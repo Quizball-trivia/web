@@ -872,6 +872,8 @@
   "banCategory": {
     "banned": "BANNED",
     "title": "Ban Category",
+    "opponentConnecting": "Opponent is connecting…",
+    "connecting": "Connecting…",
     "draftResumes": "Opponent disconnected. Draft resumes when they return."
   },
   "recentMatches": {

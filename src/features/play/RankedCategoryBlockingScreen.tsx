@@ -67,6 +67,9 @@ export interface BanCategoryViewProps {
   phase: 'ban' | 'ready';
   currentActor: 'player' | 'opponent';
   timeLeft: number;
+  turnActive?: boolean;
+  waitingMessage?: string | null;
+  waitingSeconds?: number | null;
   paused?: boolean;
   pauseSeconds?: number | null;
   hasResolvedRound?: boolean;
@@ -151,6 +154,9 @@ export function BanCategoryView({
   phase,
   currentActor,
   timeLeft,
+  turnActive = true,
+  waitingMessage = null,
+  waitingSeconds = null,
   paused = false,
   pauseSeconds = null,
   hasResolvedRound = false,
@@ -212,15 +218,17 @@ export function BanCategoryView({
           />
 
           {/* Center timer pill */}
-          <div
-            className={cn(
-              'flex h-14 min-w-[72px] items-center justify-center rounded-full px-6 text-3xl tabular-nums text-white transition-colors',
-              timeLeft <= 5 ? 'bg-brand-red-soft animate-pulse' : 'bg-brand-blue'
-            )}
-            style={poppins}
-          >
-            {timeLeft}
-          </div>
+          {turnActive ? (
+            <div
+              className={cn(
+                'flex h-14 min-w-[72px] items-center justify-center rounded-full px-6 text-3xl tabular-nums text-white transition-colors',
+                timeLeft <= 5 ? 'bg-brand-red-soft animate-pulse' : 'bg-brand-blue'
+              )}
+              style={poppins}
+            >
+              {timeLeft}
+            </div>
+          ) : <div className="min-w-[72px]" />}
 
           {/* Opponent (Right) */}
           <PlayerHeader
@@ -251,14 +259,20 @@ export function BanCategoryView({
             className="text-3xl uppercase text-white sm:text-4xl"
             style={poppins}
           >
-            {paused
+            {waitingMessage
+              ? waitingMessage
+              : paused
               ? t('possession.waiting')
               : phase === 'ban'
                 ? t('banCategory.title')
                 : t('possession.getReady')}
           </h2>
           {/* Turn indicator — clearly shows whose turn it is to ban. */}
-          {phase === 'ban' && !paused ? (
+          {waitingMessage && waitingSeconds != null ? (
+            <p className="mt-3 text-2xl tabular-nums text-brand-yellow" style={poppins}>
+              {waitingSeconds}
+            </p>
+          ) : phase === 'ban' && !paused && turnActive ? (
             <p
               className={cn(
                 'mt-2 text-sm uppercase tracking-[0.12em] sm:text-base',
@@ -291,6 +305,7 @@ export function BanCategoryView({
               const isBanned = isPlayerBanned || isOpponentBanned;
 
               const disabled =
+                !turnActive ||
                 paused ||
                 (!!playerBannedId && !isPlayerBanned && phase === 'ban') ||
                 isOpponentBanned ||
@@ -345,6 +360,7 @@ export function RankedCategoryBlockingScreen() {
     selectDraftCountdownSeconds(useRealtimeMatchStore.getState())
   );
   const [draftPauseNowMs, setDraftPauseNowMs] = useState(() => Date.now());
+  const [gateNowMs, setGateNowMs] = useState(() => Date.now());
   const [showShowdown, setShowShowdown] = useState(() => {
     if (skipDraftShowdown) return false;
     const currentDraft = useRealtimeMatchStore.getState().draft;
@@ -385,13 +401,21 @@ export function RankedCategoryBlockingScreen() {
   }, [draft?.lobbyId, lobby?.lobbyId, selfUserId]);
 
   useEffect(() => {
-    if (!draft || showShowdown || draftPaused) return;
+    if (!draft || !draft.turnActive || showShowdown || draftPaused) return;
     autoBanFired.current = false;
     const tick = () => setTimeLeft(selectDraftCountdownSeconds({ draft }));
     tick();
     const interval = setInterval(tick, 250);
     return () => clearInterval(interval);
-  }, [draft, draftPaused, showShowdown]);
+  }, [draft, draft?.turnActive, draftPaused, showShowdown]);
+
+  useEffect(() => {
+    if (!draft?.waitingForReady) return;
+    const tick = () => setGateNowMs(Date.now());
+    tick();
+    const intervalId = setInterval(tick, 250);
+    return () => clearInterval(intervalId);
+  }, [draft?.waitingForReady]);
 
   const draftBanCount = draft ? Object.keys(draft.bans).length : 0;
 
@@ -414,6 +438,8 @@ export function RankedCategoryBlockingScreen() {
 
     return () => window.cancelAnimationFrame(frameId);
   }, [
+    draft,
+    lobby,
     draft?.lobbyId,
     lobby?.lobbyId,
     showShowdown,
@@ -435,6 +461,7 @@ export function RankedCategoryBlockingScreen() {
   // Auto-ban a random category when timer expires on player's turn
   useEffect(() => {
     if (timeLeft !== 0 || autoBanFired.current) return;
+    if (!draft?.turnActive) return;
     if (draftPaused) return;
     if (!selfUserId) return;
     if (!draft || draft.halfOneCategoryId) return;
@@ -450,7 +477,7 @@ export function RankedCategoryBlockingScreen() {
     autoBanFired.current = true;
     getSocket().emit('draft:ban', { categoryId: randomCategory.id });
     logger.info('Auto-ban on timer expiry', { categoryId: randomCategory.id });
-  }, [timeLeft, draft, draftPaused, selfUserId]);
+  }, [timeLeft, draft, draft?.turnActive, draftPaused, selfUserId]);
 
   useEffect(() => {
     if (showShowdown) {
@@ -468,6 +495,21 @@ export function RankedCategoryBlockingScreen() {
   const pauseSeconds = draftPauseUntil
     ? Math.max(0, Math.ceil((draftPauseUntil - draftPauseNowMs) / 1000))
     : null;
+  const opponentWaiting = Boolean(
+    draft?.waitingForReady?.waitingUserIds.some((userId) => userId !== selfUserId)
+  );
+  const selfWaiting = Boolean(selfUserId && draft?.waitingForReady?.waitingUserIds.includes(selfUserId));
+  const waitingMessage = opponentWaiting
+    ? t('banCategory.opponentConnecting')
+    : selfWaiting || !draft?.turnActive
+      ? t('banCategory.connecting')
+      : null;
+  const forceCancelAtMs = draft?.waitingForReady
+    ? Date.parse(draft.waitingForReady.forceCancelAt)
+    : Number.NaN;
+  const waitingSeconds = opponentWaiting && Number.isFinite(forceCancelAtMs)
+    ? Math.max(0, Math.ceil((forceCancelAtMs - gateNowMs) / 1000))
+    : null;
 
   const poolCategories = draft?.categories ?? [];
 
@@ -483,12 +525,13 @@ export function RankedCategoryBlockingScreen() {
     ?? rankedFoundOpponent?.country
     ?? null;
   const handleBanCategory = useCallback((categoryId: string) => {
+    if (!draft?.turnActive) return;
     if (draftPaused) return;
     if (!selfUserId) return;
     useRealtimeMatchStore.getState().setDraftBan(selfUserId, categoryId);
     getSocket().emit('draft:ban', { categoryId });
     logger.info('Socket emit draft:ban (optimistic)', { categoryId });
-  }, [draftPaused, selfUserId]);
+  }, [draft?.turnActive, draftPaused, selfUserId]);
 
   if (!draft || !lobby) {
     return <LoadingScreen text={t('play.preparingMatch')} />;
@@ -556,6 +599,9 @@ export function RankedCategoryBlockingScreen() {
       phase={phase}
       currentActor={currentActor}
       timeLeft={timeLeft}
+      turnActive={draft.turnActive}
+      waitingMessage={waitingMessage}
+      waitingSeconds={waitingSeconds}
       paused={draftPaused}
       pauseSeconds={pauseSeconds}
       hasResolvedRound={hasResolvedRound}

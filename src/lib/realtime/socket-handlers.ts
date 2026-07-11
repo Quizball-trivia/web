@@ -265,6 +265,16 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
     store.setDraftStart(data);
   });
 
+  socket.on('draft:waiting_for_ready', (data) => {
+    logger.info('Socket event draft:waiting_for_ready', { lobbyId: data.lobbyId });
+    store.setDraftWaitingForReady(data);
+  });
+
+  socket.on('draft:begin', (data) => {
+    logger.info('Socket event draft:begin', { lobbyId: data.lobbyId, turnUserId: data.turnUserId });
+    store.setDraftBegin(data);
+  });
+
   socket.on('draft:banned', (data: { actorId: string; categoryId: string; forceAtMs?: number | null }) => {
     logger.info('Socket event draft:banned', data);
     store.setDraftBan(data.actorId, data.categoryId, data.forceAtMs);

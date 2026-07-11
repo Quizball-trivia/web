@@ -988,6 +988,8 @@
   "banCategory": {
     "banned": "დაბლოკილია",
     "title": "დაბლოკე კატეგორია",
+    "opponentConnecting": "მეტოქე ერთდება…",
+    "connecting": "დაკავშირება…",
     "draftResumes": "მეტოქე გაითიშა. დრაფტი განახლდება მისი დაბრუნებისას."
   },
   "recentMatches": {
