@@ -778,7 +778,7 @@ export function ProfileWeb({
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: 0.05 * index, duration: 0.3 }}
                     {...nav.handlers}
-                    className={`flex items-center gap-3 rounded-[16px] min-h-[76px] md:min-h-[82px] px-4 md:px-5 border-2 bg-surface-row-deep ${borderColor} ${nav.className}`}
+                    className={`@container flex min-w-0 items-center gap-2.5 rounded-[16px] min-h-[76px] px-3.5 border-2 bg-surface-row-deep sm:gap-3 sm:px-4 md:min-h-[82px] md:px-5 ${borderColor} ${nav.className}`}
                   >
                     {/* Avatar — rank frame using the opponent's real tier; falls
                         back to a neutral frame until the backend supplies it. */}
@@ -790,38 +790,39 @@ export function ProfileWeb({
                     />
 
                     {/* Info */}
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0 flex-1 overflow-hidden">
                       <div className="font-poppins text-[12px] md:text-[14px] font-semibold leading-none text-white uppercase truncate">
                         {t('profileScreen.vsOpponent', { opponent: match.opponent })}
                       </div>
-                      <div className="mt-1 font-poppins text-[8px] md:text-[9px] font-medium leading-none tracking-[0.08em] text-white/70 uppercase">
-                        {competitionLabel} · {match.time}
+                      <div className="mt-1 flex min-w-0 items-center gap-1 overflow-hidden font-poppins text-[8px] font-medium uppercase leading-none tracking-[0.08em] text-white/70 md:text-[9px]">
+                        <span className="min-w-0 truncate" title={competitionLabel}>{competitionLabel}</span>
+                        <span className="shrink-0 whitespace-nowrap">· {match.time}</span>
                       </div>
                     </div>
 
                     {/* RP + Score */}
-                    <div className="ml-auto flex items-center justify-end gap-3 md:gap-5 shrink-0 whitespace-nowrap">
+                    <div className="ml-auto flex shrink-0 items-center justify-end gap-2 whitespace-nowrap md:gap-5">
                       {isPlacementMatch && (
-                        <span className="rounded-[8px] bg-white/10 px-3 py-2 font-poppins text-[10px] md:text-[11px] font-semibold uppercase leading-none text-white/70">
+                        <span className="max-w-[clamp(4.5rem,24cqw,9rem)] truncate rounded-[8px] bg-white/10 px-2 py-2 font-poppins text-[10px] font-semibold uppercase leading-none text-white/70 md:px-3 md:text-[11px]" title={t('recentMatches.placementMatch')}>
                           {t('recentMatches.placementMatch')}
                         </span>
                       )}
                       {showRpDelta && (
-                        <span className={`rounded-[8px] px-3 py-2 font-poppins text-[10px] md:text-[11px] font-semibold leading-none tabular-nums ${rpPillTone}`}>
+                        <span className={`max-w-[clamp(4.5rem,24cqw,9rem)] truncate rounded-[8px] px-2 py-2 font-poppins text-[10px] font-semibold leading-none tabular-nums md:px-3 md:text-[11px] ${rpPillTone}`} title={formattedRpDelta}>
                           {formattedRpDelta}
                         </span>
                       )}
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex shrink-0 items-center gap-1">
                         <span className="font-poppins text-[20px] md:text-[22px] font-semibold leading-none text-white tabular-nums">
                           {match.scoreFormatted.score}
                         </span>
                         {match.scoreFormatted.suffix && (
-                          <span className="font-poppins text-[10px] md:text-[11px] font-medium text-white/70">
+                          <span className="max-w-[clamp(2rem,10cqw,5rem)] truncate font-poppins text-[9px] font-medium text-white/70 md:text-[11px]" title={match.scoreFormatted.suffix}>
                             {match.scoreFormatted.suffix}
                           </span>
                         )}
                         {match.scoreFormatted.badge && (
-                          <span className={`rounded-[8px] px-2 py-1 font-poppins text-[9px] md:text-[10px] font-semibold uppercase ${
+                          <span className={`max-w-[clamp(2.5rem,13cqw,5rem)] truncate rounded-[8px] px-1.5 py-1 font-poppins text-[9px] font-semibold uppercase md:px-2 md:text-[10px] ${
                             match.scoreFormatted.badgeVariant === 'red'
                               ? 'bg-brand-red-rust-deep text-brand-red-light'
                               : 'bg-white/10 text-white/70'
@@ -830,7 +831,7 @@ export function ProfileWeb({
                           </span>
                         )}
                         {match.scoreFormatted.badgeI18nKey && (
-                          <span className={`rounded-[8px] px-2 py-1 font-poppins text-[9px] md:text-[10px] font-semibold uppercase ${
+                          <span className={`max-w-[clamp(2.5rem,13cqw,5rem)] truncate rounded-[8px] px-1.5 py-1 font-poppins text-[9px] font-semibold uppercase md:px-2 md:text-[10px] ${
                             match.scoreFormatted.badgeVariant === 'red'
                               ? 'bg-brand-red-rust-deep text-brand-red-light'
                               : 'bg-white/10 text-white/70'
