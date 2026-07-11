@@ -41,6 +41,7 @@ export const createDraftSlice: StateCreator<RealtimeState, [], [], DraftSlice> =
         bans: state.draft?.lobbyId === draft.lobbyId ? state.draft.bans : {},
         turnUserId: draft.turnUserId,
         forceAtMs: draft.forceAtMs,
+        turnAnchorMs: Date.now(),
         halfOneCategoryId: null,
       },
     }));
@@ -57,6 +58,7 @@ export const createDraftSlice: StateCreator<RealtimeState, [], [], DraftSlice> =
           bans: { ...state.draft.bans, [actorId]: categoryId },
           turnUserId: nextTurn,
           forceAtMs,
+          turnAnchorMs: Date.now(),
         },
       };
     }),

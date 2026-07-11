@@ -26,6 +26,7 @@ export interface DraftStatus {
   bans: Record<string, string>;
   turnUserId: string | null;
   forceAtMs?: number | null;
+  turnAnchorMs?: number | null;
   halfOneCategoryId: string | null;
 }
 
