@@ -103,6 +103,7 @@ export function GameStageRouter() {
       : null;
 
   const returningToLobbyRef = useRef(false);
+  const forfeitedMatchIdRef = useRef<string | null>(null);
   const showingFinalResultsFromReplay = stage === "idle" && Boolean(realtimeMatch.finalResults);
   const [rankedBootNotice, setRankedBootNotice] = useState<{ id: string; message: string } | null>(null);
   const rankedBootHadPairingRef = useRef(false);
@@ -372,6 +373,7 @@ export function GameStageRouter() {
   const handleForfeit = useCallback(() => {
     if (realtimeMatchId) {
       useRealtimeMatchStore.getState().suppressAutoRejoin(realtimeMatchId);
+      forfeitedMatchIdRef.current = realtimeMatchId;
       getSocket().emit("match:forfeit", { matchId: realtimeMatchId });
       logger.info("Socket emit match:forfeit", { matchId: realtimeMatchId });
     } else {
@@ -386,6 +388,33 @@ export function GameStageRouter() {
     // match:final_results lands, then the full results screen with real RP.
     setStage("finalResults");
   }, [realtimeMatchId, setStage]);
+
+  // Self-heal for a lost match:final_results after forfeit. Gated on the
+  // forfeit intent ref — the finalResults stage is also entered on normal
+  // match end, and a retry there would forfeit a legitimately completing
+  // match. If the server's forfeit emit was lost in flight (restart,
+  // transient error), nothing would ever arrive — re-emit match:forfeit,
+  // which the server answers on a non-active match by replaying the stored
+  // terminal results.
+  const finalResultsArrived = Boolean(realtimeMatch.finalResults);
+  useEffect(() => {
+    if (stage !== "finalResults" || finalResultsArrived || !realtimeMatchId) return;
+    if (forfeitedMatchIdRef.current !== realtimeMatchId) return;
+    let attempts = 0;
+    const intervalId = setInterval(() => {
+      attempts += 1;
+      if (attempts > 3) {
+        clearInterval(intervalId);
+        return;
+      }
+      getSocket().emit("match:forfeit", { matchId: realtimeMatchId });
+      logger.info("Retrying match:forfeit for missing final results", {
+        matchId: realtimeMatchId,
+        attempt: attempts,
+      });
+    }, 6000);
+    return () => clearInterval(intervalId);
+  }, [stage, finalResultsArrived, realtimeMatchId]);
 
   const handleMatchmakingExit = useCallback(() => {
     if (matchType === "ranked") {

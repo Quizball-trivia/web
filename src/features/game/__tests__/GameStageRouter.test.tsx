@@ -552,6 +552,64 @@ describe('GameStageRouter', () => {
     expect(router.push).not.toHaveBeenCalledWith('/');
   });
 
+  it('retries match:forfeit while final results are missing after a forfeit, then stops at 3 attempts', () => {
+    vi.useFakeTimers();
+    try {
+      gameSessionState.stage = 'playing';
+      realtimeMatchState.match = {
+        ...realtimeMatchState.match,
+        matchId: 'match-forfeit-2',
+        variant: 'friendly_possession',
+      };
+
+      const { rerender } = render(<GameStageRouter />);
+      fireEvent.click(screen.getByRole('button', { name: 'Forfeit Match' }));
+      socket.emit.mockClear();
+
+      gameSessionState.stage = 'finalResults';
+      rerender(<GameStageRouter />);
+
+      act(() => {
+        vi.advanceTimersByTime(5_000);
+      });
+      expect(socket.emit).not.toHaveBeenCalledWith('match:forfeit', { matchId: 'match-forfeit-2' });
+
+      act(() => {
+        vi.advanceTimersByTime(30_000);
+      });
+      const retryEmits = socket.emit.mock.calls.filter(
+        ([event, payload]) =>
+          event === 'match:forfeit' && (payload as { matchId?: string }).matchId === 'match-forfeit-2',
+      );
+      expect(retryEmits).toHaveLength(3);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('never retries match:forfeit when finalResults is entered without a forfeit (normal match end)', () => {
+    vi.useFakeTimers();
+    try {
+      gameSessionState.stage = 'finalResults';
+      realtimeMatchState.match = {
+        ...realtimeMatchState.match,
+        matchId: 'match-normal-end',
+        variant: 'friendly_possession',
+      };
+
+      render(<GameStageRouter />);
+      act(() => {
+        vi.advanceTimersByTime(30_000);
+      });
+      expect(socket.emit).not.toHaveBeenCalledWith(
+        'match:forfeit',
+        expect.objectContaining({ matchId: 'match-normal-end' }),
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('shows loading instead of possession final results until authoritative final payload arrives', () => {
     gameSessionState.stage = 'finalResults';
     realtimeMatchState.match = {
