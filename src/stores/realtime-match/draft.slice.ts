@@ -15,7 +15,12 @@ export interface DraftSlice {
   setDraftStart: (draft: DraftState) => void;
   setDraftWaitingForReady: (payload: DraftWaitingForReadyPayload) => void;
   setDraftBegin: (payload: DraftBeginPayload) => void;
-  setDraftBan: (actorId: string, categoryId: string, forceAtMs?: number | null) => void;
+  setDraftBan: (
+    actorId: string,
+    categoryId: string,
+    forceAtMs?: number | null,
+    turnUserId?: string | null,
+  ) => void;
   setDraftComplete: (halfOneCategoryId: string) => void;
   revertDraftBan: (actorId: string) => void;
 }
@@ -72,11 +77,13 @@ export const createDraftSlice: StateCreator<RealtimeState, [], [], DraftSlice> =
         : state.draft,
     })),
 
-  setDraftBan: (actorId, categoryId, forceAtMs) =>
+  setDraftBan: (actorId, categoryId, forceAtMs, turnUserId) =>
     set((state) => {
       if (!state.draft) return state;
-      const nextTurn = computeNextDraftTurn(state.lobby?.members, actorId);
-      logger.info('Realtime store set draft ban', { actorId, categoryId, nextTurnUserId: nextTurn });
+      const nextTurn = turnUserId === undefined
+        ? computeNextDraftTurn(state.lobby?.members, actorId)
+        : turnUserId;
+      logger.info('Realtime store set draft ban', { actorId, categoryId, nextTurnUserId: nextTurn, forceAtMs });
       return {
         draft: {
           ...state.draft,

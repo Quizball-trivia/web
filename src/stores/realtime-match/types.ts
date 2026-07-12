@@ -158,7 +158,12 @@ export interface RealtimeState {
   setDraftStart: (draft: import('@/lib/realtime/socket.types').DraftState) => void;
   setDraftWaitingForReady: (payload: DraftWaitingForReadyPayload) => void;
   setDraftBegin: (payload: import('@/lib/realtime/socket.types').DraftBeginPayload) => void;
-  setDraftBan: (actorId: string, categoryId: string, forceAtMs?: number | null) => void;
+  setDraftBan: (
+    actorId: string,
+    categoryId: string,
+    forceAtMs?: number | null,
+    turnUserId?: string | null,
+  ) => void;
   setDraftComplete: (halfOneCategoryId: string) => void;
   setMatchStart: (payload: import('@/lib/realtime/socket.types').MatchStartPayload) => void;
   setMatchCountdown: (payload: import('@/lib/realtime/socket.types').MatchCountdownPayload) => void;

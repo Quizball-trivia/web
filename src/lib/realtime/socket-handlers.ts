@@ -370,9 +370,14 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
     logDraftGateEvent('received draft:begin', data, receivedAtMs);
   });
 
-  socket.on('draft:banned', (data: { actorId: string; categoryId: string; forceAtMs?: number | null }) => {
+  socket.on('draft:banned', (data: {
+    actorId: string;
+    categoryId: string;
+    turnUserId?: string | null;
+    forceAtMs?: number | null;
+  }) => {
     const receivedAtMs = Date.now();
-    store.setDraftBan(data.actorId, data.categoryId, data.forceAtMs);
+    store.setDraftBan(data.actorId, data.categoryId, data.forceAtMs, data.turnUserId);
     const draft = useRealtimeMatchStore.getState().draft;
     if (draft?.turnUserId && !draft.halfOneCategoryId) {
       _draftUiReadyGate = {
