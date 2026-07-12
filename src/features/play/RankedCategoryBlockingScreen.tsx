@@ -425,7 +425,10 @@ export function RankedCategoryBlockingScreen() {
     : null;
 
   useEffect(() => {
-    if (!draftGateKey) return;
+    if (!draftGateKey) {
+      setDebouncedGateKey(null);
+      return;
+    }
     const timeoutId = setTimeout(
       () => setDebouncedGateKey(draftGateKey),
       DRAFT_WAITING_DEBOUNCE_MS,
@@ -494,7 +497,8 @@ export function RankedCategoryBlockingScreen() {
     ? Math.max(0, Math.ceil((forceCancelAtMs - gateNowMs) / 1000))
     : null;
   const forceCancelCountdownActive = Number.isFinite(forceCancelAtMs)
-    && forceCancelAtMs - gateNowMs <= DRAFT_FORCE_CANCEL_COUNTDOWN_MS;
+    && forceCancelAtMs - gateNowMs <= DRAFT_FORCE_CANCEL_COUNTDOWN_MS
+    && forceCancelAtMs > gateNowMs;
   const showWaitingState = draft?.turnActive === false
     && (debouncedGateKey === draftGateKey || forceCancelCountdownActive);
   const visibleWaitingMessage = showWaitingState ? waitingMessage : null;
