@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Trophy, Gavel } from 'lucide-react';
 import { useRecentMatches } from '@/lib/queries/stats.queries';
 import { COLLAPSED_MATCHES_COUNT, MAX_MATCHES_COUNT } from '@/lib/constants/matches';
 import { formatMatchScore } from '@/utils/matchScore';
@@ -20,6 +20,12 @@ const rpPillTone = (result: string) => {
   return 'bg-brand-slate-deep text-white';
 };
 
+const ordinal = (n: number): string => {
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return `${n}${s[(v - 20) % 10] ?? s[v] ?? s[0]}`;
+};
+
 interface HomeRecentMatchesProps {
   /** If true, only show collapsed count without expand option */
   collapsedOnly?: boolean;
@@ -35,6 +41,12 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
   const matches = useMemo(() =>
     recentMatches.map((match) => {
       const formatted = formatMatchScore(match);
+      const isAuction = match.mode === 'auction';
+      const modeLabel = isAuction
+        ? t('recentMatches.modeAuction')
+        : match.mode === 'ranked'
+          ? t('recentMatches.modeRanked')
+          : t('recentMatches.modeFriendly');
       return {
         id: match.matchId,
         result: match.result,
@@ -44,7 +56,12 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
         avatarUrl: match.opponent.avatarUrl,
         avatarCustomization: match.opponent.avatarCustomization,
         opponentTier: match.opponent.tier,
-        mode: match.mode === 'ranked' ? t('recentMatches.modeRanked') : t('recentMatches.modeFriendly'),
+        isAuction,
+        modeLabel,
+        modeKind: match.mode,
+        placement: match.placement,
+        playerCount: match.playerCount,
+        opponents: match.opponents,
         competition: match.competition,
         rpDelta: match.rpDelta,
         score: formatted.score,
@@ -126,19 +143,37 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
             {/* Info */}
             <div className="min-w-0 flex-1">
               <div className="font-poppins text-[12px] md:text-[14px] font-semibold leading-none text-white uppercase truncate">
-                {t('recentMatches.vs', { opponent: match.opponent })}
+                {match.isAuction && match.opponents.length > 0
+                  ? t('recentMatches.vs', { opponent: match.opponents.map((o) => o.username).join(', ') })
+                  : t('recentMatches.vs', { opponent: match.opponent })}
               </div>
-              <div className="mt-1 font-poppins text-[8px] md:text-[9px] font-medium leading-none tracking-[0.08em] text-white/70 uppercase">
-                {match.mode} · {match.time}
+              {/* Mode label — larger, with a mode icon (trophy / gavel). */}
+              <div className="mt-1.5 flex items-center gap-1.5 font-poppins text-[11px] md:text-[12px] font-bold leading-none tracking-[0.06em] text-white/85 uppercase">
+                {match.isAuction ? (
+                  <Gavel className="size-3.5 text-brand-yellow" />
+                ) : match.modeKind === 'ranked' ? (
+                  <Trophy className="size-3.5 text-brand-yellow" />
+                ) : null}
+                <span>{match.modeLabel}</span>
+                <span className="text-white/40">· {match.time}</span>
               </div>
             </div>
 
             {/* RP + Score */}
             <div className="ml-auto flex items-center justify-end gap-3 md:gap-5 shrink-0 whitespace-nowrap">
-              {/* Placement matches don't move RP in a per-game win/loss way (the
-                  seed is applied once), so showing a +/- RP number is misleading
-                  — show a neutral "Placement" badge instead. Ranked shows RP. */}
-              {match.competition === 'placement' ? (
+              {/* Auction has no score/RP — show finishing placement ("1st of 3"). */}
+              {match.isAuction ? (
+                <span
+                  className={`rounded-[8px] px-3 py-2 font-poppins text-[12px] md:text-[13px] font-black uppercase leading-none tabular-nums ${rpPillTone(match.result)}`}
+                >
+                  {match.placement
+                    ? t('recentMatches.placementOf', {
+                        place: ordinal(match.placement),
+                        total: match.playerCount,
+                      })
+                    : '—'}
+                </span>
+              ) : match.competition === 'placement' ? (
                 <span className="rounded-[8px] bg-white/10 px-3 py-2 font-poppins text-[10px] md:text-[11px] font-semibold uppercase leading-none text-white/70">
                   {t('recentMatches.placementMatch')}
                 </span>
@@ -147,25 +182,28 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
                   {match.rpDelta >= 0 ? '+' : ''}{match.rpDelta} RP
                 </span>
               ) : null}
-              <div className="flex items-center gap-1.5">
-                <span className="font-poppins text-[20px] md:text-[22px] font-semibold leading-none text-white tabular-nums">
-                  {match.score}
-                </span>
-                {match.scoreSuffix && (
-                  <span className="font-poppins text-[10px] md:text-[11px] font-medium text-white/70">
-                    {match.scoreSuffix}
+              {/* Score (goals / points) — not shown for auction, which uses placement. */}
+              {!match.isAuction && (
+                <div className="flex items-center gap-1.5">
+                  <span className="font-poppins text-[20px] md:text-[22px] font-semibold leading-none text-white tabular-nums">
+                    {match.score}
                   </span>
-                )}
-                {match.scoreBadge && (
-                  <span className={`rounded-[8px] px-2 py-1 font-poppins text-[9px] md:text-[10px] font-semibold uppercase ${
-                    match.scoreBadgeVariant === 'red'
-                      ? 'bg-brand-red-rust-deep text-brand-red-light'
-                      : 'bg-white/10 text-white/70'
-                  }`}>
-                    {match.scoreBadge}
-                  </span>
-                )}
-              </div>
+                  {match.scoreSuffix && (
+                    <span className="font-poppins text-[10px] md:text-[11px] font-medium text-white/70">
+                      {match.scoreSuffix}
+                    </span>
+                  )}
+                  {match.scoreBadge && (
+                    <span className={`rounded-[8px] px-2 py-1 font-poppins text-[9px] md:text-[10px] font-semibold uppercase ${
+                      match.scoreBadgeVariant === 'red'
+                        ? 'bg-brand-red-rust-deep text-brand-red-light'
+                        : 'bg-white/10 text-white/70'
+                    }`}>
+                      {match.scoreBadge}
+                    </span>
+                  )}
+                </div>
+              )}
             </div>
           </div>
           );

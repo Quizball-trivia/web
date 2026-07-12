@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getSocket } from '@/lib/realtime/socket-client';
 import type { MatchWaitingForReadyPayload } from '@/lib/realtime/socket.types';
 import { logger } from '@/utils/logger';
@@ -30,36 +30,82 @@ function afterPaint(callback: () => void): () => void {
   };
 }
 
+function getSocketConnectionKey(): string | null {
+  const socket = getSocket();
+  if (!socket.connected) return null;
+  return socket.id ?? 'connected';
+}
+
 export function useMatchUiReadyAcks({
   matchId,
   currentQuestionIndex,
   waitingForReady,
 }: UseMatchUiReadyAcksParams): void {
-  const kickoffAckedMatchRef = useRef<string | null>(null);
+  const [socketConnectionKey, setSocketConnectionKey] = useState(getSocketConnectionKey);
+  const [connectGeneration, setConnectGeneration] = useState(0);
+  const kickoffAckedKeyRef = useRef<string | null>(null);
   const resumeAckedKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!matchId || currentQuestionIndex !== null) return;
-    if (kickoffAckedMatchRef.current === matchId) return;
-
-    return afterPaint(() => {
-      if (kickoffAckedMatchRef.current === matchId) return;
-      getSocket().emit('match:kickoff_ui_ready', { matchId });
-      kickoffAckedMatchRef.current = matchId;
-      logger.info('Socket emit match:kickoff_ui_ready', { matchId });
-    });
-  }, [currentQuestionIndex, matchId]);
+    const socket = getSocket();
+    const updateConnectionKey = () => setSocketConnectionKey(getSocketConnectionKey());
+    const handleConnect = () => {
+      kickoffAckedKeyRef.current = null;
+      resumeAckedKeyRef.current = null;
+      updateConnectionKey();
+      setConnectGeneration((generation) => generation + 1);
+    };
+    socket.on('connect', handleConnect);
+    socket.on('disconnect', updateConnectionKey);
+    queueMicrotask(updateConnectionKey);
+    return () => {
+      socket.off('connect', handleConnect);
+      socket.off('disconnect', updateConnectionKey);
+    };
+  }, []);
 
   useEffect(() => {
-    if (!matchId || waitingForReady?.phase !== 'resume') return;
-    const resumeKey = `${matchId}:${waitingForReady.forceStartsAt}`;
+    if (!matchId || currentQuestionIndex !== null || !socketConnectionKey) return;
+    const ackKey = `${matchId}:${socketConnectionKey}`;
+    if (kickoffAckedKeyRef.current === ackKey) return;
+
+    return afterPaint(() => {
+      const socket = getSocket();
+      const liveConnectionKey = socket.connected ? socket.id ?? 'connected' : null;
+      if (!liveConnectionKey) return;
+      const liveAckKey = `${matchId}:${liveConnectionKey}`;
+      if (kickoffAckedKeyRef.current === liveAckKey) return;
+      socket.emit('match:kickoff_ui_ready', { matchId });
+      kickoffAckedKeyRef.current = liveAckKey;
+      logger.info('Socket emit match:kickoff_ui_ready', { matchId, socketId: socket.id ?? null });
+    });
+  }, [
+    currentQuestionIndex,
+    connectGeneration,
+    matchId,
+    socketConnectionKey,
+    waitingForReady?.forceStartsAt,
+    waitingForReady?.phase,
+  ]);
+
+  useEffect(() => {
+    if (!matchId || waitingForReady?.phase !== 'resume' || !socketConnectionKey) return;
+    const resumeKey = `${matchId}:${waitingForReady.forceStartsAt}:${socketConnectionKey}`;
     if (resumeAckedKeyRef.current === resumeKey) return;
 
     return afterPaint(() => {
-      if (resumeAckedKeyRef.current === resumeKey) return;
-      getSocket().emit('match:resume_ui_ready', { matchId });
-      resumeAckedKeyRef.current = resumeKey;
-      logger.info('Socket emit match:resume_ui_ready', { matchId, forceStartsAt: waitingForReady.forceStartsAt });
+      const socket = getSocket();
+      const liveConnectionKey = socket.connected ? socket.id ?? 'connected' : null;
+      if (!liveConnectionKey) return;
+      const liveResumeKey = `${matchId}:${waitingForReady.forceStartsAt}:${liveConnectionKey}`;
+      if (resumeAckedKeyRef.current === liveResumeKey) return;
+      socket.emit('match:resume_ui_ready', { matchId });
+      resumeAckedKeyRef.current = liveResumeKey;
+      logger.info('Socket emit match:resume_ui_ready', {
+        matchId,
+        forceStartsAt: waitingForReady.forceStartsAt,
+        socketId: socket.id ?? null,
+      });
     });
-  }, [matchId, waitingForReady?.forceStartsAt, waitingForReady?.phase]);
+  }, [connectGeneration, matchId, socketConnectionKey, waitingForReady?.forceStartsAt, waitingForReady?.phase]);
 }

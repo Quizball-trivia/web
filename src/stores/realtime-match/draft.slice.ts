@@ -1,6 +1,6 @@
 import type { StateCreator } from 'zustand';
 import { logger } from '@/utils/logger';
-import type { DraftState } from '@/lib/realtime/socket.types';
+import type { DraftBeginPayload, DraftState, DraftWaitingForReadyPayload } from '@/lib/realtime/socket.types';
 import type { DraftStatus, RealtimeState } from './types';
 import { computeNextDraftTurn } from './reducers';
 
@@ -13,7 +13,14 @@ import { computeNextDraftTurn } from './reducers';
 export interface DraftSlice {
   draft: DraftStatus | null;
   setDraftStart: (draft: DraftState) => void;
-  setDraftBan: (actorId: string, categoryId: string) => void;
+  setDraftWaitingForReady: (payload: DraftWaitingForReadyPayload) => void;
+  setDraftBegin: (payload: DraftBeginPayload) => void;
+  setDraftBan: (
+    actorId: string,
+    categoryId: string,
+    forceAtMs?: number | null,
+    turnUserId?: string | null,
+  ) => void;
   setDraftComplete: (halfOneCategoryId: string) => void;
   revertDraftBan: (actorId: string) => void;
 }
@@ -30,7 +37,7 @@ export const createDraftSlice: StateCreator<RealtimeState, [], [], DraftSlice> =
       lobbyId: draft.lobbyId,
       categoryCount: draft.categories.length,
     });
-    set({
+    set((state) => ({
       draftPaused: false,
       draftPauseUntil: null,
       draftDisconnectedUserId: null,
@@ -38,23 +45,56 @@ export const createDraftSlice: StateCreator<RealtimeState, [], [], DraftSlice> =
       draft: {
         lobbyId: draft.lobbyId,
         categories: draft.categories,
-        bans: {},
+        bans: state.draft?.lobbyId === draft.lobbyId ? state.draft.bans : {},
         turnUserId: draft.turnUserId,
+        forceAtMs: draft.forceAtMs,
+        turnAnchorMs: Date.now(),
         halfOneCategoryId: null,
+        turnActive: draft.forceAtMs !== null,
+        waitingForReady: null,
       },
-    });
+    }));
   },
 
-  setDraftBan: (actorId, categoryId) =>
+  setDraftWaitingForReady: (payload) =>
+    set((state) => ({
+      draft: state.draft?.lobbyId === payload.lobbyId
+        ? { ...state.draft, turnActive: false, waitingForReady: payload }
+        : state.draft,
+    })),
+
+  setDraftBegin: (payload) =>
+    set((state) => ({
+      draft: state.draft && (!payload.lobbyId || state.draft.lobbyId === payload.lobbyId)
+        ? {
+            ...state.draft,
+            turnUserId: payload.turnUserId,
+            forceAtMs: payload.forceAtMs,
+            turnAnchorMs: Date.now(),
+            turnActive: true,
+            waitingForReady: null,
+          }
+        : state.draft,
+    })),
+
+  setDraftBan: (actorId, categoryId, forceAtMs, turnUserId) =>
     set((state) => {
       if (!state.draft) return state;
-      const nextTurn = computeNextDraftTurn(state.lobby?.members, actorId);
-      logger.info('Realtime store set draft ban', { actorId, categoryId, nextTurnUserId: nextTurn });
+      const nextTurn = turnUserId === undefined
+        ? computeNextDraftTurn(state.lobby?.members, actorId)
+        : turnUserId;
+      logger.info('Realtime store set draft ban', { actorId, categoryId, nextTurnUserId: nextTurn, forceAtMs });
       return {
         draft: {
           ...state.draft,
           bans: { ...state.draft.bans, [actorId]: categoryId },
           turnUserId: nextTurn,
+          forceAtMs,
+          turnAnchorMs: Date.now(),
+          // undefined is the legacy protocol (turn starts immediately); null
+          // explicitly means no human countdown until draft:begin / AI turn.
+          turnActive: forceAtMs !== null,
+          waitingForReady: null,
         },
       };
     }),

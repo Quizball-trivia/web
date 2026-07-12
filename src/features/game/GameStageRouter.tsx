@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -8,6 +8,7 @@ import { MatchmakingMapScreen } from "@/components/match/MatchmakingMapScreen";
 import { ShowdownScreen } from "@/components/ShowdownScreen";
 import { RankedCategoryBlockingScreen } from "@/features/play/RankedCategoryBlockingScreen";
 import { RealtimeResultsScreen } from "./RealtimeResultsScreen";
+import { CancelledMatchScreen } from "./CancelledMatchScreen";
 import { RealtimePossessionMatchScreen } from "@/features/possession/RealtimePossessionMatchScreen";
 import { RealtimePartyQuizScreen } from "@/features/party/RealtimePartyQuizScreen";
 import { PartyQuizResultsScreen } from "@/features/party/PartyQuizResultsScreen";
@@ -26,12 +27,16 @@ import { useGameStageState } from "@/features/game/hooks/useGameStageState";
 import { useStoreWallet, getStoreWalletQuery } from "@/lib/queries/store.queries";
 import {
   markExitToPlayPending,
+  markRankedQueueIntent,
   trackExitToPlayStarted,
+  trackRankedPlayAgainClicked,
   trackResultsMainMenuClicked,
   type ExitToPlaySource,
 } from "@/lib/analytics/game-events";
 
 const POSSESSION_TOTAL_QUESTIONS_FALLBACK = 12;
+const RANKED_BOOT_TIMEOUT_MS = 90_000;
+const RANKED_BOOT_NOTICE_DISMISS_MS = 8_000;
 
 function isAiOpponentInfo(opponentInfo: { id?: string; isAiOpponent?: boolean } | null | undefined): boolean {
   if (!opponentInfo) return false;
@@ -56,6 +61,7 @@ export function GameStageRouter() {
     realtimeError,
     sessionState,
     partyDropout,
+    cancelledMatch,
     exitCompletedMatchToLobby,
     resetRealtime,
     clearRankedMatchmaking,
@@ -63,6 +69,9 @@ export function GameStageRouter() {
     rankedSearchDurationMs,
     rankedSearchStartedAt,
     rankedFoundOpponent,
+    rankedQueueLeftAt,
+    rankedQueueLeftSeq,
+    rankedQueueLeftSource,
     rankedProfile,
     socket,
     socketConnected,
@@ -95,6 +104,25 @@ export function GameStageRouter() {
 
   const returningToLobbyRef = useRef(false);
   const showingFinalResultsFromReplay = stage === "idle" && Boolean(realtimeMatch.finalResults);
+  const [rankedBootNotice, setRankedBootNotice] = useState<{ id: string; message: string } | null>(null);
+  const rankedBootHadPairingRef = useRef(false);
+  const rankedBootAbortHandledRef = useRef(false);
+  const lastRankedQueueLeftSeqRef = useRef(rankedQueueLeftSeq);
+  const lastRankedBootSessionStateRef = useRef(sessionState?.state ?? null);
+  const hasLiveLobby = Boolean(realtimeLobby && realtimeLobby.status !== "closed");
+  const isRankedCategoryStage = stage === "categoryBlocking" && matchType === "ranked";
+  const hasActiveRankedPairingEvidence = Boolean(
+    realtimeDraft ||
+      hasLiveLobby ||
+      realtimeMatch.matchId ||
+      sessionState?.activeMatchId ||
+      sessionState?.waitingLobbyId ||
+      (sessionState?.openLobbyIds?.length ?? 0) > 0
+  );
+  const isRankedBootPreparing =
+    isRankedCategoryStage &&
+    !realtimeMatch.matchId &&
+    (!realtimeDraft || !hasLiveLobby);
 
   useGameStageTransitions({
     isMultiplayer,
@@ -154,6 +182,102 @@ export function GameStageRouter() {
     stage,
   ]);
 
+  const showRankedBootAbortNotice = useCallback(() => {
+    const message = t("matchmaking.opponentNoShow");
+    setRankedBootNotice({ id: `ranked-boot-abort-${Date.now()}`, message });
+    toast.info(message);
+  }, [t]);
+
+  const recoverRankedBoot = useCallback(() => {
+    if (rankedBootAbortHandledRef.current) return;
+    rankedBootAbortHandledRef.current = true;
+    showRankedBootAbortNotice();
+    resetRealtime();
+    clearRankedMatchmaking();
+    markRankedQueueIntent("recovery");
+    setStage("matchmaking");
+  }, [clearRankedMatchmaking, resetRealtime, setStage, showRankedBootAbortNotice]);
+
+  useEffect(() => {
+    if (!rankedBootNotice) return;
+    const timeoutId = window.setTimeout(() => {
+      setRankedBootNotice(null);
+    }, RANKED_BOOT_NOTICE_DISMISS_MS);
+    return () => window.clearTimeout(timeoutId);
+  }, [rankedBootNotice]);
+
+  useEffect(() => {
+    if (!isRankedCategoryStage) {
+      rankedBootHadPairingRef.current = false;
+      rankedBootAbortHandledRef.current = false;
+      return;
+    }
+    if (hasActiveRankedPairingEvidence) {
+      rankedBootHadPairingRef.current = true;
+      rankedBootAbortHandledRef.current = false;
+    }
+  }, [hasActiveRankedPairingEvidence, isRankedCategoryStage]);
+
+  useEffect(() => {
+    if (lastRankedQueueLeftSeqRef.current === rankedQueueLeftSeq) return;
+    lastRankedQueueLeftSeqRef.current = rankedQueueLeftSeq;
+    if (
+      rankedQueueLeftAt !== null &&
+      rankedQueueLeftSource === "server_event" &&
+      isRankedCategoryStage &&
+      rankedBootHadPairingRef.current
+    ) {
+      queueMicrotask(recoverRankedBoot);
+    }
+  }, [
+    isRankedCategoryStage,
+    rankedQueueLeftAt,
+    rankedQueueLeftSeq,
+    rankedQueueLeftSource,
+    recoverRankedBoot,
+  ]);
+
+  useEffect(() => {
+    const previousSessionState = lastRankedBootSessionStateRef.current;
+    lastRankedBootSessionStateRef.current = sessionState?.state ?? null;
+    if (
+      isRankedCategoryStage &&
+      rankedBootHadPairingRef.current &&
+      previousSessionState === "IN_ACTIVE_MATCH" &&
+      sessionState !== null &&
+      sessionState.state !== "IN_ACTIVE_MATCH"
+    ) {
+      queueMicrotask(recoverRankedBoot);
+    }
+  }, [isRankedCategoryStage, recoverRankedBoot, sessionState, sessionState?.state]);
+
+  useEffect(() => {
+    if (!isRankedBootPreparing || rankedBootAbortHandledRef.current) return;
+    if (!rankedBootHadPairingRef.current) return;
+    if (hasActiveRankedPairingEvidence) return;
+
+    const pairingDied = sessionState !== null && sessionState.state !== "IN_ACTIVE_MATCH";
+    if (!pairingDied) return;
+
+    queueMicrotask(recoverRankedBoot);
+  }, [
+    hasActiveRankedPairingEvidence,
+    isRankedBootPreparing,
+    recoverRankedBoot,
+    sessionState,
+    sessionState?.state,
+  ]);
+
+  useEffect(() => {
+    if (!isRankedBootPreparing) return;
+    const timeoutId = window.setTimeout(() => {
+      rankedBootAbortHandledRef.current = true;
+      showRankedBootAbortNotice();
+      exitToPlay("generic");
+    }, RANKED_BOOT_TIMEOUT_MS);
+    return () => window.clearTimeout(timeoutId);
+  }, [exitToPlay, isRankedBootPreparing, showRankedBootAbortNotice]);
+
   useEffect(() => {
     const inviteCode = realtimeLobby?.inviteCode;
     if (
@@ -182,10 +306,48 @@ export function GameStageRouter() {
   ]);
 
   useEffect(() => {
-    if (stage === "idle" && !returningToLobbyRef.current && !realtimeMatch.finalResults) {
+    if (
+      stage === "idle" &&
+      !returningToLobbyRef.current &&
+      !realtimeMatch.finalResults &&
+      !cancelledMatch
+    ) {
       router.replace("/play");
     }
-  }, [realtimeMatch.finalResults, stage, router]);
+  }, [cancelledMatch, realtimeMatch.finalResults, stage, router]);
+
+  useEffect(() => {
+    const isDeadMatchStage =
+      stage === "showdown" ||
+      stage === "roundIntro" ||
+      stage === "playing" ||
+      stage === "roundResult" ||
+      stage === "roundTransition" ||
+      stage === "finalResults";
+    if (
+      sessionState?.state !== "IDLE" ||
+      !isDeadMatchStage ||
+      realtimeMatch.matchId ||
+      realtimeMatch.finalResults ||
+      cancelledMatch
+    ) {
+      return;
+    }
+    resetRealtime();
+    clearRankedMatchmaking();
+    resetGameSession();
+    router.replace("/play");
+  }, [
+    cancelledMatch,
+    clearRankedMatchmaking,
+    realtimeMatch.finalResults,
+    realtimeMatch.matchId,
+    resetGameSession,
+    resetRealtime,
+    router,
+    sessionState?.state,
+    stage,
+  ]);
 
   useEffect(() => {
     if (!partyDropout || realtimeMatch.finalResults) return;
@@ -250,7 +412,7 @@ export function GameStageRouter() {
       rankedSearching,
       rankedSearchStartedAt,
       rankedSearchDurationMs,
-      hasLobby: Boolean(realtimeLobby),
+      hasLobby: Boolean(realtimeLobby && realtimeLobby.status !== "closed"),
       hasMatch: Boolean(realtimeMatch.matchId),
       errorCode: realtimeError?.code ?? null,
     }),
@@ -269,6 +431,25 @@ export function GameStageRouter() {
       socketId,
     ]
   );
+
+  if (cancelledMatch) {
+    return (
+      <CancelledMatchScreen
+        ticketRefunded={cancelledMatch.ticketRefunded}
+        onPlayAgain={() => {
+          if (matchType === "ranked") {
+            markRankedQueueIntent("play_again");
+            resetRealtime();
+            clearRankedMatchmaking();
+            setStage("matchmaking");
+            return;
+          }
+          exitToPlay("generic");
+        }}
+        onReturnToPlay={() => exitToPlay("generic")}
+      />
+    );
+  }
 
   if (config?.mode === "training") {
     return <TrainingMatchScreen onComplete={() => exitToPlay("training_complete")} />;
@@ -291,6 +472,7 @@ export function GameStageRouter() {
           rankedSearchDurationMs={rankedSearchDurationMs}
           rankedSearchStartedAt={rankedSearchStartedAt}
           rankedFoundOpponent={rankedFoundOpponent}
+          notice={rankedBootNotice}
           selfUsername={player.username}
           selfAvatarCustomization={player.avatarCustomization}
           debugInfo={matchmakingDebugInfo}
@@ -472,6 +654,15 @@ export function GameStageRouter() {
           playAgainHint={playAgainHint}
           onPlayAgain={async () => {
             if (matchType === "ranked") {
+              trackRankedPlayAgainClicked({
+                matchId: final?.matchId ?? realtimeMatch.matchId ?? null,
+                matchType,
+                mode: (realtimeMatch as { mode?: string | null }).mode ?? config?.mode ?? matchType,
+                stage,
+                cachedTickets: storeWallet?.tickets ?? null,
+                walletFetching,
+                playAgainDisabled,
+              });
               // Revalidate against the live wallet — the cached value can lag
               // the post-match invalidation refetch (mirrors play/page.tsx).
               let liveTickets = storeWallet?.tickets ?? 0;
@@ -490,6 +681,7 @@ export function GameStageRouter() {
                 toast.error(t("modeConfirm.notEnoughTickets"));
                 return;
               }
+              markRankedQueueIntent("play_again");
               resetRealtime();
               clearRankedMatchmaking();
               setStage("matchmaking");

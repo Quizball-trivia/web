@@ -1,5 +1,6 @@
 import type {
   DraftCategory,
+  DraftWaitingForReadyPayload,
   ErrorPayload,
   LobbyChallengeInvitePayload,
   LobbyState,
@@ -25,7 +26,13 @@ export interface DraftStatus {
   categories: DraftCategory[];
   bans: Record<string, string>;
   turnUserId: string | null;
+  /** Backend UI-ready gate force deadline. Never use as the visible turn timer. */
+  forceAtMs?: number | null;
+  /** Local anchor for the visible 15-second human turn countdown. */
+  turnAnchorMs?: number | null;
   halfOneCategoryId: string | null;
+  turnActive: boolean;
+  waitingForReady: DraftWaitingForReadyPayload | null;
 }
 
 export interface MatchQuestionState {
@@ -95,6 +102,11 @@ export interface PartyDropoutStatus extends MatchPartyDropoutPayload {
   createdAt: number;
 }
 
+export interface CancelledMatchStatus {
+  matchId: string;
+  ticketRefunded: boolean;
+}
+
 export interface DevPossessionAnimation {
   id: number;
   result: 'goal' | 'saved' | 'miss';
@@ -131,6 +143,7 @@ export interface RealtimeState {
   rejoinMatch: RejoinMatchStatus | null;
   forfeitPending: ForfeitPendingStatus | null;
   partyDropout: PartyDropoutStatus | null;
+  cancelledMatch: CancelledMatchStatus | null;
   autoRejoinSuppressedMatchId: string | null;
   devPossessionAnimation: DevPossessionAnimation | null;
   error: ErrorPayload | null;
@@ -143,7 +156,14 @@ export interface RealtimeState {
   suppressLobbyBanner: (durationMs?: number, reason?: LobbyBannerSuppressionReason) => void;
   clearLobbyBannerSuppression: () => void;
   setDraftStart: (draft: import('@/lib/realtime/socket.types').DraftState) => void;
-  setDraftBan: (actorId: string, categoryId: string) => void;
+  setDraftWaitingForReady: (payload: DraftWaitingForReadyPayload) => void;
+  setDraftBegin: (payload: import('@/lib/realtime/socket.types').DraftBeginPayload) => void;
+  setDraftBan: (
+    actorId: string,
+    categoryId: string,
+    forceAtMs?: number | null,
+    turnUserId?: string | null,
+  ) => void;
   setDraftComplete: (halfOneCategoryId: string) => void;
   setMatchStart: (payload: import('@/lib/realtime/socket.types').MatchStartPayload) => void;
   setMatchCountdown: (payload: import('@/lib/realtime/socket.types').MatchCountdownPayload) => void;
@@ -167,6 +187,7 @@ export interface RealtimeState {
   setQuestionPhase: (phase: 'reveal' | 'playing') => void;
   setRoundResult: (payload: MatchRoundResultPayload) => void;
   setFinalResults: (payload: MatchFinalResultsPayload) => void;
+  setMatchCancelled: (payload: CancelledMatchStatus) => void;
   setForfeitPending: (payload: MatchForfeitPendingPayload) => void;
   clearForfeitPending: () => void;
   setPartyDropout: (payload: MatchPartyDropoutPayload) => void;

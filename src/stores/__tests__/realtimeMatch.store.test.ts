@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { useRealtimeMatchStore } from '../realtimeMatch.store';
+import { selectDraftCountdownSeconds } from '../realtime-match/selectors';
 import type {
   LobbyState,
   MatchFinalResultsPayload,
@@ -150,6 +151,111 @@ function makeLobby(lobbyId = NEW_LOBBY_ID): LobbyState {
 describe('realtimeMatch.store — setMatchState shouldClearQuestion', () => {
   beforeEach(() => {
     useRealtimeMatchStore.getState().reset();
+  });
+
+  it('stores terminal cancellation while clearing the abandoned match and transient state', () => {
+    seedMatch();
+    const store = useRealtimeMatchStore.getState();
+    store.setMatchPaused({ graceMs: 30_000, remainingReconnects: 0 });
+
+    store.setMatchCancelled({ matchId: MATCH_ID, ticketRefunded: true });
+
+    const cancelled = useRealtimeMatchStore.getState();
+    expect(cancelled.match).toBeNull();
+    expect(cancelled.cancelledMatch).toEqual({ matchId: MATCH_ID, ticketRefunded: true });
+    expect(cancelled.matchPaused).toBe(false);
+    expect(cancelled.remainingReconnects).toBeNull();
+
+    cancelled.reset();
+    expect(useRealtimeMatchStore.getState().cancelledMatch).toBeNull();
+  });
+
+  describe('draft start resync', () => {
+    it('starts a <=15s human countdown after draft:begin instead of rendering forceAtMs', () => {
+      const store = useRealtimeMatchStore.getState();
+      store.setDraftStart({
+        lobbyId: 'lobby-1',
+        categories: [{ id: 'cat-1', name: { en: 'Premier League' }, icon: null }],
+        turnUserId: USER_A,
+        forceAtMs: null,
+      });
+
+      expect(useRealtimeMatchStore.getState().draft?.turnActive).toBe(false);
+
+      store.setDraftBegin({ turnUserId: USER_A, forceAtMs: Date.now() + 16_000 });
+      const draft = useRealtimeMatchStore.getState().draft;
+      expect(draft?.turnActive).toBe(true);
+      expect(draft?.forceAtMs).toEqual(expect.any(Number));
+      expect(selectDraftCountdownSeconds({ draft })).toBeLessThanOrEqual(15);
+    });
+
+    it('activates legacy drafts when turn events arrive without draft:begin', () => {
+      const store = useRealtimeMatchStore.getState();
+      store.setDraftStart({
+        lobbyId: 'lobby-1',
+        categories: [{ id: 'cat-1', name: { en: 'Premier League' }, icon: null }],
+        turnUserId: USER_A,
+        forceAtMs: null,
+      });
+
+      store.setDraftBan(USER_B, 'cat-1', Date.now() + 15_000);
+
+      expect(useRealtimeMatchStore.getState().draft?.turnActive).toBe(true);
+    });
+
+    it('preserves existing bans when draft:start replays the same lobby', () => {
+      const store = useRealtimeMatchStore.getState();
+
+      store.setDraftStart({
+        lobbyId: 'lobby-1',
+        categories: [
+          { id: 'cat-1', name: { en: 'Premier League' }, icon: null },
+          { id: 'cat-2', name: { en: 'World Cup' }, icon: null },
+        ],
+        turnUserId: USER_A,
+      });
+      store.setDraftBan(USER_A, 'cat-1');
+
+      store.setDraftStart({
+        lobbyId: 'lobby-1',
+        categories: [
+          { id: 'cat-1', name: { en: 'Premier League' }, icon: null },
+          { id: 'cat-2', name: { en: 'World Cup' }, icon: null },
+          { id: 'cat-3', name: { en: 'Champions League' }, icon: null },
+        ],
+        turnUserId: USER_B,
+      });
+
+      const draft = useRealtimeMatchStore.getState().draft;
+      expect(draft?.bans).toEqual({ [USER_A]: 'cat-1' });
+      expect(draft?.categories).toHaveLength(3);
+      expect(draft?.turnUserId).toBe(USER_B);
+    });
+
+    it('resets bans when draft:start moves to a new lobby', () => {
+      const store = useRealtimeMatchStore.getState();
+
+      store.setDraftStart({
+        lobbyId: 'lobby-1',
+        categories: [
+          { id: 'cat-1', name: { en: 'Premier League' }, icon: null },
+          { id: 'cat-2', name: { en: 'World Cup' }, icon: null },
+        ],
+        turnUserId: USER_A,
+      });
+      store.setDraftBan(USER_A, 'cat-1');
+
+      store.setDraftStart({
+        lobbyId: 'lobby-2',
+        categories: [
+          { id: 'cat-3', name: { en: 'Champions League' }, icon: null },
+          { id: 'cat-4', name: { en: 'Europa League' }, icon: null },
+        ],
+        turnUserId: USER_B,
+      });
+
+      expect(useRealtimeMatchStore.getState().draft?.bans).toEqual({});
+    });
   });
 
   // -------------------------------------------------------------------------

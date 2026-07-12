@@ -22,6 +22,19 @@ export interface ExitToPlayAnalyticsProps {
   stage?: string | null;
 }
 
+export type RankedQueueIntentSource =
+  | 'mode_select'
+  | 'play_again'
+  | 'retry'
+  | 'recovery'
+  | 'unknown';
+
+export interface RankedQueueIntent {
+  source: RankedQueueIntentSource;
+  clientRequestId: string;
+  createdAtMs: number;
+}
+
 interface PendingExitToPlayAnalytics extends ExitToPlayAnalyticsProps {
   startedAtMs: number;
   fromPath?: string | null;
@@ -29,6 +42,8 @@ interface PendingExitToPlayAnalytics extends ExitToPlayAnalyticsProps {
 
 const EXIT_TO_PLAY_PENDING_KEY = 'quizball.exit_to_play.pending';
 const EXIT_TO_PLAY_PENDING_TTL_MS = 10 * 60 * 1000;
+const RANKED_QUEUE_INTENT_KEY = 'quizball.ranked_queue.intent';
+const RANKED_QUEUE_INTENT_TTL_MS = 10 * 60 * 1000;
 
 function resultsExitProps(props: ExitToPlayAnalyticsProps) {
   return {
@@ -59,6 +74,88 @@ function readPendingExitToPlay(): PendingExitToPlayAnalytics | null {
     window.sessionStorage.removeItem(EXIT_TO_PLAY_PENDING_KEY);
     return null;
   }
+}
+
+function isRankedQueueIntentSource(value: unknown): value is RankedQueueIntentSource {
+  return (
+    value === 'mode_select' ||
+    value === 'play_again' ||
+    value === 'retry' ||
+    value === 'recovery' ||
+    value === 'unknown'
+  );
+}
+
+function createClientRequestId(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+export function createRankedQueueIntent(source: RankedQueueIntentSource = 'unknown'): RankedQueueIntent {
+  return {
+    source,
+    clientRequestId: createClientRequestId(),
+    createdAtMs: Date.now(),
+  };
+}
+
+function readRankedQueueIntent(): RankedQueueIntent | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.sessionStorage.getItem(RANKED_QUEUE_INTENT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<RankedQueueIntent>;
+    if (
+      !isRankedQueueIntentSource(parsed.source) ||
+      typeof parsed.clientRequestId !== 'string' ||
+      parsed.clientRequestId.trim().length === 0 ||
+      typeof parsed.createdAtMs !== 'number' ||
+      !Number.isFinite(parsed.createdAtMs)
+    ) {
+      window.sessionStorage.removeItem(RANKED_QUEUE_INTENT_KEY);
+      return null;
+    }
+    return {
+      source: parsed.source,
+      clientRequestId: parsed.clientRequestId.trim(),
+      createdAtMs: parsed.createdAtMs,
+    };
+  } catch {
+    try {
+      window.sessionStorage.removeItem(RANKED_QUEUE_INTENT_KEY);
+    } catch {
+      // Ignore storage cleanup failures.
+    }
+    return null;
+  }
+}
+
+export function markRankedQueueIntent(source: RankedQueueIntentSource): RankedQueueIntent | null {
+  if (typeof window === 'undefined') return null;
+  const intent = createRankedQueueIntent(source);
+  try {
+    window.sessionStorage.setItem(RANKED_QUEUE_INTENT_KEY, JSON.stringify(intent));
+  } catch {
+    // Continue without persisted attribution; the queue join will fall back to unknown.
+  }
+  return intent;
+}
+
+export function consumeRankedQueueIntent(nowMs = Date.now()): RankedQueueIntent | null {
+  if (typeof window === 'undefined') return null;
+  const intent = readRankedQueueIntent();
+  try {
+    window.sessionStorage.removeItem(RANKED_QUEUE_INTENT_KEY);
+  } catch {
+    // Ignore storage cleanup failures.
+  }
+  if (!intent) return null;
+  if (nowMs - intent.createdAtMs > RANKED_QUEUE_INTENT_TTL_MS) {
+    return null;
+  }
+  return intent;
 }
 
 export function trackSignupStarted(method: AuthMethod = 'google') {
@@ -236,6 +333,26 @@ export function trackExitToPlayLanded(
     elapsed_ms: Math.max(0, nowMs - props.startedAtMs),
     from_path: props.fromPath ?? null,
     landed_path: props.landedPath ?? null,
+  });
+}
+
+export function trackRankedPlayAgainClicked(props: {
+  matchId?: string | null;
+  matchType?: string | null;
+  mode?: string | null;
+  stage?: string | null;
+  cachedTickets?: number | null;
+  walletFetching?: boolean;
+  playAgainDisabled?: boolean;
+}): void {
+  trackEvent('ranked_play_again_clicked', {
+    match_id: props.matchId ?? null,
+    match_type: props.matchType ?? null,
+    mode: props.mode ?? null,
+    stage: props.stage ?? null,
+    cached_tickets: props.cachedTickets ?? null,
+    wallet_fetching: Boolean(props.walletFetching),
+    play_again_disabled: Boolean(props.playAgainDisabled),
   });
 }
 

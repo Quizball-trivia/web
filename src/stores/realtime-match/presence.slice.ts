@@ -192,11 +192,16 @@ export const createPresenceSlice: StateCreator<RealtimeState, [], [], PresenceSl
 
   clearDraftPaused: () => {
     logger.info('Realtime store clear draft paused');
-    set({
+    set((state) => ({
       draftPaused: false,
       draftPauseUntil: null,
       draftDisconnectedUserId: null,
-    });
+      // Resume re-opens the UI-ready gate. Never expose or auto-fire the stale
+      // pre-pause turn while waiting for the authoritative draft:begin.
+      draft: state.draft
+        ? { ...state.draft, forceAtMs: null, turnActive: false, turnAnchorMs: null }
+        : null,
+    }));
   },
 
   setRejoinAvailable: (payload) => {
