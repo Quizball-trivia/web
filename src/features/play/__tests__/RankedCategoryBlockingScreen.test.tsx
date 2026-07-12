@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { act, render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { RankedCategoryBlockingScreen } from '../RankedCategoryBlockingScreen';
 
@@ -194,6 +194,10 @@ describe('RankedCategoryBlockingScreen', () => {
     vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => undefined);
   });
 
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it('rejoins the draft without owning the ui-ready gate acknowledgement', () => {
     render(<RankedCategoryBlockingScreen />);
 
@@ -250,6 +254,36 @@ describe('RankedCategoryBlockingScreen', () => {
     expect(screen.getByText('8')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'A' })).toBeDisabled();
     expect(screen.queryByText('possession.halftime.yourTurn')).not.toBeInTheDocument();
+  });
+
+  it('debounces a brief inter-turn wait and cancels it when the turn begins', () => {
+    vi.useFakeTimers();
+    realtimeMatchState.draft.turnActive = false;
+    realtimeMatchState.draft.forceAtMs = null;
+
+    const { rerender } = render(<RankedCategoryBlockingScreen />);
+
+    expect(screen.queryByText('banCategory.connecting')).not.toBeInTheDocument();
+
+    act(() => vi.advanceTimersByTime(1_499));
+    expect(screen.queryByText('banCategory.connecting')).not.toBeInTheDocument();
+
+    realtimeMatchState.draft.turnActive = true;
+    rerender(<RankedCategoryBlockingScreen />);
+    act(() => vi.advanceTimersByTime(1));
+
+    expect(screen.queryByText('banCategory.connecting')).not.toBeInTheDocument();
+  });
+
+  it('shows the inter-turn waiting state after the debounce', () => {
+    vi.useFakeTimers();
+    realtimeMatchState.draft.turnActive = false;
+    realtimeMatchState.draft.forceAtMs = null;
+
+    render(<RankedCategoryBlockingScreen />);
+    act(() => vi.advanceTimersByTime(1_500));
+
+    expect(screen.getByText('banCategory.connecting')).toBeInTheDocument();
   });
 
   it('shows a gate countdown when only self is waiting', () => {

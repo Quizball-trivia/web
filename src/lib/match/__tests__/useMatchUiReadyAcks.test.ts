@@ -57,7 +57,7 @@ describe('useMatchUiReadyAcks', () => {
     vi.restoreAllMocks();
   });
 
-  it('re-emits kickoff ready for the same match after the socket id changes', async () => {
+  it('emits kickoff ready on reload boot and re-emits after same-id recovery', async () => {
     const { useMatchUiReadyAcks } = await import('../useMatchUiReadyAcks');
 
     renderHook(() =>
@@ -85,10 +85,42 @@ describe('useMatchUiReadyAcks', () => {
     });
     await act(async () => {
       socketMock.socket.connected = true;
-      socketMock.socket.id = 'socket-2';
+      socketMock.socket.id = 'socket-1';
       socketMock.trigger('connect');
     });
 
     expect(socketMock.emit.mock.calls.filter(([event]) => event === 'match:kickoff_ui_ready')).toHaveLength(2);
+  });
+
+  it('re-emits resume ready after a same-id mid-match reconnect', async () => {
+    const { useMatchUiReadyAcks } = await import('../useMatchUiReadyAcks');
+
+    renderHook(() =>
+      useMatchUiReadyAcks({
+        matchId: 'match-1',
+        currentQuestionIndex: 3,
+        waitingForReady: {
+          matchId: 'match-1',
+          phase: 'resume',
+          readyCount: 0,
+          totalCount: 2,
+          forceStartsAt: '2026-07-08T00:00:00.000Z',
+          forceStartsAtMs: Date.parse('2026-07-08T00:00:00.000Z'),
+        },
+      })
+    );
+
+    expect(socketMock.emit.mock.calls.filter(([event]) => event === 'match:resume_ui_ready')).toHaveLength(1);
+
+    await act(async () => {
+      socketMock.socket.connected = false;
+      socketMock.trigger('disconnect');
+    });
+    await act(async () => {
+      socketMock.socket.connected = true;
+      socketMock.trigger('connect');
+    });
+
+    expect(socketMock.emit.mock.calls.filter(([event]) => event === 'match:resume_ui_ready')).toHaveLength(2);
   });
 });

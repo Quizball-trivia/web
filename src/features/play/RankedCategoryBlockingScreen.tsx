@@ -35,6 +35,9 @@ const poppins = {
   lineHeight: 1,
 } as const;
 
+const DRAFT_WAITING_DEBOUNCE_MS = 1_500;
+const DRAFT_FORCE_CANCEL_COUNTDOWN_MS = 10_000;
+
 function isAiOpponentInfo(opponentInfo: { id?: string; isAiOpponent?: boolean } | null | undefined): boolean {
   if (!opponentInfo) return false;
   if (typeof opponentInfo.isAiOpponent === 'boolean') return opponentInfo.isAiOpponent;
@@ -361,6 +364,7 @@ export function RankedCategoryBlockingScreen() {
   );
   const [draftPauseNowMs, setDraftPauseNowMs] = useState(() => Date.now());
   const [gateNowMs, setGateNowMs] = useState(() => Date.now());
+  const [debouncedGateKey, setDebouncedGateKey] = useState<string | null>(null);
   const [showShowdown, setShowShowdown] = useState(() => {
     if (skipDraftShowdown) return false;
     const currentDraft = useRealtimeMatchStore.getState().draft;
@@ -415,6 +419,19 @@ export function RankedCategoryBlockingScreen() {
     const intervalId = setInterval(tick, 250);
     return () => clearInterval(intervalId);
   }, [draft?.waitingForReady]);
+
+  const draftGateKey = draft?.turnActive === false
+    ? `${draft.lobbyId}:${draft.turnUserId}:${Object.keys(draft.bans).length}`
+    : null;
+
+  useEffect(() => {
+    if (!draftGateKey) return;
+    const timeoutId = setTimeout(
+      () => setDebouncedGateKey(draftGateKey),
+      DRAFT_WAITING_DEBOUNCE_MS,
+    );
+    return () => clearTimeout(timeoutId);
+  }, [draftGateKey]);
 
   useEffect(() => {
     if (!draftPaused || !draftPauseUntil) return;
@@ -476,6 +493,12 @@ export function RankedCategoryBlockingScreen() {
   const waitingSeconds = draft?.waitingForReady && Number.isFinite(forceCancelAtMs)
     ? Math.max(0, Math.ceil((forceCancelAtMs - gateNowMs) / 1000))
     : null;
+  const forceCancelCountdownActive = Number.isFinite(forceCancelAtMs)
+    && forceCancelAtMs - gateNowMs <= DRAFT_FORCE_CANCEL_COUNTDOWN_MS;
+  const showWaitingState = draft?.turnActive === false
+    && (debouncedGateKey === draftGateKey || forceCancelCountdownActive);
+  const visibleWaitingMessage = showWaitingState ? waitingMessage : null;
+  const visibleWaitingSeconds = showWaitingState ? waitingSeconds : null;
 
   const poolCategories = draft?.categories ?? [];
 
@@ -566,8 +589,8 @@ export function RankedCategoryBlockingScreen() {
       currentActor={currentActor}
       timeLeft={timeLeft}
       turnActive={draft.turnActive}
-      waitingMessage={waitingMessage}
-      waitingSeconds={waitingSeconds}
+      waitingMessage={visibleWaitingMessage}
+      waitingSeconds={visibleWaitingSeconds}
       paused={draftPaused}
       pauseSeconds={pauseSeconds}
       hasResolvedRound={hasResolvedRound}

@@ -42,17 +42,24 @@ export function useMatchUiReadyAcks({
   waitingForReady,
 }: UseMatchUiReadyAcksParams): void {
   const [socketConnectionKey, setSocketConnectionKey] = useState(getSocketConnectionKey);
+  const [connectGeneration, setConnectGeneration] = useState(0);
   const kickoffAckedKeyRef = useRef<string | null>(null);
   const resumeAckedKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
     const socket = getSocket();
     const updateConnectionKey = () => setSocketConnectionKey(getSocketConnectionKey());
-    socket.on('connect', updateConnectionKey);
+    const handleConnect = () => {
+      kickoffAckedKeyRef.current = null;
+      resumeAckedKeyRef.current = null;
+      updateConnectionKey();
+      setConnectGeneration((generation) => generation + 1);
+    };
+    socket.on('connect', handleConnect);
     socket.on('disconnect', updateConnectionKey);
     queueMicrotask(updateConnectionKey);
     return () => {
-      socket.off('connect', updateConnectionKey);
+      socket.off('connect', handleConnect);
       socket.off('disconnect', updateConnectionKey);
     };
   }, []);
@@ -74,6 +81,7 @@ export function useMatchUiReadyAcks({
     });
   }, [
     currentQuestionIndex,
+    connectGeneration,
     matchId,
     socketConnectionKey,
     waitingForReady?.forceStartsAt,
@@ -99,5 +107,5 @@ export function useMatchUiReadyAcks({
         socketId: socket.id ?? null,
       });
     });
-  }, [matchId, socketConnectionKey, waitingForReady?.forceStartsAt, waitingForReady?.phase]);
+  }, [connectGeneration, matchId, socketConnectionKey, waitingForReady?.forceStartsAt, waitingForReady?.phase]);
 }
