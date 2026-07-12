@@ -387,6 +387,30 @@ export function GameStageRouter() {
     setStage("finalResults");
   }, [realtimeMatchId, setStage]);
 
+  // Self-heal for a lost match:final_results after forfeit: the finalResults
+  // stage without data only ever means "we forfeited and are waiting". If the
+  // server's emit was lost in flight (restart, transient error), nothing would
+  // ever arrive — re-emit match:forfeit, which the server answers on a
+  // non-active match by replaying the stored terminal results.
+  const finalResultsArrived = Boolean(realtimeMatch.finalResults);
+  useEffect(() => {
+    if (stage !== "finalResults" || finalResultsArrived || !realtimeMatchId) return;
+    let attempts = 0;
+    const intervalId = setInterval(() => {
+      attempts += 1;
+      if (attempts > 3) {
+        clearInterval(intervalId);
+        return;
+      }
+      getSocket().emit("match:forfeit", { matchId: realtimeMatchId });
+      logger.info("Retrying match:forfeit for missing final results", {
+        matchId: realtimeMatchId,
+        attempt: attempts,
+      });
+    }, 6000);
+    return () => clearInterval(intervalId);
+  }, [stage, finalResultsArrived, realtimeMatchId]);
+
   const handleMatchmakingExit = useCallback(() => {
     if (matchType === "ranked") {
       useRankedMatchmakingStore.getState().markRankedCancelRequested();
