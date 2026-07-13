@@ -6,10 +6,6 @@ import { ShowdownScreen } from '@/components/ShowdownScreen';
 import { Volume2, VolumeX } from 'lucide-react';
 import { isMuted as getIsMuted, toggleMute } from '@/lib/sounds/gameSounds';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
-import {
-  selectDraftCountdownSeconds,
-  selectHasResolvedRound,
-} from '@/stores/realtime-match/selectors';
 import { useRankedMatchmakingStore } from '@/stores/rankedMatchmaking.store';
 import { useGameSessionStore } from '@/stores/gameSession.store';
 import { getSocket } from '@/lib/realtime/socket-client';
@@ -34,9 +30,6 @@ const poppins = {
   letterSpacing: '0',
   lineHeight: 1,
 } as const;
-
-const DRAFT_WAITING_DEBOUNCE_MS = 1_500;
-const DRAFT_FORCE_CANCEL_COUNTDOWN_MS = 10_000;
 
 function isAiOpponentInfo(opponentInfo: { id?: string; isAiOpponent?: boolean } | null | undefined): boolean {
   if (!opponentInfo) return false;
@@ -70,12 +63,8 @@ export interface BanCategoryViewProps {
   phase: 'ban' | 'ready';
   currentActor: 'player' | 'opponent';
   timeLeft: number;
-  turnActive?: boolean;
-  waitingMessage?: string | null;
-  waitingSeconds?: number | null;
   paused?: boolean;
   pauseSeconds?: number | null;
-  hasResolvedRound?: boolean;
   soundMuted: boolean;
   onToggleSound: () => void;
   onBanCategory: (categoryId: string) => void;
@@ -157,12 +146,8 @@ export function BanCategoryView({
   phase,
   currentActor,
   timeLeft,
-  turnActive = true,
-  waitingMessage = null,
-  waitingSeconds = null,
   paused = false,
   pauseSeconds = null,
-  hasResolvedRound = false,
   soundMuted,
   onToggleSound,
   onBanCategory,
@@ -197,9 +182,7 @@ export function BanCategoryView({
                 {t('possession.opponentDisconnected')}
               </div>
               <div className="mt-1 font-poppins text-sm font-semibold text-white/70">
-                {hasResolvedRound
-                  ? t('possession.opponentDisconnectedWinIfNotReturn', { seconds: pauseSeconds })
-                  : t('possession.opponentDisconnectedCancelIfNotReturn')}
+                {t('possession.waitingForReconnect')}
               </div>
               <div className="mt-4 inline-flex items-center justify-center rounded-full bg-black/30 px-6 py-2 font-poppins text-3xl font-semibold tabular-nums text-white">
                 {pauseSeconds}
@@ -221,17 +204,15 @@ export function BanCategoryView({
           />
 
           {/* Center timer pill */}
-          {turnActive ? (
-            <div
-              className={cn(
-                'flex h-14 min-w-[72px] items-center justify-center rounded-full px-6 text-3xl tabular-nums text-white transition-colors',
-                timeLeft <= 5 ? 'bg-brand-red-soft animate-pulse' : 'bg-brand-blue'
-              )}
-              style={poppins}
-            >
-              {timeLeft}
-            </div>
-          ) : <div className="min-w-[72px]" />}
+          <div
+            className={cn(
+              'flex h-14 min-w-[72px] items-center justify-center rounded-full px-6 text-3xl tabular-nums text-white transition-colors',
+              timeLeft <= 5 ? 'bg-brand-red-soft animate-pulse' : 'bg-brand-blue'
+            )}
+            style={poppins}
+          >
+            {timeLeft}
+          </div>
 
           {/* Opponent (Right) */}
           <PlayerHeader
@@ -262,20 +243,14 @@ export function BanCategoryView({
             className="text-3xl uppercase text-white sm:text-4xl"
             style={poppins}
           >
-            {waitingMessage
-              ? waitingMessage
-              : paused
+            {paused
               ? t('possession.waiting')
               : phase === 'ban'
                 ? t('banCategory.title')
                 : t('possession.getReady')}
           </h2>
           {/* Turn indicator — clearly shows whose turn it is to ban. */}
-          {waitingMessage && waitingSeconds != null ? (
-            <p className="mt-3 text-2xl tabular-nums text-brand-yellow" style={poppins}>
-              {waitingSeconds}
-            </p>
-          ) : phase === 'ban' && !paused && turnActive ? (
+          {phase === 'ban' && !paused ? (
             <p
               className={cn(
                 'mt-2 text-sm uppercase tracking-[0.12em] sm:text-base',
@@ -308,7 +283,6 @@ export function BanCategoryView({
               const isBanned = isPlayerBanned || isOpponentBanned;
 
               const disabled =
-                !turnActive ||
                 paused ||
                 (!!playerBannedId && !isPlayerBanned && phase === 'ban') ||
                 isOpponentBanned ||
@@ -352,19 +326,14 @@ export function RankedCategoryBlockingScreen() {
   const draft = useRealtimeMatchStore((state) => state.draft);
   const draftPaused = useRealtimeMatchStore((state) => state.draftPaused);
   const draftPauseUntil = useRealtimeMatchStore((state) => state.draftPauseUntil);
-  const hasResolvedRound = useRealtimeMatchStore(selectHasResolvedRound);
   const rankedFoundOpponent = useRankedMatchmakingStore((state) => state.rankedFoundOpponent);
   const rankedFoundMyRecentForm = useRankedMatchmakingStore((state) => state.rankedFoundMyRecentForm);
   const matchOpponent = useRealtimeMatchStore((state) => state.match?.opponent);
   const myRecentForm = useRealtimeMatchStore((s) => s.match?.myRecentForm);
   const skipDraftShowdown = useGameSessionStore((state) => state.config?.skipDraftShowdown === true);
   const { data: rankedProfile } = useRankedProfile();
-  const [timeLeft, setTimeLeft] = useState(() =>
-    selectDraftCountdownSeconds(useRealtimeMatchStore.getState())
-  );
+  const [timeLeft, setTimeLeft] = useState(15);
   const [draftPauseNowMs, setDraftPauseNowMs] = useState(() => Date.now());
-  const [gateNowMs, setGateNowMs] = useState(() => Date.now());
-  const [debouncedGateKey, setDebouncedGateKey] = useState<string | null>(null);
   const [showShowdown, setShowShowdown] = useState(() => {
     if (skipDraftShowdown) return false;
     const currentDraft = useRealtimeMatchStore.getState().draft;
@@ -375,6 +344,7 @@ export function RankedCategoryBlockingScreen() {
   });
   const autoBanFired = useRef(false);
   const rejoinedDraftLobbyRef = useRef<string | null>(null);
+  const draftUiReadyRef = useRef<string | null>(null);
   const [soundMuted, setSoundMuted] = useState(() => getIsMuted());
 
   const opponentMember = useMemo(
@@ -404,37 +374,46 @@ export function RankedCategoryBlockingScreen() {
   }, [draft?.lobbyId, lobby?.lobbyId, selfUserId]);
 
   useEffect(() => {
-    if (!draft || !draft.turnActive || showShowdown || draftPaused) return;
+    if (!draft || showShowdown || draftPaused) return;
+    setTimeLeft(15);
     autoBanFired.current = false;
-    const tick = () => setTimeLeft(selectDraftCountdownSeconds({ draft }));
-    tick();
-    const interval = setInterval(tick, 250);
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
     return () => clearInterval(interval);
-  }, [draft, draft?.turnActive, draftPaused, showShowdown]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draft?.turnUserId, draft?.halfOneCategoryId, draft?.categories, draftPaused, showShowdown]);
+
+  const draftBanCount = draft ? Object.keys(draft.bans).length : 0;
 
   useEffect(() => {
-    if (!draft?.waitingForReady) return;
-    const tick = () => setGateNowMs(Date.now());
-    tick();
-    const intervalId = setInterval(tick, 250);
-    return () => clearInterval(intervalId);
-  }, [draft?.waitingForReady]);
-
-  const draftGateKey = draft?.turnActive === false
-    ? `${draft.lobbyId}:${draft.turnUserId}:${Object.keys(draft.bans).length}`
-    : null;
-
-  useEffect(() => {
-    if (!draftGateKey) {
-      setDebouncedGateKey(null);
+    if (!draft || !lobby || showShowdown || draftPaused || draft.halfOneCategoryId || !draft.turnUserId || !selfUserId) {
+      draftUiReadyRef.current = null;
       return;
     }
-    const timeoutId = setTimeout(
-      () => setDebouncedGateKey(draftGateKey),
-      DRAFT_WAITING_DEBOUNCE_MS,
-    );
-    return () => clearTimeout(timeoutId);
-  }, [draftGateKey]);
+
+    const lobbyId = draft.lobbyId ?? lobby.lobbyId;
+    const turnUserId = draft.turnUserId;
+    const readyKey = `${lobbyId}:${selfUserId}:${turnUserId}:${draftBanCount}`;
+    if (draftUiReadyRef.current === readyKey) return;
+
+    const frameId = window.requestAnimationFrame(() => {
+      getSocket().emit('draft:ui_ready', { lobbyId, turnUserId, banCount: draftBanCount });
+      draftUiReadyRef.current = readyKey;
+      logger.info('Socket emit draft:ui_ready', { lobbyId, turnUserId, banCount: draftBanCount });
+    });
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [
+    draft?.lobbyId,
+    lobby?.lobbyId,
+    showShowdown,
+    draftPaused,
+    draft?.halfOneCategoryId,
+    draft?.turnUserId,
+    draftBanCount,
+    selfUserId,
+  ]);
 
   useEffect(() => {
     if (!draftPaused || !draftPauseUntil) return;
@@ -447,7 +426,6 @@ export function RankedCategoryBlockingScreen() {
   // Auto-ban a random category when timer expires on player's turn
   useEffect(() => {
     if (timeLeft !== 0 || autoBanFired.current) return;
-    if (!draft?.turnActive) return;
     if (draftPaused) return;
     if (!selfUserId) return;
     if (!draft || draft.halfOneCategoryId) return;
@@ -463,7 +441,7 @@ export function RankedCategoryBlockingScreen() {
     autoBanFired.current = true;
     getSocket().emit('draft:ban', { categoryId: randomCategory.id });
     logger.info('Auto-ban on timer expiry', { categoryId: randomCategory.id });
-  }, [timeLeft, draft, draft?.turnActive, draftPaused, selfUserId]);
+  }, [timeLeft, draft, draftPaused, selfUserId]);
 
   useEffect(() => {
     if (showShowdown) {
@@ -481,28 +459,6 @@ export function RankedCategoryBlockingScreen() {
   const pauseSeconds = draftPauseUntil
     ? Math.max(0, Math.ceil((draftPauseUntil - draftPauseNowMs) / 1000))
     : null;
-  const opponentWaiting = Boolean(
-    draft?.waitingForReady?.waitingUserIds.some((userId) => userId !== selfUserId)
-  );
-  const selfWaiting = Boolean(selfUserId && draft?.waitingForReady?.waitingUserIds.includes(selfUserId));
-  const waitingMessage = opponentWaiting
-    ? t('banCategory.opponentConnecting')
-    : selfWaiting || !draft?.turnActive
-      ? t('banCategory.connecting')
-      : null;
-  const forceCancelAtMs = draft?.waitingForReady
-    ? Date.parse(draft.waitingForReady.forceCancelAt)
-    : Number.NaN;
-  const waitingSeconds = draft?.waitingForReady && Number.isFinite(forceCancelAtMs)
-    ? Math.max(0, Math.ceil((forceCancelAtMs - gateNowMs) / 1000))
-    : null;
-  const forceCancelCountdownActive = Number.isFinite(forceCancelAtMs)
-    && forceCancelAtMs - gateNowMs <= DRAFT_FORCE_CANCEL_COUNTDOWN_MS
-    && forceCancelAtMs > gateNowMs;
-  const showWaitingState = draft?.turnActive === false
-    && (debouncedGateKey === draftGateKey || forceCancelCountdownActive);
-  const visibleWaitingMessage = showWaitingState ? waitingMessage : null;
-  const visibleWaitingSeconds = showWaitingState ? waitingSeconds : null;
 
   const poolCategories = draft?.categories ?? [];
 
@@ -518,13 +474,12 @@ export function RankedCategoryBlockingScreen() {
     ?? rankedFoundOpponent?.country
     ?? null;
   const handleBanCategory = useCallback((categoryId: string) => {
-    if (!draft?.turnActive) return;
     if (draftPaused) return;
     if (!selfUserId) return;
     useRealtimeMatchStore.getState().setDraftBan(selfUserId, categoryId);
     getSocket().emit('draft:ban', { categoryId });
     logger.info('Socket emit draft:ban (optimistic)', { categoryId });
-  }, [draft?.turnActive, draftPaused, selfUserId]);
+  }, [draftPaused, selfUserId]);
 
   if (!draft || !lobby) {
     return <LoadingScreen text={t('play.preparingMatch')} />;
@@ -592,12 +547,8 @@ export function RankedCategoryBlockingScreen() {
       phase={phase}
       currentActor={currentActor}
       timeLeft={timeLeft}
-      turnActive={draft.turnActive}
-      waitingMessage={visibleWaitingMessage}
-      waitingSeconds={visibleWaitingSeconds}
       paused={draftPaused}
       pauseSeconds={pauseSeconds}
-      hasResolvedRound={hasResolvedRound}
       soundMuted={soundMuted}
       onToggleSound={() => setSoundMuted(toggleMute())}
       onBanCategory={handleBanCategory}
