@@ -332,15 +332,17 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
       clearTimeout(autoAdvanceTimeoutRef.current);
       autoAdvanceTimeoutRef.current = null;
     }
+    // A round only settles money if a bet was CONFIRMED. When the timer runs
+    // out with nothing confirmed, the bank carries forward untouched — zeroing
+    // it (the old behavior) put players into unplayable 0-coin rounds that
+    // still auto-advanced, and most runs ended at 0 that way.
     const correctBet = bets[currentQuestion.correctAnswerIndex];
-    const newMoney = correctBet;
+    const newMoney = hasConfirmed ? correctBet : currentMoney;
     setCurrentMoney(newMoney);
-    // On a MANUAL advance, $0 ends the game (you're out of money — MoneyDrop's
-    // core rule). On an AUTO advance (timer ran out), don't punish the player
-    // with game-over for not betting in time: carry $0 forward and keep going,
-    // ending only when the last question is reached.
+    // Busting on a confirmed bet ends the run immediately, auto or manual —
+    // MoneyDrop's core rule. There are no playable rounds with 0 coins.
     const isLast = currentQuestionIndex >= questions.length - 1;
-    if (isLast || (newMoney === 0 && !options?.auto)) {
+    if (isLast || newMoney === 0) {
       onComplete(newMoney);
       return;
     }
