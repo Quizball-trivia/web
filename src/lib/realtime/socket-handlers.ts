@@ -54,6 +54,29 @@ let _queryClient: QueryClient | null = null;
 let _handlersRegistered = false;
 let _draftUiReadyGate: { lobbyId: string; turnUserId: string; banCount: number } | null = null;
 let _draftUiReadyAckedKey: string | null = null;
+let _draftUiReadyReAck: ReturnType<typeof setInterval> | null = null;
+
+// While the server says WE are the not-ready seat, re-send the ack every 2s.
+// A single lost draft:ui_ready otherwise strands the draft in the waiting
+// state until the gate deadline cancels it under the player.
+function startDraftUiReadyReAck(): void {
+  if (_draftUiReadyReAck) return;
+  _draftUiReadyReAck = setInterval(() => {
+    if (!_draftUiReadyGate) {
+      stopDraftUiReadyReAck();
+      return;
+    }
+    _draftUiReadyAckedKey = null;
+    emitDraftUiReadyForOpenGate();
+  }, 2000);
+}
+
+function stopDraftUiReadyReAck(): void {
+  if (_draftUiReadyReAck) {
+    clearInterval(_draftUiReadyReAck);
+    _draftUiReadyReAck = null;
+  }
+}
 
 function getQueryClient(): QueryClient | null {
   return _queryClient;
@@ -354,6 +377,7 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       };
       if (state.selfUserId && data.waitingUserIds.includes(state.selfUserId)) {
         _draftUiReadyAckedKey = null;
+        startDraftUiReadyReAck();
       }
       logDraftGateEvent('received draft:waiting_for_ready', data, receivedAtMs);
       emitDraftUiReadyForOpenGate();
@@ -365,6 +389,7 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
   socket.on('draft:begin', (data) => {
     const receivedAtMs = Date.now();
     _draftUiReadyGate = null;
+    stopDraftUiReadyReAck();
     _draftUiReadyAckedKey = null;
     store.setDraftBegin(data);
     logDraftGateEvent('received draft:begin', data, receivedAtMs);
@@ -397,6 +422,7 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       halfOneCategoryId: data.halfOneCategoryId,
     });
     _draftUiReadyGate = null;
+    stopDraftUiReadyReAck();
     _draftUiReadyAckedKey = null;
     store.setDraftComplete(data.halfOneCategoryId);
   });
@@ -796,5 +822,6 @@ export function resetSocketHandlers(): void {
   _handlersRegistered = false;
   _queryClient = null;
   _draftUiReadyGate = null;
+  stopDraftUiReadyReAck();
   _draftUiReadyAckedKey = null;
 }
