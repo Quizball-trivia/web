@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { queryKeys } from '@/lib/queries/queryKeys';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { useRankedMatchmakingStore } from '@/stores/rankedMatchmaking.store';
+import { useGameSessionStore } from '@/stores/gameSession.store';
 import { __setSocketOverride } from '../socket-client';
 import type { Socket } from 'socket.io-client';
 import type { ServerToClientEvents, ClientToServerEvents } from '../socket.types';
@@ -51,7 +52,9 @@ function createMockSocket() {
     emit: vi.fn(),
   } as unknown as Socket<ServerToClientEvents, ClientToServerEvents>;
 
-  function fire<K extends keyof EventMap>(event: K, ...args: Parameters<EventMap[K]>) {
+  function fire<K extends keyof EventMap>(event: K, ...args: Parameters<EventMap[K]>): void;
+  function fire(event: string, ...args: unknown[]): void;
+  function fire(event: string, ...args: unknown[]) {
     const handlers = listeners.get(event as string);
     if (handlers) {
       for (const handler of handlers) {
@@ -74,6 +77,7 @@ describe('registerSocketHandlers', () => {
     // Reset store to clean state
     useRealtimeMatchStore.getState().reset();
     useRealtimeMatchStore.setState({ selfUserId: null });
+    useGameSessionStore.getState().reset();
     useRankedMatchmakingStore.setState({
       rankedSearchDurationMs: null,
       rankedSearchStartedAt: null,
@@ -81,6 +85,9 @@ describe('registerSocketHandlers', () => {
       rankedFoundMyRecentForm: null,
       rankedSearching: false,
       rankedCancelRequestedAt: null,
+      rankedQueueLeftAt: null,
+      rankedQueueLeftSeq: 0,
+      rankedQueueLeftSource: null,
     });
     getMeMock.mockClear();
     authState.setAuthenticated.mockClear();
@@ -163,6 +170,69 @@ describe('registerSocketHandlers', () => {
     expect(draft!.bans).toHaveProperty('user-456');
   });
 
+  it('turns MATCH_ABANDONED into a cancelled terminal state and refreshes the refunded wallet', () => {
+    const queryClient = {
+      invalidateQueries: vi.fn(),
+    };
+    registerSocketHandlers(queryClient as never);
+    useRealtimeMatchStore.getState().setMatchStart({
+      matchId: 'match-abandoned',
+      mode: 'ranked',
+      variant: 'ranked_sim',
+      mySeat: 1,
+      opponent: { id: 'opp-1', username: 'Opponent', avatarUrl: null },
+      participants: [],
+    });
+
+    mockSocket.fire('error', {
+      code: 'MATCH_ABANDONED',
+      message: 'Match abandoned because it could not be resolved from active progress',
+    });
+
+    const state = useRealtimeMatchStore.getState();
+    expect(state.match).toBeNull();
+    expect(state.cancelledMatch).toEqual({
+      matchId: 'match-abandoned',
+      ticketRefunded: true,
+    });
+    expect(state.error).toBeNull();
+    expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: queryKeys.store.wallet(),
+    });
+    expect(queryClient.invalidateQueries).toHaveBeenCalledWith({
+      queryKey: queryKeys.ranked.profile(),
+    });
+  });
+
+  it('preserves the ranked refund on the rehydrated active-match fallback', () => {
+    registerSocketHandlers();
+    useGameSessionStore.getState().startSession({
+      mode: 'ranked',
+      matchType: 'ranked',
+      opponentId: 'opp-1',
+      opponentUsername: 'Opponent',
+    });
+    useGameSessionStore.getState().setStage('playing');
+    useRealtimeMatchStore.getState().setSessionState({
+      state: 'IN_ACTIVE_MATCH',
+      waitingLobbyId: null,
+      activeMatchId: 'match-rehydrated',
+      queueSearchId: null,
+      openLobbyIds: [],
+      resolvedAt: '2026-07-10T00:00:00.000Z',
+    });
+
+    mockSocket.fire('error', {
+      code: 'MATCH_ABANDONED',
+      message: 'Match abandoned because it could not be resolved from active progress',
+    });
+
+    expect(useRealtimeMatchStore.getState().cancelledMatch).toEqual({
+      matchId: 'match-rehydrated',
+      ticketRefunded: true,
+    });
+  });
+
   it('ignores ranked lobby state that arrives after local matchmaking cancel', () => {
     registerSocketHandlers();
     useRankedMatchmakingStore.getState().markRankedCancelRequested();
@@ -239,6 +309,46 @@ describe('registerSocketHandlers', () => {
     expect(state.partyDropout?.matchId).toBe('party-1');
     expect(state.rejoinMatch).toBeNull();
     expect(state.matchPaused).toBe(false);
+  });
+
+  it('auto-emits match:rejoin when rejoin is available on the kickoff ready gate', () => {
+    const opponent = { id: 'opp-1', username: 'Opponent', avatarUrl: null };
+    const participants = [
+      { userId: 'self-1', username: 'Me', avatarUrl: null, seat: 1 },
+      { userId: 'opp-1', username: 'Opponent', avatarUrl: null, seat: 2 },
+    ];
+
+    registerSocketHandlers();
+    useRealtimeMatchStore.getState().setMatchStart({
+      matchId: 'match-ready',
+      mode: 'ranked',
+      variant: 'ranked_sim',
+      mySeat: 1,
+      opponent,
+      participants,
+    });
+    useRealtimeMatchStore.getState().setMatchWaitingForReady({
+      matchId: 'match-ready',
+      phase: 'kickoff',
+      readyCount: 0,
+      totalCount: 2,
+      readyUserIds: [],
+      waitingUserIds: ['self-1', 'opp-1'],
+      forceStartsAt: new Date(Date.now() + 10_000).toISOString(),
+    });
+
+    mockSocket.fire('match:rejoin_available', {
+      matchId: 'match-ready',
+      mode: 'ranked',
+      variant: 'ranked_sim',
+      opponent,
+      participants,
+      graceMs: 60_000,
+      remainingReconnects: 2,
+    });
+
+    expect(mockSocket.socket.emit).toHaveBeenCalledWith('match:rejoin', { matchId: 'match-ready' });
+    expect(useRealtimeMatchStore.getState().rejoinMatch).toBeNull();
   });
 
   it('patches ranked profile cache from match:final_results when rankedOutcome exists for self', () => {

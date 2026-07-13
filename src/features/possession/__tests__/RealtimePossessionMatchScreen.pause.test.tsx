@@ -9,6 +9,7 @@ vi.mock('@/contexts/LocaleContext', () => ({
       const copy: Record<string, string> = {
         'possession.matchPaused': 'Match paused',
         'possession.opponentDisconnected': 'Opponent disconnected',
+        'possession.opponentDisconnectedCancelIfNotReturn': 'Match cancelled and ticket refunded',
         'possession.opponentDisconnectedWinIfNotReturn': `Win if they do not return in ${vars?.seconds}s`,
         'possession.leaveSafely': 'Leave safely',
         'possession.muteAudio': 'Mute audio',
@@ -170,6 +171,47 @@ describe('RealtimePossessionMatchScreen pause overlay', () => {
 
     expect(screen.getByText('Opponent disconnected')).toBeInTheDocument();
     expect(screen.queryByText('Leave safely')).not.toBeInTheDocument();
+  });
+
+  it('promises cancellation and a ticket refund before any round is resolved', () => {
+    render(<RealtimePossessionMatchScreen {...baseProps} />);
+
+    expect(screen.getByText('Match cancelled and ticket refunded')).toBeInTheDocument();
+    expect(screen.queryByText(/Win if they do not return/)).not.toBeInTheDocument();
+  });
+
+  it('keeps the win copy after a round has been resolved', () => {
+    useRealtimeMatchStore.setState((state) => ({
+      match: state.match
+        ? {
+            ...state.match,
+            questions: {
+              0: {
+                payload: {
+                  matchId: 'match-1',
+                  qIndex: 0,
+                  total: 12,
+                  question: {
+                    kind: 'multipleChoice',
+                    id: 'q-0',
+                    prompt: 'Question 0',
+                    options: ['A', 'B'],
+                    categoryName: 'General',
+                  },
+                  deadlineAt: new Date(Date.now() + 10_000).toISOString(),
+                },
+                selfIsCorrect: true,
+                opponentIsCorrect: false,
+              },
+            },
+          }
+        : null,
+    }));
+
+    render(<RealtimePossessionMatchScreen {...baseProps} />);
+
+    expect(screen.getByText('Win if they do not return in 8s')).toBeInTheDocument();
+    expect(screen.queryByText('Match cancelled and ticket refunded')).not.toBeInTheDocument();
   });
 
   it('uses kickoff ready badges instead of the ready overlay before ranked kickoff countdown starts', () => {

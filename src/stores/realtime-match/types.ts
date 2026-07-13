@@ -95,6 +95,11 @@ export interface PartyDropoutStatus extends MatchPartyDropoutPayload {
   createdAt: number;
 }
 
+export interface CancelledMatchStatus {
+  matchId: string;
+  ticketRefunded: boolean;
+}
+
 export interface DevPossessionAnimation {
   id: number;
   result: 'goal' | 'saved' | 'miss';
@@ -131,6 +136,7 @@ export interface RealtimeState {
   rejoinMatch: RejoinMatchStatus | null;
   forfeitPending: ForfeitPendingStatus | null;
   partyDropout: PartyDropoutStatus | null;
+  cancelledMatch: CancelledMatchStatus | null;
   autoRejoinSuppressedMatchId: string | null;
   devPossessionAnimation: DevPossessionAnimation | null;
   error: ErrorPayload | null;
@@ -167,6 +173,7 @@ export interface RealtimeState {
   setQuestionPhase: (phase: 'reveal' | 'playing') => void;
   setRoundResult: (payload: MatchRoundResultPayload) => void;
   setFinalResults: (payload: MatchFinalResultsPayload) => void;
+  setMatchCancelled: (payload: CancelledMatchStatus) => void;
   setForfeitPending: (payload: MatchForfeitPendingPayload) => void;
   clearForfeitPending: () => void;
   setPartyDropout: (payload: MatchPartyDropoutPayload) => void;

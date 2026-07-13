@@ -16,6 +16,11 @@ import { logger } from "@/utils/logger";
 import { getSocketDebugSnapshot, logSocketDebug } from "@/lib/realtime/socket-client";
 import { GOAL_VISUAL_SEQUENCE_MS } from "@/lib/constants/game";
 import { PENALTY_RESULT_SEQUENCE_HOLD_MS } from "@/features/possession/realtimePossession.helpers";
+import {
+  consumeRankedQueueIntent,
+  createRankedQueueIntent,
+  type RankedQueueIntent,
+} from "@/lib/analytics/game-events";
 
 const STAGE_ORDER: GameStage[] = [
   "idle",
@@ -47,6 +52,7 @@ const GEO_HINT_CACHE_KEY = "ranked_geo_hint_v1";
 const IP_LOOKUP_TIMEOUT_MS = 1800;
 
 type RankedGeoHint = NonNullable<RankedQueueJoinPayload["geoHint"]>;
+type RankedQueueJoinReason = NonNullable<RankedQueueJoinPayload["reason"]>;
 
 interface IpWhoResponse {
   success?: boolean;
@@ -199,10 +205,11 @@ function computeHasSearchAck(
 }
 
 function hasActiveRealtimeSession(snapshot: ReturnType<typeof useRealtimeMatchStore.getState>): boolean {
+  const hasLiveLobby = Boolean(snapshot.lobby?.lobbyId && snapshot.lobby.status !== "closed");
   return Boolean(
     snapshot.match?.matchId ||
       snapshot.draft?.lobbyId ||
-      snapshot.lobby?.lobbyId ||
+      hasLiveLobby ||
       snapshot.sessionState?.activeMatchId ||
       snapshot.sessionState?.waitingLobbyId
   );
@@ -234,7 +241,9 @@ export function useGameStageTransitions({
   const finalStageTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const matchFoundShownAtRef = useRef<number | null>(null);
   const rankedGeoHintRef = useRef<RankedGeoHint | undefined>(undefined);
+  const rankedQueueIntentRef = useRef<RankedQueueIntent | null>(null);
   const rankedRetryCountRef = useRef(0);
+  const rankedSocketDisconnectedRef = useRef(false);
   const lastRoundResolvedAtRef = useRef<number | null>(null);
   const lastRoundResolvedQRef = useRef<number | null>(null);
   const rankedSearchStartedAt = useRankedMatchmakingStore((state) => state.rankedSearchStartedAt);
@@ -347,16 +356,26 @@ export function useGameStageTransitions({
   }, []);
 
   const emitRankedQueueJoin = useCallback(
-    (reason: "initial" | "retry") => {
+    (reason: RankedQueueJoinReason) => {
       const snapshot = useRealtimeMatchStore.getState();
+      const queueIntent =
+        rankedQueueIntentRef.current ??
+        consumeRankedQueueIntent() ??
+        createRankedQueueIntent("unknown");
+      rankedQueueIntentRef.current = queueIntent;
       const payload: RankedQueueJoinPayload = {
         searchMode: "human_first",
+        source: queueIntent.source,
+        reason,
+        clientRequestId: queueIntent.clientRequestId,
         geoHint: rankedGeoHintRef.current,
       };
       useRankedMatchmakingStore.getState().markRankedSearchRequested();
       socket.emit("ranked:queue_join", payload);
       logger.info("Socket emit ranked:queue_join", {
         reason,
+        source: queueIntent.source,
+        clientRequestId: queueIntent.clientRequestId,
         retryCount: rankedRetryCountRef.current,
         payload,
         socketConnected: socket.connected,
@@ -374,6 +393,8 @@ export function useGameStageTransitions({
       });
       logSocketDebug("ranked queue_join emit", {
         reason,
+        source: queueIntent.source,
+        clientRequestId: queueIntent.clientRequestId,
         retryCount: rankedRetryCountRef.current,
         ...getSocketDebugSnapshot(socket),
         sessionState: snapshot.sessionState?.state ?? "NO_SESSION",
@@ -389,9 +410,66 @@ export function useGameStageTransitions({
   );
 
   useEffect(() => {
+    const handleDisconnect = () => {
+      rankedSocketDisconnectedRef.current = true;
+    };
+
+    const handleConnect = () => {
+      if (!rankedSocketDisconnectedRef.current) return;
+      rankedSocketDisconnectedRef.current = false;
+      if (!isMultiplayer || config?.matchType !== "ranked" || stage !== "matchmaking") return;
+
+      const latestRealtime = useRealtimeMatchStore.getState();
+      const latestRanked = useRankedMatchmakingStore.getState();
+      const clientBelievesSearching = Boolean(
+        rankedRequestRef.current ||
+          latestRanked.rankedSearching ||
+          latestRanked.rankedSearchStartedAt
+      );
+      if (
+        !clientBelievesSearching ||
+        latestRanked.rankedFoundOpponent ||
+        latestRanked.rankedCancelRequestedAt !== null ||
+        hasActiveRealtimeSession(latestRealtime)
+      ) {
+        return;
+      }
+
+      latestRanked.invalidateRankedSearchAck();
+      rankedRequestRef.current = true;
+      rankedRetryCountRef.current = 0;
+      clearRankedAckTimer();
+      clearRankedRetryTimer();
+      logSocketDebug("ranked queue_join reconnect recovery", {
+        ...getSocketDebugSnapshot(socket),
+        sessionState: latestRealtime.sessionState?.state ?? "NO_SESSION",
+        queueSearchId: latestRealtime.sessionState?.queueSearchId ?? null,
+        rankedSearching: latestRanked.rankedSearching,
+      });
+      emitRankedQueueJoin("recovery_retry");
+    };
+
+    socket.on("disconnect", handleDisconnect);
+    socket.on("connect", handleConnect);
+    return () => {
+      socket.off("disconnect", handleDisconnect);
+      socket.off("connect", handleConnect);
+    };
+  }, [
+    clearRankedAckTimer,
+    clearRankedRetryTimer,
+    config?.matchType,
+    emitRankedQueueJoin,
+    isMultiplayer,
+    socket,
+    stage,
+  ]);
+
+  useEffect(() => {
     if (!isMultiplayer || config?.matchType !== "ranked") return;
     if (stage !== "matchmaking") {
       rankedRequestRef.current = false;
+      rankedQueueIntentRef.current = null;
       rankedRetryCountRef.current = 0;
       matchFoundShownAtRef.current = null;
       clearRankedAckTimer();
@@ -412,7 +490,7 @@ export function useGameStageTransitions({
         rankedRequestRef.current = true;
         logger.info("Ranked queue join skipped: existing realtime session/search state", {
           hasSearchAck,
-          hasLobby: Boolean(latestRealtime.lobby?.lobbyId),
+          hasLobby: Boolean(latestRealtime.lobby?.lobbyId && latestRealtime.lobby.status !== "closed"),
           hasDraft: Boolean(latestRealtime.draft?.lobbyId),
           activeMatchId: latestRealtime.sessionState?.activeMatchId ?? latestRealtime.match?.matchId ?? null,
           waitingLobbyId: latestRealtime.sessionState?.waitingLobbyId ?? latestRealtime.lobby?.lobbyId ?? null,
@@ -423,7 +501,7 @@ export function useGameStageTransitions({
         });
         logSocketDebug("ranked queue_join skipped existing state", {
           hasSearchAck,
-          hasLobby: Boolean(latestRealtime.lobby?.lobbyId),
+          hasLobby: Boolean(latestRealtime.lobby?.lobbyId && latestRealtime.lobby.status !== "closed"),
           hasDraft: Boolean(latestRealtime.draft?.lobbyId),
           ...getSocketDebugSnapshot(socket),
           sessionState: latestRealtime.sessionState?.state ?? "NO_SESSION",
@@ -601,7 +679,7 @@ export function useGameStageTransitions({
         ...getSocketDebugSnapshot(socket),
         sessionState: useRealtimeMatchStore.getState().sessionState?.state ?? "NO_SESSION",
       });
-      emitRankedQueueJoin("retry");
+      emitRankedQueueJoin("recovery_retry");
     }, RANKED_QUEUE_RETRY_DELAY_MS);
 
     return () => {

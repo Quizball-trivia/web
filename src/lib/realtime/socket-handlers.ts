@@ -1,6 +1,7 @@
 import { getSocket, getSocketDebugSnapshot, logSocketDebug } from './socket-client';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { useRankedMatchmakingStore } from '@/stores/rankedMatchmaking.store';
+import { useGameSessionStore } from '@/stores/gameSession.store';
 import { QueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queries/queryKeys';
 import { logger } from '@/utils/logger';
@@ -59,6 +60,18 @@ function computeServerTimeOffsetMs(serverNow: string | undefined, receivedAtMs =
   if (!serverNow) return undefined;
   const serverNowMs = new Date(serverNow).getTime();
   return Number.isFinite(serverNowMs) ? serverNowMs - receivedAtMs : undefined;
+}
+
+function isKickoffReadyGateRejoinAvailable(data: MatchRejoinAvailablePayload): boolean {
+  const state = useRealtimeMatchStore.getState();
+  const match = state.match;
+  return Boolean(
+    match?.matchId === data.matchId &&
+      match.waitingForReady?.phase === 'kickoff' &&
+      match.currentQuestion === null &&
+      !match.finalResults &&
+      state.autoRejoinSuppressedMatchId !== data.matchId
+  );
 }
 
 export function registerSocketHandlers(queryClient?: QueryClient): void {
@@ -180,6 +193,29 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
 
   socket.on('error', (data: ErrorPayload) => {
     logger.warn('Socket event error', { code: data.code, message: data.message, meta: data.meta });
+    if (data.code === 'MATCH_ABANDONED') {
+      const current = useRealtimeMatchStore.getState();
+      const matchId = current.match?.matchId ?? current.sessionState?.activeMatchId;
+      if (matchId) {
+        const rejoinMode = current.rejoinMatch?.matchId === matchId
+          ? current.rejoinMatch.mode
+          : null;
+        const gameSession = useGameSessionStore.getState();
+        const sessionMode = gameSession.stage === 'playing'
+          ? gameSession.config?.matchType
+          : null;
+        current.setMatchCancelled({
+          matchId,
+          ticketRefunded: (current.match?.mode ?? rejoinMode ?? sessionMode) === 'ranked',
+        });
+        const qc = getQueryClient();
+        if (qc) {
+          void qc.invalidateQueries({ queryKey: queryKeys.store.wallet() });
+          void qc.invalidateQueries({ queryKey: queryKeys.ranked.profile() });
+        }
+        return;
+      }
+    }
     if (
       data.code === 'RANKED_QUEUE_BLOCKED' ||
       data.code === 'RANKED_QUEUE_UNAVAILABLE' ||
@@ -192,7 +228,7 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
         meta: data.meta ?? null,
         ...getSocketDebugSnapshot(socket),
       });
-      useRankedMatchmakingStore.getState().setRankedQueueLeft();
+      useRankedMatchmakingStore.getState().setRankedQueueLeft('socket_error');
     }
     // Rollback optimistic draft ban on server rejection
     if (
@@ -589,6 +625,11 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       remainingReconnects: data.remainingReconnects,
     });
     store.setRejoinAvailable(data);
+    if (isKickoffReadyGateRejoinAvailable(data)) {
+      socket.emit('match:rejoin', { matchId: data.matchId });
+      store.clearRejoinAvailable();
+      logger.info('Socket emit match:rejoin from kickoff ready gate', { matchId: data.matchId });
+    }
   });
 
   socket.on('ranked:search_started', (data: RankedSearchStartedPayload) => {
@@ -619,7 +660,7 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
   socket.on('ranked:queue_left', () => {
     logger.info('Socket event ranked:queue_left');
     logSocketDebug('ranked queue_left event', getSocketDebugSnapshot(socket));
-    useRankedMatchmakingStore.getState().setRankedQueueLeft();
+    useRankedMatchmakingStore.getState().setRankedQueueLeft('server_event');
   });
 
   socket.on('presence:online_count', (data: PresenceOnlineCountPayload) => {

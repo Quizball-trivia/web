@@ -11,6 +11,7 @@ import { useLocale } from '@/contexts/LocaleContext';
 import { useMatchUiReadyAcks } from '@/lib/match/useMatchUiReadyAcks';
 import { useMatchStagePresence } from '@/lib/realtime/useMatchStagePresence';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
+import { selectHasResolvedRound } from '@/stores/realtime-match/selectors';
 import { BarBattleFlightOverlay } from './components/BarBattleFlightOverlay';
 import { HalftimeScreen } from './components/HalftimeScreen';
 import { KickoffCountdownOverlay } from './components/KickoffCountdownOverlay';
@@ -59,6 +60,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
   // classic variant. Manages its own state internally.
   const barBattleFlights = usePossessionBarBattleFlights();
   const matchPaused = useRealtimeMatchStore((state) => state.matchPaused);
+  const hasResolvedRound = useRealtimeMatchStore(selectHasResolvedRound);
   const hasMatch = useRealtimeMatchStore((state) => state.match != null);
   const matchId = useRealtimeMatchStore((state) => state.match?.matchId ?? null);
   const currentQuestionIndex = useRealtimeMatchStore((state) => state.match?.currentQuestion?.qIndex ?? null);
@@ -413,7 +415,9 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
                 {t('possession.opponentDisconnected')}
               </div>
               <div className="mt-1 font-poppins text-sm font-semibold text-white/70">
-                {t('possession.opponentDisconnectedWinIfNotReturn', { seconds: pauseSeconds })}
+                {hasResolvedRound
+                  ? t('possession.opponentDisconnectedWinIfNotReturn', { seconds: pauseSeconds })
+                  : t('possession.opponentDisconnectedCancelIfNotReturn')}
               </div>
               <div className="mt-4 inline-flex items-center justify-center rounded-full bg-black/30 px-6 py-2 font-poppins text-3xl font-semibold tabular-nums text-white">
                 {pauseSeconds}

@@ -169,8 +169,8 @@ export default function DevPartTunerPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#10121e] p-6 text-white">
-      <div className="sticky top-0 z-10 mb-4 flex flex-wrap items-center gap-3 bg-[#10121e] py-2">
+    <div className="min-h-screen bg-surface-page-alt p-6 text-white">
+      <div className="sticky top-0 z-10 mb-4 flex flex-wrap items-center gap-3 bg-surface-page-alt py-2">
         <h1 className="text-lg font-semibold">Part tuner</h1>
         <div className="flex gap-1">
           {SLOTS.map((s, i) => (

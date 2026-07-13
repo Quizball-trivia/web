@@ -18,6 +18,7 @@ vi.mock("@/lib/auth/session", () => ({
 
 vi.mock("@/lib/auth/auth.service", () => ({
   logout: (...args: unknown[]) => logoutServiceMock(...args),
+  isBannedAuthError: () => false,
 }));
 
 vi.mock("@/lib/auth/supabase", () => ({

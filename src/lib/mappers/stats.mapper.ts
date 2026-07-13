@@ -61,6 +61,16 @@ export function toRecentMatchSummaries(response: RecentMatchesResponse): RecentM
     winnerDecisionMethod: item.winnerDecisionMethod,
     cancelledNoContest: item.cancelledNoContest ?? false,
     rpDelta: item.rpDelta ?? null,
+    placement: item.placement ?? null,
+    playerCount: item.playerCount ?? 2,
+    opponents: (item.opponents ?? []).map((o) => ({
+      id: o.id,
+      username: o.username,
+      avatarUrl: o.avatarUrl,
+      avatarCustomization: o.avatarCustomization,
+      isAi: o.isAi,
+      placement: o.placement ?? null,
+    })),
     opponent: {
       id: item.opponent.id,
       username: item.opponent.username,

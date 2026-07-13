@@ -152,6 +152,23 @@ describe('realtimeMatch.store — setMatchState shouldClearQuestion', () => {
     useRealtimeMatchStore.getState().reset();
   });
 
+  it('stores terminal cancellation while clearing the abandoned match and transient state', () => {
+    seedMatch();
+    const store = useRealtimeMatchStore.getState();
+    store.setMatchPaused({ graceMs: 30_000, remainingReconnects: 0 });
+
+    store.setMatchCancelled({ matchId: MATCH_ID, ticketRefunded: true });
+
+    const cancelled = useRealtimeMatchStore.getState();
+    expect(cancelled.match).toBeNull();
+    expect(cancelled.cancelledMatch).toEqual({ matchId: MATCH_ID, ticketRefunded: true });
+    expect(cancelled.matchPaused).toBe(false);
+    expect(cancelled.remainingReconnects).toBeNull();
+
+    cancelled.reset();
+    expect(useRealtimeMatchStore.getState().cancelledMatch).toBeNull();
+  });
+
   // -------------------------------------------------------------------------
   // HALFTIME — existing behavior (was already working)
   // -------------------------------------------------------------------------
