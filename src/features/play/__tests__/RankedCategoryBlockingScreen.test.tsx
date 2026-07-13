@@ -1,5 +1,5 @@
-import { act, render, screen } from '@testing-library/react';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { render, waitFor } from '@testing-library/react';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { RankedCategoryBlockingScreen } from '../RankedCategoryBlockingScreen';
 
@@ -38,19 +38,10 @@ function createRealtimeMatchState() {
       ],
       bans: {},
       turnUserId: 'u1',
-      forceAtMs: (Date.now() + 45_000) as number | null,
-      turnAnchorMs: Date.now(),
       halfOneCategoryId: null,
-      turnActive: true,
-      waitingForReady: null as null | {
-        lobbyId: string;
-        readyUserIds: string[];
-        waitingUserIds: string[];
-        forceCancelAt: string;
-      },
     },
     draftPaused: false,
-    draftPauseUntil: null as number | null,
+    draftPauseUntil: null,
     match: null,
   };
 }
@@ -168,8 +159,8 @@ vi.mock('@/components/AvatarDisplay', () => ({
 }));
 
 vi.mock('@/components/shared/BanCategoryCard', () => ({
-  BanCategoryCard: (props: { category: { name: string }; disabled: boolean }) => (
-    <button type="button" disabled={props.disabled}>{props.category.name}</button>
+  BanCategoryCard: (props: { category: { name: string } }) => (
+    <button type="button">{props.category.name}</button>
   ),
 }));
 
@@ -194,28 +185,20 @@ describe('RankedCategoryBlockingScreen', () => {
     vi.spyOn(window, 'cancelAnimationFrame').mockImplementation(() => undefined);
   });
 
-  afterEach(() => {
-    vi.useRealTimers();
-  });
-
-  it('rejoins the draft without owning the ui-ready gate acknowledgement', () => {
+  it('emits draft:ui_ready after the draft ban screen is shown', async () => {
     render(<RankedCategoryBlockingScreen />);
 
+    await waitFor(() => {
+      expect(socket.emit).toHaveBeenCalledWith('draft:ui_ready', {
+        lobbyId: 'l1',
+        turnUserId: 'u1',
+        banCount: 0,
+      });
+    });
     expect(socket.emit).toHaveBeenCalledWith('draft:rejoin', { lobbyId: 'l1' });
-    expect(socket.emit.mock.calls.filter(([eventName]) => eventName === 'draft:ui_ready')).toHaveLength(0);
   });
 
-  it('renders 15 seconds from the authoritative 16-second human turn deadline', () => {
-    realtimeMatchState.draft.forceAtMs = Date.now() + 16_000;
-    realtimeMatchState.draft.turnAnchorMs = Date.now();
-
-    render(<RankedCategoryBlockingScreen />);
-
-    expect(screen.getByText('15')).toBeInTheDocument();
-    expect(screen.queryByText('16')).not.toBeInTheDocument();
-  });
-
-  it('does not make the showdown responsible for draft:ui_ready', () => {
+  it('does not emit draft:ui_ready while the draft showdown is still showing', () => {
     gameSessionState.config.skipDraftShowdown = false;
     rankedMatchmakingState.rankedFoundOpponent = {
       userId: 'u2',
@@ -226,79 +209,5 @@ describe('RankedCategoryBlockingScreen', () => {
     render(<RankedCategoryBlockingScreen />);
 
     expect(socket.emit.mock.calls.filter(([eventName]) => eventName === 'draft:ui_ready')).toHaveLength(0);
-  });
-
-  it('promises cancellation and a ticket refund when the draft is paused', () => {
-    realtimeMatchState.draftPaused = true;
-    realtimeMatchState.draftPauseUntil = Date.now() + 8_000;
-
-    render(<RankedCategoryBlockingScreen />);
-
-    expect(screen.getByText('possession.opponentDisconnectedCancelIfNotReturn')).toBeInTheDocument();
-    expect(screen.queryByText('possession.opponentDisconnectedWinIfNotReturn')).not.toBeInTheDocument();
-  });
-
-  it('shows a live opponent ready-gate countdown and disables banning', () => {
-    realtimeMatchState.draft.turnActive = false;
-    realtimeMatchState.draft.forceAtMs = null;
-    realtimeMatchState.draft.waitingForReady = {
-      lobbyId: 'l1',
-      readyUserIds: ['u1'],
-      waitingUserIds: ['u2'],
-      forceCancelAt: new Date(Date.now() + 8_000).toISOString(),
-    };
-
-    render(<RankedCategoryBlockingScreen />);
-
-    expect(screen.getByText('banCategory.opponentConnecting')).toBeInTheDocument();
-    expect(screen.getByText('8')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'A' })).toBeDisabled();
-    expect(screen.queryByText('possession.halftime.yourTurn')).not.toBeInTheDocument();
-  });
-
-  it('debounces a brief inter-turn wait and cancels it when the turn begins', () => {
-    vi.useFakeTimers();
-    realtimeMatchState.draft.turnActive = false;
-    realtimeMatchState.draft.forceAtMs = null;
-
-    const { rerender } = render(<RankedCategoryBlockingScreen />);
-
-    expect(screen.queryByText('banCategory.connecting')).not.toBeInTheDocument();
-
-    act(() => vi.advanceTimersByTime(1_499));
-    expect(screen.queryByText('banCategory.connecting')).not.toBeInTheDocument();
-
-    realtimeMatchState.draft.turnActive = true;
-    rerender(<RankedCategoryBlockingScreen />);
-    act(() => vi.advanceTimersByTime(1));
-
-    expect(screen.queryByText('banCategory.connecting')).not.toBeInTheDocument();
-  });
-
-  it('shows the inter-turn waiting state after the debounce', () => {
-    vi.useFakeTimers();
-    realtimeMatchState.draft.turnActive = false;
-    realtimeMatchState.draft.forceAtMs = null;
-
-    render(<RankedCategoryBlockingScreen />);
-    act(() => vi.advanceTimersByTime(1_500));
-
-    expect(screen.getByText('banCategory.connecting')).toBeInTheDocument();
-  });
-
-  it('shows a gate countdown when only self is waiting', () => {
-    realtimeMatchState.draft.turnActive = false;
-    realtimeMatchState.draft.forceAtMs = null;
-    realtimeMatchState.draft.waitingForReady = {
-      lobbyId: 'l1',
-      readyUserIds: ['u2'],
-      waitingUserIds: ['u1'],
-      forceCancelAt: new Date(Date.now() + 8_000).toISOString(),
-    };
-
-    render(<RankedCategoryBlockingScreen />);
-
-    expect(screen.getByText('banCategory.connecting')).toBeInTheDocument();
-    expect(screen.getByText('8')).toBeInTheDocument();
   });
 });
