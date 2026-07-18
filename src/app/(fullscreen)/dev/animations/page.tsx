@@ -502,6 +502,7 @@ type PenaltyKickOptions = {
   answerAckDelayMs?: number;
   opponentAnsweredDelayMs?: number;
   roundResultDelayMs?: number;
+  legacyOpponentRecentPointsOverride?: number;
   // When true, DON'T advance to the next shooter after the round result. Used for
   // the FINAL/deciding kick so the goal/save shot + splash play out fully instead
   // of being cut short by the next-shooter state change (the reported bug).
@@ -2197,6 +2198,7 @@ function DevAnimationsContent() {
     const roundResultDelayMs = options.roundResultDelayMs ?? DEV_PENALTY_ROUND_RESULT_DELAY_MS;
     const emitOpponentAnswered = options.emitOpponentAnswered ?? false;
     const holdOnResult = options.holdOnResult ?? false;
+    const legacyOpponentRecentPointsOverride = options.legacyOpponentRecentPointsOverride;
     const nextShooterSeat = nextSeat(shooterSeat);
 
     stateVersion.current += 1;
@@ -2287,6 +2289,19 @@ function DevAnimationsContent() {
       pendingTimers.current.push(
         window.setTimeout(() => {
           s.setRoundResult(result);
+          if (legacyOpponentRecentPointsOverride !== undefined) {
+            useRealtimeMatchStore.setState((prev) =>
+              prev.match
+                ? {
+                    ...prev,
+                    match: {
+                      ...prev.match,
+                      opponentRecentPoints: legacyOpponentRecentPointsOverride,
+                    },
+                  }
+                : prev
+            );
+          }
           if (outcome === 'goal') {
             if (shooterSeat === 1) penaltyGoalsRef.current.seat1 += 1;
             else penaltyGoalsRef.current.seat2 += 1;
@@ -2353,7 +2368,8 @@ function DevAnimationsContent() {
       window.setTimeout(() => {
         takePenaltyKick(2, 'goal', {
           resetTimers: false,
-          points: { me: 100, opp: mode === 'before' ? 0 : 100 },
+          points: { me: 100, opp: 100 },
+          legacyOpponentRecentPointsOverride: mode === 'before' ? 0 : undefined,
           holdOnResult: true,
         });
       }, 200)

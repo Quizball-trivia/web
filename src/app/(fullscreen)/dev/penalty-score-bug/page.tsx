@@ -37,7 +37,7 @@ function ScoreSide({
         <span className="font-fun text-6xl font-black leading-none text-white sm:text-7xl">{points}</span>
         <span className="mb-1 text-xs font-black uppercase tracking-widest text-white/40">pts</span>
       </div>
-      <div className="mt-3 font-mono text-xs text-white/55">answer time · {timeMs.toLocaleString()} ms</div>
+      <div className="mt-3 font-mono text-xs text-white/55">answer time · {timeMs.toLocaleString('en-US')} ms</div>
     </div>
   );
 }
