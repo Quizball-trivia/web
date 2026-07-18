@@ -675,6 +675,19 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
           cluesGuessAck: null,
           myTotalPoints: myTotals?.totalPoints ?? state.match.myTotalPoints,
           oppTotalPoints: opponentTotals?.totalPoints ?? state.match.oppTotalPoints,
+          // AI penalty answers deliberately skip the live
+          // `match:opponent_answered` event so the keeper/shooter result is not
+          // leaked before the round resolves. Reconcile the transient opponent
+          // fields from the authoritative round result; otherwise the UI keeps
+          // the question-reset defaults (notably `opponentRecentPoints = 0`)
+          // while animating a real bot goal.
+          opponentAnswered: opponentTotals ? true : state.match.opponentAnswered,
+          opponentRecentPoints:
+            opponentTotals?.pointsEarned ?? state.match.opponentRecentPoints,
+          opponentAnsweredCorrectly:
+            opponentTotals?.isCorrect ?? state.match.opponentAnsweredCorrectly,
+          opponentSelectedIndex:
+            opponentTotals?.selectedIndex ?? state.match.opponentSelectedIndex,
           questions: {
             ...state.match.questions,
             [payload.qIndex]: {
