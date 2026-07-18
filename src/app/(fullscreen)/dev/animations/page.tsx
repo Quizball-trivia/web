@@ -2314,6 +2314,52 @@ function DevAnimationsContent() {
     });
   }
 
+  function replayPenaltyScoreBug(mode: 'before' | 'after') {
+    setMobilePanelOpen(false);
+    pendingTimers.current.forEach((t) => window.clearTimeout(t));
+    pendingTimers.current = [];
+
+    stateVersion.current = 0;
+    scoreRef.current = { meTotal: 1500, oppTotal: 1450 };
+    goalsRef.current = { seat1: 1, seat2: 1 };
+    penaltyGoalsRef.current = { seat1: 3, seat2: 3 };
+    penaltyKickIndexRef.current = 0;
+
+    const s = store();
+    s.reset();
+    s.setSelfUserId(SELF_ID);
+    s.setMatchStart(makeStartPayload());
+    useRealtimeMatchStore.setState((prev) =>
+      prev.match ? { ...prev, match: { ...prev.match, countdownEndsAt: null } } : prev
+    );
+    stateVersion.current += 1;
+    s.setMatchState(
+      makeMatchState('PENALTY_SHOOTOUT', {
+        stateVersion: stateVersion.current,
+        half: 2,
+        goals: goalsRef.current,
+        penaltyGoals: penaltyGoalsRef.current,
+        phaseKind: 'penalty',
+        phaseRound: penaltyPhaseRoundForKickIndex(penaltyKickIndexRef.current),
+        shooterSeat: 2,
+      })
+    );
+    setRemountKey((key) => key + 1);
+
+    // The server outcome is a legitimate bot goal. The legacy replay feeds the
+    // UI its stale reset value (0) for the bot's round points; the fixed replay
+    // reconciles the authoritative 100 before the same goal animation.
+    pendingTimers.current.push(
+      window.setTimeout(() => {
+        takePenaltyKick(2, 'goal', {
+          resetTimers: false,
+          points: { me: 100, opp: mode === 'before' ? 0 : 100 },
+          holdOnResult: true,
+        });
+      }, 200)
+    );
+  }
+
   function runPenaltyShootoutScript() {
     setMobilePanelOpen(false);
     pendingTimers.current.forEach((t) => window.clearTimeout(t));
@@ -2707,6 +2753,20 @@ function DevAnimationsContent() {
             Full script starts from 6-6, alternates shooters, omits
             opponent_answered like production penalties, then sends the next
             shooter state right after each goal/save result.
+          </p>
+        </Group>
+
+        <Group label="Nika903 bug · before / after">
+          <Btn variant="red" onClick={() => replayPenaltyScoreBug('before')}>
+            BEFORE · bot shows 0 → goal
+          </Btn>
+          <Btn variant="green" onClick={() => replayPenaltyScoreBug('after')}>
+            AFTER · bot shows 100 → goal
+          </Btn>
+          <p className="mt-1 text-[9px] text-brand-slate">
+            Deterministic replay of the reported presentation mismatch. Both
+            runs use the same legitimate bot-goal outcome; BEFORE injects the
+            legacy stale bot score, while AFTER shows the reconciled round result.
           </p>
         </Group>
 
