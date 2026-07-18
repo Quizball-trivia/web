@@ -2338,7 +2338,7 @@ function DevAnimationsContent() {
     scoreRef.current = { meTotal: 1500, oppTotal: 1450 };
     goalsRef.current = { seat1: 1, seat2: 1 };
     penaltyGoalsRef.current = { seat1: 3, seat2: 3 };
-    penaltyKickIndexRef.current = 0;
+    penaltyKickIndexRef.current = 10;
 
     const s = store();
     s.reset();
