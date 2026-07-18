@@ -33,7 +33,7 @@ function seedMatch() {
   });
 }
 
-function makeQuestion(qIndex: number, phaseKind: 'normal' | 'last_attack' = 'normal'): ResolvedMatchQuestionPayload {
+function makeQuestion(qIndex: number, phaseKind: 'normal' | 'last_attack' | 'penalty' = 'normal'): ResolvedMatchQuestionPayload {
   return {
     matchId: MATCH_ID,
     qIndex,
@@ -150,6 +150,55 @@ function makeLobby(lobbyId = NEW_LOBBY_ID): LobbyState {
 describe('realtimeMatch.store — setMatchState shouldClearQuestion', () => {
   beforeEach(() => {
     useRealtimeMatchStore.getState().reset();
+  });
+
+  it('reconciles bot penalty points from round_result when no live opponent event was sent', () => {
+    seedMatch();
+    const store = useRealtimeMatchStore.getState();
+    store.setSelfUserId(USER_A);
+    store.setMatchQuestion(makeQuestion(12, 'penalty'));
+
+    // Penalty AI answers do not emit match:opponent_answered. The question
+    // reset therefore leaves these transient values at their defaults until
+    // the authoritative round_result arrives.
+    expect(useRealtimeMatchStore.getState().match).toMatchObject({
+      opponentAnswered: false,
+      opponentRecentPoints: 0,
+      opponentAnsweredCorrectly: null,
+      opponentSelectedIndex: null,
+    });
+
+    const result = makeRoundResult(12, {
+      phaseKind: 'penalty',
+      goalScoredBySeat: 2,
+      penaltyOutcome: 'goal',
+    });
+    result.players[USER_A] = {
+      totalPoints: 1600,
+      pointsEarned: 100,
+      isCorrect: true,
+      timeMs: 1104,
+      selectedIndex: 0,
+      submittedOrderIds: [],
+    };
+    result.players[USER_B] = {
+      totalPoints: 1550,
+      pointsEarned: 100,
+      isCorrect: true,
+      timeMs: 800,
+      selectedIndex: 0,
+      submittedOrderIds: [],
+    };
+
+    store.setRoundResult(result);
+
+    expect(useRealtimeMatchStore.getState().match).toMatchObject({
+      opponentAnswered: true,
+      opponentRecentPoints: 100,
+      opponentAnsweredCorrectly: true,
+      opponentSelectedIndex: 0,
+      oppTotalPoints: 1550,
+    });
   });
 
   it('stores terminal cancellation while clearing the abandoned match and transient state', () => {
