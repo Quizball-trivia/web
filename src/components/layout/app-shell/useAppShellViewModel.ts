@@ -145,6 +145,7 @@ export function useAppShellViewModel() {
         matchId: rejoinMatch.matchId,
         mode: rejoinMatch.mode,
         opponent: rejoinMatch.opponent,
+        rejoinOfferCreatedAt: rejoinMatch.createdAt,
         source: 'rejoin' as const,
       }
     : matchBanner.matchId && !matchBanner.finalResults
@@ -152,9 +153,10 @@ export function useAppShellViewModel() {
           matchId: matchBanner.matchId,
           mode: matchBanner.mode!,
           opponent: matchBanner.opponent!,
+          rejoinOfferCreatedAt: null,
           source: 'active' as const,
-      }
-    : null;
+        }
+      : null;
   const forfeitPendingForActiveMatch =
     !!forfeitPending &&
     !!activeMatchBanner &&
@@ -299,8 +301,9 @@ export function useAppShellViewModel() {
   //  - showRejoinBanner reuses all existing suppressions (forfeit pending,
   //    party dropout, /friend/room, already on /game)
   //  - autoRejoinSuppressedMatchId skips matches the user intentionally left
-  //  - once per matchId per page lifetime (ref) — no loops if rejoin fails
-  const autoRejoinAttemptedMatchIdRef = useRef<string | null>(null);
+  //  - once per server offer (matchId + createdAt), so a later disconnect in
+  //    the same match is retried without allowing one offer to loop
+  const autoRejoinAttemptedOfferRef = useRef<string | null>(null);
   const canAutoRejoin =
     showRejoinBanner &&
     !!activeMatchBanner &&
@@ -308,15 +311,20 @@ export function useAppShellViewModel() {
     sessionState?.state === 'IN_ACTIVE_MATCH' &&
     sessionState.activeMatchId === activeMatchBanner.matchId &&
     autoRejoinSuppressedMatchId !== activeMatchBanner.matchId;
-  const autoRejoinMatchId = canAutoRejoin && activeMatchBanner ? activeMatchBanner.matchId : null;
+  const autoRejoinOffer = canAutoRejoin && activeMatchBanner
+    ? {
+        matchId: activeMatchBanner.matchId,
+        key: `${activeMatchBanner.matchId}:${activeMatchBanner.rejoinOfferCreatedAt ?? 0}`,
+      }
+    : null;
   useEffect(() => {
-    if (!autoRejoinMatchId) return;
-    if (autoRejoinAttemptedMatchIdRef.current === autoRejoinMatchId) return;
-    autoRejoinAttemptedMatchIdRef.current = autoRejoinMatchId;
-    logger.info('Auto-rejoining active match after reload/reconnect', { matchId: autoRejoinMatchId });
+    if (!autoRejoinOffer) return;
+    if (autoRejoinAttemptedOfferRef.current === autoRejoinOffer.key) return;
+    autoRejoinAttemptedOfferRef.current = autoRejoinOffer.key;
+    logger.info('Auto-rejoining active match after reload/reconnect', { matchId: autoRejoinOffer.matchId });
     handleRejoinMatch();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- handleRejoinMatch is recreated every render; the matchId + ref guard make this fire at most once per match
-  }, [autoRejoinMatchId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- handleRejoinMatch is recreated every render; the offer key + ref guard make this fire at most once per offer
+  }, [autoRejoinOffer?.key]);
 
   const handleReturnToDraft = () => {
     if (!activeDraftBanner) return;
