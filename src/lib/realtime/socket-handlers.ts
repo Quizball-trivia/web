@@ -62,13 +62,11 @@ function computeServerTimeOffsetMs(serverNow: string | undefined, receivedAtMs =
   return Number.isFinite(serverNowMs) ? serverNowMs - receivedAtMs : undefined;
 }
 
-function isKickoffReadyGateRejoinAvailable(data: MatchRejoinAvailablePayload): boolean {
+function shouldAutoRejoinActiveMatch(data: MatchRejoinAvailablePayload): boolean {
   const state = useRealtimeMatchStore.getState();
   const match = state.match;
   return Boolean(
     match?.matchId === data.matchId &&
-      match.waitingForReady?.phase === 'kickoff' &&
-      match.currentQuestion === null &&
       !match.finalResults &&
       state.autoRejoinSuppressedMatchId !== data.matchId
   );
@@ -625,10 +623,14 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       remainingReconnects: data.remainingReconnects,
     });
     store.setRejoinAvailable(data);
-    if (isKickoffReadyGateRejoinAvailable(data)) {
+    // A live game can receive more than one reconnect offer for the same match
+    // during socket handoff/flapping. Accept every offer while the same match is
+    // still active locally; routing/banner recovery is only needed for a cold
+    // page whose match store was lost.
+    if (shouldAutoRejoinActiveMatch(data)) {
       socket.emit('match:rejoin', { matchId: data.matchId });
       store.clearRejoinAvailable();
-      logger.info('Socket emit match:rejoin from kickoff ready gate', { matchId: data.matchId });
+      logger.info('Socket emit match:rejoin for active match recovery', { matchId: data.matchId });
     }
   });
 

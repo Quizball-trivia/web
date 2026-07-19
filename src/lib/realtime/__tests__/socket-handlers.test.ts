@@ -351,6 +351,41 @@ describe('registerSocketHandlers', () => {
     expect(useRealtimeMatchStore.getState().rejoinMatch).toBeNull();
   });
 
+  it('auto-rejoins every reconnect offer while the same match remains active', () => {
+    const opponent = { id: 'opp-1', username: 'Opponent', avatarUrl: null };
+    const participants = [
+      { userId: 'self-1', username: 'Me', avatarUrl: null, seat: 1 },
+      { userId: 'opp-1', username: 'Opponent', avatarUrl: null, seat: 2 },
+    ];
+    const offer = {
+      matchId: 'match-flapping',
+      mode: 'ranked' as const,
+      variant: 'ranked_sim' as const,
+      opponent,
+      participants,
+      graceMs: 20_000,
+      remainingReconnects: 2,
+    };
+
+    registerSocketHandlers();
+    useRealtimeMatchStore.getState().setMatchStart({
+      matchId: offer.matchId,
+      mode: offer.mode,
+      variant: offer.variant,
+      mySeat: 1,
+      opponent,
+      participants,
+    });
+
+    mockSocket.fire('match:rejoin_available', offer);
+    mockSocket.fire('match:rejoin_available', { ...offer, remainingReconnects: 1 });
+
+    expect(mockSocket.socket.emit).toHaveBeenCalledTimes(2);
+    expect(mockSocket.socket.emit).toHaveBeenNthCalledWith(1, 'match:rejoin', { matchId: offer.matchId });
+    expect(mockSocket.socket.emit).toHaveBeenNthCalledWith(2, 'match:rejoin', { matchId: offer.matchId });
+    expect(useRealtimeMatchStore.getState().rejoinMatch).toBeNull();
+  });
+
   it('patches ranked profile cache from match:final_results when rankedOutcome exists for self', () => {
     const profileKey = queryKeys.ranked.profile();
     let cachedProfile: Record<string, unknown> = {
