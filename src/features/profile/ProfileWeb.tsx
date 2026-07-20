@@ -26,6 +26,7 @@ import { TierFrameAvatar } from '@/components/TierFrameAvatar';
 import { CountryFlag } from '@/components/CountryFlag';
 import { AvatarPicker } from './components/AvatarPicker';
 import { RankFrameCard } from './components/RankFrameCard';
+import { useLeaderboardSeasons, useUserRank } from '@/lib/queries/leaderboard.queries';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
@@ -130,6 +131,28 @@ export function ProfileWeb({
   const showRankTier = rankedDataReady && !isPlacementInProgress;
 
   const [isEditingName, setIsEditingName] = useState(false);
+  const [profileSeasonId, setProfileSeasonId] = useState<string | null>(null);
+  const { data: seasonsData } = useLeaderboardSeasons();
+  const archivedSeasons = seasonsData?.seasons ?? [];
+  const currentSeasonNumber = seasonsData?.currentSeasonNumber ?? archivedSeasons.length + 1;
+  const { data: archivedRank, isLoading: archivedRankLoading } = useUserRank(
+    isSelf && profileSeasonId ? player.id : '',
+    'global',
+    profileSeasonId ?? undefined,
+  );
+  const { data: archivedCountryRank } = useUserRank(
+    isSelf && profileSeasonId ? player.id : '',
+    'country',
+    profileSeasonId ?? undefined,
+  );
+  const seasonPillClass = (on: boolean) =>
+    `inline-flex h-7 items-center justify-center gap-1 rounded-full px-3 text-[10px] sm:text-[11px] font-black uppercase tracking-wide transition-all active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 ${
+      on
+        ? isEventMode ? 'bg-[#FF6C0A] text-white' : 'bg-brand-green text-white'
+        : isEventMode
+          ? 'border-2 border-[#FF6C0A]/60 text-white/70 hover:bg-[#FF6C0A]/10 hover:text-white'
+          : 'border-2 border-brand-green/60 text-white/70 hover:bg-brand-green/10 hover:text-white'
+    }`;
   const [editedName, setEditedName] = useState(player.username);
   const [isAvatarPickerOpen, setIsAvatarPickerOpen] = useState(false);
   const [isSavingAvatar, setIsSavingAvatar] = useState(false);
@@ -295,9 +318,6 @@ export function ProfileWeb({
 
         {/* ── Rank Progression — no header, no separator ── */}
         <div className="mt-6">
-          {/* While the ranked profile is loading, RP would read 0 and the
-              cards would flash the Academy frame before snapping to the real
-              tier — show a neutral skeleton instead until data arrives. */}
           {rankedProfileLoading ? (
             <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 sm:gap-6">
               <div className="aspect-[200/320] w-[96px] animate-pulse rounded-[16px] bg-white/5 sm:w-[160px]" />
@@ -483,6 +503,58 @@ export function ProfileWeb({
               className="h-full rounded-[20px] overflow-hidden bg-surface-card/40 backdrop-blur-sm"
             >
               <div className="p-5 flex flex-col items-center">
+                {isSelf && archivedSeasons.length > 0 && (
+                  <div className="mb-4 flex items-center justify-center gap-2">
+                    <button type="button" onClick={() => setProfileSeasonId(null)} className={seasonPillClass(profileSeasonId === null)}>
+                      {t('leaderboard.season', { n: currentSeasonNumber })}
+                    </button>
+                    {[...archivedSeasons].reverse().map((season) => (
+                      <button key={season.id} type="button" onClick={() => setProfileSeasonId(season.id)} className={seasonPillClass(profileSeasonId === season.id)}>
+                        <TrophyPh weight="fill" className="size-3" aria-hidden />
+                        {t('leaderboard.season', { n: season.seasonNumber })}
+                      </button>
+                    ))}
+                  </div>
+                )}
+                {profileSeasonId !== null ? (
+                  archivedRankLoading ? (
+                    <div className="animate-pulse space-y-3 w-full flex flex-col items-center">
+                      <div className="h-5 w-32 bg-white/15 rounded" />
+                      <div className="w-full space-y-1.5 mt-2">
+                        <div className="h-10 bg-white/15 rounded-full" />
+                        <div className="h-10 bg-white/15 rounded-full" />
+                      </div>
+                    </div>
+                  ) : archivedRank ? (
+                    <>
+                      <p className="font-poppins text-xs font-semibold uppercase text-white/80 mb-2">
+                        {t('leaderboard.finalStandings')}
+                      </p>
+                      <div className="mb-4 font-poppins text-xs font-semibold uppercase text-white/90">
+                        {tierLabelOf(archivedRank.tier)}
+                        <span className="text-white/30"> · </span>
+                        <span className="text-brand-yellow">{archivedRank.rankPoints} RP</span>
+                      </div>
+                      <div className="w-full space-y-2">
+                        <div className="flex justify-between items-center h-10 rounded-full bg-brand-green px-4">
+                          <span className="font-poppins text-xs font-semibold uppercase text-white">{t("profileScreen.global")}</span>
+                          <span className="font-poppins text-xs font-semibold tabular-nums text-white">#{archivedRank.rank}</span>
+                        </div>
+                        <div className="flex justify-between items-center h-10 rounded-full bg-brand-yellow px-4">
+                          <span className="font-poppins text-xs font-semibold uppercase text-black">{t("profileScreen.country")}</span>
+                          <span className="font-poppins text-xs font-semibold tabular-nums text-black">
+                            {archivedCountryRank ? `#${archivedCountryRank.rank}` : '#--'}
+                          </span>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="font-poppins text-xs font-semibold uppercase text-white/70 text-center py-6">
+                      {t('profileScreen.seasonNoRank')}
+                    </p>
+                  )
+                ) : (
+                <>
                 {rankedProfileLoading && (
                   <div className="animate-pulse space-y-3 w-full flex flex-col items-center">
                     <div className="h-10 w-10 bg-white/15 rounded" />
@@ -537,6 +609,8 @@ export function ProfileWeb({
                     </p>
                   </>
                 )}
+                </>
+                )}
               </div>
             </motion.div>
 
@@ -553,7 +627,7 @@ export function ProfileWeb({
                 <SeasonToggleCard
                   regular={rankedSeasons!.regular}
                   event={rankedSeasons!.event}
-                  defaultTab={isEventMode ? 'event' : 'ranked'}
+                  defaultTab="ranked"
                   t={t}
                 />
               ) : (
@@ -1000,8 +1074,8 @@ function SeasonToggleCard({
       {/* Segmented toggle */}
       <div className="flex gap-1 p-1.5">
         {([
-          { key: 'ranked' as const, label: t('profileScreen.rankedLabel'), activeBg: 'bg-brand-blue' },
-          { key: 'event' as const, label: t('profileScreen.wcEventShort'), activeBg: 'bg-brand-yellow' },
+          { key: 'ranked' as const, label: t('leaderboard.season', { n: 2 }), activeBg: 'bg-brand-blue' },
+          { key: 'event' as const, label: t('leaderboard.season', { n: 1 }), activeBg: 'bg-brand-yellow' },
         ]).map((tab) => {
           const on = active === tab.key;
           const onText = tab.key === 'event' ? 'text-black' : 'text-white';

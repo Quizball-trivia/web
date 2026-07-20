@@ -237,15 +237,6 @@ export function ModeSelectionScreen({
               </div>
 
               {/* World Cup event info — event only */}
-              {isEventMode && (
-                <div className="mt-2 flex items-center gap-2 flex-wrap">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-brand-yellow px-3 py-1 text-xs font-black uppercase tracking-wide text-black">
-                    <Image src="/assets/brand/world-cup-trophy.webp" alt="" width={16} height={16} className="h-4 w-auto object-contain" />
-                    {t('play.eventWinPrizes')}
-                  </span>
-                </div>
-              )}
-
               <div className="mt-5">
                 <div className="flex h-[56px] w-[180px] items-center justify-center rounded-[16px] bg-surface-page text-xl uppercase tracking-wide text-white" style={poppins}>
                   {t('common.play')}
@@ -304,14 +295,6 @@ export function ModeSelectionScreen({
                       : t('play.rankedSubtitle')}
                 </div>
                 {/* World Cup event info — mobile, event only */}
-                {isEventMode && (
-                  <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-brand-yellow px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-black">
-                      <Image src="/assets/brand/world-cup-trophy.webp" alt="" width={14} height={14} className="h-3.5 w-auto object-contain" />
-                      {t('play.eventWinPrizes')}
-                    </span>
-                  </div>
-                )}
               </div>
               <div className="shrink-0 text-right w-[125px]">
                 <div className="text-[1.4rem] leading-none text-brand-yellow drop-shadow-[0_2px_12px_rgba(255,229,0,0.25)]" style={poppins}>

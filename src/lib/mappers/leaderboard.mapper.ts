@@ -36,5 +36,6 @@ export function toUserRank(entry: UserRankResponse): UserRank {
     isCurrentUser: true,
     trend: entry.trend,
     trendValue: entry.trendValue,
+    total: entry.total,
   };
 }

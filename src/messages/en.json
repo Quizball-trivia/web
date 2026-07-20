@@ -364,7 +364,9 @@
     "next": "Next",
     "unranked": "Unranked",
     "rpToNextTier": "{rp} RP to next tier",
-    "toNextLeagueLabel": "to next tier"
+    "toNextLeagueLabel": "to next tier",
+    "seasonOf": "of {total} players",
+    "seasonNoRank": "No rank this season"
   },
   "socialScreen": {
     "friends": "Friends",
@@ -654,9 +656,8 @@
   },
   "play": {
     "rankedMatch": "Ranked Match",
-    "rankedMatchEvent": "World Cup Ranked",
+    "rankedMatchEvent": "Ranked",
     "rankedSubtitle": "1v1 Competitive",
-    "eventWinPrizes": "Win Prizes",
     "eventPlayWorldCup": "Play World Cup & Win Prizes",
     "eventViewLeaderboard": "View Leaderboard",
     "eventRules": "Rules",
@@ -700,7 +701,10 @@
     "colPlayer": "Player",
     "colTier": "Tier",
     "colRP": "RP",
-    "resetsIn": "Resets in"
+    "resetsIn": "Resets in",
+    "season": "Season {n}",
+    "finalStandings": "Final standings",
+    "seasonsAriaLabel": "Leaderboard seasons"
   },
   "welcome": {
     "poweredBy": "Powered by",
@@ -718,8 +722,8 @@
     "phraseKnow": "Climb the pyramid. Claim the crown.",
     "phraseStartStrong": "Elite trivia for the 12th man.",
     "phraseEveryRight": "Dominate the pitch, one answer at a time.",
-    "categoriesTitle": "World Cup Event Categories",
-    "categoriesSubtitle": "Test your knowledge across {count} World Cup categories",
+    "categoriesTitle": "Categories",
+    "categoriesSubtitle": "Test your knowledge across {count} football categories",
     "browseAllCategories": "Explore all {count} categories",
     "openCategory": "Open {name}",
     "tierRoadTitle": "Rise through the tiers",
@@ -849,7 +853,7 @@
   "modeConfirm": {
     "rankedTitlePrefix": "1V1",
     "rankedTitleRest": "Ranked",
-    "rankedTitleRestEvent": "World Cup Ranked",
+    "rankedTitleRestEvent": "Ranked",
     "rankedDescription": "3 Random categories appear - each player blocks 1, then compete in the remaining one",
     "rankedStatLeft": "12–18 Questions",
     "rankedStatRight": "Duration 5 Min",
@@ -1582,5 +1586,14 @@
     "achSubtitle1": "Won the World Cup ranked tournament · Summer 2026",
     "achSubtitle2": "Runner-up of the World Cup ranked tournament · Summer 2026",
     "achSubtitle3": "Podium finish in the World Cup ranked tournament · Summer 2026"
+  },
+  "events": {
+    "upcomingKicker": "New event",
+    "upcomingTitle": "New Ranked Event",
+    "startsLabel": "Starts",
+    "minRankLabel": "Min rank",
+    "qualifyHint": "Reach {tier} before kickoff to qualify — the ranked ladder is open now.",
+    "playRankedCta": "Play Ranked",
+    "startsValue": "Saturday, 25 July, 00:00 (Georgia time)"
   }
 }
