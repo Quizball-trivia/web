@@ -67,6 +67,11 @@ export function toClientAuctionState(
           optionB: toClientSoloPickOption(publicState.soloPick.optionB, 'solo-b'),
         }
       : null,
+    rankings: publicState.rankings
+      ? [...publicState.rankings]
+          .sort((a, b) => a.rank - b.rank)
+          .map((entry) => entry.seatId)
+      : null,
   };
 }
 
@@ -179,6 +184,7 @@ function toClientRound(round: PublicAuctionRoundState, options: AuctionStateAdap
     currentTurnId: round.currentTurnSeatId,
     foldedIds: [...round.foldedSeatIds],
     turnEndsAt: toClientTurnEndsAt(round.turnEndsAt, options.serverTimeOffsetMs),
+    biddingStartsAt: toClientTurnEndsAt(round.biddingStartsAt ?? null, options.serverTimeOffsetMs),
   };
 }
 

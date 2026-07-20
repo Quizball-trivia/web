@@ -110,6 +110,7 @@ function round(overrides: Partial<PublicAuctionRoundState> = {}): PublicAuctionR
     currentTurnSeatId: null,
     foldedSeatIds: [],
     turnEndsAt: null,
+    biddingStartsAt: null,
     startedAt: '2026-06-20T10:00:00.000Z',
     updatedAt: '2026-06-20T10:00:00.000Z',
     revealedClues: [],
@@ -649,7 +650,7 @@ describe('useRealtimeAuctionMatch', () => {
     }
   });
 
-  it('emits auction ui-ready for visible clue and bidding phases', async () => {
+  it('holds the round ui-ready until the intro is confirmed, then acks bidding', async () => {
     const { result } = renderHook(() => useRealtimeAuctionMatch({
       enabled: true,
       selfUserId: 'user-1',
@@ -668,6 +669,15 @@ describe('useRealtimeAuctionMatch', () => {
           currentRound: round({ roundId: 'round-1' }),
         }),
       });
+    });
+
+    // The round intro is still on screen — acking here would let the server
+    // start revealing clues behind it.
+    await waitFor(() => expect(result.current.state?.phase).toBe('clue-reveal'));
+    expect(socketMock.emit).not.toHaveBeenCalledWith('auction:ui_ready', expect.objectContaining({ phase: 'round' }));
+
+    act(() => {
+      result.current.actions.confirmRoundIntro?.();
     });
 
     await waitFor(() => {

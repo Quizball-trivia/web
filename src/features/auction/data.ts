@@ -2,16 +2,23 @@ import type { Footballer, Formation, AuctionPlayer, AuctionTeam, PositionGroup }
 import { randomBotAvatar } from './data/botAvatars';
 
 export const STARTING_BUDGET = 1_000_000_000;
-export const MIN_BID_INCREMENT = 5_000_000;
+// Every raise is exactly one increment — the bid surface is a single "+10M"
+// button. Mirrors MIN_BID_INCREMENT in the backend auction constants.
+export const MIN_BID_INCREMENT = 10_000_000;
 // Turn time limits: the opener (first turn, no standing bid) gets longer to read
 // the clues and decide; every turn after is fast. Shared by the game hook (timer
 // scheduling) and the UI (countdown bar) so they can never drift.
 export const OPENING_TURN_MS = 30_000;
-export const RAISE_TURN_MS = 10_000;
-// Delay between each clue reveal during the pre-bid clue-reveal phase.
-// One extra tick of this duration is added after the last clue so players have
-// a beat to read it before bidding opens.
-export const CLUE_REVEAL_INTERVAL_MS = 2500;
+export const RAISE_TURN_MS = 15_000;
+// Bot deliberation before it bids or folds. Mirrors AUCTION_BOT_MIN/MAX_THINK_MS
+// in the backend bot service — long enough that bidding reads as a contest, and
+// comfortably inside RAISE_TURN_MS so a bot never times its own turn out.
+export const BOT_MIN_THINK_MS = 2_000;
+export const BOT_MAX_THINK_MS = 5_000;
+// Delay between each clue reveal during the pre-bid clue-reveal phase: the three
+// clues stagger onto the board, then CLUE_STUDY_MS runs before bidding opens.
+export const CLUE_REVEAL_INTERVAL_MS = 1200;
+export const CLUE_STUDY_MS = 10_000;
 
 // Placeholder face for a footballer. The structure supports a real photo via
 // the `imageUrl` field on Footballer; this is just the stand-in until we wire

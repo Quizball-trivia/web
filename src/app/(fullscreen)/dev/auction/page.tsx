@@ -34,6 +34,8 @@ import type {
 import {
   FOOTBALLERS,
   FORMATIONS,
+  OPENING_TURN_MS,
+  RAISE_TURN_MS,
   STARTING_BUDGET,
   createEmptyTeam,
 } from '@/features/auction/data';
@@ -99,6 +101,7 @@ function makeRound(overrides: Partial<AuctionRound> = {}): AuctionRound {
     currentTurnId: null,
     foldedIds: [],
     turnEndsAt: null,
+    biddingStartsAt: null,
     ...overrides,
   };
 }
@@ -280,7 +283,7 @@ const SCENARIOS: Scenario[] = [
         state={baseState({
           phase: 'bidding',
           // Your turn, no bids yet — open at the starting price or fold.
-          currentRound: makeRound({ currentTurnId: HUMAN_ID, turnEndsAt: Date.now() + 30_000 }),
+          currentRound: makeRound({ currentTurnId: HUMAN_ID, turnEndsAt: Date.now() + OPENING_TURN_MS }),
         })}
       />
     ),
@@ -301,7 +304,7 @@ const SCENARIOS: Scenario[] = [
             highestBidderId: 'bot-2',
             highestBid: 90_000_000,
             currentTurnId: HUMAN_ID,
-            turnEndsAt: Date.now() + 10_000,
+            turnEndsAt: Date.now() + RAISE_TURN_MS,
           }),
         })}
       />
@@ -323,7 +326,52 @@ const SCENARIOS: Scenario[] = [
             highestBidderId: 'bot-1',
             highestBid: 160_000_000,
             currentTurnId: 'bot-2',
-            turnEndsAt: Date.now() + 10_000,
+            turnEndsAt: Date.now() + RAISE_TURN_MS,
+          }),
+        })}
+      />
+    ),
+  },
+  {
+    id: 'bidding-rival-folded',
+    label: 'Bidding — a rival folded',
+    group: 'Round',
+    render: () => (
+      <Game
+        state={baseState({
+          phase: 'bidding',
+          currentRound: makeRound({
+            bids: [
+              { playerId: 'bot-1', amount: 90_000_000 },
+              { playerId: HUMAN_ID, amount: 100_000_000 },
+            ],
+            highestBidderId: HUMAN_ID,
+            highestBid: 100_000_000,
+            foldedIds: ['bot-2'],
+            currentTurnId: 'bot-1',
+            turnEndsAt: Date.now() + RAISE_TURN_MS,
+          }),
+        })}
+      />
+    ),
+  },
+  {
+    id: 'bidding-sitting-out',
+    label: 'Bidding — you sit this lot out',
+    group: 'Round',
+    render: () => (
+      <Game
+        state={baseState({
+          phase: 'bidding',
+          currentRound: makeRound({
+            // turnOrder omits the human: they already filled this position, so
+            // they watch the whole lot and the UI has to say why.
+            turnOrder: ['bot-1', 'bot-2'],
+            bids: [{ playerId: 'bot-1', amount: 80_000_000 }],
+            highestBidderId: 'bot-1',
+            highestBid: 80_000_000,
+            currentTurnId: 'bot-2',
+            turnEndsAt: Date.now() + RAISE_TURN_MS,
           }),
         })}
       />

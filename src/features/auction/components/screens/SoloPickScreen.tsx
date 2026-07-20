@@ -19,45 +19,59 @@ export function SoloPickScreen({
   state,
   actions,
   humanPlayerId,
+  serverDrivenTransitions = false,
 }: {
   state: AuctionGameState;
   actions: AuctionActions;
   humanPlayerId: string;
+  /** Live match: the server resolves other seats' picks, so this client must not. */
+  serverDrivenTransitions?: boolean;
 }) {
   const { t } = useLocale();
   const posLabel = usePositionLabel();
   const pick = state.soloPick;
   const isHumanPicking = pick ? pick.playerId === humanPlayerId : true;
+  const picker = pick ? state.players.find((p) => p.id === pick.playerId) ?? null : null;
+
+  // Mock-mode only: stand in for the bot that owns this pick. In a live match
+  // the server decides for bots and rejects anyone choosing on another seat's
+  // behalf — firing this there spammed both spectators with an error banner
+  // every solo-pick round.
+  const shouldAutoPickForBot = !serverDrivenTransitions && !isHumanPicking && (picker?.isBot ?? false);
 
   useEffect(() => {
-    if (!pick || isHumanPicking) return;
+    if (!shouldAutoPickForBot) return;
     const timer = setTimeout(() => {
       actions.pickSoloOption(Math.random() > 0.5 ? 'A' : 'B');
     }, 1500);
     return () => clearTimeout(timer);
-  }, [pick, isHumanPicking, actions]);
+  }, [shouldAutoPickForBot, actions]);
 
   if (!pick) return null;
 
   const posColor = POS_COLORS[pick.positionGroup];
 
   if (!isHumanPicking) {
-    const botPlayer = state.players.find((p) => p.id === pick.playerId);
+    const pickerName = picker?.username ?? '';
+    const pickerIsBot = picker?.isBot ?? false;
     return (
       <AuctionScreen className="flex flex-col items-center justify-center p-4">
-        <div className="relative z-10 text-center">
+        <div className="relative z-10 flex flex-col items-center text-center">
           <motion.div
             animate={{ rotate: [0, 10, -10, 0] }}
             transition={{ duration: 1.5, repeat: Infinity }}
             className="text-4xl mb-3"
           >
-            🤖
+            {pickerIsBot ? '🤖' : '⏳'}
           </motion.div>
-          <div className="font-poppins text-base font-semibold text-white/50">
-            {t('auctionGame.botPicking', {
-              name: botPlayer?.username ?? '',
+          <div className="font-poppins text-base font-semibold text-white/60">
+            {t('auctionGame.opponentPicking', {
+              name: pickerName,
               position: posLabel(pick.positionGroup).toLowerCase(),
             })}
+          </div>
+          <div className="mt-1.5 font-poppins text-xs font-semibold uppercase tracking-wide text-white/35">
+            {t('auctionGame.opponentPickingHint')}
           </div>
         </div>
       </AuctionScreen>

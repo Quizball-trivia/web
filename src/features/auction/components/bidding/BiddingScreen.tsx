@@ -1,23 +1,21 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import type { AuctionGameState } from '../../types';
 import type { AuctionActions } from '../../hooks/useAuctionGame';
-import { formatMoney, getMaxBid, getMinBid, needsPosition, OPENING_TURN_MS, RAISE_TURN_MS } from '../../data';
+import { formatMoney, getMaxBid, getMinBid, needsPosition, CLUE_STUDY_MS, OPENING_TURN_MS, RAISE_TURN_MS } from '../../data';
 import { POS_COLORS } from '../../constants/auction.constants';
 import { useLocale } from '@/contexts/LocaleContext';
 import { usePositionLabel } from '../../hooks/usePositionLabel';
 import { SCREEN_GLOW } from '../shared/ScreenBackdrop';
 import { AuctionScreen } from '../shared/AuctionScreen';
-import { RoundTransitionOverlay } from '@/components/game/RoundTransitionOverlay';
+import { AuctionRoundIntro } from '../screens/AuctionRoundIntro';
 import { AllSquads } from '../pitch/AllSquads';
 import { CountdownTimer } from './CountdownTimer';
 import { BidTicker } from './BidTicker';
+import { BiddingRivals } from './BiddingRivals';
 import { QuickBidPanel } from './QuickBidPanel';
-
-/** How long the round-start intro shows over the clue card before fading. */
-const ROUND_INTRO_MS = 1600;
 
 /** Main bidding UI: mystery card, clues, current-bid panel, ticker, bid panel, squads. */
 export function BiddingScreen({
@@ -37,36 +35,19 @@ export function BiddingScreen({
   const isCluePhase = state.phase === 'clue-reveal';
   const isBidding = state.phase === 'bidding';
 
-  // Round-start intro: a brief overlay on the clue card each new round.
-  // Deadline-based + interval-ticked (same pattern as the possession intro) so
-  // a remount or the clue-reveal re-render can't strand it visible. Keyed on
-  // (clue-phase, roundIndex): each new clue-phase round arms a fresh deadline,
-  // and the interval ticks `nowMs` until it passes.
-  const [introDeadline, setIntroDeadline] = useState<number | null>(null);
-  const [nowMs, setNowMs] = useState(() => Date.now());
-
-  useEffect(() => {
-    if (!isCluePhase) {
-      queueMicrotask(() => setIntroDeadline(null));
-      return;
-    }
-    const deadline = Date.now() + ROUND_INTRO_MS;
-    queueMicrotask(() => {
-      setIntroDeadline(deadline);
-      setNowMs(Date.now());
-    });
-    const interval = setInterval(() => {
-      setNowMs(Date.now());
-      if (Date.now() >= deadline) clearInterval(interval);
-    }, 100);
-    return () => clearInterval(interval);
-  }, [isCluePhase, state.roundIndex]);
-
-  const showRoundIntro = introDeadline !== null && nowMs < introDeadline;
+  // Full-screen round intro: shown once per clue-phase round, dismissed by the
+  // intro's own timer. Tracked by roundIndex (not a boolean) so a remount during
+  // the same round can't replay it, and a genuinely new round always arms it.
+  const [introDoneForRound, setIntroDoneForRound] = useState<number | null>(null);
+  const showRoundIntro = isCluePhase && introDoneForRound !== state.roundIndex;
 
   const visibleClues = round ? (isCluePhase ? round.clueRevealIndex : round.clues.length) : 0;
   const allCluesRevealed = round ? visibleClues >= round.clues.length : false;
   const hasBids = round ? round.highestBid > 0 : false;
+
+  // Study window: every clue is on the board and the server is counting down to
+  // the first turn. `biddingStartsAt` is server-driven, so it survives reloads.
+  const studyEndsAt = isCluePhase ? round?.biddingStartsAt ?? null : null;
 
   const minBid = round ? getMinBid(round) : 0;
 
@@ -80,6 +61,16 @@ export function BiddingScreen({
     ? state.players.find((p) => p.id === round.currentTurnId)
     : null;
   const humanFolded = round.foldedIds.includes(humanPlayerId);
+
+  // Why can't I bid? `turnOrder` only contains seats that still need this
+  // position, so a player who is full there is silently excluded for the whole
+  // lot. Without a reason the UI just said "Watching" and looked broken.
+  const inTurnOrder = round.turnOrder.includes(humanPlayerId);
+  const sitOutReason: 'eliminated' | 'position-filled' | null = humanPlayer.isEliminated
+    ? 'eliminated'
+    : !inTurnOrder
+      ? 'position-filled'
+      : null;
 
   const maxBid = getMaxBid(humanPlayer);
   const posColor = POS_COLORS[round.positionGroup];
@@ -101,6 +92,22 @@ export function BiddingScreen({
 
   return (
     <AuctionScreen glow={SCREEN_GLOW.bidding} className="flex flex-col">
+      <AnimatePresence>
+        {showRoundIntro && (
+          <AuctionRoundIntro
+            key={state.roundIndex}
+            roundIndex={state.roundIndex}
+            positionGroup={round.positionGroup}
+            onDone={() => {
+              setIntroDoneForRound(state.roundIndex);
+              // Live mode: releases the server's ui-ready gate so clues start
+              // revealing now rather than behind the intro.
+              actions.confirmRoundIntro?.();
+            }}
+          />
+        )}
+      </AnimatePresence>
+
       <div className="relative z-10 flex flex-1 flex-col overflow-y-auto">
         {/* Main area */}
         <div className="flex flex-col items-center gap-3 px-4 pt-4 pb-2 mx-auto w-full max-w-lg">
@@ -112,21 +119,6 @@ export function BiddingScreen({
             className="relative w-full rounded-[20px] bg-brand-yellow p-4 sm:p-5"
             style={isCluePhase ? { boxShadow: `0 0 40px ${posColor}08` } : undefined}
           >
-            {/* Round-start intro — overlays only this clue card, then fades,
-                using the SAME RoundTransitionOverlay component + appear/disappear
-                animation as the ranked match (dark scrim over the yellow card). */}
-            <AnimatePresence>
-              {showRoundIntro && (
-                <RoundTransitionOverlay
-                  title={posLabel(round.positionGroup)}
-                  categoryName={t('auctionGame.round', { round: state.roundIndex })}
-                  subtitle={t('auctionGame.mysteryPlayer')}
-                  className="z-30 rounded-[20px] bg-surface-deep/95 backdrop-blur-sm"
-                />
-              )}
-            </AnimatePresence>
-
-
             {/* "Rivals want this" — tilted ribbon badge, top-left, outside the card.
                 Drops in from above + overshoots + bounces (slightly longer fall than
                 the shared DropInBadge, so kept inline). Held back until the round
@@ -189,26 +181,27 @@ export function BiddingScreen({
               </div>
             </div>
 
-            {/* Clues */}
-            <div className="space-y-2.5 min-h-[80px]">
+            {/* Clues — large type, slow reveal. Each clue eases up into place
+                over ~0.9s so the board fills deliberately rather than snapping. */}
+            <div className="space-y-4 min-h-[140px]">
               <AnimatePresence>
                 {round.clues.slice(0, visibleClues).map((clue, i) => (
                   <motion.div
                     key={i}
-                    initial={{ opacity: 0, x: -20, scale: 0.95 }}
-                    animate={{ opacity: 1, x: 0, scale: 1 }}
-                    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                    className="flex items-center gap-2.5"
+                    initial={{ opacity: 0, y: 18, filter: 'blur(6px)' }}
+                    animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+                    transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+                    className="flex items-start gap-3"
                   >
                     <motion.div
                       initial={{ scale: 0, rotate: -90 }}
                       animate={{ scale: 1, rotate: 0 }}
-                      transition={{ type: 'spring', stiffness: 400, damping: 12, delay: 0.1 }}
-                      className="size-5 shrink-0 rounded-full flex items-center justify-center bg-black font-poppins text-[10px] font-black text-brand-yellow leading-none"
+                      transition={{ type: 'spring', stiffness: 260, damping: 16, delay: 0.2 }}
+                      className="mt-0.5 size-7 shrink-0 rounded-full flex items-center justify-center bg-black font-poppins text-sm font-black text-brand-yellow leading-none"
                     >
                       {i + 1}
                     </motion.div>
-                    <p className="font-poppins text-[13px] font-semibold text-black/80 leading-tight">{clue}</p>
+                    <p className="font-poppins text-lg font-bold leading-snug text-black sm:text-xl">{clue}</p>
                   </motion.div>
                 ))}
               </AnimatePresence>
@@ -216,12 +209,26 @@ export function BiddingScreen({
               {isCluePhase && !allCluesRevealed && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-2 pt-1">
                   <div className="size-4 rounded-full border-2 border-black/15 border-t-black/50 animate-spin" />
-                  <span className="font-poppins text-xs font-semibold text-black/55">
+                  <span className="font-poppins text-sm font-semibold text-black/55">
                     {t('auctionGame.revealingClue', { current: visibleClues + 1, total: round.clues.length })}
                   </span>
                 </motion.div>
               )}
             </div>
+
+            {/* Study countdown — all clues are out, bidding opens when it hits 0. */}
+            {studyEndsAt && (
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-4 flex items-center justify-between gap-3 rounded-[14px] bg-black/10 px-3.5 py-2.5"
+              >
+                <span className="font-poppins text-xs font-black uppercase tracking-wide text-black/70">
+                  {t('auctionGame.biddingOpensIn')}
+                </span>
+                <CountdownTimer key={String(studyEndsAt)} endsAt={studyEndsAt} totalMs={CLUE_STUDY_MS} />
+              </motion.div>
+            )}
 
             {/* Starting price — own row below the clues (no overlap) */}
             <div className="mt-3 flex items-center justify-between gap-2 border-t border-black/10 pt-3">
@@ -234,8 +241,9 @@ export function BiddingScreen({
             </div>
           </motion.div>
 
-          {/* Bidding controls */}
-          {allCluesRevealed && (
+          {/* Bidding controls — held back through the study window so the board
+              doesn't advertise "bidding open" while the countdown is still running. */}
+          {allCluesRevealed && !studyEndsAt && (
             <>
               {/* Current bid display */}
               <motion.div
@@ -275,13 +283,19 @@ export function BiddingScreen({
                           )}
                         </div>
 
-                        {/* Bid count — top-aligned with the Highest Bid label */}
+                        {/* Your budget — the number you actually decide against,
+                            and visible on every turn, not just your own. (It
+                            replaced a raw bid count, which competed for the same
+                            visual weight while informing almost nothing.) */}
                         <div className="text-right">
                           <div className="font-poppins text-[11px] font-black uppercase text-white/70 mb-1">
-                            {t('auctionGame.totalBids')}
+                            {t('auctionGame.budgetLabel')}
                           </div>
                           <div className="font-poppins text-3xl sm:text-4xl font-black text-white tabular-nums leading-none">
-                            {round.bids.length}
+                            {formatMoney(humanPlayer.budget)}
+                          </div>
+                          <div className="font-poppins text-xs font-semibold text-white/50 mt-1.5">
+                            {t('auctionGame.totalBidsShort', { count: round.bids.length })}
                           </div>
                         </div>
                       </div>
@@ -305,6 +319,10 @@ export function BiddingScreen({
                   </motion.div>
                 </AnimatePresence>
               </motion.div>
+
+              {/* Who you're up against: folded / still in / leading, and how
+                  much each has left to outbid you with. */}
+              <BiddingRivals players={state.players} round={round} humanPlayerId={humanPlayerId} />
 
               {/* Bid activity ticker */}
               {round.bids.length > 0 && (
@@ -336,6 +354,7 @@ export function BiddingScreen({
                         minBid={minBid}
                         maxBid={maxBid}
                         currentBudget={humanPlayer.budget}
+                        isOpeningBid={mustOpen}
                         onBid={actions.placeBid}
                       />
                       {/* Fold only when there's a standing bid — the opener must bid. */}
@@ -352,9 +371,29 @@ export function BiddingScreen({
                   )}
                 </motion.div>
               ) : isBidding ? (
-                // Not your turn → status: folded / waiting for the active player.
-                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full">
-                  <div className="flex items-center justify-center gap-2 rounded-[14px] border-2 border-white/5 bg-white/[0.03] px-5 py-3 text-center font-poppins text-sm font-semibold uppercase text-white/45">
+                // Not your turn. Lead with WHY you can't act (sat out for this
+                // lot / folded), then who everyone is waiting on.
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full space-y-2">
+                  {sitOutReason && (
+                    <div
+                      className="flex items-center justify-center gap-2 rounded-[14px] border-2 px-5 py-3 text-center font-poppins text-sm font-black uppercase"
+                      style={{
+                        borderColor: `${posColor}55`,
+                        backgroundColor: `${posColor}14`,
+                        color: posColor,
+                      }}
+                    >
+                      {sitOutReason === 'eliminated'
+                        ? t('auctionGame.eliminatedWatching')
+                        : t('auctionGame.positionFilledWatching', {
+                            position: posLabel(round.positionGroup),
+                          })}
+                    </div>
+                  )}
+                  <div
+                    aria-live="polite"
+                    className="flex items-center justify-center gap-2 rounded-[14px] border-2 border-white/5 bg-white/[0.03] px-5 py-3 text-center font-poppins text-sm font-semibold uppercase text-white/45"
+                  >
                     {humanFolded ? (
                       t('auctionGame.youFolded')
                     ) : currentTurnPlayer ? (

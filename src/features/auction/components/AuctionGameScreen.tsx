@@ -39,7 +39,14 @@ export function AuctionGameScreen({
   }
 
   if (state.phase === 'solo-pick') {
-    return <SoloPickScreen state={state} actions={actions} humanPlayerId={humanPlayerId} />;
+    return (
+      <SoloPickScreen
+        state={state}
+        actions={actions}
+        humanPlayerId={humanPlayerId}
+        serverDrivenTransitions={serverDrivenTransitions}
+      />
+    );
   }
 
   return null;

@@ -29,6 +29,14 @@ export interface AuctionPlayer {
   isEliminated: boolean;
   /** Quit / disconnect-forfeited out (ranks below everyone; no coins). */
   forfeited?: boolean;
+  /**
+   * Real profile details, shown on the showdown card when present. The auction
+   * seat payload does not carry them yet, so they stay undefined and their
+   * chips simply don't render — never substitute placeholders here, it shows
+   * opponents a nationality and club they never picked.
+   */
+  country?: string | null;
+  favoriteClub?: string | null;
 }
 
 export interface AuctionTeam {
@@ -85,6 +93,11 @@ export interface AuctionRound {
   foldedIds: string[];
   /** When the current turn's timer expires (auto-fold). */
   turnEndsAt: number | null;
+  /**
+   * When the post-clue study window ends and the first turn opens. Set only
+   * while all clues are on screen and nobody can bid yet; null otherwise.
+   */
+  biddingStartsAt: number | null;
 }
 
 export interface SoloPickOption {
@@ -107,4 +120,11 @@ export interface AuctionGameState {
     optionA: SoloPickOption;
     optionB: SoloPickOption;
   } | null;
+  /**
+   * Final placings as decided by the server, best first (player ids). Coins are
+   * paid out against this order, so the results screen must render it rather
+   * than re-sorting locally — a local tiebreak can disagree and show two
+   * players different 2nd/3rd. Absent in mock mode.
+   */
+  rankings?: string[] | null;
 }

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -9,7 +10,11 @@ import { QuitMatchModal } from '@/components/match/QuitMatchModal';
 import { useRealtimeConnectionHealth } from '@/lib/realtime/connection-health';
 import { poppins, AUCTION_QUIT_MODAL_THEME, AUCTION_PURPLE } from './constants/auction.constants';
 import { useAuctionGame } from './hooks/useAuctionGame';
-import { useRealtimeAuctionMatch, type AuctionPauseState } from './realtime/useRealtimeAuctionMatch';
+import {
+  useRealtimeAuctionMatch,
+  type AuctionMatchNotice,
+  type AuctionPauseState,
+} from './realtime/useRealtimeAuctionMatch';
 import { AuctionShowdownScreen } from './components/AuctionShowdownScreen';
 import { AuctionGameScreen } from './components/AuctionGameScreen';
 import { AuctionResultsScreen } from './components/AuctionResultsScreen';
@@ -20,6 +25,7 @@ import { LottieSearch } from './components/screens/LottieSearch';
 import { MatchCountdown } from './components/screens/MatchCountdown';
 import type { AuctionFormationName } from '@/lib/realtime/socket.types';
 import type { AvatarCustomization } from '@/types/game';
+import type { AuctionGameState } from './types';
 
 // The matchmaking search still sends a formation name (the hook requires one),
 // but the SERVER picks the real formation randomly and ignores this value.
@@ -167,6 +173,7 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
     versionGapDetected,
     waitingForReady,
     pause,
+    matchNotice,
     rejoinAvailable,
     resumeCountdownEndsAtMs,
     search,
@@ -195,10 +202,21 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
   // play, so it must stay a thin strip, NOT a full-screen overlay (that would
   // flash over the live game). Only genuinely blocking moments (finalizing /
   // loading results) use the centered AuctionStatusOverlay.
+  // "Waiting for players" carries readyCount/totalCount, so say how many we're
+  // waiting on rather than an open-ended stall — with three players a single
+  // slow client holds the other two for up to 8s.
+  const waitingMessage = waitingForReady
+    ? waitingForReady.totalCount > 0
+      ? t('auctionGame.waitingForPlayersReadyCount', {
+          ready: waitingForReady.readyCount,
+          total: waitingForReady.totalCount,
+        })
+      : t('auctionGame.waitingForPlayersReady')
+    : null;
   const liveWarningMessage =
     error ??
     connectionWarning ??
-    (waitingForReady ? t('auctionGame.waitingForPlayersReady') : null) ??
+    waitingMessage ??
     (versionGapDetected ? t('auctionGame.stateChangedReconnect') : null);
 
   const handlePlayAgain = useCallback(() => {
@@ -349,8 +367,15 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
             message={liveWarningMessage}
           />
         )}
+        {matchNotice && (
+          <LiveAuctionNotice
+            key={matchNotice.id}
+            notice={matchNotice}
+            playerName={seatName(state, matchNotice.seatId)}
+          />
+        )}
         {pause && (
-          <LiveAuctionPauseOverlay pause={pause} />
+          <LiveAuctionPauseOverlay pause={pause} playerName={seatName(state, pause.seatId)} />
         )}
         <QuitMatchModal
           open={showQuitModal}
@@ -445,7 +470,76 @@ function LiveAuctionWarning({ message }: { message: string }) {
   );
 }
 
-function LiveAuctionPauseOverlay({ pause }: { pause: AuctionPauseState }) {
+/** Display name for a seat, or null when the seat isn't in the state yet. */
+function seatName(state: AuctionGameState | null, seatId: string): string | null {
+  return state?.players.find((player) => player.id === seatId)?.username ?? null;
+}
+
+/**
+ * Transient, non-blocking announcement that something happened to another seat.
+ * Deliberately not an overlay: these fire while the board is still playable
+ * (a rival drops but the turn order hasn't reached them yet), so blocking the
+ * screen would be worse than the silence it replaces.
+ */
+function LiveAuctionNotice({
+  notice,
+  playerName,
+}: {
+  notice: AuctionMatchNotice;
+  playerName: string | null;
+}) {
+  const { t } = useLocale();
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setVisible(false), 4500);
+    return () => window.clearTimeout(timeout);
+  }, []);
+
+  const name = playerName ?? t('auctionGame.anOpponent');
+  const copy =
+    notice.kind === 'opponent-disconnected'
+      ? t('auctionGame.opponentLostConnection', { name })
+      : notice.kind === 'opponent-returned'
+        ? t('auctionGame.opponentReconnected', { name })
+        : t('auctionGame.opponentLeftMatch', { name });
+  const tone =
+    notice.kind === 'opponent-returned'
+      ? 'border-brand-green/40 bg-brand-green/15 text-brand-green'
+      : notice.kind === 'opponent-forfeited'
+        ? 'border-brand-red/40 bg-brand-red/15 text-brand-red'
+        : 'border-brand-yellow/40 bg-brand-yellow/15 text-brand-yellow';
+
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -12 }}
+          role="status"
+          aria-live="polite"
+          className="pointer-events-none fixed inset-x-0 top-14 z-[70] flex justify-center px-4"
+        >
+          <div
+            className={`rounded-full border-2 px-4 py-2 text-center font-poppins text-xs font-black uppercase tracking-wide backdrop-blur ${tone}`}
+          >
+            {copy}
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+function LiveAuctionPauseOverlay({
+  pause,
+  playerName,
+}: {
+  pause: AuctionPauseState;
+  /** Who dropped. With three players "a player disconnected" is not enough. */
+  playerName: string | null;
+}) {
   const { t } = useLocale();
   const [nowMs, setNowMs] = useState(() => Date.now());
 
@@ -475,7 +569,9 @@ function LiveAuctionPauseOverlay({ pause }: { pause: AuctionPauseState }) {
           className="mt-2 font-poppins text-xl font-semibold uppercase text-white"
           style={poppins}
         >
-          {t('auctionGame.playerDisconnected')}
+          {playerName
+            ? t('auctionGame.namedPlayerDisconnected', { name: playerName })
+            : t('auctionGame.playerDisconnected')}
         </div>
         <div
           className="mt-1 font-poppins text-sm font-semibold text-white/70"

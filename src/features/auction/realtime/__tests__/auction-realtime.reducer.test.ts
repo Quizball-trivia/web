@@ -58,6 +58,7 @@ function round(overrides: Partial<PublicAuctionRoundState> = {}): PublicAuctionR
     currentTurnSeatId: 'seat-human',
     foldedSeatIds: [],
     turnEndsAt: null,
+    biddingStartsAt: null,
     startedAt: '2026-06-20T10:00:00.000Z',
     updatedAt: '2026-06-20T10:00:00.000Z',
     revealedClues: ['First clue', 'Second clue', 'Third clue'],

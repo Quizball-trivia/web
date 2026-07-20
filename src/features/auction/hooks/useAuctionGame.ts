@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { ROUND_INTRO_MS } from '../components/screens/AuctionRoundIntro';
 import type {
   AuctionGameState,
   AuctionPhase,
@@ -12,7 +13,10 @@ import {
   FOOTBALLERS,
   STARTING_BUDGET,
   MIN_PLAYER_COST,
+  BOT_MAX_THINK_MS,
+  BOT_MIN_THINK_MS,
   CLUE_REVEAL_INTERVAL_MS,
+  CLUE_STUDY_MS,
   MIN_BID_INCREMENT,
   OPENING_TURN_MS,
   RAISE_TURN_MS,
@@ -45,6 +49,13 @@ export interface AuctionActions {
   placeBid: (amount: number) => void;
   fold: () => void;
   confirmReveal: () => void;
+  /**
+   * Signals the round intro has finished playing. In live mode this releases
+   * the server's ui-ready gate so clues only start revealing once the intro has
+   * cleared; in mock mode the local clue timer is already intro-aware, so this
+   * is a no-op.
+   */
+  confirmRoundIntro?: () => void;
   pickSoloOption: (option: 'A' | 'B') => void;
   setPhase: (phase: AuctionPhase) => void;
   cancelSearch?: () => void;
@@ -221,6 +232,7 @@ export function useAuctionGame(humanUsername: string, humanAvatarSeed: string) {
           currentTurnId: null,
           foldedIds: [],
           turnEndsAt: null,
+          biddingStartsAt: null,
         },
         soloPick: null,
       };
@@ -282,7 +294,8 @@ export function useAuctionGame(humanUsername: string, humanAvatarSeed: string) {
     const { clueRevealIndex, clues } = state.currentRound;
 
     if (clueRevealIndex < clues.length) {
-      const delay = clueRevealIndex === 0 ? 800 : CLUE_REVEAL_INTERVAL_MS;
+      // First clue waits out the full-screen round intro; the rest stagger in.
+      const delay = clueRevealIndex === 0 ? ROUND_INTRO_MS + 400 : CLUE_REVEAL_INTERVAL_MS;
       clueRevealTimerRef.current = setTimeout(() => {
         setState((prev) => {
           if (prev.phase !== 'clue-reveal' || !prev.currentRound) return prev;
@@ -303,6 +316,15 @@ export function useAuctionGame(humanUsername: string, humanAvatarSeed: string) {
       };
     }
 
+    // All clues are out: arm the study countdown, then open bidding when it ends.
+    setState((prev) => {
+      if (prev.phase !== 'clue-reveal' || !prev.currentRound || prev.currentRound.biddingStartsAt) return prev;
+      return {
+        ...prev,
+        currentRound: { ...prev.currentRound, biddingStartsAt: Date.now() + CLUE_STUDY_MS },
+      };
+    });
+
     const timer = setTimeout(() => {
       setState((prev) => {
         if (prev.phase !== 'clue-reveal' || !prev.currentRound) return prev;
@@ -319,10 +341,10 @@ export function useAuctionGame(humanUsername: string, humanAvatarSeed: string) {
         return {
           ...prev,
           phase: 'bidding',
-          currentRound: { ...round, currentTurnId: firstId, turnEndsAt: Date.now() + turnMsFor(round) },
+          currentRound: { ...round, currentTurnId: firstId, turnEndsAt: Date.now() + turnMsFor(round), biddingStartsAt: null },
         };
       });
-    }, CLUE_REVEAL_INTERVAL_MS);
+    }, CLUE_STUDY_MS);
 
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -365,7 +387,7 @@ export function useAuctionGame(humanUsername: string, humanAvatarSeed: string) {
     const turnId = state.currentRound.currentTurnId;
     if (turnId === HUMAN_PLAYER_ID) return;
 
-    const think = 800 + Math.random() * 2000; // 0.8–2.8s, well within the turn window
+    const think = BOT_MIN_THINK_MS + Math.random() * (BOT_MAX_THINK_MS - BOT_MIN_THINK_MS);
     botTimerRef.current = setTimeout(() => {
       setState((prev) => {
         if (prev.phase !== 'bidding' || !prev.currentRound || prev.currentRound.currentTurnId !== turnId) return prev;
@@ -545,6 +567,7 @@ export function useAuctionGame(humanUsername: string, humanAvatarSeed: string) {
           currentTurnId: null,
           foldedIds: [],
           turnEndsAt: null,
+          biddingStartsAt: null,
         };
 
         return advanceToNextRound({
