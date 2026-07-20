@@ -25,16 +25,17 @@ export interface RankedTierBand {
   maxRpExclusive: number | null;
 }
 
+// Season 2 curve — keep in sync with backend tierFromRp (ranked.service.ts).
 export const RANKED_TIER_BANDS: RankedTierBand[] = [
-  { tier: "GOAT", minRp: 5000, maxRpExclusive: null },
-  { tier: "Legend", minRp: 2900, maxRpExclusive: 5000 },
-  { tier: "World-Class", minRp: 2600, maxRpExclusive: 2900 },
-  { tier: "Captain", minRp: 2200, maxRpExclusive: 2600 },
-  { tier: "Key Player", minRp: 1850, maxRpExclusive: 2200 },
-  { tier: "Starting11", minRp: 1500, maxRpExclusive: 1850 },
-  { tier: "Rotation", minRp: 1200, maxRpExclusive: 1500 },
-  { tier: "Bench", minRp: 900, maxRpExclusive: 1200 },
-  { tier: "Reserve", minRp: 600, maxRpExclusive: 900 },
+  { tier: "GOAT", minRp: 9000, maxRpExclusive: null },
+  { tier: "Legend", minRp: 6800, maxRpExclusive: 9000 },
+  { tier: "World-Class", minRp: 5200, maxRpExclusive: 6800 },
+  { tier: "Captain", minRp: 4000, maxRpExclusive: 5200 },
+  { tier: "Key Player", minRp: 3000, maxRpExclusive: 4000 },
+  { tier: "Starting11", minRp: 2200, maxRpExclusive: 3000 },
+  { tier: "Rotation", minRp: 1500, maxRpExclusive: 2200 },
+  { tier: "Bench", minRp: 1000, maxRpExclusive: 1500 },
+  { tier: "Reserve", minRp: 600, maxRpExclusive: 1000 },
   { tier: "Youth Prospect", minRp: 300, maxRpExclusive: 600 },
   { tier: "Academy", minRp: 0, maxRpExclusive: 300 },
 ];

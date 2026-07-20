@@ -98,13 +98,6 @@ export function getElementCenter(element: Element | null): { x: number; y: numbe
   };
 }
 
-export function getDaysUntilWorldCup(): number {
-  const WC_START = new Date(2026, 5, 11); // June 11, 2026
-  const now = new Date();
-  const diff = WC_START.getTime() - now.getTime();
-  return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
-}
-
 // Marketing counters that grow ~2,000/day from a fixed baseline. Deterministic
 // (date-derived) so every viewer on a given day sees the same number.
 const COUNTER_ANCHOR_DATE = Date.UTC(2026, 5, 10); // 2026-06-10

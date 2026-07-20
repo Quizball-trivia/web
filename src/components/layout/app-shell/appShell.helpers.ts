@@ -5,16 +5,16 @@
  * these without dragging extra deps.
  */
 
-import { Home, Medal, Gem, User, UserRound } from 'lucide-react';
+import { CalendarDays, Home, Medal, Gem, UserRound } from 'lucide-react';
 import type { MessageKey } from '@/lib/i18n/messages';
 import type { RankedGeoHintDebug } from './appShell.types';
 
 export const MOBILE_NAV_ITEMS = [
   { path: '/play', labelKey: 'navigation.home', icon: Home },
   { path: '/leaderboard', labelKey: 'navigation.leaderboard', icon: Medal },
+  { path: '/events', labelKey: 'navigation.events', icon: CalendarDays },
   { path: '/social', labelKey: 'navigation.social', icon: UserRound },
   { path: '/store', labelKey: 'navigation.store', icon: Gem },
-  { path: '/profile', labelKey: 'navigation.profile', icon: User },
 ] as const;
 
 export const HIDE_NAV_PATHS = ['/game', '/onboarding'];
