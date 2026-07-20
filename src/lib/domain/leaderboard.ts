@@ -17,6 +17,7 @@ export interface LeaderboardEntry {
 /** User's own rank information, always marked as current user */
 export interface UserRank extends Omit<LeaderboardEntry, 'isCurrentUser'> {
   isCurrentUser: true;
+  total: number;
 }
 
 export type LeaderboardType = 'global' | 'country';

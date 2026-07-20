@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Loader2, Trophy } from "lucide-react";
 import { motion } from "motion/react";
 
 import Image from "next/image";
-import { useLeaderboard, useUserRank } from "@/lib/queries/leaderboard.queries";
+import { useLeaderboard, useLeaderboardSeasons, useUserRank } from "@/lib/queries/leaderboard.queries";
 import type { LeaderboardType } from "@/lib/domain/leaderboard";
 import { useLocale } from "@/contexts/LocaleContext";
+import { cn } from "@/lib/utils";
 import type { MessageKey } from "@/lib/i18n/messages";
 
 import { useActiveEventMode } from "@/lib/hooks/useActiveEventMode";
@@ -37,9 +38,23 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
   const { t } = useLocale();
   const { isEventMode } = useActiveEventMode();
   const [activeTab, setActiveTab] = useState<LeaderboardType>("global");
+  const [seasonId, setSeasonId] = useState<string | null>(null);
 
-  const { data: entries, isLoading, isError } = useLeaderboard(activeTab, currentPlayerId);
-  const { data: userRank } = useUserRank(currentPlayerId ?? "", activeTab);
+  const { data: seasonsData } = useLeaderboardSeasons();
+  const archivedSeasons = seasonsData?.seasons ?? [];
+  const currentSeasonNumber = seasonsData?.currentSeasonNumber ?? archivedSeasons.length + 1;
+  const isArchivedView = seasonId !== null;
+
+  const { data: entries, isLoading, isError } = useLeaderboard(
+    activeTab,
+    currentPlayerId,
+    seasonId ?? undefined,
+  );
+  const { data: userRank } = useUserRank(
+    currentPlayerId ?? "",
+    activeTab,
+    seasonId ?? undefined,
+  );
 
   const handleEntryClick = (userId: string) => {
     router.push(`/profile/${userId}`);
@@ -106,6 +121,64 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
                 <span className="text-[6px] font-bold uppercase tracking-wider text-white/80 leading-none">{t('welcome.poweredBy')}</span>
                 <Image src="/assets/betsson/3.png" alt="Betsson Sport" width={96} height={18} className="h-4 w-auto object-contain mt-0.5" />
               </div>
+            )}
+          </motion.div>
+        )}
+
+        {/* ─── Season switcher — only once at least one season is archived ─── */}
+        {archivedSeasons.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, delay: 0.08 }}
+            className="flex flex-col items-center gap-1.5 pt-1"
+          >
+            <div className="flex items-center justify-center gap-2" role="tablist" aria-label={t("leaderboard.seasonsAriaLabel")}>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={!isArchivedView}
+                onClick={() => setSeasonId(null)}
+                className={cn(
+                  "inline-flex h-8 items-center justify-center rounded-full px-4 text-[11px] sm:text-xs font-fun font-black uppercase tracking-wide transition-all active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70",
+                  !isArchivedView
+                    ? isEventMode
+                      ? "bg-[#FF6C0A] text-white"
+                      : "bg-brand-green text-white"
+                    : isEventMode
+                      ? "border-2 border-[#FF6C0A]/60 text-white/70 hover:bg-[#FF6C0A]/10 hover:text-white"
+                      : "border-2 border-brand-green/60 text-white/70 hover:bg-brand-green/10 hover:text-white",
+                )}
+              >
+                {t("leaderboard.season", { n: currentSeasonNumber })}
+              </button>
+              {[...archivedSeasons].reverse().map((season) => (
+                <button
+                  key={season.id}
+                  type="button"
+                  role="tab"
+                  aria-selected={seasonId === season.id}
+                  onClick={() => setSeasonId(season.id)}
+                  className={cn(
+                    "inline-flex h-8 items-center justify-center gap-1 rounded-full px-4 text-[11px] sm:text-xs font-fun font-black uppercase tracking-wide transition-all active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70",
+                    seasonId === season.id
+                      ? isEventMode
+                        ? "bg-[#FF6C0A] text-white"
+                        : "bg-brand-green text-white"
+                      : isEventMode
+                        ? "border-2 border-[#FF6C0A]/60 text-white/70 hover:bg-[#FF6C0A]/10 hover:text-white"
+                        : "border-2 border-brand-green/60 text-white/70 hover:bg-brand-green/10 hover:text-white",
+                  )}
+                >
+                  <Trophy className="size-3" aria-hidden />
+                  {t("leaderboard.season", { n: season.seasonNumber })}
+                </button>
+              ))}
+            </div>
+            {isArchivedView && (
+              <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-brand-yellow/80">
+                {t("leaderboard.finalStandings")}
+              </span>
             )}
           </motion.div>
         )}

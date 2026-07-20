@@ -18,7 +18,7 @@ const NAV_ITEMS = [
   { path: "/play/friend?tab=browse", labelKey: "navigation.lobbies", exact: true },
   // Events tab hidden until the feature ships — keep the route + translations
   // in place so we can flip it back on without re-wiring.
-  // { path: "/events", labelKey: "navigation.events" },
+  { path: "/events", labelKey: "navigation.events" },
   { path: "/store", labelKey: "navigation.store" },
   { path: "/profile", labelKey: "navigation.profile" },
   { path: "/settings", labelKey: "navigation.settings" },
