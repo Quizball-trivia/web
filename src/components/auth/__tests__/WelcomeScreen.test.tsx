@@ -358,12 +358,7 @@ describe('WelcomeScreen — landing chrome', () => {
     expect(screen.getAllByText(/welcome\.kickOff/).length).toBeGreaterThan(0);
   });
 
-  it('hides the World Cup promo banner when the event flag is off (default)', () => {
-    render(<WelcomeScreen />);
-    expect(screen.queryByText(/welcome\.wcPromoTitle/)).not.toBeInTheDocument();
-  });
-
-  it('renders the World Cup promo banner copy when event mode is on', () => {
+  it('never renders the retired World Cup promo banner, even with event mode on', () => {
     eventModeMock.mockReturnValueOnce({
       eventEnabled: true,
       isEligibleRegion: true,
@@ -373,22 +368,7 @@ describe('WelcomeScreen — landing chrome', () => {
       eventSlug: 'georgia-world-cup',
     });
     render(<WelcomeScreen />);
-    expect(screen.getByText(/welcome\.wcPromoTitle/)).toBeInTheDocument();
-  });
-
-  it('renders the World Cup promo banner for non-eligible regions too (landing is region-free)', () => {
-    // The landing shows the Betsson layer to EVERYONE while the flag is on —
-    // region gating only applies to in-game surfaces (isEventMode stays false).
-    eventModeMock.mockReturnValueOnce({
-      eventEnabled: true,
-      isEligibleRegion: false,
-      isEventMode: false,
-      canParticipate: false,
-      scoreLabel: 'RP',
-      eventSlug: null,
-    });
-    render(<WelcomeScreen />);
-    expect(screen.getByText(/welcome\.wcPromoTitle/)).toBeInTheDocument();
+    expect(screen.queryByText(/welcome\.wcPromoTitle/)).not.toBeInTheDocument();
   });
 
   it('renders the leaderboard podium and table sections', () => {
