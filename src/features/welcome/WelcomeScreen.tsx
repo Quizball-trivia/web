@@ -8,11 +8,7 @@ import { useGeorgianPhoneAuthAvailability } from '@/lib/auth/useGeorgianPhoneAut
 import { useCspNonce } from '@/contexts/CspNonceContext';
 
 import { DEMO_LEADERBOARD } from './welcome.content';
-import {
-  getDaysUntilWorldCup,
-  getDuelsCount,
-  getVerifiedQuestionsCount,
-} from './welcome.helpers';
+import { getDuelsCount, getVerifiedQuestionsCount } from './welcome.helpers';
 import { useWelcomeAuthController } from './useWelcomeAuthController';
 import { useWelcomeStadiumSim } from './useWelcomeStadiumSim';
 import { useWelcomeCategoriesData } from './useWelcomeCategoriesData';
@@ -26,15 +22,12 @@ import { WelcomeCategoriesDialog } from './WelcomeCategoriesDialog';
 import { WelcomeTierRoadSection } from './WelcomeTierRoadSection';
 import { WelcomeLeaderboardSection } from './WelcomeLeaderboardSection';
 import { WelcomeFooter } from './WelcomeFooter';
-import { WelcomeWorldCupBanner } from './WelcomeWorldCupBanner';
-import { useActiveEventMode } from '@/lib/hooks/useActiveEventMode';
 
 export function WelcomeScreen() {
   const cspNonce = useCspNonce();
   // Landing shows the Betsson/World Cup layer to EVERYONE while the event flag
   // is on — no region gating here. In-game surfaces (leaderboard, play, modals)
   // keep the region-gated `isEventMode`.
-  const { eventEnabled } = useActiveEventMode();
   const auth = useWelcomeAuthController();
   const {
     loginOpen,
@@ -91,7 +84,6 @@ export function WelcomeScreen() {
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [duelsCount] = useState(() => getDuelsCount());
   const [verifiedQuestionsCount] = useState(() => getVerifiedQuestionsCount());
-  const [wcDaysLeft] = useState(() => getDaysUntilWorldCup());
 
   const sim = useWelcomeStadiumSim();
   const { landingFlights, setLandingFlights } = sim;
@@ -135,7 +127,7 @@ export function WelcomeScreen() {
           defer
         />
       ) : null}
-      <WelcomeNavbar wcDaysLeft={wcDaysLeft} />
+      <WelcomeNavbar />
 
       <WelcomeHero sim={sim} duelsCount={duelsCount} onKickOff={handleKickOff} />
 
@@ -146,13 +138,6 @@ export function WelcomeScreen() {
 
       {/* ─── World Cup Event Zone ─── */}
       <div className="relative max-w-7xl mx-auto w-full px-2 md:px-4 pt-8 pb-4">
-        {/* World Cup banner — Betsson/World Cup event only */}
-        {eventEnabled && (
-          <div className="pb-10">
-            <WelcomeWorldCupBanner />
-          </div>
-        )}
-
         {/* Categories */}
         <div className="pb-10">
           <WelcomeCategoriesSection

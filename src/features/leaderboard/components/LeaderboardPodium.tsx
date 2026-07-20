@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { TierFrameAvatar } from "@/components/TierFrameAvatar";
 import type { LeaderboardEntry } from "@/lib/domain/leaderboard";
@@ -36,9 +35,6 @@ const eventPodiumConfig: Record<
     gradientFrom: string;
     gradientTo: string;
     order: string;
-    prizeImage: string;
-    prizeAlt: string;
-    prizeSize: string;
   }
 > = {
   1: {
@@ -48,9 +44,6 @@ const eventPodiumConfig: Record<
     gradientFrom: "rgba(255,215,0,0.85)",
     gradientTo: "rgba(255,176,0,0.35)",
     order: "order-2",
-    prizeImage: "/assets/world-cup-promotion/Layer 6.png",
-    prizeAlt: "iPhone 17 Pro",
-    prizeSize: "h-16 sm:h-20",
   },
   2: {
     barHeight: "h-28 sm:h-36",
@@ -59,9 +52,6 @@ const eventPodiumConfig: Record<
     gradientFrom: "rgba(214,214,222,0.8)",
     gradientTo: "rgba(160,160,170,0.3)",
     order: "order-1",
-    prizeImage: "/assets/world-cup-promotion/Sony-PlayStation-5-Digital-Edition-Console-Wholesale-Product-Hero2.png",
-    prizeAlt: "PlayStation 5",
-    prizeSize: "h-14 sm:h-16",
   },
   3: {
     barHeight: "h-20 sm:h-28",
@@ -70,9 +60,6 @@ const eventPodiumConfig: Record<
     gradientFrom: "rgba(205,127,50,0.85)",
     gradientTo: "rgba(160,90,30,0.35)",
     order: "order-3",
-    prizeImage: "/assets/world-cup-promotion/pngtree-apple-airpods-pro-in-a-charging-case-with-the-lid-open-png-image_16254552.png",
-    prizeAlt: "AirPods",
-    prizeSize: "h-10 sm:h-14",
   },
 };
 
@@ -243,17 +230,6 @@ export function LeaderboardPodium({ topThree, onEntryClick, eventMode }: Leaderb
                 interactive ? "cursor-pointer active:translate-y-[2px] transition-transform" : ""
               }`}
             >
-              {/* Prize image floating above avatar */}
-              <div className="mb-1 sm:mb-2 shrink-0">
-                <Image
-                  src={config.prizeImage}
-                  alt={config.prizeAlt}
-                  width={80}
-                  height={80}
-                  className={`${config.prizeSize} w-auto object-contain drop-shadow-[0_4px_16px_rgba(0,0,0,0.4)]`}
-                />
-              </div>
-
               {/* Avatar inside tier card frame */}
               <div className="relative mb-2 sm:mb-3 z-10 shrink-0">
                 <div className="hidden sm:block">
