@@ -26,12 +26,6 @@ const poppins = {
   lineHeight: 1,
 } as const;
 
-const PRIZE_IMAGES: Record<number, { src: string; alt: string }> = {
-  1: { src: "/assets/world-cup-promotion/Layer 6.png", alt: "iPhone" },
-  2: { src: "/assets/world-cup-promotion/Sony-PlayStation-5-Digital-Edition-Console-Wholesale-Product-Hero2.png", alt: "PS5" },
-  3: { src: "/assets/world-cup-promotion/pngtree-apple-airpods-pro-in-a-charging-case-with-the-lid-open-png-image_16254552.png", alt: "AirPods" },
-};
-
 export function LeaderboardTable({ entries, currentUserId, onEntryClick, eventMode }: LeaderboardTableProps) {
   const { t } = useLocale();
   const { isEventMode: regionEventMode } = useActiveEventMode();
@@ -68,27 +62,11 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick, eventMo
             {entries.map((entry) => {
               const isCurrentUser = entry.isCurrentUser || entry.id === currentUserId;
               const isFirst = entry.rank === 1;
-              const isTopThree = entry.rank <= 3;
               const interactive = !!onEntryClick;
               const tierAccent = getTierAccent(entry.tier);
-              // Prize images are part of the World Cup / Betsson event — only show
-              // them while the event is active (badge + border are already gated).
-              const prize = isEventMode ? PRIZE_IMAGES[entry.rank] : undefined;
 
               return (
                 <div key={entry.id} className="relative">
-                  {/* Gift icon on the left border — event only */}
-                  {isEventMode && entry.rank <= 25 && (
-                    <div className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full bg-surface-page size-7 sm:size-8">
-                      <Image
-                        src={isTopThree ? "/assets/world-cup-promotion/gift-filled.svg" : "/assets/world-cup-promotion/gift.svg"}
-                        alt=""
-                        width={24}
-                        height={24}
-                        className={cn("size-5 sm:size-6", !isTopThree && "opacity-50")}
-                      />
-                    </div>
-                  )}
                   {/* Row content */}
                   <div
                     onClick={interactive ? () => onEntryClick(entry.id) : undefined}
@@ -115,17 +93,8 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick, eventMo
                     )}
                     style={isEventMode && isFirst ? { backgroundColor: '#FF6C0A' } : undefined}
                   >
-                    {/* Rank (+ prize image) */}
+                    {/* Rank */}
                     <div className="col-span-3 flex items-center justify-center gap-1.5 sm:gap-2">
-                      {prize && (
-                        <Image
-                          src={prize.src}
-                          alt={prize.alt}
-                          width={40}
-                          height={48}
-                          className="h-9 sm:h-12 w-auto object-contain shrink-0"
-                        />
-                      )}
                       <span
                         className="text-xl sm:text-2xl tabular-nums font-black text-white"
                         style={poppins}

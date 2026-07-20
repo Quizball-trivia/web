@@ -110,7 +110,6 @@ export function ModeSelectionScreen({
   const { isEventMode } = useActiveEventMode();
   const [selectedMode, setSelectedMode] = useState<'ranked' | 'friendly' | 'solo' | null>(null);
   const [playEntranceAnimation] = useState(shouldPlayEntranceAnimation);
-  const [wcDaysLeft] = useState(() => Math.max(0, Math.ceil((new Date('2026-07-19T23:59:59Z').getTime() - Date.now()) / 86_400_000)));
   const isPlacementInProgress = rankedProfile ? rankedProfile.placementStatus !== 'placed' : false;
   const placementPlayed = rankedProfile?.placementPlayed ?? 0;
   const placementRequired = Math.max(1, rankedProfile?.placementRequired ?? 3);
@@ -244,13 +243,6 @@ export function ModeSelectionScreen({
                     <Image src="/assets/brand/world-cup-trophy.webp" alt="" width={16} height={16} className="h-4 w-auto object-contain" />
                     {t('play.eventWinPrizes')}
                   </span>
-                  <span
-                    className="inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-black uppercase tracking-wide text-white shadow-[0_2px_12px_rgba(255,108,10,0.25)]"
-                    style={{ backgroundColor: '#FF6C0A' }}
-                  >
-                    <Image src="/assets/brand/world-cup-trophy.webp" alt="" width={16} height={16} className="h-4 w-auto object-contain" />
-                    {t('play.eventDaysLeft', { count: wcDaysLeft })}
-                  </span>
                 </div>
               )}
 
@@ -317,13 +309,6 @@ export function ModeSelectionScreen({
                     <span className="inline-flex items-center gap-1 rounded-full bg-brand-yellow px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-black">
                       <Image src="/assets/brand/world-cup-trophy.webp" alt="" width={14} height={14} className="h-3.5 w-auto object-contain" />
                       {t('play.eventWinPrizes')}
-                    </span>
-                    <span
-                      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-black uppercase tracking-wide text-white shadow-[0_2px_12px_rgba(255,108,10,0.25)]"
-                      style={{ backgroundColor: '#FF6C0A' }}
-                    >
-                      <Image src="/assets/brand/world-cup-trophy.webp" alt="" width={14} height={14} className="h-3.5 w-auto object-contain" />
-                      {t('play.eventDaysLeftShort', { count: wcDaysLeft })}
                     </span>
                   </div>
                 )}

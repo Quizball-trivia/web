@@ -19,7 +19,6 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { WorldCupRulesButton } from "./WorldCupRulesModal";
 import {
   Dialog,
   DialogContent,
@@ -127,10 +126,6 @@ export function ModeConfirmModal({
     return () => clearTimeout(timer);
   }, [starting]);
 
-  const [wcDaysLeft] = useState(() =>
-    Math.max(0, Math.ceil((new Date("2026-07-19T23:59:59Z").getTime() - Date.now()) / 86_400_000))
-  );
-
   if (!mode) return null;
 
   const config = CONFIG[mode];
@@ -171,22 +166,6 @@ export function ModeConfirmModal({
       <p className="mx-auto mt-3 max-w-[30rem] text-center text-[13px] leading-snug font-bold text-white/85 sm:mt-4 sm:text-sm md:text-base">
         {description}
       </p>
-
-      {isEventMode && isRanked && (
-        <>
-          {/* Event countdown (prominent) + rules */}
-          <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
-            <span
-              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] sm:text-xs font-black uppercase tracking-wide text-white shadow-[0_2px_12px_rgba(255,108,10,0.25)]"
-              style={{ backgroundColor: '#FF6C0A' }}
-            >
-              <Image src="/assets/brand/world-cup-trophy.webp" alt="" width={14} height={14} className="h-3.5 w-auto object-contain" />
-              {t('play.eventDaysLeft', { count: wcDaysLeft })}
-            </span>
-            <WorldCupRulesButton variant="text" />
-          </div>
-        </>
-      )}
 
       {/* Trophy section */}
       <div

@@ -11,12 +11,10 @@ import type { LeaderboardType } from "@/lib/domain/leaderboard";
 import { useLocale } from "@/contexts/LocaleContext";
 import type { MessageKey } from "@/lib/i18n/messages";
 
-import { WorldCupRulesButton } from "@/components/shared/WorldCupRulesModal";
 import { useActiveEventMode } from "@/lib/hooks/useActiveEventMode";
 import { LeaderboardTable } from "./components/LeaderboardTable";
 import { LeaderboardPodium } from "./components/LeaderboardPodium";
 import { UserRankStrip } from "./components/UserRankStrip";
-import { ResetsInBadge } from "./components/ResetsInBadge";
 
 interface LeaderboardScreenProps {
   currentPlayerId?: string;
@@ -76,12 +74,6 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
             <p className="mt-2 text-[11px] sm:text-[13px] font-black uppercase tracking-[0.08em] text-white/70">
               {t("leaderboard.subtitle")}
             </p>
-            {isEventMode && (
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <WorldCupRulesButton variant="pill" />
-                <ResetsInBadge />
-              </div>
-            )}
           </div>
 
           <div className="flex shrink-0 flex-col items-end gap-2">
