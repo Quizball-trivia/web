@@ -251,7 +251,9 @@
     "next": "შემდეგი",
     "unranked": "ურანგო",
     "rpToNextTier": "{rp} RP შემდეგ ლიგამდე",
-    "toNextLeagueLabel": "შემდეგ ლიგამდე"
+    "toNextLeagueLabel": "შემდეგ ლიგამდე",
+    "seasonOf": "{total} მოთამაშიდან",
+    "seasonNoRank": "ამ სეზონში რანგი არ გქონდა"
   },
   "home": {
     "statRP": "RP",
@@ -291,8 +293,8 @@
     "phraseKnow": "აიარე პირამიდა. დაეუფლე გვირგვინს.",
     "phraseStartStrong": "ელიტური ქვიზი მე-12 მოთამაშისთვის.",
     "phraseEveryRight": "დომინირება მოედანზე, თითოეული პასუხით.",
-    "categoriesTitle": "მსოფლიო ჩემპიონატის კატეგორიები",
-    "categoriesSubtitle": "შეამოწმე შენი ცოდნა {count} მსოფლიო ჩემპიონატის კატეგორიაში",
+    "categoriesTitle": "კატეგორიები",
+    "categoriesSubtitle": "შეამოწმე შენი ცოდნა {count} საფეხბურთო კატეგორიაში",
     "browseAllCategories": "ნახე ყველა {count} კატეგორია",
     "openCategory": "გახსენი {name}",
     "tierRoadTitle": "აიწიე კატეგორიებში",
@@ -366,7 +368,7 @@
     "rankedTitlePrefix": "1V1",
     "friendlyTitlePrefix": "1V1",
     "rankedTitleRest": "რეიტინგული",
-    "rankedTitleRestEvent": "მსოფლიო თასის რეიტინგი",
+    "rankedTitleRestEvent": "რეიტინგი",
     "rankedDescription": "გამოჩნდება 3 შემთხვევითი კატეგორია - თითოეული მოთამაშე ბლოკავს 1-ს, შემდეგ კი ეჯიბრებით დარჩენილში",
     "rankedStatLeft": "12–18 კითხვა",
     "rankedStatRight": "ხანგრძლივობა 5 წთ",
@@ -527,7 +529,7 @@
     "backOnline": "კავშირი აღდგა"
   },
   "navigation": {
-    "events": "ღონისძიებები",
+    "events": "ივენთები",
     "home": "მთავარი",
     "leaderboard": "ლიდერბორდი",
     "lobbies": "ოთახები",
@@ -862,9 +864,8 @@
   },
   "play": {
     "rankedMatch": "რეიტინგული მატჩი",
-    "rankedMatchEvent": "მსოფლიო თასის რეიტინგი",
+    "rankedMatchEvent": "რეიტინგი",
     "rankedSubtitle": "1V1 ონლაინ",
-    "eventWinPrizes": "მოიგე პრიზები",
     "eventPlayWorldCup": "ითამაშე მსოფლიო თასი და მოიგე პრიზები",
     "eventViewLeaderboard": "ლიდერბორდის ნახვა",
     "eventRules": "წესები",
@@ -908,7 +909,10 @@
     "colPlayer": "მოთამაშე",
     "colTier": "ლიგა",
     "colRP": "RP",
-    "resetsIn": "განახლდება"
+    "resetsIn": "განახლდება",
+    "season": "სეზონი {n}",
+    "finalStandings": "საბოლოო შედეგები",
+    "seasonsAriaLabel": "ლიდერბორდის სეზონები"
   },
   "appAuthGate": {
     "warmingUp": "გახურება...",
@@ -1582,5 +1586,14 @@
     "achSubtitle1": "მსოფლიო თასის რეიტინგული ტურნირის გამარჯვებული · ზაფხული 2026",
     "achSubtitle2": "მე-2 ადგილი მსოფლიო თასის რეიტინგულ ტურნირში · ზაფხული 2026",
     "achSubtitle3": "მე-3 ადგილი მსოფლიო თასის რეიტინგულ ტურნირში · ზაფხული 2026"
+  },
+  "events": {
+    "upcomingKicker": "ახალი ივენთი",
+    "upcomingTitle": "ახალი რეიტინგული ივენთი",
+    "startsLabel": "იწყება",
+    "minRankLabel": "მინ. რანგი",
+    "qualifyHint": "მიაღწიე {tier}-ს ივენთის დაწყებამდე — რეიტინგული უკვე ღიაა.",
+    "playRankedCta": "ითამაშე რეიტინგული",
+    "startsValue": "შაბათი, 25 ივლისი, 00:00"
   }
 }

@@ -2,10 +2,9 @@
 
 /**
  * Resolves the welcome-screen categories grid from the
- * useAllCategoriesList query. Filters out game-mode entries, picks
- * the FEATURED_NAMES list in order, then back-fills with the rest
- * until FEATURED_CATEGORY_LIMIT is hit. Returns three slices the
- * sections render directly.
+ * useAllCategoriesList query. Filters out game-mode/daily-challenge
+ * entries AND the admin-featured (World Cup event) collection, then
+ * shows the first FEATURED_CATEGORY_LIMIT general categories.
  */
 
 import { useMemo } from 'react';
@@ -20,33 +19,28 @@ export function useWelcomeCategoriesData() {
   const { data: featuredData } = useFeaturedCategories();
 
   const { allCategories, featuredCategories, remainingCategories } = useMemo(() => {
+    // The admin-featured collection held the World Cup event set — with the
+    // event over it is HIDDEN from the landing grid instead of being its
+    // source. The grid now shows general categories (minus game-mode /
+    // daily-challenge entries, which isWelcomeCategoryExcluded strips).
+    const adminFeaturedIds = new Set(
+      (featuredData?.items ?? []).map((fc) => fc.category.id),
+    );
     const allCategories = (categoriesData?.items ?? []).filter(
-      (c) => !isWelcomeCategoryExcluded(c.slug, c.name),
+      (c) => !isWelcomeCategoryExcluded(c.slug, c.name) && !adminFeaturedIds.has(c.id),
     );
     const featuredCategories: typeof allCategories = [];
     const used = new Set<string>();
 
-    // 1. Use admin-panel featured collection first (World Cup categories etc.)
-    // Show ONLY the admin-panel featured collection (the World Cup set curated
-    // in the CMS). We intentionally do NOT back-fill with league names or
-    // arbitrary categories — the welcome grid mirrors exactly what's marked
-    // featured, so non-featured leagues (Champions League, Premier League, …)
-    // never leak onto the landing page.
-    const adminFeatured = featuredData?.items ?? [];
-    const sortedAdminFeatured = [...adminFeatured].sort(
-      (a, b) => (a.sortOrder ?? 999) - (b.sortOrder ?? 999),
-    );
-    for (const fc of sortedAdminFeatured) {
-      const cat = fc.category;
-      if (used.has(cat.id) || isWelcomeCategoryExcluded(cat.slug, cat.name)) continue;
+    for (const cat of allCategories) {
       if (featuredCategories.length >= FEATURED_CATEGORY_LIMIT) break;
       featuredCategories.push(cat);
       used.add(cat.id);
     }
 
-    // Trim to a multiple of the widest column count (4) so the grid never shows
-    // a half-empty last row. The dropped ones fall back into `remaining`.
-    const evenCount = Math.floor(featuredCategories.length / 4) * 4;
+    // Trim to a multiple of 12 so every grid breakpoint (2 / 3 / 4 columns)
+    // fills its last row. The dropped ones fall back into `remaining`.
+    const evenCount = Math.floor(featuredCategories.length / 12) * 12;
     const trimmed = featuredCategories.slice(evenCount);
     for (const cat of trimmed) used.delete(cat.id);
     featuredCategories.length = evenCount;

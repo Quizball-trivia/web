@@ -21,6 +21,18 @@ export interface LeaderboardApiResponse {
   entries: LeaderboardEntryResponse[];
 }
 
+export interface LeaderboardSeasonResponse {
+  id: string;
+  seasonNumber: number;
+  startedAt: string;
+  endedAt: string | null;
+}
+
+export interface LeaderboardSeasonsApiResponse {
+  seasons: LeaderboardSeasonResponse[];
+  currentSeasonNumber: number;
+}
+
 export interface UserRankResponse {
   userId: string;
   username: string;
@@ -53,18 +65,32 @@ function scopeFromType(type: LeaderboardType): string {
   return "global";
 }
 
-export async function getLeaderboard(type: LeaderboardType = "global", limit = 50, offset = 0) {
+export async function getLeaderboard(
+  type: LeaderboardType = "global",
+  limit = 50,
+  offset = 0,
+  season?: string,
+) {
   const scope = scopeFromType(type);
+  const seasonParam = season ? `&season=${season}` : "";
   const data = await requestJson<LeaderboardApiResponse>(
-    `/api/v1/ranked/leaderboard?scope=${scope}&limit=${limit}&offset=${offset}`
+    `/api/v1/ranked/leaderboard?scope=${scope}&limit=${limit}&offset=${offset}${seasonParam}`
   );
   return { data: data.entries, error: null };
 }
 
-export async function getUserRank(type: LeaderboardType = "global") {
+export async function getUserRank(type: LeaderboardType = "global", season?: string) {
   const scope = scopeFromType(type);
+  const seasonParam = season ? `&season=${season}` : "";
   const data = await requestJson<UserRankResponse | null>(
-    `/api/v1/ranked/leaderboard/me?scope=${scope}`
+    `/api/v1/ranked/leaderboard/me?scope=${scope}${seasonParam}`
+  );
+  return { data, error: null };
+}
+
+export async function getLeaderboardSeasons() {
+  const data = await requestJson<LeaderboardSeasonsApiResponse>(
+    "/api/v1/ranked/leaderboard/seasons"
   );
   return { data, error: null };
 }
