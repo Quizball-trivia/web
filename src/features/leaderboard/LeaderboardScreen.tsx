@@ -140,7 +140,7 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
                 aria-selected={!isArchivedView}
                 onClick={() => setSeasonId(null)}
                 className={cn(
-                  "inline-flex h-8 items-center justify-center rounded-full px-4 text-[11px] sm:text-xs font-fun font-black uppercase tracking-wide transition-all active:translate-y-[1px] focus-visible:outline-none",
+                  "inline-flex h-8 items-center justify-center rounded-full px-4 text-[11px] sm:text-xs font-fun font-black uppercase tracking-wide transition-all active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70",
                   !isArchivedView
                     ? isEventMode
                       ? "bg-[#FF6C0A] text-white"
@@ -160,7 +160,7 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
                   aria-selected={seasonId === season.id}
                   onClick={() => setSeasonId(season.id)}
                   className={cn(
-                    "inline-flex h-8 items-center justify-center gap-1 rounded-full px-4 text-[11px] sm:text-xs font-fun font-black uppercase tracking-wide transition-all active:translate-y-[1px] focus-visible:outline-none",
+                    "inline-flex h-8 items-center justify-center gap-1 rounded-full px-4 text-[11px] sm:text-xs font-fun font-black uppercase tracking-wide transition-all active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70",
                     seasonId === season.id
                       ? isEventMode
                         ? "bg-[#FF6C0A] text-white"

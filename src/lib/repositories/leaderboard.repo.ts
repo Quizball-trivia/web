@@ -72,7 +72,7 @@ export async function getLeaderboard(
   season?: string,
 ) {
   const scope = scopeFromType(type);
-  const seasonParam = season ? `&season=${season}` : "";
+  const seasonParam = season ? `&season=${encodeURIComponent(season)}` : "";
   const data = await requestJson<LeaderboardApiResponse>(
     `/api/v1/ranked/leaderboard?scope=${scope}&limit=${limit}&offset=${offset}${seasonParam}`
   );
@@ -81,7 +81,7 @@ export async function getLeaderboard(
 
 export async function getUserRank(type: LeaderboardType = "global", season?: string) {
   const scope = scopeFromType(type);
-  const seasonParam = season ? `&season=${season}` : "";
+  const seasonParam = season ? `&season=${encodeURIComponent(season)}` : "";
   const data = await requestJson<UserRankResponse | null>(
     `/api/v1/ranked/leaderboard/me?scope=${scope}${seasonParam}`
   );

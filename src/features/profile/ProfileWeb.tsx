@@ -146,7 +146,7 @@ export function ProfileWeb({
     profileSeasonId ?? undefined,
   );
   const seasonPillClass = (on: boolean) =>
-    `inline-flex h-7 items-center justify-center gap-1 rounded-full px-3 text-[10px] sm:text-[11px] font-black uppercase tracking-wide transition-all active:translate-y-[1px] focus-visible:outline-none ${
+    `inline-flex h-7 items-center justify-center gap-1 rounded-full px-3 text-[10px] sm:text-[11px] font-black uppercase tracking-wide transition-all active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 ${
       on
         ? isEventMode ? 'bg-[#FF6C0A] text-white' : 'bg-brand-green text-white'
         : isEventMode
