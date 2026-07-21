@@ -253,7 +253,8 @@
     "rpToNextTier": "{rp} RP შემდეგ ლიგამდე",
     "toNextLeagueLabel": "შემდეგ ლიგამდე",
     "seasonOf": "{total} მოთამაშიდან",
-    "seasonNoRank": "ამ სეზონში რანგი არ გქონდა"
+    "seasonNoRank": "ამ სეზონში რანგი არ გქონდა",
+    "achievementsTitle": "მიღწევები"
   },
   "home": {
     "statRP": "RP",
