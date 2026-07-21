@@ -24,6 +24,11 @@ export const queryKeys = {
     detail: (id: string) =>
       [...queryKeys.questions.all, "detail", id] as const,
   },
+  eventAwards: {
+    all: ["eventAwards"] as const,
+    mine: () => [...queryKeys.eventAwards.all, "mine"] as const,
+    user: (userId: string) => [...queryKeys.eventAwards.all, "user", userId] as const,
+  },
   leaderboard: {
     all: ["leaderboard"] as const,
     list: (type: LeaderboardType, season?: string) =>
