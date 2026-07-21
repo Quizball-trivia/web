@@ -7,7 +7,8 @@ export interface EventAwardResponse {
   eventSlug: string;
   place: 1 | 2 | 3;
   awardedAt: string;
-  seen: boolean;
+  /** Present only on /me responses — public per-user awards omit it. */
+  seen?: boolean;
 }
 
 export interface EventAwardsApiResponse {
