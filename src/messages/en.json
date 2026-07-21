@@ -366,7 +366,8 @@
     "rpToNextTier": "{rp} RP to next tier",
     "toNextLeagueLabel": "to next tier",
     "seasonOf": "of {total} players",
-    "seasonNoRank": "No rank this season"
+    "seasonNoRank": "No rank this season",
+    "achievementsTitle": "Achievements"
   },
   "socialScreen": {
     "friends": "Friends",
