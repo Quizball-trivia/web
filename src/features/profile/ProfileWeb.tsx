@@ -26,6 +26,8 @@ import { TierFrameAvatar } from '@/components/TierFrameAvatar';
 import { CountryFlag } from '@/components/CountryFlag';
 import { AvatarPicker } from './components/AvatarPicker';
 import { RankFrameCard } from './components/RankFrameCard';
+import { WorldCupAchievementCard } from '@/components/shared/WorldCupAchievementCard';
+import { useUserEventAwards } from '@/lib/queries/eventAwards.queries';
 import { useLeaderboardSeasons, useUserRank } from '@/lib/queries/leaderboard.queries';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
@@ -131,6 +133,7 @@ export function ProfileWeb({
   const showRankTier = rankedDataReady && !isPlacementInProgress;
 
   const [isEditingName, setIsEditingName] = useState(false);
+  const { data: eventAwards } = useUserEventAwards(player.id);
   const [profileSeasonId, setProfileSeasonId] = useState<string | null>(null);
   const { data: seasonsData } = useLeaderboardSeasons();
   const archivedSeasons = seasonsData?.seasons ?? [];
@@ -787,6 +790,27 @@ export function ProfileWeb({
       <div className="space-y-5">
 
           {/* Recent Matches — hidden on other profiles when there are no matches */}
+          {(eventAwards?.length ?? 0) > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 }}
+              className="space-y-3"
+            >
+              <h3
+                className="text-xl uppercase text-white"
+                style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, letterSpacing: '0', lineHeight: 1 }}
+              >
+                {t('profileScreen.achievementsTitle')}
+              </h3>
+              <div className="space-y-3">
+                {eventAwards!.map((award) => (
+                  <WorldCupAchievementCard key={award.id} place={award.place} />
+                ))}
+              </div>
+            </motion.div>
+          )}
+
           {(isSelf || recentMatchesLoading || recentMatches.length > 0) && (
           <motion.div
             initial={{ opacity: 0, y: 12 }}
