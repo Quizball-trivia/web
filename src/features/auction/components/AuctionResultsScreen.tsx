@@ -95,22 +95,31 @@ export function AuctionResultsScreen({
     if (n === 3) return t('auctionGame.ordinal3');
     return t('auctionGame.ordinalN', { rank: n });
   };
-  const rankedPlayers = [...state.players]
-    .map((p) => ({
-      ...p,
-      teamValue: getTotalTeamValue(p.team),
-      teamComplete: isTeamComplete(p.team),
-      filledCount: getFilledCount(p.team),
-    }))
-    .sort((a, b) => {
-      // Forfeiters always rank last (matches the server's rankAuctionPlayers) —
-      // quitting while ahead can never win.
-      const aForfeited = Boolean(a.forfeited);
-      const bForfeited = Boolean(b.forfeited);
-      if (aForfeited !== bForfeited) return aForfeited ? 1 : -1;
-      if (a.teamComplete !== b.teamComplete) return a.teamComplete ? -1 : 1;
-      return b.teamValue - a.teamValue;
-    });
+  const decorated = state.players.map((p) => ({
+    ...p,
+    teamValue: getTotalTeamValue(p.team),
+    teamComplete: isTeamComplete(p.team),
+    filledCount: getFilledCount(p.team),
+  }));
+
+  // Prefer the server's placings: coins were paid against that exact order, and
+  // re-sorting locally can break ties differently on each client (the server
+  // has a stable seat-index tiebreak this cannot see). The local sort is the
+  // mock-mode fallback only.
+  const serverOrder = state.rankings ?? null;
+  const rankedPlayers = serverOrder
+    ? serverOrder
+        .map((seatId) => decorated.find((p) => p.id === seatId))
+        .filter((p): p is (typeof decorated)[number] => Boolean(p))
+    : [...decorated].sort((a, b) => {
+        // Forfeiters always rank last (matches the server's rankAuctionPlayers) —
+        // quitting while ahead can never win.
+        const aForfeited = Boolean(a.forfeited);
+        const bForfeited = Boolean(b.forfeited);
+        if (aForfeited !== bForfeited) return aForfeited ? 1 : -1;
+        if (a.teamComplete !== b.teamComplete) return a.teamComplete ? -1 : 1;
+        return b.teamValue - a.teamValue;
+      });
 
   const winner = rankedPlayers[0];
   const humanRank = rankedPlayers.findIndex((p) => p.id === humanPlayerId);

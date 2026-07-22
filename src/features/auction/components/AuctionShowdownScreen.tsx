@@ -13,11 +13,6 @@ import { useLocale } from '@/contexts/LocaleContext';
 import type { AvatarCustomization } from '@/types/game';
 import type { AuctionPlayer } from '../types';
 
-// Placeholder country + club per seat until the backend supplies real user
-// profile data (favorite club + country). Picked deterministically by index so
-// each player card looks distinct.
-const PLACEHOLDER_COUNTRY_CODES = ['GE', 'BR', 'AR', 'ES'];
-const PLACEHOLDER_CLUB_IDS = ['liverpool', 'chelsea', 'arsenal', 'everton'];
 import { formatMoney, STARTING_BUDGET } from '../data';
 import { poppins } from '../constants/auction.constants';
 
@@ -108,9 +103,11 @@ function PlayerSide({
 }) {
   const { t } = useLocale();
   const mirror = index > 0;
-  // Placeholder flag + club per seat (real values come from the backend later).
-  const countryCode = PLACEHOLDER_COUNTRY_CODES[index % PLACEHOLDER_COUNTRY_CODES.length];
-  const clubId = PLACEHOLDER_CLUB_IDS[index % PLACEHOLDER_CLUB_IDS.length];
+  // Flag + club render only when the seat actually carries them. They used to be
+  // faked from the seat index, which showed real opponents a nationality and
+  // club they never chose.
+  const countryCode = player.country ?? null;
+  const clubId = player.favoriteClub ?? null;
 
   const enterFrom = { x: index === 0 ? -180 : index === 2 ? 180 : 0, y: index === 1 ? 80 : 0, opacity: 0 };
 

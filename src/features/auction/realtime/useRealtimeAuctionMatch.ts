@@ -85,6 +85,8 @@ export interface UseRealtimeAuctionMatchResult {
   versionGapDetected: boolean;
   waitingForReady: AuctionWaitingForReadyState | null;
   pause: AuctionPauseState | null;
+  /** Transient announcement about another seat (dropped / returned / quit). */
+  matchNotice: AuctionMatchNotice | null;
   /** Set when reloading into a paused match this client was disconnected from. */
   rejoinAvailable: AuctionRejoinAvailablePayload | null;
   /** Server resume "get ready" countdown end (this client's clock). */
@@ -107,6 +109,17 @@ export type AuctionPauseState = {
   graceMs: number;
   remainingReconnects: number;
   reason: AuctionPausedPayload['reason'] | AuctionPlayerForfeitedPayload['reason'];
+};
+
+/**
+ * A one-off thing that happened to ANOTHER seat, worth telling this player
+ * about. `id` changes on every occurrence so the UI can re-animate even when
+ * the same seat drops twice.
+ */
+export type AuctionMatchNotice = {
+  id: number;
+  kind: 'opponent-disconnected' | 'opponent-returned' | 'opponent-forfeited';
+  seatId: string;
 };
 
 export type AuctionSearchState = {
@@ -142,6 +155,10 @@ export function useRealtimeAuctionMatch({
   const [pendingTurnAction, setPendingTurnAction] = useState<AuctionPendingTurnAction | null>(null);
   const [waitingForReady, setWaitingForReady] = useState<AuctionWaitingForReadyState | null>(null);
   const [pause, setPause] = useState<AuctionPauseState | null>(null);
+  // Transient "what just happened to someone else" announcement. With three
+  // players a rival dropping or quitting was previously invisible — the board
+  // simply froze, or lots went uncontested with no explanation.
+  const [matchNotice, setMatchNotice] = useState<AuctionMatchNotice | null>(null);
   // Reload-into-paused-match: server prompts to rejoin; we show a prompt and the
   // user opts in (auction:rejoin). Mirrors ranked's rejoin handshake.
   const [rejoinAvailable, setRejoinAvailable] = useState<AuctionRejoinAvailablePayload | null>(null);
@@ -190,6 +207,9 @@ export function useRealtimeAuctionMatch({
   const ignoredMatchIdsRef = useRef(new Set<string>());
   const lastUiReadyAckKeyRef = useRef<string | null>(null);
   const revealReadyKeyRef = useRef<string | null>(null);
+  // Round ('clue_reveal') ack is held until the full-screen round intro has
+  // played, so the server does not start revealing clues behind it.
+  const roundReadyKeyRef = useRef<string | null>(null);
 
   const publicState = realtimeState.publicState;
   const matchId = publicState?.matchId ?? null;
@@ -359,6 +379,7 @@ export function useRealtimeAuctionMatch({
         ignoredMatchIdsRef.current.clear();
         lastUiReadyAckKeyRef.current = null;
         revealReadyKeyRef.current = null;
+        roundReadyKeyRef.current = null;
         setError(null);
       });
       return;
@@ -399,6 +420,7 @@ export function useRealtimeAuctionMatch({
     if (!phase) return;
     const ackKey = getAuctionUiReadyKey(matchId, phase, currentRoundId, publicStateVersion);
     if (phase === 'reveal' && revealReadyKeyRef.current !== ackKey) return;
+    if (phase === 'round' && roundReadyKeyRef.current !== ackKey) return;
     if (lastUiReadyAckKeyRef.current === ackKey) return;
 
     lastUiReadyAckKeyRef.current = ackKey;
@@ -656,9 +678,13 @@ export function useRealtimeAuctionMatch({
     const onOpponentDisconnected = (payload: AuctionOpponentDisconnectedPayload) => {
       updateServerTimeOffset(payload.serverNow);
       setError(null);
+      // Play continues until the turn order reaches the missing seat, at which
+      // point the board hard-pauses. Announce the drop now so that freeze has a
+      // cause the other two players can see coming.
+      setMatchNotice({ id: Date.now(), kind: 'opponent-disconnected', seatId: payload.seatId });
     };
     const onPaused = (payload: AuctionPausedPayload) => {
-      updateServerTimeOffset(payload.serverNow);
+      const pauseOffset = updateServerTimeOffset(payload.serverNow);
       apply({
         type: 'state',
         payload: {
@@ -668,7 +694,7 @@ export function useRealtimeAuctionMatch({
           serverNow: payload.serverNow,
         },
       });
-      setPause(toAuctionPauseState(payload));
+      setPause(toAuctionPauseState(payload, pauseOffset));
       setWaitingForReady(null);
       setPendingTurnActionValue(null);
     };
@@ -687,6 +713,9 @@ export function useRealtimeAuctionMatch({
       setResumeCountdownEndsAtMs(null);
       setRejoinAvailable(null);
       setError(null);
+      if (payload.userId !== selfUserId) {
+        setMatchNotice({ id: Date.now(), kind: 'opponent-returned', seatId: payload.seatId });
+      }
     };
     const onRejoinAvailable = (payload: AuctionRejoinAvailablePayload) => {
       updateServerTimeOffset(payload.serverNow);
@@ -713,6 +742,11 @@ export function useRealtimeAuctionMatch({
       });
       setPause(null);
       setPendingTurnActionValue(null);
+      // A three-player match just became a two-player one. Without this the
+      // remaining players only saw lots quietly stop being contested.
+      if (payload.userId !== selfUserId) {
+        setMatchNotice({ id: Date.now(), kind: 'opponent-forfeited', seatId: payload.seatId });
+      }
     };
 
     // Single source of truth for listeners: `bind` registers each handler AND
@@ -798,6 +832,19 @@ export function useRealtimeAuctionMatch({
       });
       socket.emit('auction:fold', { matchId });
     },
+    confirmRoundIntro: () => {
+      if (!matchId || publicPhase !== 'clue_reveal' || !currentRoundId || publicStateVersion === null) return;
+      const ackKey = getAuctionUiReadyKey(matchId, 'round', currentRoundId, publicStateVersion);
+      roundReadyKeyRef.current = ackKey;
+      if (!socket.connected || lastUiReadyAckKeyRef.current === ackKey) return;
+      lastUiReadyAckKeyRef.current = ackKey;
+      socket.emit('auction:ui_ready', {
+        matchId,
+        phase: 'round',
+        roundId: currentRoundId,
+        stateVersion: publicStateVersion,
+      });
+    },
     confirmReveal: () => {
       if (!matchId || publicPhase !== 'reveal' || !currentRoundId || publicStateVersion === null) return;
       const ackKey = getAuctionUiReadyKey(matchId, 'reveal', currentRoundId, publicStateVersion);
@@ -882,6 +929,7 @@ export function useRealtimeAuctionMatch({
     versionGapDetected: realtimeState.versionGapDetected,
     waitingForReady,
     pause,
+    matchNotice,
     rejoinAvailable,
     resumeCountdownEndsAtMs,
     search,
@@ -905,15 +953,24 @@ function toAuctionSearchState(
   };
 }
 
-function toAuctionPauseState(payload: AuctionPausedPayload | AuctionPlayerForfeitedPayload): AuctionPauseState {
+function toAuctionPauseState(
+  payload: AuctionPausedPayload | AuctionPlayerForfeitedPayload,
+  serverTimeOffsetMs?: number | null,
+): AuctionPauseState {
   const pauseUntil = 'pauseUntil' in payload ? payload.pauseUntil : new Date().toISOString();
   const parsedPauseUntilMs = Date.parse(pauseUntil);
+  // Rebase onto this client's clock like every other server deadline here.
+  // Without it a skewed clock showed a wrong — often instantly-zero —
+  // countdown while the real grace window was still 30s long.
+  const localPauseUntilMs = Number.isFinite(parsedPauseUntilMs)
+    ? parsedPauseUntilMs - (serverTimeOffsetMs ?? 0)
+    : Date.now();
   return {
     matchId: payload.matchId,
     seatId: payload.seatId,
     userId: payload.userId,
     pauseUntil,
-    pauseUntilMs: Number.isFinite(parsedPauseUntilMs) ? parsedPauseUntilMs : Date.now(),
+    pauseUntilMs: localPauseUntilMs,
     graceMs: 'graceMs' in payload ? payload.graceMs : 0,
     remainingReconnects: 'remainingReconnects' in payload ? payload.remainingReconnects : 0,
     reason: payload.reason,
@@ -931,6 +988,41 @@ const AUCTION_ERROR_MESSAGES: Record<string, { en: string; ka: string }> = {
   auction_content_unavailable: {
     en: 'No auction content is available right now.',
     ka: 'ამჟამად აუქციონის კონტენტი მიუწვდომელია.',
+  },
+  // Turn-action rejections. These are the ones a player actually hits mid-match
+  // (double-tap, losing a race to a rival, tapping after their turn passed), so
+  // they must say what happened to the bid rather than "something went wrong".
+  auction_not_current_turn: {
+    en: "That turn has already passed — your bid wasn't placed.",
+    ka: 'სვლა უკვე დასრულდა — თქვენი ფსონი არ განთავსდა.',
+  },
+  auction_no_active_bidding: {
+    en: 'Bidding is not open right now.',
+    ka: 'ვაჭრობა ამჟამად დახურულია.',
+  },
+  auction_seat_already_folded: {
+    en: 'You already folded on this player.',
+    ka: 'თქვენ უკვე გაჰყევით ამ მოთამაშეზე.',
+  },
+  auction_high_bidder_self_bid: {
+    en: 'You already hold the highest bid.',
+    ka: 'თქვენ უკვე გაქვთ უმაღლესი ფსონი.',
+  },
+  auction_opening_bidder_cannot_fold: {
+    en: 'The first bidder has to open — you cannot fold here.',
+    ka: 'პირველმა მოთამაშემ უნდა გახსნას — აქ ვერ გაჰყვებით.',
+  },
+  auction_seat_cannot_bid: {
+    en: "You can't bid on this player.",
+    ka: 'ამ მოთამაშეზე ვერ დადებთ ფსონს.',
+  },
+  auction_invalid_bid: {
+    en: "That bid isn't valid any more — the price moved.",
+    ka: 'ფსონი აღარ არის მოქმედი — ფასი შეიცვალა.',
+  },
+  auction_solo_pick_not_yours: {
+    en: "That choice belongs to another player.",
+    ka: 'ეს არჩევანი სხვა მოთამაშეს ეკუთვნის.',
   },
 };
 

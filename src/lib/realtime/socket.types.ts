@@ -809,6 +809,8 @@ export interface PublicAuctionRoundState {
   currentTurnSeatId: string | null;
   foldedSeatIds: string[];
   turnEndsAt: string | null;
+  /** Deadline of the post-clue study window; null outside it. */
+  biddingStartsAt: string | null;
   startedAt: string;
   updatedAt: string;
   revealedClues: readonly string[];

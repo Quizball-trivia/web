@@ -67,6 +67,7 @@ function round(): AuctionRound {
     currentTurnId: null,
     foldedIds: ['seat-bot'],
     turnEndsAt: null,
+    biddingStartsAt: null,
   };
 }
 

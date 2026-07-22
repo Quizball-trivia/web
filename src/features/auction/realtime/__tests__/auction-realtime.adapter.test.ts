@@ -62,6 +62,7 @@ function round(overrides: Partial<PublicAuctionRoundState> = {}): PublicAuctionR
     currentTurnSeatId: null,
     foldedSeatIds: [],
     turnEndsAt: null,
+    biddingStartsAt: null,
     startedAt: '2026-06-20T10:00:00.000Z',
     updatedAt: '2026-06-20T10:00:00.000Z',
     revealedClues: ['Won a major European trophy'],
@@ -111,6 +112,26 @@ describe('auction realtime adapter', () => {
     });
     expect(clientState.formation.name).toBe('4-3-3');
     expect(clientState.totalRounds).toBe(33);
+  });
+
+  it('carries the server ranking order through, best first', () => {
+    // Coins are paid against the server's placings, so the results screen has to
+    // render this exact order rather than re-sorting locally (a local tiebreak
+    // can disagree and show two players different 2nd/3rd).
+    const clientState = toClientAuctionState(matchState({
+      phase: 'finished',
+      rankings: [
+        { seatId: 'seat-bot-2', isBot: true, displayName: 'Bot 2', rank: 3, isComplete: false, totalTrueValue: 10, budgetRemaining: 0 },
+        { seatId: 'seat-human', isBot: false, displayName: 'You', rank: 1, isComplete: true, totalTrueValue: 90, budgetRemaining: 5 },
+        { seatId: 'seat-bot-1', isBot: true, displayName: 'Bot 1', rank: 2, isComplete: true, totalTrueValue: 50, budgetRemaining: 2 },
+      ] as PublicAuctionMatchState['rankings'],
+    }));
+
+    expect(clientState.rankings).toEqual(['seat-human', 'seat-bot-1', 'seat-bot-2']);
+  });
+
+  it('leaves rankings null while the match is still running', () => {
+    expect(toClientAuctionState(matchState()).rankings).toBeNull();
   });
 
   it('pads hidden rounds to three clue slots while preserving revealed clue text', () => {
