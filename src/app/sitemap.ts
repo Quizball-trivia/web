@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { CAMPAIGN_QUIZ_SLUGS } from "@/features/campaign-quiz/campaignQuiz.content";
 import { SITE_URL } from "@/lib/seo/site";
 import { LOCALES } from "@/lib/i18n/locale";
 
@@ -34,14 +35,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
   // or sitemap URL until an equivalent Georgian quiz genuinely exists.
   const englishCampaignEntries = [
     entry('/en/football-quiz', 'weekly', 0.9),
-    entry('/en/football-quiz/liverpool', 'monthly', 0.8),
-    entry('/en/football-quiz/manchester-united', 'monthly', 0.8),
-    entry('/en/football-quiz/tottenham', 'monthly', 0.8),
-    entry('/en/football-quiz/everton', 'monthly', 0.8),
-    entry('/en/football-quiz/premier-league', 'monthly', 0.8),
-    entry('/en/football-quiz/guess-the-player', 'monthly', 0.8),
-    entry('/en/football-quiz/career-path', 'monthly', 0.8),
-    entry('/en/football-quiz/club-badges', 'monthly', 0.8),
+    ...CAMPAIGN_QUIZ_SLUGS.map((slug) =>
+      entry(`/en/football-quiz/${slug}`, 'monthly', 0.8),
+    ),
   ];
 
   return [...localizedEntries, ...englishCampaignEntries];

@@ -106,9 +106,9 @@ export default async function FootballQuizHubPage({
                       <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-yellow">
                         Play free
                       </p>
-                      <h2 className="mt-1 text-lg font-semibold text-white">
+                      <h3 className="mt-1 text-lg font-semibold text-white">
                         {quiz.breadcrumbLabel}
-                      </h2>
+                      </h3>
                     </div>
                     <ArrowRight className="size-5 shrink-0 text-brand-yellow transition-transform group-hover:translate-x-1" aria-hidden />
                   </div>
