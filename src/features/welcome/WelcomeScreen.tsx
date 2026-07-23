@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Script from 'next/script';
 import { useLeaderboard } from '@/lib/queries/leaderboard.queries';
 import { BarBattleFlightOverlay } from '@/features/possession/components/BarBattleFlightOverlay';
@@ -84,6 +84,7 @@ export function WelcomeScreen() {
   const [categoriesOpen, setCategoriesOpen] = useState(false);
   const [duelsCount] = useState(() => getDuelsCount());
   const [verifiedQuestionsCount] = useState(() => getVerifiedQuestionsCount());
+  const campaignSignupHandledRef = useRef(false);
 
   const sim = useWelcomeStadiumSim();
   const { landingFlights, setLandingFlights } = sim;
@@ -115,6 +116,21 @@ export function WelcomeScreen() {
       handleAuthModeChange('signin');
     }
   }, [authMode, canUseGeorgianPhoneAuth, handleAuthModeChange]);
+
+  // Campaign score/header CTAs deep-link into the existing signup panel.
+  // Remove the one-shot query flag after opening so refresh/back navigation
+  // does not repeatedly force the dialog open.
+  useEffect(() => {
+    if (campaignSignupHandledRef.current) return;
+    const url = new URL(window.location.href);
+    if (url.searchParams.get('signup') !== '1') return;
+
+    campaignSignupHandledRef.current = true;
+    handleAuthModeChange('signup');
+    handleLoginDialogOpenChange(true);
+    url.searchParams.delete('signup');
+    window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
+  }, [handleAuthModeChange, handleLoginDialogOpenChange]);
 
   return (
     <div className="min-h-screen w-full bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat font-sans text-foreground flex flex-col overflow-x-hidden">

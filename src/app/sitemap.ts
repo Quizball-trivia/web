@@ -26,7 +26,23 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ["/privacy", "yearly", 0.3],
   ];
 
-  return LOCALES.flatMap((locale) =>
+  const localizedEntries = LOCALES.flatMap((locale) =>
     routes.map(([suffix, freq, prio]) => entry(`/${locale}${suffix}`, freq, prio)),
   );
+
+  // UK campaign pages launch in English only. Do not emit a Georgian alternate
+  // or sitemap URL until an equivalent Georgian quiz genuinely exists.
+  const englishCampaignEntries = [
+    entry('/en/football-quiz', 'weekly', 0.9),
+    entry('/en/football-quiz/liverpool', 'monthly', 0.8),
+    entry('/en/football-quiz/manchester-united', 'monthly', 0.8),
+    entry('/en/football-quiz/tottenham', 'monthly', 0.8),
+    entry('/en/football-quiz/everton', 'monthly', 0.8),
+    entry('/en/football-quiz/premier-league', 'monthly', 0.8),
+    entry('/en/football-quiz/guess-the-player', 'monthly', 0.8),
+    entry('/en/football-quiz/career-path', 'monthly', 0.8),
+    entry('/en/football-quiz/club-badges', 'monthly', 0.8),
+  ];
+
+  return [...localizedEntries, ...englishCampaignEntries];
 }
