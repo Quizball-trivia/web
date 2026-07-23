@@ -14,7 +14,7 @@ interface WelcomeFooterProps {
 export function WelcomeFooter({ duelsCount, verifiedQuestionsCount }: WelcomeFooterProps) {
   const { t, locale } = useLocale();
   return (
-    <footer className="border-t border-white/6 py-8">
+    <footer className="py-10 font-poppins">
       <div className="mx-auto max-w-4xl px-6">
         <div className="flex flex-wrap justify-center gap-8 md:gap-16">
           <div className="flex items-center gap-2 font-bold text-brand-yellow">
@@ -48,12 +48,19 @@ export function WelcomeFooter({ duelsCount, verifiedQuestionsCount }: WelcomeFoo
           </div>
         </div>
 
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-sm md:gap-4">
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3 text-sm md:gap-4">
           <Link
             href={`/${locale}/about`}
             className="font-bold text-white/40 hover:text-brand-cyan transition-colors"
           >
             {t('welcome.aboutUs')}
+          </Link>
+          <span className="text-white/20">|</span>
+          <Link
+            href={`/${locale}/football-quiz`}
+            className="font-bold text-white/40 hover:text-brand-cyan transition-colors"
+          >
+            Quizzes
           </Link>
           <span className="text-white/20">|</span>
           <Link
