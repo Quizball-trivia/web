@@ -60,7 +60,7 @@ export function WelcomeFooter({ duelsCount, verifiedQuestionsCount }: WelcomeFoo
             href={`/${locale}/football-quiz`}
             className="font-bold text-white/40 hover:text-brand-cyan transition-colors"
           >
-            Quizzes
+            {t('welcome.quizzes')}
           </Link>
           <span className="text-white/20">|</span>
           <Link

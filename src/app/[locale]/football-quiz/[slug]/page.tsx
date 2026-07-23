@@ -154,7 +154,9 @@ export default async function CampaignQuizPage({ params }: CampaignQuizPageProps
         nonce={nonce}
         type="application/ld+json"
         suppressHydrationWarning
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c'),
+        }}
       />
       <CampaignQuizLanding content={content} quiz={quiz} />
     </>

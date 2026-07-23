@@ -91,7 +91,7 @@ export function CampaignQuizRating({ slug, initialRating }: CampaignQuizRatingPr
       </div>
 
       {message ? (
-        <p className="mt-3 text-sm font-semibold text-white/65">
+        <p role="status" className="mt-3 text-sm font-semibold text-white/65">
           {message}{' '}
           {authStatus !== 'authenticated' ? (
             <Link
