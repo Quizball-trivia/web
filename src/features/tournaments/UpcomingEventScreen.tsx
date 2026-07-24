@@ -5,7 +5,7 @@ import { CalendarDays, Trophy } from 'lucide-react';
 
 import { useLocale } from '@/contexts/LocaleContext';
 
-const MIN_RANK_TIER = 'Bench';
+const MIN_RANK_TIER = 'Rotation';
 
 export function UpcomingEventScreen() {
   const { t } = useLocale();
