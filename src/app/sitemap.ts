@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { CAMPAIGN_QUIZ_SLUGS } from "@/features/campaign-quiz/campaignQuiz.content";
 import { SITE_URL } from "@/lib/seo/site";
 import { LOCALES } from "@/lib/i18n/locale";
 
@@ -26,7 +27,18 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ["/privacy", "yearly", 0.3],
   ];
 
-  return LOCALES.flatMap((locale) =>
+  const localizedEntries = LOCALES.flatMap((locale) =>
     routes.map(([suffix, freq, prio]) => entry(`/${locale}${suffix}`, freq, prio)),
   );
+
+  // UK campaign pages launch in English only. Do not emit a Georgian alternate
+  // or sitemap URL until an equivalent Georgian quiz genuinely exists.
+  const englishCampaignEntries = [
+    entry('/en/football-quiz', 'weekly', 0.9),
+    ...CAMPAIGN_QUIZ_SLUGS.map((slug) =>
+      entry(`/en/football-quiz/${slug}`, 'monthly', 0.8),
+    ),
+  ];
+
+  return [...localizedEntries, ...englishCampaignEntries];
 }
