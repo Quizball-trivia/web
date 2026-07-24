@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { redirect } from 'next/navigation';
 import { ArrowRight, Swords } from 'lucide-react';
 import {
   CAMPAIGN_QUIZ_CONTENT,
@@ -42,7 +42,7 @@ export default async function FootballQuizHubPage({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
-  if (locale !== 'en') notFound();
+  if (locale !== 'en') redirect('/en/football-quiz');
 
   return (
     <div className="min-h-screen bg-surface-page font-poppins text-white">

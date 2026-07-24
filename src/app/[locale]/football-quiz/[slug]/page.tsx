@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { CampaignQuizLanding } from '@/features/campaign-quiz/CampaignQuizLanding';
 import {
   CAMPAIGN_QUIZ_SLUGS,
@@ -68,7 +68,8 @@ export async function generateMetadata({
 export default async function CampaignQuizPage({ params }: CampaignQuizPageProps) {
   const { locale, slug } = await params;
   const content = getCampaignQuizContent(slug);
-  if (locale !== 'en' || !content) notFound();
+  if (!content) notFound();
+  if (locale !== 'en') redirect(`/en/football-quiz/${content.slug}`);
 
   const [quiz, headerList] = await Promise.all([
     getCampaignQuiz(content.slug),
