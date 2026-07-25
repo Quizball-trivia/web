@@ -7,6 +7,7 @@ import {
   CAMPAIGN_QUIZ_CONTENT,
   CAMPAIGN_QUIZ_SLUGS,
 } from '@/features/campaign-quiz/campaignQuiz.content';
+import { CampaignTrackedLink } from '@/features/campaign-quiz/CampaignTrackedLink';
 import { SITE_NAME, SITE_URL } from '@/lib/seo/site';
 
 const TITLE = 'Football Quiz — Play Free Football Quizzes & Trivia | QuizBall';
@@ -87,8 +88,9 @@ export default async function FootballQuizHubPage({
             {CAMPAIGN_QUIZ_SLUGS.map((slug) => {
               const quiz = CAMPAIGN_QUIZ_CONTENT[slug];
               return (
-                <Link
+                <CampaignTrackedLink
                   key={slug}
+                  targetSlug={slug}
                   href={`/en/football-quiz/${slug}`}
                   className="group overflow-hidden rounded-xl bg-surface-card-deeper"
                 >
@@ -112,7 +114,7 @@ export default async function FootballQuizHubPage({
                     </div>
                     <ArrowRight className="size-5 shrink-0 text-brand-yellow transition-transform group-hover:translate-x-1" aria-hidden />
                   </div>
-                </Link>
+                </CampaignTrackedLink>
               );
             })}
           </div>
