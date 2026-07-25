@@ -51,8 +51,9 @@ export async function rateCampaignQuiz(
   slug: string,
   rating: number,
 ): Promise<CampaignQuizRating> {
-  const accessToken = await getSupabaseAccessToken();
-  if (!accessToken) throw new Error('Sign in to rate this quiz');
+  // Signed-out visitors can rate too; the backend keys those by a hashed
+  // client address. Only attach a token when one already exists.
+  const accessToken = await getSupabaseAccessToken().catch(() => null);
 
   const response = await fetch(
     `${API_BASE_URL}/api/v1/campaign-quizzes/${encodeURIComponent(slug)}/rating`,
@@ -61,8 +62,8 @@ export async function rateCampaignQuiz(
       credentials: 'include',
       headers: {
         Accept: 'application/json',
-        Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       },
       body: JSON.stringify({ rating }),
     },

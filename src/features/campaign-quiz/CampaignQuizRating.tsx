@@ -1,14 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { Star } from 'lucide-react';
 import { useAuthStore } from '@/stores/auth.store';
 import { rateCampaignQuiz } from './campaignQuiz.api';
-import {
-  trackCampaignQuizRating,
-  trackCampaignSignupClick,
-} from './campaignQuiz.analytics';
+import { trackCampaignQuizRating } from './campaignQuiz.analytics';
 import type { CampaignQuizRating as Rating } from './campaignQuiz.types';
 
 interface CampaignQuizRatingProps {
@@ -27,20 +23,15 @@ export function CampaignQuizRating({ slug, initialRating }: CampaignQuizRatingPr
   const submit = async (rating: number) => {
     setSelected(rating);
     setMessage(null);
-
-    if (authStatus !== 'authenticated') {
-      trackCampaignSignupClick(slug, 'rating');
-      setMessage('Sign up free to leave a rating.');
-      return;
-    }
-
     setSubmitting(true);
+
     try {
       const nextAggregate = await rateCampaignQuiz(slug, rating);
       setAggregate(nextAggregate);
       setMessage('Thanks — your rating has been saved.');
-      trackCampaignQuizRating(slug, rating);
+      trackCampaignQuizRating(slug, rating, authStatus === 'authenticated');
     } catch {
+      setSelected(0);
       setMessage('We could not save your rating. Please try again.');
     } finally {
       setSubmitting(false);
@@ -92,15 +83,7 @@ export function CampaignQuizRating({ slug, initialRating }: CampaignQuizRatingPr
 
       {message ? (
         <p role="status" className="mt-3 text-sm font-semibold text-white/65">
-          {message}{' '}
-          {authStatus !== 'authenticated' ? (
-            <Link
-              href={`/en?signup=1&source=${slug}-quiz-rating`}
-              className="text-brand-yellow underline underline-offset-4"
-            >
-              Sign up
-            </Link>
-          ) : null}
+          {message}
         </p>
       ) : null}
     </section>
