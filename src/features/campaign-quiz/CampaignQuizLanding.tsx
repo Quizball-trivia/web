@@ -18,8 +18,10 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { CampaignQuizGame } from './CampaignQuizGame';
+import { CampaignQuizPageView } from './CampaignQuizPageView';
 import { CampaignQuizRating } from './CampaignQuizRating';
 import { CampaignSignupLink } from './CampaignSignupLink';
+import { CampaignTrackedLink } from './CampaignTrackedLink';
 import {
   CAMPAIGN_QUIZ_CONTENT,
   type CampaignQuizPageContent,
@@ -43,6 +45,10 @@ export function CampaignQuizLanding({ content, quiz }: CampaignQuizLandingProps)
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-surface-page font-poppins text-white">
+      <CampaignQuizPageView
+        slug={quiz.slug}
+        totalQuestions={quiz.total_questions}
+      />
       <header className="sticky top-0 z-50 bg-surface-page/95 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:h-20 lg:px-8">
           <Link href="/en" aria-label="QuizBall home" className="shrink-0">
@@ -214,7 +220,26 @@ export function CampaignQuizLanding({ content, quiz }: CampaignQuizLandingProps)
           </article>
 
           <div>
-            <CampaignQuizRating slug={quiz.slug} initialRating={quiz.rating} />
+            <section
+              id="ranked-quiz-cta"
+              className="scroll-mt-24 rounded-[24px] bg-brand-blue px-5 py-7 sm:px-6"
+            >
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-yellow">
+                Ready for ranked?
+              </p>
+              <h2 className="mt-2 text-balance text-xl font-semibold leading-snug text-white sm:text-2xl">
+                {content.footerCta}
+              </h2>
+              <CampaignSignupLink
+                slug={quiz.slug}
+                placement="footer"
+                href={`/en?signup=1&source=${content.slug}-quiz-footer`}
+                className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-brand-yellow px-6 font-semibold text-black transition-colors hover:bg-brand-yellow/90"
+              >
+                Sign up free
+                <ArrowRight className="size-5" aria-hidden />
+              </CampaignSignupLink>
+            </section>
             <div className="mt-5 px-1 pt-3">
               <p className="text-xs font-semibold uppercase tracking-[0.17em] text-brand-cyan">
                 Built for fair play
@@ -256,8 +281,10 @@ export function CampaignQuizLanding({ content, quiz }: CampaignQuizLandingProps)
               const related = CAMPAIGN_QUIZ_CONTENT[slug];
               const clubLogo = CLUB_QUIZ_LOGOS[slug];
               return (
-                <Link
+                <CampaignTrackedLink
                   key={slug}
+                  fromSlug={quiz.slug}
+                  targetSlug={slug}
                   href={`/en/football-quiz/${slug}`}
                   aria-label={`Play ${related.breadcrumbLabel}`}
                   title={related.breadcrumbLabel}
@@ -277,33 +304,14 @@ export function CampaignQuizLanding({ content, quiz }: CampaignQuizLandingProps)
                         : 'rounded-xl object-cover'
                     }`}
                   />
-                </Link>
+                </CampaignTrackedLink>
               );
             })}
           </div>
         </section>
 
-        <section
-          id="ranked-quiz-cta"
-          className="scroll-mt-24 mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8"
-        >
-          <div className="max-w-2xl py-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-yellow">
-              Ready for ranked?
-            </p>
-            <h2 className="mt-2 text-balance text-3xl font-semibold leading-tight text-white sm:text-4xl">
-              {content.footerCta}
-            </h2>
-            <CampaignSignupLink
-              slug={quiz.slug}
-              placement="footer"
-              href={`/en?signup=1&source=${content.slug}-quiz-footer`}
-              className="mt-6 inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-brand-yellow px-6 font-semibold text-black transition-colors hover:bg-brand-yellow/90"
-            >
-              Sign up free
-              <ArrowRight className="size-5" aria-hidden />
-            </CampaignSignupLink>
-          </div>
+        <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
+          <CampaignQuizRating slug={quiz.slug} initialRating={quiz.rating} />
         </section>
       </main>
 

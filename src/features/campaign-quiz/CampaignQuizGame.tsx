@@ -8,7 +8,9 @@ import { motion } from 'motion/react';
 import { useAuthStore } from '@/stores/auth.store';
 import { answerCampaignQuizQuestion } from './campaignQuiz.api';
 import {
+  trackCampaignQuizAnswer,
   trackCampaignQuizComplete,
+  trackCampaignQuizRestart,
   trackCampaignQuizStart,
   trackCampaignSignupClick,
 } from './campaignQuiz.analytics';
@@ -25,6 +27,25 @@ interface CampaignQuizGameProps {
   slug: string;
   questions: CampaignQuizQuestion[];
   scoreTemplate?: string;
+}
+
+/**
+ * Career-path prompts often just spell out the same club sequence that is
+ * rendered as chips below ("Liverpool ➔ LA Galaxy"). Showing both duplicates
+ * the question, so the heading is kept for screen readers only in that case.
+ * Prompts that carry real extra wording are always shown.
+ */
+function isRedundantCareerPrompt(question: CampaignQuizQuestion): boolean {
+  if (question.type !== 'career_path' || question.details.length === 0) return false;
+
+  const normalize = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const prompt = normalize(question.prompt);
+  if (!prompt) return false;
+
+  // A bare "Guess the player" carries no information once chips are shown.
+  if (prompt === normalize('Guess the player')) return true;
+
+  return prompt === normalize(question.details.join(''));
 }
 
 function answerClasses(input: {
@@ -94,6 +115,14 @@ export function CampaignQuizGame({
           explanation: result.explanation,
         },
       }));
+      trackCampaignQuizAnswer({
+        slug,
+        questionId: question.id,
+        questionType: question.type,
+        position: question.position,
+        difficulty: question.difficulty,
+        correct: result.correct,
+      });
     } catch {
       setSelectedOptionId(null);
       setError('We could not check that answer. Please try again.');
@@ -115,6 +144,7 @@ export function CampaignQuizGame({
   };
 
   const restart = () => {
+    trackCampaignQuizRestart(slug, score);
     setCurrentIndex(0);
     setAnswers({});
     setSelectedOptionId(null);
@@ -212,19 +242,36 @@ export function CampaignQuizGame({
                 <div className="flex min-h-20 flex-col justify-center sm:min-h-24">
                   <h3
                     id={`campaign-question-${question.id}`}
-                    className="text-balance text-xl font-bold leading-snug text-white sm:text-2xl"
+                    className={`text-balance text-xl font-bold leading-snug text-white sm:text-2xl ${
+                      isRedundantCareerPrompt(question) ? 'sr-only' : ''
+                    }`}
                   >
                     {question.prompt}
                   </h3>
                   {question.details.length > 0 ? (
-                    <ul className="mt-4 grid gap-2 text-sm font-medium leading-relaxed text-white/65 sm:text-base">
-                      {question.details.map((detail) => (
-                        <li key={detail} className="flex gap-2">
-                          <span className="text-brand-cyan" aria-hidden>•</span>
-                          <span>{detail}</span>
-                        </li>
-                      ))}
-                    </ul>
+                    question.type === 'career_path' ? (
+                      <ol className="mt-4 flex flex-wrap items-center gap-2">
+                        {question.details.map((club, clubIndex) => (
+                          <li key={`${club}-${clubIndex}`} className="flex items-center gap-2">
+                            <span className="rounded-xl border-2 border-brand-yellow px-3 py-2 text-sm font-bold text-white shadow-[0_0_6.334px_1.32px_rgba(255,229,0,0.15)] sm:text-base">
+                              {club}
+                            </span>
+                            {clubIndex < question.details.length - 1 ? (
+                              <span className="text-xl text-white/35" aria-hidden>→</span>
+                            ) : null}
+                          </li>
+                        ))}
+                      </ol>
+                    ) : (
+                      <ul className="mt-4 grid gap-2.5 text-[15px] font-semibold leading-relaxed text-white/90 sm:text-lg">
+                        {question.details.map((detail) => (
+                          <li key={detail} className="flex gap-2.5">
+                            <span className="text-brand-cyan" aria-hidden>•</span>
+                            <span>{detail}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )
                   ) : null}
                 </div>
                 {question.image_url ? (
