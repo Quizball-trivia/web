@@ -192,7 +192,7 @@ export function CampaignQuizGame({
             }}
             className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-brand-yellow px-6 text-base font-bold text-black transition-colors hover:bg-brand-yellow/90 sm:w-auto"
           >
-            {isAuthenticated ? 'Play ranked' : 'Sign up free'}
+            Play Ranked
             <ArrowRight className="size-5" aria-hidden />
           </Link>
           <button
