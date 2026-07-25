@@ -63,7 +63,7 @@ export default async function FootballQuizHubPage({
             href="/en?signup=1&source=football-quiz-hub-header"
             className="inline-flex min-h-10 items-center rounded-lg bg-brand-yellow px-4 text-sm font-semibold text-black hover:bg-brand-yellow/90"
           >
-            Sign up free
+            Play Ranked
           </Link>
         </div>
       </header>

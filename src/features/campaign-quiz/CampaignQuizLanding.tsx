@@ -73,7 +73,7 @@ export function CampaignQuizLanding({ content, quiz }: CampaignQuizLandingProps)
               href={`/en?signup=1&source=${content.slug}-quiz-header`}
               className="inline-flex min-h-10 items-center justify-center rounded-lg bg-brand-yellow px-4 text-sm font-semibold text-black transition-colors hover:bg-brand-yellow/90 sm:px-5"
             >
-              Sign up free
+              Play Ranked
             </CampaignSignupLink>
           </div>
         </div>
@@ -236,7 +236,7 @@ export function CampaignQuizLanding({ content, quiz }: CampaignQuizLandingProps)
                 href={`/en?signup=1&source=${content.slug}-quiz-footer`}
                 className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-brand-yellow px-6 font-semibold text-black transition-colors hover:bg-brand-yellow/90"
               >
-                Sign up free
+                Play Ranked
                 <ArrowRight className="size-5" aria-hidden />
               </CampaignSignupLink>
             </section>
