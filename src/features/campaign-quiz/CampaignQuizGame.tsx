@@ -275,13 +275,14 @@ export function CampaignQuizGame({
                   ) : null}
                 </div>
                 {question.image_url ? (
-                  <div className="relative mt-4 aspect-video overflow-hidden rounded-xl bg-white/5">
+                  <div className="mt-4 flex justify-center">
                     <Image
                       src={question.image_url}
                       alt=""
-                      fill
-                      sizes="(min-width: 640px) 768px, 100vw"
-                      className="object-contain"
+                      width={220}
+                      height={220}
+                      sizes="(min-width: 640px) 220px, 180px"
+                      className="h-36 w-auto object-contain sm:h-44"
                     />
                   </div>
                 ) : null}
