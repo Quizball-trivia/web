@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { buildProfileNavTarget } from '@/lib/hooks/useProfileNavigation';
 import { motion } from 'motion/react';
 import {
-  Pencil, Check, X,
+  Pencil, Check, X, Lock,
   ChevronDown, ChevronUp,
 } from 'lucide-react';
 import { Trophy as TrophyPh } from '@phosphor-icons/react';
@@ -33,7 +33,7 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
 import type { PlayerStats } from '@/types/game';
-import type { MatchStatsSummary, ModeMatchStatsSummary, HeadToHeadSummary, RankPosition } from '@/lib/domain';
+import type { MatchStatsSummary, ModeMatchStatsSummary, HeadToHeadSummary, RankPosition, PreviousNickname } from '@/lib/domain';
 import type { MessageKey } from '@/lib/i18n/messages';
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
 
@@ -101,6 +101,13 @@ interface ProfileWebProps {
   recentMatchesLoading?: boolean;
   recentMatchesError?: string | null;
   headToHead?: HeadToHeadSummary | null;
+  previousNicknames?: PreviousNickname[];
+  /** Free changes left. Undefined while unknown — the UI then assumes nothing. */
+  nicknameChangesRemaining?: number;
+  /** Total free changes the server grants, for "X of Y left" copy. */
+  nicknameChangesTotal?: number;
+  /** ISO date the next change unlocks, when the allowance is spent. */
+  nicknameNextChangeAt?: string | null;
   onNameChange?: (newName: string) => Promise<void> | void;
   onAvatarChange?: (avatarUrl: string) => Promise<void> | void;
   onClubChange?: (club: string) => Promise<void> | void;
@@ -116,6 +123,10 @@ export function ProfileWeb({
   rankedProfile = null, rankedProfileLoading = false,
   recentMatches = [], recentMatchesLoading = false, recentMatchesError = null,
   headToHead = null,
+  previousNicknames = [],
+  nicknameChangesRemaining,
+  nicknameChangesTotal,
+  nicknameNextChangeAt = null,
   onNameChange, onAvatarChange, onClubChange, onLanguageChange,
   isUpdating = false,
 }: ProfileWebProps) {
@@ -190,6 +201,49 @@ export function ProfileWeb({
   const rankedSeasons = matchStatsSummary?.rankedSeasons;
   const showSeasonSplit = isEventMode && !!rankedSeasons;
 
+
+
+  // The server is the arbiter; this only decides what the UI offers. Recompute
+  // the remaining wait from the unlock timestamp rather than trusting a
+  // server-sent duration, so a stale tab or a skewed clock can't show a
+  // countdown that already expired.
+  const nicknameCooldown = useMemo(() => {
+    const unlocksAt = nicknameNextChangeAt ? new Date(nicknameNextChangeAt) : null;
+    const isValid = unlocksAt !== null && !Number.isNaN(unlocksAt.getTime());
+    const locked = isValid && unlocksAt.getTime() > Date.now();
+    if (!locked) return { locked: false as const };
+
+    const msLeft = unlocksAt.getTime() - Date.now();
+    const daysLeft = Math.ceil(msLeft / 86_400_000);
+    return {
+      locked: true as const,
+      unlocksAt,
+      label:
+        daysLeft <= 0
+          ? t('profileScreen.nicknameCooldownToday')
+          : daysLeft === 1
+            ? t('profileScreen.nicknameCooldownTomorrow')
+            : t('profileScreen.nicknameCooldownShort', { days: daysLeft }),
+      until: t('profileScreen.nicknameCooldownUntil', {
+        date: unlocksAt.toLocaleDateString(locale === 'ka' ? 'ka-GE' : 'en-GB', {
+          day: 'numeric', month: 'long', year: 'numeric',
+        }),
+      }),
+    };
+  }, [nicknameNextChangeAt, t, locale]);
+
+  const canEditNickname = isSelf && !nicknameCooldown.locked;
+
+  const nicknameStatus = useMemo(() => {
+    if (nicknameCooldown.locked) return nicknameCooldown.until;
+    if (nicknameChangesRemaining === undefined) return null;
+    if (nicknameChangesRemaining <= 0) return t('profileScreen.nicknameNoChangesLeft');
+    if (nicknameChangesRemaining === 1) return t('profileScreen.nicknameLastFreeChange');
+    return t('profileScreen.nicknameChangesLeft', {
+      count: nicknameChangesRemaining,
+      total: nicknameChangesTotal ?? nicknameChangesRemaining,
+    });
+  }, [nicknameCooldown, nicknameChangesRemaining, nicknameChangesTotal, t]);
 
 
   const handleNameChange = async () => {
@@ -272,18 +326,46 @@ export function ProfileWeb({
                     {player.username}
                   </h1>
                   {isSelf && (
-                    <button
-                      onClick={() => setIsEditingName(true)}
-                      className="text-white/35 hover:text-white disabled:opacity-50 transition-colors"
-                      aria-label={t("profileScreen.editNickname")}
-                      disabled={isUpdating}
-                    >
-                      <Pencil className="size-4" />
-                    </button>
+                    canEditNickname ? (
+                      <button
+                        onClick={() => setIsEditingName(true)}
+                        className="text-white/35 hover:text-white disabled:opacity-50 transition-colors"
+                        aria-label={t("profileScreen.editNickname")}
+                        disabled={isUpdating}
+                      >
+                        <Pencil className="size-4" />
+                      </button>
+                    ) : (
+                      <span
+                        className="text-white/20 cursor-not-allowed"
+                        title={nicknameCooldown.locked ? nicknameCooldown.until : undefined}
+                        aria-label={nicknameCooldown.locked ? nicknameCooldown.until : undefined}
+                      >
+                        <Lock className="size-4" />
+                      </span>
+                    )
                   )}
                 </>
               )}
             </div>
+
+            {previousNicknames.length > 0 && (
+              <div className="mt-2 text-[11px] lg:text-xs text-white/40 [overflow-wrap:anywhere]">
+                <span className="uppercase tracking-wide text-white/30">
+                  {t('profileScreen.previouslyKnownAs')}
+                </span>{' '}
+                <span className="text-white/55">
+                  {previousNicknames.map((entry) => entry.nickname).join(', ')}
+                </span>
+              </div>
+            )}
+
+            {isSelf && !isEditingName && nicknameStatus && (
+              <div className="mt-1.5 flex items-center justify-center lg:justify-start gap-1.5 text-[11px] lg:text-xs text-white/40">
+                {nicknameCooldown.locked && <Lock className="size-3 shrink-0" />}
+                <span>{nicknameStatus}</span>
+              </div>
+            )}
           </div>
 
           {/* Inline quick stats — right side per Figma */}
