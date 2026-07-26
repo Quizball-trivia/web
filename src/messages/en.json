@@ -367,7 +367,15 @@
     "toNextLeagueLabel": "to next tier",
     "seasonOf": "of {total} players",
     "seasonNoRank": "No rank this season",
-    "achievementsTitle": "Season Achievements"
+    "achievementsTitle": "Season Achievements",
+    "previouslyKnownAs": "Previously known as",
+    "nicknameChangesLeft": "{count} of {total} name changes left",
+    "nicknameNoChangesLeft": "No name changes left",
+    "nicknameCooldownUntil": "You can change your name again on {date}",
+    "nicknameCooldownShort": "Available in {days} days",
+    "nicknameCooldownTomorrow": "Available tomorrow",
+    "nicknameCooldownToday": "Available today",
+    "nicknameLastFreeChange": "This is your last free change"
   },
   "socialScreen": {
     "friends": "Friends",
@@ -1323,7 +1331,11 @@
     "failedToUpdateClub": "Failed to update club",
     "failedToUpdateLanguage": "Failed to update language",
     "notSet": "Not set",
-    "tryAgain": "Please try again."
+    "tryAgain": "Please try again.",
+    "nicknameTaken": "That name is already taken. Try another one.",
+    "nicknameRecentlyReleased": "That name was recently used by another player. Try another one.",
+    "nicknameProhibited": "That name isn't allowed. Try another one.",
+    "nicknameEmpty": "Enter a name."
   },
   "authValidation": {
     "emailRequired": "Email is required.",
