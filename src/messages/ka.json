@@ -1331,7 +1331,11 @@
     "failedToUpdateClub": "კლუბის განახლება ვერ მოხერხდა",
     "failedToUpdateLanguage": "ენის განახლება ვერ მოხერხდა",
     "notSet": "არ არის მითითებული",
-    "tryAgain": "გთხოვთ, სცადოთ თავიდან."
+    "tryAgain": "გთხოვთ, სცადოთ თავიდან.",
+    "nicknameTaken": "ეს სახელი უკვე დაკავებულია. სცადე სხვა.",
+    "nicknameRecentlyReleased": "ეს სახელი ცოტა ხნის წინ სხვა მოთამაშეს ეკავა. სცადე სხვა.",
+    "nicknameProhibited": "ეს სახელი დაუშვებელია. სცადე სხვა.",
+    "nicknameEmpty": "შეიყვანე სახელი."
   },
   "authValidation": {
     "emailRequired": "ელფოსტის მითითება აუცილებელია.",

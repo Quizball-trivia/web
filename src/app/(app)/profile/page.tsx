@@ -19,7 +19,12 @@ import { useEffect } from "react";
 import { useMyAchievements, usePublicProfile } from "@/lib/queries/users.queries";
 import { decodeAvatarCustomization } from "@/lib/avatars";
 import { trackNicknameChanged, trackFavoriteClubChanged } from "@/lib/analytics/game-events";
-import { formatCooldownDate, getNicknameCooldown } from "@/lib/api/nicknameErrors";
+import {
+  formatCooldownDate,
+  getNicknameCooldown,
+  getNicknameRejection,
+  type NicknameRejection,
+} from "@/lib/api/nicknameErrors";
 
 export default function ProfilePage() {
   const searchParams = useSearchParams();
@@ -62,6 +67,34 @@ export default function ProfilePage() {
     router.replace(cleaned ? `?${cleaned}` : window.location.pathname, { scroll: false });
   }, [purchaseStatus, queryClient, router, searchParams, t]);
 
+  // Every rejection used to collapse into one "failed to update" toast, leaving
+  // the user unsure whether to pick another name, wait, or retry.
+  const describeNicknameRejection = (
+    rejection: NicknameRejection | null,
+    error: unknown,
+  ): string => {
+    switch (rejection) {
+      case "taken":
+        return t("profile.nicknameTaken");
+      case "recently_released":
+        return t("profile.nicknameRecentlyReleased");
+      case "prohibited_content":
+        return t("profile.nicknameProhibited");
+      case "empty":
+        return t("profile.nicknameEmpty");
+      case "cooldown": {
+        const nextAvailableAt = getNicknameCooldown(error)?.nextAvailableAt;
+        return nextAvailableAt
+          ? t("profileScreen.nicknameCooldownUntil", {
+              date: formatCooldownDate(new Date(nextAvailableAt), locale),
+            })
+          : t("profileScreen.nicknameNoChangesLeft");
+      }
+      default:
+        return t("profile.pleaseTryAgain");
+    }
+  };
+
   const handleNameChange = async (name: string) => {
     if (isUpdating) return;
     setIsUpdating(true);
@@ -82,24 +115,18 @@ export default function ProfilePage() {
       }
       toast.success(t("profile.nicknameUpdated"));
     } catch (error) {
-      const cooldown = getNicknameCooldown(error);
-      if (cooldown) {
+      const rejection = getNicknameRejection(error);
+
+      if (rejection === "cooldown") {
         // Pull the authoritative quota so the profile switches to the locked
         // state instead of still offering an edit the server keeps rejecting.
         void getMe()
           .then((fresh) => setAuthenticated(fresh))
           .catch(() => undefined);
-        toast.error(t("profile.nicknameUpdateFailed"), {
-          description: cooldown.nextAvailableAt
-            ? t("profileScreen.nicknameCooldownUntil", {
-                date: formatCooldownDate(new Date(cooldown.nextAvailableAt), locale),
-              })
-            : t("profileScreen.nicknameNoChangesLeft"),
-        });
-        throw error;
       }
+
       toast.error(t("profile.nicknameUpdateFailed"), {
-        description: error instanceof Error ? error.message : t("profile.pleaseTryAgain"),
+        description: describeNicknameRejection(rejection, error),
       });
       throw error;
     } finally {

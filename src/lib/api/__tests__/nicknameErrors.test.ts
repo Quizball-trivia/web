@@ -1,7 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { ApiError } from "@/lib/api/api";
-import { getNicknameCooldown, isNicknameTakenError } from "@/lib/api/nicknameErrors";
+import {
+  getNicknameCooldown,
+  getNicknameRejection,
+  isNicknameTakenError,
+} from "@/lib/api/nicknameErrors";
 
 function apiError(status: number, data: unknown) {
   return new ApiError("boom", status, data);
@@ -42,5 +46,41 @@ describe("getNicknameCooldown", () => {
   it("returns null for unrelated errors", () => {
     expect(getNicknameCooldown(apiError(409, { code: "CONFLICT" }))).toBeNull();
     expect(getNicknameCooldown(new Error("nope"))).toBeNull();
+  });
+});
+
+describe("getNicknameRejection", () => {
+  it("classifies a plain uniqueness clash", () => {
+    expect(getNicknameRejection(apiError(409, { details: { field: "nickname" } }))).toBe("taken");
+  });
+
+  it("distinguishes a name another player recently vacated", () => {
+    const error = apiError(409, {
+      details: { field: "nickname", reason: "recently_released" },
+    });
+    expect(getNicknameRejection(error)).toBe("recently_released");
+  });
+
+  it("classifies profanity and empty rejections", () => {
+    expect(
+      getNicknameRejection(apiError(400, { details: { field: "nickname", reason: "prohibited_content" } })),
+    ).toBe("prohibited_content");
+    expect(
+      getNicknameRejection(apiError(400, { details: { field: "nickname", reason: "empty" } })),
+    ).toBe("empty");
+  });
+
+  it("classifies the cooldown by code, not status", () => {
+    const error = apiError(400, {
+      code: "NICKNAME_CHANGE_COOLDOWN",
+      details: { field: "nickname", nextAvailableAt: "2026-08-25T07:26:42.672Z" },
+    });
+    expect(getNicknameRejection(error)).toBe("cooldown");
+  });
+
+  it("returns null for unrelated failures so they fall back to generic copy", () => {
+    expect(getNicknameRejection(apiError(409, { details: { field: "phone_number" } }))).toBeNull();
+    expect(getNicknameRejection(apiError(500, { code: "INTERNAL" }))).toBeNull();
+    expect(getNicknameRejection(new Error("network"))).toBeNull();
   });
 });
