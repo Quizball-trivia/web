@@ -252,10 +252,10 @@ export function ProfileWeb({
         await onNameChange?.(editedName.trim());
       }
       setIsEditingName(false);
-    } catch (error) {
-      toast.error(t('profile.failedToUpdateName'), {
-        description: error instanceof Error ? error.message : t('profile.failedToUpdateName'),
-      });
+    } catch {
+      // onNameChange owns the error toast — it can tell a cooldown from a taken
+      // name. Rethrowing only signals "keep the field open so the value isn't
+      // lost"; re-reporting here would double-toast, the second one raw.
     }
   };
 
