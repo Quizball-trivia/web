@@ -2,7 +2,10 @@ import { describe, expect, it } from "vitest";
 
 import { formatCooldownDate } from "@/lib/api/nicknameErrors";
 
-const UNLOCK = new Date("2026-08-25T07:26:42.672Z");
+// Local-time components, not a UTC ISO string: toLocaleDateString renders the
+// runner's local date, so a UTC timestamp would assert "24 August" on a UTC-8
+// machine and flake.
+const UNLOCK = new Date(2026, 7, 25, 12, 0, 0);
 
 describe("formatCooldownDate", () => {
   it("formats in Georgian for the ka locale", () => {
