@@ -8,9 +8,15 @@ export interface RankPosition {
   total: number;
 }
 
+export interface PreviousNickname {
+  nickname: string;
+  changedAt: string;
+}
+
 export interface PublicProfile {
   id: string;
   nickname: string | null;
+  previousNicknames: PreviousNickname[];
   avatarUrl: string | null;
   avatarCustomization: AvatarCustomization | null;
   country: string | null;
