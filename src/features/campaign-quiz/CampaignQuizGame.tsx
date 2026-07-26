@@ -3,7 +3,7 @@
 import { useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Check, RotateCcw, Sparkles, X } from 'lucide-react';
+import { ArrowRight, Check, RotateCcw, X } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useAuthStore } from '@/stores/auth.store';
 import { answerCampaignQuizQuestion } from './campaignQuiz.api';
@@ -164,13 +164,18 @@ export function CampaignQuizGame({
 
     return (
       <div
-        className="overflow-hidden rounded-xl bg-surface-card-deeper font-poppins"
+        className="overflow-hidden rounded-xl bg-brand-blue font-poppins"
         data-testid="campaign-quiz-score"
       >
         <div className="px-5 py-6 text-center sm:px-8">
-          <div className="mx-auto flex size-12 items-center justify-center rounded-lg border border-brand-yellow text-brand-yellow">
-            <Sparkles className="size-7" aria-hidden />
-          </div>
+          <Image
+            src="/assets/brand/goal-ball-small.webp"
+            alt=""
+            aria-hidden
+            width={64}
+            height={64}
+            className="mx-auto size-14 object-contain"
+          />
           <p className="mt-4 text-xs font-bold uppercase tracking-[0.22em] text-white/70">
             Full time
           </p>
@@ -180,7 +185,7 @@ export function CampaignQuizGame({
         </div>
 
         <div className="px-5 py-7 text-center sm:px-10 sm:py-9">
-          <p className="mx-auto max-w-xl text-base font-semibold leading-relaxed text-white/75 sm:text-lg">
+          <p className="mx-auto max-w-xl text-base font-semibold leading-relaxed text-white/85 sm:text-lg">
             {isAuthenticated
               ? 'Ready for a tougher test? Take your football knowledge into a ranked duel.'
               : guestScoreCopy}
@@ -198,7 +203,7 @@ export function CampaignQuizGame({
           <button
             type="button"
             onClick={restart}
-            className="mx-auto mt-5 flex items-center gap-2 text-sm font-bold text-white/55 transition-colors hover:text-white"
+            className="mx-auto mt-5 flex items-center gap-2 text-sm font-bold text-white/75 transition-colors hover:text-white"
           >
             <RotateCcw className="size-4" aria-hidden />
             Play the quiz again
