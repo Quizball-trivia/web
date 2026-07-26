@@ -338,7 +338,7 @@ export function ProfileWeb({
                     ) : (
                       <span
                         className="text-white/20 cursor-not-allowed"
-                        title={nicknameCooldown.locked ? nicknameCooldown.until : undefined}
+                        title={nicknameCooldown.locked ? nicknameCooldown.label : undefined}
                         aria-label={nicknameCooldown.locked ? nicknameCooldown.until : undefined}
                       >
                         <Lock className="size-4" />
