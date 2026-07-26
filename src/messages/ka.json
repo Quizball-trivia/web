@@ -254,7 +254,15 @@
     "toNextLeagueLabel": "შემდეგ ლიგამდე",
     "seasonOf": "{total} მოთამაშიდან",
     "seasonNoRank": "ამ სეზონში რანგი არ გქონდა",
-    "achievementsTitle": "სეზონის მიღწევები"
+    "achievementsTitle": "სეზონის მიღწევები",
+    "previouslyKnownAs": "ცნობილი იყო როგორც",
+    "nicknameChangesLeft": "დარჩა {count} ცვლილება {total}-დან",
+    "nicknameNoChangesLeft": "ცვლილებები ამოიწურა",
+    "nicknameCooldownUntil": "სახელს ხელახლა {date}-ს შეცვლი",
+    "nicknameCooldownShort": "ხელმისაწვდომია {days} დღეში",
+    "nicknameCooldownTomorrow": "ხელმისაწვდომია ხვალ",
+    "nicknameCooldownToday": "ხელმისაწვდომია დღეს",
+    "nicknameLastFreeChange": "ეს შენი ბოლო უფასო ცვლილებაა"
   },
   "home": {
     "statRP": "RP",

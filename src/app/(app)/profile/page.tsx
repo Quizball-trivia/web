@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { ProfileScreen } from "@/features/profile/ProfileScreen";
 import { usePlayer } from "@/contexts/PlayerContext";
-import { updateMe } from "@/lib/api/endpoints";
+import { getMe, updateMe } from "@/lib/api/endpoints";
 import { toast } from "sonner";
 import { useAuthStore } from "@/stores/auth.store";
 import { useMatchStatsSummary, useRecentMatches } from "@/lib/queries/stats.queries";
@@ -16,9 +16,10 @@ import { LOCALES, type Locale } from "@/lib/i18n/messages";
 import { toProfileRecentMatch } from "@/features/profile/ProfileWeb";
 import { MAX_MATCHES_COUNT } from "@/lib/constants/matches";
 import { useEffect } from "react";
-import { useMyAchievements } from "@/lib/queries/users.queries";
+import { useMyAchievements, usePublicProfile } from "@/lib/queries/users.queries";
 import { decodeAvatarCustomization } from "@/lib/avatars";
 import { trackNicknameChanged, trackFavoriteClubChanged } from "@/lib/analytics/game-events";
+import { getNicknameCooldown } from "@/lib/api/nicknameErrors";
 
 export default function ProfilePage() {
   const searchParams = useSearchParams();
@@ -36,6 +37,9 @@ export default function ProfilePage() {
   const { data: rankedProfile, isLoading: rankedProfileLoading } = useRankedProfile();
   const { data: userRanks } = useUserRanks();
   const { data: achievements = [] } = useMyAchievements();
+  // Own previous nicknames come from the public profile so self and visitor
+  // views render from the same server-filtered list.
+  const { data: ownPublicProfile } = usePublicProfile(authUser?.id);
 
   const { setLocale, t } = useLocale();
   const [isUpdating, setIsUpdating] = useState(false);
@@ -74,9 +78,28 @@ export default function ProfilePage() {
       }
       toast.success(t("profile.nicknameUpdated"));
     } catch (error) {
+      const cooldown = getNicknameCooldown(error);
+      if (cooldown) {
+        // Pull the authoritative quota so the profile switches to the locked
+        // state instead of still offering an edit the server keeps rejecting.
+        void getMe()
+          .then((fresh) => setAuthenticated(fresh))
+          .catch(() => undefined);
+        toast.error(t("profile.nicknameUpdateFailed"), {
+          description: cooldown.nextAvailableAt
+            ? t("profileScreen.nicknameCooldownUntil", {
+                date: new Date(cooldown.nextAvailableAt).toLocaleDateString(undefined, {
+                  day: "numeric", month: "long", year: "numeric",
+                }),
+              })
+            : t("profileScreen.nicknameNoChangesLeft"),
+        });
+        throw error;
+      }
       toast.error(t("profile.nicknameUpdateFailed"), {
         description: error instanceof Error ? error.message : t("profile.pleaseTryAgain"),
       });
+      throw error;
     } finally {
       setIsUpdating(false);
     }
@@ -180,6 +203,10 @@ export default function ProfilePage() {
           ? recentMatchesError.message
           : null
       }
+      previousNicknames={ownPublicProfile?.previousNicknames ?? []}
+      nicknameChangesRemaining={authUser?.nickname_changes_remaining}
+      nicknameChangesTotal={authUser?.nickname_changes_total}
+      nicknameNextChangeAt={authUser?.nickname_next_change_at ?? null}
       onNameChange={handleNameChange}
       onAvatarChange={handleAvatarChange}
       onClubChange={handleClubChange}

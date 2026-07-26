@@ -9,30 +9,12 @@ import { logger } from "@/utils/logger";
 import { useLocale } from "@/contexts/LocaleContext";
 import { updateMe } from "@/lib/api/endpoints";
 import { apiFetch } from "@/lib/api/client";
-import { ApiError } from "@/lib/api/api";
+import { isNicknameTakenError } from "@/lib/api/nicknameErrors";
 import { useAuthStore } from "@/stores/auth.store";
 import { DEFAULT_HAIR_ID, DEFAULT_JERSEY_ID, DEFAULT_SKIN_ID } from "@/lib/avatars/parts";
 import type { AvatarCustomization } from "@/types/game";
 import { trackOnboardingCompleted } from "@/lib/analytics/game-events";
 import { consumePostAuthRedirect } from "@/lib/auth/postAuthRedirect";
-
-function isNicknameTakenError(error: unknown): boolean {
-  if (!(error instanceof ApiError) || error.status !== 409) {
-    return false;
-  }
-
-  const payload = error.data;
-  if (!payload || typeof payload !== "object") {
-    return false;
-  }
-
-  const details = (payload as { details?: unknown }).details;
-  return (
-    !!details &&
-    typeof details === "object" &&
-    (details as { field?: unknown }).field === "nickname"
-  );
-}
 
 export default function OnboardingPage() {
   const router = useRouter();
