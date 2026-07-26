@@ -68,9 +68,13 @@ export default function ProfilePage() {
     try {
       const updated = await updateMe({ nickname: name });
       updateStats({ username: name });
-      if (authUser) {
-        setAuthenticated({ ...authUser, nickname: updated.nickname ?? name });
-      }
+      // Take the whole response, not a spread of the stale user: it carries the
+      // decremented quota, so the profile locks itself on the last change
+      // instead of still offering one.
+      setAuthenticated(updated);
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.users.publicProfile(updated.id),
+      });
       try {
         trackNicknameChanged();
       } catch (analyticsError) {
