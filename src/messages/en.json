@@ -1331,7 +1331,11 @@
     "failedToUpdateClub": "Failed to update club",
     "failedToUpdateLanguage": "Failed to update language",
     "notSet": "Not set",
-    "tryAgain": "Please try again."
+    "tryAgain": "Please try again.",
+    "nicknameTaken": "That name is already taken. Try another one.",
+    "nicknameRecentlyReleased": "That name was recently used by another player. Try another one.",
+    "nicknameProhibited": "That name isn't allowed. Try another one.",
+    "nicknameEmpty": "Enter a name."
   },
   "authValidation": {
     "emailRequired": "Email is required.",

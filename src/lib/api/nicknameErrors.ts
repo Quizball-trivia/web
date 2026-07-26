@@ -52,3 +52,30 @@ export function getNicknameCooldown(error: unknown): NicknameCooldownInfo | null
     nextAvailableAt: typeof nextAvailableAt === "string" ? nextAvailableAt : null,
   };
 }
+
+/**
+ * Why the server refused a nickname. Every one of these used to surface as the
+ * same "failed to update" toast, which left the user with no idea whether to
+ * pick a different name, wait, or retry.
+ */
+export type NicknameRejection =
+  | "taken"
+  | "recently_released"
+  | "prohibited_content"
+  | "empty"
+  | "cooldown";
+
+export function getNicknameRejection(error: unknown): NicknameRejection | null {
+  if (!(error instanceof ApiError)) return null;
+  if (errorCode(error) === "NICKNAME_CHANGE_COOLDOWN") return "cooldown";
+
+  const details = errorDetails(error);
+  if (details?.field !== "nickname") return null;
+
+  const reason = details.reason;
+  if (reason === "recently_released") return "recently_released";
+  if (reason === "prohibited_content") return "prohibited_content";
+  if (reason === "empty") return "empty";
+  // A 409 on the nickname field with no reason is the plain uniqueness clash.
+  return error.status === 409 ? "taken" : null;
+}
