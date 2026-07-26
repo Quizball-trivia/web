@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { buildProfileNavTarget } from '@/lib/hooks/useProfileNavigation';
@@ -30,6 +30,7 @@ import { WorldCupAchievementCard } from '@/components/shared/WorldCupAchievement
 import { useUserEventAwards } from '@/lib/queries/eventAwards.queries';
 import { useLeaderboardSeasons, useUserRank } from '@/lib/queries/leaderboard.queries';
 import { Input } from '@/components/ui/input';
+import { formatCooldownDate } from '@/lib/api/nicknameErrors';
 import { toast } from 'sonner';
 
 import type { PlayerStats } from '@/types/game';
@@ -207,17 +208,40 @@ export function ProfileWeb({
   // the remaining wait from the unlock timestamp rather than trusting a
   // server-sent duration, so a stale tab or a skewed clock can't show a
   // countdown that already expired.
-  const nicknameCooldown = useMemo(() => {
-    const unlocksAt = nicknameNextChangeAt ? new Date(nicknameNextChangeAt) : null;
-    const isValid = unlocksAt !== null && !Number.isNaN(unlocksAt.getTime());
-    const locked = isValid && unlocksAt.getTime() > Date.now();
-    if (!locked) return { locked: false as const };
+  // Reading the clock during render is impure, and a profile left open past the
+  // unlock time would otherwise stay locked forever. Keep "now" in state and
+  // wake exactly once, when the cooldown expires.
+  const [now, setNow] = useState(() => Date.now());
+  const unlocksAtMs = useMemo(() => {
+    if (!nicknameNextChangeAt) return null;
+    const parsed = new Date(nicknameNextChangeAt).getTime();
+    return Number.isNaN(parsed) ? null : parsed;
+  }, [nicknameNextChangeAt]);
 
-    const msLeft = unlocksAt.getTime() - Date.now();
-    const daysLeft = Math.ceil(msLeft / 86_400_000);
+  useEffect(() => {
+    if (unlocksAtMs === null || unlocksAtMs <= now) return;
+    // setTimeout clamps above ~24.8 days, so cap and re-arm rather than
+    // scheduling a 30-day wait that would fire immediately.
+    const delay = Math.min(unlocksAtMs - now, 60_000 * 60);
+    const timer = setTimeout(() => setNow(Date.now()), delay);
+    return () => clearTimeout(timer);
+  }, [unlocksAtMs, now]);
+
+  const nicknameCooldown = useMemo(() => {
+    if (unlocksAtMs === null || unlocksAtMs <= now) return { locked: false as const };
+
+    const unlocksAt = new Date(unlocksAtMs);
+    // Compare calendar days, not elapsed hours: an unlock two hours from now is
+    // "today", and a fixed 24h division would call it "tomorrow". Using local
+    // midnights also keeps this right across a DST shift.
+    const startOfDay = (ms: number) => {
+      const d = new Date(ms);
+      d.setHours(0, 0, 0, 0);
+      return d.getTime();
+    };
+    const daysLeft = Math.round((startOfDay(unlocksAtMs) - startOfDay(now)) / 86_400_000);
     return {
       locked: true as const,
-      unlocksAt,
       label:
         daysLeft <= 0
           ? t('profileScreen.nicknameCooldownToday')
@@ -225,14 +249,24 @@ export function ProfileWeb({
             ? t('profileScreen.nicknameCooldownTomorrow')
             : t('profileScreen.nicknameCooldownShort', { days: daysLeft }),
       until: t('profileScreen.nicknameCooldownUntil', {
-        date: unlocksAt.toLocaleDateString(locale === 'ka' ? 'ka-GE' : 'en-GB', {
-          day: 'numeric', month: 'long', year: 'numeric',
-        }),
+        date: formatCooldownDate(unlocksAt, locale),
       }),
     };
-  }, [nicknameNextChangeAt, t, locale]);
+  }, [unlocksAtMs, now, t, locale]);
 
-  const canEditNickname = isSelf && !nicknameCooldown.locked;
+  // Out of changes with no unlock time to show. The server still rejects, so
+  // the UI must not offer an edit just because there is no date to render.
+  const nicknameExhausted =
+    !nicknameCooldown.locked && nicknameChangesRemaining !== undefined && nicknameChangesRemaining <= 0;
+
+  const canEditNickname = isSelf && !nicknameCooldown.locked && !nicknameExhausted;
+
+  // Another tab (or this one, racing) can spend the last change while the
+  // editor is open. Once the refreshed quota says locked, close it rather than
+  // leaving an input that only produces rejections.
+  useEffect(() => {
+    if (isEditingName && !canEditNickname) setIsEditingName(false);
+  }, [isEditingName, canEditNickname]);
 
   const nicknameStatus = useMemo(() => {
     if (nicknameCooldown.locked) return nicknameCooldown.until;
@@ -290,7 +324,7 @@ export function ProfileWeb({
           {/* Name */}
           <div className="flex-1 min-w-0 text-center lg:text-left">
             <div className="flex items-center justify-center lg:justify-start gap-2">
-              {isEditingName ? (
+              {isEditingName && canEditNickname ? (
                 <div className="flex items-center gap-2">
                   <Input
                     value={editedName}
@@ -338,8 +372,8 @@ export function ProfileWeb({
                     ) : (
                       <span
                         className="text-white/20 cursor-not-allowed"
-                        title={nicknameCooldown.locked ? nicknameCooldown.label : undefined}
-                        aria-label={nicknameCooldown.locked ? nicknameCooldown.until : undefined}
+                        title={nicknameCooldown.locked ? nicknameCooldown.label : nicknameStatus ?? undefined}
+                        aria-label={nicknameCooldown.locked ? nicknameCooldown.until : nicknameStatus ?? undefined}
                       >
                         <Lock className="size-4" />
                       </span>
@@ -362,7 +396,7 @@ export function ProfileWeb({
 
             {isSelf && !isEditingName && nicknameStatus && (
               <div className="mt-1.5 flex items-center justify-center lg:justify-start gap-1.5 text-[11px] lg:text-xs text-white/40">
-                {nicknameCooldown.locked && <Lock className="size-3 shrink-0" />}
+                {(nicknameCooldown.locked || nicknameExhausted) && <Lock className="size-3 shrink-0" />}
                 <span>{nicknameStatus}</span>
               </div>
             )}

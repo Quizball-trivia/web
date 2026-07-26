@@ -19,7 +19,7 @@ import { useEffect } from "react";
 import { useMyAchievements, usePublicProfile } from "@/lib/queries/users.queries";
 import { decodeAvatarCustomization } from "@/lib/avatars";
 import { trackNicknameChanged, trackFavoriteClubChanged } from "@/lib/analytics/game-events";
-import { getNicknameCooldown } from "@/lib/api/nicknameErrors";
+import { formatCooldownDate, getNicknameCooldown } from "@/lib/api/nicknameErrors";
 
 export default function ProfilePage() {
   const searchParams = useSearchParams();
@@ -41,7 +41,7 @@ export default function ProfilePage() {
   // views render from the same server-filtered list.
   const { data: ownPublicProfile } = usePublicProfile(authUser?.id);
 
-  const { setLocale, t } = useLocale();
+  const { setLocale, t, locale } = useLocale();
   const [isUpdating, setIsUpdating] = useState(false);
   const purchaseStatus = searchParams.get("purchase");
 
@@ -92,9 +92,7 @@ export default function ProfilePage() {
         toast.error(t("profile.nicknameUpdateFailed"), {
           description: cooldown.nextAvailableAt
             ? t("profileScreen.nicknameCooldownUntil", {
-                date: new Date(cooldown.nextAvailableAt).toLocaleDateString(undefined, {
-                  day: "numeric", month: "long", year: "numeric",
-                }),
+                date: formatCooldownDate(new Date(cooldown.nextAvailableAt), locale),
               })
             : t("profileScreen.nicknameNoChangesLeft"),
         });

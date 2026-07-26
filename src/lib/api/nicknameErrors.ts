@@ -1,5 +1,17 @@
 import { ApiError } from "@/lib/api/api";
 
+/**
+ * Cooldown dates must follow the in-app language, not the browser's — a
+ * Georgian UI showing an English date reads as a bug.
+ */
+export function formatCooldownDate(date: Date, locale: string): string {
+  return date.toLocaleDateString(locale === "ka" ? "ka-GE" : "en-GB", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
 function errorDetails(error: unknown): Record<string, unknown> | null {
   if (!(error instanceof ApiError)) return null;
   const payload = error.data;
