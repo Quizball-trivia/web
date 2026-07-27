@@ -932,7 +932,12 @@
     "matchComplete": "MATCH COMPLETE",
     "cancelled": "Cancelled",
     "noContest": "No contest",
-    "ticketRefunded": "Ranked ticket refunded"
+    "ticketRefunded": "Ranked ticket refunded",
+    "addFriend": "Add friend",
+    "friendRequestSent": "Request sent",
+    "acceptFriendRequest": "Accept request",
+    "friends": "Friends",
+    "friendRequestError": "Friend request failed. Please try again."
   },
   "friendHub": {
     "title": "Friend Match",
