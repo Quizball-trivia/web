@@ -139,9 +139,13 @@ export function AddOpponentFriendButton({
       await acceptRequestMutation.mutateAsync(relationship.requestId);
       setOptimisticStatus('friends');
       await invalidateSocialQueries();
-    } catch {
+    } catch (error) {
       await invalidateSocialQueries();
-      toast.error(t('results.friendRequestError'));
+      // 409 = already accepted/withdrawn elsewhere — the refetch resolves the
+      // button to the true state, no error to report.
+      if (!isConflictError(error)) {
+        toast.error(t('results.friendRequestError'));
+      }
     }
   };
 

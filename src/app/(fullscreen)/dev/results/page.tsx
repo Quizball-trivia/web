@@ -431,7 +431,11 @@ function DevResultsContent() {
           <Segmented
             options={['none', 'sent', 'received', 'friends'] as const}
             value={friendButtonState}
-            onChange={setFriendButtonState}
+            onChange={(state) => {
+              friendSimulationTimers.current.forEach((timer) => window.clearTimeout(timer));
+              friendSimulationTimers.current = [];
+              setFriendButtonState(state);
+            }}
           />
           <button
             type="button"

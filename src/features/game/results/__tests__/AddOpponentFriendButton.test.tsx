@@ -96,6 +96,8 @@ function renderButton({
 beforeEach(() => {
   vi.clearAllMocks();
   useAuthStore.setState({ status: 'authenticated' });
+  repoMocks.getFriends.mockResolvedValue({ friends: [] });
+  repoMocks.getFriendRequests.mockResolvedValue({ incoming: [], outgoing: [], incomingCount: 0 });
   repoMocks.createFriendRequest.mockResolvedValue({ requestId: 'new-request', status: 'pending' });
   repoMocks.acceptFriendRequest.mockResolvedValue({ success: true });
 });
@@ -225,6 +227,33 @@ describe('AddOpponentFriendButton', () => {
       expect(screen.getByText('Friends')).toBeInTheDocument();
     });
     expect(screen.queryByRole('button', { name: /accept request/i })).not.toBeInTheDocument();
+  });
+
+  it('resolves accept 409 conflicts silently against refetched state', async () => {
+    repoMocks.acceptFriendRequest.mockRejectedValueOnce(
+      new ApiError('Request failed', 409, { message: 'Already handled' }),
+    );
+
+    renderButton({
+      requests: {
+        incoming: [{
+          requestId: 'incoming-id',
+          createdAt: '2026-01-01T00:00:00.000Z',
+          user: socialPlayer(OPPONENT_ID, 'pending_received'),
+        }],
+        outgoing: [],
+        incomingCount: 1,
+      },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /accept request/i }));
+
+    await waitFor(() => {
+      expect(repoMocks.acceptFriendRequest).toHaveBeenCalledWith('incoming-id');
+    });
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /add friend/i })).toBeInTheDocument();
+    });
+    expect(toast.error).not.toHaveBeenCalled();
   });
 
   it('resolves 409 conflicts against refetched server state without an error toast', async () => {
