@@ -2,7 +2,7 @@ import { io, type Socket } from 'socket.io-client';
 import { API_BASE_URL } from '@/lib/config';
 import { getSupabaseAccessToken, getSupabaseClient } from '@/lib/auth/supabase';
 import { logger } from '@/utils/logger';
-import { trackSocketConnectionFailed, trackSocketReconnected } from '@/lib/analytics/game-events';
+import { trackSocketConnectionFailed } from '@/lib/analytics/game-events';
 import {
   markRealtimeConnected,
   markRealtimeConnecting,
@@ -14,7 +14,6 @@ import {
 } from './connection-health';
 import type { ClientToServerEvents, ServerToClientEvents } from './socket.types';
 
-let lastDisconnectAtMs: number | null = null;
 let connectionPingIntervalId: ReturnType<typeof setInterval> | null = null;
 let connectionPingMonitorRunId = 0;
 const pendingPingTimeoutIds = new Set<ReturnType<typeof setTimeout>>();
@@ -277,11 +276,6 @@ function createSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
     socketDebug('socket authenticated/connected', socketSnapshot(socket));
     logger.info('Socket connected', { socketId: socket.id });
     markRealtimeConnected();
-    if (lastDisconnectAtMs !== null) {
-      const downtimeSec = Math.max(0, Math.round((Date.now() - lastDisconnectAtMs) / 1000));
-      lastDisconnectAtMs = null;
-      try { trackSocketReconnected(downtimeSec); } catch { /* best-effort */ }
-    }
   });
   socket.on('disconnect', (reason) => {
     socketDebug('socket disconnected', {
@@ -290,7 +284,6 @@ function createSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
     });
     logger.warn('Socket disconnected', { reason });
     markRealtimeDisconnected(reason);
-    lastDisconnectAtMs = Date.now();
   });
   socket.on('connect_error', (error) => {
     socketDebug('connect_error', {

@@ -48,6 +48,7 @@ export function AppShellBanners({ variant, vm }: AppShellBannersProps) {
   const {
     activeDraftBanner,
     activeMatchBanner,
+    activeAuctionMatch,
     completedMatchBanner,
     forfeitPending,
     partyDropout,
@@ -64,6 +65,7 @@ export function AppShellBanners({ variant, vm }: AppShellBannersProps) {
     showRankedLobbyBanner,
     showDraftBanner,
     showRejoinBanner,
+    showAuctionRejoinBanner,
     showCompletedMatchBanner,
     showForfeitPendingBanner,
     showPartyDropoutBanner,
@@ -71,6 +73,7 @@ export function AppShellBanners({ variant, vm }: AppShellBannersProps) {
     handleReturnToRankedLobby,
     handleLeaveLobby,
     handleRejoinMatch,
+    handleRejoinAuction,
     handleReturnToDraft,
     handleForfeitRejoin,
     handleViewCompletedMatch,
@@ -98,6 +101,9 @@ export function AppShellBanners({ variant, vm }: AppShellBannersProps) {
   const completedOpponentName = completedMatchBanner?.opponent.username ?? t('appShell.opponentFallback');
   const draftOpponentName = activeDraftBanner?.opponent?.username ?? t('appShell.opponentFallback');
   const activeMatchOpponentName = activeMatchBanner?.opponent.username ?? t('appShell.opponentFallback');
+  const auctionOpponentName = activeAuctionMatch?.opponentName ?? t('appShell.opponentFallback');
+  const auctionTitleKey = isDesktop ? 'appShell.auctionStillActiveAgainst' : 'appShell.auctionActiveVs';
+  const auctionDescKey = isDesktop ? 'appShell.returnToLiveAuction' : 'appShell.returnToContinue';
 
   return (
     <>
@@ -246,6 +252,33 @@ export function AppShellBanners({ variant, vm }: AppShellBannersProps) {
                   {t('appShell.forfeit')} {isDesktop && xIcon}
                 </Button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showAuctionRejoinBanner && (
+        <div className={pad}>
+          <div className={`rounded-2xl border-2 border-brand-yellow bg-brand-yellow/10 ${card}`}>
+            <div className={`flex ${rowLayout}`}>
+              <div className="flex items-center gap-3">
+                <div className={`${iconSize} rounded-full bg-brand-yellow/20 text-brand-yellow flex items-center justify-center`}>
+                  <Gamepad2 className={iconGlyph} />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-white">
+                    {t(auctionTitleKey, { name: auctionOpponentName })}
+                  </p>
+                  <p className="text-xs text-white/70">{t(auctionDescKey)}</p>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                className={`${btnH} bg-brand-yellow text-surface-page hover:bg-brand-yellow-deep`}
+                onClick={handleRejoinAuction}
+              >
+                {t(rejoinLabel)} {isDesktop && arrow}
+              </Button>
             </div>
           </div>
         </div>

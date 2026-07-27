@@ -59,6 +59,7 @@ vi.mock('@/lib/realtime/socket-client', () => ({
 vi.mock('@/utils/logger', () => ({
   logger: {
     warn: loggerWarnMock,
+    info: vi.fn(),
   },
 }));
 
@@ -197,6 +198,55 @@ describe('useRealtimeAuctionMatch', () => {
     expect(socketMock.emit).not.toHaveBeenCalledWith('auction:start_ai_match', { locale: 'en', formation: '4-3-3' });
   });
 
+  it('attaches to an existing match instead of queueing when entered from a lobby', () => {
+    vi.useFakeTimers();
+
+    renderHook(() => useRealtimeAuctionMatch({
+      enabled: true,
+      autoStart: true,
+      matchmakingMode: 'search',
+      attachMatchId: 'lobby-match-1',
+      selfUserId: 'user-1',
+      locale: 'en',
+      formation: '4-3-3',
+      humanAvatarSeed: 'avatar-1',
+    }));
+
+    expect(socketMock.emit).toHaveBeenCalledWith('auction:rejoin', { matchId: 'lobby-match-1' });
+
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
+
+    // The autoStart search timer must never fire for a lobby hand-off — the
+    // player already has a match, a second search would be a duplicate queue.
+    expect(socketMock.emit).not.toHaveBeenCalledWith('auction:search_start', { locale: 'en', formation: '4-3-3' });
+  });
+
+  it('re-attaches rather than re-queueing when the socket reconnects after a lobby hand-off', () => {
+    vi.useFakeTimers();
+
+    renderHook(() => useRealtimeAuctionMatch({
+      enabled: true,
+      autoStart: true,
+      matchmakingMode: 'search',
+      attachMatchId: 'lobby-match-1',
+      selfUserId: 'user-1',
+      locale: 'en',
+      formation: '4-3-3',
+      humanAvatarSeed: 'avatar-1',
+    }));
+
+    socketMock.emit.mockClear();
+
+    act(() => {
+      socketMock.trigger('connect');
+    });
+
+    expect(socketMock.emit).toHaveBeenCalledWith('auction:rejoin', { matchId: 'lobby-match-1' });
+    expect(socketMock.emit).not.toHaveBeenCalledWith('auction:search_start', { locale: 'en', formation: '4-3-3' });
+  });
+
   it('updates search status from auction matchmaking events', () => {
     const { result } = renderHook(() => useRealtimeAuctionMatch({
       enabled: true,
@@ -285,6 +335,115 @@ describe('useRealtimeAuctionMatch', () => {
     expect(result.current.search).toBeNull();
     expect(result.current.matchId).toBe('match-1');
     expect(result.current.state?.phase).toBe('bidding');
+  });
+
+  it('holds a found lineup and ignores a late search echo that would downgrade it', () => {
+    const { result } = renderHook(() => useRealtimeAuctionMatch({
+      enabled: true,
+      autoStart: true,
+      matchmakingMode: 'search',
+      selfUserId: 'user-1',
+      locale: 'en',
+      formation: '4-3-3',
+      humanAvatarSeed: 'avatar-1',
+    }));
+
+    act(() => {
+      result.current.actions.startGame();
+      socketMock.trigger('auction:search_status', {
+        searchId: 'search-1',
+        locale: 'en',
+        queuedUserCount: 3,
+        seatsNeeded: 0,
+        fallbackAt: '2026-06-20T10:00:12.000Z',
+      });
+      socketMock.trigger('auction:match_found', {
+        matchId: 'match-1',
+        humanUserIds: ['user-1', 'user-2', 'user-3'],
+        botCount: 0,
+        locale: 'en',
+        formation: '4-3-3',
+      });
+    });
+
+    expect(result.current.search).toMatchObject({ phase: 'match_found', queuedUserCount: 3 });
+    const searchStartsBeforeReconnect = socketMock.emit.mock.calls.filter(
+      ([event]) => event === 'auction:search_start',
+    ).length;
+
+    // A reconnect re-runs search on the server, which echoes a fresh low count.
+    // It must NOT regress the found lineup back to a partial searching state.
+    act(() => {
+      socketMock.socket.connected = false;
+      socketMock.trigger('disconnect');
+      socketMock.socket.connected = true;
+      socketMock.trigger('connect');
+      socketMock.trigger('auction:search_start', {
+        searchId: 'search-1',
+        locale: 'en',
+        queuedUserCount: 1,
+        seatsNeeded: 2,
+        fallbackAt: '2026-06-20T10:00:12.000Z',
+      });
+      socketMock.trigger('auction:search_status', {
+        searchId: 'search-1',
+        locale: 'en',
+        queuedUserCount: 1,
+        seatsNeeded: 2,
+        fallbackAt: '2026-06-20T10:00:12.000Z',
+      });
+    });
+
+    expect(result.current.search).toMatchObject({ phase: 'match_found', queuedUserCount: 3 });
+    // Reconnect while a match is found must not re-queue (only re-hydrate state).
+    const searchStartsAfterReconnect = socketMock.emit.mock.calls.filter(
+      ([event]) => event === 'auction:search_start',
+    ).length;
+    expect(searchStartsAfterReconnect).toBe(searchStartsBeforeReconnect);
+  });
+
+  it('re-attaches to a found match on reconnect via auction:rejoin instead of re-queuing', () => {
+    const { result } = renderHook(() => useRealtimeAuctionMatch({
+      enabled: true,
+      autoStart: true,
+      matchmakingMode: 'search',
+      selfUserId: 'user-1',
+      locale: 'en',
+      formation: '4-3-3',
+      humanAvatarSeed: 'avatar-1',
+    }));
+
+    act(() => {
+      result.current.actions.startGame();
+      socketMock.trigger('auction:match_found', {
+        matchId: 'match-1',
+        humanUserIds: ['user-1', 'user-2', 'user-3'],
+        botCount: 0,
+        locale: 'en',
+        formation: '4-3-3',
+      });
+    });
+
+    expect(result.current.search).toMatchObject({ phase: 'match_found' });
+    socketMock.emit.mockClear();
+
+    // The routine socket swap at match entry: the old socket drops, a fresh one
+    // connects. It must re-attach to the match room (auction:rejoin), NOT re-run
+    // the search — otherwise the server sees no replacement, arms grace, and
+    // pushes a spurious "you disconnected, return?" prompt.
+    act(() => {
+      socketMock.socket.connected = false;
+      socketMock.trigger('disconnect');
+      socketMock.socket.connected = true;
+      socketMock.trigger('connect');
+    });
+
+    expect(socketMock.emit).toHaveBeenCalledWith('auction:rejoin', { matchId: 'match-1' });
+    expect(socketMock.emit).not.toHaveBeenCalledWith(
+      'auction:search_start',
+      expect.anything(),
+    );
+    expect(result.current.search).toMatchObject({ phase: 'match_found' });
   });
 
   it('cancels live matchmaking and ignores stale match_found hydration after cancel', () => {
@@ -715,6 +874,69 @@ describe('useRealtimeAuctionMatch', () => {
     });
 
     expect(result.current.state?.phase).toBe('bidding');
+  });
+
+  it('still acks the round ui-ready when the intro is fast-forwarded after clues start revealing', async () => {
+    // FIX C: the server may reveal clues before this client finishes the round
+    // intro. BiddingScreen fast-forwards (skips the intro) and calls
+    // confirmRoundIntro on skip — that ack must still release the round gate for
+    // the current version, even though clues already advanced the round.
+    const { result } = renderHook(() => useRealtimeAuctionMatch({
+      enabled: true,
+      selfUserId: 'user-1',
+      locale: 'en',
+      formation: '4-3-3',
+      humanAvatarSeed: 'avatar-1',
+    }));
+
+    act(() => {
+      socketMock.trigger('auction:match_started', {
+        matchId: 'match-1',
+        locale: 'en',
+        state: matchState({
+          version: 1,
+          phase: 'clue_reveal',
+          currentRound: round({ roundId: 'round-1' }),
+        }),
+      });
+    });
+
+    await waitFor(() => expect(result.current.state?.phase).toBe('clue-reveal'));
+    expect(socketMock.emit).not.toHaveBeenCalledWith(
+      'auction:ui_ready',
+      expect.objectContaining({ phase: 'round' }),
+    );
+
+    // A clue is revealed while the intro is still on screen (round advances).
+    act(() => {
+      socketMock.trigger('auction:clue_revealed', {
+        matchId: 'match-1',
+        roundId: 'round-1',
+        clueIndex: 0,
+        clue: 'Scored in a Champions League final',
+        round: round({
+          roundId: 'round-1',
+          clueRevealIndex: 1,
+          revealedClues: ['Scored in a Champions League final'],
+        }),
+        stateVersion: 2,
+      });
+    });
+
+    // The screen fast-forwards the intro and confirms — the ack must fire for
+    // the current (advanced) version so the round gate releases.
+    act(() => {
+      result.current.actions.confirmRoundIntro?.();
+    });
+
+    await waitFor(() => {
+      expect(socketMock.emit).toHaveBeenCalledWith('auction:ui_ready', {
+        matchId: 'match-1',
+        phase: 'round',
+        roundId: 'round-1',
+        stateVersion: 2,
+      });
+    });
   });
 
   it('emits reveal ui-ready only after reveal completion and re-emits after reconnect', async () => {
@@ -1185,6 +1407,178 @@ describe('useRealtimeAuctionMatch', () => {
       }),
     );
     expect(loggerWarnMock.mock.calls[0]?.[1]).not.toHaveProperty('payload');
+  });
+
+  it('surfaces selfForfeited when the server forfeits this player', () => {
+    const { result } = renderHook(() => useRealtimeAuctionMatch({
+      enabled: true,
+      selfUserId: 'user-1',
+      locale: 'en',
+      formation: '4-3-3',
+      humanAvatarSeed: 'avatar-1',
+    }));
+
+    act(() => {
+      socketMock.trigger('auction:match_started', {
+        matchId: 'match-1',
+        locale: 'en',
+        state: matchState({
+          version: 1,
+          phase: 'bidding',
+          currentRound: round({ currentTurnSeatId: 'seat-bot-1' }),
+        }),
+      });
+    });
+
+    expect(result.current.selfForfeited).toBe(false);
+
+    const forfeitedState = matchState({
+      version: 2,
+      phase: 'bidding',
+      seats: [
+        { ...player('seat-human', 'You', 'user-1'), forfeited: true },
+        player('seat-bot-1', 'Bot 1', null),
+        player('seat-bot-2', 'Bot 2', null),
+      ],
+      currentRound: round({ currentTurnSeatId: 'seat-bot-1' }),
+    });
+
+    act(() => {
+      socketMock.trigger('auction:player_forfeited', {
+        matchId: 'match-1',
+        seatId: 'seat-human',
+        userId: 'user-1',
+        reason: 'reconnect_limit',
+        state: forfeitedState,
+        stateVersion: 2,
+        serverNow: '2026-06-20T10:00:05.000Z',
+      });
+    });
+
+    expect(result.current.selfForfeited).toBe(true);
+  });
+
+  it('does not ack ui_ready or reconnect once this player is forfeited', () => {
+    const { result } = renderHook(() => useRealtimeAuctionMatch({
+      enabled: true,
+      selfUserId: 'user-1',
+      locale: 'en',
+      formation: '4-3-3',
+      humanAvatarSeed: 'avatar-1',
+    }));
+
+    const forfeitedSeats = [
+      { ...player('seat-human', 'You', 'user-1'), forfeited: true },
+      player('seat-bot-1', 'Bot 1', null),
+      player('seat-bot-2', 'Bot 2', null),
+    ];
+
+    act(() => {
+      socketMock.trigger('auction:player_forfeited', {
+        matchId: 'match-1',
+        seatId: 'seat-human',
+        userId: 'user-1',
+        reason: 'reconnect_limit',
+        state: matchState({
+          version: 2,
+          phase: 'bidding',
+          seats: forfeitedSeats,
+          currentRound: round({ currentTurnSeatId: 'seat-bot-1' }),
+        }),
+        stateVersion: 2,
+        serverNow: '2026-06-20T10:00:05.000Z',
+      });
+    });
+
+    expect(result.current.selfForfeited).toBe(true);
+    socketMock.emit.mockClear();
+    reconnectSocketMock.mockClear();
+
+    // Further state (including a reveal that would normally be acked) must not
+    // produce any ui_ready ack from the now-spectating forfeited client.
+    act(() => {
+      socketMock.trigger('auction:state', {
+        matchId: 'match-1',
+        state: matchState({
+          version: 3,
+          phase: 'reveal',
+          seats: forfeitedSeats,
+          currentRound: round({
+            roundId: 'round-1',
+            revealed: true,
+            clueRevealIndex: 3,
+            winnerSeatId: 'seat-bot-1',
+            winningBid: 30_000_000,
+            revealedClues: ['clue 1', 'clue 2', 'clue 3'],
+          }),
+        }),
+        stateVersion: 3,
+      });
+      result.current.actions.confirmReveal();
+    });
+
+    expect(result.current.state?.phase).toBe('reveal');
+    expect(socketMock.emit).not.toHaveBeenCalledWith(
+      'auction:ui_ready',
+      expect.anything(),
+    );
+
+    // A reconnect cycle must not re-trigger any ui_ready storm either.
+    act(() => {
+      socketMock.socket.connected = false;
+      socketMock.trigger('disconnect');
+      socketMock.socket.connected = true;
+      socketMock.trigger('connect');
+    });
+
+    expect(socketMock.emit).not.toHaveBeenCalledWith(
+      'auction:ui_ready',
+      expect.anything(),
+    );
+  });
+
+  it('clears the waiting-for-ready strip once everyone is ready', () => {
+    const { result } = renderHook(() => useRealtimeAuctionMatch({
+      enabled: true,
+      selfUserId: 'user-1',
+      locale: 'en',
+      formation: '4-3-3',
+      humanAvatarSeed: 'avatar-1',
+    }));
+
+    act(() => {
+      socketMock.trigger('auction:waiting_for_ready', {
+        matchId: 'match-1',
+        phase: 'bidding',
+        roundId: 'round-1',
+        stateVersion: 2,
+        readyCount: 1,
+        totalCount: 2,
+        readyUserIds: ['user-1'],
+        waitingUserIds: ['user-2'],
+        forceStartsAt: '2026-06-20T10:00:08.000Z',
+        serverNow: '2026-06-20T10:00:00.000Z',
+      });
+    });
+
+    expect(result.current.waitingForReady).not.toBeNull();
+
+    act(() => {
+      socketMock.trigger('auction:waiting_for_ready', {
+        matchId: 'match-1',
+        phase: 'bidding',
+        roundId: 'round-1',
+        stateVersion: 2,
+        readyCount: 2,
+        totalCount: 2,
+        readyUserIds: ['user-1', 'user-2'],
+        waitingUserIds: [],
+        forceStartsAt: '2026-06-20T10:00:08.000Z',
+        serverNow: '2026-06-20T10:00:00.000Z',
+      });
+    });
+
+    expect(result.current.waitingForReady).toBeNull();
   });
 
   it('surfaces auction errors without logging sensitive metadata', () => {

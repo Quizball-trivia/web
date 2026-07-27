@@ -9,6 +9,7 @@ import type { AvatarCustomization } from '@/types/game';
 import { poppins } from '../../constants/auction.constants';
 import { ScreenBackdrop, SCREEN_GLOW } from '../shared/ScreenBackdrop';
 import { FramedAvatar } from '../shared/FramedAvatar';
+import { LINEUP_CARD_WIDTH } from './MatchCountdown';
 
 // Self-host the player WASM + the animations so the search screen never depends
 // on an external CDN (works offline, no CORS, faster).
@@ -150,11 +151,12 @@ export function LottieSearch({
           {formatElapsed(elapsed)}
         </div>
 
-        {/* Seats — your framed avatar (large), rivals as frames that fill in */}
-        <div className="mt-6 flex items-end justify-center gap-3">
-          <SeatFrame width={88} filled customization={selfAvatarCustomization} avatarSeed={selfAvatarSeed} />
-          <SeatFrame width={68} filled={joined > 1} />
-          <SeatFrame width={68} filled={joined > 2} />
+        {/* Seats — three equal slots; rivals fill in as they join (matches the
+            countdown screen's sizing so the lineup doesn't resize on handoff). */}
+        <div className="mt-6 flex items-start justify-center gap-3">
+          <SeatFrame width={LINEUP_CARD_WIDTH} filled customization={selfAvatarCustomization} avatarSeed={selfAvatarSeed} />
+          <SeatFrame width={LINEUP_CARD_WIDTH} filled={joined > 1} />
+          <SeatFrame width={LINEUP_CARD_WIDTH} filled={joined > 2} />
         </div>
 
         {onCancel && (

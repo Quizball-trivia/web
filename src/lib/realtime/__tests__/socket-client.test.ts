@@ -24,7 +24,6 @@ vi.mock('@/lib/auth/supabase', () => ({
 
 vi.mock('@/lib/analytics/game-events', () => ({
   trackSocketConnectionFailed: vi.fn(),
-  trackSocketReconnected: vi.fn(),
 }));
 
 type FakeSocket = {

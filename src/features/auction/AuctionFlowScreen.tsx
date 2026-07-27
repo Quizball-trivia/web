@@ -6,6 +6,7 @@ import { X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useAuthStore } from '@/stores/auth.store';
+import { useAuctionActiveMatchStore } from '@/stores/auctionActiveMatch.store';
 import { QuitMatchModal } from '@/components/match/QuitMatchModal';
 import { useRealtimeConnectionHealth } from '@/lib/realtime/connection-health';
 import { poppins, AUCTION_QUIT_MODAL_THEME, AUCTION_PURPLE } from './constants/auction.constants';
@@ -143,6 +144,14 @@ function AuctionMockFlowScreen({ username, avatarSeed }: Omit<AuctionFlowScreenP
 function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<AuctionFlowScreenProps, 'mode'>) {
   const router = useRouter();
   const { locale, t } = useLocale();
+  // A match already exists when we arrive from a friend lobby or the app-shell
+  // "still in an auction" banner. Captured once on mount: the store is cleared
+  // as the match settles, and we must not flip to search mode mid-match.
+  // Dropped on "play again" so the next round queues a fresh search instead of
+  // re-attaching to the finished match.
+  const [attachMatchId, setAttachMatchId] = useState(
+    () => useAuctionActiveMatchStore.getState().activeAuctionMatch?.matchId ?? null,
+  );
   // Start matchmaking as soon as the screen opens — searching comes first, the
   // formation is shown later (briefly) once a match is found.
   const [auctionStarted, setAuctionStarted] = useState(true);
@@ -153,10 +162,14 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
   const [showQuitModal, setShowQuitModal] = useState(false);
   // After forfeiting, show the results screen immediately (like ranked) with a
   // "you forfeited" state + no coins — instead of bouncing back to /play.
-  const [forfeited, setForfeited] = useState(false);
+  const [voluntarilyForfeited, setVoluntarilyForfeited] = useState(false);
   // Brief "Finalizing Match" beat before the results screen reveals (ranked
   // style). Gated so it plays once when the match first reaches 'results'.
   const [resultsRevealed, setResultsRevealed] = useState(false);
+  // Highest bidder-join count seen so far. Matchmaking counts only ever grow
+  // toward a full lobby; holding the peak keeps the searching screen from
+  // visually regressing (3 found → 1) during the match-found handoff churn.
+  const [peakJoined, setPeakJoined] = useState(1);
   const authUser = useAuthStore((store) => store.user);
   const authStatus = useAuthStore((store) => store.status);
   const connectionHealth = useRealtimeConnectionHealth();
@@ -178,16 +191,35 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
     resumeCountdownEndsAtMs,
     search,
     coinsAwarded,
+    apEarned,
+    selfForfeited,
   } = useRealtimeAuctionMatch({
     enabled: realtimeEnabled,
     autoStart: auctionStarted,
     matchmakingMode: 'search',
+    attachMatchId,
     selfUserId: authUser?.id ?? null,
     locale: locale === 'ka' ? 'ka' : 'en',
     formation: LIVE_AUCTION_FORMATION_NAME,
     humanAvatarSeed: avatarSeed,
     humanAvatarCustomization: avatarCustomization,
   });
+
+  // Grow the peak join count monotonically as the lobby fills / a match is
+  // found. Never shrinks mid-search, so the searching UI can't regress. Adjusted
+  // during render (React's sanctioned derive-from-props pattern) rather than in
+  // an effect, so it re-renders in place with no extra commit.
+  const currentJoined = search?.phase === 'match_found' ? 3 : Math.max(search?.queuedUserCount ?? 1, 1);
+  if (currentJoined > peakJoined) {
+    setPeakJoined(currentJoined);
+  }
+  const joinedShown = Math.max(peakJoined, currentJoined);
+
+  // Involuntary server removal (drop / reconnect-limit forfeit) and voluntary
+  // quit both route to the same results/exit flow; `removedByServer` only picks
+  // the honest "removed from the match" copy over "you forfeited".
+  const removedByServer = selfForfeited;
+  const forfeited = voluntarilyForfeited || removedByServer;
 
   const resolvedHumanPlayerId =
     humanPlayerId ?? state?.players.find((player) => !player.isBot)?.id ?? state?.players[0]?.id ?? null;
@@ -220,8 +252,10 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
     (versionGapDetected ? t('auctionGame.stateChangedReconnect') : null);
 
   const handlePlayAgain = useCallback(() => {
-    setForfeited(false);
+    setVoluntarilyForfeited(false);
+    setAttachMatchId(null);
     setAuctionStarted(true);
+    setPeakJoined(1);
     actions.startGame(3);
   }, [actions]);
 
@@ -242,7 +276,7 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
     actions.forfeit?.();
     // Show the results screen right away (forfeit = loss, no coins); the match
     // keeps going server-side for the remaining players.
-    setForfeited(true);
+    setVoluntarilyForfeited(true);
   }, [actions]);
 
   const handleCancelSearch = useCallback(() => {
@@ -273,6 +307,7 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
         onPlayAgain={handlePlayAgain}
         onExit={handleExit}
         forfeited
+        removed={removedByServer}
       />
     );
   }
@@ -309,13 +344,15 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
     if (searchError) {
       return <MockSearchingScreen error={searchError} />;
     }
+    // Hold the peak join count so the searching screen shows the full lineup
+    // (never regresses) until the countdown/intro takes over.
     return (
       <LottieSearch
-        joined={Math.max(search?.queuedUserCount ?? 1, 1)}
+        joined={joinedShown}
         total={3}
         selfAvatarSeed={avatarSeed}
         selfAvatarCustomization={avatarCustomization}
-        onCancel={auctionStarted && !state ? handleCancelSearch : undefined}
+        onCancel={auctionStarted && !state && !attachMatchId ? handleCancelSearch : undefined}
       />
     );
   }
@@ -406,6 +443,7 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
         onPlayAgain={handlePlayAgain}
         onExit={handleExit}
         coinsAwarded={coinsAwarded}
+        apEarned={apEarned}
       />
     );
   }

@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import type { AuctionGameState } from '../../types';
 import type { AuctionActions } from '../../hooks/useAuctionGame';
 import { formatMoney, getMaxBid, getMinBid, needsPosition, CLUE_STUDY_MS, OPENING_TURN_MS, RAISE_TURN_MS } from '../../data';
 import { POS_COLORS } from '../../constants/auction.constants';
+import { cn } from '@/lib/utils';
 import { useLocale } from '@/contexts/LocaleContext';
 import { usePositionLabel } from '../../hooks/usePositionLabel';
 import { SCREEN_GLOW } from '../shared/ScreenBackdrop';
@@ -39,7 +40,19 @@ export function BiddingScreen({
   // intro's own timer. Tracked by roundIndex (not a boolean) so a remount during
   // the same round can't replay it, and a genuinely new round always arms it.
   const [introDoneForRound, setIntroDoneForRound] = useState<number | null>(null);
-  const showRoundIntro = isCluePhase && introDoneForRound !== state.roundIndex;
+
+  // Fast-forward guard: the server may start the round (reveal clues / open the
+  // study window / start bidding) before this client finishes the intro — its
+  // round-gate ceiling is separately extended, not infinite. If any live round
+  // signal is already present, drop the intro immediately so the player lands on
+  // the board with maximum remaining study time instead of being dumped
+  // mid-study. Derived (not setState) so hiding the intro never cascades a
+  // render; the round ui-ready ack for the skip is released by the effect below.
+  const roundAlreadyLive =
+    !isCluePhase ||
+    (round ? round.clueRevealIndex > 0 || round.biddingStartsAt !== null : false);
+  const showRoundIntro =
+    isCluePhase && introDoneForRound !== state.roundIndex && !roundAlreadyLive;
 
   const visibleClues = round ? (isCluePhase ? round.clueRevealIndex : round.clues.length) : 0;
   const allCluesRevealed = round ? visibleClues >= round.clues.length : false;
@@ -50,6 +63,16 @@ export function BiddingScreen({
   const studyEndsAt = isCluePhase ? round?.biddingStartsAt ?? null : null;
 
   const minBid = round ? getMinBid(round) : 0;
+
+  // When the intro was skipped (round already live) rather than completed, still
+  // release the server's round ui-ready gate — this is an external-system sync
+  // (socket emit), so it belongs in an effect. Guarded to the clue phase where
+  // the 'round' ack is meaningful; confirmRoundIntro no-ops otherwise.
+  useEffect(() => {
+    if (isCluePhase && roundAlreadyLive) {
+      actions.confirmRoundIntro?.();
+    }
+  }, [isCluePhase, roundAlreadyLive, state.roundIndex, actions]);
 
   if (!round || !humanPlayer) return null;
 
@@ -66,14 +89,24 @@ export function BiddingScreen({
   // position, so a player who is full there is silently excluded for the whole
   // lot. Without a reason the UI just said "Watching" and looked broken.
   const inTurnOrder = round.turnOrder.includes(humanPlayerId);
-  const sitOutReason: 'eliminated' | 'position-filled' | null = humanPlayer.isEliminated
-    ? 'eliminated'
-    : !inTurnOrder
-      ? 'position-filled'
-      : null;
+  const sitOutReason: 'forfeited' | 'eliminated' | 'position-filled' | null = humanPlayer.forfeited
+    ? 'forfeited'
+    : humanPlayer.isEliminated
+      ? 'eliminated'
+      : !inTurnOrder
+        ? 'position-filled'
+        : null;
 
   const maxBid = getMaxBid(humanPlayer);
   const posColor = POS_COLORS[round.positionGroup];
+
+  // Defensive against overlong clue content: when the visible clues run long,
+  // step the type down so the bid controls stay on-screen. The clue area is also
+  // height-capped with its own scroll below. Short clues render unchanged.
+  const visibleClueChars = round.clues
+    .slice(0, visibleClues)
+    .reduce((sum, clue) => sum + clue.length, 0);
+  const longClues = visibleClueChars > 160;
 
   const highestBidder = round.highestBidderId
     ? state.players.find((p) => p.id === round.highestBidderId)
@@ -183,7 +216,7 @@ export function BiddingScreen({
 
             {/* Clues — large type, slow reveal. Each clue eases up into place
                 over ~0.9s so the board fills deliberately rather than snapping. */}
-            <div className="space-y-4 min-h-[140px]">
+            <div className="space-y-4 min-h-[140px] max-h-[42vh] overflow-y-auto">
               <AnimatePresence>
                 {round.clues.slice(0, visibleClues).map((clue, i) => (
                   <motion.div
@@ -201,7 +234,14 @@ export function BiddingScreen({
                     >
                       {i + 1}
                     </motion.div>
-                    <p className="font-poppins text-lg font-bold leading-snug text-black sm:text-xl">{clue}</p>
+                    <p
+                      className={cn(
+                        'font-poppins font-bold leading-snug text-black',
+                        longClues ? 'text-base' : 'text-lg sm:text-xl',
+                      )}
+                    >
+                      {clue}
+                    </p>
                   </motion.div>
                 ))}
               </AnimatePresence>
@@ -383,11 +423,13 @@ export function BiddingScreen({
                         color: posColor,
                       }}
                     >
-                      {sitOutReason === 'eliminated'
-                        ? t('auctionGame.eliminatedWatching')
-                        : t('auctionGame.positionFilledWatching', {
-                            position: posLabel(round.positionGroup),
-                          })}
+                      {sitOutReason === 'forfeited'
+                        ? t('auctionGame.removedWatching')
+                        : sitOutReason === 'eliminated'
+                          ? t('auctionGame.eliminatedWatching')
+                          : t('auctionGame.positionFilledWatching', {
+                              position: posLabel(round.positionGroup),
+                            })}
                     </div>
                   )}
                   <div
