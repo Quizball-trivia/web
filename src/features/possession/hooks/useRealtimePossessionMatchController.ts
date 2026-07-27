@@ -778,6 +778,8 @@ export function useRealtimePossessionMatchController({
       onBanPhaseShown: handleHalftimeBanPhaseShown,
       // Pre-penalty ban reuses the halftime ban UI but with a penalty title.
       isPenaltyBan: possessionState.halftime.purpose === 'penalty',
+      // Host preset the second-half category → short reveal, no ban cards.
+      isPresetSecondHalf: possessionState.halftime.purpose === 'second_half_preset',
     };
 
   const handleTemporaryQuit = useCallback(() => {

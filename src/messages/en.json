@@ -1171,7 +1171,8 @@
       "deciding": "Deciding...",
       "banTitle": "Ban 1 Category Each",
       "yourTurn": "Your Turn",
-      "opponentBanning": "Opponent is banning"
+      "opponentBanning": "Opponent is banning",
+      "presetTitle": "Second Half Category"
     },
     "opponentSelected": "Opponent selected this answer",
     "partyPickSelected": "{username} selected this answer",

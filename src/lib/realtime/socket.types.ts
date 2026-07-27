@@ -602,8 +602,13 @@ export interface MatchStatePayload {
       seat1: string | null;
       seat2: string | null;
     };
-    /** Whether this ban interlude is the second-half pick or the pre-penalty pick. */
-    purpose?: 'second_half' | 'penalty';
+    /**
+     * Whether this ban interlude is the second-half pick or the pre-penalty
+     * pick. 'second_half_preset' means the lobby host already chose the
+     * second-half category: there is no ban, `categoryOptions` holds that single
+     * category, and the client shows a short reveal instead of ban cards.
+     */
+    purpose?: 'second_half' | 'second_half_preset' | 'penalty';
   };
   penaltySuddenDeath?: boolean;
   stateVersion?: number;

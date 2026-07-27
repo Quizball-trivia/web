@@ -1218,7 +1218,8 @@
       "deciding": "მიმდინარეობს გადაწყვეტა...",
       "banTitle": "თითო კატეგორია დაბლოკეთ",
       "yourTurn": "შენი რიგია",
-      "opponentBanning": "მეტოქე ბლოკავს"
+      "opponentBanning": "მეტოქე ბლოკავს",
+      "presetTitle": "მე-2 ტაიმის კატეგორია"
     },
     "opponentSelected": "მოწინააღმდეგემ აირჩია ეს პასუხი",
     "partyPickSelected": "{username}-მ აირჩია ეს პასუხი",
