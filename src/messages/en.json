@@ -1024,7 +1024,7 @@
     "categoriesWillBeRandom": "Categories will be selected randomly.",
     "rankedSimHeader": "Ranked Simulation",
     "rankedSimDescriptionLong": "This match follows standard ranked rules. You will enter a Ban/Pick phase before the game starts.",
-    "readyCopyRanked": "When both players are ready, ranked sim begins automatically.",
+    "readyCopyRanked": "Ranked sim starts the moment both players are ready — no host start needed.",
     "readyCopyParty": "When everyone is ready, the host can start the party quiz.",
     "readyCopyClassic": "When both players are ready, the host can start the match.",
     "startPartyQuiz": "Start Party Quiz",
