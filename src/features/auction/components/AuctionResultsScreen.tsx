@@ -77,7 +77,9 @@ export function AuctionResultsScreen({
   onPlayAgain,
   onExit,
   coinsAwarded,
+  apEarned,
   forfeited = false,
+  removed = false,
 }: {
   state: AuctionGameState;
   humanPlayerId: string;
@@ -85,8 +87,14 @@ export function AuctionResultsScreen({
   onExit: () => void;
   /** Coins this player earned (500 win / 300 finish). 0/null = none shown. */
   coinsAwarded?: number | null;
+  /** Auction Points this player earned (1st +50 / 2nd +30 / 3rd +10). Absent or
+   *  0 for friendly-lobby matches and forfeiters — nothing is rendered then. */
+  apEarned?: number | null;
   /** This player left/forfeited: show the forfeit result, never coins. */
   forfeited?: boolean;
+  /** The SERVER removed this player (drop / reconnect limit) — not a voluntary
+   *  quit. Shown with honest "removed from the match" copy. */
+  removed?: boolean;
 }) {
   const { t } = useLocale();
   const ordinal = (n: number) => {
@@ -126,6 +134,9 @@ export function AuctionResultsScreen({
   const humanWon = !forfeited && winner?.id === humanPlayerId;
   // Coins are never shown on a forfeit (the leaver gets nothing).
   const showCoins = !forfeited && (coinsAwarded ?? 0) > 0;
+  // AP is ranked-auction only: friendly lobbies send no apEarned (and
+  // forfeiters get 0), so an absent/zero value hides the whole reveal.
+  const showAp = !forfeited && (apEarned ?? 0) > 0;
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-surface-page-alt p-3 md:p-6">
@@ -173,38 +184,46 @@ export function AuctionResultsScreen({
             style={{ lineHeight: '1.3' }}
           >
             {forfeited
-              ? t('auctionGame.lostByForfeit')
+              ? removed
+                ? t('auctionGame.removedFromMatch')
+                : t('auctionGame.lostByForfeit')
               : humanWon
                 ? t('auctionGame.youWin')
                 : t('auctionGame.auctionOver')}
           </h1>
           <p className="mt-1 font-poppins text-sm font-semibold text-white/50 uppercase">
             {forfeited
-              ? t('auctionGame.lostByForfeitSubtitle')
+              ? removed
+                ? t('auctionGame.removedFromMatchSubtitle')
+                : t('auctionGame.lostByForfeitSubtitle')
               : humanWon
                 ? t('auctionGame.highestTeamValueSubtitle')
                 : t('auctionGame.youFinishedRank', { rank: ordinal(humanRank + 1) })}
           </p>
 
-          {/* Coin reward — animated chip (win = +500, finish = +300). Never on
-              a forfeit. */}
-          {showCoins && (
+          {/* Reward chips — coins (win = +500, finish = +300) and Auction
+              Points (1st +50 / 2nd +30 / 3rd +10). Neither shows on a forfeit;
+              AP additionally stays hidden for friendly-lobby matches. */}
+          {(showCoins || showAp) && (
             <motion.div
-              initial={{ scale: 0, opacity: 0, y: 8 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              transition={{ delay: 0.55, type: 'spring', stiffness: 320, damping: 16 }}
-              className="mt-3 inline-flex items-center gap-2 rounded-full bg-brand-yellow/15 px-4 py-2 ring-1 ring-brand-yellow/40"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.55, type: 'spring', stiffness: 320, damping: 18 }}
+              className="mt-3 flex flex-wrap items-center justify-center gap-x-5 gap-y-1"
             >
-              <motion.div
-                initial={{ rotate: -20, scale: 0.6 }}
-                animate={{ rotate: 0, scale: 1 }}
-                transition={{ delay: 0.65, type: 'spring', stiffness: 360, damping: 12 }}
-              >
-                <Image src="/assets/coin-1.png" alt="" width={24} height={24} className="size-6 object-contain" />
-              </motion.div>
-              <span className="font-poppins text-lg font-black tabular-nums text-brand-yellow" style={poppins}>
-                {t('auctionGame.coinsEarned', { coins: coinsAwarded ?? 0 })}
-              </span>
+              {showCoins && (
+                <span className="inline-flex items-center gap-1.5">
+                  <Image src="/assets/coin-1.png" alt="" width={20} height={20} className="size-5 object-contain" />
+                  <span className="font-poppins text-lg font-black tabular-nums text-brand-yellow" style={poppins}>
+                    {t('auctionGame.coinsEarned', { coins: coinsAwarded ?? 0 })}
+                  </span>
+                </span>
+              )}
+              {showAp && (
+                <span className="font-poppins text-lg font-black tabular-nums text-white" style={poppins}>
+                  {t('auctionGame.apEarned', { ap: apEarned ?? 0 })}
+                </span>
+              )}
             </motion.div>
           )}
         </div>
@@ -303,6 +322,14 @@ export function AuctionResultsScreen({
                   {player.isEliminated && (
                     <span className="rounded-md bg-brand-red/20 px-2 py-1 text-[10px] font-bold uppercase text-brand-red" style={poppins}>
                       {t('auctionGame.eliminated')}
+                    </span>
+                  )}
+                  {isHuman && showAp && (
+                    <span
+                      className="rounded-md bg-brand-green/20 px-2 py-1 text-[10px] font-black uppercase tabular-nums text-brand-green"
+                      style={poppins}
+                    >
+                      {t('auctionGame.apEarned', { ap: apEarned ?? 0 })}
                     </span>
                   )}
                 </div>

@@ -1108,6 +1108,12 @@ export interface AuctionMatchFinishedPayload {
    * own entry to show the reward animation.
    */
   coinsByUserId?: Record<string, number>;
+  /**
+   * Auction Points granted per real-human userId for this match (1st = 50,
+   * 2nd = 30, 3rd = 10; 0 for forfeiters). Absent entirely for friendly-lobby
+   * matches, which award no AP. Each client reads its own entry.
+   */
+  apByUserId?: Record<string, number>;
 }
 
 export interface AuctionSoloPickStartedPayload {

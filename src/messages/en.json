@@ -705,7 +705,17 @@
     "resetsIn": "Resets in",
     "season": "Season {n}",
     "finalStandings": "Final standings",
-    "seasonsAriaLabel": "Leaderboard seasons"
+    "seasonsAriaLabel": "Leaderboard seasons",
+    "tabRanked": "Ranked",
+    "tabAuction": "Auction",
+    "modeTablistAriaLabel": "Leaderboard mode",
+    "colAP": "AP",
+    "auctionSubtitle": "Top bidders by Auction Points",
+    "auctionEmpty": "No auction results yet. Play an auction to get on the board.",
+    "seasonEyebrow": "Season",
+    "regionEyebrow": "Region",
+    "seasonSelectAriaLabel": "Select season",
+    "regionSelectAriaLabel": "Select region"
   },
   "welcome": {
     "poweredBy": "Powered by",
@@ -1608,7 +1618,9 @@
     "rivalFolded": "Folded",
     "rivalSittingOut": "Sitting out",
     "rivalOut": "Out",
-    "botTag": "BOT"
+    "botTag": "BOT",
+    "apEarned": "+{ap} AP",
+    "auctionPointsLabel": "Auction Points"
   },
   "wcAward": {
     "unlocked": "Achievement unlocked",

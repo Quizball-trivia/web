@@ -913,7 +913,17 @@
     "resetsIn": "განახლდება",
     "season": "სეზონი {n}",
     "finalStandings": "საბოლოო შედეგები",
-    "seasonsAriaLabel": "ლიდერბორდის სეზონები"
+    "seasonsAriaLabel": "ლიდერბორდის სეზონები",
+    "tabRanked": "რეიტინგული",
+    "tabAuction": "აუქციონი",
+    "modeTablistAriaLabel": "ლიდერბორდის რეჟიმი",
+    "colAP": "AP",
+    "auctionSubtitle": "საუკეთესო მოთამაშეები აუქციონის ქულებით",
+    "auctionEmpty": "აუქციონის შედეგები ჯერ არ არის. ითამაშე აუქციონი და მოხვდი ლიდერბორდზე.",
+    "seasonEyebrow": "სეზონი",
+    "regionEyebrow": "რეგიონი",
+    "seasonSelectAriaLabel": "აირჩიე სეზონი",
+    "regionSelectAriaLabel": "აირჩიე რეგიონი"
   },
   "appAuthGate": {
     "warmingUp": "გახურება...",
@@ -1608,7 +1618,9 @@
     "rivalFolded": "გავიდა",
     "rivalSittingOut": "არ მონაწილეობს",
     "rivalOut": "ამოვარდა",
-    "botTag": "ბოტი"
+    "botTag": "ბოტი",
+    "apEarned": "+{ap} AP",
+    "auctionPointsLabel": "აუქციონის ქულები"
   },
   "wcAward": {
     "unlocked": "მიღწევა გახსნილია",
