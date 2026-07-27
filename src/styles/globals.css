@@ -91,6 +91,7 @@
   /* Brand accent variants. */
   --brand-orange-light: 22 100% 62%; /* #FF8A3D — softer orange */
   --brand-orange-deep: 35 100% 43%; /* #DB8200 — orange button press shadow */
+  --brand-orange-event: 24 100% 52%; /* #FF6C0A — event-mode accent (leaderboard, profile, auction) */
   --brand-gold-deep: 43 89% 38%;    /* #B8860B — darker gold */
   --brand-gold-press: 40 100% 40%; /* #CC8800 — gold CTA press shadow */
   --brand-gold-ink: 47 100% 30%;   /* #9A7900 — daily XP pill text */
@@ -182,6 +183,7 @@
   /* Brand accent variants */
   --color-brand-orange-light: hsl(var(--brand-orange-light));
   --color-brand-orange-deep: hsl(var(--brand-orange-deep));
+  --color-brand-orange-event: hsl(var(--brand-orange-event));
   --color-brand-gold-deep: hsl(var(--brand-gold-deep));
   --color-brand-gold-press: hsl(var(--brand-gold-press));
   --color-brand-gold-ink: hsl(var(--brand-gold-ink));

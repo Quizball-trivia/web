@@ -56,7 +56,7 @@ function ReplayStage({ mode, runKey }: { mode: ReplayMode; runKey: number }) {
       key={`${mode}-${runKey}`}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative overflow-hidden border border-white/15 bg-[#080d19] shadow-[0_28px_90px_rgba(0,0,0,0.45)]"
+      className="relative overflow-hidden border border-white/15 bg-surface-darkest shadow-[0_28px_90px_rgba(0,0,0,0.45)]"
     >
       <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(115deg,transparent_0%,transparent_47%,rgba(255,255,255,.08)_47%,rgba(255,255,255,.08)_52%,transparent_52%)]" />
       <div className="relative border-b border-white/10 px-5 py-4 sm:px-7">
@@ -132,7 +132,7 @@ function PenaltyScoreBugContent() {
   };
 
   return (
-    <main className="min-h-dvh overflow-hidden bg-[#050913] text-white [background-image:radial-gradient(circle_at_12%_5%,rgba(255,194,26,.11),transparent_24%),radial-gradient(circle_at_90%_85%,rgba(55,211,85,.10),transparent_28%)]">
+    <main className="min-h-dvh overflow-hidden bg-surface-page text-white [background-image:radial-gradient(circle_at_12%_5%,rgba(255,194,26,.11),transparent_24%),radial-gradient(circle_at_90%_85%,rgba(55,211,85,.10),transparent_28%)]">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-7 sm:py-12">
         <header className="grid gap-7 border-b border-white/10 pb-8 lg:grid-cols-[1fr_420px] lg:items-end">
           <div>
