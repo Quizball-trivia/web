@@ -12,8 +12,9 @@
  * Production code paths are untouched — guarded by NODE_ENV.
  */
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { RealtimeResultsScreen } from '@/features/game/RealtimeResultsScreen';
 import { getRankedTierProgress } from '@/utils/rankedTier';
 import type {
@@ -22,11 +23,17 @@ import type {
 } from '@/lib/realtime/socket.types';
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
 import type { UserProgression } from '@/lib/domain';
+import { queryKeys } from '@/lib/queries/queryKeys';
+import type {
+  FriendRequestsDTO,
+  SocialPlayer,
+} from '@/lib/queries/social.queries';
 
 const SELF_ID = 'dev-self';
 const OPP_ID = 'dev-opp';
 
 type Outcome = 'win' | 'loss' | 'draw' | 'cancelled';
+type FriendButtonState = 'none' | 'sent' | 'received' | 'friends';
 
 const ACHIEVEMENT_SAMPLES: AchievementUnlockPayload[] = [
   {
@@ -51,6 +58,53 @@ const ACHIEVEMENT_SAMPLES: AchievementUnlockPayload[] = [
   },
 ];
 
+function devSocialPlayer(friendStatus: SocialPlayer['friendStatus']): SocialPlayer {
+  return {
+    id: OPP_ID,
+    nickname: 'Konstantine Kevlishvili',
+    avatarUrl: null,
+    avatarCustomization: null,
+    level: 8,
+    pendingDeletion: false,
+    ranked: null,
+    friendStatus,
+  };
+}
+
+function seedFriendButtonCache(queryClient: QueryClient, state: FriendButtonState) {
+  const requestCreatedAt = '2026-01-01T00:00:00.000Z';
+  const requests: FriendRequestsDTO = {
+    incoming: [],
+    outgoing: [],
+    incomingCount: 0,
+  };
+  const friends: SocialPlayer[] = [];
+
+  if (state === 'friends') {
+    friends.push(devSocialPlayer('friends'));
+  }
+
+  if (state === 'sent') {
+    requests.outgoing.push({
+      requestId: 'dev-outgoing-request',
+      createdAt: requestCreatedAt,
+      user: devSocialPlayer('pending_sent'),
+    });
+  }
+
+  if (state === 'received') {
+    requests.incoming.push({
+      requestId: 'dev-incoming-request',
+      createdAt: requestCreatedAt,
+      user: devSocialPlayer('pending_received'),
+    });
+    requests.incomingCount = 1;
+  }
+
+  queryClient.setQueryData<SocialPlayer[]>(queryKeys.social.friends(), friends);
+  queryClient.setQueryData<FriendRequestsDTO>(queryKeys.social.requests(), requests);
+}
+
 export default function DevResultsPage() {
   if (process.env.NODE_ENV !== 'development') {
     return (
@@ -64,6 +118,7 @@ export default function DevResultsPage() {
 
 function DevResultsContent() {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const [outcome, setOutcome] = useState<Outcome>('cancelled');
   const [preMatchRp, setPreMatchRp] = useState(495);
@@ -76,6 +131,9 @@ function DevResultsContent() {
   const [withAchievements, setWithAchievements] = useState(false);
   const [withProgression, setWithProgression] = useState(true);
   const [withQuestionDots, setWithQuestionDots] = useState(true);
+  const [friendButtonState, setFriendButtonState] = useState<FriendButtonState>('none');
+  const [friendCacheReady, setFriendCacheReady] = useState(false);
+  const friendSimulationTimers = useRef<number[]>([]);
   // Tick to force-remount the results screen so internal animations replay.
   const [replayKey, setReplayKey] = useState(0);
   const isCancelled = outcome === 'cancelled';
@@ -179,6 +237,29 @@ function DevResultsContent() {
     [withProgression]
   );
 
+  useEffect(() => {
+    seedFriendButtonCache(queryClient, friendButtonState);
+    setFriendCacheReady(true);
+  }, [friendButtonState, queryClient]);
+
+  useEffect(() => () => {
+    friendSimulationTimers.current.forEach((timer) => window.clearTimeout(timer));
+    friendSimulationTimers.current = [];
+    // Drop the fabricated social caches so real screens refetch fresh data.
+    queryClient.removeQueries({ queryKey: queryKeys.social.friends() });
+    queryClient.removeQueries({ queryKey: queryKeys.social.requests() });
+  }, [queryClient]);
+
+  const simulateFriendSendFlow = () => {
+    friendSimulationTimers.current.forEach((timer) => window.clearTimeout(timer));
+    friendSimulationTimers.current = [];
+    setFriendButtonState('none');
+    friendSimulationTimers.current.push(
+      window.setTimeout(() => setFriendButtonState('sent'), 350),
+      window.setTimeout(() => setFriendButtonState('friends'), 1900),
+    );
+  };
+
   // For win: player has the higher goal count. For loss: opp higher. Force
   // those to a sensible default but allow override via the sliders.
   const finalWinnerId = outcome === 'win'
@@ -191,35 +272,37 @@ function DevResultsContent() {
     <div className="relative min-h-dvh bg-surface-page">
       {/* Mount the results screen with a remount key so animations can be replayed. */}
       <div className="lg:pl-72">
-        <RealtimeResultsScreen
-          key={replayKey}
-          matchType="ranked"
-          playerUsername="Konstantine Kevlishvili"
-          playerAvatar="avatar-1"
-          playerAvatarCustomization={null}
-          opponentUsername="Konstantine Kevlishvili"
-          opponentAvatar="avatar-2"
-          opponentAvatarCustomization={null}
-          playerScore={displayPlayerGoals}
-          opponentScore={displayOpponentGoals}
-          playerCorrect={displayPlayerCorrect}
-          opponentCorrect={displayOpponentCorrect}
-          totalQuestions={displayTotalQuestions}
-          playerQuestionResults={withQuestionDots && !isCancelled ? playerQuestionResults : undefined}
-          opponentQuestionResults={withQuestionDots && !isCancelled ? opponentQuestionResults : undefined}
-          selfUserId={SELF_ID}
-          finalWinnerId={finalWinnerId}
-          winnerDecisionMethod={isCancelled ? 'forfeit' : 'goals'}
-          cancelledNoContest={isCancelled}
-          preMatchRp={preMatchRp}
-          opponentId={OPP_ID}
-          rankedOutcome={rankedOutcome}
-          preMatchRankedProfile={preMatchRankedProfile}
-          preMatchProgression={preMatchProgression}
-          unlockedAchievements={withAchievements ? ACHIEVEMENT_SAMPLES : []}
-          onPlayAgain={() => setReplayKey((k) => k + 1)}
-          onMainMenu={() => router.push('/play')}
-        />
+        {friendCacheReady && (
+          <RealtimeResultsScreen
+            key={replayKey}
+            matchType="ranked"
+            playerUsername="Konstantine Kevlishvili"
+            playerAvatar="avatar-1"
+            playerAvatarCustomization={null}
+            opponentUsername="Konstantine Kevlishvili"
+            opponentAvatar="avatar-2"
+            opponentAvatarCustomization={null}
+            playerScore={displayPlayerGoals}
+            opponentScore={displayOpponentGoals}
+            playerCorrect={displayPlayerCorrect}
+            opponentCorrect={displayOpponentCorrect}
+            totalQuestions={displayTotalQuestions}
+            playerQuestionResults={withQuestionDots && !isCancelled ? playerQuestionResults : undefined}
+            opponentQuestionResults={withQuestionDots && !isCancelled ? opponentQuestionResults : undefined}
+            selfUserId={SELF_ID}
+            finalWinnerId={finalWinnerId}
+            winnerDecisionMethod={isCancelled ? 'forfeit' : 'goals'}
+            cancelledNoContest={isCancelled}
+            preMatchRp={preMatchRp}
+            opponentId={OPP_ID}
+            rankedOutcome={rankedOutcome}
+            preMatchRankedProfile={preMatchRankedProfile}
+            preMatchProgression={preMatchProgression}
+            unlockedAchievements={withAchievements ? ACHIEVEMENT_SAMPLES : []}
+            onPlayAgain={() => setReplayKey((k) => k + 1)}
+            onMainMenu={() => router.push('/play')}
+          />
+        )}
       </div>
 
       {/* ── Side control panel ─────────────────────────────────────────── */}
@@ -344,9 +427,31 @@ function DevResultsContent() {
           <Toggle checked={withQuestionDots} onChange={setWithQuestionDots} label="Question dots" />
         </Group>
 
+        <Group label="Friend button">
+          <Segmented
+            options={['none', 'sent', 'received', 'friends'] as const}
+            value={friendButtonState}
+            onChange={(state) => {
+              friendSimulationTimers.current.forEach((timer) => window.clearTimeout(timer));
+              friendSimulationTimers.current = [];
+              setFriendButtonState(state);
+            }}
+          />
+          <button
+            type="button"
+            onClick={simulateFriendSendFlow}
+            className="mt-2 w-full rounded-lg bg-brand-cyan px-3 py-2 text-[10px] font-black uppercase tracking-wider text-surface-page transition-colors hover:bg-brand-cyan-deep"
+          >
+            Simulate send flow
+          </button>
+          <p className="mt-1 text-[9px] text-brand-slate">
+            Uses query-cache seeds: none to sent, then accepted to friends.
+          </p>
+        </Group>
+
         <button
           onClick={() => setReplayKey((k) => k + 1)}
-          className="mt-2 w-full rounded-xl bg-brand-green px-4 py-2.5 text-sm font-black uppercase tracking-wider text-white shadow-[0_4px_0_var(--color-brand-green-deep)] active:translate-y-[2px] active:shadow-[0_2px_0_var(--color-brand-green-deep)]"
+          className="mt-2 w-full rounded-xl bg-brand-green px-4 py-2.5 text-sm font-black uppercase tracking-wider text-white transition-colors hover:bg-brand-green-deep"
         >
           ▶ Replay animations
         </button>
