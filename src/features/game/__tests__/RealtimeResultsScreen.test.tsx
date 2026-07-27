@@ -1,4 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock the head-to-head query — the real one hits react-query + the API
@@ -40,6 +41,8 @@ vi.mock('@/components/AvatarDisplay', () => ({
 import { RealtimeResultsScreen } from '../RealtimeResultsScreen';
 import type { RankedMatchOutcomePayload } from '@/lib/realtime/socket.types';
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
+import { queryKeys } from '@/lib/queries/queryKeys';
+import type { FriendRequestsDTO, SocialPlayer } from '@/lib/queries/social.queries';
 
 const SELF_ID = 'user-self';
 const OPP_ID = 'user-opp';
@@ -47,26 +50,39 @@ const OPP_ID = 'user-opp';
 function renderResults(overrides: Partial<Parameters<typeof RealtimeResultsScreen>[0]> = {}) {
   const onPlayAgain = vi.fn();
   const onMainMenu = vi.fn();
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+    },
+  });
+  queryClient.setQueryData<SocialPlayer[]>(queryKeys.social.friends(), []);
+  queryClient.setQueryData<FriendRequestsDTO>(queryKeys.social.requests(), {
+    incoming: [],
+    outgoing: [],
+    incomingCount: 0,
+  });
   const utils = render(
-    <RealtimeResultsScreen
-      matchType="friendly"
-      playerUsername="Player One"
-      playerAvatar="avatar-1"
-      opponentUsername="Opponent"
-      opponentAvatar="avatar-2"
-      playerScore={3}
-      opponentScore={1}
-      playerCorrect={9}
-      opponentCorrect={5}
-      totalQuestions={12}
-      selfUserId={SELF_ID}
-      opponentId={OPP_ID}
-      onPlayAgain={onPlayAgain}
-      onMainMenu={onMainMenu}
-      {...overrides}
-    />,
+    <QueryClientProvider client={queryClient}>
+      <RealtimeResultsScreen
+        matchType="friendly"
+        playerUsername="Player One"
+        playerAvatar="avatar-1"
+        opponentUsername="Opponent"
+        opponentAvatar="avatar-2"
+        playerScore={3}
+        opponentScore={1}
+        playerCorrect={9}
+        opponentCorrect={5}
+        totalQuestions={12}
+        selfUserId={SELF_ID}
+        opponentId={OPP_ID}
+        onPlayAgain={onPlayAgain}
+        onMainMenu={onMainMenu}
+        {...overrides}
+      />
+    </QueryClientProvider>,
   );
-  return { ...utils, onPlayAgain, onMainMenu };
+  return { ...utils, onPlayAgain, onMainMenu, queryClient };
 }
 
 beforeEach(() => {
@@ -242,7 +258,7 @@ describe('RealtimeResultsScreen — fire-once analytics', () => {
   });
 
   it('does not re-fire analytics on rerender with the same props', () => {
-    const { rerender } = renderResults({
+    const { rerender, queryClient } = renderResults({
       finalWinnerId: SELF_ID,
       playerScore: 3,
       opponentScore: 1,
@@ -250,23 +266,25 @@ describe('RealtimeResultsScreen — fire-once analytics', () => {
     expect(trackMatchResultsViewedMock).toHaveBeenCalledTimes(1);
 
     rerender(
-      <RealtimeResultsScreen
-        matchType="friendly"
-        playerUsername="Player One"
-        playerAvatar="avatar-1"
-        opponentUsername="Opponent"
-        opponentAvatar="avatar-2"
-        playerScore={3}
-        opponentScore={1}
-        playerCorrect={9}
-        opponentCorrect={5}
-        totalQuestions={12}
-        selfUserId={SELF_ID}
-        opponentId={OPP_ID}
-        finalWinnerId={SELF_ID}
-        onPlayAgain={vi.fn()}
-        onMainMenu={vi.fn()}
-      />,
+      <QueryClientProvider client={queryClient}>
+        <RealtimeResultsScreen
+          matchType="friendly"
+          playerUsername="Player One"
+          playerAvatar="avatar-1"
+          opponentUsername="Opponent"
+          opponentAvatar="avatar-2"
+          playerScore={3}
+          opponentScore={1}
+          playerCorrect={9}
+          opponentCorrect={5}
+          totalQuestions={12}
+          selfUserId={SELF_ID}
+          opponentId={OPP_ID}
+          finalWinnerId={SELF_ID}
+          onPlayAgain={vi.fn()}
+          onMainMenu={vi.fn()}
+        />
+      </QueryClientProvider>,
     );
     expect(trackMatchResultsViewedMock).toHaveBeenCalledTimes(1);
   });

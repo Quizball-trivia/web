@@ -17,6 +17,7 @@ import type { AvatarCustomization } from '@/types/game';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { RankFrameCard } from '@/features/profile/components/RankFrameCard';
 import { useTierLabel } from '@/hooks/useTierLabel';
+import { AddOpponentFriendButton } from './AddOpponentFriendButton';
 import { AnimatedCounter } from './AnimatedCounter';
 
 export function ResultsHero({
@@ -30,6 +31,8 @@ export function ResultsHero({
   opponentUsername,
   opponentAvatar,
   opponentAvatarCustomization,
+  opponentId,
+  showAddFriendButton = false,
   playerScore,
   opponentScore,
   totalGamesLabel,
@@ -49,6 +52,8 @@ export function ResultsHero({
   opponentUsername: string;
   opponentAvatar: string;
   opponentAvatarCustomization: AvatarCustomization | null;
+  opponentId: string;
+  showAddFriendButton?: boolean;
   playerScore: number;
   opponentScore: number;
   totalGamesLabel: string;
@@ -138,26 +143,31 @@ export function ResultsHero({
 
           {/* Opponent (Right) — tier shield frame when ranked, plain avatar otherwise */}
           <div className="flex flex-row-reverse items-center gap-3 justify-self-end sm:gap-4">
-            {opponentTier ? (
-              <RankFrameCard
-                tier={opponentTier}
-                tierLabel={tierLabelOf(opponentTier)}
-                rpLabel={opponentDisplayRp != null ? `${opponentDisplayRp}RP` : undefined}
-                customization={opponentAvatarCustomization ?? { base: opponentAvatar }}
-                mirrored
-                sizes="(min-width: 640px) 150px, 100px"
-                className="w-[100px] shrink-0 sm:w-[150px]"
-              />
-            ) : (
-              <div className="flex size-24 shrink-0 items-center justify-center">
-                <AvatarDisplay
+            <div className="flex shrink-0 flex-col items-center gap-2">
+              {opponentTier ? (
+                <RankFrameCard
+                  tier={opponentTier}
+                  tierLabel={tierLabelOf(opponentTier)}
+                  rpLabel={opponentDisplayRp != null ? `${opponentDisplayRp}RP` : undefined}
                   customization={opponentAvatarCustomization ?? { base: opponentAvatar }}
-                  size="lg"
-                  className="-scale-x-100"
-                  shape="square"
+                  mirrored
+                  sizes="(min-width: 640px) 150px, 100px"
+                  className="w-[100px] shrink-0 sm:w-[150px]"
                 />
-              </div>
-            )}
+              ) : (
+                <div className="flex size-24 shrink-0 items-center justify-center">
+                  <AvatarDisplay
+                    customization={opponentAvatarCustomization ?? { base: opponentAvatar }}
+                    size="lg"
+                    className="-scale-x-100"
+                    shape="square"
+                  />
+                </div>
+              )}
+              {showAddFriendButton && (
+                <AddOpponentFriendButton opponentId={opponentId} opponentUsername={opponentUsername} />
+              )}
+            </div>
             <div className="hidden min-w-0 text-right sm:block">
               <div
                 className="truncate font-poppins font-semibold uppercase text-white text-base sm:text-lg md:text-xl"
