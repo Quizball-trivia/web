@@ -3,7 +3,7 @@
 import { optimizedRemoteImageProps } from "@/lib/images/remoteImage";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { Check, Eye, EyeOff, Lock, Search, Shuffle, Trophy } from "lucide-react";
+import { Check, Eye, EyeOff, Gavel, Lock, Search, Shuffle, Trophy } from "lucide-react";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
@@ -11,7 +11,9 @@ import { CategorySummary } from "@/lib/domain";
 import type { LobbyGameMode, LobbySettings as LobbySettingsState, LobbyState } from "@/lib/realtime/socket.types";
 import { logger } from "@/utils/logger";
 import { useLocale } from "@/contexts/LocaleContext";
+import type { MessageKey } from "@/lib/i18n/messages";
 import { trackCategorySelected } from "@/lib/analytics/game-events";
+import { AUCTION_PURPLE } from "@/features/auction/constants/auction.constants";
 
 interface LobbySettingsProps {
   isHost: boolean;
@@ -22,6 +24,20 @@ interface LobbySettingsProps {
 }
 
 type SettingsPatch = Partial<LobbySettingsState> & { isPublic?: boolean };
+
+const MODE_TABS: ReadonlyArray<{ value: LobbyGameMode; labelKey: MessageKey }> = [
+  { value: 'friendly_possession', labelKey: 'friend.classic' },
+  { value: 'friendly_party_quiz', labelKey: 'friend.partyQuiz' },
+  { value: 'ranked_sim', labelKey: 'friend.rankedSim' },
+  { value: 'auction', labelKey: 'friend.auction' },
+];
+
+const MODE_DESCRIPTION_KEYS: Record<LobbyGameMode, MessageKey> = {
+  friendly_possession: 'friend.classicDescription',
+  friendly_party_quiz: 'friend.partyQuizDescription',
+  ranked_sim: 'friend.rankedSimDescription',
+  auction: 'friend.auctionDescription',
+};
 
 export function LobbySettings({
   isHost,
@@ -34,7 +50,9 @@ export function LobbySettings({
   const settings = lobby?.settings;
   const serverMode = settings?.gameMode ?? 'friendly_possession';
   const memberCount = lobby?.members.length ?? 0;
-  const isPartyLocked = memberCount > 2;
+  // Auction seats 3 by design, so a full auction lobby is at capacity — not an
+  // oversized 1v1 lobby that has to fall back to party standings mode.
+  const isPartyLocked = memberCount > 2 && serverMode !== 'auction';
   const serverIsPublic = lobby?.isPublic ?? false;
   const serverIsRandom = settings?.friendlyRandom ?? true;
 
@@ -92,12 +110,19 @@ export function LobbySettings({
 
   const mode = optimisticMode ?? serverMode;
   const isFriendlyMode = mode === 'friendly_possession' || mode === 'friendly_party_quiz';
+  const isAuctionMode = mode === 'auction';
   const isPublic = optimisticPublic ?? serverIsPublic;
   const isRandom = optimisticRandom ?? serverIsRandom;
+  // Classic supports an optional second-half pick; party quiz stays
+  // single-category (one shared pool for the whole lobby).
+  const supportsSecondHalf = mode === 'friendly_possession';
 
   // --- Category state ---
   const serverSelectedCategoryId = settings?.friendlyCategoryAId ?? null;
   const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(serverSelectedCategoryId);
+  // Optional second-half preset (Classic only). null = decided by the halftime ban.
+  const serverSelectedCategoryBId = settings?.friendlyCategoryBId ?? null;
+  const [selectedCategoryBId, setSelectedCategoryBId] = useState<string | null>(serverSelectedCategoryBId);
   const [categorySearch, setCategorySearch] = useState("");
   const lastSentCategoryIdRef = useRef<string | null>(null);
   const handledErrorVersionRef = useRef(0);
@@ -249,10 +274,11 @@ export function LobbySettings({
       setOptimisticPublic(null);
       setOptimisticRandom(null);
       setSelectedCategoryId(serverSelectedCategoryId);
+      setSelectedCategoryBId(serverSelectedCategoryBId);
     }, 0);
 
     return () => clearTimeout(resetTimer);
-  }, [clearFlushTimer, clearInFlightTimeout, lobby?.lobbyId, serverSelectedCategoryId]);
+  }, [clearFlushTimer, clearInFlightTimeout, lobby?.lobbyId, serverSelectedCategoryId, serverSelectedCategoryBId]);
 
   // Sync server category → local (only when server confirms random is off)
   useEffect(() => {
@@ -270,10 +296,14 @@ export function LobbySettings({
         if (prev === serverSelectedCategoryId) return prev;
         return serverSelectedCategoryId;
       });
+      setSelectedCategoryBId((prev) => {
+        if (prev === serverSelectedCategoryBId) return prev;
+        return serverSelectedCategoryBId;
+      });
     }, 0);
     lastSentCategoryIdRef.current = serverSelectedCategoryId;
     return () => clearTimeout(syncTimer);
-  }, [hasCategoryTransitionInProgress, isFriendlyMode, serverIsRandom, serverSelectedCategoryId]);
+  }, [hasCategoryTransitionInProgress, isFriendlyMode, serverIsRandom, serverSelectedCategoryId, serverSelectedCategoryBId]);
 
   useEffect(() => {
     if (!settingsErrorVersion) return;
@@ -292,11 +322,12 @@ export function LobbySettings({
       setOptimisticRandom(null);
       if (!serverIsRandom && isFriendlyMode) {
         setSelectedCategoryId(serverSelectedCategoryId);
+        setSelectedCategoryBId(serverSelectedCategoryBId);
       }
     }, 0);
 
     return () => clearTimeout(rollbackTimer);
-  }, [clearFlushTimer, clearInFlightTimeout, isFriendlyMode, serverIsRandom, serverSelectedCategoryId, settingsErrorVersion]);
+  }, [clearFlushTimer, clearInFlightTimeout, isFriendlyMode, serverIsRandom, serverSelectedCategoryId, serverSelectedCategoryBId, settingsErrorVersion]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -327,14 +358,40 @@ export function LobbySettings({
   const toggleCategory = (catId: string) => {
     if (!canEdit || isRandom) return;
 
-    const next = selectedCategoryId === catId ? null : catId;
-    setSelectedCategoryId(next);
-    // Analytics: only emit when a category is being selected (not when
-    // the user un-selects). The selection set is single-category here, so
-    // each `next != null` corresponds to one user pick.
-    if (next) {
-      const picked = categories.find((c) => c.id === next);
-      try { trackCategorySelected(next, picked?.name ?? next); } catch { /* best-effort */ }
+    let nextA: string | null;
+    let nextB: string | null;
+
+    if (!supportsSecondHalf) {
+      nextA = selectedCategoryId === catId ? null : catId;
+      nextB = null;
+    } else if (selectedCategoryId === catId) {
+      // Deselecting the 1st half promotes the 2nd half up, so the remaining
+      // pick never becomes an orphaned "2nd half with no 1st half".
+      nextA = selectedCategoryBId;
+      nextB = null;
+    } else if (selectedCategoryBId === catId) {
+      nextA = selectedCategoryId;
+      nextB = null;
+    } else if (!selectedCategoryId) {
+      nextA = catId;
+      nextB = selectedCategoryBId;
+    } else if (!selectedCategoryBId) {
+      nextA = selectedCategoryId;
+      nextB = catId;
+    } else {
+      // Both slots taken — a third tap replaces the 2nd half.
+      nextA = selectedCategoryId;
+      nextB = catId;
+    }
+
+    setSelectedCategoryId(nextA);
+    setSelectedCategoryBId(nextB);
+
+    // Analytics: emit for the card the user just turned ON (not deselects).
+    const turnedOn = nextA === catId || nextB === catId;
+    if (turnedOn) {
+      const picked = categories.find((c) => c.id === catId);
+      try { trackCategorySelected(catId, picked?.name ?? catId); } catch { /* best-effort */ }
     }
 
     // Emit category update only from explicit user interactions.
@@ -344,12 +401,16 @@ export function LobbySettings({
       pending.friendlyCategoryAId ??
       inFlight?.friendlyCategoryAId ??
       (settings?.friendlyCategoryAId ?? null);
+    const targetCategoryBId =
+      pending.friendlyCategoryBId ??
+      inFlight?.friendlyCategoryBId ??
+      (settings?.friendlyCategoryBId ?? null);
 
-    if (next !== targetCategoryAId) {
-      lastSentCategoryIdRef.current = next;
+    if (nextA !== targetCategoryAId || nextB !== targetCategoryBId) {
+      lastSentCategoryIdRef.current = nextA;
       queueChange({
-        friendlyCategoryAId: next,
-        friendlyCategoryBId: null,
+        friendlyCategoryAId: nextA,
+        friendlyCategoryBId: nextB,
       });
     }
   };
@@ -407,10 +468,16 @@ export function LobbySettings({
         setSelectedCategoryId(fallback);
         toast.info(t("friend.randomDisabledDefault"));
       }
+      // Carry a previously chosen second half only if it survives as a distinct
+      // pick; otherwise halftime decides it as before.
+      const catB = supportsSecondHalf && selectedCategoryBId && selectedCategoryBId !== cat
+        ? selectedCategoryBId
+        : null;
+      setSelectedCategoryBId(catB);
       queueChange({
         friendlyRandom: false,
         friendlyCategoryAId: cat,
-        friendlyCategoryBId: null,
+        friendlyCategoryBId: catB,
       });
     }
   };
@@ -470,46 +537,24 @@ export function LobbySettings({
               </div>
             </div>
           ) : (
-            <div className="flex bg-surface-deep rounded-[14px] p-1 gap-1">
-              <button
-                onClick={() => handleModeChange('friendly_possession')}
-                disabled={!canEdit}
-                style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 13, letterSpacing: '0.04em' }}
-                className={cn(
-                  "flex-1 py-2.5 rounded-[10px] uppercase transition-colors",
-                  mode === 'friendly_possession'
-                    ? "bg-brand-blue text-white"
-                    : "text-white/55 hover:text-white"
-                )}
-              >
-                {t("friend.classic")}
-              </button>
-              <button
-                onClick={() => handleModeChange('friendly_party_quiz')}
-                disabled={!canEdit}
-                style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 13, letterSpacing: '0.04em' }}
-                className={cn(
-                  "flex-1 py-2.5 rounded-[10px] uppercase transition-colors",
-                  mode === 'friendly_party_quiz'
-                    ? "bg-brand-blue text-white"
-                    : "text-white/55 hover:text-white"
-                )}
-              >
-                {t("friend.partyQuiz")}
-              </button>
-              <button
-                onClick={() => handleModeChange('ranked_sim')}
-                disabled={!canEdit}
-                style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 13, letterSpacing: '0.04em' }}
-                className={cn(
-                  "flex-1 py-2.5 rounded-[10px] uppercase transition-colors",
-                  mode === 'ranked_sim'
-                    ? "bg-brand-blue text-white"
-                    : "text-white/55 hover:text-white"
-                )}
-              >
-                {t("friend.rankedSim")}
-              </button>
+            <div className="grid grid-cols-2 bg-surface-deep rounded-[14px] p-1 gap-1">
+              {MODE_TABS.map(({ value, labelKey }) => (
+                <button
+                  key={value}
+                  onClick={() => handleModeChange(value)}
+                  disabled={!canEdit}
+                  aria-pressed={mode === value}
+                  style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 13, letterSpacing: '0.04em' }}
+                  className={cn(
+                    "py-2.5 rounded-[10px] uppercase transition-colors",
+                    mode === value
+                      ? "bg-brand-blue text-white"
+                      : "text-white/55 hover:text-white"
+                  )}
+                >
+                  {t(labelKey)}
+                </button>
+              ))}
             </div>
           )}
           <p
@@ -518,11 +563,7 @@ export function LobbySettings({
           >
             {isPartyLocked
               ? t("friend.partyDescription")
-              : mode === 'friendly_possession'
-                ? t("friend.classicDescription")
-                : mode === 'friendly_party_quiz'
-                  ? t("friend.partyQuizDescription")
-                : t("friend.rankedSimDescription")}
+              : t(MODE_DESCRIPTION_KEYS[mode])}
           </p>
         </div>
 
@@ -658,18 +699,30 @@ export function LobbySettings({
                       {t("friend.noCategoryMatchesSearch", { query: categorySearch })}
                     </p>
                   ) : filteredCategories.map(cat => {
-                    const isSelected = selectedCategoryId === cat.id;
+                    const isFirstHalf = selectedCategoryId === cat.id;
+                    const isSecondHalf = supportsSecondHalf && selectedCategoryBId === cat.id;
+                    const isSelected = isFirstHalf || isSecondHalf;
+                    // The next tap on an unselected card fills whichever slot is
+                    // open — surfaced as a ghost badge so the outcome is visible
+                    // before committing.
+                    const isNextSecondHalf = supportsSecondHalf
+                      && !isSelected
+                      && Boolean(selectedCategoryId)
+                      && !selectedCategoryBId;
                     return (
                       <button
                         key={cat.id}
                         onClick={() => toggleCategory(cat.id)}
                         disabled={!canEdit || isRandom}
+                        aria-pressed={isSelected}
                         style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, letterSpacing: '0.02em' }}
                         className={cn(
                           "w-full flex items-center gap-3 px-3 py-3.5 rounded-[14px] transition-colors border-2 bg-white/[0.04] hover:bg-white/[0.08]",
-                          isSelected
+                          isFirstHalf
                             ? "border-brand-green text-white"
-                            : "border-brand-blue text-white/70 hover:text-white",
+                            : isSecondHalf
+                              ? "border-brand-yellow text-white"
+                              : "border-brand-blue text-white/70 hover:text-white",
                           (!canEdit || isRandom) && "opacity-50 cursor-not-allowed"
                         )}
                       >
@@ -680,13 +733,61 @@ export function LobbySettings({
                           }
                         </div>
                         <span className="flex-1 text-left text-sm truncate">{cat.name}</span>
-                        {isSelected && <Check className="size-4 shrink-0 text-brand-green" />}
+                        {supportsSecondHalf && (isSelected || isNextSecondHalf) && (
+                          <span
+                            className={cn(
+                              "shrink-0 rounded-full px-2 py-0.5 uppercase",
+                              isFirstHalf
+                                ? "bg-brand-green/20 text-brand-green"
+                                : isSecondHalf
+                                  ? "bg-brand-yellow/20 text-brand-yellow"
+                                  : "bg-white/10 text-white/45"
+                            )}
+                            style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 9, letterSpacing: '0.06em' }}
+                          >
+                            {isFirstHalf
+                              ? t("friend.firstHalfBadge")
+                              : isSecondHalf
+                                ? t("friend.secondHalfBadge")
+                                : t("friend.secondHalfOptional")}
+                          </span>
+                        )}
+                        {isSelected && (
+                          <Check className={cn(
+                            "size-4 shrink-0",
+                            isFirstHalf ? "text-brand-green" : "text-brand-yellow"
+                          )} />
+                        )}
                       </button>
                     );
                   })}
                 </div>
               </>
             )}
+          </div>
+        )}
+
+        {/* Auction Info — categories don't apply, so this replaces the picker. */}
+        {isAuctionMode && (
+          <div className="p-5 rounded-[14px] bg-white/[0.05] flex flex-col items-center text-center gap-2.5">
+            <div
+              className="size-14 rounded-full flex items-center justify-center"
+              style={{ background: AUCTION_PURPLE }}
+            >
+              <Gavel className="size-7 text-white" strokeWidth={2.5} />
+            </div>
+            <h4
+              className="text-white uppercase"
+              style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 16, letterSpacing: '0.04em' }}
+            >
+              {t("friend.auctionHeader")}
+            </h4>
+            <p
+              className="text-white/65 max-w-xs"
+              style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 500, fontSize: 12, lineHeight: 1.45 }}
+            >
+              {t("friend.auctionDescriptionLong")}
+            </p>
           </div>
         )}
 

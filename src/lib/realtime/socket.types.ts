@@ -5,8 +5,13 @@ import type { components } from "@/types/api.generated";
 export type I18nField = components["schemas"]["I18nField"];
 
 export type MatchMode = 'friendly' | 'ranked';
-export type LobbyGameMode = 'friendly_possession' | 'friendly_party_quiz' | 'ranked_sim';
-export type MatchVariant = LobbyGameMode;
+export type LobbyGameMode = 'friendly_possession' | 'friendly_party_quiz' | 'ranked_sim' | 'auction';
+/**
+ * Variant of a possession/quiz match handled by the `/game` realtime layer.
+ * Deliberately excludes 'auction': auction matches run on their own socket
+ * protocol and route (`/auction`), never through the possession reducers.
+ */
+export type MatchVariant = Exclude<LobbyGameMode, 'auction'>;
 export type LobbyStatus = 'waiting' | 'active' | 'closed';
 export type MatchPhase =
   | 'NORMAL_PLAY'
