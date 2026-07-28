@@ -106,6 +106,10 @@ export interface UseRealtimeAuctionMatchResult {
   apEarned: number | null;
   /** The server removed THIS player from the match (disconnect/reconnect-limit forfeit). */
   selfForfeited: boolean;
+  /** The `attachMatchId` handed to this hook is no longer joinable (server said
+   *  auction_rejoin_unavailable). The owner must drop it, or the screen stays
+   *  stuck: auto-start is suppressed and cancel is hidden while it is set. */
+  attachUnavailable: boolean;
 }
 
 export type AuctionWaitingForReadyState = AuctionWaitingForReadyPayload & {
@@ -175,6 +179,7 @@ export function useRealtimeAuctionMatch({
   // Reload-into-paused-match: server prompts to rejoin; we show a prompt and the
   // user opts in (auction:rejoin). Mirrors ranked's rejoin handshake.
   const [rejoinAvailable, setRejoinAvailable] = useState<AuctionRejoinAvailablePayload | null>(null);
+  const [attachUnavailable, setAttachUnavailable] = useState(false);
   // Server-authoritative resume "get ready" countdown end (this client's clock).
   const [resumeCountdownEndsAtMs, setResumeCountdownEndsAtMs] = useState<number | null>(null);
   // Coins this client earned for the finished match (win = 500, finish = 300,
@@ -477,6 +482,13 @@ export function useRealtimeAuctionMatch({
   // belongs to. Registering the id in `activeMatchIdRef` also makes the
   // connect handler re-attach (never re-queue) if the socket later drops.
   const attachedMatchIdRef = useRef<string | null>(null);
+  // Read inside the socket handlers without making them re-subscribe per change.
+  const attachMatchIdRef = useRef<string | null>(attachMatchId);
+  useEffect(() => {
+    attachMatchIdRef.current = attachMatchId;
+    // A new (or cleared) attach target invalidates the previous failure.
+    setAttachUnavailable(false);
+  }, [attachMatchId]);
   useEffect(() => {
     if (!enabled || !selfUserId || !attachMatchId || !isConnected) return;
     activeMatchIdRef.current = attachMatchId;
@@ -652,6 +664,9 @@ export function useRealtimeAuctionMatch({
         // normal flow — this is not a visible error condition.
         setRejoinAvailable(null);
         setResumeCountdownEndsAtMs(null);
+        // If we got here from an attach-on-entry, the match is gone: tell the
+        // owner to drop attachMatchId so search can auto-start / be cancelled.
+        if (attachMatchIdRef.current) setAttachUnavailable(true);
         return;
       }
       clearPendingForMatch(null);
@@ -1057,6 +1072,7 @@ export function useRealtimeAuctionMatch({
     coinsAwarded,
     apEarned,
     selfForfeited,
+    attachUnavailable,
   };
 }
 

@@ -437,7 +437,8 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     const settingsUnchanged =
       emit.gameMode === activeLobby.settings.gameMode &&
       emit.friendlyRandom === activeLobby.settings.friendlyRandom &&
-      emit.friendlyCategoryAId === activeLobby.settings.friendlyCategoryAId;
+      emit.friendlyCategoryAId === activeLobby.settings.friendlyCategoryAId &&
+      emit.friendlyCategoryBId === (activeLobby.settings.friendlyCategoryBId ?? null);
 
     const visibilityUnchanged =
       updates.isPublic === undefined || updates.isPublic === activeLobby.isPublic;

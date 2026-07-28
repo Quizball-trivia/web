@@ -193,6 +193,7 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
     coinsAwarded,
     apEarned,
     selfForfeited,
+    attachUnavailable,
   } = useRealtimeAuctionMatch({
     enabled: realtimeEnabled,
     autoStart: auctionStarted,
@@ -218,8 +219,17 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
   // Involuntary server removal (drop / reconnect-limit forfeit) and voluntary
   // quit both route to the same results/exit flow; `removedByServer` only picks
   // the honest "removed from the match" copy over "you forfeited".
-  const removedByServer = selfForfeited;
+  const removedByServer = selfForfeited && !voluntarilyForfeited;
   const forfeited = voluntarilyForfeited || removedByServer;
+
+  // The match we came in to re-attach to is gone (grace expired / it ended
+  // while we were away). Drop the attach target so the search screen can
+  // auto-start a fresh one and re-enable its cancel button instead of hanging.
+  // Derived during render (same pattern as peakJoined above) rather than in an
+  // effect, so it settles in one commit.
+  if (attachUnavailable && attachMatchId) {
+    setAttachMatchId(null);
+  }
 
   const resolvedHumanPlayerId =
     humanPlayerId ?? state?.players.find((player) => !player.isBot)?.id ?? state?.players[0]?.id ?? null;
@@ -256,6 +266,8 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
     setAttachMatchId(null);
     setAuctionStarted(true);
     setPeakJoined(1);
+    setResultsRevealed(false);
+    setCountdownDone(false);
     actions.startGame(3);
   }, [actions]);
 

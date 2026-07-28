@@ -73,7 +73,6 @@ export function useAppShellViewModel() {
   const autoRejoinSuppressedMatchId = useRealtimeMatchStore((state) => state.autoRejoinSuppressedMatchId);
   const resetRealtime = useRealtimeMatchStore((state) => state.reset);
   const activeAuctionMatch = useAuctionActiveMatchStore((state) => state.activeAuctionMatch);
-  const clearAuctionActiveMatch = useAuctionActiveMatchStore((state) => state.clear);
   const startSession = useGameSessionStore((state) => state.startSession);
   const setGameStage = useGameSessionStore((state) => state.setStage);
   const [socketConnected, setSocketConnected] = useState(() => getSocket().connected);
@@ -337,11 +336,12 @@ export function useAppShellViewModel() {
   }, [autoRejoinOffer?.key]);
 
   // Rejoin a live auction from the home/play banner. Navigating to /auction
-  // remounts AuctionFlowScreen → useRealtimeAuctionMatch, whose connect
-  // handshake (auction:rejoin / server rejoin-on-connect) re-attaches to the
-  // match. Clear the banner immediately so it doesn't linger behind the route.
+  // remounts AuctionFlowScreen, which captures the match id from this store in
+  // a mount-time lazy initializer — so the store must NOT be cleared here or
+  // the screen reads null and starts a fresh search instead of re-attaching.
+  // The banner is already route-gated off /auction; the store clears naturally
+  // on the next auction:state / match_finished event.
   const handleRejoinAuction = () => {
-    clearAuctionActiveMatch();
     router.push('/auction');
   };
 
