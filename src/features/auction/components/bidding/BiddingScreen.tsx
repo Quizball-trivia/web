@@ -216,7 +216,7 @@ export function BiddingScreen({
 
             {/* Clues — large type, slow reveal. Each clue eases up into place
                 over ~0.9s so the board fills deliberately rather than snapping. */}
-            <div className="space-y-4 min-h-[140px] max-h-[42vh] overflow-y-auto">
+            <div className="scrollbar-thin space-y-4 min-h-[140px] max-h-[60vh] overflow-y-auto">
               <AnimatePresence>
                 {round.clues.slice(0, visibleClues).map((clue, i) => (
                   <motion.div

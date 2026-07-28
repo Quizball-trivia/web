@@ -1637,7 +1637,9 @@
     "rivalFolded": "Folded",
     "rivalSittingOut": "Sitting out",
     "rivalOut": "Out",
-    "botTag": "BOT",
+    "forfeitYouFinishThird": "You finish 3rd",
+    "forfeitMatchStillRunning": "The match is still going — final standings stay hidden.",
+    "forfeitYourSquad": "Your squad",
     "apEarned": "+{ap} AP",
     "auctionPointsLabel": "Auction Points"
   },

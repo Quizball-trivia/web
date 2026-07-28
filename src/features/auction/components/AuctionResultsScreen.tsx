@@ -132,6 +132,10 @@ export function AuctionResultsScreen({
   const winner = rankedPlayers[0];
   const humanRank = rankedPlayers.findIndex((p) => p.id === humanPlayerId);
   const humanWon = !forfeited && winner?.id === humanPlayerId;
+  // A forfeiter leaves while the other two are still bidding, so no standing is
+  // final yet — show only their own guaranteed last place and their own squad.
+  // Revealing the podium here would leak an in-progress match's state.
+  const humanEntry = decorated.find((p) => p.id === humanPlayerId) ?? null;
   // Coins are never shown on a forfeit (the leaver gets nothing).
   const showCoins = !forfeited && (coinsAwarded ?? 0) > 0;
   // AP is ranked-auction only: friendly lobbies send no apEarned (and
@@ -191,15 +195,25 @@ export function AuctionResultsScreen({
                 ? t('auctionGame.youWin')
                 : t('auctionGame.auctionOver')}
           </h1>
-          <p className="mt-1 font-poppins text-sm font-semibold text-white/50 uppercase">
-            {forfeited
-              ? removed
-                ? t('auctionGame.removedFromMatchSubtitle')
-                : t('auctionGame.lostByForfeitSubtitle')
-              : humanWon
+          {forfeited ? (
+            <>
+              <p className="mt-1 font-poppins text-lg font-black uppercase text-white">
+                {t('auctionGame.forfeitYouFinishThird')}
+              </p>
+              <p className="mt-1 font-poppins text-sm font-semibold text-white/50 uppercase">
+                {removed ? t('auctionGame.removedFromMatchSubtitle') : t('auctionGame.lostByForfeitSubtitle')}
+              </p>
+              <p className="mt-1 font-poppins text-xs font-semibold text-white/40">
+                {t('auctionGame.forfeitMatchStillRunning')}
+              </p>
+            </>
+          ) : (
+            <p className="mt-1 font-poppins text-sm font-semibold text-white/50 uppercase">
+              {humanWon
                 ? t('auctionGame.highestTeamValueSubtitle')
                 : t('auctionGame.youFinishedRank', { rank: ordinal(humanRank + 1) })}
-          </p>
+            </p>
+          )}
 
           {/* Reward chips — coins (win = +500, finish = +300) and Auction
               Points (1st +50 / 2nd +30 / 3rd +10). Neither shows on a forfeit;
@@ -228,8 +242,9 @@ export function AuctionResultsScreen({
           )}
         </div>
 
-        {/* Podium — top 3 (party-quiz style) */}
-        {rankedPlayers.length >= 1 && (
+        {/* Podium — top 3 (party-quiz style). Hidden on a forfeit: the other
+            seats are still playing, so there is nothing final to rank. */}
+        {!forfeited && rankedPlayers.length >= 1 && (
           <div className="grid grid-cols-3 items-end gap-2 sm:gap-3">
             {rankedPlayers.slice(0, 3).map((player, i) => (
               <PodiumColumn
@@ -244,11 +259,21 @@ export function AuctionResultsScreen({
           </div>
         )}
 
-        {/* Detailed stats list (preserves squad chips, players filled, budget) */}
+        {/* Detailed stats list (preserves squad chips, players filled, budget).
+            On a forfeit this collapses to the leaver's own squad — no rival
+            standings, no squads, nothing from the match still in progress. */}
         <div className="space-y-3">
-          {rankedPlayers.map((player, rank) => {
+          {forfeited && (
+            <h2 className="font-poppins text-xs font-black uppercase tracking-wide text-white/50">
+              {t('auctionGame.forfeitYourSquad')}
+            </h2>
+          )}
+          {(forfeited ? (humanEntry ? [humanEntry] : []) : rankedPlayers).map((player, index) => {
             const isHuman = player.id === humanPlayerId;
-            const isWinner = rank === 0;
+            // A forfeiter is always last (3rd) and never a winner, regardless of
+            // where they sat in the local list.
+            const rank = forfeited ? 2 : index;
+            const isWinner = !forfeited && rank === 0;
 
             const medal = medalColor(rank);
 

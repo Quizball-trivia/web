@@ -1637,7 +1637,9 @@
     "rivalFolded": "გავიდა",
     "rivalSittingOut": "არ მონაწილეობს",
     "rivalOut": "ამოვარდა",
-    "botTag": "ბოტი",
+    "forfeitYouFinishThird": "იკავებ მე-3 ადგილს",
+    "forfeitMatchStillRunning": "მატჩი ჯერ მიმდინარეობს — საბოლოო ცხრილი დამალულია.",
+    "forfeitYourSquad": "შენი შემადგენლობა",
     "apEarned": "+{ap} AP",
     "auctionPointsLabel": "აუქციონის ქულები"
   },
