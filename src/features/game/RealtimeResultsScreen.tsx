@@ -19,6 +19,7 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
     opponentUsername,
     opponentAvatar,
     opponentAvatarCustomization = null,
+    opponentId,
     playerScore,
     opponentScore,
     playerCorrect,
@@ -101,6 +102,8 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
           opponentUsername={opponentUsername}
           opponentAvatar={opponentAvatar}
           opponentAvatarCustomization={opponentAvatarCustomization}
+          opponentId={opponentId}
+          showAddFriendButton={matchType === 'ranked' && !isCancelledNoContest}
           playerScore={playerScore}
           opponentScore={opponentScore}
           totalGamesLabel={totalGamesLabel}

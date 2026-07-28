@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { buildProfileNavTarget } from '@/lib/hooks/useProfileNavigation';
 import { motion } from 'motion/react';
 import {
-  Pencil, Check, X,
+  Pencil, Check, X, Lock,
   ChevronDown, ChevronUp,
 } from 'lucide-react';
 import { Trophy as TrophyPh } from '@phosphor-icons/react';
@@ -30,10 +30,11 @@ import { WorldCupAchievementCard } from '@/components/shared/WorldCupAchievement
 import { useUserEventAwards } from '@/lib/queries/eventAwards.queries';
 import { useLeaderboardSeasons, useUserRank } from '@/lib/queries/leaderboard.queries';
 import { Input } from '@/components/ui/input';
+import { formatCooldownDate } from '@/lib/api/nicknameErrors';
 import { toast } from 'sonner';
 
 import type { PlayerStats } from '@/types/game';
-import type { MatchStatsSummary, ModeMatchStatsSummary, HeadToHeadSummary, RankPosition } from '@/lib/domain';
+import type { MatchStatsSummary, ModeMatchStatsSummary, HeadToHeadSummary, RankPosition, PreviousNickname } from '@/lib/domain';
 import type { MessageKey } from '@/lib/i18n/messages';
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
 
@@ -101,6 +102,13 @@ interface ProfileWebProps {
   recentMatchesLoading?: boolean;
   recentMatchesError?: string | null;
   headToHead?: HeadToHeadSummary | null;
+  previousNicknames?: PreviousNickname[];
+  /** Free changes left. Undefined while unknown — the UI then assumes nothing. */
+  nicknameChangesRemaining?: number;
+  /** Total free changes the server grants, for "X of Y left" copy. */
+  nicknameChangesTotal?: number;
+  /** ISO date the next change unlocks, when the allowance is spent. */
+  nicknameNextChangeAt?: string | null;
   onNameChange?: (newName: string) => Promise<void> | void;
   onAvatarChange?: (avatarUrl: string) => Promise<void> | void;
   onClubChange?: (club: string) => Promise<void> | void;
@@ -116,6 +124,10 @@ export function ProfileWeb({
   rankedProfile = null, rankedProfileLoading = false,
   recentMatches = [], recentMatchesLoading = false, recentMatchesError = null,
   headToHead = null,
+  previousNicknames = [],
+  nicknameChangesRemaining,
+  nicknameChangesTotal,
+  nicknameNextChangeAt = null,
   onNameChange, onAvatarChange, onClubChange, onLanguageChange,
   isUpdating = false,
 }: ProfileWebProps) {
@@ -192,16 +204,92 @@ export function ProfileWeb({
 
 
 
+  // The server is the arbiter; this only decides what the UI offers. Recompute
+  // the remaining wait from the unlock timestamp rather than trusting a
+  // server-sent duration, so a stale tab or a skewed clock can't show a
+  // countdown that already expired.
+  // Reading the clock during render is impure, and a profile left open past the
+  // unlock time would otherwise stay locked forever. Keep "now" in state and
+  // wake exactly once, when the cooldown expires.
+  const [now, setNow] = useState(() => Date.now());
+  const unlocksAtMs = useMemo(() => {
+    if (!nicknameNextChangeAt) return null;
+    const parsed = new Date(nicknameNextChangeAt).getTime();
+    return Number.isNaN(parsed) ? null : parsed;
+  }, [nicknameNextChangeAt]);
+
+  useEffect(() => {
+    if (unlocksAtMs === null || unlocksAtMs <= now) return;
+    // setTimeout clamps above ~24.8 days, so cap and re-arm rather than
+    // scheduling a 30-day wait that would fire immediately.
+    const delay = Math.min(unlocksAtMs - now, 60_000 * 60);
+    const timer = setTimeout(() => setNow(Date.now()), delay);
+    return () => clearTimeout(timer);
+  }, [unlocksAtMs, now]);
+
+  const nicknameCooldown = useMemo(() => {
+    if (unlocksAtMs === null || unlocksAtMs <= now) return { locked: false as const };
+
+    const unlocksAt = new Date(unlocksAtMs);
+    // Compare calendar days, not elapsed hours: an unlock two hours from now is
+    // "today", and a fixed 24h division would call it "tomorrow". Using local
+    // midnights also keeps this right across a DST shift.
+    const startOfDay = (ms: number) => {
+      const d = new Date(ms);
+      d.setHours(0, 0, 0, 0);
+      return d.getTime();
+    };
+    const daysLeft = Math.round((startOfDay(unlocksAtMs) - startOfDay(now)) / 86_400_000);
+    return {
+      locked: true as const,
+      label:
+        daysLeft <= 0
+          ? t('profileScreen.nicknameCooldownToday')
+          : daysLeft === 1
+            ? t('profileScreen.nicknameCooldownTomorrow')
+            : t('profileScreen.nicknameCooldownShort', { days: daysLeft }),
+      until: t('profileScreen.nicknameCooldownUntil', {
+        date: formatCooldownDate(unlocksAt, locale),
+      }),
+    };
+  }, [unlocksAtMs, now, t, locale]);
+
+  // Out of changes with no unlock time to show. The server still rejects, so
+  // the UI must not offer an edit just because there is no date to render.
+  const nicknameExhausted =
+    !nicknameCooldown.locked && nicknameChangesRemaining !== undefined && nicknameChangesRemaining <= 0;
+
+  const canEditNickname = isSelf && !nicknameCooldown.locked && !nicknameExhausted;
+
+  // Another tab (or this one, racing) can spend the last change while the
+  // editor is open. Once the refreshed quota says locked, close it rather than
+  // leaving an input that only produces rejections.
+  useEffect(() => {
+    if (isEditingName && !canEditNickname) setIsEditingName(false);
+  }, [isEditingName, canEditNickname]);
+
+  const nicknameStatus = useMemo(() => {
+    if (nicknameCooldown.locked) return nicknameCooldown.until;
+    if (nicknameChangesRemaining === undefined) return null;
+    if (nicknameChangesRemaining <= 0) return t('profileScreen.nicknameNoChangesLeft');
+    if (nicknameChangesRemaining === 1) return t('profileScreen.nicknameLastFreeChange');
+    return t('profileScreen.nicknameChangesLeft', {
+      count: nicknameChangesRemaining,
+      total: nicknameChangesTotal ?? nicknameChangesRemaining,
+    });
+  }, [nicknameCooldown, nicknameChangesRemaining, nicknameChangesTotal, t]);
+
+
   const handleNameChange = async () => {
     try {
       if (editedName.trim() !== player.username) {
         await onNameChange?.(editedName.trim());
       }
       setIsEditingName(false);
-    } catch (error) {
-      toast.error(t('profile.failedToUpdateName'), {
-        description: error instanceof Error ? error.message : t('profile.failedToUpdateName'),
-      });
+    } catch {
+      // onNameChange owns the error toast — it can tell a cooldown from a taken
+      // name. Rethrowing only signals "keep the field open so the value isn't
+      // lost"; re-reporting here would double-toast, the second one raw.
     }
   };
 
@@ -236,7 +324,7 @@ export function ProfileWeb({
           {/* Name */}
           <div className="flex-1 min-w-0 text-center lg:text-left">
             <div className="flex items-center justify-center lg:justify-start gap-2">
-              {isEditingName ? (
+              {isEditingName && canEditNickname ? (
                 <div className="flex items-center gap-2">
                   <Input
                     value={editedName}
@@ -272,18 +360,46 @@ export function ProfileWeb({
                     {player.username}
                   </h1>
                   {isSelf && (
-                    <button
-                      onClick={() => setIsEditingName(true)}
-                      className="text-white/35 hover:text-white disabled:opacity-50 transition-colors"
-                      aria-label={t("profileScreen.editNickname")}
-                      disabled={isUpdating}
-                    >
-                      <Pencil className="size-4" />
-                    </button>
+                    canEditNickname ? (
+                      <button
+                        onClick={() => setIsEditingName(true)}
+                        className="text-white/35 hover:text-white disabled:opacity-50 transition-colors"
+                        aria-label={t("profileScreen.editNickname")}
+                        disabled={isUpdating}
+                      >
+                        <Pencil className="size-4" />
+                      </button>
+                    ) : (
+                      <span
+                        className="text-white/20 cursor-not-allowed"
+                        title={nicknameCooldown.locked ? nicknameCooldown.label : nicknameStatus ?? undefined}
+                        aria-label={nicknameCooldown.locked ? nicknameCooldown.until : nicknameStatus ?? undefined}
+                      >
+                        <Lock className="size-4" />
+                      </span>
+                    )
                   )}
                 </>
               )}
             </div>
+
+            {previousNicknames.length > 0 && (
+              <div className="mt-2 text-[11px] lg:text-xs text-white/40 [overflow-wrap:anywhere]">
+                <span className="uppercase tracking-wide text-white/30">
+                  {t('profileScreen.previouslyKnownAs')}
+                </span>{' '}
+                <span className="text-white/55">
+                  {previousNicknames.map((entry) => entry.nickname).join(', ')}
+                </span>
+              </div>
+            )}
+
+            {isSelf && !isEditingName && nicknameStatus && (
+              <div className="mt-1.5 flex items-center justify-center lg:justify-start gap-1.5 text-[11px] lg:text-xs text-white/40">
+                {(nicknameCooldown.locked || nicknameExhausted) && <Lock className="size-3 shrink-0" />}
+                <span>{nicknameStatus}</span>
+              </div>
+            )}
           </div>
 
           {/* Inline quick stats — right side per Figma */}

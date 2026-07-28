@@ -367,7 +367,15 @@
     "toNextLeagueLabel": "to next tier",
     "seasonOf": "of {total} players",
     "seasonNoRank": "No rank this season",
-    "achievementsTitle": "Season Achievements"
+    "achievementsTitle": "Season Achievements",
+    "previouslyKnownAs": "Previously known as",
+    "nicknameChangesLeft": "{count} of {total} name changes left",
+    "nicknameNoChangesLeft": "No name changes left",
+    "nicknameCooldownUntil": "You can change your name again on {date}",
+    "nicknameCooldownShort": "Available in {days} days",
+    "nicknameCooldownTomorrow": "Available tomorrow",
+    "nicknameCooldownToday": "Available today",
+    "nicknameLastFreeChange": "This is your last free change"
   },
   "socialScreen": {
     "friends": "Friends",
@@ -745,6 +753,7 @@
     "viewFullTable": "See real leaderboard",
     "verifiedQuestions": "{count}+ verified questions",
     "aboutUs": "About Us",
+    "quizzes": "Quizzes",
     "termsOfService": "Terms of Service",
     "privacyPolicy": "Privacy Policy",
     "copyright": "© 2026 QuizBall",
@@ -933,7 +942,12 @@
     "matchComplete": "MATCH COMPLETE",
     "cancelled": "Cancelled",
     "noContest": "No contest",
-    "ticketRefunded": "Ranked ticket refunded"
+    "ticketRefunded": "Ranked ticket refunded",
+    "addFriend": "Add friend",
+    "friendRequestSent": "Request sent",
+    "acceptFriendRequest": "Accept request",
+    "friends": "Friends",
+    "friendRequestError": "Friend request failed. Please try again."
   },
   "friendHub": {
     "title": "Friend Match",
@@ -1026,7 +1040,7 @@
     "auctionDescription": "Play for fun. Three managers bid for players, empty seats are filled with bots. No RP at stake.",
     "auctionHeader": "Auction",
     "auctionDescriptionLong": "Bid against your friends to sign the best squad. Three seats — any left empty are filled with bots. Categories don't apply, and no RP is at stake.",
-    "readyCopyRanked": "When both players are ready, ranked sim begins automatically.",
+    "readyCopyRanked": "Ranked sim starts the moment both players are ready — no host start needed.",
     "readyCopyParty": "When everyone is ready, the host can start the party quiz.",
     "readyCopyClassic": "When both players are ready, the host can start the match.",
     "readyCopyAuction": "When everyone is ready, the host can start the auction.",
@@ -1348,7 +1362,11 @@
     "failedToUpdateClub": "Failed to update club",
     "failedToUpdateLanguage": "Failed to update language",
     "notSet": "Not set",
-    "tryAgain": "Please try again."
+    "tryAgain": "Please try again.",
+    "nicknameTaken": "That name is already taken. Try another one.",
+    "nicknameRecentlyReleased": "That name was recently used by another player. Try another one.",
+    "nicknameProhibited": "That name isn't allowed. Try another one.",
+    "nicknameEmpty": "Enter a name."
   },
   "authValidation": {
     "emailRequired": "Email is required.",
@@ -1641,6 +1659,6 @@
     "minRankLabel": "Min rank",
     "qualifyHint": "Reach {tier} before kickoff to qualify — the ranked ladder is open now.",
     "playRankedCta": "Play Ranked",
-    "startsValue": "Saturday, 25 July, 00:00 (Georgia time)"
+    "startsValue": "Saturday, 1 August, 00:00 (Georgia time)"
   }
 }

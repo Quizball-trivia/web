@@ -1,7 +1,7 @@
 'use client';
 
 import type { PlayerStats } from '@/types/game';
-import type { MatchStatsSummary, RankPosition } from '@/lib/domain';
+import type { MatchStatsSummary, RankPosition, PreviousNickname } from '@/lib/domain';
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
 import { ProfileWeb, type ProfileRecentMatch } from './ProfileWeb';
 
@@ -19,6 +19,10 @@ interface ProfileScreenProps {
   recentMatches?: ProfileRecentMatch[];
   recentMatchesLoading?: boolean;
   recentMatchesError?: string | null;
+  previousNicknames?: PreviousNickname[];
+  nicknameChangesRemaining?: number;
+  nicknameChangesTotal?: number;
+  nicknameNextChangeAt?: string | null;
   onNameChange?: (newName: string) => Promise<void> | void;
   onAvatarChange?: (avatarUrl: string) => Promise<void> | void;
   onClubChange?: (club: string) => Promise<void> | void;
@@ -43,6 +47,10 @@ export function ProfileScreen(props: ProfileScreenProps) {
         recentMatches={props.recentMatches}
         recentMatchesLoading={props.recentMatchesLoading}
         recentMatchesError={props.recentMatchesError}
+        previousNicknames={props.previousNicknames}
+        nicknameChangesRemaining={props.nicknameChangesRemaining}
+        nicknameChangesTotal={props.nicknameChangesTotal}
+        nicknameNextChangeAt={props.nicknameNextChangeAt}
         onNameChange={props.onNameChange}
         onAvatarChange={props.onAvatarChange}
         onClubChange={props.onClubChange}

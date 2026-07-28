@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { ProfileScreen } from "@/features/profile/ProfileScreen";
 import { usePlayer } from "@/contexts/PlayerContext";
-import { updateMe } from "@/lib/api/endpoints";
+import { getMe, updateMe } from "@/lib/api/endpoints";
 import { toast } from "sonner";
 import { useAuthStore } from "@/stores/auth.store";
 import { useMatchStatsSummary, useRecentMatches } from "@/lib/queries/stats.queries";
@@ -16,9 +16,15 @@ import { LOCALES, type Locale } from "@/lib/i18n/messages";
 import { toProfileRecentMatch } from "@/features/profile/ProfileWeb";
 import { MAX_MATCHES_COUNT } from "@/lib/constants/matches";
 import { useEffect } from "react";
-import { useMyAchievements } from "@/lib/queries/users.queries";
+import { useMyAchievements, usePublicProfile } from "@/lib/queries/users.queries";
 import { decodeAvatarCustomization } from "@/lib/avatars";
 import { trackNicknameChanged, trackFavoriteClubChanged } from "@/lib/analytics/game-events";
+import {
+  formatCooldownDate,
+  getNicknameCooldown,
+  getNicknameRejection,
+  type NicknameRejection,
+} from "@/lib/api/nicknameErrors";
 
 export default function ProfilePage() {
   const searchParams = useSearchParams();
@@ -36,8 +42,11 @@ export default function ProfilePage() {
   const { data: rankedProfile, isLoading: rankedProfileLoading } = useRankedProfile();
   const { data: userRanks } = useUserRanks();
   const { data: achievements = [] } = useMyAchievements();
+  // Own previous nicknames come from the public profile so self and visitor
+  // views render from the same server-filtered list.
+  const { data: ownPublicProfile } = usePublicProfile(authUser?.id);
 
-  const { setLocale, t } = useLocale();
+  const { setLocale, t, locale } = useLocale();
   const [isUpdating, setIsUpdating] = useState(false);
   const purchaseStatus = searchParams.get("purchase");
 
@@ -58,15 +67,47 @@ export default function ProfilePage() {
     router.replace(cleaned ? `?${cleaned}` : window.location.pathname, { scroll: false });
   }, [purchaseStatus, queryClient, router, searchParams, t]);
 
+  // Every rejection used to collapse into one "failed to update" toast, leaving
+  // the user unsure whether to pick another name, wait, or retry.
+  const describeNicknameRejection = (
+    rejection: NicknameRejection | null,
+    error: unknown,
+  ): string => {
+    switch (rejection) {
+      case "taken":
+        return t("profile.nicknameTaken");
+      case "recently_released":
+        return t("profile.nicknameRecentlyReleased");
+      case "prohibited_content":
+        return t("profile.nicknameProhibited");
+      case "empty":
+        return t("profile.nicknameEmpty");
+      case "cooldown": {
+        const nextAvailableAt = getNicknameCooldown(error)?.nextAvailableAt;
+        return nextAvailableAt
+          ? t("profileScreen.nicknameCooldownUntil", {
+              date: formatCooldownDate(new Date(nextAvailableAt), locale),
+            })
+          : t("profileScreen.nicknameNoChangesLeft");
+      }
+      default:
+        return t("profile.pleaseTryAgain");
+    }
+  };
+
   const handleNameChange = async (name: string) => {
     if (isUpdating) return;
     setIsUpdating(true);
     try {
       const updated = await updateMe({ nickname: name });
       updateStats({ username: name });
-      if (authUser) {
-        setAuthenticated({ ...authUser, nickname: updated.nickname ?? name });
-      }
+      // Take the whole response, not a spread of the stale user: it carries the
+      // decremented quota, so the profile locks itself on the last change
+      // instead of still offering one.
+      setAuthenticated(updated);
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.users.publicProfile(updated.id),
+      });
       try {
         trackNicknameChanged();
       } catch (analyticsError) {
@@ -74,9 +115,20 @@ export default function ProfilePage() {
       }
       toast.success(t("profile.nicknameUpdated"));
     } catch (error) {
+      const rejection = getNicknameRejection(error);
+
+      if (rejection === "cooldown") {
+        // Pull the authoritative quota so the profile switches to the locked
+        // state instead of still offering an edit the server keeps rejecting.
+        void getMe()
+          .then((fresh) => setAuthenticated(fresh))
+          .catch(() => undefined);
+      }
+
       toast.error(t("profile.nicknameUpdateFailed"), {
-        description: error instanceof Error ? error.message : t("profile.pleaseTryAgain"),
+        description: describeNicknameRejection(rejection, error),
       });
+      throw error;
     } finally {
       setIsUpdating(false);
     }
@@ -180,6 +232,10 @@ export default function ProfilePage() {
           ? recentMatchesError.message
           : null
       }
+      previousNicknames={ownPublicProfile?.previousNicknames ?? []}
+      nicknameChangesRemaining={authUser?.nickname_changes_remaining}
+      nicknameChangesTotal={authUser?.nickname_changes_total}
+      nicknameNextChangeAt={authUser?.nickname_next_change_at ?? null}
       onNameChange={handleNameChange}
       onAvatarChange={handleAvatarChange}
       onClubChange={handleClubChange}

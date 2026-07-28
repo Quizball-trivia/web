@@ -161,6 +161,7 @@ function PublicProfileContent({ userId }: { userId: string }) {
             : null
         }
         headToHead={profile.headToHead}
+        previousNicknames={profile.previousNicknames}
       />
     </div>
   );
