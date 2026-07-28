@@ -722,6 +722,17 @@ export function useRealtimeAuctionMatch({
         setWaitingForReady(null);
         return;
       }
+      // While WE are the one the gate is waiting on (intro/reveal animation
+      // still playing), "waiting for players" is nonsense — surface the strip
+      // only once our own ack is in and we're genuinely held up by others.
+      const selfPending =
+        selfUserId !== null &&
+        (payload.waitingUserIds?.includes(selfUserId) ?? false) &&
+        !(payload.readyUserIds?.includes(selfUserId) ?? false);
+      if (selfPending) {
+        setWaitingForReady(null);
+        return;
+      }
       const forceStartsAtMs = Date.parse(payload.forceStartsAt);
       setWaitingForReady({
         ...payload,

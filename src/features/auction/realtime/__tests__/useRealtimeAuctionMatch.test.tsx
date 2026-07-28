@@ -1040,6 +1040,25 @@ describe('useRealtimeAuctionMatch', () => {
       });
     });
 
+    // Our own ack is still pending — the strip stays hidden rather than
+    // telling the player we're waiting on them.
+    expect(result.current.waitingForReady).toBeNull();
+
+    act(() => {
+      socketMock.trigger('auction:waiting_for_ready', {
+        matchId: 'match-1',
+        phase: 'bidding',
+        roundId: 'round-1',
+        stateVersion: 2,
+        readyCount: 1,
+        totalCount: 2,
+        readyUserIds: ['user-1'],
+        waitingUserIds: ['user-1', 'user-2'],
+        forceStartsAt: '2026-06-20T10:00:08.000Z',
+        serverNow: '2026-06-20T10:00:00.000Z',
+      });
+    });
+
     expect(result.current.waitingForReady).toMatchObject({
       matchId: 'match-1',
       phase: 'bidding',

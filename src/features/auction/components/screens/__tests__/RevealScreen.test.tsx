@@ -147,7 +147,7 @@ describe('RevealScreen', () => {
     expect(testActions.confirmReveal).not.toHaveBeenCalled();
 
     act(() => {
-      vi.advanceTimersByTime(3199);
+      vi.advanceTimersByTime(5199);
     });
     expect(testActions.confirmReveal).not.toHaveBeenCalled();
 
