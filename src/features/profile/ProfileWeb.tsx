@@ -197,8 +197,6 @@ export function ProfileWeb({
   const draws = overallStats?.draws ?? 0;
   const wldTotal = wins + losses + draws;
 
-  // World Cup event: split the ranked W/D/L into the event season vs the
-  // post-reset season. Only shown in event mode once the backend provides it.
   const rankedSeasons = matchStatsSummary?.rankedSeasons;
   const showSeasonSplit = isEventMode && !!rankedSeasons;
 
@@ -733,9 +731,6 @@ export function ProfileWeb({
               </div>
             </motion.div>
 
-            {/* W/L/D Breakdown — in event mode a single card with a toggle to
-                switch between Ranked (regular) and World Cup event stats. The
-                games-played counts live in the season card (left). */}
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
@@ -744,9 +739,10 @@ export function ProfileWeb({
             >
               {showSeasonSplit ? (
                 <SeasonToggleCard
-                  regular={rankedSeasons!.regular}
-                  event={rankedSeasons!.event}
-                  defaultTab="ranked"
+                  current={rankedSeasons!.current}
+                  previous={rankedSeasons!.previous}
+                  currentSeasonNumber={rankedSeasons!.currentSeasonNumber}
+                  previousSeasonNumber={rankedSeasons!.previousSeasonNumber}
                   t={t}
                 />
               ) : (
@@ -1188,60 +1184,68 @@ function WinDrawLossGrid({
   );
 }
 
-/** A single W/D/L card with a segmented toggle to switch between the Ranked
- *  (regular) season and the World Cup event. Replaces the two stacked cards so
- *  the middle column stays compact in event mode. */
 function SeasonToggleCard({
-  regular,
-  event,
-  defaultTab = 'event',
+  current,
+  previous,
+  currentSeasonNumber,
+  previousSeasonNumber,
   t,
 }: {
-  regular: ModeMatchStatsSummary;
-  event: ModeMatchStatsSummary;
-  /** Which season is selected on first render. Defaults to the World Cup
-   *  event — this card only renders while an event is active, so the event
-   *  season is the one the player wants to see first. */
-  defaultTab?: 'ranked' | 'event';
+  current: ModeMatchStatsSummary;
+  previous: ModeMatchStatsSummary;
+  currentSeasonNumber: number;
+  previousSeasonNumber: number | null;
   t: (key: MessageKey, params?: Record<string, string | number>) => string;
 }) {
-  const [active, setActive] = useState<'ranked' | 'event'>(defaultTab);
-  const stats = active === 'event' ? event : regular;
+  const [active, setActive] = useState<'current' | 'previous'>('current');
+  const stats = active === 'previous' && previousSeasonNumber !== null ? previous : current;
   const total = stats.wins + stats.draws + stats.losses;
+  const tabs = [
+    {
+      key: 'current' as const,
+      label: t('leaderboard.season', { n: currentSeasonNumber }),
+      activeBg: 'bg-brand-blue',
+    },
+    ...(previousSeasonNumber !== null
+      ? [{
+          key: 'previous' as const,
+          label: t('leaderboard.season', { n: previousSeasonNumber }),
+          activeBg: 'bg-brand-yellow',
+        }]
+      : []),
+  ];
 
   return (
     <div className="relative flex h-full flex-col rounded-[20px] bg-surface-card/40 backdrop-blur-sm overflow-hidden">
-      {/* Segmented toggle */}
-      <div className="flex gap-1 p-1.5">
-        {([
-          { key: 'ranked' as const, label: t('leaderboard.season', { n: 2 }), activeBg: 'bg-brand-blue' },
-          { key: 'event' as const, label: t('leaderboard.season', { n: 1 }), activeBg: 'bg-brand-yellow' },
-        ]).map((tab) => {
-          const on = active === tab.key;
-          const onText = tab.key === 'event' ? 'text-black' : 'text-white';
-          return (
-            <button
-              key={tab.key}
-              type="button"
-              onClick={() => setActive(tab.key)}
-              className={`flex flex-1 items-center justify-center gap-1.5 rounded-[14px] px-1.5 py-2 font-poppins text-[11px] font-black uppercase tracking-wide transition-colors ${
-                on ? `${tab.activeBg} ${onText}` : 'bg-white/5 text-white/50 hover:text-white/80'
-              }`}
-            >
-              {tab.key === 'event' && (
-                <Image
-                  src="/assets/brand/world-cup-trophy.webp"
-                  alt=""
-                  width={16}
-                  height={16}
-                  className={`h-4 w-auto shrink-0 object-contain ${on ? '' : 'opacity-60'}`}
-                />
-              )}
-              <span className="whitespace-nowrap">{tab.label}</span>
-            </button>
-          );
-        })}
-      </div>
+      {previousSeasonNumber !== null && (
+        <div className="flex gap-1 p-1.5">
+          {tabs.map((tab) => {
+            const on = active === tab.key;
+            const onText = tab.key === 'previous' ? 'text-black' : 'text-white';
+            return (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setActive(tab.key)}
+                className={`flex flex-1 items-center justify-center gap-1.5 rounded-[14px] px-1.5 py-2 font-poppins text-[11px] font-black uppercase tracking-wide transition-colors ${
+                  on ? `${tab.activeBg} ${onText}` : 'bg-white/5 text-white/50 hover:text-white/80'
+                }`}
+              >
+                {tab.key === 'previous' && previousSeasonNumber === 1 && (
+                  <Image
+                    src="/assets/brand/world-cup-trophy.webp"
+                    alt=""
+                    width={16}
+                    height={16}
+                    className={`h-4 w-auto shrink-0 object-contain ${on ? '' : 'opacity-60'}`}
+                  />
+                )}
+                <span className="whitespace-nowrap">{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      )}
       <div className="flex flex-1 items-center justify-center pb-1">
         {total > 0 ? (
           <WinDrawLossGrid wins={stats.wins} draws={stats.draws} losses={stats.losses} t={t} size="sm" />
