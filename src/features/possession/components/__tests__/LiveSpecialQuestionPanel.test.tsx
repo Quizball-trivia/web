@@ -259,6 +259,101 @@ describe('LiveSpecialQuestionPanel put-in-order submission', () => {
     });
   });
 
+  it('uses a verified perfect submission when the correct-order reveal is unavailable', async () => {
+    const perfectOrderIds = fourItemPutInOrderQuestion.items.map((item) => item.id);
+    renderPutInOrder({
+      question: fourItemPutInOrderQuestion,
+      roundResolved: true,
+      roundResult: {
+        matchId: 'match-1',
+        qIndex: 2,
+        questionKind: 'putInOrder',
+        // Defensive regression case: a stale/malformed reveal used to leave
+        // correctById empty and paint every server-verified row red.
+        reveal: { kind: 'multipleChoice', correctIndex: 0 },
+        players: {},
+        phaseKind: 'normal',
+        phaseRound: 1,
+        deltas: { possessionDelta: 0, goalScoredBySeat: null, penaltyOutcome: null },
+      } as never,
+      myRound: {
+        totalPoints: 100,
+        pointsEarned: 0,
+        isCorrect: true,
+        timeMs: 700,
+        selectedIndex: null,
+        foundCount: 4,
+        submittedOrderIds: perfectOrderIds,
+      },
+      opponentRound: {
+        totalPoints: 100,
+        pointsEarned: 0,
+        isCorrect: true,
+        timeMs: 900,
+        selectedIndex: null,
+        foundCount: 4,
+        submittedOrderIds: perfectOrderIds,
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getAllByText('4/4')).toHaveLength(2);
+      expect(screen.getAllByText('Right')).toHaveLength(8);
+      expect(screen.queryByText(/Should be/i)).not.toBeInTheDocument();
+      expect(screen.getAllByText('+100 PTS')).toHaveLength(2);
+    });
+  });
+
+  it('prefers a verified perfect submission over a same-kind reveal with foreign item ids', async () => {
+    const perfectOrderIds = fourItemPutInOrderQuestion.items.map((item) => item.id);
+    renderPutInOrder({
+      question: fourItemPutInOrderQuestion,
+      roundResolved: true,
+      roundResult: {
+        matchId: 'match-1',
+        qIndex: 2,
+        questionKind: 'putInOrder',
+        reveal: {
+          kind: 'putInOrder',
+          correctOrder: [
+            { id: 'stale-a', sortValue: 1, label: { en: 'Stale A' } },
+            { id: 'stale-b', sortValue: 2, label: { en: 'Stale B' } },
+            { id: 'stale-c', sortValue: 3, label: { en: 'Stale C' } },
+            { id: 'stale-d', sortValue: 4, label: { en: 'Stale D' } },
+          ],
+        },
+        players: {},
+        phaseKind: 'normal',
+        phaseRound: 1,
+        deltas: { possessionDelta: 0, goalScoredBySeat: null, penaltyOutcome: null },
+      } as never,
+      myRound: {
+        totalPoints: 100,
+        pointsEarned: 0,
+        isCorrect: true,
+        timeMs: 700,
+        selectedIndex: null,
+        foundCount: 4,
+        submittedOrderIds: perfectOrderIds,
+      },
+      opponentRound: {
+        totalPoints: 100,
+        pointsEarned: 0,
+        isCorrect: true,
+        timeMs: 900,
+        selectedIndex: null,
+        foundCount: 4,
+        submittedOrderIds: perfectOrderIds,
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getAllByText('4/4')).toHaveLength(2);
+      expect(screen.getAllByText('Right')).toHaveLength(8);
+      expect(screen.queryByText(/Should be/i)).not.toBeInTheDocument();
+    });
+  });
+
   it('renders a no-submit opponent as 0/N with all rows wrong', async () => {
     renderPutInOrder({
       question: fourItemPutInOrderQuestion,
