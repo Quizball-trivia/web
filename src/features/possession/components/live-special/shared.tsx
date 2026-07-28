@@ -66,16 +66,22 @@ export function clampCount(value: number, total: number): number {
   return Math.max(0, Math.min(total, value));
 }
 
-export function putInOrderPointsFromCount(count: number | null | undefined): number {
-  return Math.max(0, Math.min(count ?? 0, 5)) * 20;
+export function putInOrderPointsFromCount(
+  count: number | null | undefined,
+  totalItems: number,
+): number {
+  if (totalItems <= 0) return 0;
+  const matched = Math.max(0, Math.min(count ?? 0, totalItems));
+  return Math.round((matched / totalItems) * 100);
 }
 
 export function resolvePutInOrderPoints(
   pointsEarned: number | null | undefined,
   matchedCount: number | null | undefined,
+  totalItems: number,
 ): number {
   if (typeof pointsEarned === 'number' && pointsEarned > 0) return pointsEarned;
-  return putInOrderPointsFromCount(matchedCount);
+  return putInOrderPointsFromCount(matchedCount, totalItems);
 }
 
 export function SpecialScoreFlightAnchors() {

@@ -361,6 +361,7 @@ export function LivePutInOrderPanel({
   const submissionStartedRef = useRef(false);
   const sawPlayableTimerRef = useRef(false);
   const resolvedLocale = question.resolvedLocale ?? 'en';
+  const totalItems = question.items.length;
   const submitted = isSubmitting || Boolean(answerAck?.questionKind === 'putInOrder' && answerAck?.qIndex === qIndex);
   const inputLocked = !showOptions || roundResolved || submitted;
 
@@ -378,7 +379,7 @@ export function LivePutInOrderPanel({
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  const correctOrder = useMemo(() => {
+  const revealedCorrectOrder = useMemo(() => {
     if (!roundResolved || !roundResult || roundResult.reveal.kind !== 'putInOrder') return [];
     return roundResult.reveal.correctOrder.map((item) => ({
       id: item.id,
@@ -389,10 +390,6 @@ export function LivePutInOrderPanel({
     }));
   }, [resolvedLocale, roundResolved, roundResult]);
 
-  const correctById = useMemo(
-    () => new Map(correctOrder.map((item, index) => [item.id, { sortValue: item.sortValue, index }])),
-    [correctOrder]
-  );
   const questionItemById = useMemo(
     () => new Map(question.items.map((item, index) => [item.id, {
       id: item.id,
@@ -402,6 +399,35 @@ export function LivePutInOrderPanel({
       sortValue: index + 1,
     }])),
     [question.items, resolvedLocale]
+  );
+  const perfectSubmissionFallbackIds = useMemo(() => {
+    const validIds = new Set(question.items.map((item) => item.id));
+    const candidates = [myRound, opponentRound];
+    for (const candidate of candidates) {
+      const submittedIds = candidate?.submittedOrderIds;
+      if (!candidate?.isCorrect || submittedIds?.length !== totalItems) continue;
+      if (new Set(submittedIds).size !== totalItems) continue;
+      if (!submittedIds.every((itemId) => validIds.has(itemId))) continue;
+      return submittedIds;
+    }
+    return [];
+  }, [myRound, opponentRound, question.items, totalItems]);
+  const correctOrder = useMemo(() => {
+    const validIds = new Set(question.items.map((item) => item.id));
+    const revealedIsCompletePermutation = revealedCorrectOrder.length === totalItems
+      && new Set(revealedCorrectOrder.map((item) => item.id)).size === totalItems
+      && revealedCorrectOrder.every((item) => validIds.has(item.id));
+    if (revealedIsCompletePermutation) return revealedCorrectOrder;
+    return perfectSubmissionFallbackIds
+      .map((itemId, index) => {
+        const item = questionItemById.get(itemId);
+        return item ? { ...item, sortValue: index + 1 } : null;
+      })
+      .filter((item): item is PutInOrderDisplayItem => item !== null);
+  }, [perfectSubmissionFallbackIds, question.items, questionItemById, revealedCorrectOrder, totalItems]);
+  const correctById = useMemo(
+    () => new Map(correctOrder.map((item, index) => [item.id, { sortValue: item.sortValue, index }])),
+    [correctOrder]
   );
   const itemById = useMemo(
     () => new Map<string, PutInOrderDisplayItem>([
@@ -432,7 +458,6 @@ export function LivePutInOrderPanel({
       submissionStartedRef.current = false;
     });
   }, [answerAck, qIndex, question.items]);
-  const totalItems = question.items.length;
   const submittedForThisQuestion = answerAck?.questionKind === 'putInOrder' && answerAck.qIndex === qIndex;
   const playerCorrectCount = roundResolved
     ? (myRound?.foundCount ?? userOrder.reduce((count, item, index) => (
@@ -458,10 +483,10 @@ export function LivePutInOrderPanel({
   const playerResultOrderIds = playerDidNotSubmit ? correctOrderIds : playerSubmittedOrderIds;
   const opponentResultOrderIds = opponentDidNotSubmit ? correctOrderIds : opponentSubmittedOrderIds;
   const putOrderPlayerPoints = roundResolved
-    ? resolvePutInOrderPoints(myRound?.pointsEarned, playerCorrectCount)
-    : (submittedForThisQuestion ? resolvePutInOrderPoints(answerAck?.pointsEarned, playerCorrectCount) : null);
+    ? resolvePutInOrderPoints(myRound?.pointsEarned, playerCorrectCount, totalItems)
+    : (submittedForThisQuestion ? resolvePutInOrderPoints(answerAck?.pointsEarned, playerCorrectCount, totalItems) : null);
   const putOrderOpponentPoints = roundResolved
-    ? resolvePutInOrderPoints(opponentRound?.pointsEarned, opponentCorrectCount)
+    ? resolvePutInOrderPoints(opponentRound?.pointsEarned, opponentCorrectCount, totalItems)
     : null;
   const putOrderPlayerCorrect = roundResolved ? Boolean(myRound?.isCorrect) : Boolean(answerAck?.isCorrect);
   const putOrderPlayerBadge = putOrderPlayerCorrect
