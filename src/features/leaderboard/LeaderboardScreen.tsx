@@ -1,12 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Trophy } from "lucide-react";
+import { Calendar, Globe, Loader2, Trophy } from "lucide-react";
 import { motion } from "motion/react";
 
 import Image from "next/image";
-import { useLeaderboard, useLeaderboardSeasons, useUserRank } from "@/lib/queries/leaderboard.queries";
+import {
+  useAuctionLeaderboard,
+  useAuctionUserRank,
+  useLeaderboard,
+  useLeaderboardSeasons,
+  useUserRank,
+} from "@/lib/queries/leaderboard.queries";
 import type { LeaderboardType } from "@/lib/domain/leaderboard";
 import { useLocale } from "@/contexts/LocaleContext";
 import { cn } from "@/lib/utils";
@@ -15,6 +21,7 @@ import type { MessageKey } from "@/lib/i18n/messages";
 import { useActiveEventMode } from "@/lib/hooks/useActiveEventMode";
 import { LeaderboardTable } from "./components/LeaderboardTable";
 import { LeaderboardPodium } from "./components/LeaderboardPodium";
+import { LeaderboardSelect, type LeaderboardSelectOption } from "./components/LeaderboardSelect";
 import { UserRankStrip } from "./components/UserRankStrip";
 
 interface LeaderboardScreenProps {
@@ -33,27 +40,77 @@ const TABS: { value: LeaderboardType; labelKey: MessageKey }[] = [
   { value: "country", labelKey: "leaderboard.tabCountry" },
 ];
 
+/** Which game mode's board is shown. Ranked keeps seasons + RP; auction is a
+ *  single all-time board scored in Auction Points. */
+type LeaderboardMode = "ranked" | "auction";
+
+const MODE_TABS: { value: LeaderboardMode; labelKey: MessageKey }[] = [
+  { value: "ranked", labelKey: "leaderboard.tabRanked" },
+  { value: "auction", labelKey: "leaderboard.tabAuction" },
+];
+
+/** Stands in for `seasonId === null` (the live season) inside the select, which
+ *  needs a non-null string value per option. */
+const CURRENT_SEASON_VALUE = "current";
+
 export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
   const router = useRouter();
   const { t } = useLocale();
   const { isEventMode } = useActiveEventMode();
   const [activeTab, setActiveTab] = useState<LeaderboardType>("global");
+  const [mode, setMode] = useState<LeaderboardMode>("ranked");
   const [seasonId, setSeasonId] = useState<string | null>(null);
 
-  const { data: seasonsData } = useLeaderboardSeasons();
-  const archivedSeasons = seasonsData?.seasons ?? [];
-  const currentSeasonNumber = seasonsData?.currentSeasonNumber ?? archivedSeasons.length + 1;
-  const isArchivedView = seasonId !== null;
+  const isAuction = mode === "auction";
 
-  const { data: entries, isLoading, isError } = useLeaderboard(
+  const { data: seasonsData } = useLeaderboardSeasons();
+  const archivedSeasons = useMemo(() => seasonsData?.seasons ?? [], [seasonsData]);
+  const currentSeasonNumber = seasonsData?.currentSeasonNumber ?? archivedSeasons.length + 1;
+  // Seasons are a ranked-only concept; the auction board is all-time.
+  const isArchivedView = !isAuction && seasonId !== null;
+
+  // Only the visible mode fetches; switching tabs kicks off the other board.
+  const rankedBoard = useLeaderboard(
     activeTab,
     currentPlayerId,
     seasonId ?? undefined,
+    !isAuction,
   );
-  const { data: userRank } = useUserRank(
+  const auctionBoard = useAuctionLeaderboard(activeTab, currentPlayerId, isAuction);
+  const { data: entries, isLoading, isError } = isAuction ? auctionBoard : rankedBoard;
+
+  const rankedUserRank = useUserRank(
     currentPlayerId ?? "",
     activeTab,
     seasonId ?? undefined,
+    !isAuction,
+  );
+  const auctionUserRank = useAuctionUserRank(currentPlayerId ?? "", activeTab, isAuction);
+  const { data: userRank } = isAuction ? auctionUserRank : rankedUserRank;
+
+  const pointsUnit = isAuction ? t("leaderboard.colAP") : t("leaderboard.colRP");
+
+  const accentHex = isEventMode ? "#FF6C0A" : undefined;
+
+  const seasonOptions = useMemo<LeaderboardSelectOption<string>[]>(
+    () => [
+      {
+        value: CURRENT_SEASON_VALUE,
+        label: t("leaderboard.season", { n: currentSeasonNumber }),
+      },
+      // Newest archived season first, mirroring the old pill order.
+      ...[...archivedSeasons].reverse().map((season) => ({
+        value: season.id,
+        label: t("leaderboard.season", { n: season.seasonNumber }),
+        icon: Trophy,
+      })),
+    ],
+    [archivedSeasons, currentSeasonNumber, t],
+  );
+
+  const regionOptions = useMemo<LeaderboardSelectOption<LeaderboardType>[]>(
+    () => TABS.map((tab) => ({ value: tab.value, label: t(tab.labelKey) })),
+    [t],
   );
 
   const handleEntryClick = (userId: string) => {
@@ -87,7 +144,7 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
               {t("leaderboard.title")}
             </h1>
             <p className="mt-2 text-[11px] sm:text-[13px] font-black uppercase tracking-[0.08em] text-white/70">
-              {t("leaderboard.subtitle")}
+              {isAuction ? t("leaderboard.auctionSubtitle") : t("leaderboard.subtitle")}
             </p>
           </div>
 
@@ -97,7 +154,7 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
                 className="text-right text-2xl sm:text-3xl md:text-4xl tabular-nums text-brand-yellow drop-shadow-[0_2px_12px_rgba(255,229,0,0.25)]"
                 style={poppinsTitle}
               >
-                {userEntry.rankPoints.toLocaleString()} RP
+                {userEntry.rankPoints.toLocaleString()} {pointsUnit}
               </div>
             )}
           </div>
@@ -111,7 +168,7 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
             transition={{ duration: 0.35, delay: 0.05 }}
             className="relative"
           >
-            <UserRankStrip userEntry={userEntry} />
+            <UserRankStrip userEntry={userEntry} pointsUnit={pointsUnit} hideTier={isAuction} />
             {/* Betsson badge — event only, sits on the top-right border edge */}
             {isEventMode && (
               <div
@@ -125,96 +182,80 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
           </motion.div>
         )}
 
-        {/* ─── Season switcher — only once at least one season is archived ─── */}
-        {archivedSeasons.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, delay: 0.08 }}
-            className="flex flex-col items-center gap-1.5 pt-1"
-          >
-            <div className="flex items-center justify-center gap-2" role="tablist" aria-label={t("leaderboard.seasonsAriaLabel")}>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={!isArchivedView}
-                onClick={() => setSeasonId(null)}
-                className={cn(
-                  "inline-flex h-8 items-center justify-center rounded-full px-4 text-[11px] sm:text-xs font-fun font-black uppercase tracking-wide transition-all active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70",
-                  !isArchivedView
-                    ? isEventMode
-                      ? "bg-[#FF6C0A] text-white"
-                      : "bg-brand-green text-white"
-                    : isEventMode
-                      ? "border-2 border-[#FF6C0A]/60 text-white/70 hover:bg-[#FF6C0A]/10 hover:text-white"
-                      : "border-2 border-brand-green/60 text-white/70 hover:bg-brand-green/10 hover:text-white",
-                )}
-              >
-                {t("leaderboard.season", { n: currentSeasonNumber })}
-              </button>
-              {[...archivedSeasons].reverse().map((season) => (
-                <button
-                  key={season.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={seasonId === season.id}
-                  onClick={() => setSeasonId(season.id)}
-                  className={cn(
-                    "inline-flex h-8 items-center justify-center gap-1 rounded-full px-4 text-[11px] sm:text-xs font-fun font-black uppercase tracking-wide transition-all active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70",
-                    seasonId === season.id
-                      ? isEventMode
-                        ? "bg-[#FF6C0A] text-white"
-                        : "bg-brand-green text-white"
-                      : isEventMode
-                        ? "border-2 border-[#FF6C0A]/60 text-white/70 hover:bg-[#FF6C0A]/10 hover:text-white"
-                        : "border-2 border-brand-green/60 text-white/70 hover:bg-brand-green/10 hover:text-white",
-                  )}
-                >
-                  <Trophy className="size-3" aria-hidden />
-                  {t("leaderboard.season", { n: season.seasonNumber })}
-                </button>
-              ))}
-            </div>
-            {isArchivedView && (
-              <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-brand-yellow/80">
-                {t("leaderboard.finalStandings")}
-              </span>
-            )}
-          </motion.div>
-        )}
-
-        {/* ─── Segmented Tabs (pill style) ─── */}
+        {/* ─── Header bar — mode tabs on the left, season/region selects on the
+             right, sharing one hairline rail. ─── */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.35, delay: 0.1 }}
-          className="flex items-center justify-center gap-3 pt-1"
-          role="tablist"
-          aria-label={t("leaderboard.tablistAriaLabel")}
+          transition={{ duration: 0.35, delay: 0.06 }}
+          className="flex flex-col gap-1.5"
         >
-          {TABS.map((tab) => {
-            const isActive = activeTab === tab.value;
-            return (
-              <button
-                key={tab.value}
-                type="button"
-                role="tab"
-                aria-selected={isActive}
-                onClick={() => setActiveTab(tab.value)}
-                className={`inline-flex h-10 min-w-[130px] items-center justify-center rounded-full px-6 text-xs sm:text-sm font-fun font-black uppercase tracking-wide transition-all active:translate-y-[1px] ${
-                  isEventMode
-                    ? isActive
-                      ? "bg-[#FF6C0A] text-white"
-                      : "border-2 border-[#FF6C0A] text-white hover:bg-[#FF6C0A]/10"
-                    : isActive
-                      ? "bg-brand-green text-white"
-                      : "border-2 border-brand-green text-white hover:bg-brand-green/10"
-                }`}
-              >
-                {t(tab.labelKey)}
-              </button>
-            );
-          })}
+          <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b border-white/10">
+            <div
+              className="flex items-center gap-7"
+              role="tablist"
+              aria-label={t("leaderboard.modeTablistAriaLabel")}
+            >
+              {MODE_TABS.map((tab) => {
+                const isActive = mode === tab.value;
+                return (
+                  <button
+                    key={tab.value}
+                    type="button"
+                    role="tab"
+                    aria-selected={isActive}
+                    onClick={() => setMode(tab.value)}
+                    className={cn(
+                      "relative -mb-px px-1 pb-2 pt-1 text-[11px] sm:text-xs font-fun font-black uppercase tracking-[0.14em] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70",
+                      isActive ? "text-white" : "text-white/40 hover:text-white/70",
+                    )}
+                  >
+                    {t(tab.labelKey)}
+                    <span
+                      aria-hidden
+                      className={cn(
+                        "absolute inset-x-0 bottom-0 h-[3px] rounded-full transition-opacity",
+                        isActive ? "opacity-100" : "opacity-0",
+                        isEventMode ? "bg-[#FF6C0A]" : "bg-brand-orange",
+                      )}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="flex min-w-0 flex-1 items-center justify-end gap-2 pb-2 sm:flex-none">
+              {/* Seasons are ranked-only; the auction board is all-time. */}
+              {!isAuction && seasonOptions.length > 1 && (
+                <LeaderboardSelect
+                  eyebrow={t("leaderboard.seasonEyebrow")}
+                  ariaLabel={t("leaderboard.seasonSelectAriaLabel")}
+                  icon={Calendar}
+                  options={seasonOptions}
+                  value={seasonId ?? CURRENT_SEASON_VALUE}
+                  onChange={(value) =>
+                    setSeasonId(value === CURRENT_SEASON_VALUE ? null : value)
+                  }
+                  accentHex={accentHex}
+                />
+              )}
+              <LeaderboardSelect
+                eyebrow={t("leaderboard.regionEyebrow")}
+                ariaLabel={t("leaderboard.regionSelectAriaLabel")}
+                icon={Globe}
+                options={regionOptions}
+                value={activeTab}
+                onChange={setActiveTab}
+                accentHex={accentHex}
+              />
+            </div>
+          </div>
+
+          {isArchivedView && (
+            <span className="text-right text-[10px] font-bold uppercase tracking-[0.18em] text-brand-yellow/80">
+              {t("leaderboard.finalStandings")}
+            </span>
+          )}
         </motion.div>
 
         {/* ─── Content ─── */}
@@ -264,11 +305,20 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
                 {t("leaderboard.rankings")}
               </h2>
 
-              <LeaderboardTable
-                entries={entries}
-                currentUserId={currentPlayerId}
-                onEntryClick={handleEntryClick}
-              />
+              {entries.length === 0 && isAuction ? (
+                <div className="rounded-[10px] border-2 border-white/10 px-4 py-8 text-center">
+                  <p className="text-sm font-fun font-black uppercase tracking-wide text-white/60">
+                    {t("leaderboard.auctionEmpty")}
+                  </p>
+                </div>
+              ) : (
+                <LeaderboardTable
+                  entries={entries}
+                  currentUserId={currentPlayerId}
+                  onEntryClick={handleEntryClick}
+                  pointsLabel={pointsUnit}
+                />
+              )}
             </motion.div>
           </div>
         )}

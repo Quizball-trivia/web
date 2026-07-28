@@ -5,8 +5,13 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useLocale } from '@/contexts/LocaleContext';
 import { poppins } from '../../constants/auction.constants';
 import { ScreenBackdrop, SCREEN_GLOW } from '../shared/ScreenBackdrop';
-import { FramedAvatar } from '../shared/FramedAvatar';
+import { FramedAvatar, framedAvatarHeight } from '../shared/FramedAvatar';
 import type { AuctionPlayer } from '../../types';
+
+// Shared with the search screen so every matched player renders the same size —
+// no larger "self" card, no per-arrival size jitter. The slot box is reserved at
+// this width so late-arriving avatars fill in place without shifting the row.
+export const LINEUP_CARD_WIDTH = 80;
 
 /**
  * Showdown countdown shown once all 3 bidders are in, before the formation
@@ -43,7 +48,11 @@ export function MatchCountdown({ players, endsAtMs, onComplete }: MatchCountdown
     return () => clearTimeout(tick);
   }, [count, targetMs, onComplete]);
 
-  const shown = players.slice(0, 3);
+  // Always three stable slots at a fixed size: filled seats render the avatar,
+  // any not-yet-hydrated seat holds an empty frame of the same size so the row
+  // never resizes or shifts as the last player arrives.
+  const cardHeight = framedAvatarHeight(LINEUP_CARD_WIDTH);
+  const slots: (AuctionPlayer | null)[] = [0, 1, 2].map((i) => players[i] ?? null);
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-surface-page-alt">
@@ -57,28 +66,31 @@ export function MatchCountdown({ players, endsAtMs, onComplete }: MatchCountdown
           {count > 0 ? t('auctionGame.countdownReady') : t('auctionGame.countdownGo')}
         </div>
 
-        {/* Matched players */}
-        <div className="flex items-end justify-center gap-3">
-          {shown.map((p, i) => {
-            const w = i === 0 ? 92 : 76;
-            return (
-              <motion.div
-                key={p.id}
-                initial={{ opacity: 0, y: 16, scale: 0.85 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ delay: i * 0.12, type: 'spring', stiffness: 240, damping: 20 }}
-                className="flex flex-col items-center"
+        {/* Matched players — three equal, reserved slots */}
+        <div className="flex items-start justify-center gap-3">
+          {slots.map((p, i) => (
+            <div key={p?.id ?? `slot-${i}`} className="flex flex-col items-center">
+              <div style={{ width: LINEUP_CARD_WIDTH, height: cardHeight }}>
+                {p ? (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.85 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: i * 0.08, type: 'spring', stiffness: 240, damping: 20 }}
+                  >
+                    <FramedAvatar width={LINEUP_CARD_WIDTH} customization={p.avatarCustomization} />
+                  </motion.div>
+                ) : (
+                  <FramedAvatar width={LINEUP_CARD_WIDTH} filled={false} />
+                )}
+              </div>
+              <span
+                className="mt-1.5 h-4 max-w-[84px] truncate font-poppins text-[11px] font-bold uppercase tracking-wide text-white/80"
+                style={poppins}
               >
-                <FramedAvatar width={w} customization={p.avatarCustomization} />
-                <span
-                  className="mt-1.5 max-w-[84px] truncate font-poppins text-[11px] font-bold uppercase tracking-wide text-white/80"
-                  style={poppins}
-                >
-                  {p.username}
-                </span>
-              </motion.div>
-            );
-          })}
+                {p?.username ?? ''}
+              </span>
+            </div>
+          ))}
         </div>
 
         {/* Countdown number */}

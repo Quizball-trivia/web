@@ -17,7 +17,7 @@ export const BOT_MIN_THINK_MS = 2_000;
 export const BOT_MAX_THINK_MS = 5_000;
 // Delay between each clue reveal during the pre-bid clue-reveal phase: the three
 // clues stagger onto the board, then CLUE_STUDY_MS runs before bidding opens.
-export const CLUE_REVEAL_INTERVAL_MS = 1200;
+export const CLUE_REVEAL_INTERVAL_MS = 5000;
 export const CLUE_STUDY_MS = 10_000;
 
 // Placeholder face for a footballer. The structure supports a real photo via

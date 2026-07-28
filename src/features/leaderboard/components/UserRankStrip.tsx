@@ -6,6 +6,10 @@ import { useActiveEventMode } from "@/lib/hooks/useActiveEventMode";
 
 interface UserRankStripProps {
   userEntry: LeaderboardEntry;
+  /** Unit suffix for the points figure. Defaults to the ranked "RP". */
+  pointsUnit?: string;
+  /** Hide the tier name — the auction board ranks on AP alone, not ranked tiers. */
+  hideTier?: boolean;
 }
 
 const poppins = {
@@ -15,7 +19,7 @@ const poppins = {
   lineHeight: 1,
 } as const;
 
-export function UserRankStrip({ userEntry }: UserRankStripProps) {
+export function UserRankStrip({ userEntry, pointsUnit = "RP", hideTier = false }: UserRankStripProps) {
   const { isEventMode } = useActiveEventMode();
   const tierAccent = getTierAccent(userEntry.tier);
   return (
@@ -46,9 +50,11 @@ export function UserRankStrip({ userEntry }: UserRankStripProps) {
           {userEntry.username}
         </div>
         <div className="mt-1 flex items-center gap-2 text-[10px] sm:text-xs font-fun font-black uppercase tracking-wide">
-          <span className="truncate" style={{ color: tierAccent }}>{userEntry.tier}</span>
+          {!hideTier && (
+            <span className="truncate" style={{ color: tierAccent }}>{userEntry.tier}</span>
+          )}
           <span className="tabular-nums shrink-0 text-white">
-            {userEntry.rankPoints.toLocaleString()} RP
+            {userEntry.rankPoints.toLocaleString()} {pointsUnit}
           </span>
         </div>
       </div>

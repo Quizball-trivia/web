@@ -605,10 +605,6 @@ export function trackSocketConnectionFailed(error: string) {
   trackEvent('socket_connection_failed', { error });
 }
 
-export function trackSocketReconnected(downtimeSec: number) {
-  trackEvent('socket_reconnected', { downtime_sec: downtimeSec });
-}
-
 export function trackApiError(endpoint: string, status: number, code?: string) {
   trackEvent('api_error', { endpoint, status, code });
 }

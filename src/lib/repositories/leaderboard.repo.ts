@@ -88,6 +88,32 @@ export async function getUserRank(type: LeaderboardType = "global", season?: str
   return { data, error: null };
 }
 
+/**
+ * Auction leaderboard — same response shape as the ranked board, but ranked by
+ * Auction Points. `rp` carries the AP total (the backend mirrors the ranked
+ * contract field-for-field), so the existing mappers and row components apply
+ * unchanged.
+ */
+export async function getAuctionLeaderboard(
+  type: LeaderboardType = "global",
+  limit = 50,
+  offset = 0,
+) {
+  const scope = scopeFromType(type);
+  const data = await requestJson<LeaderboardApiResponse>(
+    `/api/v1/auction/leaderboard?scope=${scope}&limit=${limit}&offset=${offset}`
+  );
+  return { data: data.entries, error: null };
+}
+
+export async function getAuctionUserRank(type: LeaderboardType = "global") {
+  const scope = scopeFromType(type);
+  const data = await requestJson<UserRankResponse | null>(
+    `/api/v1/auction/leaderboard/me?scope=${scope}`
+  );
+  return { data, error: null };
+}
+
 export async function getLeaderboardSeasons() {
   const data = await requestJson<LeaderboardSeasonsApiResponse>(
     "/api/v1/ranked/leaderboard/seasons"

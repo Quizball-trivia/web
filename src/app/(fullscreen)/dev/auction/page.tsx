@@ -178,11 +178,17 @@ function QuitModalScenario() {
 function ResultsScenario({
   humanWins,
   coinsAwarded,
+  apEarned,
   forfeited,
+  /** Force the human into a specific finishing place (1/2/3) via the server
+   *  ranking order, so the AP previews match the AP value being shown. */
+  humanPlace,
 }: {
   humanWins: boolean;
   coinsAwarded?: number | null;
+  apEarned?: number | null;
   forfeited?: boolean;
+  humanPlace?: 1 | 2 | 3;
 }) {
   // Give the human the most valuable team when they win, else a bot.
   const players = basePlayers();
@@ -194,13 +200,23 @@ function ResultsScenario({
     players[1].team.slots.MID = byPos('MID').slice(0, 3);
     players[0].isEliminated = true;
   }
+  // The results screen prefers the server's ranking order when present, which
+  // is what pins the human to the requested podium place.
+  const rankings = humanPlace
+    ? [
+        ...['bot-1', 'bot-2'].slice(0, humanPlace - 1),
+        HUMAN_ID,
+        ...['bot-1', 'bot-2'].slice(humanPlace - 1),
+      ]
+    : undefined;
   return (
     <AuctionResultsScreen
-      state={baseState({ phase: 'results', players })}
+      state={baseState({ phase: 'results', players, ...(rankings ? { rankings } : {}) })}
       humanPlayerId={HUMAN_ID}
       onPlayAgain={() => {}}
       onExit={() => {}}
       coinsAwarded={coinsAwarded}
+      apEarned={apEarned}
       forfeited={forfeited}
     />
   );
@@ -443,6 +459,48 @@ const SCENARIOS: Scenario[] = [
   { id: 'results-win', label: 'Results — YOU win (+500)', group: 'End', render: () => <ResultsScenario humanWins coinsAwarded={500} /> },
   { id: 'results-lose', label: 'Results — you finish (+300)', group: 'End', render: () => <ResultsScenario humanWins={false} coinsAwarded={300} /> },
   { id: 'results-forfeit', label: 'Results — you forfeited (no coins)', group: 'End', render: () => <ResultsScenario humanWins={false} forfeited /> },
+  // ─── Auction Points (AP) previews — ranked auction pays 1st +50 / 2nd +30 /
+  // 3rd +10; friendly-lobby matches pay none and must render no AP at all.
+  {
+    id: 'results-ap-1st',
+    label: 'AP — 1st place (+50 AP)',
+    group: 'Auction Points',
+    render: () => <ResultsScenario humanWins coinsAwarded={500} apEarned={50} humanPlace={1} />,
+  },
+  {
+    id: 'results-ap-2nd',
+    label: 'AP — 2nd place (+30 AP)',
+    group: 'Auction Points',
+    render: () => <ResultsScenario humanWins={false} coinsAwarded={300} apEarned={30} humanPlace={2} />,
+  },
+  {
+    id: 'results-ap-3rd',
+    label: 'AP — 3rd place (+10 AP)',
+    group: 'Auction Points',
+    render: () => <ResultsScenario humanWins={false} coinsAwarded={300} apEarned={10} humanPlace={3} />,
+  },
+  {
+    id: 'results-ap-friendly',
+    label: 'AP — friendly lobby (no AP shown)',
+    group: 'Auction Points',
+    render: () => <ResultsScenario humanWins coinsAwarded={500} apEarned={null} humanPlace={1} />,
+  },
+  {
+    id: 'results-ap-forfeit',
+    label: 'AP — forfeited (no AP shown)',
+    group: 'Auction Points',
+    render: () => <ResultsScenario humanWins={false} apEarned={0} forfeited humanPlace={3} />,
+  },
+  {
+    id: 'results-ap-1st-ka',
+    label: 'AP — 1st place (KA)',
+    group: 'Auction Points',
+    render: () => (
+      <LocaleProvider initialLocale="ka">
+        <ResultsScenario humanWins coinsAwarded={500} apEarned={50} humanPlace={1} />
+      </LocaleProvider>
+    ),
+  },
 ];
 
 function FinalizingOverlayScenario() {

@@ -40,6 +40,12 @@ interface HalftimeScreenProps {
   onBanPhaseShown?: () => void;
   /** When true this is the pre-penalty category ban — shows a "Penalties" heading. */
   isPenaltyBan?: boolean;
+  /**
+   * The lobby host preset the second-half category, so there is nothing to ban.
+   * Renders a single-card reveal of `categoryOptions[0]` instead of ban cards,
+   * with no timer and no turn indicator.
+   */
+  isPresetSecondHalf?: boolean;
 }
 
 const FALLBACK_HALFTIME_SECONDS = 20;
@@ -108,6 +114,7 @@ export function HalftimeScreen({
   onBanCategory,
   onBanPhaseShown,
   isPenaltyBan = false,
+  isPresetSecondHalf = false,
 }: HalftimeScreenProps) {
   const { t, locale } = useLocale();
   const [nowMs, setNowMs] = useState(() => Date.now());
@@ -124,9 +131,11 @@ export function HalftimeScreen({
   }, [visible]);
 
   useEffect(() => {
-    if (!visible || !showBanPhase) return;
+    // A preset second half has no ban window to open, so the server ignores
+    // `halftime_ui_ready` — don't emit it.
+    if (!visible || !showBanPhase || isPresetSecondHalf) return;
     onBanPhaseShown?.();
-  }, [visible, showBanPhase, onBanPhaseShown]);
+  }, [visible, showBanPhase, onBanPhaseShown, isPresetSecondHalf]);
 
   useEffect(() => {
     if (!visible || !deadlineAt) return;
@@ -138,7 +147,10 @@ export function HalftimeScreen({
     return () => clearInterval(timer);
   }, [visible, deadlineAt]);
 
-  const banTimerReady = showBanPhase && Boolean(deadlineAt && uiReadyAt === deadlineAt);
+  // A preset second half has no ban deadline, so the ring never arms.
+  const banTimerReady = !isPresetSecondHalf
+    && showBanPhase
+    && Boolean(deadlineAt && uiReadyAt === deadlineAt);
   const timerDeadlineAt = banTimerReady ? deadlineAt : null;
 
   // Parse the real ban deadline once it has been restarted for the ban UI.
@@ -162,6 +174,8 @@ export function HalftimeScreen({
   }, [deadlineMs, nowMs]);
 
   const isUrgent = timeLeft <= 5;
+  // Preset second half: the server sends exactly one category to reveal.
+  const presetCategory = isPresetSecondHalf ? (categoryOptions[0] ?? null) : null;
   const bannedIds = useMemo(
     () => new Set([myBan, opponentBan].filter((id): id is string => Boolean(id))),
     [myBan, opponentBan]
@@ -252,7 +266,7 @@ export function HalftimeScreen({
             {/* Player — avatar with name + RP to the SIDE, like the draft. */}
             <div className={cn(
               'flex items-center gap-3 min-w-0 flex-1 transition-opacity duration-300',
-              showBanPhase && !bothBansSubmitted && !canBan && 'opacity-40',
+              !isPresetSecondHalf && showBanPhase && !bothBansSubmitted && !canBan && 'opacity-40',
             )}>
               <TierFrameAvatar
                 tier={tierFromRp(playerRankPoints ?? 0)}
@@ -287,7 +301,7 @@ export function HalftimeScreen({
             {/* Opponent — mirrored: avatar on the right, name + RP to its side. */}
             <div className={cn(
               'flex flex-row-reverse items-center gap-3 min-w-0 flex-1 transition-opacity duration-300',
-              showBanPhase && !bothBansSubmitted && canBan && 'opacity-40',
+              !isPresetSecondHalf && showBanPhase && !bothBansSubmitted && canBan && 'opacity-40',
             )}>
               <TierFrameAvatar
                 tier={tierFromRp(opponentRankPoints ?? 0)}
@@ -316,8 +330,43 @@ export function HalftimeScreen({
           )}
         </div>
 
+        {/* Preset second half — the host already chose, so reveal the single
+            category instead of running a ban. */}
+        {showBanPhase && isPresetSecondHalf && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: 'spring', stiffness: 280, damping: 24 }}
+            className="w-full flex flex-col items-center"
+          >
+            <div className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.25em] text-brand-slate mb-3 sm:mb-4">
+              {t('possession.halftime.presetTitle')}
+            </div>
+
+            <div className="w-1/2 sm:w-1/3 max-w-[220px]">
+              {presetCategory && (
+                <BanCategoryCard
+                  key={presetCategory.id}
+                  category={presetCategory}
+                  colorIndex={0}
+                  animationIndex={0}
+                  isBanned={false}
+                  isRemaining
+                  disabled
+                />
+              )}
+            </div>
+
+            <div className="mt-4 sm:mt-6 text-xs sm:text-sm font-bold uppercase tracking-widest text-white/50 text-center">
+              {t('possession.halftime.secondHalfCategory', {
+                name: presetCategory ? getI18nText(presetCategory.name, locale) : t('possession.halftime.deciding'),
+              })}
+            </div>
+          </motion.div>
+        )}
+
         {/* Ban phase — slides up into view after the intro. */}
-        {showBanPhase && (
+        {showBanPhase && !isPresetSecondHalf && (
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}

@@ -5,8 +5,13 @@ import type { components } from "@/types/api.generated";
 export type I18nField = components["schemas"]["I18nField"];
 
 export type MatchMode = 'friendly' | 'ranked';
-export type LobbyGameMode = 'friendly_possession' | 'friendly_party_quiz' | 'ranked_sim';
-export type MatchVariant = LobbyGameMode;
+export type LobbyGameMode = 'friendly_possession' | 'friendly_party_quiz' | 'ranked_sim' | 'auction';
+/**
+ * Variant of a possession/quiz match handled by the `/game` realtime layer.
+ * Deliberately excludes 'auction': auction matches run on their own socket
+ * protocol and route (`/auction`), never through the possession reducers.
+ */
+export type MatchVariant = Exclude<LobbyGameMode, 'auction'>;
 export type LobbyStatus = 'waiting' | 'active' | 'closed';
 export type MatchPhase =
   | 'NORMAL_PLAY'
@@ -597,8 +602,13 @@ export interface MatchStatePayload {
       seat1: string | null;
       seat2: string | null;
     };
-    /** Whether this ban interlude is the second-half pick or the pre-penalty pick. */
-    purpose?: 'second_half' | 'penalty';
+    /**
+     * Whether this ban interlude is the second-half pick or the pre-penalty
+     * pick. 'second_half_preset' means the lobby host already chose the
+     * second-half category: there is no ban, `categoryOptions` holds that single
+     * category, and the client shows a short reveal instead of ban cards.
+     */
+    purpose?: 'second_half' | 'second_half_preset' | 'penalty';
   };
   penaltySuddenDeath?: boolean;
   stateVersion?: number;
@@ -1103,6 +1113,12 @@ export interface AuctionMatchFinishedPayload {
    * own entry to show the reward animation.
    */
   coinsByUserId?: Record<string, number>;
+  /**
+   * Auction Points granted per real-human userId for this match (1st = 50,
+   * 2nd = 30, 3rd = 10; 0 for forfeiters). Absent entirely for friendly-lobby
+   * matches, which award no AP. Each client reads its own entry.
+   */
+  apByUserId?: Record<string, number>;
 }
 
 export interface AuctionSoloPickStartedPayload {

@@ -7,6 +7,8 @@
  *  1. Pre-match ranked draft  → <BanCategoryView />
  *  2. Halftime ban            → <HalftimeScreen />
  *  3. Before-penalties ban    → <HalftimeScreen isPenaltyBan />
+ *  4. Preset second half      → <HalftimeScreen isPresetSecondHalf /> (host
+ *     picked the 2nd-half category in the lobby: one card, no timer, no ban)
  *
  * Real categories are pulled from the DB (useAllCategoriesList) so the cards
  * render true artwork. A fake bot auto-bans a category after a short delay so
@@ -24,12 +26,13 @@ import { BanCategoryView } from '@/features/play/RankedCategoryBlockingScreen';
 import { HalftimeScreen } from '@/features/possession/components/HalftimeScreen';
 import type { DraftCategory } from '@/lib/realtime/socket.types';
 
-type Variant = 'prematch' | 'halftime' | 'penalty';
+type Variant = 'prematch' | 'halftime' | 'penalty' | 'preset';
 
 const VARIANTS: Array<{ id: Variant; label: string }> = [
   { id: 'prematch', label: 'Pre-match draft' },
   { id: 'halftime', label: 'Halftime' },
   { id: 'penalty', label: 'Pre-penalties' },
+  { id: 'preset', label: 'Preset second half' },
 ];
 
 // Real bans show exactly 3 categories per round.
@@ -103,19 +106,21 @@ export default function DevHalftimesPage() {
   // Fake bot: a couple of seconds after (re)mount, ban a category the player
   // hasn't taken — so the banning animation plays automatically.
   useEffect(() => {
-    if (categories.length === 0 || opponentBan) return;
+    // The preset variant has no ban at all, so the bot must stay out of it.
+    if (variant === 'preset' || categories.length === 0 || opponentBan) return;
     const id = window.setTimeout(() => {
       const target = categories.find((c) => c.id !== playerBan);
       if (target) setOpponentBan(target.id);
     }, BOT_BAN_DELAY_MS);
     return () => window.clearTimeout(id);
-  }, [categories, opponentBan, playerBan, replayKey]);
+  }, [categories, opponentBan, playerBan, replayKey, variant]);
 
   const handleBan = useCallback((id: string) => {
     setPlayerBan((current) => current ?? id);
   }, []);
 
   const bothBanned = Boolean(playerBan && opponentBan);
+  const isPreset = variant === 'preset';
 
   return (
     <div className="relative min-h-dvh w-full bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat">
@@ -184,15 +189,18 @@ export default function DevHalftimesPage() {
             playerPosition={42}
             playerRankPoints={DEMO_PLAYER.rankPoints}
             opponentRankPoints={DEMO_OPPONENT.rankPoints}
-            categoryOptions={categories}
-            deadlineAt={deadlineAt}
-            uiReadyAt={deadlineAt}
+            // Preset second half: the server sends exactly one category and no
+            // ban deadline, so mirror that shape here.
+            categoryOptions={isPreset ? categories.slice(0, 1) : categories}
+            deadlineAt={isPreset ? null : deadlineAt}
+            uiReadyAt={isPreset ? null : deadlineAt}
             mySeat={1}
             firstBanSeat={1}
-            myBan={playerBan}
-            opponentBan={opponentBan}
+            myBan={isPreset ? null : playerBan}
+            opponentBan={isPreset ? null : opponentBan}
             onBanCategory={handleBan}
             isPenaltyBan={variant === 'penalty'}
+            isPresetSecondHalf={isPreset}
           />
         )}
       </div>

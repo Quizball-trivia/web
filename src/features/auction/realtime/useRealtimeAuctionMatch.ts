@@ -66,6 +66,13 @@ export interface UseRealtimeAuctionMatchParams {
   enabled: boolean;
   autoStart?: boolean;
   matchmakingMode?: 'ai' | 'search';
+  /**
+   * Attach to an already-created match instead of starting matchmaking. Set when
+   * the screen is entered with a match already running (friend-lobby hand-off, or
+   * the app-shell "still in an auction" banner): the hook emits `auction:rejoin`
+   * to join the match room and pull state, and never queues a search.
+   */
+  attachMatchId?: string | null;
   selfUserId: string | null;
   locale: 'en' | 'ka';
   formation?: AuctionFormationName;
@@ -94,6 +101,15 @@ export interface UseRealtimeAuctionMatchResult {
   search: AuctionSearchState | null;
   /** Coins this client earned for the finished match (500 win / 300 finish / 0). null until settled. */
   coinsAwarded: number | null;
+  /** Auction Points this client earned (1st 50 / 2nd 30 / 3rd 10 / 0 forfeit).
+   *  null until settled, and stays null for friendly lobbies (no AP awarded). */
+  apEarned: number | null;
+  /** The server removed THIS player from the match (disconnect/reconnect-limit forfeit). */
+  selfForfeited: boolean;
+  /** The `attachMatchId` handed to this hook is no longer joinable (server said
+   *  auction_rejoin_unavailable). The owner must drop it, or the screen stays
+   *  stuck: auto-start is suppressed and cancel is hidden while it is set. */
+  attachUnavailable: boolean;
 }
 
 export type AuctionWaitingForReadyState = AuctionWaitingForReadyPayload & {
@@ -140,6 +156,7 @@ export function useRealtimeAuctionMatch({
   enabled,
   autoStart = true,
   matchmakingMode = 'ai',
+  attachMatchId = null,
   selfUserId,
   locale,
   formation,
@@ -162,12 +179,17 @@ export function useRealtimeAuctionMatch({
   // Reload-into-paused-match: server prompts to rejoin; we show a prompt and the
   // user opts in (auction:rejoin). Mirrors ranked's rejoin handshake.
   const [rejoinAvailable, setRejoinAvailable] = useState<AuctionRejoinAvailablePayload | null>(null);
+  const [attachUnavailable, setAttachUnavailable] = useState(false);
   // Server-authoritative resume "get ready" countdown end (this client's clock).
   const [resumeCountdownEndsAtMs, setResumeCountdownEndsAtMs] = useState<number | null>(null);
   // Coins this client earned for the finished match (win = 500, finish = 300,
   // forfeit = 0). Set from match_finished's per-user map; drives the reward
   // animation on the results screen. null until/unless the match settles.
   const [coinsAwarded, setCoinsAwarded] = useState<number | null>(null);
+  // Auction Points this client earned (1st = 50, 2nd = 30, 3rd = 10, forfeit =
+  // 0). Friendly-lobby matches award none and omit the map entirely, so this
+  // stays null there and the results screen renders no AP at all.
+  const [apEarned, setApEarned] = useState<number | null>(null);
 
   // Watchdog: the rejoin prompt is only valid for the grace window. If the
   // player doesn't tap in time (seat forfeits server-side), auto-dismiss so
@@ -199,6 +221,10 @@ export function useRealtimeAuctionMatch({
   const recoveredVersionGapKeyRef = useRef<string | null>(null);
   const matchFoundRejoinTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const matchFoundRejoinKeyRef = useRef<string | null>(null);
+  // The id of the match this client belongs to, captured from match_found before
+  // any public state has hydrated. Lets a fresh socket re-attach on (re)connect
+  // via auction:rejoin even when publicState isn't set yet.
+  const activeMatchIdRef = useRef<string | null>(null);
   const serverTimeOffsetMsRef = useRef<number | null>(null);
   const pendingTurnActionRef = useRef<AuctionPendingTurnAction | null>(null);
   const publicStateRef = useRef<AuctionRealtimeState['publicState']>(null);
@@ -220,6 +246,26 @@ export function useRealtimeAuctionMatch({
     () => findMyAuctionSeatId(publicState, selfUserId),
     [publicState, selfUserId],
   );
+
+  // This client's own seat, once hydrated. Drives both the self-forfeit exit and
+  // the "am I still a live participant" gate that stops eliminated/forfeited
+  // spectators from acking ui-ready and reconnect-storming forever.
+  const selfSeat = useMemo(
+    () =>
+      selfUserId && publicState
+        ? publicState.seats.find((seat) => seat.userId === selfUserId) ?? null
+        : null,
+    [publicState, selfUserId],
+  );
+  const selfForfeited = selfSeat?.forfeited === true;
+  // A live participant has a present human seat that is neither forfeited nor
+  // eliminated. Only participants ack ui-ready / trigger reconnect recovery;
+  // spectators still receive and render every state, they just stay silent.
+  const isLiveParticipant = Boolean(selfSeat) && !selfForfeited && selfSeat?.isEliminated !== true;
+  const isLiveParticipantRef = useRef(isLiveParticipant);
+  useEffect(() => {
+    isLiveParticipantRef.current = isLiveParticipant;
+  }, [isLiveParticipant]);
 
   const state = useMemo(
     () =>
@@ -260,7 +306,21 @@ export function useRealtimeAuctionMatch({
     socket.emit('auction:search_start', { locale, formation });
   }, [formation, locale, socket]);
 
+  // Re-attach a freshly (re)connected socket to a live match without going
+  // through search. match_found stops re-running the search on reconnect (that
+  // regressed the lineup), so the routine socket swap at match entry would
+  // otherwise leave the new socket unattached — the server then arms grace and
+  // pushes a spurious rejoin prompt. Emitting auction:rejoin joins the match
+  // room and re-emits state; the server treats a re-attach of an already-
+  // attached socket as a no-op state resend, so this is idempotent.
+  const emitAuctionRejoinForActiveMatch = useCallback(() => {
+    const rejoinMatchId = publicStateRef.current?.matchId ?? activeMatchIdRef.current;
+    if (!rejoinMatchId || searchCancelledRef.current) return;
+    socket.emit('auction:rejoin', { matchId: rejoinMatchId });
+  }, [socket]);
+
   const emitRevealReadyIfComplete = useCallback(() => {
+    if (!isLiveParticipantRef.current) return;
     const activeState = publicStateRef.current;
     const roundId = activeState?.currentRound?.roundId ?? null;
     if (!activeState || activeState.phase !== 'reveal' || !roundId || !socket.connected) return;
@@ -293,6 +353,7 @@ export function useRealtimeAuctionMatch({
     setError(null);
     setRealtimeState(EMPTY_AUCTION_REALTIME_STATE);
     ignoredMatchIdsRef.current.clear();
+    activeMatchIdRef.current = null;
 
     if (matchmakingMode === 'search') {
       searchCancelledRef.current = false;
@@ -327,14 +388,28 @@ export function useRealtimeAuctionMatch({
     const handleConnect = () => {
       setIsConnected(true);
       const activeSearch = searchRef.current;
-      if (
+      // Once we belong to a live match (found lineup or hydrated state), a fresh
+      // socket must re-attach to the match room instead of re-queuing — this is
+      // the only thing that reattaches the swapped socket the server expects.
+      const belongsToLiveMatch =
+        !searchCancelledRef.current &&
+        (Boolean(publicStateRef.current?.matchId) ||
+          activeSearch?.phase === 'match_found' ||
+          Boolean(activeMatchIdRef.current));
+      if (belongsToLiveMatch) {
+        emitAuctionRejoinForActiveMatch();
+      } else if (
         enabled &&
         autoStart &&
         matchmakingMode === 'search' &&
         activeSearch &&
         activeSearch.phase !== 'cancelled' &&
-        !publicStateRef.current &&
-        !searchCancelledRef.current
+        // A match was already found — reconnecting must only re-attach to its
+        // room (handled above), never re-queue. Re-emitting search_start here
+        // made the server reply with a low queued count that regressed the
+        // shown lineup from "3 found" back to a partial "searching" state.
+        activeSearch.phase !== 'match_found' &&
+        !publicStateRef.current
       ) {
         emitAuctionSearchStart();
       }
@@ -353,7 +428,7 @@ export function useRealtimeAuctionMatch({
       socket.off('connect', handleConnect);
       socket.off('disconnect', handleDisconnect);
     };
-  }, [autoStart, emitAuctionSearchStart, emitRevealReadyIfComplete, enabled, matchmakingMode, socket]);
+  }, [autoStart, emitAuctionRejoinForActiveMatch, emitAuctionSearchStart, emitRevealReadyIfComplete, enabled, matchmakingMode, socket]);
 
   useEffect(() => {
     if (!enabled || !selfUserId) {
@@ -377,6 +452,7 @@ export function useRealtimeAuctionMatch({
         setSearchValue(null);
         searchCancelledRef.current = false;
         ignoredMatchIdsRef.current.clear();
+        activeMatchIdRef.current = null;
         lastUiReadyAckKeyRef.current = null;
         revealReadyKeyRef.current = null;
         roundReadyKeyRef.current = null;
@@ -384,6 +460,11 @@ export function useRealtimeAuctionMatch({
       });
       return;
     }
+    // Entered with a live match (lobby hand-off / banner rejoin): attach to it
+    // rather than queueing. The socket is a persistent singleton, so arriving by
+    // client-side navigation fires no `connect` event — without this the
+    // autoStart timer below would start a second, unwanted search.
+    if (attachMatchId) return;
     if (!autoStart || !isConnected || startRequestedRef.current || publicState) return;
     autoStartTimerRef.current = setTimeout(() => {
       autoStartTimerRef.current = null;
@@ -395,7 +476,31 @@ export function useRealtimeAuctionMatch({
         autoStartTimerRef.current = null;
       }
     };
-  }, [autoStart, enabled, isConnected, publicState, requestStart, selfUserId, setPendingTurnActionValue, setSearchValue]);
+  }, [attachMatchId, autoStart, enabled, isConnected, publicState, requestStart, selfUserId, setPendingTurnActionValue, setSearchValue]);
+
+  // Attach-on-entry: emit `auction:rejoin` for a match this client already
+  // belongs to. Registering the id in `activeMatchIdRef` also makes the
+  // connect handler re-attach (never re-queue) if the socket later drops.
+  const attachedMatchIdRef = useRef<string | null>(null);
+  // Read inside the socket handlers without making them re-subscribe per change.
+  const attachMatchIdRef = useRef<string | null>(attachMatchId);
+  useEffect(() => {
+    attachMatchIdRef.current = attachMatchId;
+    // A new (or cleared) attach target invalidates the previous failure.
+    setAttachUnavailable(false);
+  }, [attachMatchId]);
+  useEffect(() => {
+    if (!enabled || !selfUserId || !attachMatchId || !isConnected) return;
+    activeMatchIdRef.current = attachMatchId;
+    searchCancelledRef.current = false;
+    // The server treats re-attaching an already-attached socket as a state
+    // resend, but only emit once per match to keep entry quiet.
+    if (attachedMatchIdRef.current === attachMatchId) return;
+    attachedMatchIdRef.current = attachMatchId;
+    startRequestedRef.current = true;
+    logger.info('Attaching to existing auction match', { matchId: attachMatchId });
+    socket.emit('auction:rejoin', { matchId: attachMatchId });
+  }, [attachMatchId, enabled, isConnected, selfUserId, socket]);
 
   useEffect(() => () => {
     const activeSearch = searchRef.current;
@@ -416,6 +521,9 @@ export function useRealtimeAuctionMatch({
 
   useEffect(() => {
     if (!enabled || !selfUserId || !matchId || !isConnected || !currentRoundId || publicStateVersion === null || !publicPhase) return;
+    // Forfeited/eliminated spectators keep receiving state but must never ack —
+    // the server ignores their acks, and re-acking on every reconnect storms.
+    if (!isLiveParticipant) return;
     const phase = getUiReadyPhase(publicPhase);
     if (!phase) return;
     const ackKey = getAuctionUiReadyKey(matchId, phase, currentRoundId, publicStateVersion);
@@ -434,6 +542,7 @@ export function useRealtimeAuctionMatch({
     currentRoundId,
     enabled,
     isConnected,
+    isLiveParticipant,
     matchId,
     publicPhase,
     publicStateVersion,
@@ -447,6 +556,9 @@ export function useRealtimeAuctionMatch({
       return;
     }
     if (publicState.phase === 'finished') return;
+    // Spectators (forfeited/eliminated) should not drive the reconnect recovery:
+    // they'd reconnect on every version gap forever with nothing to re-sync.
+    if (!isLiveParticipant) return;
 
     // Key the recovery by matchId ONLY (not version). Reconnecting drops the
     // shared socket and the match advances several versions while we're away,
@@ -472,7 +584,7 @@ export function useRealtimeAuctionMatch({
         versionGapReconnectTimerRef.current = null;
       }
     };
-  }, [enabled, isConnected, publicState, realtimeState.versionGapDetected]);
+  }, [enabled, isConnected, isLiveParticipant, publicState, realtimeState.versionGapDetected]);
 
   useEffect(() => {
     if (!enabled || !matchId || publicState?.phase === 'finished') return;
@@ -552,6 +664,9 @@ export function useRealtimeAuctionMatch({
         // normal flow — this is not a visible error condition.
         setRejoinAvailable(null);
         setResumeCountdownEndsAtMs(null);
+        // If we got here from an attach-on-entry, the match is gone: tell the
+        // owner to drop attachMatchId so search can auto-start / be cancelled.
+        if (attachMatchIdRef.current) setAttachUnavailable(true);
         return;
       }
       clearPendingForMatch(null);
@@ -591,11 +706,22 @@ export function useRealtimeAuctionMatch({
     const onMatchFinished = (payload: AuctionMatchFinishedPayload) => {
       if (selfUserId) {
         setCoinsAwarded(payload.coinsByUserId?.[selfUserId] ?? 0);
+        // Absent map = friendly lobby (no AP at stake): keep null so the
+        // results screen hides AP entirely, rather than showing "+0 AP".
+        setApEarned(payload.apByUserId ? (payload.apByUserId[selfUserId] ?? 0) : null);
       }
+      // The match is over — a later reconnect must not try to re-attach to it.
+      activeMatchIdRef.current = null;
       apply({ type: 'match_finished', payload });
     };
     const onWaitingForReady = (payload: AuctionWaitingForReadyPayload) => {
       const offset = updateServerTimeOffset(payload.serverNow);
+      // Everyone is already ready — the strip would otherwise linger over the
+      // board until the next phase event happened to clear it.
+      if (payload.totalCount > 0 && payload.readyCount >= payload.totalCount) {
+        setWaitingForReady(null);
+        return;
+      }
       const forceStartsAtMs = Date.parse(payload.forceStartsAt);
       setWaitingForReady({
         ...payload,
@@ -606,12 +732,17 @@ export function useRealtimeAuctionMatch({
     };
     const onSearchStarted = (payload: AuctionSearchStartedPayload) => {
       if (searchCancelledRef.current) return;
+      // Once a match is found the lineup is locked in — never downgrade back to
+      // a queued/searching state (a late search echo after reconnect would
+      // otherwise flip "3 found" back to "preparing").
+      if (searchRef.current?.phase === 'match_found') return;
       setError(null);
       setSearchValue(toAuctionSearchState('queued', payload));
       startRequestedRef.current = true;
     };
     const onSearchStatus = (payload: AuctionSearchStatusPayload) => {
       if (searchCancelledRef.current) return;
+      if (searchRef.current?.phase === 'match_found') return;
       setSearchValue(toAuctionSearchState('queued', payload));
     };
     const onMatchFound = (payload: AuctionMatchFoundPayload) => {
@@ -639,6 +770,9 @@ export function useRealtimeAuctionMatch({
         countdownEndsAtMs,
       });
       startRequestedRef.current = true;
+      // Remember the match we now belong to so a socket that (re)connects before
+      // any state hydrates can still re-attach via auction:rejoin.
+      activeMatchIdRef.current = payload.matchId;
 
       // The match's state/round events are broadcast to the match room. The
       // server joins our sockets to that room at match creation, but if this
@@ -665,6 +799,7 @@ export function useRealtimeAuctionMatch({
     const onSearchCancelled = (payload: AuctionSearchCancelledPayload) => {
       searchCancelledRef.current = true;
       startRequestedRef.current = false;
+      activeMatchIdRef.current = null;
       setSearchValue({
         phase: 'cancelled',
         searchId: payload.searchId,
@@ -881,6 +1016,7 @@ export function useRealtimeAuctionMatch({
     cancelSearch: () => {
       searchCancelledRef.current = true;
       startRequestedRef.current = false;
+      activeMatchIdRef.current = null;
       setSearchValue((searchRef.current && {
         ...searchRef.current,
         phase: 'cancelled',
@@ -934,6 +1070,9 @@ export function useRealtimeAuctionMatch({
     resumeCountdownEndsAtMs,
     search,
     coinsAwarded,
+    apEarned,
+    selfForfeited,
+    attachUnavailable,
   };
 }
 
@@ -1061,6 +1200,7 @@ function shouldClearPendingAfterEvent(event: Parameters<typeof applyAuctionRealt
 function shouldClearWaitingForReadyAfterEvent(event: Parameters<typeof applyAuctionRealtimeEvent>[1]): boolean {
   return (
     event.type === 'clue_revealed' ||
+    event.type === 'bidding_started' ||
     event.type === 'turn_started' ||
     event.type === 'round_revealed' ||
     event.type === 'solo_pick_started' ||
