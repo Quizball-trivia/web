@@ -20,8 +20,9 @@ const STATUS_STYLE: Record<RivalStatus, { chip: string; label: string }> = {
  *
  * In a 3-player match most of a lot is spent watching, and the board previously
  * said nothing about the other two: you could not see that a rival had folded
- * (so the lot was yours at the current price), how much they had left to outbid
- * you with, or whether a seat was a backfilled bot. All of that lives here.
+ * (so the lot was yours at the current price), or how much they had left to
+ * outbid you with. All of that lives here. Bot seats are never labelled as
+ * such — opponents always read as ordinary players.
  */
 export function BiddingRivals({
   players,
@@ -73,11 +74,6 @@ export function BiddingRivals({
               <span className="truncate font-poppins text-xs font-black uppercase text-white/90">
                 {rival.username}
               </span>
-              {rival.isBot && (
-                <span className="shrink-0 rounded bg-white/12 px-1 py-px font-poppins text-[9px] font-black uppercase tracking-wide text-white/60">
-                  {t('auctionGame.botTag')}
-                </span>
-              )}
             </div>
             <div className="flex items-baseline justify-between gap-1.5">
               <span className={`font-poppins text-[10px] font-black uppercase tracking-wide ${style.label}`}>

@@ -40,7 +40,6 @@ vi.mock('@/contexts/LocaleContext', () => ({
         'auctionGame.rivalFolded': 'Folded',
         'auctionGame.rivalSittingOut': 'Sitting out',
         'auctionGame.rivalOut': 'Out',
-        'auctionGame.botTag': 'BOT',
         'auctionGame.positionForward': 'Forward',
       };
       return messages[key] ?? key;
@@ -222,7 +221,7 @@ describe('BiddingScreen', () => {
     expect(screen.getByText('You are eliminated - watching')).toBeInTheDocument();
   });
 
-  it('shows each rival’s status and budget, and flags bots', () => {
+  it('shows each rival’s status and budget, and never labels a seat as a bot', () => {
     const folded = round({ foldedIds: ['seat-bot'] });
 
     render(
@@ -235,7 +234,8 @@ describe('BiddingScreen', () => {
 
     // A rival folding means the lot may already be yours — it must be visible.
     expect(screen.getByText('Folded')).toBeInTheDocument();
-    expect(screen.getByText('BOT')).toBeInTheDocument();
+    // Product rule: users are never told an opponent is a bot.
+    expect(screen.queryByText('BOT')).not.toBeInTheDocument();
   });
 
   it('keeps your own budget on screen when it is not your turn', () => {
