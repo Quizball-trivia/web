@@ -1266,20 +1266,22 @@ export interface paths {
                                 winRate: number;
                             };
                             rankedSeasons: {
-                                regular: {
+                                current: {
                                     gamesPlayed: number;
                                     wins: number;
                                     losses: number;
                                     draws: number;
                                     winRate: number;
                                 };
-                                event: {
+                                previous: {
                                     gamesPlayed: number;
                                     wins: number;
                                     losses: number;
                                     draws: number;
                                     winRate: number;
                                 };
+                                currentSeasonNumber: number;
+                                previousSeasonNumber: number | null;
                             };
                         };
                     };
@@ -7171,20 +7173,22 @@ export interface components {
                 winRate: number;
             };
             rankedSeasons: {
-                regular: {
+                current: {
                     gamesPlayed: number;
                     wins: number;
                     losses: number;
                     draws: number;
                     winRate: number;
                 };
-                event: {
+                previous: {
                     gamesPlayed: number;
                     wins: number;
                     losses: number;
                     draws: number;
                     winRate: number;
                 };
+                currentSeasonNumber: number;
+                previousSeasonNumber: number | null;
             };
         };
         RankedProfileResponse: {
