@@ -105,7 +105,6 @@ export function toMatchStatsSummary(response: StatsSummaryResponse): MatchStatsS
       draws: response.friendly.draws,
       winRate: response.friendly.winRate,
     },
-    // Optional until the backend stats split (PR) is deployed.
     ...(toRankedSeasons(response)),
   };
 }
@@ -113,13 +112,21 @@ export function toMatchStatsSummary(response: StatsSummaryResponse): MatchStatsS
 function toRankedSeasons(
   response: StatsSummaryResponse,
 ): Pick<MatchStatsSummary, 'rankedSeasons'> {
-  const split = (response as { rankedSeasons?: { regular: ModeStats; event: ModeStats } })
-    .rankedSeasons;
-  if (!split) return {};
+  const split = (response as {
+    rankedSeasons?: {
+      current?: ModeStats;
+      previous: ModeStats;
+      currentSeasonNumber?: number;
+      previousSeasonNumber: number | null;
+    };
+  }).rankedSeasons;
+  if (!split?.current || split.currentSeasonNumber === undefined) return {};
   return {
     rankedSeasons: {
-      regular: toMode(split.regular),
-      event: toMode(split.event),
+      current: toMode(split.current),
+      previous: toMode(split.previous),
+      currentSeasonNumber: split.currentSeasonNumber,
+      previousSeasonNumber: split.previousSeasonNumber,
     },
   };
 }
