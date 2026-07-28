@@ -32,6 +32,7 @@ export function RevealScreen({
   const round = state.currentRound;
   const [stage, setStage] = useState(0);
   const [showSold, setShowSold] = useState(true);
+  const [holdDone, setHoldDone] = useState(false);
   const serverRevealAckedRoundRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -42,17 +43,20 @@ export function RevealScreen({
       setTimeout(() => setStage(3), 2000),
       setTimeout(() => setStage(4), 2600),
       setTimeout(() => setStage(5), 3200),
+      // Everything is on screen at 3.2s; hold the full picture a beat before
+      // acking so the server doesn't sweep into the next round immediately.
+      setTimeout(() => setHoldDone(true), 5200),
     ];
     return () => timers.forEach(clearTimeout);
   }, []);
 
   useEffect(() => {
-    if (!serverDrivenTransitions || stage < 5 || !round) return;
+    if (!serverDrivenTransitions || stage < 5 || !holdDone || !round) return;
     const revealKey = `${state.roundIndex}:${round.footballer.id}`;
     if (serverRevealAckedRoundRef.current === revealKey) return;
     serverRevealAckedRoundRef.current = revealKey;
     actions.confirmReveal();
-  }, [actions, round, serverDrivenTransitions, stage, state.roundIndex]);
+  }, [actions, holdDone, round, serverDrivenTransitions, stage, state.roundIndex]);
 
   if (!round) return null;
 

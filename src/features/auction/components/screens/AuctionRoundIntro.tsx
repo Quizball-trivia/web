@@ -34,7 +34,9 @@ export function AuctionRoundIntro({ roundIndex, positionGroup, onDone }: Auction
   return (
     <motion.div
       data-testid="auction-round-intro"
-      initial={{ opacity: 0 }}
+      // Mounts fully opaque: fading in would flash the pitch board underneath
+      // before the intro covers it. Only the exit fades.
+      initial={{ opacity: 1 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, transition: { duration: 0.35 } }}
       className="fixed inset-0 z-40 flex flex-col items-center justify-center gap-6 bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat px-6"
