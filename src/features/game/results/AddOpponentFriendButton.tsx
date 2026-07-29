@@ -36,32 +36,30 @@ export function AddOpponentFriendButton({
   const queryClient = useQueryClient();
   const friendsQuery = useSocialFriends();
   const requestsQuery = useFriendRequests();
-  const [optimisticStatus, setOptimisticStatus] = useState<OptimisticStatus | null>(null);
+  // Keyed to the opponent it was set for and reconciled against the live
+  // cache by derivation rather than by effects: a stale entry simply stops
+  // applying (different opponent, or the cache caught up), so nothing needs
+  // to clear it.
+  const [optimistic, setOptimistic] = useState<{ opponentId: string; status: OptimisticStatus } | null>(null);
+  const setOptimisticStatus = (status: OptimisticStatus | null) =>
+    setOptimistic(status === null ? null : { opponentId: normalizedOpponentId, status });
 
   const derivedRelationship = useMemo(
     () => deriveOpponentFriendState(normalizedOpponentId, friendsQuery.data, requestsQuery.data),
     [friendsQuery.data, normalizedOpponentId, requestsQuery.data],
   );
 
-  useEffect(() => {
-    setOptimisticStatus(null);
-  }, [normalizedOpponentId]);
-
-  useEffect(() => {
-    if (!optimisticStatus) return;
-    // Optimistic "friends" must hold until the cache agrees: right after an
-    // accept the requests cache still says "received", and reverting there
-    // would re-enable the accept button for an already-handled request.
-    if (optimisticStatus === 'friends') {
-      if (derivedRelationship.status === 'friends') {
-        setOptimisticStatus(null);
-      }
-      return;
-    }
-    if (derivedRelationship.status !== 'none') {
-      setOptimisticStatus(null);
-    }
-  }, [derivedRelationship.status, optimisticStatus]);
+  // Optimistic "friends" must hold until the cache agrees: right after an
+  // accept the requests cache still says "received", and reverting there
+  // would re-enable the accept button for an already-handled request.
+  // Optimistic "sent" yields as soon as the cache says anything but "none".
+  const rawOptimistic = optimistic?.opponentId === normalizedOpponentId ? optimistic.status : null;
+  const optimisticStatus =
+    rawOptimistic === 'friends'
+      ? derivedRelationship.status === 'friends' ? null : 'friends'
+      : rawOptimistic === 'sent' && derivedRelationship.status === 'none'
+        ? 'sent'
+        : null;
 
   const prevDerivedStatusRef = useRef(derivedRelationship.status);
   useEffect(() => {
