@@ -275,6 +275,17 @@ export function ModeSelectionScreen({
                     ? <>{t('play.rpToTier', { rp: Math.max(0, (nextTierTargetRp ?? 0) - displayRp) })}<span className="text-brand-yellow">{tierLabelOf(nextTierBand.tier)}</span></>
                     : t('play.maxRankReached')}
               </div>
+              {/* Betsson badge — in flow below the rank text so it can never
+                  cover it, whatever height the text block reaches. */}
+              {isEventMode && (
+                <div
+                  className="mt-2 inline-flex flex-col items-start rounded-lg px-3 py-1.5"
+                  style={{ backgroundColor: '#1a1a1a', border: '1px solid rgba(255,255,255,0.15)' }}
+                >
+                  <span className="text-[8px] font-bold uppercase tracking-wider text-white/60 leading-none">Powered by</span>
+                  <Image src="/assets/betsson/3.png" alt="Betsson Sport" width={96} height={18} className="h-4 w-auto object-contain mt-0.5" />
+                </div>
+              )}
             </div>
           </div>
 
@@ -355,16 +366,6 @@ export function ModeSelectionScreen({
           </div>
         </div>
 
-        {/* Betsson badge — bottom-right on desktop only, event only */}
-        {isEventMode && (
-          <div
-            className="hidden lg:flex absolute bottom-4 right-4 z-20 flex-col items-start rounded-lg px-3 py-1.5"
-            style={{ backgroundColor: '#1a1a1a', border: '1px solid rgba(255,255,255,0.15)' }}
-          >
-            <span className="text-[8px] font-bold uppercase tracking-wider text-white/60 leading-none">Powered by</span>
-            <Image src="/assets/betsson/3.png" alt="Betsson Sport" width={96} height={18} className="h-4 w-auto object-contain mt-0.5" />
-          </div>
-        )}
       </div>
 
       {/* ─── 1b. Announcements ─── */}
