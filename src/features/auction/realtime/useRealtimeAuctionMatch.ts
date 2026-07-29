@@ -216,6 +216,12 @@ export function useRealtimeAuctionMatch({
   const [search, setSearch] = useState<AuctionSearchState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const startRequestedRef = useRef(false);
+  // Latches once autoStart has queued a search and never resets for the life
+  // of this mount. startRequestedRef resets on auth flaps (session refresh
+  // when a backgrounded tab wakes), which used to let a stale tab silently
+  // queue a brand-new match hours after the user left. Explicit user actions
+  // (startGame / play again) bypass this and are unaffected.
+  const autoStartConsumedRef = useRef(false);
   const autoStartTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const versionGapReconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const recoveredVersionGapKeyRef = useRef<string | null>(null);
@@ -466,8 +472,10 @@ export function useRealtimeAuctionMatch({
     // autoStart timer below would start a second, unwanted search.
     if (attachMatchId) return;
     if (!autoStart || !isConnected || startRequestedRef.current || publicState) return;
+    if (autoStartConsumedRef.current) return;
     autoStartTimerRef.current = setTimeout(() => {
       autoStartTimerRef.current = null;
+      autoStartConsumedRef.current = true;
       requestStart();
     }, POST_CONNECT_AUCTION_HYDRATION_GRACE_MS);
     return () => {
