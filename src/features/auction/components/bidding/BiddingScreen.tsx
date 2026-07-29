@@ -100,13 +100,19 @@ export function BiddingScreen({
   const maxBid = getMaxBid(humanPlayer);
   const posColor = POS_COLORS[round.positionGroup];
 
-  // Defensive against overlong clue content: when the visible clues run long,
-  // step the type down so the bid controls stay on-screen. The clue area is also
-  // height-capped with its own scroll below. Short clues render unchanged.
+  // Defensive against overlong clue content: step the type down in tiers as
+  // the visible clues grow so all three fit without the card scrolling —
+  // Georgian translations run well past their English counterparts. The
+  // height-capped scroll below stays only as a last resort for extremes.
   const visibleClueChars = round.clues
     .slice(0, visibleClues)
     .reduce((sum, clue) => sum + clue.length, 0);
-  const longClues = visibleClueChars > 160;
+  const clueTextClass =
+    visibleClueChars > 360
+      ? 'text-sm leading-snug'
+      : visibleClueChars > 160
+        ? 'text-base'
+        : 'text-lg sm:text-xl';
 
   const highestBidder = round.highestBidderId
     ? state.players.find((p) => p.id === round.highestBidderId)
@@ -234,12 +240,7 @@ export function BiddingScreen({
                     >
                       {i + 1}
                     </motion.div>
-                    <p
-                      className={cn(
-                        'font-poppins font-bold leading-snug text-black',
-                        longClues ? 'text-base' : 'text-lg sm:text-xl',
-                      )}
-                    >
+                    <p className={cn('font-poppins font-bold leading-snug text-black', clueTextClass)}>
                       {clue}
                     </p>
                   </motion.div>
