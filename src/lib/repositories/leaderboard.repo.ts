@@ -4,17 +4,22 @@ import { ApiError } from "@/lib/api/api";
 import type { LeaderboardType } from "@/lib/domain/leaderboard";
 import type { AvatarCustomization } from "@/types/game";
 
+// The ranked endpoints send rp/tier/trend; the auction endpoints send
+// auctionPoints and omit the ranked-only fields. One response type serves
+// both, so everything mode-specific is optional here and the mapper fills
+// the gaps.
 export interface LeaderboardEntryResponse {
   userId: string;
   rank: number;
   username: string;
   avatarUrl: string | null;
   avatarCustomization: AvatarCustomization | null;
-  rp: number;
-  tier: string;
+  rp?: number;
+  auctionPoints?: number;
+  tier?: string;
   country: string | null;
-  trend: 'up' | 'down' | 'same';
-  trendValue: number;
+  trend?: 'up' | 'down' | 'same';
+  trendValue?: number;
 }
 
 export interface LeaderboardApiResponse {
@@ -39,12 +44,13 @@ export interface UserRankResponse {
   avatarUrl: string | null;
   avatarCustomization: AvatarCustomization | null;
   country: string | null;
-  rp: number;
-  tier: string;
+  rp?: number;
+  auctionPoints?: number;
+  tier?: string;
   rank: number;
   total: number;
-  trend: 'up' | 'down' | 'same';
-  trendValue: number;
+  trend?: 'up' | 'down' | 'same';
+  trendValue?: number;
 }
 
 async function requestJson<T>(path: string): Promise<T> {
