@@ -239,7 +239,10 @@ function DevResultsContent() {
 
   useEffect(() => {
     seedFriendButtonCache(queryClient, friendButtonState);
-    setFriendCacheReady(true);
+    // Deferred so the ready flag flips outside the effect's own render pass
+    // (dev-only page; one frame of "not ready" is invisible).
+    const timer = window.setTimeout(() => setFriendCacheReady(true), 0);
+    return () => window.clearTimeout(timer);
   }, [friendButtonState, queryClient]);
 
   useEffect(() => () => {
