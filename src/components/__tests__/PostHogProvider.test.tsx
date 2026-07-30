@@ -24,6 +24,13 @@ vi.mock('posthog-js', () => ({
 
 vi.mock('@/lib/analytics/game-events', () => analyticsMocks);
 
+const recordingMocks = vi.hoisted(() => ({
+  startSessionRecording: vi.fn(),
+  stopSessionRecording: vi.fn(),
+}));
+
+vi.mock('@/lib/posthog', () => recordingMocks);
+
 import { PostHogPageView } from '../PostHogProvider';
 
 describe('PostHogPageView', () => {
@@ -58,5 +65,27 @@ describe('PostHogPageView', () => {
         landedPath: '/play',
       });
     });
+  });
+
+  it('starts session recording on football-quiz pages', async () => {
+    navigationMocks.pathname = '/en/football-quiz/liverpool';
+
+    render(<PostHogPageView />);
+
+    await waitFor(() => {
+      expect(recordingMocks.startSessionRecording).toHaveBeenCalled();
+    });
+    expect(recordingMocks.stopSessionRecording).not.toHaveBeenCalled();
+  });
+
+  it('stops session recording everywhere else', async () => {
+    navigationMocks.pathname = '/play';
+
+    render(<PostHogPageView />);
+
+    await waitFor(() => {
+      expect(recordingMocks.stopSessionRecording).toHaveBeenCalled();
+    });
+    expect(recordingMocks.startSessionRecording).not.toHaveBeenCalled();
   });
 });

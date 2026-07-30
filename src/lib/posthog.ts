@@ -62,6 +62,37 @@ export function resetUser(): void {
   }
 }
 
+// Replay is disabled globally at init (major ingest cost). These scope it to
+// the public SEO quiz pages only: start when a visitor is on /football-quiz,
+// stop again when they navigate anywhere else so app sessions stay unrecorded.
+// posthog.startSessionRecording() flips disable_session_recording back off
+// internally, so it works despite the init-time kill switch.
+export function startSessionRecording(): void {
+  if (typeof window === 'undefined' || !isTrackingEnv()) {
+    return;
+  }
+
+  try {
+    posthog.startSessionRecording();
+  } catch (error) {
+    console.error('PostHog startSessionRecording error:', error);
+  }
+}
+
+export function stopSessionRecording(): void {
+  if (typeof window === 'undefined' || !isTrackingEnv()) {
+    return;
+  }
+
+  try {
+    if (posthog.sessionRecordingStarted()) {
+      posthog.stopSessionRecording();
+    }
+  } catch (error) {
+    console.error('PostHog stopSessionRecording error:', error);
+  }
+}
+
 // Track custom events
 export function trackEvent(eventName: string, properties?: AnalyticsProperties): void {
   if (typeof window === 'undefined' || !process.env.NEXT_PUBLIC_POSTHOG_KEY || !isTrackingEnv()) {

@@ -4,6 +4,7 @@ import { Suspense, useEffect } from 'react';
 import type { ReactElement } from 'react';
 import { usePathname } from 'next/navigation';
 import { consumeExitToPlayPending, trackExitToPlayLanded } from '@/lib/analytics/game-events';
+import { startSessionRecording, stopSessionRecording } from '@/lib/posthog';
 
 export function PostHogPageView(): ReactElement {
   return (
@@ -19,6 +20,15 @@ function PostHogPageViewInner(): ReactElement {
   // ($pageview capture removed — ~20k events/day of pure cost. We don't analyze
   // pageviews/funnels by URL; our funnels run on named events. capture_pageview
   // is already false in the PostHog init, so nothing else emits them.)
+
+  useEffect(() => {
+    if (!pathname) return;
+    if (pathname.includes('/football-quiz')) {
+      startSessionRecording();
+    } else {
+      stopSessionRecording();
+    }
+  }, [pathname]);
 
   useEffect(() => {
     if (!pathname) return;
