@@ -11,6 +11,20 @@ export const poppins = {
 // Weekend League cutoff: the top N of the qualifier advance to Sunday's playoffs.
 export const PLAYOFF_CUTOFF = 24;
 
+/**
+ * QP needed in the Mon–Fri window to earn a ticket: 25 QP per ranked win, 10 per
+ * loss. 200 QP is ~8 wins, ~12 games at the observed win rate, or 20 games on a
+ * losing week — which qualified 43% of active players in Season 2 data.
+ */
+export const QP_TARGET = 200;
+
+/**
+ * First edition: entry is open to everyone regardless of rank or QP, so the rail
+ * shows a full bar and a free-entry note instead of live progress. Set to false
+ * once QP starts accruing on the following Monday.
+ */
+export const LAUNCH_EDITION = true;
+
 // Gameplay timings (mock quiz).
 export const KICKOFF_SECONDS = 10; // pre-match "everyone starts together" countdown
 export const QUESTION_SECONDS = 12; // per-question answer window

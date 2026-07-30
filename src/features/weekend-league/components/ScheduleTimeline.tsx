@@ -2,6 +2,7 @@
 
 import { Check } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useLocale } from '@/contexts/LocaleContext';
 import type { LeaguePhase, Milestone } from '../types';
 
 type StageStatus = 'done' | 'active' | 'upcoming';
@@ -26,11 +27,11 @@ function Dot({ status }: { status: StageStatus }) {
   if (status === 'active') {
     return (
       <motion.span
-        className="flex size-7 items-center justify-center rounded-full bg-brand-cyan"
-        animate={{ boxShadow: ['0 0 0 0 rgba(28,176,246,0.5)', '0 0 0 8px rgba(28,176,246,0)'] }}
+        className="flex size-7 items-center justify-center rounded-full bg-brand-gold"
+        animate={{ boxShadow: ['0 0 0 0 rgba(255,215,0,0.5)', '0 0 0 8px rgba(255,215,0,0)'] }}
         transition={{ duration: 1.4, repeat: Infinity }}
       >
-        <span className="size-2 rounded-full bg-white" />
+        <span className="size-2 rounded-full bg-black" />
       </motion.span>
     );
   }
@@ -45,11 +46,12 @@ export function ScheduleTimeline({
   phase: LeaguePhase;
   milestones: Record<'entry' | 'qualifier' | 'playoffs', Milestone> | null;
 }) {
+  const { t } = useLocale();
   const statuses = STATUS_BY_PHASE[phase];
-  const stages: { title: string; m: Milestone | null }[] = [
-    { title: 'Entry', m: milestones?.entry ?? null },
-    { title: 'Qualifier', m: milestones?.qualifier ?? null },
-    { title: 'Playoffs', m: milestones?.playoffs ?? null },
+  const stages: { title: string; when: string; m: Milestone | null }[] = [
+    { title: t('weekendLeague.stageQualifying'), when: t('weekendLeague.qualifyingShort'), m: milestones?.entry ?? null },
+    { title: t('weekendLeague.stageSaturday'), when: t('weekendLeague.qualifierShort'), m: milestones?.qualifier ?? null },
+    { title: t('weekendLeague.stageFinal'), when: t('weekendLeague.playoffsShort'), m: milestones?.playoffs ?? null },
   ];
 
   return (
@@ -69,7 +71,7 @@ export function ScheduleTimeline({
                 {stage.title}
               </div>
               <div className={`font-poppins text-[10px] font-semibold ${emphasized ? 'text-white/70' : 'text-white/30'}`}>
-                {stage.m ? `${stage.m.dayLabel.slice(0, 3)} ${stage.m.timeLabel}` : '—'}
+                {stage.when}
               </div>
             </div>
           </div>

@@ -1,13 +1,15 @@
 // Weekend League — a weekly synchronized tournament.
 //
-// The week runs: entry opens Friday night → everyone plays the same qualifier
+// The week runs: entry closes Friday 12:00 → everyone plays the same qualifier
 // Saturday 14:00 (Georgian time) → the top 24 return for a knockout playoff
 // Sunday 14:00. This file types the whole thing; it is a FRONTEND PROTOTYPE
 // driven by mock data (see mock-data.ts) so the flow can be demoed end to end
 // before the backend exists.
 
+import type { MessageKey } from '@/lib/i18n/messages';
+
 export type LeaguePhase =
-  | 'upcoming' // before entry opens (before Fri 21:00)
+  | 'upcoming' // before entry closes (before Fri 12:00)
   | 'entry_open' // Fri 21:00 → Sat 14:00: claim your one weekly entry
   | 'qualifier_live' // Sat 14:00: the qualifier quiz is running
   | 'qualifier_done' // qualifier finished, top 24 known, waiting for Sunday
@@ -44,11 +46,14 @@ export type PrizeAccent = 'gold' | 'silver' | 'bronze' | 'blue' | 'green';
 
 export interface PrizeTier {
   id: string;
-  label: string; // "Champion", "Runner-up", "Top 8"…
-  rankLabel: string; // "1st", "4th–8th"
+  /** i18n key for the band name ("Champion", "Runner-up", …). */
+  labelKey: MessageKey;
+  /** i18n key for the rank label ("1st", "4th–8th"). */
+  rankKey: MessageKey;
   rankFrom: number;
   rankTo: number;
-  prize: string; // the reward copy
+  /** i18n key for the reward copy. */
+  prizeKey: MessageKey;
   icon: string; // emoji marker
   accent: PrizeAccent;
 }

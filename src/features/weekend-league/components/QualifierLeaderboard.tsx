@@ -1,6 +1,7 @@
 'use client';
 
 import { TierFrameAvatar } from '@/components/TierFrameAvatar';
+import { useLocale } from '@/contexts/LocaleContext';
 import { poppins, PLAYOFF_CUTOFF } from '../constants';
 import { prizeForRank } from '../mock-data';
 import type { LeaguePlayer } from '../types';
@@ -9,6 +10,7 @@ import { LiveBadge } from './LiveBadge';
 const MEDAL = ['🥇', '🥈', '🥉'];
 
 function ScoreRow({ player, rank, isYou }: { player: LeaguePlayer; rank: number; isYou: boolean }) {
+  const { t } = useLocale();
   const prize = prizeForRank(rank);
   return (
     <div
@@ -42,7 +44,7 @@ function ScoreRow({ player, rank, isYou }: { player: LeaguePlayer; rank: number;
         </div>
       </div>
       <div className="flex items-center gap-2">
-        {prize && <span className="text-base leading-none" title={prize.prize}>{prize.icon}</span>}
+        {prize && <span className="text-base leading-none" title={t(prize.prizeKey)}>{prize.icon}</span>}
         <span className="font-poppins text-base font-black tabular-nums text-brand-yellow" style={poppins}>
           {player.score.toLocaleString()}
         </span>

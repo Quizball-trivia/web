@@ -6,7 +6,6 @@ import { poppins } from './constants';
 import { useWeekendLeague } from './use-weekend-league';
 import type { WeekendLeagueState } from './types';
 import { LeagueHeader } from './components/LeagueHeader';
-import { ScheduleTimeline } from './components/ScheduleTimeline';
 import { YourStatusCard } from './components/YourStatusCard';
 import { EntryPanel } from './components/EntryPanel';
 import { HowItWorks } from './components/HowItWorks';
@@ -57,19 +56,26 @@ export function WeekendLeagueScreen({
         />
       )}
 
-      <LeagueHeader />
-
-      <div className="rounded-2xl border-2 border-white/8 bg-surface-card-deep px-4 py-4">
-        <ScheduleTimeline phase={wl.phase} milestones={wl.milestones} />
-      </div>
-
-      <YourStatusCard
+      <LeagueHeader
         phase={wl.phase}
+        milestones={wl.milestones}
         hasEntered={wl.hasEntered}
-        qualified={wl.qualified}
-        yourRank={wl.yourRank}
-        championName={wl.bracket?.championName ?? null}
+        registered={wl.registered}
+        onEnter={wl.enterLeague}
       />
+
+
+      {/* The header's status panel already states where you stand while entry
+          is open, so the status card would just repeat it. */}
+      {wl.phase !== 'entry_open' && (
+        <YourStatusCard
+          phase={wl.phase}
+          hasEntered={wl.hasEntered}
+          qualified={wl.qualified}
+          yourRank={wl.yourRank}
+          championName={wl.bracket?.championName ?? null}
+        />
+      )}
 
       <PhaseContent wl={wl} />
     </div>
@@ -85,7 +91,7 @@ function PhaseContent({ wl }: { wl: ReturnType<typeof useWeekendLeague> }) {
         <EntryPanel
           mode="locked"
           countdownTarget={milestones?.entry.targetMs ?? null}
-          countdownCaption="Your free entry unlocks Friday night."
+          countdownCaption="Claim before Friday 12:00."
           registered={wl.registered}
           onEnter={wl.enterLeague}
         />
@@ -98,13 +104,6 @@ function PhaseContent({ wl }: { wl: ReturnType<typeof useWeekendLeague> }) {
   if (phase === 'entry_open') {
     return (
       <>
-        <EntryPanel
-          mode={wl.hasEntered ? 'entered' : 'open'}
-          countdownTarget={milestones?.qualifier.targetMs ?? null}
-          countdownCaption="See you Saturday 14:00 — the qualifier starts for everyone at once."
-          registered={wl.registered}
-          onEnter={wl.enterLeague}
-        />
         <HowItWorks />
         <PrizesPanel />
       </>
