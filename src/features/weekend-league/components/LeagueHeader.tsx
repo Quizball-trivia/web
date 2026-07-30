@@ -24,6 +24,7 @@ export function LeagueHeader({
   qp = LAUNCH_EDITION ? QP_TARGET : 105,
   hasEntered = false,
   registered,
+  result,
   onEnter,
   onPlayRanked,
 }: {
@@ -32,6 +33,8 @@ export function LeagueHeader({
   qp?: number;
   hasEntered?: boolean;
   registered?: number;
+  /** Set once the Saturday qualifier is done — switches the card to the result state. */
+  result?: { qualified: boolean; rank: number; cutoff: number } | null;
   onEnter?: () => void;
   onPlayRanked?: () => void;
 }) {
@@ -44,6 +47,82 @@ export function LeagueHeader({
 
   const ctaClass =
     'flex h-11 w-full items-center justify-center gap-2 rounded-[10px] font-poppins text-[13px] font-black uppercase tracking-wide text-black transition-opacity hover:opacity-90';
+
+  // Once the qualifier is decided the card reports the outcome instead of QP
+  // progress: brand-yellow when you're through, dark when you missed out.
+  if (result) {
+    const dark = !result.qualified;
+    return (
+      <header
+        className="relative overflow-visible rounded-[24px] border-2"
+        style={{
+          backgroundColor: dark ? 'transparent' : colors.yellow.base,
+          borderColor: dark ? 'rgba(255,255,255,0.12)' : 'transparent',
+        }}
+      >
+        {/* Corner badge, in the app's orange chip style. */}
+        <div className="absolute -top-3 left-5 z-30">
+          <span
+            className="whitespace-nowrap rounded-lg px-3 py-1 font-poppins text-xs font-black uppercase tracking-wide text-white shadow-[0_4px_14px_rgba(0,0,0,0.5)]"
+            style={{ backgroundColor: '#FF6C0A' }}
+          >
+            {t(result.qualified ? 'weekendLeague.qBadge' : 'weekendLeague.missedBadge')}
+          </span>
+        </div>
+
+        <div className="px-5 pb-5 pt-7 text-center">
+          <div
+            className={`font-poppins text-[11px] font-black uppercase tracking-[0.28em] ${dark ? 'text-white/50' : 'text-black/60'}`}
+          >
+            {t('weekendLeague.kicker')}
+          </div>
+          <h1
+            className={`mt-1.5 font-poppins text-[1.6rem] font-black uppercase leading-none sm:text-3xl ${dark ? 'text-white' : 'text-black'}`}
+            style={poppins}
+          >
+            {t('weekendLeague.title')}
+          </h1>
+
+          <div
+            className={`mt-4 font-poppins text-2xl font-black uppercase sm:text-3xl ${dark ? 'text-white' : 'text-black'}`}
+            style={poppins}
+          >
+            {t(result.qualified ? 'weekendLeague.qHeadline' : 'weekendLeague.missedHeadline', {
+              rank: result.rank,
+            })}
+          </div>
+          <p
+            className={`mx-auto mt-2 max-w-sm font-poppins text-[14px] font-semibold leading-snug ${dark ? 'text-white/65' : 'text-black/70'}`}
+          >
+            {t(result.qualified ? 'weekendLeague.qBody' : 'weekendLeague.missedBody', {
+              cutoff: result.cutoff,
+            })}
+          </p>
+
+          {/* Countdown to Sunday — only meaningful if you're still in it. */}
+          {result.qualified && milestones && (
+            <div className="mt-4">
+              <div className="font-poppins text-[10px] font-black uppercase tracking-[0.16em] text-black/50">
+                {t('weekendLeague.startsIn')}
+              </div>
+              <div className="mt-1.5 flex justify-center">
+                <LeagueCountdown
+                  targetMs={milestones.playoffs.targetMs}
+                  size="sm"
+                  accent="text-black"
+                  plain
+                />
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className={`relative border-t px-4 pb-5 pt-4 lg:px-6 ${dark ? 'border-white/10' : 'border-black/15'}`}>
+          <ScheduleTimeline phase={phase} milestones={milestones} onLight={!dark} />
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header

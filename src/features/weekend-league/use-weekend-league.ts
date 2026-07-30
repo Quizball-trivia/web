@@ -1,7 +1,8 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
+  applyLiveScores,
   buildBracket,
   buildLeaderboard,
   buildLeaderboardAtRank,
@@ -102,10 +103,21 @@ export function useWeekendLeague(initial?: Partial<WeekendLeagueState>) {
     }
   }, [milestones, state.phase]);
 
-  const leaderboard = useMemo(
-    () => (playedRank != null ? buildLeaderboardAtRank(playedRank) : buildLeaderboard(qualified)),
-    [playedRank, qualified],
-  );
+  // While the qualifier is live the standings move as players post scores. This
+  // stands in for the realtime feed: every few seconds a handful of players
+  // finish a round and climb, and the board re-sorts.
+  const [liveTick, setLiveTick] = useState(0);
+  useEffect(() => {
+    if (state.phase !== 'qualifier_live') return;
+    const id = setInterval(() => setLiveTick((n) => n + 1), 3000);
+    return () => clearInterval(id);
+  }, [state.phase]);
+
+  const leaderboard = useMemo(() => {
+    const base = playedRank != null ? buildLeaderboardAtRank(playedRank) : buildLeaderboard(qualified);
+    if (state.phase !== 'qualifier_live' || liveTick === 0) return base;
+    return applyLiveScores(base, liveTick);
+  }, [playedRank, qualified, state.phase, liveTick]);
   const yourRank = useMemo(() => leaderboard.findIndex((p) => p.isYou) + 1, [leaderboard]);
 
   const bracket = useMemo(() => {

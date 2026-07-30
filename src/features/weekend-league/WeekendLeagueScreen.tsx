@@ -1,8 +1,10 @@
 'use client';
 
+import { useCallback, useState } from 'react';
 import { motion } from 'motion/react';
-import { Play } from 'lucide-react';
-import { poppins } from './constants';
+import { Eye, Play } from 'lucide-react';
+import { useLocale } from '@/contexts/LocaleContext';
+import { PLAYOFF_CUTOFF, poppins } from './constants';
 import { useWeekendLeague } from './use-weekend-league';
 import type { WeekendLeagueState } from './types';
 import { LeagueHeader } from './components/LeagueHeader';
@@ -12,10 +14,12 @@ import { HowItWorks } from './components/HowItWorks';
 import { PrizesPanel } from './components/PrizesPanel';
 import { QualifierLeaderboard } from './components/QualifierLeaderboard';
 import { PlayoffBracket } from './components/PlayoffBracket';
-import { LeagueCountdown } from './components/LeagueCountdown';
 import { PhaseSwitcher } from './components/PhaseSwitcher';
 import { LiveBadge } from './components/LiveBadge';
 import { WeekendLeagueGame } from './components/game/WeekendLeagueGame';
+import { GauntletFlow } from './gauntlet/GauntletFlow';
+import { SpectatorFlow } from './gauntlet/SpectatorFlow';
+import type { GauntletExit } from './gauntlet/gauntlet.types';
 
 /**
  * Weekend League — full frontend prototype (mock data). Renders the whole week:
@@ -30,6 +34,37 @@ export function WeekendLeagueScreen({
   initial?: Partial<WeekendLeagueState>;
 }) {
   const wl = useWeekendLeague(initial);
+  const [liveMode, setLiveMode] = useState<'gauntlet' | 'spectate' | null>(null);
+
+  const handleGauntletExit = useCallback(
+    (exit: GauntletExit) => {
+      setLiveMode(null);
+      const outcome = { score: 0, correct: 0, total: 0, remaining: 0 };
+      if (exit.status === 'finalist') {
+        wl.finishQualifier(Math.min(exit.rank, 24), { ...outcome, score: exit.score });
+      } else if (exit.status === 'eliminated') {
+        wl.finishQualifier(Math.max(exit.rank, 25), { ...outcome, score: exit.score });
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [wl.finishQualifier],
+  );
+
+  if (liveMode === 'gauntlet') {
+    return (
+      <GauntletFlow
+        registered={wl.registered}
+        kickoffMs={null}
+        canPlay={wl.hasEntered}
+        startAtCheckIn
+        onExit={handleGauntletExit}
+        onWatch={() => setLiveMode('spectate')}
+      />
+    );
+  }
+  if (liveMode === 'spectate') {
+    return <SpectatorFlow onExit={() => setLiveMode(null)} />;
+  }
 
   // While a match is being played, the game flow takes over the whole screen.
   if (wl.session) {
@@ -56,18 +91,27 @@ export function WeekendLeagueScreen({
         />
       )}
 
-      <LeagueHeader
-        phase={wl.phase}
-        milestones={wl.milestones}
-        hasEntered={wl.hasEntered}
-        registered={wl.registered}
-        onEnter={wl.enterLeague}
-      />
+      {/* Once the qualifier is live the entry/QP card is spent — the screen is
+          just play + live standings. */}
+      {wl.phase !== 'qualifier_live' && (
+        <LeagueHeader
+          phase={wl.phase}
+          milestones={wl.milestones}
+          hasEntered={wl.hasEntered}
+          registered={wl.registered}
+          result={
+            wl.phase === 'qualifier_done'
+              ? { qualified: wl.qualified, rank: wl.yourRank, cutoff: PLAYOFF_CUTOFF }
+              : null
+          }
+          onEnter={wl.enterLeague}
+        />
+      )}
 
 
       {/* The header's status panel already states where you stand while entry
           is open, so the status card would just repeat it. */}
-      {wl.phase !== 'entry_open' && (
+      {wl.phase !== 'entry_open' && wl.phase !== 'qualifier_live' && (
         <YourStatusCard
           phase={wl.phase}
           hasEntered={wl.hasEntered}
@@ -77,12 +121,21 @@ export function WeekendLeagueScreen({
         />
       )}
 
-      <PhaseContent wl={wl} />
+      <PhaseContent wl={wl} onJoin={() => setLiveMode('gauntlet')} onWatch={() => setLiveMode('spectate')} />
     </div>
   );
 }
 
-function PhaseContent({ wl }: { wl: ReturnType<typeof useWeekendLeague> }) {
+function PhaseContent({
+  wl,
+  onJoin,
+  onWatch,
+}: {
+  wl: ReturnType<typeof useWeekendLeague>;
+  onJoin: () => void;
+  onWatch: () => void;
+}) {
+  const { t } = useLocale();
   const { phase, milestones } = wl;
 
   if (phase === 'upcoming') {
@@ -114,55 +167,58 @@ function PhaseContent({ wl }: { wl: ReturnType<typeof useWeekendLeague> }) {
     return (
       <>
         {wl.hasEntered ? (
-          <div className="rounded-[24px] border-2 border-brand-cyan/40 bg-brand-cyan/[0.08] p-5 text-center">
+          <div className="rounded-[24px] bg-brand-cyan/[0.08] p-5 text-center">
             <div className="mb-2 flex items-center justify-center gap-2">
               <LiveBadge />
             </div>
-            <div className="font-poppins text-2xl font-black uppercase text-white" style={poppins}>Qualifier is live</div>
+            <div className="font-poppins text-2xl font-black uppercase text-white" style={poppins}>{t('weekendLeague.qualifierLive')}</div>
             <p className="mx-auto mt-1 max-w-xs font-poppins text-[13px] font-semibold text-white/60">
-              Everyone plays the same questions right now. Post your best score before the whistle.
+              {t('weekendLeague.qualifierLiveBody')}
             </p>
             <motion.button
               type="button"
               whileTap={{ scale: 0.97 }}
-              onClick={wl.startQualifierGame}
+              onClick={onJoin}
               className="mx-auto mt-4 flex h-14 w-full max-w-xs items-center justify-center gap-2 rounded-2xl bg-brand-green py-3.5 font-poppins text-lg font-black uppercase tracking-wide text-white transition-colors hover:bg-brand-green/90"
             >
-              <Play className="size-5 fill-current" /> Play now
+              <Play className="size-5 fill-current" /> {t('weekendLeague.joinGame')}
             </motion.button>
+            <button
+              type="button"
+              onClick={onWatch}
+              className="mx-auto mt-2.5 flex items-center justify-center gap-1.5 font-poppins text-[12px] font-bold uppercase tracking-widest text-white/50 hover:text-white"
+            >
+              <Eye className="size-4" /> {t('weekendLeague.watchLive')}
+            </button>
           </div>
         ) : (
-          <div className="rounded-[24px] border-2 border-white/10 bg-surface-card-deep p-5 text-center">
-            <div className="font-poppins text-lg font-black uppercase text-white">Entry closed</div>
+          <div className="rounded-[24px] border-2 border-white/10 p-5 text-center">
+            <div className="font-poppins text-lg font-black uppercase text-white">
+              {t('weekendLeague.entryClosedTitle')}
+            </div>
             <p className="mx-auto mt-1 max-w-xs font-poppins text-[13px] font-semibold text-white/60">
-              The qualifier is live but you didn&apos;t enter this week. You can still follow the standings below.
+              {t('weekendLeague.entryClosedLiveBody')}
             </p>
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.97 }}
+              onClick={onWatch}
+              className="mx-auto mt-4 flex h-12 w-full max-w-xs items-center justify-center gap-2 rounded-2xl bg-brand-green py-3 font-poppins text-base font-black uppercase tracking-wide text-white transition-colors hover:bg-brand-green/90"
+            >
+              <Eye className="size-5" /> {t('weekendLeague.watchLive')}
+            </motion.button>
           </div>
         )}
-        <QualifierLeaderboard entries={wl.leaderboard} yourRank={wl.yourRank} live />
-        <PrizesPanel />
+        <QualifierLeaderboard entries={wl.leaderboard} yourRank={wl.yourRank} />
       </>
     );
   }
 
+  // The result card above already carries the outcome and the countdown, so
+  // this phase is just the qualifier standings and the prize ladder.
   if (phase === 'qualifier_done') {
     return (
       <>
-        <div
-          className={`rounded-[24px] border-2 p-5 text-center ${
-            wl.qualified ? 'border-brand-gold/40 bg-brand-gold/10' : 'border-white/10 bg-surface-card-deep'
-          }`}
-        >
-          <div className="font-poppins text-[11px] font-black uppercase tracking-widest text-white/50">Playoffs start in</div>
-          <div className="mt-1 font-poppins text-xl font-black uppercase text-white" style={poppins}>
-            {wl.qualified ? "You're through to Sunday" : 'Sunday 14:00 · Georgian time'}
-          </div>
-          {milestones && (
-            <div className="mt-4 flex justify-center">
-              <LeagueCountdown targetMs={milestones.playoffs.targetMs} accent={wl.qualified ? 'text-brand-gold' : 'text-brand-yellow'} />
-            </div>
-          )}
-        </div>
         <QualifierLeaderboard entries={wl.leaderboard} yourRank={wl.yourRank} />
         <PrizesPanel highlightRank={wl.yourRank} />
       </>

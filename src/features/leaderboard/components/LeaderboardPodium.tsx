@@ -15,6 +15,11 @@ interface LeaderboardPodiumProps {
    * region-gated `isEventMode`.
    */
   eventMode?: boolean;
+  /**
+   * Use gold/silver/bronze bars instead of the ranked green/yellow/blue. The
+   * Weekend League podium opts in; /leaderboard keeps the ranked palette.
+   */
+  medalColors?: boolean;
 }
 
 const poppins = {
@@ -63,6 +68,40 @@ const eventPodiumConfig: Record<
   },
 };
 
+/** Medal palette — gold / silver / bronze. Opted into via `medalColors`. */
+const medalPodiumConfig: Record<
+  PodiumRank,
+  {
+    height: string;
+    bg: string;
+    nameColor: string;
+    rpColor: string;
+    order: string;
+  }
+> = {
+  1: {
+    height: "h-40 sm:h-52",
+    bg: "#FFD700",
+    nameColor: "text-black",
+    rpColor: "text-black",
+    order: "order-2",
+  },
+  2: {
+    height: "h-32 sm:h-40",
+    bg: "#C7CBD1",
+    nameColor: "text-black",
+    rpColor: "text-black",
+    order: "order-1",
+  },
+  3: {
+    height: "h-24 sm:h-32",
+    bg: "#CD7F32",
+    nameColor: "text-white",
+    rpColor: "text-white",
+    order: "order-3",
+  },
+};
+
 const podiumConfig: Record<
   PodiumRank,
   {
@@ -99,7 +138,7 @@ const podiumConfig: Record<
   },
 };
 
-export function LeaderboardPodium({ topThree, onEntryClick, eventMode }: LeaderboardPodiumProps) {
+export function LeaderboardPodium({ topThree, onEntryClick, eventMode, medalColors = false }: LeaderboardPodiumProps) {
   const { isEventMode: regionEventMode } = useActiveEventMode();
   const isEventMode = eventMode ?? regionEventMode;
 
@@ -122,7 +161,7 @@ export function LeaderboardPodium({ topThree, onEntryClick, eventMode }: Leaderb
       <div className="overflow-visible px-4 pt-10 sm:px-6 sm:pt-14">
         <div className="flex items-end justify-center gap-2 sm:gap-4 w-full max-w-md mx-auto">
           {players.map(({ entry, rank }) => {
-            const config = podiumConfig[rank];
+            const config = (medalColors ? medalPodiumConfig : podiumConfig)[rank];
 
             if (!entry) {
               return <div key={rank} className={`flex-1 ${config.order}`} />;

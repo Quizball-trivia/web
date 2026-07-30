@@ -106,6 +106,24 @@ export function buildLeaderboard(qualified: boolean): LeaguePlayer[] {
   return buildLeaderboardAtRank(qualified ? 7 : 41);
 }
 
+/**
+ * Stand-in for the live qualifier feed: on each tick a rotating slice of
+ * players "finishes a round" and gains points, then the board re-sorts so they
+ * visibly climb. Deterministic in `tick` so re-renders don't jitter, and the
+ * viewer's own row is left alone — their score comes from actually playing.
+ */
+export function applyLiveScores(entries: LeaguePlayer[], tick: number): LeaguePlayer[] {
+  const moved = entries.map((p, i) => {
+    if (p.isYou) return p;
+    // Three players advance per tick, cycling through the field.
+    const finishes = (i + tick) % Math.max(1, Math.floor(entries.length / 3)) === 0;
+    if (!finishes) return p;
+    const gain = 15 + ((i * 7 + tick * 13) % 45);
+    return { ...p, score: p.score + gain };
+  });
+  return moved.sort((a, b) => b.score - a.score);
+}
+
 // ── Mapping a quiz performance → a leaderboard rank ──────────────────────────
 // Rank you'd land at for N correct out of QUIZ_LENGTH. Tuned so ~4/6 is the
 // cut-off to qualify (top 24), a perfect run challenges for the win.

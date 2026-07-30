@@ -10,7 +10,7 @@ import type { MessageKey } from '@/lib/i18n/messages';
 
 export type LeaguePhase =
   | 'upcoming' // before entry closes (before Fri 12:00)
-  | 'entry_open' // Fri 21:00 → Sat 14:00: claim your one weekly entry
+  | 'entry_open' // Mon → Fri 12:00: claim your one weekly entry
   | 'qualifier_live' // Sat 14:00: the qualifier quiz is running
   | 'qualifier_done' // qualifier finished, top 24 known, waiting for Sunday
   | 'playoffs_live' // Sun 14:00: knockout bracket for the top 24
