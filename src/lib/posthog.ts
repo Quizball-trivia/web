@@ -73,7 +73,9 @@ export function startSessionRecording(): void {
   }
 
   try {
-    posthog.startSessionRecording();
+    // `true` also overrides any remote sampling/linked-flag config so every
+    // quiz visit records — volume here is ~tens of sessions a month.
+    posthog.startSessionRecording(true);
   } catch (error) {
     console.error('PostHog startSessionRecording error:', error);
   }
@@ -85,9 +87,10 @@ export function stopSessionRecording(): void {
   }
 
   try {
-    if (posthog.sessionRecordingStarted()) {
-      posthog.stopSessionRecording();
-    }
+    // Unconditional: the recorder lazy-loads after start, so a
+    // sessionRecordingStarted() guard would skip the stop if the visitor
+    // bounces before it finishes loading, leaving replay armed app-wide.
+    posthog.stopSessionRecording();
   } catch (error) {
     console.error('PostHog stopSessionRecording error:', error);
   }
