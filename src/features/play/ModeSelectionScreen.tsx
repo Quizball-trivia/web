@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { ModeConfirmModal } from '@/components/shared/ModeConfirmModal';
 import { FriendPlayModal } from '@/components/shared/FriendPlayModal';
 import { AuctionModeModal } from '@/features/auction/components/AuctionModeModal';
-import { HomeRecentMatches } from '@/components/shared/HomeRecentMatches';
+// import { HomeRecentMatches } from '@/components/shared/HomeRecentMatches';
 import { MessageCircle } from 'lucide-react';
 import { SocialLinks } from '@/components/shared/SocialLinks';
 import { ContactModal } from '@/components/shared/ContactModal';
@@ -22,6 +22,7 @@ import { useActiveEventMode } from '@/lib/hooks/useActiveEventMode';
 
 import { colors } from '@/lib/colors';
 import { PlayAnnouncements } from './PlayAnnouncements';
+import { RailNavyGradient as WeekendLeagueRail } from '@/features/weekend-league/components/RailColorVariants';
 
 import { getNextTierBand } from '@/utils/rankedTier';
 
@@ -187,6 +188,9 @@ export function ModeSelectionScreen({
       className="max-w-5xl mx-auto px-4 py-3 space-y-4 md:py-6 md:space-y-5 font-fun"
     >
 
+      {/* ─── 0. Weekend League — the weekly objective, aligned to the mode cards ─── */}
+      <WeekendLeagueRail />
+
       {/* ─── 1. Ranked Hero Card ─── */}
       <div
         onClick={() => {
@@ -219,11 +223,11 @@ export function ModeSelectionScreen({
 
         <div className="relative z-10 p-4 md:p-7">
           {/* ── Desktop layout ── */}
-          <div className="hidden lg:flex items-start gap-6">
+          <div className="hidden lg:flex items-stretch gap-6">
             {/* Left: Title + Play. Title is capped at the trophy's left edge
                 (~40% of the card) so long locales (e.g. Georgian) wrap onto a
                 second line instead of running under the absolute trophy. */}
-            <div className="flex-1 min-w-0">
+            <div className="flex flex-1 min-w-0 flex-col">
               <h1
                 className="max-w-[20rem] text-[clamp(1.75rem,3vw,2.75rem)] uppercase text-white [overflow-wrap:normal] [word-break:keep-all] [hyphens:none]"
                 style={{ ...rankedTitleStyle, lineHeight: 1.15 }}
@@ -238,9 +242,10 @@ export function ModeSelectionScreen({
                     : t('play.rankedSubtitle')}
               </div>
 
-              {/* World Cup event info — event only */}
-              <div className="mt-5">
-                <div className="flex h-[56px] w-[180px] items-center justify-center rounded-[16px] bg-surface-page text-xl uppercase tracking-wide text-white" style={poppins}>
+              {/* Play sits flush with the card's bottom padding, matching the
+                  secondary mode cards. */}
+              <div className="mt-auto pt-5">
+                <div className="flex h-[56px] w-[180px] items-center justify-center rounded-[8px] bg-surface-page text-xl uppercase tracking-wide text-white" style={poppins}>
                   {t('common.play')}
                 </div>
               </div>
@@ -359,7 +364,7 @@ export function ModeSelectionScreen({
                   />
                 )}
               </div>
-              <div className="mb-1 flex h-[44px] w-[120px] items-center justify-center rounded-[12px] bg-surface-page text-[15px] uppercase tracking-wide text-white" style={poppins}>
+              <div className="mb-1 flex h-[44px] w-[120px] items-center justify-center rounded-[8px] bg-surface-page text-[15px] uppercase tracking-wide text-white" style={poppins}>
                 {t('common.play')}
               </div>
             </div>
@@ -693,8 +698,8 @@ export function ModeSelectionScreen({
       </div>
       )}
 
-      {/* ─── 5. Recent Matches ─── */}
-      <HomeRecentMatches collapsedOnly />
+      {/* ─── 5. Recent Matches — hidden for now ───
+      <HomeRecentMatches collapsedOnly /> */}
 
       {/* ─── 5b. Socials + contact (mobile only — desktop uses the top-left
               header cluster in AppShell) ─── */}

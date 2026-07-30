@@ -30,7 +30,7 @@ function resolve(
 ): { emoji: string; headline: string; sub: string; tone: Tone } {
   switch (phase) {
     case 'upcoming':
-      return { emoji: '📅', headline: 'Get ready', sub: 'Entry opens Friday — claim your spot to compete for prizes.', tone: 'neutral' };
+      return { emoji: '📅', headline: 'Get ready', sub: 'Claim your free entry before Friday 12:00 to compete for prizes.', tone: 'neutral' };
     case 'entry_open':
       return hasEntered
         ? { emoji: '✅', headline: "You're entered", sub: 'Qualifier starts Saturday 14:00. Be there — it starts for everyone at once.', tone: 'green' }

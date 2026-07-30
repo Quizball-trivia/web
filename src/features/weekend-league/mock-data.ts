@@ -18,11 +18,11 @@ export const REGISTERED_COUNT = 1_240;
 
 // ── Prize ladder (football-themed digital prizes) ───────────────────────────
 export const PRIZES: PrizeTier[] = [
-  { id: 'p1', label: 'Champion', rankLabel: '1st', rankFrom: 1, rankTo: 1, prize: '6 months Setanta Sports + EA FC 26', icon: '🏆', accent: 'gold' },
-  { id: 'p2', label: 'Runner-up', rankLabel: '2nd', rankFrom: 2, rankTo: 2, prize: '3 months Setanta + FC Points', icon: '🥈', accent: 'silver' },
-  { id: 'p3', label: 'Third', rankLabel: '3rd', rankFrom: 3, rankTo: 3, prize: '1 month Setanta + FC Points', icon: '🥉', accent: 'bronze' },
-  { id: 'p4', label: 'Semi-finalists', rankLabel: '4th–8th', rankFrom: 4, rankTo: 8, prize: 'FotMob Premium + 5,000 coins', icon: '⭐', accent: 'blue' },
-  { id: 'p5', label: 'Playoff qualifiers', rankLabel: '9th–24th', rankFrom: 9, rankTo: 24, prize: 'Finalist badge + 2,000 coins', icon: '🎖️', accent: 'green' },
+  { id: 'p1', labelKey: 'weekendLeague.prize1Label', rankKey: 'weekendLeague.prize1Rank', rankFrom: 1, rankTo: 1, prizeKey: 'weekendLeague.prize1Reward', icon: '🏆', accent: 'gold' },
+  { id: 'p2', labelKey: 'weekendLeague.prize2Label', rankKey: 'weekendLeague.prize2Rank', rankFrom: 2, rankTo: 2, prizeKey: 'weekendLeague.prize2Reward', icon: '🥈', accent: 'silver' },
+  { id: 'p3', labelKey: 'weekendLeague.prize3Label', rankKey: 'weekendLeague.prize3Rank', rankFrom: 3, rankTo: 3, prizeKey: 'weekendLeague.prize3Reward', icon: '🥉', accent: 'bronze' },
+  { id: 'p4', labelKey: 'weekendLeague.prize4Label', rankKey: 'weekendLeague.prize4Rank', rankFrom: 4, rankTo: 8, prizeKey: 'weekendLeague.prize4Reward', icon: '⭐', accent: 'blue' },
+  { id: 'p5', labelKey: 'weekendLeague.prize5Label', rankKey: 'weekendLeague.prize5Rank', rankFrom: 9, rankTo: 24, prizeKey: 'weekendLeague.prize5Reward', icon: '🎖️', accent: 'green' },
 ];
 
 export function prizeForRank(rank: number): PrizeTier | null {
@@ -33,7 +33,7 @@ export function prizeForRank(rank: number): PrizeTier | null {
 // Friday = 5, Saturday = 6, Sunday = 0.
 export function getMilestones(nowMs: number): Record<'entry' | 'qualifier' | 'playoffs', Milestone> {
   return {
-    entry: { key: 'entry', label: 'Entry opens', dayLabel: 'Friday', timeLabel: '21:00', targetMs: nextGeorgianOccurrence(5, 21, nowMs) },
+    entry: { key: 'entry', label: 'Entry closes', dayLabel: 'Friday', timeLabel: '12:00', targetMs: nextGeorgianOccurrence(5, 12, nowMs) },
     qualifier: { key: 'qualifier', label: 'Qualifier', dayLabel: 'Saturday', timeLabel: '14:00', targetMs: nextGeorgianOccurrence(6, 14, nowMs) },
     playoffs: { key: 'playoffs', label: 'Playoffs', dayLabel: 'Sunday', timeLabel: '14:00', targetMs: nextGeorgianOccurrence(0, 14, nowMs) },
   };
@@ -104,6 +104,24 @@ export function buildLeaderboardAtRank(rank: number): LeaguePlayer[] {
 /** Demo standings: "You" at rank 7 (qualified) or rank 41 (missed the cut). */
 export function buildLeaderboard(qualified: boolean): LeaguePlayer[] {
   return buildLeaderboardAtRank(qualified ? 7 : 41);
+}
+
+/**
+ * Stand-in for the live qualifier feed: on each tick a rotating slice of
+ * players "finishes a round" and gains points, then the board re-sorts so they
+ * visibly climb. Deterministic in `tick` so re-renders don't jitter, and the
+ * viewer's own row is left alone — their score comes from actually playing.
+ */
+export function applyLiveScores(entries: LeaguePlayer[], tick: number): LeaguePlayer[] {
+  const moved = entries.map((p, i) => {
+    if (p.isYou) return p;
+    // Three players advance per tick, cycling through the field.
+    const finishes = (i + tick) % Math.max(1, Math.floor(entries.length / 3)) === 0;
+    if (!finishes) return p;
+    const gain = 15 + ((i * 7 + tick * 13) % 45);
+    return { ...p, score: p.score + gain };
+  });
+  return moved.sort((a, b) => b.score - a.score);
 }
 
 // ── Mapping a quiz performance → a leaderboard rank ──────────────────────────
