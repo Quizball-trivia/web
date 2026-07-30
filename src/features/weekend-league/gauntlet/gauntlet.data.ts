@@ -23,7 +23,13 @@ export const FINALISTS = 25;
  * never advances more players than are playing, and never fewer than the
  * finalist count once we're at that stage.
  */
-export function buildGames(fieldSize: number): GameDef[] {
+export function buildGames(fieldSize: number, singleGame = false): GameDef[] {
+  // Sunday's final is one game that crowns a champion, not an elimination ladder.
+  if (singleGame) {
+    const players = Math.max(2, Math.round(fieldSize));
+    return [{ index: 0, players, advance: 1 }];
+  }
+
   const players = Math.max(FINALISTS + 1, Math.round(fieldSize));
 
   // Game 3 always ends at 25. Work backwards with a ~2x cut per game, but never

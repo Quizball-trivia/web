@@ -20,10 +20,12 @@ export function useGauntlet(
   onExit: (exit: GauntletExit) => void,
   initialScreen: GauntletScreenKind = 'lobby',
   fieldSize = 600,
+  singleGame = false,
 ) {
   // The ladder is derived from the field that actually showed up, so a 200-player
-  // Saturday still runs three games and ends on 25 finalists.
-  const games = useMemo(() => buildGames(fieldSize), [fieldSize]);
+  // Saturday still runs three games and ends on 25 finalists. The Sunday final
+  // is a single game instead.
+  const games = useMemo(() => buildGames(fieldSize, singleGame), [fieldSize, singleGame]);
   const [gameIndex, setGameIndex] = useState(0);
   const [roundIndex, setRoundIndex] = useState(0);
   const [screen, setScreen] = useState<GauntletScreenKind>(initialScreen);

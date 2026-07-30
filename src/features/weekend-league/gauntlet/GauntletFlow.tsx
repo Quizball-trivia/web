@@ -33,11 +33,14 @@ export function GauntletFlow({
   kickoffMs,
   canPlay = true,
   startAtCheckIn = false,
+  singleGame = false,
   onExit,
   onWatch,
 }: {
   registered: number;
   kickoffMs: number | null;
+  /** Sunday's final: one game, one champion — no elimination ladder. */
+  singleGame?: boolean;
   /** Registered players can enter; everyone else can only watch. */
   canPlay?: boolean;
   /** Entering from the league card goes straight to check-in — no second lobby. */
@@ -45,7 +48,12 @@ export function GauntletFlow({
   onExit: (exit: GauntletExit) => void;
   onWatch: () => void;
 }) {
-  const g = useGauntlet(onExit, startAtCheckIn && canPlay ? 'checkin' : 'lobby', registered);
+  const g = useGauntlet(
+    onExit,
+    startAtCheckIn && canPlay ? 'checkin' : 'lobby',
+    registered,
+    singleGame,
+  );
   const [devOpen, setDevOpen] = useState(false);
 
   const question = QUESTIONS[g.gameIndex][g.roundIndex];

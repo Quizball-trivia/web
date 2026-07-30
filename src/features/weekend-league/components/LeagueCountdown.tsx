@@ -30,12 +30,15 @@ export function LeagueCountdown({
   size = 'md',
   accent = 'text-brand-yellow',
   plain = false,
+  labelClass = 'text-white/40',
 }: {
   targetMs: number;
   size?: 'sm' | 'md';
   accent?: string;
   /** Drop the boxed segments and render the digits straight on the surface. */
   plain?: boolean;
+  /** Colour for the unit labels — override on light surfaces. */
+  labelClass?: string;
 }) {
   const { t } = useLocale();
   const [remaining, setRemaining] = useState<number | null>(null);
@@ -67,7 +70,7 @@ export function LeagueCountdown({
             >
               {remaining == null ? '—' : String(seg.value).padStart(2, '0')}
             </span>
-            <span className="mt-1.5 font-poppins text-[10px] font-bold uppercase tracking-widest text-white/40">
+            <span className={`mt-1.5 font-poppins text-[11px] font-black uppercase tracking-widest ${labelClass}`}>
               {t(`weekendLeague.${seg.unit}`)}
             </span>
           </div>

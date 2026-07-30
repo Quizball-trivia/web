@@ -51,7 +51,7 @@ export function QualifierLeaderboard({
 
   return (
     <section>
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-center gap-2">
         <h2 className="font-poppins text-lg font-black uppercase tracking-wide text-white">
           {title ?? t('weekendLeague.standings')}
         </h2>
@@ -64,8 +64,8 @@ export function QualifierLeaderboard({
         <LeaderboardPodium topThree={topThree} eventMode={false} medalColors />
       </div>
 
-      {/* Only the qualifying places are shown — below the cutoff is noise. */}
-      <LeaderboardTable entries={shown} pointsLabel="QP" eventMode={false} />
+      {/* Points, not QP or RP: these are scored inside the weekend games. */}
+      <LeaderboardTable entries={shown} pointsLabel={t('weekendLeague.colPoints')} eventMode={false} />
 
       <div className="mt-2 flex items-center gap-2 rounded-[10px] bg-brand-gold/10 px-4 py-1.5">
         <span className="h-px flex-1 bg-brand-gold/40" />
@@ -79,7 +79,7 @@ export function QualifierLeaderboard({
       {youBelowFold && you && (
         <>
           <div className="py-1.5 text-center font-poppins text-lg leading-none text-white/25">···</div>
-          <LeaderboardTable entries={[you]} pointsLabel="QP" eventMode={false} />
+          <LeaderboardTable entries={[you]} pointsLabel={t('weekendLeague.colPoints')} eventMode={false} />
         </>
       )}
     </section>

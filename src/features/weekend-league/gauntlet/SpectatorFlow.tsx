@@ -346,7 +346,7 @@ function LiveBoard({
       <div className="grid grid-cols-[3.4rem_1fr_auto] gap-2 px-3 pb-1.5 font-fun text-[10px] font-black uppercase tracking-[0.16em] text-white/45">
         <span>{t('leaderboard.colRank')}</span>
         <span>{t('leaderboard.colPlayer')}</span>
-        <span>QP</span>
+        <span>{t('weekendLeague.colPoints')}</span>
       </div>
 
       <div className="overflow-hidden rounded-[10px] border-2" style={{ borderColor: '#38B60E' }}>
@@ -391,19 +391,18 @@ function SpectatorRow({ row, delta = 0 }: { row: StandingsRow; delta?: number })
 function SpectatorBreak({ gameIndex, onDone }: { gameIndex: number; onDone: () => void }) {
   const { t } = useLocale();
   const [left, setLeft] = useState(SPECTATOR_BREAK_SECONDS);
+
+  // Tick down only — the state updater must stay pure. Advancing the parent
+  // from inside it would be a setState during render.
   useEffect(() => {
-    const id = setInterval(() => {
-      setLeft((l) => {
-        if (l <= 1) {
-          clearInterval(id);
-          onDone();
-          return 0;
-        }
-        return l - 1;
-      });
-    }, 1000);
+    const id = setInterval(() => setLeft((l) => Math.max(0, l - 1)), 1000);
     return () => clearInterval(id);
-  }, [onDone]);
+  }, []);
+
+  useEffect(() => {
+    if (left > 0) return;
+    onDone();
+  }, [left, onDone]);
 
   const next = GAMES[gameIndex + 1];
   return (

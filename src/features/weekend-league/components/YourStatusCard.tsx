@@ -26,7 +26,6 @@ function resolve(
   hasEntered: boolean,
   qualified: boolean,
   yourRank: number,
-  championName: string | null,
 ): { emoji: string; headline: string; sub: string; tone: Tone } {
   switch (phase) {
     case 'upcoming':
@@ -45,12 +44,12 @@ function resolve(
         : { emoji: '😔', headline: `So close — finished #${yourRank}`, sub: 'Only the top 24 advance. Come back next week and go again.', tone: 'red' };
     case 'playoffs_live':
       return qualified
-        ? { emoji: '🥊', headline: "You're in the playoffs", sub: 'Your knockout match is coming up. Win to advance.', tone: 'cyan' }
-        : { emoji: '👀', headline: 'Playoffs are live', sub: 'Watch the top 24 battle it out for the title.', tone: 'neutral' };
+        ? { emoji: '🏁', headline: "You're in the final", sub: 'The last 24 play for the title. Post your best score.', tone: 'cyan' }
+        : { emoji: '👀', headline: 'The final is live', sub: 'Watch the top 24 play for the title.', tone: 'neutral' };
     case 'completed':
       return qualified
         ? { emoji: '🏆', headline: "You're the champion!", sub: 'You won the Weekend League. Prizes are on the way.', tone: 'gold' }
-        : { emoji: '🏁', headline: 'Weekend wrapped', sub: `Champion: ${championName ?? '—'}. You finished #${yourRank}.`, tone: 'neutral' };
+        : { emoji: '🏁', headline: 'Weekend wrapped', sub: `You finished #${yourRank}.`, tone: 'neutral' };
   }
 }
 
@@ -60,15 +59,13 @@ export function YourStatusCard({
   hasEntered,
   qualified,
   yourRank,
-  championName,
 }: {
   phase: LeaguePhase;
   hasEntered: boolean;
   qualified: boolean;
   yourRank: number;
-  championName: string | null;
 }) {
-  const { emoji, headline, sub, tone } = resolve(phase, hasEntered, qualified, yourRank, championName);
+  const { emoji, headline, sub, tone } = resolve(phase, hasEntered, qualified, yourRank);
   return (
     <div className={`flex items-center gap-3 rounded-2xl border-2 px-4 py-3.5 ${TONE_CLASS[tone]}`}>
       <span className="text-2xl leading-none">{emoji}</span>

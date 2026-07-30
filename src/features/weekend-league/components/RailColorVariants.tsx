@@ -56,30 +56,49 @@ function Rail({ skin }: { skin: RailSkin }) {
         />
       )}
 
-      <div className="relative z-10 flex flex-wrap items-center gap-x-5 gap-y-2 px-4 py-3.5 md:px-6">
-        <h2 className={`text-base uppercase italic leading-none lg:text-lg ${skin.title}`} style={poppins}>
-          {t('weekendLeague.title')}
-        </h2>
+      {/* Mobile stacks title/status over the bar; from `sm` it's a single row. */}
+      <div className="relative z-10 px-4 py-3 md:px-6">
+        <div className="flex items-center gap-3">
+          <h2 className={`min-w-0 flex-1 truncate text-[15px] uppercase italic leading-none sm:flex-none lg:text-lg ${skin.title}`} style={poppins}>
+            {t('weekendLeague.title')}
+          </h2>
 
-        <div className="flex min-w-[120px] flex-1 items-center gap-2.5">
+          {/* Bar sits inline only once there's room for it. */}
+          <div className={`hidden h-1.5 flex-1 overflow-hidden rounded-full sm:block ${skin.trough}`}>
+            <div className={`h-full rounded-full ${skin.fill}`} style={{ width: `${PCT}%` }} />
+          </div>
+
+          <span className={`hidden whitespace-nowrap text-[13px] uppercase sm:inline ${skin.meta}`} style={poppins}>
+            {LAUNCH_EDITION ? (
+              <span className={skin.qpText}>{t('weekendLeague.freeEntryClaim')}</span>
+            ) : (
+              <>
+                <span className={skin.qpText}>{QP}</span>/{QP_TARGET.toLocaleString()} QP
+              </>
+            )}
+          </span>
+
+          <span className={`shrink-0 whitespace-nowrap text-[13px] uppercase ${skin.time}`} style={poppins}>
+            {t('weekendLeague.qualifierShort')}
+          </span>
+          <ArrowRight className={`size-4 shrink-0 transition-transform group-hover:translate-x-0.5 ${skin.arrow}`} />
+        </div>
+
+        {/* Mobile row: bar + status under the title. */}
+        <div className="mt-2 flex items-center gap-2.5 sm:hidden">
           <div className={`h-1.5 flex-1 overflow-hidden rounded-full ${skin.trough}`}>
             <div className={`h-full rounded-full ${skin.fill}`} style={{ width: `${PCT}%` }} />
           </div>
-          {LAUNCH_EDITION ? (
-            <span className={`whitespace-nowrap text-[13px] uppercase ${skin.qpText}`} style={poppins}>
-              {t('weekendLeague.freeEntryClaim')}
-            </span>
-          ) : (
-            <span className={`whitespace-nowrap text-[13px] uppercase ${skin.meta}`} style={poppins}>
-              <span className={skin.qpText}>{QP}</span>/{QP_TARGET.toLocaleString()} QP
-            </span>
-          )}
+          <span className={`shrink-0 whitespace-nowrap text-[12px] uppercase ${skin.meta}`} style={poppins}>
+            {LAUNCH_EDITION ? (
+              <span className={skin.qpText}>{t('weekendLeague.freeEntryShort')}</span>
+            ) : (
+              <>
+                <span className={skin.qpText}>{QP}</span>/{QP_TARGET.toLocaleString()} QP
+              </>
+            )}
+          </span>
         </div>
-
-        <span className={`whitespace-nowrap text-[13px] uppercase ${skin.time}`} style={poppins}>
-          {t('weekendLeague.qualifierShort')}
-        </span>
-        <ArrowRight className={`size-4 shrink-0 transition-transform group-hover:translate-x-0.5 ${skin.arrow}`} />
       </div>
     </Link>
   );

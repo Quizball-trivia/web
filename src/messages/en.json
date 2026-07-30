@@ -1839,6 +1839,14 @@
     "qBody": "You made the top {cutoff}. The final is Sunday 14:00.",
     "missedBadge": "Missed out",
     "missedHeadline": "You finished #{rank}",
-    "missedBody": "Only the top {cutoff} reach the final. Come back next week."
+    "missedBody": "Only the top {cutoff} reach the final. Come back next week.",
+    "colPoints": "Points",
+    "pointsShort": "PTS",
+    "finalLive": "The final is live",
+    "finalLiveBody": "The last {n} play the same questions right now. Win it to be champion.",
+    "finalStandings": "Final standings",
+    "notInFinal": "You're not in the final",
+    "notInFinalBody": "Only the top {n} qualified. You can still follow the final below.",
+    "freeEntryShort": "Free entry"
   }
 }
