@@ -13,7 +13,6 @@ import { EntryPanel } from './components/EntryPanel';
 import { HowItWorks } from './components/HowItWorks';
 import { PrizesPanel } from './components/PrizesPanel';
 import { QualifierLeaderboard } from './components/QualifierLeaderboard';
-import { PlayoffBracket } from './components/PlayoffBracket';
 import { PhaseSwitcher } from './components/PhaseSwitcher';
 import { LiveBadge } from './components/LiveBadge';
 import { WeekendLeagueGame } from './components/game/WeekendLeagueGame';
@@ -34,7 +33,7 @@ export function WeekendLeagueScreen({
   initial?: Partial<WeekendLeagueState>;
 }) {
   const wl = useWeekendLeague(initial);
-  const [liveMode, setLiveMode] = useState<'gauntlet' | 'spectate' | null>(null);
+  const [liveMode, setLiveMode] = useState<'gauntlet' | 'final' | 'spectate' | null>(null);
 
   const handleGauntletExit = useCallback(
     (exit: GauntletExit) => {
@@ -50,12 +49,13 @@ export function WeekendLeagueScreen({
     [wl.finishQualifier],
   );
 
-  if (liveMode === 'gauntlet') {
+  if (liveMode === 'gauntlet' || liveMode === 'final') {
     return (
       <GauntletFlow
-        registered={wl.registered}
+        registered={liveMode === 'final' ? PLAYOFF_CUTOFF : wl.registered}
         kickoffMs={null}
         canPlay={wl.hasEntered}
+        singleGame={liveMode === 'final'}
         startAtCheckIn
         onExit={handleGauntletExit}
         onWatch={() => setLiveMode('spectate')}
@@ -91,9 +91,9 @@ export function WeekendLeagueScreen({
         />
       )}
 
-      {/* Once the qualifier is live the entry/QP card is spent — the screen is
-          just play + live standings. */}
-      {wl.phase !== 'qualifier_live' && (
+      {/* Once a game is live the entry/QP card is spent — the screen is just
+          play + live standings. Before kickoff it's the countdown card. */}
+      {wl.phase !== 'qualifier_live' && wl.phase !== 'playoffs_live' && (
         <LeagueHeader
           phase={wl.phase}
           milestones={wl.milestones}
@@ -111,17 +111,24 @@ export function WeekendLeagueScreen({
 
       {/* The header's status panel already states where you stand while entry
           is open, so the status card would just repeat it. */}
-      {wl.phase !== 'entry_open' && wl.phase !== 'qualifier_live' && (
+      {wl.phase !== 'entry_open' &&
+        wl.phase !== 'qualifier_live' &&
+        wl.phase !== 'qualifier_done' &&
+        wl.phase !== 'playoffs_live' && (
         <YourStatusCard
           phase={wl.phase}
           hasEntered={wl.hasEntered}
           qualified={wl.qualified}
           yourRank={wl.yourRank}
-          championName={wl.bracket?.championName ?? null}
         />
       )}
 
-      <PhaseContent wl={wl} onJoin={() => setLiveMode('gauntlet')} onWatch={() => setLiveMode('spectate')} />
+      <PhaseContent
+        wl={wl}
+        onJoin={() => setLiveMode('gauntlet')}
+        onJoinFinal={() => setLiveMode('final')}
+        onWatch={() => setLiveMode('spectate')}
+      />
     </div>
   );
 }
@@ -129,10 +136,13 @@ export function WeekendLeagueScreen({
 function PhaseContent({
   wl,
   onJoin,
+  onJoinFinal,
   onWatch,
 }: {
   wl: ReturnType<typeof useWeekendLeague>;
   onJoin: () => void;
+  /** The Sunday final runs the same gauntlet with only the finalists. */
+  onJoinFinal: () => void;
   onWatch: () => void;
 }) {
   const { t } = useLocale();
@@ -225,48 +235,73 @@ function PhaseContent({
     );
   }
 
-  if (phase === 'playoffs_live' && wl.bracket) {
-    const eliminated = wl.playoffOutcome?.status === 'out';
+  // The Sunday final runs the same gauntlet as Saturday, just with the 24 who
+  // qualified — no knockout bracket.
+  if (phase === 'playoffs_live') {
     return (
       <>
-        {wl.qualified && !eliminated && (
-          <div className="rounded-[24px] border-2 border-brand-gold/40 bg-brand-gold/10 p-5 text-center">
-            <div className="mb-2 flex items-center justify-center">
+        {wl.qualified ? (
+          <div className="rounded-[24px] bg-brand-cyan/[0.08] p-5 text-center">
+            <div className="mb-2 flex items-center justify-center gap-2">
               <LiveBadge />
             </div>
-            <div className="font-poppins text-xl font-black uppercase text-white" style={poppins}>Your match is up</div>
+            <div className="font-poppins text-2xl font-black uppercase text-white" style={poppins}>
+              {t('weekendLeague.finalLive')}
+            </div>
             <p className="mx-auto mt-1 max-w-xs font-poppins text-[13px] font-semibold text-white/60">
-              Win your knockout tie to advance. Lose and your weekend is over.
+              {t('weekendLeague.finalLiveBody', { n: PLAYOFF_CUTOFF })}
             </p>
             <motion.button
               type="button"
               whileTap={{ scale: 0.97 }}
-              onClick={wl.startPlayoffGame}
+              onClick={onJoinFinal}
               className="mx-auto mt-4 flex h-14 w-full max-w-xs items-center justify-center gap-2 rounded-2xl bg-brand-green py-3.5 font-poppins text-lg font-black uppercase tracking-wide text-white transition-colors hover:bg-brand-green/90"
             >
-              <Play className="size-5 fill-current" /> Play your match
+              <Play className="size-5 fill-current" /> {t('weekendLeague.joinGame')}
+            </motion.button>
+            <button
+              type="button"
+              onClick={onWatch}
+              className="mx-auto mt-2.5 flex items-center justify-center gap-1.5 font-poppins text-[12px] font-bold uppercase tracking-widest text-white/50 hover:text-white"
+            >
+              <Eye className="size-4" /> {t('weekendLeague.watchLive')}
+            </button>
+          </div>
+        ) : (
+          <div className="rounded-[24px] border-2 border-white/10 p-5 text-center">
+            <div className="font-poppins text-lg font-black uppercase text-white">
+              {t('weekendLeague.notInFinal')}
+            </div>
+            <p className="mx-auto mt-1 max-w-xs font-poppins text-[13px] font-semibold text-white/60">
+              {t('weekendLeague.notInFinalBody', { n: PLAYOFF_CUTOFF })}
+            </p>
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.97 }}
+              onClick={onWatch}
+              className="mx-auto mt-4 flex h-12 w-full max-w-xs items-center justify-center gap-2 rounded-2xl bg-brand-green py-3 font-poppins text-base font-black uppercase tracking-wide text-white transition-colors hover:bg-brand-green/90"
+            >
+              <Eye className="size-5" /> {t('weekendLeague.watchLive')}
             </motion.button>
           </div>
         )}
-        {eliminated && (
-          <div className="rounded-[24px] border-2 border-brand-red-soft/40 bg-brand-red-soft/10 p-5 text-center">
-            <div className="font-poppins text-lg font-black uppercase text-brand-red-soft">Knocked out</div>
-            <p className="mx-auto mt-1 max-w-xs font-poppins text-[13px] font-semibold text-white/70">
-              You were beaten in the {wl.playoffOutcome?.status === 'out' ? wl.playoffOutcome.roundName : ''}. Watch the rest of the bracket play out below.
-            </p>
-          </div>
-        )}
-        <PlayoffBracket bracket={wl.bracket} live />
-        <PrizesPanel highlightRank={wl.qualified ? wl.yourRank : null} />
+        <QualifierLeaderboard
+          entries={wl.leaderboard.slice(0, PLAYOFF_CUTOFF)}
+          yourRank={wl.yourRank}
+          live
+        />
       </>
     );
   }
 
-  if (phase === 'completed' && wl.bracket) {
+  if (phase === 'completed') {
     return (
       <>
-        <PlayoffBracket bracket={wl.bracket} />
-        <QualifierLeaderboard entries={wl.leaderboard} yourRank={wl.yourRank} title="Final standings" />
+        <QualifierLeaderboard
+          entries={wl.leaderboard.slice(0, PLAYOFF_CUTOFF)}
+          yourRank={wl.yourRank}
+          title={t('weekendLeague.finalStandings')}
+        />
         <PrizesPanel highlightRank={wl.qualified ? wl.yourRank : null} />
       </>
     );

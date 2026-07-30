@@ -10,6 +10,7 @@ import type { LeaguePhase, Milestone } from '../types';
 import { ScheduleTimeline } from './ScheduleTimeline';
 import { LeagueCountdown } from './LeagueCountdown';
 import { JoinLeagueButton } from './JoinLeagueButton';
+import { DropInBadge } from '@/features/auction/components/shared/DropInBadge';
 
 /**
  * The league card: identity on the left, qualification status and the primary
@@ -56,44 +57,42 @@ export function LeagueHeader({
       <header
         className="relative overflow-visible rounded-[24px] border-2"
         style={{
-          backgroundColor: dark ? 'transparent' : colors.yellow.base,
+          backgroundColor: dark ? 'transparent' : colors.blue.brand,
           borderColor: dark ? 'rgba(255,255,255,0.12)' : 'transparent',
         }}
       >
-        {/* Corner badge, in the app's orange chip style. */}
-        <div className="absolute -top-3 left-5 z-30">
-          <span
-            className="whitespace-nowrap rounded-lg px-3 py-1 font-poppins text-xs font-black uppercase tracking-wide text-white shadow-[0_4px_14px_rgba(0,0,0,0.5)]"
+        {/* Corner badge — drops in and lands tilted, like the auction deal badge. */}
+        <div className="pointer-events-none absolute -top-3 left-5 z-30">
+          <DropInBadge
+            from={-160}
+            landingRotate={-5}
             style={{ backgroundColor: '#FF6C0A' }}
+            className="whitespace-nowrap rounded-lg px-3 py-1.5 font-poppins text-sm font-black uppercase tracking-wide text-white shadow-[0_4px_14px_rgba(0,0,0,0.5)]"
           >
             {t(result.qualified ? 'weekendLeague.qBadge' : 'weekendLeague.missedBadge')}
-          </span>
+          </DropInBadge>
         </div>
 
         <div className="px-5 pb-5 pt-7 text-center">
-          <div
-            className={`font-poppins text-[11px] font-black uppercase tracking-[0.28em] ${dark ? 'text-white/50' : 'text-black/60'}`}
-          >
+          <div className="font-poppins text-[11px] font-black uppercase tracking-[0.28em] text-brand-gold">
             {t('weekendLeague.kicker')}
           </div>
           <h1
-            className={`mt-1.5 font-poppins text-[1.6rem] font-black uppercase leading-none sm:text-3xl ${dark ? 'text-white' : 'text-black'}`}
+            className="mt-1.5 font-poppins text-[1.6rem] font-black uppercase leading-none text-white sm:text-3xl"
             style={poppins}
           >
             {t('weekendLeague.title')}
           </h1>
 
           <div
-            className={`mt-4 font-poppins text-2xl font-black uppercase sm:text-3xl ${dark ? 'text-white' : 'text-black'}`}
+            className="mt-4 font-poppins text-2xl font-black uppercase text-white sm:text-3xl"
             style={poppins}
           >
             {t(result.qualified ? 'weekendLeague.qHeadline' : 'weekendLeague.missedHeadline', {
               rank: result.rank,
             })}
           </div>
-          <p
-            className={`mx-auto mt-2 max-w-sm font-poppins text-[14px] font-semibold leading-snug ${dark ? 'text-white/65' : 'text-black/70'}`}
-          >
+          <p className="mx-auto mt-2 max-w-sm font-poppins text-[14px] font-semibold leading-snug text-white/75">
             {t(result.qualified ? 'weekendLeague.qBody' : 'weekendLeague.missedBody', {
               cutoff: result.cutoff,
             })}
@@ -102,14 +101,15 @@ export function LeagueHeader({
           {/* Countdown to Sunday — only meaningful if you're still in it. */}
           {result.qualified && milestones && (
             <div className="mt-4">
-              <div className="font-poppins text-[10px] font-black uppercase tracking-[0.16em] text-black/50">
+              <div className="font-poppins text-[12px] font-black uppercase tracking-[0.16em] text-white/70">
                 {t('weekendLeague.startsIn')}
               </div>
               <div className="mt-1.5 flex justify-center">
                 <LeagueCountdown
                   targetMs={milestones.playoffs.targetMs}
                   size="sm"
-                  accent="text-black"
+                  accent="text-white"
+                  labelClass="text-white/70"
                   plain
                 />
               </div>
@@ -117,8 +117,8 @@ export function LeagueHeader({
           )}
         </div>
 
-        <div className={`relative border-t px-4 pb-5 pt-4 lg:px-6 ${dark ? 'border-white/10' : 'border-black/15'}`}>
-          <ScheduleTimeline phase={phase} milestones={milestones} onLight={!dark} />
+        <div className="relative px-4 pb-5 pt-2 lg:px-6">
+          <ScheduleTimeline phase={phase} milestones={milestones} />
         </div>
       </header>
     );
@@ -197,7 +197,13 @@ export function LeagueHeader({
             </div>
             {milestones && (
               <div className="mt-2 flex justify-center">
-                <LeagueCountdown targetMs={milestones.qualifier.targetMs} size="sm" accent="text-white" plain />
+                <LeagueCountdown
+                  targetMs={milestones.qualifier.targetMs}
+                  size="sm"
+                  accent="text-white"
+                  labelClass="text-white/70"
+                  plain
+                />
               </div>
             )}
 

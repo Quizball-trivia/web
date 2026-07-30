@@ -142,8 +142,9 @@ export function AnswerBtn({
         cursor: disabled ? 'default' : 'pointer',
       }}
     >
-      <div className="flex items-center justify-center gap-3 text-center">
-        {prefix}
+      {/* Option letter pinned to the corner so it never shifts with the label. */}
+      {prefix && <span className="absolute left-2.5 top-2">{prefix}</span>}
+      <div className="flex items-center justify-center gap-3 px-6 text-center">
         <span>{label}</span>
         {state === 'correct' && <CheckCircle2 className="size-6 shrink-0" />}
         {state === 'wrong' && <XCircle className="size-6 shrink-0" />}

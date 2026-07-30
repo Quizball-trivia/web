@@ -457,19 +457,18 @@ export function BreakScreen({
   const { t } = useLocale();
   const total = fast ? 8 : BREAK_SECONDS;
   const [left, setLeft] = useState(total);
+
+  // Tick down only — advancing the parent from inside the updater would be a
+  // setState during render.
   useEffect(() => {
-    const id = setInterval(() => {
-      setLeft((l) => {
-        if (l <= 1) {
-          clearInterval(id);
-          onDone();
-          return 0;
-        }
-        return l - 1;
-      });
-    }, 1000);
+    const id = setInterval(() => setLeft((l) => Math.max(0, l - 1)), 1000);
     return () => clearInterval(id);
-  }, [onDone]);
+  }, []);
+
+  useEffect(() => {
+    if (left > 0) return;
+    onDone();
+  }, [left, onDone]);
 
   const next = games[game.index + 1];
   const mm = String(Math.floor(left / 60)).padStart(2, '0');

@@ -42,12 +42,9 @@ function Dot({ status }: { status: StageStatus }) {
 export function ScheduleTimeline({
   phase,
   milestones,
-  onLight = false,
 }: {
   phase: LeaguePhase;
   milestones: Record<'entry' | 'qualifier' | 'playoffs', Milestone> | null;
-  /** Rendered on a light (brand-yellow) card — flip the text to dark. */
-  onLight?: boolean;
 }) {
   const { t } = useLocale();
   const statuses = STATUS_BY_PHASE[phase];
@@ -70,22 +67,10 @@ export function ScheduleTimeline({
               <span className={`h-0.5 flex-1 rounded-full ${i === stages.length - 1 ? 'opacity-0' : status === 'done' ? 'bg-brand-green' : 'bg-white/12'}`} />
             </div>
             <div className="mt-2 text-center">
-              <div
-                className={`font-poppins text-[11px] font-black uppercase tracking-wide ${
-                  onLight
-                    ? emphasized ? 'text-black' : 'text-black/40'
-                    : emphasized ? 'text-white' : 'text-white/45'
-                }`}
-              >
+              <div className={`font-poppins text-[11px] font-black uppercase tracking-wide ${emphasized ? 'text-white' : 'text-white/45'}`}>
                 {stage.title}
               </div>
-              <div
-                className={`font-poppins text-[10px] font-semibold ${
-                  onLight
-                    ? emphasized ? 'text-black/70' : 'text-black/30'
-                    : emphasized ? 'text-white/70' : 'text-white/30'
-                }`}
-              >
+              <div className={`font-poppins text-[10px] font-semibold ${emphasized ? 'text-white/70' : 'text-white/30'}`}>
                 {stage.when}
               </div>
             </div>
