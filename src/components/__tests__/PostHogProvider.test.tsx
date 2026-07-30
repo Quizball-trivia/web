@@ -88,4 +88,28 @@ describe('PostHogPageView', () => {
     });
     expect(recordingMocks.startSessionRecording).not.toHaveBeenCalled();
   });
+
+  it('does not record lookalike or non-locale football-quiz paths', async () => {
+    for (const path of ['/en/football-quiz-tips', '/foo/football-quiz', '/en/xfootball-quiz']) {
+      navigationMocks.pathname = path;
+
+      render(<PostHogPageView />);
+
+      await waitFor(() => {
+        expect(recordingMocks.stopSessionRecording).toHaveBeenCalled();
+      });
+      expect(recordingMocks.startSessionRecording).not.toHaveBeenCalled();
+      vi.clearAllMocks();
+    }
+  });
+
+  it('records the quiz hub page', async () => {
+    navigationMocks.pathname = '/ka/football-quiz';
+
+    render(<PostHogPageView />);
+
+    await waitFor(() => {
+      expect(recordingMocks.startSessionRecording).toHaveBeenCalled();
+    });
+  });
 });
