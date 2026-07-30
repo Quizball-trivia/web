@@ -9,8 +9,7 @@ import { Sheet, SheetContent, SheetTitle, SheetFooter } from '@/components/ui/sh
 import { Button } from '@/components/ui/button';
 import { Coins, Trophy, Calendar, Zap, AlertCircle } from 'lucide-react';
 import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { WeekendLeagueScreen } from '@/features/weekend-league/WeekendLeagueScreen';
+import { useRouter } from 'next/navigation';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 
@@ -30,12 +29,8 @@ export function EventsDashboard({
   weekendLeagueHref = '/weekend-league',
 }: EventsDashboardProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [selectedEvent, setSelectedEvent] = useState<Tournament | null>(null);
 
-  // ?tab=weekend-league opens the league directly — this is where the play-home
-  // Weekend League band lands.
-  const activeTab = searchParams?.get('tab') ?? null;
 
   // Group tournaments: the seasonal entry is the featured hero (Weekend
   // League), the rest split into upcoming and past.
@@ -54,10 +49,6 @@ export function EventsDashboard({
   const isEligible = (event: Tournament) => {
      return playerCoins >= event.entryCoins && playerRankPoints >= event.minRank;
   };
-
-  if (activeTab === 'weekend-league') {
-    return <WeekendLeagueScreen />;
-  }
 
   return (
     <div className="container mx-auto max-w-5xl space-y-8 animate-in fade-in duration-500 py-6">
