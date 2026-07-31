@@ -1,11 +1,11 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { motion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 import { Eye, Play } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
 import { PLAYOFF_CUTOFF, poppins } from './constants';
-import { useWeekendLeague } from './use-weekend-league';
+import { useWeekendLeague, type WeekendLeagueController } from './use-weekend-league';
 import type { WeekendLeagueState } from './types';
 import { LeagueHeader } from './components/LeagueHeader';
 import { YourStatusCard } from './components/YourStatusCard';
@@ -21,18 +21,22 @@ import { SpectatorFlow } from './gauntlet/SpectatorFlow';
 import type { GauntletExit } from './gauntlet/gauntlet.types';
 
 /**
- * Weekend League — full frontend prototype (mock data). Renders the whole week:
- * entry → Saturday qualifier → Sunday playoffs. `showControls` adds the demo
- * phase switcher; turn it off for the "real" in-app placement.
+ * Weekend League — the whole week on one screen: entry → Saturday qualifier →
+ * Sunday playoffs. Without a `controller` it runs on the mock hook (the /dev/wl
+ * prototype, where `showControls` adds the demo phase switcher); the in-app
+ * placement injects the live backend-driven controller instead.
  */
 export function WeekendLeagueScreen({
   showControls = true,
   initial,
+  controller,
 }: {
   showControls?: boolean;
   initial?: Partial<WeekendLeagueState>;
+  controller?: WeekendLeagueController & { qp?: number };
 }) {
-  const wl = useWeekendLeague(initial);
+  const mock = useWeekendLeague(initial);
+  const wl = controller ?? mock;
   const [liveMode, setLiveMode] = useState<'gauntlet' | 'final' | 'spectate' | null>(null);
 
   const handleGauntletExit = useCallback(
@@ -91,44 +95,57 @@ export function WeekendLeagueScreen({
         />
       )}
 
-      {/* Once a game is live the entry/QP card is spent — the screen is just
-          play + live standings. Before kickoff it's the countdown card. */}
-      {wl.phase !== 'qualifier_live' && wl.phase !== 'playoffs_live' && (
-        <LeagueHeader
-          phase={wl.phase}
-          milestones={wl.milestones}
-          hasEntered={wl.hasEntered}
-          registered={wl.registered}
-          result={
-            wl.phase === 'qualifier_done'
-              ? { qualified: wl.qualified, rank: wl.yourRank, cutoff: PLAYOFF_CUTOFF }
-              : null
-          }
-          onEnter={wl.enterLeague}
-        />
-      )}
+      {/* The whole phase view swaps as one block, so week transitions (entry →
+          live → done) cross-fade instead of components popping in and out. */}
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={wl.phase}
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -16 }}
+          transition={{ duration: 0.28, ease: 'easeOut' }}
+          className="space-y-5"
+        >
+          {/* Once a game is live the entry/QP card is spent — the screen is just
+              play + live standings. Before kickoff it's the countdown card. */}
+          {wl.phase !== 'qualifier_live' && wl.phase !== 'playoffs_live' && (
+            <LeagueHeader
+              phase={wl.phase}
+              milestones={wl.milestones}
+              qp={controller?.qp}
+              hasEntered={wl.hasEntered}
+              registered={wl.registered}
+              result={
+                wl.phase === 'qualifier_done'
+                  ? { qualified: wl.qualified, rank: wl.yourRank, cutoff: PLAYOFF_CUTOFF }
+                  : null
+              }
+              onEnter={wl.enterLeague}
+            />
+          )}
 
+          {/* The header's status panel already states where you stand while entry
+              is open, so the status card would just repeat it. */}
+          {wl.phase !== 'entry_open' &&
+            wl.phase !== 'qualifier_live' &&
+            wl.phase !== 'qualifier_done' &&
+            wl.phase !== 'playoffs_live' && (
+            <YourStatusCard
+              phase={wl.phase}
+              hasEntered={wl.hasEntered}
+              qualified={wl.qualified}
+              yourRank={wl.yourRank}
+            />
+          )}
 
-      {/* The header's status panel already states where you stand while entry
-          is open, so the status card would just repeat it. */}
-      {wl.phase !== 'entry_open' &&
-        wl.phase !== 'qualifier_live' &&
-        wl.phase !== 'qualifier_done' &&
-        wl.phase !== 'playoffs_live' && (
-        <YourStatusCard
-          phase={wl.phase}
-          hasEntered={wl.hasEntered}
-          qualified={wl.qualified}
-          yourRank={wl.yourRank}
-        />
-      )}
-
-      <PhaseContent
-        wl={wl}
-        onJoin={() => setLiveMode('gauntlet')}
-        onJoinFinal={() => setLiveMode('final')}
-        onWatch={() => setLiveMode('spectate')}
-      />
+          <PhaseContent
+            wl={wl}
+            onJoin={() => setLiveMode('gauntlet')}
+            onJoinFinal={() => setLiveMode('final')}
+            onWatch={() => setLiveMode('spectate')}
+          />
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }
