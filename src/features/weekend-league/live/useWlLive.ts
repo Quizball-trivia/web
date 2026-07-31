@@ -252,12 +252,18 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
         clockOffsetRef.current,
         snapshot.server_now - Date.now(),
       );
+      // Room events can beat the ack callback (the server emits to the room
+      // the moment we join, before the ack round-trips). If a dispatch has
+      // already flowed, the live stream is ahead of the snapshot — take only
+      // the clock and (if we have none) the board, never regress the screen.
+      if (currentAttemptRef.current != null || lastGameIndexRef.current != null) {
+        setBoard((current) => (current.length > 0 ? current : snapshot.board ?? []));
+        return;
+      }
       setBoard(snapshot.board ?? []);
       setGameIndex(snapshot.game_index);
-      if (lastGameIndexRef.current !== snapshot.game_index) {
-        lastGameIndexRef.current = snapshot.game_index;
-        scoredRef.current = new Map();
-      }
+      lastGameIndexRef.current = snapshot.game_index;
+      scoredRef.current = new Map();
       // The snapshot score is authoritative (persisted + in-flight accepted).
       setScore(snapshot.score);
       const attempt = snapshot.attempt;
