@@ -190,6 +190,9 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
       // Only pause on the reveal when it closes the question being shown;
       // late reveals (after the next dispatch) just refresh the board.
       if (attempt && attempt.attempt_id === event.attempt_id) {
+        // The attempt is over — a pending timer must not resurrect its
+        // (now expired) question screen over this reveal.
+        clearPendingQuestion();
         apply({ kind: 'reveal', attempt, reveal: event, answer: answeredRef.current });
       }
     };
@@ -418,33 +421,30 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
             }
             inFlightRef.current = null;
             setLastAck(ack);
+            const cur = screenRef.current;
+            const onThisQuestion =
+              cur.kind === 'question' && cur.attempt.attempt_id === attemptId;
             if (ack.accepted || ack.reason === 'duplicate') {
               answeredRef.current = ack;
               if (ack.accepted && !scoredRef.current.has(attemptId)) {
                 scoredRef.current.set(attemptId, ack.points);
                 setScore((s) => s + ack.points);
               }
-              setScreen((current) => {
-                if (current.kind === 'question' && current.attempt.attempt_id === attemptId) {
-                  const next = { ...current, answer: ack };
-                  screenRef.current = next;
-                  return next;
-                }
-                return current;
-              });
+              if (onThisQuestion) {
+                const next = { ...cur, answer: ack };
+                screenRef.current = next;
+                setScreen(next);
+              }
             } else {
               // Rejected (closed/invalid/…): leave the question unlocked so
               // the player can answer again inside the window.
               answeredRef.current = null;
               setRetryNonce((n) => n + 1);
-              setScreen((current) => {
-                if (current.kind === 'question' && current.attempt.attempt_id === attemptId) {
-                  const next = { ...current, answer: null };
-                  screenRef.current = next;
-                  return next;
-                }
-                return current;
-              });
+              if (onThisQuestion) {
+                const next = { ...cur, answer: null };
+                screenRef.current = next;
+                setScreen(next);
+              }
             }
           },
         );

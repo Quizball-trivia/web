@@ -161,6 +161,8 @@ function screenKey(screen: WlLiveScreen): string {
 }
 
 function Shell({ children, onExit }: { children: React.ReactNode; onExit: () => void }) {
+  const { t } = useLocale();
+  const SHELL_EXIT_LABEL = t('weekendLeague.gQuit');
   return (
     <div className="mx-auto flex min-h-[70vh] w-full max-w-2xl flex-col items-center justify-center px-4 py-5 text-center font-fun">
       <div className="w-full rounded-[24px] border-2 border-white/10 bg-surface-card-deep p-6">
@@ -170,7 +172,7 @@ function Shell({ children, onExit }: { children: React.ReactNode; onExit: () => 
           onClick={onExit}
           className="mx-auto mt-6 flex items-center gap-1.5 font-poppins text-[12px] font-bold uppercase tracking-widest text-white/40 hover:text-white"
         >
-          <LogOut className="size-4" /> ←
+          <LogOut className="size-4" /> {SHELL_EXIT_LABEL}
         </button>
       </div>
     </div>
@@ -541,7 +543,7 @@ function HigherLowerQuestion({
         {pick(q['stat_label'], locale)}
       </div>
       <div className="mt-1 text-center font-poppins text-lg font-black text-white">
-        {t('weekendLeague.gHigherLowerPrompt')}
+        {t('weekendLeague.gHigherLowerPrompt', { name: pick(q['left_name'], locale) })}
       </div>
       <div className="mt-5 grid grid-cols-2 gap-3">
         {(['left', 'right'] as const).map((side) => (
@@ -762,6 +764,7 @@ function BoardStrip({
 }
 
 function BoardRowView({ row, isYou }: { row: WlBoardRow; isYou: boolean }) {
+  const { t } = useLocale();
   return (
     <div
       className={`flex items-center justify-between rounded-lg px-3 py-1.5 font-poppins text-[13px] font-bold ${
@@ -769,7 +772,9 @@ function BoardRowView({ row, isYou }: { row: WlBoardRow; isYou: boolean }) {
       }`}
     >
       <span className="tabular-nums">#{row.rank}</span>
-      <span className="mx-2 flex-1 truncate">{isYou ? 'You' : `Player ${row.rank}`}</span>
+      <span className="mx-2 flex-1 truncate">
+        {isYou ? t('weekendLeague.gYou') : t('weekendLeague.gPlayerN', { n: row.rank })}
+      </span>
       <span className="tabular-nums">{row.points}</span>
     </div>
   );

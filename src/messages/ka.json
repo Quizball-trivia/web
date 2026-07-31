@@ -1871,8 +1871,10 @@
     "gAnsweredCount": "{n}-მა უპასუხა",
     "gWaitingNext": "შემდეგი კითხვა მოდის…",
     "gQuit": "გასვლა",
-    "gPts": "ქლ",
+    "gPts": "ქულა",
     "gCareerPrompt": "ვისი კარიერაა ეს?",
-    "gTimeUp": "დრო ამოიწურა"
+    "gTimeUp": "დრო ამოიწურა",
+    "gYou": "შენ",
+    "gPlayerN": "მოთამაშე {n}"
   }
 }
