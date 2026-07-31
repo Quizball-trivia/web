@@ -10,7 +10,6 @@ import type { WeekendLeagueLiveExtras } from './use-weekend-league-live';
 import type { WeekendLeagueState } from './types';
 import { LeagueHeader } from './components/LeagueHeader';
 import { YourStatusCard } from './components/YourStatusCard';
-import { EntryPanel } from './components/EntryPanel';
 import { HowItWorks } from './components/HowItWorks';
 import { PrizesPanel } from './components/PrizesPanel';
 import { QualifierLeaderboard } from './components/QualifierLeaderboard';
@@ -31,16 +30,21 @@ export function WeekendLeagueScreen({
   showControls = true,
   initial,
   controller,
+  onJoinLive,
+  onWatchLive,
 }: {
   showControls?: boolean;
   initial?: Partial<WeekendLeagueState>;
   controller?: WeekendLeagueController & Partial<WeekendLeagueLiveExtras>;
+  /** Live-mode handlers: open the real socket-driven game/spectator flow. */
+  onJoinLive?: () => void;
+  onWatchLive?: () => void;
 }) {
   const mock = useWeekendLeague(initial);
   const wl = controller ?? mock;
-  // Live mode keeps the prototype game flows unreachable until the wl:* socket
-  // client ships — real players must never check in / play against mock data.
-  // Fail closed: a live controller must explicitly opt in to gameplay.
+  // The mock game flows are only reachable without a live controller — real
+  // players play through the socket flow (onJoinLive), never against mock
+  // data. Fail closed at the type boundary.
   const playable = controller ? controller.playable === true && !controller.live : true;
   const [liveMode, setLiveMode] = useState<'gauntlet' | 'final' | 'spectate' | null>(null);
 
@@ -132,9 +136,11 @@ export function WeekendLeagueScreen({
             />
           )}
 
-          {/* The header's status panel already states where you stand while entry
-              is open, so the status card would just repeat it. */}
-          {wl.phase !== 'entry_open' &&
+          {/* The blue header card already carries status + countdown + the
+              entry CTA, so the status card only earns its spot once there is a
+              real outcome to report (champion / weekend wrapped). */}
+          {wl.phase !== 'upcoming' &&
+            wl.phase !== 'entry_open' &&
             wl.phase !== 'qualifier_live' &&
             wl.phase !== 'qualifier_done' &&
             wl.phase !== 'playoffs_live' && (
@@ -154,10 +160,9 @@ export function WeekendLeagueScreen({
 
           <PhaseContent
             wl={wl}
-            playable={playable}
-            onJoin={() => setLiveMode('gauntlet')}
-            onJoinFinal={() => setLiveMode('final')}
-            onWatch={() => setLiveMode('spectate')}
+            onJoin={playable ? () => setLiveMode('gauntlet') : onJoinLive}
+            onJoinFinal={playable ? () => setLiveMode('final') : onJoinLive}
+            onWatch={playable ? () => setLiveMode('spectate') : onWatchLive}
           />
         </motion.div>
       </AnimatePresence>
@@ -167,32 +172,25 @@ export function WeekendLeagueScreen({
 
 function PhaseContent({
   wl,
-  playable,
   onJoin,
   onJoinFinal,
   onWatch,
 }: {
   wl: WeekendLeagueController;
-  /** False in live mode until real gameplay is wired — hides join/watch CTAs. */
-  playable: boolean;
-  onJoin: () => void;
+  /** Absent handler = that action isn't available — its CTA is not rendered. */
+  onJoin?: () => void;
   /** The Sunday final runs the same gauntlet with only the finalists. */
-  onJoinFinal: () => void;
-  onWatch: () => void;
+  onJoinFinal?: () => void;
+  onWatch?: () => void;
 }) {
   const { t } = useLocale();
-  const { phase, milestones } = wl;
+  const { phase } = wl;
 
+  // The blue header card owns the countdown + entry state, so before the
+  // week opens the page is just the format explainer and the prize ladder.
   if (phase === 'upcoming') {
     return (
       <>
-        <EntryPanel
-          mode="locked"
-          countdownTarget={milestones?.entry.targetMs ?? null}
-          countdownCaption="Claim before Friday 12:00."
-          registered={wl.registered}
-          onEnter={wl.enterLeague}
-        />
         <HowItWorks />
         <PrizesPanel />
       </>
@@ -220,7 +218,7 @@ function PhaseContent({
             <p className="mx-auto mt-1 max-w-xs font-poppins text-[13px] font-semibold text-white/60">
               {t('weekendLeague.qualifierLiveBody')}
             </p>
-            {playable && (
+            {onJoin && (
               <>
                 <motion.button
                   type="button"
@@ -233,6 +231,7 @@ function PhaseContent({
                 <button
                   type="button"
                   onClick={onWatch}
+                  hidden={!onWatch}
                   className="mx-auto mt-2.5 flex items-center justify-center gap-1.5 font-poppins text-[12px] font-bold uppercase tracking-widest text-white/50 hover:text-white"
                 >
                   <Eye className="size-4" /> {t('weekendLeague.watchLive')}
@@ -248,7 +247,7 @@ function PhaseContent({
             <p className="mx-auto mt-1 max-w-xs font-poppins text-[13px] font-semibold text-white/60">
               {t('weekendLeague.entryClosedLiveBody')}
             </p>
-            {playable && (
+            {onWatch && (
               <motion.button
                 type="button"
                 whileTap={{ scale: 0.97 }}
@@ -292,7 +291,7 @@ function PhaseContent({
             <p className="mx-auto mt-1 max-w-xs font-poppins text-[13px] font-semibold text-white/60">
               {t('weekendLeague.finalLiveBody', { n: PLAYOFF_CUTOFF })}
             </p>
-            {playable && (
+            {onJoinFinal && (
               <>
                 <motion.button
                   type="button"
@@ -305,6 +304,7 @@ function PhaseContent({
                 <button
                   type="button"
                   onClick={onWatch}
+                  hidden={!onWatch}
                   className="mx-auto mt-2.5 flex items-center justify-center gap-1.5 font-poppins text-[12px] font-bold uppercase tracking-widest text-white/50 hover:text-white"
                 >
                   <Eye className="size-4" /> {t('weekendLeague.watchLive')}
@@ -320,7 +320,7 @@ function PhaseContent({
             <p className="mx-auto mt-1 max-w-xs font-poppins text-[13px] font-semibold text-white/60">
               {t('weekendLeague.notInFinalBody', { n: PLAYOFF_CUTOFF })}
             </p>
-            {playable && (
+            {onWatch && (
               <motion.button
                 type="button"
                 whileTap={{ scale: 0.97 }}

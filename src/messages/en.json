@@ -1851,6 +1851,27 @@
     "qHeadlineNoRank": "You qualified for the final!",
     "missedHeadlineNoRank": "You didn't make the cut",
     "loadError": "Couldn't load the Weekend League.",
-    "retry": "Try again"
+    "retry": "Try again",
+    "gTypeAnswer": "Type your answer…",
+    "gSubmit": "Submit",
+    "gCheckinTitle": "Check in to play",
+    "gCheckinBody": "Confirm you are here — kickoff is at 14:00 sharp for everyone.",
+    "gCheckedIn": "You are checked in",
+    "gCheckin": "Check in",
+    "gWaitingKickoff": "Waiting for kickoff…",
+    "gEliminatedTitle": "Eliminated",
+    "gThroughTitle": "You are through!",
+    "gChampionTitle": "CHAMPION!",
+    "gFinalDoneTitle": "Final finished",
+    "gCancelledTitle": "Event cancelled",
+    "gCancelledBody": "This weekend’s event was cancelled. Entries are not consumed.",
+    "gNotEntered": "You are not entered in this event.",
+    "gWatchInstead": "Watch live instead",
+    "gYourRank": "Your rank",
+    "gAnsweredCount": "{n} answered",
+    "gWaitingNext": "Next question coming up…",
+    "gQuit": "Leave",
+    "gPts": "pts",
+    "gCareerPrompt": "Whose career is this?"
   }
 }
