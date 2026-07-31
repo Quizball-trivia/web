@@ -16,6 +16,9 @@ class FakeSocket {
   /** Captured wl:answer sends: [payload, cb] with timeout-style callbacks. */
   answerSends: Array<{ data: Record<string, unknown>; cb: (err: Error | null, ack?: WlAnswerAck) => void }> = [];
   subscribeAck: { ok: boolean; seq?: number; reason?: string; snapshot?: WlSubscribeSnapshot | null } = { ok: true, seq: 0 };
+  /** When true, subscribe acks are held until releaseSubscribeAck(). */
+  deferSubscribeAck = false;
+  pendingSubscribeAcks: Array<(r: unknown) => void> = [];
 
   on(event: string, h: Handler) {
     if (!this.handlers.has(event)) this.handlers.set(event, new Set());
@@ -29,9 +32,15 @@ class FakeSocket {
   emit(event: string, ...args: unknown[]) {
     if (event === 'wl:subscribe') {
       const ack = args[1] as (r: unknown) => void;
-      ack?.(this.subscribeAck);
+      if (this.deferSubscribeAck) this.pendingSubscribeAcks.push(ack);
+      else ack?.(this.subscribeAck);
     }
     return this;
+  }
+  releaseSubscribeAck() {
+    const acks = this.pendingSubscribeAcks;
+    this.pendingSubscribeAcks = [];
+    for (const ack of acks) ack(this.subscribeAck);
   }
   timeout(timeoutMs: number) {
     void timeoutMs;
@@ -265,6 +274,50 @@ describe('useWlLive', () => {
     expect(result.current.retryNonce).toBe(1);
     act(() => result.current.submitAnswer('a'));
     expect(fakeSocket.answerSends).toHaveLength(4);
+  });
+
+  it('merges a dropped-ack recovery even when an event beats the subscribe ack', () => {
+    const { result } = renderHook(() => useWlLive(TID, 'player'));
+    act(() => fakeSocket.fire('wl:dispatch', dispatch(5)));
+    act(() => result.current.submitAnswer('a')); // ack dropped
+
+    fakeSocket.deferSubscribeAck = true;
+    fakeSocket.subscribeAck = {
+      ok: true,
+      seq: 5,
+      snapshot: {
+        status: 'game_live',
+        server_now: Date.now(),
+        game_index: 0,
+        attempt: {
+          attempt_id: 'attempt-5',
+          game_index: 0,
+          round_index: 0,
+          question_index: 0,
+          kind: 'mcq',
+          question: { prompt: { en: 'Q' }, options: [] },
+          evaluation: { correct_id: 'a' },
+          playableAt: Date.now() - 500,
+          deadlineAt: Date.now() + 5_000,
+        },
+        your_answer: { correct: true, points: 40, elapsedMs: 700 },
+        score: 40,
+        board: [],
+      },
+    };
+    act(() => {
+      fakeSocket.fire('disconnect', 'transport close');
+      fakeSocket.fire('connect', undefined);
+    });
+    // A phase event lands BEFORE the ack callback runs.
+    act(() =>
+      fakeSocket.fire('wl:phase', {
+        type: 'phase', tournamentId: TID, seq: 6, serverNowAtEmit: Date.now(), to: 'game_live',
+      }),
+    );
+    act(() => fakeSocket.releaseSubscribeAck());
+    expect(result.current.score).toBe(40);
+    expect(result.current.screen.kind === 'question' && result.current.screen.answer?.accepted).toBe(true);
   });
 
   it('remaps the spectator window onto the delayed emission time', () => {

@@ -266,12 +266,29 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
       // Room events can beat the ack callback (the server emits to the room
       // the moment we join, before the ack round-trips). If ANY event has
       // arrived since this subscribe was sent, the live stream is ahead of
-      // the snapshot — take only the clock and (if we have none) the board,
-      // never regress the screen. A stale attempt left over from BEFORE a
-      // reconnect does not count: rehydrating over it is exactly how a
-      // dropped ack and the authoritative score are recovered.
+      // the snapshot — never regress the screen. But recovery of a dropped
+      // ack must still work: when the snapshot describes the SAME attempt
+      // the stream has current (and the same game), merge in the stored
+      // answer and the authoritative score without touching the screen kind.
       if (eventSinceSubscribeRef.current) {
         setBoard((current) => (current.length > 0 ? current : snapshot.board ?? []));
+        const curAttempt = currentAttemptRef.current;
+        if (
+          curAttempt &&
+          snapshot.attempt?.attempt_id === curAttempt.attempt_id &&
+          snapshot.game_index === lastGameIndexRef.current
+        ) {
+          setScore((s) => Math.max(s, snapshot.score));
+          if (answeredRef.current == null && snapshot.your_answer) {
+            const priorAck: WlAnswerAck = { accepted: true, ...snapshot.your_answer };
+            answeredRef.current = priorAck;
+            scoredRef.current.set(curAttempt.attempt_id, snapshot.your_answer.points);
+            const cur = screenRef.current;
+            if (cur.kind === 'question' && cur.attempt.attempt_id === curAttempt.attempt_id) {
+              apply({ ...cur, answer: priorAck });
+            }
+          }
+        }
         return;
       }
       setBoard(snapshot.board ?? []);
@@ -341,7 +358,12 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
       // Socket.IO discards pending ack callbacks on disconnect — a submit
       // that was in flight will never resolve, so unlock it for a retry
       // (the backend dedupes and returns the stored result idempotently).
+      // The choice UI holds its pick until retryNonce bumps; without this an
+      // unanswered question stays functionally locked after the reconnect.
       inFlightRef.current = null;
+      if (answeredRef.current == null && currentAttemptRef.current != null) {
+        setRetryNonce((n) => n + 1);
+      }
       setConnected(false);
       setSubscribed(false);
     };
