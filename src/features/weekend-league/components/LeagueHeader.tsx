@@ -23,6 +23,9 @@ export function LeagueHeader({
   phase,
   milestones,
   qp = LAUNCH_EDITION ? QP_TARGET : 105,
+  qpTarget = QP_TARGET,
+  qpQualified,
+  canEnter = true,
   hasEntered = false,
   registered,
   result,
@@ -32,19 +35,26 @@ export function LeagueHeader({
   phase: LeaguePhase;
   milestones: Record<'entry' | 'qualifier' | 'playoffs', Milestone> | null;
   qp?: number;
+  /** Tournament-configured QP requirement (defaults to the prototype constant). */
+  qpTarget?: number;
+  /** Server's word on entry eligibility; overrides the local qp>=target guess. */
+  qpQualified?: boolean;
+  /** Entry window is open right now — off, the claim CTA renders locked. */
+  canEnter?: boolean;
   hasEntered?: boolean;
   registered?: number;
-  /** Set once the Saturday qualifier is done — switches the card to the result state. */
+  /** Set once the Saturday qualifier is done — switches the card to the result
+      state. `rank` ≤ 0 means the rank isn't known (live mode without standings). */
   result?: { qualified: boolean; rank: number; cutoff: number } | null;
   onEnter?: () => void;
   onPlayRanked?: () => void;
 }) {
   const { t } = useLocale();
 
-  const clamped = Math.max(0, Math.min(qp, QP_TARGET));
-  const pct = Math.round((clamped / QP_TARGET) * 100);
-  const remaining = Math.max(0, QP_TARGET - clamped);
-  const isQualified = clamped >= QP_TARGET;
+  const clamped = Math.max(0, Math.min(qp, qpTarget));
+  const pct = qpTarget <= 0 ? 100 : Math.round((clamped / qpTarget) * 100);
+  const remaining = Math.max(0, qpTarget - clamped);
+  const isQualified = qpQualified ?? clamped >= qpTarget;
 
   const ctaClass =
     'flex h-11 w-full items-center justify-center gap-2 rounded-[10px] font-poppins text-[13px] font-black uppercase tracking-wide text-black transition-opacity hover:opacity-90';
@@ -88,9 +98,11 @@ export function LeagueHeader({
             className="mt-4 font-poppins text-2xl font-black uppercase text-white sm:text-3xl"
             style={poppins}
           >
-            {t(result.qualified ? 'weekendLeague.qHeadline' : 'weekendLeague.missedHeadline', {
-              rank: result.rank,
-            })}
+            {result.rank > 0
+              ? t(result.qualified ? 'weekendLeague.qHeadline' : 'weekendLeague.missedHeadline', {
+                  rank: result.rank,
+                })
+              : t(result.qualified ? 'weekendLeague.qHeadlineNoRank' : 'weekendLeague.missedHeadlineNoRank')}
           </div>
           <p className="mx-auto mt-2 max-w-sm font-poppins text-[14px] font-semibold leading-snug text-white/75">
             {t(result.qualified ? 'weekendLeague.qBody' : 'weekendLeague.missedBody', {
@@ -172,7 +184,7 @@ export function LeagueHeader({
 
           <div className="mt-3 text-center font-poppins text-xl font-black text-white" style={poppins}>
             {clamped}
-            <span className="text-sm font-bold text-white/60"> / {QP_TARGET.toLocaleString()} QP</span>
+            <span className="text-sm font-bold text-white/60"> / {qpTarget.toLocaleString()} QP</span>
           </div>
 
           <div className="mt-2 flex items-center gap-2">
@@ -208,8 +220,18 @@ export function LeagueHeader({
             )}
 
             <div className="mt-3.5">
-              {hasEntered || isQualified ? (
-                <JoinLeagueButton joined={hasEntered} onJoin={onEnter} />
+              {hasEntered ? (
+                <JoinLeagueButton joined onJoin={onEnter} />
+              ) : isQualified && !canEnter ? (
+                <button
+                  type="button"
+                  disabled
+                  className="flex h-11 w-full cursor-not-allowed items-center justify-center rounded-[10px] bg-white/10 font-poppins text-[13px] font-black uppercase tracking-wide text-white/40"
+                >
+                  {t('weekendLeague.entryClosedTitle')}
+                </button>
+              ) : isQualified ? (
+                <JoinLeagueButton joined={false} onJoin={onEnter} />
               ) : onPlayRanked ? (
                 <button type="button" onClick={onPlayRanked} className={ctaClass} style={{ backgroundColor: colors.green.light }}>
                   {t('weekendLeague.playRanked')}

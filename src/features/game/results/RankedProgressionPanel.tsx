@@ -35,6 +35,7 @@ type RankedFields = Pick<
   | 'isCancelledNoContest'
   | 'rpChange'
   | 'coinsAwarded'
+  | 'qpAwarded'
   | 'refundedTickets'
   | 'oldRP'
   | 'newRP'
@@ -72,6 +73,7 @@ export function RankedProgressionPanel({
     isCancelledNoContest,
     rpChange,
     coinsAwarded,
+    qpAwarded,
     refundedTickets,
     oldRP,
     newRP,
@@ -194,9 +196,14 @@ export function RankedProgressionPanel({
           )}
 
           {/* Placement matches also pay the participation reward */}
-          {isPlacementMatch && coinsAwarded != null && coinsAwarded > 0 && (
-            <div className="mt-3 flex justify-center">
-              <CoinRewardChip amount={coinsAwarded} delay={0.8} />
+          {isPlacementMatch && ((coinsAwarded ?? 0) > 0 || (qpAwarded ?? 0) > 0) && (
+            <div className="mt-3 flex justify-center gap-2">
+              {coinsAwarded != null && coinsAwarded > 0 && (
+                <CoinRewardChip amount={coinsAwarded} delay={0.8} />
+              )}
+              {qpAwarded != null && qpAwarded > 0 && (
+                <QpRewardChip amount={qpAwarded} delay={1.0} />
+              )}
             </div>
           )}
         </>
@@ -336,9 +343,17 @@ export function RankedProgressionPanel({
                 </motion.span>
               )}
             </div>
-            {/* Coin participation reward (win 300 / loss 100) from settlement */}
-            {coinsAwarded != null && coinsAwarded > 0 && (
-              <CoinRewardChip amount={coinsAwarded} delay={1.1} />
+            {/* Coin participation reward (win 300 / loss 100) + Weekend League
+                QP (win 25 / loss 10) from the same settlement */}
+            {((coinsAwarded ?? 0) > 0 || (qpAwarded ?? 0) > 0) && (
+              <div className="flex items-center justify-center gap-2">
+                {coinsAwarded != null && coinsAwarded > 0 && (
+                  <CoinRewardChip amount={coinsAwarded} delay={1.1} />
+                )}
+                {qpAwarded != null && qpAwarded > 0 && (
+                  <QpRewardChip amount={qpAwarded} delay={1.3} />
+                )}
+              </div>
             )}
           </div>
 
@@ -404,6 +419,30 @@ function CoinRewardChip({ amount, delay }: { amount: number; delay: number }) {
     >
       <CoinIcon size={24} />
       +{amount}
+    </motion.div>
+  );
+}
+
+/**
+ * Cyan pill showing the Weekend League qualification points this match earned
+ * toward the weekend ticket. Pops in right after the coin reward.
+ */
+function QpRewardChip({ amount, delay }: { amount: number; delay: number }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 24, scale: 0 }}
+      animate={{ opacity: 1, y: 0, scale: [0, 1.25, 0.95, 1] }}
+      transition={{
+        delay,
+        duration: 0.55,
+        times: [0, 0.55, 0.8, 1],
+        ease: 'easeOut',
+      }}
+      className="mt-4 inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 font-poppins font-semibold tabular-nums leading-none text-[17px] sm:py-2 sm:text-[21px]"
+      style={{ backgroundColor: '#1CB0F6', color: '#071013', boxShadow: '0 4px 0 rgba(0,0,0,0.35)' }}
+    >
+      +{amount}
+      <span className="text-[13px] font-black sm:text-[15px]">QP</span>
     </motion.div>
   );
 }

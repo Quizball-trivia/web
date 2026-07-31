@@ -531,6 +531,10 @@ export interface RankedUserOutcomePayload {
   deltaRp: number;
   /** Coin participation reward granted with the ranked settlement (win/loss). */
   coinsAwarded?: number;
+  /** Weekend League qualification points earned by this match (win/loss). */
+  qpAwarded?: number;
+  /** Running QP balance after this match (resets when an entry is claimed). */
+  qpWeekTotal?: number;
   oldTier: string;
   newTier: string;
   placementStatus: 'unplaced' | 'in_progress' | 'placed';

@@ -40,8 +40,8 @@ function resolve(
         : { emoji: '⌛', headline: "You didn't enter this week", sub: 'Entry closed at kickoff. Come back next Friday to claim your spot.', tone: 'neutral' };
     case 'qualifier_done':
       return qualified
-        ? { emoji: '🎉', headline: `You qualified — #${yourRank}`, sub: 'You made the top 24. Playoffs are Sunday 14:00.', tone: 'gold' }
-        : { emoji: '😔', headline: `So close — finished #${yourRank}`, sub: 'Only the top 24 advance. Come back next week and go again.', tone: 'red' };
+        ? { emoji: '🎉', headline: yourRank > 0 ? `You qualified — #${yourRank}` : 'You qualified!', sub: 'You made the top 24. Playoffs are Sunday 14:00.', tone: 'gold' }
+        : { emoji: '😔', headline: yourRank > 0 ? `So close — finished #${yourRank}` : 'So close — missed the cut', sub: 'Only the top 24 advance. Come back next week and go again.', tone: 'red' };
     case 'playoffs_live':
       return qualified
         ? { emoji: '🏁', headline: "You're in the final", sub: 'The last 24 play for the title. Post your best score.', tone: 'cyan' }
@@ -49,7 +49,7 @@ function resolve(
     case 'completed':
       return qualified
         ? { emoji: '🏆', headline: "You're the champion!", sub: 'You won the Weekend League. Prizes are on the way.', tone: 'gold' }
-        : { emoji: '🏁', headline: 'Weekend wrapped', sub: `You finished #${yourRank}.`, tone: 'neutral' };
+        : { emoji: '🏁', headline: 'Weekend wrapped', sub: yourRank > 0 ? `You finished #${yourRank}.` : 'See you next weekend.', tone: 'neutral' };
   }
 }
 

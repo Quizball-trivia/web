@@ -45,6 +45,7 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
     showRankedRpCard,
     rpChange,
     coinsAwarded,
+    qpAwarded,
     oldRP,
     newRP,
     rpTierInfo,
@@ -122,6 +123,7 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
           isCancelledNoContest={isCancelledNoContest}
           rpChange={rpChange}
           coinsAwarded={coinsAwarded}
+          qpAwarded={qpAwarded}
           refundedTickets={refundedTickets}
           oldRP={oldRP}
           newRP={newRP}

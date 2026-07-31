@@ -46,6 +46,8 @@ export interface MatchResultViewModel {
   rpChange: number;
   /** Coin participation reward from the ranked settlement (null when not ranked/settled). */
   coinsAwarded: number | null;
+  /** Weekend League QP earned by this match (null when not ranked/settled). */
+  qpAwarded: number | null;
   oldRP: number;
   newRP: number;
   rpTierInfo: ReturnType<typeof getRankedTierProgress>;
@@ -163,6 +165,7 @@ export function useMatchResultViewModel(props: RealtimeResultsScreenProps): Matc
   // authoritative settlement data so profile and result screens cannot diverge.
   const rpChange = myOutcome?.deltaRp ?? 0;
   const coinsAwarded = myOutcome?.coinsAwarded ?? null;
+  const qpAwarded = myOutcome?.qpAwarded ?? null;
   const refundedTickets = isCancelledNoContest && matchType === 'ranked' ? 1 : 0;
   const oldRP = myOutcome?.oldRp ?? oldRpBase;
   const newRP = myOutcome?.newRp ?? oldRP;
@@ -291,6 +294,7 @@ export function useMatchResultViewModel(props: RealtimeResultsScreenProps): Matc
     showRankedRpCard,
     rpChange,
     coinsAwarded,
+    qpAwarded,
     oldRP,
     newRP,
     rpTierInfo,

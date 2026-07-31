@@ -559,14 +559,40 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
           rankedOutcomeUserIds: data.rankedOutcome ? Object.keys(data.rankedOutcome.byUserId) : [],
         });
       }
+      if (typeof myRankedOutcome?.qpWeekTotal === 'number') {
+        // The settlement carries the authoritative running QP balance — patch
+        // the cached Weekend League snapshot so the league card is correct
+        // even before the invalidation refetch lands.
+        const qpTotal = myRankedOutcome.qpWeekTotal;
+        qc.setQueryData(queryKeys.weekendLeague.current(), (current: unknown) => {
+          if (!current || typeof current !== 'object') return current;
+          const snapshot = current as {
+            you?: { qp?: { points: number; target: number; qualified: boolean } } | null;
+          };
+          if (!snapshot.you?.qp) return current;
+          const qp = snapshot.you.qp;
+          return {
+            ...snapshot,
+            you: {
+              ...snapshot.you,
+              qp: {
+                ...qp,
+                points: qpTotal,
+                qualified: qp.qualified || qpTotal >= qp.target,
+              },
+            },
+          };
+        });
+      }
       void qc.invalidateQueries({ queryKey: queryKeys.ranked.all });
       void qc.invalidateQueries({ queryKey: queryKeys.stats.all });
       void qc.invalidateQueries({ queryKey: queryKeys.store.wallet() });
       void qc.invalidateQueries({ queryKey: queryKeys.store.inventory() });
       void qc.invalidateQueries({ queryKey: queryKeys.users.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.weekendLeague.all });
       logger.info('Invalidated post-match queries after match:final_results', {
         matchId: data.matchId,
-        invalidated: ['ranked.all', 'stats.all', 'store.wallet', 'store.inventory', 'users.all'],
+        invalidated: ['ranked.all', 'stats.all', 'store.wallet', 'store.inventory', 'users.all', 'weekendLeague.all'],
       });
     }
     void getMe()
