@@ -158,6 +158,11 @@ export function useWeekendLeagueLive(): WeekendLeagueLiveController {
   }, [status, enterMutate]);
 
   const milestones = useMemo(() => {
+    // The fallback is NOT invented: the league runs on a fixed weekly calendar
+    // (Fri close / Sat qualifier / Sun final, Georgia time) shared with the
+    // backend scheduler. With no tournament row — or a cancelled/voided one —
+    // the next occurrence of that calendar IS the next event; the reconciler
+    // creates its row ahead of time and the poll swaps in real timestamps.
     const fallback = getMilestones(nowMs);
     if (!tournament || tournament.status === 'cancelled' || tournament.status === 'voided') {
       return fallback;
@@ -210,7 +215,9 @@ export function useWeekendLeagueLive(): WeekendLeagueLiveController {
     finishPlayoff: noop,
     live: true,
     isLoading: query.isLoading,
-    isError: query.isError,
+    // Fatal only when there's nothing to show — a failed background poll on
+    // top of usable data must not blank the screen into an error card.
+    isError: query.isError && query.data === undefined,
     refetch: () => void query.refetch(),
     qp: you?.qp.points ?? 0,
     qpTarget: tournament?.qp_target ?? QP_TARGET,

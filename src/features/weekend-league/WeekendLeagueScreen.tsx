@@ -40,7 +40,8 @@ export function WeekendLeagueScreen({
   const wl = controller ?? mock;
   // Live mode keeps the prototype game flows unreachable until the wl:* socket
   // client ships — real players must never check in / play against mock data.
-  const playable = controller?.playable ?? true;
+  // Fail closed: a live controller must explicitly opt in to gameplay.
+  const playable = controller ? controller.playable === true && !controller.live : true;
   const [liveMode, setLiveMode] = useState<'gauntlet' | 'final' | 'spectate' | null>(null);
 
   const handleGauntletExit = useCallback(
