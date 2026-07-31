@@ -10,7 +10,6 @@ import type { WeekendLeagueLiveExtras } from './use-weekend-league-live';
 import type { WeekendLeagueState } from './types';
 import { LeagueHeader } from './components/LeagueHeader';
 import { YourStatusCard } from './components/YourStatusCard';
-import { EntryPanel } from './components/EntryPanel';
 import { HowItWorks } from './components/HowItWorks';
 import { PrizesPanel } from './components/PrizesPanel';
 import { QualifierLeaderboard } from './components/QualifierLeaderboard';
@@ -132,9 +131,11 @@ export function WeekendLeagueScreen({
             />
           )}
 
-          {/* The header's status panel already states where you stand while entry
-              is open, so the status card would just repeat it. */}
-          {wl.phase !== 'entry_open' &&
+          {/* The blue header card already carries status + countdown + the
+              entry CTA, so the status card only earns its spot once there is a
+              real outcome to report (champion / weekend wrapped). */}
+          {wl.phase !== 'upcoming' &&
+            wl.phase !== 'entry_open' &&
             wl.phase !== 'qualifier_live' &&
             wl.phase !== 'qualifier_done' &&
             wl.phase !== 'playoffs_live' && (
@@ -181,18 +182,13 @@ function PhaseContent({
   onWatch: () => void;
 }) {
   const { t } = useLocale();
-  const { phase, milestones } = wl;
+  const { phase } = wl;
 
+  // The blue header card owns the countdown + entry state, so before the
+  // week opens the page is just the format explainer and the prize ladder.
   if (phase === 'upcoming') {
     return (
       <>
-        <EntryPanel
-          mode="locked"
-          countdownTarget={milestones?.entry.targetMs ?? null}
-          countdownCaption="Claim before Friday 12:00."
-          registered={wl.registered}
-          onEnter={wl.enterLeague}
-        />
         <HowItWorks />
         <PrizesPanel />
       </>
