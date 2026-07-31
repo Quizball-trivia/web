@@ -30,16 +30,22 @@ export function WeekendLeagueScreen({
   showControls = true,
   initial,
   controller,
+  onJoinLive,
+  onWatchLive,
 }: {
   showControls?: boolean;
   initial?: Partial<WeekendLeagueState>;
   controller?: WeekendLeagueController & Partial<WeekendLeagueLiveExtras>;
+  /** Live-mode handlers: open the real socket-driven game/spectator flow. */
+  onJoinLive?: () => void;
+  onWatchLive?: () => void;
 }) {
+  const { t } = useLocale();
   const mock = useWeekendLeague(initial);
   const wl = controller ?? mock;
-  // Live mode keeps the prototype game flows unreachable until the wl:* socket
-  // client ships — real players must never check in / play against mock data.
-  // Fail closed: a live controller must explicitly opt in to gameplay.
+  // The mock game flows are only reachable without a live controller — real
+  // players play through the socket flow (onJoinLive), never against mock
+  // data. Fail closed at the type boundary.
   const playable = controller ? controller.playable === true && !controller.live : true;
   const [liveMode, setLiveMode] = useState<'gauntlet' | 'final' | 'spectate' | null>(null);
 
@@ -153,12 +159,36 @@ export function WeekendLeagueScreen({
             />
           )}
 
+          {/* Sunday final check-in: the backend's final_checkin status maps to
+              the qualifier_done phase, which otherwise has no action — without
+              this card a finalist could never check in and would be marked a
+              no-show. */}
+          {controller?.live && controller.status === 'final_checkin' && wl.qualified && onJoinLive && (
+            <div className="rounded-[24px] border-2 border-brand-gold/40 bg-brand-gold/10 p-5 text-center">
+              <div className="mb-2 flex items-center justify-center gap-2"><LiveBadge /></div>
+              <div className="font-poppins text-xl font-black uppercase text-white" style={poppins}>
+                {controller.checkedIn ? t('weekendLeague.gCheckedIn') : t('weekendLeague.gCheckinTitle')}
+              </div>
+              <p className="mx-auto mt-1 max-w-xs font-poppins text-[13px] font-semibold text-white/60">
+                {controller.checkedIn ? t('weekendLeague.gWaitingKickoff') : t('weekendLeague.gCheckinBody')}
+              </p>
+              <motion.button
+                type="button"
+                whileTap={{ scale: 0.97 }}
+                onClick={onJoinLive}
+                className="mx-auto mt-4 flex h-13 w-full max-w-xs items-center justify-center gap-2 rounded-2xl bg-brand-green py-3 font-poppins text-base font-black uppercase tracking-wide text-white transition-colors hover:bg-brand-green/90"
+              >
+                <Play className="size-5 fill-current" />
+                {controller.checkedIn ? t('weekendLeague.joinGame') : t('weekendLeague.gCheckin')}
+              </motion.button>
+            </div>
+          )}
+
           <PhaseContent
             wl={wl}
-            playable={playable}
-            onJoin={() => setLiveMode('gauntlet')}
-            onJoinFinal={() => setLiveMode('final')}
-            onWatch={() => setLiveMode('spectate')}
+            onJoin={playable ? () => setLiveMode('gauntlet') : onJoinLive}
+            onJoinFinal={playable ? () => setLiveMode('final') : onJoinLive}
+            onWatch={playable ? () => setLiveMode('spectate') : onWatchLive}
           />
         </motion.div>
       </AnimatePresence>
@@ -168,18 +198,16 @@ export function WeekendLeagueScreen({
 
 function PhaseContent({
   wl,
-  playable,
   onJoin,
   onJoinFinal,
   onWatch,
 }: {
   wl: WeekendLeagueController;
-  /** False in live mode until real gameplay is wired — hides join/watch CTAs. */
-  playable: boolean;
-  onJoin: () => void;
+  /** Absent handler = that action isn't available — its CTA is not rendered. */
+  onJoin?: () => void;
   /** The Sunday final runs the same gauntlet with only the finalists. */
-  onJoinFinal: () => void;
-  onWatch: () => void;
+  onJoinFinal?: () => void;
+  onWatch?: () => void;
 }) {
   const { t } = useLocale();
   const { phase } = wl;
@@ -216,7 +244,7 @@ function PhaseContent({
             <p className="mx-auto mt-1 max-w-xs font-poppins text-[13px] font-semibold text-white/60">
               {t('weekendLeague.qualifierLiveBody')}
             </p>
-            {playable && (
+            {onJoin && (
               <>
                 <motion.button
                   type="button"
@@ -229,6 +257,7 @@ function PhaseContent({
                 <button
                   type="button"
                   onClick={onWatch}
+                  hidden={!onWatch}
                   className="mx-auto mt-2.5 flex items-center justify-center gap-1.5 font-poppins text-[12px] font-bold uppercase tracking-widest text-white/50 hover:text-white"
                 >
                   <Eye className="size-4" /> {t('weekendLeague.watchLive')}
@@ -244,7 +273,7 @@ function PhaseContent({
             <p className="mx-auto mt-1 max-w-xs font-poppins text-[13px] font-semibold text-white/60">
               {t('weekendLeague.entryClosedLiveBody')}
             </p>
-            {playable && (
+            {onWatch && (
               <motion.button
                 type="button"
                 whileTap={{ scale: 0.97 }}
@@ -288,7 +317,7 @@ function PhaseContent({
             <p className="mx-auto mt-1 max-w-xs font-poppins text-[13px] font-semibold text-white/60">
               {t('weekendLeague.finalLiveBody', { n: PLAYOFF_CUTOFF })}
             </p>
-            {playable && (
+            {onJoinFinal && (
               <>
                 <motion.button
                   type="button"
@@ -301,6 +330,7 @@ function PhaseContent({
                 <button
                   type="button"
                   onClick={onWatch}
+                  hidden={!onWatch}
                   className="mx-auto mt-2.5 flex items-center justify-center gap-1.5 font-poppins text-[12px] font-bold uppercase tracking-widest text-white/50 hover:text-white"
                 >
                   <Eye className="size-4" /> {t('weekendLeague.watchLive')}
@@ -316,7 +346,7 @@ function PhaseContent({
             <p className="mx-auto mt-1 max-w-xs font-poppins text-[13px] font-semibold text-white/60">
               {t('weekendLeague.notInFinalBody', { n: PLAYOFF_CUTOFF })}
             </p>
-            {playable && (
+            {onWatch && (
               <motion.button
                 type="button"
                 whileTap={{ scale: 0.97 }}

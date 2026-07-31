@@ -14,7 +14,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { enterWeekendLeague, getWeekendLeagueCurrent } from '@/lib/api/endpoints';
+import { checkinWeekendLeague, enterWeekendLeague, getWeekendLeagueCurrent } from '@/lib/api/endpoints';
 import { queryKeys } from '@/lib/queries/queryKeys';
 import { useAuthStore } from '@/stores/auth.store';
 import type { components } from '@/types/api.generated';
@@ -92,6 +92,13 @@ export interface WeekendLeagueLiveExtras {
   isLoading: boolean;
   isError: boolean;
   refetch: () => void;
+  tournamentId: string | null;
+  /** Raw backend tournament status (finer-grained than the screen phase). */
+  status: string | null;
+  /** Role-appropriate check-in state for the current window. */
+  checkedIn: boolean;
+  checkinLeague: () => void;
+  checkinPending: boolean;
   /** Running QP balance (server truth, resets when a ticket is claimed). */
   qp: number;
   qpTarget: number;
@@ -157,6 +164,19 @@ export function useWeekendLeagueLive(): WeekendLeagueLiveController {
     enterMutate();
   }, [status, enterMutate]);
 
+  const checkinMutation = useMutation({
+    mutationFn: checkinWeekendLeague,
+    onSuccess: (res) => {
+      if (!res.checked_in && !res.already_checked_in) {
+        toast.error('Check-in is not open right now.');
+      }
+      invalidate();
+    },
+    onError: () => toast.error('Check-in failed — try again.'),
+  });
+  const { mutate: checkinMutate } = checkinMutation;
+  const checkinLeague = useCallback(() => checkinMutate(), [checkinMutate]);
+
   const milestones = useMemo(() => {
     // The fallback is NOT invented: the league runs on a fixed weekly calendar
     // (Fri close / Sat qualifier / Sun final, Georgia time) shared with the
@@ -219,6 +239,13 @@ export function useWeekendLeagueLive(): WeekendLeagueLiveController {
     // top of usable data must not blank the screen into an error card.
     isError: query.isError && query.data === undefined,
     refetch: () => void query.refetch(),
+    tournamentId: tournament?.id ?? null,
+    status: status ?? null,
+    checkedIn: status === 'final_checkin' || status === 'final_live'
+      ? (you?.final_checked_in ?? false)
+      : (you?.checked_in ?? false),
+    checkinLeague,
+    checkinPending: checkinMutation.isPending,
     qp: you?.qp.points ?? 0,
     qpTarget: tournament?.qp_target ?? QP_TARGET,
     qpQualified: you?.qp.qualified ?? false,

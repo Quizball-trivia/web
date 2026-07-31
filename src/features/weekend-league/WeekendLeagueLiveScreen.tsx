@@ -1,14 +1,17 @@
 'use client';
 
+import { useState } from 'react';
 import { RotateCw } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useWeekendLeagueLive } from './use-weekend-league-live';
 import { WeekendLeagueScreen } from './WeekendLeagueScreen';
+import { WlLiveFlow } from './live/WlLiveFlow';
 
 /** In-app Weekend League: the prototype screen driven by the real backend. */
 export function WeekendLeagueLiveScreen() {
   const { t } = useLocale();
   const live = useWeekendLeagueLive();
+  const [mode, setMode] = useState<'player' | 'spectator' | null>(null);
 
   if (live.isLoading) {
     return (
@@ -38,5 +41,26 @@ export function WeekendLeagueLiveScreen() {
     );
   }
 
-  return <WeekendLeagueScreen showControls={false} controller={live} />;
+  if (mode != null && live.tournamentId != null) {
+    return (
+      <WlLiveFlow
+        tournamentId={live.tournamentId}
+        role={mode}
+        status={live.status}
+        checkedIn={live.checkedIn}
+        checkinPending={live.checkinPending}
+        onCheckin={live.checkinLeague}
+        onExit={() => setMode(null)}
+      />
+    );
+  }
+
+  return (
+    <WeekendLeagueScreen
+      showControls={false}
+      controller={live}
+      onJoinLive={live.hasEntered ? () => setMode('player') : undefined}
+      onWatchLive={() => setMode('spectator')}
+    />
+  );
 }
