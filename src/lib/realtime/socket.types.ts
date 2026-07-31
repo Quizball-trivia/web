@@ -1493,7 +1493,38 @@ export type WlEventPayload =
   | WlRevealEventPayload | WlVoidEventPayload | WlGameResultEventPayload
   | WlFinalResultEventPayload | WlCancellationEventPayload;
 
-export type WlSubscribeAck = { ok: boolean; reason?: 'not_entered' | 'not_found' | 'invalid'; seq?: number };
+/** In-flight attempt restored by the subscribe snapshot (dispatch-shaped). */
+export interface WlSnapshotAttempt {
+  attempt_id: string;
+  game_index: number;
+  round_index: number;
+  question_index: number;
+  kind: WlRoundKind;
+  question: Record<string, unknown>;
+  evaluation: Record<string, unknown>;
+  playableAt: number;
+  deadlineAt: number;
+}
+
+/** Role-appropriate state in the wl:subscribe ack, for late joins/reconnects. */
+export interface WlSubscribeSnapshot {
+  status: string;
+  /** Server clock at snapshot build — seeds the client's clock offset. */
+  server_now: number;
+  game_index: number;
+  /** Players only; spectators never get the undelayed in-flight question. */
+  attempt: WlSnapshotAttempt | null;
+  your_answer: { correct: boolean; points: number; elapsedMs: number } | null;
+  score: number;
+  board: WlBoardRow[];
+}
+
+export type WlSubscribeAck = {
+  ok: boolean;
+  reason?: 'not_entered' | 'not_found' | 'invalid';
+  seq?: number;
+  snapshot?: WlSubscribeSnapshot | null;
+};
 
 export type WlAnswerAck =
   | { accepted: true; correct: boolean; points: number; elapsedMs: number }

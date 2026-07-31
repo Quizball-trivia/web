@@ -139,6 +139,7 @@ export function WlLiveFlow({
             locale={locale}
             serverNow={live.serverNow}
             submitAnswer={live.submitAnswer}
+            retryNonce={live.retryNonce}
             board={live.board}
             selfUserId={selfUserId}
             onExit={onExit}
@@ -207,13 +208,14 @@ function TopBar({
 }
 
 function ScreenBody({
-  screen, role, locale, serverNow, submitAnswer, board, selfUserId, onExit,
+  screen, role, locale, serverNow, submitAnswer, retryNonce, board, selfUserId, onExit,
 }: {
   screen: WlLiveScreen;
   role: 'player' | 'spectator';
   locale: Locale;
   serverNow: () => number;
   submitAnswer: (answer: unknown) => void;
+  retryNonce: number;
   board: WlBoardRow[];
   selfUserId: string | null;
   onExit: () => void;
@@ -240,6 +242,7 @@ function ScreenBody({
           locale={locale}
           serverNow={serverNow}
           submitAnswer={submitAnswer}
+          retryNonce={retryNonce}
           spectator={role === 'spectator'}
         />
       );
@@ -320,13 +323,14 @@ function ScreenBody({
 // ── Question rendering per kind ─────────────────────────────────────────────
 
 function QuestionScreen({
-  attempt, answered, locale, serverNow, submitAnswer, spectator,
+  attempt, answered, locale, serverNow, submitAnswer, retryNonce, spectator,
 }: {
   attempt: WlDispatchEventPayload;
   answered: { accepted: boolean } | null;
   locale: Locale;
   serverNow: () => number;
   submitAnswer: (answer: unknown) => void;
+  retryNonce: number;
   spectator: boolean;
 }) {
   const { t } = useLocale();
@@ -353,13 +357,13 @@ function QuestionScreen({
       </div>
 
       {attempt.kind === 'true_false' && (
-        <TrueFalseQuestion prompt={pick(q['prompt'], locale)} locked={locked} onAnswer={submitAnswer} feedback={answered} evaluation={attempt.evaluation} />
+        <TrueFalseQuestion prompt={pick(q['prompt'], locale)} locked={locked} onAnswer={submitAnswer} feedback={answered} evaluation={attempt.evaluation} retryNonce={retryNonce} />
       )}
       {attempt.kind === 'mcq' && (
-        <McqQuestion q={q} locale={locale} locked={locked} onAnswer={submitAnswer} feedback={answered} evaluation={attempt.evaluation} />
+        <McqQuestion q={q} locale={locale} locked={locked} onAnswer={submitAnswer} feedback={answered} evaluation={attempt.evaluation} retryNonce={retryNonce} />
       )}
       {attempt.kind === 'higher_lower' && (
-        <HigherLowerQuestion q={q} locale={locale} locked={locked} onAnswer={submitAnswer} feedback={answered} evaluation={attempt.evaluation} />
+        <HigherLowerQuestion q={q} locale={locale} locked={locked} onAnswer={submitAnswer} feedback={answered} evaluation={attempt.evaluation} retryNonce={retryNonce} />
       )}
       {attempt.kind === 'career_path' && (
         <TypedQuestion
@@ -415,8 +419,16 @@ function optionBtnClass(state: 'idle' | 'correct' | 'wrong' | 'dim'): string {
   }
 }
 
-function useChoice(locked: boolean, onAnswer: (a: unknown) => void) {
+function useChoice(locked: boolean, onAnswer: (a: unknown) => void, retryNonce: number) {
   const [chosen, setChosen] = useState<string | null>(null);
+  const [seenNonce, setSeenNonce] = useState(retryNonce);
+  // A rejected (non-terminal) ack bumps the nonce — clear the pick so the
+  // player can answer again inside the window (render-time adjustment, no
+  // effect round-trip).
+  if (retryNonce !== seenNonce) {
+    setSeenNonce(retryNonce);
+    setChosen(null);
+  }
   const choose = (id: string) => {
     if (locked || chosen != null) return;
     setChosen(id);
@@ -438,16 +450,17 @@ function stateFor(
 }
 
 function TrueFalseQuestion({
-  prompt, locked, onAnswer, feedback, evaluation,
+  prompt, locked, onAnswer, feedback, evaluation, retryNonce,
 }: {
   prompt: string;
   locked: boolean;
   onAnswer: (a: unknown) => void;
   feedback: { accepted: boolean } | null;
   evaluation: Record<string, unknown>;
+  retryNonce: number;
 }) {
   const { t } = useLocale();
-  const { chosen, choose } = useChoice(locked, onAnswer);
+  const { chosen, choose } = useChoice(locked, onAnswer, retryNonce);
   const correctId = typeof evaluation['correct_id'] === 'string' ? evaluation['correct_id'] : null;
   const revealed = feedback != null;
   return (
@@ -465,7 +478,7 @@ function TrueFalseQuestion({
 }
 
 function McqQuestion({
-  q, locale, locked, onAnswer, feedback, evaluation,
+  q, locale, locked, onAnswer, feedback, evaluation, retryNonce,
 }: {
   q: Record<string, unknown>;
   locale: Locale;
@@ -473,8 +486,9 @@ function McqQuestion({
   onAnswer: (a: unknown) => void;
   feedback: { accepted: boolean } | null;
   evaluation: Record<string, unknown>;
+  retryNonce: number;
 }) {
-  const { chosen, choose } = useChoice(locked, onAnswer);
+  const { chosen, choose } = useChoice(locked, onAnswer, retryNonce);
   const correctId = typeof evaluation['correct_id'] === 'string' ? evaluation['correct_id'] : null;
   const revealed = feedback != null;
   const options = Array.isArray(q['options']) ? (q['options'] as Array<Record<string, unknown>>) : [];
@@ -505,7 +519,7 @@ function McqQuestion({
 }
 
 function HigherLowerQuestion({
-  q, locale, locked, onAnswer, feedback, evaluation,
+  q, locale, locked, onAnswer, feedback, evaluation, retryNonce,
 }: {
   q: Record<string, unknown>;
   locale: Locale;
@@ -513,9 +527,10 @@ function HigherLowerQuestion({
   onAnswer: (a: unknown) => void;
   feedback: { accepted: boolean } | null;
   evaluation: Record<string, unknown>;
+  retryNonce: number;
 }) {
   const { t } = useLocale();
-  const { chosen, choose } = useChoice(locked, onAnswer);
+  const { chosen, choose } = useChoice(locked, onAnswer, retryNonce);
   const revealed = feedback != null;
   const left = Number(evaluation['left_value']);
   const right = Number(evaluation['right_value']);
