@@ -7,10 +7,19 @@
 // returns the role cursor (live vs delayed stream head), and anything at or
 // below the last seen seq is dropped. Gaps need no replay — dispatches are
 // self-contained and reveal/game_result payloads carry ABSOLUTE standings, so
-// the next event of each kind fully supersedes whatever was missed.
+// the next event of each kind fully supersedes whatever was missed. All
+// cursor/board/score state resets when the (tournament, role) target changes.
 //
-// Clocks: playableAt/deadlineAt are server-clock ms. Each event refreshes the
-// (serverNow − localNow) offset estimate, and countdowns render through it.
+// Clocks: playableAt/deadlineAt are server-clock ms. The offset estimate keeps
+// the MAX of (serverNowAtEmit − localNow) samples — the sample with the least
+// network latency dominates, so countdowns lag the server as little as
+// possible. Spectator dispatches arrive ~30s after the live window; their
+// attempt window is remapped onto the delayed emission time so replay timing
+// matches what live players experienced.
+//
+// Scoring: per-attempt, exactly once. An accepted ack adds points only the
+// first time for that attempt; a void event refunds them (the backend zeroes
+// accepted answers on voided attempts).
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { connectSocket } from '@/lib/realtime/socket-client';
@@ -62,33 +71,104 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
   const [lastAck, setLastAck] = useState<WlAnswerAck | null>(null);
 
   const lastSeqRef = useRef(-1);
-  const clockOffsetRef = useRef(0);
+  const screenRef = useRef<WlLiveScreen>({ kind: 'waiting' });
+  const clockOffsetRef = useRef(Number.NEGATIVE_INFINITY);
   const currentAttemptRef = useRef<WlDispatchEventPayload | null>(null);
   const answeredRef = useRef<WlAnswerAck | null>(null);
+  const inFlightRef = useRef<string | null>(null);
+  /** attempt_id → points credited to the local score (for void refunds). */
+  const scoredRef = useRef<Map<string, number>>(new Map());
+  const lastGameIndexRef = useRef<number | null>(null);
+  const pendingQuestionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const serverNow = useCallback(() => Date.now() + clockOffsetRef.current, []);
+  const serverNow = useCallback(
+    () => Date.now() + (Number.isFinite(clockOffsetRef.current) ? clockOffsetRef.current : 0),
+    [],
+  );
 
   useEffect(() => {
     const socket = connectSocket();
     let disposed = false;
 
+    // Fresh target (tournament/role) — nothing from the previous stream may
+    // leak: the new tournament's seqs restart lower, so a stale cursor would
+    // silently discard every event forever.
+    lastSeqRef.current = -1;
+    clockOffsetRef.current = Number.NEGATIVE_INFINITY;
+    currentAttemptRef.current = null;
+    answeredRef.current = null;
+    inFlightRef.current = null;
+    scoredRef.current = new Map();
+    lastGameIndexRef.current = null;
+    screenRef.current = { kind: 'waiting' };
+    setScreen({ kind: 'waiting' });
+    setBoard([]);
+    setScore(0);
+    setGameIndex(0);
+    setLastAck(null);
+    setDenied(null);
+
     const accept = (event: WlEventPayload): boolean => {
       if (event.tournamentId !== tournamentId) return false;
       if (event.seq <= lastSeqRef.current) return false;
       lastSeqRef.current = event.seq;
-      clockOffsetRef.current = event.serverNowAtEmit - Date.now();
+      // Max over samples: the least-latency packet gives the best estimate.
+      clockOffsetRef.current = Math.max(
+        clockOffsetRef.current,
+        event.serverNowAtEmit - Date.now(),
+      );
       return true;
+    };
+
+    const clearPendingQuestion = () => {
+      if (pendingQuestionTimerRef.current != null) {
+        clearTimeout(pendingQuestionTimerRef.current);
+        pendingQuestionTimerRef.current = null;
+      }
+    };
+
+    const apply = (next: WlLiveScreen) => {
+      screenRef.current = next;
+      setScreen(next);
+    };
+
+    const showQuestion = (attempt: WlDispatchEventPayload) => {
+      if (disposed || currentAttemptRef.current?.attempt_id !== attempt.attempt_id) return;
+      apply({ kind: 'question', attempt, answer: answeredRef.current });
     };
 
     const onDispatch = (event: WlDispatchEventPayload) => {
       if (!accept(event)) return;
-      // First slot of a game — a fresh per-game score.
-      if (event.round_index === 0 && event.question_index === 0) setScore(0);
-      currentAttemptRef.current = event;
+      // Spectators replay a 30s-delayed stream: the original live window is
+      // long gone, so replay it relative to this (delayed) emission.
+      const attempt: WlDispatchEventPayload = event.spectator
+        ? {
+            ...event,
+            playableAt: event.serverNowAtEmit,
+            deadlineAt: event.serverNowAtEmit + (event.deadlineAt - event.playableAt),
+          }
+        : event;
+      // New game (first slot missed or not): reset the per-game score.
+      if (lastGameIndexRef.current !== attempt.game_index) {
+        lastGameIndexRef.current = attempt.game_index;
+        setScore(0);
+        scoredRef.current = new Map();
+      }
+      currentAttemptRef.current = attempt;
       answeredRef.current = null;
-      setGameIndex(event.game_index);
+      inFlightRef.current = null;
+      setGameIndex(attempt.game_index);
       setLastAck(null);
-      setScreen({ kind: 'question', attempt: event, answer: null });
+      clearPendingQuestion();
+      // If a reveal is on screen, hold it through the dispatch lead — the
+      // question isn't answerable before playableAt anyway, so the correct
+      // answer stays readable instead of flashing away.
+      const leadMs = attempt.playableAt - serverNow();
+      if (screenRef.current.kind === 'reveal' && leadMs > 150) {
+        pendingQuestionTimerRef.current = setTimeout(() => showQuestion(attempt), leadMs);
+      } else {
+        apply({ kind: 'question', attempt, answer: null });
+      }
     };
 
     const onReveal = (event: WlRevealEventPayload) => {
@@ -98,16 +178,27 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
       // Only pause on the reveal when it closes the question being shown;
       // late reveals (after the next dispatch) just refresh the board.
       if (attempt && attempt.attempt_id === event.attempt_id) {
-        setScreen({ kind: 'reveal', attempt, reveal: event, answer: answeredRef.current });
+        apply({ kind: 'reveal', attempt, reveal: event, answer: answeredRef.current });
       }
     };
 
     const onVoid = (event: WlEventPayload) => {
       if (!accept(event)) return;
       const voided = event as { attempt_id?: string };
-      if (currentAttemptRef.current?.attempt_id === voided.attempt_id) {
+      const attemptId = voided.attempt_id;
+      // The backend zeroes every accepted answer on a voided attempt — refund
+      // any points we credited locally.
+      if (attemptId && scoredRef.current.has(attemptId)) {
+        const pts = scoredRef.current.get(attemptId)!;
+        scoredRef.current.delete(attemptId);
+        setScore((s) => Math.max(0, s - pts));
+      }
+      if (currentAttemptRef.current?.attempt_id === attemptId) {
         currentAttemptRef.current = null;
-        setScreen({ kind: 'waiting' });
+        answeredRef.current = null;
+        inFlightRef.current = null;
+        clearPendingQuestion();
+        apply({ kind: 'waiting' });
       }
     };
 
@@ -115,15 +206,18 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
       if (!accept(event)) return;
       setBoard(event.board ?? []);
       currentAttemptRef.current = null;
-      const eliminated = selfUserId != null && event.eliminated_user_ids.includes(selfUserId);
-      setScreen({ kind: 'game_result', result: event, eliminated });
+      clearPendingQuestion();
+      const eliminated =
+        selfUserId != null && (event.eliminated_user_ids ?? []).includes(selfUserId);
+      apply({ kind: 'game_result', result: event, eliminated });
     };
 
     const onFinalResult = (event: WlFinalResultEventPayload) => {
       if (!accept(event)) return;
       setBoard(event.board ?? []);
       currentAttemptRef.current = null;
-      setScreen({
+      clearPendingQuestion();
+      apply({
         kind: 'final_result',
         result: event,
         champion: selfUserId != null && event.champion_user_id === selfUserId,
@@ -136,7 +230,8 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
 
     const onCancellation = (event: WlEventPayload) => {
       if (!accept(event)) return;
-      setScreen({ kind: 'cancelled' });
+      clearPendingQuestion();
+      apply({ kind: 'cancelled' });
     };
 
     socket.on('wl:dispatch', onDispatch);
@@ -180,6 +275,7 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
 
     return () => {
       disposed = true;
+      clearPendingQuestion();
       socket.emit('wl:unsubscribe');
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
@@ -192,25 +288,49 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
       socket.off('wl:clue_reveal', onPhase);
       socket.off('wl:cancellation', onCancellation);
     };
+    // serverNow is a stable callback (reads a ref).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tournamentId, role, selfUserId]);
 
   const submitAnswer = useCallback(
     (answer: unknown) => {
       const attempt = currentAttemptRef.current;
-      if (!attempt || role !== 'player' || answeredRef.current) return;
+      if (!attempt || role !== 'player') return;
+      // Single-flight per attempt: no resubmits while an ack is pending, no
+      // resubmits after an ACCEPTED ack. Rejections other than `duplicate`
+      // (e.g. `closed` from a too-early click) unlock so the player can try
+      // again inside the window.
+      if (inFlightRef.current === attempt.attempt_id) return;
+      const prior = answeredRef.current;
+      if (prior && (prior.accepted || prior.reason === 'duplicate')) return;
+      inFlightRef.current = attempt.attempt_id;
+      const attemptId = attempt.attempt_id;
       const socket = connectSocket();
       socket.emit(
         'wl:answer',
-        { tournament_id: tournamentId, attempt_id: attempt.attempt_id, answer },
+        { tournament_id: tournamentId, attempt_id: attemptId, answer },
         (ack) => {
+          // Scope everything to the attempt this submit belonged to — a late
+          // ack for a previous attempt must not lock or score the next one.
+          if (currentAttemptRef.current?.attempt_id !== attemptId) {
+            if (inFlightRef.current === attemptId) inFlightRef.current = null;
+            return;
+          }
+          inFlightRef.current = null;
           answeredRef.current = ack;
           setLastAck(ack);
-          if (ack.accepted) setScore((s) => s + ack.points);
-          setScreen((current) =>
-            current.kind === 'question' && current.attempt.attempt_id === attempt.attempt_id
-              ? { ...current, answer: ack }
-              : current,
-          );
+          if (ack.accepted && !scoredRef.current.has(attemptId)) {
+            scoredRef.current.set(attemptId, ack.points);
+            setScore((s) => s + ack.points);
+          }
+          setScreen((current) => {
+            if (current.kind === 'question' && current.attempt.attempt_id === attemptId) {
+              const next = { ...current, answer: ack };
+              screenRef.current = next;
+              return next;
+            }
+            return current;
+          });
         },
       );
     },

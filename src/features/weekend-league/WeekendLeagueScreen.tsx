@@ -40,6 +40,7 @@ export function WeekendLeagueScreen({
   onJoinLive?: () => void;
   onWatchLive?: () => void;
 }) {
+  const { t } = useLocale();
   const mock = useWeekendLeague(initial);
   const wl = controller ?? mock;
   // The mock game flows are only reachable without a live controller — real
@@ -156,6 +157,31 @@ export function WeekendLeagueScreen({
               }
               yourRank={wl.yourRank}
             />
+          )}
+
+          {/* Sunday final check-in: the backend's final_checkin status maps to
+              the qualifier_done phase, which otherwise has no action — without
+              this card a finalist could never check in and would be marked a
+              no-show. */}
+          {controller?.live && controller.status === 'final_checkin' && wl.qualified && onJoinLive && (
+            <div className="rounded-[24px] border-2 border-brand-gold/40 bg-brand-gold/10 p-5 text-center">
+              <div className="mb-2 flex items-center justify-center gap-2"><LiveBadge /></div>
+              <div className="font-poppins text-xl font-black uppercase text-white" style={poppins}>
+                {controller.checkedIn ? t('weekendLeague.gCheckedIn') : t('weekendLeague.gCheckinTitle')}
+              </div>
+              <p className="mx-auto mt-1 max-w-xs font-poppins text-[13px] font-semibold text-white/60">
+                {controller.checkedIn ? t('weekendLeague.gWaitingKickoff') : t('weekendLeague.gCheckinBody')}
+              </p>
+              <motion.button
+                type="button"
+                whileTap={{ scale: 0.97 }}
+                onClick={onJoinLive}
+                className="mx-auto mt-4 flex h-13 w-full max-w-xs items-center justify-center gap-2 rounded-2xl bg-brand-green py-3 font-poppins text-base font-black uppercase tracking-wide text-white transition-colors hover:bg-brand-green/90"
+              >
+                <Play className="size-5 fill-current" />
+                {controller.checkedIn ? t('weekendLeague.joinGame') : t('weekendLeague.gCheckin')}
+              </motion.button>
+            </div>
           )}
 
           <PhaseContent

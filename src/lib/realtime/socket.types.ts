@@ -1467,19 +1467,21 @@ export interface WlVoidEventPayload extends WlEventBase {
 export interface WlGameResultEventPayload extends WlEventBase {
   type: 'game_result';
   game_index: number;
-  board: WlBoardRow[];
-  field: number;
-  advanced: number;
-  eliminated_user_ids: string[];
+  /** Absent on stub/walkover events — treat as empty/unknown. */
+  board?: WlBoardRow[];
+  field?: number;
+  advanced?: number;
+  eliminated_user_ids?: string[];
 }
 
 export interface WlFinalResultEventPayload extends WlEventBase {
   type: 'final_result';
-  game_index: number;
-  board: WlBoardRow[];
-  field: number;
-  advanced: number;
-  eliminated_user_ids: string[];
+  game_index?: number;
+  /** Absent on walkover finals — treat as empty/unknown. */
+  board?: WlBoardRow[];
+  field?: number;
+  advanced?: number;
+  eliminated_user_ids?: string[];
   champion_user_id?: string | null;
   final_played?: boolean;
 }

@@ -246,7 +246,14 @@ function ScreenBody({
 
     case 'reveal':
       return (
-        <RevealScreen reveal={screen.reveal} answer={screen.answer} locale={locale} board={board} selfUserId={selfUserId} />
+        <RevealScreen
+          reveal={screen.reveal}
+          answer={screen.answer}
+          locale={locale}
+          board={board}
+          selfUserId={selfUserId}
+          spectator={role === 'spectator'}
+        />
       );
 
     case 'game_result': {
@@ -261,9 +268,11 @@ function ScreenBody({
               ? t('weekendLeague.gGameComplete')
               : eliminated ? t('weekendLeague.gEliminatedTitle') : t('weekendLeague.gThroughTitle')}
           </div>
-          <p className="mt-2 font-poppins text-[13px] font-semibold text-white/60">
-            {t('weekendLeague.gAdvanceCount', { n: result.advanced })}
-          </p>
+          {result.advanced != null && (
+            <p className="mt-2 font-poppins text-[13px] font-semibold text-white/60">
+              {t('weekendLeague.gAdvanceCount', { n: result.advanced })}
+            </p>
+          )}
           <BoardStrip board={board} selfUserId={selfUserId} rows={8} />
           {eliminated && (
             <button
@@ -322,7 +331,9 @@ function QuestionScreen({
 }) {
   const { t } = useLocale();
   const secondsLeft = useServerCountdown(attempt.deadlineAt, serverNow);
-  const locked = spectator || answered != null || secondsLeft <= 0;
+  const leadLeft = useServerCountdown(attempt.playableAt, serverNow);
+  const ready = leadLeft <= 0;
+  const locked = spectator || answered != null || secondsLeft <= 0 || !ready;
   const q = attempt.question;
 
   return (
@@ -332,10 +343,12 @@ function QuestionScreen({
           {t('weekendLeague.gRoundOf', { g: attempt.game_index + 1, r: attempt.round_index + 1 })}
         </span>
         <span
-          className={`tabular-nums text-lg font-black ${secondsLeft <= 3 ? 'text-brand-red-soft' : 'text-brand-yellow'}`}
+          className={`tabular-nums text-lg font-black ${
+            !ready ? 'text-white/50' : secondsLeft <= 3 ? 'text-brand-red-soft' : 'text-brand-yellow'
+          }`}
           style={poppins}
         >
-          {secondsLeft}s
+          {!ready ? '…' : `${secondsLeft}s`}
         </span>
       </div>
 
@@ -465,9 +478,18 @@ function McqQuestion({
   const correctId = typeof evaluation['correct_id'] === 'string' ? evaluation['correct_id'] : null;
   const revealed = feedback != null;
   const options = Array.isArray(q['options']) ? (q['options'] as Array<Record<string, unknown>>) : [];
+  const image = q['image'] as { url?: string } | null | undefined;
   return (
     <div>
       <div className="text-center font-poppins text-lg font-black text-white">{pick(q['prompt'], locale)}</div>
+      {image?.url && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={image.url}
+          alt=""
+          className="mx-auto mt-4 max-h-56 w-auto max-w-full rounded-xl object-contain"
+        />
+      )}
       <div className="mt-5 grid gap-2.5">
         {options.map((o) => {
           const id = String(o['id']);
@@ -637,39 +659,49 @@ function WhoAmIQuestion({
 // ── Reveal + standings ──────────────────────────────────────────────────────
 
 function RevealScreen({
-  reveal, answer, locale, board, selfUserId,
+  reveal, answer, locale, board, selfUserId, spectator,
 }: {
   reveal: WlRevealEventPayload;
   answer: { accepted: boolean; correct?: boolean; points?: number } | null;
   locale: Locale;
   board: WlBoardRow[];
   selfUserId: string | null;
+  spectator: boolean;
 }) {
   const { t } = useLocale();
   const evaluation = reveal.evaluation ?? {};
   const answerText =
     pick(evaluation['display_answer'], locale)
     || (typeof evaluation['correct_id'] === 'string' ? String(evaluation['correct_id']) : '');
-  const correct = answer?.accepted ? answer.correct === true : false;
+  // Spectators (and anyone without an own accepted answer) get a neutral
+  // reveal — a personal "Wrong" verdict only exists for a submitted answer.
+  const verdict: 'correct' | 'wrong' | 'neutral' =
+    spectator || answer == null || !answer.accepted
+      ? 'neutral'
+      : answer.correct === true ? 'correct' : 'wrong';
   return (
     <div className="rounded-[24px] border-2 border-white/10 bg-surface-card-deep p-6 text-center">
-      <div
-        className={`mx-auto flex size-14 items-center justify-center rounded-full ${correct ? 'bg-brand-green' : 'bg-brand-red-soft'} text-white`}
-      >
-        {correct ? <Check className="size-8" strokeWidth={3} /> : <span className="font-poppins text-2xl font-black">✕</span>}
-      </div>
-      <div
-        className={`mt-3 font-poppins text-3xl font-black uppercase ${correct ? 'text-brand-green-light' : 'text-brand-red-soft'}`}
-        style={poppins}
-      >
-        {correct ? t('weekendLeague.gCorrect') : t('weekendLeague.gWrong')}
-      </div>
-      {answer?.accepted && correct && (
-        <div className="mt-1 font-poppins text-xl font-black tabular-nums text-brand-yellow" style={poppins}>
-          {t('weekendLeague.gPlusPoints', { n: answer.points ?? 0 })}
+      {verdict !== 'neutral' && (
+        <div
+          className={`mx-auto flex size-14 items-center justify-center rounded-full ${verdict === 'correct' ? 'bg-brand-green' : 'bg-brand-red-soft'} text-white`}
+        >
+          {verdict === 'correct' ? <Check className="size-8" strokeWidth={3} /> : <span className="font-poppins text-2xl font-black">✕</span>}
         </div>
       )}
-      {!correct && answerText && (
+      <div
+        className={`mt-3 font-poppins text-3xl font-black uppercase ${
+          verdict === 'correct' ? 'text-brand-green-light' : verdict === 'wrong' ? 'text-brand-red-soft' : 'text-white'
+        }`}
+        style={poppins}
+      >
+        {verdict === 'correct' ? t('weekendLeague.gCorrect') : verdict === 'wrong' ? t('weekendLeague.gWrong') : t('weekendLeague.gTimeUp')}
+      </div>
+      {verdict === 'correct' && (
+        <div className="mt-1 font-poppins text-xl font-black tabular-nums text-brand-yellow" style={poppins}>
+          {t('weekendLeague.gPlusPoints', { n: answer?.accepted ? answer.points ?? 0 : 0 })}
+        </div>
+      )}
+      {verdict !== 'correct' && answerText && (
         <div className="mt-2 font-poppins text-[14px] font-semibold text-white/70">
           {t('weekendLeague.gCorrectAnswer')} <span className="text-brand-green-light">{answerText}</span>
         </div>
