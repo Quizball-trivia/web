@@ -320,6 +320,53 @@ describe('useWlLive', () => {
     expect(result.current.screen.kind === 'question' && result.current.screen.answer?.accepted).toBe(true);
   });
 
+  it('upgrades a reveal that beat the ack with the recovered answer', () => {
+    const { result } = renderHook(() => useWlLive(TID, 'player'));
+    act(() => fakeSocket.fire('wl:dispatch', dispatch(7)));
+    act(() => result.current.submitAnswer('a')); // ack dropped
+
+    fakeSocket.deferSubscribeAck = true;
+    fakeSocket.subscribeAck = {
+      ok: true,
+      seq: 7,
+      snapshot: {
+        status: 'game_live',
+        server_now: Date.now(),
+        game_index: 0,
+        attempt: {
+          attempt_id: 'attempt-7',
+          game_index: 0,
+          round_index: 0,
+          question_index: 0,
+          kind: 'mcq',
+          question: { prompt: { en: 'Q' }, options: [] },
+          evaluation: { correct_id: 'a' },
+          playableAt: Date.now() - 500,
+          deadlineAt: Date.now() + 5_000,
+        },
+        your_answer: { correct: true, points: 40, elapsedMs: 700 },
+        score: 40,
+        board: [],
+      },
+    };
+    act(() => {
+      fakeSocket.fire('disconnect', 'transport close');
+      fakeSocket.fire('connect', undefined);
+    });
+    // The reveal for the same attempt lands BEFORE the ack callback runs.
+    act(() =>
+      fakeSocket.fire('wl:reveal', {
+        type: 'reveal', tournamentId: TID, seq: 8, serverNowAtEmit: Date.now(),
+        attempt_id: 'attempt-7', game_index: 0, round_index: 0, question_index: 0,
+        kind: 'mcq', evaluation: { correct_id: 'a' }, answered: 5, distribution: {}, board: [],
+      }),
+    );
+    expect(result.current.screen.kind).toBe('reveal');
+    act(() => fakeSocket.releaseSubscribeAck());
+    expect(result.current.score).toBe(40);
+    expect(result.current.screen.kind === 'reveal' && result.current.screen.answer?.accepted).toBe(true);
+  });
+
   it('remaps the spectator window onto the delayed emission time', () => {
     const { result } = renderHook(() => useWlLive(TID, 'spectator'));
     const emitNow = Date.now();

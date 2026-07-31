@@ -272,19 +272,32 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
       // answer and the authoritative score without touching the screen kind.
       if (eventSinceSubscribeRef.current) {
         setBoard((current) => (current.length > 0 ? current : snapshot.board ?? []));
+        // The authoritative score stands per game even when the snapshot's
+        // attempt is already gone (e.g. it froze between our answer and the
+        // reconnect) — local score can only be missing acks, never ahead.
+        if (snapshot.game_index === lastGameIndexRef.current) {
+          setScore((s) => Math.max(s, snapshot.score));
+        }
         const curAttempt = currentAttemptRef.current;
         if (
           curAttempt &&
           snapshot.attempt?.attempt_id === curAttempt.attempt_id &&
           snapshot.game_index === lastGameIndexRef.current
         ) {
-          setScore((s) => Math.max(s, snapshot.score));
           if (answeredRef.current == null && snapshot.your_answer) {
             const priorAck: WlAnswerAck = { accepted: true, ...snapshot.your_answer };
             answeredRef.current = priorAck;
             scoredRef.current.set(curAttempt.attempt_id, snapshot.your_answer.points);
             const cur = screenRef.current;
             if (cur.kind === 'question' && cur.attempt.attempt_id === curAttempt.attempt_id) {
+              apply({ ...cur, answer: priorAck });
+            } else if (
+              cur.kind === 'reveal' &&
+              cur.reveal.attempt_id === curAttempt.attempt_id
+            ) {
+              // The reveal beat the ack and rendered with a null answer —
+              // upgrade it in place so it shows the earned verdict, not
+              // a false "Time's up".
               apply({ ...cur, answer: priorAck });
             }
           }
