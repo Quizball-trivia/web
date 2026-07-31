@@ -564,9 +564,10 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       void qc.invalidateQueries({ queryKey: queryKeys.store.wallet() });
       void qc.invalidateQueries({ queryKey: queryKeys.store.inventory() });
       void qc.invalidateQueries({ queryKey: queryKeys.users.all });
+      void qc.invalidateQueries({ queryKey: queryKeys.weekendLeague.all });
       logger.info('Invalidated post-match queries after match:final_results', {
         matchId: data.matchId,
-        invalidated: ['ranked.all', 'stats.all', 'store.wallet', 'store.inventory', 'users.all'],
+        invalidated: ['ranked.all', 'stats.all', 'store.wallet', 'store.inventory', 'users.all', 'weekendLeague.all'],
       });
     }
     void getMe()

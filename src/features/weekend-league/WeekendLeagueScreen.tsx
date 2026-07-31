@@ -6,6 +6,7 @@ import { Eye, Play } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
 import { PLAYOFF_CUTOFF, poppins } from './constants';
 import { useWeekendLeague, type WeekendLeagueController } from './use-weekend-league';
+import type { WeekendLeagueLiveExtras } from './use-weekend-league-live';
 import type { WeekendLeagueState } from './types';
 import { LeagueHeader } from './components/LeagueHeader';
 import { YourStatusCard } from './components/YourStatusCard';
@@ -33,10 +34,13 @@ export function WeekendLeagueScreen({
 }: {
   showControls?: boolean;
   initial?: Partial<WeekendLeagueState>;
-  controller?: WeekendLeagueController & { qp?: number };
+  controller?: WeekendLeagueController & Partial<WeekendLeagueLiveExtras>;
 }) {
   const mock = useWeekendLeague(initial);
   const wl = controller ?? mock;
+  // Live mode keeps the prototype game flows unreachable until the wl:* socket
+  // client ships — real players must never check in / play against mock data.
+  const playable = controller?.playable ?? true;
   const [liveMode, setLiveMode] = useState<'gauntlet' | 'final' | 'spectate' | null>(null);
 
   const handleGauntletExit = useCallback(
@@ -113,6 +117,9 @@ export function WeekendLeagueScreen({
               phase={wl.phase}
               milestones={wl.milestones}
               qp={controller?.qp}
+              qpTarget={controller?.qpTarget}
+              qpQualified={controller?.qpQualified}
+              canEnter={controller?.canEnter ?? true}
               hasEntered={wl.hasEntered}
               registered={wl.registered}
               result={
@@ -133,13 +140,20 @@ export function WeekendLeagueScreen({
             <YourStatusCard
               phase={wl.phase}
               hasEntered={wl.hasEntered}
-              qualified={wl.qualified}
+              qualified={
+                // In live mode "completed + qualified" reads as champion on the
+                // card — only the actual winner gets that.
+                wl.phase === 'completed' && controller?.live
+                  ? (controller.champion ?? false)
+                  : wl.qualified
+              }
               yourRank={wl.yourRank}
             />
           )}
 
           <PhaseContent
             wl={wl}
+            playable={playable}
             onJoin={() => setLiveMode('gauntlet')}
             onJoinFinal={() => setLiveMode('final')}
             onWatch={() => setLiveMode('spectate')}
@@ -152,11 +166,14 @@ export function WeekendLeagueScreen({
 
 function PhaseContent({
   wl,
+  playable,
   onJoin,
   onJoinFinal,
   onWatch,
 }: {
-  wl: ReturnType<typeof useWeekendLeague>;
+  wl: WeekendLeagueController;
+  /** False in live mode until real gameplay is wired — hides join/watch CTAs. */
+  playable: boolean;
   onJoin: () => void;
   /** The Sunday final runs the same gauntlet with only the finalists. */
   onJoinFinal: () => void;
@@ -202,21 +219,25 @@ function PhaseContent({
             <p className="mx-auto mt-1 max-w-xs font-poppins text-[13px] font-semibold text-white/60">
               {t('weekendLeague.qualifierLiveBody')}
             </p>
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.97 }}
-              onClick={onJoin}
-              className="mx-auto mt-4 flex h-14 w-full max-w-xs items-center justify-center gap-2 rounded-2xl bg-brand-green py-3.5 font-poppins text-lg font-black uppercase tracking-wide text-white transition-colors hover:bg-brand-green/90"
-            >
-              <Play className="size-5 fill-current" /> {t('weekendLeague.joinGame')}
-            </motion.button>
-            <button
-              type="button"
-              onClick={onWatch}
-              className="mx-auto mt-2.5 flex items-center justify-center gap-1.5 font-poppins text-[12px] font-bold uppercase tracking-widest text-white/50 hover:text-white"
-            >
-              <Eye className="size-4" /> {t('weekendLeague.watchLive')}
-            </button>
+            {playable && (
+              <>
+                <motion.button
+                  type="button"
+                  whileTap={{ scale: 0.97 }}
+                  onClick={onJoin}
+                  className="mx-auto mt-4 flex h-14 w-full max-w-xs items-center justify-center gap-2 rounded-2xl bg-brand-green py-3.5 font-poppins text-lg font-black uppercase tracking-wide text-white transition-colors hover:bg-brand-green/90"
+                >
+                  <Play className="size-5 fill-current" /> {t('weekendLeague.joinGame')}
+                </motion.button>
+                <button
+                  type="button"
+                  onClick={onWatch}
+                  className="mx-auto mt-2.5 flex items-center justify-center gap-1.5 font-poppins text-[12px] font-bold uppercase tracking-widest text-white/50 hover:text-white"
+                >
+                  <Eye className="size-4" /> {t('weekendLeague.watchLive')}
+                </button>
+              </>
+            )}
           </div>
         ) : (
           <div className="rounded-[24px] border-2 border-white/10 p-5 text-center">
@@ -226,14 +247,16 @@ function PhaseContent({
             <p className="mx-auto mt-1 max-w-xs font-poppins text-[13px] font-semibold text-white/60">
               {t('weekendLeague.entryClosedLiveBody')}
             </p>
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.97 }}
-              onClick={onWatch}
-              className="mx-auto mt-4 flex h-12 w-full max-w-xs items-center justify-center gap-2 rounded-2xl bg-brand-green py-3 font-poppins text-base font-black uppercase tracking-wide text-white transition-colors hover:bg-brand-green/90"
-            >
-              <Eye className="size-5" /> {t('weekendLeague.watchLive')}
-            </motion.button>
+            {playable && (
+              <motion.button
+                type="button"
+                whileTap={{ scale: 0.97 }}
+                onClick={onWatch}
+                className="mx-auto mt-4 flex h-12 w-full max-w-xs items-center justify-center gap-2 rounded-2xl bg-brand-green py-3 font-poppins text-base font-black uppercase tracking-wide text-white transition-colors hover:bg-brand-green/90"
+              >
+                <Eye className="size-5" /> {t('weekendLeague.watchLive')}
+              </motion.button>
+            )}
           </div>
         )}
         <QualifierLeaderboard entries={wl.leaderboard} yourRank={wl.yourRank} />
@@ -268,21 +291,25 @@ function PhaseContent({
             <p className="mx-auto mt-1 max-w-xs font-poppins text-[13px] font-semibold text-white/60">
               {t('weekendLeague.finalLiveBody', { n: PLAYOFF_CUTOFF })}
             </p>
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.97 }}
-              onClick={onJoinFinal}
-              className="mx-auto mt-4 flex h-14 w-full max-w-xs items-center justify-center gap-2 rounded-2xl bg-brand-green py-3.5 font-poppins text-lg font-black uppercase tracking-wide text-white transition-colors hover:bg-brand-green/90"
-            >
-              <Play className="size-5 fill-current" /> {t('weekendLeague.joinGame')}
-            </motion.button>
-            <button
-              type="button"
-              onClick={onWatch}
-              className="mx-auto mt-2.5 flex items-center justify-center gap-1.5 font-poppins text-[12px] font-bold uppercase tracking-widest text-white/50 hover:text-white"
-            >
-              <Eye className="size-4" /> {t('weekendLeague.watchLive')}
-            </button>
+            {playable && (
+              <>
+                <motion.button
+                  type="button"
+                  whileTap={{ scale: 0.97 }}
+                  onClick={onJoinFinal}
+                  className="mx-auto mt-4 flex h-14 w-full max-w-xs items-center justify-center gap-2 rounded-2xl bg-brand-green py-3.5 font-poppins text-lg font-black uppercase tracking-wide text-white transition-colors hover:bg-brand-green/90"
+                >
+                  <Play className="size-5 fill-current" /> {t('weekendLeague.joinGame')}
+                </motion.button>
+                <button
+                  type="button"
+                  onClick={onWatch}
+                  className="mx-auto mt-2.5 flex items-center justify-center gap-1.5 font-poppins text-[12px] font-bold uppercase tracking-widest text-white/50 hover:text-white"
+                >
+                  <Eye className="size-4" /> {t('weekendLeague.watchLive')}
+                </button>
+              </>
+            )}
           </div>
         ) : (
           <div className="rounded-[24px] border-2 border-white/10 p-5 text-center">
@@ -292,14 +319,16 @@ function PhaseContent({
             <p className="mx-auto mt-1 max-w-xs font-poppins text-[13px] font-semibold text-white/60">
               {t('weekendLeague.notInFinalBody', { n: PLAYOFF_CUTOFF })}
             </p>
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.97 }}
-              onClick={onWatch}
-              className="mx-auto mt-4 flex h-12 w-full max-w-xs items-center justify-center gap-2 rounded-2xl bg-brand-green py-3 font-poppins text-base font-black uppercase tracking-wide text-white transition-colors hover:bg-brand-green/90"
-            >
-              <Eye className="size-5" /> {t('weekendLeague.watchLive')}
-            </motion.button>
+            {playable && (
+              <motion.button
+                type="button"
+                whileTap={{ scale: 0.97 }}
+                onClick={onWatch}
+                className="mx-auto mt-4 flex h-12 w-full max-w-xs items-center justify-center gap-2 rounded-2xl bg-brand-green py-3 font-poppins text-base font-black uppercase tracking-wide text-white transition-colors hover:bg-brand-green/90"
+              >
+                <Eye className="size-5" /> {t('weekendLeague.watchLive')}
+              </motion.button>
+            )}
           </div>
         )}
         <QualifierLeaderboard

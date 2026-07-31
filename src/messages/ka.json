@@ -1847,6 +1847,10 @@
     "finalStandings": "საბოლოო ცხრილი",
     "notInFinal": "ფინალში არ ხარ",
     "notInFinalBody": "ფინალში მხოლოდ საუკეთესო {n} გავიდა. შედეგებს მაინც შეგიძლია თვალი ადევნო.",
-    "freeEntryShort": "უფასო"
+    "freeEntryShort": "უფასო",
+    "qHeadlineNoRank": "ფინალში გადახვედი!",
+    "missedHeadlineNoRank": "ფინალში ვერ მოხვდი",
+    "loadError": "Weekend League ვერ ჩაიტვირთა.",
+    "retry": "თავიდან სცადე"
   }
 }

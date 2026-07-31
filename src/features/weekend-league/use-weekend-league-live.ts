@@ -6,9 +6,10 @@
 // unchanged; entry goes through the real endpoint. The mock hook stays behind
 // /dev/wl for design iteration.
 //
-// Not yet live-driven (lands with the socket client): qualifier standings and
-// your rank — the REST surface has no standings, so the board is empty until
-// the wl:* feed is wired in.
+// Not yet live-driven (lands with the wl:* socket client): gameplay, check-in,
+// standings and your rank. Until then `playable` is false — the screen renders
+// live phases informationally and never routes users into the mock game — and
+// the qualifier board stays empty rather than showing invented players.
 
 import { useCallback, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -17,15 +18,9 @@ import { enterWeekendLeague, getWeekendLeagueCurrent } from '@/lib/api/endpoints
 import { queryKeys } from '@/lib/queries/queryKeys';
 import { useAuthStore } from '@/stores/auth.store';
 import type { components } from '@/types/api.generated';
-import { PLAYOFF_CUTOFF, QP_TARGET } from './constants';
+import { QP_TARGET } from './constants';
 import { getMilestones } from './mock-data';
-import type {
-  GameSession,
-  LeaguePhase,
-  Milestone,
-  PlayoffOutcome,
-  QuizOutcome,
-} from './types';
+import type { LeaguePhase, Milestone } from './types';
 import type { WeekendLeagueController } from './use-weekend-league';
 
 type WlCurrent = components['schemas']['WlCurrentResponse'];
@@ -40,7 +35,7 @@ const HOT_STATUSES: ReadonlySet<string> = new Set([
 function phaseFromStatus(status: WlStatus | undefined): LeaguePhase {
   switch (status) {
     case 'entry_open':
-    case 'entry_closed': // still the countdown card, claiming is just over
+    case 'entry_closed': // same countdown card; the claim CTA locks via canEnter
       return 'entry_open';
     case 'checkin':
     case 'game_live':
@@ -55,7 +50,9 @@ function phaseFromStatus(status: WlStatus | undefined): LeaguePhase {
     case 'completed':
       return 'completed';
     default:
-      // scheduled / content_pending / ready / cancelled / voided / no tournament
+      // scheduled / content_pending / ready — the week hasn't opened yet.
+      // cancelled / voided / no tournament fall back to the next event's
+      // calendar (handled by the milestone fallback below).
       return 'upcoming';
   }
 }
@@ -88,12 +85,30 @@ function toMilestone(
   };
 }
 
-export type WeekendLeagueLiveController = WeekendLeagueController & {
+/** Live-only signals layered on top of the prototype controller contract. */
+export interface WeekendLeagueLiveExtras {
+  /** Marks a backend-driven controller (the screen uses it to trust server fields). */
+  live: true;
   isLoading: boolean;
-  /** Running QP balance (full bar on the launch edition). */
+  isError: boolean;
+  refetch: () => void;
+  /** Running QP balance (server truth, resets when a ticket is claimed). */
   qp: number;
   qpTarget: number;
-};
+  /** Server's word on entry eligibility (`you.qp.qualified`). */
+  qpQualified: boolean;
+  /** The entry window is open right now and the caller hasn't claimed yet. */
+  canEnter: boolean;
+  /** Actually won the event (distinct from `qualified` = reached the final). */
+  champion: boolean;
+  /** Gameplay is wired — false until the wl:* socket client lands, so live
+      phases render informationally instead of launching the mock game. */
+  playable: boolean;
+}
+
+export type WeekendLeagueLiveController = WeekendLeagueController & WeekendLeagueLiveExtras;
+
+const noop = () => {};
 
 export function useWeekendLeagueLive(): WeekendLeagueLiveController {
   const authStatus = useAuthStore((state) => state.status);
@@ -115,6 +130,8 @@ export function useWeekendLeagueLive(): WeekendLeagueLiveController {
   const you = query.data?.you ?? null;
   const status = tournament?.status;
   const phase = phaseFromStatus(status);
+  const hasEntered = you?.entered ?? false;
+  const canEnter = status === 'entry_open' && !hasEntered;
 
   const invalidate = useCallback(
     () => queryClient.invalidateQueries({ queryKey: queryKeys.weekendLeague.all }),
@@ -140,35 +157,11 @@ export function useWeekendLeagueLive(): WeekendLeagueLiveController {
     enterMutate();
   }, [status, enterMutate]);
 
-  // ── Play session (mock gameplay until the wl:* socket client lands) ──
-  const [session, setSession] = useState<GameSession | null>(null);
-  const [playedRank, setPlayedRank] = useState<number | null>(null);
-  const [playedOutcome, setPlayedOutcome] = useState<QuizOutcome | null>(null);
-  const [playoffOutcome, setPlayoffOutcome] = useState<PlayoffOutcome | null>(null);
-
-  const startQualifierGame = useCallback(() => {
-    setPlayedRank(null);
-    setPlayedOutcome(null);
-    setSession({ kind: 'qualifier' });
-  }, []);
-  const startPlayoffGame = useCallback(() => {
-    setPlayoffOutcome(null);
-    setSession({ kind: 'playoff' });
-  }, []);
-  const cancelGame = useCallback(() => setSession(null), []);
-  const finishQualifier = useCallback((rank: number, outcome: QuizOutcome) => {
-    setPlayedRank(rank);
-    setPlayedOutcome(outcome);
-    setSession(null);
-  }, []);
-  const finishPlayoff = useCallback((result: PlayoffOutcome) => {
-    setSession(null);
-    setPlayoffOutcome(result);
-  }, []);
-
   const milestones = useMemo(() => {
     const fallback = getMilestones(nowMs);
-    if (!tournament) return fallback;
+    if (!tournament || tournament.status === 'cancelled' || tournament.status === 'voided') {
+      return fallback;
+    }
     return {
       entry: toMilestone('entry', 'Entry closes', tournament.entry_closes_at, fallback.entry),
       qualifier: toMilestone('qualifier', 'Qualifier', tournament.qualifier_starts_at, fallback.qualifier),
@@ -189,14 +182,13 @@ export function useWeekendLeagueLive(): WeekendLeagueLiveController {
     }
   }, [milestones, phase]);
 
-  // "Made the cut": the server's word once it has one, a played mock result as
-  // an interim stand-in while gameplay is still prototype-driven.
-  const serverQualified = you?.state === 'finalist' || you?.state === 'champion';
-  const qualified = playedRank != null ? playedRank <= PLAYOFF_CUTOFF : serverQualified;
+  // Server truth only — no locally simulated results in live mode.
+  const champion = you?.state === 'champion';
+  const qualified = champion || you?.state === 'finalist';
 
   return {
     phase,
-    hasEntered: you?.entered ?? false,
+    hasEntered,
     qualified,
     milestones,
     activeMilestone,
@@ -204,20 +196,27 @@ export function useWeekendLeagueLive(): WeekendLeagueLiveController {
     yourRank: 0,
     bracket: null,
     registered: tournament?.registered_count ?? 0,
-    session,
-    playedOutcome,
-    playoffOutcome,
-    setPhase: () => {},
-    setEntered: () => {},
-    setQualified: () => {},
+    session: null,
+    playedOutcome: null,
+    playoffOutcome: null,
+    setPhase: noop,
+    setEntered: noop,
+    setQualified: noop,
     enterLeague,
-    startQualifierGame,
-    startPlayoffGame,
-    cancelGame,
-    finishQualifier,
-    finishPlayoff,
+    startQualifierGame: noop,
+    startPlayoffGame: noop,
+    cancelGame: noop,
+    finishQualifier: noop,
+    finishPlayoff: noop,
+    live: true,
     isLoading: query.isLoading,
-    qp: tournament?.launch_edition ? (tournament.qp_target ?? QP_TARGET) : (you?.qp.points ?? 0),
+    isError: query.isError,
+    refetch: () => void query.refetch(),
+    qp: you?.qp.points ?? 0,
     qpTarget: tournament?.qp_target ?? QP_TARGET,
+    qpQualified: you?.qp.qualified ?? false,
+    canEnter,
+    champion,
+    playable: false,
   };
 }

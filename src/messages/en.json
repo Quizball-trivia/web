@@ -1847,6 +1847,10 @@
     "finalStandings": "Final standings",
     "notInFinal": "You're not in the final",
     "notInFinalBody": "Only the top {n} qualified. You can still follow the final below.",
-    "freeEntryShort": "Free entry"
+    "freeEntryShort": "Free entry",
+    "qHeadlineNoRank": "You qualified for the final!",
+    "missedHeadlineNoRank": "You didn't make the cut",
+    "loadError": "Couldn't load the Weekend League.",
+    "retry": "Try again"
   }
 }

@@ -439,7 +439,7 @@ function QpRewardChip({ amount, delay }: { amount: number; delay: number }) {
         ease: 'easeOut',
       }}
       className="mt-4 inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 font-poppins font-semibold tabular-nums leading-none text-[17px] sm:py-2 sm:text-[21px]"
-      style={{ backgroundColor: '#1CB0F6', color: '#FFFFFF', boxShadow: '0 4px 0 rgba(0,0,0,0.35)' }}
+      style={{ backgroundColor: '#1CB0F6', color: '#071013', boxShadow: '0 4px 0 rgba(0,0,0,0.35)' }}
     >
       +{amount}
       <span className="text-[13px] font-black sm:text-[15px]">QP</span>
