@@ -1515,6 +1515,8 @@ export interface WlSubscribeSnapshot {
   /** Players only; spectators never get the undelayed in-flight question. */
   attempt: WlSnapshotAttempt | null;
   your_answer: { correct: boolean; points: number; elapsedMs: number } | null;
+  /** Latest persisted answer this game, attempt-identified — survives freeze. */
+  your_last_answer: { attempt_id: string; correct: boolean; points: number; elapsedMs: number } | null;
   score: number;
   board: WlBoardRow[];
 }

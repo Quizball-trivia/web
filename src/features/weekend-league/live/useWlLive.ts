@@ -86,6 +86,9 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
   const pendingQuestionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   /** Any event accepted since the LAST subscribe emit (not since mount). */
   const eventSinceSubscribeRef = useRef(false);
+  /** A void arrived since the last subscribe — the snapshot score may
+      predate it, so the authoritative-max merge must not resurrect it. */
+  const voidSinceSubscribeRef = useRef(false);
 
   const serverNow = useCallback(
     () => Date.now() + (Number.isFinite(clockOffsetRef.current) ? clockOffsetRef.current : 0),
@@ -199,6 +202,7 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
 
     const onVoid = (event: WlEventPayload) => {
       if (!accept(event)) return;
+      voidSinceSubscribeRef.current = true;
       const voided = event as { attempt_id?: string };
       const attemptId = voided.attempt_id;
       // The backend zeroes every accepted answer on a voided attempt — refund
@@ -273,34 +277,42 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
       if (eventSinceSubscribeRef.current) {
         setBoard((current) => (current.length > 0 ? current : snapshot.board ?? []));
         // The authoritative score stands per game even when the snapshot's
-        // attempt is already gone (e.g. it froze between our answer and the
+        // attempt is already gone (it froze between our answer and the
         // reconnect) — local score can only be missing acks, never ahead.
-        if (snapshot.game_index === lastGameIndexRef.current) {
+        // Unless a VOID raced past the ack: the snapshot may then include
+        // points the void just took away, so skip the merge (the next
+        // reveal board is absolute and self-corrects).
+        if (snapshot.game_index === lastGameIndexRef.current && !voidSinceSubscribeRef.current) {
           setScore((s) => Math.max(s, snapshot.score));
         }
+        // Recover the caller's verdict for whatever the screen shows:
+        // the active attempt (your_answer) or an already-frozen one
+        // (your_last_answer, attempt-identified).
+        const cur = screenRef.current;
         const curAttempt = currentAttemptRef.current;
         if (
           curAttempt &&
           snapshot.attempt?.attempt_id === curAttempt.attempt_id &&
-          snapshot.game_index === lastGameIndexRef.current
+          snapshot.game_index === lastGameIndexRef.current &&
+          answeredRef.current == null &&
+          snapshot.your_answer
         ) {
-          if (answeredRef.current == null && snapshot.your_answer) {
-            const priorAck: WlAnswerAck = { accepted: true, ...snapshot.your_answer };
-            answeredRef.current = priorAck;
-            scoredRef.current.set(curAttempt.attempt_id, snapshot.your_answer.points);
-            const cur = screenRef.current;
-            if (cur.kind === 'question' && cur.attempt.attempt_id === curAttempt.attempt_id) {
-              apply({ ...cur, answer: priorAck });
-            } else if (
-              cur.kind === 'reveal' &&
-              cur.reveal.attempt_id === curAttempt.attempt_id
-            ) {
-              // The reveal beat the ack and rendered with a null answer —
-              // upgrade it in place so it shows the earned verdict, not
-              // a false "Time's up".
-              apply({ ...cur, answer: priorAck });
-            }
+          const priorAck: WlAnswerAck = { accepted: true, ...snapshot.your_answer };
+          answeredRef.current = priorAck;
+          scoredRef.current.set(curAttempt.attempt_id, snapshot.your_answer.points);
+          if (cur.kind === 'question' && cur.attempt.attempt_id === curAttempt.attempt_id) {
+            apply({ ...cur, answer: priorAck });
+          } else if (cur.kind === 'reveal' && cur.reveal.attempt_id === curAttempt.attempt_id) {
+            apply({ ...cur, answer: priorAck });
           }
+        } else if (
+          cur.kind === 'reveal' &&
+          cur.answer == null &&
+          snapshot.your_last_answer?.attempt_id === cur.reveal.attempt_id
+        ) {
+          // The attempt froze before the snapshot was built — the persisted
+          // answer still carries the verdict for the reveal on screen.
+          apply({ ...cur, answer: { accepted: true, ...snapshot.your_last_answer } });
         }
         return;
       }
@@ -346,6 +358,7 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
 
     const subscribe = () => {
       eventSinceSubscribeRef.current = false;
+      voidSinceSubscribeRef.current = false;
       socket.emit('wl:subscribe', { tournament_id: tournamentId, role }, (result) => {
         if (disposed) return;
         if (!result.ok) {

@@ -128,6 +128,7 @@ describe('useWlLive', () => {
           deadlineAt: Date.now() + 5_000,
         },
         your_answer: { correct: true, points: 34, elapsedMs: 900 },
+        your_last_answer: null,
         score: 120,
         board: [{ user_id: 'me', points: 120, time_ms_total: 4000, rank: 3 }],
       },
@@ -242,6 +243,7 @@ describe('useWlLive', () => {
           deadlineAt: Date.now() + 5_000,
         },
         your_answer: { correct: true, points: 40, elapsedMs: 700 },
+        your_last_answer: null,
         score: 40,
         board: [],
       },
@@ -301,6 +303,7 @@ describe('useWlLive', () => {
           deadlineAt: Date.now() + 5_000,
         },
         your_answer: { correct: true, points: 40, elapsedMs: 700 },
+        your_last_answer: null,
         score: 40,
         board: [],
       },
@@ -345,6 +348,7 @@ describe('useWlLive', () => {
           deadlineAt: Date.now() + 5_000,
         },
         your_answer: { correct: true, points: 40, elapsedMs: 700 },
+        your_last_answer: null,
         score: 40,
         board: [],
       },
@@ -365,6 +369,76 @@ describe('useWlLive', () => {
     act(() => fakeSocket.releaseSubscribeAck());
     expect(result.current.score).toBe(40);
     expect(result.current.screen.kind === 'reveal' && result.current.screen.answer?.accepted).toBe(true);
+  });
+
+  it('recovers the verdict from your_last_answer when the attempt froze pre-snapshot', () => {
+    const { result } = renderHook(() => useWlLive(TID, 'player'));
+    act(() => fakeSocket.fire('wl:dispatch', dispatch(9)));
+    act(() => result.current.submitAnswer('a')); // ack dropped
+
+    fakeSocket.deferSubscribeAck = true;
+    fakeSocket.subscribeAck = {
+      ok: true,
+      seq: 9,
+      snapshot: {
+        status: 'game_live',
+        server_now: Date.now(),
+        game_index: 0,
+        attempt: null, // froze before the snapshot was built
+        your_answer: null,
+        your_last_answer: { attempt_id: 'attempt-9', correct: true, points: 40, elapsedMs: 700 },
+        score: 40,
+        board: [],
+      },
+    };
+    act(() => {
+      fakeSocket.fire('disconnect', 'transport close');
+      fakeSocket.fire('connect', undefined);
+    });
+    // Reveal for the frozen attempt beats the ack.
+    act(() =>
+      fakeSocket.fire('wl:reveal', {
+        type: 'reveal', tournamentId: TID, seq: 10, serverNowAtEmit: Date.now(),
+        attempt_id: 'attempt-9', game_index: 0, round_index: 0, question_index: 0,
+        kind: 'mcq', evaluation: { correct_id: 'a' }, answered: 5, distribution: {}, board: [],
+      }),
+    );
+    act(() => fakeSocket.releaseSubscribeAck());
+    expect(result.current.score).toBe(40);
+    expect(result.current.screen.kind === 'reveal' && result.current.screen.answer?.accepted).toBe(true);
+  });
+
+  it('a void racing the snapshot blocks the stale score merge', () => {
+    const { result } = renderHook(() => useWlLive(TID, 'player'));
+    act(() => fakeSocket.fire('wl:dispatch', dispatch(11)));
+
+    fakeSocket.deferSubscribeAck = true;
+    fakeSocket.subscribeAck = {
+      ok: true,
+      seq: 11,
+      snapshot: {
+        status: 'game_live',
+        server_now: Date.now(),
+        game_index: 0,
+        attempt: null,
+        your_answer: null,
+        your_last_answer: null,
+        score: 40, // includes points the void below just took away
+        board: [],
+      },
+    };
+    act(() => {
+      fakeSocket.fire('disconnect', 'transport close');
+      fakeSocket.fire('connect', undefined);
+    });
+    act(() =>
+      fakeSocket.fire('wl:void', {
+        type: 'void', tournamentId: TID, seq: 12, serverNowAtEmit: Date.now(),
+        attempt_id: 'attempt-11', game_index: 0, round_index: 0, question_index: 0,
+      }),
+    );
+    act(() => fakeSocket.releaseSubscribeAck());
+    expect(result.current.score).toBe(0);
   });
 
   it('remaps the spectator window onto the delayed emission time', () => {
