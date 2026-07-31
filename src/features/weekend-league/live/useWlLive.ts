@@ -84,6 +84,8 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
   const scoredRef = useRef<Map<string, number>>(new Map());
   const lastGameIndexRef = useRef<number | null>(null);
   const pendingQuestionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** Any event accepted since the LAST subscribe emit (not since mount). */
+  const eventSinceSubscribeRef = useRef(false);
 
   const serverNow = useCallback(
     () => Date.now() + (Number.isFinite(clockOffsetRef.current) ? clockOffsetRef.current : 0),
@@ -116,6 +118,7 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
       if (event.tournamentId !== tournamentId) return false;
       if (event.seq <= lastSeqRef.current) return false;
       lastSeqRef.current = event.seq;
+      eventSinceSubscribeRef.current = true;
       // Max over samples: the least-latency packet gives the best estimate.
       clockOffsetRef.current = Math.max(
         clockOffsetRef.current,
@@ -158,11 +161,16 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
         setScore(0);
         scoredRef.current = new Map();
       }
+      // A re-broadcast (or snapshot-then-event overlap) of the SAME attempt
+      // must not wipe an answer already given to it.
+      const sameAttempt = currentAttemptRef.current?.attempt_id === attempt.attempt_id;
       currentAttemptRef.current = attempt;
-      answeredRef.current = null;
-      inFlightRef.current = null;
+      if (!sameAttempt) {
+        answeredRef.current = null;
+        inFlightRef.current = null;
+        setLastAck(null);
+      }
       setGameIndex(attempt.game_index);
-      setLastAck(null);
       clearPendingQuestion();
       // If a reveal is on screen, hold it through the dispatch lead — the
       // question isn't answerable before playableAt anyway, so the correct
@@ -171,7 +179,7 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
       if (screenRef.current.kind === 'reveal' && leadMs > 150) {
         pendingQuestionTimerRef.current = setTimeout(() => showQuestion(attempt), leadMs);
       } else {
-        apply({ kind: 'question', attempt, answer: null });
+        apply({ kind: 'question', attempt, answer: answeredRef.current });
       }
     };
 
@@ -253,10 +261,13 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
         snapshot.server_now - Date.now(),
       );
       // Room events can beat the ack callback (the server emits to the room
-      // the moment we join, before the ack round-trips). If a dispatch has
-      // already flowed, the live stream is ahead of the snapshot — take only
-      // the clock and (if we have none) the board, never regress the screen.
-      if (currentAttemptRef.current != null || lastGameIndexRef.current != null) {
+      // the moment we join, before the ack round-trips). If ANY event has
+      // arrived since this subscribe was sent, the live stream is ahead of
+      // the snapshot — take only the clock and (if we have none) the board,
+      // never regress the screen. A stale attempt left over from BEFORE a
+      // reconnect does not count: rehydrating over it is exactly how a
+      // dropped ack and the authoritative score are recovered.
+      if (eventSinceSubscribeRef.current) {
         setBoard((current) => (current.length > 0 ? current : snapshot.board ?? []));
         return;
       }
@@ -266,6 +277,12 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
       scoredRef.current = new Map();
       // The snapshot score is authoritative (persisted + in-flight accepted).
       setScore(snapshot.score);
+      if (snapshot.status === 'cancelled' || snapshot.status === 'voided') {
+        currentAttemptRef.current = null;
+        clearPendingQuestion();
+        apply({ kind: 'cancelled' });
+        return;
+      }
       const attempt = snapshot.attempt;
       if (attempt && attempt.deadlineAt > serverNow()) {
         const restored: WlDispatchEventPayload = {
@@ -289,11 +306,13 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
       } else if (screenRef.current.kind === 'question') {
         // The question we were on is over and nothing newer is in flight.
         currentAttemptRef.current = null;
+        clearPendingQuestion();
         apply({ kind: 'waiting' });
       }
     };
 
     const subscribe = () => {
+      eventSinceSubscribeRef.current = false;
       socket.emit('wl:subscribe', { tournament_id: tournamentId, role }, (result) => {
         if (disposed) return;
         if (!result.ok) {
@@ -384,12 +403,17 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
             if (err || !ack) {
               // Timed out / dropped. The backend accepts duplicates
               // idempotently (returns the stored result), so retrying while
-              // the window is open is safe.
+              // the window is open is safe — but only while OUR lock is
+              // still held (a disconnect clears it and may have already
+              // allowed a fresh manual submit).
+              if (inFlightRef.current !== attemptId) return;
               if (retriesLeft > 0 && attempt.deadlineAt > serverNow()) {
                 send(retriesLeft - 1);
                 return;
               }
               inFlightRef.current = null;
+              // Give up: unlock the choice UI so the player can try again.
+              setRetryNonce((n) => n + 1);
               return;
             }
             inFlightRef.current = null;

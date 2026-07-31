@@ -207,6 +207,66 @@ describe('useWlLive', () => {
     expect(result.current.screen.kind).toBe('question');
   });
 
+  it('rehydrates across a reconnect: dropped ack + authoritative score recovered', () => {
+    const { result } = renderHook(() => useWlLive(TID, 'player'));
+    act(() => fakeSocket.fire('wl:dispatch', dispatch(3)));
+    act(() => result.current.submitAnswer('a')); // ack will be dropped
+    expect(result.current.score).toBe(0);
+
+    // Reconnect: the server-stored answer and score come back in the snapshot.
+    fakeSocket.subscribeAck = {
+      ok: true,
+      seq: 3,
+      snapshot: {
+        status: 'game_live',
+        server_now: Date.now(),
+        game_index: 0,
+        attempt: {
+          attempt_id: 'attempt-3',
+          game_index: 0,
+          round_index: 0,
+          question_index: 0,
+          kind: 'mcq',
+          question: { prompt: { en: 'Q' }, options: [] },
+          evaluation: { correct_id: 'a' },
+          playableAt: Date.now() - 500,
+          deadlineAt: Date.now() + 5_000,
+        },
+        your_answer: { correct: true, points: 40, elapsedMs: 700 },
+        score: 40,
+        board: [],
+      },
+    };
+    act(() => {
+      fakeSocket.fire('disconnect', 'transport close');
+      fakeSocket.fire('connect', undefined);
+    });
+    expect(result.current.score).toBe(40);
+    expect(result.current.screen.kind === 'question' && result.current.screen.answer?.accepted).toBe(true);
+  });
+
+  it('a re-broadcast of the same attempt keeps the given answer', () => {
+    const { result } = renderHook(() => useWlLive(TID, 'player'));
+    act(() => fakeSocket.fire('wl:dispatch', dispatch(1)));
+    act(() => result.current.submitAnswer('a'));
+    act(() => fakeSocket.answerSends[0].cb(null, { accepted: true, correct: true, points: 40, elapsedMs: 800 }));
+    act(() => fakeSocket.fire('wl:dispatch', dispatch(2, { attempt_id: 'attempt-1' })));
+    expect(result.current.screen.kind === 'question' && result.current.screen.answer?.accepted).toBe(true);
+    expect(result.current.score).toBe(40);
+  });
+
+  it('unlocks after all ack retries are exhausted', () => {
+    const { result } = renderHook(() => useWlLive(TID, 'player'));
+    act(() => fakeSocket.fire('wl:dispatch', dispatch(1)));
+    act(() => result.current.submitAnswer('a'));
+    act(() => fakeSocket.answerSends[0].cb(new Error('timeout')));
+    act(() => fakeSocket.answerSends[1].cb(new Error('timeout')));
+    act(() => fakeSocket.answerSends[2].cb(new Error('timeout')));
+    expect(result.current.retryNonce).toBe(1);
+    act(() => result.current.submitAnswer('a'));
+    expect(fakeSocket.answerSends).toHaveLength(4);
+  });
+
   it('remaps the spectator window onto the delayed emission time', () => {
     const { result } = renderHook(() => useWlLive(TID, 'spectator'));
     const emitNow = Date.now();
