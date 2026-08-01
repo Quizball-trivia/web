@@ -16,7 +16,7 @@ const STATUS_BY_PHASE: Record<LeaguePhase, [StageStatus, StageStatus, StageStatu
   completed: ['done', 'done', 'done'],
 };
 
-function Dot({ status }: { status: StageStatus }) {
+function Dot({ status, onGold }: { status: StageStatus; onGold: boolean }) {
   if (status === 'done') {
     return (
       <span className="flex size-7 items-center justify-center rounded-full bg-brand-green text-white">
@@ -25,13 +25,18 @@ function Dot({ status }: { status: StageStatus }) {
     );
   }
   if (status === 'active') {
+    // Gold on gold disappears — the active stage flips to brand blue there.
     return (
       <motion.span
-        className="flex size-7 items-center justify-center rounded-full bg-brand-gold"
-        animate={{ boxShadow: ['0 0 0 0 rgba(255,215,0,0.5)', '0 0 0 8px rgba(255,215,0,0)'] }}
+        className={`flex size-7 items-center justify-center rounded-full ${onGold ? 'bg-brand-blue' : 'bg-brand-gold'}`}
+        animate={{
+          boxShadow: onGold
+            ? ['0 0 0 0 rgba(45,66,255,0.45)', '0 0 0 8px rgba(45,66,255,0)']
+            : ['0 0 0 0 rgba(255,215,0,0.5)', '0 0 0 8px rgba(255,215,0,0)'],
+        }}
         transition={{ duration: 1.4, repeat: Infinity }}
       >
-        <span className="size-2 rounded-full bg-black" />
+        <span className={`size-2 rounded-full ${onGold ? 'bg-white' : 'bg-black'}`} />
       </motion.span>
     );
   }
@@ -42,9 +47,12 @@ function Dot({ status }: { status: StageStatus }) {
 export function ScheduleTimeline({
   phase,
   milestones,
+  onGold = false,
 }: {
   phase: LeaguePhase;
   milestones: Record<'entry' | 'qualifier' | 'playoffs', Milestone> | null;
+  /** Rendered on the gold (entered) card — dark text/connector variants. */
+  onGold?: boolean;
 }) {
   const { t } = useLocale();
   const statuses = STATUS_BY_PHASE[phase];
@@ -62,15 +70,15 @@ export function ScheduleTimeline({
         return (
           <div key={stage.title} className="flex flex-1 flex-col items-center">
             <div className="flex w-full items-center">
-              <span className={`h-0.5 flex-1 rounded-full ${i === 0 ? 'opacity-0' : statuses[i - 1] === 'done' ? 'bg-brand-green' : 'bg-white/12'}`} />
-              <Dot status={status} />
-              <span className={`h-0.5 flex-1 rounded-full ${i === stages.length - 1 ? 'opacity-0' : status === 'done' ? 'bg-brand-green' : 'bg-white/12'}`} />
+              <span className={`h-0.5 flex-1 rounded-full ${i === 0 ? 'opacity-0' : statuses[i - 1] === 'done' ? 'bg-brand-green' : onGold ? 'bg-black/15' : 'bg-white/12'}`} />
+              <Dot status={status} onGold={onGold} />
+              <span className={`h-0.5 flex-1 rounded-full ${i === stages.length - 1 ? 'opacity-0' : status === 'done' ? 'bg-brand-green' : onGold ? 'bg-black/15' : 'bg-white/12'}`} />
             </div>
             <div className="mt-2 text-center">
-              <div className={`font-poppins text-[11px] font-black uppercase tracking-wide ${emphasized ? 'text-white' : 'text-white/45'}`}>
+              <div className={`font-poppins text-[11px] font-black uppercase tracking-wide ${emphasized ? (onGold ? 'text-black/85' : 'text-white') : onGold ? 'text-black/40' : 'text-white/45'}`}>
                 {stage.title}
               </div>
-              <div className={`font-poppins text-[10px] font-semibold ${emphasized ? 'text-white/70' : 'text-white/30'}`}>
+              <div className={`font-poppins text-[10px] font-semibold ${emphasized ? (onGold ? 'text-black/60' : 'text-white/70') : onGold ? 'text-black/30' : 'text-white/30'}`}>
                 {stage.when}
               </div>
             </div>

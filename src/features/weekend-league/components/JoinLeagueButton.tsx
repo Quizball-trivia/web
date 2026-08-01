@@ -23,10 +23,13 @@ export function JoinLeagueButton({
   joined,
   onJoin,
   className = '',
+  onGold = false,
 }: {
   joined: boolean;
   onJoin?: () => void;
   className?: string;
+  /** Rendered on the gold (entered) card — dark-on-gold joined state. */
+  onGold?: boolean;
 }) {
   const { t } = useLocale();
   const [burst, setBurst] = useState(false);
@@ -90,7 +93,9 @@ export function JoinLeagueButton({
           animate={{ scale: 1 }}
           transition={{ type: 'spring', stiffness: 320, damping: 14 }}
           className={`${base} cursor-default`}
-          style={{ backgroundColor: 'rgba(133,224,0,0.35)', color: 'rgba(255,255,255,0.75)' }}
+          style={onGold
+            ? { backgroundColor: 'rgba(0,0,0,0.16)', color: 'rgba(7,16,19,0.9)' }
+            : { backgroundColor: 'rgba(133,224,0,0.35)', color: 'rgba(255,255,255,0.75)' }}
         >
           <motion.span
             initial={{ scale: 0, rotate: -30 }}

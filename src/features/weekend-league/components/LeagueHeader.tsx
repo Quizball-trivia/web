@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { Ticket, Users } from 'lucide-react';
-import { motion } from 'motion/react';
+import { useEffect, useRef, useState } from 'react';
+import { Check, Ticket, Users } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
 import { useLocale } from '@/contexts/LocaleContext';
 import { colors } from '@/lib/colors';
 import { LAUNCH_EDITION, poppins, QP_TARGET } from '../constants';
@@ -50,6 +51,30 @@ export function LeagueHeader({
   onPlayRanked?: () => void;
 }) {
   const { t } = useLocale();
+
+  // ── The join moment ──
+  // Entering SPENDS the QP balance on the ticket: the bar drains to zero and
+  // the number rolls down with it, the section collapses away (the joined
+  // card doesn't show QP at all), and the card flips blue → gold. A card
+  // that MOUNTS already-entered (reload) skips the ceremony.
+  // Render-time adjustment (no effect setState): detect the not-entered →
+  // entered flip during render, start the ceremony, and let a timer settle it.
+  const [vanishing, setVanishing] = useState(false);
+  const [drained, setDrained] = useState(hasEntered);
+  const [seenEntered, setSeenEntered] = useState(hasEntered);
+  if (hasEntered !== seenEntered) {
+    setSeenEntered(hasEntered);
+    if (hasEntered) setVanishing(true);
+    else { setVanishing(false); setDrained(false); }
+  }
+  const settleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (!vanishing) return;
+    settleTimerRef.current = setTimeout(() => { setVanishing(false); setDrained(true); }, 1_150);
+    return () => { if (settleTimerRef.current) clearTimeout(settleTimerRef.current); };
+  }, [vanishing]);
+  const gold = hasEntered;
+  const showQp = !drained && !(hasEntered && !vanishing);
 
   const clamped = Math.max(0, Math.min(qp, qpTarget));
   const pct = qpTarget <= 0 ? 100 : Math.round((clamped / qpTarget) * 100);
@@ -137,30 +162,47 @@ export function LeagueHeader({
   }
 
   return (
-    <header
+    <motion.header
       className="relative overflow-hidden rounded-[24px] border-2 border-brand-gold/25"
-      style={{ backgroundColor: colors.blue.brand }}
+      initial={false}
+      animate={{ backgroundColor: gold ? colors.gold.warm : colors.blue.brand }}
+      transition={{ duration: 0.8, ease: 'easeInOut', delay: gold && vanishing ? 0.45 : 0 }}
     >
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
         style={{
-          background:
-            'radial-gradient(70% 120% at 88% 0%, rgba(255,215,0,0.14) 0%, transparent 62%), linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(0,0,0,0.18) 100%)',
+          background: gold
+            ? 'radial-gradient(70% 120% at 50% 0%, rgba(255,255,255,0.28) 0%, transparent 60%), linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(0,0,0,0.10) 100%)'
+            : 'radial-gradient(70% 120% at 88% 0%, rgba(255,215,0,0.14) 0%, transparent 62%), linear-gradient(180deg, rgba(255,255,255,0.06) 0%, rgba(0,0,0,0.18) 100%)',
         }}
       />
+      {/* One-time celebratory flash as the card turns gold. */}
+      <AnimatePresence>
+        {gold && vanishing && (
+          <motion.div
+            aria-hidden
+            className="pointer-events-none absolute inset-0 z-10"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 0.55, 0] }}
+            exit={{ opacity: 0 }}
+            transition={{ delay: 0.5, duration: 0.9, times: [0, 0.35, 1] }}
+            style={{ background: 'radial-gradient(60% 60% at 50% 40%, rgba(255,255,255,0.9) 0%, transparent 70%)' }}
+          />
+        )}
+      </AnimatePresence>
 
       <div className="relative flex flex-col items-center gap-5 p-5 text-center lg:p-6">
         {/* Identity */}
         <div className="min-w-0">
-          <div className="font-poppins text-[11px] font-black uppercase tracking-[0.28em] text-brand-gold">
+          <div className={`font-poppins text-[11px] font-black uppercase tracking-[0.28em] transition-colors duration-700 ${gold ? 'text-black/55' : 'text-brand-gold'}`}>
             {t('weekendLeague.kicker')}
           </div>
           <motion.h1
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
-            className="mt-2 font-poppins text-[1.75rem] font-black uppercase leading-none text-white sm:text-4xl"
+            className={`mt-2 font-poppins text-[1.75rem] font-black uppercase leading-none transition-colors duration-700 sm:text-4xl ${gold ? 'text-black/90' : 'text-white'}`}
             style={poppins}
           >
             {t('weekendLeague.title')}
@@ -169,42 +211,77 @@ export function LeagueHeader({
 
         {/* Qualification status + action */}
         <div className="w-full max-w-[320px]">
-          <div className="flex items-center justify-center gap-2">
-            <div className="flex size-8 items-center justify-center rounded-lg bg-brand-yellow text-black">
-              <Ticket className="size-4" />
-            </div>
-            <div
-              className={`font-poppins text-[11px] font-black uppercase tracking-[0.16em] ${
-                isQualified ? 'text-brand-green-light' : 'text-brand-gold'
-              }`}
+          {gold ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.6, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ delay: vanishing ? 0.75 : 0, type: 'spring', stiffness: 260, damping: 15 }}
+              className="flex flex-col items-center gap-2.5"
             >
-              {isQualified ? t('weekendLeague.qualified') : t('weekendLeague.notQualified')}
-            </div>
-          </div>
-
-          <div className="mt-3 text-center font-poppins text-xl font-black text-white" style={poppins}>
-            {clamped}
-            <span className="text-sm font-bold text-white/60"> / {qpTarget.toLocaleString()} QP</span>
-          </div>
-
-          <div className="mt-2 flex items-center gap-2">
-            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-black/30">
+              <span className="flex size-16 items-center justify-center rounded-full bg-brand-green text-white shadow-[0_6px_18px_rgba(0,0,0,0.18)]">
+                <Check className="size-9" strokeWidth={3.5} />
+              </span>
+              <div className="font-poppins text-[22px] font-black uppercase tracking-[0.04em] text-black" style={poppins}>
+                {t('weekendLeague.joinedCta')}
+              </div>
+            </motion.div>
+          ) : (
+            <div className="flex items-center justify-center gap-2">
+              <div className="flex size-8 items-center justify-center rounded-lg bg-brand-yellow text-black">
+                <Ticket className="size-4" />
+              </div>
               <div
-                className="h-full rounded-full bg-brand-green-light transition-all duration-500"
-                style={{ width: `${pct}%` }}
-              />
-            </div>
-            <span className="font-poppins text-[11px] font-black text-brand-green-light">{pct}%</span>
-          </div>
-
-          {!isQualified && (
-            <div className="mt-1.5 text-center font-poppins text-[11px] font-bold uppercase tracking-wide text-white/60">
-              {t('weekendLeague.qpNeeded', { count: remaining })}
+                className={`font-poppins text-[11px] font-black uppercase tracking-[0.16em] ${
+                  isQualified ? 'text-brand-green-light' : 'text-brand-gold'
+                }`}
+              >
+                {isQualified ? t('weekendLeague.qualified') : t('weekendLeague.notQualified')}
+              </div>
             </div>
           )}
 
+          {/* The QP balance is SPENT on entry: drain to zero, then collapse. */}
+          <AnimatePresence initial={false}>
+            {showQp && (
+              <motion.div
+                key="qp"
+                exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                transition={{ duration: 0.35, ease: 'easeIn' }}
+                className="overflow-hidden"
+              >
+                <div className="mt-3 text-center font-poppins text-xl font-black text-white" style={poppins}>
+                  <QpDrainNumber value={clamped} draining={vanishing} />
+                  <span className="text-sm font-bold text-white/60"> / {qpTarget.toLocaleString()} QP</span>
+                </div>
+
+                <div className="mt-2 flex items-center gap-2">
+                  <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-black/30">
+                    <motion.div
+                      className="h-full rounded-full"
+                      initial={false}
+                      animate={{
+                        width: vanishing ? '0%' : `${pct}%`,
+                        backgroundColor: vanishing ? colors.gold.base : '#85E000',
+                      }}
+                      transition={{ duration: vanishing ? 0.8 : 0.5, ease: 'easeInOut' }}
+                    />
+                  </div>
+                  <span className={`font-poppins text-[11px] font-black ${vanishing ? 'text-brand-gold' : 'text-brand-green-light'}`}>
+                    {vanishing ? '' : `${pct}%`}
+                  </span>
+                </div>
+
+                {!isQualified && (
+                  <div className="mt-1.5 text-center font-poppins text-[11px] font-bold uppercase tracking-wide text-white/60">
+                    {t('weekendLeague.qpNeeded', { count: remaining })}
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <div className="mt-4">
-            <div className="text-center font-poppins text-[10px] font-black uppercase tracking-[0.16em] text-white/60">
+            <div className={`text-center font-poppins text-[10px] font-black uppercase tracking-[0.16em] transition-colors duration-700 ${gold ? 'text-black/55' : 'text-white/60'}`}>
               {t('weekendLeague.startsIn')}
             </div>
             {milestones && (
@@ -212,17 +289,22 @@ export function LeagueHeader({
                 <LeagueCountdown
                   targetMs={milestones.qualifier.targetMs}
                   size="sm"
-                  accent="text-white"
-                  labelClass="text-white/70"
+                  accent={gold ? 'text-black/90' : 'text-white'}
+                  labelClass={gold ? 'text-black/55' : 'text-white/70'}
                   plain
                 />
               </div>
             )}
 
-            <div className="mt-3.5">
-              {hasEntered ? (
-                <JoinLeagueButton joined onJoin={onEnter} />
-              ) : isQualified && !canEnter ? (
+            <AnimatePresence initial={false}>
+            {!hasEntered && (
+              <motion.div
+                key="cta"
+                exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                transition={{ duration: 0.3, ease: 'easeIn' }}
+                className="mt-3.5 overflow-hidden"
+              >
+              {isQualified && !canEnter ? (
                 <button
                   type="button"
                   disabled
@@ -241,10 +323,12 @@ export function LeagueHeader({
                   {t('weekendLeague.playRanked')}
                 </Link>
               )}
-            </div>
+              </motion.div>
+            )}
+            </AnimatePresence>
 
             {registered != null && (
-              <div className="mt-2.5 flex items-center justify-center gap-1.5 font-poppins text-[11px] font-semibold text-white/60">
+              <div className={`mt-2.5 flex items-center justify-center gap-1.5 font-poppins text-[11px] font-semibold transition-colors duration-700 ${gold ? 'text-black/60' : 'text-white/60'}`}>
                 <Users className="size-3.5" />
                 {t('weekendLeague.playersEntered', { count: registered.toLocaleString() })}
               </div>
@@ -255,9 +339,35 @@ export function LeagueHeader({
       </div>
 
       <div className="relative px-4 pb-5 lg:px-6">
-        <ScheduleTimeline phase={phase} milestones={milestones} />
+        <ScheduleTimeline phase={phase} milestones={milestones} onGold={gold} />
       </div>
-    </header>
+    </motion.header>
   );
+}
+
+/** Rolls the balance down to zero while the ticket is being punched. */
+function QpDrainNumber({ value, draining }: { value: number; draining: boolean }) {
+  const [shown, setShown] = useState(value);
+  const [tracked, setTracked] = useState(value);
+  // Render-time adjustment: follow the live balance whenever no drain is
+  // playing (no effect round-trip).
+  if (!draining && tracked !== value) {
+    setTracked(value);
+    setShown(value);
+  }
+  useEffect(() => {
+    if (!draining) return;
+    const start = performance.now();
+    const durationMs = 800;
+    let raf = 0;
+    const tick = (now: number) => {
+      const progress = Math.min(1, (now - start) / durationMs);
+      setShown(Math.round(value * (1 - progress)));
+      if (progress < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [draining, value]);
+  return <>{shown}</>;
 }
 
