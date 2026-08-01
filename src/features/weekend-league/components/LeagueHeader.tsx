@@ -50,7 +50,7 @@ export function LeagueHeader({
   onEnter?: () => void;
   onPlayRanked?: () => void;
 }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
 
   // ── The join moment ──
   // Entering SPENDS the QP balance on the ticket: the bar drains to zero and
@@ -285,15 +285,24 @@ export function LeagueHeader({
               {t('weekendLeague.startsIn')}
             </div>
             {milestones && (
-              <div className="mt-2 flex justify-center">
-                <LeagueCountdown
-                  targetMs={milestones.qualifier.targetMs}
-                  size="sm"
-                  accent={gold ? 'text-black/90' : 'text-white'}
-                  labelClass={gold ? 'text-black/55' : 'text-white/70'}
-                  plain
-                />
-              </div>
+              <>
+                <div className="mt-2 flex justify-center">
+                  <LeagueCountdown
+                    targetMs={milestones.qualifier.targetMs}
+                    size="sm"
+                    accent={gold ? 'text-black/90' : 'text-white'}
+                    labelClass={gold ? 'text-black/55' : 'text-white/70'}
+                    plain
+                  />
+                </div>
+                {/* The concrete date, so nobody has to do countdown math to
+                    know the first event is NEXT Saturday. */}
+                <div className={`mt-1.5 text-center font-poppins text-[12px] font-bold ${gold ? 'text-black/70' : 'text-white/70'}`}>
+                  {new Intl.DateTimeFormat(locale === 'ka' ? 'ka-GE' : 'en-GB', {
+                    timeZone: 'Asia/Tbilisi', weekday: 'long', day: 'numeric', month: 'long',
+                  }).format(milestones.qualifier.targetMs)} · {milestones.qualifier.timeLabel}
+                </div>
+              </>
             )}
 
             <AnimatePresence initial={false}>

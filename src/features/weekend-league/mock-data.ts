@@ -32,10 +32,16 @@ export function prizeForRank(rank: number): PrizeTier | null {
 // ── Schedule (Georgian time) ────────────────────────────────────────────────
 // Friday = 5, Saturday = 6, Sunday = 0.
 export function getMilestones(nowMs: number): Record<'entry' | 'qualifier' | 'playoffs', Milestone> {
+  // ONE coherent event weekend: everything anchors to the next qualifier
+  // Saturday, so mid-weekend the rail can never mix this week's final with
+  // next week's qualifier (Sat 15:00 must show next Sat + its own Fri/Sun,
+  // not tomorrow's final).
+  const DAY = 24 * 60 * 60_000;
+  const saturdayMs = nextGeorgianOccurrence(6, 14, nowMs);
   return {
-    entry: { key: 'entry', label: 'Entry closes', dayLabel: 'Friday', timeLabel: '12:00', targetMs: nextGeorgianOccurrence(5, 12, nowMs) },
-    qualifier: { key: 'qualifier', label: 'Qualifier', dayLabel: 'Saturday', timeLabel: '14:00', targetMs: nextGeorgianOccurrence(6, 14, nowMs) },
-    playoffs: { key: 'playoffs', label: 'Playoffs', dayLabel: 'Sunday', timeLabel: '14:00', targetMs: nextGeorgianOccurrence(0, 14, nowMs) },
+    entry: { key: 'entry', label: 'Entry closes', dayLabel: 'Friday', timeLabel: '12:00', targetMs: saturdayMs - DAY - 2 * 60 * 60_000 },
+    qualifier: { key: 'qualifier', label: 'Qualifier', dayLabel: 'Saturday', timeLabel: '14:00', targetMs: saturdayMs },
+    playoffs: { key: 'playoffs', label: 'Playoffs', dayLabel: 'Sunday', timeLabel: '14:00', targetMs: saturdayMs + DAY },
   };
 }
 
