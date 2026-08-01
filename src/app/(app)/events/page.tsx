@@ -4,7 +4,6 @@ import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
 import { EventsDashboard } from "@/features/tournaments/EventsDashboard";
-import { UpcomingEventScreen } from "@/features/tournaments/UpcomingEventScreen";
 import { WeekendLeagueLiveScreen } from "@/features/weekend-league/WeekendLeagueLiveScreen";
 
 const EVENTS_ENABLED = process.env.NEXT_PUBLIC_FEATURE_EVENTS_ENABLED === "true";
@@ -12,18 +11,13 @@ const EVENTS_ENABLED = process.env.NEXT_PUBLIC_FEATURE_EVENTS_ENABLED === "true"
 function EventsContent() {
   const searchParams = useSearchParams();
 
-  // ?tab=weekend-league is a direct link from the play-screen rail. It has to be
-  // handled before the feature-flag fallback, otherwise the link lands on the
-  // "upcoming event" placeholder whenever the events hub is still gated off.
-  if (searchParams?.get("tab") === "weekend-league") {
-    return <WeekendLeagueLiveScreen />;
+  // The events hub dashboard survives behind an explicit tab while the
+  // Weekend League IS the events tab (launch decision 2026-08-01).
+  if (EVENTS_ENABLED && searchParams?.get("tab") === "hub") {
+    return <EventsDashboard />;
   }
 
-  if (!EVENTS_ENABLED) {
-    return <UpcomingEventScreen />;
-  }
-
-  return <EventsDashboard />;
+  return <WeekendLeagueLiveScreen />;
 }
 
 export default function EventsPage() {
