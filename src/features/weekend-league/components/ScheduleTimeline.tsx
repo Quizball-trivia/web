@@ -42,9 +42,12 @@ function Dot({ status }: { status: StageStatus }) {
 export function ScheduleTimeline({
   phase,
   milestones,
+  onGold = false,
 }: {
   phase: LeaguePhase;
   milestones: Record<'entry' | 'qualifier' | 'playoffs', Milestone> | null;
+  /** Rendered on the gold (entered) card — dark text/connector variants. */
+  onGold?: boolean;
 }) {
   const { t } = useLocale();
   const statuses = STATUS_BY_PHASE[phase];
@@ -62,15 +65,15 @@ export function ScheduleTimeline({
         return (
           <div key={stage.title} className="flex flex-1 flex-col items-center">
             <div className="flex w-full items-center">
-              <span className={`h-0.5 flex-1 rounded-full ${i === 0 ? 'opacity-0' : statuses[i - 1] === 'done' ? 'bg-brand-green' : 'bg-white/12'}`} />
+              <span className={`h-0.5 flex-1 rounded-full ${i === 0 ? 'opacity-0' : statuses[i - 1] === 'done' ? 'bg-brand-green' : onGold ? 'bg-black/15' : 'bg-white/12'}`} />
               <Dot status={status} />
-              <span className={`h-0.5 flex-1 rounded-full ${i === stages.length - 1 ? 'opacity-0' : status === 'done' ? 'bg-brand-green' : 'bg-white/12'}`} />
+              <span className={`h-0.5 flex-1 rounded-full ${i === stages.length - 1 ? 'opacity-0' : status === 'done' ? 'bg-brand-green' : onGold ? 'bg-black/15' : 'bg-white/12'}`} />
             </div>
             <div className="mt-2 text-center">
-              <div className={`font-poppins text-[11px] font-black uppercase tracking-wide ${emphasized ? 'text-white' : 'text-white/45'}`}>
+              <div className={`font-poppins text-[11px] font-black uppercase tracking-wide ${emphasized ? (onGold ? 'text-black/85' : 'text-white') : onGold ? 'text-black/40' : 'text-white/45'}`}>
                 {stage.title}
               </div>
-              <div className={`font-poppins text-[10px] font-semibold ${emphasized ? 'text-white/70' : 'text-white/30'}`}>
+              <div className={`font-poppins text-[10px] font-semibold ${emphasized ? (onGold ? 'text-black/60' : 'text-white/70') : onGold ? 'text-black/30' : 'text-white/30'}`}>
                 {stage.when}
               </div>
             </div>
