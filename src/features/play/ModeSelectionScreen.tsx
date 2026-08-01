@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils';
+import { RailNavyGradient as WeekendLeagueRail } from '@/features/weekend-league/components/RailColorVariants';
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import Image from 'next/image';
@@ -184,6 +185,9 @@ export function ModeSelectionScreen({
       transition={playEntranceAnimation ? PLAY_ENTRANCE_TRANSITION : { duration: 0 }}
       className="max-w-5xl mx-auto px-4 py-3 space-y-4 md:py-6 md:space-y-5 font-fun"
     >
+
+      {/* ─── 0. Weekend League — the weekly objective, aligned to the mode cards ─── */}
+      <WeekendLeagueRail />
 
       {/* ─── 1. Ranked Hero Card ─── */}
       <div
