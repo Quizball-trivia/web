@@ -195,6 +195,9 @@ function DevResultsContent() {
           deltaRp: signedRpDelta,
           // Mirrors backend: win 300, anything else (loss/draw) 100.
           coinsAwarded: outcome === 'win' ? 300 : 100,
+          // Weekend League QP: win 25 / loss 10 — previews the +QP chip.
+          qpAwarded: outcome === 'win' ? 25 : 10,
+          qpWeekTotal: 135 + (outcome === 'win' ? 25 : 10),
           oldTier,
           newTier,
           placementStatus: 'placed',
