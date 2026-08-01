@@ -400,51 +400,64 @@ export function RankedProgressionPanel({
 }
 
 /**
- * Yellow coin pill showing the match's coin participation reward
- * (ranked win/loss). Pops in after the RP delta chip.
+ * One reward chip: springs in with overshoot, the icon flicks upright, the
+ * number ROLLS up from zero, then a shine sweeps across once — earning,
+ * not appearing. Coins and QP share this so the pair reads as one system.
  */
-function CoinRewardChip({ amount, delay }: { amount: number; delay: number }) {
+function RewardChip({
+  amount,
+  delay,
+  bg,
+  icon,
+  suffix,
+}: {
+  amount: number;
+  delay: number;
+  bg: string;
+  icon?: React.ReactNode;
+  suffix?: string;
+}) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 24, scale: 0 }}
-      animate={{ opacity: 1, y: 0, scale: [0, 1.25, 0.95, 1] }}
-      transition={{
-        delay,
-        duration: 0.55,
-        times: [0, 0.55, 0.8, 1],
-        ease: 'easeOut',
-      }}
-      className="mt-4 inline-flex items-center gap-2 rounded-full px-4 py-1.5 font-poppins font-semibold tabular-nums leading-none text-[17px] sm:py-2 sm:text-[21px]"
-      style={{ backgroundColor: '#FFE500', color: '#071013', boxShadow: '0 4px 0 rgba(0,0,0,0.35)' }}
+      initial={{ opacity: 0, y: 18, scale: 0.4 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ delay, type: 'spring', stiffness: 320, damping: 15 }}
+      className="relative mt-4 inline-flex items-center gap-2 overflow-hidden rounded-full px-4 py-1.5 font-poppins font-semibold tabular-nums leading-none text-[17px] sm:py-2 sm:text-[21px]"
+      style={{ backgroundColor: bg, color: '#071013' }}
     >
-      <CoinIcon size={24} />
-      +{amount}
+      {icon && (
+        <motion.span
+          initial={{ rotate: -30, scale: 0.5 }}
+          animate={{ rotate: 0, scale: 1 }}
+          transition={{ delay: delay + 0.08, type: 'spring', stiffness: 300, damping: 9 }}
+          className="inline-flex"
+        >
+          {icon}
+        </motion.span>
+      )}
+      <span className="inline-flex items-baseline">
+        +<AnimatedCounter from={0} to={amount} delay={delay + 0.15} />
+        {suffix && (
+          <span className="ml-1 text-[13px] font-black sm:text-[15px]">{suffix}</span>
+        )}
+      </span>
+      <motion.span
+        aria-hidden
+        className="pointer-events-none absolute inset-y-0 w-8 rotate-12 bg-white/50 blur-[6px]"
+        initial={{ left: '-40%' }}
+        animate={{ left: '130%' }}
+        transition={{ delay: delay + 0.55, duration: 0.55, ease: 'easeOut' }}
+      />
     </motion.div>
   );
 }
 
-/**
- * Cyan pill showing the Weekend League qualification points this match earned
- * toward the weekend ticket. Pops in right after the coin reward.
- */
+function CoinRewardChip({ amount, delay }: { amount: number; delay: number }) {
+  return <RewardChip amount={amount} delay={delay} bg="#FFE500" icon={<CoinIcon size={24} />} />;
+}
+
 function QpRewardChip({ amount, delay }: { amount: number; delay: number }) {
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 24, scale: 0 }}
-      animate={{ opacity: 1, y: 0, scale: [0, 1.25, 0.95, 1] }}
-      transition={{
-        delay,
-        duration: 0.55,
-        times: [0, 0.55, 0.8, 1],
-        ease: 'easeOut',
-      }}
-      className="mt-4 inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 font-poppins font-semibold tabular-nums leading-none text-[17px] sm:py-2 sm:text-[21px]"
-      style={{ backgroundColor: '#1CB0F6', color: '#071013', boxShadow: '0 4px 0 rgba(0,0,0,0.35)' }}
-    >
-      +{amount}
-      <span className="text-[13px] font-black sm:text-[15px]">QP</span>
-    </motion.div>
-  );
+  return <RewardChip amount={amount} delay={delay} bg="#1CB0F6" suffix="QP" />;
 }
 
 /**
