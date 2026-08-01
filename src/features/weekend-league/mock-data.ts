@@ -32,12 +32,15 @@ export function prizeForRank(rank: number): PrizeTier | null {
 // ── Schedule (Georgian time) ────────────────────────────────────────────────
 // Friday = 5, Saturday = 6, Sunday = 0.
 export function getMilestones(nowMs: number): Record<'entry' | 'qualifier' | 'playoffs', Milestone> {
-  // ONE coherent event weekend: everything anchors to the next qualifier
-  // Saturday, so mid-weekend the rail can never mix this week's final with
-  // next week's qualifier (Sat 15:00 must show next Sat + its own Fri/Sun,
-  // not tomorrow's final).
+  // ONE coherent event weekend anchored to the next JOINABLE event: once
+  // this week's entry window is over (Friday 12:00 GE), the whole rail
+  // rolls to NEXT Saturday — mirroring the backend's entry-cutoff rule.
+  // Without this, Saturday morning showed "today 14:00" for an event
+  // nobody could have entered.
   const DAY = 24 * 60 * 60_000;
-  const saturdayMs = nextGeorgianOccurrence(6, 14, nowMs);
+  let saturdayMs = nextGeorgianOccurrence(6, 14, nowMs);
+  const entryCloseMs = saturdayMs - DAY - 2 * 60 * 60_000; // Fri 12:00 GE
+  if (nowMs > entryCloseMs) saturdayMs += 7 * DAY;
   return {
     entry: { key: 'entry', label: 'Entry closes', dayLabel: 'Friday', timeLabel: '12:00', targetMs: saturdayMs - DAY - 2 * 60 * 60_000 },
     qualifier: { key: 'qualifier', label: 'Qualifier', dayLabel: 'Saturday', timeLabel: '14:00', targetMs: saturdayMs },
