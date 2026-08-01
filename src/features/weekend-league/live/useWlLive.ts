@@ -361,6 +361,10 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
       voidSinceSubscribeRef.current = false;
       // A resubscribe reports the last seq this client actually received so
       // the server backfills events broadcast while the socket was down.
+      // Best-effort: if a newer live event races ahead of the backfill the
+      // monotonic gate below drops the replay, which is exactly today's
+      // behavior — screens are absolute payloads and self-heal on the next
+      // event, so no ordering machinery is worth the race-defense cost here.
       socket.emit('wl:subscribe', {
         tournament_id: tournamentId,
         role,
