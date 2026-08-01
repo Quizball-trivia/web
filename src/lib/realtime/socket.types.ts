@@ -1290,7 +1290,7 @@ export type MatchCluesAnswerPayload =
 
 export interface ClientToServerEvents {
   'wl:subscribe': (
-    data: { tournament_id: string; role: 'player' | 'spectator' },
+    data: { tournament_id: string; role: 'player' | 'spectator'; last_seq?: number },
     ack?: (result: WlSubscribeAck) => void
   ) => void;
   'wl:unsubscribe': () => void;
@@ -1525,6 +1525,8 @@ export type WlSubscribeAck = {
   ok: boolean;
   reason?: 'not_entered' | 'not_found' | 'invalid';
   seq?: number;
+  /** Snapshot boundary: events ≤ head are reflected in the snapshot. */
+  head?: number;
   snapshot?: WlSubscribeSnapshot | null;
 };
 
