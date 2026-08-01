@@ -1,14 +1,13 @@
 "use client";
 
-import { GameHubScreen } from "@/features/tournaments/GameHubScreen";
-import { UpcomingEventScreen } from "@/features/tournaments/UpcomingEventScreen";
+import { Suspense } from "react";
+import { WeekendLeagueLiveScreen } from "@/features/weekend-league/WeekendLeagueLiveScreen";
 
-const EVENTS_ENABLED = process.env.NEXT_PUBLIC_FEATURE_EVENTS_ENABLED === "true";
-
+// The events tab IS the Weekend League (launch decision 2026-08-01).
 export default function EventsPage() {
-  if (!EVENTS_ENABLED) {
-    return <UpcomingEventScreen />;
-  }
-
-  return <GameHubScreen />;
+  return (
+    <Suspense fallback={null}>
+      <WeekendLeagueLiveScreen />
+    </Suspense>
+  );
 }

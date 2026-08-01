@@ -90,4 +90,9 @@ export const queryKeys = {
     all: ["announcements"] as const,
     active: () => [...queryKeys.announcements.all, "active"] as const,
   },
+  weekendLeague: {
+    all: ["weekendLeague"] as const,
+    current: () => [...queryKeys.weekendLeague.all, "current"] as const,
+    qp: () => [...queryKeys.weekendLeague.all, "qp"] as const,
+  },
 };

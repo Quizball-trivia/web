@@ -526,6 +526,10 @@ export interface RankedUserOutcomePayload {
   deltaRp: number;
   /** Coin participation reward granted with the ranked settlement (win/loss). */
   coinsAwarded?: number;
+  /** Weekend League qualification points earned by this match (win/loss). */
+  qpAwarded?: number;
+  /** Running QP balance after this match (resets when an entry is claimed). */
+  qpWeekTotal?: number;
   oldTier: string;
   newTier: string;
   placementStatus: 'unplaced' | 'in_progress' | 'placed';
@@ -1267,6 +1271,15 @@ export type MatchCluesAnswerPayload =
   | MatchCluesAnswerGiveUpPayload;
 
 export interface ClientToServerEvents {
+  'wl:subscribe': (
+    data: { tournament_id: string; role: 'player' | 'spectator' },
+    ack?: (result: WlSubscribeAck) => void
+  ) => void;
+  'wl:unsubscribe': () => void;
+  'wl:answer': (
+    data: { tournament_id: string; attempt_id: string; answer: unknown },
+    ack?: (result: WlAnswerAck) => void
+  ) => void;
   'lobby:create': (
     data: { mode: MatchMode; isPublic?: boolean; correlationId?: string },
     ack?: (result: LobbyCreateResult) => void
@@ -1354,8 +1367,163 @@ export interface NotificationUnreadCountPayload {
   unreadCount: number;
 }
 
+// ── Weekend League ──────────────────────────────────────────────────────────
+// Mirrors backend src/realtime/socket.types.ts. Events carry (tournamentId,
+// seq, serverNowAtEmit); seq is the tournament-scoped total order — clients
+// dedup and order by it. The dispatch payload deliberately includes the
+// evaluation (instant answer feedback is a product decision); scoring stays
+// server-authoritative via the wl:answer ack.
+
+export type WlRoundKind = 'true_false' | 'higher_lower' | 'mcq' | 'career_path' | 'who_am_i';
+
+/** Localized text object from the question bank. */
+export interface WlI18nText {
+  en?: string;
+  ka?: string;
+  [locale: string]: string | undefined;
+}
+
+export interface WlBoardRow {
+  user_id: string;
+  points: number;
+  time_ms_total: number;
+  rank: number;
+}
+
+export interface WlEventBase {
+  tournamentId: string;
+  seq: number;
+  serverNowAtEmit: number;
+  spectator?: boolean;
+}
+
+export interface WlPhaseEventPayload extends WlEventBase {
+  type: 'phase';
+  from?: string | null;
+  to?: string;
+  game_index?: number;
+  evicted_user_ids?: string[];
+}
+
+export interface WlDispatchEventPayload extends WlEventBase {
+  type: 'dispatch';
+  attempt_id: string;
+  game_index: number;
+  round_index: number;
+  question_index: number;
+  kind: WlRoundKind;
+  /** Per-kind display payload (see WlQuestion* shapes). */
+  question: Record<string, unknown>;
+  /** Answer key (correct_id / accepted_answers / values) for instant feedback. */
+  evaluation: Record<string, unknown>;
+  /** Server-clock window stamped at first emission. */
+  playableAt: number;
+  deadlineAt: number;
+}
+
+export interface WlClueRevealEventPayload extends WlEventBase { type: 'clue_reveal' }
+
+export interface WlRevealEventPayload extends WlEventBase {
+  type: 'reveal';
+  attempt_id: string;
+  game_index: number;
+  round_index: number;
+  question_index: number;
+  kind: WlRoundKind;
+  evaluation: Record<string, unknown> | null;
+  answered: number;
+  distribution: Record<string, number>;
+  board: WlBoardRow[];
+}
+
+export interface WlVoidEventPayload extends WlEventBase {
+  type: 'void';
+  attempt_id: string;
+  game_index: number;
+  round_index: number;
+  question_index: number;
+  reason?: string;
+  covers_seq?: number | null;
+}
+
+export interface WlGameResultEventPayload extends WlEventBase {
+  type: 'game_result';
+  game_index: number;
+  /** Absent on stub/walkover events — treat as empty/unknown. */
+  board?: WlBoardRow[];
+  field?: number;
+  advanced?: number;
+  eliminated_user_ids?: string[];
+}
+
+export interface WlFinalResultEventPayload extends WlEventBase {
+  type: 'final_result';
+  game_index?: number;
+  /** Absent on walkover finals — treat as empty/unknown. */
+  board?: WlBoardRow[];
+  field?: number;
+  advanced?: number;
+  eliminated_user_ids?: string[];
+  champion_user_id?: string | null;
+  final_played?: boolean;
+}
+
+export interface WlCancellationEventPayload extends WlEventBase { type: 'cancellation' }
+
+export type WlEventPayload =
+  | WlPhaseEventPayload | WlDispatchEventPayload | WlClueRevealEventPayload
+  | WlRevealEventPayload | WlVoidEventPayload | WlGameResultEventPayload
+  | WlFinalResultEventPayload | WlCancellationEventPayload;
+
+/** In-flight attempt restored by the subscribe snapshot (dispatch-shaped). */
+export interface WlSnapshotAttempt {
+  attempt_id: string;
+  game_index: number;
+  round_index: number;
+  question_index: number;
+  kind: WlRoundKind;
+  question: Record<string, unknown>;
+  evaluation: Record<string, unknown>;
+  playableAt: number;
+  deadlineAt: number;
+}
+
+/** Role-appropriate state in the wl:subscribe ack, for late joins/reconnects. */
+export interface WlSubscribeSnapshot {
+  status: string;
+  /** Server clock at snapshot build — seeds the client's clock offset. */
+  server_now: number;
+  game_index: number;
+  /** Players only; spectators never get the undelayed in-flight question. */
+  attempt: WlSnapshotAttempt | null;
+  your_answer: { correct: boolean; points: number; elapsedMs: number } | null;
+  /** Latest persisted answer this game, attempt-identified — survives freeze. */
+  your_last_answer: { attempt_id: string; correct: boolean; points: number; elapsedMs: number } | null;
+  score: number;
+  board: WlBoardRow[];
+}
+
+export type WlSubscribeAck = {
+  ok: boolean;
+  reason?: 'not_entered' | 'not_found' | 'invalid';
+  seq?: number;
+  snapshot?: WlSubscribeSnapshot | null;
+};
+
+export type WlAnswerAck =
+  | { accepted: true; correct: boolean; points: number; elapsedMs: number }
+  | { accepted: false; reason: 'closed' | 'not_participant' | 'duplicate' | 'unknown_attempt' | 'invalid' };
+
 export interface ServerToClientEvents {
   'error': (data: ErrorPayload) => void;
+  'wl:phase': (data: WlPhaseEventPayload) => void;
+  'wl:dispatch': (data: WlDispatchEventPayload) => void;
+  'wl:clue_reveal': (data: WlClueRevealEventPayload) => void;
+  'wl:reveal': (data: WlRevealEventPayload) => void;
+  'wl:void': (data: WlVoidEventPayload) => void;
+  'wl:game_result': (data: WlGameResultEventPayload) => void;
+  'wl:final_result': (data: WlFinalResultEventPayload) => void;
+  'wl:cancellation': (data: WlCancellationEventPayload) => void;
   'presence:online_count': (data: PresenceOnlineCountPayload) => void;
   'notification:new': (data: NotificationPayload) => void;
   'notification:unread_count': (data: NotificationUnreadCountPayload) => void;
