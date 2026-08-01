@@ -16,7 +16,7 @@ const STATUS_BY_PHASE: Record<LeaguePhase, [StageStatus, StageStatus, StageStatu
   completed: ['done', 'done', 'done'],
 };
 
-function Dot({ status }: { status: StageStatus }) {
+function Dot({ status, onGold }: { status: StageStatus; onGold: boolean }) {
   if (status === 'done') {
     return (
       <span className="flex size-7 items-center justify-center rounded-full bg-brand-green text-white">
@@ -25,13 +25,18 @@ function Dot({ status }: { status: StageStatus }) {
     );
   }
   if (status === 'active') {
+    // Gold on gold disappears — the active stage flips to brand blue there.
     return (
       <motion.span
-        className="flex size-7 items-center justify-center rounded-full bg-brand-gold"
-        animate={{ boxShadow: ['0 0 0 0 rgba(255,215,0,0.5)', '0 0 0 8px rgba(255,215,0,0)'] }}
+        className={`flex size-7 items-center justify-center rounded-full ${onGold ? 'bg-brand-blue' : 'bg-brand-gold'}`}
+        animate={{
+          boxShadow: onGold
+            ? ['0 0 0 0 rgba(45,66,255,0.45)', '0 0 0 8px rgba(45,66,255,0)']
+            : ['0 0 0 0 rgba(255,215,0,0.5)', '0 0 0 8px rgba(255,215,0,0)'],
+        }}
         transition={{ duration: 1.4, repeat: Infinity }}
       >
-        <span className="size-2 rounded-full bg-black" />
+        <span className={`size-2 rounded-full ${onGold ? 'bg-white' : 'bg-black'}`} />
       </motion.span>
     );
   }
@@ -66,7 +71,7 @@ export function ScheduleTimeline({
           <div key={stage.title} className="flex flex-1 flex-col items-center">
             <div className="flex w-full items-center">
               <span className={`h-0.5 flex-1 rounded-full ${i === 0 ? 'opacity-0' : statuses[i - 1] === 'done' ? 'bg-brand-green' : onGold ? 'bg-black/15' : 'bg-white/12'}`} />
-              <Dot status={status} />
+              <Dot status={status} onGold={onGold} />
               <span className={`h-0.5 flex-1 rounded-full ${i === stages.length - 1 ? 'opacity-0' : status === 'done' ? 'bg-brand-green' : onGold ? 'bg-black/15' : 'bg-white/12'}`} />
             </div>
             <div className="mt-2 text-center">

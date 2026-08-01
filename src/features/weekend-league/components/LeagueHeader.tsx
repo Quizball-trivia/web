@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import { Ticket, Users } from 'lucide-react';
+import { Check, Ticket, Users } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useLocale } from '@/contexts/LocaleContext';
 import { colors } from '@/lib/colors';
@@ -211,22 +211,34 @@ export function LeagueHeader({
 
         {/* Qualification status + action */}
         <div className="w-full max-w-[320px]">
-          <div className="flex items-center justify-center gap-2">
+          {gold ? (
             <motion.div
-              className={`flex size-8 items-center justify-center rounded-lg ${gold ? 'bg-black/85 text-brand-gold' : 'bg-brand-yellow text-black'}`}
-              animate={gold && vanishing ? { rotate: [0, -12, 8, 0], scale: [1, 1.25, 1] } : {}}
-              transition={{ delay: 0.55, duration: 0.6 }}
+              initial={{ opacity: 0, scale: 0.6, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ delay: vanishing ? 0.75 : 0, type: 'spring', stiffness: 260, damping: 15 }}
+              className="flex flex-col items-center gap-2.5"
             >
-              <Ticket className="size-4" />
+              <span className="flex size-16 items-center justify-center rounded-full bg-brand-green text-white shadow-[0_6px_18px_rgba(0,0,0,0.18)]">
+                <Check className="size-9" strokeWidth={3.5} />
+              </span>
+              <div className="font-poppins text-[22px] font-black uppercase tracking-[0.04em] text-black" style={poppins}>
+                {t('weekendLeague.joinedCta')}
+              </div>
             </motion.div>
-            <div
-              className={`font-poppins text-[11px] font-black uppercase tracking-[0.16em] transition-colors duration-700 ${
-                gold ? 'text-black/80' : isQualified ? 'text-brand-green-light' : 'text-brand-gold'
-              }`}
-            >
-              {gold ? t('weekendLeague.joinedCta') : isQualified ? t('weekendLeague.qualified') : t('weekendLeague.notQualified')}
+          ) : (
+            <div className="flex items-center justify-center gap-2">
+              <div className="flex size-8 items-center justify-center rounded-lg bg-brand-yellow text-black">
+                <Ticket className="size-4" />
+              </div>
+              <div
+                className={`font-poppins text-[11px] font-black uppercase tracking-[0.16em] ${
+                  isQualified ? 'text-brand-green-light' : 'text-brand-gold'
+                }`}
+              >
+                {isQualified ? t('weekendLeague.qualified') : t('weekendLeague.notQualified')}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* The QP balance is SPENT on entry: drain to zero, then collapse. */}
           <AnimatePresence initial={false}>
@@ -284,10 +296,15 @@ export function LeagueHeader({
               </div>
             )}
 
-            <div className="mt-3.5">
-              {hasEntered ? (
-                <JoinLeagueButton joined onJoin={onEnter} onGold={gold} />
-              ) : isQualified && !canEnter ? (
+            <AnimatePresence initial={false}>
+            {!hasEntered && (
+              <motion.div
+                key="cta"
+                exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                transition={{ duration: 0.3, ease: 'easeIn' }}
+                className="mt-3.5 overflow-hidden"
+              >
+              {isQualified && !canEnter ? (
                 <button
                   type="button"
                   disabled
@@ -306,7 +323,9 @@ export function LeagueHeader({
                   {t('weekendLeague.playRanked')}
                 </Link>
               )}
-            </div>
+              </motion.div>
+            )}
+            </AnimatePresence>
 
             {registered != null && (
               <div className={`mt-2.5 flex items-center justify-center gap-1.5 font-poppins text-[11px] font-semibold transition-colors duration-700 ${gold ? 'text-black/60' : 'text-white/60'}`}>

@@ -17,12 +17,12 @@ import type {
 export const REGISTERED_COUNT = 1_240;
 
 // ── Prize ladder (football-themed digital prizes) ───────────────────────────
+// Prizes are TOP-3 ONLY: store vouchers (Veli / Zoommer / PlayStation Store,
+// winner's choice) valued by final place — ₾200 / ₾175 / ₾150.
 export const PRIZES: PrizeTier[] = [
   { id: 'p1', labelKey: 'weekendLeague.prize1Label', rankKey: 'weekendLeague.prize1Rank', rankFrom: 1, rankTo: 1, prizeKey: 'weekendLeague.prize1Reward', icon: '🏆', accent: 'gold' },
   { id: 'p2', labelKey: 'weekendLeague.prize2Label', rankKey: 'weekendLeague.prize2Rank', rankFrom: 2, rankTo: 2, prizeKey: 'weekendLeague.prize2Reward', icon: '🥈', accent: 'silver' },
   { id: 'p3', labelKey: 'weekendLeague.prize3Label', rankKey: 'weekendLeague.prize3Rank', rankFrom: 3, rankTo: 3, prizeKey: 'weekendLeague.prize3Reward', icon: '🥉', accent: 'bronze' },
-  { id: 'p4', labelKey: 'weekendLeague.prize4Label', rankKey: 'weekendLeague.prize4Rank', rankFrom: 4, rankTo: 8, prizeKey: 'weekendLeague.prize4Reward', icon: '⭐', accent: 'blue' },
-  { id: 'p5', labelKey: 'weekendLeague.prize5Label', rankKey: 'weekendLeague.prize5Rank', rankFrom: 9, rankTo: 24, prizeKey: 'weekendLeague.prize5Reward', icon: '🎖️', accent: 'green' },
 ];
 
 export function prizeForRank(rank: number): PrizeTier | null {
