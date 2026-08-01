@@ -1525,6 +1525,8 @@ export type WlSubscribeAck = {
   ok: boolean;
   reason?: 'not_entered' | 'not_found' | 'invalid';
   seq?: number;
+  /** Snapshot boundary: events ≤ head are reflected in the snapshot. */
+  head?: number;
   snapshot?: WlSubscribeSnapshot | null;
 };
 
