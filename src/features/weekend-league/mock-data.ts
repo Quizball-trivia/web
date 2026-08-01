@@ -17,8 +17,8 @@ import type {
 export const REGISTERED_COUNT = 1_240;
 
 // ── Prize ladder (football-themed digital prizes) ───────────────────────────
-// Prizes are TOP-3 ONLY: store vouchers (Veli / Zoommer / PlayStation Store,
-// winner's choice) valued by final place — ₾200 / ₾175 / ₾150.
+// Prizes are TOP-3 ONLY: store vouchers (Wolt / Zoommer / PlayStation Store,
+// winner's choice) valued by final place — ₾200 / ₾100 / ₾50.
 export const PRIZES: PrizeTier[] = [
   { id: 'p1', labelKey: 'weekendLeague.prize1Label', rankKey: 'weekendLeague.prize1Rank', rankFrom: 1, rankTo: 1, prizeKey: 'weekendLeague.prize1Reward', icon: '🏆', accent: 'gold' },
   { id: 'p2', labelKey: 'weekendLeague.prize2Label', rankKey: 'weekendLeague.prize2Rank', rankFrom: 2, rankTo: 2, prizeKey: 'weekendLeague.prize2Reward', icon: '🥈', accent: 'silver' },
