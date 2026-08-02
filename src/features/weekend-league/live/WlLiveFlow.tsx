@@ -275,7 +275,7 @@ function ScreenBody({
             style={poppins}
           >
             {role === 'spectator'
-              ? t('weekendLeague.gGameComplete')
+              ? t('weekendLeague.gGameComplete', { n: result.game_index + 1 })
               : eliminated ? t('weekendLeague.gEliminatedTitle') : t('weekendLeague.gThroughTitle')}
           </div>
           {result.advanced != null && (
@@ -808,7 +808,7 @@ function BoardRowView({ row, isYou }: { row: WlBoardRow; isYou: boolean }) {
     >
       <span className="tabular-nums">#{row.rank}</span>
       <span className="mx-2 flex-1 truncate">
-        {isYou ? t('weekendLeague.gYou') : t('weekendLeague.gPlayerN', { n: row.rank })}
+        {isYou ? t('weekendLeague.gYou') : (row.nickname ?? t('weekendLeague.gPlayerN', { n: row.rank }))}
       </span>
       <span className="tabular-nums">{row.points}</span>
     </div>
