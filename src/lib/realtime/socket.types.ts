@@ -1403,6 +1403,9 @@ export interface WlI18nText {
 
 export interface WlBoardRow {
   user_id: string;
+  /** Present on servers ≥ the nicknames-on-boards deploy; fall back to a
+      placeholder when absent. */
+  nickname?: string | null;
   points: number;
   time_ms_total: number;
   rank: number;
