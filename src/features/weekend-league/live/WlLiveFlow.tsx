@@ -18,6 +18,11 @@ import type {
 import type { Locale } from '@/lib/i18n/messages';
 import { poppins } from '../constants';
 import { LiveBadge } from '../components/LiveBadge';
+// ONE visual source with /dev/wl-gauntlet: the live flow renders the same
+// designed chrome the prototype uses — change it there, it changes here.
+import { AnswerBtn, QuestionCard, type AnswerState } from '../gauntlet/RoundChrome';
+import { ResultSplash } from '@/features/daily/components/ResultSplash';
+import { useResultSplash } from '@/features/daily/components/useResultSplash';
 import { useWlLive, type WlLiveScreen } from './useWlLive';
 
 const WHO_AM_I_CLUES = 5;
@@ -342,6 +347,17 @@ function QuestionScreen({
   const locked = spectator || answered != null || secondsLeft <= 0 || !ready;
   const q = attempt.question;
 
+  // Same verdict splash the prototype fires — one shared visual language.
+  const { splashProps, fire } = useResultSplash();
+  const [splashedFor, setSplashedFor] = useState<string | null>(null);
+  const verdict = answered != null && 'correct' in answered
+    ? (answered as { accepted: boolean; correct?: boolean })
+    : null;
+  if (verdict?.accepted && typeof verdict.correct === 'boolean' && splashedFor !== attempt.attempt_id) {
+    setSplashedFor(attempt.attempt_id);
+    fire(verdict.correct ? 'correct' : 'wrong', 'left');
+  }
+
   return (
     <div className="rounded-[24px] border-2 border-white/10 bg-surface-card-deep p-5">
       <div className="mb-4 flex items-center justify-between font-poppins text-[12px] font-bold uppercase tracking-wide text-white/50">
@@ -385,6 +401,7 @@ function QuestionScreen({
       {answered != null && (
         <AnswerFeedback ack={answered as never} />
       )}
+      <ResultSplash {...splashProps} />
     </div>
   );
 }
@@ -411,15 +428,6 @@ function AnswerFeedback({ ack }: { ack: { accepted: boolean; correct?: boolean; 
   );
 }
 
-function optionBtnClass(state: 'idle' | 'correct' | 'wrong' | 'dim'): string {
-  const base = 'flex min-h-13 w-full items-center justify-center rounded-2xl border-2 px-4 py-3 text-center font-poppins text-[15px] font-bold transition-colors';
-  switch (state) {
-    case 'correct': return `${base} border-brand-green bg-brand-green/20 text-brand-green-light`;
-    case 'wrong': return `${base} border-brand-red-soft bg-brand-red-soft/15 text-brand-red-soft`;
-    case 'dim': return `${base} border-white/10 text-white/35`;
-    default: return `${base} border-white/15 text-white hover:border-brand-cyan/60`;
-  }
-}
 
 function useChoice(locked: boolean, onAnswer: (a: unknown) => void, retryNonce: number) {
   const [chosen, setChosen] = useState<string | null>(null);
@@ -444,11 +452,11 @@ function stateFor(
   chosen: string | null,
   correctId: string | null,
   revealed: boolean,
-): 'idle' | 'correct' | 'wrong' | 'dim' {
-  if (!revealed || chosen == null) return chosen == null ? 'idle' : id === chosen ? 'dim' : 'idle';
+): AnswerState {
+  if (!revealed || chosen == null) return chosen == null ? 'idle' : id === chosen ? 'faded' : 'idle';
   if (correctId != null && id === correctId) return 'correct';
   if (id === chosen) return 'wrong';
-  return 'dim';
+  return 'faded';
 }
 
 function TrueFalseQuestion({
@@ -467,12 +475,17 @@ function TrueFalseQuestion({
   const revealed = feedback != null;
   return (
     <div>
-      <div className="text-center font-poppins text-lg font-black text-white">{prompt}</div>
-      <div className="mt-5 grid grid-cols-2 gap-3">
+      <QuestionCard>{prompt}</QuestionCard>
+      <div className="mt-3 grid grid-cols-2 gap-2.5">
         {(['true', 'false'] as const).map((id) => (
-          <button key={id} type="button" disabled={locked && chosen == null} onClick={() => choose(id)} className={optionBtnClass(stateFor(id, chosen, correctId, revealed))}>
-            {t(id === 'true' ? 'weekendLeague.gTrue' : 'weekendLeague.gFalse')}
-          </button>
+          <AnswerBtn
+            key={id}
+            tall
+            label={t(id === 'true' ? 'weekendLeague.gTrue' : 'weekendLeague.gFalse')}
+            state={stateFor(id, chosen, correctId, revealed)}
+            disabled={locked && chosen == null}
+            onClick={() => choose(id)}
+          />
         ))}
       </div>
     </div>
@@ -497,7 +510,7 @@ function McqQuestion({
   const image = q['image'] as { url?: string } | null | undefined;
   return (
     <div>
-      <div className="text-center font-poppins text-lg font-black text-white">{pick(q['prompt'], locale)}</div>
+      <QuestionCard>{pick(q['prompt'], locale)}</QuestionCard>
       {image?.url && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
@@ -506,19 +519,26 @@ function McqQuestion({
           className="mx-auto mt-4 max-h-56 w-auto max-w-full rounded-xl object-contain"
         />
       )}
-      <div className="mt-5 grid gap-2.5">
-        {options.map((o) => {
+      <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
+        {options.map((o, i) => {
           const id = String(o['id']);
           return (
-            <button key={id} type="button" disabled={locked && chosen == null} onClick={() => choose(id)} className={optionBtnClass(stateFor(id, chosen, correctId, revealed))}>
-              {pick(o['text'], locale)}
-            </button>
+            <AnswerBtn
+              key={id}
+              label={pick(o['text'], locale)}
+              prefix={<span className="font-poppins text-[11px] font-black text-white/40">{OPTION_LETTERS[i] ?? ''}</span>}
+              state={stateFor(id, chosen, correctId, revealed)}
+              disabled={locked && chosen == null}
+              onClick={() => choose(id)}
+            />
           );
         })}
       </div>
     </div>
   );
 }
+
+const OPTION_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
 
 function HigherLowerQuestion({
   q, locale, locked, onAnswer, feedback, evaluation, retryNonce,
@@ -542,21 +562,28 @@ function HigherLowerQuestion({
       <div className="text-center font-poppins text-[12px] font-bold uppercase tracking-wide text-brand-cyan">
         {pick(q['stat_label'], locale)}
       </div>
-      <div className="mt-1 text-center font-poppins text-lg font-black text-white">
-        {t('weekendLeague.gHigherLowerPrompt', { name: pick(q['left_name'], locale) })}
+      <div className="mt-2">
+        <QuestionCard>{t('weekendLeague.gHigherLowerPrompt', { name: pick(q['left_name'], locale) })}</QuestionCard>
       </div>
-      <div className="mt-5 grid grid-cols-2 gap-3">
+      <div className="mt-3 grid grid-cols-2 gap-2.5">
         {(['left', 'right'] as const).map((side) => (
-          <button key={side} type="button" disabled={locked && chosen == null} onClick={() => choose(side)} className={optionBtnClass(stateFor(side, chosen, correctSide, revealed))}>
-            <span>
-              {pick(q[side === 'left' ? 'left_name' : 'right_name'], locale)}
-              {revealed && Number.isFinite(side === 'left' ? left : right) && (
-                <span className="mt-1 block font-poppins text-[13px] font-bold tabular-nums text-white/70">
-                  {side === 'left' ? left : right}
-                </span>
-              )}
-            </span>
-          </button>
+          <AnswerBtn
+            key={side}
+            tall
+            label={
+              <span>
+                {pick(q[side === 'left' ? 'left_name' : 'right_name'], locale)}
+                {revealed && Number.isFinite(side === 'left' ? left : right) && (
+                  <span className="mt-1 block font-poppins text-[13px] font-bold tabular-nums opacity-70">
+                    {side === 'left' ? left : right}
+                  </span>
+                )}
+              </span>
+            }
+            state={stateFor(side, chosen, correctSide, revealed)}
+            disabled={locked && chosen == null}
+            onClick={() => choose(side)}
+          />
         ))}
       </div>
     </div>
@@ -581,12 +608,20 @@ function TypedQuestion({
     : null;
   return (
     <div>
-      <div className="text-center font-poppins text-[13px] font-bold uppercase tracking-wide text-brand-cyan">{heading}</div>
-      <div className="mt-3 space-y-1.5 text-center">
-        {lines.map((line, i) => (
-          <div key={i} className="font-poppins text-[15px] font-bold text-white">{line}</div>
-        ))}
-      </div>
+      {heading !== '' && (
+        <div className="text-center font-poppins text-[13px] font-bold uppercase tracking-wide text-brand-cyan">{heading}</div>
+      )}
+      {lines.length > 0 && (
+        <div className="mt-3">
+          <QuestionCard>
+            <div className="space-y-1.5 text-center">
+              {lines.map((line, i) => (
+                <div key={i}>{line}</div>
+              ))}
+            </div>
+          </QuestionCard>
+        </div>
+      )}
       <form
         className="mt-5 flex gap-2"
         onSubmit={(e) => {
@@ -600,12 +635,12 @@ function TypedQuestion({
           onChange={(e) => setGuess(e.target.value)}
           disabled={locked}
           placeholder={t('weekendLeague.gTypeAnswer')}
-          className="h-12 flex-1 rounded-xl border-2 border-white/15 bg-transparent px-4 font-poppins text-[15px] font-bold text-white outline-none placeholder:text-white/30 focus:border-brand-cyan/60"
+          className="h-14 flex-1 rounded-[16px] border-2 border-brand-yellow/70 bg-transparent px-4 font-poppins text-[16px] font-bold uppercase text-white shadow-[0_0_6px_1px_rgba(255,229,0,0.25)] outline-none placeholder:normal-case placeholder:text-white/30 focus:border-brand-yellow"
         />
         <button
           type="submit"
           disabled={locked || guess.trim() === ''}
-          className="h-12 rounded-xl bg-brand-green px-5 font-poppins text-sm font-black uppercase text-white disabled:opacity-40"
+          className="h-14 rounded-[16px] bg-brand-green px-6 font-poppins text-sm font-black uppercase text-white shadow-[0_1.76px_6.334px_1.32px_rgba(56,182,14,0.25)] transition-opacity disabled:opacity-40"
         >
           {t('weekendLeague.gSubmit')}
         </button>
