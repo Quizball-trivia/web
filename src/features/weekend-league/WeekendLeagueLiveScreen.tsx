@@ -52,6 +52,8 @@ export function WeekendLeagueLiveScreen() {
         onCheckin={live.checkinLeague}
         onExit={() => setMode(null)}
         onSpectate={() => setMode('spectator')}
+        kickoffMs={live.kickoffMs}
+        registered={live.registered}
       />
     );
   }

@@ -95,6 +95,9 @@ export interface WeekendLeagueLiveExtras {
   tournamentId: string | null;
   /** Raw backend tournament status (finer-grained than the screen phase). */
   status: string | null;
+  /** Authoritative qualifier kickoff (ms) from the live row; null when the
+      row carries no real timestamp — never the synthetic calendar fallback. */
+  kickoffMs: number | null;
   /** Role-appropriate check-in state for the current window. */
   checkedIn: boolean;
   checkinLeague: () => void;
@@ -211,10 +214,20 @@ export function useWeekendLeagueLive(): WeekendLeagueLiveController {
   const champion = you?.state === 'champion';
   const qualified = champion || you?.state === 'finalist';
 
+  // Authoritative kickoff only: null unless the live tournament row carries
+  // a real qualifier timestamp — the synthetic calendar fallback must never
+  // drive a countdown on the checked-in waiting screen.
+  const kickoffMs = (() => {
+    if (!tournament?.qualifier_starts_at) return null;
+    const ms = Date.parse(tournament.qualifier_starts_at);
+    return Number.isFinite(ms) ? ms : null;
+  })();
+
   return {
     phase,
     hasEntered,
     qualified,
+    kickoffMs,
     milestones,
     activeMilestone,
     leaderboard: [],
