@@ -100,6 +100,8 @@ export interface WeekendLeagueLiveExtras {
   kickoffMs: number | null;
   /** Role-appropriate check-in state for the current window. */
   checkedIn: boolean;
+  /** Live count of players already checked in (public payload). */
+  checkedInCount: number;
   checkinLeague: () => void;
   checkinPending: boolean;
   /** Running QP balance (server truth, resets when a ticket is claimed). */
@@ -234,6 +236,7 @@ export function useWeekendLeagueLive(): WeekendLeagueLiveController {
     yourRank: 0,
     bracket: null,
     registered: tournament?.registered_count ?? 0,
+    checkedInCount: tournament?.checked_in_count ?? 0,
     session: null,
     playedOutcome: null,
     playoffOutcome: null,

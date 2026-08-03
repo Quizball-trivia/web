@@ -18,6 +18,7 @@ import type {
 import type { Locale } from '@/lib/i18n/messages';
 import { poppins } from '../constants';
 import { LiveBadge } from '../components/LiveBadge';
+import { CheckInPanel } from '../components/CheckInPanel';
 // ONE visual source with /dev/wl-gauntlet: the live flow renders the same
 // designed views the prototype uses — change them there, they change here.
 import { QuestionCard, RoundIntroOverlay, type AnswerState } from '../gauntlet/RoundChrome';
@@ -77,6 +78,7 @@ export function WlLiveFlow({
   onSpectate,
   kickoffMs,
   registered,
+  checkedInCount,
 }: {
   tournamentId: string;
   role: 'player' | 'spectator';
@@ -92,6 +94,8 @@ export function WlLiveFlow({
   /** Saturday kickoff (qualifier start) — drives the waiting countdown. */
   kickoffMs?: number | null;
   registered?: number;
+  /** Live checked-in count for the ready meter (public payload). */
+  checkedInCount?: number;
 }) {
   const { t, locale } = useLocale();
   const live = useWlLive(tournamentId, role);
@@ -135,35 +139,26 @@ export function WlLiveFlow({
 
   const inCheckinWindow = status === 'checkin' || status === 'final_checkin';
   if (role === 'player' && inCheckinWindow && live.screen.kind === 'waiting') {
+    // The SAME designed check-in panel the /dev/wl prototype renders, fed by
+    // live data: real ready counter, closes at the authoritative kickoff.
     return (
       <Immersive>
-      <Shell onExit={onExit}>
-        <div className="mb-2 flex justify-center"><LiveBadge /></div>
-        <div className="font-poppins text-2xl font-black uppercase text-white" style={poppins}>
-          {checkedIn ? t('weekendLeague.gCheckedIn') : t('weekendLeague.gCheckinTitle')}
-        </div>
-        <p className="mx-auto mt-1 max-w-xs font-poppins text-[13px] font-semibold text-white/60">
-          {checkedIn ? t('weekendLeague.gWaitingKickoff') : t('weekendLeague.gCheckinBody')}
-        </p>
-        {checkedIn ? (
-          <>
-            <div className="mx-auto mt-5 flex size-14 items-center justify-center rounded-full bg-brand-green text-white">
-              <Check className="size-8" strokeWidth={3} />
-            </div>
-            <KickoffCountdown kickoffMs={kickoffMs ?? null} registered={registered ?? 0} />
-          </>
-        ) : (
-          <motion.button
+        <div className="mx-auto flex min-h-[80vh] w-full max-w-xl flex-col justify-center px-4">
+          <CheckInPanel
+            checkedIn={checkedIn}
+            ready={checkedInCount ?? 0}
+            registered={registered ?? 0}
+            closesAtMs={kickoffMs ?? null}
+            onCheckIn={checkinPending ? () => {} : onCheckin}
+          />
+          <button
             type="button"
-            whileTap={{ scale: 0.97 }}
-            disabled={checkinPending}
-            onClick={onCheckin}
-            className="mx-auto mt-5 flex h-14 w-full max-w-xs items-center justify-center rounded-2xl bg-brand-green font-poppins text-lg font-black uppercase tracking-wide text-white transition-colors hover:bg-brand-green/90 disabled:opacity-60"
+            onClick={onExit}
+            className="mx-auto mt-6 flex items-center gap-1.5 font-poppins text-[12px] font-bold uppercase tracking-widest text-white/40 hover:text-white"
           >
-            {t('weekendLeague.gCheckin')}
-          </motion.button>
-        )}
-      </Shell>
+            <LogOut className="size-4" /> {t('weekendLeague.gQuit')}
+          </button>
+        </div>
       </Immersive>
     );
   }
@@ -437,49 +432,6 @@ function SpectatorGameResult({
         )}
         <BoardStrip board={board} selfUserId={selfUserId} rows={8} />
       </div>
-    </div>
-  );
-}
-
-/** Kickoff countdown for the designed waiting screen — same tabular clock
- *  language as the league card, fed by the live qualifier timestamp. */
-function KickoffCountdown({ kickoffMs, registered }: { kickoffMs: number | null; registered: number }) {
-  const { t } = useLocale();
-  const [nowMs, setNowMs] = useState(() => Date.now());
-  useEffect(() => {
-    const id = setInterval(() => setNowMs(Date.now()), 1000);
-    return () => clearInterval(id);
-  }, []);
-  if (kickoffMs == null || kickoffMs <= nowMs) return null;
-  const total = Math.max(0, Math.floor((kickoffMs - nowMs) / 1000));
-  const d = Math.floor(total / 86_400);
-  const h = Math.floor((total % 86_400) / 3600);
-  const m = Math.floor((total % 3600) / 60);
-  const sec = total % 60;
-  const cells: Array<[string, string]> = [
-    [String(d).padStart(2, '0'), t('weekendLeague.days')],
-    [String(h).padStart(2, '0'), t('weekendLeague.hrs')],
-    [String(m).padStart(2, '0'), t('weekendLeague.min')],
-    [String(sec).padStart(2, '0'), t('weekendLeague.sec')],
-  ];
-  return (
-    <div className="mt-6">
-      <div className="flex items-center justify-center gap-3">
-        {cells.map(([value, unit], i) => (
-          <div key={unit} className="flex items-start gap-3">
-            {i > 0 && <span className="pt-1 font-poppins text-2xl font-black text-white/30">:</span>}
-            <div className="text-center">
-              <div className="font-poppins text-3xl font-black tabular-nums text-white" style={poppins}>{value}</div>
-              <div className="mt-0.5 font-poppins text-[10px] font-bold uppercase tracking-wide text-white/45">{unit}</div>
-            </div>
-          </div>
-        ))}
-      </div>
-      {registered > 0 && (
-        <div className="mt-4 font-poppins text-[12px] font-semibold text-white/50">
-          {t('weekendLeague.playersEntered', { count: registered })}
-        </div>
-      )}
     </div>
   );
 }
