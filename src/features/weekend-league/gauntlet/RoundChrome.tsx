@@ -26,7 +26,8 @@ export function GauntletHeader({
   gameIndex: number;
   round: RoundDef;
   score: number;
-  rank: number;
+  /** null = not on the visible board (live boards are truncated). */
+  rank: number | null;
   secondsLeft: number;
   spectator?: boolean;
   /** "2/5" when the round holds several questions. */
@@ -58,7 +59,11 @@ export function GauntletHeader({
             <span className="size-1.5 animate-pulse rounded-full bg-brand-cyan" /> {t('weekendLeague.gSpectator')}
           </span>
         ) : (
-          <span className="tabular-nums text-white/80">{t('weekendLeague.gScoreRank', { score, rank })}</span>
+          <span className="tabular-nums text-white/80">
+            {rank != null
+              ? t('weekendLeague.gScoreRank', { score, rank })
+              : t('weekendLeague.gPlusPoints', { n: score })}
+          </span>
         )}
       </div>
       <div className="mx-auto mt-2 flex max-w-3xl items-center gap-1.5 px-4">

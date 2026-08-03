@@ -51,6 +51,7 @@ export function WeekendLeagueLiveScreen() {
         checkinPending={live.checkinPending}
         onCheckin={live.checkinLeague}
         onExit={() => setMode(null)}
+        onSpectate={() => setMode('spectator')}
       />
     );
   }
