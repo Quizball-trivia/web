@@ -4,7 +4,7 @@
 // the wl:* socket stream (see useWlLive). Replaces the mock GauntletFlow for
 // in-app play; the prototype stays on /dev/wl.
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Check, LogOut } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -35,6 +35,7 @@ import {
 } from '../gauntlet/RoundViews';
 import { AnswerReveal, EliminationReveal, GameResult } from '../gauntlet/GauntletScreens';
 import { ROUNDS } from '../gauntlet/gauntlet.data';
+import { ResultSplash } from '@/features/daily/components/ResultSplash';
 import { useResultSplash } from '@/features/daily/components/useResultSplash';
 import { useWlLive, type WlLiveScreen } from './useWlLive';
 
@@ -101,6 +102,21 @@ export function WlLiveFlow({
     [live.board, selfUserId],
   );
 
+  // Verdict splash lives ABOVE the keyed screen transition so a quick
+  // question→reveal flip can't unmount it mid-animation; fired from an effect
+  // (never during render), once per attempt.
+  const { splashProps: liveSplashProps, fire: fireSplash } = useResultSplash();
+  const splashedFor = useRef<string | null>(null);
+  const liveScreen = live.screen;
+  useEffect(() => {
+    if (liveScreen.kind !== 'question') return;
+    const ack = liveScreen.answer as { accepted: boolean; correct?: boolean } | null;
+    if (ack?.accepted !== true || typeof ack.correct !== 'boolean') return;
+    if (splashedFor.current === liveScreen.attempt.attempt_id) return;
+    splashedFor.current = liveScreen.attempt.attempt_id;
+    fireSplash(ack.correct ? 'correct' : 'wrong', 'left');
+  }, [liveScreen, fireSplash]);
+
   if (live.denied === 'not_entered') {
     return (
       <Immersive>
@@ -149,7 +165,7 @@ export function WlLiveFlow({
   }
 
   return (
-    <Immersive>
+    <Immersive resetKey={screenKey(live.screen)}>
       <ConnectionDot connected={live.connected && live.subscribed} />
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
@@ -175,15 +191,22 @@ export function WlLiveFlow({
           />
         </motion.div>
       </AnimatePresence>
+      <ResultSplash {...liveSplashProps} />
     </Immersive>
   );
 }
 
 /** Full-screen takeover with the gauntlet backdrop — live play looks exactly
  *  like /dev/wl-gauntlet even though the route lives inside the app shell. */
-function Immersive({ children }: { children: React.ReactNode }) {
+function Immersive({ children, resetKey }: { children: React.ReactNode; resetKey?: string }) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  // Each screen starts at the top — the container outlives the keyed screens,
+  // so a long clue ladder must not leave the next screen scrolled down.
+  useEffect(() => {
+    ref.current?.scrollTo(0, 0);
+  }, [resetKey]);
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+    <div ref={ref} className="fixed inset-0 z-50 overflow-y-auto overscroll-contain">
       <GauntletBackdrop>{children}</GauntletBackdrop>
     </div>
   );
@@ -575,17 +598,6 @@ function QuestionScreen({
   const locked = spectator || answered != null || secondsLeft <= 0 || !ready;
   const q = attempt.question;
 
-  // Same verdict splash the prototype fires — one shared visual language.
-  const { splashProps, fire } = useResultSplash();
-  const [splashedFor, setSplashedFor] = useState<string | null>(null);
-  const verdict = answered != null && 'correct' in answered
-    ? (answered as { accepted: boolean; correct?: boolean })
-    : null;
-  if (verdict?.accepted && typeof verdict.correct === 'boolean' && splashedFor !== attempt.attempt_id) {
-    setSplashedFor(attempt.attempt_id);
-    fire(verdict.correct ? 'correct' : 'wrong', 'left');
-  }
-
   const round = { ...(ROUNDS[attempt.round_index] ?? ROUNDS[0]), index: attempt.round_index };
   const header: RoundHeaderModel = {
     gameIndex: attempt.game_index,
@@ -602,7 +614,7 @@ function QuestionScreen({
   return (
     <>
       {!ready && <RoundIntroOverlay round={round} onDone={() => {}} />}
-      <RoundScreenShell header={header} splashProps={splashProps}>
+      <RoundScreenShell header={header}>
         {attempt.kind === 'true_false' && (
           <TrueFalseQuestion prompt={pick(q['prompt'], locale)} locked={locked} onAnswer={submitAnswer} feedback={ack} evaluation={attempt.evaluation} retryNonce={retryNonce} />
         )}
@@ -689,13 +701,16 @@ function choiceState(
   correctId: string | null,
 ): AnswerState {
   if (chosen == null) return 'idle';
-  if (correctId != null) {
+  // The answer key never colors anything before the player's own answer is
+  // resolved — even if a payload ever leaked it, clicking must not reveal it.
+  const resolved = ack?.accepted === true && typeof ack.correct === 'boolean';
+  if (resolved && correctId != null) {
     if (id === correctId) return 'correct';
     if (id === chosen) return 'wrong';
     return 'faded';
   }
   if (id !== chosen) return 'faded';
-  if (ack?.accepted && typeof ack.correct === 'boolean') return ack.correct ? 'correct' : 'wrong';
+  if (resolved) return ack!.correct ? 'correct' : 'wrong';
   return 'idle';
 }
 
@@ -722,7 +737,7 @@ function TrueFalseQuestion({
           { key: 'true', label: t('weekendLeague.gTrue'), state: choiceState('true', chosen, feedback, correctId) },
           { key: 'false', label: t('weekendLeague.gFalse'), state: choiceState('false', chosen, feedback, correctId) },
         ]}
-        disabled={locked && chosen == null}
+        disabled={locked || chosen != null}
         onPick={(key) => choose(key)}
       />
     </>
@@ -760,7 +775,7 @@ function McqQuestion({
           const id = String(o['id']);
           return { key: id, label: pick(o['text'], locale), state: choiceState(id, chosen, feedback, correctId) };
         })}
-        disabled={locked && chosen == null}
+        disabled={locked || chosen != null}
         onPick={(key) => choose(key)}
       />
     </>
@@ -805,7 +820,7 @@ function HigherLowerQuestion({
           { key: 'left', label: sideLabel('left'), state: choiceState('left', chosen, feedback, correctSide) },
           { key: 'right', label: sideLabel('right'), state: choiceState('right', chosen, feedback, correctSide) },
         ]}
-        disabled={locked && chosen == null}
+        disabled={locked || chosen != null}
         onPick={(key) => choose(key)}
       />
     </>

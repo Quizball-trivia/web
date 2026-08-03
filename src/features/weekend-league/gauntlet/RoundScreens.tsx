@@ -336,9 +336,12 @@ export function WhoAmIRound(props: RoundProps<WhoAmIQ>) {
   const [outcome, setOutcome] = useState<'correct' | 'wrong' | null>(null);
   const { locked, lock } = useAnswerLock(onResolved);
   const { splashProps, fire } = useResultSplash();
-  const clock = useRoundClock(round.seconds, !!fastTimers, () =>
-    lock({ correct: false, points: 0, timeFrac: 0 }),
-  );
+  const clock = useRoundClock(round.seconds, !!fastTimers, () => {
+    // Timeout resolves as wrong so the verdict box (with the answer) shows
+    // during the resolution beat, exactly as a wrong guess would.
+    setOutcome('wrong');
+    lock({ correct: false, points: 0, timeFrac: 0 });
+  });
 
   // Ranked's clue logic: one clue per 10s slice of the round.
   const clueCount = question.clues.length;
