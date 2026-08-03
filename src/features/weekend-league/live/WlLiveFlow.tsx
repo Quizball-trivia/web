@@ -387,7 +387,10 @@ function LiveGameResult({
       survived={!eliminated}
       finalRank={countsKnown ? yourRank : null}
       score={score}
-      onContinue={onSpectate}
+      // Survivors stay players: the screen auto-advances when the next game
+      // dispatches, so Continue only acknowledges. Keep Watching (eliminated
+      // branch) is the role switch.
+      onContinue={() => {}}
       onKeepWatching={onSpectate}
       onExit={onExit}
     />
