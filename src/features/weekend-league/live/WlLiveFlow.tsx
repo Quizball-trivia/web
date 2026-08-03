@@ -34,11 +34,11 @@ import {
   WhoAmIClueLadder,
   type RoundHeaderModel,
 } from '../gauntlet/RoundViews';
-import { AnswerReveal, EliminationReveal, GameResult } from '../gauntlet/GauntletScreens';
+import { AnswerReveal, BreakScreen, ChampionScreen, EliminationReveal, GameIntro, GameResult } from '../gauntlet/GauntletScreens';
 import { ROUNDS } from '../gauntlet/gauntlet.data';
 import { ResultSplash } from '@/features/daily/components/ResultSplash';
 import { useResultSplash } from '@/features/daily/components/useResultSplash';
-import { useWlLive, type WlLiveScreen } from './useWlLive';
+import { useWlLive, type WlLiveScreen, type WlLiveState } from './useWlLive';
 
 const WHO_AM_I_CLUES = 5;
 const WHO_AM_I_POINTS = [300, 240, 180, 120, 60];
@@ -67,20 +67,7 @@ function useServerCountdown(deadlineAt: number | null, serverNow: () => number):
   return Math.ceil(left / 1000);
 }
 
-export function WlLiveFlow({
-  tournamentId,
-  role,
-  status,
-  checkedIn,
-  checkinPending,
-  onCheckin,
-  onExit,
-  onSpectate,
-  kickoffMs,
-  registered,
-  checkedInCount,
-}: {
-  tournamentId: string;
+export interface WlLiveFlowUiProps {
   role: 'player' | 'spectator';
   /** Backend tournament status (drives the pre-game check-in screen). */
   status: string | null;
@@ -96,15 +83,51 @@ export function WlLiveFlow({
   registered?: number;
   /** Live checked-in count for the ready meter (public payload). */
   checkedInCount?: number;
-}) {
-  const { t, locale } = useLocale();
-  const live = useWlLive(tournamentId, role);
+  /** Server break deadline (epoch ms) — drives the designed break screen. */
+  breakUntilMs?: number | null;
+  /** 0-based game currently running / next to run (public payload). */
+  currentGameIndex?: number;
+}
+
+export function WlLiveFlow({ tournamentId, ...ui }: WlLiveFlowUiProps & { tournamentId: string }) {
+  const live = useWlLive(tournamentId, ui.role);
   const selfUserId = useAuthStore((s) => s.user?.id ?? null);
+  return <WlLiveFlowView live={live} selfUserId={selfUserId} {...ui} />;
+}
+
+/** The full live-game UI with an injectable driver — the real socket state in
+ *  the app, a scripted driver in the /dev/wl simulator. One UI, by construction. */
+export function WlLiveFlowView({
+  live,
+  selfUserId,
+  role,
+  status,
+  checkedIn,
+  checkinPending,
+  onCheckin,
+  onExit,
+  onSpectate,
+  kickoffMs,
+  registered,
+  checkedInCount,
+  breakUntilMs,
+  currentGameIndex,
+}: WlLiveFlowUiProps & { live: WlLiveState; selfUserId: string | null }) {
+  const { t, locale } = useLocale();
 
   const yourRow = useMemo(
     () => live.board.find((row) => row.user_id === selfUserId) ?? null,
     [live.board, selfUserId],
   );
+
+  // Remember the latest game_result so the break screen and next game's intro
+  // can show real field/advance counts after the screen has moved on.
+  // Render-time adjustment (same pattern as useChoice's nonce): capture the
+  // result while the game_result screen is showing, no effect round-trip.
+  const [lastResult, setLastResult] = useState<{ game_index: number; field?: number; advanced?: number | null } | null>(null);
+  if (live.screen.kind === 'game_result' && lastResult !== live.screen.result) {
+    setLastResult(live.screen.result);
+  }
 
   // Verdict splash lives ABOVE the keyed screen transition so a quick
   // question→reveal flip can't unmount it mid-animation; fired from an effect
@@ -185,6 +208,10 @@ export function WlLiveFlow({
             selfUserId={selfUserId}
             score={live.score}
             rank={yourRow?.rank ?? null}
+            breakUntilMs={breakUntilMs ?? null}
+            lastResult={lastResult}
+            checkedInCount={checkedInCount ?? 0}
+            currentGameIndex={currentGameIndex ?? live.gameIndex}
             onExit={onExit}
             onSpectate={onSpectate ?? onExit}
           />
@@ -219,6 +246,28 @@ function ConnectionDot({ connected }: { connected: boolean }) {
   );
 }
 
+/** The real backend qualifier ladder (wl-rules): /3 after game 1, /2 after
+ *  game 2, cut to 24 for the final — never an invented count. */
+function nextAdvanceByRules(gameIdx: number, players: number): number {
+  if (players <= 0) return 0;
+  if (gameIdx === 0) return Math.round(players / 3);
+  if (gameIdx === 1) return Math.round(players / 2);
+  return Math.min(24, players);
+}
+
+/** Games array for the break screen's progress strip + next-game lookup,
+ *  built ONLY from authoritative counts (zeros hide the count copy). */
+function ladderStrip(finished: { game_index: number; field?: number; advanced?: number | null } | null): { index: number; players: number; advance: number }[] {
+  const g = finished?.game_index ?? -1;
+  const field = Number(finished?.field ?? 0) || 0;
+  const advanced = Number(finished?.advanced ?? 0) || 0;
+  return [0, 1, 2].map((i) => {
+    if (i === g) return { index: i, players: field, advance: advanced };
+    if (i === g + 1 && advanced > 0) return { index: i, players: advanced, advance: nextAdvanceByRules(i, advanced) };
+    return { index: i, players: 0, advance: 0 };
+  });
+}
+
 function screenKey(screen: WlLiveScreen): string {
   switch (screen.kind) {
     case 'question': return `q-${screen.attempt.attempt_id}`;
@@ -250,7 +299,7 @@ function Shell({ children, onExit }: { children: React.ReactNode; onExit: () => 
 
 
 function ScreenBody({
-  screen, role, locale, serverNow, submitAnswer, retryNonce, board, selfUserId, score, rank, onExit, onSpectate,
+  screen, role, locale, serverNow, submitAnswer, retryNonce, board, selfUserId, score, rank, breakUntilMs, lastResult, checkedInCount, currentGameIndex, onExit, onSpectate,
 }: {
   screen: WlLiveScreen;
   role: 'player' | 'spectator';
@@ -262,6 +311,10 @@ function ScreenBody({
   selfUserId: string | null;
   score: number;
   rank: number | null;
+  breakUntilMs: number | null;
+  lastResult: { game_index: number; field?: number; advanced?: number | null } | null;
+  checkedInCount: number;
+  currentGameIndex: number;
   onExit: () => void;
   onSpectate: () => void;
 }) {
@@ -269,7 +322,29 @@ function ScreenBody({
   const yourRank = rank ?? (selfUserId ? board.find((r) => r.user_id === selfUserId)?.rank ?? null : null);
 
   switch (screen.kind) {
-    case 'waiting':
+    case 'waiting': {
+      // Between games with a known deadline: the SAME designed break screen
+      // the prototype shows, counting down the server's break window. Counts
+      // come only from the authoritative game_result; joining mid-break still
+      // gets the countdown + progress strip (count copy hides on zeros).
+      // The server nulls past deadlines on every poll, and the next dispatch
+      // replaces this screen — an expired deadline only ever shows briefly.
+      if (breakUntilMs != null) {
+        const finishedIndex = lastResult?.game_index ?? Math.max(0, currentGameIndex - 1);
+        return (
+          <BreakScreen
+            games={ladderStrip(lastResult)}
+            game={{
+              index: finishedIndex,
+              players: Number(lastResult?.field ?? 0) || 0,
+              advance: Number(lastResult?.advanced ?? 0) || 0,
+            }}
+            finalRank={lastResult != null ? rank : null}
+            score={score}
+            deadlineMs={breakUntilMs}
+          />
+        );
+      }
       return (
         <div className="mx-auto w-full max-w-2xl px-4 py-10">
           <div className="rounded-[24px] bg-brand-cyan/[0.08] p-8 text-center">
@@ -288,13 +363,29 @@ function ScreenBody({
           </div>
         </div>
       );
+    }
 
-    case 'question':
+    case 'question': {
+      const attempt = screen.attempt;
+      const introCounts = (() => {
+        if (attempt.game_index === 0) {
+          // The game-1 field is everyone checked in (humans + bots).
+          return checkedInCount > 0
+            ? { players: checkedInCount, advance: nextAdvanceByRules(0, checkedInCount) }
+            : null;
+        }
+        if (lastResult != null && lastResult.game_index === attempt.game_index - 1) {
+          const advanced = Number(lastResult.advanced ?? 0) || 0;
+          return { players: advanced, advance: nextAdvanceByRules(attempt.game_index, advanced) };
+        }
+        return null;
+      })();
       return (
         <QuestionScreen
-          attempt={screen.attempt}
+          attempt={attempt}
           score={score}
           rank={yourRank}
+          introCounts={introCounts}
           onExit={onExit}
           answered={screen.answer}
           locale={locale}
@@ -304,6 +395,7 @@ function ScreenBody({
           spectator={role === 'spectator'}
         />
       );
+    }
 
     case 'reveal': {
       if (role === 'spectator' || screen.answer == null || !screen.answer.accepted) {
@@ -346,6 +438,7 @@ function ScreenBody({
           eliminated={eliminated}
           yourRank={yourRank}
           score={score}
+          breakUntilMs={breakUntilMs}
           onExit={onExit}
           onSpectate={onSpectate}
         />
@@ -354,37 +447,10 @@ function ScreenBody({
 
     case 'final_result': {
       const { champion } = screen;
-      const finalRankRow = yourRank;
       return (
-        <div className="mx-auto flex min-h-[70vh] w-full max-w-xl flex-col items-center justify-center px-4 text-center">
-          <motion.div
-            initial={{ scale: 0, rotate: -15 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 12 }}
-            className={`flex size-20 items-center justify-center rounded-full ${champion ? 'bg-brand-gold text-black' : 'bg-white/10 text-brand-gold'}`}
-          >
-            <span className="text-4xl">🏆</span>
-          </motion.div>
-          <div className="mt-4 font-poppins text-4xl font-black uppercase text-brand-gold" style={poppins}>
-            {champion ? t('weekendLeague.gChampionTitle') : t('weekendLeague.gFinalDoneTitle')}
-          </div>
-          {!champion && finalRankRow != null && (
-            <div className="mt-2 font-poppins text-xl font-black tabular-nums text-white" style={poppins}>
-              {t('weekendLeague.gYouFinished', { r: finalRankRow })}
-            </div>
-          )}
-          <div className="mt-2 font-poppins text-[13px] font-black uppercase tracking-wide text-white/55">
-            {t('weekendLeague.gTotalScore')} <span className="tabular-nums text-white">{score}</span>
-          </div>
+        <ChampionScreen champion={champion} finalRank={yourRank} score={score} onExit={onExit}>
           <BoardStrip board={board} selfUserId={selfUserId} rows={10} />
-          <button
-            type="button"
-            onClick={onExit}
-            className="mx-auto mt-6 flex h-12 items-center justify-center rounded-2xl bg-white/10 px-8 font-poppins text-sm font-black uppercase text-white hover:bg-white/15"
-          >
-            {t('weekendLeague.gContinue')}
-          </button>
-        </div>
+        </ChampionScreen>
       );
     }
 
@@ -440,16 +506,17 @@ function SpectatorGameResult({
  *  the survived/eliminated result — the same components /dev/wl-gauntlet
  *  renders, fed by the live game_result payload. */
 function LiveGameResult({
-  result, eliminated, yourRank, score, onExit, onSpectate,
+  result, eliminated, yourRank, score, breakUntilMs, onExit, onSpectate,
 }: {
   result: { game_index: number; field?: number; advanced?: number | null };
   eliminated: boolean;
   yourRank: number | null;
   score: number;
+  breakUntilMs: number | null;
   onExit: () => void;
   onSpectate: () => void;
 }) {
-  const [phase, setPhase] = useState<'cut' | 'result'>('cut');
+  const [phase, setPhase] = useState<'cut' | 'result' | 'break'>('cut');
   const game = {
     index: result.game_index,
     players: Number(result.field ?? 0) || 0,
@@ -459,8 +526,28 @@ function LiveGameResult({
   // Stub/walkover results carry no counts: skip the count-down theatre and
   // hide the rank line rather than animating "0 players".
   const countsKnown = game.players > 0 && game.advance > 0;
+  // Survivors flow into the designed break screen once the server break is
+  // on (the engine keeps game_result until the next dispatch): auto after a
+  // beat, or via Continue.
+  const canBreak = !eliminated && breakUntilMs != null && !isLastGame;
+  useEffect(() => {
+    if (phase !== 'result' || !canBreak) return;
+    const id = setTimeout(() => setPhase('break'), 8_000);
+    return () => clearTimeout(id);
+  }, [phase, canBreak]);
   if (phase === 'cut' && countsKnown) {
     return <EliminationReveal game={game} isLastGame={isLastGame} onDone={() => setPhase('result')} />;
+  }
+  if (phase === 'break' && canBreak) {
+    return (
+      <BreakScreen
+        games={ladderStrip(result)}
+        game={game}
+        finalRank={yourRank}
+        score={score}
+        deadlineMs={breakUntilMs}
+      />
+    );
   }
   return (
     <GameResult
@@ -469,10 +556,9 @@ function LiveGameResult({
       survived={!eliminated}
       finalRank={countsKnown ? yourRank : null}
       score={score}
-      // Survivors stay players: the screen auto-advances when the next game
-      // dispatches, so Continue only acknowledges. Keep Watching (eliminated
-      // branch) is the role switch.
-      onContinue={() => {}}
+      // Survivors continue into the break countdown; the next game's dispatch
+      // replaces the screen either way. Keep Watching is the role switch.
+      onContinue={() => { if (canBreak) setPhase('break'); }}
       onKeepWatching={onSpectate}
       onExit={onExit}
     />
@@ -534,7 +620,7 @@ function revealCorrectPct(reveal: WlRevealEventPayload): number | null {
 // ── Question rendering per kind ─────────────────────────────────────────────
 
 function QuestionScreen({
-  attempt, answered, locale, serverNow, submitAnswer, retryNonce, spectator, score, rank, onExit,
+  attempt, answered, locale, serverNow, submitAnswer, retryNonce, spectator, score, rank, introCounts, onExit,
 }: {
   attempt: WlDispatchEventPayload;
   answered: { accepted: boolean } | null;
@@ -545,6 +631,8 @@ function QuestionScreen({
   spectator: boolean;
   score: number;
   rank: number | null;
+  /** Field/advance for the game-intro theatre (prev game's result). */
+  introCounts: { players: number; advance: number } | null;
   onExit: () => void;
 }) {
   const { t } = useLocale();
@@ -569,7 +657,23 @@ function QuestionScreen({
 
   return (
     <>
-      {!ready && <RoundIntroOverlay round={round} onDone={() => {}} />}
+      {!ready && attempt.round_index === 0 && attempt.question_index === 0 ? (
+        // First question of a game: the GAME N intro theatre instead of the
+        // round overlay — counts from the previous game's result when known.
+        <div className="fixed inset-0 z-40 bg-surface-page-alt/95">
+          <GameIntro
+            game={{
+              index: attempt.game_index,
+              players: Number(introCounts?.players ?? 0) || 0,
+              advance: Number(introCounts?.advance ?? 0) || 0,
+            }}
+            isLastGame={attempt.game_index >= 2}
+            onDone={() => {}}
+          />
+        </div>
+      ) : (
+        !ready && <RoundIntroOverlay round={round} onDone={() => {}} />
+      )}
       <RoundScreenShell header={header}>
         {attempt.kind === 'true_false' && (
           <TrueFalseQuestion prompt={pick(q['prompt'], locale)} locked={locked} onAnswer={submitAnswer} feedback={ack} evaluation={attempt.evaluation} retryNonce={retryNonce} />

@@ -55,6 +55,8 @@ export function WeekendLeagueLiveScreen() {
         kickoffMs={live.kickoffMs}
         registered={live.registered}
         checkedInCount={live.checkedInCount}
+        breakUntilMs={live.breakUntilMs}
+        currentGameIndex={live.currentGameIndex}
       />
     );
   }
