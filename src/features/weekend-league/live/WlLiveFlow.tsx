@@ -62,6 +62,7 @@ export function WlLiveFlow({
   checkinPending,
   onCheckin,
   onExit,
+  onSpectate,
 }: {
   tournamentId: string;
   role: 'player' | 'spectator';
@@ -72,6 +73,8 @@ export function WlLiveFlow({
   checkinPending: boolean;
   onCheckin: () => void;
   onExit: () => void;
+  /** Eliminated players continue as spectators through here. */
+  onSpectate?: () => void;
 }) {
   const { t, locale } = useLocale();
   const live = useWlLive(tournamentId, role);
@@ -151,6 +154,7 @@ export function WlLiveFlow({
             selfUserId={selfUserId}
             score={live.score}
             onExit={onExit}
+            onSpectate={onSpectate ?? onExit}
           />
         </motion.div>
       </AnimatePresence>
@@ -218,7 +222,7 @@ function TopBar({
 }
 
 function ScreenBody({
-  screen, role, locale, serverNow, submitAnswer, retryNonce, board, selfUserId, score, onExit,
+  screen, role, locale, serverNow, submitAnswer, retryNonce, board, selfUserId, score, onExit, onSpectate,
 }: {
   screen: WlLiveScreen;
   role: 'player' | 'spectator';
@@ -230,6 +234,7 @@ function ScreenBody({
   selfUserId: string | null;
   score: number;
   onExit: () => void;
+  onSpectate: () => void;
 }) {
   const { t } = useLocale();
   const yourRank = selfUserId ? board.find((r) => r.user_id === selfUserId)?.rank ?? null : null;
@@ -284,7 +289,7 @@ function ScreenBody({
           gameIndex={screen.reveal.game_index}
           round={ROUNDS[screen.reveal.round_index] ?? ROUNDS[0]}
           onContinue={() => {}}
-          answerTextOverride={revealAnswerText(screen.reveal, locale) || null}
+          answerTextOverride={revealAnswerText(screen.reveal, screen.attempt, locale, t as never) || null}
           correctPct={revealCorrectPct(screen.reveal)}
         />
       );
@@ -314,6 +319,7 @@ function ScreenBody({
           yourRank={yourRank}
           score={score}
           onExit={onExit}
+          onSpectate={onSpectate}
         />
       );
     }
@@ -352,13 +358,14 @@ function ScreenBody({
  *  the survived/eliminated result — the same components /dev/wl-gauntlet
  *  renders, fed by the live game_result payload. */
 function LiveGameResult({
-  result, eliminated, yourRank, score, onExit,
+  result, eliminated, yourRank, score, onExit, onSpectate,
 }: {
   result: { game_index: number; field?: number; advanced?: number | null };
   eliminated: boolean;
   yourRank: number | null;
   score: number;
   onExit: () => void;
+  onSpectate: () => void;
 }) {
   const [phase, setPhase] = useState<'cut' | 'result'>('cut');
   const game = {
@@ -367,7 +374,10 @@ function LiveGameResult({
     advance: Number(result.advanced ?? 0) || 0,
   };
   const isLastGame = result.game_index >= 2;
-  if (phase === 'cut') {
+  // Stub/walkover results carry no counts: skip the count-down theatre and
+  // hide the rank line rather than animating "0 players".
+  const countsKnown = game.players > 0 && game.advance > 0;
+  if (phase === 'cut' && countsKnown) {
     return <EliminationReveal game={game} isLastGame={isLastGame} onDone={() => setPhase('result')} />;
   }
   return (
@@ -375,23 +385,41 @@ function LiveGameResult({
       game={game}
       isLastGame={isLastGame}
       survived={!eliminated}
-      finalRank={yourRank}
+      finalRank={countsKnown ? yourRank : null}
       score={score}
-      onContinue={() => {}}
-      onKeepWatching={() => {}}
+      onContinue={onSpectate}
+      onKeepWatching={onSpectate}
       onExit={onExit}
     />
   );
 }
 
-/** Server-provided correct answer as display text, per kind. */
-function revealAnswerText(reveal: WlRevealEventPayload, locale: Locale): string {
+/** Server-provided correct answer as display text, per kind. MCQ ids and
+ *  true/false resolve against the attempt's question payload so the player
+ *  never sees an internal option id. */
+function revealAnswerText(
+  reveal: WlRevealEventPayload,
+  attempt: WlDispatchEventPayload | null,
+  locale: Locale,
+  t: (key: never, params?: never) => string,
+): string {
   const evaluation = reveal.evaluation ?? {};
   const display = pick(evaluation['display_answer'], locale);
   if (display) return display;
   const accepted = evaluation['accepted_answers'];
   if (Array.isArray(accepted) && typeof accepted[0] === 'string') return accepted[0];
-  if (typeof evaluation['correct_id'] === 'string') return String(evaluation['correct_id']);
+  const correctId = typeof evaluation['correct_id'] === 'string' ? evaluation['correct_id'] : null;
+  if (correctId != null) {
+    if (correctId === 'true' || correctId === 'false') {
+      return t((correctId === 'true' ? 'weekendLeague.gTrue' : 'weekendLeague.gFalse') as never);
+    }
+    const options = attempt && Array.isArray(attempt.question['options'])
+      ? (attempt.question['options'] as Array<Record<string, unknown>>)
+      : [];
+    const hit = options.find((o) => String(o['id']) === correctId);
+    if (hit) return pick(hit['text'], locale);
+    return '';
+  }
   const left = Number(evaluation['left_value']);
   const right = Number(evaluation['right_value']);
   if (Number.isFinite(left) && Number.isFinite(right)) return left > right ? String(left) : String(right);
@@ -459,7 +487,7 @@ function QuestionScreen({
         gameIndex={attempt.game_index}
         round={{ ...round, index: attempt.round_index }}
         score={score}
-        rank={rank ?? 0}
+        rank={rank}
         secondsLeft={ready ? secondsLeft : 0}
         spectator={spectator}
         step={`${attempt.question_index + 1}/5`}

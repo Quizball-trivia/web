@@ -412,9 +412,11 @@ export function GameResult({
             {t('weekendLeague.gOfCount', { r: finalRank, n: game.players })}
           </div>
         )}
-        <div className="mt-3 font-poppins text-[13px] font-black uppercase tracking-wide text-white/55">
-          {t('weekendLeague.gSurvivedNext', { advance: game.advance, next: game.index + 2 })}
-        </div>
+        {game.advance > 0 && (
+          <div className="mt-3 font-poppins text-[13px] font-black uppercase tracking-wide text-white/55">
+            {t('weekendLeague.gSurvivedNext', { advance: game.advance, next: game.index + 2 })}
+          </div>
+        )}
         <div className="mt-7 w-full space-y-2.5">
           <Cta onClick={onContinue}>{t('weekendLeague.gViewContinue')}</Cta>
         </div>
@@ -422,9 +424,11 @@ export function GameResult({
     );
   }
 
-  const missedBy = isLastGame
-    ? t('weekendLeague.gReachFinal', { n: game.advance })
-    : t('weekendLeague.gTopAdvanced', { n: game.advance });
+  const missedBy = game.advance <= 0
+    ? null
+    : isLastGame
+      ? t('weekendLeague.gReachFinal', { n: game.advance })
+      : t('weekendLeague.gTopAdvanced', { n: game.advance });
   return (
     <div className="mx-auto flex min-h-[80vh] w-full max-w-xl flex-col items-center justify-center px-4 text-center">
       <div className="font-poppins text-4xl font-black uppercase text-white" style={poppins}>
@@ -435,7 +439,7 @@ export function GameResult({
           {t('weekendLeague.gYouFinished', { r: finalRank })}
         </div>
       )}
-      <div className="mt-2 font-poppins text-[13px] font-black uppercase tracking-wide text-white/55">{missedBy}</div>
+      {missedBy && <div className="mt-2 font-poppins text-[13px] font-black uppercase tracking-wide text-white/55">{missedBy}</div>}
       <div className="mt-4 space-y-1 font-poppins text-[13px] font-semibold text-white/55">
         <div className="tabular-nums">{t('weekendLeague.gFinalScore', { score })}</div>
         {bestRound && <div>{t('weekendLeague.gBestRound', { label: t(ROUND_LABEL_KEYS[ROUNDS[bestRound.round].type]), points: bestRound.points })}</div>}
