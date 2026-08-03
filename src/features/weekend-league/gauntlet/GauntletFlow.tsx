@@ -22,6 +22,7 @@ import {
   GauntletLobby,
 } from './GauntletScreens';
 import { RoundIntroOverlay } from './RoundChrome';
+import { GauntletBackdrop } from './RoundViews';
 
 /**
  * Full-screen Saturday gauntlet: lobby → (game intro → 5×(question → reveal →
@@ -70,7 +71,7 @@ export function GauntletFlow({
   };
 
   return (
-    <div className="min-h-screen bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat font-fun">
+    <GauntletBackdrop>
       {g.screen !== 'question' && (
         <button
           type="button"
@@ -162,7 +163,7 @@ export function GauntletFlow({
           onDone={g.breakDone}
         />
       )}
-    </div>
+    </GauntletBackdrop>
   );
 }
 

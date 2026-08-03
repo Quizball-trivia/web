@@ -6,7 +6,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { Check, Eye, LogOut } from 'lucide-react';
+import { Check, LogOut } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useAuthStore } from '@/stores/auth.store';
 import type {
@@ -19,11 +19,22 @@ import type { Locale } from '@/lib/i18n/messages';
 import { poppins } from '../constants';
 import { LiveBadge } from '../components/LiveBadge';
 // ONE visual source with /dev/wl-gauntlet: the live flow renders the same
-// designed chrome the prototype uses — change it there, it changes here.
-import { AnswerBtn, GauntletHeader, QuestionCard, RoundIntroOverlay, type AnswerState } from '../gauntlet/RoundChrome';
+// designed views the prototype uses — change them there, they change here.
+import { QuestionCard, RoundIntroOverlay, type AnswerState } from '../gauntlet/RoundChrome';
+import {
+  AnswerOptionList,
+  CareerPathCard,
+  GauntletBackdrop,
+  HigherLowerCard,
+  PairAnswers,
+  RoundScreenShell,
+  TypedAnswerPanel,
+  WhoAmIBadges,
+  WhoAmIClueLadder,
+  type RoundHeaderModel,
+} from '../gauntlet/RoundViews';
 import { AnswerReveal, EliminationReveal, GameResult } from '../gauntlet/GauntletScreens';
 import { ROUNDS } from '../gauntlet/gauntlet.data';
-import { ResultSplash } from '@/features/daily/components/ResultSplash';
 import { useResultSplash } from '@/features/daily/components/useResultSplash';
 import { useWlLive, type WlLiveScreen } from './useWlLive';
 
@@ -92,17 +103,20 @@ export function WlLiveFlow({
 
   if (live.denied === 'not_entered') {
     return (
-      <Shell onExit={onExit}>
-        <div className="font-poppins text-lg font-black uppercase text-white">
-          {t('weekendLeague.gNotEntered')}
-        </div>
-      </Shell>
+      <Immersive>
+        <Shell onExit={onExit}>
+          <div className="font-poppins text-lg font-black uppercase text-white">
+            {t('weekendLeague.gNotEntered')}
+          </div>
+        </Shell>
+      </Immersive>
     );
   }
 
   const inCheckinWindow = status === 'checkin' || status === 'final_checkin';
   if (role === 'player' && inCheckinWindow && live.screen.kind === 'waiting') {
     return (
+      <Immersive>
       <Shell onExit={onExit}>
         <div className="mb-2 flex justify-center"><LiveBadge /></div>
         <div className="font-poppins text-2xl font-black uppercase text-white" style={poppins}>
@@ -130,19 +144,13 @@ export function WlLiveFlow({
           </motion.button>
         )}
       </Shell>
+      </Immersive>
     );
   }
 
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-5 font-fun">
-      <TopBar
-        role={role}
-        score={live.score}
-        rank={yourRow?.rank ?? null}
-        gameIndex={live.gameIndex}
-        onExit={onExit}
-        connected={live.connected && live.subscribed}
-      />
+    <Immersive>
+      <ConnectionDot connected={live.connected && live.subscribed} />
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
           key={screenKey(live.screen)}
@@ -161,12 +169,31 @@ export function WlLiveFlow({
             board={live.board}
             selfUserId={selfUserId}
             score={live.score}
+            rank={yourRow?.rank ?? null}
             onExit={onExit}
             onSpectate={onSpectate ?? onExit}
           />
         </motion.div>
       </AnimatePresence>
+    </Immersive>
+  );
+}
+
+/** Full-screen takeover with the gauntlet backdrop — live play looks exactly
+ *  like /dev/wl-gauntlet even though the route lives inside the app shell. */
+function Immersive({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      <GauntletBackdrop>{children}</GauntletBackdrop>
     </div>
+  );
+}
+
+/** Slim connection signal — only visible while the socket is down. */
+function ConnectionDot({ connected }: { connected: boolean }) {
+  if (connected) return null;
+  return (
+    <span className="fixed right-3 top-3 z-50 size-2.5 animate-pulse rounded-full bg-brand-red-soft" />
   );
 }
 
@@ -199,38 +226,9 @@ function Shell({ children, onExit }: { children: React.ReactNode; onExit: () => 
   );
 }
 
-function TopBar({
-  role, score, rank, gameIndex, onExit, connected,
-}: {
-  role: 'player' | 'spectator';
-  score: number;
-  rank: number | null;
-  gameIndex: number;
-  onExit: () => void;
-  connected: boolean;
-}) {
-  const { t } = useLocale();
-  return (
-    <div className="mb-4 flex items-center justify-between font-poppins text-[12px] font-bold uppercase tracking-wide text-white/60">
-      <button type="button" onClick={onExit} className="hover:text-white">← {t('weekendLeague.gQuit')}</button>
-      <span className="flex items-center gap-2">
-        {role === 'spectator' ? (
-          <span className="flex items-center gap-1.5 text-brand-cyan"><Eye className="size-3.5" /> {t('weekendLeague.gSpectator')}</span>
-        ) : (
-          <>
-            <span>{t('weekendLeague.gGameN', { n: gameIndex + 1 })}</span>
-            <span className="tabular-nums text-brand-yellow">{score} {t('weekendLeague.gPts')}</span>
-            {rank != null && <span className="tabular-nums text-white">#{rank}</span>}
-          </>
-        )}
-        <span className={`size-2 rounded-full ${connected ? 'bg-brand-green' : 'bg-brand-red-soft animate-pulse'}`} />
-      </span>
-    </div>
-  );
-}
 
 function ScreenBody({
-  screen, role, locale, serverNow, submitAnswer, retryNonce, board, selfUserId, score, onExit, onSpectate,
+  screen, role, locale, serverNow, submitAnswer, retryNonce, board, selfUserId, score, rank, onExit, onSpectate,
 }: {
   screen: WlLiveScreen;
   role: 'player' | 'spectator';
@@ -241,21 +239,31 @@ function ScreenBody({
   board: WlBoardRow[];
   selfUserId: string | null;
   score: number;
+  rank: number | null;
   onExit: () => void;
   onSpectate: () => void;
 }) {
   const { t } = useLocale();
-  const yourRank = selfUserId ? board.find((r) => r.user_id === selfUserId)?.rank ?? null : null;
+  const yourRank = rank ?? (selfUserId ? board.find((r) => r.user_id === selfUserId)?.rank ?? null : null);
 
   switch (screen.kind) {
     case 'waiting':
       return (
-        <div className="rounded-[24px] bg-brand-cyan/[0.08] p-8 text-center">
-          <div className="mb-3 flex justify-center"><LiveBadge /></div>
-          <div className="font-poppins text-xl font-black uppercase text-white" style={poppins}>
-            {t('weekendLeague.gWaitingNext')}
+        <div className="mx-auto w-full max-w-2xl px-4 py-10">
+          <div className="rounded-[24px] bg-brand-cyan/[0.08] p-8 text-center">
+            <div className="mb-3 flex justify-center"><LiveBadge /></div>
+            <div className="font-poppins text-xl font-black uppercase text-white" style={poppins}>
+              {t('weekendLeague.gWaitingNext')}
+            </div>
+            <BoardStrip board={board} selfUserId={selfUserId} />
+            <button
+              type="button"
+              onClick={onExit}
+              className="mx-auto mt-6 flex items-center gap-1.5 font-poppins text-[12px] font-bold uppercase tracking-widest text-white/40 hover:text-white"
+            >
+              <LogOut className="size-4" /> {t('weekendLeague.gQuit')}
+            </button>
           </div>
-          <BoardStrip board={board} selfUserId={selfUserId} />
         </div>
       );
 
@@ -360,9 +368,11 @@ function ScreenBody({
 
     case 'cancelled':
       return (
-        <div className="rounded-[24px] border-2 border-white/10 bg-surface-card-deep p-6 text-center">
-          <div className="font-poppins text-xl font-black uppercase text-white">{t('weekendLeague.gCancelledTitle')}</div>
-          <p className="mt-2 font-poppins text-[13px] font-semibold text-white/60">{t('weekendLeague.gCancelledBody')}</p>
+        <div className="mx-auto w-full max-w-2xl px-4 py-10">
+          <div className="rounded-[24px] border-2 border-white/10 bg-surface-card-deep p-6 text-center">
+            <div className="font-poppins text-xl font-black uppercase text-white">{t('weekendLeague.gCancelledTitle')}</div>
+            <p className="mt-2 font-poppins text-[13px] font-semibold text-white/60">{t('weekendLeague.gCancelledBody')}</p>
+          </div>
         </div>
       );
   }
@@ -388,16 +398,18 @@ function SpectatorGameResult({
     return <EliminationReveal game={game} isLastGame={result.game_index >= 2} onDone={() => setPhase('board')} />;
   }
   return (
-    <div className="rounded-[24px] border-2 border-white/10 bg-surface-card-deep p-6 text-center">
-      <div className="font-poppins text-3xl font-black uppercase text-brand-green-light" style={poppins}>
-        {t('weekendLeague.gGameComplete', { n: result.game_index + 1 })}
+    <div className="mx-auto w-full max-w-2xl px-4 py-10">
+      <div className="rounded-[24px] border-2 border-white/10 bg-surface-card-deep p-6 text-center">
+        <div className="font-poppins text-3xl font-black uppercase text-brand-green-light" style={poppins}>
+          {t('weekendLeague.gGameComplete', { n: result.game_index + 1 })}
+        </div>
+        {result.advanced != null && (
+          <p className="mt-2 font-poppins text-[13px] font-semibold text-white/60">
+            {t('weekendLeague.gAdvanceCount', { n: result.advanced })}
+          </p>
+        )}
+        <BoardStrip board={board} selfUserId={selfUserId} rows={8} />
       </div>
-      {result.advanced != null && (
-        <p className="mt-2 font-poppins text-[13px] font-semibold text-white/60">
-          {t('weekendLeague.gAdvanceCount', { n: result.advanced })}
-        </p>
-      )}
-      <BoardStrip board={board} selfUserId={selfUserId} rows={8} />
     </div>
   );
 }
@@ -574,52 +586,57 @@ function QuestionScreen({
     fire(verdict.correct ? 'correct' : 'wrong', 'left');
   }
 
-  const round = ROUNDS[attempt.round_index] ?? ROUNDS[0];
+  const round = { ...(ROUNDS[attempt.round_index] ?? ROUNDS[0]), index: attempt.round_index };
+  const header: RoundHeaderModel = {
+    gameIndex: attempt.game_index,
+    round,
+    score,
+    rank,
+    secondsLeft: ready ? secondsLeft : 0,
+    spectator,
+    step: `${attempt.question_index + 1}/5`,
+    onQuit: onExit,
+  };
+  const ack = answered as { accepted: boolean; correct?: boolean; points?: number } | null;
+
   return (
-    <div>
-      <GauntletHeader
-        gameIndex={attempt.game_index}
-        round={{ ...round, index: attempt.round_index }}
-        score={score}
-        rank={rank}
-        secondsLeft={ready ? secondsLeft : 0}
-        spectator={spectator}
-        step={`${attempt.question_index + 1}/5`}
-        onQuit={onExit}
-      />
-      {!ready && <RoundIntroOverlay round={{ ...round, index: attempt.round_index }} onDone={() => {}} />}
-      <div className="mt-3 rounded-[24px] border-2 border-white/10 bg-surface-card-deep p-5">
+    <>
+      {!ready && <RoundIntroOverlay round={round} onDone={() => {}} />}
+      <RoundScreenShell header={header} splashProps={splashProps}>
+        {attempt.kind === 'true_false' && (
+          <TrueFalseQuestion prompt={pick(q['prompt'], locale)} locked={locked} onAnswer={submitAnswer} feedback={ack} evaluation={attempt.evaluation} retryNonce={retryNonce} />
+        )}
+        {attempt.kind === 'mcq' && (
+          <McqQuestion q={q} locale={locale} locked={locked} onAnswer={submitAnswer} feedback={ack} evaluation={attempt.evaluation} retryNonce={retryNonce} />
+        )}
+        {attempt.kind === 'higher_lower' && (
+          <HigherLowerQuestion q={q} locale={locale} locked={locked} onAnswer={submitAnswer} feedback={ack} evaluation={attempt.evaluation} retryNonce={retryNonce} />
+        )}
+        {attempt.kind === 'career_path' && (
+          <TypedKindQuestion
+            card={
+              <CareerPathCard
+                heading={t('weekendLeague.gCareerPrompt')}
+                items={(Array.isArray(q['clubs']) ? (q['clubs'] as unknown[]) : []).map((c) => ({ label: pick(c, locale) }))}
+              />
+            }
+            locked={locked}
+            spectator={spectator}
+            onSubmit={(guess) => submitAnswer(guess)}
+            feedback={ack}
+            evaluation={attempt.evaluation}
+            locale={locale}
+          />
+        )}
+        {attempt.kind === 'who_am_i' && (
+          <WhoAmIQuestion attempt={attempt} locale={locale} serverNow={serverNow} locked={locked} spectator={spectator} onSubmit={(guess) => submitAnswer({ guess })} feedback={ack} />
+        )}
 
-      {attempt.kind === 'true_false' && (
-        <TrueFalseQuestion prompt={pick(q['prompt'], locale)} locked={locked} onAnswer={submitAnswer} feedback={answered} evaluation={attempt.evaluation} retryNonce={retryNonce} />
-      )}
-      {attempt.kind === 'mcq' && (
-        <McqQuestion q={q} locale={locale} locked={locked} onAnswer={submitAnswer} feedback={answered} evaluation={attempt.evaluation} retryNonce={retryNonce} />
-      )}
-      {attempt.kind === 'higher_lower' && (
-        <HigherLowerQuestion q={q} locale={locale} locked={locked} onAnswer={submitAnswer} feedback={answered} evaluation={attempt.evaluation} retryNonce={retryNonce} />
-      )}
-      {attempt.kind === 'career_path' && (
-        <TypedQuestion
-          heading={t('weekendLeague.gCareerPrompt')}
-          lines={(Array.isArray(q['clubs']) ? (q['clubs'] as unknown[]) : []).map((c) => pick(c, locale))}
-          locked={locked}
-          onSubmit={(guess) => submitAnswer(guess)}
-          feedback={answered}
-          evaluation={attempt.evaluation}
-          locale={locale}
-        />
-      )}
-      {attempt.kind === 'who_am_i' && (
-        <WhoAmIQuestion attempt={attempt} locale={locale} serverNow={serverNow} locked={locked} onSubmit={(guess) => submitAnswer({ guess })} feedback={answered} />
-      )}
-
-      {answered != null && (
-        <AnswerFeedback ack={answered as never} />
-      )}
-      </div>
-      <ResultSplash {...splashProps} />
-    </div>
+        {ack != null && attempt.kind !== 'career_path' && attempt.kind !== 'who_am_i' && (
+          <AnswerFeedback ack={ack} />
+        )}
+      </RoundScreenShell>
+    </>
   );
 }
 
@@ -645,7 +662,6 @@ function AnswerFeedback({ ack }: { ack: { accepted: boolean; correct?: boolean; 
   );
 }
 
-
 function useChoice(locked: boolean, onAnswer: (a: unknown) => void, retryNonce: number) {
   const [chosen, setChosen] = useState<string | null>(null);
   const [seenNonce, setSeenNonce] = useState(retryNonce);
@@ -664,17 +680,26 @@ function useChoice(locked: boolean, onAnswer: (a: unknown) => void, retryNonce: 
   return { chosen, choose };
 }
 
-function stateFor(
+/** Answer-button state before the public reveal: your own pick colors from the
+ *  server ack; the correct option only highlights once reveal data exists. */
+function choiceState(
   id: string,
   chosen: string | null,
+  ack: { accepted: boolean; correct?: boolean } | null,
   correctId: string | null,
-  revealed: boolean,
 ): AnswerState {
-  if (!revealed || chosen == null) return chosen == null ? 'idle' : id === chosen ? 'faded' : 'idle';
-  if (correctId != null && id === correctId) return 'correct';
-  if (id === chosen) return 'wrong';
-  return 'faded';
+  if (chosen == null) return 'idle';
+  if (correctId != null) {
+    if (id === correctId) return 'correct';
+    if (id === chosen) return 'wrong';
+    return 'faded';
+  }
+  if (id !== chosen) return 'faded';
+  if (ack?.accepted && typeof ack.correct === 'boolean') return ack.correct ? 'correct' : 'wrong';
+  return 'idle';
 }
+
+type Ack = { accepted: boolean; correct?: boolean; points?: number } | null;
 
 function TrueFalseQuestion({
   prompt, locked, onAnswer, feedback, evaluation, retryNonce,
@@ -682,30 +707,25 @@ function TrueFalseQuestion({
   prompt: string;
   locked: boolean;
   onAnswer: (a: unknown) => void;
-  feedback: { accepted: boolean } | null;
+  feedback: Ack;
   evaluation: Record<string, unknown>;
   retryNonce: number;
 }) {
   const { t } = useLocale();
   const { chosen, choose } = useChoice(locked, onAnswer, retryNonce);
   const correctId = typeof evaluation['correct_id'] === 'string' ? evaluation['correct_id'] : null;
-  const revealed = feedback != null;
   return (
-    <div>
+    <>
       <QuestionCard>{prompt}</QuestionCard>
-      <div className="mt-3 grid grid-cols-2 gap-2.5">
-        {(['true', 'false'] as const).map((id) => (
-          <AnswerBtn
-            key={id}
-            tall
-            label={t(id === 'true' ? 'weekendLeague.gTrue' : 'weekendLeague.gFalse')}
-            state={stateFor(id, chosen, correctId, revealed)}
-            disabled={locked && chosen == null}
-            onClick={() => choose(id)}
-          />
-        ))}
-      </div>
-    </div>
+      <PairAnswers
+        choices={[
+          { key: 'true', label: t('weekendLeague.gTrue'), state: choiceState('true', chosen, feedback, correctId) },
+          { key: 'false', label: t('weekendLeague.gFalse'), state: choiceState('false', chosen, feedback, correctId) },
+        ]}
+        disabled={locked && chosen == null}
+        onPick={(key) => choose(key)}
+      />
+    </>
   );
 }
 
@@ -716,17 +736,16 @@ function McqQuestion({
   locale: Locale;
   locked: boolean;
   onAnswer: (a: unknown) => void;
-  feedback: { accepted: boolean } | null;
+  feedback: Ack;
   evaluation: Record<string, unknown>;
   retryNonce: number;
 }) {
   const { chosen, choose } = useChoice(locked, onAnswer, retryNonce);
   const correctId = typeof evaluation['correct_id'] === 'string' ? evaluation['correct_id'] : null;
-  const revealed = feedback != null;
   const options = Array.isArray(q['options']) ? (q['options'] as Array<Record<string, unknown>>) : [];
   const image = q['image'] as { url?: string } | null | undefined;
   return (
-    <div>
+    <>
       <QuestionCard>{pick(q['prompt'], locale)}</QuestionCard>
       {image?.url && (
         // eslint-disable-next-line @next/next/no-img-element
@@ -736,26 +755,17 @@ function McqQuestion({
           className="mx-auto mt-4 max-h-56 w-auto max-w-full rounded-xl object-contain"
         />
       )}
-      <div className="mt-3 grid gap-2.5 sm:grid-cols-2">
-        {options.map((o, i) => {
+      <AnswerOptionList
+        options={options.map((o) => {
           const id = String(o['id']);
-          return (
-            <AnswerBtn
-              key={id}
-              label={pick(o['text'], locale)}
-              prefix={<span className="font-poppins text-[11px] font-black text-white/40">{OPTION_LETTERS[i] ?? ''}</span>}
-              state={stateFor(id, chosen, correctId, revealed)}
-              disabled={locked && chosen == null}
-              onClick={() => choose(id)}
-            />
-          );
+          return { key: id, label: pick(o['text'], locale), state: choiceState(id, chosen, feedback, correctId) };
         })}
-      </div>
-    </div>
+        disabled={locked && chosen == null}
+        onPick={(key) => choose(key)}
+      />
+    </>
   );
 }
-
-const OPTION_LETTERS = ['A', 'B', 'C', 'D', 'E', 'F'];
 
 function HigherLowerQuestion({
   q, locale, locked, onAnswer, feedback, evaluation, retryNonce,
@@ -764,7 +774,7 @@ function HigherLowerQuestion({
   locale: Locale;
   locked: boolean;
   onAnswer: (a: unknown) => void;
-  feedback: { accepted: boolean } | null;
+  feedback: Ack;
   evaluation: Record<string, unknown>;
   retryNonce: number;
 }) {
@@ -774,114 +784,89 @@ function HigherLowerQuestion({
   const left = Number(evaluation['left_value']);
   const right = Number(evaluation['right_value']);
   const correctSide = Number.isFinite(left) && Number.isFinite(right) ? (left > right ? 'left' : 'right') : null;
+  const sideLabel = (side: 'left' | 'right') => (
+    <span>
+      {pick(q[side === 'left' ? 'left_name' : 'right_name'], locale)}
+      {revealed && Number.isFinite(side === 'left' ? left : right) && (
+        <span className="mt-1 block font-poppins text-[13px] font-bold tabular-nums opacity-70">
+          {side === 'left' ? left : right}
+        </span>
+      )}
+    </span>
+  );
   return (
-    <div>
-      <div className="text-center font-poppins text-[12px] font-bold uppercase tracking-wide text-brand-cyan">
-        {pick(q['stat_label'], locale)}
-      </div>
-      <div className="mt-2">
-        <QuestionCard>{t('weekendLeague.gHigherLowerPrompt', { name: pick(q['left_name'], locale) })}</QuestionCard>
-      </div>
-      <div className="mt-3 grid grid-cols-2 gap-2.5">
-        {(['left', 'right'] as const).map((side) => (
-          <AnswerBtn
-            key={side}
-            tall
-            label={
-              <span>
-                {pick(q[side === 'left' ? 'left_name' : 'right_name'], locale)}
-                {revealed && Number.isFinite(side === 'left' ? left : right) && (
-                  <span className="mt-1 block font-poppins text-[13px] font-bold tabular-nums opacity-70">
-                    {side === 'left' ? left : right}
-                  </span>
-                )}
-              </span>
-            }
-            state={stateFor(side, chosen, correctSide, revealed)}
-            disabled={locked && chosen == null}
-            onClick={() => choose(side)}
-          />
-        ))}
-      </div>
-    </div>
+    <>
+      <HigherLowerCard
+        statLabel={pick(q['stat_label'], locale)}
+        prompt={t('weekendLeague.gHigherLowerPrompt', { name: pick(q['left_name'], locale) })}
+      />
+      <PairAnswers
+        choices={[
+          { key: 'left', label: sideLabel('left'), state: choiceState('left', chosen, feedback, correctSide) },
+          { key: 'right', label: sideLabel('right'), state: choiceState('right', chosen, feedback, correctSide) },
+        ]}
+        disabled={locked && chosen == null}
+        onPick={(key) => choose(key)}
+      />
+    </>
   );
 }
 
-function TypedQuestion({
-  heading, lines, locked, onSubmit, feedback, evaluation, locale,
+/** Shared driver for the typed kinds (career path, who-am-i): the designed
+ *  blue input + green submit / red give-up, then the verdict box. */
+function TypedKindQuestion({
+  card, locked, spectator, onSubmit, feedback, evaluation, locale,
 }: {
-  heading: string;
-  lines: string[];
+  card: React.ReactNode;
   locked: boolean;
+  spectator: boolean;
   onSubmit: (guess: string) => void;
-  feedback: { accepted: boolean; correct?: boolean } | null;
+  feedback: Ack;
   evaluation: Record<string, unknown>;
   locale: Locale;
 }) {
-  const { t } = useLocale();
   const [guess, setGuess] = useState('');
-  const revealedAnswer = feedback != null && feedback.accepted && feedback.correct === false
-    ? pick(evaluation['display_answer'], locale)
-    : null;
+  const outcome: 'correct' | 'wrong' | null =
+    feedback?.accepted && typeof feedback.correct === 'boolean'
+      ? (feedback.correct ? 'correct' : 'wrong')
+      : null;
+  const answerText = outcome === 'wrong' ? pick(evaluation['display_answer'], locale) : '';
   return (
-    <div>
-      {heading !== '' && (
-        <div className="text-center font-poppins text-[13px] font-bold uppercase tracking-wide text-brand-cyan">{heading}</div>
-      )}
-      {lines.length > 0 && (
-        <div className="mt-3">
-          <QuestionCard>
-            <div className="space-y-1.5 text-center">
-              {lines.map((line, i) => (
-                <div key={i}>{line}</div>
-              ))}
-            </div>
-          </QuestionCard>
-        </div>
-      )}
-      <form
-        className="mt-5 flex gap-2"
-        onSubmit={(e) => {
-          e.preventDefault();
+    <>
+      {card}
+      <TypedAnswerPanel
+        locked={feedback != null || locked}
+        outcome={outcome}
+        answerText={answerText}
+        guess={guess}
+        onGuessChange={setGuess}
+        onSubmit={() => {
           if (locked || guess.trim() === '') return;
           onSubmit(guess.trim());
         }}
-      >
-        <input
-          value={guess}
-          onChange={(e) => setGuess(e.target.value)}
-          disabled={locked}
-          placeholder={t('weekendLeague.gTypeAnswer')}
-          className="h-14 flex-1 rounded-[16px] border-2 border-brand-yellow/70 bg-transparent px-4 font-poppins text-[16px] font-bold uppercase text-white shadow-[0_0_6px_1px_rgba(255,229,0,0.25)] outline-none placeholder:normal-case placeholder:text-white/30 focus:border-brand-yellow"
-        />
-        <button
-          type="submit"
-          disabled={locked || guess.trim() === ''}
-          className="h-14 rounded-[16px] bg-brand-green px-6 font-poppins text-sm font-black uppercase text-white shadow-[0_1.76px_6.334px_1.32px_rgba(56,182,14,0.25)] transition-opacity disabled:opacity-40"
-        >
-          {t('weekendLeague.gSubmit')}
-        </button>
-      </form>
-      {revealedAnswer && (
-        <div className="mt-3 text-center font-poppins text-[13px] font-semibold text-white/70">
-          {t('weekendLeague.gCorrectAnswer')} <span className="text-brand-green-light">{revealedAnswer}</span>
-        </div>
-      )}
-    </div>
+        onGiveUp={() => {
+          if (locked) return;
+          // An empty guess is scored as wrong by the server — same effect as
+          // the prototype's give-up, and it reveals the answer at the flip.
+          onSubmit('');
+        }}
+        readOnly={spectator}
+      />
+    </>
   );
 }
 
 function WhoAmIQuestion({
-  attempt, locale, serverNow, locked, onSubmit, feedback,
+  attempt, locale, serverNow, locked, spectator, onSubmit, feedback,
 }: {
   attempt: WlDispatchEventPayload;
   locale: Locale;
   serverNow: () => number;
   locked: boolean;
+  spectator: boolean;
   onSubmit: (guess: string) => void;
-  feedback: { accepted: boolean; correct?: boolean } | null;
+  feedback: Ack;
 }) {
-  const { t } = useLocale();
   const clues = Array.isArray(attempt.question['clues'])
     ? (attempt.question['clues'] as Array<Record<string, unknown>>)
     : [];
@@ -894,34 +879,28 @@ function WhoAmIQuestion({
     WHO_AM_I_CLUES - 1,
     Math.max(0, Math.floor((serverNow() - attempt.playableAt) / clueWindow)),
   );
+  const revealAll = locked && feedback != null;
   return (
-    <div>
-      <div className="flex items-center justify-between font-poppins text-[12px] font-bold uppercase tracking-wide">
-        <span className="text-brand-cyan">{t('weekendLeague.gWhoAmI')}</span>
-        <span className="tabular-nums text-brand-yellow">{WHO_AM_I_POINTS[clueIndex]} {t('weekendLeague.gPts')}</span>
-      </div>
-      <div className="mt-3 space-y-2">
-        {clues.slice(0, clueIndex + 1).map((clue, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, x: -8 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-left font-poppins text-[14px] font-semibold text-white"
-          >
-            {pick((clue as { content?: unknown })['content'] ?? clue, locale)}
-          </motion.div>
-        ))}
-      </div>
-      <TypedQuestion
-        heading=""
-        lines={[]}
-        locked={locked}
-        onSubmit={onSubmit}
-        feedback={feedback}
-        evaluation={attempt.evaluation}
-        locale={locale}
-      />
-    </div>
+    <TypedKindQuestion
+      card={
+        <>
+          <WhoAmIBadges pointsNow={WHO_AM_I_POINTS[clueIndex]} />
+          <WhoAmIClueLadder
+            clues={clues.map((clue, i) => ({
+              text: pick((clue as { content?: unknown })['content'] ?? clue, locale),
+              revealed: revealAll || i <= clueIndex,
+              points: WHO_AM_I_POINTS[i] ?? 0,
+            }))}
+          />
+        </>
+      }
+      locked={locked}
+      spectator={spectator}
+      onSubmit={onSubmit}
+      feedback={feedback}
+      evaluation={attempt.evaluation}
+      locale={locale}
+    />
   );
 }
 
@@ -949,6 +928,7 @@ function RevealScreen({
       ? 'neutral'
       : answer.correct === true ? 'correct' : 'wrong';
   return (
+    <div className="mx-auto w-full max-w-2xl px-4 py-10">
     <div className="rounded-[24px] border-2 border-white/10 bg-surface-card-deep p-6 text-center">
       {verdict !== 'neutral' && (
         <div
@@ -979,6 +959,7 @@ function RevealScreen({
         {t('weekendLeague.gAnsweredCount', { n: reveal.answered })}
       </div>
       <BoardStrip board={board} selfUserId={selfUserId} />
+    </div>
     </div>
   );
 }
