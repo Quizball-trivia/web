@@ -480,8 +480,11 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
             inFlightRef.current = null;
             setLastAck(ack);
             const cur = screenRef.current;
+            // A reveal can race ahead of the ack — the late ack must still
+            // land on the reveal screen so the personal verdict shows.
             const onThisQuestion =
-              cur.kind === 'question' && cur.attempt.attempt_id === attemptId;
+              (cur.kind === 'question' && cur.attempt.attempt_id === attemptId)
+              || (cur.kind === 'reveal' && cur.reveal.attempt_id === attemptId);
             if (ack.accepted || ack.reason === 'duplicate') {
               answeredRef.current = ack;
               if (ack.accepted && !scoredRef.current.has(attemptId)) {
