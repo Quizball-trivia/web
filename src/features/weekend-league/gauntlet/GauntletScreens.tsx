@@ -77,9 +77,11 @@ export function GauntletLobby({
       <h1 className="mt-2 font-poppins text-4xl font-black uppercase leading-none text-white" style={poppins}>
         {t('weekendLeague.title')}
       </h1>
-      <div className="mt-3 flex items-center justify-center gap-1.5 font-poppins text-[13px] font-semibold text-white/60">
-        <Users className="size-4" /> {t('weekendLeague.gPlayersCount', { count: registered })}
-      </div>
+      {registered > 0 && (
+        <div className="mt-3 flex items-center justify-center gap-1.5 font-poppins text-[13px] font-semibold text-white/60">
+          <Users className="size-4" /> {t('weekendLeague.gPlayersCount', { count: registered })}
+        </div>
+      )}
 
       <div className={`mt-6 w-full ${card} p-5`}>
         <div className="font-poppins text-[13px] font-black uppercase tracking-wide text-white">
