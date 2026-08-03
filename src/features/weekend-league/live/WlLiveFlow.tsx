@@ -34,11 +34,12 @@ import {
   WhoAmIClueLadder,
   type RoundHeaderModel,
 } from '../gauntlet/RoundViews';
-import { AnswerReveal, EliminationReveal, GameResult } from '../gauntlet/GauntletScreens';
+import { AnswerReveal, BreakScreen, ChampionScreen, EliminationReveal, GameIntro, GameResult } from '../gauntlet/GauntletScreens';
+import { buildGames } from '../gauntlet/gauntlet.data';
 import { ROUNDS } from '../gauntlet/gauntlet.data';
 import { ResultSplash } from '@/features/daily/components/ResultSplash';
 import { useResultSplash } from '@/features/daily/components/useResultSplash';
-import { useWlLive, type WlLiveScreen } from './useWlLive';
+import { useWlLive, type WlLiveScreen, type WlLiveState } from './useWlLive';
 
 const WHO_AM_I_CLUES = 5;
 const WHO_AM_I_POINTS = [300, 240, 180, 120, 60];
@@ -67,20 +68,7 @@ function useServerCountdown(deadlineAt: number | null, serverNow: () => number):
   return Math.ceil(left / 1000);
 }
 
-export function WlLiveFlow({
-  tournamentId,
-  role,
-  status,
-  checkedIn,
-  checkinPending,
-  onCheckin,
-  onExit,
-  onSpectate,
-  kickoffMs,
-  registered,
-  checkedInCount,
-}: {
-  tournamentId: string;
+export interface WlLiveFlowUiProps {
   role: 'player' | 'spectator';
   /** Backend tournament status (drives the pre-game check-in screen). */
   status: string | null;
@@ -96,15 +84,48 @@ export function WlLiveFlow({
   registered?: number;
   /** Live checked-in count for the ready meter (public payload). */
   checkedInCount?: number;
-}) {
-  const { t, locale } = useLocale();
-  const live = useWlLive(tournamentId, role);
+  /** Server break deadline (epoch ms) — drives the designed break screen. */
+  breakUntilMs?: number | null;
+}
+
+export function WlLiveFlow({ tournamentId, ...ui }: WlLiveFlowUiProps & { tournamentId: string }) {
+  const live = useWlLive(tournamentId, ui.role);
   const selfUserId = useAuthStore((s) => s.user?.id ?? null);
+  return <WlLiveFlowView live={live} selfUserId={selfUserId} {...ui} />;
+}
+
+/** The full live-game UI with an injectable driver — the real socket state in
+ *  the app, a scripted driver in the /dev/wl simulator. One UI, by construction. */
+export function WlLiveFlowView({
+  live,
+  selfUserId,
+  role,
+  status,
+  checkedIn,
+  checkinPending,
+  onCheckin,
+  onExit,
+  onSpectate,
+  kickoffMs,
+  registered,
+  checkedInCount,
+  breakUntilMs,
+}: WlLiveFlowUiProps & { live: WlLiveState; selfUserId: string | null }) {
+  const { t, locale } = useLocale();
 
   const yourRow = useMemo(
     () => live.board.find((row) => row.user_id === selfUserId) ?? null,
     [live.board, selfUserId],
   );
+
+  // Remember the latest game_result so the break screen and next game's intro
+  // can show real field/advance counts after the screen has moved on.
+  // Render-time adjustment (same pattern as useChoice's nonce): capture the
+  // result while the game_result screen is showing, no effect round-trip.
+  const [lastResult, setLastResult] = useState<{ game_index: number; field?: number; advanced?: number | null } | null>(null);
+  if (live.screen.kind === 'game_result' && lastResult !== live.screen.result) {
+    setLastResult(live.screen.result);
+  }
 
   // Verdict splash lives ABOVE the keyed screen transition so a quick
   // question→reveal flip can't unmount it mid-animation; fired from an effect
@@ -185,6 +206,9 @@ export function WlLiveFlow({
             selfUserId={selfUserId}
             score={live.score}
             rank={yourRow?.rank ?? null}
+            breakUntilMs={breakUntilMs ?? null}
+            lastResult={lastResult}
+            registered={registered ?? 0}
             onExit={onExit}
             onSpectate={onSpectate ?? onExit}
           />
@@ -250,7 +274,7 @@ function Shell({ children, onExit }: { children: React.ReactNode; onExit: () => 
 
 
 function ScreenBody({
-  screen, role, locale, serverNow, submitAnswer, retryNonce, board, selfUserId, score, rank, onExit, onSpectate,
+  screen, role, locale, serverNow, submitAnswer, retryNonce, board, selfUserId, score, rank, breakUntilMs, lastResult, registered, onExit, onSpectate,
 }: {
   screen: WlLiveScreen;
   role: 'player' | 'spectator';
@@ -262,6 +286,9 @@ function ScreenBody({
   selfUserId: string | null;
   score: number;
   rank: number | null;
+  breakUntilMs: number | null;
+  lastResult: { game_index: number; field?: number; advanced?: number | null } | null;
+  registered: number;
   onExit: () => void;
   onSpectate: () => void;
 }) {
@@ -269,7 +296,26 @@ function ScreenBody({
   const yourRank = rank ?? (selfUserId ? board.find((r) => r.user_id === selfUserId)?.rank ?? null : null);
 
   switch (screen.kind) {
-    case 'waiting':
+    case 'waiting': {
+      // Between games with a known deadline: the SAME designed break screen
+      // the prototype shows, counting down the server's break window.
+      // The server nulls past deadlines on every poll, and the next dispatch
+      // replaces this screen — an expired deadline only ever shows briefly.
+      if (breakUntilMs != null && lastResult != null) {
+        const field = Number(lastResult.field ?? 0) || 0;
+        const advanced = Number(lastResult.advanced ?? 0) || 0;
+        if (field > 0 && advanced > 0) {
+          return (
+            <BreakScreen
+              games={buildGames(Math.max(field, registered, 26))}
+              game={{ index: lastResult.game_index, players: field, advance: advanced }}
+              finalRank={rank}
+              score={score}
+              deadlineMs={breakUntilMs}
+            />
+          );
+        }
+      }
       return (
         <div className="mx-auto w-full max-w-2xl px-4 py-10">
           <div className="rounded-[24px] bg-brand-cyan/[0.08] p-8 text-center">
@@ -288,13 +334,25 @@ function ScreenBody({
           </div>
         </div>
       );
+    }
 
-    case 'question':
+    case 'question': {
+      const attempt = screen.attempt;
+      const introCounts = (() => {
+        if (attempt.game_index === 0) return registered > 0 ? { players: registered, advance: 0 } : null;
+        if (lastResult != null && lastResult.game_index === attempt.game_index - 1) {
+          const advanced = Number(lastResult.advanced ?? 0) || 0;
+          const games = buildGames(Math.max(Number(lastResult.field ?? 0) || 0, registered, 26));
+          return { players: advanced, advance: games[attempt.game_index]?.advance ?? 0 };
+        }
+        return null;
+      })();
       return (
         <QuestionScreen
-          attempt={screen.attempt}
+          attempt={attempt}
           score={score}
           rank={yourRank}
+          introCounts={introCounts}
           onExit={onExit}
           answered={screen.answer}
           locale={locale}
@@ -304,6 +362,7 @@ function ScreenBody({
           spectator={role === 'spectator'}
         />
       );
+    }
 
     case 'reveal': {
       if (role === 'spectator' || screen.answer == null || !screen.answer.accepted) {
@@ -354,37 +413,10 @@ function ScreenBody({
 
     case 'final_result': {
       const { champion } = screen;
-      const finalRankRow = yourRank;
       return (
-        <div className="mx-auto flex min-h-[70vh] w-full max-w-xl flex-col items-center justify-center px-4 text-center">
-          <motion.div
-            initial={{ scale: 0, rotate: -15 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 12 }}
-            className={`flex size-20 items-center justify-center rounded-full ${champion ? 'bg-brand-gold text-black' : 'bg-white/10 text-brand-gold'}`}
-          >
-            <span className="text-4xl">🏆</span>
-          </motion.div>
-          <div className="mt-4 font-poppins text-4xl font-black uppercase text-brand-gold" style={poppins}>
-            {champion ? t('weekendLeague.gChampionTitle') : t('weekendLeague.gFinalDoneTitle')}
-          </div>
-          {!champion && finalRankRow != null && (
-            <div className="mt-2 font-poppins text-xl font-black tabular-nums text-white" style={poppins}>
-              {t('weekendLeague.gYouFinished', { r: finalRankRow })}
-            </div>
-          )}
-          <div className="mt-2 font-poppins text-[13px] font-black uppercase tracking-wide text-white/55">
-            {t('weekendLeague.gTotalScore')} <span className="tabular-nums text-white">{score}</span>
-          </div>
+        <ChampionScreen champion={champion} finalRank={yourRank} score={score} onExit={onExit}>
           <BoardStrip board={board} selfUserId={selfUserId} rows={10} />
-          <button
-            type="button"
-            onClick={onExit}
-            className="mx-auto mt-6 flex h-12 items-center justify-center rounded-2xl bg-white/10 px-8 font-poppins text-sm font-black uppercase text-white hover:bg-white/15"
-          >
-            {t('weekendLeague.gContinue')}
-          </button>
-        </div>
+        </ChampionScreen>
       );
     }
 
@@ -534,7 +566,7 @@ function revealCorrectPct(reveal: WlRevealEventPayload): number | null {
 // ── Question rendering per kind ─────────────────────────────────────────────
 
 function QuestionScreen({
-  attempt, answered, locale, serverNow, submitAnswer, retryNonce, spectator, score, rank, onExit,
+  attempt, answered, locale, serverNow, submitAnswer, retryNonce, spectator, score, rank, introCounts, onExit,
 }: {
   attempt: WlDispatchEventPayload;
   answered: { accepted: boolean } | null;
@@ -545,6 +577,8 @@ function QuestionScreen({
   spectator: boolean;
   score: number;
   rank: number | null;
+  /** Field/advance for the game-intro theatre (prev game's result). */
+  introCounts: { players: number; advance: number } | null;
   onExit: () => void;
 }) {
   const { t } = useLocale();
@@ -569,7 +603,23 @@ function QuestionScreen({
 
   return (
     <>
-      {!ready && <RoundIntroOverlay round={round} onDone={() => {}} />}
+      {!ready && attempt.round_index === 0 && attempt.question_index === 0 ? (
+        // First question of a game: the GAME N intro theatre instead of the
+        // round overlay — counts from the previous game's result when known.
+        <div className="fixed inset-0 z-40 bg-surface-page-alt/95">
+          <GameIntro
+            game={{
+              index: attempt.game_index,
+              players: Number(introCounts?.players ?? 0) || 0,
+              advance: Number(introCounts?.advance ?? 0) || 0,
+            }}
+            isLastGame={attempt.game_index >= 2}
+            onDone={() => {}}
+          />
+        </div>
+      ) : (
+        !ready && <RoundIntroOverlay round={round} onDone={() => {}} />
+      )}
       <RoundScreenShell header={header}>
         {attempt.kind === 'true_false' && (
           <TrueFalseQuestion prompt={pick(q['prompt'], locale)} locked={locked} onAnswer={submitAnswer} feedback={ack} evaluation={attempt.evaluation} retryNonce={retryNonce} />

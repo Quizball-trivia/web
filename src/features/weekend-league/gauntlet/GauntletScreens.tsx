@@ -162,11 +162,15 @@ export function GameIntro({
           transition={{ delay: 0.35 }}
           className="mt-4 space-y-1.5 font-poppins text-lg font-black uppercase tracking-wide"
         >
-          <div className="text-white">{t('weekendLeague.gPlayersCount', { count: game.players })}</div>
+          {game.players > 0 && (
+            <div className="text-white">{t('weekendLeague.gPlayersCount', { count: game.players })}</div>
+          )}
           <div className="text-brand-green-light">
-            {isLastGame
-              ? t('weekendLeague.gReachFinal', { n: game.advance })
-              : t('weekendLeague.gTopAdvance', { n: game.advance })}
+            {game.advance <= 0
+              ? null
+              : isLastGame
+                ? t('weekendLeague.gReachFinal', { n: game.advance })
+                : t('weekendLeague.gTopAdvance', { n: game.advance })}
           </div>
           <div className="text-white/50">{t('weekendLeague.gRounds5')}</div>
         </motion.div>
@@ -463,38 +467,97 @@ export function GameResult({
 }
 
 // ── 2-minute break ──────────────────────────────────────────────────────────
+/** Tournament end: champion celebration or your final placement — the same
+ *  designed screen for live play and the playground simulator. */
+export function ChampionScreen({
+  champion,
+  finalRank,
+  score,
+  onExit,
+  children,
+}: {
+  champion: boolean;
+  finalRank: number | null;
+  score: number;
+  onExit: () => void;
+  /** Board strip slot — the caller owns the standings data shape. */
+  children?: React.ReactNode;
+}) {
+  const { t } = useLocale();
+  return (
+    <div className="mx-auto flex min-h-[70vh] w-full max-w-xl flex-col items-center justify-center px-4 text-center">
+      <motion.div
+        initial={{ scale: 0, rotate: -15 }}
+        animate={{ scale: 1, rotate: 0 }}
+        transition={{ type: 'spring', stiffness: 200, damping: 12 }}
+        className={`flex size-20 items-center justify-center rounded-full ${champion ? 'bg-brand-gold text-black' : 'bg-white/10 text-brand-gold'}`}
+      >
+        <span className="text-4xl">🏆</span>
+      </motion.div>
+      <div className="mt-4 font-poppins text-4xl font-black uppercase text-brand-gold" style={poppins}>
+        {champion ? t('weekendLeague.gChampionTitle') : t('weekendLeague.gFinalDoneTitle')}
+      </div>
+      {!champion && finalRank != null && (
+        <div className="mt-2 font-poppins text-xl font-black tabular-nums text-white" style={poppins}>
+          {t('weekendLeague.gYouFinished', { r: finalRank })}
+        </div>
+      )}
+      <div className="mt-2 font-poppins text-[13px] font-black uppercase tracking-wide text-white/55">
+        {t('weekendLeague.gTotalScore')} <span className="tabular-nums text-white">{score}</span>
+      </div>
+      {children}
+      <button
+        type="button"
+        onClick={onExit}
+        className="mx-auto mt-6 flex h-12 items-center justify-center rounded-2xl bg-white/10 px-8 font-poppins text-sm font-black uppercase text-white hover:bg-white/15"
+      >
+        {t('weekendLeague.gContinue')}
+      </button>
+    </div>
+  );
+}
+
 export function BreakScreen({
   games,
   game,
-  finalRank,
+  finalRank = null,
   score,
-  bestRound,
-  fast,
+  bestRound = null,
+  fast = false,
   onDone,
+  deadlineMs = null,
 }: {
   games: GameDef[];
   game: GameDef;
-  finalRank: number;
+  finalRank?: number | null;
   score: number;
-  bestRound: { round: number; points: number };
-  fast: boolean;
-  onDone: () => void;
+  bestRound?: { round: number; points: number } | null;
+  fast?: boolean;
+  /** Prototype driver: local countdown, auto-advance + skip. */
+  onDone?: () => void;
+  /** Live driver: count down to the server break deadline; server advances. */
+  deadlineMs?: number | null;
 }) {
   const { t } = useLocale();
   const total = fast ? 8 : BREAK_SECONDS;
-  const [left, setLeft] = useState(total);
+  const [left, setLeft] = useState(() =>
+    deadlineMs != null ? Math.max(0, Math.ceil((deadlineMs - Date.now()) / 1000)) : total,
+  );
 
   // Tick down only — advancing the parent from inside the updater would be a
-  // setState during render.
+  // setState during render. Server-paced breaks re-derive from the deadline.
   useEffect(() => {
-    const id = setInterval(() => setLeft((l) => Math.max(0, l - 1)), 1000);
+    const id = setInterval(() => {
+      if (deadlineMs != null) setLeft(Math.max(0, Math.ceil((deadlineMs - Date.now()) / 1000)));
+      else setLeft((l) => Math.max(0, l - 1));
+    }, 1000);
     return () => clearInterval(id);
-  }, []);
+  }, [deadlineMs]);
 
   useEffect(() => {
-    if (left > 0) return;
+    if (left > 0 || onDone == null || deadlineMs != null) return;
     onDone();
-  }, [left, onDone]);
+  }, [left, onDone, deadlineMs]);
 
   const next = games[game.index + 1];
   const mm = String(Math.floor(left / 60)).padStart(2, '0');
@@ -505,27 +568,36 @@ export function BreakScreen({
       <div className="font-poppins text-[12px] font-black uppercase tracking-widest text-white/45">
         {t('weekendLeague.gGameComplete', { n: game.index + 1 })}
       </div>
-      <div className="mt-1 font-poppins text-3xl font-black uppercase text-white" style={poppins}>
-        {t('weekendLeague.gYouFinished', { r: finalRank })}
-      </div>
+      {finalRank != null && (
+        <div className="mt-1 font-poppins text-3xl font-black uppercase text-white" style={poppins}>
+          {t('weekendLeague.gYouFinished', { r: finalRank })}
+        </div>
+      )}
       <div className="mx-auto mt-2 max-w-md font-poppins text-[15px] font-semibold leading-snug text-white/70">
-        {t('weekendLeague.gFinalScore', { score })} ·{' '}
-        {t('weekendLeague.gBestRound', {
-          label: t(ROUND_LABEL_KEYS[ROUNDS[bestRound.round].type]),
-          points: bestRound.points,
-        })}
+        {t('weekendLeague.gFinalScore', { score })}
+        {bestRound != null && (
+          <>
+            {' · '}
+            {t('weekendLeague.gBestRound', {
+              label: t(ROUND_LABEL_KEYS[ROUNDS[bestRound.round].type]),
+              points: bestRound.points,
+            })}
+          </>
+        )}
       </div>
 
       <div className="mt-5 w-full rounded-[24px] border-2 border-white/10 p-5">
-        <div className="mx-auto max-w-md font-poppins text-[15px] font-black uppercase leading-snug tracking-wide text-white/70">
-          {t('weekendLeague.gPlayersRemain', {
-            count: next.players,
-            advance: next.advance,
-            finalWord: t(next.index === games.length - 1 ? 'weekendLeague.gReachFinalWord' : 'weekendLeague.gAdvanceWord'),
-          })}
-        </div>
+        {next != null && next.players > 0 && (
+          <div className="mx-auto max-w-md font-poppins text-[15px] font-black uppercase leading-snug tracking-wide text-white/70">
+            {t('weekendLeague.gPlayersRemain', {
+              count: next.players,
+              advance: next.advance,
+              finalWord: t(next.index === games.length - 1 ? 'weekendLeague.gReachFinalWord' : 'weekendLeague.gAdvanceWord'),
+            })}
+          </div>
+        )}
         <div className="mt-4 font-poppins text-[13px] font-black uppercase tracking-widest text-white/55">
-          {t('weekendLeague.gGameStartsIn', { n: next.index + 1 })}
+          {t('weekendLeague.gGameStartsIn', { n: game.index + 2 })}
         </div>
         <div className="mt-1 font-poppins text-5xl font-black tabular-nums text-brand-yellow" style={poppins}>
           {mm}:{ss}
@@ -555,13 +627,15 @@ export function BreakScreen({
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={onDone}
-        className="mt-6 font-poppins text-[12px] font-bold uppercase tracking-widest text-white/40 hover:text-white"
-      >
-        {t('weekendLeague.gSkipBreak')}
-      </button>
+      {onDone != null && (
+        <button
+          type="button"
+          onClick={onDone}
+          className="mt-6 font-poppins text-[12px] font-bold uppercase tracking-widest text-white/40 hover:text-white"
+        >
+          {t('weekendLeague.gSkipBreak')}
+        </button>
+      )}
     </div>
   );
 }

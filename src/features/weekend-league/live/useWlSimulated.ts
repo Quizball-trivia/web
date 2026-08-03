@@ -1,0 +1,362 @@
+'use client';
+
+// Scripted driver for the REAL live-game UI (WlLiveFlowView): produces the
+// same WlLiveState the socket hook produces, but from a local state machine —
+// so /dev/wl can walk every live screen (questions of all five kinds, reveals,
+// standings, elimination, break, game intro, champion) with zero backend.
+//
+// One UI, two drivers: iterate on the components here, and the real weekend
+// league renders the same pixels.
+
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import type {
+  WlAnswerAck,
+  WlBoardRow,
+  WlDispatchEventPayload,
+  WlRevealEventPayload,
+} from '@/lib/realtime/socket.types';
+import type { WlLiveScreen, WlLiveState } from './useWlLive';
+
+export const SIM_SELF_ID = 'sim-you';
+
+const BOT_NAMES = [
+  'BOBBIGOL', 'Totti10', 'DAVE8', 'zaqoo', 'Irakli0407', 'Thenotorious',
+  'gio_beqa', 'LashaK', 'Nika77', 'guram22', 'datola', 'saba_fc',
+  'levan9', 'tazo10', 'anzori', 'beka_m', 'ilia21', 'sandro7',
+  'giorgi_b', 'luka99', 'oto_gel', 'vato_z', 'demna4', 'rezi_k',
+] as const;
+
+const FIELD = 137;
+const LADDER = [
+  { index: 0, players: FIELD, advance: 46 },
+  { index: 1, players: 46, advance: 24 },
+  { index: 2, players: 24, advance: 24 },
+] as const;
+
+// Compressed pacing so the walkthrough flows; Skip jumps ahead any time.
+const QUESTION_MS = 12_000;
+const LEAD_MS = 2_600; // long enough to see the game-intro / round overlay
+const REVEAL_MS = 4_500;
+const RESULT_MS = 7_000;
+const BREAK_MS = 14_000;
+
+type I18n = { en: string; ka: string };
+const i18n = (en: string, ka: string): I18n => ({ en, ka });
+
+interface SimQuestion {
+  kind: WlDispatchEventPayload['kind'];
+  question: Record<string, unknown>;
+  evaluation: Record<string, unknown>;
+  points: number;
+}
+
+const QUESTIONS: SimQuestion[] = [
+  {
+    kind: 'true_false',
+    question: { prompt: i18n('Zidane scored twice in the 1998 World Cup final.', 'ზიდანმა 1998 წლის მუნდიალის ფინალში ორი გოლი გაიტანა.') },
+    evaluation: { correct_id: 'true' },
+    points: 150,
+  },
+  {
+    kind: 'higher_lower',
+    question: {
+      stat_label: i18n('Career goals', 'კარიერული გოლები'),
+      left_name: i18n('Cristiano Ronaldo', 'კრიშტიანუ რონალდუ'),
+      right_name: i18n('Lionel Messi', 'ლიონელ მესი'),
+    },
+    evaluation: { left_value: 895, right_value: 851 },
+    points: 150,
+  },
+  {
+    kind: 'mcq',
+    question: {
+      prompt: i18n('Which club has won the most Champions League titles?', 'რომელ კლუბს აქვს ყველაზე მეტი ჩემპიონთა ლიგის ტიტული?'),
+      options: [
+        { id: 'a', text: i18n('Real Madrid', 'რეალ მადრიდი') },
+        { id: 'b', text: i18n('AC Milan', 'მილანი') },
+        { id: 'c', text: i18n('Bayern Munich', 'ბავარია') },
+        { id: 'd', text: i18n('Liverpool', 'ლივერპული') },
+      ],
+      image: null,
+    },
+    evaluation: { correct_id: 'a' },
+    points: 200,
+  },
+  {
+    kind: 'career_path',
+    question: {
+      clubs: [
+        i18n('Sporting CP', 'სპორტინგი'),
+        i18n('Man United', 'მან იუნაიტედი'),
+        i18n('Real Madrid', 'რეალ მადრიდი'),
+        i18n('Juventus', 'იუვენტუსი'),
+        i18n('Al-Nassr', 'ალ-ნასრი'),
+      ],
+    },
+    evaluation: {
+      display_answer: i18n('Cristiano Ronaldo', 'კრიშტიანუ რონალდუ'),
+      accepted_answers: ['ronaldo', 'cristiano ronaldo', 'cristiano', 'რონალდუ'],
+    },
+    points: 250,
+  },
+  {
+    kind: 'who_am_i',
+    question: {
+      clues: [
+        { content: i18n('I was born in Rosario in 1987.', 'დავიბადე როსარიოში 1987 წელს.') },
+        { content: i18n('I joined La Masia at age 13.', '13 წლის ასაკში ლა მასიაში გადავედი.') },
+        { content: i18n('I have won 8 Ballons d’Or.', 'მოგებული მაქვს 8 ოქროს ბურთი.') },
+        { content: i18n('I won the 2022 World Cup.', '2022 წლის მუნდიალი მოვიგე.') },
+        { content: i18n('I now play for Inter Miami.', 'ახლა ინტერ მაიამიში ვთამაშობ.') },
+      ],
+    },
+    evaluation: {
+      display_answer: i18n('Lionel Messi', 'ლიონელ მესი'),
+      accepted_answers: ['messi', 'lionel messi', 'leo messi', 'მესი'],
+    },
+    points: 300,
+  },
+];
+
+type SimStep =
+  | { kind: 'question'; game: number; round: number; ms: number }
+  | { kind: 'reveal'; game: number; round: number; ms: number }
+  | { kind: 'game_result'; game: number; ms: number }
+  | { kind: 'break'; game: number; ms: number }
+  | { kind: 'final'; ms: number };
+
+function buildScript(): SimStep[] {
+  const steps: SimStep[] = [];
+  for (let g = 0; g < 3; g += 1) {
+    for (let r = 0; r < QUESTIONS.length; r += 1) {
+      steps.push({ kind: 'question', game: g, round: r, ms: QUESTION_MS });
+      steps.push({ kind: 'reveal', game: g, round: r, ms: REVEAL_MS });
+    }
+    steps.push({ kind: 'game_result', game: g, ms: RESULT_MS });
+    if (g < 2) steps.push({ kind: 'break', game: g, ms: BREAK_MS });
+  }
+  steps.push({ kind: 'final', ms: Number.POSITIVE_INFINITY });
+  return steps;
+}
+
+function normalize(v: string): string {
+  return v.toLowerCase().trim().replace(/\s+/g, ' ');
+}
+
+function simBoard(game: number, round: number, myScore: number): WlBoardRow[] {
+  // Deterministic drifting bot scores: stable per (game, round), no Math.random
+  // so re-renders don't reshuffle the board.
+  const rows: WlBoardRow[] = BOT_NAMES.map((name, i) => ({
+    user_id: `sim-bot-${i}`,
+    nickname: name,
+    points: Math.max(0, Math.round((round + 1) * (170 - i * 6) + ((i * 37 + game * 91) % 60))),
+    time_ms_total: 30_000 + i * 1_800,
+    rank: 0,
+  }));
+  rows.push({ user_id: SIM_SELF_ID, nickname: 'You', points: myScore, time_ms_total: 28_000, rank: 0 });
+  rows.sort((a, b) => b.points - a.points || a.time_ms_total - b.time_ms_total);
+  return rows.slice(0, 24).map((r, i) => ({ ...r, rank: i + 1 }));
+}
+
+function dispatchFor(game: number, round: number, now: number): WlDispatchEventPayload {
+  const q = QUESTIONS[round];
+  return {
+    tournamentId: 'simulated',
+    seq: game * 100 + round,
+    serverNowAtEmit: now,
+    type: 'dispatch',
+    attempt_id: `sim-${game}-${round}`,
+    game_index: game,
+    round_index: round,
+    question_index: 0,
+    kind: q.kind,
+    question: q.question,
+    evaluation: {}, // scrubbed pre-reveal, exactly like the real dispatch
+    playableAt: now + LEAD_MS,
+    deadlineAt: now + LEAD_MS + QUESTION_MS,
+  };
+}
+
+function revealFor(game: number, round: number, now: number, board: WlBoardRow[]): WlRevealEventPayload {
+  const q = QUESTIONS[round];
+  const correctKey = typeof q.evaluation['correct_id'] === 'string'
+    ? (q.evaluation['correct_id'] as string)
+    : Number(q.evaluation['left_value']) > Number(q.evaluation['right_value']) ? 'left' : 'right';
+  return {
+    tournamentId: 'simulated',
+    seq: game * 100 + round + 50,
+    serverNowAtEmit: now,
+    type: 'reveal',
+    attempt_id: `sim-${game}-${round}`,
+    game_index: game,
+    round_index: round,
+    question_index: 0,
+    kind: q.kind,
+    evaluation: q.evaluation,
+    answered: LADDER[game].players,
+    distribution: { [correctKey]: Math.round(LADDER[game].players * 0.62) },
+    board,
+  };
+}
+
+export interface WlSimControls {
+  /** Jump to the next scripted step immediately. */
+  skip: () => void;
+  restart: () => void;
+  /** Break deadline while the break step runs (feeds the view prop). */
+  breakUntilMs: number | null;
+  stepLabel: string;
+}
+
+export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
+  const script = useMemo(() => buildScript(), []);
+  const [stepIndex, setStepIndex] = useState(0);
+  const [stepStartedAt, setStepStartedAt] = useState(() => Date.now());
+  const [score, setScore] = useState(0);
+  const [ack, setAck] = useState<WlAnswerAck | null>(null);
+  const [nonce, setNonce] = useState(0);
+  const ackRef = useRef<WlAnswerAck | null>(null);
+
+  const step = script[Math.min(stepIndex, script.length - 1)];
+
+  const advance = useCallback(() => {
+    setStepIndex((i) => {
+      const next = Math.min(i + 1, script.length - 1);
+      if (next !== i) {
+        setStepStartedAt(Date.now());
+        const to = script[next];
+        if (to.kind === 'question') {
+          ackRef.current = null;
+          setAck(null);
+        }
+        if (to.kind === 'question' && to.round === 0 && to.game > 0) setScore(0);
+      }
+      return next;
+    });
+  }, [script]);
+
+  const restart = useCallback(() => {
+    ackRef.current = null;
+    setAck(null);
+    setScore(0);
+    setStepIndex(0);
+    setStepStartedAt(Date.now());
+  }, []);
+
+  // Auto-pace: every step advances itself when its window elapses.
+  useEffect(() => {
+    if (!Number.isFinite(step.ms)) return;
+    const extra = step.kind === 'question' ? LEAD_MS + 800 : 0;
+    const id = setTimeout(advance, step.ms + extra);
+    return () => clearTimeout(id);
+  }, [step, stepIndex, advance]);
+
+  const submitAnswer = useCallback((answer: unknown) => {
+    if (ackRef.current != null) return;
+    const cur = script[stepIndex];
+    if (cur.kind !== 'question') return;
+    const q = QUESTIONS[cur.round];
+    let correct = false;
+    if (q.kind === 'true_false' || q.kind === 'mcq') {
+      correct = answer === q.evaluation['correct_id'];
+    } else if (q.kind === 'higher_lower') {
+      const expected = Number(q.evaluation['left_value']) > Number(q.evaluation['right_value']) ? 'left' : 'right';
+      correct = answer === expected;
+    } else {
+      const guess = typeof answer === 'string' ? answer : String((answer as { guess?: unknown })?.guess ?? '');
+      const accepted = (q.evaluation['accepted_answers'] as string[]) ?? [];
+      correct = guess.trim() !== '' && accepted.some((a) => normalize(a) === normalize(guess));
+    }
+    const result: WlAnswerAck = correct
+      ? { accepted: true, correct: true, points: q.points, elapsedMs: 2_000 }
+      : { accepted: true, correct: false, points: 0, elapsedMs: 2_000 };
+    // Small round-trip delay so the pending state is visible, like the wire.
+    setTimeout(() => {
+      ackRef.current = result;
+      setAck(result);
+      if (correct) setScore((s) => s + q.points);
+    }, 350);
+  }, [script, stepIndex]);
+
+  const serverNow = useCallback(() => Date.now(), []);
+
+  const board = useMemo(() => {
+    const g = 'game' in step ? step.game : 2;
+    const r = step.kind === 'question' || step.kind === 'reveal' ? step.round : QUESTIONS.length - 1;
+    return simBoard(g, r, score);
+  }, [step, score]);
+
+  const screen: WlLiveScreen = useMemo(() => {
+    switch (step.kind) {
+      case 'question':
+        return { kind: 'question', attempt: dispatchFor(step.game, step.round, stepStartedAt), answer: ack };
+      case 'reveal':
+        return {
+          kind: 'reveal',
+          attempt: dispatchFor(step.game, step.round, stepStartedAt - QUESTION_MS),
+          reveal: revealFor(step.game, step.round, stepStartedAt, board),
+          answer: ack,
+        };
+      case 'game_result':
+        return {
+          kind: 'game_result',
+          result: {
+            tournamentId: 'simulated',
+            seq: 900 + step.game,
+            serverNowAtEmit: stepStartedAt,
+            type: 'game_result',
+            game_index: step.game,
+            board,
+            field: LADDER[step.game].players,
+            advanced: LADDER[step.game].advance,
+          },
+          eliminated: false,
+        };
+      case 'break':
+        return { kind: 'waiting' };
+      case 'final':
+        return {
+          kind: 'final_result',
+          result: {
+            tournamentId: 'simulated',
+            seq: 999,
+            serverNowAtEmit: stepStartedAt,
+            type: 'final_result',
+            game_index: 2,
+            board,
+            champion_user_id: SIM_SELF_ID,
+            final_played: true,
+          },
+          champion: true,
+        };
+    }
+  }, [step, stepStartedAt, ack, board]);
+
+  const live: WlLiveState = useMemo(() => ({
+    connected: true,
+    subscribed: true,
+    denied: null,
+    screen,
+    board,
+    score,
+    gameIndex: 'game' in step ? step.game : 2,
+    serverNow,
+    submitAnswer,
+    lastAck: ack,
+    retryNonce: nonce,
+  }), [screen, board, score, step, serverNow, submitAnswer, ack, nonce]);
+  void setNonce;
+
+  const sim: WlSimControls = useMemo(() => ({
+    skip: advance,
+    restart,
+    breakUntilMs: step.kind === 'break' ? stepStartedAt + BREAK_MS : null,
+    stepLabel: step.kind === 'question' || step.kind === 'reveal'
+      ? `G${step.game + 1} R${step.round + 1} ${step.kind}`
+      : step.kind === 'game_result' ? `G${step.game + 1} result`
+      : step.kind === 'break' ? `break after G${step.game + 1}`
+      : 'champion',
+  }), [step, stepStartedAt, advance, restart]);
+
+  return { live, sim };
+}
