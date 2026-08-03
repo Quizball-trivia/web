@@ -63,6 +63,8 @@ export function WlLiveFlow({
   onCheckin,
   onExit,
   onSpectate,
+  kickoffMs,
+  registered,
 }: {
   tournamentId: string;
   role: 'player' | 'spectator';
@@ -75,6 +77,9 @@ export function WlLiveFlow({
   onExit: () => void;
   /** Eliminated players continue as spectators through here. */
   onSpectate?: () => void;
+  /** Saturday kickoff (qualifier start) — drives the waiting countdown. */
+  kickoffMs?: number | null;
+  registered?: number;
 }) {
   const { t, locale } = useLocale();
   const live = useWlLive(tournamentId, role);
@@ -107,9 +112,12 @@ export function WlLiveFlow({
           {checkedIn ? t('weekendLeague.gWaitingKickoff') : t('weekendLeague.gCheckinBody')}
         </p>
         {checkedIn ? (
-          <div className="mx-auto mt-5 flex size-14 items-center justify-center rounded-full bg-brand-green text-white">
-            <Check className="size-8" strokeWidth={3} />
-          </div>
+          <>
+            <div className="mx-auto mt-5 flex size-14 items-center justify-center rounded-full bg-brand-green text-white">
+              <Check className="size-8" strokeWidth={3} />
+            </div>
+            <KickoffCountdown kickoffMs={kickoffMs ?? null} registered={registered ?? 0} />
+          </>
         ) : (
           <motion.button
             type="button"
@@ -299,17 +307,7 @@ function ScreenBody({
       const { result, eliminated } = screen;
       if (role === 'spectator') {
         return (
-          <div className="rounded-[24px] border-2 border-white/10 bg-surface-card-deep p-6 text-center">
-            <div className="font-poppins text-3xl font-black uppercase text-brand-green-light" style={poppins}>
-              {t('weekendLeague.gGameComplete', { n: result.game_index + 1 })}
-            </div>
-            {result.advanced != null && (
-              <p className="mt-2 font-poppins text-[13px] font-semibold text-white/60">
-                {t('weekendLeague.gAdvanceCount', { n: result.advanced })}
-              </p>
-            )}
-            <BoardStrip board={board} selfUserId={selfUserId} rows={8} />
-          </div>
+          <SpectatorGameResult result={result} board={board} selfUserId={selfUserId} />
         );
       }
       return (
@@ -326,17 +324,33 @@ function ScreenBody({
 
     case 'final_result': {
       const { champion } = screen;
+      const finalRankRow = yourRank;
       return (
-        <div className="rounded-[24px] border-2 border-brand-gold/40 bg-brand-gold/10 p-6 text-center">
-          <div className="text-4xl">🏆</div>
-          <div className="mt-2 font-poppins text-3xl font-black uppercase text-brand-gold" style={poppins}>
+        <div className="mx-auto flex min-h-[70vh] w-full max-w-xl flex-col items-center justify-center px-4 text-center">
+          <motion.div
+            initial={{ scale: 0, rotate: -15 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 12 }}
+            className={`flex size-20 items-center justify-center rounded-full ${champion ? 'bg-brand-gold text-black' : 'bg-white/10 text-brand-gold'}`}
+          >
+            <span className="text-4xl">🏆</span>
+          </motion.div>
+          <div className="mt-4 font-poppins text-4xl font-black uppercase text-brand-gold" style={poppins}>
             {champion ? t('weekendLeague.gChampionTitle') : t('weekendLeague.gFinalDoneTitle')}
+          </div>
+          {!champion && finalRankRow != null && (
+            <div className="mt-2 font-poppins text-xl font-black tabular-nums text-white" style={poppins}>
+              {t('weekendLeague.gYouFinished', { r: finalRankRow })}
+            </div>
+          )}
+          <div className="mt-2 font-poppins text-[13px] font-black uppercase tracking-wide text-white/55">
+            {t('weekendLeague.gTotalScore')} <span className="tabular-nums text-white">{score}</span>
           </div>
           <BoardStrip board={board} selfUserId={selfUserId} rows={10} />
           <button
             type="button"
             onClick={onExit}
-            className="mx-auto mt-5 flex h-11 items-center justify-center rounded-xl bg-white/10 px-6 font-poppins text-sm font-black uppercase text-white hover:bg-white/15"
+            className="mx-auto mt-6 flex h-12 items-center justify-center rounded-2xl bg-white/10 px-8 font-poppins text-sm font-black uppercase text-white hover:bg-white/15"
           >
             {t('weekendLeague.gContinue')}
           </button>
@@ -352,6 +366,83 @@ function ScreenBody({
         </div>
       );
   }
+}
+
+/** Spectators get the same elimination theatre, then the board — the cut
+ *  is public information, only the personal verdict is player-only. */
+function SpectatorGameResult({
+  result, board, selfUserId,
+}: {
+  result: { game_index: number; field?: number; advanced?: number | null };
+  board: WlBoardRow[];
+  selfUserId: string | null;
+}) {
+  const { t } = useLocale();
+  const [phase, setPhase] = useState<'cut' | 'board'>('cut');
+  const game = {
+    index: result.game_index,
+    players: Number(result.field ?? 0) || 0,
+    advance: Number(result.advanced ?? 0) || 0,
+  };
+  if (phase === 'cut' && game.players > 0 && game.advance > 0) {
+    return <EliminationReveal game={game} isLastGame={result.game_index >= 2} onDone={() => setPhase('board')} />;
+  }
+  return (
+    <div className="rounded-[24px] border-2 border-white/10 bg-surface-card-deep p-6 text-center">
+      <div className="font-poppins text-3xl font-black uppercase text-brand-green-light" style={poppins}>
+        {t('weekendLeague.gGameComplete', { n: result.game_index + 1 })}
+      </div>
+      {result.advanced != null && (
+        <p className="mt-2 font-poppins text-[13px] font-semibold text-white/60">
+          {t('weekendLeague.gAdvanceCount', { n: result.advanced })}
+        </p>
+      )}
+      <BoardStrip board={board} selfUserId={selfUserId} rows={8} />
+    </div>
+  );
+}
+
+/** Kickoff countdown for the designed waiting screen — same tabular clock
+ *  language as the league card, fed by the live qualifier timestamp. */
+function KickoffCountdown({ kickoffMs, registered }: { kickoffMs: number | null; registered: number }) {
+  const { t } = useLocale();
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNowMs(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  if (kickoffMs == null || kickoffMs <= nowMs) return null;
+  const total = Math.max(0, Math.floor((kickoffMs - nowMs) / 1000));
+  const d = Math.floor(total / 86_400);
+  const h = Math.floor((total % 86_400) / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const sec = total % 60;
+  const cells: Array<[string, string]> = [
+    [String(d).padStart(2, '0'), t('weekendLeague.days')],
+    [String(h).padStart(2, '0'), t('weekendLeague.hrs')],
+    [String(m).padStart(2, '0'), t('weekendLeague.min')],
+    [String(sec).padStart(2, '0'), t('weekendLeague.sec')],
+  ];
+  return (
+    <div className="mt-6">
+      <div className="flex items-center justify-center gap-3">
+        {cells.map(([value, unit], i) => (
+          <div key={unit} className="flex items-start gap-3">
+            {i > 0 && <span className="pt-1 font-poppins text-2xl font-black text-white/30">:</span>}
+            <div className="text-center">
+              <div className="font-poppins text-3xl font-black tabular-nums text-white" style={poppins}>{value}</div>
+              <div className="mt-0.5 font-poppins text-[10px] font-bold uppercase tracking-wide text-white/45">{unit}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+      {registered > 0 && (
+        <div className="mt-4 font-poppins text-[12px] font-semibold text-white/50">
+          {t('weekendLeague.playersEntered', { count: registered })}
+        </div>
+      )}
+    </div>
+  );
 }
 
 /** Designed end-of-game sequence: the elimination count-down reveal, then
