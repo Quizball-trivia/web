@@ -109,11 +109,15 @@ export function WlLiveFlow({
   const splashedFor = useRef<string | null>(null);
   const liveScreen = live.screen;
   useEffect(() => {
-    if (liveScreen.kind !== 'question') return;
-    const ack = liveScreen.answer as { accepted: boolean; correct?: boolean } | null;
+    const attemptId =
+      liveScreen.kind === 'question' ? liveScreen.attempt.attempt_id
+      : liveScreen.kind === 'reveal' ? liveScreen.reveal.attempt_id
+      : null;
+    if (attemptId == null) return;
+    const ack = (liveScreen as { answer?: unknown }).answer as { accepted: boolean; correct?: boolean } | null;
     if (ack?.accepted !== true || typeof ack.correct !== 'boolean') return;
-    if (splashedFor.current === liveScreen.attempt.attempt_id) return;
-    splashedFor.current = liveScreen.attempt.attempt_id;
+    if (splashedFor.current === attemptId) return;
+    splashedFor.current = attemptId;
     fireSplash(ack.correct ? 'correct' : 'wrong', 'left');
   }, [liveScreen, fireSplash]);
 
@@ -795,7 +799,9 @@ function HigherLowerQuestion({
 }) {
   const { t } = useLocale();
   const { chosen, choose } = useChoice(locked, onAnswer, retryNonce);
-  const revealed = feedback != null;
+  // Values (and hence the correct side) only render once the OWN answer is
+  // resolved — an unresolved duplicate ack must not leak them.
+  const revealed = feedback?.accepted === true && typeof feedback.correct === 'boolean';
   const left = Number(evaluation['left_value']);
   const right = Number(evaluation['right_value']);
   const correctSide = Number.isFinite(left) && Number.isFinite(right) ? (left > right ? 'left' : 'right') : null;
