@@ -15,7 +15,7 @@ import {
 } from './gauntlet.data';
 import type { GameDef, RoundDef, RoundQuestion, RoundResult } from './gauntlet.types';
 
-const card = 'rounded-[24px] border-2 border-white/10 bg-surface-card-deep';
+const card = 'rounded-[24px] border border-white/10 bg-white/5 backdrop-blur-sm';
 
 function Cta({
   children,
@@ -85,12 +85,16 @@ export function GauntletLobby({
         <div className="font-poppins text-[13px] font-black uppercase tracking-wide text-white">
           {t('weekendLeague.gFormatDynamic', { finalists: games[2].advance })}
         </div>
+        {/* Cut wording is field-size independent (÷3, ÷2, top-N final — see
+            backend wl-rules ladder): real fields vary, so no absolute counts. */}
         <div className="mt-3 grid grid-cols-3 gap-2">
           {games.map((g) => (
             <div key={g.index} className="rounded-xl bg-black/30 px-2 py-2.5">
               <div className="font-poppins text-[10px] font-black uppercase text-white/50">{t('weekendLeague.gGameN', { n: g.index + 1 })}</div>
-              <div className="mt-0.5 font-poppins text-sm font-black tabular-nums text-white" style={poppins}>
-                {g.players} → {g.advance}
+              <div className="mt-0.5 font-poppins text-[13px] font-black text-white" style={poppins}>
+                {g.index === 0 && t('weekendLeague.gCutGame1')}
+                {g.index === 1 && t('weekendLeague.gCutGame2')}
+                {g.index === 2 && t('weekendLeague.gCutGame3', { n: g.advance })}
               </div>
             </div>
           ))}
