@@ -1749,7 +1749,7 @@
     "gLobbyKicker": "Saturday Qualifier",
     "gFormat": "3 games · 5 rounds each · top 25 reach the final",
     "gGameN": "Game {n}",
-    "gPlayersCount": "{count} players",
+    "gPlayersCount": "{count} players registered",
     "gCutGame1": "Top ⅓ advance",
     "gCutGame2": "Top ½ advance",
     "gCutGame3": "Top {n} reach the final",
