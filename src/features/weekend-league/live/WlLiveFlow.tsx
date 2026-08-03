@@ -20,7 +20,9 @@ import { poppins } from '../constants';
 import { LiveBadge } from '../components/LiveBadge';
 // ONE visual source with /dev/wl-gauntlet: the live flow renders the same
 // designed chrome the prototype uses — change it there, it changes here.
-import { AnswerBtn, QuestionCard, type AnswerState } from '../gauntlet/RoundChrome';
+import { AnswerBtn, GauntletHeader, QuestionCard, RoundIntroOverlay, type AnswerState } from '../gauntlet/RoundChrome';
+import { AnswerReveal, EliminationReveal, GameResult } from '../gauntlet/GauntletScreens';
+import { ROUNDS } from '../gauntlet/gauntlet.data';
 import { ResultSplash } from '@/features/daily/components/ResultSplash';
 import { useResultSplash } from '@/features/daily/components/useResultSplash';
 import { useWlLive, type WlLiveScreen } from './useWlLive';
@@ -147,6 +149,7 @@ export function WlLiveFlow({
             retryNonce={live.retryNonce}
             board={live.board}
             selfUserId={selfUserId}
+            score={live.score}
             onExit={onExit}
           />
         </motion.div>
@@ -215,7 +218,7 @@ function TopBar({
 }
 
 function ScreenBody({
-  screen, role, locale, serverNow, submitAnswer, retryNonce, board, selfUserId, onExit,
+  screen, role, locale, serverNow, submitAnswer, retryNonce, board, selfUserId, score, onExit,
 }: {
   screen: WlLiveScreen;
   role: 'player' | 'spectator';
@@ -225,9 +228,11 @@ function ScreenBody({
   retryNonce: number;
   board: WlBoardRow[];
   selfUserId: string | null;
+  score: number;
   onExit: () => void;
 }) {
   const { t } = useLocale();
+  const yourRank = selfUserId ? board.find((r) => r.user_id === selfUserId)?.rank ?? null : null;
 
   switch (screen.kind) {
     case 'waiting':
@@ -245,6 +250,9 @@ function ScreenBody({
       return (
         <QuestionScreen
           attempt={screen.attempt}
+          score={score}
+          rank={yourRank}
+          onExit={onExit}
           answered={screen.answer}
           locale={locale}
           serverNow={serverNow}
@@ -254,46 +262,59 @@ function ScreenBody({
         />
       );
 
-    case 'reveal':
+    case 'reveal': {
+      if (role === 'spectator' || screen.answer == null || !screen.answer.accepted) {
+        return (
+          <RevealScreen
+            reveal={screen.reveal}
+            answer={screen.answer}
+            locale={locale}
+            board={board}
+            selfUserId={selfUserId}
+            spectator={role === 'spectator'}
+          />
+        );
+      }
+      const ack = screen.answer as { accepted: boolean; correct?: boolean; points?: number };
       return (
-        <RevealScreen
-          reveal={screen.reveal}
-          answer={screen.answer}
-          locale={locale}
-          board={board}
-          selfUserId={selfUserId}
-          spectator={role === 'spectator'}
+        <AnswerReveal
+          question={null}
+          result={{ correct: ack.correct === true, points: ack.points ?? 0, timeFrac: 0 }}
+          score={score}
+          gameIndex={screen.reveal.game_index}
+          round={ROUNDS[screen.reveal.round_index] ?? ROUNDS[0]}
+          onContinue={() => {}}
+          answerTextOverride={revealAnswerText(screen.reveal, locale) || null}
+          correctPct={revealCorrectPct(screen.reveal)}
         />
       );
+    }
 
     case 'game_result': {
       const { result, eliminated } = screen;
-      return (
-        <div className="rounded-[24px] border-2 border-white/10 bg-surface-card-deep p-6 text-center">
-          <div
-            className={`font-poppins text-3xl font-black uppercase ${eliminated ? 'text-brand-red-soft' : 'text-brand-green-light'}`}
-            style={poppins}
-          >
-            {role === 'spectator'
-              ? t('weekendLeague.gGameComplete', { n: result.game_index + 1 })
-              : eliminated ? t('weekendLeague.gEliminatedTitle') : t('weekendLeague.gThroughTitle')}
+      if (role === 'spectator') {
+        return (
+          <div className="rounded-[24px] border-2 border-white/10 bg-surface-card-deep p-6 text-center">
+            <div className="font-poppins text-3xl font-black uppercase text-brand-green-light" style={poppins}>
+              {t('weekendLeague.gGameComplete', { n: result.game_index + 1 })}
+            </div>
+            {result.advanced != null && (
+              <p className="mt-2 font-poppins text-[13px] font-semibold text-white/60">
+                {t('weekendLeague.gAdvanceCount', { n: result.advanced })}
+              </p>
+            )}
+            <BoardStrip board={board} selfUserId={selfUserId} rows={8} />
           </div>
-          {result.advanced != null && (
-            <p className="mt-2 font-poppins text-[13px] font-semibold text-white/60">
-              {t('weekendLeague.gAdvanceCount', { n: result.advanced })}
-            </p>
-          )}
-          <BoardStrip board={board} selfUserId={selfUserId} rows={8} />
-          {eliminated && (
-            <button
-              type="button"
-              onClick={onExit}
-              className="mx-auto mt-5 flex h-11 items-center justify-center rounded-xl bg-white/10 px-6 font-poppins text-sm font-black uppercase text-white hover:bg-white/15"
-            >
-              {t('weekendLeague.gContinue')}
-            </button>
-          )}
-        </div>
+        );
+      }
+      return (
+        <LiveGameResult
+          result={result}
+          eliminated={eliminated}
+          yourRank={yourRank}
+          score={score}
+          onExit={onExit}
+        />
       );
     }
 
@@ -327,10 +348,80 @@ function ScreenBody({
   }
 }
 
+/** Designed end-of-game sequence: the elimination count-down reveal, then
+ *  the survived/eliminated result — the same components /dev/wl-gauntlet
+ *  renders, fed by the live game_result payload. */
+function LiveGameResult({
+  result, eliminated, yourRank, score, onExit,
+}: {
+  result: { game_index: number; field?: number; advanced?: number | null };
+  eliminated: boolean;
+  yourRank: number | null;
+  score: number;
+  onExit: () => void;
+}) {
+  const [phase, setPhase] = useState<'cut' | 'result'>('cut');
+  const game = {
+    index: result.game_index,
+    players: Number(result.field ?? 0) || 0,
+    advance: Number(result.advanced ?? 0) || 0,
+  };
+  const isLastGame = result.game_index >= 2;
+  if (phase === 'cut') {
+    return <EliminationReveal game={game} isLastGame={isLastGame} onDone={() => setPhase('result')} />;
+  }
+  return (
+    <GameResult
+      game={game}
+      isLastGame={isLastGame}
+      survived={!eliminated}
+      finalRank={yourRank}
+      score={score}
+      onContinue={() => {}}
+      onKeepWatching={() => {}}
+      onExit={onExit}
+    />
+  );
+}
+
+/** Server-provided correct answer as display text, per kind. */
+function revealAnswerText(reveal: WlRevealEventPayload, locale: Locale): string {
+  const evaluation = reveal.evaluation ?? {};
+  const display = pick(evaluation['display_answer'], locale);
+  if (display) return display;
+  const accepted = evaluation['accepted_answers'];
+  if (Array.isArray(accepted) && typeof accepted[0] === 'string') return accepted[0];
+  if (typeof evaluation['correct_id'] === 'string') return String(evaluation['correct_id']);
+  const left = Number(evaluation['left_value']);
+  const right = Number(evaluation['right_value']);
+  if (Number.isFinite(left) && Number.isFinite(right)) return left > right ? String(left) : String(right);
+  return '';
+}
+
+/** Real percent-correct from the reveal distribution; null when the answer
+ *  space is free-text and keys cannot be matched reliably. */
+function revealCorrectPct(reveal: WlRevealEventPayload): number | null {
+  const evaluation = reveal.evaluation ?? {};
+  const distribution = (reveal as { distribution?: Record<string, number> }).distribution ?? null;
+  const answered = Number(reveal.answered ?? 0);
+  if (!distribution || answered <= 0) return null;
+  let correctKey: string | null = null;
+  if (typeof evaluation['correct_id'] === 'string') {
+    correctKey = evaluation['correct_id'];
+  } else {
+    const left = Number(evaluation['left_value']);
+    const right = Number(evaluation['right_value']);
+    if (Number.isFinite(left) && Number.isFinite(right)) correctKey = left > right ? 'left' : 'right';
+  }
+  if (correctKey == null) return null;
+  const correct = Number(distribution[correctKey] ?? 0);
+  return Math.round((100 * correct) / answered);
+}
+
 // ── Question rendering per kind ─────────────────────────────────────────────
 
 function QuestionScreen({
-  attempt, answered, locale, serverNow, submitAnswer, retryNonce, spectator,
+  attempt, answered, locale, serverNow, submitAnswer, retryNonce, spectator, score, rank, onExit,
 }: {
   attempt: WlDispatchEventPayload;
   answered: { accepted: boolean } | null;
@@ -339,6 +430,9 @@ function QuestionScreen({
   submitAnswer: (answer: unknown) => void;
   retryNonce: number;
   spectator: boolean;
+  score: number;
+  rank: number | null;
+  onExit: () => void;
 }) {
   const { t } = useLocale();
   const secondsLeft = useServerCountdown(attempt.deadlineAt, serverNow);
@@ -358,21 +452,21 @@ function QuestionScreen({
     fire(verdict.correct ? 'correct' : 'wrong', 'left');
   }
 
+  const round = ROUNDS[attempt.round_index] ?? ROUNDS[0];
   return (
-    <div className="rounded-[24px] border-2 border-white/10 bg-surface-card-deep p-5">
-      <div className="mb-4 flex items-center justify-between font-poppins text-[12px] font-bold uppercase tracking-wide text-white/50">
-        <span>
-          {t('weekendLeague.gRoundOf', { g: attempt.game_index + 1, r: attempt.round_index + 1 })}
-        </span>
-        <span
-          className={`tabular-nums text-lg font-black ${
-            !ready ? 'text-white/50' : secondsLeft <= 3 ? 'text-brand-red-soft' : 'text-brand-yellow'
-          }`}
-          style={poppins}
-        >
-          {!ready ? '…' : `${secondsLeft}s`}
-        </span>
-      </div>
+    <div>
+      <GauntletHeader
+        gameIndex={attempt.game_index}
+        round={{ ...round, index: attempt.round_index }}
+        score={score}
+        rank={rank ?? 0}
+        secondsLeft={ready ? secondsLeft : 0}
+        spectator={spectator}
+        step={`${attempt.question_index + 1}/5`}
+        onQuit={onExit}
+      />
+      {!ready && <RoundIntroOverlay round={{ ...round, index: attempt.round_index }} onDone={() => {}} />}
+      <div className="mt-3 rounded-[24px] border-2 border-white/10 bg-surface-card-deep p-5">
 
       {attempt.kind === 'true_false' && (
         <TrueFalseQuestion prompt={pick(q['prompt'], locale)} locked={locked} onAnswer={submitAnswer} feedback={answered} evaluation={attempt.evaluation} retryNonce={retryNonce} />
@@ -401,6 +495,7 @@ function QuestionScreen({
       {answered != null && (
         <AnswerFeedback ack={answered as never} />
       )}
+      </div>
       <ResultSplash {...splashProps} />
     </div>
   );

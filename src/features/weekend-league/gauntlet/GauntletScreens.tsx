@@ -184,20 +184,28 @@ export function AnswerReveal({
   gameIndex,
   round,
   onContinue,
+  answerTextOverride,
+  correctPct,
 }: {
-  question: RoundQuestion;
+  question: RoundQuestion | null;
   result: RoundResult;
   score: number;
   gameIndex: number;
   round: RoundDef;
   onContinue: () => void;
+  /** Live flow: the server-provided correct answer (prototype derives it). */
+  answerTextOverride?: string | null;
+  /** Live flow: real % correct from the reveal distribution; null hides the line. */
+  correctPct?: number | null;
 }) {
   const { t } = useLocale();
-  const answerText = useCorrectAnswerText(question);
-  const dist = useMemo(
+  const derivedText = useCorrectAnswerText(question ?? ({ type: 'trueFalse', items: [] } as RoundQuestion));
+  const answerText = answerTextOverride !== undefined ? answerTextOverride : derivedText;
+  const mockDist = useMemo(
     () => answerDistribution(gameIndex, round.index, 4, 0),
     [gameIndex, round.index],
   );
+  const dist = { correctPct: correctPct !== undefined ? correctPct : mockDist.correctPct };
 
   useEffect(() => {
     const id = setTimeout(onContinue, 3000);
@@ -234,7 +242,7 @@ export function AnswerReveal({
       )}
 
       <div className="mt-4 space-y-1 font-poppins text-[13px] font-semibold text-white/55">
-        <div>{t('weekendLeague.gAnsweredCorrectly', { pct: dist.correctPct })}</div>
+        {dist.correctPct != null && <div>{t('weekendLeague.gAnsweredCorrectly', { pct: dist.correctPct })}</div>}
         <div>
           {t('weekendLeague.gTotalScore')} <span className="tabular-nums text-white">{score}</span>
         </div>
@@ -341,9 +349,11 @@ export function GameResult({
   game: GameDef;
   isLastGame: boolean;
   survived: boolean;
-  finalRank: number;
+  /** null = beyond the visible board (live shows a 24+ style placeholder). */
+  finalRank: number | null;
   score: number;
-  bestRound: { round: number; points: number };
+  /** Prototype-only stat; the live flow omits it. */
+  bestRound?: { round: number; points: number };
   onContinue: () => void;
   onKeepWatching: () => void;
   onExit: () => void;
@@ -363,9 +373,11 @@ export function GameResult({
         <div className="mt-4 font-poppins text-4xl font-black uppercase text-brand-gold" style={poppins}>
           {t('weekendLeague.gInFinal')}
         </div>
-        <div className="mt-2 font-poppins text-xl font-black tabular-nums text-white" style={poppins}>
-          {t('weekendLeague.gOfCount', { r: finalRank, n: game.players })}
-        </div>
+        {finalRank != null && (
+          <div className="mt-2 font-poppins text-xl font-black tabular-nums text-white" style={poppins}>
+            {t('weekendLeague.gOfCount', { r: finalRank, n: game.players })}
+          </div>
+        )}
         <div className="mt-4 space-y-1 font-poppins text-[13px] font-black uppercase tracking-wide text-white/60">
           <div>{t('weekendLeague.gSunday')}</div>
           <div>{t('weekendLeague.gFinalists', { n: game.advance })}</div>
@@ -395,9 +407,11 @@ export function GameResult({
         <div className="mt-4 font-poppins text-4xl font-black uppercase text-brand-green-light" style={poppins}>
           {t('weekendLeague.gSurvived')}
         </div>
-        <div className="mt-2 font-poppins text-xl font-black tabular-nums text-white" style={poppins}>
-          {t('weekendLeague.gOfCount', { r: finalRank, n: game.players })}
-        </div>
+        {finalRank != null && (
+          <div className="mt-2 font-poppins text-xl font-black tabular-nums text-white" style={poppins}>
+            {t('weekendLeague.gOfCount', { r: finalRank, n: game.players })}
+          </div>
+        )}
         <div className="mt-3 font-poppins text-[13px] font-black uppercase tracking-wide text-white/55">
           {t('weekendLeague.gSurvivedNext', { advance: game.advance, next: game.index + 2 })}
         </div>
@@ -416,13 +430,15 @@ export function GameResult({
       <div className="font-poppins text-4xl font-black uppercase text-white" style={poppins}>
         {isLastGame ? t('weekendLeague.gSoClose') : t('weekendLeague.gEliminated')}
       </div>
-      <div className="mt-2 font-poppins text-xl font-black tabular-nums text-white/85" style={poppins}>
-        {t('weekendLeague.gYouFinished', { r: finalRank })}
-      </div>
+      {finalRank != null && (
+        <div className="mt-2 font-poppins text-xl font-black tabular-nums text-white/85" style={poppins}>
+          {t('weekendLeague.gYouFinished', { r: finalRank })}
+        </div>
+      )}
       <div className="mt-2 font-poppins text-[13px] font-black uppercase tracking-wide text-white/55">{missedBy}</div>
       <div className="mt-4 space-y-1 font-poppins text-[13px] font-semibold text-white/55">
         <div className="tabular-nums">{t('weekendLeague.gFinalScore', { score })}</div>
-        <div>{t('weekendLeague.gBestRound', { label: t(ROUND_LABEL_KEYS[ROUNDS[bestRound.round].type]), points: bestRound.points })}</div>
+        {bestRound && <div>{t('weekendLeague.gBestRound', { label: t(ROUND_LABEL_KEYS[ROUNDS[bestRound.round].type]), points: bestRound.points })}</div>}
       </div>
       <div className="mt-7 w-full space-y-2.5">
         <Cta onClick={onKeepWatching}>
