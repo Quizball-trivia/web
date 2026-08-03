@@ -95,6 +95,9 @@ export interface WeekendLeagueLiveExtras {
   tournamentId: string | null;
   /** Raw backend tournament status (finer-grained than the screen phase). */
   status: string | null;
+  /** Authoritative qualifier kickoff (ms) from the live row; null when the
+      row carries no real timestamp — never the synthetic calendar fallback. */
+  kickoffMs: number | null;
   /** Role-appropriate check-in state for the current window. */
   checkedIn: boolean;
   checkinLeague: () => void;
