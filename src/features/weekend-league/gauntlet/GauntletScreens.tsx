@@ -597,7 +597,9 @@ export function BreakScreen({
           </div>
         )}
         <div className="mt-4 font-poppins text-[13px] font-black uppercase tracking-widest text-white/55">
-          {t('weekendLeague.gGameStartsIn', { n: game.index + 2 })}
+          {game.index + 1 < games.length
+            ? t('weekendLeague.gGameStartsIn', { n: game.index + 2 })
+            : t('weekendLeague.gFinalWord')}
         </div>
         <div className="mt-1 font-poppins text-5xl font-black tabular-nums text-brand-yellow" style={poppins}>
           {mm}:{ss}

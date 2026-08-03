@@ -13,7 +13,7 @@ import { WlLiveFlowView } from './WlLiveFlow';
 import { SIM_SELF_ID, useWlSimulated } from './useWlSimulated';
 
 const CHECKIN_WINDOW_MS = 25_000;
-const SIM_FIELD = 137;
+const SIM_FIELD = 600;
 
 export function WlLiveSimFlow({ onExit }: { onExit: () => void }) {
   const { live, sim } = useWlSimulated();
@@ -43,8 +43,9 @@ export function WlLiveSimFlow({ onExit }: { onExit: () => void }) {
         onSpectate={onExit}
         kickoffMs={kickoffMs}
         registered={SIM_FIELD}
-        checkedInCount={Math.min(SIM_FIELD, 98 + (checkedIn ? 1 : 0))}
+        checkedInCount={Math.min(SIM_FIELD, 512 + (checkedIn ? 1 : 0))}
         breakUntilMs={sim.breakUntilMs}
+        currentGameIndex={live.gameIndex}
       />
 
       {/* Sim controls — float above the real UI, never part of it. */}

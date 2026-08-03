@@ -35,7 +35,6 @@ import {
   type RoundHeaderModel,
 } from '../gauntlet/RoundViews';
 import { AnswerReveal, BreakScreen, ChampionScreen, EliminationReveal, GameIntro, GameResult } from '../gauntlet/GauntletScreens';
-import { buildGames } from '../gauntlet/gauntlet.data';
 import { ROUNDS } from '../gauntlet/gauntlet.data';
 import { ResultSplash } from '@/features/daily/components/ResultSplash';
 import { useResultSplash } from '@/features/daily/components/useResultSplash';
@@ -86,6 +85,8 @@ export interface WlLiveFlowUiProps {
   checkedInCount?: number;
   /** Server break deadline (epoch ms) — drives the designed break screen. */
   breakUntilMs?: number | null;
+  /** 0-based game currently running / next to run (public payload). */
+  currentGameIndex?: number;
 }
 
 export function WlLiveFlow({ tournamentId, ...ui }: WlLiveFlowUiProps & { tournamentId: string }) {
@@ -110,6 +111,7 @@ export function WlLiveFlowView({
   registered,
   checkedInCount,
   breakUntilMs,
+  currentGameIndex,
 }: WlLiveFlowUiProps & { live: WlLiveState; selfUserId: string | null }) {
   const { t, locale } = useLocale();
 
@@ -208,7 +210,8 @@ export function WlLiveFlowView({
             rank={yourRow?.rank ?? null}
             breakUntilMs={breakUntilMs ?? null}
             lastResult={lastResult}
-            registered={registered ?? 0}
+            checkedInCount={checkedInCount ?? 0}
+            currentGameIndex={currentGameIndex ?? live.gameIndex}
             onExit={onExit}
             onSpectate={onSpectate ?? onExit}
           />
@@ -243,6 +246,28 @@ function ConnectionDot({ connected }: { connected: boolean }) {
   );
 }
 
+/** The real backend qualifier ladder (wl-rules): /3 after game 1, /2 after
+ *  game 2, cut to 24 for the final — never an invented count. */
+function nextAdvanceByRules(gameIdx: number, players: number): number {
+  if (players <= 0) return 0;
+  if (gameIdx === 0) return Math.round(players / 3);
+  if (gameIdx === 1) return Math.round(players / 2);
+  return Math.min(24, players);
+}
+
+/** Games array for the break screen's progress strip + next-game lookup,
+ *  built ONLY from authoritative counts (zeros hide the count copy). */
+function ladderStrip(finished: { game_index: number; field?: number; advanced?: number | null } | null): { index: number; players: number; advance: number }[] {
+  const g = finished?.game_index ?? -1;
+  const field = Number(finished?.field ?? 0) || 0;
+  const advanced = Number(finished?.advanced ?? 0) || 0;
+  return [0, 1, 2].map((i) => {
+    if (i === g) return { index: i, players: field, advance: advanced };
+    if (i === g + 1 && advanced > 0) return { index: i, players: advanced, advance: nextAdvanceByRules(i, advanced) };
+    return { index: i, players: 0, advance: 0 };
+  });
+}
+
 function screenKey(screen: WlLiveScreen): string {
   switch (screen.kind) {
     case 'question': return `q-${screen.attempt.attempt_id}`;
@@ -274,7 +299,7 @@ function Shell({ children, onExit }: { children: React.ReactNode; onExit: () => 
 
 
 function ScreenBody({
-  screen, role, locale, serverNow, submitAnswer, retryNonce, board, selfUserId, score, rank, breakUntilMs, lastResult, registered, onExit, onSpectate,
+  screen, role, locale, serverNow, submitAnswer, retryNonce, board, selfUserId, score, rank, breakUntilMs, lastResult, checkedInCount, currentGameIndex, onExit, onSpectate,
 }: {
   screen: WlLiveScreen;
   role: 'player' | 'spectator';
@@ -288,7 +313,8 @@ function ScreenBody({
   rank: number | null;
   breakUntilMs: number | null;
   lastResult: { game_index: number; field?: number; advanced?: number | null } | null;
-  registered: number;
+  checkedInCount: number;
+  currentGameIndex: number;
   onExit: () => void;
   onSpectate: () => void;
 }) {
@@ -298,23 +324,26 @@ function ScreenBody({
   switch (screen.kind) {
     case 'waiting': {
       // Between games with a known deadline: the SAME designed break screen
-      // the prototype shows, counting down the server's break window.
+      // the prototype shows, counting down the server's break window. Counts
+      // come only from the authoritative game_result; joining mid-break still
+      // gets the countdown + progress strip (count copy hides on zeros).
       // The server nulls past deadlines on every poll, and the next dispatch
       // replaces this screen — an expired deadline only ever shows briefly.
-      if (breakUntilMs != null && lastResult != null) {
-        const field = Number(lastResult.field ?? 0) || 0;
-        const advanced = Number(lastResult.advanced ?? 0) || 0;
-        if (field > 0 && advanced > 0) {
-          return (
-            <BreakScreen
-              games={buildGames(Math.max(field, registered, 26))}
-              game={{ index: lastResult.game_index, players: field, advance: advanced }}
-              finalRank={rank}
-              score={score}
-              deadlineMs={breakUntilMs}
-            />
-          );
-        }
+      if (breakUntilMs != null) {
+        const finishedIndex = lastResult?.game_index ?? Math.max(0, currentGameIndex - 1);
+        return (
+          <BreakScreen
+            games={ladderStrip(lastResult)}
+            game={{
+              index: finishedIndex,
+              players: Number(lastResult?.field ?? 0) || 0,
+              advance: Number(lastResult?.advanced ?? 0) || 0,
+            }}
+            finalRank={lastResult != null ? rank : null}
+            score={score}
+            deadlineMs={breakUntilMs}
+          />
+        );
       }
       return (
         <div className="mx-auto w-full max-w-2xl px-4 py-10">
@@ -339,11 +368,15 @@ function ScreenBody({
     case 'question': {
       const attempt = screen.attempt;
       const introCounts = (() => {
-        if (attempt.game_index === 0) return registered > 0 ? { players: registered, advance: 0 } : null;
+        if (attempt.game_index === 0) {
+          // The game-1 field is everyone checked in (humans + bots).
+          return checkedInCount > 0
+            ? { players: checkedInCount, advance: nextAdvanceByRules(0, checkedInCount) }
+            : null;
+        }
         if (lastResult != null && lastResult.game_index === attempt.game_index - 1) {
           const advanced = Number(lastResult.advanced ?? 0) || 0;
-          const games = buildGames(Math.max(Number(lastResult.field ?? 0) || 0, registered, 26));
-          return { players: advanced, advance: games[attempt.game_index]?.advance ?? 0 };
+          return { players: advanced, advance: nextAdvanceByRules(attempt.game_index, advanced) };
         }
         return null;
       })();
@@ -405,6 +438,7 @@ function ScreenBody({
           eliminated={eliminated}
           yourRank={yourRank}
           score={score}
+          breakUntilMs={breakUntilMs}
           onExit={onExit}
           onSpectate={onSpectate}
         />
@@ -472,16 +506,17 @@ function SpectatorGameResult({
  *  the survived/eliminated result — the same components /dev/wl-gauntlet
  *  renders, fed by the live game_result payload. */
 function LiveGameResult({
-  result, eliminated, yourRank, score, onExit, onSpectate,
+  result, eliminated, yourRank, score, breakUntilMs, onExit, onSpectate,
 }: {
   result: { game_index: number; field?: number; advanced?: number | null };
   eliminated: boolean;
   yourRank: number | null;
   score: number;
+  breakUntilMs: number | null;
   onExit: () => void;
   onSpectate: () => void;
 }) {
-  const [phase, setPhase] = useState<'cut' | 'result'>('cut');
+  const [phase, setPhase] = useState<'cut' | 'result' | 'break'>('cut');
   const game = {
     index: result.game_index,
     players: Number(result.field ?? 0) || 0,
@@ -491,8 +526,28 @@ function LiveGameResult({
   // Stub/walkover results carry no counts: skip the count-down theatre and
   // hide the rank line rather than animating "0 players".
   const countsKnown = game.players > 0 && game.advance > 0;
+  // Survivors flow into the designed break screen once the server break is
+  // on (the engine keeps game_result until the next dispatch): auto after a
+  // beat, or via Continue.
+  const canBreak = !eliminated && breakUntilMs != null && !isLastGame;
+  useEffect(() => {
+    if (phase !== 'result' || !canBreak) return;
+    const id = setTimeout(() => setPhase('break'), 8_000);
+    return () => clearTimeout(id);
+  }, [phase, canBreak]);
   if (phase === 'cut' && countsKnown) {
     return <EliminationReveal game={game} isLastGame={isLastGame} onDone={() => setPhase('result')} />;
+  }
+  if (phase === 'break' && canBreak) {
+    return (
+      <BreakScreen
+        games={ladderStrip(result)}
+        game={game}
+        finalRank={yourRank}
+        score={score}
+        deadlineMs={breakUntilMs}
+      />
+    );
   }
   return (
     <GameResult
@@ -501,10 +556,9 @@ function LiveGameResult({
       survived={!eliminated}
       finalRank={countsKnown ? yourRank : null}
       score={score}
-      // Survivors stay players: the screen auto-advances when the next game
-      // dispatches, so Continue only acknowledges. Keep Watching (eliminated
-      // branch) is the role switch.
-      onContinue={() => {}}
+      // Survivors continue into the break countdown; the next game's dispatch
+      // replaces the screen either way. Keep Watching is the role switch.
+      onContinue={() => { if (canBreak) setPhase('break'); }}
       onKeepWatching={onSpectate}
       onExit={onExit}
     />

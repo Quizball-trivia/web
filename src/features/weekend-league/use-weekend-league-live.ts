@@ -104,6 +104,8 @@ export interface WeekendLeagueLiveExtras {
   checkedInCount: number;
   /** Server break deadline (epoch ms) between games; null outside breaks. */
   breakUntilMs: number | null;
+  /** 0-based game currently running / next to run (public payload). */
+  currentGameIndex: number;
   checkinLeague: () => void;
   checkinPending: boolean;
   /** Running QP balance (server truth, resets when a ticket is claimed). */
@@ -240,6 +242,7 @@ export function useWeekendLeagueLive(): WeekendLeagueLiveController {
     registered: tournament?.registered_count ?? 0,
     checkedInCount: tournament?.checked_in_count ?? 0,
     breakUntilMs: tournament?.break_until_ms ?? null,
+    currentGameIndex: tournament?.current_game_index ?? 0,
     session: null,
     playedOutcome: null,
     playoffOutcome: null,

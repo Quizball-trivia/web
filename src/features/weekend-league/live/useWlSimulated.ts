@@ -26,11 +26,12 @@ const BOT_NAMES = [
   'giorgi_b', 'luka99', 'oto_gel', 'vato_z', 'demna4', 'rezi_k',
 ] as const;
 
-const FIELD = 137;
+// The product ladder (wl-rules: /3, /2, cut to 24) from a 600 field.
+const FIELD = 600;
 const LADDER = [
-  { index: 0, players: FIELD, advance: 46 },
-  { index: 1, players: 46, advance: 24 },
-  { index: 2, players: 24, advance: 24 },
+  { index: 0, players: FIELD, advance: 200 },
+  { index: 1, players: 200, advance: 100 },
+  { index: 2, players: 100, advance: 24 },
 ] as const;
 
 // Compressed pacing so the walkthrough flows; Skip jumps ahead any time.
@@ -205,43 +206,54 @@ export interface WlSimControls {
   restart: () => void;
   /** Break deadline while the break step runs (feeds the view prop). */
   breakUntilMs: number | null;
+  /** The finished game's counts while the break runs. */
+  lastResult: { game_index: number; field: number; advanced: number } | null;
   stepLabel: string;
 }
 
 export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
   const script = useMemo(() => buildScript(), []);
-  const [stepIndex, setStepIndex] = useState(0);
-  const [stepStartedAt, setStepStartedAt] = useState(() => Date.now());
-  const [score, setScore] = useState(0);
-  const [ack, setAck] = useState<WlAnswerAck | null>(null);
-  const [nonce, setNonce] = useState(0);
-  const ackRef = useRef<WlAnswerAck | null>(null);
+  // One state object with pure functional transitions — StrictMode-safe.
+  const [st, setSt] = useState(() => ({
+    stepIndex: 0,
+    startedAt: Date.now(),
+    score: 0,
+    ack: null as WlAnswerAck | null,
+  }));
+  // Generation guard: bumps on every step change/restart so a delayed ack
+  // timeout from an earlier question can never land on a later state.
+  const genRef = useRef(0);
+  const pendingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const step = script[Math.min(stepIndex, script.length - 1)];
+  const step = script[Math.min(st.stepIndex, script.length - 1)];
+
+  const clearPending = useCallback(() => {
+    genRef.current += 1;
+    if (pendingRef.current != null) clearTimeout(pendingRef.current);
+    pendingRef.current = null;
+  }, []);
+  useEffect(() => () => clearPending(), [clearPending]);
 
   const advance = useCallback(() => {
-    setStepIndex((i) => {
-      const next = Math.min(i + 1, script.length - 1);
-      if (next !== i) {
-        setStepStartedAt(Date.now());
-        const to = script[next];
-        if (to.kind === 'question') {
-          ackRef.current = null;
-          setAck(null);
-        }
-        if (to.kind === 'question' && to.round === 0 && to.game > 0) setScore(0);
-      }
-      return next;
+    clearPending();
+    const now = Date.now();
+    setSt((cur) => {
+      const next = Math.min(cur.stepIndex + 1, script.length - 1);
+      if (next === cur.stepIndex) return cur;
+      const to = script[next];
+      return {
+        stepIndex: next,
+        startedAt: now,
+        ack: to.kind === 'question' ? null : cur.ack,
+        score: to.kind === 'question' && to.round === 0 && to.game > 0 ? 0 : cur.score,
+      };
     });
-  }, [script]);
+  }, [script, clearPending]);
 
   const restart = useCallback(() => {
-    ackRef.current = null;
-    setAck(null);
-    setScore(0);
-    setStepIndex(0);
-    setStepStartedAt(Date.now());
-  }, []);
+    clearPending();
+    setSt({ stepIndex: 0, startedAt: Date.now(), score: 0, ack: null });
+  }, [clearPending]);
 
   // Auto-pace: every step advances itself when its window elapses.
   useEffect(() => {
@@ -249,12 +261,12 @@ export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
     const extra = step.kind === 'question' ? LEAD_MS + 800 : 0;
     const id = setTimeout(advance, step.ms + extra);
     return () => clearTimeout(id);
-  }, [step, stepIndex, advance]);
+  }, [step, st.stepIndex, advance]);
 
   const submitAnswer = useCallback((answer: unknown) => {
-    if (ackRef.current != null) return;
-    const cur = script[stepIndex];
-    if (cur.kind !== 'question') return;
+    if (pendingRef.current != null) return;
+    const cur = script[st.stepIndex];
+    if (cur.kind !== 'question' || st.ack != null) return;
     const q = QUESTIONS[cur.round];
     let correct = false;
     if (q.kind === 'true_false' || q.kind === 'mcq') {
@@ -270,32 +282,38 @@ export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
     const result: WlAnswerAck = correct
       ? { accepted: true, correct: true, points: q.points, elapsedMs: 2_000 }
       : { accepted: true, correct: false, points: 0, elapsedMs: 2_000 };
-    // Small round-trip delay so the pending state is visible, like the wire.
-    setTimeout(() => {
-      ackRef.current = result;
-      setAck(result);
-      if (correct) setScore((s) => s + q.points);
+    // Small round-trip delay so the pending state is visible, like the wire —
+    // generation-checked so Skip/Restart discard it.
+    const gen = genRef.current;
+    pendingRef.current = setTimeout(() => {
+      pendingRef.current = null;
+      if (gen !== genRef.current) return;
+      setSt((prev) => ({
+        ...prev,
+        ack: prev.ack ?? result,
+        score: prev.ack == null && correct ? prev.score + q.points : prev.score,
+      }));
     }, 350);
-  }, [script, stepIndex]);
+  }, [script, st.stepIndex, st.ack]);
 
   const serverNow = useCallback(() => Date.now(), []);
 
   const board = useMemo(() => {
     const g = 'game' in step ? step.game : 2;
     const r = step.kind === 'question' || step.kind === 'reveal' ? step.round : QUESTIONS.length - 1;
-    return simBoard(g, r, score);
-  }, [step, score]);
+    return simBoard(g, r, st.score);
+  }, [step, st.score]);
 
   const screen: WlLiveScreen = useMemo(() => {
     switch (step.kind) {
       case 'question':
-        return { kind: 'question', attempt: dispatchFor(step.game, step.round, stepStartedAt), answer: ack };
+        return { kind: 'question', attempt: dispatchFor(step.game, step.round, st.startedAt), answer: st.ack };
       case 'reveal':
         return {
           kind: 'reveal',
-          attempt: dispatchFor(step.game, step.round, stepStartedAt - QUESTION_MS),
-          reveal: revealFor(step.game, step.round, stepStartedAt, board),
-          answer: ack,
+          attempt: dispatchFor(step.game, step.round, st.startedAt - QUESTION_MS),
+          reveal: revealFor(step.game, step.round, st.startedAt, board),
+          answer: st.ack,
         };
       case 'game_result':
         return {
@@ -303,7 +321,7 @@ export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
           result: {
             tournamentId: 'simulated',
             seq: 900 + step.game,
-            serverNowAtEmit: stepStartedAt,
+            serverNowAtEmit: st.startedAt,
             type: 'game_result',
             game_index: step.game,
             board,
@@ -320,7 +338,7 @@ export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
           result: {
             tournamentId: 'simulated',
             seq: 999,
-            serverNowAtEmit: stepStartedAt,
+            serverNowAtEmit: st.startedAt,
             type: 'final_result',
             game_index: 2,
             board,
@@ -330,7 +348,7 @@ export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
           champion: true,
         };
     }
-  }, [step, stepStartedAt, ack, board]);
+  }, [step, st.startedAt, st.ack, board]);
 
   const live: WlLiveState = useMemo(() => ({
     connected: true,
@@ -338,25 +356,31 @@ export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
     denied: null,
     screen,
     board,
-    score,
+    score: st.score,
     gameIndex: 'game' in step ? step.game : 2,
     serverNow,
     submitAnswer,
-    lastAck: ack,
-    retryNonce: nonce,
-  }), [screen, board, score, step, serverNow, submitAnswer, ack, nonce]);
-  void setNonce;
+    lastAck: st.ack,
+    retryNonce: 0,
+  }), [screen, board, st.score, st.ack, step, serverNow, submitAnswer]);
 
   const sim: WlSimControls = useMemo(() => ({
     skip: advance,
     restart,
-    breakUntilMs: step.kind === 'break' ? stepStartedAt + BREAK_MS : null,
+    breakUntilMs: step.kind === 'break' ? st.startedAt + BREAK_MS : null,
+    lastResult: step.kind === 'break'
+      ? {
+          game_index: step.game,
+          field: LADDER[step.game].players,
+          advanced: LADDER[step.game].advance,
+        }
+      : null,
     stepLabel: step.kind === 'question' || step.kind === 'reveal'
       ? `G${step.game + 1} R${step.round + 1} ${step.kind}`
       : step.kind === 'game_result' ? `G${step.game + 1} result`
       : step.kind === 'break' ? `break after G${step.game + 1}`
       : 'champion',
-  }), [step, stepStartedAt, advance, restart]);
+  }), [step, st.startedAt, advance, restart]);
 
   return { live, sim };
 }
