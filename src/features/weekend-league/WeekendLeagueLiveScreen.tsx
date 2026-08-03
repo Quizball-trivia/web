@@ -54,6 +54,7 @@ export function WeekendLeagueLiveScreen() {
         onSpectate={() => setMode('spectator')}
         kickoffMs={live.kickoffMs}
         registered={live.registered}
+        checkedInCount={live.checkedInCount}
       />
     );
   }
