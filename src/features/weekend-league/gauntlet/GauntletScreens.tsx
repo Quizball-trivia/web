@@ -91,7 +91,7 @@ export function GauntletLobby({
             backend wl-rules ladder): real fields vary, so no absolute counts. */}
         <div className="mt-3 grid grid-cols-3 gap-2">
           {games.map((g) => (
-            <div key={g.index} className="rounded-xl bg-black/30 px-2 py-2.5">
+            <div key={g.index} className="rounded-xl bg-white/5 px-2 py-2.5">
               <div className="font-poppins text-[10px] font-black uppercase text-white/50">{t('weekendLeague.gGameN', { n: g.index + 1 })}</div>
               <div className="mt-0.5 font-poppins text-[13px] font-black text-white" style={poppins}>
                 {g.index === 0 && t('weekendLeague.gCutGame1')}

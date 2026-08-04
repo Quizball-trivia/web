@@ -52,11 +52,12 @@ export function LeagueCountdown({
 
   const segs = segments(remaining ?? 0);
   const numClass = size === 'sm' ? 'text-2xl' : 'text-4xl sm:text-5xl';
+  // Digits sit straight on the surface — no boxes or borders around segments.
   const boxClass = plain
     ? 'min-w-[2.5rem]'
     : size === 'sm'
-      ? 'min-w-[3rem] px-2 py-1.5 rounded-2xl border-2 border-white/10 bg-surface-card-deep'
-      : 'min-w-[4.25rem] px-3 py-2.5 rounded-2xl border-2 border-white/10 bg-surface-card-deep';
+      ? 'min-w-[3rem] px-1 py-1'
+      : 'min-w-[4.25rem] px-1.5 py-1.5';
 
   return (
     <div className="flex items-stretch gap-2" role="timer" aria-live="off">
