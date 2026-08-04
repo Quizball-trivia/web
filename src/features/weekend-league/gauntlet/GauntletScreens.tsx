@@ -109,7 +109,7 @@ export function GauntletLobby({
 
       {kickoffMs != null && (
         <div className="mt-5">
-          <div className="mb-2 font-poppins text-[11px] font-black uppercase tracking-widest text-white/45">
+          <div className="mb-2 font-poppins text-[13px] font-black uppercase tracking-widest text-white">
             {t('weekendLeague.gGameStartsIn', { n: 1 })}
           </div>
           <LeagueCountdown targetMs={kickoffMs} size="sm" accent="text-brand-yellow" />
@@ -597,7 +597,7 @@ export function BreakScreen({
             })}
           </div>
         )}
-        <div className="mt-4 font-poppins text-[13px] font-black uppercase tracking-widest text-white/55">
+        <div className="mt-4 font-poppins text-[13px] font-black uppercase tracking-widest text-white">
           {game.index + 1 < games.length
             ? t('weekendLeague.gGameStartsIn', { n: game.index + 2 })
             : t('weekendLeague.gFinalWord')}
