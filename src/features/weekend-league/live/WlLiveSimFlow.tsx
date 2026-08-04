@@ -17,14 +17,15 @@ import { SIM_SELF_ID, useWlSimulated, type SimJumpTarget } from './useWlSimulate
 
 /** Every designed screen, addressable from the sim bar. */
 const SCREENS: { label: string; go: SimJumpTarget | 'lobby' | 'checkin' }[] = [
+  // 'lobby' is reachable via Restart; the picker starts at check-in.
   { label: 'lobby', go: 'lobby' },
   { label: 'check-in', go: 'checkin' },
   { label: 'intro', go: { kind: 'question', round: 0 } },
-  { label: 'T/F', go: { kind: 'question', round: 0 } },
-  { label: 'hi/lo', go: { kind: 'question', round: 1 } },
-  { label: 'MCQ', go: { kind: 'question', round: 2 } },
-  { label: 'career', go: { kind: 'question', round: 3 } },
-  { label: 'who am i', go: { kind: 'question', round: 4 } },
+  { label: 'T/F', go: { kind: 'question', round: 0, skipIntro: true } },
+  { label: 'hi/lo', go: { kind: 'question', round: 1, skipIntro: true } },
+  { label: 'MCQ', go: { kind: 'question', round: 2, skipIntro: true } },
+  { label: 'career', go: { kind: 'question', round: 3, skipIntro: true } },
+  { label: 'who am i', go: { kind: 'question', round: 4, skipIntro: true } },
   { label: 'reveal', go: { kind: 'reveal', round: 2 } },
   { label: 'result', go: { kind: 'game_result' } },
   { label: 'break', go: { kind: 'break' } },
@@ -104,11 +105,13 @@ export function WlLiveSimFlow({ onExit }: { onExit: () => void }) {
         {/* Screen picker: jump straight to any designed screen. */}
         {SCREENS.map((sc) => {
           // The lobby returns early, so only check-in / playing reach here.
+          // intro vs T/F share a step — the lead phase tells them apart.
           const active = phase === 'checkin'
             ? sc.go === 'checkin'
             : typeof sc.go === 'object' && sim.current != null
               && sc.go.kind === sim.current.kind
-              && (!('round' in sc.go) || !('round' in sim.current) || sc.go.round === sim.current.round);
+              && (!('round' in sc.go) || !('round' in sim.current) || sc.go.round === sim.current.round)
+              && (sc.go.kind !== 'question' || (sc.go.skipIntro ?? false) !== sim.inLead);
           return (
             <button
               key={sc.label}

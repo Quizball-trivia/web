@@ -121,7 +121,7 @@ const QUESTIONS: SimQuestion[] = [
 
 /** Addressable screens for the playground picker. */
 export type SimJumpTarget =
-  | { kind: 'question'; round: number }
+  | { kind: 'question'; round: number; skipIntro?: boolean }
   | { kind: 'reveal'; round: number }
   | { kind: 'game_result' }
   | { kind: 'break' }
@@ -216,6 +216,8 @@ export interface WlSimControls {
   jumpTo: (target: SimJumpTarget) => void;
   /** Which screen is showing (drives the picker's active chip). */
   current: SimJumpTarget | null;
+  /** True while a question is still in its dispatch lead (intro overlay up). */
+  inLead: boolean;
   /** Break deadline while the break step runs (feeds the view prop). */
   breakUntilMs: number | null;
   /** The finished game's counts while the break runs. */
@@ -231,6 +233,8 @@ export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
     startedAt: Date.now(),
     score: 0,
     ack: null as WlAnswerAck | null,
+    /** Entered with the dispatch lead skipped (picker jumped past the intro). */
+    leadSkipped: false,
   }));
   // Generation guard: bumps on every step change/restart so a delayed ack
   // timeout from an earlier question can never land on a later state.
@@ -256,6 +260,7 @@ export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
       return {
         stepIndex: next,
         startedAt: now,
+        leadSkipped: false,
         ack: to.kind === 'question' ? null : cur.ack,
         score: to.kind === 'question' && to.round === 0 && to.game > 0 ? 0 : cur.score,
       };
@@ -264,7 +269,7 @@ export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
 
   const restart = useCallback(() => {
     clearPending();
-    setSt({ stepIndex: 0, startedAt: Date.now(), score: 0, ack: null });
+    setSt({ stepIndex: 0, startedAt: Date.now(), score: 0, ack: null, leadSkipped: false });
   }, [clearPending]);
 
   // Auto-pace: every step advances itself when its window elapses. The
@@ -278,7 +283,9 @@ export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
       if (gen === genRef.current) advance();
     }, step.ms + extra);
     return () => clearTimeout(id);
-  }, [step, st.stepIndex, advance]);
+    // startedAt is a dep so a jump to the CURRENT step reschedules the timer
+    // (its old generation is dead) instead of freezing auto-advance.
+  }, [step, st.stepIndex, st.startedAt, advance]);
 
   const submitAnswer = useCallback((answer: unknown) => {
     if (pendingRef.current != null) return;
@@ -391,7 +398,11 @@ export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
     });
     if (idx < 0) return;
     clearPending();
-    setSt((cur) => ({ ...cur, stepIndex: idx, startedAt: Date.now(), ack: null }));
+    // skipIntro backdates the start so playableAt has already passed — the
+    // question opens live instead of behind the game-intro/round overlay.
+    const skipped = target.kind === 'question' && target.skipIntro === true;
+    const startedAt = skipped ? Date.now() - LEAD_MS - 200 : Date.now();
+    setSt((cur) => ({ ...cur, stepIndex: idx, startedAt, ack: null, leadSkipped: skipped }));
   }, [script, clearPending]);
 
   const current: SimJumpTarget | null = useMemo(() => {
@@ -407,6 +418,7 @@ export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
     restart,
     jumpTo,
     current,
+    inLead: step.kind === 'question' && !st.leadSkipped,
     breakUntilMs: step.kind === 'break' ? st.startedAt + BREAK_MS : null,
     lastResult: step.kind === 'break'
       ? {
@@ -420,7 +432,7 @@ export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
       : step.kind === 'game_result' ? `G${step.game + 1} result`
       : step.kind === 'break' ? `break after G${step.game + 1}`
       : 'champion',
-  }), [step, st.startedAt, advance, restart, jumpTo, current]);
+  }), [step, st.startedAt, st.leadSkipped, advance, restart, jumpTo, current]);
 
   return { live, sim };
 }
