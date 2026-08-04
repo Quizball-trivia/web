@@ -25,12 +25,18 @@ export function WlLiveSimFlow({ onExit }: { onExit: () => void }) {
   const [kickoffMs, setKickoffMs] = useState(() => Date.now() + CHECKIN_WINDOW_MS);
 
   // Kickoff when the simulated check-in window closes (checked in or not —
-  // the sim always lets you watch the games).
+  // the sim always lets you watch the games). The scripted driver ticks from
+  // mount, so RESTART it at kickoff — gameplay must open on game 1 question 1,
+  // not wherever the script drifted while the lobby/check-in was showing.
+  const { restart } = sim;
   useEffect(() => {
     if (phase !== 'checkin') return;
-    const id = setTimeout(() => setPhase('playing'), Math.max(0, kickoffMs - Date.now()));
+    const id = setTimeout(() => {
+      restart();
+      setPhase('playing');
+    }, Math.max(0, kickoffMs - Date.now()));
     return () => clearTimeout(id);
-  }, [phase, kickoffMs]);
+  }, [phase, kickoffMs, restart]);
 
   if (phase === 'lobby') {
     return (
@@ -84,7 +90,11 @@ export function WlLiveSimFlow({ onExit }: { onExit: () => void }) {
         </span>
         <button
           type="button"
-          onClick={() => (phase === 'checkin' ? setPhase('playing') : sim.skip())}
+          onClick={() => {
+            if (phase === 'playing') { sim.skip(); return; }
+            sim.restart();
+            setPhase('playing');
+          }}
           className="flex items-center gap-1 rounded-lg bg-white/10 px-2.5 py-1.5 font-poppins text-[11px] font-black uppercase text-white hover:bg-white/20"
         >
           <FastForward className="size-3.5" /> Skip
