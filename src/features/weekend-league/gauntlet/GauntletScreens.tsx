@@ -15,7 +15,8 @@ import {
 } from './gauntlet.data';
 import type { GameDef, RoundDef, RoundQuestion, RoundResult } from './gauntlet.types';
 
-const card = 'rounded-[24px] border border-white/10 bg-white/5 backdrop-blur-sm';
+// Fully transparent lobby card — content sits directly on the backdrop.
+const card = 'rounded-[24px]';
 
 function Cta({
   children,
