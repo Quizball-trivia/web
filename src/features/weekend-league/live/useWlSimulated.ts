@@ -255,11 +255,16 @@ export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
     setSt({ stepIndex: 0, startedAt: Date.now(), score: 0, ack: null });
   }, [clearPending]);
 
-  // Auto-pace: every step advances itself when its window elapses.
+  // Auto-pace: every step advances itself when its window elapses. The
+  // callback is generation-checked — a restart/skip between the timer firing
+  // and this effect's cleanup must not advance the freshly reset state.
   useEffect(() => {
     if (!Number.isFinite(step.ms)) return;
     const extra = step.kind === 'question' ? LEAD_MS + 800 : 0;
-    const id = setTimeout(advance, step.ms + extra);
+    const gen = genRef.current;
+    const id = setTimeout(() => {
+      if (gen === genRef.current) advance();
+    }, step.ms + extra);
     return () => clearTimeout(id);
   }, [step, st.stepIndex, advance]);
 
