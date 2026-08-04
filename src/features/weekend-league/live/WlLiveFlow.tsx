@@ -660,7 +660,7 @@ function QuestionScreen({
       {!ready && attempt.round_index === 0 && attempt.question_index === 0 ? (
         // First question of a game: the GAME N intro theatre instead of the
         // round overlay — counts from the previous game's result when known.
-        <div className="fixed inset-0 z-40 bg-surface-page-alt/95">
+        <div className="fixed inset-0 z-40 bg-surface-page-alt">
           <GameIntro
             game={{
               index: attempt.game_index,

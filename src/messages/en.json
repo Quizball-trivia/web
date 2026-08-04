@@ -1808,6 +1808,8 @@
     "gViewContinue": "Continue",
     "gPlayersRemain": "{count} players remain · top {advance} {finalWord}",
     "gAdvanceWord": "advance",
+    "gFieldLabel": "Field",
+    "gRoundsLabel": "Rounds",
     "gReachFinalWord": "reach the final",
     "gNextLabel": "Next",
     "gLocked": "Locked",

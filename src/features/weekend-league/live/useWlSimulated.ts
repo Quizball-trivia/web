@@ -119,6 +119,14 @@ const QUESTIONS: SimQuestion[] = [
   },
 ];
 
+/** Addressable screens for the playground picker. */
+export type SimJumpTarget =
+  | { kind: 'question'; round: number }
+  | { kind: 'reveal'; round: number }
+  | { kind: 'game_result' }
+  | { kind: 'break' }
+  | { kind: 'final' };
+
 type SimStep =
   | { kind: 'question'; game: number; round: number; ms: number }
   | { kind: 'reveal'; game: number; round: number; ms: number }
@@ -204,6 +212,10 @@ export interface WlSimControls {
   /** Jump to the next scripted step immediately. */
   skip: () => void;
   restart: () => void;
+  /** Jump straight to a screen — the playground's screen picker. */
+  jumpTo: (target: SimJumpTarget) => void;
+  /** Which screen is showing (drives the picker's active chip). */
+  current: SimJumpTarget | null;
   /** Break deadline while the break step runs (feeds the view prop). */
   breakUntilMs: number | null;
   /** The finished game's counts while the break runs. */
@@ -369,9 +381,32 @@ export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
     retryNonce: 0,
   }), [screen, board, st.score, st.ack, step, serverNow, submitAnswer]);
 
+  const jumpTo = useCallback((target: SimJumpTarget) => {
+    const idx = script.findIndex((sp) => {
+      if (sp.kind !== target.kind) return false;
+      if (target.kind === 'question' || target.kind === 'reveal') {
+        return 'round' in sp && sp.round === target.round && sp.game === 0;
+      }
+      return true;
+    });
+    if (idx < 0) return;
+    clearPending();
+    setSt((cur) => ({ ...cur, stepIndex: idx, startedAt: Date.now(), ack: null }));
+  }, [script, clearPending]);
+
+  const current: SimJumpTarget | null = useMemo(() => {
+    if (step.kind === 'question' || step.kind === 'reveal') return { kind: step.kind, round: step.round };
+    if (step.kind === 'game_result') return { kind: 'game_result' };
+    if (step.kind === 'break') return { kind: 'break' };
+    if (step.kind === 'final') return { kind: 'final' };
+    return null;
+  }, [step]);
+
   const sim: WlSimControls = useMemo(() => ({
     skip: advance,
     restart,
+    jumpTo,
+    current,
     breakUntilMs: step.kind === 'break' ? st.startedAt + BREAK_MS : null,
     lastResult: step.kind === 'break'
       ? {
@@ -385,7 +420,7 @@ export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
       : step.kind === 'game_result' ? `G${step.game + 1} result`
       : step.kind === 'break' ? `break after G${step.game + 1}`
       : 'champion',
-  }), [step, st.startedAt, advance, restart]);
+  }), [step, st.startedAt, advance, restart, jumpTo, current]);
 
   return { live, sim };
 }

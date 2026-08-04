@@ -150,39 +150,66 @@ export function GameIntro({
   return (
     <div className="flex min-h-[80vh] flex-col items-center justify-center px-4 text-center">
       <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
+        initial={{ opacity: 0, scale: 0.86, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 200, damping: 18 }}
+        // Solid card: the intro sits over the live question screen, so it needs
+        // its own surface to stay readable.
+        className="w-full max-w-sm overflow-hidden rounded-[28px] border-2 border-white/10 bg-surface-card-deep shadow-[0_18px_60px_rgba(0,0,0,0.55)]"
       >
-        <div className="font-poppins text-6xl font-black uppercase italic text-white" style={poppins}>
-          {t('weekendLeague.gGameN', { n: game.index + 1 })}
+        <div className="bg-brand-green/12 px-6 pb-5 pt-6">
+          <div className="font-poppins text-[11px] font-black uppercase tracking-[0.3em] text-brand-green-light">
+            {t('weekendLeague.gLobbyKicker')}
+          </div>
+          <div className="mt-1 font-poppins text-5xl font-black uppercase italic leading-none text-white" style={poppins}>
+            {t('weekendLeague.gGameN', { n: game.index + 1 })}
+          </div>
         </div>
+
         <motion.div
-          initial={{ opacity: 0, y: 14 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35 }}
-          className="mt-4 space-y-1.5 font-poppins text-lg font-black uppercase tracking-wide"
+          transition={{ delay: 0.3 }}
+          className="divide-y divide-white/8 px-6 py-2"
         >
           {game.players > 0 && (
-            <div className="text-white">{t('weekendLeague.gPlayersCount', { count: game.players })}</div>
+            <Stat label={t('weekendLeague.gFieldLabel')} value={String(game.players)} />
           )}
-          <div className="text-brand-green-light">
-            {game.advance <= 0
-              ? null
-              : isLastGame
-                ? t('weekendLeague.gReachFinal', { n: game.advance })
-                : t('weekendLeague.gTopAdvance', { n: game.advance })}
-          </div>
-          <div className="text-white/50">{t('weekendLeague.gRounds5')}</div>
+          {game.advance > 0 && (
+            <Stat
+              label={isLastGame ? t('weekendLeague.gReachFinalWord') : t('weekendLeague.gAdvanceWord')}
+              value={String(game.advance)}
+              accent
+            />
+          )}
+          <Stat label={t('weekendLeague.gRoundsLabel')} value="5" />
         </motion.div>
       </motion.div>
+
       <button
         type="button"
         onClick={onDone}
-        className="mt-10 font-poppins text-[12px] font-bold uppercase tracking-widest text-white/40 hover:text-white"
+        className="mt-8 font-poppins text-[12px] font-bold uppercase tracking-widest text-white/40 hover:text-white"
       >
         {t('weekendLeague.gSkip')}
       </button>
+    </div>
+  );
+}
+
+/** One row of the game-intro card: label left, big number right. */
+function Stat({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div className="flex items-center justify-between py-3">
+      <span className="font-poppins text-[12px] font-black uppercase tracking-wide text-white/50">
+        {label}
+      </span>
+      <span
+        className={`font-poppins text-2xl font-black tabular-nums ${accent ? 'text-brand-green-light' : 'text-white'}`}
+        style={poppins}
+      >
+        {value}
+      </span>
     </div>
   );
 }

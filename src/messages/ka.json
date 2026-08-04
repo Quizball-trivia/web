@@ -1808,6 +1808,8 @@
     "gViewContinue": "გაგრძელება",
     "gPlayersRemain": "{count} მოთამაშე დარჩა · საუკეთესო {advance} {finalWord}",
     "gAdvanceWord": "გადადის",
+    "gFieldLabel": "მოთამაშე",
+    "gRoundsLabel": "რაუნდი",
     "gReachFinalWord": "გადადის ფინალში",
     "gNextLabel": "შემდეგი",
     "gLocked": "ჩაკეტილი",
