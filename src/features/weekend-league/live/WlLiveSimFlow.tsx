@@ -9,6 +9,9 @@
 
 import { useEffect, useState } from 'react';
 import { FastForward, RotateCcw, X } from 'lucide-react';
+import { GauntletBackdrop } from '../gauntlet/RoundViews';
+import { GauntletLobby } from '../gauntlet/GauntletScreens';
+import { buildGames } from '../gauntlet/gauntlet.data';
 import { WlLiveFlowView } from './WlLiveFlow';
 import { SIM_SELF_ID, useWlSimulated } from './useWlSimulated';
 
@@ -17,7 +20,7 @@ const SIM_FIELD = 600;
 
 export function WlLiveSimFlow({ onExit }: { onExit: () => void }) {
   const { live, sim } = useWlSimulated();
-  const [phase, setPhase] = useState<'checkin' | 'playing'>('checkin');
+  const [phase, setPhase] = useState<'lobby' | 'checkin' | 'playing'>('lobby');
   const [checkedIn, setCheckedIn] = useState(false);
   const [kickoffMs, setKickoffMs] = useState(() => Date.now() + CHECKIN_WINDOW_MS);
 
@@ -28,6 +31,29 @@ export function WlLiveSimFlow({ onExit }: { onExit: () => void }) {
     const id = setTimeout(() => setPhase('playing'), Math.max(0, kickoffMs - Date.now()));
     return () => clearTimeout(id);
   }, [phase, kickoffMs]);
+
+  if (phase === 'lobby') {
+    return (
+      <GauntletBackdrop>
+        <GauntletLobby
+          games={buildGames(SIM_FIELD)}
+          registered={SIM_FIELD}
+          kickoffMs={kickoffMs}
+          canPlay
+          onEnter={() => { setKickoffMs(Date.now() + CHECKIN_WINDOW_MS); setPhase('checkin'); }}
+          onWatch={() => { setKickoffMs(Date.now() + CHECKIN_WINDOW_MS); setPhase('checkin'); }}
+        />
+        <button
+          type="button"
+          onClick={onExit}
+          className="fixed left-3 top-3 z-50 flex size-10 items-center justify-center rounded-full bg-black/40 font-poppins text-white/80 backdrop-blur hover:bg-black/60"
+          aria-label="Exit simulation"
+        >
+          <X className="size-5" />
+        </button>
+      </GauntletBackdrop>
+    );
+  }
 
   return (
     <>
@@ -65,7 +91,7 @@ export function WlLiveSimFlow({ onExit }: { onExit: () => void }) {
         </button>
         <button
           type="button"
-          onClick={() => { sim.restart(); setCheckedIn(false); setKickoffMs(Date.now() + CHECKIN_WINDOW_MS); setPhase('checkin'); }}
+          onClick={() => { sim.restart(); setCheckedIn(false); setKickoffMs(Date.now() + CHECKIN_WINDOW_MS); setPhase('lobby'); }}
           className="flex items-center gap-1 rounded-lg bg-white/10 px-2.5 py-1.5 font-poppins text-[11px] font-black uppercase text-white hover:bg-white/20"
         >
           <RotateCcw className="size-3.5" /> Restart
