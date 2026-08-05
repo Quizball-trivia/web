@@ -13,7 +13,24 @@ import { GauntletBackdrop } from '../gauntlet/RoundViews';
 import { GauntletLobby } from '../gauntlet/GauntletScreens';
 import { buildGames } from '../gauntlet/gauntlet.data';
 import { WlLiveFlowView } from './WlLiveFlow';
-import { SIM_SELF_ID, useWlSimulated } from './useWlSimulated';
+import { SIM_SELF_ID, useWlSimulated, type SimJumpTarget } from './useWlSimulated';
+
+/** Every designed screen, addressable from the sim bar. */
+const SCREENS: { label: string; go: SimJumpTarget | 'lobby' | 'checkin' }[] = [
+  // 'lobby' is reachable via Restart; the picker starts at check-in.
+  { label: 'lobby', go: 'lobby' },
+  { label: 'check-in', go: 'checkin' },
+  { label: 'intro', go: { kind: 'question', round: 0 } },
+  { label: 'T/F', go: { kind: 'question', round: 0, skipIntro: true } },
+  { label: 'hi/lo', go: { kind: 'question', round: 1, skipIntro: true } },
+  { label: 'MCQ', go: { kind: 'question', round: 2, skipIntro: true } },
+  { label: 'career', go: { kind: 'question', round: 3, skipIntro: true } },
+  { label: 'who am i', go: { kind: 'question', round: 4, skipIntro: true } },
+  { label: 'reveal', go: { kind: 'reveal', round: 2 } },
+  { label: 'result', go: { kind: 'game_result' } },
+  { label: 'break', go: { kind: 'break' } },
+  { label: 'champion', go: { kind: 'final' } },
+];
 
 const CHECKIN_WINDOW_MS = 25_000;
 const SIM_FIELD = 600;
@@ -81,13 +98,38 @@ export function WlLiveSimFlow({ onExit }: { onExit: () => void }) {
       />
 
       {/* Sim controls — float above the real UI, never part of it. */}
-      <div className="fixed bottom-4 left-1/2 z-[60] flex -translate-x-1/2 items-center gap-2 rounded-2xl border-2 border-brand-purple/40 bg-black/85 px-3 py-2 backdrop-blur">
+      <div className="fixed bottom-4 left-1/2 z-[60] flex max-w-[95vw] -translate-x-1/2 flex-wrap items-center justify-center gap-1.5 rounded-2xl border-2 border-brand-purple/40 bg-black/85 px-3 py-2 backdrop-blur">
         <span className="font-poppins text-[10px] font-black uppercase tracking-widest text-brand-purple">
           SIM
         </span>
-        <span className="font-poppins text-[11px] font-bold uppercase text-white/60">
-          {phase === 'checkin' ? 'check-in' : sim.stepLabel}
-        </span>
+        {/* Screen picker: jump straight to any designed screen. */}
+        {SCREENS.map((sc) => {
+          // The lobby returns early, so only check-in / playing reach here.
+          // intro vs T/F share a step — the lead phase tells them apart.
+          const active = phase === 'checkin'
+            ? sc.go === 'checkin'
+            : typeof sc.go === 'object' && sim.current != null
+              && sc.go.kind === sim.current.kind
+              && (!('round' in sc.go) || !('round' in sim.current) || sc.go.round === sim.current.round)
+              && (sc.go.kind !== 'question' || (sc.go.skipIntro ?? false) !== sim.inLead);
+          return (
+            <button
+              key={sc.label}
+              type="button"
+              onClick={() => {
+                if (sc.go === 'lobby') { sim.restart(); setPhase('lobby'); return; }
+                if (sc.go === 'checkin') { setKickoffMs(Date.now() + CHECKIN_WINDOW_MS); setCheckedIn(false); setPhase('checkin'); return; }
+                setPhase('playing');
+                sim.jumpTo(sc.go);
+              }}
+              className={`rounded-lg px-2 py-1 font-poppins text-[10px] font-black uppercase tracking-wide transition-colors ${
+                active ? 'bg-brand-purple text-white' : 'bg-white/8 text-white/55 hover:bg-white/15'
+              }`}
+            >
+              {sc.label}
+            </button>
+          );
+        })}
         <button
           type="button"
           onClick={() => {

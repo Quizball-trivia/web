@@ -10,9 +10,10 @@ import { ArrowRight } from 'lucide-react';
 import { motion } from 'motion/react';
 import { ResultSplash } from '@/features/daily/components/ResultSplash';
 import { useLocale } from '@/contexts/LocaleContext';
+import { findClubByName } from '@/lib/clubs';
 import { poppins } from '../constants';
 import type { RoundDef } from './gauntlet.types';
-import { AnswerBtn, GauntletHeader, QuestionCard, type AnswerState } from './RoundChrome';
+import { AnswerBtn, GauntletHeader, QuestionCard, RoundProgressDashes, type AnswerState } from './RoundChrome';
 
 export interface RoundHeaderModel {
   gameIndex: number;
@@ -29,17 +30,23 @@ export interface RoundHeaderModel {
 export function RoundScreenShell({
   header,
   splashProps,
+  overlay,
   children,
 }: {
   header: RoundHeaderModel;
   splashProps?: React.ComponentProps<typeof ResultSplash>;
+  /** Round/game intro, absolutely positioned over the question area only —
+   *  the header and timer stay visible above it, as in ranked. */
+  overlay?: React.ReactNode;
   children: React.ReactNode;
 }) {
   return (
     <div className="flex min-h-screen flex-col pb-10">
       <GauntletHeader {...header} />
-      <div className="mx-auto flex w-full max-w-3xl flex-col px-4 pt-3">
+      <div className="relative mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 pt-3">
+        <RoundProgressDashes round={header.round} />
         {children}
+        {overlay}
       </div>
       {splashProps && <ResultSplash {...splashProps} />}
     </div>
@@ -130,10 +137,12 @@ export function AnswerOptionList({
   );
 }
 
-/** Career chip — a club logo (prototype) or a club name (live data). */
+/** Career chip: an explicit crest, or a club name we resolve to one. */
 export interface CareerItem {
   imageSrc?: string;
   label?: string;
+  /** Name used for crest lookup — always English; label may be localized. */
+  matchName?: string;
 }
 
 /** The career chain inside the question card: chips joined by yellow arrows. */
@@ -151,25 +160,44 @@ export function CareerPathCard({ heading, items }: { heading: string; items: Car
               transition={{ delay: i * 0.12 }}
               className="flex items-center gap-2"
             >
-              {item.imageSrc ? (
-                <Image
-                  src={item.imageSrc}
-                  alt=""
-                  width={96}
-                  height={96}
-                  className="size-11 object-contain sm:size-14"
-                />
-              ) : (
-                <span className="rounded-xl bg-white/[0.07] px-3 py-2 font-poppins text-[13px] font-bold uppercase text-white sm:text-sm">
-                  {item.label}
-                </span>
-              )}
+              <CareerChip item={item} />
               {i < items.length - 1 && <ArrowRight className="size-4 shrink-0 text-brand-yellow" />}
             </motion.span>
           ))}
         </div>
       </div>
     </QuestionCard>
+  );
+}
+
+/** One club in the chain: crest when we can resolve one (with the name under
+ *  it), a text chip otherwise — never a bare unlabelled logo. */
+function CareerChip({ item }: { item: CareerItem }) {
+  const club = item.imageSrc ? null : findClubByName(item.matchName ?? item.label);
+  const src = item.imageSrc ?? club?.logo ?? null;
+  if (src == null) {
+    return (
+      <span className="rounded-xl bg-white/[0.07] px-3 py-2 font-poppins text-[13px] font-bold uppercase text-white sm:text-sm">
+        {item.label}
+      </span>
+    );
+  }
+  return (
+    <span className="flex w-16 flex-col items-center gap-1 sm:w-20">
+      <Image
+        src={src}
+        alt={item.label ?? ''}
+        width={96}
+        height={96}
+        className="size-11 object-contain sm:size-14"
+        unoptimized
+      />
+      {item.label && (
+        <span className="w-full truncate text-center font-poppins text-[10px] font-bold uppercase leading-tight text-white/70">
+          {item.label}
+        </span>
+      )}
+    </span>
   );
 }
 
@@ -190,17 +218,21 @@ export function HigherLowerCard({
   return (
     <QuestionCard>
       <div className="text-center">
-        <div className="font-poppins text-[12px] font-bold uppercase tracking-wide text-white/50">
+        {/* The STAT is the question — big. The prompt is the small ask under
+            it; the two names live on the answer buttons. */}
+        <div className="text-xl leading-snug sm:text-2xl">
           {statLabel}
-          {stepLabel ? ` · ${stepLabel}` : ''}
         </div>
-        {subject && <div className="mt-2 text-xl sm:text-2xl">{subject}</div>}
+        {subject && <div className="mt-2 text-lg sm:text-xl">{subject}</div>}
         {value && (
           <div className="mt-1 font-poppins text-3xl font-black tabular-nums text-brand-yellow" style={poppins}>
             {value}
           </div>
         )}
-        <div className="mt-3 text-base sm:text-lg">{prompt}</div>
+        <div className="mt-2 font-poppins text-[12px] font-bold uppercase tracking-wide text-white/50">
+          {prompt}
+          {stepLabel ? ` · ${stepLabel}` : ''}
+        </div>
       </div>
     </QuestionCard>
   );

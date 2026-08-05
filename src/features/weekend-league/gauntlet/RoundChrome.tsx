@@ -35,6 +35,7 @@ export function GauntletHeader({
   onQuit: () => void;
 }) {
   const { t } = useLocale();
+  void gameIndex; // kept in the API for callers; the meta line that used it is gone
   return (
     <div>
       <DailyChallengeHeader
@@ -48,12 +49,9 @@ export function GauntletHeader({
             : t('possession.questionCounter', { current: 1, total: 1 })
         }
       />
-      <div className="mx-auto mt-2 flex max-w-3xl items-center justify-between px-4 font-poppins text-[11px] font-bold uppercase tracking-wide text-white/50">
-        <span>
-          {t('weekendLeague.gRoundOf', { g: gameIndex + 1, r: round.index + 1 })} ·{' '}
-          {t(ROUND_LABEL_KEYS[round.type])} ·{' '}
-          <span className="text-brand-yellow">{t('weekendLeague.gUpTo', { n: round.maxPoints })}</span>
-        </span>
+      {/* Score/spectator badge only — the game/round/kind/points meta line was
+          noise above the question. */}
+      <div className="mx-auto mt-2 flex max-w-3xl items-center justify-end px-4 font-poppins text-[11px] font-bold uppercase tracking-wide text-white/50">
         {spectator ? (
           <span className="flex items-center gap-1.5 text-brand-cyan">
             <span className="size-1.5 animate-pulse rounded-full bg-brand-cyan" /> {t('weekendLeague.gSpectator')}
@@ -66,16 +64,23 @@ export function GauntletHeader({
           </span>
         )}
       </div>
-      <div className="mx-auto mt-2 flex max-w-3xl items-center gap-1.5 px-4">
-        {ROUNDS.map((r) => (
-          <span
-            key={r.index}
-            className={`h-1 flex-1 rounded-full ${
-              r.index < round.index ? 'bg-brand-green-light' : r.index === round.index ? 'bg-brand-yellow' : 'bg-white/10'
-            }`}
-          />
-        ))}
-      </div>
+    </div>
+  );
+}
+
+/** Round progress dashes — rendered INSIDE the question area so the round
+ *  transition overlay covers them, as it does in ranked. */
+export function RoundProgressDashes({ round }: { round: RoundDef }) {
+  return (
+    <div className="mx-auto mb-2 flex max-w-3xl items-center gap-1.5">
+      {ROUNDS.map((r) => (
+        <span
+          key={r.index}
+          className={`h-1 flex-1 rounded-full ${
+            r.index < round.index ? 'bg-brand-green-light' : r.index === round.index ? 'bg-brand-yellow' : 'bg-white/10'
+          }`}
+        />
+      ))}
     </div>
   );
 }
@@ -97,7 +102,9 @@ export function QuestionCard({ children }: { children: React.ReactNode }) {
   );
 }
 
-export type AnswerState = 'idle' | 'correct' | 'wrong' | 'faded';
+/** `pending` = your pick, awaiting the server verdict (WL scrubs the answer
+ *  key from dispatches, so the ack is the earliest honest verdict). */
+export type AnswerState = 'idle' | 'pending' | 'correct' | 'wrong' | 'faded';
 
 /** Daily-style answer button: yellow outline → green fill / red outline. */
 export function AnswerBtn({
@@ -131,7 +138,9 @@ export function AnswerBtn({
         textTransform: 'uppercase',
         color: state === 'wrong' ? '#FB3101' : '#FFFFFF',
         opacity: state === 'faded' ? 0.45 : 1,
-        backgroundColor: state === 'correct' ? '#38B60E' : 'transparent',
+        backgroundColor: state === 'correct'
+          ? '#38B60E'
+          : state === 'pending' ? 'rgba(255,229,0,0.16)' : 'transparent',
         border:
           state === 'correct'
             ? 'none'
@@ -147,6 +156,10 @@ export function AnswerBtn({
         cursor: disabled ? 'default' : 'pointer',
       }}
     >
+      {/* Instant press feedback: the pick lights up on tap, before the ack. */}
+      {state === 'pending' && (
+        <span className="pointer-events-none absolute inset-0 animate-pulse rounded-[16px] bg-brand-yellow/10" />
+      )}
       {/* Option letter pinned to the corner so it never shifts with the label. */}
       {prefix && <span className="absolute left-2.5 top-2">{prefix}</span>}
       <div className="flex items-center justify-center gap-3 px-6 text-center">
@@ -169,15 +182,16 @@ export function RoundIntroOverlay({ round, onDone }: { round: RoundDef; onDone: 
     return () => clearTimeout(id);
   }, [onDone]);
 
+  // Scoped exactly like ranked: absolute inset-0 filling the QUESTION area
+  // (its positioned parent), not the viewport — the header/timer stay visible
+  // above it, everything below is covered.
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center px-4">
-      <div className="relative h-56 w-full max-w-xl">
-        <RoundTransitionOverlay
-          title={t('weekendLeague.gRoundOnly', { n: round.index + 1 })}
-          categoryName={t(ROUND_LABEL_KEYS[round.type])}
-          subtitle={t('weekendLeague.gUpTo', { n: round.maxPoints })}
-        />
-      </div>
+    <div className="absolute inset-0 z-40 bg-surface-page-alt">
+      <RoundTransitionOverlay
+        title={t('weekendLeague.gRoundOnly', { n: round.index + 1 })}
+        categoryName={t(ROUND_LABEL_KEYS[round.type])}
+        subtitle={t('weekendLeague.gUpTo', { n: round.maxPoints })}
+      />
     </div>
   );
 }

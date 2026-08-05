@@ -16,6 +16,7 @@ import type {
   WlRevealEventPayload,
 } from '@/lib/realtime/socket.types';
 import type { WlLiveScreen, WlLiveState } from './useWlLive';
+import { wlLadder } from '../gauntlet/gauntlet.data';
 
 export const SIM_SELF_ID = 'sim-you';
 
@@ -26,18 +27,24 @@ const BOT_NAMES = [
   'giorgi_b', 'luka99', 'oto_gel', 'vato_z', 'demna4', 'rezi_k',
 ] as const;
 
-// The product ladder (wl-rules: /3, /2, cut to 24) from a 600 field.
+// Derived from the shared ladder mirror so the sim can never drift from the
+// real cut numbers.
 const FIELD = 600;
+const [SIM_A1, SIM_A2, SIM_A3] = wlLadder(FIELD);
 const LADDER = [
-  { index: 0, players: FIELD, advance: 200 },
-  { index: 1, players: 200, advance: 100 },
-  { index: 2, players: 100, advance: 24 },
+  { index: 0, players: FIELD, advance: SIM_A1 },
+  { index: 1, players: SIM_A1, advance: SIM_A2 },
+  { index: 2, players: SIM_A2, advance: SIM_A3 },
 ] as const;
 
 // Compressed pacing so the walkthrough flows; Skip jumps ahead any time.
 const QUESTION_MS = 12_000;
 const LEAD_MS = 2_600; // long enough to see the game-intro / round overlay
-const REVEAL_MS = 4_500;
+// Mid-round the question simply stays up with its verdict, so the "reveal"
+// step is just the short gap before the next dispatch.
+const REVEAL_MS = 1_800;
+// Round boundaries get the server's breather so the standings beat can play.
+const ROUND_END_REVEAL_MS = 6_000;
 const RESULT_MS = 7_000;
 const BREAK_MS = 14_000;
 
@@ -91,7 +98,7 @@ const QUESTIONS: SimQuestion[] = [
         i18n('Man United', 'მან იუნაიტედი'),
         i18n('Real Madrid', 'რეალ მადრიდი'),
         i18n('Juventus', 'იუვენტუსი'),
-        i18n('Al-Nassr', 'ალ-ნასრი'),
+        i18n('Chelsea', 'ჩელსი'),
       ],
     },
     evaluation: {
@@ -119,6 +126,14 @@ const QUESTIONS: SimQuestion[] = [
   },
 ];
 
+/** Addressable screens for the playground picker. */
+export type SimJumpTarget =
+  | { kind: 'question'; round: number; skipIntro?: boolean }
+  | { kind: 'reveal'; round: number }
+  | { kind: 'game_result' }
+  | { kind: 'break' }
+  | { kind: 'final' };
+
 type SimStep =
   | { kind: 'question'; game: number; round: number; ms: number }
   | { kind: 'reveal'; game: number; round: number; ms: number }
@@ -131,7 +146,8 @@ function buildScript(): SimStep[] {
   for (let g = 0; g < 3; g += 1) {
     for (let r = 0; r < QUESTIONS.length; r += 1) {
       steps.push({ kind: 'question', game: g, round: r, ms: QUESTION_MS });
-      steps.push({ kind: 'reveal', game: g, round: r, ms: REVEAL_MS });
+      const lastOfRound = true; // one question per kind in the sim script
+      steps.push({ kind: 'reveal', game: g, round: r, ms: lastOfRound ? ROUND_END_REVEAL_MS : REVEAL_MS });
     }
     steps.push({ kind: 'game_result', game: g, ms: RESULT_MS });
     if (g < 2) steps.push({ kind: 'break', game: g, ms: BREAK_MS });
@@ -204,6 +220,12 @@ export interface WlSimControls {
   /** Jump to the next scripted step immediately. */
   skip: () => void;
   restart: () => void;
+  /** Jump straight to a screen — the playground's screen picker. */
+  jumpTo: (target: SimJumpTarget) => void;
+  /** Which screen is showing (drives the picker's active chip). */
+  current: SimJumpTarget | null;
+  /** True while a question is still in its dispatch lead (intro overlay up). */
+  inLead: boolean;
   /** Break deadline while the break step runs (feeds the view prop). */
   breakUntilMs: number | null;
   /** The finished game's counts while the break runs. */
@@ -219,6 +241,8 @@ export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
     startedAt: Date.now(),
     score: 0,
     ack: null as WlAnswerAck | null,
+    /** Entered with the dispatch lead skipped (picker jumped past the intro). */
+    leadSkipped: false,
   }));
   // Generation guard: bumps on every step change/restart so a delayed ack
   // timeout from an earlier question can never land on a later state.
@@ -244,6 +268,7 @@ export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
       return {
         stepIndex: next,
         startedAt: now,
+        leadSkipped: false,
         ack: to.kind === 'question' ? null : cur.ack,
         score: to.kind === 'question' && to.round === 0 && to.game > 0 ? 0 : cur.score,
       };
@@ -252,7 +277,7 @@ export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
 
   const restart = useCallback(() => {
     clearPending();
-    setSt({ stepIndex: 0, startedAt: Date.now(), score: 0, ack: null });
+    setSt({ stepIndex: 0, startedAt: Date.now(), score: 0, ack: null, leadSkipped: false });
   }, [clearPending]);
 
   // Auto-pace: every step advances itself when its window elapses. The
@@ -266,7 +291,9 @@ export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
       if (gen === genRef.current) advance();
     }, step.ms + extra);
     return () => clearTimeout(id);
-  }, [step, st.stepIndex, advance]);
+    // startedAt is a dep so a jump to the CURRENT step reschedules the timer
+    // (its old generation is dead) instead of freezing auto-advance.
+  }, [step, st.stepIndex, st.startedAt, advance]);
 
   const submitAnswer = useCallback((answer: unknown) => {
     if (pendingRef.current != null) return;
@@ -369,9 +396,37 @@ export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
     retryNonce: 0,
   }), [screen, board, st.score, st.ack, step, serverNow, submitAnswer]);
 
+  const jumpTo = useCallback((target: SimJumpTarget) => {
+    const idx = script.findIndex((sp) => {
+      if (sp.kind !== target.kind) return false;
+      if (target.kind === 'question' || target.kind === 'reveal') {
+        return 'round' in sp && sp.round === target.round && sp.game === 0;
+      }
+      return true;
+    });
+    if (idx < 0) return;
+    clearPending();
+    // skipIntro backdates the start so playableAt has already passed — the
+    // question opens live instead of behind the game-intro/round overlay.
+    const skipped = target.kind === 'question' && target.skipIntro === true;
+    const startedAt = skipped ? Date.now() - LEAD_MS - 200 : Date.now();
+    setSt((cur) => ({ ...cur, stepIndex: idx, startedAt, ack: null, leadSkipped: skipped }));
+  }, [script, clearPending]);
+
+  const current: SimJumpTarget | null = useMemo(() => {
+    if (step.kind === 'question' || step.kind === 'reveal') return { kind: step.kind, round: step.round };
+    if (step.kind === 'game_result') return { kind: 'game_result' };
+    if (step.kind === 'break') return { kind: 'break' };
+    if (step.kind === 'final') return { kind: 'final' };
+    return null;
+  }, [step]);
+
   const sim: WlSimControls = useMemo(() => ({
     skip: advance,
     restart,
+    jumpTo,
+    current,
+    inLead: step.kind === 'question' && !st.leadSkipped,
     breakUntilMs: step.kind === 'break' ? st.startedAt + BREAK_MS : null,
     lastResult: step.kind === 'break'
       ? {
@@ -385,7 +440,7 @@ export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
       : step.kind === 'game_result' ? `G${step.game + 1} result`
       : step.kind === 'break' ? `break after G${step.game + 1}`
       : 'champion',
-  }), [step, st.startedAt, advance, restart]);
+  }), [step, st.startedAt, st.leadSkipped, advance, restart, jumpTo, current]);
 
   return { live, sim };
 }
