@@ -16,6 +16,7 @@ import type {
   WlRevealEventPayload,
 } from '@/lib/realtime/socket.types';
 import type { WlLiveScreen, WlLiveState } from './useWlLive';
+import { wlLadder } from '../gauntlet/gauntlet.data';
 
 export const SIM_SELF_ID = 'sim-you';
 
@@ -26,12 +27,14 @@ const BOT_NAMES = [
   'giorgi_b', 'luka99', 'oto_gel', 'vato_z', 'demna4', 'rezi_k',
 ] as const;
 
-// Mirrors wlBuildLadder for a 600 field: every game cuts, ending on 24.
+// Derived from the shared ladder mirror so the sim can never drift from the
+// real cut numbers.
 const FIELD = 600;
+const [SIM_A1, SIM_A2, SIM_A3] = wlLadder(FIELD);
 const LADDER = [
-  { index: 0, players: FIELD, advance: 200 },
-  { index: 1, players: 200, advance: 100 },
-  { index: 2, players: 100, advance: 24 },
+  { index: 0, players: FIELD, advance: SIM_A1 },
+  { index: 1, players: SIM_A1, advance: SIM_A2 },
+  { index: 2, players: SIM_A2, advance: SIM_A3 },
 ] as const;
 
 // Compressed pacing so the walkthrough flows; Skip jumps ahead any time.

@@ -6,14 +6,7 @@ import type {
   StandingsRow,
 } from './gauntlet.types';
 
-/** Reference ladder at the design field size (600 → 200 → 100 → 25). */
-export const GAMES: GameDef[] = [
-  { index: 0, players: 600, advance: 200 },
-  { index: 1, players: 200, advance: 100 },
-  { index: 2, players: 100, advance: 25 },
-];
-
-/** Finalists are always 25 — the Sunday final has a fixed size. */
+/** Finalists — must equal the backend's WL_FINALISTS. */
 // Must equal the backend's WL_FINALISTS (wl-rules.ts) — the ladder below is a
 // mirror of wlBuildLadder, so a mismatch shows players the wrong cut numbers.
 export const FINALISTS = 24;
@@ -21,26 +14,31 @@ export const FINALISTS = 24;
 /**
  * The qualifier ladder — a MIRROR of the backend `wlBuildLadder` (wl-rules.ts).
  * Every game must eliminate someone: big fields keep the product shape
- * (600 → 200 → 100 → 24), smaller fields spread the reduction geometrically
- * (54 → 41 → 31 → 24) instead of dumping the whole cut into game 1, and fields
- * too small for three cuts to 24 end just below it rather than promising a cut
- * that cannot happen. Keep the two implementations in step.
+ * ONE continuous rule, identical to the backend's wlBuildLadder: the gentler of
+ * the product shape (n/3, n/6) and an equal-ratio spread, so large fields land
+ * near 600 -> 205 -> 100 -> 24 and small ones spread (54 -> 41 -> 31 -> 24)
+ * without a discontinuity when one extra player joins. Fields too small for
+ * three cuts to 24 end just below it. Keep the two implementations in step.
  */
 export function wlLadder(fieldSize: number): [number, number, number] {
   const n = Math.max(0, Math.floor(fieldSize));
   if (n <= 3) return [n, n, n];
 
   const finalTarget = Math.min(FINALISTS, n - 3);
-  const byThirds = Math.round(n / 3);
-  const bySixths = Math.round(n / 6);
-  if (bySixths > finalTarget) return [byThirds, bySixths, finalTarget];
-
   const ratio = Math.pow(finalTarget / n, 1 / 3);
-  const a1 = Math.min(n - 1, Math.max(finalTarget + 2, Math.round(n * ratio)));
-  const a2 = Math.min(a1 - 1, Math.max(finalTarget + 1, Math.round(n * ratio * ratio)));
+  const a1 = Math.min(
+    n - 1,
+    Math.max(finalTarget + 2, Math.round(n / 3), Math.round(n * ratio)),
+  );
+  const a2 = Math.min(
+    a1 - 1,
+    Math.max(finalTarget + 1, Math.round(n / 6), Math.round(n * ratio * ratio)),
+  );
   return [a1, a2, finalTarget];
 }
 
+/** Reference ladder at the design field size — derived, never hand-written,
+ *  so it cannot drift from the rules. Declared after buildGames (TDZ). */
 export function buildGames(fieldSize: number, singleGame = false): GameDef[] {
   // Sunday's final is one game that crowns a champion, not an elimination ladder.
   if (singleGame) {
@@ -56,6 +54,8 @@ export function buildGames(fieldSize: number, singleGame = false): GameDef[] {
     { index: 2, players: a2, advance: a3 },
   ];
 }
+
+export const GAMES: GameDef[] = buildGames(600);
 
 // Timings mirror ranked (backend `QUESTION_TIME_MS` = 10s per question, and
 // clues run 10s per clue). Multi-question rounds carry 5 × 10s; the clue round

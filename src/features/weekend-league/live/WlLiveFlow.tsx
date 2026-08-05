@@ -425,10 +425,30 @@ function ScreenBody({
       }
       if (isLastQuestionOfRound(screen.reveal)) {
         return (
-          <RoundStandings
+          <RevealThenStandings
             board={board}
             selfUserId={selfUserId}
             roundIndex={screen.reveal.round_index}
+            question={
+              screen.attempt != null ? (
+                <QuestionScreen
+                  attempt={screen.answer == null
+                    ? { ...screen.attempt, evaluation: screen.reveal.evaluation ?? screen.attempt.evaluation }
+                    : screen.attempt}
+                  score={score}
+                  rank={yourRank}
+                  introCounts={null}
+                  onExit={onExit}
+                  answered={screen.answer}
+                  locale={locale}
+                  serverNow={serverNow}
+                  submitAnswer={() => {}}
+                  retryNonce={retryNonce}
+                  spectator={false}
+                  revealed={screen.answer == null}
+                />
+              ) : null
+            }
           />
         );
       }
@@ -517,6 +537,28 @@ const QUESTIONS_PER_ROUND: Record<number, number> = { 0: 5, 1: 5, 2: 5, 3: 5, 4:
 function isLastQuestionOfRound(reveal: { round_index: number; question_index: number }): boolean {
   const total = QUESTIONS_PER_ROUND[reveal.round_index] ?? 5;
   return reveal.question_index >= total - 1;
+}
+
+/**
+ * Round end: the resolved question holds briefly — so a player who timed out
+ * still sees the correct answer — then the standings take over.
+ */
+function RevealThenStandings({
+  board, selfUserId, roundIndex, question,
+}: {
+  board: WlBoardRow[];
+  selfUserId: string | null;
+  roundIndex: number;
+  question: React.ReactNode;
+}) {
+  const [phase, setPhase] = useState<'answer' | 'board'>(question == null ? 'board' : 'answer');
+  useEffect(() => {
+    if (question == null) return;
+    const id = setTimeout(() => setPhase('board'), 2_200);
+    return () => clearTimeout(id);
+  }, [question]);
+  if (phase === 'answer') return <>{question}</>;
+  return <RoundStandings board={board} selfUserId={selfUserId} roundIndex={roundIndex} />;
 }
 
 /** Round-end standings: the one place the board interrupts play. */
