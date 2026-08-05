@@ -77,3 +77,59 @@ export function getClub(idOrValue: string | null | undefined): Club | null {
   }
   return null;
 }
+
+/**
+ * Best-effort crest lookup by club NAME (career-path payloads carry names, not
+ * ids): exact match on id/value/label first, then a normalized comparison that
+ * ignores case, punctuation and the usual FC/CF/AC/SC prefixes and suffixes.
+ * Returns null when nothing matches — callers fall back to a text chip.
+ */
+export function findClubByName(name: string | null | undefined): Club | null {
+  if (!name) return null;
+  const direct = getClub(name);
+  if (direct) return direct;
+  const norm = expandAliases(normalizeClubName(name));
+  if (norm === '') return null;
+  const exact = clubs.find((c) => normalizeClubName(c.value) === norm)
+    ?? clubs.find((c) => normalizeClubName(c.label) === norm)
+    ?? clubs.find((c) => normalizeClubName(c.id) === norm);
+  if (exact) return exact;
+  // Last resort: a registry name that starts with the query (or vice versa),
+  // which catches "Inter" vs "Inter Milan" style shorthand. Requires a
+  // reasonably specific query so short words can't match half the league.
+  if (norm.length < 5) return null;
+  return clubs.find((c) => {
+    const v = normalizeClubName(c.value);
+    return v.startsWith(`${norm} `) || norm.startsWith(`${v} `);
+  }) ?? null;
+}
+
+/** Shorthand that appears in question content but not in the registry. */
+const CLUB_ALIASES: Record<string, string> = {
+  'man united': 'manchester united',
+  'man utd': 'manchester united',
+  'man city': 'manchester city',
+  'spurs': 'tottenham hotspur',
+  'inter': 'inter milan',
+  'psg': 'paris saint germain',
+  'atleti': 'atletico madrid',
+  'barca': 'barcelona',
+  'bayern': 'bayern munich',
+  'gladbach': 'borussia monchengladbach',
+  'dortmund': 'borussia dortmund',
+};
+
+function expandAliases(norm: string): string {
+  return CLUB_ALIASES[norm] ?? norm;
+}
+
+function normalizeClubName(value: string): string {
+  return value
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9 ]/g, ' ')
+    .replace(/\b(fc|cf|ac|sc|sv|as|ss|ssc|afc|bsc|rc|us|ud|cd|club|de|futbol|football)\b/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}

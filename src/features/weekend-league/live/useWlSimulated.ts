@@ -26,7 +26,7 @@ const BOT_NAMES = [
   'giorgi_b', 'luka99', 'oto_gel', 'vato_z', 'demna4', 'rezi_k',
 ] as const;
 
-// The product ladder (wl-rules: /3, /2, cut to 24) from a 600 field.
+// Mirrors wlBuildLadder for a 600 field: every game cuts, ending on 24.
 const FIELD = 600;
 const LADDER = [
   { index: 0, players: FIELD, advance: 200 },
@@ -37,7 +37,11 @@ const LADDER = [
 // Compressed pacing so the walkthrough flows; Skip jumps ahead any time.
 const QUESTION_MS = 12_000;
 const LEAD_MS = 2_600; // long enough to see the game-intro / round overlay
-const REVEAL_MS = 4_500;
+// Mid-round the question simply stays up with its verdict, so the "reveal"
+// step is just the short gap before the next dispatch.
+const REVEAL_MS = 1_800;
+// Round boundaries get the server's breather so the standings beat can play.
+const ROUND_END_REVEAL_MS = 6_000;
 const RESULT_MS = 7_000;
 const BREAK_MS = 14_000;
 
@@ -91,7 +95,7 @@ const QUESTIONS: SimQuestion[] = [
         i18n('Man United', 'მან იუნაიტედი'),
         i18n('Real Madrid', 'რეალ მადრიდი'),
         i18n('Juventus', 'იუვენტუსი'),
-        i18n('Al-Nassr', 'ალ-ნასრი'),
+        i18n('Chelsea', 'ჩელსი'),
       ],
     },
     evaluation: {
@@ -139,7 +143,8 @@ function buildScript(): SimStep[] {
   for (let g = 0; g < 3; g += 1) {
     for (let r = 0; r < QUESTIONS.length; r += 1) {
       steps.push({ kind: 'question', game: g, round: r, ms: QUESTION_MS });
-      steps.push({ kind: 'reveal', game: g, round: r, ms: REVEAL_MS });
+      const lastOfRound = true; // one question per kind in the sim script
+      steps.push({ kind: 'reveal', game: g, round: r, ms: lastOfRound ? ROUND_END_REVEAL_MS : REVEAL_MS });
     }
     steps.push({ kind: 'game_result', game: g, ms: RESULT_MS });
     if (g < 2) steps.push({ kind: 'break', game: g, ms: BREAK_MS });

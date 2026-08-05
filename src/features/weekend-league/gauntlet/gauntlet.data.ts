@@ -14,15 +14,33 @@ export const GAMES: GameDef[] = [
 ];
 
 /** Finalists are always 25 — the Sunday final has a fixed size. */
-export const FINALISTS = 25;
+// Must equal the backend's WL_FINALISTS (wl-rules.ts) — the ladder below is a
+// mirror of wlBuildLadder, so a mismatch shows players the wrong cut numbers.
+export const FINALISTS = 24;
 
 /**
- * Build the three-game ladder for whatever field actually turned up. Each game
- * cuts the field by a third (600→200→100 at the design size), and the last game
- * always lands on 25 finalists. Small fields collapse gracefully: the ladder
- * never advances more players than are playing, and never fewer than the
- * finalist count once we're at that stage.
+ * The qualifier ladder — a MIRROR of the backend `wlBuildLadder` (wl-rules.ts).
+ * Every game must eliminate someone: big fields keep the product shape
+ * (600 → 200 → 100 → 24), smaller fields spread the reduction geometrically
+ * (54 → 41 → 31 → 24) instead of dumping the whole cut into game 1, and fields
+ * too small for three cuts to 24 end just below it rather than promising a cut
+ * that cannot happen. Keep the two implementations in step.
  */
+export function wlLadder(fieldSize: number): [number, number, number] {
+  const n = Math.max(0, Math.floor(fieldSize));
+  if (n <= 3) return [n, n, n];
+
+  const finalTarget = Math.min(FINALISTS, n - 3);
+  const byThirds = Math.round(n / 3);
+  const bySixths = Math.round(n / 6);
+  if (bySixths > finalTarget) return [byThirds, bySixths, finalTarget];
+
+  const ratio = Math.pow(finalTarget / n, 1 / 3);
+  const a1 = Math.min(n - 1, Math.max(finalTarget + 2, Math.round(n * ratio)));
+  const a2 = Math.min(a1 - 1, Math.max(finalTarget + 1, Math.round(n * ratio * ratio)));
+  return [a1, a2, finalTarget];
+}
+
 export function buildGames(fieldSize: number, singleGame = false): GameDef[] {
   // Sunday's final is one game that crowns a champion, not an elimination ladder.
   if (singleGame) {
@@ -30,17 +48,12 @@ export function buildGames(fieldSize: number, singleGame = false): GameDef[] {
     return [{ index: 0, players, advance: 1 }];
   }
 
-  const players = Math.max(FINALISTS + 1, Math.round(fieldSize));
-
-  // Game 3 always ends at 25. Work backwards with a ~2x cut per game, but never
-  // below the finalist count and never above the field.
-  const g3Players = Math.max(FINALISTS + 1, Math.min(players, Math.round(players / 6)));
-  const g2Players = Math.max(g3Players, Math.min(players, Math.round(players / 3)));
-
+  const players = Math.max(4, Math.round(fieldSize));
+  const [a1, a2, a3] = wlLadder(players);
   return [
-    { index: 0, players, advance: g2Players },
-    { index: 1, players: g2Players, advance: g3Players },
-    { index: 2, players: g3Players, advance: Math.min(FINALISTS, g3Players - 1) },
+    { index: 0, players, advance: a1 },
+    { index: 1, players: a1, advance: a2 },
+    { index: 2, players: a2, advance: a3 },
   ];
 }
 

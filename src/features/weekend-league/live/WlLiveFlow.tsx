@@ -34,8 +34,8 @@ import {
   WhoAmIClueLadder,
   type RoundHeaderModel,
 } from '../gauntlet/RoundViews';
-import { AnswerReveal, BreakScreen, ChampionScreen, EliminationReveal, GameIntro, GameResult } from '../gauntlet/GauntletScreens';
-import { ROUNDS } from '../gauntlet/gauntlet.data';
+import { BreakScreen, ChampionScreen, EliminationReveal, GameIntro, GameResult } from '../gauntlet/GauntletScreens';
+import { ROUNDS, wlLadder } from '../gauntlet/gauntlet.data';
 import { ResultSplash } from '@/features/daily/components/ResultSplash';
 import { useResultSplash } from '@/features/daily/components/useResultSplash';
 import { useWlLive, type WlLiveScreen, type WlLiveState } from './useWlLive';
@@ -246,24 +246,31 @@ function ConnectionDot({ connected }: { connected: boolean }) {
   );
 }
 
-/** The real backend qualifier ladder (wl-rules): /3 after game 1, /2 after
- *  game 2, cut to 24 for the final — never an invented count. */
-function nextAdvanceByRules(gameIdx: number, players: number): number {
-  if (players <= 0) return 0;
-  if (gameIdx === 0) return Math.round(players / 3);
-  if (gameIdx === 1) return Math.round(players / 2);
-  return Math.min(24, players);
+/**
+ * Advance target for the game at `gameIdx`, given the ORIGINAL field size.
+ * The ladder is a function of the starting field (mirror of wlBuildLadder), so
+ * it must be read at the right stage — not re-derived from a shrunken field.
+ */
+function advanceForGame(gameIdx: number, originalField: number): number {
+  if (originalField <= 0) return 0;
+  const ladder = wlLadder(originalField);
+  return ladder[Math.min(2, Math.max(0, gameIdx))] ?? 0;
 }
 
 /** Games array for the break screen's progress strip + next-game lookup,
  *  built ONLY from authoritative counts (zeros hide the count copy). */
-function ladderStrip(finished: { game_index: number; field?: number; advanced?: number | null } | null): { index: number; players: number; advance: number }[] {
+function ladderStrip(
+  finished: { game_index: number; field?: number; advanced?: number | null } | null,
+  originalField: number,
+): { index: number; players: number; advance: number }[] {
   const g = finished?.game_index ?? -1;
   const field = Number(finished?.field ?? 0) || 0;
   const advanced = Number(finished?.advanced ?? 0) || 0;
   return [0, 1, 2].map((i) => {
     if (i === g) return { index: i, players: field, advance: advanced };
-    if (i === g + 1 && advanced > 0) return { index: i, players: advanced, advance: nextAdvanceByRules(i, advanced) };
+    if (i === g + 1 && advanced > 0) {
+      return { index: i, players: advanced, advance: advanceForGame(i, originalField) };
+    }
     return { index: i, players: 0, advance: 0 };
   });
 }
@@ -333,7 +340,7 @@ function ScreenBody({
         const finishedIndex = lastResult?.game_index ?? Math.max(0, currentGameIndex - 1);
         return (
           <BreakScreen
-            games={ladderStrip(lastResult)}
+            games={ladderStrip(lastResult, checkedInCount)}
             game={{
               index: finishedIndex,
               players: Number(lastResult?.field ?? 0) || 0,
@@ -371,12 +378,12 @@ function ScreenBody({
         if (attempt.game_index === 0) {
           // The game-1 field is everyone checked in (humans + bots).
           return checkedInCount > 0
-            ? { players: checkedInCount, advance: nextAdvanceByRules(0, checkedInCount) }
+            ? { players: checkedInCount, advance: advanceForGame(0, checkedInCount) }
             : null;
         }
         if (lastResult != null && lastResult.game_index === attempt.game_index - 1) {
           const advanced = Number(lastResult.advanced ?? 0) || 0;
-          return { players: advanced, advance: nextAdvanceByRules(attempt.game_index, advanced) };
+          return { players: advanced, advance: advanceForGame(attempt.game_index, checkedInCount) };
         }
         return null;
       })();
@@ -398,7 +405,11 @@ function ScreenBody({
     }
 
     case 'reveal': {
-      if (role === 'spectator' || screen.answer == null || !screen.answer.accepted) {
+      // Mid-round there is NO separate reveal screen: the answer buttons
+      // already carry the verdict, so the question simply stays up until the
+      // next one dispatches. Only the round's last question breaks away, to
+      // the standings. Spectators keep the neutral reveal (they never answer).
+      if (role === 'spectator') {
         return (
           <RevealScreen
             reveal={screen.reveal}
@@ -406,21 +417,46 @@ function ScreenBody({
             locale={locale}
             board={board}
             selfUserId={selfUserId}
-            spectator={role === 'spectator'}
+            spectator
           />
         );
       }
-      const ack = screen.answer as { accepted: boolean; correct?: boolean; points?: number };
+      if (isLastQuestionOfRound(screen.reveal)) {
+        return (
+          <RoundStandings
+            board={board}
+            selfUserId={selfUserId}
+            roundIndex={screen.reveal.round_index}
+          />
+        );
+      }
+      // Hold the question screen (with its resolved buttons) — the attempt is
+      // still on the reveal payload, so nothing flickers.
+      if (screen.attempt != null) {
+        return (
+          <QuestionScreen
+            attempt={screen.attempt}
+            score={score}
+            rank={yourRank}
+            introCounts={null}
+            onExit={onExit}
+            answered={screen.answer}
+            locale={locale}
+            serverNow={serverNow}
+            submitAnswer={() => {}}
+            retryNonce={retryNonce}
+            spectator={false}
+          />
+        );
+      }
       return (
-        <AnswerReveal
-          question={null}
-          result={{ correct: ack.correct === true, points: ack.points ?? 0, timeFrac: 0 }}
-          score={score}
-          gameIndex={screen.reveal.game_index}
-          round={ROUNDS[screen.reveal.round_index] ?? ROUNDS[0]}
-          onContinue={() => {}}
-          answerTextOverride={revealAnswerText(screen.reveal, screen.attempt, locale, t as never) || null}
-          correctPct={revealCorrectPct(screen.reveal)}
+        <RevealScreen
+          reveal={screen.reveal}
+          answer={screen.answer}
+          locale={locale}
+          board={board}
+          selfUserId={selfUserId}
+          spectator={false}
         />
       );
     }
@@ -439,6 +475,7 @@ function ScreenBody({
           yourRank={yourRank}
           score={score}
           breakUntilMs={breakUntilMs}
+          originalField={checkedInCount}
           onExit={onExit}
           onSpectate={onSpectate}
         />
@@ -464,6 +501,40 @@ function ScreenBody({
         </div>
       );
   }
+}
+
+/** Questions per round, mirroring the backend WL_QUESTIONS_PER_ROUND. */
+const QUESTIONS_PER_ROUND: Record<number, number> = { 0: 5, 1: 5, 2: 5, 3: 5, 4: 1 };
+
+function isLastQuestionOfRound(reveal: { round_index: number; question_index: number }): boolean {
+  const total = QUESTIONS_PER_ROUND[reveal.round_index] ?? 5;
+  return reveal.question_index >= total - 1;
+}
+
+/** Round-end standings: the one place the board interrupts play. */
+function RoundStandings({
+  board, selfUserId, roundIndex,
+}: {
+  board: WlBoardRow[];
+  selfUserId: string | null;
+  roundIndex: number;
+}) {
+  const { t } = useLocale();
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="mx-auto flex min-h-[70vh] w-full max-w-2xl flex-col items-center justify-center px-4 text-center"
+    >
+      <div className="font-poppins text-[12px] font-black uppercase tracking-widest text-white/70">
+        {t('weekendLeague.gRoundOnly', { n: roundIndex + 1 })}
+      </div>
+      <div className="mt-1 font-poppins text-2xl font-black uppercase text-white" style={poppins}>
+        {t('weekendLeague.gStandingsTitle')}
+      </div>
+      <BoardStrip board={board} selfUserId={selfUserId} rows={5} />
+    </motion.div>
+  );
 }
 
 /** Spectators get the same elimination theatre, then the board — the cut
@@ -506,13 +577,15 @@ function SpectatorGameResult({
  *  the survived/eliminated result — the same components /dev/wl-gauntlet
  *  renders, fed by the live game_result payload. */
 function LiveGameResult({
-  result, eliminated, yourRank, score, breakUntilMs, onExit, onSpectate,
+  result, eliminated, yourRank, score, breakUntilMs, originalField, onExit, onSpectate,
 }: {
   result: { game_index: number; field?: number; advanced?: number | null };
   eliminated: boolean;
   yourRank: number | null;
   score: number;
   breakUntilMs: number | null;
+  /** Starting field (checked-in count) — the ladder is a function of it. */
+  originalField: number;
   onExit: () => void;
   onSpectate: () => void;
 }) {
@@ -532,7 +605,9 @@ function LiveGameResult({
   const canBreak = !eliminated && breakUntilMs != null && !isLastGame;
   useEffect(() => {
     if (phase !== 'result' || !canBreak) return;
-    const id = setTimeout(() => setPhase('break'), 8_000);
+    // Nothing is required of the player: the result reads for a beat, then the
+    // break countdown takes over on its own.
+    const id = setTimeout(() => setPhase('break'), 4_000);
     return () => clearTimeout(id);
   }, [phase, canBreak]);
   if (phase === 'cut' && countsKnown) {
@@ -541,7 +616,7 @@ function LiveGameResult({
   if (phase === 'break' && canBreak) {
     return (
       <BreakScreen
-        games={ladderStrip(result)}
+        games={ladderStrip(result, originalField)}
         game={game}
         finalRank={yourRank}
         score={score}
@@ -556,65 +631,13 @@ function LiveGameResult({
       survived={!eliminated}
       finalRank={countsKnown ? yourRank : null}
       score={score}
-      // Survivors continue into the break countdown; the next game's dispatch
-      // replaces the screen either way. Keep Watching is the role switch.
+      // Survivors have no CTA — this only fires for the eliminated/finalist
+      // branches that still show one. Keep Watching is the role switch.
       onContinue={() => { if (canBreak) setPhase('break'); }}
       onKeepWatching={onSpectate}
       onExit={onExit}
     />
   );
-}
-
-/** Server-provided correct answer as display text, per kind. MCQ ids and
- *  true/false resolve against the attempt's question payload so the player
- *  never sees an internal option id. */
-function revealAnswerText(
-  reveal: WlRevealEventPayload,
-  attempt: WlDispatchEventPayload | null,
-  locale: Locale,
-  t: (key: never, params?: never) => string,
-): string {
-  const evaluation = reveal.evaluation ?? {};
-  const display = pick(evaluation['display_answer'], locale);
-  if (display) return display;
-  const accepted = evaluation['accepted_answers'];
-  if (Array.isArray(accepted) && typeof accepted[0] === 'string') return accepted[0];
-  const correctId = typeof evaluation['correct_id'] === 'string' ? evaluation['correct_id'] : null;
-  if (correctId != null) {
-    if (correctId === 'true' || correctId === 'false') {
-      return t((correctId === 'true' ? 'weekendLeague.gTrue' : 'weekendLeague.gFalse') as never);
-    }
-    const options = attempt && Array.isArray(attempt.question['options'])
-      ? (attempt.question['options'] as Array<Record<string, unknown>>)
-      : [];
-    const hit = options.find((o) => String(o['id']) === correctId);
-    if (hit) return pick(hit['text'], locale);
-    return '';
-  }
-  const left = Number(evaluation['left_value']);
-  const right = Number(evaluation['right_value']);
-  if (Number.isFinite(left) && Number.isFinite(right)) return left > right ? String(left) : String(right);
-  return '';
-}
-
-/** Real percent-correct from the reveal distribution; null when the answer
- *  space is free-text and keys cannot be matched reliably. */
-function revealCorrectPct(reveal: WlRevealEventPayload): number | null {
-  const evaluation = reveal.evaluation ?? {};
-  const distribution = (reveal as { distribution?: Record<string, number> }).distribution ?? null;
-  const answered = Number(reveal.answered ?? 0);
-  if (!distribution || answered <= 0) return null;
-  let correctKey: string | null = null;
-  if (typeof evaluation['correct_id'] === 'string') {
-    correctKey = evaluation['correct_id'];
-  } else {
-    const left = Number(evaluation['left_value']);
-    const right = Number(evaluation['right_value']);
-    if (Number.isFinite(left) && Number.isFinite(right)) correctKey = left > right ? 'left' : 'right';
-  }
-  if (correctKey == null) return null;
-  const correct = Number(distribution[correctKey] ?? 0);
-  return Math.round((100 * correct) / answered);
 }
 
 // ── Question rendering per kind ─────────────────────────────────────────────
@@ -655,26 +678,35 @@ function QuestionScreen({
   };
   const ack = answered as { accepted: boolean; correct?: boolean; points?: number } | null;
 
+  // Games 2 and 3 open with the GAME N card, full-screen on its own: the field
+  // just shrank, so the new numbers are the whole point. Game 1 skips it —
+  // the lobby and check-in already stated the format.
+  const showGameIntro = !ready
+    && attempt.round_index === 0
+    && attempt.question_index === 0
+    && attempt.game_index > 0;
+  if (showGameIntro) {
+    return (
+      <div className="fixed inset-0 z-50 bg-surface-page-alt">
+        <GameIntro
+          game={{
+            index: attempt.game_index,
+            players: Number(introCounts?.players ?? 0) || 0,
+            advance: Number(introCounts?.advance ?? 0) || 0,
+          }}
+          isLastGame={attempt.game_index >= 2}
+          onDone={() => {}}
+        />
+      </div>
+    );
+  }
+
   return (
     <>
-      {!ready && attempt.round_index === 0 && attempt.question_index === 0 ? (
-        // First question of a game: the GAME N intro theatre instead of the
-        // round overlay — counts from the previous game's result when known.
-        <div className="fixed inset-0 z-40 bg-surface-page-alt">
-          <GameIntro
-            game={{
-              index: attempt.game_index,
-              players: Number(introCounts?.players ?? 0) || 0,
-              advance: Number(introCounts?.advance ?? 0) || 0,
-            }}
-            isLastGame={attempt.game_index >= 2}
-            onDone={() => {}}
-          />
-        </div>
-      ) : (
-        !ready && <RoundIntroOverlay round={round} onDone={() => {}} />
-      )}
-      <RoundScreenShell header={header}>
+      <RoundScreenShell
+        header={header}
+        overlay={!ready ? <RoundIntroOverlay round={round} onDone={() => {}} /> : null}
+      >
         {attempt.kind === 'true_false' && (
           <TrueFalseQuestion prompt={pick(q['prompt'], locale)} locked={locked} onAnswer={submitAnswer} feedback={ack} evaluation={attempt.evaluation} retryNonce={retryNonce} />
         )}
@@ -689,7 +721,11 @@ function QuestionScreen({
             card={
               <CareerPathCard
                 heading={t('weekendLeague.gCareerPrompt')}
-                items={(Array.isArray(q['clubs']) ? (q['clubs'] as unknown[]) : []).map((c) => ({ label: pick(c, locale) }))}
+                items={(Array.isArray(q['clubs']) ? (q['clubs'] as unknown[]) : []).map((c) => ({
+                  label: pick(c, locale),
+                  // Crests are keyed on English names; the chip label stays localized.
+                  matchName: pick(c, 'en' as Locale),
+                }))}
               />
             }
             locked={locked}
@@ -761,17 +797,19 @@ function choiceState(
   correctId: string | null,
 ): AnswerState {
   if (chosen == null) return 'idle';
-  // The answer key never colors anything before the player's own answer is
-  // resolved — even if a payload ever leaked it, clicking must not reveal it.
-  const resolved = ack?.accepted === true && typeof ack.correct === 'boolean';
-  if (resolved && correctId != null) {
+  // INSTANT verdict: the dispatch carries the answer key for players (only
+  // spectators get it scrubbed), so the tap colours immediately — no waiting
+  // on the ack. The server still scores; this is display only.
+  if (correctId != null) {
     if (id === correctId) return 'correct';
     if (id === chosen) return 'wrong';
     return 'faded';
   }
+  // No key in the payload (spectator/legacy): fall back to the server verdict.
+  const resolved = ack?.accepted === true && typeof ack.correct === 'boolean';
   if (id !== chosen) return 'faded';
   if (resolved) return ack!.correct ? 'correct' : 'wrong';
-  return 'idle';
+  return 'pending';
 }
 
 type Ack = { accepted: boolean; correct?: boolean; points?: number } | null;
@@ -855,9 +893,9 @@ function HigherLowerQuestion({
 }) {
   const { t } = useLocale();
   const { chosen, choose } = useChoice(locked, onAnswer, retryNonce);
-  // Values (and hence the correct side) only render once the OWN answer is
-  // resolved — an unresolved duplicate ack must not leak them.
-  const revealed = feedback?.accepted === true && typeof feedback.correct === 'boolean';
+  // Values appear as soon as the pick is locked in (the payload already
+  // carries them); before that they stay hidden so the answer isn't readable.
+  const revealed = chosen != null;
   const left = Number(evaluation['left_value']);
   const right = Number(evaluation['right_value']);
   const correctSide = Number.isFinite(left) && Number.isFinite(right) ? (left > right ? 'left' : 'right') : null;
@@ -875,7 +913,7 @@ function HigherLowerQuestion({
     <>
       <HigherLowerCard
         statLabel={pick(q['stat_label'], locale)}
-        prompt={t('weekendLeague.gHigherLowerPrompt', { name: pick(q['left_name'], locale) })}
+        prompt={t('weekendLeague.gWhoHasMore')}
       />
       <PairAnswers
         choices={[
@@ -1006,7 +1044,7 @@ function RevealScreen({
       : answer.correct === true ? 'correct' : 'wrong';
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-10">
-    <div className="rounded-[24px] border-2 border-white/10 bg-surface-card-deep p-6 text-center">
+    <div className="rounded-[24px] p-6 text-center">
       {verdict !== 'neutral' && (
         <div
           className={`mx-auto flex size-14 items-center justify-center rounded-full ${verdict === 'correct' ? 'bg-brand-green' : 'bg-brand-red-soft'} text-white`}
@@ -1041,7 +1079,7 @@ function RevealScreen({
   );
 }
 
-function BoardStrip({
+export function BoardStrip({
   board, selfUserId, rows = 5,
 }: {
   board: WlBoardRow[];
@@ -1055,15 +1093,19 @@ function BoardStrip({
   const showYouRow = you != null && !top.some((r) => r.user_id === you.user_id);
   return (
     <div className="mx-auto mt-5 w-full max-w-sm text-left">
-      {top.map((row) => (
-        <BoardRowView key={row.user_id} row={row} isYou={row.user_id === selfUserId} />
-      ))}
-      {showYouRow && (
-        <>
-          <div className="py-0.5 text-center font-poppins text-[11px] font-bold text-white/30">⋯</div>
-          <BoardRowView row={you} isYou />
-        </>
-      )}
+      <div className="overflow-hidden rounded-[10px] border-2 border-brand-green">
+        <div className="divide-y divide-brand-green/25">
+          {top.map((row) => (
+            <BoardRowView key={row.user_id} row={row} isYou={row.user_id === selfUserId} />
+          ))}
+          {showYouRow && (
+            <>
+              <div className="py-0.5 text-center font-poppins text-[11px] font-bold text-white/30">⋯</div>
+              <BoardRowView row={you} isYou />
+            </>
+          )}
+        </div>
+      </div>
       {you == null && selfUserId != null && (
         <div className="mt-1.5 text-center font-poppins text-[11px] font-bold uppercase text-white/40">
           {t('weekendLeague.gYourRank')}: 24+
@@ -1073,19 +1115,38 @@ function BoardStrip({
   );
 }
 
+/** Podium palette — the same gold / silver / bronze the leaderboard uses.
+ *  Rendered as a FILLED badge: tinted text alone (silver especially) barely
+ *  separates from white on a dark row. */
+const MEDAL_COLORS: Record<number, string> = { 1: '#FFD700', 2: '#C7CBD1', 3: '#CD7F32' };
+
 function BoardRowView({ row, isYou }: { row: WlBoardRow; isYou: boolean }) {
   const { t } = useLocale();
+  const medal = MEDAL_COLORS[row.rank] ?? null;
   return (
     <div
-      className={`flex items-center justify-between rounded-lg px-3 py-1.5 font-poppins text-[13px] font-bold ${
-        isYou ? 'bg-brand-cyan/15 text-brand-cyan' : 'text-white/75'
+      className={`flex items-center gap-3 px-3 py-2.5 transition-colors ${
+        isYou ? 'bg-brand-green text-white' : 'text-white hover:bg-white/[0.03]'
       }`}
     >
-      <span className="tabular-nums">#{row.rank}</span>
-      <span className="mx-2 flex-1 truncate">
+      {medal ? (
+        <span
+          className="flex size-9 shrink-0 items-center justify-center rounded-full font-poppins text-base font-black tabular-nums text-black shadow-[0_0_12px_rgba(0,0,0,0.35)]"
+          style={{ ...poppins, backgroundColor: medal }}
+        >
+          {row.rank}
+        </span>
+      ) : (
+        <span className="min-w-[2.25rem] text-center font-poppins text-xl font-black tabular-nums" style={poppins}>
+          #{row.rank}
+        </span>
+      )}
+      <span className="flex-1 truncate font-fun text-sm font-black uppercase">
         {isYou ? t('weekendLeague.gYou') : (row.nickname ?? t('weekendLeague.gPlayerN', { n: row.rank }))}
       </span>
-      <span className="tabular-nums">{row.points}</span>
+      <span className="font-poppins text-base font-black tabular-nums" style={poppins}>
+        {row.points}
+      </span>
     </div>
   );
 }
