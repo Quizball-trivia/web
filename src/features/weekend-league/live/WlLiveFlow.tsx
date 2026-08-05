@@ -277,8 +277,10 @@ function ladderStrip(
 
 function screenKey(screen: WlLiveScreen): string {
   switch (screen.kind) {
+    // Question and its reveal share a key: the reveal keeps the SAME question
+    // on screen, so remounting would drop the local pick and blank the buttons.
     case 'question': return `q-${screen.attempt.attempt_id}`;
-    case 'reveal': return `r-${screen.reveal.attempt_id}`;
+    case 'reveal': return `q-${screen.reveal.attempt_id}`;
     case 'game_result': return `g-${screen.result.game_index}`;
     case 'final_result': return 'final';
     default: return screen.kind;
@@ -431,11 +433,16 @@ function ScreenBody({
         );
       }
       // Hold the question screen (with its resolved buttons) — the attempt is
-      // still on the reveal payload, so nothing flickers.
+      // still on the reveal payload, so nothing flickers. The reveal's
+      // evaluation is merged in so a TIMED-OUT player (no answer at all) still
+      // sees which option was right.
       if (screen.attempt != null) {
+        const attemptWithKey = screen.answer == null
+          ? { ...screen.attempt, evaluation: screen.reveal.evaluation ?? screen.attempt.evaluation }
+          : screen.attempt;
         return (
           <QuestionScreen
-            attempt={screen.attempt}
+            attempt={attemptWithKey}
             score={score}
             rank={yourRank}
             introCounts={null}
@@ -446,6 +453,7 @@ function ScreenBody({
             submitAnswer={() => {}}
             retryNonce={retryNonce}
             spectator={false}
+            revealed={screen.answer == null}
           />
         );
       }
@@ -643,7 +651,7 @@ function LiveGameResult({
 // ── Question rendering per kind ─────────────────────────────────────────────
 
 function QuestionScreen({
-  attempt, answered, locale, serverNow, submitAnswer, retryNonce, spectator, score, rank, introCounts, onExit,
+  attempt, answered, locale, serverNow, submitAnswer, retryNonce, spectator, score, rank, introCounts, revealed = false, onExit,
 }: {
   attempt: WlDispatchEventPayload;
   answered: { accepted: boolean } | null;
@@ -656,6 +664,9 @@ function QuestionScreen({
   rank: number | null;
   /** Field/advance for the game-intro theatre (prev game's result). */
   introCounts: { players: number; advance: number } | null;
+  /** Public reveal with no answer from this player (timeout): highlight the
+   *  correct option anyway so nobody is left guessing. */
+  revealed?: boolean;
   onExit: () => void;
 }) {
   const { t } = useLocale();
@@ -708,16 +719,17 @@ function QuestionScreen({
         overlay={!ready ? <RoundIntroOverlay round={round} onDone={() => {}} /> : null}
       >
         {attempt.kind === 'true_false' && (
-          <TrueFalseQuestion prompt={pick(q['prompt'], locale)} locked={locked} onAnswer={submitAnswer} feedback={ack} evaluation={attempt.evaluation} retryNonce={retryNonce} />
+          <TrueFalseQuestion revealed={revealed} prompt={pick(q['prompt'], locale)} locked={locked} onAnswer={submitAnswer} feedback={ack} evaluation={attempt.evaluation} retryNonce={retryNonce} />
         )}
         {attempt.kind === 'mcq' && (
-          <McqQuestion q={q} locale={locale} locked={locked} onAnswer={submitAnswer} feedback={ack} evaluation={attempt.evaluation} retryNonce={retryNonce} />
+          <McqQuestion revealed={revealed} q={q} locale={locale} locked={locked} onAnswer={submitAnswer} feedback={ack} evaluation={attempt.evaluation} retryNonce={retryNonce} />
         )}
         {attempt.kind === 'higher_lower' && (
-          <HigherLowerQuestion q={q} locale={locale} locked={locked} onAnswer={submitAnswer} feedback={ack} evaluation={attempt.evaluation} retryNonce={retryNonce} />
+          <HigherLowerQuestion revealed={revealed} q={q} locale={locale} locked={locked} onAnswer={submitAnswer} feedback={ack} evaluation={attempt.evaluation} retryNonce={retryNonce} />
         )}
         {attempt.kind === 'career_path' && (
           <TypedKindQuestion
+            revealed={revealed}
             card={
               <CareerPathCard
                 heading={t('weekendLeague.gCareerPrompt')}
@@ -737,7 +749,7 @@ function QuestionScreen({
           />
         )}
         {attempt.kind === 'who_am_i' && (
-          <WhoAmIQuestion attempt={attempt} locale={locale} serverNow={serverNow} locked={locked} spectator={spectator} onSubmit={(guess) => submitAnswer({ guess })} feedback={ack} />
+          <WhoAmIQuestion revealed={revealed} attempt={attempt} locale={locale} serverNow={serverNow} locked={locked} spectator={spectator} onSubmit={(guess) => submitAnswer({ guess })} feedback={ack} />
         )}
 
         {ack != null && attempt.kind !== 'career_path' && attempt.kind !== 'who_am_i' && (
@@ -795,8 +807,13 @@ function choiceState(
   chosen: string | null,
   ack: { accepted: boolean; correct?: boolean } | null,
   correctId: string | null,
+  revealed = false,
 ): AnswerState {
-  if (chosen == null) return 'idle';
+  // Timed out without answering: the public reveal still shows what was right.
+  if (chosen == null) {
+    if (revealed && correctId != null) return id === correctId ? 'correct' : 'faded';
+    return 'idle';
+  }
   // INSTANT verdict: the dispatch carries the answer key for players (only
   // spectators get it scrubbed), so the tap colours immediately — no waiting
   // on the ack. The server still scores; this is display only.
@@ -815,7 +832,7 @@ function choiceState(
 type Ack = { accepted: boolean; correct?: boolean; points?: number } | null;
 
 function TrueFalseQuestion({
-  prompt, locked, onAnswer, feedback, evaluation, retryNonce,
+  prompt, locked, onAnswer, feedback, evaluation, retryNonce, revealed = false,
 }: {
   prompt: string;
   locked: boolean;
@@ -823,6 +840,7 @@ function TrueFalseQuestion({
   feedback: Ack;
   evaluation: Record<string, unknown>;
   retryNonce: number;
+  revealed?: boolean;
 }) {
   const { t } = useLocale();
   const { chosen, choose } = useChoice(locked, onAnswer, retryNonce);
@@ -832,8 +850,8 @@ function TrueFalseQuestion({
       <QuestionCard>{prompt}</QuestionCard>
       <PairAnswers
         choices={[
-          { key: 'true', label: t('weekendLeague.gTrue'), state: choiceState('true', chosen, feedback, correctId) },
-          { key: 'false', label: t('weekendLeague.gFalse'), state: choiceState('false', chosen, feedback, correctId) },
+          { key: 'true', label: t('weekendLeague.gTrue'), state: choiceState('true', chosen, feedback, correctId, revealed) },
+          { key: 'false', label: t('weekendLeague.gFalse'), state: choiceState('false', chosen, feedback, correctId, revealed) },
         ]}
         disabled={locked || chosen != null}
         onPick={(key) => choose(key)}
@@ -843,7 +861,7 @@ function TrueFalseQuestion({
 }
 
 function McqQuestion({
-  q, locale, locked, onAnswer, feedback, evaluation, retryNonce,
+  q, locale, locked, onAnswer, feedback, evaluation, retryNonce, revealed = false,
 }: {
   q: Record<string, unknown>;
   locale: Locale;
@@ -852,6 +870,7 @@ function McqQuestion({
   feedback: Ack;
   evaluation: Record<string, unknown>;
   retryNonce: number;
+  revealed?: boolean;
 }) {
   const { chosen, choose } = useChoice(locked, onAnswer, retryNonce);
   const correctId = typeof evaluation['correct_id'] === 'string' ? evaluation['correct_id'] : null;
@@ -871,7 +890,7 @@ function McqQuestion({
       <AnswerOptionList
         options={options.map((o) => {
           const id = String(o['id']);
-          return { key: id, label: pick(o['text'], locale), state: choiceState(id, chosen, feedback, correctId) };
+          return { key: id, label: pick(o['text'], locale), state: choiceState(id, chosen, feedback, correctId, revealed) };
         })}
         disabled={locked || chosen != null}
         onPick={(key) => choose(key)}
@@ -881,7 +900,7 @@ function McqQuestion({
 }
 
 function HigherLowerQuestion({
-  q, locale, locked, onAnswer, feedback, evaluation, retryNonce,
+  q, locale, locked, onAnswer, feedback, evaluation, retryNonce, revealed = false,
 }: {
   q: Record<string, unknown>;
   locale: Locale;
@@ -890,19 +909,20 @@ function HigherLowerQuestion({
   feedback: Ack;
   evaluation: Record<string, unknown>;
   retryNonce: number;
+  revealed?: boolean;
 }) {
   const { t } = useLocale();
   const { chosen, choose } = useChoice(locked, onAnswer, retryNonce);
   // Values appear as soon as the pick is locked in (the payload already
   // carries them); before that they stay hidden so the answer isn't readable.
-  const revealed = chosen != null;
+  const showValues = chosen != null || revealed;
   const left = Number(evaluation['left_value']);
   const right = Number(evaluation['right_value']);
   const correctSide = Number.isFinite(left) && Number.isFinite(right) ? (left > right ? 'left' : 'right') : null;
   const sideLabel = (side: 'left' | 'right') => (
     <span>
       {pick(q[side === 'left' ? 'left_name' : 'right_name'], locale)}
-      {revealed && Number.isFinite(side === 'left' ? left : right) && (
+      {showValues && Number.isFinite(side === 'left' ? left : right) && (
         <span className="mt-1 block font-poppins text-[13px] font-bold tabular-nums opacity-70">
           {side === 'left' ? left : right}
         </span>
@@ -917,8 +937,8 @@ function HigherLowerQuestion({
       />
       <PairAnswers
         choices={[
-          { key: 'left', label: sideLabel('left'), state: choiceState('left', chosen, feedback, correctSide) },
-          { key: 'right', label: sideLabel('right'), state: choiceState('right', chosen, feedback, correctSide) },
+          { key: 'left', label: sideLabel('left'), state: choiceState('left', chosen, feedback, correctSide, revealed) },
+          { key: 'right', label: sideLabel('right'), state: choiceState('right', chosen, feedback, correctSide, revealed) },
         ]}
         disabled={locked || chosen != null}
         onPick={(key) => choose(key)}
@@ -930,7 +950,7 @@ function HigherLowerQuestion({
 /** Shared driver for the typed kinds (career path, who-am-i): the designed
  *  blue input + green submit / red give-up, then the verdict box. */
 function TypedKindQuestion({
-  card, locked, spectator, onSubmit, feedback, evaluation, locale,
+  card, locked, spectator, onSubmit, feedback, evaluation, locale, revealed = false,
 }: {
   card: React.ReactNode;
   locked: boolean;
@@ -939,18 +959,20 @@ function TypedKindQuestion({
   feedback: Ack;
   evaluation: Record<string, unknown>;
   locale: Locale;
+  revealed?: boolean;
 }) {
   const [guess, setGuess] = useState('');
   const outcome: 'correct' | 'wrong' | null =
     feedback?.accepted && typeof feedback.correct === 'boolean'
       ? (feedback.correct ? 'correct' : 'wrong')
-      : null;
+      // Timed out with nothing submitted — treat as wrong so the answer shows.
+      : revealed ? 'wrong' : null;
   const answerText = outcome === 'wrong' ? pick(evaluation['display_answer'], locale) : '';
   return (
     <>
       {card}
       <TypedAnswerPanel
-        locked={feedback != null || locked}
+        locked={feedback != null || locked || revealed}
         outcome={outcome}
         answerText={answerText}
         guess={guess}
@@ -972,7 +994,7 @@ function TypedKindQuestion({
 }
 
 function WhoAmIQuestion({
-  attempt, locale, serverNow, locked, spectator, onSubmit, feedback,
+  attempt, locale, serverNow, locked, spectator, onSubmit, feedback, revealed = false,
 }: {
   attempt: WlDispatchEventPayload;
   locale: Locale;
@@ -981,6 +1003,7 @@ function WhoAmIQuestion({
   spectator: boolean;
   onSubmit: (guess: string) => void;
   feedback: Ack;
+  revealed?: boolean;
 }) {
   const clues = Array.isArray(attempt.question['clues'])
     ? (attempt.question['clues'] as Array<Record<string, unknown>>)
@@ -994,7 +1017,7 @@ function WhoAmIQuestion({
     WHO_AM_I_CLUES - 1,
     Math.max(0, Math.floor((serverNow() - attempt.playableAt) / clueWindow)),
   );
-  const revealAll = locked && feedback != null;
+  const revealAll = (locked && feedback != null) || revealed;
   return (
     <TypedKindQuestion
       card={
@@ -1015,6 +1038,7 @@ function WhoAmIQuestion({
       feedback={feedback}
       evaluation={attempt.evaluation}
       locale={locale}
+      revealed={revealed}
     />
   );
 }
