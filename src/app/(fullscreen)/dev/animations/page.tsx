@@ -514,7 +514,7 @@ type PenaltyKickOptions = {
   answerAckDelayMs?: number;
   opponentAnsweredDelayMs?: number;
   roundResultDelayMs?: number;
-  legacyOpponentRecentPointsOverride?: number;
+  legacyOpponentRoundPointsOverride?: number;
   // When true, DON'T advance to the next shooter after the round result. Used for
   // the FINAL/deciding kick so the goal/save shot + splash play out fully instead
   // of being cut short by the next-shooter state change (the reported bug).
@@ -527,6 +527,15 @@ function defaultPenaltyPoints(shooterSeat: 1 | 2, outcome: 'goal' | 'saved'): { 
     me: winningSeat === 1 ? 100 : 90,
     opp: winningSeat === 2 ? 100 : 90,
   };
+}
+
+function penaltyOutcomeForPoints(
+  shooterSeat: 1 | 2,
+  points: { me: number; opp: number }
+): 'goal' | 'saved' {
+  const shooterPoints = shooterSeat === 1 ? points.me : points.opp;
+  const keeperPoints = shooterSeat === 1 ? points.opp : points.me;
+  return shooterPoints > keeperPoints ? 'goal' : 'saved';
 }
 
 const PUT_IN_ORDER_CORRECT = [
@@ -2220,7 +2229,7 @@ export function DevAnimationsContent({
     const roundResultDelayMs = options.roundResultDelayMs ?? DEV_PENALTY_ROUND_RESULT_DELAY_MS;
     const emitOpponentAnswered = options.emitOpponentAnswered ?? false;
     const holdOnResult = options.holdOnResult ?? false;
-    const legacyOpponentRecentPointsOverride = options.legacyOpponentRecentPointsOverride;
+    const legacyOpponentRoundPointsOverride = options.legacyOpponentRoundPointsOverride;
     const penaltyAttempts = options.penaltyAttempts;
     const nextShooterSeat = nextSeat(shooterSeat);
 
@@ -2267,10 +2276,11 @@ export function DevAnimationsContent({
     s.setMatchQuestion(makePenaltyQuestion(qIndex, shooterSeat));
 
     const points = options.points ?? defaultPenaltyPoints(shooterSeat, outcome);
+    const resolvedOutcome = penaltyOutcomeForPoints(shooterSeat, points);
     const result = makePenaltyRoundResult(
       qIndex,
       shooterSeat,
-      outcome,
+      resolvedOutcome,
       scoreRef.current,
       points,
       options.times
@@ -2319,21 +2329,22 @@ export function DevAnimationsContent({
 
       pendingTimers.current.push(
         window.setTimeout(() => {
-          s.setRoundResult(result);
-          if (legacyOpponentRecentPointsOverride !== undefined) {
-            useRealtimeMatchStore.setState((prev) =>
-              prev.match
-                ? {
-                    ...prev,
-                    match: {
-                      ...prev.match,
-                      opponentRecentPoints: legacyOpponentRecentPointsOverride,
-                    },
-                  }
-                : prev
-            );
-          }
-          if (outcome === 'goal') {
+          const displayedResult = legacyOpponentRoundPointsOverride === undefined
+            ? result
+            : {
+                ...result,
+                players: {
+                  ...result.players,
+                  [OPP_ID]: {
+                    ...opp,
+                    totalPoints: scoreRef.current.oppTotal + legacyOpponentRoundPointsOverride,
+                    pointsEarned: legacyOpponentRoundPointsOverride,
+                    isCorrect: legacyOpponentRoundPointsOverride > 0,
+                  },
+                },
+              };
+          s.setRoundResult(displayedResult);
+          if (resolvedOutcome === 'goal') {
             if (shooterSeat === 1) penaltyGoalsRef.current.seat1 += 1;
             else penaltyGoalsRef.current.seat2 += 1;
           }
@@ -2343,7 +2354,7 @@ export function DevAnimationsContent({
               seat2: [...penaltyAttempts.seat2],
             };
             resolvedAttempts[shooterSeat === 1 ? 'seat1' : 'seat2'].push(
-              outcome === 'goal' ? 'goal' : 'miss'
+              resolvedOutcome === 'goal' ? 'goal' : 'miss'
             );
             stateVersion.current += 1;
             s.setMatchState(
@@ -2415,15 +2426,15 @@ export function DevAnimationsContent({
     );
     setRemountKey((key) => key + 1);
 
-    // The server outcome is a legitimate bot goal. The legacy replay feeds the
-    // UI its stale reset value (0) for the bot's round points; the fixed replay
-    // reconciles the authoritative 100 before the same goal animation.
+    // The server outcome is a legitimate bot goal. To replay the old client,
+    // feed the production UI the stale zero-point opponent snapshot it used to
+    // render. The fixed replay receives the authoritative 100-point snapshot.
     pendingTimers.current.push(
       window.setTimeout(() => {
         takePenaltyKick(2, 'goal', {
           resetTimers: false,
-          points: { me: 100, opp: 100 },
-          legacyOpponentRecentPointsOverride: mode === 'before' ? 0 : undefined,
+          points: { me: 90, opp: 100 },
+          legacyOpponentRoundPointsOverride: mode === 'before' ? 0 : undefined,
           holdOnResult: true,
         });
       }, 200)
@@ -2947,7 +2958,7 @@ export function DevAnimationsContent({
                   ? 'Before fix: bot points stay at 0, but the real result is a goal.'
                   : activePenaltyReplay === 'after'
                     ? 'After fix: the same goal reveals the bot\'s authoritative 100 points.'
-                    : 'Reported round: KIGAN shoots; both are correct, faster keeper saves it. Score stays 0–2.'}
+                    : 'New rule: KIGAN shoots; 100–100 is a tie, so the keeper saves it. Score stays 0–2.'}
               </div>
             </div>
             <button

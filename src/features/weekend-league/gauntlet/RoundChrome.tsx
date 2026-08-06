@@ -139,9 +139,7 @@ export function AnswerBtn({
         textTransform: 'uppercase',
         color: state === 'wrong' ? '#FB3101' : '#FFFFFF',
         opacity: state === 'faded' ? 0.45 : 1,
-        backgroundColor: state === 'correct'
-          ? '#38B60E'
-          : state === 'pending' ? 'rgba(255,229,0,0.16)' : 'transparent',
+        backgroundColor: state === 'correct' ? '#38B60E' : 'transparent',
         border:
           state === 'correct'
             ? 'none'
@@ -157,10 +155,6 @@ export function AnswerBtn({
         cursor: disabled ? 'default' : 'pointer',
       }}
     >
-      {/* Instant press feedback: the pick lights up on tap, before the ack. */}
-      {state === 'pending' && (
-        <span className="pointer-events-none absolute inset-0 animate-pulse rounded-[16px] bg-brand-yellow/10" />
-      )}
       {/* Option letter pinned to the corner so it never shifts with the label. */}
       {prefix && <span className="absolute left-2.5 top-2">{prefix}</span>}
       <div className="flex items-center justify-center gap-3 px-6 text-center">

@@ -175,15 +175,12 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
       }
       setGameIndex(attempt.game_index);
       clearPendingQuestion();
-      // If a reveal is on screen, hold it through the dispatch lead — the
-      // question isn't answerable before playableAt anyway, so the correct
-      // answer stays readable instead of flashing away.
-      const leadMs = attempt.playableAt - serverNow();
-      if (screenRef.current.kind === 'reveal' && leadMs > 150) {
-        pendingQuestionTimerRef.current = setTimeout(() => showQuestion(attempt), leadMs);
-      } else {
-        apply({ kind: 'question', attempt, answer: answeredRef.current });
-      }
+      // Show the new question IMMEDIATELY: the dispatch lead IS the reading
+      // grace (timer held at full until playableAt), and round intros render
+      // inside it. Holding the old reveal here consumed the entire lead and
+      // no player ever saw the grace. The round-end standings beat is
+      // protected server-side by the 6s breather, not by this hold.
+      apply({ kind: 'question', attempt, answer: answeredRef.current });
     };
 
     const onReveal = (event: WlRevealEventPayload) => {

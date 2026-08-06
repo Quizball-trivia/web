@@ -128,8 +128,9 @@ export function WlLiveFlowView({
   // can show real field/advance counts after the screen has moved on.
   // Ranked's background loop: start when live play begins, stop with a fade
   // when the tournament resolves or the screen unmounts.
-  const inPlay = live.screen.kind === 'question' || live.screen.kind === 'reveal'
-    || live.screen.kind === 'game_result';
+  const inPlay = role === 'player'
+    && (live.screen.kind === 'question' || live.screen.kind === 'reveal'
+      || live.screen.kind === 'game_result');
   useEffect(() => {
     if (!inPlay) return;
     playBgm('kickoff');
@@ -480,7 +481,6 @@ function ScreenBody({
             board={board}
             selfUserId={selfUserId}
             roundIndex={screen.reveal.round_index}
-            yourRankFallback={lastGameRank}
             question={
               screen.attempt != null ? (
                 <QuestionScreen

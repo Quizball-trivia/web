@@ -11,5 +11,9 @@ export default function PenaltyScoreBugPage() {
     );
   }
 
-  return <DevAnimationsContent initialScenario="penalty-score-bug" />;
+  return (
+    <div className="min-h-dvh overflow-x-hidden">
+      <DevAnimationsContent initialScenario="penalty-score-bug" />
+    </div>
+  );
 }
