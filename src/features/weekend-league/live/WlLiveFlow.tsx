@@ -529,6 +529,7 @@ function ScreenBody({
           moneyBudget={moneyBudget}
           mdSheet={mdSheets[attempt.attempt_id] ?? null}
           onMdSheet={onMdSheet}
+          spectatorBoard={role === 'spectator' ? board : null}
           onExit={onExit}
           answered={screen.answer}
           locale={locale}
@@ -886,7 +887,7 @@ function LiveGameResult({
 // ── Question rendering per kind ─────────────────────────────────────────────
 
 function QuestionScreen({
-  attempt, answered, locale, serverNow, submitAnswer, retryNonce, spectator, score, rank, introCounts, moneyBudget = 300, mdSheet = null, onMdSheet, revealed = false, onExit,
+  attempt, answered, locale, serverNow, submitAnswer, retryNonce, spectator, score, rank, introCounts, moneyBudget = 300, mdSheet = null, onMdSheet, spectatorBoard = null, revealed = false, onExit,
 }: {
   attempt: WlDispatchEventPayload;
   answered: { accepted: boolean } | null;
@@ -904,6 +905,9 @@ function QuestionScreen({
   /** Previously submitted money-drop sheet (restores across remounts). */
   mdSheet?: Record<string, number> | null;
   onMdSheet?: (attemptId: string, sheet: Record<string, number>) => void;
+  /** Spectators only: live board rendered UNDER the question on screens too
+   *  narrow for the fixed rail (the rail is xl-only; mobile had nothing). */
+  spectatorBoard?: WlBoardRow[] | null;
   /** Public reveal with no answer from this player (timeout): highlight the
    *   correct option anyway so nobody is left guessing. */
   revealed?: boolean;
@@ -1028,6 +1032,18 @@ function QuestionScreen({
 
         {ack != null && attempt.kind !== 'career_path' && attempt.kind !== 'who_am_i' && attempt.kind !== 'money_drop' && (
           <AnswerFeedback ack={ack} />
+        )}
+
+        {spectator && spectatorBoard != null && spectatorBoard.length > 0 && (
+          <div className="mt-6 xl:hidden">
+            <div className="mb-1 flex items-center justify-center gap-2">
+              <span className="font-poppins text-[12px] font-black uppercase tracking-wide text-white">
+                {t('weekendLeague.gStandingsTitle')}
+              </span>
+              <LiveBadge />
+            </div>
+            <BoardStrip board={spectatorBoard} selfUserId={null} rows={5} />
+          </div>
         )}
       </RoundScreenShell>
     </>

@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { poppins } from '../constants';
-import { XCircle } from 'lucide-react';
+import { Eye, XCircle } from 'lucide-react';
 import { DailyChallengeHeader } from '@/features/daily/components/DailyChallengeHeader';
 import { RoundTransitionOverlay } from '@/components/game/RoundTransitionOverlay';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -50,9 +50,15 @@ export function GauntletHeader({
             : t('possession.questionCounter', { current: 1, total: 1 })
         }
       />
-      {/* Players see their score; spectators get no meta line at all — the
-          watching context is obvious and the badge read as clutter. */}
-      {!spectator && (
+      {/* Players see their score; spectators get a slim centered chip — the
+          playtest showed that NO indicator reads as "answers are broken". */}
+      {spectator ? (
+        <div className="mx-auto mt-2 flex max-w-3xl items-center justify-center px-4">
+          <span className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 font-poppins text-[11px] font-black uppercase tracking-widest text-white/70">
+            <Eye className="size-3.5" /> {t('weekendLeague.gSpectator')}
+          </span>
+        </div>
+      ) : (
         <div className="mx-auto mt-2 flex max-w-3xl items-center justify-end px-4 font-poppins text-[11px] font-bold uppercase tracking-wide text-white/50">
           <span className="tabular-nums text-white/80">
             {rank != null
