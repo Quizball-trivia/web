@@ -53,6 +53,16 @@ export function LeagueCountdown({
     return () => clearInterval(id);
   }, [targetMs]);
 
+  // Zero is a moment, not a state: the next phase lands within one fast poll,
+  // and a frozen 00:00 read as "broken" in playtests. Pulse "starting" instead.
+  if (remaining != null && remaining <= 0) {
+    return (
+      <div className={`animate-pulse font-poppins text-xl font-black uppercase tracking-widest ${accent}`} style={poppins} role="timer">
+        {t('weekendLeague.startingNow')}
+      </div>
+    );
+  }
+
   const segs = segments(remaining ?? 0);
   const numClass = size === 'sm' ? 'text-2xl' : 'text-4xl sm:text-5xl';
   // Digits sit straight on the surface — no boxes or borders around segments.

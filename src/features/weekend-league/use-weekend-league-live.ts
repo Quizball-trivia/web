@@ -20,7 +20,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import { useLocale } from '@/contexts/LocaleContext';
 import type { components } from '@/types/api.generated';
 import { QP_TARGET } from './constants';
-import { syncWlClock } from './wlClock';
+import { syncWlClock, wlNow } from './wlClock';
 import { getMilestones } from './mock-data';
 import type { LeaguePhase, Milestone } from './types';
 import type { WeekendLeagueController } from './use-weekend-league';
@@ -145,8 +145,19 @@ export function useWeekendLeagueLive(): WeekendLeagueLiveController {
     enabled: authStatus === 'authenticated',
     staleTime: 0,
     refetchInterval: (q) => {
-      const status = q.state.data?.tournament?.status;
-      return status && HOT_STATUSES.has(status) ? 5_000 : 60_000;
+      const t = q.state.data?.tournament;
+      const status = t?.status;
+      if (status && HOT_STATUSES.has(status)) return 5_000;
+      // Near ANY phase boundary poll fast: a lazy 60s cadence left the entry
+      // card frozen at 00:00 for up to a minute after the window closed
+      // (owner playtest report) — the flip to check-in must land in seconds.
+      const now = wlNow();
+      const boundaries = [t?.entry_opens_at, t?.entry_closes_at, t?.qualifier_starts_at, t?.final_starts_at]
+        .map((iso) => (iso ? Date.parse(iso) : Number.NaN))
+        .filter((ms) => Number.isFinite(ms) && ms > now - 30_000);
+      const nearest = boundaries.length > 0 ? Math.min(...boundaries) : null;
+      if (nearest != null && nearest - now < 90_000) return 3_000;
+      return 60_000;
     },
   });
 
