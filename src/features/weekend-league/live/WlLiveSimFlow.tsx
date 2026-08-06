@@ -8,7 +8,7 @@
 // this, the playground AND live play all change together.
 
 import { useEffect, useState } from 'react';
-import { FastForward, RotateCcw, X } from 'lucide-react';
+import { Bot, Eye, FastForward, RotateCcw, User, X } from 'lucide-react';
 import { GauntletBackdrop } from '../gauntlet/RoundViews';
 import { GauntletLobby } from '../gauntlet/GauntletScreens';
 import { buildGames } from '../gauntlet/gauntlet.data';
@@ -39,6 +39,7 @@ export function WlLiveSimFlow({ onExit }: { onExit: () => void }) {
   const { live, sim } = useWlSimulated();
   const [phase, setPhase] = useState<'lobby' | 'checkin' | 'playing'>('lobby');
   const [checkedIn, setCheckedIn] = useState(false);
+  const [role, setRole] = useState<'player' | 'spectator'>('player');
   const [kickoffMs, setKickoffMs] = useState(() => Date.now() + CHECKIN_WINDOW_MS);
 
   // Kickoff when the simulated check-in window closes (checked in or not —
@@ -83,7 +84,7 @@ export function WlLiveSimFlow({ onExit }: { onExit: () => void }) {
       <WlLiveFlowView
         live={live}
         selfUserId={SIM_SELF_ID}
-        role="player"
+        role={role}
         status={phase === 'checkin' ? 'checkin' : 'game_live'}
         checkedIn={checkedIn}
         checkinPending={false}
@@ -97,11 +98,51 @@ export function WlLiveSimFlow({ onExit }: { onExit: () => void }) {
         currentGameIndex={live.gameIndex}
       />
 
+      {/* Saturday is done; Sunday's final has not kicked off yet. The live app
+          shows the league card here — the sim states it plainly. */}
+      {sim.intermission && (
+        <div className="fixed inset-0 z-[55] flex flex-col items-center justify-center bg-surface-page-alt px-4 text-center">
+          <div className="font-poppins text-[11px] font-black uppercase tracking-[0.3em] text-brand-gold">
+            SATURDAY COMPLETE
+          </div>
+          <div className="mt-2 font-poppins text-4xl font-black uppercase text-white">
+            24 finalists
+          </div>
+          <div className="mt-3 font-poppins text-[13px] font-bold uppercase tracking-wide text-white/60">
+            Sunday final · one game · one champion
+          </div>
+        </div>
+      )}
+
       {/* Sim controls — float above the real UI, never part of it. */}
       <div className="fixed bottom-4 left-1/2 z-[60] flex max-w-[95vw] -translate-x-1/2 flex-wrap items-center justify-center gap-1.5 rounded-2xl border-2 border-brand-purple/40 bg-black/85 px-3 py-2 backdrop-blur">
         <span className="font-poppins text-[10px] font-black uppercase tracking-widest text-brand-purple">
           SIM
         </span>
+        <span className={`rounded-lg px-2 py-1 font-poppins text-[10px] font-black uppercase tracking-wide ${
+          sim.day === 'sunday' ? 'bg-brand-gold/20 text-brand-gold' : 'bg-white/10 text-white/70'
+        }`}>
+          {sim.day === 'sunday' ? 'SUN · final' : 'SAT · qualifier'}
+        </span>
+        <button
+          type="button"
+          onClick={() => setRole((r) => (r === 'player' ? 'spectator' : 'player'))}
+          className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 font-poppins text-[11px] font-black uppercase transition-colors ${
+            role === 'spectator' ? 'bg-brand-cyan text-black' : 'bg-white/8 text-white/70 hover:bg-white/15'
+          }`}
+        >
+          {role === 'spectator' ? <Eye className="size-3.5" /> : <User className="size-3.5" />}
+          {role === 'spectator' ? 'Watching' : 'Playing'}
+        </button>
+        <button
+          type="button"
+          onClick={() => sim.setAutoplay(!sim.autoplay)}
+          className={`flex items-center gap-1 rounded-lg px-2.5 py-1.5 font-poppins text-[11px] font-black uppercase transition-colors ${
+            sim.autoplay ? 'bg-brand-green text-white' : 'bg-white/8 text-white/70 hover:bg-white/15'
+          }`}
+        >
+          <Bot className="size-3.5" /> {sim.autoplay ? 'Bot on' : 'Bot off'}
+        </button>
         {/* Screen picker: jump straight to any designed screen. */}
         {SCREENS.map((sc) => {
           // The lobby returns early, so only check-in / playing reach here.

@@ -47,6 +47,8 @@ const REVEAL_MS = 1_800;
 const ROUND_END_REVEAL_MS = 6_000;
 const RESULT_MS = 7_000;
 const BREAK_MS = 14_000;
+// Stands in for the overnight wait between Saturday and Sunday.
+const INTERMISSION_MS = 10_000;
 
 type I18n = { en: string; ka: string };
 const i18n = (en: string, ka: string): I18n => ({ en, ka });
@@ -139,18 +141,30 @@ type SimStep =
   | { kind: 'reveal'; game: number; round: number; ms: number }
   | { kind: 'game_result'; game: number; ms: number }
   | { kind: 'break'; game: number; ms: number }
+  /** Saturday is over; Sunday's final has not started yet. */
+  | { kind: 'intermission'; ms: number }
   | { kind: 'final'; ms: number };
 
+/** Game index 3 is Sunday's final, matching the backend's WL_FINAL_GAME_INDEX. */
+export const SIM_FINAL_GAME = 3;
+
+/**
+ * A whole weekend: Saturday's three qualifier games with their breaks, the
+ * overnight intermission, then Sunday's final and the champion screen.
+ */
 function buildScript(): SimStep[] {
   const steps: SimStep[] = [];
-  for (let g = 0; g < 3; g += 1) {
+  for (let g = 0; g < 4; g += 1) {
     for (let r = 0; r < QUESTIONS.length; r += 1) {
       steps.push({ kind: 'question', game: g, round: r, ms: QUESTION_MS });
       const lastOfRound = true; // one question per kind in the sim script
       steps.push({ kind: 'reveal', game: g, round: r, ms: lastOfRound ? ROUND_END_REVEAL_MS : REVEAL_MS });
     }
+    if (g === SIM_FINAL_GAME) break;
     steps.push({ kind: 'game_result', game: g, ms: RESULT_MS });
     if (g < 2) steps.push({ kind: 'break', game: g, ms: BREAK_MS });
+    // After Saturday's last qualifier: the wait until Sunday.
+    if (g === 2) steps.push({ kind: 'intermission', ms: INTERMISSION_MS });
   }
   steps.push({ kind: 'final', ms: Number.POSITIVE_INFINITY });
   return steps;
@@ -210,13 +224,16 @@ function revealFor(game: number, round: number, now: number, board: WlBoardRow[]
     question_index: 0,
     kind: q.kind,
     evaluation: q.evaluation,
-    answered: LADDER[game].players,
-    distribution: { [correctKey]: Math.round(LADDER[game].players * 0.62) },
+    answered: LADDER[Math.min(game, 2)].players,
+    distribution: { [correctKey]: Math.round(LADDER[Math.min(game, 2)].players * 0.62) },
     board,
   };
 }
 
 export interface WlSimControls {
+  /** Let a bot answer for you — the weekend then plays itself. */
+  autoplay: boolean;
+  setAutoplay: (on: boolean) => void;
   /** Jump to the next scripted step immediately. */
   skip: () => void;
   restart: () => void;
@@ -226,6 +243,10 @@ export interface WlSimControls {
   current: SimJumpTarget | null;
   /** True while a question is still in its dispatch lead (intro overlay up). */
   inLead: boolean;
+  /** Which day of the weekend the current step belongs to. */
+  day: 'saturday' | 'sunday';
+  /** Between Saturday's last game and Sunday's final. */
+  intermission: boolean;
   /** Break deadline while the break step runs (feeds the view prop). */
   breakUntilMs: number | null;
   /** The finished game's counts while the break runs. */
@@ -236,6 +257,7 @@ export interface WlSimControls {
 export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
   const script = useMemo(() => buildScript(), []);
   // One state object with pure functional transitions — StrictMode-safe.
+  const [autoplay, setAutoplay] = useState(false);
   const [st, setSt] = useState(() => ({
     stepIndex: 0,
     startedAt: Date.now(),
@@ -328,6 +350,35 @@ export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
     }, 350);
   }, [script, st.stepIndex, st.ack]);
 
+  // Bot autoplay: answers a beat after the question opens, right ~70% of the
+  // time so the board moves the way a real field would.
+  const submitRef = useRef<(a: unknown) => void>(() => {});
+  useEffect(() => {
+    if (!autoplay || step.kind !== 'question' || st.ack != null) return;
+    const q = QUESTIONS[step.round];
+    const wantCorrect = (step.game * 7 + step.round * 3) % 10 < 7;
+    const answer = (() => {
+      if (q.kind === 'true_false') {
+        const right = String(q.evaluation['correct_id']);
+        return wantCorrect ? right : (right === 'true' ? 'false' : 'true');
+      }
+      if (q.kind === 'mcq') {
+        const right = String(q.evaluation['correct_id']);
+        const opts = (q.question['options'] as Array<{ id: string }>).map((o) => o.id);
+        return wantCorrect ? right : (opts.find((o) => o !== right) ?? right);
+      }
+      if (q.kind === 'higher_lower') {
+        const right = Number(q.evaluation['left_value']) > Number(q.evaluation['right_value']) ? 'left' : 'right';
+        return wantCorrect ? right : (right === 'left' ? 'right' : 'left');
+      }
+      const accepted = (q.evaluation['accepted_answers'] as string[]) ?? [];
+      const guess = wantCorrect ? (accepted[0] ?? '') : 'wrong answer';
+      return q.kind === 'who_am_i' ? { guess } : guess;
+    })();
+    const id = setTimeout(() => submitRef.current(answer), LEAD_MS + 900);
+    return () => clearTimeout(id);
+  }, [autoplay, step, st.ack]);
+
   const serverNow = useCallback(() => Date.now(), []);
 
   const board = useMemo(() => {
@@ -357,12 +408,13 @@ export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
             type: 'game_result',
             game_index: step.game,
             board,
-            field: LADDER[step.game].players,
-            advanced: LADDER[step.game].advance,
+            field: LADDER[Math.min(step.game, 2)].players,
+            advanced: LADDER[Math.min(step.game, 2)].advance,
           },
           eliminated: false,
         };
       case 'break':
+      case 'intermission':
         return { kind: 'waiting' };
       case 'final':
         return {
@@ -421,12 +473,20 @@ export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
     return null;
   }, [step]);
 
+  useEffect(() => { submitRef.current = submitAnswer; }, [submitAnswer]);
+
   const sim: WlSimControls = useMemo(() => ({
+    autoplay,
+    setAutoplay,
     skip: advance,
     restart,
     jumpTo,
     current,
     inLead: step.kind === 'question' && !st.leadSkipped,
+    day: ('game' in step ? step.game : SIM_FINAL_GAME) >= SIM_FINAL_GAME || step.kind === 'intermission'
+      ? 'sunday'
+      : 'saturday',
+    intermission: step.kind === 'intermission',
     breakUntilMs: step.kind === 'break' ? st.startedAt + BREAK_MS : null,
     lastResult: step.kind === 'break'
       ? {
@@ -439,8 +499,9 @@ export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
       ? `G${step.game + 1} R${step.round + 1} ${step.kind}`
       : step.kind === 'game_result' ? `G${step.game + 1} result`
       : step.kind === 'break' ? `break after G${step.game + 1}`
+      : step.kind === 'intermission' ? 'Sat → Sun'
       : 'champion',
-  }), [step, st.startedAt, st.leadSkipped, advance, restart, jumpTo, current]);
+  }), [step, st.startedAt, st.leadSkipped, advance, restart, jumpTo, current, autoplay]);
 
   return { live, sim };
 }
