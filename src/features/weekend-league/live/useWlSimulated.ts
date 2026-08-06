@@ -108,20 +108,17 @@ const QUESTIONS: SimQuestion[] = [
     points: 250,
   },
   {
-    kind: 'who_am_i',
+    kind: 'money_drop',
     question: {
-      clues: [
-        { content: i18n('I was born in Rosario in 1987.', 'დავიბადე როსარიოში 1987 წელს.') },
-        { content: i18n('I joined La Masia at age 13.', '13 წლის ასაკში ლა მასიაში გადავედი.') },
-        { content: i18n('I have won 8 Ballons d’Or.', 'მოგებული მაქვს 8 ოქროს ბურთი.') },
-        { content: i18n('I won the 2022 World Cup.', '2022 წლის მუნდიალი მოვიგე.') },
-        { content: i18n('I now play for Inter Miami.', 'ახლა ინტერ მაიამიში ვთამაშობ.') },
+      prompt: i18n('Which country won the 2022 World Cup?', 'რომელმა ქვეყანამ მოიგო 2022 წლის მუნდიალი?'),
+      options: [
+        { id: 'a', text: i18n('France', 'საფრანგეთი') },
+        { id: 'b', text: i18n('Argentina', 'არგენტინა') },
+        { id: 'c', text: i18n('Brazil', 'ბრაზილია') },
+        { id: 'd', text: i18n('Germany', 'გერმანია') },
       ],
     },
-    evaluation: {
-      display_answer: i18n('Lionel Messi', 'ლიონელ მესი'),
-      accepted_answers: ['messi', 'lionel messi', 'leo messi', 'მესი'],
-    },
+    evaluation: { correct_id: 'b' },
     points: 300,
   },
 ];
@@ -301,7 +298,14 @@ export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
     if (cur.kind !== 'question' || st.ack != null) return;
     const q = QUESTIONS[cur.round];
     let correct = false;
-    if (q.kind === 'true_false' || q.kind === 'mcq') {
+    let carry: number | undefined;
+    if (q.kind === 'money_drop') {
+      // One question stands in for the whole round in the sim: whatever lands
+      // on the correct option IS the round's carry (and the points).
+      const bets = ((answer as { bets?: Record<string, number> })?.bets) ?? {};
+      carry = Math.max(0, Math.min(Math.floor(bets[String(q.evaluation['correct_id'])] ?? 0), q.points));
+      correct = carry > 0;
+    } else if (q.kind === 'true_false' || q.kind === 'mcq') {
       correct = answer === q.evaluation['correct_id'];
     } else if (q.kind === 'higher_lower') {
       const expected = Number(q.evaluation['left_value']) > Number(q.evaluation['right_value']) ? 'left' : 'right';
@@ -311,9 +315,10 @@ export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
       const accepted = (q.evaluation['accepted_answers'] as string[]) ?? [];
       correct = guess.trim() !== '' && accepted.some((a) => normalize(a) === normalize(guess));
     }
+    const earned = carry ?? (correct ? q.points : 0);
     const result: WlAnswerAck = correct
-      ? { accepted: true, correct: true, points: q.points, elapsedMs: 2_000 }
-      : { accepted: true, correct: false, points: 0, elapsedMs: 2_000 };
+      ? { accepted: true, correct: true, points: earned, elapsedMs: 2_000, ...(carry != null ? { carry } : {}) }
+      : { accepted: true, correct: false, points: 0, elapsedMs: 2_000, ...(carry != null ? { carry } : {}) };
     // Small round-trip delay so the pending state is visible, like the wire —
     // generation-checked so Skip/Restart discard it.
     const gen = genRef.current;
@@ -323,7 +328,7 @@ export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
       setSt((prev) => ({
         ...prev,
         ack: prev.ack ?? result,
-        score: prev.ack == null && correct ? prev.score + q.points : prev.score,
+        score: prev.ack == null && correct ? prev.score + earned : prev.score,
       }));
     }, 350);
   }, [script, st.stepIndex, st.ack]);
@@ -394,6 +399,7 @@ export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
     submitAnswer,
     lastAck: st.ack,
     retryNonce: 0,
+    snapshotMoneyBudget: null,
   }), [screen, board, st.score, st.ack, step, serverNow, submitAnswer]);
 
   const jumpTo = useCallback((target: SimJumpTarget) => {

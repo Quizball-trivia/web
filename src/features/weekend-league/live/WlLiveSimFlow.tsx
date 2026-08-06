@@ -25,7 +25,7 @@ const SCREENS: { label: string; go: SimJumpTarget | 'lobby' | 'checkin' }[] = [
   { label: 'hi/lo', go: { kind: 'question', round: 1, skipIntro: true } },
   { label: 'MCQ', go: { kind: 'question', round: 2, skipIntro: true } },
   { label: 'career', go: { kind: 'question', round: 3, skipIntro: true } },
-  { label: 'who am i', go: { kind: 'question', round: 4, skipIntro: true } },
+  { label: 'money drop', go: { kind: 'question', round: 4, skipIntro: true } },
   { label: 'reveal', go: { kind: 'reveal', round: 2 } },
   { label: 'result', go: { kind: 'game_result' } },
   { label: 'break', go: { kind: 'break' } },

@@ -1392,7 +1392,7 @@ export interface NotificationUnreadCountPayload {
 // evaluation (instant answer feedback is a product decision); scoring stays
 // server-authoritative via the wl:answer ack.
 
-export type WlRoundKind = 'true_false' | 'higher_lower' | 'mcq' | 'career_path' | 'who_am_i';
+export type WlRoundKind = 'true_false' | 'higher_lower' | 'mcq' | 'career_path' | 'who_am_i' | 'money_drop';
 
 /** Localized text object from the question bank. */
 export interface WlI18nText {
@@ -1517,9 +1517,12 @@ export interface WlSubscribeSnapshot {
   game_index: number;
   /** Players only; spectators never get the undelayed in-flight question. */
   attempt: WlSnapshotAttempt | null;
-  your_answer: { correct: boolean; points: number; elapsedMs: number } | null;
+  your_answer: { correct: boolean; points: number; elapsedMs: number; carry?: number } | null;
+  /** money_drop in-flight attempt only: the server-derived budget carried
+      into it — reconnects must not reset the client's display chain. */
+  money_budget?: number;
   /** Latest persisted answer this game, attempt-identified — survives freeze. */
-  your_last_answer: { attempt_id: string; correct: boolean; points: number; elapsedMs: number } | null;
+  your_last_answer: { attempt_id: string; correct: boolean; points: number; elapsedMs: number; carry?: number } | null;
   score: number;
   board: WlBoardRow[];
 }
@@ -1534,7 +1537,8 @@ export type WlSubscribeAck = {
 };
 
 export type WlAnswerAck =
-  | { accepted: true; correct: boolean; points: number; elapsedMs: number }
+  /** carry: money-drop only — the amount that survived this question. */
+  | { accepted: true; correct: boolean; points: number; elapsedMs: number; carry?: number }
   | { accepted: false; reason: 'closed' | 'not_participant' | 'duplicate' | 'unknown_attempt' | 'invalid' };
 
 export interface ServerToClientEvents {

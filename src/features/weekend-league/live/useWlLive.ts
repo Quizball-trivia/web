@@ -60,6 +60,8 @@ export interface WlLiveState {
   lastAck: WlAnswerAck | null;
   /** Bumps when a rejected ack unlocks the question — UIs reset their choice. */
   retryNonce: number;
+  /** Snapshot-restored money-drop budget for a specific attempt (reconnects). */
+  snapshotMoneyBudget: { attemptId: string; budget: number } | null;
 }
 
 export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): WlLiveState {
@@ -70,6 +72,7 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
   const [screen, setScreen] = useState<WlLiveScreen>({ kind: 'waiting' });
   const [board, setBoard] = useState<WlBoardRow[]>([]);
   const [score, setScore] = useState(0);
+  const [snapshotMoneyBudget, setSnapshotMoneyBudget] = useState<{ attemptId: string; budget: number } | null>(null);
   const [gameIndex, setGameIndex] = useState(0);
   const [lastAck, setLastAck] = useState<WlAnswerAck | null>(null);
   const [retryNonce, setRetryNonce] = useState(0);
@@ -221,6 +224,12 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
     const onGameResult = (event: WlGameResultEventPayload) => {
       if (!accept(event)) return;
       setBoard(event.board ?? []);
+      // The board is absolute — reconcile the local ack-sum with our own row
+      // (server-side awards, e.g. a voided final money-drop slot, have no ack).
+      const mine = selfUserId != null
+        ? (event.board ?? []).find((r) => r.user_id === selfUserId)
+        : undefined;
+      if (mine) setScore(mine.points);
       currentAttemptRef.current = null;
       clearPendingQuestion();
       const eliminated =
@@ -264,6 +273,9 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
         clockOffsetRef.current,
         snapshot.server_now - Date.now(),
       );
+      if (snapshot.attempt != null && typeof snapshot.money_budget === 'number') {
+        setSnapshotMoneyBudget({ attemptId: snapshot.attempt.attempt_id, budget: snapshot.money_budget });
+      }
       // Room events can beat the ack callback (the server emits to the room
       // the moment we join, before the ack round-trips). If ANY event has
       // arrived since this subscribe was sent, the live stream is ahead of
@@ -525,7 +537,8 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
       submitAnswer,
       lastAck,
       retryNonce,
+      snapshotMoneyBudget,
     }),
-    [connected, subscribed, denied, screen, board, score, gameIndex, serverNow, submitAnswer, lastAck, retryNonce],
+    [connected, subscribed, denied, screen, board, score, gameIndex, serverNow, submitAnswer, lastAck, retryNonce, snapshotMoneyBudget],
   );
 }

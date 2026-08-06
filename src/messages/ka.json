@@ -1845,6 +1845,8 @@
     "rMcq": "სავარაუდო პასუხები",
     "rCareerPath": "კარიერული გზა",
     "rWhoAmI": "ვინ ვარ მე?",
+    "rMoneyDrop": "ფულის ვარდნა",
+    "gMdAllocateAll": "განათავსე ყველა {amount} ქულა",
     "gRoundOnly": "რაუნდი {n}",
     "gPerStep": "+{n} სწორ პასუხზე",
     "gFormatDynamic": "3 თამაში · 5 რაუნდი · საუკეთესო {finalists} ფინალში",

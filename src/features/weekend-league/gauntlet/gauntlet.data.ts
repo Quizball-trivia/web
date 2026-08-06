@@ -64,12 +64,13 @@ const SECONDS_PER_QUESTION = 10;
 const QUESTIONS_PER_ROUND = 5;
 const ROUND_SECONDS = SECONDS_PER_QUESTION * QUESTIONS_PER_ROUND;
 
+// maxPoints mirror the backend exactly: 5×30, 5×30, 5×40, 5×40, 300 budget.
 export const ROUNDS: RoundDef[] = [
-  { index: 0, type: 'trueFalse', maxPoints: 100, seconds: ROUND_SECONDS, label: 'True or False' },
+  { index: 0, type: 'trueFalse', maxPoints: 150, seconds: ROUND_SECONDS, label: 'True or False' },
   { index: 1, type: 'higherLower', maxPoints: 150, seconds: ROUND_SECONDS, label: 'Higher or Lower' },
   { index: 2, type: 'mcq', maxPoints: 200, seconds: ROUND_SECONDS, label: 'Multiple Choice' },
-  { index: 3, type: 'careerPath', maxPoints: 250, seconds: ROUND_SECONDS, label: 'Career Path' },
-  { index: 4, type: 'whoAmI', maxPoints: 300, seconds: ROUND_SECONDS, label: 'Who Am I?' },
+  { index: 3, type: 'careerPath', maxPoints: 200, seconds: ROUND_SECONDS, label: 'Career Path' },
+  { index: 4, type: 'moneyDrop', maxPoints: 300, seconds: ROUND_SECONDS * 3, label: 'Money Drop' },
 ];
 
 export const ROUND_LABEL_KEYS: Record<string, MessageKey> = {
@@ -78,6 +79,7 @@ export const ROUND_LABEL_KEYS: Record<string, MessageKey> = {
   mcq: 'weekendLeague.rMcq',
   careerPath: 'weekendLeague.rCareerPath',
   whoAmI: 'weekendLeague.rWhoAmI',
+  moneyDrop: 'weekendLeague.rMoneyDrop',
 };
 
 export const BREAK_SECONDS = 120;
