@@ -217,6 +217,13 @@ export function WlLiveFlowView({
           />
         </motion.div>
       </AnimatePresence>
+      {/* Spectators keep the standings in view the whole time — the rail lives
+          OUTSIDE the keyed transition so it never remounts between question
+          and reveal, and re-renders as each reveal refreshes the board. */}
+      {role === 'spectator'
+        && (live.screen.kind === 'question' || live.screen.kind === 'reveal') && (
+        <SpectatorBoardRail board={live.board} />
+      )}
       <ResultSplash {...liveSplashProps} />
     </Immersive>
   );
@@ -235,6 +242,26 @@ function Immersive({ children, resetKey }: { children: React.ReactNode; resetKey
     <div ref={ref} className="fixed inset-0 z-50 overflow-y-auto overscroll-contain">
       <GauntletBackdrop>{children}</GauntletBackdrop>
     </div>
+  );
+}
+
+/** Persistent standings rail for spectators (desktop). On smaller screens the
+ *  board still appears at each reveal, where there is room for it. */
+function SpectatorBoardRail({ board }: { board: WlBoardRow[] }) {
+  const { t } = useLocale();
+  if (board.length === 0) return null;
+  return (
+    <aside className="fixed right-4 top-20 z-40 hidden w-80 xl:block">
+      <div className="rounded-[20px] border border-white/10 bg-surface-card-deep/90 p-4 backdrop-blur">
+        <div className="mb-2 flex items-center justify-between">
+          <span className="font-poppins text-[12px] font-black uppercase tracking-wide text-white">
+            {t('weekendLeague.gStandingsTitle')}
+          </span>
+          <LiveBadge />
+        </div>
+        <BoardStrip board={board} selfUserId={null} rows={8} />
+      </div>
+    </aside>
   );
 }
 
