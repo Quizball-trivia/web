@@ -1207,6 +1207,7 @@
     "opponentFallback": "Opponent",
     "preparingMatch": "Preparing match...",
     "opponentNoShow": "Opponent didn't show up",
+    "dbOutagePaused": "Matchmaking is paused for a moment — your ticket wasn't used. Retrying…",
     "matchSetupStuck": "Match setup got stuck",
     "matchSetupStuckDescription": "Restart matchmaking and try again. If it keeps happening, the backend is still failing while preparing the draft.",
     "restartSearch": "Restart Search",
@@ -1256,6 +1257,10 @@
     "unreadAnnouncementPlural": "You have {count} new notifications"
   },
   "appShell": {
+    "systemDegradedTitle": "Match paused",
+    "systemDegradedDescription": "Your progress is protected. This will clear automatically.",
+    "systemDegradedInMatch": "Match paused — your progress is protected",
+    "systemBackOnline": "Back online",
     "memberFallback": "Member",
     "unrankedFallback": "Unranked",
     "opponentFallback": "Opponent",

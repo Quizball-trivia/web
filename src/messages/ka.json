@@ -458,6 +458,7 @@
     "opponentFallback": "მეტოქე",
     "preparingMatch": "მატჩის მომზადება...",
     "opponentNoShow": "მეტოქე არ გამოჩნდა",
+    "dbOutagePaused": "მატჩმეიკინგი შეჩერებულია — თქვენი ბილეთი არ დახარჯულა. ვცდილობთ თავიდან…",
     "matchSetupStuck": "მატჩის დაწყება შეფერხდა",
     "matchSetupStuckDescription": "თავიდან სცადე მეტოქის ძიება. თუ პრობლემა განმეორდა, სერვერზე ხარვეზია.",
     "restartSearch": "ძიების თავიდან დაწყება",
@@ -1256,6 +1257,10 @@
     "partyDescription": "შეგიძლიათ დროებით გახვიდეთ და დაბრუნდეთ ტაიმერის ამოწურვამდე, ან ახლავე დანებდეთ."
   },
   "appShell": {
+    "systemDegradedTitle": "მატჩი შეჩერებულია",
+    "systemDegradedDescription": "თქვენი პროგრესი დაცულია. ეს ავტომატურად გაქრება.",
+    "systemDegradedInMatch": "მატჩი შეჩერებულია — თქვენი პროგრესი დაცულია",
+    "systemBackOnline": "ხაზზე დაბრუნდა",
     "memberFallback": "წევრი",
     "unrankedFallback": "რეიტინგის გარეშე",
     "opponentFallback": "მოწინააღმდეგე",

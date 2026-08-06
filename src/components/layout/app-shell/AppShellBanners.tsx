@@ -18,7 +18,7 @@
  * Visibility is driven entirely by the view-model's show* flags.
  */
 
-import { ArrowRight, Gamepad2, X } from 'lucide-react';
+import { ArrowRight, Gamepad2, X, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLocale } from '@/contexts/LocaleContext';
 import { formatRejoinCopy } from './appShell.helpers';
@@ -68,6 +68,8 @@ export function AppShellBanners({ variant, vm }: AppShellBannersProps) {
     showAuctionRejoinBanner,
     showCompletedMatchBanner,
     showForfeitPendingBanner,
+    showSystemBanner,
+    systemDegraded,
     showPartyDropoutBanner,
     handleReturnToLobby,
     handleReturnToRankedLobby,
@@ -107,6 +109,39 @@ export function AppShellBanners({ variant, vm }: AppShellBannersProps) {
 
   return (
     <>
+      {showSystemBanner && (
+        <div className={pad}>
+          <div
+            role="status"
+            className={
+              systemDegraded
+                ? `rounded-2xl border-2 border-brand-yellow/40 bg-brand-yellow/10 ${card}`
+                : `rounded-2xl border-2 border-brand-green/40 bg-brand-green/10 ${card}`
+            }
+          >
+            <div className="flex items-center gap-3">
+              <div
+                className={
+                  systemDegraded
+                    ? `${iconSize} rounded-full bg-brand-yellow/20 text-brand-yellow-soft flex items-center justify-center`
+                    : `${iconSize} rounded-full bg-brand-green/20 text-brand-green-light flex items-center justify-center`
+                }
+              >
+                {systemDegraded ? <ShieldCheck className={iconGlyph} /> : <CheckCircle2 className={iconGlyph} />}
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-white">
+                  {systemDegraded ? t('appShell.systemDegradedTitle') : t('appShell.systemBackOnline')}
+                </p>
+                {systemDegraded && (
+                  <p className="text-xs text-white/70">{t('appShell.systemDegradedDescription')}</p>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showForfeitPendingBanner && forfeitPending && (
         <div className={pad}>
           <div className={`rounded-2xl border-2 border-brand-red-soft bg-brand-red-soft/10 ${card}`}>
