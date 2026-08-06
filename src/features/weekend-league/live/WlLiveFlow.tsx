@@ -361,6 +361,11 @@ function ScreenBody({
             <div className="font-poppins text-xl font-black uppercase text-white" style={poppins}>
               {t('weekendLeague.gWaitingNext')}
             </div>
+            {role === 'spectator' && (
+              <p className="mt-2 font-poppins text-[12px] font-semibold text-white/50">
+                {t('weekendLeague.gSpectatorDelayHint')}
+              </p>
+            )}
             <BoardStrip board={board} selfUserId={selfUserId} />
             <button
               type="button"

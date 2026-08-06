@@ -17,6 +17,7 @@ import { toast } from 'sonner';
 import { checkinWeekendLeague, enterWeekendLeague, getWeekendLeagueCurrent } from '@/lib/api/endpoints';
 import { queryKeys } from '@/lib/queries/queryKeys';
 import { useAuthStore } from '@/stores/auth.store';
+import { useLocale } from '@/contexts/LocaleContext';
 import type { components } from '@/types/api.generated';
 import { QP_TARGET } from './constants';
 import { getMilestones } from './mock-data';
@@ -129,6 +130,7 @@ const noop = () => {};
 export function useWeekendLeagueLive(): WeekendLeagueLiveController {
   const authStatus = useAuthStore((state) => state.status);
   const queryClient = useQueryClient();
+  const { t } = useLocale();
   const [nowMs] = useState(() => Date.now());
 
   const query = useQuery({
@@ -158,30 +160,30 @@ export function useWeekendLeagueLive(): WeekendLeagueLiveController {
     mutationFn: enterWeekendLeague,
     onSuccess: (res) => {
       if (!res.entered && !res.already_entered) {
-        toast.error('Entry is closed for this event.');
+        toast.error(t('weekendLeague.entryClosedToast'));
       }
       invalidate();
     },
-    onError: () => toast.error('Could not claim your entry — try again.'),
+    onError: () => toast.error(t('weekendLeague.entryFailedToast')),
   });
   const { mutate: enterMutate } = enterMutation;
   const enterLeague = useCallback(() => {
     if (status !== 'entry_open') {
-      toast.error('Entry is closed for this event.');
+      toast.error(t('weekendLeague.entryClosedToast'));
       return;
     }
     enterMutate();
-  }, [status, enterMutate]);
+  }, [status, enterMutate, t]);
 
   const checkinMutation = useMutation({
     mutationFn: checkinWeekendLeague,
     onSuccess: (res) => {
       if (!res.checked_in && !res.already_checked_in) {
-        toast.error('Check-in is not open right now.');
+        toast.error(t('weekendLeague.checkinNotOpenToast'));
       }
       invalidate();
     },
-    onError: () => toast.error('Check-in failed — try again.'),
+    onError: () => toast.error(t('weekendLeague.checkinFailedToast')),
   });
   const { mutate: checkinMutate } = checkinMutation;
   const checkinLeague = useCallback(() => checkinMutate(), [checkinMutate]);

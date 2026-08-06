@@ -211,7 +211,11 @@ export function useAppShellViewModel() {
   const sessionStateLabel = sessionState?.state ?? 'NO_SESSION';
   const navbarCoins = storeWallet?.coins ?? 0;
   const navbarTickets = storeWallet?.tickets ?? 0;
-  const socialBadgeCount = incomingFriendRequestCount + challengeInviteCount + unreadNotificationCount;
+  // Two separate badges: the SOCIAL tab counts what that tab resolves (friend
+  // requests + challenge invites); the BELL counts general notifications. The
+  // old combined number double-badged every WL notification on both icons.
+  const socialBadgeCount = incomingFriendRequestCount + challengeInviteCount;
+  const bellBadgeCount = unreadNotificationCount;
 
   useEffect(() => {
     const socket = getSocket();
@@ -439,6 +443,7 @@ export function useAppShellViewModel() {
     navbarCoins,
     navbarTickets,
     socialBadgeCount,
+    bellBadgeCount,
     // Realtime
     socketConnected,
     // Debug

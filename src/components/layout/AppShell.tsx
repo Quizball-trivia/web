@@ -28,6 +28,7 @@ export function AppShell({ children }: AppShellProps) {
     navbarCoins,
     navbarTickets,
     socialBadgeCount,
+    bellBadgeCount,
     showLobbyDebug,
     lobbyDebugMismatch,
     localWaitingLobbyId,
@@ -72,7 +73,7 @@ export function AppShell({ children }: AppShellProps) {
 
               <div className="h-6 w-px bg-border/50" />
 
-              <NotificationsDropdown badgeCount={socialBadgeCount} />
+              <NotificationsDropdown badgeCount={bellBadgeCount} />
 
               <AppShellProfileMenu
                 variant="desktop"
@@ -104,7 +105,7 @@ export function AppShell({ children }: AppShellProps) {
                       coins/tickets/bell intact. */}
                   <div className="z-10 flex shrink-0 items-center gap-2">
                     <AppShellCurrencyPills variant="mobile" coins={navbarCoins} tickets={navbarTickets} />
-                    <NotificationsDropdown badgeCount={socialBadgeCount} />
+                    <NotificationsDropdown badgeCount={bellBadgeCount} />
                   </div>
                 </div>
               </div>
