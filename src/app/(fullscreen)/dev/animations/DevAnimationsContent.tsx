@@ -2199,6 +2199,8 @@ export function DevAnimationsContent({
 
   function takePenaltyKick(
     shooterSeat: 1 | 2,
+    // Advisory when points are explicit; otherwise it seeds the default points.
+    // The resolved point totals always decide whether this kick is a goal or save.
     outcome: 'goal' | 'saved',
     options: PenaltyKickOptions = {}
   ) {
