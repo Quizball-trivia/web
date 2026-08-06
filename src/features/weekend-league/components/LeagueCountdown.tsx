@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useLocale } from '@/contexts/LocaleContext';
+import { wlNow } from '../wlClock';
 import { poppins } from '../constants';
 
 interface Segment {
@@ -44,7 +45,9 @@ export function LeagueCountdown({
   const [remaining, setRemaining] = useState<number | null>(null);
 
   useEffect(() => {
-    const tick = () => setRemaining(targetMs - Date.now());
+    // Server-corrected clock: device skew must never change when the event
+    // actually starts (wlNow == Date.now until the first /current poll syncs).
+    const tick = () => setRemaining(targetMs - wlNow());
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);

@@ -11,7 +11,7 @@
 // live phases informationally and never routes users into the mock game — and
 // the qualifier board stays empty rather than showing invented players.
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { checkinWeekendLeague, enterWeekendLeague, getWeekendLeagueCurrent } from '@/lib/api/endpoints';
@@ -20,6 +20,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import { useLocale } from '@/contexts/LocaleContext';
 import type { components } from '@/types/api.generated';
 import { QP_TARGET } from './constants';
+import { syncWlClock } from './wlClock';
 import { getMilestones } from './mock-data';
 import type { LeaguePhase, Milestone } from './types';
 import type { WeekendLeagueController } from './use-weekend-league';
@@ -150,6 +151,10 @@ export function useWeekendLeagueLive(): WeekendLeagueLiveController {
   });
 
   const tournament = query.data?.tournament ?? null;
+  useEffect(() => {
+    const serverNow = tournament?.server_now_ms;
+    if (typeof serverNow === 'number') syncWlClock(serverNow);
+  }, [tournament?.server_now_ms]);
   const you = query.data?.you ?? null;
   const status = tournament?.status;
   const phase = phaseFromStatus(status);
