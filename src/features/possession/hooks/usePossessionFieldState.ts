@@ -139,6 +139,13 @@ function getSeatPenaltyAttempts(params: {
   };
 }
 
+export function resolvePenaltyOutcomeByPoints(
+  shooterPoints: number,
+  keeperPoints: number,
+): Exclude<PenaltyResult, null | 'pending'> {
+  return shooterPoints > keeperPoints ? 'goal' : 'saved';
+}
+
 export function usePossessionFieldState({
   possessionState,
   mySeat,
@@ -272,11 +279,10 @@ export function usePossessionFieldState({
 
     const shooterRound = resultShooterIsMe ? myRound : opponentRound;
     const keeperRound = resultShooterIsMe ? opponentRound : myRound;
-    const shooterCorrect = shooterRound?.isCorrect ?? false;
-    const keeperCorrect = keeperRound?.isCorrect ?? false;
-    if (!shooterCorrect) return 'saved';
-    if (!keeperCorrect) return 'goal';
-    return (shooterRound?.timeMs ?? 10000) < (keeperRound?.timeMs ?? 10000) ? 'goal' : 'saved';
+    return resolvePenaltyOutcomeByPoints(
+      shooterRound?.pointsEarned ?? 0,
+      keeperRound?.pointsEarned ?? 0,
+    );
   }, [isPenaltyQuestion, myRound, opponentRound, penaltyRoundResult, resultShooterIsMe]);
 
   const penaltyShotDelayMs = useMemo(() => {
