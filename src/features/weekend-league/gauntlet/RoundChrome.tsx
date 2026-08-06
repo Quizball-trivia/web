@@ -50,21 +50,17 @@ export function GauntletHeader({
             : t('possession.questionCounter', { current: 1, total: 1 })
         }
       />
-      {/* Score/spectator badge only — the game/round/kind/points meta line was
-          noise above the question. */}
-      <div className="mx-auto mt-2 flex max-w-3xl items-center justify-end px-4 font-poppins text-[11px] font-bold uppercase tracking-wide text-white/50">
-        {spectator ? (
-          <span className="flex items-center gap-1.5 text-brand-cyan">
-            <span className="size-1.5 animate-pulse rounded-full bg-brand-cyan" /> {t('weekendLeague.gSpectator')}
-          </span>
-        ) : (
+      {/* Players see their score; spectators get no meta line at all — the
+          watching context is obvious and the badge read as clutter. */}
+      {!spectator && (
+        <div className="mx-auto mt-2 flex max-w-3xl items-center justify-end px-4 font-poppins text-[11px] font-bold uppercase tracking-wide text-white/50">
           <span className="tabular-nums text-white/80">
             {rank != null
               ? t('weekendLeague.gScoreRank', { score, rank })
               : t('weekendLeague.gPlusPoints', { n: score })}
           </span>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

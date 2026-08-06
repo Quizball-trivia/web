@@ -271,15 +271,13 @@ function SpectatorBoardRail({ board }: { board: WlBoardRow[] }) {
   if (board.length === 0) return null;
   return (
     <aside className="fixed right-4 top-20 z-40 hidden w-80 xl:block">
-      <div className="rounded-[20px] border border-white/10 bg-surface-card-deep/90 p-4 backdrop-blur">
-        <div className="mb-2 flex items-center justify-between">
-          <span className="font-poppins text-[12px] font-black uppercase tracking-wide text-white">
-            {t('weekendLeague.gStandingsTitle')}
-          </span>
-          <LiveBadge />
-        </div>
-        <BoardStrip board={board} selfUserId={null} rows={8} />
+      <div className="mb-2 flex items-center justify-between px-1">
+        <span className="font-poppins text-[12px] font-black uppercase tracking-wide text-white">
+          {t('weekendLeague.gStandingsTitle')}
+        </span>
+        <LiveBadge />
       </div>
+      <BoardStrip board={board} selfUserId={null} rows={8} />
     </aside>
   );
 }
@@ -464,6 +462,18 @@ function ScreenBody({
       // next one dispatches. Only the round's last question breaks away, to
       // the standings. Spectators keep the neutral reveal (they never answer).
       if (role === 'spectator') {
+        // The round's last reveal flows into the standings beat, exactly as it
+        // does for players — the old neutral reveal left spectators staring at
+        // nothing through the round boundary.
+        if (isLastQuestionOfRound(screen.reveal)) {
+          return (
+            <RoundStandings
+              board={board}
+              selfUserId={selfUserId}
+              roundIndex={screen.reveal.round_index}
+            />
+          );
+        }
         return (
           <RevealScreen
             reveal={screen.reveal}
