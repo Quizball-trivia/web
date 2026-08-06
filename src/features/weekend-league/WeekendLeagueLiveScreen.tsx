@@ -56,6 +56,7 @@ export function WeekendLeagueLiveScreen() {
         registered={live.registered}
         checkedInCount={live.checkedInCount}
         breakUntilMs={live.breakUntilMs}
+        spectatorDelayMs={live.spectatorDelayMs}
         lastGameRank={live.lastGameRank}
         currentGameIndex={live.currentGameIndex}
       />
