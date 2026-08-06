@@ -34,6 +34,7 @@ import {
   WhoAmIClueLadder,
   type RoundHeaderModel,
 } from '../gauntlet/RoundViews';
+import { MoneyDropBoard } from '../gauntlet/MoneyDropBoard';
 import { BreakScreen, ChampionScreen, EliminationReveal, GameIntro, GameResult } from '../gauntlet/GauntletScreens';
 import { ROUNDS, wlLadder } from '../gauntlet/gauntlet.data';
 import { ResultSplash } from '@/features/daily/components/ResultSplash';
@@ -158,6 +159,39 @@ export function WlLiveFlowView({
     setLastResult(live.screen.result);
   }
 
+  // Money-drop budget chain (display only — the server re-derives its own):
+  // 300 enters question 1; each question's budget is the last ack's carry; a
+  // played question with no accepted answer zeroes it (daily rules).
+  // Render-time adjustment (converges: the second pass finds the attempt
+  // budgeted + settled and sets nothing).
+  const [mdChain, setMdChain] = useState<{
+    budgets: Record<string, number>;
+    lastCarry: number;
+    settled: Record<string, true>;
+  }>({ budgets: {}, lastCarry: 300, settled: {} });
+  let moneyBudget = 300;
+  {
+    const scr = live.screen;
+    const att = scr.kind === 'question' || scr.kind === 'reveal' ? scr.attempt : null;
+    if (att?.kind === 'money_drop') {
+      let next = mdChain;
+      if (!(att.attempt_id in next.budgets)) {
+        next = {
+          ...next,
+          budgets: { ...next.budgets, [att.attempt_id]: att.question_index === 0 ? 300 : next.lastCarry },
+        };
+      }
+      const ack = (scr as { answer?: { carry?: number } | null }).answer;
+      if (typeof ack?.carry === 'number' && !next.settled[att.attempt_id]) {
+        next = { ...next, lastCarry: Math.max(0, ack.carry), settled: { ...next.settled, [att.attempt_id]: true } };
+      } else if (scr.kind === 'reveal' && !next.settled[att.attempt_id]) {
+        next = { ...next, lastCarry: 0, settled: { ...next.settled, [att.attempt_id]: true } };
+      }
+      if (next !== mdChain) setMdChain(next);
+      moneyBudget = next.budgets[att.attempt_id] ?? 300;
+    }
+  }
+
   // Verdict splash lives ABOVE the keyed screen transition so a quick
   // question→reveal flip can't unmount it mid-animation; fired from an effect
   // (never during render), once per attempt.
@@ -238,6 +272,7 @@ export function WlLiveFlowView({
             score={live.score}
             rank={yourRow?.rank ?? null}
             breakUntilMs={roleBreakUntilMs}
+            moneyBudget={moneyBudget}
             lastResult={lastResult}
             checkedInCount={checkedInCount ?? 0}
             currentGameIndex={currentGameIndex ?? live.gameIndex}
@@ -363,7 +398,7 @@ function Shell({ children, onExit }: { children: React.ReactNode; onExit: () => 
 
 
 function ScreenBody({
-  screen, role, locale, serverNow, submitAnswer, retryNonce, board, selfUserId, score, rank, breakUntilMs, lastResult, checkedInCount, currentGameIndex, lastGameRank, onExit, onSpectate,
+  screen, role, locale, serverNow, submitAnswer, retryNonce, board, selfUserId, score, rank, breakUntilMs, moneyBudget, lastResult, checkedInCount, currentGameIndex, lastGameRank, onExit, onSpectate,
 }: {
   screen: WlLiveScreen;
   role: 'player' | 'spectator';
@@ -376,6 +411,8 @@ function ScreenBody({
   score: number;
   rank: number | null;
   breakUntilMs: number | null;
+  /** Money-drop budget entering the current question (client chain). */
+  moneyBudget: number;
   lastResult: { game_index: number; field?: number; advanced?: number | null } | null;
   checkedInCount: number;
   currentGameIndex: number;
@@ -456,6 +493,7 @@ function ScreenBody({
           score={score}
           rank={yourRank}
           introCounts={introCounts}
+          moneyBudget={moneyBudget}
           onExit={onExit}
           answered={screen.answer}
           locale={locale}
@@ -514,6 +552,7 @@ function ScreenBody({
                   score={score}
                   rank={yourRank}
                   introCounts={null}
+                  moneyBudget={moneyBudget}
                   onExit={onExit}
                   answered={screen.answer}
                   locale={locale}
@@ -543,6 +582,7 @@ function ScreenBody({
             score={score}
             rank={yourRank}
             introCounts={null}
+            moneyBudget={moneyBudget}
             onExit={onExit}
             answered={screen.answer}
             locale={locale}
@@ -609,7 +649,7 @@ function ScreenBody({
 }
 
 /** Questions per round, mirroring the backend WL_QUESTIONS_PER_ROUND. */
-const QUESTIONS_PER_ROUND: Record<number, number> = { 0: 5, 1: 5, 2: 5, 3: 5, 4: 1 };
+const QUESTIONS_PER_ROUND: Record<number, number> = { 0: 5, 1: 5, 2: 5, 3: 5, 4: 5 };
 
 function isLastQuestionOfRound(reveal: { round_index: number; question_index: number }): boolean {
   const total = QUESTIONS_PER_ROUND[reveal.round_index] ?? 5;
@@ -803,7 +843,7 @@ function LiveGameResult({
 // ── Question rendering per kind ─────────────────────────────────────────────
 
 function QuestionScreen({
-  attempt, answered, locale, serverNow, submitAnswer, retryNonce, spectator, score, rank, introCounts, revealed = false, onExit,
+  attempt, answered, locale, serverNow, submitAnswer, retryNonce, spectator, score, rank, introCounts, moneyBudget = 300, revealed = false, onExit,
 }: {
   attempt: WlDispatchEventPayload;
   answered: { accepted: boolean } | null;
@@ -816,8 +856,10 @@ function QuestionScreen({
   rank: number | null;
   /** Field/advance for the game-intro theatre (prev game's result). */
   introCounts: { players: number; advance: number } | null;
+  /** Money-drop budget entering this question (client chain, display only). */
+  moneyBudget?: number;
   /** Public reveal with no answer from this player (timeout): highlight the
-   *  correct option anyway so nobody is left guessing. */
+   *   correct option anyway so nobody is left guessing. */
   revealed?: boolean;
   onExit: () => void;
 }) {
@@ -911,8 +953,28 @@ function QuestionScreen({
         {attempt.kind === 'who_am_i' && (
           <WhoAmIQuestion revealed={revealed} attempt={attempt} locale={locale} serverNow={serverNow} locked={locked} spectator={spectator} onSubmit={(guess) => submitAnswer({ guess })} feedback={ack} />
         )}
+        {attempt.kind === 'money_drop' && (
+          <>
+            <QuestionCard>{pick(q['prompt'], locale)}</QuestionCard>
+            <MoneyDropBoard
+              options={(Array.isArray(q['options']) ? (q['options'] as Array<Record<string, unknown>>) : []).map((o) => ({
+                id: String(o['id'] ?? ''),
+                label: pick(o['text'], locale),
+              }))}
+              budget={moneyBudget}
+              locked={locked}
+              spectator={spectator}
+              correctId={
+                typeof attempt.evaluation?.['correct_id'] === 'string'
+                  ? (attempt.evaluation['correct_id'] as string)
+                  : null
+              }
+              onSubmit={(bets) => submitAnswer({ bets })}
+            />
+          </>
+        )}
 
-        {ack != null && attempt.kind !== 'career_path' && attempt.kind !== 'who_am_i' && (
+        {ack != null && attempt.kind !== 'career_path' && attempt.kind !== 'who_am_i' && attempt.kind !== 'money_drop' && (
           <AnswerFeedback ack={ack} />
         )}
       </RoundScreenShell>

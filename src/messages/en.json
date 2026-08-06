@@ -1845,6 +1845,7 @@
     "rMcq": "Multiple Choice",
     "rCareerPath": "Career Path",
     "rWhoAmI": "Who Am I?",
+    "rMoneyDrop": "Money Drop",
     "gRoundOnly": "Round {n}",
     "gPerStep": "+{n} per correct answer",
     "gFormatDynamic": "3 games · 5 rounds each · top {finalists} reach the final",

@@ -8,6 +8,7 @@
 import { useState } from 'react';
 import { RotateCcw, X } from 'lucide-react';
 import { CheckInPanel } from '../components/CheckInPanel';
+import { MoneyDropBoard } from '../gauntlet/MoneyDropBoard';
 import { LeagueCountdown } from '../components/LeagueCountdown';
 import { LiveBadge } from '../components/LiveBadge';
 import { poppins } from '../constants';
@@ -344,6 +345,25 @@ export function WlComponentGallery({
             answerText=""
             guess={typedGuess}
             onGuessChange={setTypedGuess}
+            onSubmit={noop}
+          />
+        </Frame>
+      ),
+    },
+    {
+      id: 'money-drop', label: 'Money drop board', group: 'Question bodies',
+      render: () => (
+        <Frame>
+          <MoneyDropBoard
+            options={[
+              { id: 'a', label: 'საფრანგეთი' },
+              { id: 'b', label: 'არგენტინა' },
+              { id: 'c', label: 'ბრაზილია' },
+              { id: 'd', label: 'გერმანია' },
+            ]}
+            budget={300}
+            locked={false}
+            correctId={null}
             onSubmit={noop}
           />
         </Frame>
