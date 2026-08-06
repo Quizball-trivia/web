@@ -94,6 +94,7 @@ export function WlLiveSimFlow({ onExit }: { onExit: () => void }) {
         registered={SIM_FIELD}
         checkedInCount={Math.min(SIM_FIELD, 512 + (checkedIn ? 1 : 0))}
         breakUntilMs={sim.breakUntilMs}
+        spectatorDelayMs={0}
         currentGameIndex={live.gameIndex}
       />
 

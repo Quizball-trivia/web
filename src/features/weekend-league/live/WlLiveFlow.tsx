@@ -86,6 +86,9 @@ export interface WlLiveFlowUiProps {
   checkedInCount?: number;
   /** Server break deadline (epoch ms) — drives the designed break screen. */
   breakUntilMs?: number | null;
+  /** Spectator stream lag (ms) — spectator countdowns shift by this so the
+   *  clock reaches zero when the delayed stream actually resumes. */
+  spectatorDelayMs?: number;
   /** 0-based game currently running / next to run (public payload). */
   currentGameIndex?: number;
   /** Your rank in the newest finished game (the board is top-24 only). */
@@ -114,10 +117,18 @@ export function WlLiveFlowView({
   registered,
   checkedInCount,
   breakUntilMs,
+  spectatorDelayMs,
   currentGameIndex,
   lastGameRank,
 }: WlLiveFlowUiProps & { live: WlLiveState; selfUserId: string | null }) {
   const { t, locale } = useLocale();
+
+  // A spectator's world runs spectatorDelayMs behind live, but break_until_ms
+  // is real-time — unshifted, their countdown hits zero with the delay still
+  // to run and they stare at a frozen board (seen in the 54-bot playtest).
+  const roleBreakUntilMs = breakUntilMs != null
+    ? breakUntilMs + (role === 'spectator' ? spectatorDelayMs ?? 30_000 : 0)
+    : null;
 
   const yourRow = useMemo(
     () => live.board.find((row) => row.user_id === selfUserId) ?? null,
@@ -226,7 +237,7 @@ export function WlLiveFlowView({
             selfUserId={selfUserId}
             score={live.score}
             rank={yourRow?.rank ?? null}
-            breakUntilMs={breakUntilMs ?? null}
+            breakUntilMs={roleBreakUntilMs}
             lastResult={lastResult}
             checkedInCount={checkedInCount ?? 0}
             currentGameIndex={currentGameIndex ?? live.gameIndex}
@@ -411,7 +422,7 @@ function ScreenBody({
                 {t('weekendLeague.gSpectatorDelayHint')}
               </p>
             )}
-            <BoardStrip board={board} selfUserId={selfUserId} />
+            <BoardStrip board={board} selfUserId={role === 'spectator' ? null : selfUserId} />
             <button
               type="button"
               onClick={onExit}
@@ -466,10 +477,12 @@ function ScreenBody({
         // does for players — the old neutral reveal left spectators staring at
         // nothing through the round boundary.
         if (isLastQuestionOfRound(screen.reveal)) {
+          // selfUserId stays null: a spectator gets no row highlight and no
+          // "your place" fallback — the board is pure broadcast.
           return (
             <RoundStandings
               board={board}
-              selfUserId={selfUserId}
+              selfUserId={null}
               roundIndex={screen.reveal.round_index}
             />
           );
@@ -480,7 +493,7 @@ function ScreenBody({
             answer={screen.answer}
             locale={locale}
             board={board}
-            selfUserId={selfUserId}
+            selfUserId={null}
             spectator
           />
         );
@@ -557,7 +570,7 @@ function ScreenBody({
       const { result, eliminated } = screen;
       if (role === 'spectator') {
         return (
-          <SpectatorGameResult result={result} board={board} selfUserId={selfUserId} breakUntilMs={breakUntilMs} yourRankFallback={lastGameRank} />
+          <SpectatorGameResult result={result} board={board} breakUntilMs={breakUntilMs} />
         );
       }
       return (
@@ -660,13 +673,11 @@ function RoundStandings({
 /** Spectators get the same elimination theatre, then the board — the cut
  *  is public information, only the personal verdict is player-only. */
 function SpectatorGameResult({
-  result, board, selfUserId, breakUntilMs, yourRankFallback = null,
+  result, board, breakUntilMs,
 }: {
   result: { game_index: number; field?: number; advanced?: number | null };
   board: WlBoardRow[];
-  selfUserId: string | null;
   breakUntilMs: number | null;
-  yourRankFallback?: number | null;
 }) {
   const { t } = useLocale();
   const [phase, setPhase] = useState<'cut' | 'board'>('cut');
@@ -700,7 +711,7 @@ function SpectatorGameResult({
         </div>
       )}
       <div className="mt-2 max-h-[58vh] w-full overflow-y-auto overscroll-contain">
-        <BoardStrip board={board} selfUserId={selfUserId} rows={24} yourRankFallback={yourRankFallback} />
+        <BoardStrip board={board} selfUserId={null} rows={24} />
       </div>
     </div>
   );

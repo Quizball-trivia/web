@@ -105,6 +105,9 @@ export interface WeekendLeagueLiveExtras {
   checkedInCount: number;
   /** Server break deadline (epoch ms) between games; null outside breaks. */
   breakUntilMs: number | null;
+  /** How far behind live the spectator stream runs — spectator countdowns
+   *  shift by this so they land when the delayed stream actually resumes. */
+  spectatorDelayMs: number;
   /** Your rank in the newest finished game (board is top-24 only). */
   lastGameRank: number | null;
   /** 0-based game currently running / next to run (public payload). */
@@ -246,6 +249,7 @@ export function useWeekendLeagueLive(): WeekendLeagueLiveController {
     registered: tournament?.registered_count ?? 0,
     checkedInCount: tournament?.checked_in_count ?? 0,
     breakUntilMs: tournament?.break_until_ms ?? null,
+    spectatorDelayMs: tournament?.spectator_delay_ms ?? 30_000,
     lastGameRank: you?.last_game_rank ?? null,
     currentGameIndex: tournament?.current_game_index ?? 0,
     session: null,

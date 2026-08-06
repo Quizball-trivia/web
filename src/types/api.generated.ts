@@ -9608,6 +9608,7 @@ export interface components {
                 qp_target: number;
                 current_game_index: number;
                 break_until_ms: number | null;
+                spectator_delay_ms: number;
             } | null;
             you: {
                 entered: boolean;
