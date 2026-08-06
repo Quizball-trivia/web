@@ -109,6 +109,7 @@ export function MoneyDropBoard({
   locked,
   windowClosing = false,
   spectator = false,
+  initialBets = null,
   correctId,
   onSubmit,
 }: {
@@ -121,13 +122,17 @@ export function MoneyDropBoard({
    *  accepts (the daily game submits AT the deadline; the wire needs margin). */
   windowClosing?: boolean;
   spectator?: boolean;
+  /** Already-submitted sheet (restores the theatre across screen remounts).
+   *  Retries after a rejected ack are handled by the parent: it drops the
+   *  stored sheet and remounts this board (key includes the retry nonce). */
+  initialBets?: Record<string, number> | null;
   /** Set when the public reveal is out — flips the board into the drop theatre. */
   correctId: string | null;
   onSubmit: (bets: Record<string, number>) => void;
 }) {
   const { t } = useLocale();
-  const [bets, setBets] = useState<Record<string, number>>({});
-  const [confirmed, setConfirmed] = useState(false);
+  const [bets, setBets] = useState<Record<string, number>>(() => initialBets ?? {});
+  const [confirmed, setConfirmed] = useState(() => initialBets != null);
   const [dropped, setDropped] = useState<string[]>([]);
   const revealPlayed = useRef(false);
 
@@ -144,7 +149,7 @@ export function MoneyDropBoard({
     });
   };
 
-  const submittedRef = useRef(false);
+  const submittedRef = useRef(initialBets != null);
   const confirm = () => {
     if (!betting || !isFullyAllocated || submittedRef.current) return;
     submittedRef.current = true;

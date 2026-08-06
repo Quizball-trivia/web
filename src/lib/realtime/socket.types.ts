@@ -1522,7 +1522,7 @@ export interface WlSubscribeSnapshot {
       into it — reconnects must not reset the client's display chain. */
   money_budget?: number;
   /** Latest persisted answer this game, attempt-identified — survives freeze. */
-  your_last_answer: { attempt_id: string; correct: boolean; points: number; elapsedMs: number } | null;
+  your_last_answer: { attempt_id: string; correct: boolean; points: number; elapsedMs: number; carry?: number } | null;
   score: number;
   board: WlBoardRow[];
 }

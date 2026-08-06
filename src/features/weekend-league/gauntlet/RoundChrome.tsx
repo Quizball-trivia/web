@@ -176,16 +176,21 @@ export function RoundIntroOverlay({ round, onDone }: { round: RoundDef; onDone: 
 
   // Scoped exactly like ranked: absolute inset-0 filling the QUESTION area
   // (its positioned parent), not the viewport — the header/timer stay visible
-  // above it, everything below is covered.
+  // above it, everything below is covered. The shared overlay itself renders
+  // inside a CENTERED, height-capped band: the WL question area is the full
+  // remaining viewport on mobile, and edge-to-edge accent rails there read as
+  // stray lines with a void between them (owner's screenshot).
   return (
-    <div className="absolute inset-0 z-40 bg-surface-page-alt">
-      <RoundTransitionOverlay
-        // Digit in Poppins: the fun font's numerals read as a different
-        // typeface next to the Georgian glyphs.
-        title={<>{t('weekendLeague.gRoundWord')} <span style={poppins}>{round.index + 1}</span></>}
-        categoryName={t(ROUND_LABEL_KEYS[round.type])}
-        subtitle={t('weekendLeague.gUpTo', { n: round.maxPoints })}
-      />
+    <div className="absolute inset-0 z-50 flex items-center bg-surface-page-alt">
+      <div className="relative h-[280px] w-full">
+        <RoundTransitionOverlay
+          // Digit in Poppins: the fun font's numerals read as a different
+          // typeface next to the Georgian glyphs.
+          title={<>{t('weekendLeague.gRoundWord')} <span style={poppins}>{round.index + 1}</span></>}
+          categoryName={t(ROUND_LABEL_KEYS[round.type])}
+          subtitle={t('weekendLeague.gUpTo', { n: round.maxPoints })}
+        />
+      </div>
     </div>
   );
 }

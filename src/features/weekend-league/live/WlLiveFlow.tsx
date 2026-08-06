@@ -197,6 +197,28 @@ export function WlLiveFlowView({
       moneyBudget = next.budgets[att.attempt_id] ?? 300;
     }
   }
+  // The player's submitted sheet, kept OUTSIDE the question screen: the
+  // round-end wrapper remounts it, and a fresh board with empty bets would
+  // drop nothing, show no survivor stake and play the wrong sound.
+  const [mdSheets, setMdSheets] = useState<Record<string, Record<string, number>>>({});
+  const onMdSheet = (attemptId: string, sheet: Record<string, number>) => {
+    setMdSheets((prev) => (prev[attemptId] ? prev : { ...prev, [attemptId]: sheet }));
+  };
+  // A rejected (non-terminal) ack bumps retryNonce: forget the optimistic
+  // sheet so the remounted board (keyed by nonce) starts a clean retry.
+  const [mdRetrySeen, setMdRetrySeen] = useState(live.retryNonce);
+  if (live.retryNonce !== mdRetrySeen) {
+    setMdRetrySeen(live.retryNonce);
+    const scr = live.screen;
+    const att = scr.kind === 'question' || scr.kind === 'reveal' ? scr.attempt : null;
+    if (att?.kind === 'money_drop' && mdSheets[att.attempt_id] != null) {
+      setMdSheets((prev) => {
+        const rest = { ...prev };
+        delete rest[att.attempt_id];
+        return rest;
+      });
+    }
+  }
 
   // Verdict splash lives ABOVE the keyed screen transition so a quick
   // question→reveal flip can't unmount it mid-animation; fired from an effect
@@ -279,6 +301,8 @@ export function WlLiveFlowView({
             rank={yourRow?.rank ?? null}
             breakUntilMs={roleBreakUntilMs}
             moneyBudget={moneyBudget}
+            mdSheets={mdSheets}
+            onMdSheet={onMdSheet}
             lastResult={lastResult}
             checkedInCount={checkedInCount ?? 0}
             currentGameIndex={currentGameIndex ?? live.gameIndex}
@@ -404,7 +428,7 @@ function Shell({ children, onExit }: { children: React.ReactNode; onExit: () => 
 
 
 function ScreenBody({
-  screen, role, locale, serverNow, submitAnswer, retryNonce, board, selfUserId, score, rank, breakUntilMs, moneyBudget, lastResult, checkedInCount, currentGameIndex, lastGameRank, onExit, onSpectate,
+  screen, role, locale, serverNow, submitAnswer, retryNonce, board, selfUserId, score, rank, breakUntilMs, moneyBudget, mdSheets, onMdSheet, lastResult, checkedInCount, currentGameIndex, lastGameRank, onExit, onSpectate,
 }: {
   screen: WlLiveScreen;
   role: 'player' | 'spectator';
@@ -419,6 +443,9 @@ function ScreenBody({
   breakUntilMs: number | null;
   /** Money-drop budget entering the current question (client chain). */
   moneyBudget: number;
+  /** Submitted money-drop sheets by attempt (survives screen remounts). */
+  mdSheets: Record<string, Record<string, number>>;
+  onMdSheet: (attemptId: string, sheet: Record<string, number>) => void;
   lastResult: { game_index: number; field?: number; advanced?: number | null } | null;
   checkedInCount: number;
   currentGameIndex: number;
@@ -500,6 +527,8 @@ function ScreenBody({
           rank={yourRank}
           introCounts={introCounts}
           moneyBudget={moneyBudget}
+          mdSheet={mdSheets[attempt.attempt_id] ?? null}
+          onMdSheet={onMdSheet}
           onExit={onExit}
           answered={screen.answer}
           locale={locale}
@@ -548,6 +577,7 @@ function ScreenBody({
             board={board}
             selfUserId={selfUserId}
             roundIndex={screen.reveal.round_index}
+            holdMs={screen.reveal.kind === 'money_drop' ? 4_500 : 2_200}
             question={
               screen.attempt != null ? (
                 <QuestionScreen
@@ -559,6 +589,8 @@ function ScreenBody({
                   rank={yourRank}
                   introCounts={null}
                   moneyBudget={moneyBudget}
+                  mdSheet={mdSheets[screen.attempt.attempt_id] ?? null}
+                  onMdSheet={onMdSheet}
                   onExit={onExit}
                   answered={screen.answer}
                   locale={locale}
@@ -589,6 +621,8 @@ function ScreenBody({
             rank={yourRank}
             introCounts={null}
             moneyBudget={moneyBudget}
+            mdSheet={screen.attempt != null ? mdSheets[screen.attempt.attempt_id] ?? null : null}
+            onMdSheet={onMdSheet}
             onExit={onExit}
             answered={screen.answer}
             locale={locale}
@@ -667,20 +701,23 @@ function isLastQuestionOfRound(reveal: { round_index: number; question_index: nu
  * still sees the correct answer — then the standings take over.
  */
 function RevealThenStandings({
-  board, selfUserId, roundIndex, question, yourRankFallback = null,
+  board, selfUserId, roundIndex, question, holdMs = 2_200, yourRankFallback = null,
 }: {
   board: WlBoardRow[];
   selfUserId: string | null;
   roundIndex: number;
   question: React.ReactNode;
+  /** How long the resolved question stays before the standings take over —
+   *  money drop's falling-bill theatre needs more than the default beat. */
+  holdMs?: number;
   yourRankFallback?: number | null;
 }) {
   const [phase, setPhase] = useState<'answer' | 'board'>(question == null ? 'board' : 'answer');
   useEffect(() => {
     if (question == null) return;
-    const id = setTimeout(() => setPhase('board'), 2_200);
+    const id = setTimeout(() => setPhase('board'), holdMs);
     return () => clearTimeout(id);
-  }, [question]);
+  }, [question, holdMs]);
   if (phase === 'answer') return <>{question}</>;
   return <RoundStandings board={board} selfUserId={selfUserId} roundIndex={roundIndex} yourRankFallback={yourRankFallback} />;
 }
@@ -849,7 +886,7 @@ function LiveGameResult({
 // ── Question rendering per kind ─────────────────────────────────────────────
 
 function QuestionScreen({
-  attempt, answered, locale, serverNow, submitAnswer, retryNonce, spectator, score, rank, introCounts, moneyBudget = 300, revealed = false, onExit,
+  attempt, answered, locale, serverNow, submitAnswer, retryNonce, spectator, score, rank, introCounts, moneyBudget = 300, mdSheet = null, onMdSheet, revealed = false, onExit,
 }: {
   attempt: WlDispatchEventPayload;
   answered: { accepted: boolean } | null;
@@ -864,6 +901,9 @@ function QuestionScreen({
   introCounts: { players: number; advance: number } | null;
   /** Money-drop budget entering this question (client chain, display only). */
   moneyBudget?: number;
+  /** Previously submitted money-drop sheet (restores across remounts). */
+  mdSheet?: Record<string, number> | null;
+  onMdSheet?: (attemptId: string, sheet: Record<string, number>) => void;
   /** Public reveal with no answer from this player (timeout): highlight the
    *   correct option anyway so nobody is left guessing. */
   revealed?: boolean;
@@ -963,6 +1003,7 @@ function QuestionScreen({
           <>
             <QuestionCard>{pick(q['prompt'], locale)}</QuestionCard>
             <MoneyDropBoard
+              key={`${attempt.attempt_id}:${retryNonce}`}
               options={(Array.isArray(q['options']) ? (q['options'] as Array<Record<string, unknown>>) : []).map((o) => ({
                 id: String(o['id'] ?? ''),
                 label: pick(o['text'], locale),
@@ -971,12 +1012,16 @@ function QuestionScreen({
               locked={locked}
               windowClosing={ready && !revealed && secondsLeft <= 1}
               spectator={spectator}
+              initialBets={mdSheet}
               correctId={
                 typeof attempt.evaluation?.['correct_id'] === 'string'
                   ? (attempt.evaluation['correct_id'] as string)
                   : null
               }
-              onSubmit={(bets) => submitAnswer({ bets })}
+              onSubmit={(bets) => {
+                onMdSheet?.(attempt.attempt_id, bets);
+                submitAnswer({ bets });
+              }}
             />
           </>
         )}

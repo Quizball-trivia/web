@@ -224,6 +224,12 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
     const onGameResult = (event: WlGameResultEventPayload) => {
       if (!accept(event)) return;
       setBoard(event.board ?? []);
+      // The board is absolute — reconcile the local ack-sum with our own row
+      // (server-side awards, e.g. a voided final money-drop slot, have no ack).
+      const mine = selfUserId != null
+        ? (event.board ?? []).find((r) => r.user_id === selfUserId)
+        : undefined;
+      if (mine) setScore(mine.points);
       currentAttemptRef.current = null;
       clearPendingQuestion();
       const eliminated =
