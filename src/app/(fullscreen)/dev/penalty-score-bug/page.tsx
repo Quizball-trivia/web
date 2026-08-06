@@ -1,6 +1,4 @@
-'use client';
-
-import { DevAnimationsContent } from '../animations/page';
+import { DevAnimationsContent } from '../animations/DevAnimationsContent';
 
 export default function PenaltyScoreBugPage() {
   if (process.env.NODE_ENV !== 'development') {
