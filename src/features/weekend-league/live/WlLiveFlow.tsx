@@ -88,6 +88,8 @@ export interface WlLiveFlowUiProps {
   breakUntilMs?: number | null;
   /** 0-based game currently running / next to run (public payload). */
   currentGameIndex?: number;
+  /** Your rank in the newest finished game (the board is top-24 only). */
+  lastGameRank?: number | null;
 }
 
 export function WlLiveFlow({ tournamentId, ...ui }: WlLiveFlowUiProps & { tournamentId: string }) {
@@ -113,6 +115,7 @@ export function WlLiveFlowView({
   checkedInCount,
   breakUntilMs,
   currentGameIndex,
+  lastGameRank,
 }: WlLiveFlowUiProps & { live: WlLiveState; selfUserId: string | null }) {
   const { t, locale } = useLocale();
 
@@ -226,6 +229,7 @@ export function WlLiveFlowView({
             lastResult={lastResult}
             checkedInCount={checkedInCount ?? 0}
             currentGameIndex={currentGameIndex ?? live.gameIndex}
+            lastGameRank={lastGameRank ?? null}
             onExit={onExit}
             onSpectate={onSpectate ?? onExit}
           />
@@ -349,7 +353,7 @@ function Shell({ children, onExit }: { children: React.ReactNode; onExit: () => 
 
 
 function ScreenBody({
-  screen, role, locale, serverNow, submitAnswer, retryNonce, board, selfUserId, score, rank, breakUntilMs, lastResult, checkedInCount, currentGameIndex, onExit, onSpectate,
+  screen, role, locale, serverNow, submitAnswer, retryNonce, board, selfUserId, score, rank, breakUntilMs, lastResult, checkedInCount, currentGameIndex, lastGameRank, onExit, onSpectate,
 }: {
   screen: WlLiveScreen;
   role: 'player' | 'spectator';
@@ -365,6 +369,7 @@ function ScreenBody({
   lastResult: { game_index: number; field?: number; advanced?: number | null } | null;
   checkedInCount: number;
   currentGameIndex: number;
+  lastGameRank: number | null;
   onExit: () => void;
   onSpectate: () => void;
 }) {
@@ -475,6 +480,7 @@ function ScreenBody({
             board={board}
             selfUserId={selfUserId}
             roundIndex={screen.reveal.round_index}
+            yourRankFallback={lastGameRank}
             question={
               screen.attempt != null ? (
                 <QuestionScreen
@@ -541,14 +547,14 @@ function ScreenBody({
       const { result, eliminated } = screen;
       if (role === 'spectator') {
         return (
-          <SpectatorGameResult result={result} board={board} selfUserId={selfUserId} />
+          <SpectatorGameResult result={result} board={board} selfUserId={selfUserId} breakUntilMs={breakUntilMs} yourRankFallback={lastGameRank} />
         );
       }
       return (
         <LiveGameResult
           result={result}
           eliminated={eliminated}
-          yourRank={yourRank}
+          yourRank={yourRank ?? lastGameRank}
           score={score}
           breakUntilMs={breakUntilMs}
           originalField={checkedInCount}
@@ -592,12 +598,13 @@ function isLastQuestionOfRound(reveal: { round_index: number; question_index: nu
  * still sees the correct answer — then the standings take over.
  */
 function RevealThenStandings({
-  board, selfUserId, roundIndex, question,
+  board, selfUserId, roundIndex, question, yourRankFallback = null,
 }: {
   board: WlBoardRow[];
   selfUserId: string | null;
   roundIndex: number;
   question: React.ReactNode;
+  yourRankFallback?: number | null;
 }) {
   const [phase, setPhase] = useState<'answer' | 'board'>(question == null ? 'board' : 'answer');
   useEffect(() => {
@@ -606,16 +613,17 @@ function RevealThenStandings({
     return () => clearTimeout(id);
   }, [question]);
   if (phase === 'answer') return <>{question}</>;
-  return <RoundStandings board={board} selfUserId={selfUserId} roundIndex={roundIndex} />;
+  return <RoundStandings board={board} selfUserId={selfUserId} roundIndex={roundIndex} yourRankFallback={yourRankFallback} />;
 }
 
 /** Round-end standings: the one place the board interrupts play. */
 function RoundStandings({
-  board, selfUserId, roundIndex,
+  board, selfUserId, roundIndex, yourRankFallback = null,
 }: {
   board: WlBoardRow[];
   selfUserId: string | null;
   roundIndex: number;
+  yourRankFallback?: number | null;
 }) {
   const { t } = useLocale();
   return (
@@ -633,7 +641,7 @@ function RoundStandings({
       {/* The whole top-24 — the board IS the drama at a round end. Your own
           row highlights in place (or appends below the cut when outside). */}
       <div className="mt-2 max-h-[62vh] w-full overflow-y-auto overscroll-contain">
-        <BoardStrip board={board} selfUserId={selfUserId} rows={24} />
+        <BoardStrip board={board} selfUserId={selfUserId} rows={24} yourRankFallback={yourRankFallback} />
       </div>
     </motion.div>
   );
@@ -642,11 +650,13 @@ function RoundStandings({
 /** Spectators get the same elimination theatre, then the board — the cut
  *  is public information, only the personal verdict is player-only. */
 function SpectatorGameResult({
-  result, board, selfUserId,
+  result, board, selfUserId, breakUntilMs, yourRankFallback = null,
 }: {
   result: { game_index: number; field?: number; advanced?: number | null };
   board: WlBoardRow[];
   selfUserId: string | null;
+  breakUntilMs: number | null;
+  yourRankFallback?: number | null;
 }) {
   const { t } = useLocale();
   const [phase, setPhase] = useState<'cut' | 'board'>('cut');
@@ -658,19 +668,46 @@ function SpectatorGameResult({
   if (phase === 'cut' && game.players > 0 && game.advance > 0) {
     return <EliminationReveal game={game} isLastGame={result.game_index >= 2} onDone={() => setPhase('board')} />;
   }
+  // No outer card: the headline + full top-24 board sit directly on the
+  // backdrop, in the leaderboard's own visual language. During the break the
+  // countdown keeps ticking so a spectator is never staring at a static list.
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-10">
-      <div className="rounded-[24px] border-2 border-white/10 bg-surface-card-deep p-6 text-center">
-        <div className="font-poppins text-3xl font-black uppercase text-brand-green-light" style={poppins}>
-          {t('weekendLeague.gGameComplete', { n: result.game_index + 1 })}
-        </div>
-        {result.advanced != null && (
-          <p className="mt-2 font-poppins text-[13px] font-semibold text-white/60">
-            {t('weekendLeague.gAdvanceCount', { n: result.advanced })}
-          </p>
-        )}
-        <BoardStrip board={board} selfUserId={selfUserId} rows={8} />
+    <div className="mx-auto flex min-h-[70vh] w-full max-w-2xl flex-col items-center justify-center px-4 py-6 text-center">
+      <div className="font-poppins text-3xl font-black uppercase text-brand-green-light" style={poppins}>
+        {t('weekendLeague.gGameComplete', { n: result.game_index + 1 })}
       </div>
+      {result.advanced != null && (
+        <p className="mt-1 font-poppins text-[13px] font-black uppercase tracking-wide text-white/70">
+          {t('weekendLeague.gAdvanceCount', { n: result.advanced })}
+        </p>
+      )}
+      {breakUntilMs != null && (
+        <div className="mt-3">
+          <div className="mb-1 font-poppins text-[11px] font-black uppercase tracking-widest text-white/60">
+            {t('weekendLeague.gGameStartsIn', { n: result.game_index + 2 })}
+          </div>
+          <BreakCountdown deadlineMs={breakUntilMs} />
+        </div>
+      )}
+      <div className="mt-2 max-h-[58vh] w-full overflow-y-auto overscroll-contain">
+        <BoardStrip board={board} selfUserId={selfUserId} rows={24} yourRankFallback={yourRankFallback} />
+      </div>
+    </div>
+  );
+}
+
+/** mm:ss to a server deadline — the spectator's between-games clock. */
+function BreakCountdown({ deadlineMs }: { deadlineMs: number }) {
+  const [left, setLeft] = useState(() => Math.max(0, Math.ceil((deadlineMs - Date.now()) / 1000)));
+  useEffect(() => {
+    const id = setInterval(() => setLeft(Math.max(0, Math.ceil((deadlineMs - Date.now()) / 1000))), 1000);
+    return () => clearInterval(id);
+  }, [deadlineMs]);
+  const mm = String(Math.floor(left / 60)).padStart(2, '0');
+  const ss = String(left % 60).padStart(2, '0');
+  return (
+    <div className="font-poppins text-4xl font-black tabular-nums text-brand-yellow" style={poppins}>
+      {mm}:{ss}
     </div>
   );
 }
@@ -1083,12 +1120,6 @@ function TypedKindQuestion({
           if (locked || guess.trim() === '') return;
           onSubmit(guess.trim());
         }}
-        onGiveUp={() => {
-          if (locked) return;
-          // An empty guess is scored as wrong by the server — same effect as
-          // the prototype's give-up, and it reveals the answer at the flip.
-          onSubmit('');
-        }}
         readOnly={spectator}
       />
     </>
@@ -1206,11 +1237,13 @@ function RevealScreen({
 }
 
 export function BoardStrip({
-  board, selfUserId, rows = 5,
+  board, selfUserId, rows = 5, yourRankFallback = null,
 }: {
   board: WlBoardRow[];
   selfUserId: string | null;
   rows?: number;
+  /** Real rank when you're beyond the truncated board (server-provided). */
+  yourRankFallback?: number | null;
 }) {
   const { t } = useLocale();
   if (board.length === 0) return null;
@@ -1233,8 +1266,11 @@ export function BoardStrip({
         </div>
       </div>
       {you == null && selfUserId != null && (
-        <div className="mt-1.5 text-center font-poppins text-[11px] font-bold uppercase text-white/40">
-          {t('weekendLeague.gYourRank')}: 24+
+        <div className="mt-2 text-center font-poppins text-[13px] font-black uppercase text-white/80">
+          {t('weekendLeague.gYourRank')}:{' '}
+          <span className="tabular-nums text-brand-yellow">
+            {yourRankFallback != null ? `#${yourRankFallback}` : '24+'}
+          </span>
         </div>
       )}
     </div>

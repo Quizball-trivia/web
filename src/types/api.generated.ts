@@ -9615,6 +9615,7 @@ export interface components {
                 state: "entered" | "playing" | "eliminated" | "finalist" | "champion" | "no_show" | "withdrawn" | "disqualified" | "cancelled" | null;
                 checked_in: boolean;
                 final_checked_in: boolean;
+                last_game_rank: number | null;
                 qp: {
                     week_key: string | null;
                     points: number;

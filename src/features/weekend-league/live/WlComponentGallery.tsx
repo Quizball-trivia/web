@@ -320,7 +320,6 @@ export function WlComponentGallery({
             guess={typedGuess}
             onGuessChange={setTypedGuess}
             onSubmit={noop}
-            onGiveUp={noop}
           />
         </Frame>
       ),
@@ -346,7 +345,6 @@ export function WlComponentGallery({
             guess={typedGuess}
             onGuessChange={setTypedGuess}
             onSubmit={noop}
-            onGiveUp={noop}
           />
         </Frame>
       ),
@@ -413,6 +411,26 @@ export function WlComponentGallery({
           bestRound={{ round: 1, points: 90 }}
           onContinue={noop} onKeepWatching={noop} onExit={noop}
         />
+      ),
+    },
+    {
+      id: 'spectator-result', label: 'Game result (spectator)', group: 'Boards & results',
+      render: () => (
+        <Frame pad={false}>
+          <div className="mx-auto flex min-h-[70vh] w-full max-w-2xl flex-col items-center justify-center px-4 py-6 text-center">
+            <div className="font-poppins text-3xl font-black uppercase text-brand-green-light">
+              თამაში 1 დასრულდა
+            </div>
+            <p className="mt-1 font-poppins text-[13px] font-black uppercase tracking-wide text-white/70">112 გადადის</p>
+            <div className="mt-3">
+              <div className="mb-1 font-poppins text-[11px] font-black uppercase tracking-widest text-white/60">თამაში 2 დაიწყება</div>
+              <div className="font-poppins text-4xl font-black tabular-nums text-brand-yellow">01:47</div>
+            </div>
+            <div className="mt-2 max-h-[58vh] w-full overflow-y-auto overscroll-contain">
+              {boardStrip(BOARD, 'sim-you', 24)}
+            </div>
+          </div>
+        </Frame>
       ),
     },
     {

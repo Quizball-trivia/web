@@ -105,6 +105,8 @@ export interface WeekendLeagueLiveExtras {
   checkedInCount: number;
   /** Server break deadline (epoch ms) between games; null outside breaks. */
   breakUntilMs: number | null;
+  /** Your rank in the newest finished game (board is top-24 only). */
+  lastGameRank: number | null;
   /** 0-based game currently running / next to run (public payload). */
   currentGameIndex: number;
   checkinLeague: () => void;
@@ -244,6 +246,7 @@ export function useWeekendLeagueLive(): WeekendLeagueLiveController {
     registered: tournament?.registered_count ?? 0,
     checkedInCount: tournament?.checked_in_count ?? 0,
     breakUntilMs: tournament?.break_until_ms ?? null,
+    lastGameRank: you?.last_game_rank ?? null,
     currentGameIndex: tournament?.current_game_index ?? 0,
     session: null,
     playedOutcome: null,

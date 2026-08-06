@@ -176,9 +176,19 @@ function CareerChip({ item }: { item: CareerItem }) {
   const club = item.imageSrc ? null : findClubByName(item.matchName ?? item.label);
   const src = item.imageSrc ?? club?.logo ?? null;
   if (src == null) {
+    // No crest in the registry: a monogram shield keeps the chain visually
+    // uniform — every step reads as a badge, never a bare text pill.
+    const initials = (item.label ?? '?').trim().slice(0, 2).toUpperCase();
     return (
-      <span className="rounded-xl bg-white/[0.07] px-3 py-2 font-poppins text-[13px] font-bold uppercase text-white sm:text-sm">
-        {item.label}
+      <span className="flex w-16 flex-col items-center gap-1 sm:w-20">
+        <span className="flex size-11 items-center justify-center rounded-[10px] border-2 border-white/25 bg-white/10 font-poppins text-sm font-black text-white sm:size-14 sm:text-base">
+          {initials}
+        </span>
+        {item.label && (
+          <span className="w-full truncate text-center font-poppins text-[10px] font-bold uppercase leading-tight text-white/70">
+            {item.label}
+          </span>
+        )}
       </span>
     );
   }
@@ -324,19 +334,24 @@ export function TypedAnswerPanel({
   const { t } = useLocale();
   if (locked) {
     if (outcome == null) return null;
+    if (outcome === 'correct') {
+      return (
+        <div className="mt-4 rounded-[20px] bg-brand-green px-5 py-4 text-center font-poppins text-base font-black uppercase text-white">
+          {t('weekendLeague.gCorrect')}
+        </div>
+      );
+    }
+    // Wrong: plain text — the boxed red pill drew more attention than the answer.
     return (
-      <div
-        className={`mt-4 rounded-[20px] px-5 py-4 text-center font-poppins text-base font-black uppercase ${
-          outcome === 'correct'
-            ? 'bg-brand-green text-white'
-            : 'border-2 border-brand-red-soft text-brand-red-soft'
-        }`}
-      >
-        {outcome === 'correct'
-          ? t('weekendLeague.gCorrect')
-          : answerText
-            ? `${t('weekendLeague.gCorrectAnswer')} ${answerText}`
-            : t('weekendLeague.gWrong')}
+      <div className="mt-4 text-center font-poppins text-[15px] font-black uppercase">
+        {answerText ? (
+          <>
+            <span className="text-white/60">{t('weekendLeague.gCorrectAnswer')}</span>{' '}
+            <span className="text-brand-green-light">{answerText}</span>
+          </>
+        ) : (
+          <span className="text-brand-red-soft">{t('weekendLeague.gWrong')}</span>
+        )}
       </div>
     );
   }
