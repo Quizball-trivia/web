@@ -1,7 +1,8 @@
 'use client';
 
 import { useEffect } from 'react';
-import { CheckCircle2, XCircle } from 'lucide-react';
+import { poppins } from '../constants';
+import { XCircle } from 'lucide-react';
 import { DailyChallengeHeader } from '@/features/daily/components/DailyChallengeHeader';
 import { RoundTransitionOverlay } from '@/components/game/RoundTransitionOverlay';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -97,7 +98,7 @@ export function QuestionCard({ children }: { children: React.ReactNode }) {
         minHeight: 'clamp(84px, 10vw, 132px)',
       }}
     >
-      <div className="w-full leading-snug">{children}</div>
+      <div className="w-full text-center leading-snug">{children}</div>
     </div>
   );
 }
@@ -138,9 +139,7 @@ export function AnswerBtn({
         textTransform: 'uppercase',
         color: state === 'wrong' ? '#FB3101' : '#FFFFFF',
         opacity: state === 'faded' ? 0.45 : 1,
-        backgroundColor: state === 'correct'
-          ? '#38B60E'
-          : state === 'pending' ? 'rgba(255,229,0,0.16)' : 'transparent',
+        backgroundColor: state === 'correct' ? '#38B60E' : 'transparent',
         border:
           state === 'correct'
             ? 'none'
@@ -156,15 +155,10 @@ export function AnswerBtn({
         cursor: disabled ? 'default' : 'pointer',
       }}
     >
-      {/* Instant press feedback: the pick lights up on tap, before the ack. */}
-      {state === 'pending' && (
-        <span className="pointer-events-none absolute inset-0 animate-pulse rounded-[16px] bg-brand-yellow/10" />
-      )}
       {/* Option letter pinned to the corner so it never shifts with the label. */}
       {prefix && <span className="absolute left-2.5 top-2">{prefix}</span>}
       <div className="flex items-center justify-center gap-3 px-6 text-center">
         <span>{label}</span>
-        {state === 'correct' && <CheckCircle2 className="size-6 shrink-0" />}
         {state === 'wrong' && <XCircle className="size-6 shrink-0" />}
       </div>
     </button>
@@ -178,7 +172,9 @@ export function AnswerBtn({
 export function RoundIntroOverlay({ round, onDone }: { round: RoundDef; onDone: () => void }) {
   const { t } = useLocale();
   useEffect(() => {
-    const id = setTimeout(onDone, 1800);
+    // Long enough to actually read (the 1.8s version registered as a flash);
+    // the round-start dispatch lead budgets for exactly this duration.
+    const id = setTimeout(onDone, 2_200);
     return () => clearTimeout(id);
   }, [onDone]);
 
@@ -188,7 +184,9 @@ export function RoundIntroOverlay({ round, onDone }: { round: RoundDef; onDone: 
   return (
     <div className="absolute inset-0 z-40 bg-surface-page-alt">
       <RoundTransitionOverlay
-        title={t('weekendLeague.gRoundOnly', { n: round.index + 1 })}
+        // Digit in Poppins: the fun font's numerals read as a different
+        // typeface next to the Georgian glyphs.
+        title={<>{t('weekendLeague.gRoundWord')} <span style={poppins}>{round.index + 1}</span></>}
         categoryName={t(ROUND_LABEL_KEYS[round.type])}
         subtitle={t('weekendLeague.gUpTo', { n: round.maxPoints })}
       />

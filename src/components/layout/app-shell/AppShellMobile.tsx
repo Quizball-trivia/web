@@ -31,6 +31,7 @@ export function AppShellMobile({ vm, children }: AppShellMobileProps) {
     navbarCoins,
     navbarTickets,
     socialBadgeCount,
+    bellBadgeCount,
     setShowLogoutConfirm,
   } = vm;
 
@@ -52,7 +53,7 @@ export function AppShellMobile({ vm, children }: AppShellMobileProps) {
 
               <div className="flex items-center gap-2 z-10">
                 <AppShellCurrencyPills variant="mobile" coins={navbarCoins} tickets={navbarTickets} />
-                <NotificationsDropdown badgeCount={socialBadgeCount} />
+                <NotificationsDropdown badgeCount={bellBadgeCount} />
               </div>
             </div>
           </div>

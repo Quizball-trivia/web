@@ -38,6 +38,7 @@ import { BreakScreen, ChampionScreen, EliminationReveal, GameIntro, GameResult }
 import { ROUNDS, wlLadder } from '../gauntlet/gauntlet.data';
 import { ResultSplash } from '@/features/daily/components/ResultSplash';
 import { useResultSplash } from '@/features/daily/components/useResultSplash';
+import { playBgm, stopBgm } from '@/lib/sounds/gameSounds';
 import { useWlLive, type WlLiveScreen, type WlLiveState } from './useWlLive';
 
 const WHO_AM_I_CLUES = 5;
@@ -87,6 +88,8 @@ export interface WlLiveFlowUiProps {
   breakUntilMs?: number | null;
   /** 0-based game currently running / next to run (public payload). */
   currentGameIndex?: number;
+  /** Your rank in the newest finished game (the board is top-24 only). */
+  lastGameRank?: number | null;
 }
 
 export function WlLiveFlow({ tournamentId, ...ui }: WlLiveFlowUiProps & { tournamentId: string }) {
@@ -112,6 +115,7 @@ export function WlLiveFlowView({
   checkedInCount,
   breakUntilMs,
   currentGameIndex,
+  lastGameRank,
 }: WlLiveFlowUiProps & { live: WlLiveState; selfUserId: string | null }) {
   const { t, locale } = useLocale();
 
@@ -122,6 +126,20 @@ export function WlLiveFlowView({
 
   // Remember the latest game_result so the break screen and next game's intro
   // can show real field/advance counts after the screen has moved on.
+  // Ranked's background loop: start when live play begins, stop with a fade
+  // when the tournament resolves or the screen unmounts.
+  const inPlay = role === 'player'
+    && (live.screen.kind === 'question' || live.screen.kind === 'reveal'
+      || live.screen.kind === 'game_result');
+  useEffect(() => {
+    if (!inPlay) return;
+    playBgm('kickoff');
+    return () => stopBgm(400);
+  }, [inPlay]);
+  useEffect(() => {
+    if (live.screen.kind === 'final_result') stopBgm(600);
+  }, [live.screen.kind]);
+
   // Render-time adjustment (same pattern as useChoice's nonce): capture the
   // result while the game_result screen is showing, no effect round-trip.
   const [lastResult, setLastResult] = useState<{ game_index: number; field?: number; advanced?: number | null } | null>(null);
@@ -212,11 +230,19 @@ export function WlLiveFlowView({
             lastResult={lastResult}
             checkedInCount={checkedInCount ?? 0}
             currentGameIndex={currentGameIndex ?? live.gameIndex}
+            lastGameRank={lastGameRank ?? null}
             onExit={onExit}
             onSpectate={onSpectate ?? onExit}
           />
         </motion.div>
       </AnimatePresence>
+      {/* Spectators keep the standings in view the whole time — the rail lives
+          OUTSIDE the keyed transition so it never remounts between question
+          and reveal, and re-renders as each reveal refreshes the board. */}
+      {role === 'spectator'
+        && (live.screen.kind === 'question' || live.screen.kind === 'reveal') && (
+        <SpectatorBoardRail board={live.board} />
+      )}
       <ResultSplash {...liveSplashProps} />
     </Immersive>
   );
@@ -235,6 +261,26 @@ function Immersive({ children, resetKey }: { children: React.ReactNode; resetKey
     <div ref={ref} className="fixed inset-0 z-50 overflow-y-auto overscroll-contain">
       <GauntletBackdrop>{children}</GauntletBackdrop>
     </div>
+  );
+}
+
+/** Persistent standings rail for spectators (desktop). On smaller screens the
+ *  board still appears at each reveal, where there is room for it. */
+function SpectatorBoardRail({ board }: { board: WlBoardRow[] }) {
+  const { t } = useLocale();
+  if (board.length === 0) return null;
+  return (
+    <aside className="fixed right-4 top-20 z-40 hidden w-80 xl:block">
+      <div className="rounded-[20px] border border-white/10 bg-surface-card-deep/90 p-4 backdrop-blur">
+        <div className="mb-2 flex items-center justify-between">
+          <span className="font-poppins text-[12px] font-black uppercase tracking-wide text-white">
+            {t('weekendLeague.gStandingsTitle')}
+          </span>
+          <LiveBadge />
+        </div>
+        <BoardStrip board={board} selfUserId={null} rows={8} />
+      </div>
+    </aside>
   );
 }
 
@@ -308,7 +354,7 @@ function Shell({ children, onExit }: { children: React.ReactNode; onExit: () => 
 
 
 function ScreenBody({
-  screen, role, locale, serverNow, submitAnswer, retryNonce, board, selfUserId, score, rank, breakUntilMs, lastResult, checkedInCount, currentGameIndex, onExit, onSpectate,
+  screen, role, locale, serverNow, submitAnswer, retryNonce, board, selfUserId, score, rank, breakUntilMs, lastResult, checkedInCount, currentGameIndex, lastGameRank, onExit, onSpectate,
 }: {
   screen: WlLiveScreen;
   role: 'player' | 'spectator';
@@ -324,6 +370,7 @@ function ScreenBody({
   lastResult: { game_index: number; field?: number; advanced?: number | null } | null;
   checkedInCount: number;
   currentGameIndex: number;
+  lastGameRank: number | null;
   onExit: () => void;
   onSpectate: () => void;
 }) {
@@ -361,6 +408,11 @@ function ScreenBody({
             <div className="font-poppins text-xl font-black uppercase text-white" style={poppins}>
               {t('weekendLeague.gWaitingNext')}
             </div>
+            {role === 'spectator' && (
+              <p className="mt-2 font-poppins text-[12px] font-semibold text-white/50">
+                {t('weekendLeague.gSpectatorDelayHint')}
+              </p>
+            )}
             <BoardStrip board={board} selfUserId={selfUserId} />
             <button
               type="button"
@@ -432,9 +484,10 @@ function ScreenBody({
             question={
               screen.attempt != null ? (
                 <QuestionScreen
-                  attempt={screen.answer == null
-                    ? { ...screen.attempt, evaluation: screen.reveal.evaluation ?? screen.attempt.evaluation }
-                    : screen.attempt}
+                  attempt={{
+                    ...screen.attempt,
+                    evaluation: screen.reveal.evaluation ?? screen.attempt.evaluation,
+                  }}
                   score={score}
                   rank={yourRank}
                   introCounts={null}
@@ -445,7 +498,7 @@ function ScreenBody({
                   submitAnswer={() => {}}
                   retryNonce={retryNonce}
                   spectator={false}
-                  revealed={screen.answer == null}
+                  revealed
                 />
               ) : null
             }
@@ -453,13 +506,14 @@ function ScreenBody({
         );
       }
       // Hold the question screen (with its resolved buttons) — the attempt is
-      // still on the reveal payload, so nothing flickers. The reveal's
-      // evaluation is merged in so a TIMED-OUT player (no answer at all) still
-      // sees which option was right.
+      // still on the reveal payload, so nothing flickers. The reveal's answer
+      // key is merged UNCONDITIONALLY: if the screen remounts (round-end
+      // wrapper) the verdict re-derives from the key instead of blanking.
       if (screen.attempt != null) {
-        const attemptWithKey = screen.answer == null
-          ? { ...screen.attempt, evaluation: screen.reveal.evaluation ?? screen.attempt.evaluation }
-          : screen.attempt;
+        const attemptWithKey = {
+          ...screen.attempt,
+          evaluation: screen.reveal.evaluation ?? screen.attempt.evaluation,
+        };
         return (
           <QuestionScreen
             attempt={attemptWithKey}
@@ -473,7 +527,7 @@ function ScreenBody({
             submitAnswer={() => {}}
             retryNonce={retryNonce}
             spectator={false}
-            revealed={screen.answer == null}
+            revealed
           />
         );
       }
@@ -493,14 +547,14 @@ function ScreenBody({
       const { result, eliminated } = screen;
       if (role === 'spectator') {
         return (
-          <SpectatorGameResult result={result} board={board} selfUserId={selfUserId} />
+          <SpectatorGameResult result={result} board={board} selfUserId={selfUserId} breakUntilMs={breakUntilMs} yourRankFallback={lastGameRank} />
         );
       }
       return (
         <LiveGameResult
           result={result}
           eliminated={eliminated}
-          yourRank={yourRank}
+          yourRank={yourRank ?? lastGameRank}
           score={score}
           breakUntilMs={breakUntilMs}
           originalField={checkedInCount}
@@ -544,12 +598,13 @@ function isLastQuestionOfRound(reveal: { round_index: number; question_index: nu
  * still sees the correct answer — then the standings take over.
  */
 function RevealThenStandings({
-  board, selfUserId, roundIndex, question,
+  board, selfUserId, roundIndex, question, yourRankFallback = null,
 }: {
   board: WlBoardRow[];
   selfUserId: string | null;
   roundIndex: number;
   question: React.ReactNode;
+  yourRankFallback?: number | null;
 }) {
   const [phase, setPhase] = useState<'answer' | 'board'>(question == null ? 'board' : 'answer');
   useEffect(() => {
@@ -558,23 +613,24 @@ function RevealThenStandings({
     return () => clearTimeout(id);
   }, [question]);
   if (phase === 'answer') return <>{question}</>;
-  return <RoundStandings board={board} selfUserId={selfUserId} roundIndex={roundIndex} />;
+  return <RoundStandings board={board} selfUserId={selfUserId} roundIndex={roundIndex} yourRankFallback={yourRankFallback} />;
 }
 
 /** Round-end standings: the one place the board interrupts play. */
 function RoundStandings({
-  board, selfUserId, roundIndex,
+  board, selfUserId, roundIndex, yourRankFallback = null,
 }: {
   board: WlBoardRow[];
   selfUserId: string | null;
   roundIndex: number;
+  yourRankFallback?: number | null;
 }) {
   const { t } = useLocale();
   return (
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mx-auto flex min-h-[70vh] w-full max-w-2xl flex-col items-center justify-center px-4 text-center"
+      className="mx-auto flex min-h-[70vh] w-full max-w-2xl flex-col items-center justify-center px-4 py-6 text-center"
     >
       <div className="font-poppins text-[12px] font-black uppercase tracking-widest text-white/70">
         {t('weekendLeague.gRoundOnly', { n: roundIndex + 1 })}
@@ -582,7 +638,11 @@ function RoundStandings({
       <div className="mt-1 font-poppins text-2xl font-black uppercase text-white" style={poppins}>
         {t('weekendLeague.gStandingsTitle')}
       </div>
-      <BoardStrip board={board} selfUserId={selfUserId} rows={5} />
+      {/* The whole top-24 — the board IS the drama at a round end. Your own
+          row highlights in place (or appends below the cut when outside). */}
+      <div className="mt-2 max-h-[62vh] w-full overflow-y-auto overscroll-contain">
+        <BoardStrip board={board} selfUserId={selfUserId} rows={24} yourRankFallback={yourRankFallback} />
+      </div>
     </motion.div>
   );
 }
@@ -590,11 +650,13 @@ function RoundStandings({
 /** Spectators get the same elimination theatre, then the board — the cut
  *  is public information, only the personal verdict is player-only. */
 function SpectatorGameResult({
-  result, board, selfUserId,
+  result, board, selfUserId, breakUntilMs, yourRankFallback = null,
 }: {
   result: { game_index: number; field?: number; advanced?: number | null };
   board: WlBoardRow[];
   selfUserId: string | null;
+  breakUntilMs: number | null;
+  yourRankFallback?: number | null;
 }) {
   const { t } = useLocale();
   const [phase, setPhase] = useState<'cut' | 'board'>('cut');
@@ -606,19 +668,46 @@ function SpectatorGameResult({
   if (phase === 'cut' && game.players > 0 && game.advance > 0) {
     return <EliminationReveal game={game} isLastGame={result.game_index >= 2} onDone={() => setPhase('board')} />;
   }
+  // No outer card: the headline + full top-24 board sit directly on the
+  // backdrop, in the leaderboard's own visual language. During the break the
+  // countdown keeps ticking so a spectator is never staring at a static list.
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-10">
-      <div className="rounded-[24px] border-2 border-white/10 bg-surface-card-deep p-6 text-center">
-        <div className="font-poppins text-3xl font-black uppercase text-brand-green-light" style={poppins}>
-          {t('weekendLeague.gGameComplete', { n: result.game_index + 1 })}
-        </div>
-        {result.advanced != null && (
-          <p className="mt-2 font-poppins text-[13px] font-semibold text-white/60">
-            {t('weekendLeague.gAdvanceCount', { n: result.advanced })}
-          </p>
-        )}
-        <BoardStrip board={board} selfUserId={selfUserId} rows={8} />
+    <div className="mx-auto flex min-h-[70vh] w-full max-w-2xl flex-col items-center justify-center px-4 py-6 text-center">
+      <div className="font-poppins text-3xl font-black uppercase text-brand-green-light" style={poppins}>
+        {t('weekendLeague.gGameComplete', { n: result.game_index + 1 })}
       </div>
+      {result.advanced != null && (
+        <p className="mt-1 font-poppins text-[13px] font-black uppercase tracking-wide text-white/70">
+          {t('weekendLeague.gAdvanceCount', { n: result.advanced })}
+        </p>
+      )}
+      {breakUntilMs != null && (
+        <div className="mt-3">
+          <div className="mb-1 font-poppins text-[11px] font-black uppercase tracking-widest text-white/60">
+            {t('weekendLeague.gGameStartsIn', { n: result.game_index + 2 })}
+          </div>
+          <BreakCountdown deadlineMs={breakUntilMs} />
+        </div>
+      )}
+      <div className="mt-2 max-h-[58vh] w-full overflow-y-auto overscroll-contain">
+        <BoardStrip board={board} selfUserId={selfUserId} rows={24} yourRankFallback={yourRankFallback} />
+      </div>
+    </div>
+  );
+}
+
+/** mm:ss to a server deadline — the spectator's between-games clock. */
+function BreakCountdown({ deadlineMs }: { deadlineMs: number }) {
+  const [left, setLeft] = useState(() => Math.max(0, Math.ceil((deadlineMs - Date.now()) / 1000)));
+  useEffect(() => {
+    const id = setInterval(() => setLeft(Math.max(0, Math.ceil((deadlineMs - Date.now()) / 1000))), 1000);
+    return () => clearInterval(id);
+  }, [deadlineMs]);
+  const mm = String(Math.floor(left / 60)).padStart(2, '0');
+  const ss = String(left % 60).padStart(2, '0');
+  return (
+    <div className="font-poppins text-4xl font-black tabular-nums text-brand-yellow" style={poppins}>
+      {mm}:{ss}
     </div>
   );
 }
@@ -719,16 +808,24 @@ function QuestionScreen({
   const q = attempt.question;
 
   const round = { ...(ROUNDS[attempt.round_index] ?? ROUNDS[0]), index: attempt.round_index };
+  const windowSec = Math.max(1, Math.round((attempt.deadlineAt - attempt.playableAt) / 1000));
   const header: RoundHeaderModel = {
     gameIndex: attempt.game_index,
     round,
     score,
     rank,
-    secondsLeft: ready ? secondsLeft : 0,
+    // Reading grace: the timer HOLDS at the full window until playableAt —
+    // ranked parity, so the countdown never starts on an unread question.
+    secondsLeft: ready ? secondsLeft : windowSec,
     spectator,
     step: `${attempt.question_index + 1}/5`,
     onQuit: onExit,
   };
+  // Round intro only at the round's FIRST question; it dismisses itself and
+  // hands the remaining lead to reading time. (Mid-round questions get no
+  // overlay — that flash between every question was noise.)
+  const [introDone, setIntroDone] = useState(false);
+  const showRoundIntro = !ready && attempt.question_index === 0 && !introDone;
   const ack = answered as { accepted: boolean; correct?: boolean; points?: number } | null;
 
   // Games 2 and 3 open with the GAME N card, full-screen on its own: the field
@@ -758,7 +855,7 @@ function QuestionScreen({
     <>
       <RoundScreenShell
         header={header}
-        overlay={!ready ? <RoundIntroOverlay round={round} onDone={() => {}} /> : null}
+        overlay={showRoundIntro ? <RoundIntroOverlay round={round} onDone={() => setIntroDone(true)} /> : null}
       >
         {attempt.kind === 'true_false' && (
           <TrueFalseQuestion revealed={revealed} prompt={pick(q['prompt'], locale)} locked={locked} onAnswer={submitAnswer} feedback={ack} evaluation={attempt.evaluation} retryNonce={retryNonce} />
@@ -1023,12 +1120,6 @@ function TypedKindQuestion({
           if (locked || guess.trim() === '') return;
           onSubmit(guess.trim());
         }}
-        onGiveUp={() => {
-          if (locked) return;
-          // An empty guess is scored as wrong by the server — same effect as
-          // the prototype's give-up, and it reveals the answer at the flip.
-          onSubmit('');
-        }}
         readOnly={spectator}
       />
     </>
@@ -1146,11 +1237,13 @@ function RevealScreen({
 }
 
 export function BoardStrip({
-  board, selfUserId, rows = 5,
+  board, selfUserId, rows = 5, yourRankFallback = null,
 }: {
   board: WlBoardRow[];
   selfUserId: string | null;
   rows?: number;
+  /** Real rank when you're beyond the truncated board (server-provided). */
+  yourRankFallback?: number | null;
 }) {
   const { t } = useLocale();
   if (board.length === 0) return null;
@@ -1173,8 +1266,11 @@ export function BoardStrip({
         </div>
       </div>
       {you == null && selfUserId != null && (
-        <div className="mt-1.5 text-center font-poppins text-[11px] font-bold uppercase text-white/40">
-          {t('weekendLeague.gYourRank')}: 24+
+        <div className="mt-2 text-center font-poppins text-[13px] font-black uppercase text-white/80">
+          {t('weekendLeague.gYourRank')}:{' '}
+          <span className="tabular-nums text-brand-yellow">
+            {yourRankFallback != null ? `#${yourRankFallback}` : '24+'}
+          </span>
         </div>
       )}
     </div>

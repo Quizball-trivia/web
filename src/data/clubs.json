@@ -970,5 +970,1112 @@
     "primaryColor": "#0b1f3a",
     "hidden": true,
     "restrictedToUserId": "e015028e-6ae8-45f5-9701-5831fd8d8df1"
+  },
+  {
+    "id": "wl-al-nassr",
+    "label": "Al Nassr",
+    "value": "Al Nassr",
+    "country": "",
+    "logo": "wl-al-nassr.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-al-qadsiah",
+    "label": "Al Qadsiah",
+    "value": "Al Qadsiah",
+    "country": "",
+    "logo": "wl-al-qadsiah.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-ales",
+    "label": "Alès",
+    "value": "Alès",
+    "country": "",
+    "logo": "wl-ales.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-atletico-mineiro",
+    "label": "Atlético Mineiro",
+    "value": "Atlético Mineiro",
+    "country": "",
+    "logo": "wl-atletico-mineiro.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-banfield",
+    "label": "Banfield",
+    "value": "Banfield",
+    "country": "",
+    "logo": "wl-banfield.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-basel",
+    "label": "Basel",
+    "value": "Basel",
+    "country": "",
+    "logo": "wl-basel.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-besiktas",
+    "label": "Beşiktaş",
+    "value": "Beşiktaş",
+    "country": "",
+    "logo": "wl-besiktas.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-bordeaux",
+    "label": "Bordeaux",
+    "value": "Bordeaux",
+    "country": "",
+    "logo": "wl-bordeaux.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-bordeaux-b",
+    "label": "Bordeaux B",
+    "value": "Bordeaux B",
+    "country": "",
+    "logo": "wl-bordeaux-b.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-botafogo",
+    "label": "Botafogo",
+    "value": "Botafogo",
+    "country": "",
+    "logo": "wl-botafogo.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-brescia",
+    "label": "Brescia",
+    "value": "Brescia",
+    "country": "",
+    "logo": "wl-brescia.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-chemnitzer-fc",
+    "label": "Chemnitzer FC",
+    "value": "Chemnitzer FC",
+    "country": "",
+    "logo": "wl-chemnitzer-fc.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-chicago-fire",
+    "label": "Chicago Fire",
+    "value": "Chicago Fire",
+    "country": "",
+    "logo": "wl-chicago-fire.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-cobreloa",
+    "label": "Cobreloa",
+    "value": "Cobreloa",
+    "country": "",
+    "logo": "wl-cobreloa.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-como",
+    "label": "Como",
+    "value": "Como",
+    "country": "",
+    "logo": "wl-como.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-cruzeiro",
+    "label": "Cruzeiro",
+    "value": "Cruzeiro",
+    "country": "",
+    "logo": "wl-cruzeiro.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-cska-sofia",
+    "label": "CSKA Sofia",
+    "value": "CSKA Sofia",
+    "country": "",
+    "logo": "wl-cska-sofia.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-dinamo-zagreb",
+    "label": "Dinamo Zagreb",
+    "value": "Dinamo Zagreb",
+    "country": "",
+    "logo": "wl-dinamo-zagreb.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-dynamo-kyiv",
+    "label": "Dynamo Kyiv",
+    "value": "Dynamo Kyiv",
+    "country": "",
+    "logo": "wl-dynamo-kyiv.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-eibar",
+    "label": "Eibar",
+    "value": "Eibar",
+    "country": "",
+    "logo": "wl-eibar.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-fiorentina",
+    "label": "Fiorentina",
+    "value": "Fiorentina",
+    "country": "",
+    "logo": "wl-fiorentina.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-fluminense",
+    "label": "Fluminense",
+    "value": "Fluminense",
+    "country": "",
+    "logo": "wl-fluminense.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-fulham",
+    "label": "Fulham",
+    "value": "Fulham",
+    "country": "",
+    "logo": "wl-fulham.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-galatasaray",
+    "label": "Galatasaray",
+    "value": "Galatasaray",
+    "country": "",
+    "logo": "wl-galatasaray.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-genk",
+    "label": "Genk",
+    "value": "Genk",
+    "country": "",
+    "logo": "wl-genk.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-go-ahead-eagles",
+    "label": "Go Ahead Eagles",
+    "value": "Go Ahead Eagles",
+    "country": "",
+    "logo": "wl-go-ahead-eagles.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-gremio",
+    "label": "Grêmio",
+    "value": "Grêmio",
+    "country": "",
+    "logo": "wl-gremio.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-groningen",
+    "label": "Groningen",
+    "value": "Groningen",
+    "country": "",
+    "logo": "wl-groningen.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-internacional",
+    "label": "Internacional",
+    "value": "Internacional",
+    "country": "",
+    "logo": "wl-internacional.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-internazionale",
+    "label": "Internazionale",
+    "value": "Internazionale",
+    "country": "",
+    "logo": "wl-internazionale.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-juventude",
+    "label": "Juventude",
+    "value": "Juventude",
+    "country": "",
+    "logo": "wl-juventude.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-kaiserslautern",
+    "label": "Kaiserslautern",
+    "value": "Kaiserslautern",
+    "country": "",
+    "logo": "wl-kaiserslautern.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-la-galaxy",
+    "label": "LA Galaxy",
+    "value": "LA Galaxy",
+    "country": "",
+    "logo": "wl-la-galaxy.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-liefering",
+    "label": "Liefering",
+    "value": "Liefering",
+    "country": "",
+    "logo": "wl-liefering.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-malmo-ff",
+    "label": "Malmö FF",
+    "value": "Malmö FF",
+    "country": "",
+    "logo": "wl-malmo-ff.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-marseille",
+    "label": "Marseille",
+    "value": "Marseille",
+    "country": "",
+    "logo": "wl-marseille.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-metz",
+    "label": "Metz",
+    "value": "Metz",
+    "country": "",
+    "logo": "wl-metz.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-millonarios",
+    "label": "Millonarios",
+    "value": "Millonarios",
+    "country": "",
+    "logo": "wl-millonarios.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-monterrey",
+    "label": "Monterrey",
+    "value": "Monterrey",
+    "country": "",
+    "logo": "wl-monterrey.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-nancy",
+    "label": "Nancy",
+    "value": "Nancy",
+    "country": "",
+    "logo": "wl-nancy.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-palmeiras",
+    "label": "Palmeiras",
+    "value": "Palmeiras",
+    "country": "",
+    "logo": "wl-palmeiras.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-queens-park-rangers",
+    "label": "Queens Park Rangers",
+    "value": "Queens Park Rangers",
+    "country": "",
+    "logo": "wl-queens-park-rangers.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-rennes",
+    "label": "Rennes",
+    "value": "Rennes",
+    "country": "",
+    "logo": "wl-rennes.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-salernitana",
+    "label": "Salernitana",
+    "value": "Salernitana",
+    "country": "",
+    "logo": "wl-salernitana.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-udinese",
+    "label": "Udinese",
+    "value": "Udinese",
+    "country": "",
+    "logo": "wl-udinese.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-vissel-kobe",
+    "label": "Vissel Kobe",
+    "value": "Vissel Kobe",
+    "country": "",
+    "logo": "wl-vissel-kobe.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-wolfsburg",
+    "label": "Wolfsburg",
+    "value": "Wolfsburg",
+    "country": "",
+    "logo": "wl-wolfsburg.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-znicz-pruszkow",
+    "label": "Znicz Pruszków",
+    "value": "Znicz Pruszków",
+    "country": "",
+    "logo": "wl-znicz-pruszkow.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-al-mokawloon",
+    "label": "Al Mokawloon",
+    "value": "Al Mokawloon",
+    "country": "",
+    "logo": "wl-al-mokawloon.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-al-duhail",
+    "label": "Al-Duhail",
+    "value": "Al-Duhail",
+    "country": "",
+    "logo": "wl-al-duhail.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-al-ettifaq",
+    "label": "Al-Ettifaq",
+    "value": "Al-Ettifaq",
+    "country": "",
+    "logo": "wl-al-ettifaq.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-al-gharafa",
+    "label": "Al-Gharafa",
+    "value": "Al-Gharafa",
+    "country": "",
+    "logo": "wl-al-gharafa.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-al-ittihad",
+    "label": "Al-Ittihad",
+    "value": "Al-Ittihad",
+    "country": "",
+    "logo": "wl-al-ittihad.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-al-rayyan",
+    "label": "Al-Rayyan",
+    "value": "Al-Rayyan",
+    "country": "",
+    "logo": "wl-al-rayyan.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-anderlecht",
+    "label": "Anderlecht",
+    "value": "Anderlecht",
+    "country": "",
+    "logo": "wl-anderlecht.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-anzhi-makhachkala",
+    "label": "Anzhi Makhachkala",
+    "value": "Anzhi Makhachkala",
+    "country": "",
+    "logo": "wl-anzhi-makhachkala.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-auxerre",
+    "label": "Auxerre",
+    "value": "Auxerre",
+    "country": "",
+    "logo": "wl-auxerre.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-barnet",
+    "label": "Barnet",
+    "value": "Barnet",
+    "country": "",
+    "logo": "wl-barnet.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-bayer-leverkusen",
+    "label": "Bayer Leverkusen",
+    "value": "Bayer Leverkusen",
+    "country": "",
+    "logo": "wl-bayer-leverkusen.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-benfica",
+    "label": "Benfica",
+    "value": "Benfica",
+    "country": "",
+    "logo": "wl-benfica.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-beveren",
+    "label": "Beveren",
+    "value": "Beveren",
+    "country": "",
+    "logo": "wl-beveren.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-birmingham-city",
+    "label": "Birmingham City",
+    "value": "Birmingham City",
+    "country": "",
+    "logo": "wl-birmingham-city.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-bolton-wanderers",
+    "label": "Bolton Wanderers",
+    "value": "Bolton Wanderers",
+    "country": "",
+    "logo": "wl-bolton-wanderers.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-boulogne",
+    "label": "Boulogne",
+    "value": "Boulogne",
+    "country": "",
+    "logo": "wl-boulogne.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-bournemouth",
+    "label": "Bournemouth",
+    "value": "Bournemouth",
+    "country": "",
+    "logo": "wl-bournemouth.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-brentford",
+    "label": "Brentford",
+    "value": "Brentford",
+    "country": "",
+    "logo": "wl-brentford.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-brest",
+    "label": "Brest",
+    "value": "Brest",
+    "country": "",
+    "logo": "wl-brest.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-caen",
+    "label": "Caen",
+    "value": "Caen",
+    "country": "",
+    "logo": "wl-caen.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-cannes",
+    "label": "Cannes",
+    "value": "Cannes",
+    "country": "",
+    "logo": "wl-cannes.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-cardiff-city",
+    "label": "Cardiff City",
+    "value": "Cardiff City",
+    "country": "",
+    "logo": "wl-cardiff-city.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-colo-colo",
+    "label": "Colo-Colo",
+    "value": "Colo-Colo",
+    "country": "",
+    "logo": "wl-colo-colo.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-coventry-city",
+    "label": "Coventry City",
+    "value": "Coventry City",
+    "country": "",
+    "logo": "wl-coventry-city.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-crystal-palace",
+    "label": "Crystal Palace",
+    "value": "Crystal Palace",
+    "country": "",
+    "logo": "wl-crystal-palace.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-cska-moscow",
+    "label": "CSKA Moscow",
+    "value": "CSKA Moscow",
+    "country": "",
+    "logo": "wl-cska-moscow.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-d-c-united",
+    "label": "D.C. United",
+    "value": "D.C. United",
+    "country": "",
+    "logo": "wl-d-c-united.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-den-bosch",
+    "label": "Den Bosch",
+    "value": "Den Bosch",
+    "country": "",
+    "logo": "wl-den-bosch.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-derby-county",
+    "label": "Derby County",
+    "value": "Derby County",
+    "country": "",
+    "logo": "wl-derby-county.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-dijon",
+    "label": "Dijon",
+    "value": "Dijon",
+    "country": "",
+    "logo": "wl-dijon.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-emirates-club",
+    "label": "Emirates Club",
+    "value": "Emirates Club",
+    "country": "",
+    "logo": "wl-emirates-club.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-envigado",
+    "label": "Envigado",
+    "value": "Envigado",
+    "country": "",
+    "logo": "wl-envigado.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-espanyol",
+    "label": "Espanyol",
+    "value": "Espanyol",
+    "country": "",
+    "logo": "wl-espanyol.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-fenerbahce",
+    "label": "Fenerbahçe",
+    "value": "Fenerbahçe",
+    "country": "",
+    "logo": "wl-fenerbahce.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-heerenveen",
+    "label": "Heerenveen",
+    "value": "Heerenveen",
+    "country": "",
+    "logo": "wl-heerenveen.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-inter-miami",
+    "label": "Inter Miami",
+    "value": "Inter Miami",
+    "country": "",
+    "logo": "wl-inter-miami.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-inter-zapresic",
+    "label": "Inter Zaprešić",
+    "value": "Inter Zaprešić",
+    "country": "",
+    "logo": "wl-inter-zapresic.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-lanceros-boyaca",
+    "label": "Lanceros Boyacá",
+    "value": "Lanceros Boyacá",
+    "country": "",
+    "logo": "wl-lanceros-boyaca.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-lech-poznan",
+    "label": "Lech Poznań",
+    "value": "Lech Poznań",
+    "country": "",
+    "logo": "wl-lech-poznan.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-leyton-orient",
+    "label": "Leyton Orient",
+    "value": "Leyton Orient",
+    "country": "",
+    "logo": "wl-leyton-orient.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-lille",
+    "label": "Lille",
+    "value": "Lille",
+    "country": "",
+    "logo": "wl-lille.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-lyon",
+    "label": "Lyon",
+    "value": "Lyon",
+    "country": "",
+    "logo": "wl-lyon.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-malaga",
+    "label": "Málaga",
+    "value": "Málaga",
+    "country": "",
+    "logo": "wl-malaga.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-mallorca",
+    "label": "Mallorca",
+    "value": "Mallorca",
+    "country": "",
+    "logo": "wl-mallorca.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-maritimo",
+    "label": "Marítimo",
+    "value": "Marítimo",
+    "country": "",
+    "logo": "wl-maritimo.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-marsala",
+    "label": "Marsala",
+    "value": "Marsala",
+    "country": "",
+    "logo": "wl-marsala.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-martigues",
+    "label": "Martigues",
+    "value": "Martigues",
+    "country": "",
+    "logo": "wl-martigues.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-metalurh-donetsk",
+    "label": "Metalurh Donetsk",
+    "value": "Metalurh Donetsk",
+    "country": "",
+    "logo": "wl-metalurh-donetsk.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-millwall",
+    "label": "Millwall",
+    "value": "Millwall",
+    "country": "",
+    "logo": "wl-millwall.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-monza",
+    "label": "Monza",
+    "value": "Monza",
+    "country": "",
+    "logo": "wl-monza.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-new-york-city-fc",
+    "label": "New York City FC",
+    "value": "New York City FC",
+    "country": "",
+    "logo": "wl-new-york-city-fc.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-new-york-red-bulls",
+    "label": "New York Red Bulls",
+    "value": "New York Red Bulls",
+    "country": "",
+    "logo": "wl-new-york-red-bulls.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-nice",
+    "label": "Nice",
+    "value": "Nice",
+    "country": "",
+    "logo": "wl-nice.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-nimes",
+    "label": "Nîmes",
+    "value": "Nîmes",
+    "country": "",
+    "logo": "wl-nimes.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-norwich-city",
+    "label": "Norwich City",
+    "value": "Norwich City",
+    "country": "",
+    "logo": "wl-norwich-city.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-olympiacos",
+    "label": "Olympiacos",
+    "value": "Olympiacos",
+    "country": "",
+    "logo": "wl-olympiacos.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-orlando-city",
+    "label": "Orlando City",
+    "value": "Orlando City",
+    "country": "",
+    "logo": "wl-orlando-city.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-paok",
+    "label": "PAOK",
+    "value": "PAOK",
+    "country": "",
+    "logo": "wl-paok.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-perth-glory",
+    "label": "Perth Glory",
+    "value": "Perth Glory",
+    "country": "",
+    "logo": "wl-perth-glory.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-qingdao-huanghai",
+    "label": "Qingdao Huanghai",
+    "value": "Qingdao Huanghai",
+    "country": "",
+    "logo": "wl-qingdao-huanghai.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-queretaro",
+    "label": "Querétaro",
+    "value": "Querétaro",
+    "country": "",
+    "logo": "wl-queretaro.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-rayo-vallecano",
+    "label": "Rayo Vallecano",
+    "value": "Rayo Vallecano",
+    "country": "",
+    "logo": "wl-rayo-vallecano.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-rb-leipzig",
+    "label": "RB Leipzig",
+    "value": "RB Leipzig",
+    "country": "",
+    "logo": "wl-rb-leipzig.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-red-bull-salzburg",
+    "label": "Red Bull Salzburg",
+    "value": "Red Bull Salzburg",
+    "country": "",
+    "logo": "wl-red-bull-salzburg.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-reggina",
+    "label": "Reggina",
+    "value": "Reggina",
+    "country": "",
+    "logo": "wl-reggina.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-rosario-central",
+    "label": "Rosario Central",
+    "value": "Rosario Central",
+    "country": "",
+    "logo": "wl-rosario-central.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-sagan-tosu",
+    "label": "Sagan Tosu",
+    "value": "Sagan Tosu",
+    "country": "",
+    "logo": "wl-sagan-tosu.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-southampton",
+    "label": "Southampton",
+    "value": "Southampton",
+    "country": "",
+    "logo": "wl-southampton.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-sporting-gijon",
+    "label": "Sporting Gijón",
+    "value": "Sporting Gijón",
+    "country": "",
+    "logo": "wl-sporting-gijon.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-stoke-city",
+    "label": "Stoke City",
+    "value": "Stoke City",
+    "country": "",
+    "logo": "wl-stoke-city.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-vasco-da-gama",
+    "label": "Vasco da Gama",
+    "value": "Vasco da Gama",
+    "country": "",
+    "logo": "wl-vasco-da-gama.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-west-bromwich-albion",
+    "label": "West Bromwich Albion",
+    "value": "West Bromwich Albion",
+    "country": "",
+    "logo": "wl-west-bromwich-albion.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-willem-ii",
+    "label": "Willem II",
+    "value": "Willem II",
+    "country": "",
+    "logo": "wl-willem-ii.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-zaragoza",
+    "label": "Zaragoza",
+    "value": "Zaragoza",
+    "country": "",
+    "logo": "wl-zaragoza.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-zrinjski",
+    "label": "Zrinjski",
+    "value": "Zrinjski",
+    "country": "",
+    "logo": "wl-zrinjski.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
   }
 ]

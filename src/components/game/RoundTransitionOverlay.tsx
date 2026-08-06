@@ -4,7 +4,7 @@ import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 
 interface RoundTransitionOverlayProps {
-  title: string;
+  title: React.ReactNode;
   categoryName?: string | null;
   subtitle?: string | null;
   className?: string;

@@ -319,11 +319,13 @@ describe('AppShell — children + chrome', () => {
     expect(sidebar.getAttribute('data-social-badge')).toBe('2');
   });
 
-  it('forwards the social badge count to NotificationsDropdown', () => {
+  it('feeds the bell the NOTIFICATION count, not the social count', () => {
     renderShell();
     const dropdowns = screen.getAllByTestId('notifications');
     expect(dropdowns.length).toBeGreaterThan(0);
-    expect(dropdowns[0].getAttribute('data-badge')).toBe('2');
+    // Friend requests / invites badge the social tab only; with no unread
+    // notifications mocked, the bell shows 0 — the counts are independent.
+    expect(dropdowns[0].getAttribute('data-badge')).toBe('0');
   });
 });
 
