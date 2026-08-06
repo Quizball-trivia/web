@@ -308,6 +308,10 @@ function makeMatchState(
     half?: 1 | 2;
     goals?: { seat1: number; seat2: number };
     penaltyGoals?: { seat1: number; seat2: number };
+    penaltyAttempts?: {
+      seat1: Array<'goal' | 'miss'>;
+      seat2: Array<'goal' | 'miss'>;
+    };
     shooterSeat?: 1 | 2 | null;
     phaseKind?: 'normal' | 'last_attack' | 'penalty';
     phaseRound?: number;
@@ -326,6 +330,7 @@ function makeMatchState(
     kickOffSeat: 1,
     goals: opts.goals ?? { seat1: 0, seat2: 0 },
     penaltyGoals: opts.penaltyGoals ?? { seat1: 0, seat2: 0 },
+    penaltyAttempts: opts.penaltyAttempts,
     phaseKind: opts.phaseKind ?? 'normal',
     phaseRound: opts.phaseRound ?? 1,
     shooterSeat: opts.shooterSeat ?? null,
@@ -447,7 +452,8 @@ function makePenaltyRoundResult(
   shooterSeat: 1 | 2,
   outcome: 'goal' | 'saved',
   scores: { meTotal: number; oppTotal: number },
-  points: { me: number; opp: number }
+  points: { me: number; opp: number },
+  times?: { me: number; opp: number }
 ): MatchRoundResultPayload {
   const sample = SAMPLE_QUESTIONS[qIndex % SAMPLE_QUESTIONS.length];
   const kickIndex = Math.max(0, qIndex - PENALTY_QINDEX_BASE);
@@ -455,6 +461,7 @@ function makePenaltyRoundResult(
   const meCorrect = points.me > 0;
   const oppCorrect = points.opp > 0;
   const timeForSeat = (seat: 1 | 2, correct: boolean) => {
+    if (times) return seat === 1 ? times.me : times.opp;
     if (!correct) return 6000;
     if (outcome === 'goal') return seat === shooterSeat ? 1400 : 2600;
     return seat === keeperSeat ? 1400 : 2600;
@@ -499,10 +506,15 @@ type PenaltyKickOptions = {
   resetTimers?: boolean;
   emitOpponentAnswered?: boolean;
   points?: { me: number; opp: number };
+  times?: { me: number; opp: number };
+  penaltyAttempts?: {
+    seat1: Array<'goal' | 'miss'>;
+    seat2: Array<'goal' | 'miss'>;
+  };
   answerAckDelayMs?: number;
   opponentAnsweredDelayMs?: number;
   roundResultDelayMs?: number;
-  legacyOpponentRecentPointsOverride?: number;
+  legacyOpponentRoundPointsOverride?: number;
   // When true, DON'T advance to the next shooter after the round result. Used for
   // the FINAL/deciding kick so the goal/save shot + splash play out fully instead
   // of being cut short by the next-shooter state change (the reported bug).
@@ -515,6 +527,15 @@ function defaultPenaltyPoints(shooterSeat: 1 | 2, outcome: 'goal' | 'saved'): { 
     me: winningSeat === 1 ? 100 : 90,
     opp: winningSeat === 2 ? 100 : 90,
   };
+}
+
+function penaltyOutcomeForPoints(
+  shooterSeat: 1 | 2,
+  points: { me: number; opp: number }
+): 'goal' | 'saved' {
+  const shooterPoints = shooterSeat === 1 ? points.me : points.opp;
+  const keeperPoints = shooterSeat === 1 ? points.opp : points.me;
+  return shooterPoints > keeperPoints ? 'goal' : 'saved';
 }
 
 const PUT_IN_ORDER_CORRECT = [
@@ -753,8 +774,15 @@ export default function DevAnimationsPage() {
   return <DevAnimationsContent />;
 }
 
-function DevAnimationsContent() {
+type DevAnimationsScenario = 'playground' | 'penalty-score-bug';
+
+export function DevAnimationsContent({
+  initialScenario = 'playground',
+}: {
+  initialScenario?: DevAnimationsScenario;
+}) {
   const router = useRouter();
+  const isPenaltyScoreBugRoute = initialScenario === 'penalty-score-bug';
 
   const store = useRealtimeMatchStore.getState;
   const matchId = useRealtimeMatchStore((s) => s.match?.matchId ?? null);
@@ -795,6 +823,8 @@ function DevAnimationsContent() {
   // straight on the controls, can tap "✕" to dismiss and watch the
   // animation full-screen.
   const [mobilePanelOpen, setMobilePanelOpen] = useState(true);
+  const [bugControlsOpen, setBugControlsOpen] = useState(true);
+  const [activePenaltyReplay, setActivePenaltyReplay] = useState<'before' | 'after' | 'reported'>('before');
 
   // Seed: self user id + start match + first question.
   function start() {
@@ -973,7 +1003,8 @@ function DevAnimationsContent() {
     // Install inside the effect so React Strict Mode's dev-only cleanup/replay
     // cannot leave the page with the override cleared.
     __setSocketOverride(createStubSocket());
-    start();
+    if (isPenaltyScoreBugRoute) replayPenaltyScoreBug('before');
+    else start();
     return () => {
       // Cleanup socket override + pending timers on unmount.
       pendingTimers.current.forEach((t) => window.clearTimeout(t));
@@ -2198,7 +2229,8 @@ function DevAnimationsContent() {
     const roundResultDelayMs = options.roundResultDelayMs ?? DEV_PENALTY_ROUND_RESULT_DELAY_MS;
     const emitOpponentAnswered = options.emitOpponentAnswered ?? false;
     const holdOnResult = options.holdOnResult ?? false;
-    const legacyOpponentRecentPointsOverride = options.legacyOpponentRecentPointsOverride;
+    const legacyOpponentRoundPointsOverride = options.legacyOpponentRoundPointsOverride;
+    const penaltyAttempts = options.penaltyAttempts;
     const nextShooterSeat = nextSeat(shooterSeat);
 
     stateVersion.current += 1;
@@ -2208,6 +2240,7 @@ function DevAnimationsContent() {
         half: 2,
         goals: goalsRef.current,
         penaltyGoals: penaltyGoalsRef.current,
+        penaltyAttempts,
         phaseKind: 'penalty',
         phaseRound,
         shooterSeat,
@@ -2243,7 +2276,15 @@ function DevAnimationsContent() {
     s.setMatchQuestion(makePenaltyQuestion(qIndex, shooterSeat));
 
     const points = options.points ?? defaultPenaltyPoints(shooterSeat, outcome);
-    const result = makePenaltyRoundResult(qIndex, shooterSeat, outcome, scoreRef.current, points);
+    const resolvedOutcome = penaltyOutcomeForPoints(shooterSeat, points);
+    const result = makePenaltyRoundResult(
+      qIndex,
+      shooterSeat,
+      resolvedOutcome,
+      scoreRef.current,
+      points,
+      options.times
+    );
     const me = result.players[SELF_ID];
     const opp = result.players[OPP_ID];
     if (!me || !opp) return;
@@ -2288,23 +2329,46 @@ function DevAnimationsContent() {
 
       pendingTimers.current.push(
         window.setTimeout(() => {
-          s.setRoundResult(result);
-          if (legacyOpponentRecentPointsOverride !== undefined) {
-            useRealtimeMatchStore.setState((prev) =>
-              prev.match
-                ? {
-                    ...prev,
-                    match: {
-                      ...prev.match,
-                      opponentRecentPoints: legacyOpponentRecentPointsOverride,
-                    },
-                  }
-                : prev
-            );
-          }
-          if (outcome === 'goal') {
+          const displayedResult = legacyOpponentRoundPointsOverride === undefined
+            ? result
+            : {
+                ...result,
+                players: {
+                  ...result.players,
+                  [OPP_ID]: {
+                    ...opp,
+                    totalPoints: scoreRef.current.oppTotal + legacyOpponentRoundPointsOverride,
+                    pointsEarned: legacyOpponentRoundPointsOverride,
+                    isCorrect: legacyOpponentRoundPointsOverride > 0,
+                  },
+                },
+              };
+          s.setRoundResult(displayedResult);
+          if (resolvedOutcome === 'goal') {
             if (shooterSeat === 1) penaltyGoalsRef.current.seat1 += 1;
             else penaltyGoalsRef.current.seat2 += 1;
+          }
+          if (penaltyAttempts) {
+            const resolvedAttempts = {
+              seat1: [...penaltyAttempts.seat1],
+              seat2: [...penaltyAttempts.seat2],
+            };
+            resolvedAttempts[shooterSeat === 1 ? 'seat1' : 'seat2'].push(
+              resolvedOutcome === 'goal' ? 'goal' : 'miss'
+            );
+            stateVersion.current += 1;
+            s.setMatchState(
+              makeMatchState('PENALTY_SHOOTOUT', {
+                stateVersion: stateVersion.current,
+                half: 2,
+                goals: goalsRef.current,
+                penaltyGoals: penaltyGoalsRef.current,
+                penaltyAttempts: resolvedAttempts,
+                phaseKind: 'penalty',
+                phaseRound,
+                shooterSeat,
+              })
+            );
           }
           scoreRef.current.meTotal = me.totalPoints;
           scoreRef.current.oppTotal = opp.totalPoints;
@@ -2330,6 +2394,7 @@ function DevAnimationsContent() {
   }
 
   function replayPenaltyScoreBug(mode: 'before' | 'after') {
+    setActivePenaltyReplay(mode);
     setMobilePanelOpen(false);
     pendingTimers.current.forEach((t) => window.clearTimeout(t));
     pendingTimers.current = [];
@@ -2338,7 +2403,7 @@ function DevAnimationsContent() {
     scoreRef.current = { meTotal: 1500, oppTotal: 1450 };
     goalsRef.current = { seat1: 1, seat2: 1 };
     penaltyGoalsRef.current = { seat1: 3, seat2: 3 };
-    penaltyKickIndexRef.current = 10;
+    penaltyKickIndexRef.current = 0;
 
     const s = store();
     s.reset();
@@ -2361,15 +2426,67 @@ function DevAnimationsContent() {
     );
     setRemountKey((key) => key + 1);
 
-    // The server outcome is a legitimate bot goal. The legacy replay feeds the
-    // UI its stale reset value (0) for the bot's round points; the fixed replay
-    // reconciles the authoritative 100 before the same goal animation.
+    // The server outcome is a legitimate bot goal. To replay the old client,
+    // feed the production UI the stale zero-point opponent snapshot it used to
+    // render. The fixed replay receives the authoritative 100-point snapshot.
     pendingTimers.current.push(
       window.setTimeout(() => {
         takePenaltyKick(2, 'goal', {
           resetTimers: false,
+          points: { me: 90, opp: 100 },
+          legacyOpponentRoundPointsOverride: mode === 'before' ? 0 : undefined,
+          holdOnResult: true,
+        });
+      }, 200)
+    );
+  }
+
+  function replayReportedPenaltyRound() {
+    setActivePenaltyReplay('reported');
+    setMobilePanelOpen(false);
+    pendingTimers.current.forEach((t) => window.clearTimeout(t));
+    pendingTimers.current = [];
+
+    stateVersion.current = 0;
+    scoreRef.current = { meTotal: 1200, oppTotal: 1350 };
+    goalsRef.current = { seat1: 0, seat2: 0 };
+    penaltyGoalsRef.current = { seat1: 0, seat2: 2 };
+    // Two kicks per side have already happened. This is KIGAN's third kick.
+    penaltyKickIndexRef.current = 4;
+
+    const penaltyAttempts = {
+      seat1: ['miss', 'miss'] as Array<'goal' | 'miss'>,
+      seat2: ['goal', 'goal'] as Array<'goal' | 'miss'>,
+    };
+    const s = store();
+    s.reset();
+    s.setSelfUserId(SELF_ID);
+    s.setMatchStart(makeStartPayload());
+    useRealtimeMatchStore.setState((prev) =>
+      prev.match ? { ...prev, match: { ...prev.match, countdownEndsAt: null } } : prev
+    );
+    stateVersion.current += 1;
+    s.setMatchState(
+      makeMatchState('PENALTY_SHOOTOUT', {
+        stateVersion: stateVersion.current,
+        half: 2,
+        goals: goalsRef.current,
+        penaltyGoals: penaltyGoalsRef.current,
+        penaltyAttempts,
+        phaseKind: 'penalty',
+        phaseRound: 3,
+        shooterSeat: 1,
+      })
+    );
+    setRemountKey((key) => key + 1);
+
+    pendingTimers.current.push(
+      window.setTimeout(() => {
+        takePenaltyKick(1, 'saved', {
+          resetTimers: false,
           points: { me: 100, opp: 100 },
-          legacyOpponentRecentPointsOverride: mode === 'before' ? 0 : undefined,
+          times: { me: 3584, opp: 1585 },
+          penaltyAttempts,
           holdOnResult: true,
         });
       }, 200)
@@ -2554,13 +2671,13 @@ function DevAnimationsContent() {
   return (
     <div className="relative min-h-dvh bg-surface-page">
       {/* Stage — main area with the real match screen */}
-      <div className="lg:pl-72">
+      <div className={isPenaltyScoreBugRoute ? '' : 'lg:pl-72'}>
         <RealtimePossessionMatchScreen
           key={remountKey}
-          playerUsername="Me"
+          playerUsername={isPenaltyScoreBugRoute ? 'KIGAN' : 'Me'}
           playerAvatar="avatar-1"
           playerAvatarCustomization={null}
-          opponentUsername="Mock Opponent"
+          opponentUsername={isPenaltyScoreBugRoute ? 'Nikushaka' : 'Mock Opponent'}
           opponentAvatar="avatar-2"
           opponentAvatarCustomization={{ jersey: 'jersey_red' }}
           playerFavoriteClub="real-madrid"
@@ -2577,7 +2694,7 @@ function DevAnimationsContent() {
           On mobile it slides in/out via the `mobilePanelOpen` state so the
           user can preview animations full-screen, then re-open the panel
           to tweak. */}
-      <aside
+      {!isPenaltyScoreBugRoute && <aside
         className={`fixed left-3 top-[calc(env(safe-area-inset-top)+3.75rem)] bottom-[calc(env(safe-area-inset-bottom)+1rem)] z-[60] w-64 overflow-y-auto rounded-2xl border border-surface-card-light bg-surface-card/95 p-4 shadow-2xl backdrop-blur font-fun transition-transform duration-200 lg:left-4 lg:top-4 lg:bottom-4 lg:translate-x-0 ${
           mobilePanelOpen ? 'translate-x-0' : '-translate-x-[110%]'
         }`}
@@ -2827,12 +2944,84 @@ function DevAnimationsContent() {
           result, then &quot;next question&quot; to advance. Goal triggers the
           celebration overlay + bar battle conversion when you score.
         </p>
-      </aside>
+      </aside>}
+
+      {isPenaltyScoreBugRoute && bugControlsOpen && (
+        <aside className="fixed bottom-3 left-3 z-[80] w-[min(22rem,calc(100vw-1.5rem))] rounded-2xl border border-white/15 bg-surface-card/95 p-3 shadow-2xl backdrop-blur-md font-fun">
+          <div className="mb-2 flex items-start justify-between gap-3">
+            <div>
+              <div className="text-[9px] font-black uppercase tracking-[0.18em] text-brand-yellow">
+                Production UI replay
+              </div>
+              <div className="mt-0.5 text-xs font-bold text-white/70">
+                {activePenaltyReplay === 'before'
+                  ? 'Before fix: bot points stay at 0, but the real result is a goal.'
+                  : activePenaltyReplay === 'after'
+                    ? 'After fix: the same goal reveals the bot\'s authoritative 100 points.'
+                    : 'New rule: KIGAN shoots; 100–100 is a tie, so the keeper saves it. Score stays 0–2.'}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setBugControlsOpen(false)}
+              className="flex size-8 shrink-0 items-center justify-center rounded-full bg-white/10 text-white/65 hover:bg-white/20 hover:text-white"
+              aria-label="Hide replay controls"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+          <div className="grid grid-cols-3 gap-1.5">
+            <button
+              type="button"
+              onClick={() => replayPenaltyScoreBug('before')}
+              className={`rounded-lg px-2 py-2 text-[10px] font-black uppercase tracking-wide ${
+                activePenaltyReplay === 'before'
+                  ? 'bg-brand-red-soft text-white'
+                  : 'bg-white/8 text-white/65 hover:bg-white/15'
+              }`}
+            >
+              Before
+            </button>
+            <button
+              type="button"
+              onClick={() => replayPenaltyScoreBug('after')}
+              className={`rounded-lg px-2 py-2 text-[10px] font-black uppercase tracking-wide ${
+                activePenaltyReplay === 'after'
+                  ? 'bg-brand-green text-white'
+                  : 'bg-white/8 text-white/65 hover:bg-white/15'
+              }`}
+            >
+              After
+            </button>
+            <button
+              type="button"
+              onClick={replayReportedPenaltyRound}
+              className={`rounded-lg px-2 py-2 text-[10px] font-black uppercase tracking-wide ${
+                activePenaltyReplay === 'reported'
+                  ? 'bg-brand-yellow text-surface-page'
+                  : 'bg-white/8 text-white/65 hover:bg-white/15'
+              }`}
+            >
+              KIGAN
+            </button>
+          </div>
+        </aside>
+      )}
+
+      {isPenaltyScoreBugRoute && !bugControlsOpen && (
+        <button
+          type="button"
+          onClick={() => setBugControlsOpen(true)}
+          className="fixed bottom-3 left-3 z-[80] rounded-full bg-brand-yellow px-4 py-2 text-[10px] font-black uppercase tracking-wider text-surface-page shadow-xl"
+        >
+          Replay controls
+        </button>
+      )}
 
       {/* Mobile FAB to re-open the controls drawer once it's been dismissed.
           Anchored to the bottom-left so it sits below the MCQ answer grid —
           out of the way of the question content but always one tap away. */}
-      {!mobilePanelOpen && (
+      {!isPenaltyScoreBugRoute && !mobilePanelOpen && (
         <button
           onClick={() => setMobilePanelOpen(true)}
           className="lg:hidden fixed left-3 bottom-[calc(env(safe-area-inset-bottom)+0.75rem)] z-[70] flex h-11 items-center gap-2 rounded-full bg-brand-yellow px-4 text-[11px] font-black uppercase tracking-wider text-surface-page shadow-lg"

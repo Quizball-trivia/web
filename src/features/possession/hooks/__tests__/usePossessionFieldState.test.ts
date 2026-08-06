@@ -13,7 +13,10 @@ import {
   GOAL_SHOT_TO_CELEBRATION_MS,
   PENALTY_ICON_SWAP_DELAY_MS,
 } from '../../realtimePossession.helpers';
-import { usePossessionFieldState } from '../usePossessionFieldState';
+import {
+  resolvePenaltyOutcomeByPoints,
+  usePossessionFieldState,
+} from '../usePossessionFieldState';
 
 const MATCH_ID = 'match-1';
 
@@ -603,5 +606,17 @@ describe('usePossessionFieldState', () => {
 
     expect(result.current.resultShooterIsMe).toBe(false);
     expect(result.current.pitchProps.penaltyMode?.isPlayerShooter).toBe(false);
+  });
+});
+
+describe('resolvePenaltyOutcomeByPoints', () => {
+  it('scores only when the shooter has strictly more points', () => {
+    expect(resolvePenaltyOutcomeByPoints(80, 70)).toBe('goal');
+    expect(resolvePenaltyOutcomeByPoints(70, 80)).toBe('saved');
+  });
+
+  it('gives equal points to the keeper', () => {
+    expect(resolvePenaltyOutcomeByPoints(100, 100)).toBe('saved');
+    expect(resolvePenaltyOutcomeByPoints(0, 0)).toBe('saved');
   });
 });
