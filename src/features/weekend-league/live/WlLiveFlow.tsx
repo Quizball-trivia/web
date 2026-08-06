@@ -38,6 +38,7 @@ import { BreakScreen, ChampionScreen, EliminationReveal, GameIntro, GameResult }
 import { ROUNDS, wlLadder } from '../gauntlet/gauntlet.data';
 import { ResultSplash } from '@/features/daily/components/ResultSplash';
 import { useResultSplash } from '@/features/daily/components/useResultSplash';
+import { playBgm, stopBgm } from '@/lib/sounds/gameSounds';
 import { useWlLive, type WlLiveScreen, type WlLiveState } from './useWlLive';
 
 const WHO_AM_I_CLUES = 5;
@@ -122,6 +123,19 @@ export function WlLiveFlowView({
 
   // Remember the latest game_result so the break screen and next game's intro
   // can show real field/advance counts after the screen has moved on.
+  // Ranked's background loop: start when live play begins, stop with a fade
+  // when the tournament resolves or the screen unmounts.
+  const inPlay = live.screen.kind === 'question' || live.screen.kind === 'reveal'
+    || live.screen.kind === 'game_result';
+  useEffect(() => {
+    if (!inPlay) return;
+    playBgm('kickoff');
+    return () => stopBgm(400);
+  }, [inPlay]);
+  useEffect(() => {
+    if (live.screen.kind === 'final_result') stopBgm(600);
+  }, [live.screen.kind]);
+
   // Render-time adjustment (same pattern as useChoice's nonce): capture the
   // result while the game_result screen is showing, no effect round-trip.
   const [lastResult, setLastResult] = useState<{ game_index: number; field?: number; advanced?: number | null } | null>(null);
@@ -464,9 +478,10 @@ function ScreenBody({
             question={
               screen.attempt != null ? (
                 <QuestionScreen
-                  attempt={screen.answer == null
-                    ? { ...screen.attempt, evaluation: screen.reveal.evaluation ?? screen.attempt.evaluation }
-                    : screen.attempt}
+                  attempt={{
+                    ...screen.attempt,
+                    evaluation: screen.reveal.evaluation ?? screen.attempt.evaluation,
+                  }}
                   score={score}
                   rank={yourRank}
                   introCounts={null}
@@ -477,7 +492,7 @@ function ScreenBody({
                   submitAnswer={() => {}}
                   retryNonce={retryNonce}
                   spectator={false}
-                  revealed={screen.answer == null}
+                  revealed
                 />
               ) : null
             }
@@ -485,13 +500,14 @@ function ScreenBody({
         );
       }
       // Hold the question screen (with its resolved buttons) — the attempt is
-      // still on the reveal payload, so nothing flickers. The reveal's
-      // evaluation is merged in so a TIMED-OUT player (no answer at all) still
-      // sees which option was right.
+      // still on the reveal payload, so nothing flickers. The reveal's answer
+      // key is merged UNCONDITIONALLY: if the screen remounts (round-end
+      // wrapper) the verdict re-derives from the key instead of blanking.
       if (screen.attempt != null) {
-        const attemptWithKey = screen.answer == null
-          ? { ...screen.attempt, evaluation: screen.reveal.evaluation ?? screen.attempt.evaluation }
-          : screen.attempt;
+        const attemptWithKey = {
+          ...screen.attempt,
+          evaluation: screen.reveal.evaluation ?? screen.attempt.evaluation,
+        };
         return (
           <QuestionScreen
             attempt={attemptWithKey}
@@ -505,7 +521,7 @@ function ScreenBody({
             submitAnswer={() => {}}
             retryNonce={retryNonce}
             spectator={false}
-            revealed={screen.answer == null}
+            revealed
           />
         );
       }
@@ -606,7 +622,7 @@ function RoundStandings({
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mx-auto flex min-h-[70vh] w-full max-w-2xl flex-col items-center justify-center px-4 text-center"
+      className="mx-auto flex min-h-[70vh] w-full max-w-2xl flex-col items-center justify-center px-4 py-6 text-center"
     >
       <div className="font-poppins text-[12px] font-black uppercase tracking-widest text-white/70">
         {t('weekendLeague.gRoundOnly', { n: roundIndex + 1 })}
@@ -614,7 +630,11 @@ function RoundStandings({
       <div className="mt-1 font-poppins text-2xl font-black uppercase text-white" style={poppins}>
         {t('weekendLeague.gStandingsTitle')}
       </div>
-      <BoardStrip board={board} selfUserId={selfUserId} rows={5} />
+      {/* The whole top-24 — the board IS the drama at a round end. Your own
+          row highlights in place (or appends below the cut when outside). */}
+      <div className="mt-2 max-h-[62vh] w-full overflow-y-auto overscroll-contain">
+        <BoardStrip board={board} selfUserId={selfUserId} rows={24} />
+      </div>
     </motion.div>
   );
 }
@@ -751,16 +771,24 @@ function QuestionScreen({
   const q = attempt.question;
 
   const round = { ...(ROUNDS[attempt.round_index] ?? ROUNDS[0]), index: attempt.round_index };
+  const windowSec = Math.max(1, Math.round((attempt.deadlineAt - attempt.playableAt) / 1000));
   const header: RoundHeaderModel = {
     gameIndex: attempt.game_index,
     round,
     score,
     rank,
-    secondsLeft: ready ? secondsLeft : 0,
+    // Reading grace: the timer HOLDS at the full window until playableAt —
+    // ranked parity, so the countdown never starts on an unread question.
+    secondsLeft: ready ? secondsLeft : windowSec,
     spectator,
     step: `${attempt.question_index + 1}/5`,
     onQuit: onExit,
   };
+  // Round intro only at the round's FIRST question; it dismisses itself and
+  // hands the remaining lead to reading time. (Mid-round questions get no
+  // overlay — that flash between every question was noise.)
+  const [introDone, setIntroDone] = useState(false);
+  const showRoundIntro = !ready && attempt.question_index === 0 && !introDone;
   const ack = answered as { accepted: boolean; correct?: boolean; points?: number } | null;
 
   // Games 2 and 3 open with the GAME N card, full-screen on its own: the field
@@ -790,7 +818,7 @@ function QuestionScreen({
     <>
       <RoundScreenShell
         header={header}
-        overlay={!ready ? <RoundIntroOverlay round={round} onDone={() => {}} /> : null}
+        overlay={showRoundIntro ? <RoundIntroOverlay round={round} onDone={() => setIntroDone(true)} /> : null}
       >
         {attempt.kind === 'true_false' && (
           <TrueFalseQuestion revealed={revealed} prompt={pick(q['prompt'], locale)} locked={locked} onAnswer={submitAnswer} feedback={ack} evaluation={attempt.evaluation} retryNonce={retryNonce} />
