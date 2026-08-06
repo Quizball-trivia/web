@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useLocale } from '@/contexts/LocaleContext';
+import { wlNow } from '../wlClock';
 import { poppins } from '../constants';
 
 interface Segment {
@@ -44,11 +45,23 @@ export function LeagueCountdown({
   const [remaining, setRemaining] = useState<number | null>(null);
 
   useEffect(() => {
-    const tick = () => setRemaining(targetMs - Date.now());
+    // Server-corrected clock: device skew must never change when the event
+    // actually starts (wlNow == Date.now until the first /current poll syncs).
+    const tick = () => setRemaining(targetMs - wlNow());
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, [targetMs]);
+
+  // Zero is a moment, not a state: the next phase lands within one fast poll,
+  // and a frozen 00:00 read as "broken" in playtests. Pulse "starting" instead.
+  if (remaining != null && remaining <= 0) {
+    return (
+      <div className={`animate-pulse font-poppins text-xl font-black uppercase tracking-widest ${accent}`} style={poppins} role="timer">
+        {t('weekendLeague.startingNow')}
+      </div>
+    );
+  }
 
   const segs = segments(remaining ?? 0);
   const numClass = size === 'sm' ? 'text-2xl' : 'text-4xl sm:text-5xl';

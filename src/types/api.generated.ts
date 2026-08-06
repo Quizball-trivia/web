@@ -9609,6 +9609,7 @@ export interface components {
                 current_game_index: number;
                 break_until_ms: number | null;
                 spectator_delay_ms: number;
+                server_now_ms: number;
             } | null;
             you: {
                 entered: boolean;
