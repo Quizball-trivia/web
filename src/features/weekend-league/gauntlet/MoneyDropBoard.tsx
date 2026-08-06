@@ -107,6 +107,7 @@ export function MoneyDropBoard({
   options,
   budget,
   locked,
+  windowClosing = false,
   spectator = false,
   correctId,
   onSubmit,
@@ -114,7 +115,11 @@ export function MoneyDropBoard({
   options: MoneyDropOption[];
   /** What the player carries into this question (server-clamped upstream). */
   budget: number;
+  /** Interaction disabled (dispatch lead, answered, window over, spectator). */
   locked: boolean;
+  /** ~1s of answer window left — fires the auto-submit while the server still
+   *  accepts (the daily game submits AT the deadline; the wire needs margin). */
+  windowClosing?: boolean;
   spectator?: boolean;
   /** Set when the public reveal is out — flips the board into the drop theatre. */
   correctId: string | null;
@@ -147,37 +152,48 @@ export function MoneyDropBoard({
     onSubmit(bets);
   };
 
-  // The server window closing (locked flips true) submits whatever is placed —
-  // daily's timeout rule: unplaced money is simply gone, the sheet still
-  // counts. No local state changes here: `locked` already disables the board,
-  // so the effect only fires the wire call.
+  // Timeout auto-submit (daily rules: whatever is placed counts, the rest is
+  // gone). `submittedRef` flips ONLY when a sheet actually goes to the wire —
+  // an empty board passing the deadline must not block a later manual confirm
+  // on remount/retry paths.
   const betsRef = useRef(bets);
   useEffect(() => {
     betsRef.current = bets;
   }, [bets]);
   useEffect(() => {
-    if (!locked || spectator || submittedRef.current) return;
-    submittedRef.current = true;
+    if (!windowClosing || spectator || correctId != null || submittedRef.current) return;
     const sheet = betsRef.current;
-    if (Object.values(sheet).some((v) => v > 0)) onSubmit(sheet);
-  }, [locked, spectator, onSubmit]);
+    if (Object.values(sheet).some((v) => v > 0)) {
+      submittedRef.current = true;
+      onSubmit(sheet);
+    }
+  }, [windowClosing, spectator, correctId, onSubmit]);
 
   // Reveal choreography: wrong options with money fall one second apart, the
-  // survivor chime/buzzer follows — the daily game's exact beat.
+  // survivor chime/buzzer follows — the daily game's exact beat. One-shot:
+  // timers live in a ref (cleared only on unmount) so re-renders from the
+  // first drop can't cancel the rest of the sequence.
+  const optionsRef = useRef(options);
+  useEffect(() => {
+    optionsRef.current = options;
+  }, [options]);
+  const revealTimers = useRef<Array<ReturnType<typeof setTimeout>>>([]);
+  useEffect(() => () => revealTimers.current.forEach(clearTimeout), []);
   useEffect(() => {
     if (correctId == null || revealPlayed.current) return;
     revealPlayed.current = true;
     const sheet = betsRef.current;
-    const wrong = options.filter((o) => o.id !== correctId && (sheet[o.id] ?? 0) > 0);
-    const timers = wrong.map((o, i) => setTimeout(() => setDropped((d) => [...d, o.id]), i * 1000));
+    const wrong = optionsRef.current.filter((o) => o.id !== correctId && (sheet[o.id] ?? 0) > 0);
+    wrong.forEach((o, i) => {
+      revealTimers.current.push(setTimeout(() => setDropped((d) => [...d, o.id]), i * 1000));
+    });
     if (!spectator) {
-      timers.push(setTimeout(
+      revealTimers.current.push(setTimeout(
         () => playSfx((sheet[correctId] ?? 0) > 0 ? 'dailyCorrect' : 'wrongAnswer'),
         wrong.length * 1000 + 600,
       ));
     }
-    return () => timers.forEach(clearTimeout);
-  }, [correctId, options, spectator]);
+  }, [correctId, spectator]);
 
   if (correctId != null) {
     return (
@@ -257,6 +273,7 @@ export function MoneyDropBoard({
                 )}
               </div>
               <Slider
+                aria-label={option.label}
                 value={[betAmount]}
                 onValueChange={(value) => setBet(option.id, value[0] ?? 0)}
                 max={budget}
@@ -291,7 +308,7 @@ export function MoneyDropBoard({
             isFullyAllocated ? 'bg-brand-green hover:bg-brand-green-deep' : 'cursor-not-allowed bg-brand-green/30 opacity-40',
           )}
         >
-          {isFullyAllocated ? t('dailyGames.confirmBets') : t('dailyGames.allocateAllCoins', { amount: budget })}
+          {isFullyAllocated ? t('dailyGames.confirmBets') : t('weekendLeague.gMdAllocateAll', { amount: budget })}
         </button>
       )}
       {(confirmed || (locked && !spectator)) && (

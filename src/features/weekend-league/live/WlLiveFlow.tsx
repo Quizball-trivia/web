@@ -167,7 +167,7 @@ export function WlLiveFlowView({
   const [mdChain, setMdChain] = useState<{
     budgets: Record<string, number>;
     lastCarry: number;
-    settled: Record<string, true>;
+    settled: Record<string, 'ack' | 'zero'>;
   }>({ budgets: {}, lastCarry: 300, settled: {} });
   let moneyBudget = 300;
   {
@@ -176,16 +176,22 @@ export function WlLiveFlowView({
     if (att?.kind === 'money_drop') {
       let next = mdChain;
       if (!(att.attempt_id in next.budgets)) {
-        next = {
-          ...next,
-          budgets: { ...next.budgets, [att.attempt_id]: att.question_index === 0 ? 300 : next.lastCarry },
-        };
+        // A reconnect snapshot carries the SERVER-derived budget for its
+        // attempt — without it, a mid-round reload would restart the display
+        // chain at 300 (the server clamps regardless; this is honesty).
+        const snap = live.snapshotMoneyBudget;
+        const entering = att.question_index === 0
+          ? 300
+          : snap?.attemptId === att.attempt_id ? snap.budget : next.lastCarry;
+        next = { ...next, budgets: { ...next.budgets, [att.attempt_id]: entering } };
       }
       const ack = (scr as { answer?: { carry?: number } | null }).answer;
-      if (typeof ack?.carry === 'number' && !next.settled[att.attempt_id]) {
-        next = { ...next, lastCarry: Math.max(0, ack.carry), settled: { ...next.settled, [att.attempt_id]: true } };
+      if (typeof ack?.carry === 'number' && next.settled[att.attempt_id] !== 'ack') {
+        // An ack is authoritative — it overrides a provisional reveal-zero
+        // (a late recovery ack can trail the reveal event).
+        next = { ...next, lastCarry: Math.max(0, ack.carry), settled: { ...next.settled, [att.attempt_id]: 'ack' } };
       } else if (scr.kind === 'reveal' && !next.settled[att.attempt_id]) {
-        next = { ...next, lastCarry: 0, settled: { ...next.settled, [att.attempt_id]: true } };
+        next = { ...next, lastCarry: 0, settled: { ...next.settled, [att.attempt_id]: 'zero' } };
       }
       if (next !== mdChain) setMdChain(next);
       moneyBudget = next.budgets[att.attempt_id] ?? 300;
@@ -963,6 +969,7 @@ function QuestionScreen({
               }))}
               budget={moneyBudget}
               locked={locked}
+              windowClosing={ready && !revealed && secondsLeft <= 1}
               spectator={spectator}
               correctId={
                 typeof attempt.evaluation?.['correct_id'] === 'string'

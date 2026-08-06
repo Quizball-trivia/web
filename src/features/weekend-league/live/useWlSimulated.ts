@@ -399,6 +399,7 @@ export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
     submitAnswer,
     lastAck: st.ack,
     retryNonce: 0,
+    snapshotMoneyBudget: null,
   }), [screen, board, st.score, st.ack, step, serverNow, submitAnswer]);
 
   const jumpTo = useCallback((target: SimJumpTarget) => {

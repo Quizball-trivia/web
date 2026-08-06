@@ -1517,7 +1517,10 @@ export interface WlSubscribeSnapshot {
   game_index: number;
   /** Players only; spectators never get the undelayed in-flight question. */
   attempt: WlSnapshotAttempt | null;
-  your_answer: { correct: boolean; points: number; elapsedMs: number } | null;
+  your_answer: { correct: boolean; points: number; elapsedMs: number; carry?: number } | null;
+  /** money_drop in-flight attempt only: the server-derived budget carried
+      into it — reconnects must not reset the client's display chain. */
+  money_budget?: number;
   /** Latest persisted answer this game, attempt-identified — survives freeze. */
   your_last_answer: { attempt_id: string; correct: boolean; points: number; elapsedMs: number } | null;
   score: number;
