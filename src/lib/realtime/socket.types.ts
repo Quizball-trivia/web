@@ -1392,7 +1392,7 @@ export interface NotificationUnreadCountPayload {
 // evaluation (instant answer feedback is a product decision); scoring stays
 // server-authoritative via the wl:answer ack.
 
-export type WlRoundKind = 'true_false' | 'higher_lower' | 'mcq' | 'career_path' | 'who_am_i' | 'money_drop';
+export type WlRoundKind = 'true_false' | 'higher_lower' | 'mcq' | 'career_path' | 'who_am_i' | 'money_drop' | 'put_in_order';
 
 /** Localized text object from the question bank. */
 export interface WlI18nText {

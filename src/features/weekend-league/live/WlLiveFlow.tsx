@@ -35,6 +35,7 @@ import {
   type RoundHeaderModel,
 } from '../gauntlet/RoundViews';
 import { MoneyDropBoard } from '../gauntlet/MoneyDropBoard';
+import { PutInOrderBoard } from '../gauntlet/PutInOrderBoard';
 import { BreakScreen, ChampionScreen, EliminationReveal, GameIntro, GameResult } from '../gauntlet/GauntletScreens';
 import { ROUNDS, wlLadder } from '../gauntlet/gauntlet.data';
 import { ResultSplash } from '@/features/daily/components/ResultSplash';
@@ -705,7 +706,7 @@ function ScreenBody({
 }
 
 /** Questions per round, mirroring the backend WL_QUESTIONS_PER_ROUND. */
-const QUESTIONS_PER_ROUND: Record<number, number> = { 0: 5, 1: 5, 2: 5, 3: 5, 4: 5 };
+const QUESTIONS_PER_ROUND: Record<number, number> = { 0: 5, 1: 5, 2: 5, 3: 5, 4: 1 };
 
 function isLastQuestionOfRound(reveal: { round_index: number; question_index: number }): boolean {
   const total = QUESTIONS_PER_ROUND[reveal.round_index] ?? 5;
@@ -1018,6 +1019,29 @@ function QuestionScreen({
         {attempt.kind === 'who_am_i' && (
           <WhoAmIQuestion revealed={revealed} attempt={attempt} locale={locale} serverNow={serverNow} locked={locked} spectator={spectator} onSubmit={(guess) => submitAnswer({ guess })} feedback={ack} />
         )}
+        {attempt.kind === 'put_in_order' && (
+          <>
+            <QuestionCard>{pick(q['prompt'], locale)}</QuestionCard>
+            <PutInOrderBoard
+              key={`${attempt.attempt_id}:${retryNonce}`}
+              items={(Array.isArray(q['items']) ? (q['items'] as Array<Record<string, unknown>>) : []).map((it) => ({
+                id: String(it['id'] ?? ''),
+                label: pick(it['label'], locale),
+                emoji: typeof it['emoji'] === 'string' ? it['emoji'] : null,
+              }))}
+              instruction={q['instruction'] != null ? pick(q['instruction'], locale) : null}
+              locked={locked}
+              windowClosing={ready && !revealed && secondsLeft <= 1}
+              spectator={spectator}
+              correctOrder={
+                Array.isArray(attempt.evaluation?.['order'])
+                  ? (attempt.evaluation['order'] as unknown[]).map(String)
+                  : null
+              }
+              onSubmit={(order) => submitAnswer(order)}
+            />
+          </>
+        )}
         {attempt.kind === 'money_drop' && (
           <>
             <QuestionCard>{pick(q['prompt'], locale)}</QuestionCard>
@@ -1045,7 +1069,7 @@ function QuestionScreen({
           </>
         )}
 
-        {ack != null && attempt.kind !== 'career_path' && attempt.kind !== 'who_am_i' && attempt.kind !== 'money_drop' && (
+        {ack != null && attempt.kind !== 'career_path' && attempt.kind !== 'who_am_i' && attempt.kind !== 'money_drop' && attempt.kind !== 'put_in_order' && (
           <AnswerFeedback ack={ack} />
         )}
 
