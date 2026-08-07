@@ -22,7 +22,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { ArrowDown, ArrowUp, Check, GripVertical } from 'lucide-react';
+import { Check, CheckCircle2, XCircle } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
 import { cn } from '@/lib/utils';
 
@@ -33,58 +33,64 @@ export interface OrderItem {
 }
 
 function Row({
-  item, index, total, disabled, verdict, onMove,
+  item, index, disabled, verdict,
 }: {
   item: OrderItem;
   index: number;
-  total: number;
   disabled: boolean;
   /** After reveal: was this item in the right slot? null = no reveal yet. */
   verdict: boolean | null;
-  onMove: (id: string, dir: -1 | 1) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id, disabled });
+  // Ranked parity: the WHOLE card is the drag handle — grips and arrows made
+  // people hunt for the grab point (same feedback that shaped ranked's panel).
+  const dragProps = disabled ? {} : { ...attributes, ...listeners };
   return (
     <div
       ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={cn(
-        'flex items-center gap-2 rounded-[16px] border-2 px-3 py-3',
-        verdict == null && 'border-brand-yellow bg-black/20',
-        verdict === true && 'border-brand-green bg-brand-green/15',
-        verdict === false && 'border-brand-red-soft bg-brand-red-soft/10',
-        isDragging && 'z-10 opacity-90 shadow-xl',
-      )}
+      style={{ transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 }}
+      className={isDragging ? 'z-50' : 'z-0'}
     >
-      <span className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-white/10 font-poppins text-sm font-black text-white">
-        {index + 1}
-      </span>
-      <span className="min-w-0 flex-1 truncate font-poppins text-[14px] font-bold text-white sm:text-base">
-        {item.emoji ? `${item.emoji} ` : ''}{item.label}
-      </span>
-      {!disabled && (
-        <span className="flex shrink-0 items-center gap-1">
-          <button
-            type="button"
-            aria-label="up"
-            onClick={() => onMove(item.id, -1)}
-            disabled={index === 0}
-            className="rounded-lg bg-white/10 p-1.5 text-white disabled:opacity-30"
-          ><ArrowUp className="size-4" /></button>
-          <button
-            type="button"
-            aria-label="down"
-            onClick={() => onMove(item.id, 1)}
-            disabled={index === total - 1}
-            className="rounded-lg bg-white/10 p-1.5 text-white disabled:opacity-30"
-          ><ArrowDown className="size-4" /></button>
-          <span
-            {...attributes}
-            {...listeners}
-            className="cursor-grab touch-none rounded-lg p-1.5 text-white/50 active:cursor-grabbing"
-          ><GripVertical className="size-4" /></span>
-        </span>
-      )}
+      <div
+        {...dragProps}
+        className={cn(
+          'flex items-center gap-2 rounded-[14px] px-3 py-3 transition-all sm:gap-3 sm:p-3',
+          verdict == null && !disabled && 'cursor-grab touch-none bg-white/[0.04] hover:bg-white/[0.07] active:cursor-grabbing',
+          verdict == null && disabled && 'bg-white/[0.04]',
+          verdict === true && 'bg-brand-green/12',
+          verdict === false && 'bg-brand-red-soft/12',
+          isDragging && 'scale-[1.02] shadow-xl',
+        )}
+      >
+        <div
+          className={cn(
+            'font-poppins flex h-14 w-20 shrink-0 items-center justify-center rounded-[30px] text-white sm:h-16 sm:w-24',
+            verdict === false
+              ? 'bg-brand-red-soft shadow-[0_0_10px_rgba(255,75,75,0.35)]'
+              : 'bg-brand-green shadow-[0_0_10px_rgba(56,182,14,0.35)]',
+          )}
+          style={{ fontWeight: 700, fontSize: 24 }}
+        >
+          {index + 1}
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start gap-2">
+            {item.emoji && <span className="shrink-0 text-xl sm:text-2xl">{item.emoji}</span>}
+            <span className="text-sm font-fun font-black uppercase leading-tight tracking-wide text-white [overflow-wrap:anywhere] sm:text-lg">
+              {item.label}
+            </span>
+          </div>
+        </div>
+        {verdict != null && (
+          <div className="flex shrink-0 items-center gap-2">
+            {verdict ? (
+              <CheckCircle2 className="size-5 text-brand-green" />
+            ) : (
+              <XCircle className="size-5 text-brand-red-soft" />
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -118,17 +124,6 @@ export function PutInOrderBoard({
   );
 
   const interactive = !locked && !spectator && correctOrder == null && !submitted;
-
-  const move = (id: string, dir: -1 | 1) => {
-    if (!interactive) return;
-    touchedRef.current = true;
-    setOrder((cur) => {
-      const i = cur.findIndex((x) => x.id === id);
-      const j = i + dir;
-      if (i < 0 || j < 0 || j >= cur.length) return cur;
-      return arrayMove(cur, i, j);
-    });
-  };
 
   const onDragEnd = (e: DragEndEvent) => {
     if (!interactive || e.over == null || e.active.id === e.over.id) return;
@@ -178,10 +173,8 @@ export function PutInOrderBoard({
                 key={item.id}
                 item={item}
                 index={i}
-                total={display.length}
                 disabled={!interactive}
                 verdict={verdictOf(item.id, i)}
-                onMove={move}
               />
             ))}
           </div>
