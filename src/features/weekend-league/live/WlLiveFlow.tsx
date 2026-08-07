@@ -305,6 +305,7 @@ export function WlLiveFlowView({
             onMdSheet={onMdSheet}
             lastResult={lastResult}
             checkedInCount={checkedInCount ?? 0}
+            checkedIn={checkedIn}
             currentGameIndex={currentGameIndex ?? live.gameIndex}
             lastGameRank={lastGameRank ?? null}
             onExit={onExit}
@@ -428,7 +429,7 @@ function Shell({ children, onExit }: { children: React.ReactNode; onExit: () => 
 
 
 function ScreenBody({
-  screen, role, locale, serverNow, submitAnswer, retryNonce, board, selfUserId, score, rank, breakUntilMs, moneyBudget, mdSheets, onMdSheet, lastResult, checkedInCount, currentGameIndex, lastGameRank, onExit, onSpectate,
+  screen, role, locale, serverNow, submitAnswer, retryNonce, board, selfUserId, score, rank, breakUntilMs, moneyBudget, mdSheets, onMdSheet, lastResult, checkedInCount, checkedIn, currentGameIndex, lastGameRank, onExit, onSpectate,
 }: {
   screen: WlLiveScreen;
   role: 'player' | 'spectator';
@@ -448,6 +449,8 @@ function ScreenBody({
   onMdSheet: (attemptId: string, sheet: Record<string, number>) => void;
   lastResult: { game_index: number; field?: number; advanced?: number | null } | null;
   checkedInCount: number;
+  /** Actually IN the game (checked in) — non-participants get broadcast views. */
+  checkedIn: boolean;
   currentGameIndex: number;
   lastGameRank: number | null;
   onExit: () => void;
@@ -466,6 +469,18 @@ function ScreenBody({
       // replaces this screen — an expired deadline only ever shows briefly.
       if (breakUntilMs != null) {
         const finishedIndex = lastResult?.game_index ?? Math.max(0, currentGameIndex - 1);
+        // Anyone not actually IN the game gets the broadcast view: the player
+        // break screen presents "your total: 0" and an upcoming game as if
+        // they were playing (owner hit this watching a bots event).
+        if (role === 'spectator' || !checkedIn) {
+          return (
+            <SpectatorGameResult
+              result={lastResult ?? { game_index: finishedIndex }}
+              board={board}
+              breakUntilMs={breakUntilMs}
+            />
+          );
+        }
         return (
           <BreakScreen
             games={ladderStrip(lastResult, checkedInCount)}
