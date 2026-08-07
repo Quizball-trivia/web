@@ -7,7 +7,7 @@
 
 import Image from 'next/image';
 import { ArrowRight } from 'lucide-react';
-import { motion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 import { ResultSplash } from '@/features/daily/components/ResultSplash';
 import { useLocale } from '@/contexts/LocaleContext';
 import { findClubByName } from '@/lib/clubs';
@@ -46,7 +46,7 @@ export function RoundScreenShell({
       <div className="relative mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 pt-3">
         <RoundProgressDashes round={header.round} />
         {children}
-        {overlay}
+        <AnimatePresence>{overlay}</AnimatePresence>
       </div>
       {splashProps && <ResultSplash {...splashProps} />}
     </div>
@@ -185,7 +185,7 @@ function CareerChip({ item }: { item: CareerItem }) {
           {initials}
         </span>
         {item.label && (
-          <span className="w-full truncate text-center font-poppins text-[10px] font-bold uppercase leading-tight text-white/70">
+          <span className="line-clamp-2 w-full break-words text-center font-poppins text-[10px] font-bold uppercase leading-tight text-white/70">
             {item.label}
           </span>
         )}
@@ -203,7 +203,7 @@ function CareerChip({ item }: { item: CareerItem }) {
         unoptimized
       />
       {item.label && (
-        <span className="w-full truncate text-center font-poppins text-[10px] font-bold uppercase leading-tight text-white/70">
+        <span className="line-clamp-2 w-full break-words text-center font-poppins text-[10px] font-bold uppercase leading-tight text-white/70">
           {item.label}
         </span>
       )}

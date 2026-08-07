@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { motion } from 'motion/react';
 import { poppins } from '../constants';
 import { Eye, XCircle } from 'lucide-react';
 import { DailyChallengeHeader } from '@/features/daily/components/DailyChallengeHeader';
@@ -187,7 +188,12 @@ export function RoundIntroOverlay({ round, onDone }: { round: RoundDef; onDone: 
   // remaining viewport on mobile, and edge-to-edge accent rails there read as
   // stray lines with a void between them (owner's screenshot).
   return (
-    <div className="absolute inset-0 z-50 flex items-center bg-surface-page-alt">
+    <motion.div
+      initial={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.35, ease: 'easeOut' }}
+      className="absolute inset-0 z-50 flex items-center bg-surface-page-alt"
+    >
       <div className="relative h-[280px] w-full">
         <RoundTransitionOverlay
           // Digit in Poppins: the fun font's numerals read as a different
@@ -197,6 +203,6 @@ export function RoundIntroOverlay({ round, onDone }: { round: RoundDef; onDone: 
           subtitle={t('weekendLeague.gUpTo', { n: round.maxPoints })}
         />
       </div>
-    </div>
+    </motion.div>
   );
 }

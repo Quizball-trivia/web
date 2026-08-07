@@ -279,6 +279,9 @@ export function MoneyDropBoard({
               </div>
               <Slider
                 aria-label={option.label}
+                // Explicit for mobile Safari: the drag must never turn into a
+                // page scroll mid-gesture (playtest report: slider stuck).
+                style={{ touchAction: 'none' }}
                 value={[betAmount]}
                 onValueChange={(value) => setBet(option.id, value[0] ?? 0)}
                 max={budget}
@@ -288,7 +291,8 @@ export function MoneyDropBoard({
                   'w-full',
                   '[&_[data-slot=slider-track]]:h-2 [&_[data-slot=slider-track]]:rounded-full [&_[data-slot=slider-track]]:bg-white/10 md:[&_[data-slot=slider-track]]:h-2.5',
                   color.sliderRange,
-                  '[&_[data-slot=slider-thumb]]:size-5 [&_[data-slot=slider-thumb]]:border-2 [&_[data-slot=slider-thumb]]:bg-white',
+                  '[&_[data-slot=slider-thumb]]:size-6 sm:[&_[data-slot=slider-thumb]]:size-5 [&_[data-slot=slider-thumb]]:border-2 [&_[data-slot=slider-thumb]]:bg-white',
+                  '[&_[data-slot=slider-track]]:min-h-3 py-1.5',
                   color.sliderThumb,
                 )}
               />

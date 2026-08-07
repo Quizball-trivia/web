@@ -1,1 +1,155 @@
-[]
+[
+  {
+    "id": "wl-adana-demirspor",
+    "label": "Adana Demirspor",
+    "value": "Adana Demirspor",
+    "country": "",
+    "logo": "wl-adana-demirspor.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-all-boys",
+    "label": "All Boys",
+    "value": "All Boys",
+    "country": "",
+    "logo": "wl-all-boys.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-basaksehir",
+    "label": "Başakşehir",
+    "value": "Başakşehir",
+    "country": "",
+    "logo": "wl-basaksehir.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-bryne",
+    "label": "Bryne",
+    "value": "Bryne",
+    "country": "",
+    "logo": "wl-bryne.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-danubio",
+    "label": "Danubio",
+    "value": "Danubio",
+    "country": "",
+    "logo": "wl-danubio.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-dynamo-moscow",
+    "label": "Dynamo Moscow",
+    "value": "Dynamo Moscow",
+    "country": "",
+    "logo": "wl-dynamo-moscow.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-el-mokawloon",
+    "label": "El Mokawloon",
+    "value": "El Mokawloon",
+    "country": "",
+    "logo": "wl-el-mokawloon.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-estudiantes-de-la-plata",
+    "label": "Estudiantes de La Plata",
+    "value": "Estudiantes de La Plata",
+    "country": "",
+    "logo": "wl-estudiantes-de-la-plata.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-hamburger-sv",
+    "label": "Hamburger SV",
+    "value": "Hamburger SV",
+    "country": "",
+    "logo": "wl-hamburger-sv.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-hebei-china-fortune",
+    "label": "Hebei China Fortune",
+    "value": "Hebei China Fortune",
+    "country": "",
+    "logo": "wl-hebei-china-fortune.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-los-angeles-fc",
+    "label": "Los Angeles FC",
+    "value": "Los Angeles FC",
+    "country": "",
+    "logo": "wl-los-angeles-fc.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-melbourne-victory",
+    "label": "Melbourne Victory",
+    "value": "Melbourne Victory",
+    "country": "",
+    "logo": "wl-melbourne-victory.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-molde",
+    "label": "Molde",
+    "value": "Molde",
+    "country": "",
+    "logo": "wl-molde.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-club-nacional-de-football",
+    "label": "Club Nacional de Football",
+    "value": "Club Nacional de Football",
+    "country": "",
+    "logo": "wl-club-nacional-de-football.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-trabzonspor",
+    "label": "Trabzonspor",
+    "value": "Trabzonspor",
+    "country": "",
+    "logo": "wl-trabzonspor.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-venezia",
+    "label": "Venezia",
+    "value": "Venezia",
+    "country": "",
+    "logo": "wl-venezia.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-vfl-wolfsburg",
+    "label": "VfL Wolfsburg",
+    "value": "VfL Wolfsburg",
+    "country": "",
+    "logo": "wl-vfl-wolfsburg.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  }
+]
