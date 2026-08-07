@@ -10,6 +10,7 @@ import { LAUNCH_EDITION, poppins, QP_TARGET } from '../constants';
 import type { LeaguePhase, Milestone } from '../types';
 import { ScheduleTimeline } from './ScheduleTimeline';
 import { LeagueCountdown } from './LeagueCountdown';
+import { wlNow } from '../wlClock';
 import { JoinLeagueButton } from './JoinLeagueButton';
 import { DropInBadge } from '@/features/auction/components/shared/DropInBadge';
 
@@ -281,13 +282,21 @@ export function LeagueHeader({
           </AnimatePresence>
 
           <div className="mt-4">
+            {/* Count to the boundary where this SCREEN actually changes: while
+                entry is open that is entry-close (check-in opens and the page
+                flips to "join") — counting to kickoff here left ~the whole
+                check-in window on the clock at the moment of the jump. */}
             <div className={`text-center font-poppins text-[10px] font-black uppercase tracking-[0.16em] transition-colors duration-700 ${gold ? 'text-black/55' : 'text-white/60'}`}>
-              {t('weekendLeague.startsIn')}
+              {phase === 'entry_open' && milestones != null && milestones.entry.targetMs > wlNow()
+                ? t('weekendLeague.checkinOpensIn')
+                : t('weekendLeague.startsIn')}
             </div>
             {milestones && (
               <div className="mt-2 flex justify-center">
                 <LeagueCountdown
-                  targetMs={milestones.qualifier.targetMs}
+                  targetMs={phase === 'entry_open' && milestones.entry.targetMs > wlNow()
+                    ? milestones.entry.targetMs
+                    : milestones.qualifier.targetMs}
                   size="sm"
                   accent={gold ? 'text-black/90' : 'text-white'}
                   labelClass={gold ? 'text-black/55' : 'text-white/70'}

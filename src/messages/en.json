@@ -1848,6 +1848,7 @@
     "rMoneyDrop": "Money Drop",
     "rPutInOrder": "Put In Order",
     "startingNow": "Starting…",
+    "checkinOpensIn": "Check-in opens in",
     "gMdAllocateAll": "Place all {amount} points",
     "gRoundOnly": "Round {n}",
     "gPerStep": "+{n} per correct answer",
