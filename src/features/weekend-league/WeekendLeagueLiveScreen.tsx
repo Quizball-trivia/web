@@ -42,10 +42,19 @@ export function WeekendLeagueLiveScreen() {
   }
 
   if (mode != null && live.tournamentId != null) {
+    // The tapped button is an INTENT, not a seat: with the game running and
+    // no check-in, the server refuses every answer — so the UI must present
+    // spectator mode (chip, board, locked answers, honest result screens),
+    // not player chrome with dead buttons. Check-in windows stay player-side
+    // so the check-in panel can render.
+    const gameRunning = live.status === 'game_live' || live.status === 'break';
+    const effectiveRole = mode === 'player' && gameRunning && !live.checkedIn
+      ? 'spectator'
+      : mode;
     return (
       <WlLiveFlow
         tournamentId={live.tournamentId}
-        role={mode}
+        role={effectiveRole}
         status={live.status}
         checkedIn={live.checkedIn}
         checkinPending={live.checkinPending}
