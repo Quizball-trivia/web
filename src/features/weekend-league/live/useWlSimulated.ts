@@ -66,13 +66,19 @@ const QUESTIONS: SimQuestion[] = [
     points: 150,
   },
   {
-    kind: 'higher_lower',
+    kind: 'put_in_order',
     question: {
-      stat_label: i18n('Career goals', 'კარიერული გოლები'),
-      left_name: i18n('Cristiano Ronaldo', 'კრიშტიანუ რონალდუ'),
-      right_name: i18n('Lionel Messi', 'ლიონელ მესი'),
+      prompt: i18n('Order these World Cup wins, oldest first.', 'დაალაგე ეს მუნდიალის გამარჯვებები, ჯერ ყველაზე ძველი.'),
+      instruction: i18n('Oldest first', 'ჯერ ყველაზე ძველი'),
+      direction: 'asc',
+      items: [
+        { id: 'b', label: i18n('Brazil 1970', 'ბრაზილია 1970'), emoji: null },
+        { id: 'a', label: i18n('England 1966', 'ინგლისი 1966'), emoji: null },
+        { id: 'd', label: i18n('France 1998', 'საფრანგეთი 1998'), emoji: null },
+        { id: 'c', label: i18n('Argentina 1986', 'არგენტინა 1986'), emoji: null },
+      ],
     },
-    evaluation: { left_value: 895, right_value: 851 },
+    evaluation: { order: ['a', 'b', 'c', 'd'] },
     points: 150,
   },
   {
@@ -108,17 +114,20 @@ const QUESTIONS: SimQuestion[] = [
     points: 250,
   },
   {
-    kind: 'money_drop',
+    kind: 'who_am_i',
     question: {
-      prompt: i18n('Which country won the 2022 World Cup?', 'რომელმა ქვეყანამ მოიგო 2022 წლის მუნდიალი?'),
-      options: [
-        { id: 'a', text: i18n('France', 'საფრანგეთი') },
-        { id: 'b', text: i18n('Argentina', 'არგენტინა') },
-        { id: 'c', text: i18n('Brazil', 'ბრაზილია') },
-        { id: 'd', text: i18n('Germany', 'გერმანია') },
+      clues: [
+        { content: i18n('I was born in Rosario in 1987.', 'დავიბადე როსარიოში 1987 წელს.') },
+        { content: i18n('I joined La Masia at age 13.', '13 წლის ასაკში ლა მასიაში გადავედი.') },
+        { content: i18n('I have won 8 Ballons d’Or.', 'მოგებული მაქვს 8 ოქროს ბურთი.') },
+        { content: i18n('I won the 2022 World Cup.', '2022 წლის მუნდიალი მოვიგე.') },
+        { content: i18n('I now play for Inter Miami.', 'ახლა ინტერ მაიამიში ვთამაშობ.') },
       ],
     },
-    evaluation: { correct_id: 'b' },
+    evaluation: {
+      display_answer: i18n('Lionel Messi', 'ლიონელ მესი'),
+      accepted_answers: ['messi', 'lionel messi', 'leo messi', 'მესი'],
+    },
     points: 300,
   },
 ];
@@ -300,11 +309,13 @@ export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
     let correct = false;
     let carry: number | undefined;
     if (q.kind === 'money_drop') {
-      // One question stands in for the whole round in the sim: whatever lands
-      // on the correct option IS the round's carry (and the points).
       const bets = ((answer as { bets?: Record<string, number> })?.bets) ?? {};
       carry = Math.max(0, Math.min(Math.floor(bets[String(q.evaluation['correct_id'])] ?? 0), q.points));
       correct = carry > 0;
+    } else if (q.kind === 'put_in_order') {
+      const expected = (q.evaluation['order'] as string[]) ?? [];
+      const got = Array.isArray(answer) ? (answer as unknown[]).map(String) : [];
+      correct = expected.length > 0 && got.length === expected.length && expected.every((id, i) => got[i] === id);
     } else if (q.kind === 'true_false' || q.kind === 'mcq') {
       correct = answer === q.evaluation['correct_id'];
     } else if (q.kind === 'higher_lower') {
