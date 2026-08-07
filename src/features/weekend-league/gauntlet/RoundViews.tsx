@@ -248,23 +248,6 @@ export function HigherLowerCard({
   );
 }
 
-/** Who-am-I header: the kind badge + the current clue's points pill. */
-export function WhoAmIBadges({ pointsNow }: { pointsNow: number }) {
-  const { t } = useLocale();
-  return (
-    <div className="flex flex-col items-center">
-      {/* Kind badge stands in for the prompt — as in ranked, the badge already
-          says "Who am I?", so no duplicate prompt line. */}
-      <span className="rounded-full bg-brand-cyan/15 px-4 py-1.5 font-poppins text-[12px] font-black uppercase tracking-widest text-brand-cyan">
-        {t('weekendLeague.gWhoAmI')}
-      </span>
-      <span className="mt-2 rounded-full bg-brand-yellow/15 px-3 py-1 font-poppins text-[12px] font-black uppercase text-brand-yellow">
-        {t('weekendLeague.gPtsNow', { n: pointsNow })}
-      </span>
-    </div>
-  );
-}
-
 export interface WhoAmIClue {
   text: string;
   revealed: boolean;

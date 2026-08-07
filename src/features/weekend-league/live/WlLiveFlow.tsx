@@ -30,7 +30,6 @@ import {
   PairAnswers,
   RoundScreenShell,
   TypedAnswerPanel,
-  WhoAmIBadges,
   WhoAmIClueLadder,
   type RoundHeaderModel,
 } from '../gauntlet/RoundViews';
@@ -38,6 +37,7 @@ import { MoneyDropBoard } from '../gauntlet/MoneyDropBoard';
 import { PutInOrderBoard } from '../gauntlet/PutInOrderBoard';
 import { BreakScreen, ChampionScreen, EliminationReveal, GameIntro, GameResult } from '../gauntlet/GauntletScreens';
 import { ROUNDS, wlLadder } from '../gauntlet/gauntlet.data';
+import { QuestionKindBadge } from '@/features/possession/components/live-special/shared';
 import { ResultSplash } from '@/features/daily/components/ResultSplash';
 import { useResultSplash } from '@/features/daily/components/useResultSplash';
 import { playBgm, stopBgm } from '@/lib/sounds/gameSounds';
@@ -594,7 +594,7 @@ function ScreenBody({
             board={board}
             selfUserId={selfUserId}
             roundIndex={screen.reveal.round_index}
-            holdMs={screen.reveal.kind === 'money_drop' ? 4_500 : 2_200}
+            holdMs={screen.reveal.kind === 'money_drop' ? 4_500 : screen.reveal.kind === 'put_in_order' ? 5_000 : 2_200}
             question={
               screen.attempt != null ? (
                 <QuestionScreen
@@ -753,7 +753,7 @@ function RoundStandings({
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mx-auto flex min-h-[70vh] w-full max-w-2xl flex-col items-center justify-center px-4 py-6 text-center"
+      className="mx-auto flex w-full max-w-2xl flex-col items-center px-4 py-6 text-center"
     >
       <div className="font-poppins text-[12px] font-black uppercase tracking-widest text-white/70">
         {t('weekendLeague.gRoundOnly', { n: roundIndex + 1 })}
@@ -761,9 +761,9 @@ function RoundStandings({
       <div className="mt-1 font-poppins text-2xl font-black uppercase text-white" style={poppins}>
         {t('weekendLeague.gStandingsTitle')}
       </div>
-      {/* The whole top-24 — the board IS the drama at a round end. Your own
-          row highlights in place (or appends below the cut when outside). */}
-      <div className="mt-2 max-h-[62vh] w-full overflow-y-auto overscroll-contain">
+      {/* The whole top-24 flows with the page — an inner max-h scrollbox read
+          as "the board is cut off" on both web and phones. */}
+      <div className="mt-2 w-full">
         <BoardStrip board={board} selfUserId={selfUserId} rows={24} yourRankFallback={yourRankFallback} />
       </div>
     </motion.div>
@@ -793,7 +793,7 @@ function SpectatorGameResult({
   // backdrop, in the leaderboard's own visual language. During the break the
   // countdown keeps ticking so a spectator is never staring at a static list.
   return (
-    <div className="mx-auto flex min-h-[70vh] w-full max-w-2xl flex-col items-center justify-center px-4 py-6 text-center">
+    <div className="mx-auto flex w-full max-w-2xl flex-col items-center px-4 py-6 text-center">
       <div className="font-poppins text-3xl font-black uppercase text-brand-green-light" style={poppins}>
         {t('weekendLeague.gGameComplete', { n: result.game_index + 1 })}
       </div>
@@ -810,7 +810,7 @@ function SpectatorGameResult({
           <BreakCountdown deadlineMs={breakUntilMs} />
         </div>
       )}
-      <div className="mt-2 max-h-[58vh] w-full overflow-y-auto overscroll-contain">
+      <div className="mt-2 w-full">
         <BoardStrip board={board} selfUserId={null} rows={24} />
       </div>
     </div>
@@ -1022,6 +1022,9 @@ function QuestionScreen({
         )}
         {attempt.kind === 'put_in_order' && (
           <>
+            <div className="mb-2 flex items-center justify-start">
+              <QuestionKindBadge key={attempt.attempt_id} kind="putInOrder" />
+            </div>
             <QuestionCard>{pick(q['prompt'], locale)}</QuestionCard>
             <GraceReveal ready={ready || revealed}>
             <PutInOrderBoard
@@ -1377,7 +1380,9 @@ function WhoAmIQuestion({
     <TypedKindQuestion
       card={
         <>
-          <WhoAmIBadges pointsNow={WHO_AM_I_POINTS[clueIndex]} />
+          <div className="mb-2 flex items-center justify-start">
+            <QuestionKindBadge key={attempt.attempt_id} kind="clues" />
+          </div>
           <WhoAmIClueLadder
             clues={clues.map((clue, i) => ({
               text: pick((clue as { content?: unknown })['content'] ?? clue, locale),

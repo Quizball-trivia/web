@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { RotateCcw, X } from 'lucide-react';
 import { CheckInPanel } from '../components/CheckInPanel';
 import { MoneyDropBoard } from '../gauntlet/MoneyDropBoard';
+import { QuestionKindBadge } from '@/features/possession/components/live-special/shared';
 import { LeagueCountdown } from '../components/LeagueCountdown';
 import { LiveBadge } from '../components/LiveBadge';
 import { poppins } from '../constants';
@@ -26,7 +27,6 @@ import {
   PairAnswers,
   RoundScreenShell,
   TypedAnswerPanel,
-  WhoAmIBadges,
   WhoAmIClueLadder,
 } from '../gauntlet/RoundViews';
 import {
@@ -329,7 +329,9 @@ export function WlComponentGallery({
       id: 'whoami', label: 'Who am I ladder', group: 'Question bodies',
       render: () => (
         <Frame>
-          <WhoAmIBadges pointsNow={180} />
+          <div className="mb-2 flex items-center justify-start">
+            <QuestionKindBadge kind="clues" />
+          </div>
           <WhoAmIClueLadder
             clues={[
               { text: 'დავიბადე როსარიოში 1987 წელს.', revealed: true, points: 300 },
