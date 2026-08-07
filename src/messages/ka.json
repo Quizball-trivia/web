@@ -1848,6 +1848,7 @@
     "rMoneyDrop": "ფულის ვარდნა",
     "rPutInOrder": "დაალაგე სწორად",
     "startingNow": "იწყება...",
+    "checkinOpensIn": "ჩექინი გაიხსნება",
     "gMdAllocateAll": "განათავსე ყველა {amount} ქულა",
     "gRoundOnly": "რაუნდი {n}",
     "gPerStep": "+{n} სწორ პასუხზე",
