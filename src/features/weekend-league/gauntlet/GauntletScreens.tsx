@@ -619,8 +619,13 @@ export function BreakScreen({
 }) {
   const { t } = useLocale();
   const total = fast ? 8 : BREAK_SECONDS;
+  // The local `total` fallback exists ONLY for the /dev/wl prototype driver
+  // (onDone set): in the live flow a missing server deadline must never
+  // fabricate a countdown — a phantom "02:00" with no server clock behind it
+  // reached a real playtest.
+  const synthetic = deadlineMs == null && onDone != null;
   const [left, setLeft] = useState(() =>
-    deadlineMs != null ? Math.max(0, Math.ceil((deadlineMs - Date.now()) / 1000)) : total,
+    deadlineMs != null ? Math.max(0, Math.ceil((deadlineMs - Date.now()) / 1000)) : synthetic ? total : 0,
   );
 
   // Tick down only — advancing the parent from inside the updater would be a
@@ -689,9 +694,15 @@ export function BreakScreen({
             ? t('weekendLeague.gGameStartsIn', { n: game.index + 2 })
             : t('weekendLeague.gFinalWord')}
         </div>
-        <div className="mt-1 font-poppins text-5xl font-black tabular-nums text-brand-yellow" style={poppins}>
-          {mm}:{ss}
-        </div>
+        {deadlineMs != null || synthetic ? (
+          <div className="mt-1 font-poppins text-5xl font-black tabular-nums text-brand-yellow" style={poppins}>
+            {mm}:{ss}
+          </div>
+        ) : (
+          <div className="mt-1 animate-pulse font-poppins text-xl font-black uppercase tracking-widest text-brand-yellow" style={poppins}>
+            {t('weekendLeague.startingNow')}
+          </div>
+        )}
       </div>
 
       {/* Weekend progress */}
