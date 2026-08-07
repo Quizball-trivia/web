@@ -22,6 +22,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { motion } from 'motion/react';
 import { Check, CheckCircle2, XCircle } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
 import { cn } from '@/lib/utils';
@@ -95,6 +96,128 @@ function Row({
   );
 }
 
+function RevealColumn({
+  title, itemIds, correctIndexById, itemById, showHints, allCorrect = false, emptyText,
+}: {
+  title: string;
+  itemIds: string[];
+  correctIndexById: Map<string, number>;
+  itemById: Map<string, OrderItem>;
+  /** "Right / Should be #N" per row (the player's column). */
+  showHints: boolean;
+  /** Render every slot green (the correct-order column). */
+  allCorrect?: boolean;
+  emptyText?: string;
+}) {
+  const { t } = useLocale();
+  const matched = allCorrect
+    ? itemIds.length
+    : itemIds.reduce((count, id, i) => (correctIndexById.get(id) === i ? count + 1 : count), 0);
+  return (
+    <div className="grid min-w-0 grid-rows-[1.1rem_auto] gap-1.5">
+      <div className="grid grid-cols-[minmax(0,1fr)_2.5rem] items-center gap-2">
+        <h3 className="truncate text-[9px] font-fun font-black uppercase tracking-[0.18em] text-white/50 sm:text-[10px]">
+          {title}
+        </h3>
+        {itemIds.length > 0 && (
+          <span className={`justify-self-end text-[10px] font-fun font-black uppercase ${allCorrect ? 'text-brand-green' : matched === itemIds.length ? 'text-brand-green' : 'text-brand-red-soft'}`}>
+            {matched}/{correctIndexById.size}
+          </span>
+        )}
+      </div>
+      {itemIds.length === 0 ? (
+        <p className="rounded-[8px] border border-white/10 px-2 py-3 text-[10px] font-fun font-black uppercase tracking-[0.16em] text-white/35">
+          {emptyText}
+        </p>
+      ) : (
+        <div className="grid auto-rows-[4.5rem] gap-1 sm:auto-rows-[4.875rem]">
+          {itemIds.map((id, i) => {
+            const item = itemById.get(id);
+            const isCorrectPosition = allCorrect || correctIndexById.get(id) === i;
+            const shouldBe = correctIndexById.get(id);
+            return (
+              <div
+                key={`${title}-${id}-${i}`}
+                className={`grid h-full items-center gap-1.5 rounded-[8px] border px-1.5 sm:gap-2 sm:px-2 ${
+                  showHints ? 'grid-cols-[1.45rem_minmax(0,1fr)] sm:grid-cols-[2rem_minmax(0,1fr)_6rem]' : 'grid-cols-[1.45rem_minmax(0,1fr)] sm:grid-cols-[2rem_minmax(0,1fr)]'
+                } ${
+                  isCorrectPosition
+                    ? 'border-brand-green/25 bg-brand-green/10'
+                    : 'border-brand-red-soft/20 bg-brand-red-soft/8'
+                }`}
+              >
+                <span className={`flex size-6 items-center justify-center rounded-[6px] text-[10px] font-fun font-black sm:size-7 sm:text-xs ${
+                  isCorrectPosition ? 'bg-brand-green text-white' : 'bg-brand-red-soft/80 text-white'
+                }`}>
+                  {i + 1}
+                </span>
+                <span className="min-w-0">
+                  <span className="flex min-w-0 items-center gap-1.5">
+                    {item?.emoji && <span className="shrink-0 text-sm sm:text-base">{item.emoji}</span>}
+                    <span className="truncate text-[10px] font-fun font-black uppercase text-white sm:text-xs">
+                      {item?.label ?? id}
+                    </span>
+                  </span>
+                </span>
+                {showHints && (
+                  <span className={`hidden justify-self-end text-right text-[10px] font-fun font-black uppercase sm:block ${
+                    isCorrectPosition ? 'text-brand-green' : 'text-white/35'
+                  }`}>
+                    {isCorrectPosition
+                      ? t('possession.right')
+                      : t('possession.shouldBe', { pos: typeof shouldBe === 'number' ? shouldBe + 1 : '-' })}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function RevealComparison({
+  yourOrder, correctOrder, itemById,
+}: {
+  /** null = never submitted an arrangement this window. */
+  yourOrder: OrderItem[] | null;
+  correctOrder: string[];
+  itemById: Map<string, OrderItem>;
+}) {
+  const { t } = useLocale();
+  const correctIndexById = new Map(correctOrder.map((id, i) => [id, i]));
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="mt-3 space-y-2 px-1"
+    >
+      <div className="text-[11px] font-fun font-black uppercase tracking-[0.22em] text-white/55">
+        {t('possession.orderResults')}
+      </div>
+      <div className="grid grid-cols-2 gap-2 sm:gap-3">
+        <RevealColumn
+          title={t('results.you')}
+          itemIds={yourOrder != null ? yourOrder.map((x) => x.id) : []}
+          correctIndexById={correctIndexById}
+          itemById={itemById}
+          showHints
+          emptyText={t('possession.noOrderSubmitted')}
+        />
+        <RevealColumn
+          title={t('weekendLeague.gCorrectOrder')}
+          itemIds={correctOrder}
+          correctIndexById={correctIndexById}
+          itemById={itemById}
+          showHints={false}
+          allCorrect
+        />
+      </div>
+    </motion.div>
+  );
+}
+
 export function PutInOrderBoard({
   items,
   instruction,
@@ -149,14 +272,22 @@ export function PutInOrderBoard({
     if (!windowClosing || submitted || spectator || correctOrder != null || submitRef.current) return;
     if (!touchedRef.current) return;
     submitRef.current = true;
+    queueMicrotask(() => setSubmitted(true));
     onSubmit(orderRef.current.map((x) => x.id));
   }, [windowClosing, submitted, spectator, correctOrder, onSubmit]);
 
-  const display = correctOrder != null ? order : order;
-  const verdictOf = (id: string, index: number): boolean | null => {
-    if (correctOrder == null) return null;
-    return correctOrder[index] === id;
-  };
+  // Reveal: the ranked result comparison (LivePutInOrderPanel's language) —
+  // your submitted order judged slot-by-slot next to the full correct
+  // sequence, so the right order is actually readable, not a color flash.
+  if (correctOrder != null) {
+    return (
+      <RevealComparison
+        yourOrder={submitted ? order : null}
+        correctOrder={correctOrder}
+        itemById={new Map(items.map((x) => [x.id, x]))}
+      />
+    );
+  }
 
   return (
     <div className="mt-3 space-y-2.5">
@@ -166,15 +297,15 @@ export function PutInOrderBoard({
         </div>
       )}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
-        <SortableContext items={display.map((x) => x.id)} strategy={verticalListSortingStrategy}>
+        <SortableContext items={order.map((x) => x.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-2">
-            {display.map((item, i) => (
+            {order.map((item, i) => (
               <Row
                 key={item.id}
                 item={item}
                 index={i}
                 disabled={!interactive}
-                verdict={verdictOf(item.id, i)}
+                verdict={null}
               />
             ))}
           </div>
