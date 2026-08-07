@@ -987,17 +987,18 @@ function QuestionScreen({
         overlay={showRoundIntro ? <RoundIntroOverlay round={round} onDone={() => setIntroDone(true)} /> : null}
       >
         {attempt.kind === 'true_false' && (
-          <TrueFalseQuestion revealed={revealed} prompt={pick(q['prompt'], locale)} locked={locked} onAnswer={submitAnswer} feedback={ack} evaluation={attempt.evaluation} retryNonce={retryNonce} />
+          <TrueFalseQuestion revealed={revealed} prompt={pick(q['prompt'], locale)} locked={locked} grace={!ready && !revealed} onAnswer={submitAnswer} feedback={ack} evaluation={attempt.evaluation} retryNonce={retryNonce} />
         )}
         {attempt.kind === 'mcq' && (
-          <McqQuestion revealed={revealed} q={q} locale={locale} locked={locked} onAnswer={submitAnswer} feedback={ack} evaluation={attempt.evaluation} retryNonce={retryNonce} />
+          <McqQuestion revealed={revealed} q={q} locale={locale} locked={locked} grace={!ready && !revealed} onAnswer={submitAnswer} feedback={ack} evaluation={attempt.evaluation} retryNonce={retryNonce} />
         )}
         {attempt.kind === 'higher_lower' && (
-          <HigherLowerQuestion revealed={revealed} q={q} locale={locale} locked={locked} onAnswer={submitAnswer} feedback={ack} evaluation={attempt.evaluation} retryNonce={retryNonce} />
+          <HigherLowerQuestion revealed={revealed} q={q} locale={locale} locked={locked} grace={!ready && !revealed} onAnswer={submitAnswer} feedback={ack} evaluation={attempt.evaluation} retryNonce={retryNonce} />
         )}
         {attempt.kind === 'career_path' && (
           <TypedKindQuestion
             revealed={revealed}
+            grace={!ready && !revealed}
             card={
               <CareerPathCard
                 heading={t('weekendLeague.gCareerPrompt')}
@@ -1017,11 +1018,12 @@ function QuestionScreen({
           />
         )}
         {attempt.kind === 'who_am_i' && (
-          <WhoAmIQuestion revealed={revealed} attempt={attempt} locale={locale} serverNow={serverNow} locked={locked} spectator={spectator} onSubmit={(guess) => submitAnswer({ guess })} feedback={ack} />
+          <WhoAmIQuestion revealed={revealed} grace={!ready && !revealed} attempt={attempt} locale={locale} serverNow={serverNow} locked={locked} spectator={spectator} onSubmit={(guess) => submitAnswer({ guess })} feedback={ack} />
         )}
         {attempt.kind === 'put_in_order' && (
           <>
             <QuestionCard>{pick(q['prompt'], locale)}</QuestionCard>
+            <GraceReveal ready={ready || revealed}>
             <PutInOrderBoard
               key={`${attempt.attempt_id}:${retryNonce}`}
               items={(Array.isArray(q['items']) ? (q['items'] as Array<Record<string, unknown>>) : []).map((it) => ({
@@ -1040,11 +1042,13 @@ function QuestionScreen({
               }
               onSubmit={(order) => submitAnswer(order)}
             />
+            </GraceReveal>
           </>
         )}
         {attempt.kind === 'money_drop' && (
           <>
             <QuestionCard>{pick(q['prompt'], locale)}</QuestionCard>
+            <GraceReveal ready={ready || revealed}>
             <MoneyDropBoard
               key={`${attempt.attempt_id}:${retryNonce}`}
               options={(Array.isArray(q['options']) ? (q['options'] as Array<Record<string, unknown>>) : []).map((o) => ({
@@ -1066,6 +1070,7 @@ function QuestionScreen({
                 submitAnswer({ bets });
               }}
             />
+            </GraceReveal>
           </>
         )}
 
@@ -1108,6 +1113,19 @@ function AnswerFeedback({ ack }: { ack: { accepted: boolean; correct?: boolean; 
       {ack.correct ? t('weekendLeague.gCorrect') : t('weekendLeague.gWrong')}
       {ack.correct && <span className="ml-2 text-brand-yellow">{t('weekendLeague.gPlusPoints', { n: ack.points ?? 0 })}</span>}
     </motion.div>
+  );
+}
+
+/** Reading grace: answers render dimmed + inert until the window opens, then
+ *  fade to life — the question is readable the whole time. */
+function GraceReveal({ ready, children }: { ready: boolean; children: React.ReactNode }) {
+  return (
+    <div
+      className={`transition-all duration-500 ${ready ? 'opacity-100 saturate-100' : 'pointer-events-none opacity-30 saturate-0'}`}
+      aria-hidden={!ready}
+    >
+      {children}
+    </div>
   );
 }
 
@@ -1161,10 +1179,12 @@ function choiceState(
 type Ack = { accepted: boolean; correct?: boolean; points?: number } | null;
 
 function TrueFalseQuestion({
-  prompt, locked, onAnswer, feedback, evaluation, retryNonce, revealed = false,
+  prompt, locked, grace = false, onAnswer, feedback, evaluation, retryNonce, revealed = false,
 }: {
   prompt: string;
   locked: boolean;
+  /** Reading grace running: answers dimmed + inert. */
+  grace?: boolean;
   onAnswer: (a: unknown) => void;
   feedback: Ack;
   evaluation: Record<string, unknown>;
@@ -1177,24 +1197,27 @@ function TrueFalseQuestion({
   return (
     <>
       <QuestionCard>{prompt}</QuestionCard>
-      <PairAnswers
-        choices={[
-          { key: 'true', label: t('weekendLeague.gTrue'), state: choiceState('true', chosen, feedback, correctId, revealed) },
-          { key: 'false', label: t('weekendLeague.gFalse'), state: choiceState('false', chosen, feedback, correctId, revealed) },
-        ]}
-        disabled={locked || chosen != null}
-        onPick={(key) => choose(key)}
-      />
+      <GraceReveal ready={grace !== true}>
+        <PairAnswers
+          choices={[
+            { key: 'true', label: t('weekendLeague.gTrue'), state: choiceState('true', chosen, feedback, correctId, revealed) },
+            { key: 'false', label: t('weekendLeague.gFalse'), state: choiceState('false', chosen, feedback, correctId, revealed) },
+          ]}
+          disabled={locked || chosen != null}
+          onPick={(key) => choose(key)}
+        />
+      </GraceReveal>
     </>
   );
 }
 
 function McqQuestion({
-  q, locale, locked, onAnswer, feedback, evaluation, retryNonce, revealed = false,
+  q, locale, locked, grace = false, onAnswer, feedback, evaluation, retryNonce, revealed = false,
 }: {
   q: Record<string, unknown>;
   locale: Locale;
   locked: boolean;
+  grace?: boolean;
   onAnswer: (a: unknown) => void;
   feedback: Ack;
   evaluation: Record<string, unknown>;
@@ -1216,21 +1239,24 @@ function McqQuestion({
           className="mx-auto mt-4 max-h-56 w-auto max-w-full rounded-xl object-contain"
         />
       )}
-      <AnswerOptionList
-        options={options.map((o) => {
-          const id = String(o['id']);
-          return { key: id, label: pick(o['text'], locale), state: choiceState(id, chosen, feedback, correctId, revealed) };
-        })}
-        disabled={locked || chosen != null}
-        onPick={(key) => choose(key)}
-      />
+      <GraceReveal ready={grace !== true}>
+        <AnswerOptionList
+          options={options.map((o) => {
+            const id = String(o['id']);
+            return { key: id, label: pick(o['text'], locale), state: choiceState(id, chosen, feedback, correctId, revealed) };
+          })}
+          disabled={locked || chosen != null}
+          onPick={(key) => choose(key)}
+        />
+      </GraceReveal>
     </>
   );
 }
 
 function HigherLowerQuestion({
-  q, locale, locked, onAnswer, feedback, evaluation, retryNonce, revealed = false,
+  q, locale, locked, grace = false, onAnswer, feedback, evaluation, retryNonce, revealed = false,
 }: {
+  grace?: boolean;
   q: Record<string, unknown>;
   locale: Locale;
   locked: boolean;
@@ -1264,14 +1290,16 @@ function HigherLowerQuestion({
         statLabel={pick(q['stat_label'], locale)}
         prompt={t('weekendLeague.gWhoHasMore')}
       />
-      <PairAnswers
-        choices={[
-          { key: 'left', label: sideLabel('left'), state: choiceState('left', chosen, feedback, correctSide, revealed) },
-          { key: 'right', label: sideLabel('right'), state: choiceState('right', chosen, feedback, correctSide, revealed) },
-        ]}
-        disabled={locked || chosen != null}
-        onPick={(key) => choose(key)}
-      />
+      <GraceReveal ready={grace !== true}>
+        <PairAnswers
+          choices={[
+            { key: 'left', label: sideLabel('left'), state: choiceState('left', chosen, feedback, correctSide, revealed) },
+            { key: 'right', label: sideLabel('right'), state: choiceState('right', chosen, feedback, correctSide, revealed) },
+          ]}
+          disabled={locked || chosen != null}
+          onPick={(key) => choose(key)}
+        />
+      </GraceReveal>
     </>
   );
 }
@@ -1279,10 +1307,11 @@ function HigherLowerQuestion({
 /** Shared driver for the typed kinds (career path, who-am-i): the designed
  *  blue input + green submit / red give-up, then the verdict box. */
 function TypedKindQuestion({
-  card, locked, spectator, onSubmit, feedback, evaluation, locale, revealed = false,
+  card, locked, grace = false, spectator, onSubmit, feedback, evaluation, locale, revealed = false,
 }: {
   card: React.ReactNode;
   locked: boolean;
+  grace?: boolean;
   spectator: boolean;
   onSubmit: (guess: string) => void;
   feedback: Ack;
@@ -1300,6 +1329,7 @@ function TypedKindQuestion({
   return (
     <>
       {card}
+      <GraceReveal ready={grace !== true}>
       <TypedAnswerPanel
         locked={feedback != null || locked || revealed}
         outcome={outcome}
@@ -1312,13 +1342,15 @@ function TypedKindQuestion({
         }}
         readOnly={spectator}
       />
+      </GraceReveal>
     </>
   );
 }
 
 function WhoAmIQuestion({
-  attempt, locale, serverNow, locked, spectator, onSubmit, feedback, revealed = false,
+  attempt, locale, serverNow, locked, grace = false, spectator, onSubmit, feedback, revealed = false,
 }: {
+  grace?: boolean;
   attempt: WlDispatchEventPayload;
   locale: Locale;
   serverNow: () => number;
@@ -1356,6 +1388,7 @@ function WhoAmIQuestion({
         </>
       }
       locked={locked}
+      grace={grace}
       spectator={spectator}
       onSubmit={onSubmit}
       feedback={feedback}

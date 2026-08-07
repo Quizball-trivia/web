@@ -5,7 +5,6 @@ import { motion } from 'motion/react';
 import { poppins } from '../constants';
 import { Eye, XCircle } from 'lucide-react';
 import { DailyChallengeHeader } from '@/features/daily/components/DailyChallengeHeader';
-import { RoundTransitionOverlay } from '@/components/game/RoundTransitionOverlay';
 import { useLocale } from '@/contexts/LocaleContext';
 import { ROUND_LABEL_KEYS, ROUNDS } from './gauntlet.data';
 import type { RoundDef } from './gauntlet.types';
@@ -181,28 +180,42 @@ export function RoundIntroOverlay({ round, onDone }: { round: RoundDef; onDone: 
     return () => clearTimeout(id);
   }, [onDone]);
 
-  // Scoped exactly like ranked: absolute inset-0 filling the QUESTION area
-  // (its positioned parent), not the viewport — the header/timer stay visible
-  // above it, everything below is covered. The shared overlay itself renders
-  // inside a CENTERED, height-capped band: the WL question area is the full
-  // remaining viewport on mobile, and edge-to-edge accent rails there read as
-  // stray lines with a void between them (owner's screenshot).
+  // WL-own intro: no accent rails, no band — the boxed look read as a stray
+  // square on mobile (owner feedback). Centered type over a full opaque
+  // cover, staggered rise-in, exit fade handled by the parent AnimatePresence.
   return (
     <motion.div
       initial={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.35, ease: 'easeOut' }}
-      className="absolute inset-0 z-50 flex items-center bg-surface-page-alt"
+      className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-surface-page-alt px-6 text-center"
     >
-      <div className="relative h-[280px] w-full">
-        <RoundTransitionOverlay
-          // Digit in Poppins: the fun font's numerals read as a different
-          // typeface next to the Georgian glyphs.
-          title={<>{t('weekendLeague.gRoundWord')} <span style={poppins}>{round.index + 1}</span></>}
-          categoryName={t(ROUND_LABEL_KEYS[round.type])}
-          subtitle={t('weekendLeague.gUpTo', { n: round.maxPoints })}
-        />
-      </div>
+      <motion.div
+        initial={{ y: 14, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 380, damping: 26, delay: 0.05 }}
+        className="font-poppins max-w-[90vw] text-balance text-[15px] font-bold uppercase leading-tight tracking-[0.14em] text-brand-yellow sm:text-[19px] sm:tracking-[0.22em]"
+        style={{ textShadow: '0 2px 8px rgba(0,0,0,0.4)' }}
+      >
+        {t(ROUND_LABEL_KEYS[round.type])}
+      </motion.div>
+      <motion.div
+        initial={{ y: 18, opacity: 0, scale: 0.92 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
+        transition={{ type: 'spring', stiffness: 320, damping: 22, delay: 0.14 }}
+        className="mt-3 font-poppins text-[30px] font-extrabold uppercase tracking-wider text-white sm:text-[40px]"
+        style={{ textShadow: '0 4px 14px rgba(0,0,0,0.35)' }}
+      >
+        {t('weekendLeague.gRoundWord')} <span style={poppins}>{round.index + 1}</span>
+      </motion.div>
+      <motion.div
+        initial={{ y: -8, opacity: 0, scale: 0.85 }}
+        animate={{ y: 0, opacity: 1, scale: 1 }}
+        transition={{ type: 'spring', stiffness: 380, damping: 22, delay: 0.24 }}
+        className="mt-3 font-poppins text-[13px] font-bold uppercase tracking-[0.22em] text-brand-yellow sm:text-[15px]"
+      >
+        {t('weekendLeague.gUpTo', { n: round.maxPoints })}
+      </motion.div>
     </motion.div>
   );
 }
