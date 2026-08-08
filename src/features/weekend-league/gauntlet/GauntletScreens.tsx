@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Check, Eye, Play, Trophy, Users } from 'lucide-react';
+import { Check, Crown, Eye, Play, Trophy, Users } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useLocale } from '@/contexts/LocaleContext';
 import { poppins } from '../constants';
@@ -15,7 +15,8 @@ import {
 } from './gauntlet.data';
 import type { GameDef, RoundDef, RoundQuestion, RoundResult } from './gauntlet.types';
 
-const card = 'rounded-[24px] border-2 border-white/10 bg-surface-card-deep';
+// Fully transparent lobby card — content sits directly on the backdrop.
+const card = 'rounded-[24px]';
 
 function Cta({
   children,
@@ -77,32 +78,39 @@ export function GauntletLobby({
       <h1 className="mt-2 font-poppins text-4xl font-black uppercase leading-none text-white" style={poppins}>
         {t('weekendLeague.title')}
       </h1>
-      <div className="mt-3 flex items-center justify-center gap-1.5 font-poppins text-[13px] font-semibold text-white/60">
-        <Users className="size-4" /> {t('weekendLeague.gPlayersCount', { count: registered })}
-      </div>
+      {registered > 0 && (
+        <div className="mt-3 flex items-center justify-center gap-1.5 font-poppins text-[13px] font-semibold text-white/60">
+          <Users className="size-4" /> {t('weekendLeague.gPlayersCount', { count: registered })}
+        </div>
+      )}
 
       <div className={`mt-6 w-full ${card} p-5`}>
         <div className="font-poppins text-[13px] font-black uppercase tracking-wide text-white">
           {t('weekendLeague.gFormatDynamic', { finalists: games[2].advance })}
         </div>
+        {/* Cut wording is field-size independent (÷3, ÷2, top-N final — see
+            backend wl-rules ladder): real fields vary, so no absolute counts. */}
         <div className="mt-3 grid grid-cols-3 gap-2">
           {games.map((g) => (
-            <div key={g.index} className="rounded-xl bg-black/30 px-2 py-2.5">
+            <div key={g.index} className="rounded-xl bg-white/5 px-2 py-2.5">
               <div className="font-poppins text-[10px] font-black uppercase text-white/50">{t('weekendLeague.gGameN', { n: g.index + 1 })}</div>
-              <div className="mt-0.5 font-poppins text-sm font-black tabular-nums text-white" style={poppins}>
-                {g.players} → {g.advance}
+              <div className="mt-0.5 font-poppins text-[13px] font-black text-white" style={poppins}>
+                {g.index === 0 && t('weekendLeague.gCutGame1')}
+                {g.index === 1 && t('weekendLeague.gCutGame2')}
+                {g.index === 2 && t('weekendLeague.gCutGame3', { n: g.advance })}
               </div>
             </div>
           ))}
         </div>
         <div className="mt-3 font-poppins text-[12px] font-semibold text-brand-gold">
-          🏆 {t('weekendLeague.championWinsLabel')} {t('weekendLeague.prize1Reward')}
+          <Trophy className="mr-1 inline size-4 align-[-2px]" strokeWidth={2.5} />
+          {t('weekendLeague.championWinsLabel')} {t('weekendLeague.prize1Reward')}
         </div>
       </div>
 
       {kickoffMs != null && (
         <div className="mt-5">
-          <div className="mb-2 font-poppins text-[11px] font-black uppercase tracking-widest text-white/45">
+          <div className="mb-2 font-poppins text-[13px] font-black uppercase tracking-widest text-white">
             {t('weekendLeague.gGameStartsIn', { n: 1 })}
           </div>
           <LeagueCountdown targetMs={kickoffMs} size="sm" accent="text-brand-yellow" />
@@ -143,35 +151,66 @@ export function GameIntro({
   return (
     <div className="flex min-h-[80vh] flex-col items-center justify-center px-4 text-center">
       <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
+        initial={{ opacity: 0, scale: 0.86, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ type: 'spring', stiffness: 200, damping: 18 }}
+        // Solid card: the intro sits over the live question screen, so it needs
+        // its own surface to stay readable.
+        className="w-full max-w-sm overflow-hidden rounded-[28px] bg-brand-blue shadow-[0_18px_60px_rgba(22,69,255,0.35)]"
       >
-        <div className="font-poppins text-6xl font-black uppercase italic text-white" style={poppins}>
-          {t('weekendLeague.gGameN', { n: game.index + 1 })}
-        </div>
-        <motion.div
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35 }}
-          className="mt-4 space-y-1.5 font-poppins text-lg font-black uppercase tracking-wide"
-        >
-          <div className="text-white">{t('weekendLeague.gPlayersCount', { count: game.players })}</div>
-          <div className="text-brand-green-light">
-            {isLastGame
-              ? t('weekendLeague.gReachFinal', { n: game.advance })
-              : t('weekendLeague.gTopAdvance', { n: game.advance })}
+        <div className="px-6 pb-4 pt-6 text-center">
+          <div className="font-poppins text-[11px] font-black uppercase tracking-[0.3em] text-white/60">
+            {t('weekendLeague.gLobbyKicker')}
           </div>
-          <div className="text-white/50">{t('weekendLeague.gRounds5')}</div>
+          <div className="mt-1 font-poppins text-5xl font-black uppercase italic leading-none text-white" style={poppins}>
+            {t('weekendLeague.gGameN', { n: game.index + 1 })}
+          </div>
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="px-6 pb-6"
+        >
+          {game.players > 0 && (
+            <Stat label={t('weekendLeague.gFieldLabel')} value={String(game.players)} />
+          )}
+          {game.advance > 0 && (
+            <Stat
+              label={isLastGame ? t('weekendLeague.gReachFinalWord') : t('weekendLeague.gAdvanceWord')}
+              value={String(game.advance)}
+              accent
+            />
+          )}
+          <Stat label={t('weekendLeague.gRoundsLabel')} value="5" />
         </motion.div>
       </motion.div>
+
       <button
         type="button"
         onClick={onDone}
-        className="mt-10 font-poppins text-[12px] font-bold uppercase tracking-widest text-white/40 hover:text-white"
+        className="mt-8 font-poppins text-[12px] font-bold uppercase tracking-widest text-white/40 hover:text-white"
       >
         {t('weekendLeague.gSkip')}
       </button>
+    </div>
+  );
+}
+
+/** One row of the game-intro card: label left, big number right. */
+function Stat({ label, value, accent = false }: { label: string; value: string; accent?: boolean }) {
+  return (
+    <div className="flex items-center justify-between py-2">
+      <span className="font-poppins text-[12px] font-black uppercase tracking-wide text-white/70">
+        {label}
+      </span>
+      <span
+        className={`font-poppins text-2xl font-black tabular-nums ${accent ? 'text-brand-yellow' : 'text-white'}`}
+        style={poppins}
+      >
+        {value}
+      </span>
     </div>
   );
 }
@@ -184,20 +223,29 @@ export function AnswerReveal({
   gameIndex,
   round,
   onContinue,
+  answerTextOverride,
+  correctPct,
 }: {
-  question: RoundQuestion;
+  question: RoundQuestion | null;
   result: RoundResult;
   score: number;
   gameIndex: number;
   round: RoundDef;
   onContinue: () => void;
+  /** Live flow: the server-provided correct answer (prototype derives it). */
+  answerTextOverride?: string | null;
+  /** Live flow: real % correct from the reveal distribution; null hides the line. */
+  correctPct?: number | null;
 }) {
   const { t } = useLocale();
-  const answerText = useCorrectAnswerText(question);
-  const dist = useMemo(
+  void score; // running total lives in the header; the reveal stays single-message
+  const derivedText = useCorrectAnswerText(question ?? ({ type: 'trueFalse', items: [] } as RoundQuestion));
+  const answerText = answerTextOverride !== undefined ? answerTextOverride : derivedText;
+  const mockDist = useMemo(
     () => answerDistribution(gameIndex, round.index, 4, 0),
     [gameIndex, round.index],
   );
+  const dist = { correctPct: correctPct !== undefined ? correctPct : mockDist.correctPct };
 
   useEffect(() => {
     const id = setTimeout(onContinue, 3000);
@@ -206,47 +254,48 @@ export function AnswerReveal({
 
   return (
     <div className="mx-auto flex min-h-[80vh] w-full max-w-xl flex-col items-center justify-center px-4 text-center">
+      {/* This screen lives for ~2-3s before the next question dispatches, so it
+          carries ONE message: right or wrong, and what it was worth. Details
+          (correct answer, crowd %, running total) only when they add something. */}
       <motion.div
         initial={{ scale: 0.6, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ type: 'spring', stiffness: 260, damping: 16 }}
-        className={`flex size-16 items-center justify-center rounded-full ${
+        className={`flex size-20 items-center justify-center rounded-full ${
           result.correct ? 'bg-brand-green text-white' : 'bg-brand-red-soft text-white'
         }`}
       >
-        {result.correct ? <Check className="size-9" strokeWidth={3} /> : <span className="font-poppins text-3xl font-black">✕</span>}
+        {result.correct ? <Check className="size-11" strokeWidth={3} /> : <span className="font-poppins text-4xl font-black">✕</span>}
       </motion.div>
 
-      <div
-        className={`mt-4 font-poppins text-4xl font-black uppercase ${result.correct ? 'text-brand-green-light' : 'text-brand-red-soft'}`}
-        style={poppins}
-      >
-        {result.correct ? t('weekendLeague.gCorrect') : t('weekendLeague.gWrong')}
-      </div>
-      <div className="mt-2 font-poppins text-2xl font-black tabular-nums text-brand-yellow" style={poppins}>
-        {t('weekendLeague.gPlusPoints', { n: result.points })}
-      </div>
-
-      {!result.correct && answerText && (
-        <div className="mt-3 font-poppins text-[14px] font-semibold text-white/70">
-          {t('weekendLeague.gCorrectAnswer')} <span className="text-brand-green-light">{answerText}</span>
-        </div>
+      {result.correct ? (
+        <motion.div
+          initial={{ scale: 0.7, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 18, delay: 0.1 }}
+          className="mt-5 font-poppins text-6xl font-black tabular-nums text-brand-yellow"
+          style={poppins}
+        >
+          +{result.points}
+        </motion.div>
+      ) : (
+        <>
+          <div className="mt-5 font-poppins text-3xl font-black uppercase text-brand-red-soft" style={poppins}>
+            {t('weekendLeague.gWrong')}
+          </div>
+          {answerText && (
+            <div className="mt-2 font-poppins text-xl font-black uppercase text-brand-green-light" style={poppins}>
+              {answerText}
+            </div>
+          )}
+        </>
       )}
 
-      <div className="mt-4 space-y-1 font-poppins text-[13px] font-semibold text-white/55">
-        <div>{t('weekendLeague.gAnsweredCorrectly', { pct: dist.correctPct })}</div>
-        <div>
-          {t('weekendLeague.gTotalScore')} <span className="tabular-nums text-white">{score}</span>
+      {dist.correctPct != null && (
+        <div className="mt-4 font-poppins text-[12px] font-bold uppercase tracking-wide text-white/40">
+          {t('weekendLeague.gAnsweredCorrectly', { pct: dist.correctPct })}
         </div>
-      </div>
-
-      <button
-        type="button"
-        onClick={onContinue}
-        className="mt-8 font-poppins text-[12px] font-bold uppercase tracking-widest text-white/40 hover:text-white"
-      >
-        {t('weekendLeague.gContinue')}
-      </button>
+      )}
     </div>
   );
 }
@@ -281,47 +330,60 @@ export function EliminationReveal({
     return () => clearTimeout(id);
   }, [phase, stepIndex, steps.length, onDone]);
 
+  // Nobody is cut while the field is already at/under the finalist count —
+  // say so instead of counting down to the same number.
+  const noCut = game.advance >= game.players;
+
   return (
     <div className="flex min-h-[80vh] flex-col items-center justify-center px-4 text-center">
-      {phase === 'calc' ? (
-        <motion.div
-          animate={{ opacity: [0.4, 1, 0.4] }}
-          transition={{ duration: 1.1, repeat: Infinity }}
-          className="font-poppins text-2xl font-black uppercase tracking-[0.2em] text-white"
-          style={poppins}
-        >
-          {t('weekendLeague.gCalculating')}
-        </motion.div>
-      ) : (
-        <>
-          <div className="font-poppins text-[12px] font-black uppercase tracking-widest text-white/45">
-            {t('weekendLeague.gGameComplete', { n: game.index + 1 })}
-          </div>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ type: 'spring', stiffness: 200, damping: 18 }}
+        className="w-full max-w-sm rounded-[28px] bg-brand-yellow px-6 py-8 text-black shadow-[0_18px_60px_rgba(255,229,0,0.28)]"
+      >
+        {phase === 'calc' ? (
           <motion.div
-            key={steps[stepIndex]}
-            initial={{ scale: 1.15, opacity: 0.6 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="mt-3 font-poppins text-7xl font-black tabular-nums text-white"
+            animate={{ opacity: [0.45, 1, 0.45] }}
+            transition={{ duration: 1.1, repeat: Infinity }}
+            className="font-poppins text-2xl font-black uppercase tracking-[0.2em]"
             style={poppins}
           >
-            {steps[stepIndex]}
+            {t('weekendLeague.gCalculating')}
           </motion.div>
-          <div className="mt-2 font-poppins text-[13px] font-black uppercase tracking-wide text-white/55">
-            {t('weekendLeague.gPlayersWord')}
-          </div>
-          {stepIndex === steps.length - 1 && (
+        ) : (
+          <>
+            <div className="font-poppins text-[12px] font-black uppercase tracking-widest text-black/55">
+              {t('weekendLeague.gGameComplete', { n: game.index + 1 })}
+            </div>
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-4 font-poppins text-xl font-black uppercase text-brand-green-light"
+              key={steps[stepIndex]}
+              initial={{ scale: 1.15, opacity: 0.6 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="mt-2 font-poppins text-7xl font-black leading-none tabular-nums"
+              style={poppins}
             >
-              {isLastGame
-                ? t('weekendLeague.gReachFinal', { n: game.advance })
-                : t('weekendLeague.gAdvanceCount', { n: game.advance })}
+              {steps[stepIndex]}
             </motion.div>
-          )}
-        </>
-      )}
+            <div className="mt-2 font-poppins text-[13px] font-black uppercase tracking-wide text-black/60">
+              {t('weekendLeague.gPlayersWord')}
+            </div>
+            {stepIndex === steps.length - 1 && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-4 font-poppins text-lg font-black uppercase leading-snug"
+              >
+                {noCut
+                  ? t('weekendLeague.gNoEliminations')
+                  : isLastGame
+                    ? t('weekendLeague.gReachFinal', { n: game.advance })
+                    : t('weekendLeague.gAdvanceCount', { n: game.advance })}
+              </motion.div>
+            )}
+          </>
+        )}
+      </motion.div>
     </div>
   );
 }
@@ -341,13 +403,17 @@ export function GameResult({
   game: GameDef;
   isLastGame: boolean;
   survived: boolean;
-  finalRank: number;
+  /** null = beyond the visible board (live shows a 24+ style placeholder). */
+  finalRank: number | null;
   score: number;
-  bestRound: { round: number; points: number };
+  /** Prototype-only stat; the live flow omits it. */
+  bestRound?: { round: number; points: number };
   onContinue: () => void;
   onKeepWatching: () => void;
   onExit: () => void;
 }) {
+  void onContinue; // break auto-advances; the explicit CTA was removed (owner)
+
   const { t } = useLocale();
   if (survived && isLastGame) {
     return (
@@ -363,16 +429,19 @@ export function GameResult({
         <div className="mt-4 font-poppins text-4xl font-black uppercase text-brand-gold" style={poppins}>
           {t('weekendLeague.gInFinal')}
         </div>
-        <div className="mt-2 font-poppins text-xl font-black tabular-nums text-white" style={poppins}>
-          {t('weekendLeague.gOfCount', { r: finalRank, n: game.players })}
-        </div>
+        {finalRank != null && (
+          <div className="mt-2 font-poppins text-xl font-black tabular-nums text-white" style={poppins}>
+            {t('weekendLeague.gOfCount', { r: finalRank, n: game.players })}
+          </div>
+        )}
         <div className="mt-4 space-y-1 font-poppins text-[13px] font-black uppercase tracking-wide text-white/60">
           <div>{t('weekendLeague.gSunday')}</div>
           <div>{t('weekendLeague.gFinalists', { n: game.advance })}</div>
-          <div className="text-brand-gold">🏆 {t('weekendLeague.prize1Reward')}</div>
+          <div className="flex items-center justify-center gap-1.5 text-brand-gold">
+            <Trophy className="size-4" strokeWidth={2.5} /> {t('weekendLeague.prize1Reward')}
+          </div>
         </div>
         <div className="mt-7 w-full space-y-2.5">
-          <Cta onClick={onContinue}>{t('weekendLeague.gViewFinal')}</Cta>
           <Cta onClick={onExit} secondary>
             {t('weekendLeague.returnHome')}
           </Cta>
@@ -395,35 +464,76 @@ export function GameResult({
         <div className="mt-4 font-poppins text-4xl font-black uppercase text-brand-green-light" style={poppins}>
           {t('weekendLeague.gSurvived')}
         </div>
-        <div className="mt-2 font-poppins text-xl font-black tabular-nums text-white" style={poppins}>
-          {t('weekendLeague.gOfCount', { r: finalRank, n: game.players })}
-        </div>
-        <div className="mt-3 font-poppins text-[13px] font-black uppercase tracking-wide text-white/55">
-          {t('weekendLeague.gSurvivedNext', { advance: game.advance, next: game.index + 2 })}
-        </div>
-        <div className="mt-7 w-full space-y-2.5">
-          <Cta onClick={onContinue}>{t('weekendLeague.gViewContinue')}</Cta>
-        </div>
+        {finalRank != null && (
+          <div className="mt-2 font-poppins text-xl font-black tabular-nums text-white" style={poppins}>
+            {t('weekendLeague.gOfCount', { r: finalRank, n: game.players })}
+          </div>
+        )}
+        {game.advance > 0 && (
+          <div className="mt-3 font-poppins text-[13px] font-black uppercase tracking-wide text-white/55">
+            {t('weekendLeague.gAdvanceCount', { n: game.advance })}
+          </div>
+        )}
+        {/* No CTA: the break countdown starts by itself and the next game
+            dispatches on the server's clock — a button here would imply the
+            player must act to stay in, which is never true. */}
       </div>
     );
   }
 
-  const missedBy = isLastGame
-    ? t('weekendLeague.gReachFinal', { n: game.advance })
-    : t('weekendLeague.gTopAdvanced', { n: game.advance });
+  const missedBy = game.advance <= 0
+    ? null
+    : isLastGame
+      ? t('weekendLeague.gReachFinal', { n: game.advance })
+      : t('weekendLeague.gTopAdvanced', { n: game.advance });
   return (
     <div className="mx-auto flex min-h-[80vh] w-full max-w-xl flex-col items-center justify-center px-4 text-center">
       <div className="font-poppins text-4xl font-black uppercase text-white" style={poppins}>
         {isLastGame ? t('weekendLeague.gSoClose') : t('weekendLeague.gEliminated')}
       </div>
-      <div className="mt-2 font-poppins text-xl font-black tabular-nums text-white/85" style={poppins}>
-        {t('weekendLeague.gYouFinished', { r: finalRank })}
-      </div>
-      <div className="mt-2 font-poppins text-[13px] font-black uppercase tracking-wide text-white/55">{missedBy}</div>
-      <div className="mt-4 space-y-1 font-poppins text-[13px] font-semibold text-white/55">
-        <div className="tabular-nums">{t('weekendLeague.gFinalScore', { score })}</div>
-        <div>{t('weekendLeague.gBestRound', { label: t(ROUND_LABEL_KEYS[ROUNDS[bestRound.round].type]), points: bestRound.points })}</div>
-      </div>
+
+      {/* Your run, grouped as one summary card instead of four loose lines. */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: 'spring', stiffness: 220, damping: 20, delay: 0.1 }}
+        className="mt-5 w-full max-w-sm rounded-[24px] bg-brand-blue px-5 py-4 shadow-[0_18px_60px_rgba(22,69,255,0.3)]"
+      >
+        {finalRank != null && (
+          <div className="flex items-baseline justify-between">
+            <span className="font-poppins text-[12px] font-black uppercase tracking-wide text-white/60">
+              {t('weekendLeague.gPlaceLabel')}
+            </span>
+            <span className="font-poppins text-3xl font-black tabular-nums text-white" style={poppins}>
+              #{finalRank}
+            </span>
+          </div>
+        )}
+        <div className="mt-2 flex items-baseline justify-between">
+          <span className="font-poppins text-[12px] font-black uppercase tracking-wide text-white/60">
+            {t('weekendLeague.gTotalScore')}
+          </span>
+          <span className="font-poppins text-xl font-black tabular-nums text-brand-yellow" style={poppins}>
+            {score}
+          </span>
+        </div>
+        {bestRound && (
+          <div className="mt-2 flex items-baseline justify-between gap-3">
+            <span className="font-poppins text-[12px] font-black uppercase tracking-wide text-white/60">
+              {t('weekendLeague.gBestRoundLabel')}
+            </span>
+            <span className="truncate font-poppins text-[13px] font-black uppercase text-white">
+              {t(ROUND_LABEL_KEYS[ROUNDS[bestRound.round].type])}
+              <span className="ml-1.5 text-brand-yellow">+{bestRound.points}</span>
+            </span>
+          </div>
+        )}
+        {missedBy && (
+          <div className="mt-3 border-t border-white/20 pt-3 font-poppins text-[12px] font-bold uppercase tracking-wide text-white/60">
+            {missedBy}
+          </div>
+        )}
+      </motion.div>
       <div className="mt-7 w-full space-y-2.5">
         <Cta onClick={onKeepWatching}>
           <Eye className="size-5" /> {t('weekendLeague.gKeepWatching')}
@@ -437,38 +547,105 @@ export function GameResult({
 }
 
 // ── 2-minute break ──────────────────────────────────────────────────────────
+/** Tournament end: champion celebration or your final placement — the same
+ *  designed screen for live play and the playground simulator. */
+export function ChampionScreen({
+  champion,
+  finalRank,
+  score,
+  onExit,
+  children,
+}: {
+  champion: boolean;
+  finalRank: number | null;
+  score: number;
+  onExit: () => void;
+  /** Board strip slot — the caller owns the standings data shape. */
+  children?: React.ReactNode;
+}) {
+  const { t } = useLocale();
+  return (
+    <div className="mx-auto flex min-h-[70vh] w-full max-w-xl flex-col items-center justify-center px-4 text-center">
+      <motion.div
+        initial={{ scale: 0, rotate: -15 }}
+        animate={{ scale: 1, rotate: 0 }}
+        transition={{ type: 'spring', stiffness: 200, damping: 12 }}
+        className={champion ? 'text-brand-gold' : 'text-white/35'}
+      >
+        <Crown className="size-16" strokeWidth={2} fill="currentColor" />
+      </motion.div>
+      <div className="mt-4 font-poppins text-4xl font-black uppercase text-brand-gold" style={poppins}>
+        {champion ? t('weekendLeague.gChampionTitle') : t('weekendLeague.gFinalDoneTitle')}
+      </div>
+      {!champion && finalRank != null && (
+        <div className="mt-2 font-poppins text-xl font-black tabular-nums text-white" style={poppins}>
+          {t('weekendLeague.gYouFinished', { r: finalRank })}
+        </div>
+      )}
+      <div className="mt-2 font-poppins text-[13px] font-black uppercase tracking-wide text-white/55">
+        {t('weekendLeague.gTotalScore')} <span className="tabular-nums text-white">{score}</span>
+      </div>
+      {children}
+      <button
+        type="button"
+        onClick={onExit}
+        className="mx-auto mt-6 flex h-12 items-center justify-center rounded-2xl bg-white/10 px-8 font-poppins text-sm font-black uppercase text-white hover:bg-white/15"
+      >
+        {t('weekendLeague.gContinue')}
+      </button>
+    </div>
+  );
+}
+
 export function BreakScreen({
   games,
   game,
-  finalRank,
+  finalRank = null,
   score,
-  bestRound,
-  fast,
+  bestRound = null,
+  fast = false,
   onDone,
+  deadlineMs = null,
+  board = null,
 }: {
   games: GameDef[];
   game: GameDef;
-  finalRank: number;
+  finalRank?: number | null;
   score: number;
-  bestRound: { round: number; points: number };
-  fast: boolean;
-  onDone: () => void;
+  bestRound?: { round: number; points: number } | null;
+  fast?: boolean;
+  /** Prototype driver: local countdown, auto-advance + skip. */
+  onDone?: () => void;
+  /** Live driver: count down to the server break deadline; server advances. */
+  deadlineMs?: number | null;
+  /** Post-game standings — the one place the full board takes the stage. */
+  board?: React.ReactNode;
 }) {
   const { t } = useLocale();
   const total = fast ? 8 : BREAK_SECONDS;
-  const [left, setLeft] = useState(total);
+  // The local `total` fallback exists ONLY for the /dev/wl prototype driver
+  // (onDone set): in the live flow a missing server deadline must never
+  // fabricate a countdown — a phantom "02:00" with no server clock behind it
+  // reached a real playtest.
+  const synthetic = deadlineMs == null && onDone != null;
+  const [left, setLeft] = useState(() =>
+    deadlineMs != null ? Math.max(0, Math.ceil((deadlineMs - Date.now()) / 1000)) : synthetic ? total : 0,
+  );
 
   // Tick down only — advancing the parent from inside the updater would be a
-  // setState during render.
+  // setState during render. Server-paced breaks re-derive from the deadline.
   useEffect(() => {
-    const id = setInterval(() => setLeft((l) => Math.max(0, l - 1)), 1000);
+    const id = setInterval(() => {
+      if (deadlineMs != null) setLeft(Math.max(0, Math.ceil((deadlineMs - Date.now()) / 1000)));
+      else setLeft((l) => Math.max(0, l - 1));
+    }, 1000);
     return () => clearInterval(id);
-  }, []);
+  }, [deadlineMs]);
 
   useEffect(() => {
-    if (left > 0) return;
+    if (left > 0 || onDone == null || deadlineMs != null) return;
     onDone();
-  }, [left, onDone]);
+  }, [left, onDone, deadlineMs]);
 
   const next = games[game.index + 1];
   const mm = String(Math.floor(left / 60)).padStart(2, '0');
@@ -476,34 +653,60 @@ export function BreakScreen({
 
   return (
     <div className="mx-auto flex min-h-[80vh] w-full max-w-xl flex-col items-center justify-center px-4 text-center">
-      <div className="font-poppins text-[12px] font-black uppercase tracking-widest text-white/45">
+      <div className="font-poppins text-[12px] font-black uppercase tracking-widest text-white/70">
         {t('weekendLeague.gGameComplete', { n: game.index + 1 })}
       </div>
-      <div className="mt-1 font-poppins text-3xl font-black uppercase text-white" style={poppins}>
-        {t('weekendLeague.gYouFinished', { r: finalRank })}
-      </div>
-      <div className="mx-auto mt-2 max-w-md font-poppins text-[15px] font-semibold leading-snug text-white/70">
-        {t('weekendLeague.gFinalScore', { score })} ·{' '}
-        {t('weekendLeague.gBestRound', {
-          label: t(ROUND_LABEL_KEYS[ROUNDS[bestRound.round].type]),
-          points: bestRound.points,
-        })}
+      {/* Rank as a number to spot, then the two stats as separate chips — the
+          old single run-on sentence was the hardest line on the screen. */}
+      {finalRank != null && (
+        // Stacked, not inline: a small Georgian label never sits cleanly on the
+        // baseline of a 5xl numeral.
+        <div className="mt-2 flex flex-col items-center">
+          <span className="font-poppins text-[12px] font-black uppercase tracking-widest text-white/70">
+            {t('weekendLeague.gPlaceLabel')}
+          </span>
+          <span className="mt-0.5 font-poppins text-6xl font-black leading-none tabular-nums text-brand-yellow" style={poppins}>
+            #{finalRank}
+          </span>
+        </div>
+      )}
+      <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+        <span className="rounded-xl bg-white/[0.07] px-3 py-1.5 font-poppins text-[13px] font-black uppercase tracking-wide text-white">
+          {t('weekendLeague.gTotalScore')}{' '}
+          <span className="tabular-nums text-brand-yellow">{score}</span>
+        </span>
+        {bestRound != null && (
+          <span className="rounded-xl bg-white/[0.07] px-3 py-1.5 font-poppins text-[13px] font-black uppercase tracking-wide text-white">
+            {t(ROUND_LABEL_KEYS[ROUNDS[bestRound.round].type])}{' '}
+            <span className="text-brand-green-light">+{bestRound.points}</span>
+          </span>
+        )}
       </div>
 
       <div className="mt-5 w-full rounded-[24px] border-2 border-white/10 p-5">
-        <div className="mx-auto max-w-md font-poppins text-[15px] font-black uppercase leading-snug tracking-wide text-white/70">
-          {t('weekendLeague.gPlayersRemain', {
-            count: next.players,
-            advance: next.advance,
-            finalWord: t(next.index === games.length - 1 ? 'weekendLeague.gReachFinalWord' : 'weekendLeague.gAdvanceWord'),
-          })}
+        {next != null && next.players > 0 && (
+          <div className="mx-auto max-w-md font-poppins text-[15px] font-black uppercase leading-snug tracking-wide text-white/70">
+            {t('weekendLeague.gPlayersRemain', {
+              count: next.players,
+              advance: next.advance,
+              finalWord: t(next.index === games.length - 1 ? 'weekendLeague.gReachFinalWord' : 'weekendLeague.gAdvanceWord'),
+            })}
+          </div>
+        )}
+        <div className="mt-4 font-poppins text-[13px] font-black uppercase tracking-widest text-white">
+          {game.index + 1 < games.length
+            ? t('weekendLeague.gGameStartsIn', { n: game.index + 2 })
+            : t('weekendLeague.gFinalWord')}
         </div>
-        <div className="mt-4 font-poppins text-[13px] font-black uppercase tracking-widest text-white/55">
-          {t('weekendLeague.gGameStartsIn', { n: next.index + 1 })}
-        </div>
-        <div className="mt-1 font-poppins text-5xl font-black tabular-nums text-brand-yellow" style={poppins}>
-          {mm}:{ss}
-        </div>
+        {deadlineMs != null || synthetic ? (
+          <div className="mt-1 font-poppins text-5xl font-black tabular-nums text-brand-yellow" style={poppins}>
+            {mm}:{ss}
+          </div>
+        ) : (
+          <div className="mt-1 animate-pulse font-poppins text-xl font-black uppercase tracking-widest text-brand-yellow" style={poppins}>
+            {t('weekendLeague.startingNow')}
+          </div>
+        )}
       </div>
 
       {/* Weekend progress */}
@@ -529,13 +732,17 @@ export function BreakScreen({
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={onDone}
-        className="mt-6 font-poppins text-[12px] font-bold uppercase tracking-widest text-white/40 hover:text-white"
-      >
-        {t('weekendLeague.gSkipBreak')}
-      </button>
+      {board != null && <div className="mt-2 w-full">{board}</div>}
+
+      {onDone != null && (
+        <button
+          type="button"
+          onClick={onDone}
+          className="mt-6 font-poppins text-[12px] font-bold uppercase tracking-widest text-white/40 hover:text-white"
+        >
+          {t('weekendLeague.gSkipBreak')}
+        </button>
+      )}
     </div>
   );
 }

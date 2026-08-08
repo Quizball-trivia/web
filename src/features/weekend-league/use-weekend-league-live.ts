@@ -11,14 +11,16 @@
 // live phases informationally and never routes users into the mock game — and
 // the qualifier board stays empty rather than showing invented players.
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { checkinWeekendLeague, enterWeekendLeague, getWeekendLeagueCurrent } from '@/lib/api/endpoints';
 import { queryKeys } from '@/lib/queries/queryKeys';
 import { useAuthStore } from '@/stores/auth.store';
+import { useLocale } from '@/contexts/LocaleContext';
 import type { components } from '@/types/api.generated';
 import { QP_TARGET } from './constants';
+import { syncWlClock, wlNow } from './wlClock';
 import { getMilestones } from './mock-data';
 import type { LeaguePhase, Milestone } from './types';
 import type { WeekendLeagueController } from './use-weekend-league';
@@ -95,8 +97,22 @@ export interface WeekendLeagueLiveExtras {
   tournamentId: string | null;
   /** Raw backend tournament status (finer-grained than the screen phase). */
   status: string | null;
+  /** Authoritative qualifier kickoff (ms) from the live row; null when the
+      row carries no real timestamp — never the synthetic calendar fallback. */
+  kickoffMs: number | null;
   /** Role-appropriate check-in state for the current window. */
   checkedIn: boolean;
+  /** Live count of players already checked in (public payload). */
+  checkedInCount: number;
+  /** Server break deadline (epoch ms) between games; null outside breaks. */
+  breakUntilMs: number | null;
+  /** How far behind live the spectator stream runs — spectator countdowns
+   *  shift by this so they land when the delayed stream actually resumes. */
+  spectatorDelayMs: number;
+  /** Your rank in the newest finished game (board is top-24 only). */
+  lastGameRank: number | null;
+  /** 0-based game currently running / next to run (public payload). */
+  currentGameIndex: number;
   checkinLeague: () => void;
   checkinPending: boolean;
   /** Running QP balance (server truth, resets when a ticket is claimed). */
@@ -120,6 +136,7 @@ const noop = () => {};
 export function useWeekendLeagueLive(): WeekendLeagueLiveController {
   const authStatus = useAuthStore((state) => state.status);
   const queryClient = useQueryClient();
+  const { t } = useLocale();
   const [nowMs] = useState(() => Date.now());
 
   const query = useQuery({
@@ -128,12 +145,31 @@ export function useWeekendLeagueLive(): WeekendLeagueLiveController {
     enabled: authStatus === 'authenticated',
     staleTime: 0,
     refetchInterval: (q) => {
-      const status = q.state.data?.tournament?.status;
-      return status && HOT_STATUSES.has(status) ? 5_000 : 60_000;
+      const t = q.state.data?.tournament;
+      const status = t?.status;
+      if (status && HOT_STATUSES.has(status)) return 5_000;
+      // Near ANY phase boundary poll fast: a lazy 60s cadence left the entry
+      // card frozen at 00:00 for up to a minute after the window closed
+      // (owner playtest report) — the flip to check-in must land in seconds.
+      const now = wlNow();
+      const boundaries = [t?.entry_opens_at, t?.entry_closes_at, t?.qualifier_starts_at, t?.final_starts_at]
+        .map((iso) => (iso ? Date.parse(iso) : Number.NaN))
+        .filter((ms) => Number.isFinite(ms) && ms > now - 30_000);
+      const nearest = boundaries.length > 0 ? Math.min(...boundaries) : null;
+      // Straddling a boundary (10s either side) the status flip must land in
+      // ~a second — this is the moment the countdown sits at 00:00 waiting
+      // for the card to swap.
+      if (nearest != null && Math.abs(nearest - now) < 10_000) return 1_000;
+      if (nearest != null && nearest - now < 90_000) return 3_000;
+      return 60_000;
     },
   });
 
   const tournament = query.data?.tournament ?? null;
+  useEffect(() => {
+    const serverNow = tournament?.server_now_ms;
+    if (typeof serverNow === 'number') syncWlClock(serverNow);
+  }, [tournament?.server_now_ms]);
   const you = query.data?.you ?? null;
   const status = tournament?.status;
   const phase = phaseFromStatus(status);
@@ -149,30 +185,30 @@ export function useWeekendLeagueLive(): WeekendLeagueLiveController {
     mutationFn: enterWeekendLeague,
     onSuccess: (res) => {
       if (!res.entered && !res.already_entered) {
-        toast.error('Entry is closed for this event.');
+        toast.error(t('weekendLeague.entryClosedToast'));
       }
       invalidate();
     },
-    onError: () => toast.error('Could not claim your entry — try again.'),
+    onError: () => toast.error(t('weekendLeague.entryFailedToast')),
   });
   const { mutate: enterMutate } = enterMutation;
   const enterLeague = useCallback(() => {
     if (status !== 'entry_open') {
-      toast.error('Entry is closed for this event.');
+      toast.error(t('weekendLeague.entryClosedToast'));
       return;
     }
     enterMutate();
-  }, [status, enterMutate]);
+  }, [status, enterMutate, t]);
 
   const checkinMutation = useMutation({
     mutationFn: checkinWeekendLeague,
     onSuccess: (res) => {
       if (!res.checked_in && !res.already_checked_in) {
-        toast.error('Check-in is not open right now.');
+        toast.error(t('weekendLeague.checkinNotOpenToast'));
       }
       invalidate();
     },
-    onError: () => toast.error('Check-in failed — try again.'),
+    onError: () => toast.error(t('weekendLeague.checkinFailedToast')),
   });
   const { mutate: checkinMutate } = checkinMutation;
   const checkinLeague = useCallback(() => checkinMutate(), [checkinMutate]);
@@ -211,16 +247,31 @@ export function useWeekendLeagueLive(): WeekendLeagueLiveController {
   const champion = you?.state === 'champion';
   const qualified = champion || you?.state === 'finalist';
 
+  // Authoritative kickoff only: null unless the live tournament row carries
+  // a real qualifier timestamp — the synthetic calendar fallback must never
+  // drive a countdown on the checked-in waiting screen.
+  const kickoffMs = (() => {
+    if (!tournament?.qualifier_starts_at) return null;
+    const ms = Date.parse(tournament.qualifier_starts_at);
+    return Number.isFinite(ms) ? ms : null;
+  })();
+
   return {
     phase,
     hasEntered,
     qualified,
+    kickoffMs,
     milestones,
     activeMilestone,
     leaderboard: [],
     yourRank: 0,
     bracket: null,
     registered: tournament?.registered_count ?? 0,
+    checkedInCount: tournament?.checked_in_count ?? 0,
+    breakUntilMs: tournament?.break_until_ms ?? null,
+    spectatorDelayMs: tournament?.spectator_delay_ms ?? 30_000,
+    lastGameRank: you?.last_game_rank ?? null,
+    currentGameIndex: tournament?.current_game_index ?? 0,
     session: null,
     playedOutcome: null,
     playoffOutcome: null,

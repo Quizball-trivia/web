@@ -5,8 +5,13 @@ import type { components } from "@/types/api.generated";
 export type I18nField = components["schemas"]["I18nField"];
 
 export type MatchMode = 'friendly' | 'ranked';
-export type LobbyGameMode = 'friendly_possession' | 'friendly_party_quiz' | 'ranked_sim';
-export type MatchVariant = LobbyGameMode;
+export type LobbyGameMode = 'friendly_possession' | 'friendly_party_quiz' | 'ranked_sim' | 'auction';
+/**
+ * Variant of a possession/quiz match handled by the `/game` realtime layer.
+ * Deliberately excludes 'auction': auction matches run on their own socket
+ * protocol and route (`/auction`), never through the possession reducers.
+ */
+export type MatchVariant = Exclude<LobbyGameMode, 'auction'>;
 export type LobbyStatus = 'waiting' | 'active' | 'closed';
 export type MatchPhase =
   | 'NORMAL_PLAY'
@@ -601,8 +606,13 @@ export interface MatchStatePayload {
       seat1: string | null;
       seat2: string | null;
     };
-    /** Whether this ban interlude is the second-half pick or the pre-penalty pick. */
-    purpose?: 'second_half' | 'penalty';
+    /**
+     * Whether this ban interlude is the second-half pick or the pre-penalty
+     * pick. 'second_half_preset' means the lobby host already chose the
+     * second-half category: there is no ban, `categoryOptions` holds that single
+     * category, and the client shows a short reveal instead of ban cards.
+     */
+    purpose?: 'second_half' | 'second_half_preset' | 'penalty';
   };
   penaltySuddenDeath?: boolean;
   stateVersion?: number;
@@ -813,6 +823,8 @@ export interface PublicAuctionRoundState {
   currentTurnSeatId: string | null;
   foldedSeatIds: string[];
   turnEndsAt: string | null;
+  /** Deadline of the post-clue study window; null outside it. */
+  biddingStartsAt: string | null;
   startedAt: string;
   updatedAt: string;
   revealedClues: readonly string[];
@@ -1105,6 +1117,12 @@ export interface AuctionMatchFinishedPayload {
    * own entry to show the reward animation.
    */
   coinsByUserId?: Record<string, number>;
+  /**
+   * Auction Points granted per real-human userId for this match (1st = 50,
+   * 2nd = 30, 3rd = 10; 0 for forfeiters). Absent entirely for friendly-lobby
+   * matches, which award no AP. Each client reads its own entry.
+   */
+  apByUserId?: Record<string, number>;
 }
 
 export interface AuctionSoloPickStartedPayload {
@@ -1272,7 +1290,7 @@ export type MatchCluesAnswerPayload =
 
 export interface ClientToServerEvents {
   'wl:subscribe': (
-    data: { tournament_id: string; role: 'player' | 'spectator' },
+    data: { tournament_id: string; role: 'player' | 'spectator'; last_seq?: number },
     ack?: (result: WlSubscribeAck) => void
   ) => void;
   'wl:unsubscribe': () => void;
@@ -1374,7 +1392,7 @@ export interface NotificationUnreadCountPayload {
 // evaluation (instant answer feedback is a product decision); scoring stays
 // server-authoritative via the wl:answer ack.
 
-export type WlRoundKind = 'true_false' | 'higher_lower' | 'mcq' | 'career_path' | 'who_am_i';
+export type WlRoundKind = 'true_false' | 'higher_lower' | 'mcq' | 'career_path' | 'who_am_i' | 'money_drop' | 'put_in_order';
 
 /** Localized text object from the question bank. */
 export interface WlI18nText {
@@ -1385,6 +1403,9 @@ export interface WlI18nText {
 
 export interface WlBoardRow {
   user_id: string;
+  /** Present on servers ≥ the nicknames-on-boards deploy; fall back to a
+      placeholder when absent. */
+  nickname?: string | null;
   points: number;
   time_ms_total: number;
   rank: number;
@@ -1496,9 +1517,12 @@ export interface WlSubscribeSnapshot {
   game_index: number;
   /** Players only; spectators never get the undelayed in-flight question. */
   attempt: WlSnapshotAttempt | null;
-  your_answer: { correct: boolean; points: number; elapsedMs: number } | null;
+  your_answer: { correct: boolean; points: number; elapsedMs: number; carry?: number } | null;
+  /** money_drop in-flight attempt only: the server-derived budget carried
+      into it — reconnects must not reset the client's display chain. */
+  money_budget?: number;
   /** Latest persisted answer this game, attempt-identified — survives freeze. */
-  your_last_answer: { attempt_id: string; correct: boolean; points: number; elapsedMs: number } | null;
+  your_last_answer: { attempt_id: string; correct: boolean; points: number; elapsedMs: number; carry?: number } | null;
   score: number;
   board: WlBoardRow[];
 }
@@ -1507,11 +1531,14 @@ export type WlSubscribeAck = {
   ok: boolean;
   reason?: 'not_entered' | 'not_found' | 'invalid';
   seq?: number;
+  /** Snapshot boundary: events ≤ head are reflected in the snapshot. */
+  head?: number;
   snapshot?: WlSubscribeSnapshot | null;
 };
 
 export type WlAnswerAck =
-  | { accepted: true; correct: boolean; points: number; elapsedMs: number }
+  /** carry: money-drop only — the amount that survived this question. */
+  | { accepted: true; correct: boolean; points: number; elapsedMs: number; carry?: number }
   | { accepted: false; reason: 'closed' | 'not_participant' | 'duplicate' | 'unknown_attempt' | 'invalid' };
 
 export interface ServerToClientEvents {

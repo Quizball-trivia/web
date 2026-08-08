@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Eye, Play } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -15,10 +15,7 @@ import { PrizesPanel } from './components/PrizesPanel';
 import { QualifierLeaderboard } from './components/QualifierLeaderboard';
 import { PhaseSwitcher } from './components/PhaseSwitcher';
 import { LiveBadge } from './components/LiveBadge';
-import { WeekendLeagueGame } from './components/game/WeekendLeagueGame';
-import { GauntletFlow } from './gauntlet/GauntletFlow';
-import { SpectatorFlow } from './gauntlet/SpectatorFlow';
-import type { GauntletExit } from './gauntlet/gauntlet.types';
+import { WlLiveSimFlow } from './live/WlLiveSimFlow';
 
 /**
  * Weekend League — the whole week on one screen: entry → Saturday qualifier →
@@ -43,53 +40,14 @@ export function WeekendLeagueScreen({
   const { t } = useLocale();
   const mock = useWeekendLeague(initial);
   const wl = controller ?? mock;
-  // The mock game flows are only reachable without a live controller — real
-  // players play through the socket flow (onJoinLive), never against mock
-  // data. Fail closed at the type boundary.
+  // Without a live controller (the /dev/wl playground) every play/watch action
+  // opens the SIMULATOR — the real live-game UI on a scripted driver. Real
+  // players go through the socket flow via onJoinLive/onWatchLive.
   const playable = controller ? controller.playable === true && !controller.live : true;
-  const [liveMode, setLiveMode] = useState<'gauntlet' | 'final' | 'spectate' | null>(null);
+  const [simulating, setSimulating] = useState(false);
 
-  const handleGauntletExit = useCallback(
-    (exit: GauntletExit) => {
-      setLiveMode(null);
-      const outcome = { score: 0, correct: 0, total: 0, remaining: 0 };
-      if (exit.status === 'finalist') {
-        wl.finishQualifier(Math.min(exit.rank, 24), { ...outcome, score: exit.score });
-      } else if (exit.status === 'eliminated') {
-        wl.finishQualifier(Math.max(exit.rank, 25), { ...outcome, score: exit.score });
-      }
-    },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [wl.finishQualifier],
-  );
-
-  if (liveMode === 'gauntlet' || liveMode === 'final') {
-    return (
-      <GauntletFlow
-        registered={liveMode === 'final' ? PLAYOFF_CUTOFF : wl.registered}
-        kickoffMs={null}
-        canPlay={wl.hasEntered}
-        singleGame={liveMode === 'final'}
-        startAtCheckIn
-        onExit={handleGauntletExit}
-        onWatch={() => setLiveMode('spectate')}
-      />
-    );
-  }
-  if (liveMode === 'spectate') {
-    return <SpectatorFlow onExit={() => setLiveMode(null)} />;
-  }
-
-  // While a match is being played, the game flow takes over the whole screen.
-  if (wl.session) {
-    return (
-      <WeekendLeagueGame
-        kind={wl.session.kind}
-        onExitQualifier={wl.finishQualifier}
-        onExitPlayoff={wl.finishPlayoff}
-        onCancel={wl.cancelGame}
-      />
-    );
+  if (simulating) {
+    return <WlLiveSimFlow onExit={() => setSimulating(false)} />;
   }
 
   return (
@@ -186,9 +144,9 @@ export function WeekendLeagueScreen({
 
           <PhaseContent
             wl={wl}
-            onJoin={playable ? () => setLiveMode('gauntlet') : onJoinLive}
-            onJoinFinal={playable ? () => setLiveMode('final') : onJoinLive}
-            onWatch={playable ? () => setLiveMode('spectate') : onWatchLive}
+            onJoin={playable ? () => setSimulating(true) : onJoinLive}
+            onJoinFinal={playable ? () => setSimulating(true) : onJoinLive}
+            onWatch={playable ? () => setSimulating(true) : onWatchLive}
           />
         </motion.div>
       </AnimatePresence>

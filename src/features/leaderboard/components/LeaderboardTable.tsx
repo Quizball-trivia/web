@@ -17,6 +17,11 @@ interface LeaderboardTableProps {
    * back to the region-gated `isEventMode`.
    */
   eventMode?: boolean;
+  /**
+   * Column heading for the points column. Defaults to the ranked "RP" label;
+   * the auction board passes its "AP" label instead.
+   */
+  pointsLabel?: string;
 }
 
 const poppins = {
@@ -26,7 +31,7 @@ const poppins = {
   lineHeight: 1,
 } as const;
 
-export function LeaderboardTable({ entries, currentUserId, onEntryClick, eventMode }: LeaderboardTableProps) {
+export function LeaderboardTable({ entries, currentUserId, onEntryClick, eventMode, pointsLabel }: LeaderboardTableProps) {
   const { t } = useLocale();
   const { isEventMode: regionEventMode } = useActiveEventMode();
   const isEventMode = eventMode ?? regionEventMode;
@@ -37,7 +42,7 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick, eventMo
         <div className="col-span-3 text-center">{t('leaderboard.colRank')}</div>
         <div className="col-span-4 text-left">{t('leaderboard.colPlayer')}</div>
         <div className="col-span-2 sm:col-span-3 text-center">{t('leaderboard.colTier')}</div>
-        <div className="col-span-3 sm:col-span-2 text-center">{t('leaderboard.colRP')}</div>
+        <div className="col-span-3 sm:col-span-2 text-center">{pointsLabel ?? t('leaderboard.colRP')}</div>
       </div>
 
       {/* Table wrapper */}
