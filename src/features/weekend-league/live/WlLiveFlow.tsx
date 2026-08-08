@@ -166,8 +166,18 @@ export function WlLiveFlowView({
     setLastMove({ key: screenK, delta: rankMark.rank - yourRow.rank });
   }
   const rankDelta = lastMove?.delta ?? 0;
-  const rankInfo: RankInfo | null = yourRow?.rank != null && rankField > 0 && rankCut > 0
-    ? { rank: yourRow.rank, field: rankField, cut: rankCut, delta: rankDelta }
+  // The final eliminates nobody — a podium-sized cut painted the whole
+  // field red; finalists ride green with rank + delta instead.
+  const zoneCut = gameIdxNow >= 3 ? Math.max(rankField, 1) : rankCut;
+  // Below the truncated board the server rank is unknown: the pill degrades
+  // to a neutral floor ("#25+") instead of vanishing (launch report).
+  const rankInfo: RankInfo | null = rankField > 0 && zoneCut > 0
+    ? yourRow?.rank != null
+      ? { rank: yourRow.rank, field: rankField, cut: zoneCut, delta: rankDelta }
+      : role === 'player' && checkedIn && live.board.length > 0
+        && (live.screen.kind === 'question' || live.screen.kind === 'reveal')
+        ? { rank: live.board.length + 1, field: rankField, cut: zoneCut, beyond: true }
+        : null
     : null;
 
   // Remember the latest game_result so the break screen and next game's intro
