@@ -266,11 +266,11 @@ export function WlLiveFlowView({
       : liveScreen.kind === 'reveal' ? liveScreen.reveal.attempt_id
       : null;
     if (attemptId == null) return;
-    const ack = (liveScreen as { answer?: unknown }).answer as { accepted: boolean; correct?: boolean } | null;
+    const ack = (liveScreen as { answer?: unknown }).answer as { accepted: boolean; correct?: boolean; points?: number } | null;
     if (ack?.accepted !== true || typeof ack.correct !== 'boolean') return;
     if (splashedFor.current === attemptId) return;
     splashedFor.current = attemptId;
-    fireSplash(ack.correct ? 'correct' : 'wrong', 'left');
+    fireSplash(ack.correct ? 'correct' : 'wrong', 'left', { points: ack.correct ? ack.points ?? null : null });
   }, [liveScreen, fireSplash]);
 
   if (live.denied === 'not_entered') {

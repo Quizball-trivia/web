@@ -16,17 +16,23 @@ export function ResultSplash({
   verdict,
   from,
   triggerKey,
+  points = null,
 }: {
   show: boolean;
   verdict: SplashVerdict;
   from: "left" | "right";
   triggerKey: number;
+  /** When set on a correct verdict, the splash IS the score — "+150", the
+   *  ranked ArenaScoreSplash treatment — instead of the word. */
+  points?: number | null;
 }) {
   const { t } = useLocale();
   const correct = verdict === "correct";
   const isLeft = from === "left";
   const color = correct ? "#58CC02" : "#FB3101";
-  const label = correct ? t("dailyGames.correctExclaim") : t("dailyGames.wrong");
+  const label = correct
+    ? (points != null && points > 0 ? `+${points}` : t("dailyGames.correctExclaim"))
+    : t("dailyGames.wrong");
 
   return (
     <div className="pointer-events-none fixed inset-0 z-[60] flex items-center justify-center">
