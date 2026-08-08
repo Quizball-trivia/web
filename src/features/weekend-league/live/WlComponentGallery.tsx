@@ -640,6 +640,16 @@ export function WlComponentGallery({
       ),
     },
     {
+      id: 'game-result-finalist', label: 'Finalist screen (after game 3)', group: 'Boards & results',
+      render: () => (
+        <GameResult
+          game={GAMES[2]} isLastGame survived finalRank={2} score={760}
+          bestRound={{ round: 4, points: 300 }}
+          onContinue={noop} onKeepWatching={noop} onExit={noop}
+        />
+      ),
+    },
+    {
       id: 'game-result-out', label: 'Game result (eliminated)', group: 'Boards & results',
       render: () => (
         <GameResult
@@ -675,6 +685,7 @@ export function WlComponentGallery({
         <BreakScreen
           games={GAMES} game={GAMES[0]} finalRank={12} score={350}
           bestRound={{ round: 2, points: 200 }} deadlineMs={mountedAt + 120_000}
+          board={boardStrip(BOARD, 'sim-you', 24)}
         />
       ),
     },

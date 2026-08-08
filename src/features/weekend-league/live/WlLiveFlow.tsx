@@ -36,6 +36,7 @@ import {
 import { MoneyDropBoard } from '../gauntlet/MoneyDropBoard';
 import { PutInOrderBoard } from '../gauntlet/PutInOrderBoard';
 import { BreakScreen, ChampionScreen, EliminationReveal, GameIntro, GameResult } from '../gauntlet/GauntletScreens';
+import { RankPill, SideLeaderboard, YourRankCard, type RankInfo } from '../gauntlet/RankStatus';
 import { ROUNDS, wlLadder } from '../gauntlet/gauntlet.data';
 import { QuestionKindBadge } from '@/features/possession/components/live-special/shared';
 import { ResultSplash } from '@/features/daily/components/ResultSplash';
@@ -136,6 +137,33 @@ export function WlLiveFlowView({
     () => live.board.find((row) => row.user_id === selfUserId) ?? null,
     [live.board, selfUserId],
   );
+
+  // Placement info for the always-on rank UI. Field/cut come from the ladder
+  // (a pure function of the starting field, mirroring the server); the final
+  // (game 3) uses the podium as its "cut".
+  const gameIdxNow = live.screen.kind === 'question'
+    ? live.screen.attempt.game_index
+    : live.screen.kind === 'reveal'
+      ? (live.screen.attempt?.game_index ?? currentGameIndex ?? 0)
+      : currentGameIndex ?? live.gameIndex;
+  const ladderNow = wlLadder(checkedInCount ?? 0);
+  const rankField = gameIdxNow <= 0
+    ? (checkedInCount ?? 0)
+    : ladderNow[Math.min(2, gameIdxNow - 1)] ?? 0;
+  const rankCut = gameIdxNow >= 3 ? 3 : ladderNow[gameIdxNow] ?? 0;
+  // Rank at the moment the question opened — the delta on reveal is measured
+  // against it (render-time adjustment, same pattern as lastResult below).
+  const [rankMark, setRankMark] = useState<{ key: string; rank: number } | null>(null);
+  const screenK = screenKey(live.screen);
+  if (live.screen.kind === 'question' && yourRow?.rank != null && rankMark?.key !== screenK) {
+    setRankMark({ key: screenK, rank: yourRow.rank });
+  }
+  const rankDelta = live.screen.kind === 'reveal' && rankMark?.key === screenK && yourRow?.rank != null
+    ? rankMark.rank - yourRow.rank
+    : 0;
+  const rankInfo: RankInfo | null = yourRow?.rank != null && rankField > 0 && rankCut > 0
+    ? { rank: yourRow.rank, field: rankField, cut: rankCut, delta: rankDelta }
+    : null;
 
   // Remember the latest game_result so the break screen and next game's intro
   // can show real field/advance counts after the screen has moved on.
@@ -309,6 +337,7 @@ export function WlLiveFlowView({
             checkedIn={checkedIn}
             currentGameIndex={currentGameIndex ?? live.gameIndex}
             lastGameRank={lastGameRank ?? null}
+            rankInfo={rankInfo}
             onExit={onExit}
             onSpectate={onSpectate ?? onExit}
           />
@@ -320,6 +349,10 @@ export function WlLiveFlowView({
       {role === 'spectator'
         && (live.screen.kind === 'question' || live.screen.kind === 'reveal') && (
         <SpectatorBoardRail board={live.board} />
+      )}
+      {role === 'player'
+        && (live.screen.kind === 'question' || live.screen.kind === 'reveal') && (
+        <PlayerRankRail board={live.board} selfUserId={selfUserId} score={live.score} rankInfo={rankInfo} />
       )}
       <ResultSplash {...liveSplashProps} />
     </Immersive>
@@ -356,6 +389,41 @@ function SpectatorBoardRail({ board }: { board: WlBoardRow[] }) {
         <LiveBadge />
       </div>
       <BoardStrip board={board} selfUserId={null} rows={8} />
+    </aside>
+  );
+}
+
+/** Player's persistent placement rail (desktop): your card pinned on top,
+ *  the live board under it with the qualification line drawn. Rows
+ *  layout-animate on every board tick, so overtakes are visible as they
+ *  happen. Mobile carries the same info in the header RankPill. */
+function PlayerRankRail({
+  board, selfUserId, score, rankInfo,
+}: {
+  board: WlBoardRow[];
+  selfUserId: string | null;
+  score: number;
+  rankInfo: RankInfo | null;
+}) {
+  const { t } = useLocale();
+  if (board.length === 0) return null;
+  const rows = board.map((r) => ({
+    user_id: r.user_id,
+    nickname: r.user_id === selfUserId ? t('weekendLeague.gYou') : (r.nickname ?? t('weekendLeague.gPlayerN', { n: r.rank })),
+    points: r.points,
+    rank: r.rank,
+  }));
+  return (
+    <aside className="fixed right-4 top-16 z-40 hidden w-80 flex-col gap-2.5 xl:flex">
+      {rankInfo != null && (
+        <YourRankCard nickname={t('weekendLeague.gYou')} points={score} info={rankInfo} />
+      )}
+      <SideLeaderboard
+        board={rows}
+        selfUserId={selfUserId ?? ''}
+        cut={rankInfo?.cut ?? Number.MAX_SAFE_INTEGER}
+        className="max-h-[calc(100vh-180px)]"
+      />
     </aside>
   );
 }
@@ -430,7 +498,7 @@ function Shell({ children, onExit }: { children: React.ReactNode; onExit: () => 
 
 
 function ScreenBody({
-  screen, role, locale, serverNow, submitAnswer, retryNonce, board, selfUserId, score, rank, breakUntilMs, moneyBudget, mdSheets, onMdSheet, lastResult, checkedInCount, checkedIn, currentGameIndex, lastGameRank, onExit, onSpectate,
+  screen, role, locale, serverNow, submitAnswer, retryNonce, board, selfUserId, score, rank, breakUntilMs, moneyBudget, mdSheets, onMdSheet, lastResult, checkedInCount, checkedIn, currentGameIndex, lastGameRank, rankInfo, onExit, onSpectate,
 }: {
   screen: WlLiveScreen;
   role: 'player' | 'spectator';
@@ -454,6 +522,8 @@ function ScreenBody({
   checkedIn: boolean;
   currentGameIndex: number;
   lastGameRank: number | null;
+  /** Placement info for the always-on rank pill (null until the board knows you). */
+  rankInfo: RankInfo | null;
   onExit: () => void;
   onSpectate: () => void;
 }) {
@@ -493,6 +563,7 @@ function ScreenBody({
             finalRank={lastResult != null ? rank : null}
             score={score}
             deadlineMs={breakUntilMs}
+            board={<BoardStrip board={board} selfUserId={selfUserId} rows={24} yourRankFallback={lastGameRank} />}
           />
         );
       }
@@ -541,6 +612,7 @@ function ScreenBody({
           attempt={attempt}
           score={score}
           rank={yourRank}
+          rankInfo={role === 'player' ? rankInfo : null}
           introCounts={introCounts}
           moneyBudget={moneyBudget}
           mdSheet={mdSheets[attempt.attempt_id] ?? null}
@@ -588,40 +660,9 @@ function ScreenBody({
           />
         );
       }
-      if (isLastQuestionOfRound(screen.reveal)) {
-        return (
-          <RevealThenStandings
-            board={board}
-            selfUserId={selfUserId}
-            roundIndex={screen.reveal.round_index}
-            holdMs={screen.reveal.kind === 'money_drop' ? 4_500 : screen.reveal.kind === 'put_in_order' ? 5_000 : 2_200}
-            question={
-              screen.attempt != null ? (
-                <QuestionScreen
-                  attempt={{
-                    ...screen.attempt,
-                    evaluation: screen.reveal.evaluation ?? screen.attempt.evaluation,
-                  }}
-                  score={score}
-                  rank={yourRank}
-                  introCounts={null}
-                  moneyBudget={moneyBudget}
-                  mdSheet={mdSheets[screen.attempt.attempt_id] ?? null}
-                  onMdSheet={onMdSheet}
-                  onExit={onExit}
-                  answered={screen.answer}
-                  locale={locale}
-                  serverNow={serverNow}
-                  submitAnswer={() => {}}
-                  retryNonce={retryNonce}
-                  spectator={false}
-                  revealed
-                />
-              ) : null
-            }
-          />
-        );
-      }
+      // Round boundaries no longer cut to a standings screen: the docked
+      // board (desktop) and the rank pill (mobile) already carry placement,
+      // so the resolved question simply holds through the breather.
       // Hold the question screen (with its resolved buttons) — the attempt is
       // still on the reveal payload, so nothing flickers. The reveal's answer
       // key is merged UNCONDITIONALLY: if the screen remounts (round-end
@@ -636,6 +677,7 @@ function ScreenBody({
             attempt={attemptWithKey}
             score={score}
             rank={yourRank}
+            rankInfo={rankInfo}
             introCounts={null}
             moneyBudget={moneyBudget}
             mdSheet={screen.attempt != null ? mdSheets[screen.attempt.attempt_id] ?? null : null}
@@ -678,6 +720,8 @@ function ScreenBody({
           score={score}
           breakUntilMs={breakUntilMs}
           originalField={checkedInCount}
+          board={board}
+          selfUserId={selfUserId}
           onExit={onExit}
           onSpectate={onSpectate}
         />
@@ -713,31 +757,6 @@ function isLastQuestionOfRound(reveal: { round_index: number; question_index: nu
   return reveal.question_index >= total - 1;
 }
 
-/**
- * Round end: the resolved question holds briefly — so a player who timed out
- * still sees the correct answer — then the standings take over.
- */
-function RevealThenStandings({
-  board, selfUserId, roundIndex, question, holdMs = 2_200, yourRankFallback = null,
-}: {
-  board: WlBoardRow[];
-  selfUserId: string | null;
-  roundIndex: number;
-  question: React.ReactNode;
-  /** How long the resolved question stays before the standings take over —
-   *  money drop's falling-bill theatre needs more than the default beat. */
-  holdMs?: number;
-  yourRankFallback?: number | null;
-}) {
-  const [phase, setPhase] = useState<'answer' | 'board'>(question == null ? 'board' : 'answer');
-  useEffect(() => {
-    if (question == null) return;
-    const id = setTimeout(() => setPhase('board'), holdMs);
-    return () => clearTimeout(id);
-  }, [question, holdMs]);
-  if (phase === 'answer') return <>{question}</>;
-  return <RoundStandings board={board} selfUserId={selfUserId} roundIndex={roundIndex} yourRankFallback={yourRankFallback} />;
-}
 
 /** Round-end standings: the one place the board interrupts play. */
 function RoundStandings({
@@ -837,7 +856,7 @@ function BreakCountdown({ deadlineMs }: { deadlineMs: number }) {
  *  the survived/eliminated result — the same components /dev/wl-gauntlet
  *  renders, fed by the live game_result payload. */
 function LiveGameResult({
-  result, eliminated, yourRank, score, breakUntilMs, originalField, onExit, onSpectate,
+  result, eliminated, yourRank, score, breakUntilMs, originalField, board, selfUserId, onExit, onSpectate,
 }: {
   result: { game_index: number; field?: number; advanced?: number | null };
   eliminated: boolean;
@@ -846,6 +865,8 @@ function LiveGameResult({
   breakUntilMs: number | null;
   /** Starting field (checked-in count) — the ladder is a function of it. */
   originalField: number;
+  board: WlBoardRow[];
+  selfUserId: string | null;
   onExit: () => void;
   onSpectate: () => void;
 }) {
@@ -881,6 +902,7 @@ function LiveGameResult({
         finalRank={yourRank}
         score={score}
         deadlineMs={breakUntilMs}
+        board={<BoardStrip board={board} selfUserId={selfUserId} rows={24} yourRankFallback={yourRank} />}
       />
     );
   }
@@ -903,7 +925,7 @@ function LiveGameResult({
 // ── Question rendering per kind ─────────────────────────────────────────────
 
 function QuestionScreen({
-  attempt, answered, locale, serverNow, submitAnswer, retryNonce, spectator, score, rank, introCounts, moneyBudget = 300, mdSheet = null, onMdSheet, spectatorBoard = null, revealed = false, onExit,
+  attempt, answered, locale, serverNow, submitAnswer, retryNonce, spectator, score, rank, rankInfo = null, introCounts, moneyBudget = 300, mdSheet = null, onMdSheet, spectatorBoard = null, revealed = false, onExit,
 }: {
   attempt: WlDispatchEventPayload;
   answered: { accepted: boolean } | null;
@@ -914,6 +936,7 @@ function QuestionScreen({
   spectator: boolean;
   score: number;
   rank: number | null;
+  rankInfo?: RankInfo | null;
   /** Field/advance for the game-intro theatre (prev game's result). */
   introCounts: { players: number; advance: number } | null;
   /** Money-drop budget entering this question (client chain, display only). */
@@ -948,6 +971,9 @@ function QuestionScreen({
     secondsLeft: ready ? secondsLeft : windowSec,
     spectator,
     step: `${attempt.question_index + 1}/5`,
+    // Desktop carries placement in the fixed rail; the pill is the mobile
+    // always-on equivalent, top-left on the score line.
+    rankPill: rankInfo != null ? <span className="xl:hidden"><RankPill {...rankInfo} /></span> : undefined,
     onQuit: onExit,
   };
   // Round intro only at the round's FIRST question; it dismisses itself and

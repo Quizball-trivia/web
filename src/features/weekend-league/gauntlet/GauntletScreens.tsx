@@ -412,6 +412,8 @@ export function GameResult({
   onKeepWatching: () => void;
   onExit: () => void;
 }) {
+  void onContinue; // break auto-advances; the explicit CTA was removed (owner)
+
   const { t } = useLocale();
   if (survived && isLastGame) {
     return (
@@ -440,7 +442,6 @@ export function GameResult({
           </div>
         </div>
         <div className="mt-7 w-full space-y-2.5">
-          <Cta onClick={onContinue}>{t('weekendLeague.gViewFinal')}</Cta>
           <Cta onClick={onExit} secondary>
             {t('weekendLeague.returnHome')}
           </Cta>
@@ -605,6 +606,7 @@ export function BreakScreen({
   fast = false,
   onDone,
   deadlineMs = null,
+  board = null,
 }: {
   games: GameDef[];
   game: GameDef;
@@ -616,6 +618,8 @@ export function BreakScreen({
   onDone?: () => void;
   /** Live driver: count down to the server break deadline; server advances. */
   deadlineMs?: number | null;
+  /** Post-game standings — the one place the full board takes the stage. */
+  board?: React.ReactNode;
 }) {
   const { t } = useLocale();
   const total = fast ? 8 : BREAK_SECONDS;
@@ -727,6 +731,8 @@ export function BreakScreen({
           <span>{t('weekendLeague.gLocked')}</span>
         </div>
       </div>
+
+      {board != null && <div className="mt-2 w-full">{board}</div>}
 
       {onDone != null && (
         <button

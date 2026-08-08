@@ -61,18 +61,36 @@ function DeltaChip({ delta }: { delta?: number }) {
   );
 }
 
-/** Minimal placement pill: rank + last move; the ZONE is the color — green
- *  inside the cut, yellow on the bubble, red outside. No prose. */
+/** Minimal placement pill, fully filled like the kind badges: solid green
+ *  inside the cut, solid yellow on the bubble, solid red outside. */
+const PILL_FILL: Record<ZoneTone, { bg: string; main: string; dim: string; delta: string }> = {
+  safe: { bg: 'bg-brand-green', main: 'text-white', dim: 'text-white/70', delta: 'text-white' },
+  bubble: { bg: 'bg-brand-yellow', main: 'text-black', dim: 'text-black/60', delta: 'text-black' },
+  out: { bg: 'bg-brand-red-soft', main: 'text-white', dim: 'text-white/70', delta: 'text-white' },
+};
+
 export function RankPill(info: RankInfo) {
   const zone = zoneOf(info);
-  const s = ZONE_STYLE[zone];
+  const f = PILL_FILL[zone];
   return (
-    <span className={cn('inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1', s.wrap)}>
-      <span className="font-poppins text-[13px] font-black tabular-nums text-white" style={poppins}>
+    <span className={cn('inline-flex items-center gap-1.5 rounded-full px-3 py-1 shadow-[0_1px_6px_rgba(0,0,0,0.35)]', f.bg)}>
+      <span className={cn('font-poppins text-[13px] font-black tabular-nums', f.main)} style={poppins}>
         #{info.rank}
       </span>
-      <span className="font-poppins text-[10px] font-bold tabular-nums text-white/45">/{info.field}</span>
-      <DeltaChip delta={info.delta} />
+      <span className={cn('font-poppins text-[10px] font-bold tabular-nums', f.dim)}>/{info.field}</span>
+      {info.delta != null && info.delta !== 0 && (
+        <motion.span
+          key={info.delta}
+          initial={{ y: info.delta > 0 ? 6 : -6, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className={cn('flex items-center font-poppins text-[11px] font-black tabular-nums', f.delta)}
+        >
+          {info.delta > 0
+            ? <ArrowUp className="size-3" strokeWidth={3.5} />
+            : <ArrowDown className="size-3" strokeWidth={3.5} />}
+          {Math.abs(info.delta)}
+        </motion.span>
+      )}
     </span>
   );
 }
@@ -188,7 +206,7 @@ export function SideLeaderboard({
   className?: string;
 }) {
   return (
-    <div className={cn('overflow-y-auto overscroll-contain rounded-[14px] border-2 border-white/10 bg-black/30', className)}>
+    <div className={cn('overflow-y-auto overscroll-contain rounded-[10px] border-2 border-brand-green bg-black/30', className)}>
       {board.map((r) => (
         <motion.div layout key={r.user_id} transition={{ type: 'spring', stiffness: 420, damping: 32 }}>
           {r.rank === cut + 1 && (
@@ -200,7 +218,7 @@ export function SideLeaderboard({
               <span className="h-px flex-1 bg-brand-red-soft/60" />
             </div>
           )}
-          <div className="border-t border-white/5 first:border-t-0">
+          <div className="border-t border-brand-green/25 first:border-t-0">
             <CutRow row={r} isYou={r.user_id === selfUserId} out={r.rank > cut} />
           </div>
         </motion.div>
@@ -216,19 +234,32 @@ export interface CutBoardRow {
   rank: number;
 }
 
+const MEDALS: Record<number, string> = { 1: '#FFD700', 2: '#C7CBD1', 3: '#CD7F32' };
+
 function CutRow({ row, isYou, out }: { row: CutBoardRow; isYou: boolean; out: boolean }) {
+  const medal = MEDALS[row.rank] ?? null;
   return (
     <div className={cn(
-      'flex items-center gap-2.5 px-3 py-2',
-      isYou ? 'bg-brand-green text-white' : out ? 'bg-brand-red-soft/[0.07]' : 'bg-black/40',
+      'flex items-center gap-3 px-3 py-2.5 transition-colors',
+      isYou ? 'bg-brand-green text-white' : 'text-white',
+      !isYou && out && 'opacity-60',
     )}>
-      <span className={cn('w-9 shrink-0 font-poppins text-[13px] font-black tabular-nums', isYou ? 'text-white' : 'text-white/70')} style={poppins}>
-        #{row.rank}
-      </span>
-      <span className="min-w-0 flex-1 truncate font-poppins text-[13px] font-black uppercase text-white">
+      {medal ? (
+        <span
+          className="flex size-8 shrink-0 items-center justify-center rounded-full font-poppins text-sm font-black tabular-nums text-black shadow-[0_0_12px_rgba(0,0,0,0.35)]"
+          style={{ ...poppins, backgroundColor: medal }}
+        >
+          {row.rank}
+        </span>
+      ) : (
+        <span className="min-w-[2.1rem] text-center font-poppins text-base font-black tabular-nums" style={poppins}>
+          #{row.rank}
+        </span>
+      )}
+      <span className="min-w-0 flex-1 truncate font-fun text-sm font-black uppercase">
         {row.nickname}
       </span>
-      <span className="shrink-0 font-poppins text-[14px] font-black tabular-nums text-white" style={poppins}>
+      <span className="shrink-0 font-poppins text-base font-black tabular-nums" style={poppins}>
         {row.points}
       </span>
     </div>
