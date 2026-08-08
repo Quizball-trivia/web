@@ -9,6 +9,7 @@ import { useState } from 'react';
 import { RotateCcw, X } from 'lucide-react';
 import { CheckInPanel } from '../components/CheckInPanel';
 import { MoneyDropBoard } from '../gauntlet/MoneyDropBoard';
+import { PutInOrderBoard } from '../gauntlet/PutInOrderBoard';
 import { QuestionKindBadge } from '@/features/possession/components/live-special/shared';
 import { LeagueCountdown } from '../components/LeagueCountdown';
 import { LiveBadge } from '../components/LiveBadge';
@@ -55,6 +56,54 @@ const BOARD = [
 ];
 
 type Entry = { id: string; label: string; group: string; render: () => React.ReactNode };
+
+const PIO_ITEMS = [
+  { id: 'p1', label: 'ჰაკიმ ზიეში', emoji: null },
+  { id: 'p2', label: 'ბენ ჩილუელი', emoji: null },
+  { id: 'p3', label: 'ტიმო ვერნერი', emoji: null },
+  { id: 'p4', label: 'რაჰიმ სტერლინგი', emoji: null },
+];
+
+/** The live sequence in miniature: arrange → submit (or wait) → the ranked
+ *  comparison reveal, replayable. */
+function PutInOrderRevealDemo() {
+  const [run, setRun] = useState(0);
+  const [revealed, setRevealed] = useState(false);
+  return (
+    <div key={run}>
+      <Frame>
+        <div className="mb-2 flex items-center justify-start">
+          <QuestionKindBadge kind="putInOrder" />
+        </div>
+        <QuestionCard>დაალაგე ეს გადასვლები ტრანსფერის თანხის მიხედვით (მაღლიდან დაბლისკენ)</QuestionCard>
+        <PutInOrderBoard
+          items={PIO_ITEMS}
+          instruction={null}
+          locked={false}
+          correctOrder={revealed ? ['p4', 'p3', 'p1', 'p2'] : null}
+          onSubmit={noop}
+        />
+        <div className="mt-3 flex justify-center gap-2">
+          <button
+            type="button"
+            onClick={() => setRevealed(true)}
+            className="rounded-lg bg-brand-green px-3 py-2 font-poppins text-[11px] font-black uppercase tracking-wide text-white hover:opacity-90"
+          >
+            Reveal
+          </button>
+          <button
+            type="button"
+            onClick={() => { setRun((n) => n + 1); setRevealed(false); }}
+            className="flex items-center gap-1.5 rounded-lg bg-brand-purple px-3 py-2 font-poppins text-[11px] font-black uppercase tracking-wide text-white hover:opacity-90"
+          >
+            <RotateCcw className="size-3.5" /> Replay
+          </button>
+        </div>
+      </Frame>
+    </div>
+  );
+}
+
 
 /** A full question screen (header + body) — what the overlay hands off to. */
 function TrueFalseDemo({ overlay }: { overlay?: React.ReactNode }) {
@@ -351,6 +400,28 @@ export function WlComponentGallery({
           />
         </Frame>
       ),
+    },
+    {
+      id: 'put-in-order', label: 'Put in order (play)', group: 'Question bodies',
+      render: () => (
+        <Frame>
+          <div className="mb-2 flex items-center justify-start">
+            <QuestionKindBadge kind="putInOrder" />
+          </div>
+          <QuestionCard>დაალაგე ეს გადასვლები ტრანსფერის თანხის მიხედვით (მაღლიდან დაბლისკენ)</QuestionCard>
+          <PutInOrderBoard
+            items={PIO_ITEMS}
+            instruction={null}
+            locked={false}
+            correctOrder={null}
+            onSubmit={noop}
+          />
+        </Frame>
+      ),
+    },
+    {
+      id: 'put-in-order-reveal', label: 'Put in order (reveal)', group: 'Question bodies',
+      render: () => <PutInOrderRevealDemo />,
     },
     {
       id: 'money-drop', label: 'Money drop board', group: 'Question bodies',
