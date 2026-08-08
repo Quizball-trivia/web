@@ -23,6 +23,8 @@ export interface RoundHeaderModel {
   secondsLeft: number;
   spectator?: boolean;
   step?: string;
+  /** Always-on placement pill (mobile) — rendered left of the score line. */
+  rankPill?: React.ReactNode;
   onQuit: () => void;
 }
 

@@ -22,6 +22,7 @@ export function GauntletHeader({
   secondsLeft,
   spectator = false,
   step,
+  rankPill,
   onQuit,
 }: {
   gameIndex: number;
@@ -33,6 +34,7 @@ export function GauntletHeader({
   spectator?: boolean;
   /** "2/5" when the round holds several questions. */
   step?: string;
+  rankPill?: React.ReactNode;
   onQuit: () => void;
 }) {
   const { t } = useLocale();
@@ -59,7 +61,8 @@ export function GauntletHeader({
           </span>
         </div>
       ) : (
-        <div className="mx-auto mt-2 flex max-w-3xl items-center justify-end px-4 font-poppins text-[11px] font-bold uppercase tracking-wide text-white/50">
+        <div className="mx-auto mt-2 flex max-w-3xl items-center justify-between gap-2 px-4 font-poppins text-[11px] font-bold uppercase tracking-wide text-white/50">
+          <span>{rankPill}</span>
           <span className="tabular-nums text-white/80">
             {rank != null
               ? t('weekendLeague.gScoreRank', { score, rank })
