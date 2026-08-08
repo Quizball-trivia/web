@@ -24,6 +24,9 @@ export interface RankInfo {
   cut: number;
   /** Rank change since the previous question; 0/undefined = no move. */
   delta?: number;
+  /** True when you're below the visible (truncated) board: rank is a floor
+   *  ("#25+"), zone is unknowable — the pill renders neutral. */
+  beyond?: boolean;
 }
 
 type ZoneTone = 'safe' | 'bubble' | 'out';
@@ -73,11 +76,13 @@ const PILL_FILL: Record<ZoneTone, { bg: string; main: string; dim: string; delta
 
 export function RankPill(info: RankInfo) {
   const zone = zoneOf(info);
-  const f = PILL_FILL[zone];
+  const f = info.beyond
+    ? { bg: 'bg-white/15', main: 'text-white', dim: 'text-white/60', delta: 'text-white' }
+    : PILL_FILL[zone];
   return (
     <span className={cn('inline-flex items-center gap-1.5 rounded-full px-3 py-1 shadow-[0_1px_6px_rgba(0,0,0,0.35)]', f.bg)}>
       <span className={cn('font-poppins text-[13px] font-black tabular-nums', f.main)} style={poppins}>
-        #{info.rank}
+        #{info.rank}{info.beyond ? '+' : ''}
       </span>
       <span className={cn('font-poppins text-[10px] font-bold tabular-nums', f.dim)}>/{info.field}</span>
       {info.delta != null && info.delta !== 0 ? (
@@ -175,7 +180,7 @@ export function YourRankCard({
   info: RankInfo;
 }) {
   const zone = zoneOf(info);
-  const s = ZONE_STYLE[zone];
+  const s = info.beyond ? { wrap: 'border-white/25 bg-white/5', chip: 'text-white/60' } : ZONE_STYLE[zone];
   return (
     <div className={cn('flex items-center gap-3 rounded-[18px] border-2 px-4 py-3', s.wrap)}>
       <div className="min-w-0 flex-1">
@@ -191,7 +196,7 @@ export function YourRankCard({
         className="font-poppins text-[30px] font-black tabular-nums text-white"
         style={poppins}
       >
-        #{info.rank}
+        #{info.rank}{info.beyond ? '+' : ''}
       </motion.div>
     </div>
   );
