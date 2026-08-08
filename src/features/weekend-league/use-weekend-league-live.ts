@@ -156,6 +156,10 @@ export function useWeekendLeagueLive(): WeekendLeagueLiveController {
         .map((iso) => (iso ? Date.parse(iso) : Number.NaN))
         .filter((ms) => Number.isFinite(ms) && ms > now - 30_000);
       const nearest = boundaries.length > 0 ? Math.min(...boundaries) : null;
+      // Straddling a boundary (10s either side) the status flip must land in
+      // ~a second — this is the moment the countdown sits at 00:00 waiting
+      // for the card to swap.
+      if (nearest != null && Math.abs(nearest - now) < 10_000) return 1_000;
       if (nearest != null && nearest - now < 90_000) return 3_000;
       return 60_000;
     },

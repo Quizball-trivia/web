@@ -286,15 +286,19 @@ export function LeagueHeader({
                 entry is open that is entry-close (check-in opens and the page
                 flips to "join") — counting to kickoff here left ~the whole
                 check-in window on the clock at the moment of the jump. */}
+            {/* While the server still says entry_open the clock stays on the
+                entry boundary — clamped at 00:00 once passed — NEVER retargeted
+                to kickoff: that restarted the countdown for the few seconds
+                until the poll flipped the card (rehearsal report). */}
             <div className={`text-center font-poppins text-[10px] font-black uppercase tracking-[0.16em] transition-colors duration-700 ${gold ? 'text-black/55' : 'text-white/60'}`}>
-              {phase === 'entry_open' && milestones != null && milestones.entry.targetMs > wlNow()
+              {phase === 'entry_open'
                 ? t('weekendLeague.checkinOpensIn')
                 : t('weekendLeague.startsIn')}
             </div>
             {milestones && (
               <div className="mt-2 flex justify-center">
                 <LeagueCountdown
-                  targetMs={phase === 'entry_open' && milestones.entry.targetMs > wlNow()
+                  targetMs={phase === 'entry_open'
                     ? milestones.entry.targetMs
                     : milestones.qualifier.targetMs}
                   size="sm"
