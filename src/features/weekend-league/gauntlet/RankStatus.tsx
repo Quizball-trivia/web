@@ -141,6 +141,74 @@ export function RankDeltaMoment({
   );
 }
 
+
+/** Your identity card pinned above the side board — the events-hub "#1 card"
+ *  language: bordered card, name + points left, big rank right. Border color
+ *  is the zone. */
+export function YourRankCard({
+  nickname, points, info,
+}: {
+  nickname: string;
+  points: number;
+  info: RankInfo;
+}) {
+  const zone = zoneOf(info);
+  const s = ZONE_STYLE[zone];
+  return (
+    <div className={cn('flex items-center gap-3 rounded-[18px] border-2 px-4 py-3', s.wrap)}>
+      <div className="min-w-0 flex-1">
+        <div className="truncate font-poppins text-[15px] font-black uppercase text-white">{nickname}</div>
+        <div className="font-poppins text-[12px] font-bold tabular-nums text-white/60">{points} ქულა</div>
+      </div>
+      <DeltaChip delta={info.delta} />
+      <motion.div
+        key={info.rank}
+        initial={{ scale: 0.75, opacity: 0.4 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ type: 'spring', stiffness: 420, damping: 20 }}
+        className="font-poppins text-[30px] font-black tabular-nums text-white"
+        style={poppins}
+      >
+        #{info.rank}
+      </motion.div>
+    </div>
+  );
+}
+
+/**
+ * Web-only docked leaderboard: the FULL field, scrollable, cut line drawn,
+ * rows layout-animate as ranks change so movement is visible in realtime.
+ */
+export function SideLeaderboard({
+  board, selfUserId, cut, className,
+}: {
+  board: CutBoardRow[];
+  selfUserId: string;
+  cut: number;
+  className?: string;
+}) {
+  return (
+    <div className={cn('overflow-y-auto overscroll-contain rounded-[14px] border-2 border-white/10 bg-black/30', className)}>
+      {board.map((r) => (
+        <motion.div layout key={r.user_id} transition={{ type: 'spring', stiffness: 420, damping: 32 }}>
+          {r.rank === cut + 1 && (
+            <div className="flex items-center gap-2 bg-brand-red-soft/15 px-3 py-1">
+              <span className="h-px flex-1 bg-brand-red-soft/60" />
+              <span className="font-poppins text-[9px] font-black uppercase tracking-[0.18em] text-brand-red-soft">
+                TOP {cut} გადადის
+              </span>
+              <span className="h-px flex-1 bg-brand-red-soft/60" />
+            </div>
+          )}
+          <div className="border-t border-white/5 first:border-t-0">
+            <CutRow row={r} isYou={r.user_id === selfUserId} out={r.rank > cut} />
+          </div>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
 export interface CutBoardRow {
   user_id: string;
   nickname: string;
