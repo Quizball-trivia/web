@@ -10,7 +10,7 @@ import { RotateCcw, X } from 'lucide-react';
 import { CheckInPanel } from '../components/CheckInPanel';
 import { MoneyDropBoard } from '../gauntlet/MoneyDropBoard';
 import { PutInOrderBoard } from '../gauntlet/PutInOrderBoard';
-import { CutlineBoard, RankDeltaMoment, RankStatusStrip, type CutBoardRow } from '../gauntlet/RankStatus';
+import { CutlineBoard, RankDeltaMoment, RankPill, type CutBoardRow } from '../gauntlet/RankStatus';
 import { QuestionKindBadge } from '@/features/possession/components/live-special/shared';
 import { LeagueCountdown } from '../components/LeagueCountdown';
 import { LiveBadge } from '../components/LiveBadge';
@@ -74,54 +74,67 @@ function cutBoard(youRank: number): CutBoardRow[] {
   });
 }
 
-/** The full loop: answer → verdict → rank move → strip updates. Replayable
- *  from both a safe and a danger starting position. */
+/** The full loop inside the REAL question chrome: header, dashes, pill by
+ *  the score line, answer → verdict colors → rank beat → cut-line board. */
 function RankFlowSim({ phone }: { phone: boolean }) {
-  const [state, setState] = useState<{ from: number; to: number; revealed: boolean; passed: string[] }>(
-    { from: 66, to: 66, revealed: false, passed: [] },
+  const [state, setState] = useState<{ from: number; to: number; picked: 'a' | 'b' | null; passed: string[] }>(
+    { from: 62, to: 62, picked: null, passed: [] },
   );
-  const answer = (correct: boolean) => {
-    const from = state.revealed ? state.to : state.from;
-    const to = correct
-      ? Math.max(1, from - (3 + Math.floor(from / 30)))
-      : Math.min(CUT_FIELD, from + 4);
-    const passed = correct
-      ? cutBoard(99).filter((r) => r.rank >= to && r.rank < from).slice(0, 3).map((r) => r.nickname)
-      : cutBoard(99).filter((r) => r.rank > from && r.rank <= to).slice(0, 3).map((r) => r.nickname);
-    setState({ from, to, revealed: true, passed });
+  const revealed = state.picked != null;
+  const correct = state.picked === 'a';
+  const answer = (key: 'a' | 'b') => {
+    if (revealed) return;
+    const from = state.from;
+    const good = key === 'a';
+    const to = good ? Math.max(1, from - 5) : Math.min(CUT_FIELD, from + 4);
+    const pool = cutBoard(99);
+    const passed = good
+      ? pool.filter((r) => r.rank >= to && r.rank < from).slice(0, 3).map((r) => r.nickname)
+      : pool.filter((r) => r.rank > from && r.rank <= to).slice(0, 3).map((r) => r.nickname);
+    setState({ from, to, picked: key, passed });
   };
-  const info = { rank: state.revealed ? state.to : state.from, field: CUT_FIELD, cut: CUT, delta: state.revealed ? state.from - state.to : 0 };
+  const rank = revealed ? state.to : state.from;
+  const info = { rank, field: CUT_FIELD, cut: CUT, delta: revealed ? state.from - state.to : 0 };
   return (
-    <div className={phone ? 'mx-auto w-[375px] rounded-[28px] border border-white/15 px-3 py-4' : ''}>
-      <RankStatusStrip {...info} />
-      <div className="mt-3">
+    <div className={phone ? 'mx-auto w-[375px] rounded-[28px] border border-white/15 py-3' : ''}>
+      <GauntletHeader
+        gameIndex={0} round={ROUND} score={revealed && correct ? 130 : 100} rank={rank}
+        secondsLeft={revealed ? 0 : 7} step="3/5" onQuit={noop}
+      />
+      {/* The pill rides the same right-aligned line the score uses today. */}
+      <div className="mx-auto -mt-1 flex max-w-3xl items-center justify-end px-4">
+        <RankPill {...info} />
+      </div>
+      <div className="mx-auto mt-2 w-full max-w-3xl px-4">
         <QuestionCard>ზიდანმა 2006 წლის ფინალში წითელი ბარათი მიიღო.</QuestionCard>
-      </div>
-      {state.revealed && (
-        <RankDeltaMoment
-          key={`${state.from}-${state.to}`}
-          fromRank={state.from}
-          toRank={state.to}
-          info={info}
-          passedNames={state.passed}
+        <PairAnswers
+          choices={[
+            { key: 'a', label: 'მართალია', state: revealed ? (correct ? 'correct' : 'faded') : 'idle' },
+            { key: 'b', label: 'მცდარია', state: revealed ? (correct ? 'faded' : 'wrong') : 'idle' },
+          ]}
+          disabled={revealed}
+          onPick={(key) => answer(key as 'a' | 'b')}
         />
-      )}
-      <div className="mt-4">
-        <CutlineBoard board={cutBoard(state.revealed ? state.to : state.from)} selfUserId="sim-you" cut={CUT} />
-      </div>
-      <div className="mt-4 flex justify-center gap-2">
-        <button type="button" onClick={() => answer(true)}
-          className="rounded-lg bg-brand-green px-3 py-2 font-poppins text-[11px] font-black uppercase tracking-wide text-white hover:opacity-90">
-          სწორი პასუხი
-        </button>
-        <button type="button" onClick={() => answer(false)}
-          className="rounded-lg bg-brand-red-soft px-3 py-2 font-poppins text-[11px] font-black uppercase tracking-wide text-white hover:opacity-90">
-          არასწორი პასუხი
-        </button>
-        <button type="button" onClick={() => setState({ from: 66, to: 66, revealed: false, passed: [] })}
-          className="flex items-center gap-1.5 rounded-lg bg-brand-purple px-3 py-2 font-poppins text-[11px] font-black uppercase tracking-wide text-white hover:opacity-90">
-          <RotateCcw className="size-3.5" /> Replay
-        </button>
+        {revealed && (
+          <RankDeltaMoment
+            key={`${state.from}-${state.to}`}
+            fromRank={state.from}
+            toRank={state.to}
+            info={info}
+            passedNames={state.passed}
+          />
+        )}
+        {revealed && (
+          <div className="mt-4">
+            <CutlineBoard board={cutBoard(state.to)} selfUserId="sim-you" cut={CUT} window={2} />
+          </div>
+        )}
+        <div className="mt-4 flex justify-center">
+          <button type="button" onClick={() => setState({ from: 62, to: 62, picked: null, passed: [] })}
+            className="flex items-center gap-1.5 rounded-lg bg-brand-purple px-3 py-2 font-poppins text-[11px] font-black uppercase tracking-wide text-white hover:opacity-90">
+            <RotateCcw className="size-3.5" /> Replay
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -519,13 +532,13 @@ export function WlComponentGallery({
 
     // ── Boards & results ────────────────────────────────────────────────────
     {
-      id: 'rank-strip', label: 'Rank strip (states)', group: 'Rank',
+      id: 'rank-pill', label: 'Rank pill (states)', group: 'Rank',
       render: () => (
         <Frame>
-          <div className="space-y-3">
-            <RankStatusStrip rank={12} field={120} cut={60} delta={3} />
-            <RankStatusStrip rank={55} field={120} cut={60} delta={-2} />
-            <RankStatusStrip rank={66} field={120} cut={60} delta={0} />
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <RankPill rank={12} field={120} cut={60} delta={3} />
+            <RankPill rank={55} field={120} cut={60} delta={-2} />
+            <RankPill rank={66} field={120} cut={60} />
           </div>
         </Frame>
       ),

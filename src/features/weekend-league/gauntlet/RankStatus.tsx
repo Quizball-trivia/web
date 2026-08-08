@@ -4,7 +4,7 @@
 // opening a board: their rank, whether the last answer moved them, and
 // whether they are inside the qualification cut. Three pieces:
 //
-//   RankStatusStrip  — slim always-on bar under the question header.
+//   RankPill         — minimal zone-colored pill beside the score line.
 //   RankDeltaMoment  — the post-reveal beat: old rank → new rank, who was
 //                      passed, and the in/out verdict for the cut.
 //   CutlineBoard     — standings with the qualification line drawn where the
@@ -37,56 +37,43 @@ function zoneOf({ rank, cut }: RankInfo): ZoneTone {
 }
 
 const ZONE_STYLE: Record<ZoneTone, { wrap: string; chip: string }> = {
-  safe: { wrap: 'border-brand-green/40 bg-brand-green/10', chip: 'text-brand-green-light' },
-  bubble: { wrap: 'border-brand-yellow/40 bg-brand-yellow/10', chip: 'text-brand-yellow' },
-  out: { wrap: 'border-brand-red-soft/50 bg-brand-red-soft/10', chip: 'text-brand-red-soft' },
+  safe: { wrap: 'border-brand-green bg-brand-green/15', chip: 'text-brand-green-light' },
+  bubble: { wrap: 'border-brand-yellow bg-brand-yellow/15', chip: 'text-brand-yellow' },
+  out: { wrap: 'border-brand-red-soft bg-brand-red-soft/15', chip: 'text-brand-red-soft' },
 };
 
 function DeltaChip({ delta }: { delta?: number }) {
-  if (!delta) {
-    return (
-      <span className="flex items-center gap-0.5 font-poppins text-[12px] font-black text-white/40">
-        <Minus className="size-3.5" />
-      </span>
-    );
-  }
+  if (!delta) return null;
   const up = delta > 0;
   return (
     <motion.span
       key={delta}
-      initial={{ y: up ? 8 : -8, opacity: 0 }}
+      initial={{ y: up ? 6 : -6, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       className={cn(
-        'flex items-center gap-0.5 font-poppins text-[13px] font-black tabular-nums',
+        'flex items-center font-poppins text-[11px] font-black tabular-nums',
         up ? 'text-brand-green-light' : 'text-brand-red-soft',
       )}
     >
-      {up ? <ArrowUp className="size-3.5" strokeWidth={3} /> : <ArrowDown className="size-3.5" strokeWidth={3} />}
+      {up ? <ArrowUp className="size-3" strokeWidth={3.5} /> : <ArrowDown className="size-3" strokeWidth={3.5} />}
       {Math.abs(delta)}
     </motion.span>
   );
 }
 
-/** Always-visible placement bar: rank + last move + cut verdict. */
-export function RankStatusStrip(info: RankInfo) {
+/** Minimal placement pill: rank + last move; the ZONE is the color — green
+ *  inside the cut, yellow on the bubble, red outside. No prose. */
+export function RankPill(info: RankInfo) {
   const zone = zoneOf(info);
   const s = ZONE_STYLE[zone];
   return (
-    <div className={cn('mx-auto flex w-full max-w-3xl items-center gap-3 rounded-[12px] border px-3 py-1.5', s.wrap)}>
-      <span className="flex items-baseline gap-1 font-poppins">
-        <span className="text-[10px] font-black uppercase tracking-widest text-white/50">ადგილი</span>
-        <span className="text-[17px] font-black tabular-nums text-white" style={poppins}>#{info.rank}</span>
-        <span className="text-[11px] font-bold tabular-nums text-white/40">/{info.field}</span>
+    <span className={cn('inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1', s.wrap)}>
+      <span className="font-poppins text-[13px] font-black tabular-nums text-white" style={poppins}>
+        #{info.rank}
       </span>
+      <span className="font-poppins text-[10px] font-bold tabular-nums text-white/45">/{info.field}</span>
       <DeltaChip delta={info.delta} />
-      <span className={cn('ml-auto flex items-center gap-1.5 font-poppins text-[11px] font-black uppercase tracking-wide', s.chip)}>
-        {zone === 'out'
-          ? (<><TriangleAlert className="size-3.5" /> ზონის მიღმა · გჭირდება {info.rank - info.cut} ადგილი</>)
-          : zone === 'bubble'
-            ? (<><TriangleAlert className="size-3.5" /> ზღვარზე ხარ · TOP {info.cut} გადადის</>)
-            : (<><Check className="size-3.5" strokeWidth={3.5} /> TOP {info.cut}-ში ხარ</>)}
-      </span>
-    </div>
+    </span>
   );
 }
 
@@ -145,10 +132,10 @@ export function RankDeltaMoment({
           )}
         </div>
       )}
-      <div className={cn('mt-1.5 flex items-center justify-center gap-1.5 font-poppins text-[12px] font-black uppercase tracking-wide', s.chip)}>
+      <div className={cn('mt-1 flex items-center justify-center gap-1 font-poppins text-[11px] font-black uppercase tracking-wide', s.chip)}>
         {zone === 'out'
-          ? (<><TriangleAlert className="size-4" /> ზონის მიღმა — TOP {info.cut} გადადის, გჭირდება {toRank - info.cut} ადგილი</>)
-          : (<><Check className="size-4" strokeWidth={3.5} /> გადამსვლელ ზონაში ხარ (TOP {info.cut})</>)}
+          ? (<><TriangleAlert className="size-3.5" /> TOP {info.cut} · გჭირდება {toRank - info.cut}</>)
+          : (<><Check className="size-3.5" strokeWidth={3.5} /> TOP {info.cut}</>)}
       </div>
     </motion.div>
   );
