@@ -5,7 +5,7 @@
 // These are the SAME components live play renders — edit one and both the
 // gallery and the real game change.
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { RotateCcw, X } from 'lucide-react';
 import { CheckInPanel } from '../components/CheckInPanel';
 import { MoneyDropBoard } from '../gauntlet/MoneyDropBoard';
@@ -64,11 +64,17 @@ const PIO_ITEMS = [
   { id: 'p4', label: 'რაჰიმ სტერლინგი', emoji: null },
 ];
 
-/** The live sequence in miniature: arrange → submit (or wait) → the ranked
- *  comparison reveal, replayable. */
+/** The live sequence in miniature: arrange → submit → a server-ish beat →
+ *  the ranked comparison reveal, replayable. Reveal skips straight there. */
 function PutInOrderRevealDemo() {
   const [run, setRun] = useState(0);
   const [revealed, setRevealed] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (timerRef.current) clearTimeout(timerRef.current); }, []);
+  const scheduleReveal = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    timerRef.current = setTimeout(() => setRevealed(true), 1_200);
+  };
   return (
     <div key={run}>
       <Frame>
@@ -81,7 +87,7 @@ function PutInOrderRevealDemo() {
           instruction={null}
           locked={false}
           correctOrder={revealed ? ['p4', 'p3', 'p1', 'p2'] : null}
-          onSubmit={noop}
+          onSubmit={scheduleReveal}
         />
         <div className="mt-3 flex justify-center gap-2">
           <button
@@ -89,11 +95,11 @@ function PutInOrderRevealDemo() {
             onClick={() => setRevealed(true)}
             className="rounded-lg bg-brand-green px-3 py-2 font-poppins text-[11px] font-black uppercase tracking-wide text-white hover:opacity-90"
           >
-            Reveal
+            Reveal now
           </button>
           <button
             type="button"
-            onClick={() => { setRun((n) => n + 1); setRevealed(false); }}
+            onClick={() => { if (timerRef.current) clearTimeout(timerRef.current); setRun((n) => n + 1); setRevealed(false); }}
             className="flex items-center gap-1.5 rounded-lg bg-brand-purple px-3 py-2 font-poppins text-[11px] font-black uppercase tracking-wide text-white hover:opacity-90"
           >
             <RotateCcw className="size-3.5" /> Replay
@@ -402,25 +408,7 @@ export function WlComponentGallery({
       ),
     },
     {
-      id: 'put-in-order', label: 'Put in order (play)', group: 'Question bodies',
-      render: () => (
-        <Frame>
-          <div className="mb-2 flex items-center justify-start">
-            <QuestionKindBadge kind="putInOrder" />
-          </div>
-          <QuestionCard>დაალაგე ეს გადასვლები ტრანსფერის თანხის მიხედვით (მაღლიდან დაბლისკენ)</QuestionCard>
-          <PutInOrderBoard
-            items={PIO_ITEMS}
-            instruction={null}
-            locked={false}
-            correctOrder={null}
-            onSubmit={noop}
-          />
-        </Frame>
-      ),
-    },
-    {
-      id: 'put-in-order-reveal', label: 'Put in order (reveal)', group: 'Question bodies',
+      id: 'put-in-order', label: 'Put in order (sim)', group: 'Question bodies',
       render: () => <PutInOrderRevealDemo />,
     },
     {
@@ -589,10 +577,11 @@ export function WlComponentGallery({
   const [activeId, setActiveId] = useState(ENTRIES[0].id);
   const active = ENTRIES.find((e) => e.id === activeId) ?? ENTRIES[0];
   const groups = [...new Set(ENTRIES.map((e) => e.group))];
+  const [railOpen, setRailOpen] = useState(true);
 
   return (
     <GauntletBackdrop>
-      <div className="min-h-screen pb-40">
+      <div className="min-h-screen pb-[44vh]">
         {/* Isolated component under study */}
         <div key={activeId}>{active.render()}</div>
       </div>
@@ -606,8 +595,18 @@ export function WlComponentGallery({
         <X className="size-5" />
       </button>
 
-      {/* Picker rail */}
-      <div className="fixed inset-x-0 bottom-0 z-[65] max-h-[38vh] overflow-y-auto border-t-2 border-brand-purple/40 bg-black/90 px-3 py-2.5 backdrop-blur">
+      {/* Picker rail — collapsible: full-height demos (put-in-order, money
+          drop) have their submit buttons down where the rail sits. */}
+      <div className="fixed inset-x-0 bottom-0 z-[65] border-t-2 border-brand-purple/40 bg-black/90 backdrop-blur">
+        <button
+          type="button"
+          onClick={() => setRailOpen((v) => !v)}
+          className="mx-auto flex w-full items-center justify-center gap-2 py-1.5 font-poppins text-[10px] font-black uppercase tracking-widest text-brand-purple hover:text-white"
+        >
+          {railOpen ? '▾ hide components' : '▴ show components'}
+        </button>
+        {railOpen && (
+        <div className="max-h-[34vh] overflow-y-auto px-3 pb-2.5">
         <div className="mx-auto max-w-4xl space-y-2">
           {groups.map((group) => (
             <div key={group} className="flex flex-wrap items-center gap-1.5">
@@ -632,6 +631,8 @@ export function WlComponentGallery({
             Same components live play renders — edit the file, this and the real game both change.
           </div>
         </div>
+        </div>
+        )}
       </div>
     </GauntletBackdrop>
   );

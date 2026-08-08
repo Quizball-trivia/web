@@ -1018,12 +1018,12 @@ function QuestionScreen({
           />
         )}
         {attempt.kind === 'who_am_i' && (
-          <WhoAmIQuestion revealed={revealed} grace={!ready && !revealed} attempt={attempt} locale={locale} serverNow={serverNow} locked={locked} spectator={spectator} onSubmit={(guess) => submitAnswer({ guess })} feedback={ack} />
+          <WhoAmIQuestion revealed={revealed} grace={!ready && !revealed} badgeVisible={!showRoundIntro} attempt={attempt} locale={locale} serverNow={serverNow} locked={locked} spectator={spectator} onSubmit={(guess) => submitAnswer({ guess })} feedback={ack} />
         )}
         {attempt.kind === 'put_in_order' && (
           <>
-            <div className="mb-2 flex items-center justify-start">
-              <QuestionKindBadge key={attempt.attempt_id} kind="putInOrder" />
+            <div className="mb-2 flex min-h-[42px] items-center justify-start">
+              {!showRoundIntro && <QuestionKindBadge key={attempt.attempt_id} kind="putInOrder" />}
             </div>
             <QuestionCard>{pick(q['prompt'], locale)}</QuestionCard>
             <GraceReveal ready={ready || revealed}>
@@ -1351,9 +1351,12 @@ function TypedKindQuestion({
 }
 
 function WhoAmIQuestion({
-  attempt, locale, serverNow, locked, grace = false, spectator, onSubmit, feedback, revealed = false,
+  attempt, locale, serverNow, locked, grace = false, badgeVisible = true, spectator, onSubmit, feedback, revealed = false,
 }: {
   grace?: boolean;
+  /** False while the round intro covers the screen — delays the badge drop
+   *  so it plays where people can see it. */
+  badgeVisible?: boolean;
   attempt: WlDispatchEventPayload;
   locale: Locale;
   serverNow: () => number;
@@ -1380,8 +1383,8 @@ function WhoAmIQuestion({
     <TypedKindQuestion
       card={
         <>
-          <div className="mb-2 flex items-center justify-start">
-            <QuestionKindBadge key={attempt.attempt_id} kind="clues" />
+          <div className="mb-2 flex min-h-[42px] items-center justify-start">
+            {badgeVisible && <QuestionKindBadge key={attempt.attempt_id} kind="clues" />}
           </div>
           <WhoAmIClueLadder
             clues={clues.map((clue, i) => ({
