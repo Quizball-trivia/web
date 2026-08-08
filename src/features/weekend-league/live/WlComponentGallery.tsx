@@ -78,8 +78,10 @@ function PutInOrderRevealDemo() {
   return (
     <div key={run}>
       <Frame>
-        <div className="mb-2 flex items-center justify-start">
-          <QuestionKindBadge kind="putInOrder" />
+        <div className="relative z-10 flex min-h-[42px] items-center justify-start pl-3">
+          <div className="translate-y-4">
+            <QuestionKindBadge kind="putInOrder" />
+          </div>
         </div>
         <QuestionCard>დაალაგე ეს გადასვლები ტრანსფერის თანხის მიხედვით (მაღლიდან დაბლისკენ)</QuestionCard>
         <PutInOrderBoard
@@ -384,8 +386,10 @@ export function WlComponentGallery({
       id: 'whoami', label: 'Who am I ladder', group: 'Question bodies',
       render: () => (
         <Frame>
-          <div className="mb-2 flex items-center justify-start">
-            <QuestionKindBadge kind="clues" />
+          <div className="relative z-10 flex min-h-[42px] items-center justify-start pl-3">
+            <div className="translate-y-7">
+              <QuestionKindBadge kind="clues" />
+            </div>
           </div>
           <WhoAmIClueLadder
             clues={[
