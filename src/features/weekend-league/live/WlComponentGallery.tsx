@@ -10,6 +10,7 @@ import { RotateCcw, X } from 'lucide-react';
 import { CheckInPanel } from '../components/CheckInPanel';
 import { MoneyDropBoard } from '../gauntlet/MoneyDropBoard';
 import { PutInOrderBoard } from '../gauntlet/PutInOrderBoard';
+import { CutlineBoard, RankDeltaMoment, RankStatusStrip, type CutBoardRow } from '../gauntlet/RankStatus';
 import { QuestionKindBadge } from '@/features/possession/components/live-special/shared';
 import { LeagueCountdown } from '../components/LeagueCountdown';
 import { LiveBadge } from '../components/LiveBadge';
@@ -56,6 +57,76 @@ const BOARD = [
 ];
 
 type Entry = { id: string; label: string; group: string; render: () => React.ReactNode };
+
+const CUT_FIELD = 120;
+const CUT = 60;
+
+function cutBoard(youRank: number): CutBoardRow[] {
+  const names = ['BOBBIGOL', 'ZAQOO', 'TOTTI10', 'NIKA77', 'GIO_BEQA', 'TALAKHA', 'RAMOS248', 'ELOSHA69', 'GRANDIOZA', 'SILVIO'];
+  return Array.from({ length: CUT_FIELD }, (_, i) => {
+    const rank = i + 1;
+    return {
+      user_id: rank === youRank ? 'sim-you' : `p${rank}`,
+      nickname: rank === youRank ? 'შენ' : `${names[rank % names.length]}${rank}`,
+      points: Math.max(0, 640 - rank * 5 - (rank % 7)),
+      rank,
+    };
+  });
+}
+
+/** The full loop: answer → verdict → rank move → strip updates. Replayable
+ *  from both a safe and a danger starting position. */
+function RankFlowSim({ phone }: { phone: boolean }) {
+  const [state, setState] = useState<{ from: number; to: number; revealed: boolean; passed: string[] }>(
+    { from: 66, to: 66, revealed: false, passed: [] },
+  );
+  const answer = (correct: boolean) => {
+    const from = state.revealed ? state.to : state.from;
+    const to = correct
+      ? Math.max(1, from - (3 + Math.floor(from / 30)))
+      : Math.min(CUT_FIELD, from + 4);
+    const passed = correct
+      ? cutBoard(99).filter((r) => r.rank >= to && r.rank < from).slice(0, 3).map((r) => r.nickname)
+      : cutBoard(99).filter((r) => r.rank > from && r.rank <= to).slice(0, 3).map((r) => r.nickname);
+    setState({ from, to, revealed: true, passed });
+  };
+  const info = { rank: state.revealed ? state.to : state.from, field: CUT_FIELD, cut: CUT, delta: state.revealed ? state.from - state.to : 0 };
+  return (
+    <div className={phone ? 'mx-auto w-[375px] rounded-[28px] border border-white/15 px-3 py-4' : ''}>
+      <RankStatusStrip {...info} />
+      <div className="mt-3">
+        <QuestionCard>ზიდანმა 2006 წლის ფინალში წითელი ბარათი მიიღო.</QuestionCard>
+      </div>
+      {state.revealed && (
+        <RankDeltaMoment
+          key={`${state.from}-${state.to}`}
+          fromRank={state.from}
+          toRank={state.to}
+          info={info}
+          passedNames={state.passed}
+        />
+      )}
+      <div className="mt-4">
+        <CutlineBoard board={cutBoard(state.revealed ? state.to : state.from)} selfUserId="sim-you" cut={CUT} />
+      </div>
+      <div className="mt-4 flex justify-center gap-2">
+        <button type="button" onClick={() => answer(true)}
+          className="rounded-lg bg-brand-green px-3 py-2 font-poppins text-[11px] font-black uppercase tracking-wide text-white hover:opacity-90">
+          სწორი პასუხი
+        </button>
+        <button type="button" onClick={() => answer(false)}
+          className="rounded-lg bg-brand-red-soft px-3 py-2 font-poppins text-[11px] font-black uppercase tracking-wide text-white hover:opacity-90">
+          არასწორი პასუხი
+        </button>
+        <button type="button" onClick={() => setState({ from: 66, to: 66, revealed: false, passed: [] })}
+          className="flex items-center gap-1.5 rounded-lg bg-brand-purple px-3 py-2 font-poppins text-[11px] font-black uppercase tracking-wide text-white hover:opacity-90">
+          <RotateCcw className="size-3.5" /> Replay
+        </button>
+      </div>
+    </div>
+  );
+}
+
 
 const PIO_ITEMS = [
   { id: 'p1', label: 'ჰაკიმ ზიეში', emoji: null },
@@ -447,6 +518,50 @@ export function WlComponentGallery({
     },
 
     // ── Boards & results ────────────────────────────────────────────────────
+    {
+      id: 'rank-strip', label: 'Rank strip (states)', group: 'Rank',
+      render: () => (
+        <Frame>
+          <div className="space-y-3">
+            <RankStatusStrip rank={12} field={120} cut={60} delta={3} />
+            <RankStatusStrip rank={55} field={120} cut={60} delta={-2} />
+            <RankStatusStrip rank={66} field={120} cut={60} delta={0} />
+          </div>
+        </Frame>
+      ),
+    },
+    {
+      id: 'rank-moment', label: 'Rank move (reveal beat)', group: 'Rank',
+      render: () => (
+        <Frame>
+          <div className="space-y-4">
+            <RankDeltaMoment fromRank={27} toRank={24} info={{ rank: 24, field: 120, cut: 60 }} passedNames={['NIKA77', 'ZAQOO', 'TALAKHA']} />
+            <RankDeltaMoment fromRank={58} toRank={63} info={{ rank: 63, field: 120, cut: 60 }} passedNames={['GIO_BEQA', 'RAMOS248']} />
+          </div>
+        </Frame>
+      ),
+    },
+    {
+      id: 'rank-cutline', label: 'Board with cut line', group: 'Rank',
+      render: () => (
+        <Frame>
+          <div className="flex flex-wrap items-start justify-center gap-6">
+            <div><p className="mb-2 text-center font-poppins text-[11px] font-black uppercase text-white/50">ზონაში (#57)</p>
+              <CutlineBoard board={cutBoard(57)} selfUserId="sim-you" cut={60} /></div>
+            <div><p className="mb-2 text-center font-poppins text-[11px] font-black uppercase text-white/50">ზონის მიღმა (#63)</p>
+              <CutlineBoard board={cutBoard(63)} selfUserId="sim-you" cut={60} /></div>
+          </div>
+        </Frame>
+      ),
+    },
+    {
+      id: 'rank-sim-mobile', label: 'Full sim (mobile)', group: 'Rank',
+      render: () => <Frame><RankFlowSim phone /></Frame>,
+    },
+    {
+      id: 'rank-sim-web', label: 'Full sim (web)', group: 'Rank',
+      render: () => <Frame><RankFlowSim phone={false} /></Frame>,
+    },
     {
       id: 'board', label: 'Standings board', group: 'Boards & results',
       render: () => <Frame>{boardStrip(BOARD, 'sim-you', 5)}</Frame>,
