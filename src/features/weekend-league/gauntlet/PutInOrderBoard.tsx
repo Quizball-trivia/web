@@ -240,7 +240,6 @@ export function PutInOrderBoard({
   const { t } = useLocale();
   const [order, setOrder] = useState<OrderItem[]>(() => [...items]);
   const [submitted, setSubmitted] = useState(false);
-  const touchedRef = useRef(false);
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 120, tolerance: 8 } }),
@@ -250,7 +249,6 @@ export function PutInOrderBoard({
 
   const onDragEnd = (e: DragEndEvent) => {
     if (!interactive || e.over == null || e.active.id === e.over.id) return;
-    touchedRef.current = true;
     setOrder((cur) => {
       const i = cur.findIndex((x) => x.id === e.active.id);
       const j = cur.findIndex((x) => x.id === e.over!.id);
@@ -264,13 +262,14 @@ export function PutInOrderBoard({
     onSubmit(order.map((x) => x.id));
   };
 
-  // Window closing: an arrangement the player worked on must not die unsent.
+  // Window closing: whatever is on the board goes in — ranked auto-submits
+  // the current arrangement even if it was never touched, and partial credit
+  // means an untouched board can still land positions.
   const orderRef = useRef(order);
   useEffect(() => { orderRef.current = order; }, [order]);
   const submitRef = useRef(false);
   useEffect(() => {
     if (!windowClosing || submitted || spectator || correctOrder != null || submitRef.current) return;
-    if (!touchedRef.current) return;
     submitRef.current = true;
     queueMicrotask(() => setSubmitted(true));
     onSubmit(orderRef.current.map((x) => x.id));
