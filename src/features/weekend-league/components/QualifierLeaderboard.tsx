@@ -61,11 +61,11 @@ export function QualifierLeaderboard({
       {/* eventMode={false}: the Weekend League has its own identity — it must not
           inherit the Betsson/World Cup event skin from the region hook. */}
       <div className="mb-5">
-        <LeaderboardPodium topThree={topThree} eventMode={false}  />
+        <LeaderboardPodium topThree={topThree} eventMode={false} medalColors />
       </div>
 
       {/* Points, not QP or RP: these are scored inside the weekend games. */}
-      <LeaderboardTable entries={shown} eventMode={false} />
+      <LeaderboardTable entries={shown} pointsLabel={t('weekendLeague.colPoints')} eventMode={false} />
 
       <div className="mt-2 flex items-center gap-2 rounded-[10px] bg-brand-gold/10 px-4 py-1.5">
         <span className="h-px flex-1 bg-brand-gold/40" />
@@ -79,7 +79,7 @@ export function QualifierLeaderboard({
       {youBelowFold && you && (
         <>
           <div className="py-1.5 text-center font-poppins text-lg leading-none text-white/25">···</div>
-          <LeaderboardTable entries={[you]} eventMode={false} />
+          <LeaderboardTable entries={[you]} pointsLabel={t('weekendLeague.colPoints')} eventMode={false} />
         </>
       )}
     </section>

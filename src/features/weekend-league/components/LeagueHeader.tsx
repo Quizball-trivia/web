@@ -10,8 +10,9 @@ import { LAUNCH_EDITION, poppins, QP_TARGET } from '../constants';
 import type { LeaguePhase, Milestone } from '../types';
 import { ScheduleTimeline } from './ScheduleTimeline';
 import { LeagueCountdown } from './LeagueCountdown';
+import { wlNow } from '../wlClock';
 import { JoinLeagueButton } from './JoinLeagueButton';
-import { DropInBadge } from './DropInBadge';
+import { DropInBadge } from '@/features/auction/components/shared/DropInBadge';
 
 /**
  * The league card: identity on the left, qualification status and the primary
@@ -50,7 +51,7 @@ export function LeagueHeader({
   onEnter?: () => void;
   onPlayRanked?: () => void;
 }) {
-  const { t, locale } = useLocale();
+  const { t } = useLocale();
 
   // ── The join moment ──
   // Entering SPENDS the QP balance on the ticket: the bar drains to zero and
@@ -281,28 +282,31 @@ export function LeagueHeader({
           </AnimatePresence>
 
           <div className="mt-4">
+            {/* Count to the boundary where this SCREEN actually changes: while
+                entry is open that is entry-close (check-in opens and the page
+                flips to "join") — counting to kickoff here left ~the whole
+                check-in window on the clock at the moment of the jump. */}
+            {/* While the server still says entry_open the clock stays on the
+                entry boundary — clamped at 00:00 once passed — NEVER retargeted
+                to kickoff: that restarted the countdown for the few seconds
+                until the poll flipped the card (rehearsal report). */}
             <div className={`text-center font-poppins text-[10px] font-black uppercase tracking-[0.16em] transition-colors duration-700 ${gold ? 'text-black/55' : 'text-white/60'}`}>
-              {t('weekendLeague.startsIn')}
+              {phase === 'entry_open'
+                ? t('weekendLeague.checkinOpensIn')
+                : t('weekendLeague.startsIn')}
             </div>
             {milestones && (
-              <>
-                <div className="mt-2 flex justify-center">
-                  <LeagueCountdown
-                    targetMs={milestones.qualifier.targetMs}
-                    size="sm"
-                    accent={gold ? 'text-black/90' : 'text-white'}
-                    labelClass={gold ? 'text-black/55' : 'text-white/70'}
-                    plain
-                  />
-                </div>
-                {/* The concrete date, so nobody has to do countdown math to
-                    know the first event is NEXT Saturday. */}
-                <div className={`mt-1.5 text-center font-poppins text-[12px] font-bold ${gold ? 'text-black/70' : 'text-white/70'}`}>
-                  {new Intl.DateTimeFormat(locale === 'ka' ? 'ka-GE' : 'en-GB', {
-                    timeZone: 'Asia/Tbilisi', weekday: 'long', day: 'numeric', month: 'long',
-                  }).format(milestones.qualifier.targetMs)} · {milestones.qualifier.timeLabel}
-                </div>
-              </>
+              <div className="mt-2 flex justify-center">
+                <LeagueCountdown
+                  targetMs={phase === 'entry_open'
+                    ? milestones.entry.targetMs
+                    : milestones.qualifier.targetMs}
+                  size="sm"
+                  accent={gold ? 'text-black/90' : 'text-white'}
+                  labelClass={gold ? 'text-black/55' : 'text-white/70'}
+                  plain
+                />
+              </div>
             )}
 
             <AnimatePresence initial={false}>

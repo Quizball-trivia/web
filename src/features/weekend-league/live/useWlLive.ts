@@ -60,6 +60,8 @@ export interface WlLiveState {
   lastAck: WlAnswerAck | null;
   /** Bumps when a rejected ack unlocks the question — UIs reset their choice. */
   retryNonce: number;
+  /** Snapshot-restored money-drop budget for a specific attempt (reconnects). */
+  snapshotMoneyBudget: { attemptId: string; budget: number } | null;
 }
 
 export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): WlLiveState {
@@ -70,6 +72,7 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
   const [screen, setScreen] = useState<WlLiveScreen>({ kind: 'waiting' });
   const [board, setBoard] = useState<WlBoardRow[]>([]);
   const [score, setScore] = useState(0);
+  const [snapshotMoneyBudget, setSnapshotMoneyBudget] = useState<{ attemptId: string; budget: number } | null>(null);
   const [gameIndex, setGameIndex] = useState(0);
   const [lastAck, setLastAck] = useState<WlAnswerAck | null>(null);
   const [retryNonce, setRetryNonce] = useState(0);
@@ -175,15 +178,12 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
       }
       setGameIndex(attempt.game_index);
       clearPendingQuestion();
-      // If a reveal is on screen, hold it through the dispatch lead — the
-      // question isn't answerable before playableAt anyway, so the correct
-      // answer stays readable instead of flashing away.
-      const leadMs = attempt.playableAt - serverNow();
-      if (screenRef.current.kind === 'reveal' && leadMs > 150) {
-        pendingQuestionTimerRef.current = setTimeout(() => showQuestion(attempt), leadMs);
-      } else {
-        apply({ kind: 'question', attempt, answer: answeredRef.current });
-      }
+      // Show the new question IMMEDIATELY: the dispatch lead IS the reading
+      // grace (timer held at full until playableAt), and round intros render
+      // inside it. Holding the old reveal here consumed the entire lead and
+      // no player ever saw the grace. The round-end standings beat is
+      // protected server-side by the 6s breather, not by this hold.
+      apply({ kind: 'question', attempt, answer: answeredRef.current });
     };
 
     const onReveal = (event: WlRevealEventPayload) => {
@@ -224,6 +224,12 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
     const onGameResult = (event: WlGameResultEventPayload) => {
       if (!accept(event)) return;
       setBoard(event.board ?? []);
+      // The board is absolute — reconcile the local ack-sum with our own row
+      // (server-side awards, e.g. a voided final money-drop slot, have no ack).
+      const mine = selfUserId != null
+        ? (event.board ?? []).find((r) => r.user_id === selfUserId)
+        : undefined;
+      if (mine) setScore(mine.points);
       currentAttemptRef.current = null;
       clearPendingQuestion();
       const eliminated =
@@ -267,6 +273,9 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
         clockOffsetRef.current,
         snapshot.server_now - Date.now(),
       );
+      if (snapshot.attempt != null && typeof snapshot.money_budget === 'number') {
+        setSnapshotMoneyBudget({ attemptId: snapshot.attempt.attempt_id, budget: snapshot.money_budget });
+      }
       // Room events can beat the ack callback (the server emits to the room
       // the moment we join, before the ack round-trips). If ANY event has
       // arrived since this subscribe was sent, the live stream is ahead of
@@ -359,7 +368,17 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
     const subscribe = () => {
       eventSinceSubscribeRef.current = false;
       voidSinceSubscribeRef.current = false;
-      socket.emit('wl:subscribe', { tournament_id: tournamentId, role }, (result) => {
+      // A resubscribe reports the last seq this client actually received so
+      // the server backfills events broadcast while the socket was down.
+      // Best-effort: if a newer live event races ahead of the backfill the
+      // monotonic gate below drops the replay, which is exactly today's
+      // behavior — screens are absolute payloads and self-heal on the next
+      // event, so no ordering machinery is worth the race-defense cost here.
+      socket.emit('wl:subscribe', {
+        tournament_id: tournamentId,
+        role,
+        ...(lastSeqRef.current > 0 ? { last_seq: lastSeqRef.current } : {}),
+      }, (result) => {
         if (disposed) return;
         if (!result.ok) {
           setDenied(result.reason ?? 'invalid');
@@ -470,8 +489,11 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
             inFlightRef.current = null;
             setLastAck(ack);
             const cur = screenRef.current;
+            // A reveal can race ahead of the ack — the late ack must still
+            // land on the reveal screen so the personal verdict shows.
             const onThisQuestion =
-              cur.kind === 'question' && cur.attempt.attempt_id === attemptId;
+              (cur.kind === 'question' && cur.attempt.attempt_id === attemptId)
+              || (cur.kind === 'reveal' && cur.reveal.attempt_id === attemptId);
             if (ack.accepted || ack.reason === 'duplicate') {
               answeredRef.current = ack;
               if (ack.accepted && !scoredRef.current.has(attemptId)) {
@@ -515,7 +537,8 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
       submitAnswer,
       lastAck,
       retryNonce,
+      snapshotMoneyBudget,
     }),
-    [connected, subscribed, denied, screen, board, score, gameIndex, serverNow, submitAnswer, lastAck, retryNonce],
+    [connected, subscribed, denied, screen, board, score, gameIndex, serverNow, submitAnswer, lastAck, retryNonce, snapshotMoneyBudget],
   );
 }

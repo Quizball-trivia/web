@@ -1,7 +1,7 @@
 // Saturday qualifier gauntlet — 3 games of 5 rounds; the field only shrinks
 // between games. Frontend prototype: mock data + local state only.
 
-export type RoundType = 'trueFalse' | 'higherLower' | 'mcq' | 'careerPath' | 'whoAmI';
+export type RoundType = 'trueFalse' | 'higherLower' | 'mcq' | 'careerPath' | 'whoAmI' | 'moneyDrop' | 'putInOrder';
 
 export interface GameDef {
   /** 0-based game index. */

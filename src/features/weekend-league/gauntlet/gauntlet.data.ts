@@ -6,23 +6,39 @@ import type {
   StandingsRow,
 } from './gauntlet.types';
 
-/** Reference ladder at the design field size (600 → 200 → 100 → 25). */
-export const GAMES: GameDef[] = [
-  { index: 0, players: 600, advance: 200 },
-  { index: 1, players: 200, advance: 100 },
-  { index: 2, players: 100, advance: 25 },
-];
-
-/** Finalists are always 25 — the Sunday final has a fixed size. */
-export const FINALISTS = 25;
+/** Finalists — must equal the backend's WL_FINALISTS. */
+// Must equal the backend's WL_FINALISTS (wl-rules.ts) — the ladder below is a
+// mirror of wlBuildLadder, so a mismatch shows players the wrong cut numbers.
+export const FINALISTS = 24;
 
 /**
- * Build the three-game ladder for whatever field actually turned up. Each game
- * cuts the field by a third (600→200→100 at the design size), and the last game
- * always lands on 25 finalists. Small fields collapse gracefully: the ladder
- * never advances more players than are playing, and never fewer than the
- * finalist count once we're at that stage.
+ * The qualifier ladder — a MIRROR of the backend `wlBuildLadder` (wl-rules.ts).
+ * Every game must eliminate someone: big fields keep the product shape
+ * ONE continuous rule, identical to the backend's wlBuildLadder: the gentler of
+ * the product shape (n/3, n/6) and an equal-ratio spread, so large fields land
+ * near 600 -> 205 -> 100 -> 24 and small ones spread (54 -> 41 -> 31 -> 24)
+ * without a discontinuity when one extra player joins. Fields too small for
+ * three cuts to 24 end just below it. Keep the two implementations in step.
  */
+export function wlLadder(fieldSize: number): [number, number, number] {
+  const n = Math.max(0, Math.floor(fieldSize));
+  if (n <= 3) return [n, n, n];
+
+  const finalTarget = Math.min(FINALISTS, n - 3);
+  const ratio = Math.pow(finalTarget / n, 1 / 3);
+  const a1 = Math.min(
+    n - 1,
+    Math.max(finalTarget + 2, Math.round(n / 3), Math.round(n * ratio)),
+  );
+  const a2 = Math.min(
+    a1 - 1,
+    Math.max(finalTarget + 1, Math.round(n / 6), Math.round(n * ratio * ratio)),
+  );
+  return [a1, a2, finalTarget];
+}
+
+/** Reference ladder at the design field size — derived, never hand-written,
+ *  so it cannot drift from the rules. Declared after buildGames (TDZ). */
 export function buildGames(fieldSize: number, singleGame = false): GameDef[] {
   // Sunday's final is one game that crowns a champion, not an elimination ladder.
   if (singleGame) {
@@ -30,19 +46,16 @@ export function buildGames(fieldSize: number, singleGame = false): GameDef[] {
     return [{ index: 0, players, advance: 1 }];
   }
 
-  const players = Math.max(FINALISTS + 1, Math.round(fieldSize));
-
-  // Game 3 always ends at 25. Work backwards with a ~2x cut per game, but never
-  // below the finalist count and never above the field.
-  const g3Players = Math.max(FINALISTS + 1, Math.min(players, Math.round(players / 6)));
-  const g2Players = Math.max(g3Players, Math.min(players, Math.round(players / 3)));
-
+  const players = Math.max(4, Math.round(fieldSize));
+  const [a1, a2, a3] = wlLadder(players);
   return [
-    { index: 0, players, advance: g2Players },
-    { index: 1, players: g2Players, advance: g3Players },
-    { index: 2, players: g3Players, advance: Math.min(FINALISTS, g3Players - 1) },
+    { index: 0, players, advance: a1 },
+    { index: 1, players: a1, advance: a2 },
+    { index: 2, players: a2, advance: a3 },
   ];
 }
+
+export const GAMES: GameDef[] = buildGames(600);
 
 // Timings mirror ranked (backend `QUESTION_TIME_MS` = 10s per question, and
 // clues run 10s per clue). Multi-question rounds carry 5 × 10s; the clue round
@@ -51,11 +64,12 @@ const SECONDS_PER_QUESTION = 10;
 const QUESTIONS_PER_ROUND = 5;
 const ROUND_SECONDS = SECONDS_PER_QUESTION * QUESTIONS_PER_ROUND;
 
+// maxPoints mirror the backend exactly: 5×30, 5×30, 5×40, 5×40, 300 puzzle.
 export const ROUNDS: RoundDef[] = [
-  { index: 0, type: 'trueFalse', maxPoints: 100, seconds: ROUND_SECONDS, label: 'True or False' },
-  { index: 1, type: 'higherLower', maxPoints: 150, seconds: ROUND_SECONDS, label: 'Higher or Lower' },
+  { index: 0, type: 'trueFalse', maxPoints: 150, seconds: ROUND_SECONDS, label: 'True or False' },
+  { index: 1, type: 'putInOrder', maxPoints: 150, seconds: ROUND_SECONDS * 2, label: 'Put In Order' },
   { index: 2, type: 'mcq', maxPoints: 200, seconds: ROUND_SECONDS, label: 'Multiple Choice' },
-  { index: 3, type: 'careerPath', maxPoints: 250, seconds: ROUND_SECONDS, label: 'Career Path' },
+  { index: 3, type: 'careerPath', maxPoints: 200, seconds: ROUND_SECONDS, label: 'Career Path' },
   { index: 4, type: 'whoAmI', maxPoints: 300, seconds: ROUND_SECONDS, label: 'Who Am I?' },
 ];
 
@@ -65,6 +79,8 @@ export const ROUND_LABEL_KEYS: Record<string, MessageKey> = {
   mcq: 'weekendLeague.rMcq',
   careerPath: 'weekendLeague.rCareerPath',
   whoAmI: 'weekendLeague.rWhoAmI',
+  moneyDrop: 'weekendLeague.rMoneyDrop',
+  putInOrder: 'weekendLeague.rPutInOrder',
 };
 
 export const BREAK_SECONDS = 120;
