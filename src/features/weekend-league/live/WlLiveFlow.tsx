@@ -1022,8 +1022,12 @@ function QuestionScreen({
         )}
         {attempt.kind === 'put_in_order' && (
           <>
-            <div className="mb-2 flex min-h-[42px] items-center justify-start">
-              {!showRoundIntro && <QuestionKindBadge key={attempt.attempt_id} kind="putInOrder" />}
+            <div className="relative z-10 flex min-h-[42px] items-center justify-start pl-3">
+              {!showRoundIntro && (
+                <div className="translate-y-4">
+                  <QuestionKindBadge key={attempt.attempt_id} kind="putInOrder" />
+                </div>
+              )}
             </div>
             <QuestionCard>{pick(q['prompt'], locale)}</QuestionCard>
             <GraceReveal ready={ready || revealed}>
@@ -1383,8 +1387,12 @@ function WhoAmIQuestion({
     <TypedKindQuestion
       card={
         <>
-          <div className="mb-2 flex min-h-[42px] items-center justify-start">
-            {badgeVisible && <QuestionKindBadge key={attempt.attempt_id} kind="clues" />}
+          <div className="relative z-10 flex min-h-[42px] items-center justify-start pl-3">
+            {badgeVisible && (
+              <div className="translate-y-7">
+                <QuestionKindBadge key={attempt.attempt_id} kind="clues" />
+              </div>
+            )}
           </div>
           <WhoAmIClueLadder
             clues={clues.map((clue, i) => ({
