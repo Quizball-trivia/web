@@ -158,9 +158,14 @@ export function WlLiveFlowView({
   if (live.screen.kind === 'question' && yourRow?.rank != null && rankMark?.key !== screenK) {
     setRankMark({ key: screenK, rank: yourRow.rank });
   }
-  const rankDelta = live.screen.kind === 'reveal' && rankMark?.key === screenK && yourRow?.rank != null
-    ? rankMark.rank - yourRow.rank
-    : 0;
+  // The move persists through the NEXT question (always-on arrows / dash on
+  // the pill and card), refreshing at every reveal.
+  const [lastMove, setLastMove] = useState<{ key: string; delta: number } | null>(null);
+  if (live.screen.kind === 'reveal' && rankMark?.key === screenK && yourRow?.rank != null
+    && lastMove?.key !== screenK) {
+    setLastMove({ key: screenK, delta: rankMark.rank - yourRow.rank });
+  }
+  const rankDelta = lastMove?.delta ?? 0;
   const rankInfo: RankInfo | null = yourRow?.rank != null && rankField > 0 && rankCut > 0
     ? { rank: yourRow.rank, field: rankField, cut: rankCut, delta: rankDelta }
     : null;
@@ -563,7 +568,15 @@ function ScreenBody({
             finalRank={lastResult != null ? rank : null}
             score={score}
             deadlineMs={breakUntilMs}
-            board={<BoardStrip board={board} selfUserId={selfUserId} rows={24} yourRankFallback={lastGameRank} />}
+            board={
+              <BreakBoard
+                board={board}
+                selfUserId={selfUserId}
+                score={score}
+                rankInfo={rankInfo}
+                yourRankFallback={lastGameRank}
+              />
+            }
           />
         );
       }
@@ -722,6 +735,7 @@ function ScreenBody({
           originalField={checkedInCount}
           board={board}
           selfUserId={selfUserId}
+          rankInfo={rankInfo}
           onExit={onExit}
           onSpectate={onSpectate}
         />
@@ -856,7 +870,7 @@ function BreakCountdown({ deadlineMs }: { deadlineMs: number }) {
  *  the survived/eliminated result — the same components /dev/wl-gauntlet
  *  renders, fed by the live game_result payload. */
 function LiveGameResult({
-  result, eliminated, yourRank, score, breakUntilMs, originalField, board, selfUserId, onExit, onSpectate,
+  result, eliminated, yourRank, score, breakUntilMs, originalField, board, selfUserId, rankInfo, onExit, onSpectate,
 }: {
   result: { game_index: number; field?: number; advanced?: number | null };
   eliminated: boolean;
@@ -867,6 +881,7 @@ function LiveGameResult({
   originalField: number;
   board: WlBoardRow[];
   selfUserId: string | null;
+  rankInfo: RankInfo | null;
   onExit: () => void;
   onSpectate: () => void;
 }) {
@@ -902,7 +917,15 @@ function LiveGameResult({
         finalRank={yourRank}
         score={score}
         deadlineMs={breakUntilMs}
-        board={<BoardStrip board={board} selfUserId={selfUserId} rows={24} yourRankFallback={yourRank} />}
+        board={
+          <BreakBoard
+            board={board}
+            selfUserId={selfUserId}
+            score={score}
+            rankInfo={rankInfo}
+            yourRankFallback={yourRank}
+          />
+        }
       />
     );
   }
@@ -1498,6 +1521,32 @@ function RevealScreen({
       <BoardStrip board={board} selfUserId={selfUserId} />
     </div>
     </div>
+  );
+}
+
+/** Break-screen standings: YOUR card first (as on /leaderboard), then the
+ *  top-24 — the one place the full board takes the stage. */
+function BreakBoard({
+  board, selfUserId, score, rankInfo, yourRankFallback,
+}: {
+  board: WlBoardRow[];
+  selfUserId: string | null;
+  score: number;
+  rankInfo: RankInfo | null;
+  yourRankFallback: number | null;
+}) {
+  const { t } = useLocale();
+  const cardInfo = rankInfo
+    ?? (yourRankFallback != null ? { rank: yourRankFallback, field: 0, cut: Number.MAX_SAFE_INTEGER, delta: 0 } : null);
+  return (
+    <>
+      {cardInfo != null && (
+        <div className="mx-auto mt-4 w-full max-w-sm">
+          <YourRankCard nickname={t('weekendLeague.gYou')} points={score} info={cardInfo} />
+        </div>
+      )}
+      <BoardStrip board={board} selfUserId={selfUserId} rows={24} yourRankFallback={yourRankFallback} />
+    </>
   );
 }
 

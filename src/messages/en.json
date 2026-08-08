@@ -1751,6 +1751,7 @@
     "gGameN": "Game {n}",
     "gPlayersCount": "{count} players registered",
     "gCorrectOrder": "Correct order",
+    "gPointsWord": "{n} pts",
     "gRoundWord": "Round",
     "entryClosedToast": "Entry is closed for this event",
     "entryFailedToast": "Could not claim your entry — try again",

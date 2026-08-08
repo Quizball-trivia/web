@@ -39,6 +39,7 @@ export function GauntletHeader({
 }) {
   const { t } = useLocale();
   void gameIndex; // kept in the API for callers; the meta line that used it is gone
+  void rank; // rank lives in the RankPill now; prop kept for callers
   return (
     <div>
       <DailyChallengeHeader
@@ -63,10 +64,8 @@ export function GauntletHeader({
       ) : (
         <div className="mx-auto mt-2 flex max-w-3xl items-center justify-between gap-2 px-4 font-poppins text-[11px] font-bold uppercase tracking-wide text-white/50">
           <span>{rankPill}</span>
-          <span className="tabular-nums text-white/80">
-            {rank != null
-              ? t('weekendLeague.gScoreRank', { score, rank })
-              : t('weekendLeague.gPlusPoints', { n: score })}
+          <span className="font-poppins text-[15px] font-black tabular-nums text-white">
+            {t('weekendLeague.gPointsWord', { n: score })}
           </span>
         </div>
       )}
