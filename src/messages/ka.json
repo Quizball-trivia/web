@@ -1751,6 +1751,7 @@
     "gGameN": "თამაში {n}",
     "gPlayersCount": "დარეგისტრირებულია {count} მოთამაშე",
     "gCorrectOrder": "სწორი თანმიმდევრობა",
+    "gPointsWord": "{n} ქულა",
     "gRoundWord": "რაუნდი",
     "entryClosedToast": "ამ ივენთზე რეგისტრაცია დახურულია",
     "entryFailedToast": "რეგისტრაცია ვერ მოხერხდა — სცადე თავიდან",

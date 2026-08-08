@@ -43,7 +43,9 @@ const ZONE_STYLE: Record<ZoneTone, { wrap: string; chip: string }> = {
 };
 
 function DeltaChip({ delta }: { delta?: number }) {
-  if (!delta) return null;
+  if (!delta) {
+    return <Minus className="size-4 text-white/40" strokeWidth={3} />;
+  }
   const up = delta > 0;
   return (
     <motion.span
@@ -78,7 +80,7 @@ export function RankPill(info: RankInfo) {
         #{info.rank}
       </span>
       <span className={cn('font-poppins text-[10px] font-bold tabular-nums', f.dim)}>/{info.field}</span>
-      {info.delta != null && info.delta !== 0 && (
+      {info.delta != null && info.delta !== 0 ? (
         <motion.span
           key={info.delta}
           initial={{ y: info.delta > 0 ? 6 : -6, opacity: 0 }}
@@ -90,6 +92,8 @@ export function RankPill(info: RankInfo) {
             : <ArrowDown className="size-3" strokeWidth={3.5} />}
           {Math.abs(info.delta)}
         </motion.span>
+      ) : (
+        <Minus className={cn('size-3', f.dim)} strokeWidth={3} />
       )}
     </span>
   );
