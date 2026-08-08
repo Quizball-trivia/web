@@ -1737,15 +1737,6 @@
     "hidden": true
   },
   {
-    "id": "wl-lanceros-boyaca",
-    "label": "Lanceros Boyacá",
-    "value": "Lanceros Boyacá",
-    "country": "",
-    "logo": "wl-lanceros-boyaca.png",
-    "primaryColor": "#1f2937",
-    "hidden": true
-  },
-  {
     "id": "wl-lech-poznan",
     "label": "Lech Poznań",
     "value": "Lech Poznań",
