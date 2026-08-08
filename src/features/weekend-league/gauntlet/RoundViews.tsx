@@ -41,7 +41,9 @@ export function RoundScreenShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen flex-col pb-10">
+    // pb clears the fixed mobile/tablet bottom nav (xl:hidden in AppShell) —
+    // without it the last MCQ option hides under the tab bar on phones.
+    <div className="flex min-h-screen flex-col pb-28 xl:pb-10">
       <GauntletHeader {...header} />
       <div className="relative mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 pt-3">
         <RoundProgressDashes round={header.round} />

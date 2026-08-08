@@ -1239,7 +1239,7 @@ function McqQuestion({
         <img
           src={image.url}
           alt=""
-          className="mx-auto mt-4 max-h-56 w-auto max-w-full rounded-xl object-contain"
+          className="mx-auto mt-4 max-h-44 w-auto max-w-full rounded-xl object-contain sm:max-h-56"
         />
       )}
       <GraceReveal ready={grace !== true}>
