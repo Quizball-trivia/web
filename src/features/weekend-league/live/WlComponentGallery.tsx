@@ -10,7 +10,7 @@ import { RotateCcw, X } from 'lucide-react';
 import { CheckInPanel } from '../components/CheckInPanel';
 import { MoneyDropBoard } from '../gauntlet/MoneyDropBoard';
 import { PutInOrderBoard } from '../gauntlet/PutInOrderBoard';
-import { CutlineBoard, RankDeltaMoment, RankPill, type CutBoardRow } from '../gauntlet/RankStatus';
+import { CutlineBoard, RankDeltaMoment, RankPill, SideLeaderboard, YourRankCard, type CutBoardRow } from '../gauntlet/RankStatus';
 import { QuestionKindBadge } from '@/features/possession/components/live-special/shared';
 import { LeagueCountdown } from '../components/LeagueCountdown';
 import { LiveBadge } from '../components/LiveBadge';
@@ -61,81 +61,104 @@ type Entry = { id: string; label: string; group: string; render: () => React.Rea
 const CUT_FIELD = 120;
 const CUT = 60;
 
-function cutBoard(youRank: number): CutBoardRow[] {
+function cutBoard(): CutBoardRow[] {
   const names = ['BOBBIGOL', 'ZAQOO', 'TOTTI10', 'NIKA77', 'GIO_BEQA', 'TALAKHA', 'RAMOS248', 'ELOSHA69', 'GRANDIOZA', 'SILVIO'];
-  return Array.from({ length: CUT_FIELD }, (_, i) => {
+  return Array.from({ length: CUT_FIELD - 1 }, (_, i) => {
     const rank = i + 1;
     return {
-      user_id: rank === youRank ? 'sim-you' : `p${rank}`,
-      nickname: rank === youRank ? 'შენ' : `${names[rank % names.length]}${rank}`,
+      user_id: `p${rank}`,
+      nickname: `${names[rank % names.length]}${rank}`,
       points: Math.max(0, 640 - rank * 5 - (rank % 7)),
       rank,
     };
   });
 }
 
-/** The full loop inside the REAL question chrome: header, dashes, pill by
- *  the score line, answer → verdict colors → rank beat → cut-line board. */
-function RankFlowSim({ phone }: { phone: boolean }) {
-  const [state, setState] = useState<{ from: number; to: number; picked: 'a' | 'b' | null; passed: string[] }>(
-    { from: 62, to: 62, picked: null, passed: [] },
-  );
-  const revealed = state.picked != null;
-  const correct = state.picked === 'a';
+function boardWithYou(yourRank: number): CutBoardRow[] {
+  const others = cutBoard();
+  const rows = [...others.map((r) => ({ ...r }))];
+  rows.splice(yourRank - 1, 0, { user_id: 'sim-you', nickname: 'შენ', points: 641 - yourRank * 5, rank: 0 });
+  return rows.map((r, i) => ({ ...r, rank: i + 1 }));
+}
+
+/** Shared sim state: your points move the board; ranks recompute; the side
+ *  board layout-animates so movement is visible the moment you answer. */
+function useRankSim() {
+  const [you, setYou] = useState({ points: 312, prevRank: 0, picked: null as null | 'a' | 'b' });
+  const others = cutBoard();
+  const rows = [
+    ...others.filter((r) => r.user_id !== 'sim-you'),
+    { user_id: 'sim-you', nickname: 'შენ', points: you.points, rank: 0 },
+  ]
+    .sort((a, b) => b.points - a.points)
+    .map((r, i) => ({ ...r, rank: i + 1 }));
+  const yourRank = rows.find((r) => r.user_id === 'sim-you')!.rank;
   const answer = (key: 'a' | 'b') => {
-    if (revealed) return;
-    const from = state.from;
-    const good = key === 'a';
-    const to = good ? Math.max(1, from - 5) : Math.min(CUT_FIELD, from + 4);
-    const pool = cutBoard(99);
-    const passed = good
-      ? pool.filter((r) => r.rank >= to && r.rank < from).slice(0, 3).map((r) => r.nickname)
-      : pool.filter((r) => r.rank > from && r.rank <= to).slice(0, 3).map((r) => r.nickname);
-    setState({ from, to, picked: key, passed });
+    if (you.picked) return;
+    setYou({ points: you.points + (key === 'a' ? 30 : 0), prevRank: yourRank, picked: key });
   };
-  const rank = revealed ? state.to : state.from;
-  const info = { rank, field: CUT_FIELD, cut: CUT, delta: revealed ? state.from - state.to : 0 };
+  const reset = () => setYou({ points: 312, prevRank: 0, picked: null });
+  const revealed = you.picked != null;
+  const delta = revealed ? you.prevRank - yourRank : 0;
+  return { rows, yourRank, yourPoints: you.points, revealed, correct: you.picked === 'a', delta, answer, reset };
+}
+
+function SimQuestion({ sim, pillTopLeft }: { sim: ReturnType<typeof useRankSim>; pillTopLeft: boolean }) {
+  const info = { rank: sim.yourRank, field: CUT_FIELD, cut: CUT, delta: sim.delta };
   return (
-    <div className={phone ? 'mx-auto w-[375px] rounded-[28px] border border-white/15 py-3' : ''}>
+    <div>
       <GauntletHeader
-        gameIndex={0} round={ROUND} score={revealed && correct ? 130 : 100} rank={rank}
-        secondsLeft={revealed ? 0 : 7} step="3/5" onQuit={noop}
+        gameIndex={0} round={ROUND} score={sim.yourPoints} rank={sim.yourRank}
+        secondsLeft={sim.revealed ? 0 : 7} step="3/5" onQuit={noop}
       />
-      {/* The pill rides the same right-aligned line the score uses today. */}
-      <div className="mx-auto -mt-1 flex max-w-3xl items-center justify-end px-4">
-        <RankPill {...info} />
-      </div>
+      {pillTopLeft && (
+        <div className="mx-auto -mt-1 flex max-w-3xl items-center justify-start px-4">
+          <RankPill {...info} />
+        </div>
+      )}
       <div className="mx-auto mt-2 w-full max-w-3xl px-4">
         <QuestionCard>ზიდანმა 2006 წლის ფინალში წითელი ბარათი მიიღო.</QuestionCard>
         <PairAnswers
           choices={[
-            { key: 'a', label: 'მართალია', state: revealed ? (correct ? 'correct' : 'faded') : 'idle' },
-            { key: 'b', label: 'მცდარია', state: revealed ? (correct ? 'faded' : 'wrong') : 'idle' },
+            { key: 'a', label: 'მართალია', state: sim.revealed ? (sim.correct ? 'correct' : 'faded') : 'idle' },
+            { key: 'b', label: 'მცდარია', state: sim.revealed ? (sim.correct ? 'faded' : 'wrong') : 'idle' },
           ]}
-          disabled={revealed}
-          onPick={(key) => answer(key as 'a' | 'b')}
+          disabled={sim.revealed}
+          onPick={(key) => sim.answer(key as 'a' | 'b')}
         />
-        {revealed && (
-          <RankDeltaMoment
-            key={`${state.from}-${state.to}`}
-            fromRank={state.from}
-            toRank={state.to}
-            info={info}
-            passedNames={state.passed}
-          />
-        )}
-        {revealed && (
-          <div className="mt-4">
-            <CutlineBoard board={cutBoard(state.to)} selfUserId="sim-you" cut={CUT} window={2} />
-          </div>
-        )}
         <div className="mt-4 flex justify-center">
-          <button type="button" onClick={() => setState({ from: 62, to: 62, picked: null, passed: [] })}
+          <button type="button" onClick={sim.reset}
             className="flex items-center gap-1.5 rounded-lg bg-brand-purple px-3 py-2 font-poppins text-[11px] font-black uppercase tracking-wide text-white hover:opacity-90">
             <RotateCcw className="size-3.5" /> Replay
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+/** WEB: question left, docked realtime board right — your card pinned on
+ *  top, full field scrollable underneath with the cut line drawn. */
+function RankSimWeb() {
+  const sim = useRankSim();
+  return (
+    <div className="mx-auto grid w-full max-w-6xl grid-cols-[minmax(0,1fr)_300px] gap-5 px-4 py-6">
+      <SimQuestion sim={sim} pillTopLeft={false} />
+      <div className="flex flex-col gap-2.5">
+        <YourRankCard nickname="შენ" points={sim.yourPoints}
+          info={{ rank: sim.yourRank, field: CUT_FIELD, cut: CUT, delta: sim.delta }} />
+        <SideLeaderboard board={sim.rows} selfUserId="sim-you" cut={CUT} className="h-[480px]" />
+      </div>
+    </div>
+  );
+}
+
+/** MOBILE: no side board — the always-on pill top-left carries rank + move. */
+function RankSimMobile() {
+  const sim = useRankSim();
+  return (
+    <div className="mx-auto w-[375px] rounded-[28px] border border-white/15 py-3">
+      <SimQuestion sim={sim} pillTopLeft />
     </div>
   );
 }
@@ -560,20 +583,20 @@ export function WlComponentGallery({
         <Frame>
           <div className="flex flex-wrap items-start justify-center gap-6">
             <div><p className="mb-2 text-center font-poppins text-[11px] font-black uppercase text-white/50">ზონაში (#57)</p>
-              <CutlineBoard board={cutBoard(57)} selfUserId="sim-you" cut={60} /></div>
+              <CutlineBoard board={boardWithYou(57)} selfUserId="sim-you" cut={60} /></div>
             <div><p className="mb-2 text-center font-poppins text-[11px] font-black uppercase text-white/50">ზონის მიღმა (#63)</p>
-              <CutlineBoard board={cutBoard(63)} selfUserId="sim-you" cut={60} /></div>
+              <CutlineBoard board={boardWithYou(63)} selfUserId="sim-you" cut={60} /></div>
           </div>
         </Frame>
       ),
     },
     {
       id: 'rank-sim-mobile', label: 'Full sim (mobile)', group: 'Rank',
-      render: () => <Frame><RankFlowSim phone /></Frame>,
+      render: () => <RankSimMobile />,
     },
     {
       id: 'rank-sim-web', label: 'Full sim (web)', group: 'Rank',
-      render: () => <Frame><RankFlowSim phone={false} /></Frame>,
+      render: () => <RankSimWeb />,
     },
     {
       id: 'board', label: 'Standings board', group: 'Boards & results',
