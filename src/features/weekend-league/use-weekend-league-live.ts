@@ -258,8 +258,13 @@ export function useWeekendLeagueLive(): WeekendLeagueLiveController {
   // a real qualifier timestamp — the synthetic calendar fallback must never
   // drive a countdown on the checked-in waiting screen.
   const kickoffMs = (() => {
-    if (!tournament?.qualifier_starts_at) return null;
-    const ms = Date.parse(tournament.qualifier_starts_at);
+    // Sunday phases count to the FINAL, not to Saturday's (past) qualifier —
+    // the final check-in card showed no timer at all otherwise.
+    const source = status === 'qualifier_done' || status === 'final_checkin' || status === 'final_live'
+      ? tournament?.final_starts_at
+      : tournament?.qualifier_starts_at;
+    if (!source) return null;
+    const ms = Date.parse(source);
     return Number.isFinite(ms) ? ms : null;
   })();
 
