@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'motion/react';
-import { Check, Users } from 'lucide-react';
+import { Check, Eye, Users } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
 import { colors } from '@/lib/colors';
 import { poppins } from '../constants';
@@ -19,6 +19,7 @@ export function CheckInPanel({
   closesAtMs,
   onCheckIn,
   onStart,
+  spectator = false,
 }: {
   checkedIn: boolean;
   ready: number;
@@ -27,6 +28,9 @@ export function CheckInPanel({
   onCheckIn: () => void;
   /** Prototype-only: skip the wait once ready. */
   onStart?: () => void;
+  /** Read-only: countdown + ready meter, no button — what a watcher sees
+   *  during the check-in window (they used to get a blank waiting card). */
+  spectator?: boolean;
 }) {
   const { t } = useLocale();
   const pct = registered > 0 ? Math.round((ready / registered) * 100) : 0;
@@ -52,6 +56,20 @@ export function CheckInPanel({
           </div>
           <p className="mx-auto mt-1 max-w-xs font-poppins text-[13px] font-semibold text-white/65">
             {t('weekendLeague.checkedInBody')}
+          </p>
+        </>
+      ) : spectator ? (
+        <>
+          <div className="mb-2 flex justify-center">
+            <span className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1 font-poppins text-[11px] font-black uppercase tracking-widest text-white/70">
+              <Eye className="size-3.5" /> {t('weekendLeague.gSpectator')}
+            </span>
+          </div>
+          <div className="font-poppins text-2xl font-black uppercase text-white" style={poppins}>
+            {t('weekendLeague.checkInTitle')}
+          </div>
+          <p className="mx-auto mt-1 max-w-sm font-poppins text-[13px] font-semibold text-white/65">
+            {t('weekendLeague.spectatorCheckinBody')}
           </p>
         </>
       ) : (
@@ -81,7 +99,7 @@ export function CheckInPanel({
         </div>
       )}
 
-      {!checkedIn && (
+      {!checkedIn && !spectator && (
         <motion.button
           type="button"
           whileTap={{ scale: 0.97 }}
