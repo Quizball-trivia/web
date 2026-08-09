@@ -296,6 +296,32 @@ export function WlLiveFlowView({
   }
 
   const inCheckinWindow = status === 'checkin' || status === 'final_checkin';
+  // Spectators get the same check-in picture — countdown, ready meter — just
+  // without the button (they used to stare at a bare waiting card for the
+  // whole window, with no idea what was happening).
+  if (role === 'spectator' && inCheckinWindow && live.screen.kind === 'waiting') {
+    return (
+      <Immersive>
+        <div className="mx-auto flex min-h-[80vh] w-full max-w-xl flex-col justify-center px-4">
+          <CheckInPanel
+            spectator
+            checkedIn={false}
+            ready={checkedInCount ?? 0}
+            registered={registered ?? 0}
+            closesAtMs={kickoffMs ?? null}
+            onCheckIn={() => {}}
+          />
+          <button
+            type="button"
+            onClick={onExit}
+            className="mx-auto mt-6 flex items-center gap-1.5 font-poppins text-[12px] font-bold uppercase tracking-widest text-white/40 hover:text-white"
+          >
+            <LogOut className="size-4" /> {t('weekendLeague.gQuit')}
+          </button>
+        </div>
+      </Immersive>
+    );
+  }
   if (role === 'player' && inCheckinWindow && live.screen.kind === 'waiting') {
     // The SAME designed check-in panel the /dev/wl prototype renders, fed by
     // live data: real ready counter, closes at the authoritative kickoff.
