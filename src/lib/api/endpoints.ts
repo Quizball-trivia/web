@@ -24,6 +24,21 @@ export function getWeekendLeagueCurrent() {
   return apiFetch("get", "/api/v1/weekend-league/current");
 }
 
+export interface WlStandingsEntry {
+  user_id: string; nickname: string | null; avatar_url: string | null;
+  country: string | null; tier: string; rank: number; points: number;
+  advanced: boolean;
+}
+export interface WlStandingsResponse {
+  tournament_id: string | null;
+  game_index: number | null;
+  entries: WlStandingsEntry[];
+}
+export function getWeekendLeagueStandings(): Promise<WlStandingsResponse> {
+  // Path not yet in api.generated.ts (regenerate on the next openapi pass).
+  return apiFetch("get", "/api/v1/weekend-league/standings" as never) as Promise<WlStandingsResponse>;
+}
+
 export function getWeekendLeagueQp() {
   return apiFetch("get", "/api/v1/weekend-league/qp");
 }
