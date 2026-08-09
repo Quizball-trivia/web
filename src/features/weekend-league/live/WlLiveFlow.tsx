@@ -202,10 +202,12 @@ export function WlLiveFlowView({
     // 5-minutes stale and the ceremony component is already mounted — poke it
     // (with a beat for the settlement tx) or winners only see the ceremony on
     // their next full reload (review catch).
-    const id = setTimeout(() => {
+    // Deliberately NOT cancelled on unmount: leaving the champion screen
+    // early must still refresh the awards cache (the invalidation is
+    // idempotent and the client is app-wide).
+    setTimeout(() => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.eventAwards.mine() });
     }, 4_000);
-    return () => clearTimeout(id);
   }, [live.screen.kind, queryClient]);
 
   // Render-time adjustment (same pattern as useChoice's nonce): capture the

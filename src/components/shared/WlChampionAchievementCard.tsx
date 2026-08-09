@@ -71,8 +71,14 @@ export function WlChampionAchievementCard({ place, weekLabel, className }: WlCha
 
 export function isWlAwardSlug(eventSlug: string): boolean {
   // Exact family match — a prefix test would swallow typos and any future
-  // unrelated "weekend-league*" event (review catch).
-  return /^weekend-league-\d{4}-\d{2}-\d{2}$/.test(eventSlug);
+  // unrelated "weekend-league*" event (review catch). The date must be a
+  // REAL calendar date (2026-02-31 must not route here).
+  const m = eventSlug.match(/^weekend-league-(\d{4})-(\d{2})-(\d{2})$/);
+  if (!m) return false;
+  const d = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, Number(m[3])));
+  return d.getUTCFullYear() === Number(m[1])
+    && d.getUTCMonth() === Number(m[2]) - 1
+    && d.getUTCDate() === Number(m[3]);
 }
 
 const KA_MONTHS = ["იანვარი", "თებერვალი", "მარტი", "აპრილი", "მაისი", "ივნისი",
@@ -83,6 +89,7 @@ const EN_MONTHS = ["January", "February", "March", "April", "May", "June",
 /** Date-only label: "8 აგვისტო 2026" / "8 August 2026" — callers add their
  *  own framing ("Weekend League · ", the ceremony sentence). */
 export function wlAwardWeekLabel(eventSlug: string, locale: "ka" | "en" = "ka"): string | undefined {
+  if (!isWlAwardSlug(eventSlug)) return undefined;
   const m = eventSlug.match(/(\d{4})-(\d{2})-(\d{2})$/);
   if (!m) return undefined;
   const months = locale === "ka" ? KA_MONTHS : EN_MONTHS;

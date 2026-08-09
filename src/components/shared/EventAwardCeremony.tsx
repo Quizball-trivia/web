@@ -32,6 +32,7 @@ export function EventAwardCeremony() {
   if (isWlAwardSlug(pending.eventSlug)) {
     return (
       <WlChampionUnlockOverlay
+        key={pending.id}
         place={pending.place}
         weekLabel={wlAwardWeekLabel(pending.eventSlug, locale)}
         open
@@ -39,5 +40,5 @@ export function EventAwardCeremony() {
       />
     );
   }
-  return <WorldCupUnlockOverlay place={pending.place} open onClose={close} />;
+  return <WorldCupUnlockOverlay key={pending.id} place={pending.place} open onClose={close} />;
 }
