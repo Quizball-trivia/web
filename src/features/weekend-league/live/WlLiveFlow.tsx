@@ -42,6 +42,8 @@ import { QuestionKindBadge } from '@/features/possession/components/live-special
 import { ResultSplash } from '@/features/daily/components/ResultSplash';
 import { useResultSplash } from '@/features/daily/components/useResultSplash';
 import { playBgm, stopBgm } from '@/lib/sounds/gameSounds';
+import { useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/queries/queryKeys';
 import { useWlLive, type WlLiveScreen, type WlLiveState } from './useWlLive';
 
 const WHO_AM_I_CLUES = 5;
@@ -192,9 +194,19 @@ export function WlLiveFlowView({
     playBgm('kickoff');
     return () => stopBgm(400);
   }, [inPlay]);
+  const queryClient = useQueryClient();
   useEffect(() => {
-    if (live.screen.kind === 'final_result') stopBgm(600);
-  }, [live.screen.kind]);
+    if (live.screen.kind !== 'final_result') return;
+    stopBgm(600);
+    // The final just minted podium badges server-side; the awards cache is
+    // 5-minutes stale and the ceremony component is already mounted — poke it
+    // (with a beat for the settlement tx) or winners only see the ceremony on
+    // their next full reload (review catch).
+    const id = setTimeout(() => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.eventAwards.mine() });
+    }, 4_000);
+    return () => clearTimeout(id);
+  }, [live.screen.kind, queryClient]);
 
   // Render-time adjustment (same pattern as useChoice's nonce): capture the
   // result while the game_result screen is showing, no effect round-trip.

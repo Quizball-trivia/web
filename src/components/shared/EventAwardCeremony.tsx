@@ -6,12 +6,14 @@ import { WorldCupUnlockOverlay } from '@/components/shared/WorldCupUnlockOverlay
 import { WlChampionUnlockOverlay } from '@/components/shared/WlChampionUnlockOverlay';
 import { isWlAwardSlug, wlAwardWeekLabel } from '@/components/shared/WlChampionAchievementCard';
 import { useAckEventAward, useMyEventAwards } from '@/lib/queries/eventAwards.queries';
+import { useLocale } from '@/contexts/LocaleContext';
 
 /**
  * Plays the one-time podium unlock ceremony after login: the first unseen
  * award renders the overlay; Collect acks it server-side so it never replays.
  */
 export function EventAwardCeremony() {
+  const { locale } = useLocale();
   const { data: awards } = useMyEventAwards();
   const ack = useAckEventAward();
   const [dismissedIds, setDismissedIds] = useState<string[]>([]);
@@ -31,7 +33,7 @@ export function EventAwardCeremony() {
     return (
       <WlChampionUnlockOverlay
         place={pending.place}
-        weekLabel={wlAwardWeekLabel(pending.eventSlug)}
+        weekLabel={wlAwardWeekLabel(pending.eventSlug, locale)}
         open
         onClose={close}
       />

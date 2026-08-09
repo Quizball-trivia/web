@@ -922,7 +922,7 @@ export function ProfileWeb({
                     <WlChampionAchievementCard
                       key={award.id}
                       place={award.place}
-                      weekLabel={wlAwardWeekLabel(award.eventSlug)}
+                      weekLabel={`Weekend League · ${wlAwardWeekLabel(award.eventSlug, locale) ?? ''}`}
                     />
                   ) : (
                     <WorldCupAchievementCard key={award.id} place={award.place} />

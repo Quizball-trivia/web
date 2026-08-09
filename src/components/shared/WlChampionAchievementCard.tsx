@@ -70,16 +70,22 @@ export function WlChampionAchievementCard({ place, weekLabel, className }: WlCha
 }
 
 export function isWlAwardSlug(eventSlug: string): boolean {
-  return eventSlug.startsWith("weekend-league");
+  // Exact family match — a prefix test would swallow typos and any future
+  // unrelated "weekend-league*" event (review catch).
+  return /^weekend-league-\d{4}-\d{2}-\d{2}$/.test(eventSlug);
 }
 
 const KA_MONTHS = ["იანვარი", "თებერვალი", "მარტი", "აპრილი", "მაისი", "ივნისი",
   "ივლისი", "აგვისტო", "სექტემბერი", "ოქტომბერი", "ნოემბერი", "დეკემბერი"];
+const EN_MONTHS = ["January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"];
 
-/** "weekend-league-2026-08-08" → "Weekend League · 8 აგვისტო 2026". */
-export function wlAwardWeekLabel(eventSlug: string): string | undefined {
+/** Date-only label: "8 აგვისტო 2026" / "8 August 2026" — callers add their
+ *  own framing ("Weekend League · ", the ceremony sentence). */
+export function wlAwardWeekLabel(eventSlug: string, locale: "ka" | "en" = "ka"): string | undefined {
   const m = eventSlug.match(/(\d{4})-(\d{2})-(\d{2})$/);
   if (!m) return undefined;
-  const month = KA_MONTHS[Number(m[2]) - 1] ?? m[2];
-  return `Weekend League · ${Number(m[3])} ${month} ${m[1]}`;
+  const months = locale === "ka" ? KA_MONTHS : EN_MONTHS;
+  const month = months[Number(m[2]) - 1] ?? m[2];
+  return `${Number(m[3])} ${month} ${m[1]}`;
 }
