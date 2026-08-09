@@ -280,7 +280,16 @@ export function WlLiveFlowView({
     if (ack?.accepted !== true || typeof ack.correct !== 'boolean') return;
     if (splashedFor.current === attemptId) return;
     splashedFor.current = attemptId;
-    fireSplash(ack.correct ? 'correct' : 'wrong', 'left', { points: ack.correct ? ack.points ?? null : null });
+    const kind = liveScreen.kind === 'question' ? liveScreen.attempt.kind
+      : liveScreen.kind === 'reveal' ? liveScreen.reveal.kind : null;
+    if (kind === 'put_in_order') {
+      // Partial credit: the splash IS the score — +22, +15, or a red +0.
+      // "WRONG!" was a lie for a 2/4 arrangement that just earned 15.
+      const pts = ack.points ?? 0;
+      fireSplash(pts > 0 ? 'correct' : 'wrong', 'left', { points: pts, forcePoints: true });
+    } else {
+      fireSplash(ack.correct ? 'correct' : 'wrong', 'left', { points: ack.correct ? ack.points ?? null : null });
+    }
   }, [liveScreen, fireSplash]);
 
   if (live.denied === 'not_entered') {
