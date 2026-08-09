@@ -1736,6 +1736,7 @@
     "standings": "Qualifier standings",
     "topQualify": "Top {count} qualify for playoffs",
     "checkInTitle": "Check in to play",
+    "spectatorCheckinBody": "Players are checking in — the game starts when the clock hits zero. You'll watch the stream with a short delay.",
     "checkInBody": "Mark yourself ready before kickoff. Miss the window and you can't join this week's qualifier.",
     "checkInCta": "I'm ready",
     "checkedIn": "You're ready",
