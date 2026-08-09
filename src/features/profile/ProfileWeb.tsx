@@ -28,6 +28,7 @@ import { AvatarPicker } from './components/AvatarPicker';
 import { RankFrameCard } from './components/RankFrameCard';
 import { WorldCupAchievementCard } from '@/components/shared/WorldCupAchievementCard';
 import { useUserEventAwards } from '@/lib/queries/eventAwards.queries';
+import { WlChampionAchievementCard, isWlAwardSlug, wlAwardWeekLabel } from '@/components/shared/WlChampionAchievementCard';
 import { useLeaderboardSeasons, useUserRank } from '@/lib/queries/leaderboard.queries';
 import { Input } from '@/components/ui/input';
 import { formatCooldownDate } from '@/lib/api/nicknameErrors';
@@ -163,9 +164,9 @@ export function ProfileWeb({
   const seasonPillClass = (on: boolean) =>
     `inline-flex h-7 items-center justify-center gap-1 rounded-full px-3 text-[10px] sm:text-[11px] font-black uppercase tracking-wide transition-all active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 ${
       on
-        ? isEventMode ? 'bg-[#FF6C0A] text-white' : 'bg-brand-green text-white'
+        ? isEventMode ? 'bg-brand-orange-event text-white' : 'bg-brand-green text-white'
         : isEventMode
-          ? 'border-2 border-[#FF6C0A]/60 text-white/70 hover:bg-[#FF6C0A]/10 hover:text-white'
+          ? 'border-2 border-brand-orange-event/60 text-white/70 hover:bg-brand-orange-event/10 hover:text-white'
           : 'border-2 border-brand-green/60 text-white/70 hover:bg-brand-green/10 hover:text-white'
     }`;
   const [editedName, setEditedName] = useState(player.username);
@@ -917,7 +918,15 @@ export function ProfileWeb({
               </h3>
               <div className="space-y-3">
                 {eventAwards!.map((award) => (
-                  <WorldCupAchievementCard key={award.id} place={award.place} />
+                  isWlAwardSlug(award.eventSlug) ? (
+                    <WlChampionAchievementCard
+                      key={award.id}
+                      place={award.place}
+                      weekLabel={`Weekend League · ${wlAwardWeekLabel(award.eventSlug, locale) ?? ''}`}
+                    />
+                  ) : (
+                    <WorldCupAchievementCard key={award.id} place={award.place} />
+                  )
                 ))}
               </div>
             </motion.div>
