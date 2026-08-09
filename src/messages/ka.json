@@ -1900,5 +1900,14 @@
     "gTimeUp": "დრო ამოიწურა",
     "gYou": "შენ",
     "gPlayerN": "მოთამაშე {n}"
+  },
+  "wlAward": {
+    "title1": "Weekend League-ის ჩემპიონი",
+    "title2": "Weekend League — მე-2 ადგილი",
+    "title3": "Weekend League — მე-3 ადგილი",
+    "unlocked": "ბეჯი გახსნილია",
+    "unlockSubtitle": "ეს ბეჯი ახლა შენს პროფილზეა — ყველა დაინახავს.",
+    "unlockSubtitleWeek": "{week}-ის შაბათ-კვირა შენია. ბეჯი ახლა შენს პროფილზეა.",
+    "collect": "აღება"
   }
 }
