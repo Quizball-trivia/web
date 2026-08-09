@@ -14,7 +14,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { checkinWeekendLeague, enterWeekendLeague, getWeekendLeagueCurrent } from '@/lib/api/endpoints';
+import { checkinWeekendLeague, enterWeekendLeague, getWeekendLeagueCurrent, getWeekendLeagueStandings } from '@/lib/api/endpoints';
 import { queryKeys } from '@/lib/queries/queryKeys';
 import { useAuthStore } from '@/stores/auth.store';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -166,6 +166,13 @@ export function useWeekendLeagueLive(): WeekendLeagueLiveController {
   });
 
   const tournament = query.data?.tournament ?? null;
+  const standingsQuery = useQuery({
+    queryKey: [...queryKeys.weekendLeague.all, 'standings'],
+    queryFn: getWeekendLeagueStandings,
+    enabled: authStatus === 'authenticated',
+    refetchInterval: 60_000,
+    staleTime: 30_000,
+  });
   useEffect(() => {
     const serverNow = tournament?.server_now_ms;
     if (typeof serverNow === 'number') syncWlClock(serverNow);
@@ -263,7 +270,14 @@ export function useWeekendLeagueLive(): WeekendLeagueLiveController {
     kickoffMs,
     milestones,
     activeMilestone,
-    leaderboard: [],
+    leaderboard: (standingsQuery.data?.entries ?? []).map((e) => ({
+      id: e.user_id,
+      username: e.nickname ?? '—',
+      avatar: e.avatar_url ?? 'avatar-1',
+      tier: e.tier,
+      country: e.country ?? 'GE',
+      score: e.points,
+    })),
     yourRank: 0,
     bracket: null,
     registered: tournament?.registered_count ?? 0,
