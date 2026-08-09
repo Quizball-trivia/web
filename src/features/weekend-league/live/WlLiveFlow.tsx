@@ -280,7 +280,16 @@ export function WlLiveFlowView({
     if (ack?.accepted !== true || typeof ack.correct !== 'boolean') return;
     if (splashedFor.current === attemptId) return;
     splashedFor.current = attemptId;
-    fireSplash(ack.correct ? 'correct' : 'wrong', 'left', { points: ack.correct ? ack.points ?? null : null });
+    const kind = liveScreen.kind === 'question' ? liveScreen.attempt.kind
+      : liveScreen.kind === 'reveal' ? liveScreen.reveal.kind : null;
+    if (kind === 'put_in_order') {
+      // Partial credit: the splash IS the score — +22, +15, or a red +0.
+      // "WRONG!" was a lie for a 2/4 arrangement that just earned 15.
+      const pts = ack.points ?? 0;
+      fireSplash(pts > 0 ? 'correct' : 'wrong', 'left', { points: pts, forcePoints: true });
+    } else {
+      fireSplash(ack.correct ? 'correct' : 'wrong', 'left', { points: ack.correct ? ack.points ?? null : null });
+    }
   }, [liveScreen, fireSplash]);
 
   if (live.denied === 'not_entered') {
@@ -296,6 +305,32 @@ export function WlLiveFlowView({
   }
 
   const inCheckinWindow = status === 'checkin' || status === 'final_checkin';
+  // Spectators get the same check-in picture — countdown, ready meter — just
+  // without the button (they used to stare at a bare waiting card for the
+  // whole window, with no idea what was happening).
+  if (role === 'spectator' && inCheckinWindow && live.screen.kind === 'waiting') {
+    return (
+      <Immersive>
+        <div className="mx-auto flex min-h-[80vh] w-full max-w-xl flex-col justify-center px-4">
+          <CheckInPanel
+            spectator
+            checkedIn={false}
+            ready={checkedInCount ?? 0}
+            registered={registered ?? 0}
+            closesAtMs={kickoffMs ?? null}
+            onCheckIn={() => {}}
+          />
+          <button
+            type="button"
+            onClick={onExit}
+            className="mx-auto mt-6 flex items-center gap-1.5 font-poppins text-[12px] font-bold uppercase tracking-widest text-white/40 hover:text-white"
+          >
+            <LogOut className="size-4" /> {t('weekendLeague.gQuit')}
+          </button>
+        </div>
+      </Immersive>
+    );
+  }
   if (role === 'player' && inCheckinWindow && live.screen.kind === 'waiting') {
     // The SAME designed check-in panel the /dev/wl prototype renders, fed by
     // live data: real ready counter, closes at the authoritative kickoff.

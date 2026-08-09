@@ -24,12 +24,14 @@ export function useResultSplash() {
   const [from, setFrom] = useState<"left" | "right">("right");
   const [triggerKey, setTriggerKey] = useState(0);
   const [points, setPoints] = useState<number | null>(null);
+  const [forcePoints, setForcePoints] = useState(false);
 
   const fire = useCallback(
-    (nextVerdict: SplashVerdict, fromSide: "left" | "right", options?: { silent?: boolean; points?: number | null }) => {
+    (nextVerdict: SplashVerdict, fromSide: "left" | "right", options?: { silent?: boolean; points?: number | null; forcePoints?: boolean }) => {
       setVerdict(nextVerdict);
       setFrom(fromSide);
       setPoints(options?.points ?? null);
+      setForcePoints(options?.forcePoints ?? false);
       setTriggerKey((k) => k + 1);
       setShow(true);
       if (!options?.silent) {
@@ -45,5 +47,5 @@ export function useResultSplash() {
     return () => window.clearTimeout(timeout);
   }, [show, triggerKey]);
 
-  return { splashProps: { show, verdict, from, triggerKey, points }, fire };
+  return { splashProps: { show, verdict, from, triggerKey, points, forcePoints }, fire };
 }
