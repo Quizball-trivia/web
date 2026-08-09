@@ -12,6 +12,11 @@ export function WeekendLeagueLiveScreen() {
   const { t } = useLocale();
   const live = useWeekendLeagueLive();
   const [mode, setMode] = useState<'player' | 'spectator' | null>(null);
+  // Pin the tournament being played/watched: when it completes, /current
+  // moves on to the NEXT event — without the pin that yanked the champion
+  // screen away mid-ceremony and replaced it with "you're not registered"
+  // for an event the player never joined (rehearsal report).
+  const [pinnedId, setPinnedId] = useState<string | null>(null);
 
   if (live.isLoading) {
     return (
@@ -41,7 +46,8 @@ export function WeekendLeagueLiveScreen() {
     );
   }
 
-  if (mode != null && live.tournamentId != null) {
+  const activeTournamentId = pinnedId ?? live.tournamentId;
+  if (mode != null && activeTournamentId != null) {
     // The tapped button is an INTENT, not a seat: with the game running and
     // no check-in, the server refuses every answer — so the UI must present
     // spectator mode (chip, board, locked answers, honest result screens),
@@ -53,13 +59,13 @@ export function WeekendLeagueLiveScreen() {
       : mode;
     return (
       <WlLiveFlow
-        tournamentId={live.tournamentId}
+        tournamentId={activeTournamentId}
         role={effectiveRole}
         status={live.status}
         checkedIn={live.checkedIn}
         checkinPending={live.checkinPending}
         onCheckin={live.checkinLeague}
-        onExit={() => setMode(null)}
+        onExit={() => { setMode(null); setPinnedId(null); }}
         onSpectate={() => setMode('spectator')}
         kickoffMs={live.kickoffMs}
         registered={live.registered}
@@ -76,8 +82,8 @@ export function WeekendLeagueLiveScreen() {
     <WeekendLeagueScreen
       showControls={false}
       controller={live}
-      onJoinLive={live.hasEntered ? () => setMode('player') : undefined}
-      onWatchLive={() => setMode('spectator')}
+      onJoinLive={live.hasEntered ? () => { setPinnedId(live.tournamentId); setMode('player'); } : undefined}
+      onWatchLive={() => { setPinnedId(live.tournamentId); setMode('spectator'); }}
     />
   );
 }
