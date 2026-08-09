@@ -1900,5 +1900,14 @@
     "gTimeUp": "Time's up",
     "gYou": "You",
     "gPlayerN": "Player {n}"
+  },
+  "wlAward": {
+    "title1": "Weekend League Champion",
+    "title2": "Weekend League — 2nd Place",
+    "title3": "Weekend League — 3rd Place",
+    "unlocked": "Badge unlocked",
+    "unlockSubtitle": "This badge now lives on your profile — everyone can see it.",
+    "unlockSubtitleWeek": "The {week} weekend is yours. The badge now lives on your profile.",
+    "collect": "Collect"
   }
 }
