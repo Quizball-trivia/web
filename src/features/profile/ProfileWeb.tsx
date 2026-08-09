@@ -28,6 +28,7 @@ import { AvatarPicker } from './components/AvatarPicker';
 import { RankFrameCard } from './components/RankFrameCard';
 import { WorldCupAchievementCard } from '@/components/shared/WorldCupAchievementCard';
 import { useUserEventAwards } from '@/lib/queries/eventAwards.queries';
+import { WlChampionAchievementCard, isWlAwardSlug, wlAwardWeekLabel } from '@/components/shared/WlChampionAchievementCard';
 import { useLeaderboardSeasons, useUserRank } from '@/lib/queries/leaderboard.queries';
 import { Input } from '@/components/ui/input';
 import { formatCooldownDate } from '@/lib/api/nicknameErrors';
@@ -917,7 +918,15 @@ export function ProfileWeb({
               </h3>
               <div className="space-y-3">
                 {eventAwards!.map((award) => (
-                  <WorldCupAchievementCard key={award.id} place={award.place} />
+                  isWlAwardSlug(award.eventSlug) ? (
+                    <WlChampionAchievementCard
+                      key={award.id}
+                      place={award.place}
+                      weekLabel={wlAwardWeekLabel(award.eventSlug)}
+                    />
+                  ) : (
+                    <WorldCupAchievementCard key={award.id} place={award.place} />
+                  )
                 ))}
               </div>
             </motion.div>

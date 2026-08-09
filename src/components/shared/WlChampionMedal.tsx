@@ -10,9 +10,9 @@ const PALETTES: Record<
   WlMedalPlace,
   { body: string; bodyDeep: string; ink: string; edge: string }
 > = {
-  1: { body: "#F0C63C", bodyDeep: "#DCAF1E", ink: "#8A6B0C", edge: "#38B60E" },
-  2: { body: "#DCDCDC", bodyDeep: "#BFBFBF", ink: "#6C6C6C", edge: "#38B60E" },
-  3: { body: "#E2953B", bodyDeep: "#C97B21", ink: "#74450D", edge: "#38B60E" },
+  1: { body: "#F0C63C", bodyDeep: "#DCAF1E", ink: "#8A6B0C", edge: "#B8912A" },
+  2: { body: "#DCDCDC", bodyDeep: "#BFBFBF", ink: "#6C6C6C", edge: "#9A9A9A" },
+  3: { body: "#E2953B", bodyDeep: "#C97B21", ink: "#74450D", edge: "#A96A1D" },
 };
 
 const PLACE_WORD: Record<WlMedalPlace, string> = {
@@ -43,20 +43,20 @@ export function WlChampionMedal({ place, className }: WlChampionMedalProps) {
           <stop offset="100%" stopColor={p.bodyDeep} />
         </radialGradient>
         <path id={topArcId} d="M 16 50 A 34 34 0 0 1 84 50" fill="none" />
-        <path id={bottomArcId} d="M 20 50 A 30 30 0 0 0 80 50" fill="none" />
+        <path id={bottomArcId} d="M 13 50 A 37 37 0 0 0 87 50" fill="none" />
       </defs>
 
       <circle cx="50" cy="50" r="48" fill={p.edge} />
       <circle cx="50" cy="50" r="44.5" fill={p.bodyDeep} />
       <circle cx="50" cy="50" r="42" fill={`url(#${coinId})`} />
-      <circle cx="50" cy="50" r="35" fill="none" stroke={p.ink} strokeOpacity="0.5" strokeWidth="0.8" />
+      <circle cx="50" cy="50" r="29" fill="none" stroke={p.ink} strokeOpacity="0.5" strokeWidth="0.8" />
 
-      <text fontFamily="Poppins, sans-serif" fontWeight="800" fontSize="7.2" fill={p.ink} letterSpacing="1.6">
+      <text fontFamily="Poppins, sans-serif" fontWeight="800" fontSize="6.4" fill={p.ink} letterSpacing="1.3">
         <textPath href={`#${topArcId}`} startOffset="50%" textAnchor="middle">
           WEEKEND LEAGUE
         </textPath>
       </text>
-      <text fontFamily="Poppins, sans-serif" fontWeight="800" fontSize="6" fill={p.ink} letterSpacing="1.4">
+      <text fontFamily="Poppins, sans-serif" fontWeight="800" fontSize="5.4" fill={p.ink} letterSpacing="1.2">
         <textPath href={`#${bottomArcId}`} startOffset="50%" textAnchor="middle">
           {PLACE_WORD[place]}
         </textPath>

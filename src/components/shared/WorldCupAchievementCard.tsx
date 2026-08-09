@@ -55,7 +55,7 @@ export function WorldCupAchievementCard({
   return (
     <div
       className={cn(
-        "relative flex items-center gap-4 overflow-hidden rounded-[14px] border-2 bg-surface-card px-4 py-3",
+        "relative flex items-center gap-3 overflow-hidden rounded-[14px] border-2 bg-surface-card px-3 py-2.5 sm:gap-4 sm:px-4 sm:py-3",
         theme.border,
         theme.glow,
         className,
@@ -68,22 +68,24 @@ export function WorldCupAchievementCard({
             "radial-gradient(circle at 12% 50%, currentColor 0%, transparent 55%)",
         }}
       />
-      <WorldCupMedal place={place} className="w-14 shrink-0 sm:w-16" />
+      <WorldCupMedal place={place} className="w-11 shrink-0 sm:w-16" />
       <div className="min-w-0 flex-1">
         <div
           className={cn(
-            "font-poppins text-sm font-bold uppercase leading-tight sm:text-base",
+            "font-poppins text-[12.5px] font-bold uppercase leading-tight sm:text-base",
             theme.title,
           )}
         >
           {t(TITLE_KEYS[place])}
         </div>
-        <div className="mt-1 text-[11px] font-semibold leading-snug text-white/60 sm:text-xs">
+        {/* The verbose subtitle is desktop-only — on phones the medal + title
+            already say everything and three wrapped lines read as clutter. */}
+        <div className="mt-1 hidden text-[11px] font-semibold leading-snug text-white/60 sm:block sm:text-xs">
           {t(SUBTITLE_KEYS[place])}
         </div>
       </div>
       <div className="flex shrink-0 flex-col items-end gap-1">
-        <span className="text-[7px] font-bold uppercase tracking-[0.14em] text-white/45">
+        <span className="hidden text-[7px] font-bold uppercase tracking-[0.14em] text-white/45 sm:block">
           {t("welcome.poweredBy")}
         </span>
         <Image
@@ -91,7 +93,7 @@ export function WorldCupAchievementCard({
           alt="Betsson Sport"
           width={80}
           height={16}
-          className="h-3 w-auto object-contain"
+          className="h-2.5 w-auto object-contain sm:h-3"
         />
       </div>
     </div>

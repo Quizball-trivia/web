@@ -3,6 +3,8 @@
 import { useState } from 'react';
 
 import { WorldCupUnlockOverlay } from '@/components/shared/WorldCupUnlockOverlay';
+import { WlChampionUnlockOverlay } from '@/components/shared/WlChampionUnlockOverlay';
+import { isWlAwardSlug, wlAwardWeekLabel } from '@/components/shared/WlChampionAchievementCard';
 import { useAckEventAward, useMyEventAwards } from '@/lib/queries/eventAwards.queries';
 
 /**
@@ -19,14 +21,21 @@ export function EventAwardCeremony() {
   );
   if (!pending) return null;
 
-  return (
-    <WorldCupUnlockOverlay
-      place={pending.place}
-      open
-      onClose={() => {
-        setDismissedIds((ids) => [...ids, pending.id]);
-        ack.mutate(pending.id);
-      }}
-    />
-  );
+  const close = () => {
+    setDismissedIds((ids) => [...ids, pending.id]);
+    ack.mutate(pending.id);
+  };
+  // Each event family keeps its own medal + ceremony; the queue/ack flow is
+  // shared. WL slugs are minted by the final's writeAwards.
+  if (isWlAwardSlug(pending.eventSlug)) {
+    return (
+      <WlChampionUnlockOverlay
+        place={pending.place}
+        weekLabel={wlAwardWeekLabel(pending.eventSlug)}
+        open
+        onClose={close}
+      />
+    );
+  }
+  return <WorldCupUnlockOverlay place={pending.place} open onClose={close} />;
 }
