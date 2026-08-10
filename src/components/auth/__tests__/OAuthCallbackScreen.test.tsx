@@ -60,7 +60,10 @@ vi.mock("@/lib/analytics/game-events", () => ({
 }));
 
 import { OAuthCallbackScreen } from "@/components/auth/OAuthCallbackScreen";
-import { rememberCampaignAttribution } from "@/features/campaign-quiz/campaignAttribution";
+import {
+  getCampaignAttributionHeader,
+  rememberCampaignAttribution,
+} from "@/features/campaign-quiz/campaignAttribution";
 import { useAuthStore } from "@/stores/auth.store";
 
 function makeUser(onboardingComplete: boolean): User {
@@ -157,5 +160,23 @@ describe("OAuthCallbackScreen analytics", () => {
     await waitFor(() => expect(fetchCurrentUserMock).toHaveBeenCalledTimes(1));
     expect(screen.getByText("oauthCallback.authenticationFailed")).toBeInTheDocument();
     expect(window.location.pathname).toBe("/auth/callback");
+  });
+
+  it("clears campaign attribution after successful mobile provisioning", async () => {
+    rememberCampaignAttribution({ quizSlug: "liverpool", placement: "score" });
+    const mobileRedirect = encodeURIComponent(
+      "https://staging.quizball.io/auth/mobile-callback",
+    );
+    window.history.replaceState(
+      {},
+      "",
+      `/auth/callback?code=pkce-code&mobile_redirect=${mobileRedirect}`,
+    );
+    fetchCurrentUserMock.mockResolvedValue(makeUser(true));
+
+    render(<OAuthCallbackScreen />);
+
+    await waitFor(() => expect(fetchCurrentUserMock).toHaveBeenCalledTimes(1));
+    expect(getCampaignAttributionHeader()).toBeNull();
   });
 });

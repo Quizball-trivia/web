@@ -151,6 +151,14 @@ export function rememberCampaignAttributionFromSignupUrl(url: URL): void {
   const match = suffixes.find(([suffix]) => source.endsWith(suffix));
   if (!match) return;
   const quizSlug = source.slice(0, -match[0].length);
+  const stored = readStored();
+  if (
+    stored &&
+    stored.quiz_slug === quizSlug &&
+    stored.cta_placement === match[1]
+  ) {
+    return;
+  }
   rememberCampaignAttribution({ quizSlug, placement: match[1] });
 }
 
