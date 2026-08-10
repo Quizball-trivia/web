@@ -724,6 +724,7 @@ function ScreenBody({
         return (
           <RevealScreen
             reveal={screen.reveal}
+            attempt={screen.attempt}
             answer={screen.answer}
             locale={locale}
             board={board}
@@ -768,6 +769,7 @@ function ScreenBody({
       return (
         <RevealScreen
           reveal={screen.reveal}
+          attempt={screen.attempt}
           answer={screen.answer}
           locale={locale}
           board={board}
@@ -1526,8 +1528,10 @@ function WhoAmIQuestion({
 // ── Reveal + standings ──────────────────────────────────────────────────────
 
 function RevealScreen({
-  reveal, answer, locale, board, selfUserId, spectator,
+  reveal, attempt, answer, locale, board, selfUserId, spectator,
 }: {
+  /** The dispatched question — carries option labels for id-based kinds. */
+  attempt: WlDispatchEventPayload | null;
   reveal: WlRevealEventPayload;
   answer: { accepted: boolean; correct?: boolean; points?: number } | null;
   locale: Locale;
@@ -1537,9 +1541,23 @@ function RevealScreen({
 }) {
   const { t } = useLocale();
   const evaluation = reveal.evaluation ?? {};
-  const answerText =
-    pick(evaluation['display_answer'], locale)
-    || (typeof evaluation['correct_id'] === 'string' ? String(evaluation['correct_id']) : '');
+  // mcq / true_false carry no display_answer — the answer is an option ID that
+  // must be resolved against the dispatched question. Printing the raw ID (a
+  // UUID) reached spectators in the Aug-9 final.
+  const answerText = (() => {
+    const typed = pick(evaluation['display_answer'], locale);
+    if (typed) return typed;
+    const correctId = evaluation['correct_id'];
+    if (typeof correctId !== 'string') return '';
+    if (correctId === 'true') return t('weekendLeague.gTrue');
+    if (correctId === 'false') return t('weekendLeague.gFalse');
+    const options = Array.isArray(attempt?.question?.['options'])
+      ? (attempt!.question['options'] as Array<Record<string, unknown>>)
+      : [];
+    const match = options.find((o) => String(o['id']) === correctId);
+    // Never fall back to the raw id — hide the line instead.
+    return match ? pick(match['text'], locale) : '';
+  })();
   // Spectators (and anyone without an own accepted answer) get a neutral
   // reveal — a personal "Wrong" verdict only exists for a submitted answer.
   const verdict: 'correct' | 'wrong' | 'neutral' =
@@ -1577,7 +1595,12 @@ function RevealScreen({
       <div className="mt-2 font-poppins text-[12px] font-semibold text-white/45">
         {t('weekendLeague.gAnsweredCount', { n: reveal.answered })}
       </div>
-      <BoardStrip board={board} selfUserId={selfUserId} />
+      {/* Full top-24 in its own scroll area: the 5-row strip left spectators
+          unable to see (or reach) the rest of the board — the immersive layer
+          has no page scroll of its own. */}
+      <div className="mt-2 max-h-[54vh] w-full overflow-y-auto overscroll-contain">
+        <BoardStrip board={board} selfUserId={selfUserId} rows={24} />
+      </div>
     </div>
     </div>
   );
