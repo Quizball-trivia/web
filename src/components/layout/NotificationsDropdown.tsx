@@ -405,7 +405,7 @@ export function NotificationsDropdown({ badgeCount }: { badgeCount: number }) {
       if (payload.status === "accepted" && payload.inviteCode) {
         setOpen(false);
         beginLobbyHandoff(payload.inviteCode);
-        router.push(`/friend/room/${payload.inviteCode}`);
+        router.push(`/friend/room/${payload.inviteCode}?source=challenge`);
       }
       setPendingChallengeAction(null);
     };

@@ -4,16 +4,17 @@ import { AlertCircle, ArrowLeft, CheckCircle2, Loader2, LogOut, RotateCcw } from
 import { cn } from "@/lib/utils";
 import { LobbyHeader } from "./LobbyHeader";
 import { LobbySettings } from "./LobbySettings";
-import { useFriendLobbyLogic } from "../hooks/useFriendLobbyLogic";
+import { type FriendLobbyInviteSource, useFriendLobbyLogic } from "../hooks/useFriendLobbyLogic";
 import { AlreadyInLobbyModal } from "./AlreadyInLobbyModal";
 import { useLocale } from "@/contexts/LocaleContext";
 
 interface FriendLobbyScreenProps {
   roomCode: string;
   isHost: boolean;
+  inviteSource?: FriendLobbyInviteSource;
 }
 
-export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) {
+export function FriendLobbyScreen({ roomCode, isHost, inviteSource }: FriendLobbyScreenProps) {
   const { t } = useLocale();
   const {
     lobby,
@@ -32,7 +33,7 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
     isLeaving,
     optimisticReady,
     actions
-  } = useFriendLobbyLogic({ roomCode, isHost });
+  } = useFriendLobbyLogic({ roomCode, isHost, inviteSource });
   const displayedReady = optimisticReady ?? me?.isReady ?? false;
   // Host has local `isStartingMatch`; non-host members infer "preparing"
   // from the broadcast lobby status flipping to "active" (server emits this
@@ -153,7 +154,7 @@ export function FriendLobbyScreen({ roomCode, isHost }: FriendLobbyScreenProps) 
   }
 
   if (inviteJoinFailure) {
-    const code = inviteJoinFailure.code || targetInviteCode || lobbyCode;
+    const code = inviteJoinFailure.inviteCode || targetInviteCode || lobbyCode;
 
     return (
       <div className="container mx-auto max-w-5xl px-3 py-6 animate-in fade-in lg:px-0">

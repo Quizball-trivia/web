@@ -15,15 +15,46 @@ import { logger } from "@/utils/logger";
 import type { LobbySettings as LobbySettingsState } from "@/lib/realtime/socket.types";
 import { useCategoriesList } from "@/lib/queries/categories.queries";
 import { copyToClipboard } from "@/utils/clipboard";
-import { trackFriendInviteSent } from "@/lib/analytics/game-events";
+import {
+  trackFriendInviteJoinAttempted,
+  trackFriendInviteJoinFailed,
+  trackFriendInviteJoinSucceeded,
+  trackFriendInviteLinkOpened,
+  trackFriendInviteSent,
+  trackLobbyCreated,
+  trackLobbyJoined,
+} from "@/lib/analytics/game-events";
 import { useHeadToHead } from "@/lib/queries/stats.queries";
-import { trackLobbyCreated, trackLobbyJoined } from "@/lib/analytics/game-events";
 import { normalizeFriendInviteCode } from "@/lib/friend/inviteCode";
 import { useLobbyCommandMachine } from "./useLobbyCommandMachine";
 
 interface UseFriendLobbyLogicProps {
   roomCode: string;
   isHost: boolean;
+  inviteSource?: FriendLobbyInviteSource;
+}
+
+export type FriendLobbyInviteSource =
+  | "shared_link"
+  | "manual_code"
+  | "public_lobby"
+  | "challenge"
+  | "rematch"
+  | "create"
+  | "current_lobby";
+
+export function parseFriendLobbyInviteSource(value: string | null): FriendLobbyInviteSource {
+  if (
+    value === "manual_code" ||
+    value === "public_lobby" ||
+    value === "challenge" ||
+    value === "rematch" ||
+    value === "create" ||
+    value === "current_lobby"
+  ) {
+    return value;
+  }
+  return "shared_link";
 }
 
 /**
@@ -35,7 +66,26 @@ const LOBBY_ERROR_COPY_KEYS: Record<string, MessageKey> = {
   MEMBER_BUSY: "friend.errorMemberBusy",
 };
 
-export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicProps) {
+const INVITE_STATE_CONFIRMATION_TIMEOUT_MS = 4_000;
+const INVITE_STATE_CONFIRMATION_MAX_RETRIES = 2;
+
+interface InviteJoinFailure {
+  inviteCode: string;
+  reasonCode: string;
+  message: string;
+}
+
+interface AwaitingInviteLobbyState {
+  inviteCode: string;
+  correlationId: string;
+  retryCount: number;
+}
+
+export function useFriendLobbyLogic({
+  roomCode,
+  isHost,
+  inviteSource = "shared_link",
+}: UseFriendLobbyLogicProps) {
   const router = useRouter();
   const { t } = useLocale();
   const { player } = usePlayer();
@@ -83,6 +133,8 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
   const leavingRef = useRef(false);
   const inviteJoinCancelledRef = useRef(false);
   const terminalInviteJoinFailureRef = useRef(false);
+  const inviteOpenedTrackedRef = useRef<string | null>(null);
+  const inviteJoinAttemptRef = useRef(0);
   const prevOpponentIdRef = useRef<string | null>(null);
   const prevLobbyIdRef = useRef<string | null>(null);
   const initActionRef = useRef<string | null>(null);
@@ -93,10 +145,8 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
   const [isStartingMatch, setIsStartingMatch] = useState(false);
   const [handoffTimedOutCode, setHandoffTimedOutCode] = useState<string | null>(null);
   const [optimisticReady, setOptimisticReady] = useState<boolean | null>(null);
-  const [inviteJoinFailureState, setInviteJoinFailure] = useState<{
-    code: string;
-    message: string;
-  } | null>(null);
+  const [inviteJoinFailureState, setInviteJoinFailure] = useState<InviteJoinFailure | null>(null);
+  const [awaitingInviteLobby, setAwaitingInviteLobby] = useState<AwaitingInviteLobbyState | null>(null);
 
   const clearStartMatchTimeout = useCallback(() => {
     if (!startMatchTimeoutRef.current) return;
@@ -108,8 +158,9 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
   const shouldCreateLobby = isHost && isNewRoomRoute;
   const normalizedRoomCode = roomCode && !isNewRoomRoute ? normalizeFriendInviteCode(roomCode) : null;
   const inviteJoinFailure =
-    inviteJoinFailureState?.code === normalizedRoomCode ? inviteJoinFailureState : null;
+    inviteJoinFailureState?.inviteCode === normalizedRoomCode ? inviteJoinFailureState : null;
   const expectsInviteLobby = Boolean(normalizedRoomCode);
+  const shouldTrackSharedInvite = expectsInviteLobby && inviteSource === "shared_link";
   const lobbyMatchesInvite = !expectsInviteLobby || lobby?.inviteCode?.toUpperCase() === normalizedRoomCode;
   const activeLobby = lobbyMatchesInvite ? lobby : null;
   const isActiveMatchHandoff =
@@ -131,9 +182,24 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
   );
 
   useEffect(() => {
+    createdRef.current = false;
+    leavingRef.current = false;
+    initActionRef.current = null;
+    analyticsTrackedRef.current = false;
     inviteJoinCancelledRef.current = false;
     terminalInviteJoinFailureRef.current = false;
+    inviteJoinAttemptRef.current = 0;
   }, [normalizedRoomCode]);
+
+  useEffect(() => {
+    if (
+      !shouldTrackSharedInvite ||
+      !normalizedRoomCode ||
+      inviteOpenedTrackedRef.current === normalizedRoomCode
+    ) return;
+    inviteOpenedTrackedRef.current = normalizedRoomCode;
+    trackFriendInviteLinkOpened();
+  }, [normalizedRoomCode, shouldTrackSharedInvite]);
 
   // 1. Reset local guards after leaving a lobby/match
   useEffect(() => {
@@ -210,9 +276,23 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     if (initActionRef.current === joinKey) return;
     initActionRef.current = joinKey;
     createdRef.current = true;
+    inviteJoinAttemptRef.current += 1;
+    if (shouldTrackSharedInvite) {
+      trackFriendInviteJoinAttempted({
+        attemptNumber: inviteJoinAttemptRef.current,
+      });
+    }
     void joinByCode(roomCode).then((result) => {
       if (leavingRef.current || inviteJoinCancelledRef.current) return;
-      if (!result || result.ok) return;
+      if (!result) return;
+      if (result.ok) {
+        setAwaitingInviteLobby((current) => ({
+          inviteCode: targetCode ?? result.inviteCode,
+          correlationId: result.correlationId,
+          retryCount: current?.inviteCode === targetCode ? current.retryCount : 0,
+        }));
+        return;
+      }
       const latestState = useRealtimeMatchStore.getState();
       const latestHasMatchHandoff =
         latestState.match !== null ||
@@ -229,8 +309,17 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
       }
       terminalInviteJoinFailureRef.current = true;
       inviteJoinCancelledRef.current = true;
+      if (shouldTrackSharedInvite) {
+        trackFriendInviteJoinFailed({
+          failureCode: result.code,
+          retryable: result.retryable,
+          correlationId: result.correlationId,
+          attemptNumber: inviteJoinAttemptRef.current,
+        });
+      }
       setInviteJoinFailure({
-        code: targetCode ?? roomCode.toUpperCase(),
+        inviteCode: targetCode ?? roomCode.toUpperCase(),
+        reasonCode: result.code,
         message: result.message,
       });
       toast.error(result.message);
@@ -239,6 +328,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
       inviteCode: `${roomCode.slice(0, 2)}***`,
     });
   }, [
+    awaitingInviteLobby?.retryCount,
     createLobby,
     handoffTimedOutCode,
     hasActiveMatch,
@@ -253,8 +343,70 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     pendingLobbyHandoffCode,
     roomCode,
     shouldCreateLobby,
+    shouldTrackSharedInvite,
     draft,
   ]);
+
+  useEffect(() => {
+    if (
+      !awaitingInviteLobby ||
+      awaitingInviteLobby.inviteCode !== normalizedRoomCode ||
+      activeLobby ||
+      isPreparingMatch
+    ) return;
+
+    const timer = setTimeout(() => {
+      const latestState = useRealtimeMatchStore.getState();
+      const confirmedCode = latestState.lobby?.inviteCode?.toUpperCase() ?? null;
+      if (confirmedCode === awaitingInviteLobby.inviteCode) return;
+      if (latestState.match || latestState.draft) return;
+
+      const nextRetryCount = awaitingInviteLobby.retryCount + 1;
+      if (nextRetryCount <= INVITE_STATE_CONFIRMATION_MAX_RETRIES) {
+        logger.warn("Invite join ack was not followed by lobby state; retrying", {
+          correlationId: awaitingInviteLobby.correlationId,
+          retryCount: nextRetryCount,
+        });
+        setAwaitingInviteLobby({ ...awaitingInviteLobby, retryCount: nextRetryCount });
+        createdRef.current = false;
+        initActionRef.current = null;
+        resetLobbyCommand();
+        return;
+      }
+
+      terminalInviteJoinFailureRef.current = true;
+      inviteJoinCancelledRef.current = true;
+      const message = "Lobby joined, but the room did not finish loading. Please try again.";
+      if (shouldTrackSharedInvite) {
+        trackFriendInviteJoinFailed({
+          failureCode: "LOBBY_STATE_TIMEOUT",
+          retryable: true,
+          correlationId: awaitingInviteLobby.correlationId,
+          attemptNumber: inviteJoinAttemptRef.current,
+          stateConfirmationTimedOut: true,
+        });
+      }
+      setInviteJoinFailure({
+        inviteCode: awaitingInviteLobby.inviteCode,
+        reasonCode: "LOBBY_STATE_TIMEOUT",
+        message,
+      });
+      setAwaitingInviteLobby(null);
+      toast.error(message);
+    }, INVITE_STATE_CONFIRMATION_TIMEOUT_MS);
+
+    return () => clearTimeout(timer);
+  }, [activeLobby, awaitingInviteLobby, isPreparingMatch, normalizedRoomCode, resetLobbyCommand, shouldTrackSharedInvite]);
+
+  useEffect(() => {
+    if (!activeLobby || shouldCreateLobby) return;
+    terminalInviteJoinFailureRef.current = false;
+    inviteJoinCancelledRef.current = false;
+    queueMicrotask(() => {
+      setInviteJoinFailure(null);
+      setAwaitingInviteLobby(null);
+    });
+  }, [activeLobby, shouldCreateLobby]);
 
   // 2.5. Track lobby creation/join success when lobby is confirmed
   useEffect(() => {
@@ -265,8 +417,14 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
       trackLobbyCreated("friendly");
     } else {
       trackLobbyJoined(activeLobby.lobbyId, activeLobby.inviteCode ?? roomCode);
+      if (shouldTrackSharedInvite && inviteJoinAttemptRef.current > 0) {
+        trackFriendInviteJoinSucceeded({
+          lobbyId: activeLobby.lobbyId,
+          attemptNumber: inviteJoinAttemptRef.current,
+        });
+      }
     }
-  }, [activeLobby, roomCode, shouldCreateLobby]);
+  }, [activeLobby, roomCode, shouldCreateLobby, shouldTrackSharedInvite]);
 
   // 3. Navigation & Session Logic
   useEffect(() => {
@@ -505,6 +663,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     createdRef.current = false;
     initActionRef.current = null;
     setInviteJoinFailure(null);
+    setAwaitingInviteLobby(null);
     resetLobbyCommand();
   };
 
@@ -514,6 +673,7 @@ export function useFriendLobbyLogic({ roomCode, isHost }: UseFriendLobbyLogicPro
     createdRef.current = true;
     initActionRef.current = null;
     setInviteJoinFailure(null);
+    setAwaitingInviteLobby(null);
     resetLobbyCommand();
     router.replace("/play/friend?tab=create");
   };

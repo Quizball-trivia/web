@@ -294,7 +294,7 @@ export function GameStageRouter() {
     returningToLobbyRef.current = true;
     exitCompletedMatchToLobby();
     resetGameSession();
-    router.push(`/friend/room/${inviteCode}`);
+    router.push(`/friend/room/${inviteCode}?source=rematch`);
   }, [
     exitCompletedMatchToLobby,
     matchType,

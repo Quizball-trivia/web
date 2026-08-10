@@ -79,9 +79,9 @@ export function AlreadyInLobbyModal({
     const code = lobby?.inviteCode || meta.inviteCode || currentLobbyCode;
     
     if (code) {
-      router.push(`/friend/room/${code}`);
+      router.push(`/friend/room/${code}?source=current_lobby`);
       clearError();
-       if (onClose) onClose();
+      if (onClose) onClose();
     } else {
         // Fallback if we somehow don't have the code
         handleLeaveAndRetry();
@@ -136,8 +136,10 @@ export function AlreadyInLobbyModal({
                     className="w-full h-12 border-red-500/20 text-red-500 hover:bg-red-500/10 hover:text-red-600 hover:border-red-500/30"
                     onClick={handleLeaveAndRetry}
                     disabled={lobbyCommands.isLeaving}
+                    aria-busy={lobbyCommands.isLeaving}
                 >
-                    <LogOut className="size-4 mr-2" /> Leave & Join New
+                    <LogOut className="size-4 mr-2" />
+                    {lobbyCommands.isLeaving ? t('friend.leavingLobby') : 'Leave & Join New'}
                 </Button>
             </div>
             

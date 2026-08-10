@@ -443,7 +443,7 @@ export function SocialScreen() {
       beginLobbyHandoff(payload.inviteCode);
       suppressLobbyBanner(8000, "challenge");
       setPendingChallengeId(null);
-      router.push(`/friend/room/${payload.inviteCode}`);
+      router.push(`/friend/room/${payload.inviteCode}?source=challenge`);
     };
     const handleChallengeError = (payload: ErrorPayload) => {
       if (!payload.code.startsWith("LOBBY_CHALLENGE") && payload.code !== "TRANSITION_IN_PROGRESS") {
