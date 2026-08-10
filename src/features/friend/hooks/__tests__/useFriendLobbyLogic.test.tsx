@@ -16,6 +16,7 @@ const mocks = vi.hoisted(() => ({
   trackInviteJoinFailed: vi.fn(),
   trackInviteJoinSucceeded: vi.fn(),
   toastError: vi.fn(),
+  retryFailureJoinCount: 0,
 }));
 
 vi.mock('next/navigation', () => ({
@@ -112,6 +113,7 @@ function makeLobby(inviteCode: string): LobbyState {
 describe('useFriendLobbyLogic invite links', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.retryFailureJoinCount = 0;
     mocks.socketEmit.mockImplementation((event: string, payload?: unknown, ack?: (result: unknown) => void) => {
       if (typeof ack !== 'function') return;
       const correlationId =
@@ -140,6 +142,19 @@ describe('useFriendLobbyLogic invite links', () => {
             correlationId,
           });
           return;
+        }
+        if (inviteCode === 'FLAKY1') {
+          mocks.retryFailureJoinCount += 1;
+          if (mocks.retryFailureJoinCount > 1) {
+            ack({
+              ok: false,
+              code: 'LOBBY_NOT_FOUND',
+              message: 'Lobby closed during retry.',
+              retryable: false,
+              correlationId,
+            });
+            return;
+          }
         }
         ack({
           ok: true,
@@ -277,6 +292,8 @@ describe('useFriendLobbyLogic invite links', () => {
 
     await act(async () => {
       await Promise.resolve();
+    });
+    await act(async () => {
       await vi.advanceTimersByTimeAsync(4_000);
     });
     await act(async () => {
@@ -303,6 +320,33 @@ describe('useFriendLobbyLogic invite links', () => {
       lobbyId: 'lobby-LATE01',
       attemptNumber: 3,
     });
+  });
+
+  it('keeps a retry command failure from being overwritten by the confirmation timeout', async () => {
+    vi.useFakeTimers();
+    const { result } = renderHook(() =>
+      useFriendLobbyLogic({ roomCode: 'FLAKY1', isHost: false }),
+    );
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(4_000);
+    });
+
+    expect(result.current.inviteJoinFailure).toEqual(expect.objectContaining({
+      reasonCode: 'LOBBY_NOT_FOUND',
+      message: 'Lobby closed during retry.',
+    }));
+    expect(mocks.trackInviteJoinFailed).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(8_000);
+    });
+
+    expect(result.current.inviteJoinFailure?.reasonCode).toBe('LOBBY_NOT_FOUND');
+    expect(mocks.trackInviteJoinFailed).toHaveBeenCalledTimes(1);
   });
 
   it('does not label internal room navigation as a shared-link funnel', async () => {
