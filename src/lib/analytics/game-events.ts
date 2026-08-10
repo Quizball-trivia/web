@@ -1,4 +1,8 @@
 import { trackEvent } from '@/lib/posthog';
+import {
+  getCampaignAttributionAnalyticsProperties,
+  setCampaignAuthMethod,
+} from '@/features/campaign-quiz/campaignAttribution';
 
 type AuthMethod = 'google' | 'facebook' | 'email' | 'phone';
 
@@ -164,12 +168,17 @@ export function trackSignupStarted(method: AuthMethod = 'google') {
   // returning logins (the server only knows new-vs-returning after auth).
   // `auth_started` is the honest name; `signup_started` is kept for historical
   // dashboards (dual-fire) and should be retired once charts are migrated.
-  // Real new-account signal = `onboarding_completed` (only new users see it).
-  trackEvent('auth_started', { method });
-  trackEvent('signup_started', { method });
+  // Real new-account signal = backend `account_created`, gated on the DB insert.
+  setCampaignAuthMethod(method);
+  const campaign = getCampaignAttributionAnalyticsProperties();
+  trackEvent('auth_started', { method, ...campaign });
+  trackEvent('signup_started', { method, ...campaign });
 }
 
 export function trackSignupCompleted(method: AuthMethod = 'google') {
+  // Legacy helper retained for older callers. New signup funnels must use the
+  // backend account_created event; client code cannot authoritatively tell a
+  // new account from a returning login or delayed email confirmation.
   trackEvent('signup_completed', { method });
 }
 

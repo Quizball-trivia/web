@@ -10,6 +10,7 @@ import { trackLogout } from "@/lib/analytics/game-events";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
 import { getSupabaseSession, signOutLocal } from "@/lib/auth/supabase";
 import { disconnectSocket } from "@/lib/realtime/socket-client";
+import { clearCampaignAttribution } from "@/features/campaign-quiz/campaignAttribution";
 
 type AuthStatus = "loading" | "anonymous" | "authenticated" | "banned";
 const BOOTSTRAP_TRANSIENT_RETRY_MS = 300;
@@ -54,6 +55,9 @@ function syncAnalyticsUser(user: User): void {
       first_email: user.email,
     },
   );
+  // Provisioning has already sent this attribution to the backend. Clear it
+  // after identify so a later account on the same browser cannot inherit it.
+  clearCampaignAttribution();
 }
 
 function wait(ms: number): Promise<void> {

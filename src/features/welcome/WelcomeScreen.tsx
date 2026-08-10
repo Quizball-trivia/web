@@ -22,6 +22,7 @@ import { WelcomeCategoriesDialog } from './WelcomeCategoriesDialog';
 import { WelcomeTierRoadSection } from './WelcomeTierRoadSection';
 import { WelcomeLeaderboardSection } from './WelcomeLeaderboardSection';
 import { WelcomeFooter } from './WelcomeFooter';
+import { rememberCampaignAttributionFromSignupUrl } from '@/features/campaign-quiz/campaignAttribution';
 
 export function WelcomeScreen() {
   const cspNonce = useCspNonce();
@@ -125,6 +126,7 @@ export function WelcomeScreen() {
     const url = new URL(window.location.href);
     if (url.searchParams.get('signup') !== '1') return;
 
+    rememberCampaignAttributionFromSignupUrl(url);
     campaignSignupHandledRef.current = true;
     handleAuthModeChange('signup');
     handleLoginDialogOpenChange(true);

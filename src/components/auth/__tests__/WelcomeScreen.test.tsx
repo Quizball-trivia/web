@@ -539,7 +539,7 @@ describe('WelcomeScreen — email signin / signup', () => {
       locale: 'en',
     }));
     expect(trackSignupStartedMock).toHaveBeenCalledWith('email');
-    await waitFor(() => expect(trackSignupCompletedMock).toHaveBeenCalledWith('email'));
+    expect(trackSignupCompletedMock).not.toHaveBeenCalled();
     await waitFor(() => expect(bootstrapMock).toHaveBeenCalled());
   });
 
