@@ -17,6 +17,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
+import { AppShellPageChrome } from '@/components/layout/app-shell/AppShellPageChrome';
 import { CampaignQuizGame } from './CampaignQuizGame';
 import { CampaignQuizPageView } from './CampaignQuizPageView';
 import { CampaignQuizRating } from './CampaignQuizRating';
@@ -57,12 +58,13 @@ export function CampaignQuizLanding({ content, quiz }: CampaignQuizLandingProps)
   const playId = `play-${content.slug}-quiz`;
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-surface-page font-poppins text-white">
+    <div className="relative min-h-screen overflow-x-hidden bg-surface-page-alt font-poppins text-white">
+      <AppShellPageChrome />
       <CampaignQuizPageView
         slug={quiz.slug}
         totalQuestions={quiz.total_questions}
       />
-      <header className="sticky top-0 z-50 bg-surface-page/95 backdrop-blur-xl">
+      <header className="sticky top-0 z-50 bg-surface-page-alt/80 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:h-20 lg:px-8">
           <Link href="/en" aria-label="QuizBall home" className="shrink-0">
             <Image
@@ -92,7 +94,7 @@ export function CampaignQuizLanding({ content, quiz }: CampaignQuizLandingProps)
         </div>
       </header>
 
-      <main>
+      <main className="relative z-10">
         <div className="mx-auto max-w-7xl px-4 pt-5 sm:px-6 lg:px-8">
           <Breadcrumb>
             <BreadcrumbList className="text-xs font-semibold text-white/40 sm:text-sm">
@@ -328,7 +330,7 @@ export function CampaignQuizLanding({ content, quiz }: CampaignQuizLandingProps)
         </section>
       </main>
 
-      <footer className="bg-surface-page px-4 py-10">
+      <footer className="relative z-10 bg-surface-page-alt/80 px-4 py-10 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-5 sm:flex-row">
           <Link href="/en" aria-label="QuizBall home">
             <Image

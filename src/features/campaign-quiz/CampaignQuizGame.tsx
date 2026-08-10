@@ -345,11 +345,7 @@ export function CampaignQuizGame({
                 <motion.div
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                className={`mt-4 rounded-lg border px-4 py-4 ${
-                    result.correct
-                      ? 'border-brand-green/60'
-                      : 'border-brand-red/60'
-                  }`}
+                  className="mt-4 px-4 py-4"
                 >
                   <p className={`font-black ${result.correct ? 'text-brand-green-light' : 'text-brand-red-light'}`}>
                     {result.correct ? 'Correct — well played!' : 'Not quite — the correct answer is highlighted.'}
