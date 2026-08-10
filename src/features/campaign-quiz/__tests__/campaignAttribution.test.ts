@@ -77,14 +77,20 @@ describe('campaign attribution handoff', () => {
   it('puts the same conversion ID on the signup click event and auth handoff', () => {
     trackCampaignSignupClick('liverpool', 'score', { score: 12, totalQuestions: 15 });
 
+    const signupProperties = trackEventMock.mock.calls[0]?.[1] as Record<string, unknown>;
     expect(trackEventMock).toHaveBeenCalledWith('signup_click', expect.objectContaining({
       quiz_slug: 'liverpool',
       campaign_conversion_id: '11111111-1111-4111-8111-111111111111',
       score: 12,
       total_questions: 15,
     }));
-    expect(getCampaignAttributionAnalyticsProperties()).toMatchObject({
-      campaign_conversion_id: '11111111-1111-4111-8111-111111111111',
-    });
+    const encodedHandoff = getCampaignAttributionHeader();
+    expect(encodedHandoff).toBeTruthy();
+    const base64 = encodedHandoff!.replace(/-/g, '+').replace(/_/g, '/');
+    const binary = window.atob(base64.padEnd(Math.ceil(base64.length / 4) * 4, '='));
+    const handoff = JSON.parse(
+      new TextDecoder().decode(Uint8Array.from(binary, (char) => char.charCodeAt(0))),
+    ) as Record<string, unknown>;
+    expect(handoff.campaign_conversion_id).toBe(signupProperties.campaign_conversion_id);
   });
 });
