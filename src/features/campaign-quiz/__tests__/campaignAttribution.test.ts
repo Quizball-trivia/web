@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const getDistinctIdMock = vi.fn(() => 'anon-browser-123');
+const trackEventMock = vi.fn();
 
 vi.mock('@/lib/posthog', () => ({
-  posthog: { get_distinct_id: () => getDistinctIdMock() },
+  trackEvent: (...args: unknown[]) => trackEventMock(...args),
 }));
 
 import {
@@ -14,13 +14,15 @@ import {
   hydrateCampaignAttributionFromUrl,
   rememberCampaignAttribution,
   rememberCampaignAttributionFromSignupUrl,
-  setCampaignAuthMethod,
 } from '../campaignAttribution';
+import { trackCampaignSignupClick } from '../campaignQuiz.analytics';
 
 describe('campaign attribution handoff', () => {
   beforeEach(() => {
+    vi.restoreAllMocks();
     window.sessionStorage.clear();
-    getDistinctIdMock.mockReturnValue('anon-browser-123');
+    trackEventMock.mockClear();
+    vi.spyOn(window.crypto, 'randomUUID').mockReturnValue('11111111-1111-4111-8111-111111111111');
   });
 
   it('persists score, CTA placement, auth method, and anonymous ID', () => {
@@ -30,7 +32,6 @@ describe('campaign attribution handoff', () => {
       score: 12,
       totalQuestions: 15,
     });
-    setCampaignAuthMethod('google');
 
     const encoded = getCampaignAttributionHeader();
     expect(encoded).toBeTruthy();
@@ -41,8 +42,7 @@ describe('campaign attribution handoff', () => {
       source: 'campaign_quiz',
       quiz_slug: 'manchester-city',
       cta_placement: 'score',
-      anonymous_distinct_id: 'anon-browser-123',
-      auth_method: 'google',
+      campaign_conversion_id: '11111111-1111-4111-8111-111111111111',
       quiz_score: 12,
       quiz_total_questions: 15,
     });
@@ -71,6 +71,20 @@ describe('campaign attribution handoff', () => {
     expect(getCampaignAttributionAnalyticsProperties()).toMatchObject({
       quiz_slug: 'arsenal',
       cta_placement: 'header',
+    });
+  });
+
+  it('puts the same conversion ID on the signup click event and auth handoff', () => {
+    trackCampaignSignupClick('liverpool', 'score', { score: 12, totalQuestions: 15 });
+
+    expect(trackEventMock).toHaveBeenCalledWith('signup_click', expect.objectContaining({
+      quiz_slug: 'liverpool',
+      campaign_conversion_id: '11111111-1111-4111-8111-111111111111',
+      score: 12,
+      total_questions: 15,
+    }));
+    expect(getCampaignAttributionAnalyticsProperties()).toMatchObject({
+      campaign_conversion_id: '11111111-1111-4111-8111-111111111111',
     });
   });
 });

@@ -1,17 +1,13 @@
 'use client';
 
-import { posthog } from '@/lib/posthog';
-
 export type CampaignCtaPlacement = 'header' | 'score' | 'footer' | 'rating' | 'hero';
-export type CampaignAuthMethod = 'google' | 'facebook' | 'apple' | 'email' | 'phone';
 
 export type CampaignAttribution = {
   source: 'campaign_quiz';
   quiz_slug: string;
   cta_placement: CampaignCtaPlacement;
   captured_at: string;
-  anonymous_distinct_id: string;
-  auth_method?: CampaignAuthMethod;
+  campaign_conversion_id: string;
   quiz_score?: number;
   quiz_total_questions?: number;
 };
@@ -20,6 +16,7 @@ const STORAGE_KEY = 'quizball_campaign_attribution';
 const URL_PARAM = 'campaign_attribution';
 const MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const PLACEMENTS = new Set<CampaignCtaPlacement>([
   'header',
   'score',
@@ -39,9 +36,8 @@ function isValid(value: unknown, nowMs = Date.now()): value is CampaignAttributi
     SLUG_RE.test(item.quiz_slug) &&
     typeof item.cta_placement === 'string' &&
     PLACEMENTS.has(item.cta_placement as CampaignCtaPlacement) &&
-    typeof item.anonymous_distinct_id === 'string' &&
-    item.anonymous_distinct_id.length > 0 &&
-    item.anonymous_distinct_id.length <= 200 &&
+    typeof item.campaign_conversion_id === 'string' &&
+    UUID_RE.test(item.campaign_conversion_id) &&
     Number.isFinite(capturedAtMs) &&
     capturedAtMs >= nowMs - MAX_AGE_MS &&
     capturedAtMs <= nowMs + 5 * 60 * 1000 &&
@@ -100,10 +96,9 @@ function decode(encoded: string): CampaignAttribution | null {
   }
 }
 
-function getAnonymousDistinctId(): string | null {
+function createConversionId(): string | null {
   try {
-    const distinctId = posthog.get_distinct_id();
-    return typeof distinctId === 'string' && distinctId.trim() ? distinctId : null;
+    return window.crypto.randomUUID();
   } catch {
     return null;
   }
@@ -115,15 +110,15 @@ export function rememberCampaignAttribution(input: {
   score?: number;
   totalQuestions?: number;
 }): CampaignAttribution | null {
-  const anonymousDistinctId = getAnonymousDistinctId();
-  if (!anonymousDistinctId || !SLUG_RE.test(input.quizSlug)) return null;
+  const campaignConversionId = createConversionId();
+  if (!campaignConversionId || !SLUG_RE.test(input.quizSlug)) return null;
 
   const attribution: CampaignAttribution = {
     source: 'campaign_quiz',
     quiz_slug: input.quizSlug,
     cta_placement: input.placement,
     captured_at: new Date().toISOString(),
-    anonymous_distinct_id: anonymousDistinctId,
+    campaign_conversion_id: campaignConversionId,
     ...(input.score !== undefined ? { quiz_score: input.score } : {}),
     ...(input.totalQuestions !== undefined
       ? { quiz_total_questions: input.totalQuestions }
@@ -164,11 +159,6 @@ export function hydrateCampaignAttributionFromUrl(url: URL): CampaignAttribution
   return attribution;
 }
 
-export function setCampaignAuthMethod(method: CampaignAuthMethod): void {
-  const current = readStored();
-  if (current) store({ ...current, auth_method: method });
-}
-
 export function getCampaignAttributionHeader(): string | null {
   const attribution = readStored();
   return attribution ? encode(attribution) : null;
@@ -190,6 +180,7 @@ export function getCampaignAttributionAnalyticsProperties(): Record<string, stri
     quiz_type: 'campaign',
     quiz_slug: attribution.quiz_slug,
     cta_placement: attribution.cta_placement,
+    campaign_conversion_id: attribution.campaign_conversion_id,
     ...(attribution.quiz_score !== undefined ? { quiz_score: attribution.quiz_score } : {}),
     ...(attribution.quiz_total_questions !== undefined
       ? { quiz_total_questions: attribution.quiz_total_questions }
