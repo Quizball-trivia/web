@@ -1549,12 +1549,18 @@ function RevealScreen({
     if (typed) return typed;
     const correctId = evaluation['correct_id'];
     if (typeof correctId !== 'string') return '';
-    if (correctId === 'true') return t('weekendLeague.gTrue');
-    if (correctId === 'false') return t('weekendLeague.gFalse');
-    const options = Array.isArray(attempt?.question?.['options'])
-      ? (attempt!.question['options'] as Array<Record<string, unknown>>)
-      : [];
-    const match = options.find((o) => String(o['id']) === correctId);
+    // Literal true/false ids belong to that kind ONLY — an mcq option whose id
+    // happens to be "true" must still resolve through its own options.
+    if (reveal.kind === 'true_false') {
+      if (correctId === 'true') return t('weekendLeague.gTrue');
+      if (correctId === 'false') return t('weekendLeague.gFalse');
+    }
+    const raw = attempt?.question?.['options'];
+    const options = Array.isArray(raw) ? raw : [];
+    const match = options.find(
+      (o): o is Record<string, unknown> =>
+        typeof o === 'object' && o !== null && String((o as Record<string, unknown>)['id']) === correctId,
+    );
     // Never fall back to the raw id — hide the line instead.
     return match ? pick(match['text'], locale) : '';
   })();
@@ -1595,10 +1601,10 @@ function RevealScreen({
       <div className="mt-2 font-poppins text-[12px] font-semibold text-white/45">
         {t('weekendLeague.gAnsweredCount', { n: reveal.answered })}
       </div>
-      {/* Full top-24 in its own scroll area: the 5-row strip left spectators
-          unable to see (or reach) the rest of the board — the immersive layer
-          has no page scroll of its own. */}
-      <div className="mt-2 max-h-[54vh] w-full overflow-y-auto overscroll-contain">
+      {/* Full top-24, scrolled by the Immersive layer that already owns
+          overflow-y-auto — a nested scroller traps gestures on short mobile
+          viewports (review catch). The 5-row default hid most of the board. */}
+      <div className="mt-2 w-full">
         <BoardStrip board={board} selfUserId={selfUserId} rows={24} />
       </div>
     </div>
