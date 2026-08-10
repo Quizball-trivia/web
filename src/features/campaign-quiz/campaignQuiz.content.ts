@@ -1,3 +1,5 @@
+import manualClubQuizContent from './manualClubQuiz.content.json';
+
 export interface CampaignQuizPageContent {
   slug: string;
   title: string;
@@ -19,7 +21,11 @@ export interface CampaignQuizPageContent {
 }
 
 const CATEGORY_IMAGE_BASE =
-  'https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/categories';
+  `${process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, '') ?? 'https://nsdfiprfmhdqhbfxfwpv.supabase.co'}/storage/v1/object/public/imgs/categories`;
+
+interface ManualClubQuizContent extends Omit<CampaignQuizPageContent, 'heroImage'> {
+  heroImageFile: string;
+}
 
 export const CAMPAIGN_QUIZ_CONTENT: Record<string, CampaignQuizPageContent> = {
   liverpool: {
@@ -239,6 +245,14 @@ export const CAMPAIGN_QUIZ_CONTENT: Record<string, CampaignQuizPageContent> = {
     relatedSlugs: ['premier-league', 'guess-the-player', 'career-path'],
   },
 };
+
+for (const quiz of manualClubQuizContent as ManualClubQuizContent[]) {
+  const { heroImageFile, ...content } = quiz;
+  CAMPAIGN_QUIZ_CONTENT[quiz.slug] = {
+    ...content,
+    heroImage: `${CATEGORY_IMAGE_BASE}/${heroImageFile}`,
+  };
+}
 
 export const CAMPAIGN_QUIZ_SLUGS = Object.keys(CAMPAIGN_QUIZ_CONTENT);
 

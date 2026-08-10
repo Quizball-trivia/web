@@ -60,6 +60,10 @@ vi.mock("@/lib/analytics/game-events", () => ({
 }));
 
 import { OAuthCallbackScreen } from "@/components/auth/OAuthCallbackScreen";
+import {
+  getCampaignAttributionHeader,
+  rememberCampaignAttribution,
+} from "@/features/campaign-quiz/campaignAttribution";
 import { useAuthStore } from "@/stores/auth.store";
 
 function makeUser(onboardingComplete: boolean): User {
@@ -101,26 +105,29 @@ describe("OAuthCallbackScreen analytics", () => {
       error: null,
     });
     consumeRedirectOAuthProviderMock.mockReturnValue("google");
+    vi.spyOn(window.crypto, "randomUUID").mockReturnValue(
+      "11111111-1111-4111-8111-111111111111",
+    );
   });
 
-  it("tracks signup_completed for a successful callback when the user still needs onboarding", async () => {
+  it("does not guess signup completion from onboarding state", async () => {
     fetchCurrentUserMock.mockResolvedValue(makeUser(false));
 
     render(<OAuthCallbackScreen />);
 
     await waitFor(() => expect(replaceMock).toHaveBeenCalledWith("/onboarding"));
-    expect(trackSignupCompletedMock).toHaveBeenCalledWith("google");
+    expect(trackSignupCompletedMock).not.toHaveBeenCalled();
     expect(trackLoginCompletedMock).not.toHaveBeenCalled();
   });
 
-  it("tracks login_completed for a successful callback when the user is onboarded", async () => {
+  it("does not emit a client login completion from the signup callback", async () => {
     consumeRedirectOAuthProviderMock.mockReturnValue("facebook");
     fetchCurrentUserMock.mockResolvedValue(makeUser(true));
 
     render(<OAuthCallbackScreen />);
 
     await waitFor(() => expect(replaceMock).toHaveBeenCalledWith("/play"));
-    expect(trackLoginCompletedMock).toHaveBeenCalledWith("facebook");
+    expect(trackLoginCompletedMock).not.toHaveBeenCalled();
     expect(trackSignupCompletedMock).not.toHaveBeenCalled();
   });
 
@@ -134,5 +141,42 @@ describe("OAuthCallbackScreen analytics", () => {
     });
     expect(trackSignupCompletedMock).not.toHaveBeenCalled();
     expect(trackLoginCompletedMock).not.toHaveBeenCalled();
+  });
+
+  it("provisions campaign attribution before a valid mobile redirect", async () => {
+    rememberCampaignAttribution({ quizSlug: "liverpool", placement: "score" });
+    const mobileRedirect = encodeURIComponent(
+      "https://staging.quizball.io/auth/mobile-callback",
+    );
+    window.history.replaceState(
+      {},
+      "",
+      `/auth/callback?code=pkce-code&mobile_redirect=${mobileRedirect}`,
+    );
+    fetchCurrentUserMock.mockRejectedValue(new Error("provision failed"));
+
+    render(<OAuthCallbackScreen />);
+
+    await waitFor(() => expect(fetchCurrentUserMock).toHaveBeenCalledTimes(1));
+    expect(screen.getByText("oauthCallback.authenticationFailed")).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/auth/callback");
+  });
+
+  it("clears campaign attribution after successful mobile provisioning", async () => {
+    rememberCampaignAttribution({ quizSlug: "liverpool", placement: "score" });
+    const mobileRedirect = encodeURIComponent(
+      "https://staging.quizball.io/auth/mobile-callback",
+    );
+    window.history.replaceState(
+      {},
+      "",
+      `/auth/callback?code=pkce-code&mobile_redirect=${mobileRedirect}`,
+    );
+    fetchCurrentUserMock.mockResolvedValue(makeUser(true));
+
+    render(<OAuthCallbackScreen />);
+
+    await waitFor(() => expect(fetchCurrentUserMock).toHaveBeenCalledTimes(1));
+    expect(getCampaignAttributionHeader()).toBeNull();
   });
 });
