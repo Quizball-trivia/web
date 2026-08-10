@@ -12,7 +12,12 @@ const mocks = vi.hoisted(() => ({
   startSession: vi.fn(),
   trackLobbyCreated: vi.fn(),
   trackLobbyJoined: vi.fn(),
+  trackInviteLinkOpened: vi.fn(),
+  trackInviteJoinAttempted: vi.fn(),
+  trackInviteJoinFailed: vi.fn(),
+  trackInviteJoinSucceeded: vi.fn(),
   toastError: vi.fn(),
+  retryFailureJoinCount: 0,
 }));
 
 vi.mock('next/navigation', () => ({
@@ -59,6 +64,10 @@ vi.mock('@/lib/queries/stats.queries', () => ({
 
 vi.mock('@/lib/analytics/game-events', () => ({
   trackFriendInviteSent: vi.fn(),
+  trackFriendInviteLinkOpened: (...args: unknown[]) => mocks.trackInviteLinkOpened(...args),
+  trackFriendInviteJoinAttempted: (...args: unknown[]) => mocks.trackInviteJoinAttempted(...args),
+  trackFriendInviteJoinFailed: (...args: unknown[]) => mocks.trackInviteJoinFailed(...args),
+  trackFriendInviteJoinSucceeded: (...args: unknown[]) => mocks.trackInviteJoinSucceeded(...args),
   trackLobbyCreated: (...args: unknown[]) => mocks.trackLobbyCreated(...args),
   trackLobbyJoined: (...args: unknown[]) => mocks.trackLobbyJoined(...args),
 }));
@@ -105,6 +114,7 @@ function makeLobby(inviteCode: string): LobbyState {
 describe('useFriendLobbyLogic invite links', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.retryFailureJoinCount = 0;
     mocks.socketEmit.mockImplementation((event: string, payload?: unknown, ack?: (result: unknown) => void) => {
       if (typeof ack !== 'function') return;
       const correlationId =
@@ -133,6 +143,19 @@ describe('useFriendLobbyLogic invite links', () => {
             correlationId,
           });
           return;
+        }
+        if (inviteCode === 'FLAKY1') {
+          mocks.retryFailureJoinCount += 1;
+          if (mocks.retryFailureJoinCount > 1) {
+            ack({
+              ok: false,
+              code: 'LOBBY_NOT_FOUND',
+              message: 'Lobby closed during retry.',
+              retryable: false,
+              correlationId,
+            });
+            return;
+          }
         }
         ack({
           ok: true,
@@ -223,13 +246,123 @@ describe('useFriendLobbyLogic invite links', () => {
 
     await waitFor(() => {
       expect(result.current.inviteJoinFailure).toEqual({
-        code: 'MISSING',
+        inviteCode: 'MISSING',
+        reasonCode: 'LOBBY_NOT_FOUND',
         message: 'Lobby not found.',
       });
     });
 
     expect(result.current.isResolvingInvite).toBe(false);
     expect(mocks.toastError).toHaveBeenCalledWith('Lobby not found.');
+    expect(mocks.trackInviteLinkOpened).toHaveBeenCalledTimes(1);
+    expect(mocks.trackInviteJoinAttempted).toHaveBeenCalledWith({
+      attemptNumber: 1,
+    });
+    expect(mocks.trackInviteJoinFailed).toHaveBeenCalledWith(expect.objectContaining({
+      failureCode: 'LOBBY_NOT_FOUND',
+      attemptNumber: 1,
+    }));
+  });
+
+  it('retries an acknowledged invite when lobby state is not delivered', async () => {
+    vi.useFakeTimers();
+    renderHook(() =>
+      useFriendLobbyLogic({ roomCode: 'STATE1', isHost: false }),
+    );
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+    expect(mocks.socketEmit.mock.calls.filter(([event]) => event === 'lobby:join_by_code')).toHaveLength(1);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(4_000);
+    });
+
+    expect(mocks.socketEmit.mock.calls.filter(([event]) => event === 'lobby:join_by_code')).toHaveLength(2);
+    expect(mocks.trackInviteJoinAttempted).toHaveBeenLastCalledWith({
+      attemptNumber: 2,
+    });
+  });
+
+  it('accepts authoritative lobby state that arrives just after the terminal timeout', async () => {
+    vi.useFakeTimers();
+    const { result } = renderHook(() =>
+      useFriendLobbyLogic({ roomCode: 'LATE01', isHost: false }),
+    );
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(4_000);
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(4_000);
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(4_000);
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(4_000);
+    });
+
+    expect(result.current.inviteJoinFailure?.reasonCode).toBe('LOBBY_STATE_TIMEOUT');
+
+    act(() => {
+      useRealtimeMatchStore.getState().setLobby(makeLobby('LATE01'));
+    });
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(result.current.inviteJoinFailure).toBeNull();
+    expect(mocks.trackInviteJoinSucceeded).toHaveBeenCalledWith({
+      lobbyId: 'lobby-LATE01',
+      attemptNumber: 3,
+    });
+  });
+
+  it('keeps a retry command failure from being overwritten by the confirmation timeout', async () => {
+    vi.useFakeTimers();
+    const { result } = renderHook(() =>
+      useFriendLobbyLogic({ roomCode: 'FLAKY1', isHost: false }),
+    );
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(4_000);
+    });
+
+    expect(result.current.inviteJoinFailure).toEqual(expect.objectContaining({
+      reasonCode: 'LOBBY_NOT_FOUND',
+      message: 'Lobby closed during retry.',
+    }));
+    expect(mocks.trackInviteJoinFailed).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(8_000);
+    });
+
+    expect(result.current.inviteJoinFailure?.reasonCode).toBe('LOBBY_NOT_FOUND');
+    expect(mocks.trackInviteJoinFailed).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not label internal room navigation as a shared-link funnel', async () => {
+    renderHook(() =>
+      useFriendLobbyLogic({ roomCode: 'MANUAL1', isHost: false, inviteSource: 'manual_code' }),
+    );
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(mocks.trackInviteLinkOpened).not.toHaveBeenCalled();
+    expect(mocks.trackInviteJoinAttempted).not.toHaveBeenCalled();
+    expect(mocks.trackInviteJoinFailed).not.toHaveBeenCalled();
+    expect(mocks.trackInviteJoinSucceeded).not.toHaveBeenCalled();
   });
 
   it('does not try to rejoin the invite while the lobby is handing off to an active match', async () => {

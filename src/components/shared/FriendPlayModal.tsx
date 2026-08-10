@@ -73,7 +73,7 @@ export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) 
     }
 
     onOpenChange(false);
-    router.push(`/friend/room/${code}`);
+    router.push(`/friend/room/${code}?source=manual_code`);
   };
 
   const Body = (

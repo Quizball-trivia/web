@@ -248,7 +248,7 @@ export function useAppShellViewModel() {
 
   const handleReturnToLobby = () => {
     if (!lobbyCode) return;
-    router.push(`/friend/room/${lobbyCode}`);
+    router.push(`/friend/room/${lobbyCode}?source=current_lobby`);
   };
 
   const handleReturnToRankedLobby = () => {
