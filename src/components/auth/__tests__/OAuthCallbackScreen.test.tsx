@@ -60,6 +60,7 @@ vi.mock("@/lib/analytics/game-events", () => ({
 }));
 
 import { OAuthCallbackScreen } from "@/components/auth/OAuthCallbackScreen";
+import { rememberCampaignAttribution } from "@/features/campaign-quiz/campaignAttribution";
 import { useAuthStore } from "@/stores/auth.store";
 
 function makeUser(onboardingComplete: boolean): User {
@@ -101,6 +102,9 @@ describe("OAuthCallbackScreen analytics", () => {
       error: null,
     });
     consumeRedirectOAuthProviderMock.mockReturnValue("google");
+    vi.spyOn(window.crypto, "randomUUID").mockReturnValue(
+      "11111111-1111-4111-8111-111111111111",
+    );
   });
 
   it("does not guess signup completion from onboarding state", async () => {
@@ -134,5 +138,23 @@ describe("OAuthCallbackScreen analytics", () => {
     });
     expect(trackSignupCompletedMock).not.toHaveBeenCalled();
     expect(trackLoginCompletedMock).not.toHaveBeenCalled();
+  });
+
+  it("provisions campaign attribution before a valid mobile redirect", async () => {
+    rememberCampaignAttribution({ quizSlug: "liverpool", placement: "score" });
+    const mobileRedirect = encodeURIComponent(
+      "https://staging.quizball.io/auth/mobile-callback",
+    );
+    window.history.replaceState(
+      {},
+      "",
+      `/auth/callback?code=pkce-code&mobile_redirect=${mobileRedirect}`,
+    );
+    fetchCurrentUserMock.mockRejectedValue(new Error("provision failed"));
+
+    render(<OAuthCallbackScreen />);
+
+    await waitFor(() => expect(fetchCurrentUserMock).toHaveBeenCalledTimes(1));
+    expect(screen.getByText("oauthCallback.authenticationFailed")).toBeInTheDocument();
   });
 });

@@ -25,7 +25,7 @@ describe('campaign attribution handoff', () => {
     vi.spyOn(window.crypto, 'randomUUID').mockReturnValue('11111111-1111-4111-8111-111111111111');
   });
 
-  it('persists score, CTA placement, auth method, and anonymous ID', () => {
+  it('persists score, CTA placement, and a conversion ID', () => {
     rememberCampaignAttribution({
       quizSlug: 'manchester-city',
       placement: 'score',
