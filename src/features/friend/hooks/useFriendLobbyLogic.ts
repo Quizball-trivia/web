@@ -309,6 +309,7 @@ export function useFriendLobbyLogic({
       }
       terminalInviteJoinFailureRef.current = true;
       inviteJoinCancelledRef.current = true;
+      setAwaitingInviteLobby(null);
       if (shouldTrackSharedInvite) {
         trackFriendInviteJoinFailed({
           failureCode: result.code,
