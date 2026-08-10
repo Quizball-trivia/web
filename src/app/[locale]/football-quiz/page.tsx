@@ -3,6 +3,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { ArrowRight, Swords } from 'lucide-react';
+import { AppShellPageChrome } from '@/components/layout/app-shell/AppShellPageChrome';
 import {
   CAMPAIGN_QUIZ_CONTENT,
   CAMPAIGN_QUIZ_SLUGS,
@@ -46,8 +47,9 @@ export default async function FootballQuizHubPage({
   if (locale !== 'en') redirect('/en/football-quiz');
 
   return (
-    <div className="min-h-screen bg-surface-page font-poppins text-white">
-      <header className="bg-surface-page/95">
+    <div className="relative min-h-screen bg-surface-page-alt font-poppins text-white">
+      <AppShellPageChrome />
+      <header className="relative z-10 bg-surface-page-alt/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:h-20 lg:px-8">
           <Link href="/en" aria-label="QuizBall home">
             <Image
@@ -68,7 +70,7 @@ export default async function FootballQuizHubPage({
         </div>
       </header>
 
-      <main>
+      <main className="relative z-10">
         <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-cyan">
             Free football trivia
@@ -92,7 +94,7 @@ export default async function FootballQuizHubPage({
                   key={slug}
                   targetSlug={slug}
                   href={`/en/football-quiz/${slug}`}
-                  className="group overflow-hidden rounded-xl bg-surface-card-deeper"
+                  className="group flex h-full flex-col overflow-hidden rounded-xl bg-surface-card-deeper"
                 >
                   <div className="relative aspect-[4/3] overflow-hidden">
                     <Image
@@ -103,7 +105,7 @@ export default async function FootballQuizHubPage({
                       className="object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                     />
                   </div>
-                  <div className="flex items-center justify-between gap-4 bg-brand-blue p-5">
+                  <div className="flex flex-1 items-center justify-between gap-4 bg-brand-blue p-5">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.14em] text-brand-yellow">
                         Play free

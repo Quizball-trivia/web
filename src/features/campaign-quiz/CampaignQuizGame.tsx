@@ -193,7 +193,12 @@ export function CampaignQuizGame({
           <Link
             href={ctaHref}
             onClick={() => {
-              if (!isAuthenticated) trackCampaignSignupClick(slug, 'score');
+              if (!isAuthenticated) {
+                trackCampaignSignupClick(slug, 'score', {
+                  score,
+                  totalQuestions: questions.length,
+                });
+              }
             }}
             className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-brand-yellow px-6 text-base font-bold text-black transition-colors hover:bg-brand-yellow/90 sm:w-auto"
           >
@@ -345,11 +350,7 @@ export function CampaignQuizGame({
                 <motion.div
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                className={`mt-4 rounded-lg border px-4 py-4 ${
-                    result.correct
-                      ? 'border-brand-green/60'
-                      : 'border-brand-red/60'
-                  }`}
+                  className="mt-4 px-4 py-4"
                 >
                   <p className={`font-black ${result.correct ? 'text-brand-green-light' : 'text-brand-red-light'}`}>
                     {result.correct ? 'Correct — well played!' : 'Not quite — the correct answer is highlighted.'}

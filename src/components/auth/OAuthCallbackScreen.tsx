@@ -15,9 +15,8 @@ import { useAuthStore } from '@/stores/auth.store';
 import { logger } from '@/utils/logger';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
 import { getPostAuthEntryRoute } from '@/lib/auth/postAuthRedirect';
-import { isOnboardingComplete } from '@/lib/auth/onboarding';
-import { trackLoginCompleted, trackSignupCompleted } from '@/lib/analytics/game-events';
 import { useLocale } from '@/contexts/LocaleContext';
+import { hydrateCampaignAttributionFromUrl } from '@/features/campaign-quiz/campaignAttribution';
 
 // Provider error codes that mean "the user backed out", not "auth is broken".
 // These are silently redirected home; every other error surfaces the failure UI.
@@ -113,6 +112,9 @@ export function OAuthCallbackScreen() {
 
         const searchParams = new URLSearchParams(query.replace(/^\?/, ""));
         const mobileRedirect = searchParams.get("mobile_redirect");
+        const campaignAttribution = hydrateCampaignAttributionFromUrl(
+          new URL(window.location.href),
+        );
 
         // User cancelled / denied the provider consent (e.g. tapped "Cancel" on
         // the Facebook or Google screen). The provider redirects back with an
@@ -156,6 +158,13 @@ export function OAuthCallbackScreen() {
             session.refresh_token,
           );
           if (deepLink) {
+            // A campaign conversion must be provisioned while this browser still
+            // owns the attribution context. The mobile app receives only the
+            // session tokens, so redirecting first would lose the originating
+            // quiz for brand-new accounts.
+            if (campaignAttribution) {
+              await fetchCurrentUser();
+            }
             logger.info("OAuth callback: redirecting to mobile app");
             window.location.href = deepLink;
             return;
@@ -183,16 +192,10 @@ export function OAuthCallbackScreen() {
         }
         setAuthenticated(authenticatedUser);
 
-        const provider = consumeRedirectOAuthProvider();
-        if (provider) {
-          // OAuth callbacks don't expose a precise new-vs-returning signal; onboarding
-          // state is the best available heuristic and matches the post-auth route.
-          if (isOnboardingComplete(authenticatedUser)) {
-            trackLoginCompleted(provider);
-          } else {
-            trackSignupCompleted(provider);
-          }
-        }
+        // Clear the redirect marker, but do not guess signup-vs-login from
+        // onboarding state. The backend emits account_created only when the
+        // application user row is actually inserted.
+        consumeRedirectOAuthProvider();
         logger.info('OAuth callback bootstrap success');
         router.replace(getPostAuthEntryRoute(authenticatedUser));
       } catch (err) {

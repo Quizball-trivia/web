@@ -37,7 +37,6 @@ import { useLocale } from '@/contexts/LocaleContext';
 import {
   trackInAppBrowserBlocked,
   trackLoginCompleted,
-  trackSignupCompleted,
   trackSignupStarted,
 } from '@/lib/analytics/game-events';
 
@@ -349,7 +348,6 @@ export function useWelcomeAuthController() {
             setAuthFieldErrors({});
             return;
           }
-          trackSignupCompleted('email');
         } else {
           try {
             await login(authEmail, authPassword);

@@ -9,6 +9,7 @@ import {
   setSupabaseSession,
   signOutLocal,
 } from "@/lib/auth/supabase";
+import { getCampaignAttributionHeader } from "@/features/campaign-quiz/campaignAttribution";
 
 type AuthResponse = components["schemas"]["AuthResponse"];
 
@@ -98,7 +99,12 @@ async function provisionCurrentSession(): Promise<void> {
   // but log + rethrow with context so the provisioning step is identifiable
   // upstream instead of surfacing as a bare request error.
   try {
-    await api.GET("/api/v1/users/me");
+    const attribution = getCampaignAttributionHeader();
+    await api.GET("/api/v1/users/me", {
+      ...(attribution
+        ? { headers: { "X-QuizBall-Campaign-Attribution": attribution } }
+        : {}),
+    });
   } catch (error) {
     logger.error("Session provisioning failed", { error });
     throw error;

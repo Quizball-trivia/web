@@ -1,4 +1,8 @@
 import { trackEvent } from '@/lib/posthog';
+import {
+  rememberCampaignAttribution,
+  type CampaignCtaPlacement,
+} from './campaignAttribution';
 
 /**
  * Funnel for the public SEO quiz pages:
@@ -73,13 +77,30 @@ export function trackCampaignQuizRestart(slug: string, previousScore: number): v
 
 export function trackCampaignSignupClick(
   slug: string,
-  placement: 'header' | 'score' | 'footer' | 'rating' | 'hero',
+  placement: CampaignCtaPlacement,
+  quizResult?: { score: number; totalQuestions: number },
 ): void {
+  const attribution = rememberCampaignAttribution({
+    quizSlug: slug,
+    placement,
+    ...(quizResult
+      ? { score: quizResult.score, totalQuestions: quizResult.totalQuestions }
+      : {}),
+  });
   trackEvent('signup_click', {
     ...CAMPAIGN_PROPS,
     quiz_slug: slug,
     source: 'campaign_quiz',
     placement,
+    ...(attribution
+      ? { campaign_conversion_id: attribution.campaign_conversion_id }
+      : {}),
+    ...(quizResult
+      ? {
+          score: quizResult.score,
+          total_questions: quizResult.totalQuestions,
+        }
+      : {}),
   });
 }
 

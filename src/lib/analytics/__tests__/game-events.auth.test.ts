@@ -1,9 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const trackEventMock = vi.fn();
+const getCampaignPropertiesMock = vi.fn(() => ({}));
 
 vi.mock('@/lib/posthog', () => ({
   trackEvent: (event: string, props?: Record<string, unknown>) => trackEventMock(event, props),
+}));
+
+vi.mock('@/features/campaign-quiz/campaignAttribution', () => ({
+  getCampaignAttributionAnalyticsProperties: () => getCampaignPropertiesMock(),
 }));
 
 import {
@@ -21,6 +26,8 @@ import {
 describe('auth analytics events', () => {
   beforeEach(() => {
     trackEventMock.mockClear();
+    getCampaignPropertiesMock.mockReset();
+    getCampaignPropertiesMock.mockReturnValue({});
   });
 
   it('auth_started carries the method and dual-fires the legacy signup_started', () => {
@@ -29,6 +36,25 @@ describe('auth analytics events', () => {
     expect(trackEventMock).toHaveBeenCalledWith('auth_started', { method: 'facebook' });
     // still dual-fires the legacy event during the dashboard transition
     expect(trackEventMock).toHaveBeenCalledWith('signup_started', { method: 'facebook' });
+  });
+
+  it('adds persisted quiz campaign context to auth intent', () => {
+    getCampaignPropertiesMock.mockReturnValue({
+      source: 'campaign_quiz',
+      quiz_slug: 'liverpool',
+      cta_placement: 'score',
+      quiz_score: 11,
+    });
+
+    trackSignupStarted('email');
+
+    expect(trackEventMock).toHaveBeenCalledWith('auth_started', {
+      method: 'email',
+      source: 'campaign_quiz',
+      quiz_slug: 'liverpool',
+      cta_placement: 'score',
+      quiz_score: 11,
+    });
   });
 
   it('onboarding_completed fires without attribution payload', () => {
