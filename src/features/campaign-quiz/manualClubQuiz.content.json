@@ -1,0 +1,434 @@
+[
+  {
+    "slug": "arsenal",
+    "title": "Arsenal Quiz — Test Your Gunners Knowledge",
+    "metadataTitle": "Arsenal Quiz — Test Your Gunners Knowledge | QuizBall",
+    "description": "Free Arsenal quiz — verified questions on the Gunners. Instant score, no sign-up needed to play. Then take on real fans in ranked football duels.",
+    "breadcrumbLabel": "Arsenal Quiz",
+    "heroLead": "Arsenal Quiz —",
+    "heroHighlight": "Test Your Gunners Knowledge",
+    "lede": "Invincibles, Highbury heroes and north London bragging rights — how much do you really know? Play our free Arsenal quiz: verified questions covering Gunners history from Woolwich to the Emirates. No sign-up needed — answer, get your score instantly, and see how you rank against thousands of fans.",
+    "playHeading": "Kick off the Arsenal quiz",
+    "aboutEyebrow": "The story behind the questions",
+    "aboutHeading": "About this Arsenal FC quiz",
+    "aboutParagraphs": [
+      "Arsenal’s story runs from a munitions workers’ team in Woolwich to one of the most decorated clubs in England: 13 league titles, a record haul of FA Cups, and the only side of the modern era to go a whole top-flight season unbeaten — the Invincibles of 2003–04.",
+      "This arsenal quiz pulls verified questions from QuizBall’s football trivia bank: Herbert Chapman’s pioneers, the 1989 Anfield miracle, Wenger’s revolution, Thierry Henry’s records and the marble halls of Highbury. Mixed difficulty — some questions any Gooner will get, a few that will separate the North Bank regulars from the tourists.",
+      "Play free above, no account needed, and see your score instantly; replay for a fresh set from our Arsenal pool. Then take it further: sign up free and defend your score in live ranked duels against real fans — every correct answer keeps possession, every run of them puts the ball in the net."
+    ],
+    "scoreTemplate": "You scored {score}/{total} — sign up free to save your score and defend it in a ranked duel.",
+    "footerCta": "Proper Gooner or just passing through? Prove it against real fans in live trivia duels.",
+    "heroImageFile": "arsenal-v2.webp",
+    "heroImageAlt": "Arsenal category artwork — red and white football theme",
+    "relatedSlugs": [
+      "tottenham",
+      "chelsea",
+      "premier-league"
+    ]
+  },
+  {
+    "slug": "aston-villa",
+    "title": "Aston Villa Quiz — Test Your Villans Knowledge",
+    "metadataTitle": "Aston Villa Quiz — Test Your Villans Knowledge | QuizBall",
+    "description": "Free Aston Villa quiz — verified questions on the Villans. Instant score, no sign-up needed to play. Then beat real fans in ranked football duels.",
+    "breadcrumbLabel": "Aston Villa Quiz",
+    "heroLead": "Aston Villa Quiz —",
+    "heroHighlight": "Test Your Villans Knowledge",
+    "lede": "European champions, founder members, claret and blue royalty. Play our free Aston Villa quiz — verified questions on Villans history from the Holte End to Rotterdam 1982. No sign-up needed: answer, get your score instantly, and see how you rank against thousands of football fans.",
+    "playHeading": "Kick off the Aston Villa quiz",
+    "aboutEyebrow": "The story behind the questions",
+    "aboutHeading": "About this Aston Villa quiz",
+    "aboutParagraphs": [
+      "Aston Villa’s trophy cabinet was full before most clubs existed: seven league titles, seven FA Cups, and — on one immortal night in Rotterdam in 1982 — the European Cup, won by a side of homegrown grafters against mighty Bayern Munich. Peter Withe’s shin will never be forgotten in B6.",
+      "This aston villa quiz pulls verified questions from QuizBall’s trivia bank across the claret-and-blue story: founder members of the Football League, the Holte End’s roar, Grealish the local heartbeat, and Emery’s revival that put Villa back among Europe’s elite.",
+      "Play free above — no account needed, instant score, fresh questions from the Villa pool each replay. Then take it up a level: sign up free and play live ranked duels against real fans, where correct answers keep possession and streaks finish like Withe at the far post."
+    ],
+    "scoreTemplate": "You scored {score}/{total} — sign up free to save your score and defend it in a ranked duel.",
+    "footerCta": "Holte Ender at heart? Prove your Villa knowledge against real fans in live duels.",
+    "heroImageFile": "aston-villa-v2.webp",
+    "heroImageAlt": "Aston Villa category artwork — claret and blue football theme",
+    "relatedSlugs": [
+      "coventry-city",
+      "nottingham-forest",
+      "premier-league"
+    ]
+  },
+  {
+    "slug": "bournemouth",
+    "title": "Bournemouth Quiz — Test Your Cherries Knowledge",
+    "metadataTitle": "Bournemouth Quiz — Test Your Cherries Knowledge | QuizBall",
+    "description": "Free AFC Bournemouth quiz — verified questions on the Cherries. Instant score, no sign-up needed to play. Then beat real fans in ranked football duels.",
+    "breadcrumbLabel": "Bournemouth Quiz",
+    "heroLead": "Bournemouth Quiz —",
+    "heroHighlight": "Test Your Cherries Knowledge",
+    "lede": "From the brink of extinction to the Premier League — few climbs compare. Play our free Bournemouth quiz: verified questions on the Cherries, Dean Court dramas and the great escape years. No sign-up needed — instant score, then see how you compare with thousands of fans.",
+    "playHeading": "Kick off the Bournemouth quiz",
+    "aboutEyebrow": "The story behind the questions",
+    "aboutHeading": "About this AFC Bournemouth quiz",
+    "aboutParagraphs": [
+      "In 2008 Bournemouth were minutes from going out of business, docked points in League Two and staring at non-league football. Seven years later Eddie Howe walked them into the Premier League. English football rarely writes a better arc.",
+      "This bournemouth quiz pulls verified questions from QuizBall’s trivia bank: the great escape season, promotion in 2015, the tightest ground in the top flight, red-and-black stripes borrowed from Milan, and the Iraola era that turned the Cherries into everyone’s second-favourite watch.",
+      "Play free above — no account needed, your score appears instantly, and every replay brings fresh questions from the Bournemouth pool. Then test it where it counts: sign up free and play live ranked duels against real fans, where sharp answers win possession and streaks turn into goals."
+    ],
+    "scoreTemplate": "You scored {score}/{total} — sign up free to save your score and defend it in a ranked duel.",
+    "footerCta": "South-coast scholar? Prove your Cherries knowledge against real fans in live duels.",
+    "heroImageFile": "bournemouth-v2.webp",
+    "heroImageAlt": "AFC Bournemouth category artwork — red and black striped football theme",
+    "relatedSlugs": [
+      "brighton",
+      "fulham",
+      "premier-league"
+    ]
+  },
+  {
+    "slug": "brentford",
+    "title": "Brentford Quiz — Test Your Bees Knowledge",
+    "metadataTitle": "Brentford Quiz — Test Your Bees Knowledge | QuizBall",
+    "description": "Free Brentford quiz — verified questions on the Bees. Instant score, no sign-up needed to play. Then take on real fans in ranked football trivia duels.",
+    "breadcrumbLabel": "Brentford Quiz",
+    "heroLead": "Brentford Quiz —",
+    "heroHighlight": "Test Your Bees Knowledge",
+    "lede": "Data-driven, fearless and impossible to ignore — Brentford rewrote the rules of getting to the top. Play our free Brentford quiz: verified questions on the Bees, from Griffin Park folklore to Premier League scalps. No sign-up needed — instant score, then compare with thousands of fans.",
+    "playHeading": "Kick off the Brentford quiz",
+    "aboutEyebrow": "The story behind the questions",
+    "aboutHeading": "About this Brentford FC quiz",
+    "aboutParagraphs": [
+      "Brentford are modern football’s favourite underdog story: a west London club that sold its beloved Griffin Park — pub on every corner and all — bet everything on data, and beat the odds to end 74 years outside the top flight in 2021. Then they beat Arsenal on opening night for good measure.",
+      "This brentford quiz pulls verified questions from QuizBall’s trivia bank: the play-off final win over Swansea, Thomas Frank’s rise, Ivan Toney’s penalties, and the moneyball model that made bigger clubs copy their homework.",
+      "Play free above — no account needed, instant score, fresh questions each replay. Feeling brave? Sign up free and take your Bees knowledge into live ranked duels against real fans, where the quickest correct answer wins possession and every streak stings like, well, you know."
+    ],
+    "scoreTemplate": "You scored {score}/{total} — sign up free to save your score and defend it in a ranked duel.",
+    "footerCta": "Know the Bees better than the data department? Prove it in live duels.",
+    "heroImageFile": "brentford-v2.webp",
+    "heroImageAlt": "Brentford category artwork — red and white striped football theme",
+    "relatedSlugs": [
+      "fulham",
+      "chelsea",
+      "premier-league"
+    ]
+  },
+  {
+    "slug": "brighton",
+    "title": "Brighton Quiz — Test Your Seagulls Knowledge",
+    "metadataTitle": "Brighton Quiz — Test Your Seagulls Knowledge | QuizBall",
+    "description": "Free Brighton quiz — verified questions on the Seagulls. Instant score, no sign-up needed to play. Then take on real fans in ranked football duels.",
+    "breadcrumbLabel": "Brighton Quiz",
+    "heroLead": "Brighton Quiz —",
+    "heroHighlight": "Test Your Seagulls Knowledge",
+    "lede": "From nearly dropping out of the league in 1997 to European football — Brighton did it the smart way. Play our free Brighton quiz: verified questions on Seagulls history, Amex era heroes and famous escapes. No sign-up needed — instant score, then compare with thousands of fans.",
+    "playHeading": "Kick off the Brighton quiz",
+    "aboutEyebrow": "The story behind the questions",
+    "aboutHeading": "About this Brighton & Hove Albion quiz",
+    "aboutParagraphs": [
+      "In 1997 Brighton needed a final-day draw at Hereford just to stay in the Football League, homeless after the Goldstone Ground was sold from under them. Twenty-six years later they were beating Ajax in the Europa League. No club better embodies football’s long game.",
+      "This brighton quiz takes verified questions from QuizBall’s trivia bank across the journey: the 1983 FA Cup final and the miss that haunts (“and Smith must score…”), Tony Bloom’s algorithmic empire, Mitoma’s thesis-approved dribbling, and the record-breaking sales that keep funding the rise.",
+      "Play the bhafc quiz free above — no account needed, instant score, fresh questions each replay. Then sign up free and take your Seagulls knowledge into live ranked duels against real fans — where quick correct answers win possession, and unlike 1983, you get to take the chance again."
+    ],
+    "scoreTemplate": "You scored {score}/{total} — sign up free to save your score and defend it in a ranked duel.",
+    "footerCta": "Smarter than the algorithm? Prove your Albion knowledge in live duels.",
+    "heroImageFile": "brighton-v2.webp",
+    "heroImageAlt": "Brighton & Hove Albion category artwork — blue and white striped football theme",
+    "relatedSlugs": [
+      "crystal-palace",
+      "bournemouth",
+      "premier-league"
+    ]
+  },
+  {
+    "slug": "chelsea",
+    "title": "Chelsea Quiz — Test Your Blues Knowledge",
+    "metadataTitle": "Chelsea Quiz — Test Your Blues Knowledge | QuizBall",
+    "description": "Free Chelsea quiz — verified questions on the Blues. Instant score, no sign-up needed to play. Then take on real fans in ranked football duels.",
+    "breadcrumbLabel": "Chelsea Quiz",
+    "heroLead": "Chelsea Quiz —",
+    "heroHighlight": "Test Your Blues Knowledge",
+    "lede": "From Munich 2012 to Porto 2021, Stamford Bridge has seen it all. Play our free Chelsea quiz — verified questions on Blues legends, European nights and title-winning sides. No sign-up needed: instant score, then see how your Chelsea knowledge compares with thousands of football fans.",
+    "playHeading": "Kick off the Chelsea quiz",
+    "aboutEyebrow": "The story behind the questions",
+    "aboutHeading": "About this Chelsea FC quiz",
+    "aboutParagraphs": [
+      "Chelsea packed a century of history into two remarkable decades: the Abramovich takeover of 2003, Mourinho’s back-to-back titles, that rain-soaked night in Munich when Didier Drogba dragged the Blues to a first European Cup, and a second one in Porto in 2021.",
+      "This chelsea quiz draws verified questions from QuizBall’s trivia bank across all of it — Zola’s magic, Lampard’s goals from midfield, Terry’s leadership, and the older history the pub experts forget: Chelsea were champions in 1955, half a century before the Special One arrived.",
+      "Play free above with no account and get your score instantly; replay for a fresh set from our Chelsea pool. When a solo score stops being enough, sign up free and take your Blues knowledge into live ranked duels against real fans — correct answers win possession, streaks score goals, and the leaderboard doesn’t care about reputations."
+    ],
+    "scoreTemplate": "You scored {score}/{total} — sign up free to save your score and defend it in a ranked duel.",
+    "footerCta": "Think you bleed blue? Prove it against real fans in live trivia duels.",
+    "heroImageFile": "chelsea-v2.webp",
+    "heroImageAlt": "Chelsea category artwork — royal blue football theme",
+    "relatedSlugs": [
+      "arsenal",
+      "fulham",
+      "premier-league"
+    ]
+  },
+  {
+    "slug": "coventry-city",
+    "title": "Coventry City Quiz — Test Your Sky Blues Knowledge",
+    "metadataTitle": "Coventry City Quiz — Test Your Sky Blues Knowledge | QuizBall",
+    "description": "Free Coventry City quiz — verified questions on the Sky Blues. Instant score, no sign-up needed to play. Then beat real fans in ranked football duels.",
+    "breadcrumbLabel": "Coventry City Quiz",
+    "heroLead": "Coventry City Quiz —",
+    "heroHighlight": "Test Your Sky Blues Knowledge",
+    "lede": "Wembley 1987, the Sky Blue Revolution and three decades of top-flight graft. Play our free Coventry City quiz — verified questions on Sky Blues history from Highfield Road to today. No sign-up needed: instant score, then see how you rank against thousands of fans.",
+    "playHeading": "Kick off the Coventry City quiz",
+    "aboutEyebrow": "The story behind the questions",
+    "aboutHeading": "About this Coventry City quiz",
+    "aboutParagraphs": [
+      "Every football romantic has a soft spot for Coventry City: Jimmy Hill’s Sky Blue Revolution dragged the club into the modern age, thirty-four straight seasons of top-flight football followed, and in 1987 the Sky Blues produced one of Wembley’s great FA Cup finals — Keith Houchen flying through the air to help sink Spurs 3–2.",
+      "This coventry city quiz draws verified questions from QuizBall’s trivia bank across the whole story: Highfield Road, the great escapes of the 90s, the wilderness years, and the Mark Robins rebuild that took Coventry within a penalty shoot-out of the Premier League in 2023.",
+      "Play free above — no account needed, instant score, fresh questions each replay. Then sign up free and take your Sky Blues knowledge into live ranked duels against real fans, where every correct answer keeps the ball and streaks finish like Houchen."
+    ],
+    "scoreTemplate": "You scored {score}/{total} — sign up free to save your score and defend it in a ranked duel.",
+    "footerCta": "Sky Blue through and through? Prove it against real fans in live trivia duels.",
+    "heroImageFile": "coventry-city-v2.webp",
+    "heroImageAlt": "Coventry City category artwork — sky blue football theme",
+    "relatedSlugs": [
+      "aston-villa",
+      "tottenham",
+      "premier-league"
+    ]
+  },
+  {
+    "slug": "crystal-palace",
+    "title": "Crystal Palace Quiz — Test Your Eagles Knowledge",
+    "metadataTitle": "Crystal Palace Quiz — Test Your Eagles Knowledge | QuizBall",
+    "description": "Free Crystal Palace quiz — verified questions on the Eagles. Instant score, no sign-up needed to play. Then beat real fans in ranked football duels.",
+    "breadcrumbLabel": "Crystal Palace Quiz",
+    "heroLead": "Crystal Palace Quiz —",
+    "heroHighlight": "Test Your Eagles Knowledge",
+    "lede": "South London, loud and proud — and finally with silverware to match. Play our free Crystal Palace quiz: verified questions on Eagles history, Selhurst Park heroes and the Wembley day that changed everything. No sign-up needed — instant score, then see how you rank against thousands of fans.",
+    "playHeading": "Kick off the Crystal Palace quiz",
+    "aboutEyebrow": "The story behind the questions",
+    "aboutHeading": "About this Crystal Palace quiz",
+    "aboutParagraphs": [
+      "For decades Crystal Palace were English football’s great nearly-club: the 1990 FA Cup final that needed a replay, Ian Wright’s fairytale rise from non-league, Zaha carrying the badge through thick and thin, and Selhurst Park’s Holmesdale end making more noise than grounds twice its size. Then came Wembley 2025 — Eberechi Eze, one goal, and the club’s first major trophy.",
+      "This crystal palace quiz pulls verified questions from QuizBall’s trivia bank across the red-and-blue story: play-off drama, great escapes, the M23 rivalry with Brighton and the cult heroes in between.",
+      "Play the cpfc quiz free above — no account needed, instant score, fresh questions from the Palace pool on every replay. Then sign up free and take your Eagles knowledge into live ranked duels against real fans, where correct answers win possession and streaks soar."
+    ],
+    "scoreTemplate": "You scored {score}/{total} — sign up free to save your score and defend it in a ranked duel.",
+    "footerCta": "South London and proud? Prove your Palace knowledge in live duels.",
+    "heroImageFile": "crystal-palace-v2.webp",
+    "heroImageAlt": "Crystal Palace category artwork — red and blue striped football theme",
+    "relatedSlugs": [
+      "brighton",
+      "manchester-united",
+      "premier-league"
+    ]
+  },
+  {
+    "slug": "fulham",
+    "title": "Fulham Quiz — Test Your Cottagers Knowledge",
+    "metadataTitle": "Fulham Quiz — Test Your Cottagers Knowledge | QuizBall",
+    "description": "Free Fulham quiz — verified questions on the Cottagers. Instant score, no sign-up needed to play. Then beat real fans in ranked football duels.",
+    "breadcrumbLabel": "Fulham Quiz",
+    "heroLead": "Fulham Quiz —",
+    "heroHighlight": "Test Your Cottagers Knowledge",
+    "lede": "Football by the Thames since 1879 — London’s oldest professional club has stories most can’t match. Play our free Fulham quiz: verified questions on Craven Cottage, European adventures and Cottagers cult heroes. No sign-up needed — instant score, then compare with thousands of football fans.",
+    "playHeading": "Kick off the Fulham quiz",
+    "aboutEyebrow": "The story behind the questions",
+    "aboutHeading": "About this Fulham FC quiz",
+    "aboutParagraphs": [
+      "Fulham are London’s oldest professional club, playing by the Thames at Craven Cottage since 1896 — a ground so distinctive it has an actual cottage in the corner. Johnny Haynes made history here as the first £100-a-week footballer; decades later, Roy Hodgson’s unfancied side beat Juventus and Shakhtar on the road to a European final.",
+      "This fulham quiz pulls verified questions from QuizBall’s trivia bank across the lot: the great 2010 Europa League run, Dempsey’s chip, Al-Fayed’s eccentric reign (Michael Jackson statue included), and the west London identity that makes the Cottage unlike anywhere in football.",
+      "Play free above — no account needed, instant score, fresh questions on every replay. Then sign up free and take your Cottagers knowledge into live ranked duels against real fans — quick correct answers win possession, streaks turn into goals."
+    ],
+    "scoreTemplate": "You scored {score}/{total} — sign up free to save your score and defend it in a ranked duel.",
+    "footerCta": "Riverside regular? Prove your Fulham knowledge against real fans in live duels.",
+    "heroImageFile": "fulham-v2.webp",
+    "heroImageAlt": "Fulham category artwork — white and black football theme by the Thames",
+    "relatedSlugs": [
+      "chelsea",
+      "brentford",
+      "premier-league"
+    ]
+  },
+  {
+    "slug": "hull-city",
+    "title": "Hull City Quiz — Test Your Tigers Knowledge",
+    "metadataTitle": "Hull City Quiz — Test Your Tigers Knowledge | QuizBall",
+    "description": "Free Hull City quiz — verified questions on the Tigers. Instant score, no sign-up needed to play. Then beat real fans in ranked football trivia duels.",
+    "breadcrumbLabel": "Hull City Quiz",
+    "heroLead": "Hull City Quiz —",
+    "heroHighlight": "Test Your Tigers Knowledge",
+    "lede": "Amber, black and built on graft — the Tigers’ story has more twists than most. Play our free Hull City quiz: verified questions from Boothferry Park days to Wembley heartbreak and Premier League firsts. No sign-up needed — instant score, then compare with thousands of fans.",
+    "playHeading": "Kick off the Hull City quiz",
+    "aboutEyebrow": "The story behind the questions",
+    "aboutHeading": "About this Hull City quiz",
+    "aboutParagraphs": [
+      "It took Hull City 104 years to reach the top flight — and when it finally happened in 2008, it arrived via one of Wembley’s most romantic moments: local lad Dean Windass, 39 years old, thumping a volley past Bristol City. The Tigers have specialised in drama ever since, from Phil Brown’s on-pitch team talk to a two-goal FA Cup final lead that slipped away against Arsenal in 2014.",
+      "This hull city quiz takes verified questions from QuizBall’s trivia bank across it all: Boothferry Park nostalgia, amber-and-black icons, Steve Bruce’s promotions and the quirks that make Hull unlike anywhere else — starting with a city that’s formally called Kingston upon Hull.",
+      "Play free above — no account, instant score, fresh questions every replay. Then sign up free and defend your score in live ranked duels against real fans."
+    ],
+    "scoreTemplate": "You scored {score}/{total} — sign up free to save your score and defend it in a ranked duel.",
+    "footerCta": "Roar louder than the KC faithful? Prove your Tigers knowledge in live duels.",
+    "heroImageFile": "hull-city-v2.webp",
+    "heroImageAlt": "Hull City category artwork — amber and black football theme",
+    "relatedSlugs": [
+      "leeds-united",
+      "sunderland",
+      "premier-league"
+    ]
+  },
+  {
+    "slug": "ipswich-town",
+    "title": "Ipswich Town Quiz — Test Your Tractor Boys Knowledge",
+    "metadataTitle": "Ipswich Town Quiz — Tractor Boys Knowledge Test | QuizBall",
+    "description": "Free Ipswich Town quiz — verified questions on the Tractor Boys. Instant score, no sign-up needed to play. Then beat real fans in ranked football duels.",
+    "breadcrumbLabel": "Ipswich Town Quiz",
+    "heroLead": "Ipswich Town Quiz —",
+    "heroHighlight": "Test Your Tractor Boys Knowledge",
+    "lede": "Champions under Ramsey, European winners under Robson, and the great back-to-back rise of the 2020s. Play our free Ipswich Town quiz — verified questions on Tractor Boys history from Portman Road outwards. No sign-up needed: instant score, then see how you compare with thousands of fans.",
+    "playHeading": "Kick off the Ipswich Town quiz",
+    "aboutEyebrow": "The story behind the questions",
+    "aboutHeading": "About this Ipswich Town quiz",
+    "aboutParagraphs": [
+      "Portman Road has seen giants: Alf Ramsey won Ipswich the league title in 1962 before winning England the World Cup; Bobby Robson delivered the 1978 FA Cup and the 1981 UEFA Cup with John Wark scoring from everywhere. Then, four decades on, Kieran McKenna’s side went from League One to the Premier League in successive seasons — one of modern football’s great rises.",
+      "This ipswich town quiz draws verified questions from QuizBall’s trivia bank across it all: the Ramsey and Robson dynasties, Suffolk pride, the Old Farm rivalry with Norwich, and the blue-shirted folklore in between.",
+      "Play free above — no account needed, instant score, fresh questions from the Ipswich pool each replay. Then sign up free and take your Tractor Boys knowledge into live ranked duels against real fans, where correct answers keep possession and streaks score."
+    ],
+    "scoreTemplate": "You scored {score}/{total} — sign up free to save your score and defend it in a ranked duel.",
+    "footerCta": "Robson-era wisdom or McKenna-era energy? Prove it in live duels.",
+    "heroImageFile": "ipswich-town-v2.webp",
+    "heroImageAlt": "Ipswich Town category artwork — blue and white football theme",
+    "relatedSlugs": [
+      "arsenal",
+      "sunderland",
+      "premier-league"
+    ]
+  },
+  {
+    "slug": "leeds-united",
+    "title": "Leeds United Quiz — Test Your Whites Knowledge",
+    "metadataTitle": "Leeds United Quiz — Test Your Whites Knowledge | QuizBall",
+    "description": "Free Leeds United quiz — verified questions on the Whites. Instant score, no sign-up needed to play. Then beat real fans in ranked football duels.",
+    "breadcrumbLabel": "Leeds United Quiz",
+    "heroLead": "Leeds United Quiz —",
+    "heroHighlight": "Test Your Whites Knowledge",
+    "lede": "Revie’s machine, the last champions of the old era, Bielsa’s beautiful chaos — Leeds demand proper knowledge. Play our free Leeds United quiz: verified questions on Elland Road history and Whites folklore. No sign-up needed — instant score, then see how you rank against thousands of fans.",
+    "playHeading": "Kick off the Leeds United quiz",
+    "aboutEyebrow": "The story behind the questions",
+    "aboutHeading": "About this Leeds United quiz",
+    "aboutParagraphs": [
+      "Leeds United inspire devotion like few clubs in England. Don Revie’s side of the 60s and 70s were feared everywhere; in 1992 the Whites became the final champions of the old First Division; and between David O’Leary’s Champions League semi-finalists and Bielsa’s all-running revolutionaries, Elland Road has never done quiet.",
+      "This leeds united quiz draws verified questions from QuizBall’s trivia bank across the whole saga: Bremner’s statue, the Cantona sale that still stings, Radebe the Chief, the wilderness years and the triumphant returns — most recently under Daniel Farke in 2025.",
+      "Play the lufc quiz free above — no account needed, instant score, fresh questions each replay. Then sign up free and march on together into live ranked duels against real fans, where correct answers win possession and streaks turn into goals."
+    ],
+    "scoreTemplate": "You scored {score}/{total} — sign up free to save your score and defend it in a ranked duel.",
+    "footerCta": "Marching on together? Prove your Leeds knowledge against real fans in live duels.",
+    "heroImageFile": "leeds-united-v2.webp",
+    "heroImageAlt": "Leeds United category artwork — white and yellow football theme",
+    "relatedSlugs": [
+      "manchester-united",
+      "hull-city",
+      "premier-league"
+    ]
+  },
+  {
+    "slug": "manchester-city",
+    "title": "Manchester City Quiz — Test Your City Knowledge",
+    "metadataTitle": "Manchester City Quiz — Test Your City Knowledge | QuizBall",
+    "description": "Free Manchester City quiz — verified questions on the Citizens. Instant score, no sign-up needed to play. Then beat real fans in ranked football duels.",
+    "breadcrumbLabel": "Manchester City Quiz",
+    "heroLead": "Manchester City Quiz —",
+    "heroHighlight": "Test Your City Knowledge",
+    "lede": "93:20. If those numbers mean something to you, this is your quiz. Play our free Manchester City quiz — verified questions from Maine Road memories to treble winners and title streaks. No sign-up needed: instant score, then see how you rank against thousands of football fans.",
+    "playHeading": "Kick off the Manchester City quiz",
+    "aboutEyebrow": "The story behind the questions",
+    "aboutHeading": "About this Manchester City quiz",
+    "aboutParagraphs": [
+      "Few clubs have lived both extremes like Manchester City: third-tier football at Maine Road in 1999, then the Agüero moment, the Centurions, four titles in a row and a 2023 treble. It’s a history built for trivia.",
+      "This manchester city quiz takes verified questions from QuizBall’s football bank across the whole arc — the takeover that changed everything in 2008, Silva and De Bruyne pulling the strings, Haaland rewriting the scoring records, and the older, scrappier decades that true Blues never let anyone forget.",
+      "Play the man city quiz free above — no account, instant score, fresh questions on every replay. Then put it on the line: sign up free and play live ranked duels against real fans, where quick correct answers win possession and knowledge turns into goals. The leaderboard has room for one more perfectionist."
+    ],
+    "scoreTemplate": "You scored {score}/{total} — sign up free to save your score and defend it in a ranked duel.",
+    "footerCta": "Centurion-level knowledge? Prove it against real fans in live trivia duels.",
+    "heroImageFile": "manchester-city-v2.webp",
+    "heroImageAlt": "Manchester City category artwork — sky blue football theme",
+    "relatedSlugs": [
+      "manchester-united",
+      "liverpool",
+      "premier-league"
+    ]
+  },
+  {
+    "slug": "newcastle-united",
+    "title": "Newcastle United Quiz — Test Your Magpies Knowledge",
+    "metadataTitle": "Newcastle United Quiz — Magpies Knowledge Test | QuizBall",
+    "description": "Free Newcastle United quiz — verified questions on the Magpies. Instant score, no sign-up needed to play. Then beat real fans in ranked football duels.",
+    "breadcrumbLabel": "Newcastle United Quiz",
+    "heroLead": "Newcastle United Quiz —",
+    "heroHighlight": "Test Your Magpies Knowledge",
+    "lede": "St James’ Park, the Entertainers, and a trophy drought that finally ended — Newcastle’s story demands proper knowledge. Play our free Newcastle United quiz: verified questions on Magpies legends, Keegan drama and Wembley glory. No sign-up needed — instant score, then compare with thousands of fans.",
+    "playHeading": "Kick off the Newcastle United quiz",
+    "aboutEyebrow": "The story behind the questions",
+    "aboutHeading": "About this Newcastle United quiz",
+    "aboutParagraphs": [
+      "Few clubs feel football like Newcastle. Fifty-two thousand pack St James’ Park through every era — the Milburn years, Keegan’s Entertainers throwing away a twelve-point lead in the most dramatic title race of the Premier League age, Shearer’s 206 goals, and finally, in 2025, a Wembley day that ended seven decades without a domestic trophy.",
+      "This newcastle united quiz draws verified questions from QuizBall’s trivia bank across the lot: the 1969 Fairs Cup, Sir Bobby Robson’s redemption years, the 2021 takeover, and the black-and-white folklore every Geordie inherits at birth.",
+      "Play the nufc quiz free above — no account needed, instant score, fresh questions on every replay. Then sign up free and take your Toon knowledge into live ranked duels against real fans, where quick correct answers win possession and streaks hit like a Shearer volley."
+    ],
+    "scoreTemplate": "You scored {score}/{total} — sign up free to save your score and defend it in a ranked duel.",
+    "footerCta": "Howay man — prove your Toon knowledge against real fans in live duels.",
+    "heroImageFile": "newcastle-united-v2.webp",
+    "heroImageAlt": "Newcastle United category artwork — black and white striped football theme",
+    "relatedSlugs": [
+      "sunderland",
+      "liverpool",
+      "premier-league"
+    ]
+  },
+  {
+    "slug": "nottingham-forest",
+    "title": "Nottingham Forest Quiz — Test Your Reds Knowledge",
+    "metadataTitle": "Nottingham Forest Quiz — Test Your Reds Knowledge | QuizBall",
+    "description": "Free Nottingham Forest quiz — verified questions on Forest. Instant score, no sign-up needed to play. Then beat real fans in ranked football duels.",
+    "breadcrumbLabel": "Nottingham Forest Quiz",
+    "heroLead": "Nottingham Forest Quiz —",
+    "heroHighlight": "Test Your Reds Knowledge",
+    "lede": "Two European Cups. Back to back. From a provincial city on the Trent — it will never happen again. Play our free Nottingham Forest quiz: verified questions on Clough’s miracle men and everything since. No sign-up needed — instant score, then compare with thousands of football fans.",
+    "playHeading": "Kick off the Nottingham Forest quiz",
+    "aboutEyebrow": "The story behind the questions",
+    "aboutHeading": "About this Nottingham Forest quiz",
+    "aboutParagraphs": [
+      "No story in football matches it: Brian Clough and Peter Taylor took a second-tier Nottingham Forest, won promotion, won the league at the first attempt, then conquered Europe twice in a row — 1979 and 1980 — with John Robertson jinking down the wing and the first million-pound footballer heading in at Munich.",
+      "This nottingham forest quiz draws verified questions from QuizBall’s trivia bank across the Garibaldi-red story: the miracle years, Psycho Pearce and Des Walker, the Premier League returns, and a City Ground that still hums with what happened under Old Big ’Ead.",
+      "Play free above — no account needed, your score appears instantly, and each replay pulls fresh questions from the Forest pool. Then sign up free and take that knowledge into live ranked duels against real fans — correct answers win possession, streaks finish like Robertson in Madrid."
+    ],
+    "scoreTemplate": "You scored {score}/{total} — sign up free to save your score and defend it in a ranked duel.",
+    "footerCta": "Clough-level standards? Prove your Forest knowledge against real fans in live duels.",
+    "heroImageFile": "nottingham-forest-v2.webp",
+    "heroImageAlt": "Nottingham Forest category artwork — Garibaldi red football theme",
+    "relatedSlugs": [
+      "aston-villa",
+      "leeds-united",
+      "premier-league"
+    ]
+  },
+  {
+    "slug": "sunderland",
+    "title": "Sunderland Quiz — Test Your Black Cats Knowledge",
+    "metadataTitle": "Sunderland Quiz — Test Your Black Cats Knowledge | QuizBall",
+    "description": "Free Sunderland quiz — verified questions on the Black Cats. Instant score, no sign-up needed to play. Then beat real fans in ranked football duels.",
+    "breadcrumbLabel": "Sunderland Quiz",
+    "heroLead": "Sunderland Quiz —",
+    "heroHighlight": "Test Your Black Cats Knowledge",
+    "lede": "The Stadium of Light, the miracle of 1973 and a fanbase that never stops. Play our free Sunderland quiz — verified questions on Black Cats history, Wearside heroes and Wembley shocks. No sign-up needed: instant score, then see how you rank against thousands of fans.",
+    "playHeading": "Kick off the Sunderland quiz",
+    "aboutEyebrow": "The story behind the questions",
+    "aboutHeading": "About this Sunderland AFC quiz",
+    "aboutParagraphs": [
+      "Sunderland supporters have seen everything: six league titles in the club’s early pomp, the 1973 miracle when a Second Division side beat mighty Leeds at Wembley, thirty-goal seasons from Kevin Phillips, two Netflix series’ worth of heartbreak — and then a Wembley play-off day in 2025 that finally went right.",
+      "This sunderland quiz pulls verified questions from QuizBall’s trivia bank across all of it: Roker Park’s roar, Montgomery’s double save, Quinn and Phillips, the Tyne–Wear rivalry and the red-and-white stripes that mean everything on Wearside.",
+      "Play free above — no account needed, your score appears instantly, and every replay brings fresh questions from the Sunderland pool. Then do what Black Cats fans do best — turn up and fight: sign up free and play live ranked duels against real fans, where correct answers win possession and streaks turn into goals."
+    ],
+    "scoreTemplate": "You scored {score}/{total} — sign up free to save your score and defend it in a ranked duel.",
+    "footerCta": "Haway — prove your Black Cats knowledge against real fans in live duels.",
+    "heroImageFile": "sunderland-v2.webp",
+    "heroImageAlt": "Sunderland category artwork — red and white striped football theme",
+    "relatedSlugs": [
+      "newcastle-united",
+      "leeds-united",
+      "premier-league"
+    ]
+  }
+]
