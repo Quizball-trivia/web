@@ -461,6 +461,50 @@ export function trackFriendInviteAccepted(lobbyId: string) {
   trackEvent('friend_lobby_invite_accepted', { lobby_id: lobbyId });
 }
 
+export function trackFriendInviteLinkOpened() {
+  trackEvent('friend_lobby_invite_link_opened', {
+    source: 'shared_link',
+    authenticated: true,
+  });
+}
+
+export function trackFriendInviteJoinAttempted(props: {
+  attemptNumber: number;
+}) {
+  trackEvent('friend_lobby_invite_join_attempted', {
+    source: 'shared_link',
+    attempt_number: props.attemptNumber,
+  });
+}
+
+export function trackFriendInviteJoinFailed(props: {
+  failureCode: string;
+  retryable: boolean;
+  correlationId?: string | null;
+  attemptNumber: number;
+  stateConfirmationTimedOut?: boolean;
+}) {
+  trackEvent('friend_lobby_invite_join_failed', {
+    source: 'shared_link',
+    failure_code: props.failureCode,
+    retryable: props.retryable,
+    correlation_id: props.correlationId ?? null,
+    attempt_number: props.attemptNumber,
+    state_confirmation_timed_out: Boolean(props.stateConfirmationTimedOut),
+  });
+}
+
+export function trackFriendInviteJoinSucceeded(props: {
+  lobbyId: string;
+  attemptNumber: number;
+}) {
+  trackEvent('friend_lobby_invite_join_succeeded', {
+    source: 'shared_link',
+    lobby_id: props.lobbyId,
+    attempt_number: props.attemptNumber,
+  });
+}
+
 export function trackPartyQuizStarted(playerCount: number) {
   trackEvent('party_quiz_started', { player_count: playerCount });
 }

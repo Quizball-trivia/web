@@ -43,7 +43,7 @@ export function ChallengeInvitePrompt() {
       if (payload.invitationId !== pendingAcceptId) return;
       if (payload.status === "accepted" && payload.inviteCode) {
         beginLobbyHandoff(payload.inviteCode);
-        router.push(`/friend/room/${payload.inviteCode}`);
+        router.push(`/friend/room/${payload.inviteCode}?source=challenge`);
       }
       setPendingAction(null);
       setPendingAcceptId(null);

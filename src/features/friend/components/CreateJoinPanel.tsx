@@ -9,7 +9,7 @@ import { extractFriendInviteCode } from "@/lib/friend/inviteCode";
 import { useLobbyCommandMachine } from "../hooks/useLobbyCommandMachine";
 
 interface CreateJoinPanelProps {
-  onActionTriggered?: () => void;
+  onActionTriggered?: (source: 'create' | 'manual_code') => void;
 }
 
 const poppinsFont = "'Poppins', sans-serif";
@@ -45,7 +45,7 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
 
   const handleCreate = () => {
     if (lobbyCommands.isBusy || createPressed) return;
-    if (onActionTriggered) onActionTriggered();
+    if (onActionTriggered) onActionTriggered('create');
     setCreatePressed(true);
     createTimerRef.current = setTimeout(() => setCreatePressed(false), 600);
     toast.info(t("friend.creatingRoom"));
@@ -63,7 +63,7 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
       return;
     }
 
-    if (onActionTriggered) onActionTriggered();
+    if (onActionTriggered) onActionTriggered('manual_code');
     setJoinPressed(true);
     joinTimerRef.current = setTimeout(() => setJoinPressed(false), 600);
     try {
