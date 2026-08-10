@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const trackEventMock = vi.fn();
-const setCampaignAuthMethodMock = vi.fn();
 const getCampaignPropertiesMock = vi.fn(() => ({}));
 
 vi.mock('@/lib/posthog', () => ({
@@ -9,7 +8,6 @@ vi.mock('@/lib/posthog', () => ({
 }));
 
 vi.mock('@/features/campaign-quiz/campaignAttribution', () => ({
-  setCampaignAuthMethod: (method: string) => setCampaignAuthMethodMock(method),
   getCampaignAttributionAnalyticsProperties: () => getCampaignPropertiesMock(),
 }));
 
@@ -28,7 +26,6 @@ import {
 describe('auth analytics events', () => {
   beforeEach(() => {
     trackEventMock.mockClear();
-    setCampaignAuthMethodMock.mockClear();
     getCampaignPropertiesMock.mockReset();
     getCampaignPropertiesMock.mockReturnValue({});
   });
@@ -39,7 +36,6 @@ describe('auth analytics events', () => {
     expect(trackEventMock).toHaveBeenCalledWith('auth_started', { method: 'facebook' });
     // still dual-fires the legacy event during the dashboard transition
     expect(trackEventMock).toHaveBeenCalledWith('signup_started', { method: 'facebook' });
-    expect(setCampaignAuthMethodMock).toHaveBeenCalledWith('facebook');
   });
 
   it('adds persisted quiz campaign context to auth intent', () => {

@@ -80,7 +80,7 @@ export function trackCampaignSignupClick(
   placement: CampaignCtaPlacement,
   quizResult?: { score: number; totalQuestions: number },
 ): void {
-  rememberCampaignAttribution({
+  const attribution = rememberCampaignAttribution({
     quizSlug: slug,
     placement,
     ...(quizResult
@@ -92,6 +92,9 @@ export function trackCampaignSignupClick(
     quiz_slug: slug,
     source: 'campaign_quiz',
     placement,
+    ...(attribution
+      ? { campaign_conversion_id: attribution.campaign_conversion_id }
+      : {}),
     ...(quizResult
       ? {
           score: quizResult.score,
