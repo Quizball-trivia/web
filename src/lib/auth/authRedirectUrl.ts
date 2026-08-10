@@ -1,5 +1,7 @@
 'use client';
 
+import { appendCampaignAttribution } from '@/features/campaign-quiz/campaignAttribution';
+
 const configuredSiteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim();
 
 function getConfiguredOrigin(): string | null {
@@ -17,5 +19,8 @@ function normalizePath(path: string): string {
 
 export function getAuthRedirectUrl(path: string): string {
   const origin = getConfiguredOrigin() ?? (typeof window !== 'undefined' ? window.location.origin : '');
-  return origin ? `${origin}${normalizePath(path)}` : normalizePath(path);
+  const url = origin ? `${origin}${normalizePath(path)}` : normalizePath(path);
+  return normalizePath(path) === '/auth/callback' && typeof window !== 'undefined'
+    ? appendCampaignAttribution(url)
+    : url;
 }

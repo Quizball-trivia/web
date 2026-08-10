@@ -193,7 +193,12 @@ export function CampaignQuizGame({
           <Link
             href={ctaHref}
             onClick={() => {
-              if (!isAuthenticated) trackCampaignSignupClick(slug, 'score');
+              if (!isAuthenticated) {
+                trackCampaignSignupClick(slug, 'score', {
+                  score,
+                  totalQuestions: questions.length,
+                });
+              }
             }}
             className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-brand-yellow px-6 text-base font-bold text-black transition-colors hover:bg-brand-yellow/90 sm:w-auto"
           >

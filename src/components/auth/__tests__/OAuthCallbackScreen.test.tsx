@@ -103,24 +103,24 @@ describe("OAuthCallbackScreen analytics", () => {
     consumeRedirectOAuthProviderMock.mockReturnValue("google");
   });
 
-  it("tracks signup_completed for a successful callback when the user still needs onboarding", async () => {
+  it("does not guess signup completion from onboarding state", async () => {
     fetchCurrentUserMock.mockResolvedValue(makeUser(false));
 
     render(<OAuthCallbackScreen />);
 
     await waitFor(() => expect(replaceMock).toHaveBeenCalledWith("/onboarding"));
-    expect(trackSignupCompletedMock).toHaveBeenCalledWith("google");
+    expect(trackSignupCompletedMock).not.toHaveBeenCalled();
     expect(trackLoginCompletedMock).not.toHaveBeenCalled();
   });
 
-  it("tracks login_completed for a successful callback when the user is onboarded", async () => {
+  it("does not emit a client login completion from the signup callback", async () => {
     consumeRedirectOAuthProviderMock.mockReturnValue("facebook");
     fetchCurrentUserMock.mockResolvedValue(makeUser(true));
 
     render(<OAuthCallbackScreen />);
 
     await waitFor(() => expect(replaceMock).toHaveBeenCalledWith("/play"));
-    expect(trackLoginCompletedMock).toHaveBeenCalledWith("facebook");
+    expect(trackLoginCompletedMock).not.toHaveBeenCalled();
     expect(trackSignupCompletedMock).not.toHaveBeenCalled();
   });
 
