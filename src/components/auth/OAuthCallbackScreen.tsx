@@ -112,7 +112,9 @@ export function OAuthCallbackScreen() {
 
         const searchParams = new URLSearchParams(query.replace(/^\?/, ""));
         const mobileRedirect = searchParams.get("mobile_redirect");
-        hydrateCampaignAttributionFromUrl(new URL(window.location.href));
+        const campaignAttribution = hydrateCampaignAttributionFromUrl(
+          new URL(window.location.href),
+        );
 
         // User cancelled / denied the provider consent (e.g. tapped "Cancel" on
         // the Facebook or Google screen). The provider redirects back with an
@@ -156,6 +158,13 @@ export function OAuthCallbackScreen() {
             session.refresh_token,
           );
           if (deepLink) {
+            // A campaign conversion must be provisioned while this browser still
+            // owns the attribution context. The mobile app receives only the
+            // session tokens, so redirecting first would lose the originating
+            // quiz for brand-new accounts.
+            if (campaignAttribution) {
+              await fetchCurrentUser();
+            }
             logger.info("OAuth callback: redirecting to mobile app");
             window.location.href = deepLink;
             return;
