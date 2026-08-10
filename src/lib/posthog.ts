@@ -56,6 +56,10 @@ export function resetUser(): void {
 
   try {
     lastIdentifySignature = null;
+    // Guest bootstrap must not rotate the anonymous $session_id.
+    if (!posthog._isIdentified()) {
+      return;
+    }
     posthog.reset();
   } catch (error) {
     console.error('PostHog resetUser error:', error);
