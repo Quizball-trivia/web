@@ -34,9 +34,22 @@ interface CampaignQuizLandingProps {
 }
 
 const CLUB_QUIZ_LOGOS: Record<string, string> = {
+  arsenal: '/clubs/arsenal-fc.webp',
+  'aston-villa': '/clubs/aston-villa.webp',
+  bournemouth: '/clubs/afc-bournemouth.webp',
+  brentford: '/clubs/brentford-fc.webp',
+  brighton: '/clubs/brighton-hove-albion.webp',
+  chelsea: '/clubs/chelsea-fc.webp',
+  'crystal-palace': '/clubs/crystal-palace.webp',
   everton: '/clubs/everton-fc.webp',
+  fulham: '/clubs/fulham-fc.webp',
+  'leeds-united': '/clubs/leeds-united.webp',
   liverpool: '/clubs/liverpool-fc.webp',
+  'manchester-city': '/clubs/manchester-city.webp',
   'manchester-united': '/clubs/manchester-united.webp',
+  'newcastle-united': '/clubs/newcastle-united.webp',
+  'nottingham-forest': '/clubs/nottingham-forest.webp',
+  sunderland: '/clubs/sunderland-afc.webp',
   tottenham: '/clubs/tottenham-hotspur.webp',
 };
 
