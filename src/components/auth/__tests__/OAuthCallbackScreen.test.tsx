@@ -156,5 +156,6 @@ describe("OAuthCallbackScreen analytics", () => {
 
     await waitFor(() => expect(fetchCurrentUserMock).toHaveBeenCalledTimes(1));
     expect(screen.getByText("oauthCallback.authenticationFailed")).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/auth/callback");
   });
 });
