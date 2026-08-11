@@ -62,6 +62,7 @@ interface InviteJoinFailure {
   inviteCode: string;
   reasonCode: string;
   message: string;
+  retryable: boolean;
 }
 
 interface AwaitingInviteLobbyState {
@@ -306,12 +307,17 @@ export function useFriendLobbyLogic({
           attemptNumber: inviteJoinAttemptRef.current,
         });
       }
+      const message =
+        result.code === "LOBBY_NOT_FOUND"
+          ? t("friend.inviteExpiredReason")
+          : result.message;
       setInviteJoinFailure({
         inviteCode: targetCode ?? roomCode.toUpperCase(),
         reasonCode: result.code,
-        message: result.message,
+        message,
+        retryable: result.retryable,
       });
-      toast.error(result.message);
+      toast.error(message);
     });
     logger.info("Socket emit lobby:join_by_code via command machine", {
       inviteCode: `${roomCode.slice(0, 2)}***`,
@@ -333,6 +339,7 @@ export function useFriendLobbyLogic({
     roomCode,
     shouldCreateLobby,
     shouldTrackSharedInvite,
+    t,
     draft,
   ]);
 
@@ -365,7 +372,7 @@ export function useFriendLobbyLogic({
 
       terminalInviteJoinFailureRef.current = true;
       inviteJoinCancelledRef.current = true;
-      const message = "Lobby joined, but the room did not finish loading. Please try again.";
+      const message = t("friend.inviteStateTimeoutReason");
       if (shouldTrackSharedInvite) {
         trackFriendInviteJoinFailed({
           failureCode: "LOBBY_STATE_TIMEOUT",
@@ -379,13 +386,14 @@ export function useFriendLobbyLogic({
         inviteCode: awaitingInviteLobby.inviteCode,
         reasonCode: "LOBBY_STATE_TIMEOUT",
         message,
+        retryable: true,
       });
       setAwaitingInviteLobby(null);
       toast.error(message);
     }, INVITE_STATE_CONFIRMATION_TIMEOUT_MS);
 
     return () => clearTimeout(timer);
-  }, [activeLobby, awaitingInviteLobby, isPreparingMatch, normalizedRoomCode, resetLobbyCommand, shouldTrackSharedInvite]);
+  }, [activeLobby, awaitingInviteLobby, isPreparingMatch, normalizedRoomCode, resetLobbyCommand, shouldTrackSharedInvite, t]);
 
   useEffect(() => {
     if (!activeLobby || shouldCreateLobby) return;
@@ -485,6 +493,9 @@ export function useFriendLobbyLogic({
       error.code === "TRANSITION_IN_PROGRESS";
     const isTransientSettingsBusy = error.code === "LOBBY_SETTINGS_LOCKED";
     const isInviteTransitionBusy = isResolvingInvite && error.code === "TRANSITION_IN_PROGRESS";
+    const isInviteNotFound =
+      error.code === "LOBBY_NOT_FOUND" &&
+      (isResolvingInvite || inviteJoinFailure?.reasonCode === "LOBBY_NOT_FOUND");
     const isMatchHandoffJoinError =
       isPreparingMatch &&
       (error.code === "ALREADY_IN_LOBBY" || error.code === "ACTIVE_MATCH");
@@ -493,7 +504,7 @@ export function useFriendLobbyLogic({
       clearError();
       return;
     }
-    if (isLobbySettingsError && !isInviteTransitionBusy) {
+    if (isLobbySettingsError && !isInviteTransitionBusy && !isInviteNotFound) {
       timer = setTimeout(() => {
         setSettingsErrorVersion((current) => current + 1);
       }, 0);
@@ -502,7 +513,7 @@ export function useFriendLobbyLogic({
     const stopStartingTimer = setTimeout(() => {
       setIsStartingMatch(false);
     }, 0);
-    if (!isTransientSettingsBusy && !isInviteTransitionBusy) {
+    if (!isTransientSettingsBusy && !isInviteTransitionBusy && !isInviteNotFound) {
       toast.error(error.message);
     }
     clearError();
@@ -513,7 +524,7 @@ export function useFriendLobbyLogic({
       }
       clearTimeout(stopStartingTimer);
     };
-  }, [clearError, clearStartMatchTimeout, error, isPreparingMatch, isResolvingInvite]);
+  }, [clearError, clearStartMatchTimeout, error, inviteJoinFailure, isPreparingMatch, isResolvingInvite]);
 
   // 3. Actions
   const copyCode = async () => {
