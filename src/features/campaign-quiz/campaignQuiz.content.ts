@@ -21,7 +21,7 @@ export interface CampaignQuizPageContent {
 }
 
 const CATEGORY_IMAGE_BASE =
-  `${process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, '') ?? 'https://nsdfiprfmhdqhbfxfwpv.supabase.co'}/storage/v1/object/public/imgs/categories`;
+  `${process.env.NEXT_PUBLIC_SUPABASE_URL?.trim().replace(/\/$/, '') ?? 'https://nsdfiprfmhdqhbfxfwpv.supabase.co'}/storage/v1/object/public/imgs/categories`;
 
 interface ManualClubQuizContent extends Omit<CampaignQuizPageContent, 'heroImage'> {
   heroImageFile: string;
