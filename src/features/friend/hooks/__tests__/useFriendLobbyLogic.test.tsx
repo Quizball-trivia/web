@@ -248,12 +248,13 @@ describe('useFriendLobbyLogic invite links', () => {
       expect(result.current.inviteJoinFailure).toEqual({
         inviteCode: 'MISSING',
         reasonCode: 'LOBBY_NOT_FOUND',
-        message: 'Lobby not found.',
+        message: 'This link can’t be used anymore.',
+        retryable: false,
       });
     });
 
     expect(result.current.isResolvingInvite).toBe(false);
-    expect(mocks.toastError).toHaveBeenCalledWith('Lobby not found.');
+    expect(mocks.toastError).toHaveBeenCalledWith('This link can’t be used anymore.');
     expect(mocks.trackInviteLinkOpened).toHaveBeenCalledTimes(1);
     expect(mocks.trackInviteJoinAttempted).toHaveBeenCalledWith({
       attemptNumber: 1,
@@ -338,7 +339,8 @@ describe('useFriendLobbyLogic invite links', () => {
 
     expect(result.current.inviteJoinFailure).toEqual(expect.objectContaining({
       reasonCode: 'LOBBY_NOT_FOUND',
-      message: 'Lobby closed during retry.',
+      message: 'This link can’t be used anymore.',
+      retryable: false,
     }));
     expect(mocks.trackInviteJoinFailed).toHaveBeenCalledTimes(1);
 
