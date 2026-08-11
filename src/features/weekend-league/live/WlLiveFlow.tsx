@@ -17,6 +17,7 @@ import type {
 } from '@/lib/realtime/socket.types';
 import type { Locale } from '@/lib/i18n/messages';
 import { poppins } from '../constants';
+import { wlNow } from '../wlClock';
 import { LiveBadge } from '../components/LiveBadge';
 import { CheckInPanel } from '../components/CheckInPanel';
 // ONE visual source with /dev/wl-gauntlet: the live flow renders the same
@@ -98,6 +99,10 @@ export interface WlLiveFlowUiProps {
   currentGameIndex?: number;
   /** Your rank in the newest finished game (the board is top-24 only). */
   lastGameRank?: number | null;
+  /** Late-join grace deadline — non-null only while this user may still
+   *  join the running game (missed check-in, window open). */
+  lateJoinUntilMs?: number | null;
+  onLateJoin?: () => void;
 }
 
 export function WlLiveFlow({ tournamentId, ...ui }: WlLiveFlowUiProps & { tournamentId: string }) {
@@ -125,6 +130,8 @@ export function WlLiveFlowView({
   spectatorDelayMs,
   currentGameIndex,
   lastGameRank,
+  lateJoinUntilMs,
+  onLateJoin,
 }: WlLiveFlowUiProps & { live: WlLiveState; selfUserId: string | null }) {
   const { t, locale } = useLocale();
 
@@ -325,6 +332,9 @@ export function WlLiveFlowView({
   if (role === 'spectator' && inCheckinWindow && live.screen.kind === 'waiting') {
     return (
       <Immersive>
+        {lateJoinUntilMs != null && onLateJoin && (
+          <LateJoinBanner untilMs={lateJoinUntilMs} pending={checkinPending} onJoin={onLateJoin} />
+        )}
         <div className="mx-auto flex min-h-[80vh] w-full max-w-xl flex-col justify-center px-4">
           <CheckInPanel
             spectator
@@ -414,6 +424,9 @@ export function WlLiveFlowView({
         && (live.screen.kind === 'question' || live.screen.kind === 'reveal') && (
         <SpectatorBoardRail board={live.board} />
       )}
+      {role === 'spectator' && lateJoinUntilMs != null && onLateJoin && (
+        <LateJoinBanner untilMs={lateJoinUntilMs} pending={checkinPending} onJoin={onLateJoin} />
+      )}
       {role === 'player'
         && (live.screen.kind === 'question' || live.screen.kind === 'reveal') && (
         <PlayerRankRail board={live.board} selfUserId={selfUserId} score={live.score} rankInfo={rankInfo} />
@@ -425,6 +438,52 @@ export function WlLiveFlowView({
 
 /** Full-screen takeover with the gauntlet backdrop — live play looks exactly
  *  like /dev/wl-gauntlet even though the route lives inside the app shell. */
+/** Fixed top banner shown to a spectator who can still late-join the running
+ *  game: title, "missed questions score 0", join CTA and the live countdown
+ *  to the grace deadline. Ticks locally and removes itself at zero — the
+ *  server independently enforces the same deadline on check-in. */
+export function LateJoinBanner({ untilMs, pending, onJoin }: {
+  untilMs: number;
+  pending: boolean;
+  onJoin: () => void;
+}) {
+  const { t } = useLocale();
+  const [now, setNow] = useState(() => wlNow());
+  useEffect(() => {
+    const id = window.setInterval(() => setNow(wlNow()), 1000);
+    return () => window.clearInterval(id);
+  }, []);
+  const left = Math.max(0, Math.ceil((untilMs - now) / 1000));
+  if (left <= 0) return null;
+  return (
+    <motion.div
+      initial={{ y: -60, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      className="fixed inset-x-0 top-3 z-50 mx-auto w-[calc(100%-24px)] max-w-md rounded-2xl border-2 border-brand-green bg-surface-card-deep p-4 shadow-[0_8px_28px_rgba(0,0,0,0.5)]"
+    >
+      <div className="font-poppins text-[15px] font-black uppercase text-white" style={poppins}>
+        {t('weekendLeague.lateJoinTitle')}
+      </div>
+      <p className="mt-1 font-poppins text-[12px] font-semibold text-white/65">
+        {t('weekendLeague.lateJoinBody')}
+      </p>
+      <div className="mt-3 flex items-center gap-3">
+        <button
+          type="button"
+          disabled={pending}
+          onClick={onJoin}
+          className="flex h-11 flex-1 items-center justify-center rounded-xl bg-brand-green font-poppins text-sm font-black uppercase tracking-wide text-white transition-colors hover:bg-brand-green/90 disabled:opacity-60"
+        >
+          {t('weekendLeague.lateJoinCta')}
+        </button>
+        <span className="font-poppins text-[14px] font-black tabular-nums text-brand-yellow">
+          {Math.floor(left / 60)}:{String(left % 60).padStart(2, '0')}
+        </span>
+      </div>
+    </motion.div>
+  );
+}
+
 function Immersive({ children, resetKey }: { children: React.ReactNode; resetKey?: string }) {
   const ref = useRef<HTMLDivElement | null>(null);
   // Each screen starts at the top — the container outlives the keyed screens,
