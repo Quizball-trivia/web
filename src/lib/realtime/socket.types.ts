@@ -1238,6 +1238,18 @@ export interface ErrorPayload {
   meta?: Record<string, unknown>;
 }
 
+/**
+ * Server read-only DB breaker status (INC-2026-07-29). Broadcast on state edges
+ * and sent to each socket on connect. Mirrors the backend SystemStatusPayload.
+ */
+export interface SystemStatusPayload {
+  degraded: boolean;
+  reason: 'db_write_outage' | null;
+  matchmaking: 'available' | 'paused';
+  sinceMs: number | null;
+  serverTimeMs: number;
+}
+
 export interface LobbyChallengeUser {
   id: string;
   username: string;
@@ -1555,6 +1567,7 @@ export interface ServerToClientEvents {
   'notification:new': (data: NotificationPayload) => void;
   'notification:unread_count': (data: NotificationUnreadCountPayload) => void;
   'session:state': (data: SessionStatePayload) => void;
+  'system:status': (data: SystemStatusPayload) => void;
   'session:blocked': (data: SessionBlockedPayload) => void;
   'auth:force_logout': (data: ForceLogoutPayload) => void;
   'lobby:state': (data: LobbyState) => void;

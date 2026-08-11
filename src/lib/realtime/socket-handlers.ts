@@ -8,6 +8,7 @@ import { queryKeys } from '@/lib/queries/queryKeys';
 import { logger } from '@/utils/logger';
 import { storage, STORAGE_KEYS } from '@/utils/storage';
 import { getI18nText } from '@/lib/utils/i18n';
+import { applySystemStatus, type SystemStatusPayload } from '@/lib/realtime/system-status';
 import { translate, normalizeLocale } from '@/lib/i18n/messages';
 import { toast } from 'sonner';
 import { getMe } from '@/lib/api/endpoints';
@@ -56,6 +57,14 @@ import type {
 // without needing to tear down and re-register all listeners.
 let _queryClient: QueryClient | null = null;
 let _handlersRegistered = false;
+// The backend pairs error(DB_WRITE_OUTAGE) with an immediate ranked:queue_left
+// (no payload). The generic queue_left handler would otherwise overwrite the
+// db_write_outage source with 'server_event' and re-bump the seq — defeating
+// the outage notice and letting the router treat it as a recoverable lost boot.
+// We stamp the outage here and let the queue_left handler preserve the source
+// for a short window.
+let _lastDbOutageErrorAtMs = 0;
+const DB_OUTAGE_QUEUE_LEFT_WINDOW_MS = 3_000;
 
 function getQueryClient(): QueryClient | null {
   return _queryClient;
@@ -233,6 +242,20 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       });
       useRankedMatchmakingStore.getState().setRankedQueueLeft('socket_error');
     }
+    // DB write outage (INC-2026-07-29): the server refused the queue join
+    // BEFORE spending a ticket and paired this error with ranked:queue_left.
+    // Tag the queue-left with a dedicated source so the router does NOT treat
+    // it as a lost boot to recover, and so the map surfaces the reassuring
+    // "ticket wasn't used, retrying" notice instead of a scary error.
+    if (data.code === 'DB_WRITE_OUTAGE') {
+      logSocketDebug('ranked db write outage', {
+        code: data.code,
+        message: data.message,
+        ...getSocketDebugSnapshot(socket),
+      });
+      _lastDbOutageErrorAtMs = Date.now();
+      useRankedMatchmakingStore.getState().setRankedQueueLeft('db_write_outage');
+    }
     // Rollback optimistic draft ban on server rejection
     if (
       data.code === 'NOT_YOUR_TURN' ||
@@ -256,6 +279,20 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       }
     }
     store.setError(data);
+  });
+
+  // Read-only DB outage signal (INC-2026-07-29). Broadcast on breaker state
+  // edges and sent to each socket on connect, so a client that connects mid-
+  // outage renders the degraded UI immediately. Feeds the system-status store,
+  // which drives the paused-matchmaking notice, the in-match "paused, protected"
+  // pill, and the green "Back online" recovery pulse.
+  socket.on('system:status', (data: SystemStatusPayload) => {
+    logger.info('Socket event system:status', {
+      degraded: data.degraded,
+      reason: data.reason,
+      matchmaking: data.matchmaking,
+    });
+    applySystemStatus(data);
   });
 
   socket.on('draft:start', (data: DraftState) => {
@@ -693,7 +730,14 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
   socket.on('ranked:queue_left', () => {
     logger.info('Socket event ranked:queue_left');
     logSocketDebug('ranked queue_left event', getSocketDebugSnapshot(socket));
-    useRankedMatchmakingStore.getState().setRankedQueueLeft('server_event');
+    // Preserve the db_write_outage source when this queue_left is the one the
+    // backend paired with a just-received DB_WRITE_OUTAGE error — otherwise the
+    // router would see 'server_event' and could try to recover a "lost boot",
+    // and the outage notice would be lost.
+    const source = Date.now() - _lastDbOutageErrorAtMs < DB_OUTAGE_QUEUE_LEFT_WINDOW_MS
+      ? 'db_write_outage'
+      : 'server_event';
+    useRankedMatchmakingStore.getState().setRankedQueueLeft(source);
   });
 
   socket.on('presence:online_count', (data: PresenceOnlineCountPayload) => {
@@ -734,4 +778,5 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
 export function resetSocketHandlers(): void {
   _handlersRegistered = false;
   _queryClient = null;
+  _lastDbOutageErrorAtMs = 0;
 }

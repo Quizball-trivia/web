@@ -238,6 +238,26 @@ export function GameStageRouter() {
     recoverRankedBoot,
   ]);
 
+  // DB write outage (INC-2026-07-29): the server refused the queue join before
+  // spending a ticket. Surface the reassuring "ticket wasn't used, retrying"
+  // notice on the matchmaking map. Not a boot abort — no recovery, no toast
+  // error — just a calm inline pill.
+  const lastDbOutageQueueLeftSeqRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (lastDbOutageQueueLeftSeqRef.current === rankedQueueLeftSeq) return;
+    lastDbOutageQueueLeftSeqRef.current = rankedQueueLeftSeq;
+    if (rankedQueueLeftAt !== null && rankedQueueLeftSource === "db_write_outage") {
+      // Defer the setState out of the effect body (matches recoverRankedBoot's
+      // queueMicrotask above; avoids the cascading-render lint).
+      queueMicrotask(() => {
+        setRankedBootNotice({
+          id: `ranked-db-outage-${Date.now()}`,
+          message: t("matchmaking.dbOutagePaused"),
+        });
+      });
+    }
+  }, [rankedQueueLeftAt, rankedQueueLeftSeq, rankedQueueLeftSource, t]);
+
   useEffect(() => {
     const previousSessionState = lastRankedBootSessionStateRef.current;
     lastRankedBootSessionStateRef.current = sessionState?.state ?? null;

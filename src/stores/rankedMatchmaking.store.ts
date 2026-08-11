@@ -17,13 +17,13 @@ interface RankedMatchmakingState {
   rankedCancelRequestedAt: number | null;
   rankedQueueLeftAt: number | null;
   rankedQueueLeftSeq: number;
-  rankedQueueLeftSource: 'server_event' | 'socket_error' | null;
+  rankedQueueLeftSource: 'server_event' | 'socket_error' | 'db_write_outage' | null;
   markRankedSearchRequested: () => void;
   markRankedCancelRequested: () => void;
   invalidateRankedSearchAck: () => void;
   setRankedSearchStarted: (payload: { durationMs: number }) => void;
   setRankedMatchFound: (payload: { opponent: OpponentInfo; myRecentForm?: Array<'W' | 'L' | 'D'> }) => void;
-  setRankedQueueLeft: (source?: 'server_event' | 'socket_error') => void;
+  setRankedQueueLeft: (source?: 'server_event' | 'socket_error' | 'db_write_outage') => void;
   clearRankedMatchmaking: () => void;
 }
 
