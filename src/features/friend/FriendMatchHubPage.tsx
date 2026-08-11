@@ -35,6 +35,7 @@ export function FriendMatchHubPage() {
   
   const [activeTab, setActiveTab] = useState(initialTab);
   const [isNavigatingToRoom, setIsNavigatingToRoom] = useState(false);
+  const [roomNavigationSource, setRoomNavigationSource] = useState<'create' | 'manual_code' | 'public_lobby' | null>(null);
   const lobbyCommands = useLobbyCommandMachine();
   const { joinByCode, reset: resetLobbyCommand } = lobbyCommands;
   const isJoiningCode = lobbyCommands.isJoining ? lobbyCommands.state.targetInviteCode : null;
@@ -46,6 +47,7 @@ export function FriendMatchHubPage() {
   const resetJoinNavigationState = useCallback(() => {
     resetJoiningCodeState();
     setIsNavigatingToRoom(false);
+    setRoomNavigationSource(null);
   }, [resetJoiningCodeState]);
 
   useEffect(() => {
@@ -62,8 +64,9 @@ export function FriendMatchHubPage() {
     sessionState?.state === "IN_QUEUE"
   );
 
-  const handleActionTriggered = () => {
+  const handleActionTriggered = (source: 'create' | 'manual_code' | 'public_lobby') => {
     clearRealtimeError();
+    setRoomNavigationSource(source);
     setIsNavigatingToRoom(true);
   };
 
@@ -72,7 +75,8 @@ export function FriendMatchHubPage() {
   useEffect(() => {
     if (lobby?.inviteCode && isNavigatingToRoom) {
       resetLobbyCommand();
-      router.push(`/friend/room/${lobby.inviteCode}`);
+      const source = roomNavigationSource ?? 'manual_code';
+      router.push(`/friend/room/${lobby.inviteCode}?source=${source}`);
       // Reset navigation state after push so a re-run doesn't strand the flag.
       // Deferred out of the synchronous effect body to avoid a cascading render.
       queueMicrotask(() => setIsNavigatingToRoom(false));
@@ -80,17 +84,17 @@ export function FriendMatchHubPage() {
     }
     
     // Safety fallback: if we are verifying "Already In Lobby", we don't redirect.
-  }, [lobby, resetLobbyCommand, router, isNavigatingToRoom]);
+  }, [lobby, resetLobbyCommand, roomNavigationSource, router, isNavigatingToRoom]);
 
   const handleJoinPublic = (inviteCode: string) => {
     const currentCode = lobby?.inviteCode?.toUpperCase() ?? null;
     const targetCode = inviteCode.toUpperCase();
     if (currentCode === targetCode) {
-      router.push(`/friend/room/${targetCode}`);
+      router.push(`/friend/room/${targetCode}?source=public_lobby`);
       return;
     }
 
-    handleActionTriggered();
+    handleActionTriggered('public_lobby');
     toast.info(t('friend.toastJoiningCode', { code: targetCode }));
     void joinByCode(targetCode).then((result) => {
       if (!result) {
@@ -102,8 +106,8 @@ export function FriendMatchHubPage() {
         // code, so we don't have to wait on the lobby:state store update
         // (which won't re-fire the navigation effect if the store was already
         // populated, leaving the button doing nothing).
-        resetLobbyCommand();
-        router.push(`/friend/room/${result.inviteCode}`);
+        resetJoinNavigationState();
+        router.push(`/friend/room/${result.inviteCode}?source=public_lobby`);
         return;
       }
       if (result.code === "LOBBY_NOT_FOUND") {
@@ -208,7 +212,6 @@ export function FriendMatchHubPage() {
                <LobbyBrowsePanel
                   onJoin={handleJoinPublic}
                   isJoiningCode={isJoiningCode}
-                  onActionTriggered={handleActionTriggered}
                />
             </div>
          ) : (

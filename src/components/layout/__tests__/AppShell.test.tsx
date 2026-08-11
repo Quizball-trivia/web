@@ -760,7 +760,7 @@ describe('AppShell — banner callbacks fire the right store / socket actions', 
     renderShell();
     const buttons = screen.getAllByText(/appShell.returnToLobby/);
     fireEvent.click(buttons[0]);
-    expect(routerPushMock).toHaveBeenCalledWith('/friend/room/ROOM1');
+    expect(routerPushMock).toHaveBeenCalledWith('/friend/room/ROOM1?source=current_lobby');
   });
 
   it('lobby banner Leave → emits lobby:leave, resets realtime, clears ranked matchmaking', async () => {
