@@ -530,7 +530,9 @@ export function useFriendLobbyLogic({
       error.code === "LOBBY_MODE_CAPACITY";
     const isTransientSettingsBusy = error.code === "LOBBY_SETTINGS_LOCKED";
     const isInviteTransitionBusy = isResolvingInvite && error.code === "TRANSITION_IN_PROGRESS";
-    const isInviteNotFound = isResolvingInvite && error.code === "LOBBY_NOT_FOUND";
+    const isInviteNotFound =
+      error.code === "LOBBY_NOT_FOUND" &&
+      (isResolvingInvite || inviteJoinFailure?.reasonCode === "LOBBY_NOT_FOUND");
     const isMatchHandoffJoinError =
       isPreparingMatch &&
       (error.code === "ALREADY_IN_LOBBY" || error.code === "ACTIVE_MATCH");
@@ -562,7 +564,7 @@ export function useFriendLobbyLogic({
       }
       clearTimeout(stopStartingTimer);
     };
-  }, [clearError, clearStartMatchTimeout, error, isPreparingMatch, isResolvingInvite, t]);
+  }, [clearError, clearStartMatchTimeout, error, inviteJoinFailure, isPreparingMatch, isResolvingInvite, t]);
 
   // 3. Actions
   const copyCode = async () => {
