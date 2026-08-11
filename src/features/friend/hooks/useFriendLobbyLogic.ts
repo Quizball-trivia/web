@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useLocale } from "@/contexts/LocaleContext";
@@ -140,6 +140,10 @@ export function useFriendLobbyLogic({
   const isNewRoomRoute = roomCode.trim().toLowerCase() === "new";
   const shouldCreateLobby = isHost && isNewRoomRoute;
   const normalizedRoomCode = roomCode && !isNewRoomRoute ? normalizeFriendInviteCode(roomCode) : null;
+  const activeInviteCodeRef = useRef(normalizedRoomCode);
+  useLayoutEffect(() => {
+    activeInviteCodeRef.current = normalizedRoomCode;
+  }, [normalizedRoomCode]);
   const inviteJoinFailure =
     inviteJoinFailureState?.inviteCode === normalizedRoomCode ? inviteJoinFailureState : null;
   const expectsInviteLobby = Boolean(normalizedRoomCode);
@@ -266,6 +270,7 @@ export function useFriendLobbyLogic({
       });
     }
     void joinByCode(roomCode).then((result) => {
+      if (activeInviteCodeRef.current !== targetCode) return;
       if (leavingRef.current || inviteJoinCancelledRef.current) return;
       if (!result) return;
       if (result.ok) {

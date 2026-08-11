@@ -263,6 +263,48 @@ describe('useFriendLobbyLogic invite links', () => {
     }));
   });
 
+  it('ignores a late join failure after navigating to another invite code', async () => {
+    let resolveFirstJoin: ((result: unknown) => void) | undefined;
+    mocks.socketEmit.mockImplementationOnce((event: string, _payload: unknown, ack?: (result: unknown) => void) => {
+      expect(event).toBe('lobby:join_by_code');
+      resolveFirstJoin = ack;
+    });
+
+    const { result, rerender } = renderHook(
+      ({ roomCode }) => useFriendLobbyLogic({ roomCode, isHost: false }),
+      { initialProps: { roomCode: 'ROOMA1' } },
+    );
+
+    await waitFor(() => expect(resolveFirstJoin).toBeDefined());
+    rerender({ roomCode: 'ROOMB2' });
+
+    await waitFor(() => {
+      expect(mocks.socketEmit).toHaveBeenCalledWith('lobby:join_by_code', {
+        inviteCode: 'ROOMB2',
+        correlationId: expect.any(String),
+      }, expect.any(Function));
+    });
+
+    act(() => {
+      resolveFirstJoin?.({
+        ok: false,
+        code: 'LOBBY_NOT_FOUND',
+        message: 'Old lobby no longer exists.',
+        retryable: false,
+        correlationId: 'stale-request',
+      });
+    });
+
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(result.current.targetInviteCode).toBe('ROOMB2');
+    expect(result.current.inviteJoinFailure).toBeNull();
+    expect(mocks.toastError).not.toHaveBeenCalledWith('Old lobby no longer exists.');
+    expect(mocks.trackInviteJoinFailed).not.toHaveBeenCalled();
+  });
+
   it('retries an acknowledged invite when lobby state is not delivered', async () => {
     vi.useFakeTimers();
     renderHook(() =>

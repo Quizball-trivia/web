@@ -106,7 +106,7 @@ export function FriendMatchHubPage() {
         // code, so we don't have to wait on the lobby:state store update
         // (which won't re-fire the navigation effect if the store was already
         // populated, leaving the button doing nothing).
-        resetLobbyCommand();
+        resetJoinNavigationState();
         router.push(`/friend/room/${result.inviteCode}?source=public_lobby`);
         return;
       }
