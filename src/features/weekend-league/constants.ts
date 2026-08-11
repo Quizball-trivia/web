@@ -27,6 +27,10 @@ export const LAUNCH_EDITION = true;
 
 // Gameplay timings (mock quiz).
 export const KICKOFF_SECONDS = 10; // pre-match "everyone starts together" countdown
+
+// Mirrors backend WL_LATE_JOIN_MS: how long after the scheduled start a
+// missed-check-in entrant can still join (server re-authorizes on check-in).
+export const LATE_JOIN_MS = 150_000;
 export const QUESTION_SECONDS = 12; // per-question answer window
 export const QUIZ_LENGTH = 6; // questions per match
 export const POINTS_PER_CORRECT = 100; // + seconds-remaining speed bonus
