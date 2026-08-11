@@ -262,6 +262,19 @@ describe('useFriendLobbyLogic invite links', () => {
       failureCode: 'LOBBY_NOT_FOUND',
       attemptNumber: 1,
     }));
+
+    act(() => {
+      useRealtimeMatchStore.getState().setError({
+        code: 'LOBBY_NOT_FOUND',
+        message: 'Raw backend error.',
+      });
+    });
+
+    await waitFor(() => {
+      expect(useRealtimeMatchStore.getState().error).toBeNull();
+    });
+    expect(mocks.toastError).toHaveBeenCalledTimes(1);
+    expect(result.current.settingsErrorVersion).toBe(0);
   });
 
   it('ignores a late join failure after navigating to another invite code', async () => {
