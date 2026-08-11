@@ -136,6 +136,7 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource }: FriendLobb
 
   if (inviteJoinFailure) {
     const code = inviteJoinFailure.inviteCode || targetInviteCode || lobbyCode;
+    const isExpiredInvite = inviteJoinFailure.reasonCode === "LOBBY_NOT_FOUND";
 
     return (
       <div className="container mx-auto max-w-5xl px-3 py-6 animate-in fade-in lg:px-0">
@@ -146,13 +147,15 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource }: FriendLobb
               className="text-white uppercase"
               style={{ fontFamily: poppins, fontWeight: 700, fontSize: 24, letterSpacing: '0.04em' }}
             >
-              {t("friend.inviteJoinFailedTitle")}
+              {t(isExpiredInvite ? "friend.inviteExpiredTitle" : "friend.inviteJoinFailedTitle")}
             </h1>
             <p
               className="text-white/65"
               style={{ fontFamily: poppins, fontWeight: 500, fontSize: 14, lineHeight: 1.45 }}
             >
-              {t("friend.inviteJoinFailedDescription", { code })}
+              {isExpiredInvite
+                ? t("friend.inviteExpiredDescription")
+                : t("friend.inviteJoinFailedDescription", { code })}
             </p>
             <p
               className="text-white/45 uppercase"
@@ -162,14 +165,16 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource }: FriendLobb
             </p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
-            <button
-              onClick={actions.handleInviteRetry}
-              className="flex h-12 items-center justify-center gap-2 rounded-[16px] bg-brand-green px-5 text-white uppercase transition-all hover:bg-brand-green-deep active:scale-[0.98]"
-              style={{ fontFamily: poppins, fontWeight: 600, fontSize: 13, letterSpacing: '0.04em' }}
-            >
-              <RotateCcw className="size-4" />
-              {t("friend.retry")}
-            </button>
+            {inviteJoinFailure.retryable && (
+              <button
+                onClick={actions.handleInviteRetry}
+                className="flex h-12 items-center justify-center gap-2 rounded-[16px] bg-brand-green px-5 text-white uppercase transition-all hover:bg-brand-green-deep active:scale-[0.98]"
+                style={{ fontFamily: poppins, fontWeight: 600, fontSize: 13, letterSpacing: '0.04em' }}
+              >
+                <RotateCcw className="size-4" />
+                {t("friend.retry")}
+              </button>
+            )}
             <button
               onClick={actions.handleInviteBack}
               className="flex h-12 items-center justify-center gap-2 rounded-[16px] bg-white/10 px-5 text-white uppercase transition-all hover:bg-white/15 active:scale-[0.98]"
