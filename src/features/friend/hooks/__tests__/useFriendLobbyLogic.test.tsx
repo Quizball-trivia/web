@@ -248,12 +248,13 @@ describe('useFriendLobbyLogic invite links', () => {
       expect(result.current.inviteJoinFailure).toEqual({
         inviteCode: 'MISSING',
         reasonCode: 'LOBBY_NOT_FOUND',
-        message: 'Lobby not found.',
+        message: 'This link can’t be used anymore.',
+        retryable: false,
       });
     });
 
     expect(result.current.isResolvingInvite).toBe(false);
-    expect(mocks.toastError).toHaveBeenCalledWith('Lobby not found.');
+    expect(mocks.toastError).toHaveBeenCalledWith('This link can’t be used anymore.');
     expect(mocks.trackInviteLinkOpened).toHaveBeenCalledTimes(1);
     expect(mocks.trackInviteJoinAttempted).toHaveBeenCalledWith({
       attemptNumber: 1,
@@ -262,6 +263,19 @@ describe('useFriendLobbyLogic invite links', () => {
       failureCode: 'LOBBY_NOT_FOUND',
       attemptNumber: 1,
     }));
+
+    act(() => {
+      useRealtimeMatchStore.getState().setError({
+        code: 'LOBBY_NOT_FOUND',
+        message: 'Raw backend error.',
+      });
+    });
+
+    await waitFor(() => {
+      expect(useRealtimeMatchStore.getState().error).toBeNull();
+    });
+    expect(mocks.toastError).toHaveBeenCalledTimes(1);
+    expect(result.current.settingsErrorVersion).toBe(0);
   });
 
   it('retries an acknowledged invite when lobby state is not delivered', async () => {
@@ -338,7 +352,8 @@ describe('useFriendLobbyLogic invite links', () => {
 
     expect(result.current.inviteJoinFailure).toEqual(expect.objectContaining({
       reasonCode: 'LOBBY_NOT_FOUND',
-      message: 'Lobby closed during retry.',
+      message: 'This link can’t be used anymore.',
+      retryable: false,
     }));
     expect(mocks.trackInviteJoinFailed).toHaveBeenCalledTimes(1);
 
