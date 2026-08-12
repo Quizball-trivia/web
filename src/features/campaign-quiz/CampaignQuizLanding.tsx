@@ -32,6 +32,8 @@ import type { CampaignQuiz } from './campaignQuiz.types';
 interface CampaignQuizLandingProps {
   content: CampaignQuizPageContent;
   quiz: CampaignQuiz;
+  locale?: 'en' | 'ka';
+  previewToken?: string;
 }
 
 const CLUB_QUIZ_LOGOS: Record<string, string> = {
@@ -54,8 +56,22 @@ const CLUB_QUIZ_LOGOS: Record<string, string> = {
   tottenham: '/clubs/tottenham-hotspur.webp',
 };
 
-export function CampaignQuizLanding({ content, quiz }: CampaignQuizLandingProps) {
+export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken }: CampaignQuizLandingProps) {
   const playId = `play-${content.slug}-quiz`;
+  const difficultyCounts = quiz.difficulty_counts ?? quiz.questions.reduce(
+    (counts, question) => {
+      counts[question.difficulty] += 1;
+      return counts;
+    },
+    { easy: 0, medium: 0, hard: 0 },
+  );
+  const localizedH1 = locale === 'ka' && content.kaH1 ? content.kaH1 : content.title;
+  const localizedHeading = (() => {
+    const divider = localizedH1.indexOf('—');
+    if (divider === -1) return { lead: localizedH1, highlight: '' };
+    return { lead: localizedH1.slice(0, divider + 1).trim(), highlight: localizedH1.slice(divider + 1).trim() };
+  })();
+  const localizedLede = locale === 'ka' && content.kaLede ? content.kaLede : content.lede;
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-surface-page-alt font-poppins text-white">
@@ -66,7 +82,7 @@ export function CampaignQuizLanding({ content, quiz }: CampaignQuizLandingProps)
       />
       <header className="sticky top-0 z-50 bg-surface-page-alt/80 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:h-20 lg:px-8">
-          <Link href="/en" aria-label="QuizBall home" className="shrink-0">
+          <Link href={`/${locale}`} aria-label="QuizBall home" className="shrink-0">
             <Image
               src="/assets/brand/quizball-logo.webp"
               alt="QuizBall"
@@ -85,7 +101,7 @@ export function CampaignQuizLanding({ content, quiz }: CampaignQuizLandingProps)
             <CampaignSignupLink
               slug={quiz.slug}
               placement="header"
-              href={`/en?signup=1&source=${content.slug}-quiz-header`}
+              href={`/${locale}?signup=1&source=${content.slug}-quiz-header`}
               className="inline-flex min-h-10 items-center justify-center rounded-lg bg-brand-yellow px-4 text-sm font-semibold text-black transition-colors hover:bg-brand-yellow/90 sm:px-5"
             >
               Play Ranked
@@ -100,7 +116,7 @@ export function CampaignQuizLanding({ content, quiz }: CampaignQuizLandingProps)
             <BreadcrumbList className="text-xs font-semibold text-white/40 sm:text-sm">
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link href="/en" className="hover:text-brand-yellow">
+                  <Link href={`/${locale}`} className="hover:text-brand-yellow">
                     Home
                   </Link>
                 </BreadcrumbLink>
@@ -108,7 +124,7 @@ export function CampaignQuizLanding({ content, quiz }: CampaignQuizLandingProps)
               <BreadcrumbSeparator className="text-white/25" />
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link href="/en/football-quiz" className="text-white/50 hover:text-brand-yellow">
+                  <Link href={`/${locale}/football-quiz`} className="text-white/50 hover:text-brand-yellow">
                     Football Quiz
                   </Link>
                 </BreadcrumbLink>
@@ -131,11 +147,11 @@ export function CampaignQuizLanding({ content, quiz }: CampaignQuizLandingProps)
                 {quiz.total_questions} verified questions
               </div>
               <h1 className="mt-5 text-balance text-4xl font-semibold leading-[1.04] tracking-[-0.035em] text-white sm:text-5xl lg:text-6xl">
-                {content.heroLead}{' '}
-                <span className="text-brand-yellow">{content.heroHighlight}</span>
+                {localizedHeading.lead}{' '}
+                {localizedHeading.highlight ? <span className="text-brand-yellow">{localizedHeading.highlight}</span> : null}
               </h1>
               <p className="mt-5 max-w-2xl text-pretty text-base font-medium leading-relaxed text-white/68 sm:text-lg">
-                {content.lede}
+                {localizedLede}
               </p>
 
               <div className="mt-7 flex flex-wrap items-center gap-4">
@@ -152,11 +168,11 @@ export function CampaignQuizLanding({ content, quiz }: CampaignQuizLandingProps)
                 </div>
               </div>
 
-              {quiz.total_questions === 15 ? (
+              {quiz.total_questions > 0 ? (
                 <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium text-white/55">
-                  <span><strong className="font-semibold text-white">5</strong> easy</span>
-                  <span><strong className="font-semibold text-white">5</strong> medium</span>
-                  <span><strong className="font-semibold text-white">5</strong> hard</span>
+                  <span><strong className="font-semibold text-white">{difficultyCounts.easy}</strong> easy</span>
+                  <span><strong className="font-semibold text-white">{difficultyCounts.medium}</strong> medium</span>
+                  <span><strong className="font-semibold text-white">{difficultyCounts.hard}</strong> hard</span>
                 </div>
               ) : null}
             </div>
@@ -200,6 +216,7 @@ export function CampaignQuizLanding({ content, quiz }: CampaignQuizLandingProps)
               slug={quiz.slug}
               questions={quiz.questions}
               scoreTemplate={content.scoreTemplate}
+              previewToken={previewToken}
             />
             <div className="mt-5 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-semibold text-white/40">
               <span className="inline-flex items-center gap-1.5">
@@ -228,8 +245,10 @@ export function CampaignQuizLanding({ content, quiz }: CampaignQuizLandingProps)
             </h2>
 
             <div className="mt-6 space-y-4 text-[15px] font-medium leading-7 text-white/65 sm:text-base">
-              {content.aboutParagraphs.map((paragraph) => (
-                <p key={paragraph}>{paragraph}</p>
+              {(content.aboutBlocks ?? content.aboutParagraphs.map((text, index) => ({ id: String(index), type: 'paragraph' as const, text }))).map((block) => (
+                block.type === 'bullet'
+                  ? <p key={block.id} className="flex gap-2.5"><span className="text-brand-cyan" aria-hidden>•</span><span>{block.text}</span></p>
+                  : <p key={block.id}>{block.text}</p>
               ))}
             </div>
           </article>
@@ -248,10 +267,10 @@ export function CampaignQuizLanding({ content, quiz }: CampaignQuizLandingProps)
               <CampaignSignupLink
                 slug={quiz.slug}
                 placement="footer"
-                href={`/en?signup=1&source=${content.slug}-quiz-footer`}
+                href={`/${locale}?signup=1&source=${content.slug}-quiz-footer`}
                 className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-brand-yellow px-6 font-semibold text-black transition-colors hover:bg-brand-yellow/90"
               >
-                Play Ranked
+                {content.footerButtonLabel ?? 'Play Ranked'}
                 <ArrowRight className="size-5" aria-hidden />
               </CampaignSignupLink>
             </section>
@@ -284,29 +303,33 @@ export function CampaignQuizLanding({ content, quiz }: CampaignQuizLandingProps)
               </h2>
             </div>
             <Link
-              href="/en/football-quiz"
-              className="inline-flex items-center gap-2 text-sm font-semibold text-brand-yellow hover:text-white"
+              href={`/${locale}/football-quiz`}
+              className="group inline-flex items-center gap-2 text-sm font-semibold text-brand-yellow transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow"
             >
               All football quizzes
-              <ArrowRight className="size-4" aria-hidden />
+              <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden />
             </Link>
           </div>
           <div className="mt-5 grid grid-cols-2 gap-x-8 gap-y-3 sm:grid-cols-4">
             {content.relatedSlugs.map((slug) => {
-              const related = CAMPAIGN_QUIZ_CONTENT[slug];
+              const managedRelated = content.relatedPages?.find((page) => page.slug === slug);
+              const legacyRelated = CAMPAIGN_QUIZ_CONTENT[slug];
+              const relatedLabel = managedRelated?.breadcrumb_label ?? legacyRelated?.breadcrumbLabel ?? slug;
+              const relatedImage = managedRelated?.hero_image_url ?? legacyRelated?.heroImage;
               const clubLogo = CLUB_QUIZ_LOGOS[slug];
+              if (!clubLogo && !relatedImage) return null;
               return (
                 <CampaignTrackedLink
                   key={slug}
                   fromSlug={quiz.slug}
                   targetSlug={slug}
-                  href={`/en/football-quiz/${slug}`}
-                  aria-label={`Play ${related.breadcrumbLabel}`}
-                  title={related.breadcrumbLabel}
+                  href={`/${locale}/football-quiz/${slug}`}
+                  aria-label={`Play ${relatedLabel}`}
+                  title={relatedLabel}
                   className="group flex min-h-28 items-center justify-center py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow"
                 >
                   <Image
-                    src={clubLogo ?? related.heroImage}
+                    src={clubLogo ?? relatedImage!}
                     alt=""
                     aria-hidden
                     width={120}
@@ -332,7 +355,7 @@ export function CampaignQuizLanding({ content, quiz }: CampaignQuizLandingProps)
 
       <footer className="relative z-10 bg-surface-page-alt/80 px-4 py-10 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-5 sm:flex-row">
-          <Link href="/en" aria-label="QuizBall home">
+          <Link href={`/${locale}`} aria-label="QuizBall home">
             <Image
               src="/assets/brand/quizball-logo.webp"
               alt="QuizBall"

@@ -41,6 +41,9 @@ const SECURITY_HEADERS = [
 const nextConfig: NextConfig = {
   productionBrowserSourceMaps: true,
   images: {
+    // Local CMS previews read artwork from the local Supabase Storage service.
+    // Keep private-IP image fetching disabled everywhere except development.
+    dangerouslyAllowLocalIP: process.env.NODE_ENV === "development",
     // Serve AVIF where the browser supports it (smaller than webp at the
     // same visual quality), webp otherwise.
     formats: ["image/avif", "image/webp"],
@@ -50,6 +53,16 @@ const nextConfig: NextConfig = {
     // Whitelist the explicit qualities used by lib/images/remoteImage.ts.
     qualities: [70, 75, 90],
     remotePatterns: [
+      ...(process.env.NODE_ENV === "development"
+        ? [
+            {
+              protocol: "http" as const,
+              hostname: "127.0.0.1",
+              port: "54321",
+              pathname: "/storage/v1/object/public/**",
+            },
+          ]
+        : []),
       {
         // Own Supabase storage (question/category images) — lets the
         // optimizer resize the stored 1440×1080 PNGs down to card size.
