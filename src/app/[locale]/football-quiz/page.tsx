@@ -15,6 +15,8 @@ import { SITE_NAME, SITE_URL } from '@/lib/seo/site';
 
 const TITLE = 'Football Quiz — Play Free Football Quizzes & Trivia | QuizBall';
 const DESCRIPTION = 'Play free football quizzes on clubs, players, badges, career paths and Premier League history. Instant scores, no sign-up needed.';
+const KA_TITLE = 'ფეხბურთის ქვიზი — ითამაშე უფასოდ | QuizBall';
+const KA_DESCRIPTION = 'ითამაშე უფასო ფეხბურთის ქვიზები კლუბებზე, მოთამაშეებზე, ემბლემებსა და პრემიერ ლიგის ისტორიაზე. მიიღე შედეგი მყისიერად.';
 const GROUP_LABELS: Record<CampaignQuizHubPage['category'], string> = {
   team: 'Club quizzes',
   league: 'League quizzes',
@@ -26,11 +28,20 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const { locale } = await params;
   if (locale !== 'en' && locale !== 'ka') return {};
   const pageUrl = `${SITE_URL}/${locale}/football-quiz`;
+  const title = locale === 'ka' ? KA_TITLE : TITLE;
+  const description = locale === 'ka' ? KA_DESCRIPTION : DESCRIPTION;
   return {
-    title: { absolute: TITLE },
-    description: DESCRIPTION,
-    alternates: { canonical: pageUrl },
-    openGraph: { type: 'website', siteName: SITE_NAME, title: TITLE, description: DESCRIPTION, url: pageUrl, locale: locale === 'ka' ? 'ka_GE' : 'en_GB' },
+    title: { absolute: title },
+    description,
+    alternates: {
+      canonical: pageUrl,
+      languages: {
+        en: `${SITE_URL}/en/football-quiz`,
+        ka: `${SITE_URL}/ka/football-quiz`,
+        'x-default': `${SITE_URL}/en/football-quiz`,
+      },
+    },
+    openGraph: { type: 'website', siteName: SITE_NAME, title, description, url: pageUrl, locale: locale === 'ka' ? 'ka_GE' : 'en_GB' },
   };
 }
 
@@ -49,7 +60,7 @@ export default async function FootballQuizHubPage({ params }: { params: Promise<
   if (rawLocale !== 'en' && rawLocale !== 'ka') notFound();
   const locale = rawLocale as 'en' | 'ka';
   const pages = await loadHubPages(locale);
-  if (locale === 'ka' && pages.length === 0) notFound();
+  if (pages.length === 0) notFound();
 
   const groups = (['team', 'league', 'quiz_type', 'article'] as const)
     .map((category) => ({ category, pages: pages.filter((page) => page.category === category) }))

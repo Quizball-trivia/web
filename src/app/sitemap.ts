@@ -31,6 +31,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     routes.map(([suffix, freq, prio]) => entry(`/${locale}${suffix}`, freq, prio)),
   );
 
+  const validLastModified = (value: string): Date | undefined => {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? undefined : date;
+  };
+
   let campaignPages: Awaited<ReturnType<typeof listCampaignQuizPages>>;
   try {
     campaignPages = await listCampaignQuizPages('en');
@@ -47,7 +52,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...campaignPages.flatMap((page) => {
       const english = {
         ...entry(`/en/football-quiz/${page.slug}`, 'monthly', 0.8),
-        lastModified: new Date(page.updated_at),
+        lastModified: validLastModified(page.updated_at),
       };
       return page.locale_mode === 'en_ka'
         ? [english, { ...english, url: `${SITE_URL}/ka/football-quiz/${page.slug}` }]
