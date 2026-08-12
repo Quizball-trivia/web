@@ -27,6 +27,7 @@ interface CampaignQuizGameProps {
   slug: string;
   questions: CampaignQuizQuestion[];
   scoreTemplate?: string;
+  previewToken?: string;
 }
 
 /**
@@ -72,6 +73,7 @@ export function CampaignQuizGame({
   slug,
   questions,
   scoreTemplate = 'You scored {score}/{total} — sign up free to save your score and defend it in a ranked duel.',
+  previewToken,
 }: CampaignQuizGameProps) {
   const authStatus = useAuthStore((state) => state.status);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -105,6 +107,7 @@ export function CampaignQuizGame({
         slug,
         questionId: question.id,
         selectedOptionId: optionId,
+        previewToken,
       });
       setAnswers((current) => ({
         ...current,

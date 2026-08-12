@@ -1,94 +1,122 @@
+import { cache } from 'react';
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
-import { notFound, redirect } from 'next/navigation';
+import { notFound, permanentRedirect, redirect } from 'next/navigation';
 import { CampaignQuizLanding } from '@/features/campaign-quiz/CampaignQuizLanding';
 import {
   CAMPAIGN_QUIZ_SLUGS,
   getCampaignQuizContent,
 } from '@/features/campaign-quiz/campaignQuiz.content';
-import { getCampaignQuiz } from '@/features/campaign-quiz/campaignQuiz.api';
+import {
+  CampaignQuizApiError,
+  getCampaignQuiz,
+  resolveCampaignQuizRoute,
+} from '@/features/campaign-quiz/campaignQuiz.api';
 import { SITE_NAME, SITE_URL } from '@/lib/seo/site';
 
 export const dynamic = 'force-dynamic';
 
 interface CampaignQuizPageProps {
   params: Promise<{ locale: string; slug: string }>;
+  searchParams: Promise<{ preview?: string }>;
 }
+
+const loadQuiz = cache((slug: string, preview?: string) => getCampaignQuiz(slug, preview));
 
 export function generateStaticParams() {
   return CAMPAIGN_QUIZ_SLUGS.map((slug) => ({ locale: 'en', slug }));
 }
 
-export async function generateMetadata({
-  params,
-}: CampaignQuizPageProps): Promise<Metadata> {
-  const { locale, slug } = await params;
-  const content = getCampaignQuizContent(slug);
-  if (locale !== 'en' || !content) return {};
-
-  const pageUrl = `${SITE_URL}/en/football-quiz/${content.slug}`;
-
-  return {
-    title: { absolute: content.metadataTitle },
-    description: content.description,
-    alternates: {
-      canonical: pageUrl,
-    },
-    openGraph: {
-      type: 'website',
-      siteName: SITE_NAME,
-      title: content.metadataTitle,
-      description: content.description,
-      url: pageUrl,
-      locale: 'en_GB',
-      images: [
-        {
-          url: content.heroImage.startsWith('http')
-            ? content.heroImage
-            : `${SITE_URL}${content.heroImage}`,
-          width: 1200,
-          height: 1200,
-          alt: content.heroImageAlt,
-        },
-      ],
-    },
-    twitter: {
-      card: 'summary_large_image',
-      title: content.metadataTitle,
-      description: content.description,
-      images: [
-        content.heroImage.startsWith('http')
-          ? content.heroImage
-          : `${SITE_URL}${content.heroImage}`,
-      ],
-    },
-  };
+function absoluteImage(url: string): string {
+  return url.startsWith('http') ? url : `${SITE_URL}${url}`;
 }
 
-export default async function CampaignQuizPage({ params }: CampaignQuizPageProps) {
-  const { locale, slug } = await params;
-  const content = getCampaignQuizContent(slug);
-  if (!content) notFound();
-  if (locale !== 'en') redirect(`/en/football-quiz/${content.slug}`);
+export async function generateMetadata({ params, searchParams }: CampaignQuizPageProps): Promise<Metadata> {
+  const [{ locale, slug }, { preview }] = await Promise.all([params, searchParams]);
+  if (locale !== 'en' && locale !== 'ka') return {};
 
-  const [quiz, headerList] = await Promise.all([
-    getCampaignQuiz(content.slug),
-    headers(),
-  ]);
+  try {
+    const quiz = await loadQuiz(slug, preview);
+    const content = getCampaignQuizContent(slug, quiz.page);
+    if (!content) return {};
+    if (locale === 'ka' && content.localeMode !== 'en_ka') return {};
+
+    const isGeorgian = locale === 'ka';
+    const title = isGeorgian ? (content.kaMetadataTitle ?? content.metadataTitle) : content.metadataTitle;
+    const description = isGeorgian ? (content.kaDescription ?? content.description) : content.description;
+    const pageUrl = `${SITE_URL}/${locale}/football-quiz/${content.slug}`;
+    const ogImage = content.ogImage ?? content.heroImage;
+    const ogAlt = content.ogImageAlt ?? content.heroImageAlt;
+    const languages = content.localeMode === 'en_ka'
+      ? {
+          en: `${SITE_URL}/en/football-quiz/${content.slug}`,
+          ka: `${SITE_URL}/ka/football-quiz/${content.slug}`,
+          'x-default': `${SITE_URL}/en/football-quiz/${content.slug}`,
+        }
+      : { en: `${SITE_URL}/en/football-quiz/${content.slug}` };
+
+    return {
+      title: { absolute: title },
+      description,
+      robots: preview ? { index: false, follow: false } : undefined,
+      alternates: { canonical: pageUrl, languages },
+      openGraph: {
+        type: 'website',
+        siteName: SITE_NAME,
+        title,
+        description,
+        url: pageUrl,
+        locale: isGeorgian ? 'ka_GE' : 'en_GB',
+        images: [{ url: absoluteImage(ogImage), width: 1200, height: 1200, alt: ogAlt }],
+      },
+      twitter: {
+        card: 'summary_large_image',
+        title,
+        description,
+        images: [absoluteImage(ogImage)],
+      },
+    };
+  } catch {
+    return {};
+  }
+}
+
+export default async function CampaignQuizPage({ params, searchParams }: CampaignQuizPageProps) {
+  const [{ locale, slug }, { preview }] = await Promise.all([params, searchParams]);
+  if (locale !== 'en' && locale !== 'ka') notFound();
+
+  let quiz;
+  try {
+    quiz = await loadQuiz(slug, preview);
+  } catch (error) {
+    if (!(error instanceof CampaignQuizApiError) || error.status !== 404) throw error;
+    const route = await resolveCampaignQuizRoute(slug);
+    if (route.kind === 'redirect' && route.target_slug) {
+      permanentRedirect(`/${locale}/football-quiz/${route.target_slug}`);
+    }
+    notFound();
+  }
+
+  const content = getCampaignQuizContent(slug, quiz.page);
+  if (!content) notFound();
+  if (locale === 'ka' && content.localeMode !== 'en_ka') redirect(`/en/football-quiz/${content.slug}`);
+
+  const headerList = await headers();
   const nonce = headerList.get('x-nonce') ?? undefined;
-  const pageUrl = `${SITE_URL}/en/football-quiz/${content.slug}`;
+  const pageUrl = `${SITE_URL}/${locale}/football-quiz/${content.slug}`;
+  const isGeorgian = locale === 'ka';
+  const title = isGeorgian ? (content.kaMetadataTitle ?? content.metadataTitle) : content.metadataTitle;
+  const description = isGeorgian ? (content.kaDescription ?? content.description) : content.description;
+  const h1 = isGeorgian ? (content.kaH1 ?? content.title) : content.title;
 
   const gameSchema: Record<string, unknown> = {
     '@type': 'Game',
-    name: content.title,
-    description: content.description,
+    name: h1,
+    description,
     url: pageUrl,
-    inLanguage: 'en-GB',
+    inLanguage: isGeorgian ? 'ka-GE' : 'en-GB',
     isAccessibleForFree: true,
-    numberOfPlayers: {
-      '@type': 'QuantitativeValue',
-      value: 1,
-    },
+    numberOfPlayers: { '@type': 'QuantitativeValue', value: 1 },
   };
 
   if (quiz.rating.count > 0 && quiz.rating.average !== null) {
@@ -108,58 +136,29 @@ export default async function CampaignQuizPage({ params }: CampaignQuizPageProps
         '@type': 'WebPage',
         '@id': `${pageUrl}#webpage`,
         url: pageUrl,
-        name: content.metadataTitle,
-        description: content.description,
-        inLanguage: 'en-GB',
-        isPartOf: {
-          '@id': `${SITE_URL}/#website`,
-        },
-        mainEntity: {
-          '@id': `${pageUrl}#quiz`,
-        },
+        name: title,
+        description,
+        inLanguage: isGeorgian ? 'ka-GE' : 'en-GB',
+        isPartOf: { '@id': `${SITE_URL}/#website` },
+        mainEntity: { '@id': `${pageUrl}#quiz` },
       },
       {
         '@type': 'BreadcrumbList',
         '@id': `${pageUrl}#breadcrumb`,
         itemListElement: [
-          {
-            '@type': 'ListItem',
-            position: 1,
-            name: 'Home',
-            item: `${SITE_URL}/en`,
-          },
-          {
-            '@type': 'ListItem',
-            position: 2,
-            name: 'Football Quiz',
-            item: `${SITE_URL}/en/football-quiz`,
-          },
-          {
-            '@type': 'ListItem',
-            position: 3,
-            name: content.breadcrumbLabel,
-            item: pageUrl,
-          },
+          { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/${locale}` },
+          { '@type': 'ListItem', position: 2, name: 'Football Quiz', item: `${SITE_URL}/${locale}/football-quiz` },
+          { '@type': 'ListItem', position: 3, name: content.breadcrumbLabel, item: pageUrl },
         ],
       },
-      {
-        '@id': `${pageUrl}#quiz`,
-        ...gameSchema,
-      },
+      { '@id': `${pageUrl}#quiz`, ...gameSchema },
     ],
   };
 
   return (
     <>
-      <script
-        nonce={nonce}
-        type="application/ld+json"
-        suppressHydrationWarning
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c'),
-        }}
-      />
-      <CampaignQuizLanding content={content} quiz={quiz} />
+      <script nonce={nonce} type="application/ld+json" suppressHydrationWarning dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }} />
+      <CampaignQuizLanding content={content} quiz={quiz} locale={locale} previewToken={preview} />
     </>
   );
 }

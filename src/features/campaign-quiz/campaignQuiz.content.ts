@@ -1,4 +1,5 @@
 import manualClubQuizContent from './manualClubQuiz.content.json';
+import type { CampaignQuizAboutBlock, CampaignQuizPage, CampaignQuizRelatedPage } from './campaignQuiz.types';
 
 export interface CampaignQuizPageContent {
   slug: string;
@@ -18,6 +19,16 @@ export interface CampaignQuizPageContent {
   heroImage: string;
   heroImageAlt: string;
   relatedSlugs: string[];
+  aboutBlocks?: CampaignQuizAboutBlock[];
+  relatedPages?: CampaignQuizRelatedPage[];
+  footerButtonLabel?: string;
+  localeMode?: 'en_only' | 'en_ka';
+  kaMetadataTitle?: string | null;
+  kaDescription?: string | null;
+  kaH1?: string | null;
+  kaLede?: string | null;
+  ogImage?: string | null;
+  ogImageAlt?: string | null;
 }
 
 const CATEGORY_IMAGE_BASE =
@@ -256,6 +267,52 @@ for (const quiz of manualClubQuizContent as ManualClubQuizContent[]) {
 
 export const CAMPAIGN_QUIZ_SLUGS = Object.keys(CAMPAIGN_QUIZ_CONTENT);
 
-export function getCampaignQuizContent(slug: string) {
-  return CAMPAIGN_QUIZ_CONTENT[slug];
+function splitHeading(heading: string): { heroLead: string; heroHighlight: string } {
+  const divider = heading.indexOf('—');
+  if (divider === -1) return { heroLead: heading, heroHighlight: '' };
+  return {
+    heroLead: heading.slice(0, divider + 1).trim(),
+    heroHighlight: heading.slice(divider + 1).trim(),
+  };
+}
+
+export function getCampaignQuizContent(
+  slug: string,
+  page?: CampaignQuizPage | null,
+): CampaignQuizPageContent | undefined {
+  if (!page) return CAMPAIGN_QUIZ_CONTENT[slug];
+  if (!page.hero_image_url) return undefined;
+  const heading = splitHeading(page.h1);
+  const paragraphs = page.about_blocks
+    .filter((block) => block.type === 'paragraph')
+    .map((block) => block.text);
+  return {
+    slug,
+    title: page.h1,
+    metadataTitle: page.seo_title,
+    description: page.meta_description,
+    breadcrumbLabel: page.breadcrumb_label,
+    heroLead: heading.heroLead,
+    heroHighlight: heading.heroHighlight,
+    lede: page.lede,
+    playHeading: `Kick off the ${page.breadcrumb_label}`,
+    aboutEyebrow: 'The story behind the questions',
+    aboutHeading: page.about_heading,
+    aboutParagraphs: paragraphs,
+    aboutBlocks: page.about_blocks,
+    scoreTemplate: page.score_cta,
+    footerCta: page.footer_banner_text,
+    footerButtonLabel: page.footer_button_label,
+    heroImage: page.hero_image_url,
+    heroImageAlt: page.hero_image_alt,
+    relatedSlugs: page.related_pages.map((related) => related.slug),
+    relatedPages: page.related_pages,
+    localeMode: page.locale_mode,
+    kaMetadataTitle: page.ka_seo_title,
+    kaDescription: page.ka_meta_description,
+    kaH1: page.ka_h1,
+    kaLede: page.ka_lede,
+    ogImage: page.og_image_url,
+    ogImageAlt: page.og_image_alt,
+  };
 }
