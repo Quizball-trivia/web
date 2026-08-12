@@ -6,7 +6,6 @@ import { ArrowRight, Swords } from 'lucide-react';
 import { AppShellPageChrome } from '@/components/layout/app-shell/AppShellPageChrome';
 import {
   CAMPAIGN_QUIZ_CONTENT,
-  CAMPAIGN_QUIZ_SLUGS,
 } from '@/features/campaign-quiz/campaignQuiz.content';
 import { CampaignQuizHubPageView } from '@/features/campaign-quiz/CampaignQuizHubPageView';
 import { listCampaignQuizPages } from '@/features/campaign-quiz/campaignQuiz.api';
@@ -39,20 +38,9 @@ async function loadHubPages(locale: 'en' | 'ka'): Promise<CampaignQuizHubPage[]>
   try {
     return await listCampaignQuizPages(locale);
   } catch {
-    if (locale === 'ka') return [];
-    return CAMPAIGN_QUIZ_SLUGS.map((slug) => {
-      const content = CAMPAIGN_QUIZ_CONTENT[slug];
-      return {
-        slug,
-        category: 'team' as const,
-        h1: content.title,
-        breadcrumb_label: content.breadcrumbLabel,
-        hero_image_url: content.heroImage,
-        hero_image_alt: content.heroImageAlt,
-        locale_mode: 'en_only' as const,
-        updated_at: new Date(0).toISOString(),
-      };
-    });
+    // Publication state belongs to the CMS. If it cannot be loaded, fail
+    // closed rather than resurfacing a deleted or unpublished legacy page.
+    return [];
   }
 }
 
