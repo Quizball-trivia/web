@@ -26,7 +26,9 @@ type AnswerResult = {
 interface CampaignQuizGameProps {
   slug: string;
   questions: CampaignQuizQuestion[];
+  locale?: 'en' | 'ka';
   scoreTemplate?: string;
+  previewToken?: string;
 }
 
 /**
@@ -71,7 +73,9 @@ function answerClasses(input: {
 export function CampaignQuizGame({
   slug,
   questions,
+  locale = 'en',
   scoreTemplate = 'You scored {score}/{total} — sign up free to save your score and defend it in a ranked duel.',
+  previewToken,
 }: CampaignQuizGameProps) {
   const authStatus = useAuthStore((state) => state.status);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -105,6 +109,7 @@ export function CampaignQuizGame({
         slug,
         questionId: question.id,
         selectedOptionId: optionId,
+        previewToken,
       });
       setAnswers((current) => ({
         ...current,
@@ -157,7 +162,7 @@ export function CampaignQuizGame({
     const isAuthenticated = authStatus === 'authenticated';
     const ctaHref = isAuthenticated
       ? '/play'
-      : `/en?signup=1&source=${slug}-quiz`;
+      : `/${locale}?signup=1&source=${slug}-quiz`;
     const guestScoreCopy = scoreTemplate
       .replace('{score}', String(score))
       .replace('{total}', String(questions.length));
