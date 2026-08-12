@@ -279,9 +279,12 @@ function splitHeading(heading: string): { heroLead: string; heroHighlight: strin
 export function getCampaignQuizContent(
   slug: string,
   page?: CampaignQuizPage | null,
+  locale: 'en' | 'ka' = 'en',
 ): CampaignQuizPageContent | undefined {
   if (!page) return CAMPAIGN_QUIZ_CONTENT[slug];
-  if (!page.hero_image_url) return undefined;
+  const fallback = CAMPAIGN_QUIZ_CONTENT[slug];
+  const heroImage = page.hero_image_url ?? fallback?.heroImage;
+  if (!heroImage) return undefined;
   const heading = splitHeading(page.h1);
   const paragraphs = page.about_blocks
     .filter((block) => block.type === 'paragraph')
@@ -295,16 +298,18 @@ export function getCampaignQuizContent(
     heroLead: heading.heroLead,
     heroHighlight: heading.heroHighlight,
     lede: page.lede,
-    playHeading: `Kick off the ${page.breadcrumb_label}`,
-    aboutEyebrow: 'The story behind the questions',
+    playHeading: locale === 'ka'
+      ? `დაიწყე ${page.breadcrumb_label}`
+      : `Kick off the ${page.breadcrumb_label}`,
+    aboutEyebrow: locale === 'ka' ? 'ისტორია კითხვების მიღმა' : 'The story behind the questions',
     aboutHeading: page.about_heading,
     aboutParagraphs: paragraphs,
     aboutBlocks: page.about_blocks,
     scoreTemplate: page.score_cta,
     footerCta: page.footer_banner_text,
     footerButtonLabel: page.footer_button_label,
-    heroImage: page.hero_image_url,
-    heroImageAlt: page.hero_image_alt,
+    heroImage,
+    heroImageAlt: page.hero_image_alt || fallback?.heroImageAlt || '',
     relatedSlugs: page.related_pages.map((related) => related.slug),
     relatedPages: page.related_pages,
     localeMode: page.locale_mode,

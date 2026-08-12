@@ -37,7 +37,7 @@ export async function generateMetadata({ params, searchParams }: CampaignQuizPag
 
   try {
     const quiz = await loadQuiz(slug, preview);
-    const content = getCampaignQuizContent(slug, quiz.page);
+    const content = getCampaignQuizContent(slug, quiz.page, locale);
     if (!content) return {};
     if (locale === 'ka' && content.localeMode !== 'en_ka') return {};
 
@@ -90,14 +90,14 @@ export default async function CampaignQuizPage({ params, searchParams }: Campaig
     quiz = await loadQuiz(slug, preview);
   } catch (error) {
     if (!(error instanceof CampaignQuizApiError) || error.status !== 404) throw error;
-    const route = await resolveCampaignQuizRoute(slug);
-    if (route.kind === 'redirect' && route.target_slug) {
+    const route = await resolveCampaignQuizRoute(slug).catch(() => null);
+    if (route?.kind === 'redirect' && route.target_slug) {
       permanentRedirect(`/${locale}/football-quiz/${route.target_slug}`);
     }
     notFound();
   }
 
-  const content = getCampaignQuizContent(slug, quiz.page);
+  const content = getCampaignQuizContent(slug, quiz.page, locale);
   if (!content) notFound();
   if (locale === 'ka' && content.localeMode !== 'en_ka') redirect(`/en/football-quiz/${content.slug}`);
 

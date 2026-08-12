@@ -118,7 +118,11 @@ export async function middleware(req: NextRequest) {
     try {
       const response = await fetch(
         `${API_BASE_URL.replace(/\/+$/, '')}/api/v1/campaign-quizzes/routes/${encodeURIComponent(quizPath[2])}`,
-        { headers: { Accept: 'application/json' }, cache: 'no-store' },
+        {
+          headers: { Accept: 'application/json' },
+          cache: 'no-store',
+          signal: AbortSignal.timeout(1_000),
+        },
       );
       if (response.ok) {
         const route = await response.json() as { kind: string; target_slug: string | null };
@@ -130,13 +134,17 @@ export async function middleware(req: NextRequest) {
           return redirectResponse;
         }
         if (route.kind === 'gone') {
-          return new NextResponse(null, {
+          return new NextResponse(
+            '<!doctype html><html lang="en"><head><title>Quiz no longer available</title></head><body><main><h1>This quiz is no longer available.</h1></main></body></html>',
+            {
             status: 410,
             headers: {
+              'Content-Type': 'text/html; charset=utf-8',
               'Content-Security-Policy': csp,
               'X-Robots-Tag': 'noindex, follow',
             },
-          });
+            },
+          );
         }
       }
     } catch {
