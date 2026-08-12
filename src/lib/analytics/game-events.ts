@@ -1,5 +1,6 @@
 import { trackEvent } from '@/lib/posthog';
 import {
+  clearCampaignAttribution,
   getCampaignAttributionAnalyticsProperties,
 } from '@/features/campaign-quiz/campaignAttribution';
 
@@ -197,7 +198,8 @@ export function trackOnboardingStepCompleted(step: string) {
 }
 
 export function trackOnboardingCompleted() {
-  trackEvent('onboarding_completed');
+  const campaign = getCampaignAttributionAnalyticsProperties();
+  trackEvent('onboarding_completed', Object.keys(campaign).length > 0 ? campaign : undefined);
 }
 
 export function trackInAppBrowserBlocked(browser: string, isIOS: boolean, isAndroid: boolean) {
@@ -230,13 +232,16 @@ export function trackMatchStarted(props: {
   opponentIsAi: boolean;
   opponentRp?: number;
 }) {
+  const campaign = getCampaignAttributionAnalyticsProperties();
   trackEvent('match_started', {
     match_id: props.matchId,
     mode: props.mode,
     variant: props.variant,
     opponent_is_ai: props.opponentIsAi,
     opponent_rp: props.opponentRp,
+    ...campaign,
   });
+  if (Object.keys(campaign).length > 0) clearCampaignAttribution();
 }
 
 export function trackMatchCompleted(props: {

@@ -8,6 +8,7 @@ import {
   CAMPAIGN_QUIZ_CONTENT,
   CAMPAIGN_QUIZ_SLUGS,
 } from '@/features/campaign-quiz/campaignQuiz.content';
+import { CampaignQuizHubPageView } from '@/features/campaign-quiz/CampaignQuizHubPageView';
 import { CampaignTrackedLink } from '@/features/campaign-quiz/CampaignTrackedLink';
 import { SITE_NAME, SITE_URL } from '@/lib/seo/site';
 
@@ -48,6 +49,7 @@ export default async function FootballQuizHubPage({
 
   return (
     <div className="relative min-h-screen bg-surface-page-alt font-poppins text-white">
+      <CampaignQuizHubPageView locale={locale} />
       <AppShellPageChrome />
       <header className="relative z-10 bg-surface-page-alt/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:h-20 lg:px-8">

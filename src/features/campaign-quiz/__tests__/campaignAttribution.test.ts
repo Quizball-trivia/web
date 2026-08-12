@@ -8,14 +8,22 @@ vi.mock('@/lib/posthog', () => ({
 
 import {
   appendCampaignAttribution,
+  bindCampaignAttributionToUser,
   clearCampaignAttribution,
   getCampaignAttributionAnalyticsProperties,
   getCampaignAttributionHeader,
+  getOrCreateCampaignConversionId,
   hydrateCampaignAttributionFromUrl,
   rememberCampaignAttribution,
   rememberCampaignAttributionFromSignupUrl,
 } from '../campaignAttribution';
-import { trackCampaignSignupClick } from '../campaignQuiz.analytics';
+import {
+  trackCampaignQuizComplete,
+  trackCampaignQuizHubView,
+  trackCampaignQuizPageView,
+  trackCampaignQuizStart,
+  trackCampaignSignupClick,
+} from '../campaignQuiz.analytics';
 
 describe('campaign attribution handoff', () => {
   beforeEach(() => {
@@ -46,6 +54,40 @@ describe('campaign attribution handoff', () => {
       quiz_score: 12,
       quiz_total_questions: 15,
     });
+  });
+
+  it('uses one conversion ID throughout the same quiz journey', () => {
+    vi.mocked(window.crypto.randomUUID)
+      .mockReturnValueOnce('11111111-1111-4111-8111-111111111111')
+      .mockReturnValueOnce('22222222-2222-4222-8222-222222222222');
+    const pageViewId = getOrCreateCampaignConversionId('liverpool', true);
+    const startId = getOrCreateCampaignConversionId('liverpool');
+    rememberCampaignAttribution({ quizSlug: 'liverpool', placement: 'score' });
+
+    expect(startId).toBe(pageViewId);
+    expect(getCampaignAttributionAnalyticsProperties().campaign_conversion_id).toBe(pageViewId);
+  });
+
+  it('puts one conversion ID on every browser stage of a quiz funnel', () => {
+    vi.mocked(window.crypto.randomUUID)
+      .mockReturnValueOnce('11111111-1111-4111-8111-111111111111')
+      .mockReturnValueOnce('22222222-2222-4222-8222-222222222222');
+
+    trackCampaignQuizPageView('liverpool', 15);
+    trackCampaignQuizStart('liverpool', 15);
+    trackCampaignQuizComplete('liverpool', 12, 15);
+    trackCampaignSignupClick('liverpool', 'score', { score: 12, totalQuestions: 15 });
+
+    const journeyIds = trackEventMock.mock.calls.map(
+      ([, properties]) => (properties as Record<string, unknown>).campaign_conversion_id,
+    );
+    expect(journeyIds).toEqual([
+      '11111111-1111-4111-8111-111111111111',
+      '11111111-1111-4111-8111-111111111111',
+      '11111111-1111-4111-8111-111111111111',
+      '11111111-1111-4111-8111-111111111111',
+    ]);
+    expect(window.crypto.randomUUID).toHaveBeenCalledOnce();
   });
 
   it('round-trips attribution through an OAuth/email callback URL', () => {
@@ -115,5 +157,36 @@ describe('campaign attribution handoff', () => {
       quiz_score: 12,
       quiz_total_questions: 15,
     });
+  });
+
+  it('tracks a campaign-scoped hub view with its locale', () => {
+    trackCampaignQuizHubView('en');
+
+    expect(trackEventMock).toHaveBeenCalledWith('campaign_quiz_hub_view', {
+      quiz_type: 'campaign',
+      locale: 'en',
+    });
+  });
+
+  it('keeps attribution account-bound for onboarding and the first match', () => {
+    rememberCampaignAttribution({ quizSlug: 'liverpool', placement: 'score' });
+
+    bindCampaignAttributionToUser('user-1');
+
+    expect(getCampaignAttributionHeader()).toBeNull();
+    expect(getCampaignAttributionAnalyticsProperties()).toMatchObject({
+      source: 'campaign_quiz',
+      quiz_slug: 'liverpool',
+      campaign_conversion_id: '11111111-1111-4111-8111-111111111111',
+    });
+  });
+
+  it('does not let a different account inherit authenticated attribution', () => {
+    rememberCampaignAttribution({ quizSlug: 'liverpool', placement: 'score' });
+    bindCampaignAttributionToUser('user-1');
+
+    bindCampaignAttributionToUser('user-2');
+
+    expect(getCampaignAttributionAnalyticsProperties()).toEqual({});
   });
 });

@@ -1,17 +1,32 @@
 import { trackEvent } from '@/lib/posthog';
 import {
+  getOrCreateCampaignConversionId,
   rememberCampaignAttribution,
   type CampaignCtaPlacement,
 } from './campaignAttribution';
 
 /**
  * Funnel for the public SEO quiz pages:
- *   page view -> quiz start -> per-question answers -> completion -> signup
- * Every event carries `quiz_slug` so one funnel can be split by campaign, and
- * `quiz_type: 'campaign'` so this traffic stays separable from in-app play.
+ *   hub view -> page view -> quiz start -> per-question answers -> completion -> signup
+ * Every quiz-specific event carries `quiz_slug` so one funnel can be split by
+ * campaign, and `quiz_type: 'campaign'` keeps it separate from in-app play.
  */
 
 const CAMPAIGN_PROPS = { quiz_type: 'campaign' as const };
+
+function journeyProperties(slug: string, reset = false) {
+  const campaignConversionId = getOrCreateCampaignConversionId(slug, reset);
+  return campaignConversionId
+    ? { campaign_conversion_id: campaignConversionId }
+    : {};
+}
+
+export function trackCampaignQuizHubView(locale: 'en' | 'ka'): void {
+  trackEvent('campaign_quiz_hub_view', {
+    ...CAMPAIGN_PROPS,
+    locale,
+  });
+}
 
 export function trackCampaignQuizPageView(
   slug: string,
@@ -20,6 +35,7 @@ export function trackCampaignQuizPageView(
   trackEvent('campaign_quiz_page_view', {
     ...CAMPAIGN_PROPS,
     quiz_slug: slug,
+    ...journeyProperties(slug, true),
     total_questions: totalQuestions,
   });
 }
@@ -28,6 +44,7 @@ export function trackCampaignQuizStart(slug: string, totalQuestions: number): vo
   trackEvent('quiz_start', {
     ...CAMPAIGN_PROPS,
     quiz_slug: slug,
+    ...journeyProperties(slug),
     total_questions: totalQuestions,
   });
 }
@@ -43,6 +60,7 @@ export function trackCampaignQuizAnswer(input: {
   trackEvent('quiz_question_answered', {
     ...CAMPAIGN_PROPS,
     quiz_slug: input.slug,
+    ...journeyProperties(input.slug),
     question_id: input.questionId,
     question_type: input.questionType,
     question_position: input.position,
@@ -59,6 +77,7 @@ export function trackCampaignQuizComplete(
   trackEvent('quiz_complete', {
     ...CAMPAIGN_PROPS,
     quiz_slug: slug,
+    ...journeyProperties(slug),
     score,
     total_questions: totalQuestions,
     // Pre-computed so score-band funnels do not need a HogQL expression.
@@ -71,6 +90,7 @@ export function trackCampaignQuizRestart(slug: string, previousScore: number): v
   trackEvent('quiz_restart', {
     ...CAMPAIGN_PROPS,
     quiz_slug: slug,
+    ...journeyProperties(slug),
     previous_score: previousScore,
   });
 }
@@ -125,6 +145,7 @@ export function trackCampaignRelatedQuizClick(
   trackEvent('campaign_quiz_related_click', {
     ...CAMPAIGN_PROPS,
     quiz_slug: fromSlug,
+    ...journeyProperties(fromSlug),
     target_quiz_slug: toSlug,
   });
 }

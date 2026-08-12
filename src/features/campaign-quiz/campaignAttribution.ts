@@ -12,7 +12,13 @@ export type CampaignAttribution = {
   quiz_total_questions?: number;
 };
 
+type AuthenticatedCampaignAttribution = CampaignAttribution & {
+  authenticated_user_id: string;
+};
+
 const STORAGE_KEY = 'quizball_campaign_attribution';
+const AUTHENTICATED_STORAGE_KEY = 'quizball_authenticated_campaign_attribution';
+const JOURNEY_STORAGE_KEY = 'quizball_campaign_journey';
 const URL_PARAM = 'campaign_attribution';
 const MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
@@ -67,6 +73,25 @@ function readStored(): CampaignAttribution | null {
   return null;
 }
 
+function readAuthenticatedStored(): AuthenticatedCampaignAttribution | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.sessionStorage.getItem(AUTHENTICATED_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed: unknown = JSON.parse(raw);
+    if (
+      isValid(parsed) &&
+      typeof (parsed as Partial<AuthenticatedCampaignAttribution>).authenticated_user_id === 'string'
+    ) {
+      return parsed as AuthenticatedCampaignAttribution;
+    }
+    window.sessionStorage.removeItem(AUTHENTICATED_STORAGE_KEY);
+  } catch {
+    // Analytics attribution is best-effort and must never block authentication.
+  }
+  return null;
+}
+
 function store(attribution: CampaignAttribution): void {
   if (typeof window === 'undefined') return;
   try {
@@ -107,13 +132,55 @@ function createConversionId(): string | null {
   }
 }
 
+export function getOrCreateCampaignConversionId(
+  quizSlug: string,
+  reset = false,
+): string | null {
+  if (typeof window === 'undefined' || !SLUG_RE.test(quizSlug)) return null;
+  try {
+    if (!reset) {
+      const raw = window.sessionStorage.getItem(JOURNEY_STORAGE_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw) as {
+          quiz_slug?: unknown;
+          campaign_conversion_id?: unknown;
+          captured_at?: unknown;
+        };
+        const capturedAtMs = typeof parsed.captured_at === 'string'
+          ? Date.parse(parsed.captured_at)
+          : NaN;
+        if (
+          parsed.quiz_slug === quizSlug &&
+          typeof parsed.campaign_conversion_id === 'string' &&
+          UUID_RE.test(parsed.campaign_conversion_id) &&
+          Number.isFinite(capturedAtMs) &&
+          capturedAtMs >= Date.now() - MAX_AGE_MS
+        ) {
+          return parsed.campaign_conversion_id;
+        }
+      }
+    }
+
+    const campaignConversionId = createConversionId();
+    if (!campaignConversionId) return null;
+    window.sessionStorage.setItem(JOURNEY_STORAGE_KEY, JSON.stringify({
+      quiz_slug: quizSlug,
+      campaign_conversion_id: campaignConversionId,
+      captured_at: new Date().toISOString(),
+    }));
+    return campaignConversionId;
+  } catch {
+    return createConversionId();
+  }
+}
+
 export function rememberCampaignAttribution(input: {
   quizSlug: string;
   placement: CampaignCtaPlacement;
   score?: number;
   totalQuestions?: number;
 }): CampaignAttribution | null {
-  const campaignConversionId = createConversionId();
+  const campaignConversionId = getOrCreateCampaignConversionId(input.quizSlug);
   if (!campaignConversionId || !SLUG_RE.test(input.quizSlug)) return null;
 
   const attribution: CampaignAttribution = {
@@ -184,7 +251,7 @@ export function appendCampaignAttribution(url: string): string {
 }
 
 export function getCampaignAttributionAnalyticsProperties(): Record<string, string | number> {
-  const attribution = readStored();
+  const attribution = readStored() ?? readAuthenticatedStored();
   if (!attribution) return {};
   return {
     source: attribution.source,
@@ -199,10 +266,37 @@ export function getCampaignAttributionAnalyticsProperties(): Record<string, stri
   };
 }
 
+/**
+ * Keep the campaign context for onboarding and the first match, but bind it to
+ * the authenticated account so another account cannot inherit the conversion.
+ */
+export function bindCampaignAttributionToUser(userId: string): void {
+  if (typeof window === 'undefined' || !userId) return;
+  try {
+    const pending = readStored();
+    const authenticated = readAuthenticatedStored();
+    if (pending) {
+      window.sessionStorage.setItem(
+        AUTHENTICATED_STORAGE_KEY,
+        JSON.stringify({ ...pending, authenticated_user_id: userId }),
+      );
+      window.sessionStorage.removeItem(STORAGE_KEY);
+      return;
+    }
+    if (authenticated && authenticated.authenticated_user_id !== userId) {
+      window.sessionStorage.removeItem(AUTHENTICATED_STORAGE_KEY);
+    }
+  } catch {
+    // Authentication succeeds even when browser storage is unavailable.
+  }
+}
+
 export function clearCampaignAttribution(): void {
   if (typeof window === 'undefined') return;
   try {
     window.sessionStorage.removeItem(STORAGE_KEY);
+    window.sessionStorage.removeItem(AUTHENTICATED_STORAGE_KEY);
+    window.sessionStorage.removeItem(JOURNEY_STORAGE_KEY);
   } catch {
     // No-op when storage is unavailable.
   }
