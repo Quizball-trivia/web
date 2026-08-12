@@ -267,7 +267,7 @@ for (const quiz of manualClubQuizContent as ManualClubQuizContent[]) {
 
 export const CAMPAIGN_QUIZ_SLUGS = Object.keys(CAMPAIGN_QUIZ_CONTENT);
 
-function splitHeading(heading: string): { heroLead: string; heroHighlight: string } {
+export function splitHeading(heading: string): { heroLead: string; heroHighlight: string } {
   const divider = heading.indexOf('—');
   if (divider === -1) return { heroLead: heading, heroHighlight: '' };
   return {
