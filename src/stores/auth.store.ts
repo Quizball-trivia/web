@@ -10,7 +10,10 @@ import { trackLogout } from "@/lib/analytics/game-events";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
 import { getSupabaseSession, signOutLocal } from "@/lib/auth/supabase";
 import { disconnectSocket } from "@/lib/realtime/socket-client";
-import { clearCampaignAttribution } from "@/features/campaign-quiz/campaignAttribution";
+import {
+  bindCampaignAttributionToUser,
+  clearCampaignAttribution,
+} from "@/features/campaign-quiz/campaignAttribution";
 
 type AuthStatus = "loading" | "anonymous" | "authenticated" | "banned";
 const BOOTSTRAP_TRANSIENT_RETRY_MS = 300;
@@ -55,9 +58,9 @@ function syncAnalyticsUser(user: User): void {
       first_email: user.email,
     },
   );
-  // Provisioning has already sent this attribution to the backend. Clear it
-  // after identify so a later account on the same browser cannot inherit it.
-  clearCampaignAttribution();
+  // Provisioning has already sent the pending attribution to the backend.
+  // Keep an account-bound copy until onboarding and the first match are tracked.
+  bindCampaignAttributionToUser(user.id);
 }
 
 function wait(ms: number): Promise<void> {
@@ -83,6 +86,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
   setAnonymous: () => {
     clearLocalSession();
+    clearCampaignAttribution();
     resetUser();
     set({ status: "anonymous", user: null, hasBootstrapped: true });
   },
@@ -91,6 +95,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     // "banned" status so the app root renders the ACCOUNT BANNED screen instead
     // of the anonymous landing page.
     clearLocalSession();
+    clearCampaignAttribution();
     resetUser();
     void signOutLocal().catch(() => {});
     disconnectSocket();
@@ -140,9 +145,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const session = await getSupabaseSession();
       if (!session?.access_token) {
         logger.info("Auth bootstrap anonymous: no Supabase session");
-        clearLocalSession();
-        resetUser();
-        set({ status: "anonymous", user: null, hasBootstrapped: true });
+        get().setAnonymous();
         return;
       }
 
@@ -163,9 +166,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         } catch {
           // Best-effort; local app state still becomes anonymous.
         }
-        clearLocalSession();
-        resetUser();
-        set({ status: "anonymous", user: null, hasBootstrapped: true });
+        get().setAnonymous();
         return;
       }
 
@@ -173,9 +174,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       try {
         const session = await getSupabaseSession();
         if (!session?.access_token) {
-          clearLocalSession();
-          resetUser();
-          set({ status: "anonymous", user: null, hasBootstrapped: true });
+          get().setAnonymous();
           return;
         }
         const user = await fetchCurrentUser();
@@ -190,9 +189,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
         if (isAuthFailure(retryError)) {
           logger.warn("Auth bootstrap transient retry failed terminally");
-          clearLocalSession();
-          resetUser();
-          set({ status: "anonymous", user: null, hasBootstrapped: true });
+          get().setAnonymous();
           return;
         }
         if (hasAuthenticatedUser) {
@@ -216,8 +213,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch {
       // Best-effort; store state still resets.
     }
-    clearLocalSession();
-    resetUser(); // Reset PostHog user
-    set({ status: "anonymous", user: null, hasBootstrapped: true });
+    get().setAnonymous();
   },
 }));

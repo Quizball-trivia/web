@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const trackEventMock = vi.fn();
 const getCampaignPropertiesMock = vi.fn(() => ({}));
+const clearCampaignAttributionMock = vi.fn();
 
 vi.mock('@/lib/posthog', () => ({
   trackEvent: (event: string, props?: Record<string, unknown>) => trackEventMock(event, props),
@@ -9,12 +10,14 @@ vi.mock('@/lib/posthog', () => ({
 
 vi.mock('@/features/campaign-quiz/campaignAttribution', () => ({
   getCampaignAttributionAnalyticsProperties: () => getCampaignPropertiesMock(),
+  clearCampaignAttribution: () => clearCampaignAttributionMock(),
 }));
 
 import {
   trackSignupStarted,
   trackOnboardingCompleted,
   trackLoginCompleted,
+  trackMatchStarted,
 } from '../game-events';
 
 // These tests pin the PROD-STYLE analytics shape restored by d3780cf
@@ -28,6 +31,7 @@ describe('auth analytics events', () => {
     trackEventMock.mockClear();
     getCampaignPropertiesMock.mockReset();
     getCampaignPropertiesMock.mockReturnValue({});
+    clearCampaignAttributionMock.mockClear();
   });
 
   it('auth_started carries the method and dual-fires the legacy signup_started', () => {
@@ -57,9 +61,34 @@ describe('auth analytics events', () => {
     });
   });
 
-  it('onboarding_completed fires without attribution payload', () => {
+  it('onboarding_completed fires without attribution when no campaign exists', () => {
     trackOnboardingCompleted();
     expect(trackEventMock).toHaveBeenCalledWith('onboarding_completed', undefined);
+  });
+
+  it('carries campaign context through onboarding and consumes it on the first match', () => {
+    getCampaignPropertiesMock.mockReturnValue({
+      source: 'campaign_quiz',
+      quiz_type: 'campaign',
+      quiz_slug: 'liverpool',
+      campaign_conversion_id: '11111111-1111-4111-8111-111111111111',
+    });
+
+    trackOnboardingCompleted();
+    trackMatchStarted({
+      matchId: 'match-1',
+      mode: 'ranked',
+      opponentIsAi: false,
+    });
+
+    expect(trackEventMock).toHaveBeenCalledWith('onboarding_completed', expect.objectContaining({
+      quiz_slug: 'liverpool',
+    }));
+    expect(trackEventMock).toHaveBeenCalledWith('match_started', expect.objectContaining({
+      match_id: 'match-1',
+      quiz_slug: 'liverpool',
+    }));
+    expect(clearCampaignAttributionMock).toHaveBeenCalledOnce();
   });
 
   it('login_completed fires with the method', () => {
