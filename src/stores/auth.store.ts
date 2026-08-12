@@ -145,9 +145,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const session = await getSupabaseSession();
       if (!session?.access_token) {
         logger.info("Auth bootstrap anonymous: no Supabase session");
-        clearLocalSession();
-        resetUser();
-        set({ status: "anonymous", user: null, hasBootstrapped: true });
+        get().setAnonymous();
         return;
       }
 
@@ -168,9 +166,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         } catch {
           // Best-effort; local app state still becomes anonymous.
         }
-        clearLocalSession();
-        resetUser();
-        set({ status: "anonymous", user: null, hasBootstrapped: true });
+        get().setAnonymous();
         return;
       }
 
@@ -178,9 +174,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       try {
         const session = await getSupabaseSession();
         if (!session?.access_token) {
-          clearLocalSession();
-          resetUser();
-          set({ status: "anonymous", user: null, hasBootstrapped: true });
+          get().setAnonymous();
           return;
         }
         const user = await fetchCurrentUser();
@@ -195,9 +189,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
         if (isAuthFailure(retryError)) {
           logger.warn("Auth bootstrap transient retry failed terminally");
-          clearLocalSession();
-          resetUser();
-          set({ status: "anonymous", user: null, hasBootstrapped: true });
+          get().setAnonymous();
           return;
         }
         if (hasAuthenticatedUser) {
@@ -221,9 +213,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     } catch {
       // Best-effort; store state still resets.
     }
-    clearLocalSession();
-    clearCampaignAttribution();
-    resetUser(); // Reset PostHog user
-    set({ status: "anonymous", user: null, hasBootstrapped: true });
+    get().setAnonymous();
   },
 }));
