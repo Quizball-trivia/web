@@ -19,7 +19,7 @@ import { queryKeys } from '@/lib/queries/queryKeys';
 import { useAuthStore } from '@/stores/auth.store';
 import { useLocale } from '@/contexts/LocaleContext';
 import type { components } from '@/types/api.generated';
-import { QP_TARGET } from './constants';
+import { LATE_JOIN_MS, QP_TARGET } from './constants';
 import { syncWlClock, wlNow } from './wlClock';
 import { getMilestones } from './mock-data';
 import type { LeaguePhase, Milestone } from './types';
@@ -115,6 +115,10 @@ export interface WeekendLeagueLiveExtras {
   currentGameIndex: number;
   checkinLeague: () => void;
   checkinPending: boolean;
+  /** Non-null while THIS user could still late-join the running game: the
+   *  grace deadline (epoch ms). Time-bounding is the consumer's job (the
+   *  banner ticks and hides itself); the server re-authorizes on check-in. */
+  lateJoinUntilMs: number | null;
   /** Running QP balance (server truth, resets when a ticket is claimed). */
   qp: number;
   qpTarget: number;
@@ -268,6 +272,20 @@ export function useWeekendLeagueLive(): WeekendLeagueLiveController {
     return Number.isFinite(ms) ? ms : null;
   })();
 
+  const lateJoinUntilMs = (() => {
+    if (kickoffMs == null) return null;
+    if (status === 'game_live' && (tournament?.current_game_index ?? 0) === 0
+        && you?.state === 'entered' && !(you?.checked_in ?? false)) {
+      return kickoffMs + LATE_JOIN_MS;
+    }
+    if ((status === 'final_checkin' || status === 'final_live')
+        && (you?.state === 'finalist' || you?.state === 'no_show')
+        && !(you?.final_checked_in ?? false)) {
+      return kickoffMs + LATE_JOIN_MS;
+    }
+    return null;
+  })();
+
   return {
     phase,
     hasEntered,
@@ -316,6 +334,7 @@ export function useWeekendLeagueLive(): WeekendLeagueLiveController {
       : (you?.checked_in ?? false),
     checkinLeague,
     checkinPending: checkinMutation.isPending,
+    lateJoinUntilMs,
     qp: you?.qp.points ?? 0,
     qpTarget: tournament?.qp_target ?? QP_TARGET,
     qpQualified: you?.qp.qualified ?? false,
