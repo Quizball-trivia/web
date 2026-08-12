@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { DEFAULT_LOCALE } from "@/lib/i18n/locale";
 import { API_BASE_URL } from "@/lib/config";
+import type { CampaignQuizRoute } from "@/features/campaign-quiz/campaignQuiz.types";
 
 // Routes that must redirect to the default-locale variant. Only marketing/legal
 // pages are localized; everything else (app, auth, game) is intentionally
@@ -125,7 +126,7 @@ export async function middleware(req: NextRequest) {
         },
       );
       if (response.ok) {
-        const route = await response.json() as { kind: string; target_slug: string | null };
+        const route = await response.json() as CampaignQuizRoute;
         if (route.kind === 'redirect' && route.target_slug) {
           const url = req.nextUrl.clone();
           url.pathname = `/${quizPath[1]}/football-quiz/${route.target_slug}`;

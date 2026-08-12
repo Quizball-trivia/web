@@ -28,7 +28,7 @@ import {
   splitHeading,
   type CampaignQuizPageContent,
 } from './campaignQuiz.content';
-import type { CampaignQuiz } from './campaignQuiz.types';
+import type { CampaignQuiz, CampaignQuizAboutBlock } from './campaignQuiz.types';
 
 interface CampaignQuizLandingProps {
   content: CampaignQuizPageContent;
@@ -108,6 +108,27 @@ const COPY = {
   },
 } as const;
 
+type AboutSection =
+  | { id: string; type: 'paragraph'; text: string }
+  | { id: string; type: 'bullet_list'; items: CampaignQuizAboutBlock[] };
+
+function groupAboutBlocks(blocks: CampaignQuizAboutBlock[]): AboutSection[] {
+  return blocks.reduce<AboutSection[]>((sections, block) => {
+    if (block.type === 'paragraph') {
+      sections.push({ id: block.id, type: 'paragraph', text: block.text });
+      return sections;
+    }
+
+    const previous = sections.at(-1);
+    if (previous?.type === 'bullet_list') {
+      previous.items.push(block);
+    } else {
+      sections.push({ id: block.id, type: 'bullet_list', items: [block] });
+    }
+    return sections;
+  }, []);
+}
+
 export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken }: CampaignQuizLandingProps) {
   const playId = `play-${content.slug}-quiz`;
   const copy = COPY[locale];
@@ -122,6 +143,10 @@ export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken
   const localizedHeading = splitHeading(localizedH1);
   const localizedLede = locale === 'ka' && content.kaLede ? content.kaLede : content.lede;
   const hasDifficultyMix = difficultyCounts.easy + difficultyCounts.medium + difficultyCounts.hard > 0;
+  const aboutSections = groupAboutBlocks(
+    content.aboutBlocks
+      ?? content.aboutParagraphs.map((text, index) => ({ id: String(index), type: 'paragraph' as const, text })),
+  );
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-surface-page-alt font-poppins text-white">
@@ -296,10 +321,14 @@ export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken
             </h2>
 
             <div className="mt-6 space-y-4 text-[15px] font-medium leading-7 text-white/65 sm:text-base">
-              {(content.aboutBlocks ?? content.aboutParagraphs.map((text, index) => ({ id: String(index), type: 'paragraph' as const, text }))).map((block) => (
-                block.type === 'bullet'
-                  ? <p key={block.id} className="flex gap-2.5"><span className="text-brand-cyan" aria-hidden>•</span><span>{block.text}</span></p>
-                  : <p key={block.id}>{block.text}</p>
+              {aboutSections.map((section) => (
+                section.type === 'bullet_list'
+                  ? (
+                      <ul key={section.id} className="list-disc space-y-2 pl-5 marker:text-brand-cyan">
+                        {section.items.map((item) => <li key={item.id} className="pl-1">{item.text}</li>)}
+                      </ul>
+                    )
+                  : <p key={section.id}>{section.text}</p>
               ))}
             </div>
           </article>
