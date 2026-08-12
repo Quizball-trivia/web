@@ -53,7 +53,7 @@ export function WeekendLeagueLiveScreen() {
     // spectator mode (chip, board, locked answers, honest result screens),
     // not player chrome with dead buttons. Check-in windows stay player-side
     // so the check-in panel can render.
-    const gameRunning = live.status === 'game_live' || live.status === 'break';
+    const gameRunning = live.status === 'game_live' || live.status === 'break' || live.status === 'final_live';
     const effectiveRole = mode === 'player' && gameRunning && !live.checkedIn
       ? 'spectator'
       : mode;
@@ -65,6 +65,8 @@ export function WeekendLeagueLiveScreen() {
         checkedIn={live.checkedIn}
         checkinPending={live.checkinPending}
         onCheckin={live.checkinLeague}
+        lateJoinUntilMs={live.lateJoinUntilMs}
+        onLateJoin={() => { live.checkinLeague(); setMode('player'); }}
         onExit={() => { setMode(null); setPinnedId(null); }}
         onSpectate={() => setMode('spectator')}
         kickoffMs={live.kickoffMs}

@@ -8,6 +8,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { RotateCcw, X } from 'lucide-react';
 import { CheckInPanel } from '../components/CheckInPanel';
+import { LateJoinBanner } from './WlLiveFlow';
 import { MoneyDropBoard } from '../gauntlet/MoneyDropBoard';
 import { PutInOrderBoard } from '../gauntlet/PutInOrderBoard';
 import { CutlineBoard, RankDeltaMoment, RankPill, SideLeaderboard, YourRankCard, type CutBoardRow } from '../gauntlet/RankStatus';
@@ -328,6 +329,14 @@ export function WlComponentGallery({
           step="2/5"
           onQuit={noop}
         />
+      ),
+    },
+    {
+      id: 'late-join-banner', label: 'Late-join banner', group: 'Chrome',
+      render: () => (
+        <div className="relative min-h-[180px]">
+          <LateJoinBanner untilMs={Date.now() + 95_000} pending={false} onJoin={noop} />
+        </div>
       ),
     },
     {
