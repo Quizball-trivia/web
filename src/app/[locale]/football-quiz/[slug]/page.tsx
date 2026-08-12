@@ -1,7 +1,7 @@
 import { cache } from 'react';
 import type { Metadata } from 'next';
 import { headers } from 'next/headers';
-import { notFound, permanentRedirect, redirect } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { CampaignQuizLanding } from '@/features/campaign-quiz/CampaignQuizLanding';
 import {
   CAMPAIGN_QUIZ_SLUGS,
@@ -99,7 +99,7 @@ export default async function CampaignQuizPage({ params, searchParams }: Campaig
 
   const content = getCampaignQuizContent(slug, quiz.page, locale);
   if (!content) notFound();
-  if (locale === 'ka' && content.localeMode !== 'en_ka') redirect(`/en/football-quiz/${content.slug}`);
+  if (locale === 'ka' && content.localeMode !== 'en_ka') permanentRedirect(`/en/football-quiz/${content.slug}`);
 
   const headerList = await headers();
   const nonce = headerList.get('x-nonce') ?? undefined;
@@ -108,6 +108,8 @@ export default async function CampaignQuizPage({ params, searchParams }: Campaig
   const title = isGeorgian ? (content.kaMetadataTitle ?? content.metadataTitle) : content.metadataTitle;
   const description = isGeorgian ? (content.kaDescription ?? content.description) : content.description;
   const h1 = isGeorgian ? (content.kaH1 ?? content.title) : content.title;
+  const homeLabel = isGeorgian ? 'მთავარი' : 'Home';
+  const hubLabel = isGeorgian ? 'ფეხბურთის ქვიზი' : 'Football Quiz';
 
   const gameSchema: Record<string, unknown> = {
     '@type': 'Game',
@@ -146,8 +148,8 @@ export default async function CampaignQuizPage({ params, searchParams }: Campaig
         '@type': 'BreadcrumbList',
         '@id': `${pageUrl}#breadcrumb`,
         itemListElement: [
-          { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/${locale}` },
-          { '@type': 'ListItem', position: 2, name: 'Football Quiz', item: `${SITE_URL}/${locale}/football-quiz` },
+          { '@type': 'ListItem', position: 1, name: homeLabel, item: `${SITE_URL}/${locale}` },
+          { '@type': 'ListItem', position: 2, name: hubLabel, item: `${SITE_URL}/${locale}/football-quiz` },
           { '@type': 'ListItem', position: 3, name: content.breadcrumbLabel, item: pageUrl },
         ],
       },
