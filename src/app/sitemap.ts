@@ -1,5 +1,4 @@
 import type { MetadataRoute } from "next";
-import { CAMPAIGN_QUIZ_SLUGS } from "@/features/campaign-quiz/campaignQuiz.content";
 import { listCampaignQuizPages } from "@/features/campaign-quiz/campaignQuiz.api";
 import { SITE_URL } from "@/lib/seo/site";
 import { LOCALES } from "@/lib/i18n/locale";
@@ -36,16 +35,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
     campaignPages = await listCampaignQuizPages('en');
   } catch {
-    campaignPages = CAMPAIGN_QUIZ_SLUGS.map((slug) => ({
-      slug,
-      category: 'team' as const,
-      h1: slug,
-      breadcrumb_label: slug,
-      hero_image_url: null,
-      hero_image_alt: '',
-      locale_mode: 'en_only' as const,
-      updated_at: now.toISOString(),
-    }));
+    // Do not revive unpublished/deleted pages from a hardcoded fallback.
+    campaignPages = [];
   }
 
   const campaignEntries: MetadataRoute.Sitemap = [
