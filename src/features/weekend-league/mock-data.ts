@@ -25,10 +25,6 @@ export const PRIZES: PrizeTier[] = [
   { id: 'p3', labelKey: 'weekendLeague.prize3Label', rankKey: 'weekendLeague.prize3Rank', rankFrom: 3, rankTo: 3, prizeKey: 'weekendLeague.prize3Reward', icon: '🥉', accent: 'bronze' },
 ];
 
-export function prizeForRank(rank: number): PrizeTier | null {
-  return PRIZES.find((p) => rank >= p.rankFrom && rank <= p.rankTo) ?? null;
-}
-
 // ── Schedule (Georgian time) ────────────────────────────────────────────────
 // Friday = 5, Saturday = 6, Sunday = 0.
 export function getMilestones(nowMs: number): Record<'entry' | 'qualifier' | 'playoffs', Milestone> {

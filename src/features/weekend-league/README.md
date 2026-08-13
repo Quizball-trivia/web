@@ -56,8 +56,8 @@ Defined in `mock-data.ts` (`PRIZES`). Football-themed digital prizes:
 | 4th–8th — Semi-finalists | FotMob Premium + 5,000 coins |
 | 9th–24th — Playoff qualifiers | Finalist badge + 2,000 coins |
 
-`prizeForRank(rank)` maps a rank to its band; the leaderboard shows the icon on
-paying ranks and `PrizesPanel` highlights the viewer's band.
+The leaderboard shows the icon on paying ranks and `PrizesPanel` highlights
+the viewer's band.
 
 ---
 
@@ -126,7 +126,6 @@ components/
   HowItWorks.tsx          3-step explainer
   PrizesPanel.tsx         Prize ladder (optional rank highlight)
   QualifierLeaderboard.tsx Podium + rows + top-24 cutoff + pinned "you" row
-  PlayoffBracket.tsx      Horizontally-scrollable knockout rounds
   LeagueCountdown.tsx     Segmented D:H:M:S countdown to a target
   LiveBadge.tsx           Pulsing LIVE pill
   PhaseSwitcher.tsx       DEMO-ONLY preview control
