@@ -69,6 +69,10 @@ const LOBBY_ERROR_COPY_KEYS: Record<string, MessageKey> = {
 const INVITE_STATE_CONFIRMATION_TIMEOUT_MS = 4_000;
 const INVITE_STATE_CONFIRMATION_MAX_RETRIES = 2;
 
+// Friendly lobbies have a fixed length — the backend LobbySettings has no
+// questionCount field, so this is the single source of truth client-side.
+const FRIENDLY_QUESTION_COUNT = 10;
+
 interface InviteJoinFailure {
   inviteCode: string;
   reasonCode: string;
@@ -439,11 +443,7 @@ export function useFriendLobbyLogic({
   useEffect(() => {
     if (!activeLobby || startedRef.current) return;
     startedRef.current = true;
-    // Derive questionCount from lobby settings, fallback to 10 if missing or invalid
-    const settingsCount = (activeLobby.settings as unknown as Record<string, unknown>)?.questionCount;
-    const derivedCount =
-      typeof settingsCount === "number" && settingsCount > 0 ? settingsCount : 10;
-    startSession({ mode: "quizball", matchType: "friendly", questionCount: derivedCount });
+    startSession({ mode: "quizball", matchType: "friendly", questionCount: FRIENDLY_QUESTION_COUNT });
   }, [activeLobby, startSession]);
 
   // Explicitly notify the remaining player when an opponent leaves a waiting lobby.
