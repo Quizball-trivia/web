@@ -56,6 +56,132 @@ export const FEATURED_DEMO_MODES: DemoModeCard[] = [
   },
 ];
 
+// Prototype mini-games (features/mini-games) — self-contained, no backend.
+// In-game copy is English-only for now (prototypes); hub cards are bilingual.
+export const MINI_GAME_DEMO_MODES: DemoModeCard[] = [
+  {
+    slug: "mini-squad-spin",
+    title: { en: "Squad Spin", ka: "Squad Spin" },
+    description: {
+      en: "Spin the reels — club, position, nation — then name a player who fits.",
+      ka: "დაატრიალე — კლუბი, პოზიცია, ქვეყანა — და დაასახელე შესაბამისი ფეხბურთელი.",
+    },
+    icon: "\u{1F3B0}",
+    iconBgColor: "bg-yellow-500/20",
+    group: "featured",
+  },
+  {
+    slug: "mini-trivia-spin",
+    title: { en: "Trivia Spin", ka: "Trivia Spin" },
+    description: {
+      en: "Answer to earn spins, then let the wheel decide your payout.",
+      ka: "უპასუხე, მოაგროვე დატრიალებები და ბორბალმა გადაწყვიტოს შენი მოგება.",
+    },
+    icon: "\u{1F3A1}",
+    iconBgColor: "bg-sky-500/20",
+    group: "featured",
+  },
+  {
+    slug: "mini-penalty-shootout",
+    title: { en: "Penalty Shootout", ka: "პენალტების სერია" },
+    description: {
+      en: "Answer to earn a shot, pick your corner against the keeper — five rounds.",
+      ka: "უპასუხე, მოიგე დარტყმა და აირჩიე კუთხე მეკარის წინააღმდეგ — ხუთი რაუნდი.",
+    },
+    icon: "\u{1F945}",
+    iconBgColor: "bg-emerald-500/20",
+    group: "featured",
+  },
+  {
+    slug: "mini-daily-jackpot",
+    title: { en: "Daily Jackpot", ka: "Daily Jackpot" },
+    description: {
+      en: "One hard question a day — a pot that climbs until someone cracks it.",
+      ka: "დღეში ერთი რთული კითხვა — ჯექპოტი იზრდება, სანამ ვინმე გატეხავს.",
+    },
+    icon: "\u{1F4B0}",
+    iconBgColor: "bg-amber-500/20",
+    group: "featured",
+  },
+  {
+    slug: "mini-pass-chain",
+    title: { en: "Pass Chain", ka: "Pass Chain" },
+    description: {
+      en: "Link two players through shared clubs — fewer links score higher.",
+      ka: "დააკავშირე ორი ფეხბურთელი საერთო კლუბებით — ნაკლები რგოლი, მეტი ქულა.",
+    },
+    icon: "\u{1F517}",
+    iconBgColor: "bg-blue-500/20",
+    group: "featured",
+  },
+  {
+    slug: "mini-accumulator",
+    title: { en: "Accumulator", ka: "ექსპრესი" },
+    description: {
+      en: "Pick 5 legs, one stake, all must land — odds multiply, cash out late.",
+      ka: "აირჩიე 5 პასუხი ერთი ფსონით — კოეფიციენტები მრავლდება, დროულად დააქეშაუთე.",
+    },
+    icon: "\u{1F9E9}",
+    iconBgColor: "bg-green-500/20",
+    group: "featured",
+  },
+  {
+    slug: "mini-squad-collection",
+    title: { en: "Squad Collection", ka: "Squad Collection" },
+    description: {
+      en: "Answer to pull player cards and fill your formation — pack-opening reveals.",
+      ka: "უპასუხე, ამოიღე ბარათები და შეავსე შენი შემადგენლობა — პაკეტების გახსნით.",
+    },
+    icon: "\u{1F0CF}",
+    iconBgColor: "bg-purple-500/20",
+    group: "featured",
+  },
+  {
+    slug: "mini-cash-out-ladder",
+    title: { en: "Cash Out Ladder", ka: "Cash Out Ladder" },
+    description: {
+      en: "1x to 32x — bank or climb after each answer; one miss wipes it.",
+      ka: "1x-დან 32x-მდე — ყოველი პასუხის შემდეგ აიღე ან აძვერი; ერთი შეცდომა შლის ყველაფერს.",
+    },
+    icon: "\u{1FA9C}",
+    iconBgColor: "bg-orange-500/20",
+    group: "featured",
+  },
+  {
+    slug: "mini-bet-slip-booster",
+    title: { en: "Bet Slip Booster", ka: "Bet Slip Booster" },
+    description: {
+      en: "A 3-leg slip — answer club questions to boost each leg's odds.",
+      ka: "3-პოზიციანი ტალონი — უპასუხე კლუბების კითხვებს და გაზარდე კოეფიციენტები.",
+    },
+    icon: "\u{1F680}",
+    iconBgColor: "bg-amber-500/20",
+    group: "featured",
+  },
+  {
+    slug: "mini-half-time-trivia",
+    title: { en: "Half-Time Trivia", ka: "Half-Time Trivia" },
+    description: {
+      en: "A live match at half-time — a 60-second quiz above the markets.",
+      ka: "მატჩის შესვენება — 60-წამიანი ქვიზი მარკეტების თავზე.",
+    },
+    icon: "\u{1F4FB}",
+    iconBgColor: "bg-red-500/20",
+    group: "featured",
+  },
+  {
+    slug: "mini-odds-board",
+    title: { en: "Odds Board", ka: "Odds Board" },
+    description: {
+      en: "Every answer is priced like a market — obvious pays 1.2x, contrarian 6x.",
+      ka: "ყველა პასუხი მარკეტივით ფასდება — აშკარა 1.2x-ს იხდის, სარისკო 6x-ს.",
+    },
+    icon: "\u{1F4C8}",
+    iconBgColor: "bg-cyan-500/20",
+    group: "featured",
+  },
+];
+
 const DAILY_DEMO_COPY: Record<DailyChallengeType, { title: DemoI18nText; description: DemoI18nText }> = {
   moneyDrop: {
     title: { en: "Money Drop", ka: "ფულის ვარდნა" },
@@ -145,6 +271,7 @@ const HIDDEN_DAILY_MODES: DemoModeCard[] = HIDDEN_DAILY_TYPES.map(buildDailyCard
 
 export const ALL_DEMO_MODES: DemoModeCard[] = [
   ...FEATURED_DEMO_MODES,
+  ...MINI_GAME_DEMO_MODES,
   ...DAILY_DEMO_MODES,
   ...HIDDEN_DEMO_MODES,
   ...HIDDEN_DAILY_MODES,

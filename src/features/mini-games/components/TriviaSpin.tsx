@@ -20,7 +20,7 @@ const SEGMENTS: WheelSegment[] = [
 // Bigger weight = more likely. Jackpot is deliberately rare.
 const WEIGHTS = [22, 18, 20, 12, 22, 6, 18, 1];
 
-export function TriviaSpin() {
+export function TriviaSpin({ backHref }: { backHref?: string } = {}) {
   const [coins, setCoins] = useState(0);
   const [spins, setSpins] = useState(0);
   const [qIndex, setQIndex] = useState(0);
@@ -63,6 +63,7 @@ export function TriviaSpin() {
 
   return (
     <MiniGameShell
+      backHref={backHref}
       title="Trivia Spin"
       subtitle="Answer to earn spins — the wheel pays out"
       accent="#1CB0F6"

@@ -13,7 +13,7 @@ const oddsFor = (q: TriviaQuestion) => (q.difficulty === 'hard' ? 2.6 : q.diffic
 
 type Phase = 'select' | 'stake' | 'play' | 'cashout' | 'result';
 
-export function Accumulator() {
+export function Accumulator({ backHref }: { backHref?: string } = {}) {
   const [points, setPoints] = useState(500);
   const [phase, setPhase] = useState<Phase>('select');
   const [picked, setPicked] = useState<string[]>([]);
@@ -81,6 +81,7 @@ export function Accumulator() {
 
   return (
     <MiniGameShell
+      backHref={backHref}
       title="Accumulator"
       subtitle="Five legs. One stake. All must land."
       accent="#58CC02"

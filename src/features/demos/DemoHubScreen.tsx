@@ -8,6 +8,7 @@ import { colors } from "@/lib/colors";
 import {
   DAILY_DEMO_MODES,
   FEATURED_DEMO_MODES,
+  MINI_GAME_DEMO_MODES,
   demoText,
   type DemoModeCard,
 } from "./demoModes";
@@ -84,7 +85,7 @@ export function DemoHubScreen() {
       </header>
 
       <section className="flex flex-col gap-2">
-        {[...FEATURED_DEMO_MODES, ...DAILY_DEMO_MODES].map((mode) => (
+        {[...FEATURED_DEMO_MODES, ...DAILY_DEMO_MODES, ...MINI_GAME_DEMO_MODES].map((mode) => (
           <DemoModeRow key={mode.slug} mode={mode} />
         ))}
       </section>

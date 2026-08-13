@@ -9,7 +9,7 @@ import { HARD_QUESTIONS } from '../data/trivia';
 const BASE_POT = 12_450;
 const FAILS_START = 1_284;
 
-export function DailyJackpot() {
+export function DailyJackpot({ backHref }: { backHref?: string } = {}) {
   const [pot, setPot] = useState(BASE_POT);
   const [fails, setFails] = useState(FAILS_START);
   const [phase, setPhase] = useState<'open' | 'won' | 'lost'>('open');
@@ -65,7 +65,7 @@ export function DailyJackpot() {
   };
 
   return (
-    <MiniGameShell title="Daily Jackpot" subtitle="One hard question. Winner takes the pot." accent="#FFD700">
+    <MiniGameShell backHref={backHref} title="Daily Jackpot" subtitle="One hard question. Winner takes the pot." accent="#FFD700">
       {/* Pot */}
       <div className="mt-2 rounded-3xl border-2 border-brand-gold/30 bg-gradient-to-b from-brand-gold/[0.12] to-transparent p-5 text-center">
         <div className="font-poppins text-[11px] font-black uppercase tracking-[0.2em] text-brand-gold/80">Today’s pot</div>

@@ -15,7 +15,7 @@ const SURVIVAL = [1, 0.82, 0.68, 0.52, 0.38, 0.24];
 
 type Phase = 'idle' | 'playing' | 'decision' | 'cashed' | 'busted';
 
-export function CashOutLadder() {
+export function CashOutLadder({ backHref }: { backHref?: string } = {}) {
   const [points, setPoints] = useState(1000);
   const [phase, setPhase] = useState<Phase>('idle');
   const [level, setLevel] = useState(0);
@@ -99,6 +99,7 @@ export function CashOutLadder() {
 
   return (
     <MiniGameShell
+      backHref={backHref}
       title="Cash Out Ladder"
       subtitle="Bank it or climb — one wrong answer wipes it all"
       accent="#FF9600"

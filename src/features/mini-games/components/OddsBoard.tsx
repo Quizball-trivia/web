@@ -9,7 +9,7 @@ import { impliedPct, formatOdds, money } from '../lib/odds';
 
 const STAKES = [25, 50, 100];
 
-export function OddsBoard() {
+export function OddsBoard({ backHref }: { backHref?: string } = {}) {
   const [points, setPoints] = useState(500);
   const [qi, setQi] = useState(0);
   const [pick, setPick] = useState<number | null>(null);
@@ -35,6 +35,7 @@ export function OddsBoard() {
 
   return (
     <MiniGameShell
+      backHref={backHref}
       title="Odds Board"
       subtitle="Every answer is a market — back your call"
       accent="#1CB0F6"

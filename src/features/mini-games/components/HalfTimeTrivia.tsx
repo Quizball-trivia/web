@@ -14,7 +14,7 @@ const QUIZ = TRIVIA.slice(0, 4);
 const QUIZ_MS = 60_000;
 const WIN_THRESHOLD = 3;
 
-export function HalfTimeTrivia() {
+export function HalfTimeTrivia({ backHref }: { backHref?: string } = {}) {
   const f = HT_FIXTURE;
   const [phase, setPhase] = useState<'playing' | 'done'>('playing');
   const [qi, setQi] = useState(0);
@@ -54,7 +54,7 @@ export function HalfTimeTrivia() {
     <div className="relative min-h-[100dvh] bg-surface-page text-white">
       {/* Top bar */}
       <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-white/[0.06] bg-surface-page/95 px-4 py-3 backdrop-blur">
-        <Link href="/dev/mini-games" aria-label="Back" className="flex size-9 items-center justify-center rounded-full bg-white/[0.06] text-white/70 hover:text-white">
+        <Link href={backHref ?? "/dev/mini-games"} aria-label="Back" className="flex size-9 items-center justify-center rounded-full bg-white/[0.06] text-white/70 hover:text-white">
           <ArrowLeft className="size-5" />
         </Link>
         <div className="flex items-center gap-1.5 font-poppins text-xs font-black uppercase tracking-wide text-brand-red-soft">

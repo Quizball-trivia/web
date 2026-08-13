@@ -59,7 +59,7 @@ interface SpinResult {
   points?: number;
 }
 
-export function SquadSpin() {
+export function SquadSpin({ backHref }: { backHref?: string } = {}) {
   const [phase, setPhase] = useState<Phase>('idle');
   const [reels, setReels] = useState(3);
   const [combo, setCombo] = useState<SquadCombo>(() => SQUAD_COMBOS[0]);
@@ -215,6 +215,7 @@ export function SquadSpin() {
 
   return (
     <MiniGameShell
+      backHref={backHref}
       title="Squad Spin"
       subtitle="Name a player who fits every reel"
       accent="#FFE500"

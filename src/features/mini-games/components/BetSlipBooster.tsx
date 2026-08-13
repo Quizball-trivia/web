@@ -11,7 +11,7 @@ import { formatOdds, money } from '../lib/odds';
 type Phase = 'boost' | 'review' | 'result';
 const STAKE = 100;
 
-export function BetSlipBooster() {
+export function BetSlipBooster({ backHref }: { backHref?: string } = {}) {
   const [points, setPoints] = useState(500);
   const [phase, setPhase] = useState<Phase>('boost');
   const [leg, setLeg] = useState(0);
@@ -57,6 +57,7 @@ export function BetSlipBooster() {
 
   return (
     <MiniGameShell
+      backHref={backHref}
       title="Bet Slip Booster"
       subtitle="Answer right to boost your odds"
       accent="#FFD700"

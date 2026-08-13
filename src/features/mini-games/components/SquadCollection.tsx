@@ -20,7 +20,7 @@ const lastName = (n: string) => n.split(' ').slice(-1)[0];
 
 type Phase = 'question' | 'pack' | 'reveal' | 'complete';
 
-export function SquadCollection() {
+export function SquadCollection({ backHref }: { backHref?: string } = {}) {
   const [filled, setFilled] = useState<Record<CardPos, PlayerCard[]>>({ GK: [], DEF: [], MID: [], FWD: [] });
   const [phase, setPhase] = useState<Phase>('question');
   const [qIndex, setQIndex] = useState(0);
@@ -75,6 +75,7 @@ export function SquadCollection() {
 
   return (
     <MiniGameShell
+      backHref={backHref}
       title="Squad Collection"
       subtitle="Answer to pull cards. Build your XI."
       accent="#CE82FF"

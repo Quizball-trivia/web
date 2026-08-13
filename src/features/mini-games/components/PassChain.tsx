@@ -26,7 +26,7 @@ const initials = (name: string) =>
     .slice(0, 2)
     .toUpperCase();
 
-export function PassChain() {
+export function PassChain({ backHref }: { backHref?: string } = {}) {
   const [puzzleIndex, setPuzzleIndex] = useState(0);
   const [chain, setChain] = useState<Link[]>([]);
   const [endClub, setEndClub] = useState<string | null>(null);
@@ -95,6 +95,7 @@ export function PassChain() {
 
   return (
     <MiniGameShell
+      backHref={backHref}
       title="Pass Chain"
       subtitle="Link the two players through shared clubs"
       accent="#1CB0F6"

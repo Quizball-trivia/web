@@ -32,7 +32,7 @@ type Beat =
   | 'ai-result'
   | 'game-over';
 
-export function PenaltyShootout() {
+export function PenaltyShootout({ backHref }: { backHref?: string } = {}) {
   const [round, setRound] = useState(1);
   const [you, setYou] = useState(0);
   const [ai, setAi] = useState(0);
@@ -143,6 +143,7 @@ export function PenaltyShootout() {
 
   return (
     <MiniGameShell
+      backHref={backHref}
       title="Penalty Shootout"
       subtitle={`Round ${Math.min(round, ROUNDS)} / ${ROUNDS}`}
       accent="#58CC02"
