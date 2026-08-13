@@ -11,9 +11,9 @@ import { useMiniLocale, useMiniT } from '../lib/i18n';
 const SEGMENTS: WheelSegment[] = [
   { label: '25', value: 25, color: '#1CB0F6' },
   { label: '50', value: 50, color: '#58CC02' },
-  { label: '10', value: 10, color: '#243B44', text: '#ffffff' },
+  { label: '10', value: 10, color: '#1645FF', text: '#ffffff' },
   { label: '100', value: 100, color: '#FF9600' },
-  { label: '25', value: 25, color: '#1CB0F6' },
+  { label: '25', value: 25, color: '#FF4B4B', text: '#ffffff' },
   { label: '250', value: 250, color: '#CE82FF' },
   { label: '50', value: 50, color: '#58CC02' },
   { label: 'JACKPOT', value: 1000, color: '#FFD700' },
@@ -74,18 +74,18 @@ export function TriviaSpin({ backHref }: { backHref?: string } = {}) {
       headerRight={<StatPill label={t('Coins')} value={coins.toLocaleString()} color="#FFD700" />}
     >
       {/* Trivia block */}
-      <div className="mt-2 rounded-2xl border border-white/[0.08] bg-surface-card/60 p-4">
+      <div className="mt-2 rounded-2xl border border-white/15 bg-brand-blue p-4">
         <div className="mb-3 flex items-center justify-between">
-          <span className="font-poppins text-[10px] font-black uppercase tracking-wider text-brand-cyan">
+          <span className="font-poppins text-[10px] font-black uppercase tracking-wider text-white/80">
             {t('Question {n}', { n: qIndex + 1 })}
           </span>
           <span
             className={`rounded-full px-2 py-0.5 font-poppins text-[9px] font-black uppercase ${
               question.difficulty === 'hard'
-                ? 'bg-brand-red/15 text-brand-red'
+                ? 'bg-brand-red/25 text-white'
                 : question.difficulty === 'medium'
-                  ? 'bg-brand-orange/15 text-brand-orange'
-                  : 'bg-brand-green/15 text-brand-green'
+                  ? 'bg-brand-orange/25 text-white'
+                  : 'bg-brand-green/25 text-white'
             }`}
           >
             {t(question.difficulty)}
@@ -105,12 +105,12 @@ export function TriviaSpin({ backHref }: { backHref?: string } = {}) {
                 onClick={() => answer(i)}
                 className={`flex items-center justify-between rounded-xl border-2 px-3.5 py-3 text-left font-poppins text-sm font-bold transition-colors ${
                   state === 'idle'
-                    ? 'border-white/10 bg-white/[0.03] text-white hover:border-brand-cyan/50'
+                    ? 'border-white/25 bg-transparent text-white hover:border-white/60'
                     : state === 'correct'
-                      ? 'border-brand-green bg-brand-green/15 text-white'
+                      ? 'border-brand-green bg-brand-green/20 text-white'
                       : state === 'wrong'
-                        ? 'border-brand-red bg-brand-red/15 text-white'
-                        : 'border-white/5 bg-white/[0.02] text-white/35'
+                        ? 'border-brand-red bg-brand-red/20 text-white'
+                        : 'border-white/10 bg-transparent text-white/40'
                 }`}
               >
                 {opt}
