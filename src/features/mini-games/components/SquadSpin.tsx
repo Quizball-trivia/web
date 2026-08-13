@@ -420,7 +420,7 @@ function ReelCard({
   return (
     <div
       className={`relative flex flex-col items-center gap-1.5 rounded-2xl border-2 px-0.5 py-3 transition-colors ${
-        held ? 'border-brand-yellow/70 bg-surface-card/70' : extra ? 'border-brand-purple/25 bg-brand-purple/[0.06]' : 'border-white/10 bg-surface-card/70'
+        held ? 'border-brand-yellow/70 bg-brand-yellow/[0.06]' : extra ? 'border-brand-purple/25 bg-brand-purple/[0.06]' : 'border-white/10 bg-white/[0.03]'
       }`}
     >
       <span className="font-poppins text-[9px] font-black uppercase tracking-wider text-white/40">{label}</span>
