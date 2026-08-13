@@ -124,8 +124,7 @@ const SAMPLE_QUESTIONS: Array<{
     categoryName: 'Records',
   },
   {
-    // Long-answer preview: each option auto-shrinks to fit the card (FitText) —
-    // uniform card heights, no ellipsis, full text always visible.
+    // Long-answer preview: exercises how option cards handle lengthy text.
     prompt: 'Which match is widely considered the greatest World Cup final ever?',
     options: [
       'Italy vs France, 2006 — decided on penalties after the Zidane headbutt',
@@ -227,8 +226,8 @@ function makeQuestion(qIndex: number, kind: QuestionKind = 'multipleChoice'): Re
       kind: 'multipleChoice',
       id: `dev-q-${qIndex}`,
       prompt: isImageSlot ? 'Identify the stadium shown in this image' : sample.prompt,
-      // Image slot uses long answers so the FitText auto-shrink can be previewed
-      // in the tighter image-MCQ cards (which are shorter than text-only cards).
+      // Image slot uses long answers to preview overflow handling in the
+      // tighter image-MCQ cards (which are shorter than text-only cards).
       options: isImageSlot
         ? [
           // Real worst-case answers from the DB (longest is 86 chars EN / 89 KA).
