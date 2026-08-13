@@ -1,12 +1,11 @@
 "use client";
 
-import { ArrowRight, Clock3 } from "lucide-react";
+import { Clock3 } from "lucide-react";
 import Link from "next/link";
+import { motion } from "motion/react";
 import { AppLogo } from "@/components/AppLogo";
 import { useLocale } from "@/contexts/LocaleContext";
-import { colors } from "@/lib/colors";
 import type { Locale } from "@/lib/i18n/messages";
-import { DemoModeIcon } from "./DemoModeIcon";
 import {
   DAILY_DEMO_MODES,
   FEATURED_DEMO_MODES,
@@ -15,78 +14,54 @@ import {
   type DemoModeCard,
 } from "./demoModes";
 
-type ModePresentation = {
-  accent: string;
-};
-
-const MODE_PRESENTATION: Record<string, ModePresentation> = {
-  auction: { accent: "#a3e635" },
-  "daily-moneyDrop": { accent: "#facc15" },
-  "daily-trueFalse": { accent: "#2dd4bf" },
-  "daily-countdown": { accent: "#38bdf8" },
-  "daily-imposter": { accent: "#a78bfa" },
-  "daily-careerPath": { accent: "#84cc16" },
-  "daily-highLow": { accent: "#fb923c" },
-  "daily-footballLogic": { accent: "#c084fc" },
-  "mini-squad-spin": { accent: "#facc15" },
-  "mini-trivia-spin": { accent: "#22d3ee" },
-  "mini-penalty-shootout": { accent: "#4ade80" },
-  "mini-daily-jackpot": { accent: "#fbbf24" },
-  "mini-pass-chain": { accent: "#60a5fa" },
-  "mini-accumulator": { accent: "#34d399" },
-  "mini-squad-collection": { accent: "#c084fc" },
-  "mini-cash-out-ladder": { accent: "#fb923c" },
-  "mini-bet-slip-booster": { accent: "#f59e0b" },
-  "mini-half-time-trivia": { accent: "#fb7185" },
-  "mini-odds-board": { accent: "#22d3ee" },
-};
-
-const DEFAULT_PRESENTATION: ModePresentation = { accent: "#38bdf8" };
 const HUB_MODES = [...FEATURED_DEMO_MODES, ...MINI_GAME_DEMO_MODES, ...DAILY_DEMO_MODES];
 
-function DemoModeCardItem({ mode, locale }: { mode: DemoModeCard; locale: Locale }) {
-  const { accent } = MODE_PRESENTATION[mode.slug] ?? DEFAULT_PRESENTATION;
-  const playLabel = locale === "ka" ? "თამაში" : "Play";
-
+// Faithful copy of the daily-challenges hub card (see
+// app/(app)/daily/challenges ChallengeCard): yellow card, centred uppercase
+// title, full description, pills row, black PLAY pill.
+function DemoModeCardItem({ mode, index, locale }: { mode: DemoModeCard; index: number; locale: Locale }) {
   return (
-    <Link
-      href={`/demos/${mode.slug}`}
-      className="group relative flex min-h-[132px] overflow-hidden rounded-2xl border border-white/20 p-4 font-poppins shadow-[0_14px_32px_rgba(0,0,0,0.22)] transition duration-300 hover:-translate-y-0.5 hover:border-white/35 hover:shadow-[0_18px_38px_rgba(0,0,0,0.3)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-green focus-visible:ring-offset-4 focus-visible:ring-offset-[#050b18] active:translate-y-0"
-      style={{ backgroundColor: colors.blue.brand }}
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, delay: 0.05 + index * 0.03, ease: "easeOut" }}
+      className="relative flex h-full"
     >
-      <div className="flex w-full gap-4">
-        <div
-          className="flex size-12 shrink-0 items-center justify-center transition-transform duration-300 group-hover:scale-110 sm:size-14"
-          style={{ color: accent }}
-        >
-          <DemoModeIcon slug={mode.slug} className="size-10 sm:size-11" />
-        </div>
-
-        <div className="flex min-w-0 flex-1 flex-col self-stretch">
-          <div className="flex items-start justify-between gap-3">
-            <h2 className="font-poppins text-base font-extrabold leading-tight text-white sm:text-lg">
-              {demoText(mode.title, locale)}
-            </h2>
-            <span className="flex shrink-0 items-center gap-1 rounded-full border border-white/15 bg-white/[0.07] px-2.5 py-1 font-poppins text-[10px] font-semibold text-white/70">
-              <Clock3 aria-hidden className="size-3" />
-              1–2 {locale === "ka" ? "წთ" : "min"}
-            </span>
-          </div>
-
-          <p className="mt-2 line-clamp-2 font-poppins text-xs font-medium leading-relaxed text-white/70 sm:text-[13px]">
-            {demoText(mode.description, locale)}
-          </p>
-
-          <span
-            className="mt-auto inline-flex self-end items-center gap-1.5 rounded-md px-2.5 py-1 font-poppins text-[11px] font-bold text-white transition duration-200 group-hover:brightness-110"
-            style={{ backgroundColor: colors.green.base }}
-          >
-            {playLabel}
-            <ArrowRight aria-hidden className="size-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
+      <Link
+        href={`/demos/${mode.slug}`}
+        className="relative flex min-h-[184px] w-full flex-col overflow-hidden rounded-[8px] bg-brand-yellow p-3.5 pb-10 text-center text-black transition-all hover:brightness-105 active:translate-y-[2px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow md:min-h-[268px] md:rounded-[20px] md:p-6 md:pb-6"
+      >
+        <h3 className="font-poppins flex min-h-[2.1rem] items-start justify-center px-2 text-center text-[16px] uppercase leading-[1.1] text-black md:mt-2 md:min-h-[3.5rem] md:px-0 md:text-[26px] md:leading-[0.95]">
+          {demoText(mode.title, locale)}
+        </h3>
+        <p className="mt-3 mb-4 text-center text-[10px] font-bold leading-snug text-black/80 [word-spacing:0.1em] md:mt-5 md:mb-6 md:px-4 md:text-[17px] md:font-semibold md:leading-snug md:[word-spacing:normal]">
+          {demoText(mode.description, locale)}
+        </p>
+        {/* Mobile pill row (mirrors the daily hub's reward pills). */}
+        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2 md:hidden">
+          <span className="inline-flex h-6 items-center gap-1 rounded-full bg-white/70 px-2.5 text-[10px] font-black text-brand-gold-ink">
+            <Clock3 className="size-3" /> 1–2 {locale === "ka" ? "წთ" : "min"}
+          </span>
+          <span className="inline-flex h-6 items-center gap-1 rounded-full bg-brand-green-light px-2.5 text-[10px] font-black text-white">
+            {locale === "ka" ? "დემო" : "DEMO"}
           </span>
         </div>
-      </div>
-    </Link>
+        {/* Desktop pill row. */}
+        <div className="mt-auto mb-3 hidden w-full items-center justify-between gap-2 md:flex">
+          <span className="inline-flex h-8 items-center gap-1.5 rounded-full bg-white/70 px-3.5 text-[15px] font-black tabular-nums text-brand-gold-ink">
+            <Clock3 className="size-4" /> 1–2 {locale === "ka" ? "წთ" : "min"}
+          </span>
+          <span className="inline-flex h-8 items-center gap-1 rounded-full bg-brand-green-light px-3.5 text-[15px] font-black text-white">
+            {locale === "ka" ? "დემო" : "DEMO"}
+          </span>
+        </div>
+        <div className="hidden justify-center md:flex">
+          <span className="font-poppins inline-flex h-[34px] min-w-[120px] items-center justify-center rounded-[14px] bg-black px-5 text-[15px] uppercase tracking-wide text-white md:h-[50px] md:min-w-[200px] md:rounded-[20px] md:px-8 md:text-[22px]">
+            {locale === "ka" ? "თამაში" : "Play"}
+          </span>
+        </div>
+      </Link>
+    </motion.div>
   );
 }
 
@@ -150,11 +125,11 @@ export function DemoHubScreen() {
         </header>
 
         <section
-          className="grid grid-cols-1 gap-3.5 lg:grid-cols-2"
+          className="grid grid-cols-2 gap-2.5 md:gap-6 lg:grid-cols-3"
           aria-label={locale === "ka" ? "თამაშის რეჟიმები" : "Game modes"}
         >
-          {HUB_MODES.map((mode) => (
-            <DemoModeCardItem key={mode.slug} mode={mode} locale={locale} />
+          {HUB_MODES.map((mode, index) => (
+            <DemoModeCardItem key={mode.slug} mode={mode} index={index} locale={locale} />
           ))}
         </section>
       </div>
