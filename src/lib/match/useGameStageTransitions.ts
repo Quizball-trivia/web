@@ -17,6 +17,11 @@ import { getSocketDebugSnapshot, logSocketDebug } from "@/lib/realtime/socket-cl
 import { GOAL_VISUAL_SEQUENCE_MS } from "@/lib/constants/game";
 import { PENALTY_RESULT_SEQUENCE_HOLD_MS } from "@/features/possession/realtimePossession.helpers";
 import {
+  readCachedRankedGeoHint,
+  writeCachedRankedGeoHint,
+  type RankedGeoHint,
+} from "@/lib/match/rankedGeoHint";
+import {
   consumeRankedQueueIntent,
   createRankedQueueIntent,
   type RankedQueueIntent,
@@ -48,10 +53,8 @@ export const PENALTY_MATCH_END_OVERLAY_MS = 2000;
 // THEN show the won/lost overlay, before the results screen — otherwise the shot is
 // cut mid-animation and the match appears to end abruptly (reported bug).
 const FINAL_RESULTS_HOLD_PENALTY_MS = PENALTY_RESULT_SEQUENCE_HOLD_MS + PENALTY_MATCH_END_OVERLAY_MS;
-const GEO_HINT_CACHE_KEY = "ranked_geo_hint_v1";
 const IP_LOOKUP_TIMEOUT_MS = 1800;
 
-type RankedGeoHint = NonNullable<RankedQueueJoinPayload["geoHint"]>;
 type RankedQueueJoinReason = NonNullable<RankedQueueJoinPayload["reason"]>;
 
 interface IpWhoResponse {
@@ -80,29 +83,6 @@ function isIpWhoResponse(value: unknown): value is IpWhoResponse {
     isMaybeString(candidate.country_code) &&
     isMaybeNumber(candidate.latitude) &&
     isMaybeNumber(candidate.longitude)
-  );
-}
-
-function isRankedGeoHint(value: unknown): value is RankedGeoHint {
-  if (!value || typeof value !== "object") return false;
-  const candidate = value as Partial<RankedGeoHint>;
-  const isMaybeString = (input: unknown) => input === undefined || typeof input === "string";
-  const isMaybeNumber = (input: unknown) => input === undefined || typeof input === "number";
-  return (
-    isMaybeString(candidate.ip) &&
-    isMaybeString(candidate.city) &&
-    isMaybeString(candidate.region) &&
-    isMaybeString(candidate.country) &&
-    isMaybeString(candidate.countryCode) &&
-    isMaybeNumber(candidate.latitude) &&
-    isMaybeNumber(candidate.longitude) &&
-    isMaybeString(candidate.timezone) &&
-    isMaybeString(candidate.locale) &&
-    (candidate.source === undefined ||
-      candidate.source === "ip_lookup" ||
-      candidate.source === "browser_geolocation" ||
-      candidate.source === "client_locale" ||
-      candidate.source === "unknown")
   );
 }
 
@@ -265,26 +245,19 @@ export function useGameStageTransitions({
       source: "client_locale",
     };
 
-    try {
-      const cachedRaw = window.localStorage.getItem(GEO_HINT_CACHE_KEY);
-      if (cachedRaw) {
-        const parsed: unknown = JSON.parse(cachedRaw);
-        const cached = isRankedGeoHint(parsed) ? parsed : baseHint;
-        rankedGeoHintRef.current = { ...baseHint, ...cached };
-        logger.info("Ranked geo hint loaded from cache", {
-          baseHint,
-          cachedHint: cached,
-          mergedHint: rankedGeoHintRef.current,
-        });
-      } else {
-        rankedGeoHintRef.current = baseHint;
-        logger.info("Ranked geo hint initialized from client locale/timezone", {
-          baseHint,
-        });
-      }
-    } catch {
+    const cached = readCachedRankedGeoHint();
+    if (cached) {
+      rankedGeoHintRef.current = { ...baseHint, ...cached };
+      logger.info("Ranked geo hint loaded from cache", {
+        baseHint,
+        cachedHint: cached,
+        mergedHint: rankedGeoHintRef.current,
+      });
+    } else {
       rankedGeoHintRef.current = baseHint;
-      logger.warn("Ranked geo hint cache parse failed; using base hint", { baseHint });
+      logger.info("Ranked geo hint initialized from client locale/timezone", {
+        baseHint,
+      });
     }
 
     let active = true;
@@ -319,11 +292,7 @@ export function useGameStageTransitions({
         browserHint,
         mergedHint: merged,
       });
-      try {
-        window.localStorage.setItem(GEO_HINT_CACHE_KEY, JSON.stringify(merged));
-      } catch {
-        // Ignore localStorage failures.
-      }
+      writeCachedRankedGeoHint(merged);
     })();
 
     return () => {

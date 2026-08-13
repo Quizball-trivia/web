@@ -3,25 +3,19 @@
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Bell, Check, Loader2, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { LoadingScreen } from "@/components/shared/LoadingScreen";
-import { queryKeys } from "@/lib/queries/queryKeys";
 import {
   useFriendRequests,
   type FriendRequestListItem,
   type SocialPlayer,
 } from "@/lib/queries/social.queries";
-import {
-  acceptFriendRequest,
-  declineFriendRequest,
-} from "@/lib/repositories/social.repo";
+import { useFriendRequestMutations } from "@/features/social/hooks/useFriendRequestMutations";
 import {
   useMarkAllNotificationsRead,
   useNotifications,
@@ -324,7 +318,6 @@ export function NotificationsDropdown({ badgeCount }: { badgeCount: number }) {
   const router = useRouter();
   const { t, locale } = useLocale();
   const badgeDisplay = badgeCount > 99 ? "99+" : String(badgeCount);
-  const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
   const [pendingAction, setPendingAction] = useState<{ requestId: string; action: "accept" | "decline" } | null>(null);
   const [pendingChallengeAction, setPendingChallengeAction] = useState<{ invitationId: string; action: "accept" | "decline" } | null>(null);
@@ -355,27 +348,17 @@ export function NotificationsDropdown({ badgeCount }: { badgeCount: number }) {
     }
   }, [open, notificationsData?.unreadCount, markAllRead]);
 
-  const invalidate = async () => {
-    await queryClient.invalidateQueries({ queryKey: queryKeys.social.all });
-  };
-
-  const acceptMutation = useMutation({
-    mutationFn: (requestId: string) => acceptFriendRequest(requestId),
-    onSuccess: async () => {
-      await invalidate();
-      toast.success(t("notifications.friendRequestAccepted"));
-    },
-    onError: () => toast.error(t("notifications.acceptFailed")),
-  });
-
-  const declineMutation = useMutation({
-    mutationFn: (requestId: string) => declineFriendRequest(requestId),
-    onSuccess: async () => {
-      await invalidate();
-      toast.success(t("notifications.friendRequestDeclined"));
-    },
-    onError: () => toast.error(t("notifications.declineFailed")),
-  });
+  const { acceptRequestMutation: acceptMutation, declineRequestMutation: declineMutation } =
+    useFriendRequestMutations({
+      accept: {
+        success: t("notifications.friendRequestAccepted"),
+        error: t("notifications.acceptFailed"),
+      },
+      decline: {
+        success: t("notifications.friendRequestDeclined"),
+        error: t("notifications.declineFailed"),
+      },
+    });
 
   const handleAccept = async (requestId: string) => {
     if (pendingAction) return;

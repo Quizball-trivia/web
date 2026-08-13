@@ -8,14 +8,14 @@
  */
 
 import { cn } from '@/lib/utils';
-import type { RankedGeoHintDebug } from './appShell.types';
+import type { RankedGeoHint } from '@/lib/match/rankedGeoHint';
 
 interface AppShellLobbyDebugBadgeProps {
   lobbyDebugMismatch: boolean;
   localWaitingLobbyId: string | null;
   sessionWaitingLobbyId: string | null;
   sessionStateLabel: string;
-  rankedGeoHintDebug: RankedGeoHintDebug | null;
+  rankedGeoHintDebug: RankedGeoHint | null;
 }
 
 export function AppShellLobbyDebugBadge({
