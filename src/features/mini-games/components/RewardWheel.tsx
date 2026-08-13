@@ -89,18 +89,14 @@ export function RewardWheel({
         {segments.map((s, i) => {
           const angle = i * slice + slice / 2;
           return (
-            <div
-              key={i}
-              className="absolute left-1/2 top-1/2 origin-left"
-              style={{ transform: `rotate(${angle - 90}deg) translateX(6px)` }}
-            >
+            // Rotate a full-size frame to the slice's mid-angle, then park the
+            // label at the top — dead centre of the slice, reading outward.
+            <div key={i} className="absolute inset-0" style={{ transform: `rotate(${angle}deg)` }}>
               <span
-                className="inline-block font-poppins text-xs font-black tabular-nums"
+                className="absolute left-1/2 top-[14%] -translate-x-1/2 font-poppins font-black tabular-nums"
                 style={{
-                  transform: `translate(-2px,-50%) rotate(90deg)`,
+                  fontSize: s.label.length > 4 ? 13 : 16,
                   color: s.text ?? '#0b0f14',
-                  width: size / 2 - 22,
-                  textAlign: 'right',
                   textShadow: s.text ? '0 1px 2px rgba(0,0,0,0.55)' : '0 1px 1px rgba(255,255,255,0.25)',
                 }}
               >

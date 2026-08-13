@@ -125,8 +125,8 @@ export function BetSlipBooster({ backHref }: { backHref?: string } = {}) {
       <div className="mt-4 flex-1">
         <AnimatePresence mode="wait">
           {phase === 'boost' && (
-            <motion.div key={`leg-${leg}`} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} className="rounded-2xl border border-white/[0.08] bg-surface-card/60 p-4">
-              <div className="mb-2 flex items-center gap-1.5 font-poppins text-[10px] font-black uppercase tracking-wider text-brand-gold">
+            <motion.div key={`leg-${leg}`} initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }} className="rounded-2xl border border-white/15 bg-brand-blue p-4">
+              <div className="mb-2 flex items-center gap-1.5 font-poppins text-[10px] font-black uppercase tracking-wider text-brand-yellow">
                 <Zap className="size-3.5" /> {t('Boost leg {n} · {club}', { n: leg + 1, club: SLIP[leg].club.replace(/ (CF|FC)$/i, '') })}
               </div>
               <p className="mb-3 font-poppins text-base font-bold leading-snug text-white">{SLIP[leg].question.q}</p>
@@ -142,12 +142,12 @@ export function BetSlipBooster({ backHref }: { backHref?: string } = {}) {
                       onClick={() => answer(i)}
                       className={`flex items-center justify-between rounded-xl border-2 px-3.5 py-3 text-left font-poppins text-sm font-bold transition-colors ${
                         state === 'idle'
-                          ? 'border-white/10 bg-white/[0.03] text-white hover:border-brand-gold/50'
+                          ? 'border-brand-yellow/70 bg-transparent text-white shadow-[0_0_6px_1px_rgba(255,229,0,0.12)] hover:border-brand-yellow'
                           : state === 'correct'
-                            ? 'border-brand-green bg-brand-green/15 text-white'
+                            ? 'border-brand-green bg-brand-green/20 text-white'
                             : state === 'wrong'
-                              ? 'border-brand-red bg-brand-red/15 text-white'
-                              : 'border-white/5 bg-white/[0.02] text-white/35'
+                              ? 'border-brand-red bg-brand-red/20 text-white'
+                              : 'border-white/15 bg-transparent text-white/40'
                       }`}
                     >
                       {opt}
