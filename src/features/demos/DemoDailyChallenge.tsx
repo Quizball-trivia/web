@@ -16,6 +16,7 @@ import { useLocale } from "@/contexts/LocaleContext";
 import type { DailyChallengeType } from "@/lib/domain/dailyChallenge";
 import { buildDemoDailySession } from "./data/demoDailySessions";
 import { DemoResultScreen } from "./DemoResultScreen";
+import { DemoBackButton } from "./DemoBackButton";
 
 interface DemoDailyChallengeProps {
   type: DailyChallengeType;
@@ -60,7 +61,12 @@ export function DemoDailyChallenge({ type }: DemoDailyChallengeProps) {
   }
 
   if (!introDone) {
-    return <DailyChallengeIntro title={session.title} onDone={() => setIntroDone(true)} />;
+    return (
+      <>
+        <DemoBackButton onClick={handleBack} />
+        <DailyChallengeIntro title={session.title} onDone={() => setIntroDone(true)} />
+      </>
+    );
   }
 
   const gameProps = { onBack: handleBack, onComplete: handleComplete };

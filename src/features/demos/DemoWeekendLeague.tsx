@@ -1,33 +1,26 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
-import { WeekendLeagueScreen } from "@/features/weekend-league/WeekendLeagueScreen";
-import { useLocale } from "@/contexts/LocaleContext";
+import { WlLiveSimFlow } from "@/features/weekend-league/live/WlLiveSimFlow";
+import { WL_LAST_WEEK_QUESTIONS } from "./data/demoWlLastWeek";
 
-const poppins = { fontFamily: "'Poppins', sans-serif" };
+const DEMO_CHECKIN_MS = 8_000;
 
+/**
+ * Weekend League demo: one game of the live-game simulator playing LAST
+ * WEEK'S real qualifier questions (game 1, one question per round type),
+ * so investors see exactly what the Saturday event feels like.
+ */
 export function DemoWeekendLeague() {
   const router = useRouter();
-  const { locale } = useLocale();
 
   return (
-    <div className="min-h-dvh w-full bg-surface-page">
-      <div className="mx-auto flex w-full max-w-2xl items-center px-4 pt-4">
-        <button
-          type="button"
-          onClick={() => router.push("/demos")}
-          className="flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-[12px] font-semibold uppercase tracking-wide text-white/70 transition-colors hover:bg-white/15 hover:text-white"
-          style={poppins}
-        >
-          <ArrowLeft className="h-4 w-4" />
-          {locale === "ka" ? "დემოები" : "Demos"}
-        </button>
-      </div>
-      <WeekendLeagueScreen
-        showControls={false}
-        initial={{ phase: "qualifier_live", hasEntered: true }}
-      />
-    </div>
+    <WlLiveSimFlow
+      onExit={() => router.push("/demos")}
+      questions={WL_LAST_WEEK_QUESTIONS}
+      games={1}
+      showControls={false}
+      checkInWindowMs={DEMO_CHECKIN_MS}
+    />
   );
 }

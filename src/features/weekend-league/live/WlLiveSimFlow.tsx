@@ -13,7 +13,7 @@ import { GauntletBackdrop } from '../gauntlet/RoundViews';
 import { GauntletLobby } from '../gauntlet/GauntletScreens';
 import { buildGames } from '../gauntlet/gauntlet.data';
 import { WlLiveFlowView } from './WlLiveFlow';
-import { SIM_SELF_ID, useWlSimulated, type SimJumpTarget } from './useWlSimulated';
+import { SIM_SELF_ID, useWlSimulated, type SimJumpTarget, type SimQuestion } from './useWlSimulated';
 
 /** Every designed screen, addressable from the sim bar. */
 const SCREENS: { label: string; go: SimJumpTarget | 'lobby' | 'checkin' }[] = [
@@ -35,11 +35,26 @@ const SCREENS: { label: string; go: SimJumpTarget | 'lobby' | 'checkin' }[] = [
 const CHECKIN_WINDOW_MS = 25_000;
 const SIM_FIELD = 600;
 
-export function WlLiveSimFlow({ onExit }: { onExit: () => void }) {
-  const { live, sim } = useWlSimulated();
+export function WlLiveSimFlow({
+  onExit,
+  questions,
+  games,
+  showControls = true,
+  checkInWindowMs = CHECKIN_WINDOW_MS,
+}: {
+  onExit: () => void;
+  /** Replace the walkthrough questions (e.g. a real event's set). */
+  questions?: SimQuestion[];
+  /** Games the script plays (default 3). */
+  games?: number;
+  /** Hide the dev screen-picker bar (demo mode keeps only Skip + exit). */
+  showControls?: boolean;
+  checkInWindowMs?: number;
+}) {
+  const { live, sim } = useWlSimulated({ questions, games });
   const [phase, setPhase] = useState<'lobby' | 'checkin' | 'playing'>('lobby');
   const [checkedIn, setCheckedIn] = useState(false);
-  const [kickoffMs, setKickoffMs] = useState(() => Date.now() + CHECKIN_WINDOW_MS);
+  const [kickoffMs, setKickoffMs] = useState(() => Date.now() + checkInWindowMs);
 
   // Kickoff when the simulated check-in window closes (checked in or not —
   // the sim always lets you watch the games). The scripted driver ticks from
@@ -63,8 +78,8 @@ export function WlLiveSimFlow({ onExit }: { onExit: () => void }) {
           registered={SIM_FIELD}
           kickoffMs={kickoffMs}
           canPlay
-          onEnter={() => { setKickoffMs(Date.now() + CHECKIN_WINDOW_MS); setPhase('checkin'); }}
-          onWatch={() => { setKickoffMs(Date.now() + CHECKIN_WINDOW_MS); setPhase('checkin'); }}
+          onEnter={() => { setKickoffMs(Date.now() + checkInWindowMs); setPhase('checkin'); }}
+          onWatch={() => { setKickoffMs(Date.now() + checkInWindowMs); setPhase('checkin'); }}
         />
         <button
           type="button"
@@ -98,7 +113,19 @@ export function WlLiveSimFlow({ onExit }: { onExit: () => void }) {
         currentGameIndex={live.gameIndex}
       />
 
+      {/* Demo mode: no dev bar — just a floating Skip so a walkthrough never stalls. */}
+      {!showControls && (
+        <button
+          type="button"
+          onClick={() => sim.skip()}
+          className="fixed bottom-4 right-4 z-[60] flex items-center gap-1 rounded-full bg-black/60 px-4 py-2.5 font-poppins text-[12px] font-black uppercase text-white/85 backdrop-blur hover:bg-black/80"
+        >
+          <FastForward className="size-4" /> Skip
+        </button>
+      )}
+
       {/* Sim controls — float above the real UI, never part of it. */}
+      {showControls && (
       <div className="fixed bottom-4 left-1/2 z-[60] flex max-w-[95vw] -translate-x-1/2 flex-wrap items-center justify-center gap-1.5 rounded-2xl border-2 border-brand-purple/40 bg-black/85 px-3 py-2 backdrop-blur">
         <span className="font-poppins text-[10px] font-black uppercase tracking-widest text-brand-purple">
           SIM
@@ -157,6 +184,7 @@ export function WlLiveSimFlow({ onExit }: { onExit: () => void }) {
           <X className="size-3.5" />
         </button>
       </div>
+      )}
     </>
   );
 }
