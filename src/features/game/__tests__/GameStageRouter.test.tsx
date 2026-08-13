@@ -35,6 +35,7 @@ const socket = {
 type RealtimeResultsScreenMockProps = {
   finalWinnerId?: string | null;
   totalQuestions?: number;
+  playerCorrect?: number;
   opponentId?: string;
   opponentRankPoints?: number | null;
   playerQuestionResults?: Array<'correct' | 'wrong' | null>;
@@ -135,11 +136,6 @@ const rankedProfileData = {
   placementStatus: 'placed',
 };
 
-const possessionMatchState = {
-  totalCorrect: 0,
-  totalQuestions: 12,
-};
-
 vi.mock('next/navigation', () => ({
   useRouter: () => router,
 }));
@@ -198,10 +194,6 @@ vi.mock('@/lib/queries/store.queries', () => ({
     queryKey: ['store', 'wallet'],
     queryFn: async () => ({ tickets: 5 }),
   }),
-}));
-
-vi.mock('@/stores/possessionMatch.store', () => ({
-  usePossessionMatchStore: (selector: (state: typeof possessionMatchState) => unknown) => selector(possessionMatchState),
 }));
 
 vi.mock('@/lib/avatars', () => ({
@@ -285,8 +277,6 @@ describe('GameStageRouter', () => {
     Object.assign(gameSessionState, createInitialGameSessionState());
     Object.assign(realtimeMatchState, createInitialRealtimeMatchState());
     Object.assign(rankedMatchmakingState, createInitialRankedMatchmakingState());
-    possessionMatchState.totalCorrect = 0;
-    possessionMatchState.totalQuestions = 12;
   });
 
   it('keeps party showdown flow in the centralized router', () => {
@@ -787,10 +777,9 @@ describe('GameStageRouter', () => {
     expect(router.replace).not.toHaveBeenCalledWith('/play');
   });
 
-  it('keeps result dots and opponent RP when client totals are reset', () => {
+  it('keeps result dots and opponent RP when final results omit totalQuestions', () => {
     gameSessionState.stage = 'finalResults';
     gameSessionState.config = { ...gameSessionState.config, matchType: 'ranked' };
-    possessionMatchState.totalQuestions = 0;
     realtimeMatchState.match = {
       ...realtimeMatchState.match,
       variant: 'ranked_sim',
@@ -844,10 +833,40 @@ describe('GameStageRouter', () => {
 
     const props = realtimeResultsRenderProps.at(-1);
     expect(props?.totalQuestions).toBe(12);
+    expect(props?.playerCorrect).toBe(1);
     expect(props?.playerQuestionResults?.[0]).toBe('correct');
     expect(props?.opponentQuestionResults?.[0]).toBe('wrong');
     expect(props?.opponentRankPoints).toBe(1900);
     expect(props?.opponentId).toBe('opp-1');
+  });
+
+  it('falls back to zero playerCorrect when final results lack self stats', () => {
+    gameSessionState.stage = 'finalResults';
+    gameSessionState.config = { ...gameSessionState.config, matchType: 'ranked' };
+    realtimeMatchState.match = {
+      ...realtimeMatchState.match,
+      variant: 'ranked_sim',
+      currentQuestion: null,
+      questions: {},
+      finalResults: {
+        matchId: 'match-1',
+        winnerId: 'opp-1',
+        winnerDecisionMethod: 'goals',
+        players: {
+          'opp-1': { totalPoints: 200, goals: 1, correctAnswers: 2 },
+        },
+        unlockedAchievements: {},
+      },
+    } as unknown as typeof realtimeMatchState.match & {
+      currentQuestion: null;
+      questions: Record<number, unknown>;
+      finalResults: unknown;
+    };
+
+    render(<GameStageRouter />);
+
+    const props = realtimeResultsRenderProps.at(-1);
+    expect(props?.playerCorrect).toBe(0);
   });
 
   it('fills empty final-results dot arrays from captured round results', () => {
