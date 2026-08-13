@@ -57,10 +57,15 @@ export function MiniGameShell({
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-        className="relative z-10 mx-auto flex w-full max-w-md flex-1 flex-col px-4 pb-6 sm:max-w-lg sm:px-6"
+        className="relative z-10 mx-auto flex w-full max-w-md flex-1 flex-col px-4 pb-2 sm:max-w-lg sm:px-6"
       >
         {children}
       </motion.main>
+
+      {/* Prototype notice — these games run on virtual points only. */}
+      <p className="relative z-10 pb-3 pt-1 text-center font-poppins text-[10px] font-semibold uppercase tracking-wider text-white/30">
+        Prototype — virtual points only, no real money or rewards · პროტოტიპი — მხოლოდ ვირტუალური ქულები
+      </p>
     </div>
   );
 }

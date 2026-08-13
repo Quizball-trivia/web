@@ -60,6 +60,9 @@ export function HalfTimeTrivia({ backHref }: { backHref?: string } = {}) {
         <div className="flex items-center gap-1.5 font-poppins text-xs font-black uppercase tracking-wide text-brand-red-soft">
           <Radio className="size-3.5" /> Live
         </div>
+        <span className="ml-auto font-poppins text-[9px] font-semibold uppercase tracking-wider text-white/30">
+          Prototype — virtual only
+        </span>
         <span className="truncate font-poppins text-xs font-semibold text-white/45">{f.competition}</span>
       </header>
 
@@ -138,7 +141,7 @@ export function HalfTimeTrivia({ backHref }: { backHref?: string } = {}) {
                     {won ? 'Free bet won!' : `${correct}/${QUIZ.length} — so close`}
                   </div>
                   <p className="font-poppins text-xs font-semibold text-white/55">
-                    {won ? 'A £5 second-half free bet has been added to your account.' : `Get ${WIN_THRESHOLD}+ right before kickoff to earn a free bet.`}
+                    {won ? 'You earned a virtual second-half free bet (demo — no real rewards).' : `Get ${WIN_THRESHOLD}+ right before kickoff to earn a free bet.`}
                   </p>
                   <button type="button" onClick={restart} className="mt-2 rounded-xl bg-brand-yellow px-5 py-2.5 font-poppins text-sm font-black uppercase text-black">
                     Play again

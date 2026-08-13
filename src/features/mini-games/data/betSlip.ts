@@ -21,10 +21,10 @@ export const SLIP: Selection[] = [
     baseOdds: 1.5,
     question: {
       id: 'bs1',
-      q: 'How many Champions League titles has Real Madrid won (most all-time)?',
-      options: ['12', '13', '14', '15'],
-      answer: 3,
-      difficulty: 'hard',
+      q: 'Real Madrid signed Toni Kroos, Keylor Navas, and which other player in the summer of 2014?',
+      options: ['Isco', 'James Rodríguez', 'Asier Illarramendi', 'Casemiro'],
+      answer: 1,
+      difficulty: 'medium',
     },
   },
   {
@@ -34,8 +34,8 @@ export const SLIP: Selection[] = [
     baseOdds: 1.4,
     question: {
       id: 'bs2',
-      q: 'Who was Man City’s manager for their 2023 treble?',
-      options: ['Mikel Arteta', 'Pep Guardiola', 'Roberto Mancini', 'Manuel Pellegrini'],
+      q: "Which player, who left Manchester City in 2021, is the club's all-time leading goalscorer?",
+      options: ['Raheem Sterling', 'Sergio Agüero', 'Shaun Goater', 'Francis Lee'],
       answer: 1,
       difficulty: 'easy',
     },
@@ -47,9 +47,9 @@ export const SLIP: Selection[] = [
     baseOdds: 1.3,
     question: {
       id: 'bs3',
-      q: 'Which stadium does Bayern Munich play at?',
-      options: ['Signal Iduna Park', 'Allianz Arena', 'Olympiastadion', 'Veltins-Arena'],
-      answer: 1,
+      q: 'Which player left Bayern Munich for Barcelona in 2022?',
+      options: ['Robert Lewandowski', 'David Alaba', 'Thiago Alcântara', 'Philippe Coutinho'],
+      answer: 0,
       difficulty: 'medium',
     },
   },

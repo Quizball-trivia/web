@@ -1,6 +1,7 @@
 /** Odds Board data: each answer is priced like a betting market. The favourite
  *  (obvious answer) is short-priced; contrarian correct answers pay big. Odds
- *  reflect crowd perception, NOT correctness — so the underdog is sometimes right. */
+ *  reflect crowd perception, NOT correctness. Questions sourced from the real
+ *  published question pool (staging DB export). */
 
 export interface OddsOption {
   text: string;
@@ -16,68 +17,68 @@ export interface OddsQuestion {
 export const ODDS_QUESTIONS: OddsQuestion[] = [
   {
     id: 'ob1',
-    q: 'Which country won the 2022 World Cup?',
+    q: 'Which Manchester City player was the first to score 30+ goals in a single Premier League season?',
     options: [
-      { text: 'Argentina', odds: 1.4 },
-      { text: 'France', odds: 2.5 },
-      { text: 'Brazil', odds: 3.5 },
-      { text: 'Croatia', odds: 12 },
+      { text: 'Sergio Agüero', odds: 2.8 },
+      { text: 'Erling Haaland', odds: 1.4 },
+      { text: 'Raheem Sterling', odds: 4.0 },
+      { text: 'Carlos Tevez', odds: 9.0 },
     ],
-    answer: 0, // favourite is right
+    answer: 1,
   },
   {
     id: 'ob2',
-    q: 'Who scored the fastest goal in World Cup history (~11s, 2002)?',
+    q: 'Manchester City\'s record European victory is a 7–0 win achieved in 2019 against which team?',
     options: [
-      { text: 'Ronaldo', odds: 2.2 },
-      { text: 'Rivaldo', odds: 4.0 },
-      { text: 'Hakan Şükür', odds: 6.0 },
-      { text: 'Oliver Bierhoff', odds: 8.0 },
+      { text: 'RB Leipzig', odds: 3.2 },
+      { text: 'Schalke 04', odds: 1.3 },
+      { text: 'Real Madrid', odds: 5.0 },
+      { text: 'Sporting CP', odds: 8.0 },
     ],
-    answer: 2, // contrarian pays 6x
+    answer: 1,
   },
   {
     id: 'ob3',
-    q: 'Only goalkeeper to win the Ballon d’Or?',
+    q: 'In the 2018–19 season, Manchester City beat which team 6–0 in the FA Cup final to complete the domestic treble?',
     options: [
-      { text: 'Gianluigi Buffon', odds: 1.8 },
-      { text: 'Iker Casillas', odds: 3.2 },
-      { text: 'Lev Yashin', odds: 4.5 },
-      { text: 'Manuel Neuer', odds: 7.0 },
-    ],
-    answer: 2, // underdog is right
-  },
-  {
-    id: 'ob4',
-    q: 'Which club has won the most Champions League titles?',
-    options: [
-      { text: 'Real Madrid', odds: 1.2 },
-      { text: 'AC Milan', odds: 5.0 },
-      { text: 'Bayern Munich', odds: 4.5 },
-      { text: 'Barcelona', odds: 6.0 },
-    ],
-    answer: 0, // heavy favourite
-  },
-  {
-    id: 'ob5',
-    q: 'Most goals in a single calendar year (91 in 2012)?',
-    options: [
-      { text: 'Lionel Messi', odds: 1.5 },
-      { text: 'Cristiano Ronaldo', odds: 3.0 },
-      { text: 'Robert Lewandowski', odds: 6.0 },
-      { text: 'Gerd Müller', odds: 9.0 },
+      { text: 'Watford', odds: 1.5 },
+      { text: 'Brighton', odds: 2.5 },
+      { text: 'Chelsea', odds: 4.5 },
+      { text: 'Wigan Athletic', odds: 10.0 },
     ],
     answer: 0,
   },
   {
-    id: 'ob6',
-    q: 'Which player made the most Serie A appearances?',
+    id: 'ob4',
+    q: 'Which Arsenal goalkeeper was sent off in the 2006 Champions League Final?',
     options: [
-      { text: 'Paolo Maldini', odds: 2.0 },
-      { text: 'Francesco Totti', odds: 2.6 },
-      { text: 'Gianluigi Buffon', odds: 3.5 },
-      { text: 'Javier Zanetti', odds: 6.5 },
+      { text: 'Manuel Almunia', odds: 3.0 },
+      { text: 'Jens Lehmann', odds: 1.35 },
+      { text: 'David Seaman', odds: 4.2 },
+      { text: 'Richard Wright', odds: 7.5 },
     ],
-    answer: 2, // Buffon — a mid-priced surprise
+    answer: 1,
+  },
+  {
+    id: 'ob5',
+    q: 'Who became the youngest player to ever play for Arsenal in a Premier League match in 2022?',
+    options: [
+      { text: 'Cesc Fàbregas', odds: 1.4 },
+      { text: 'Jack Wilshere', odds: 2.8 },
+      { text: 'Ethan Nwaneri', odds: 6.0 },
+      { text: 'Theo Walcott', odds: 4.5 },
+    ],
+    answer: 2,
+  },
+  {
+    id: 'ob6',
+    q: 'Which Arsenal player holds the record for the most Premier League assists in a single season (20) for the club?',
+    options: [
+      { text: 'Mesut Özil', odds: 1.5 },
+      { text: 'Cesc Fàbregas', odds: 3.0 },
+      { text: 'Thierry Henry', odds: 5.5 },
+      { text: 'Dennis Bergkamp', odds: 4.0 },
+    ],
+    answer: 2,
   },
 ];
