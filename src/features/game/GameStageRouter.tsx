@@ -84,8 +84,6 @@ export function GameStageRouter() {
     opponentGameAvatar,
     stableRankedProfile,
     stableProgression,
-    clientTotalCorrect,
-    clientTotalQuestions,
   } = useGameStageState();
 
   // Ranked replay costs a ticket. match:final_results invalidates the wallet
@@ -646,7 +644,6 @@ export function GameStageRouter() {
       const firstPositiveQuestionCount = [
         final?.totalQuestions,
         realtimeMatch.currentQuestionTotal,
-        clientTotalQuestions,
       ].find((value): value is number => typeof value === 'number' && value > 0);
       const totalQuestionsPlayed = firstPositiveQuestionCount
         ?? Math.max(knownQuestionCount, POSSESSION_TOTAL_QUESTIONS_FALLBACK);
@@ -683,7 +680,7 @@ export function GameStageRouter() {
           opponentAvatarCustomization={opponent.avatarCustomization}
           playerScore={playerDisplayScore}
           opponentScore={opponentDisplayScore}
-          playerCorrect={myStats?.correctAnswers ?? clientTotalCorrect}
+          playerCorrect={myStats?.correctAnswers ?? 0}
           opponentCorrect={opponentStats?.correctAnswers ?? 0}
           totalQuestions={totalQuestionsPlayed}
           playerQuestionResults={playerQuestionResults}

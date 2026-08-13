@@ -11,7 +11,6 @@ import { useRankedMatchmakingStore } from "@/stores/rankedMatchmaking.store";
 import { resolveAvatarUrl } from "@/lib/avatars";
 import { useRankedProfile } from "@/lib/queries/ranked.queries";
 import type { RankedProfileResponse } from "@/lib/repositories/ranked.repo";
-import { usePossessionMatchStore } from "@/stores/possessionMatch.store";
 import { tierFromRp } from "@/utils/rankedTier";
 import type { UserProgression } from "@/lib/domain";
 import type { AvatarCustomization } from "@/types/game";
@@ -90,8 +89,6 @@ export function useGameStageState() {
   const clearRankedMatchmaking = useRankedMatchmakingStore((state) => state.clearRankedMatchmaking);
 
   const { data: rankedProfile } = useRankedProfile();
-  const clientTotalCorrect = usePossessionMatchStore((s) => s.totalCorrect);
-  const clientTotalQuestions = usePossessionMatchStore((s) => s.totalQuestions);
 
   const defaultOpponent = useMemo<OpponentInfo>(
     () => ({
@@ -276,9 +273,5 @@ export function useGameStageState() {
     opponentGameAvatar,
     stableRankedProfile,
     stableProgression,
-
-    // Possession
-    clientTotalCorrect,
-    clientTotalQuestions,
   };
 }
