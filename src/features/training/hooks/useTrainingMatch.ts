@@ -68,7 +68,22 @@ export interface TrainingMatchState {
 
 const DEFAULT_ANSWER_STATES: AnswerStateArray = ["default", "default", "default", "default"];
 
-export function useTrainingMatch(isPaused: boolean) {
+// The bot script (TRAINING_SCRIPT) is indexed per question, so an override is
+// only usable when it can cover every scripted question. Anything shorter
+// falls back to the built-in set instead of crashing mid-match.
+function resolveQuestions(questionsOverride?: GameQuestion[]): GameQuestion[] {
+  if (questionsOverride && questionsOverride.length >= TRAINING_SCRIPT.length) {
+    return questionsOverride.slice(0, TRAINING_SCRIPT.length);
+  }
+  return TRAINING_QUESTIONS;
+}
+
+export function useTrainingMatch(isPaused: boolean, questionsOverride?: GameQuestion[]) {
+  // Ref so the empty-dep callbacks below never close over a stale question list.
+  const questionsRef = useRef(resolveQuestions(questionsOverride));
+  useEffect(() => {
+    questionsRef.current = resolveQuestions(questionsOverride);
+  }, [questionsOverride]);
   const [state, setState] = useState<TrainingMatchState>({
     stage: "matchmaking",
     half: 1,
@@ -79,7 +94,7 @@ export function useTrainingMatch(isPaused: boolean) {
     playerGoals: 0,
     opponentGoals: 0,
     phase: "playing",
-    question: TRAINING_QUESTIONS[0],
+    question: resolveQuestions(questionsOverride)[0],
     showOptions: true,
     selectedAnswer: null,
     answerStates: DEFAULT_ANSWER_STATES,
@@ -130,7 +145,7 @@ export function useTrainingMatch(isPaused: boolean) {
   // ─── Start playing phase for a question ─────────────────────
   const startQuestion = useCallback(
     (qIndex: number) => {
-      const question = TRAINING_QUESTIONS[qIndex];
+      const question = questionsRef.current[qIndex];
       const half = qIndex < QUESTIONS_PER_HALF ? 1 : 2;
       const questionInHalf = qIndex < QUESTIONS_PER_HALF ? qIndex : qIndex - QUESTIONS_PER_HALF;
 
@@ -406,7 +421,7 @@ export function useTrainingMatch(isPaused: boolean) {
         };
       }
 
-      if (nextIdx >= TRAINING_QUESTIONS.length) {
+      if (nextIdx >= questionsRef.current.length) {
         return {
           ...prev,
           stage: "results",
@@ -493,7 +508,7 @@ export function useTrainingMatch(isPaused: boolean) {
         };
       }
 
-      if (nextIdx >= TRAINING_QUESTIONS.length) {
+      if (nextIdx >= questionsRef.current.length) {
         return {
           ...prev,
           stage: "results",

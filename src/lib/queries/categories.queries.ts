@@ -31,8 +31,11 @@ export const getCategoriesListQuery = (filters?: ListCategoriesQuery) => ({
   },
 });
 
-export function useCategoriesList(filters?: ListCategoriesQuery) {
-  return useQuery(getCategoriesListQuery(filters));
+export function useCategoriesList(
+  filters?: ListCategoriesQuery,
+  options?: { enabled?: boolean },
+) {
+  return useQuery({ ...getCategoriesListQuery(filters), ...options });
 }
 
 export const getAllCategoriesListQuery = (filters?: ListCategoriesQuery) => ({

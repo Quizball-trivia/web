@@ -7,7 +7,7 @@ import { useTraining } from "../TrainingMatchProvider";
 import { BOT_NAME } from "../constants";
 
 export function TrainingResultsStage() {
-  const { match, tooltips, onSkip } = useTraining();
+  const { match, tooltips, onSkip, resultsCopy } = useTraining();
   const { player } = usePlayer();
   const { state } = match;
   const tooltipFired = useRef(false);
@@ -67,7 +67,7 @@ export function TrainingResultsStage() {
         transition={{ delay: 0.5 }}
         className="text-sm font-semibold text-brand-slate-light text-center max-w-xs mb-10 leading-relaxed"
       >
-        Great job! You now know how possession matches work. Time to compete for real!
+        {resultsCopy?.message ?? "Great job! You now know how possession matches work. Time to compete for real!"}
       </motion.p>
 
       {/* Play Ranked button */}
@@ -78,7 +78,7 @@ export function TrainingResultsStage() {
         onClick={onSkip}
         className="w-full max-w-xs py-4 rounded-2xl bg-brand-green-light border-b-[5px] border-brand-green text-base font-black text-white uppercase tracking-wider active:translate-y-[2px] active:border-b-[3px] transition-all"
       >
-        PLAY RANKED
+        {resultsCopy?.cta ?? "PLAY RANKED"}
       </motion.button>
     </div>
   );

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import type { CareerPathSession } from "@/lib/domain/dailyChallenge";
 import { getDailyChallengeCopy } from "@/lib/i18n/dailyChallenge";
 import { fuzzyMatchesAnswer } from "@/lib/answerMatching";
+import { resolveClubCrest } from "./clubCrests";
 import { QuitGameDialog } from "./QuitGameDialog";
 import { DailyChallengeHeader } from "./components/DailyChallengeHeader";
 import { ResultSplash } from "./components/ResultSplash";
@@ -118,25 +119,37 @@ export function CareerPathGame({
       <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-4 py-4">
         {/* Club path chips — the question itself (no separate prompt card). */}
         <div className="flex flex-wrap items-center justify-center gap-2.5">
-          {currentQuestion.clubs.map((club, index) => (
-            <div key={`${club}-${index}`} className="flex items-center gap-2.5">
-              <span
-                className="rounded-[14px] px-5 py-3.5"
-                style={{
-                  ...poppins,
-                  fontSize: 'clamp(16px, 2.2vw, 26px)',
-                  fontWeight: 700,
-                  border: '2px solid #FFE500',
-                  boxShadow: '0 0 6.334px 1.32px rgba(255,229,0,0.15)',
-                }}
-              >
-                {club}
-              </span>
-              {index < currentQuestion.clubs.length - 1 && (
-                <span className="text-2xl text-white/35" style={poppins}>→</span>
-              )}
-            </div>
-          ))}
+          {currentQuestion.clubs.map((club, index) => {
+            const crest = resolveClubCrest(club);
+            return (
+              <div key={`${club}-${index}`} className="flex items-center gap-2.5">
+                <span
+                  className="flex items-center gap-2.5 rounded-[14px] px-5 py-3.5"
+                  style={{
+                    ...poppins,
+                    fontSize: 'clamp(16px, 2.2vw, 26px)',
+                    fontWeight: 700,
+                    border: '2px solid #FFE500',
+                    boxShadow: '0 0 6.334px 1.32px rgba(255,229,0,0.15)',
+                  }}
+                >
+                  {crest && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={crest}
+                      alt=""
+                      aria-hidden="true"
+                      className="h-[1.35em] w-[1.35em] shrink-0 object-contain"
+                    />
+                  )}
+                  {club}
+                </span>
+                {index < currentQuestion.clubs.length - 1 && (
+                  <span className="text-2xl text-white/35" style={poppins}>→</span>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {/* Input + submit */}
