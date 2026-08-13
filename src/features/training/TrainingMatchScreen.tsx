@@ -1,5 +1,6 @@
 "use client";
 
+import type { ComponentProps } from "react";
 import { TrainingMatchProvider, useTraining } from "./TrainingMatchProvider";
 import { TrainingMatchmakingStage } from "./components/TrainingMatchmakingStage";
 import { TrainingShowdownStage } from "./components/TrainingShowdownStage";
@@ -35,13 +36,24 @@ function TrainingMatchContent() {
   );
 }
 
-interface TrainingMatchScreenProps {
-  onComplete: () => void;
-}
+type TrainingMatchScreenProps = Pick<
+  ComponentProps<typeof TrainingMatchProvider>,
+  "onComplete" | "banCategoriesOverride" | "questionsOverride" | "resultsCopy"
+>;
 
-export function TrainingMatchScreen({ onComplete }: TrainingMatchScreenProps) {
+export function TrainingMatchScreen({
+  onComplete,
+  banCategoriesOverride,
+  questionsOverride,
+  resultsCopy,
+}: TrainingMatchScreenProps) {
   return (
-    <TrainingMatchProvider onComplete={onComplete}>
+    <TrainingMatchProvider
+      onComplete={onComplete}
+      banCategoriesOverride={banCategoriesOverride}
+      questionsOverride={questionsOverride}
+      resultsCopy={resultsCopy}
+    >
       <TrainingMatchContent />
     </TrainingMatchProvider>
   );

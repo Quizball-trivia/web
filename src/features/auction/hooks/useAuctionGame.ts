@@ -104,7 +104,11 @@ function turnMsFor(round: AuctionRound): number {
   return round.highestBidderId ? RAISE_TURN_MS : OPENING_TURN_MS;
 }
 
-export function useAuctionGame(humanUsername: string, humanAvatarSeed: string) {
+export function useAuctionGame(
+  humanUsername: string,
+  humanAvatarSeed: string,
+  rosterOverride?: Footballer[],
+) {
   const [state, setState] = useState<AuctionGameState>({
     phase: 'lobby',
     players: [],
@@ -452,11 +456,12 @@ export function useAuctionGame(humanUsername: string, humanAvatarSeed: string) {
         isEliminated: false,
       };
 
+      const roster = rosterOverride ?? FOOTBALLERS;
       poolRef.current = {
-        GK: shuffle(FOOTBALLERS.filter((f) => f.positionGroup === 'GK')),
-        DEF: shuffle(FOOTBALLERS.filter((f) => f.positionGroup === 'DEF')),
-        MID: shuffle(FOOTBALLERS.filter((f) => f.positionGroup === 'MID')),
-        FWD: shuffle(FOOTBALLERS.filter((f) => f.positionGroup === 'FWD')),
+        GK: shuffle(roster.filter((f) => f.positionGroup === 'GK')),
+        DEF: shuffle(roster.filter((f) => f.positionGroup === 'DEF')),
+        MID: shuffle(roster.filter((f) => f.positionGroup === 'MID')),
+        FWD: shuffle(roster.filter((f) => f.positionGroup === 'FWD')),
       };
 
       setState({
@@ -470,7 +475,7 @@ export function useAuctionGame(humanUsername: string, humanAvatarSeed: string) {
         soloPick: null,
       });
     },
-    [humanUsername, humanAvatarSeed, clearAllTimers],
+    [humanUsername, humanAvatarSeed, rosterOverride, clearAllTimers],
   );
 
   const setPhase = useCallback(
