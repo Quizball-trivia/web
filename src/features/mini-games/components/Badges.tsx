@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { getClub } from '@/lib/clubs';
+import { findClubByName } from '@/lib/clubs';
 import { CountryFlag } from '@/components/CountryFlag';
 import { normalizeCountryCode } from '@/lib/geo/countryCode';
 
@@ -9,7 +9,7 @@ import { normalizeCountryCode } from '@/lib/geo/countryCode';
  *  club can't be resolved. Self-contained so mini-games don't depend on other
  *  features' components. */
 export function ClubCrest({ club, size = 24, className = '' }: { club?: string | null; size?: number; className?: string }) {
-  const resolved = getClub(club ?? null);
+  const resolved = findClubByName(club ?? null);
   if (!resolved) return null;
   return (
     <Image

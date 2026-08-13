@@ -30,6 +30,10 @@ const COUNTRY_NAME_TO_CODE: Record<string, string> = {
   'united kingdom': 'gb',
   britain: 'gb',
   'great britain': 'gb',
+  // UK home nations — flag-icons ships dedicated fi-gb-eng/sct/wls flags.
+  england: 'gb-eng',
+  scotland: 'gb-sct',
+  wales: 'gb-wls',
   usa: 'us',
   us: 'us',
   united_states: 'us',
