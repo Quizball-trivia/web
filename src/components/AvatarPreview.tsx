@@ -3,7 +3,7 @@
 /* eslint-disable @next/next/no-img-element -- Layered avatar overlays require raw img sizing and absolute positioning. */
 
 import Image from "next/image";
-import { customizationFromAvatarValue } from "@/lib/avatars";
+import { resolveAvatarCustomization } from "@/lib/avatars";
 import { AVATAR_SLOTS, getAvatarPart, getSkinPart } from "@/lib/avatars/parts";
 import type { AvatarCustomization } from "@/types/game";
 
@@ -19,17 +19,7 @@ interface AvatarPreviewProps {
  * equipped slots layered over the chosen skin.
  */
 export function AvatarPreview({ customization, width = 240, className = "" }: AvatarPreviewProps) {
-  const defaults = customizationFromAvatarValue(customization.base);
-  const hasStructuredSlots = (["skin", "jersey", "hair", "glasses", "facialHair"] as const).some((slot) =>
-    Object.prototype.hasOwnProperty.call(customization, slot),
-  );
-  const final: AvatarCustomization = {
-    skin: customization.skin ?? defaults.skin,
-    jersey: hasStructuredSlots ? customization.jersey : defaults.jersey,
-    hair: hasStructuredSlots ? customization.hair : defaults.hair,
-    glasses: hasStructuredSlots ? customization.glasses : defaults.glasses,
-    facialHair: hasStructuredSlots ? customization.facialHair : defaults.facialHair,
-  };
+  const final = resolveAvatarCustomization(customization);
 
   const skinAsset = getSkinPart(final.skin).asset;
 

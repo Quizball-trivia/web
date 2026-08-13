@@ -32,12 +32,11 @@ import { useSystemStatusPoll } from '@/lib/realtime/useSystemStatusPoll';
 import { logger } from '@/utils/logger';
 import { useLobbyCommandMachine } from '@/features/friend/hooks/useLobbyCommandMachine';
 
-import type { RankedGeoHintDebug } from './appShell.types';
+import { readCachedRankedGeoHint, type RankedGeoHint } from '@/lib/match/rankedGeoHint';
 import {
   HEADER_PATHS,
   HIDE_NAV_PATHS,
   isPathActive as isPathActiveHelper,
-  readRankedGeoHintDebug,
 } from './appShell.helpers';
 
 export function useAppShellViewModel() {
@@ -83,8 +82,8 @@ export function useAppShellViewModel() {
   const startSession = useGameSessionStore((state) => state.startSession);
   const setGameStage = useGameSessionStore((state) => state.setStage);
   const [socketConnected, setSocketConnected] = useState(() => getSocket().connected);
-  const [rankedGeoHintDebug, setRankedGeoHintDebug] = useState<RankedGeoHintDebug | null>(
-    () => readRankedGeoHintDebug(),
+  const [rankedGeoHintDebug, setRankedGeoHintDebug] = useState<RankedGeoHint | null>(
+    () => readCachedRankedGeoHint(),
   );
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [nowTick, setNowTick] = useState(() => Date.now());
@@ -251,7 +250,7 @@ export function useAppShellViewModel() {
   }, []);
 
   useEffect(() => {
-    const sync = () => setRankedGeoHintDebug(readRankedGeoHintDebug());
+    const sync = () => setRankedGeoHintDebug(readCachedRankedGeoHint());
     window.addEventListener('storage', sync);
     const intervalId = window.setInterval(sync, 1500);
     return () => {
