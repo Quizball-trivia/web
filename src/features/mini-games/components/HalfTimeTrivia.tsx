@@ -55,7 +55,7 @@ export function HalfTimeTrivia({ backHref }: { backHref?: string } = {}) {
   const won = correct >= WIN_THRESHOLD;
 
   return (
-    <div className="relative min-h-[100dvh] bg-surface-page text-white">
+    <div className="relative min-h-[100dvh] bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat text-white">
       {/* Top bar */}
       <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-white/[0.06] bg-surface-page/95 px-4 py-3 backdrop-blur">
         <Link href={backHref ?? "/dev/mini-games"} aria-label={t('Back')} className="flex size-9 items-center justify-center rounded-full bg-white/[0.06] text-white/70 hover:text-white">

@@ -28,7 +28,7 @@ export function MiniGameShell({
 }) {
   const t = useMiniT();
   return (
-    <div className="relative flex min-h-[100dvh] flex-col overflow-hidden bg-surface-page text-white">
+    <div className="relative flex min-h-[100dvh] flex-col overflow-hidden bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat text-white">
       {/* Ambient glow */}
       <div
         aria-hidden

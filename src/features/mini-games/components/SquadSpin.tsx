@@ -368,35 +368,58 @@ export function SquadSpin({ backHref }: { backHref?: string } = {}) {
 
 function ReelContent({ reel, display, iconSize }: { reel: keyof Display; display: Display; iconSize: number }) {
   const t = useMiniT();
-  if (reel === 'club') return (<><ClubCrest club={display.club} size={iconSize} /><ReelText>{display.club.replace(/ (CF|FC)$/i, '')}</ReelText></>);
+  if (reel === 'club')
+    return (
+      <>
+        <IconBox><ClubCrest club={display.club} size={iconSize} /></IconBox>
+        <ReelText>{display.club.replace(/ (CF|FC)$/i, '')}</ReelText>
+      </>
+    );
   if (reel === 'position')
     return (
       <>
-        <span className="flex items-center justify-center rounded-xl font-poppins font-black text-black" style={{ width: iconSize, height: iconSize, backgroundColor: POSITION_COLOR[display.position], fontSize: iconSize * 0.4 }}>
-          {display.position}
-        </span>
+        <IconBox>
+          <span className="flex items-center justify-center rounded-xl font-poppins font-black text-black" style={{ width: iconSize, height: iconSize, backgroundColor: POSITION_COLOR[display.position], fontSize: iconSize * 0.4 }}>
+            {display.position}
+          </span>
+        </IconBox>
         <ReelText>{t(POSITION_LABEL[display.position])}</ReelText>
       </>
     );
-  if (reel === 'nation') return (<><FlagChip country={display.nation} width={iconSize} height={Math.round(iconSize * 0.68)} /><ReelText>{display.nation}</ReelText></>);
+  if (reel === 'nation')
+    return (
+      <>
+        <IconBox><FlagChip country={display.nation} width={iconSize} height={Math.round(iconSize * 0.68)} /></IconBox>
+        <ReelText>{display.nation}</ReelText>
+      </>
+    );
   if (reel === 'era')
     return (
       <>
-        <span className="flex items-center justify-center rounded-xl bg-brand-purple/25 font-poppins font-black text-brand-purple" style={{ width: iconSize, height: iconSize, fontSize: iconSize * 0.34 }}>
-          {display.era.slice(2)}
-        </span>
+        <IconBox>
+          <span className="flex items-center justify-center rounded-xl bg-brand-purple/25 font-poppins font-black text-brand-purple" style={{ width: iconSize, height: iconSize, fontSize: iconSize * 0.34 }}>
+            {display.era.slice(2)}
+          </span>
+        </IconBox>
         <ReelText>{display.era}</ReelText>
       </>
     );
   // trophy
   return (
     <>
-      <span className="flex items-center justify-center" style={{ width: iconSize, height: iconSize, fontSize: iconSize * 0.7 }}>
-        {TROPHY_META[display.trophy].emoji}
-      </span>
+      <IconBox>
+        <span className="flex items-center justify-center" style={{ width: iconSize, height: iconSize, fontSize: iconSize * 0.7 }}>
+          {TROPHY_META[display.trophy].emoji}
+        </span>
+      </IconBox>
       <ReelText>{t(TROPHY_META[display.trophy].short)}</ReelText>
     </>
   );
+}
+
+/** Equal flexible icon zone so crest/flag/badge sit on the same line across cards. */
+function IconBox({ children }: { children: React.ReactNode }) {
+  return <span className="flex min-h-11 w-full flex-1 items-center justify-center">{children}</span>;
 }
 
 function ReelCard({
@@ -427,7 +450,7 @@ function ReelCard({
       <motion.div
         animate={spinning ? { y: [0, -3, 0], filter: ['blur(0px)', 'blur(1.5px)', 'blur(0px)'] } : { filter: 'blur(0px)' }}
         transition={spinning ? { duration: 0.16, repeat: Infinity } : { duration: 0.2 }}
-        className="flex flex-col items-center gap-1"
+        className="flex w-full flex-1 flex-col items-center gap-1"
       >
         {children}
       </motion.div>
@@ -446,7 +469,11 @@ function ReelCard({
 }
 
 function ReelText({ children }: { children: React.ReactNode }) {
-  return <span className="line-clamp-2 max-w-full text-center font-poppins text-[9px] font-black uppercase leading-tight text-white sm:text-[10px]">{children}</span>;
+  return (
+    <span className="flex min-h-[26px] w-full items-center justify-center">
+      <span className="line-clamp-2 max-w-full text-center font-poppins text-[9px] font-black uppercase leading-tight text-white sm:text-[10px]">{children}</span>
+    </span>
+  );
 }
 
 function ResultCard({ result, onNext }: { result: SpinResult; onNext: () => void }) {
