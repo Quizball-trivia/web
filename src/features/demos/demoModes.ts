@@ -24,18 +24,18 @@ const HIDDEN_DEMO_MODES: DemoModeCard[] = [
     },
     group: "featured",
   },
+];
+
+export const FEATURED_DEMO_MODES: DemoModeCard[] = [
   {
     slug: "weekend-league",
     title: { en: "Weekend League", ka: "შაბათ-კვირის ლიგა" },
     description: {
-      en: "The weekly tournament — qualifiers, playoff bracket and the 5-round Gauntlet.",
-      ka: "ყოველკვირეული ტურნირი — შესარჩევი, პლეი-ოფი და 5-რაუნდიანი განტლეტი.",
+      en: "Live multiplayer tournament — 1,000 players answer the same quiz at the same time.",
+      ka: "ლაივ მულტიპლეიერ ტურნირი — 1000 მოთამაშე ერთდროულად პასუხობს ერთსა და იმავე კითხვებს.",
     },
     group: "featured",
   },
-];
-
-export const FEATURED_DEMO_MODES: DemoModeCard[] = [
   {
     slug: "auction",
     title: { en: "Auction", ka: "აუქციონი" },
