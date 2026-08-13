@@ -2,6 +2,7 @@
 
 import { notFound, useParams } from "next/navigation";
 import { DemoAuction } from "@/features/demos/DemoAuction";
+import { DemoBackButton } from "@/features/demos/DemoBackButton";
 import { DemoDailyChallenge } from "@/features/demos/DemoDailyChallenge";
 import { DemoTraining } from "@/features/demos/DemoTraining";
 import { DemoWeekendLeague } from "@/features/demos/DemoWeekendLeague";
@@ -35,11 +36,26 @@ export default function DemoModePage() {
 
   switch (mode.slug) {
     case "match":
-      return <DemoTraining />;
+      return (
+        <>
+          <DemoBackButton />
+          <DemoTraining />
+        </>
+      );
     case "auction":
-      return <DemoAuction />;
+      return (
+        <>
+          <DemoBackButton />
+          <DemoAuction />
+        </>
+      );
     case "weekend-league":
-      return <DemoWeekendLeague />;
+      return (
+        <>
+          <DemoBackButton />
+          <DemoWeekendLeague />
+        </>
+      );
     case "mini-squad-spin":
       return <SquadSpin backHref={DEMO_BACK} />;
     case "mini-trivia-spin":

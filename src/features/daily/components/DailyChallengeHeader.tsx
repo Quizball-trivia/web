@@ -1,5 +1,6 @@
 "use client";
 
+import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/contexts/LocaleContext";
 
@@ -46,11 +47,10 @@ export function DailyChallengeHeader({
         <button
           type="button"
           onClick={onQuit}
-          aria-label={t("common.close")}
-          className="flex items-center justify-center rounded-[16px] bg-brand-blue px-4 text-white h-[40px] sm:h-[52px]"
-          style={poppins}
+          aria-label={t("common.back")}
+          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-white/75 transition-colors hover:bg-white/10 hover:text-white sm:size-[52px]"
         >
-          ✕
+          <ArrowLeft aria-hidden className="size-5 sm:size-6" />
         </button>
         <div
           className="flex flex-1 items-center justify-center rounded-[16px] bg-brand-blue px-5 text-white h-[40px] sm:h-[52px]"

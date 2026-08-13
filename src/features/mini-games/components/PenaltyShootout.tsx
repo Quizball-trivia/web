@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useId, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Check, X } from 'lucide-react';
 import { MiniGameShell, StatPill } from './MiniGameShell';
@@ -8,19 +8,21 @@ import { getTrivia, type TriviaQuestion } from '../data/trivia';
 import { useMiniLocale, useMiniT } from '../lib/i18n';
 
 const ROUNDS = 5;
+const BALL_URL = '/assets/brand/goal-ball-small.webp';
 
 interface Zone {
   id: string;
   x: number; // % across the goal
   y: number; // % down
 }
+/** Percent positions inset inside the goal mouth (posts ~11–89%, bar ~8%, line ~68%). */
 const ZONES: Zone[] = [
-  { id: 'TL', x: 20, y: 34 },
-  { id: 'TC', x: 50, y: 26 },
-  { id: 'TR', x: 80, y: 34 },
-  { id: 'BL', x: 20, y: 66 },
-  { id: 'BC', x: 50, y: 72 },
-  { id: 'BR', x: 80, y: 66 },
+  { id: 'TL', x: 22, y: 24 },
+  { id: 'TC', x: 50, y: 22 },
+  { id: 'TR', x: 78, y: 24 },
+  { id: 'BL', x: 22, y: 52 },
+  { id: 'BC', x: 50, y: 54 },
+  { id: 'BR', x: 78, y: 52 },
 ];
 const randZone = () => ZONES[Math.floor(Math.random() * ZONES.length)];
 
@@ -144,6 +146,7 @@ export function PenaltyShootout({ backHref }: { backHref?: string } = {}) {
   const isShooting = beat === 'your-shot';
   const isKeeping = beat === 'ai-keep';
   const resolving = (beat === 'your-shot' || beat === 'ai-keep') && !!shooterZone && !!keeperZone;
+  const settled = beat === 'your-result' || beat === 'ai-result';
 
   return (
     <MiniGameShell
@@ -172,6 +175,8 @@ export function PenaltyShootout({ backHref }: { backHref?: string } = {}) {
           shooterZone={shooterZone}
           keeperZone={keeperZone}
           resolving={resolving}
+          settled={settled}
+          scored={scored}
           onPick={isShooting ? takeShot : isKeeping ? dive : undefined}
         />
       </div>
@@ -231,68 +236,215 @@ function Goal({
   shooterZone,
   keeperZone,
   resolving,
+  settled,
+  scored,
   onPick,
 }: {
   mode: 'shoot' | 'keep' | 'idle';
   shooterZone: Zone | null;
   keeperZone: Zone | null;
   resolving: boolean;
+  settled: boolean;
+  scored: boolean | null;
   onPick?: (z: Zone) => void;
 }) {
+  const uid = useId().replace(/:/g, '');
+  const picking = mode !== 'idle' && !shooterZone && !keeperZone;
+  const inFlight = resolving || (settled && !!shooterZone && !!keeperZone);
+  const isSave = inFlight && !!shooterZone && !!keeperZone && shooterZone.id === keeperZone.id;
+  const showGoalFx = settled && scored === true;
+  const showSaveFx = settled && scored === false && !!shooterZone;
+  const dest = shooterZone;
+  const peakX = dest ? 50 + (dest.x - 50) * 0.45 : 50;
+  const peakY = dest ? Math.min(dest.y, 70) - 16 : 50;
+  const restTop = dest ? (isSave && settled ? dest.y + 10 : dest.y) : 88;
+  const restLeft = dest ? dest.x : 50;
+  const diveAngle = !keeperZone ? 0 : keeperZone.x < 40 ? -58 : keeperZone.x > 60 ? 58 : keeperZone.y < 40 ? -16 : 22;
+
   return (
-    <div className="relative mx-auto aspect-[16/9] w-full overflow-hidden rounded-2xl border-2 border-white/10 bg-gradient-to-b from-[#0e2f14] to-[#0a1f0d]">
-      {/* Goal frame */}
-      <div className="absolute left-1/2 top-2 h-[62%] w-[86%] -translate-x-1/2 rounded-t-md border-[3px] border-white/70 border-b-0">
-        {/* net hint */}
-        <div
-          className="absolute inset-0 opacity-15"
-          style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '14px 14px' }}
-        />
-      </div>
+    <div className="relative mx-auto aspect-[16/9] w-full overflow-hidden rounded-[24px] border border-white/10 bg-white/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] backdrop-blur-md">
+      {/* Pitch wash — tinted glass, not a solid green box */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          backgroundImage: [
+            'radial-gradient(110% 70% at 50% 8%, rgba(88,204,2,0.16), transparent 62%)',
+            'linear-gradient(180deg, rgba(56,182,14,0.06), rgba(8,24,14,0.16))',
+            'repeating-linear-gradient(90deg, rgba(56,182,14,0.08) 0 28px, rgba(56,182,14,0.02) 28px 56px)',
+          ].join(', '),
+        }}
+      />
+
+      {/* Goal frame + net + box markings */}
+      <svg className="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 400 225" preserveAspectRatio="none" aria-hidden>
+        <defs>
+          <pattern id={`${uid}-net`} width="14" height="14" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <path d="M0 0h14M0 0v14" stroke="rgba(255,255,255,0.28)" strokeWidth="0.7" />
+          </pattern>
+          <linearGradient id={`${uid}-post`} x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor="#d6d6d6" />
+            <stop offset="45%" stopColor="#ffffff" />
+            <stop offset="100%" stopColor="#b8b8b8" />
+          </linearGradient>
+        </defs>
+        {/* 6-yard box */}
+        <path d="M78 210 V168 H322 V210" fill="none" stroke="rgba(255,255,255,0.28)" strokeWidth="1.6" />
+        {/* penalty spot */}
+        <circle cx="200" cy="204" r="3.2" fill="rgba(255,255,255,0.55)" />
+        {/* net */}
+        <path d="M42 18 H358 V148 H42 Z" fill={`url(#${uid}-net)`} opacity="0.9" />
+        {/* posts + crossbar */}
+        <rect x="36" y="12" width="10" height="140" rx="2" fill={`url(#${uid}-post)`} />
+        <rect x="354" y="12" width="10" height="140" rx="2" fill={`url(#${uid}-post)`} />
+        <rect x="36" y="8" width="328" height="10" rx="2" fill={`url(#${uid}-post)`} />
+        {/* goal-line */}
+        <path d="M46 152 H354" stroke="rgba(255,255,255,0.45)" strokeWidth="1.4" />
+      </svg>
+
+      {/* Net bulge on a goal */}
+      <AnimatePresence>
+        {showGoalFx && (
+          <motion.div
+            key="net-ripple"
+            className="pointer-events-none absolute left-[9%] top-[6%] h-[56%] w-[82%] rounded-t-md"
+            initial={{ opacity: 0, scale: 1 }}
+            animate={{ opacity: [0, 0.55, 0], scale: [1, 1.045, 1.02] }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.55, ease: 'easeOut' }}
+            style={{
+              background:
+                'radial-gradient(ellipse at 50% 40%, rgba(255,255,255,0.28), transparent 62%)',
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Outcome wash */}
+      <AnimatePresence>
+        {(showGoalFx || showSaveFx) && (
+          <motion.div
+            key="fx"
+            className="pointer-events-none absolute inset-0"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: [0, 0.55, 0.18] }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.7 }}
+            style={{
+              background: showGoalFx
+                ? 'radial-gradient(circle at 50% 42%, rgba(88,204,2,0.45), transparent 62%)'
+                : 'radial-gradient(circle at 50% 42%, rgba(255,75,75,0.4), transparent 62%)',
+            }}
+          />
+        )}
+      </AnimatePresence>
 
       {/* Zones (pickable) */}
-      {mode !== 'idle' &&
-        !shooterZone &&
-        !keeperZone &&
+      {picking &&
         ZONES.map((z) => (
-          <button
+          <motion.button
             key={z.id}
             type="button"
             onClick={() => onPick?.(z)}
             aria-label={`Zone ${z.id}`}
-            className="absolute size-11 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/40 bg-white/10 transition-colors hover:border-brand-yellow hover:bg-brand-yellow/25"
+            initial={{ opacity: 0, scale: 0.7 }}
+            animate={{ opacity: 1, scale: [1, 1.08, 1] }}
+            transition={{ scale: { duration: 1.6, repeat: Infinity, ease: 'easeInOut' } }}
+            className="group absolute z-20 size-10 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/40 bg-white/10 transition-colors hover:border-brand-yellow hover:bg-brand-yellow/25 sm:size-11"
             style={{ left: `${z.x}%`, top: `${z.y}%` }}
-          />
+          >
+            <span className="pointer-events-none absolute inset-[6px] rounded-full border border-white/45 group-hover:border-brand-yellow" />
+            <span className="pointer-events-none absolute left-1/2 top-2 bottom-2 w-px -translate-x-1/2 bg-white/50 group-hover:bg-brand-yellow" />
+            <span className="pointer-events-none absolute top-1/2 left-2 right-2 h-px -translate-y-1/2 bg-white/50 group-hover:bg-brand-yellow" />
+          </motion.button>
         ))}
-
-      {/* Ball */}
-      <motion.div
-        className="absolute z-10 -translate-x-1/2 -translate-y-1/2 text-2xl"
-        initial={false}
-        animate={
-          resolving && shooterZone
-            ? { left: `${shooterZone.x}%`, top: `${shooterZone.y}%`, scale: 0.8 }
-            : { left: '50%', top: '92%', scale: 1 }
-        }
-        transition={{ duration: 0.8, ease: [0.5, 0, 0.75, 0] }}
-      >
-        ⚽
-      </motion.div>
 
       {/* Keeper */}
       <motion.div
-        className="absolute z-10 -translate-x-1/2 -translate-y-1/2 text-3xl"
+        className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-1/2"
         initial={false}
         animate={
-          resolving && keeperZone
-            ? { left: `${keeperZone.x}%`, top: `${keeperZone.y}%`, rotate: keeperZone.x < 40 ? -35 : keeperZone.x > 60 ? 35 : 0 }
-            : { left: '50%', top: '52%', rotate: 0 }
+          keeperZone && inFlight
+            ? { left: `${keeperZone.x}%`, top: `${keeperZone.y}%`, rotate: diveAngle, scale: 1.16 }
+            : { left: '50%', top: '40%', rotate: 0, scale: 1 }
         }
-        transition={{ duration: 0.7, ease: [0.34, 1.4, 0.64, 1] }}
+        transition={
+          keeperZone && inFlight
+            ? { type: 'spring', stiffness: 380, damping: 14, mass: 0.7 }
+            : { duration: 0.45, ease: [0.22, 1, 0.36, 1] }
+        }
       >
-        🧤
+        <motion.div
+          animate={inFlight ? { y: 0 } : { y: [0, -3, 0] }}
+          transition={inFlight ? { duration: 0.2 } : { duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+        >
+          <KeeperGlove />
+        </motion.div>
+      </motion.div>
+
+      {/* Ball */}
+      <motion.div
+        className="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-1/2"
+        initial={false}
+        animate={
+          dest && inFlight
+            ? resolving
+              ? {
+                  left: ['50%', `${peakX}%`, `${dest.x}%`],
+                  top: ['88%', `${peakY}%`, `${dest.y}%`],
+                  scale: [1, 0.88, 0.7],
+                  rotate: [0, 220, 420],
+                }
+              : {
+                  left: `${restLeft}%`,
+                  top: `${restTop}%`,
+                  scale: isSave ? 0.82 : 0.62,
+                  rotate: isSave ? 480 : 520,
+                }
+            : { left: '50%', top: '88%', scale: 1, rotate: 0 }
+        }
+        transition={
+          dest && resolving
+            ? { duration: 0.72, ease: [0.18, 0.7, 0.28, 1], times: [0, 0.45, 1] }
+            : dest && settled
+              ? { type: 'spring', stiffness: 380, damping: 16 }
+              : { duration: 0.35 }
+        }
+      >
+        <motion.img
+          src={BALL_URL}
+          alt=""
+          width={40}
+          height={40}
+          className="size-9 drop-shadow-[0_6px_10px_rgba(0,0,0,0.45)] sm:size-10"
+          animate={!inFlight ? { y: [0, -4, 0] } : { y: 0 }}
+          transition={!inFlight ? { duration: 1.6, repeat: Infinity, ease: 'easeInOut' } : { duration: 0.2 }}
+          draggable={false}
+        />
       </motion.div>
     </div>
+  );
+}
+
+function KeeperGlove() {
+  return (
+    <svg
+      viewBox="0 0 64 72"
+      className="h-12 w-11 drop-shadow-[0_8px_12px_rgba(0,0,0,0.5)] sm:h-14 sm:w-12"
+      aria-hidden
+    >
+      <g fill="#58CC02" stroke="#16380a" strokeWidth="1.7" strokeLinejoin="round">
+        <rect x="12" y="6" width="8" height="26" rx="4" />
+        <rect x="22" y="2" width="9" height="30" rx="4.5" />
+        <rect x="33" y="4" width="8.5" height="28" rx="4.2" />
+        <rect x="43" y="8" width="8" height="24" rx="4" />
+        <path d="M14 28h32c5 0 9 4 9 9v16H8V36c0-5 3-8 6-8Z" />
+        <ellipse cx="11" cy="38" rx="8" ry="12" transform="rotate(-28 11 38)" />
+      </g>
+      <rect x="16" y="54" width="32" height="15" rx="5" fill="#f3f3f3" stroke="#16380a" strokeWidth="1.7" />
+      <rect x="16" y="54" width="32" height="5" fill="#58CC02" stroke="#16380a" strokeWidth="1.2" />
+      <path d="M22 40h20M22 46h16" stroke="#d4ff9a" strokeWidth="1.4" strokeLinecap="round" opacity=".85" />
+    </svg>
   );
 }
 
@@ -307,9 +459,9 @@ function QuestionCard({
 }) {
   const answered = selected !== null;
   return (
-    <div className="mt-3 rounded-2xl border border-white/[0.08] bg-surface-card/60 p-4">
-      <p className="mb-3 font-poppins text-base font-bold leading-snug text-white">{question.q}</p>
-      <div className="grid grid-cols-1 gap-2">
+    <div className="mt-3">
+      <p className="px-1 font-poppins text-base font-bold leading-snug text-white sm:text-lg">{question.q}</p>
+      <div className="mt-3 grid grid-cols-2 gap-2.5">
         {question.options.map((opt, i) => {
           const isAnswer = i === question.answer;
           const isPicked = selected === i;
@@ -320,19 +472,33 @@ function QuestionCard({
               type="button"
               disabled={answered}
               onClick={() => onAnswer(i)}
-              className={`flex items-center justify-between rounded-xl border-2 px-3.5 py-3 text-left font-poppins text-sm font-bold transition-colors ${
-                state === 'idle'
-                  ? 'border-white/10 bg-white/[0.03] text-white hover:border-brand-green/50'
-                  : state === 'correct'
-                    ? 'border-brand-green bg-brand-green/15 text-white'
+              className="relative flex h-[60px] appearance-none items-center justify-center overflow-hidden rounded-[16px] bg-transparent px-3 font-poppins text-sm font-bold leading-tight sm:h-[78px] sm:text-base"
+              style={{
+                color: state === 'wrong' ? '#FB3101' : state === 'dim' ? 'rgba(255,255,255,0.35)' : '#FFFFFF',
+                backgroundColor: state === 'correct' ? '#38B60E' : 'transparent',
+                border:
+                  state === 'correct'
+                    ? 'none'
                     : state === 'wrong'
-                      ? 'border-brand-red bg-brand-red/15 text-white'
-                      : 'border-white/5 bg-white/[0.02] text-white/35'
-              }`}
+                      ? '2px solid #FB3101'
+                      : state === 'dim'
+                        ? '2px solid rgba(255,255,255,0.12)'
+                        : '2px solid rgba(255,229,0,0.4)',
+                boxShadow:
+                  state === 'correct'
+                    ? '0 1.76px 6.334px 1.32px rgba(56,182,14,0.25)'
+                    : state === 'wrong'
+                      ? '0 1.76px 6.334px 1.32px rgba(251,49,1,0.25)'
+                      : state === 'idle'
+                        ? '0 0 6.334px 1.32px rgba(255,229,0,0.18)'
+                        : undefined,
+              }}
             >
-              {opt}
-              {state === 'correct' && <Check className="size-4 text-brand-green" />}
-              {state === 'wrong' && <X className="size-4 text-brand-red" />}
+              <span className="flex items-center gap-2 text-center">
+                {opt}
+                {state === 'correct' && <Check className="size-4 shrink-0 text-white" />}
+                {state === 'wrong' && <X className="size-4 shrink-0 text-brand-red" />}
+              </span>
             </button>
           );
         })}
@@ -344,11 +510,8 @@ function QuestionCard({
 function Banner({ tone, children }: { tone: 'you' | 'ai'; children: React.ReactNode }) {
   return (
     <div
-      className="rounded-xl px-4 py-2.5 text-center font-poppins text-sm font-black uppercase tracking-wide"
-      style={{
-        background: tone === 'you' ? 'rgba(88,204,2,0.12)' : 'rgba(255,75,75,0.12)',
-        color: tone === 'you' ? '#58CC02' : '#FF4B4B',
-      }}
+      className="px-1 py-1 text-center font-poppins text-sm font-black uppercase tracking-wide"
+      style={{ color: tone === 'you' ? '#58CC02' : '#FF4B4B' }}
     >
       {children}
     </div>
@@ -393,7 +556,7 @@ function ResultBeat({
       <button
         type="button"
         onClick={onContinue}
-        className="h-13 rounded-2xl bg-white/10 px-8 py-3 font-poppins text-base font-black uppercase text-white transition-colors hover:bg-white/15"
+        className="h-13 rounded-2xl border border-white/20 bg-transparent px-8 py-3 font-poppins text-base font-black uppercase text-white transition-colors hover:border-white/40"
       >
         {mine ? t("Opponent's turn") : lastRound ? t('See result') : t('Next round')}
       </button>

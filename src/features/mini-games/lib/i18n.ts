@@ -88,7 +88,7 @@ const KA: Record<string, string> = {
   "Rolled over": "გადავიდა",
   "Not this time — your entry fed the pot. It now sits at {pot}. Come back for the next question in {time}.":
     "ამჯერად ვერა — შენი ცდა ბანკს დაემატა. ახლა {pot}-ია. დაბრუნდი შემდეგ კითხვაზე {time}-ში.",
-  "Replay (dev)": "თავიდან (dev)",
+  "Replay": "თავიდან",
   "Jackpot won!": "ჯექპოტი მოგებულია!",
   "The pot resets for tomorrow's question.": "ბანკი ხვალინდელი კითხვისთვის განულდება.",
 

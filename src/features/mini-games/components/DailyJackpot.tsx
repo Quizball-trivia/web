@@ -71,8 +71,8 @@ export function DailyJackpot({ backHref }: { backHref?: string } = {}) {
   return (
     <MiniGameShell backHref={backHref} title={t('Daily Jackpot')} subtitle={t('One hard question. Winner takes the pot.')} accent="#FFD700">
       {/* Pot */}
-      <div className="mt-2 rounded-3xl border-2 border-brand-gold/30 bg-gradient-to-b from-brand-gold/[0.12] to-transparent p-5 text-center">
-        <div className="font-poppins text-[11px] font-black uppercase tracking-[0.2em] text-brand-gold/80">{t("Today's pot")}</div>
+      <div className="mt-2 rounded-3xl border-2 border-brand-yellow bg-brand-yellow p-5 text-center">
+        <div className="font-poppins text-[11px] font-black uppercase tracking-[0.2em] text-black/55">{t("Today's pot")}</div>
         <div ref={potRef} className="relative mt-1 flex items-center justify-center">
           <AnimatePresence mode="popLayout">
             <motion.div
@@ -81,16 +81,15 @@ export function DailyJackpot({ backHref }: { backHref?: string } = {}) {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -10, opacity: 0, position: 'absolute' }}
               transition={{ duration: 0.3 }}
-              className="font-poppins text-5xl font-black tabular-nums text-brand-gold"
-              style={{ textShadow: '0 2px 24px rgba(255,215,0,0.35)' }}
+              className="font-poppins text-5xl font-black tabular-nums text-black"
             >
               {pot.toLocaleString()}
             </motion.div>
           </AnimatePresence>
-          <span className="ml-2 font-poppins text-lg font-black text-brand-gold/60">🪙</span>
+          <span className="ml-2 font-poppins text-lg font-black text-black/50">🪙</span>
         </div>
         {phase === 'open' && (
-          <div className="mt-1 font-poppins text-[11px] font-semibold text-white/40">{t('climbing with every miss…')}</div>
+          <div className="mt-1 font-poppins text-[11px] font-semibold text-black/45">{t('climbing with every miss…')}</div>
         )}
       </div>
 
@@ -120,36 +119,48 @@ export function DailyJackpot({ backHref }: { backHref?: string } = {}) {
               <div className="mb-2 flex items-center justify-center gap-1.5 font-poppins text-[11px] font-black uppercase tracking-wider text-brand-red">
                 <Flame className="size-3.5" /> {t('Hard · one attempt')}
               </div>
-              <div className="rounded-2xl border border-white/[0.08] bg-surface-card/60 p-4">
-                <p className="mb-3 font-poppins text-lg font-bold leading-snug text-white">{question.q}</p>
-                <div className="grid grid-cols-1 gap-2">
-                  {question.options.map((opt, i) => {
-                    const isAnswer = i === question.answer;
-                    const isPicked = selected === i;
-                    const state = selected === null ? 'idle' : isAnswer ? 'correct' : isPicked ? 'wrong' : 'dim';
-                    return (
-                      <button
-                        key={i}
-                        type="button"
-                        disabled={selected !== null}
-                        onClick={() => answer(i)}
-                        className={`flex items-center justify-between rounded-xl border-2 px-3.5 py-3 text-left font-poppins text-sm font-bold transition-colors ${
-                          state === 'idle'
-                            ? 'border-white/10 bg-white/[0.03] text-white hover:border-brand-gold/50'
-                            : state === 'correct'
-                              ? 'border-brand-green bg-brand-green/15 text-white'
-                              : state === 'wrong'
-                                ? 'border-brand-red bg-brand-red/15 text-white'
-                                : 'border-white/5 bg-white/[0.02] text-white/35'
-                        }`}
-                      >
+              <p className="px-1 font-poppins text-lg font-bold leading-snug text-white">{question.q}</p>
+              <div className="mt-3 grid grid-cols-1 gap-2.5">
+                {question.options.map((opt, i) => {
+                  const isAnswer = i === question.answer;
+                  const isPicked = selected === i;
+                  const state = selected === null ? 'idle' : isAnswer ? 'correct' : isPicked ? 'wrong' : 'dim';
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      disabled={selected !== null}
+                      onClick={() => answer(i)}
+                      className="relative flex min-h-[60px] appearance-none items-center justify-center overflow-hidden rounded-[16px] bg-transparent px-3.5 py-3 text-center font-poppins text-sm font-bold leading-tight sm:min-h-[72px]"
+                      style={{
+                        color: state === 'wrong' ? '#FB3101' : state === 'dim' ? 'rgba(255,255,255,0.35)' : '#FFFFFF',
+                        backgroundColor: state === 'correct' ? '#38B60E' : 'transparent',
+                        border:
+                          state === 'correct'
+                            ? 'none'
+                            : state === 'wrong'
+                              ? '2px solid #FB3101'
+                              : state === 'dim'
+                                ? '2px solid rgba(255,255,255,0.12)'
+                                : '2px solid rgba(255,229,0,0.4)',
+                        boxShadow:
+                          state === 'correct'
+                            ? '0 1.76px 6.334px 1.32px rgba(56,182,14,0.25)'
+                            : state === 'wrong'
+                              ? '0 1.76px 6.334px 1.32px rgba(251,49,1,0.25)'
+                              : state === 'idle'
+                                ? '0 0 6.334px 1.32px rgba(255,229,0,0.18)'
+                                : undefined,
+                      }}
+                    >
+                      <span className="flex items-center gap-2">
                         {opt}
-                        {state === 'correct' && <Check className="size-4 text-brand-green" />}
-                        {state === 'wrong' && <X className="size-4 text-brand-red" />}
-                      </button>
-                    );
-                  })}
-                </div>
+                        {state === 'correct' && <Check className="size-4 shrink-0 text-white" />}
+                        {state === 'wrong' && <X className="size-4 shrink-0 text-brand-red" />}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </motion.div>
           )}
@@ -163,8 +174,8 @@ export function DailyJackpot({ backHref }: { backHref?: string } = {}) {
               <p className="max-w-xs font-poppins text-sm font-semibold text-white/55">
                 {t('Not this time — your entry fed the pot. It now sits at {pot}. Come back for the next question in {time}.', { pot: pot.toLocaleString(), time: formatHMS(msToNext) })}
               </p>
-              <button type="button" onClick={replay} className="mt-2 rounded-xl bg-white/10 px-5 py-2.5 font-poppins text-xs font-black uppercase text-white/70 hover:bg-white/15">
-                {t('Replay (dev)')}
+              <button type="button" onClick={replay} className="mt-2 rounded-xl bg-brand-blue px-8 py-3 font-poppins text-sm font-black uppercase text-white hover:brightness-110">
+                {t('Replay')}
               </button>
             </motion.div>
           )}
@@ -201,8 +212,8 @@ function WinBurst({ pot, onReplay }: { pot: number; onReplay: () => void }) {
       </div>
       <div className="font-poppins text-4xl font-black tabular-nums text-white">+{pot.toLocaleString()} 🪙</div>
       <p className="font-poppins text-xs font-semibold text-white/45">{t("The pot resets for tomorrow's question.")}</p>
-      <button type="button" onClick={onReplay} className="mt-2 rounded-xl bg-white/10 px-5 py-2.5 font-poppins text-xs font-black uppercase text-white/70 hover:bg-white/15">
-        {t('Replay (dev)')}
+      <button type="button" onClick={onReplay} className="mt-2 rounded-xl bg-brand-blue px-8 py-3 font-poppins text-sm font-black uppercase text-white hover:brightness-110">
+        {t('Replay')}
       </button>
     </motion.div>
   );

@@ -185,7 +185,7 @@ export function ImposterGame({
                 type="button"
                 disabled={resolved || revealing}
                 onClick={() => toggleOption(option.id)}
-                className="relative flex items-center justify-center overflow-hidden rounded-[16px] px-3 transition-shadow duration-150 h-[60px] sm:h-[78px] md:h-[94px]"
+                className="relative flex h-[60px] appearance-none items-center justify-center overflow-hidden rounded-[16px] bg-transparent px-3 transition-shadow duration-150 sm:h-[78px] md:h-[94px]"
                 style={{
                   ...poppins,
                   fontSize: 'clamp(13px, 1.7vw, 22px)',
