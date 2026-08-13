@@ -436,7 +436,7 @@ function ReelCard({
           type="button"
           onClick={onHold}
           aria-label={held ? t('Release reel') : t('Hold reel')}
-          className={`absolute -right-1.5 -top-1.5 flex size-6 items-center justify-center rounded-full border-2 border-surface-page ${held ? 'bg-brand-yellow text-black' : 'bg-white/15 text-white/70'}`}
+          className={`absolute -right-1.5 -top-1.5 z-10 flex size-6 items-center justify-center rounded-full border-2 border-surface-page ${held ? 'bg-brand-yellow text-black' : 'bg-surface-card text-white/80'}`}
         >
           {held ? <Lock className="size-3" /> : <LockOpen className="size-3" />}
         </button>
