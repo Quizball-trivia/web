@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Lock, LockOpen, RotateCw, Sparkles } from 'lucide-react';
+import { Lock, LockOpen, RotateCw, Send, Sparkles } from 'lucide-react';
 import { ClubCrest, FlagChip } from './Badges';
 import { MiniGameShell, StatPill } from './MiniGameShell';
 import { useMiniT } from '../lib/i18n';
@@ -298,7 +298,7 @@ export function SquadSpin({ backHref }: { backHref?: string } = {}) {
 
           {phase === 'answering' && (
             <motion.div key="answer" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-3">
-              <motion.div key={wrongShake} animate={wrongShake ? { x: [0, -8, 8, -6, 6, 0] } : {}} transition={{ duration: 0.35 }} className="flex items-center gap-2">
+              <motion.div key={wrongShake} animate={wrongShake ? { x: [0, -8, 8, -6, 6, 0] } : {}} transition={{ duration: 0.35 }} className="relative">
                 <input
                   ref={inputRef}
                   value={input}
@@ -307,10 +307,17 @@ export function SquadSpin({ backHref }: { backHref?: string } = {}) {
                   placeholder={t('Name a player…')}
                   autoComplete="off"
                   spellCheck={false}
-                  className="h-14 w-full rounded-2xl border-2 border-white/10 bg-surface-input px-4 font-poppins text-lg font-bold text-white outline-none placeholder:text-white/30 focus:border-brand-yellow/60"
+                  className="font-poppins h-14 w-full rounded-[14px] border-none bg-brand-blue px-5 pr-14 text-center text-base uppercase text-white outline-none placeholder:text-white/55 placeholder:uppercase placeholder:tracking-[0.08em] focus:outline-none"
+                  style={{ fontWeight: 600 }}
                 />
-                <button type="button" onClick={submit} className="flex h-14 shrink-0 items-center rounded-2xl bg-brand-green px-5 font-poppins text-base font-black uppercase text-white">
-                  {t('Go')}
+                <button
+                  type="button"
+                  onClick={submit}
+                  disabled={!input.trim()}
+                  aria-label={t('Go')}
+                  className="absolute right-3 top-1/2 inline-flex size-9 -translate-y-1/2 items-center justify-center rounded-full text-white/85 transition-colors hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-transparent"
+                >
+                  <Send className="size-4" />
                 </button>
               </motion.div>
 

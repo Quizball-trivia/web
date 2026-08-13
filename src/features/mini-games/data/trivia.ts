@@ -26,102 +26,6 @@ interface BilingualTrivia extends Omit<TriviaQuestion, 'q' | 'options'> {
 const BANK: BilingualTrivia[] = [
   {
     id: 'q1',
-    q: { en: 'Which player famously scored the "Hand of God" goal?', ka: 'რომელმა მოთამაშემ გაიტანა ცნობილი გოლი „ღმერთის ხელით“?' },
-    options: [
-      { en: 'Pelé', ka: 'პელე' },
-      { en: 'Diego Maradona', ka: 'დიეგო მარადონა' },
-      { en: 'Johan Cruyff', ka: 'იოჰან კრუიფი' },
-      { en: 'Zinedine Zidane', ka: 'ზინედინ ზიდანი' },
-    ],
-    answer: 1,
-    difficulty: 'easy',
-  },
-  {
-    id: 'q2',
-    q: { en: 'Who is the all-time top scorer in La Liga history?', ka: 'ვინ არის ლა ლიგის ისტორიაში ყველა დროის საუკეთესო ბომბარდირი?' },
-    options: [
-      { en: 'Cristiano Ronaldo', ka: 'კრიშტიანუ რონალდუ' },
-      { en: 'Lionel Messi', ka: 'ლიონელ მესი' },
-      { en: 'Telmo Zarra', ka: 'ტელმო სარა' },
-      { en: 'Hugo Sánchez', ka: 'უგო სანჩესი' },
-    ],
-    answer: 1,
-    difficulty: 'easy',
-  },
-  {
-    id: 'q3',
-    q: { en: 'Which Italian legend spent his entire 25-year professional career at AS Roma?', ka: 'რომელმა იტალიელმა ლეგენდამ გაატარა მთელი თავისი 25-წლიანი პროფესიონალური კარიერა ას რომაში?' },
-    options: [
-      { en: 'Alessandro Del Piero', ka: 'ალესანდრო დელ პიერო' },
-      { en: 'Paolo Maldini', ka: 'პაოლო მალდინი' },
-      { en: 'Francesco Totti', ka: 'ფრანჩესკო ტოტი' },
-      { en: 'Andrea Pirlo', ka: 'ანდრეა პირლო' },
-    ],
-    answer: 2,
-    difficulty: 'easy',
-  },
-  {
-    id: 'q4',
-    q: { en: 'Which club is universally known as "Los Blancos"?', ka: 'რომელი კლუბია საყოველთაოდ ცნობილი როგორც „ლოს ბლანკოსი“?' },
-    options: [
-      { en: 'Sevilla', ka: 'სევილია' },
-      { en: 'Valencia', ka: 'ვალენსია' },
-      { en: 'Real Madrid', ka: 'რეალ მადრიდი' },
-      { en: 'Atletico Madrid', ka: 'ატლეტიკო მადრიდი' },
-    ],
-    answer: 2,
-    difficulty: 'easy',
-  },
-  {
-    id: 'q5',
-    q: { en: 'Which of these legendary players has NEVER won the Ballon d\'Or?', ka: 'ამ ლეგენდარული მოთამაშეებიდან რომელს არასოდეს მოუგია ოქროს ბურთი?' },
-    options: [
-      { en: 'Kaká', ka: 'კაკა' },
-      { en: 'Andrés Iniesta', ka: 'ანდრეს ინიესტა' },
-      { en: 'Ronaldinho', ka: 'რონალდინიო' },
-      { en: 'Fabio Cannavaro', ka: 'ფაბიო კანავარო' },
-    ],
-    answer: 1,
-    difficulty: 'easy',
-  },
-  {
-    id: 'q6',
-    q: { en: 'Which stadium is known as "The Theatre of Dreams"?', ka: 'რომელი სტადიონია ცნობილი როგორც „ოცნებების თეატრი“?' },
-    options: [
-      { en: 'Anfield', ka: 'ენფილდი' },
-      { en: 'Stamford Bridge', ka: 'სტემფორდ ბრიჯი' },
-      { en: 'Old Trafford', ka: 'ოლდ ტრაფორდი' },
-      { en: 'Emirates Stadium', ka: 'ემირეიტს სთედიუმი' },
-    ],
-    answer: 2,
-    difficulty: 'easy',
-  },
-  {
-    id: 'q7',
-    q: { en: 'Which country will co-host the 2026 Men\'s FIFA World Cup along with the USA and Mexico?', ka: 'რომელი ქვეყანა უმასპინძლებს 2026 წლის მამაკაცთა ფიფას მსოფლიო ჩემპიონატს აშშ-სთან და მექსიკასთან ერთად?' },
-    options: [
-      { en: 'Brazil', ka: 'ბრაზილია' },
-      { en: 'Costa Rica', ka: 'კოსტა-რიკა' },
-      { en: 'Canada', ka: 'კანადა' },
-      { en: 'Colombia', ka: 'კოლუმბია' },
-    ],
-    answer: 2,
-    difficulty: 'easy',
-  },
-  {
-    id: 'q8',
-    q: { en: 'Which club did David Beckham join immediately after leaving Manchester United in 2003?', ka: 'რომელ კლუბს შეუერთდა დევიდ ბექჰემი 2003 წელს მანჩესტერ იუნაიტედის დატოვებისთანავე?' },
-    options: [
-      { en: 'LA Galaxy', ka: 'ელ ეი გალაქსი' },
-      { en: 'AC Milan', ka: 'მილანი' },
-      { en: 'Real Madrid', ka: 'რეალ მადრიდი' },
-      { en: 'Paris Saint-Germain', ka: 'პარი სენ-ჟერმენი' },
-    ],
-    answer: 2,
-    difficulty: 'easy',
-  },
-  {
-    id: 'q9',
     q: { en: 'Which club has won the most Serie A titles in Italy?', ka: 'რომელ კლუბს აქვს მოგებული ყველაზე მეტი სერია A-ს ტიტული იტალიაში?' },
     options: [
       { en: 'AC Milan', ka: 'მილანი' },
@@ -133,7 +37,7 @@ const BANK: BilingualTrivia[] = [
     difficulty: 'medium',
   },
   {
-    id: 'q10',
+    id: 'q2',
     q: { en: 'Who is the all-time top scorer for the England men\'s national team?', ka: 'ვინ არის ინგლისის ვაჟთა ეროვნული ნაკრების ყველა დროის საუკეთესო ბომბარდირი?' },
     options: [
       { en: 'Wayne Rooney', ka: 'უეინ რუნი' },
@@ -145,7 +49,7 @@ const BANK: BilingualTrivia[] = [
     difficulty: 'medium',
   },
   {
-    id: 'q11',
+    id: 'q3',
     q: { en: 'Which player holds the record for the most red cards in La Liga history?', ka: 'რომელ მოთამაშეს ეკუთვნის ლა ლიგის ისტორიაში ყველაზე მეტი წითელი ბარათის რეკორდი?' },
     options: [
       { en: 'Pepe', ka: 'პეპე' },
@@ -157,7 +61,7 @@ const BANK: BilingualTrivia[] = [
     difficulty: 'medium',
   },
   {
-    id: 'q12',
+    id: 'q4',
     q: { en: 'Which African player won the Ballon d\'Or in 1995?', ka: 'რომელმა აფრიკელმა მოთამაშემ მოიგო ოქროს ბურთი 1995 წელს?' },
     options: [
       { en: 'Didier Drogba', ka: 'დიდიე დროგბა' },
@@ -169,7 +73,7 @@ const BANK: BilingualTrivia[] = [
     difficulty: 'medium',
   },
   {
-    id: 'q13',
+    id: 'q5',
     q: { en: 'Which player won the Golden Boot at the 2014 Men\'s FIFA World Cup?', ka: 'რომელმა მოთამაშემ მოიგო ოქროს ბუცი 2014 წლის მამაკაცთა ფიფას მსოფლიო ჩემპიონატზე?' },
     options: [
       { en: 'Thomas Müller', ka: 'თომას მიულერი' },
@@ -181,7 +85,7 @@ const BANK: BilingualTrivia[] = [
     difficulty: 'medium',
   },
   {
-    id: 'q14',
+    id: 'q6',
     q: { en: 'Which manager has won the most UEFA Champions League titles?', ka: 'რომელ მწვრთნელს აქვს მოგებული უეფას ჩემპიონთა ლიგის ყველაზე მეტი ტიტული?' },
     options: [
       { en: 'Pep Guardiola', ka: 'პეპ გვარდიოლა' },
@@ -193,7 +97,7 @@ const BANK: BilingualTrivia[] = [
     difficulty: 'medium',
   },
   {
-    id: 'q15',
+    id: 'q7',
     q: { en: 'Who scored the winning goal in extra time during the 2010 World Cup final?', ka: 'ვინ გაიტანა გამარჯვების გოლი დამატებით დროში 2010 წლის მსოფლიო ჩემპიონატის ფინალში?' },
     options: [
       { en: 'David Villa', ka: 'დავიდ ვილია' },
@@ -205,7 +109,7 @@ const BANK: BilingualTrivia[] = [
     difficulty: 'medium',
   },
   {
-    id: 'q16',
+    id: 'q8',
     q: { en: 'Which team won the 2004 UEFA European Championship in a massive upset?', ka: 'რომელმა გუნდმა მოიგო 2004 წლის უეფას ევროპის ჩემპიონატი მოულოდნელი გამარჯვებით?' },
     options: [
       { en: 'Portugal', ka: 'პორტუგალია' },
@@ -217,7 +121,7 @@ const BANK: BilingualTrivia[] = [
     difficulty: 'medium',
   },
   {
-    id: 'q17',
+    id: 'q9',
     q: { en: 'Which English team was the first to win the European Cup in 1968?', ka: 'რომელი ინგლისური გუნდი იყო პირველი, რომელმაც 1968 წელს ევროპის თასი მოიგო?' },
     options: [
       { en: 'Liverpool', ka: 'ლივერპული' },
@@ -229,7 +133,7 @@ const BANK: BilingualTrivia[] = [
     difficulty: 'medium',
   },
   {
-    id: 'q18',
+    id: 'q10',
     q: { en: 'Which club won the 2003-04 UEFA Champions League under Jose Mourinho?', ka: 'რომელმა კლუბმა მოიგო 2003-04 წლების უეფას ჩემპიონთა ლიგა ჟოზე მოურინიოს ხელმძღვანელობით?' },
     options: [
       { en: 'Chelsea', ka: 'ჩელსი' },
@@ -241,7 +145,7 @@ const BANK: BilingualTrivia[] = [
     difficulty: 'medium',
   },
   {
-    id: 'q19',
+    id: 'q11',
     q: { en: 'What was the original name of Manchester United when the club was founded in 1878?', ka: 'რა იყო მანჩესტერ იუნაიტედის თავდაპირველი სახელი, როდესაც კლუბი 1878 წელს დაარსდა?' },
     options: [
       { en: 'Manchester Central FC', ka: 'მანჩესტერ ცენტრალ ფკ' },
@@ -253,7 +157,7 @@ const BANK: BilingualTrivia[] = [
     difficulty: 'hard',
   },
   {
-    id: 'q20',
+    id: 'q12',
     q: { en: 'Which club did Thierry Henry play for immediately before joining Arsenal in 1999?', ka: 'რომელ კლუბში თამაშობდა ტიერი ანრი 1999 წელს არსენალში გადასვლამდე?' },
     options: [
       { en: 'AS Monaco', ka: 'ას მონაკო' },
@@ -265,7 +169,7 @@ const BANK: BilingualTrivia[] = [
     difficulty: 'hard',
   },
   {
-    id: 'q21',
+    id: 'q13',
     q: { en: 'Who was the first football player to cost over €100 million in a transfer?', ka: 'ვინ იყო პირველი ფეხბურთელი, რომლის ტრანსფერიც 100 მილიონ ევროზე მეტი დაჯდა?' },
     options: [
       { en: 'Cristiano Ronaldo', ka: 'კრიშტიანუ რონალდუ' },
@@ -277,7 +181,7 @@ const BANK: BilingualTrivia[] = [
     difficulty: 'hard',
   },
   {
-    id: 'q22',
+    id: 'q14',
     q: { en: 'Which player has made the most appearances in Premier League history?', ka: 'რომელ მოთამაშეს აქვს ჩატარებული ყველაზე მეტი მატჩი პრემიერ ლიგის ისტორიაში?' },
     options: [
       { en: 'Ryan Giggs', ka: 'რაიან გიგზი' },
@@ -289,7 +193,7 @@ const BANK: BilingualTrivia[] = [
     difficulty: 'hard',
   },
   {
-    id: 'q23',
+    id: 'q15',
     q: { en: 'Who is the highest-scoring defender in the history of professional football?', ka: 'ვინ არის ყველაზე მეტი გოლის ავტორი მცველი პროფესიონალური ფეხბურთის ისტორიაში?' },
     options: [
       { en: 'Roberto Carlos', ka: 'რობერტო კარლოსი' },
@@ -301,7 +205,7 @@ const BANK: BilingualTrivia[] = [
     difficulty: 'hard',
   },
   {
-    id: 'q24',
+    id: 'q16',
     q: { en: 'Which player holds the record for the most goals in a single Men\'s World Cup tournament (13 goals)?', ka: 'რომელ მოთამაშეს ეკუთვნის რეკორდი ერთ მსოფლიო ჩემპიონატზე გატანილი ყველაზე მეტი გოლით (13 გოლი)?' },
     options: [
       { en: 'Just Fontaine', ka: 'ჟიუსტ ფონტენი' },
@@ -310,6 +214,30 @@ const BANK: BilingualTrivia[] = [
       { en: 'Pelé', ka: 'პელე' },
     ],
     answer: 0,
+    difficulty: 'hard',
+  },
+  {
+    id: 'q17',
+    q: { en: 'Which African nation won the gold medal in men\'s football at the 1996 Olympic Games?', ka: 'რომელმა აფრიკულმა ქვეყანამ მოიპოვა ოქროს მედალი ვაჟთა ფეხბურთში 1996 წლის ოლიმპიურ თამაშებზე?' },
+    options: [
+      { en: 'Cameroon', ka: 'კამერუნი' },
+      { en: 'Senegal', ka: 'სენეგალი' },
+      { en: 'Ghana', ka: 'განა' },
+      { en: 'Nigeria', ka: 'ნიგერია' },
+    ],
+    answer: 3,
+    difficulty: 'hard',
+  },
+  {
+    id: 'q18',
+    q: { en: 'Who is the all-time leading goalscorer in the French Ligue 1?', ka: 'ვინ არის საფრანგეთის ლიგა 1-ის ყველა დროის საუკეთესო ბომბარდირი?' },
+    options: [
+      { en: 'Kylian Mbappé', ka: 'კილიან მბაპე' },
+      { en: 'Jean-Pierre Papin', ka: 'ჟან-პიერ პაპენი' },
+      { en: 'Delio Onnis', ka: 'დელიო ონისი' },
+      { en: 'Thierry Henry', ka: 'ტიერი ანრი' },
+    ],
+    answer: 2,
     difficulty: 'hard',
   },
 ];

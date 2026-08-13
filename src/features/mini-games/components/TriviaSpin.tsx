@@ -146,7 +146,7 @@ export function TriviaSpin({ backHref }: { backHref?: string } = {}) {
                 <button
                   type="button"
                   onClick={nextQuestion}
-                  className="rounded-xl bg-brand-cyan px-4 py-2 font-poppins text-sm font-black uppercase text-white"
+                  className="rounded-xl bg-brand-yellow px-4 py-2 font-poppins text-sm font-black uppercase text-black"
                 >
                   {t('Next')}
                 </button>
