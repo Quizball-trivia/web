@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { AvatarCustomization } from '../types/game';
-import { customizationFromAvatarValue } from '@/lib/avatars';
+import { resolveAvatarCustomization } from '@/lib/avatars';
 import { AVATAR_SLOTS, getAvatarPart, getSkinPart } from '@/lib/avatars/parts';
 import { normalizeCountryCode } from '@/lib/geo/countryCode';
 import { cn } from '@/lib/utils';
@@ -34,22 +34,6 @@ const sizeClasses: Record<NonNullable<AvatarDisplayProps['size']>, string> = {
   xxl: 'size-28 sm:size-32 md:size-36',
 };
 
-/** Merge anything encoded in `customization.base` into the customization. */
-function resolveCustomization(c: AvatarCustomization): AvatarCustomization {
-  const merged = customizationFromAvatarValue(c.base);
-  const hasStructuredSlots = (["skin", "jersey", "hair", "glasses", "facialHair"] as const).some((slot) =>
-    Object.prototype.hasOwnProperty.call(c, slot),
-  );
-  return {
-    skin: c.skin ?? merged.skin,
-    jersey: hasStructuredSlots ? c.jersey : merged.jersey,
-    hair: hasStructuredSlots ? c.hair : merged.hair,
-    glasses: hasStructuredSlots ? c.glasses : merged.glasses,
-    facialHair: hasStructuredSlots ? c.facialHair : merged.facialHair,
-    base: c.base ?? merged.base,
-  };
-}
-
 export function AvatarDisplay({
   customization,
   size = 'md',
@@ -59,7 +43,7 @@ export function AvatarDisplay({
 }: AvatarDisplayProps) {
   const normalizedCountryCode = normalizeCountryCode(countryCode);
 
-  const merged = resolveCustomization(customization);
+  const merged = resolveAvatarCustomization(customization);
   const skinAsset = getSkinPart(merged.skin).asset;
 
   const cropClass = shape === 'circle' ? 'rounded-full' : 'rounded-2xl';

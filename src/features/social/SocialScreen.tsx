@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useDebounce } from "@/hooks/useDebounce";
 import { cn } from "@/lib/utils";
 import { useProfileNavigation } from "@/lib/hooks/useProfileNavigation";
@@ -27,7 +27,6 @@ import { TierFrameAvatar } from "@/components/TierFrameAvatar";
 import { getSocket } from "@/lib/realtime/socket-client";
 import type { ErrorPayload, LobbyChallengeCreatedPayload } from "@/lib/realtime/socket.types";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
-import { queryKeys } from "@/lib/queries/queryKeys";
 import { trackChallengeInviteSent } from "@/lib/analytics/game-events";
 import {
   useFriendRequests,
@@ -37,12 +36,8 @@ import {
   type FriendRequestListItem,
   type SocialPlayer,
 } from "@/lib/queries/social.queries";
-import {
-  acceptFriendRequest,
-  createFriendRequest,
-  declineFriendRequest,
-  removeFriend,
-} from "@/lib/repositories/social.repo";
+import { removeFriend } from "@/lib/repositories/social.repo";
+import { useFriendRequestMutations } from "@/features/social/hooks/useFriendRequestMutations";
 
 type Tab = "friends" | "find";
 
@@ -367,7 +362,6 @@ function SectionHeader({ title }: { title: string }) {
 export function SocialScreen() {
   const { t } = useLocale();
   const router = useRouter();
-  const queryClient = useQueryClient();
 
   const [activeTab, setActiveTab] = useState<Tab>("friends");
   const [query, setQuery] = useState("");
@@ -388,40 +382,23 @@ export function SocialScreen() {
   const requestsQuery = useFriendRequests();
   const searchQuery = useSocialSearch(debouncedQuery);
 
-  const invalidateSocialQueries = async () => {
-    await queryClient.invalidateQueries({ queryKey: queryKeys.social.all });
-  };
-
-  const sendRequestMutation = useMutation({
-    mutationFn: (targetUserId: string) => createFriendRequest({ targetUserId }),
-    onSuccess: async () => {
-      await invalidateSocialQueries();
-      toast.success(t('social.toastRequestSent'));
+  const {
+    sendRequestMutation,
+    acceptRequestMutation,
+    declineRequestMutation,
+    invalidateSocialQueries,
+  } = useFriendRequestMutations({
+    send: {
+      success: t('social.toastRequestSent'),
+      error: (error) => getApiErrorMessage(error, t('social.toastFailedSend')),
     },
-    onError: (error) => {
-      toast.error(getApiErrorMessage(error, t('social.toastFailedSend')));
+    accept: {
+      success: t('social.toastRequestAccepted'),
+      error: (error) => getApiErrorMessage(error, t('social.toastFailedAccept')),
     },
-  });
-
-  const acceptRequestMutation = useMutation({
-    mutationFn: (requestId: string) => acceptFriendRequest(requestId),
-    onSuccess: async () => {
-      await invalidateSocialQueries();
-      toast.success(t('social.toastRequestAccepted'));
-    },
-    onError: (error) => {
-      toast.error(getApiErrorMessage(error, t('social.toastFailedAccept')));
-    },
-  });
-
-  const declineRequestMutation = useMutation({
-    mutationFn: (requestId: string) => declineFriendRequest(requestId),
-    onSuccess: async () => {
-      await invalidateSocialQueries();
-      toast.success(t('social.toastRequestDeclined'));
-    },
-    onError: (error) => {
-      toast.error(getApiErrorMessage(error, t('social.toastFailedDecline')));
+    decline: {
+      success: t('social.toastRequestDeclined'),
+      error: (error) => getApiErrorMessage(error, t('social.toastFailedDecline')),
     },
   });
 

@@ -15,6 +15,7 @@ import { AvatarDisplay } from "@/components/AvatarDisplay";
 import type { OpponentInfo } from "@/lib/realtime/socket.types";
 import type { AvatarCustomization } from "@/types/game";
 import { AVATAR_COLORS, getAvatarAsset } from "@/lib/avatars";
+import { readCachedRankedGeoHint } from "@/lib/match/rankedGeoHint";
 import {
   CITY_DATA,
   EXTRA_SEARCH_LOCATIONS,
@@ -89,48 +90,6 @@ const PREPARING_MATCH_STUCK_TIMEOUT_MS = 20000;
 const SEARCH_BGM_START_DELAY_MS = 700;
 
 const MOBILE_BREAKPOINT = 768;
-const GEO_HINT_CACHE_KEY = "ranked_geo_hint_v1";
-
-interface CachedGeoHint {
-  city?: string;
-  region?: string;
-  country?: string;
-  countryCode?: string;
-  latitude?: number;
-  longitude?: number;
-  source?: string;
-}
-
-function isCachedGeoHint(value: unknown): value is CachedGeoHint {
-  if (!value || typeof value !== "object") return false;
-  const candidate = value as Partial<CachedGeoHint>;
-  const isMaybeNumber = (v: unknown) =>
-    v === undefined || typeof v === "number";
-  const isMaybeString = (v: unknown) =>
-    v === undefined || typeof v === "string";
-  return (
-    isMaybeString(candidate.city) &&
-    isMaybeString(candidate.region) &&
-    isMaybeString(candidate.country) &&
-    isMaybeString(candidate.countryCode) &&
-    isMaybeNumber(candidate.latitude) &&
-    isMaybeNumber(candidate.longitude) &&
-    isMaybeString(candidate.source)
-  );
-}
-
-function readCachedGeoHint(): CachedGeoHint | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = window.localStorage.getItem(GEO_HINT_CACHE_KEY);
-    if (!raw) return null;
-    const parsed: unknown = JSON.parse(raw);
-    return isCachedGeoHint(parsed) ? parsed : null;
-  } catch {
-    return null;
-  }
-}
-
 // ── World Cup 2026 theme ──
 // The 2026 brand identity is a neon-bright multicolor look on dark — led by
 // magenta/pink + electric blue, with cyan, lime, violet, orange, yellow.
@@ -518,7 +477,7 @@ export function MatchmakingMapScreen({
 }: MatchmakingMapScreenProps) {
   const { t } = useLocale();
   const fakePlayers = useMemo(() => generateFakePlayers(), []);
-  const localGeoHint = readCachedGeoHint();
+  const localGeoHint = readCachedRankedGeoHint();
   const [visiblePins, setVisiblePins] = useState<Set<number>>(new Set());
   const [searchTime, setSearchTime] = useState(0);
   const [preparingMatchStuck, setPreparingMatchStuck] = useState(false);
