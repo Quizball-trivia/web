@@ -1,11 +1,12 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Check, X, Lock } from 'lucide-react';
 import { MiniGameShell, StatPill } from './MiniGameShell';
-import { TRIVIA } from '../data/trivia';
+import { getTrivia } from '../data/trivia';
 import { money } from '../lib/odds';
+import { useMiniLocale, useMiniT } from '../lib/i18n';
 
 const MULTS = [1, 2, 4, 8, 16, 32];
 const TOP = MULTS.length - 1;
@@ -16,6 +17,8 @@ const SURVIVAL = [1, 0.82, 0.68, 0.52, 0.38, 0.24];
 type Phase = 'idle' | 'playing' | 'decision' | 'cashed' | 'busted';
 
 export function CashOutLadder({ backHref }: { backHref?: string } = {}) {
+  const t = useMiniT();
+  const miniLocale = useMiniLocale();
   const [points, setPoints] = useState(1000);
   const [phase, setPhase] = useState<Phase>('idle');
   const [level, setLevel] = useState(0);
@@ -27,6 +30,7 @@ export function CashOutLadder({ backHref }: { backHref?: string } = {}) {
   const timers = useRef<number[]>([]);
   useEffect(() => () => timers.current.forEach((t) => window.clearTimeout(t)), []);
 
+  const TRIVIA = useMemo(() => getTrivia(miniLocale), [miniLocale]);
   const question = TRIVIA[qIndex % TRIVIA.length];
 
   const start = () => {
@@ -100,10 +104,10 @@ export function CashOutLadder({ backHref }: { backHref?: string } = {}) {
   return (
     <MiniGameShell
       backHref={backHref}
-      title="Cash Out Ladder"
-      subtitle="Bank it or climb — one wrong answer wipes it all"
+      title={t('Cash Out Ladder')}
+      subtitle={t('Bank it or climb — one wrong answer wipes it all')}
       accent="#FF9600"
-      headerRight={<StatPill label="Points" value={points.toLocaleString()} color="#FF9600" />}
+      headerRight={<StatPill label={t('Points')} value={points.toLocaleString()} color="#FF9600" />}
     >
       <div className="mt-2 flex gap-4">
         {/* Ladder */}
@@ -138,7 +142,7 @@ export function CashOutLadder({ backHref }: { backHref?: string } = {}) {
         <div className="flex min-w-0 flex-1 flex-col">
           <div className="rounded-2xl border-2 border-brand-orange/30 bg-gradient-to-b from-brand-orange/[0.1] to-transparent p-3 text-center">
             <div className="font-poppins text-[10px] font-black uppercase tracking-[0.15em] text-brand-orange/80">
-              {phase === 'idle' ? 'Stake' : phase === 'busted' ? 'Wiped' : phase === 'cashed' ? 'Banked' : 'Pot at risk'}
+              {phase === 'idle' ? t('Stake') : phase === 'busted' ? t('Wiped') : phase === 'cashed' ? t('Banked') : t('Pot at risk')}
             </div>
             <AnimatePresence mode="popLayout">
               <motion.div
@@ -152,14 +156,14 @@ export function CashOutLadder({ backHref }: { backHref?: string } = {}) {
                 {money(phase === 'idle' ? STAKE : phase === 'busted' ? 0 : phase === 'cashed' ? banked : potNow)}
               </motion.div>
             </AnimatePresence>
-            <div className="font-poppins text-[10px] font-semibold text-white/40">{MULTS[level]}x on {money(STAKE)}</div>
+            <div className="font-poppins text-[10px] font-semibold text-white/40">{t('{mult}x on {stake}', { mult: MULTS[level], stake: money(STAKE) })}</div>
           </div>
 
           <div className="mt-3 flex-1">
             <AnimatePresence mode="wait">
               {phase === 'idle' && (
                 <motion.button key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={start} className="flex h-full min-h-[120px] w-full items-center justify-center rounded-2xl bg-brand-orange font-poppins text-lg font-black uppercase tracking-wide text-black">
-                  Stake {money(STAKE)} & climb
+                  {t('Stake {stake} & climb', { stake: money(STAKE) })}
                 </motion.button>
               )}
 
@@ -200,13 +204,13 @@ export function CashOutLadder({ backHref }: { backHref?: string } = {}) {
               {phase === 'decision' && (
                 <motion.div key="decision" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="flex h-full flex-col justify-center gap-2">
                   <div className="text-center font-poppins text-xs font-bold text-white/55">
-                    Bank <span className="text-brand-green">{money(potNow)}</span> now, or risk it for <span className="text-brand-orange">{money(STAKE * MULTS[Math.min(level + 1, TOP)])}</span>?
+                    {t('Bank {pot} now, or risk it for {next}?', { pot: money(potNow), next: money(STAKE * MULTS[Math.min(level + 1, TOP)]) })}
                   </div>
                   <button type="button" onClick={bank} className="flex h-14 items-center justify-center gap-2 rounded-2xl bg-brand-green font-poppins text-base font-black uppercase text-white">
-                    <Lock className="size-4" /> Bank {money(potNow)}
+                    <Lock className="size-4" /> {t('Bank {pot}', { pot: money(potNow) })}
                   </button>
                   <button type="button" onClick={cont} className="h-14 rounded-2xl border-2 border-brand-orange bg-brand-orange/10 font-poppins text-base font-black uppercase text-brand-orange">
-                    Climb to {MULTS[Math.min(level + 1, TOP)]}x
+                    {t('Climb to {mult}x', { mult: MULTS[Math.min(level + 1, TOP)] })}
                   </button>
                 </motion.div>
               )}
@@ -218,10 +222,10 @@ export function CashOutLadder({ backHref }: { backHref?: string } = {}) {
               {phase === 'busted' && (
                 <motion.div key="busted" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex h-full flex-col items-center justify-center gap-3 text-center">
                   <div className="text-4xl">💥</div>
-                  <div className="font-poppins text-xl font-black uppercase text-brand-red">Wiped!</div>
-                  <p className="font-poppins text-xs font-semibold text-white/50">Wrong answer at {MULTS[level]}x — the whole pot is gone.</p>
+                  <div className="font-poppins text-xl font-black uppercase text-brand-red">{t('Wiped!')}</div>
+                  <p className="font-poppins text-xs font-semibold text-white/50">{t('Wrong answer at {mult}x — the whole pot is gone.', { mult: MULTS[level] })}</p>
                   <button type="button" onClick={() => setPhase('idle')} className="h-12 w-full rounded-2xl bg-brand-orange font-poppins text-base font-black uppercase text-black">
-                    Try again
+                    {t('Try again')}
                   </button>
                 </motion.div>
               )}
@@ -234,6 +238,7 @@ export function CashOutLadder({ backHref }: { backHref?: string } = {}) {
 }
 
 function GhostReveal({ banked, level, ghostBust, ghostReveal, onRestart }: { banked: number; level: number; ghostBust: number | null; ghostReveal: number; onRestart: () => void }) {
+  const t = useMiniT();
   const reachedTop = ghostBust === TOP + 1;
   const done = reachedTop ? ghostReveal >= TOP : ghostBust !== null && ghostReveal >= ghostBust - 1;
   const wouldHave = ghostBust === null ? level : reachedTop ? TOP : ghostBust - 1;
@@ -241,18 +246,18 @@ function GhostReveal({ banked, level, ghostBust, ghostReveal, onRestart }: { ban
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex h-full flex-col items-center justify-center gap-2 text-center">
       <div className="flex items-center gap-2 font-poppins text-lg font-black uppercase text-brand-green">
-        <Lock className="size-4" /> Banked {money(banked)}
+        <Lock className="size-4" /> {t('Banked {amount}', { amount: money(banked) })}
       </div>
       <AnimatePresence>
         {done && (
           <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="mt-1">
             {reachedTop ? (
-              <p className="font-poppins text-sm font-black text-brand-red">😱 It would have hit 32x!</p>
+              <p className="font-poppins text-sm font-black text-brand-red">{t('😱 It would have hit 32x!')}</p>
             ) : dodged ? (
-              <p className="font-poppins text-sm font-black text-brand-green">Smart! You&apos;d have busted at {MULTS[ghostBust!]}x.</p>
+              <p className="font-poppins text-sm font-black text-brand-green">{t("Smart! You'd have busted at {mult}x.", { mult: MULTS[ghostBust!] })}</p>
             ) : (
               <p className="font-poppins text-sm font-bold text-white/70">
-                It would&apos;ve climbed to <span className="font-black text-brand-orange">{MULTS[wouldHave]}x</span> then busted at {MULTS[ghostBust!]}x.
+                {t("It would've climbed to {a}x then busted at {b}x.", { a: MULTS[wouldHave], b: MULTS[ghostBust!] })}
               </p>
             )}
           </motion.div>
@@ -260,7 +265,7 @@ function GhostReveal({ banked, level, ghostBust, ghostReveal, onRestart }: { ban
       </AnimatePresence>
       {done && (
         <button type="button" onClick={onRestart} className="mt-3 h-12 w-full rounded-2xl bg-brand-orange font-poppins text-base font-black uppercase text-black">
-          Go again
+          {t('Go again')}
         </button>
       )}
     </motion.div>

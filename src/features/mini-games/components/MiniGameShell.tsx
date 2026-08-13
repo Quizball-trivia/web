@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { ArrowLeft } from 'lucide-react';
 import { motion } from 'motion/react';
+import { useMiniT } from '../lib/i18n';
 
 /**
  * Full-screen shell for a mini-game prototype: a dark page, a header with a back
@@ -25,6 +26,7 @@ export function MiniGameShell({
   children: React.ReactNode;
   backHref?: string;
 }) {
+  const t = useMiniT();
   return (
     <div className="relative flex min-h-[100dvh] flex-col overflow-hidden bg-surface-page text-white">
       {/* Ambient glow */}
@@ -38,7 +40,7 @@ export function MiniGameShell({
       <header className="relative z-10 flex items-center gap-3 px-4 pt-4 pb-2 sm:px-6">
         <Link
           href={backHref}
-          aria-label="Back to mini-games"
+          aria-label={t('Back')}
           className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-white/70 transition-colors hover:bg-white/10 hover:text-white"
         >
           <ArrowLeft className="size-5" />
@@ -61,10 +63,8 @@ export function MiniGameShell({
       >
         {children}
       </motion.main>
-
-      {/* Prototype notice — these games run on virtual points only. */}
       <p className="relative z-10 pb-3 pt-1 text-center font-poppins text-[10px] font-semibold uppercase tracking-wider text-white/30">
-        Prototype — virtual points only, no real money or rewards · პროტოტიპი — მხოლოდ ვირტუალური ქულები
+        {t('Prototype — virtual points only, no real money or rewards')}
       </p>
     </div>
   );

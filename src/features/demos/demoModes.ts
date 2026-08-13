@@ -1,4 +1,3 @@
-import { DAILY_CHALLENGE_VISUALS } from "@/lib/domain/dailyChallengeVisuals";
 import type { DailyChallengeType } from "@/lib/domain/dailyChallenge";
 import type { Locale } from "@/lib/i18n/messages";
 
@@ -8,8 +7,6 @@ export interface DemoModeCard {
   slug: string;
   title: DemoI18nText;
   description: DemoI18nText;
-  icon: string;
-  iconBgColor: string;
   group: "featured" | "daily";
   dailyType?: DailyChallengeType;
 }
@@ -25,8 +22,6 @@ const HIDDEN_DEMO_MODES: DemoModeCard[] = [
       en: "The flagship head-to-head quiz duel — bans, halves and a live scoreboard.",
       ka: "მთავარი რეჟიმი — პირისპირ ქვიზ-დუელი ბანებით, ტაიმებით და ცოცხალი ანგარიშით.",
     },
-    icon: "\u{26BD}",
-    iconBgColor: "bg-emerald-500/20",
     group: "featured",
   },
   {
@@ -36,8 +31,6 @@ const HIDDEN_DEMO_MODES: DemoModeCard[] = [
       en: "The weekly tournament — qualifiers, playoff bracket and the 5-round Gauntlet.",
       ka: "ყოველკვირეული ტურნირი — შესარჩევი, პლეი-ოფი და 5-რაუნდიანი განტლეტი.",
     },
-    icon: "\u{1F3C6}",
-    iconBgColor: "bg-yellow-500/20",
     group: "featured",
   },
 ];
@@ -50,8 +43,6 @@ export const FEATURED_DEMO_MODES: DemoModeCard[] = [
       en: "Bid against rivals to sign mystery footballers and build the best squad.",
       ka: "ივაჭრე მეტოქეების წინააღმდეგ იდუმალ ფეხბურთელებზე და ააწყვე საუკეთესო გუნდი.",
     },
-    icon: "\u{1F528}",
-    iconBgColor: "bg-purple-500/20",
     group: "featured",
   },
 ];
@@ -66,8 +57,6 @@ export const MINI_GAME_DEMO_MODES: DemoModeCard[] = [
       en: "Spin the reels — club, position, nation — then name a player who fits.",
       ka: "დაატრიალე — კლუბი, პოზიცია, ქვეყანა — და დაასახელე შესაბამისი ფეხბურთელი.",
     },
-    icon: "\u{1F3B0}",
-    iconBgColor: "bg-yellow-500/20",
     group: "featured",
   },
   {
@@ -77,8 +66,6 @@ export const MINI_GAME_DEMO_MODES: DemoModeCard[] = [
       en: "Answer to earn spins, then let the wheel decide your payout.",
       ka: "უპასუხე, მოაგროვე დატრიალებები და ბორბალმა გადაწყვიტოს შენი მოგება.",
     },
-    icon: "\u{1F3A1}",
-    iconBgColor: "bg-sky-500/20",
     group: "featured",
   },
   {
@@ -88,8 +75,6 @@ export const MINI_GAME_DEMO_MODES: DemoModeCard[] = [
       en: "Answer to earn a shot, pick your corner against the keeper — five rounds.",
       ka: "უპასუხე, მოიგე დარტყმა და აირჩიე კუთხე მეკარის წინააღმდეგ — ხუთი რაუნდი.",
     },
-    icon: "\u{1F945}",
-    iconBgColor: "bg-emerald-500/20",
     group: "featured",
   },
   {
@@ -99,8 +84,6 @@ export const MINI_GAME_DEMO_MODES: DemoModeCard[] = [
       en: "One hard question a day — a pot that climbs until someone cracks it.",
       ka: "დღეში ერთი რთული კითხვა — ჯექპოტი იზრდება, სანამ ვინმე გატეხავს.",
     },
-    icon: "\u{1F4B0}",
-    iconBgColor: "bg-amber-500/20",
     group: "featured",
   },
   {
@@ -110,8 +93,6 @@ export const MINI_GAME_DEMO_MODES: DemoModeCard[] = [
       en: "Link two players through shared clubs — fewer links score higher.",
       ka: "დააკავშირე ორი ფეხბურთელი საერთო კლუბებით — ნაკლები რგოლი, მეტი ქულა.",
     },
-    icon: "\u{1F517}",
-    iconBgColor: "bg-blue-500/20",
     group: "featured",
   },
   {
@@ -121,8 +102,6 @@ export const MINI_GAME_DEMO_MODES: DemoModeCard[] = [
       en: "Pick 5 legs, one stake, all must land — odds multiply, cash out late.",
       ka: "აირჩიე 5 პასუხი ერთი ფსონით — კოეფიციენტები მრავლდება, დროულად დააქეშაუთე.",
     },
-    icon: "\u{1F9E9}",
-    iconBgColor: "bg-green-500/20",
     group: "featured",
   },
   {
@@ -132,8 +111,6 @@ export const MINI_GAME_DEMO_MODES: DemoModeCard[] = [
       en: "Answer to pull player cards and fill your formation — pack-opening reveals.",
       ka: "უპასუხე, ამოიღე ბარათები და შეავსე შენი შემადგენლობა — პაკეტების გახსნით.",
     },
-    icon: "\u{1F0CF}",
-    iconBgColor: "bg-purple-500/20",
     group: "featured",
   },
   {
@@ -143,8 +120,6 @@ export const MINI_GAME_DEMO_MODES: DemoModeCard[] = [
       en: "1x to 32x — bank or climb after each answer; one miss wipes it.",
       ka: "1x-დან 32x-მდე — ყოველი პასუხის შემდეგ აიღე ან აძვერი; ერთი შეცდომა შლის ყველაფერს.",
     },
-    icon: "\u{1FA9C}",
-    iconBgColor: "bg-orange-500/20",
     group: "featured",
   },
   {
@@ -154,8 +129,6 @@ export const MINI_GAME_DEMO_MODES: DemoModeCard[] = [
       en: "A 3-leg slip — answer club questions to boost each leg's odds.",
       ka: "3-პოზიციანი ტალონი — უპასუხე კლუბების კითხვებს და გაზარდე კოეფიციენტები.",
     },
-    icon: "\u{1F680}",
-    iconBgColor: "bg-amber-500/20",
     group: "featured",
   },
   {
@@ -165,8 +138,6 @@ export const MINI_GAME_DEMO_MODES: DemoModeCard[] = [
       en: "A live match at half-time — a 60-second quiz above the markets.",
       ka: "მატჩის შესვენება — 60-წამიანი ქვიზი მარკეტების თავზე.",
     },
-    icon: "\u{1F4FB}",
-    iconBgColor: "bg-red-500/20",
     group: "featured",
   },
   {
@@ -176,8 +147,6 @@ export const MINI_GAME_DEMO_MODES: DemoModeCard[] = [
       en: "Every answer is priced like a market — obvious pays 1.2x, contrarian 6x.",
       ka: "ყველა პასუხი მარკეტივით ფასდება — აშკარა 1.2x-ს იხდის, სარისკო 6x-ს.",
     },
-    icon: "\u{1F4C8}",
-    iconBgColor: "bg-cyan-500/20",
     group: "featured",
   },
 ];
@@ -255,14 +224,12 @@ const buildDailyCard = (type: DailyChallengeType): DemoModeCard => ({
   slug: `daily-${type}`,
   title: DAILY_DEMO_COPY[type].title,
   description: DAILY_DEMO_COPY[type].description,
-  icon: DAILY_CHALLENGE_VISUALS[type].icon,
-  iconBgColor: DAILY_CHALLENGE_VISUALS[type].iconBgColor,
   group: "daily",
   dailyType: type,
 });
 
 export const DAILY_DEMO_MODES: DemoModeCard[] = (
-  Object.keys(DAILY_CHALLENGE_VISUALS) as DailyChallengeType[]
+  Object.keys(DAILY_DEMO_COPY) as DailyChallengeType[]
 )
   .filter((type) => !HIDDEN_DAILY_TYPES.includes(type))
   .map(buildDailyCard);

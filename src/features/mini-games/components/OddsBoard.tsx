@@ -1,22 +1,26 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Check, X, TrendingUp } from 'lucide-react';
 import { MiniGameShell, StatPill } from './MiniGameShell';
-import { ODDS_QUESTIONS } from '../data/oddsBoard';
+import { getOddsQuestions } from '../data/oddsBoard';
 import { impliedPct, formatOdds, money } from '../lib/odds';
+import { useMiniLocale, useMiniT } from '../lib/i18n';
 
 const STAKES = [25, 50, 100];
 
 export function OddsBoard({ backHref }: { backHref?: string } = {}) {
+  const t = useMiniT();
+  const miniLocale = useMiniLocale();
   const [points, setPoints] = useState(500);
   const [qi, setQi] = useState(0);
   const [pick, setPick] = useState<number | null>(null);
   const [stake, setStake] = useState(50);
   const [revealed, setRevealed] = useState(false);
 
-  const q = ODDS_QUESTIONS[qi % ODDS_QUESTIONS.length];
+  const oddsQuestions = useMemo(() => getOddsQuestions(miniLocale), [miniLocale]);
+  const q = oddsQuestions[qi % oddsQuestions.length];
   const won = revealed && pick === q.answer;
   const payout = pick !== null ? Math.round(stake * q.options[pick].odds) : 0;
 
@@ -36,13 +40,13 @@ export function OddsBoard({ backHref }: { backHref?: string } = {}) {
   return (
     <MiniGameShell
       backHref={backHref}
-      title="Odds Board"
-      subtitle="Every answer is a market — back your call"
+      title={t('Odds Board')}
+      subtitle={t('Every answer is a market — back your call')}
       accent="#1CB0F6"
-      headerRight={<StatPill label="Points" value={points.toLocaleString()} color="#1CB0F6" />}
+      headerRight={<StatPill label={t('Points')} value={points.toLocaleString()} color="#1CB0F6" />}
     >
       <div className="mt-2 rounded-2xl border border-white/[0.08] bg-surface-card/60 p-4">
-        <div className="mb-1 font-poppins text-[10px] font-black uppercase tracking-wider text-brand-cyan">Market {qi % ODDS_QUESTIONS.length + 1}</div>
+        <div className="mb-1 font-poppins text-[10px] font-black uppercase tracking-wider text-brand-cyan">{t('Market {n}', { n: qi % oddsQuestions.length + 1 })}</div>
         <p className="font-poppins text-base font-bold leading-snug text-white">{q.q}</p>
       </div>
 
@@ -72,7 +76,7 @@ export function OddsBoard({ backHref }: { backHref?: string } = {}) {
             >
               <div className="min-w-0 flex-1">
                 <div className="truncate font-poppins text-sm font-black text-white">{o.text}</div>
-                <div className="font-poppins text-[10px] font-semibold text-white/40">{impliedPct(o.odds)}% implied</div>
+                <div className="font-poppins text-[10px] font-semibold text-white/40">{t('{pct}% implied', { pct: impliedPct(o.odds) })}</div>
               </div>
               {state === 'correct' && <Check className="size-4 shrink-0 text-brand-green" />}
               {state === 'wrong' && <X className="size-4 shrink-0 text-brand-red" />}
@@ -94,10 +98,10 @@ export function OddsBoard({ backHref }: { backHref?: string } = {}) {
           {!revealed ? (
             <motion.div key="stake" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className="font-poppins text-xs font-black uppercase tracking-wide text-white/50">Your stake</span>
+                <span className="font-poppins text-xs font-black uppercase tracking-wide text-white/50">{t('Your stake')}</span>
                 {pick !== null && (
                   <span className="font-poppins text-xs font-bold text-white/50">
-                    returns <span className="font-black text-brand-cyan">{money(payout)}</span>
+                    {t('returns')} <span className="font-black text-brand-cyan">{money(payout)}</span>
                   </span>
                 )}
               </div>
@@ -122,27 +126,27 @@ export function OddsBoard({ backHref }: { backHref?: string } = {}) {
                 disabled={pick === null || stake > points}
                 className="h-14 w-full rounded-2xl bg-brand-cyan font-poppins text-lg font-black uppercase tracking-wide text-white transition-opacity disabled:opacity-35"
               >
-                {pick === null ? 'Pick an answer to back' : `Place ${money(stake)} on ${q.options[pick].text}`}
+                {pick === null ? t('Pick an answer to back') : t('Place {stake} on {answer}', { stake: money(stake), answer: q.options[pick].text })}
               </button>
             </motion.div>
           ) : (
             <motion.div key="result" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center gap-2 py-2 text-center">
               <div className="text-4xl">{won ? '💰' : '❌'}</div>
               <div className="font-poppins text-xl font-black uppercase" style={{ color: won ? '#58CC02' : '#FB3101' }}>
-                {won ? `Won ${money(payout)}!` : `Lost ${money(stake)}`}
+                {won ? t('Won {amount}!', { amount: money(payout) }) : t('Lost {amount}', { amount: money(stake) })}
               </div>
               {won && pick !== null && q.options[pick].odds >= 4 && (
                 <div className="flex items-center gap-1 font-poppins text-xs font-black uppercase text-brand-orange">
-                  <TrendingUp className="size-3.5" /> Big-odds call!
+                  <TrendingUp className="size-3.5" /> {t('Big-odds call!')}
                 </div>
               )}
               {!won && (
                 <p className="font-poppins text-xs font-semibold text-white/50">
-                  Right answer: <span className="font-black text-white">{q.options[q.answer].text}</span> @ {formatOdds(q.options[q.answer].odds)}
+                  {t('Right answer:')} <span className="font-black text-white">{q.options[q.answer].text}</span> @ {formatOdds(q.options[q.answer].odds)}
                 </p>
               )}
               <button type="button" onClick={next} className="mt-2 h-14 w-full rounded-2xl bg-brand-cyan font-poppins text-lg font-black uppercase tracking-wide text-white">
-                Next market
+                {t('Next market')}
               </button>
             </motion.div>
           )}

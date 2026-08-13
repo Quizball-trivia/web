@@ -1,15 +1,18 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Check, X, Flame, Users, Clock } from 'lucide-react';
 import { MiniGameShell } from './MiniGameShell';
-import { HARD_QUESTIONS } from '../data/trivia';
+import { getHardQuestions } from '../data/trivia';
+import { useMiniLocale, useMiniT } from '../lib/i18n';
 
 const BASE_POT = 12_450;
 const FAILS_START = 1_284;
 
 export function DailyJackpot({ backHref }: { backHref?: string } = {}) {
+  const t = useMiniT();
+  const miniLocale = useMiniLocale();
   const [pot, setPot] = useState(BASE_POT);
   const [fails, setFails] = useState(FAILS_START);
   const [phase, setPhase] = useState<'open' | 'won' | 'lost'>('open');
@@ -17,6 +20,7 @@ export function DailyJackpot({ backHref }: { backHref?: string } = {}) {
   const [msToNext, setMsToNext] = useState<number | null>(null);
   const potRef = useRef<HTMLDivElement>(null);
 
+  const HARD_QUESTIONS = useMemo(() => getHardQuestions(miniLocale), [miniLocale]);
   const question = HARD_QUESTIONS[0];
 
   // Climb the pot while the question is still open — as if others keep failing
@@ -65,10 +69,10 @@ export function DailyJackpot({ backHref }: { backHref?: string } = {}) {
   };
 
   return (
-    <MiniGameShell backHref={backHref} title="Daily Jackpot" subtitle="One hard question. Winner takes the pot." accent="#FFD700">
+    <MiniGameShell backHref={backHref} title={t('Daily Jackpot')} subtitle={t('One hard question. Winner takes the pot.')} accent="#FFD700">
       {/* Pot */}
       <div className="mt-2 rounded-3xl border-2 border-brand-gold/30 bg-gradient-to-b from-brand-gold/[0.12] to-transparent p-5 text-center">
-        <div className="font-poppins text-[11px] font-black uppercase tracking-[0.2em] text-brand-gold/80">Today’s pot</div>
+        <div className="font-poppins text-[11px] font-black uppercase tracking-[0.2em] text-brand-gold/80">{t("Today's pot")}</div>
         <div ref={potRef} className="relative mt-1 flex items-center justify-center">
           <AnimatePresence mode="popLayout">
             <motion.div
@@ -86,7 +90,7 @@ export function DailyJackpot({ backHref }: { backHref?: string } = {}) {
           <span className="ml-2 font-poppins text-lg font-black text-brand-gold/60">🪙</span>
         </div>
         {phase === 'open' && (
-          <div className="mt-1 font-poppins text-[11px] font-semibold text-white/40">climbing with every miss…</div>
+          <div className="mt-1 font-poppins text-[11px] font-semibold text-white/40">{t('climbing with every miss…')}</div>
         )}
       </div>
 
@@ -96,14 +100,14 @@ export function DailyJackpot({ backHref }: { backHref?: string } = {}) {
           <Users className="size-4 shrink-0 text-brand-red-soft" />
           <div>
             <div className="font-poppins text-base font-black tabular-nums leading-none text-white">{fails.toLocaleString()}</div>
-            <div className="font-poppins text-[9px] font-black uppercase tracking-wider text-white/40">failed today</div>
+            <div className="font-poppins text-[9px] font-black uppercase tracking-wider text-white/40">{t('failed today')}</div>
           </div>
         </div>
         <div className="flex items-center gap-2 rounded-2xl border border-white/[0.06] bg-white/[0.03] px-3 py-2.5">
           <Clock className="size-4 shrink-0 text-brand-cyan" />
           <div>
             <div className="font-poppins text-base font-black tabular-nums leading-none text-white">{formatHMS(msToNext)}</div>
-            <div className="font-poppins text-[9px] font-black uppercase tracking-wider text-white/40">next question</div>
+            <div className="font-poppins text-[9px] font-black uppercase tracking-wider text-white/40">{t('next question')}</div>
           </div>
         </div>
       </div>
@@ -114,7 +118,7 @@ export function DailyJackpot({ backHref }: { backHref?: string } = {}) {
           {phase === 'open' && (
             <motion.div key="q" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <div className="mb-2 flex items-center justify-center gap-1.5 font-poppins text-[11px] font-black uppercase tracking-wider text-brand-red">
-                <Flame className="size-3.5" /> Hard · one attempt
+                <Flame className="size-3.5" /> {t('Hard · one attempt')}
               </div>
               <div className="rounded-2xl border border-white/[0.08] bg-surface-card/60 p-4">
                 <p className="mb-3 font-poppins text-lg font-bold leading-snug text-white">{question.q}</p>
@@ -155,14 +159,12 @@ export function DailyJackpot({ backHref }: { backHref?: string } = {}) {
           {phase === 'lost' && (
             <motion.div key="lost" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col items-center gap-3 py-4 text-center">
               <div className="text-4xl">💸</div>
-              <div className="font-poppins text-xl font-black uppercase text-brand-red">Rolled over</div>
+              <div className="font-poppins text-xl font-black uppercase text-brand-red">{t('Rolled over')}</div>
               <p className="max-w-xs font-poppins text-sm font-semibold text-white/55">
-                Not this time — your entry fed the pot. It now sits at{' '}
-                <span className="font-black text-brand-gold">{pot.toLocaleString()}</span>. Come back for the next question in{' '}
-                <span className="font-black text-white">{formatHMS(msToNext)}</span>.
+                {t('Not this time — your entry fed the pot. It now sits at {pot}. Come back for the next question in {time}.', { pot: pot.toLocaleString(), time: formatHMS(msToNext) })}
               </p>
               <button type="button" onClick={replay} className="mt-2 rounded-xl bg-white/10 px-5 py-2.5 font-poppins text-xs font-black uppercase text-white/70 hover:bg-white/15">
-                Replay (dev)
+                {t('Replay (dev)')}
               </button>
             </motion.div>
           )}
@@ -173,6 +175,7 @@ export function DailyJackpot({ backHref }: { backHref?: string } = {}) {
 }
 
 function WinBurst({ pot, onReplay }: { pot: number; onReplay: () => void }) {
+  const t = useMiniT();
   const coins = Array.from({ length: 14 }, (_, i) => i);
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="relative flex flex-col items-center gap-3 py-4 text-center">
@@ -194,12 +197,12 @@ function WinBurst({ pot, onReplay }: { pot: number; onReplay: () => void }) {
       </div>
       <div className="text-5xl">🏆</div>
       <div className="font-poppins text-2xl font-black uppercase text-brand-gold" style={{ textShadow: '0 2px 20px rgba(255,215,0,0.4)' }}>
-        Jackpot won!
+        {t('Jackpot won!')}
       </div>
       <div className="font-poppins text-4xl font-black tabular-nums text-white">+{pot.toLocaleString()} 🪙</div>
-      <p className="font-poppins text-xs font-semibold text-white/45">The pot resets for tomorrow’s question.</p>
+      <p className="font-poppins text-xs font-semibold text-white/45">{t("The pot resets for tomorrow's question.")}</p>
       <button type="button" onClick={onReplay} className="mt-2 rounded-xl bg-white/10 px-5 py-2.5 font-poppins text-xs font-black uppercase text-white/70 hover:bg-white/15">
-        Replay (dev)
+        {t('Replay (dev)')}
       </button>
     </motion.div>
   );

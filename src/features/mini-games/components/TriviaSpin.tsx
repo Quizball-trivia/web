@@ -1,11 +1,12 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Check, X, Coins, Ticket } from 'lucide-react';
 import { MiniGameShell, StatPill } from './MiniGameShell';
 import { RewardWheel, pickWeightedIndex, rotationForIndex, type WheelSegment } from './RewardWheel';
-import { TRIVIA } from '../data/trivia';
+import { getTrivia } from '../data/trivia';
+import { useMiniLocale, useMiniT } from '../lib/i18n';
 
 const SEGMENTS: WheelSegment[] = [
   { label: '25', value: 25, color: '#1CB0F6' },
@@ -21,6 +22,8 @@ const SEGMENTS: WheelSegment[] = [
 const WEIGHTS = [22, 18, 20, 12, 22, 6, 18, 1];
 
 export function TriviaSpin({ backHref }: { backHref?: string } = {}) {
+  const t = useMiniT();
+  const miniLocale = useMiniLocale();
   const [coins, setCoins] = useState(0);
   const [spins, setSpins] = useState(0);
   const [qIndex, setQIndex] = useState(0);
@@ -30,7 +33,8 @@ export function TriviaSpin({ backHref }: { backHref?: string } = {}) {
   const [wheelSpinning, setWheelSpinning] = useState(false);
   const [lastPayout, setLastPayout] = useState<number | null>(null);
 
-  const question = TRIVIA[qIndex % TRIVIA.length];
+  const trivia = useMemo(() => getTrivia(miniLocale), [miniLocale]);
+  const question = trivia[qIndex % trivia.length];
   const answered = selected !== null;
 
   const answer = (i: number) => {
@@ -64,16 +68,16 @@ export function TriviaSpin({ backHref }: { backHref?: string } = {}) {
   return (
     <MiniGameShell
       backHref={backHref}
-      title="Trivia Spin"
-      subtitle="Answer to earn spins — the wheel pays out"
+      title={t('Trivia Spin')}
+      subtitle={t('Answer to earn spins — the wheel pays out')}
       accent="#1CB0F6"
-      headerRight={<StatPill label="Coins" value={coins.toLocaleString()} color="#FFD700" />}
+      headerRight={<StatPill label={t('Coins')} value={coins.toLocaleString()} color="#FFD700" />}
     >
       {/* Trivia block */}
       <div className="mt-2 rounded-2xl border border-white/[0.08] bg-surface-card/60 p-4">
         <div className="mb-3 flex items-center justify-between">
           <span className="font-poppins text-[10px] font-black uppercase tracking-wider text-brand-cyan">
-            Question {qIndex + 1}
+            {t('Question {n}', { n: qIndex + 1 })}
           </span>
           <span
             className={`rounded-full px-2 py-0.5 font-poppins text-[9px] font-black uppercase ${
@@ -84,7 +88,7 @@ export function TriviaSpin({ backHref }: { backHref?: string } = {}) {
                   : 'bg-brand-green/15 text-brand-green'
             }`}
           >
-            {question.difficulty}
+            {t(question.difficulty)}
           </span>
         </div>
         <p className="mb-3 font-poppins text-base font-bold leading-snug text-white">{question.q}</p>
@@ -133,10 +137,10 @@ export function TriviaSpin({ backHref }: { backHref?: string } = {}) {
                 >
                   {selected === question.answer ? (
                     <>
-                      <Ticket className="size-4" /> +1 spin earned
+                      <Ticket className="size-4" /> {t('+1 spin earned')}
                     </>
                   ) : (
-                    'No spin — try the next one'
+                    t('No spin — try the next one')
                   )}
                 </span>
                 <button
@@ -144,7 +148,7 @@ export function TriviaSpin({ backHref }: { backHref?: string } = {}) {
                   onClick={nextQuestion}
                   className="rounded-xl bg-brand-cyan px-4 py-2 font-poppins text-sm font-black uppercase text-white"
                 >
-                  Next
+                  {t('Next')}
                 </button>
               </div>
             </motion.div>
@@ -157,7 +161,7 @@ export function TriviaSpin({ backHref }: { backHref?: string } = {}) {
         <div className="mb-3 flex items-center gap-2 rounded-full bg-white/[0.06] px-4 py-2">
           <Ticket className="size-4 text-brand-yellow" />
           <span className="font-poppins text-sm font-black uppercase text-white">
-            {spins} spin{spins === 1 ? '' : 's'} available
+            {t('{n} spins available', { n: spins })}
           </span>
         </div>
 
@@ -175,7 +179,7 @@ export function TriviaSpin({ backHref }: { backHref?: string } = {}) {
                 className="flex items-center gap-1.5 font-poppins text-xl font-black text-brand-gold"
               >
                 <Coins className="size-5" /> +{lastPayout}
-                {lastPayout >= 1000 && <span className="text-brand-yellow"> JACKPOT!</span>}
+                {lastPayout >= 1000 && <span className="text-brand-yellow"> {t('JACKPOT!')}</span>}
               </motion.div>
             )}
           </AnimatePresence>
@@ -187,7 +191,7 @@ export function TriviaSpin({ backHref }: { backHref?: string } = {}) {
           disabled={spins <= 0 || wheelSpinning}
           className="mt-2 h-14 w-full rounded-2xl bg-brand-yellow font-poppins text-lg font-black uppercase tracking-wide text-black shadow-[0_8px_24px_rgba(255,229,0,0.25)] transition-transform enabled:active:scale-[0.98] disabled:opacity-35"
         >
-          {wheelSpinning ? 'Spinning…' : spins > 0 ? 'Spin the wheel' : 'Answer to earn a spin'}
+          {wheelSpinning ? t('Spinning…') : spins > 0 ? t('Spin the wheel') : t('Answer to earn a spin')}
         </button>
       </div>
     </MiniGameShell>

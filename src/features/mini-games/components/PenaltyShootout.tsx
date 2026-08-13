@@ -1,10 +1,11 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Check, X } from 'lucide-react';
 import { MiniGameShell, StatPill } from './MiniGameShell';
-import { TRIVIA } from '../data/trivia';
+import { getTrivia, type TriviaQuestion } from '../data/trivia';
+import { useMiniLocale, useMiniT } from '../lib/i18n';
 
 const ROUNDS = 5;
 
@@ -33,6 +34,8 @@ type Beat =
   | 'game-over';
 
 export function PenaltyShootout({ backHref }: { backHref?: string } = {}) {
+  const t = useMiniT();
+  const miniLocale = useMiniLocale();
   const [round, setRound] = useState(1);
   const [you, setYou] = useState(0);
   const [ai, setAi] = useState(0);
@@ -44,7 +47,8 @@ export function PenaltyShootout({ backHref }: { backHref?: string } = {}) {
   const [scored, setScored] = useState<boolean | null>(null);
   const [aiOnTarget, setAiOnTarget] = useState(false);
 
-  const question = TRIVIA[qIndex % TRIVIA.length];
+  const trivia = useMemo(() => getTrivia(miniLocale), [miniLocale]);
+  const question = trivia[qIndex % trivia.length];
 
   const answerYours = (i: number) => {
     if (selected !== null) return;
@@ -144,11 +148,11 @@ export function PenaltyShootout({ backHref }: { backHref?: string } = {}) {
   return (
     <MiniGameShell
       backHref={backHref}
-      title="Penalty Shootout"
-      subtitle={`Round ${Math.min(round, ROUNDS)} / ${ROUNDS}`}
+      title={t('Penalty Shootout')}
+      subtitle={t('Round {n} / {total}', { n: Math.min(round, ROUNDS), total: ROUNDS })}
       accent="#58CC02"
       headerRight={
-        <StatPill label="You · AI" value={`${you} – ${ai}`} color="#58CC02" />
+        <StatPill label={t('You · AI')} value={`${you} – ${ai}`} color="#58CC02" />
       }
     >
       {/* Round dots */}
@@ -178,14 +182,14 @@ export function PenaltyShootout({ backHref }: { backHref?: string } = {}) {
           {(beat === 'your-question' || beat === 'ai-question') && (
             <motion.div key={`q-${beat}-${qIndex}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
               <Banner tone={beat === 'your-question' ? 'you' : 'ai'}>
-                {beat === 'your-question' ? 'Answer to earn your shot' : 'Opponent is stepping up…'}
+                {beat === 'your-question' ? t('Answer to earn your shot') : t('Opponent is stepping up…')}
               </Banner>
               {beat === 'your-question' ? (
                 <QuestionCard question={question} selected={selected} onAnswer={answerYours} />
               ) : (
                 <div className="mt-3 flex items-center justify-center gap-2 py-4 font-poppins text-sm font-black uppercase text-white/50">
                   <span className="size-3 animate-spin rounded-full border-2 border-white/20 border-t-brand-red-soft" />
-                  {aiOnTarget ? 'AI is on target — get ready to dive!' : 'AI answering…'}
+                  {aiOnTarget ? t('AI is on target — get ready to dive!') : t('AI answering…')}
                 </div>
               )}
             </motion.div>
@@ -193,13 +197,13 @@ export function PenaltyShootout({ backHref }: { backHref?: string } = {}) {
 
           {beat === 'your-shot' && !shooterZone && (
             <motion.div key="shoot" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <Banner tone="you">Pick your corner — beat the keeper</Banner>
+              <Banner tone="you">{t('Pick your corner — beat the keeper')}</Banner>
             </motion.div>
           )}
 
           {beat === 'ai-keep' && !keeperZone && (
             <motion.div key="keep" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-              <Banner tone="ai">You&apos;re in goal — pick your dive!</Banner>
+              <Banner tone="ai">{t("You're in goal — pick your dive!")}</Banner>
             </motion.div>
           )}
 
@@ -297,7 +301,7 @@ function QuestionCard({
   selected,
   onAnswer,
 }: {
-  question: (typeof TRIVIA)[number];
+  question: TriviaQuestion;
   selected: number | null;
   onAnswer: (i: number) => void;
 }) {
@@ -362,15 +366,16 @@ function ResultBeat({
   onContinue: () => void;
   lastRound: boolean;
 }) {
+  const t = useMiniT();
   const mine = beat === 'your-result';
   const good = mine ? scored : !scored; // a save on AI's shot is good for you
   const headline = mine
     ? scored
-      ? 'GOAL!'
-      : 'MISSED'
+      ? t('GOAL!')
+      : t('MISSED')
     : scored
-      ? 'AI SCORES'
-      : 'SAVED!';
+      ? t('AI SCORES')
+      : t('SAVED!');
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.9 }}
@@ -390,13 +395,14 @@ function ResultBeat({
         onClick={onContinue}
         className="h-13 rounded-2xl bg-white/10 px-8 py-3 font-poppins text-base font-black uppercase text-white transition-colors hover:bg-white/15"
       >
-        {mine ? 'Opponent’s turn' : lastRound ? 'See result' : 'Next round'}
+        {mine ? t("Opponent's turn") : lastRound ? t('See result') : t('Next round')}
       </button>
     </motion.div>
   );
 }
 
 function GameOver({ you, ai, onRestart }: { you: number; ai: number; onRestart: () => void }) {
+  const t = useMiniT();
   const win = you > ai;
   const draw = you === ai;
   return (
@@ -407,7 +413,7 @@ function GameOver({ you, ai, onRestart }: { you: number; ai: number; onRestart: 
     >
       <div className="text-5xl">{win ? '🏆' : draw ? '🤝' : '😞'}</div>
       <div className="font-poppins text-2xl font-black uppercase" style={{ color: win ? '#FFD700' : draw ? '#FFE500' : '#FF4B4B' }}>
-        {win ? 'You win!' : draw ? 'Draw' : 'You lose'}
+        {win ? t('You win!') : draw ? t('Draw') : t('You lose')}
       </div>
       <div className="font-poppins text-4xl font-black tabular-nums text-white">
         {you} <span className="text-white/30">–</span> {ai}
@@ -417,7 +423,7 @@ function GameOver({ you, ai, onRestart }: { you: number; ai: number; onRestart: 
         onClick={onRestart}
         className="mt-2 h-14 w-full rounded-2xl bg-brand-green font-poppins text-lg font-black uppercase tracking-wide text-white"
       >
-        Play again
+        {t('Play again')}
       </button>
     </motion.div>
   );

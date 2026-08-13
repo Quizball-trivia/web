@@ -1,6 +1,14 @@
 /** Shared football trivia pool for the mini-games (Trivia Spin, Penalty
  *  Shootout, Daily Jackpot). Multiple choice with a single correct index.
- *  Sourced from the real published question pool (staging DB export). */
+ *  Sourced from the real published question pool (staging DB export),
+ *  bilingual EN/KA — resolve with getTrivia(locale). */
+
+import type { MiniLocale } from '../lib/i18n';
+
+interface BilingualText {
+  en: string;
+  ka: string;
+}
 
 export interface TriviaQuestion {
   id: string;
@@ -10,31 +18,318 @@ export interface TriviaQuestion {
   difficulty: 'easy' | 'medium' | 'hard';
 }
 
-export const TRIVIA: TriviaQuestion[] = [
-  { id: 'q1', q: 'Which part of London is Arsenal\'s stadium located in?', options: ['South London', 'North London', 'West London', 'East London'], answer: 1, difficulty: 'easy' },
-  { id: 'q2', q: 'What is the nickname for Arsenal F.C. and its players?', options: ['The Blues', 'The Gunners', 'The Lions', 'The Eagles'], answer: 1, difficulty: 'easy' },
-  { id: 'q3', q: 'Who is the legendary Ivory Coast striker who scored many goals for Chelsea?', options: ['Didier Drogba', 'Mohamed Salah', 'Samuel Eto\'o', 'Sadio Mane'], answer: 0, difficulty: 'easy' },
-  { id: 'q4', q: 'Which manager, known as "The Special One," led Chelsea to back-to-back Premier League titles in 2005 and 2006?', options: ['Carlo Ancelotti', 'Antonio Conte', 'Thomas Tuchel', 'José Mourinho'], answer: 3, difficulty: 'easy' },
-  { id: 'q5', q: 'Which famous trophy did Chelsea win in 2012 and 2021?', options: ['The World Cup', 'The Champions League', 'The Super Bowl', 'The Wimbledon Cup'], answer: 1, difficulty: 'easy' },
-  { id: 'q6', q: 'Which city is Chelsea F.C. located in?', options: ['Manchester', 'London', 'Liverpool', 'Leeds'], answer: 1, difficulty: 'easy' },
-  { id: 'q7', q: 'In 2012, Chelsea became the first London club to win which major trophy?', options: ['The Premier League', 'The FA Cup', 'The UEFA Champions League', 'The League Cup'], answer: 2, difficulty: 'easy' },
-  { id: 'q8', q: 'Which Bundesliga club has red bulls in its logo?', options: ['Bayern', 'RB Leipzig', 'Leverkusen', 'Mainz'], answer: 1, difficulty: 'easy' },
-  { id: 'q9', q: 'Who is the all-time leading goalscorer for Chelsea, with 211 goals?', options: ['Didier Drogba', 'Eden Hazard', 'Frank Lampard', 'Bobby Tambling'], answer: 2, difficulty: 'medium' },
-  { id: 'q10', q: 'What was the Chelsea\'s original nickname before they became known as "The Blues"?', options: ['The Pensioners', 'The Sailors', 'The Hammers', 'The Royals'], answer: 0, difficulty: 'medium' },
-  { id: 'q11', q: 'Which of these is a major local rival for Chelsea?', options: ['Tottenham Hotspur', 'Real Madrid', 'Paris Saint-Germain', 'LA Galaxy'], answer: 0, difficulty: 'medium' },
-  { id: 'q12', q: 'What is the official nickname of Chelsea F.C.?', options: ['The Reds', 'The Gunners', 'The Blues', 'The Lions'], answer: 2, difficulty: 'medium' },
-  { id: 'q13', q: 'Which famous Russian billionaire owned Chelsea from 2003 to 2022?', options: ['Todd Boehly', 'Roman Abramovich', 'Alisher Usmanov', 'Mikhail Prokhorov'], answer: 1, difficulty: 'medium' },
-  { id: 'q14', q: 'Which club’s logo features a "Biscione" (a large grass snake)?', options: ['AC Milan', 'Inter Milan', 'Atalanta', 'Brescia'], answer: 1, difficulty: 'medium' },
-  { id: 'q15', q: 'Which Serie A team has a logo that features a "Zebretta" (Little Zebra)?', options: ['Juventus', 'Udinese', 'Siena', 'Spezia'], answer: 1, difficulty: 'medium' },
-  { id: 'q16', q: 'The current Chelsea crest features a lion holding what object?', options: ['A football', 'An abbot’s staff', 'A shield', 'A crown'], answer: 1, difficulty: 'medium' },
-  { id: 'q17', q: 'Which sponsor\'s logo is featured on the sleeve of the Bayern Munich jersey in 2025/26?', options: ['Qatar Airways', 'Audi', 'Emirates', 'Allianz'], answer: 1, difficulty: 'medium' },
-  { id: 'q18', q: 'Who was the first player signed by Manchester City after the Abu Dhabi United Group takeover in 2008?', options: ['Vincent Kompany', 'Robinho', 'Pablo Zabaleta', 'Nigel de Jong'], answer: 1, difficulty: 'medium' },
-  { id: 'q19', q: 'Arsenal’s 49-game unbeaten run was ended by which team in October 2004?', options: ['Chelsea', 'Manchester United', 'Liverpool', 'Bolton Wanderers'], answer: 1, difficulty: 'hard' },
-  { id: 'q20', q: 'Who was the first Arsenal player to score a goal at the Emirates Stadium?', options: ['Thierry Henry', 'Gilberto Silva', 'Robin van Persie', 'Cesc Fàbregas'], answer: 1, difficulty: 'hard' },
-  { id: 'q21', q: 'What is the main color of the Chelsea home kit?', options: ['Red', 'Blue', 'White', 'Yellow'], answer: 1, difficulty: 'hard' },
-  { id: 'q22', q: 'Who was the famous Chelsea captain known as "Captain, Leader, Legend"?', options: ['John Terry', 'Wayne Rooney', 'Steven Gerrard', 'David Beckham'], answer: 0, difficulty: 'hard' },
-  { id: 'q23', q: 'Which of these legends is Chelsea\'s all-time top goalscorer and a former manager?', options: ['John Terry', 'Frank Lampard', 'Petr Cech', 'Ashley Cole'], answer: 1, difficulty: 'hard' },
-  { id: 'q24', q: 'What animal is featured on the current Chelsea club crest?', options: ['A Rooster', 'A Dragon', 'A Lion', 'An Eagle'], answer: 2, difficulty: 'hard' },
+interface BilingualTrivia extends Omit<TriviaQuestion, 'q' | 'options'> {
+  q: BilingualText;
+  options: BilingualText[];
+}
+
+const BANK: BilingualTrivia[] = [
+  {
+    id: 'q1',
+    q: { en: 'Which player famously scored the "Hand of God" goal?', ka: 'რომელმა მოთამაშემ გაიტანა ცნობილი გოლი „ღმერთის ხელით“?' },
+    options: [
+      { en: 'Pelé', ka: 'პელე' },
+      { en: 'Diego Maradona', ka: 'დიეგო მარადონა' },
+      { en: 'Johan Cruyff', ka: 'იოჰან კრუიფი' },
+      { en: 'Zinedine Zidane', ka: 'ზინედინ ზიდანი' },
+    ],
+    answer: 1,
+    difficulty: 'easy',
+  },
+  {
+    id: 'q2',
+    q: { en: 'Who is the all-time top scorer in La Liga history?', ka: 'ვინ არის ლა ლიგის ისტორიაში ყველა დროის საუკეთესო ბომბარდირი?' },
+    options: [
+      { en: 'Cristiano Ronaldo', ka: 'კრიშტიანუ რონალდუ' },
+      { en: 'Lionel Messi', ka: 'ლიონელ მესი' },
+      { en: 'Telmo Zarra', ka: 'ტელმო სარა' },
+      { en: 'Hugo Sánchez', ka: 'უგო სანჩესი' },
+    ],
+    answer: 1,
+    difficulty: 'easy',
+  },
+  {
+    id: 'q3',
+    q: { en: 'Which Italian legend spent his entire 25-year professional career at AS Roma?', ka: 'რომელმა იტალიელმა ლეგენდამ გაატარა მთელი თავისი 25-წლიანი პროფესიონალური კარიერა ას რომაში?' },
+    options: [
+      { en: 'Alessandro Del Piero', ka: 'ალესანდრო დელ პიერო' },
+      { en: 'Paolo Maldini', ka: 'პაოლო მალდინი' },
+      { en: 'Francesco Totti', ka: 'ფრანჩესკო ტოტი' },
+      { en: 'Andrea Pirlo', ka: 'ანდრეა პირლო' },
+    ],
+    answer: 2,
+    difficulty: 'easy',
+  },
+  {
+    id: 'q4',
+    q: { en: 'Which club is universally known as "Los Blancos"?', ka: 'რომელი კლუბია საყოველთაოდ ცნობილი როგორც „ლოს ბლანკოსი“?' },
+    options: [
+      { en: 'Sevilla', ka: 'სევილია' },
+      { en: 'Valencia', ka: 'ვალენსია' },
+      { en: 'Real Madrid', ka: 'რეალ მადრიდი' },
+      { en: 'Atletico Madrid', ka: 'ატლეტიკო მადრიდი' },
+    ],
+    answer: 2,
+    difficulty: 'easy',
+  },
+  {
+    id: 'q5',
+    q: { en: 'Which of these legendary players has NEVER won the Ballon d\'Or?', ka: 'ამ ლეგენდარული მოთამაშეებიდან რომელს არასოდეს მოუგია ოქროს ბურთი?' },
+    options: [
+      { en: 'Kaká', ka: 'კაკა' },
+      { en: 'Andrés Iniesta', ka: 'ანდრეს ინიესტა' },
+      { en: 'Ronaldinho', ka: 'რონალდინიო' },
+      { en: 'Fabio Cannavaro', ka: 'ფაბიო კანავარო' },
+    ],
+    answer: 1,
+    difficulty: 'easy',
+  },
+  {
+    id: 'q6',
+    q: { en: 'Which stadium is known as "The Theatre of Dreams"?', ka: 'რომელი სტადიონია ცნობილი როგორც „ოცნებების თეატრი“?' },
+    options: [
+      { en: 'Anfield', ka: 'ენფილდი' },
+      { en: 'Stamford Bridge', ka: 'სტემფორდ ბრიჯი' },
+      { en: 'Old Trafford', ka: 'ოლდ ტრაფორდი' },
+      { en: 'Emirates Stadium', ka: 'ემირეიტს სთედიუმი' },
+    ],
+    answer: 2,
+    difficulty: 'easy',
+  },
+  {
+    id: 'q7',
+    q: { en: 'Which country will co-host the 2026 Men\'s FIFA World Cup along with the USA and Mexico?', ka: 'რომელი ქვეყანა უმასპინძლებს 2026 წლის მამაკაცთა ფიფას მსოფლიო ჩემპიონატს აშშ-სთან და მექსიკასთან ერთად?' },
+    options: [
+      { en: 'Brazil', ka: 'ბრაზილია' },
+      { en: 'Costa Rica', ka: 'კოსტა-რიკა' },
+      { en: 'Canada', ka: 'კანადა' },
+      { en: 'Colombia', ka: 'კოლუმბია' },
+    ],
+    answer: 2,
+    difficulty: 'easy',
+  },
+  {
+    id: 'q8',
+    q: { en: 'Which club did David Beckham join immediately after leaving Manchester United in 2003?', ka: 'რომელ კლუბს შეუერთდა დევიდ ბექჰემი 2003 წელს მანჩესტერ იუნაიტედის დატოვებისთანავე?' },
+    options: [
+      { en: 'LA Galaxy', ka: 'ელ ეი გალაქსი' },
+      { en: 'AC Milan', ka: 'მილანი' },
+      { en: 'Real Madrid', ka: 'რეალ მადრიდი' },
+      { en: 'Paris Saint-Germain', ka: 'პარი სენ-ჟერმენი' },
+    ],
+    answer: 2,
+    difficulty: 'easy',
+  },
+  {
+    id: 'q9',
+    q: { en: 'Which club has won the most Serie A titles in Italy?', ka: 'რომელ კლუბს აქვს მოგებული ყველაზე მეტი სერია A-ს ტიტული იტალიაში?' },
+    options: [
+      { en: 'AC Milan', ka: 'მილანი' },
+      { en: 'Inter Milan', ka: 'ინტერ მილანი' },
+      { en: 'Juventus', ka: 'იუვენტუსი' },
+      { en: 'AS Roma', ka: 'რომა' },
+    ],
+    answer: 2,
+    difficulty: 'medium',
+  },
+  {
+    id: 'q10',
+    q: { en: 'Who is the all-time top scorer for the England men\'s national team?', ka: 'ვინ არის ინგლისის ვაჟთა ეროვნული ნაკრების ყველა დროის საუკეთესო ბომბარდირი?' },
+    options: [
+      { en: 'Wayne Rooney', ka: 'უეინ რუნი' },
+      { en: 'Bobby Charlton', ka: 'ბობი ჩარლტონი' },
+      { en: 'Gary Lineker', ka: 'გარი ლინეკერი' },
+      { en: 'Harry Kane', ka: 'ჰარი კეინი' },
+    ],
+    answer: 3,
+    difficulty: 'medium',
+  },
+  {
+    id: 'q11',
+    q: { en: 'Which player holds the record for the most red cards in La Liga history?', ka: 'რომელ მოთამაშეს ეკუთვნის ლა ლიგის ისტორიაში ყველაზე მეტი წითელი ბარათის რეკორდი?' },
+    options: [
+      { en: 'Pepe', ka: 'პეპე' },
+      { en: 'Sergio Ramos', ka: 'სერხიო რამოსი' },
+      { en: 'Diego Simeone', ka: 'დიეგო სიმეონე' },
+      { en: 'Fernando Hierro', ka: 'ფერნანდო იერო' },
+    ],
+    answer: 1,
+    difficulty: 'medium',
+  },
+  {
+    id: 'q12',
+    q: { en: 'Which African player won the Ballon d\'Or in 1995?', ka: 'რომელმა აფრიკელმა მოთამაშემ მოიგო ოქროს ბურთი 1995 წელს?' },
+    options: [
+      { en: 'Didier Drogba', ka: 'დიდიე დროგბა' },
+      { en: 'Samuel Eto\'o', ka: 'სამუელ ეტო\'ო' },
+      { en: 'George Weah', ka: 'ჯორჯ ვეა' },
+      { en: 'Roger Milla', ka: 'როჟე მილა' },
+    ],
+    answer: 2,
+    difficulty: 'medium',
+  },
+  {
+    id: 'q13',
+    q: { en: 'Which player won the Golden Boot at the 2014 Men\'s FIFA World Cup?', ka: 'რომელმა მოთამაშემ მოიგო ოქროს ბუცი 2014 წლის მამაკაცთა ფიფას მსოფლიო ჩემპიონატზე?' },
+    options: [
+      { en: 'Thomas Müller', ka: 'თომას მიულერი' },
+      { en: 'Lionel Messi', ka: 'ლიონელ მესი' },
+      { en: 'James Rodríguez', ka: 'ხამეს როდრიგესი' },
+      { en: 'Robin van Persie', ka: 'რობინ ვან პერსი' },
+    ],
+    answer: 2,
+    difficulty: 'medium',
+  },
+  {
+    id: 'q14',
+    q: { en: 'Which manager has won the most UEFA Champions League titles?', ka: 'რომელ მწვრთნელს აქვს მოგებული უეფას ჩემპიონთა ლიგის ყველაზე მეტი ტიტული?' },
+    options: [
+      { en: 'Pep Guardiola', ka: 'პეპ გვარდიოლა' },
+      { en: 'Sir Alex Ferguson', ka: 'სერ ალექს ფერგიუსონი' },
+      { en: 'Carlo Ancelotti', ka: 'კარლო ანჩელოტი' },
+      { en: 'Zinedine Zidane', ka: 'ზინედინ ზიდანი' },
+    ],
+    answer: 2,
+    difficulty: 'medium',
+  },
+  {
+    id: 'q15',
+    q: { en: 'Who scored the winning goal in extra time during the 2010 World Cup final?', ka: 'ვინ გაიტანა გამარჯვების გოლი დამატებით დროში 2010 წლის მსოფლიო ჩემპიონატის ფინალში?' },
+    options: [
+      { en: 'David Villa', ka: 'დავიდ ვილია' },
+      { en: 'Fernando Torres', ka: 'ფერნანდო ტორესი' },
+      { en: 'Xavi', ka: 'ჩავი' },
+      { en: 'Andrés Iniesta', ka: 'ანდრეს ინიესტა' },
+    ],
+    answer: 3,
+    difficulty: 'medium',
+  },
+  {
+    id: 'q16',
+    q: { en: 'Which team won the 2004 UEFA European Championship in a massive upset?', ka: 'რომელმა გუნდმა მოიგო 2004 წლის უეფას ევროპის ჩემპიონატი მოულოდნელი გამარჯვებით?' },
+    options: [
+      { en: 'Portugal', ka: 'პორტუგალია' },
+      { en: 'Denmark', ka: 'დანია' },
+      { en: 'Greece', ka: 'საბერძნეთი' },
+      { en: 'Czech Republic', ka: 'ჩეხეთის რესპუბლიკა' },
+    ],
+    answer: 2,
+    difficulty: 'medium',
+  },
+  {
+    id: 'q17',
+    q: { en: 'Which English team was the first to win the European Cup in 1968?', ka: 'რომელი ინგლისური გუნდი იყო პირველი, რომელმაც 1968 წელს ევროპის თასი მოიგო?' },
+    options: [
+      { en: 'Liverpool', ka: 'ლივერპული' },
+      { en: 'Manchester United', ka: 'მანჩესტერ იუნაიტედი' },
+      { en: 'Nottingham Forest', ka: 'ნოტინგემ ფორესტი' },
+      { en: 'Aston Villa', ka: 'ასტონ ვილა' },
+    ],
+    answer: 1,
+    difficulty: 'medium',
+  },
+  {
+    id: 'q18',
+    q: { en: 'Which club won the 2003-04 UEFA Champions League under Jose Mourinho?', ka: 'რომელმა კლუბმა მოიგო 2003-04 წლების უეფას ჩემპიონთა ლიგა ჟოზე მოურინიოს ხელმძღვანელობით?' },
+    options: [
+      { en: 'Chelsea', ka: 'ჩელსი' },
+      { en: 'Inter Milan', ka: 'ინტერი' },
+      { en: 'FC Porto', ka: 'პორტუ' },
+      { en: 'AS Monaco', ka: 'მონაკო' },
+    ],
+    answer: 2,
+    difficulty: 'medium',
+  },
+  {
+    id: 'q19',
+    q: { en: 'What was the original name of Manchester United when the club was founded in 1878?', ka: 'რა იყო მანჩესტერ იუნაიტედის თავდაპირველი სახელი, როდესაც კლუბი 1878 წელს დაარსდა?' },
+    options: [
+      { en: 'Manchester Central FC', ka: 'მანჩესტერ ცენტრალ ფკ' },
+      { en: 'Newton Heath LYR Football Club', ka: 'ნიუტონ ჰით LYR საფეხბურთო კლუბი' },
+      { en: 'Stretford End FC', ka: 'სტრეტფორდ ენდ ფკ' },
+      { en: 'Salford City Rovers', ka: 'სალფორდ სიტი როვერსი' },
+    ],
+    answer: 1,
+    difficulty: 'hard',
+  },
+  {
+    id: 'q20',
+    q: { en: 'Which club did Thierry Henry play for immediately before joining Arsenal in 1999?', ka: 'რომელ კლუბში თამაშობდა ტიერი ანრი 1999 წელს არსენალში გადასვლამდე?' },
+    options: [
+      { en: 'AS Monaco', ka: 'ას მონაკო' },
+      { en: 'Barcelona', ka: 'ბარსელონა' },
+      { en: 'Juventus', ka: 'იუვენტუსი' },
+      { en: 'Paris Saint-Germain', ka: 'პარი სენ-ჟერმენი' },
+    ],
+    answer: 2,
+    difficulty: 'hard',
+  },
+  {
+    id: 'q21',
+    q: { en: 'Who was the first football player to cost over €100 million in a transfer?', ka: 'ვინ იყო პირველი ფეხბურთელი, რომლის ტრანსფერიც 100 მილიონ ევროზე მეტი დაჯდა?' },
+    options: [
+      { en: 'Cristiano Ronaldo', ka: 'კრიშტიანუ რონალდუ' },
+      { en: 'Paul Pogba', ka: 'პოლ პოგბა' },
+      { en: 'Gareth Bale', ka: 'გარეთ ბეილი' },
+      { en: 'Neymar', ka: 'ნეიმარი' },
+    ],
+    answer: 2,
+    difficulty: 'hard',
+  },
+  {
+    id: 'q22',
+    q: { en: 'Which player has made the most appearances in Premier League history?', ka: 'რომელ მოთამაშეს აქვს ჩატარებული ყველაზე მეტი მატჩი პრემიერ ლიგის ისტორიაში?' },
+    options: [
+      { en: 'Ryan Giggs', ka: 'რაიან გიგზი' },
+      { en: 'Frank Lampard', ka: 'ფრენკ ლემპარდი' },
+      { en: 'James Milner', ka: 'ჯეიმს მილნერი' },
+      { en: 'Gareth Barry', ka: 'გარეთ ბარი' },
+    ],
+    answer: 3,
+    difficulty: 'hard',
+  },
+  {
+    id: 'q23',
+    q: { en: 'Who is the highest-scoring defender in the history of professional football?', ka: 'ვინ არის ყველაზე მეტი გოლის ავტორი მცველი პროფესიონალური ფეხბურთის ისტორიაში?' },
+    options: [
+      { en: 'Roberto Carlos', ka: 'რობერტო კარლოსი' },
+      { en: 'Sergio Ramos', ka: 'სერხიო რამოსი' },
+      { en: 'Ronald Koeman', ka: 'რონალდ კუმანი' },
+      { en: 'Franz Beckenbauer', ka: 'ფრანც ბეკენბაუერი' },
+    ],
+    answer: 2,
+    difficulty: 'hard',
+  },
+  {
+    id: 'q24',
+    q: { en: 'Which player holds the record for the most goals in a single Men\'s World Cup tournament (13 goals)?', ka: 'რომელ მოთამაშეს ეკუთვნის რეკორდი ერთ მსოფლიო ჩემპიონატზე გატანილი ყველაზე მეტი გოლით (13 გოლი)?' },
+    options: [
+      { en: 'Just Fontaine', ka: 'ჟიუსტ ფონტენი' },
+      { en: 'Gerd Müller', ka: 'გერდ მიულერი' },
+      { en: 'Miroslav Klose', ka: 'მიროსლავ კლოზე' },
+      { en: 'Pelé', ka: 'პელე' },
+    ],
+    answer: 0,
+    difficulty: 'hard',
+  },
 ];
 
-export const HARD_QUESTIONS = TRIVIA.filter((q) => q.difficulty === 'hard');
+function resolve(row: BilingualTrivia, locale: MiniLocale): TriviaQuestion {
+  return {
+    ...row,
+    q: row.q[locale],
+    options: row.options.map((o) => o[locale]),
+  };
+}
+
+export function getTrivia(locale: MiniLocale): TriviaQuestion[] {
+  return BANK.map((row) => resolve(row, locale));
+}
+
+export function getHardQuestions(locale: MiniLocale): TriviaQuestion[] {
+  return getTrivia(locale).filter((q) => q.difficulty === 'hard');
+}
+
+// Back-compat for the /dev pages and not-yet-localized callers.
+export const TRIVIA: TriviaQuestion[] = getTrivia('en');
+export const HARD_QUESTIONS: TriviaQuestion[] = getHardQuestions('en');
