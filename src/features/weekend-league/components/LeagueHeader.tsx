@@ -289,7 +289,14 @@ export function LeagueHeader({
 
                 {!isQualified && (
                   <div className="mt-1.5 text-center font-poppins text-[11px] font-bold uppercase tracking-wide text-white/60">
-                    {t('weekendLeague.qpNeeded', { count: remaining })}
+                    {/* Once entry closes, "N QP needed" is a lie for THIS week —
+                        the target is no longer reachable. Say where the QP
+                        actually goes instead (play-ranked stays: still the
+                        right action, it banks QP for next week). Explicit
+                        status check: `upcoming` must keep the QP hint. */}
+                    {status === 'entry_closed'
+                      ? t('weekendLeague.qpNextWeek')
+                      : t('weekendLeague.qpNeeded', { count: remaining })}
                   </div>
                 )}
               </motion.div>
