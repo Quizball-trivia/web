@@ -23,7 +23,7 @@ import {
   type AvatarPart,
   type SkinPart,
 } from "@/lib/avatars/parts";
-import { useStoreInventory } from "@/lib/queries/store.queries";
+import { useStoreInventory, useStoreProducts } from "@/lib/queries/store.queries";
 import { AvatarPreview } from "@/components/AvatarPreview";
 import { Check, Loader2, Lock, X } from "lucide-react";
 import { purchaseStoreWithCoins } from "@/lib/repositories/store.repo";
@@ -58,7 +58,20 @@ export function AvatarPicker({
   const queryClient = useQueryClient();
   const { t } = useLocale();
   const { data: inventoryData } = useStoreInventory();
+  const { data: productsData } = useStoreProducts();
   const [activeTab, setActiveTab] = useState<SlotTab>("skin");
+
+  /**
+   * Live coin price for a part. The backend catalogue is the source of truth
+   * (priceCents holds the coin amount for coin-priced products); the priceCoins
+   * in parts.ts is only a fallback, so server-side repricing needs no release.
+   */
+  const partPriceCoins = (part?: { productSlug?: string; priceCoins?: number }) => {
+    const product = part?.productSlug
+      ? (productsData?.items ?? []).find((item) => item.slug === part.productSlug)
+      : undefined;
+    return product?.priceCents ?? part?.priceCoins;
+  };
 
   const TAB_LABELS: Record<SlotTab, string> = {
     skin: t('profile.avatarPicker.tabSkin'),
@@ -231,9 +244,9 @@ export function AvatarPicker({
               <span className="text-[10px] font-black uppercase tracking-wider text-white/70">
                 {translatePartName(skin.name, t)}
               </span>
-              {!owned && skin.priceCoins && (
+              {!owned && partPriceCoins(skin) && (
                 <span className="text-[9px] font-black uppercase tracking-wider text-brand-yellow">
-                  {skin.priceCoins}
+                  {partPriceCoins(skin)}
                 </span>
               )}
             </div>
@@ -320,9 +333,9 @@ export function AvatarPicker({
                   <span className="max-w-[96px] text-center text-[10px] font-black uppercase tracking-wider leading-tight text-white/70 line-clamp-2">
                     {translatePartName(part.name, t)}
                   </span>
-                  {!owned && part.priceCoins && (
+                  {!owned && partPriceCoins(part) && (
                     <span className="text-[9px] font-black uppercase tracking-wider text-brand-yellow">
-                      {part.priceCoins}
+                      {partPriceCoins(part)}
                     </span>
                   )}
                 </div>
@@ -389,8 +402,8 @@ export function AvatarPicker({
                 <span className="text-[10px] uppercase tracking-[0.04em] text-white/50">{t('profile.purchase.price')}</span>
                 <span className="text-[24px]" style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, color: PURPLE }}>
                   {pendingPurchase.type === "skin"
-                    ? pendingPurchase.skin?.priceCoins
-                    : pendingPurchase.part?.priceCoins}
+                    ? partPriceCoins(pendingPurchase.skin)
+                    : partPriceCoins(pendingPurchase.part)}
                 </span>
                 <span className="text-[10px] uppercase tracking-[0.04em] text-white/50">{t('profile.purchase.coinsLabel')}</span>
               </div>
