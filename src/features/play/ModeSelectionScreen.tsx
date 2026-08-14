@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { ModeConfirmModal } from '@/components/shared/ModeConfirmModal';
 import { FriendPlayModal } from '@/components/shared/FriendPlayModal';
 import { AuctionModeModal } from '@/features/auction/components/AuctionModeModal';
+import { HomeRecentMatches } from '@/components/shared/HomeRecentMatches';
 import { MessageCircle } from 'lucide-react';
 import { SocialLinks } from '@/components/shared/SocialLinks';
 import { ContactModal } from '@/components/shared/ContactModal';
@@ -696,6 +697,9 @@ export function ModeSelectionScreen({
         </div>
       </div>
       )}
+
+      {/* ─── 5. Recent Matches ─── */}
+      <HomeRecentMatches collapsedOnly />
 
       {/* ─── 5b. Socials + contact (mobile only — desktop uses the top-left
               header cluster in AppShell) ─── */}
