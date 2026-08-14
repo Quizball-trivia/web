@@ -556,8 +556,17 @@ export function StoreScreen() {
     });
   };
 
+  /**
+   * Live coin cost for the open modal. Re-derived from the catalogue on every
+   * render so a modal opened before the products query resolved does not stay
+   * pinned to the parts.ts fallback captured at open time.
+   */
+  const modalPriceCoins = buyModal?.avatarPart
+    ? partPriceCoins(buyModal.avatarPart)
+    : buyModal?.priceCoinsValue;
+
   /** Live affordability for the open modal — re-derived when the wallet updates. */
-  const modalAffordable = canAffordCoins(buyModal?.priceCoinsValue);
+  const modalAffordable = canAffordCoins(modalPriceCoins);
 
   const handleConfirm = () => {
     if (!buyModal || purchasePending) return;
@@ -578,7 +587,7 @@ export function StoreScreen() {
       checkoutMutation.mutate(buyModal.productSlug);
       return;
     }
-    if (!canAffordCoins(buyModal.priceCoinsValue)) {
+    if (!canAffordCoins(modalPriceCoins)) {
       toast.error(t("store.notEnoughCoins"));
       setBuyModal(null);
       return;
@@ -822,8 +831,14 @@ export function StoreScreen() {
             onConfirm={handleConfirm}
             isPending={purchasePending}
             name={buyModal?.name ?? ""}
-            price={buyModal?.price ?? ""}
-            priceInCoins={buyModal?.priceInCoins ?? false}
+            price={
+              buyModal?.mode === "equip"
+                ? ""
+                : modalPriceCoins
+                ? modalPriceCoins.toLocaleString()
+                : buyModal?.price ?? ""
+            }
+            priceInCoins={buyModal?.mode === "equip" ? false : buyModal?.priceInCoins ?? false}
             previewCustomization={buyModal?.previewCustomization}
             confirmLabel={buyModal?.mode === "equip" ? t("store.equip") : undefined}
             affordable={modalAffordable}
