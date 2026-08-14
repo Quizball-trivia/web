@@ -10,7 +10,6 @@ import { LAUNCH_EDITION, poppins, QP_TARGET } from '../constants';
 import type { LeaguePhase, Milestone } from '../types';
 import { ScheduleTimeline } from './ScheduleTimeline';
 import { LeagueCountdown } from './LeagueCountdown';
-import { wlNow } from '../wlClock';
 import { JoinLeagueButton } from './JoinLeagueButton';
 import { DropInBadge } from '@/features/auction/components/shared/DropInBadge';
 
@@ -23,6 +22,7 @@ import { DropInBadge } from '@/features/auction/components/shared/DropInBadge';
  */
 export function LeagueHeader({
   phase,
+  status,
   milestones,
   qp = LAUNCH_EDITION ? QP_TARGET : 105,
   qpTarget = QP_TARGET,
@@ -35,6 +35,9 @@ export function LeagueHeader({
   onPlayRanked,
 }: {
   phase: LeaguePhase;
+  /** Raw backend status — `entry_open` and `entry_closed` share one phase, so
+   *  the countdown target needs the finer-grained truth. */
+  status?: string | null;
   milestones: Record<'entry' | 'qualifier' | 'playoffs', Milestone> | null;
   qp?: number;
   /** Tournament-configured QP requirement (defaults to the prototype constant). */
@@ -63,6 +66,18 @@ export function LeagueHeader({
   const [vanishing, setVanishing] = useState(false);
   const [drained, setDrained] = useState(hasEntered);
   const [seenEntered, setSeenEntered] = useState(hasEntered);
+
+  // `entry_closed` shares the 'entry_open' phase (same card; the CTA locks via
+  // canEnter), so the entry deadline is only the countdown target while entry
+  // is genuinely still open — once the server closes it the clock retargets to
+  // kickoff. Keyed off backend status, not a clock comparison: inferring it
+  // from `entry_closes_at > now` disagrees with the server at the edges, and
+  // reading a clock during render is hydration-unsafe. Without this the card
+  // froze on "starting now" for the ~26h between entry close and the qualifier
+  // (seen on prod 2026-08-14). No status (the /dev/wl mock) keeps the old
+  // phase-only behaviour.
+  const countingToEntry = phase === 'entry_open' && (status == null || status === 'entry_open');
+
   if (hasEntered !== seenEntered) {
     setSeenEntered(hasEntered);
     if (hasEntered) setVanishing(true);
@@ -291,14 +306,14 @@ export function LeagueHeader({
                 to kickoff: that restarted the countdown for the few seconds
                 until the poll flipped the card (rehearsal report). */}
             <div className={`text-center font-poppins text-[10px] font-black uppercase tracking-[0.16em] transition-colors duration-700 ${gold ? 'text-black/55' : 'text-white/60'}`}>
-              {phase === 'entry_open'
+              {countingToEntry
                 ? t('weekendLeague.checkinOpensIn')
                 : t('weekendLeague.startsIn')}
             </div>
             {milestones && (
               <div className="mt-2 flex justify-center">
                 <LeagueCountdown
-                  targetMs={phase === 'entry_open'
+                  targetMs={countingToEntry
                     ? milestones.entry.targetMs
                     : milestones.qualifier.targetMs}
                   size="sm"
