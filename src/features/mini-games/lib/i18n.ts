@@ -183,6 +183,16 @@ const KA: Record<string, string> = {
   "The keeper read it — pot lost.": "მეკარემ წაიკითხა — ბანკი დაიკარგა.",
   "Cashed out {amount}!": "განაღდებულია {amount}!",
   "New round": "ახალი რაუნდი",
+  "Live wins": "ლაივ მოგებები",
+  "Longest runs today": "დღის ყველაზე გრძელი სერიები",
+  "{n} playing now": "{n} თამაშობს ახლა",
+  "{pct}% answered correctly": "{pct}%-მა სწორად უპასუხა",
+  "{pct}% scored": "{pct}%-მა გაიტანა",
+  "{pct}% cashed out": "{pct}%-მა აიღო",
+  "{n} going NEXT ATTACK": "{n} აგრძელებს შეტევას",
+  "You": "შენ",
+  "just now": "ახლახან",
+  "{n}m ago": "{n} წთ წინ",
 
   // Squad Collection
   "Squad Collection": "გუნდის კოლექცია",

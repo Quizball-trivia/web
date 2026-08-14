@@ -9,12 +9,15 @@
  * continued attack). A wrong answer means a BLIND shot at 4/6 = 66.7% but a
  * bigger 1.40x. After every goal: TAKE the pot or NEXT ATTACK. Knowledge
  * improves your vision of the goal — it never removes the risk (max RTP 96%).
+ *
+ * The social layer (live-wins ticker, crowd pulse, longest runs) is purely
+ * cosmetic client-side flavour — it never influences the RNG or payouts.
  * Virtual points only.
  */
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Check, Coins, Eye, X } from 'lucide-react';
+import { Check, Coins, Eye, Radio, Trophy, X } from 'lucide-react';
 import { MiniGameShell, StatPill } from './MiniGameShell';
 import { KeeperGlove } from './PenaltyShootout';
 import { getTrivia, type TriviaQuestion } from '../data/trivia';
@@ -27,6 +30,8 @@ const SAVE_ZONES = 2;
 const INFORMED_FIRST_MULT = 1.2;
 const INFORMED_NEXT_MULT = 1.25;
 const BLIND_MULT = 1.4;
+/** Informed-path ladder shown under the HUD. */
+const LADDER = [1.2, 1.5, 1.875, 2.34, 2.93, 3.66];
 
 interface Zone {
   id: string;
@@ -51,9 +56,31 @@ function pickSaveZones(): Set<string> {
   return new Set(ids.slice(0, SAVE_ZONES));
 }
 
+/** Tiny deterministic PRNG so the fake crowd numbers are stable per attack. */
+function seeded(seed: number): () => number {
+  let s = seed >>> 0;
+  return () => {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+}
+
+const CROWD_NAMES = [
+  'გიორგი7', 'ნიკა77', 'ლუკა99', 'თაზო10', 'საბა_fc', 'დათო21',
+  'ბექა_მ', 'სანდრო9', 'ვატო_ზ', 'რეზი_კ', 'ილია21', 'ანზორი',
+] as const;
+
 type Beat = 'bet' | 'question' | 'shoot' | 'resolving' | 'goal' | 'saved' | 'cashed';
 
 const fmt = (v: number) => (Number.isInteger(v) ? String(v) : v.toFixed(2));
+
+interface TickerEntry {
+  id: number;
+  name: string;
+  amount: number;
+  mult: number;
+  minutesAgo: number;
+}
 
 export function FinalThird({ backHref }: { backHref?: string } = {}) {
   const t = useMiniT();
@@ -62,7 +89,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
 
   const [balance, setBalance] = useState(START_BALANCE);
   const [beat, setBeat] = useState<Beat>('bet');
-  const [attack, setAttack] = useState(0); // 0-based attack within the round
+  const [attack, setAttack] = useState(0);
   const [pot, setPot] = useState(0);
   const [qIndex, setQIndex] = useState(() => Math.floor(Math.random() * 1000));
   const [selected, setSelected] = useState<number | null>(null);
@@ -72,19 +99,57 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
   const [shotZone, setShotZone] = useState<Zone | null>(null);
   const [scored, setScored] = useState<boolean | null>(null);
   const [lastTake, setLastTake] = useState<number | null>(null);
+  const [bestRun, setBestRun] = useState<number | null>(null);
+  const [ticker, setTicker] = useState<TickerEntry[]>([]);
+  const [playingNow, setPlayingNow] = useState(1284);
+  const tickerId = useRef(0);
+  const timersRef = useRef<number[]>([]);
+
+  // ── Fake stadium: live-wins ticker + drifting player count. Cosmetic only.
+  useEffect(() => {
+    const push = () => {
+      const rnd = seeded(Date.now() % 1_000_000);
+      const mult = [1.2, 1.5, 1.5, 1.875, 1.875, 2.34, 2.93, 4.58][Math.floor(rnd() * 8)];
+      setTicker((cur) => [
+        {
+          id: (tickerId.current += 1),
+          name: CROWD_NAMES[Math.floor(rnd() * CROWD_NAMES.length)],
+          amount: Math.round(STAKE * mult * 100) / 100,
+          mult,
+          minutesAgo: 0,
+        },
+        ...cur.slice(0, 3).map((e) => ({ ...e, minutesAgo: e.minutesAgo + (rnd() > 0.5 ? 1 : 0) })),
+      ]);
+      setPlayingNow((n) => Math.max(900, n + Math.floor(rnd() * 21) - 10));
+    };
+    push();
+    const id = window.setInterval(push, 4200);
+    return () => window.clearInterval(id);
+  }, []);
+
+  useEffect(() => {
+    const timers = timersRef.current;
+    return () => timers.forEach((id) => window.clearTimeout(id));
+  }, []);
+  const later = (fn: () => void, ms: number) => {
+    timersRef.current.push(window.setTimeout(fn, ms));
+  };
 
   const question: TriviaQuestion = trivia[qIndex % trivia.length];
   const mult = informed ? (attack === 0 ? INFORMED_FIRST_MULT : INFORMED_NEXT_MULT) : BLIND_MULT;
   const potential = useMemo(() => Math.round(pot * mult * 100) / 100, [pot, mult]);
+  const runMult = pot > 0 ? Math.round((pot / STAKE) * 100) / 100 : 0;
 
-  const startRound = () => {
-    if (balance < STAKE) return;
-    setBalance((b) => b - STAKE);
-    setPot(STAKE);
-    setAttack(0);
-    setLastTake(null);
-    beginAttack();
-  };
+  // Deterministic crowd-pulse numbers per attack (stable across re-renders).
+  const pulse = useMemo(() => {
+    const rnd = seeded(qIndex * 7919 + attack * 104729);
+    return {
+      answered: 55 + Math.floor(rnd() * 30),
+      scored: 55 + Math.floor(rnd() * 25),
+      cashed: 20 + Math.floor(rnd() * 25),
+      going: 900 + Math.floor(rnd() * 700),
+    };
+  }, [qIndex, attack]);
 
   const beginAttack = () => {
     setSelected(null);
@@ -97,14 +162,22 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
     setBeat('question');
   };
 
+  const startRound = () => {
+    if (balance < STAKE) return;
+    setBalance((b) => b - STAKE);
+    setPot(STAKE);
+    setAttack(0);
+    setLastTake(null);
+    beginAttack();
+  };
+
   const answer = (i: number) => {
     if (selected !== null) return;
     setSelected(i);
     const correct = i === question.answer;
     setInformed(correct);
-    window.setTimeout(() => {
+    later(() => {
       if (correct) {
-        // SCOUT REPORT: reveal one of the save zones and lock it.
         setSaves((cur) => {
           const first = [...cur][Math.floor(Math.random() * cur.size)];
           setRevealedSave(first);
@@ -112,7 +185,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
         });
       }
       setBeat('shoot');
-    }, 900);
+    }, 950);
   };
 
   const shoot = (zone: Zone) => {
@@ -121,16 +194,18 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
     setShotZone(zone);
     setBeat('resolving');
     const isSave = saves.has(zone.id);
-    window.setTimeout(() => {
+    later(() => {
       if (isSave) {
         setScored(false);
         setBeat('saved');
       } else {
         setScored(true);
-        setPot(potential);
+        const next = potential;
+        setPot(next);
+        setBestRun((b) => Math.max(b ?? 0, Math.round((next / STAKE) * 100) / 100));
         setBeat('goal');
       }
-    }, 850);
+    }, 880);
   };
 
   const cashOut = () => {
@@ -144,9 +219,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
     beginAttack();
   };
 
-  const zoneCountLabel = informed
-    ? t('4 GOAL · 1 SAVE')
-    : t('4 GOAL · 2 SAVE');
+  const ladderIndex = pot > 0 ? LADDER.findIndex((m) => Math.abs(m - runMult * (beat === 'goal' ? 1 : mult)) < 0.01) : -1;
 
   return (
     <MiniGameShell
@@ -156,29 +229,94 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
       accent="#58CC02"
       headerRight={<StatPill label={t('Balance')} value={fmt(balance)} color="#FFD700" />}
     >
+      {/* Live stadium strip: player count + rotating last win. Cosmetic. */}
+      <div className="mt-1 flex items-center justify-between gap-2 rounded-xl border border-white/[0.07] bg-black/25 px-3 py-2">
+        <span className="flex items-center gap-1.5 font-poppins text-[10px] font-black uppercase tracking-wide text-brand-red-soft">
+          <Radio className="size-3.5 animate-pulse" /> {t('{n} playing now', { n: playingNow.toLocaleString() })}
+        </span>
+        <div className="relative h-4 min-w-0 flex-1 overflow-hidden text-right">
+          <AnimatePresence mode="popLayout">
+            {ticker[0] && (
+              <motion.span
+                key={ticker[0].id}
+                initial={{ y: 12, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -12, opacity: 0 }}
+                transition={{ duration: 0.35 }}
+                className="absolute right-0 top-0 truncate font-poppins text-[10px] font-bold text-white/60"
+              >
+                {ticker[0].name} <span className="text-brand-gold">+{fmt(ticker[0].amount)} 🪙</span>{' '}
+                <span className="text-white/40">×{ticker[0].mult}</span>
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+
       {/* HUD: stake | pot | next multiplier */}
-      <div className="mt-1 flex items-center justify-center gap-2 font-poppins text-[12px] font-black uppercase tracking-wide text-white/70">
+      <div className="mt-2 flex items-center justify-center gap-2 font-poppins text-[12px] font-black uppercase tracking-wide text-white/70">
         <span className="rounded-full bg-white/[0.06] px-3 py-1.5">{t('Stake')} {STAKE} 🪙</span>
         {pot > 0 && beat !== 'cashed' && (
-          <span className="rounded-full bg-brand-yellow/15 px-3 py-1.5 text-brand-yellow">{t('Pot')} {fmt(pot)} 🪙</span>
+          <motion.span
+            key={pot}
+            initial={{ scale: 1.25 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+            className="rounded-full bg-brand-yellow/15 px-3 py-1.5 text-brand-yellow"
+          >
+            {t('Pot')} {fmt(pot)} 🪙
+          </motion.span>
         )}
         {(beat === 'question' || beat === 'shoot') && (
           <span className="rounded-full bg-brand-green/15 px-3 py-1.5 text-brand-green">×{mult}</span>
         )}
       </div>
 
-      {/* Goal */}
-      <div className="mt-3">
+      {/* Multiplier ladder (informed path) */}
+      <div className="mt-2 flex items-center justify-center gap-1">
+        {LADDER.map((m, i) => {
+          const reached = pot > 0 && runMult >= m - 0.01;
+          const isNext = i === (ladderIndex >= 0 ? ladderIndex : LADDER.findIndex((x) => x > runMult));
+          return (
+            <span
+              key={m}
+              className={`rounded-md px-1.5 py-0.5 font-poppins text-[9px] font-black tabular-nums ${
+                reached
+                  ? 'bg-brand-green/25 text-brand-green'
+                  : isNext && pot > 0
+                    ? 'bg-brand-yellow/20 text-brand-yellow'
+                    : 'bg-white/[0.05] text-white/35'
+              }`}
+            >
+              {m}x
+            </span>
+          );
+        })}
+      </div>
+
+      {/* Goal — shakes on a save, bursts on a goal */}
+      <motion.div
+        className="mt-3"
+        animate={
+          beat === 'saved'
+            ? { x: [0, -7, 7, -5, 5, 0] }
+            : beat === 'goal'
+              ? { scale: [1, 1.015, 1] }
+              : { x: 0, scale: 1 }
+        }
+        transition={{ duration: 0.45 }}
+      >
         <FinalThirdGoal
           picking={beat === 'shoot'}
           revealedSave={revealedSave}
+          scouting={beat === 'shoot' && informed === true}
           shotZone={shotZone}
           resolving={beat === 'resolving'}
           settled={beat === 'goal' || beat === 'saved'}
           scored={scored}
           onPick={shoot}
         />
-      </div>
+      </motion.div>
 
       {/* Beat area */}
       <div className="mt-3 flex-1">
@@ -210,6 +348,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
                   {t('Top up (demo)')}
                 </button>
               )}
+              <StadiumBoard t={t} bestRun={bestRun} />
             </motion.div>
           )}
 
@@ -246,6 +385,11 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
                   );
                 })}
               </div>
+              {selected !== null && (
+                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-3 text-center font-poppins text-[10px] font-bold uppercase tracking-wide text-white/50">
+                  {t('{pct}% answered correctly', { pct: pulse.answered })}
+                </motion.p>
+              )}
             </motion.div>
           )}
 
@@ -253,8 +397,9 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
             <motion.div key="shoot" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-2 text-center">
               {informed ? (
                 <motion.div
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
+                  initial={{ scale: 0.7, opacity: 0, rotate: -3 }}
+                  animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                  transition={{ type: 'spring', stiffness: 320, damping: 16 }}
                   className="mx-auto inline-flex items-center gap-2 rounded-full bg-brand-green/15 px-4 py-2 font-poppins text-sm font-black uppercase text-brand-green"
                 >
                   <Eye className="size-4" /> {t('SCOUT REPORT ✓ — one save zone revealed')}
@@ -265,22 +410,38 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
                 </div>
               )}
               <p className="font-poppins text-xs font-bold uppercase tracking-wide text-white/60">
-                {t('Pick your shot zone')} · {zoneCountLabel} · {fmt(pot)} → {fmt(potential)} 🪙
+                {t('Pick your shot zone')} · {informed ? t('4 GOAL · 1 SAVE') : t('4 GOAL · 2 SAVE')} · {fmt(pot)} → {fmt(potential)} 🪙
               </p>
             </motion.div>
           )}
 
           {beat === 'goal' && (
             <motion.div key="goal" initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="space-y-3 text-center">
-              <div className="font-poppins text-2xl font-black uppercase text-brand-green">{t('GOAL!')}</div>
+              <motion.div
+                initial={{ scale: 2.2, opacity: 0, rotate: -6 }}
+                animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 14 }}
+                className="font-poppins text-3xl font-black uppercase text-brand-green drop-shadow-[0_0_18px_rgba(88,204,2,0.5)]"
+              >
+                {t('GOAL!')}
+              </motion.div>
+              <div className="flex flex-wrap items-center justify-center gap-2 font-poppins text-[10px] font-bold uppercase tracking-wide text-white/50">
+                <span>{t('{pct}% scored', { pct: pulse.scored })}</span>
+                <span>·</span>
+                <span>{t('{pct}% cashed out', { pct: pulse.cashed })}</span>
+                <span>·</span>
+                <span className="text-brand-orange">🔥 {t('{n} going NEXT ATTACK', { n: pulse.going.toLocaleString() })}</span>
+              </div>
               <div className="flex gap-2">
-                <button
+                <motion.button
                   type="button"
                   onClick={cashOut}
+                  animate={{ scale: [1, 1.03, 1] }}
+                  transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
                   className="h-14 flex-1 rounded-2xl bg-brand-yellow font-poppins text-base font-black uppercase tracking-wide text-black active:scale-[0.98]"
                 >
                   {t('TAKE {amount}', { amount: fmt(pot) })} 🪙
-                </button>
+                </motion.button>
                 <button
                   type="button"
                   onClick={nextAttack}
@@ -297,7 +458,14 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
 
           {beat === 'saved' && (
             <motion.div key="saved" initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="space-y-3 text-center">
-              <div className="font-poppins text-2xl font-black uppercase text-brand-red">{t('SAVED!')}</div>
+              <motion.div
+                initial={{ scale: 1.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 300, damping: 15 }}
+                className="font-poppins text-3xl font-black uppercase text-brand-red drop-shadow-[0_0_18px_rgba(255,75,75,0.45)]"
+              >
+                {t('SAVED!')}
+              </motion.div>
               <p className="font-poppins text-xs font-semibold text-white/55">{t('The keeper read it — pot lost.')}</p>
               <button
                 type="button"
@@ -306,14 +474,20 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
               >
                 {t('New round')}
               </button>
+              <StadiumBoard t={t} bestRun={bestRun} />
             </motion.div>
           )}
 
           {beat === 'cashed' && (
             <motion.div key="cashed" initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="space-y-3 text-center">
-              <div className="font-poppins text-2xl font-black text-brand-gold">
-                <Coins className="mr-1.5 inline size-6" /> +{fmt(lastTake ?? 0)}
-              </div>
+              <motion.div
+                initial={{ scale: 0.6, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 320, damping: 15 }}
+                className="font-poppins text-3xl font-black text-brand-gold drop-shadow-[0_0_18px_rgba(255,215,0,0.4)]"
+              >
+                <Coins className="mr-1.5 inline size-7" /> +{fmt(lastTake ?? 0)}
+              </motion.div>
               <button
                 type="button"
                 onClick={() => setBeat('bet')}
@@ -321,6 +495,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
               >
                 {t('New round')}
               </button>
+              <StadiumBoard t={t} bestRun={bestRun} />
             </motion.div>
           )}
 
@@ -331,9 +506,48 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
   );
 }
 
+/** Longest-runs leaderboard — static flavour rows + the player's own best. */
+function StadiumBoard({ t, bestRun }: { t: (k: string, v?: Record<string, string | number>) => string; bestRun: number | null }) {
+  const rows: Array<{ name: string; mult: number; you?: boolean }> = [
+    { name: 'თაზო10', mult: 18.31 },
+    { name: 'გიორგი7', mult: 14.66 },
+    { name: 'ნიკა77', mult: 9.16 },
+    { name: 'საბა_fc', mult: 5.72 },
+  ];
+  if (bestRun != null && bestRun > 1) rows.push({ name: t('You'), mult: bestRun, you: true });
+  rows.sort((a, b) => b.mult - a.mult);
+
+  return (
+    <div className="rounded-2xl border border-white/[0.07] bg-black/25 p-3">
+      <div className="mb-2 flex items-center gap-1.5 font-poppins text-[10px] font-black uppercase tracking-wider text-brand-gold">
+        <Trophy className="size-3.5" /> {t('Longest runs today')}
+      </div>
+      <div className="space-y-1">
+        {rows.slice(0, 5).map((r, i) => (
+          <div
+            key={r.name}
+            className={`flex items-center justify-between rounded-lg px-2.5 py-1.5 font-poppins text-xs font-bold ${
+              r.you ? 'bg-brand-yellow/15 text-brand-yellow' : i === 0 ? 'bg-white/[0.06] text-white' : 'text-white/60'
+            }`}
+          >
+            <span className="flex items-center gap-2">
+              <span className="w-4 text-right tabular-nums text-white/35">{i + 1}</span>
+              {r.name}
+            </span>
+            <span className="tabular-nums">{r.mult.toFixed(2)}x</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const CONFETTI = ['#58CC02', '#FFE500', '#1CB0F6', '#FF9600', '#CE82FF', '#FFD700'];
+
 function FinalThirdGoal({
   picking,
   revealedSave,
+  scouting,
   shotZone,
   resolving,
   settled,
@@ -342,6 +556,7 @@ function FinalThirdGoal({
 }: {
   picking: boolean;
   revealedSave: string | null;
+  scouting: boolean;
   shotZone: Zone | null;
   resolving: boolean;
   settled: boolean;
@@ -357,15 +572,29 @@ function FinalThirdGoal({
 
   return (
     <div className="relative mx-auto aspect-[16/9] w-full overflow-hidden rounded-[24px] border border-white/10 bg-white/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] backdrop-blur-md">
+      {/* Stadium atmosphere: floodlight beams + crowd band + pitch wash */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
         style={{
           backgroundImage: [
+            'radial-gradient(60% 42% at 18% 0%, rgba(255,255,255,0.10), transparent 70%)',
+            'radial-gradient(60% 42% at 82% 0%, rgba(255,255,255,0.10), transparent 70%)',
+            'linear-gradient(180deg, rgba(6,10,22,0.55) 0%, rgba(6,10,22,0.15) 22%, transparent 34%)',
             'radial-gradient(110% 70% at 50% 8%, rgba(88,204,2,0.16), transparent 62%)',
             'linear-gradient(180deg, rgba(56,182,14,0.06), rgba(8,24,14,0.16))',
             'repeating-linear-gradient(90deg, rgba(56,182,14,0.08) 0 28px, rgba(56,182,14,0.02) 28px 56px)',
           ].join(', '),
+        }}
+      />
+      {/* Crowd dots band */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 h-[12%] opacity-40"
+        style={{
+          backgroundImage:
+            'radial-gradient(circle at 4px 4px, rgba(255,255,255,0.35) 1.1px, transparent 1.4px)',
+          backgroundSize: '11px 8px',
         }}
       />
 
@@ -382,6 +611,9 @@ function FinalThirdGoal({
         </defs>
         <path d="M78 210 V168 H322 V210" fill="none" stroke="rgba(255,255,255,0.28)" strokeWidth="1.6" />
         <circle cx="200" cy="204" r="3.2" fill="rgba(255,255,255,0.55)" />
+        {/* side netting depth */}
+        <path d="M42 18 L58 30 V140 L42 148 Z" fill="url(#ft-net)" opacity="0.45" />
+        <path d="M358 18 L342 30 V140 L358 148 Z" fill="url(#ft-net)" opacity="0.45" />
         <path d="M42 18 H358 V148 H42 Z" fill="url(#ft-net)" opacity="0.9" />
         <rect x="36" y="12" width="10" height="140" rx="2" fill="url(#ft-post)" />
         <rect x="354" y="12" width="10" height="140" rx="2" fill="url(#ft-post)" />
@@ -389,6 +621,24 @@ function FinalThirdGoal({
         <path d="M46 152 H354" stroke="rgba(255,255,255,0.45)" strokeWidth="1.4" />
       </svg>
 
+      {/* VAR sweep on scout */}
+      <AnimatePresence>
+        {scouting && (
+          <motion.div
+            key="var-sweep"
+            className="pointer-events-none absolute inset-y-[4%] z-30 w-10"
+            initial={{ left: '-12%', opacity: 0 }}
+            animate={{ left: ['-12%', '104%'], opacity: [0, 0.9, 0] }}
+            transition={{ duration: 0.9, ease: 'easeInOut' }}
+            style={{
+              background:
+                'linear-gradient(90deg, transparent, rgba(88,204,2,0.5), rgba(255,255,255,0.65), rgba(88,204,2,0.5), transparent)',
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Outcome washes */}
       <AnimatePresence>
         {showGoalFx && (
           <motion.div
@@ -414,6 +664,33 @@ function FinalThirdGoal({
         )}
       </AnimatePresence>
 
+      {/* Confetti burst on goal */}
+      <AnimatePresence>
+        {showGoalFx && dest && (
+          <motion.div key="confetti" className="pointer-events-none absolute inset-0 z-30" initial={false} exit={{ opacity: 0 }}>
+            {CONFETTI.map((c, i) => {
+              const angle = (i / CONFETTI.length) * Math.PI * 2;
+              return (
+                <motion.span
+                  key={c + i}
+                  className="absolute size-2 rounded-[2px]"
+                  style={{ left: `${dest.x}%`, top: `${dest.y}%`, backgroundColor: c }}
+                  initial={{ x: 0, y: 0, opacity: 1, rotate: 0, scale: 1 }}
+                  animate={{
+                    x: Math.cos(angle) * (46 + (i % 3) * 18),
+                    y: Math.sin(angle) * (34 + (i % 3) * 14) + 30,
+                    opacity: 0,
+                    rotate: 200 + i * 40,
+                    scale: 0.6,
+                  }}
+                  transition={{ duration: 0.9, ease: 'easeOut' }}
+                />
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Zones */}
       {(picking || revealedSave) &&
         ZONES.map((z) => {
@@ -427,12 +704,12 @@ function FinalThirdGoal({
               onClick={() => onPick(z)}
               aria-label={locked ? 'Locked save zone' : `Zone ${z.id}`}
               initial={{ opacity: 0, scale: 0.7 }}
-              animate={locked ? { opacity: 1, scale: 1 } : { opacity: 1, scale: [1, 1.08, 1] }}
-              transition={locked ? { duration: 0.3 } : { scale: { duration: 1.6, repeat: Infinity, ease: 'easeInOut' } }}
+              animate={locked ? { opacity: 1, scale: [1.3, 1] } : { opacity: 1, scale: [1, 1.08, 1] }}
+              transition={locked ? { duration: 0.35, ease: 'easeOut' } : { scale: { duration: 1.6, repeat: Infinity, ease: 'easeInOut' } }}
               className={`group absolute z-20 size-10 -translate-x-1/2 -translate-y-1/2 rounded-full border sm:size-11 ${
                 locked
-                  ? 'cursor-not-allowed border-brand-red/70 bg-brand-red/20'
-                  : 'border-white/40 bg-white/10 transition-colors hover:border-brand-yellow hover:bg-brand-yellow/25'
+                  ? 'cursor-not-allowed border-brand-red/70 bg-brand-red/25 shadow-[0_0_14px_2px_rgba(255,75,75,0.35)]'
+                  : 'border-white/40 bg-white/10 transition-colors hover:border-brand-yellow hover:bg-brand-yellow/25 hover:shadow-[0_0_14px_2px_rgba(255,229,0,0.3)]'
               }`}
               style={{ left: `${z.x}%`, top: `${z.y}%` }}
             >
@@ -451,7 +728,7 @@ function FinalThirdGoal({
           );
         })}
 
-      {/* Keeper — dives to the shot zone only when it's a save */}
+      {/* Keeper — dives to the shot on a save, wrong way on a goal */}
       <motion.div
         className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-1/2"
         initial={false}
@@ -472,7 +749,17 @@ function FinalThirdGoal({
         </motion.div>
       </motion.div>
 
-      {/* Ball */}
+      {/* Ball with flight trail */}
+      {dest && resolving && (
+        <motion.div
+          className="pointer-events-none absolute z-[15] -translate-x-1/2 -translate-y-1/2"
+          initial={{ left: '50%', top: '88%', opacity: 0.5 }}
+          animate={{ left: [`50%`, `${peakX}%`, `${dest.x}%`], top: ['88%', `${peakY}%`, `${dest.y}%`], opacity: [0.4, 0.25, 0] }}
+          transition={{ duration: 0.72, ease: [0.18, 0.7, 0.28, 1], times: [0, 0.45, 1], delay: 0.06 }}
+        >
+          <span className="block size-7 rounded-full bg-white/40 blur-[6px]" />
+        </motion.div>
+      )}
       <motion.div
         className="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-1/2"
         initial={false}
