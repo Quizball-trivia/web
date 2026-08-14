@@ -18,7 +18,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { animate, motion, AnimatePresence } from 'motion/react';
-import { Check, Eye, Radio, Trophy } from 'lucide-react';
+import { Check, Eye, Radio, Trophy, X } from 'lucide-react';
 import { MiniGameShell } from './MiniGameShell';
 import { KeeperGlove } from './PenaltyShootout';
 import { getTrivia, type TriviaQuestion } from '../data/trivia';
@@ -47,6 +47,7 @@ const FinalThirdPitch3D = dynamic(
 const START_BALANCE = 100;
 const SAVE_ZONES = 2;
 const QUESTION_S = 5;
+const ANSWER_HOLD_MS = 2000;
 const INFORMED_FIRST_MULT = 1.2;
 const INFORMED_NEXT_MULT = 1.25;
 const BLIND_MULT = 1.4;
@@ -268,7 +269,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
       setSelected(-1);
       setInformed(false);
       fire('wrong', 'right');
-      later(() => setBeat('shoot'), 1050);
+      later(() => setBeat('shoot'), ANSWER_HOLD_MS);
     }, QUESTION_S * 1000);
     return () => {
       window.clearInterval(tick);
@@ -339,7 +340,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
         });
       }
       setBeat('shoot');
-    }, 1050);
+    }, ANSWER_HOLD_MS);
   };
 
   const shoot = (zone: Zone) => {
@@ -524,6 +525,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
             resolving={beat === 'resolving'}
             settled={beat === 'goal' || beat === 'saved'}
             scored={scored}
+            kickSeed={qIndex}
             onPick={shoot}
           />
         ) : (
@@ -633,37 +635,34 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
               </div>
               <p className="mb-3 font-poppins text-base font-bold leading-snug text-white">{question.q}</p>
               <div className="grid grid-cols-1 gap-2">
-                <AnimatePresence initial={false}>
-                  {question.options.map((opt, i) => {
-                    if (selected !== null && i !== question.answer) return null;
-                    const locked = selected !== null;
-                    return (
-                      <motion.button
-                        key={i}
-                        type="button"
-                        layout
-                        initial={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-                        animate={
-                          locked
-                            ? { opacity: 1, scale: 1.03, filter: 'blur(0px)' }
-                            : { opacity: 1, scale: 1, filter: 'blur(0px)' }
-                        }
-                        exit={{ opacity: 0, height: 0, marginTop: 0, marginBottom: 0, scale: 0.94, filter: 'blur(12px)' }}
-                        transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
-                        disabled={locked}
-                        onClick={() => answer(i)}
-                        className={`flex items-center justify-between overflow-hidden rounded-xl border-2 px-3.5 py-3 text-left font-poppins text-sm font-bold ${
-                          locked
+                {question.options.map((opt, i) => {
+                  const locked = selected !== null;
+                  const isCorrect = i === question.answer;
+                  const isPickedWrong = locked && selected === i && !isCorrect;
+                  const isFiller = locked && !isCorrect && !isPickedWrong;
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      disabled={locked}
+                      onClick={() => answer(i)}
+                      className={`flex items-center justify-between rounded-xl border-2 px-3.5 py-3 text-left font-poppins text-sm font-bold transition-[filter,opacity,transform] duration-300 ${
+                        !locked
+                          ? 'border-brand-yellow/70 bg-transparent text-white shadow-[0_0_6px_1px_rgba(255,229,0,0.12)] hover:border-brand-yellow'
+                          : isCorrect
                             ? 'border-brand-green bg-brand-green text-black shadow-[0_0_22px_rgba(88,204,2,0.45)]'
-                            : 'border-brand-yellow/70 bg-transparent text-white shadow-[0_0_6px_1px_rgba(255,229,0,0.12)] hover:border-brand-yellow'
-                        }`}
-                      >
-                        <span>{opt}</span>
-                        {locked && <Check className="size-5 shrink-0 text-black" />}
-                      </motion.button>
-                    );
-                  })}
-                </AnimatePresence>
+                            : isPickedWrong
+                              ? 'border-brand-red bg-brand-red/25 text-white'
+                              : 'border-white/10 bg-black/20 text-white/35'
+                      }`}
+                      style={isFiller ? { filter: 'blur(2px)', opacity: 0.45 } : undefined}
+                    >
+                      <span>{opt}</span>
+                      {locked && isCorrect && <Check className="size-5 shrink-0 text-black" />}
+                      {isPickedWrong && <X className="size-5 shrink-0 text-brand-red" />}
+                    </button>
+                  );
+                })}
               </div>
               {selected !== null && (
                 <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-3 text-center font-poppins text-[10px] font-bold uppercase tracking-wide text-white/50">

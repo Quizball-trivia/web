@@ -37,7 +37,9 @@ const ZONE_POS: Record<string, [number, number]> = {
 
 const BALL_SPOT = new THREE.Vector3(0, 0.13, 9);
 const SHOOTER_IDLE = new THREE.Vector3(-0.95, 0, 10.65);
-const SHOOTER_STRIKE = new THREE.Vector3(-0.18, 0, 9.38);
+const _idle = new THREE.Vector3();
+const _strike = new THREE.Vector3();
+const _ball = new THREE.Vector3();
 const KICK_LEAD_S = 0.45;
 const FLIGHT_S = 0.78;
 const SAVE_CONTACT_S = FLIGHT_S * 0.88;
@@ -82,12 +84,135 @@ const easeOut = (v: number) => {
   return 1 - (1 - t) * (1 - t);
 };
 
-type ShotStyle = 'curl' | 'drive' | 'placed';
+type TakerId = 'ronaldo' | 'messi' | 'beckham' | 'carlos' | 'ronaldinho' | 'neymar';
 
-function shotStyleFromZone(id: string): ShotStyle {
-  if (id === 'TL' || id === 'TR') return 'curl';
-  if (id === 'TC') return 'drive';
-  return 'placed';
+interface KickSetup {
+  id: TakerId;
+  ball: readonly [number, number, number];
+  idle: readonly [number, number];
+  strike: readonly [number, number];
+  wall: number;
+  yaw: number;
+  strides: number;
+  hop: number;
+  weave: number;
+  stutter: number;
+  whip: number;
+  curlBias: number;
+  heightBias: number;
+  spin: number;
+  knuckle: number;
+}
+
+/** Famous free-kick shapes — positions stay inside the camera frustum. */
+const KICK_SETUPS: readonly KickSetup[] = [
+  {
+    id: 'ronaldo',
+    ball: [0.12, 0.13, 9.2],
+    idle: [-0.28, 11.28],
+    strike: [-0.06, 9.48],
+    wall: 0.05,
+    yaw: 0.05,
+    strides: 3.1,
+    hop: 0.045,
+    weave: 0.04,
+    stutter: 0.72,
+    whip: 1.28,
+    curlBias: 0.12,
+    heightBias: 0.18,
+    spin: 14,
+    knuckle: 1,
+  },
+  {
+    id: 'messi',
+    ball: [-1.62, 0.13, 8.28],
+    idle: [-2.38, 9.42],
+    strike: [-1.78, 8.55],
+    wall: -0.82,
+    yaw: 0.34,
+    strides: 2.35,
+    hop: 0.03,
+    weave: 0.1,
+    stutter: 0,
+    whip: 0.82,
+    curlBias: 1.55,
+    heightBias: 0.62,
+    spin: 22,
+    knuckle: 0,
+  },
+  {
+    id: 'beckham',
+    ball: [1.95, 0.13, 8.62],
+    idle: [2.88, 9.95],
+    strike: [2.08, 8.88],
+    wall: 0.92,
+    yaw: -0.36,
+    strides: 3.9,
+    hop: 0.055,
+    weave: 0.2,
+    stutter: 0.12,
+    whip: 1.05,
+    curlBias: 1.42,
+    heightBias: 0.95,
+    spin: 24,
+    knuckle: 0.15,
+  },
+  {
+    id: 'carlos',
+    ball: [-2.28, 0.13, 9.72],
+    idle: [-3.42, 11.48],
+    strike: [-2.42, 10.02],
+    wall: -1.12,
+    yaw: 0.4,
+    strides: 5.15,
+    hop: 0.1,
+    weave: 0.16,
+    stutter: 0,
+    whip: 1.32,
+    curlBias: 2.05,
+    heightBias: -0.12,
+    spin: 28,
+    knuckle: 0.35,
+  },
+  {
+    id: 'ronaldinho',
+    ball: [0.92, 0.13, 7.88],
+    idle: [0.22, 8.72],
+    strike: [0.78, 8.15],
+    wall: 0.38,
+    yaw: -0.2,
+    strides: 1.85,
+    hop: 0.08,
+    weave: 0.14,
+    stutter: 0.2,
+    whip: 0.68,
+    curlBias: 0.85,
+    heightBias: 1.18,
+    spin: 11,
+    knuckle: 0.2,
+  },
+  {
+    id: 'neymar',
+    ball: [-0.88, 0.13, 8.08],
+    idle: [-1.52, 9.18],
+    strike: [-1.02, 8.35],
+    wall: -0.42,
+    yaw: 0.18,
+    strides: 3.25,
+    hop: 0.12,
+    weave: 0.22,
+    stutter: 0.28,
+    whip: 0.9,
+    curlBias: 0.95,
+    heightBias: 0.48,
+    spin: 18,
+    knuckle: 0.25,
+  },
+];
+
+function kickFromSeed(seed: number): KickSetup {
+  const rnd = seeded(seed || 1);
+  return KICK_SETUPS[Math.floor(rnd() * KICK_SETUPS.length) % KICK_SETUPS.length];
 }
 
 function zoneSide(id: string): number {
@@ -497,11 +622,13 @@ interface Timeline {
 
 function Shooter({
   tl,
+  kick,
   shotZone,
   settled,
   scored,
 }: {
   tl: RefObject<Timeline>;
+  kick: KickSetup;
   shotZone: Zone | null;
   settled: boolean;
   scored: boolean | null;
@@ -516,14 +643,15 @@ function Shooter({
     const joint = joints.current;
     const now = state.clock.elapsedTime;
     const start = tl.current?.start ?? null;
-    const style = shotStyleFromZone(shotZone?.id ?? 'TC');
     const side = zoneSide(shotZone?.id ?? 'TC');
+    _idle.set(kick.idle[0], 0, kick.idle[1]);
+    _strike.set(kick.strike[0], 0, kick.strike[1]);
 
     if (start == null) {
       const breathe = Math.sin(now * 2.2);
-      player.position.copy(SHOOTER_IDLE);
+      player.position.copy(_idle);
       player.position.y = 0.018 + breathe * 0.012;
-      player.rotation.set(0, Math.PI + 0.13, -0.025);
+      player.rotation.set(0, Math.PI + kick.yaw, -0.025);
       setJoint(joint.pelvis, 0, 0, breathe * 0.035);
       setJoint(joint.spine, 0.03, 0, -0.04);
       setJoint(joint.hipL, 0.08 + breathe * 0.025);
@@ -539,68 +667,68 @@ function Shooter({
     }
 
     const phase = now - start;
-    const strides = style === 'drive' ? 4.55 : style === 'curl' ? 3.45 : 2.7;
-    const hop = style === 'drive' ? 0.09 : style === 'curl' ? 0.07 : 0.032;
-    const weave = style === 'curl' ? 0.28 * (side || 1) : style === 'drive' ? 0.04 : 0.07;
-    const yaw0 = style === 'curl' ? 0.22 * (side || 1) : style === 'drive' ? 0.06 : 0.16;
-    const yaw1 = style === 'curl' ? 0.12 * (side || 1) : 0.02;
+    let runU = clamp01(phase / 0.29);
+    if (kick.stutter > 0 && runU > 0.32 && runU < 0.58) {
+      const hold = (runU - 0.32) / 0.26;
+      runU = 0.32 + hold * (1 - kick.stutter * 0.65) * 0.26;
+    }
 
     if (!settled) {
       if (phase < 0.29) {
-        const progress = easeOut(phase / 0.29);
-        const stride = Math.sin(progress * Math.PI * strides);
-        player.position.lerpVectors(SHOOTER_IDLE, SHOOTER_STRIKE, progress * 0.78);
-        player.position.x -= Math.sin(progress * Math.PI) * weave;
-        player.position.y = Math.abs(Math.sin(progress * Math.PI * (style === 'placed' ? 1.4 : 2.2))) * hop;
-        player.rotation.set(0, Math.PI + lerp(yaw0, yaw1, progress), style === 'placed' ? -0.06 : -0.02);
-        setJoint(joint.pelvis, 0, side * (style === 'curl' ? 0.12 : 0.04) * progress, -stride * 0.05);
-        setJoint(joint.hipL, stride * (style === 'placed' ? 0.52 : 0.78));
-        setJoint(joint.hipR, -stride * (style === 'placed' ? 0.52 : 0.78));
+        const progress = easeOut(runU);
+        const stride = Math.sin(progress * Math.PI * kick.strides);
+        player.position.lerpVectors(_idle, _strike, progress * 0.78);
+        player.position.x -= Math.sin(progress * Math.PI) * kick.weave * (side || 1);
+        player.position.y = Math.abs(Math.sin(progress * Math.PI * (kick.id === 'neymar' ? 3.4 : 2.1))) * kick.hop;
+        player.rotation.set(0, Math.PI + lerp(kick.yaw, kick.yaw * 0.25, progress), kick.id === 'messi' ? -0.08 : -0.02);
+        setJoint(joint.pelvis, 0, kick.yaw * 0.4 * progress, -stride * 0.05);
+        setJoint(joint.hipL, stride * 0.7);
+        setJoint(joint.hipR, -stride * 0.7);
         setJoint(joint.kneeL, Math.max(0, -stride) * 0.98 + 0.12);
         setJoint(joint.kneeR, Math.max(0, stride) * 0.98 + 0.12);
         setJoint(joint.ankleL, -Math.max(0, -stride) * 0.26);
         setJoint(joint.ankleR, -Math.max(0, stride) * 0.26);
         setJoint(joint.shoL, -stride * 0.72, 0, 0.16);
         setJoint(joint.shoR, stride * 0.72, 0, -0.16);
-        setJoint(joint.elbL, style === 'drive' ? -0.68 : -0.5);
-        setJoint(joint.elbR, style === 'drive' ? -0.68 : -0.5);
-        setJoint(joint.spine, style === 'placed' ? 0.08 : -0.14, side * (style === 'curl' ? 0.18 : 0.04), 0.02);
-        setJoint(joint.head, 0.04, -0.08 + side * 0.06, 0);
+        setJoint(joint.elbL, kick.id === 'ronaldo' ? -0.78 : -0.5);
+        setJoint(joint.elbR, kick.id === 'ronaldo' ? -0.78 : -0.5);
+        setJoint(joint.spine, kick.id === 'ronaldinho' ? 0.1 : -0.14, kick.yaw * 0.5, 0.02);
+        setJoint(joint.head, 0.04, -0.08 + kick.yaw * 0.3, 0);
       } else {
         const strike = easeInOut((phase - 0.29) / (KICK_LEAD_S - 0.29));
         const follow = easeOut(clamp01((phase - KICK_LEAD_S) / 0.42));
-        const whip = style === 'drive' ? 1.18 : style === 'curl' ? 1 : 0.72;
-        player.position.lerpVectors(SHOOTER_IDLE, SHOOTER_STRIKE, 0.78 + strike * 0.22);
-        player.position.y = Math.sin(strike * Math.PI) * (style === 'placed' ? 0.012 : 0.034);
+        const whip = kick.whip;
+        player.position.lerpVectors(_idle, _strike, 0.78 + strike * 0.22);
+        player.position.y = Math.sin(strike * Math.PI) * (kick.hop * 0.45);
         player.rotation.set(
           0,
-          Math.PI + lerp(yaw1, style === 'curl' ? -0.16 * (side || 1) : 0.02, strike),
-          lerp(-0.05, style === 'drive' ? 0.18 : 0.1, strike),
+          Math.PI + lerp(kick.yaw * 0.25, -kick.yaw * 0.55, strike),
+          lerp(-0.05, kick.id === 'carlos' ? 0.22 : 0.1, strike),
         );
         const hipSnap = phase < KICK_LEAD_S
           ? lerp(0.88 * whip, -1.48 * whip, strike)
-          : lerp(-1.48 * whip, style === 'placed' ? -0.42 : -0.62, follow);
+          : lerp(-1.48 * whip, kick.id === 'messi' ? -0.4 : -0.62, follow);
         const kneeSnap = phase < KICK_LEAD_S
-          ? lerp(style === 'placed' ? 0.92 : 1.22, style === 'placed' ? 0.28 : 0.1, strike)
-          : lerp(style === 'placed' ? 0.28 : 0.1, 0.32, follow);
-        setJoint(joint.pelvis, 0, lerp(-0.08, style === 'curl' ? 0.28 * (side || 1) : 0.16, strike), lerp(-0.04, 0.2, strike));
+          ? lerp(kick.id === 'messi' ? 0.9 : 1.22, kick.id === 'messi' ? 0.26 : 0.1, strike)
+          : lerp(0.12, 0.32, follow);
+        setJoint(joint.pelvis, 0, lerp(-0.08, kick.curlBias * 0.12 * (side || 1), strike), lerp(-0.04, 0.2, strike));
         setJoint(joint.hipR, hipSnap);
         setJoint(joint.kneeR, kneeSnap);
-        setJoint(joint.ankleR, style === 'placed' ? lerp(0.18, -0.22, strike) : lerp(-0.22, 0.28, strike));
-        setJoint(joint.hipL, lerp(-0.22, style === 'placed' ? 0.28 : 0.14, strike));
+        setJoint(joint.ankleR, kick.id === 'messi' ? lerp(0.18, -0.22, strike) : lerp(-0.22, 0.28, strike));
+        setJoint(joint.hipL, lerp(-0.22, 0.16, strike));
         setJoint(joint.kneeL, lerp(0.55, 0.26, strike));
         setJoint(joint.ankleL, -0.1);
         setJoint(joint.shoL, lerp(-0.72, 0.92 * whip, strike), 0, lerp(0.16, 0.62, strike));
         setJoint(joint.shoR, lerp(0.86, -0.82 * whip, strike), 0, lerp(-0.14, -0.52, strike));
         setJoint(joint.elbL, -0.46);
         setJoint(joint.elbR, -0.58);
-        setJoint(joint.spine, lerp(0.14, style === 'drive' ? -0.32 : -0.18, strike), side * (style === 'curl' ? 0.22 : 0.05), lerp(-0.04, -0.2, strike));
-        setJoint(joint.head, 0.1, 0.04 + side * 0.05, 0.05);
+        setJoint(joint.spine, lerp(0.14, kick.id === 'ronaldo' ? -0.34 : -0.18, strike), kick.yaw * 0.4, lerp(-0.04, -0.2, strike));
+        setJoint(joint.head, kick.id === 'ronaldinho' ? -0.16 : 0.1, 0.04 + kick.yaw * 0.2, 0.05);
       }
       return;
     }
 
-    player.position.copy(SHOOTER_STRIKE);
+    player.position.copy(_strike);
     player.rotation.set(0, Math.PI + 0.02, 0);
     if (scored) {
       const bounce = Math.abs(Math.sin(now * 6.2));
@@ -739,6 +867,7 @@ function WallPlayer({
   skin,
   hair,
   number,
+  shift,
 }: {
   tl: RefObject<Timeline>;
   x: number;
@@ -746,6 +875,7 @@ function WallPlayer({
   skin: string;
   hair: string;
   number: number;
+  shift: number;
 }) {
   const root = useRef<THREE.Group>(null);
   const joints = useRef<JointMap | null>(null);
@@ -757,20 +887,21 @@ function WallPlayer({
     const joint = joints.current;
     const now = state.clock.elapsedTime;
     const start = tl.current?.start ?? null;
+    const px = x + shift;
 
     setJoint(joint.spine, 0.06);
     setJoint(joint.shoL, -0.6, 0, 0.45);
     setJoint(joint.shoR, -0.6, 0, -0.45);
     setJoint(joint.elbL, -1.82, 0, -0.18);
     setJoint(joint.elbR, -1.82, 0, 0.18);
-    setJoint(joint.head, 0, -x * 0.035, 0);
+    setJoint(joint.head, 0, -px * 0.035, 0);
 
     const jumpAt = start == null ? null : start + KICK_LEAD_S - 0.035 + delay;
     if (jumpAt != null && now >= jumpAt) {
       const jump = clamp01((now - jumpAt) / 0.55);
       const height = Math.sin(jump * Math.PI) * 0.47;
-      player.position.set(x, height, 4.55);
-      player.rotation.set(0, 0, Math.sin(jump * Math.PI) * (x + 1.5) * 0.025);
+      player.position.set(px, height, 4.55);
+      player.rotation.set(0, 0, Math.sin(jump * Math.PI) * (px + 1.5) * 0.025);
       const tuck = Math.sin(jump * Math.PI);
       setJoint(joint.hipL, -tuck * 0.42);
       setJoint(joint.hipR, -tuck * 0.42);
@@ -780,7 +911,7 @@ function WallPlayer({
       setJoint(joint.ankleR, -tuck * 0.18);
     } else {
       const breathe = Math.sin(now * 2.1 + x * 2.7);
-      player.position.set(x, breathe * 0.012, 4.55);
+      player.position.set(px, breathe * 0.012, 4.55);
       player.rotation.set(0, 0, 0);
       setJoint(joint.hipL, 0);
       setJoint(joint.hipR, 0);
@@ -960,6 +1091,7 @@ interface SceneProps {
   scored: boolean | null;
   onPick: (zone: Zone) => void;
   zones: Zone[];
+  kick: KickSetup;
 }
 
 function Scene({
@@ -972,6 +1104,7 @@ function Scene({
   scored,
   onPick,
   zones,
+  kick,
 }: SceneProps) {
   const grass = useGrassTexture();
   const net = useNetTexture();
@@ -996,11 +1129,12 @@ function Scene({
     if (!ballMesh) return;
 
     const start = timeline.current.start;
+    _ball.set(kick.ball[0], kick.ball[1], kick.ball[2]);
     if (start == null || !shotZone) {
-      ballMesh.position.copy(BALL_SPOT);
+      ballMesh.position.copy(_ball);
       ballMesh.rotation.x += delta * 0.4;
       if (shadowMesh) {
-        shadowMesh.position.set(BALL_SPOT.x, 0.012, BALL_SPOT.z);
+        shadowMesh.position.set(_ball.x, 0.012, _ball.z);
         shadowMesh.scale.setScalar(1);
       }
       return;
@@ -1012,7 +1146,7 @@ function Scene({
     const flight = clamp01((now - launch) / FLIGHT_S);
 
     if (now < launch) {
-      ballMesh.position.copy(BALL_SPOT);
+      ballMesh.position.copy(_ball);
     } else if (willSave === true && now >= launch + SAVE_CONTACT_S) {
       const parry = easeInOut((now - launch - SAVE_CONTACT_S) / 0.58);
       const side = destinationX === 0 ? (shotZone.id === 'TC' ? 1 : -1) : Math.sign(destinationX);
@@ -1027,25 +1161,20 @@ function Scene({
       ballMesh.rotation.z += delta * side * 13;
     } else {
       const targetFlight = willSave === true ? clamp01(flight / 0.88) : flight;
-      const style = shotStyleFromZone(shotZone.id);
       const side = shotZone.x === 50 ? 0 : shotZone.x < 50 ? 1 : -1;
-      const curl = style === 'curl' ? side * 1.92 : style === 'placed' ? side * 0.68 : side * 0.18;
-      const controlX = destinationX * (style === 'drive' ? 0.18 : 0.34) + curl;
-      const controlY = style === 'drive'
-        ? Math.max(destinationY, 1.18) + 0.42
-        : style === 'placed'
-          ? Math.max(destinationY, 1.05) + 0.78
-          : Math.max(destinationY, 1.62) + 1.38;
-      const controlZ = BALL_SPOT.z * (style === 'drive' ? 0.52 : 0.45);
+      const curl = (kick.curlBias + (Math.abs(side) ? 0.35 : 0)) * (side || (kick.curlBias > 0.5 ? 1 : 0.2));
+      const controlX = destinationX * 0.28 + curl + _ball.x * 0.22;
+      const controlY = Math.max(destinationY, 1.12) + 0.55 + kick.heightBias;
+      const controlZ = _ball.z * 0.48;
       const oneMinus = 1 - targetFlight;
+      const wobble = kick.knuckle * Math.sin(targetFlight * 17.5) * 0.11;
       ballMesh.position.set(
-        oneMinus * oneMinus * BALL_SPOT.x + 2 * oneMinus * targetFlight * controlX + targetFlight * targetFlight * destinationX,
-        oneMinus * oneMinus * BALL_SPOT.y + 2 * oneMinus * targetFlight * controlY + targetFlight * targetFlight * destinationY,
-        oneMinus * oneMinus * BALL_SPOT.z + 2 * oneMinus * targetFlight * controlZ + targetFlight * targetFlight * destinationZ,
+        oneMinus * oneMinus * _ball.x + 2 * oneMinus * targetFlight * controlX + targetFlight * targetFlight * destinationX + wobble * 0.35,
+        oneMinus * oneMinus * _ball.y + 2 * oneMinus * targetFlight * controlY + targetFlight * targetFlight * destinationY + wobble,
+        oneMinus * oneMinus * _ball.z + 2 * oneMinus * targetFlight * controlZ + targetFlight * targetFlight * destinationZ,
       );
-      const spin = style === 'placed' ? 12 : style === 'curl' ? 21 : 19;
-      ballMesh.rotation.x -= delta * spin;
-      ballMesh.rotation.z += delta * curl * (style === 'curl' ? 3.4 : 1.6);
+      ballMesh.rotation.x -= delta * kick.spin;
+      ballMesh.rotation.z += delta * curl * 2.4;
 
       if (willSave === false && flight >= 1) {
         const netTravel = easeInOut((now - launch - FLIGHT_S) / 0.34);
@@ -1057,7 +1186,7 @@ function Scene({
 
     if (shadowMesh) {
       shadowMesh.position.set(ballMesh.position.x, 0.012, ballMesh.position.z);
-      const height = Math.max(0, ballMesh.position.y - BALL_SPOT.y);
+      const height = Math.max(0, ballMesh.position.y - _ball.y);
       const scale = 1 + Math.min(1.25, height * 0.32);
       shadowMesh.scale.set(scale, scale, 1);
       const material = shadowMesh.material;
@@ -1097,7 +1226,7 @@ function Scene({
           <meshBasicMaterial color="#f3f7f4" transparent opacity={0.74} />
         </mesh>
       ))}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.009, 9]}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[kick.ball[0], 0.009, kick.ball[2]]}>
         <circleGeometry args={[0.09, 16]} />
         <meshBasicMaterial color="#ffffff" transparent opacity={0.9} />
       </mesh>
@@ -1136,10 +1265,10 @@ function Scene({
 
       {/* players */}
       {WALL_PLAYERS.map((player) => (
-        <WallPlayer key={player.x} tl={timeline} {...player} />
+        <WallPlayer key={player.x} tl={timeline} {...player} shift={kick.wall} />
       ))}
       <KeeperPlayer tl={timeline} shotZone={shotZone} willSave={willSave} />
-      <Shooter tl={timeline} shotZone={shotZone} settled={settled} scored={scored} />
+      <Shooter tl={timeline} kick={kick} shotZone={shotZone} settled={settled} scored={scored} />
 
       {/* generous invisible hit discs wrap crisp visible targets */}
       {zones.map((zone) => {
@@ -1240,6 +1369,7 @@ export function FinalThirdPitch3D({
   resolving,
   settled,
   scored,
+  kickSeed,
   onPick,
 }: {
   picking: boolean;
@@ -1250,6 +1380,7 @@ export function FinalThirdPitch3D({
   resolving: boolean;
   settled: boolean;
   scored: boolean | null;
+  kickSeed: number;
   onPick: (zone: Zone) => void;
 }) {
   const zones: Zone[] = useMemo(
@@ -1263,6 +1394,7 @@ export function FinalThirdPitch3D({
     ],
     [],
   );
+  const kick = useMemo(() => kickFromSeed(kickSeed), [kickSeed]);
   const showGoalFx = settled && scored === true;
   const showSaveFx = settled && scored === false;
 
@@ -1286,6 +1418,7 @@ export function FinalThirdPitch3D({
           scored={scored}
           onPick={onPick}
           zones={zones}
+          kick={kick}
         />
       </Canvas>
 
