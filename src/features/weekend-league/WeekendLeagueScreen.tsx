@@ -79,6 +79,7 @@ export function WeekendLeagueScreen({
           {wl.phase !== 'qualifier_live' && wl.phase !== 'playoffs_live' && (
             <LeagueHeader
               phase={wl.phase}
+              status={controller?.status}
               milestones={wl.milestones}
               qp={controller?.qp}
               qpTarget={controller?.qpTarget}
