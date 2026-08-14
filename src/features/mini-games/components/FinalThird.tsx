@@ -723,9 +723,12 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
                   onClick={cashOut}
                   animate={{ scale: [1, 1.03, 1] }}
                   transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
-                  className="h-14 flex-1 rounded-2xl bg-brand-yellow font-poppins text-base font-black uppercase tracking-wide text-black active:scale-[0.98]"
+                  className="inline-flex h-14 flex-1 items-center justify-center gap-1.5 rounded-2xl bg-brand-yellow font-poppins text-base font-black uppercase tracking-wide text-black active:scale-[0.98]"
                 >
-                  {t('TAKE {amount}', { amount: fmt(pot) })} <CashBill size={0.5} />
+                  <span>{t('TAKE {amount}', { amount: fmt(pot) })}</span>
+                  <span className="inline-flex shrink-0 items-center">
+                    <CashBill size={0.5} />
+                  </span>
                 </motion.button>
                 <button
                   type="button"
