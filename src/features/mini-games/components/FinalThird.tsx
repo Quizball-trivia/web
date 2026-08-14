@@ -74,6 +74,23 @@ type Beat = 'bet' | 'question' | 'shoot' | 'resolving' | 'goal' | 'saved' | 'cas
 
 const fmt = (v: number) => (Number.isInteger(v) ? String(v) : v.toFixed(2));
 
+/** The app's actual coin sprite (same asset as the daily hub reward pills). */
+function Coin({ size = 16 }: { size?: number }) {
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src="/assets/coin-1.png?v=2"
+      alt=""
+      aria-hidden="true"
+      width={size}
+      height={size}
+      className="inline-block object-contain align-[-2px]"
+      style={{ width: size, height: size }}
+      draggable={false}
+    />
+  );
+}
+
 interface TickerEntry {
   id: number;
   name: string;
@@ -230,7 +247,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
       headerRight={<StatPill label={t('Balance')} value={fmt(balance)} color="#FFD700" />}
     >
       {/* Live stadium strip: player count + rotating last win. Cosmetic. */}
-      <div className="mt-1 flex items-center justify-between gap-2 rounded-xl border border-white/[0.07] bg-black/25 px-3 py-2">
+      <div className="mt-1 flex items-center justify-between gap-2 px-1 py-1">
         <span className="flex items-center gap-1.5 font-poppins text-[10px] font-black uppercase tracking-wide text-brand-red-soft">
           <Radio className="size-3.5 animate-pulse" /> {t('{n} playing now', { n: playingNow.toLocaleString() })}
         </span>
@@ -245,7 +262,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
                 transition={{ duration: 0.35 }}
                 className="absolute right-0 top-0 truncate font-poppins text-[10px] font-bold text-white/60"
               >
-                {ticker[0].name} <span className="text-brand-gold">+{fmt(ticker[0].amount)} 🪙</span>{' '}
+                {ticker[0].name} <span className="text-brand-gold">+{fmt(ticker[0].amount)} <Coin size={12} /></span>{' '}
                 <span className="text-white/40">×{ticker[0].mult}</span>
               </motion.span>
             )}
@@ -255,7 +272,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
 
       {/* HUD: stake | pot | next multiplier */}
       <div className="mt-2 flex items-center justify-center gap-2 font-poppins text-[12px] font-black uppercase tracking-wide text-white/70">
-        <span className="rounded-full bg-white/[0.06] px-3 py-1.5">{t('Stake')} {STAKE} 🪙</span>
+        <span className="rounded-full bg-white/[0.06] px-3 py-1.5">{t('Stake')} {STAKE} <Coin size={14} /></span>
         {pot > 0 && beat !== 'cashed' && (
           <motion.span
             key={pot}
@@ -264,7 +281,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
             transition={{ type: 'spring', stiffness: 400, damping: 15 }}
             className="rounded-full bg-brand-yellow/15 px-3 py-1.5 text-brand-yellow"
           >
-            {t('Pot')} {fmt(pot)} 🪙
+            {t('Pot')} {fmt(pot)} <Coin size={14} />
           </motion.span>
         )}
         {(beat === 'question' || beat === 'shoot') && (
@@ -410,7 +427,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
                 </div>
               )}
               <p className="font-poppins text-xs font-bold uppercase tracking-wide text-white/60">
-                {t('Pick your shot zone')} · {informed ? t('4 GOAL · 1 SAVE') : t('4 GOAL · 2 SAVE')} · {fmt(pot)} → {fmt(potential)} 🪙
+                {t('Pick your shot zone')} · {informed ? t('4 GOAL · 1 SAVE') : t('4 GOAL · 2 SAVE')} · {fmt(pot)} → {fmt(potential)} <Coin size={13} />
               </p>
             </motion.div>
           )}
@@ -440,7 +457,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
                   transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
                   className="h-14 flex-1 rounded-2xl bg-brand-yellow font-poppins text-base font-black uppercase tracking-wide text-black active:scale-[0.98]"
                 >
-                  {t('TAKE {amount}', { amount: fmt(pot) })} 🪙
+                  {t('TAKE {amount}', { amount: fmt(pot) })} <Coin size={18} />
                 </motion.button>
                 <button
                   type="button"
@@ -506,7 +523,9 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
   );
 }
 
-/** Longest-runs leaderboard — static flavour rows + the player's own best. */
+/** Longest-runs leaderboard styled like the Betsson event leaderboard:
+ *  orange border, orange #1 row, tilted "Powered by" badge. Flavour rows +
+ *  the player's own best run. */
 function StadiumBoard({ t, bestRun }: { t: (k: string, v?: Record<string, string | number>) => string; bestRun: number | null }) {
   const rows: Array<{ name: string; mult: number; you?: boolean }> = [
     { name: 'თაზო10', mult: 18.31 },
@@ -518,25 +537,38 @@ function StadiumBoard({ t, bestRun }: { t: (k: string, v?: Record<string, string
   rows.sort((a, b) => b.mult - a.mult);
 
   return (
-    <div className="rounded-2xl border border-white/[0.07] bg-black/25 p-3">
-      <div className="mb-2 flex items-center gap-1.5 font-poppins text-[10px] font-black uppercase tracking-wider text-brand-gold">
-        <Trophy className="size-3.5" /> {t('Longest runs today')}
+    <div className="relative mt-2">
+      {/* Betsson badge — same treatment as the event leaderboard. */}
+      <div
+        className="absolute -top-1 -right-2 z-20 flex flex-col items-start rounded-md px-2 py-1"
+        style={{ backgroundColor: '#FF6C0A', width: 120, height: 34, rotate: '-5.8deg', border: '2px solid #000', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}
+      >
+        <span className="text-[6px] font-bold uppercase tracking-wider text-white/80 leading-none">Powered by</span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/assets/betsson/3.png" alt="Betsson Sport" width={96} height={18} className="mt-0.5 h-4 w-auto object-contain" />
       </div>
-      <div className="space-y-1">
-        {rows.slice(0, 5).map((r, i) => (
-          <div
-            key={r.name}
-            className={`flex items-center justify-between rounded-lg px-2.5 py-1.5 font-poppins text-xs font-bold ${
-              r.you ? 'bg-brand-yellow/15 text-brand-yellow' : i === 0 ? 'bg-white/[0.06] text-white' : 'text-white/60'
-            }`}
-          >
-            <span className="flex items-center gap-2">
-              <span className="w-4 text-right tabular-nums text-white/35">{i + 1}</span>
-              {r.name}
-            </span>
-            <span className="tabular-nums">{r.mult.toFixed(2)}x</span>
-          </div>
-        ))}
+
+      <div className="mb-2 flex items-center gap-1.5 px-1 font-poppins text-[10px] font-black uppercase tracking-wider text-white/60">
+        <Trophy className="size-3.5 text-[#FF6C0A]" /> {t('Longest runs today')}
+      </div>
+      <div className="overflow-hidden rounded-[10px] border-2" style={{ borderColor: '#FF6C0A' }}>
+        <div className="divide-y divide-white/5">
+          {rows.slice(0, 5).map((r, i) => (
+            <div
+              key={r.name}
+              className={`flex items-center justify-between px-3 py-2.5 font-poppins text-sm font-bold ${
+                i === 0 ? 'text-white' : r.you ? 'bg-brand-green text-white' : 'text-white/70 hover:bg-white/[0.03]'
+              }`}
+              style={i === 0 ? { backgroundColor: '#FF6C0A' } : undefined}
+            >
+              <span className="flex items-center gap-2.5">
+                <span className="text-lg font-black tabular-nums">#{i + 1}</span>
+                {r.name}
+              </span>
+              <span className="text-base font-black tabular-nums">{r.mult.toFixed(2)}x</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
