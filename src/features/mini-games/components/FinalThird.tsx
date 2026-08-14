@@ -18,7 +18,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { animate, motion, AnimatePresence } from 'motion/react';
-import { Check, Eye, Radio, Trophy, X } from 'lucide-react';
+import { Check, Eye, Radio, Trophy } from 'lucide-react';
 import { MiniGameShell } from './MiniGameShell';
 import { KeeperGlove } from './PenaltyShootout';
 import { getTrivia, type TriviaQuestion } from '../data/trivia';
@@ -46,6 +46,7 @@ const FinalThirdPitch3D = dynamic(
 );
 const START_BALANCE = 100;
 const SAVE_ZONES = 2;
+const QUESTION_S = 5;
 const INFORMED_FIRST_MULT = 1.2;
 const INFORMED_NEXT_MULT = 1.25;
 const BLIND_MULT = 1.4;
@@ -222,6 +223,8 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
   const [stackBump, setStackBump] = useState(false);
   const tickerId = useRef(0);
   const timersRef = useRef<number[]>([]);
+  const selectedRef = useRef<number | null>(null);
+  const [qLeft, setQLeft] = useState(QUESTION_S);
 
   // ── Fake stadium: live-wins ticker + drifting player count. Cosmetic only.
   useEffect(() => {
@@ -253,6 +256,28 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
     timersRef.current.push(window.setTimeout(fn, ms));
   };
 
+  useEffect(() => {
+    if (beat !== 'question') return;
+    const started = Date.now();
+    const tick = window.setInterval(() => {
+      setQLeft(Math.max(0, QUESTION_S - (Date.now() - started) / 1000));
+    }, 100);
+    const to = window.setTimeout(() => {
+      if (selectedRef.current !== null) return;
+      selectedRef.current = -1;
+      setSelected(-1);
+      setInformed(false);
+      fire('wrong', 'right');
+      later(() => setBeat('shoot'), 1050);
+    }, QUESTION_S * 1000);
+    return () => {
+      window.clearInterval(tick);
+      window.clearTimeout(to);
+    };
+    // Restart only when a new question is dealt.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [beat, qIndex]);
+
   const question: TriviaQuestion = trivia[qIndex % trivia.length];
   const mult = informed ? (attack === 0 ? INFORMED_FIRST_MULT : INFORMED_NEXT_MULT) : BLIND_MULT;
   const potential = useMemo(() => Math.round(pot * mult * 100) / 100, [pot, mult]);
@@ -270,6 +295,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
   }, [qIndex, attack]);
 
   const beginAttack = () => {
+    selectedRef.current = null;
     setSelected(null);
     setInformed(null);
     setRevealedSave(null);
@@ -277,6 +303,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
     setScored(null);
     setSaves(pickSaveZones());
     setQIndex((q) => q + 1);
+    setQLeft(QUESTION_S);
     setBeat('question');
   };
 
@@ -297,7 +324,8 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
   };
 
   const answer = (i: number) => {
-    if (selected !== null) return;
+    if (selectedRef.current !== null) return;
+    selectedRef.current = i;
     setSelected(i);
     const correct = i === question.answer;
     setInformed(correct);
@@ -588,40 +616,65 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
             <motion.div key={`q-${qIndex}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="rounded-2xl border border-white/15 bg-brand-blue p-4">
               <div className="mb-2 flex items-center justify-between font-poppins text-[10px] font-black uppercase tracking-wider text-white/80">
                 <span>{t('Attack {n}', { n: attack + 1 })}</span>
-                <span>{t('Answer to scout the keeper')}</span>
+                <span className={qLeft <= 1.5 && selected === null ? 'text-brand-red' : 'text-brand-yellow'}>
+                  {selected === null ? t('{n}s', { n: Math.max(0, Math.ceil(qLeft)) }) : t('Answer to scout the keeper')}
+                </span>
+              </div>
+              <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-white/15">
+                <div
+                  key={qIndex}
+                  className={`h-full origin-left rounded-full ${qLeft <= 1.5 && selected === null ? 'bg-brand-red' : 'bg-brand-yellow'}`}
+                  style={{
+                    transform: 'scaleX(1)',
+                    animation: `ft-q-timer ${QUESTION_S}s linear forwards`,
+                    animationPlayState: selected === null ? 'running' : 'paused',
+                  }}
+                />
               </div>
               <p className="mb-3 font-poppins text-base font-bold leading-snug text-white">{question.q}</p>
               <div className="grid grid-cols-1 gap-2">
-                {question.options.map((opt, i) => {
-                  const state = selected === null ? 'idle' : i === question.answer ? 'correct' : selected === i ? 'wrong' : 'dim';
-                  return (
-                    <button
-                      key={i}
-                      type="button"
-                      disabled={selected !== null}
-                      onClick={() => answer(i)}
-                      className={`flex items-center justify-between rounded-xl border-2 px-3.5 py-3 text-left font-poppins text-sm font-bold transition-colors ${
-                        state === 'idle'
-                          ? 'border-brand-yellow/70 bg-transparent text-white shadow-[0_0_6px_1px_rgba(255,229,0,0.12)] hover:border-brand-yellow'
-                          : state === 'correct'
-                            ? 'border-brand-green bg-brand-green/20 text-white'
-                            : state === 'wrong'
-                              ? 'border-brand-red bg-brand-red/20 text-white'
-                              : 'border-white/15 bg-transparent text-white/40'
-                      }`}
-                    >
-                      {opt}
-                      {state === 'correct' && <Check className="size-4 text-brand-green" />}
-                      {state === 'wrong' && <X className="size-4 text-brand-red" />}
-                    </button>
-                  );
-                })}
+                <AnimatePresence initial={false}>
+                  {question.options.map((opt, i) => {
+                    if (selected !== null && i !== question.answer) return null;
+                    const locked = selected !== null;
+                    return (
+                      <motion.button
+                        key={i}
+                        type="button"
+                        layout
+                        initial={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+                        animate={
+                          locked
+                            ? { opacity: 1, scale: 1.03, filter: 'blur(0px)' }
+                            : { opacity: 1, scale: 1, filter: 'blur(0px)' }
+                        }
+                        exit={{ opacity: 0, height: 0, marginTop: 0, marginBottom: 0, scale: 0.94, filter: 'blur(12px)' }}
+                        transition={{ duration: 0.32, ease: [0.22, 1, 0.36, 1] }}
+                        disabled={locked}
+                        onClick={() => answer(i)}
+                        className={`flex items-center justify-between overflow-hidden rounded-xl border-2 px-3.5 py-3 text-left font-poppins text-sm font-bold ${
+                          locked
+                            ? 'border-brand-green bg-brand-green text-black shadow-[0_0_22px_rgba(88,204,2,0.45)]'
+                            : 'border-brand-yellow/70 bg-transparent text-white shadow-[0_0_6px_1px_rgba(255,229,0,0.12)] hover:border-brand-yellow'
+                        }`}
+                      >
+                        <span>{opt}</span>
+                        {locked && <Check className="size-5 shrink-0 text-black" />}
+                      </motion.button>
+                    );
+                  })}
+                </AnimatePresence>
               </div>
               {selected !== null && (
                 <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-3 text-center font-poppins text-[10px] font-bold uppercase tracking-wide text-white/50">
-                  {t('{pct}% answered correctly', { pct: pulse.answered })}
+                  {selected === -1
+                    ? t("Time's up — blind shot")
+                    : selected === question.answer
+                      ? t('{pct}% answered correctly', { pct: pulse.answered })
+                      : t('Wrong — the correct answer stays. Blind shot.')}
                 </motion.p>
               )}
+              <style>{`@keyframes ft-q-timer { from { transform: scaleX(1); } to { transform: scaleX(0); } }`}</style>
             </motion.div>
           )}
 
