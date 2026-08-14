@@ -18,11 +18,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { animate, motion, AnimatePresence } from 'motion/react';
-import { Check, Coins, Eye, Radio, Trophy, X } from 'lucide-react';
+import { Check, Eye, Radio, Trophy, X } from 'lucide-react';
 import { MiniGameShell } from './MiniGameShell';
 import { KeeperGlove } from './PenaltyShootout';
 import { getTrivia, type TriviaQuestion } from '../data/trivia';
 import { useMiniLocale, useMiniT } from '../lib/i18n';
+import { playSfx } from '@/lib/sounds/gameSounds';
 
 const BALL_URL = '/assets/brand/goal-ball-small.webp';
 const MIN_STAKE = 5;
@@ -108,12 +109,14 @@ function AnimatedNumber({ value, decimals = 0, className }: { value: number; dec
   return <span className={className}>{shown}</span>;
 }
 
-/** The app's actual coin sprite (same asset as the daily hub reward pills). */
+const COIN_SRC = '/assets/coin-1.png?v=2';
+
+/** The app's actual coin sprite (same asset as auction / daily hub pills). */
 function Coin({ size = 16 }: { size?: number }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src="/assets/coin-1.png?v=2"
+      src={COIN_SRC}
       alt=""
       aria-hidden="true"
       width={size}
@@ -122,6 +125,45 @@ function Coin({ size = 16 }: { size?: number }) {
       style={{ width: size, height: size }}
       draggable={false}
     />
+  );
+}
+
+function CoinBurst({ seed, variant }: { seed: number; variant: 'pop' | 'rain' }) {
+  const bits = useMemo(() => {
+    const rnd = seeded(Math.floor(Math.abs(seed)) || 1);
+    const count = variant === 'rain' ? 18 : 12;
+    return Array.from({ length: count }, (_, i) => ({
+      i,
+      x: (rnd() - 0.5) * (variant === 'rain' ? 280 : 170),
+      drift: (rnd() - 0.5) * 90,
+      delay: rnd() * (variant === 'rain' ? 0.26 : 0.1),
+      rot: rnd() * 520 - 160,
+      size: 16 + Math.floor(rnd() * 18),
+      duration: 0.82 + rnd() * 0.42,
+    }));
+  }, [seed, variant]);
+
+  return (
+    <div className="pointer-events-none absolute inset-0 z-40 overflow-hidden" aria-hidden>
+      {bits.map((bit) => (
+        <motion.img
+          key={bit.i}
+          src={COIN_SRC}
+          alt=""
+          initial={{ opacity: 0, x: 0, y: variant === 'rain' ? -24 : 12, scale: 0.35, rotate: 0 }}
+          animate={{
+            opacity: [0, 1, 1, 0],
+            x: [0, bit.x * 0.45, bit.x + bit.drift],
+            y: variant === 'rain' ? [0, 36, 240] : [8, -100 - Math.abs(bit.x) * 0.12, 24],
+            scale: [0.35, 1.18, 0.8],
+            rotate: [0, bit.rot],
+          }}
+          transition={{ duration: bit.duration, delay: bit.delay, ease: [0.18, 0.84, 0.22, 1] }}
+          className="absolute left-1/2 top-[36%] object-contain"
+          style={{ width: bit.size, height: bit.size, marginLeft: -bit.size / 2 }}
+        />
+      ))}
+    </div>
   );
 }
 
@@ -255,12 +297,15 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
     setShotZone(zone);
     setBeat('resolving');
     const isSave = saves.has(zone.id);
+    later(() => playSfx('kick'), USE_3D_PITCH ? 430 : 90);
     // 3D pitch: run-up (~0.45s) + flight (~0.8s) before the outcome lands.
     later(() => {
       if (isSave) {
+        playSfx('wrongAnswer');
         setScored(false);
         setBeat('saved');
       } else {
+        playSfx('correctRanked');
         setScored(true);
         const next = potential;
         setPot(next);
@@ -270,7 +315,21 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
     }, USE_3D_PITCH ? 1350 : 880);
   };
 
+  // Playwright reuses this hook; rebind every commit so `shoot` is current.
+  useEffect(() => {
+    const w = window as Window & { __finalThirdPick?: (id: string) => void };
+    w.__finalThirdPick = (id: string) => {
+      const zone = ZONES.find((z) => z.id === id);
+      if (zone) shoot(zone);
+    };
+    return () => {
+      delete w.__finalThirdPick;
+    };
+  });
+
   const cashOut = () => {
+    playSfx('dailyCorrect');
+    later(() => playSfx('dailyCorrect'), 160);
     setBalance((b) => Math.round((b + pot) * 100) / 100);
     setLastTake(pot);
     setBeat('cashed');
@@ -292,7 +351,8 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
       headerRight={
         <div className="flex flex-col items-end text-right">
           <span className="font-poppins text-[9px] font-black uppercase tracking-wider text-white/45">{t('Balance')}</span>
-          <span className="font-poppins text-base font-black tabular-nums leading-none text-brand-gold">
+          <span className="inline-flex items-center gap-1 font-poppins text-base font-black tabular-nums leading-none text-brand-gold">
+            <Coin size={16} />
             <AnimatedNumber value={balance} decimals={Number.isInteger(balance) ? 0 : 2} />
           </span>
         </div>
@@ -376,7 +436,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
 
       {/* Goal — shakes on a save, bursts on a goal */}
       <motion.div
-        className="mt-3"
+        className="relative mt-3"
         animate={
           beat === 'saved'
             ? { x: [0, -7, 7, -5, 5, 0] }
@@ -410,6 +470,8 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
             onPick={shoot}
           />
         )}
+        {beat === 'goal' && <CoinBurst seed={pot * 97 + attack} variant="pop" />}
+        {beat === 'cashed' && <CoinBurst seed={(lastTake ?? 1) * 131 + attack} variant="rain" />}
       </motion.div>
 
       {/* Beat area */}
@@ -419,7 +481,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
             <motion.div key="bet" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-3">
               {lastTake != null && (
                 <div className="text-center font-poppins text-lg font-black text-brand-gold">
-                  <Coins className="mr-1 inline size-5" /> {t('Cashed out {amount}!', { amount: fmt(lastTake) })}
+                  <Coin size={20} /> {t('Cashed out {amount}!', { amount: fmt(lastTake) })}
                 </div>
               )}
               <p className="text-center font-poppins text-xs font-semibold text-white/55">
@@ -611,14 +673,15 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
           )}
 
           {beat === 'cashed' && (
-            <motion.div key="cashed" initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="space-y-3 text-center">
+            <motion.div key="cashed" initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative space-y-3 text-center">
+              <CoinBurst seed={(lastTake ?? 1) * 17 + 9} variant="rain" />
               <motion.div
                 initial={{ scale: 0.6, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: 'spring', stiffness: 320, damping: 15 }}
-                className="font-poppins text-3xl font-black text-brand-gold drop-shadow-[0_0_18px_rgba(255,215,0,0.4)]"
+                className="inline-flex items-center gap-1.5 font-poppins text-3xl font-black text-brand-gold drop-shadow-[0_0_18px_rgba(255,215,0,0.4)]"
               >
-                <Coins className="mr-1.5 inline size-7" /> +{fmt(lastTake ?? 0)}
+                <Coin size={28} /> +{fmt(lastTake ?? 0)}
               </motion.div>
               <button
                 type="button"
