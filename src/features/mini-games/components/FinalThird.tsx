@@ -24,6 +24,9 @@ import { KeeperGlove } from './PenaltyShootout';
 import { getTrivia, type TriviaQuestion } from '../data/trivia';
 import { useMiniLocale, useMiniT } from '../lib/i18n';
 import { playSfx } from '@/lib/sounds/gameSounds';
+import { CashBill } from '@/features/auction/components/shared/CashBill';
+import { ResultSplash } from '@/features/daily/components/ResultSplash';
+import { useResultSplash } from '@/features/daily/components/useResultSplash';
 
 const BALL_URL = '/assets/brand/goal-ball-small.webp';
 const MIN_STAKE = 5;
@@ -109,59 +112,75 @@ function AnimatedNumber({ value, decimals = 0, className }: { value: number; dec
   return <span className={className}>{shown}</span>;
 }
 
-const COIN_SRC = '/assets/coin-1.png?v=2';
-
-/** The app's actual coin sprite (same asset as auction / daily hub pills). */
-function Coin({ size = 16 }: { size?: number }) {
+/** Auction-style bill stack (same CashBill as the auction win FX). */
+function MoneyStack({ count = 3 }: { count?: number }) {
+  const bills = Math.min(4, Math.max(2, count));
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={COIN_SRC}
-      alt=""
-      aria-hidden="true"
-      width={size}
-      height={size}
-      className="inline-block object-contain align-[-2px]"
-      style={{ width: size, height: size }}
-      draggable={false}
-    />
+    <span className="relative inline-block h-6 w-8 shrink-0" aria-hidden>
+      {Array.from({ length: bills }, (_, i) => (
+        <span
+          key={i}
+          className="absolute left-1/2 top-1/2"
+          style={{
+            transform: `translate(-50%, -50%) translate(${(i - 1) * 3}px, ${(1 - i) * 2}px) rotate(${(i - 1) * 11}deg)`,
+            zIndex: i + 1,
+          }}
+        >
+          <CashBill size={0.52} />
+        </span>
+      ))}
+    </span>
   );
 }
 
-function CoinBurst({ seed, variant }: { seed: number; variant: 'pop' | 'rain' }) {
+function MoneyFlight({
+  flight,
+}: {
+  flight: { seed: number; ox: number; oy: number; tx: number; ty: number } | null;
+}) {
   const bits = useMemo(() => {
-    const rnd = seeded(Math.floor(Math.abs(seed)) || 1);
-    const count = variant === 'rain' ? 18 : 12;
-    return Array.from({ length: count }, (_, i) => ({
+    if (!flight) return [];
+    const rnd = seeded(Math.floor(Math.abs(flight.seed)) || 1);
+    return Array.from({ length: 10 }, (_, i) => ({
       i,
-      x: (rnd() - 0.5) * (variant === 'rain' ? 280 : 170),
-      drift: (rnd() - 0.5) * 90,
-      delay: rnd() * (variant === 'rain' ? 0.26 : 0.1),
-      rot: rnd() * 520 - 160,
-      size: 16 + Math.floor(rnd() * 18),
-      duration: 0.82 + rnd() * 0.42,
+      delay: i * 0.04,
+      jx: (rnd() - 0.5) * 72,
+      jy: (rnd() - 0.5) * 36,
+      rot: (rnd() - 0.5) * 90,
+      size: 0.62 + rnd() * 0.28,
     }));
-  }, [seed, variant]);
+  }, [flight]);
+
+  if (!flight) return null;
 
   return (
-    <div className="pointer-events-none absolute inset-0 z-40 overflow-hidden" aria-hidden>
+    <div className="pointer-events-none fixed inset-0 z-[80] overflow-hidden" aria-hidden>
       {bits.map((bit) => (
-        <motion.img
-          key={bit.i}
-          src={COIN_SRC}
-          alt=""
-          initial={{ opacity: 0, x: 0, y: variant === 'rain' ? -24 : 12, scale: 0.35, rotate: 0 }}
-          animate={{
-            opacity: [0, 1, 1, 0],
-            x: [0, bit.x * 0.45, bit.x + bit.drift],
-            y: variant === 'rain' ? [0, 36, 240] : [8, -100 - Math.abs(bit.x) * 0.12, 24],
-            scale: [0.35, 1.18, 0.8],
-            rotate: [0, bit.rot],
+        <motion.div
+          key={`${flight.seed}-${bit.i}`}
+          className="absolute"
+          initial={{
+            left: flight.ox,
+            top: flight.oy,
+            x: '-50%',
+            y: '-50%',
+            opacity: 0,
+            scale: 0.45,
+            rotate: 0,
           }}
-          transition={{ duration: bit.duration, delay: bit.delay, ease: [0.18, 0.84, 0.22, 1] }}
-          className="absolute left-1/2 top-[36%] object-contain"
-          style={{ width: bit.size, height: bit.size, marginLeft: -bit.size / 2 }}
-        />
+          animate={{
+            left: flight.tx,
+            top: flight.ty,
+            x: ['-50%', `calc(-50% + ${bit.jx}px)`, '-50%'],
+            y: ['-50%', `calc(-50% + ${bit.jy - 48}px)`, '-50%'],
+            opacity: [0, 1, 1, 0],
+            scale: [0.45, 1.05, 0.55],
+            rotate: [0, bit.rot, bit.rot * 0.2],
+          }}
+          transition={{ duration: 0.72, delay: bit.delay, ease: [0.2, 0.75, 0.15, 1] }}
+        >
+          <CashBill size={bit.size} />
+        </motion.div>
       ))}
     </div>
   );
@@ -179,6 +198,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
   const t = useMiniT();
   const miniLocale = useMiniLocale();
   const trivia = useMemo(() => getTrivia(miniLocale), [miniLocale]);
+  const { splashProps, fire } = useResultSplash();
 
   const [balance, setBalance] = useState(START_BALANCE);
   const [beat, setBeat] = useState<Beat>('bet');
@@ -198,6 +218,8 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
   const [bestRun, setBestRun] = useState<number | null>(null);
   const [ticker, setTicker] = useState<TickerEntry[]>([]);
   const [playingNow, setPlayingNow] = useState(1284);
+  const [flight, setFlight] = useState<{ seed: number; ox: number; oy: number; tx: number; ty: number } | null>(null);
+  const [stackBump, setStackBump] = useState(false);
   const tickerId = useRef(0);
   const timersRef = useRef<number[]>([]);
 
@@ -279,6 +301,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
     setSelected(i);
     const correct = i === question.answer;
     setInformed(correct);
+    fire(correct ? 'correct' : 'wrong', i % 2 === 0 ? 'left' : 'right');
     later(() => {
       if (correct) {
         setSaves((cur) => {
@@ -288,7 +311,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
         });
       }
       setBeat('shoot');
-    }, 950);
+    }, 1050);
   };
 
   const shoot = (zone: Zone) => {
@@ -327,12 +350,25 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
     };
   });
 
-  const cashOut = () => {
+  const cashOut = (event: { currentTarget: HTMLElement }) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const stack = document.querySelector('[data-money-stack]')?.getBoundingClientRect();
     playSfx('dailyCorrect');
-    later(() => playSfx('dailyCorrect'), 160);
-    setBalance((b) => Math.round((b + pot) * 100) / 100);
+    setFlight({
+      seed: pot * 17 + attack + 3,
+      ox: rect.left + rect.width / 2,
+      oy: rect.top + rect.height / 2,
+      tx: stack ? stack.left + stack.width / 2 : rect.left + rect.width / 2,
+      ty: stack ? stack.top + stack.height / 2 : 36,
+    });
     setLastTake(pot);
     setBeat('cashed');
+    later(() => {
+      setBalance((b) => Math.round((b + pot) * 100) / 100);
+      setStackBump(true);
+    }, 520);
+    later(() => setStackBump(false), 980);
+    later(() => setFlight(null), 1200);
   };
 
   const nextAttack = () => {
@@ -349,13 +385,17 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
       subtitle={t('Know football. Read the goal. Take the shot.')}
       accent="#58CC02"
       headerRight={
-        <div className="flex flex-col items-end text-right">
-          <span className="font-poppins text-[9px] font-black uppercase tracking-wider text-white/45">{t('Balance')}</span>
-          <span className="inline-flex items-center gap-1 font-poppins text-base font-black tabular-nums leading-none text-brand-gold">
-            <Coin size={16} />
+        <motion.div
+          data-money-stack
+          animate={stackBump ? { scale: [1, 1.22, 1] } : { scale: 1 }}
+          transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
+          className="flex items-center gap-1 rounded-full bg-brand-yellow py-1 pl-1 pr-2.5"
+        >
+          <MoneyStack />
+          <span className="font-poppins text-sm font-black tabular-nums leading-none text-black">
             <AnimatedNumber value={balance} decimals={Number.isInteger(balance) ? 0 : 2} />
           </span>
-        </div>
+        </motion.div>
       }
     >
       {/* Live stadium strip: player count + rotating last win. Cosmetic. */}
@@ -374,7 +414,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
                 transition={{ duration: 0.35 }}
                 className="absolute right-0 top-0 truncate font-poppins text-[10px] font-bold text-white/60"
               >
-                {ticker[0].name} <span className="text-brand-gold">+{fmt(ticker[0].amount)} <Coin size={12} /></span>{' '}
+                {ticker[0].name} <span className="text-brand-gold">+{fmt(ticker[0].amount)}</span>{' '}
                 <span className="text-white/40">×{ticker[0].mult}</span>
               </motion.span>
             )}
@@ -384,16 +424,16 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
 
       {/* HUD: stake | pot | next multiplier */}
       <div className="mt-2 flex items-center justify-center gap-2 font-poppins text-[12px] font-black uppercase tracking-wide text-white/70">
-        <span className="rounded-full bg-white/[0.06] px-3 py-1.5">{t('Stake')} {beat === 'bet' ? stake : roundStake} <Coin size={14} /></span>
+        <span className="inline-flex items-center gap-1 rounded-full bg-white/[0.06] px-3 py-1.5">{t('Stake')} {beat === 'bet' ? stake : roundStake} <CashBill size={0.42} /></span>
         {pot > 0 && beat !== 'cashed' && (
           <motion.span
             key={`pot-${attack}-${beat === 'goal' ? 'g' : 'x'}`}
             initial={{ scale: 1.25 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-            className="rounded-full bg-brand-yellow/15 px-3 py-1.5 text-brand-yellow"
+            className="inline-flex items-center gap-1 rounded-full bg-brand-yellow/15 px-3 py-1.5 text-brand-yellow"
           >
-            {t('Pot')} <AnimatedNumber value={pot} decimals={Number.isInteger(pot) ? 0 : 2} /> <Coin size={14} />
+            {t('Pot')} <AnimatedNumber value={pot} decimals={Number.isInteger(pot) ? 0 : 2} /> <CashBill size={0.42} />
           </motion.span>
         )}
         {(beat === 'question' || beat === 'shoot') && (
@@ -470,8 +510,6 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
             onPick={shoot}
           />
         )}
-        {beat === 'goal' && <CoinBurst seed={pot * 97 + attack} variant="pop" />}
-        {beat === 'cashed' && <CoinBurst seed={(lastTake ?? 1) * 131 + attack} variant="rain" />}
       </motion.div>
 
       {/* Beat area */}
@@ -480,8 +518,8 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
           {beat === 'bet' && (
             <motion.div key="bet" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-3">
               {lastTake != null && (
-                <div className="text-center font-poppins text-lg font-black text-brand-gold">
-                  <Coin size={20} /> {t('Cashed out {amount}!', { amount: fmt(lastTake) })}
+                <div className="inline-flex items-center justify-center gap-1.5 text-center font-poppins text-lg font-black text-brand-gold">
+                  <MoneyStack /> {t('Cashed out {amount}!', { amount: fmt(lastTake) })}
                 </div>
               )}
               <p className="text-center font-poppins text-xs font-semibold text-white/55">
@@ -604,7 +642,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
                 </div>
               )}
               <p className="font-poppins text-xs font-bold uppercase tracking-wide text-white/60">
-                {t('Pick your shot zone')} · {informed ? t('4 GOAL · 1 SAVE') : t('4 GOAL · 2 SAVE')} · {fmt(pot)} → {fmt(potential)} <Coin size={13} />
+                {t('Pick your shot zone')} · {informed ? t('4 GOAL · 1 SAVE') : t('4 GOAL · 2 SAVE')} · {fmt(pot)} → {fmt(potential)} <CashBill size={0.4} />
               </p>
             </motion.div>
           )}
@@ -634,7 +672,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
                   transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
                   className="h-14 flex-1 rounded-2xl bg-brand-yellow font-poppins text-base font-black uppercase tracking-wide text-black active:scale-[0.98]"
                 >
-                  {t('TAKE {amount}', { amount: fmt(pot) })} <Coin size={18} />
+                  {t('TAKE {amount}', { amount: fmt(pot) })} <CashBill size={0.5} />
                 </motion.button>
                 <button
                   type="button"
@@ -674,14 +712,13 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
 
           {beat === 'cashed' && (
             <motion.div key="cashed" initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative space-y-3 text-center">
-              <CoinBurst seed={(lastTake ?? 1) * 17 + 9} variant="rain" />
               <motion.div
                 initial={{ scale: 0.6, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: 'spring', stiffness: 320, damping: 15 }}
                 className="inline-flex items-center gap-1.5 font-poppins text-3xl font-black text-brand-gold drop-shadow-[0_0_18px_rgba(255,215,0,0.4)]"
               >
-                <Coin size={28} /> +{fmt(lastTake ?? 0)}
+                <MoneyStack count={4} /> +{fmt(lastTake ?? 0)}
               </motion.div>
               <button
                 type="button"
@@ -697,6 +734,8 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
           {beat === 'resolving' && <motion.div key="resolving" className="h-14" />}
         </AnimatePresence>
       </div>
+      <ResultSplash {...splashProps} />
+      <MoneyFlight flight={flight} />
     </MiniGameShell>
   );
 }
