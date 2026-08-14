@@ -16,15 +16,16 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { animate, motion, AnimatePresence } from 'motion/react';
 import { Check, Coins, Eye, Radio, Trophy, X } from 'lucide-react';
-import { MiniGameShell, StatPill } from './MiniGameShell';
+import { MiniGameShell } from './MiniGameShell';
 import { KeeperGlove } from './PenaltyShootout';
 import { getTrivia, type TriviaQuestion } from '../data/trivia';
 import { useMiniLocale, useMiniT } from '../lib/i18n';
 
 const BALL_URL = '/assets/brand/goal-ball-small.webp';
-const STAKE = 10;
+const MIN_STAKE = 5;
+const STAKE_PRESETS = [5, 10, 20, 50, 100];
 const START_BALANCE = 100;
 const SAVE_ZONES = 2;
 const INFORMED_FIRST_MULT = 1.2;
@@ -74,6 +75,25 @@ type Beat = 'bet' | 'question' | 'shoot' | 'resolving' | 'goal' | 'saved' | 'cas
 
 const fmt = (v: number) => (Number.isInteger(v) ? String(v) : v.toFixed(2));
 
+/** Rolls a number from its previous value to the new one (win "fill up"). */
+function AnimatedNumber({ value, decimals = 0, className }: { value: number; decimals?: number; className?: string }) {
+  const [display, setDisplay] = useState(value);
+  const prevRef = useRef(value);
+  useEffect(() => {
+    const from = prevRef.current;
+    prevRef.current = value;
+    if (from === value) return;
+    const controls = animate(from, value, {
+      duration: 0.7,
+      ease: [0.22, 1, 0.36, 1],
+      onUpdate: (v) => setDisplay(v),
+    });
+    return () => controls.stop();
+  }, [value]);
+  const shown = decimals > 0 ? display.toFixed(decimals) : String(Math.round(display));
+  return <span className={className}>{shown}</span>;
+}
+
 /** The app's actual coin sprite (same asset as the daily hub reward pills). */
 function Coin({ size = 16 }: { size?: number }) {
   return (
@@ -108,6 +128,9 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
   const [beat, setBeat] = useState<Beat>('bet');
   const [attack, setAttack] = useState(0);
   const [pot, setPot] = useState(0);
+  const [stake, setStake] = useState(10);
+  const [stakeText, setStakeText] = useState('10');
+  const [roundStake, setRoundStake] = useState(10);
   const [qIndex, setQIndex] = useState(() => Math.floor(Math.random() * 1000));
   const [selected, setSelected] = useState<number | null>(null);
   const [informed, setInformed] = useState<boolean | null>(null);
@@ -131,7 +154,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
         {
           id: (tickerId.current += 1),
           name: CROWD_NAMES[Math.floor(rnd() * CROWD_NAMES.length)],
-          amount: Math.round(STAKE * mult * 100) / 100,
+          amount: Math.round(10 * mult * 100) / 100,
           mult,
           minutesAgo: 0,
         },
@@ -155,7 +178,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
   const question: TriviaQuestion = trivia[qIndex % trivia.length];
   const mult = informed ? (attack === 0 ? INFORMED_FIRST_MULT : INFORMED_NEXT_MULT) : BLIND_MULT;
   const potential = useMemo(() => Math.round(pot * mult * 100) / 100, [pot, mult]);
-  const runMult = pot > 0 ? Math.round((pot / STAKE) * 100) / 100 : 0;
+  const runMult = pot > 0 ? Math.round((pot / roundStake) * 100) / 100 : 0;
 
   // Deterministic crowd-pulse numbers per attack (stable across re-renders).
   const pulse = useMemo(() => {
@@ -180,12 +203,19 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
   };
 
   const startRound = () => {
-    if (balance < STAKE) return;
-    setBalance((b) => b - STAKE);
-    setPot(STAKE);
+    if (balance < stake || stake < MIN_STAKE) return;
+    setBalance((b) => Math.round((b - stake) * 100) / 100);
+    setPot(stake);
+    setRoundStake(stake);
     setAttack(0);
     setLastTake(null);
     beginAttack();
+  };
+
+  const applyStake = (v: number) => {
+    const clamped = Math.max(MIN_STAKE, Math.min(Math.floor(v), 1000));
+    setStake(clamped);
+    setStakeText(String(clamped));
   };
 
   const answer = (i: number) => {
@@ -219,7 +249,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
         setScored(true);
         const next = potential;
         setPot(next);
-        setBestRun((b) => Math.max(b ?? 0, Math.round((next / STAKE) * 100) / 100));
+        setBestRun((b) => Math.max(b ?? 0, Math.round((next / roundStake) * 100) / 100));
         setBeat('goal');
       }
     }, 880);
@@ -244,7 +274,14 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
       title="Final Third"
       subtitle={t('Know football. Read the goal. Take the shot.')}
       accent="#58CC02"
-      headerRight={<StatPill label={t('Balance')} value={fmt(balance)} color="#FFD700" />}
+      headerRight={
+        <div className="flex flex-col items-end text-right">
+          <span className="font-poppins text-[9px] font-black uppercase tracking-wider text-white/45">{t('Balance')}</span>
+          <span className="font-poppins text-base font-black tabular-nums leading-none text-[#FFD700]">
+            <AnimatedNumber value={balance} decimals={Number.isInteger(balance) ? 0 : 2} />
+          </span>
+        </div>
+      }
     >
       {/* Live stadium strip: player count + rotating last win. Cosmetic. */}
       <div className="mt-1 flex items-center justify-between gap-2 px-1 py-1">
@@ -272,20 +309,31 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
 
       {/* HUD: stake | pot | next multiplier */}
       <div className="mt-2 flex items-center justify-center gap-2 font-poppins text-[12px] font-black uppercase tracking-wide text-white/70">
-        <span className="rounded-full bg-white/[0.06] px-3 py-1.5">{t('Stake')} {STAKE} <Coin size={14} /></span>
+        <span className="rounded-full bg-white/[0.06] px-3 py-1.5">{t('Stake')} {beat === 'bet' ? stake : roundStake} <Coin size={14} /></span>
         {pot > 0 && beat !== 'cashed' && (
           <motion.span
-            key={pot}
+            key={`pot-${attack}-${beat === 'goal' ? 'g' : 'x'}`}
             initial={{ scale: 1.25 }}
             animate={{ scale: 1 }}
             transition={{ type: 'spring', stiffness: 400, damping: 15 }}
             className="rounded-full bg-brand-yellow/15 px-3 py-1.5 text-brand-yellow"
           >
-            {t('Pot')} {fmt(pot)} <Coin size={14} />
+            {t('Pot')} <AnimatedNumber value={pot} decimals={Number.isInteger(pot) ? 0 : 2} /> <Coin size={14} />
           </motion.span>
         )}
         {(beat === 'question' || beat === 'shoot') && (
           <span className="rounded-full bg-brand-green/15 px-3 py-1.5 text-brand-green">×{mult}</span>
+        )}
+        {beat === 'goal' && runMult > 1 && (
+          <motion.span
+            key={`run-${runMult}`}
+            initial={{ scale: 2, opacity: 0, rotate: -6 }}
+            animate={{ scale: 1, opacity: 1, rotate: 0 }}
+            transition={{ type: 'spring', stiffness: 320, damping: 13 }}
+            className="rounded-full bg-brand-green px-3 py-1.5 text-white shadow-[0_0_16px_rgba(88,204,2,0.5)]"
+          >
+            ×<AnimatedNumber value={runMult} decimals={2} />
+          </motion.span>
         )}
       </div>
 
@@ -348,14 +396,52 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
               <p className="text-center font-poppins text-xs font-semibold text-white/55">
                 {t('Answer to scout the keeper — knowledge sharpens the shot, the risk stays.')}
               </p>
-              {balance >= STAKE ? (
-                <button
-                  type="button"
-                  onClick={startRound}
-                  className="h-14 w-full rounded-2xl bg-brand-green font-poppins text-lg font-black uppercase tracking-wide text-white shadow-[0_8px_24px_rgba(88,204,2,0.25)] active:scale-[0.98]"
-                >
-                  {t('Stake {n} & attack', { n: STAKE })}
-                </button>
+              {balance >= MIN_STAKE ? (
+                <>
+                  {/* Stake picker: presets + free entry, min 5 */}
+                  <div className="flex items-center justify-center gap-1.5">
+                    {STAKE_PRESETS.map((p) => (
+                      <button
+                        key={p}
+                        type="button"
+                        onClick={() => applyStake(p)}
+                        disabled={p > balance}
+                        className={`rounded-xl border-2 px-3 py-2 font-poppins text-sm font-black tabular-nums transition-colors disabled:opacity-30 ${
+                          stake === p
+                            ? 'border-brand-yellow bg-brand-yellow/15 text-brand-yellow'
+                            : 'border-white/15 bg-transparent text-white/70 hover:border-white/40'
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    ))}
+                    <input
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      value={stakeText}
+                      onChange={(e) => {
+                        const raw = e.target.value.replace(/[^0-9]/g, '');
+                        setStakeText(raw);
+                        const v = Number(raw);
+                        if (Number.isFinite(v) && v >= MIN_STAKE) setStake(Math.min(Math.floor(v), 1000));
+                      }}
+                      onBlur={() => applyStake(Number(stakeText) || MIN_STAKE)}
+                      aria-label={t('Stake')}
+                      className="h-[42px] w-16 rounded-xl border-2 border-white/15 bg-transparent text-center font-poppins text-sm font-black tabular-nums text-white outline-none placeholder:text-white/30 focus:border-brand-yellow/70"
+                    />
+                  </div>
+                  <p className="text-center font-poppins text-[10px] font-bold uppercase tracking-wide text-white/35">
+                    {t('Min {n}', { n: MIN_STAKE })}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={startRound}
+                    disabled={stake < MIN_STAKE || stake > balance}
+                    className="h-14 w-full rounded-2xl bg-brand-green font-poppins text-lg font-black uppercase tracking-wide text-white shadow-[0_8px_24px_rgba(88,204,2,0.25)] active:scale-[0.98] disabled:opacity-40"
+                  >
+                    {t('Stake {n} & attack', { n: stake })}
+                  </button>
+                </>
               ) : (
                 <button
                   type="button"

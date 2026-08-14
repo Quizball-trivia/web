@@ -167,6 +167,7 @@ const KA: Record<string, string> = {
   "Balance": "ბალანსი",
   "Pot": "ბანკი",
   "Stake {n} & attack": "დადე {n} და შეუტიე",
+  "Min {n}": "მინ. {n}",
   "Top up (demo)": "შევსება (დემო)",
   "Answer to scout the keeper": "უპასუხე და დაზვერე მეკარე",
   "Answer to scout the keeper — knowledge sharpens the shot, the risk stays.":
