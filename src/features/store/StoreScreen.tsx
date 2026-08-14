@@ -293,11 +293,22 @@ export function StoreScreen() {
   const canAffordCoins = (priceCoins: number | undefined) =>
     isUnlimited || !priceCoins || wallet == null || wallet.coins >= priceCoins;
 
-  const canAffordPart = (part: AvatarPart) => canAffordCoins(part.priceCoins);
-
   const productsBySlug = useMemo(() => {
     return new Map((productsData?.items ?? []).map((item) => [item.slug, item]));
   }, [productsData]);
+
+  /**
+   * Live coin price for an avatar part. The backend catalogue is the source of
+   * truth (priceCents holds the coin amount for coin-priced products); the
+   * priceCoins baked into parts.ts is only a fallback for parts that have no
+   * backing product, so repricing server-side does not need a client release.
+   */
+  const partPriceCoins = (part: Pick<AvatarPart, "productSlug" | "priceCoins">) => {
+    const product = part.productSlug ? productsBySlug.get(part.productSlug) : undefined;
+    return product?.priceCents ?? part.priceCoins;
+  };
+
+  const canAffordPart = (part: AvatarPart) => canAffordCoins(partPriceCoins(part));
 
   const featuredBundleSlug = useMemo(() => {
     if (productsBySlug.has("coin_pack_1200")) return "coin_pack_1200";
@@ -532,20 +543,30 @@ export function StoreScreen() {
         affordable: isOwned || canAffordPart(part),
       });
     }
+    const livePrice = partPriceCoins(part);
     setBuyModal({
       name: translatePartName(part.name),
-      price: isOwned ? "" : part.priceCoins ? part.priceCoins.toLocaleString() : "—",
-      priceInCoins: !isOwned && Boolean(part.priceCoins),
+      price: isOwned ? "" : livePrice ? livePrice.toLocaleString() : "—",
+      priceInCoins: !isOwned && Boolean(livePrice),
       productSlug: part.productSlug,
       mode: modalMode,
       avatarPart: part,
       previewCustomization,
-      priceCoinsValue: isOwned ? undefined : part.priceCoins,
+      priceCoinsValue: isOwned ? undefined : livePrice,
     });
   };
 
+  /**
+   * Live coin cost for the open modal. Re-derived from the catalogue on every
+   * render so a modal opened before the products query resolved does not stay
+   * pinned to the parts.ts fallback captured at open time.
+   */
+  const modalPriceCoins = buyModal?.avatarPart
+    ? partPriceCoins(buyModal.avatarPart)
+    : buyModal?.priceCoinsValue;
+
   /** Live affordability for the open modal — re-derived when the wallet updates. */
-  const modalAffordable = canAffordCoins(buyModal?.priceCoinsValue);
+  const modalAffordable = canAffordCoins(modalPriceCoins);
 
   const handleConfirm = () => {
     if (!buyModal || purchasePending) return;
@@ -566,7 +587,7 @@ export function StoreScreen() {
       checkoutMutation.mutate(buyModal.productSlug);
       return;
     }
-    if (!canAffordCoins(buyModal.priceCoinsValue)) {
+    if (!canAffordCoins(modalPriceCoins)) {
       toast.error(t("store.notEnoughCoins"));
       setBuyModal(null);
       return;
@@ -705,7 +726,7 @@ export function StoreScreen() {
                   <ItemCard
                     name={translatePartName(part.name)}
                     asset={part.asset}
-                    price={part.priceCoins ? part.priceCoins.toLocaleString() : "—"}
+                    price={partPriceCoins(part) ? partPriceCoins(part)!.toLocaleString() : "—"}
                     mannequinPart={part}
                     owned={ownedPartIds.has(part.id)}
                     onBuy={() => openAvatarPartModal(part)}
@@ -732,7 +753,7 @@ export function StoreScreen() {
                   <ItemCard
                     name={translatePartName(part.name)}
                     asset={part.asset}
-                    price={part.priceCoins ? part.priceCoins.toLocaleString() : "—"}
+                    price={partPriceCoins(part) ? partPriceCoins(part)!.toLocaleString() : "—"}
                     mannequinPart={part}
                     owned={ownedPartIds.has(part.id)}
                     onBuy={() => openAvatarPartModal(part)}
@@ -759,7 +780,7 @@ export function StoreScreen() {
                   <ItemCard
                     name={translatePartName(part.name)}
                     asset={part.asset}
-                    price={part.priceCoins ? part.priceCoins.toLocaleString() : "—"}
+                    price={partPriceCoins(part) ? partPriceCoins(part)!.toLocaleString() : "—"}
                     mannequinPart={part}
                     owned={ownedPartIds.has(part.id)}
                     onBuy={() => openAvatarPartModal(part)}
@@ -786,7 +807,7 @@ export function StoreScreen() {
                   <ItemCard
                     name={translatePartName(part.name)}
                     asset={part.asset}
-                    price={part.priceCoins ? part.priceCoins.toLocaleString() : "—"}
+                    price={partPriceCoins(part) ? partPriceCoins(part)!.toLocaleString() : "—"}
                     imageSize="lg"
                     owned={ownedPartIds.has(part.id)}
                     onBuy={() => openAvatarPartModal(part)}
@@ -810,8 +831,14 @@ export function StoreScreen() {
             onConfirm={handleConfirm}
             isPending={purchasePending}
             name={buyModal?.name ?? ""}
-            price={buyModal?.price ?? ""}
-            priceInCoins={buyModal?.priceInCoins ?? false}
+            price={
+              buyModal?.mode === "equip"
+                ? ""
+                : modalPriceCoins
+                ? modalPriceCoins.toLocaleString()
+                : buyModal?.price ?? ""
+            }
+            priceInCoins={buyModal?.mode === "equip" ? false : buyModal?.priceInCoins ?? false}
             previewCustomization={buyModal?.previewCustomization}
             confirmLabel={buyModal?.mode === "equip" ? t("store.equip") : undefined}
             affordable={modalAffordable}
