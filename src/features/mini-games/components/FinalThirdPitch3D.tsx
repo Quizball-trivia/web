@@ -56,10 +56,20 @@ const WALL_PLAYERS = [
   { x: -0.85, delay: 0.07, skin: '#aa6948', hair: '#201712', number: 8 },
 ] as const;
 
-const REAR_ADS = [-7.3, -5.1, 5.1, 7.3] as const;
-const SIDE_ADS = [-1, 1] as const;
 const FLOODLIGHTS = [-8.4, 8.4] as const;
 const GOAL_POSTS = [-3.72, 3.72] as const;
+
+/** Pitch-side LED hoarding: a U that meets at the corners (thickness included). */
+const HOARD_H = 0.84;
+const HOARD_T = 0.14;
+const HOARD_INNER = 8.02;
+const HOARD_REAR_Z = -1.18;
+const HOARD_SIDE_END_Z = 8.45;
+const HOARD_REAR_W = HOARD_INNER * 2 + HOARD_T;
+const HOARD_SIDE_LEN = HOARD_SIDE_END_Z - (HOARD_REAR_Z - HOARD_T / 2);
+const HOARD_SIDE_Z = HOARD_REAR_Z - HOARD_T / 2 + HOARD_SIDE_LEN / 2;
+const HOARD_Y = HOARD_H / 2 + 0.02;
+const HOARD_LOGO_M = 2.55;
 
 const lerp = THREE.MathUtils.lerp;
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
@@ -223,32 +233,16 @@ function useCrowdTexture(): THREE.Texture {
   }, []);
 }
 
-function useAdTexture(): THREE.Texture {
+function useHoardingMap(metres: number): THREE.Texture {
   return useMemo(() => {
-    const canvas = document.createElement('canvas');
-    canvas.width = 1024;
-    canvas.height = 128;
-    const context = canvas.getContext('2d')!;
-    context.fillStyle = '#071320';
-    context.fillRect(0, 0, 1024, 128);
-    context.fillStyle = '#58cc02';
-    context.fillRect(0, 0, 340, 128);
-    context.fillStyle = '#ffe500';
-    context.fillRect(682, 0, 342, 128);
-    context.textAlign = 'center';
-    context.textBaseline = 'middle';
-    context.font = '900 49px sans-serif';
-    context.fillStyle = '#081221';
-    context.fillText('FINAL THIRD', 170, 65);
-    context.fillStyle = '#ffffff';
-    context.fillText('PLAY BOLD', 511, 65);
-    context.fillStyle = '#081221';
-    context.fillText('MATCH NIGHT', 853, 65);
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.colorSpace = THREE.SRGBColorSpace;
-    texture.anisotropy = 2;
-    return texture;
-  }, []);
+    const map = new THREE.TextureLoader().load('/assets/betsson/1.png');
+    map.colorSpace = THREE.SRGBColorSpace;
+    map.wrapS = THREE.RepeatWrapping;
+    map.wrapT = THREE.ClampToEdgeWrapping;
+    map.anisotropy = 4;
+    map.repeat.set(Math.max(1, metres / HOARD_LOGO_M), 1);
+    return map;
+  }, [metres]);
 }
 
 /* ── articulated footballers ──────────────────────────────────────── */
@@ -836,7 +830,27 @@ function Floodlight({ x }: { x: number }) {
   );
 }
 
-function Stadium({ crowd, ad }: { crowd: THREE.Texture; ad: THREE.Texture }) {
+function HoardingFace({
+  map,
+  width,
+  height,
+}: {
+  map: THREE.Texture;
+  width: number;
+  height: number;
+}) {
+  return (
+    <mesh position={[0, 0, HOARD_T / 2 + 0.004]}>
+      <planeGeometry args={[width - 0.08, height - 0.14]} />
+      <meshBasicMaterial map={map} toneMapped={false} />
+    </mesh>
+  );
+}
+
+function Stadium({ crowd }: { crowd: THREE.Texture }) {
+  const rearMap = useHoardingMap(HOARD_REAR_W);
+  const sideMap = useHoardingMap(HOARD_SIDE_LEN);
+
   return (
     <group>
       {/* packed end stand */}
@@ -876,7 +890,7 @@ function Stadium({ crowd, ad }: { crowd: THREE.Texture; ad: THREE.Texture }) {
         <meshBasicMaterial map={crowd} color="#9eafc0" toneMapped={false} />
       </mesh>
 
-      {/* scoreboard and animated-ribbon-style adboards */}
+      {/* scoreboard */}
       <mesh position={[0, 6.85, -5.02]}>
         <boxGeometry args={[3.3, 1.02, 0.18]} />
         <meshStandardMaterial color="#03070d" roughness={0.68} />
@@ -889,30 +903,46 @@ function Stadium({ crowd, ad }: { crowd: THREE.Texture; ad: THREE.Texture }) {
         <boxGeometry args={[0.88, 0.24, 0.025]} />
         <meshBasicMaterial color="#ffe500" toneMapped={false} />
       </mesh>
-      {REAR_ADS.map((x) => (
-        <group key={x} position={[x, 0.5, -0.45]}>
+
+      {/* U-shaped pitch hoarding — rear + sides share corner thickness */}
+      <group position={[0, HOARD_Y, HOARD_REAR_Z]}>
+        <mesh>
+          <boxGeometry args={[HOARD_REAR_W, HOARD_H, HOARD_T]} />
+          <meshStandardMaterial color="#0a0a0a" roughness={0.48} metalness={0.22} />
+        </mesh>
+        <mesh position={[0, HOARD_H / 2 - 0.03, HOARD_T / 2 + 0.002]}>
+          <boxGeometry args={[HOARD_REAR_W, 0.045, 0.02]} />
+          <meshBasicMaterial color="#FF6C0A" toneMapped={false} />
+        </mesh>
+        <HoardingFace map={rearMap} width={HOARD_REAR_W} height={HOARD_H} />
+      </group>
+      {([-1, 1] as const).map((side) => (
+        <group
+          key={side}
+          position={[side * HOARD_INNER, HOARD_Y, HOARD_SIDE_Z]}
+          rotation={[0, side * -Math.PI / 2, 0]}
+        >
           <mesh>
-            <boxGeometry args={[2, 0.72, 0.16]} />
-            <meshStandardMaterial color="#071320" roughness={0.62} />
+            <boxGeometry args={[HOARD_SIDE_LEN, HOARD_H, HOARD_T]} />
+            <meshStandardMaterial color="#0a0a0a" roughness={0.48} metalness={0.22} />
           </mesh>
-          <mesh position={[0, 0, 0.086]}>
-            <planeGeometry args={[1.92, 0.62]} />
-            <meshBasicMaterial map={ad} toneMapped={false} />
+          <mesh position={[0, HOARD_H / 2 - 0.03, HOARD_T / 2 + 0.002]}>
+            <boxGeometry args={[HOARD_SIDE_LEN, 0.045, 0.02]} />
+            <meshBasicMaterial color="#FF6C0A" toneMapped={false} />
           </mesh>
+          <HoardingFace map={sideMap} width={HOARD_SIDE_LEN} height={HOARD_H} />
         </group>
       ))}
-      {SIDE_ADS.map((side) => (
-        <group key={side} position={[side * 6.15, 0.48, 5.6]} rotation={[0, side * Math.PI / 2, 0]}>
-          <mesh>
-            <boxGeometry args={[7.2, 0.68, 0.16]} />
-            <meshStandardMaterial color="#071320" roughness={0.62} />
-          </mesh>
-          <mesh position={[0, 0, side * -0.086]} rotation={[0, side > 0 ? Math.PI : 0, 0]}>
-            <planeGeometry args={[7.05, 0.58]} />
-            <meshBasicMaterial map={ad} toneMapped={false} />
-          </mesh>
-        </group>
+      {([-1, 1] as const).map((side) => (
+        <mesh
+          key={`corner-${side}`}
+          position={[side * HOARD_INNER, HOARD_Y, HOARD_REAR_Z]}
+        >
+          <boxGeometry args={[HOARD_T + 0.04, HOARD_H + 0.04, HOARD_T + 0.04]} />
+          <meshStandardMaterial color="#141414" roughness={0.4} metalness={0.35} />
+        </mesh>
       ))}
+
       {FLOODLIGHTS.map((x) => <Floodlight key={x} x={x} />)}
     </group>
   );
@@ -947,7 +977,6 @@ function Scene({
   const net = useNetTexture();
   const ballTexture = useBallTexture();
   const crowd = useCrowdTexture();
-  const ad = useAdTexture();
   const ball = useRef<THREE.Mesh>(null);
   const ballShadow = useRef<THREE.Mesh>(null);
   const netBack = useRef<THREE.Mesh>(null);
@@ -1051,7 +1080,7 @@ function Scene({
       <pointLight position={[-7, 7, 1]} intensity={15} distance={24} color="#d8f2ff" />
       <pointLight position={[7, 7, 1]} intensity={15} distance={24} color="#d8f2ff" />
 
-      <Stadium crowd={crowd} ad={ad} />
+      <Stadium crowd={crowd} />
 
       {/* striped pitch and markings */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 4]}>
