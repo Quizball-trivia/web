@@ -36,7 +36,7 @@ const FinalThirdPitch3D = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="relative mx-auto aspect-[16/10] w-full animate-pulse rounded-[24px] border border-white/10 bg-[#0a1420]" />
+      <div className="relative mx-auto aspect-[16/10] w-full animate-pulse rounded-[24px] border border-white/10 bg-surface-page" />
     ),
   },
 );
@@ -292,7 +292,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
       headerRight={
         <div className="flex flex-col items-end text-right">
           <span className="font-poppins text-[9px] font-black uppercase tracking-wider text-white/45">{t('Balance')}</span>
-          <span className="font-poppins text-base font-black tabular-nums leading-none text-[#FFD700]">
+          <span className="font-poppins text-base font-black tabular-nums leading-none text-brand-gold">
             <AnimatedNumber value={balance} decimals={Number.isInteger(balance) ? 0 : 2} />
           </span>
         </div>
@@ -392,6 +392,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
             revealedSave={revealedSave}
             scouting={beat === 'shoot' && informed === true}
             shotZone={shotZone}
+            willSave={shotZone ? saves.has(shotZone.id) : null}
             resolving={beat === 'resolving'}
             settled={beat === 'goal' || beat === 'saved'}
             scored={scored}
@@ -663,7 +664,7 @@ function StadiumBoard({ t, bestRun }: { t: (k: string, v?: Record<string, string
       </div>
 
       <div className="mb-2 flex items-center gap-1.5 px-1 font-poppins text-[10px] font-black uppercase tracking-wider text-white/60">
-        <Trophy className="size-3.5 text-[#FF6C0A]" /> {t('Longest runs today')}
+        <Trophy className="size-3.5 text-brand-orange-event" /> {t('Longest runs today')}
       </div>
       <div className="overflow-hidden rounded-[10px] border-2" style={{ borderColor: '#FF6C0A' }}>
         <div className="divide-y divide-white/5">
