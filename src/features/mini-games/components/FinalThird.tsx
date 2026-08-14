@@ -16,6 +16,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { animate, motion, AnimatePresence } from 'motion/react';
 import { Check, Coins, Eye, Radio, Trophy, X } from 'lucide-react';
 import { MiniGameShell } from './MiniGameShell';
@@ -26,6 +27,19 @@ import { useMiniLocale, useMiniT } from '../lib/i18n';
 const BALL_URL = '/assets/brand/goal-ball-small.webp';
 const MIN_STAKE = 5;
 const STAKE_PRESETS = [5, 10, 20, 50, 100];
+
+/** Flip to false to fall back to the 2D goal (tag: final-third-2d-stable). */
+const USE_3D_PITCH = true;
+
+const FinalThirdPitch3D = dynamic(
+  () => import('./FinalThirdPitch3D').then((m) => m.FinalThirdPitch3D),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="relative mx-auto aspect-[16/10] w-full animate-pulse rounded-[24px] border border-white/10 bg-[#0a1420]" />
+    ),
+  },
+);
 const START_BALANCE = 100;
 const SAVE_ZONES = 2;
 const INFORMED_FIRST_MULT = 1.2;
@@ -241,6 +255,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
     setShotZone(zone);
     setBeat('resolving');
     const isSave = saves.has(zone.id);
+    // 3D pitch: run-up (~0.45s) + flight (~0.8s) before the outcome lands.
     later(() => {
       if (isSave) {
         setScored(false);
@@ -252,7 +267,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
         setBestRun((b) => Math.max(b ?? 0, Math.round((next / roundStake) * 100) / 100));
         setBeat('goal');
       }
-    }, 880);
+    }, USE_3D_PITCH ? 1350 : 880);
   };
 
   const cashOut = () => {
@@ -371,16 +386,29 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
         }
         transition={{ duration: 0.45 }}
       >
-        <FinalThirdGoal
-          picking={beat === 'shoot'}
-          revealedSave={revealedSave}
-          scouting={beat === 'shoot' && informed === true}
-          shotZone={shotZone}
-          resolving={beat === 'resolving'}
-          settled={beat === 'goal' || beat === 'saved'}
-          scored={scored}
-          onPick={shoot}
-        />
+        {USE_3D_PITCH ? (
+          <FinalThirdPitch3D
+            picking={beat === 'shoot'}
+            revealedSave={revealedSave}
+            scouting={beat === 'shoot' && informed === true}
+            shotZone={shotZone}
+            resolving={beat === 'resolving'}
+            settled={beat === 'goal' || beat === 'saved'}
+            scored={scored}
+            onPick={shoot}
+          />
+        ) : (
+          <FinalThirdGoal
+            picking={beat === 'shoot'}
+            revealedSave={revealedSave}
+            scouting={beat === 'shoot' && informed === true}
+            shotZone={shotZone}
+            resolving={beat === 'resolving'}
+            settled={beat === 'goal' || beat === 'saved'}
+            scored={scored}
+            onPick={shoot}
+          />
+        )}
       </motion.div>
 
       {/* Beat area */}
