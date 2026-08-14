@@ -426,7 +426,7 @@ function Goal({
   );
 }
 
-function KeeperGlove() {
+export function KeeperGlove() {
   return (
     <svg
       viewBox="0 0 64 72"

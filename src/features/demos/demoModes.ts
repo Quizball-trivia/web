@@ -51,6 +51,15 @@ export const FEATURED_DEMO_MODES: DemoModeCard[] = [
 // In-game copy is English-only for now (prototypes); hub cards are bilingual.
 export const MINI_GAME_DEMO_MODES: DemoModeCard[] = [
   {
+    slug: "mini-final-third",
+    title: { en: "Final Third", ka: "Final Third" },
+    description: {
+      en: "Know football, read the goal, take the shot — cash out or ride the multiplier.",
+      ka: "იცოდე ფეხბურთი, წაიკითხე კარი, დაარტყი — აიღე ან გაზარდე მამრავლი.",
+    },
+    group: "featured",
+  },
+  {
     slug: "mini-squad-spin",
     title: { en: "Squad Spin", ka: "Squad Spin" },
     description: {

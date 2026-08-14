@@ -162,6 +162,28 @@ const KA: Record<string, string> = {
   "Draw": "ფრე",
   "You lose": "წააგე",
 
+  // Final Third
+  "Know football. Read the goal. Take the shot.": "იცოდე ფეხბურთი. წაიკითხე კარი. დაარტყი.",
+  "Balance": "ბალანსი",
+  "Pot": "ბანკი",
+  "Stake {n} & attack": "დადე {n} და შეუტიე",
+  "Top up (demo)": "შევსება (დემო)",
+  "Answer to scout the keeper": "უპასუხე და დაზვერე მეკარე",
+  "Answer to scout the keeper — knowledge sharpens the shot, the risk stays.":
+    "უპასუხე და დაზვერე მეკარე — ცოდნა დარტყმას ალესავს, რისკი კი რჩება.",
+  "Attack {n}": "შეტევა {n}",
+  "SCOUT REPORT ✓ — one save zone revealed": "დაზვერვის ანგარიში ✓ — ერთი სეივ-ზონა გამოვლინდა",
+  "No scout — blind shot pays more": "დაზვერვის გარეშე — ბრმა დარტყმა მეტს იხდის",
+  "Pick your shot zone": "აირჩიე დარტყმის ზონა",
+  "4 GOAL · 2 SAVE": "4 გოლი · 2 სეივი",
+  "4 GOAL · 1 SAVE": "4 გოლი · 1 სეივი",
+  "TAKE {amount}": "აიღე {amount}",
+  "NEXT ATTACK": "შემდეგი შეტევა",
+  "Next attack risks the whole pot — the keeper resets.": "შემდეგი შეტევა მთელ ბანკს რისკავს — მეკარე თავიდან დგება.",
+  "The keeper read it — pot lost.": "მეკარემ წაიკითხა — ბანკი დაიკარგა.",
+  "Cashed out {amount}!": "განაღდებულია {amount}!",
+  "New round": "ახალი რაუნდი",
+
   // Squad Collection
   "Squad Collection": "გუნდის კოლექცია",
   "Answer to pull cards. Build your XI.": "უპასუხე, ამოიღე ბარათები და ააწყვე შენი 11-ეული.",

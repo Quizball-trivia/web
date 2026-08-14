@@ -11,6 +11,7 @@ import { Accumulator } from "@/features/mini-games/components/Accumulator";
 import { BetSlipBooster } from "@/features/mini-games/components/BetSlipBooster";
 import { CashOutLadder } from "@/features/mini-games/components/CashOutLadder";
 import { DailyJackpot } from "@/features/mini-games/components/DailyJackpot";
+import { FinalThird } from "@/features/mini-games/components/FinalThird";
 import { HalfTimeTrivia } from "@/features/mini-games/components/HalfTimeTrivia";
 import { OddsBoard } from "@/features/mini-games/components/OddsBoard";
 import { PassChain } from "@/features/mini-games/components/PassChain";
@@ -56,6 +57,8 @@ export default function DemoModePage() {
           <DemoWeekendLeague />
         </>
       );
+    case "mini-final-third":
+      return <FinalThird backHref={DEMO_BACK} />;
     case "mini-squad-spin":
       return <SquadSpin backHref={DEMO_BACK} />;
     case "mini-trivia-spin":
