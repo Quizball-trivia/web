@@ -2230,5 +2230,356 @@
     "logo": "wl-shanghai-shenhua.png",
     "primaryColor": "#1f2937",
     "hidden": true
+  },
+  {
+    "id": "wl-nurnberg",
+    "label": "1. FC Nürnberg",
+    "value": "1. FC Nürnberg",
+    "country": "",
+    "logo": "wl-nurnberg.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-al-shabab",
+    "label": "Al Shabab",
+    "value": "Al Shabab",
+    "country": "",
+    "logo": "wl-al-shabab.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-al-ahli",
+    "label": "Al-Ahli",
+    "value": "Al-Ahli",
+    "country": "",
+    "logo": "wl-al-ahli.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-al-arabi",
+    "label": "Al-Arabi",
+    "value": "Al-Arabi",
+    "country": "",
+    "logo": "wl-al-arabi.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-alania",
+    "label": "Alania Vladikavkaz",
+    "value": "Alania Vladikavkaz",
+    "country": "",
+    "logo": "wl-alania.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-anorthosis",
+    "label": "Anorthosis Famagusta",
+    "value": "Anorthosis Famagusta",
+    "country": "",
+    "logo": "wl-anorthosis.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-bastia",
+    "label": "Bastia",
+    "value": "Bastia",
+    "country": "",
+    "logo": "wl-bastia.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-grasshoppers",
+    "label": "Grasshoppers",
+    "value": "Grasshoppers",
+    "country": "",
+    "logo": "wl-grasshoppers.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-grosseto",
+    "label": "Grosseto",
+    "value": "Grosseto",
+    "country": "",
+    "logo": "wl-grosseto.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-hajduk-split",
+    "label": "Hajduk Split",
+    "value": "Hajduk Split",
+    "country": "",
+    "logo": "wl-hajduk-split.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-inter-baku",
+    "label": "Inter Baku",
+    "value": "Inter Baku",
+    "country": "",
+    "logo": "wl-inter-baku.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-karlsruher",
+    "label": "Karlsruher SC",
+    "value": "Karlsruher SC",
+    "country": "",
+    "logo": "wl-karlsruher.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-lanceros",
+    "label": "Lanceros Boyacá",
+    "value": "Lanceros Boyacá",
+    "country": "",
+    "logo": "wl-lanceros.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-lask",
+    "label": "LASK",
+    "value": "LASK",
+    "country": "",
+    "logo": "wl-lask.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-le-havre",
+    "label": "Le Havre",
+    "value": "Le Havre",
+    "country": "",
+    "logo": "wl-le-havre.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-luzern",
+    "label": "Luzern",
+    "value": "Luzern",
+    "country": "",
+    "logo": "wl-luzern.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-notts-county",
+    "label": "Notts County",
+    "value": "Notts County",
+    "country": "",
+    "logo": "wl-notts-county.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-perugia",
+    "label": "Perugia",
+    "value": "Perugia",
+    "country": "",
+    "logo": "wl-perugia.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-pescara",
+    "label": "Pescara",
+    "value": "Pescara",
+    "country": "",
+    "logo": "wl-pescara.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-portsmouth",
+    "label": "Portsmouth",
+    "value": "Portsmouth",
+    "country": "",
+    "logo": "wl-portsmouth.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-quimper",
+    "label": "Quimper",
+    "value": "Quimper",
+    "country": "",
+    "logo": "wl-quimper.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-red-star",
+    "label": "Red Star Belgrade",
+    "value": "Red Star Belgrade",
+    "country": "",
+    "logo": "wl-red-star.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-rw-ahlen",
+    "label": "Rot Weiss Ahlen",
+    "value": "Rot Weiss Ahlen",
+    "country": "",
+    "logo": "wl-rw-ahlen.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-rubin-kazan",
+    "label": "Rubin Kazan",
+    "value": "Rubin Kazan",
+    "country": "",
+    "logo": "wl-rubin-kazan.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-saarbrucken",
+    "label": "Saarbrücken",
+    "value": "Saarbrücken",
+    "country": "",
+    "logo": "wl-saarbrucken.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-sheffield-united",
+    "label": "Sheffield United",
+    "value": "Sheffield United",
+    "country": "",
+    "logo": "wl-sheffield-united.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-siena",
+    "label": "Siena",
+    "value": "Siena",
+    "country": "",
+    "logo": "wl-siena.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-sion",
+    "label": "Sion",
+    "value": "Sion",
+    "country": "",
+    "logo": "wl-sion.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-spartak-moscow",
+    "label": "Spartak Moscow",
+    "value": "Spartak Moscow",
+    "country": "",
+    "logo": "wl-spartak-moscow.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-spartak-subotica",
+    "label": "Spartak Subotica",
+    "value": "Spartak Subotica",
+    "country": "",
+    "logo": "wl-spartak-subotica.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-st-gallen",
+    "label": "St. Gallen",
+    "value": "St. Gallen",
+    "country": "",
+    "logo": "wl-st-gallen.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-talleres",
+    "label": "Talleres",
+    "value": "Talleres",
+    "country": "",
+    "logo": "wl-talleres.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-teplice",
+    "label": "Teplice",
+    "value": "Teplice",
+    "country": "",
+    "logo": "wl-teplice.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-toulouse",
+    "label": "Toulouse",
+    "value": "Toulouse",
+    "country": "",
+    "logo": "wl-toulouse.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-usti",
+    "label": "Ústí nad Labem",
+    "value": "Ústí nad Labem",
+    "country": "",
+    "logo": "wl-usti.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-lubeck",
+    "label": "VfB Lübeck",
+    "value": "VfB Lübeck",
+    "country": "",
+    "logo": "wl-lubeck.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-bochum",
+    "label": "VfL Bochum",
+    "value": "VfL Bochum",
+    "country": "",
+    "logo": "wl-bochum.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-zeljeznicar",
+    "label": "Željezničar",
+    "value": "Željezničar",
+    "country": "",
+    "logo": "wl-zeljeznicar.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-zurich",
+    "label": "Zürich",
+    "value": "Zürich",
+    "country": "",
+    "logo": "wl-zurich.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
   }
 ]
