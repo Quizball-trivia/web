@@ -23,7 +23,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { animate, motion, AnimatePresence } from 'motion/react';
-import { Check, Eye, Radio, Trophy, Volume2, VolumeX, X } from 'lucide-react';
+import { Check, Radio, Trophy, Volume2, VolumeX, X } from 'lucide-react';
 import { MiniGameShell } from './MiniGameShell';
 import { KeeperGlove } from './PenaltyShootout';
 import { getTrivia, type TriviaQuestion } from '../data/trivia';
@@ -862,21 +862,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
             </motion.div>
           )}
 
-          {beat === 'shoot' && (
-            <motion.div key="shoot" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-2 text-center">
-              <motion.div
-                initial={{ scale: 0.7, opacity: 0, rotate: -3 }}
-                animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                transition={{ type: 'spring', stiffness: 320, damping: 16 }}
-                className="mx-auto inline-flex items-center gap-2 rounded-full bg-brand-green/15 px-4 py-2 font-poppins text-sm font-black uppercase text-brand-green"
-              >
-                <Eye className="size-4" /> {t('{k} zones open — one hides the keeper', { k: openCount })}
-              </motion.div>
-              <p className="font-poppins text-xs font-bold uppercase tracking-wide text-white/60">
-                {t('Pick your shot zone')} · {t('{pct}% goal', { pct: goalPct })} · {fmt(pot)} → {fmt(potential)} <CoinIcon size={14} />
-              </p>
-            </motion.div>
-          )}
+          {beat === 'shoot' && <motion.div key="shoot" className="h-10" />}
 
           {beat === 'goal' && (
             <motion.div key="goal" initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="space-y-3 text-center">

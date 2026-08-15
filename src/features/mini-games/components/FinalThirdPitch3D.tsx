@@ -134,9 +134,9 @@ const KICK_SETUPS: readonly KickSetup[] = [
     stutter: 0.72,
     whip: 1.28,
     curlBias: 0.12,
-    heightBias: 0.18,
-    spin: 14,
-    knuckle: 1,
+    heightBias: 0.42,
+    spin: 10,
+    knuckle: 1.5,
   },
   {
     id: 'messi',
@@ -150,9 +150,9 @@ const KICK_SETUPS: readonly KickSetup[] = [
     weave: 0.1,
     stutter: 0,
     whip: 0.82,
-    curlBias: 1.55,
-    heightBias: 0.62,
-    spin: 22,
+    curlBias: 1.95,
+    heightBias: 0.85,
+    spin: 26,
     knuckle: 0,
   },
   {
@@ -184,9 +184,9 @@ const KICK_SETUPS: readonly KickSetup[] = [
     weave: 0.16,
     stutter: 0,
     whip: 1.32,
-    curlBias: 2.05,
-    heightBias: -0.12,
-    spin: 28,
+    curlBias: 2.35,
+    heightBias: -0.18,
+    spin: 30,
     knuckle: 0.35,
   },
   {
@@ -255,9 +255,9 @@ const KICK_SETUPS: readonly KickSetup[] = [
     stutter: 0.1,
     whip: 1.15,
     curlBias: 0.3,
-    heightBias: 0.55,
-    spin: 8,
-    knuckle: 1.4,
+    heightBias: 0.7,
+    spin: 6,
+    knuckle: 1.9,
   },
   {
     // Explosive sprint-up, low driven strike.
@@ -302,17 +302,17 @@ function kickFromSeed(seed: number): KickSetup {
   return KICK_SETUPS[index];
 }
 
-const TAKER_LOOK: Record<TakerId, { kit: string; shorts: string; socks: string; hair: string; number: number; skin: string; accent: string }> = {
-  ronaldo: { kit: '#f4f7fb', shorts: '#10233e', socks: '#f4f7fb', hair: '#1a120c', number: 7, skin: '#c48a62', accent: '#10233e' },
-  messi: { kit: '#6bb3ff', shorts: '#0b2a6b', socks: '#6bb3ff', hair: '#3a2414', number: 10, skin: '#c9a07a', accent: '#0b2a6b' },
-  beckham: { kit: '#da1f26', shorts: '#f4f7fb', socks: '#da1f26', hair: '#1c140e', number: 7, skin: '#d4a07a', accent: '#f4f7fb' },
-  carlos: { kit: '#fde100', shorts: '#1b3d8f', socks: '#fde100', hair: '#120c08', number: 6, skin: '#5c3824', accent: '#1b3d8f' },
-  ronaldinho: { kit: '#0a3d2c', shorts: '#f4f7fb', socks: '#0a3d2c', hair: '#1a100c', number: 10, skin: '#8a5a38', accent: '#f4f7fb' },
-  neymar: { kit: '#ffe500', shorts: '#1a3a1a', socks: '#ffe500', hair: '#24160e', number: 11, skin: '#c9a070', accent: '#1a3a1a' },
-  zidane: { kit: '#1c3f94', shorts: '#f4f7fb', socks: '#c8102e', hair: '#2b211a', number: 10, skin: '#d4a07a', accent: '#f4f7fb' },
-  juninho: { kit: '#f4f7fb', shorts: '#f4f7fb', socks: '#f4f7fb', hair: '#17110b', number: 8, skin: '#c9a07a', accent: '#1b3d8f' },
-  mbappe: { kit: '#10224e', shorts: '#10224e', socks: '#10224e', hair: '#100b08', number: 7, skin: '#8a5a38', accent: '#da1f26' },
-  kvara: { kit: '#f4f7fb', shorts: '#f4f7fb', socks: '#c8102e', hair: '#1a120c', number: 7, skin: '#d4a07a', accent: '#c8102e' },
+const TAKER_LOOK: Record<TakerId, { kit: string; shorts: string; socks: string; hair: string; number: number; skin: string; accent: string; hairStyle?: HairStyle; beard?: boolean }> = {
+  ronaldo: { kit: '#f4f7fb', shorts: '#10233e', socks: '#f4f7fb', hair: '#1a120c', number: 7, skin: '#c48a62', accent: '#10233e', hairStyle: 'crop' },
+  messi: { kit: '#6bb3ff', shorts: '#0b2a6b', socks: '#6bb3ff', hair: '#3a2414', number: 10, skin: '#c9a07a', accent: '#0b2a6b', hairStyle: 'mop', beard: true },
+  beckham: { kit: '#da1f26', shorts: '#f4f7fb', socks: '#da1f26', hair: '#8a6b3c', number: 7, skin: '#d4a07a', accent: '#f4f7fb', hairStyle: 'fauxhawk' },
+  carlos: { kit: '#fde100', shorts: '#1b3d8f', socks: '#fde100', hair: '#120c08', number: 6, skin: '#5c3824', accent: '#1b3d8f', hairStyle: 'bald' },
+  ronaldinho: { kit: '#0a3d2c', shorts: '#f4f7fb', socks: '#0a3d2c', hair: '#1a100c', number: 10, skin: '#8a5a38', accent: '#f4f7fb', hairStyle: 'long' },
+  neymar: { kit: '#ffe500', shorts: '#1a3a1a', socks: '#ffe500', hair: '#24160e', number: 11, skin: '#c9a070', accent: '#1a3a1a', hairStyle: 'mop' },
+  zidane: { kit: '#1c3f94', shorts: '#f4f7fb', socks: '#c8102e', hair: '#2b211a', number: 10, skin: '#d4a07a', accent: '#f4f7fb', hairStyle: 'balding' },
+  juninho: { kit: '#f4f7fb', shorts: '#f4f7fb', socks: '#f4f7fb', hair: '#17110b', number: 8, skin: '#c9a07a', accent: '#1b3d8f', hairStyle: 'short' },
+  mbappe: { kit: '#10224e', shorts: '#10224e', socks: '#10224e', hair: '#100b08', number: 7, skin: '#8a5a38', accent: '#da1f26', hairStyle: 'crop' },
+  kvara: { kit: '#f4f7fb', shorts: '#f4f7fb', socks: '#c8102e', hair: '#1a120c', number: 7, skin: '#d4a07a', accent: '#c8102e', hairStyle: 'short', beard: true },
 };
 
 function CameraRig({ kick, shotZone, flying }: { kick: KickSetup; shotZone: Zone | null; flying: boolean }) {
@@ -896,22 +896,22 @@ function PlayerLeg({
   return (
     <group name={`hip${side}`} position={[x, -0.07, 0]}>
       <mesh position={[0, -0.17, 0]} castShadow>
-        <capsuleGeometry args={[0.08, 0.2, 4, 8]} />
-        <meshStandardMaterial color={skin} roughness={0.82} flatShading />
+        <capsuleGeometry args={[0.086, 0.2, 4, 10]} />
+        <meshStandardMaterial color={skin} roughness={0.82} />
       </mesh>
       <group name={`knee${side}`} position={[0, -0.36, 0]}>
         <mesh scale={[1.02, 0.86, 1]} castShadow>
           <sphereGeometry args={[0.077, 8, 8]} />
-          <meshStandardMaterial color={skin} roughness={0.82} flatShading />
+          <meshStandardMaterial color={skin} roughness={0.82} />
         </mesh>
         <mesh position={[0, -0.17, 0]} castShadow>
           <capsuleGeometry args={[0.066, 0.22, 4, 8]} />
-          <meshStandardMaterial color={sock} roughness={0.76} flatShading />
+          <meshStandardMaterial color={sock} roughness={0.76} />
         </mesh>
         <group name={`ankle${side}`} position={[0, -0.35, 0]}>
-          <mesh position={[0, -0.015, 0.075]} rotation={[Math.PI / 2 + 0.08, 0, 0]} scale={[1.05, 1, 0.7]} castShadow>
+          <mesh position={[0, -0.015, 0.075]} rotation={[Math.PI / 2 + 0.08, 0, 0]} scale={[1.16, 1.08, 0.78]} castShadow>
             <capsuleGeometry args={[0.067, 0.16, 4, 10]} />
-            <meshStandardMaterial color={boot} roughness={0.62} flatShading />
+            <meshStandardMaterial color={boot} roughness={0.62} />
           </mesh>
           <mesh position={[0, -0.066, 0.083]} rotation={[Math.PI / 2, 0, 0]} scale={[1.08, 1, 0.62]}>
             <capsuleGeometry args={[0.069, 0.17, 3, 10]} />
@@ -934,40 +934,40 @@ function PlayerArm({
   skin: string;
   glove?: string;
 }) {
-  const x = side === 'L' ? -0.265 : 0.265;
+  const x = side === 'L' ? -0.235 : 0.235;
   return (
-    <group name={`sho${side}`} position={[x, 0.13, 0]}>
+    <group name={`sho${side}`} position={[x, 0.155, 0]}>
       <mesh castShadow>
-        <sphereGeometry args={[0.092, 8, 8]} />
-        <meshStandardMaterial color={kit} roughness={0.78} flatShading />
+        <sphereGeometry args={[0.104, 12, 12]} />
+        <meshStandardMaterial color={kit} roughness={0.78} />
       </mesh>
       <mesh position={[0, -0.105, 0]} castShadow>
         <capsuleGeometry args={[0.064, 0.12, 4, 8]} />
-        <meshStandardMaterial color={kit} roughness={0.78} flatShading />
+        <meshStandardMaterial color={kit} roughness={0.78} />
       </mesh>
       <group name={`elb${side}`} position={[0, -0.25, 0]}>
         <mesh position={[0, -0.115, 0]} castShadow>
           <capsuleGeometry args={[0.052, 0.18, 4, 8]} />
-          <meshStandardMaterial color={skin} roughness={0.82} flatShading />
+          <meshStandardMaterial color={skin} roughness={0.82} />
         </mesh>
         <group name={`hand${side}`} position={[0, -0.265, 0]}>
           <mesh scale={glove ? [1.38, 1.16, 0.78] : [1, 1, 0.82]} castShadow>
             <sphereGeometry args={[glove ? 0.076 : 0.062, 10, 10]} />
-            <meshStandardMaterial color={glove ?? skin} roughness={0.7} flatShading />
+            <meshStandardMaterial color={glove ?? skin} roughness={0.7} />
           </mesh>
           {glove && (
             <>
               <mesh position={[side === 'L' ? 0.065 : -0.065, 0.005, 0.012]} rotation={[0, 0, side === 'L' ? -0.65 : 0.65]} castShadow>
                 <capsuleGeometry args={[0.026, 0.055, 3, 8]} />
-                <meshStandardMaterial color={glove} roughness={0.7} flatShading />
+                <meshStandardMaterial color={glove} roughness={0.7} />
               </mesh>
               <mesh position={[0, 0.055, 0]} scale={[1.18, 0.58, 0.92]} castShadow>
                 <cylinderGeometry args={[0.068, 0.063, 0.105, 10]} />
-                <meshStandardMaterial color="#071320" roughness={0.78} flatShading />
+                <meshStandardMaterial color="#071320" roughness={0.78} />
               </mesh>
               <mesh position={[0, -0.012, 0.058]} scale={[1.08, 0.82, 0.5]}>
                 <sphereGeometry args={[0.058, 8, 8]} />
-                <meshStandardMaterial color="#ffe500" roughness={0.72} flatShading />
+                <meshStandardMaterial color="#ffe500" roughness={0.72} />
               </mesh>
             </>
           )}
@@ -1001,35 +1001,116 @@ function ShirtNumber({ number, accent = '#f8fbff', back = false }: { number: num
     return tex;
   }, [number, accent]);
   return (
-    <mesh position={[0, back ? 0.05 : 0.1, back ? -0.245 : 0.245]} rotation={[0, back ? Math.PI : 0, 0]}>
+    <mesh position={[0, back ? 0.05 : 0.1, back ? -0.21 : 0.21]} rotation={[0, back ? Math.PI : 0, 0]}>
       <planeGeometry args={back ? [0.26, 0.26] : [0.13, 0.13]} />
       <meshBasicMaterial map={texture} transparent toneMapped={false} depthWrite={false} />
     </mesh>
   );
 }
 
-function PlayerHead({ skin, hair }: { skin: string; hair: string }) {
+type HairStyle = 'short' | 'crop' | 'mop' | 'long' | 'bald' | 'balding' | 'fauxhawk';
+
+function PlayerHead({
+  skin,
+  hair,
+  hairStyle = 'short',
+  beard = false,
+}: {
+  skin: string;
+  hair: string;
+  hairStyle?: HairStyle;
+  beard?: boolean;
+}) {
   return (
-    <group name="head" position={[0, 0.5, 0]}>
+    <group name="head" position={[0, 0.51, 0]}>
+      <group scale={1.12}>
       <mesh scale={[0.88, 1, 0.92]} castShadow>
         <sphereGeometry args={[0.15, 14, 12]} />
-        <meshStandardMaterial color={skin} roughness={0.86} flatShading />
+        <meshStandardMaterial color={skin} roughness={0.86} />
       </mesh>
-      <mesh position={[0, 0.084, -0.012]} scale={[0.93, 0.54, 0.94]} castShadow>
-        <sphereGeometry args={[0.153, 14, 10]} />
-        <meshStandardMaterial color={hair} roughness={0.92} flatShading />
-      </mesh>
-      <mesh position={[0, 0.128, 0.025]} rotation={[0.1, 0, 0]} scale={[1, 0.42, 0.9]} castShadow>
-        <sphereGeometry args={[0.12, 10, 8]} />
-        <meshStandardMaterial color={hair} roughness={0.94} flatShading />
-      </mesh>
+      {hairStyle === 'short' && (
+        <>
+          <mesh position={[0, 0.084, -0.012]} scale={[0.93, 0.54, 0.94]} castShadow>
+            <sphereGeometry args={[0.153, 14, 10]} />
+            <meshStandardMaterial color={hair} roughness={0.92} />
+          </mesh>
+          <mesh position={[0, 0.128, 0.025]} rotation={[0.1, 0, 0]} scale={[1, 0.42, 0.9]} castShadow>
+            <sphereGeometry args={[0.12, 10, 8]} />
+            <meshStandardMaterial color={hair} roughness={0.94} />
+          </mesh>
+        </>
+      )}
+      {hairStyle === 'crop' && (
+        <mesh position={[0, 0.098, -0.006]} scale={[0.9, 0.44, 0.92]} castShadow>
+          <sphereGeometry args={[0.15, 14, 10]} />
+          <meshStandardMaterial color={hair} roughness={0.94} />
+        </mesh>
+      )}
+      {hairStyle === 'mop' && (
+        <>
+          <mesh position={[0, 0.05, -0.012]} scale={[0.98, 0.76, 0.98]} castShadow>
+            <sphereGeometry args={[0.155, 14, 12]} />
+            <meshStandardMaterial color={hair} roughness={0.92} />
+          </mesh>
+          <mesh position={[0, 0.108, 0.068]} rotation={[0.24, 0, 0]} scale={[0.94, 0.4, 0.66]} castShadow>
+            <sphereGeometry args={[0.132, 12, 8]} />
+            <meshStandardMaterial color={hair} roughness={0.94} />
+          </mesh>
+        </>
+      )}
+      {hairStyle === 'long' && (
+        <>
+          <mesh position={[0, 0.05, -0.012]} scale={[1, 0.78, 1]} castShadow>
+            <sphereGeometry args={[0.156, 14, 12]} />
+            <meshStandardMaterial color={hair} roughness={0.92} />
+          </mesh>
+          <mesh position={[0, -0.05, -0.105]} scale={[0.82, 1.05, 0.5]} castShadow>
+            <sphereGeometry args={[0.13, 12, 10]} />
+            <meshStandardMaterial color={hair} roughness={0.92} />
+          </mesh>
+          <mesh position={[0, 0.072, 0]} rotation={[Math.PI / 2 + 0.14, 0, 0]}>
+            <torusGeometry args={[0.148, 0.017, 8, 20]} />
+            <meshStandardMaterial color="#f2f5f8" roughness={0.6} />
+          </mesh>
+        </>
+      )}
+      {hairStyle === 'balding' && (
+        <>
+          <mesh position={[0, 0.012, -0.01]} rotation={[Math.PI / 2 - 0.08, 0, 0]}>
+            <torusGeometry args={[0.132, 0.034, 8, 20]} />
+            <meshStandardMaterial color={hair} roughness={0.94} />
+          </mesh>
+          <mesh position={[0, 0.028, -0.108]} scale={[0.82, 0.52, 0.4]} castShadow>
+            <sphereGeometry args={[0.13, 10, 8]} />
+            <meshStandardMaterial color={hair} roughness={0.94} />
+          </mesh>
+        </>
+      )}
+      {hairStyle === 'fauxhawk' && (
+        <>
+          <mesh position={[0, 0.098, -0.006]} scale={[0.9, 0.42, 0.92]} castShadow>
+            <sphereGeometry args={[0.15, 14, 10]} />
+            <meshStandardMaterial color={hair} roughness={0.94} />
+          </mesh>
+          <mesh position={[0, 0.158, 0.012]} rotation={[0.12, 0, 0]} castShadow>
+            <boxGeometry args={[0.05, 0.055, 0.21]} />
+            <meshStandardMaterial color={hair} roughness={0.9} />
+          </mesh>
+        </>
+      )}
+      {beard && (
+        <mesh position={[0, -0.078, 0.06]} scale={[0.74, 0.5, 0.62]} castShadow>
+          <sphereGeometry args={[0.125, 12, 10]} />
+          <meshStandardMaterial color={hair} roughness={0.95} />
+        </mesh>
+      )}
       <mesh position={[-0.139, 0.005, 0]} scale={[0.42, 0.66, 0.3]}>
         <sphereGeometry args={[0.055, 8, 8]} />
-        <meshStandardMaterial color={skin} roughness={0.86} flatShading />
+        <meshStandardMaterial color={skin} roughness={0.86} />
       </mesh>
       <mesh position={[0.139, 0.005, 0]} scale={[0.42, 0.66, 0.3]}>
         <sphereGeometry args={[0.055, 8, 8]} />
-        <meshStandardMaterial color={skin} roughness={0.86} flatShading />
+        <meshStandardMaterial color={skin} roughness={0.86} />
       </mesh>
       <mesh position={[-0.051, 0.015, 0.136]}>
         <sphereGeometry args={[0.012, 6, 6]} />
@@ -1041,8 +1122,9 @@ function PlayerHead({ skin, hair }: { skin: string; hair: string }) {
       </mesh>
       <mesh position={[0, -0.018, 0.155]} rotation={[Math.PI / 2, 0, 0]}>
         <coneGeometry args={[0.018, 0.055, 6]} />
-        <meshStandardMaterial color={skin} roughness={0.86} flatShading />
+        <meshStandardMaterial color={skin} roughness={0.86} />
       </mesh>
+      </group>
     </group>
   );
 }
@@ -1057,6 +1139,8 @@ function PlayerRig({
   glove,
   number,
   accent = '#f8fbff',
+  hairStyle,
+  beard,
 }: {
   kit: string;
   shorts: string;
@@ -1067,46 +1151,38 @@ function PlayerRig({
   glove?: string;
   number: number;
   accent?: string;
+  hairStyle?: HairStyle;
+  beard?: boolean;
 }) {
   return (
     <group name="pelvis" position={[0, 0.93, 0]}>
       <PlayerLeg side="L" skin={skin} sock={socks} boot={boot} />
       <PlayerLeg side="R" skin={skin} sock={socks} boot={boot} />
-      <mesh position={[0, -0.005, 0]} scale={[1, 0.82, 0.92]} castShadow>
-        <cylinderGeometry args={[0.18, 0.205, 0.25, 10]} />
-        <meshStandardMaterial color={shorts} roughness={0.78} flatShading />
+      {/* Boxy football shorts: a hip block + two square leg cuffs centered
+          over the thighs. Panels, not a bubble. */}
+      <mesh position={[0, 0.028, 0]} castShadow>
+        <boxGeometry args={[0.36, 0.16, 0.28]} />
+        <meshStandardMaterial color={shorts} roughness={0.78} />
       </mesh>
-      <mesh position={[-0.095, -0.12, 0]} castShadow>
-        <cylinderGeometry args={[0.07, 0.086, 0.18, 8]} />
-        <meshStandardMaterial color={shorts} roughness={0.78} flatShading />
+      <mesh position={[-0.108, -0.075, 0]} rotation={[0, 0, 0.06]} castShadow>
+        <boxGeometry args={[0.19, 0.16, 0.26]} />
+        <meshStandardMaterial color={shorts} roughness={0.78} />
       </mesh>
-      <mesh position={[0.095, -0.12, 0]} castShadow>
-        <cylinderGeometry args={[0.07, 0.086, 0.18, 8]} />
-        <meshStandardMaterial color={shorts} roughness={0.78} flatShading />
+      <mesh position={[0.108, -0.075, 0]} rotation={[0, 0, -0.06]} castShadow>
+        <boxGeometry args={[0.19, 0.16, 0.26]} />
+        <meshStandardMaterial color={shorts} roughness={0.78} />
       </mesh>
       <group name="spine" position={[0, 0.055, 0]}>
         <group name="torso" position={[0, 0.31, 0]}>
-          <mesh castShadow>
-            <cylinderGeometry args={[0.245, 0.19, 0.47, 12]} />
-            <meshStandardMaterial color={kit} roughness={0.76} flatShading />
-          </mesh>
-          <mesh position={[0, 0.155, 0.175]} scale={[1.5, 0.58, 0.38]}>
-            <sphereGeometry args={[0.13, 12, 8]} />
-            <meshStandardMaterial color={kit} roughness={0.74} flatShading />
-          </mesh>
-          <mesh position={[-0.19, 0, 0.145]} rotation={[0, 0, -0.06]}>
-            <boxGeometry args={[0.035, 0.4, 0.018]} />
-            <meshStandardMaterial color={accent} roughness={0.75} />
-          </mesh>
-          <mesh position={[0.19, 0, 0.145]} rotation={[0, 0, 0.06]}>
-            <boxGeometry args={[0.035, 0.4, 0.018]} />
-            <meshStandardMaterial color={accent} roughness={0.75} />
+          <mesh scale={[1.08, 1, 0.84]} castShadow>
+            <capsuleGeometry args={[0.195, 0.16, 8, 16]} />
+            <meshStandardMaterial color={kit} roughness={0.76} />
           </mesh>
           <mesh position={[0, 0.225, 0]} rotation={[Math.PI / 2, 0, 0]}>
             <torusGeometry args={[0.072, 0.018, 6, 12]} />
-            <meshStandardMaterial color={accent} roughness={0.72} flatShading />
+            <meshStandardMaterial color={accent} roughness={0.72} />
           </mesh>
-          <mesh position={[-0.105, 0.11, 0.215]}>
+          <mesh position={[-0.1, 0.11, 0.185]}>
             <circleGeometry args={[0.025, 8]} />
             <meshBasicMaterial color="#ffe500" toneMapped={false} />
           </mesh>
@@ -1116,9 +1192,9 @@ function PlayerRig({
           <PlayerArm side="R" kit={kit} skin={skin} glove={glove} />
           <mesh position={[0, 0.315, 0]}>
             <cylinderGeometry args={[0.058, 0.068, 0.12, 8]} />
-            <meshStandardMaterial color={skin} roughness={0.86} flatShading />
+            <meshStandardMaterial color={skin} roughness={0.86} />
           </mesh>
-          <PlayerHead skin={skin} hair={hair} />
+          <PlayerHead skin={skin} hair={hair} hairStyle={hairStyle} beard={beard} />
         </group>
       </group>
     </group>
@@ -1260,23 +1336,37 @@ function Shooter({
         boot="#131a24"
         number={look.number}
         accent={look.accent}
+        hairStyle={look.hairStyle}
+        beard={look.beard}
       />
     </group>
   );
 }
 
-type KeeperMove = 'jump-catch' | 'high-fly' | 'high-tip' | 'low-sprawl' | 'smother' | 'wrong-way' | 'late' | 'frozen';
+type KeeperMove = 'jump-catch' | 'high-fly' | 'high-tip' | 'low-sprawl' | 'smother' | 'wrong-way' | 'late' | 'frozen' | 'punch';
 
-function keeperMove(zoneId: string, willSave: boolean, taker: TakerId): KeeperMove {
+/** `roll` is a stable per-shot random (derived from the shot start time) so
+ *  the keeper and the ball agree on whether the save is a catch or a punch. */
+function keeperMove(zoneId: string, willSave: boolean, taker: TakerId, roll: number): KeeperMove {
   if (!willSave) {
     if (taker === 'messi' || taker === 'neymar' || taker === 'kvara') return 'frozen';
     if (taker === 'carlos' || taker === 'ronaldinho' || taker === 'juninho') return 'late';
     return 'wrong-way';
   }
+  if (isPunchSave(zoneId, roll)) return 'punch';
   if (zoneId === 'TC') return 'jump-catch';
   if (zoneId === 'BC') return 'smother';
   if (zoneId === 'TL' || zoneId === 'TR') return taker === 'beckham' || taker === 'ronaldo' ? 'high-tip' : 'high-fly';
   return 'low-sprawl';
+}
+
+/** High saves are sometimes two-fist punches that deflect the ball away. */
+function isPunchSave(zoneId: string, roll: number): boolean {
+  return (zoneId === 'TL' || zoneId === 'TR' || zoneId === 'TC') && roll > 0.55;
+}
+
+function shotRollFrom(start: number | null): number {
+  return start == null ? 0 : Math.abs(Math.sin(start * 761.3));
 }
 
 function poseKeeperReady(now: number, player: THREE.Group, joint: JointMap) {
@@ -1357,6 +1447,23 @@ function poseKeeperMove(
     return;
   }
 
+  if (move === 'punch') {
+    const lift = Math.sin(motion * Math.PI) * 0.82;
+    player.position.set(target[0] * 0.68 * motion, -0.05 + motion * 0.42 + lift, 0.42);
+    player.rotation.set(lerp(0.08, -0.2, motion), 0, -Math.sign(target[0] || 1) * motion * 0.35);
+    setJoint(joint.pelvis, lerp(-0.16, 0.06, motion));
+    setJoint(joint.spine, lerp(0.28, -0.22, motion));
+    setJoint(joint.hipL, lerp(-0.62, -0.1, motion));
+    setJoint(joint.hipR, lerp(-0.62, -0.35, motion));
+    setJoint(joint.kneeL, lerp(1.08, 0.4, motion));
+    setJoint(joint.kneeR, lerp(1.08, 0.72, motion));
+    setJoint(joint.shoL, lerp(-0.72, -2.7, motion), 0, lerp(-0.82, -0.12, motion));
+    setJoint(joint.shoR, lerp(-0.72, -2.7, motion), 0, lerp(0.82, 0.12, motion));
+    setJoint(joint.elbL, lerp(-0.82, -0.2, motion));
+    setJoint(joint.elbR, lerp(-0.82, -0.2, motion));
+    setJoint(joint.head, lerp(-0.16, -0.3, motion));
+    return;
+  }
   const fly = move === 'high-fly' || move === 'high-tip' || move === 'late';
   const sprawl = move === 'low-sprawl';
   const wrong = move === 'wrong-way';
@@ -1519,7 +1626,7 @@ function KeeperPlayer({
     const now = state.clock.elapsedTime;
     const start = tl.current?.start ?? null;
     const shotTarget = shotZone ? ZONE_POS[shotZone.id] : null;
-    const move = shotZone && willSave != null ? keeperMove(shotZone.id, willSave, taker) : 'jump-catch';
+    const move = shotZone && willSave != null ? keeperMove(shotZone.id, willSave, taker, shotRollFrom(start)) : 'jump-catch';
     const delay = move === 'late' ? 0.2 : 0.05;
     const shotPhase = start == null ? -1 : now - start;
     const dive = clamp01((shotPhase - (KICK_LEAD_S + delay)) / (move === 'jump-catch' ? 0.42 : 0.5));
@@ -2034,20 +2141,37 @@ function Scene({
     if (now < launch) {
       ballMesh.position.copy(_ball);
     } else if (willSave === true && now >= launch + SAVE_CONTACT_S) {
-      const gather = easeOut((now - launch - SAVE_CONTACT_S) / SAVE_GATHER_S);
-      ballMesh.position.set(destinationX, destinationY, destinationZ);
-      ballMesh.position.lerp(keeperCatch.current, gather);
-      const spinLeft = 1 - gather;
-      spinBall(delta * kick.spin * spinLeft * 0.9);
+      const punch = isPunchSave(shotZone.id, shotRollFrom(start));
+      if (punch) {
+        const t = clamp01((now - launch - SAVE_CONTACT_S) / 0.62);
+        const away = Math.sign(destinationX || (shotRollFrom(start) > 0.77 ? 1 : -1));
+        ballMesh.position.set(
+          lerp(destinationX, destinationX + away * 2.6, easeOut(t)),
+          lerp(destinationY, 0.13, t * t) + Math.sin(t * Math.PI) * 0.85,
+          lerp(0.2, 4.4, easeOut(t)),
+        );
+        spinBall(delta * kick.spin * Math.max(0, 1 - t * 1.1));
+      } else {
+        const gather = easeOut((now - launch - SAVE_CONTACT_S) / SAVE_GATHER_S);
+        ballMesh.position.set(destinationX, destinationY, destinationZ);
+        ballMesh.position.lerp(keeperCatch.current, gather);
+        const spinLeft = 1 - gather;
+        spinBall(delta * kick.spin * spinLeft * 0.9);
+      }
     } else {
       const targetFlight = willSave === true ? clamp01(flight / 0.88) : flight;
       const side = shotZone.x === 50 ? 0 : shotZone.x < 50 ? 1 : -1;
       const curl = (kick.curlBias + (Math.abs(side) ? 0.35 : 0)) * (side || (kick.curlBias > 0.5 ? 1 : 0.2));
       const controlX = destinationX * 0.28 + curl + _ball.x * 0.22;
-      const controlY = Math.max(destinationY, 1.12) + 0.55 + kick.heightBias;
+      // Low shots sometimes skid UNDER the jumping wall (Ronaldinho's party
+      // trick — near-always for him). The roll is derived from the shot start
+      // time so it is stable across frames.
+      const shotRoll = Math.abs(Math.sin(start * 913.7));
+      const underWall = destinationY < 0.9 && shotRoll < (kick.id === 'ronaldinho' ? 0.85 : 0.38);
+      const controlY = underWall ? 0.32 : Math.max(destinationY, 1.12) + 0.55 + kick.heightBias;
       const controlZ = _ball.z * 0.48;
       const oneMinus = 1 - targetFlight;
-      const wobble = kick.knuckle * Math.sin(targetFlight * 17.5) * 0.11;
+      const wobble = kick.knuckle * Math.sin(targetFlight * 17.5) * (underWall ? 0.04 : 0.11);
       ballMesh.position.set(
         oneMinus * oneMinus * _ball.x + 2 * oneMinus * targetFlight * controlX + targetFlight * targetFlight * destinationX + wobble * 0.35,
         oneMinus * oneMinus * _ball.y + 2 * oneMinus * targetFlight * controlY + targetFlight * targetFlight * destinationY + wobble,
