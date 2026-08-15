@@ -15,7 +15,7 @@ import {
 } from '../auction-realtime.reducer';
 
 const formation: PublicAuctionFormation = {
-  name: '4-3-3',
+  name: '2-2-2',
   required: { GK: 1, DEF: 4, MID: 3, FWD: 3 },
   rows: [
     { pos: 'FWD', count: 3 },
@@ -76,7 +76,7 @@ function matchState(overrides: Partial<PublicAuctionMatchState> = {}): PublicAuc
     version: 1,
     locale: 'en',
     phase: 'clue_reveal',
-    formation: '4-3-3',
+    formation: '2-2-2',
     seats: [
       player('seat-human', 'You', 'user-1'),
       player('seat-bot-1', 'Bot 1', null),
@@ -110,7 +110,7 @@ describe('auction realtime adapter', () => {
       avatarSeed: 'avatar-1',
       isBot: false,
     });
-    expect(clientState.formation.name).toBe('4-3-3');
+    expect(clientState.formation.name).toBe('2-2-2');
     expect(clientState.totalRounds).toBe(33);
   });
 

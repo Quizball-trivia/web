@@ -227,7 +227,7 @@ describe('AuctionFlowScreen live mode', () => {
       matchmakingMode: 'search',
       selfUserId: 'user-1',
       locale: 'en',
-      formation: '4-3-3',
+      formation: '2-2-2',
     });
   });
 
@@ -245,7 +245,7 @@ describe('AuctionFlowScreen live mode', () => {
       enabled: false,
       matchmakingMode: 'search',
       selfUserId: null,
-      formation: '4-3-3',
+      formation: '2-2-2',
     });
   });
 

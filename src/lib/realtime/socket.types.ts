@@ -748,7 +748,7 @@ export interface WarmupScoresPayload {
 }
 
 export type AuctionPositionGroup = 'GK' | 'DEF' | 'MID' | 'FWD';
-export type AuctionFormationName = '4-3-3' | '4-4-2' | '3-5-2' | '4-2-3-1' | '3-4-3';
+export type AuctionFormationName = '2-2-2';
 export type AuctionMatchPhase =
   | 'created'
   | 'clue_reveal'
@@ -779,6 +779,7 @@ export interface PublicAuctionFootballer {
   imageUrl?: string | null;
   currentClub?: string | null;
   nationality?: string | null;
+  league?: string | null;
 }
 
 export interface PublicAuctionTeam {

@@ -35,7 +35,7 @@ export function MatchCountdown({ players, endsAtMs, onComplete }: MatchCountdown
 
   useEffect(() => {
     if (count <= 0) {
-      const done = setTimeout(onComplete, 600);
+      const done = setTimeout(onComplete, 300);
       return () => clearTimeout(done);
     }
     // Tick on the next whole-second boundary relative to the target, so the

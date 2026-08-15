@@ -2,6 +2,29 @@ import type { AvatarCustomization } from '@/types/game';
 
 export type PositionGroup = 'GK' | 'DEF' | 'MID' | 'FWD';
 
+/** Why the human can't bid on the current lot (null = they can act). */
+export type SitOutReason = 'forfeited' | 'eliminated' | 'position-filled' | null;
+
+/**
+ * One anonymised older-season stat line — the "scouting" clue format. The club
+ * is deliberately never included (that's the giveaway); the league gives level +
+ * region, and the that-season market value is only a weak proxy for the true
+ * (current) value that actually scores — that gap is the bidder's gamble.
+ */
+export interface SeasonSnapshot {
+  season: string; // "2011/12"
+  league: string; // "La Liga" — level + region, never the club
+  age: number;
+  apps: number;
+  goals: number;
+  assists?: number;
+  /** Goalkeeper facets — shown instead of goals/assists for GK lots. */
+  cleanSheets?: number;
+  conceded?: number;
+  /** Market value that season, in EUR. */
+  valueEur: number;
+}
+
 export interface Footballer {
   id: string;
   name: string;
@@ -9,7 +32,14 @@ export interface Footballer {
   value: number;
   startingPrice: number;
   clues: string[];
+  /** Older-season stat lines shown snapshot-by-snapshot instead of text clues
+   *  (when present). Same reveal cadence as `clues`. */
+  snapshots?: SeasonSnapshot[];
   nationality: string;
+  /** Current club — a chemistry dimension. Resolves to a crest via getClub(). */
+  club?: string | null;
+  /** League — a chemistry dimension. Resolves to a badge via getLeague(). */
+  league?: string | null;
   imageUrl?: string;
 }
 

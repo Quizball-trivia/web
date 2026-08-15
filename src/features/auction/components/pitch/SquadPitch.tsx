@@ -1,11 +1,18 @@
 'use client';
 
+import { useMemo } from 'react';
 import { motion } from 'motion/react';
 import type { AuctionPlayer, Formation, PositionGroup } from '../../types';
-import { getRemainingSlots, lastName } from '../../data';
+import { getRemainingSlots, lastName, computeSquadChemistry, MAX_PLAYER_CHEMISTRY } from '../../data';
 import { POS_COLORS, poppins } from '../../constants/auction.constants';
 import { useLocale } from '@/contexts/LocaleContext';
 import { PlayerPhoto } from '../shared/PlayerPhoto';
+import { ClubCrest } from '../shared/ClubCrest';
+import { LeagueLogo } from '../shared/LeagueLogo';
+import { FlagChip } from '../shared/FlagChip';
+import { getLeagueForClub } from '../../data/leagues';
+
+const CHEM_DOT_COLOR = '#58CC02';
 
 /** Vertical stadium pitch — lays out the formation rows + filled/empty slots. */
 export function SquadPitch({
@@ -17,6 +24,8 @@ export function SquadPitch({
   showYouBadge,
   needGlow,
   isHuman,
+  fill = false,
+  showChemistry = false,
 }: {
   player: AuctionPlayer;
   formation: Formation;
@@ -26,16 +35,28 @@ export function SquadPitch({
   showYouBadge?: boolean;
   needGlow?: boolean;
   isHuman?: boolean;
+  /** Fill the parent's height instead of the fixed 4/5 card aspect. Used by the
+   *  full-screen stadium layout where each pitch is a tall column. */
+  fill?: boolean;
+  /** Show each player's club crest, nation flag and league badge under their
+   *  photo, plus 3 dots filled to their chemistry (0…3). */
+  showChemistry?: boolean;
 }) {
   const { t } = useLocale();
   const circle = size === 'lg' ? 48 : size === 'md' ? 36 : 28;
   const nameFs = size === 'lg' ? 'text-[11px]' : size === 'md' ? 'text-[9px]' : 'text-[8px]';
+  const badgeSize = size === 'lg' ? 18 : size === 'md' ? 15 : 11;
+  const dotSize = size === 'lg' ? 6 : size === 'md' ? 5 : 4;
   const remaining = getRemainingSlots(player.team);
+  const perPlayerChem = useMemo(
+    () => (showChemistry ? computeSquadChemistry(player.team).perPlayer : {}),
+    [showChemistry, player.team],
+  );
 
   return (
     <motion.div
-      className="relative overflow-hidden rounded-[12px]"
-      style={{ aspectRatio: '4/5' }}
+      className={`relative overflow-hidden rounded-[12px] ${fill ? 'h-full w-full' : ''}`}
+      style={fill ? undefined : { aspectRatio: '4/5' }}
       animate={
         needGlow
           ? {
@@ -62,7 +83,14 @@ export function SquadPitch({
         alt=""
         aria-hidden
         draggable={false}
-        className="absolute left-1/2 top-1/2 h-[80%] w-[125%] max-w-none -translate-x-1/2 -translate-y-1/2 -rotate-90 object-fill"
+        className={
+          fill
+            // Tall column: cover the whole area (a vertical slice of the turf) so
+            // there are no dark bands top/bottom. The rotated-fill trick below is
+            // sized by width and only covers a middle band when the box is tall.
+            ? 'absolute inset-0 h-full w-full object-cover'
+            : 'absolute left-1/2 top-1/2 h-[80%] w-[125%] max-w-none -translate-x-1/2 -translate-y-1/2 -rotate-90 object-fill'
+        }
       />
       <div aria-hidden className="absolute inset-0 bg-black/15" />
 
@@ -172,10 +200,39 @@ export function SquadPitch({
                           animate={isNew ? { opacity: 1, y: 0 } : {}}
                           transition={isNew ? { delay: 0.3 } : undefined}
                           className={`${nameFs} text-white/90 text-center leading-tight font-semibold`}
-                          style={{ maxWidth: circle + 16, ...poppins, textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}
+                          style={{ maxWidth: circle + 20, ...poppins, textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}
                         >
                           {lastName(f.name)}
                         </motion.span>
+                      )}
+                      {f && showChemistry && (
+                        <>
+                          {/* Nation flag · league badge · club crest — EA FC-card
+                              order, on a dark chip so low-contrast crests stay
+                              visible on the turf. League falls back to the club's
+                              country league when the player has no explicit league
+                              (display only). */}
+                          <div className="flex items-center justify-center gap-1 rounded-full bg-black/60 px-1.5 py-0.5 shadow-[0_1px_3px_rgba(0,0,0,0.55)]">
+                            <FlagChip country={f.nationality} width={badgeSize + 4} height={Math.round((badgeSize + 4) * 0.67)} />
+                            <LeagueLogo league={f.league ?? getLeagueForClub(f.club)?.name} size={badgeSize} />
+                            <ClubCrest club={f.club} size={badgeSize} />
+                          </div>
+                          {/* Chemistry dots (0…3) */}
+                          <div className="flex items-center justify-center gap-[3px]">
+                            {Array.from({ length: MAX_PLAYER_CHEMISTRY }).map((_, d) => (
+                              <span
+                                key={d}
+                                className="rounded-full"
+                                style={{
+                                  width: dotSize,
+                                  height: dotSize,
+                                  backgroundColor: d < (perPlayerChem[f.id] ?? 0) ? CHEM_DOT_COLOR : 'rgba(255,255,255,0.22)',
+                                  boxShadow: d < (perPlayerChem[f.id] ?? 0) ? `0 0 4px ${CHEM_DOT_COLOR}99` : 'none',
+                                }}
+                              />
+                            ))}
+                          </div>
+                        </>
                       )}
                     </div>
                   );

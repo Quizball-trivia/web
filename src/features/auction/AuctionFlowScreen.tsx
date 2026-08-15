@@ -30,7 +30,7 @@ import type { AuctionGameState } from './types';
 
 // The matchmaking search still sends a formation name (the hook requires one),
 // but the SERVER picks the real formation randomly and ignores this value.
-const LIVE_AUCTION_FORMATION_NAME: AuctionFormationName = '4-3-3';
+const LIVE_AUCTION_FORMATION_NAME: AuctionFormationName = '2-2-2';
 
 interface AuctionFlowScreenProps {
   username: string;
@@ -305,7 +305,7 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
   const isResultsPhase = state?.phase === 'results';
   useEffect(() => {
     if (!isResultsPhase || resultsRevealed) return;
-    const id = window.setTimeout(() => setResultsRevealed(true), 1400);
+    const id = window.setTimeout(() => setResultsRevealed(true), 600);
     return () => window.clearTimeout(id);
   }, [isResultsPhase, resultsRevealed]);
 
@@ -385,7 +385,7 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
         />
       );
     }
-    return <FormationReveal state={state} onContinue={() => {}} autoAdvanceMs={3000} />;
+    return <FormationReveal state={state} onContinue={() => {}} autoAdvanceMs={1500} />;
   }
 
   if (
@@ -439,24 +439,28 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
   }
 
   if (state.phase === 'results') {
-    // Brief finalizing/loading beat before the standings reveal (ranked style).
-    if (!resultsRevealed) {
-      return (
-        <AuctionStatusOverlay
-          title={t('auctionGame.finalizingMatch')}
-          subtitle={t('auctionGame.calculatingResults')}
-        />
-      );
-    }
+    // Results mount underneath; the brief "finalizing" beat fades out on top of
+    // them (ranked style) via AnimatePresence, so it no longer hard-cuts.
     return (
-      <AuctionResultsScreen
-        state={state}
-        humanPlayerId={resolvedHumanPlayerId}
-        onPlayAgain={handlePlayAgain}
-        onExit={handleExit}
-        coinsAwarded={coinsAwarded}
-        apEarned={apEarned}
-      />
+      <>
+        <AuctionResultsScreen
+          state={state}
+          humanPlayerId={resolvedHumanPlayerId}
+          onPlayAgain={handlePlayAgain}
+          onExit={handleExit}
+          coinsAwarded={coinsAwarded}
+          apEarned={apEarned}
+        />
+        <AnimatePresence>
+          {!resultsRevealed && (
+            <AuctionStatusOverlay
+              key="finalizing"
+              title={t('auctionGame.finalizingMatch')}
+              subtitle={t('auctionGame.calculatingResults')}
+            />
+          )}
+        </AnimatePresence>
+      </>
     );
   }
 

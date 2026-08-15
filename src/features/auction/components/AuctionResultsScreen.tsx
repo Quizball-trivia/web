@@ -5,8 +5,22 @@ import Image from 'next/image';
 import { Crown } from 'lucide-react';
 import { AvatarPreview } from '@/components/AvatarPreview';
 import type { AuctionGameState, AuctionPlayer } from '../types';
-import { formatMoney, getTotalTeamValue, getFilledCount, isTeamComplete, lastName, POSITION_ORDER } from '../data';
+import {
+  chemistryMultiplier,
+  computeSquadChemistry,
+  formatMoney,
+  getSquadProfit,
+  getAdjustedProfit,
+  getFilledCount,
+  isTeamComplete,
+  lastName,
+  POSITION_ORDER,
+} from '../data';
+
+/** Profit with an explicit sign, e.g. "+$70M" / "−$40M". */
+const formatProfit = (n: number): string => `${n < 0 ? '−' : '+'}${formatMoney(Math.abs(n))}`;
 import { POS_COLORS, poppins, medalColor, MEDAL_COLORS } from '../constants/auction.constants';
+import { ChemistryBadge, ChemistryBreakdown } from './shared/ChemistryPanel';
 import { ScreenBackdrop, SCREEN_GLOW } from './shared/ScreenBackdrop';
 import { AuctionPrimaryButton } from './shared/AuctionPrimaryButton';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -23,13 +37,18 @@ function PodiumColumn({
   player,
   rank,
   isHuman,
-  teamValue,
+  score,
+  chemistry,
+  multiplier,
   delay,
 }: {
   player: AuctionPlayer;
   rank: 1 | 2 | 3;
   isHuman: boolean;
-  teamValue: number;
+  /** Chemistry-adjusted value — the score the ranking is decided on. */
+  score: number;
+  chemistry: number;
+  multiplier: number;
   delay: number;
 }) {
   const { t } = useLocale();
@@ -60,7 +79,10 @@ function PodiumColumn({
         style={{ background: `linear-gradient(180deg, ${s.gradientFrom} 0%, ${s.gradientTo} 100%)` }}
       >
         <span className="font-poppins text-lg font-black text-white" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{rank}</span>
-        <span className="font-poppins text-sm font-black tabular-nums text-white" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{formatMoney(teamValue)}</span>
+        <span className="font-poppins text-sm font-black tabular-nums text-white" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{formatProfit(score)}</span>
+        <span className="mt-0.5 font-poppins text-[9px] font-black tabular-nums text-white/90" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
+          ⚡{chemistry} · ×{multiplier.toFixed(1)}
+        </span>
         {isHuman && (
           <span className="mt-1 rounded-full bg-black/70 px-1.5 py-px text-[8px] font-black uppercase text-brand-yellow" style={poppins}>
             {t('auctionGame.youBadge')}
@@ -103,12 +125,21 @@ export function AuctionResultsScreen({
     if (n === 3) return t('auctionGame.ordinal3');
     return t('auctionGame.ordinalN', { rank: n });
   };
-  const decorated = state.players.map((p) => ({
-    ...p,
-    teamValue: getTotalTeamValue(p.team),
-    teamComplete: isTeamComplete(p.team),
-    filledCount: getFilledCount(p.team),
-  }));
+  const decorated = state.players.map((p) => {
+    const chemistry = computeSquadChemistry(p.team).total;
+    const multiplier = chemistryMultiplier(chemistry);
+    return {
+      ...p,
+      chemistry,
+      multiplier,
+      // Profit (later-season value − amount paid), and profit scaled by
+      // chemistry — the score the winner is decided on.
+      profit: getSquadProfit(p),
+      adjustedProfit: getAdjustedProfit(p),
+      teamComplete: isTeamComplete(p.team),
+      filledCount: getFilledCount(p.team),
+    };
+  });
 
   // Prefer the server's placings: coins were paid against that exact order, and
   // re-sorting locally can break ties differently on each client (the server
@@ -126,7 +157,8 @@ export function AuctionResultsScreen({
         const bForfeited = Boolean(b.forfeited);
         if (aForfeited !== bForfeited) return aForfeited ? 1 : -1;
         if (a.teamComplete !== b.teamComplete) return a.teamComplete ? -1 : 1;
-        return b.teamValue - a.teamValue;
+        // Then the chemistry-adjusted profit — most profit wins.
+        return b.adjustedProfit - a.adjustedProfit;
       });
 
   const winner = rankedPlayers[0];
@@ -252,7 +284,9 @@ export function AuctionResultsScreen({
                 player={player}
                 rank={(i + 1) as 1 | 2 | 3}
                 isHuman={player.id === humanPlayerId}
-                teamValue={player.teamValue}
+                score={player.adjustedProfit}
+                chemistry={player.chemistry}
+                multiplier={player.multiplier}
                 delay={0.3 + i * 0.12}
               />
             ))}
@@ -313,12 +347,17 @@ export function AuctionResultsScreen({
                     </span>
                     {isWinner && <Crown className="size-4 shrink-0" style={{ color: medal }} fill="currentColor" />}
                   </div>
-                  <span
-                    className="shrink-0 text-xl font-black tabular-nums"
-                    style={{ ...poppins, color: medal, textShadow: isWinner ? `0 2px 12px ${medal}40` : undefined }}
-                  >
-                    {formatMoney(player.teamValue)}
-                  </span>
+                  <div className="flex shrink-0 flex-col items-end">
+                    <span
+                      className="text-xl font-black tabular-nums leading-none"
+                      style={{ ...poppins, color: medal, textShadow: isWinner ? `0 2px 12px ${medal}40` : undefined }}
+                    >
+                      {formatProfit(player.adjustedProfit)}
+                    </span>
+                    <span className="mt-1 font-poppins text-[10px] font-bold tabular-nums text-white/45">
+                      {formatProfit(player.profit)} × {player.multiplier.toFixed(1)}
+                    </span>
+                  </div>
                 </div>
 
                 {/* Squad chips — solid position colours */}
@@ -338,6 +377,7 @@ export function AuctionResultsScreen({
 
                 {/* Stat pills */}
                 <div className="mt-3 flex flex-wrap gap-2">
+                  <ChemistryBadge total={player.chemistry} multiplier={player.multiplier} />
                   <span className="rounded-md bg-white/8 px-2 py-1 text-[10px] font-bold text-white/70" style={poppins}>
                     {t('auctionGame.playersFilled', { filled: player.filledCount })}
                   </span>
@@ -358,6 +398,10 @@ export function AuctionResultsScreen({
                     </span>
                   )}
                 </div>
+
+                {/* Full chemistry breakdown — which club / league / nation links
+                    produced this squad's chemistry (crests, badges, flags). */}
+                <ChemistryBreakdown team={player.team} showInfo={rank === 0} className="mt-3" />
               </motion.div>
             );
           })}

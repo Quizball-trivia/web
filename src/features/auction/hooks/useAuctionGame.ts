@@ -29,6 +29,7 @@ import {
   needsPosition,
   isTeamComplete,
   getRemainingSlots,
+  AUCTION_SQUAD_SIZE,
 } from '../data';
 
 function shuffle<T>(arr: T[]): T[] {
@@ -470,7 +471,7 @@ export function useAuctionGame(
         formation,
         currentRound: null,
         roundIndex: 0,
-        totalRounds: 11 * playerCount,
+        totalRounds: AUCTION_SQUAD_SIZE * playerCount,
         completedRounds: [],
         soloPick: null,
       });

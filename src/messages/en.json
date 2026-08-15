@@ -1602,7 +1602,7 @@
     "youLabel": "You",
     "youWin": "You Win!",
     "auctionOver": "Auction Over",
-    "highestTeamValueSubtitle": "Highest total team value!",
+    "highestTeamValueSubtitle": "Most profit — value growth × chemistry!",
     "youFinishedRank": "You finished {rank}",
     "stateChangedReconnect": "Auction state changed while reconnecting. Latest event was applied.",
     "rejoinTitle": "Rejoin your match",

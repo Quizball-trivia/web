@@ -1602,7 +1602,7 @@
     "youLabel": "შენ",
     "youWin": "შენ მოიგე!",
     "auctionOver": "აუქციონი დასრულდა",
-    "highestTeamValueSubtitle": "ყველაზე ღირებული გუნდი!",
+    "highestTeamValueSubtitle": "ყველაზე დიდი მოგება — ღირებულების ზრდა × ქიმია!",
     "youFinishedRank": "დაასრულე {rank} ადგილზე",
     "stateChangedReconnect": "აუქციონის მდგომარეობა შეიცვალა ხელახლა დაკავშირებისას. გამოყენებულია უახლესი მოვლენა.",
     "rejoinTitle": "დაუბრუნდი მატჩს",

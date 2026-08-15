@@ -146,8 +146,10 @@ describe('RevealScreen', () => {
 
     expect(testActions.confirmReveal).not.toHaveBeenCalled();
 
+    // Reveal cascade holds the full picture until 2400ms (sped up from 5200ms),
+    // then acks the server-driven transition.
     act(() => {
-      vi.advanceTimersByTime(5199);
+      vi.advanceTimersByTime(2399);
     });
     expect(testActions.confirmReveal).not.toHaveBeenCalled();
 

@@ -4,10 +4,21 @@ import { useState } from 'react';
 import { motion } from 'motion/react';
 import { Crown } from 'lucide-react';
 import type { AuctionGameState, AuctionPlayer, PositionGroup } from '../../types';
-import { formatMoney, getTotalTeamValue, getFilledCount, needsPosition } from '../../data';
+import {
+  formatMoney,
+  getTotalTeamValue,
+  getFilledCount,
+  needsPosition,
+  computeSquadChemistry,
+  chemistryMultiplier,
+  orderPlayersHumanCentered,
+  AUCTION_SQUAD_SIZE,
+} from '../../data';
 import { poppins } from '../../constants/auction.constants';
 import { useLocale } from '@/contexts/LocaleContext';
 import { SquadPitch } from './SquadPitch';
+import { ProgressDots } from './ProgressDots';
+import { ChemistryBadge } from '../shared/ChemistryPanel';
 
 /** One squad: name + crown, budget/value, pitch, progress dots. */
 function SquadColumn({
@@ -29,6 +40,7 @@ function SquadColumn({
   const isHuman = player.id === humanPlayerId;
   const value = getTotalTeamValue(player.team);
   const filled = getFilledCount(player.team);
+  const chem = computeSquadChemistry(player.team).total;
   const isHighBidder = state.currentRound?.highestBidderId === player.id;
   const needsActivePos = activePosition ? needsPosition(player, activePosition) : false;
   // Squads still chasing the player being auctioned glow — yellow for YOU,
@@ -79,6 +91,11 @@ function SquadColumn({
         </div>
       </div>
 
+      {/* Squad chemistry — total + value multiplier */}
+      <div className="mb-2 flex justify-center">
+        <ChemistryBadge total={chem} multiplier={chemistryMultiplier(chem)} />
+      </div>
+
       {/* Pitch */}
       <div className="mx-auto w-full max-w-[320px]">
         <SquadPitch
@@ -94,15 +111,8 @@ function SquadColumn({
       </div>
 
       {/* Progress dots */}
-      <div className="flex gap-[3px] mt-1.5 justify-center">
-        {Array.from({ length: 11 }).map((_, i) => (
-          <div
-            key={i}
-            className={`h-[5px] w-[5px] sm:h-1.5 sm:w-1.5 rounded-full transition-colors ${
-              i < filled ? 'bg-brand-green' : 'bg-white/10'
-            }`}
-          />
-        ))}
+      <div className="mt-1.5">
+        <ProgressDots filled={filled} total={AUCTION_SQUAD_SIZE} />
       </div>
     </div>
   );
@@ -125,13 +135,13 @@ export function AllSquads({
 }) {
   const { t } = useLocale();
   // Keep YOU in the center column on desktop: split the others around the human.
-  const human = state.players.filter((p) => p.id === humanPlayerId);
-  const others = state.players.filter((p) => p.id !== humanPlayerId);
-  const leftCount = Math.floor(others.length / 2);
-  const sorted = [...others.slice(0, leftCount), ...human, ...others.slice(leftCount)];
+  const sorted = orderPlayersHumanCentered(state.players, humanPlayerId);
 
   // Mobile switcher: YOU first, then opponents.
-  const tabOrder = [...human, ...others];
+  const tabOrder = [
+    ...state.players.filter((p) => p.id === humanPlayerId),
+    ...state.players.filter((p) => p.id !== humanPlayerId),
+  ];
   const [activeId, setActiveId] = useState(humanPlayerId);
   const activePlayer = tabOrder.find((p) => p.id === activeId) ?? tabOrder[0];
 

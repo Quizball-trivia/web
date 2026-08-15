@@ -230,14 +230,14 @@ export function AuctionShowdownScreen({
     const timers = players.map((p, i) =>
       setTimeout(() => {
         setReadyIds((prev) => new Set(prev).add(p.id));
-      }, 1400 + i * 700),
+      }, 700 + i * 350),
     );
     return () => timers.forEach(clearTimeout);
   }, [players]);
 
   useEffect(() => {
     if (!allReady) return;
-    const t = setTimeout(() => onComplete(), 900);
+    const t = setTimeout(() => onComplete(), 450);
     return () => clearTimeout(t);
   }, [allReady, onComplete]);
 

@@ -201,6 +201,8 @@ function toClientFootballer(
     startingPrice: footballer.startingPrice,
     clues: round ? getRoundClues(round) : [...(footballer.clues ?? [])],
     nationality: footballer.nationality ?? '',
+    club: footballer.currentClub ?? null,
+    league: footballer.league ?? null,
     imageUrl: footballer.imageUrl ?? undefined,
   };
 }
