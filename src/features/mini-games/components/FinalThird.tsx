@@ -1,14 +1,19 @@
 'use client';
 
 /**
- * FINAL THIRD — house-banked football risk game.
+ * FREE KICKS — house-banked football risk game (open-zones + run multiplier).
  *
- * Loop: stake → one football question → the RNG has pre-assigned 4 GOAL and
- * 2 SAVE zones on the goal. A correct answer runs a SCOUT REPORT that reveals
- * (and locks) one SAVE zone, so the shot is 4/5 = 80% at 1.20x (then ×1.25 per
- * continued attack). A wrong answer means a BLIND shot at 4/6 = 66.7% but a
- * bigger 1.40x. After every goal: TAKE the pot or NEXT ATTACK. Knowledge
- * improves your vision of the goal — it never removes the risk (max RTP 96%).
+ * Loop: stake → the goal opens with 2 zones (1 hidden keeper → 50% goal).
+ * Each attack you choose: ANSWER a question to open one more zone (up to 6,
+ * 83.3% goal), or SHOOT now. A wrong answer slams the goal back to 2 zones.
+ * Per-shot payouts are priced per state, always below fair odds k/(k-1):
+ *   k=2 → 1.86x (fair 2.00, RTP 93%) · k=3 → 1.42x (95%) · k=4 → 1.28x (96%)
+ *   k=5 → 1.21x (97%) · k=6 → 1.18x (98%)
+ * The GROWING number the player rides is the RUN multiplier: the pot compounds
+ * across attacks (×1.86 → ×2.6 → ×3.3 → …) until they cash out or the keeper
+ * ends it. Every state's EV < 1, so the house edge is provable for every
+ * strategy — knowledge narrows it from 7% to 2% but can never flip it.
+ * After every goal: TAKE the pot or NEXT ATTACK (goal resets to 2 zones).
  *
  * The social layer (live-wins ticker, crowd pulse, longest runs) is purely
  * cosmetic client-side flavour — it never influences the RNG or payouts.
@@ -18,13 +23,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { animate, motion, AnimatePresence } from 'motion/react';
-import { Check, Eye, Radio, Trophy, X } from 'lucide-react';
+import { Check, Eye, Radio, Trophy, Volume2, VolumeX, X } from 'lucide-react';
 import { MiniGameShell } from './MiniGameShell';
 import { KeeperGlove } from './PenaltyShootout';
 import { getTrivia, type TriviaQuestion } from '../data/trivia';
 import { useMiniLocale, useMiniT } from '../lib/i18n';
-import { playSfx } from '@/lib/sounds/gameSounds';
-import { CashBill } from '@/features/auction/components/shared/CashBill';
+import { getSoundLevels, playCash, playKick, setCrowdLevel, setCrowdMood, setSfxLevel, startCrowd, stopCrowd } from '../lib/crowdAudio';
+import { CoinIcon } from '@/features/store/components/CoinIcon';
 import { ResultSplash } from '@/features/daily/components/ResultSplash';
 import { useResultSplash } from '@/features/daily/components/useResultSplash';
 
@@ -45,14 +50,14 @@ const FinalThirdPitch3D = dynamic(
   },
 );
 const START_BALANCE = 100;
-const SAVE_ZONES = 2;
 const QUESTION_S = 5;
 const ANSWER_HOLD_MS = 2000;
-const INFORMED_FIRST_MULT = 1.2;
-const INFORMED_NEXT_MULT = 1.25;
-const BLIND_MULT = 1.4;
-/** Informed-path ladder shown under the HUD. */
-const LADDER = [1.2, 1.5, 1.875, 2.34, 2.93, 3.66];
+const MIN_OPEN = 2;
+const MAX_OPEN = 6;
+/** Per-state payouts — below fair odds k/(k-1) at every k (see header). */
+const STATE_MULTS: Record<number, number> = { 2: 1.86, 3: 1.42, 4: 1.28, 5: 1.21, 6: 1.18 };
+/** Zones unlock in this order — starts as a pure left/right coin flip. */
+const OPEN_ORDER = ['BL', 'BR', 'TL', 'TR', 'BC', 'TC'] as const;
 
 interface Zone {
   id: string;
@@ -68,14 +73,6 @@ const ZONES: Zone[] = [
   { id: 'BR', x: 78, y: 52 },
 ];
 
-function pickSaveZones(): Set<string> {
-  const ids = ZONES.map((z) => z.id);
-  for (let i = ids.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [ids[i], ids[j]] = [ids[j], ids[i]];
-  }
-  return new Set(ids.slice(0, SAVE_ZONES));
-}
 
 /** Tiny deterministic PRNG so the fake crowd numbers are stable per attack. */
 function seeded(seed: number): () => number {
@@ -91,7 +88,7 @@ const CROWD_NAMES = [
   'ბექა_მ', 'სანდრო9', 'ვატო_ზ', 'რეზი_კ', 'ილია21', 'ანზორი',
 ] as const;
 
-type Beat = 'bet' | 'question' | 'shoot' | 'resolving' | 'goal' | 'saved' | 'cashed';
+type Beat = 'bet' | 'decide' | 'question' | 'shoot' | 'resolving' | 'goal' | 'saved' | 'cashed';
 
 const fmt = (v: number) => (Number.isInteger(v) ? String(v) : v.toFixed(2));
 
@@ -114,7 +111,57 @@ function AnimatedNumber({ value, decimals = 0, className }: { value: number; dec
   return <span className={className}>{shown}</span>;
 }
 
-/** Auction-style bill stack (same CashBill as the auction win FX). */
+/** Speaker button + popover: crowd and effects volume sliders (persisted). */
+function SoundSettings() {
+  const t = useMiniT();
+  const [open, setOpen] = useState(false);
+  const [levels, setLevelsState] = useState(() =>
+    typeof window === 'undefined' ? { crowd: 1, sfx: 1 } : getSoundLevels(),
+  );
+  const apply = (key: 'crowd' | 'sfx', value: number) => {
+    setLevelsState((cur) => ({ ...cur, [key]: value }));
+    if (key === 'crowd') setCrowdLevel(value);
+    else setSfxLevel(value);
+  };
+  const allOff = levels.crowd === 0 && levels.sfx === 0;
+  return (
+    <div className="relative">
+      <button
+        type="button"
+        aria-label={t('Sound settings')}
+        onClick={() => setOpen((o) => !o)}
+        className={`flex size-8 items-center justify-center rounded-full bg-white/[0.08] transition-colors hover:text-white ${open ? 'text-white' : 'text-white/70'}`}
+      >
+        {allOff ? <VolumeX className="size-4" /> : <Volume2 className="size-4" />}
+      </button>
+      {open && (
+        <div className="absolute right-0 top-10 z-[80] w-60 rounded-2xl bg-brand-blue p-3 shadow-[0_12px_32px_rgba(0,0,0,0.55)]">
+          {([
+            ['crowd', t('Crowd')],
+            ['sfx', t('Effects')],
+          ] as const).map(([key, label]) => (
+            <div key={key} className="mb-2.5 last:mb-0">
+              <div className="mb-1 flex items-center justify-between font-poppins text-[10px] font-black uppercase tracking-wider text-white/70">
+                <span>{label}</span>
+                <span className="tabular-nums text-white">{levels[key] === 0 ? t('Off') : `${Math.round(levels[key] * 100)}%`}</span>
+              </div>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={Math.round(levels[key] * 100)}
+                onChange={(e) => apply(key, Number(e.target.value) / 100)}
+                className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-white/25 accent-[#FFE500]"
+              />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Small stack of the store coin icon (replaces the old auction bill stack). */
 function MoneyStack({ count = 3 }: { count?: number }) {
   const bills = Math.min(4, Math.max(2, count));
   return (
@@ -128,7 +175,7 @@ function MoneyStack({ count = 3 }: { count?: number }) {
             zIndex: i + 1,
           }}
         >
-          <CashBill size={0.52} />
+          <CoinIcon size={16} />
         </span>
       ))}
     </span>
@@ -181,7 +228,7 @@ function MoneyFlight({
           }}
           transition={{ duration: 0.72, delay: bit.delay, ease: [0.2, 0.75, 0.15, 1] }}
         >
-          <CashBill size={bit.size} />
+          <CoinIcon size={Math.round(30 * bit.size)} />
         </motion.div>
       ))}
     </div>
@@ -211,9 +258,10 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
   const [roundStake, setRoundStake] = useState(10);
   const [qIndex, setQIndex] = useState(() => Math.floor(Math.random() * 1000));
   const [selected, setSelected] = useState<number | null>(null);
-  const [informed, setInformed] = useState<boolean | null>(null);
-  const [saves, setSaves] = useState<Set<string>>(() => new Set());
-  const [revealedSave, setRevealedSave] = useState<string | null>(null);
+  const [openCount, setOpenCount] = useState(MIN_OPEN);
+  const [answerLocked, setAnswerLocked] = useState(false);
+  const [keeperZone, setKeeperZone] = useState<string | null>(null);
+  const [lastAnswer, setLastAnswer] = useState<'up' | 'reset' | null>(null);
   const [shotZone, setShotZone] = useState<Zone | null>(null);
   const [scored, setScored] = useState<boolean | null>(null);
   const [lastTake, setLastTake] = useState<number | null>(null);
@@ -253,9 +301,34 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
     const timers = timersRef.current;
     return () => timers.forEach((id) => window.clearTimeout(id));
   }, []);
+
+  useEffect(() => {
+    startCrowd();
+    return () => stopCrowd();
+  }, []);
+
+  useEffect(() => {
+    if (beat === 'goal') setCrowdMood('cheer');
+    else if (beat === 'saved') setCrowdMood('miss');
+    else if (beat === 'cashed') {
+      playCash();
+      setCrowdMood('cheer');
+    } else if (beat === 'decide' || beat === 'question' || beat === 'shoot' || beat === 'resolving') setCrowdMood('build');
+    else setCrowdMood('idle');
+  }, [beat]);
   const later = (fn: () => void, ms: number) => {
     timersRef.current.push(window.setTimeout(fn, ms));
   };
+
+  // Leaving a round (cash-out or back to betting) resets the scene: ball on
+  // the spot, taker and keeper back to their idle poses.
+  useEffect(() => {
+    if (beat === 'bet' || beat === 'cashed') {
+      setShotZone(null);
+      setScored(null);
+      setKeeperZone(null);
+    }
+  }, [beat]);
 
   useEffect(() => {
     if (beat !== 'question') return;
@@ -267,9 +340,13 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
       if (selectedRef.current !== null) return;
       selectedRef.current = -1;
       setSelected(-1);
-      setInformed(false);
       fire('wrong', 'right');
-      later(() => setBeat('shoot'), ANSWER_HOLD_MS);
+      later(() => {
+        setLastAnswer('reset');
+        setOpenCount(MIN_OPEN);
+        setAnswerLocked(true);
+        setBeat('decide');
+      }, ANSWER_HOLD_MS);
     }, QUESTION_S * 1000);
     return () => {
       window.clearInterval(tick);
@@ -280,7 +357,9 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
   }, [beat, qIndex]);
 
   const question: TriviaQuestion = trivia[qIndex % trivia.length];
-  const mult = informed ? (attack === 0 ? INFORMED_FIRST_MULT : INFORMED_NEXT_MULT) : BLIND_MULT;
+  const mult = STATE_MULTS[openCount];
+  const goalPct = Math.round(((openCount - 1) / openCount) * 100);
+  const openIds = useMemo(() => OPEN_ORDER.slice(0, openCount) as readonly string[], [openCount]);
   const potential = useMemo(() => Math.round(pot * mult * 100) / 100, [pot, mult]);
   const runMult = pot > 0 ? Math.round((pot / roundStake) * 100) / 100 : 0;
 
@@ -298,11 +377,19 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
   const beginAttack = () => {
     selectedRef.current = null;
     setSelected(null);
-    setInformed(null);
-    setRevealedSave(null);
     setShotZone(null);
     setScored(null);
-    setSaves(pickSaveZones());
+    setOpenCount(MIN_OPEN);
+    setAnswerLocked(false);
+    setKeeperZone(null);
+    setLastAnswer(null);
+    setBeat('decide');
+  };
+
+  const askQuestion = () => {
+    if (openCount >= MAX_OPEN || answerLocked) return;
+    selectedRef.current = null;
+    setSelected(null);
     setQIndex((q) => q + 1);
     setQLeft(QUESTION_S);
     setBeat('question');
@@ -310,6 +397,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
 
   const startRound = () => {
     if (balance < stake || stake < MIN_STAKE) return;
+    startCrowd();
     setBalance((b) => Math.round((b - stake) * 100) / 100);
     setPot(stake);
     setRoundStake(stake);
@@ -329,42 +417,46 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
     selectedRef.current = i;
     setSelected(i);
     const correct = i === question.answer;
-    setInformed(correct);
     fire(correct ? 'correct' : 'wrong', i % 2 === 0 ? 'left' : 'right');
     later(() => {
       if (correct) {
-        setSaves((cur) => {
-          const first = [...cur][Math.floor(Math.random() * cur.size)];
-          setRevealedSave(first);
-          return cur;
-        });
+        const next = Math.min(MAX_OPEN, openCount + 1);
+        setOpenCount(next);
+        setLastAnswer('up');
+        setBeat(next >= MAX_OPEN ? 'shoot' : 'decide');
+      } else {
+        setLastAnswer('reset');
+        setOpenCount(MIN_OPEN);
+        setAnswerLocked(true);
+        setBeat('decide');
       }
-      setBeat('shoot');
     }, ANSWER_HOLD_MS);
   };
 
   const shoot = (zone: Zone) => {
     if (beat !== 'shoot' || shotZone) return;
-    if (zone.id === revealedSave) return;
+    if (!openIds.includes(zone.id)) return;
+    // The keeper commits to one of the open zones the moment the ball is
+    // struck — exactly 1/k save chance, independent of the player's pick.
+    const keeper = openIds[Math.floor(Math.random() * openIds.length)];
+    setKeeperZone(keeper);
     setShotZone(zone);
     setBeat('resolving');
-    const isSave = saves.has(zone.id);
-    later(() => playSfx('kick'), USE_3D_PITCH ? 430 : 90);
-    // 3D pitch: run-up (~0.45s) + flight (~0.8s) before the outcome lands.
+    const isSave = zone.id === keeper;
+    later(() => playKick(), USE_3D_PITCH ? 430 : 90);
+    // Give a saved shot enough time to read as contact, gather, and landing.
     later(() => {
       if (isSave) {
-        playSfx('wrongAnswer');
         setScored(false);
         setBeat('saved');
       } else {
-        playSfx('correctRanked');
         setScored(true);
         const next = potential;
         setPot(next);
         setBestRun((b) => Math.max(b ?? 0, Math.round((next / roundStake) * 100) / 100));
         setBeat('goal');
       }
-    }, USE_3D_PITCH ? 1350 : 880);
+    }, USE_3D_PITCH ? (isSave ? 1850 : 1450) : 880);
   };
 
   // Playwright reuses this hook; rebind every commit so `shoot` is current.
@@ -382,7 +474,6 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
   const cashOut = (event: { currentTarget: HTMLElement }) => {
     const rect = event.currentTarget.getBoundingClientRect();
     const stack = document.querySelector('[data-money-stack]')?.getBoundingClientRect();
-    playSfx('dailyCorrect');
     setFlight({
       seed: pot * 17 + attack + 3,
       ox: rect.left + rect.width / 2,
@@ -405,28 +496,96 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
     beginAttack();
   };
 
-  const ladderIndex = pot > 0 ? LADDER.findIndex((m) => Math.abs(m - runMult * (beat === 'goal' ? 1 : mult)) < 0.01) : -1;
+  // Stake · pot · run card. Compact 3-column strip on mobile; big stacked
+  // rows in the desktop rail under the leaderboard.
+  const renderHud = (big: boolean) => (
+    <div
+      className={
+        big
+          ? 'grid grid-cols-1 divide-y divide-white/15 rounded-2xl bg-brand-blue'
+          : 'mt-2 grid grid-cols-3 divide-x divide-white/15 rounded-2xl bg-brand-blue py-2'
+      }
+    >
+      <div className={big ? 'flex items-center justify-between px-4 py-3' : 'flex flex-col items-center gap-0.5 px-2'}>
+        <span className={`font-poppins font-black uppercase tracking-wider text-white/60 ${big ? 'text-[11px]' : 'text-[9px]'}`}>{t('Stake')}</span>
+        <span className={`inline-flex items-center gap-1 font-poppins font-black tabular-nums leading-none text-white ${big ? 'text-2xl' : 'text-base'}`}>
+          {beat === 'bet' ? stake : roundStake} <CoinIcon size={big ? 20 : 14} />
+        </span>
+      </div>
+      <div className={big ? 'flex items-center justify-between px-4 py-3' : 'flex flex-col items-center gap-0.5 px-2'}>
+        <span className={`font-poppins font-black uppercase tracking-wider text-white/60 ${big ? 'text-[11px]' : 'text-[9px]'}`}>{t('Your pot')}</span>
+        <motion.span
+          key={`pot-${attack}-${beat === 'goal' ? 'g' : 'x'}`}
+          initial={{ scale: 1.2 }}
+          animate={{ scale: 1 }}
+          transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+          className={`inline-flex items-center gap-1 font-poppins font-black tabular-nums leading-none text-brand-yellow ${big ? 'text-2xl' : 'text-base'}`}
+        >
+          {pot > 0 && beat !== 'cashed' ? (
+            <>
+              <AnimatedNumber value={pot} decimals={Number.isInteger(pot) ? 0 : 2} /> <CoinIcon size={big ? 20 : 14} />
+            </>
+          ) : (
+            <span className="text-white/40">—</span>
+          )}
+        </motion.span>
+      </div>
+      <div className={big ? 'flex items-center justify-between px-4 py-3' : 'flex flex-col items-center gap-0.5 px-2'}>
+        <span className={`font-poppins font-black uppercase tracking-wider text-white/60 ${big ? 'text-[11px]' : 'text-[9px]'}`}>{t('Run')}</span>
+        {beat === 'goal' && runMult > 1 ? (
+          <motion.span
+            key={`run-${runMult}`}
+            initial={{ scale: 1.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 320, damping: 13 }}
+            className={`font-poppins font-black tabular-nums leading-none text-brand-green drop-shadow-[0_0_10px_rgba(88,204,2,0.6)] ${big ? 'text-2xl' : 'text-base'}`}
+          >
+            ×<AnimatedNumber value={runMult} decimals={2} />
+          </motion.span>
+        ) : beat === 'decide' || beat === 'question' || beat === 'shoot' ? (
+          <motion.span
+            key={`run-next-${openCount}-${attack}`}
+            initial={{ scale: 1.15 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+            className={`font-poppins font-black tabular-nums leading-none text-brand-green ${big ? 'text-2xl' : 'text-base'}`}
+          >
+            ×{fmt(Math.max(1, runMult))} <span className="text-white/35">→</span> ×{fmt(Math.round(Math.max(1, runMult) * mult * 100) / 100)}
+          </motion.span>
+        ) : (
+          <span className={`font-poppins font-black leading-none text-white/40 ${big ? 'text-2xl' : 'text-base'}`}>—</span>
+        )}
+      </div>
+    </div>
+  );
 
   return (
     <MiniGameShell
       backHref={backHref}
-      title="Final Third"
+      title={t('Free Kicks')}
       subtitle={t('Know football. Read the goal. Take the shot.')}
       accent="#58CC02"
+      wide
       headerRight={
-        <motion.div
-          data-money-stack
-          animate={stackBump ? { scale: [1, 1.22, 1] } : { scale: 1 }}
-          transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
-          className="flex items-center gap-1 rounded-full bg-brand-yellow py-1 pl-1 pr-2.5"
-        >
-          <MoneyStack />
-          <span className="font-poppins text-sm font-black tabular-nums leading-none text-black">
-            <AnimatedNumber value={balance} decimals={Number.isInteger(balance) ? 0 : 2} />
-          </span>
-        </motion.div>
+        <div className="flex items-center gap-2">
+          <SoundSettings />
+          <motion.div
+            data-money-stack
+            animate={stackBump ? { scale: [1, 1.22, 1] } : { scale: 1 }}
+            transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
+            className="flex items-center gap-1 rounded-full bg-brand-yellow py-1 pl-1 pr-2.5"
+          >
+            <MoneyStack />
+            <span className="font-poppins text-sm font-black tabular-nums leading-none text-black">
+              <AnimatedNumber value={balance} decimals={Number.isInteger(balance) ? 0 : 2} />
+            </span>
+          </motion.div>
+        </div>
       }
     >
+      {/* Desktop: game on the left, leaderboard rail on the right. */}
+      <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start lg:gap-6">
+        <div className="min-w-0">
       {/* Live stadium strip: player count + rotating last win. Cosmetic. */}
       <div className="mt-1 flex items-center justify-between gap-2 px-1 py-1">
         <span className="flex items-center gap-1.5 font-poppins text-[10px] font-black uppercase tracking-wide text-brand-red-soft">
@@ -451,54 +610,28 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
         </div>
       </div>
 
-      {/* HUD: stake | pot | next multiplier */}
-      <div className="mt-2 flex items-center justify-center gap-2 font-poppins text-[12px] font-black uppercase tracking-wide text-white/70">
-        <span className="inline-flex items-center gap-1 rounded-full bg-white/[0.06] px-3 py-1.5">{t('Stake')} {beat === 'bet' ? stake : roundStake} <CashBill size={0.42} /></span>
-        {pot > 0 && beat !== 'cashed' && (
-          <motion.span
-            key={`pot-${attack}-${beat === 'goal' ? 'g' : 'x'}`}
-            initial={{ scale: 1.25 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-            className="inline-flex items-center gap-1 rounded-full bg-brand-yellow/15 px-3 py-1.5 text-brand-yellow"
-          >
-            {t('Pot')} <AnimatedNumber value={pot} decimals={Number.isInteger(pot) ? 0 : 2} /> <CashBill size={0.42} />
-          </motion.span>
-        )}
-        {(beat === 'question' || beat === 'shoot') && (
-          <span className="rounded-full bg-brand-green/15 px-3 py-1.5 text-brand-green">×{mult}</span>
-        )}
-        {beat === 'goal' && runMult > 1 && (
-          <motion.span
-            key={`run-${runMult}`}
-            initial={{ scale: 2, opacity: 0, rotate: -6 }}
-            animate={{ scale: 1, opacity: 1, rotate: 0 }}
-            transition={{ type: 'spring', stiffness: 320, damping: 13 }}
-            className="rounded-full bg-brand-green px-3 py-1.5 text-white shadow-[0_0_16px_rgba(88,204,2,0.5)]"
-          >
-            ×<AnimatedNumber value={runMult} decimals={2} />
-          </motion.span>
-        )}
-      </div>
+      {/* HUD stat card — inline on mobile, larger copy in the desktop rail. */}
+      <div className="lg:hidden">{renderHud(false)}</div>
 
-      {/* Multiplier ladder (informed path) */}
-      <div className="mt-2 flex items-center justify-center gap-1">
-        {LADDER.map((m, i) => {
-          const reached = pot > 0 && runMult >= m - 0.01;
-          const isNext = i === (ladderIndex >= 0 ? ladderIndex : LADDER.findIndex((x) => x > runMult));
+      {/* Zone ladder: a joined segmented bar — chance climbs 50% → 83%. */}
+      <div className="mt-1.5 flex overflow-hidden rounded-full border border-white/10">
+        {Array.from({ length: MAX_OPEN - MIN_OPEN + 1 }, (_, i) => MIN_OPEN + i).map((k) => {
+          const inRound = beat !== 'bet' && beat !== 'cashed';
+          const active = k === openCount && inRound;
+          const passed = k < openCount && inRound;
           return (
-            <span
-              key={m}
-              className={`rounded-md px-1.5 py-0.5 font-poppins text-[9px] font-black tabular-nums ${
-                reached
-                  ? 'bg-brand-green/25 text-brand-green'
-                  : isNext && pot > 0
-                    ? 'bg-brand-yellow/20 text-brand-yellow'
-                    : 'bg-white/[0.05] text-white/35'
+            <div
+              key={k}
+              className={`flex-1 py-1 text-center font-poppins text-[9px] font-black tabular-nums transition-colors ${
+                active
+                  ? 'bg-brand-yellow text-black'
+                  : passed
+                    ? 'bg-brand-green/25 text-brand-green'
+                    : 'bg-white/[0.03] text-white/35'
               }`}
             >
-              {m}x
-            </span>
+              {k} · {Math.round(((k - 1) / k) * 100)}%
+            </div>
           );
         })}
       </div>
@@ -518,10 +651,12 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
         {USE_3D_PITCH ? (
           <FinalThirdPitch3D
             picking={beat === 'shoot'}
-            revealedSave={revealedSave}
-            scouting={beat === 'shoot' && informed === true}
+            showZones={beat === 'bet' || beat === 'decide' || beat === 'question' || beat === 'shoot'}
+            revealedSave={null}
+            scouting={false}
+            openZones={[...openIds]}
             shotZone={shotZone}
-            willSave={shotZone ? saves.has(shotZone.id) : null}
+            willSave={shotZone ? shotZone.id === keeperZone : null}
             resolving={beat === 'resolving'}
             settled={beat === 'goal' || beat === 'saved'}
             scored={scored}
@@ -531,8 +666,8 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
         ) : (
           <FinalThirdGoal
             picking={beat === 'shoot'}
-            revealedSave={revealedSave}
-            scouting={beat === 'shoot' && informed === true}
+            revealedSave={null}
+            scouting={false}
             shotZone={shotZone}
             resolving={beat === 'resolving'}
             settled={beat === 'goal' || beat === 'saved'}
@@ -553,7 +688,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
                 </div>
               )}
               <p className="text-center font-poppins text-xs font-semibold text-white/55">
-                {t('Answer to scout the keeper — knowledge sharpens the shot, the risk stays.')}
+                {t('The goal opens with 2 zones and one hidden keeper. Answer questions to open up to 6 — a wrong answer slams it back to 2.')}
               </p>
               {balance >= MIN_STAKE ? (
                 <>
@@ -610,19 +745,69 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
                   {t('Top up (demo)')}
                 </button>
               )}
-              <StadiumBoard t={t} bestRun={bestRun} />
+            </motion.div>
+          )}
+
+          {beat === 'decide' && (
+            <motion.div key={`decide-${openCount}-${lastAnswer}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-2 text-center">
+              {lastAnswer === 'up' && (
+                <motion.div
+                  initial={{ scale: 0.7, opacity: 0, rotate: -3 }}
+                  animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                  transition={{ type: 'spring', stiffness: 320, damping: 16 }}
+                  className="mx-auto inline-flex items-center gap-2 rounded-full bg-brand-green/15 px-4 py-2 font-poppins text-sm font-black uppercase text-brand-green"
+                >
+                  <Check className="size-4" /> {t('Zone opened! {k} of {max} in play', { k: openCount, max: MAX_OPEN })}
+                </motion.div>
+              )}
+              {lastAnswer === 'reset' && (
+                <motion.div
+                  initial={{ scale: 0.7, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: 'spring', stiffness: 320, damping: 16 }}
+                  className="mx-auto inline-flex items-center gap-2 rounded-full bg-brand-red/15 px-4 py-2 font-poppins text-sm font-black uppercase text-brand-red"
+                >
+                  <X className="size-4" /> {t('Wrong — goal slams back to {n} zones', { n: MIN_OPEN })}
+                </motion.div>
+              )}
+              <p className="font-poppins text-xs font-bold uppercase tracking-wide text-white/60">
+                {t('{k} zones open · 1 keeper hidden · {pct}% goal', { k: openCount, pct: goalPct })}
+              </p>
+              <div className="flex gap-2">
+                {!answerLocked && openCount < MAX_OPEN && (
+                  <button
+                    type="button"
+                    onClick={askQuestion}
+                    className="inline-flex h-14 flex-1 items-center justify-center gap-1.5 rounded-2xl bg-brand-blue font-poppins text-sm font-black uppercase tracking-wide text-white active:scale-[0.98]"
+                  >
+                    {t('Answer · open zone {n}', { n: openCount + 1 })}
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setBeat('shoot')}
+                  className="inline-flex h-14 flex-1 items-center justify-center gap-1.5 rounded-2xl bg-brand-green font-poppins text-sm font-black uppercase tracking-wide text-white active:scale-[0.98]"
+                >
+                  {t('Shoot · {pot} → {next}', { pot: fmt(pot), next: fmt(potential) })}
+                </button>
+              </div>
+              <p className="font-poppins text-[11px] font-semibold text-white/45">
+                {answerLocked
+                  ? t('Answering is locked this attack — take the shot.')
+                  : t('More open zones = better odds of keeping the run alive.')}
+              </p>
             </motion.div>
           )}
 
           {beat === 'question' && (
-            <motion.div key={`q-${qIndex}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="rounded-2xl border border-white/15 bg-brand-blue p-4">
-              <div className="mb-2 flex items-center justify-between font-poppins text-[10px] font-black uppercase tracking-wider text-white/80">
+            <motion.div key={`q-${qIndex}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="rounded-2xl border border-white/15 bg-brand-blue p-3">
+              <div className="mb-1.5 flex items-center justify-between font-poppins text-[10px] font-black uppercase tracking-wider text-white/80">
                 <span>{t('Attack {n}', { n: attack + 1 })}</span>
                 <span className={qLeft <= 1.5 && selected === null ? 'text-brand-red' : 'text-brand-yellow'}>
-                  {selected === null ? t('{n}s', { n: Math.max(0, Math.ceil(qLeft)) }) : t('Answer to scout the keeper')}
+                  {selected === null ? t('{n}s', { n: Math.max(0, Math.ceil(qLeft)) }) : t('Opening the goal…')}
                 </span>
               </div>
-              <div className="mb-3 h-1.5 overflow-hidden rounded-full bg-white/15">
+              <div className="mb-2 h-1 overflow-hidden rounded-full bg-white/15">
                 <div
                   key={qIndex}
                   className={`h-full origin-left rounded-full ${qLeft <= 1.5 && selected === null ? 'bg-brand-red' : 'bg-brand-yellow'}`}
@@ -633,8 +818,8 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
                   }}
                 />
               </div>
-              <p className="mb-3 font-poppins text-base font-bold leading-snug text-white">{question.q}</p>
-              <div className="grid grid-cols-1 gap-2">
+              <p className="mb-2 font-poppins text-sm font-bold leading-snug text-white">{question.q}</p>
+              <div className="grid grid-cols-1 gap-1.5">
                 {question.options.map((opt, i) => {
                   const locked = selected !== null;
                   const isCorrect = i === question.answer;
@@ -646,7 +831,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
                       type="button"
                       disabled={locked}
                       onClick={() => answer(i)}
-                      className={`flex items-center justify-between rounded-xl border-2 px-3.5 py-3 text-left font-poppins text-sm font-bold transition-[filter,opacity,transform] duration-300 ${
+                      className={`flex items-center justify-between rounded-xl border-2 px-3.5 py-2 text-left font-poppins text-sm font-bold transition-[filter,opacity,transform] duration-300 ${
                         !locked
                           ? 'border-brand-yellow/70 bg-transparent text-white shadow-[0_0_6px_1px_rgba(255,229,0,0.12)] hover:border-brand-yellow'
                           : isCorrect
@@ -665,12 +850,12 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
                 })}
               </div>
               {selected !== null && (
-                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-3 text-center font-poppins text-[10px] font-bold uppercase tracking-wide text-white/50">
+                <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-2 text-center font-poppins text-[10px] font-bold uppercase tracking-wide text-white/50">
                   {selected === -1
-                    ? t("Time's up — blind shot")
+                    ? t("Time's up — the goal slams back to {n} zones", { n: MIN_OPEN })
                     : selected === question.answer
                       ? t('{pct}% answered correctly', { pct: pulse.answered })
-                      : t('Wrong — the correct answer stays. Blind shot.')}
+                      : t('Wrong — the goal slams back to {n} zones', { n: MIN_OPEN })}
                 </motion.p>
               )}
               <style>{`@keyframes ft-q-timer { from { transform: scaleX(1); } to { transform: scaleX(0); } }`}</style>
@@ -679,22 +864,16 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
 
           {beat === 'shoot' && (
             <motion.div key="shoot" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-2 text-center">
-              {informed ? (
-                <motion.div
-                  initial={{ scale: 0.7, opacity: 0, rotate: -3 }}
-                  animate={{ scale: 1, opacity: 1, rotate: 0 }}
-                  transition={{ type: 'spring', stiffness: 320, damping: 16 }}
-                  className="mx-auto inline-flex items-center gap-2 rounded-full bg-brand-green/15 px-4 py-2 font-poppins text-sm font-black uppercase text-brand-green"
-                >
-                  <Eye className="size-4" /> {t('SCOUT REPORT ✓ — one save zone revealed')}
-                </motion.div>
-              ) : (
-                <div className="mx-auto inline-flex items-center gap-2 rounded-full bg-brand-orange/15 px-4 py-2 font-poppins text-sm font-black uppercase text-brand-orange">
-                  {t('No scout — blind shot pays more')}
-                </div>
-              )}
+              <motion.div
+                initial={{ scale: 0.7, opacity: 0, rotate: -3 }}
+                animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                transition={{ type: 'spring', stiffness: 320, damping: 16 }}
+                className="mx-auto inline-flex items-center gap-2 rounded-full bg-brand-green/15 px-4 py-2 font-poppins text-sm font-black uppercase text-brand-green"
+              >
+                <Eye className="size-4" /> {t('{k} zones open — one hides the keeper', { k: openCount })}
+              </motion.div>
               <p className="font-poppins text-xs font-bold uppercase tracking-wide text-white/60">
-                {t('Pick your shot zone')} · {informed ? t('4 GOAL · 1 SAVE') : t('4 GOAL · 2 SAVE')} · {fmt(pot)} → {fmt(potential)} <CashBill size={0.4} />
+                {t('Pick your shot zone')} · {t('{pct}% goal', { pct: goalPct })} · {fmt(pot)} → {fmt(potential)} <CoinIcon size={14} />
               </p>
             </motion.div>
           )}
@@ -726,7 +905,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
                 >
                   <span>{t('TAKE {amount}', { amount: fmt(pot) })}</span>
                   <span className="inline-flex shrink-0 items-center">
-                    <CashBill size={0.5} />
+                    <CoinIcon size={16} />
                   </span>
                 </motion.button>
                 <button
@@ -738,7 +917,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
                 </button>
               </div>
               <p className="font-poppins text-[11px] font-semibold text-white/45">
-                {t('Next attack risks the whole pot — the keeper resets.')}
+                {t('Next attack risks the whole pot — the goal resets to {n} zones.', { n: MIN_OPEN })}
               </p>
             </motion.div>
           )}
@@ -761,7 +940,6 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
               >
                 {t('New round')}
               </button>
-              <StadiumBoard t={t} bestRun={bestRun} />
             </motion.div>
           )}
 
@@ -782,12 +960,18 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
               >
                 {t('New round')}
               </button>
-              <StadiumBoard t={t} bestRun={bestRun} />
             </motion.div>
           )}
 
           {beat === 'resolving' && <motion.div key="resolving" className="h-14" />}
         </AnimatePresence>
+      </div>
+        </div>
+
+        <div className="mt-4 lg:sticky lg:top-4 lg:mt-1">
+          <StadiumBoard t={t} bestRun={bestRun} />
+          <div className="mt-4 hidden lg:block">{renderHud(true)}</div>
+        </div>
       </div>
       <ResultSplash {...splashProps} />
       <MoneyFlight flight={flight} />

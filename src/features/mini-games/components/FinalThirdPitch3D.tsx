@@ -9,7 +9,7 @@
  * ref during render (required by the React Compiler lint rules).
  *
  * Timeline after a zone is picked: 0–0.45s run-up/strike · 0.45s launch ·
- * 0.45–1.23s flight. The parent resolves the outcome at 1.35s.
+ * 0.45–1.23s flight. Saved shots then gather and land before resolution.
  *
  * Shot style is derived from the zone (curl / drive / placed) so each pick
  * reads differently without changing the 0.45s launch or 0.78s flight budget.
@@ -43,6 +43,8 @@ const _ball = new THREE.Vector3();
 const KICK_LEAD_S = 0.45;
 const FLIGHT_S = 0.78;
 const SAVE_CONTACT_S = FLIGHT_S * 0.88;
+const SAVE_GATHER_S = 0.18;
+const SAVE_LAND_S = 0.52;
 const SKIN_DEFAULT = '#b9784f';
 
 const PITCH_LINES = [
@@ -58,14 +60,17 @@ const WALL_PLAYERS = [
   { x: -0.85, delay: 0.07, skin: '#aa6948', hair: '#201712', number: 8 },
 ] as const;
 
-const FLOODLIGHTS = [-8.4, 8.4] as const;
-const GOAL_POSTS = [-3.72, 3.72] as const;
+const GOAL_HALF = 3.66;
+const GOAL_H = 2.44;
+const GOAL_D = 1.82;
+const POST_R = 0.058;
+const GOAL_POSTS = [-GOAL_HALF, GOAL_HALF] as const;
 
 /** Pitch-side LED hoarding: a U that meets at the corners (thickness included). */
 const HOARD_H = 0.84;
 const HOARD_T = 0.14;
 const HOARD_INNER = 8.02;
-const HOARD_REAR_Z = -1.18;
+const HOARD_REAR_Z = -2.48;
 const HOARD_SIDE_END_Z = 8.45;
 const HOARD_REAR_W = HOARD_INNER * 2 + HOARD_T;
 const HOARD_SIDE_LEN = HOARD_SIDE_END_Z - (HOARD_REAR_Z - HOARD_T / 2);
@@ -84,7 +89,17 @@ const easeOut = (v: number) => {
   return 1 - (1 - t) * (1 - t);
 };
 
-type TakerId = 'ronaldo' | 'messi' | 'beckham' | 'carlos' | 'ronaldinho' | 'neymar';
+type TakerId =
+  | 'ronaldo'
+  | 'messi'
+  | 'beckham'
+  | 'carlos'
+  | 'ronaldinho'
+  | 'neymar'
+  | 'zidane'
+  | 'juninho'
+  | 'mbappe'
+  | 'kvara';
 
 interface KickSetup {
   id: TakerId;
@@ -108,11 +123,11 @@ interface KickSetup {
 const KICK_SETUPS: readonly KickSetup[] = [
   {
     id: 'ronaldo',
-    ball: [0.12, 0.13, 9.2],
-    idle: [-0.28, 11.28],
-    strike: [-0.06, 9.48],
-    wall: 0.05,
-    yaw: 0.05,
+    ball: [0.18, 0.13, 9.85],
+    idle: [-0.22, 12.05],
+    strike: [-0.04, 10.12],
+    wall: 0.08,
+    yaw: 0.04,
     strides: 3.1,
     hop: 0.045,
     weave: 0.04,
@@ -125,11 +140,11 @@ const KICK_SETUPS: readonly KickSetup[] = [
   },
   {
     id: 'messi',
-    ball: [-1.62, 0.13, 8.28],
-    idle: [-2.38, 9.42],
-    strike: [-1.78, 8.55],
-    wall: -0.82,
-    yaw: 0.34,
+    ball: [-2.05, 0.13, 8.05],
+    idle: [-2.88, 9.28],
+    strike: [-2.18, 8.32],
+    wall: -0.95,
+    yaw: 0.38,
     strides: 2.35,
     hop: 0.03,
     weave: 0.1,
@@ -142,11 +157,11 @@ const KICK_SETUPS: readonly KickSetup[] = [
   },
   {
     id: 'beckham',
-    ball: [1.95, 0.13, 8.62],
-    idle: [2.88, 9.95],
-    strike: [2.08, 8.88],
-    wall: 0.92,
-    yaw: -0.36,
+    ball: [2.22, 0.13, 8.48],
+    idle: [3.18, 9.92],
+    strike: [2.38, 8.72],
+    wall: 1.05,
+    yaw: -0.4,
     strides: 3.9,
     hop: 0.055,
     weave: 0.2,
@@ -159,11 +174,11 @@ const KICK_SETUPS: readonly KickSetup[] = [
   },
   {
     id: 'carlos',
-    ball: [-2.28, 0.13, 9.72],
-    idle: [-3.42, 11.48],
-    strike: [-2.42, 10.02],
-    wall: -1.12,
-    yaw: 0.4,
+    ball: [-2.48, 0.13, 10.35],
+    idle: [-3.62, 12.15],
+    strike: [-2.62, 10.62],
+    wall: -1.22,
+    yaw: 0.44,
     strides: 5.15,
     hop: 0.1,
     weave: 0.16,
@@ -176,11 +191,11 @@ const KICK_SETUPS: readonly KickSetup[] = [
   },
   {
     id: 'ronaldinho',
-    ball: [0.92, 0.13, 7.88],
-    idle: [0.22, 8.72],
-    strike: [0.78, 8.15],
-    wall: 0.38,
-    yaw: -0.2,
+    ball: [1.18, 0.13, 7.55],
+    idle: [0.38, 8.42],
+    strike: [1.02, 7.82],
+    wall: 0.48,
+    yaw: -0.22,
     strides: 1.85,
     hop: 0.08,
     weave: 0.14,
@@ -193,11 +208,11 @@ const KICK_SETUPS: readonly KickSetup[] = [
   },
   {
     id: 'neymar',
-    ball: [-0.88, 0.13, 8.08],
-    idle: [-1.52, 9.18],
-    strike: [-1.02, 8.35],
-    wall: -0.42,
-    yaw: 0.18,
+    ball: [-1.22, 0.13, 7.72],
+    idle: [-1.92, 8.95],
+    strike: [-1.38, 8.02],
+    wall: -0.52,
+    yaw: 0.2,
     strides: 3.25,
     hop: 0.12,
     weave: 0.22,
@@ -208,11 +223,388 @@ const KICK_SETUPS: readonly KickSetup[] = [
     spin: 18,
     knuckle: 0.25,
   },
+  {
+    // Elegant short approach, side-foot placement over the wall.
+    id: 'zidane',
+    ball: [0.65, 0.13, 8.3],
+    idle: [1.45, 9.4],
+    strike: [0.82, 8.55],
+    wall: 0.3,
+    yaw: -0.12,
+    strides: 2.6,
+    hop: 0.03,
+    weave: 0.06,
+    stutter: 0,
+    whip: 0.95,
+    curlBias: 1.1,
+    heightBias: 0.7,
+    spin: 19,
+    knuckle: 0,
+  },
+  {
+    // The knuckleball original — straight run, almost no spin, max wobble.
+    id: 'juninho',
+    ball: [-0.7, 0.13, 9.6],
+    idle: [-1.5, 11.2],
+    strike: [-0.9, 9.85],
+    wall: -0.3,
+    yaw: 0.14,
+    strides: 3.4,
+    hop: 0.05,
+    weave: 0.05,
+    stutter: 0.1,
+    whip: 1.15,
+    curlBias: 0.3,
+    heightBias: 0.55,
+    spin: 8,
+    knuckle: 1.4,
+  },
+  {
+    // Explosive sprint-up, low driven strike.
+    id: 'mbappe',
+    ball: [1.8, 0.13, 9.1],
+    idle: [2.7, 10.6],
+    strike: [1.95, 9.35],
+    wall: 0.85,
+    yaw: -0.3,
+    strides: 4.4,
+    hop: 0.07,
+    weave: 0.1,
+    stutter: 0,
+    whip: 1.25,
+    curlBias: 0.55,
+    heightBias: 0.25,
+    spin: 20,
+    knuckle: 0.3,
+  },
+  {
+    // Left-footed flair — stuttered approach, whipped curl.
+    id: 'kvara',
+    ball: [-1.7, 0.13, 8.6],
+    idle: [-2.5, 9.9],
+    strike: [-1.85, 8.85],
+    wall: -0.75,
+    yaw: 0.3,
+    strides: 3,
+    hop: 0.09,
+    weave: 0.18,
+    stutter: 0.22,
+    whip: 0.88,
+    curlBias: 1.3,
+    heightBias: 0.6,
+    spin: 21,
+    knuckle: 0.15,
+  },
 ];
 
 function kickFromSeed(seed: number): KickSetup {
-  const rnd = seeded(seed || 1);
-  return KICK_SETUPS[Math.floor(rnd() * KICK_SETUPS.length) % KICK_SETUPS.length];
+  const index = ((seed % KICK_SETUPS.length) + KICK_SETUPS.length) % KICK_SETUPS.length;
+  return KICK_SETUPS[index];
+}
+
+const TAKER_LOOK: Record<TakerId, { kit: string; shorts: string; socks: string; hair: string; number: number; skin: string; accent: string }> = {
+  ronaldo: { kit: '#f4f7fb', shorts: '#10233e', socks: '#f4f7fb', hair: '#1a120c', number: 7, skin: '#c48a62', accent: '#10233e' },
+  messi: { kit: '#6bb3ff', shorts: '#0b2a6b', socks: '#6bb3ff', hair: '#3a2414', number: 10, skin: '#c9a07a', accent: '#0b2a6b' },
+  beckham: { kit: '#da1f26', shorts: '#f4f7fb', socks: '#da1f26', hair: '#1c140e', number: 7, skin: '#d4a07a', accent: '#f4f7fb' },
+  carlos: { kit: '#fde100', shorts: '#1b3d8f', socks: '#fde100', hair: '#120c08', number: 6, skin: '#5c3824', accent: '#1b3d8f' },
+  ronaldinho: { kit: '#0a3d2c', shorts: '#f4f7fb', socks: '#0a3d2c', hair: '#1a100c', number: 10, skin: '#8a5a38', accent: '#f4f7fb' },
+  neymar: { kit: '#ffe500', shorts: '#1a3a1a', socks: '#ffe500', hair: '#24160e', number: 11, skin: '#c9a070', accent: '#1a3a1a' },
+  zidane: { kit: '#1c3f94', shorts: '#f4f7fb', socks: '#c8102e', hair: '#2b211a', number: 10, skin: '#d4a07a', accent: '#f4f7fb' },
+  juninho: { kit: '#f4f7fb', shorts: '#f4f7fb', socks: '#f4f7fb', hair: '#17110b', number: 8, skin: '#c9a07a', accent: '#1b3d8f' },
+  mbappe: { kit: '#10224e', shorts: '#10224e', socks: '#10224e', hair: '#100b08', number: 7, skin: '#8a5a38', accent: '#da1f26' },
+  kvara: { kit: '#f4f7fb', shorts: '#f4f7fb', socks: '#c8102e', hair: '#1a120c', number: 7, skin: '#d4a07a', accent: '#c8102e' },
+};
+
+function CameraRig({ kick, shotZone, flying }: { kick: KickSetup; shotZone: Zone | null; flying: boolean }) {
+  const look = useRef(new THREE.Vector3(-0.08, 1.05, 0));
+  useFrame((state) => {
+    const bx = kick.ball[0];
+    const bz = kick.ball[2];
+    const aimX = flying && shotZone ? (ZONE_POS[shotZone.id]?.[0] ?? 0) * 0.18 + bx * 0.12 : bx;
+    look.current.x = lerp(look.current.x, aimX * 0.48, 0.09);
+    look.current.y = lerp(look.current.y, 1.08, 0.09);
+    look.current.z = lerp(look.current.z, 0.12, 0.09);
+    state.camera.position.x = lerp(state.camera.position.x, 0.48 + bx * 0.46, 0.09);
+    state.camera.position.y = lerp(state.camera.position.y, 2.2 + (bz - 9) * 0.06, 0.09);
+    state.camera.position.z = lerp(state.camera.position.z, 13.55 + (bz - 8.4) * 0.58, 0.09);
+    state.camera.lookAt(look.current);
+  });
+  return null;
+}
+
+/** Momentum carry-over: the scorer wheels off the strike before the
+ *  signature pose, so the celebration doesn't snap in. */
+function poseWheelAway(kick: KickSetup, u: number, joint: JointMap, player: THREE.Group) {
+  const stride = Math.sin(u * Math.PI * 2.6);
+  player.position.y = Math.abs(stride) * 0.05;
+  player.position.x += kick.yaw * -0.4 * u;
+  player.position.z += u * 0.55;
+  player.rotation.set(0, Math.PI + lerp(-kick.yaw * 0.55, 0, easeOut(u)), lerp(0.1, 0, u));
+  setJoint(joint.pelvis, 0, 0, -stride * 0.05);
+  setJoint(joint.hipL, stride * 0.6);
+  setJoint(joint.hipR, -stride * 0.6);
+  setJoint(joint.kneeL, Math.max(0, -stride) * 0.9 + 0.12);
+  setJoint(joint.kneeR, Math.max(0, stride) * 0.9 + 0.12);
+  setJoint(joint.ankleL, -Math.max(0, -stride) * 0.2);
+  setJoint(joint.ankleR, -Math.max(0, stride) * 0.2);
+  setJoint(joint.shoL, -stride * 0.8, 0, 0.18);
+  setJoint(joint.shoR, stride * 0.8, 0, -0.18);
+  setJoint(joint.elbL, -0.6);
+  setJoint(joint.elbR, -0.6);
+  setJoint(joint.spine, lerp(-0.18, -0.04, u));
+  setJoint(joint.head, -0.06);
+}
+
+function poseCelebrate(id: TakerId, now: number, elapsed: number, joint: JointMap, player: THREE.Group) {
+  const bounce = Math.abs(Math.sin(now * 7.2));
+  player.position.z += 0.55;
+  if (id === 'ronaldo') {
+    // Siuu: leap + mid-air pirouette, then the planted wide-stance arms-back landing.
+    if (elapsed < 0.55) {
+      const t = elapsed / 0.55;
+      player.position.y = Math.sin(t * Math.PI) * 0.62;
+      player.rotation.set(0, Math.PI + t * Math.PI * 2, 0);
+      setJoint(joint.pelvis, 0, 0, 0);
+      setJoint(joint.hipL, -0.5);
+      setJoint(joint.hipR, -0.5);
+      setJoint(joint.kneeL, 0.9);
+      setJoint(joint.kneeR, 0.9);
+      setJoint(joint.shoL, -1.4, 0, 0.6);
+      setJoint(joint.shoR, -1.4, 0, -0.6);
+      setJoint(joint.elbL, -0.5);
+      setJoint(joint.elbR, -0.5);
+      setJoint(joint.spine, -0.1);
+      setJoint(joint.head, -0.1);
+      return;
+    }
+    const land = easeOut(clamp01((elapsed - 0.55) / 0.18));
+    player.position.y = lerp(0.1, 0, land);
+    player.rotation.set(0.06, Math.PI, 0);
+    setJoint(joint.pelvis, 0, 0, 0);
+    setJoint(joint.hipL, -0.22, 0, -0.3);
+    setJoint(joint.hipR, -0.22, 0, 0.3);
+    setJoint(joint.kneeL, 0.3);
+    setJoint(joint.kneeR, 0.3);
+    setJoint(joint.shoL, lerp(-1.4, 0.62, land), 0, 0.5);
+    setJoint(joint.shoR, lerp(-1.4, 0.62, land), 0, -0.5);
+    setJoint(joint.elbL, -0.12);
+    setJoint(joint.elbR, -0.12);
+    setJoint(joint.spine, -0.38);
+    setJoint(joint.head, -0.34);
+    return;
+  }
+  if (id === 'messi') {
+    player.position.y = bounce * 0.035;
+    player.rotation.set(0, Math.PI + 0.18, 0);
+    setJoint(joint.pelvis, 0, 0.08, 0);
+    setJoint(joint.hipL, 0.06);
+    setJoint(joint.hipR, -0.04);
+    setJoint(joint.kneeL, 0.16);
+    setJoint(joint.kneeR, 0.16);
+    setJoint(joint.shoL, -1.18, 0, 0.32);
+    setJoint(joint.shoR, -1.18, 0, -0.32);
+    setJoint(joint.elbL, -1.48);
+    setJoint(joint.elbR, -1.48);
+    setJoint(joint.spine, 0.1);
+    setJoint(joint.head, -0.06, 0.14);
+    return;
+  }
+  if (id === 'beckham') {
+    player.position.y = 0.02;
+    player.rotation.set(0, Math.PI, 0);
+    setJoint(joint.pelvis, 0, 0, 0);
+    setJoint(joint.hipL, 0.04);
+    setJoint(joint.hipR, 0.04);
+    setJoint(joint.kneeL, 0.1);
+    setJoint(joint.kneeR, 0.1);
+    setJoint(joint.shoL, -1.92, 0, 1.22);
+    setJoint(joint.shoR, -1.92, 0, -1.22);
+    setJoint(joint.elbL, -0.18);
+    setJoint(joint.elbR, -0.18);
+    setJoint(joint.spine, -0.08);
+    setJoint(joint.head, -0.04);
+    return;
+  }
+  if (id === 'carlos') {
+    player.position.x += Math.sin(now * 3.4) * 0.01;
+    player.position.y = bounce * 0.14;
+    player.rotation.set(0, Math.PI + Math.sin(now * 2.2) * 0.35, 0.1);
+    setJoint(joint.pelvis, 0, 0.12, 0);
+    setJoint(joint.hipL, 0.22);
+    setJoint(joint.hipR, -0.18);
+    setJoint(joint.kneeL, 0.28);
+    setJoint(joint.kneeR, 0.22);
+    setJoint(joint.shoL, -2.55, 0, 0.48);
+    setJoint(joint.shoR, -1.15, 0, -0.92);
+    setJoint(joint.elbL, -0.22);
+    setJoint(joint.elbR, -0.55);
+    setJoint(joint.spine, -0.22);
+    setJoint(joint.head, -0.18);
+    return;
+  }
+  if (id === 'ronaldinho') {
+    const sway = Math.sin(now * 8.4);
+    player.position.y = Math.abs(Math.sin(now * 10.2)) * 0.11;
+    player.rotation.set(0, Math.PI + sway * 0.28, sway * 0.14);
+    setJoint(joint.pelvis, 0, sway * 0.22, 0);
+    setJoint(joint.hipL, sway * 0.18);
+    setJoint(joint.hipR, -sway * 0.18);
+    setJoint(joint.kneeL, 0.22);
+    setJoint(joint.kneeR, 0.22);
+    setJoint(joint.shoL, -2.25, 0, 0.62 + sway * 0.45);
+    setJoint(joint.shoR, -2.25, 0, -0.62 - sway * 0.45);
+    setJoint(joint.elbL, -0.35);
+    setJoint(joint.elbR, -0.35);
+    setJoint(joint.spine, -0.06);
+    setJoint(joint.head, -0.22, sway * 0.22);
+    return;
+  }
+  if (id === 'neymar') {
+    // "Hang loose" — one arm thrown up, hip sway.
+    const sway = Math.sin(now * 5.6);
+    player.position.y = Math.abs(sway) * 0.05;
+    player.rotation.set(0, Math.PI + sway * 0.12, sway * 0.05);
+    setJoint(joint.pelvis, 0, sway * 0.14, 0);
+    setJoint(joint.hipL, 0.08);
+    setJoint(joint.hipR, -0.06);
+    setJoint(joint.kneeL, 0.18);
+    setJoint(joint.kneeR, 0.14);
+    setJoint(joint.shoR, -2.9, 0, -0.25 + sway * 0.12);
+    setJoint(joint.shoL, 0.2, 0, 0.4);
+    setJoint(joint.elbR, -0.35);
+    setJoint(joint.elbL, -0.5);
+    setJoint(joint.spine, -0.16, sway * 0.1, 0);
+    setJoint(joint.head, -0.22, sway * 0.15);
+    return;
+  }
+  if (id === 'zidane') {
+    // Understated maestro: both arms opened low to the crowd, chin up.
+    player.position.y = bounce * 0.03;
+    player.rotation.set(0, Math.PI - 0.1, 0);
+    setJoint(joint.pelvis, 0, 0, 0);
+    setJoint(joint.hipL, 0.05);
+    setJoint(joint.hipR, 0.05);
+    setJoint(joint.kneeL, 0.12);
+    setJoint(joint.kneeR, 0.12);
+    setJoint(joint.shoL, -1.05, 0, 1.05);
+    setJoint(joint.shoR, -1.05, 0, -1.05);
+    setJoint(joint.elbL, -0.15);
+    setJoint(joint.elbR, -0.15);
+    setJoint(joint.spine, -0.14);
+    setJoint(joint.head, -0.28);
+    return;
+  }
+  if (id === 'mbappe') {
+    // Petit Prince: planted wide, arms crossed, head tilted.
+    player.position.y = 0;
+    player.rotation.set(0, Math.PI, 0);
+    setJoint(joint.pelvis, 0, 0, 0);
+    setJoint(joint.hipL, -0.06, 0, -0.22);
+    setJoint(joint.hipR, -0.06, 0, 0.22);
+    setJoint(joint.kneeL, 0.1);
+    setJoint(joint.kneeR, 0.1);
+    setJoint(joint.shoL, -1.05, 0, -0.55);
+    setJoint(joint.shoR, -1.15, 0, 0.55);
+    setJoint(joint.elbL, -1.9);
+    setJoint(joint.elbR, -1.9);
+    setJoint(joint.spine, -0.12);
+    setJoint(joint.head, -0.05, 0.2, 0.1);
+    return;
+  }
+  if (id === 'juninho') {
+    // Aeroplane run, banking side to side.
+    const bank = Math.sin(now * 3.1);
+    player.position.y = 0.03 + Math.abs(Math.sin(now * 6.4)) * 0.05;
+    player.rotation.set(0.12, Math.PI + bank * 0.2, bank * 0.3);
+    setJoint(joint.pelvis, 0, bank * 0.1, 0);
+    setJoint(joint.hipL, 0.16);
+    setJoint(joint.hipR, -0.1);
+    setJoint(joint.kneeL, 0.28);
+    setJoint(joint.kneeR, 0.2);
+    setJoint(joint.shoL, -1.5, 0, 1.35);
+    setJoint(joint.shoR, -1.5, 0, -1.35);
+    setJoint(joint.elbL, -0.08);
+    setJoint(joint.elbR, -0.08);
+    setJoint(joint.spine, -0.2);
+    setJoint(joint.head, -0.14, bank * 0.2);
+    return;
+  }
+  // Kvara & default: sliding knee celebration, arms wide, gliding forward.
+  const slide = easeOut(clamp01(elapsed / 0.9));
+  player.position.y = -0.14;
+  player.position.z += slide * 0.9;
+  player.rotation.set(0.38, Math.PI + 0.42, 0.22);
+  setJoint(joint.pelvis, 0.18, 0.2, 0);
+  setJoint(joint.hipL, 1.18);
+  setJoint(joint.kneeL, 1.52);
+  setJoint(joint.hipR, 0.18);
+  setJoint(joint.kneeR, 0.38);
+  setJoint(joint.shoL, -2.08, 0, 0.88);
+  setJoint(joint.shoR, -2.08, 0, -0.88);
+  setJoint(joint.elbL, -0.28);
+  setJoint(joint.elbR, -0.28);
+  setJoint(joint.spine, 0.24);
+  setJoint(joint.head, 0.08);
+}
+
+function poseMiss(id: TakerId, joint: JointMap, player: THREE.Group) {
+  if (id === 'messi') {
+    player.position.y = -0.06;
+    player.rotation.set(0.22, Math.PI, 0);
+    setJoint(joint.hipL, 0.55);
+    setJoint(joint.hipR, 0.55);
+    setJoint(joint.kneeL, 0.92);
+    setJoint(joint.kneeR, 0.92);
+    setJoint(joint.shoL, -0.85, 0, 0.22);
+    setJoint(joint.shoR, -0.85, 0, -0.22);
+    setJoint(joint.elbL, -1.15);
+    setJoint(joint.elbR, -1.15);
+    setJoint(joint.spine, 0.32);
+    setJoint(joint.head, 0.28);
+    return;
+  }
+  if (id === 'beckham' || id === 'ronaldo') {
+    player.position.y = 0;
+    player.rotation.set(0, Math.PI + (id === 'ronaldo' ? 0.35 : 0), 0);
+    setJoint(joint.hipL, 0.04);
+    setJoint(joint.hipR, 0.04);
+    setJoint(joint.kneeL, 0.12);
+    setJoint(joint.kneeR, 0.12);
+    setJoint(joint.shoL, -2.38, 0, 0.68);
+    setJoint(joint.shoR, -2.38, 0, -0.68);
+    setJoint(joint.elbL, -1.82);
+    setJoint(joint.elbR, -1.82);
+    setJoint(joint.spine, 0.16);
+    setJoint(joint.head, 0.22);
+    return;
+  }
+  if (id === 'neymar') {
+    player.position.y = -0.1;
+    player.rotation.set(0.28, Math.PI, 0);
+    setJoint(joint.hipL, 0.85);
+    setJoint(joint.hipR, 0.85);
+    setJoint(joint.kneeL, 1.25);
+    setJoint(joint.kneeR, 1.25);
+    setJoint(joint.shoL, -1.55, 0, 0.4);
+    setJoint(joint.shoR, -1.55, 0, -0.4);
+    setJoint(joint.elbL, -1.05);
+    setJoint(joint.elbR, -1.05);
+    setJoint(joint.spine, 0.38);
+    setJoint(joint.head, 0.32);
+    return;
+  }
+  player.position.y = 0;
+  player.rotation.set(0, Math.PI + 0.55, 0);
+  setJoint(joint.hipL, 0.08);
+  setJoint(joint.hipR, 0.08);
+  setJoint(joint.kneeL, 0.16);
+  setJoint(joint.kneeR, 0.16);
+  setJoint(joint.shoL, -0.55, 0, 0.35);
+  setJoint(joint.shoR, -0.55, 0, -0.35);
+  setJoint(joint.elbL, -0.62);
+  setJoint(joint.elbR, -0.62);
+  setJoint(joint.spine, 0.08);
+  setJoint(joint.head, 0.12, 0.35);
 }
 
 function zoneSide(id: string): number {
@@ -261,99 +653,185 @@ function useGrassTexture(): THREE.Texture {
 function useNetTexture(): THREE.Texture {
   return useMemo(() => {
     const canvas = document.createElement('canvas');
-    canvas.width = 256;
-    canvas.height = 256;
+    canvas.width = 512;
+    canvas.height = 512;
     const context = canvas.getContext('2d')!;
-    context.clearRect(0, 0, 256, 256);
-    context.strokeStyle = 'rgba(240,248,255,0.8)';
-    context.lineWidth = 2;
-    for (let i = 0; i <= 256; i += 16) {
-      context.beginPath();
-      context.moveTo(i, 0);
-      context.lineTo(i, 256);
-      context.stroke();
-      context.beginPath();
-      context.moveTo(0, i);
-      context.lineTo(256, i);
-      context.stroke();
-    }
+    context.clearRect(0, 0, 512, 512);
+    // Two passes per cord — a dark under-stroke and a bright line — so the
+    // mesh reads as twine with depth instead of a flat hatch.
+    const drawDiagonals = (offset: number, style: string, width: number) => {
+      context.strokeStyle = style;
+      context.lineWidth = width;
+      for (let i = -512; i <= 1024; i += 26) {
+        context.beginPath();
+        context.moveTo(i + offset, 0);
+        context.lineTo(i + offset + 512, 512);
+        context.stroke();
+        context.beginPath();
+        context.moveTo(i + offset, 512);
+        context.lineTo(i + offset + 512, 0);
+        context.stroke();
+      }
+    };
+    drawDiagonals(1.4, 'rgba(8, 14, 22, 0.55)', 3.4);
+    drawDiagonals(0, 'rgba(244, 249, 254, 0.95)', 1.9);
     const texture = new THREE.CanvasTexture(canvas);
     texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(6, 3);
+    texture.anisotropy = 8;
     return texture;
   }, []);
 }
 
+/** The brand World Cup ball (same art as the loading screen), billboarded. */
 function useBallTexture(): THREE.Texture {
   return useMemo(() => {
-    const canvas = document.createElement('canvas');
-    canvas.width = 256;
-    canvas.height = 128;
-    const context = canvas.getContext('2d')!;
-    context.fillStyle = '#f5f5ef';
-    context.fillRect(0, 0, 256, 128);
-    context.fillStyle = '#172130';
-    for (let i = 0; i < 12; i += 1) {
-      const x = (i % 4) * 64 + 32 + (i % 2) * 10;
-      const y = Math.floor(i / 4) * 42 + 22;
-      context.beginPath();
-      for (let k = 0; k < 5; k += 1) {
-        const angle = (k / 5) * Math.PI * 2 - Math.PI / 2;
-        const pointX = x + Math.cos(angle) * 13;
-        const pointY = y + Math.sin(angle) * 13;
-        if (k === 0) context.moveTo(pointX, pointY);
-        else context.lineTo(pointX, pointY);
-      }
-      context.closePath();
-      context.fill();
-    }
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.colorSpace = THREE.SRGBColorSpace;
-    return texture;
+    const map = new THREE.TextureLoader().load('/assets/brand/goal-ball.webp');
+    map.colorSpace = THREE.SRGBColorSpace;
+    map.anisotropy = 8;
+    return map;
   }, []);
 }
 
+function useStadiumBackdropTexture(): THREE.Texture {
+  return useMemo(() => {
+    const map = new THREE.TextureLoader().load('/assets/demos/final-third-stadium-georgia-v3.png');
+    map.colorSpace = THREE.SRGBColorSpace;
+    map.anisotropy = 8;
+    return map;
+  }, []);
+}
+
+// Retained for the optional all-3D stadium fallback used during art iteration.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function useCrowdTexture(): THREE.Texture {
   return useMemo(() => {
+    const W = 1536;
+    const H = 768;
     const canvas = document.createElement('canvas');
-    canvas.width = 1024;
-    canvas.height = 384;
-    const context = canvas.getContext('2d')!;
-    const gradient = context.createLinearGradient(0, 0, 0, 384);
-    gradient.addColorStop(0, '#111a2a');
-    gradient.addColorStop(1, '#070d18');
-    context.fillStyle = gradient;
-    context.fillRect(0, 0, 1024, 384);
-
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext('2d')!;
     const random = seeded(2026);
-    const shirts = ['#f7f8fa', '#ffe500', '#1cb0f6', '#ff4b4b', '#58cc02', '#ff9600', '#a8b2c5'];
-    const skins = ['#f0c49a', '#d99b68', '#aa6948', '#70452f'];
-    for (let row = 0; row < 12; row += 1) {
-      const y = 26 + row * 29;
-      const offset = row % 2 === 0 ? 0 : 10;
-      for (let col = 0; col < 53; col += 1) {
-        const x = col * 20 + offset + (random() - 0.5) * 5;
-        const bounce = (random() - 0.5) * 5;
-        context.fillStyle = shirts[Math.floor(random() * shirts.length)];
-        context.fillRect(x - 5, y + bounce + 7, 10, 11);
-        context.fillStyle = skins[Math.floor(random() * skins.length)];
-        context.beginPath();
-        context.arc(x, y + bounce + 3, 4, 0, Math.PI * 2);
-        context.fill();
-        if (random() > 0.86) {
-          context.strokeStyle = context.fillStyle;
-          context.lineWidth = 3;
-          context.beginPath();
-          context.moveTo(x - 3, y + bounce + 10);
-          context.lineTo(x - 8, y + bounce - 2);
-          context.moveTo(x + 3, y + bounce + 10);
-          context.lineTo(x + 8, y + bounce - 2);
-          context.stroke();
+
+    const shade = (hex: string, f: number) => {
+      const n = parseInt(hex.slice(1), 16);
+      const r = Math.round(((n >> 16) & 255) * f);
+      const g = Math.round(((n >> 8) & 255) * f);
+      const b = Math.round((n & 255) * f);
+      return `rgb(${r},${g},${b})`;
+    };
+
+    // Concrete bowl base.
+    ctx.fillStyle = '#0f141c';
+    ctx.fillRect(0, 0, W, H);
+
+    // A stadium crowd reads as a dense low-contrast mass with structure:
+    // supporter blocks in team colors, everyone else muted, tiers + aisles.
+    const neutrals = ['#39424f', '#2e3642', '#454f5d', '#525c6b', '#3d4653', '#2a3340', '#4c5665'];
+    const mutedKit = ['#6e4a4e', '#3c5a78', '#5a6248', '#6b5a86', '#806246', '#7a3b41'];
+    const lights = ['#9aa4b2', '#aab2be', '#8d97a5'];
+    // Georgian colors — red and white supporter blocks.
+    const homeKit = ['#b8453c', '#a83a32', '#c65048', '#93332c'];
+    const awayKit = ['#c9ced6', '#b8bec7', '#d6dae0', '#aab0ba'];
+    const skins = ['#e8bd94', '#d99b68', '#aa6948', '#70452f', '#c48a62'];
+    const sections = [
+      { from: 0.06, to: 0.19, kit: homeKit },
+      { from: 0.44, to: 0.56, kit: awayKit },
+      { from: 0.81, to: 0.94, kit: homeKit },
+    ];
+    const pickShirt = (u: number) => {
+      const section = sections.find((s) => u >= s.from && u <= s.to);
+      if (section && random() < 0.62) return section.kit[Math.floor(random() * section.kit.length)];
+      const r = random();
+      if (r < 0.6) return neutrals[Math.floor(random() * neutrals.length)];
+      if (r < 0.86) return mutedKit[Math.floor(random() * mutedKit.length)];
+      return lights[Math.floor(random() * lights.length)];
+    };
+
+    // Stairway aisles slicing the tiers vertically.
+    const AISLE_STEP = 192;
+    const AISLE_HALF = 7;
+    const inAisle = (x: number) => {
+      const m = (((x - 96) % AISLE_STEP) + AISLE_STEP) % AISLE_STEP;
+      return m < AISLE_HALF || m > AISLE_STEP - AISLE_HALF;
+    };
+    ctx.fillStyle = '#1a212b';
+    for (let ax = 96; ax < W; ax += AISLE_STEP) ctx.fillRect(ax - AISLE_HALF, 0, AISLE_HALF * 2, H);
+
+    // Two seating tiers with a concourse walkway between them.
+    const tiers = [
+      { top: 22, bottom: 318, rows: 24, base: 0.52, range: 0.3 },
+      { top: 374, bottom: 748, rows: 30, base: 0.74, range: 0.26 },
+    ];
+    for (const tier of tiers) {
+      const rowStep = (tier.bottom - tier.top) / tier.rows;
+      for (let row = 0; row < tier.rows; row += 1) {
+        const y = tier.top + row * rowStep;
+        const depth = tier.base + tier.range * (row / (tier.rows - 1));
+        const offset = (row % 2) * 4.1;
+        for (let x = 4 + offset; x < W; x += 8.2) {
+          if (inAisle(x)) continue;
+          if (random() < 0.045) continue;
+          const jx = x + (random() - 0.5) * 2.6;
+          const jy = y + (random() - 0.5) * 2.4;
+          const f = depth * (0.9 + random() * 0.2);
+          ctx.fillStyle = shade(pickShirt(x / W), f);
+          ctx.beginPath();
+          ctx.ellipse(jx, jy + 4.4, 2.7, 3.5, 0, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = shade(skins[Math.floor(random() * skins.length)], f * 0.95);
+          ctx.beginPath();
+          ctx.arc(jx, jy, 1.9, 0, Math.PI * 2);
+          ctx.fill();
         }
+        ctx.fillStyle = 'rgba(5, 8, 12, 0.22)';
+        ctx.fillRect(0, y + rowStep - 2, W, 2);
       }
     }
+
+    // Concourse walkway with railing highlights.
+    ctx.fillStyle = '#141a23';
+    ctx.fillRect(0, 318, W, 56);
+    ctx.fillStyle = '#303a48';
+    ctx.fillRect(0, 318, W, 3);
+    ctx.fillStyle = '#232b36';
+    ctx.fillRect(0, 371, W, 3);
+
+    // A few supporter flags poking out of the lower tier.
+    for (let i = 0; i < 8; i += 1) {
+      const fx = 50 + random() * (W - 100);
+      const fy = 400 + random() * 300;
+      const kit = random() < 0.5 ? homeKit[0] : awayKit[0];
+      ctx.save();
+      ctx.translate(fx, fy);
+      ctx.rotate((random() - 0.5) * 0.5);
+      ctx.fillStyle = shade('#77808d', 0.9);
+      ctx.fillRect(-0.8, -16, 1.6, 18);
+      ctx.fillStyle = shade(kit, 0.88);
+      ctx.fillRect(0.8, -16, 17, 11);
+      ctx.restore();
+    }
+
+    // Atmospheric falloff — upper tier fades into the stadium gloom, and the
+    // far edges darken so the stands recede behind the floodlit pitch.
+    const fog = ctx.createLinearGradient(0, 0, 0, H);
+    fog.addColorStop(0, 'rgba(7, 11, 17, 0.55)');
+    fog.addColorStop(0.45, 'rgba(7, 11, 17, 0.16)');
+    fog.addColorStop(1, 'rgba(7, 11, 17, 0)');
+    ctx.fillStyle = fog;
+    ctx.fillRect(0, 0, W, H);
+    for (const [x0, x1] of [[0, 200], [W - 200, W]] as const) {
+      const edge = ctx.createLinearGradient(x0 === 0 ? x1 : x0, 0, x0 === 0 ? 0 : W, 0);
+      edge.addColorStop(0, 'rgba(7, 11, 17, 0)');
+      edge.addColorStop(1, 'rgba(7, 11, 17, 0.45)');
+      ctx.fillStyle = edge;
+      ctx.fillRect(x0, 0, x1 - x0, H);
+    }
+
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
-    texture.anisotropy = 2;
+    texture.anisotropy = 4;
     return texture;
   }, []);
 }
@@ -386,6 +864,8 @@ const JOINT_NAMES = [
   'shoR',
   'elbL',
   'elbR',
+  'handL',
+  'handR',
   'head',
 ] as const;
 type JointName = (typeof JOINT_NAMES)[number];
@@ -429,13 +909,13 @@ function PlayerLeg({
           <meshStandardMaterial color={sock} roughness={0.76} flatShading />
         </mesh>
         <group name={`ankle${side}`} position={[0, -0.35, 0]}>
-          <mesh position={[0, -0.02, 0.075]} rotation={[0.08, 0, 0]} castShadow>
-            <boxGeometry args={[0.14, 0.09, 0.29]} />
+          <mesh position={[0, -0.015, 0.075]} rotation={[Math.PI / 2 + 0.08, 0, 0]} scale={[1.05, 1, 0.7]} castShadow>
+            <capsuleGeometry args={[0.067, 0.16, 4, 10]} />
             <meshStandardMaterial color={boot} roughness={0.62} flatShading />
           </mesh>
-          <mesh position={[0, 0.025, 0.13]} rotation={[0.08, 0, 0]}>
-            <boxGeometry args={[0.105, 0.012, 0.12]} />
-            <meshStandardMaterial color="#edf3f8" roughness={0.7} />
+          <mesh position={[0, -0.066, 0.083]} rotation={[Math.PI / 2, 0, 0]} scale={[1.08, 1, 0.62]}>
+            <capsuleGeometry args={[0.069, 0.17, 3, 10]} />
+            <meshStandardMaterial color="#0a1018" roughness={0.78} />
           </mesh>
         </group>
       </group>
@@ -470,44 +950,61 @@ function PlayerArm({
           <capsuleGeometry args={[0.052, 0.18, 4, 8]} />
           <meshStandardMaterial color={skin} roughness={0.82} flatShading />
         </mesh>
-        <mesh position={[0, -0.265, 0]} scale={glove ? [1.35, 1.1, 0.72] : [1, 1, 0.8]} castShadow>
-          <sphereGeometry args={[glove ? 0.073 : 0.062, 8, 8]} />
-          <meshStandardMaterial color={glove ?? skin} roughness={0.72} flatShading />
-        </mesh>
-        {glove && (
-          <mesh position={[0, -0.276, 0.045]} scale={[1.2, 0.72, 0.55]}>
-            <boxGeometry args={[0.09, 0.1, 0.05]} />
-            <meshStandardMaterial color="#071320" roughness={0.78} />
+        <group name={`hand${side}`} position={[0, -0.265, 0]}>
+          <mesh scale={glove ? [1.38, 1.16, 0.78] : [1, 1, 0.82]} castShadow>
+            <sphereGeometry args={[glove ? 0.076 : 0.062, 10, 10]} />
+            <meshStandardMaterial color={glove ?? skin} roughness={0.7} flatShading />
           </mesh>
-        )}
+          {glove && (
+            <>
+              <mesh position={[side === 'L' ? 0.065 : -0.065, 0.005, 0.012]} rotation={[0, 0, side === 'L' ? -0.65 : 0.65]} castShadow>
+                <capsuleGeometry args={[0.026, 0.055, 3, 8]} />
+                <meshStandardMaterial color={glove} roughness={0.7} flatShading />
+              </mesh>
+              <mesh position={[0, 0.055, 0]} scale={[1.18, 0.58, 0.92]} castShadow>
+                <cylinderGeometry args={[0.068, 0.063, 0.105, 10]} />
+                <meshStandardMaterial color="#071320" roughness={0.78} flatShading />
+              </mesh>
+              <mesh position={[0, -0.012, 0.058]} scale={[1.08, 0.82, 0.5]}>
+                <sphereGeometry args={[0.058, 8, 8]} />
+                <meshStandardMaterial color="#ffe500" roughness={0.72} flatShading />
+              </mesh>
+            </>
+          )}
+        </group>
       </group>
     </group>
   );
 }
 
-function ShirtNumber({ number, back = false }: { number: number; back?: boolean }) {
-  const z = back ? -0.198 : 0.198;
-  const rotationY = back ? Math.PI : 0;
-  const bars = number % 2 === 0
-    ? [
-        [0, 0.07, 0, 0.1],
-        [0.035, 0, Math.PI / 2, 0.075],
-        [-0.035, -0.075, Math.PI / 2, 0.075],
-      ]
-    : [
-        [0, 0.07, 0, 0.1],
-        [0, -0.025, 0, 0.16],
-        [-0.035, 0.015, Math.PI / 2, 0.07],
-      ];
+function ShirtNumber({ number, accent = '#f8fbff', back = false }: { number: number; accent?: string; back?: boolean }) {
+  // Real digits drawn to a canvas — the old bar-glyph sat inside the torso
+  // cylinder (z 0.198 < radius 0.245) so it was never visible.
+  const texture = useMemo(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 128;
+    canvas.height = 128;
+    const ctx = canvas.getContext('2d')!;
+    ctx.clearRect(0, 0, 128, 128);
+    ctx.font = '900 92px Poppins, "Arial Black", Arial, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.lineWidth = 12;
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = 'rgba(8, 12, 18, 0.5)';
+    ctx.strokeText(String(number), 64, 70);
+    ctx.fillStyle = accent;
+    ctx.fillText(String(number), 64, 70);
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = 4;
+    return tex;
+  }, [number, accent]);
   return (
-    <group position={[0, 0.025, z]} rotation={[0, rotationY, 0]}>
-      {bars.map(([x, y, rotation, length], index) => (
-        <mesh key={index} position={[x, y, 0]} rotation={[0, 0, rotation]}>
-          <planeGeometry args={[0.024, length]} />
-          <meshBasicMaterial color="#f8fbff" toneMapped={false} />
-        </mesh>
-      ))}
-    </group>
+    <mesh position={[0, back ? 0.05 : 0.1, back ? -0.245 : 0.245]} rotation={[0, back ? Math.PI : 0, 0]}>
+      <planeGeometry args={back ? [0.26, 0.26] : [0.13, 0.13]} />
+      <meshBasicMaterial map={texture} transparent toneMapped={false} depthWrite={false} />
+    </mesh>
   );
 }
 
@@ -515,16 +1012,24 @@ function PlayerHead({ skin, hair }: { skin: string; hair: string }) {
   return (
     <group name="head" position={[0, 0.5, 0]}>
       <mesh scale={[0.88, 1, 0.92]} castShadow>
-        <sphereGeometry args={[0.15, 10, 10]} />
+        <sphereGeometry args={[0.15, 14, 12]} />
         <meshStandardMaterial color={skin} roughness={0.86} flatShading />
       </mesh>
       <mesh position={[0, 0.084, -0.012]} scale={[0.93, 0.54, 0.94]} castShadow>
-        <sphereGeometry args={[0.153, 10, 10]} />
+        <sphereGeometry args={[0.153, 14, 10]} />
         <meshStandardMaterial color={hair} roughness={0.92} flatShading />
       </mesh>
-      <mesh position={[0, 0.125, 0.025]} rotation={[0.2, 0, 0]} castShadow>
-        <boxGeometry args={[0.18, 0.05, 0.18]} />
+      <mesh position={[0, 0.128, 0.025]} rotation={[0.1, 0, 0]} scale={[1, 0.42, 0.9]} castShadow>
+        <sphereGeometry args={[0.12, 10, 8]} />
         <meshStandardMaterial color={hair} roughness={0.94} flatShading />
+      </mesh>
+      <mesh position={[-0.139, 0.005, 0]} scale={[0.42, 0.66, 0.3]}>
+        <sphereGeometry args={[0.055, 8, 8]} />
+        <meshStandardMaterial color={skin} roughness={0.86} flatShading />
+      </mesh>
+      <mesh position={[0.139, 0.005, 0]} scale={[0.42, 0.66, 0.3]}>
+        <sphereGeometry args={[0.055, 8, 8]} />
+        <meshStandardMaterial color={skin} roughness={0.86} flatShading />
       </mesh>
       <mesh position={[-0.051, 0.015, 0.136]}>
         <sphereGeometry args={[0.012, 6, 6]} />
@@ -568,7 +1073,7 @@ function PlayerRig({
       <PlayerLeg side="L" skin={skin} sock={socks} boot={boot} />
       <PlayerLeg side="R" skin={skin} sock={socks} boot={boot} />
       <mesh position={[0, -0.005, 0]} scale={[1, 0.82, 0.92]} castShadow>
-        <boxGeometry args={[0.34, 0.22, 0.24]} />
+        <cylinderGeometry args={[0.18, 0.205, 0.25, 10]} />
         <meshStandardMaterial color={shorts} roughness={0.78} flatShading />
       </mesh>
       <mesh position={[-0.095, -0.12, 0]} castShadow>
@@ -582,8 +1087,12 @@ function PlayerRig({
       <group name="spine" position={[0, 0.055, 0]}>
         <group name="torso" position={[0, 0.31, 0]}>
           <mesh castShadow>
-            <cylinderGeometry args={[0.245, 0.19, 0.47, 8]} />
+            <cylinderGeometry args={[0.245, 0.19, 0.47, 12]} />
             <meshStandardMaterial color={kit} roughness={0.76} flatShading />
+          </mesh>
+          <mesh position={[0, 0.155, 0.175]} scale={[1.5, 0.58, 0.38]}>
+            <sphereGeometry args={[0.13, 12, 8]} />
+            <meshStandardMaterial color={kit} roughness={0.74} flatShading />
           </mesh>
           <mesh position={[-0.19, 0, 0.145]} rotation={[0, 0, -0.06]}>
             <boxGeometry args={[0.035, 0.4, 0.018]} />
@@ -601,8 +1110,8 @@ function PlayerRig({
             <circleGeometry args={[0.025, 8]} />
             <meshBasicMaterial color="#ffe500" toneMapped={false} />
           </mesh>
-          <ShirtNumber number={number} />
-          <ShirtNumber number={number} back />
+          <ShirtNumber number={number} accent={accent} />
+          <ShirtNumber number={number} accent={accent} back />
           <PlayerArm side="L" kit={kit} skin={skin} glove={glove} />
           <PlayerArm side="R" kit={kit} skin={skin} glove={glove} />
           <mesh position={[0, 0.315, 0]}>
@@ -731,57 +1240,273 @@ function Shooter({
     player.position.copy(_strike);
     player.rotation.set(0, Math.PI + 0.02, 0);
     if (scored) {
-      const bounce = Math.abs(Math.sin(now * 6.2));
-      player.position.y = bounce * 0.085;
-      setJoint(joint.pelvis, 0, 0, Math.sin(now * 3.1) * 0.05);
-      setJoint(joint.hipL, -0.06);
-      setJoint(joint.hipR, 0.08);
-      setJoint(joint.kneeL, 0.12);
-      setJoint(joint.kneeR, 0.12);
-      setJoint(joint.shoL, -2.78, 0, 0.22);
-      setJoint(joint.shoR, -2.78, 0, -0.22);
-      setJoint(joint.elbL, -0.12);
-      setJoint(joint.elbR, -0.12);
-      setJoint(joint.spine, -0.12);
-      setJoint(joint.head, -0.12);
+      const celebrated = now - (start + KICK_LEAD_S + FLIGHT_S);
+      if (celebrated < 0.5) poseWheelAway(kick, clamp01(celebrated / 0.5), joint, player);
+      else poseCelebrate(kick.id, now, celebrated - 0.5, joint, player);
     } else {
-      setJoint(joint.hipL, 0.02);
-      setJoint(joint.hipR, 0.02);
-      setJoint(joint.kneeL, 0.14);
-      setJoint(joint.kneeR, 0.14);
-      setJoint(joint.shoL, -2.32, 0, 0.62);
-      setJoint(joint.shoR, -2.32, 0, -0.62);
-      setJoint(joint.elbL, -1.78);
-      setJoint(joint.elbR, -1.78);
-      setJoint(joint.spine, 0.18);
-      setJoint(joint.head, 0.2);
+      poseMiss(kick.id, joint, player);
     }
   });
 
+  const look = TAKER_LOOK[kick.id];
   return (
     <group ref={root} position={SHOOTER_IDLE.toArray()} rotation={[0, Math.PI + 0.13, 0]}>
       <PlayerRig
-        kit="#ffe500"
-        shorts="#10233e"
-        socks="#f4f7fb"
-        skin="#a96544"
-        hair="#21140c"
+        kit={look.kit}
+        shorts={look.shorts}
+        socks={look.socks}
+        skin={look.skin}
+        hair={look.hair}
         boot="#131a24"
-        number={9}
-        accent="#10233e"
+        number={look.number}
+        accent={look.accent}
       />
     </group>
   );
+}
+
+type KeeperMove = 'jump-catch' | 'high-fly' | 'high-tip' | 'low-sprawl' | 'smother' | 'wrong-way' | 'late' | 'frozen';
+
+function keeperMove(zoneId: string, willSave: boolean, taker: TakerId): KeeperMove {
+  if (!willSave) {
+    if (taker === 'messi' || taker === 'neymar' || taker === 'kvara') return 'frozen';
+    if (taker === 'carlos' || taker === 'ronaldinho' || taker === 'juninho') return 'late';
+    return 'wrong-way';
+  }
+  if (zoneId === 'TC') return 'jump-catch';
+  if (zoneId === 'BC') return 'smother';
+  if (zoneId === 'TL' || zoneId === 'TR') return taker === 'beckham' || taker === 'ronaldo' ? 'high-tip' : 'high-fly';
+  return 'low-sprawl';
+}
+
+function poseKeeperReady(now: number, player: THREE.Group, joint: JointMap) {
+  const sway = Math.sin(now * 2.15) * 0.22;
+  const hop = Math.abs(Math.sin(now * 3.4));
+  player.position.set(sway, -0.05 + hop * 0.05, 0.42);
+  player.rotation.set(0.08, 0, -sway * 0.18);
+  setJoint(joint.pelvis, -0.16, 0, -sway * 0.1);
+  setJoint(joint.spine, 0.28);
+  setJoint(joint.hipL, -0.62 + hop * 0.08);
+  setJoint(joint.hipR, -0.62 + hop * 0.08);
+  setJoint(joint.kneeL, 1.08);
+  setJoint(joint.kneeR, 1.08);
+  setJoint(joint.ankleL, -0.28);
+  setJoint(joint.ankleR, -0.28);
+  setJoint(joint.shoL, -0.72, 0, -0.82);
+  setJoint(joint.shoR, -0.72, 0, 0.82);
+  setJoint(joint.elbL, -0.82);
+  setJoint(joint.elbR, -0.82);
+  setJoint(joint.head, -0.16);
+}
+
+function poseKeeperMove(
+  move: KeeperMove,
+  u: number,
+  side: number,
+  target: [number, number],
+  player: THREE.Group,
+  joint: JointMap,
+) {
+  const motion = easeOut(u);
+  if (move === 'jump-catch') {
+    const lift = Math.sin(motion * Math.PI) * 0.78;
+    player.position.set(target[0] * 0.12 * motion, -0.05 + motion * 0.55 + lift, 0.42);
+    player.rotation.set(lerp(0.08, -0.12, motion), 0, 0);
+    setJoint(joint.pelvis, lerp(-0.16, 0.08, motion));
+    setJoint(joint.spine, lerp(0.28, -0.18, motion));
+    setJoint(joint.hipL, lerp(-0.62, -0.22, motion));
+    setJoint(joint.hipR, lerp(-0.62, -0.22, motion));
+    setJoint(joint.kneeL, lerp(1.08, 0.55, motion));
+    setJoint(joint.kneeR, lerp(1.08, 0.55, motion));
+    setJoint(joint.shoL, lerp(-0.72, -2.85, motion), 0, lerp(-0.82, -0.18, motion));
+    setJoint(joint.shoR, lerp(-0.72, -2.85, motion), 0, lerp(0.82, 0.18, motion));
+    setJoint(joint.elbL, lerp(-0.82, -0.12, motion));
+    setJoint(joint.elbR, lerp(-0.82, -0.12, motion));
+    setJoint(joint.head, lerp(-0.16, -0.28, motion));
+    return;
+  }
+  if (move === 'smother') {
+    player.position.set(target[0] * 0.18 * motion, lerp(-0.05, -0.16, motion), lerp(0.42, 0.22, motion));
+    player.rotation.set(lerp(0.08, 1.05, motion), 0, 0);
+    setJoint(joint.pelvis, lerp(-0.16, 0.22, motion));
+    setJoint(joint.spine, lerp(0.28, 0.35, motion));
+    setJoint(joint.hipL, lerp(-0.62, 0.85, motion));
+    setJoint(joint.hipR, lerp(-0.62, 0.7, motion));
+    setJoint(joint.kneeL, lerp(1.08, 1.35, motion));
+    setJoint(joint.kneeR, lerp(1.08, 1.18, motion));
+    setJoint(joint.shoL, lerp(-0.72, -1.55, motion), 0, lerp(-0.82, 0.35, motion));
+    setJoint(joint.shoR, lerp(-0.72, -1.55, motion), 0, lerp(0.82, -0.35, motion));
+    setJoint(joint.elbL, lerp(-0.82, -0.2, motion));
+    setJoint(joint.elbR, lerp(-0.82, -0.2, motion));
+    setJoint(joint.head, lerp(-0.16, 0.22, motion));
+    return;
+  }
+  if (move === 'frozen') {
+    const flinch = Math.sin(motion * Math.PI);
+    player.position.set(side * 0.18 * motion, -0.05 + flinch * 0.12, 0.42);
+    player.rotation.set(0.1, -side * 0.35 * motion, -side * 0.12 * motion);
+    setJoint(joint.pelvis, -0.12);
+    setJoint(joint.spine, 0.2);
+    setJoint(joint.hipL, -0.5);
+    setJoint(joint.hipR, -0.5);
+    setJoint(joint.kneeL, 0.95);
+    setJoint(joint.kneeR, 0.95);
+    setJoint(joint.shoL, lerp(-0.72, -1.35, motion), 0, lerp(-0.82, -1.05, motion));
+    setJoint(joint.shoR, lerp(-0.72, -0.4, motion), 0, lerp(0.82, 0.55, motion));
+    setJoint(joint.head, 0.12, -side * 0.25, 0);
+    return;
+  }
+
+  const fly = move === 'high-fly' || move === 'high-tip' || move === 'late';
+  const sprawl = move === 'low-sprawl';
+  const wrong = move === 'wrong-way';
+  const reachSide = wrong ? -side : side;
+  const destX = wrong ? reachSide * 1.85 : fly ? target[0] * 0.82 : target[0] * 0.9;
+  const destY = fly ? Math.max(0.28, target[1] - 0.85) : sprawl ? 0.02 : 0.22;
+  const lift = Math.sin(motion * Math.PI) * (fly ? 0.72 : sprawl ? 0.22 : 0.38);
+  const roll = fly ? 1.05 : sprawl ? 1.42 : 1.22;
+  player.position.set(lerp(0, destX, motion), lerp(-0.05, destY, motion) + lift, 0.42);
+  player.rotation.set(sprawl ? lerp(0.08, 0.55, motion) : 0.04, 0, lerp(0, -reachSide * roll, motion));
+  setJoint(joint.pelvis, lerp(-0.16, 0.1, motion), 0, lerp(0, reachSide * 0.12, motion));
+  setJoint(joint.spine, lerp(0.28, fly ? -0.16 : 0.08, motion));
+  const leadArm = move === 'high-tip' ? 1.95 : 1.55;
+  setJoint(joint.shoL, lerp(-0.72, reachSide > 0 ? -0.35 : -2.7, motion), 0, lerp(-0.82, reachSide > 0 ? -leadArm : 0.55, motion));
+  setJoint(joint.shoR, lerp(-0.72, reachSide < 0 ? -0.35 : -2.7, motion), 0, lerp(0.82, reachSide < 0 ? leadArm : -0.55, motion));
+  setJoint(joint.elbL, lerp(-0.82, -0.08, motion));
+  setJoint(joint.elbR, lerp(-0.82, -0.08, motion));
+  setJoint(joint.hipL, lerp(-0.62, fly ? 0.35 : 0.85, motion), 0, -reachSide * 0.18);
+  setJoint(joint.hipR, lerp(-0.62, fly ? -0.15 : 0.2, motion), 0, reachSide * 0.22);
+  setJoint(joint.kneeL, lerp(1.08, fly ? 0.42 : 0.95, motion));
+  setJoint(joint.kneeR, lerp(1.08, fly ? 0.62 : 0.55, motion));
+  setJoint(joint.head, 0, 0, -reachSide * lerp(0, 0.22, motion));
+}
+
+function poseKeeperSave(
+  move: KeeperMove,
+  shotPhase: number,
+  side: number,
+  target: [number, number],
+  player: THREE.Group,
+  joint: JointMap,
+) {
+  const diveStart = KICK_LEAD_S + 0.02;
+  const contactAt = KICK_LEAD_S + SAVE_CONTACT_S;
+  const anticipation = easeInOut((shotPhase - (KICK_LEAD_S - 0.2)) / 0.2);
+  const reach = easeOut((shotPhase - diveStart) / (contactAt - diveStart));
+  const afterContact = Math.max(0, shotPhase - contactAt);
+  const gather = easeOut(afterContact / SAVE_GATHER_S);
+  const landing = easeInOut((afterContact - SAVE_GATHER_S * 0.55) / SAVE_LAND_S);
+  const settle = easeOut((afterContact - SAVE_GATHER_S - SAVE_LAND_S * 0.72) / 0.32);
+  const squeeze = Math.sin(clamp01(afterContact / SAVE_GATHER_S) * Math.PI);
+
+  if (move === 'jump-catch') {
+    const jumpY = lerp(-0.05 - anticipation * 0.09, 0.38, reach) + Math.sin(reach * Math.PI) * 0.3;
+    player.position.set(side * 0.08 * reach, lerp(jumpY, -0.05, landing), lerp(0.42, 0.48, landing));
+    player.rotation.set(lerp(0.08, -0.08, reach), 0, 0);
+    setJoint(joint.pelvis, lerp(-0.16 - anticipation * 0.12, 0.04, reach));
+    setJoint(joint.spine, lerp(0.3 + anticipation * 0.08, -0.12, reach));
+    setJoint(joint.hipL, lerp(-0.62 - anticipation * 0.28, -0.18, reach));
+    setJoint(joint.hipR, lerp(-0.62 - anticipation * 0.28, -0.18, reach));
+    setJoint(joint.kneeL, lerp(1.08 + anticipation * 0.38, 0.5, reach));
+    setJoint(joint.kneeR, lerp(1.08 + anticipation * 0.38, 0.5, reach));
+    setJoint(joint.ankleL, lerp(-0.28, 0.08, reach));
+    setJoint(joint.ankleR, lerp(-0.28, 0.08, reach));
+    setJoint(joint.shoL, lerp(-0.72, -1.35, reach), 0, lerp(-0.82, 2.62, reach));
+    setJoint(joint.shoR, lerp(-0.72, -1.35, reach), 0, lerp(0.82, -2.62, reach));
+    setJoint(joint.elbL, lerp(-0.82, -0.18 - gather * 1.2, reach));
+    setJoint(joint.elbR, lerp(-0.82, -0.18 - gather * 1.2, reach));
+    if (gather > 0) {
+      setJoint(joint.shoL, lerp(-1.35, -0.62, gather), 0, lerp(2.62, 1.62, gather));
+      setJoint(joint.shoR, lerp(-1.35, -0.62, gather), 0, lerp(-2.62, -1.62, gather));
+    }
+    setJoint(joint.head, lerp(-0.16, -0.32, reach) + gather * 0.24);
+    return;
+  }
+
+  if (move === 'smother') {
+    player.position.set(0, lerp(-0.05 - anticipation * 0.1, -0.14, reach), lerp(0.42, 0.18, reach));
+    player.rotation.set(lerp(0.08, 1.02, reach), 0, 0);
+    setJoint(joint.pelvis, lerp(-0.16 - anticipation * 0.12, 0.28, reach));
+    setJoint(joint.spine, lerp(0.28, 0.42, reach));
+    setJoint(joint.hipL, lerp(-0.62 - anticipation * 0.3, 0.92, reach));
+    setJoint(joint.hipR, lerp(-0.62 - anticipation * 0.3, 0.82, reach));
+    setJoint(joint.kneeL, lerp(1.08 + anticipation * 0.36, 1.38, reach));
+    setJoint(joint.kneeR, lerp(1.08 + anticipation * 0.36, 1.26, reach));
+    setJoint(joint.shoL, lerp(-0.72, 1.38, reach), 0, lerp(-0.82, 0.36, gather));
+    setJoint(joint.shoR, lerp(-0.72, 1.38, reach), 0, lerp(0.82, -0.36, gather));
+    setJoint(joint.elbL, lerp(-0.82, -0.18 - gather * 1.18, reach));
+    setJoint(joint.elbR, lerp(-0.82, -0.18 - gather * 1.18, reach));
+    setJoint(joint.head, lerp(-0.16, 0.28, reach));
+    return;
+  }
+
+  const high = move === 'high-fly' || move === 'high-tip';
+  const contactRootX = target[0] * (high ? 0.68 : 0.66);
+  const contactRootY = high ? Math.max(0.52, target[1] - 0.78) : 0.08;
+  const flightLift = Math.sin(reach * Math.PI) * (high ? 0.34 : 0.16);
+  const contactRoll = -side * (high ? 0.72 : 0.58);
+  const landedRoll = -side * (high ? 1.38 : 1.46);
+  const landedX = target[0] * (high ? 0.52 : 0.5);
+
+  player.position.set(
+    lerp(lerp(0, contactRootX, reach), landedX, landing),
+    lerp(lerp(-0.05 - anticipation * 0.08, contactRootY, reach) + flightLift, 0.035, landing),
+    lerp(0.42, 0.5, landing),
+  );
+  player.rotation.set(lerp(0.08, high ? -0.04 : 0.28, reach), 0, lerp(0, lerp(contactRoll, landedRoll, landing), reach));
+  setJoint(joint.pelvis, lerp(-0.16 - anticipation * 0.1, 0.12, reach), 0, side * lerp(0, 0.12, gather));
+  setJoint(joint.spine, lerp(0.28, high ? -0.12 : 0.12, reach) + landing * 0.16);
+
+  const reachAngle = side * (high ? 2.95 : 2.66);
+  const wrapAngle = side * (high ? 0.42 : 0.3);
+  setJoint(joint.shoL, lerp(-0.72, -1.18, reach), 0, lerp(-0.82, reachAngle - 0.16, reach));
+  setJoint(joint.shoR, lerp(-0.72, -1.18, reach), 0, lerp(0.82, reachAngle + 0.16, reach));
+  if (gather > 0) {
+    setJoint(joint.shoL, lerp(-1.18, -0.48, gather), 0, lerp(reachAngle - 0.16, wrapAngle + 0.58, gather));
+    setJoint(joint.shoR, lerp(-1.18, -0.48, gather), 0, lerp(reachAngle + 0.16, wrapAngle - 0.58, gather));
+  }
+  setJoint(joint.elbL, lerp(-0.82, -0.12, reach) - gather * 1.42 - squeeze * 0.12);
+  setJoint(joint.elbR, lerp(-0.82, -0.12, reach) - gather * 1.42 - squeeze * 0.12);
+  setJoint(joint.hipL, lerp(-0.62 - anticipation * 0.22, high ? 0.28 : 0.76, reach), 0, -side * 0.12);
+  setJoint(joint.hipR, lerp(-0.62 - anticipation * 0.22, high ? -0.2 : 0.18, reach), 0, side * 0.18);
+  setJoint(joint.kneeL, lerp(1.08 + anticipation * 0.3, high ? 0.46 : 1.02, reach) + landing * 0.36);
+  setJoint(joint.kneeR, lerp(1.08 + anticipation * 0.3, high ? 0.68 : 0.62, reach) + landing * 0.28);
+  setJoint(joint.ankleL, lerp(-0.28, 0.18, reach));
+  setJoint(joint.ankleR, lerp(-0.28, -0.08, reach));
+  setJoint(joint.head, lerp(-0.16, -0.04, reach), side * lerp(0, 0.18, gather), -side * lerp(0, 0.18, landing));
+
+  if (settle > 0) {
+    player.position.y += Math.sin(settle * Math.PI) * 0.035;
+    setJoint(joint.spine, 0.22 - settle * 0.08);
+  }
+}
+
+function updateKeeperCatchPoint(player: THREE.Group, joint: JointMap, catchPoint: THREE.Vector3 | null) {
+  const left = joint.handL;
+  const right = joint.handR;
+  if (!left || !right || !catchPoint) return;
+  player.updateMatrixWorld(true);
+  left.getWorldPosition(catchPoint);
+  right.getWorldPosition(_ball);
+  catchPoint.lerp(_ball, 0.5);
 }
 
 function KeeperPlayer({
   tl,
   shotZone,
   willSave,
+  settled,
+  scored,
+  taker,
+  catchPoint,
 }: {
   tl: RefObject<Timeline>;
   shotZone: Zone | null;
   willSave: boolean | null;
+  settled: boolean;
+  scored: boolean | null;
+  taker: TakerId;
+  catchPoint: RefObject<THREE.Vector3>;
 }) {
   const root = useRef<THREE.Group>(null);
   const joints = useRef<JointMap | null>(null);
@@ -793,58 +1518,56 @@ function KeeperPlayer({
     const joint = joints.current;
     const now = state.clock.elapsedTime;
     const start = tl.current?.start ?? null;
-
     const shotTarget = shotZone ? ZONE_POS[shotZone.id] : null;
+    const move = shotZone && willSave != null ? keeperMove(shotZone.id, willSave, taker) : 'jump-catch';
+    const delay = move === 'late' ? 0.2 : 0.05;
     const shotPhase = start == null ? -1 : now - start;
-    const dive = clamp01((shotPhase - (KICK_LEAD_S + 0.06)) / 0.48);
+    const dive = clamp01((shotPhase - (KICK_LEAD_S + delay)) / (move === 'jump-catch' ? 0.42 : 0.5));
 
-    if (!shotTarget || willSave == null || dive <= 0) {
-      const sway = Math.sin(now * 2.35) * 0.15;
-      player.position.set(sway, -0.08 + Math.abs(Math.sin(now * 2.35)) * 0.018, 0.48);
-      player.rotation.set(0, 0, 0);
-      setJoint(joint.pelvis, -0.1, 0, -sway * 0.08);
-      setJoint(joint.spine, 0.22);
-      setJoint(joint.hipL, -0.48);
-      setJoint(joint.hipR, -0.48);
-      setJoint(joint.kneeL, 0.92);
-      setJoint(joint.kneeR, 0.92);
-      setJoint(joint.ankleL, -0.22);
-      setJoint(joint.ankleR, -0.22);
-      setJoint(joint.shoL, -0.55, 0, -0.68);
-      setJoint(joint.shoR, -0.55, 0, 0.68);
-      setJoint(joint.elbL, -0.74);
-      setJoint(joint.elbR, -0.74);
-      setJoint(joint.head, -0.12);
+    if (!shotTarget || willSave == null) {
+      poseKeeperReady(now, player, joint);
+      updateKeeperCatchPoint(player, joint, catchPoint.current);
       return;
     }
 
-    const saveSide = shotTarget[0] === 0 ? (shotZone?.id === 'TC' ? 1 : -1) : Math.sign(shotTarget[0]);
-    const diveSide = willSave ? saveSide : -saveSide;
-    const destinationX = willSave ? shotTarget[0] * 0.76 : diveSide * 1.7;
-    const destinationY = willSave ? Math.max(0.08, shotTarget[1] - 0.62) : 0.34;
-    const movement = easeInOut(dive);
-    const lift = Math.sin(movement * Math.PI) * (willSave ? 0.42 : 0.3);
+    const side = shotTarget[0] === 0 ? (shotZone?.id === 'TC' ? 1 : -1) : Math.sign(shotTarget[0]);
+    if (willSave) {
+      if (shotPhase < KICK_LEAD_S - 0.2) poseKeeperReady(now, player, joint);
+      else poseKeeperSave(move, shotPhase, side, shotTarget, player, joint);
+      updateKeeperCatchPoint(player, joint, catchPoint.current);
+      return;
+    }
 
-    player.position.set(lerp(0, destinationX, movement), lerp(-0.08, destinationY, movement) + lift, 0.48);
-    player.rotation.set(0, 0, lerp(0, -diveSide * 1.32, movement));
-    setJoint(joint.pelvis, lerp(-0.1, 0.05, movement), 0, lerp(0, diveSide * 0.1, movement));
-    setJoint(joint.spine, lerp(0.22, -0.06, movement));
-    const reach = diveSide * lerp(0.68, 1.72, movement);
-    setJoint(joint.shoL, lerp(-0.55, -0.12, movement), 0, reach);
-    setJoint(joint.shoR, lerp(-0.55, -0.12, movement), 0, reach);
-    setJoint(joint.elbL, lerp(-0.74, -0.06, movement));
-    setJoint(joint.elbR, lerp(-0.74, -0.06, movement));
-    setJoint(joint.hipL, lerp(-0.48, 0.12, movement), 0, -diveSide * 0.12);
-    setJoint(joint.hipR, lerp(-0.48, -0.24, movement), 0, diveSide * 0.16);
-    setJoint(joint.kneeL, lerp(0.92, 0.28, movement));
-    setJoint(joint.kneeR, lerp(0.92, 0.58, movement));
-    setJoint(joint.ankleL, lerp(-0.22, 0.08, movement));
-    setJoint(joint.ankleR, lerp(-0.22, -0.12, movement));
-    setJoint(joint.head, 0, 0, -diveSide * lerp(0, 0.16, movement));
-  });
+    if (dive <= 0) {
+      poseKeeperReady(now, player, joint);
+      updateKeeperCatchPoint(player, joint, catchPoint.current);
+      return;
+    }
+
+    poseKeeperMove(move, dive, side, shotTarget, player, joint);
+
+    // Gravity: once the dive completes, the keeper comes down — flying saves
+    // land on the turf, a jump-catch lands back on its feet.
+    const diveDuration = move === 'jump-catch' ? 0.42 : 0.5;
+    const landing = easeOut(clamp01((shotPhase - (KICK_LEAD_S + delay + diveDuration)) / 0.5));
+    if (landing > 0 && move !== 'smother' && move !== 'frozen') {
+      const groundY = move === 'jump-catch' ? -0.05 : 0.03;
+      player.position.y = lerp(player.position.y, groundY, landing);
+    }
+
+    if (settled && scored === false) {
+      const bounce = Math.abs(Math.sin(now * 7.4));
+      if (move === 'jump-catch' || move === 'high-tip') {
+        player.position.y += bounce * 0.04 * (1 - landing * 0.5);
+        setJoint(joint.shoL, -2.7, 0, -0.2);
+        setJoint(joint.shoR, -2.7, 0, 0.2);
+      }
+    }
+    updateKeeperCatchPoint(player, joint, catchPoint.current);
+  }, -1);
 
   return (
-    <group ref={root} position={[0, -0.08, 0.48]}>
+    <group ref={root} position={[0, -0.05, 0.42]}>
       <PlayerRig
         kit="#58cc02"
         shorts="#071b18"
@@ -889,11 +1612,15 @@ function WallPlayer({
     const start = tl.current?.start ?? null;
     const px = x + shift;
 
-    setJoint(joint.spine, 0.06);
-    setJoint(joint.shoL, -0.6, 0, 0.45);
-    setJoint(joint.shoR, -0.6, 0, -0.45);
-    setJoint(joint.elbL, -1.82, 0, -0.18);
-    setJoint(joint.elbR, -1.82, 0, 0.18);
+    // Classic wall pose: arms hang almost straight, hands clasped low in
+    // front — not the old chest-high elbow flare.
+    setJoint(joint.spine, 0.08);
+    setJoint(joint.shoL, -0.3, 0, 0.34);
+    setJoint(joint.shoR, -0.3, 0, -0.34);
+    setJoint(joint.elbL, -0.62, 0, -0.22);
+    setJoint(joint.elbR, -0.62, 0, 0.22);
+    setJoint(joint.handL, -0.25, 0, -0.12);
+    setJoint(joint.handR, -0.25, 0, 0.12);
     setJoint(joint.head, 0, -px * 0.035, 0);
 
     const jumpAt = start == null ? null : start + KICK_LEAD_S - 0.035 + delay;
@@ -940,23 +1667,184 @@ function WallPlayer({
 
 /* ── stadium ──────────────────────────────────────────────────────── */
 
-function Floodlight({ x }: { x: number }) {
+function PostBar({
+  position,
+  rotation = [0, 0, 0],
+  args,
+}: {
+  position: [number, number, number];
+  rotation?: [number, number, number];
+  args: [number, number, number, number?];
+}) {
   return (
-    <group position={[x, 0, -2.8]}>
-      <mesh position={[0, 3.65, 0]}>
-        <cylinderGeometry args={[0.045, 0.085, 7.3, 8]} />
-        <meshStandardMaterial color="#5f6e7d" metalness={0.68} roughness={0.42} />
-      </mesh>
-      <mesh position={[0, 7.28, 0]}>
-        <boxGeometry args={[1.4, 0.72, 0.18]} />
-        <meshStandardMaterial color="#172231" metalness={0.45} roughness={0.46} />
-      </mesh>
-      {[-0.48, -0.16, 0.16, 0.48].map((offset) => (
-        <mesh key={offset} position={[offset, 7.31, 0.105]}>
-          <boxGeometry args={[0.23, 0.45, 0.04]} />
-          <meshBasicMaterial color="#eff9ff" toneMapped={false} />
-        </mesh>
+    <mesh position={position} rotation={rotation} castShadow>
+      <cylinderGeometry args={args} />
+      <meshStandardMaterial color="#f4f8fb" metalness={0.62} roughness={0.2} />
+    </mesh>
+  );
+}
+
+function GoalFrame() {
+  const rear = -GOAL_D;
+  return (
+    <group>
+      {GOAL_POSTS.map((x) => (
+        <group key={x}>
+          <PostBar position={[x, GOAL_H / 2, 0]} args={[POST_R, POST_R, GOAL_H, 14]} />
+          <PostBar position={[x, GOAL_H / 2, rear]} args={[POST_R * 0.82, POST_R * 0.82, GOAL_H, 12]} />
+          <PostBar
+            position={[x, GOAL_H, rear / 2]}
+            rotation={[Math.PI / 2, 0, 0]}
+            args={[POST_R * 0.72, POST_R * 0.72, GOAL_D, 10]}
+          />
+          <PostBar
+            position={[x, POST_R, rear / 2]}
+            rotation={[Math.PI / 2, 0, 0]}
+            args={[POST_R * 0.62, POST_R * 0.62, GOAL_D, 10]}
+          />
+          <mesh position={[x, GOAL_H, 0]}>
+            <sphereGeometry args={[POST_R * 1.05, 10, 10]} />
+            <meshStandardMaterial color="#f7fbff" metalness={0.64} roughness={0.18} />
+          </mesh>
+        </group>
       ))}
+      <PostBar
+        position={[0, GOAL_H, 0]}
+        rotation={[0, 0, Math.PI / 2]}
+        args={[POST_R, POST_R, GOAL_HALF * 2 + POST_R * 2, 16]}
+      />
+      <PostBar
+        position={[0, GOAL_H, rear]}
+        rotation={[0, 0, Math.PI / 2]}
+        args={[POST_R * 0.72, POST_R * 0.72, GOAL_HALF * 2, 12]}
+      />
+      <PostBar
+        position={[0, POST_R, rear]}
+        rotation={[0, 0, Math.PI / 2]}
+        args={[POST_R * 0.62, POST_R * 0.62, GOAL_HALF * 2, 12]}
+      />
+    </group>
+  );
+}
+
+interface NetHit {
+  time: number;
+  x: number;
+  y: number;
+  power: number;
+}
+
+function makeBagNet(
+  width: number,
+  height: number,
+  segmentsW: number,
+  segmentsH: number,
+  bag: (x: number, y: number) => number,
+) {
+  const geometry = new THREE.PlaneGeometry(width, height, segmentsW, segmentsH);
+  const position = geometry.attributes.position;
+  const rest = new Float32Array(position.count);
+  for (let i = 0; i < position.count; i += 1) {
+    const depth = bag(position.getX(i), position.getY(i));
+    position.setZ(i, depth);
+    rest[i] = depth;
+  }
+  geometry.userData.rest = rest;
+  geometry.userData.vel = new Float32Array(position.count);
+  geometry.computeVertexNormals();
+  return geometry;
+}
+
+function stepCloth(geometry: THREE.BufferGeometry, hit: NetHit | null, now: number, scale = 1) {
+  const position = geometry.attributes.position;
+  const rest = geometry.userData.rest as Float32Array | undefined;
+  const vel = geometry.userData.vel as Float32Array | undefined;
+  if (!rest || !vel) return;
+  const elapsed = hit ? Math.max(0, now - hit.time) : 99;
+  const live = hit && elapsed < 2.05 ? hit.power * scale * Math.exp(-elapsed * 2.5) : 0;
+  for (let i = 0; i < position.count; i += 1) {
+    const x = position.getX(i);
+    const y = position.getY(i);
+    let target = rest[i];
+    if (live > 0.01 && hit) {
+      const dist = Math.hypot(x - hit.x, y - hit.y);
+      // A deep pocket where the ball lands, clamped so the cloth never spikes,
+      // plus a low-frequency wave so the whole panel billows and settles.
+      const push = live * Math.exp(-dist * dist * 0.7) * (1 + Math.sin(elapsed * 22 - dist * 3.4) * 0.35);
+      target += -Math.min(1.05, push) - live * 0.1 * Math.sin(elapsed * 6.5 + y * 1.4);
+    }
+    const current = position.getZ(i);
+    vel[i] = vel[i] * 0.86 + (target - current) * 0.22;
+    position.setZ(i, current + vel[i]);
+  }
+  position.needsUpdate = true;
+}
+
+function GoalNets({
+  map,
+  hit,
+}: {
+  map: THREE.Texture;
+  hit: RefObject<NetHit | null>;
+}) {
+  const back = useRef<THREE.Mesh>(null);
+  const top = useRef<THREE.Mesh>(null);
+  const left = useRef<THREE.Mesh>(null);
+  const right = useRef<THREE.Mesh>(null);
+  const backGeo = useMemo(
+    () => makeBagNet(GOAL_HALF * 2, GOAL_H, 22, 14, (x, y) => {
+      const nx = x / GOAL_HALF;
+      const ny = (y + GOAL_H / 2) / GOAL_H;
+      return -(0.14 + (1 - nx * nx) * (0.4 + 0.5 * (1 - ny)));
+    }),
+    [],
+  );
+  const topGeo = useMemo(
+    () => makeBagNet(GOAL_HALF * 2, GOAL_D, 20, 8, (x, y) => {
+      const nx = x / GOAL_HALF;
+      const along = (y + GOAL_D / 2) / GOAL_D;
+      return -(0.05 + (1 - nx * nx) * along * 0.26);
+    }),
+    [],
+  );
+  const leftGeo = useMemo(
+    () => makeBagNet(GOAL_D, GOAL_H, 10, 14, (_x, y) => 0.08 + (1 - (y + GOAL_H / 2) / GOAL_H) * 0.22),
+    [],
+  );
+  const rightGeo = useMemo(
+    () => makeBagNet(GOAL_D, GOAL_H, 10, 14, (_x, y) => 0.08 + (1 - (y + GOAL_H / 2) / GOAL_H) * 0.22),
+    [],
+  );
+
+  useFrame((state) => {
+    const impulse = hit.current;
+    const now = state.clock.elapsedTime;
+    // The ball hits the BACK net — side/top panels only catch a faint shiver
+    // (their local coordinates don't match the goal-mouth hit point anyway).
+    if (back.current) stepCloth(back.current.geometry, impulse, now, 1.2);
+    if (top.current) stepCloth(top.current.geometry, impulse, now, 0.2);
+    if (left.current) stepCloth(left.current.geometry, impulse, now, 0.15);
+    if (right.current) stepCloth(right.current.geometry, impulse, now, 0.15);
+  });
+
+  const netMat = (
+    <meshBasicMaterial map={map} transparent opacity={0.55} side={THREE.DoubleSide} depthWrite={false} />
+  );
+
+  return (
+    <group>
+      <mesh ref={back} geometry={backGeo} position={[0, GOAL_H / 2, -GOAL_D + 0.04]}>
+        {netMat}
+      </mesh>
+      <mesh ref={top} geometry={topGeo} position={[0, GOAL_H - 0.02, -GOAL_D / 2]} rotation={[-Math.PI / 2.08, 0, 0]}>
+        {netMat}
+      </mesh>
+      <mesh ref={left} geometry={leftGeo} position={[-GOAL_HALF + 0.02, GOAL_H / 2, -GOAL_D / 2]} rotation={[0, Math.PI / 2, 0]}>
+        {netMat}
+      </mesh>
+      <mesh ref={right} geometry={rightGeo} position={[GOAL_HALF - 0.02, GOAL_H / 2, -GOAL_D / 2]} rotation={[0, -Math.PI / 2, 0]}>
+        {netMat}
+      </mesh>
     </group>
   );
 }
@@ -978,64 +1866,53 @@ function HoardingFace({
   );
 }
 
-function Stadium({ crowd }: { crowd: THREE.Texture }) {
+/** Static crowd plane — no bobbing; the crowd reads as a painted backdrop. */
+function CrowdDeck({
+  map,
+  position,
+  rotation,
+  size,
+  tint,
+}: {
+  map: THREE.Texture;
+  position: [number, number, number];
+  rotation: [number, number, number];
+  size: [number, number];
+  tint: string;
+}) {
+  return (
+    <mesh position={position} rotation={rotation}>
+      <planeGeometry args={size} />
+      <meshBasicMaterial map={map} color={tint} toneMapped={false} />
+    </mesh>
+  );
+}
+
+function Stadium({ crowd, showStructure = true }: { crowd?: THREE.Texture; showStructure?: boolean }) {
   const rearMap = useHoardingMap(HOARD_REAR_W);
   const sideMap = useHoardingMap(HOARD_SIDE_LEN);
 
   return (
     <group>
-      {/* packed end stand */}
-      <mesh position={[0, 4.2, -5.9]}>
-        <boxGeometry args={[20.8, 7.1, 1.2]} />
-        <meshStandardMaterial color="#0a1220" roughness={0.96} />
-      </mesh>
-      <mesh position={[0, 4.15, -5.25]} rotation={[-0.055, 0, 0]}>
-        <planeGeometry args={[19.7, 5.65]} />
-        <meshBasicMaterial map={crowd} color="#dce8f5" toneMapped={false} />
-      </mesh>
-      {/* aisles split the texture into believable sections */}
-      {[-6.4, -3.2, 3.2, 6.4].map((x) => (
-        <mesh key={x} position={[x, 4.2, -5.16]} rotation={[0, 0, x * 0.002]}>
-          <planeGeometry args={[0.16, 5.8]} />
-          <meshBasicMaterial color="#7d8a99" />
-        </mesh>
-      ))}
-      <mesh position={[0, 7.95, -4.85]}>
-        <boxGeometry args={[22.4, 0.32, 3.7]} />
-        <meshStandardMaterial color="#101a29" metalness={0.45} roughness={0.55} />
-      </mesh>
-      {[-8.7, -4.35, 0, 4.35, 8.7].map((x) => (
-        <mesh key={x} position={[x, 5.95, -5.05]}>
-          <boxGeometry args={[0.12, 4.1, 0.12]} />
-          <meshStandardMaterial color="#536170" metalness={0.58} roughness={0.48} />
-        </mesh>
-      ))}
+      {showStructure && crowd && (
+        <>
+          <mesh position={[0, 7.55, -4.55]}>
+            <boxGeometry args={[23.6, 0.28, 4.2]} />
+            <meshStandardMaterial color="#101820" metalness={0.42} roughness={0.52} />
+          </mesh>
+          {[-8.4, -4.2, 0, 4.2, 8.4].map((x) => (
+            <mesh key={x} position={[x, 7.42, -3.85]}>
+              <boxGeometry args={[2.05, 0.16, 0.5]} />
+              <meshBasicMaterial color="#eef6ff" toneMapped={false} />
+            </mesh>
+          ))}
 
-      {/* side bowls close the black void without adding dense geometry */}
-      <mesh position={[-9.3, 3.65, 0.2]} rotation={[0, 0.42, 0]}>
-        <planeGeometry args={[12, 5.5]} />
-        <meshBasicMaterial map={crowd} color="#9eafc0" toneMapped={false} />
-      </mesh>
-      <mesh position={[9.3, 3.65, 0.2]} rotation={[0, -0.42, 0]}>
-        <planeGeometry args={[12, 5.5]} />
-        <meshBasicMaterial map={crowd} color="#9eafc0" toneMapped={false} />
-      </mesh>
+          <CrowdDeck map={crowd} position={[0, 1.72, -3.12]} rotation={[-0.18, 0, 0]} size={[17.6, 2.15]} tint="#6a7684" />
+          <CrowdDeck map={crowd} position={[0, 3.28, -3.98]} rotation={[-0.14, 0, 0]} size={[19.2, 2.55]} tint="#5d6976" />
+          <CrowdDeck map={crowd} position={[0, 5.15, -4.92]} rotation={[-0.1, 0, 0]} size={[21.4, 3.05]} tint="#525e6b" />
+        </>
+      )}
 
-      {/* scoreboard */}
-      <mesh position={[0, 6.85, -5.02]}>
-        <boxGeometry args={[3.3, 1.02, 0.18]} />
-        <meshStandardMaterial color="#03070d" roughness={0.68} />
-      </mesh>
-      <mesh position={[-0.72, 6.85, -4.91]}>
-        <boxGeometry args={[0.88, 0.24, 0.025]} />
-        <meshBasicMaterial color="#58cc02" toneMapped={false} />
-      </mesh>
-      <mesh position={[0.72, 6.85, -4.91]}>
-        <boxGeometry args={[0.88, 0.24, 0.025]} />
-        <meshBasicMaterial color="#ffe500" toneMapped={false} />
-      </mesh>
-
-      {/* U-shaped pitch hoarding — rear + sides share corner thickness */}
       <group position={[0, HOARD_Y, HOARD_REAR_Z]}>
         <mesh>
           <boxGeometry args={[HOARD_REAR_W, HOARD_H, HOARD_T]} />
@@ -1073,8 +1950,6 @@ function Stadium({ crowd }: { crowd: THREE.Texture }) {
           <meshStandardMaterial color="#141414" roughness={0.4} metalness={0.35} />
         </mesh>
       ))}
-
-      {FLOODLIGHTS.map((x) => <Floodlight key={x} x={x} />)}
     </group>
   );
 }
@@ -1083,7 +1958,11 @@ function Stadium({ crowd }: { crowd: THREE.Texture }) {
 
 interface SceneProps {
   picking: boolean;
+  /** Render zone markers even when not yet clickable (decide/question). */
+  showZones: boolean;
   revealedSave: string | null;
+  /** Zone ids currently unlocked (Option C); null = all zones open. */
+  openZones: string[] | null;
   shotZone: Zone | null;
   willSave: boolean | null;
   resolving: boolean;
@@ -1096,7 +1975,9 @@ interface SceneProps {
 
 function Scene({
   picking,
+  showZones,
   revealedSave,
+  openZones,
   shotZone,
   willSave,
   resolving,
@@ -1109,10 +1990,11 @@ function Scene({
   const grass = useGrassTexture();
   const net = useNetTexture();
   const ballTexture = useBallTexture();
-  const crowd = useCrowdTexture();
-  const ball = useRef<THREE.Mesh>(null);
+  const stadiumBackdrop = useStadiumBackdropTexture();
+  const ball = useRef<THREE.Sprite>(null);
   const ballShadow = useRef<THREE.Mesh>(null);
-  const netBack = useRef<THREE.Mesh>(null);
+  const netHit = useRef<NetHit | null>(null);
+  const keeperCatch = useRef(new THREE.Vector3(0, 1.15, 0.38));
   const [hover, setHover] = useState<string | null>(null);
   const timeline = useRef<Timeline>({ start: null });
 
@@ -1122,17 +2004,21 @@ function Scene({
       if (timeline.current.start == null) timeline.current.start = now;
     } else if (!shotZone) {
       timeline.current.start = null;
+      netHit.current = null;
     }
 
     const ballMesh = ball.current;
     const shadowMesh = ballShadow.current;
     if (!ballMesh) return;
+    // Billboarded sprite: "spin" is the material's in-plane rotation.
+    const spinBall = (amount: number) => {
+      ballMesh.material.rotation -= amount;
+    };
 
     const start = timeline.current.start;
     _ball.set(kick.ball[0], kick.ball[1], kick.ball[2]);
     if (start == null || !shotZone) {
       ballMesh.position.copy(_ball);
-      ballMesh.rotation.x += delta * 0.4;
       if (shadowMesh) {
         shadowMesh.position.set(_ball.x, 0.012, _ball.z);
         shadowMesh.scale.setScalar(1);
@@ -1148,17 +2034,11 @@ function Scene({
     if (now < launch) {
       ballMesh.position.copy(_ball);
     } else if (willSave === true && now >= launch + SAVE_CONTACT_S) {
-      const parry = easeInOut((now - launch - SAVE_CONTACT_S) / 0.58);
-      const side = destinationX === 0 ? (shotZone.id === 'TC' ? 1 : -1) : Math.sign(destinationX);
-      const parryX = destinationX + side * 2.15;
-      const parryZ = 3.8;
-      ballMesh.position.set(
-        lerp(destinationX, parryX, parry),
-        lerp(destinationY, 0.13, parry) + Math.sin(parry * Math.PI) * 0.72,
-        lerp(0.2, parryZ, parry),
-      );
-      ballMesh.rotation.x -= delta * 21;
-      ballMesh.rotation.z += delta * side * 13;
+      const gather = easeOut((now - launch - SAVE_CONTACT_S) / SAVE_GATHER_S);
+      ballMesh.position.set(destinationX, destinationY, destinationZ);
+      ballMesh.position.lerp(keeperCatch.current, gather);
+      const spinLeft = 1 - gather;
+      spinBall(delta * kick.spin * spinLeft * 0.9);
     } else {
       const targetFlight = willSave === true ? clamp01(flight / 0.88) : flight;
       const side = shotZone.x === 50 ? 0 : shotZone.x < 50 ? 1 : -1;
@@ -1173,14 +2053,23 @@ function Scene({
         oneMinus * oneMinus * _ball.y + 2 * oneMinus * targetFlight * controlY + targetFlight * targetFlight * destinationY + wobble,
         oneMinus * oneMinus * _ball.z + 2 * oneMinus * targetFlight * controlZ + targetFlight * targetFlight * destinationZ,
       );
-      ballMesh.rotation.x -= delta * kick.spin;
-      ballMesh.rotation.z += delta * curl * 2.4;
+      // Spin dies quickly once the ball is in the net.
+      const settledInNet = willSave === false && flight >= 1 ? Math.max(0, 1 - (now - launch - FLIGHT_S) * 2.4) : 1;
+      spinBall(delta * kick.spin * (side === 0 ? 1 : side) * settledInNet);
 
       if (willSave === false && flight >= 1) {
         const netTravel = easeInOut((now - launch - FLIGHT_S) / 0.34);
-        ballMesh.position.x = lerp(destinationX, destinationX * 0.94, netTravel);
-        ballMesh.position.y = lerp(destinationY, Math.max(0.18, destinationY - 0.34), netTravel);
-        ballMesh.position.z = lerp(destinationZ, -1.08, netTravel);
+        ballMesh.position.x = lerp(destinationX, destinationX * 0.92, netTravel);
+        ballMesh.position.y = lerp(destinationY, Math.max(0.22, destinationY - 0.28), netTravel);
+        ballMesh.position.z = lerp(destinationZ, -GOAL_D * 0.62, netTravel);
+        if (!netHit.current || now - netHit.current.time > 1.6) {
+          netHit.current = {
+            time: now,
+            x: destinationX,
+            y: destinationY - GOAL_H / 2,
+            power: 1.35,
+          };
+        }
       }
     }
 
@@ -1192,13 +2081,6 @@ function Scene({
       const material = shadowMesh.material;
       if (material instanceof THREE.MeshBasicMaterial) material.opacity = Math.max(0.08, 0.32 - height * 0.085);
     }
-
-    if (netBack.current) {
-      const afterHit = now - launch - FLIGHT_S;
-      const strength = willSave === false && afterHit > 0 ? Math.max(0, 1 - afterHit / 0.7) : 0;
-      netBack.current.position.z = -0.92 - Math.sin(afterHit * 25) * strength * 0.22;
-      netBack.current.scale.x = 1 + Math.sin(afterHit * 18) * strength * 0.018;
-    }
   });
 
   return (
@@ -1209,7 +2091,11 @@ function Scene({
       <pointLight position={[-7, 7, 1]} intensity={15} distance={24} color="#d8f2ff" />
       <pointLight position={[7, 7, 1]} intensity={15} distance={24} color="#d8f2ff" />
 
-      <Stadium crowd={crowd} />
+      <mesh position={[0, 6, -5.4]} renderOrder={-2}>
+        <planeGeometry args={[30, 16.875]} />
+        <meshBasicMaterial map={stadiumBackdrop} toneMapped={false} fog={false} />
+      </mesh>
+      <Stadium showStructure={false} />
 
       {/* striped pitch and markings */}
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 4]}>
@@ -1231,60 +2117,42 @@ function Scene({
         <meshBasicMaterial color="#ffffff" transparent opacity={0.9} />
       </mesh>
 
-      {/* regulation goal frame with depth */}
-      {GOAL_POSTS.map((x) => (
-        <group key={x}>
-          <mesh position={[x, 1.28, 0]} castShadow>
-            <cylinderGeometry args={[0.065, 0.065, 2.56, 12]} />
-            <meshStandardMaterial color="#f5f8fb" metalness={0.32} roughness={0.32} />
-          </mesh>
-          <mesh position={[x, 1.25, -1.05]}>
-            <cylinderGeometry args={[0.04, 0.04, 2.5, 10]} />
-            <meshStandardMaterial color="#dfe7ed" metalness={0.25} roughness={0.42} />
-          </mesh>
-        </group>
-      ))}
-      <mesh position={[0, 2.5, 0]} rotation={[0, 0, Math.PI / 2]} castShadow>
-        <cylinderGeometry args={[0.065, 0.065, 7.56, 12]} />
-        <meshStandardMaterial color="#f5f8fb" metalness={0.32} roughness={0.32} />
-      </mesh>
-      <mesh ref={netBack} position={[0, 1.22, -0.92]}>
-        <planeGeometry args={[7.44, 2.44]} />
-        <meshBasicMaterial map={net} transparent opacity={0.5} side={THREE.DoubleSide} depthWrite={false} />
-      </mesh>
-      <mesh position={[0, 2.48, -0.51]} rotation={[-Math.PI / 2.42, 0, 0]}>
-        <planeGeometry args={[7.44, 1.18]} />
-        <meshBasicMaterial map={net} transparent opacity={0.46} side={THREE.DoubleSide} depthWrite={false} />
-      </mesh>
-      {GOAL_POSTS.map((x) => (
-        <mesh key={`net-${x}`} position={[x, 1.22, -0.51]} rotation={[0, Math.PI / 2, 0]}>
-          <planeGeometry args={[1.05, 2.44]} />
-          <meshBasicMaterial map={net} transparent opacity={0.45} side={THREE.DoubleSide} depthWrite={false} />
-        </mesh>
-      ))}
+      <GoalFrame />
+      <GoalNets map={net} hit={netHit} />
 
       {/* players */}
       {WALL_PLAYERS.map((player) => (
         <WallPlayer key={player.x} tl={timeline} {...player} shift={kick.wall} />
       ))}
-      <KeeperPlayer tl={timeline} shotZone={shotZone} willSave={willSave} />
-      <Shooter tl={timeline} kick={kick} shotZone={shotZone} settled={settled} scored={scored} />
+      <CameraRig kick={kick} shotZone={shotZone} flying={resolving || settled} />
+      <KeeperPlayer
+        tl={timeline}
+        shotZone={shotZone}
+        willSave={willSave}
+        settled={settled}
+        scored={scored}
+        taker={kick.id}
+        catchPoint={keeperCatch}
+      />
+      <Shooter key={kick.id} tl={timeline} kick={kick} shotZone={shotZone} settled={settled} scored={scored} />
 
       {/* generous invisible hit discs wrap crisp visible targets */}
       {zones.map((zone) => {
         const [x, y] = ZONE_POS[zone.id];
         const locked = zone.id === revealedSave;
-        if (!picking && !locked) return null;
-        const activeHover = hover === zone.id && !locked;
+        const closed = !!openZones && !openZones.includes(zone.id);
+        if (!picking && !showZones && !locked) return null;
+        const clickable = picking && !locked && !closed;
+        const activeHover = hover === zone.id && clickable;
         return (
           <group key={zone.id} position={[x, y, 0.31]} renderOrder={20}>
             <mesh
               onClick={(event: ThreeEvent<MouseEvent>) => {
                 event.stopPropagation();
-                if (!locked && picking) onPick(zone);
+                if (clickable) onPick(zone);
               }}
               onPointerOver={() => {
-                if (!locked && picking) {
+                if (clickable) {
                   setHover(zone.id);
                   document.body.style.cursor = 'pointer';
                 }
@@ -1300,9 +2168,9 @@ function Scene({
             <mesh>
               <circleGeometry args={[0.49, 28]} />
               <meshBasicMaterial
-                color={locked ? '#ff4b4b' : activeHover ? '#ffe500' : '#eaf6ff'}
+                color={locked ? '#ff4b4b' : closed ? '#5b6a7c' : activeHover ? '#ffe500' : '#eaf6ff'}
                 transparent
-                opacity={locked ? 0.3 : activeHover ? 0.28 : 0.13}
+                opacity={locked ? 0.3 : closed ? 0.06 : activeHover ? 0.28 : 0.13}
                 depthTest={false}
                 depthWrite={false}
                 toneMapped={false}
@@ -1311,15 +2179,15 @@ function Scene({
             <mesh>
               <ringGeometry args={[0.43, 0.5, 28]} />
               <meshBasicMaterial
-                color={locked ? '#ff4b4b' : activeHover ? '#ffe500' : '#f4fbff'}
+                color={locked ? '#ff4b4b' : closed ? '#5b6a7c' : activeHover ? '#ffe500' : '#f4fbff'}
                 transparent
-                opacity={locked ? 0.95 : 0.86}
+                opacity={locked ? 0.95 : closed ? 0.24 : 0.86}
                 depthTest={false}
                 depthWrite={false}
                 toneMapped={false}
               />
             </mesh>
-            {!locked && (
+            {!locked && !closed && (
               <>
                 <mesh>
                   <planeGeometry args={[0.035, 0.7]} />
@@ -1348,10 +2216,9 @@ function Scene({
       })}
 
       {/* ball and a height-aware ground shadow */}
-      <mesh ref={ball} position={BALL_SPOT.toArray()} castShadow>
-        <sphereGeometry args={[0.135, 18, 18]} />
-        <meshStandardMaterial map={ballTexture} roughness={0.42} />
-      </mesh>
+      <sprite ref={ball} position={BALL_SPOT.toArray()} scale={[0.32, 0.32, 1]}>
+        <spriteMaterial map={ballTexture} transparent alphaTest={0.35} toneMapped={false} />
+      </sprite>
       <mesh ref={ballShadow} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.012, 9]}>
         <circleGeometry args={[0.17, 16]} />
         <meshBasicMaterial color="#020906" transparent opacity={0.32} depthWrite={false} />
@@ -1362,8 +2229,10 @@ function Scene({
 
 export function FinalThirdPitch3D({
   picking,
+  showZones,
   revealedSave,
   scouting,
+  openZones = null,
   shotZone,
   willSave,
   resolving,
@@ -1373,8 +2242,10 @@ export function FinalThirdPitch3D({
   onPick,
 }: {
   picking: boolean;
+  showZones?: boolean;
   revealedSave: string | null;
   scouting: boolean;
+  openZones?: string[] | null;
   shotZone: Zone | null;
   willSave: boolean | null;
   resolving: boolean;
@@ -1409,8 +2280,11 @@ export function FinalThirdPitch3D({
         <color attach="background" args={['#07111d']} />
         <fog attach="fog" args={['#07111d', 24, 48]} />
         <Scene
+          key={kick.id}
           picking={picking}
+          showZones={showZones ?? picking}
           revealedSave={revealedSave}
+          openZones={openZones}
           shotZone={shotZone}
           willSave={willSave}
           resolving={resolving}
@@ -1439,7 +2313,20 @@ export function FinalThirdPitch3D({
       {showGoalFx && (
         <div
           className="pointer-events-none absolute inset-0 animate-pulse"
-          style={{ background: 'radial-gradient(circle at 50% 40%, rgba(88,204,2,0.42), transparent 58%)' }}
+          style={{
+            background:
+              kick.id === 'ronaldo'
+                ? 'radial-gradient(circle at 50% 40%, rgba(255,229,0,0.38), transparent 58%)'
+                : kick.id === 'messi'
+                  ? 'radial-gradient(circle at 38% 42%, rgba(80,170,255,0.42), transparent 58%)'
+                  : kick.id === 'beckham'
+                    ? 'radial-gradient(circle at 62% 40%, rgba(218,31,38,0.4), transparent 58%)'
+                    : kick.id === 'carlos'
+                      ? 'radial-gradient(circle at 32% 44%, rgba(253,225,0,0.4), transparent 58%)'
+                      : kick.id === 'ronaldinho'
+                        ? 'radial-gradient(circle at 58% 38%, rgba(40,180,90,0.42), transparent 58%)'
+                        : 'radial-gradient(circle at 42% 40%, rgba(88,204,2,0.42), transparent 58%)',
+          }}
         />
       )}
       {showSaveFx && (

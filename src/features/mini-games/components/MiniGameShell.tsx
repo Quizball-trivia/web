@@ -18,6 +18,7 @@ export function MiniGameShell({
   headerRight,
   children,
   backHref = '/dev/mini-games',
+  wide = false,
 }: {
   title: string;
   subtitle?: string;
@@ -25,6 +26,8 @@ export function MiniGameShell({
   headerRight?: React.ReactNode;
   children: React.ReactNode;
   backHref?: string;
+  /** Desktop: widen the play area (e.g. for a side-by-side layout). */
+  wide?: boolean;
 }) {
   const t = useMiniT();
   return (
@@ -37,21 +40,32 @@ export function MiniGameShell({
       />
 
       {/* Header */}
-      <header className="relative z-10 flex items-center gap-3 px-4 pt-4 pb-2 sm:px-6">
+      <header
+        className={`relative z-[90] flex items-start gap-2 px-4 pt-4 pb-2 sm:items-center sm:gap-3 sm:px-6 ${
+          wide ? 'mx-auto w-full lg:max-w-6xl' : ''
+        }`}
+      >
         <Link
           href={backHref}
           aria-label={t('Back')}
-          className="flex size-10 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+          className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-white/70 transition-colors hover:bg-white/10 hover:text-white sm:mt-0"
         >
           <ArrowLeft className="size-5" />
         </Link>
         <div className="min-w-0 flex-1">
-          <h1 className="truncate font-poppins text-lg font-black uppercase tracking-wide sm:text-xl" style={{ color: accent }}>
+          <h1
+            className="font-poppins text-[15px] font-black uppercase leading-tight tracking-tight sm:text-xl sm:tracking-wide"
+            style={{ color: accent }}
+          >
             {title}
           </h1>
-          {subtitle && <p className="truncate font-poppins text-xs font-semibold text-white/45">{subtitle}</p>}
+          {subtitle && (
+            <p className="mt-0.5 font-poppins text-[11px] font-semibold leading-snug text-white/45 sm:text-xs">
+              {subtitle}
+            </p>
+          )}
         </div>
-        {headerRight}
+        {headerRight ? <div className="shrink-0">{headerRight}</div> : null}
       </header>
 
       {/* Body */}
@@ -59,7 +73,9 @@ export function MiniGameShell({
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-        className="relative z-10 mx-auto flex w-full max-w-md flex-1 flex-col px-4 pb-2 sm:max-w-lg sm:px-6"
+        className={`relative z-10 mx-auto flex w-full flex-1 flex-col px-4 pb-2 sm:px-6 ${
+          wide ? 'max-w-md sm:max-w-lg lg:max-w-6xl' : 'max-w-md sm:max-w-lg'
+        }`}
       >
         {children}
       </motion.main>

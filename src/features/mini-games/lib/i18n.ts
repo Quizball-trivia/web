@@ -162,10 +162,12 @@ const KA: Record<string, string> = {
   "Draw": "ფრე",
   "You lose": "წააგე",
 
-  // Final Third
-  "Know football. Read the goal. Take the shot.": "იცოდე ფეხბურთი. ამოიცანი კარი. დაარტყი ზუსტად.",
+  // Free Kicks (formerly Final Third)
+  "Free Kicks": "Free Kicks",
+  "Know football. Read the goal. Take the shot.": "Know football. Read the goal. Take the shot.",
   "Balance": "ბალანსი",
   "Pot": "ბანკი",
+  "Your pot": "შენი ბანკი",
   "Stake {n} & attack": "დადე {n} და შეუტიე",
   "Min {n}": "მინ. {n}",
   "Top up (demo)": "შევსება (დემო)",
@@ -454,6 +456,50 @@ const KA: Record<string, string> = {
   "Blindfolded": "თვალახვეული",
   "{score} points over {n} targets": "{score} ქულა {n} სამიზნეზე",
   "Reload": "გადატენვა",
+
+  // Free Kicks — boost rules (50/50 shot, answers raise the payout)
+  "Every shot is a 50/50 duel with the keeper. Answer questions to boost the payout — a wrong answer resets the boost.":
+    "ყოველი დარტყმა მეკარესთან 50/50 დუელია. უპასუხე კითხვებს და გაზარდე კოეფიციენტი — არასწორი პასუხი ბუსტს ანულებს.",
+  "Boost {a}/{max} · ×{mult}": "ბუსტი {a}/{max} · ×{mult}",
+  "BOOSTED! Payout is now ×{mult}": "ბუსტი! კოეფიციენტი ახლა ×{mult}",
+  "Wrong — boost resets to ×{mult}": "არასწორია — ბუსტი ×{mult}-ზე ბრუნდება",
+  "50/50 shot · current payout ×{mult}": "50/50 დარტყმა · მიმდინარე კოეფიციენტი ×{mult}",
+  "Answer · boost to ×{next}": "უპასუხე · გაზარდე ×{next}-მდე",
+  "Boosts raise the payout — the shot stays 50/50.": "ბუსტები კოეფიციენტს ზრდის — დარტყმა 50/50 რჩება.",
+  "Boosting…": "იზრდება…",
+  "Time's up — boost resets to ×{mult}": "დრო ამოიწურა — ბუსტი ×{mult}-ზე ბრუნდება",
+  "Left or right — the keeper picks one": "მარცხნივ თუ მარჯვნივ — მეკარე ერთს ირჩევს",
+  "Pick your corner": "აირჩიე კუთხე",
+  "Next attack risks the whole pot — the boost resets.": "შემდეგი შეტევა მთელ ბანკს რისკავს — ბუსტი ნულდება.",
+
+  // Free Kicks — run-multiplier HUD
+  "Run ×{run} → ×{next}": "სერია ×{run} → ×{next}",
+  "Run": "სერია",
+  "Answering is locked this attack — take the shot.": "პასუხები ამ შეტევაზე დაკეტილია — დაარტყი.",
+  "Sound settings": "ხმის პარამეტრები",
+  "Crowd": "გულშემატკივრები",
+  "Effects": "ეფექტები",
+  "Off": "გამორთ.",
+  "More open zones = better odds of keeping the run alive.": "მეტი ღია ზონა = მეტი შანსი, რომ სერია გააგრძელო.",
+
+  // Free Kicks — Option C (open-zones) rules
+  "The goal opens with 2 zones and one hidden keeper. Answer questions to open up to 6 — a wrong answer slams it back to 2.":
+    "კარი იხსნება 2 ზონით და ერთი დამალული მეკარით. უპასუხე კითხვებს და გახსენი 6-მდე — არასწორი პასუხი ისევ 2-მდე ხურავს.",
+  "{k} open · {pct}% · ×{mult}": "{k} ღია · {pct}% · ×{mult}",
+  "Zone opened! {k} of {max} in play": "ზონა გაიხსნა! {k} {max}-დან თამაშშია",
+  "Wrong — goal slams back to {n} zones": "არასწორია — კარი ისევ {n} ზონამდე იხურება",
+  "{k} zones open · 1 keeper hidden · {pct}% goal": "{k} ზონა ღიაა · 1 მეკარე იმალება · გოლის შანსი {pct}%",
+  "Answer · open zone {n}": "უპასუხე · გახსენი ზონა {n}",
+  "Shoot · {pot} → {next}": "დაარტყი · {pot} → {next}",
+  "More zones = safer shot, smaller payout — the maths favours knowing.":
+    "მეტი ზონა = უფრო უსაფრთხო დარტყმა, ნაკლები კოეფიციენტი — მათემატიკა ცოდნის მხარესაა.",
+  "Opening the goal…": "კარი იხსნება…",
+  "Time's up — the goal slams back to {n} zones": "დრო ამოიწურა — კარი ისევ {n} ზონამდე იხურება",
+  "Wrong — the goal slams back to {n} zones": "არასწორია — კარი ისევ {n} ზონამდე იხურება",
+  "{k} zones open — one hides the keeper": "{k} ზონა ღიაა — ერთში მეკარე იმალება",
+  "{pct}% goal": "გოლის შანსი {pct}%",
+  "Next attack risks the whole pot — the goal resets to {n} zones.":
+    "შემდეგი შეტევა მთელ ბანკს რისკავს — კარი ისევ {n} ზონამდე ბრუნდება.",
 };
 
 export function useMiniLocale(): MiniLocale {
