@@ -392,6 +392,7 @@ export function WlLiveFlowView({
           transition={{ duration: 0.22, ease: 'easeOut' }}
         >
           <ScreenBody
+            splashProps={liveSplashProps}
             screen={live.screen}
             role={role}
             locale={locale}
@@ -431,7 +432,6 @@ export function WlLiveFlowView({
         && (live.screen.kind === 'question' || live.screen.kind === 'reveal') && (
         <PlayerRankRail board={live.board} selfUserId={selfUserId} score={live.score} rankInfo={rankInfo} />
       )}
-      <ResultSplash {...liveSplashProps} />
     </Immersive>
   );
 }
@@ -621,9 +621,12 @@ function Shell({ children, onExit }: { children: React.ReactNode; onExit: () => 
 
 
 function ScreenBody({
-  screen, role, locale, serverNow, submitAnswer, retryNonce, board, selfUserId, score, rank, breakUntilMs, moneyBudget, mdSheets, onMdSheet, lastResult, checkedInCount, checkedIn, currentGameIndex, lastGameRank, rankInfo, onExit, onSpectate,
+  screen, role, locale, serverNow, submitAnswer, retryNonce, board, selfUserId, score, rank, breakUntilMs, moneyBudget, mdSheets, onMdSheet, lastResult, checkedInCount, checkedIn, currentGameIndex, lastGameRank, rankInfo, splashProps, onExit, onSpectate,
 }: {
   screen: WlLiveScreen;
+  /** Score splash, rendered inside the round shell so it anchors to the
+   *  question column edge instead of the viewport centre. */
+  splashProps?: React.ComponentProps<typeof ResultSplash>;
   role: 'player' | 'spectator';
   locale: Locale;
   serverNow: () => number;
@@ -749,6 +752,7 @@ function ScreenBody({
           mdSheet={mdSheets[attempt.attempt_id] ?? null}
           onMdSheet={onMdSheet}
           spectatorBoard={role === 'spectator' ? board : null}
+          splashProps={role === 'player' ? splashProps : undefined}
           onExit={onExit}
           answered={screen.answer}
           locale={locale}
@@ -814,6 +818,7 @@ function ScreenBody({
             moneyBudget={moneyBudget}
             mdSheet={screen.attempt != null ? mdSheets[screen.attempt.attempt_id] ?? null : null}
             onMdSheet={onMdSheet}
+            splashProps={role === 'player' ? splashProps : undefined}
             onExit={onExit}
             answered={screen.answer}
             locale={locale}
@@ -1068,10 +1073,12 @@ function LiveGameResult({
 // ── Question rendering per kind ─────────────────────────────────────────────
 
 function QuestionScreen({
-  attempt, answered, locale, serverNow, submitAnswer, retryNonce, spectator, score, rank, rankInfo = null, introCounts, moneyBudget = 300, mdSheet = null, onMdSheet, spectatorBoard = null, revealed = false, onExit,
+  attempt, answered, locale, serverNow, submitAnswer, retryNonce, spectator, score, rank, rankInfo = null, introCounts, moneyBudget = 300, mdSheet = null, onMdSheet, spectatorBoard = null, revealed = false, splashProps, onExit,
 }: {
   attempt: WlDispatchEventPayload;
   answered: { accepted: boolean } | null;
+  /** Score splash, anchored to the question column edge (ranked treatment). */
+  splashProps?: React.ComponentProps<typeof ResultSplash>;
   locale: Locale;
   serverNow: () => number;
   submitAnswer: (answer: unknown) => void;
@@ -1153,6 +1160,7 @@ function QuestionScreen({
     <>
       <RoundScreenShell
         header={header}
+        splashProps={splashProps}
         overlay={showRoundIntro ? <RoundIntroOverlay round={round} onDone={() => setIntroDone(true)} /> : null}
       >
         {attempt.kind === 'true_false' && (
@@ -1207,7 +1215,6 @@ function QuestionScreen({
                 label: pick(it['label'], locale),
                 emoji: typeof it['emoji'] === 'string' ? it['emoji'] : null,
               }))}
-              instruction={q['instruction'] != null ? pick(q['instruction'], locale) : null}
               locked={locked}
               windowClosing={ready && !revealed && secondsLeft <= 1}
               spectator={spectator}

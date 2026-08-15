@@ -18,6 +18,8 @@ export function ResultSplash({
   triggerKey,
   points = null,
   forcePoints = false,
+  tone = "daily",
+  align = "center",
 }: {
   show: boolean;
   verdict: SplashVerdict;
@@ -29,11 +31,19 @@ export function ResultSplash({
   /** Show the points even at 0 / on a wrong verdict (partial-credit kinds:
    *  a red "+0" beats a "WRONG!" that ignores earned points). */
   forcePoints?: boolean;
+  /** "ranked" scores in ArenaScoreSplash yellow (#FFE500) rather than daily's
+   *  green, so a WL match reads like a ranked one. Misses stay red either way. */
+  tone?: "daily" | "ranked";
+  /** "center" is the daily treatment (fixed, viewport-centred). "edge" drops
+   *  the fixed wrapper and positions the splash against the left/right edge of
+   *  the nearest positioned ancestor — the ranked ArenaScoreSplash anchoring,
+   *  which keeps "+N" off the answer grid. The parent must be `relative`. */
+  align?: "center" | "edge";
 }) {
   const { t } = useLocale();
   const correct = verdict === "correct";
   const isLeft = from === "left";
-  const color = correct ? "#58CC02" : "#FB3101";
+  const color = correct ? (tone === "ranked" ? "#FFE500" : "#58CC02") : "#FB3101";
   const label = forcePoints && points != null
     ? `+${points}`
     : correct
@@ -41,7 +51,15 @@ export function ResultSplash({
       : t("dailyGames.wrong");
 
   return (
-    <div className="pointer-events-none fixed inset-0 z-[60] flex items-center justify-center">
+    <div
+      className={
+        align === "edge"
+          ? `pointer-events-none absolute top-1/2 z-[60] -translate-y-1/2 ${
+              isLeft ? "left-[-12px]" : "right-[-12px]"
+            }`
+          : "pointer-events-none fixed inset-0 z-[60] flex items-center justify-center"
+      }
+    >
       <AnimatePresence>
         {show && (
           <motion.div
