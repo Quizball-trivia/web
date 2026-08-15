@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useSyncExternalStore } from 'react';
+import { createPortal } from 'react-dom';
 import { motion } from 'motion/react';
 import { poppins } from '../constants';
 import { Eye, XCircle } from 'lucide-react';
@@ -182,42 +183,60 @@ export function RoundIntroOverlay({ round, onDone }: { round: RoundDef; onDone: 
     return () => clearTimeout(id);
   }, [onDone]);
 
-  // WL-own intro: no accent rails, no band — the boxed look read as a stray
-  // square on mobile (owner feedback). Centered type over a full opaque
-  // cover, staggered rise-in, exit fade handled by the parent AnimatePresence.
-  return (
+  // SSR-safe portal gate (no setState-in-effect: the store never changes).
+  const mounted = useSyncExternalStore(() => () => {}, () => true, () => false);
+  if (!mounted) return null;
+
+  // Masking an opaque plate never worked: the overlay is `inset-0` inside the
+  // max-w-3xl question column, so it can only ever BE that column's rectangle.
+  // Instead it's a scrim + a card that owns its own rounded shape — the same
+  // pattern GameIntro already uses, so the two intros read as one family.
+  // PORTALED to <body>: inside the keyed screen transition the entering
+  // wrapper's transform/opacity makes `fixed` behave like `absolute` and lets
+  // the z-40 rank rails paint above the scrim for the 220ms entrance (Codex
+  // review) — at the document root the stacking is deterministic.
+  return createPortal(
     <motion.div
-      initial={{ opacity: 1 }}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.35, ease: 'easeOut' }}
-      className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-surface-page-alt px-6 text-center"
+      transition={{ duration: 0.28, ease: 'easeOut' }}
+      className="fixed inset-0 z-[70] flex items-center justify-center px-4"
     >
+      <div className="pointer-events-none absolute inset-0 bg-black/70 backdrop-blur-sm" />
+
       <motion.div
-        initial={{ y: 14, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ type: 'spring', stiffness: 380, damping: 26, delay: 0.05 }}
-        className="font-poppins max-w-[90vw] text-balance text-[15px] font-bold uppercase leading-tight tracking-[0.14em] text-brand-yellow sm:text-[19px] sm:tracking-[0.22em]"
-        style={{ textShadow: '0 2px 8px rgba(0,0,0,0.4)' }}
+        initial={{ opacity: 0, scale: 0.86, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ type: 'spring', stiffness: 200, damping: 18 }}
+        className="relative w-full max-w-sm overflow-hidden rounded-[28px] bg-brand-blue px-6 py-7 text-center shadow-[0_18px_60px_rgba(22,69,255,0.35)]"
       >
-        {t(ROUND_LABEL_KEYS[round.type])}
+        <motion.div
+          initial={{ y: 14, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 380, damping: 26, delay: 0.05 }}
+          className="font-poppins text-balance text-[15px] font-bold uppercase leading-tight tracking-[0.14em] text-brand-yellow sm:text-[19px] sm:tracking-[0.22em]"
+        >
+          {t(ROUND_LABEL_KEYS[round.type])}
+        </motion.div>
+        <motion.div
+          initial={{ y: 18, opacity: 0, scale: 0.92 }}
+          animate={{ y: 0, opacity: 1, scale: 1 }}
+          transition={{ type: 'spring', stiffness: 320, damping: 22, delay: 0.14 }}
+          className="mt-2 font-poppins text-[34px] font-extrabold uppercase leading-none tracking-wider text-white sm:text-[44px]"
+        >
+          {t('weekendLeague.gRoundWord')} <span style={poppins}>{round.index + 1}</span>
+        </motion.div>
+        <motion.div
+          initial={{ y: -8, opacity: 0, scale: 0.85 }}
+          animate={{ y: 0, opacity: 1, scale: 1 }}
+          transition={{ type: 'spring', stiffness: 380, damping: 22, delay: 0.24 }}
+          className="mt-3 font-poppins text-[13px] font-bold uppercase tracking-[0.22em] text-brand-yellow sm:text-[15px]"
+        >
+          {t('weekendLeague.gUpTo', { n: round.maxPoints })}
+        </motion.div>
       </motion.div>
-      <motion.div
-        initial={{ y: 18, opacity: 0, scale: 0.92 }}
-        animate={{ y: 0, opacity: 1, scale: 1 }}
-        transition={{ type: 'spring', stiffness: 320, damping: 22, delay: 0.14 }}
-        className="mt-3 font-poppins text-[30px] font-extrabold uppercase tracking-wider text-white sm:text-[40px]"
-        style={{ textShadow: '0 4px 14px rgba(0,0,0,0.35)' }}
-      >
-        {t('weekendLeague.gRoundWord')} <span style={poppins}>{round.index + 1}</span>
-      </motion.div>
-      <motion.div
-        initial={{ y: -8, opacity: 0, scale: 0.85 }}
-        animate={{ y: 0, opacity: 1, scale: 1 }}
-        transition={{ type: 'spring', stiffness: 380, damping: 22, delay: 0.24 }}
-        className="mt-3 font-poppins text-[13px] font-bold uppercase tracking-[0.22em] text-brand-yellow sm:text-[15px]"
-      >
-        {t('weekendLeague.gUpTo', { n: round.maxPoints })}
-      </motion.div>
-    </motion.div>
+    </motion.div>,
+    document.body,
   );
 }

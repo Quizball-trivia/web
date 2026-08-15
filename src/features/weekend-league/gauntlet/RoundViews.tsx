@@ -51,8 +51,11 @@ export function RoundScreenShell({
         <RoundProgressDashes round={header.round} />
         {children}
         <AnimatePresence>{overlay}</AnimatePresence>
+        {/* Anchored to the question column's edge, ranked-style — a centred
+            splash lands on the answer grid. Defaults here; an explicit
+            tone/align on splashProps still wins. */}
+        {splashProps && <ResultSplash tone="ranked" align="edge" {...splashProps} />}
       </div>
-      {splashProps && <ResultSplash {...splashProps} />}
     </div>
   );
 }

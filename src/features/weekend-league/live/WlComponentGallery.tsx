@@ -194,7 +194,6 @@ function PutInOrderRevealDemo() {
         <QuestionCard>დაალაგე ეს გადასვლები ტრანსფერის თანხის მიხედვით (მაღლიდან დაბლისკენ)</QuestionCard>
         <PutInOrderBoard
           items={PIO_ITEMS}
-          instruction={null}
           locked={false}
           correctOrder={revealed ? ['p4', 'p3', 'p1', 'p2'] : null}
           onSubmit={scheduleReveal}
@@ -335,7 +334,7 @@ export function WlComponentGallery({
       id: 'late-join-banner', label: 'Late-join banner', group: 'Chrome',
       render: () => (
         <div className="relative min-h-[180px]">
-          <LateJoinBanner untilMs={Date.now() + 95_000} pending={false} onJoin={noop} />
+          <LateJoinBanner untilMs={mountedAt + 150_000} pending={false} onJoin={noop} />
         </div>
       ),
     },

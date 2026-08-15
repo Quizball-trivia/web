@@ -142,8 +142,8 @@ function RevealColumn({
                   showHints ? 'grid-cols-[1.45rem_minmax(0,1fr)] sm:grid-cols-[2rem_minmax(0,1fr)_6rem]' : 'grid-cols-[1.45rem_minmax(0,1fr)] sm:grid-cols-[2rem_minmax(0,1fr)]'
                 } ${
                   isCorrectPosition
-                    ? 'border-brand-green/25 bg-brand-green/10'
-                    : 'border-brand-red-soft/20 bg-brand-red-soft/8'
+                    ? 'border-brand-green/60'
+                    : 'border-brand-red-soft/60'
                 }`}
               >
                 <span className={`flex size-6 items-center justify-center rounded-[6px] text-[10px] font-fun font-black sm:size-7 sm:text-xs ${
@@ -220,7 +220,6 @@ function RevealComparison({
 
 export function PutInOrderBoard({
   items,
-  instruction,
   locked,
   windowClosing = false,
   spectator = false,
@@ -228,7 +227,6 @@ export function PutInOrderBoard({
   onSubmit,
 }: {
   items: OrderItem[];
-  instruction?: string | null;
   locked: boolean;
   /** ~1s left: auto-submit an arrangement the player actually touched. */
   windowClosing?: boolean;
@@ -288,13 +286,11 @@ export function PutInOrderBoard({
     );
   }
 
+  // No standalone direction caption — ranked (LivePutInOrderPanel) carries the
+  // ordering entirely in the prompt ("…oldest first."), and the WL prompt says
+  // the same thing, so a caption just repeats it.
   return (
     <div className="mt-3 space-y-2.5">
-      {instruction && (
-        <div className="text-center font-poppins text-[12px] font-bold uppercase tracking-wide text-brand-cyan">
-          {instruction}
-        </div>
-      )}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
         <SortableContext items={order.map((x) => x.id)} strategy={verticalListSortingStrategy}>
           <div className="space-y-2">
