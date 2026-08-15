@@ -765,37 +765,11 @@ function ScreenBody({
     }
 
     case 'reveal': {
-      // Mid-round there is NO separate reveal screen: the answer buttons
-      // already carry the verdict, so the question simply stays up until the
-      // next one dispatches. Only the round's last question breaks away, to
-      // the standings. Spectators keep the neutral reveal (they never answer).
-      if (role === 'spectator') {
-        // The round's last reveal flows into the standings beat, exactly as it
-        // does for players — the old neutral reveal left spectators staring at
-        // nothing through the round boundary.
-        if (isLastQuestionOfRound(screen.reveal)) {
-          // selfUserId stays null: a spectator gets no row highlight and no
-          // "your place" fallback — the board is pure broadcast.
-          return (
-            <RoundStandings
-              board={board}
-              selfUserId={null}
-              roundIndex={screen.reveal.round_index}
-            />
-          );
-        }
-        return (
-          <RevealScreen
-            reveal={screen.reveal}
-            attempt={screen.attempt}
-            answer={screen.answer}
-            locale={locale}
-            board={board}
-            selfUserId={null}
-            spectator
-          />
-        );
-      }
+      // Mid-round there is NO separate reveal screen for ANYONE: the answer
+      // buttons carry the verdict and the question holds until the next one
+      // dispatches. Spectators used to cut away to a board screen after every
+      // question (and to standings at round ends) — owner call 2026-08-15:
+      // that read as broken UX; the rail/mobile board already show placement.
       // Round boundaries no longer cut to a standings screen: the docked
       // board (desktop) and the rank pill (mobile) already carry placement,
       // so the resolved question simply holds through the breather.
@@ -825,7 +799,8 @@ function ScreenBody({
             serverNow={serverNow}
             submitAnswer={() => {}}
             retryNonce={retryNonce}
-            spectator={false}
+            spectator={role === 'spectator'}
+            spectatorBoard={role === 'spectator' ? board : null}
             revealed
           />
         );
@@ -838,7 +813,7 @@ function ScreenBody({
           locale={locale}
           board={board}
           selfUserId={selfUserId}
-          spectator={false}
+          spectator={role === 'spectator'}
         />
       );
     }
@@ -886,46 +861,6 @@ function ScreenBody({
         </div>
       );
   }
-}
-
-/** Questions per round, mirroring the backend WL_QUESTIONS_PER_ROUND. */
-const QUESTIONS_PER_ROUND: Record<number, number> = { 0: 5, 1: 5, 2: 5, 3: 5, 4: 1 };
-
-function isLastQuestionOfRound(reveal: { round_index: number; question_index: number }): boolean {
-  const total = QUESTIONS_PER_ROUND[reveal.round_index] ?? 5;
-  return reveal.question_index >= total - 1;
-}
-
-
-/** Round-end standings: the one place the board interrupts play. */
-function RoundStandings({
-  board, selfUserId, roundIndex, yourRankFallback = null,
-}: {
-  board: WlBoardRow[];
-  selfUserId: string | null;
-  roundIndex: number;
-  yourRankFallback?: number | null;
-}) {
-  const { t } = useLocale();
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="mx-auto flex w-full max-w-2xl flex-col items-center px-4 py-6 text-center"
-    >
-      <div className="font-poppins text-[12px] font-black uppercase tracking-widest text-white/70">
-        {t('weekendLeague.gRoundOnly', { n: roundIndex + 1 })}
-      </div>
-      <div className="mt-1 font-poppins text-2xl font-black uppercase text-white" style={poppins}>
-        {t('weekendLeague.gStandingsTitle')}
-      </div>
-      {/* The whole top-24 flows with the page — an inner max-h scrollbox read
-          as "the board is cut off" on both web and phones. */}
-      <div className="mt-2 w-full">
-        <BoardStrip board={board} selfUserId={selfUserId} rows={24} yourRankFallback={yourRankFallback} />
-      </div>
-    </motion.div>
-  );
 }
 
 /** Spectators get the same elimination theatre, then the board — the cut
@@ -1269,7 +1204,11 @@ function QuestionScreen({
               </span>
               <LiveBadge />
             </div>
-            <BoardStrip board={spectatorBoard} selfUserId={null} rows={5} />
+            {/* Full top-24 in a COMPACT scrollbox, like the desktop rail — the
+                uncut 5-row strip read as "the board is cut off" (owner). */}
+            <div className="max-h-60 overflow-y-auto rounded-[16px]">
+              <BoardStrip board={spectatorBoard} selfUserId={null} rows={24} />
+            </div>
           </div>
         )}
       </RoundScreenShell>
@@ -1503,12 +1442,15 @@ function TypedKindQuestion({
   revealed?: boolean;
 }) {
   const [guess, setGuess] = useState('');
+  const revealAnswer = pick(evaluation['display_answer'], locale);
   const outcome: 'correct' | 'wrong' | null =
     feedback?.accepted && typeof feedback.correct === 'boolean'
       ? (feedback.correct ? 'correct' : 'wrong')
-      // Timed out with nothing submitted — treat as wrong so the answer shows.
-      : revealed ? 'wrong' : null;
-  const answerText = outcome === 'wrong' ? pick(evaluation['display_answer'], locale) : '';
+      // Timed out with nothing submitted — surface the answer, but ONLY when
+      // there is one to show: an empty 'wrong' renders a personal red verdict,
+      // which is a lie for spectators and timeouts (review catch).
+      : revealed && revealAnswer ? 'wrong' : null;
+  const answerText = outcome === 'wrong' ? revealAnswer : '';
   return (
     <>
       {card}
