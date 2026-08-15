@@ -71,62 +71,72 @@ export function GauntletLobby({
 }) {
   const { t } = useLocale();
   return (
-    <div className="mx-auto flex min-h-[80vh] w-full max-w-xl flex-col items-center justify-center px-4 py-14 text-center">
-      <div className="font-poppins text-[11px] font-black uppercase tracking-[0.28em] text-brand-gold">
-        {t('weekendLeague.gLobbyKicker')}
-      </div>
-      <h1 className="mt-2 font-poppins text-4xl font-black uppercase leading-none text-white" style={poppins}>
-        {t('weekendLeague.title')}
-      </h1>
-      {registered > 0 && (
-        <div className="mt-3 flex items-center justify-center gap-1.5 font-poppins text-[13px] font-semibold text-white/60">
-          <Users className="size-4" /> {t('weekendLeague.gPlayersCount', { count: registered })}
-        </div>
-      )}
-
-      <div className={`mt-6 w-full ${card} p-5`}>
-        <div className="font-poppins text-[13px] font-black uppercase tracking-wide text-white">
-          {t('weekendLeague.gFormatDynamic', { finalists: games[2].advance })}
-        </div>
-        {/* Cut wording is field-size independent (÷3, ÷2, top-N final — see
-            backend wl-rules ladder): real fields vary, so no absolute counts. */}
-        <div className="mt-3 grid grid-cols-3 gap-2">
-          {games.map((g) => (
-            <div key={g.index} className="rounded-xl bg-white/5 px-2 py-2.5">
-              <div className="font-poppins text-[10px] font-black uppercase text-white/50">{t('weekendLeague.gGameN', { n: g.index + 1 })}</div>
-              <div className="mt-0.5 font-poppins text-[13px] font-black text-white" style={poppins}>
-                {g.index === 0 && t('weekendLeague.gCutGame1')}
-                {g.index === 1 && t('weekendLeague.gCutGame2')}
-                {g.index === 2 && t('weekendLeague.gCutGame3', { n: g.advance })}
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="mt-3 font-poppins text-[12px] font-semibold text-brand-gold">
-          <Trophy className="mr-1 inline size-4 align-[-2px]" strokeWidth={2.5} />
-          {t('weekendLeague.championWinsLabel')} {t('weekendLeague.prize1Reward')}
-        </div>
-      </div>
-
-      {kickoffMs != null && (
-        <div className="mt-5">
-          <div className="mb-2 font-poppins text-[13px] font-black uppercase tracking-widest text-white">
-            {t('weekendLeague.gGameStartsIn', { n: 1 })}
+    <div className="mx-auto flex min-h-[80vh] w-full max-w-md flex-col items-center justify-center px-4 py-14 text-center">
+      {/* Single solid card — the lobby sits over the patterned page background,
+          so one surface keeps the hierarchy readable instead of loose text. */}
+      <div className={`w-full overflow-hidden ${card} bg-brand-blue shadow-[0_18px_60px_rgba(22,69,255,0.35)]`}>
+        <div className="px-5 pt-6">
+          <div className="font-poppins text-[11px] font-black uppercase tracking-[0.28em] text-brand-gold">
+            {t('weekendLeague.gLobbyKicker')}
           </div>
-          <LeagueCountdown targetMs={kickoffMs} size="sm" accent="text-brand-yellow" />
+          <h1 className="mt-2 font-poppins text-4xl font-black uppercase leading-none text-white" style={poppins}>
+            {t('weekendLeague.title')}
+          </h1>
+          {registered > 0 && (
+            <div className="mt-3 flex items-center justify-center gap-1.5 font-poppins text-[13px] font-semibold text-white/70">
+              <Users className="size-4" /> {t('weekendLeague.gPlayersCount', { count: registered })}
+            </div>
+          )}
         </div>
-      )}
 
-      <div className="mt-6 flex w-full flex-col gap-2.5">
-        {canPlay ? (
-          <Cta onClick={onEnter}>
-            <Play className="size-5 fill-current" /> {t('weekendLeague.joinGame')}
-          </Cta>
-        ) : (
-          <Cta onClick={onWatch}>
-            <Eye className="size-5" /> {t('weekendLeague.watchLive')}
-          </Cta>
+        <div className="mt-5 px-5">
+          <div className="font-poppins text-[13px] font-black uppercase tracking-wide text-white">
+            {t('weekendLeague.gFormatDynamic', { finalists: games[2].advance })}
+          </div>
+          {/* Cut wording is field-size independent (÷3, ÷2, top-N final — see
+              backend wl-rules ladder): real fields vary, so no absolute counts. */}
+          <div className="mt-3 grid grid-cols-3 gap-2">
+            {games.map((g) => (
+              <div key={g.index} className="rounded-xl bg-black/20 px-2 py-2.5">
+                <div className="font-poppins text-[10px] font-black uppercase text-white/60">{t('weekendLeague.gGameN', { n: g.index + 1 })}</div>
+                <div className="mt-0.5 font-poppins text-[13px] font-black text-white" style={poppins}>
+                  {g.index === 0 && t('weekendLeague.gCutGame1')}
+                  {g.index === 1 && t('weekendLeague.gCutGame2')}
+                  {g.index === 2 && t('weekendLeague.gCutGame3', { n: g.advance })}
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-3 font-poppins text-[12px] font-semibold text-brand-gold">
+            <Trophy className="mr-1 inline size-4 align-[-2px]" strokeWidth={2.5} />
+            {t('weekendLeague.championWinsLabel')} {t('weekendLeague.prize1Reward')}
+          </div>
+        </div>
+
+        {kickoffMs != null && (
+          <div className="mt-5 border-t border-white/10 px-5 pt-4">
+            <div className="mb-2 font-poppins text-[13px] font-black uppercase tracking-widest text-white/80">
+              {t('weekendLeague.gGameStartsIn', { n: 1 })}
+            </div>
+            {/* LeagueCountdown's root is a plain flex row (no justify), so it
+                packs left unless the mount centres it. */}
+            <div className="flex justify-center">
+              <LeagueCountdown targetMs={kickoffMs} size="sm" accent="text-brand-yellow" />
+            </div>
+          </div>
         )}
+
+        <div className="mt-5 flex w-full flex-col gap-2.5 px-5 pb-5">
+          {canPlay ? (
+            <Cta onClick={onEnter}>
+              <Play className="size-5 fill-current" /> {t('weekendLeague.joinGame')}
+            </Cta>
+          ) : (
+            <Cta onClick={onWatch}>
+              <Eye className="size-5" /> {t('weekendLeague.watchLive')}
+            </Cta>
+          )}
+        </div>
       </div>
     </div>
   );

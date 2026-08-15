@@ -312,6 +312,10 @@ export function LeagueHeader({
                 entry boundary — clamped at 00:00 once passed — NEVER retargeted
                 to kickoff: that restarted the countdown for the few seconds
                 until the poll flipped the card (rehearsal report). */}
+            {/* `entry_closed` shares this phase with `entry_open`, so once the
+                entry deadline passes the clock must move on to the qualifier —
+                otherwise it sits frozen on "starting now" for the ~26h between
+                entry close and kickoff (seen on prod 2026-08-14). */}
             <div className={`text-center font-poppins text-[10px] font-black uppercase tracking-[0.16em] transition-colors duration-700 ${gold ? 'text-black/55' : 'text-white/60'}`}>
               {countingToEntry
                 ? t('weekendLeague.checkinOpensIn')
