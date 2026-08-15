@@ -51,6 +51,24 @@ export const FEATURED_DEMO_MODES: DemoModeCard[] = [
 // In-game copy is English-only for now (prototypes); hub cards are bilingual.
 export const MINI_GAME_DEMO_MODES: DemoModeCard[] = [
   {
+    slug: "mini-final-third",
+    title: { en: "Free Kicks", ka: "თავისუფალი დარტყმები" },
+    description: {
+      en: "Know football, read the goal, take the shot — cash out or ride the multiplier.",
+      ka: "ფეხბურთის ცოდნით ამოიცანი მეკარის ზონა და დაარტყი — აიღე მოგება ან გარისკე მეტ მამრავლზე.",
+    },
+    group: "featured",
+  },
+  {
+    slug: "mini-road-to-goal",
+    title: { en: "Road to Goal", ka: "გზა გოლისკენ" },
+    description: {
+      en: "Beat 11 defenders with 11 football questions — bank each zone or risk the tackle.",
+      ka: "აჯობე 11 მცველს 11 საფეხბურთო კითხვით — აიღე მოგება ან გარისკე ჩაჭრაზე.",
+    },
+    group: "featured",
+  },
+  {
     slug: "mini-squad-spin",
     title: { en: "Squad Spin", ka: "Squad Spin" },
     description: {
@@ -146,6 +164,87 @@ export const MINI_GAME_DEMO_MODES: DemoModeCard[] = [
     description: {
       en: "Every answer is priced like a market — obvious pays 1.2x, contrarian 6x.",
       ka: "ყველა პასუხი მარკეტივით ფასდება — აშკარა 1.2x-ს იხდის, სარისკო 6x-ს.",
+    },
+    group: "featured",
+  },
+  {
+    slug: "mini-football-grid",
+    title: { en: "Football Tic Tac Toe", ka: "საფეხბურთო იქს-ნული" },
+    description: {
+      en: "Tic-tac-toe on a club × nation grid — claim cells by naming players.",
+      ka: "იქს-ნული კლუბი × ქვეყანა ბადეზე — დაიკავე უჯრები ფეხბურთელების დასახელებით.",
+    },
+    group: "featured",
+  },
+  {
+    slug: "mini-survivor",
+    title: { en: "Survivor", ka: "სურვაივერი" },
+    description: {
+      en: "Sudden death — questions get harder until one mistake ends the run.",
+      ka: "უეცარი სიკვდილი — კითხვები მძიმდება, ერთი შეცდომა ამთავრებს სერიას.",
+    },
+    group: "featured",
+  },
+  {
+    slug: "mini-hi-lo-ride",
+    title: { en: "Hi-Lo Ride", ka: "Hi-Lo Ride" },
+    description: {
+      en: "Chain higher-or-lower stat calls — hard matchups pay bigger odds.",
+      ka: "მეტი-ნაკლების ჯაჭვი სტატისტიკაზე — რთული წყვილები მეტს იხდიან.",
+    },
+    group: "featured",
+  },
+  {
+    slug: "mini-trivia-mines",
+    title: { en: "Trivia Mines", ka: "Trivia Mines" },
+    description: {
+      en: "Dribble past hidden defenders — scout them out with your knowledge.",
+      ka: "გაუარე დამალულ მცველებს — დაზვერე ისინი შენი ცოდნით.",
+    },
+    group: "featured",
+  },
+  {
+    slug: "mini-quiz-board",
+    title: { en: "Quiz Board", ka: "ქვიზის დაფა" },
+    description: {
+      en: "Jeopardy-style value board vs the AI — steal tiles when it slips.",
+      ka: "ჯეპარდის სტილის დაფა AI-ს წინააღმდეგ — მოიპარე უჯრები, როცა შეცდება.",
+    },
+    group: "featured",
+  },
+  {
+    slug: "mini-last-one-standing",
+    title: { en: "Last One Standing", ka: "უკანასკნელი გადარჩენილი" },
+    description: {
+      en: "100 players, nine cuts, one survivor — answer fast to stay alive.",
+      ka: "100 მოთამაშე, ცხრა გადარჩევა, ერთი გადარჩენილი — უპასუხე სწრაფად.",
+    },
+    group: "featured",
+  },
+  {
+    slug: "mini-golden-goal",
+    title: { en: "Golden Goal", ka: "ოქროს გოლი" },
+    description: {
+      en: "Blitz duel — speed and accuracy push the ball; first goal wins.",
+      ka: "ბლიც-დუელი — სისწრაფე და სიზუსტე წევს ბურთს; პირველი გოლი იგებს.",
+    },
+    group: "featured",
+  },
+  {
+    slug: "mini-career-race",
+    title: { en: "Career Race", ka: "კარიერის რბოლა" },
+    description: {
+      en: "Transfer trail reveals club by club — buzz before your rival.",
+      ka: "კარიერა იხსნება კლუბ-კლუბ — დააჭირე ზარს მეტოქეზე ადრე.",
+    },
+    group: "featured",
+  },
+  {
+    slug: "mini-stat-sniper",
+    title: { en: "Stat Sniper", ka: "სტატ-სნაიპერი" },
+    description: {
+      en: "No options — slide to your best guess and score on proximity.",
+      ka: "ვარიანტების გარეშე — გაასრიალე შენი ვარაუდი და დააგროვე სიზუსტით.",
     },
     group: "featured",
   },

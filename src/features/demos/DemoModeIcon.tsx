@@ -104,6 +104,17 @@ function IconArtwork({ slug }: { slug: string }) {
           <path d="m29 15 4 3-5 2" />
         </>
       );
+    case "mini-road-to-goal":
+      return (
+        <>
+          <path d="M7 37h34M10 37V14M38 37V14M10 18h28" />
+          <circle cx="13" cy="31" r="4" />
+          <circle cx="24" cy="25" r="4" />
+          <circle cx="35" cy="19" r="4" />
+          <path d="m16 30 5-3M27 24l5-3" strokeDasharray="3 2" />
+          <path d="m34 8 4 3-2 5h-4l-2-5 4-3Z" />
+        </>
+      );
     case "mini-daily-jackpot":
       return (
         <>
