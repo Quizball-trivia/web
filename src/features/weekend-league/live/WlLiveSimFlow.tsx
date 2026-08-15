@@ -50,6 +50,7 @@ function RoleToggle({ role, onChange }: { role: SimRole; onChange: (r: SimRole) 
         <button
           key={r}
           type="button"
+          aria-pressed={role === r}
           onClick={() => onChange(r)}
           className={`flex items-center gap-1 rounded-md px-2 py-1 font-poppins text-[10px] font-black uppercase tracking-wide transition-colors ${
             role === r ? 'bg-brand-green text-white' : 'text-white/55 hover:bg-white/10'
