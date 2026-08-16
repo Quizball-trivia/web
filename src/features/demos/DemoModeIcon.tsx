@@ -190,6 +190,101 @@ function IconArtwork({ slug }: { slug: string }) {
           <circle cx="17" cy="14" r="1" fill="currentColor" stroke="none" />
         </>
       );
+    case "mini-final-third":
+      return (
+        <>
+          <path d="M6 14h36v12H6zM6 20h36M13 14v-4h22v4" />
+          <circle cx="15" cy="34" r="5" />
+          <path d="m15 30 2.5 2-1 3.5h-3l-1-3.5L15 30Z" />
+          <path d="M24 34h14M31 30v8M28 32l6 4M34 32l-6 4" opacity=".7" />
+        </>
+      );
+    case "mini-football-grid":
+      return (
+        <>
+          <path d="M18 8v32M30 8v32M8 18h32M8 30h32" />
+          <path d="m11 11 4 4M15 11l-4 4" />
+          <circle cx="35" cy="13" r="3" />
+          <path d="m33 33 4 4M37 33l-4 4" />
+          <circle cx="24" cy="24" r="3" />
+        </>
+      );
+    case "mini-survivor":
+      return (
+        <>
+          <path d="M9 11h30M14 20h20M19 29h10" />
+          <circle cx="24" cy="38" r="4" />
+          <path d="m24 35 2 1.5-.8 3h-2.4l-.8-3L24 35Z" />
+          <path d="M40 9v6M43 12h-6" opacity=".7" />
+        </>
+      );
+    case "mini-hi-lo-ride":
+      return (
+        <>
+          <rect x="14" y="9" width="20" height="30" rx="3" />
+          <path d="M20 24h8" />
+          <path d="m24 13 4 5h-8l4-5Z" />
+          <path d="m24 35-4-5h8l-4 5Z" />
+          <path d="M39 15v-6h-6M9 33v6h6" opacity=".6" />
+        </>
+      );
+    case "mini-trivia-mines":
+      return (
+        <>
+          <rect x="7" y="7" width="34" height="34" rx="3" />
+          <path d="M7 19h34M7 30h34M18 7v34M30 7v34" opacity=".55" />
+          <circle cx="24" cy="24" r="4.5" />
+          <path d="M24 24v-6M24 15l3-2M28 20l3-1M24 24l4 3" />
+        </>
+      );
+    case "mini-quiz-board":
+      return (
+        <>
+          <rect x="7" y="9" width="34" height="30" rx="3" />
+          <path d="M7 19h34M18 19v20M30 19v20" />
+          <path d="M11 14h4M22 14h4M33 14h4" />
+          <path d="m21 27 2.5 4.5L26 27l-1.5 6M12 27h-2v6h2M36 27h-2l2 3-2 3h2" />
+        </>
+      );
+    case "mini-last-one-standing":
+      return (
+        <>
+          <circle cx="11" cy="21" r="2.5" opacity=".55" />
+          <circle cx="19" cy="21" r="2.5" opacity=".55" />
+          <circle cx="29" cy="21" r="2.5" opacity=".55" />
+          <circle cx="37" cy="21" r="2.5" opacity=".55" />
+          <circle cx="24" cy="33" r="5" />
+          <path d="m17 12 3 3 4-5 4 5 3-3v5H17v-5Z" />
+        </>
+      );
+    case "mini-golden-goal":
+      return (
+        <>
+          <path d="M8 38V14h32v24M8 20h32M14 38V26h20v12" />
+          <path d="m26 9-6 8h5l-2 7 7-9h-5l1-6Z" />
+          <circle cx="24" cy="32" r="4" />
+        </>
+      );
+    case "mini-career-race":
+      return (
+        <>
+          <path d="M11 8v32" />
+          <path d="M11 10h17l-3 5 3 5H11z" />
+          <path d="M20 34h18M31 30v8" strokeDasharray="3 3" opacity=".7" />
+          <circle cx="36" cy="16" r="4" />
+          <path d="M36 12v2M36 18v2M32 16h2M38 16h2" opacity=".7" />
+        </>
+      );
+    case "mini-stat-sniper":
+      return (
+        <>
+          <circle cx="24" cy="19" r="12" />
+          <circle cx="24" cy="19" r="4.5" />
+          <path d="M24 4v6M24 28v6M9 19h6M33 19h6" />
+          <path d="M9 39h30" />
+          <circle cx="28" cy="39" r="3" />
+        </>
+      );
     case "match":
       return (
         <>
