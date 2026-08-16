@@ -23,9 +23,14 @@ export default function PublicProfilePage({
   // The segment is either a user id (legacy links) or a nickname — nicknames
   // are case-insensitively unique among claimable users, so /profile/მახატა
   // resolves to exactly one account. UUID links keep working forever.
-  // Next already percent-decodes dynamic segments — decoding again threw on
-  // literal '%' nicknames and let '%2F' resolve a different user (review).
-  const { userId: handle } = use(params);
+  // CLIENT pages receive the segment still percent-encoded (route handlers
+  // get it decoded — verified empirically on this Next version: staging
+  // /profile/Tako%20Eliashava arrived as the literal encoded string and the
+  // resolver 404ed). Decode defensively: a nickname with a literal '%' is not
+  // valid percent-encoding, so on decode failure the raw value passes through.
+  const { userId: rawParam } = use(params);
+  let handle = rawParam;
+  try { handle = decodeURIComponent(rawParam); } catch { /* literal % */ }
   const isId = UUID_RE.test(handle);
   const { data: resolved, error: resolveError } = useResolveNickname(isId ? undefined : handle);
   const userId = isId ? handle : resolved?.user_id;
