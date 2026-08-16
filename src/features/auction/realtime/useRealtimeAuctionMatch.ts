@@ -49,6 +49,7 @@ import {
 } from './auction-realtime.reducer';
 
 const POST_CONNECT_AUCTION_HYDRATION_GRACE_MS = 500;
+const LAST_AUCTION_MATCH_KEY = 'auction:last_match_id';
 const VERSION_GAP_RECONNECT_DELAY_MS = 250;
 // If a match is found but no state arrives in this window, reconnect once to
 // force the server's rejoin (which joins the match room and re-emits state).
@@ -232,6 +233,21 @@ export function useRealtimeAuctionMatch({
   // via auction:rejoin even when publicState isn't set yet.
   const activeMatchIdRef = useRef<string | null>(null);
   const serverTimeOffsetMsRef = useRef<number | null>(null);
+
+  // A hard reload means "get back to what I was doing", never "queue a new
+  // match": suppress auto-start and re-attach to the last known match. The
+  // server resumes a live match and REPLAYS a finished one (results screen),
+  // so reloading on the results screen no longer discards it for a fresh
+  // search. Older than the server's state TTL → rejoin declines → idle screen.
+  useEffect(() => {
+    const nav = performance.getEntriesByType?.('navigation')?.[0] as
+      | PerformanceNavigationTiming
+      | undefined;
+    if (nav?.type !== 'reload') return;
+    autoStartConsumedRef.current = true;
+    const stored = window.sessionStorage.getItem(LAST_AUCTION_MATCH_KEY);
+    if (stored) activeMatchIdRef.current = stored;
+  }, []);
   const pendingTurnActionRef = useRef<AuctionPendingTurnAction | null>(null);
   const publicStateRef = useRef<AuctionRealtimeState['publicState']>(null);
   const searchRef = useRef<AuctionSearchState | null>(null);
@@ -790,8 +806,15 @@ export function useRealtimeAuctionMatch({
       });
       startRequestedRef.current = true;
       // Remember the match we now belong to so a socket that (re)connects before
-      // any state hydrates can still re-attach via auction:rejoin.
+      // any state hydrates can still re-attach via auction:rejoin. Session
+      // storage carries it across a hard reload (reload-recovery above).
       activeMatchIdRef.current = payload.matchId;
+      try {
+        window.sessionStorage.setItem(LAST_AUCTION_MATCH_KEY, payload.matchId);
+      } catch {
+        // Storage may be unavailable (private mode quotas); recovery just won't
+        // survive a reload, which is the pre-existing behaviour.
+      }
 
       // The match's state/round events are broadcast to the match room. The
       // server joins our sockets to that room at match creation, but if this

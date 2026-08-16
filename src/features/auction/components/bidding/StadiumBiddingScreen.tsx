@@ -93,7 +93,7 @@ export function StadiumBiddingScreen({
           initial={{ y: 24, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={SPRING.settle}
-          className="mx-auto flex max-h-[48dvh] w-full max-w-lg flex-col overflow-y-auto rounded-t-[24px] border-2 border-white/15 bg-brand-blue px-3.5 pt-2 pb-2.5 shadow-[0_-8px_36px_rgba(0,0,0,0.5)] md:rounded-[24px]"
+          className="relative mx-auto flex max-h-[54dvh] w-full max-w-lg flex-col overflow-y-auto rounded-t-[24px] border-2 border-white/15 bg-brand-blue px-3.5 pt-2 pb-2.5 shadow-[0_-8px_36px_rgba(0,0,0,0.5)] md:rounded-[24px]"
         >
           <div className="mx-auto mb-2 h-1 w-10 shrink-0 rounded-full bg-white/20 md:hidden" />
 
@@ -156,7 +156,6 @@ export function StadiumBiddingScreen({
                 budgetLabel={t('auctionGame.budgetLabel')}
                 outbid={humanOutbid}
                 outbidLabel={t('auctionGame.outbid')}
-                accent={posColor}
               />
             ) : null}
 
@@ -198,7 +197,6 @@ function BidStatusBar({
   budgetLabel,
   outbid,
   outbidLabel,
-  accent,
 }: {
   label: string;
   amount: string;
@@ -207,12 +205,10 @@ function BidStatusBar({
   budgetLabel: string;
   outbid: boolean;
   outbidLabel: string;
-  accent: string;
 }) {
   return (
     <div
-      className="flex items-center justify-between gap-2 rounded-[14px] border-l-[3px] bg-black/25 px-4 py-1.5"
-      style={{ borderColor: accent }}
+      className="flex items-center justify-between gap-2 rounded-xl bg-black/25 px-3 py-1.5"
     >
       <div className="min-w-0">
         <div className="flex items-center gap-2">
