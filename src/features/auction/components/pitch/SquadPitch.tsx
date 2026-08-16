@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import type { AuctionPlayer, Formation, PositionGroup } from '../../types';
 import { getRemainingSlots, lastName, computeSquadChemistry, MAX_PLAYER_CHEMISTRY } from '../../data';
@@ -43,10 +43,30 @@ export function SquadPitch({
   showChemistry?: boolean;
 }) {
   const { t } = useLocale();
-  const circle = size === 'lg' ? 44 : size === 'md' ? 36 : 28;
-  const nameFs = size === 'lg' ? 'text-[11px]' : size === 'md' ? 'text-[9px]' : 'text-[8px]';
-  const badgeSize = size === 'lg' ? 16 : size === 'md' ? 15 : 11;
-  const dotSize = size === 'lg' ? 5 : size === 'md' ? 5 : 4;
+
+  // Fill mode gets whatever height the viewport leaves it, but the player
+  // stacks (photo + name + chips + dots) are pixel-sized — on short screens
+  // they overlap rows and spill past the goal lines. Measure the pitch and
+  // scale the stacks so 4 rows always fit. 400px is the height at which the
+  // full-size lg stack fits exactly; callback ref so remeasure survives
+  // conditional remounts.
+  const [pitchH, setPitchH] = useState(0);
+  const roRef = useRef<ResizeObserver | null>(null);
+  const measureRef = useCallback((node: HTMLDivElement | null) => {
+    roRef.current?.disconnect();
+    roRef.current = null;
+    if (node && typeof ResizeObserver !== 'undefined') {
+      const ro = new ResizeObserver(([entry]) => setPitchH(entry.contentRect.height));
+      ro.observe(node);
+      roRef.current = ro;
+    }
+  }, []);
+  const scale = fill && pitchH > 0 ? Math.min(1, Math.max(0.55, pitchH / 400)) : 1;
+
+  const circle = Math.round((size === 'lg' ? 44 : size === 'md' ? 36 : 28) * scale);
+  const nameFsPx = Math.max(8, Math.round((size === 'lg' ? 11 : size === 'md' ? 9 : 8) * scale));
+  const badgeSize = Math.max(10, Math.round((size === 'lg' ? 16 : size === 'md' ? 15 : 11) * scale));
+  const dotSize = Math.max(3, Math.round((size === 'lg' ? 5 : size === 'md' ? 5 : 4) * scale));
   const remaining = getRemainingSlots(player.team);
   const perPlayerChem = useMemo(
     () => (showChemistry ? computeSquadChemistry(player.team).perPlayer : {}),
@@ -55,6 +75,7 @@ export function SquadPitch({
 
   return (
     <motion.div
+      ref={measureRef}
       className={`relative overflow-hidden rounded-[12px] ${fill ? 'h-full w-full' : ''}`}
       style={fill ? undefined : { aspectRatio: '4/5' }}
       animate={
@@ -202,8 +223,8 @@ export function SquadPitch({
                           initial={isNew ? { opacity: 0, y: 4 } : false}
                           animate={isNew ? { opacity: 1, y: 0 } : {}}
                           transition={isNew ? { delay: 0.3 } : undefined}
-                          className={`${nameFs} text-white/90 text-center leading-tight font-semibold`}
-                          style={{ maxWidth: circle + 20, ...poppins, textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}
+                          className="text-white/90 text-center leading-tight font-semibold"
+                          style={{ fontSize: nameFsPx, maxWidth: circle + 20, ...poppins, textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}
                         >
                           {lastName(f.name)}
                         </motion.span>
