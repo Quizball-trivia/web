@@ -8,7 +8,7 @@ import { usePositionLabel } from '../../hooks/usePositionLabel';
 import type { PositionGroup } from '../../types';
 
 /** How long the full-screen round intro holds before the clue card takes over. */
-export const ROUND_INTRO_MS = 1000;
+export const ROUND_INTRO_MS = 3000;
 
 interface AuctionRoundIntroProps {
   roundIndex: number;

@@ -42,19 +42,24 @@ function pickSeason(snapshots: SeasonSnapshot[]): SeasonSnapshot {
  * gap (and which season was picked) is the bidder's gamble. `variant` swaps the
  * colour scheme (yellow card / dark panel).
  */
+// Constant accent for the scout-season header: position colours cycled red /
+// green / blue per round, which read as a warning state on red rounds.
+const SEASON_ACCENT = '#4ADE80';
+
 export function SnapshotClues({
   snapshots,
   visibleClues,
   variant,
-  accent = '#FFE500',
   position,
 }: {
   snapshots: SeasonSnapshot[];
   visibleClues: number;
   variant: 'card' | 'panel';
+  /** Kept for call-site compatibility; the season accent is fixed green. */
   accent?: string;
   position?: PositionGroup;
 }) {
+  const accent = SEASON_ACCENT;
   const { t } = useLocale();
   const isCard = variant === 'card';
   const s = pickSeason(snapshots);
