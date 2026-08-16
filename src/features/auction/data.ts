@@ -5,6 +5,9 @@ import { randomBotAvatar } from './data/botAvatars';
 // values run 90–200M, so 350M forces real trade-offs (a couple of premiums +
 // cheaper fills) rather than the old 1B free-for-all.
 export const AUCTION_SQUAD_SIZE = 7;
+/** Mirrors AUCTION_SOLO_PICK_TIMEOUT_MS server-side: the pick auto-resolves
+ *  to the default option when this window expires. */
+export const SOLO_PICK_MS = 10_000;
 export const STARTING_BUDGET = 350_000_000;
 // Every raise is exactly one increment — the bid surface is a single "+10M"
 // button. Mirrors MIN_BID_INCREMENT in the backend auction constants.

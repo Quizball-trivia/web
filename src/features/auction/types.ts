@@ -149,6 +149,9 @@ export interface AuctionGameState {
     positionGroup: PositionGroup;
     optionA: SoloPickOption;
     optionB: SoloPickOption;
+    /** Deadline (epoch ms, server-offset-corrected) when the server resolves
+     *  the pick to the default option; drives the countdown on every seat. */
+    endsAt?: number | null;
   } | null;
   /**
    * Final placings as decided by the server, best first (player ids). Coins are

@@ -4,7 +4,8 @@ import { useEffect } from 'react';
 import { motion } from 'motion/react';
 import type { AuctionGameState } from '../../types';
 import type { AuctionActions } from '../../hooks/useAuctionGame';
-import { formatMoney } from '../../data';
+import { formatMoney, SOLO_PICK_MS } from '../../data';
+import { CountdownTimer } from '../bidding/CountdownTimer';
 import { POS_COLORS, AUCTION_PURPLE } from '../../constants/auction.constants';
 import { useLocale } from '@/contexts/LocaleContext';
 import { usePositionLabel } from '../../hooks/usePositionLabel';
@@ -57,6 +58,12 @@ export function SoloPickScreen({
     return (
       <AuctionScreen className="flex flex-col items-center justify-center p-4">
         <div className="relative z-10 flex flex-col items-center text-center">
+          {/* Everyone watches the same ticking clock the chooser is under. */}
+          {pick.endsAt != null && (
+            <div className="mb-4">
+              <CountdownTimer key={String(pick.endsAt)} endsAt={pick.endsAt} totalMs={SOLO_PICK_MS} />
+            </div>
+          )}
           <motion.div
             animate={{ rotate: [0, 10, -10, 0] }}
             transition={{ duration: 1.5, repeat: Infinity }}
@@ -82,7 +89,13 @@ export function SoloPickScreen({
     <AuctionScreen glow={SCREEN_GLOW.soloPick} className="flex flex-col items-center p-4 pt-[12vh] sm:pt-[14vh]">
 
       <div className="relative z-10 flex flex-col items-center gap-6 w-full max-w-2xl">
-        <div className="text-center">
+        <div className="relative w-full text-center">
+          {/* The pick auto-resolves at the deadline — keep the clock in view. */}
+          {pick.endsAt != null && (
+            <div className="absolute right-0 top-0">
+              <CountdownTimer key={String(pick.endsAt)} endsAt={pick.endsAt} totalMs={SOLO_PICK_MS} />
+            </div>
+          )}
           <div
             className="inline-block rounded-[12px] px-4 py-2 font-poppins text-xs font-black uppercase text-black mb-3"
             style={{ backgroundColor: posColor }}

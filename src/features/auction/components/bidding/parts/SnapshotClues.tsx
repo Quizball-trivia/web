@@ -76,7 +76,9 @@ export function SnapshotClues({
     <div className="space-y-1.5">
       {/* Chosen scout season → the season the value (and profit) is judged on.
           Only the value season's YEAR is shown here; its value is hidden. */}
-      <div className="flex items-center justify-center gap-2 pb-0.5">
+      {/* flex-wrap: on narrow phones the two season groups stack instead of
+          spilling past the card border. */}
+      <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 px-1 pb-0.5">
         <div className="flex items-center gap-1.5">
           <CalendarDays className="size-4" style={{ color: accent }} />
           <span className="font-poppins text-sm font-black uppercase tracking-wide" style={{ color: accent }}>

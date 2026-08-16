@@ -17,6 +17,7 @@ import type {
 } from '@/lib/realtime/socket.types';
 import type { AvatarCustomization } from '@/types/game';
 import { randomBotAvatar } from '../data/botAvatars';
+import { SOLO_PICK_MS } from '../data';
 
 const POSITION_GROUPS = ['GK', 'DEF', 'MID', 'FWD'] as const satisfies readonly PositionGroup[];
 const DEFAULT_AUCTION_CLUE_COUNT = 3;
@@ -66,6 +67,12 @@ export function toClientAuctionState(
           positionGroup: publicState.soloPick.positionGroup,
           optionA: toClientSoloPickOption(publicState.soloPick.optionA, 'solo-a'),
           optionB: toClientSoloPickOption(publicState.soloPick.optionB, 'solo-b'),
+          // Server auto-resolves the pick SOLO_PICK_MS after startedAt; the
+          // derived deadline drives the countdown every seat can watch.
+          endsAt: (() => {
+            const started = toClientTurnEndsAt(publicState.soloPick.startedAt, options.serverTimeOffsetMs);
+            return started === null ? null : started + SOLO_PICK_MS;
+          })(),
         }
       : null,
     rankings: publicState.rankings
