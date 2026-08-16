@@ -28,9 +28,11 @@ import { cn } from '@/lib/utils';
 
 // ─── Podium (top 3) — gold / silver / bronze, matching the Betsson leaderboard ─
 const PODIUM_STYLE: Record<1 | 2 | 3, { medal: string; gradientFrom: string; gradientTo: string; height: string; order: string }> = {
-  1: { medal: MEDAL_COLORS[0], gradientFrom: 'rgba(255,215,0,0.9)', gradientTo: 'rgba(255,176,0,0.4)', height: 'h-28 sm:h-36', order: 'order-2' },
-  2: { medal: MEDAL_COLORS[1], gradientFrom: 'rgba(214,214,222,0.85)', gradientTo: 'rgba(160,160,170,0.35)', height: 'h-20 sm:h-28', order: 'order-1' },
-  3: { medal: MEDAL_COLORS[2], gradientFrom: 'rgba(205,127,50,0.9)', gradientTo: 'rgba(160,90,30,0.4)', height: 'h-16 sm:h-24', order: 'order-3' },
+  // Shortest bar must still hold the full stack (rank + score + chem ≈ 80px),
+  // or the rank number overflows out the top on mobile.
+  1: { medal: MEDAL_COLORS[0], gradientFrom: 'rgba(255,215,0,0.9)', gradientTo: 'rgba(255,176,0,0.4)', height: 'h-32 sm:h-36', order: 'order-2' },
+  2: { medal: MEDAL_COLORS[1], gradientFrom: 'rgba(214,214,222,0.85)', gradientTo: 'rgba(160,160,170,0.35)', height: 'h-24 sm:h-28', order: 'order-1' },
+  3: { medal: MEDAL_COLORS[2], gradientFrom: 'rgba(205,127,50,0.9)', gradientTo: 'rgba(160,90,30,0.4)', height: 'h-20 sm:h-24', order: 'order-3' },
 };
 
 function PodiumColumn({
@@ -75,19 +77,22 @@ function PodiumColumn({
       </div>
       {/* Podium bar — medal gradient */}
       <div
-        className={cn('flex w-full max-w-[120px] flex-col items-center justify-center rounded-t-[14px] px-2 pt-2 pb-3', s.height)}
+        className={cn('relative flex w-full max-w-[120px] flex-col items-center justify-center rounded-t-[14px] px-2 pt-2 pb-3', s.height)}
         style={{ background: `linear-gradient(180deg, ${s.gradientFrom} 0%, ${s.gradientTo} 100%)` }}
       >
+        {isHuman && (
+          <span
+            className="absolute -right-2.5 -top-2.5 z-10 rotate-6 rounded-lg bg-brand-orange px-2.5 py-1 text-[11px] font-black uppercase tracking-wide text-white shadow-[0_3px_10px_rgba(0,0,0,0.45)]"
+            style={poppins}
+          >
+            {t('auctionGame.youBadge')}
+          </span>
+        )}
         <span className="font-poppins text-lg font-black text-white" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{rank}</span>
         <span className="font-poppins text-sm font-black tabular-nums text-white" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{formatProfit(score)}</span>
         <span className="mt-0.5 font-poppins text-[9px] font-black tabular-nums text-white/90" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
           ⚡{chemistry} · ×{multiplier.toFixed(1)}
         </span>
-        {isHuman && (
-          <span className="mt-1 rounded-full bg-black/70 px-1.5 py-px text-[8px] font-black uppercase text-brand-yellow" style={poppins}>
-            {t('auctionGame.youBadge')}
-          </span>
-        )}
       </div>
     </motion.div>
   );

@@ -86,11 +86,12 @@ export function BiddingScreen({
             className="relative w-full rounded-[20px] border-2 border-white/15 bg-brand-blue p-4 sm:p-5"
             style={isCluePhase ? { boxShadow: `0 0 40px ${posColor}08` } : undefined}
           >
-            {/* "Rivals want this" — shared drop-in ribbon, top-left, outside the
-                card. Held back until the round intro overlay has cleared. */}
+            {/* "Rivals want this" — shared drop-in ribbon along the card's top
+                edge, offset right so the fixed leave (X) button in the screen
+                corner never covers it. Held back until the round intro clears. */}
             {competitorsNeedingPos > 0 && !showRoundIntro && (
               <DropInBadge
-                className="absolute -left-2 -top-3.5 z-20 rounded-lg bg-brand-orange px-3.5 py-1.5 font-poppins text-xs font-black uppercase tracking-wide text-white shadow-[0_3px_10px_rgba(0,0,0,0.45)]"
+                className="absolute left-10 -top-3.5 z-20 rounded-lg bg-brand-orange px-3.5 py-1.5 font-poppins text-xs font-black uppercase tracking-wide text-white shadow-[0_3px_10px_rgba(0,0,0,0.45)]"
                 landingRotate={-6}
               >
                 {competitorsNeedingPos > 1
@@ -110,8 +111,9 @@ export function BiddingScreen({
               </div>
             )}
 
-            {/* Position + round chips — head the question card */}
-            <div className="mb-3 flex items-center gap-2 pr-16">
+            {/* Position + round chips — head the question card. pl-9 clears the
+                fixed leave (X) button; pr-16 clears the top-right timer. */}
+            <div className="mb-3 flex items-center gap-2 pl-9 pr-16">
               <div className="flex h-7 items-center justify-center rounded-[10px] bg-black px-3 font-poppins text-xs font-black uppercase text-brand-yellow">
                 {posLabel(round.positionGroup)}
               </div>

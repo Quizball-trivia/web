@@ -90,9 +90,11 @@ export function SoloPickScreen({
 
       <div className="relative z-10 flex flex-col items-center gap-6 w-full max-w-2xl">
         <div className="relative w-full text-center">
-          {/* The pick auto-resolves at the deadline — keep the clock in view. */}
+          {/* The pick auto-resolves at the deadline — pinned to the screen's
+              top-right corner (mirrors the leave button top-left) instead of
+              hugging the banner mid-screen. */}
           {pick.endsAt != null && (
-            <div className="absolute right-0 top-0">
+            <div className="fixed right-3 top-3 z-50">
               <CountdownTimer key={String(pick.endsAt)} endsAt={pick.endsAt} totalMs={SOLO_PICK_MS} />
             </div>
           )}
