@@ -27,11 +27,15 @@ export function buildProfileNavTarget(
   router: Router,
   userId: string | null | undefined,
   isAi = false,
+  nickname?: string | null,
 ): ProfileNavTarget {
   const canViewProfile = Boolean(userId) && !isAi;
   if (!canViewProfile) return { canViewProfile: false, handlers: {}, className: '' };
 
-  const goToProfile = () => router.push(`/profile/${userId}`);
+  // Nicknames are unique (lower(nickname) unique index), so they make shareable
+  // URLs — /profile/მახატა beats /profile/<uuid>. The id stays the fallback.
+  const handle = nickname && nickname.trim() !== '' ? encodeURIComponent(nickname.trim()) : userId;
+  const goToProfile = () => router.push(`/profile/${handle}`);
   return {
     canViewProfile: true,
     handlers: {
@@ -50,7 +54,11 @@ export function buildProfileNavTarget(
 }
 
 /** Top-level convenience wrapper (single target, not inside a loop). */
-export function useProfileNavigation(userId: string | null | undefined, isAi = false): ProfileNavTarget {
+export function useProfileNavigation(
+  userId: string | null | undefined,
+  isAi = false,
+  nickname?: string | null,
+): ProfileNavTarget {
   const router = useRouter();
-  return buildProfileNavTarget(router, userId, isAi);
+  return buildProfileNavTarget(router, userId, isAi, nickname);
 }

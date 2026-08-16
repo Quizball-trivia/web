@@ -114,7 +114,9 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
   );
 
   const handleEntryClick = (userId: string) => {
-    router.push(`/profile/${userId}`);
+    // Prefer the unique nickname for a shareable URL; ids keep working.
+    const nickname = entries?.find((e) => e.id === userId)?.username?.trim();
+    router.push(`/profile/${nickname ? encodeURIComponent(nickname) : userId}`);
   };
 
   const topThree = entries ? entries.slice(0, 3) : [];

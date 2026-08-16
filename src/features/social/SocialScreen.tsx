@@ -189,7 +189,7 @@ function CardIdentity({ player }: { player: SocialPlayer }) {
 // buttons (challenge/add/accept/…) sit OUTSIDE this wrapper so they aren't
 // swallowed by the navigation click.
 function CardPersonLink({ player }: { player: SocialPlayer }) {
-  const nav = useProfileNavigation(player.id);
+  const nav = useProfileNavigation(player.id, false, player.nickname);
   return (
     <div
       {...nav.handlers}

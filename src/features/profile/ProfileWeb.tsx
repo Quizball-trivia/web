@@ -989,7 +989,7 @@ export function ProfileWeb({
                 const showRpDelta = !isPlacementMatch && match.competition !== 'friendly' && match.rpDelta !== null;
                 const rpDelta = match.rpDelta ?? 0;
                 const formattedRpDelta = `${rpDelta >= 0 ? '+' : ''}${rpDelta} RP`;
-                const nav = buildProfileNavTarget(router, match.opponentId, match.opponentIsAi);
+                const nav = buildProfileNavTarget(router, match.opponentId, match.opponentIsAi, match.opponent);
                 return (
                   <motion.div
                     key={match.id}
