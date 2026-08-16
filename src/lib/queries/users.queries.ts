@@ -1,9 +1,22 @@
 import { useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/lib/queries/queryKeys";
-import { getMyAchievements, getPublicProfile, getUserAchievements } from "@/lib/repositories/users.repo";
+import { getMyAchievements, getPublicProfile,
+  resolveNickname, getUserAchievements } from "@/lib/repositories/users.repo";
 import { toPublicProfile } from "@/lib/mappers/publicProfile.mapper";
 import type { Achievement } from "@/types/game";
 import { useAuthStore } from "@/stores/auth.store";
+
+/** Nickname -> user id for pretty profile URLs (/profile/<nickname>). */
+export function useResolveNickname(nickname?: string) {
+  const authStatus = useAuthStore((state) => state.status);
+  return useQuery({
+    queryKey: queryKeys.users.resolveNickname(nickname ?? ""),
+    queryFn: () => resolveNickname(nickname!),
+    enabled: authStatus === "authenticated" && Boolean(nickname),
+    retry: 1,
+    staleTime: 10 * 60_000,
+  });
+}
 
 export function usePublicProfile(userId?: string) {
   const authStatus = useAuthStore((state) => state.status);

@@ -1,9 +1,9 @@
 "use client";
 
-import { use } from "react";
+import { use, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
-import { usePublicProfile, useUserAchievements } from "@/lib/queries/users.queries";
+import { usePublicProfile, useResolveNickname, useUserAchievements } from "@/lib/queries/users.queries";
 import { useRecentMatches } from "@/lib/queries/stats.queries";
 import { useAuthStore } from "@/stores/auth.store";
 import { ProfileWeb, toProfileRecentMatch } from "@/features/profile/ProfileWeb";
@@ -13,22 +13,75 @@ import { useLocale } from "@/contexts/LocaleContext";
 import type { PlayerStats } from "@/types/game";
 import type { RankedProfileResponse } from "@/lib/repositories/ranked.repo";
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export default function PublicProfilePage({
   params,
 }: {
   params: Promise<{ userId: string }>;
 }) {
-  const { userId } = use(params);
+  // The segment is either a user id (legacy links) or a nickname — nicknames
+  // are case-insensitively unique among claimable users, so /profile/მახატა
+  // resolves to exactly one account. UUID links keep working forever.
+  // Next already percent-decodes dynamic segments — decoding again threw on
+  // literal '%' nicknames and let '%2F' resolve a different user (review).
+  const { userId: handle } = use(params);
+  const isId = UUID_RE.test(handle);
+  const { data: resolved, error: resolveError } = useResolveNickname(isId ? undefined : handle);
+  const userId = isId ? handle : resolved?.user_id;
   const router = useRouter();
   const currentUserId = useAuthStore((state) => state.user?.id);
 
-  // Redirect to own profile page
-  if (currentUserId && userId === currentUserId) {
-    router.replace("/profile");
-    return null;
+  // Own profile lives at /profile — redirect from an effect: replace() during
+  // render re-fires every render until navigation commits (review).
+  const isOwn = Boolean(currentUserId) && userId === currentUserId;
+  useEffect(() => {
+    if (isOwn) router.replace("/profile");
+  }, [isOwn, router]);
+  if (isOwn) return null;
+
+  if (!isId && !userId) {
+    // Only a settled failure shows the not-found state — while auth hydrates
+    // or the lookup is in flight, the query has neither data nor error, and a
+    // premature 404 would flash on every nickname link.
+    if (resolveError) {
+      return <ProfileErrorState is404={resolveError instanceof ApiError && resolveError.status === 404} />;
+    }
+    return (
+      <div className="flex min-h-[60vh] items-center justify-center">
+        <Loader2 className="size-8 animate-spin text-white/40" />
+      </div>
+    );
   }
 
-  return <PublicProfileContent userId={userId} />;
+  return <PublicProfileContent userId={userId ?? handle} />;
+}
+
+function ProfileErrorState({ is404 }: { is404: boolean }) {
+  const router = useRouter();
+  const { t } = useLocale();
+  return (
+    <div className="container mx-auto max-w-7xl px-4 py-8 font-fun">
+      <button
+        onClick={() => router.back()}
+        className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-colors mb-8"
+      >
+        <ArrowLeft className="size-4" />
+        {t("common.back")}
+      </button>
+      <div className="text-center py-20 rounded-2xl bg-card border-2 border-border border-b-4">
+        <div className="text-4xl mb-3">{is404 ? "👤" : "⚠️"}</div>
+        <h2 className="text-xl font-black mb-1">
+          {is404 ? t("profileScreen.playerNotFound") : t("errors.INTERNAL_ERROR")}
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          {is404
+            ? t("profileScreen.playerNotFoundDescription")
+            : t("profileScreen.failedToLoadProfile")}
+        </p>
+      </div>
+    </div>
+  );
 }
 
 function PublicProfileContent({ userId }: { userId: string }) {
@@ -54,29 +107,7 @@ function PublicProfileContent({ userId }: { userId: string }) {
   }
 
   if (error) {
-    const is404 = error instanceof ApiError && error.status === 404;
-    return (
-      <div className="container mx-auto max-w-7xl px-4 py-8 font-fun">
-        <button
-          onClick={() => router.back()}
-          className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-colors mb-8"
-        >
-          <ArrowLeft className="size-4" />
-          {t("common.back")}
-        </button>
-        <div className="text-center py-20 rounded-2xl bg-card border-2 border-border border-b-4">
-          <div className="text-4xl mb-3">{is404 ? "👤" : "⚠️"}</div>
-          <h2 className="text-xl font-black mb-1">
-            {is404 ? t("profileScreen.playerNotFound") : t("errors.INTERNAL_ERROR")}
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            {is404
-              ? t("profileScreen.playerNotFoundDescription")
-              : t("profileScreen.failedToLoadProfile")}
-          </p>
-        </div>
-      </div>
-    );
+    return <ProfileErrorState is404={error instanceof ApiError && error.status === 404} />;
   }
 
   if (!profile) return null;

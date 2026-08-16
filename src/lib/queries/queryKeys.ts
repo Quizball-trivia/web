@@ -46,6 +46,8 @@ export const queryKeys = {
     all: ["users"] as const,
     publicProfile: (userId: string) =>
       [...queryKeys.users.all, "publicProfile", userId] as const,
+    resolveNickname: (nickname: string) =>
+      [...queryKeys.users.all, "resolveNickname", nickname.toLowerCase()] as const,
     achievements: (userId?: string) =>
       [...queryKeys.users.all, "achievements", userId ?? "me"] as const,
   },
