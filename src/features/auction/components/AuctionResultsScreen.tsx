@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'motion/react';
 import Image from 'next/image';
 import { Crown } from 'lucide-react';
@@ -173,6 +174,11 @@ export function AuctionResultsScreen({
   // final yet — show only their own guaranteed last place and their own squad.
   // Revealing the podium here would leak an in-progress match's state.
   const humanEntry = decorated.find((p) => p.id === humanPlayerId) ?? null;
+  // Which player's detail card the switcher shows — your own by default.
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const detailShownId =
+    (detailId && rankedPlayers.some((p) => p.id === detailId) ? detailId : null) ??
+    (rankedPlayers.some((p) => p.id === humanPlayerId) ? humanPlayerId : (rankedPlayers[0]?.id ?? null));
   // Coins are never shown on a forfeit (the leaver gets nothing).
   const showCoins = !forfeited && (coinsAwarded ?? 0) > 0;
   // AP is ranked-auction only: friendly lobbies send no apEarned (and
@@ -298,20 +304,43 @@ export function AuctionResultsScreen({
           </div>
         )}
 
-        {/* Detailed stats list (preserves squad chips, players filled, budget).
-            On a forfeit this collapses to the leaver's own squad — no rival
-            standings, no squads, nothing from the match still in progress. */}
+        {/* Detailed stats — ONE card with a segmented switcher (same pattern as
+            the mobile squad-pitch tabs) instead of three stacked cards, so the
+            screen doesn't scroll. Defaults to your own card. On a forfeit this
+            collapses to the leaver's own squad — no rival standings, nothing
+            from the match still in progress. */}
         <div className="space-y-3">
           {forfeited && (
             <h2 className="font-poppins text-xs font-black uppercase tracking-wide text-white/50">
               {t('auctionGame.forfeitYourSquad')}
             </h2>
           )}
-          {(forfeited ? (humanEntry ? [humanEntry] : []) : rankedPlayers).map((player, index) => {
+          {!forfeited && rankedPlayers.length > 1 && (
+            <div className="mx-auto flex w-full max-w-[420px] rounded-full bg-white/[0.06] p-1">
+              {rankedPlayers.map((p, i) => {
+                const sel = p.id === detailShownId;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => setDetailId(p.id)}
+                    className={cn(
+                      'min-w-0 flex-1 truncate rounded-full px-2 py-1.5 text-[11px] font-black uppercase transition-colors',
+                      sel ? 'bg-brand-yellow text-black' : 'text-white/60',
+                    )}
+                    style={poppins}
+                  >
+                    {i + 1} · {p.id === humanPlayerId ? t('auctionGame.you') : p.username}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          {(forfeited ? (humanEntry ? [humanEntry] : []) : rankedPlayers.filter((p) => p.id === detailShownId)).map((player) => {
             const isHuman = player.id === humanPlayerId;
             // A forfeiter is always last (3rd) and never a winner, regardless of
             // where they sat in the local list.
-            const rank = forfeited ? 2 : index;
+            const rank = forfeited ? 2 : rankedPlayers.findIndex((rp) => rp.id === player.id);
             const isWinner = !forfeited && rank === 0;
 
             const medal = medalColor(rank);
@@ -321,7 +350,7 @@ export function AuctionResultsScreen({
                 key={player.id}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.5 + rank * 0.15 }}
+                transition={{ delay: 0.15 }}
                 className={`relative rounded-[18px] border-2 bg-white/[0.02] p-4 ${player.isEliminated ? 'opacity-50' : ''}`}
                 style={{ borderColor: medal }}
               >
@@ -330,7 +359,7 @@ export function AuctionResultsScreen({
                   <motion.span
                     initial={{ scale: 0, rotate: 0 }}
                     animate={{ scale: 1, rotate: 8 }}
-                    transition={{ type: 'spring', stiffness: 420, damping: 13, delay: 0.5 + rank * 0.15 }}
+                    transition={{ type: 'spring', stiffness: 420, damping: 13, delay: 0.25 }}
                     className="absolute -right-2 -top-3 z-20 rounded-lg bg-brand-yellow px-3 py-1 text-sm font-black uppercase text-surface-page shadow-[0_3px_10px_rgba(0,0,0,0.45)]"
                     style={poppins}
                   >
