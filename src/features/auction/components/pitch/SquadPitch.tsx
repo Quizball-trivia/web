@@ -113,8 +113,8 @@ export function SquadPitch({
         // Band range leaves room for the full player stack (photo + name +
         // chip row + chem dots): the GK stack grows upward and the FWD stack
         // downward, so pushing bands to the very edges clips photos.
-        const TOP = 16;
-        const BOTTOM = 87;
+        const TOP = 14;
+        const BOTTOM = 88;
         const step = rows.length > 1 ? (BOTTOM - TOP) / (rows.length - 1) : 0;
         const posOffset: Record<PositionGroup, number> = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
         return rows.map((row, rowIdx) => {

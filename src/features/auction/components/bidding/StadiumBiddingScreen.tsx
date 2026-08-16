@@ -134,7 +134,9 @@ export function StadiumBiddingScreen({
           {/* Footer — CONSTANT height across clue / study / bidding phases so
               the panel never grows and the stadiums above never shrink. The
               phase content swaps inside the reserved box, bottom-aligned. */}
-          <div className="mt-3 flex h-[118px] shrink-0 flex-col justify-end gap-2.5">
+          {/* Reserved height must cover the tallest phase (status bar with
+              bidder line + gap + controls ≈ 106px) or bidding overflows. */}
+          <div className="mt-2 flex h-[108px] shrink-0 flex-col justify-end gap-2">
             {studyEndsAt ? (
               <StudyCountdown endsAt={studyEndsAt} variant="panel" />
             ) : isBidding ? (
@@ -207,7 +209,7 @@ function BidStatusBar({
 }) {
   return (
     <div
-      className="flex items-center justify-between gap-2 rounded-xl bg-black/25 px-3 py-1.5"
+      className="flex items-center justify-between gap-2 rounded-xl bg-black/25 px-3 py-1"
     >
       <div className="min-w-0">
         <div className="flex items-center gap-2">
@@ -228,7 +230,7 @@ function BidStatusBar({
             initial={{ scale: 1.1, opacity: 0.5 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={SPRING.snap}
-            className="font-poppins text-xl font-black tabular-nums leading-none text-brand-yellow"
+            className="font-poppins text-lg font-black tabular-nums leading-none text-brand-yellow"
           >
             {amount}
           </motion.div>

@@ -57,7 +57,7 @@ export function TurnControls({
           <button
             type="button"
             onClick={onFold}
-            className="flex h-12 shrink-0 items-center justify-center rounded-2xl bg-brand-red px-6 font-poppins text-sm font-black uppercase text-white transition-colors hover:bg-brand-red/90"
+            className="flex h-11 shrink-0 items-center justify-center rounded-2xl bg-brand-red px-6 font-poppins text-sm font-black uppercase text-white transition-colors hover:bg-brand-red/90"
           >
             {t('auctionGame.fold')}
           </button>
@@ -67,7 +67,7 @@ export function TurnControls({
           whileTap={canAfford ? { scale: 0.98 } : undefined}
           disabled={!canAfford}
           onClick={() => canAfford && onBid(minBid)}
-          className={`flex h-12 flex-1 flex-col items-center justify-center rounded-2xl font-poppins leading-none transition-colors ${
+          className={`flex h-11 flex-1 flex-col items-center justify-center rounded-2xl font-poppins leading-none transition-colors ${
             canAfford ? 'bg-brand-green text-white hover:bg-brand-green/90' : 'cursor-not-allowed bg-white/10 text-white/30'
           }`}
         >
