@@ -86,14 +86,14 @@ export function StadiumBiddingScreen({
         <StadiumBoard state={state} humanPlayerId={humanPlayerId} activePosition={round.positionGroup} />
       </div>
 
-      {/* Clue + auction panel — floating card, centered & capped on desktop. */}
-      <div className="shrink-0 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] md:px-4 md:pb-4">
+      {/* Clue + auction panel — floating brand-blue card, breathing room above
+          so it never crowds the stadium row. */}
+      <div className="shrink-0 px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-3 md:px-4 md:pb-4 md:pt-5">
         <motion.div
           initial={{ y: 24, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={SPRING.settle}
-          className="mx-auto flex max-h-[52dvh] w-full max-w-2xl flex-col rounded-t-[24px] border-2 bg-surface-card/95 px-4 pt-2.5 pb-3 shadow-[0_-8px_36px_rgba(0,0,0,0.5)] backdrop-blur-md md:rounded-[24px]"
-          style={{ borderColor: `${posColor}66` }}
+          className="mx-auto flex max-h-[48dvh] w-full max-w-xl flex-col rounded-t-[24px] border-2 border-brand-blue bg-surface-card/95 px-4 pt-2.5 pb-3 shadow-[0_-8px_36px_rgba(0,0,0,0.5)] backdrop-blur-md md:rounded-[24px]"
         >
           <div className="mx-auto mb-2 h-1 w-10 shrink-0 rounded-full bg-white/20 md:hidden" />
 

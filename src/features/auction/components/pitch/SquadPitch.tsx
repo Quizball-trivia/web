@@ -79,16 +79,16 @@ export function SquadPitch({
           would fight the rotation + w-[125%] overflow trick. */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src="/assets/stadium-green.webp"
+        src={fill ? '/assets/stadium-green-vertical.webp' : '/assets/stadium-green.webp'}
         alt=""
         aria-hidden
         draggable={false}
         className={
           fill
-            // Tall column: cover the whole area (a vertical slice of the turf) so
-            // there are no dark bands top/bottom. The rotated-fill trick below is
-            // sized by width and only covers a middle band when the box is tall.
-            ? 'absolute inset-0 h-full w-full object-cover'
+            // Pre-rotated portrait asset (goals top & bottom) so the pitch
+            // markings match the vertical formation without CSS rotation
+            // tricks, which cannot cover an arbitrary-aspect box.
+            ? 'absolute inset-0 h-full w-full object-fill'
             : 'absolute left-1/2 top-1/2 h-[80%] w-[125%] max-w-none -translate-x-1/2 -translate-y-1/2 -rotate-90 object-fill'
         }
       />
