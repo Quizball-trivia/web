@@ -81,27 +81,27 @@ export function SnapshotClues({
     <div className="space-y-1.5">
       {/* Chosen scout season → the season the value (and profit) is judged on.
           Only the value season's YEAR is shown here; its value is hidden. */}
-      {/* flex-wrap: on narrow phones the two season groups stack instead of
-          spilling past the card border. */}
-      <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 px-1 pb-0.5">
-        <div className="flex items-center gap-1.5">
-          <CalendarDays className="size-4" style={{ color: accent }} />
-          <span className="font-poppins text-sm font-black uppercase tracking-wide" style={{ color: accent }}>
+      {/* Single line always: compact sizes + nowrap so the two season groups
+          never stack on narrow phones. */}
+      <div className="flex flex-nowrap items-center justify-center gap-x-1.5 px-1 pb-0.5">
+        <div className="flex min-w-0 items-center gap-1">
+          <CalendarDays className="size-3.5 shrink-0" style={{ color: accent }} />
+          <span className="shrink-0 font-poppins text-[13px] font-black uppercase tracking-wide" style={{ color: accent }}>
             {s.season}
           </span>
-          <span className={cn('font-poppins text-[11px] font-bold uppercase tracking-wide', labelColor)}>
+          <span className={cn('truncate font-poppins text-[10px] font-bold uppercase tracking-wide', labelColor)}>
             {t('auctionGame.snapCluesLabel')}
           </span>
         </div>
         {showValueSeason && (
           <>
-            <ArrowRight className={cn('size-3.5 shrink-0', 'text-white/60')} />
-            <div className="flex items-center gap-1.5">
-              <TrendingUp className={cn('size-4', 'text-white/70')} />
-              <span className={cn('font-poppins text-sm font-black uppercase tracking-wide', valueColor)}>
+            <ArrowRight className={cn('size-3 shrink-0', 'text-white/60')} />
+            <div className="flex min-w-0 items-center gap-1">
+              <TrendingUp className={cn('size-3.5 shrink-0', 'text-white/70')} />
+              <span className={cn('shrink-0 font-poppins text-[13px] font-black uppercase tracking-wide', valueColor)}>
                 {valueSeason}
               </span>
-              <span className={cn('font-poppins text-[11px] font-bold uppercase tracking-wide', labelColor)}>
+              <span className={cn('truncate font-poppins text-[10px] font-bold uppercase tracking-wide', labelColor)}>
                 {t('auctionGame.snapValueLabel')}
               </span>
             </div>
