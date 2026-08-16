@@ -98,6 +98,16 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
     [],
   );
 
+  // A subscribe already replaces the socket's WL room. Unsubscribe only when
+  // this hook actually unmounts: emitting it from the target effect cleanup
+  // races the next role's async subscribe handler and can remove its new room.
+  useEffect(() => {
+    const socket = connectSocket();
+    return () => {
+      socket.emit('wl:unsubscribe');
+    };
+  }, []);
+
   useEffect(() => {
     const socket = connectSocket();
     let disposed = false;
@@ -440,7 +450,6 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
       disposed = true;
       clearPendingQuestion();
       document.removeEventListener('visibilitychange', onVisibilityChange);
-      socket.emit('wl:unsubscribe');
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
       socket.off('wl:dispatch', onDispatch);

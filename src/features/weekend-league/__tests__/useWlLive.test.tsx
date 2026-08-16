@@ -13,6 +13,7 @@ type Handler = (...args: unknown[]) => void;
 class FakeSocket {
   connected = true;
   handlers = new Map<string, Set<Handler>>();
+  emits: Array<{ event: string; data: unknown }> = [];
   /** Captured wl:answer sends: [payload, cb] with timeout-style callbacks. */
   answerSends: Array<{ data: Record<string, unknown>; cb: (err: Error | null, ack?: WlAnswerAck) => void }> = [];
   subscribeCount = 0;
@@ -31,6 +32,7 @@ class FakeSocket {
     return this;
   }
   emit(event: string, ...args: unknown[]) {
+    this.emits.push({ event, data: args[0] });
     if (event === 'wl:subscribe') {
       this.subscribeCount += 1;
       const ack = args[1] as (r: unknown) => void;
@@ -274,6 +276,27 @@ describe('useWlLive', () => {
     // The new tournament's low seq must be accepted despite the old 50.
     act(() => fakeSocket.fire('wl:dispatch', dispatch(1, { tournamentId: OTHER } as never)));
     expect(result.current.screen.kind).toBe('question');
+  });
+
+  it('replaces the spectator subscription without racing an unsubscribe', () => {
+    const { rerender, unmount } = renderHook(
+      ({ role }: { role: 'player' | 'spectator' }) => useWlLive(TID, role),
+      { initialProps: { role: 'spectator' } as { role: 'player' | 'spectator' } },
+    );
+
+    rerender({ role: 'player' });
+
+    expect(fakeSocket.emits.map(({ event }) => event)).toEqual([
+      'wl:subscribe',
+      'wl:subscribe',
+    ]);
+    expect(fakeSocket.emits.map(({ data }) => data)).toEqual([
+      { tournament_id: TID, role: 'spectator' },
+      { tournament_id: TID, role: 'player' },
+    ]);
+
+    unmount();
+    expect(fakeSocket.emits.at(-1)?.event).toBe('wl:unsubscribe');
   });
 
   it('rehydrates across a reconnect: dropped ack + authoritative score recovered', () => {
