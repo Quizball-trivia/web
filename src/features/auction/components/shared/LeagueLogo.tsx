@@ -23,16 +23,22 @@ export function LeagueLogo({
   if (!l) return null;
 
   if (l.logo) {
+    // League marks are brand-coloured (PL purple, Ligue 1 black…) and drown on
+    // dark chips — a white backing keeps every league legible on any surface.
     return (
-      <Image
-        src={l.logo}
-        alt={l.name}
-        width={size * 2}
-        height={size * 2}
-        unoptimized
-        className={`object-contain drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)] ${className}`}
-        style={{ width: size, height: size }}
-      />
+      <span
+        className={`inline-flex shrink-0 items-center justify-center rounded-full bg-white shadow-[0_1px_2px_rgba(0,0,0,0.4)] ${className}`}
+        style={{ width: size, height: size, padding: Math.max(2, Math.round(size * 0.12)) }}
+      >
+        <Image
+          src={l.logo}
+          alt={l.name}
+          width={size * 2}
+          height={size * 2}
+          unoptimized
+          className="size-full object-contain"
+        />
+      </span>
     );
   }
 

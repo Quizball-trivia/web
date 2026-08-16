@@ -28,16 +28,16 @@ export interface League {
 }
 
 export const LEAGUES: League[] = [
-  { name: 'Premier League', abbr: 'Premier League', short: 'PL', color: '#360D3A', country: 'England', logo: 'https://tmssl.akamaized.net/images/logo/medium/gb1.png' },
-  { name: 'La Liga', abbr: 'La Liga', short: 'LL', color: '#E01A22', country: 'Spain', logo: 'https://tmssl.akamaized.net/images/logo/medium/es1.png' },
-  { name: 'Serie A', abbr: 'Serie A', short: 'SA', color: '#0067B1', country: 'Italy', logo: 'https://tmssl.akamaized.net/images/logo/medium/it1.png' },
-  { name: 'Bundesliga', abbr: 'Bundesliga', short: 'BL', color: '#D20515', country: 'Germany', logo: 'https://tmssl.akamaized.net/images/logo/medium/l1.png' },
-  { name: 'Ligue 1', abbr: 'Ligue 1', short: 'L1', color: '#DAE025', textColor: '#0A1A3F', country: 'France', logo: 'https://tmssl.akamaized.net/images/logo/medium/fr1.png' },
-  { name: 'Eredivisie', abbr: 'Eredivisie', short: 'ER', color: '#E4002B', country: 'Netherlands', logo: 'https://tmssl.akamaized.net/images/logo/medium/nl1.png' },
-  { name: 'Primeira Liga', abbr: 'Primeira Liga', short: 'PT', color: '#006847', country: 'Portugal', logo: 'https://tmssl.akamaized.net/images/logo/medium/po1.png' },
-  { name: 'Brasileirão', abbr: 'Brasileirão', short: 'BR', color: '#009C3B', textColor: '#FFDF00', country: 'Brazil', logo: 'https://tmssl.akamaized.net/images/logo/medium/bra1.png' },
-  { name: 'Scottish Premiership', abbr: 'Scottish Prem', short: 'SP', color: '#163A6B', country: 'Scotland', logo: 'https://tmssl.akamaized.net/images/logo/medium/sc1.png' },
-  { name: 'Primera División', abbr: 'Primera División', short: 'AR', color: '#75AADB', textColor: '#0A1A3F', country: 'Argentina', logo: 'https://tmssl.akamaized.net/images/logo/medium/ar1n.png' },
+  { name: 'Premier League', abbr: 'Premier League', short: 'PL', color: '#360D3A', country: 'England', logo: 'https://media.api-sports.io/football/leagues/39.png' },
+  { name: 'La Liga', abbr: 'La Liga', short: 'LL', color: '#E01A22', country: 'Spain', logo: 'https://media.api-sports.io/football/leagues/140.png' },
+  { name: 'Serie A', abbr: 'Serie A', short: 'SA', color: '#0067B1', country: 'Italy', logo: 'https://media.api-sports.io/football/leagues/135.png' },
+  { name: 'Bundesliga', abbr: 'Bundesliga', short: 'BL', color: '#D20515', country: 'Germany', logo: 'https://media.api-sports.io/football/leagues/78.png' },
+  { name: 'Ligue 1', abbr: 'Ligue 1', short: 'L1', color: '#DAE025', textColor: '#0A1A3F', country: 'France', logo: 'https://media.api-sports.io/football/leagues/61.png' },
+  { name: 'Eredivisie', abbr: 'Eredivisie', short: 'ER', color: '#E4002B', country: 'Netherlands', logo: 'https://media.api-sports.io/football/leagues/88.png' },
+  { name: 'Primeira Liga', abbr: 'Primeira Liga', short: 'PT', color: '#006847', country: 'Portugal', logo: 'https://media.api-sports.io/football/leagues/94.png' },
+  { name: 'Brasileirão', abbr: 'Brasileirão', short: 'BR', color: '#009C3B', textColor: '#FFDF00', country: 'Brazil', logo: 'https://media.api-sports.io/football/leagues/71.png' },
+  { name: 'Scottish Premiership', abbr: 'Scottish Prem', short: 'SP', color: '#163A6B', country: 'Scotland', logo: 'https://media.api-sports.io/football/leagues/179.png' },
+  { name: 'Primera División', abbr: 'Primera División', short: 'AR', color: '#75AADB', textColor: '#0A1A3F', country: 'Argentina', logo: 'https://media.api-sports.io/football/leagues/128.png' },
 ];
 
 const byName = new Map<string, League>(LEAGUES.map((l) => [l.name.toLowerCase(), l]));
