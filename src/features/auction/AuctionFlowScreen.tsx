@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -194,6 +194,7 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
     apEarned,
     selfForfeited,
     attachUnavailable,
+    restoringFromReload,
   } = useRealtimeAuctionMatch({
     enabled: realtimeEnabled,
     autoStart: auctionStarted,
@@ -301,10 +302,18 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
   }, [actions, rejoinAvailable]);
 
   // "Finalizing Match" beat: hold a short overlay the first time the match
-  // reaches 'results', then reveal the results screen (ranked-style).
+  // reaches 'results', then reveal the results screen (ranked-style). Skipped
+  // when the match arrives ALREADY finished (reload-recovery replay) — nothing
+  // is being finalized, so the beat reads as a glitch.
   const isResultsPhase = state?.phase === 'results';
+  const sawLivePhaseRef = useRef(false);
+  if (state?.phase && state.phase !== 'results') sawLivePhaseRef.current = true;
   useEffect(() => {
     if (!isResultsPhase || resultsRevealed) return;
+    if (!sawLivePhaseRef.current) {
+      setResultsRevealed(true);
+      return;
+    }
     const id = window.setTimeout(() => setResultsRevealed(true), 600);
     return () => window.clearTimeout(id);
   }, [isResultsPhase, resultsRevealed]);
@@ -355,6 +364,16 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
     // the normal searching state shows the Lottie loaders that swap as bidders join.
     if (searchError) {
       return <MockSearchingScreen error={searchError} />;
+    }
+    // Reload-recovery: we're re-attaching to a known match, not queueing — a
+    // bare spinner instead of the "table is getting ready" search animation,
+    // which reads as matchmaking having restarted.
+    if (restoringFromReload) {
+      return (
+        <div className="flex min-h-screen items-center justify-center bg-surface-page">
+          <div className="size-9 animate-spin rounded-full border-[4px] border-white/15 border-t-brand-yellow" />
+        </div>
+      );
     }
     // Hold the peak join count so the searching screen shows the full lineup
     // (never regresses) until the countdown/intro takes over.

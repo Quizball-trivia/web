@@ -111,6 +111,10 @@ export interface UseRealtimeAuctionMatchResult {
    *  auction_rejoin_unavailable). The owner must drop it, or the screen stays
    *  stuck: auto-start is suppressed and cancel is hidden while it is set. */
   attachUnavailable: boolean;
+  /** A hard reload/back-forward restored a stored match id and the hook is
+   *  re-attaching to it — the screen should show a quiet loader, not the
+   *  matchmaking search animation. */
+  restoringFromReload: boolean;
 }
 
 export type AuctionWaitingForReadyState = AuctionWaitingForReadyPayload & {
@@ -239,6 +243,7 @@ export function useRealtimeAuctionMatch({
   // server resumes a live match and REPLAYS a finished one (results screen),
   // so reloading on the results screen no longer discards it for a fresh
   // search. Older than the server's state TTL → rejoin declines → idle screen.
+  const [restoringFromReload, setRestoringFromReload] = useState(false);
   useEffect(() => {
     const nav = performance.getEntriesByType?.('navigation')?.[0] as
       | PerformanceNavigationTiming
@@ -246,7 +251,10 @@ export function useRealtimeAuctionMatch({
     if (nav?.type !== 'reload' && nav?.type !== 'back_forward') return;
     autoStartConsumedRef.current = true;
     const stored = window.sessionStorage.getItem(LAST_AUCTION_MATCH_KEY);
-    if (stored) activeMatchIdRef.current = stored;
+    if (stored) {
+      activeMatchIdRef.current = stored;
+      setRestoringFromReload(true);
+    }
   }, []);
   const pendingTurnActionRef = useRef<AuctionPendingTurnAction | null>(null);
   const publicStateRef = useRef<AuctionRealtimeState['publicState']>(null);
@@ -691,6 +699,14 @@ export function useRealtimeAuctionMatch({
         // If we got here from an attach-on-entry, the match is gone: tell the
         // owner to drop attachMatchId so search can auto-start / be cancelled.
         if (attachMatchIdRef.current) setAttachUnavailable(true);
+        // Reload-recovery target is gone too (state TTL expired): drop the
+        // stored id + the restoring flag so the screen leaves the quiet loader.
+        setRestoringFromReload(false);
+        try {
+          window.sessionStorage.removeItem(LAST_AUCTION_MATCH_KEY);
+        } catch {
+          // Storage unavailable — nothing stored to clear.
+        }
         return;
       }
       clearPendingForMatch(null);
@@ -1126,6 +1142,7 @@ export function useRealtimeAuctionMatch({
     apEarned,
     selfForfeited,
     attachUnavailable,
+    restoringFromReload,
   };
 }
 
