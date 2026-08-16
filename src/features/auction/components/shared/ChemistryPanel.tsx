@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Info, X, Zap } from 'lucide-react';
-import { getClub } from '@/lib/clubs';
+import { findClubByName } from '@/lib/clubs';
 import { useLocale } from '@/contexts/LocaleContext';
 import { cn } from '@/lib/utils';
 import {
@@ -67,7 +67,7 @@ function LinkIcon({ link }: { link: ChemLink }) {
 
 /** The human-facing label for a link key. */
 function linkLabel(link: ChemLink): string {
-  if (link.dimension === 'club') return getClub(link.key)?.label ?? link.key;
+  if (link.dimension === 'club') return findClubByName(link.key)?.label ?? link.key;
   if (link.dimension === 'league') return getLeague(link.key)?.abbr ?? link.key;
   return link.key;
 }

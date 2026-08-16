@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import type { AuctionGameState } from '../../types';
 import type { AuctionActions } from '../../hooks/useAuctionGame';
 import { formatMoney, computeSquadChemistry, chemistryMultiplier, getFutureValue } from '../../data';
-import { getClub } from '@/lib/clubs';
+import { findClubByName } from '@/lib/clubs';
 import { getLeague } from '../../data/leagues';
 import { POS_COLORS, poppins, withAlpha } from '../../constants/auction.constants';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -69,7 +69,7 @@ export function RevealScreen({
   const winner = state.players.find((p) => p.id === round.winnerId);
   const posColor = POS_COLORS[round.positionGroup];
   const isHumanWin = round.winnerId === humanPlayerId;
-  const club = getClub(round.footballer.club ?? null);
+  const club = findClubByName(round.footballer.club ?? null);
   const league = getLeague(round.footballer.league ?? null);
   // Scoring uses the player's LATER-season value (the clue phase showed an
   // earlier season); the gap between what you paid and this is the profit.

@@ -1,12 +1,14 @@
 'use client';
 
 import Image from 'next/image';
-import { getClub } from '@/lib/clubs';
+import { findClubByName } from '@/lib/clubs';
 
 /**
- * A club crest resolved from a club name/id via getClub(). Renders nothing when
- * the club can't be resolved (so an unknown club simply shows no badge rather
- * than a broken image).
+ * A club crest resolved from a club name via the career-path resolver
+ * (findClubByName): alias-aware and suffix-tolerant, so Transfermarkt names
+ * like "Feyenoord Rotterdam" or "RC Strasbourg Alsace" hit the same CDN
+ * crests the career screens use. Renders nothing when the club can't be
+ * resolved (an unknown club shows no badge rather than a broken image).
  */
 export function ClubCrest({
   club,
@@ -17,7 +19,7 @@ export function ClubCrest({
   size?: number;
   className?: string;
 }) {
-  const resolved = getClub(club ?? null);
+  const resolved = findClubByName(club ?? null);
   if (!resolved) return null;
   return (
     <Image

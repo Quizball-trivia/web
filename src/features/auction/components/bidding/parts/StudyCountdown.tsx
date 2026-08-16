@@ -27,7 +27,7 @@ export function StudyCountdown({
   return (
     <div
       className={cn(
-        'flex flex-col items-center gap-2 rounded-[16px] bg-black/25 px-4 py-2.5 text-center',
+        'flex flex-col items-center gap-1.5 rounded-[16px] bg-black/25 px-4 py-2 text-center',
       )}
     >
       <div

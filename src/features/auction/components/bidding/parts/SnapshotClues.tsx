@@ -73,7 +73,7 @@ export function SnapshotClues({
   const skeleton = 'bg-white/25';
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1.5">
       {/* Chosen scout season → the season the value (and profit) is judged on.
           Only the value season's YEAR is shown here; its value is hidden. */}
       <div className="flex items-center justify-center gap-2 pb-0.5">
@@ -106,7 +106,7 @@ export function SnapshotClues({
         const revealed = i < visibleClues;
         const Icon = f.icon;
         return (
-          <div key={f.labelKey} className={cn('flex items-center gap-3 rounded-xl px-3 py-2', rowBg)}>
+          <div key={f.labelKey} className={cn('flex items-center gap-3 rounded-xl px-3 py-1.5', rowBg)}>
             <Icon className={cn('size-4 shrink-0', 'text-white/75')} />
             <span className={cn('flex-1 font-poppins text-sm font-bold', labelColor)}>{t(f.labelKey)}</span>
             {revealed ? (
@@ -114,7 +114,7 @@ export function SnapshotClues({
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, ease: EASE.smooth }}
-                className={cn('font-poppins text-lg font-black tabular-nums', f.money ? 'text-brand-yellow' : valueColor)}
+                className={cn('font-poppins text-base font-black tabular-nums', f.money ? 'text-brand-yellow' : valueColor)}
               >
                 {f.get(s)}
               </motion.span>

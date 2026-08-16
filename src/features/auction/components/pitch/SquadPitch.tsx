@@ -43,10 +43,10 @@ export function SquadPitch({
   showChemistry?: boolean;
 }) {
   const { t } = useLocale();
-  const circle = size === 'lg' ? 48 : size === 'md' ? 36 : 28;
+  const circle = size === 'lg' ? 44 : size === 'md' ? 36 : 28;
   const nameFs = size === 'lg' ? 'text-[11px]' : size === 'md' ? 'text-[9px]' : 'text-[8px]';
-  const badgeSize = size === 'lg' ? 18 : size === 'md' ? 15 : 11;
-  const dotSize = size === 'lg' ? 6 : size === 'md' ? 5 : 4;
+  const badgeSize = size === 'lg' ? 16 : size === 'md' ? 15 : 11;
+  const dotSize = size === 'lg' ? 5 : size === 'md' ? 5 : 4;
   const remaining = getRemainingSlots(player.team);
   const perPlayerChem = useMemo(
     () => (showChemistry ? computeSquadChemistry(player.team).perPlayer : {}),
@@ -110,8 +110,11 @@ export function SquadPitch({
         // correctly. A per-position offset keeps slot indexing continuous when a
         // group spans two rows (MID 3 then MID 2).
         const rows = formation.rows;
-        const TOP = 19;
-        const BOTTOM = 93;
+        // Band range leaves room for the full player stack (photo + name +
+        // chip row + chem dots): the GK stack grows upward and the FWD stack
+        // downward, so pushing bands to the very edges clips photos.
+        const TOP = 16;
+        const BOTTOM = 87;
         const step = rows.length > 1 ? (BOTTOM - TOP) / (rows.length - 1) : 0;
         const posOffset: Record<PositionGroup, number> = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
         return rows.map((row, rowIdx) => {
