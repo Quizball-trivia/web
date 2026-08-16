@@ -51,7 +51,9 @@ export function RevealScreen({
       setTimeout(() => setStage(5), 1600),
       // Everything is on screen at 1.6s; hold the full picture a short beat
       // before acking so the server doesn't sweep into the next round instantly.
-      setTimeout(() => setHoldDone(true), 2400),
+      // Full picture on screen at 1.6s; hold it so the sold player is
+      // actually readable before the server sweeps into the next round.
+      setTimeout(() => setHoldDone(true), 6000),
     ];
     return () => timers.forEach(clearTimeout);
   }, []);

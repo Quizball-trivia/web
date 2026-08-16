@@ -28,16 +28,16 @@ export interface League {
 }
 
 export const LEAGUES: League[] = [
-  { name: 'Premier League', abbr: 'Premier League', short: 'PL', color: '#360D3A', country: 'England' },
-  { name: 'La Liga', abbr: 'La Liga', short: 'LL', color: '#E01A22', country: 'Spain' },
-  { name: 'Serie A', abbr: 'Serie A', short: 'SA', color: '#0067B1', country: 'Italy' },
-  { name: 'Bundesliga', abbr: 'Bundesliga', short: 'BL', color: '#D20515', country: 'Germany' },
-  { name: 'Ligue 1', abbr: 'Ligue 1', short: 'L1', color: '#DAE025', textColor: '#0A1A3F', country: 'France' },
-  { name: 'Eredivisie', abbr: 'Eredivisie', short: 'ER', color: '#E4002B', country: 'Netherlands' },
-  { name: 'Primeira Liga', abbr: 'Primeira Liga', short: 'PT', color: '#006847', country: 'Portugal' },
-  { name: 'Brasileirão', abbr: 'Brasileirão', short: 'BR', color: '#009C3B', textColor: '#FFDF00', country: 'Brazil' },
-  { name: 'Scottish Premiership', abbr: 'Scottish Prem', short: 'SP', color: '#163A6B', country: 'Scotland' },
-  { name: 'Primera División', abbr: 'Primera División', short: 'AR', color: '#75AADB', textColor: '#0A1A3F', country: 'Argentina' },
+  { name: 'Premier League', abbr: 'Premier League', short: 'PL', color: '#360D3A', country: 'England', logo: 'https://tmssl.akamaized.net/images/logo/header/gb1.png' },
+  { name: 'La Liga', abbr: 'La Liga', short: 'LL', color: '#E01A22', country: 'Spain', logo: 'https://tmssl.akamaized.net/images/logo/header/es1.png' },
+  { name: 'Serie A', abbr: 'Serie A', short: 'SA', color: '#0067B1', country: 'Italy', logo: 'https://tmssl.akamaized.net/images/logo/header/it1.png' },
+  { name: 'Bundesliga', abbr: 'Bundesliga', short: 'BL', color: '#D20515', country: 'Germany', logo: 'https://tmssl.akamaized.net/images/logo/header/l1.png' },
+  { name: 'Ligue 1', abbr: 'Ligue 1', short: 'L1', color: '#DAE025', textColor: '#0A1A3F', country: 'France', logo: 'https://tmssl.akamaized.net/images/logo/header/fr1.png' },
+  { name: 'Eredivisie', abbr: 'Eredivisie', short: 'ER', color: '#E4002B', country: 'Netherlands', logo: 'https://tmssl.akamaized.net/images/logo/header/nl1.png' },
+  { name: 'Primeira Liga', abbr: 'Primeira Liga', short: 'PT', color: '#006847', country: 'Portugal', logo: 'https://tmssl.akamaized.net/images/logo/header/po1.png' },
+  { name: 'Brasileirão', abbr: 'Brasileirão', short: 'BR', color: '#009C3B', textColor: '#FFDF00', country: 'Brazil', logo: 'https://tmssl.akamaized.net/images/logo/header/bra1.png' },
+  { name: 'Scottish Premiership', abbr: 'Scottish Prem', short: 'SP', color: '#163A6B', country: 'Scotland', logo: 'https://tmssl.akamaized.net/images/logo/header/sc1.png' },
+  { name: 'Primera División', abbr: 'Primera División', short: 'AR', color: '#75AADB', textColor: '#0A1A3F', country: 'Argentina', logo: 'https://tmssl.akamaized.net/images/logo/header/ar1n.png' },
 ];
 
 const byName = new Map<string, League>(LEAGUES.map((l) => [l.name.toLowerCase(), l]));

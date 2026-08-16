@@ -97,29 +97,31 @@ export function StadiumBiddingScreen({
         >
           <div className="mx-auto mb-2 h-1 w-10 shrink-0 rounded-full bg-white/20 md:hidden" />
 
-          {/* Header: position + round chips, countdown on the right */}
-          <div className="mb-2 flex shrink-0 items-center gap-2">
-            <span
-              className="flex h-6 items-center rounded-[8px] px-2.5 font-poppins text-[11px] font-black uppercase text-black"
-              style={{ backgroundColor: posColor }}
-            >
-              {posLabel(round.positionGroup)}
-            </span>
-            <span className="flex h-6 items-center rounded-[8px] bg-white/10 px-2.5 font-poppins text-[11px] font-semibold uppercase text-white/70">
-              {t('auctionGame.round', { round: state.roundIndex })}
-            </span>
-            <span className="flex items-center gap-1.5 font-poppins text-xs font-black uppercase text-white">
-              <span className="text-base">❓</span> {t('auctionGame.mysteryPlayer')}
-            </span>
-            <div className="ml-auto">
-              {isBidding && round.turnEndsAt && round.currentTurnId && (
-                <CountdownTimer
-                  key={round.currentTurnId + String(round.turnEndsAt)}
-                  endsAt={round.turnEndsAt}
-                  totalMs={round.highestBidderId ? RAISE_TURN_MS : OPENING_TURN_MS}
-                />
-              )}
+          {/* Header — mirrors the mobile mystery card: black position chip +
+              round chip up top, the mystery-player line beneath, live turn
+              countdown floating top-right. */}
+          {isBidding && round.turnEndsAt && round.currentTurnId && (
+            <div className="absolute right-3 top-3 z-20">
+              <CountdownTimer
+                key={round.currentTurnId + String(round.turnEndsAt)}
+                endsAt={round.turnEndsAt}
+                totalMs={round.highestBidderId ? RAISE_TURN_MS : OPENING_TURN_MS}
+              />
             </div>
+          )}
+          <div className="mb-2 flex shrink-0 items-center gap-2 pr-16">
+            <div className="flex h-7 items-center justify-center rounded-[10px] bg-black px-3 font-poppins text-xs font-black uppercase text-brand-yellow">
+              {posLabel(round.positionGroup)}
+            </div>
+            <div className="flex h-7 items-center justify-center rounded-[10px] bg-black/25 px-3 font-poppins text-xs font-semibold uppercase text-white">
+              {t('auctionGame.round', { round: state.roundIndex })}
+            </div>
+          </div>
+          <div className="mb-2 flex shrink-0 items-center gap-2">
+            <span className="text-lg">❓</span>
+            <span className="font-poppins text-sm font-black uppercase text-white">
+              {t('auctionGame.mysteryPlayer')}
+            </span>
           </div>
 
           {/* Clues — scouting snapshots when available, else text clues */}
@@ -129,11 +131,23 @@ export function StadiumBiddingScreen({
             <CluesList clues={round.clues} visibleClues={visibleClues} variant="panel" accent={posColor} />
           )}
 
+          {/* Starting price — mobile-card style row while clues reveal. */}
+          {!isBidding && !studyEndsAt && (
+            <div className="mt-3 flex shrink-0 items-center justify-between gap-2 border-t border-white/15 pt-3">
+              <span className="font-poppins text-[11px] font-black uppercase tracking-wide text-white/80">
+                {t('auctionGame.startingPriceLabel')}
+              </span>
+              <span className="rounded-[10px] bg-black px-3.5 py-1.5 font-poppins text-lg font-black uppercase tabular-nums text-brand-yellow">
+                {formatMoney(round.startingPrice)}
+              </span>
+            </div>
+          )}
+
           {/* Footer: study countdown → OR → bid status + clean controls */}
           <div className="mt-3 shrink-0 space-y-2.5">
             {studyEndsAt ? (
               <StudyCountdown endsAt={studyEndsAt} variant="panel" />
-            ) : (
+            ) : isBidding ? (
               <BidStatusBar
                 label={hasBids ? t('auctionGame.highestBid') : t('auctionGame.startingPriceLabel')}
                 amount={formatMoney(hasBids ? round.highestBid : round.startingPrice)}
@@ -144,7 +158,7 @@ export function StadiumBiddingScreen({
                 outbidLabel={t('auctionGame.outbid')}
                 accent={posColor}
               />
-            )}
+            ) : null}
 
             {/* Turn-based controls (only once bidding is open) */}
             {showControls &&
