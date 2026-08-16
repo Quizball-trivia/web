@@ -3,28 +3,30 @@
 import { motion } from 'motion/react';
 import { Goal, Handshake, Coins, Cake, Trophy, CalendarDays, ShieldCheck, Shield, ArrowRight, TrendingUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useLocale } from '@/contexts/LocaleContext';
+import type { MessageKey } from '@/lib/i18n/messages';
 import { EASE } from '../../../constants/motion';
 import type { PositionGroup, SeasonSnapshot } from '../../../types';
 
 const eur = (v: number) => `€${Math.round(v / 1_000_000)}M`;
 
-type Facet = { icon: typeof Goal; label: string; get: (s: SeasonSnapshot) => string; money?: boolean };
+type Facet = { icon: typeof Goal; labelKey: MessageKey; get: (s: SeasonSnapshot) => string; money?: boolean };
 
 /** Outfield lots reveal goals → assists; keepers reveal clean sheets → conceded.
  *  Both then reveal value → age → league (5 steps, matches SNAPSHOT_STAT_STEPS). */
 const OUTFIELD_FACETS: Facet[] = [
-  { icon: Goal, label: 'Goals', get: (s) => `${s.goals}` },
-  { icon: Handshake, label: 'Assists', get: (s) => (s.assists != null ? `${s.assists}` : '—') },
-  { icon: Coins, label: 'Market value', get: (s) => eur(s.valueEur), money: true },
-  { icon: Cake, label: 'Age', get: (s) => `${s.age}` },
-  { icon: Trophy, label: 'League', get: (s) => s.league },
+  { icon: Goal, labelKey: 'auctionGame.clueGoals', get: (s) => `${s.goals}` },
+  { icon: Handshake, labelKey: 'auctionGame.clueAssists', get: (s) => (s.assists != null ? `${s.assists}` : '—') },
+  { icon: Coins, labelKey: 'auctionGame.clueMarketValue', get: (s) => eur(s.valueEur), money: true },
+  { icon: Cake, labelKey: 'auctionGame.clueAge', get: (s) => `${s.age}` },
+  { icon: Trophy, labelKey: 'auctionGame.clueLeague', get: (s) => s.league },
 ];
 const GK_FACETS: Facet[] = [
-  { icon: ShieldCheck, label: 'Clean sheets', get: (s) => `${s.cleanSheets ?? '—'}` },
-  { icon: Shield, label: 'Goals conceded', get: (s) => `${s.conceded ?? '—'}` },
-  { icon: Coins, label: 'Market value', get: (s) => eur(s.valueEur), money: true },
-  { icon: Cake, label: 'Age', get: (s) => `${s.age}` },
-  { icon: Trophy, label: 'League', get: (s) => s.league },
+  { icon: ShieldCheck, labelKey: 'auctionGame.clueCleanSheets', get: (s) => `${s.cleanSheets ?? '—'}` },
+  { icon: Shield, labelKey: 'auctionGame.clueConceded', get: (s) => `${s.conceded ?? '—'}` },
+  { icon: Coins, labelKey: 'auctionGame.clueMarketValue', get: (s) => eur(s.valueEur), money: true },
+  { icon: Cake, labelKey: 'auctionGame.clueAge', get: (s) => `${s.age}` },
+  { icon: Trophy, labelKey: 'auctionGame.clueLeague', get: (s) => s.league },
 ];
 
 /** The scout season = the EARLIEST snapshot. Scoring later uses a LATER season's
@@ -53,6 +55,7 @@ export function SnapshotClues({
   accent?: string;
   position?: PositionGroup;
 }) {
+  const { t } = useLocale();
   const isCard = variant === 'card';
   const s = pickSeason(snapshots);
   // Scoring uses the LATER season's value (getFutureValue = last snapshot). Show
@@ -76,7 +79,7 @@ export function SnapshotClues({
           <span className="font-poppins text-sm font-black uppercase tracking-wide" style={{ color: accent }}>
             {s.season}
           </span>
-          <span className={cn('font-poppins text-[11px] font-bold uppercase tracking-wide', labelColor)}>clues</span>
+          <span className={cn('font-poppins text-[11px] font-bold uppercase tracking-wide', labelColor)}>{t('auctionGame.scoutCluesLabel')}</span>
         </div>
         {showValueSeason && (
           <>
@@ -86,7 +89,7 @@ export function SnapshotClues({
               <span className={cn('font-poppins text-sm font-black uppercase tracking-wide', valueColor)}>
                 {valueSeason}
               </span>
-              <span className={cn('font-poppins text-[11px] font-bold uppercase tracking-wide', labelColor)}>value</span>
+              <span className={cn('font-poppins text-[11px] font-bold uppercase tracking-wide', labelColor)}>{t('auctionGame.scoutValueLabel')}</span>
             </div>
           </>
         )}
@@ -96,9 +99,9 @@ export function SnapshotClues({
         const revealed = i < visibleClues;
         const Icon = f.icon;
         return (
-          <div key={f.label} className={cn('flex items-center gap-3 rounded-xl px-3 py-2.5', rowBg)}>
+          <div key={f.labelKey} className={cn('flex items-center gap-3 rounded-xl px-3 py-2.5', rowBg)}>
             <Icon className={cn('size-4 shrink-0', isCard ? 'text-black/45' : 'text-white/40')} />
-            <span className={cn('flex-1 font-poppins text-sm font-bold', labelColor)}>{f.label}</span>
+            <span className={cn('flex-1 font-poppins text-sm font-bold', labelColor)}>{t(f.labelKey)}</span>
             {revealed ? (
               <motion.span
                 initial={{ opacity: 0, y: 4 }}

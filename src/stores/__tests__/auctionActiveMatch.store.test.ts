@@ -11,7 +11,7 @@ import type {
 const SELF = 'user-self';
 
 const EMPTY_TEAM: PublicAuctionTeam = {
-  formation: { name: '2-2-2', required: { GK: 1, DEF: 4, MID: 3, FWD: 3 }, rows: [] },
+  formation: { name: '2-2-2', required: { GK: 1, DEF: 2, MID: 2, FWD: 2 }, rows: [] },
   slots: { GK: [], DEF: [], MID: [], FWD: [] },
 };
 

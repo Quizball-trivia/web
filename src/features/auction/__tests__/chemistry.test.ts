@@ -36,7 +36,7 @@ describe('computeSquadChemistry', () => {
     expect(computeSquadChemistry(team([])).total).toBe(0);
   });
 
-  it('gives a club link at 2 sharing players (club threshold 2/4/7)', () => {
+  it('gives a club link at 2 sharing players (club threshold 2/3/4)', () => {
     const t = team([fb({ club: 'Real Madrid CF' }), fb({ club: 'Real Madrid CF' })]);
     const chem = computeSquadChemistry(t);
     // Each earns 1 club point; nations are unique so no nation link.
@@ -56,13 +56,14 @@ describe('computeSquadChemistry', () => {
     expect(computeSquadChemistry(three).total).toBe(3); // still tier 1, each earns 1
   });
 
-  it('gives a nation link at 2 sharing players (nation threshold 2/5/8)', () => {
+  it('gives a nation link at 2 sharing players (nation threshold 2/4/6)', () => {
     const t = team([fb({ nationality: 'Brazil' }), fb({ nationality: 'Brazil' })]);
     expect(computeSquadChemistry(t).total).toBe(2);
   });
 
   it('caps a single player at 3 even when club+league+nation all stack', () => {
-    // 4 players all sharing club (→2), league (→1) and nation (→1) = 4, capped to 3.
+    // 4 players all sharing club (count 4 → tiers 2,3,4 → 3), league (4 → tiers
+    // 2,4 → 2) and nation (4 → tiers 2,4 → 2) = 7 points, capped to 3 per player.
     const shared = { club: 'FC Bayern Munich', league: 'Bundesliga', nationality: 'Germany' };
     const t = team([fb(shared), fb(shared), fb(shared), fb(shared)]);
     const chem = computeSquadChemistry(t);

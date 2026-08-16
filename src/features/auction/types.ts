@@ -32,8 +32,9 @@ export interface Footballer {
   value: number;
   startingPrice: number;
   clues: string[];
-  /** Older-season stat lines shown snapshot-by-snapshot instead of text clues
-   *  (when present). Same reveal cadence as `clues`. */
+  /** Older-season stat lines shown snapshot-by-snapshot. Every mock lot carries
+   *  these (so `clues` holds the stat-step labels, not prose); absent only for
+   *  live server rounds that still send plain text `clues`. Same reveal cadence. */
   snapshots?: SeasonSnapshot[];
   nationality: string;
   /** Current club — a chemistry dimension. Resolves to a crest via getClub(). */

@@ -5,6 +5,8 @@ import { AnimatePresence, motion } from 'motion/react';
 import { Info, X, Zap } from 'lucide-react';
 import { getClub } from '@/lib/clubs';
 import { cn } from '@/lib/utils';
+import { useLocale } from '@/contexts/LocaleContext';
+import type { MessageKey } from '@/lib/i18n/messages';
 import {
   CLUB_CHEM_THRESHOLDS,
   LEAGUE_CHEM_THRESHOLDS,
@@ -35,10 +37,10 @@ const DIMENSION_COLOR: Record<ChemDimension, string> = {
   nation: '#FF9600',
 };
 
-const DIMENSION_LABEL: Record<ChemDimension, string> = {
-  club: 'Club',
-  league: 'League',
-  nation: 'Nation',
+const DIMENSION_LABEL_KEY: Record<ChemDimension, MessageKey> = {
+  club: 'auctionGame.chemDimClub',
+  league: 'auctionGame.chemDimLeague',
+  nation: 'auctionGame.chemDimNation',
 };
 
 /** Three dots filled up to `tier` (0…3). */
@@ -134,6 +136,7 @@ export function ChemistryBreakdown({
   showInfo?: boolean;
   className?: string;
 }) {
+  const { t } = useLocale();
   const { total, multiplier, links } = getSquadChemistryBreakdown(team);
   const tier = chemistryTier(total);
 
@@ -144,7 +147,7 @@ export function ChemistryBreakdown({
         <div className="flex items-center gap-2">
           <Zap className="size-4" style={{ color: tier.color }} fill="currentColor" />
           <span className="text-[11px] font-black uppercase tracking-wide text-white/50" style={poppins}>
-            Chemistry
+            {t('auctionGame.chemistry')}
           </span>
           {showInfo && <ChemistryInfoButton />}
         </div>
@@ -165,7 +168,7 @@ export function ChemistryBreakdown({
       {/* Links */}
       {links.length === 0 ? (
         <p className="px-1 py-2 text-center text-[11px] text-white/35" style={poppins}>
-          No links yet — sign players from the same club, league or nation.
+          {t('auctionGame.chemNoLinks')}
         </p>
       ) : (
         <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
@@ -180,13 +183,14 @@ export function ChemistryBreakdown({
 
 /** Small (i) button that opens the "how chemistry works" explainer. */
 export function ChemistryInfoButton({ className = '' }: { className?: string }) {
+  const { t } = useLocale();
   const [open, setOpen] = useState(false);
   return (
     <>
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label="How chemistry works"
+        aria-label={t('auctionGame.chemHowTitle')}
         className={cn(
           'flex size-4 items-center justify-center rounded-full text-white/40 transition-colors hover:text-white/80',
           className,
@@ -207,6 +211,7 @@ const RULE_ROWS: { dim: ChemDimension; thresholds: number[] }[] = [
 
 /** Modal explaining the FC-style tier thresholds. */
 export function ChemistryHelpModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = useLocale();
   return (
     <AnimatePresence>
       {open && (
@@ -229,13 +234,13 @@ export function ChemistryHelpModal({ open, onClose }: { open: boolean; onClose: 
               <div className="flex items-center gap-2">
                 <Zap className="size-5 text-brand-yellow" fill="currentColor" />
                 <h2 className="text-base font-black uppercase text-white" style={poppins}>
-                  How chemistry works
+                  {t('auctionGame.chemHowTitle')}
                 </h2>
               </div>
               <button
                 type="button"
                 onClick={onClose}
-                aria-label="Close"
+                aria-label={t('common.close')}
                 className="flex size-7 items-center justify-center rounded-full bg-white/10 text-white/70 hover:bg-white/15"
               >
                 <X className="size-4" />
@@ -243,12 +248,7 @@ export function ChemistryHelpModal({ open, onClose }: { open: boolean; onClose: 
             </div>
 
             <p className="mb-4 text-[12px] leading-relaxed text-white/60" style={poppins}>
-              Every player earns up to <span className="font-black text-white">3</span> chemistry from
-              squadmates who share their <span className="font-black text-white">club</span>,{' '}
-              <span className="font-black text-white">league</span> or{' '}
-              <span className="font-black text-white">nation</span>. Your squad total (max{' '}
-              {MAX_SQUAD_CHEMISTRY}) multiplies your team value — so a smart, linked squad beats a
-              pricier random one.
+              {t('auctionGame.chemHowBody', { max: MAX_SQUAD_CHEMISTRY })}
             </p>
 
             <div className="space-y-2">
@@ -262,12 +262,12 @@ export function ChemistryHelpModal({ open, onClose }: { open: boolean; onClose: 
                     className="text-[12px] font-black uppercase"
                     style={{ ...poppins, color: DIMENSION_COLOR[dim] }}
                   >
-                    {DIMENSION_LABEL[dim]}
+                    {t(DIMENSION_LABEL_KEY[dim])}
                   </span>
                   <span className="flex items-center gap-2 text-[11px] font-bold tabular-nums text-white/70">
-                    {thresholds.map((t, i) => (
+                    {thresholds.map((threshold, i) => (
                       <span key={i} className="flex items-center gap-1">
-                        <span className="text-white/40">{t}+</span>
+                        <span className="text-white/40">{threshold}+</span>
                         <span className="flex items-center gap-[2px]">
                           {[0, 1, 2].map((d) => (
                             <span

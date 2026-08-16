@@ -442,7 +442,8 @@ const SQUAD_META_BY_ID: Record<string, { club: string; league: string }> = {
 // Anonymised older-season stat lines (the "scouting" clue format). Club is never
 // included; league gives level+region; the that-season value is a weak proxy for
 // today's value. Authored for modern forwards (market-value era); players without
-// an entry fall back to their text clues.
+// an entry get generated snapshots (see generateSnapshots) — every lot uses the
+// scouting format, so no footballer keeps plain text clues.
 const SNAPSHOTS_BY_ID: Record<string, SeasonSnapshot[]> = {
   'fwd-messi': [
     { season: '2006/07', league: 'La Liga', age: 19, apps: 26, goals: 14, assists: 3, valueEur: 26_000_000 },
@@ -601,11 +602,11 @@ export function getTotalTeamValue(team: AuctionTeam): number {
 
 // ── Squad chemistry (mirrors the backend, which is authoritative) ────────────
 // FC-style chemistry on three dimensions — club, league and nation. Each of the
-// 11 players earns up to 3 points from how many squadmates share their club,
+// 7 players earns up to 3 points from how many squadmates share their club,
 // league and nation (each dimension has its own tier thresholds, FC-style). A
 // player's points are the sum across the three dimensions, capped at 3; the
-// squad total scales the team's value by chem ÷ 10. With a 7-a-side squad the
-// max is 7 × 3 = 21 → ×2.1.
+// squad total (0…21, max 7 × 3) scales profit by the chemistry multiplier
+// (1 + chem/10), so the max is ×3.1.
 
 export const MAX_PLAYER_CHEMISTRY = 3;
 export const MAX_SQUAD_CHEMISTRY = AUCTION_SQUAD_SIZE * MAX_PLAYER_CHEMISTRY; // 21
@@ -629,7 +630,7 @@ function chemTierPoints(count: number, thresholds: number[]): number {
 }
 
 export interface SquadChemistry {
-  total: number; // 0…33
+  total: number; // 0…21 (AUCTION_SQUAD_SIZE × MAX_PLAYER_CHEMISTRY)
   perPlayer: Record<string, number>; // footballer id → 0…3
 }
 

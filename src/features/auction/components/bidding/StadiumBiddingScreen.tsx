@@ -122,12 +122,16 @@ export function StadiumBiddingScreen({
             </div>
           </div>
 
-          {/* Clues — scouting snapshots when available, else text clues */}
-          {round.footballer.snapshots?.length ? (
-            <SnapshotClues snapshots={round.footballer.snapshots} visibleClues={visibleClues} variant="panel" accent={posColor} position={round.footballer.positionGroup} />
-          ) : (
-            <CluesList clues={round.clues} visibleClues={visibleClues} variant="panel" accent={posColor} />
-          )}
+          {/* Clues — scouting snapshots when available, else text clues. Scrolls
+              on its own so tall content never pushes the bid controls below the
+              capped panel (the screen root clips overflow). */}
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {round.footballer.snapshots?.length ? (
+              <SnapshotClues snapshots={round.footballer.snapshots} visibleClues={visibleClues} variant="panel" accent={posColor} position={round.footballer.positionGroup} />
+            ) : (
+              <CluesList clues={round.clues} visibleClues={visibleClues} variant="panel" accent={posColor} />
+            )}
+          </div>
 
           {/* Footer: study countdown → OR → bid status + clean controls */}
           <div className="mt-3 shrink-0 space-y-2.5">
@@ -141,6 +145,7 @@ export function StadiumBiddingScreen({
                 budget={formatMoney(humanPlayer.budget)}
                 budgetLabel={t('auctionGame.budgetLabel')}
                 outbid={humanOutbid}
+                outbidLabel={t('auctionGame.outbidStatus')}
                 accent={posColor}
               />
             )}
@@ -182,6 +187,7 @@ function BidStatusBar({
   budget,
   budgetLabel,
   outbid,
+  outbidLabel,
   accent,
 }: {
   label: string;
@@ -190,6 +196,7 @@ function BidStatusBar({
   budget: string;
   budgetLabel: string;
   outbid: boolean;
+  outbidLabel: string;
   accent: string;
 }) {
   return (
@@ -206,7 +213,7 @@ function BidStatusBar({
               animate={{ scale: 1, opacity: 1 }}
               className="rounded-full bg-brand-red/20 px-2 py-0.5 font-poppins text-[9px] font-black uppercase text-brand-red"
             >
-              Outbid
+              {outbidLabel}
             </motion.span>
           )}
         </div>

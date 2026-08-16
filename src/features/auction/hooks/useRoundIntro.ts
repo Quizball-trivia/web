@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { AuctionGameState } from '../types';
 import type { AuctionActions } from './useAuctionGame';
 
@@ -22,6 +22,10 @@ export function useRoundIntro(state: AuctionGameState, actions: AuctionActions) 
   const isCluePhase = state.phase === 'clue-reveal';
   const round = state.currentRound;
   const [introDoneForRound, setIntroDoneForRound] = useState<number | null>(null);
+  // `actions` is recreated on every state-version bump, so the skip-path effect
+  // re-runs on each clue update. Track the round we've already acked so the gate
+  // (auction:ui_ready) is released exactly once per round, not per bump.
+  const confirmedRoundRef = useRef<number | null>(null);
 
   const roundAlreadyLive =
     !isCluePhase ||
@@ -29,16 +33,22 @@ export function useRoundIntro(state: AuctionGameState, actions: AuctionActions) 
   const showRoundIntro =
     isCluePhase && introDoneForRound !== state.roundIndex && !roundAlreadyLive;
 
+  const confirmRoundOnce = useCallback(() => {
+    if (confirmedRoundRef.current === state.roundIndex) return;
+    confirmedRoundRef.current = state.roundIndex;
+    actions.confirmRoundIntro?.();
+  }, [actions, state.roundIndex]);
+
   useEffect(() => {
     if (isCluePhase && roundAlreadyLive) {
-      actions.confirmRoundIntro?.();
+      confirmRoundOnce();
     }
-  }, [isCluePhase, roundAlreadyLive, state.roundIndex, actions]);
+  }, [isCluePhase, roundAlreadyLive, confirmRoundOnce]);
 
   const onIntroDone = useCallback(() => {
     setIntroDoneForRound(state.roundIndex);
-    actions.confirmRoundIntro?.();
-  }, [actions, state.roundIndex]);
+    confirmRoundOnce();
+  }, [confirmRoundOnce, state.roundIndex]);
 
   return { showRoundIntro, onIntroDone };
 }

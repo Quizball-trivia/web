@@ -2,7 +2,7 @@
 
 import type { AuctionGameState, AuctionPlayer, AuctionRound, SitOutReason } from '../types';
 import type { AuctionActions } from './useAuctionGame';
-import { getMaxBid, getMinBid, needsPosition } from '../data';
+import { getMaxBid, getMinBid, needsPosition, SNAPSHOT_STAT_STEPS } from '../data';
 import { POS_COLORS } from '../constants/auction.constants';
 
 /**
@@ -54,8 +54,15 @@ export function useBiddingViewModel(
   const isCluePhase = state.phase === 'clue-reveal';
   const isBidding = state.phase === 'bidding';
 
-  const visibleClues = round ? (isCluePhase ? round.clueRevealIndex : round.clues.length) : 0;
-  const allCluesRevealed = round ? visibleClues >= round.clues.length : false;
+  // Snapshot rounds always show the fixed set of stat facets (SNAPSHOT_STAT_STEPS),
+  // which can exceed the server's text-clue count (e.g. 3 DB clues alongside
+  // snapshots). Target the facet count so the last facets aren't left locked and
+  // `allCluesRevealed` doesn't open early. Text-clue rounds keep clues.length.
+  const clueTarget = round
+    ? (round.footballer.snapshots?.length ? SNAPSHOT_STAT_STEPS.length : round.clues.length)
+    : 0;
+  const visibleClues = round ? (isCluePhase ? Math.min(round.clueRevealIndex, clueTarget) : clueTarget) : 0;
+  const allCluesRevealed = round ? visibleClues >= clueTarget : false;
   const hasBids = round ? round.highestBid > 0 : false;
   const studyEndsAt = isCluePhase ? round?.biddingStartsAt ?? null : null;
 

@@ -33,6 +33,7 @@ import type {
   PositionGroup,
 } from '@/features/auction/types';
 import {
+  AUCTION_SQUAD_SIZE,
   CLUE_STUDY_MS,
   FOOTBALLERS,
   FORMATIONS,
@@ -44,7 +45,7 @@ import {
 import { randomBotAvatar } from '@/features/auction/data/botAvatars';
 
 const HUMAN_ID = 'human-player';
-const FORMATION: Formation = FORMATIONS[0]; // 4-3-3
+const FORMATION: Formation = FORMATIONS[0]; // 2-2-2
 
 function byPos(pos: PositionGroup): Footballer[] {
   return FOOTBALLERS.filter((f) => f.positionGroup === pos);
@@ -78,9 +79,9 @@ function makePlayer(
 
 function basePlayers(): AuctionPlayer[] {
   return [
-    makePlayer(HUMAN_ID, 'YouPlayer', 'avatar-1', false, { GK: 1, DEF: 2, MID: 1 }, 720_000_000),
-    makePlayer('bot-1', 'CarlosGol99', 'avatar-2', true, { DEF: 1, MID: 2 }, 540_000_000),
-    makePlayer('bot-2', 'FutbolMaster', 'avatar-3', true, { GK: 1, FWD: 1 }, 610_000_000),
+    makePlayer(HUMAN_ID, 'YouPlayer', 'avatar-1', false, { GK: 1, DEF: 2, MID: 1 }, 190_000_000),
+    makePlayer('bot-1', 'CarlosGol99', 'avatar-2', true, { DEF: 1, MID: 2 }, 230_000_000),
+    makePlayer('bot-2', 'FutbolMaster', 'avatar-3', true, { GK: 1, FWD: 1 }, 250_000_000),
   ];
 }
 
@@ -115,7 +116,7 @@ function baseState(overrides: Partial<AuctionGameState> = {}): AuctionGameState 
     formation: FORMATION,
     currentRound: null,
     roundIndex: 3,
-    totalRounds: 33,
+    totalRounds: AUCTION_SQUAD_SIZE * 3,
     completedRounds: [],
     soloPick: null,
     ...overrides,
@@ -590,7 +591,7 @@ function LoadingResultsOverlayScenario() {
 }
 
 export default function DevAuctionPage() {
-  const [activeId, setActiveId] = useState<string>('formation-4-3-3');
+  const [activeId, setActiveId] = useState<string>(`formation-${FORMATIONS[0].name}`);
   const [nonce, setNonce] = useState(0); // bump to force remount (replay animations)
 
   const active = SCENARIOS.find((s) => s.id === activeId) ?? SCENARIOS[0];
