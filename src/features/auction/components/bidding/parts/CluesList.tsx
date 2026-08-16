@@ -38,12 +38,12 @@ export function CluesList({
             key={i}
             className={cn(
               'flex items-start gap-3 rounded-xl px-3 py-2.5 transition-colors',
-              isCard ? 'bg-black/[0.04]' : 'bg-white/[0.03]',
+              'bg-black/25',
             )}
           >
             <span
               className="mt-px w-4 shrink-0 text-center font-poppins text-sm font-black tabular-nums"
-              style={{ color: revealed ? accent : isCard ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.2)' }}
+              style={{ color: revealed ? accent : 'rgba(255,255,255,0.35)' }}
             >
               {i + 1}
             </span>
@@ -52,15 +52,15 @@ export function CluesList({
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.45, ease: EASE.smooth }}
-                className={cn('font-poppins font-semibold leading-snug', textSize, isCard ? 'text-black' : 'text-white')}
+                className={cn('font-poppins font-semibold leading-snug', textSize, 'text-white')}
               >
                 {clue}
               </motion.p>
             ) : (
               // Skeleton for a locked clue — keeps the row height stable.
               <span className="flex flex-1 flex-col gap-1.5 py-1" aria-hidden>
-                <span className={cn('h-2 w-11/12 rounded-full', isCard ? 'bg-black/10' : 'bg-white/10')} />
-                <span className={cn('h-2 w-2/3 rounded-full', isCard ? 'bg-black/10' : 'bg-white/10')} />
+                <span className={cn('h-2 w-11/12 rounded-full', 'bg-white/25')} />
+                <span className={cn('h-2 w-2/3 rounded-full', 'bg-white/25')} />
               </span>
             )}
           </div>

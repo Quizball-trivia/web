@@ -83,7 +83,7 @@ export function BiddingScreen({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="relative w-full rounded-[20px] bg-brand-yellow p-4 sm:p-5"
+            className="relative w-full rounded-[20px] border-2 border-white/15 bg-brand-blue p-4 sm:p-5"
             style={isCluePhase ? { boxShadow: `0 0 40px ${posColor}08` } : undefined}
           >
             {/* "Rivals want this" — shared drop-in ribbon, top-left, outside the
@@ -115,7 +115,7 @@ export function BiddingScreen({
               <div className="flex h-7 items-center justify-center rounded-[10px] bg-black px-3 font-poppins text-xs font-black uppercase text-brand-yellow">
                 {posLabel(round.positionGroup)}
               </div>
-              <div className="flex h-7 items-center justify-center rounded-[10px] bg-brand-blue px-3 font-poppins text-xs font-semibold uppercase text-white">
+              <div className="flex h-7 items-center justify-center rounded-[10px] bg-black/25 px-3 font-poppins text-xs font-semibold uppercase text-white">
                 {t('auctionGame.round', { round: state.roundIndex })}
               </div>
             </div>
@@ -128,7 +128,7 @@ export function BiddingScreen({
               >
                 ❓
               </motion.div>
-              <div className="font-poppins text-sm font-black uppercase text-black">
+              <div className="font-poppins text-sm font-black uppercase text-white">
                 {t('auctionGame.mysteryPlayer')}
               </div>
             </div>
@@ -148,8 +148,8 @@ export function BiddingScreen({
             )}
 
             {/* Starting price — own row below the clues (no overlap) */}
-            <div className="mt-3 flex items-center justify-between gap-2 border-t border-black/10 pt-3">
-              <span className="font-poppins text-[11px] font-black uppercase tracking-wide text-black/60">
+            <div className="mt-3 flex items-center justify-between gap-2 border-t border-white/15 pt-3">
+              <span className="font-poppins text-[11px] font-black uppercase tracking-wide text-white/80">
                 {t('auctionGame.startingPriceLabel')}
               </span>
               <span className="rounded-[10px] bg-black px-3.5 py-1.5 font-poppins text-lg font-black uppercase tabular-nums text-brand-yellow">

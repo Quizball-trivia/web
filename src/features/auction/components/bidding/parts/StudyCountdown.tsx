@@ -20,19 +20,19 @@ export function StudyCountdown({
   variant: 'card' | 'panel';
 }) {
   const { t } = useLocale();
-  const isCard = variant === 'card';
+  // Both variants sit on the brand-blue card: dark inset + bright text, so the
+  // countdown never reads blue-on-blue.
+  void variant;
 
   return (
     <div
       className={cn(
-        'flex flex-col items-center gap-2 rounded-[16px] px-4 py-3 text-center',
-        isCard ? 'bg-black/[0.06]' : 'bg-white/[0.04]',
+        'flex flex-col items-center gap-2 rounded-[16px] bg-black/25 px-4 py-2.5 text-center',
       )}
     >
       <div
         className={cn(
-          'flex items-center gap-1.5 font-poppins text-[11px] font-black uppercase tracking-[0.12em]',
-          isCard ? 'text-black/60' : 'text-white/55',
+          'flex items-center gap-1.5 font-poppins text-[11px] font-black uppercase tracking-[0.12em] text-white/90',
         )}
       >
         <Clock className="size-3.5" strokeWidth={2.5} />

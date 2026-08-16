@@ -64,12 +64,13 @@ export function SnapshotClues({
   const valueSeason = snapshots.at(-1)?.season ?? null;
   const showValueSeason = valueSeason != null && valueSeason !== s.season;
   const FACETS = position === 'GK' ? GK_FACETS : OUTFIELD_FACETS;
-  // Panel variant sits on the solid brand-blue card: darkened rows, full-white
-  // text so labels and numbers stay readable on blue.
-  const rowBg = isCard ? 'bg-black/[0.05]' : 'bg-black/25';
-  const labelColor = isCard ? 'text-black/60' : 'text-white/90';
-  const valueColor = isCard ? 'text-black' : 'text-white';
-  const skeleton = isCard ? 'bg-black/10' : 'bg-white/25';
+  // Both variants sit on the solid brand-blue card now: darkened inset rows,
+  // full-white text so labels and numbers stay readable on blue.
+  void isCard;
+  const rowBg = 'bg-black/25';
+  const labelColor = 'text-white/90';
+  const valueColor = 'text-white';
+  const skeleton = 'bg-white/25';
 
   return (
     <div className="space-y-2">
@@ -87,9 +88,9 @@ export function SnapshotClues({
         </div>
         {showValueSeason && (
           <>
-            <ArrowRight className={cn('size-3.5 shrink-0', isCard ? 'text-black/35' : 'text-white/35')} />
+            <ArrowRight className={cn('size-3.5 shrink-0', 'text-white/60')} />
             <div className="flex items-center gap-1.5">
-              <TrendingUp className={cn('size-4', isCard ? 'text-black/45' : 'text-white/45')} />
+              <TrendingUp className={cn('size-4', 'text-white/70')} />
               <span className={cn('font-poppins text-sm font-black uppercase tracking-wide', valueColor)}>
                 {valueSeason}
               </span>
@@ -106,14 +107,14 @@ export function SnapshotClues({
         const Icon = f.icon;
         return (
           <div key={f.labelKey} className={cn('flex items-center gap-3 rounded-xl px-3 py-2', rowBg)}>
-            <Icon className={cn('size-4 shrink-0', isCard ? 'text-black/45' : 'text-white/75')} />
+            <Icon className={cn('size-4 shrink-0', 'text-white/75')} />
             <span className={cn('flex-1 font-poppins text-sm font-bold', labelColor)}>{t(f.labelKey)}</span>
             {revealed ? (
               <motion.span
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, ease: EASE.smooth }}
-                className={cn('font-poppins text-lg font-black tabular-nums', f.money ? (isCard ? 'text-black' : 'text-brand-yellow') : valueColor)}
+                className={cn('font-poppins text-lg font-black tabular-nums', f.money ? 'text-brand-yellow' : valueColor)}
               >
                 {f.get(s)}
               </motion.span>
