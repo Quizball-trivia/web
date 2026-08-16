@@ -243,7 +243,7 @@ export function useRealtimeAuctionMatch({
     const nav = performance.getEntriesByType?.('navigation')?.[0] as
       | PerformanceNavigationTiming
       | undefined;
-    if (nav?.type !== 'reload') return;
+    if (nav?.type !== 'reload' && nav?.type !== 'back_forward') return;
     autoStartConsumedRef.current = true;
     const stored = window.sessionStorage.getItem(LAST_AUCTION_MATCH_KEY);
     if (stored) activeMatchIdRef.current = stored;
@@ -696,13 +696,24 @@ export function useRealtimeAuctionMatch({
       clearPendingForMatch(null);
       setError(friendlyAuctionError(payload, locale));
     };
-    const onMatchStarted = (payload: AuctionMatchStartedPayload) =>
+    const rememberMatchId = (matchId: string | undefined | null) => {
+      if (!matchId) return;
+      try {
+        window.sessionStorage.setItem(LAST_AUCTION_MATCH_KEY, matchId);
+      } catch {
+        // Storage unavailable → reload recovery just won't apply.
+      }
+    };
+    const onMatchStarted = (payload: AuctionMatchStartedPayload) => {
+      rememberMatchId(payload.matchId);
       apply({ type: 'match_started', payload });
+    };
     const onState = (payload: AuctionStatePayload) => {
       // A full snapshot proves this socket is attached and hydrated — any
       // pending rejoin prompt is obsolete (stale prompts otherwise stick
       // forever, since nothing else clears them on this path).
       setRejoinAvailable(null);
+      rememberMatchId(payload.matchId);
       apply({ type: 'state', payload });
     };
     const onRoundStarted = (payload: AuctionRoundStartedPayload) =>

@@ -136,6 +136,7 @@ export function ChemistryBreakdown({
   showInfo?: boolean;
   className?: string;
 }) {
+  const { t } = useLocale();
   const { total, multiplier, links } = getSquadChemistryBreakdown(team);
   const tier = chemistryTier(total);
 
@@ -166,8 +167,8 @@ export function ChemistryBreakdown({
 
       {/* Links */}
       {links.length === 0 ? (
-        <p className="px-1 py-2 text-center text-[11px] text-white/35" style={poppins}>
-          No links yet — sign players from the same club, league or nation.
+        <p className="px-1 py-2 text-center text-[11px] text-white/60" style={poppins}>
+          {t('auctionGame.chemNoLinks')}
         </p>
       ) : (
         <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">

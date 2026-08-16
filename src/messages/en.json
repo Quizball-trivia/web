@@ -1666,7 +1666,8 @@
     "chemClub": "Club",
     "chemLeague": "League",
     "chemNation": "Nation",
-    "chemClose": "Close"
+    "chemClose": "Close",
+    "chemNoLinks": "No links yet — sign players from the same club, league or nation."
   },
   "wcAward": {
     "unlocked": "Achievement unlocked",
