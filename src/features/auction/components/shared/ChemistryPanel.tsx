@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Info, X, Zap } from 'lucide-react';
 import { getClub } from '@/lib/clubs';
+import { useLocale } from '@/contexts/LocaleContext';
 import { cn } from '@/lib/utils';
 import {
   CLUB_CHEM_THRESHOLDS,
@@ -15,6 +16,7 @@ import {
   type ChemLink,
 } from '../../data';
 import { getLeague } from '../../data/leagues';
+import type { MessageKey } from '@/lib/i18n/messages';
 import type { AuctionTeam } from '../../types';
 import { poppins, withAlpha } from '../../constants/auction.constants';
 import { ClubCrest } from './ClubCrest';
@@ -35,10 +37,10 @@ const DIMENSION_COLOR: Record<ChemDimension, string> = {
   nation: '#FF9600',
 };
 
-const DIMENSION_LABEL: Record<ChemDimension, string> = {
-  club: 'Club',
-  league: 'League',
-  nation: 'Nation',
+const DIMENSION_LABEL_KEY: Record<ChemDimension, MessageKey> = {
+  club: 'auctionGame.chemClub',
+  league: 'auctionGame.chemLeague',
+  nation: 'auctionGame.chemNation',
 };
 
 /** Three dots filled up to `tier` (0…3). */
@@ -207,6 +209,7 @@ const RULE_ROWS: { dim: ChemDimension; thresholds: number[] }[] = [
 
 /** Modal explaining the FC-style tier thresholds. */
 export function ChemistryHelpModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { t } = useLocale();
   return (
     <AnimatePresence>
       {open && (
@@ -223,51 +226,45 @@ export function ChemistryHelpModal({ open, onClose }: { open: boolean; onClose: 
             exit={{ scale: 0.9, y: 20, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 260, damping: 22 }}
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-sm rounded-[20px] border border-white/10 bg-surface-page p-5"
+            className="w-full max-w-sm rounded-[20px] border-2 border-white/20 bg-brand-blue p-5 shadow-[0_16px_48px_rgba(0,0,0,0.5)]"
           >
             <div className="mb-3 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Zap className="size-5 text-brand-yellow" fill="currentColor" />
                 <h2 className="text-base font-black uppercase text-white" style={poppins}>
-                  How chemistry works
+                  {t('auctionGame.chemHelpTitle')}
                 </h2>
               </div>
               <button
                 type="button"
                 onClick={onClose}
-                aria-label="Close"
-                className="flex size-7 items-center justify-center rounded-full bg-white/10 text-white/70 hover:bg-white/15"
+                aria-label={t('auctionGame.chemClose')}
+                className="flex size-7 items-center justify-center rounded-full bg-white/15 text-white hover:bg-white/25"
               >
                 <X className="size-4" />
               </button>
             </div>
 
-            <p className="mb-4 text-[12px] leading-relaxed text-white/60" style={poppins}>
-              Every player earns up to <span className="font-black text-white">3</span> chemistry from
-              squadmates who share their <span className="font-black text-white">club</span>,{' '}
-              <span className="font-black text-white">league</span> or{' '}
-              <span className="font-black text-white">nation</span>. Your squad total (max{' '}
-              {MAX_SQUAD_CHEMISTRY}) multiplies your team value — so a smart, linked squad beats a
-              pricier random one.
+            <p className="mb-4 text-[13px] font-semibold leading-relaxed text-white" style={poppins}>
+              {t('auctionGame.chemHelpBody', { max: 3, squadMax: MAX_SQUAD_CHEMISTRY })}
             </p>
 
             <div className="space-y-2">
               {RULE_ROWS.map(({ dim, thresholds }) => (
                 <div
                   key={dim}
-                  className="flex items-center justify-between rounded-xl px-3 py-2"
-                  style={{ backgroundColor: withAlpha(DIMENSION_COLOR[dim], 0.1) }}
+                  className="flex items-center justify-between rounded-xl bg-black/25 px-3 py-2"
                 >
                   <span
                     className="text-[12px] font-black uppercase"
                     style={{ ...poppins, color: DIMENSION_COLOR[dim] }}
                   >
-                    {DIMENSION_LABEL[dim]}
+                    {t(DIMENSION_LABEL_KEY[dim])}
                   </span>
-                  <span className="flex items-center gap-2 text-[11px] font-bold tabular-nums text-white/70">
-                    {thresholds.map((t, i) => (
+                  <span className="flex items-center gap-2 text-[11px] font-bold tabular-nums text-white">
+                    {thresholds.map((threshold, i) => (
                       <span key={i} className="flex items-center gap-1">
-                        <span className="text-white/40">{t}+</span>
+                        <span className="text-white/80">{threshold}+</span>
                         <span className="flex items-center gap-[2px]">
                           {[0, 1, 2].map((d) => (
                             <span
@@ -287,9 +284,8 @@ export function ChemistryHelpModal({ open, onClose }: { open: boolean; onClose: 
               ))}
             </div>
 
-            <p className="mt-3 text-[10px] leading-relaxed text-white/35" style={poppins}>
-              Counts include the player themselves. Same club is the fastest link — just 2 players
-              start it.
+            <p className="mt-3 text-[11px] font-semibold leading-relaxed text-white/80" style={poppins}>
+              {t('auctionGame.chemHelpFooter')}
             </p>
           </motion.div>
         </motion.div>

@@ -93,7 +93,7 @@ export function StadiumBiddingScreen({
           initial={{ y: 24, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={SPRING.settle}
-          className="mx-auto flex max-h-[48dvh] w-full max-w-xl flex-col rounded-t-[24px] border-2 border-brand-blue bg-surface-card/95 px-4 pt-2.5 pb-3 shadow-[0_-8px_36px_rgba(0,0,0,0.5)] backdrop-blur-md md:rounded-[24px]"
+          className="mx-auto flex max-h-[46dvh] w-full max-w-lg flex-col rounded-t-[24px] border-2 border-white/15 bg-brand-blue px-3.5 pt-2.5 pb-3 shadow-[0_-8px_36px_rgba(0,0,0,0.5)] md:rounded-[24px]"
         >
           <div className="mx-auto mb-2 h-1 w-10 shrink-0 rounded-full bg-white/20 md:hidden" />
 
