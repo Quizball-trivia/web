@@ -454,4 +454,31 @@ describe('auction realtime reducer', () => {
     expect(next.publicState?.seats.find((seat) => seat.seatId === 'seat-human')?.team.slots.FWD).toHaveLength(1);
     expect(next.publicState?.seats.find((seat) => seat.seatId === 'seat-bot-1')?.budget).toBe(1_000_000_000);
   });
+
+  it('maps season snapshots through and pads snapshot lots to five clue slots', () => {
+    const snapshots = [
+      { season: '2020/21', league: 'La Liga', age: 19, apps: 20, goals: 3, valueEur: 5_000_000 },
+      { season: '2022/23', league: 'La Liga', age: 21, apps: 36, goals: 11, valueEur: 30_000_000 },
+      { season: '2025/26', league: 'Primeira Liga', age: null, apps: 31, goals: 3, valueEur: 0 },
+    ];
+    const clientState = toClientAuctionState(matchState({
+      currentRound: round({
+        footballer: {
+          positionGroup: 'FWD',
+          startingPrice: 20_000_000,
+          clues: ['Goals'],
+          snapshots,
+        },
+        clueRevealIndex: 1,
+        revealedClues: ['Goals'],
+      }),
+    }));
+
+    const footballer = clientState.currentRound!.footballer;
+    expect(footballer.snapshots).toHaveLength(3);
+    // Null age coerces to the UI's number contract.
+    expect(footballer.snapshots![2].age).toBe(0);
+    // Facet-unlock cadence is driven by clue count: snapshot lots pad to 5.
+    expect(clientState.currentRound!.clues).toHaveLength(5);
+  });
 });

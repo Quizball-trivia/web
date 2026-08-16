@@ -780,6 +780,24 @@ export interface PublicAuctionFootballer {
   currentClub?: string | null;
   nationality?: string | null;
   league?: string | null;
+  /**
+   * Career seasons for scouting-snapshot lots, chronological. Pre-reveal the
+   * final (scoring) season arrives with valueEur 0 — the server withholds the
+   * answer to the price gamble until the reveal.
+   */
+  snapshots?: AuctionSeasonSnapshotPayload[];
+}
+
+export interface AuctionSeasonSnapshotPayload {
+  season: string;
+  league: string;
+  age: number | null;
+  apps: number;
+  goals: number;
+  assists?: number;
+  cleanSheets?: number;
+  conceded?: number;
+  valueEur: number;
 }
 
 export interface PublicAuctionTeam {

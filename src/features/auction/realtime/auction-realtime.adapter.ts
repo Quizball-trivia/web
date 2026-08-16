@@ -20,6 +20,7 @@ import { randomBotAvatar } from '../data/botAvatars';
 
 const POSITION_GROUPS = ['GK', 'DEF', 'MID', 'FWD'] as const satisfies readonly PositionGroup[];
 const DEFAULT_AUCTION_CLUE_COUNT = 3;
+const SNAPSHOT_CLUE_COUNT = 5;
 
 export interface AuctionStateAdapterOptions {
   humanSeatId?: string | null;
@@ -204,6 +205,10 @@ function toClientFootballer(
     club: footballer.currentClub ?? null,
     league: footballer.league ?? null,
     imageUrl: footballer.imageUrl ?? undefined,
+    snapshots: footballer.snapshots?.map((snapshot) => ({
+      ...snapshot,
+      age: snapshot.age ?? 0,
+    })),
   };
 }
 
@@ -226,7 +231,12 @@ function getRoundClues(round: PublicAuctionRoundState): string[] {
 
   if (round.revealed) return visibleClues;
 
-  const clueCount = Math.max(DEFAULT_AUCTION_CLUE_COUNT, visibleClues.length);
+  // Snapshot lots reveal five stat facets; the padded length drives the
+  // facet-unlock cadence, so it must match the full step count up front.
+  const expectedCount = round.footballer.snapshots?.length
+    ? SNAPSHOT_CLUE_COUNT
+    : DEFAULT_AUCTION_CLUE_COUNT;
+  const clueCount = Math.max(expectedCount, visibleClues.length);
   return [
     ...visibleClues,
     ...Array.from({ length: clueCount - visibleClues.length }, () => ''),
