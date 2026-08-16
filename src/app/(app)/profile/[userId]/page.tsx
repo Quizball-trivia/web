@@ -1,6 +1,6 @@
 "use client";
 
-import { use } from "react";
+import { use, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { usePublicProfile, useResolveNickname, useUserAchievements } from "@/lib/queries/users.queries";
@@ -23,19 +23,22 @@ export default function PublicProfilePage({
   // The segment is either a user id (legacy links) or a nickname — nicknames
   // are case-insensitively unique among claimable users, so /profile/მახატა
   // resolves to exactly one account. UUID links keep working forever.
-  const { userId: rawParam } = use(params);
-  const handle = decodeURIComponent(rawParam);
+  // Next already percent-decodes dynamic segments — decoding again threw on
+  // literal '%' nicknames and let '%2F' resolve a different user (review).
+  const { userId: handle } = use(params);
   const isId = UUID_RE.test(handle);
   const { data: resolved, error: resolveError } = useResolveNickname(isId ? undefined : handle);
   const userId = isId ? handle : resolved?.user_id;
   const router = useRouter();
   const currentUserId = useAuthStore((state) => state.user?.id);
 
-  // Redirect to own profile page
-  if (currentUserId && userId === currentUserId) {
-    router.replace("/profile");
-    return null;
-  }
+  // Own profile lives at /profile — redirect from an effect: replace() during
+  // render re-fires every render until navigation commits (review).
+  const isOwn = Boolean(currentUserId) && userId === currentUserId;
+  useEffect(() => {
+    if (isOwn) router.replace("/profile");
+  }, [isOwn, router]);
+  if (isOwn) return null;
 
   if (!isId && !userId) {
     // Only a settled failure shows the not-found state — while auth hydrates
