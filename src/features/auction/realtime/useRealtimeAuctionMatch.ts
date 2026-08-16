@@ -384,6 +384,9 @@ export function useRealtimeAuctionMatch({
     setRealtimeState(EMPTY_AUCTION_REALTIME_STATE);
     ignoredMatchIdsRef.current.clear();
     activeMatchIdRef.current = null;
+    // An explicit (re)start ends any reload-restoration: without this, the
+    // play-again search hides behind the quiet reload loader forever.
+    setRestoringFromReload(false);
 
     if (matchmakingMode === 'search') {
       searchCancelledRef.current = false;
