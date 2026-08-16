@@ -110,10 +110,10 @@ export function StadiumBiddingScreen({
             </div>
           )}
           <div className="mb-2 flex shrink-0 items-center gap-2 pr-16">
-            <div className="flex h-7 items-center justify-center rounded-[10px] bg-black px-3 font-poppins text-xs font-black uppercase text-brand-yellow">
+            <div className="flex h-7 shrink-0 items-center justify-center whitespace-nowrap rounded-[10px] bg-black px-3 font-poppins text-xs font-black uppercase text-brand-yellow">
               {posLabel(round.positionGroup)}
             </div>
-            <div className="flex h-7 items-center justify-center rounded-[10px] bg-black/25 px-3 font-poppins text-xs font-semibold uppercase text-white">
+            <div className="flex h-7 shrink-0 items-center justify-center whitespace-nowrap rounded-[10px] bg-black/25 px-3 font-poppins text-xs font-semibold uppercase text-white">
               {t('auctionGame.round', { round: state.roundIndex })}
             </div>
           </div>
