@@ -14,6 +14,15 @@ export async function requestAccountDeletion(): Promise<AccountDeletionResponse>
   return apiFetch("post", "/api/v1/users/me/deletion");
 }
 
+export type ResolveNicknameResponse =
+  paths["/api/v1/users/by-nickname/{nickname}"]["get"]["responses"][200]["content"]["application/json"];
+
+export async function resolveNickname(nickname: string): Promise<ResolveNicknameResponse> {
+  return apiFetch("get", "/api/v1/users/by-nickname/{nickname}", {
+    params: { nickname },
+  });
+}
+
 export async function getPublicProfile(userId: string): Promise<PublicProfileResponse> {
   return apiFetch("get", "/api/v1/users/{userId}/profile", {
     params: { userId },

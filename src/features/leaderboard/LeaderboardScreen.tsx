@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { profileHandle } from '@/lib/hooks/useProfileNavigation';
 import { Calendar, Globe, Loader2, Trophy } from "lucide-react";
 import { motion } from "motion/react";
 
@@ -114,7 +115,10 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
   );
 
   const handleEntryClick = (userId: string) => {
-    router.push(`/profile/${userId}`);
+    // Prefer the unique nickname for a shareable URL; ids keep working.
+    // profileHandle guards the null-nickname 'Player' fallback rows (review).
+    const nickname = entries?.find((e) => e.id === userId)?.username;
+    router.push(`/profile/${profileHandle(userId, nickname)}`);
   };
 
   const topThree = entries ? entries.slice(0, 3) : [];
