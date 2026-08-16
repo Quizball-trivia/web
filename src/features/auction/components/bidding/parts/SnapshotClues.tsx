@@ -89,8 +89,10 @@ export function SnapshotClues({
           <span className="shrink-0 font-poppins text-[13px] font-black uppercase tracking-wide" style={{ color: accent }}>
             {s.season}
           </span>
+          {/* Full word on desktop, abbreviation on phones (where it truncated). */}
           <span className={cn('truncate font-poppins text-[10px] font-bold uppercase tracking-wide', labelColor)}>
-            {t('auctionGame.snapCluesLabel')}
+            <span className="sm:hidden">{t('auctionGame.snapCluesLabelShort')}</span>
+            <span className="hidden sm:inline">{t('auctionGame.snapCluesLabel')}</span>
           </span>
         </div>
         {showValueSeason && (
@@ -102,7 +104,8 @@ export function SnapshotClues({
                 {valueSeason}
               </span>
               <span className={cn('truncate font-poppins text-[10px] font-bold uppercase tracking-wide', labelColor)}>
-                {t('auctionGame.snapValueLabel')}
+                <span className="sm:hidden">{t('auctionGame.snapValueLabelShort')}</span>
+                <span className="hidden sm:inline">{t('auctionGame.snapValueLabel')}</span>
               </span>
             </div>
           </>
