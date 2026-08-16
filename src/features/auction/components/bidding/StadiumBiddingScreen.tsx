@@ -141,6 +141,7 @@ export function StadiumBiddingScreen({
                 budget={formatMoney(humanPlayer.budget)}
                 budgetLabel={t('auctionGame.budgetLabel')}
                 outbid={humanOutbid}
+                outbidLabel={t('auctionGame.outbid')}
                 accent={posColor}
               />
             )}
@@ -182,6 +183,7 @@ function BidStatusBar({
   budget,
   budgetLabel,
   outbid,
+  outbidLabel,
   accent,
 }: {
   label: string;
@@ -190,23 +192,24 @@ function BidStatusBar({
   budget: string;
   budgetLabel: string;
   outbid: boolean;
+  outbidLabel: string;
   accent: string;
 }) {
   return (
     <div
-      className="flex items-center justify-between gap-2 rounded-[14px] border-l-[3px] bg-white/[0.05] px-4 py-2.5"
+      className="flex items-center justify-between gap-2 rounded-[14px] border-l-[3px] bg-black/25 px-4 py-1.5"
       style={{ borderColor: accent }}
     >
       <div className="min-w-0">
         <div className="flex items-center gap-2">
-          <span className="font-poppins text-[9px] font-black uppercase tracking-wide text-white/45">{label}</span>
+          <span className="font-poppins text-[9px] font-black uppercase tracking-wide text-white/70">{label}</span>
           {outbid && (
             <motion.span
               initial={{ scale: 0.6, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               className="rounded-full bg-brand-red/20 px-2 py-0.5 font-poppins text-[9px] font-black uppercase text-brand-red"
             >
-              Outbid
+              {outbidLabel}
             </motion.span>
           )}
         </div>
@@ -216,7 +219,7 @@ function BidStatusBar({
             initial={{ scale: 1.1, opacity: 0.5 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={SPRING.snap}
-            className="font-poppins text-2xl font-black tabular-nums leading-none text-brand-yellow"
+            className="font-poppins text-xl font-black tabular-nums leading-none text-brand-yellow"
           >
             {amount}
           </motion.div>
@@ -224,8 +227,8 @@ function BidStatusBar({
         {by && <div className="mt-0.5 font-poppins text-[10px] font-semibold text-white/50">{by}</div>}
       </div>
       <div className="text-right">
-        <div className="font-poppins text-[9px] font-black uppercase tracking-wide text-white/45">{budgetLabel}</div>
-        <div className="font-poppins text-xl font-black tabular-nums leading-none text-white">{budget}</div>
+        <div className="font-poppins text-[9px] font-black uppercase tracking-wide text-white/70">{budgetLabel}</div>
+        <div className="font-poppins text-lg font-black tabular-nums leading-none text-white">{budget}</div>
       </div>
     </div>
   );

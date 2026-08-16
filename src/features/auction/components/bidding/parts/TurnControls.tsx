@@ -57,7 +57,7 @@ export function TurnControls({
           <button
             type="button"
             onClick={onFold}
-            className="flex h-14 shrink-0 items-center justify-center rounded-2xl border-2 border-brand-red/40 bg-brand-red/10 px-6 font-poppins text-sm font-black uppercase text-brand-red transition-colors hover:bg-brand-red/20"
+            className="flex h-12 shrink-0 items-center justify-center rounded-2xl border-2 border-brand-red/40 bg-brand-red/10 px-6 font-poppins text-sm font-black uppercase text-brand-red transition-colors hover:bg-brand-red/20"
           >
             {t('auctionGame.fold')}
           </button>
@@ -67,14 +67,14 @@ export function TurnControls({
           whileTap={canAfford ? { scale: 0.98 } : undefined}
           disabled={!canAfford}
           onClick={() => canAfford && onBid(minBid)}
-          className={`flex h-14 flex-1 flex-col items-center justify-center rounded-2xl font-poppins leading-none transition-colors ${
+          className={`flex h-12 flex-1 flex-col items-center justify-center rounded-2xl font-poppins leading-none transition-colors ${
             canAfford ? 'bg-brand-green text-white hover:bg-brand-green/90' : 'cursor-not-allowed bg-white/10 text-white/30'
           }`}
         >
           <span className="text-lg font-black uppercase">
             {mustOpen ? t('auctionGame.bidAmount', { amount: formatMoney(minBid) }) : t('auctionGame.raiseBy', { amount: formatMoney(MIN_BID_INCREMENT) })}
           </span>
-          <span className="mt-1 text-[11px] font-semibold text-white/85">
+          <span className="mt-0.5 text-[11px] font-semibold text-white/85">
             {canAfford
               ? mustOpen
                 ? t('auctionGame.leftAmount', { amount: formatMoney(budgetAfter) })
