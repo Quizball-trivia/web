@@ -131,20 +131,10 @@ export function StadiumBiddingScreen({
             <CluesList clues={round.clues} visibleClues={visibleClues} variant="panel" accent={posColor} />
           )}
 
-          {/* Starting price — mobile-card style row while clues reveal. */}
-          {!isBidding && !studyEndsAt && (
-            <div className="mt-3 flex shrink-0 items-center justify-between gap-2 border-t border-white/15 pt-3">
-              <span className="font-poppins text-[11px] font-black uppercase tracking-wide text-white/80">
-                {t('auctionGame.startingPriceLabel')}
-              </span>
-              <span className="rounded-[10px] bg-black px-3.5 py-1.5 font-poppins text-lg font-black uppercase tabular-nums text-brand-yellow">
-                {formatMoney(round.startingPrice)}
-              </span>
-            </div>
-          )}
-
-          {/* Footer: study countdown → OR → bid status + clean controls */}
-          <div className="mt-3 shrink-0 space-y-2.5">
+          {/* Footer — CONSTANT height across clue / study / bidding phases so
+              the panel never grows and the stadiums above never shrink. The
+              phase content swaps inside the reserved box, bottom-aligned. */}
+          <div className="mt-3 flex h-[118px] shrink-0 flex-col justify-end gap-2.5">
             {studyEndsAt ? (
               <StudyCountdown endsAt={studyEndsAt} variant="panel" />
             ) : isBidding ? (
@@ -157,7 +147,16 @@ export function StadiumBiddingScreen({
                 outbid={humanOutbid}
                 outbidLabel={t('auctionGame.outbid')}
               />
-            ) : null}
+            ) : (
+              <div className="flex items-center justify-between gap-2 border-t border-white/15 pt-3">
+                <span className="font-poppins text-[11px] font-black uppercase tracking-wide text-white/80">
+                  {t('auctionGame.startingPriceLabel')}
+                </span>
+                <span className="rounded-[10px] bg-black px-3.5 py-1.5 font-poppins text-lg font-black uppercase tabular-nums text-brand-yellow">
+                  {formatMoney(round.startingPrice)}
+                </span>
+              </div>
+            )}
 
             {/* Turn-based controls (only once bidding is open) */}
             {showControls &&
