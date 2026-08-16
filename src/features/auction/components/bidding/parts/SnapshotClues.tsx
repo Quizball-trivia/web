@@ -8,7 +8,8 @@ import { cn } from '@/lib/utils';
 import { EASE } from '../../../constants/motion';
 import type { PositionGroup, SeasonSnapshot } from '../../../types';
 
-const eur = (v: number) => `€${Math.round(v / 1_000_000)}M`;
+const eur = (v: number) =>
+  v > 0 && v < 1_000_000 ? `€${Math.round(v / 1_000)}K` : `€${Math.round(v / 1_000_000)}M`;
 
 type Facet = { icon: typeof Goal; labelKey: MessageKey; get: (s: SeasonSnapshot) => string; money?: boolean };
 
@@ -18,14 +19,14 @@ const OUTFIELD_FACETS: Facet[] = [
   { icon: Goal, labelKey: 'auctionGame.snapGoals', get: (s) => `${s.goals}` },
   { icon: Handshake, labelKey: 'auctionGame.snapAssists', get: (s) => (s.assists != null ? `${s.assists}` : '—') },
   { icon: Coins, labelKey: 'auctionGame.snapMarketValue', get: (s) => eur(s.valueEur), money: true },
-  { icon: Cake, labelKey: 'auctionGame.snapAge', get: (s) => `${s.age}` },
+  { icon: Cake, labelKey: 'auctionGame.snapAge', get: (s) => (s.age != null ? `${s.age}` : '—') },
   { icon: Trophy, labelKey: 'auctionGame.snapLeague', get: (s) => s.league },
 ];
 const GK_FACETS: Facet[] = [
   { icon: ShieldCheck, labelKey: 'auctionGame.snapCleanSheets', get: (s) => `${s.cleanSheets ?? '—'}` },
   { icon: Shield, labelKey: 'auctionGame.snapConceded', get: (s) => `${s.conceded ?? '—'}` },
   { icon: Coins, labelKey: 'auctionGame.snapMarketValue', get: (s) => eur(s.valueEur), money: true },
-  { icon: Cake, labelKey: 'auctionGame.snapAge', get: (s) => `${s.age}` },
+  { icon: Cake, labelKey: 'auctionGame.snapAge', get: (s) => (s.age != null ? `${s.age}` : '—') },
   { icon: Trophy, labelKey: 'auctionGame.snapLeague', get: (s) => s.league },
 ];
 

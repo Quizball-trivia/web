@@ -385,8 +385,15 @@ export function useRealtimeAuctionMatch({
     ignoredMatchIdsRef.current.clear();
     activeMatchIdRef.current = null;
     // An explicit (re)start ends any reload-restoration: without this, the
-    // play-again search hides behind the quiet reload loader forever.
+    // play-again search hides behind the quiet reload loader forever. The
+    // stored id goes too — reloading mid-search must not resurrect the
+    // previous finished match (match_found will store the new id).
     setRestoringFromReload(false);
+    try {
+      window.sessionStorage.removeItem(LAST_AUCTION_MATCH_KEY);
+    } catch {
+      // Storage unavailable — nothing stored to clear.
+    }
 
     if (matchmakingMode === 'search') {
       searchCancelledRef.current = false;
@@ -456,6 +463,13 @@ export function useRealtimeAuctionMatch({
     socket.on('connect', handleConnect);
     socket.on('disconnect', handleDisconnect);
     queueMicrotask(() => setIsConnected(socket.connected));
+    // Reload-recovery restores the match id BEFORE this effect runs. When the
+    // singleton socket is ALREADY connected there is no future 'connect' event
+    // to trigger the re-attach — emit the rejoin now or the quiet reload
+    // loader spins forever.
+    if (socket.connected && activeMatchIdRef.current && !publicStateRef.current) {
+      emitAuctionRejoinForActiveMatch();
+    }
 
     return () => {
       socket.off('connect', handleConnect);
@@ -498,6 +512,10 @@ export function useRealtimeAuctionMatch({
     // client-side navigation fires no `connect` event — without this the
     // autoStart timer below would start a second, unwanted search.
     if (attachMatchId) return;
+    // A reload restoration is in flight — never auto-queue over it. When the
+    // restore fails (rejoin unavailable) the flag flips false, this effect
+    // re-runs, and the normal auto-start below picks up the fresh search.
+    if (restoringFromReload) return;
     if (!autoStart || !isConnected || startRequestedRef.current || publicState) return;
     if (autoStartConsumedRef.current) return;
     autoStartTimerRef.current = setTimeout(() => {
@@ -511,7 +529,7 @@ export function useRealtimeAuctionMatch({
         autoStartTimerRef.current = null;
       }
     };
-  }, [attachMatchId, autoStart, enabled, isConnected, publicState, requestStart, selfUserId, setPendingTurnActionValue, setSearchValue]);
+  }, [attachMatchId, autoStart, enabled, isConnected, publicState, requestStart, restoringFromReload, selfUserId, setPendingTurnActionValue, setSearchValue]);
 
   // Attach-on-entry: emit `auction:rejoin` for a match this client already
   // belongs to. Registering the id in `activeMatchIdRef` also makes the
@@ -703,7 +721,12 @@ export function useRealtimeAuctionMatch({
         // owner to drop attachMatchId so search can auto-start / be cancelled.
         if (attachMatchIdRef.current) setAttachUnavailable(true);
         // Reload-recovery target is gone too (state TTL expired): drop the
-        // stored id + the restoring flag so the screen leaves the quiet loader.
+        // stored id, release the auto-start suppression and the restoring
+        // flag, so the screen falls back to a normal fresh search instead of
+        // retrying the dead match id forever.
+        activeMatchIdRef.current = null;
+        autoStartConsumedRef.current = false;
+        startRequestedRef.current = false;
         setRestoringFromReload(false);
         try {
           window.sessionStorage.removeItem(LAST_AUCTION_MATCH_KEY);
@@ -730,8 +753,10 @@ export function useRealtimeAuctionMatch({
     const onState = (payload: AuctionStatePayload) => {
       // A full snapshot proves this socket is attached and hydrated — any
       // pending rejoin prompt is obsolete (stale prompts otherwise stick
-      // forever, since nothing else clears them on this path).
+      // forever, since nothing else clears them on this path), and a reload
+      // restoration (if one was in flight) has succeeded.
       setRejoinAvailable(null);
+      setRestoringFromReload(false);
       rememberMatchId(payload.matchId);
       apply({ type: 'state', payload });
     };

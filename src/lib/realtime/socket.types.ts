@@ -814,7 +814,9 @@ export interface PublicAuctionPlayer {
   /** Ranked identity for the showdown/lineup cards (tier frame + RP). */
   tier?: string | null;
   rp?: number | null;
-  isBot: boolean;
+  /** Server-only since the bot-concealment pass — never sent to clients. Kept
+   *  optional so older cached payloads still parse. */
+  isBot?: boolean;
   budget: number;
   team: PublicAuctionTeam;
   isEliminated: boolean;
@@ -870,13 +872,13 @@ export interface PublicAuctionSoloPickState {
 export interface PublicAuctionPlayerRanking {
   seatId: string;
   userId?: string | null;
-  isBot: boolean;
   displayName: string;
   rank: number;
   isComplete: boolean;
   totalTrueValue: number;
   budgetRemaining: number;
-  player: PublicAuctionPlayer;
+  /** Absent on rankings computed by legacy server states. */
+  player?: PublicAuctionPlayer;
 }
 
 export interface PublicAuctionMatchState {

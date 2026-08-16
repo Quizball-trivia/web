@@ -14,7 +14,7 @@ export type SitOutReason = 'forfeited' | 'eliminated' | 'position-filled' | null
 export interface SeasonSnapshot {
   season: string; // "2011/12"
   league: string; // "La Liga" — level + region, never the club
-  age: number;
+  age: number | null;
   apps: number;
   goals: number;
   assists?: number;

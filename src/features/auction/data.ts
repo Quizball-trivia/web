@@ -604,7 +604,7 @@ export function getTotalTeamValue(team: AuctionTeam): number {
 
 // ── Squad chemistry (mirrors the backend, which is authoritative) ────────────
 // FC-style chemistry on three dimensions — club, league and nation. Each of the
-// 11 players earns up to 3 points from how many squadmates share their club,
+// 7 players earns up to 3 points from how many squadmates share their club,
 // league and nation (each dimension has its own tier thresholds, FC-style). A
 // player's points are the sum across the three dimensions, capped at 3; the
 // squad total scales the team's value by chem ÷ 10. With a 7-a-side squad the
@@ -632,7 +632,7 @@ function chemTierPoints(count: number, thresholds: number[]): number {
 }
 
 export interface SquadChemistry {
-  total: number; // 0…33
+  total: number; // 0…21
   perPlayer: Record<string, number>; // footballer id → 0…3
 }
 
@@ -766,9 +766,13 @@ export function getSquadProfit(player: AuctionPlayer): number {
   return getTotalFutureValue(player.team) - (STARTING_BUDGET - player.budget);
 }
 
-/** Profit scaled by chemistry — the score the winner is decided on. */
+/** Profit scaled by chemistry — the score the winner is decided on. Mirrors the
+ *  server exactly: chemistry is a BONUS that amplifies gains but never deepens
+ *  a loss (multiplying negative profit would rank better-linked squads lower). */
 export function getAdjustedProfit(player: AuctionPlayer): number {
-  return Math.round(getSquadProfit(player) * chemistryMultiplier(computeSquadChemistry(player.team).total));
+  const profit = getSquadProfit(player);
+  if (profit <= 0) return Math.round(profit);
+  return Math.round(profit * chemistryMultiplier(computeSquadChemistry(player.team).total));
 }
 
 export function needsPosition(player: AuctionPlayer, pos: PositionGroup): boolean {

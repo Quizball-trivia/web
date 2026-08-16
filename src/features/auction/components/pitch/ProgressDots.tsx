@@ -1,11 +1,11 @@
 /**
  * Squad-fill progress dots: `filled` green, the rest muted. Shared by the squad
- * grid and the stadium board (both hardcoded an 11-dot row before). `total`
- * defaults to a full 11-man squad but can be derived from the formation.
+ * grid and the stadium board. `total` defaults to the full 7-a-side squad but
+ * can be derived from the formation.
  */
 export function ProgressDots({
   filled,
-  total = 11,
+  total = 7,
   size = 'sm',
 }: {
   filled: number;

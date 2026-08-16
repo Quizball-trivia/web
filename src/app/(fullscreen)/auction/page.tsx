@@ -13,9 +13,9 @@ function AuctionPageInner() {
   // Opt-in preview of the experimental 3-stadium layout on the live URL:
   // /auction?stadium=1 — renders the same mock prototype as /dev/auction-stadium
   // without touching the real live game (default /auction is unchanged).
-  // NOTE: /auction is login-gated, so this only reaches signed-in users; the
-  // no-login preview lives at /dev/auction-stadium.
-  if (searchParams.get('stadium')) {
+  // Dev-only: in production the live route must never be swappable for a mock
+  // via query string (the preview lives at /dev/auction-stadium).
+  if (process.env.NODE_ENV !== 'production' && searchParams.get('stadium')) {
     return <StadiumBiddingPreview />;
   }
 

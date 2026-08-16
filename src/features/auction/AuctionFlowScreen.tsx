@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -306,17 +306,20 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
   // when the match arrives ALREADY finished (reload-recovery replay) — nothing
   // is being finalized, so the beat reads as a glitch.
   const isResultsPhase = state?.phase === 'results';
-  const sawLivePhaseRef = useRef(false);
-  if (state?.phase && state.phase !== 'results') sawLivePhaseRef.current = true;
+  const statePhase = state?.phase ?? null;
+  // Derived during render (same sanctioned pattern as peakJoined below): true
+  // once any LIVE phase was seen this session.
+  const [sawLivePhase, setSawLivePhase] = useState(false);
+  if (statePhase && statePhase !== 'results' && !sawLivePhase) {
+    setSawLivePhase(true);
+  }
   useEffect(() => {
     if (!isResultsPhase || resultsRevealed) return;
-    if (!sawLivePhaseRef.current) {
-      setResultsRevealed(true);
-      return;
-    }
-    const id = window.setTimeout(() => setResultsRevealed(true), 600);
+    // Reload-recovery arrives ALREADY finished — reveal immediately (the
+    // overlay below is also gated on sawLivePhase so it never flashes).
+    const id = window.setTimeout(() => setResultsRevealed(true), sawLivePhase ? 600 : 0);
     return () => window.clearTimeout(id);
-  }, [isResultsPhase, resultsRevealed]);
+  }, [isResultsPhase, resultsRevealed, sawLivePhase]);
 
   // Forfeited: show the results screen immediately with the forfeit state (no
   // coins). Takes priority over every other branch once the player has left.
@@ -471,7 +474,7 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
           apEarned={apEarned}
         />
         <AnimatePresence>
-          {!resultsRevealed && (
+          {!resultsRevealed && sawLivePhase && (
             <AuctionStatusOverlay
               key="finalizing"
               title={t('auctionGame.finalizingMatch')}

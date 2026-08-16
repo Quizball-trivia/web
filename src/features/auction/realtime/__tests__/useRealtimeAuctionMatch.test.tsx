@@ -65,11 +65,11 @@ vi.mock('@/utils/logger', () => ({
 
 const formation: PublicAuctionFormation = {
   name: '2-2-2',
-  required: { GK: 1, DEF: 4, MID: 3, FWD: 3 },
+  required: { GK: 1, DEF: 2, MID: 2, FWD: 2 },
   rows: [
-    { pos: 'FWD', count: 3 },
-    { pos: 'MID', count: 3 },
-    { pos: 'DEF', count: 4 },
+    { pos: 'FWD', count: 2 },
+    { pos: 'MID', count: 2 },
+    { pos: 'DEF', count: 2 },
     { pos: 'GK', count: 1 },
   ],
 };
@@ -1222,7 +1222,6 @@ describe('useRealtimeAuctionMatch', () => {
       rankings: [{
         seatId: 'seat-human',
         userId: 'user-1',
-        isBot: false,
         displayName: 'You',
         rank: 1,
         isComplete: false,

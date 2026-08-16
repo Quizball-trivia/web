@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { AuctionGameState } from '../types';
 import type { AuctionActions } from './useAuctionGame';
 
@@ -29,14 +29,20 @@ export function useRoundIntro(state: AuctionGameState, actions: AuctionActions) 
   const showRoundIntro =
     isCluePhase && introDoneForRound !== state.roundIndex && !roundAlreadyLive;
 
+  // One ack per round: `actions` is recreated on every state version (each
+  // clue), so without this guard the skip-path effect would re-emit the
+  // ui-ready ack on every clue of an already-live round.
+  const ackedRoundRef = useRef<number | null>(null);
   useEffect(() => {
-    if (isCluePhase && roundAlreadyLive) {
-      actions.confirmRoundIntro?.();
-    }
+    if (!isCluePhase || !roundAlreadyLive) return;
+    if (ackedRoundRef.current === state.roundIndex) return;
+    ackedRoundRef.current = state.roundIndex;
+    actions.confirmRoundIntro?.();
   }, [isCluePhase, roundAlreadyLive, state.roundIndex, actions]);
 
   const onIntroDone = useCallback(() => {
     setIntroDoneForRound(state.roundIndex);
+    ackedRoundRef.current = state.roundIndex;
     actions.confirmRoundIntro?.();
   }, [actions, state.roundIndex]);
 

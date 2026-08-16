@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Info, X, Zap } from 'lucide-react';
 import { findClubByName } from '@/lib/clubs';
@@ -147,7 +147,7 @@ export function ChemistryBreakdown({
         <div className="flex items-center gap-2">
           <Zap className="size-4" style={{ color: tier.color }} fill="currentColor" />
           <span className="text-[11px] font-black uppercase tracking-wide text-white/50" style={poppins}>
-            Chemistry
+            {t('auctionGame.chemTitle')}
           </span>
           {showInfo && <ChemistryInfoButton />}
         </div>
@@ -183,13 +183,14 @@ export function ChemistryBreakdown({
 
 /** Small (i) button that opens the "how chemistry works" explainer. */
 export function ChemistryInfoButton({ className = '' }: { className?: string }) {
+  const { t } = useLocale();
   const [open, setOpen] = useState(false);
   return (
     <>
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label="How chemistry works"
+        aria-label={t('auctionGame.chemHelpTitle')}
         className={cn(
           'flex size-4 items-center justify-center rounded-full text-white/40 transition-colors hover:text-white/80',
           className,
@@ -211,6 +212,16 @@ const RULE_ROWS: { dim: ChemDimension; thresholds: number[] }[] = [
 /** Modal explaining the FC-style tier thresholds. */
 export function ChemistryHelpModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t } = useLocale();
+  // Escape closes the modal — it renders without a focus-trapping dialog
+  // element, so at minimum keyboard users get the standard dismiss key.
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open, onClose]);
   return (
     <AnimatePresence>
       {open && (
@@ -222,6 +233,9 @@ export function ChemistryHelpModal({ open, onClose }: { open: boolean; onClose: 
           onClick={onClose}
         >
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-label={t('auctionGame.chemHelpTitle')}
             initial={{ scale: 0.9, y: 20, opacity: 0 }}
             animate={{ scale: 1, y: 0, opacity: 1 }}
             exit={{ scale: 0.9, y: 20, opacity: 0 }}

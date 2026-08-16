@@ -68,10 +68,14 @@ export function toClientAuctionState(
           optionA: toClientSoloPickOption(publicState.soloPick.optionA, 'solo-a'),
           optionB: toClientSoloPickOption(publicState.soloPick.optionB, 'solo-b'),
           // Server auto-resolves the pick SOLO_PICK_MS after startedAt; the
-          // derived deadline drives the countdown every seat can watch.
+          // derived deadline drives the countdown every seat can watch. The
+          // past is NOT clamped to now (rejoining 6s into a pick must show the
+          // remaining 4s, not a fresh 10s) and the server clock is converted
+          // to this client's clock.
           endsAt: (() => {
-            const started = toClientTurnEndsAt(publicState.soloPick.startedAt, options.serverTimeOffsetMs);
-            return started === null ? null : started + SOLO_PICK_MS;
+            const startedMs = Date.parse(publicState.soloPick.startedAt);
+            if (!Number.isFinite(startedMs)) return null;
+            return startedMs - (options.serverTimeOffsetMs ?? 0) + SOLO_PICK_MS;
           })(),
         }
       : null,
@@ -114,11 +118,11 @@ function toClientFormation(
 
   return {
     name: fallbackName,
-    required: { GK: 1, DEF: 4, MID: 3, FWD: 3 },
+    required: { GK: 1, DEF: 2, MID: 2, FWD: 2 },
     rows: [
-      { pos: 'FWD', count: 3 },
-      { pos: 'MID', count: 3 },
-      { pos: 'DEF', count: 4 },
+      { pos: 'FWD', count: 2 },
+      { pos: 'MID', count: 2 },
+      { pos: 'DEF', count: 2 },
       { pos: 'GK', count: 1 },
     ],
   };
@@ -167,7 +171,9 @@ function toClientPlayer(
         ),
       },
     },
-    isBot: player.isBot,
+    // Live payloads no longer carry isBot (bot concealment) — every live seat
+    // renders as a human. The client `isBot` only drives MOCK-mode automation.
+    isBot: player.isBot ?? false,
     isEliminated: player.isEliminated,
     forfeited: player.forfeited ?? false,
   };
@@ -216,7 +222,7 @@ function toClientFootballer(
     imageUrl: footballer.imageUrl ?? undefined,
     snapshots: footballer.snapshots?.map((snapshot) => ({
       ...snapshot,
-      age: snapshot.age ?? 0,
+      age: snapshot.age ?? null,
     })),
   };
 }

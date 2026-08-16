@@ -229,7 +229,7 @@ export function SquadPitch({
                           {lastName(f.name)}
                         </motion.span>
                       )}
-                      {f && showChemistry && (
+                      {f && showChemistry && (f.nationality || f.league || f.club) && (
                         <>
                           {/* Nation flag · league badge · club crest — EA FC-card
                               order, on a dark chip so low-contrast crests stay

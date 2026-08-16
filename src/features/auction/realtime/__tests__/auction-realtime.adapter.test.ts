@@ -16,11 +16,11 @@ import {
 
 const formation: PublicAuctionFormation = {
   name: '2-2-2',
-  required: { GK: 1, DEF: 4, MID: 3, FWD: 3 },
+  required: { GK: 1, DEF: 2, MID: 2, FWD: 2 },
   rows: [
-    { pos: 'FWD', count: 3 },
-    { pos: 'MID', count: 3 },
-    { pos: 'DEF', count: 4 },
+    { pos: 'FWD', count: 2 },
+    { pos: 'MID', count: 2 },
+    { pos: 'DEF', count: 2 },
     { pos: 'GK', count: 1 },
   ],
 };
@@ -111,7 +111,7 @@ describe('auction realtime adapter', () => {
       isBot: false,
     });
     expect(clientState.formation.name).toBe('2-2-2');
-    expect(clientState.totalRounds).toBe(33);
+    expect(clientState.totalRounds).toBe(21);
   });
 
   it('carries the server ranking order through, best first', () => {
@@ -121,9 +121,9 @@ describe('auction realtime adapter', () => {
     const clientState = toClientAuctionState(matchState({
       phase: 'finished',
       rankings: [
-        { seatId: 'seat-bot-2', isBot: true, displayName: 'Bot 2', rank: 3, isComplete: false, totalTrueValue: 10, budgetRemaining: 0 },
-        { seatId: 'seat-human', isBot: false, displayName: 'You', rank: 1, isComplete: true, totalTrueValue: 90, budgetRemaining: 5 },
-        { seatId: 'seat-bot-1', isBot: true, displayName: 'Bot 1', rank: 2, isComplete: true, totalTrueValue: 50, budgetRemaining: 2 },
+        { seatId: 'seat-bot-2', displayName: 'Bot 2', rank: 3, isComplete: false, totalTrueValue: 10, budgetRemaining: 0 },
+        { seatId: 'seat-human', displayName: 'You', rank: 1, isComplete: true, totalTrueValue: 90, budgetRemaining: 5 },
+        { seatId: 'seat-bot-1', displayName: 'Bot 1', rank: 2, isComplete: true, totalTrueValue: 50, budgetRemaining: 2 },
       ] as PublicAuctionMatchState['rankings'],
     }));
 
@@ -317,7 +317,6 @@ describe('auction realtime adapter', () => {
       rankings: [{
         seatId: 'seat-human',
         userId: 'user-1',
-        isBot: false,
         displayName: 'You',
         rank: 1,
         isComplete: false,
@@ -476,8 +475,8 @@ describe('auction realtime reducer', () => {
 
     const footballer = clientState.currentRound!.footballer;
     expect(footballer.snapshots).toHaveLength(3);
-    // Null age coerces to the UI's number contract.
-    expect(footballer.snapshots![2].age).toBe(0);
+    // Null age is preserved so the UI renders "—" instead of a fake 0.
+    expect(footballer.snapshots![2].age).toBeNull();
     // Facet-unlock cadence is driven by clue count: snapshot lots pad to 5.
     expect(clientState.currentRound!.clues).toHaveLength(5);
   });

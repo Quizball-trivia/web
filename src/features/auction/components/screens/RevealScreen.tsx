@@ -237,7 +237,7 @@ export function RevealScreen({
                       className="flex items-center gap-1 rounded-full px-2.5 py-1 font-poppins text-[11px] font-black uppercase tabular-nums"
                       style={{ backgroundColor: withAlpha('#58CC02', 0.18), color: '#58CC02' }}
                     >
-                      ⚡ +{chemGain} chem
+                      ⚡ {t('auctionGame.chemGainBadge', { chem: chemGain })}
                     </motion.span>
                   )}
                   <ChemistryBadge total={winnerChemNow} multiplier={chemistryMultiplier(winnerChemNow)} />
