@@ -41,7 +41,7 @@ export function SitOutWaiting({
       )}
       <div
         aria-live="polite"
-        className="flex items-center justify-center gap-2 rounded-[14px] border-2 border-white/5 bg-white/[0.03] px-5 py-2.5 text-center font-poppins text-sm font-semibold uppercase text-white/45"
+        className="flex items-center justify-center gap-2 rounded-[14px] bg-black/25 px-5 py-2.5 text-center font-poppins text-sm font-semibold uppercase text-white/45"
       >
         {humanFolded ? (
           t('auctionGame.youFolded')

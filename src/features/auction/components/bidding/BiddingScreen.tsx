@@ -165,7 +165,7 @@ export function BiddingScreen({
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="w-full rounded-[16px] border-2 border-white/10 bg-white/[0.03] p-4"
+                className="w-full rounded-[16px] bg-black/25 p-3"
               >
                 <AnimatePresence mode="wait">
                   <motion.div

@@ -35,7 +35,7 @@ export function TurnControls({
 
   if (pendingTurnAction) {
     return (
-      <div className="flex items-center justify-center gap-2 rounded-[14px] border-2 border-white/5 bg-white/[0.03] px-5 py-3 text-center font-poppins text-sm font-semibold uppercase text-white/45">
+      <div className="flex items-center justify-center gap-2 rounded-[14px] bg-black/25 px-5 py-2.5 text-center font-poppins text-sm font-semibold uppercase text-white/45">
         <span className="size-3 shrink-0 animate-spin rounded-full border-2 border-white/15 border-t-brand-yellow" />
         {pendingTurnAction.kind === 'bid' ? t('auctionGame.bidPlacedWaiting') : t('auctionGame.foldPlacedWaiting')}
       </div>
