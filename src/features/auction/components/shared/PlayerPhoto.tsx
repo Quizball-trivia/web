@@ -38,7 +38,9 @@ export function PlayerPhoto({
     <img
       src={src}
       alt={footballer.name}
-      className={`rounded-full object-cover ${className}`}
+      // TM portraits are 139x181 with the head near the top: a centered cover
+      // crop slices the forehead, so anchor the crop to the top edge.
+      className={`rounded-full object-cover object-top ${className}`}
       style={{ width: size, height: size }}
       onError={() => setErr(true)}
     />

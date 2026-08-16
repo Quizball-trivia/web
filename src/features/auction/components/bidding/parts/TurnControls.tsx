@@ -57,7 +57,7 @@ export function TurnControls({
           <button
             type="button"
             onClick={onFold}
-            className="flex h-12 shrink-0 items-center justify-center rounded-2xl border-2 border-brand-red/40 bg-brand-red/10 px-6 font-poppins text-sm font-black uppercase text-brand-red transition-colors hover:bg-brand-red/20"
+            className="flex h-12 shrink-0 items-center justify-center rounded-2xl bg-brand-red px-6 font-poppins text-sm font-black uppercase text-white transition-colors hover:bg-brand-red/90"
           >
             {t('auctionGame.fold')}
           </button>
