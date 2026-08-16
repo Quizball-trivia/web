@@ -147,6 +147,8 @@ function toClientPlayer(
     username: player.displayName,
     avatarSeed,
     avatarCustomization,
+    tier: player.tier ?? null,
+    rp: player.rp ?? null,
     budget: player.budget,
     team: {
       formation,

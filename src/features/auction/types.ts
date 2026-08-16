@@ -53,6 +53,9 @@ export interface AuctionPlayer {
    * absent (mock flow / tests). The live adapter always populates it.
    */
   avatarCustomization?: AvatarCustomization;
+  /** Ranked identity for the showdown/lineup cards (tier frame + RP). */
+  tier?: string | null;
+  rp?: number | null;
   budget: number;
   team: AuctionTeam;
   isBot: boolean;

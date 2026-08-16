@@ -811,6 +811,9 @@ export interface PublicAuctionPlayer {
   displayName: string;
   /** Real user's layered avatar (opponents). Null for bots → client randomizes. */
   avatarCustomization?: AvatarCustomization | null;
+  /** Ranked identity for the showdown/lineup cards (tier frame + RP). */
+  tier?: string | null;
+  rp?: number | null;
   isBot: boolean;
   budget: number;
   team: PublicAuctionTeam;
