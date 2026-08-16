@@ -139,7 +139,7 @@ function toClientPlayer(
   // Real opponent → their avatar from the server (avatarCustomization).
   // Bot / no data → a deterministic random avatar keyed by seatId.
   const avatarCustomization: AvatarCustomization = isHuman
-    ? options.humanAvatarCustomization ?? { base: avatarSeed }
+    ? options.humanAvatarCustomization ?? player.avatarCustomization ?? { base: avatarSeed }
     : player.avatarCustomization ?? randomBotAvatar(player.seatId);
 
   return {
