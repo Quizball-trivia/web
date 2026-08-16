@@ -2,7 +2,6 @@ import type { Locale } from "@/lib/i18n/messages";
 import {
   DAILY_DEMO_MODES,
   FEATURED_DEMO_MODES,
-  MINI_GAME_DEMO_MODES,
   type DemoModeCard,
 } from "./demoModes";
 
@@ -26,7 +25,7 @@ export const SHOWCASE_HERO = {
   ctaPrimary: { en: "Book a demo", ka: "დაჯავშნეთ დემო" },
   ctaSecondary: { en: "Explore the games", ka: "იხილეთ თამაშები" },
   chips: [
-    { en: "30+ games", ka: "30+ თამაში" },
+    { en: "Live tournaments", ka: "ლაივ ტურნირები" },
     { en: "White-label", ka: "თეთრი ლეიბლი" },
     { en: "Web & mobile", ka: "ვები და მობილური" },
     { en: "EN / KA ready", ka: "EN / KA მზა" },
@@ -87,7 +86,7 @@ export const SHOWCASE_BENEFITS: ShowcaseBenefit[] = [
 
 // ── Game sections ────────────────────────────────────────────────────────────
 export interface ShowcaseSection {
-  id: "flagship" | "mini" | "daily";
+  id: "flagship" | "daily";
   accent: string; // hex, used for accents/badges
   eyebrow: DemoI18nText;
   title: DemoI18nText;
@@ -106,17 +105,6 @@ export const SHOWCASE_SECTIONS: ShowcaseSection[] = [
       ka: "მასშტაბური მულტიპლეიერ მოვლენები, რომლებიც ქმნის თავშეყრის მომენტს და ზრდის აქტივობას მატჩების დღეებში.",
     },
     modes: FEATURED_DEMO_MODES,
-  },
-  {
-    id: "mini",
-    accent: "#1CB0F6",
-    eyebrow: { en: "Quick & monetizable", ka: "სწრაფი და მონეტიზებადი" },
-    title: { en: "Bet-native mini-games", ka: "ფსონის სტილის მინი-თამაშები" },
-    blurb: {
-      en: "Fast, replayable games built on mechanics your users already know — a natural, low-friction bridge to your markets.",
-      ka: "სწრაფი, გამეორებადი თამაშები ნაცნობ მექანიკებზე — ბუნებრივი ხიდი თქვენს მარკეტებამდე.",
-    },
-    modes: MINI_GAME_DEMO_MODES,
   },
   {
     id: "daily",
@@ -140,8 +128,6 @@ export interface CardMeta {
 }
 
 const DURATION_SHORT: DemoI18nText = { en: "1–2 min", ka: "1–2 წთ" };
-
-const FORMAT_SOLO: DemoI18nText = { en: "Solo · instant", ka: "სოლო · მყისიერი" };
 const FORMAT_DAILY: DemoI18nText = { en: "Daily", ka: "ყოველდღიური" };
 
 // Flagship formats/durations (bespoke — these are the big multiplayer modes).
@@ -156,22 +142,6 @@ const FLAGSHIP_META: Record<string, CardMeta> = {
   },
 };
 
-// Betting mechanic tags for the mini-games where the hook is unmistakable.
-const MECHANIC_BY_SLUG: Record<string, DemoI18nText> = {
-  "mini-accumulator": { en: "Accumulator", ka: "ექსპრესი" },
-  "mini-cash-out-ladder": { en: "Cash-out", ka: "Cash-out" },
-  "mini-odds-board": { en: "Odds market", ka: "კოეფიციენტები" },
-  "mini-bet-slip-booster": { en: "Bet slip", ka: "ტალონი" },
-  "mini-daily-jackpot": { en: "Jackpot", ka: "ჯექპოტი" },
-  "mini-hi-lo-ride": { en: "Hi-Lo", ka: "Hi-Lo" },
-  "mini-trivia-mines": { en: "Mines", ka: "Mines" },
-  "mini-final-third": { en: "Cash-out", ka: "Cash-out" },
-};
-
 export function getCardMeta(mode: DemoModeCard): CardMeta {
-  if (FLAGSHIP_META[mode.slug]) return FLAGSHIP_META[mode.slug];
-  if (mode.group === "daily") {
-    return { duration: DURATION_SHORT, format: FORMAT_DAILY };
-  }
-  return { duration: DURATION_SHORT, format: FORMAT_SOLO, mechanic: MECHANIC_BY_SLUG[mode.slug] };
+  return FLAGSHIP_META[mode.slug] ?? { duration: DURATION_SHORT, format: FORMAT_DAILY };
 }

@@ -31,8 +31,6 @@ import {
   type ShowcaseSection,
 } from "./demoShowcase";
 
-const TOTAL_GAMES = SHOWCASE_SECTIONS.reduce((sum, section) => sum + section.modes.length, 0);
-
 const BENEFIT_ICONS: Record<BenefitIcon, LucideIcon> = {
   retention: CalendarCheck,
   crossSell: TrendingUp,
@@ -296,11 +294,7 @@ function GameCard({
 // ── Section ───────────────────────────────────────────────────────────────────
 function GameSection({ section, locale }: { section: ShowcaseSection; locale: Locale }) {
   const feature = section.id === "flagship";
-  const gridCols = feature
-    ? "sm:grid-cols-2"
-    : section.id === "mini"
-      ? "sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-      : "sm:grid-cols-2 lg:grid-cols-3";
+  const gridCols = feature ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3";
 
   return (
     <section className="px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
@@ -354,8 +348,8 @@ function CtaBand({ locale }: { locale: Locale }) {
           </h2>
           <p className="mt-4 max-w-xl font-poppins text-sm leading-relaxed text-white/60 sm:text-base">
             {locale === "ka"
-              ? `${TOTAL_GAMES}+ თამაში, სრულად ბრენდირებადი და თქვენს პროდუქტში ინტეგრაციისთვის მზა. მოდით, გაჩვენოთ ცოცხლად.`
-              : `${TOTAL_GAMES}+ games, fully brandable and ready to embed in your product. Let us walk you through a live integration.`}
+              ? "სრულად ბრენდირებადი და თქვენს პროდუქტში ინტეგრაციისთვის მზა — მოდით, გაჩვენოთ ცოცხლად."
+              : "Fully brandable and ready to embed in your product — let us walk you through a live integration."}
           </p>
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row">
             <a
