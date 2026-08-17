@@ -61,7 +61,10 @@ export function SquadPitch({
       roRef.current = ro;
     }
   }, []);
-  const scale = fill && pitchH > 0 ? Math.min(1, Math.max(0.55, pitchH / 400)) : 1;
+  // Applies in BOTH sizing modes: fill pitches vary with the viewport, and the
+  // fixed-aspect (4/5) pitches shrink with container width on small phones —
+  // either way a short pitch must shrink its player stacks to keep rows apart.
+  const scale = pitchH > 0 ? Math.min(1, Math.max(0.55, pitchH / 400)) : 1;
 
   const circle = Math.round((size === 'lg' ? 44 : size === 'md' ? 36 : 28) * scale);
   const nameFsPx = Math.max(8, Math.round((size === 'lg' ? 11 : size === 'md' ? 9 : 8) * scale));

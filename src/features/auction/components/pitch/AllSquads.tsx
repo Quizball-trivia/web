@@ -107,6 +107,7 @@ function SquadColumn({
           showYouBadge={isHuman}
           needGlow={showNeedGlow}
           isHuman={isHuman}
+          showChemistry
         />
       </div>
 
