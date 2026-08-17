@@ -180,7 +180,7 @@ function PromoSpecialRound({ quiz }: { quiz: PromoQuizApi }) {
   );
 }
 
-export function PromoQuizScreen({ playerName = 'Shota' }: { playerName?: string }) {
+export function PromoQuizScreen({ playerName = 'შოთა' }: { playerName?: string }) {
   const quiz = usePromoQuiz();
 
   // Install the stub socket before any interaction can produce an emit. The
@@ -202,7 +202,7 @@ export function PromoQuizScreen({ playerName = 'Shota' }: { playerName?: string 
       <div className="flex min-h-dvh flex-col items-center justify-center gap-8 px-6 text-center">
         <PromoLocaleDefault />
         <div className="font-fun text-sm uppercase tracking-[0.3em] text-white/50">
-          Final score
+          საბოლოო ქულა
         </div>
         <div className="font-fun text-7xl font-black text-brand-yellow" style={poppins}>
           {quiz.score}
@@ -213,7 +213,7 @@ export function PromoQuizScreen({ playerName = 'Shota' }: { playerName?: string 
           onClick={quiz.restart}
           className="rounded-xl bg-brand-green px-8 py-4 font-fun text-lg font-black uppercase text-white transition-transform active:scale-95"
         >
-          Play again
+          თავიდან თამაში
         </button>
       </div>
     );
@@ -289,7 +289,7 @@ export function PromoQuizScreen({ playerName = 'Shota' }: { playerName?: string 
               className="w-full max-w-sm rounded-xl bg-brand-green px-8 py-4 font-fun text-lg font-black uppercase text-white shadow-lg transition-transform active:scale-95"
               style={poppins}
             >
-              {quiz.isLast ? 'Finish' : 'Next question'}
+              {quiz.isLast ? 'დასრულება' : 'შემდეგი კითხვა'}
             </button>
           </motion.div>
         )}

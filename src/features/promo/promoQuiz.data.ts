@@ -11,21 +11,19 @@ export type PromoQuestion =
   | { kind: 'putInOrder'; points: number; question: ResolvedPutInOrderQuestion }
   | { kind: 'clues'; points: number; question: ResolvedCluesQuestion };
 
-// Shota Arveladze — Georgia's record scorer: Dinamo Tbilisi, Trabzonspor,
-// Ajax, Rangers, AZ. Image rounds use local club crests (public/clubs/) so
-// nothing depends on the network during filming. Facts checked against his
-// actual career: Ajax 1997–2001, Rangers 2001–05, and Rangers' 2003/04
-// Champions League group (Manchester United, VfB Stuttgart, Panathinaikos).
+// Shota Arveladze promo quiz — Georgian editorial content supplied by the
+// owner for the 2026-08-18 video shoot. Photos are vendored under
+// public/promo/ so nothing depends on external hosts during filming.
 export const PROMO_QUESTIONS: PromoQuestion[] = [
   {
     kind: 'multipleChoice',
     points: 100,
     question: {
       id: 'promo-q1',
-      prompt: 'Which Dutch club did Shota Arveladze join in 1997?',
-      options: ['PSV Eindhoven', 'Feyenoord', 'Ajax', 'AZ Alkmaar'],
-      correctIndex: 2,
-      categoryName: 'Shota Arveladze',
+      prompt: 'რა მეტსახელი ჰქონდა შოთა არველაძეს „რეინჯერსში“ თამაშის დროს?',
+      options: ['სუპერ შოთა', 'მისტერ ბინი', 'ქართველი ტანკი', 'ჯადოქარი'],
+      correctIndex: 1,
+      categoryName: 'შოთა არველაძე',
     },
   },
   {
@@ -33,11 +31,10 @@ export const PROMO_QUESTIONS: PromoQuestion[] = [
     points: 100,
     question: {
       id: 'promo-q2',
-      prompt:
-        'Arveladze is Georgia’s all-time leading scorer. How many goals did he score for the national team?',
-      options: ['18 goals', '26 goals', '31 goals', '22 goals'],
-      correctIndex: 1,
-      categoryName: 'Shota Arveladze',
+      prompt: 'რისი წაღება დაავიწყდა შოთა არველაძეს „აიაქსის“ პირველი ვარჯიშის დროს?',
+      options: ['ფორმის', 'წინდების', 'სპორტული ჩანთის', 'ბუცების'],
+      correctIndex: 3,
+      categoryName: 'შოთა არველაძე',
     },
   },
   {
@@ -45,11 +42,10 @@ export const PROMO_QUESTIONS: PromoQuestion[] = [
     points: 100,
     question: {
       id: 'promo-q3',
-      prompt:
-        'At which Turkish club did Shota Arveladze become a fan favourite before moving to the Netherlands?',
-      options: ['Galatasaray', 'Beşiktaş', 'Fenerbahçe', 'Trabzonspor'],
-      correctIndex: 3,
-      categoryName: 'Shota Arveladze',
+      prompt: 'ვის წინააღმდეგ ჩაატარა შოთა არველაძემ საკლუბო კარიერის ბოლო თამაში?',
+      options: ['ბარსელონა', 'ვალენსია', 'რეალ მადრიდი', 'ატლეტიკო მადრიდი'],
+      correctIndex: 2,
+      categoryName: 'შოთა არველაძე',
     },
   },
   {
@@ -57,15 +53,14 @@ export const PROMO_QUESTIONS: PromoQuestion[] = [
     points: 100,
     question: {
       id: 'promo-q4',
-      prompt:
-        'Arveladze’s Rangers faced this English club in the 2003/04 Champions League group stage. Who is it?',
-      options: ['Liverpool', 'Manchester United', 'Arsenal', 'Chelsea'],
-      correctIndex: 1,
-      categoryName: 'Shota Arveladze',
+      prompt: 'ჩემპიონთა ლიგის რომელი გუნდის წინააღმდეგ არის გადაღებული ეს სურათი 2003 წელს?',
+      options: ['შტუტგარტი', 'კოპენჰაგენი', 'მანჩესტერ იუნაიტედი', 'პანათინაიკოსი'],
+      correctIndex: 0,
+      categoryName: 'შოთა არველაძე',
       image: {
-        url: '/clubs/manchester-united.webp',
-        width: 512,
-        height: 512,
+        url: '/promo/shota-cl-2003.jpg',
+        width: 399,
+        height: 501,
       },
     },
   },
@@ -74,14 +69,14 @@ export const PROMO_QUESTIONS: PromoQuestion[] = [
     points: 100,
     question: {
       id: 'promo-q5',
-      prompt: 'Rangers also met this German side in that 2003/04 Champions League group. Name the club.',
-      options: ['Bayern Munich', 'Borussia Dortmund', 'VfB Stuttgart', 'Bayer Leverkusen'],
+      prompt: 'რომელ წელს არის გადაღებული ეს სურათი?',
+      options: ['1998', '1999', '1997', '2000'],
       correctIndex: 2,
-      categoryName: 'Shota Arveladze',
+      categoryName: 'შოთა არველაძე',
       image: {
-        url: '/clubs/vfb-stuttgart.webp',
-        width: 512,
-        height: 512,
+        url: '/promo/shota-archil-nac.jpg',
+        width: 676,
+        height: 471,
       },
     },
   },
@@ -91,18 +86,18 @@ export const PROMO_QUESTIONS: PromoQuestion[] = [
     question: {
       kind: 'putInOrder',
       id: 'promo-q6',
-      prompt: 'Shota Arveladze’s career',
-      instruction: 'Put these clubs in the order he played for them',
+      prompt: 'შოთა არველაძის კარიერის მნიშვნელოვანი მოვლენები',
+      instruction: 'დაალაგეთ ეს მოვლენები ქრონოლოგიურად (ყველაზე ადრინდელიდან უახლესისკენ)',
       direction: 'asc',
-      // Deliberately scrambled so there is real dragging to film; the correct
-      // chronological order is PROMO_PUT_IN_ORDER_CORRECT_IDS below.
+      // Displayed scrambled; the chronological answer is
+      // PROMO_PUT_IN_ORDER_CORRECT_IDS below.
       items: [
-        { id: 'ajax', label: 'Ajax', details: '1997–2001' },
-        { id: 'rangers', label: 'Rangers', details: '2001–2005' },
-        { id: 'dinamo', label: 'Dinamo Tbilisi', details: '1991–1993' },
-        { id: 'trabzon', label: 'Trabzonspor', details: '1993–1997' },
+        { id: 'scot-title', label: 'მოიგო შოტლანდიის პრემიერლიგის პირველი ტიტული' },
+        { id: 'retire', label: 'დაასრულა პროფესიონალური საფეხბურთო კარიერა' },
+        { id: 'debut', label: 'შედგა მისი დებიუტი საქართველოს ეროვნულ ნაკრებში' },
+        { id: 'top-scorer', label: 'გახდა თურქეთის სუპერლიგის საუკეთესო ბომბარდირი' },
       ],
-      categoryName: 'Shota Arveladze',
+      categoryName: 'შოთა არველაძე',
     },
   },
   {
@@ -111,32 +106,33 @@ export const PROMO_QUESTIONS: PromoQuestion[] = [
     question: {
       kind: 'clues',
       id: 'promo-q7',
-      prompt: 'Who am I?',
+      prompt: 'ვინ ვარ მე?',
       clues: [
-        { type: 'text', content: 'I was born in Tbilisi in 1973.' },
-        { type: 'text', content: 'I have an identical twin who also played professionally.' },
-        { type: 'text', content: 'I won the Eredivisie and scored in the Champions League for Ajax.' },
-        { type: 'text', content: 'At Rangers I scored over 40 goals in Scottish football.' },
-        { type: 'text', content: 'I am my country’s all-time top scorer.' },
+        { type: 'text', content: 'ვარ საქართველოს ნაკრების ყოფილი თავდამსხმელი, დავიბადე თბილისში 1973 წლის 22 თებერვალს.' },
+        { type: 'text', content: 'კარიერის ნაწილი თურქეთში, ნიდერლანდებსა და გერმანიაში მაქვს გატარებული.' },
+        { type: 'text', content: 'ვთამაშობდი „ნაკ ბრედაში“ და ერედივიზიონში ჩემი ძმის წინააღმდეგ ვითამაშე.' },
+        { type: 'text', content: 'საქართველოს სამგზის ჩემპიონი ვარ.' },
+        { type: 'text', content: 'შოთა არველაძის ტყუპისცალი ვარ.' },
       ],
-      categoryName: 'Shota Arveladze',
+      categoryName: 'შოთა არველაძე',
     },
   },
 ];
 
-// The correct final order for the put-in-order round, in chronological order.
-export const PROMO_PUT_IN_ORDER_CORRECT_IDS = ['dinamo', 'trabzon', 'ajax', 'rangers'];
+// The correct final order for the put-in-order round: national-team debut
+// (1992) → Turkish Süper Lig top scorer (1995/96) → first Scottish title
+// (2002) → retirement (2008).
+export const PROMO_PUT_IN_ORDER_CORRECT_IDS = ['debut', 'top-scorer', 'scot-title', 'retire'];
 
-export const PROMO_CLUES_ANSWER = 'Shota Arveladze';
+export const PROMO_CLUES_ANSWER = 'არჩილ არველაძე';
 
-// Exact accepted guesses (lowercased): full name, surname, or first name, in
-// Latin or Georgian script. Deliberately NOT a substring match — a stray
-// letter must never count as correct on camera.
+// Exact accepted guesses (lowercased): full name or first name, Georgian or
+// Latin script. Deliberately NOT a substring match. Bare "არველაძე"/"arveladze"
+// is NOT accepted — the surname alone doesn't distinguish Archil from Shota.
 export const PROMO_CLUES_ACCEPTED = [
-  'shota arveladze',
-  'arveladze',
-  'shota',
-  'შოთა არველაძე',
-  'არველაძე',
-  'შოთა',
+  'არჩილ არველაძე',
+  'არჩილი',
+  'არჩილ',
+  'archil arveladze',
+  'archil',
 ];
