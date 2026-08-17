@@ -1,14 +1,19 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import type { Socket } from 'socket.io-client';
 import { PossessionQuestionPanel } from '@/components/game/PossessionQuestionPanel';
 import { LiveSpecialQuestionPanel } from '@/features/possession/components/LiveSpecialQuestionPanel';
 import { __setSocketOverride } from '@/lib/realtime/socket-client';
-import type { ClientToServerEvents, ServerToClientEvents } from '@/lib/realtime/socket.types';
-import { PROMO_CLUES_ANSWER, PROMO_PUT_IN_ORDER_CORRECT_IDS } from './promoQuiz.data';
+import type {
+  ClientToServerEvents,
+  MatchCluesGuessAckPayload,
+  ServerToClientEvents,
+} from '@/lib/realtime/socket.types';
+import { PROMO_CLUES_ACCEPTED, PROMO_PUT_IN_ORDER_CORRECT_IDS } from './promoQuiz.data';
 import { PROMO_FROZEN_TIME, PROMO_MATCH_ID, usePromoQuiz } from './usePromoQuiz';
+import { PromoLocaleDefault } from './PromoLocaleDefault';
 
 const poppins = {
   fontFamily: "'Poppins', sans-serif",
@@ -18,6 +23,10 @@ const poppins = {
 } as const;
 
 const PROMO_EMIT_EVENT = 'promo:socket-emit';
+
+// Who-am-I clue pacing: one clue every CLUE_SECONDS; after the last clue the
+// countdown holds and the round waits for an answer (no timeout, no give-up).
+const CLUE_SECONDS = 10;
 
 interface PromoEmitDetail {
   event: string;
@@ -56,48 +65,53 @@ function createPromoSocket(): Socket<ServerToClientEvents, ClientToServerEvents>
   return stub;
 }
 
-// Who-am-I clue pacing: one clue every CLUE_SECONDS; after the last clue the
-// countdown holds and the round waits for an answer (no timeout, no give-up).
-const CLUE_SECONDS = 10;
+function isAcceptedCluesGuess(raw: string): boolean {
+  const guess = raw.trim().toLowerCase();
+  return guess.length > 0 && PROMO_CLUES_ACCEPTED.includes(guess);
+}
 
-export function PromoQuizScreen({ playerName = 'Shota' }: { playerName?: string }) {
-  const quiz = usePromoQuiz();
-  const [socketReady, setSocketReady] = useState(false);
+type PromoQuizApi = ReturnType<typeof usePromoQuiz>;
 
-  const clueCount = quiz.current.kind === 'clues' ? quiz.current.question.clues.length : 0;
+/**
+ * One special round (put-in-order or who-am-I). Remounted per question via the
+ * parent's key, so all round-local state (clue countdown, wrong-guess reveals)
+ * starts fresh without effect-driven resets.
+ */
+function PromoSpecialRound({ quiz }: { quiz: PromoQuizApi }) {
+  const current = quiz.current;
+  const isClues = current.kind === 'clues';
+  const clueCount = isClues ? current.question.clues.length : 0;
   const cluesDuration = Math.max(1, clueCount) * CLUE_SECONDS;
-  // The panel reveals clue N when (duration - timeRemaining) passes N-1 clue
-  // slots, so holding at CLUE_SECONDS keeps every clue visible with no expiry.
-  const cluesFloor = CLUE_SECONDS;
-  const [cluesTimeLeft, setCluesTimeLeft] = useState(cluesDuration);
+
+  const [timeLeft, setTimeLeft] = useState(cluesDuration);
+  const [guessAck, setGuessAck] = useState<MatchCluesGuessAckPayload | null>(null);
+  // Wrong guesses reveal the next clue (mirrors the real game's server ack),
+  // which also lowers the score awarded on the eventual correct answer.
+  const [penaltyReveals, setPenaltyReveals] = useState(0);
 
   useEffect(() => {
-    if (quiz.current.kind !== 'clues' || quiz.stage !== 'question') return;
-    setCluesTimeLeft(cluesDuration);
+    if (!isClues) return;
     const interval = setInterval(() => {
-      setCluesTimeLeft((t) => {
-        if (t <= cluesFloor) {
-          clearInterval(interval);
-          return cluesFloor;
-        }
-        return t - 1;
-      });
+      setTimeLeft((t) => (t <= CLUE_SECONDS ? t : t - 1));
     }, 1000);
     return () => clearInterval(interval);
-  }, [quiz.current, quiz.stage, quiz.nonce, cluesDuration, cluesFloor]);
+  }, [isClues]);
 
-  const cluesHeld = cluesTimeLeft <= cluesFloor;
-  const cluesRevealCount = quiz.current.kind === 'clues'
-    ? Math.min(clueCount, Math.max(1, Math.floor((cluesDuration - cluesTimeLeft) / CLUE_SECONDS) + 1))
+  const timedReveals = isClues
+    ? Math.min(clueCount, Math.max(1, Math.floor((cluesDuration - timeLeft) / CLUE_SECONDS) + 1))
     : 0;
+  const revealCount = Math.min(clueCount, Math.max(timedReveals, 1 + penaltyReveals));
 
+  // Latest-value refs so the emit listener subscribes exactly once.
+  const revealCountRef = useRef(revealCount);
+  const submitRef = useRef(quiz.submitSpecial);
+  const qIndexRef = useRef(quiz.index);
   useEffect(() => {
-    __setSocketOverride(createPromoSocket());
-    setSocketReady(true);
-    return () => __setSocketOverride(null);
-  }, []);
+    revealCountRef.current = revealCount;
+    submitRef.current = quiz.submitSpecial;
+    qIndexRef.current = quiz.index;
+  });
 
-  // Bridge the special panels' own submissions into the local state machine.
   useEffect(() => {
     function onEmit(event: Event) {
       const detail = (event as CustomEvent<PromoEmitDetail>).detail;
@@ -106,13 +120,20 @@ export function PromoQuizScreen({ playerName = 'Shota' }: { playerName?: string 
       if (detail.event === 'match:clues_answer') {
         const payload = detail.args[0] as { guess?: string; giveUp?: boolean } | undefined;
         if (payload?.giveUp) return; // no give-up path in promo mode
-        const guess = (payload?.guess ?? '').trim().toLowerCase();
-        const correct = guess.length > 0 && PROMO_CLUES_ANSWER.toLowerCase().includes(guess);
-        // A wrong guess is simply ignored: the panel's pending-guess watchdog
-        // unlocks the input after 2s and the player keeps trying.
-        if (!correct) return;
-        const clueIdx = Math.max(0, cluesRevealCount - 1);
-        quiz.submitSpecial(true, { points: 100 - 20 * clueIdx, clueIndex: clueIdx });
+        if (isAcceptedCluesGuess(payload?.guess ?? '')) {
+          const clueIdx = Math.max(0, revealCountRef.current - 1);
+          submitRef.current(true, { points: 100 - 20 * clueIdx, clueIndex: clueIdx });
+        } else {
+          // Wrong guess: ack it like the server would — clears the input and
+          // reveals the next clue. The round keeps waiting for an answer.
+          setPenaltyReveals((p) => p + 1);
+          setGuessAck({
+            matchId: PROMO_MATCH_ID,
+            qIndex: qIndexRef.current,
+            clueIndex: revealCountRef.current - 1,
+            revealCount: Math.min(5, revealCountRef.current + 1),
+          });
+        }
         return;
       }
 
@@ -121,7 +142,7 @@ export function PromoQuizScreen({ playerName = 'Shota' }: { playerName?: string 
         const submitted = payload?.orderedItemIds ?? [];
         const total = PROMO_PUT_IN_ORDER_CORRECT_IDS.length;
         const matched = submitted.filter((id, i) => id === PROMO_PUT_IN_ORDER_CORRECT_IDS[i]).length;
-        quiz.submitSpecial(matched === total, {
+        submitRef.current(matched === total, {
           points: Math.round((matched / total) * 100),
           submittedOrderIds: submitted,
           foundCount: matched,
@@ -131,20 +152,55 @@ export function PromoQuizScreen({ playerName = 'Shota' }: { playerName?: string 
 
     window.addEventListener(PROMO_EMIT_EVENT, onEmit);
     return () => window.removeEventListener(PROMO_EMIT_EVENT, onEmit);
-  }, [quiz, cluesRevealCount]);
+  }, []);
+
+  if (current.kind === 'multipleChoice') return null;
+
+  const cluesHeld = isClues && revealCount >= clueCount;
+
+  return (
+    <LiveSpecialQuestionPanel
+      matchId={PROMO_MATCH_ID}
+      qIndex={quiz.index}
+      totalQuestions={quiz.totalQuestions}
+      question={current.question}
+      showOptions
+      timeRemaining={isClues ? timeLeft : PROMO_FROZEN_TIME}
+      questionDurationSeconds={isClues ? cluesDuration : PROMO_FROZEN_TIME}
+      hideTimer={!isClues || cluesHeld}
+      soloMode
+      roundResolved={quiz.stage === 'revealed'}
+      answerAck={quiz.answerAck}
+      roundResult={quiz.roundResult}
+      myRound={quiz.myRound}
+      opponentRound={null}
+      countdownGuessAck={null}
+      cluesGuessAck={guessAck}
+    />
+  );
+}
+
+export function PromoQuizScreen({ playerName = 'Shota' }: { playerName?: string }) {
+  const quiz = usePromoQuiz();
+
+  // Install the stub socket before any interaction can produce an emit. The
+  // panels only emit on user input, which cannot precede the first effect.
+  useEffect(() => {
+    __setSocketOverride(createPromoSocket());
+    return () => __setSocketOverride(null);
+  }, []);
+
+  // Fresh question or restart: always film from the top of the page.
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, [quiz.index, quiz.nonce, quiz.finished]);
 
   const revealed = quiz.stage === 'revealed';
-
-  const specialQuestion = useMemo(() => {
-    if (quiz.current.kind === 'multipleChoice') return null;
-    return quiz.current.question;
-  }, [quiz.current]);
-
-  if (!socketReady) return null;
 
   if (quiz.finished) {
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center gap-8 px-6 text-center">
+        <PromoLocaleDefault />
         <div className="font-fun text-sm uppercase tracking-[0.3em] text-white/50">
           Final score
         </div>
@@ -165,7 +221,8 @@ export function PromoQuizScreen({ playerName = 'Shota' }: { playerName?: string 
 
   return (
     <div className="relative flex min-h-dvh w-full flex-col">
-      {/* Scoreboard — replaces the ranked HUD (no pitch, no timers). */}
+      <PromoLocaleDefault />
+      {/* Scoreboard — replaces the ranked HUD (no pitch, no opponent). */}
       <div className="flex items-center justify-center gap-6 px-4 pt-5 sm:pt-7">
         <div className="flex flex-col items-center gap-1">
           <span className="font-fun text-[10px] uppercase tracking-[0.24em] text-white/45">
@@ -209,26 +266,9 @@ export function PromoQuizScreen({ playerName = 'Shota' }: { playerName?: string 
                 opponentAnswer={null}
                 onAnswer={quiz.answerMultipleChoice}
               />
-            ) : specialQuestion ? (
-              <LiveSpecialQuestionPanel
-                matchId={PROMO_MATCH_ID}
-                qIndex={quiz.index}
-                totalQuestions={quiz.totalQuestions}
-                question={specialQuestion}
-                showOptions
-                timeRemaining={quiz.current.kind === 'clues' ? cluesTimeLeft : PROMO_FROZEN_TIME}
-                questionDurationSeconds={quiz.current.kind === 'clues' ? cluesDuration : PROMO_FROZEN_TIME}
-                hideTimer={quiz.current.kind !== 'clues' || cluesHeld}
-                soloMode
-                roundResolved={revealed}
-                answerAck={quiz.answerAck}
-                roundResult={quiz.roundResult}
-                myRound={quiz.myRound}
-                opponentRound={null}
-                countdownGuessAck={null}
-                cluesGuessAck={null}
-              />
-            ) : null}
+            ) : (
+              <PromoSpecialRound quiz={quiz} />
+            )}
           </motion.div>
         </AnimatePresence>
       </div>

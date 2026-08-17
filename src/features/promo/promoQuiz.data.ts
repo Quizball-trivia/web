@@ -11,9 +11,11 @@ export type PromoQuestion =
   | { kind: 'putInOrder'; points: number; question: ResolvedPutInOrderQuestion }
   | { kind: 'clues'; points: number; question: ResolvedCluesQuestion };
 
-// Shota Arveladze — Georgia's record-era striker: Dinamo Tbilisi, Trabzonspor,
-// Ajax, Rangers, AZ. Placeholder imagery uses existing in-repo category art so
-// the image rounds render without new asset uploads.
+// Shota Arveladze — Georgia's record scorer: Dinamo Tbilisi, Trabzonspor,
+// Ajax, Rangers, AZ. Image rounds use local club crests (public/clubs/) so
+// nothing depends on the network during filming. Facts checked against his
+// actual career: Ajax 1997–2001, Rangers 2001–05, and Rangers' 2003/04
+// Champions League group (Manchester United, VfB Stuttgart, Panathinaikos).
 export const PROMO_QUESTIONS: PromoQuestion[] = [
   {
     kind: 'multipleChoice',
@@ -21,8 +23,8 @@ export const PROMO_QUESTIONS: PromoQuestion[] = [
     question: {
       id: 'promo-q1',
       prompt: 'Which Dutch club did Shota Arveladze join in 1997?',
-      options: ['Ajax', 'PSV Eindhoven', 'Feyenoord', 'AZ Alkmaar'],
-      correctIndex: 0,
+      options: ['PSV Eindhoven', 'Feyenoord', 'Ajax', 'AZ Alkmaar'],
+      correctIndex: 2,
       categoryName: 'Shota Arveladze',
     },
   },
@@ -33,8 +35,8 @@ export const PROMO_QUESTIONS: PromoQuestion[] = [
       id: 'promo-q2',
       prompt:
         'Arveladze is Georgia’s all-time leading scorer. How many goals did he score for the national team?',
-      options: ['26 goals', '18 goals', '31 goals', '22 goals'],
-      correctIndex: 0,
+      options: ['18 goals', '26 goals', '31 goals', '22 goals'],
+      correctIndex: 1,
       categoryName: 'Shota Arveladze',
     },
   },
@@ -45,8 +47,8 @@ export const PROMO_QUESTIONS: PromoQuestion[] = [
       id: 'promo-q3',
       prompt:
         'At which Turkish club did Shota Arveladze become a fan favourite before moving to the Netherlands?',
-      options: ['Trabzonspor', 'Galatasaray', 'Beşiktaş', 'Fenerbahçe'],
-      correctIndex: 0,
+      options: ['Galatasaray', 'Beşiktaş', 'Fenerbahçe', 'Trabzonspor'],
+      correctIndex: 3,
       categoryName: 'Shota Arveladze',
     },
   },
@@ -55,12 +57,13 @@ export const PROMO_QUESTIONS: PromoQuestion[] = [
     points: 100,
     question: {
       id: 'promo-q4',
-      prompt: 'Arveladze scored in the Champions League against this club. Which is it?',
-      options: ['Bayern Munich', 'Real Madrid', 'AC Milan', 'FC Barcelona'],
-      correctIndex: 0,
+      prompt:
+        'Arveladze’s Rangers faced this English club in the 2003/04 Champions League group stage. Who is it?',
+      options: ['Liverpool', 'Manchester United', 'Arsenal', 'Chelsea'],
+      correctIndex: 1,
       categoryName: 'Shota Arveladze',
       image: {
-        url: '/clubs/bayern-munich.webp',
+        url: '/clubs/manchester-united.webp',
         width: 512,
         height: 512,
       },
@@ -71,12 +74,12 @@ export const PROMO_QUESTIONS: PromoQuestion[] = [
     points: 100,
     question: {
       id: 'promo-q5',
-      prompt: 'Name this Italian giant — a Champions League opponent during Arveladze’s Ajax years.',
-      options: ['Juventus', 'Inter Milan', 'AC Milan', 'AS Roma'],
-      correctIndex: 0,
+      prompt: 'Rangers also met this German side in that 2003/04 Champions League group. Name the club.',
+      options: ['Bayern Munich', 'Borussia Dortmund', 'VfB Stuttgart', 'Bayer Leverkusen'],
+      correctIndex: 2,
       categoryName: 'Shota Arveladze',
       image: {
-        url: '/clubs/juventus-fc.webp',
+        url: '/clubs/vfb-stuttgart.webp',
         width: 512,
         height: 512,
       },
@@ -125,3 +128,15 @@ export const PROMO_QUESTIONS: PromoQuestion[] = [
 export const PROMO_PUT_IN_ORDER_CORRECT_IDS = ['dinamo', 'trabzon', 'ajax', 'rangers'];
 
 export const PROMO_CLUES_ANSWER = 'Shota Arveladze';
+
+// Exact accepted guesses (lowercased): full name, surname, or first name, in
+// Latin or Georgian script. Deliberately NOT a substring match — a stray
+// letter must never count as correct on camera.
+export const PROMO_CLUES_ACCEPTED = [
+  'shota arveladze',
+  'arveladze',
+  'shota',
+  'შოთა არველაძე',
+  'არველაძე',
+  'შოთა',
+];
