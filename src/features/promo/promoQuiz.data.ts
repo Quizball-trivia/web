@@ -100,7 +100,7 @@ export const PROMO_QUESTIONS: PromoQuestion[] = [
         { id: 'ajax', label: 'Ajax', details: '1997–2001' },
         { id: 'rangers', label: 'Rangers', details: '2001–2005' },
         { id: 'dinamo', label: 'Dinamo Tbilisi', details: '1991–1993' },
-        { id: 'trabzon', label: 'Trabzonspor', details: '1995–1997' },
+        { id: 'trabzon', label: 'Trabzonspor', details: '1993–1997' },
       ],
       categoryName: 'Shota Arveladze',
     },

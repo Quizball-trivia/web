@@ -7,6 +7,10 @@ import { IS_PRODUCTION_DEPLOYMENT } from "@/lib/seo/site";
 // PROMO_ROUTE_ENABLED is explicitly set, mirroring the /demos gate.
 export const metadata = APP_ROUTE_METADATA;
 
+// Evaluate the PROMO_ROUTE_ENABLED escape hatch at request time so flipping
+// the env var takes effect without a rebuild.
+export const dynamic = "force-dynamic";
+
 export default function PromoLayout({
   children,
 }: Readonly<{
