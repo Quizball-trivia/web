@@ -36,7 +36,7 @@ export const SHOWCASE_HERO = {
 
 // Where the "Book a demo" CTAs point. Placeholder address — swap for the real
 // partnerships inbox before this ships.
-export const CONTACT_EMAIL = "hello@quizball.io";
+export const CONTACT_EMAIL = "nika@quizball.io";
 export const CONTACT_MAILTO = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(
   "Quizball for operators — demo request",
 )}`;
