@@ -77,7 +77,7 @@ export function DemoModeArt({ slug, className = "" }: { slug: string; className?
           alt=""
           fill
           sizes="(min-width: 1024px) 50vw, 100vw"
-          className="object-cover"
+          className="object-contain object-center"
         />
         <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/30 to-transparent" />
       </div>
