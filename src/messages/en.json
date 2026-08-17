@@ -645,7 +645,8 @@
     "unavailableTitle": "Challenge Unavailable",
     "unavailableMessage": "This challenge isn't available right now. Please try again later.",
     "unavailableTryAgain": "Try Again",
-    "unavailableBack": "Back"
+    "unavailableBack": "Back",
+    "timeUpBankKept": "Time's up — your {amount} stays in the bank"
   },
   "dailyChallenge": {
     "answerPrefix": "Answer",

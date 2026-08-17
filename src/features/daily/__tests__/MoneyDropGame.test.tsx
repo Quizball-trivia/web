@@ -60,15 +60,14 @@ function confirmBets() {
 }
 
 function expireTimer() {
-  // interval ticks every 250ms; QUESTION_TIME=10s, then the reveal chain runs
+  // interval ticks every 250ms; QUESTION_TIME=10s, then the reveal chain
+  // (≤3s of drop animations + 2s reveal) and the 2.5s auto-advance both fit
+  // inside the 6s advance.
   act(() => {
     vi.advanceTimersByTime(10_500);
   });
   act(() => {
-    vi.advanceTimersByTime(6000); // reveal animations
-  });
-  act(() => {
-    vi.advanceTimersByTime(2500); // auto-advance delay
+    vi.advanceTimersByTime(6000);
   });
 }
 
@@ -108,6 +107,43 @@ describe('MoneyDropGame timeout and bust rules', () => {
     expireTimer(); // timer auto-submits the placed (losing) bet
     expect(onComplete).toHaveBeenCalledTimes(1);
     expect(onComplete).toHaveBeenCalledWith(0);
+  });
+
+  it('pressing View Results during a no-bet auto-window still keeps the bank', () => {
+    const onComplete = vi.fn();
+    render(<MoneyDropGame session={session(5)} onBack={vi.fn()} onComplete={onComplete} />);
+    betAllOn(0);
+    confirmBets();
+    fireEvent.click(screen.getByRole('button', { name: /next question/i }));
+    // question 2: idle timeout, but press the button DURING the reveal window
+    // (before the 2.5s auto-advance fires) — outcome must not change
+    act(() => {
+      vi.advanceTimersByTime(10_500);
+    });
+    act(() => {
+      vi.advanceTimersByTime(3000); // reveal shown (2s), auto-advance (4.5s) not yet
+    });
+    fireEvent.click(screen.getByRole('button', { name: /next question|view results/i }));
+    expect(onComplete).toHaveBeenCalledTimes(1);
+    expect(onComplete).toHaveBeenCalledWith(250000);
+  });
+
+  it('a timer-confirmed last-question win with no manual confirm ever scores 0', () => {
+    const onComplete = vi.fn();
+    render(<MoneyDropGame session={session(1)} onBack={vi.fn()} onComplete={onComplete} />);
+    betAllOn(0); // allocated on the correct answer but never pressed Confirm
+    expireTimer(); // timer auto-submits and completes the single-question run
+    expect(onComplete).toHaveBeenCalledTimes(1);
+    expect(onComplete).toHaveBeenCalledWith(0);
+  });
+
+  it('a timer-confirmed win on a non-final round advances instead of completing', () => {
+    const onComplete = vi.fn();
+    render(<MoneyDropGame session={session(5)} onBack={vi.fn()} onComplete={onComplete} />);
+    betAllOn(0);
+    expireTimer(); // auto-submit the winning bet on question 1
+    expect(onComplete).not.toHaveBeenCalled();
+    expect(screen.getByText('Question q2')).toBeInTheDocument();
   });
 
   it('surviving the last question completes with the final bank', () => {
