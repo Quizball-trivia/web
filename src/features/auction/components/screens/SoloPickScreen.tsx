@@ -4,7 +4,9 @@ import { useEffect } from 'react';
 import { motion } from 'motion/react';
 import type { AuctionGameState } from '../../types';
 import type { AuctionActions } from '../../hooks/useAuctionGame';
-import { formatMoney } from '../../data';
+import { formatMoney, SOLO_PICK_MS } from '../../data';
+import { CountdownTimer } from '../bidding/CountdownTimer';
+import { SnapshotClues } from '../bidding/parts/SnapshotClues';
 import { POS_COLORS, AUCTION_PURPLE } from '../../constants/auction.constants';
 import { useLocale } from '@/contexts/LocaleContext';
 import { usePositionLabel } from '../../hooks/usePositionLabel';
@@ -57,6 +59,12 @@ export function SoloPickScreen({
     return (
       <AuctionScreen className="flex flex-col items-center justify-center p-4">
         <div className="relative z-10 flex flex-col items-center text-center">
+          {/* Everyone watches the same ticking clock the chooser is under. */}
+          {pick.endsAt != null && (
+            <div className="mb-4">
+              <CountdownTimer key={String(pick.endsAt)} endsAt={pick.endsAt} totalMs={SOLO_PICK_MS} />
+            </div>
+          )}
           <motion.div
             animate={{ rotate: [0, 10, -10, 0] }}
             transition={{ duration: 1.5, repeat: Infinity }}
@@ -82,7 +90,15 @@ export function SoloPickScreen({
     <AuctionScreen glow={SCREEN_GLOW.soloPick} className="flex flex-col items-center p-4 pt-[12vh] sm:pt-[14vh]">
 
       <div className="relative z-10 flex flex-col items-center gap-6 w-full max-w-2xl">
-        <div className="text-center">
+        <div className="relative w-full text-center">
+          {/* The pick auto-resolves at the deadline — pinned to the screen's
+              top-right corner (mirrors the leave button top-left) instead of
+              hugging the banner mid-screen. */}
+          {pick.endsAt != null && (
+            <div className="fixed right-3 top-3 z-50">
+              <CountdownTimer key={String(pick.endsAt)} endsAt={pick.endsAt} totalMs={SOLO_PICK_MS} />
+            </div>
+          )}
           <div
             className="inline-block rounded-[12px] px-4 py-2 font-poppins text-xs font-black uppercase text-black mb-3"
             style={{ backgroundColor: posColor }}
@@ -133,12 +149,23 @@ export function SoloPickScreen({
           >
             <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-white/15 text-3xl">❓</div>
             <div className="min-w-0 flex-1">
-              <div className="font-poppins text-[10px] font-black uppercase text-white/80">{t('auctionGame.mysteryPlayer')}</div>
-              <div className="space-y-0.5">
-                {pick.optionB.clues?.map((clue, i) => (
-                  <p key={i} className="font-poppins text-[10px] font-semibold text-white/85 leading-snug">{clue}</p>
-                ))}
-              </div>
+              <div className="mb-1 font-poppins text-[10px] font-black uppercase text-white/80">{t('auctionGame.mysteryPlayer')}</div>
+              {/* Scouting lots show the actual snapshot NUMBERS — bare facet
+                  labels ("Goals", "Assists"…) carry no information. */}
+              {pick.optionB.footballer.snapshots?.length ? (
+                <SnapshotClues
+                  snapshots={pick.optionB.footballer.snapshots}
+                  visibleClues={5}
+                  variant="panel"
+                  position={pick.optionB.footballer.positionGroup}
+                />
+              ) : (
+                <div className="space-y-0.5">
+                  {pick.optionB.clues?.map((clue, i) => (
+                    <p key={i} className="font-poppins text-[10px] font-semibold text-white/85 leading-snug">{clue}</p>
+                  ))}
+                </div>
+              )}
             </div>
             <MoneyChip amount={pick.optionB.footballer.startingPrice} />
           </motion.button>
@@ -196,13 +223,24 @@ export function SoloPickScreen({
             <div className="font-poppins text-sm font-black text-white/80 uppercase">
               {t('auctionGame.mysteryPlayer')}
             </div>
-            <div className="space-y-2 mt-1">
-              {pick.optionB.clues?.map((clue, i) => (
-                <p key={i} className="font-poppins text-xs font-semibold text-white/85 leading-snug">
-                  {clue}
-                </p>
-              ))}
-            </div>
+            {pick.optionB.footballer.snapshots?.length ? (
+              <div className="mt-1 w-full text-left">
+                <SnapshotClues
+                  snapshots={pick.optionB.footballer.snapshots}
+                  visibleClues={5}
+                  variant="panel"
+                  position={pick.optionB.footballer.positionGroup}
+                />
+              </div>
+            ) : (
+              <div className="space-y-2 mt-1">
+                {pick.optionB.clues?.map((clue, i) => (
+                  <p key={i} className="font-poppins text-xs font-semibold text-white/85 leading-snug">
+                    {clue}
+                  </p>
+                ))}
+              </div>
+            )}
             <MoneyChip amount={pick.optionB.footballer.startingPrice} size="lg" className="mt-auto" />
           </motion.button>
         </div>

@@ -27,12 +27,18 @@ export function FramedAvatar({
   filled = true,
   customization,
   avatarSeed,
+  tier,
+  rp,
 }: {
   width: number;
   filled?: boolean;
   /** Layered avatar to render (preferred). Falls back to avatarSeed. */
   customization?: AvatarCustomization | null;
   avatarSeed?: string | null;
+  /** Ranked tier → the card frame art. Falls back to the neutral frame. */
+  tier?: string | null;
+  /** Ranked points, shown FUT-rating style in the frame's top-left. */
+  rp?: number | null;
 }) {
   const height = framedAvatarHeight(width);
   if (!filled) {
@@ -47,7 +53,7 @@ export function FramedAvatar({
   return (
     <div className="relative" style={{ width, height }}>
       <Image
-        src={getTierFrameSrc(SEARCH_FRAME_TIER)}
+        src={getTierFrameSrc(tier ?? SEARCH_FRAME_TIER)}
         alt=""
         width={width}
         height={height}
@@ -56,6 +62,20 @@ export function FramedAvatar({
       <div className="absolute inset-x-0 bottom-[8%] top-[22%] z-10 flex items-center justify-center overflow-hidden">
         <AvatarPreview customization={resolved} width={Math.round(width * AVATAR_WIDTH_FRACTION)} />
       </div>
+      {rp != null && (
+        <div
+          className="absolute left-[13%] top-[10%] z-20 text-center font-black leading-none text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.7)]"
+          style={{ fontSize: Math.round(width * 0.14) }}
+        >
+          {rp}
+          <div
+            className="mt-0.5 font-bold uppercase tracking-wide text-white/80"
+            style={{ fontSize: Math.round(width * 0.055) }}
+          >
+            RP
+          </div>
+        </div>
+      )}
     </div>
   );
 }

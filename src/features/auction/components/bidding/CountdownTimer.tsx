@@ -38,6 +38,10 @@ export function CountdownTimer({
   }, [endsAt]);
 
   const isUrgent = secondsLeft <= URGENT_AT_SECONDS;
+  // Traffic-light bar: green while comfortable, yellow past halfway, red when
+  // urgent — brand-blue was invisible on the blue card.
+  const fraction = Math.min(1, (secondsLeft * 1000) / totalMs);
+  const barColor = isUrgent ? 'bg-brand-red' : fraction <= 0.55 ? 'bg-brand-yellow' : 'bg-brand-green';
 
   return (
     <div className="flex w-12 flex-col items-center gap-1.5">
@@ -65,7 +69,7 @@ export function CountdownTimer({
           initial={{ width: `${startFraction * 100}%` }}
           animate={{ width: '0%' }}
           transition={{ duration: (startFraction * totalMs) / 1000, ease: 'linear' }}
-          className={`h-full rounded-full ${isUrgent ? 'bg-brand-red' : 'bg-brand-blue'}`}
+          className={`h-full rounded-full transition-colors duration-500 ${barColor}`}
         />
       </div>
     </div>

@@ -49,6 +49,7 @@ import {
 } from './auction-realtime.reducer';
 
 const POST_CONNECT_AUCTION_HYDRATION_GRACE_MS = 500;
+const LAST_AUCTION_MATCH_KEY = 'auction:last_match_id';
 const VERSION_GAP_RECONNECT_DELAY_MS = 250;
 // If a match is found but no state arrives in this window, reconnect once to
 // force the server's rejoin (which joins the match room and re-emits state).
@@ -110,6 +111,10 @@ export interface UseRealtimeAuctionMatchResult {
    *  auction_rejoin_unavailable). The owner must drop it, or the screen stays
    *  stuck: auto-start is suppressed and cancel is hidden while it is set. */
   attachUnavailable: boolean;
+  /** A hard reload/back-forward restored a stored match id and the hook is
+   *  re-attaching to it — the screen should show a quiet loader, not the
+   *  matchmaking search animation. */
+  restoringFromReload: boolean;
 }
 
 export type AuctionWaitingForReadyState = AuctionWaitingForReadyPayload & {
@@ -232,6 +237,33 @@ export function useRealtimeAuctionMatch({
   // via auction:rejoin even when publicState isn't set yet.
   const activeMatchIdRef = useRef<string | null>(null);
   const serverTimeOffsetMsRef = useRef<number | null>(null);
+
+  // A hard reload means "get back to what I was doing", never "queue a new
+  // match": suppress auto-start and re-attach to the last known match. The
+  // server resumes a live match and REPLAYS a finished one (results screen),
+  // so reloading on the results screen no longer discards it for a fresh
+  // search. Older than the server's state TTL → rejoin declines → idle screen.
+  const [restoringFromReload, setRestoringFromReload] = useState(false);
+  useEffect(() => {
+    const nav = performance.getEntriesByType?.('navigation')?.[0] as
+      | PerformanceNavigationTiming
+      | undefined;
+    if (nav?.type !== 'reload' && nav?.type !== 'back_forward') return;
+    let stored: string | null = null;
+    try {
+      stored = window.sessionStorage.getItem(LAST_AUCTION_MATCH_KEY);
+    } catch {
+      // Storage unavailable — nothing to restore.
+    }
+    // Suppress auto-start ONLY when there is a match to restore: a reload with
+    // nothing stored (e.g. mid-search) must fall through to normal matchmaking,
+    // not strand the user on an idle searching screen.
+    if (stored) {
+      autoStartConsumedRef.current = true;
+      activeMatchIdRef.current = stored;
+      setRestoringFromReload(true);
+    }
+  }, []);
   const pendingTurnActionRef = useRef<AuctionPendingTurnAction | null>(null);
   const publicStateRef = useRef<AuctionRealtimeState['publicState']>(null);
   const searchRef = useRef<AuctionSearchState | null>(null);
@@ -360,6 +392,16 @@ export function useRealtimeAuctionMatch({
     setRealtimeState(EMPTY_AUCTION_REALTIME_STATE);
     ignoredMatchIdsRef.current.clear();
     activeMatchIdRef.current = null;
+    // An explicit (re)start ends any reload-restoration: without this, the
+    // play-again search hides behind the quiet reload loader forever. The
+    // stored id goes too — reloading mid-search must not resurrect the
+    // previous finished match (match_found will store the new id).
+    setRestoringFromReload(false);
+    try {
+      window.sessionStorage.removeItem(LAST_AUCTION_MATCH_KEY);
+    } catch {
+      // Storage unavailable — nothing stored to clear.
+    }
 
     if (matchmakingMode === 'search') {
       searchCancelledRef.current = false;
@@ -429,6 +471,13 @@ export function useRealtimeAuctionMatch({
     socket.on('connect', handleConnect);
     socket.on('disconnect', handleDisconnect);
     queueMicrotask(() => setIsConnected(socket.connected));
+    // Reload-recovery restores the match id BEFORE this effect runs. When the
+    // singleton socket is ALREADY connected there is no future 'connect' event
+    // to trigger the re-attach — emit the rejoin now or the quiet reload
+    // loader spins forever.
+    if (socket.connected && activeMatchIdRef.current && !publicStateRef.current) {
+      emitAuctionRejoinForActiveMatch();
+    }
 
     return () => {
       socket.off('connect', handleConnect);
@@ -471,6 +520,10 @@ export function useRealtimeAuctionMatch({
     // client-side navigation fires no `connect` event — without this the
     // autoStart timer below would start a second, unwanted search.
     if (attachMatchId) return;
+    // A reload restoration is in flight — never auto-queue over it. When the
+    // restore fails (rejoin unavailable) the flag flips false, this effect
+    // re-runs, and the normal auto-start below picks up the fresh search.
+    if (restoringFromReload) return;
     if (!autoStart || !isConnected || startRequestedRef.current || publicState) return;
     if (autoStartConsumedRef.current) return;
     autoStartTimerRef.current = setTimeout(() => {
@@ -484,7 +537,7 @@ export function useRealtimeAuctionMatch({
         autoStartTimerRef.current = null;
       }
     };
-  }, [attachMatchId, autoStart, enabled, isConnected, publicState, requestStart, selfUserId, setPendingTurnActionValue, setSearchValue]);
+  }, [attachMatchId, autoStart, enabled, isConnected, publicState, requestStart, restoringFromReload, selfUserId, setPendingTurnActionValue, setSearchValue]);
 
   // Attach-on-entry: emit `auction:rejoin` for a match this client already
   // belongs to. Registering the id in `activeMatchIdRef` also makes the
@@ -675,18 +728,44 @@ export function useRealtimeAuctionMatch({
         // If we got here from an attach-on-entry, the match is gone: tell the
         // owner to drop attachMatchId so search can auto-start / be cancelled.
         if (attachMatchIdRef.current) setAttachUnavailable(true);
+        // Reload-recovery target is gone too (state TTL expired): drop the
+        // stored id, release the auto-start suppression and the restoring
+        // flag, so the screen falls back to a normal fresh search instead of
+        // retrying the dead match id forever.
+        activeMatchIdRef.current = null;
+        autoStartConsumedRef.current = false;
+        startRequestedRef.current = false;
+        setRestoringFromReload(false);
+        try {
+          window.sessionStorage.removeItem(LAST_AUCTION_MATCH_KEY);
+        } catch {
+          // Storage unavailable — nothing stored to clear.
+        }
         return;
       }
       clearPendingForMatch(null);
       setError(friendlyAuctionError(payload, locale));
     };
-    const onMatchStarted = (payload: AuctionMatchStartedPayload) =>
+    const rememberMatchId = (matchId: string | undefined | null) => {
+      if (!matchId) return;
+      try {
+        window.sessionStorage.setItem(LAST_AUCTION_MATCH_KEY, matchId);
+      } catch {
+        // Storage unavailable → reload recovery just won't apply.
+      }
+    };
+    const onMatchStarted = (payload: AuctionMatchStartedPayload) => {
+      rememberMatchId(payload.matchId);
       apply({ type: 'match_started', payload });
+    };
     const onState = (payload: AuctionStatePayload) => {
       // A full snapshot proves this socket is attached and hydrated — any
       // pending rejoin prompt is obsolete (stale prompts otherwise stick
-      // forever, since nothing else clears them on this path).
+      // forever, since nothing else clears them on this path), and a reload
+      // restoration (if one was in flight) has succeeded.
       setRejoinAvailable(null);
+      setRestoringFromReload(false);
+      rememberMatchId(payload.matchId);
       apply({ type: 'state', payload });
     };
     const onRoundStarted = (payload: AuctionRoundStartedPayload) =>
@@ -790,8 +869,15 @@ export function useRealtimeAuctionMatch({
       });
       startRequestedRef.current = true;
       // Remember the match we now belong to so a socket that (re)connects before
-      // any state hydrates can still re-attach via auction:rejoin.
+      // any state hydrates can still re-attach via auction:rejoin. Session
+      // storage carries it across a hard reload (reload-recovery above).
       activeMatchIdRef.current = payload.matchId;
+      try {
+        window.sessionStorage.setItem(LAST_AUCTION_MATCH_KEY, payload.matchId);
+      } catch {
+        // Storage may be unavailable (private mode quotas); recovery just won't
+        // survive a reload, which is the pre-existing behaviour.
+      }
 
       // The match's state/round events are broadcast to the match room. The
       // server joins our sockets to that room at match creation, but if this
@@ -1092,6 +1178,7 @@ export function useRealtimeAuctionMatch({
     apEarned,
     selfForfeited,
     attachUnavailable,
+    restoringFromReload,
   };
 }
 

@@ -16,6 +16,7 @@ import { useState, useCallback } from 'react';
 import { QuitMatchModal } from '@/components/match/QuitMatchModal';
 import { AUCTION_QUIT_MODAL_THEME } from '@/features/auction/constants/auction.constants';
 import { AuctionGameScreen } from '@/features/auction/components/AuctionGameScreen';
+import { StadiumBiddingScreen } from '@/features/auction/components/bidding/StadiumBiddingScreen';
 import { AuctionShowdownScreen } from '@/features/auction/components/AuctionShowdownScreen';
 import { AuctionResultsScreen } from '@/features/auction/components/AuctionResultsScreen';
 import { LottieSearch, LottieSearchDemo } from '@/features/auction/components/screens/LottieSearch';
@@ -32,6 +33,7 @@ import type {
   PositionGroup,
 } from '@/features/auction/types';
 import {
+  CLUE_STUDY_MS,
   FOOTBALLERS,
   FORMATIONS,
   OPENING_TURN_MS,
@@ -148,6 +150,11 @@ function ShowdownScenario() {
 
 function Game({ state }: { state: AuctionGameState }) {
   return <AuctionGameScreen state={state} actions={makeActions()} humanPlayerId={HUMAN_ID} />;
+}
+
+/** EXPERIMENTAL full-screen 3-stadium layout with the clue/bid overlay. */
+function StadiumGame({ state }: { state: AuctionGameState }) {
+  return <StadiumBiddingScreen state={state} actions={makeActions()} humanPlayerId={HUMAN_ID} />;
 }
 
 /** The REAL quit/leave/forfeit modal currently used in matches (same as ranked).
@@ -453,6 +460,70 @@ const SCENARIOS: Scenario[] = [
         />
       );
     },
+  },
+  // ── EXPERIMENTAL: full-screen 3-stadium layout, clue/bid as an overlay ──
+  {
+    id: 'stadium-clue',
+    label: 'Stadium — clue reveal',
+    group: 'Stadium (new)',
+    render: () => <StadiumGame state={baseState({ phase: 'clue-reveal', currentRound: makeRound({ clueRevealIndex: 2 }) })} />,
+  },
+  {
+    id: 'stadium-study',
+    label: 'Stadium — study window',
+    group: 'Stadium (new)',
+    render: () => (
+      <StadiumGame state={baseState({ phase: 'clue-reveal', currentRound: makeRound({ biddingStartsAt: Date.now() + CLUE_STUDY_MS }) })} />
+    ),
+  },
+  {
+    id: 'stadium-open',
+    label: 'Stadium — your turn (open)',
+    group: 'Stadium (new)',
+    render: () => (
+      <StadiumGame state={baseState({ phase: 'bidding', currentRound: makeRound({ currentTurnId: HUMAN_ID, turnEndsAt: Date.now() + OPENING_TURN_MS }) })} />
+    ),
+  },
+  {
+    id: 'stadium-raise',
+    label: 'Stadium — your turn (raise)',
+    group: 'Stadium (new)',
+    render: () => (
+      <StadiumGame
+        state={baseState({
+          phase: 'bidding',
+          currentRound: makeRound({
+            bids: [
+              { playerId: 'bot-1', amount: 70_000_000 },
+              { playerId: 'bot-2', amount: 90_000_000 },
+            ],
+            highestBidderId: 'bot-2',
+            highestBid: 90_000_000,
+            currentTurnId: HUMAN_ID,
+            turnEndsAt: Date.now() + RAISE_TURN_MS,
+          }),
+        })}
+      />
+    ),
+  },
+  {
+    id: 'stadium-waiting',
+    label: 'Stadium — waiting (opponent)',
+    group: 'Stadium (new)',
+    render: () => (
+      <StadiumGame
+        state={baseState({
+          phase: 'bidding',
+          currentRound: makeRound({
+            bids: [{ playerId: 'bot-1', amount: 120_000_000 }],
+            highestBidderId: 'bot-1',
+            highestBid: 120_000_000,
+            currentTurnId: 'bot-2',
+            turnEndsAt: Date.now() + RAISE_TURN_MS,
+          }),
+        })}
+      />
+    ),
   },
   { id: 'finalizing', label: 'Overlay — Finalizing match', group: 'End', render: () => <FinalizingOverlayScenario /> },
   { id: 'loading-results', label: 'Overlay — Loading results', group: 'End', render: () => <LoadingResultsOverlayScenario /> },

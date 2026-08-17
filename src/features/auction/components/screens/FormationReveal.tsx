@@ -73,7 +73,7 @@ export function FormationReveal({
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
+            transition={{ delay: 0.15 }}
             className="mt-2 font-poppins text-[3.5rem] font-black text-brand-yellow sm:text-[4.5rem]"
             style={{ textShadow: '0 2px 16px rgba(255,229,0,0.25)' }}
           >
@@ -85,7 +85,7 @@ export function FormationReveal({
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
+          transition={{ delay: 0.35 }}
           className="w-[200px] sm:w-[240px]"
         >
           <SquadPitch player={emptyPlayer} formation={state.formation} size="md" />
@@ -94,7 +94,7 @@ export function FormationReveal({
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1.4 }}
+          transition={{ delay: 0.6 }}
           className="text-xs font-poppins font-semibold text-white/40 uppercase"
         >
           {t('auctionGame.allPlayersSameFormation')}
@@ -104,7 +104,7 @@ export function FormationReveal({
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.7 }}
+            transition={{ delay: 0.8 }}
             className="mt-4 flex h-14 items-center font-poppins text-sm font-semibold uppercase tracking-wide text-white/60"
           >
             {t('auctionGame.getReady')}
@@ -113,7 +113,7 @@ export function FormationReveal({
           <motion.button
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.7 }}
+            transition={{ delay: 0.8 }}
             whileTap={{ scale: 0.97 }}
             onClick={onContinue}
             className="mt-4 flex h-14 w-56 items-center justify-center rounded-[20px] bg-brand-green font-poppins text-lg font-semibold uppercase tracking-wide text-white shadow-none transition-colors hover:bg-brand-green/90 hover:shadow-none"

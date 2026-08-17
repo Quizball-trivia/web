@@ -8,7 +8,7 @@ import { usePositionLabel } from '../../hooks/usePositionLabel';
 import type { PositionGroup } from '../../types';
 
 /** How long the full-screen round intro holds before the clue card takes over. */
-export const ROUND_INTRO_MS = 2200;
+export const ROUND_INTRO_MS = 3000;
 
 interface AuctionRoundIntroProps {
   roundIndex: number;
@@ -51,7 +51,7 @@ export function AuctionRoundIntro({ roundIndex, positionGroup, onDone }: Auction
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
         className="relative font-poppins text-5xl font-black uppercase tracking-[0.12em] text-white sm:text-6xl"
       >
         {t('auctionGame.round', { round: roundIndex })}
@@ -60,7 +60,7 @@ export function AuctionRoundIntro({ roundIndex, positionGroup, onDone }: Auction
       <motion.div
         initial={{ opacity: 0, scale: 0.82 }}
         animate={{ opacity: 1, scale: 1 }}
-        transition={{ type: 'spring', stiffness: 200, damping: 14, delay: 0.35 }}
+        transition={{ type: 'spring', stiffness: 240, damping: 16, delay: 0.2 }}
         className="relative rounded-[20px] px-8 py-4 font-poppins text-3xl font-black uppercase tracking-wide text-white sm:text-4xl"
         style={{ backgroundColor: posColor, boxShadow: `0 8px 40px ${posColor}55` }}
       >
@@ -70,7 +70,7 @@ export function AuctionRoundIntro({ roundIndex, positionGroup, onDone }: Auction
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.75, duration: 0.4 }}
+        transition={{ delay: 0.45, duration: 0.3 }}
         className="relative font-poppins text-sm font-semibold uppercase tracking-[0.18em] text-white/55"
       >
         {t('auctionGame.mysteryPlayer')}

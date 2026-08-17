@@ -11,7 +11,7 @@ import type {
 const SELF = 'user-self';
 
 const EMPTY_TEAM: PublicAuctionTeam = {
-  formation: { name: '4-3-3', required: { GK: 1, DEF: 4, MID: 3, FWD: 3 }, rows: [] },
+  formation: { name: '2-2-2', required: { GK: 1, DEF: 2, MID: 2, FWD: 2 }, rows: [] },
   slots: { GK: [], DEF: [], MID: [], FWD: [] },
 };
 
@@ -32,7 +32,7 @@ function matchState(overrides: Partial<PublicAuctionMatchState> = {}): PublicAuc
     matchId: 'match-1',
     version: 3,
     phase: 'bidding',
-    formation: '4-3-3',
+    formation: '2-2-2',
     seats: [
       seat({ seatId: 's1', userId: SELF, displayName: 'Me' }),
       seat({ seatId: 's2', userId: 'user-rival', displayName: 'Rival' }),

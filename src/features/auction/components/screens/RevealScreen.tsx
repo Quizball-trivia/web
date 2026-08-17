@@ -4,8 +4,10 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import type { AuctionGameState } from '../../types';
 import type { AuctionActions } from '../../hooks/useAuctionGame';
-import { formatMoney } from '../../data';
-import { POS_COLORS, poppins } from '../../constants/auction.constants';
+import { formatMoney, computeSquadChemistry, chemistryMultiplier, getFutureValue } from '../../data';
+import { findClubByName } from '@/lib/clubs';
+import { getLeague } from '../../data/leagues';
+import { POS_COLORS, poppins, withAlpha } from '../../constants/auction.constants';
 import { useLocale } from '@/contexts/LocaleContext';
 import { SCREEN_GLOW } from '../shared/ScreenBackdrop';
 import { AuctionScreen } from '../shared/AuctionScreen';
@@ -14,6 +16,10 @@ import { SoldFlash } from '../shared/SoldFlash';
 import { MoneyFx } from '../shared/MoneyFx';
 import { DealBadge } from '../shared/DealBadge';
 import { PlayerPhoto } from '../shared/PlayerPhoto';
+import { FlagChip } from '../shared/FlagChip';
+import { ClubCrest } from '../shared/ClubCrest';
+import { LeagueLogo } from '../shared/LeagueLogo';
+import { ChemistryBadge } from '../shared/ChemistryPanel';
 import { AllSquads } from '../pitch/AllSquads';
 
 /** Staged dramatic reveal: SOLD flash → photo → name → value/sold → deal badge → squads → next. */
@@ -37,15 +43,17 @@ export function RevealScreen({
 
   useEffect(() => {
     const timers = [
-      setTimeout(() => setShowSold(false), 1200),
-      setTimeout(() => setStage(1), 800),
-      setTimeout(() => setStage(2), 1400),
-      setTimeout(() => setStage(3), 2000),
-      setTimeout(() => setStage(4), 2600),
-      setTimeout(() => setStage(5), 3200),
-      // Everything is on screen at 3.2s; hold the full picture a beat before
-      // acking so the server doesn't sweep into the next round immediately.
-      setTimeout(() => setHoldDone(true), 5200),
+      setTimeout(() => setShowSold(false), 700),
+      setTimeout(() => setStage(1), 400),
+      setTimeout(() => setStage(2), 700),
+      setTimeout(() => setStage(3), 1000),
+      setTimeout(() => setStage(4), 1300),
+      setTimeout(() => setStage(5), 1600),
+      // Everything is on screen at 1.6s; hold the full picture a short beat
+      // before acking so the server doesn't sweep into the next round instantly.
+      // Full picture on screen at 1.6s; hold it so the sold player is
+      // actually readable before the server sweeps into the next round.
+      setTimeout(() => setHoldDone(true), 6000),
     ];
     return () => timers.forEach(clearTimeout);
   }, []);
@@ -63,6 +71,24 @@ export function RevealScreen({
   const winner = state.players.find((p) => p.id === round.winnerId);
   const posColor = POS_COLORS[round.positionGroup];
   const isHumanWin = round.winnerId === humanPlayerId;
+  const club = findClubByName(round.footballer.club ?? null);
+  const league = getLeague(round.footballer.league ?? null);
+  // Scoring uses the player's LATER-season value (the clue phase showed an
+  // earlier season); the gap between what you paid and this is the profit.
+  const futureValue = getFutureValue(round.footballer);
+  const valueSeason = round.footballer.snapshots?.at(-1)?.season ?? null;
+
+  // Chemistry this signing added to the winner's squad. The player is already
+  // assigned by reveal time, so we diff the winner's current chem against the
+  // same squad with this footballer removed from their position slot.
+  let winnerChemNow = 0;
+  let chemGain = 0;
+  if (winner) {
+    winnerChemNow = computeSquadChemistry(winner.team).total;
+    const posSlots = winner.team.slots[round.positionGroup].filter((f) => f.id !== round.footballer.id);
+    const teamWithout = { ...winner.team, slots: { ...winner.team.slots, [round.positionGroup]: posSlots } };
+    chemGain = winnerChemNow - computeSquadChemistry(teamWithout).total;
+  }
   // Randomly alternate the win cash-FX (burst / fountain), stable per reveal.
   const moneyFxVariant: 'burst' | 'fountain' =
     round.footballer.id.length % 2 === 0 ? 'burst' : 'fountain';
@@ -108,14 +134,16 @@ export function RevealScreen({
             )}
           </AnimatePresence>
 
-          {/* Position + nationality — stage 2 */}
+          {/* Position + chemistry identity chips (nation flag, club crest,
+              league badge) — stage 2. These are the three chemistry dimensions,
+              shown so players can see at a glance why a signing links up. */}
           <AnimatePresence>
             {stage >= 2 && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.2 }}
-                className="mt-1.5 flex items-center gap-2"
+                className="mt-2 flex flex-wrap items-center justify-center gap-1.5"
               >
                 <span
                   className="rounded-[8px] px-2.5 py-1 font-poppins text-[10px] font-black uppercase text-black"
@@ -123,9 +151,28 @@ export function RevealScreen({
                 >
                   {round.positionGroup}
                 </span>
-                <span className="font-poppins text-sm font-semibold text-white/50">
-                  {round.footballer.nationality}
+                <span className="flex items-center gap-1.5 rounded-[8px] bg-white/8 px-2 py-1">
+                  <FlagChip country={round.footballer.nationality} width={18} height={12} />
+                  <span className="font-poppins text-[11px] font-semibold text-white/70">
+                    {round.footballer.nationality}
+                  </span>
                 </span>
+                {club && (
+                  <span className="flex items-center gap-1.5 rounded-[8px] bg-white/8 px-2 py-1">
+                    <ClubCrest club={round.footballer.club} size={16} />
+                    <span className="font-poppins text-[11px] font-semibold text-white/70">
+                      {club.label}
+                    </span>
+                  </span>
+                )}
+                {league && (
+                  <span className="flex items-center gap-1.5 rounded-[8px] bg-white/8 px-2 py-1">
+                    <LeagueLogo league={round.footballer.league} size={16} />
+                    <span className="font-poppins text-[11px] font-semibold text-white/70">
+                      {league.abbr}
+                    </span>
+                  </span>
+                )}
               </motion.div>
             )}
           </AnimatePresence>
@@ -141,10 +188,10 @@ export function RevealScreen({
               >
                 <div className="rounded-[16px] bg-brand-yellow px-6 py-3 text-center shadow-[0_4px_16px_rgba(255,229,0,0.25)]">
                   <div className="text-[10px] font-black uppercase text-black/60" style={poppins}>
-                    {t('auctionGame.trueValue')}
+                    {valueSeason ? `${valueSeason} ${t('auctionGame.valueLabel')}` : t('auctionGame.trueValue')}
                   </div>
                   <div className="font-poppins text-2xl font-black text-black tabular-nums leading-tight">
-                    {formatMoney(round.footballer.value)}
+                    {formatMoney(futureValue)}
                   </div>
                 </div>
 
@@ -153,7 +200,7 @@ export function RevealScreen({
                     {/* Deal-quality badge — only for YOUR win (it's a you-centric
                         judgement of your deal; meaningless for an opponent's buy). */}
                     {stage >= 4 && isHumanWin && (
-                      <DealBadge paid={round.winningBid} value={round.footballer.value} />
+                      <DealBadge paid={round.winningBid} value={futureValue} />
                     )}
                     <div className="text-[10px] font-black uppercase text-white/70" style={poppins}>
                       {t('auctionGame.soldFor')}
@@ -167,20 +214,34 @@ export function RevealScreen({
             )}
           </AnimatePresence>
 
-          {/* Assignment message — stage 4 */}
+          {/* Assignment message + chemistry gained — stage 4 */}
           <AnimatePresence>
             {stage >= 4 && winner && (
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ type: 'spring', stiffness: 200 }}
-                className="mt-4"
+                className="mt-4 flex flex-col items-center gap-2"
               >
                 <span className="font-poppins text-sm font-semibold text-white/80">
                   {isHumanWin
                     ? t('auctionGame.joinedYourSquad', { name: round.footballer.name })
                     : t('auctionGame.joinedSquad', { name: round.footballer.name, owner: winner.username })}
                 </span>
+                <div className="flex items-center gap-2">
+                  {chemGain > 0 && (
+                    <motion.span
+                      initial={{ scale: 0.5, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ type: 'spring', stiffness: 320, damping: 14, delay: 0.15 }}
+                      className="flex items-center gap-1 rounded-full px-2.5 py-1 font-poppins text-[11px] font-black uppercase tabular-nums"
+                      style={{ backgroundColor: withAlpha('#58CC02', 0.18), color: '#58CC02' }}
+                    >
+                      ⚡ {t('auctionGame.chemGainBadge', { chem: chemGain })}
+                    </motion.span>
+                  )}
+                  <ChemistryBadge total={winnerChemNow} multiplier={chemistryMultiplier(winnerChemNow)} />
+                </div>
               </motion.div>
             )}
           </AnimatePresence>

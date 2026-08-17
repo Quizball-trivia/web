@@ -15,12 +15,12 @@ import {
 } from '../auction-realtime.reducer';
 
 const formation: PublicAuctionFormation = {
-  name: '4-3-3',
-  required: { GK: 1, DEF: 4, MID: 3, FWD: 3 },
+  name: '2-2-2',
+  required: { GK: 1, DEF: 2, MID: 2, FWD: 2 },
   rows: [
-    { pos: 'FWD', count: 3 },
-    { pos: 'MID', count: 3 },
-    { pos: 'DEF', count: 4 },
+    { pos: 'FWD', count: 2 },
+    { pos: 'MID', count: 2 },
+    { pos: 'DEF', count: 2 },
     { pos: 'GK', count: 1 },
   ],
 };
@@ -76,7 +76,7 @@ function matchState(overrides: Partial<PublicAuctionMatchState> = {}): PublicAuc
     version: 1,
     locale: 'en',
     phase: 'clue_reveal',
-    formation: '4-3-3',
+    formation: '2-2-2',
     seats: [
       player('seat-human', 'You', 'user-1'),
       player('seat-bot-1', 'Bot 1', null),
@@ -110,8 +110,8 @@ describe('auction realtime adapter', () => {
       avatarSeed: 'avatar-1',
       isBot: false,
     });
-    expect(clientState.formation.name).toBe('4-3-3');
-    expect(clientState.totalRounds).toBe(33);
+    expect(clientState.formation.name).toBe('2-2-2');
+    expect(clientState.totalRounds).toBe(21);
   });
 
   it('carries the server ranking order through, best first', () => {
@@ -121,9 +121,9 @@ describe('auction realtime adapter', () => {
     const clientState = toClientAuctionState(matchState({
       phase: 'finished',
       rankings: [
-        { seatId: 'seat-bot-2', isBot: true, displayName: 'Bot 2', rank: 3, isComplete: false, totalTrueValue: 10, budgetRemaining: 0 },
-        { seatId: 'seat-human', isBot: false, displayName: 'You', rank: 1, isComplete: true, totalTrueValue: 90, budgetRemaining: 5 },
-        { seatId: 'seat-bot-1', isBot: true, displayName: 'Bot 1', rank: 2, isComplete: true, totalTrueValue: 50, budgetRemaining: 2 },
+        { seatId: 'seat-bot-2', displayName: 'Bot 2', rank: 3, isComplete: false, totalTrueValue: 10, budgetRemaining: 0 },
+        { seatId: 'seat-human', displayName: 'You', rank: 1, isComplete: true, totalTrueValue: 90, budgetRemaining: 5 },
+        { seatId: 'seat-bot-1', displayName: 'Bot 1', rank: 2, isComplete: true, totalTrueValue: 50, budgetRemaining: 2 },
       ] as PublicAuctionMatchState['rankings'],
     }));
 
@@ -317,7 +317,6 @@ describe('auction realtime adapter', () => {
       rankings: [{
         seatId: 'seat-human',
         userId: 'user-1',
-        isBot: false,
         displayName: 'You',
         rank: 1,
         isComplete: false,
@@ -453,5 +452,32 @@ describe('auction realtime reducer', () => {
     expect(next.publicState?.seats.find((seat) => seat.seatId === 'seat-human')?.budget).toBe(955_000_000);
     expect(next.publicState?.seats.find((seat) => seat.seatId === 'seat-human')?.team.slots.FWD).toHaveLength(1);
     expect(next.publicState?.seats.find((seat) => seat.seatId === 'seat-bot-1')?.budget).toBe(1_000_000_000);
+  });
+
+  it('maps season snapshots through and pads snapshot lots to five clue slots', () => {
+    const snapshots = [
+      { season: '2020/21', league: 'La Liga', age: 19, apps: 20, goals: 3, valueEur: 5_000_000 },
+      { season: '2022/23', league: 'La Liga', age: 21, apps: 36, goals: 11, valueEur: 30_000_000 },
+      { season: '2025/26', league: 'Primeira Liga', age: null, apps: 31, goals: 3, valueEur: 0 },
+    ];
+    const clientState = toClientAuctionState(matchState({
+      currentRound: round({
+        footballer: {
+          positionGroup: 'FWD',
+          startingPrice: 20_000_000,
+          clues: ['Goals'],
+          snapshots,
+        },
+        clueRevealIndex: 1,
+        revealedClues: ['Goals'],
+      }),
+    }));
+
+    const footballer = clientState.currentRound!.footballer;
+    expect(footballer.snapshots).toHaveLength(3);
+    // Null age is preserved so the UI renders "—" instead of a fake 0.
+    expect(footballer.snapshots![2].age).toBeNull();
+    // Facet-unlock cadence is driven by clue count: snapshot lots pad to 5.
+    expect(clientState.currentRound!.clues).toHaveLength(5);
   });
 });

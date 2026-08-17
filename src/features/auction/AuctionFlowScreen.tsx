@@ -30,7 +30,7 @@ import type { AuctionGameState } from './types';
 
 // The matchmaking search still sends a formation name (the hook requires one),
 // but the SERVER picks the real formation randomly and ignores this value.
-const LIVE_AUCTION_FORMATION_NAME: AuctionFormationName = '4-3-3';
+const LIVE_AUCTION_FORMATION_NAME: AuctionFormationName = '2-2-2';
 
 interface AuctionFlowScreenProps {
   username: string;
@@ -194,6 +194,7 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
     apEarned,
     selfForfeited,
     attachUnavailable,
+    restoringFromReload,
   } = useRealtimeAuctionMatch({
     enabled: realtimeEnabled,
     autoStart: auctionStarted,
@@ -301,13 +302,24 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
   }, [actions, rejoinAvailable]);
 
   // "Finalizing Match" beat: hold a short overlay the first time the match
-  // reaches 'results', then reveal the results screen (ranked-style).
+  // reaches 'results', then reveal the results screen (ranked-style). Skipped
+  // when the match arrives ALREADY finished (reload-recovery replay) — nothing
+  // is being finalized, so the beat reads as a glitch.
   const isResultsPhase = state?.phase === 'results';
+  const statePhase = state?.phase ?? null;
+  // Derived during render (same sanctioned pattern as peakJoined below): true
+  // once any LIVE phase was seen this session.
+  const [sawLivePhase, setSawLivePhase] = useState(false);
+  if (statePhase && statePhase !== 'results' && !sawLivePhase) {
+    setSawLivePhase(true);
+  }
   useEffect(() => {
     if (!isResultsPhase || resultsRevealed) return;
-    const id = window.setTimeout(() => setResultsRevealed(true), 1400);
+    // Reload-recovery arrives ALREADY finished — reveal immediately (the
+    // overlay below is also gated on sawLivePhase so it never flashes).
+    const id = window.setTimeout(() => setResultsRevealed(true), sawLivePhase ? 600 : 0);
     return () => window.clearTimeout(id);
-  }, [isResultsPhase, resultsRevealed]);
+  }, [isResultsPhase, resultsRevealed, sawLivePhase]);
 
   // Forfeited: show the results screen immediately with the forfeit state (no
   // coins). Takes priority over every other branch once the player has left.
@@ -356,6 +368,21 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
     if (searchError) {
       return <MockSearchingScreen error={searchError} />;
     }
+    // Reload-recovery: we're re-attaching to a known match, not queueing — a
+    // bare spinner instead of the "table is getting ready" search animation,
+    // which reads as matchmaking having restarted.
+    if (restoringFromReload) {
+      return (
+        <div
+          role="status"
+          aria-live="polite"
+          className="flex min-h-screen items-center justify-center bg-surface-page"
+        >
+          <div className="size-9 animate-spin rounded-full border-[4px] border-white/15 border-t-brand-yellow" />
+          <span className="sr-only">{t('common.loading')}</span>
+        </div>
+      );
+    }
     // Hold the peak join count so the searching screen shows the full lineup
     // (never regresses) until the countdown/intro takes over.
     return (
@@ -385,7 +412,7 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
         />
       );
     }
-    return <FormationReveal state={state} onContinue={() => {}} autoAdvanceMs={3000} />;
+    return <FormationReveal state={state} onContinue={() => {}} autoAdvanceMs={1500} />;
   }
 
   if (
@@ -439,24 +466,28 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
   }
 
   if (state.phase === 'results') {
-    // Brief finalizing/loading beat before the standings reveal (ranked style).
-    if (!resultsRevealed) {
-      return (
-        <AuctionStatusOverlay
-          title={t('auctionGame.finalizingMatch')}
-          subtitle={t('auctionGame.calculatingResults')}
-        />
-      );
-    }
+    // Results mount underneath; the brief "finalizing" beat fades out on top of
+    // them (ranked style) via AnimatePresence, so it no longer hard-cuts.
     return (
-      <AuctionResultsScreen
-        state={state}
-        humanPlayerId={resolvedHumanPlayerId}
-        onPlayAgain={handlePlayAgain}
-        onExit={handleExit}
-        coinsAwarded={coinsAwarded}
-        apEarned={apEarned}
-      />
+      <>
+        <AuctionResultsScreen
+          state={state}
+          humanPlayerId={resolvedHumanPlayerId}
+          onPlayAgain={handlePlayAgain}
+          onExit={handleExit}
+          coinsAwarded={coinsAwarded}
+          apEarned={apEarned}
+        />
+        <AnimatePresence>
+          {!resultsRevealed && sawLivePhase && (
+            <AuctionStatusOverlay
+              key="finalizing"
+              title={t('auctionGame.finalizingMatch')}
+              subtitle={t('auctionGame.calculatingResults')}
+            />
+          )}
+        </AnimatePresence>
+      </>
     );
   }
 

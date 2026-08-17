@@ -748,7 +748,7 @@ export interface WarmupScoresPayload {
 }
 
 export type AuctionPositionGroup = 'GK' | 'DEF' | 'MID' | 'FWD';
-export type AuctionFormationName = '4-3-3' | '4-4-2' | '3-5-2' | '4-2-3-1' | '3-4-3';
+export type AuctionFormationName = '2-2-2';
 export type AuctionMatchPhase =
   | 'created'
   | 'clue_reveal'
@@ -779,6 +779,25 @@ export interface PublicAuctionFootballer {
   imageUrl?: string | null;
   currentClub?: string | null;
   nationality?: string | null;
+  league?: string | null;
+  /**
+   * Career seasons for scouting-snapshot lots, chronological. Pre-reveal the
+   * final (scoring) season arrives with valueEur 0 — the server withholds the
+   * answer to the price gamble until the reveal.
+   */
+  snapshots?: AuctionSeasonSnapshotPayload[];
+}
+
+export interface AuctionSeasonSnapshotPayload {
+  season: string;
+  league: string;
+  age: number | null;
+  apps: number;
+  goals: number;
+  assists?: number;
+  cleanSheets?: number;
+  conceded?: number;
+  valueEur: number;
 }
 
 export interface PublicAuctionTeam {
@@ -792,7 +811,12 @@ export interface PublicAuctionPlayer {
   displayName: string;
   /** Real user's layered avatar (opponents). Null for bots → client randomizes. */
   avatarCustomization?: AvatarCustomization | null;
-  isBot: boolean;
+  /** Ranked identity for the showdown/lineup cards (tier frame + RP). */
+  tier?: string | null;
+  rp?: number | null;
+  /** Server-only since the bot-concealment pass — never sent to clients. Kept
+   *  optional so older cached payloads still parse. */
+  isBot?: boolean;
   budget: number;
   team: PublicAuctionTeam;
   isEliminated: boolean;
@@ -848,13 +872,13 @@ export interface PublicAuctionSoloPickState {
 export interface PublicAuctionPlayerRanking {
   seatId: string;
   userId?: string | null;
-  isBot: boolean;
   displayName: string;
   rank: number;
   isComplete: boolean;
   totalTrueValue: number;
   budgetRemaining: number;
-  player: PublicAuctionPlayer;
+  /** Absent on rankings computed by legacy server states. */
+  player?: PublicAuctionPlayer;
 }
 
 export interface PublicAuctionMatchState {

@@ -35,7 +35,7 @@ export function MatchCountdown({ players, endsAtMs, onComplete }: MatchCountdown
 
   useEffect(() => {
     if (count <= 0) {
-      const done = setTimeout(onComplete, 600);
+      const done = setTimeout(onComplete, 300);
       return () => clearTimeout(done);
     }
     // Tick on the next whole-second boundary relative to the target, so the
@@ -77,7 +77,13 @@ export function MatchCountdown({ players, endsAtMs, onComplete }: MatchCountdown
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: i * 0.08, type: 'spring', stiffness: 240, damping: 20 }}
                   >
-                    <FramedAvatar width={LINEUP_CARD_WIDTH} customization={p.avatarCustomization} />
+                    <FramedAvatar
+                      width={LINEUP_CARD_WIDTH}
+                      customization={p.avatarCustomization}
+                      avatarSeed={p.avatarSeed}
+                      tier={p.tier}
+                      rp={p.rp}
+                    />
                   </motion.div>
                 ) : (
                   <FramedAvatar width={LINEUP_CARD_WIDTH} filled={false} />

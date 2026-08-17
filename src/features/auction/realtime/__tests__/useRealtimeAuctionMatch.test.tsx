@@ -64,12 +64,12 @@ vi.mock('@/utils/logger', () => ({
 }));
 
 const formation: PublicAuctionFormation = {
-  name: '4-3-3',
-  required: { GK: 1, DEF: 4, MID: 3, FWD: 3 },
+  name: '2-2-2',
+  required: { GK: 1, DEF: 2, MID: 2, FWD: 2 },
   rows: [
-    { pos: 'FWD', count: 3 },
-    { pos: 'MID', count: 3 },
-    { pos: 'DEF', count: 4 },
+    { pos: 'FWD', count: 2 },
+    { pos: 'MID', count: 2 },
+    { pos: 'DEF', count: 2 },
     { pos: 'GK', count: 1 },
   ],
 };
@@ -125,7 +125,7 @@ function matchState(overrides: Partial<PublicAuctionMatchState> = {}): PublicAuc
     version: 1,
     locale: 'en',
     phase: 'clue_reveal',
-    formation: '4-3-3',
+    formation: '2-2-2',
     seats: [
       player('seat-human', 'You', 'user-1'),
       player('seat-bot-1', 'Bot 1', null),
@@ -160,21 +160,21 @@ describe('useRealtimeAuctionMatch', () => {
       enabled: true,
       selfUserId: 'user-1',
       locale: 'en',
-      formation: '4-3-3',
+      formation: '2-2-2',
       humanAvatarSeed: 'avatar-1',
     }));
 
-    expect(socketMock.emit).not.toHaveBeenCalledWith('auction:start_ai_match', { locale: 'en', formation: '4-3-3' });
+    expect(socketMock.emit).not.toHaveBeenCalledWith('auction:start_ai_match', { locale: 'en', formation: '2-2-2' });
 
     act(() => {
       vi.advanceTimersByTime(499);
     });
-    expect(socketMock.emit).not.toHaveBeenCalledWith('auction:start_ai_match', { locale: 'en', formation: '4-3-3' });
+    expect(socketMock.emit).not.toHaveBeenCalledWith('auction:start_ai_match', { locale: 'en', formation: '2-2-2' });
 
     act(() => {
       vi.advanceTimersByTime(1);
     });
-    expect(socketMock.emit).toHaveBeenCalledWith('auction:start_ai_match', { locale: 'en', formation: '4-3-3' });
+    expect(socketMock.emit).toHaveBeenCalledWith('auction:start_ai_match', { locale: 'en', formation: '2-2-2' });
   });
 
   it('starts live matchmaking in search mode instead of starting an immediate AI match', () => {
@@ -186,7 +186,7 @@ describe('useRealtimeAuctionMatch', () => {
       matchmakingMode: 'search',
       selfUserId: 'user-1',
       locale: 'en',
-      formation: '4-3-3',
+      formation: '2-2-2',
       humanAvatarSeed: 'avatar-1',
     }));
 
@@ -194,8 +194,8 @@ describe('useRealtimeAuctionMatch', () => {
       vi.advanceTimersByTime(500);
     });
 
-    expect(socketMock.emit).toHaveBeenCalledWith('auction:search_start', { locale: 'en', formation: '4-3-3' });
-    expect(socketMock.emit).not.toHaveBeenCalledWith('auction:start_ai_match', { locale: 'en', formation: '4-3-3' });
+    expect(socketMock.emit).toHaveBeenCalledWith('auction:search_start', { locale: 'en', formation: '2-2-2' });
+    expect(socketMock.emit).not.toHaveBeenCalledWith('auction:start_ai_match', { locale: 'en', formation: '2-2-2' });
   });
 
   it('attaches to an existing match instead of queueing when entered from a lobby', () => {
@@ -208,7 +208,7 @@ describe('useRealtimeAuctionMatch', () => {
       attachMatchId: 'lobby-match-1',
       selfUserId: 'user-1',
       locale: 'en',
-      formation: '4-3-3',
+      formation: '2-2-2',
       humanAvatarSeed: 'avatar-1',
     }));
 
@@ -220,7 +220,7 @@ describe('useRealtimeAuctionMatch', () => {
 
     // The autoStart search timer must never fire for a lobby hand-off — the
     // player already has a match, a second search would be a duplicate queue.
-    expect(socketMock.emit).not.toHaveBeenCalledWith('auction:search_start', { locale: 'en', formation: '4-3-3' });
+    expect(socketMock.emit).not.toHaveBeenCalledWith('auction:search_start', { locale: 'en', formation: '2-2-2' });
   });
 
   it('re-attaches rather than re-queueing when the socket reconnects after a lobby hand-off', () => {
@@ -233,7 +233,7 @@ describe('useRealtimeAuctionMatch', () => {
       attachMatchId: 'lobby-match-1',
       selfUserId: 'user-1',
       locale: 'en',
-      formation: '4-3-3',
+      formation: '2-2-2',
       humanAvatarSeed: 'avatar-1',
     }));
 
@@ -244,7 +244,7 @@ describe('useRealtimeAuctionMatch', () => {
     });
 
     expect(socketMock.emit).toHaveBeenCalledWith('auction:rejoin', { matchId: 'lobby-match-1' });
-    expect(socketMock.emit).not.toHaveBeenCalledWith('auction:search_start', { locale: 'en', formation: '4-3-3' });
+    expect(socketMock.emit).not.toHaveBeenCalledWith('auction:search_start', { locale: 'en', formation: '2-2-2' });
   });
 
   it('updates search status from auction matchmaking events', () => {
@@ -254,7 +254,7 @@ describe('useRealtimeAuctionMatch', () => {
       matchmakingMode: 'search',
       selfUserId: 'user-1',
       locale: 'en',
-      formation: '4-3-3',
+      formation: '2-2-2',
       humanAvatarSeed: 'avatar-1',
     }));
 
@@ -291,7 +291,7 @@ describe('useRealtimeAuctionMatch', () => {
       matchmakingMode: 'search',
       selfUserId: 'user-1',
       locale: 'en',
-      formation: '4-3-3',
+      formation: '2-2-2',
       humanAvatarSeed: 'avatar-1',
     }));
 
@@ -309,7 +309,7 @@ describe('useRealtimeAuctionMatch', () => {
         humanUserIds: ['user-1', 'user-2'],
         botCount: 1,
         locale: 'en',
-        formation: '4-3-3',
+        formation: '2-2-2',
       });
     });
 
@@ -344,7 +344,7 @@ describe('useRealtimeAuctionMatch', () => {
       matchmakingMode: 'search',
       selfUserId: 'user-1',
       locale: 'en',
-      formation: '4-3-3',
+      formation: '2-2-2',
       humanAvatarSeed: 'avatar-1',
     }));
 
@@ -362,7 +362,7 @@ describe('useRealtimeAuctionMatch', () => {
         humanUserIds: ['user-1', 'user-2', 'user-3'],
         botCount: 0,
         locale: 'en',
-        formation: '4-3-3',
+        formation: '2-2-2',
       });
     });
 
@@ -409,7 +409,7 @@ describe('useRealtimeAuctionMatch', () => {
       matchmakingMode: 'search',
       selfUserId: 'user-1',
       locale: 'en',
-      formation: '4-3-3',
+      formation: '2-2-2',
       humanAvatarSeed: 'avatar-1',
     }));
 
@@ -420,7 +420,7 @@ describe('useRealtimeAuctionMatch', () => {
         humanUserIds: ['user-1', 'user-2', 'user-3'],
         botCount: 0,
         locale: 'en',
-        formation: '4-3-3',
+        formation: '2-2-2',
       });
     });
 
@@ -453,7 +453,7 @@ describe('useRealtimeAuctionMatch', () => {
       matchmakingMode: 'search',
       selfUserId: 'user-1',
       locale: 'en',
-      formation: '4-3-3',
+      formation: '2-2-2',
       humanAvatarSeed: 'avatar-1',
     }));
 
@@ -472,7 +472,7 @@ describe('useRealtimeAuctionMatch', () => {
         humanUserIds: ['user-1', 'user-2', 'user-3'],
         botCount: 0,
         locale: 'en',
-        formation: '4-3-3',
+        formation: '2-2-2',
       });
       socketMock.trigger('auction:match_started', {
         matchId: 'match-late',
@@ -494,7 +494,7 @@ describe('useRealtimeAuctionMatch', () => {
       matchmakingMode: 'search',
       selfUserId: 'user-1',
       locale: 'en',
-      formation: '4-3-3',
+      formation: '2-2-2',
       humanAvatarSeed: 'avatar-1',
     }));
 
@@ -504,7 +504,7 @@ describe('useRealtimeAuctionMatch', () => {
     });
 
     expect(socketMock.emit.mock.calls.filter(([event]) => event === 'auction:search_start')).toEqual([
-      ['auction:search_start', { locale: 'en', formation: '4-3-3' }],
+      ['auction:search_start', { locale: 'en', formation: '2-2-2' }],
     ]);
   });
 
@@ -515,7 +515,7 @@ describe('useRealtimeAuctionMatch', () => {
       matchmakingMode: 'search',
       selfUserId: 'user-1',
       locale: 'en',
-      formation: '4-3-3',
+      formation: '2-2-2',
       humanAvatarSeed: 'avatar-1',
     }));
 
@@ -549,7 +549,7 @@ describe('useRealtimeAuctionMatch', () => {
       enabled: true,
       selfUserId: 'user-1',
       locale: 'en',
-      formation: '4-3-3',
+      formation: '2-2-2',
       humanAvatarSeed: 'avatar-1',
     }));
 
@@ -565,7 +565,7 @@ describe('useRealtimeAuctionMatch', () => {
     act(() => {
       vi.advanceTimersByTime(500);
     });
-    expect(socketMock.emit).not.toHaveBeenCalledWith('auction:start_ai_match', { locale: 'en', formation: '4-3-3' });
+    expect(socketMock.emit).not.toHaveBeenCalledWith('auction:start_ai_match', { locale: 'en', formation: '2-2-2' });
   });
 
   it('hydrates updated state after reconnect without starting a duplicate match', () => {
@@ -575,7 +575,7 @@ describe('useRealtimeAuctionMatch', () => {
       enabled: true,
       selfUserId: 'user-1',
       locale: 'en',
-      formation: '4-3-3',
+      formation: '2-2-2',
       humanAvatarSeed: 'avatar-1',
     }));
 
@@ -615,7 +615,7 @@ describe('useRealtimeAuctionMatch', () => {
     expect(result.current.status).toBe('playing');
     expect(result.current.state?.phase).toBe('bidding');
     expect(result.current.state?.currentRound?.currentTurnId).toBe('seat-bot-1');
-    expect(socketMock.emit).not.toHaveBeenCalledWith('auction:start_ai_match', { locale: 'en', formation: '4-3-3' });
+    expect(socketMock.emit).not.toHaveBeenCalledWith('auction:start_ai_match', { locale: 'en', formation: '2-2-2' });
   });
 
   it('applies auction pause state and clears it on resume hydration', () => {
@@ -623,7 +623,7 @@ describe('useRealtimeAuctionMatch', () => {
       enabled: true,
       selfUserId: 'user-1',
       locale: 'en',
-      formation: '4-3-3',
+      formation: '2-2-2',
       humanAvatarSeed: 'avatar-1',
     }));
 
@@ -685,7 +685,7 @@ describe('useRealtimeAuctionMatch', () => {
       enabled: true,
       selfUserId: 'user-1',
       locale: 'en',
-      formation: '4-3-3',
+      formation: '2-2-2',
       humanAvatarSeed: 'avatar-1',
     }));
 
@@ -782,7 +782,7 @@ describe('useRealtimeAuctionMatch', () => {
         enabled: true,
         selfUserId: 'user-1',
         locale: 'en',
-        formation: '4-3-3',
+        formation: '2-2-2',
         humanAvatarSeed: 'avatar-1',
       }));
 
@@ -814,7 +814,7 @@ describe('useRealtimeAuctionMatch', () => {
       enabled: true,
       selfUserId: 'user-1',
       locale: 'en',
-      formation: '4-3-3',
+      formation: '2-2-2',
       humanAvatarSeed: 'avatar-1',
     }));
 
@@ -885,7 +885,7 @@ describe('useRealtimeAuctionMatch', () => {
       enabled: true,
       selfUserId: 'user-1',
       locale: 'en',
-      formation: '4-3-3',
+      formation: '2-2-2',
       humanAvatarSeed: 'avatar-1',
     }));
 
@@ -944,7 +944,7 @@ describe('useRealtimeAuctionMatch', () => {
       enabled: true,
       selfUserId: 'user-1',
       locale: 'en',
-      formation: '4-3-3',
+      formation: '2-2-2',
       humanAvatarSeed: 'avatar-1',
     }));
 
@@ -1021,7 +1021,7 @@ describe('useRealtimeAuctionMatch', () => {
       enabled: true,
       selfUserId: 'user-1',
       locale: 'en',
-      formation: '4-3-3',
+      formation: '2-2-2',
       humanAvatarSeed: 'avatar-1',
     }));
 
@@ -1101,7 +1101,7 @@ describe('useRealtimeAuctionMatch', () => {
       enabled: true,
       selfUserId: 'user-1',
       locale: 'en',
-      formation: '4-3-3',
+      formation: '2-2-2',
       humanAvatarSeed: 'avatar-1',
     }));
 
@@ -1222,7 +1222,6 @@ describe('useRealtimeAuctionMatch', () => {
       rankings: [{
         seatId: 'seat-human',
         userId: 'user-1',
-        isBot: false,
         displayName: 'You',
         rank: 1,
         isComplete: false,
@@ -1254,7 +1253,7 @@ describe('useRealtimeAuctionMatch', () => {
       enabled: true,
       selfUserId: 'user-1',
       locale: 'en',
-      formation: '4-3-3',
+      formation: '2-2-2',
       humanAvatarSeed: 'avatar-1',
     }));
 
@@ -1317,7 +1316,7 @@ describe('useRealtimeAuctionMatch', () => {
         enabled: true,
         selfUserId: 'user-1',
         locale: 'en',
-        formation: '4-3-3',
+        formation: '2-2-2',
         humanAvatarSeed: 'avatar-1',
       }));
 
@@ -1371,7 +1370,7 @@ describe('useRealtimeAuctionMatch', () => {
       enabled: true,
       selfUserId: 'user-1',
       locale: 'en',
-      formation: '4-3-3',
+      formation: '2-2-2',
       humanAvatarSeed: 'avatar-1',
     }));
 
@@ -1433,7 +1432,7 @@ describe('useRealtimeAuctionMatch', () => {
       enabled: true,
       selfUserId: 'user-1',
       locale: 'en',
-      formation: '4-3-3',
+      formation: '2-2-2',
       humanAvatarSeed: 'avatar-1',
     }));
 
@@ -1482,7 +1481,7 @@ describe('useRealtimeAuctionMatch', () => {
       enabled: true,
       selfUserId: 'user-1',
       locale: 'en',
-      formation: '4-3-3',
+      formation: '2-2-2',
       humanAvatarSeed: 'avatar-1',
     }));
 
@@ -1561,7 +1560,7 @@ describe('useRealtimeAuctionMatch', () => {
       enabled: true,
       selfUserId: 'user-1',
       locale: 'en',
-      formation: '4-3-3',
+      formation: '2-2-2',
       humanAvatarSeed: 'avatar-1',
     }));
 
@@ -1605,7 +1604,7 @@ describe('useRealtimeAuctionMatch', () => {
       enabled: true,
       selfUserId: 'user-1',
       locale: 'en',
-      formation: '4-3-3',
+      formation: '2-2-2',
       humanAvatarSeed: 'avatar-1',
     }));
 
