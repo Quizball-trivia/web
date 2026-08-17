@@ -12,6 +12,7 @@ import {
   Lightbulb,
   RefreshCw,
   Trophy,
+  Hourglass,
   XOctagon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -185,6 +186,8 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
   const [bets, setBets] = useState<number[]>([0, 0, 0, 0]);
   const [showResult, setShowResult] = useState(false);
   const [hasConfirmed, setHasConfirmed] = useState(false);
+  // Render-safe mirror of anyManualConfirmRef (refs must not be read in render).
+  const [hasEngaged, setHasEngaged] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [droppedAnswers, setDroppedAnswers] = useState<number[]>([]);
   const [showQuitDialog, setShowQuitDialog] = useState(false);
@@ -199,11 +202,15 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
   const deadlineRef = useRef<number | null>(null);
   const totalAllocatedRef = useRef(0);
   const handleConfirmBetsRef = useRef<(() => void) | null>(null);
-  const handleNextQuestionRef = useRef<((options?: { auto?: boolean }) => void) | null>(null);
+  const handleNextQuestionRef = useRef<(() => void) | null>(null);
   const confirmButtonRef = useRef<HTMLButtonElement | null>(null);
   // True when the round was confirmed by the timer running out (not a manual
   // "Confirm Bets" press) — drives auto-advance to the next question.
   const autoAdvanceRef = useRef(false);
+  // True once the player has manually confirmed at least one bet this run —
+  // separates a player who engaged from a fully idle one when a timeout ends
+  // the run (idle runs must score 0, or doing nothing would bank the maximum).
+  const anyManualConfirmRef = useRef(false);
   // Holds the pending auto-advance timer so a manual "Next" press can cancel it;
   // otherwise the stale callback fires on the next screen and skips a question.
   const autoAdvanceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -234,6 +241,10 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
     // call: the timeout sets timeoutHandledRef before invoking this, and that
     // path must still run (auto-submit). hasConfirmed covers the double-press.
     if (hasConfirmed) return;
+    if (!autoAdvanceRef.current) {
+      anyManualConfirmRef.current = true;
+      setHasEngaged(true);
+    }
     setHasConfirmed(true);
     setIsAnimating(true);
     setShowClue(false);
@@ -257,7 +268,7 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
         autoAdvanceRef.current = false;
         autoAdvanceTimeoutRef.current = setTimeout(() => {
           autoAdvanceTimeoutRef.current = null;
-          handleNextQuestionRef.current?.({ auto: true });
+          handleNextQuestionRef.current?.();
         }, 2500);
       }
     }, wrongAnswers.length * 1000 + 2000);
@@ -325,23 +336,37 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
     showResult,
   ]);
 
-  const handleNextQuestion = (options?: { auto?: boolean }) => {
+  const handleNextQuestion = () => {
     // Cancel any pending auto-advance so it can't fire on the next screen after
     // a manual press (which would skip a question or end the run early).
     if (autoAdvanceTimeoutRef.current) {
       clearTimeout(autoAdvanceTimeoutRef.current);
       autoAdvanceTimeoutRef.current = null;
     }
+    // Every terminal path goes through this gate: a run where the player never
+    // manually confirmed a single bet scores 0, whatever the bank shows —
+    // otherwise idling through timer-confirmed rounds could bank real coins.
+    const finishRun = (score: number) =>
+      onComplete(anyManualConfirmRef.current ? score : 0);
+    // A round revealed with NOTHING allocated can only be a timeout — manual
+    // confirm requires full allocation. It is not a bet; it's an absent player.
+    // Wiping the bank here (old behavior) ended most runs at 0 through
+    // unplayable zombie rounds. Rule: the run ends and the player keeps the
+    // bank they earned. Deliberately path-independent: pressing "View Results"
+    // during the auto-advance window must not change the outcome.
+    const nothingAllocated = bets.every((b) => b === 0);
+    if (nothingAllocated) {
+      finishRun(currentMoney);
+      return;
+    }
     const correctBet = bets[currentQuestion.correctAnswerIndex];
     const newMoney = correctBet;
     setCurrentMoney(newMoney);
-    // On a MANUAL advance, $0 ends the game (you're out of money — MoneyDrop's
-    // core rule). On an AUTO advance (timer ran out), don't punish the player
-    // with game-over for not betting in time: carry $0 forward and keep going,
-    // ending only when the last question is reached.
+    // Busting on a placed bet ends the run immediately, auto or manual —
+    // MoneyDrop's core rule. There are no playable rounds with 0 coins.
     const isLast = currentQuestionIndex >= questions.length - 1;
-    if (isLast || (newMoney === 0 && !options?.auto)) {
-      onComplete(newMoney);
+    if (isLast || newMoney === 0) {
+      finishRun(newMoney);
       return;
     }
     setCurrentQuestionIndex((prev) => prev + 1);
@@ -703,7 +728,19 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
               </div>
 
               {/* Result summary */}
-              {bets[currentQuestion.correctAnswerIndex] > 0 ? (
+              {bets.every((b) => b === 0) && hasEngaged ? (
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                  className="bg-white/5 border-2 border-white/20 rounded-[20px] p-5 md:p-6 lg:p-8 text-center"
+                >
+                  <div className="mb-2"><Hourglass className="size-10 lg:size-12 text-brand-slate mx-auto" /></div>
+                  <div className="text-white font-black text-base md:text-lg lg:text-xl">
+                    {t('dailyGames.timeUpBankKept', { amount: formatMoney(currentMoney) })}
+                  </div>
+                </motion.div>
+              ) : bets[currentQuestion.correctAnswerIndex] > 0 ? (
                 <motion.div
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}

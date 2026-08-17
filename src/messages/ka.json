@@ -860,7 +860,8 @@
     "unavailableTitle": "გამოწვევა მიუწვდომელია",
     "unavailableMessage": "ეს გამოწვევა ამჟამად მიუწვდომელია. სცადე მოგვიანებით.",
     "unavailableTryAgain": "ხელახლა ცდა",
-    "unavailableBack": "უკან"
+    "unavailableBack": "უკან",
+    "timeUpBankKept": "დრო ამოიწურა — {amount} შენთან რჩება"
   },
   "dailyChallenge": {
     "answerPrefix": "პასუხი",
