@@ -2,26 +2,22 @@
 
 import { useEffect, useRef } from "react";
 import { useLocale } from "@/contexts/LocaleContext";
-import { isSupportedLocale } from "@/lib/i18n/messages";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
 
 /**
- * Pins /promo to English so the reused game chrome (counters, submit
- * buttons, result cards) matches the English question content — but ONLY
- * when no explicit locale is in effect: a stored EN/KA choice and a
- * path-derived locale retained from client-side navigation (e.g. /ka →
- * /promo) are both respected.
+ * Pins /promo to Georgian: the quiz content is Georgian editorial text, so
+ * the reused game chrome (counters, submit buttons, result cards) must match.
  *
- * The stored locale is written directly (not just setLocale): this child
- * effect commits before LocaleContext's hydration effect in practice, and
- * that hydration pass geo-infers a locale only when nothing valid is
- * stored — persisting first makes it keep English instead of applying the
- * inferred Georgian. Validation mirrors readStoredLocale: an unsupported
- * stored value (e.g. "" or "fr") counts as no preference, matching what
- * hydration would do with it.
+ * Unlike a normal route this pin is UNCONDITIONAL (session-once) — /promo is
+ * a staging-only film prop for the promo shoot, and a mixed-language frame on
+ * camera is worse than overriding a tester's stored preference. The stored
+ * locale is written before LocaleContext's hydration effect reads it, so the
+ * geo-/storage-derived locale can't clobber the pin; hydration never
+ * dispatches 'en' over live state, so the setLocale('ka') sticks in every
+ * storage state (empty, invalid, 'en', or already 'ka').
  */
 export function PromoLocaleDefault() {
-  const { locale, setLocale } = useLocale();
+  const { setLocale } = useLocale();
   const applied = useRef(false);
 
   useEffect(() => {
@@ -34,16 +30,9 @@ export function PromoLocaleDefault() {
       // Storage-restricted context (e.g. private mode): fall through and
       // still attempt the pin, just without the session dedupe.
     }
-    // A non-default locale here means it was set by an explicit source
-    // (path locale retained across navigation, or an earlier hydration) —
-    // leave it alone.
-    if (locale !== "en") return;
-    const stored = storage.get<string | null>(STORAGE_KEYS.LOCALE, null);
-    if (!isSupportedLocale(stored ?? "")) {
-      storage.set(STORAGE_KEYS.LOCALE, "en");
-      setLocale("en");
-    }
-  }, [locale, setLocale]);
+    storage.set(STORAGE_KEYS.LOCALE, "ka");
+    setLocale("ka");
+  }, [setLocale]);
 
   return null;
 }
