@@ -2,6 +2,7 @@ import type { Locale } from "@/lib/i18n/messages";
 import {
   DAILY_DEMO_MODES,
   FEATURED_DEMO_MODES,
+  MINI_GAME_DEMO_MODES,
   type DemoModeCard,
 } from "./demoModes";
 
@@ -86,7 +87,7 @@ export const SHOWCASE_BENEFITS: ShowcaseBenefit[] = [
 
 // ── Game sections ────────────────────────────────────────────────────────────
 export interface ShowcaseSection {
-  id: "flagship" | "daily";
+  id: "flagship" | "mini" | "daily";
   accent: string; // hex, used for accents/badges
   eyebrow: DemoI18nText;
   title: DemoI18nText;
@@ -105,6 +106,17 @@ export const SHOWCASE_SECTIONS: ShowcaseSection[] = [
       ka: "მასშტაბური მულტიპლეიერ მოვლენები, რომლებიც ქმნის თავშეყრის მომენტს და ზრდის აქტივობას მატჩების დღეებში.",
     },
     modes: FEATURED_DEMO_MODES,
+  },
+  {
+    id: "mini",
+    accent: "#58CC02",
+    eyebrow: { en: "Quick-fire engagement", ka: "სწრაფი ჩართულობა" },
+    title: { en: "Bet-native mini-games", ka: "ფსონის სტილის მინი-თამაშები" },
+    blurb: {
+      en: "Fast 1–2 minute games built around bet mechanics — cash-out, accumulators, hi-lo, mines and more — keep players active between real bets.",
+      ka: "1–2 წუთიანი თამაშები ფსონის მექანიკებით — cash-out, ექსპრესი, hi-lo, mines და სხვა — მოთამაშეთა აქტიურობას რეალურ ფსონებს შორისაც ინარჩუნებს.",
+    },
+    modes: MINI_GAME_DEMO_MODES,
   },
   {
     id: "daily",
@@ -129,6 +141,7 @@ export interface CardMeta {
 
 const DURATION_SHORT: DemoI18nText = { en: "1–2 min", ka: "1–2 წთ" };
 const FORMAT_DAILY: DemoI18nText = { en: "Daily", ka: "ყოველდღიური" };
+const FORMAT_SINGLE_PLAYER: DemoI18nText = { en: "Single-player", ka: "სოლო" };
 
 // Flagship formats/durations (bespoke — these are the big multiplayer modes).
 const FLAGSHIP_META: Record<string, CardMeta> = {
@@ -143,5 +156,10 @@ const FLAGSHIP_META: Record<string, CardMeta> = {
 };
 
 export function getCardMeta(mode: DemoModeCard): CardMeta {
-  return FLAGSHIP_META[mode.slug] ?? { duration: DURATION_SHORT, format: FORMAT_DAILY };
+  return (
+    FLAGSHIP_META[mode.slug] ?? {
+      duration: DURATION_SHORT,
+      format: mode.slug.startsWith("mini-") ? FORMAT_SINGLE_PLAYER : FORMAT_DAILY,
+    }
+  );
 }
