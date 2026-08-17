@@ -5,6 +5,9 @@ import { AnimatePresence, motion } from 'motion/react';
 import type { Socket } from 'socket.io-client';
 import { PossessionQuestionPanel } from '@/components/game/PossessionQuestionPanel';
 import { LiveSpecialQuestionPanel } from '@/features/possession/components/LiveSpecialQuestionPanel';
+import { TrueFalseGame } from '@/features/daily/TrueFalseGame';
+import { ImposterGame } from '@/features/daily/ImposterGame';
+import { FootballLogicGame } from '@/features/daily/FootballLogicGame';
 import { __setSocketOverride } from '@/lib/realtime/socket-client';
 import type {
   ClientToServerEvents,
@@ -14,6 +17,7 @@ import type {
 import { PROMO_CLUES_ACCEPTED, PROMO_PUT_IN_ORDER_CORRECT_IDS } from './promoQuiz.data';
 import { PROMO_FROZEN_TIME, PROMO_MATCH_ID, usePromoQuiz } from './usePromoQuiz';
 import { PromoLocaleDefault } from './PromoLocaleDefault';
+import { PromoPassChain } from './PromoPassChain';
 
 const poppins = {
   fontFamily: "'Poppins', sans-serif",
@@ -27,6 +31,9 @@ const PROMO_EMIT_EVENT = 'promo:socket-emit';
 // Who-am-I clue pacing: one clue every CLUE_SECONDS; after the last clue the
 // countdown holds and the round waits for an answer (no timeout, no give-up).
 const CLUE_SECONDS = 10;
+
+// Points per correct answer inside the embedded daily-challenge games.
+const EMBEDDED_POINTS_PER_CORRECT = 100;
 
 interface PromoEmitDetail {
   event: string;
@@ -73,9 +80,9 @@ function isAcceptedCluesGuess(raw: string): boolean {
 type PromoQuizApi = ReturnType<typeof usePromoQuiz>;
 
 /**
- * One special round (put-in-order or who-am-I). Remounted per question via the
- * parent's key, so all round-local state (clue countdown, wrong-guess reveals)
- * starts fresh without effect-driven resets.
+ * One possession special round (put-in-order or who-am-I). Remounted per
+ * question via the parent's key, so all round-local state (clue countdown,
+ * wrong-guess reveals) starts fresh without effect-driven resets.
  */
 function PromoSpecialRound({ quiz }: { quiz: PromoQuizApi }) {
   const current = quiz.current;
@@ -154,7 +161,7 @@ function PromoSpecialRound({ quiz }: { quiz: PromoQuizApi }) {
     return () => window.removeEventListener(PROMO_EMIT_EVENT, onEmit);
   }, []);
 
-  if (current.kind === 'multipleChoice') return null;
+  if (current.kind !== 'putInOrder' && current.kind !== 'clues') return null;
 
   const cluesHeld = isClues && revealCount >= clueCount;
 
@@ -162,7 +169,7 @@ function PromoSpecialRound({ quiz }: { quiz: PromoQuizApi }) {
     <LiveSpecialQuestionPanel
       matchId={PROMO_MATCH_ID}
       qIndex={quiz.index}
-      totalQuestions={quiz.totalQuestions}
+      totalQuestions={quiz.totalRounds}
       question={current.question}
       showOptions
       timeRemaining={isClues ? timeLeft : PROMO_FROZEN_TIME}
@@ -180,6 +187,77 @@ function PromoSpecialRound({ quiz }: { quiz: PromoQuizApi }) {
   );
 }
 
+/** Shota avatar with a graceful fallback until the real file is dropped in. */
+function PromoAvatar({ size = 96 }: { size?: number }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) {
+    return (
+      <div
+        className="flex items-center justify-center rounded-full border-2 border-brand-yellow bg-brand-yellow/10 font-fun font-black text-brand-yellow"
+        style={{ width: size, height: size, fontSize: size * 0.42 }}
+      >
+        შ
+      </div>
+    );
+  }
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src="/promo/shota-avatar.png"
+      alt="შოთა არველაძე"
+      width={size}
+      height={size}
+      onError={() => setFailed(true)}
+      className="rounded-full border-2 border-brand-yellow object-cover"
+      style={{ width: size, height: size }}
+    />
+  );
+}
+
+function PromoResultsScreen({ quiz, playerName }: { quiz: PromoQuizApi; playerName: string }) {
+  const accuracy = quiz.totalUnits > 0 ? Math.round((quiz.correctCount / quiz.totalUnits) * 100) : 0;
+  return (
+    <div className="flex min-h-dvh flex-col items-center justify-center gap-6 px-6 text-center">
+      <PromoLocaleDefault />
+      <PromoAvatar size={104} />
+      <div className="font-fun text-2xl font-black uppercase text-white">{playerName}</div>
+
+      <div className="w-full max-w-sm rounded-3xl border-2 border-brand-green/40 bg-surface-card-deeper p-6">
+        <div className="font-fun text-xs uppercase tracking-[0.3em] text-white/50">საბოლოო ქულა</div>
+        <div className="mt-2 font-fun text-6xl font-black text-brand-yellow" style={poppins}>
+          {quiz.score}
+        </div>
+        <div className="mt-5 grid grid-cols-2 gap-3">
+          <div className="rounded-2xl bg-surface-card/60 px-4 py-3">
+            <div className="font-poppins text-2xl font-black text-white" style={poppins}>
+              {quiz.correctCount}/{quiz.totalUnits}
+            </div>
+            <div className="mt-1 font-fun text-[10px] font-black uppercase tracking-[0.18em] text-white/45">
+              სწორი პასუხი
+            </div>
+          </div>
+          <div className="rounded-2xl bg-surface-card/60 px-4 py-3">
+            <div className="font-poppins text-2xl font-black text-brand-green" style={poppins}>
+              {accuracy}%
+            </div>
+            <div className="mt-1 font-fun text-[10px] font-black uppercase tracking-[0.18em] text-white/45">
+              სიზუსტე
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        onClick={quiz.restart}
+        className="rounded-xl bg-brand-green px-8 py-4 font-fun text-lg font-black uppercase text-white transition-transform active:scale-95"
+      >
+        თავიდან თამაში
+      </button>
+    </div>
+  );
+}
+
 export function PromoQuizScreen({ playerName = 'შოთა' }: { playerName?: string }) {
   const quiz = usePromoQuiz();
 
@@ -190,34 +268,68 @@ export function PromoQuizScreen({ playerName = 'შოთა' }: { playerName?: 
     return () => __setSocketOverride(null);
   }, []);
 
-  // Fresh question or restart: always film from the top of the page.
+  // Fresh round or restart: always film from the top of the page.
   useEffect(() => {
     window.scrollTo({ top: 0 });
   }, [quiz.index, quiz.nonce, quiz.finished]);
 
   const revealed = quiz.stage === 'revealed';
+  const current = quiz.current;
+  const isEmbedded =
+    current.kind === 'trueFalse' ||
+    current.kind === 'imposter' ||
+    current.kind === 'footballLogic' ||
+    current.kind === 'passChain';
+  const noop = () => {};
 
   if (quiz.finished) {
-    return (
-      <div className="flex min-h-dvh flex-col items-center justify-center gap-8 px-6 text-center">
-        <PromoLocaleDefault />
-        <div className="font-fun text-sm uppercase tracking-[0.3em] text-white/50">
-          საბოლოო ქულა
-        </div>
-        <div className="font-fun text-7xl font-black text-brand-yellow" style={poppins}>
-          {quiz.score}
-        </div>
-        <div className="font-fun text-2xl font-black uppercase text-white">{playerName}</div>
-        <button
-          type="button"
-          onClick={quiz.restart}
-          className="rounded-xl bg-brand-green px-8 py-4 font-fun text-lg font-black uppercase text-white transition-transform active:scale-95"
-        >
-          თავიდან თამაში
-        </button>
-      </div>
-    );
+    return <PromoResultsScreen quiz={quiz} playerName={playerName} />;
   }
+
+  // The daily-challenge games render their own fixed full-screen takeover
+  // while active; the promo shell resumes with the interstitial once the
+  // round completes.
+  const activeEmbeddedGame =
+    !revealed && current.kind === 'trueFalse' ? (
+      <TrueFalseGame
+        key={`tf-${quiz.nonce}`}
+        session={current.session}
+        onBack={noop}
+        onComplete={(correct) =>
+          quiz.completeEmbedded({
+            correctUnits: correct,
+            totalUnits: current.units,
+            points: correct * EMBEDDED_POINTS_PER_CORRECT,
+          })
+        }
+      />
+    ) : !revealed && current.kind === 'imposter' ? (
+      <ImposterGame
+        key={`imp-${quiz.nonce}`}
+        session={current.session}
+        onBack={noop}
+        onComplete={(correct) =>
+          quiz.completeEmbedded({
+            correctUnits: correct,
+            totalUnits: current.units,
+            points: correct * EMBEDDED_POINTS_PER_CORRECT,
+          })
+        }
+      />
+    ) : !revealed && current.kind === 'footballLogic' ? (
+      <FootballLogicGame
+        key={`fl-${quiz.nonce}`}
+        session={current.session}
+        onBack={noop}
+        onComplete={(correct) =>
+          quiz.completeEmbedded({
+            correctUnits: correct,
+            totalUnits: current.units,
+            points: correct * EMBEDDED_POINTS_PER_CORRECT,
+          })
+        }
+      />
+    ) : null;
 
   return (
     <div className="relative flex min-h-dvh w-full flex-col">
@@ -244,21 +356,21 @@ export function PromoQuizScreen({ playerName = 'შოთა' }: { playerName?: 
       <div className="relative mx-auto w-full max-w-3xl flex-1 px-3 pb-28 pt-2 sm:px-4">
         <AnimatePresence mode="wait">
           <motion.div
-            key={`${quiz.index}-${quiz.nonce}`}
+            key={`${quiz.index}-${quiz.nonce}-${revealed && isEmbedded ? 'done' : 'live'}`}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.22, ease: 'easeOut' }}
           >
-            {quiz.current.kind === 'multipleChoice' ? (
+            {current.kind === 'multipleChoice' ? (
               <PossessionQuestionPanel
                 phase={revealed ? 'reveal' : 'playing'}
                 isPenaltyPhase={false}
                 isShotPhase={false}
                 isLastAttackPhase={false}
-                question={quiz.current.question}
+                question={current.question}
                 qIndex={quiz.index}
-                totalQuestions={quiz.totalQuestions}
+                totalQuestions={quiz.totalRounds}
                 timeRemaining={null}
                 showOptions
                 selectedAnswer={quiz.selectedAnswer}
@@ -266,12 +378,38 @@ export function PromoQuizScreen({ playerName = 'შოთა' }: { playerName?: 
                 opponentAnswer={null}
                 onAnswer={quiz.answerMultipleChoice}
               />
-            ) : (
+            ) : current.kind === 'putInOrder' || current.kind === 'clues' ? (
               <PromoSpecialRound quiz={quiz} />
-            )}
+            ) : current.kind === 'passChain' && !revealed ? (
+              <PromoPassChain
+                key={`chain-${quiz.nonce}`}
+                puzzles={current.puzzles}
+                onComplete={({ solved, points }) =>
+                  quiz.completeEmbedded({
+                    correctUnits: solved,
+                    totalUnits: current.units,
+                    points,
+                  })
+                }
+              />
+            ) : isEmbedded && revealed && quiz.lastEmbedded ? (
+              <div className="mx-auto mt-6 w-full max-w-sm rounded-3xl border-2 border-brand-green/40 bg-surface-card-deeper p-6 text-center">
+                <div className="font-fun text-xs font-black uppercase tracking-[0.24em] text-white/50">
+                  რაუნდი დასრულდა
+                </div>
+                <div className="mt-2 font-poppins text-4xl font-black text-brand-yellow" style={poppins}>
+                  +{quiz.lastEmbedded.points}
+                </div>
+                <div className="mt-2 font-poppins text-sm font-bold text-white/60">
+                  {quiz.lastEmbedded.correctUnits}/{quiz.lastEmbedded.totalUnits} სწორი
+                </div>
+              </div>
+            ) : null}
           </motion.div>
         </AnimatePresence>
       </div>
+
+      {activeEmbeddedGame}
 
       {/* Operator control — manual advance only, so retakes are easy. */}
       <AnimatePresence>
