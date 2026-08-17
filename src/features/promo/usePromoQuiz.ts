@@ -10,19 +10,26 @@ import type {
 import {
   PROMO_CLUES_ANSWER,
   PROMO_PUT_IN_ORDER_CORRECT_IDS,
-  PROMO_QUESTIONS,
-  PROMO_TOTAL_QUESTIONS,
-  type PromoQuestion,
+  PROMO_ROUNDS,
+  PROMO_TOTAL_ROUNDS,
+  PROMO_TOTAL_UNITS,
+  type PromoRound,
 } from './promoQuiz.data';
 
 export const PROMO_MATCH_ID = 'promo-match';
 const PROMO_SELF_ID = 'promo-self';
 
-// The special panels auto-submit when timeRemaining hits 0, so the promo flow
-// holds a constant positive value and never renders a countdown.
+// The possession special panels auto-submit when timeRemaining hits 0, so the
+// promo flow holds a constant positive value and never renders a countdown.
 export const PROMO_FROZEN_TIME = 99;
 
 export type PromoStage = 'question' | 'revealed';
+
+export interface PromoEmbeddedResult {
+  correctUnits: number;
+  totalUnits: number;
+  points: number;
+}
 
 function buildAnswerStates(
   optionCount: number,
@@ -57,37 +64,33 @@ function roundPlayer(
   };
 }
 
-export interface PromoQuizState {
-  index: number;
-  current: PromoQuestion;
-  stage: PromoStage;
-  score: number;
-  selectedAnswer: number | null;
-  answerStates: AnswerStateArray;
-  answerAck: MatchAnswerAckPayload | null;
-  roundResult: MatchRoundResultPayload | null;
-  myRound: MatchRoundResultPlayer | null;
-  isLast: boolean;
-  finished: boolean;
+const POSSESSION_KINDS = ['multipleChoice', 'putInOrder', 'clues'] as const;
+
+function isPossessionRound(
+  round: PromoRound,
+): round is Extract<PromoRound, { kind: 'multipleChoice' | 'putInOrder' | 'clues' }> {
+  return (POSSESSION_KINDS as readonly string[]).includes(round.kind);
 }
 
 export function usePromoQuiz() {
   const [index, setIndex] = useState(0);
   const [stage, setStage] = useState<PromoStage>('question');
   const [score, setScore] = useState(0);
+  const [correctCount, setCorrectCount] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [lastCorrect, setLastCorrect] = useState(false);
   const [lastPoints, setLastPoints] = useState(0);
   const [lastOrderIds, setLastOrderIds] = useState<string[] | null>(null);
   const [lastFoundCount, setLastFoundCount] = useState<number | null>(null);
   const [lastClueIndex, setLastClueIndex] = useState<number | null>(null);
+  const [lastEmbedded, setLastEmbedded] = useState<PromoEmbeddedResult | null>(null);
   const [finished, setFinished] = useState(false);
   // Special panels submit through the socket stub; a nonce forces a fresh
   // panel instance per question so their internal state resets cleanly.
   const [nonce, setNonce] = useState(0);
 
-  const current = PROMO_QUESTIONS[index];
-  const isLast = index >= PROMO_QUESTIONS.length - 1;
+  const current = PROMO_ROUNDS[index];
+  const isLast = index >= PROMO_ROUNDS.length - 1;
   const revealed = stage === 'revealed';
 
   const answerStates = useMemo<AnswerStateArray>(() => {
@@ -103,17 +106,11 @@ export function usePromoQuiz() {
   }, [current, selectedAnswer, revealed]);
 
   const answerAck = useMemo<MatchAnswerAckPayload | null>(() => {
-    if (stage !== 'revealed') return null;
-    const kind =
-      current.kind === 'multipleChoice'
-        ? 'multipleChoice'
-        : current.kind === 'putInOrder'
-          ? 'putInOrder'
-          : 'clues';
+    if (stage !== 'revealed' || !isPossessionRound(current)) return null;
     return {
       matchId: PROMO_MATCH_ID,
       qIndex: index,
-      questionKind: kind,
+      questionKind: current.kind,
       selectedIndex: selectedAnswer,
       isCorrect: lastCorrect,
       myTotalPoints: score,
@@ -131,7 +128,7 @@ export function usePromoQuiz() {
   }, [stage, current, index, selectedAnswer, lastCorrect, score, lastPoints, lastClueIndex, lastFoundCount, lastOrderIds]);
 
   const myRound = useMemo<MatchRoundResultPlayer | null>(() => {
-    if (stage !== 'revealed') return null;
+    if (stage !== 'revealed' || !isPossessionRound(current)) return null;
     return roundPlayer(lastCorrect, lastPoints, score, {
       selectedIndex: selectedAnswer,
       ...(current.kind === 'putInOrder'
@@ -143,7 +140,7 @@ export function usePromoQuiz() {
   }, [stage, current, lastCorrect, lastPoints, score, selectedAnswer, lastClueIndex, lastFoundCount, lastOrderIds]);
 
   const roundResult = useMemo<MatchRoundResultPayload | null>(() => {
-    if (stage !== 'revealed' || !myRound) return null;
+    if (stage !== 'revealed' || !myRound || !isPossessionRound(current)) return null;
 
     const reveal =
       current.kind === 'multipleChoice'
@@ -184,6 +181,7 @@ export function usePromoQuiz() {
       setLastCorrect(isCorrect);
       setLastPoints(points);
       if (points > 0) setScore((s) => s + points);
+      if (isCorrect) setCorrectCount((c) => c + 1);
       setStage('revealed');
     },
     [],
@@ -209,13 +207,25 @@ export function usePromoQuiz() {
         clueIndex?: number;
       },
     ) => {
-      if (stage !== 'question') return;
+      if (stage !== 'question' || !isPossessionRound(current)) return;
       setLastOrderIds(opts?.submittedOrderIds ?? null);
       setLastFoundCount(opts?.foundCount ?? null);
       setLastClueIndex(opts?.clueIndex ?? null);
       reveal(isCorrect, opts?.points ?? (isCorrect ? current.points : 0));
     },
     [stage, current, reveal],
+  );
+
+  /** An embedded daily-game / pass-chain round finished. */
+  const completeEmbedded = useCallback(
+    (result: PromoEmbeddedResult) => {
+      if (stage !== 'question') return;
+      setScore((s) => s + result.points);
+      setCorrectCount((c) => c + result.correctUnits);
+      setLastEmbedded(result);
+      setStage('revealed');
+    },
+    [stage],
   );
 
   const next = useCallback(() => {
@@ -231,6 +241,7 @@ export function usePromoQuiz() {
     setLastOrderIds(null);
     setLastFoundCount(null);
     setLastClueIndex(null);
+    setLastEmbedded(null);
     setNonce((n) => n + 1);
   }, [isLast]);
 
@@ -238,12 +249,14 @@ export function usePromoQuiz() {
     setIndex(0);
     setStage('question');
     setScore(0);
+    setCorrectCount(0);
     setSelectedAnswer(null);
     setLastCorrect(false);
     setLastPoints(0);
     setLastOrderIds(null);
     setLastFoundCount(null);
     setLastClueIndex(null);
+    setLastEmbedded(null);
     setFinished(false);
     setNonce((n) => n + 1);
   }, []);
@@ -253,17 +266,21 @@ export function usePromoQuiz() {
     current,
     stage,
     score,
+    correctCount,
     selectedAnswer,
     answerStates,
     answerAck,
     roundResult,
     myRound,
+    lastEmbedded,
     isLast,
     finished,
     nonce,
-    totalQuestions: PROMO_TOTAL_QUESTIONS,
+    totalRounds: PROMO_TOTAL_ROUNDS,
+    totalUnits: PROMO_TOTAL_UNITS,
     answerMultipleChoice,
     submitSpecial,
+    completeEmbedded,
     next,
     restart,
   };
