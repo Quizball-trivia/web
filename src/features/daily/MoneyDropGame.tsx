@@ -186,6 +186,8 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
   const [bets, setBets] = useState<number[]>([0, 0, 0, 0]);
   const [showResult, setShowResult] = useState(false);
   const [hasConfirmed, setHasConfirmed] = useState(false);
+  // Render-safe mirror of anyManualConfirmRef (refs must not be read in render).
+  const [hasEngaged, setHasEngaged] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [droppedAnswers, setDroppedAnswers] = useState<number[]>([]);
   const [showQuitDialog, setShowQuitDialog] = useState(false);
@@ -200,7 +202,7 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
   const deadlineRef = useRef<number | null>(null);
   const totalAllocatedRef = useRef(0);
   const handleConfirmBetsRef = useRef<(() => void) | null>(null);
-  const handleNextQuestionRef = useRef<((options?: { auto?: boolean }) => void) | null>(null);
+  const handleNextQuestionRef = useRef<(() => void) | null>(null);
   const confirmButtonRef = useRef<HTMLButtonElement | null>(null);
   // True when the round was confirmed by the timer running out (not a manual
   // "Confirm Bets" press) — drives auto-advance to the next question.
@@ -239,7 +241,10 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
     // call: the timeout sets timeoutHandledRef before invoking this, and that
     // path must still run (auto-submit). hasConfirmed covers the double-press.
     if (hasConfirmed) return;
-    if (!autoAdvanceRef.current) anyManualConfirmRef.current = true;
+    if (!autoAdvanceRef.current) {
+      anyManualConfirmRef.current = true;
+      setHasEngaged(true);
+    }
     setHasConfirmed(true);
     setIsAnimating(true);
     setShowClue(false);
@@ -263,7 +268,7 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
         autoAdvanceRef.current = false;
         autoAdvanceTimeoutRef.current = setTimeout(() => {
           autoAdvanceTimeoutRef.current = null;
-          handleNextQuestionRef.current?.({ auto: true });
+          handleNextQuestionRef.current?.();
         }, 2500);
       }
     }, wrongAnswers.length * 1000 + 2000);
@@ -331,7 +336,7 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
     showResult,
   ]);
 
-  const handleNextQuestion = (options?: { auto?: boolean }) => {
+  const handleNextQuestion = () => {
     // Cancel any pending auto-advance so it can't fire on the next screen after
     // a manual press (which would skip a question or end the run early).
     if (autoAdvanceTimeoutRef.current) {
@@ -347,8 +352,8 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
     // confirm requires full allocation. It is not a bet; it's an absent player.
     // Wiping the bank here (old behavior) ended most runs at 0 through
     // unplayable zombie rounds. Rule: the run ends and the player keeps the
-    // bank they earned. Deliberately independent of options.auto: pressing
-    // "View Results" during the auto-advance window must not change the outcome.
+    // bank they earned. Deliberately path-independent: pressing "View Results"
+    // during the auto-advance window must not change the outcome.
     const nothingAllocated = bets.every((b) => b === 0);
     if (nothingAllocated) {
       finishRun(currentMoney);
@@ -723,7 +728,7 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
               </div>
 
               {/* Result summary */}
-              {bets.every((b) => b === 0) && anyManualConfirmRef.current ? (
+              {bets.every((b) => b === 0) && hasEngaged ? (
                 <motion.div
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
