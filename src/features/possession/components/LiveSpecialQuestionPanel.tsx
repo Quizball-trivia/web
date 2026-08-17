@@ -46,6 +46,8 @@ export function LiveSpecialQuestionPanel(props: LiveSpecialQuestionPanelProps) {
     showOptions,
     timeRemaining,
     questionDurationSeconds,
+    hideTimer = false,
+    soloMode = false,
     answerAck,
     roundResolved,
     roundResult,
@@ -99,6 +101,7 @@ export function LiveSpecialQuestionPanel(props: LiveSpecialQuestionPanelProps) {
         roundResult={roundResult}
         myRound={myRound}
         opponentRound={opponentRound}
+        soloMode={soloMode}
       />
     );
   } else {
@@ -117,6 +120,7 @@ export function LiveSpecialQuestionPanel(props: LiveSpecialQuestionPanelProps) {
         opponentRound={opponentRound}
         opponentAnswered={opponentAnswered}
         cluesGuessAck={cluesGuessAck}
+        soloMode={soloMode}
       />
     );
   }
@@ -136,13 +140,15 @@ export function LiveSpecialQuestionPanel(props: LiveSpecialQuestionPanelProps) {
           >
             {counterLabel}
           </div>
-          <div
-            className="font-poppins flex w-[64px] items-center justify-center rounded-[16px] bg-brand-blue text-white h-[40px] sm:h-[52px] sm:w-[92px] md:h-[62px] md:w-[116px] lg:h-[72px] lg:w-[136px] tabular-nums"
-            style={{ fontWeight: 600, fontSize: 'clamp(14px, 2.2vw, 26px)' }}
-            aria-label={t('possession.timeRemaining')}
-          >
-            {timerLabel}
-          </div>
+          {!hideTimer && (
+            <div
+              className="font-poppins flex w-[64px] items-center justify-center rounded-[16px] bg-brand-blue text-white h-[40px] sm:h-[52px] sm:w-[92px] md:h-[62px] md:w-[116px] lg:h-[72px] lg:w-[136px] tabular-nums"
+              style={{ fontWeight: 600, fontSize: 'clamp(14px, 2.2vw, 26px)' }}
+              aria-label={t('possession.timeRemaining')}
+            >
+              {timerLabel}
+            </div>
+          )}
         </div>
       )}
       {content}

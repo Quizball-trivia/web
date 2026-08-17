@@ -53,6 +53,7 @@ export function LiveCluesPanel({
   myRound,
   opponentRound,
   cluesGuessAck,
+  soloMode = false,
 }: {
   matchId: string;
   qIndex: number;
@@ -68,6 +69,9 @@ export function LiveCluesPanel({
   /** Opponent has locked in their guess for this live round (pre-resolve). */
   opponentAnswered?: boolean;
   cluesGuessAck: MatchCluesGuessAckPayload | null;
+  /** Single-player mode (promo capture): no opponent card, no give-up, no
+   *  deadline auto-give-up — the round waits until the player answers. */
+  soloMode?: boolean;
 }) {
   const { t } = useLocale();
   const [guess, setGuess] = useState('');
@@ -166,6 +170,7 @@ export function LiveCluesPanel({
   // auto-submit. Cancelled if an ack/round result lands during the grace.
   const autoGiveUpQIndexRef = useRef<number | null>(null);
   useEffect(() => {
+    if (soloMode) return;
     if (autoGiveUpQIndexRef.current === qIndex) return;
     if (!showOptions || submitted || roundResolved || timeRemaining > 0) return;
     const timer = setTimeout(() => {
@@ -181,7 +186,7 @@ export function LiveCluesPanel({
       getSocket().emit('match:clues_answer', payload);
     }, AUTO_GIVE_UP_GRACE_MS);
     return () => clearTimeout(timer);
-  }, [matchId, qIndex, questionDurationSeconds, roundResolved, showOptions, submitted, timeRemaining]);
+  }, [matchId, qIndex, questionDurationSeconds, roundResolved, showOptions, soloMode, submitted, timeRemaining]);
 
   const emitGuess = useCallback((options?: { giveUp?: boolean }) => {
     if (inputLocked) return;
@@ -230,7 +235,7 @@ export function LiveCluesPanel({
           status: cluesPlayerCorrect ? 'positive' : 'negative',
           detail: cluesPlayerDetail,
         }}
-        opponent={{
+        opponent={soloMode ? null : {
           label: t('possession.opp'),
           count: opponentAnswerCount,
           total: 1,
@@ -389,7 +394,7 @@ export function LiveCluesPanel({
               }}
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className={`grid gap-3 ${soloMode ? 'grid-cols-1' : 'grid-cols-2'}`}>
             <button
               type="button"
               onClick={() => emitGuess()}
@@ -405,21 +410,23 @@ export function LiveCluesPanel({
             >
               {t('possession.submit')}
             </button>
-            <button
-              type="button"
-              onClick={() => emitGuess({ giveUp: true })}
-              disabled={inputLocked}
-              aria-label={t('possession.giveUp')}
-              className="font-poppins h-14 rounded-[20px] bg-brand-red-soft text-white outline-none transition-colors hover:bg-brand-red-deep disabled:opacity-40"
-              style={{
-                fontWeight: 600,
-                fontSize: 16,
-                letterSpacing: '0.06em',
-                boxShadow: '0 1.76px 6.334px 1.32px rgba(255, 75, 75, 0.25)',
-              }}
-            >
-              {t('possession.giveUp')}
-            </button>
+            {!soloMode && (
+              <button
+                type="button"
+                onClick={() => emitGuess({ giveUp: true })}
+                disabled={inputLocked}
+                aria-label={t('possession.giveUp')}
+                className="font-poppins h-14 rounded-[20px] bg-brand-red-soft text-white outline-none transition-colors hover:bg-brand-red-deep disabled:opacity-40"
+                style={{
+                  fontWeight: 600,
+                  fontSize: 16,
+                  letterSpacing: '0.06em',
+                  boxShadow: '0 1.76px 6.334px 1.32px rgba(255, 75, 75, 0.25)',
+                }}
+              >
+                {t('possession.giveUp')}
+              </button>
+            )}
           </div>
         </div>
       )}

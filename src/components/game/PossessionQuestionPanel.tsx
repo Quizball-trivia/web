@@ -243,7 +243,9 @@ export function PossessionQuestionPanel({
     </div>
   );
 
-  const timerPill = (
+  // A null timeRemaining means "this mode has no clock" (training, promo) —
+  // render no pill at all rather than a frozen 00.
+  const timerPill = timeRemaining === null ? null : (
     <div
       className={`${timerPillClass} h-[40px] w-[64px] sm:h-[52px] sm:w-[92px] md:h-[62px] md:w-[116px] lg:h-[72px] lg:w-[136px]`}
       style={{ ...poppins, fontSize: 'clamp(14px, 2.2vw, 26px)' }}
