@@ -2,12 +2,9 @@
 
 import {
   ArrowRight,
-  ArrowDown,
   Blocks,
   CalendarCheck,
   Clock3,
-  Play,
-  Sparkles,
   TrendingUp,
   Trophy,
   type LucideIcon,
@@ -47,10 +44,6 @@ function TopBar({ locale }: { locale: Locale }) {
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
         <div className="flex min-w-0 items-center gap-3">
           <AppLogo size="sm" className="shrink-0" />
-          <span className="hidden items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 font-poppins text-[11px] font-bold uppercase tracking-wide text-blue-200/70 sm:inline-flex">
-            <Sparkles className="size-3" />
-            {locale === "ka" ? "პარტნიორის დემო" : "Partner preview"}
-          </span>
         </div>
 
         <div className="flex items-center gap-2">
@@ -82,10 +75,9 @@ function TopBar({ locale }: { locale: Locale }) {
           </div>
           <a
             href={CONTACT_MAILTO}
-            className="hidden items-center gap-1.5 rounded-full bg-brand-green px-4 py-2 font-poppins text-sm font-black text-white shadow-[0_4px_16px_rgba(56,182,14,0.3)] transition-transform hover:-translate-y-0.5 sm:inline-flex"
+            className="hidden min-h-10 items-center rounded-lg bg-brand-yellow px-4 font-poppins text-sm font-semibold text-black transition-colors hover:bg-brand-yellow/90 sm:inline-flex"
           >
             {tt(SHOWCASE_HERO.ctaPrimary, locale)}
-            <ArrowRight className="size-4" />
           </a>
         </div>
       </div>
@@ -96,27 +88,22 @@ function TopBar({ locale }: { locale: Locale }) {
 // ── Hero ──────────────────────────────────────────────────────────────────────
 function Hero({ locale }: { locale: Locale }) {
   return (
-    <section className="relative overflow-hidden px-4 pb-12 pt-14 sm:px-6 sm:pb-16 sm:pt-20 lg:px-8">
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-[-8rem] h-[36rem] bg-[radial-gradient(circle_at_50%_0%,rgba(22,69,255,0.28),transparent_60%)]"
-      />
-      <div className="relative mx-auto flex w-full max-w-4xl flex-col items-center text-center">
-        <motion.span
+    <section className="relative px-4 pb-10 pt-14 sm:px-6 sm:pb-14 sm:pt-20 lg:px-8">
+      <div className="relative mx-auto w-full max-w-7xl">
+        <motion.p
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="inline-flex items-center gap-2 rounded-full border border-brand-cyan/25 bg-brand-cyan/10 px-3.5 py-1.5 font-poppins text-[12px] font-black uppercase tracking-[0.14em] text-brand-cyan"
+          className="font-poppins text-xs font-semibold uppercase tracking-[0.18em] text-brand-cyan"
         >
-          <Sparkles className="size-3.5" />
           {tt(SHOWCASE_HERO.eyebrow, locale)}
-        </motion.span>
+        </motion.p>
 
         <motion.h1
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, delay: 0.05 }}
-          className="mt-5 font-poppins text-[2rem] font-black leading-[1.05] tracking-[-0.03em] text-white sm:text-5xl lg:text-6xl"
+          className="mt-3 max-w-4xl text-balance font-poppins text-4xl font-semibold leading-tight tracking-[-0.035em] text-white sm:text-5xl lg:text-6xl"
         >
           {tt(SHOWCASE_HERO.title, locale)}
         </motion.h1>
@@ -125,7 +112,7 @@ function Hero({ locale }: { locale: Locale }) {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, delay: 0.1 }}
-          className="mt-5 max-w-2xl font-poppins text-base font-medium leading-relaxed text-blue-100/70 sm:text-lg"
+          className="mt-5 max-w-2xl font-poppins text-base font-medium leading-relaxed text-white/65 sm:text-lg"
         >
           {tt(SHOWCASE_HERO.subtitle, locale)}
         </motion.p>
@@ -134,39 +121,21 @@ function Hero({ locale }: { locale: Locale }) {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, delay: 0.15 }}
-          className="mt-8 flex flex-col items-center gap-3 sm:flex-row"
+          className="mt-8 flex flex-wrap items-center gap-3"
         >
           <a
             href={CONTACT_MAILTO}
-            className="inline-flex items-center gap-2 rounded-full bg-brand-green px-6 py-3 font-poppins text-base font-black text-white shadow-[0_6px_24px_rgba(56,182,14,0.32)] transition-transform hover:-translate-y-0.5"
+            className="inline-flex min-h-11 items-center rounded-lg bg-brand-yellow px-5 font-poppins text-sm font-semibold text-black transition-colors hover:bg-brand-yellow/90"
           >
             {tt(SHOWCASE_HERO.ctaPrimary, locale)}
-            <ArrowRight className="size-4" />
           </a>
           <a
             href="#games"
-            className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/[0.04] px-6 py-3 font-poppins text-base font-bold text-white transition-colors hover:bg-white/[0.08]"
+            className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-white/15 px-5 font-poppins text-sm font-semibold text-white transition-colors hover:bg-white/[0.06]"
           >
             {tt(SHOWCASE_HERO.ctaSecondary, locale)}
-            <ArrowDown className="size-4" />
+            <ArrowRight className="size-4" />
           </a>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.25 }}
-          className="mt-9 flex flex-wrap items-center justify-center gap-2"
-        >
-          {SHOWCASE_HERO.chips.map((chip) => (
-            <span
-              key={chip.en}
-              className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 font-poppins text-[12px] font-bold text-white/75"
-            >
-              <span className="size-1.5 rounded-full bg-brand-green-light" />
-              {tt(chip, locale)}
-            </span>
-          ))}
         </motion.div>
       </div>
     </section>
@@ -187,15 +156,15 @@ function BenefitsRow({ locale }: { locale: Locale }) {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true, margin: "-40px" }}
               transition={{ duration: 0.4, delay: index * 0.05 }}
-              className="flex flex-col gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-5"
+              className="flex flex-col gap-3 rounded-xl border border-white/10 bg-transparent p-5"
             >
-              <span className="inline-flex size-11 items-center justify-center rounded-xl bg-brand-cyan/12 text-brand-cyan">
+              <span className="inline-flex size-11 items-center justify-center rounded-lg bg-brand-yellow/10 text-brand-yellow">
                 <Icon className="size-5" />
               </span>
-              <h3 className="font-poppins text-[15px] font-black leading-tight text-white">
+              <h3 className="font-poppins text-[15px] font-semibold leading-tight text-white">
                 {tt(benefit.title, locale)}
               </h3>
-              <p className="font-poppins text-[13px] leading-relaxed text-white/55">
+              <p className="font-poppins text-[13px] leading-relaxed text-white/65">
                 {tt(benefit.body, locale)}
               </p>
             </motion.div>
@@ -209,13 +178,11 @@ function BenefitsRow({ locale }: { locale: Locale }) {
 // ── Game card ─────────────────────────────────────────────────────────────────
 function GameCard({
   mode,
-  accent,
   locale,
   index,
   feature,
 }: {
   mode: DemoModeCard;
-  accent: string;
   locale: Locale;
   index: number;
   feature: boolean;
@@ -232,59 +199,37 @@ function GameCard({
     >
       <Link
         href={`/demos/${mode.slug}`}
-        className="group relative flex w-full flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[#101823] transition-all hover:-translate-y-1 hover:border-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
+        className="group flex w-full flex-col overflow-hidden rounded-xl bg-surface-card-deeper focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
       >
-        {/* Core-element art tile with chips overlaid */}
-        <div className="relative">
+        <div className="relative overflow-hidden">
           <DemoModeArt
             slug={mode.slug}
-            className={`w-full ${feature ? "aspect-[16/8]" : "aspect-[16/9]"} transition-transform duration-500 group-hover:scale-[1.04]`}
+            className={`w-full ${feature ? "aspect-[2/1] sm:aspect-[5/2]" : "aspect-[4/3]"} transition-transform duration-300 group-hover:scale-[1.03]`}
           />
-          <div className="pointer-events-none absolute left-3 top-3 flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-md bg-black/45 px-2 py-1 font-poppins text-[10px] font-black uppercase tracking-wide text-white backdrop-blur-sm">
-              <Clock3 className="size-3" />
-              {tt(meta.duration, locale)}
-            </span>
-          </div>
-          {meta.mechanic && (
-            <span
-              className="pointer-events-none absolute right-3 top-3 inline-flex items-center rounded-md bg-black/45 px-2 py-1 font-poppins text-[10px] font-black uppercase tracking-wide backdrop-blur-sm"
-              style={{ color: accent }}
-            >
-              {tt(meta.mechanic, locale)}
-            </span>
-          )}
+          <span className="pointer-events-none absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-black/45 px-2 py-1 font-poppins text-[10px] font-semibold uppercase tracking-wide text-white backdrop-blur-sm">
+            <Clock3 className="size-3" />
+            {tt(meta.duration, locale)}
+          </span>
         </div>
 
-        <div className="flex flex-1 flex-col p-5">
-          <h3
-            className={`font-poppins font-black uppercase leading-[1.05] text-white ${
-              feature ? "text-2xl sm:text-3xl" : "text-lg"
-            }`}
-          >
-            {tt(mode.title, locale)}
-          </h3>
-          <p
-            className={`mt-2 font-poppins leading-relaxed text-white/60 ${
-              feature ? "text-[15px]" : "text-[13px]"
-            }`}
-          >
-            {tt(mode.description, locale)}
-          </p>
-
-          <div className="mt-auto flex items-center justify-between gap-2 pt-5">
-            <span className="font-poppins text-[11px] font-bold uppercase tracking-wide text-white/40">
-              {tt(meta.format, locale)}
-            </span>
-            <span
-              className="inline-flex items-center gap-1.5 font-poppins text-[13px] font-black transition-colors"
-              style={{ color: accent }}
-            >
-              <Play className="size-3.5 fill-current" />
-              {locale === "ka" ? "სცადეთ დემო" : "Try demo"}
-              <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
-            </span>
+        <div className={`flex flex-1 items-center justify-between gap-4 bg-brand-blue ${feature ? "p-4 sm:p-5" : "p-5"}`}>
+          <div className="min-w-0">
+            <p className="font-poppins text-xs font-semibold uppercase tracking-[0.14em] text-brand-yellow">
+              {locale === "ka" ? "სცადე დემო" : "Try demo"}
+            </p>
+            <h3 className={`mt-1 font-poppins font-semibold text-white ${feature ? "text-xl" : "text-lg"}`}>
+              {tt(mode.title, locale)}
+            </h3>
+            {feature && (
+              <p className="mt-1 line-clamp-1 font-poppins text-[13px] leading-relaxed text-white/75">
+                {tt(mode.description, locale)}
+              </p>
+            )}
           </div>
+          <ArrowRight
+            className="size-5 shrink-0 text-brand-yellow transition-transform group-hover:translate-x-1"
+            aria-hidden
+          />
         </div>
       </Link>
     </motion.div>
@@ -294,36 +239,21 @@ function GameCard({
 // ── Section ───────────────────────────────────────────────────────────────────
 function GameSection({ section, locale }: { section: ShowcaseSection; locale: Locale }) {
   const feature = section.id === "flagship";
-  const gridCols = feature ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-3";
+  const gridCols = feature ? "sm:grid-cols-2" : "sm:grid-cols-2 lg:grid-cols-4";
 
   return (
-    <section className="px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+    <section className="px-4 py-7 sm:px-6 sm:py-8 lg:px-8">
       <div className="mx-auto w-full max-w-7xl">
-        <div className="mb-6 flex flex-col gap-2 border-l-2 pl-4" style={{ borderColor: section.accent }}>
-          <span
-            className="font-poppins text-[12px] font-black uppercase tracking-[0.14em]"
-            style={{ color: section.accent }}
-          >
-            {tt(section.eyebrow, locale)} · {section.modes.length}
-          </span>
-          <h2 className="font-poppins text-2xl font-black tracking-[-0.02em] text-white sm:text-3xl">
-            {tt(section.title, locale)}
-          </h2>
-          <p className="max-w-2xl font-poppins text-sm leading-relaxed text-white/55 sm:text-[15px]">
-            {tt(section.blurb, locale)}
-          </p>
-        </div>
+        <h2 className="font-poppins text-2xl font-semibold text-white sm:text-3xl">
+          {tt(section.title, locale)}
+        </h2>
+        <p className="mt-2 max-w-2xl font-poppins text-sm leading-relaxed text-white/65 sm:text-[15px]">
+          {tt(section.blurb, locale)}
+        </p>
 
-        <div className={`grid grid-cols-1 gap-3 ${gridCols} lg:gap-4`}>
+        <div className={`mt-7 grid grid-cols-1 gap-5 ${gridCols}`}>
           {section.modes.map((mode, index) => (
-            <GameCard
-              key={mode.slug}
-              mode={mode}
-              accent={section.accent}
-              locale={locale}
-              index={index}
-              feature={feature}
-            />
+            <GameCard key={mode.slug} mode={mode} locale={locale} index={index} feature={feature} />
           ))}
         </div>
       </div>
@@ -335,18 +265,14 @@ function GameSection({ section, locale }: { section: ShowcaseSection; locale: Lo
 function CtaBand({ locale }: { locale: Locale }) {
   return (
     <section className="px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
-      <div className="relative mx-auto w-full max-w-5xl overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-[#132033] to-[#0c1420] px-6 py-12 text-center sm:px-12 sm:py-16">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-x-0 top-[-6rem] h-[20rem] bg-[radial-gradient(circle_at_50%_0%,rgba(56,182,14,0.22),transparent_60%)]"
-        />
+      <div className="relative mx-auto w-full max-w-5xl overflow-hidden rounded-xl bg-brand-blue px-6 py-12 text-center sm:px-12 sm:py-16">
         <div className="relative flex flex-col items-center">
-          <h2 className="max-w-2xl font-poppins text-2xl font-black leading-tight tracking-[-0.02em] text-white sm:text-4xl">
+          <h2 className="max-w-2xl font-poppins text-2xl font-semibold leading-tight tracking-[-0.02em] text-white sm:text-4xl">
             {locale === "ka"
               ? "მიიტანეთ საფეხბურთო ჩართულობა თქვენს პლატფორმაზე"
               : "Bring football engagement to your platform"}
           </h2>
-          <p className="mt-4 max-w-xl font-poppins text-sm leading-relaxed text-white/60 sm:text-base">
+          <p className="mt-4 max-w-xl font-poppins text-sm leading-relaxed text-white/75 sm:text-base">
             {locale === "ka"
               ? "სრულად ბრენდირებადი და თქვენს პროდუქტში ინტეგრაციისთვის მზა — მოდით, გაჩვენოთ ცოცხლად."
               : "Fully brandable and ready to embed in your product — let us walk you through a live integration."}
@@ -354,14 +280,13 @@ function CtaBand({ locale }: { locale: Locale }) {
           <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row">
             <a
               href={CONTACT_MAILTO}
-              className="inline-flex items-center gap-2 rounded-full bg-brand-green px-7 py-3.5 font-poppins text-base font-black text-white shadow-[0_6px_24px_rgba(56,182,14,0.32)] transition-transform hover:-translate-y-0.5"
+              className="inline-flex min-h-11 items-center rounded-lg bg-brand-yellow px-6 font-poppins text-sm font-semibold text-black transition-colors hover:bg-brand-yellow/90"
             >
               {tt(SHOWCASE_HERO.ctaPrimary, locale)}
-              <ArrowRight className="size-4" />
             </a>
             <a
               href={CONTACT_MAILTO}
-              className="font-poppins text-sm font-bold text-white/60 underline-offset-4 transition-colors hover:text-white hover:underline"
+              className="font-poppins text-sm font-semibold text-white/75 underline-offset-4 transition-colors hover:text-white hover:underline"
             >
               {CONTACT_EMAIL}
             </a>
