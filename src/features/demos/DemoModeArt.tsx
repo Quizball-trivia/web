@@ -1,4 +1,45 @@
+import Image from "next/image";
+
 import { DemoModeIcon } from "./DemoModeIcon";
+
+const SUPABASE_IMAGE_BASE = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim().replace(/\/$/, "");
+const GAME_MODE_IMAGE_BASE = SUPABASE_IMAGE_BASE
+  ? `${SUPABASE_IMAGE_BASE}/storage/v1/object/public/imgs/demos/game-modes/2026-08-17`
+  : "/assets/demos/game-modes";
+
+const ILLUSTRATED_MODE_SLUGS = new Set([
+  "weekend-league",
+  "auction",
+  "mini-final-third",
+  "mini-road-to-goal",
+  "mini-squad-spin",
+  "mini-trivia-spin",
+  "mini-penalty-shootout",
+  "mini-daily-jackpot",
+  "mini-pass-chain",
+  "mini-accumulator",
+  "mini-squad-collection",
+  "mini-cash-out-ladder",
+  "mini-bet-slip-booster",
+  "mini-half-time-trivia",
+  "mini-odds-board",
+  "mini-football-grid",
+  "mini-survivor",
+  "mini-hi-lo-ride",
+  "mini-trivia-mines",
+  "mini-quiz-board",
+  "mini-last-one-standing",
+  "mini-golden-goal",
+  "mini-career-race",
+  "mini-stat-sniper",
+  "daily-moneyDrop",
+  "daily-trueFalse",
+  "daily-countdown",
+  "daily-imposter",
+  "daily-careerPath",
+  "daily-highLow",
+  "daily-footballLogic",
+]);
 
 // Vibrant, dark-friendly gradient pairs. Each game maps to one stably (by slug
 // hash) so its tile colour never changes, while the set gives the grid variety.
@@ -28,6 +69,21 @@ function hash(input: string): number {
  * a screenshot. `className` controls the aspect ratio.
  */
 export function DemoModeArt({ slug, className = "" }: { slug: string; className?: string }) {
+  if (ILLUSTRATED_MODE_SLUGS.has(slug)) {
+    return (
+      <div className={`relative overflow-hidden bg-[#07111f] ${className}`} aria-hidden>
+        <Image
+          src={`${GAME_MODE_IMAGE_BASE}/${slug}.webp`}
+          alt=""
+          fill
+          sizes="(min-width: 1024px) 50vw, 100vw"
+          className="object-cover"
+        />
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/30 to-transparent" />
+      </div>
+    );
+  }
+
   const [from, to] = GRADIENTS[hash(slug) % GRADIENTS.length];
 
   return (
