@@ -204,7 +204,7 @@ function GameCard({
         <div className="relative overflow-hidden">
           <DemoModeArt
             slug={mode.slug}
-            className={`w-full ${feature ? "aspect-[2/1] sm:aspect-[5/2]" : "aspect-[4/3]"} transition-transform duration-300 group-hover:scale-[1.03]`}
+            className="aspect-video w-full transition-transform duration-300 group-hover:scale-[1.015]"
           />
           <span className="pointer-events-none absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-md bg-black/45 px-2 py-1 font-poppins text-[10px] font-semibold uppercase tracking-wide text-white backdrop-blur-sm">
             <Clock3 className="size-3" />
