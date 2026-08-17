@@ -15,6 +15,7 @@ class FakeSocket {
   handlers = new Map<string, Set<Handler>>();
   /** Captured wl:answer sends: [payload, cb] with timeout-style callbacks. */
   answerSends: Array<{ data: Record<string, unknown>; cb: (err: Error | null, ack?: WlAnswerAck) => void }> = [];
+  subscribeCount = 0;
   subscribeAck: { ok: boolean; seq?: number; reason?: string; snapshot?: WlSubscribeSnapshot | null } = { ok: true, seq: 0 };
   /** When true, subscribe acks are held until releaseSubscribeAck(). */
   deferSubscribeAck = false;
@@ -31,6 +32,7 @@ class FakeSocket {
   }
   emit(event: string, ...args: unknown[]) {
     if (event === 'wl:subscribe') {
+      this.subscribeCount += 1;
       const ack = args[1] as (r: unknown) => void;
       if (this.deferSubscribeAck) this.pendingSubscribeAcks.push(ack);
       else ack?.(this.subscribeAck);
@@ -56,9 +58,11 @@ class FakeSocket {
 }
 
 let fakeSocket = new FakeSocket();
+const reconnectSocketMock = vi.fn();
 
 vi.mock('@/lib/realtime/socket-client', () => ({
   connectSocket: () => fakeSocket,
+  reconnectSocket: () => reconnectSocketMock(),
 }));
 
 vi.mock('@/stores/auth.store', () => ({
@@ -91,6 +95,7 @@ function dispatch(seq: number, over: Partial<WlDispatchEventPayload> = {}): WlDi
 
 beforeEach(() => {
   fakeSocket = new FakeSocket();
+  reconnectSocketMock.mockClear();
 });
 
 describe('useWlLive', () => {
@@ -106,6 +111,60 @@ describe('useWlLive', () => {
     expect(
       result.current.screen.kind === 'question' && result.current.screen.attempt.attempt_id,
     ).toBe('attempt-1');
+  });
+
+  it('forces a reconnect when the tab foregrounds with the socket down', () => {
+    renderHook(() => useWlLive(TID, 'player'));
+    expect(fakeSocket.subscribeCount).toBe(1);
+
+    fakeSocket.connected = false;
+    act(() => {
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    expect(reconnectSocketMock).toHaveBeenCalledTimes(1);
+    // Subscribe waits for the reconnect's 'connect' event, not the visibility tick.
+    expect(fakeSocket.subscribeCount).toBe(1);
+  });
+
+  it('resubscribes on foreground with a live socket and heals the screen from the snapshot', () => {
+    const { result } = renderHook(() => useWlLive(TID, 'player'));
+    expect(result.current.screen.kind).toBe('waiting');
+
+    // While the tab was frozen the final kicked off — the room events never
+    // arrived. The foreground resubscribe's snapshot carries the live question.
+    fakeSocket.subscribeAck = {
+      ok: true,
+      seq: 7,
+      snapshot: {
+        status: 'final_live',
+        server_now: Date.now(),
+        game_index: 3,
+        attempt: {
+          attempt_id: 'attempt-final',
+          game_index: 3,
+          round_index: 0,
+          question_index: 3,
+          kind: 'true_false',
+          question: { prompt: { en: 'Q' } },
+          evaluation: { correct_id: 'true' },
+          playableAt: Date.now() - 500,
+          deadlineAt: Date.now() + 5_000,
+        },
+        your_answer: null,
+        your_last_answer: null,
+        score: 0,
+        board: [],
+      },
+    } as never;
+    act(() => {
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    expect(reconnectSocketMock).not.toHaveBeenCalled();
+    expect(fakeSocket.subscribeCount).toBe(2);
+    expect(result.current.screen.kind).toBe('question');
+    if (result.current.screen.kind === 'question') {
+      expect(result.current.screen.attempt.attempt_id).toBe('attempt-final');
+    }
   });
 
   it('hydrates the in-flight question, score and answered state from the snapshot', () => {

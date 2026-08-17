@@ -22,7 +22,7 @@
 // accepted answers on voided attempts).
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { connectSocket } from '@/lib/realtime/socket-client';
+import { connectSocket, reconnectSocket } from '@/lib/realtime/socket-client';
 import type {
   WlAnswerAck,
   WlBoardRow,
@@ -417,9 +417,29 @@ export function useWlLive(tournamentId: string, role: 'player' | 'spectator'): W
     socket.on('disconnect', onDisconnect);
     if (socket.connected) onConnect();
 
+    // Phones lock/background while players wait out the pre-game screens
+    // (check-in → kickoff): the frozen tab's socket dies or silently drops out
+    // of the WL room, and nothing re-syncs on return until socket.io's own
+    // ping timeout notices — players sat on a frozen waiting screen through
+    // the final's first questions until they hard-refreshed. On foreground:
+    // force a reconnect when the socket is down (the manager's backoff timer
+    // may have been throttled away while hidden), and resubscribe when it
+    // claims to be up — the subscribe ack backfills missed events and its
+    // snapshot restores the current question either way.
+    const onVisibilityChange = () => {
+      if (document.visibilityState !== 'visible' || disposed) return;
+      if (!socket.connected) {
+        reconnectSocket();
+        return;
+      }
+      subscribe();
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
     return () => {
       disposed = true;
       clearPendingQuestion();
+      document.removeEventListener('visibilitychange', onVisibilityChange);
       socket.emit('wl:unsubscribe');
       socket.off('connect', onConnect);
       socket.off('disconnect', onDisconnect);
