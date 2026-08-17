@@ -1,9 +1,9 @@
 import type { MetadataRoute } from "next";
-import { CAMPAIGN_QUIZ_SLUGS } from "@/features/campaign-quiz/campaignQuiz.content";
+import { listCampaignQuizPages } from "@/features/campaign-quiz/campaignQuiz.api";
 import { SITE_URL } from "@/lib/seo/site";
 import { LOCALES } from "@/lib/i18n/locale";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
   const entry = (
     path: string,
@@ -31,14 +31,34 @@ export default function sitemap(): MetadataRoute.Sitemap {
     routes.map(([suffix, freq, prio]) => entry(`/${locale}${suffix}`, freq, prio)),
   );
 
-  // UK campaign pages launch in English only. Do not emit a Georgian alternate
-  // or sitemap URL until an equivalent Georgian quiz genuinely exists.
-  const englishCampaignEntries = [
+  const validLastModified = (value: string): Date | undefined => {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? undefined : date;
+  };
+
+  let campaignPages: Awaited<ReturnType<typeof listCampaignQuizPages>>;
+  try {
+    campaignPages = await listCampaignQuizPages('en');
+  } catch {
+    // Do not revive unpublished/deleted pages from a hardcoded fallback.
+    campaignPages = [];
+  }
+
+  const campaignEntries: MetadataRoute.Sitemap = [
     entry('/en/football-quiz', 'weekly', 0.9),
-    ...CAMPAIGN_QUIZ_SLUGS.map((slug) =>
-      entry(`/en/football-quiz/${slug}`, 'monthly', 0.8),
-    ),
+    ...(campaignPages.some((page) => page.locale_mode === 'en_ka')
+      ? [entry('/ka/football-quiz', 'weekly', 0.9)]
+      : []),
+    ...campaignPages.flatMap((page) => {
+      const english = {
+        ...entry(`/en/football-quiz/${page.slug}`, 'monthly', 0.8),
+        lastModified: validLastModified(page.updated_at),
+      };
+      return page.locale_mode === 'en_ka'
+        ? [english, { ...english, url: `${SITE_URL}/ka/football-quiz/${page.slug}` }]
+        : [english];
+    }),
   ];
 
-  return [...localizedEntries, ...englishCampaignEntries];
+  return [...localizedEntries, ...campaignEntries];
 }

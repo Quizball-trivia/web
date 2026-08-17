@@ -25,13 +25,16 @@ import { CampaignSignupLink } from './CampaignSignupLink';
 import { CampaignTrackedLink } from './CampaignTrackedLink';
 import {
   CAMPAIGN_QUIZ_CONTENT,
+  splitHeading,
   type CampaignQuizPageContent,
 } from './campaignQuiz.content';
-import type { CampaignQuiz } from './campaignQuiz.types';
+import type { CampaignQuiz, CampaignQuizAboutBlock } from './campaignQuiz.types';
 
 interface CampaignQuizLandingProps {
   content: CampaignQuizPageContent;
   quiz: CampaignQuiz;
+  locale?: 'en' | 'ka';
+  previewToken?: string;
 }
 
 const CLUB_QUIZ_LOGOS: Record<string, string> = {
@@ -54,8 +57,96 @@ const CLUB_QUIZ_LOGOS: Record<string, string> = {
   tottenham: '/clubs/tottenham-hotspur.webp',
 };
 
-export function CampaignQuizLanding({ content, quiz }: CampaignQuizLandingProps) {
+const COPY = {
+  en: {
+    rankedTrivia: 'Ranked football trivia',
+    playRanked: 'Play Ranked',
+    home: 'Home',
+    footballQuiz: 'Football Quiz',
+    verifiedQuestions: 'verified questions',
+    startQuiz: 'Start the quiz',
+    noLogin: 'No login needed',
+    easy: 'easy',
+    medium: 'medium',
+    hard: 'hard',
+    soloWarmup: 'Solo warm-up',
+    answerPrompt: 'Pick one answer for each question. Your score arrives instantly.',
+    factChecked: 'Fact-checked questions',
+    fiveMinutes: 'About 5 minutes',
+    instantScore: 'Instant score',
+    readyRanked: 'Ready for ranked?',
+    fairPlay: 'Built for fair play',
+    publicOnly: 'These public warm-up questions stay separate from the ranked question pool.',
+    keepPlaying: 'Keep playing',
+    relatedQuizzes: 'Related football quizzes',
+    allQuizzes: 'All football quizzes',
+    playQuiz: 'Play',
+  },
+  ka: {
+    rankedTrivia: 'რეიტინგული ფეხბურთის ტრივია',
+    playRanked: 'ითამაშე რეიტინგული',
+    home: 'მთავარი',
+    footballQuiz: 'ფეხბურთის ქვიზი',
+    verifiedQuestions: 'დადასტურებული კითხვა',
+    startQuiz: 'დაიწყე ქვიზი',
+    noLogin: 'ავტორიზაცია არ არის საჭირო',
+    easy: 'მარტივი',
+    medium: 'საშუალო',
+    hard: 'რთული',
+    soloWarmup: 'სოლო გახურება',
+    answerPrompt: 'აირჩიე თითო პასუხი. შედეგს მყისიერად მიიღებ.',
+    factChecked: 'გადამოწმებული კითხვები',
+    fiveMinutes: 'დაახლოებით 5 წუთი',
+    instantScore: 'მყისიერი შედეგი',
+    readyRanked: 'მზად ხარ რეიტინგისთვის?',
+    fairPlay: 'შექმნილია სამართლიანი თამაშისთვის',
+    publicOnly: 'ეს საჯარო სავარჯიშო კითხვები რეიტინგული კითხვებისგან განცალკევებულია.',
+    keepPlaying: 'განაგრძე თამაში',
+    relatedQuizzes: 'მსგავსი ფეხბურთის ქვიზები',
+    allQuizzes: 'ყველა ფეხბურთის ქვიზი',
+    playQuiz: 'ითამაშე',
+  },
+} as const;
+
+type AboutSection =
+  | { id: string; type: 'paragraph'; text: string }
+  | { id: string; type: 'bullet_list'; items: CampaignQuizAboutBlock[] };
+
+function groupAboutBlocks(blocks: CampaignQuizAboutBlock[]): AboutSection[] {
+  return blocks.reduce<AboutSection[]>((sections, block) => {
+    if (block.type === 'paragraph') {
+      sections.push({ id: block.id, type: 'paragraph', text: block.text });
+      return sections;
+    }
+
+    const previous = sections.at(-1);
+    if (previous?.type === 'bullet_list') {
+      previous.items.push(block);
+    } else {
+      sections.push({ id: block.id, type: 'bullet_list', items: [block] });
+    }
+    return sections;
+  }, []);
+}
+
+export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken }: CampaignQuizLandingProps) {
   const playId = `play-${content.slug}-quiz`;
+  const copy = COPY[locale];
+  const difficultyCounts = quiz.difficulty_counts ?? quiz.questions.reduce(
+    (counts, question) => {
+      counts[question.difficulty] += 1;
+      return counts;
+    },
+    { easy: 0, medium: 0, hard: 0 },
+  );
+  const localizedH1 = locale === 'ka' && content.kaH1 ? content.kaH1 : content.title;
+  const localizedHeading = splitHeading(localizedH1);
+  const localizedLede = locale === 'ka' && content.kaLede ? content.kaLede : content.lede;
+  const hasDifficultyMix = difficultyCounts.easy + difficultyCounts.medium + difficultyCounts.hard > 0;
+  const aboutSections = groupAboutBlocks(
+    content.aboutBlocks
+      ?? content.aboutParagraphs.map((text, index) => ({ id: String(index), type: 'paragraph' as const, text })),
+  );
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-surface-page-alt font-poppins text-white">
@@ -66,7 +157,7 @@ export function CampaignQuizLanding({ content, quiz }: CampaignQuizLandingProps)
       />
       <header className="sticky top-0 z-50 bg-surface-page-alt/80 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:h-20 lg:px-8">
-          <Link href="/en" aria-label="QuizBall home" className="shrink-0">
+          <Link href={`/${locale}`} aria-label="QuizBall home" className="shrink-0">
             <Image
               src="/assets/brand/quizball-logo.webp"
               alt="QuizBall"
@@ -80,15 +171,15 @@ export function CampaignQuizLanding({ content, quiz }: CampaignQuizLandingProps)
           <div className="flex items-center gap-3">
             <span className="hidden items-center gap-2 text-sm font-semibold text-white/55 md:flex">
               <Swords className="size-4 text-brand-yellow" aria-hidden />
-              Ranked football trivia
+              {copy.rankedTrivia}
             </span>
             <CampaignSignupLink
               slug={quiz.slug}
               placement="header"
-              href={`/en?signup=1&source=${content.slug}-quiz-header`}
+              href={`/${locale}?signup=1&source=${content.slug}-quiz-header`}
               className="inline-flex min-h-10 items-center justify-center rounded-lg bg-brand-yellow px-4 text-sm font-semibold text-black transition-colors hover:bg-brand-yellow/90 sm:px-5"
             >
-              Play Ranked
+              {copy.playRanked}
             </CampaignSignupLink>
           </div>
         </div>
@@ -100,16 +191,16 @@ export function CampaignQuizLanding({ content, quiz }: CampaignQuizLandingProps)
             <BreadcrumbList className="text-xs font-semibold text-white/40 sm:text-sm">
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link href="/en" className="hover:text-brand-yellow">
-                    Home
+                  <Link href={`/${locale}`} className="hover:text-brand-yellow">
+                    {copy.home}
                   </Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbSeparator className="text-white/25" />
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link href="/en/football-quiz" className="text-white/50 hover:text-brand-yellow">
-                    Football Quiz
+                  <Link href={`/${locale}/football-quiz`} className="text-white/50 hover:text-brand-yellow">
+                    {copy.footballQuiz}
                   </Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
@@ -128,14 +219,14 @@ export function CampaignQuizLanding({ content, quiz }: CampaignQuizLandingProps)
             <div className="max-w-3xl">
               <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-brand-yellow">
                 <BadgeCheck className="size-4" aria-hidden />
-                {quiz.total_questions} verified questions
+                {quiz.total_questions} {copy.verifiedQuestions}
               </div>
               <h1 className="mt-5 text-balance text-4xl font-semibold leading-[1.04] tracking-[-0.035em] text-white sm:text-5xl lg:text-6xl">
-                {content.heroLead}{' '}
-                <span className="text-brand-yellow">{content.heroHighlight}</span>
+                {localizedHeading.heroLead}{' '}
+                {localizedHeading.heroHighlight ? <span className="text-brand-yellow">{localizedHeading.heroHighlight}</span> : null}
               </h1>
               <p className="mt-5 max-w-2xl text-pretty text-base font-medium leading-relaxed text-white/68 sm:text-lg">
-                {content.lede}
+                {localizedLede}
               </p>
 
               <div className="mt-7 flex flex-wrap items-center gap-4">
@@ -143,20 +234,20 @@ export function CampaignQuizLanding({ content, quiz }: CampaignQuizLandingProps)
                   href={`#${playId}`}
                   className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-brand-blue px-5 font-semibold text-white transition-colors hover:bg-brand-blue/90"
                 >
-                  Start the quiz
+                  {copy.startQuiz}
                   <ArrowRight className="size-5" aria-hidden />
                 </a>
                 <div className="flex min-h-12 items-center gap-2 px-1 text-sm font-medium text-white/55">
                   <LockKeyhole className="size-4 text-brand-cyan" aria-hidden />
-                  No login needed
+                  {copy.noLogin}
                 </div>
               </div>
 
-              {quiz.total_questions === 15 ? (
+              {hasDifficultyMix ? (
                 <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm font-medium text-white/55">
-                  <span><strong className="font-semibold text-white">5</strong> easy</span>
-                  <span><strong className="font-semibold text-white">5</strong> medium</span>
-                  <span><strong className="font-semibold text-white">5</strong> hard</span>
+                  <span><strong className="font-semibold text-white">{difficultyCounts.easy}</strong> {copy.easy}</span>
+                  <span><strong className="font-semibold text-white">{difficultyCounts.medium}</strong> {copy.medium}</span>
+                  <span><strong className="font-semibold text-white">{difficultyCounts.hard}</strong> {copy.hard}</span>
                 </div>
               ) : null}
             </div>
@@ -184,7 +275,7 @@ export function CampaignQuizLanding({ content, quiz }: CampaignQuizLandingProps)
           <div className="mx-auto max-w-4xl px-4 sm:px-6">
             <div className="mb-6 text-center">
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-cyan">
-                Solo warm-up
+                {copy.soloWarmup}
               </p>
               <h2
                 id={`${playId}-heading`}
@@ -193,26 +284,28 @@ export function CampaignQuizLanding({ content, quiz }: CampaignQuizLandingProps)
                 {content.playHeading}
               </h2>
               <p className="mt-2 font-medium text-white/50">
-                Pick one answer for each question. Your score arrives instantly.
+                {copy.answerPrompt}
               </p>
             </div>
             <CampaignQuizGame
               slug={quiz.slug}
               questions={quiz.questions}
+              locale={locale}
               scoreTemplate={content.scoreTemplate}
+              previewToken={previewToken}
             />
             <div className="mt-5 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs font-semibold text-white/40">
               <span className="inline-flex items-center gap-1.5">
                 <ShieldCheck className="size-4 text-brand-green-light" aria-hidden />
-                Fact-checked questions
+                {copy.factChecked}
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <Clock3 className="size-4 text-brand-cyan" aria-hidden />
-                About 5 minutes
+                {copy.fiveMinutes}
               </span>
               <span className="inline-flex items-center gap-1.5">
                 <Brain className="size-4 text-brand-yellow" aria-hidden />
-                Instant score
+                {copy.instantScore}
               </span>
             </div>
           </div>
@@ -228,8 +321,14 @@ export function CampaignQuizLanding({ content, quiz }: CampaignQuizLandingProps)
             </h2>
 
             <div className="mt-6 space-y-4 text-[15px] font-medium leading-7 text-white/65 sm:text-base">
-              {content.aboutParagraphs.map((paragraph) => (
-                <p key={paragraph}>{paragraph}</p>
+              {aboutSections.map((section) => (
+                section.type === 'bullet_list'
+                  ? (
+                      <ul key={section.id} className="list-disc space-y-2 pl-5 marker:text-brand-cyan">
+                        {section.items.map((item) => <li key={item.id} className="pl-1">{item.text}</li>)}
+                      </ul>
+                    )
+                  : <p key={section.id}>{section.text}</p>
               ))}
             </div>
           </article>
@@ -240,7 +339,7 @@ export function CampaignQuizLanding({ content, quiz }: CampaignQuizLandingProps)
               className="scroll-mt-24 rounded-[24px] bg-brand-blue px-5 py-7 sm:px-6"
             >
               <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-yellow">
-                Ready for ranked?
+                {copy.readyRanked}
               </p>
               <h2 className="mt-2 text-balance text-xl font-semibold leading-snug text-white sm:text-2xl">
                 {content.footerCta}
@@ -248,19 +347,19 @@ export function CampaignQuizLanding({ content, quiz }: CampaignQuizLandingProps)
               <CampaignSignupLink
                 slug={quiz.slug}
                 placement="footer"
-                href={`/en?signup=1&source=${content.slug}-quiz-footer`}
+                href={`/${locale}?signup=1&source=${content.slug}-quiz-footer`}
                 className="mt-5 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-brand-yellow px-6 font-semibold text-black transition-colors hover:bg-brand-yellow/90"
               >
-                Play Ranked
+                {content.footerButtonLabel ?? 'Play Ranked'}
                 <ArrowRight className="size-5" aria-hidden />
               </CampaignSignupLink>
             </section>
             <div className="mt-5 px-1 pt-3">
               <p className="text-xs font-semibold uppercase tracking-[0.17em] text-brand-cyan">
-                Built for fair play
+                {copy.fairPlay}
               </p>
               <p className="mt-2 text-sm font-medium leading-relaxed text-white/60">
-                These public warm-up questions stay separate from the ranked question pool.
+                {copy.publicOnly}
               </p>
             </div>
           </div>
@@ -274,39 +373,43 @@ export function CampaignQuizLanding({ content, quiz }: CampaignQuizLandingProps)
           <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-cyan">
-                Keep playing
+                {copy.keepPlaying}
               </p>
               <h2
                 id="related-football-quizzes-heading"
                 className="mt-1 text-2xl font-semibold text-white"
               >
-                Related football quizzes
+                {copy.relatedQuizzes}
               </h2>
             </div>
             <Link
-              href="/en/football-quiz"
-              className="inline-flex items-center gap-2 text-sm font-semibold text-brand-yellow hover:text-white"
+              href={`/${locale}/football-quiz`}
+              className="group inline-flex items-center gap-2 text-sm font-semibold text-brand-yellow transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow"
             >
-              All football quizzes
-              <ArrowRight className="size-4" aria-hidden />
+              {copy.allQuizzes}
+              <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden />
             </Link>
           </div>
           <div className="mt-5 grid grid-cols-2 gap-x-8 gap-y-3 sm:grid-cols-4">
             {content.relatedSlugs.map((slug) => {
-              const related = CAMPAIGN_QUIZ_CONTENT[slug];
+              const managedRelated = content.relatedPages?.find((page) => page.slug === slug);
+              const legacyRelated = CAMPAIGN_QUIZ_CONTENT[slug];
+              const relatedLabel = managedRelated?.breadcrumb_label ?? legacyRelated?.breadcrumbLabel ?? slug;
+              const relatedImage = managedRelated?.hero_image_url ?? legacyRelated?.heroImage;
               const clubLogo = CLUB_QUIZ_LOGOS[slug];
+              if (!clubLogo && !relatedImage) return null;
               return (
                 <CampaignTrackedLink
                   key={slug}
                   fromSlug={quiz.slug}
                   targetSlug={slug}
-                  href={`/en/football-quiz/${slug}`}
-                  aria-label={`Play ${related.breadcrumbLabel}`}
-                  title={related.breadcrumbLabel}
+                  href={`/${locale}/football-quiz/${slug}`}
+                  aria-label={`${copy.playQuiz} ${relatedLabel}`}
+                  title={relatedLabel}
                   className="group flex min-h-28 items-center justify-center py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow"
                 >
                   <Image
-                    src={clubLogo ?? related.heroImage}
+                    src={clubLogo ?? relatedImage!}
                     alt=""
                     aria-hidden
                     width={120}
@@ -332,7 +435,7 @@ export function CampaignQuizLanding({ content, quiz }: CampaignQuizLandingProps)
 
       <footer className="relative z-10 bg-surface-page-alt/80 px-4 py-10 backdrop-blur-md">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-5 sm:flex-row">
-          <Link href="/en" aria-label="QuizBall home">
+          <Link href={`/${locale}`} aria-label="QuizBall home">
             <Image
               src="/assets/brand/quizball-logo.webp"
               alt="QuizBall"

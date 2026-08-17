@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/features/campaign-quiz/campaignQuiz.api', () => ({
   answerCampaignQuizQuestion: vi.fn().mockResolvedValue({
@@ -18,7 +18,7 @@ const q = (id: string) => ({
 
 describe('campaign score screen', () => {
   it('uses brand blue and the loading ball, not the sparkles icon', async () => {
-    render(<CampaignQuizGame slug="club-badges" questions={[q('1')]} />);
+    render(<CampaignQuizGame slug="club-badges" locale="ka" questions={[q('1')]} />);
     fireEvent.click(screen.getByText('A'));
     await waitFor(() => screen.getByText('See my score'));
     fireEvent.click(screen.getByText('See my score'));
@@ -28,5 +28,9 @@ describe('campaign score screen', () => {
     const img = card.querySelector('img');
     expect(img?.getAttribute('src') ?? '').toContain('goal-ball-small');
     expect(card.querySelector('.lucide-sparkles')).toBeNull();
+    expect(screen.getByRole('link', { name: 'Play Ranked' })).toHaveAttribute(
+      'href',
+      '/ka?signup=1&source=club-badges-quiz',
+    );
   });
 });

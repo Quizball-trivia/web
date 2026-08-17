@@ -1,5 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { DEFAULT_LOCALE } from "@/lib/i18n/locale";
+import { API_BASE_URL } from "@/lib/config";
+import type { CampaignQuizRoute } from "@/features/campaign-quiz/campaignQuiz.types";
 
 // Routes that must redirect to the default-locale variant. Only marketing/legal
 // pages are localized; everything else (app, auth, game) is intentionally
@@ -77,7 +79,7 @@ function buildCsp(nonce: string): string {
   ].join("; ");
 }
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const nonce = generateNonce();
   const csp = buildCsp(nonce);
@@ -100,6 +102,53 @@ export function middleware(req: NextRequest) {
     res.headers.set("Content-Security-Policy", csp);
     res.headers.set("x-pathname", url.pathname);
     return res;
+  }
+
+  // Slug changes and retired CMS quiz pages are resolved before Next renders.
+  // This is the only reliable way to return a real 410 (rather than a themed
+  // 404 page) while keeping redirects locale-aware.
+  const quizPath = pathname.match(/^\/(en|ka)\/football-quiz\/([a-z0-9]+(?:-[a-z0-9]+)*)$/);
+  if (
+    quizPath
+    && !req.nextUrl.searchParams.has('preview')
+    && (req.method === 'GET' || req.method === 'HEAD')
+  ) {
+    try {
+      const response = await fetch(
+        `${API_BASE_URL.replace(/\/+$/, '')}/api/v1/campaign-quizzes/routes/${encodeURIComponent(quizPath[2])}`,
+        {
+          headers: { Accept: 'application/json' },
+          cache: 'no-store',
+          signal: AbortSignal.timeout(1_000),
+        },
+      );
+      if (response.ok) {
+        const route = await response.json() as CampaignQuizRoute;
+        if (route.kind === 'redirect' && route.target_slug) {
+          const url = req.nextUrl.clone();
+          url.pathname = `/${quizPath[1]}/football-quiz/${route.target_slug}`;
+          const redirectResponse = NextResponse.redirect(url, 301);
+          redirectResponse.headers.set('Content-Security-Policy', csp);
+          return redirectResponse;
+        }
+        if (route.kind === 'gone') {
+          return new NextResponse(
+            '<!doctype html><html lang="en"><head><title>Quiz no longer available</title></head><body><main><h1>This quiz is no longer available.</h1></main></body></html>',
+            {
+            status: 410,
+            headers: {
+              'Content-Type': 'text/html; charset=utf-8',
+              'Content-Security-Policy': csp,
+              'X-Robots-Tag': 'noindex, follow',
+            },
+            },
+          );
+        }
+      }
+    } catch {
+      // A route lookup outage must not take down otherwise valid quiz pages;
+      // the App Router still performs the authoritative page fetch below.
+    }
   }
 
   // Expose the request path to the root layout so it can set <html lang>
