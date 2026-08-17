@@ -5,15 +5,17 @@ import { useLocale } from "@/contexts/LocaleContext";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
 
 /**
- * Pins /promo to English on first visit this session so the reused game
- * chrome (counters, submit buttons, result cards) matches the English
- * question content instead of following the geo-inferred locale. A manual
- * EN/KA toggle afterwards is respected.
+ * Pins /promo to English so the reused game chrome (counters, submit
+ * buttons, result cards) matches the English question content — but ONLY
+ * when the visitor has no explicitly stored locale. An explicit EN/KA
+ * choice (made via the switcher on any route) is never overridden.
  *
  * The stored locale is written directly (not just setLocale): this child
- * effect runs BEFORE LocaleContext's hydration effect, which geo-infers a
- * locale only when nothing is stored — persisting first makes the hydration
- * pass keep English instead of clobbering it with the inferred Georgian.
+ * effect commits before LocaleContext's hydration effect in practice, and
+ * that hydration pass geo-infers a locale only when nothing is stored —
+ * persisting first makes it keep English instead of applying the inferred
+ * Georgian. Writing only when storage is empty means we replace the
+ * inference default, never a user preference.
  */
 export function PromoLocaleDefault() {
   const { setLocale } = useLocale();
@@ -22,8 +24,10 @@ export function PromoLocaleDefault() {
   useEffect(() => {
     if (applied.current) return;
     applied.current = true;
-    if (window.sessionStorage.getItem("qb-promo-locale-touched") !== "1") {
-      window.sessionStorage.setItem("qb-promo-locale-touched", "1");
+    if (window.sessionStorage.getItem("qb-promo-locale-touched") === "1") return;
+    window.sessionStorage.setItem("qb-promo-locale-touched", "1");
+    const stored = storage.get<string | null>(STORAGE_KEYS.LOCALE, null);
+    if (stored === null) {
       storage.set(STORAGE_KEYS.LOCALE, "en");
       setLocale("en");
     }
