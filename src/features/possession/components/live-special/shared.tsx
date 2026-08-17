@@ -44,6 +44,10 @@ export interface LiveSpecialQuestionPanelProps {
   showOptions: boolean;
   timeRemaining: number;
   questionDurationSeconds: number;
+  /** Clock-free modes (promo capture) keep the counter pill but drop the timer. */
+  hideTimer?: boolean;
+  /** Single-player modes (promo capture): hide every opponent-facing element. */
+  soloMode?: boolean;
   roundResolved: boolean;
   answerAck: MatchAnswerAckPayload | null;
   roundResult: MatchRoundResultPayload | null;
@@ -165,7 +169,8 @@ export function SpecialResultSummary({
   visible: boolean;
   tone: SpecialSummaryTone;
   player: SpecialSummarySide;
-  opponent: SpecialSummarySide;
+  /** null = single-player mode; the card renders only the player side. */
+  opponent: SpecialSummarySide | null;
 }) {
   const { t } = useLocale();
   if (!visible) return null;
@@ -174,7 +179,7 @@ export function SpecialResultSummary({
   // them) but no longer drive any visual — the per-side status pills were
   // removed in favor of the flat dark card.
   void tone;
-  const sides = [player, opponent];
+  const sides = opponent ? [player, opponent] : [player];
 
   return (
     <motion.div
@@ -182,7 +187,7 @@ export function SpecialResultSummary({
       initial={{ opacity: 0, y: 12, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.28, ease: 'easeOut' }}
-      className="grid grid-cols-2 gap-2 rounded-[30px] bg-surface-card-deeper p-3"
+      className={`grid gap-2 rounded-[30px] bg-surface-card-deeper p-3 ${opponent ? 'grid-cols-2' : 'grid-cols-1'}`}
     >
       {sides.map((side) => {
         const safeTotal = Math.max(1, side.total);

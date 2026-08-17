@@ -252,6 +252,7 @@ function PutInOrderResultComparison({
   totalCount,
   correctById,
   itemById,
+  soloMode = false,
 }: {
   playerOrderIds: string[];
   opponentOrderIds: string[];
@@ -262,6 +263,7 @@ function PutInOrderResultComparison({
   totalCount?: number;
   correctById: Map<string, { sortValue: number; index: number }>;
   itemById: Map<string, PutInOrderDisplayItem>;
+  soloMode?: boolean;
 }) {
   const { t } = useLocale();
   return (
@@ -273,7 +275,7 @@ function PutInOrderResultComparison({
       <div className="text-[11px] font-fun font-black uppercase tracking-[0.22em] text-white/55">
         {t('possession.orderResults')}
       </div>
-      <div className="grid grid-cols-2 gap-2 sm:gap-3">
+      <div className={`grid gap-2 sm:gap-3 ${soloMode ? 'grid-cols-1' : 'grid-cols-2'}`}>
         <PutInOrderCompactColumn
           title={t('results.you')}
           itemIds={playerOrderIds}
@@ -285,17 +287,19 @@ function PutInOrderResultComparison({
           matchedCountOverride={playerMatchedCount}
           totalCountOverride={totalCount}
         />
-        <PutInOrderCompactColumn
-          title={t('matchmaking.opponentFallback')}
-          itemIds={opponentOrderIds}
-          correctById={correctById}
-          itemById={itemById}
-          emptyText={t('possession.opponentOrderUnavailable')}
-          tone="red"
-          forceAllWrong={opponentForceAllWrong}
-          matchedCountOverride={opponentMatchedCount ?? undefined}
-          totalCountOverride={totalCount}
-        />
+        {!soloMode && (
+          <PutInOrderCompactColumn
+            title={t('matchmaking.opponentFallback')}
+            itemIds={opponentOrderIds}
+            correctById={correctById}
+            itemById={itemById}
+            emptyText={t('possession.opponentOrderUnavailable')}
+            tone="red"
+            forceAllWrong={opponentForceAllWrong}
+            matchedCountOverride={opponentMatchedCount ?? undefined}
+            totalCountOverride={totalCount}
+          />
+        )}
       </div>
     </motion.div>
   );
@@ -342,6 +346,7 @@ export function LivePutInOrderPanel({
   roundResult,
   myRound,
   opponentRound,
+  soloMode = false,
 }: {
   matchId: string;
   qIndex: number;
@@ -354,6 +359,8 @@ export function LivePutInOrderPanel({
   roundResult: MatchRoundResultPayload | null;
   myRound: MatchRoundResultPlayer | null;
   opponentRound: MatchRoundResultPlayer | null;
+  /** Single-player mode (promo capture): hide all opponent-facing UI. */
+  soloMode?: boolean;
 }) {
   const { t } = useLocale();
   const [userOrder, setUserOrder] = useState<ResolvedPutInOrderQuestionItem[]>(() => [...question.items]);
@@ -582,7 +589,7 @@ export function LivePutInOrderPanel({
           status: putOrderPlayerStatus,
           detail: t('possession.positionsMatched'),
         }}
-        opponent={{
+        opponent={soloMode ? null : {
           label: t('possession.opp'),
           count: opponentCorrectCount,
           total: totalItems,
@@ -604,6 +611,7 @@ export function LivePutInOrderPanel({
           totalCount={correctOrderIds.length}
           correctById={correctById}
           itemById={itemById}
+          soloMode={soloMode}
         />
       ) : (
         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
