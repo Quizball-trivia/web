@@ -204,6 +204,10 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
   // True when the round was confirmed by the timer running out (not a manual
   // "Confirm Bets" press) — drives auto-advance to the next question.
   const autoAdvanceRef = useRef(false);
+  // True once the player has manually confirmed at least one bet this run —
+  // separates a player who engaged from a fully idle one when a timeout ends
+  // the run (idle runs must score 0, or doing nothing would bank the maximum).
+  const anyManualConfirmRef = useRef(false);
   // Holds the pending auto-advance timer so a manual "Next" press can cancel it;
   // otherwise the stale callback fires on the next screen and skips a question.
   const autoAdvanceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -234,6 +238,7 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
     // call: the timeout sets timeoutHandledRef before invoking this, and that
     // path must still run (auto-submit). hasConfirmed covers the double-press.
     if (hasConfirmed) return;
+    if (!autoAdvanceRef.current) anyManualConfirmRef.current = true;
     setHasConfirmed(true);
     setIsAnimating(true);
     setShowClue(false);
@@ -332,15 +337,23 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
       clearTimeout(autoAdvanceTimeoutRef.current);
       autoAdvanceTimeoutRef.current = null;
     }
+    // A timer expiry with NOTHING allocated is not a bet — it's an absent
+    // player. Wiping the bank here (old behavior) ended most runs at 0 through
+    // unplayable zombie rounds. Rule: the run ends and the player keeps the
+    // bank they earned; a run with no manually confirmed bet ever scores 0 so
+    // idling can never bank the starting maximum.
+    const nothingAllocated = bets.every((b) => b === 0);
+    if (options?.auto && nothingAllocated) {
+      onComplete(anyManualConfirmRef.current ? currentMoney : 0);
+      return;
+    }
     const correctBet = bets[currentQuestion.correctAnswerIndex];
     const newMoney = correctBet;
     setCurrentMoney(newMoney);
-    // On a MANUAL advance, $0 ends the game (you're out of money — MoneyDrop's
-    // core rule). On an AUTO advance (timer ran out), don't punish the player
-    // with game-over for not betting in time: carry $0 forward and keep going,
-    // ending only when the last question is reached.
+    // Busting on a placed bet ends the run immediately, auto or manual —
+    // MoneyDrop's core rule. There are no playable rounds with 0 coins.
     const isLast = currentQuestionIndex >= questions.length - 1;
-    if (isLast || (newMoney === 0 && !options?.auto)) {
+    if (isLast || newMoney === 0) {
       onComplete(newMoney);
       return;
     }
