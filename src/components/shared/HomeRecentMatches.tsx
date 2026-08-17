@@ -124,7 +124,7 @@ export function HomeRecentMatches({ collapsedOnly = false }: HomeRecentMatchesPr
           </div>
         )}
         {!isLoading && !error && visibleMatches.map((match) => {
-          const nav = buildProfileNavTarget(router, match.opponentId, match.opponentIsAi);
+          const nav = buildProfileNavTarget(router, match.opponentId, match.opponentIsAi, match.opponent);
           return (
           <div
             key={match.id}

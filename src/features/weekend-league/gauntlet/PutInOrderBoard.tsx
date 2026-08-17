@@ -178,12 +178,14 @@ function RevealColumn({
 }
 
 function RevealComparison({
-  yourOrder, correctOrder, itemById,
+  yourOrder, correctOrder, itemById, showYou = true,
 }: {
   /** null = never submitted an arrangement this window. */
   yourOrder: OrderItem[] | null;
   correctOrder: string[];
   itemById: Map<string, OrderItem>;
+  /** Spectator broadcast hides the personal column entirely. */
+  showYou?: boolean;
 }) {
   const { t } = useLocale();
   const correctIndexById = new Map(correctOrder.map((id, i) => [id, i]));
@@ -196,7 +198,8 @@ function RevealComparison({
       <div className="text-[11px] font-fun font-black uppercase tracking-[0.22em] text-white/55">
         {t('possession.orderResults')}
       </div>
-      <div className="grid grid-cols-2 gap-2 sm:gap-3">
+      <div className={showYou ? 'grid grid-cols-2 gap-2 sm:gap-3' : 'grid grid-cols-1 gap-2 sm:gap-3'}>
+        {showYou && (
         <RevealColumn
           title={t('results.you')}
           itemIds={yourOrder != null ? yourOrder.map((x) => x.id) : []}
@@ -205,6 +208,7 @@ function RevealComparison({
           showHints
           emptyText={t('possession.noOrderSubmitted')}
         />
+        )}
         <RevealColumn
           title={t('weekendLeague.gCorrectOrder')}
           itemIds={correctOrder}
@@ -279,7 +283,10 @@ export function PutInOrderBoard({
   if (correctOrder != null) {
     return (
       <RevealComparison
-        yourOrder={submitted ? order : null}
+        // Spectators never submit — a "You: no order" column is player chrome,
+        // so broadcast mode shows only the correct sequence (review catch).
+        yourOrder={!spectator && submitted ? order : null}
+        showYou={!spectator}
         correctOrder={correctOrder}
         itemById={new Map(items.map((x) => [x.id, x]))}
       />
