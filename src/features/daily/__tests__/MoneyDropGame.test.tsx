@@ -137,6 +137,16 @@ describe('MoneyDropGame timeout and bust rules', () => {
     expect(onComplete).toHaveBeenCalledWith(0);
   });
 
+  it('a manually confirmed bust ends the run with 0', () => {
+    const onComplete = vi.fn();
+    render(<MoneyDropGame session={session(5)} onBack={vi.fn()} onComplete={onComplete} />);
+    betAllOn(2); // all on a wrong answer
+    confirmBets();
+    fireEvent.click(screen.getByRole('button', { name: /next question|view results/i }));
+    expect(onComplete).toHaveBeenCalledTimes(1);
+    expect(onComplete).toHaveBeenCalledWith(0);
+  });
+
   it('a timer-confirmed win on a non-final round advances instead of completing', () => {
     const onComplete = vi.fn();
     render(<MoneyDropGame session={session(5)} onBack={vi.fn()} onComplete={onComplete} />);
