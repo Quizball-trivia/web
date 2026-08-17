@@ -12,6 +12,7 @@ import {
   Lightbulb,
   RefreshCw,
   Trophy,
+  Hourglass,
   XOctagon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -337,14 +338,20 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
       clearTimeout(autoAdvanceTimeoutRef.current);
       autoAdvanceTimeoutRef.current = null;
     }
-    // A timer expiry with NOTHING allocated is not a bet — it's an absent
-    // player. Wiping the bank here (old behavior) ended most runs at 0 through
+    // Every terminal path goes through this gate: a run where the player never
+    // manually confirmed a single bet scores 0, whatever the bank shows —
+    // otherwise idling through timer-confirmed rounds could bank real coins.
+    const finishRun = (score: number) =>
+      onComplete(anyManualConfirmRef.current ? score : 0);
+    // A round revealed with NOTHING allocated can only be a timeout — manual
+    // confirm requires full allocation. It is not a bet; it's an absent player.
+    // Wiping the bank here (old behavior) ended most runs at 0 through
     // unplayable zombie rounds. Rule: the run ends and the player keeps the
-    // bank they earned; a run with no manually confirmed bet ever scores 0 so
-    // idling can never bank the starting maximum.
+    // bank they earned. Deliberately independent of options.auto: pressing
+    // "View Results" during the auto-advance window must not change the outcome.
     const nothingAllocated = bets.every((b) => b === 0);
-    if (options?.auto && nothingAllocated) {
-      onComplete(anyManualConfirmRef.current ? currentMoney : 0);
+    if (nothingAllocated) {
+      finishRun(currentMoney);
       return;
     }
     const correctBet = bets[currentQuestion.correctAnswerIndex];
@@ -354,7 +361,7 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
     // MoneyDrop's core rule. There are no playable rounds with 0 coins.
     const isLast = currentQuestionIndex >= questions.length - 1;
     if (isLast || newMoney === 0) {
-      onComplete(newMoney);
+      finishRun(newMoney);
       return;
     }
     setCurrentQuestionIndex((prev) => prev + 1);
@@ -716,7 +723,19 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
               </div>
 
               {/* Result summary */}
-              {bets[currentQuestion.correctAnswerIndex] > 0 ? (
+              {bets.every((b) => b === 0) && anyManualConfirmRef.current ? (
+                <motion.div
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                  className="bg-white/5 border-2 border-white/20 rounded-[20px] p-5 md:p-6 lg:p-8 text-center"
+                >
+                  <div className="mb-2"><Hourglass className="size-10 lg:size-12 text-brand-slate mx-auto" /></div>
+                  <div className="text-white font-black text-base md:text-lg lg:text-xl">
+                    {t('dailyGames.timeUpBankKept', { amount: formatMoney(currentMoney) })}
+                  </div>
+                </motion.div>
+              ) : bets[currentQuestion.correctAnswerIndex] > 0 ? (
                 <motion.div
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
