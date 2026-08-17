@@ -80,6 +80,7 @@ export function MatchCountdown({ players, endsAtMs, onComplete }: MatchCountdown
                     <FramedAvatar
                       width={LINEUP_CARD_WIDTH}
                       customization={p.avatarCustomization}
+                      avatarSeed={p.avatarSeed}
                       tier={p.tier}
                       rp={p.rp}
                     />

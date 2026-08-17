@@ -249,9 +249,17 @@ export function useRealtimeAuctionMatch({
       | PerformanceNavigationTiming
       | undefined;
     if (nav?.type !== 'reload' && nav?.type !== 'back_forward') return;
-    autoStartConsumedRef.current = true;
-    const stored = window.sessionStorage.getItem(LAST_AUCTION_MATCH_KEY);
+    let stored: string | null = null;
+    try {
+      stored = window.sessionStorage.getItem(LAST_AUCTION_MATCH_KEY);
+    } catch {
+      // Storage unavailable — nothing to restore.
+    }
+    // Suppress auto-start ONLY when there is a match to restore: a reload with
+    // nothing stored (e.g. mid-search) must fall through to normal matchmaking,
+    // not strand the user on an idle searching screen.
     if (stored) {
+      autoStartConsumedRef.current = true;
       activeMatchIdRef.current = stored;
       setRestoringFromReload(true);
     }

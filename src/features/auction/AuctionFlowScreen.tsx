@@ -373,8 +373,13 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
     // which reads as matchmaking having restarted.
     if (restoringFromReload) {
       return (
-        <div className="flex min-h-screen items-center justify-center bg-surface-page">
+        <div
+          role="status"
+          aria-live="polite"
+          className="flex min-h-screen items-center justify-center bg-surface-page"
+        >
           <div className="size-9 animate-spin rounded-full border-[4px] border-white/15 border-t-brand-yellow" />
+          <span className="sr-only">{t('common.loading')}</span>
         </div>
       );
     }

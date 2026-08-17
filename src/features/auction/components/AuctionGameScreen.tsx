@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import type { AuctionGameState } from '../types';
 import type { AuctionActions } from '../hooks/useAuctionGame';
@@ -34,7 +35,7 @@ export function AuctionGameScreen({
   const isDesktop = useIsDesktop();
 
   let key: string;
-  let content: React.ReactNode;
+  let content: ReactNode;
 
   if (state.phase === 'formation') {
     key = 'formation';
