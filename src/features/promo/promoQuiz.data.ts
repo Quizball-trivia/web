@@ -28,33 +28,36 @@ export type PromoRound =
 // auto-submit at zero, and a mid-take auto-fail would ruin the shot.
 const EMBEDDED_SECONDS = 99;
 
-const TRUE_FALSE_SESSION: TrueFalseSession = {
-  challengeType: 'trueFalse',
-  title: 'მართალია თუ ტყუილია?',
-  description: 'შოთა არველაძის კარიერის ფაქტები',
-  questionCount: 2,
-  secondsPerQuestion: EMBEDDED_SECONDS,
-  questions: [
-    {
-      id: 'promo-tf-1',
-      category: 'შოთა არველაძე',
-      difficulty: 'medium',
-      prompt: 'შოთა არველაძემ უეფას თასზე „აიაქსის“ მაისურით ჰეთ-ტრიკი „მარიბორს“ გაუტანა.',
-      trueLabel: 'მართალია',
-      falseLabel: 'ტყუილია',
-      correctAnswer: true,
-    },
-    {
-      id: 'promo-tf-2',
-      category: 'შოთა არველაძე',
-      difficulty: 'easy',
-      prompt: 'შოთა არველაძემ თავისი პირველი სანაკრებო გოლი უელსს გაუტანა.',
-      trueLabel: 'მართალია',
-      falseLabel: 'ტყუილია',
-      correctAnswer: false,
-    },
-  ],
-};
+function trueFalseSession(question: TrueFalseSession['questions'][number]): TrueFalseSession {
+  return {
+    challengeType: 'trueFalse',
+    title: 'მართალია თუ ტყუილია?',
+    description: 'შოთა არველაძის კარიერის ფაქტები',
+    questionCount: 1,
+    secondsPerQuestion: EMBEDDED_SECONDS,
+    questions: [question],
+  };
+}
+
+const TRUE_FALSE_SESSION_1 = trueFalseSession({
+  id: 'promo-tf-1',
+  category: 'შოთა არველაძე',
+  difficulty: 'medium',
+  prompt: 'შოთა არველაძემ უეფას თასზე „აიაქსის“ მაისურით ჰეთ-ტრიკი „მარიბორს“ გაუტანა.',
+  trueLabel: 'მართალია',
+  falseLabel: 'ტყუილია',
+  correctAnswer: true,
+});
+
+const TRUE_FALSE_SESSION_2 = trueFalseSession({
+  id: 'promo-tf-2',
+  category: 'შოთა არველაძე',
+  difficulty: 'easy',
+  prompt: 'შოთა არველაძემ თავისი პირველი სანაკრებო გოლი უელსს გაუტანა.',
+  trueLabel: 'მართალია',
+  falseLabel: 'ტყუილია',
+  correctAnswer: false,
+});
 
 const IMPOSTER_SESSION: ImposterSession = {
   challengeType: 'imposter',
@@ -128,7 +131,7 @@ export const PROMO_ROUNDS: PromoRound[] = [
       categoryName: 'შოთა არველაძე',
     },
   },
-  { kind: 'trueFalse', units: 2, session: TRUE_FALSE_SESSION },
+  { kind: 'trueFalse', units: 1, session: TRUE_FALSE_SESSION_1 },
   {
     kind: 'multipleChoice',
     points: 100,
@@ -167,7 +170,7 @@ export const PROMO_ROUNDS: PromoRound[] = [
       categoryName: 'შოთა არველაძე',
     },
   },
-  { kind: 'passChain', units: 2, players: PROMO_CHAIN_PLAYERS, puzzles: PROMO_CHAIN_PUZZLES },
+  { kind: 'passChain', units: 1, players: PROMO_CHAIN_PLAYERS, puzzles: [PROMO_CHAIN_PUZZLES[0]] },
   {
     kind: 'multipleChoice',
     points: 100,
@@ -185,7 +188,9 @@ export const PROMO_ROUNDS: PromoRound[] = [
       },
     },
   },
+  { kind: 'trueFalse', units: 1, session: TRUE_FALSE_SESSION_2 },
   { kind: 'footballLogic', units: 1, session: FOOTBALL_LOGIC_SESSION },
+  { kind: 'passChain', units: 1, players: PROMO_CHAIN_PLAYERS, puzzles: [PROMO_CHAIN_PUZZLES[1]] },
   { kind: 'imposter', units: 1, session: IMPOSTER_SESSION },
   {
     kind: 'clues',
