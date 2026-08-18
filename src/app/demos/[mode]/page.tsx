@@ -15,6 +15,7 @@ import { DailyJackpot } from "@/features/mini-games/components/DailyJackpot";
 import { FinalThird } from "@/features/mini-games/components/FinalThird";
 import { FootballGrid } from "@/features/mini-games/components/FootballGrid";
 import { GoldenGoal } from "@/features/mini-games/components/GoldenGoal";
+import { GuessTheGoal } from "@/features/mini-games/components/GuessTheGoal";
 import { HalfTimeTrivia } from "@/features/mini-games/components/HalfTimeTrivia";
 import { HiLoRide } from "@/features/mini-games/components/HiLoRide";
 import { LastOneStanding } from "@/features/mini-games/components/LastOneStanding";
@@ -109,6 +110,8 @@ export default function DemoModePage() {
       return <GoldenGoal backHref={DEMO_BACK} />;
     case "mini-career-race":
       return <CareerRace backHref={DEMO_BACK} />;
+    case "mini-guess-the-goal":
+      return <GuessTheGoal backHref={DEMO_BACK} />;
     case "mini-stat-sniper":
       return <StatSniper backHref={DEMO_BACK} />;
     default:
