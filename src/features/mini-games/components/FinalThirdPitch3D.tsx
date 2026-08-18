@@ -838,7 +838,30 @@ function useCrowdTexture(): THREE.Texture {
 
 function useHoardingMap(metres: number): THREE.Texture {
   return useMemo(() => {
-    const map = new THREE.TextureLoader().load('/assets/betsson/1.png');
+    // Brand hoarding: QUIZBALL wordmark tiles on brand blue.
+    const canvas = document.createElement('canvas');
+    const W = 512;
+    const H = 128;
+    canvas.width = W;
+    canvas.height = H;
+    const ctx = canvas.getContext('2d')!;
+    ctx.fillStyle = '#1645FF';
+    ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = '#FFE500';
+    ctx.beginPath();
+    ctx.arc(84, H / 2, 30, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#1645FF';
+    ctx.font = '900 34px Poppins, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('⚽', 84, H / 2 + 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '900 52px Poppins, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.letterSpacing = '4px';
+    ctx.fillText('QUIZBALL', 136, H / 2 + 2);
+    const map = new THREE.CanvasTexture(canvas);
     map.colorSpace = THREE.SRGBColorSpace;
     map.wrapS = THREE.RepeatWrapping;
     map.wrapT = THREE.ClampToEdgeWrapping;
@@ -2027,7 +2050,7 @@ function Stadium({ crowd, showStructure = true }: { crowd?: THREE.Texture; showS
         </mesh>
         <mesh position={[0, HOARD_H / 2 - 0.03, HOARD_T / 2 + 0.002]}>
           <boxGeometry args={[HOARD_REAR_W, 0.045, 0.02]} />
-          <meshBasicMaterial color="#FF6C0A" toneMapped={false} />
+          <meshBasicMaterial color="#FFE500" toneMapped={false} />
         </mesh>
         <HoardingFace map={rearMap} width={HOARD_REAR_W} height={HOARD_H} />
       </group>
@@ -2043,7 +2066,7 @@ function Stadium({ crowd, showStructure = true }: { crowd?: THREE.Texture; showS
           </mesh>
           <mesh position={[0, HOARD_H / 2 - 0.03, HOARD_T / 2 + 0.002]}>
             <boxGeometry args={[HOARD_SIDE_LEN, 0.045, 0.02]} />
-            <meshBasicMaterial color="#FF6C0A" toneMapped={false} />
+            <meshBasicMaterial color="#FFE500" toneMapped={false} />
           </mesh>
           <HoardingFace map={sideMap} width={HOARD_SIDE_LEN} height={HOARD_H} />
         </group>

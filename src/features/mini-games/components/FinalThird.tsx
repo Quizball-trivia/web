@@ -1399,9 +1399,9 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
   );
 }
 
-/** Longest-runs leaderboard styled like the Betsson event leaderboard:
- *  orange border, orange #1 row, tilted "Powered by" badge. Flavour rows +
- *  the player's own best run. */
+/** Longest-runs leaderboard in the app's own leaderboard style (green border,
+ *  green #1 row — see LeaderboardTable non-event mode). Flavour rows + the
+ *  player's own best run. */
 function StadiumBoard({
   t,
   bestRun,
@@ -1425,28 +1425,21 @@ function StadiumBoard({
 
   return (
     <div className="relative mt-2">
-      {/* Betsson badge — same treatment as the event leaderboard. */}
-      <div
-        className="absolute -top-1 -right-2 z-20 flex flex-col items-start rounded-md px-2 py-1"
-        style={{ backgroundColor: '#FF6C0A', width: 120, height: 34, rotate: '-5.8deg', border: '2px solid #000', boxShadow: '0 4px 12px rgba(0,0,0,0.4)' }}
-      >
-        <span className="text-[6px] font-bold uppercase tracking-wider text-white/80 leading-none">Powered by</span>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/assets/betsson/3.png" alt="Betsson Sport" width={96} height={18} className="mt-0.5 h-4 w-auto object-contain" />
-      </div>
-
       <div className="mb-2 flex items-center gap-1.5 px-1 font-poppins text-[10px] font-black uppercase tracking-wider text-white/60">
-        <Trophy className="size-3.5 text-brand-orange-event" /> {t('Longest runs today')}
+        <Trophy className="size-3.5 text-brand-yellow" /> {t('Longest runs today')}
       </div>
-      <div className="overflow-hidden rounded-[10px] border-2" style={{ borderColor: '#FF6C0A' }}>
-        <div className="divide-y divide-white/5">
+      <div className="overflow-hidden rounded-[10px] border-2 border-brand-green">
+        <div className="divide-y divide-brand-green/25">
           {rows.slice(0, 5).map((r, i) => (
             <div
               key={`${r.name}-${i}`}
               className={`flex items-center justify-between px-3 py-2.5 font-poppins text-sm font-bold ${
-                i === 0 ? 'text-white' : r.you ? 'bg-brand-green text-white' : 'text-white/70 hover:bg-white/[0.03]'
+                i === 0
+                  ? 'bg-brand-green text-white'
+                  : r.you
+                    ? 'bg-brand-blue text-white'
+                    : 'text-white/70 hover:bg-white/[0.03]'
               }`}
-              style={i === 0 ? { backgroundColor: '#FF6C0A' } : undefined}
             >
               <span className="flex items-center gap-2.5">
                 <span className="text-lg font-black tabular-nums">#{i + 1}</span>
