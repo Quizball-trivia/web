@@ -18,6 +18,7 @@ import { PROMO_CLUES_ACCEPTED, PROMO_PUT_IN_ORDER_CORRECT_IDS } from './promoQui
 import { PROMO_FROZEN_TIME, PROMO_MATCH_ID, usePromoQuiz } from './usePromoQuiz';
 import { PromoLocaleDefault } from './PromoLocaleDefault';
 import { PromoPassChain } from './PromoPassChain';
+import { EmbeddedCounterPill } from '@/features/daily/components/EmbeddedCounterPill';
 
 const poppins = {
   fontFamily: "'Poppins', sans-serif",
@@ -222,25 +223,28 @@ function PromoResultsScreen({ quiz, playerName }: { quiz: PromoQuizApi; playerNa
       <PromoAvatar size={104} />
       <div className="font-fun text-2xl font-black uppercase text-white">{playerName}</div>
 
-      <div className="w-full max-w-sm rounded-3xl border-2 border-brand-green/40 bg-surface-card-deeper p-6">
-        <div className="font-fun text-xs uppercase tracking-[0.3em] text-white/50">საბოლოო ქულა</div>
+      <div
+        className="w-full max-w-sm rounded-3xl bg-brand-blue p-6"
+        style={{ boxShadow: '0 1.76px 6.334px 1.32px rgba(22, 69, 255, 0.25)' }}
+      >
+        <div className="font-fun text-xs uppercase tracking-[0.3em] text-white/70">საბოლოო ქულა</div>
         <div className="mt-2 font-fun text-6xl font-black text-brand-yellow" style={poppins}>
           {quiz.score}
         </div>
         <div className="mt-5 grid grid-cols-2 gap-3">
-          <div className="rounded-2xl bg-surface-card/60 px-4 py-3">
+          <div className="rounded-2xl bg-black/25 px-4 py-3">
             <div className="font-poppins text-2xl font-black text-white" style={poppins}>
               {quiz.correctCount}/{quiz.totalUnits}
             </div>
-            <div className="mt-1 font-fun text-[10px] font-black uppercase tracking-[0.18em] text-white/45">
+            <div className="mt-1 font-fun text-[10px] font-black uppercase tracking-[0.18em] text-white/60">
               სწორი პასუხი
             </div>
           </div>
-          <div className="rounded-2xl bg-surface-card/60 px-4 py-3">
-            <div className="font-poppins text-2xl font-black text-brand-green" style={poppins}>
+          <div className="rounded-2xl bg-black/25 px-4 py-3">
+            <div className="font-poppins text-2xl font-black text-brand-yellow" style={poppins}>
               {accuracy}%
             </div>
-            <div className="mt-1 font-fun text-[10px] font-black uppercase tracking-[0.18em] text-white/45">
+            <div className="mt-1 font-fun text-[10px] font-black uppercase tracking-[0.18em] text-white/60">
               სიზუსტე
             </div>
           </div>
@@ -275,61 +279,12 @@ export function PromoQuizScreen({ playerName = 'შოთა' }: { playerName?: 
 
   const revealed = quiz.stage === 'revealed';
   const current = quiz.current;
-  const isEmbedded =
-    current.kind === 'trueFalse' ||
-    current.kind === 'imposter' ||
-    current.kind === 'footballLogic' ||
-    current.kind === 'passChain';
   const noop = () => {};
 
   if (quiz.finished) {
     return <PromoResultsScreen quiz={quiz} playerName={playerName} />;
   }
 
-  // The daily-challenge games render their own fixed full-screen takeover
-  // while active; the promo shell resumes with the interstitial once the
-  // round completes.
-  const activeEmbeddedGame =
-    !revealed && current.kind === 'trueFalse' ? (
-      <TrueFalseGame
-        key={`tf-${quiz.nonce}`}
-        session={current.session}
-        onBack={noop}
-        onComplete={(correct) =>
-          quiz.completeEmbedded({
-            correctUnits: correct,
-            totalUnits: current.units,
-            points: correct * EMBEDDED_POINTS_PER_CORRECT,
-          })
-        }
-      />
-    ) : !revealed && current.kind === 'imposter' ? (
-      <ImposterGame
-        key={`imp-${quiz.nonce}`}
-        session={current.session}
-        onBack={noop}
-        onComplete={(correct) =>
-          quiz.completeEmbedded({
-            correctUnits: correct,
-            totalUnits: current.units,
-            points: correct * EMBEDDED_POINTS_PER_CORRECT,
-          })
-        }
-      />
-    ) : !revealed && current.kind === 'footballLogic' ? (
-      <FootballLogicGame
-        key={`fl-${quiz.nonce}`}
-        session={current.session}
-        onBack={noop}
-        onComplete={(correct) =>
-          quiz.completeEmbedded({
-            correctUnits: correct,
-            totalUnits: current.units,
-            points: correct * EMBEDDED_POINTS_PER_CORRECT,
-          })
-        }
-      />
-    ) : null;
 
   return (
     <div className="relative flex min-h-dvh w-full flex-col">
@@ -356,7 +311,7 @@ export function PromoQuizScreen({ playerName = 'შოთა' }: { playerName?: 
       <div className="relative mx-auto w-full max-w-3xl flex-1 px-3 pb-28 pt-2 sm:px-4">
         <AnimatePresence mode="wait">
           <motion.div
-            key={`${quiz.index}-${quiz.nonce}-${revealed && isEmbedded ? 'done' : 'live'}`}
+            key={`${quiz.index}-${quiz.nonce}`}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
@@ -380,36 +335,72 @@ export function PromoQuizScreen({ playerName = 'შოთა' }: { playerName?: 
               />
             ) : current.kind === 'putInOrder' || current.kind === 'clues' ? (
               <PromoSpecialRound quiz={quiz} />
-            ) : current.kind === 'passChain' && !revealed ? (
-              <PromoPassChain
-                key={`chain-${quiz.nonce}`}
-                puzzles={current.puzzles}
-                onComplete={({ solved, points }) =>
+            ) : current.kind === 'passChain' ? (
+              <>
+                <EmbeddedCounterPill current={quiz.index + 1} total={quiz.totalRounds} />
+                <div className="mt-3">
+                  <PromoPassChain
+                    key={`chain-${quiz.nonce}`}
+                    puzzles={current.puzzles}
+                    onComplete={({ solved, points }) =>
+                      quiz.completeEmbedded({
+                        correctUnits: solved,
+                        totalUnits: current.units,
+                        points,
+                      })
+                    }
+                  />
+                </div>
+              </>
+            ) : current.kind === 'trueFalse' ? (
+              <TrueFalseGame
+                key={`tf-${quiz.nonce}`}
+                session={current.session}
+                autoComplete
+                embedded={{ current: quiz.index + 1, total: quiz.totalRounds }}
+                onBack={noop}
+                onComplete={(correct) =>
                   quiz.completeEmbedded({
-                    correctUnits: solved,
+                    correctUnits: correct,
                     totalUnits: current.units,
-                    points,
+                    points: correct * EMBEDDED_POINTS_PER_CORRECT,
                   })
                 }
               />
-            ) : isEmbedded && revealed && quiz.lastEmbedded ? (
-              <div className="mx-auto mt-6 w-full max-w-sm rounded-3xl border-2 border-brand-green/40 bg-surface-card-deeper p-6 text-center">
-                <div className="font-fun text-xs font-black uppercase tracking-[0.24em] text-white/50">
-                  რაუნდი დასრულდა
-                </div>
-                <div className="mt-2 font-poppins text-4xl font-black text-brand-yellow" style={poppins}>
-                  +{quiz.lastEmbedded.points}
-                </div>
-                <div className="mt-2 font-poppins text-sm font-bold text-white/60">
-                  {quiz.lastEmbedded.correctUnits}/{quiz.lastEmbedded.totalUnits} სწორი
-                </div>
-              </div>
-            ) : null}
+            ) : current.kind === 'imposter' ? (
+              <ImposterGame
+                key={`imp-${quiz.nonce}`}
+                session={current.session}
+                autoComplete
+                embedded={{ current: quiz.index + 1, total: quiz.totalRounds }}
+                onBack={noop}
+                onComplete={(correct) =>
+                  quiz.completeEmbedded({
+                    correctUnits: correct,
+                    totalUnits: current.units,
+                    points: correct * EMBEDDED_POINTS_PER_CORRECT,
+                  })
+                }
+              />
+            ) : (
+              <FootballLogicGame
+                key={`fl-${quiz.nonce}`}
+                session={current.session}
+                embedded={{ current: quiz.index + 1, total: quiz.totalRounds }}
+                onBack={noop}
+                onComplete={(correct) =>
+                  quiz.completeEmbedded({
+                    correctUnits: correct,
+                    totalUnits: current.units,
+                    points: correct * EMBEDDED_POINTS_PER_CORRECT,
+                  })
+                }
+              />
+            )}
           </motion.div>
         </AnimatePresence>
       </div>
 
-      {activeEmbeddedGame}
 
       {/* Operator control — manual advance only, so retakes are easy. */}
       <AnimatePresence>

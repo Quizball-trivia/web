@@ -277,7 +277,7 @@ function PutInOrderResultComparison({
       </div>
       <div className={`grid gap-2 sm:gap-3 ${soloMode ? 'grid-cols-1' : 'grid-cols-2'}`}>
         <PutInOrderCompactColumn
-          title={t('results.you')}
+          title={soloMode ? '' : t('results.you')}
           itemIds={playerOrderIds}
           correctById={correctById}
           itemById={itemById}
