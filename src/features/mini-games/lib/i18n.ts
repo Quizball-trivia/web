@@ -188,6 +188,7 @@ const KA: Record<string, string> = {
   "Next attack risks the whole pot — the keeper resets.": "შემდეგი შეტევა მთელ ბანკს რისკავს — მეკარე თავიდან დგება.",
   "The keeper read it — pot lost.": "მეკარემ წაიკითხა — ბანკი დაიკარგა.",
   "Cashed out {amount}!": "განაღდებულია {amount}!",
+  "Loading…": "იტვირთება…",
   "New round": "ახალი რაუნდი",
   "Live wins": "ლაივ მოგებები",
   "Longest runs today": "დღის ყველაზე გრძელი სერიები",

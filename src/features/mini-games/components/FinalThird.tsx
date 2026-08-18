@@ -65,6 +65,8 @@ const MIN_OPEN = 2;
 const MAX_OPEN = 6;
 /** Per-state payouts — below fair odds k/(k-1) at every k (see header). */
 const STATE_MULTS: Record<number, number> = { 2: 1.86, 3: 1.42, 4: 1.28, 5: 1.21, 6: 1.18 };
+/** Live mode mirrors the server's basis-point math exactly: floor(pot·bp/10000). */
+const STATE_MULT_BP: Record<number, number> = { 2: 18600, 3: 14200, 4: 12800, 5: 12100, 6: 11800 };
 /** Zones unlock in this order — starts as a pure left/right coin flip. */
 const OPEN_ORDER = ['BL', 'BR', 'TL', 'TR', 'BC', 'TC'] as const;
 
@@ -295,19 +297,37 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
     optionIds: string[];
     answer: number;
     deadlineLocalMs: number;
+    windowS: number;
   } | null>(null);
   const liveBusyRef = useRef(false);
+  // Bumped by every applied mutation; an in-flight GET current whose sequence
+  // is stale must not overwrite the newer state it lost the race to.
+  const liveSeqRef = useRef(0);
+  // Idempotency nonces survive retries — a re-click after an indeterminate
+  // response must dedupe server-side, not double-debit.
+  const startNonceRef = useRef<string | null>(null);
+  const nextNonceRef = useRef<string | null>(null);
+  const [liveZones, setLiveZones] = useState<FreeKicksZone[] | null>(null);
+  // Block staking until the mount-time resume has resolved: starting while the
+  // resume GET is in flight can hide a freshly debited round behind a stale null.
+  const [resumed, setResumed] = useState(!live);
   const [liveError, setLiveError] = useState<string | null>(null);
   const [liveStats, setLiveStats] = useState<{
     topRuns: Array<{ name: string; mult: number }>;
   } | null>(null);
 
   const applyLiveState = (state: FreeKicksState) => {
+    const prev = liveStateRef.current;
+    // Reject regressions: a late response for the same round must never roll
+    // the version (and with it pot/zones) backwards.
+    if (prev && prev.round_id === state.round_id && state.state_version < prev.state_version) return;
+    liveSeqRef.current += 1;
     liveStateRef.current = state;
     setPot(state.pot_coins);
     setRoundStake(state.stake_coins);
     setAttack(state.attack);
     setOpenCount(state.open_count);
+    setLiveZones(state.open_zones);
     setAnswerLocked(state.answer_locked);
   };
 
@@ -316,26 +336,57 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
       setLiveQuestion(null);
       return;
     }
+    // Skew from server_now ignores response transit time, so pad conservatively:
+    // the UI must expire before the server does, never after.
     const skewMs = Date.parse(state.server_now) - Date.now();
+    const deadlineLocalMs = Date.parse(state.question.deadline_at) - skewMs - 300;
     setLiveQuestion({
       id: state.question.question_id,
       q: state.question.prompt[miniLocale] ?? state.question.prompt.en,
       options: state.question.options.map((option) => option.text[miniLocale] ?? option.text.en),
       optionIds: state.question.options.map((option) => option.id),
       answer: -1,
-      deadlineLocalMs: Date.parse(state.question.deadline_at) - skewMs,
+      deadlineLocalMs,
+      windowS: Math.max(0.5, (deadlineLocalMs - Date.now()) / 1000),
     });
   };
 
+  const settleLocalRound = (state: FreeKicksState | null) => {
+    liveStateRef.current = null;
+    setLiveQuestion(null);
+    if (state?.status === 'cashed' && state.payout_coins != null) setLastTake(state.payout_coins);
+    void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
+    setBeat('bet');
+  };
+
   const resyncLive = async () => {
-    const state = await freeKicksApi.current().catch(() => null);
-    if (!state) {
-      setBeat('bet');
+    const seq = liveSeqRef.current;
+    let state: FreeKicksState | null;
+    try {
+      state = await freeKicksApi.current();
+    } catch {
+      // Transport/auth failure is NOT "no round" — keep the current screen and
+      // let the next action or heartbeat retry, instead of hiding a live pot.
+      if (seq === liveSeqRef.current) setLiveError('Connection error — retrying');
+      setResumed(true);
+      return;
+    }
+    // A mutation applied while this GET was in flight: its result is newer.
+    if (seq !== liveSeqRef.current) {
+      setResumed(true);
+      return;
+    }
+    setLiveError(null);
+    setResumed(true);
+    if (!state || state.status !== 'active') {
+      settleLocalRound(state);
       return;
     }
     applyLiveState(state);
     if (state.phase === 'question' && state.question) {
       syncLiveQuestion(state);
+      selectedRef.current = null;
+      setSelected(null);
       setBeat('question');
     } else if (state.phase === 'post_goal') {
       setScored(true);
@@ -348,10 +399,12 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
   const handleLiveError = (error: unknown) => {
     if (error instanceof FreeKicksApiError) {
       setLiveError(error.message);
-      if (error.status === 409) void resyncLive();
     } else {
       setLiveError('Connection error — retrying');
     }
+    // Always reconcile with the server: a transport error can hide a mutation
+    // that committed (debit, cashout, shot), and 409 means we are stale.
+    void resyncLive();
   };
 
   // ── Fake stadium: live-wins ticker + drifting player count. Demo only —
@@ -410,13 +463,21 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
   }, []);
 
   // Live: heartbeat while a round is active so the sweeper knows we're here.
+  // The interval is mounted once (beat transitions must not keep resetting it
+  // below its own period); the active check happens inside the tick. A 404
+  // means the sweeper already settled the round — resync instead of showing a
+  // pot that no longer exists.
   useEffect(() => {
-    if (!live || beat === 'bet' || beat === 'cashed') return;
+    if (!live) return;
     const id = window.setInterval(() => {
-      void freeKicksApi.heartbeat().catch(() => undefined);
+      if (liveStateRef.current?.status !== 'active') return;
+      void freeKicksApi.heartbeat().catch((error) => {
+        if (error instanceof FreeKicksApiError && error.status === 404) void resyncLive();
+      });
     }, 10_000);
     return () => window.clearInterval(id);
-  }, [live, beat]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [live]);
 
   // Live: the social strip and leaderboard poll REAL numbers.
   useEffect(() => {
@@ -461,8 +522,10 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
     if (beat !== 'question') return;
     const started = Date.now();
     const deadlineMs = live && liveQuestion ? liveQuestion.deadlineLocalMs : started + QUESTION_S * 1000;
+    const windowS = live && liveQuestion ? liveQuestion.windowS : QUESTION_S;
+    setQLeft(Math.max(0, Math.min(windowS, (deadlineMs - Date.now()) / 1000)));
     const tick = window.setInterval(() => {
-      setQLeft(Math.min(QUESTION_S, Math.max(0, (deadlineMs - Date.now()) / 1000)));
+      setQLeft(Math.min(windowS, Math.max(0, (deadlineMs - Date.now()) / 1000)));
     }, 100);
     const to = window.setTimeout(() => {
       if (selectedRef.current !== null) return;
@@ -494,7 +557,7 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
         setAnswerLocked(true);
         setBeat('decide');
       }, ANSWER_HOLD_MS);
-    }, Math.max(400, deadlineMs - started));
+    }, Math.max(0, deadlineMs - started));
     return () => {
       window.clearInterval(tick);
       window.clearTimeout(to);
@@ -510,8 +573,18 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
     : demoQuestion;
   const mult = STATE_MULTS[openCount];
   const goalPct = Math.round(((openCount - 1) / openCount) * 100);
-  const openIds = useMemo(() => OPEN_ORDER.slice(0, openCount) as readonly string[], [openCount]);
-  const potential = useMemo(() => Math.round(pot * mult * 100) / 100, [pot, mult]);
+  // Live: the server's open_zones are authoritative (zone order may change
+  // server-side); the demo derives them from the fixed unlock order.
+  const openIds = useMemo(
+    () => (live && liveZones ? (liveZones as readonly string[]) : (OPEN_ORDER.slice(0, openCount) as readonly string[])),
+    [live, liveZones, openCount],
+  );
+  // Live payouts are integer coins floored in basis points — mirror that math
+  // exactly so the quoted "pot → next" equals what the server will credit.
+  const potential = useMemo(
+    () => (live ? Math.floor((pot * STATE_MULT_BP[openCount]) / 10_000) : Math.round(pot * mult * 100) / 100),
+    [live, pot, openCount, mult],
+  );
   const runMult = pot > 0 ? Math.round((pot / roundStake) * 100) / 100 : 0;
 
   // Deterministic crowd-pulse numbers per attack (stable across re-renders).
@@ -569,13 +642,17 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
 
   const startRound = () => {
     if (live) {
-      if (liveBusyRef.current) return;
+      if (liveBusyRef.current || !resumed || !wallet) return;
       liveBusyRef.current = true;
       setLiveError(null);
       startCrowd();
+      // Reuse the nonce across retries: if the first attempt debited but the
+      // response was lost, the retry must dedupe, not stake twice.
+      const nonce = startNonceRef.current ?? (startNonceRef.current = crypto.randomUUID());
       freeKicksApi
-        .start(stake, crypto.randomUUID())
+        .start(stake, nonce)
         .then((state) => {
+          startNonceRef.current = null;
           applyLiveState(state);
           setLastTake(null);
           selectedRef.current = null;
@@ -623,6 +700,12 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
           // Reveal: mark the server's correct option in the rendered question.
           const correctIndex = liveQuestion.optionIds.indexOf(result.correct_option_id);
           setLiveQuestion((current) => (current ? { ...current, answer: correctIndex } : current));
+          if (result.outcome === 'late') {
+            // The server rejected the answer as late — even a correct pick must
+            // not light up green, only the reveal.
+            selectedRef.current = -1;
+            setSelected(-1);
+          }
           applyLiveState(result.state);
           fire(correct ? 'correct' : 'wrong', i % 2 === 0 ? 'left' : 'right');
           later(() => {
@@ -637,8 +720,8 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
           }, ANSWER_HOLD_MS);
         })
         .catch((error) => {
-          selectedRef.current = null;
-          setSelected(null);
+          // Keep the selection locked: the request may have committed
+          // server-side, and resync (via handleLiveError) will settle which.
           handleLiveError(error);
         });
       return;
@@ -721,30 +804,36 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
   });
 
   const cashOut = (event: { currentTarget: HTMLElement }) => {
+    // Live: nothing (flight, "Cashed out X") may be shown before the server
+    // confirms — and the amount is the server's payout, not the local pot.
+    if (live && (!liveStateRef.current || liveBusyRef.current)) return;
     const rect = event.currentTarget.getBoundingClientRect();
     const stack = document.querySelector('[data-money-stack]')?.getBoundingClientRect();
-    setFlight({
-      seed: pot * 17 + attack + 3,
-      ox: rect.left + rect.width / 2,
-      oy: rect.top + rect.height / 2,
-      tx: stack ? stack.left + stack.width / 2 : rect.left + rect.width / 2,
-      ty: stack ? stack.top + stack.height / 2 : 36,
-    });
-    setLastTake(pot);
+    const launchFlight = () => {
+      setFlight({
+        seed: pot * 17 + attack + 3,
+        ox: rect.left + rect.width / 2,
+        oy: rect.top + rect.height / 2,
+        tx: stack ? stack.left + stack.width / 2 : rect.left + rect.width / 2,
+        ty: stack ? stack.top + stack.height / 2 : 36,
+      });
+    };
     if (live) {
-      const state = liveStateRef.current;
-      if (!state || liveBusyRef.current) return;
+      const state = liveStateRef.current!;
       liveBusyRef.current = true;
       setLiveError(null);
       freeKicksApi
         .cashout(state.state_version)
         .then((next) => {
+          liveSeqRef.current += 1;
           liveStateRef.current = next;
+          setLastTake(next.payout_coins ?? pot);
+          // Refresh the shared wallet cache NOW — the delayed timers below are
+          // purely visual and die with the component on navigation.
+          void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
+          launchFlight();
           setBeat('cashed');
-          later(() => {
-            void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
-            setStackBump(true);
-          }, 520);
+          later(() => setStackBump(true), 520);
           later(() => setStackBump(false), 980);
           later(() => setFlight(null), 1200);
         })
@@ -757,6 +846,8 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
         });
       return;
     }
+    launchFlight();
+    setLastTake(pot);
     setBeat('cashed');
     later(() => {
       setBalance((b) => Math.round((b + pot) * 100) / 100);
@@ -772,9 +863,11 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
       if (!state || liveBusyRef.current) return;
       liveBusyRef.current = true;
       setLiveError(null);
+      const nonce = nextNonceRef.current ?? (nextNonceRef.current = crypto.randomUUID());
       freeKicksApi
-        .nextAttack(state.state_version, crypto.randomUUID())
+        .nextAttack(state.state_version, nonce)
         .then((next) => {
+          nextNonceRef.current = null;
           applyLiveState(next);
           selectedRef.current = null;
           setSelected(null);
@@ -992,7 +1085,9 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
               <p className="text-center font-poppins text-xs font-semibold text-white/55">
                 {t('The goal opens with 2 zones and one hidden keeper. Answer questions to open up to 6 — a wrong answer slams it back to 2.')}
               </p>
-              {effectiveBalance >= MIN_STAKE ? (
+              {live && (!wallet || !resumed) ? (
+                <p className="text-center font-poppins text-sm font-bold text-white/60">{t('Loading…')}</p>
+              ) : effectiveBalance >= MIN_STAKE ? (
                 <>
                   {/* Stake picker: presets + free entry, min 5 */}
                   <div className="flex items-center justify-center gap-1.5">
@@ -1108,7 +1203,7 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
           )}
 
           {beat === 'question' && (
-            <motion.div key={`q-${qIndex}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="rounded-2xl border border-white/15 bg-brand-blue p-3">
+            <motion.div key={`q-${live && liveQuestion ? liveQuestion.id : qIndex}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="rounded-2xl border border-white/15 bg-brand-blue p-3">
               <div className="mb-1.5 flex items-center justify-between font-poppins text-[10px] font-black uppercase tracking-wider text-white/80">
                 <span>{t('Attack {n}', { n: attack + 1 })}</span>
                 <span className={qLeft <= 1.5 && selected === null ? 'text-brand-red' : 'text-brand-yellow'}>
@@ -1117,11 +1212,11 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
               </div>
               <div className="mb-2 h-1 overflow-hidden rounded-full bg-white/15">
                 <div
-                  key={qIndex}
+                  key={live && liveQuestion ? liveQuestion.id : qIndex}
                   className={`h-full origin-left rounded-full ${qLeft <= 1.5 && selected === null ? 'bg-brand-red' : 'bg-brand-yellow'}`}
                   style={{
                     transform: 'scaleX(1)',
-                    animation: `ft-q-timer ${QUESTION_S}s linear forwards`,
+                    animation: `ft-q-timer ${live && liveQuestion ? liveQuestion.windowS : QUESTION_S}s linear forwards`,
                     animationPlayState: selected === null ? 'running' : 'paused',
                   }}
                 />
