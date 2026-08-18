@@ -189,6 +189,7 @@ const KA: Record<string, string> = {
   "The keeper read it — pot lost.": "მეკარემ წაიკითხა — ბანკი დაიკარგა.",
   "Cashed out {amount}!": "განაღდებულია {amount}!",
   "Loading…": "იტვირთება…",
+  "Could not load balance — tap to retry": "ბალანსი ვერ ჩაიტვირთა — დააჭირე თავიდან საცდელად",
   "New round": "ახალი რაუნდი",
   "Live wins": "ლაივ მოგებები",
   "Longest runs today": "დღის ყველაზე გრძელი სერიები",
