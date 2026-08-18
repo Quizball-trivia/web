@@ -23,52 +23,52 @@ export const PROMO_CHAIN_PLAYERS: ChainPlayer[] = [
     clubs: ['დინამო თბილისი', 'ტრაბზონსპორი', 'აიაქსი', 'რეინჯერსი', 'ალკმაარი', 'ლევანტე'],
   },
   {
+    id: 'kane',
+    name: 'ჰარი კეინი',
+    accepted: ['კეინი', 'ჰარი კეინი', 'kane', 'harry kane'],
+    clubs: ['ტოტენჰემი', 'ბაიერნი'],
+  },
+  {
+    id: 'ozil',
+    name: 'მესუთ იოზილი',
+    accepted: ['იოზილი', 'ოზილი', 'მესუთ იოზილი', 'მესუთ ოზილი', 'ozil', 'mesut ozil', 'özil'],
+    clubs: ['შალკე', 'ვერდერი', 'რეალ მადრიდი', 'არსენალი', 'ფენერბაჰჩე'],
+  },
+  {
+    id: 'dembele',
+    name: 'მუსა დემბელე',
+    accepted: ['დემბელე', 'მუსა დემბელე', 'dembele', 'mousa dembele', 'moussa dembele', 'musa dembele'],
+    clubs: ['ალკმაარი', 'ფულჰემი', 'ტოტენჰემი'],
+  },
+  {
+    id: 'vandervaart',
+    name: 'რაფაელ ვან დერ ვაარტი',
+    accepted: ['ვან დერ ვაარტი', 'რაფაელ ვან დერ ვაარტი', 'van der vaart', 'rafael van der vaart'],
+    clubs: ['აიაქსი', 'ჰამბურგი', 'რეალ მადრიდი', 'ტოტენჰემი'],
+  },
+  {
     id: 'arteta',
     name: 'მიკელ არტეტა',
     accepted: ['არტეტა', 'მიკელ არტეტა', 'arteta', 'mikel arteta'],
     clubs: ['პსჟ', 'რეინჯერსი', 'რეალ სოსიედადი', 'ევერტონი', 'არსენალი'],
   },
   {
-    id: 'henry',
-    name: 'ტიერი ანრი',
-    accepted: ['ანრი', 'ტიერი ანრი', 'henry', 'thierry henry', 'henri'],
-    clubs: ['მონაკო', 'იუვენტუსი', 'არსენალი', 'ბარსელონა'],
+    id: 'pedroleon',
+    name: 'პედრო ლეონი',
+    accepted: ['პედრო ლეონი', 'ლეონი', 'pedro leon', 'pedro león'],
+    clubs: ['ლევანტე', 'ხეტაფე', 'რეალ მადრიდი'],
   },
   {
-    id: 'vandersar',
-    name: 'ედვინ ვან დერ სარი',
-    accepted: ['ვან დერ სარი', 'ედვინ ვან დერ სარი', 'van der sar', 'edwin van der sar'],
-    clubs: ['აიაქსი', 'იუვენტუსი', 'ფულჰემი', 'მანჩესტერ იუნაიტედი'],
-  },
-  {
-    id: 'cristiano',
-    name: 'კრიშტიანუ რონალდუ',
-    accepted: ['რონალდუ', 'კრიშტიანუ', 'კრიშტიანუ რონალდუ', 'ronaldo', 'cristiano', 'cristiano ronaldo', 'cr7'],
-    clubs: ['სპორტინგი', 'მანჩესტერ იუნაიტედი', 'რეალ მადრიდი', 'იუვენტუსი'],
+    id: 'lovenkrands',
+    name: 'პიტერ ლოვენკრანდსი',
+    accepted: ['ლოვენკრანდსი', 'პიტერ ლოვენკრანდსი', 'lovenkrands', 'peter lovenkrands', 'løvenkrands'],
+    clubs: ['რეინჯერსი', 'შალკე', 'ნიუკასლი'],
   },
   {
     id: 'litmanen',
     name: 'იარი ლიტმანენი',
     accepted: ['ლიტმანენი', 'იარი ლიტმანენი', 'litmanen', 'jari litmanen'],
     clubs: ['აიაქსი', 'ბარსელონა', 'ლივერპული'],
-  },
-  {
-    id: 'kinkladze',
-    name: 'გიორგი ქინქლაძე',
-    accepted: ['ქინქლაძე', 'გიორგი ქინქლაძე', 'kinkladze', 'giorgi kinkladze'],
-    clubs: ['დინამო თბილისი', 'მანჩესტერ სიტი', 'აიაქსი', 'დერბი'],
-  },
-  {
-    id: 'ibra',
-    name: 'ზლატან იბრაჰიმოვიჩი',
-    accepted: ['ზლატანი', 'იბრაჰიმოვიჩი', 'ზლატან იბრაჰიმოვიჩი', 'zlatan', 'ibrahimovic', 'ibra'],
-    clubs: ['აიაქსი', 'იუვენტუსი', 'ინტერი', 'ბარსელონა', 'მილანი', 'პსჟ', 'მანჩესტერ იუნაიტედი'],
-  },
-  {
-    id: 'suarez',
-    name: 'ლუის სუარესი',
-    accepted: ['სუარესი', 'ლუის სუარესი', 'suarez', 'luis suarez'],
-    clubs: ['აიაქსი', 'ლივერპული', 'ბარსელონა', 'ატლეტიკო მადრიდი'],
   },
   {
     id: 'caniggia',
@@ -79,12 +79,13 @@ export const PROMO_CHAIN_PLAYERS: ChainPlayer[] = [
 ];
 
 // Start/end never share a club directly, so at least one intermediate is
-// required. Both puzzles have several valid par-2 routes (e.g. Shota →
-// Arteta → Henry via Rangers/Arsenal, or Shota → Van der Sar → Ronaldo via
-// Ajax/Man United).
+// required. Editorial routes: Shota → (ალკმაარი) Dembélé (ტოტენჰემი) → Kane,
+// or Shota → (აიაქსი) Van der Vaart (ტოტენჰემი) → Kane; and Shota →
+// (რეინჯერსი) Arteta (არსენალი) → Özil, or via Pedro León (ლევანტე → რეალ
+// მადრიდი), or via Løvenkrands (რეინჯერსი → შალკე).
 export const PROMO_CHAIN_PUZZLES: ChainPuzzle[] = [
-  { startId: 'shota', endId: 'henry' },
-  { startId: 'shota', endId: 'cristiano' },
+  { startId: 'shota', endId: 'kane' },
+  { startId: 'shota', endId: 'ozil' },
 ];
 
 const BY_ID = new Map(PROMO_CHAIN_PLAYERS.map((p) => [p.id, p]));
