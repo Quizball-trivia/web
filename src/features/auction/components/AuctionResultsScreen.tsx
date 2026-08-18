@@ -388,9 +388,14 @@ export function AuctionResultsScreen({
                     >
                       {formatProfit(player.adjustedProfit)}
                     </span>
-                    <span className="mt-1 font-poppins text-[10px] font-bold tabular-nums text-white/45">
-                      {formatProfit(player.profit)} × {player.multiplier.toFixed(1)}
-                    </span>
+                    {/* Chemistry only multiplies positive profit — on a loss the
+                        score IS the raw profit, so a "× 2.1" here would claim a
+                        multiplication that never happened. */}
+                    {player.profit > 0 && player.multiplier > 1 && (
+                      <span className="mt-1 font-poppins text-[10px] font-bold tabular-nums text-white/45">
+                        {formatProfit(player.profit)} × {player.multiplier.toFixed(1)}
+                      </span>
+                    )}
                   </div>
                 </div>
 
