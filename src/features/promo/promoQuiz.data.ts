@@ -43,7 +43,7 @@ const TRUE_FALSE_SESSION_1 = trueFalseSession({
   id: 'promo-tf-1',
   category: 'შოთა არველაძე',
   difficulty: 'medium',
-  prompt: 'შოთა არველაძემ უეფას თასზე „აიაქსის“ მაისურით ჰეთ-ტრიკი „მარიბორს“ გაუტანა.',
+  prompt: '2005 წელს შოთა არველაძის სატრანსფერო ღირებულება უფრო მეტი იყო, ვიდრე ლეონელ მესის.',
   trueLabel: 'მართალია',
   falseLabel: 'ტყუილია',
   correctAnswer: true,
@@ -52,8 +52,8 @@ const TRUE_FALSE_SESSION_1 = trueFalseSession({
 const TRUE_FALSE_SESSION_2 = trueFalseSession({
   id: 'promo-tf-2',
   category: 'შოთა არველაძე',
-  difficulty: 'easy',
-  prompt: 'შოთა არველაძემ თავისი პირველი სანაკრებო გოლი უელსს გაუტანა.',
+  difficulty: 'medium',
+  prompt: 'შოთა არველაძეს ეროვნული ნაკრების მაისურით ყველაზე მეტი გოლი სომხეთის წინააღმდეგ აქვს გატანილი.',
   trueLabel: 'მართალია',
   falseLabel: 'ტყუილია',
   correctAnswer: false,
@@ -62,24 +62,31 @@ const TRUE_FALSE_SESSION_2 = trueFalseSession({
 const IMPOSTER_SESSION: ImposterSession = {
   challengeType: 'imposter',
   title: 'იპოვე თვითმარქვია',
-  description: 'რომელ კლუბებში არასდროს უთამაშია შოთა არველაძეს?',
+  description: 'ჰეტრიკები საკლუბო კარიერაში',
   questionCount: 1,
   secondsPerQuestion: EMBEDDED_SECONDS,
   questions: [
     {
       id: 'promo-imp-1',
       category: 'შოთა არველაძე',
-      difficulty: 'medium',
-      prompt: 'მონიშნე ორი კლუბი, რომლებშიც შოთა არველაძეს არასდროს უთამაშია',
+      difficulty: 'hard',
+      prompt:
+        'ამ გუნდებიდან ხუთს შოთა არველაძემ საკლუბო კარიერაში ჰეტრიკი გაუტანა — მონიშნე 5 „თვითმარქვია“, რომლებსაც არ გაუტანია',
       options: [
-        { id: 'dinamo', text: 'დინამო თბილისი' },
-        { id: 'galatasaray', text: 'გალათასარაი' },
-        { id: 'trabzon', text: 'ტრაბზონსპორი' },
-        { id: 'ajax', text: 'აიაქსი' },
         { id: 'feyenoord', text: 'ფეიენოორდი' },
-        { id: 'rangers', text: 'რეინჯერსი' },
+        { id: 'heerenveen', text: 'ჰერენვენი' },
+        { id: 'vitesse', text: 'ვიტესი' },
+        { id: 'groningen', text: 'გრონინგენი' },
+        { id: 'roosendaal', text: 'როზენდალი' },
+        { id: 'forfar', text: 'ფორფარ ატლეტიკი' },
+        { id: 'karsiyaka', text: 'ქარშიაქა' },
+        { id: 'roda', text: 'როდა' },
+        { id: 'istanbulspor', text: 'ისტანბულსპორი' },
+        { id: 'alkmaar', text: 'ალკმაარი' },
       ],
-      correctOptionIds: ['galatasaray', 'feyenoord'],
+      // Hat-tricks (per the owner's editors): Feyenoord, Heerenveen,
+      // Groningen, Roosendaal, Roda. The imposters are the other five.
+      correctOptionIds: ['vitesse', 'forfar', 'karsiyaka', 'istanbulspor', 'alkmaar'],
     },
   ],
 };
@@ -87,7 +94,7 @@ const IMPOSTER_SESSION: ImposterSession = {
 const FOOTBALL_LOGIC_SESSION: FootballLogicSession = {
   challengeType: 'footballLogic',
   title: 'საფეხბურთო ლოგიკა',
-  description: 'გამოიცანი ფეხბურთელი ორი კლუბით',
+  description: 'გამოიცანი ფეხბურთელი',
   questionCount: 1,
   secondsPerQuestion: EMBEDDED_SECONDS,
   questions: [
@@ -95,13 +102,13 @@ const FOOTBALL_LOGIC_SESSION: FootballLogicSession = {
       id: 'promo-fl-1',
       category: 'შოთა არველაძე',
       difficulty: 'medium',
-      prompt: 'ამ ორ კლუბში თამაშობდა შოთას თანაგუნდელი „აიაქსიდან“. ვინ არის?',
-      imageAUrl: '/clubs/fc-barcelona.webp',
-      imageBUrl: '/clubs/liverpool-fc.webp',
-      displayAnswer: 'იარი ლიტმანენი',
-      acceptedAnswers: ['იარი ლიტმანენი', 'ლიტმანენი', 'litmanen', 'jari litmanen'],
+      prompt: '2003 წელს „აიაქსიდან“ „რომაში“ გადავიდა. ვინ არის?',
+      imageAUrl: '/promo/ajax-crest.png',
+      imageBUrl: '/clubs/as-roma.webp',
+      displayAnswer: 'კრისტიან კივუ',
+      acceptedAnswers: ['კრისტიან კივუ', 'კივუ', 'chivu', 'cristian chivu', 'kivu'],
       explanation:
-        '„აიაქსის“ ლეგენდარული მე-10 ნომერი 1990-იანების ბოლოს შოთა არველაძესთან ერთად თამაშობდა, 2000-იანების დასაწყისში კი — „ბარსელონასა“ და „ლივერპულში“.',
+        'კრისტიან კივუ „აიაქსის“ კაპიტანი იყო შოთა არველაძის თანაგუნდელობის პერიოდში და 2003 წელს „რომაში“ გადავიდა.',
     },
   ],
 };
@@ -125,9 +132,10 @@ export const PROMO_ROUNDS: PromoRound[] = [
     units: 1,
     question: {
       id: 'promo-q2',
-      prompt: 'რისი წაღება დაავიწყდა შოთა არველაძეს „აიაქსის“ პირველი ვარჯიშის დროს?',
-      options: ['ფორმის', 'წინდების', 'სპორტული ჩანთის', 'ბუცების'],
-      correctIndex: 3,
+      prompt:
+        '95/96 სეზონში „ტრაბზონსპორმა“ „ბეშიქთაშთან“ 3-1 მოიგო და აჩიმ ორი გოლი გაიტანა. რა ქენი შენ ამ თამაშში?',
+      options: ['გოლი და ასისტი', 'ასისტი და ბარათი', 'გოლი და ბარათი', 'არ გითამაშია'],
+      correctIndex: 1,
       categoryName: 'შოთა არველაძე',
     },
   },
@@ -137,15 +145,28 @@ export const PROMO_ROUNDS: PromoRound[] = [
     points: 100,
     units: 1,
     question: {
+      id: 'promo-q3',
+      prompt:
+        '„აიაქსში“ პირველივე სეზონში 25 გოლი გაიტანე. რომელ გუნდთან შეასრულე შენი პირველი ჰეტრიკი?',
+      options: ['ვილემი', 'ჰერენვენი', 'მაასტრიხტი', 'გრონინგენი'],
+      correctIndex: 2,
+      categoryName: 'შოთა არველაძე',
+    },
+  },
+  {
+    kind: 'multipleChoice',
+    points: 100,
+    units: 1,
+    question: {
       id: 'promo-q4',
-      prompt: 'ჩემპიონთა ლიგის რომელი გუნდის წინააღმდეგ არის გადაღებული ეს სურათი 2003 წელს?',
-      options: ['შტუტგარტი', 'კოპენჰაგენი', 'მანჩესტერ იუნაიტედი', 'პანათინაიკოსი'],
-      correctIndex: 0,
+      prompt: 'რომელმა თანაგუნდელმა გაიტანა ამ მატჩში ჰეტრიკი?',
+      options: ['ლიტმანენი', 'ტიჯანი ბაბანგიდა', 'ლაუდრუპი', 'რონალდ დე ბური'],
+      correctIndex: 3,
       categoryName: 'შოთა არველაძე',
       image: {
-        url: '/promo/shota-cl-2003.jpg',
-        width: 399,
-        height: 501,
+        url: '/promo/shota-hattrick-match.jpg',
+        width: 885,
+        height: 510,
       },
     },
   },
@@ -156,16 +177,16 @@ export const PROMO_ROUNDS: PromoRound[] = [
     question: {
       kind: 'putInOrder',
       id: 'promo-q6',
-      prompt: 'შოთა არველაძის კარიერის მნიშვნელოვანი მოვლენები',
-      instruction: 'დაალაგეთ ეს მოვლენები ქრონოლოგიურად (ყველაზე ადრინდელიდან უახლესისკენ)',
-      direction: 'asc',
-      // Displayed scrambled; the chronological answer is
+      prompt: 'შოთა არველაძის კარიერის სტატისტიკა',
+      instruction: 'დაალაგეთ ეს მაჩვენებლები რაოდენობის მიხედვით, მაღლიდან დაბლისკენ',
+      direction: 'desc',
+      // Displayed scrambled; the correct order is
       // PROMO_PUT_IN_ORDER_CORRECT_IDS below.
       items: [
-        { id: 'scot-title', label: 'მოიგო შოტლანდიის პრემიერლიგის პირველი ტიტული' },
-        { id: 'retire', label: 'დაასრულა პროფესიონალური საფეხბურთო კარიერა' },
-        { id: 'debut', label: 'შედგა მისი დებიუტი საქართველოს ეროვნულ ნაკრებში' },
-        { id: 'top-scorer', label: 'გახდა თურქეთის სუპერლიგის საუკეთესო ბომბარდირი' },
+        { id: 'nt-goals', label: 'ეროვნული ნაკრების გოლები' },
+        { id: 'cards', label: 'ყვითელი ბარათები საკლუბო კარიერაში' },
+        { id: 'assists', label: 'ასისტები ერედივიზიაში' },
+        { id: 'uefa-goals', label: 'გოლები უეფას თასზე (ევროპა ლიგაზე)' },
       ],
       categoryName: 'შოთა არველაძე',
     },
@@ -178,13 +199,13 @@ export const PROMO_ROUNDS: PromoRound[] = [
     question: {
       id: 'promo-q5',
       prompt: 'რომელ წელს არის გადაღებული ეს სურათი?',
-      options: ['1998', '1999', '1997', '2000'],
-      correctIndex: 2,
+      options: ['1995', '1996', '1997', '1998'],
+      correctIndex: 1,
       categoryName: 'შოთა არველაძე',
       image: {
-        url: '/promo/shota-archil-nac.jpg',
-        width: 676,
-        height: 471,
+        url: '/promo/shota-1996.jpg',
+        width: 1232,
+        height: 1699,
       },
     },
   },
@@ -201,11 +222,11 @@ export const PROMO_ROUNDS: PromoRound[] = [
       id: 'promo-q7',
       prompt: 'ვინ ვარ მე?',
       clues: [
-        { type: 'text', content: 'ვარ საქართველოს ნაკრების ყოფილი თავდამსხმელი, დავიბადე თბილისში 1973 წლის 22 თებერვალს.' },
-        { type: 'text', content: 'კარიერის ნაწილი თურქეთში, ნიდერლანდებსა და გერმანიაში მაქვს გატარებული.' },
-        { type: 'text', content: 'ვთამაშობდი „ნაკ ბრედაში“ და ერედივიზიონში ჩემი ძმის წინააღმდეგ ვითამაშე.' },
-        { type: 'text', content: 'საქართველოს სამგზის ჩემპიონი ვარ.' },
-        { type: 'text', content: 'შოთა არველაძის ტყუპისცალი ვარ.' },
+        { type: 'text', content: 'ვარ ყოფილი ბელგიელი ნახევარმცველი, რომელიც გამოვირჩეოდი განსაკუთრებული დრიბლინგითა და ბურთის შენარჩუნების უნარით.' },
+        { type: 'text', content: 'კარიერა თავდამსხმელის პოზიციაზე დავიწყე, სანამ ცენტრალურ ნახევარმცველად გადავკვალიფიცირდებოდი.' },
+        { type: 'text', content: 'პრემიერლიგაში ვთამაშობდი „ფულჰემსა“ და „ტოტენჰემ ჰოტსპურში“.' },
+        { type: 'text', content: 'ნიდერლანდების ერედივიზიონში შოთა არველაძესთან ერთად „ალკმაარის“ რიგებში ვთამაშობდი.' },
+        { type: 'text', content: 'შოთა არველაძე ჩემი კაპიტანი იყო, როდესაც ლუი ვან გალის ხელმძღვანელობით „ალკმაარმა“ უეფას თასზე შორს მიაღწია.' },
       ],
       categoryName: 'შოთა არველაძე',
     },
@@ -217,20 +238,19 @@ export const PROMO_TOTAL_ROUNDS = PROMO_ROUNDS.length;
 /** Total answerable units across all rounds — the accuracy denominator. */
 export const PROMO_TOTAL_UNITS = PROMO_ROUNDS.reduce((sum, round) => sum + round.units, 0);
 
-// The correct final order for the put-in-order round: national-team debut
-// (1992) → Turkish Süper Lig top scorer (1995/96) → first Scottish title
-// (2002) → retirement (2008).
-export const PROMO_PUT_IN_ORDER_CORRECT_IDS = ['debut', 'top-scorer', 'scot-title', 'retire'];
+// The correct put-in-order ranking, high to low: club-career yellow cards →
+// UEFA Cup goals → national-team goals → Eredivisie assists.
+export const PROMO_PUT_IN_ORDER_CORRECT_IDS = ['cards', 'uefa-goals', 'nt-goals', 'assists'];
 
-export const PROMO_CLUES_ANSWER = 'არჩილ არველაძე';
+export const PROMO_CLUES_ANSWER = 'მუსა დემბელე';
 
-// Exact accepted guesses (lowercased): full name or first name, Georgian or
-// Latin script. Deliberately NOT a substring match. Bare "არველაძე"/"arveladze"
-// is NOT accepted — the surname alone doesn't distinguish Archil from Shota.
+// Exact accepted guesses (lowercased): full name or surname, Georgian or
+// Latin script. Deliberately NOT a substring match.
 export const PROMO_CLUES_ACCEPTED = [
-  'არჩილ არველაძე',
-  'არჩილი',
-  'არჩილ',
-  'archil arveladze',
-  'archil',
+  'მუსა დემბელე',
+  'დემბელე',
+  'mousa dembele',
+  'moussa dembele',
+  'musa dembele',
+  'dembele',
 ];
