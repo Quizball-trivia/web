@@ -97,10 +97,8 @@ export const PROMO_CHAIN_PUZZLES: ChainPuzzle[] = [
   { startId: 'shota', endId: 'ozil' },
 ];
 
-const BY_ID = new Map(PROMO_CHAIN_PLAYERS.map((p) => [p.id, p]));
-
-export function getPromoChainPlayer(id: string): ChainPlayer | undefined {
-  return BY_ID.get(id);
+export function getPromoChainPlayer(players: ChainPlayer[], id: string): ChainPlayer | undefined {
+  return players.find((p) => p.id === id);
 }
 
 export function promoShareClub(a: ChainPlayer, b: ChainPlayer): string | null {
@@ -110,21 +108,22 @@ export function promoShareClub(a: ChainPlayer, b: ChainPlayer): string | null {
 
 /** Find a player by accepted-name match (case-insensitive, exact first, then
  *  loose contains for inputs of 4+ characters). */
-export function findPromoChainPlayer(input: string): ChainPlayer | null {
+export function findPromoChainPlayer(players: ChainPlayer[], input: string): ChainPlayer | null {
   const q = input.trim().toLowerCase();
   if (!q) return null;
-  for (const p of PROMO_CHAIN_PLAYERS) {
+  for (const p of players) {
     if (p.accepted.some((a) => a === q) || p.name.toLowerCase() === q) return p;
   }
-  for (const p of PROMO_CHAIN_PLAYERS) {
+  for (const p of players) {
     if (p.accepted.some((a) => a.includes(q) && q.length >= 4)) return p;
   }
   return null;
 }
 
 /** Minimum number of links between two players via shared clubs (BFS). */
-export function solvePromoChain(startId: string, endId: string): number {
+export function solvePromoChain(players: ChainPlayer[], startId: string, endId: string): number {
   if (startId === endId) return 0;
+  const byId = new Map(players.map((p) => [p.id, p]));
   const visited = new Set([startId]);
   let frontier = [startId];
   let depth = 0;
@@ -132,9 +131,9 @@ export function solvePromoChain(startId: string, endId: string): number {
     depth += 1;
     const next: string[] = [];
     for (const id of frontier) {
-      const p = BY_ID.get(id);
+      const p = byId.get(id);
       if (!p) continue;
-      for (const other of PROMO_CHAIN_PLAYERS) {
+      for (const other of players) {
         if (visited.has(other.id)) continue;
         if (promoShareClub(p, other)) {
           if (other.id === endId) return depth;

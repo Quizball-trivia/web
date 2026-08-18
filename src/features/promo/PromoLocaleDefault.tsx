@@ -16,7 +16,7 @@ import { storage, STORAGE_KEYS } from "@/utils/storage";
  * dispatches 'en' over live state, so the setLocale('ka') sticks in every
  * storage state (empty, invalid, 'en', or already 'ka').
  */
-export function PromoLocaleDefault() {
+export function PromoLocaleDefault({ locale = "ka" }: { locale?: "ka" | "en" }) {
   const { setLocale } = useLocale();
   const applied = useRef(false);
 
@@ -24,15 +24,16 @@ export function PromoLocaleDefault() {
     if (applied.current) return;
     applied.current = true;
     try {
-      if (window.sessionStorage.getItem("qb-promo-locale-touched") === "1") return;
-      window.sessionStorage.setItem("qb-promo-locale-touched", "1");
+      const touchKey = `qb-promo-locale-touched:${locale}`;
+      if (window.sessionStorage.getItem(touchKey) === "1") return;
+      window.sessionStorage.setItem(touchKey, "1");
     } catch {
       // Storage-restricted context (e.g. private mode): fall through and
       // still attempt the pin, just without the session dedupe.
     }
-    storage.set(STORAGE_KEYS.LOCALE, "ka");
-    setLocale("ka");
-  }, [setLocale]);
+    storage.set(STORAGE_KEYS.LOCALE, locale);
+    setLocale(locale);
+  }, [setLocale, locale]);
 
   return null;
 }
