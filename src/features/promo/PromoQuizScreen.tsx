@@ -9,6 +9,7 @@ import { TrueFalseGame } from '@/features/daily/TrueFalseGame';
 import { ImposterGame } from '@/features/daily/ImposterGame';
 import { FootballLogicGame } from '@/features/daily/FootballLogicGame';
 import { __setSocketOverride } from '@/lib/realtime/socket-client';
+import { fuzzyMatchesAnswer } from '@/lib/answerMatching';
 import type {
   ClientToServerEvents,
   MatchCluesGuessAckPayload,
@@ -74,9 +75,11 @@ function createPromoSocket(): Socket<ServerToClientEvents, ClientToServerEvents>
   return stub;
 }
 
+// Production fuzzy matching: normalized (case/accents), whole-word hits
+// ("დემბელე" matches "მუსა დემბელე"), and 1-2 character typo tolerance for
+// names of 5+ letters. Inputs under 4 characters never typo-match.
 function isAcceptedCluesGuess(accepted: string[], raw: string): boolean {
-  const guess = raw.trim().toLowerCase();
-  return guess.length > 0 && accepted.includes(guess);
+  return raw.trim().length > 0 && fuzzyMatchesAnswer(raw, accepted);
 }
 
 type PromoQuizApi = ReturnType<typeof usePromoQuiz>;
