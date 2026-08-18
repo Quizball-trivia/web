@@ -106,8 +106,10 @@ export function promoShareClub(a: ChainPlayer, b: ChainPlayer): string | null {
   return null;
 }
 
-/** Find a player by accepted-name match (case-insensitive, exact first, then
- *  loose contains for inputs of 4+ characters). */
+import { fuzzyMatchesAnswer } from '@/lib/answerMatching';
+
+/** Find a player by accepted-name match: exact first, then loose contains
+ *  (4+ chars), then the production fuzzy matcher (typo tolerance). */
 export function findPromoChainPlayer(players: ChainPlayer[], input: string): ChainPlayer | null {
   const q = input.trim().toLowerCase();
   if (!q) return null;
@@ -116,6 +118,9 @@ export function findPromoChainPlayer(players: ChainPlayer[], input: string): Cha
   }
   for (const p of players) {
     if (p.accepted.some((a) => a.includes(q) && q.length >= 4)) return p;
+  }
+  for (const p of players) {
+    if (fuzzyMatchesAnswer(q, [...p.accepted, p.name])) return p;
   }
   return null;
 }
