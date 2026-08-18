@@ -49,7 +49,7 @@ export const FEATURED_DEMO_MODES: DemoModeCard[] = [
 
 // Prototype mini-games (features/mini-games) — self-contained, no backend.
 // In-game copy is English-only for now (prototypes); hub cards are bilingual.
-export const MINI_GAME_DEMO_MODES: DemoModeCard[] = [
+const ALL_MINI_GAME_DEMO_MODES: DemoModeCard[] = [
   {
     slug: "mini-final-third",
     title: { en: "Free Kicks", ka: "თავისუფალი დარტყმები" },
@@ -250,6 +250,23 @@ export const MINI_GAME_DEMO_MODES: DemoModeCard[] = [
   },
 ];
 
+// Hidden from the hub per owner (2026-08-18); routes stay reachable directly.
+const HIDDEN_MINI_SLUGS = [
+  "mini-trivia-spin",
+  "mini-penalty-shootout",
+  "mini-daily-jackpot",
+  "mini-golden-goal",
+  "mini-survivor",
+];
+
+export const MINI_GAME_DEMO_MODES: DemoModeCard[] = ALL_MINI_GAME_DEMO_MODES.filter(
+  (mode) => !HIDDEN_MINI_SLUGS.includes(mode.slug),
+);
+
+const HIDDEN_MINI_MODES: DemoModeCard[] = ALL_MINI_GAME_DEMO_MODES.filter((mode) =>
+  HIDDEN_MINI_SLUGS.includes(mode.slug),
+);
+
 const DAILY_DEMO_COPY: Record<DailyChallengeType, { title: DemoI18nText; description: DemoI18nText }> = {
   moneyDrop: {
     title: { en: "Money Drop", ka: "ფულის ვარდნა" },
@@ -340,6 +357,7 @@ export const ALL_DEMO_MODES: DemoModeCard[] = [
   ...MINI_GAME_DEMO_MODES,
   ...DAILY_DEMO_MODES,
   ...HIDDEN_DEMO_MODES,
+  ...HIDDEN_MINI_MODES,
   ...HIDDEN_DAILY_MODES,
 ];
 

@@ -10,6 +10,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import Link from "next/link";
+import { useEffect } from "react";
 import { motion } from "motion/react";
 import { AppLogo } from "@/components/AppLogo";
 import { useLocale } from "@/contexts/LocaleContext";
@@ -199,6 +200,8 @@ function GameCard({
     >
       <Link
         href={`/demos/${mode.slug}`}
+        data-demo-slug={mode.slug}
+        onClick={() => window.sessionStorage.setItem(RETURN_SLUG_KEY, mode.slug)}
         className="group flex w-full flex-col overflow-hidden rounded-xl bg-surface-card-deeper focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/40"
       >
         <div className="relative overflow-hidden">
@@ -298,8 +301,24 @@ function CtaBand({ locale }: { locale: Locale }) {
 }
 
 // ── Screen ────────────────────────────────────────────────────────────────────
+// Returning from a game (in-game back button is a forward navigation, so the
+// browser doesn't restore scroll) — jump back to the card the visitor opened.
+const RETURN_SLUG_KEY = "qb-demo-return-slug";
+
+function useReturnToCard() {
+  useEffect(() => {
+    const slug = window.sessionStorage.getItem(RETURN_SLUG_KEY);
+    if (!slug) return;
+    window.sessionStorage.removeItem(RETURN_SLUG_KEY);
+    document
+      .querySelector(`[data-demo-slug="${CSS.escape(slug)}"]`)
+      ?.scrollIntoView({ behavior: "instant", block: "center" });
+  }, []);
+}
+
 export function DemoHubScreen() {
   const { locale } = useLocale();
+  useReturnToCard();
 
   return (
     <main className="relative min-h-dvh">
