@@ -8,6 +8,8 @@ export interface ChainPlayer {
   name: string;
   accepted: string[];
   clubs: string[];
+  /** Vendored headshot under public/promo/players/; initials fallback if absent. */
+  imageUrl?: string;
 }
 
 export interface ChainPuzzle {
@@ -18,36 +20,42 @@ export interface ChainPuzzle {
 export const PROMO_CHAIN_PLAYERS: ChainPlayer[] = [
   {
     id: 'shota',
+    imageUrl: '/promo/players/shota.jpg',
     name: 'შოთა არველაძე',
     accepted: ['შოთა', 'შოთა არველაძე', 'shota', 'shota arveladze'],
     clubs: ['დინამო თბილისი', 'ტრაბზონსპორი', 'აიაქსი', 'რეინჯერსი', 'ალკმაარი', 'ლევანტე'],
   },
   {
     id: 'kane',
+    imageUrl: '/promo/players/kane.jpg',
     name: 'ჰარი კეინი',
     accepted: ['კეინი', 'ჰარი კეინი', 'kane', 'harry kane'],
     clubs: ['ტოტენჰემი', 'ბაიერნი'],
   },
   {
     id: 'ozil',
+    imageUrl: '/promo/players/ozil.jpg',
     name: 'მესუთ იოზილი',
     accepted: ['იოზილი', 'ოზილი', 'მესუთ იოზილი', 'მესუთ ოზილი', 'ozil', 'mesut ozil', 'özil'],
     clubs: ['შალკე', 'ვერდერი', 'რეალ მადრიდი', 'არსენალი', 'ფენერბაჰჩე'],
   },
   {
     id: 'dembele',
+    imageUrl: '/promo/players/dembele.jpg',
     name: 'მუსა დემბელე',
     accepted: ['დემბელე', 'მუსა დემბელე', 'dembele', 'mousa dembele', 'moussa dembele', 'musa dembele'],
     clubs: ['ალკმაარი', 'ფულჰემი', 'ტოტენჰემი'],
   },
   {
     id: 'vandervaart',
+    imageUrl: '/promo/players/vandervaart.jpg',
     name: 'რაფაელ ვან დერ ვაარტი',
     accepted: ['ვან დერ ვაარტი', 'რაფაელ ვან დერ ვაარტი', 'van der vaart', 'rafael van der vaart'],
     clubs: ['აიაქსი', 'ჰამბურგი', 'რეალ მადრიდი', 'ტოტენჰემი'],
   },
   {
     id: 'arteta',
+    imageUrl: '/promo/players/arteta.jpg',
     name: 'მიკელ არტეტა',
     accepted: ['არტეტა', 'მიკელ არტეტა', 'arteta', 'mikel arteta'],
     clubs: ['პსჟ', 'რეინჯერსი', 'რეალ სოსიედადი', 'ევერტონი', 'არსენალი'],
@@ -60,6 +68,7 @@ export const PROMO_CHAIN_PLAYERS: ChainPlayer[] = [
   },
   {
     id: 'lovenkrands',
+    imageUrl: '/promo/players/lovenkrands.jpg',
     name: 'პიტერ ლოვენკრანდსი',
     accepted: ['ლოვენკრანდსი', 'პიტერ ლოვენკრანდსი', 'lovenkrands', 'peter lovenkrands', 'løvenkrands'],
     clubs: ['რეინჯერსი', 'შალკე', 'ნიუკასლი'],

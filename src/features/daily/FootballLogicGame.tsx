@@ -13,6 +13,7 @@ import { fuzzyMatchesAnswer } from "@/lib/answerMatching";
 import { playSfx } from "@/lib/sounds/gameSounds";
 import { QuitGameDialog } from "./QuitGameDialog";
 import { DailyChallengeHeader } from "./components/DailyChallengeHeader";
+import { EmbeddedCounterPill } from "./components/EmbeddedCounterPill";
 
 const poppins = {
   fontFamily: "'Poppins', sans-serif",
@@ -25,12 +26,15 @@ interface FootballLogicGameProps {
   session: FootballLogicSession;
   onBack: () => void;
   onComplete: (score: number) => void;
+  /** Render inline (promo flow): global counter pill, no header/timer/back. */
+  embedded?: { current: number; total: number };
 }
 
 export function FootballLogicGame({
   session,
   onBack,
   onComplete,
+  embedded,
 }: FootballLogicGameProps) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answer, setAnswer] = useState("");
@@ -73,7 +77,7 @@ export function FootballLogicGame({
   }, [answer, currentQuestion, resolved]);
 
   useEffect(() => {
-    if (resolved || !currentQuestion) {
+    if (resolved || !currentQuestion || embedded) {
       return;
     }
 
@@ -89,32 +93,37 @@ export function FootballLogicGame({
     }, 1000);
 
     return () => window.clearInterval(timer);
-  }, [currentQuestion, resolved, submitAnswer]);
+  }, [currentQuestion, resolved, submitAnswer, embedded]);
 
   useEffect(() => {
     if (!resolved) {
       return;
     }
 
+    // Embedded (promo): complete immediately, operator advances manually.
     const timeout = window.setTimeout(() => {
       advance();
-    }, 1500);
+    }, embedded ? 0 : 1500);
 
     return () => window.clearTimeout(timeout);
-  }, [advance, resolved]);
+  }, [advance, resolved, embedded]);
 
   if (!currentQuestion) {
     return null;
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat text-white">
-      <DailyChallengeHeader
-        onQuit={() => setShowQuitDialog(true)}
-        currentIndex={currentQuestionIndex}
-        total={session.questionCount}
-        timeLeft={timeLeft}
-      />
+    <div className={embedded ? "flex flex-col text-white" : "fixed inset-0 z-40 flex flex-col bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat text-white"}>
+      {embedded ? (
+        <EmbeddedCounterPill current={embedded.current} total={embedded.total} />
+      ) : (
+        <DailyChallengeHeader
+          onQuit={() => setShowQuitDialog(true)}
+          currentIndex={currentQuestionIndex}
+          total={session.questionCount}
+          timeLeft={timeLeft}
+        />
+      )}
 
       {/* Content */}
       <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center px-4 py-4 overflow-y-auto">
@@ -144,7 +153,7 @@ export function FootballLogicGame({
             <img
               {...optimizedRemoteImageProps(currentQuestion.imageAUrl, 448)}
               alt="Football logic clue A"
-              className="h-56 w-full rounded-[12px] object-cover"
+              className={embedded ? "h-56 w-full rounded-[12px] object-contain" : "h-56 w-full rounded-[12px] object-cover"}
             />
           </div>
           <div
@@ -157,7 +166,7 @@ export function FootballLogicGame({
             <img
               {...optimizedRemoteImageProps(currentQuestion.imageBUrl, 448)}
               alt="Football logic clue B"
-              className="h-56 w-full rounded-[12px] object-cover"
+              className={embedded ? "h-56 w-full rounded-[12px] object-contain" : "h-56 w-full rounded-[12px] object-cover"}
             />
           </div>
         </div>
@@ -222,11 +231,13 @@ export function FootballLogicGame({
           </div>
         )}
 
-        {/* Score */}
-        <div className="mt-4 flex items-center justify-between text-sm" style={poppins}>
-          <span className="text-white/55">{copy.score}</span>
-          <span className="text-white">{correctCount}</span>
-        </div>
+        {/* Score (hidden in embedded flows — the shell owns the score) */}
+        {!embedded && (
+          <div className="mt-4 flex items-center justify-between text-sm" style={poppins}>
+            <span className="text-white/55">{copy.score}</span>
+            <span className="text-white">{correctCount}</span>
+          </div>
+        )}
       </div>
 
       <QuitGameDialog

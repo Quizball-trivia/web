@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowDown, Check, RefreshCw } from 'lucide-react';
 import {
@@ -13,9 +13,10 @@ import {
 } from './promoPassChain.data';
 
 // Fork of src/features/mini-games/components/PassChain.tsx for the promo
-// quiz: data comes in via props, all copy is Georgian, there is no
-// MiniGameShell wrapper (the promo shell owns the page chrome), and after
-// the LAST puzzle the component reports completion instead of cycling.
+// quiz: data comes in via props, all copy is Georgian, no header/par chrome
+// (the promo shell owns the page chrome), player headshots instead of
+// initials, ranked-style input, and completion reported the moment the
+// chain closes — the promo shell then shows its standard green next button.
 
 interface Link {
   player: ChainPlayer;
@@ -37,20 +38,27 @@ export function PromoPassChain({
   puzzles: ChainPuzzle[];
   onComplete: (result: { solved: number; points: number }) => void;
 }) {
-  const [puzzleIndex, setPuzzleIndex] = useState(0);
   const [chain, setChain] = useState<Link[]>([]);
   const [endClub, setEndClub] = useState<string | null>(null);
   const [done, setDone] = useState(false);
   const [input, setInput] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [points, setPoints] = useState(0);
   const [lastScore, setLastScore] = useState<{ links: number; par: number; score: number } | null>(null);
+  const completedRef = useRef(false);
 
-  const puzzle = puzzles[puzzleIndex];
+  const puzzle = puzzles[0];
   const start = getPromoChainPlayer(puzzle.startId)!;
   const end = getPromoChainPlayer(puzzle.endId)!;
   const par = useMemo(() => solvePromoChain(puzzle.startId, puzzle.endId), [puzzle.startId, puzzle.endId]);
-  const isLastPuzzle = puzzleIndex >= puzzles.length - 1;
+
+  // Report completion as soon as the chain closes; the solved chain stays on
+  // screen and the promo shell shows its own green next button.
+  useEffect(() => {
+    if (done && lastScore && !completedRef.current) {
+      completedRef.current = true;
+      onComplete({ solved: 1, points: lastScore.score });
+    }
+  }, [done, lastScore, onComplete]);
 
   const submit = useCallback(() => {
     if (done || !input.trim()) return;
@@ -80,24 +88,9 @@ export function PromoPassChain({
       const score = Math.max(100, Math.round(500 - (links - par) * 120));
       setEndClub(toEnd);
       setDone(true);
-      setPoints((v) => v + score);
       setLastScore({ links, par, score });
     }
   }, [done, input, chain, start, end, par]);
-
-  const advance = () => {
-    if (isLastPuzzle) {
-      onComplete({ solved: puzzles.length, points });
-      return;
-    }
-    setPuzzleIndex((i) => i + 1);
-    setChain([]);
-    setEndClub(null);
-    setDone(false);
-    setInput('');
-    setError(null);
-    setLastScore(null);
-  };
 
   const resetPuzzle = () => {
     setChain([]);
@@ -110,29 +103,8 @@ export function PromoPassChain({
 
   return (
     <div className="mx-auto w-full max-w-md px-1">
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="font-fun text-lg font-black uppercase text-white">პასების ჯაჭვი</div>
-          <div className="font-poppins text-xs font-semibold text-white/50">
-            დააკავშირე ორი ფეხბურთელი საერთო კლუბებით
-          </div>
-        </div>
-        <span className="rounded-full bg-brand-cyan/15 px-3 py-1.5 font-poppins text-xs font-black uppercase text-brand-cyan">
-          {puzzleIndex + 1}/{puzzles.length}
-        </span>
-      </div>
-
-      <div className="mt-3 flex items-center justify-between rounded-2xl border border-white/[0.08] bg-surface-card/50 px-4 py-2.5">
-        <span className="font-poppins text-xs font-semibold text-white/50">
-          ნაკლები რგოლი — მეტი ქულა
-        </span>
-        <span className="font-poppins text-xs font-black uppercase tracking-wide text-brand-cyan">
-          {par === Infinity ? 'პარი —' : `პარი: ${par} რგოლი`}
-        </span>
-      </div>
-
       {/* Chain */}
-      <div className="mt-4 flex flex-col items-center">
+      <div className="mt-2 flex flex-col items-center">
         <ChainNode player={start} tone="start" />
 
         <AnimatePresence initial={false}>
@@ -168,9 +140,19 @@ export function PromoPassChain({
                 placeholder={`ვინ უკავშირდება — ${(chain.length ? chain[chain.length - 1].player : start).name.split(' ').slice(-1)[0]}?`}
                 autoComplete="off"
                 spellCheck={false}
-                className="h-14 w-full rounded-2xl border-2 border-white/10 bg-surface-input px-4 font-poppins text-base font-bold text-white outline-none placeholder:text-white/30 focus:border-brand-cyan/60"
+                className="font-poppins h-14 w-full rounded-[20px] border-none bg-brand-blue px-5 text-center text-base text-white outline-none placeholder:text-white/55 focus:outline-none"
+                style={{
+                  fontWeight: 600,
+                  letterSpacing: '0.04em',
+                  boxShadow: '0 1.76px 6.334px 1.32px rgba(22, 69, 255, 0.25)',
+                }}
               />
-              <button type="button" onClick={submit} className="flex h-14 shrink-0 items-center rounded-2xl bg-brand-cyan px-5 font-poppins text-base font-black uppercase text-white">
+              <button
+                type="button"
+                onClick={submit}
+                className="font-poppins flex h-14 shrink-0 items-center rounded-[20px] bg-brand-yellow px-5 text-base font-black uppercase text-surface-deep"
+                style={{ boxShadow: '0 1.76px 6.334px 1.32px rgba(255, 229, 0, 0.25)' }}
+              >
                 დამატება
               </button>
             </div>
@@ -182,7 +164,7 @@ export function PromoPassChain({
             </div>
           </div>
         ) : (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
             <div className="rounded-2xl border-2 border-brand-green/40 bg-brand-green/10 p-4 text-center">
               <div className="flex items-center justify-center gap-2 font-poppins text-lg font-black uppercase text-brand-green">
                 <Check className="size-5" /> დაკავშირდა!
@@ -190,18 +172,13 @@ export function PromoPassChain({
               {lastScore && (
                 <div className="mt-2 flex items-center justify-center gap-3 font-poppins text-xs font-bold text-white/60">
                   <span>{lastScore.links} რგოლი</span>
-                  {lastScore.links === lastScore.par ? (
-                    <span className="rounded-full bg-brand-yellow/15 px-2 py-1 text-brand-yellow">პარი — იდეალურია!</span>
-                  ) : (
-                    <span>პარი {lastScore.par}</span>
+                  {lastScore.links === lastScore.par && (
+                    <span className="rounded-full bg-brand-yellow/15 px-2 py-1 text-brand-yellow">იდეალურია!</span>
                   )}
                   <span className="font-black text-brand-green">+{lastScore.score}</span>
                 </div>
               )}
             </div>
-            <button type="button" onClick={advance} className="h-14 w-full rounded-2xl bg-brand-cyan font-poppins text-lg font-black uppercase tracking-wide text-white">
-              {isLastPuzzle ? 'დასრულება' : 'შემდეგი ჯაჭვი'}
-            </button>
           </motion.div>
         )}
       </div>
@@ -210,6 +187,7 @@ export function PromoPassChain({
 }
 
 function ChainNode({ player, tone }: { player: ChainPlayer; tone: 'start' | 'mid' | 'end' | 'end-done' }) {
+  const [imgFailed, setImgFailed] = useState(false);
   const styles: Record<string, string> = {
     start: 'border-brand-yellow bg-brand-yellow/10 text-brand-yellow',
     mid: 'border-brand-cyan bg-brand-cyan/10 text-brand-cyan',
@@ -217,10 +195,20 @@ function ChainNode({ player, tone }: { player: ChainPlayer; tone: 'start' | 'mid
     'end-done': 'border-brand-green bg-brand-green/10 text-brand-green',
   };
   return (
-    <div className={`flex w-full max-w-[280px] items-center gap-3 rounded-2xl border-2 px-3 py-2.5 ${styles[tone]}`}>
-      <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-black/30 font-poppins text-sm font-black">
-        {initials(player.name)}
-      </span>
+    <div className={`flex w-full max-w-[300px] items-center gap-3 rounded-2xl border-2 px-3 py-2.5 ${styles[tone]}`}>
+      {player.imageUrl && !imgFailed ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={player.imageUrl}
+          alt={player.name}
+          onError={() => setImgFailed(true)}
+          className="size-11 shrink-0 rounded-full border border-white/20 object-cover object-top"
+        />
+      ) : (
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-full bg-black/30 font-poppins text-sm font-black">
+          {initials(player.name)}
+        </span>
+      )}
       <div className="min-w-0">
         <div className="truncate font-poppins text-sm font-black text-white">{player.name}</div>
         <div className="truncate font-poppins text-[10px] font-semibold text-white/40">

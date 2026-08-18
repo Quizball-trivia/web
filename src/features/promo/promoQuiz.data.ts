@@ -26,7 +26,7 @@ export type PromoRound =
 
 // Generous per-question clock for the embedded daily-challenge games: they
 // auto-submit at zero, and a mid-take auto-fail would ruin the shot.
-const EMBEDDED_SECONDS = 99;
+const EMBEDDED_SECONDS = 999;
 
 function trueFalseSession(question: TrueFalseSession['questions'][number]): TrueFalseSession {
   return {
@@ -71,7 +71,7 @@ const IMPOSTER_SESSION: ImposterSession = {
       category: 'შოთა არველაძე',
       difficulty: 'hard',
       prompt:
-        'ამ გუნდებიდან ხუთს შოთა არველაძემ საკლუბო კარიერაში ჰეტრიკი გაუტანა — მონიშნე 5 „თვითმარქვია“, რომლებსაც არ გაუტანია',
+        'ამ გუნდებიდან ექვსს შოთა არველაძემ საკლუბო კარიერაში ჰეტრიკი გაუტანა — მონიშნე 4 „თვითმარქვია“, რომლებსაც არ გაუტანია',
       options: [
         { id: 'feyenoord', text: 'ფეიენოორდი' },
         { id: 'heerenveen', text: 'ჰერენვენი' },
@@ -84,9 +84,10 @@ const IMPOSTER_SESSION: ImposterSession = {
         { id: 'istanbulspor', text: 'ისტანბულსპორი' },
         { id: 'alkmaar', text: 'ალკმაარი' },
       ],
-      // Hat-tricks (per the owner's editors): Feyenoord, Heerenveen,
-      // Groningen, Roosendaal, Roda. The imposters are the other five.
-      correctOptionIds: ['vitesse', 'forfar', 'karsiyaka', 'istanbulspor', 'alkmaar'],
+      // Hat-tricks (per the owner's editors, 6-4 split): Feyenoord,
+      // Heerenveen, Groningen, Roosendaal, Roda, İstanbulspor. The imposters
+      // are the other four.
+      correctOptionIds: ['vitesse', 'forfar', 'karsiyaka', 'alkmaar'],
     },
   ],
 };
@@ -139,7 +140,6 @@ export const PROMO_ROUNDS: PromoRound[] = [
       categoryName: 'შოთა არველაძე',
     },
   },
-  { kind: 'trueFalse', units: 1, session: TRUE_FALSE_SESSION_1 },
   {
     kind: 'multipleChoice',
     points: 100,
@@ -171,6 +171,23 @@ export const PROMO_ROUNDS: PromoRound[] = [
     },
   },
   {
+    kind: 'multipleChoice',
+    points: 100,
+    units: 1,
+    question: {
+      id: 'promo-q5',
+      prompt: 'რომელ წელს არის გადაღებული ეს სურათი?',
+      options: ['1995', '1996', '1997', '1998'],
+      correctIndex: 1,
+      categoryName: 'შოთა არველაძე',
+      image: {
+        url: '/promo/shota-1996.jpg',
+        width: 1232,
+        height: 1699,
+      },
+    },
+  },
+  {
     kind: 'putInOrder',
     points: 100,
     units: 1,
@@ -191,28 +208,6 @@ export const PROMO_ROUNDS: PromoRound[] = [
       categoryName: 'შოთა არველაძე',
     },
   },
-  { kind: 'passChain', units: 1, players: PROMO_CHAIN_PLAYERS, puzzles: [PROMO_CHAIN_PUZZLES[0]] },
-  {
-    kind: 'multipleChoice',
-    points: 100,
-    units: 1,
-    question: {
-      id: 'promo-q5',
-      prompt: 'რომელ წელს არის გადაღებული ეს სურათი?',
-      options: ['1995', '1996', '1997', '1998'],
-      correctIndex: 1,
-      categoryName: 'შოთა არველაძე',
-      image: {
-        url: '/promo/shota-1996.jpg',
-        width: 1232,
-        height: 1699,
-      },
-    },
-  },
-  { kind: 'trueFalse', units: 1, session: TRUE_FALSE_SESSION_2 },
-  { kind: 'footballLogic', units: 1, session: FOOTBALL_LOGIC_SESSION },
-  { kind: 'passChain', units: 1, players: PROMO_CHAIN_PLAYERS, puzzles: [PROMO_CHAIN_PUZZLES[1]] },
-  { kind: 'imposter', units: 1, session: IMPOSTER_SESSION },
   {
     kind: 'clues',
     points: 100,
@@ -231,6 +226,12 @@ export const PROMO_ROUNDS: PromoRound[] = [
       categoryName: 'შოთა არველაძე',
     },
   },
+  { kind: 'trueFalse', units: 1, session: TRUE_FALSE_SESSION_1 },
+  { kind: 'trueFalse', units: 1, session: TRUE_FALSE_SESSION_2 },
+  { kind: 'passChain', units: 1, players: PROMO_CHAIN_PLAYERS, puzzles: [PROMO_CHAIN_PUZZLES[0]] },
+  { kind: 'passChain', units: 1, players: PROMO_CHAIN_PLAYERS, puzzles: [PROMO_CHAIN_PUZZLES[1]] },
+  { kind: 'footballLogic', units: 1, session: FOOTBALL_LOGIC_SESSION },
+  { kind: 'imposter', units: 1, session: IMPOSTER_SESSION },
 ];
 
 export const PROMO_TOTAL_ROUNDS = PROMO_ROUNDS.length;
