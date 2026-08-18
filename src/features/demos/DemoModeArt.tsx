@@ -32,6 +32,7 @@ const ILLUSTRATED_MODE_SLUGS = new Set([
   "mini-golden-goal",
   "mini-career-race",
   "mini-stat-sniper",
+  "mini-guess-the-goal",
   "daily-moneyDrop",
   "daily-trueFalse",
   "daily-countdown",

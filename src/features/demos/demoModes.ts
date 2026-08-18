@@ -240,6 +240,15 @@ const ALL_MINI_GAME_DEMO_MODES: DemoModeCard[] = [
     group: "featured",
   },
   {
+    slug: "mini-guess-the-goal",
+    title: { en: "Guess the Goal", ka: "გამოიცანი გოლი" },
+    description: {
+      en: "An iconic goal replays on the tactics board — name it early for more points.",
+      ka: "ლეგენდარული გოლი ტაქტიკურ დაფაზე — ადრე გამოიცანი და მეტი ქულა აიღე.",
+    },
+    group: "featured",
+  },
+  {
     slug: "mini-stat-sniper",
     title: { en: "Stat Sniper", ka: "სტატ-სნაიპერი" },
     description: {
