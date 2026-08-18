@@ -544,6 +544,63 @@ export function ModeSelectionScreen({
             </div>
           </div>
         </div>
+
+        {/* Free Kicks (house-banked solo mode) */}
+        <div
+          onClick={() => router.push('/free-kicks')}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              router.push('/free-kicks');
+            }
+          }}
+          role="button"
+          tabIndex={0}
+          className="relative col-span-2 lg:col-span-3 cursor-pointer overflow-hidden rounded-[10px] md:min-h-0 p-3 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
+          style={{ backgroundColor: colors.green.base }}
+        >
+          {/* Desktop watermark icon (mobile uses inline icon below) */}
+          <Image
+            src="/assets/free-kicks-card-icon.png"
+            alt=""
+            width={200}
+            height={200}
+            className="hidden lg:block absolute right-3 bottom-2 h-32 w-32 object-contain opacity-90 pointer-events-none"
+          />
+          <div className="absolute top-2 right-2 lg:top-3 lg:right-3 z-20 rounded-full bg-brand-yellow px-2 py-0.5 text-[8px] lg:text-[10px] font-black uppercase tracking-wide text-black" style={poppins}>
+            {t('play.freeKicksNewBadge')}
+          </div>
+          <div className="relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left">
+            <h3
+              className="text-[0.95rem] leading-[1.05] uppercase text-white break-words [hyphens:auto] md:text-[clamp(1.5rem,2.4vw,2.25rem)]"
+              style={friendlyTitleStyle}
+            >
+              {t('play.freeKicksTitle')}
+            </h3>
+            <p className="mt-1 text-[10px] md:mt-1.5 md:text-base uppercase text-white/85" style={poppins}>{t('play.freeKicksSubtitle')}</p>
+
+            {/* Mobile: icon + PLAY */}
+            <div className="mt-1.5 flex flex-1 items-center justify-center lg:hidden">
+              <Image
+                src="/assets/free-kicks-card-icon.png"
+                alt=""
+                width={200}
+                height={200}
+                className="h-[96px] w-[96px] object-contain pointer-events-none opacity-95"
+              />
+            </div>
+            <div className="mt-1.5 flex h-[36px] w-full items-center justify-center rounded-[8px] bg-black text-[12px] uppercase tracking-wide text-white lg:hidden" style={poppins}>
+              {t('common.play')}
+            </div>
+
+            {/* Desktop: bottom-left PLAY */}
+            <div className="mt-auto hidden pt-4 lg:block">
+              <div className="flex h-[44px] w-[130px] items-center justify-center rounded-[8px] bg-black text-base uppercase tracking-wide text-white" style={poppins}>
+                {t('common.play')}
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* ─── 3. Objectives ─── */}
