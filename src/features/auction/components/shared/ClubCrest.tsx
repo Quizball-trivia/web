@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { findClubByName } from '@/lib/clubs';
+import { resolveClubCrestByName } from '@/lib/clubs';
 
 /**
  * A club crest resolved from a club name via the career-path resolver
@@ -19,7 +19,7 @@ export function ClubCrest({
   size?: number;
   className?: string;
 }) {
-  const resolved = findClubByName(club ?? null);
+  const resolved = resolveClubCrestByName(club ?? null);
   if (!resolved) return null;
   return (
     <Image

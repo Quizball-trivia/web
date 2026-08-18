@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import type { AuctionGameState } from '../../types';
 import type { AuctionActions } from '../../hooks/useAuctionGame';
 import { formatMoney, computeSquadChemistry, chemistryMultiplier, getFutureValue } from '../../data';
-import { findClubByName } from '@/lib/clubs';
+import { resolveClubCrestByName } from '@/lib/clubs';
 import { getLeague } from '../../data/leagues';
 import { POS_COLORS, poppins, withAlpha } from '../../constants/auction.constants';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -71,7 +71,7 @@ export function RevealScreen({
   const winner = state.players.find((p) => p.id === round.winnerId);
   const posColor = POS_COLORS[round.positionGroup];
   const isHumanWin = round.winnerId === humanPlayerId;
-  const club = findClubByName(round.footballer.club ?? null);
+  const club = resolveClubCrestByName(round.footballer.club ?? null);
   const league = getLeague(round.footballer.league ?? null);
   // Scoring uses the player's LATER-season value (the clue phase showed an
   // earlier season); the gap between what you paid and this is the profit.
@@ -157,11 +157,11 @@ export function RevealScreen({
                     {round.footballer.nationality}
                   </span>
                 </span>
-                {club && (
+                {round.footballer.club && (
                   <span className="flex items-center gap-1.5 rounded-[8px] bg-white/8 px-2 py-1">
                     <ClubCrest club={round.footballer.club} size={16} />
                     <span className="font-poppins text-[11px] font-semibold text-white/70">
-                      {club.label}
+                      {club?.label ?? round.footballer.club}
                     </span>
                   </span>
                 )}
