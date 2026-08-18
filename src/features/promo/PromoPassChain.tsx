@@ -31,11 +31,17 @@ const initials = (name: string) =>
     .slice(0, 2)
     .toUpperCase();
 
+import type { PromoChainLabels } from './promoContent';
+
 export function PromoPassChain({
+  players,
   puzzles,
+  labels,
   onComplete,
 }: {
+  players: ChainPlayer[];
   puzzles: ChainPuzzle[];
+  labels: PromoChainLabels;
   onComplete: (result: { solved: number; points: number }) => void;
 }) {
   const [chain, setChain] = useState<Link[]>([]);
@@ -47,9 +53,9 @@ export function PromoPassChain({
   const completedRef = useRef(false);
 
   const puzzle = puzzles[0];
-  const start = getPromoChainPlayer(puzzle.startId)!;
-  const end = getPromoChainPlayer(puzzle.endId)!;
-  const par = useMemo(() => solvePromoChain(puzzle.startId, puzzle.endId), [puzzle.startId, puzzle.endId]);
+  const start = getPromoChainPlayer(players, puzzle.startId)!;
+  const end = getPromoChainPlayer(players, puzzle.endId)!;
+  const par = useMemo(() => solvePromoChain(players, puzzle.startId, puzzle.endId), [players, puzzle.startId, puzzle.endId]);
 
   // Report completion as soon as the chain closes; the solved chain stays on
   // screen and the promo shell shows its own green next button.
@@ -62,19 +68,19 @@ export function PromoPassChain({
 
   const submit = useCallback(() => {
     if (done || !input.trim()) return;
-    const p = findPromoChainPlayer(input);
+    const p = findPromoChainPlayer(players, input);
     if (!p) {
-      setError('უცნობი ფეხბურთელი — სცადე სხვა');
+      setError(labels.unknown);
       return;
     }
     if (p.id === start.id || p.id === end.id || chain.some((l) => l.player.id === p.id)) {
-      setError('უკვე ჯაჭვშია');
+      setError(labels.already);
       return;
     }
     const last = chain.length ? chain[chain.length - 1].player : start;
     const via = promoShareClub(last, p);
     if (!via) {
-      setError(`${p.name} და ${last.name} ერთად არ უთამაშიათ`);
+      setError(labels.neverPlayed(p.name, last.name));
       return;
     }
     const nextChain = [...chain, { player: p, viaClub: via }];
@@ -90,7 +96,7 @@ export function PromoPassChain({
       setDone(true);
       setLastScore({ links, par, score });
     }
-  }, [done, input, chain, start, end, par]);
+  }, [done, input, chain, start, end, par, players, labels]);
 
   const resetPuzzle = () => {
     setChain([]);
@@ -105,7 +111,7 @@ export function PromoPassChain({
     <div className="mx-auto w-full max-w-md px-1">
       {/* Chain */}
       <div className="mt-2 flex flex-col items-center">
-        <ChainNode player={start} tone="start" />
+        <ChainNode player={start} tone="start" labelsForNode={labels} />
 
         <AnimatePresence initial={false}>
           {chain.map((link) => (
@@ -116,13 +122,13 @@ export function PromoPassChain({
               className="flex w-full flex-col items-center"
             >
               <Connector club={link.viaClub} />
-              <ChainNode player={link.player} tone="mid" />
+              <ChainNode player={link.player} tone="mid" labelsForNode={labels} />
             </motion.div>
           ))}
         </AnimatePresence>
 
         <Connector club={endClub} pending={!done} />
-        <ChainNode player={end} tone={done ? 'end-done' : 'end'} />
+        <ChainNode player={end} tone={done ? 'end-done' : 'end'} labelsForNode={labels} />
       </div>
 
       {/* Input / result */}
@@ -137,7 +143,7 @@ export function PromoPassChain({
                   setError(null);
                 }}
                 onKeyDown={(e) => e.key === 'Enter' && submit()}
-                placeholder={`ვინ უკავშირდება — ${(chain.length ? chain[chain.length - 1].player : start).name.split(' ').slice(-1)[0]}?`}
+                placeholder={`${labels.placeholderPrefix} ${(chain.length ? chain[chain.length - 1].player : start).name.split(' ').slice(-1)[0]}?`}
                 autoComplete="off"
                 spellCheck={false}
                 className="font-poppins h-14 w-full rounded-[20px] border-none bg-brand-blue px-5 text-center text-base text-white outline-none placeholder:text-white/55 focus:outline-none"
@@ -153,13 +159,13 @@ export function PromoPassChain({
                 className="font-poppins flex h-14 shrink-0 items-center rounded-[20px] bg-brand-yellow px-5 text-base font-black uppercase text-surface-deep"
                 style={{ boxShadow: '0 1.76px 6.334px 1.32px rgba(255, 229, 0, 0.25)' }}
               >
-                დამატება
+                {labels.add}
               </button>
             </div>
             <div className="flex min-h-[20px] items-center justify-between">
               <span className="font-poppins text-xs font-bold text-brand-red">{error ?? ''}</span>
               <button type="button" onClick={resetPuzzle} className="flex items-center gap-1 font-poppins text-[11px] font-black uppercase text-white/40 hover:text-white/70">
-                <RefreshCw className="size-3" /> თავიდან
+                <RefreshCw className="size-3" /> {labels.reset}
               </button>
             </div>
           </div>
@@ -167,13 +173,13 @@ export function PromoPassChain({
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
             <div className="rounded-2xl border-2 border-brand-green/40 bg-brand-green/10 p-4 text-center">
               <div className="flex items-center justify-center gap-2 font-poppins text-lg font-black uppercase text-brand-green">
-                <Check className="size-5" /> დაკავშირდა!
+                <Check className="size-5" /> {labels.linked}
               </div>
               {lastScore && (
                 <div className="mt-2 flex items-center justify-center gap-3 font-poppins text-xs font-bold text-white/60">
-                  <span>{lastScore.links} რგოლი</span>
+                  <span>{lastScore.links} {labels.linksWord}</span>
                   {lastScore.links === lastScore.par && (
-                    <span className="rounded-full bg-brand-yellow/15 px-2 py-1 text-brand-yellow">იდეალურია!</span>
+                    <span className="rounded-full bg-brand-yellow/15 px-2 py-1 text-brand-yellow">{labels.perfect}</span>
                   )}
                   <span className="font-black text-brand-green">+{lastScore.score}</span>
                 </div>
@@ -186,7 +192,7 @@ export function PromoPassChain({
   );
 }
 
-function ChainNode({ player, tone }: { player: ChainPlayer; tone: 'start' | 'mid' | 'end' | 'end-done' }) {
+function ChainNode({ player, tone, labelsForNode }: { player: ChainPlayer; tone: 'start' | 'mid' | 'end' | 'end-done'; labelsForNode: { start: string; target: string } }) {
   const [imgFailed, setImgFailed] = useState(false);
   const styles: Record<string, string> = {
     start: 'border-brand-yellow bg-brand-yellow/10 text-brand-yellow',
@@ -212,7 +218,7 @@ function ChainNode({ player, tone }: { player: ChainPlayer; tone: 'start' | 'mid
       <div className="min-w-0">
         <div className="truncate font-poppins text-sm font-black text-white">{player.name}</div>
         <div className="truncate font-poppins text-[10px] font-semibold text-white/40">
-          {tone === 'start' ? 'სტარტი' : tone === 'end' || tone === 'end-done' ? 'სამიზნე' : player.clubs.slice(0, 3).join(' · ')}
+          {tone === 'start' ? labelsForNode.start : tone === 'end' || tone === 'end-done' ? labelsForNode.target : player.clubs.slice(0, 3).join(' · ')}
         </div>
       </div>
     </div>

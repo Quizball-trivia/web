@@ -14,7 +14,8 @@ import type {
   MatchCluesGuessAckPayload,
   ServerToClientEvents,
 } from '@/lib/realtime/socket.types';
-import { PROMO_CLUES_ACCEPTED, PROMO_PUT_IN_ORDER_CORRECT_IDS } from './promoQuiz.data';
+import { PROMO_PACK_KA } from './promoQuiz.data';
+import type { PromoContentPack } from './promoContent';
 import { PROMO_FROZEN_TIME, PROMO_MATCH_ID, usePromoQuiz } from './usePromoQuiz';
 import { PromoLocaleDefault } from './PromoLocaleDefault';
 import { PromoPassChain } from './PromoPassChain';
@@ -73,9 +74,9 @@ function createPromoSocket(): Socket<ServerToClientEvents, ClientToServerEvents>
   return stub;
 }
 
-function isAcceptedCluesGuess(raw: string): boolean {
+function isAcceptedCluesGuess(accepted: string[], raw: string): boolean {
   const guess = raw.trim().toLowerCase();
-  return guess.length > 0 && PROMO_CLUES_ACCEPTED.includes(guess);
+  return guess.length > 0 && accepted.includes(guess);
 }
 
 type PromoQuizApi = ReturnType<typeof usePromoQuiz>;
@@ -85,7 +86,7 @@ type PromoQuizApi = ReturnType<typeof usePromoQuiz>;
  * question via the parent's key, so all round-local state (clue countdown,
  * wrong-guess reveals) starts fresh without effect-driven resets.
  */
-function PromoSpecialRound({ quiz }: { quiz: PromoQuizApi }) {
+function PromoSpecialRound({ quiz, pack }: { quiz: PromoQuizApi; pack: PromoContentPack }) {
   const current = quiz.current;
   const isClues = current.kind === 'clues';
   const clueCount = isClues ? current.question.clues.length : 0;
@@ -113,11 +114,13 @@ function PromoSpecialRound({ quiz }: { quiz: PromoQuizApi }) {
   // Latest-value refs so the emit listener subscribes exactly once.
   const revealCountRef = useRef(revealCount);
   const submitRef = useRef(quiz.submitSpecial);
+  const packRef = useRef(pack);
   const qIndexRef = useRef(quiz.index);
   useEffect(() => {
     revealCountRef.current = revealCount;
     submitRef.current = quiz.submitSpecial;
     qIndexRef.current = quiz.index;
+    packRef.current = pack;
   });
 
   useEffect(() => {
@@ -128,7 +131,7 @@ function PromoSpecialRound({ quiz }: { quiz: PromoQuizApi }) {
       if (detail.event === 'match:clues_answer') {
         const payload = detail.args[0] as { guess?: string; giveUp?: boolean } | undefined;
         if (payload?.giveUp) return; // no give-up path in promo mode
-        if (isAcceptedCluesGuess(payload?.guess ?? '')) {
+        if (isAcceptedCluesGuess(packRef.current.cluesAccepted, payload?.guess ?? '')) {
           const clueIdx = Math.max(0, revealCountRef.current - 1);
           submitRef.current(true, { points: 100 - 20 * clueIdx, clueIndex: clueIdx });
         } else {
@@ -148,8 +151,9 @@ function PromoSpecialRound({ quiz }: { quiz: PromoQuizApi }) {
       if (detail.event === 'match:put_in_order_answer') {
         const payload = detail.args[0] as { orderedItemIds?: string[] } | undefined;
         const submitted = payload?.orderedItemIds ?? [];
-        const total = PROMO_PUT_IN_ORDER_CORRECT_IDS.length;
-        const matched = submitted.filter((id, i) => id === PROMO_PUT_IN_ORDER_CORRECT_IDS[i]).length;
+        const correctIds = packRef.current.pioCorrectIds;
+        const total = correctIds.length;
+        const matched = submitted.filter((id, i) => id === correctIds[i]).length;
         submitRef.current(matched === total, {
           points: Math.round((matched / total) * 100),
           submittedOrderIds: submitted,
@@ -189,7 +193,7 @@ function PromoSpecialRound({ quiz }: { quiz: PromoQuizApi }) {
 }
 
 /** Shota avatar with a graceful fallback until the real file is dropped in. */
-function PromoAvatar({ size = 96 }: { size?: number }) {
+function PromoAvatar({ size = 96, monogram = 'შ', alt = 'შოთა არველაძე' }: { size?: number; monogram?: string; alt?: string }) {
   const [failed, setFailed] = useState(false);
   if (failed) {
     return (
@@ -197,7 +201,7 @@ function PromoAvatar({ size = 96 }: { size?: number }) {
         className="flex items-center justify-center rounded-full border-2 border-brand-yellow bg-brand-yellow/10 font-fun font-black text-brand-yellow"
         style={{ width: size, height: size, fontSize: size * 0.42 }}
       >
-        შ
+        {monogram}
       </div>
     );
   }
@@ -205,29 +209,29 @@ function PromoAvatar({ size = 96 }: { size?: number }) {
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src="/promo/shota-avatar.png"
-      alt="შოთა არველაძე"
+      alt={alt}
       width={size}
       height={size}
       onError={() => setFailed(true)}
-      className="rounded-full border-2 border-brand-yellow object-cover"
-      style={{ width: size, height: size }}
+      className="object-contain"
+      style={{ width: size * 1.5, height: size * 1.5 }}
     />
   );
 }
 
-function PromoResultsScreen({ quiz, playerName }: { quiz: PromoQuizApi; playerName: string }) {
+function PromoResultsScreen({ quiz, pack }: { quiz: PromoQuizApi; pack: PromoContentPack }) {
   const accuracy = quiz.totalUnits > 0 ? Math.round((quiz.correctCount / quiz.totalUnits) * 100) : 0;
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-6 px-6 text-center">
-      <PromoLocaleDefault />
-      <PromoAvatar size={104} />
-      <div className="font-fun text-2xl font-black uppercase text-white">{playerName}</div>
+      <PromoLocaleDefault locale={pack.localePin} />
+      <PromoAvatar size={104} monogram={pack.avatarMonogram} alt={pack.playerName} />
+      <div className="font-fun text-2xl font-black uppercase text-white">{pack.playerName}</div>
 
       <div
         className="w-full max-w-sm rounded-3xl bg-brand-blue p-6"
         style={{ boxShadow: '0 1.76px 6.334px 1.32px rgba(22, 69, 255, 0.25)' }}
       >
-        <div className="font-fun text-xs uppercase tracking-[0.3em] text-white/70">საბოლოო ქულა</div>
+        <div className="font-fun text-xs uppercase tracking-[0.3em] text-white/70">{pack.strings.finalScore}</div>
         <div className="mt-2 font-fun text-6xl font-black text-brand-yellow" style={poppins}>
           {quiz.score}
         </div>
@@ -237,7 +241,7 @@ function PromoResultsScreen({ quiz, playerName }: { quiz: PromoQuizApi; playerNa
               {quiz.correctCount}/{quiz.totalUnits}
             </div>
             <div className="mt-1 font-fun text-[10px] font-black uppercase tracking-[0.18em] text-white/60">
-              სწორი პასუხი
+              {pack.strings.correctLabel}
             </div>
           </div>
           <div className="rounded-2xl bg-black/25 px-4 py-3">
@@ -245,7 +249,7 @@ function PromoResultsScreen({ quiz, playerName }: { quiz: PromoQuizApi; playerNa
               {accuracy}%
             </div>
             <div className="mt-1 font-fun text-[10px] font-black uppercase tracking-[0.18em] text-white/60">
-              სიზუსტე
+              {pack.strings.accuracyLabel}
             </div>
           </div>
         </div>
@@ -256,14 +260,14 @@ function PromoResultsScreen({ quiz, playerName }: { quiz: PromoQuizApi; playerNa
         onClick={quiz.restart}
         className="rounded-xl bg-brand-green px-8 py-4 font-fun text-lg font-black uppercase text-white transition-transform active:scale-95"
       >
-        თავიდან თამაში
+        {pack.strings.playAgain}
       </button>
     </div>
   );
 }
 
-export function PromoQuizScreen({ playerName = 'შოთა' }: { playerName?: string }) {
-  const quiz = usePromoQuiz();
+export function PromoQuizScreen({ pack = PROMO_PACK_KA }: { pack?: PromoContentPack }) {
+  const quiz = usePromoQuiz(pack);
 
   // Install the stub socket before any interaction can produce an emit. The
   // panels only emit on user input, which cannot precede the first effect.
@@ -282,18 +286,18 @@ export function PromoQuizScreen({ playerName = 'შოთა' }: { playerName?: 
   const noop = () => {};
 
   if (quiz.finished) {
-    return <PromoResultsScreen quiz={quiz} playerName={playerName} />;
+    return <PromoResultsScreen quiz={quiz} pack={pack} />;
   }
 
 
   return (
     <div className="relative flex min-h-dvh w-full flex-col">
-      <PromoLocaleDefault />
+      <PromoLocaleDefault locale={pack.localePin} />
       {/* Scoreboard — replaces the ranked HUD (no pitch, no opponent). */}
       <div className="flex items-center justify-center gap-6 px-4 pt-5 sm:pt-7">
         <div className="flex flex-col items-center gap-1">
           <span className="font-fun text-[10px] uppercase tracking-[0.24em] text-white/45">
-            {playerName}
+            {pack.playerName}
           </span>
           <motion.span
             key={quiz.score}
@@ -334,13 +338,15 @@ export function PromoQuizScreen({ playerName = 'შოთა' }: { playerName?: 
                 onAnswer={quiz.answerMultipleChoice}
               />
             ) : current.kind === 'putInOrder' || current.kind === 'clues' ? (
-              <PromoSpecialRound quiz={quiz} />
+              <PromoSpecialRound quiz={quiz} pack={pack} />
             ) : current.kind === 'passChain' ? (
               <>
                 <EmbeddedCounterPill current={quiz.index + 1} total={quiz.totalRounds} />
                 <div className="mt-3">
                   <PromoPassChain
                     key={`chain-${quiz.nonce}`}
+                    players={current.players}
+                    labels={pack.chainLabels}
                     puzzles={current.puzzles}
                     onComplete={({ solved, points }) =>
                       quiz.completeEmbedded({
@@ -418,7 +424,7 @@ export function PromoQuizScreen({ playerName = 'შოთა' }: { playerName?: 
               className="w-full max-w-sm rounded-xl bg-brand-green px-8 py-4 font-fun text-lg font-black uppercase text-white shadow-lg transition-transform active:scale-95"
               style={poppins}
             >
-              {quiz.isLast ? 'დასრულება' : 'შემდეგი კითხვა'}
+              {quiz.isLast ? pack.strings.finish : pack.strings.nextQuestion}
             </button>
           </motion.div>
         )}

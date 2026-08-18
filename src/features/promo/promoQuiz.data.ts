@@ -71,7 +71,7 @@ const IMPOSTER_SESSION: ImposterSession = {
       category: 'შოთა არველაძე',
       difficulty: 'hard',
       prompt:
-        'ამ გუნდებიდან ექვსს შოთა არველაძემ საკლუბო კარიერაში ჰეტრიკი გაუტანა — მონიშნე 4 „თვითმარქვია“, რომლებსაც არ გაუტანია',
+        'ამ გუნდებიდან ექვსს შოთა არველაძემ საკლუბო კარიერაში ჰეტრიკი გაუტანა — მონიშნე ეს 6 გუნდი',
       options: [
         { id: 'feyenoord', text: 'ფეიენოორდი' },
         { id: 'heerenveen', text: 'ჰერენვენი' },
@@ -84,10 +84,10 @@ const IMPOSTER_SESSION: ImposterSession = {
         { id: 'istanbulspor', text: 'ისტანბულსპორი' },
         { id: 'alkmaar', text: 'ალკმაარი' },
       ],
-      // Hat-tricks (per the owner's editors, 6-4 split): Feyenoord,
-      // Heerenveen, Groningen, Roosendaal, Roda, İstanbulspor. The imposters
-      // are the other four.
-      correctOptionIds: ['vitesse', 'forfar', 'karsiyaka', 'alkmaar'],
+      // Per the owner: the player SELECTS the six hat-trick teams
+      // (Feyenoord, Heerenveen, Groningen, Roosendaal, Roda, İstanbulspor);
+      // the other four are the decoys left unselected.
+      correctOptionIds: ['feyenoord', 'heerenveen', 'groningen', 'roosendaal', 'roda', 'istanbulspor'],
     },
   ],
 };
@@ -255,3 +255,37 @@ export const PROMO_CLUES_ACCEPTED = [
   'musa dembele',
   'dembele',
 ];
+
+import type { PromoContentPack } from './promoContent';
+
+export const PROMO_PACK_KA: PromoContentPack = {
+  id: 'ka',
+  localePin: 'ka',
+  playerName: 'შოთა',
+  avatarMonogram: 'შ',
+  strings: {
+    nextQuestion: 'შემდეგი კითხვა',
+    finish: 'დასრულება',
+    finalScore: 'საბოლოო ქულა',
+    playAgain: 'თავიდან თამაში',
+    correctLabel: 'სწორი პასუხი',
+    accuracyLabel: 'სიზუსტე',
+  },
+  chainLabels: {
+    placeholderPrefix: 'ვინ უკავშირდება —',
+    add: 'დამატება',
+    reset: 'თავიდან',
+    linked: 'დაკავშირდა!',
+    perfect: 'იდეალურია!',
+    linksWord: 'რგოლი',
+    start: 'სტარტი',
+    target: 'სამიზნე',
+    unknown: 'უცნობი ფეხბურთელი — სცადე სხვა',
+    already: 'უკვე ჯაჭვშია',
+    neverPlayed: (a, b) => `${a} და ${b} ერთად არ უთამაშიათ`,
+  },
+  rounds: PROMO_ROUNDS,
+  pioCorrectIds: PROMO_PUT_IN_ORDER_CORRECT_IDS,
+  cluesAnswer: PROMO_CLUES_ANSWER,
+  cluesAccepted: PROMO_CLUES_ACCEPTED,
+};

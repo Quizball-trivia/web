@@ -7,14 +7,8 @@ import type {
   MatchRoundResultPayload,
   MatchRoundResultPlayer,
 } from '@/lib/realtime/socket.types';
-import {
-  PROMO_CLUES_ANSWER,
-  PROMO_PUT_IN_ORDER_CORRECT_IDS,
-  PROMO_ROUNDS,
-  PROMO_TOTAL_ROUNDS,
-  PROMO_TOTAL_UNITS,
-  type PromoRound,
-} from './promoQuiz.data';
+import { type PromoRound } from './promoQuiz.data';
+import type { PromoContentPack } from './promoContent';
 
 export const PROMO_MATCH_ID = 'promo-match';
 const PROMO_SELF_ID = 'promo-self';
@@ -72,7 +66,9 @@ function isPossessionRound(
   return (POSSESSION_KINDS as readonly string[]).includes(round.kind);
 }
 
-export function usePromoQuiz() {
+export function usePromoQuiz(pack: PromoContentPack) {
+  const rounds = pack.rounds;
+  const totalUnits = rounds.reduce((sum, r) => sum + r.units, 0);
   const [index, setIndex] = useState(0);
   const [stage, setStage] = useState<PromoStage>('question');
   const [score, setScore] = useState(0);
@@ -89,8 +85,8 @@ export function usePromoQuiz() {
   // panel instance per question so their internal state resets cleanly.
   const [nonce, setNonce] = useState(0);
 
-  const current = PROMO_ROUNDS[index];
-  const isLast = index >= PROMO_ROUNDS.length - 1;
+  const current = rounds[index];
+  const isLast = index >= rounds.length - 1;
   const revealed = stage === 'revealed';
 
   const answerStates = useMemo<AnswerStateArray>(() => {
@@ -118,14 +114,14 @@ export function usePromoQuiz() {
       pointsEarned: lastPoints,
       ...(current.kind === 'clues'
         ? { clueIndex: lastClueIndex ?? 0,
-            cluesDisplayAnswer: { en: PROMO_CLUES_ANSWER, ka: PROMO_CLUES_ANSWER } }
+            cluesDisplayAnswer: { en: pack.cluesAnswer, ka: pack.cluesAnswer } }
         : {}),
       ...(current.kind === 'putInOrder'
         ? { foundCount: lastFoundCount ?? 0,
-            submittedOrderIds: lastOrderIds ?? PROMO_PUT_IN_ORDER_CORRECT_IDS }
+            submittedOrderIds: lastOrderIds ?? pack.pioCorrectIds }
         : {}),
     } as MatchAnswerAckPayload;
-  }, [stage, current, index, selectedAnswer, lastCorrect, score, lastPoints, lastClueIndex, lastFoundCount, lastOrderIds]);
+  }, [stage, current, index, selectedAnswer, lastCorrect, score, lastPoints, lastClueIndex, lastFoundCount, lastOrderIds, pack]);
 
   const myRound = useMemo<MatchRoundResultPlayer | null>(() => {
     if (stage !== 'revealed' || !isPossessionRound(current)) return null;
@@ -133,11 +129,11 @@ export function usePromoQuiz() {
       selectedIndex: selectedAnswer,
       ...(current.kind === 'putInOrder'
         ? { foundCount: lastFoundCount ?? 0,
-            submittedOrderIds: lastOrderIds ?? PROMO_PUT_IN_ORDER_CORRECT_IDS }
+            submittedOrderIds: lastOrderIds ?? pack.pioCorrectIds }
         : {}),
       ...(current.kind === 'clues' ? { clueIndex: lastClueIndex ?? 0 } : {}),
     });
-  }, [stage, current, lastCorrect, lastPoints, score, selectedAnswer, lastClueIndex, lastFoundCount, lastOrderIds]);
+  }, [stage, current, lastCorrect, lastPoints, score, selectedAnswer, lastClueIndex, lastFoundCount, lastOrderIds, pack]);
 
   const roundResult = useMemo<MatchRoundResultPayload | null>(() => {
     if (stage !== 'revealed' || !myRound || !isPossessionRound(current)) return null;
@@ -150,7 +146,7 @@ export function usePromoQuiz() {
               kind: 'putInOrder' as const,
               // Items are displayed scrambled; the authoritative order comes
               // from the correct-IDs list, not the display order.
-              correctOrder: PROMO_PUT_IN_ORDER_CORRECT_IDS.map((id, i) => {
+              correctOrder: pack.pioCorrectIds.map((id, i) => {
                 const item = (current.question.items as Array<{ id: string; label: string; details?: string | null; emoji?: string | null }>)
                   .find((candidate) => candidate.id === id);
                 return {
@@ -164,7 +160,7 @@ export function usePromoQuiz() {
             }
           : {
               kind: 'clues' as const,
-              displayAnswer: { en: PROMO_CLUES_ANSWER, ka: PROMO_CLUES_ANSWER },
+              displayAnswer: { en: pack.cluesAnswer, ka: pack.cluesAnswer },
             };
 
     return {
@@ -174,7 +170,7 @@ export function usePromoQuiz() {
       reveal,
       players: { [PROMO_SELF_ID]: myRound },
     } as MatchRoundResultPayload;
-  }, [stage, current, index, myRound]);
+  }, [stage, current, index, myRound, pack]);
 
   const reveal = useCallback(
     (isCorrect: boolean, points: number) => {
@@ -276,8 +272,8 @@ export function usePromoQuiz() {
     isLast,
     finished,
     nonce,
-    totalRounds: PROMO_TOTAL_ROUNDS,
-    totalUnits: PROMO_TOTAL_UNITS,
+    totalRounds: rounds.length,
+    totalUnits,
     answerMultipleChoice,
     submitSpecial,
     completeEmbedded,
