@@ -161,7 +161,8 @@ export const PROMO_ROUNDS: PromoRound[] = [
       id: 'promo-q4',
       prompt: 'რომელმა თანაგუნდელმა გაიტანა ამ მატჩში ჰეტრიკი?',
       options: ['ლიტმანენი', 'ტიჯანი ბაბანგიდა', 'ლაუდრუპი', 'რონალდ დე ბური'],
-      correctIndex: 3,
+      // Owner corrected 2026-08-18: Litmanen is in the photo and is the answer.
+      correctIndex: 0,
       categoryName: 'შოთა არველაძე',
       image: {
         url: '/promo/shota-hattrick-match.jpg',
