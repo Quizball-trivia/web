@@ -122,6 +122,11 @@ export function GuessTheGoal({ backHref }: { backHref?: string } = {}) {
     let raf = 0;
     let last = performance.now();
     const tick = (now: number) => {
+      if (document.visibilityState !== 'visible') {
+        last = now;
+        raf = requestAnimationFrame(tick);
+        return;
+      }
       // dt is clamped so the replay pauses (rather than skipping ahead and
       // burning the early-answer bonus) while the tab is hidden/throttled.
       const dt = Math.min(0.05, (now - last) / 1000);
