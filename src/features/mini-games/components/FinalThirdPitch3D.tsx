@@ -838,35 +838,65 @@ function useCrowdTexture(): THREE.Texture {
 
 function useHoardingMap(metres: number): THREE.Texture {
   return useMemo(() => {
-    // Brand hoarding: QUIZBALL wordmark tiles on brand blue.
+    // Brand hoarding: QUIZBALL wordmark tiles on brand blue. Canvas aspect
+    // matches the physical tile (HOARD_LOGO_M × visible face height) so the
+    // artwork isn't squeezed, and the repeat count is an integer so no tile
+    // ends mid-wordmark.
     const canvas = document.createElement('canvas');
     const W = 512;
-    const H = 128;
+    const H = Math.round((W * (HOARD_H - 0.14)) / HOARD_LOGO_M);
     canvas.width = W;
     canvas.height = H;
     const ctx = canvas.getContext('2d')!;
-    ctx.fillStyle = '#1645FF';
-    ctx.fillRect(0, 0, W, H);
-    ctx.fillStyle = '#FFE500';
-    ctx.beginPath();
-    ctx.arc(84, H / 2, 30, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = '#1645FF';
-    ctx.font = '900 34px Poppins, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('⚽', 84, H / 2 + 2);
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '900 52px Poppins, sans-serif';
-    ctx.textAlign = 'left';
-    ctx.letterSpacing = '4px';
-    ctx.fillText('QUIZBALL', 136, H / 2 + 2);
+    const draw = () => {
+      ctx.fillStyle = '#1645FF';
+      ctx.fillRect(0, 0, W, H);
+      // Drawn ball roundel — vector shapes only, no emoji (color-emoji fonts
+      // ignore fillStyle and vary per OS).
+      const cx = 84;
+      const cy = H / 2;
+      ctx.fillStyle = '#FFE500';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 30, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = '#1645FF';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 10, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = '#1645FF';
+      ctx.lineWidth = 4;
+      for (let i = 0; i < 5; i += 1) {
+        const a = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
+        ctx.beginPath();
+        ctx.moveTo(cx + Math.cos(a) * 10, cy + Math.sin(a) * 10);
+        ctx.lineTo(cx + Math.cos(a) * 24, cy + Math.sin(a) * 24);
+        ctx.stroke();
+      }
+      // Manual letter advance instead of ctx.letterSpacing (Safari < 18.4
+      // ignores the property and would render a narrower wordmark).
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '900 52px Poppins, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      let x = 136;
+      for (const ch of 'QUIZBALL') {
+        ctx.fillText(ch, x, cy + 2);
+        x += ctx.measureText(ch).width + 4;
+      }
+    };
+    draw();
     const map = new THREE.CanvasTexture(canvas);
     map.colorSpace = THREE.SRGBColorSpace;
     map.wrapS = THREE.RepeatWrapping;
     map.wrapT = THREE.ClampToEdgeWrapping;
     map.anisotropy = 4;
-    map.repeat.set(Math.max(1, metres / HOARD_LOGO_M), 1);
+    map.repeat.set(Math.max(1, Math.round(metres / HOARD_LOGO_M)), 1);
+    // On a cold load the first draw may use the sans-serif fallback; redraw
+    // once the real font is in.
+    void document.fonts.ready.then(() => {
+      draw();
+      map.needsUpdate = true;
+    });
     return map;
   }, [metres]);
 }
