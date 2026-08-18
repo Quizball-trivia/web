@@ -910,7 +910,10 @@
     "preparingMatch": "მატჩი მზადდება...",
     "toastCategoriesLoadFail": "კატეგორიების ჩატვირთვა ვერ მოხერხდა. გთხოვთ, სცადოთ თავიდან.",
     "toastQuestionsLoadFail": "კითხვების ჩატვირთვა ვერ მოხერხდა. გთხოვთ, სცადოთ თავიდან.",
-    "toastNoQuestions": "ამ კატეგორიაში კითხვები არ არის."
+    "toastNoQuestions": "ამ კატეგორიაში კითხვები არ არის.",
+    "freeKicksTitle": "თავისუფალი დარტყმები",
+    "freeKicksSubtitle": "აჯობე მეკარეს, გაზარდე ბანკი",
+    "freeKicksNewBadge": "ახალი"
   },
   "leaderboard": {
     "title": "ლიდერბორდი",

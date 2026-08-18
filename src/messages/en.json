@@ -695,7 +695,10 @@
     "preparingMatch": "Preparing Match...",
     "toastCategoriesLoadFail": "Unable to load categories. Please try again.",
     "toastQuestionsLoadFail": "Unable to load questions. Please try again.",
-    "toastNoQuestions": "No questions available for this category."
+    "toastNoQuestions": "No questions available for this category.",
+    "freeKicksTitle": "Free Kicks",
+    "freeKicksSubtitle": "Beat the keeper, ride the pot",
+    "freeKicksNewBadge": "New"
   },
   "leaderboard": {
     "title": "Leaderboard",

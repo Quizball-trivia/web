@@ -32,6 +32,15 @@ import { getSoundLevels, playCash, playKick, setCrowdLevel, setCrowdMood, setSfx
 import { CoinIcon } from '@/features/store/components/CoinIcon';
 import { ResultSplash } from '@/features/daily/components/ResultSplash';
 import { useResultSplash } from '@/features/daily/components/useResultSplash';
+import { useQueryClient } from '@tanstack/react-query';
+import { useStoreWallet } from '@/lib/queries/store.queries';
+import { queryKeys } from '@/lib/queries/queryKeys';
+import {
+  freeKicksApi,
+  FreeKicksApiError,
+  type FreeKicksState,
+  type FreeKicksZone,
+} from '@/lib/repositories/freeKicks.repo';
 
 const BALL_URL = '/assets/brand/goal-ball-small.webp';
 const MIN_STAKE = 5;
@@ -243,7 +252,7 @@ interface TickerEntry {
   minutesAgo: number;
 }
 
-export function FinalThird({ backHref }: { backHref?: string } = {}) {
+export function FinalThird({ backHref, live = false }: { backHref?: string; live?: boolean } = {}) {
   const t = useMiniT();
   const miniLocale = useMiniLocale();
   const trivia = useMemo(() => getTrivia(miniLocale), [miniLocale]);
@@ -275,8 +284,80 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
   const selectedRef = useRef<number | null>(null);
   const [qLeft, setQLeft] = useState(QUESTION_S);
 
-  // ── Fake stadium: live-wins ticker + drifting player count. Cosmetic only.
+  // ── Live (real-coins) mode ──
+  const queryClient = useQueryClient();
+  const { data: wallet } = useStoreWallet();
+  const liveStateRef = useRef<FreeKicksState | null>(null);
+  const [liveQuestion, setLiveQuestion] = useState<{
+    id: string;
+    q: string;
+    options: string[];
+    optionIds: string[];
+    answer: number;
+    deadlineLocalMs: number;
+  } | null>(null);
+  const liveBusyRef = useRef(false);
+  const [liveError, setLiveError] = useState<string | null>(null);
+  const [liveStats, setLiveStats] = useState<{
+    topRuns: Array<{ name: string; mult: number }>;
+  } | null>(null);
+
+  const applyLiveState = (state: FreeKicksState) => {
+    liveStateRef.current = state;
+    setPot(state.pot_coins);
+    setRoundStake(state.stake_coins);
+    setAttack(state.attack);
+    setOpenCount(state.open_count);
+    setAnswerLocked(state.answer_locked);
+  };
+
+  const syncLiveQuestion = (state: FreeKicksState) => {
+    if (!state.question) {
+      setLiveQuestion(null);
+      return;
+    }
+    const skewMs = Date.parse(state.server_now) - Date.now();
+    setLiveQuestion({
+      id: state.question.question_id,
+      q: state.question.prompt[miniLocale] ?? state.question.prompt.en,
+      options: state.question.options.map((option) => option.text[miniLocale] ?? option.text.en),
+      optionIds: state.question.options.map((option) => option.id),
+      answer: -1,
+      deadlineLocalMs: Date.parse(state.question.deadline_at) - skewMs,
+    });
+  };
+
+  const resyncLive = async () => {
+    const state = await freeKicksApi.current().catch(() => null);
+    if (!state) {
+      setBeat('bet');
+      return;
+    }
+    applyLiveState(state);
+    if (state.phase === 'question' && state.question) {
+      syncLiveQuestion(state);
+      setBeat('question');
+    } else if (state.phase === 'post_goal') {
+      setScored(true);
+      setBeat('goal');
+    } else {
+      setBeat('decide');
+    }
+  };
+
+  const handleLiveError = (error: unknown) => {
+    if (error instanceof FreeKicksApiError) {
+      setLiveError(error.message);
+      if (error.status === 409) void resyncLive();
+    } else {
+      setLiveError('Connection error — retrying');
+    }
+  };
+
+  // ── Fake stadium: live-wins ticker + drifting player count. Demo only —
+  // live mode polls /free-kicks/stats instead.
   useEffect(() => {
+    if (live) return;
     const push = () => {
       const rnd = seeded(Date.now() % 1_000_000);
       const mult = [1.2, 1.5, 1.5, 1.875, 1.875, 2.34, 2.93, 4.58][Math.floor(rnd() * 8)];
@@ -295,7 +376,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
     push();
     const id = window.setInterval(push, 4200);
     return () => window.clearInterval(id);
-  }, []);
+  }, [live]);
 
   useEffect(() => {
     const timers = timersRef.current;
@@ -320,6 +401,52 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
     timersRef.current.push(window.setTimeout(fn, ms));
   };
 
+  // Live: resume an in-flight round on mount (server is the source of truth).
+  useEffect(() => {
+    if (!live) return;
+    void resyncLive();
+    // resyncLive is stable per-mount; run once when live mode mounts.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Live: heartbeat while a round is active so the sweeper knows we're here.
+  useEffect(() => {
+    if (!live || beat === 'bet' || beat === 'cashed') return;
+    const id = window.setInterval(() => {
+      void freeKicksApi.heartbeat().catch(() => undefined);
+    }, 10_000);
+    return () => window.clearInterval(id);
+  }, [live, beat]);
+
+  // Live: the social strip and leaderboard poll REAL numbers.
+  useEffect(() => {
+    if (!live) return;
+    let cancelled = false;
+    const poll = async () => {
+      const stats = await freeKicksApi.stats().catch(() => null);
+      if (!stats || cancelled) return;
+      setPlayingNow(stats.playing_now);
+      setTicker(
+        stats.recent_wins.slice(0, 4).map((win, index) => ({
+          id: (tickerId.current += 1) + index,
+          name: win.nickname,
+          amount: win.amount,
+          mult: win.run_mult,
+          minutesAgo: Math.max(0, Math.round((Date.now() - Date.parse(win.settled_at)) / 60_000)),
+        }))
+      );
+      setLiveStats({
+        topRuns: stats.top_runs.map((run) => ({ name: run.nickname, mult: run.run_mult })),
+      });
+    };
+    void poll();
+    const id = window.setInterval(() => void poll(), 10_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, [live]);
+
   // Leaving a round (cash-out or back to betting) resets the scene: ball on
   // the spot, taker and keeper back to their idle poses.
   useEffect(() => {
@@ -333,30 +460,54 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
   useEffect(() => {
     if (beat !== 'question') return;
     const started = Date.now();
+    const deadlineMs = live && liveQuestion ? liveQuestion.deadlineLocalMs : started + QUESTION_S * 1000;
     const tick = window.setInterval(() => {
-      setQLeft(Math.max(0, QUESTION_S - (Date.now() - started) / 1000));
+      setQLeft(Math.min(QUESTION_S, Math.max(0, (deadlineMs - Date.now()) / 1000)));
     }, 100);
     const to = window.setTimeout(() => {
       if (selectedRef.current !== null) return;
       selectedRef.current = -1;
       setSelected(-1);
       fire('wrong', 'right');
+      if (live) {
+        // Let the server score the timeout (late → zones reset) so the round
+        // row and the UI can never disagree.
+        const state = liveStateRef.current;
+        if (state && liveQuestion) {
+          void freeKicksApi
+            .answer(liveQuestion.id, liveQuestion.optionIds[0], state.state_version)
+            .then((result) => {
+              applyLiveState(result.state);
+              later(() => {
+                setLastAnswer('reset');
+                setLiveQuestion(null);
+                setBeat('decide');
+              }, ANSWER_HOLD_MS);
+            })
+            .catch(handleLiveError);
+        }
+        return;
+      }
       later(() => {
         setLastAnswer('reset');
         setOpenCount(MIN_OPEN);
         setAnswerLocked(true);
         setBeat('decide');
       }, ANSWER_HOLD_MS);
-    }, QUESTION_S * 1000);
+    }, Math.max(400, deadlineMs - started));
     return () => {
       window.clearInterval(tick);
       window.clearTimeout(to);
     };
     // Restart only when a new question is dealt.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [beat, qIndex]);
+  }, [beat, qIndex, liveQuestion?.id]);
 
-  const question: TriviaQuestion = trivia[qIndex % trivia.length];
+  const demoQuestion: TriviaQuestion = trivia[qIndex % trivia.length];
+  const effectiveBalance = live ? (wallet?.coins ?? 0) : balance;
+  const question: TriviaQuestion = live && liveQuestion
+    ? { id: liveQuestion.id, q: liveQuestion.q, options: liveQuestion.options, answer: liveQuestion.answer, difficulty: 'medium' }
+    : demoQuestion;
   const mult = STATE_MULTS[openCount];
   const goalPct = Math.round(((openCount - 1) / openCount) * 100);
   const openIds = useMemo(() => OPEN_ORDER.slice(0, openCount) as readonly string[], [openCount]);
@@ -388,6 +539,27 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
 
   const askQuestion = () => {
     if (openCount >= MAX_OPEN || answerLocked) return;
+    if (live) {
+      const state = liveStateRef.current;
+      if (!state || liveBusyRef.current) return;
+      liveBusyRef.current = true;
+      setLiveError(null);
+      freeKicksApi
+        .deal(state.state_version)
+        .then((next) => {
+          applyLiveState(next);
+          syncLiveQuestion(next);
+          selectedRef.current = null;
+          setSelected(null);
+          setQLeft(QUESTION_S);
+          setBeat('question');
+        })
+        .catch(handleLiveError)
+        .finally(() => {
+          liveBusyRef.current = false;
+        });
+      return;
+    }
     selectedRef.current = null;
     setSelected(null);
     setQIndex((q) => q + 1);
@@ -396,6 +568,31 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
   };
 
   const startRound = () => {
+    if (live) {
+      if (liveBusyRef.current) return;
+      liveBusyRef.current = true;
+      setLiveError(null);
+      startCrowd();
+      freeKicksApi
+        .start(stake, crypto.randomUUID())
+        .then((state) => {
+          applyLiveState(state);
+          setLastTake(null);
+          selectedRef.current = null;
+          setSelected(null);
+          setShotZone(null);
+          setScored(null);
+          setKeeperZone(null);
+          setLastAnswer(null);
+          void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
+          setBeat('decide');
+        })
+        .catch(handleLiveError)
+        .finally(() => {
+          liveBusyRef.current = false;
+        });
+      return;
+    }
     if (balance < stake || stake < MIN_STAKE) return;
     startCrowd();
     setBalance((b) => Math.round((b - stake) * 100) / 100);
@@ -414,6 +611,38 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
 
   const answer = (i: number) => {
     if (selectedRef.current !== null) return;
+    if (live) {
+      const state = liveStateRef.current;
+      if (!state || !liveQuestion) return;
+      selectedRef.current = i;
+      setSelected(i);
+      freeKicksApi
+        .answer(liveQuestion.id, liveQuestion.optionIds[i], state.state_version)
+        .then((result) => {
+          const correct = result.outcome === 'correct';
+          // Reveal: mark the server's correct option in the rendered question.
+          const correctIndex = liveQuestion.optionIds.indexOf(result.correct_option_id);
+          setLiveQuestion((current) => (current ? { ...current, answer: correctIndex } : current));
+          applyLiveState(result.state);
+          fire(correct ? 'correct' : 'wrong', i % 2 === 0 ? 'left' : 'right');
+          later(() => {
+            setLiveQuestion(null);
+            if (correct) {
+              setLastAnswer('up');
+              setBeat(result.state.open_count >= MAX_OPEN ? 'shoot' : 'decide');
+            } else {
+              setLastAnswer('reset');
+              setBeat('decide');
+            }
+          }, ANSWER_HOLD_MS);
+        })
+        .catch((error) => {
+          selectedRef.current = null;
+          setSelected(null);
+          handleLiveError(error);
+        });
+      return;
+    }
     selectedRef.current = i;
     setSelected(i);
     const correct = i === question.answer;
@@ -433,16 +662,10 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
     }, ANSWER_HOLD_MS);
   };
 
-  const shoot = (zone: Zone) => {
-    if (beat !== 'shoot' || shotZone) return;
-    if (!openIds.includes(zone.id)) return;
-    // The keeper commits to one of the open zones the moment the ball is
-    // struck — exactly 1/k save chance, independent of the player's pick.
-    const keeper = openIds[Math.floor(Math.random() * openIds.length)];
+  const resolveShot = (zone: Zone, keeper: string, isSave: boolean, potAfter: number) => {
     setKeeperZone(keeper);
     setShotZone(zone);
     setBeat('resolving');
-    const isSave = zone.id === keeper;
     later(() => playKick(), USE_3D_PITCH ? 430 : 90);
     // Give a saved shot enough time to read as contact, gather, and landing.
     later(() => {
@@ -451,12 +674,38 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
         setBeat('saved');
       } else {
         setScored(true);
-        const next = potential;
-        setPot(next);
-        setBestRun((b) => Math.max(b ?? 0, Math.round((next / roundStake) * 100) / 100));
+        setPot(potAfter);
+        setBestRun((b) => Math.max(b ?? 0, Math.round((potAfter / roundStake) * 100) / 100));
         setBeat('goal');
       }
     }, USE_3D_PITCH ? (isSave ? 1850 : 1450) : 880);
+  };
+
+  const shoot = (zone: Zone) => {
+    if (beat !== 'shoot' || shotZone) return;
+    if (!openIds.includes(zone.id)) return;
+    if (live) {
+      const state = liveStateRef.current;
+      if (!state || liveBusyRef.current) return;
+      liveBusyRef.current = true;
+      setLiveError(null);
+      freeKicksApi
+        .shoot(zone.id as FreeKicksZone, state.state_version)
+        .then((result) => {
+          applyLiveState(result.state);
+          // The outcome is already settled server-side; the animation replays it.
+          resolveShot(zone, result.keeper_zone, !result.scored, result.state.pot_coins);
+        })
+        .catch(handleLiveError)
+        .finally(() => {
+          liveBusyRef.current = false;
+        });
+      return;
+    }
+    // Demo: the keeper commits to one of the open zones the moment the ball is
+    // struck — exactly 1/k save chance, independent of the player's pick.
+    const keeper = openIds[Math.floor(Math.random() * openIds.length)];
+    resolveShot(zone, keeper, zone.id === keeper, potential);
   };
 
   // Playwright reuses this hook; rebind every commit so `shoot` is current.
@@ -482,6 +731,32 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
       ty: stack ? stack.top + stack.height / 2 : 36,
     });
     setLastTake(pot);
+    if (live) {
+      const state = liveStateRef.current;
+      if (!state || liveBusyRef.current) return;
+      liveBusyRef.current = true;
+      setLiveError(null);
+      freeKicksApi
+        .cashout(state.state_version)
+        .then((next) => {
+          liveStateRef.current = next;
+          setBeat('cashed');
+          later(() => {
+            void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
+            setStackBump(true);
+          }, 520);
+          later(() => setStackBump(false), 980);
+          later(() => setFlight(null), 1200);
+        })
+        .catch((error) => {
+          setFlight(null);
+          handleLiveError(error);
+        })
+        .finally(() => {
+          liveBusyRef.current = false;
+        });
+      return;
+    }
     setBeat('cashed');
     later(() => {
       setBalance((b) => Math.round((b + pot) * 100) / 100);
@@ -492,6 +767,29 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
   };
 
   const nextAttack = () => {
+    if (live) {
+      const state = liveStateRef.current;
+      if (!state || liveBusyRef.current) return;
+      liveBusyRef.current = true;
+      setLiveError(null);
+      freeKicksApi
+        .nextAttack(state.state_version, crypto.randomUUID())
+        .then((next) => {
+          applyLiveState(next);
+          selectedRef.current = null;
+          setSelected(null);
+          setShotZone(null);
+          setScored(null);
+          setKeeperZone(null);
+          setLastAnswer(null);
+          setBeat('decide');
+        })
+        .catch(handleLiveError)
+        .finally(() => {
+          liveBusyRef.current = false;
+        });
+      return;
+    }
     setAttack((a) => a + 1);
     beginAttack();
   };
@@ -577,7 +875,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
           >
             <MoneyStack />
             <span className="font-poppins text-sm font-black tabular-nums leading-none text-black">
-              <AnimatedNumber value={balance} decimals={Number.isInteger(balance) ? 0 : 2} />
+              <AnimatedNumber value={effectiveBalance} decimals={Number.isInteger(effectiveBalance) ? 0 : 2} />
             </span>
           </motion.div>
         </div>
@@ -677,6 +975,10 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
         )}
       </motion.div>
 
+      {live && liveError && (
+        <p className="mt-2 text-center font-poppins text-[11px] font-bold text-brand-red">{liveError}</p>
+      )}
+
       {/* Beat area */}
       <div className="mt-3 flex-1">
         <AnimatePresence mode="wait">
@@ -690,7 +992,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
               <p className="text-center font-poppins text-xs font-semibold text-white/55">
                 {t('The goal opens with 2 zones and one hidden keeper. Answer questions to open up to 6 — a wrong answer slams it back to 2.')}
               </p>
-              {balance >= MIN_STAKE ? (
+              {effectiveBalance >= MIN_STAKE ? (
                 <>
                   {/* Stake picker: presets + free entry, min 5 */}
                   <div className="flex items-center justify-center gap-1.5">
@@ -699,7 +1001,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
                         key={p}
                         type="button"
                         onClick={() => applyStake(p)}
-                        disabled={p > balance}
+                        disabled={p > effectiveBalance}
                         className={`rounded-xl border-2 px-3 py-2 font-poppins text-sm font-black tabular-nums transition-colors disabled:opacity-30 ${
                           stake === p
                             ? 'border-brand-yellow bg-brand-yellow/15 text-brand-yellow'
@@ -730,13 +1032,18 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
                   <button
                     type="button"
                     onClick={startRound}
-                    disabled={stake < MIN_STAKE || stake > balance}
+                    disabled={stake < MIN_STAKE || stake > effectiveBalance}
                     className="h-14 w-full rounded-2xl bg-brand-green font-poppins text-lg font-black uppercase tracking-wide text-white shadow-[0_8px_24px_rgba(88,204,2,0.25)] active:scale-[0.98] disabled:opacity-40"
                   >
                     {t('Stake {n} & attack', { n: stake })}
                   </button>
                 </>
               ) : (
+                live ? (
+                  <p className="text-center font-poppins text-sm font-bold text-white/60">
+                    {t('Not enough coins — top up in the store')}
+                  </p>
+                ) : (
                 <button
                   type="button"
                   onClick={() => setBalance(START_BALANCE)}
@@ -744,6 +1051,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
                 >
                   {t('Top up (demo)')}
                 </button>
+                )
               )}
             </motion.div>
           )}
@@ -955,7 +1263,7 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
         </div>
 
         <div className="mt-4 lg:sticky lg:top-4 lg:mt-1">
-          <StadiumBoard t={t} bestRun={bestRun} />
+          <StadiumBoard t={t} bestRun={bestRun} liveRows={live ? liveStats?.topRuns ?? [] : null} />
           <div className="mt-4 hidden lg:block">{renderHud(true)}</div>
         </div>
       </div>
@@ -968,8 +1276,19 @@ export function FinalThird({ backHref }: { backHref?: string } = {}) {
 /** Longest-runs leaderboard styled like the Betsson event leaderboard:
  *  orange border, orange #1 row, tilted "Powered by" badge. Flavour rows +
  *  the player's own best run. */
-function StadiumBoard({ t, bestRun }: { t: (k: string, v?: Record<string, string | number>) => string; bestRun: number | null }) {
-  const rows: Array<{ name: string; mult: number; you?: boolean }> = [
+function StadiumBoard({
+  t,
+  bestRun,
+  liveRows = null,
+}: {
+  t: (k: string, v?: Record<string, string | number>) => string;
+  bestRun: number | null;
+  /** Real top runs from /free-kicks/stats; null = demo flavour rows. */
+  liveRows?: Array<{ name: string; mult: number }> | null;
+}) {
+  const rows: Array<{ name: string; mult: number; you?: boolean }> = liveRows
+    ? liveRows.map((row) => ({ ...row }))
+    : [
     { name: 'თაზო10', mult: 18.31 },
     { name: 'გიორგი7', mult: 14.66 },
     { name: 'ნიკა77', mult: 9.16 },
