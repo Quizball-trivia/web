@@ -1,6 +1,6 @@
 "use client";
 
-import { notFound, useParams } from "next/navigation";
+import { notFound, useParams, useSearchParams } from "next/navigation";
 import { DemoAuction } from "@/features/demos/DemoAuction";
 import { DemoBackButton } from "@/features/demos/DemoBackButton";
 import { DemoDailyChallenge } from "@/features/demos/DemoDailyChallenge";
@@ -32,9 +32,16 @@ import { TriviaMines } from "@/features/mini-games/components/TriviaMines";
 import { TriviaSpin } from "@/features/mini-games/components/TriviaSpin";
 
 const DEMO_BACK = "/demos";
+/** Entry points outside the demos catalogue (e.g. /play, /mini-games) pass
+ *  ?from= so the in-game back button returns where the player came from.
+ *  Allowlisted to internal paths only. */
+const ALLOWED_BACK = new Set(["/demos", "/play", "/mini-games"]);
 
 export default function DemoModePage() {
   const params = useParams();
+  const searchParams = useSearchParams();
+  const fromParam = searchParams.get("from");
+  const backHref = fromParam && ALLOWED_BACK.has(fromParam) ? fromParam : DEMO_BACK;
   const slug = String(params.mode ?? "");
   const mode = findDemoMode(slug);
 
@@ -69,51 +76,51 @@ export default function DemoModePage() {
         </>
       );
     case "mini-final-third":
-      return <FinalThird backHref={DEMO_BACK} />;
+      return <FinalThird backHref={backHref} />;
     case "mini-road-to-goal":
-      return <RoadToGoal backHref={DEMO_BACK} />;
+      return <RoadToGoal backHref={backHref} />;
     case "mini-squad-spin":
-      return <SquadSpin backHref={DEMO_BACK} />;
+      return <SquadSpin backHref={backHref} />;
     case "mini-trivia-spin":
-      return <TriviaSpin backHref={DEMO_BACK} />;
+      return <TriviaSpin backHref={backHref} />;
     case "mini-penalty-shootout":
-      return <PenaltyShootout backHref={DEMO_BACK} />;
+      return <PenaltyShootout backHref={backHref} />;
     case "mini-daily-jackpot":
-      return <DailyJackpot backHref={DEMO_BACK} />;
+      return <DailyJackpot backHref={backHref} />;
     case "mini-pass-chain":
-      return <PassChain backHref={DEMO_BACK} />;
+      return <PassChain backHref={backHref} />;
     case "mini-accumulator":
-      return <Accumulator backHref={DEMO_BACK} />;
+      return <Accumulator backHref={backHref} />;
     case "mini-squad-collection":
-      return <SquadCollection backHref={DEMO_BACK} />;
+      return <SquadCollection backHref={backHref} />;
     case "mini-cash-out-ladder":
-      return <CashOutLadder backHref={DEMO_BACK} />;
+      return <CashOutLadder backHref={backHref} />;
     case "mini-bet-slip-booster":
-      return <BetSlipBooster backHref={DEMO_BACK} />;
+      return <BetSlipBooster backHref={backHref} />;
     case "mini-half-time-trivia":
-      return <HalfTimeTrivia backHref={DEMO_BACK} />;
+      return <HalfTimeTrivia backHref={backHref} />;
     case "mini-odds-board":
-      return <OddsBoard backHref={DEMO_BACK} />;
+      return <OddsBoard backHref={backHref} />;
     case "mini-football-grid":
-      return <FootballGrid backHref={DEMO_BACK} />;
+      return <FootballGrid backHref={backHref} />;
     case "mini-survivor":
-      return <Survivor backHref={DEMO_BACK} />;
+      return <Survivor backHref={backHref} />;
     case "mini-hi-lo-ride":
-      return <HiLoRide backHref={DEMO_BACK} />;
+      return <HiLoRide backHref={backHref} />;
     case "mini-trivia-mines":
-      return <TriviaMines backHref={DEMO_BACK} />;
+      return <TriviaMines backHref={backHref} />;
     case "mini-quiz-board":
-      return <QuizBoard backHref={DEMO_BACK} />;
+      return <QuizBoard backHref={backHref} />;
     case "mini-last-one-standing":
-      return <LastOneStanding backHref={DEMO_BACK} />;
+      return <LastOneStanding backHref={backHref} />;
     case "mini-golden-goal":
-      return <GoldenGoal backHref={DEMO_BACK} />;
+      return <GoldenGoal backHref={backHref} />;
     case "mini-career-race":
-      return <CareerRace backHref={DEMO_BACK} />;
+      return <CareerRace backHref={backHref} />;
     case "mini-guess-the-goal":
-      return <GuessTheGoal backHref={DEMO_BACK} />;
+      return <GuessTheGoal backHref={backHref} />;
     case "mini-stat-sniper":
-      return <StatSniper backHref={DEMO_BACK} />;
+      return <StatSniper backHref={backHref} />;
     default:
       notFound();
   }

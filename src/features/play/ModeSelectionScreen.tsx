@@ -5,7 +5,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ModeConfirmModal } from '@/components/shared/ModeConfirmModal';
-import { FriendPlayModal } from '@/components/shared/FriendPlayModal';
 import { AuctionModeModal } from '@/features/auction/components/AuctionModeModal';
 import { HomeRecentMatches } from '@/components/shared/HomeRecentMatches';
 import { MessageCircle } from 'lucide-react';
@@ -98,6 +97,7 @@ function MiniModeCard({
   iconSrc,
   badge,
   badge2 = null,
+  href,
   onClick,
 }: {
   bg: string;
@@ -109,24 +109,17 @@ function MiniModeCard({
   badge?: string | null;
   /** Second pill next to the first (e.g. NEW + game count). */
   badge2?: string | null;
-  onClick: () => void;
+  /** Route target — renders a real link (a11y, open-in-new-tab). */
+  href?: string;
+  /** Modal opener — used when there is no href. */
+  onClick?: () => void;
 }) {
   const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
   const text = dark ? 'text-black' : 'text-white';
-  return (
-    <div
-      onClick={onClick}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          onClick();
-        }
-      }}
-      role="button"
-      tabIndex={0}
-      className="relative min-h-[150px] md:min-h-[220px] cursor-pointer overflow-hidden rounded-[10px] p-3.5 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
-      style={{ backgroundColor: bg }}
-    >
+  const className =
+    'relative block min-h-[150px] md:min-h-[220px] cursor-pointer overflow-hidden rounded-[10px] p-3.5 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2';
+  const inner = (
+    <>
       {(badge || badge2) && (
         <div className="absolute top-2.5 right-2.5 md:top-4 md:right-4 z-20 flex items-center gap-1.5">
           {badge && (
@@ -162,6 +155,30 @@ function MiniModeCard({
           {subtitle}
         </p>
       </div>
+    </>
+  );
+  if (href) {
+    return (
+      <Link href={href} className={className} style={{ backgroundColor: bg }}>
+        {inner}
+      </Link>
+    );
+  }
+  return (
+    <div
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick?.();
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      className={className}
+      style={{ backgroundColor: bg }}
+    >
+      {inner}
     </div>
   );
 }
@@ -199,7 +216,8 @@ export function ModeSelectionScreen({
     trackWlBannerViewed();
   }, []);
   const { isEventMode } = useActiveEventMode();
-  const [selectedMode, setSelectedMode] = useState<'ranked' | 'friendly' | 'solo' | null>(null);
+  // 'friendly' launches moved off this screen with the 2x2 grid redesign.
+  const [selectedMode, setSelectedMode] = useState<'ranked' | 'solo' | null>(null);
   const [auctionModalOpen, setAuctionModalOpen] = useState(false);
   const [playEntranceAnimation] = useState(shouldPlayEntranceAnimation);
   const isPlacementInProgress = rankedProfile ? rankedProfile.placementStatus !== 'placed' : false;
@@ -235,8 +253,6 @@ export function ModeSelectionScreen({
   }, [playEntranceAnimation]);
 
   const handleConfirm = () => {
-    // Note: 'friendly' never reaches here — the confirm modal is only opened
-    // for non-friendly modes (see its isOpen condition below).
     if (!selectedMode) return;
     // Keep the modal OPEN: the PLAY button switches to its starting spinner
     // while onSelectMode does its pre-navigation work (ranked refetches the
@@ -473,7 +489,7 @@ export function ModeSelectionScreen({
           subtitle={t('play.ticTacToeSubtitle')}
           iconSrc="/assets/tictactoe-card-icon.png?v=3"
           badge={t('play.freeKicksNewBadge')}
-          onClick={() => router.push('/demos/mini-football-grid')}
+          href="/demos/mini-football-grid?from=/play"
         />
         <MiniModeCard
           bg={colors.yellow.base}
@@ -481,7 +497,7 @@ export function ModeSelectionScreen({
           title={t('play.dailyChallenge')}
           subtitle={t('play.dailySubtitle')}
           iconSrc="/assets/daily_chllangeicon.webp"
-          onClick={() => router.push('/daily/challenges')}
+          href="/daily/challenges"
         />
         <MiniModeCard
           bg={colors.orange.base}
@@ -490,7 +506,7 @@ export function ModeSelectionScreen({
           subtitle={t('play.miniGamesSubtitle')}
           iconSrc="/assets/minigames-card-icon.png?v=3"
           badge={t('play.freeKicksNewBadge')}
-          onClick={() => router.push('/mini-games')}
+          href="/mini-games"
         />
       </div>
 
@@ -674,15 +690,11 @@ export function ModeSelectionScreen({
 
       {/* ─── 6. Modals ─── */}
       <ModeConfirmModal
-        mode={selectedMode !== 'friendly' ? selectedMode : null}
-        isOpen={!!selectedMode && selectedMode !== 'friendly'}
+        mode={selectedMode}
+        isOpen={!!selectedMode}
         onOpenChange={(open) => !open && setSelectedMode(null)}
         onConfirm={handleConfirm}
         ticketsRemaining={ticketsRemaining}
-      />
-      <FriendPlayModal
-        isOpen={selectedMode === 'friendly'}
-        onOpenChange={(open) => !open && setSelectedMode(null)}
       />
       <AuctionModeModal
         isOpen={auctionModalOpen}

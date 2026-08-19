@@ -1,8 +1,26 @@
 'use client';
 
-import { useEffect, useMemo, useRef } from 'react';
+import { Component, useEffect, useMemo, useRef, type ReactNode } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
+
+/** WebGL/three failures must degrade to the 2D fallback (via onFailure), not
+ *  crash the game route — R3F throws outward when context creation fails. */
+class CanvasFailureBoundary extends Component<
+  { onFailure?: () => void; children: ReactNode },
+  { failed: boolean }
+> {
+  state = { failed: false };
+  static getDerivedStateFromError() {
+    return { failed: true };
+  }
+  componentDidCatch() {
+    this.props.onFailure?.();
+  }
+  render() {
+    return this.state.failed ? null : this.props.children;
+  }
+}
 
 export type RoadPitchPhase = 'idle' | 'question' | 'correct' | 'decision' | 'tackle' | 'tackled' | 'cashed' | 'complete';
 
@@ -803,12 +821,14 @@ function RoadScene({ progress, phase }: Omit<RoadPitchState, 'labels'>) {
   );
 }
 
-export function RoadToGoalPitch({ progress, phase, labels }: RoadToGoalPitchProps) {
+export function RoadToGoalPitch({ progress, phase, labels, onFailure }: RoadToGoalPitchProps) {
   return (
     <div className="relative aspect-[16/9] w-full overflow-hidden rounded-[16px] border border-white/10 bg-[#040B09] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_16px_36px_rgba(0,0,0,0.3)] sm:rounded-[20px] lg:rounded-[26px] lg:shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_24px_60px_rgba(0,0,0,0.32)]">
-      <Canvas dpr={[1, 1.6]} shadows camera={{ position: [-0.6, 4.9, 12.2], fov: 40, near: 0.1, far: 80 }} gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }} onCreated={({ camera }) => camera.lookAt(0, 2.05, 0)}>
-        <RoadScene progress={progress} phase={phase} />
-      </Canvas>
+      <CanvasFailureBoundary onFailure={onFailure}>
+        <Canvas dpr={[1, 1.6]} shadows camera={{ position: [-0.6, 4.9, 12.2], fov: 40, near: 0.1, far: 80 }} gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }} onCreated={({ camera }) => camera.lookAt(0, 2.05, 0)}>
+          <RoadScene progress={progress} phase={phase} />
+        </Canvas>
+      </CanvasFailureBoundary>
       <ZoneCardRail progress={progress} labels={labels} />
       <div className="pointer-events-none absolute left-2 top-2 z-20 rounded-lg border border-[#6685FF]/45 bg-[#061128]/88 px-2.5 py-1.5 shadow-[0_7px_18px_rgba(0,0,0,.28)] backdrop-blur-sm sm:left-3 sm:top-3 lg:left-4 lg:top-4 lg:rounded-xl lg:px-4 lg:py-2 lg:shadow-[0_10px_28px_rgba(0,0,0,.3)]">
         <div className="flex items-center gap-1.5 font-poppins text-[8px] font-black tracking-[0.12em] text-white sm:text-[9px] lg:gap-2 lg:text-[11px] lg:tracking-[0.16em]"><span className="h-3.5 w-1 rounded-full bg-[#1645FF] shadow-[0_0_8px_#1645FF] lg:h-5 lg:w-1.5 lg:shadow-[0_0_12px_#1645FF]" />QUIZBALL</div>

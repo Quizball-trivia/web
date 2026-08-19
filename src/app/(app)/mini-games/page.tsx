@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { useLocale } from "@/contexts/LocaleContext";
 
@@ -17,7 +16,7 @@ const GAMES = [
   },
   {
     key: "road-to-goal",
-    href: "/demos/mini-road-to-goal",
+    href: "/demos/mini-road-to-goal?from=/mini-games",
     titleKey: "play.roadToGoalTitle",
     descKey: "play.roadToGoalSubtitle",
     iconSrc: "/assets/road-to-goal-card-icon.png",
@@ -25,7 +24,7 @@ const GAMES = [
   },
   {
     key: "guess-the-goal",
-    href: "/demos/mini-guess-the-goal",
+    href: "/demos/mini-guess-the-goal?from=/mini-games",
     titleKey: "miniGames.guessTheGoalTitle",
     descKey: "miniGames.guessTheGoalSubtitle",
     iconSrc: "/assets/guess-the-goal-card-icon.png",
@@ -37,15 +36,13 @@ type MiniGameEntry = (typeof GAMES)[number];
 
 function GameCard({ game, index }: { game: MiniGameEntry; index: number }) {
   const { t } = useLocale();
-  const router = useRouter();
   return (
     <div
       className="relative flex h-full animate-in fade-in slide-in-from-bottom-2 duration-300"
       style={{ animationDelay: `${index * 40}ms`, animationFillMode: "backwards" }}
     >
-      <button
-        type="button"
-        onClick={() => router.push(game.href)}
+      <Link
+        href={game.href}
         className="relative flex min-h-[184px] w-full flex-col overflow-hidden rounded-[8px] p-3.5 text-center text-black transition-all hover:brightness-105 active:translate-y-[2px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white md:min-h-[268px] md:rounded-[20px] md:p-6"
         style={{ backgroundColor: "#FF9600" }}
       >
@@ -74,7 +71,7 @@ function GameCard({ game, index }: { game: MiniGameEntry; index: number }) {
             {t("miniGames.hubPlay")}
           </span>
         </div>
-      </button>
+      </Link>
     </div>
   );
 }
