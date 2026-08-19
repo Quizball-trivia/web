@@ -699,7 +699,23 @@
     "toastNoQuestions": "No questions available for this category.",
     "freeKicksTitle": "Free Kicks",
     "freeKicksSubtitle": "Beat the keeper, ride the pot",
-    "freeKicksNewBadge": "New"
+    "freeKicksNewBadge": "New",
+    "ticTacToeTitle": "Football Tic Tac Toe",
+    "ticTacToeSubtitle": "Club × nation grid",
+    "roadToGoalTitle": "Road to Goal",
+    "roadToGoalSubtitle": "Beat 11 defenders",
+    "dailyTodayBadge": "Today",
+    "miniGamesTitle": "Mini Games",
+    "miniGamesSubtitle": "Free kicks, goal run & quick football games",
+    "miniGamesCount": "3 games"
+  },
+  "miniGames": {
+    "hubTitle": "Mini Games",
+    "hubSubtitle": "Quick football games — jump in and play",
+    "hubPlay": "Play",
+    "hubLiveBadge": "Real coins",
+    "guessTheGoalTitle": "Guess the Goal",
+    "guessTheGoalSubtitle": "Name the iconic goal from the replay"
   },
   "leaderboard": {
     "title": "Leaderboard",

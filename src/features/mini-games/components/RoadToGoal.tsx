@@ -18,6 +18,7 @@ const RoadToGoalPitch = dynamic(
 
 const ZONES = 11;
 const QUESTION_MS = 9_000;
+const DRIBBLE_MS = 1_150;
 const STAKES = [10, 25, 50];
 const MULTIPLIERS = [1.03, 1.08, 1.15, 1.24, 1.36, 1.52, 1.72, 1.98, 2.35, 2.9, 4] as const;
 const DIFFICULTIES: TriviaQuestion['difficulty'][] = [
@@ -372,7 +373,7 @@ export function RoadToGoal({ backHref }: { backHref?: string } = {}) {
       } else {
         setPhase('decision');
       }
-    }, 820);
+    }, DRIBBLE_MS);
   };
 
   const continueRun = () => {
@@ -411,30 +412,32 @@ export function RoadToGoal({ backHref }: { backHref?: string } = {}) {
       wide
       headerRight={<StatPill label={copy.balance} value={points(balance)} color="#FFE500" />}
     >
-      <div className="mt-2 flex flex-1 flex-col gap-3">
-        <RoadScene
-          progress={progress}
-          phase={phase}
-          labels={{ liveRoute: copy.liveRoute, safe: copy.safe, target: copy.target }}
-        />
+      <div className="mt-1.5 grid items-start gap-2.5 sm:mt-2 sm:gap-3 lg:grid-cols-[minmax(0,1fr)_300px] xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="min-w-0 self-start">
+          <RoadScene
+            progress={progress}
+            phase={phase}
+            labels={{ liveRoute: copy.liveRoute, safe: copy.safe, target: copy.target }}
+          />
+        </div>
 
-        <div className="relative flex min-h-[210px] flex-col overflow-hidden rounded-[22px] border border-white/20 bg-brand-blue p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_18px_42px_rgba(22,69,255,0.28)] sm:p-5">
+        <div className="relative flex min-h-[238px] flex-col overflow-hidden rounded-[16px] border border-white/20 bg-brand-blue p-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_14px_30px_rgba(22,69,255,0.24)] sm:min-h-[260px] sm:rounded-[20px] sm:p-3.5 sm:shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_18px_42px_rgba(22,69,255,0.28)]">
           <div className="pointer-events-none absolute -right-16 -top-28 size-72 rounded-full border-[42px] border-white/[0.055]" />
           <div className="pointer-events-none absolute bottom-0 left-[42%] h-full w-px rotate-[24deg] bg-white/10" />
           <AnimatePresence mode="wait">
             {phase === 'idle' && (
-              <motion.div key="idle" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="relative z-10 grid flex-1 items-center gap-5 lg:grid-cols-[minmax(0,1fr)_420px]">
-                <div className="max-w-2xl">
-                  <div className="mb-2 flex items-center gap-2 font-poppins text-[10px] font-black uppercase tracking-[0.2em] text-brand-yellow">
-                    <Flag className="size-4" /> {copy.introEyebrow}
+              <motion.div key="idle" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="relative z-10 flex flex-1 flex-col justify-center gap-3 sm:gap-4">
+                <div>
+                  <div className="mb-2 flex items-center gap-2 font-poppins text-[9px] font-black uppercase tracking-[0.18em] text-brand-yellow">
+                    <Flag className="size-3.5" /> {copy.introEyebrow}
                   </div>
-                  <h2 className="font-poppins text-2xl font-black uppercase leading-[0.95] text-white sm:text-3xl">
+                  <h2 className="font-poppins text-lg font-black uppercase leading-[0.98] text-white sm:text-xl">
                     {copy.introTitle}
                   </h2>
-                  <p className="mt-3 max-w-2xl font-poppins text-xs font-semibold leading-relaxed text-white/75">{copy.introBody}</p>
+                  <p className="mt-2 font-poppins text-[10px] font-semibold leading-relaxed text-white/70">{copy.introBody}</p>
                 </div>
 
-                <div className="rounded-2xl border border-white/20 bg-[#071D5B]/45 p-3 backdrop-blur-sm">
+                <div className="rounded-xl border border-white/20 bg-[#071D5B]/45 p-2 sm:p-2.5 backdrop-blur-sm">
                   <div className="mb-2 font-poppins text-[9px] font-black uppercase tracking-[0.18em] text-white/65">{copy.stake}</div>
                   <div className="grid grid-cols-3 gap-2">
                     {STAKES.map((value, index) => {
@@ -445,7 +448,7 @@ export function RoadToGoal({ backHref }: { backHref?: string } = {}) {
                           key={value}
                           type="button"
                           onClick={() => setStake(value)}
-                          className="rounded-lg border py-2 font-poppins text-sm font-black tabular-nums transition-all"
+                          className="rounded-lg border py-1.5 font-poppins text-xs font-black tabular-nums transition-all"
                           style={{
                             borderColor: selectedStake ? colors[index] : 'rgba(255,255,255,.2)',
                             color: selectedStake ? colors[index] : 'rgba(255,255,255,.62)',
@@ -462,7 +465,7 @@ export function RoadToGoal({ backHref }: { backHref?: string } = {}) {
                     type="button"
                     onClick={start}
                     disabled={balance < stake}
-                    className="mt-2.5 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-green px-5 font-poppins text-sm font-black uppercase tracking-wide text-[#07111D] transition-[filter,transform] hover:brightness-105 active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/35"
+                    className="mt-2.5 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-brand-green px-4 font-poppins text-xs font-black uppercase tracking-wide text-[#07111D] transition-[filter,transform] hover:brightness-105 active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/35"
                   >
                     <Play className="size-4 fill-current" /> {fill(copy.kickOff, { stake: points(stake) })}
                   </button>
@@ -496,8 +499,8 @@ export function RoadToGoal({ backHref }: { backHref?: string } = {}) {
                   />
                 </div>
 
-                <p className="mt-4 font-poppins text-sm font-black leading-snug text-white sm:text-base">{question.q}</p>
-                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                <p className="mt-3 font-poppins text-xs font-black leading-snug text-white">{question.q}</p>
+                <div className="mt-2.5 grid gap-2">
                   {question.options.map((option, index) => {
                     const state = answerState(index);
                     return (
@@ -506,7 +509,7 @@ export function RoadToGoal({ backHref }: { backHref?: string } = {}) {
                         type="button"
                         disabled={phase !== 'question' || selected !== null}
                         onClick={() => answer(index)}
-                        className={`flex min-h-12 items-center justify-between rounded-xl border-2 px-3 py-2 text-left font-poppins text-xs font-bold transition-all ${
+                        className={`flex min-h-10 items-center justify-between rounded-xl border-2 px-3 py-2 text-left font-poppins text-[11px] font-bold transition-all ${
                           state === 'correct'
                             ? 'border-brand-green bg-brand-green/20 text-white'
                             : state === 'wrong'
@@ -528,8 +531,8 @@ export function RoadToGoal({ backHref }: { backHref?: string } = {}) {
 
             {phase === 'decision' && (
               <motion.div key="decision" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 flex flex-1 flex-col justify-center text-center">
-                <motion.div initial={{ scale: 0.5, rotate: -12 }} animate={{ scale: 1, rotate: 0 }} className="mx-auto flex size-16 items-center justify-center rounded-full bg-brand-green text-[#07111D] shadow-[0_0_35px_rgba(88,204,2,.4)]">
-                  <Check className="size-9" strokeWidth={3.5} />
+                <motion.div initial={{ scale: 0.5, rotate: -12 }} animate={{ scale: 1, rotate: 0 }} className="mx-auto flex size-12 items-center justify-center rounded-full bg-brand-green text-[#07111D] shadow-[0_0_35px_rgba(88,204,2,.4)]">
+                  <Check className="size-7" strokeWidth={3.5} />
                 </motion.div>
                 <h2 className="mt-3 font-poppins text-xl font-black uppercase text-brand-green">{copy.clean}</h2>
                 <p className="mx-auto mt-1 max-w-xs font-poppins text-xs font-semibold leading-relaxed text-white/75">
@@ -539,7 +542,7 @@ export function RoadToGoal({ backHref }: { backHref?: string } = {}) {
                   <div className="font-poppins text-[9px] font-black uppercase tracking-wider text-brand-yellow/70">{copy.currentReturn}</div>
                   <div className="font-poppins text-2xl font-black tabular-nums text-brand-yellow">{points(currentReturn)} <span className="text-sm">· {currentMultiplier.toFixed(2)}×</span></div>
                 </div>
-                <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                <div className="mt-3 grid gap-2">
                   <button type="button" onClick={continueRun} className="h-11 rounded-xl bg-brand-orange px-3 font-poppins text-sm font-black uppercase text-[#07111D] transition-[filter,transform] hover:brightness-105 active:scale-[0.99]">
                     {fill(copy.continue, { zone: progress + 1 })}
                   </button>
@@ -552,17 +555,17 @@ export function RoadToGoal({ backHref }: { backHref?: string } = {}) {
 
             {phase === 'tackled' && question && (
               <motion.div key="tackled" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 flex flex-1 flex-col items-center justify-center text-center">
-                <div className="flex size-16 items-center justify-center rounded-full bg-brand-orange text-[#07111D] shadow-[0_0_35px_rgba(255,150,0,.45)]">
-                  <Shield className="size-9" />
+                <div className="flex size-12 items-center justify-center rounded-full bg-brand-orange text-[#07111D] shadow-[0_0_35px_rgba(255,150,0,.45)]">
+                  <Shield className="size-7" />
                 </div>
-                <h2 className="mt-3 font-poppins text-2xl font-black uppercase text-brand-orange">{copy.tackled}</h2>
+                <h2 className="mt-2 font-poppins text-xl font-black uppercase text-brand-orange">{copy.tackled}</h2>
                 <p className="mt-1 max-w-xs font-poppins text-xs font-semibold leading-relaxed text-white/75">
                   {fill(copy.tackledBody, { zone: progress + 1 })}
                 </p>
                 <p className="mt-3 rounded-xl bg-white/[0.04] px-3 py-2 font-poppins text-[10px] font-bold text-white/55">
                   {fill(copy.correctWas, { answer: question.options[question.answer] })}
                 </p>
-                <button type="button" onClick={reset} className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-green font-poppins text-sm font-black uppercase text-[#07111D] transition-[filter,transform] hover:brightness-105 active:scale-[0.99]">
+                <button type="button" onClick={reset} className="mt-4 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-brand-green font-poppins text-xs font-black uppercase text-[#07111D] transition-[filter,transform] hover:brightness-105 active:scale-[0.99]">
                   <RotateCcw className="size-4" /> {copy.newRun}
                 </button>
               </motion.div>

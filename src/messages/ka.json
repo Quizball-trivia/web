@@ -914,7 +914,23 @@
     "toastNoQuestions": "ამ კატეგორიაში კითხვები არ არის.",
     "freeKicksTitle": "თავისუფალი დარტყმები",
     "freeKicksSubtitle": "აჯობე მეკარეს, გაზარდე ბანკი",
-    "freeKicksNewBadge": "ახალი"
+    "freeKicksNewBadge": "ახალი",
+    "ticTacToeTitle": "საფეხბურთო იქს-ნული",
+    "ticTacToeSubtitle": "კლუბი × ნაკრების ბადე",
+    "roadToGoalTitle": "გზა გოლისკენ",
+    "roadToGoalSubtitle": "დაამარცხე 11 მცველი",
+    "dailyTodayBadge": "დღეს",
+    "miniGamesTitle": "მინი თამაშები",
+    "miniGamesSubtitle": "თავისუფალი დარტყმები, გზა გოლისკენ და სწრაფი თამაშები",
+    "miniGamesCount": "3 თამაში"
+  },
+  "miniGames": {
+    "hubTitle": "მინი თამაშები",
+    "hubSubtitle": "სწრაფი საფეხბურთო თამაშები — შედი და ითამაშე",
+    "hubPlay": "თამაში",
+    "hubLiveBadge": "რეალური ქოინები",
+    "guessTheGoalTitle": "გამოიცანი გოლი",
+    "guessTheGoalSubtitle": "ამოიცანი ლეგენდარული გოლი გამეორებიდან"
   },
   "leaderboard": {
     "title": "ლიდერბორდი",
