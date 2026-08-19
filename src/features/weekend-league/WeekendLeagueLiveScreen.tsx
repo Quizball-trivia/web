@@ -18,10 +18,13 @@ export function WeekendLeagueLiveScreen() {
   // has status null and phase 'upcoming', and must still count (review).
   const tabViewedRef = useRef(false);
   useEffect(() => {
-    if (tabViewedRef.current || live.isLoading) return;
+    // statusFresh, not !isLoading: cached data shown during a background
+    // refetch would log a stale phase/has_entered and the ref would then
+    // block the corrected values (review).
+    if (tabViewedRef.current || !live.statusFresh) return;
     tabViewedRef.current = true;
     trackWlTabViewed(live.phase, live.hasEntered);
-  }, [live.isLoading, live.phase, live.hasEntered]);
+  }, [live.statusFresh, live.phase, live.hasEntered]);
   // Pin the tournament being played/watched: when it completes, /current
   // moves on to the NEXT event — without the pin that yanked the champion
   // screen away mid-ceremony and replaced it with "you're not registered"

@@ -93,6 +93,9 @@ export interface WeekendLeagueLiveExtras {
   /** Marks a backend-driven controller (the screen uses it to trust server fields). */
   live: true;
   isLoading: boolean;
+  /** True once THIS mount has a fresh /current response — cached data during
+   *  a background refetch must not feed analytics (stale phase/entered). */
+  statusFresh: boolean;
   isError: boolean;
   refetch: () => void;
   tournamentId: string | null;
@@ -336,6 +339,7 @@ export function useWeekendLeagueLive(): WeekendLeagueLiveController {
     finishPlayoff: noop,
     live: true,
     isLoading: query.isLoading,
+    statusFresh: query.isSuccess && query.isFetchedAfterMount,
     // Fatal only when there's nothing to show — a failed background poll on
     // top of usable data must not blank the screen into an error card.
     isError: query.isError && query.data === undefined,
