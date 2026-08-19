@@ -1,16 +1,20 @@
 import posthog from 'posthog-js';
 
-// Initialize PostHog in any environment that has a key configured (prod AND
-// staging use separate project keys). Local dev has no key, so init is skipped.
-// Gating on the key — not VERCEL_ENV — because NEXT_PUBLIC_VERCEL_ENV does not
-// reliably inline at build on the prod Vercel build, which silently disabled
-// all browser analytics on prod.
+// PostHog runs on PROD ONLY: NEXT_PUBLIC_POSTHOG_KEY exists solely in the
+// Production Vercel env (staging's key removed 2026-08-19 — staging must send
+// nothing). Gating on the key — not VERCEL_ENV — because NEXT_PUBLIC_VERCEL_ENV
+// does not reliably inline at build on the prod Vercel build, which silently
+// disabled all browser analytics on prod.
 if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_POSTHOG_KEY) {
   try {
     posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
       api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
       person_profiles: 'identified_only',
-      capture_pageview: false,
+      // Initial load + pathname-changing SPA navigations (query/hash-only changes
+      // don't fire). Re-enabled 2026-08-19 (owner
+      // call) for acquisition/referrer visibility — costs ~20k events/day,
+      // which is why it was off; prod-only since staging has no key.
+      capture_pageview: 'history_change',
       // $pageleave on every navigation — redundant with our explicit funnel
       // events, so off to cut event volume.
       capture_pageleave: false,
