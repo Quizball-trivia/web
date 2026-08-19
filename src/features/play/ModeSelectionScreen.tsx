@@ -124,7 +124,7 @@ function MiniModeCard({
         <div className="absolute top-2.5 right-2.5 md:top-4 md:right-4 z-20 flex items-center gap-1.5">
           {badge && (
             <div
-              className="rounded-full bg-brand-yellow px-2.5 py-1 text-[8px] md:text-[11px] uppercase tracking-wide text-black"
+              className={`rounded-full px-2.5 py-1 text-[8px] md:text-[11px] uppercase tracking-wide ${dark ? 'bg-black text-brand-yellow' : 'bg-brand-yellow text-black'}`}
               style={poppins}
             >
               {badge}

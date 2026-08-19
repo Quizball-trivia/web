@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { notFound, useParams, useSearchParams } from "next/navigation";
 import { DemoAuction } from "@/features/demos/DemoAuction";
 import { DemoBackButton } from "@/features/demos/DemoBackButton";
@@ -38,6 +39,14 @@ const DEMO_BACK = "/demos";
 const ALLOWED_BACK = new Set(["/demos", "/play", "/mini-games"]);
 
 export default function DemoModePage() {
+  return (
+    <Suspense fallback={null}>
+      <DemoModePageInner />
+    </Suspense>
+  );
+}
+
+function DemoModePageInner() {
   const params = useParams();
   const searchParams = useSearchParams();
   const fromParam = searchParams.get("from");
