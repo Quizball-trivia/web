@@ -252,10 +252,12 @@ export function buildPlayerObject(
   const skinTone = look.skin ?? SKINS[h % SKINS.length];
   const hairColor = look.hairColor ?? HAIRS[(h >>> 3) % HAIRS.length];
   const kitMat = makeKitMaterial(kit, skinTone);
+  kitMat.userData.owned = true;
   const browMat = new THREE.MeshStandardMaterial({
     color: hairColor,
     roughness: 0.9,
   });
+  browMat.userData.owned = true;
   obj.traverse((child) => {
     const mesh = child as THREE.SkinnedMesh;
     if (!mesh.isSkinnedMesh) return;
@@ -284,6 +286,7 @@ export function buildPlayerObject(
   if (head && look.hair && headIB) {
     const inv = new THREE.Matrix4().fromArray(headIB);
     const hairMat = new THREE.MeshStandardMaterial({ color: hairColor, roughness: 0.88 });
+    hairMat.userData.owned = true;
     const attach = (nodeName: string) => {
       const src = look.hair?.getObjectByName(nodeName) as THREE.Mesh | undefined;
       if (!src) return;
@@ -300,14 +303,13 @@ export function buildPlayerObject(
 
   const chest = obj.getObjectByName(CHEST_BONE);
   if (chest) {
-    const back = new THREE.Mesh(
-      new THREE.PlaneGeometry(0.3, 0.3),
-      new THREE.MeshBasicMaterial({
-        map: makeNumberTexture(number, accent),
-        transparent: true,
-        depthWrite: false,
-      }),
-    );
+    const numberMat = new THREE.MeshBasicMaterial({
+      map: makeNumberTexture(number, accent),
+      transparent: true,
+      depthWrite: false,
+    });
+    numberMat.userData.owned = true;
+    const back = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.3), numberMat);
     back.position.set(0, 0.14, -0.19);
     back.rotation.y = Math.PI;
     chest.add(back);
@@ -323,16 +325,18 @@ export function buildPlayerObject(
  * must call this on unmount, or the per-instance materials and textures pile up
  * in the GL context.
  *
- * IMPORTANT: it deliberately does NOT dispose skinned-mesh geometries — those
- * are SHARED with the GLTFLoader's cached scene (skeletonClone reuses buffers),
- * so disposing them would corrupt every other instance and future clones. Only
- * geometry created here (the number back-plane) is freed. Pass the mixer to drop
- * its cached bindings too.
+ * IMPORTANT: it disposes ONLY resources this instance freshly allocated, never
+ * anything shared with the GLTFLoader's cached scene (skeletonClone reuses the
+ * source geometries, the eyes material, its textures — disposing those would
+ * corrupt every other instance and future clones). Fresh materials are tagged
+ * `userData.owned = true` at creation; only those (and their textures) plus the
+ * number back-plane's own geometry are freed. Pass the mixer to drop its cached
+ * bindings too.
  */
 export function disposeBuiltObject(obj: THREE.Object3D, mixer?: THREE.AnimationMixer): void {
   const seenMat = new Set<THREE.Material>();
   const disposeMat = (m: THREE.Material) => {
-    if (seenMat.has(m)) return;
+    if (seenMat.has(m) || !m.userData.owned) return;
     seenMat.add(m);
     for (const v of Object.values(m as unknown as Record<string, unknown>)) {
       if (v instanceof THREE.Texture) v.dispose();

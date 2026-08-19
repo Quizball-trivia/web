@@ -8,7 +8,10 @@
  * Outputs into public/assets/demos/score/:
  *   player-body.glb  — Superhero_Male body + eyes/eyebrows, textures pruned
  *                      to the eye basecolor only (kits are shader-painted)
- *   player-clips.glb — just the animation clips the games use, resampled
+ *   player-hair.glb  — hair styles rigged to the head bone
+ *   player-clips.glb — UAL locomotion clips (only used by the Score! Classics
+ *                      prototype, which is NOT in this PR — Free Kicks doesn't
+ *                      ship these clips; kept so Score! stays reproducible)
  */
 
 import { Document, NodeIO } from '@gltf-transform/core';

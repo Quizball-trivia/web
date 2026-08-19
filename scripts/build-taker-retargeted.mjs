@@ -2,12 +2,20 @@
  * Retargets the Mixamo penalty-kick clip onto our nice UBC body so the taker
  * uses the real mocap strike on the good-looking mesh (not the gray X-Bot).
  *
- *   node scripts/build-taker-retargeted.mjs <mixamo-glb-dir>
+ *   node scripts/build-taker-retargeted.mjs
  *
  * Uses three's SkeletonUtils.retargetClip (samples the Mixamo skeleton's world
  * pose each frame and writes it onto the UBC skeleton via a bone-name map).
  * Root motion is stripped afterwards (Hips X/Z held) so he kicks in place.
  * Output: public/assets/demos/score/taker.glb (UBC body + kick + idle clips).
+ *
+ * INPUTS (texture-free copies, retargetClip can't load textures under Node):
+ *   - public/assets/demos/score/player-body_notex.glb  (UBC target body)
+ *   - /tmp/tk/xbot_taker_notex.glb                      (X-Bot source w/ clips,
+ *                                                        from build-taker-rig.mjs)
+ * NOTE: this predates build-keeper-idle-retargeted.mjs, which strips textures
+ * inline via gltf-transform instead of needing pre-made *_notex copies — prefer
+ * that pattern if regenerating. The shipped taker.glb is already committed.
  */
 
 // Minimal browser-global polyfills the three exporters/loaders reach for when
@@ -61,12 +69,6 @@ const NAMES = {
   foot_r: 'mixamorigRightFoot',
   ball_r: 'mixamorigRightToeBase',
 };
-
-const [glbDir] = process.argv.slice(2);
-if (!glbDir) {
-  console.error('usage: node scripts/build-taker-retargeted.mjs <mixamo-glb-dir>');
-  process.exit(1);
-}
 
 const loader = new GLTFLoader();
 function loadGLB(file) {

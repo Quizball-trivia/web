@@ -1,6 +1,19 @@
-player-body.glb  — Quaternius "Universal Base Characters" (Superhero Male, Godot-UE build)
-                   https://quaternius.com/packs/universalbasecharacters.html
-player-clips.glb — Quaternius "Universal Animation Library" (Unreal-Godot build, clip subset)
-                   https://quaternius.com/packs/universalanimationlibrary.html
-Both CC0 1.0 (public domain), rebuilt for the /demos prototypes by
-scripts/build-score-rig.mjs (textures pruned, clips subset + resampled).
+Asset attribution for the /demos "Free Kicks" mini-game (all bundled here).
+
+player-body.glb   — Quaternius "Universal Base Characters" (Superhero Male,
+                    Godot-UE build). CC0 1.0 (public domain).
+                    https://quaternius.com/packs/universalbasecharacters.html
+
+player-hair.glb   — Quaternius "Universal Base Characters" hair styles, rigged
+                    to the head bone. CC0 1.0 (public domain).
+                    https://quaternius.com/packs/universalbasecharacters.html
+
+taker.glb         — Quaternius UBC body (above) with a Mixamo penalty-kick + idle
+keeper-idle.glb   — Quaternius UBC body (above) with a Mixamo goalkeeper idle
+                    Mixamo motion-capture clips (Adobe), free to use per the
+                    Mixamo licence, retargeted onto the CC0 UBC skeleton.
+                    https://www.mixamo.com
+
+Rebuilt for the /demos prototypes by scripts/build-*.mjs (textures pruned,
+clips retargeted/resampled, root motion pinned). No third-party textures ship;
+kits are painted procedurally at runtime.

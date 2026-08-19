@@ -1,7 +1,10 @@
 /**
- * Builds the free-kick taker GLB from the Mixamo shot clips (X Bot skinned mesh
- * + Soccer Penalty Kick + offensive idle, converted FBX→GLB). Same native-
- * skeleton approach as the keeper (no retargeting).
+ * INTERMEDIATE step, superseded by build-taker-retargeted.mjs. Builds a native
+ * Mixamo X-Bot taker GLB (X Bot skinned mesh + Soccer Penalty Kick + offensive
+ * idle, converted FBX→GLB) whose clips are then RETARGETED onto the nice UBC
+ * body by build-taker-retargeted.mjs to produce the shipped taker.glb. Do not
+ * run this alone expecting the shipped asset — its output is the X-Bot source,
+ * not the UBC runtime body.
  *
  *   node scripts/build-taker-rig.mjs <glb-dir>
  *
