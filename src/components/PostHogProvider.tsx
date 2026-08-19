@@ -25,9 +25,8 @@ export function PostHogPageView(): ReactElement {
 function PostHogPageViewInner(): ReactElement {
   const pathname = usePathname();
 
-  // ($pageview capture removed — ~20k events/day of pure cost. We don't analyze
-  // pageviews/funnels by URL; our funnels run on named events. capture_pageview
-  // is already false in the PostHog init, so nothing else emits them.)
+  // ($pageview comes from capture_pageview: 'history_change' in the PostHog
+  // init — nothing to do per-route here.)
 
   useEffect(() => {
     if (!pathname) return;
