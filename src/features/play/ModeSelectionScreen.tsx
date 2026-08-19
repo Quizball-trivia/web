@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -23,6 +23,7 @@ import { useActiveEventMode } from '@/lib/hooks/useActiveEventMode';
 import { colors } from '@/lib/colors';
 import { PlayAnnouncements } from './PlayAnnouncements';
 import { RailNavyGradient as WeekendLeagueRail } from '@/features/weekend-league/components/RailColorVariants';
+import { trackWlBannerClicked, trackWlBannerViewed } from '@/lib/analytics/game-events';
 
 import { getNextTierBand } from '@/utils/rankedTier';
 
@@ -109,6 +110,16 @@ export function ModeSelectionScreen({
 }: ModeSelectionScreenProps) {
   const { t, locale } = useLocale();
   const tierLabelOf = useTierLabel();
+
+  // Funnel top: the WL rail is above the fold on every /play visit, so a
+  // mount IS an impression. Ref-guarded so dev Strict Mode's double-effect
+  // doesn't double-count when a dev build points at real analytics.
+  const bannerViewedRef = useRef(false);
+  useEffect(() => {
+    if (bannerViewedRef.current) return;
+    bannerViewedRef.current = true;
+    trackWlBannerViewed();
+  }, []);
   const { isEventMode } = useActiveEventMode();
   const [selectedMode, setSelectedMode] = useState<'ranked' | 'friendly' | 'solo' | null>(null);
   const [auctionModalOpen, setAuctionModalOpen] = useState(false);
@@ -189,7 +200,11 @@ export function ModeSelectionScreen({
     >
 
       {/* ─── 0. Weekend League — the weekly objective, aligned to the mode cards ─── */}
-      <WeekendLeagueRail />
+      {/* Instrumented at the placement, not inside Rail — the dev gallery
+          mounts every Rail variant and would fire an impression per skin. */}
+      <div onClickCapture={trackWlBannerClicked}>
+        <WeekendLeagueRail />
+      </div>
 
       {/* ─── 1. Ranked Hero Card ─── */}
       <div
