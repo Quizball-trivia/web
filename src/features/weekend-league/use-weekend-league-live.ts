@@ -11,8 +11,9 @@
 // live phases informationally and never routes users into the mock game — and
 // the qualifier board stays empty rather than showing invented players.
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { trackWlCheckinCompleted, trackWlEntryCompleted } from '@/lib/analytics/game-events';
 import { toast } from 'sonner';
 import { checkinWeekendLeague, enterWeekendLeague, getWeekendLeagueCurrent, getWeekendLeagueStandings } from '@/lib/api/endpoints';
 import { queryKeys } from '@/lib/queries/queryKeys';
@@ -198,6 +199,7 @@ export function useWeekendLeagueLive(): WeekendLeagueLiveController {
       if (!res.entered && !res.already_entered) {
         toast.error(t('weekendLeague.entryClosedToast'));
       }
+      if (res.entered && !res.already_entered) trackWlEntryCompleted();
       invalidate();
     },
     onError: () => toast.error(t('weekendLeague.entryFailedToast')),
@@ -217,12 +219,23 @@ export function useWeekendLeagueLive(): WeekendLeagueLiveController {
       if (!res.checked_in && !res.already_checked_in) {
         toast.error(t('weekendLeague.checkinNotOpenToast'));
       }
+      if (res.checked_in && !res.already_checked_in) {
+        // Stage captured at SUBMIT time: the mutation callback re-binds on
+        // rerender, so reading `status` here can misattribute a final
+        // check-in that resolves after the tournament advances (review).
+        trackWlCheckinCompleted(checkinStageRef.current);
+      }
       invalidate();
     },
     onError: () => toast.error(t('weekendLeague.checkinFailedToast')),
   });
   const { mutate: checkinMutate } = checkinMutation;
-  const checkinLeague = useCallback(() => checkinMutate(), [checkinMutate]);
+  const checkinStageRef = useRef<'qualifier' | 'final'>('qualifier');
+  const checkinLeague = useCallback(() => {
+    checkinStageRef.current =
+      status === 'final_checkin' || status === 'final_live' ? 'final' : 'qualifier';
+    checkinMutate();
+  }, [checkinMutate, status]);
 
   const milestones = useMemo(() => {
     // The fallback is NOT invented: the league runs on a fixed weekly calendar
