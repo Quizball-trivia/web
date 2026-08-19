@@ -440,6 +440,34 @@ export function trackModeSelected(mode: string) {
   trackEvent('mode_selected', { mode });
 }
 
+// ── Weekend League funnel ────────────────────────────────────────────────────
+// banner viewed → banner clicked → tab viewed → entry → check-in. The DB holds
+// the authoritative entry/check-in truth; these exist so the top of the funnel
+// (who SAW and who CLICKED) is measurable at all.
+
+/** The home-rail banner rendered for this visit (fires once per /play mount). */
+export function trackWlBannerViewed() {
+  trackEvent('wl_banner_viewed');
+}
+
+export function trackWlBannerClicked() {
+  trackEvent('wl_banner_clicked');
+}
+
+/** The league tab opened; phase distinguishes entry-open browsing from
+ *  live-event spectating ('unknown' if the visit ends before status loads). */
+export function trackWlTabViewed(phase: string, hasEntered: boolean) {
+  trackEvent('wl_tab_viewed', { phase, has_entered: hasEntered });
+}
+
+export function trackWlEntryCompleted() {
+  trackEvent('wl_entry_completed');
+}
+
+export function trackWlCheckinCompleted(stage: 'qualifier' | 'final') {
+  trackEvent('wl_checkin_completed', { stage });
+}
+
 export function trackCategorySelected(categoryId: string, categoryName: string) {
   trackEvent('category_selected', {
     category_id: categoryId,
