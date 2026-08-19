@@ -1,35 +1,38 @@
 'use client';
 
 /**
- * SCORE!/Free Kicks shared footballer, built from two CC0 Quaternius packs
- * (bundled at /assets/demos/score/, built by scripts/build-score-rig.mjs):
+ * Free Kicks shared footballer, built from CC0 Quaternius packs (bundled at
+ * /assets/demos/score/, built by scripts/build-score-rig.mjs):
  *
  *   player-body.glb  — Universal Base Characters "Superhero Male" (real face:
  *                      textured eyes + eyebrows), UE-style 65-bone skeleton
- *   player-clips.glb — Universal Animation Library locomotion clips on the
- *                      same skeleton (Idle/Jog/Sprint/Crouch/Jump/Roll/Walk)
+ *   player-hair.glb  — hair styles rigged to the head bone
  *
  * Kits are painted by a bind-pose banding shader (the skinned mesh's
  * `position` attribute is the T-pose, so fixed bands give stable
  * skin/shirt/shorts/socks/boots zones during animation).
  *
- * This module also owns the joint adapter both games use for procedural
- * poses (kick, dive, stumble, and the whole Free Kicks pose library): poses
- * are authored in character space (x right / y up / z forward, zero = a
- * natural arms-down stance); setJoint conjugates that into each bone's
- * parent space on top of the bone's rest orientation, with a T-pose→A-pose
- * shoulder baseline folded in.
+ * This module also owns the joint adapter Free Kicks uses for procedural poses
+ * (the keeper dive/catch/save library and the wall/taker stances): poses are
+ * authored in character space (x right / y up / z forward, zero = a natural
+ * arms-down stance); setJoint conjugates that into each bone's parent space on
+ * top of the bone's rest orientation, with a T-pose→A-pose shoulder baseline
+ * folded in.
  */
 
-import { useEffect, useMemo } from 'react';
-import { useLoader } from '@react-three/fiber';
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { clone as skeletonClone } from 'three/examples/jsm/utils/SkeletonUtils.js';
-import type { KitColors } from '../data/scoreGoals';
+
+/** Player kit colours for the bind-pose banded shader. */
+export interface KitColors {
+  shirt: string;
+  shorts: string;
+  accent: string;
+  /** Sock colour; defaults to the shorts colour when omitted. */
+  socks?: string;
+}
 
 export const SCORE_BODY_URL = '/assets/demos/score/player-body.glb';
-export const SCORE_CLIPS_URL = '/assets/demos/score/player-clips.glb';
 export const SCORE_HAIR_URL = '/assets/demos/score/player-hair.glb';
 
 export type HairStyleName = 'Hair_Buzzed' | 'Hair_SimpleParted' | 'Hair_Long' | 'Hair_Buns';
@@ -42,15 +45,6 @@ const HAIR_POOL: (HairStyleName | null)[] = [
   null,
 ];
 
-export const CLIP_NAMES = {
-  idle: 'Idle_Loop',
-  jog: 'Jog_Fwd_Loop',
-  sprint: 'Sprint_Loop',
-  crouch: 'Crouch_Idle_Loop',
-  jump: 'Jump_Loop',
-  roll: 'Roll',
-} as const;
-export type ClipKey = keyof typeof CLIP_NAMES;
 
 /* ── joint adapter (UE-style skeleton) ─────────────────────────────── */
 
@@ -358,64 +352,3 @@ export function disposeBuiltObject(obj: THREE.Object3D, mixer?: THREE.AnimationM
   mixer?.uncacheRoot(obj);
 }
 
-/* ── animated player (Score! Classics) ─────────────────────────────── */
-
-export interface PlayerHandle {
-  obj: THREE.Object3D;
-  mixer: THREE.AnimationMixer;
-  actions: Record<ClipKey, THREE.AnimationAction | null>;
-  joints: JointMap | null;
-  started: boolean;
-  prevX: number;
-  prevZ: number;
-  init: boolean;
-}
-
-export function AnimatedPlayer({
-  id,
-  kit,
-  number,
-  onReady,
-}: {
-  id: string;
-  kit: KitColors;
-  number: number;
-  onReady: (id: string, handle: PlayerHandle | null) => void;
-}) {
-  const body = useLoader(GLTFLoader, SCORE_BODY_URL);
-  const clips = useLoader(GLTFLoader, SCORE_CLIPS_URL);
-  const hair = useLoader(GLTFLoader, SCORE_HAIR_URL);
-
-  const built = useMemo(() => {
-    const obj = buildPlayerObject(body.scene, kit, id, number, kit.accent, { hair: hair.scene });
-    const mixer = new THREE.AnimationMixer(obj);
-    const actions = {} as Record<ClipKey, THREE.AnimationAction | null>;
-    for (const [key, clipName] of Object.entries(CLIP_NAMES) as [ClipKey, string][]) {
-      const clip = THREE.AnimationClip.findByName(clips.animations, clipName);
-      actions[key] = clip ? mixer.clipAction(clip) : null;
-    }
-    return { obj, mixer, actions };
-  }, [body, clips, hair, id, kit, number]);
-
-  useEffect(() => {
-    onReady(id, {
-      obj: built.obj,
-      mixer: built.mixer,
-      actions: built.actions,
-      joints: null,
-      started: false,
-      prevX: 0,
-      prevZ: 0,
-      init: false,
-    });
-    return () => {
-      onReady(id, null);
-      built.mixer.stopAllAction();
-      disposeBuiltObject(built.obj, built.mixer);
-    };
-  }, [id, built, onReady]);
-
-  // Unlike the old mannequin, the UBC body natively faces +Z — exactly the
-  // scene's facing convention, so no flip wrapper is needed.
-  return <primitive object={built.obj} />;
-}
