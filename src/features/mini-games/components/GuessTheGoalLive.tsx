@@ -104,12 +104,13 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
     setPicked(null);
     setBonusPicked(null);
     setError(null);
-    setPhase(next.state === 'guessed' ? 'bonus' : 'watch');
+    // 'guessed' without a bonus payload should not happen (the server only
+    // parks in 'guessed' when a bonus exists) — degrade to the done panel so
+    // the user always has a Next Goal button.
+    setPhase(next.state === 'guessed' ? (next.bonus ? 'bonus' : 'bonus_done') : 'watch');
   }, []);
 
-  const bootstrap = useCallback(() => {
-    setPhase('loading');
-    setError(null);
+  const loadCurrent = useCallback(() => {
     guessTheGoalApi
       .current()
       .then((existing) => {
@@ -123,11 +124,18 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
       });
   }, [adoptSession]);
 
+  const retryLoad = useCallback(() => {
+    setPhase('loading');
+    setError(null);
+    loadCurrent();
+  }, [loadCurrent]);
+
   useEffect(() => {
     // A failed resume must NOT fall through to 'idle': Kick off from there
     // would abandon a session (and its pending bonus) the user still has.
-    bootstrap();
-  }, [bootstrap]);
+    // (Fetch only — phase already mounts as 'loading'.)
+    loadCurrent();
+  }, [loadCurrent]);
 
   /** Server-clock elapsed seconds past the grace window. */
   const serverElapsed = useCallback((): number => {
@@ -361,7 +369,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
           </p>
           <button
             type="button"
-            onClick={bootstrap}
+            onClick={retryLoad}
             className="flex h-12 w-full max-w-[220px] items-center justify-center rounded-2xl bg-brand-green-bright font-poppins text-sm font-black uppercase tracking-wide text-black"
           >
             {t('Try again')}
@@ -483,10 +491,15 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
                           {t('Already solved before — no repeat rewards')}
                         </p>
                       )}
+                      {error && (
+                        <p className="px-1 text-xs font-semibold text-brand-red">{error}</p>
+                      )}
                       <button
                         type="button"
                         disabled={busy}
-                        onClick={() => (outcome.session_state === 'guessed' ? setPhase('bonus') : start())}
+                        onClick={() =>
+                          outcome.session_state === 'guessed' && outcome.bonus ? setPhase('bonus') : start()
+                        }
                         className="flex h-12 items-center justify-center gap-1.5 rounded-2xl bg-brand-green-bright font-poppins text-sm font-black uppercase tracking-wide text-black disabled:opacity-60"
                       >
                         {outcome.session_state === 'guessed' ? t('Bonus question') : t('Next goal')}
@@ -537,15 +550,18 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
                       );
                     })}
                   </div>
-                  {phase === 'bonus_done' && bonusOutcome && (
+                  {phase === 'bonus_done' && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-1 flex flex-col gap-2">
-                      {(bonusOutcome.awards.coins > 0 || bonusOutcome.awards.xp > 0) && (
+                      {bonusOutcome && (bonusOutcome.awards.coins > 0 || bonusOutcome.awards.xp > 0) && (
                         <p className="flex items-center gap-2 px-1 font-poppins text-[12px] font-black uppercase text-brand-green-bright">
                           <CoinIcon className="size-4" /> +{bonusOutcome.awards.coins} · +{bonusOutcome.awards.xp} XP
                           {bonusOutcome.awards.daily_cap_reached && (
                             <span className="text-white/40">{t('(daily cap)')}</span>
                           )}
                         </p>
+                      )}
+                      {error && (
+                        <p className="px-1 text-xs font-semibold text-brand-red">{error}</p>
                       )}
                       <button
                         type="button"
