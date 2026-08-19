@@ -87,6 +87,84 @@ function RpProgressBar({ current, target }: { current: number; target: number })
   );
 }
 
+/** Compact mode card (bottom row): title + subtitle, big pictogram icon
+ *  bottom-right, optional NEW pill. The whole card is the tap target. */
+function MiniModeCard({
+  bg,
+  dark = false,
+  title,
+  subtitle,
+  iconSrc,
+  badge,
+  badge2 = null,
+  onClick,
+}: {
+  bg: string;
+  /** true = black text (light card colors) */
+  dark?: boolean;
+  title: string;
+  subtitle: string;
+  iconSrc: string;
+  badge?: string | null;
+  /** Second pill next to the first (e.g. NEW + game count). */
+  badge2?: string | null;
+  onClick: () => void;
+}) {
+  const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
+  const text = dark ? 'text-black' : 'text-white';
+  return (
+    <div
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      className="relative min-h-[150px] md:min-h-[220px] cursor-pointer overflow-hidden rounded-[10px] p-3.5 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
+      style={{ backgroundColor: bg }}
+    >
+      {(badge || badge2) && (
+        <div className="absolute top-2.5 right-2.5 md:top-4 md:right-4 z-20 flex items-center gap-1.5">
+          {badge && (
+            <div
+              className="rounded-full bg-brand-yellow px-2.5 py-1 text-[8px] md:text-[11px] uppercase tracking-wide text-black"
+              style={poppins}
+            >
+              {badge}
+            </div>
+          )}
+          {badge2 && (
+            <div
+              className={`rounded-full px-2.5 py-1 text-[8px] md:text-[11px] uppercase tracking-wide ${dark ? 'bg-black text-white' : 'bg-white/20 text-white'}`}
+              style={poppins}
+            >
+              {badge2}
+            </div>
+          )}
+        </div>
+      )}
+      <Image
+        src={iconSrc}
+        alt=""
+        width={200}
+        height={200}
+        className="pointer-events-none absolute bottom-2 right-3 z-0 h-20 w-20 object-contain opacity-90 md:bottom-3 md:right-5 md:h-32 md:w-32"
+      />
+      <div className="relative z-10 flex h-full flex-col">
+        <h3 className={`pr-12 text-[1.05rem] md:text-[clamp(1.4rem,2.2vw,2rem)] leading-[1.1] uppercase break-words [hyphens:auto] ${text}`} style={poppins}>
+          {title}
+        </h3>
+        <p className={`mt-1.5 text-[10px] md:text-[14px] uppercase ${dark ? 'text-black/70' : 'text-white/80'}`} style={poppins}>
+          {subtitle}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 interface ModeSelectionScreenProps {
   onSelectMode: (mode: 'ranked' | 'friendly' | 'solo') => void;
   /** If provided, called when ranked card is clicked BEFORE the confirm modal opens.
@@ -126,18 +204,6 @@ export function ModeSelectionScreen({
   const objectivesEnabled = useObjectivesEnabled();
   const { data: objectivesData, isLoading: objectivesLoading } = useObjectives({ enabled: objectivesEnabled });
   const rankedTitleStyle = {
-    fontFamily: "'Poppins', sans-serif",
-    fontWeight: 600,
-    letterSpacing: "0",
-    lineHeight: 1,
-  } as const;
-  const friendlyTitleStyle = {
-    fontFamily: "'Poppins', sans-serif",
-    fontWeight: 600,
-    letterSpacing: "0",
-    lineHeight: 1,
-  } as const;
-  const dailyTitleStyle = {
     fontFamily: "'Poppins', sans-serif",
     fontWeight: 600,
     letterSpacing: "0",
@@ -376,231 +442,41 @@ export function ModeSelectionScreen({
       {/* ─── 1b. Announcements ─── */}
       <PlayAnnouncements />
 
-      {/* ─── 2. Secondary Modes Grid ─── */}
-      <div
-        className="grid grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4"
-      >
-        {/* Friendly Match */}
-        <div
-          onClick={() => setSelectedMode('friendly')}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              setSelectedMode('friendly');
-            }
-          }}
-          role="button"
-          tabIndex={0}
-          className="relative cursor-pointer overflow-hidden rounded-[10px] md:min-h-0 p-3 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
-          style={{ backgroundColor: colors.blue.brand }}
-        >
-          {/* Desktop watermark icon (mobile uses inline icon below) */}
-          <Image
-            src="/assets/friendly_match-icon.webp"
-            alt=""
-            width={160}
-            height={160}
-            className="hidden lg:block absolute right-4 bottom-4 h-28 w-28 object-contain opacity-90 pointer-events-none"
-          />
-          <div className="relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left">
-            <h3
-              className="text-[0.95rem] leading-[1.05] uppercase text-white break-words [hyphens:auto] md:text-[clamp(1.5rem,2.4vw,2.25rem)]"
-              style={friendlyTitleStyle}
-            >
-              {t('play.friendlyMatch')}
-            </h3>
-            <p className="mt-1 text-[10px] md:mt-1.5 md:text-base uppercase text-white" style={poppins}>{t('play.friendlySubtitle')}</p>
-
-            {/* Mobile: icon (centered, right under subtitle) + PLAY (bottom, full width) */}
-            <div className="mt-1.5 flex flex-1 items-center justify-center lg:hidden">
-              <Image
-                src="/assets/friendly_match-icon.webp"
-                alt=""
-                width={500}
-                height={500}
-                className="h-[110px] w-[110px] object-contain pointer-events-none"
-              />
-            </div>
-            <div className="mt-1.5 flex h-[36px] w-full items-center justify-center rounded-[8px] bg-black text-[12px] uppercase tracking-wide text-white lg:hidden" style={poppins}>
-              {t('common.play')}
-            </div>
-
-            {/* Desktop: bottom-left PLAY */}
-            <div className="mt-auto hidden pt-4 lg:block">
-              <div className="flex h-[44px] w-[130px] items-center justify-center rounded-[8px] bg-black text-base uppercase tracking-wide text-white" style={poppins}>
-                {t('common.play')}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Daily Challenge */}
-        <div
-          onClick={() => router.push('/daily/challenges')}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              router.push('/daily/challenges');
-            }
-          }}
-          role="button"
-          tabIndex={0}
-          className="relative cursor-pointer overflow-hidden rounded-[10px] md:min-h-0 p-3 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
-          style={{ backgroundColor: colors.yellow.base }}
-        >
-          {/* Desktop watermark icon (mobile uses inline icon below) */}
-          <Image
-            src="/assets/daily_chllangeicon.webp"
-            alt=""
-            width={160}
-            height={160}
-            className="hidden lg:block absolute right-2 bottom-2 h-32 w-32 object-contain opacity-90 pointer-events-none"
-          />
-          <div className="relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left">
-            <h3
-              className="text-[0.95rem] leading-[1.05] uppercase text-black break-words [hyphens:auto] md:text-[clamp(1.5rem,2.4vw,2.25rem)]"
-              style={dailyTitleStyle}
-            >
-              {t('play.dailyChallenge')}
-            </h3>
-            <p className="mt-1 text-[10px] md:mt-1.5 md:text-base uppercase text-black" style={poppins}>{t('play.dailySubtitle')}</p>
-
-            {/* Mobile: icon (centered, right under subtitle) + PLAY (bottom, full width) */}
-            <div className="mt-1.5 flex flex-1 items-center justify-center lg:hidden">
-              <Image
-                src="/assets/daily_challenge_mobile.webp"
-                alt=""
-                width={528}
-                height={528}
-                className="h-[150px] w-full object-contain pointer-events-none"
-              />
-            </div>
-            <div className="mt-1.5 flex h-[36px] w-full items-center justify-center rounded-[8px] bg-black text-[12px] uppercase tracking-wide text-white lg:hidden" style={poppins}>
-              {t('common.play')}
-            </div>
-
-            {/* Desktop: bottom-left PLAY */}
-            <div className="mt-auto hidden pt-4 lg:block">
-              <div className="flex h-[44px] w-[130px] items-center justify-center rounded-[8px] bg-black text-base uppercase tracking-wide text-white" style={poppins}>
-                {t('common.play')}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Auction */}
-        <div
+      {/* ─── 2. Mode Grid (2×2): Auction · Tic-Tac-Toe / Daily · Mini Games ─── */}
+      <div className="grid grid-cols-2 gap-3 md:gap-4">
+        <MiniModeCard
+          bg="#6B2FB3"
+          title={t('play.auctionTitle')}
+          subtitle={t('play.auctionSubtitle')}
+          badge={t('play.freeKicksNewBadge')}
+          iconSrc="/assets/auction-card-icon.webp"
           onClick={() => setAuctionModalOpen(true)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              setAuctionModalOpen(true);
-            }
-          }}
-          role="button"
-          tabIndex={0}
-          className="relative col-span-2 lg:col-span-1 cursor-pointer overflow-hidden rounded-[10px] md:min-h-0 p-3 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
-          style={{ backgroundColor: '#6B2FB3' }}
-        >
-          {/* Desktop watermark icon (mobile uses inline icon below) */}
-          <Image
-            src="/assets/auction-card-icon.webp"
-            alt=""
-            width={200}
-            height={200}
-            className="hidden lg:block absolute right-3 bottom-3 h-32 w-32 object-contain opacity-90 pointer-events-none"
-          />
-          <div className="absolute top-2 right-2 lg:top-3 lg:right-3 z-20 rounded-full bg-brand-yellow px-2 py-0.5 text-[8px] lg:text-[10px] font-black uppercase tracking-wide text-black" style={poppins}>
-            {t('play.auctionNewBadge')}
-          </div>
-          <div className="relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left">
-            <h3
-              className="text-[0.95rem] leading-[1.05] uppercase text-white break-words [hyphens:auto] md:text-[clamp(1.5rem,2.4vw,2.25rem)]"
-              style={friendlyTitleStyle}
-            >
-              {t('play.auctionTitle')}
-            </h3>
-            <p className="mt-1 text-[10px] md:mt-1.5 md:text-base uppercase text-white/80" style={poppins}>{t('play.auctionSubtitle')}</p>
-
-            {/* Mobile: icon + PLAY */}
-            <div className="mt-1.5 flex flex-1 items-center justify-center lg:hidden">
-              <Image
-                src="/assets/auction-card-icon.webp"
-                alt=""
-                width={200}
-                height={200}
-                className="h-[96px] w-[96px] object-contain pointer-events-none opacity-95"
-              />
-            </div>
-            <div className="mt-1.5 flex h-[36px] w-full items-center justify-center rounded-[8px] bg-black text-[12px] uppercase tracking-wide text-white lg:hidden" style={poppins}>
-              {t('common.play')}
-            </div>
-
-            {/* Desktop: bottom-left PLAY */}
-            <div className="mt-auto hidden pt-4 lg:block">
-              <div className="flex h-[44px] w-[130px] items-center justify-center rounded-[8px] bg-black text-base uppercase tracking-wide text-white" style={poppins}>
-                {t('common.play')}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Free Kicks (house-banked solo mode) */}
-        <div
-          onClick={() => router.push('/free-kicks')}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              router.push('/free-kicks');
-            }
-          }}
-          role="button"
-          tabIndex={0}
-          className="relative col-span-2 lg:col-span-3 cursor-pointer overflow-hidden rounded-[10px] md:min-h-0 p-3 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
-          style={{ backgroundColor: colors.green.base }}
-        >
-          {/* Desktop watermark icon (mobile uses inline icon below) */}
-          <Image
-            src="/assets/free-kicks-card-icon.png"
-            alt=""
-            width={200}
-            height={200}
-            className="hidden lg:block absolute right-3 bottom-2 h-32 w-32 object-contain opacity-90 pointer-events-none"
-          />
-          <div className="absolute top-2 right-2 lg:top-3 lg:right-3 z-20 rounded-full bg-brand-yellow px-2 py-0.5 text-[8px] lg:text-[10px] font-black uppercase tracking-wide text-black" style={poppins}>
-            {t('play.freeKicksNewBadge')}
-          </div>
-          <div className="relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left">
-            <h3
-              className="text-[0.95rem] leading-[1.05] uppercase text-white break-words [hyphens:auto] md:text-[clamp(1.5rem,2.4vw,2.25rem)]"
-              style={friendlyTitleStyle}
-            >
-              {t('play.freeKicksTitle')}
-            </h3>
-            <p className="mt-1 text-[10px] md:mt-1.5 md:text-base uppercase text-white/85" style={poppins}>{t('play.freeKicksSubtitle')}</p>
-
-            {/* Mobile: icon + PLAY */}
-            <div className="mt-1.5 flex flex-1 items-center justify-center lg:hidden">
-              <Image
-                src="/assets/free-kicks-card-icon.png"
-                alt=""
-                width={200}
-                height={200}
-                className="h-[96px] w-[96px] object-contain pointer-events-none opacity-95"
-              />
-            </div>
-            <div className="mt-1.5 flex h-[36px] w-full items-center justify-center rounded-[8px] bg-black text-[12px] uppercase tracking-wide text-white lg:hidden" style={poppins}>
-              {t('common.play')}
-            </div>
-
-            {/* Desktop: bottom-left PLAY */}
-            <div className="mt-auto hidden pt-4 lg:block">
-              <div className="flex h-[44px] w-[130px] items-center justify-center rounded-[8px] bg-black text-base uppercase tracking-wide text-white" style={poppins}>
-                {t('common.play')}
-              </div>
-            </div>
-          </div>
-        </div>
+        />
+        <MiniModeCard
+          bg={colors.red.mid}
+          title={t('play.ticTacToeTitle')}
+          subtitle={t('play.ticTacToeSubtitle')}
+          iconSrc="/assets/tictactoe-card-icon.png?v=3"
+          badge={t('play.freeKicksNewBadge')}
+          onClick={() => router.push('/demos/mini-football-grid')}
+        />
+        <MiniModeCard
+          bg={colors.yellow.base}
+          dark
+          title={t('play.dailyChallenge')}
+          subtitle={t('play.dailySubtitle')}
+          iconSrc="/assets/daily_chllangeicon.webp"
+          onClick={() => router.push('/daily/challenges')}
+        />
+        <MiniModeCard
+          bg={colors.orange.base}
+          dark
+          title={t('play.miniGamesTitle')}
+          subtitle={t('play.miniGamesSubtitle')}
+          iconSrc="/assets/minigames-card-icon.png?v=3"
+          badge={t('play.freeKicksNewBadge')}
+          onClick={() => router.push('/mini-games')}
+        />
       </div>
 
       {/* ─── 3. Objectives ─── */}
