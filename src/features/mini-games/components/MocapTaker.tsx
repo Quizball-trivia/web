@@ -16,7 +16,7 @@ import { useMemo, useRef, useEffect, type RefObject } from 'react';
 import { useLoader, useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
-import { buildPlayerObject, SCORE_HAIR_URL, type HairStyleName } from './ScoreGoalsPlayer3D';
+import { buildPlayerObject, disposeBuiltObject, SCORE_HAIR_URL, type HairStyleName } from './ScoreGoalsPlayer3D';
 
 const TAKER_URL = '/assets/demos/score/taker.glb';
 const KICK_LEAD_S = 0.45;
@@ -97,9 +97,10 @@ export function MocapTaker({
   useEffect(() => {
     built.idleAction?.reset().play();
     kicking.current = false;
-    const mixer = built.mixer;
+    const { mixer, obj } = built;
     return () => {
       mixer.stopAllAction();
+      disposeBuiltObject(obj, mixer);
     };
   }, [built]);
 
@@ -111,7 +112,10 @@ export function MocapTaker({
       built.kickAction.reset().play();
       if (built.idleAction) built.kickAction.crossFadeFrom(built.idleAction, 0.12, false);
     } else if (start == null && kicking.current) {
+      // Back to the run-up: stop the clamped follow-through so it stops
+      // contributing weight, then restart the idle cleanly.
       kicking.current = false;
+      built.kickAction?.stop();
       built.idleAction?.reset().play();
     }
     built.mixer.update(dt);

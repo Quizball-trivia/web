@@ -256,7 +256,7 @@ export function buildPlayerObject(
   const obj = skeletonClone(bodyScene);
   const h = hashOf(id);
   const skinTone = look.skin ?? SKINS[h % SKINS.length];
-  const hairColor = look.hairColor ?? HAIRS[(h >> 3) % HAIRS.length];
+  const hairColor = look.hairColor ?? HAIRS[(h >>> 3) % HAIRS.length];
   const kitMat = makeKitMaterial(kit, skinTone);
   const browMat = new THREE.MeshStandardMaterial({
     color: hairColor,
@@ -299,9 +299,9 @@ export function buildPlayerObject(
       m.frustumCulled = false;
       head.add(m);
     };
-    const style = look.hairStyle === undefined ? HAIR_POOL[(h >> 5) % HAIR_POOL.length] : look.hairStyle;
+    const style = look.hairStyle === undefined ? HAIR_POOL[(h >>> 5) % HAIR_POOL.length] : look.hairStyle;
     if (style) attach(style);
-    if (look.beard ?? (h >> 8) % 5 === 0) attach('Hair_Beard');
+    if (look.beard ?? (h >>> 8) % 5 === 0) attach('Hair_Beard');
   }
 
   const chest = obj.getObjectByName(CHEST_BONE);
@@ -319,6 +319,43 @@ export function buildPlayerObject(
     chest.add(back);
   }
   return obj;
+}
+
+/**
+ * Release the GPU resources `buildPlayerObject` FRESHLY allocated for this
+ * instance — the kit/brow/hair/number materials and their textures (notably the
+ * number CanvasTexture and the back-plane's own geometry). R3F does NOT dispose
+ * objects mounted via `<primitive>`, so a component that keys/remounts these
+ * must call this on unmount, or the per-instance materials and textures pile up
+ * in the GL context.
+ *
+ * IMPORTANT: it deliberately does NOT dispose skinned-mesh geometries — those
+ * are SHARED with the GLTFLoader's cached scene (skeletonClone reuses buffers),
+ * so disposing them would corrupt every other instance and future clones. Only
+ * geometry created here (the number back-plane) is freed. Pass the mixer to drop
+ * its cached bindings too.
+ */
+export function disposeBuiltObject(obj: THREE.Object3D, mixer?: THREE.AnimationMixer): void {
+  const seenMat = new Set<THREE.Material>();
+  const disposeMat = (m: THREE.Material) => {
+    if (seenMat.has(m)) return;
+    seenMat.add(m);
+    for (const v of Object.values(m as unknown as Record<string, unknown>)) {
+      if (v instanceof THREE.Texture) v.dispose();
+    }
+    m.dispose();
+  };
+  obj.traverse((child) => {
+    const mesh = child as THREE.Mesh;
+    if (!mesh.isMesh && !(mesh as THREE.SkinnedMesh).isSkinnedMesh) return;
+    // The number back-plane is the only geometry allocated in buildPlayerObject;
+    // skinned-mesh geometry is shared with the loader cache — never dispose it.
+    if (mesh.geometry instanceof THREE.PlaneGeometry) mesh.geometry.dispose();
+    const mat = mesh.material;
+    if (Array.isArray(mat)) mat.forEach(disposeMat);
+    else if (mat) disposeMat(mat);
+  });
+  mixer?.uncacheRoot(obj);
 }
 
 /* ── animated player (Score! Classics) ─────────────────────────────── */
@@ -371,7 +408,11 @@ export function AnimatedPlayer({
       prevZ: 0,
       init: false,
     });
-    return () => onReady(id, null);
+    return () => {
+      onReady(id, null);
+      built.mixer.stopAllAction();
+      disposeBuiltObject(built.obj, built.mixer);
+    };
   }, [id, built, onReady]);
 
   // Unlike the old mannequin, the UBC body natively faces +Z — exactly the

@@ -15,13 +15,14 @@
  * reads differently without changing the 0.45s launch or 0.78s flight budget.
  */
 
-import { Suspense, useMemo, useRef, useState, type RefObject } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { Canvas, useFrame, useLoader, type ThreeEvent } from '@react-three/fiber';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { MocapTaker } from './MocapTaker';
 import {
   buildPlayerObject,
+  disposeBuiltObject,
   jointsAttached,
   resolveJoints,
   setJoint,
@@ -701,6 +702,7 @@ function GLBPlayerRig({
       ),
     [gltf, hairLib, kit, shorts, socks, skin, number, accent, hair, hairStyle, beard],
   );
+  useEffect(() => () => disposeBuiltObject(obj), [obj]);
   // The UBC body natively faces +Z, matching the hand-rig convention.
   return <primitive object={obj} />;
 }
@@ -1009,7 +1011,10 @@ function poseKeeperSave(
     return;
   }
 
-  const high = move === 'high-fly' || move === 'high-tip';
+  // 'punch' is a high corner save where the ball is parried away (the ball-
+  // flight deflects it); pose it as a full high dive reaching the ball, so the
+  // keeper meets a high shot up high rather than sprawling low.
+  const high = move === 'high-fly' || move === 'high-tip' || move === 'punch';
   const contactRootX = target[0] * (high ? 0.68 : 0.66);
   const contactRootY = high ? Math.max(0.52, target[1] - 0.78) : 0.08;
   const flightLift = Math.sin(reach * Math.PI) * (high ? 0.34 : 0.16);
@@ -1111,6 +1116,14 @@ function KeeperBody({
   const root = useRef<THREE.Group>(null);
   const joints = useRef<JointMap | null>(null);
   const idling = useRef(true);
+
+  useEffect(() => {
+    const { mixer, obj } = built;
+    return () => {
+      mixer.stopAllAction();
+      disposeBuiltObject(obj, mixer);
+    };
+  }, [built]);
 
   useFrame((state, dt) => {
     const player = root.current;

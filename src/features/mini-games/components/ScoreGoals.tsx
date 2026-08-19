@@ -9,7 +9,7 @@
  * toggle lives on the play screen. Trivia integration TBD.
  */
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { AnimatePresence, motion } from 'motion/react';
 import { Play, RotateCcw, Star, Trophy } from 'lucide-react';
@@ -55,6 +55,16 @@ export function ScoreGoals({ backHref = '/dev/mini-games' }: { backHref?: string
   const [misses, setMisses] = useState(0);
   const [missLine, setMissLine] = useState<string | null>(null);
   const [results, setResults] = useState<Record<string, GoalResult>>({});
+
+  // Cancel the pending "reveal" splash timer whenever the goal changes (e.g. the
+  // user backs out mid-splash) or the component unmounts, so a stale timer can't
+  // force a freshly-picked goal straight to its reveal card.
+  const revealTimer = useRef<number | null>(null);
+  useEffect(() => {
+    return () => {
+      if (revealTimer.current != null) window.clearTimeout(revealTimer.current);
+    };
+  }, [goalId]);
 
   const goal = useMemo(
     () => FAMOUS_GOALS.find((g) => g.id === goalId) ?? null,
@@ -111,7 +121,8 @@ export function ScoreGoals({ backHref = '/dev/mini-games' }: { backHref?: string
         return { ...r, [goal.id]: next };
       });
       setPhase('scored');
-      window.setTimeout(() => setPhase('reveal'), 1500);
+      if (revealTimer.current != null) window.clearTimeout(revealTimer.current);
+      revealTimer.current = window.setTimeout(() => setPhase('reveal'), 1500);
       return;
     }
     setCrowdMood('build');
