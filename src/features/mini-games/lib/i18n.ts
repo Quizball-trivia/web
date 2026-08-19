@@ -12,6 +12,22 @@ import { useLocale } from "@/contexts/LocaleContext";
 export type MiniLocale = "en" | "ka";
 
 const KA: Record<string, string> = {
+  // Guess the Goal (live)
+  "Guess the Goal": "გამოიცანი გოლი",
+  "Name the iconic goal — real rewards, server-scored": "ამოიცანი ლეგენდარული გოლი — რეალური ჯილდოები",
+  "Solved {n}/{total}": "ამოცნობილი {n}/{total}",
+  "Answer now · +{points}": "უპასუხე ახლა · +{points}",
+  "+{points} points": "+{points} ქულა",
+  "Move {n}/{total}": "სვლა {n}/{total}",
+  "Which goal is this?": "რომელი გოლია ეს?",
+  "Bonus question": "ბონუს კითხვა",
+  "Next goal": "შემდეგი გოლი",
+  "Guess the Goal is warming up — check back soon": "გამოიცანი გოლი მალე ჩაირთვება — შემოიარე ცოტა ხანში",
+  "A legendary goal replays on the coaching board. The earlier you name it, the more you earn — first solve of each goal pays coins and XP.":
+    "ლეგენდარული გოლი ტაქტიკურ დაფაზე თამაშდება. რაც უფრო ადრე ამოიცნობ, მეტს გამოიმუშავებ — ყოველი გოლის პირველი ამოცნობა ქოინებსა და XP-ს გაძლევს.",
+  "(daily cap)": "(დღიური ლიმიტი)",
+  "Already solved before — no repeat rewards": "უკვე ამოცნობილი გაქვს — განმეორებაზე ჯილდო აღარ გეძლევა",
+
   // Shared
   "Prototype — virtual points only, no real money or rewards":
     "პროტოტიპი — მხოლოდ ვირტუალური ქულები, რეალური ფული ან ჯილდო არ არსებობს",
