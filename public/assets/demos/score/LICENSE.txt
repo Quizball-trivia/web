@@ -1,0 +1,6 @@
+player-body.glb  — Quaternius "Universal Base Characters" (Superhero Male, Godot-UE build)
+                   https://quaternius.com/packs/universalbasecharacters.html
+player-clips.glb — Quaternius "Universal Animation Library" (Unreal-Godot build, clip subset)
+                   https://quaternius.com/packs/universalanimationlibrary.html
+Both CC0 1.0 (public domain), rebuilt for the /demos prototypes by
+scripts/build-score-rig.mjs (textures pruned, clips subset + resampled).

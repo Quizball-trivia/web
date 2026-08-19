@@ -24,6 +24,7 @@ import { PassChain } from "@/features/mini-games/components/PassChain";
 import { PenaltyShootout } from "@/features/mini-games/components/PenaltyShootout";
 import { QuizBoard } from "@/features/mini-games/components/QuizBoard";
 import { RoadToGoal } from "@/features/mini-games/components/RoadToGoal";
+import { ScoreGoals } from "@/features/mini-games/components/ScoreGoals";
 import { SquadCollection } from "@/features/mini-games/components/SquadCollection";
 import { SquadSpin } from "@/features/mini-games/components/SquadSpin";
 import { StatSniper } from "@/features/mini-games/components/StatSniper";
@@ -114,6 +115,8 @@ export default function DemoModePage() {
       return <GuessTheGoal backHref={DEMO_BACK} />;
     case "mini-stat-sniper":
       return <StatSniper backHref={DEMO_BACK} />;
+    case "mini-score-classics":
+      return <ScoreGoals backHref={DEMO_BACK} />;
     default:
       notFound();
   }

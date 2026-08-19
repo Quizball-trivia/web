@@ -257,6 +257,15 @@ const ALL_MINI_GAME_DEMO_MODES: DemoModeCard[] = [
     },
     group: "featured",
   },
+  {
+    slug: "mini-score-classics",
+    title: { en: "Score! Classics", ka: "Score! კლასიკა" },
+    description: {
+      en: "Recreate the most famous goals in history — swipe every pass, run and shot.",
+      ka: "აღადგინე ისტორიის ყველაზე ცნობილი გოლები — გაასრიალე ყოველი პასი, წინსვლა და დარტყმა.",
+    },
+    group: "featured",
+  },
 ];
 
 // Hidden from the hub per owner (2026-08-18); routes stay reachable directly.

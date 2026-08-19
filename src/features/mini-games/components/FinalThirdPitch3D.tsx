@@ -15,9 +15,21 @@
  * reads differently without changing the 0.45s launch or 0.78s flight budget.
  */
 
-import { useMemo, useRef, useState, type RefObject } from 'react';
-import { Canvas, useFrame, type ThreeEvent } from '@react-three/fiber';
+import { Suspense, useMemo, useRef, useState, type RefObject } from 'react';
+import { Canvas, useFrame, useLoader, type ThreeEvent } from '@react-three/fiber';
 import * as THREE from 'three';
+import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { MocapTaker } from './MocapTaker';
+import {
+  buildPlayerObject,
+  jointsAttached,
+  resolveJoints,
+  setJoint,
+  SCORE_BODY_URL,
+  SCORE_HAIR_URL,
+  type HairStyleName,
+  type JointMap,
+} from './ScoreGoalsPlayer3D';
 
 interface Zone {
   id: string;
@@ -36,16 +48,12 @@ const ZONE_POS: Record<string, [number, number]> = {
 };
 
 const BALL_SPOT = new THREE.Vector3(0, 0.13, 9);
-const SHOOTER_IDLE = new THREE.Vector3(-0.95, 0, 10.65);
-const _idle = new THREE.Vector3();
-const _strike = new THREE.Vector3();
 const _ball = new THREE.Vector3();
 const KICK_LEAD_S = 0.45;
 const FLIGHT_S = 0.78;
 const SAVE_CONTACT_S = FLIGHT_S * 0.88;
 const SAVE_GATHER_S = 0.18;
 const SAVE_LAND_S = 0.52;
-const SKIN_DEFAULT = '#b9784f';
 
 const PITCH_LINES = [
   { position: [0, 0.007, 5.55] as const, size: [11.2, 0.085] as const, rotation: 0 },
@@ -191,19 +199,21 @@ const KICK_SETUPS: readonly KickSetup[] = [
   },
   {
     id: 'ronaldinho',
+    // Signature side-on approach from the left, curling the ball right around
+    // the wall — a wide angled run-up, heavy inside-boot curl and topspin dip.
     ball: [1.18, 0.13, 7.55],
-    idle: [0.38, 8.42],
+    idle: [-0.55, 8.62],
     strike: [1.02, 7.82],
     wall: 0.48,
-    yaw: -0.22,
+    yaw: -0.42,
     strides: 1.85,
     hop: 0.08,
-    weave: 0.14,
-    stutter: 0.2,
-    whip: 0.68,
-    curlBias: 0.85,
+    weave: 0.22,
+    stutter: 0.24,
+    whip: 0.7,
+    curlBias: 1.35,
     heightBias: 1.18,
-    spin: 11,
+    spin: 13,
     knuckle: 0.2,
   },
   {
@@ -307,7 +317,9 @@ const TAKER_LOOK: Record<TakerId, { kit: string; shorts: string; socks: string; 
   messi: { kit: '#6bb3ff', shorts: '#0b2a6b', socks: '#6bb3ff', hair: '#3a2414', number: 10, skin: '#c9a07a', accent: '#0b2a6b', hairStyle: 'mop', beard: true },
   beckham: { kit: '#da1f26', shorts: '#f4f7fb', socks: '#da1f26', hair: '#8a6b3c', number: 7, skin: '#d4a07a', accent: '#f4f7fb', hairStyle: 'fauxhawk' },
   carlos: { kit: '#fde100', shorts: '#1b3d8f', socks: '#fde100', hair: '#120c08', number: 6, skin: '#5c3824', accent: '#1b3d8f', hairStyle: 'bald' },
-  ronaldinho: { kit: '#0a3d2c', shorts: '#f4f7fb', socks: '#0a3d2c', hair: '#1a100c', number: 10, skin: '#8a5a38', accent: '#f4f7fb', hairStyle: 'long' },
+  // Barça blaugrana — the flat kit shader can't stripe, so the claret shirt
+  // reads the colour, blue shorts, blue-claret socks, gold #10.
+  ronaldinho: { kit: '#8b1a3a', shorts: '#141d5c', socks: '#1a2a7a', hair: '#160f0a', number: 10, skin: '#8a5a38', accent: '#f4c430', hairStyle: 'long' },
   neymar: { kit: '#ffe500', shorts: '#1a3a1a', socks: '#ffe500', hair: '#24160e', number: 11, skin: '#c9a070', accent: '#1a3a1a', hairStyle: 'mop' },
   zidane: { kit: '#1c3f94', shorts: '#f4f7fb', socks: '#c8102e', hair: '#2b211a', number: 10, skin: '#d4a07a', accent: '#f4f7fb', hairStyle: 'balding' },
   juninho: { kit: '#f4f7fb', shorts: '#f4f7fb', socks: '#f4f7fb', hair: '#17110b', number: 8, skin: '#c9a07a', accent: '#1b3d8f', hairStyle: 'short' },
@@ -320,13 +332,21 @@ function CameraRig({ kick, shotZone, flying }: { kick: KickSetup; shotZone: Zone
   useFrame((state) => {
     const bx = kick.ball[0];
     const bz = kick.ball[2];
+    // Narrow viewports (phones, tall panels) lose horizontal FOV and crop the
+    // taker out of frame — pull the camera back to compensate. No-op at the
+    // 16/10 aspect the framing was tuned for.
+    const aspect =
+      (state.camera as THREE.PerspectiveCamera).aspect && (state.camera as THREE.PerspectiveCamera).isPerspectiveCamera
+        ? (state.camera as THREE.PerspectiveCamera).aspect
+        : 1.6;
+    const back = Math.max(0, 1.6 / Math.min(1.6, Math.max(0.55, aspect)) - 1);
     const aimX = flying && shotZone ? (ZONE_POS[shotZone.id]?.[0] ?? 0) * 0.18 + bx * 0.12 : bx;
     look.current.x = lerp(look.current.x, aimX * 0.48, 0.09);
     look.current.y = lerp(look.current.y, 1.08, 0.09);
     look.current.z = lerp(look.current.z, 0.12, 0.09);
     state.camera.position.x = lerp(state.camera.position.x, 0.48 + bx * 0.46, 0.09);
-    state.camera.position.y = lerp(state.camera.position.y, 2.2 + (bz - 9) * 0.06, 0.09);
-    state.camera.position.z = lerp(state.camera.position.z, 13.55 + (bz - 8.4) * 0.58, 0.09);
+    state.camera.position.y = lerp(state.camera.position.y, 2.2 + (bz - 9) * 0.06 + back * 0.9, 0.09);
+    state.camera.position.z = lerp(state.camera.position.z, 13.55 + (bz - 8.4) * 0.58 + back * 6.2, 0.09);
     state.camera.lookAt(look.current);
   });
   return null;
@@ -334,284 +354,6 @@ function CameraRig({ kick, shotZone, flying }: { kick: KickSetup; shotZone: Zone
 
 /** Momentum carry-over: the scorer wheels off the strike before the
  *  signature pose, so the celebration doesn't snap in. */
-function poseWheelAway(kick: KickSetup, u: number, joint: JointMap, player: THREE.Group) {
-  const stride = Math.sin(u * Math.PI * 2.6);
-  player.position.y = Math.abs(stride) * 0.05;
-  player.position.x += kick.yaw * -0.4 * u;
-  player.position.z += u * 0.55;
-  player.rotation.set(0, Math.PI + lerp(-kick.yaw * 0.55, 0, easeOut(u)), lerp(0.1, 0, u));
-  setJoint(joint.pelvis, 0, 0, -stride * 0.05);
-  setJoint(joint.hipL, stride * 0.6);
-  setJoint(joint.hipR, -stride * 0.6);
-  setJoint(joint.kneeL, Math.max(0, -stride) * 0.9 + 0.12);
-  setJoint(joint.kneeR, Math.max(0, stride) * 0.9 + 0.12);
-  setJoint(joint.ankleL, -Math.max(0, -stride) * 0.2);
-  setJoint(joint.ankleR, -Math.max(0, stride) * 0.2);
-  setJoint(joint.shoL, -stride * 0.8, 0, 0.18);
-  setJoint(joint.shoR, stride * 0.8, 0, -0.18);
-  setJoint(joint.elbL, -0.6);
-  setJoint(joint.elbR, -0.6);
-  setJoint(joint.spine, lerp(-0.18, -0.04, u));
-  setJoint(joint.head, -0.06);
-}
-
-function poseCelebrate(id: TakerId, now: number, elapsed: number, joint: JointMap, player: THREE.Group) {
-  const bounce = Math.abs(Math.sin(now * 7.2));
-  player.position.z += 0.55;
-  if (id === 'ronaldo') {
-    // Siuu: leap + mid-air pirouette, then the planted wide-stance arms-back landing.
-    if (elapsed < 0.55) {
-      const t = elapsed / 0.55;
-      player.position.y = Math.sin(t * Math.PI) * 0.62;
-      player.rotation.set(0, Math.PI + t * Math.PI * 2, 0);
-      setJoint(joint.pelvis, 0, 0, 0);
-      setJoint(joint.hipL, -0.5);
-      setJoint(joint.hipR, -0.5);
-      setJoint(joint.kneeL, 0.9);
-      setJoint(joint.kneeR, 0.9);
-      setJoint(joint.shoL, -1.4, 0, 0.6);
-      setJoint(joint.shoR, -1.4, 0, -0.6);
-      setJoint(joint.elbL, -0.5);
-      setJoint(joint.elbR, -0.5);
-      setJoint(joint.spine, -0.1);
-      setJoint(joint.head, -0.1);
-      return;
-    }
-    const land = easeOut(clamp01((elapsed - 0.55) / 0.18));
-    player.position.y = lerp(0.1, 0, land);
-    player.rotation.set(0.06, Math.PI, 0);
-    setJoint(joint.pelvis, 0, 0, 0);
-    setJoint(joint.hipL, -0.22, 0, -0.3);
-    setJoint(joint.hipR, -0.22, 0, 0.3);
-    setJoint(joint.kneeL, 0.3);
-    setJoint(joint.kneeR, 0.3);
-    setJoint(joint.shoL, lerp(-1.4, 0.62, land), 0, 0.5);
-    setJoint(joint.shoR, lerp(-1.4, 0.62, land), 0, -0.5);
-    setJoint(joint.elbL, -0.12);
-    setJoint(joint.elbR, -0.12);
-    setJoint(joint.spine, -0.38);
-    setJoint(joint.head, -0.34);
-    return;
-  }
-  if (id === 'messi') {
-    player.position.y = bounce * 0.035;
-    player.rotation.set(0, Math.PI + 0.18, 0);
-    setJoint(joint.pelvis, 0, 0.08, 0);
-    setJoint(joint.hipL, 0.06);
-    setJoint(joint.hipR, -0.04);
-    setJoint(joint.kneeL, 0.16);
-    setJoint(joint.kneeR, 0.16);
-    setJoint(joint.shoL, -1.18, 0, 0.32);
-    setJoint(joint.shoR, -1.18, 0, -0.32);
-    setJoint(joint.elbL, -1.48);
-    setJoint(joint.elbR, -1.48);
-    setJoint(joint.spine, 0.1);
-    setJoint(joint.head, -0.06, 0.14);
-    return;
-  }
-  if (id === 'beckham') {
-    player.position.y = 0.02;
-    player.rotation.set(0, Math.PI, 0);
-    setJoint(joint.pelvis, 0, 0, 0);
-    setJoint(joint.hipL, 0.04);
-    setJoint(joint.hipR, 0.04);
-    setJoint(joint.kneeL, 0.1);
-    setJoint(joint.kneeR, 0.1);
-    setJoint(joint.shoL, -1.92, 0, 1.22);
-    setJoint(joint.shoR, -1.92, 0, -1.22);
-    setJoint(joint.elbL, -0.18);
-    setJoint(joint.elbR, -0.18);
-    setJoint(joint.spine, -0.08);
-    setJoint(joint.head, -0.04);
-    return;
-  }
-  if (id === 'carlos') {
-    player.position.x += Math.sin(now * 3.4) * 0.01;
-    player.position.y = bounce * 0.14;
-    player.rotation.set(0, Math.PI + Math.sin(now * 2.2) * 0.35, 0.1);
-    setJoint(joint.pelvis, 0, 0.12, 0);
-    setJoint(joint.hipL, 0.22);
-    setJoint(joint.hipR, -0.18);
-    setJoint(joint.kneeL, 0.28);
-    setJoint(joint.kneeR, 0.22);
-    setJoint(joint.shoL, -2.55, 0, 0.48);
-    setJoint(joint.shoR, -1.15, 0, -0.92);
-    setJoint(joint.elbL, -0.22);
-    setJoint(joint.elbR, -0.55);
-    setJoint(joint.spine, -0.22);
-    setJoint(joint.head, -0.18);
-    return;
-  }
-  if (id === 'ronaldinho') {
-    const sway = Math.sin(now * 8.4);
-    player.position.y = Math.abs(Math.sin(now * 10.2)) * 0.11;
-    player.rotation.set(0, Math.PI + sway * 0.28, sway * 0.14);
-    setJoint(joint.pelvis, 0, sway * 0.22, 0);
-    setJoint(joint.hipL, sway * 0.18);
-    setJoint(joint.hipR, -sway * 0.18);
-    setJoint(joint.kneeL, 0.22);
-    setJoint(joint.kneeR, 0.22);
-    setJoint(joint.shoL, -2.25, 0, 0.62 + sway * 0.45);
-    setJoint(joint.shoR, -2.25, 0, -0.62 - sway * 0.45);
-    setJoint(joint.elbL, -0.35);
-    setJoint(joint.elbR, -0.35);
-    setJoint(joint.spine, -0.06);
-    setJoint(joint.head, -0.22, sway * 0.22);
-    return;
-  }
-  if (id === 'neymar') {
-    // "Hang loose" — one arm thrown up, hip sway.
-    const sway = Math.sin(now * 5.6);
-    player.position.y = Math.abs(sway) * 0.05;
-    player.rotation.set(0, Math.PI + sway * 0.12, sway * 0.05);
-    setJoint(joint.pelvis, 0, sway * 0.14, 0);
-    setJoint(joint.hipL, 0.08);
-    setJoint(joint.hipR, -0.06);
-    setJoint(joint.kneeL, 0.18);
-    setJoint(joint.kneeR, 0.14);
-    setJoint(joint.shoR, -2.9, 0, -0.25 + sway * 0.12);
-    setJoint(joint.shoL, 0.2, 0, 0.4);
-    setJoint(joint.elbR, -0.35);
-    setJoint(joint.elbL, -0.5);
-    setJoint(joint.spine, -0.16, sway * 0.1, 0);
-    setJoint(joint.head, -0.22, sway * 0.15);
-    return;
-  }
-  if (id === 'zidane') {
-    // Understated maestro: both arms opened low to the crowd, chin up.
-    player.position.y = bounce * 0.03;
-    player.rotation.set(0, Math.PI - 0.1, 0);
-    setJoint(joint.pelvis, 0, 0, 0);
-    setJoint(joint.hipL, 0.05);
-    setJoint(joint.hipR, 0.05);
-    setJoint(joint.kneeL, 0.12);
-    setJoint(joint.kneeR, 0.12);
-    setJoint(joint.shoL, -1.05, 0, 1.05);
-    setJoint(joint.shoR, -1.05, 0, -1.05);
-    setJoint(joint.elbL, -0.15);
-    setJoint(joint.elbR, -0.15);
-    setJoint(joint.spine, -0.14);
-    setJoint(joint.head, -0.28);
-    return;
-  }
-  if (id === 'mbappe') {
-    // Petit Prince: planted wide, arms crossed, head tilted.
-    player.position.y = 0;
-    player.rotation.set(0, Math.PI, 0);
-    setJoint(joint.pelvis, 0, 0, 0);
-    setJoint(joint.hipL, -0.06, 0, -0.22);
-    setJoint(joint.hipR, -0.06, 0, 0.22);
-    setJoint(joint.kneeL, 0.1);
-    setJoint(joint.kneeR, 0.1);
-    setJoint(joint.shoL, -1.05, 0, -0.55);
-    setJoint(joint.shoR, -1.15, 0, 0.55);
-    setJoint(joint.elbL, -1.9);
-    setJoint(joint.elbR, -1.9);
-    setJoint(joint.spine, -0.12);
-    setJoint(joint.head, -0.05, 0.2, 0.1);
-    return;
-  }
-  if (id === 'juninho') {
-    // Aeroplane run, banking side to side.
-    const bank = Math.sin(now * 3.1);
-    player.position.y = 0.03 + Math.abs(Math.sin(now * 6.4)) * 0.05;
-    player.rotation.set(0.12, Math.PI + bank * 0.2, bank * 0.3);
-    setJoint(joint.pelvis, 0, bank * 0.1, 0);
-    setJoint(joint.hipL, 0.16);
-    setJoint(joint.hipR, -0.1);
-    setJoint(joint.kneeL, 0.28);
-    setJoint(joint.kneeR, 0.2);
-    setJoint(joint.shoL, -1.5, 0, 1.35);
-    setJoint(joint.shoR, -1.5, 0, -1.35);
-    setJoint(joint.elbL, -0.08);
-    setJoint(joint.elbR, -0.08);
-    setJoint(joint.spine, -0.2);
-    setJoint(joint.head, -0.14, bank * 0.2);
-    return;
-  }
-  // Kvara & default: sliding knee celebration, arms wide, gliding forward.
-  const slide = easeOut(clamp01(elapsed / 0.9));
-  player.position.y = -0.14;
-  player.position.z += slide * 0.9;
-  player.rotation.set(0.38, Math.PI + 0.42, 0.22);
-  setJoint(joint.pelvis, 0.18, 0.2, 0);
-  setJoint(joint.hipL, 1.18);
-  setJoint(joint.kneeL, 1.52);
-  setJoint(joint.hipR, 0.18);
-  setJoint(joint.kneeR, 0.38);
-  setJoint(joint.shoL, -2.08, 0, 0.88);
-  setJoint(joint.shoR, -2.08, 0, -0.88);
-  setJoint(joint.elbL, -0.28);
-  setJoint(joint.elbR, -0.28);
-  setJoint(joint.spine, 0.24);
-  setJoint(joint.head, 0.08);
-}
-
-function poseMiss(id: TakerId, joint: JointMap, player: THREE.Group) {
-  if (id === 'messi') {
-    player.position.y = -0.06;
-    player.rotation.set(0.22, Math.PI, 0);
-    setJoint(joint.hipL, 0.55);
-    setJoint(joint.hipR, 0.55);
-    setJoint(joint.kneeL, 0.92);
-    setJoint(joint.kneeR, 0.92);
-    setJoint(joint.shoL, -0.85, 0, 0.22);
-    setJoint(joint.shoR, -0.85, 0, -0.22);
-    setJoint(joint.elbL, -1.15);
-    setJoint(joint.elbR, -1.15);
-    setJoint(joint.spine, 0.32);
-    setJoint(joint.head, 0.28);
-    return;
-  }
-  if (id === 'beckham' || id === 'ronaldo') {
-    player.position.y = 0;
-    player.rotation.set(0, Math.PI + (id === 'ronaldo' ? 0.35 : 0), 0);
-    setJoint(joint.hipL, 0.04);
-    setJoint(joint.hipR, 0.04);
-    setJoint(joint.kneeL, 0.12);
-    setJoint(joint.kneeR, 0.12);
-    setJoint(joint.shoL, -2.38, 0, 0.68);
-    setJoint(joint.shoR, -2.38, 0, -0.68);
-    setJoint(joint.elbL, -1.82);
-    setJoint(joint.elbR, -1.82);
-    setJoint(joint.spine, 0.16);
-    setJoint(joint.head, 0.22);
-    return;
-  }
-  if (id === 'neymar') {
-    player.position.y = -0.1;
-    player.rotation.set(0.28, Math.PI, 0);
-    setJoint(joint.hipL, 0.85);
-    setJoint(joint.hipR, 0.85);
-    setJoint(joint.kneeL, 1.25);
-    setJoint(joint.kneeR, 1.25);
-    setJoint(joint.shoL, -1.55, 0, 0.4);
-    setJoint(joint.shoR, -1.55, 0, -0.4);
-    setJoint(joint.elbL, -1.05);
-    setJoint(joint.elbR, -1.05);
-    setJoint(joint.spine, 0.38);
-    setJoint(joint.head, 0.32);
-    return;
-  }
-  player.position.y = 0;
-  player.rotation.set(0, Math.PI + 0.55, 0);
-  setJoint(joint.hipL, 0.08);
-  setJoint(joint.hipR, 0.08);
-  setJoint(joint.kneeL, 0.16);
-  setJoint(joint.kneeR, 0.16);
-  setJoint(joint.shoL, -0.55, 0, 0.35);
-  setJoint(joint.shoR, -0.55, 0, -0.35);
-  setJoint(joint.elbL, -0.62);
-  setJoint(joint.elbR, -0.62);
-  setJoint(joint.spine, 0.08);
-  setJoint(joint.head, 0.12, 0.35);
-}
-
-function zoneSide(id: string): number {
-  if (id.endsWith('L')) return 1;
-  if (id.endsWith('R')) return -1;
-  return 0;
-}
 
 function seeded(seed: number): () => number {
   let value = seed >>> 0;
@@ -903,373 +645,103 @@ function useHoardingMap(metres: number): THREE.Texture {
 
 /* ── articulated footballers ──────────────────────────────────────── */
 
-const JOINT_NAMES = [
-  'pelvis',
-  'spine',
-  'torso',
-  'hipL',
-  'hipR',
-  'kneeL',
-  'kneeR',
-  'ankleL',
-  'ankleR',
-  'shoL',
-  'shoR',
-  'elbL',
-  'elbR',
-  'handL',
-  'handR',
-  'head',
-] as const;
-type JointName = (typeof JOINT_NAMES)[number];
-type JointMap = Partial<Record<JointName, THREE.Object3D>>;
 
-function resolveJoints(root: THREE.Group): JointMap {
-  const joints: JointMap = {};
-  for (const name of JOINT_NAMES) joints[name] = root.getObjectByName(name) ?? undefined;
-  return joints;
-}
-
-function setJoint(joint: THREE.Object3D | undefined, x: number, y = 0, z = 0) {
-  joint?.rotation.set(x, y, z);
-}
-
-function PlayerLeg({
-  side,
-  skin,
-  sock,
-  boot,
-}: {
-  side: 'L' | 'R';
-  skin: string;
-  sock: string;
-  boot: string;
-}) {
-  const x = side === 'L' ? -0.115 : 0.115;
-  return (
-    <group name={`hip${side}`} position={[x, -0.07, 0]}>
-      <mesh position={[0, -0.17, 0]} castShadow>
-        <capsuleGeometry args={[0.086, 0.2, 4, 10]} />
-        <meshStandardMaterial color={skin} roughness={0.82} />
-      </mesh>
-      <group name={`knee${side}`} position={[0, -0.36, 0]}>
-        <mesh scale={[1.02, 0.86, 1]} castShadow>
-          <sphereGeometry args={[0.077, 8, 8]} />
-          <meshStandardMaterial color={skin} roughness={0.82} />
-        </mesh>
-        <mesh position={[0, -0.17, 0]} castShadow>
-          <capsuleGeometry args={[0.066, 0.22, 4, 8]} />
-          <meshStandardMaterial color={sock} roughness={0.76} />
-        </mesh>
-        <group name={`ankle${side}`} position={[0, -0.35, 0]}>
-          <mesh position={[0, -0.015, 0.075]} rotation={[Math.PI / 2 + 0.08, 0, 0]} scale={[1.16, 1.08, 0.78]} castShadow>
-            <capsuleGeometry args={[0.067, 0.16, 4, 10]} />
-            <meshStandardMaterial color={boot} roughness={0.62} />
-          </mesh>
-          <mesh position={[0, -0.066, 0.083]} rotation={[Math.PI / 2, 0, 0]} scale={[1.08, 1, 0.62]}>
-            <capsuleGeometry args={[0.069, 0.17, 3, 10]} />
-            <meshStandardMaterial color="#0a1018" roughness={0.78} />
-          </mesh>
-        </group>
-      </group>
-    </group>
-  );
-}
-
-function PlayerArm({
-  side,
-  kit,
-  skin,
-  glove,
-}: {
-  side: 'L' | 'R';
-  kit: string;
-  skin: string;
-  glove?: string;
-}) {
-  const x = side === 'L' ? -0.235 : 0.235;
-  return (
-    <group name={`sho${side}`} position={[x, 0.155, 0]}>
-      <mesh castShadow>
-        <sphereGeometry args={[0.104, 12, 12]} />
-        <meshStandardMaterial color={kit} roughness={0.78} />
-      </mesh>
-      <mesh position={[0, -0.105, 0]} castShadow>
-        <capsuleGeometry args={[0.064, 0.12, 4, 8]} />
-        <meshStandardMaterial color={kit} roughness={0.78} />
-      </mesh>
-      <group name={`elb${side}`} position={[0, -0.25, 0]}>
-        <mesh position={[0, -0.115, 0]} castShadow>
-          <capsuleGeometry args={[0.052, 0.18, 4, 8]} />
-          <meshStandardMaterial color={skin} roughness={0.82} />
-        </mesh>
-        <group name={`hand${side}`} position={[0, -0.265, 0]}>
-          <mesh scale={glove ? [1.38, 1.16, 0.78] : [1, 1, 0.82]} castShadow>
-            <sphereGeometry args={[glove ? 0.076 : 0.062, 10, 10]} />
-            <meshStandardMaterial color={glove ?? skin} roughness={0.7} />
-          </mesh>
-          {glove && (
-            <>
-              <mesh position={[side === 'L' ? 0.065 : -0.065, 0.005, 0.012]} rotation={[0, 0, side === 'L' ? -0.65 : 0.65]} castShadow>
-                <capsuleGeometry args={[0.026, 0.055, 3, 8]} />
-                <meshStandardMaterial color={glove} roughness={0.7} />
-              </mesh>
-              <mesh position={[0, 0.055, 0]} scale={[1.18, 0.58, 0.92]} castShadow>
-                <cylinderGeometry args={[0.068, 0.063, 0.105, 10]} />
-                <meshStandardMaterial color="#071320" roughness={0.78} />
-              </mesh>
-              <mesh position={[0, -0.012, 0.058]} scale={[1.08, 0.82, 0.5]}>
-                <sphereGeometry args={[0.058, 8, 8]} />
-                <meshStandardMaterial color="#ffe500" roughness={0.72} />
-              </mesh>
-            </>
-          )}
-        </group>
-      </group>
-    </group>
-  );
-}
-
-function ShirtNumber({ number, accent = '#f8fbff', back = false }: { number: number; accent?: string; back?: boolean }) {
-  // Real digits drawn to a canvas — the old bar-glyph sat inside the torso
-  // cylinder (z 0.198 < radius 0.245) so it was never visible.
-  const texture = useMemo(() => {
-    const canvas = document.createElement('canvas');
-    canvas.width = 128;
-    canvas.height = 128;
-    const ctx = canvas.getContext('2d')!;
-    ctx.clearRect(0, 0, 128, 128);
-    ctx.font = '900 92px Poppins, "Arial Black", Arial, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.lineWidth = 12;
-    ctx.lineJoin = 'round';
-    ctx.strokeStyle = 'rgba(8, 12, 18, 0.5)';
-    ctx.strokeText(String(number), 64, 70);
-    ctx.fillStyle = accent;
-    ctx.fillText(String(number), 64, 70);
-    const tex = new THREE.CanvasTexture(canvas);
-    tex.colorSpace = THREE.SRGBColorSpace;
-    tex.anisotropy = 4;
-    return tex;
-  }, [number, accent]);
-  return (
-    <mesh position={[0, back ? 0.05 : 0.1, back ? -0.21 : 0.21]} rotation={[0, back ? Math.PI : 0, 0]}>
-      <planeGeometry args={back ? [0.26, 0.26] : [0.13, 0.13]} />
-      <meshBasicMaterial map={texture} transparent toneMapped={false} depthWrite={false} />
-    </mesh>
-  );
-}
 
 type HairStyle = 'short' | 'crop' | 'mop' | 'long' | 'bald' | 'balding' | 'fauxhawk';
 
-function PlayerHead({
-  skin,
-  hair,
-  hairStyle = 'short',
-  beard = false,
-}: {
-  skin: string;
-  hair: string;
-  hairStyle?: HairStyle;
-  beard?: boolean;
-}) {
-  return (
-    <group name="head" position={[0, 0.51, 0]}>
-      <group scale={1.12}>
-      <mesh scale={[0.88, 1, 0.92]} castShadow>
-        <sphereGeometry args={[0.15, 14, 12]} />
-        <meshStandardMaterial color={skin} roughness={0.86} />
-      </mesh>
-      {hairStyle === 'short' && (
-        <>
-          <mesh position={[0, 0.084, -0.012]} scale={[0.93, 0.54, 0.94]} castShadow>
-            <sphereGeometry args={[0.153, 14, 10]} />
-            <meshStandardMaterial color={hair} roughness={0.92} />
-          </mesh>
-          <mesh position={[0, 0.128, 0.025]} rotation={[0.1, 0, 0]} scale={[1, 0.42, 0.9]} castShadow>
-            <sphereGeometry args={[0.12, 10, 8]} />
-            <meshStandardMaterial color={hair} roughness={0.94} />
-          </mesh>
-        </>
-      )}
-      {hairStyle === 'crop' && (
-        <mesh position={[0, 0.098, -0.006]} scale={[0.9, 0.44, 0.92]} castShadow>
-          <sphereGeometry args={[0.15, 14, 10]} />
-          <meshStandardMaterial color={hair} roughness={0.94} />
-        </mesh>
-      )}
-      {hairStyle === 'mop' && (
-        <>
-          <mesh position={[0, 0.05, -0.012]} scale={[0.98, 0.76, 0.98]} castShadow>
-            <sphereGeometry args={[0.155, 14, 12]} />
-            <meshStandardMaterial color={hair} roughness={0.92} />
-          </mesh>
-          <mesh position={[0, 0.108, 0.068]} rotation={[0.24, 0, 0]} scale={[0.94, 0.4, 0.66]} castShadow>
-            <sphereGeometry args={[0.132, 12, 8]} />
-            <meshStandardMaterial color={hair} roughness={0.94} />
-          </mesh>
-        </>
-      )}
-      {hairStyle === 'long' && (
-        <>
-          <mesh position={[0, 0.05, -0.012]} scale={[1, 0.78, 1]} castShadow>
-            <sphereGeometry args={[0.156, 14, 12]} />
-            <meshStandardMaterial color={hair} roughness={0.92} />
-          </mesh>
-          <mesh position={[0, -0.05, -0.105]} scale={[0.82, 1.05, 0.5]} castShadow>
-            <sphereGeometry args={[0.13, 12, 10]} />
-            <meshStandardMaterial color={hair} roughness={0.92} />
-          </mesh>
-          <mesh position={[0, 0.072, 0]} rotation={[Math.PI / 2 + 0.14, 0, 0]}>
-            <torusGeometry args={[0.148, 0.017, 8, 20]} />
-            <meshStandardMaterial color="#f2f5f8" roughness={0.6} />
-          </mesh>
-        </>
-      )}
-      {hairStyle === 'balding' && (
-        <>
-          <mesh position={[0, 0.012, -0.01]} rotation={[Math.PI / 2 - 0.08, 0, 0]}>
-            <torusGeometry args={[0.132, 0.034, 8, 20]} />
-            <meshStandardMaterial color={hair} roughness={0.94} />
-          </mesh>
-          <mesh position={[0, 0.028, -0.108]} scale={[0.82, 0.52, 0.4]} castShadow>
-            <sphereGeometry args={[0.13, 10, 8]} />
-            <meshStandardMaterial color={hair} roughness={0.94} />
-          </mesh>
-        </>
-      )}
-      {hairStyle === 'fauxhawk' && (
-        <>
-          <mesh position={[0, 0.098, -0.006]} scale={[0.9, 0.42, 0.92]} castShadow>
-            <sphereGeometry args={[0.15, 14, 10]} />
-            <meshStandardMaterial color={hair} roughness={0.94} />
-          </mesh>
-          <mesh position={[0, 0.158, 0.012]} rotation={[0.12, 0, 0]} castShadow>
-            <boxGeometry args={[0.05, 0.055, 0.21]} />
-            <meshStandardMaterial color={hair} roughness={0.9} />
-          </mesh>
-        </>
-      )}
-      {beard && (
-        <mesh position={[0, -0.078, 0.06]} scale={[0.74, 0.5, 0.62]} castShadow>
-          <sphereGeometry args={[0.125, 12, 10]} />
-          <meshStandardMaterial color={hair} roughness={0.95} />
-        </mesh>
-      )}
-      <mesh position={[-0.139, 0.005, 0]} scale={[0.42, 0.66, 0.3]}>
-        <sphereGeometry args={[0.055, 8, 8]} />
-        <meshStandardMaterial color={skin} roughness={0.86} />
-      </mesh>
-      <mesh position={[0.139, 0.005, 0]} scale={[0.42, 0.66, 0.3]}>
-        <sphereGeometry args={[0.055, 8, 8]} />
-        <meshStandardMaterial color={skin} roughness={0.86} />
-      </mesh>
-      <mesh position={[-0.051, 0.015, 0.136]}>
-        <sphereGeometry args={[0.012, 6, 6]} />
-        <meshBasicMaterial color="#101820" />
-      </mesh>
-      <mesh position={[0.051, 0.015, 0.136]}>
-        <sphereGeometry args={[0.012, 6, 6]} />
-        <meshBasicMaterial color="#101820" />
-      </mesh>
-      <mesh position={[0, -0.018, 0.155]} rotation={[Math.PI / 2, 0, 0]}>
-        <coneGeometry args={[0.018, 0.055, 6]} />
-        <meshStandardMaterial color={skin} roughness={0.86} />
-      </mesh>
-      </group>
-    </group>
-  );
-}
+/** Old hand-rig hairstyle names → bundled hair meshes. */
+const HAIR_MESH: Record<HairStyle, HairStyleName | null> = {
+  short: 'Hair_SimpleParted',
+  crop: 'Hair_Buzzed',
+  mop: 'Hair_SimpleParted',
+  long: 'Hair_Long',
+  bald: null,
+  balding: 'Hair_Buzzed',
+  fauxhawk: 'Hair_Buns',
+};
 
-function PlayerRig({
+function GLBPlayerRig({
   kit,
   shorts,
   socks,
-  skin = SKIN_DEFAULT,
-  boot = '#101722',
-  hair = '#1b120c',
-  glove,
+  skin,
   number,
-  accent = '#f8fbff',
-  hairStyle,
-  beard,
+  accent,
+  hair = '#17100c',
+  hairStyle = 'short',
+  beard = false,
 }: {
   kit: string;
   shorts: string;
   socks: string;
-  skin?: string;
-  boot?: string;
-  hair?: string;
-  glove?: string;
+  skin: string;
   number: number;
-  accent?: string;
+  accent: string;
+  hair?: string;
   hairStyle?: HairStyle;
   beard?: boolean;
 }) {
-  return (
-    <group name="pelvis" position={[0, 0.93, 0]}>
-      <PlayerLeg side="L" skin={skin} sock={socks} boot={boot} />
-      <PlayerLeg side="R" skin={skin} sock={socks} boot={boot} />
-      {/* Boxy football shorts: a hip block + two square leg cuffs centered
-          over the thighs. Panels, not a bubble. */}
-      <mesh position={[0, 0.028, 0]} castShadow>
-        <boxGeometry args={[0.36, 0.16, 0.28]} />
-        <meshStandardMaterial color={shorts} roughness={0.78} />
-      </mesh>
-      <mesh position={[-0.108, -0.075, 0]} rotation={[0, 0, 0.06]} castShadow>
-        <boxGeometry args={[0.19, 0.16, 0.26]} />
-        <meshStandardMaterial color={shorts} roughness={0.78} />
-      </mesh>
-      <mesh position={[0.108, -0.075, 0]} rotation={[0, 0, -0.06]} castShadow>
-        <boxGeometry args={[0.19, 0.16, 0.26]} />
-        <meshStandardMaterial color={shorts} roughness={0.78} />
-      </mesh>
-      <group name="spine" position={[0, 0.055, 0]}>
-        <group name="torso" position={[0, 0.31, 0]}>
-          <mesh scale={[1.08, 1, 0.84]} castShadow>
-            <capsuleGeometry args={[0.195, 0.16, 8, 16]} />
-            <meshStandardMaterial color={kit} roughness={0.76} />
-          </mesh>
-          <mesh position={[0, 0.225, 0]} rotation={[Math.PI / 2, 0, 0]}>
-            <torusGeometry args={[0.072, 0.018, 6, 12]} />
-            <meshStandardMaterial color={accent} roughness={0.72} />
-          </mesh>
-          <mesh position={[-0.1, 0.11, 0.185]}>
-            <circleGeometry args={[0.025, 8]} />
-            <meshBasicMaterial color="#ffe500" toneMapped={false} />
-          </mesh>
-          <ShirtNumber number={number} accent={accent} />
-          <ShirtNumber number={number} accent={accent} back />
-          <PlayerArm side="L" kit={kit} skin={skin} glove={glove} />
-          <PlayerArm side="R" kit={kit} skin={skin} glove={glove} />
-          <mesh position={[0, 0.315, 0]}>
-            <cylinderGeometry args={[0.058, 0.068, 0.12, 8]} />
-            <meshStandardMaterial color={skin} roughness={0.86} />
-          </mesh>
-          <PlayerHead skin={skin} hair={hair} hairStyle={hairStyle} beard={beard} />
-        </group>
-      </group>
-    </group>
+  const gltf = useLoader(GLTFLoader, SCORE_BODY_URL);
+  const hairLib = useLoader(GLTFLoader, SCORE_HAIR_URL);
+  const obj = useMemo(
+    () =>
+      buildPlayerObject(
+        gltf.scene,
+        { shirt: kit, shorts, accent, socks },
+        `${kit}-${shorts}-${number}`,
+        number,
+        accent,
+        {
+          skin,
+          hair: hairLib.scene,
+          hairColor: hair,
+          hairStyle: HAIR_MESH[hairStyle],
+          beard,
+        },
+      ),
+    [gltf, hairLib, kit, shorts, socks, skin, number, accent, hair, hairStyle, beard],
   );
+  // The UBC body natively faces +Z, matching the hand-rig convention.
+  return <primitive object={obj} />;
 }
+
+/** Signature pre-kick stances, posed over the ball while the player decides.
+ * Hands: 'free' uses the arm fields; 'hips' plants both hands on the hips;
+ * 'hipR' just the right hand. Arm z: + raises the left arm laterally
+ * (mirrored for the right); elbow x: - bends the forearm up/forward. */
 
 interface Timeline {
   start: number | null;
 }
 
-function Shooter({
+
+
+/** High saves are sometimes two-fist punches that deflect the ball away. */
+function isPunchSave(zoneId: string, roll: number): boolean {
+  return (zoneId === 'TL' || zoneId === 'TR' || zoneId === 'TC') && roll > 0.55;
+}
+
+function shotRollFrom(start: number | null): number {
+  return start == null ? 0 : Math.abs(Math.sin(start * 761.3));
+}
+
+
+function WallPlayer({
   tl,
-  kick,
-  shotZone,
-  settled,
-  scored,
+  x,
+  delay,
+  skin,
+  hair,
+  number,
+  shift,
 }: {
   tl: RefObject<Timeline>;
-  kick: KickSetup;
-  shotZone: Zone | null;
-  settled: boolean;
-  scored: boolean | null;
+  x: number;
+  delay: number;
+  skin: string;
+  hair: string;
+  number: number;
+  shift: number;
 }) {
   const root = useRef<THREE.Group>(null);
   const joints = useRef<JointMap | null>(null);
@@ -1277,124 +749,70 @@ function Shooter({
   useFrame((state) => {
     const player = root.current;
     if (!player) return;
-    if (!joints.current) joints.current = resolveJoints(player);
+    if (!joints.current || !jointsAttached(player, joints.current)) {
+      joints.current = resolveJoints(player);
+    }
     const joint = joints.current;
+    if (!joint) return;
     const now = state.clock.elapsedTime;
     const start = tl.current?.start ?? null;
-    const side = zoneSide(shotZone?.id ?? 'TC');
-    _idle.set(kick.idle[0], 0, kick.idle[1]);
-    _strike.set(kick.strike[0], 0, kick.strike[1]);
+    const px = x + shift;
 
-    if (start == null) {
-      const breathe = Math.sin(now * 2.2);
-      player.position.copy(_idle);
-      player.position.y = 0.018 + breathe * 0.012;
-      player.rotation.set(0, Math.PI + kick.yaw, -0.025);
-      setJoint(joint.pelvis, 0, 0, breathe * 0.035);
-      setJoint(joint.spine, 0.03, 0, -0.04);
-      setJoint(joint.hipL, 0.08 + breathe * 0.025);
-      setJoint(joint.hipR, -0.04 - breathe * 0.025);
-      setJoint(joint.kneeL, 0.12);
-      setJoint(joint.kneeR, 0.08);
-      setJoint(joint.shoL, -0.08, 0, 0.13);
-      setJoint(joint.shoR, 0.08, 0, -0.13);
-      setJoint(joint.elbL, -0.42);
-      setJoint(joint.elbR, -0.42);
-      setJoint(joint.head, 0, -0.12, 0.02);
-      return;
-    }
+    // Classic wall pose: upper arms angled down-forward, forearms folded in so
+    // the hands meet clasped low in front.
+    setJoint(joint.spine, 0.08);
+    setJoint(joint.shoL, -0.32, 0, 0.1);
+    setJoint(joint.shoR, -0.32, 0, -0.1);
+    setJoint(joint.elbL, -0.55, 0.85, 0);
+    setJoint(joint.elbR, -0.55, -0.85, 0);
+    setJoint(joint.handL, -0.35, 0, -0.15);
+    setJoint(joint.handR, -0.35, 0, 0.15);
+    setJoint(joint.head, 0, -px * 0.035, 0);
 
-    const phase = now - start;
-    let runU = clamp01(phase / 0.29);
-    if (kick.stutter > 0 && runU > 0.32 && runU < 0.58) {
-      const hold = (runU - 0.32) / 0.26;
-      runU = 0.32 + hold * (1 - kick.stutter * 0.65) * 0.26;
-    }
-
-    if (!settled) {
-      if (phase < 0.29) {
-        const progress = easeOut(runU);
-        const stride = Math.sin(progress * Math.PI * kick.strides);
-        player.position.lerpVectors(_idle, _strike, progress * 0.78);
-        player.position.x -= Math.sin(progress * Math.PI) * kick.weave * (side || 1);
-        player.position.y = Math.abs(Math.sin(progress * Math.PI * (kick.id === 'neymar' ? 3.4 : 2.1))) * kick.hop;
-        player.rotation.set(0, Math.PI + lerp(kick.yaw, kick.yaw * 0.25, progress), kick.id === 'messi' ? -0.08 : -0.02);
-        setJoint(joint.pelvis, 0, kick.yaw * 0.4 * progress, -stride * 0.05);
-        setJoint(joint.hipL, stride * 0.7);
-        setJoint(joint.hipR, -stride * 0.7);
-        setJoint(joint.kneeL, Math.max(0, -stride) * 0.98 + 0.12);
-        setJoint(joint.kneeR, Math.max(0, stride) * 0.98 + 0.12);
-        setJoint(joint.ankleL, -Math.max(0, -stride) * 0.26);
-        setJoint(joint.ankleR, -Math.max(0, stride) * 0.26);
-        setJoint(joint.shoL, -stride * 0.72, 0, 0.16);
-        setJoint(joint.shoR, stride * 0.72, 0, -0.16);
-        setJoint(joint.elbL, kick.id === 'ronaldo' ? -0.78 : -0.5);
-        setJoint(joint.elbR, kick.id === 'ronaldo' ? -0.78 : -0.5);
-        setJoint(joint.spine, kick.id === 'ronaldinho' ? 0.1 : -0.14, kick.yaw * 0.5, 0.02);
-        setJoint(joint.head, 0.04, -0.08 + kick.yaw * 0.3, 0);
-      } else {
-        const strike = easeInOut((phase - 0.29) / (KICK_LEAD_S - 0.29));
-        const follow = easeOut(clamp01((phase - KICK_LEAD_S) / 0.42));
-        const whip = kick.whip;
-        player.position.lerpVectors(_idle, _strike, 0.78 + strike * 0.22);
-        player.position.y = Math.sin(strike * Math.PI) * (kick.hop * 0.45);
-        player.rotation.set(
-          0,
-          Math.PI + lerp(kick.yaw * 0.25, -kick.yaw * 0.55, strike),
-          lerp(-0.05, kick.id === 'carlos' ? 0.22 : 0.1, strike),
-        );
-        const hipSnap = phase < KICK_LEAD_S
-          ? lerp(0.88 * whip, -1.48 * whip, strike)
-          : lerp(-1.48 * whip, kick.id === 'messi' ? -0.4 : -0.62, follow);
-        const kneeSnap = phase < KICK_LEAD_S
-          ? lerp(kick.id === 'messi' ? 0.9 : 1.22, kick.id === 'messi' ? 0.26 : 0.1, strike)
-          : lerp(0.12, 0.32, follow);
-        setJoint(joint.pelvis, 0, lerp(-0.08, kick.curlBias * 0.12 * (side || 1), strike), lerp(-0.04, 0.2, strike));
-        setJoint(joint.hipR, hipSnap);
-        setJoint(joint.kneeR, kneeSnap);
-        setJoint(joint.ankleR, kick.id === 'messi' ? lerp(0.18, -0.22, strike) : lerp(-0.22, 0.28, strike));
-        setJoint(joint.hipL, lerp(-0.22, 0.16, strike));
-        setJoint(joint.kneeL, lerp(0.55, 0.26, strike));
-        setJoint(joint.ankleL, -0.1);
-        setJoint(joint.shoL, lerp(-0.72, 0.92 * whip, strike), 0, lerp(0.16, 0.62, strike));
-        setJoint(joint.shoR, lerp(0.86, -0.82 * whip, strike), 0, lerp(-0.14, -0.52, strike));
-        setJoint(joint.elbL, -0.46);
-        setJoint(joint.elbR, -0.58);
-        setJoint(joint.spine, lerp(0.14, kick.id === 'ronaldo' ? -0.34 : -0.18, strike), kick.yaw * 0.4, lerp(-0.04, -0.2, strike));
-        setJoint(joint.head, kick.id === 'ronaldinho' ? -0.16 : 0.1, 0.04 + kick.yaw * 0.2, 0.05);
-      }
-      return;
-    }
-
-    player.position.copy(_strike);
-    player.rotation.set(0, Math.PI + 0.02, 0);
-    if (scored) {
-      const celebrated = now - (start + KICK_LEAD_S + FLIGHT_S);
-      if (celebrated < 0.5) poseWheelAway(kick, clamp01(celebrated / 0.5), joint, player);
-      else poseCelebrate(kick.id, now, celebrated - 0.5, joint, player);
+    const jumpAt = start == null ? null : start + KICK_LEAD_S - 0.035 + delay;
+    if (jumpAt != null && now >= jumpAt) {
+      const jump = clamp01((now - jumpAt) / 0.55);
+      const height = Math.sin(jump * Math.PI) * 0.47;
+      player.position.set(px, height, 4.55);
+      player.rotation.set(0, 0, Math.sin(jump * Math.PI) * (px + 1.5) * 0.025);
+      const tuck = Math.sin(jump * Math.PI);
+      setJoint(joint.hipL, -tuck * 0.42);
+      setJoint(joint.hipR, -tuck * 0.42);
+      setJoint(joint.kneeL, 0.1 + tuck * 0.82);
+      setJoint(joint.kneeR, 0.1 + tuck * 0.82);
+      setJoint(joint.ankleL, -tuck * 0.18);
+      setJoint(joint.ankleR, -tuck * 0.18);
     } else {
-      poseMiss(kick.id, joint, player);
+      const breathe = Math.sin(now * 2.1 + x * 2.7);
+      player.position.set(px, breathe * 0.012, 4.55);
+      player.rotation.set(0, 0, 0);
+      setJoint(joint.hipL, 0);
+      setJoint(joint.hipR, 0);
+      setJoint(joint.kneeL, 0.1);
+      setJoint(joint.kneeR, 0.1);
+      setJoint(joint.ankleL, 0);
+      setJoint(joint.ankleR, 0);
     }
   });
 
-  const look = TAKER_LOOK[kick.id];
   return (
-    <group ref={root} position={SHOOTER_IDLE.toArray()} rotation={[0, Math.PI + 0.13, 0]}>
-      <PlayerRig
-        kit={look.kit}
-        shorts={look.shorts}
-        socks={look.socks}
-        skin={look.skin}
-        hair={look.hair}
-        boot="#131a24"
-        number={look.number}
-        accent={look.accent}
-        hairStyle={look.hairStyle}
-        beard={look.beard}
-      />
+    <group ref={root} position={[x, 0, 4.55]}>
+      <Suspense fallback={null}>
+        <GLBPlayerRig
+          kit="#1754d1"
+          shorts="#f4f7fb"
+          socks="#1754d1"
+          skin={skin}
+          number={number}
+          accent="#8fd3ff"
+          hair={hair}
+          hairStyle={number % 2 === 0 ? 'crop' : 'short'}
+        />
+      </Suspense>
     </group>
   );
 }
+
 
 type KeeperMove = 'jump-catch' | 'high-fly' | 'high-tip' | 'low-sprawl' | 'smother' | 'wrong-way' | 'late' | 'frozen' | 'punch';
 
@@ -1411,15 +829,6 @@ function keeperMove(zoneId: string, willSave: boolean, taker: TakerId, roll: num
   if (zoneId === 'BC') return 'smother';
   if (zoneId === 'TL' || zoneId === 'TR') return taker === 'beckham' || taker === 'ronaldo' ? 'high-tip' : 'high-fly';
   return 'low-sprawl';
-}
-
-/** High saves are sometimes two-fist punches that deflect the ball away. */
-function isPunchSave(zoneId: string, roll: number): boolean {
-  return (zoneId === 'TL' || zoneId === 'TR' || zoneId === 'TC') && roll > 0.55;
-}
-
-function shotRollFrom(start: number | null): number {
-  return start == null ? 0 : Math.abs(Math.sin(start * 761.3));
 }
 
 function poseKeeperReady(now: number, player: THREE.Group, joint: JointMap) {
@@ -1651,7 +1060,16 @@ function updateKeeperCatchPoint(player: THREE.Group, joint: JointMap, catchPoint
   catchPoint.lerp(_ball, 0.5);
 }
 
-function KeeperPlayer({
+const KEEPER_IDLE_URL = '/assets/demos/score/keeper-idle.glb';
+
+/**
+ * Goalkeeper on the UBC body. While waiting he plays the REAL Mixamo mocap
+ * ready-idle (retargeted onto this body in keeper-idle.glb); the instant a shot
+ * is taken the mixer is paused and the hand-authored dive/catch/save poses take
+ * over on the same skeleton via setJoint. The two never run at once — mixer for
+ * idle, procedural for saves — so they don't fight over the bones.
+ */
+function KeeperBody({
   tl,
   shotZone,
   willSave,
@@ -1668,14 +1086,40 @@ function KeeperPlayer({
   taker: TakerId;
   catchPoint: RefObject<THREE.Vector3>;
 }) {
+  const gltf = useLoader(GLTFLoader, KEEPER_IDLE_URL);
+  const hairLib = useLoader(GLTFLoader, SCORE_HAIR_URL);
+
+  const built = useMemo(() => {
+    const obj = buildPlayerObject(
+      gltf.scene,
+      { shirt: '#58cc02', shorts: '#071b18', accent: '#071b18', socks: '#58cc02' },
+      'keeper',
+      1,
+      '#071b18',
+      { skin: '#8f563b', hair: hairLib.scene, hairColor: '#17130e', hairStyle: 'Hair_SimpleParted', beard: false },
+    );
+    obj.traverse((c) => {
+      if ((c as THREE.SkinnedMesh).isSkinnedMesh) c.frustumCulled = false;
+    });
+    const mixer = new THREE.AnimationMixer(obj);
+    const idleClip = THREE.AnimationClip.findByName(gltf.animations, 'idle');
+    const idleAction = idleClip ? mixer.clipAction(idleClip) : null;
+    idleAction?.play();
+    return { obj, mixer, idleAction };
+  }, [gltf, hairLib]);
+
   const root = useRef<THREE.Group>(null);
   const joints = useRef<JointMap | null>(null);
+  const idling = useRef(true);
 
-  useFrame((state) => {
+  useFrame((state, dt) => {
     const player = root.current;
     if (!player) return;
-    if (!joints.current) joints.current = resolveJoints(player);
+    if (!joints.current || !jointsAttached(player, joints.current)) {
+      joints.current = resolveJoints(player);
+    }
     const joint = joints.current;
+    if (!joint) return;
     const now = state.clock.elapsedTime;
     const start = tl.current?.start ?? null;
     const shotTarget = shotZone ? ZONE_POS[shotZone.id] : null;
@@ -1684,22 +1128,43 @@ function KeeperPlayer({
     const shotPhase = start == null ? -1 : now - start;
     const dive = clamp01((shotPhase - (KICK_LEAD_S + delay)) / (move === 'jump-catch' ? 0.42 : 0.5));
 
-    if (!shotTarget || willSave == null) {
-      poseKeeperReady(now, player, joint);
+    // Ready state: no shot yet, outcome unknown, or the save hasn't started —
+    // let the mocap idle play. On a save the reaction begins a beat before the
+    // ball is struck (shotPhase >= KICK_LEAD_S - 0.2); on a beaten dive it
+    // begins once `dive` opens up.
+    const preSave = shotPhase < KICK_LEAD_S - 0.2;
+    const ready = !shotTarget || willSave == null || (willSave ? preSave : dive <= 0);
+
+    if (ready) {
+      if (built.idleAction) {
+        // Play the real Mixamo idle. The clip already animates the whole body,
+        // so don't also drive setJoint — keep the keeper planted and let the
+        // mixer own the pose.
+        if (!idling.current) {
+          idling.current = true;
+          built.idleAction.reset().play();
+        }
+        built.mixer.update(dt);
+        player.position.set(0, -0.05, 0.42);
+        player.rotation.set(0.08, 0, 0);
+      } else {
+        // Fallback if the mocap idle clip failed to load.
+        poseKeeperReady(now, player, joint);
+      }
       updateKeeperCatchPoint(player, joint, catchPoint.current);
       return;
+    }
+
+    // A save/dive is underway — hand control to the procedural poses. Stop the
+    // idle mixer so it doesn't fight the setJoint writes.
+    if (idling.current) {
+      idling.current = false;
+      built.idleAction?.stop();
     }
 
     const side = shotTarget[0] === 0 ? (shotZone?.id === 'TC' ? 1 : -1) : Math.sign(shotTarget[0]);
     if (willSave) {
-      if (shotPhase < KICK_LEAD_S - 0.2) poseKeeperReady(now, player, joint);
-      else poseKeeperSave(move, shotPhase, side, shotTarget, player, joint);
-      updateKeeperCatchPoint(player, joint, catchPoint.current);
-      return;
-    }
-
-    if (dive <= 0) {
-      poseKeeperReady(now, player, joint);
+      poseKeeperSave(move, shotPhase, side, shotTarget, player, joint);
       updateKeeperCatchPoint(player, joint, catchPoint.current);
       return;
     }
@@ -1728,100 +1193,24 @@ function KeeperPlayer({
 
   return (
     <group ref={root} position={[0, -0.05, 0.42]}>
-      <PlayerRig
-        kit="#58cc02"
-        shorts="#071b18"
-        socks="#58cc02"
-        skin="#8f563b"
-        hair="#17130e"
-        glove="#f7fbff"
-        boot="#101820"
-        number={1}
-        accent="#071b18"
-      />
+      <primitive object={built.obj} />
     </group>
   );
 }
 
-function WallPlayer({
-  tl,
-  x,
-  delay,
-  skin,
-  hair,
-  number,
-  shift,
-}: {
+function KeeperPlayer(props: {
   tl: RefObject<Timeline>;
-  x: number;
-  delay: number;
-  skin: string;
-  hair: string;
-  number: number;
-  shift: number;
+  shotZone: Zone | null;
+  willSave: boolean | null;
+  settled: boolean;
+  scored: boolean | null;
+  taker: TakerId;
+  catchPoint: RefObject<THREE.Vector3>;
 }) {
-  const root = useRef<THREE.Group>(null);
-  const joints = useRef<JointMap | null>(null);
-
-  useFrame((state) => {
-    const player = root.current;
-    if (!player) return;
-    if (!joints.current) joints.current = resolveJoints(player);
-    const joint = joints.current;
-    const now = state.clock.elapsedTime;
-    const start = tl.current?.start ?? null;
-    const px = x + shift;
-
-    // Classic wall pose: arms hang almost straight, hands clasped low in
-    // front — not the old chest-high elbow flare.
-    setJoint(joint.spine, 0.08);
-    setJoint(joint.shoL, -0.3, 0, 0.34);
-    setJoint(joint.shoR, -0.3, 0, -0.34);
-    setJoint(joint.elbL, -0.62, 0, -0.22);
-    setJoint(joint.elbR, -0.62, 0, 0.22);
-    setJoint(joint.handL, -0.25, 0, -0.12);
-    setJoint(joint.handR, -0.25, 0, 0.12);
-    setJoint(joint.head, 0, -px * 0.035, 0);
-
-    const jumpAt = start == null ? null : start + KICK_LEAD_S - 0.035 + delay;
-    if (jumpAt != null && now >= jumpAt) {
-      const jump = clamp01((now - jumpAt) / 0.55);
-      const height = Math.sin(jump * Math.PI) * 0.47;
-      player.position.set(px, height, 4.55);
-      player.rotation.set(0, 0, Math.sin(jump * Math.PI) * (px + 1.5) * 0.025);
-      const tuck = Math.sin(jump * Math.PI);
-      setJoint(joint.hipL, -tuck * 0.42);
-      setJoint(joint.hipR, -tuck * 0.42);
-      setJoint(joint.kneeL, 0.1 + tuck * 0.82);
-      setJoint(joint.kneeR, 0.1 + tuck * 0.82);
-      setJoint(joint.ankleL, -tuck * 0.18);
-      setJoint(joint.ankleR, -tuck * 0.18);
-    } else {
-      const breathe = Math.sin(now * 2.1 + x * 2.7);
-      player.position.set(px, breathe * 0.012, 4.55);
-      player.rotation.set(0, 0, 0);
-      setJoint(joint.hipL, 0);
-      setJoint(joint.hipR, 0);
-      setJoint(joint.kneeL, 0.1);
-      setJoint(joint.kneeR, 0.1);
-      setJoint(joint.ankleL, 0);
-      setJoint(joint.ankleR, 0);
-    }
-  });
-
   return (
-    <group ref={root} position={[x, 0, 4.55]}>
-      <PlayerRig
-        kit="#1754d1"
-        shorts="#f4f7fb"
-        socks="#1754d1"
-        skin={skin}
-        hair={hair}
-        boot="#111a26"
-        number={number}
-        accent="#8fd3ff"
-      />
-    </group>
+    <Suspense fallback={null}>
+      <KeeperBody {...props} />
+    </Suspense>
   );
 }
 
@@ -2214,17 +1603,30 @@ function Scene({
     } else {
       const targetFlight = willSave === true ? clamp01(flight / 0.88) : flight;
       const side = shotZone.x === 50 ? 0 : shotZone.x < 50 ? 1 : -1;
-      const curl = (kick.curlBias + (Math.abs(side) ? 0.35 : 0)) * (side || (kick.curlBias > 0.5 ? 1 : 0.2));
+      // Per-shot flight flavour, seeded off the shot clock so the SAME taker
+      // still varies kick-to-kick — three independent rolls in [0,1).
+      const r1 = Math.abs(Math.sin(start * 913.7));
+      const r2 = Math.abs(Math.sin(start * 547.3 + 1.7));
+      const r3 = Math.abs(Math.sin(start * 311.9 + 4.2));
+      // Curl swings ±60% around the persona's bias — sometimes a whipping
+      // banana, sometimes nearly straight.
+      const curlScale = 0.4 + r2 * 1.2;
+      const curl = (kick.curlBias * curlScale + (Math.abs(side) ? 0.35 : 0)) * (side || (kick.curlBias > 0.5 ? 1 : 0.2));
       const controlX = destinationX * 0.28 + curl + _ball.x * 0.22;
       // Low shots sometimes skid UNDER the jumping wall (Ronaldinho's party
-      // trick — near-always for him). The roll is derived from the shot start
-      // time so it is stable across frames.
-      const shotRoll = Math.abs(Math.sin(start * 913.7));
-      const underWall = destinationY < 0.9 && shotRoll < (kick.id === 'ronaldinho' ? 0.85 : 0.38);
-      const controlY = underWall ? 0.32 : Math.max(destinationY, 1.12) + 0.55 + kick.heightBias;
+      // trick — near-always for him).
+      const underWall = destinationY < 0.9 && r1 < (kick.id === 'ronaldinho' ? 0.85 : 0.42);
+      // High shots occasionally balloon up and DIP back down late (a dipping
+      // shot over the wall). Adds extra arc height plus a downward pull.
+      const dipper = !underWall && destinationY > 1.0 && r3 < 0.4;
+      const arc = 0.55 + kick.heightBias + (dipper ? 0.9 + r3 * 0.6 : (r1 - 0.5) * 0.4);
+      const controlY = underWall ? 0.32 : Math.max(destinationY, 1.12) + arc;
       const controlZ = _ball.z * 0.48;
       const oneMinus = 1 - targetFlight;
-      const wobble = kick.knuckle * Math.sin(targetFlight * 17.5) * (underWall ? 0.04 : 0.11);
+      // Knuckle wobble amplitude also varies per shot — some balls sit dead
+      // still, others swerve unpredictably.
+      const knuckleAmp = kick.knuckle * (0.5 + r2 * 1.1);
+      const wobble = knuckleAmp * Math.sin(targetFlight * 17.5) * (underWall ? 0.04 : 0.11);
       ballMesh.position.set(
         oneMinus * oneMinus * _ball.x + 2 * oneMinus * targetFlight * controlX + targetFlight * targetFlight * destinationX + wobble * 0.35,
         oneMinus * oneMinus * _ball.y + 2 * oneMinus * targetFlight * controlY + targetFlight * targetFlight * destinationY + wobble,
@@ -2311,7 +1713,24 @@ function Scene({
         taker={kick.id}
         catchPoint={keeperCatch}
       />
-      <Shooter key={kick.id} tl={timeline} kick={kick} shotZone={shotZone} settled={settled} scored={scored} />
+      <Suspense fallback={null}>
+        <MocapTaker
+          key={kick.id}
+          tl={timeline}
+          ball={kick.ball}
+          aimX={shotZone ? (ZONE_POS[shotZone.id]?.[0] ?? 0) : 0}
+          id={kick.id}
+          number={TAKER_LOOK[kick.id].number}
+          kit={TAKER_LOOK[kick.id].kit}
+          shorts={TAKER_LOOK[kick.id].shorts}
+          socks={TAKER_LOOK[kick.id].socks}
+          skin={TAKER_LOOK[kick.id].skin}
+          accent={TAKER_LOOK[kick.id].accent}
+          hairColor={TAKER_LOOK[kick.id].hair}
+          hairStyle={HAIR_MESH[TAKER_LOOK[kick.id].hairStyle ?? 'short']}
+          beard={TAKER_LOOK[kick.id].beard ?? false}
+        />
+      </Suspense>
 
       {/* generous invisible hit discs wrap crisp visible targets */}
       {zones.map((zone) => {
