@@ -27,6 +27,8 @@ const KA: Record<string, string> = {
     "ლეგენდარული გოლი ტაქტიკურ დაფაზე თამაშდება. რაც უფრო ადრე ამოიცნობ, მეტს გამოიმუშავებ — ყოველი გოლის პირველი ამოცნობა ქოინებსა და XP-ს გაძლევს.",
   "(daily cap)": "(დღიური ლიმიტი)",
   "Already solved before — no repeat rewards": "უკვე ამოცნობილი გაქვს — განმეორებაზე ჯილდო აღარ გეძლევა",
+  "Something went wrong — try again": "რაღაც შეცდომაა — სცადე თავიდან",
+  "Couldn't load your game": "თამაში ვერ ჩაიტვირთა",
 
   // Shared
   "Prototype — virtual points only, no real money or rewards":

@@ -23,6 +23,7 @@ import { buildTimeline, type TacticsGoalDef, type TacticsStepKind } from '../lib
 import { useMiniLocale, useMiniT } from '../lib/i18n';
 import { useStoreWallet } from '@/lib/queries/store.queries';
 import { queryKeys } from '@/lib/queries/queryKeys';
+import { usePlayer } from '@/contexts/PlayerContext';
 import { CoinIcon } from '@/features/store/components/CoinIcon';
 import {
   guessTheGoalApi,
@@ -33,9 +34,13 @@ import {
   type GgtSession,
 } from '@/lib/repositories/guessTheGoal.repo';
 
-type Phase = 'loading' | 'idle' | 'watch' | 'reveal' | 'bonus' | 'bonus_done' | 'disabled';
+type Phase = 'loading' | 'load_error' | 'idle' | 'watch' | 'reveal' | 'bonus' | 'bonus_done' | 'disabled';
 
 const LOOP_HOLD = 1.6;
+/** Display-clock pad: the server_now offset lags by response transit, and the
+ *  guess itself takes a request to arrive — bias the shown clock FORWARD so
+ *  the displayed potential can only understate what the server will score. */
+const SKEW_PAD_MS = 400;
 
 function newNonce(): string {
   return typeof crypto !== 'undefined' && 'randomUUID' in crypto
@@ -73,6 +78,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
   const [bonusPicked, setBonusPicked] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { addXP } = usePlayer();
   const [time, setTime] = useState(0);
   /** serverNow - clientNow at payload receipt; keeps our clock honest. */
   const offsetRef = useRef(0);
@@ -91,6 +97,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
 
   const adoptSession = useCallback((next: GgtSession) => {
     offsetRef.current = new Date(next.server_now).getTime() - Date.now();
+    setTime(0);
     setSession(next);
     setOutcome(null);
     setBonusOutcome(null);
@@ -100,32 +107,32 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
     setPhase(next.state === 'guessed' ? 'bonus' : 'watch');
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
+  const bootstrap = useCallback(() => {
+    setPhase('loading');
+    setError(null);
     guessTheGoalApi
       .current()
       .then((existing) => {
-        if (cancelled) return;
         if (existing) adoptSession(existing);
         else setPhase('idle');
       })
       .catch((err) => {
-        if (cancelled) return;
         if (err instanceof GuessTheGoalApiError && err.status === 503) setPhase('disabled');
-        else {
-          setError(err instanceof Error ? err.message : String(err));
-          setPhase('idle');
-        }
+        else setPhase('load_error');
+        void err;
       });
-    return () => {
-      cancelled = true;
-    };
   }, [adoptSession]);
+
+  useEffect(() => {
+    // A failed resume must NOT fall through to 'idle': Kick off from there
+    // would abandon a session (and its pending bonus) the user still has.
+    bootstrap();
+  }, [bootstrap]);
 
   /** Server-clock elapsed seconds past the grace window. */
   const serverElapsed = useCallback((): number => {
     if (!session) return 0;
-    const now = Date.now() + offsetRef.current;
+    const now = Date.now() + offsetRef.current + SKEW_PAD_MS;
     return Math.max(0, (now - new Date(session.started_at).getTime() - session.grace_ms) / 1000);
   }, [session]);
 
@@ -156,20 +163,25 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
           setPhase('disabled');
           return;
         }
-        nonceRef.current = null;
-        if (err.status === 409) {
-          const existing = await guessTheGoalApi.current().catch(() => null);
-          if (existing) {
-            adoptSession(existing);
-            return;
+        // Only a definite 4xx invalidates the nonce; a 5xx/timeout may have
+        // committed, and retrying with a FRESH nonce would abandon that
+        // committed session (free-kicks precedent).
+        if (err.status >= 400 && err.status < 500) {
+          nonceRef.current = null;
+          if (err.status === 409) {
+            const existing = await guessTheGoalApi.current().catch(() => null);
+            if (existing) {
+              adoptSession(existing);
+              return;
+            }
           }
         }
       }
-      setError(err instanceof Error ? err.message : String(err));
+      setError(t('Something went wrong — try again'));
     } finally {
       setBusy(false);
     }
-  }, [busy, adoptSession]);
+  }, [busy, adoptSession, t]);
 
   const submitGuess = useCallback(
     async (optionId: string) => {
@@ -185,14 +197,17 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
         if (result.awards.coins > 0) {
           void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
         }
+        if (result.awards.xp > 0) addXP(result.awards.xp);
       } catch (err) {
-        setPicked(null);
-        setError(err instanceof Error ? err.message : String(err));
+        // picked is KEPT: retrying the same option replays the stored result
+        // server-side, so the retry button re-submits it safely.
+        setError(t('Something went wrong — try again'));
+        void err;
       } finally {
         setBusy(false);
       }
     },
-    [session, busy, phase, queryClient]
+    [session, busy, phase, queryClient, addXP, t]
   );
 
   const submitBonus = useCallback(
@@ -207,14 +222,15 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
         if (result.awards.coins > 0) {
           void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
         }
+        if (result.awards.xp > 0) addXP(result.awards.xp);
       } catch (err) {
-        setBonusPicked(null);
-        setError(err instanceof Error ? err.message : String(err));
+        setError(t('Something went wrong — try again'));
+        void err;
       } finally {
         setBusy(false);
       }
     },
-    [session, busy, queryClient]
+    [session, busy, queryClient, addXP, t]
   );
 
   const mainMoves = session?.goal.main_moves ?? 1;
@@ -261,8 +277,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
     return current;
   }, [phase, timeline, animTime]);
 
-  const totalAwardedCoins = (outcome?.awards.coins ?? 0) + (bonusOutcome?.awards.coins ?? 0);
-  const totalAwardedXp = (outcome?.awards.xp ?? 0) + (bonusOutcome?.awards.xp ?? 0);
+
 
   const pitchColumn = session && boardGoal && timeline && (
     <div className="flex flex-col gap-1.5 lg:flex-[3]">
@@ -319,6 +334,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
       accent="#58CC02"
       backHref={backHref}
       wide
+      disclaimer={false}
       headerRight={
         <StatPill
           label={t('Coins')}
@@ -334,6 +350,22 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
       {phase === 'loading' && (
         <div className="flex flex-1 items-center justify-center font-poppins text-sm font-bold uppercase text-white/40">
           {t('Loading…')}
+        </div>
+      )}
+
+      {phase === 'load_error' && (
+        <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
+          <WifiOff className="size-10 text-white/30" />
+          <p className="max-w-xs font-poppins text-sm font-bold uppercase leading-relaxed text-white/55">
+            {t("Couldn't load your game")}
+          </p>
+          <button
+            type="button"
+            onClick={bootstrap}
+            className="flex h-12 w-full max-w-[220px] items-center justify-center rounded-2xl bg-brand-green-bright font-poppins text-sm font-black uppercase tracking-wide text-black"
+          >
+            {t('Try again')}
+          </button>
         </div>
       )}
 
@@ -408,7 +440,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
                         <button
                           key={option.id}
                           type="button"
-                          disabled={phase !== 'watch' || busy}
+                          disabled={phase !== 'watch' || busy || (picked !== null && picked !== option.id)}
                           onClick={() => submitGuess(option.id)}
                           className={GGT_OPTION_CLASS}
                           style={ggtOptionStyle(state)}
@@ -418,13 +450,14 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
                       );
                     })}
                   </div>
-                  {error && phase === 'watch' && (
+                  {error && phase === 'watch' && picked && (
                     <button
                       type="button"
-                      onClick={() => picked && submitGuess(picked)}
+                      disabled={busy}
+                      onClick={() => submitGuess(picked)}
                       className="text-xs font-semibold text-brand-red underline"
                     >
-                      {error} — {t('Try again')}
+                      {error}
                     </button>
                   )}
                   {phase === 'reveal' && outcome && (
@@ -494,7 +527,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
                         <button
                           key={option.id}
                           type="button"
-                          disabled={phase !== 'bonus' || busy}
+                          disabled={phase !== 'bonus' || busy || (bonusPicked !== null && bonusPicked !== option.id)}
                           onClick={() => submitBonus(option.id)}
                           className={GGT_OPTION_CLASS}
                           style={ggtOptionStyle(state)}
@@ -506,9 +539,12 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
                   </div>
                   {phase === 'bonus_done' && bonusOutcome && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-1 flex flex-col gap-2">
-                      {(totalAwardedCoins > 0 || totalAwardedXp > 0) && (
+                      {(bonusOutcome.awards.coins > 0 || bonusOutcome.awards.xp > 0) && (
                         <p className="flex items-center gap-2 px-1 font-poppins text-[12px] font-black uppercase text-brand-green-bright">
-                          <CoinIcon className="size-4" /> +{totalAwardedCoins} · +{totalAwardedXp} XP
+                          <CoinIcon className="size-4" /> +{bonusOutcome.awards.coins} · +{bonusOutcome.awards.xp} XP
+                          {bonusOutcome.awards.daily_cap_reached && (
+                            <span className="text-white/40">{t('(daily cap)')}</span>
+                          )}
                         </p>
                       )}
                       <button
@@ -522,13 +558,14 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
                       </button>
                     </motion.div>
                   )}
-                  {error && phase === 'bonus' && (
+                  {error && phase === 'bonus' && bonusPicked && (
                     <button
                       type="button"
-                      onClick={() => bonusPicked && submitBonus(bonusPicked)}
+                      disabled={busy}
+                      onClick={() => submitBonus(bonusPicked)}
                       className="text-xs font-semibold text-brand-red underline"
                     >
-                      {error} — {t('Try again')}
+                      {error}
                     </button>
                   )}
                 </motion.div>
