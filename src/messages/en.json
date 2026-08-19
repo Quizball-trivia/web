@@ -422,6 +422,18 @@
     "toastSaveFailed": "Failed to save your preferences",
     "toastSaveFailedDescription": "Please try again."
   },
+  "mobileVerificationExperiment": {
+    "title": "Verify Your Mobile",
+    "description": "Add a Georgian mobile number so you can sign in to QuizBall with a text message.",
+    "phoneLabel": "Georgian mobile number",
+    "codeTitle": "Enter Your Code",
+    "codeDescription": "Enter the 6-digit code we sent to {phone}.",
+    "codeSent": "We sent a verification code to {phone}.",
+    "changeNumber": "Change number",
+    "privacyNote": "We only use this number for account access and essential service messages.",
+    "skip": "Maybe later",
+    "sendFailed": "We couldn't send the code. Please try again."
+  },
   "partyResults": {
     "youWonPartyQuiz": "You won the party quiz!",
     "takesFirst": "{winner} takes first!",
