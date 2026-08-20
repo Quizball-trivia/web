@@ -64,14 +64,6 @@ export function useRealtimeFootballGrid({
     socket.emit('grid:search_start', { locale });
   }, [autoStart, completed, enabled, locale, search.state, socket, state]);
 
-  // The player can cancel before the server has returned a searchId. If that
-  // happens, cancel the search as soon as its authoritative ID arrives so a
-  // late queue response cannot pull them into a match after navigation.
-  useEffect(() => {
-    if (!enabled || !searchSuppressedRef.current || search.state !== 'searching' || !search.searchId) return;
-    socket.emit('grid:search_cancel', { searchId: search.searchId });
-  }, [enabled, search.searchId, search.state, socket]);
-
   useEffect(() => {
     if (!enabled) return;
     const handleConnect = () => {
@@ -151,8 +143,9 @@ export function useRealtimeFootballGrid({
 
   const cancelSearch = useCallback(() => {
     searchSuppressedRef.current = true;
-    const current = useFootballGridStore.getState().search;
-    if (current.searchId) socket.emit('grid:search_cancel', { searchId: current.searchId });
+    const current = useFootballGridStore.getState();
+    current.requestSearchCancellation();
+    if (current.search.searchId) socket.emit('grid:search_cancel', { searchId: current.search.searchId });
   }, [socket]);
 
   const submitAnswer = useCallback((cellIndex: number, text: string) => {

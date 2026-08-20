@@ -23,6 +23,7 @@ interface FootballGridStoreState {
   lastTurnResolved: FootballGridTurnResolvedPayload | null;
   pendingCommandId: string | null;
   reportedAttemptIds: string[];
+  searchCancellationPending: boolean;
   error: ErrorPayload | null;
   serverTimeOffsetMs: number;
   setSearchState: (payload: FootballGridSearchStatePayload) => void;
@@ -36,6 +37,7 @@ interface FootballGridStoreState {
   clearCommandFeedback: () => void;
   markAttemptReported: (attemptId: string) => void;
   setError: (payload: ErrorPayload | null) => void;
+  requestSearchCancellation: () => void;
   beginFreshSearch: () => void;
   clear: () => void;
 }
@@ -69,6 +71,7 @@ export const useFootballGridStore = create<FootballGridStoreState>((set) => ({
   lastTurnResolved: null,
   pendingCommandId: null,
   reportedAttemptIds: [],
+  searchCancellationPending: false,
   error: null,
   serverTimeOffsetMs: 0,
 
@@ -83,6 +86,7 @@ export const useFootballGridStore = create<FootballGridStoreState>((set) => ({
     }
     return {
       search: payload,
+      searchCancellationPending: payload.state === 'idle' ? false : current.searchCancellationPending,
       error: payload.state === 'searching' ? null : current.error,
     };
   }),
@@ -98,6 +102,7 @@ export const useFootballGridStore = create<FootballGridStoreState>((set) => ({
     lastTurnResolved: null,
     pendingCommandId: null,
     reportedAttemptIds: [],
+    searchCancellationPending: false,
     error: null,
     serverTimeOffsetMs: serverOffset(payload.serverNow),
   }),
@@ -161,6 +166,7 @@ export const useFootballGridStore = create<FootballGridStoreState>((set) => ({
       : [...current.reportedAttemptIds, attemptId],
   })),
   setError: (payload) => set({ error: payload, pendingCommandId: null }),
+  requestSearchCancellation: () => set({ searchCancellationPending: true }),
   beginFreshSearch: () => set({
     search: IDLE_SEARCH,
     state: null,
@@ -172,6 +178,7 @@ export const useFootballGridStore = create<FootballGridStoreState>((set) => ({
     lastTurnResolved: null,
     pendingCommandId: null,
     reportedAttemptIds: [],
+    searchCancellationPending: false,
     error: null,
     serverTimeOffsetMs: 0,
   }),
@@ -186,6 +193,7 @@ export const useFootballGridStore = create<FootballGridStoreState>((set) => ({
     lastTurnResolved: null,
     pendingCommandId: null,
     reportedAttemptIds: [],
+    searchCancellationPending: false,
     error: null,
     serverTimeOffsetMs: 0,
   }),

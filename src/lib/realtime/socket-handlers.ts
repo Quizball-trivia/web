@@ -790,7 +790,11 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       state: data.state,
       searchId: data.searchId,
     });
-    useFootballGridStore.getState().setSearchState(data);
+    const gridStore = useFootballGridStore.getState();
+    if (gridStore.searchCancellationPending && data.state === 'searching' && data.searchId) {
+      socket.emit('grid:search_cancel', { searchId: data.searchId });
+    }
+    gridStore.setSearchState(data);
   });
   socket.on('grid:match_found', (data: FootballGridMatchFoundPayload) => {
     logger.info('Socket event grid:match_found', {

@@ -3,6 +3,7 @@ import { queryKeys } from '@/lib/queries/queryKeys';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { useRankedMatchmakingStore } from '@/stores/rankedMatchmaking.store';
 import { useGameSessionStore } from '@/stores/gameSession.store';
+import { useFootballGridStore } from '@/stores/footballGrid.store';
 import { __setSocketOverride } from '../socket-client';
 import type { Socket } from 'socket.io-client';
 import type { ServerToClientEvents, ClientToServerEvents } from '../socket.types';
@@ -78,6 +79,7 @@ describe('registerSocketHandlers', () => {
     useRealtimeMatchStore.getState().reset();
     useRealtimeMatchStore.setState({ selfUserId: null });
     useGameSessionStore.getState().reset();
+    useFootballGridStore.getState().clear();
     useRankedMatchmakingStore.setState({
       rankedSearchDurationMs: null,
       rankedSearchStartedAt: null,
@@ -102,6 +104,27 @@ describe('registerSocketHandlers', () => {
 
   afterEach(() => {
     __setSocketOverride(null);
+  });
+
+  it('cancels a late Grid queue response after the route that requested it unmounted', () => {
+    registerSocketHandlers();
+    useFootballGridStore.getState().requestSearchCancellation();
+
+    mockSocket.fire('grid:search_state', {
+      state: 'searching',
+      searchId: 'late-search-id',
+    });
+
+    expect(mockSocket.socket.emit).toHaveBeenCalledWith('grid:search_cancel', {
+      searchId: 'late-search-id',
+    });
+    expect(useFootballGridStore.getState().searchCancellationPending).toBe(true);
+
+    mockSocket.fire('grid:search_state', {
+      state: 'idle',
+      searchId: 'late-search-id',
+    });
+    expect(useFootballGridStore.getState().searchCancellationPending).toBe(false);
   });
 
   // Regression: the error handler must read selfUserId fresh via getState(),

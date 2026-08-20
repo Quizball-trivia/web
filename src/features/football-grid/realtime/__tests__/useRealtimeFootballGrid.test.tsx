@@ -58,17 +58,12 @@ describe('useRealtimeFootballGrid', () => {
     unmount();
   });
 
-  it('cancels a late queue response when the player left before a searchId arrived', async () => {
+  it('persists cancellation intent when the player leaves before a searchId arrives', async () => {
     const { result, unmount } = renderHook(() => useRealtimeFootballGrid({ enabled: true, selfUserId: 'self', locale: 'en' }));
     await waitFor(() => expect(socket.emit).toHaveBeenCalledWith('grid:search_start', { locale: 'en' }));
 
     act(() => result.current.actions.cancelSearch());
-    socket.emit.mockClear();
-    act(() => {
-      useFootballGridStore.getState().setSearchState({ state: 'searching', searchId: 'late-search-id' });
-    });
-
-    await waitFor(() => expect(socket.emit).toHaveBeenCalledWith('grid:search_cancel', { searchId: 'late-search-id' }));
+    expect(useFootballGridStore.getState().searchCancellationPending).toBe(true);
     unmount();
   });
 
