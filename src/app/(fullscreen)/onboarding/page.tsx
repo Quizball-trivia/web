@@ -15,15 +15,37 @@ import { DEFAULT_HAIR_ID, DEFAULT_JERSEY_ID, DEFAULT_SKIN_ID } from "@/lib/avata
 import type { AvatarCustomization } from "@/types/game";
 import { trackOnboardingCompleted } from "@/lib/analytics/game-events";
 import { consumePostAuthRedirect } from "@/lib/auth/postAuthRedirect";
+import { useGeorgianPhoneAuthAvailability } from "@/lib/auth/useGeorgianPhoneAuthAvailability";
+import { loadMobileVerificationExperimentVariant } from "@/lib/experiments/mobileVerificationExperiment";
+import { MobileVerificationStep } from "@/features/onboarding/MobileVerificationStep";
+
+type OnboardingData = Parameters<ComponentProps<typeof OnboardingFlow>["onComplete"]>[0];
 
 export default function OnboardingPage() {
   const router = useRouter();
   const { t } = useLocale();
   const setAuthenticated = useAuthStore((state) => state.setAuthenticated);
+  const user = useAuthStore((state) => state.user);
+  const phoneAuthAvailability = useGeorgianPhoneAuthAvailability();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [usernameError, setUsernameError] = useState<string | null>(null);
+  const [showMobileVerification, setShowMobileVerification] = useState(false);
 
-  type OnboardingData = Parameters<ComponentProps<typeof OnboardingFlow>["onComplete"]>[0];
+  const completeOnboarding = async () => {
+    const completedUser = await apiFetch("post", "/api/v1/users/me/complete-onboarding");
+    setAuthenticated(completedUser);
+
+    storage.set(STORAGE_KEYS.ONBOARDING_COMPLETE, true);
+    try {
+      trackOnboardingCompleted();
+    } catch (error) {
+      logger.error('Analytics trackOnboardingCompleted failed', error);
+    }
+    router.replace(consumePostAuthRedirect() ?? "/play");
+    toast.success(t('onboarding.toastWelcome'), {
+      description: t('onboarding.toastWelcomeDescription'),
+    });
+  };
 
   const handleComplete = async (data: OnboardingData) => {
     if (isSubmitting) return;
@@ -47,20 +69,22 @@ export default function OnboardingPage() {
         preferred_language: data.preferredLanguage === undefined ? undefined : data.preferredLanguage,
       });
 
-      // Mark onboarding complete
-      const completedUser = await apiFetch("post", "/api/v1/users/me/complete-onboarding");
-      setAuthenticated(completedUser);
+      const eligibleForMobileVerification = Boolean(
+        user &&
+        !user.phone_verified_at &&
+        phoneAuthAvailability.isAvailable &&
+        !phoneAuthAvailability.isLoading
+      );
 
-      storage.set(STORAGE_KEYS.ONBOARDING_COMPLETE, true);
-      try {
-        trackOnboardingCompleted();
-      } catch (error) {
-        logger.error('Analytics trackOnboardingCompleted failed', error);
+      if (eligibleForMobileVerification && user) {
+        const variant = await loadMobileVerificationExperimentVariant(user);
+        if (variant === 'test') {
+          setShowMobileVerification(true);
+          return;
+        }
       }
-      router.replace(consumePostAuthRedirect() ?? "/play");
-      toast.success(t('onboarding.toastWelcome'), {
-        description: t('onboarding.toastWelcomeDescription'),
-      });
+
+      await completeOnboarding();
     } catch (error) {
       logger.error("Failed to save onboarding data", error);
       if (isNicknameTakenError(error)) {
@@ -79,6 +103,30 @@ export default function OnboardingPage() {
       setIsSubmitting(false);
     }
   };
+
+  const handleMobileVerificationContinue = async () => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      await completeOnboarding();
+    } catch (error) {
+      logger.error("Failed to complete onboarding after mobile verification", error);
+      toast.error(t('onboarding.toastSaveFailed'), {
+        description: t('onboarding.toastSaveFailedDescription'),
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (showMobileVerification) {
+    return (
+      <MobileVerificationStep
+        isCompleting={isSubmitting}
+        onContinue={handleMobileVerificationContinue}
+      />
+    );
+  }
 
   return (
     <OnboardingFlow

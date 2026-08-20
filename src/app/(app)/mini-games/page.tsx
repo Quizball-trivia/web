@@ -30,11 +30,11 @@ const GAMES = [
   },
   {
     key: "guess-the-goal",
-    href: "/demos/mini-guess-the-goal?from=/mini-games",
+    href: "/guess-the-goal",
     titleKey: "miniGames.guessTheGoalTitle",
     descKey: "miniGames.guessTheGoalSubtitle",
     iconSrc: "/assets/guess-the-goal-card-icon.png",
-    live: false,
+    live: true,
   },
 ] as const;
 

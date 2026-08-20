@@ -202,6 +202,71 @@ export function trackOnboardingCompleted() {
   trackEvent('onboarding_completed', Object.keys(campaign).length > 0 ? campaign : undefined);
 }
 
+type MobileVerificationStep = 'phone' | 'otp';
+type MobileVerificationFailureReason =
+  | 'invalid_phone'
+  | 'invalid_otp'
+  | 'number_in_use'
+  | 'request_failed';
+
+const MOBILE_VERIFICATION_SOURCE = 'onboarding' as const;
+
+export function trackMobileVerificationPromptShown() {
+  trackEvent('mobile_verification_prompt_shown', {
+    source: MOBILE_VERIFICATION_SOURCE,
+  });
+}
+
+export function trackMobileVerificationStarted(props: {
+  attempt: number;
+  timeToStartMs: number;
+}) {
+  trackEvent('mobile_verification_started', {
+    source: MOBILE_VERIFICATION_SOURCE,
+    attempt: props.attempt,
+    time_to_start_ms: props.timeToStartMs,
+  });
+}
+
+export function trackMobileVerificationCompleted(props: {
+  method: 'otp' | 'already_verified';
+  sendAttempts: number;
+  verifyAttempts: number;
+  timeToCompleteMs: number;
+}) {
+  trackEvent('mobile_verification_completed', {
+    source: MOBILE_VERIFICATION_SOURCE,
+    method: props.method,
+    send_attempts: props.sendAttempts,
+    verify_attempts: props.verifyAttempts,
+    time_to_complete_ms: props.timeToCompleteMs,
+  });
+}
+
+export function trackMobileVerificationSkipped(props: {
+  step: MobileVerificationStep;
+  timeOnPromptMs: number;
+}) {
+  trackEvent('mobile_verification_skipped', {
+    source: MOBILE_VERIFICATION_SOURCE,
+    step: props.step,
+    time_on_prompt_ms: props.timeOnPromptMs,
+  });
+}
+
+export function trackMobileVerificationFailed(props: {
+  step: MobileVerificationStep;
+  reason: MobileVerificationFailureReason;
+  attempt: number;
+}) {
+  trackEvent('mobile_verification_failed', {
+    source: MOBILE_VERIFICATION_SOURCE,
+    step: props.step,
+    reason: props.reason,
+    attempt: props.attempt,
+  });
+}
+
 export function trackInAppBrowserBlocked(browser: string, isIOS: boolean, isAndroid: boolean) {
   trackEvent('in_app_browser_blocked', {
     in_app_browser: browser,

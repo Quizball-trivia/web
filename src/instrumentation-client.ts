@@ -22,10 +22,11 @@ if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_POSTHOG_KEY) {
       // tap-heavy game that's huge event volume and fully redundant with our
       // ~60 named events — disabled to cut the bill.
       autocapture: false,
-      // The one event toggle is driven by NEXT_PUBLIC_GEORGIA_WC_EVENT_ENABLED
-      // (Vercel env), not a PostHog flag, so PostHog never fetches flags (was
-      // ~15k flag requests/day for one boolean).
-      advanced_disable_feature_flags: true,
+      // Do not fetch flags during normal app startup. The mobile-verification
+      // experiment temporarily unpauses + reloads flags only when an eligible
+      // new user finishes the profile step. This preserves the old request-cost
+      // guard instead of restoring a /flags request for every app visit.
+      advanced_disable_feature_flags: false,
       advanced_disable_feature_flags_on_first_load: true,
       // Session replays are a major event/ingest cost driver and are not part of
       // our core analytics (we rely on ~60 named funnel events). Disabled to cut
@@ -34,6 +35,9 @@ if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_POSTHOG_KEY) {
       disable_session_recording: true,
       capture_performance: false,
     });
+    // identify() normally reloads flags automatically. Keep those reloads
+    // paused globally; the experiment helper owns the narrow manual reload.
+    posthog.featureFlags.setReloadingPaused(true);
   } catch (error) {
     console.error('PostHog initialization error:', error);
   }

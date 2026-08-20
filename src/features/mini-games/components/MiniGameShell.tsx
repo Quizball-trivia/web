@@ -19,6 +19,7 @@ export function MiniGameShell({
   children,
   backHref = '/dev/mini-games',
   wide = false,
+  disclaimer = true,
 }: {
   title: string;
   subtitle?: string;
@@ -28,6 +29,8 @@ export function MiniGameShell({
   backHref?: string;
   /** Desktop: widen the play area (e.g. for a side-by-side layout). */
   wide?: boolean;
+  /** Live modes grant real rewards — they suppress the prototype footer. */
+  disclaimer?: boolean;
 }) {
   const t = useMiniT();
   return (
@@ -79,9 +82,11 @@ export function MiniGameShell({
       >
         {children}
       </motion.main>
-      <p className="relative z-10 pb-3 pt-1 text-center font-poppins text-[10px] font-semibold uppercase tracking-wider text-white/30">
-        {t('Prototype — virtual points only, no real money or rewards')}
-      </p>
+      {disclaimer && (
+        <p className="relative z-10 pb-3 pt-1 text-center font-poppins text-[10px] font-semibold uppercase tracking-wider text-white/30">
+          {t('Prototype — virtual points only, no real money or rewards')}
+        </p>
+      )}
     </div>
   );
 }
