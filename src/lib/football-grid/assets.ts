@@ -34,6 +34,7 @@ export function footballGridAssetUrl(value: string | null | undefined): string |
   if (!source) return null;
   if (/^https:\/\//i.test(source)) return isAllowedFirstPartyUrl(source) ? source : null;
   if (source === '/assets/football-grid-card-icon.svg') return `${FOOTBALL_GRID_CDN_BASE_URL}/ui/card-icon.svg`;
+  if (source === '/assets/bg-pattern.webp') return `${FOOTBALL_GRID_CDN_BASE_URL}/ui/bg-pattern.webp`;
   const avatarPrefix = '/assets/store/';
   if (source.startsWith(avatarPrefix)) {
     const relative = source.slice(avatarPrefix.length).split('?')[0];

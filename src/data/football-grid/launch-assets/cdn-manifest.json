@@ -4,9 +4,9 @@
   "bucket": "imgs",
   "objectPrefix": "football-grid/v1",
   "publicBase": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/football-grid/v1",
-  "publishedAt": "2026-08-20T19:34:10.061Z",
-  "assetCount": 1098,
-  "totalBytes": 21880756,
+  "publishedAt": "2026-08-20T19:58:32.603Z",
+  "assetCount": 1099,
+  "totalBytes": 21917768,
   "assets": [
     {
       "localPath": "/assets/store/accessory_beard.webp",
@@ -8679,6 +8679,14 @@
       "contentType": "image/jpeg",
       "byteLength": 115858,
       "sha256": "3ac37e5975be3dea05909f24e66dea382710c0e031a64263c79e0774181dc676"
+    },
+    {
+      "localPath": "/assets/bg-pattern.webp",
+      "objectPath": "football-grid/v1/ui/bg-pattern.webp",
+      "publicUrl": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/football-grid/v1/ui/bg-pattern.webp",
+      "contentType": "image/webp",
+      "byteLength": 37012,
+      "sha256": "754ccdb879fded5a88d227a64105b0008d715ea062b629bc80cc73451bc7ca69"
     },
     {
       "localPath": "/assets/football-grid-card-icon.svg",

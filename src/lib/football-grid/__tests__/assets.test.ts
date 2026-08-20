@@ -12,6 +12,11 @@ describe('footballGridAssetUrl', () => {
       .toBe(`${FOOTBALL_GRID_CDN_BASE_URL}/ui/card-icon.svg`);
   });
 
+  it('maps the shared pitch texture into the Grid CDN UI namespace', () => {
+    expect(footballGridAssetUrl('/assets/bg-pattern.webp'))
+      .toBe(`${FOOTBALL_GRID_CDN_BASE_URL}/ui/bg-pattern.webp`);
+  });
+
   it('maps shared avatar layers into the Grid CDN avatar namespace', () => {
     expect(footballGridAssetUrl('/assets/store/jersey_green.webp?v=2'))
       .toBe(`${FOOTBALL_GRID_CDN_BASE_URL}/avatar/jersey_green.webp`);

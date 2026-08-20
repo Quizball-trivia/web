@@ -20,6 +20,8 @@ export function MiniGameShell({
   backHref = '/dev/mini-games',
   wide = false,
   disclaimer = true,
+  onBack,
+  backgroundImageUrl = '/assets/bg-pattern.webp',
 }: {
   title: string;
   subtitle?: string;
@@ -31,10 +33,17 @@ export function MiniGameShell({
   wide?: boolean;
   /** Live modes grant real rewards — they suppress the prototype footer. */
   disclaimer?: boolean;
+  /** Live matches can intercept back navigation to show a forfeit warning. */
+  onBack?: () => void;
+  /** Allows live modes to use an owned CDN copy of the shared pitch texture. */
+  backgroundImageUrl?: string;
 }) {
   const t = useMiniT();
   return (
-    <div className="relative flex min-h-[100dvh] flex-col overflow-hidden bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat text-white">
+    <div
+      className="relative flex min-h-[100dvh] flex-col overflow-hidden bg-surface-page-alt bg-cover bg-center bg-no-repeat text-white"
+      style={{ backgroundImage: `url(${backgroundImageUrl})` }}
+    >
       {/* Ambient glow */}
       <div
         aria-hidden
@@ -48,13 +57,24 @@ export function MiniGameShell({
           wide ? 'mx-auto w-full lg:max-w-6xl' : ''
         }`}
       >
-        <Link
-          href={backHref}
-          aria-label={t('Back')}
-          className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-white/70 transition-colors hover:bg-white/10 hover:text-white sm:mt-0"
-        >
-          <ArrowLeft className="size-5" />
-        </Link>
+        {onBack ? (
+          <button
+            type="button"
+            onClick={onBack}
+            aria-label={t('Back')}
+            className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-white/70 transition-colors hover:bg-white/10 hover:text-white sm:mt-0"
+          >
+            <ArrowLeft className="size-5" />
+          </button>
+        ) : (
+          <Link
+            href={backHref}
+            aria-label={t('Back')}
+            className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-full bg-white/[0.06] text-white/70 transition-colors hover:bg-white/10 hover:text-white sm:mt-0"
+          >
+            <ArrowLeft className="size-5" />
+          </Link>
+        )}
         <div className="min-w-0 flex-1">
           <h1
             className="font-poppins text-[15px] font-black uppercase leading-tight tracking-tight sm:text-xl sm:tracking-wide"

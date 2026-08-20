@@ -10,6 +10,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const gridAssetDir = path.join(root, 'public/assets/football-grid');
 const avatarAssetDir = path.join(root, 'public/assets/store');
 const cardIcon = path.join(root, 'public/assets/football-grid-card-icon.svg');
+const backgroundPattern = path.join(root, 'public/assets/bg-pattern.webp');
 const manifestPath = path.join(root, 'src/data/football-grid/launch-assets/cdn-manifest.json');
 const supabaseUrl = (
   process.env.SUPABASE_URL
@@ -92,6 +93,7 @@ async function loadAssets() {
     localPath: `/assets/store/${entry.relative}`,
   })));
   files.push({ file: cardIcon, relative: 'ui/card-icon.svg', localPath: '/assets/football-grid-card-icon.svg' });
+  files.push({ file: backgroundPattern, relative: 'ui/bg-pattern.webp', localPath: '/assets/bg-pattern.webp' });
   const assets = [];
   for (const entry of files) {
     const extension = path.extname(entry.relative).toLowerCase();
@@ -137,7 +139,13 @@ async function inspectExistingAsset(asset) {
     signal: AbortSignal.timeout(30_000),
   });
   if (response.status === 404) return false;
-  if (!response.ok) throw new Error(`existing-object check returned ${response.status}`);
+  if (!response.ok) {
+    const body = await response.text();
+    // Supabase's public object endpoint currently wraps a missing object in an
+    // HTTP 400 response while preserving the 404/NoSuchKey code in the body.
+    if (response.status === 400 && /"statusCode":"404"|"code":"NoSuchKey"/.test(body)) return false;
+    throw new Error(`existing-object check returned ${response.status}: ${body.slice(0, 240)}`);
+  }
   const bytes = Buffer.from(await response.arrayBuffer());
   const digest = createHash('sha256').update(bytes).digest('hex');
   if (digest !== asset.sha256) {

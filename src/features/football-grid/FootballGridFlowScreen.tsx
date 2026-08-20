@@ -1,12 +1,9 @@
 'use client';
 
-/* eslint-disable @next/next/no-img-element -- Player photos arrive from the authoritative match payload. */
-
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   AlertTriangle,
-  ArrowLeft,
   Check,
   Clock3,
   Coins,
@@ -38,12 +35,17 @@ import {
   trackFootballGridPlayStarted,
   trackFootballGridViewed,
 } from '@/features/mini-games/footballGrid.analytics';
+import { MiniGameShell, StatPill } from '@/features/mini-games/components/MiniGameShell';
 import { CriterionAsset } from './components/CriterionAsset';
 import { useRealtimeFootballGrid } from './realtime/useRealtimeFootballGrid';
 
 export const FOOTBALL_GRID_COPY = {
   en: {
-    title: 'Football Grid',
+    title: 'Football Tic Tac Toe',
+    subtitle: 'Claim cells with players — three in a row wins',
+    scoreLabel: 'You · Opponent',
+    pickTurn: 'Your turn — pick a cell',
+    opponentThinking: 'Opponent is thinking…',
     searching: 'Finding your opponent',
     searchingBody: "We're checking for a live player now. If nobody is available, a smart rank-matched opponent will step in.",
     cancel: 'Cancel search',
@@ -55,7 +57,7 @@ export const FOOTBALL_GRID_COPY = {
     theirTurn: "Opponent's move",
     pickCell: 'Pick an empty square, then name a footballer who matches both clues.',
     answerPlaceholder: 'Type a footballer…',
-    submit: 'Claim square',
+    submit: 'Go',
     pass: 'Pass',
     correct: 'Square claimed!',
     wrong: 'That answer does not match both clues.',
@@ -89,7 +91,11 @@ export const FOOTBALL_GRID_COPY = {
     retry: 'Try again',
   },
   ka: {
-    title: 'ფეხბურთის ბადე',
+    title: 'საფეხბურთო იქს-ნული',
+    subtitle: 'დაიკავე უჯრები ფეხბურთელებით — სამი ზედიზედ იგებს',
+    scoreLabel: 'შენ · მეტოქე',
+    pickTurn: 'შენი ჯერია — აირჩიე უჯრა',
+    opponentThinking: 'მეტოქე ფიქრობს…',
     searching: 'ვეძებთ მეტოქეს',
     searchingBody: 'ჯერ ონლაინ მოთამაშეს ვეძებთ. თუ ვერ მოიძებნა, შენს დონეზე მორგებული ჭკვიანი მეტოქე ჩაერთვება.',
     cancel: 'ძიების გაუქმება',
@@ -101,7 +107,7 @@ export const FOOTBALL_GRID_COPY = {
     theirTurn: 'მეტოქის სვლაა',
     pickCell: 'აირჩიე ცარიელი უჯრა და ჩაწერე ფეხბურთელი, რომელიც ორივე პირობას აკმაყოფილებს.',
     answerPlaceholder: 'ჩაწერე ფეხბურთელი…',
-    submit: 'უჯრის დაკავება',
+    submit: 'წადი',
     pass: 'გამოტოვება',
     correct: 'უჯრა შენია!',
     wrong: 'პასუხი ორივე პირობას არ აკმაყოფილებს.',
@@ -151,75 +157,55 @@ function useRemaining(deadlineAt: string | null, serverTimeOffsetMs: number): nu
 }
 
 const GRID_AVATAR_FALLBACK = footballGridAssetUrl('/assets/store/avatars/avatar_male_white.webp')!;
+const GRID_BACKGROUND = footballGridAssetUrl('/assets/bg-pattern.webp')!;
 const resolveGridAvatarAsset = (asset: string) => footballGridAssetUrl(asset) ?? GRID_AVATAR_FALLBACK;
 
-export function PlayerSeat({
-  name,
-  avatar,
-  customization,
-  active,
-  color,
-  label,
+function CriterionHeader({
+  criterion,
+  locale,
+  axis,
 }: {
-  name: string;
-  avatar: string;
-  customization?: Parameters<typeof AvatarDisplay>[0]['customization'] | null;
-  active: boolean;
-  color: 'blue' | 'yellow';
-  label: string;
+  criterion: FootballGridCriterionView;
+  locale: 'en' | 'ka';
+  axis: 'column' | 'row';
 }) {
-  return (
-    <div className={cn('relative flex min-w-0 flex-1 items-center gap-3 rounded-2xl border p-2.5 transition-all',
-      active ? (color === 'blue' ? 'border-brand-blue-light bg-brand-blue/20' : 'border-brand-yellow bg-brand-yellow/10') : 'border-white/10 bg-white/[0.04]')}
-    >
-      <div className={cn('rounded-full p-0.5', color === 'blue' ? 'bg-brand-blue' : 'bg-brand-yellow')}>
-        <AvatarDisplay customization={customization ?? { base: avatar }} size="sm" assetResolver={resolveGridAvatarAsset} />
-      </div>
-      <div className="min-w-0">
-        <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/45">{label}</p>
-        <p className="truncate text-sm font-bold text-white sm:text-base">{name}</p>
-      </div>
-      {active && <span className={cn('ml-auto size-2 animate-pulse rounded-full', color === 'blue' ? 'bg-brand-blue-light' : 'bg-brand-yellow')} />}
-    </div>
-  );
-}
-
-function CriterionHeader({ criterion, locale }: { criterion: FootballGridCriterionView; locale: 'en' | 'ka' }) {
   const label = locale === 'ka' ? criterion.labelKa || criterion.labelEn : criterion.labelEn;
+  if (axis === 'row') {
+    return (
+      <div title={label} className="flex min-w-0 items-center justify-center overflow-hidden rounded-xl bg-brand-blue p-1.5">
+        <CriterionAsset criterion={criterion} className="size-7 sm:size-8" />
+        <span className="sr-only">{label}</span>
+      </div>
+    );
+  }
   return (
-    <div className="flex min-h-20 flex-col items-center justify-center gap-1 rounded-2xl border border-white/10 bg-white/[0.055] px-1.5 py-2 text-center sm:min-h-24 sm:px-3">
-      <CriterionAsset criterion={criterion} className="size-8 sm:size-11" />
-      <span className="line-clamp-2 text-[9px] font-extrabold uppercase leading-tight text-white sm:text-xs">{label}</span>
+    <div className="flex min-h-12 min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl bg-brand-yellow px-1 py-1.5 text-center">
+      <CriterionAsset criterion={criterion} className="size-6" />
+      <span className="line-clamp-2 font-poppins text-[8px] font-black uppercase leading-tight tracking-wide text-black/80 sm:text-[9px]">{label}</span>
     </div>
   );
 }
 
 function ClaimedCell({ claim, isMine, claimedLabel }: { claim: FootballGridClaimState; isMine: boolean; claimedLabel: string }) {
   return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center overflow-hidden p-1.5">
-      <ClaimPortrait claim={claim} />
-      <span className="mt-1 line-clamp-2 text-center text-[8px] font-extrabold uppercase leading-tight text-white sm:text-[10px]">
+    <motion.div
+      initial={{ scale: 0.4, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      transition={{ type: 'spring', stiffness: 420, damping: 18 }}
+      className="absolute inset-0 flex flex-col items-center justify-center overflow-hidden p-1"
+    >
+      <span className={cn('line-clamp-3 text-center font-poppins text-[9px] font-black leading-tight sm:text-[10px]', isMine ? 'text-brand-cyan' : 'text-brand-red-soft')}>
         {claim.displayName ?? claimedLabel}
       </span>
-      <span className={cn('absolute inset-x-0 bottom-0 h-1', isMine ? 'bg-brand-blue' : 'bg-brand-yellow')} />
-    </div>
+      <motion.span
+        className="pointer-events-none absolute inset-0 rounded-xl border-2"
+        style={{ borderColor: isMine ? '#1CB0F6' : '#FF4B4B' }}
+        initial={{ opacity: 0.9, scale: 1 }}
+        animate={{ opacity: 0, scale: 1.22 }}
+        transition={{ duration: 0.65, ease: 'easeOut' }}
+      />
+    </motion.div>
   );
-}
-
-function ClaimPortrait({ claim }: { claim: FootballGridClaimState }) {
-  const [failed, setFailed] = useState(false);
-  const source = footballGridAssetUrl(claim.imageUrl);
-  const initials = (claim.displayName ?? '?')
-    .split(/\s+/)
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 2)
-    .toLocaleUpperCase();
-
-  if (!source || failed) {
-    return <span className="grid size-10 place-items-center rounded-full bg-white/10 text-xs font-black text-white/65 sm:size-14">{initials}</span>;
-  }
-  return <img src={source} alt="" className="size-10 rounded-full bg-white/10 object-cover object-top sm:size-14" onError={() => setFailed(true)} />;
 }
 
 export function MatchBoard({
@@ -238,13 +224,11 @@ export function MatchBoard({
   const claims = useMemo(() => new Map(state.claims.map((claim) => [claim.cellIndex, claim])), [state.claims]);
   const isMyTurn = state.phase === 'turn' && state.currentPlayerUserId === selfUserId;
   return (
-    <div className="grid grid-cols-[0.72fr_repeat(3,1fr)] gap-1.5 sm:gap-2">
-      <div className="grid place-items-center rounded-2xl bg-gradient-to-br from-brand-blue to-brand-blue-deep">
-        <span className="rotate-[-8deg] text-xl font-black italic text-brand-yellow sm:text-3xl">QB</span>
-      </div>
-      {state.board.columns.map((criterion) => <CriterionHeader key={criterion.id} criterion={criterion} locale={locale} />)}
+    <div className="grid grid-cols-[44px_repeat(3,minmax(0,1fr))] gap-1.5">
+      <div />
+      {state.board.columns.map((criterion) => <CriterionHeader key={criterion.id} criterion={criterion} locale={locale} axis="column" />)}
       {state.board.rows.flatMap((row, rowIndex) => [
-        <CriterionHeader key={`row-${row.id}`} criterion={row} locale={locale} />,
+        <CriterionHeader key={`row-${row.id}`} criterion={row} locale={locale} axis="row" />,
         ...state.board.columns.map((column, columnIndex) => {
           const cellIndex = rowIndex * 3 + columnIndex;
           const claim = claims.get(cellIndex);
@@ -257,19 +241,163 @@ export function MatchBoard({
               onClick={() => onSelect(cellIndex)}
               aria-label={`${locale === 'ka' ? row.labelKa : row.labelEn} × ${locale === 'ka' ? column.labelKa : column.labelEn}`}
               className={cn(
-                'relative aspect-square overflow-hidden rounded-2xl border-2 transition-all',
-                claim ? 'border-white/10 bg-surface-deep' : 'border-white/10 bg-white/[0.035]',
-                selectable && 'cursor-pointer hover:-translate-y-0.5 hover:border-brand-blue-light hover:bg-brand-blue/10',
-                selectedCell === cellIndex && 'border-brand-yellow bg-brand-yellow/10 shadow-[0_0_0_3px_rgba(255,229,0,0.12)]',
+                'relative aspect-square overflow-hidden rounded-xl border-2 p-1 text-center transition-colors',
+                claim && (claim.claimantUserId === selfUserId
+                  ? 'border-brand-cyan bg-brand-cyan/20'
+                  : 'border-brand-red-soft bg-brand-red-soft/15'),
+                !claim && 'border-white/10 bg-white/[0.03]',
+                selectable && 'cursor-pointer hover:border-brand-cyan/50 hover:bg-brand-cyan/[0.06]',
+                selectedCell === cellIndex && 'border-brand-cyan bg-brand-cyan/15',
+                !selectable && !claim && 'opacity-60',
               )}
             >
               {claim ? <ClaimedCell claim={claim} isMine={claim.claimantUserId === selfUserId} claimedLabel={FOOTBALL_GRID_COPY[locale].claimed} /> : (
-                <span className="absolute inset-0 grid place-items-center text-2xl font-black text-white/[0.08] sm:text-4xl">+</span>
+                <span className="absolute inset-0 grid place-items-center font-poppins text-lg font-black text-white/15">·</span>
               )}
             </button>
           );
         }),
       ])}
+    </div>
+  );
+}
+
+export function FootballGridTurnPanel({
+  state,
+  locale,
+  isMyTurn,
+  selectedCell,
+  remaining,
+  answer,
+  onAnswerChange,
+  onSubmit,
+  onPass,
+  pending = false,
+  feedback,
+  reportableAttempt,
+  alreadyReported = false,
+  onReport,
+}: {
+  state: FootballGridState;
+  locale: 'en' | 'ka';
+  isMyTurn: boolean;
+  selectedCell: number | null;
+  remaining: number;
+  answer: string;
+  onAnswerChange: (value: string) => void;
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void;
+  onPass: () => void;
+  pending?: boolean;
+  feedback?: 'correct' | 'wrong' | 'ambiguous' | 'already_used' | 'pass';
+  reportableAttempt?: string | null;
+  alreadyReported?: boolean;
+  onReport?: (attemptId: string) => void;
+}) {
+  const copy = FOOTBALL_GRID_COPY[locale];
+  const selectedRow = selectedCell === null ? null : state.board.rows[Math.floor(selectedCell / 3)];
+  const selectedColumn = selectedCell === null ? null : state.board.columns[selectedCell % 3];
+  const fullTurnMs = Math.max(20_000, state.turnRemainingMs ?? 0);
+  const remainingRatio = Math.min(1, Math.max(0, remaining / fullTurnMs));
+
+  return (
+    <div className="mt-3 flex-1">
+      <AnimatePresence mode="wait">
+        {!isMyTurn ? (
+          <motion.div
+            key="opponent-turn"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="rounded-2xl border-2 border-brand-red-soft/30 bg-brand-red-soft/[0.06] p-3 text-center"
+          >
+            <span className="font-poppins text-sm font-black uppercase tracking-wide text-brand-red-soft">{copy.opponentThinking}</span>
+          </motion.div>
+        ) : selectedCell === null || !selectedRow || !selectedColumn ? (
+          <motion.div
+            key="pick-cell"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="rounded-2xl bg-brand-blue/15 p-3 text-center"
+          >
+            <span className="font-poppins text-sm font-black uppercase tracking-wide text-white">{copy.pickTurn}</span>
+          </motion.div>
+        ) : (
+          <motion.form
+            key={`answer-${selectedCell}`}
+            onSubmit={onSubmit}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className={cn(
+              'rounded-2xl border-2 p-3',
+              feedback === 'wrong' || feedback === 'already_used'
+                ? 'border-brand-red bg-brand-red/10'
+                : 'border-brand-blue/60 bg-brand-blue/[0.08]',
+            )}
+          >
+            <div className="mb-2 flex min-w-0 items-center justify-center gap-2">
+              <CriterionAsset criterion={selectedRow} className="size-5 shrink-0" />
+              <span className="truncate font-poppins text-[10px] font-black uppercase text-white/80">
+                {locale === 'ka' ? selectedRow.labelKa || selectedRow.labelEn : selectedRow.labelEn}
+              </span>
+              <span className="font-poppins text-xs font-black text-white/35">×</span>
+              <CriterionAsset criterion={selectedColumn} className="size-5 shrink-0" />
+              <span className="truncate font-poppins text-[10px] font-black uppercase text-white/80">
+                {locale === 'ka' ? selectedColumn.labelKa || selectedColumn.labelEn : selectedColumn.labelEn}
+              </span>
+            </div>
+            <div className="mb-2.5 h-1 overflow-hidden rounded-full bg-white/10">
+              <div
+                className={cn('h-full rounded-full transition-[width] duration-100', remainingRatio < 0.25 ? 'bg-brand-red' : 'bg-brand-cyan')}
+                style={{ width: `${remainingRatio * 100}%` }}
+              />
+            </div>
+            <div className="flex gap-2">
+              <input
+                autoFocus
+                value={answer}
+                onChange={(event) => onAnswerChange(event.target.value)}
+                placeholder={copy.answerPlaceholder}
+                maxLength={100}
+                className="h-12 min-w-0 flex-1 rounded-xl border-none bg-brand-blue px-3 text-center text-base font-bold text-white outline-none placeholder:text-white/60"
+              />
+              <button
+                type="submit"
+                disabled={!answer.trim() || pending}
+                className="h-12 rounded-xl bg-brand-green px-4 font-poppins font-black uppercase text-white transition-colors hover:bg-brand-green-deep disabled:opacity-50"
+              >
+                {pending ? <LoaderCircle className="size-5 animate-spin" /> : copy.submit}
+              </button>
+              <button
+                type="button"
+                onClick={onPass}
+                disabled={pending}
+                aria-label={copy.pass}
+                className="flex size-12 shrink-0 items-center justify-center rounded-xl border-2 border-white/10 text-white/40 hover:text-white/70 disabled:opacity-40"
+              >
+                <X className="size-4" />
+              </button>
+            </div>
+            <div className="mt-2 min-h-4 text-center font-poppins text-[11px] font-bold">
+              {feedback === 'correct' && <span className="text-brand-green-light"><Check className="mr-1 inline size-3.5" />{copy.correct}</span>}
+              {feedback === 'wrong' && <span className="text-brand-red-soft">{copy.wrong}</span>}
+              {feedback === 'ambiguous' && <span className="text-brand-yellow">{copy.ambiguous}</span>}
+              {feedback === 'already_used' && <span className="text-brand-red-soft">{copy.alreadyUsed}</span>}
+            </div>
+            {reportableAttempt && feedback !== 'correct' && feedback !== 'pass' && onReport && (
+              <button
+                type="button"
+                disabled={alreadyReported}
+                onClick={() => onReport(reportableAttempt)}
+                className="mt-1 w-full text-center font-poppins text-[10px] font-bold text-white/40 underline decoration-white/20 underline-offset-4 disabled:no-underline"
+              >
+                {alreadyReported ? copy.reported : copy.report}
+              </button>
+            )}
+          </motion.form>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -602,60 +730,43 @@ export function FootballGridFlowScreen() {
   const reportableAttempt = grid.commandResult?.attemptId ?? null;
   const alreadyReported = Boolean(reportableAttempt && grid.reportedAttemptIds.includes(reportableAttempt));
   const selectedCellIsClaimed = selectedCell !== null && state.claims.some((claim) => claim.cellIndex === selectedCell);
+  const myClaims = state.claims.filter((claim) => claim.claimantUserId === selfUserId).length;
+  const opponentClaims = state.claims.length - myClaims;
 
   return (
-    <main className="relative min-h-dvh overflow-x-hidden bg-surface-page-alt px-3 py-3 text-white sm:px-5 sm:py-5">
-      <div className="pointer-events-none fixed inset-0 opacity-50 [background:radial-gradient(circle_at_10%_5%,rgba(22,69,255,.28),transparent_35%),radial-gradient(circle_at_95%_70%,rgba(255,229,0,.08),transparent_32%)]" />
-      <div className="relative mx-auto max-w-3xl">
-        <header className="mb-3 flex items-center justify-between">
-          <button type="button" onClick={() => setShowQuit(true)} className="grid size-10 place-items-center rounded-xl border border-white/10 bg-white/5 text-white/65" aria-label={copy.quit}><ArrowLeft className="size-5" /></button>
-          <div className="text-center"><p className="text-xs font-black uppercase tracking-[0.18em] text-brand-yellow">{copy.title}</p><p className="text-[10px] font-bold text-white/35">#{state.turnNumber}</p></div>
-          <div className={cn('flex h-10 min-w-16 items-center justify-center gap-1.5 rounded-xl border px-3 font-black tabular-nums', remaining <= 5_000 ? 'border-red-400/40 bg-red-500/15 text-red-300' : 'border-white/10 bg-white/5')}>
-            <Clock3 className="size-4" /> {Math.ceil(remaining / 1_000)}
-          </div>
-        </header>
-
-        <div className="mb-3 flex gap-2">
-          <PlayerSeat name={player.username} avatar={player.avatar} customization={player.avatarCustomization} active={state.currentPlayerUserId === selfUserId} color="blue" label={copy.you} />
-          <PlayerSeat name={grid.opponent?.username ?? copy.opponent} avatar={grid.opponent?.avatarUrl ?? 'avatar-2'} customization={grid.opponent?.avatarCustomization} active={Boolean(state.currentPlayerUserId && state.currentPlayerUserId !== selfUserId)} color="yellow" label={copy.opponent} />
-        </div>
-
-        <div className="mb-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-center">
-          <p className={cn('font-black uppercase', isMyTurn ? 'text-brand-yellow' : 'text-white')}>{isMyTurn ? copy.yourTurn : copy.theirTurn}</p>
-          <p className="mt-0.5 text-xs text-white/45">{copy.pickCell}</p>
-        </div>
-
+    <>
+      <MiniGameShell
+        title={copy.title}
+        subtitle={copy.subtitle}
+        accent="#1CB0F6"
+        headerRight={<StatPill label={copy.scoreLabel} value={`${myClaims} · ${opponentClaims}`} color="#1CB0F6" />}
+        onBack={() => setShowQuit(true)}
+        disclaimer={false}
+        backgroundImageUrl={GRID_BACKGROUND}
+      >
+        <div className="mt-2 flex flex-1 flex-col">
         <MatchBoard state={state} selfUserId={selfUserId} locale={locale} selectedCell={selectedCell} onSelect={(cell) => { statsRef.current.selections += 1; setSelectedCell(cell); setAnswer(''); grid.actions.clearCommandFeedback(); }} />
-
-        <AnimatePresence>
-          {isMyTurn && selectedCell !== null && !selectedCellIsClaimed && (
-            <motion.form onSubmit={handleSubmit} initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 24 }} className="sticky bottom-3 z-20 mt-3 rounded-[24px] border border-brand-blue-light bg-surface-page/95 p-3 shadow-2xl backdrop-blur-xl sm:p-4">
-              <div className="flex gap-2">
-                <input autoFocus value={answer} onChange={(event) => setAnswer(event.target.value)} placeholder={copy.answerPlaceholder} maxLength={100} className="min-w-0 flex-1 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-base font-bold outline-none placeholder:text-white/25 focus:border-brand-blue-light" />
-                <button type="submit" disabled={!answer.trim() || Boolean(grid.pendingCommandId)} className="rounded-xl bg-brand-blue px-4 font-black uppercase disabled:opacity-40 sm:px-6">{grid.pendingCommandId ? <LoaderCircle className="size-5 animate-spin" /> : copy.submit}</button>
-              </div>
-              <div className="mt-2 flex items-center justify-between gap-2">
-                <div className="min-h-5 text-xs font-bold">
-                  {feedback === 'correct' && <span className="text-emerald-400"><Check className="mr-1 inline size-4" />{copy.correct}</span>}
-                  {feedback === 'wrong' && <span className="text-red-300"><X className="mr-1 inline size-4" />{copy.wrong}</span>}
-                  {feedback === 'ambiguous' && <span className="text-brand-yellow">{copy.ambiguous}</span>}
-                  {feedback === 'already_used' && <span className="text-orange-300">{copy.alreadyUsed}</span>}
-                </div>
-                <button type="button" onClick={handlePass} disabled={Boolean(grid.pendingCommandId)} className="text-xs font-black uppercase text-white/45 hover:text-white">{copy.pass}</button>
-              </div>
-              {reportableAttempt && feedback !== 'correct' && feedback !== 'pass' && (
-                <button type="button" disabled={alreadyReported} onClick={() => grid.actions.reportMissingAnswer(reportableAttempt)} className="mt-2 text-[11px] font-bold text-white/40 underline decoration-white/20 underline-offset-4 disabled:no-underline">
-                  {alreadyReported ? copy.reported : copy.report}
-                </button>
-              )}
-            </motion.form>
-          )}
-        </AnimatePresence>
-
+          <FootballGridTurnPanel
+            state={state}
+            locale={locale}
+            isMyTurn={isMyTurn}
+            selectedCell={selectedCellIsClaimed ? null : selectedCell}
+            remaining={remaining}
+            answer={answer}
+            onAnswerChange={setAnswer}
+            onSubmit={handleSubmit}
+            onPass={handlePass}
+            pending={Boolean(grid.pendingCommandId)}
+            feedback={feedback}
+            reportableAttempt={reportableAttempt}
+            alreadyReported={alreadyReported}
+            onReport={grid.actions.reportMissingAnswer}
+          />
         {grid.error && <div className="mt-3 rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-center text-xs font-bold text-red-200">{grid.error.message}</div>}
-      </div>
-      <PhaseOverlay state={state} remaining={remaining} copy={copy} />
+          <PhaseOverlay state={state} remaining={remaining} copy={copy} />
+        </div>
+      </MiniGameShell>
       <QuitMatchModal open={showQuit} onOpenChange={setShowQuit} onConfirm={() => { setShowQuit(false); grid.actions.forfeit(); }} description={copy.quit} />
-    </main>
+    </>
   );
 }

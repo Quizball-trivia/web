@@ -166,6 +166,7 @@ async function validateCdnManifest(manifest) {
     ...await listPackagedAssetPaths(path.join(root, 'public/assets/football-grid')),
     ...await listPackagedAssetPaths(path.join(root, 'public/assets/store'), '/assets/store'),
     '/assets/football-grid-card-icon.svg',
+    '/assets/bg-pattern.webp',
   ]);
   const entriesByPath = new Map();
   let totalBytes = 0;
