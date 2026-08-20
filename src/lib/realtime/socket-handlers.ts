@@ -797,12 +797,24 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
     gridStore.setSearchState(data);
   });
   socket.on('grid:match_found', (data: FootballGridMatchFoundPayload) => {
+    const gridStore = useFootballGridStore.getState();
     logger.info('Socket event grid:match_found', {
       matchId: data.matchId,
       opponentId: data.opponent.id,
       stateVersion: data.state.stateVersion,
     });
-    useFootballGridStore.getState().setMatchFound(data);
+    // If matching won the race against a cancellation, end the just-created
+    // handoff immediately. The route that initiated the search may already be
+    // unmounted, so this cleanup must remain global to avoid stranding the
+    // opponent in the handoff timeout.
+    if (gridStore.searchCancellationPending) {
+      socket.emit('grid:forfeit', {
+        matchId: data.matchId,
+        commandId: globalThis.crypto.randomUUID(),
+        expectedStateVersion: data.state.stateVersion,
+      });
+    }
+    gridStore.setMatchFound(data);
   });
   const applyGridState = (eventName: string, data: FootballGridStatePayload) => {
     logger.info(`Socket event ${eventName}`, {

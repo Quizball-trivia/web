@@ -120,6 +120,19 @@ describe('registerSocketHandlers', () => {
     });
     expect(useFootballGridStore.getState().searchCancellationPending).toBe(true);
 
+    mockSocket.fire('grid:match_found', {
+      matchId: 'late-match-id',
+      state: { matchId: 'late-match-id', stateVersion: 3 },
+      opponent: { id: 'opponent-id' },
+      capabilities: { canAddFriend: false, canChallenge: false },
+      serverNow: new Date().toISOString(),
+    } as never);
+    expect(mockSocket.socket.emit).toHaveBeenCalledWith('grid:forfeit', {
+      matchId: 'late-match-id',
+      commandId: expect.any(String),
+      expectedStateVersion: 3,
+    });
+
     mockSocket.fire('grid:search_state', {
       state: 'idle',
       searchId: 'late-search-id',
