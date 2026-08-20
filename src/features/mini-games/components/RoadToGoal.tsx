@@ -2,11 +2,43 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
 import { AnimatePresence, motion } from 'motion/react';
 import { Check, Flag, LockKeyhole, Play, RotateCcw, Shield, Timer, Trophy, X } from 'lucide-react';
 import { MiniGameShell, StatPill } from './MiniGameShell';
 import { getTrivia, type TriviaQuestion } from '../data/trivia';
 import { useMiniLocale } from '../lib/i18n';
+import { useStoreWallet } from '@/lib/queries/store.queries';
+import {
+  acquireRoadToGoalMutation,
+  didRoadToGoalMutationAdvance,
+  type PendingRoadToGoalMutation,
+  type RoadToGoalMutationIntent,
+} from '@/lib/features/roadToGoalMutations';
+import {
+  RoadToGoalApiError,
+  roadToGoalApi,
+  type RoadToGoalCommitment,
+  type RoadToGoalProof,
+  type RoadToGoalQuestion,
+  type RoadToGoalState,
+} from '@/lib/repositories/roadToGoal.repo';
+import {
+  verifyRoadToGoalCommitmentEnvelope,
+  verifyRoadToGoalProof,
+} from '@/lib/features/roadToGoalProof';
+import {
+  trackRoadToGoalEngagementEnded,
+  trackRoadToGoalError,
+  trackRoadToGoalProofVerified,
+  trackRoadToGoalQuestionResolved,
+  trackRoadToGoalResumeChecked,
+  trackRoadToGoalRunSettled,
+  trackRoadToGoalRunStarted,
+  trackRoadToGoalStartRequested,
+  trackRoadToGoalViewed,
+  type RoadToGoalAnalyticsMode,
+} from '../analytics/roadToGoal.analytics';
 
 const RoadToGoalPitch = dynamic(
   () => import('./RoadToGoalPitch').then((module) => module.RoadToGoalPitch),
@@ -37,6 +69,8 @@ const DIFFICULTIES: TriviaQuestion['difficulty'][] = [
 const ZONE_COLORS = ['#58CC02', '#1CB0F6', '#FFE500', '#FF9600'] as const;
 const LANE = 104;
 const FIRST_ZONE_X = 126;
+const LAST_ROUND_STORAGE_KEY = 'quizball:road-to-goal:last-round';
+const COMMITMENT_STORAGE_PREFIX = 'quizball:road-to-goal:commitment:';
 
 type Phase = 'idle' | 'question' | 'correct' | 'decision' | 'tackle' | 'tackled' | 'cashed' | 'complete';
 
@@ -49,7 +83,7 @@ const COPY = {
     stake: 'Stake',
     introEyebrow: 'The eleven-zone gauntlet',
     introTitle: 'Know it. Dribble it. Bank it.',
-    introBody: 'Answer correctly to beat each defender. After every clean zone, take your return or risk it on the next question. One mistake and you get tackled.',
+    introBody: 'Every answer triggers a survival roll. Correct answers give you better odds. After each safe zone, bank the return or attack the next defender.',
     kickOff: 'Kick off for {stake}',
     noFunds: 'Not enough points for this stake',
     nextReturn: 'Next return',
@@ -83,7 +117,7 @@ const COPY = {
     stake: 'ფსონი',
     introEyebrow: 'თერთმეტზონიანი გამოწვევა',
     introTitle: 'იცოდე. მოატყუე. აიღე.',
-    introBody: 'სწორი პასუხით აჯობებ მცველს. ყოველი სუფთა ზონის შემდეგ აიღე მოგება ან გარისკე შემდეგ კითხვაზე. ერთი შეცდომა და ჩაგჭრიან.',
+    introBody: 'ყოველი პასუხის შემდეგ გადარჩენის გათამაშებაა. სწორი პასუხი უკეთეს შანსს გაძლევს. უსაფრთხო ზონის შემდეგ აიღე მოგება ან შეუტიე შემდეგ მცველს.',
     kickOff: 'დაიწყე — {stake}',
     noFunds: 'ამ ფსონისთვის ქულები არ გყოფნის',
     nextReturn: 'შემდეგი მოგება',
@@ -135,7 +169,85 @@ function buildRun(bank: TriviaQuestion[]): TriviaQuestion[] {
 }
 
 function points(value: number) {
-  return Math.round(value).toLocaleString();
+  return value.toLocaleString(undefined, {
+    minimumFractionDigits: Number.isInteger(value) ? 0 : 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+function randomClientValue() {
+  return globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+function isDefinitiveMutationError(error: unknown): error is RoadToGoalApiError {
+  return error instanceof RoadToGoalApiError
+    && error.status >= 400
+    && error.status < 500
+    && error.status !== 409;
+}
+
+function persistRoadToGoalCommitment(commitment: RoadToGoalCommitment) {
+  try {
+    window.localStorage.setItem(
+      `${COMMITMENT_STORAGE_PREFIX}${commitment.commitment_id}`,
+      JSON.stringify(commitment),
+    );
+    window.localStorage.setItem(LAST_ROUND_STORAGE_KEY, commitment.commitment_id);
+  } catch {
+    // The in-memory envelope still verifies this tab when storage is blocked.
+  }
+}
+
+function readRoadToGoalCommitment(roundId: string): RoadToGoalCommitment | null {
+  try {
+    const raw = window.localStorage.getItem(`${COMMITMENT_STORAGE_PREFIX}${roundId}`);
+    return raw ? JSON.parse(raw) as RoadToGoalCommitment : null;
+  } catch {
+    return null;
+  }
+}
+
+function rememberRoadToGoalRound(roundId: string) {
+  try {
+    window.localStorage.setItem(LAST_ROUND_STORAGE_KEY, roundId);
+  } catch {
+    // Storage may be unavailable in strict private-browsing environments.
+  }
+}
+
+function readLastRoadToGoalRound(): string | null {
+  try {
+    return window.localStorage.getItem(LAST_ROUND_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function forgetRoadToGoalRound(roundId?: string) {
+  try {
+    const storedRoundId = roundId ?? window.localStorage.getItem(LAST_ROUND_STORAGE_KEY);
+    if (storedRoundId) {
+      window.localStorage.removeItem(`${COMMITMENT_STORAGE_PREFIX}${storedRoundId}`);
+    }
+    window.localStorage.removeItem(LAST_ROUND_STORAGE_KEY);
+  } catch {
+    // Nothing else is required to reset the in-memory game state.
+  }
+}
+
+function localized(value: Record<string, string>, locale: 'en' | 'ka') {
+  return value[locale] ?? value.en ?? Object.values(value)[0] ?? '';
+}
+
+function toTriviaQuestion(question: RoadToGoalQuestion, locale: 'en' | 'ka'): TriviaQuestion {
+  return {
+    id: question.question_id,
+    q: localized(question.prompt, locale),
+    options: question.options.map((option) => localized(option.text, locale)),
+    answer: -1,
+    difficulty: question.difficulty,
+    image: question.image ?? undefined,
+  };
 }
 
 function Runner({ tackled }: { tackled: boolean }) {
@@ -297,10 +409,19 @@ function RoadScene(props: RoadSceneProps) {
   return <RoadToGoalPitch {...props} onFailure={showFallback} />;
 }
 
-export function RoadToGoal({ backHref }: { backHref?: string } = {}) {
+export function RoadToGoal({
+  backHref,
+  live = false,
+  newRunsEnabled = true,
+}: {
+  backHref?: string;
+  live?: boolean;
+  newRunsEnabled?: boolean;
+} = {}) {
   const locale = useMiniLocale();
   const copy = COPY[locale];
   const bank = useMemo(() => getTrivia(locale), [locale]);
+  const { data: wallet, isError: walletError, refetch: refetchWallet } = useStoreWallet({ enabled: live });
   const [balance, setBalance] = useState(1_000);
   const [stake, setStake] = useState(25);
   const [run, setRun] = useState<TriviaQuestion[]>([]);
@@ -309,39 +430,458 @@ export function RoadToGoal({ backHref }: { backHref?: string } = {}) {
   const [selected, setSelected] = useState<number | null>(null);
   const [remaining, setRemaining] = useState(QUESTION_MS);
   const [payout, setPayout] = useState(0);
+  const [liveState, setLiveState] = useState<RoadToGoalState | null>(null);
+  const [liveQuestion, setLiveQuestion] = useState<TriviaQuestion | undefined>();
+  const [liveOptionIds, setLiveOptionIds] = useState<string[]>([]);
+  const [resumed, setResumed] = useState(!live);
+  const [busy, setBusy] = useState(false);
+  const [liveError, setLiveError] = useState<string | null>(null);
+  const [clientSeed, setClientSeed] = useState(randomClientValue);
+  const [autoCashoutZone, setAutoCashoutZone] = useState<number | null>(null);
+  const [proof, setProof] = useState<RoadToGoalProof | null>(null);
+  const [proofVerified, setProofVerified] = useState<boolean | null>(null);
   const timers = useRef<number[]>([]);
+  const liveStateRef = useRef<RoadToGoalState | null>(null);
+  const pendingMutationRef = useRef<PendingRoadToGoalMutation | null>(null);
+  const committedBeforeSeedRef = useRef<RoadToGoalCommitment | null>(null);
+  const serverClockOffsetRef = useRef(0);
+  const demoRoundIdRef = useRef<string | null>(null);
+  const runStartedAtRef = useRef<number | null>(null);
+  const lastReconcileFailedRef = useRef(false);
+  const analyticsStateRef = useRef({
+    phase: 'idle' as Phase,
+    maxZoneReached: 0,
+    runStarted: false,
+    roundId: null as string | null,
+  });
+  const analyticsMode: RoadToGoalAnalyticsMode = live ? 'live' : 'demo';
 
   useEffect(() => () => timers.current.forEach((id) => window.clearTimeout(id)), []);
+
+  useEffect(() => {
+    analyticsStateRef.current.phase = phase;
+    analyticsStateRef.current.maxZoneReached = Math.max(
+      analyticsStateRef.current.maxZoneReached,
+      progress,
+    );
+    analyticsStateRef.current.roundId = liveState?.round_id ?? demoRoundIdRef.current;
+  }, [liveState?.round_id, phase, progress]);
+
+  useEffect(() => {
+    const mountedAt = Date.now();
+    let activeStartedAt = document.visibilityState === 'hidden' ? null : mountedAt;
+    let activeDurationMs = 0;
+    let ended = false;
+
+    trackRoadToGoalViewed({
+      mode: analyticsMode,
+      locale,
+      newRunsEnabled,
+    });
+
+    const stopActiveClock = () => {
+      if (activeStartedAt == null) return;
+      activeDurationMs += Date.now() - activeStartedAt;
+      activeStartedAt = null;
+    };
+    const finish = (reason: 'pagehide' | 'unmount') => {
+      if (ended) return;
+      ended = true;
+      stopActiveClock();
+      const state = analyticsStateRef.current;
+      trackRoadToGoalEngagementEnded({
+        mode: analyticsMode,
+        reason,
+        durationMs: Date.now() - mountedAt,
+        activeDurationMs,
+        runStarted: state.runStarted,
+        maxZoneReached: state.maxZoneReached,
+        phase: state.phase,
+        roundId: state.roundId,
+      });
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        stopActiveClock();
+      } else if (activeStartedAt == null) {
+        activeStartedAt = Date.now();
+      }
+    };
+    const onPageHide = () => finish('pagehide');
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('pagehide', onPageHide);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('pagehide', onPageHide);
+      finish('unmount');
+    };
+  }, [analyticsMode, locale, newRunsEnabled]);
 
   const later = (fn: () => void, delay: number) => {
     const id = window.setTimeout(fn, delay);
     timers.current.push(id);
   };
 
+  const applyLiveState = useCallback((state: RoadToGoalState) => {
+    const previous = liveStateRef.current;
+    if (
+      previous
+      && previous.round_id === state.round_id
+      && state.state_version < previous.state_version
+    ) return;
+    liveStateRef.current = state;
+    analyticsStateRef.current.runStarted = true;
+    analyticsStateRef.current.roundId = state.round_id;
+    analyticsStateRef.current.maxZoneReached = Math.max(
+      analyticsStateRef.current.maxZoneReached,
+      state.cleared_zones,
+    );
+    rememberRoadToGoalRound(state.round_id);
+    const serverNow = new Date(state.server_now).getTime();
+    if (Number.isFinite(serverNow)) serverClockOffsetRef.current = serverNow - Date.now();
+    setLiveState(state);
+    setStake(state.stake_coins);
+    setProgress(state.cleared_zones);
+    setPayout(state.payout_coins ?? 0);
+    setAutoCashoutZone(state.auto_cashout_zone);
+    if (state.question) {
+      setLiveQuestion(toTriviaQuestion(state.question, locale));
+      setLiveOptionIds(state.question.options.map((option) => option.id));
+      setRemaining(Math.max(
+        0,
+        new Date(state.question.deadline_at).getTime()
+          - (Date.now() + serverClockOffsetRef.current),
+      ));
+    } else {
+      setLiveQuestion(undefined);
+      setLiveOptionIds([]);
+    }
+    if (state.status === 'lost') setPhase('tackled');
+    else if (state.status === 'cashed') setPhase('cashed');
+    else if (state.status === 'completed') setPhase('complete');
+    else if (state.phase === 'decision') setPhase('decision');
+    else setPhase('question');
+  }, [locale]);
+
+  const loadProof = useCallback(async (roundId: string) => {
+    const nextProof = await roadToGoalApi.proof(roundId);
+    const committedBeforeSeed = committedBeforeSeedRef.current?.commitment_id === roundId
+      ? committedBeforeSeedRef.current
+      : readRoadToGoalCommitment(roundId);
+    const verified = committedBeforeSeed
+      ? await verifyRoadToGoalProof(nextProof, committedBeforeSeed)
+      : false;
+    setProof(nextProof);
+    setProofVerified(verified);
+    trackRoadToGoalProofVerified({
+      roundId,
+      verified,
+      verifiedZones: nextProof.zones.length,
+    });
+  }, []);
+
+  const reconcileLive = useCallback(async (roundId?: string) => {
+    lastReconcileFailedRef.current = false;
+    try {
+      let state = roundId ? await roadToGoalApi.get(roundId) : await roadToGoalApi.current();
+      if (!state && !roundId) {
+        const storedRoundId = readLastRoadToGoalRound();
+        if (storedRoundId) {
+          try {
+            state = await roadToGoalApi.get(storedRoundId);
+          } catch (error) {
+            if (!(error instanceof RoadToGoalApiError && error.status === 404)) throw error;
+            forgetRoadToGoalRound(storedRoundId);
+          }
+        }
+      }
+      let proofLoadFailed = false;
+      if (state) {
+        committedBeforeSeedRef.current = readRoadToGoalCommitment(state.round_id);
+        const pending = pendingMutationRef.current;
+        if (
+          pending
+          && didRoadToGoalMutationAdvance(pending, {
+            roundId: state.round_id,
+            stateVersion: state.state_version,
+            status: state.status,
+          })
+        ) {
+          pendingMutationRef.current = null;
+        }
+        applyLiveState(state);
+        if (state.status !== 'active') {
+          try {
+            await loadProof(state.round_id);
+          } catch {
+            proofLoadFailed = true;
+            trackRoadToGoalError({ action: 'proof', errorName: 'proof_load_failed' });
+          }
+          void refetchWallet();
+        }
+      }
+      else {
+        liveStateRef.current = null;
+        setLiveState(null);
+        setPhase('idle');
+      }
+      setLiveError(proofLoadFailed
+        ? locale === 'ka'
+          ? 'სამართლიანობის მტკიცებულება ვერ ჩაიტვირთა — სცადე ხელახლა'
+          : 'Fairness proof could not be loaded — try again'
+        : null);
+      return state;
+    } catch {
+      lastReconcileFailedRef.current = true;
+      trackRoadToGoalError({ action: 'resume', errorName: 'reconcile_failed' });
+      setLiveError(locale === 'ka' ? 'კავშირი შეფერხდა — სცადე ხელახლა' : 'Connection interrupted — try again');
+      return null;
+    }
+  }, [applyLiveState, loadProof, locale, refetchWallet]);
+
+  useEffect(() => {
+    if (!live) return;
+    void reconcileLive()
+      .then((state) => {
+        trackRoadToGoalResumeChecked({
+          result: lastReconcileFailedRef.current
+            ? 'error'
+            : !state
+              ? 'none'
+              : state.status === 'active'
+                ? 'active'
+                : 'terminal',
+          status: state?.status,
+        });
+      })
+      .finally(() => setResumed(true));
+  }, [live, reconcileLive]);
+
+  const liveQuestionDeadline = liveState?.question?.deadline_at;
+
   useEffect(() => {
     if (phase !== 'question') return;
-    const deadline = Date.now() + QUESTION_MS;
-    const interval = window.setInterval(() => setRemaining(Math.max(0, deadline - Date.now())), 80);
+    const deadline = live && liveQuestionDeadline
+      ? new Date(liveQuestionDeadline).getTime()
+      : Date.now() + QUESTION_MS;
+    const serverNow = () => Date.now() + (live ? serverClockOffsetRef.current : 0);
+    const interval = window.setInterval(
+      () => setRemaining(Math.max(0, deadline - serverNow())),
+      80,
+    );
+    let recoveryTimeout: number | undefined;
+    let cancelled = false;
+    const recoverExpiredQuestion = async () => {
+      const current = liveStateRef.current;
+      if (!current || cancelled) return;
+      const recovered = await reconcileLive(current.round_id);
+      if (
+        !cancelled
+        && recovered?.status === 'active'
+        && recovered.phase === 'question'
+        && recovered.question?.question_id === current.question?.question_id
+      ) {
+        recoveryTimeout = window.setTimeout(recoverExpiredQuestion, 750);
+      }
+    };
     const timeout = window.setTimeout(() => {
+      if (live) {
+        void recoverExpiredQuestion();
+        return;
+      }
+      const timedOutQuestion = run[progress];
+      const demoRoundId = demoRoundIdRef.current;
+      if (timedOutQuestion && demoRoundId) {
+        trackRoadToGoalQuestionResolved({
+          mode: 'demo',
+          roundId: demoRoundId,
+          zone: progress + 1,
+          questionId: timedOutQuestion.id,
+          difficulty: timedOutQuestion.difficulty,
+          outcome: 'late',
+          survived: false,
+          answerDurationMs: QUESTION_MS,
+          stakeCoins: stake,
+          terminalStatus: 'lost',
+        });
+        trackRoadToGoalRunSettled({
+          mode: 'demo',
+          roundId: demoRoundId,
+          result: 'lost',
+          settlementReason: 'demo_timeout_tackle',
+          stakeCoins: stake,
+          payoutCoins: 0,
+          clearedZones: progress,
+          runDurationMs: Date.now() - (runStartedAtRef.current ?? Date.now()),
+        });
+      }
       setSelected(-1);
       setPhase('tackle');
       later(() => setPhase('tackled'), 1_050);
-    }, QUESTION_MS);
+    }, Math.max(0, deadline - serverNow()));
     return () => {
+      cancelled = true;
       window.clearInterval(interval);
       window.clearTimeout(timeout);
+      if (recoveryTimeout !== undefined) window.clearTimeout(recoveryTimeout);
     };
-  }, [phase, progress]);
+  }, [live, liveQuestionDeadline, phase, progress, reconcileLive, run, stake]);
 
-  const question = run[progress];
-  const currentMultiplier = progress > 0 ? MULTIPLIERS[progress - 1] : 1;
-  const nextMultiplier = MULTIPLIERS[Math.min(progress, ZONES - 1)];
-  const currentReturn = Math.round(stake * currentMultiplier);
-  const nextReturn = Math.round(stake * nextMultiplier);
-  const timePercent = (remaining / QUESTION_MS) * 100;
+  const question = live ? liveQuestion : run[progress];
+  const currentMultiplier = live
+    ? (liveState?.current_multiplier_bp ?? 10_000) / 10_000
+    : progress > 0 ? MULTIPLIERS[progress - 1] : 1;
+  const nextMultiplier = live
+    ? (liveState?.next_multiplier_bp ?? 10_000) / 10_000
+    : MULTIPLIERS[Math.min(progress, ZONES - 1)];
+  const currentReturn = live
+    ? liveState?.current_return_coins ?? stake
+    : Math.round(stake * currentMultiplier);
+  const nextReturn = live
+    ? liveState?.next_return_coins ?? stake
+    : Math.round(stake * nextMultiplier);
+  const questionDuration = liveState?.question?.duration_ms ?? QUESTION_MS;
+  const timePercent = Math.min(100, (remaining / questionDuration) * 100);
+  const effectiveBalance = live ? wallet?.coins ?? 0 : balance;
+  const correctAnswer = question && question.answer >= 0
+    ? question.options[question.answer]
+    : undefined;
 
-  const start = () => {
-    if (balance < stake) return;
+  const acquireLiveMutation = (
+    intent: RoadToGoalMutationIntent,
+  ): PendingRoadToGoalMutation | null => {
+    const acquired = acquireRoadToGoalMutation(
+      pendingMutationRef.current,
+      intent,
+      randomClientValue,
+    );
+    pendingMutationRef.current = acquired.pending;
+    if (acquired.blocked) {
+      setLiveError(
+        locale === 'ka'
+          ? 'წინა მოქმედება ჯერ მოწმდება — გაიმეორე იგივე მოქმედება'
+          : 'Your previous action is still resolving — retry the same action',
+      );
+      return null;
+    }
+    return acquired.pending;
+  };
+
+  const finishLiveMutation = async (state: RoadToGoalState) => {
+    applyLiveState(state);
+    pendingMutationRef.current = null;
+    if (state.status !== 'active') {
+      try {
+        await loadProof(state.round_id);
+      } catch {
+        trackRoadToGoalError({ action: 'proof', errorName: 'proof_load_failed' });
+        setLiveError(
+          locale === 'ka'
+            ? 'სამართლიანობის მტკიცებულება ვერ ჩაიტვირთა — სცადე ხელახლა'
+            : 'Fairness proof could not be loaded — try again',
+        );
+      }
+      await refetchWallet();
+    }
+  };
+
+  const trackDemoSettlement = (
+    result: 'cashed' | 'lost' | 'completed',
+    settlementReason: string,
+    payoutCoins: number,
+    clearedZones: number,
+  ) => {
+    const roundId = demoRoundIdRef.current;
+    if (!roundId) return;
+    trackRoadToGoalRunSettled({
+      mode: 'demo',
+      roundId,
+      result,
+      settlementReason,
+      stakeCoins: stake,
+      payoutCoins,
+      clearedZones,
+      runDurationMs: Date.now() - (runStartedAtRef.current ?? Date.now()),
+    });
+  };
+
+  const start = async () => {
+    if (effectiveBalance < stake || busy) return;
+    trackRoadToGoalStartRequested({
+      mode: analyticsMode,
+      stakeCoins: stake,
+      autoCashoutZone: live ? autoCashoutZone : null,
+    });
+    if (live) {
+      if (!newRunsEnabled || !wallet || !resumed) return;
+      const startIntent = {
+        kind: 'start',
+        stake: stake as 10 | 25 | 50,
+        clientSeed,
+        autoCashoutZone,
+      } satisfies RoadToGoalMutationIntent;
+      const pending = acquireLiveMutation(startIntent);
+      if (!pending?.finalizeNonce) return;
+      setBusy(true);
+      setLiveError(null);
+      try {
+        const commitment: RoadToGoalCommitment = await roadToGoalApi.prepare({
+          stake: stake as 10 | 25 | 50,
+          requestNonce: pending.nonce,
+          autoCashoutZone,
+        });
+        if (!(await verifyRoadToGoalCommitmentEnvelope(commitment))) {
+          throw new RoadToGoalApiError(
+            'The server commitment did not match the published rules',
+            422,
+          );
+        }
+        committedBeforeSeedRef.current = commitment;
+        persistRoadToGoalCommitment(commitment);
+        const state = await roadToGoalApi.start({
+          commitmentId: commitment.commitment_id,
+          clientNonce: pending.finalizeNonce,
+          clientSeed,
+        });
+        pendingMutationRef.current = null;
+        setProof(null);
+        setProofVerified(null);
+        setSelected(null);
+        runStartedAtRef.current = Date.now();
+        applyLiveState(state);
+        await refetchWallet();
+      } catch (error) {
+        trackRoadToGoalError({
+          action: 'start',
+          status: error instanceof RoadToGoalApiError ? error.status : null,
+          errorName: error instanceof Error ? error.name : 'unknown',
+        });
+        if (isDefinitiveMutationError(error)) {
+          pendingMutationRef.current = null;
+          setLiveError(error.message);
+        } else {
+          const reconciled = await reconcileLive();
+          if (!reconciled && pendingMutationRef.current) {
+            setLiveError(error instanceof Error ? error.message : 'Request failed');
+          }
+        }
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
+    const demoRoundId = `demo-${randomClientValue()}`;
+    demoRoundIdRef.current = demoRoundId;
+    runStartedAtRef.current = Date.now();
+    analyticsStateRef.current.runStarted = true;
+    analyticsStateRef.current.roundId = demoRoundId;
+    trackRoadToGoalRunStarted({
+      mode: 'demo',
+      roundId: demoRoundId,
+      stakeCoins: stake,
+      autoCashoutZone: null,
+    });
     setBalance((value) => value - stake);
     setRun(buildRun(bank));
     setProgress(0);
@@ -351,11 +891,81 @@ export function RoadToGoal({ backHref }: { backHref?: string } = {}) {
     setPhase('question');
   };
 
-  const answer = (index: number) => {
-    if (phase !== 'question' || selected !== null || !question) return;
+  const answer = async (index: number) => {
+    if (phase !== 'question' || selected !== null || !question || busy) return;
+    if (live) {
+      const state = liveStateRef.current;
+      const optionId = liveOptionIds[index];
+      if (!state?.question || !optionId) return;
+      const pending = acquireLiveMutation({
+        kind: 'answer',
+        roundId: state.round_id,
+        questionId: state.question.question_id,
+        optionId,
+        expectedVersion: state.state_version,
+      });
+      if (!pending) return;
+      setSelected(index);
+      setBusy(true);
+      setLiveError(null);
+      try {
+        const result = await roadToGoalApi.answer({
+          roundId: state.round_id,
+          questionId: state.question.question_id,
+          optionId,
+          expectedVersion: state.state_version,
+          requestNonce: pending.nonce,
+        });
+        pendingMutationRef.current = null;
+        liveStateRef.current = result.state;
+        setLiveState(result.state);
+        const correctIndex = liveOptionIds.indexOf(result.correct_option_id);
+        setLiveQuestion((current) => current ? { ...current, answer: correctIndex } : current);
+        setPhase(result.survived ? 'correct' : 'tackle');
+        later(() => {
+          void finishLiveMutation(result.state);
+        }, result.survived ? DRIBBLE_MS : 1_050);
+      } catch (error) {
+        trackRoadToGoalError({
+          action: 'answer',
+          status: error instanceof RoadToGoalApiError ? error.status : null,
+          errorName: error instanceof Error ? error.name : 'unknown',
+        });
+        if (isDefinitiveMutationError(error)) {
+          pendingMutationRef.current = null;
+          setLiveError(error.message);
+        } else {
+          await reconcileLive(state.round_id);
+          if (pendingMutationRef.current) {
+            setLiveError(error instanceof Error ? error.message : 'Request failed');
+          }
+        }
+        setSelected(null);
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
     setSelected(index);
-    if (index !== question.answer) {
+    const answeredCorrectly = index === question.answer;
+    const demoRoundId = demoRoundIdRef.current;
+    if (demoRoundId) {
+      trackRoadToGoalQuestionResolved({
+        mode: 'demo',
+        roundId: demoRoundId,
+        zone: progress + 1,
+        questionId: question.id,
+        difficulty: question.difficulty,
+        outcome: answeredCorrectly ? 'correct' : 'wrong',
+        survived: answeredCorrectly,
+        answerDurationMs: QUESTION_MS - remaining,
+        stakeCoins: stake,
+        terminalStatus: answeredCorrectly ? null : 'lost',
+      });
+    }
+    if (!answeredCorrectly) {
       setPhase('tackle');
+      trackDemoSettlement('lost', 'demo_tackle', 0, progress);
       later(() => setPhase('tackled'), 1_050);
       return;
     }
@@ -369,6 +979,7 @@ export function RoadToGoal({ backHref }: { backHref?: string } = {}) {
         const finalPayout = Math.round(stake * MULTIPLIERS[ZONES - 1]);
         setPayout(finalPayout);
         setBalance((value) => value + finalPayout);
+        trackDemoSettlement('completed', 'demo_complete', finalPayout, ZONES);
         setPhase('complete');
       } else {
         setPhase('decision');
@@ -376,20 +987,111 @@ export function RoadToGoal({ backHref }: { backHref?: string } = {}) {
     }, DRIBBLE_MS);
   };
 
-  const continueRun = () => {
+  const continueRun = async () => {
+    if (live) {
+      const state = liveStateRef.current;
+      if (!state || busy) return;
+      const pending = acquireLiveMutation({
+        kind: 'continue',
+        roundId: state.round_id,
+        expectedVersion: state.state_version,
+      });
+      if (!pending) return;
+      setBusy(true);
+      try {
+        const next = await roadToGoalApi.continue({
+          roundId: state.round_id,
+          expectedVersion: state.state_version,
+          requestNonce: pending.nonce,
+        });
+        pendingMutationRef.current = null;
+        setSelected(null);
+        applyLiveState(next);
+        if (next.status !== 'active') await finishLiveMutation(next);
+      } catch (error) {
+        trackRoadToGoalError({
+          action: 'continue',
+          status: error instanceof RoadToGoalApiError ? error.status : null,
+          errorName: error instanceof Error ? error.name : 'unknown',
+        });
+        if (isDefinitiveMutationError(error)) {
+          pendingMutationRef.current = null;
+          setLiveError(error.message);
+        } else {
+          await reconcileLive(state.round_id);
+          if (pendingMutationRef.current) {
+            setLiveError(error instanceof Error ? error.message : 'Request failed');
+          }
+        }
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
     setSelected(null);
     setRemaining(QUESTION_MS);
     setPhase('question');
   };
 
-  const cashOut = () => {
+  const cashOut = async () => {
     if (progress <= 0) return;
+    if (live) {
+      const state = liveStateRef.current;
+      if (!state || busy) return;
+      const pending = acquireLiveMutation({
+        kind: 'cashout',
+        roundId: state.round_id,
+        expectedVersion: state.state_version,
+      });
+      if (!pending) return;
+      setBusy(true);
+      try {
+        const next = await roadToGoalApi.cashout({
+          roundId: state.round_id,
+          expectedVersion: state.state_version,
+          requestNonce: pending.nonce,
+        });
+        await finishLiveMutation(next);
+      } catch (error) {
+        trackRoadToGoalError({
+          action: 'cashout',
+          status: error instanceof RoadToGoalApiError ? error.status : null,
+          errorName: error instanceof Error ? error.name : 'unknown',
+        });
+        if (isDefinitiveMutationError(error)) {
+          pendingMutationRef.current = null;
+          setLiveError(error.message);
+        } else {
+          await reconcileLive(state.round_id);
+          if (pendingMutationRef.current) {
+            setLiveError(error instanceof Error ? error.message : 'Request failed');
+          }
+        }
+      } finally {
+        setBusy(false);
+      }
+      return;
+    }
     setPayout(currentReturn);
     setBalance((value) => value + currentReturn);
+    trackDemoSettlement('cashed', 'demo_cashout', currentReturn, progress);
     setPhase('cashed');
   };
 
   const reset = () => {
+    if (live) {
+      forgetRoadToGoalRound(liveStateRef.current?.round_id);
+      liveStateRef.current = null;
+      committedBeforeSeedRef.current = null;
+      setLiveState(null);
+      setLiveQuestion(undefined);
+      setLiveOptionIds([]);
+      setProof(null);
+      setProofVerified(null);
+      setClientSeed(randomClientValue());
+      pendingMutationRef.current = null;
+      void refetchWallet();
+    }
     setPhase('idle');
     setProgress(0);
     setSelected(null);
@@ -410,7 +1112,7 @@ export function RoadToGoal({ backHref }: { backHref?: string } = {}) {
       subtitle={copy.subtitle}
       accent="#58CC02"
       wide
-      headerRight={<StatPill label={copy.balance} value={points(balance)} color="#FFE500" />}
+      headerRight={<StatPill label={copy.balance} value={points(effectiveBalance)} color="#FFE500" />}
     >
       <div className="mt-1.5 grid items-start gap-2.5 sm:mt-2 sm:gap-3 lg:grid-cols-[minmax(0,1fr)_300px] xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0 self-start">
@@ -461,15 +1163,57 @@ export function RoadToGoal({ backHref }: { backHref?: string } = {}) {
                     })}
                   </div>
 
+                  {live && (
+                    <div className="mt-2 grid gap-2 border-t border-white/10 pt-2">
+                      <label className="grid gap-1 font-poppins text-[8px] font-black uppercase tracking-wider text-white/55">
+                        {locale === 'ka' ? 'კლიენტის seed' : 'Client seed'}
+                        <input
+                          value={clientSeed}
+                          onChange={(event) => setClientSeed(event.target.value.slice(0, 128))}
+                          disabled={busy || !newRunsEnabled}
+                          className="h-8 rounded-lg border border-white/15 bg-[#06142E]/65 px-2 text-[9px] normal-case tracking-normal text-white outline-none focus:border-brand-cyan"
+                        />
+                      </label>
+                      <label className="grid gap-1 font-poppins text-[8px] font-black uppercase tracking-wider text-white/55">
+                        {locale === 'ka' ? 'ავტომატურად აიღე' : 'Auto-bank'}
+                        <select
+                          value={autoCashoutZone ?? 0}
+                          onChange={(event) => setAutoCashoutZone(Number(event.target.value) || null)}
+                          disabled={busy || !newRunsEnabled}
+                          className="h-8 rounded-lg border border-white/15 bg-[#06142E]/65 px-2 text-[9px] text-white outline-none focus:border-brand-cyan"
+                        >
+                          <option value={0}>{locale === 'ka' ? 'გამორთულია' : 'Off'}</option>
+                          {MULTIPLIERS.slice(0, 10).map((multiplier, index) => (
+                            <option key={multiplier} value={index + 1}>
+                              {locale === 'ka' ? 'ზონა' : 'Zone'} {index + 1} · {multiplier.toFixed(2)}×
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    </div>
+                  )}
+
                   <button
                     type="button"
                     onClick={start}
-                    disabled={balance < stake}
+                    disabled={
+                      effectiveBalance < stake
+                      || busy
+                      || (live && (!newRunsEnabled || !wallet || !resumed))
+                    }
                     className="mt-2.5 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-brand-green px-4 font-poppins text-xs font-black uppercase tracking-wide text-[#07111D] transition-[filter,transform] hover:brightness-105 active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/35"
                   >
                     <Play className="size-4 fill-current" /> {fill(copy.kickOff, { stake: points(stake) })}
                   </button>
-                  {balance < stake && <p className="mt-2 text-center font-poppins text-[10px] font-bold text-brand-yellow">{copy.noFunds}</p>}
+                  {effectiveBalance < stake && <p className="mt-2 text-center font-poppins text-[10px] font-bold text-brand-yellow">{copy.noFunds}</p>}
+                  {live && !newRunsEnabled && (
+                    <p className="mt-2 text-center font-poppins text-[10px] font-bold text-brand-yellow">
+                      {locale === 'ka'
+                        ? 'ახალი თამაშები დროებით გამორთულია — მიმდინარე გარბენი კვლავ დაცულია'
+                        : 'New runs are paused — any active run remains available'}
+                    </p>
+                  )}
+                  {live && walletError && <p className="mt-2 text-center font-poppins text-[10px] font-bold text-brand-orange">{locale === 'ka' ? 'ბალანსი ვერ ჩაიტვირთა' : 'Wallet unavailable'}</p>}
                 </div>
               </motion.div>
             )}
@@ -499,7 +1243,31 @@ export function RoadToGoal({ backHref }: { backHref?: string } = {}) {
                   />
                 </div>
 
+                {question.image && (
+                  <div className="relative mt-3 aspect-[16/7] max-h-36 overflow-hidden rounded-xl border border-white/10 bg-[#06142E]">
+                    <Image
+                      src={question.image.url}
+                      alt=""
+                      width={question.image.width}
+                      height={question.image.height}
+                      unoptimized
+                      className="size-full object-contain"
+                    />
+                  </div>
+                )}
                 <p className="mt-3 font-poppins text-xs font-black leading-snug text-white">{question.q}</p>
+                {live && liveState?.question && (
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    <div className="rounded-lg border border-brand-green/35 bg-brand-green/10 px-2 py-1.5 text-center">
+                      <div className="font-poppins text-[7px] font-black uppercase tracking-wide text-white/45">{locale === 'ka' ? 'სწორი პასუხი' : 'Correct answer'}</div>
+                      <div className="font-poppins text-xs font-black text-brand-green">{(liveState.question.correct_survival_bp / 100).toFixed(2)}%</div>
+                    </div>
+                    <div className="rounded-lg border border-brand-orange/35 bg-brand-orange/10 px-2 py-1.5 text-center">
+                      <div className="font-poppins text-[7px] font-black uppercase tracking-wide text-white/45">{locale === 'ka' ? 'არასწორი პასუხი' : 'Wrong answer'}</div>
+                      <div className="font-poppins text-xs font-black text-brand-orange">{(liveState.question.wrong_survival_bp / 100).toFixed(2)}%</div>
+                    </div>
+                  </div>
+                )}
                 <div className="mt-2.5 grid gap-2">
                   {question.options.map((option, index) => {
                     const state = answerState(index);
@@ -543,17 +1311,17 @@ export function RoadToGoal({ backHref }: { backHref?: string } = {}) {
                   <div className="font-poppins text-2xl font-black tabular-nums text-brand-yellow">{points(currentReturn)} <span className="text-sm">· {currentMultiplier.toFixed(2)}×</span></div>
                 </div>
                 <div className="mt-3 grid gap-2">
-                  <button type="button" onClick={continueRun} className="h-11 rounded-xl bg-brand-orange px-3 font-poppins text-sm font-black uppercase text-[#07111D] transition-[filter,transform] hover:brightness-105 active:scale-[0.99]">
+                  <button type="button" onClick={continueRun} disabled={busy} className="h-11 rounded-xl bg-brand-orange px-3 font-poppins text-sm font-black uppercase text-[#07111D] transition-[filter,transform] hover:brightness-105 active:scale-[0.99] disabled:opacity-50">
                     {fill(copy.continue, { zone: progress + 1 })}
                   </button>
-                  <button type="button" onClick={cashOut} className="flex h-11 items-center justify-center gap-2 rounded-xl bg-brand-green px-3 font-poppins text-sm font-black uppercase text-[#07111D] transition-[filter,transform] hover:brightness-105 active:scale-[0.99]">
+                  <button type="button" onClick={cashOut} disabled={busy} className="flex h-11 items-center justify-center gap-2 rounded-xl bg-brand-green px-3 font-poppins text-sm font-black uppercase text-[#07111D] transition-[filter,transform] hover:brightness-105 active:scale-[0.99] disabled:opacity-50">
                     <LockKeyhole className="size-4" /> {fill(copy.cashOut, { amount: points(currentReturn) })}
                   </button>
                 </div>
               </motion.div>
             )}
 
-            {phase === 'tackled' && question && (
+            {phase === 'tackled' && (
               <motion.div key="tackled" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 flex flex-1 flex-col items-center justify-center text-center">
                 <div className="flex size-12 items-center justify-center rounded-full bg-brand-orange text-[#07111D] shadow-[0_0_35px_rgba(255,150,0,.45)]">
                   <Shield className="size-7" />
@@ -562,9 +1330,11 @@ export function RoadToGoal({ backHref }: { backHref?: string } = {}) {
                 <p className="mt-1 max-w-xs font-poppins text-xs font-semibold leading-relaxed text-white/75">
                   {fill(copy.tackledBody, { zone: progress + 1 })}
                 </p>
-                <p className="mt-3 rounded-xl bg-white/[0.04] px-3 py-2 font-poppins text-[10px] font-bold text-white/55">
-                  {fill(copy.correctWas, { answer: question.options[question.answer] })}
-                </p>
+                {correctAnswer && (
+                  <p className="mt-3 rounded-xl bg-white/[0.04] px-3 py-2 font-poppins text-[10px] font-bold text-white/55">
+                    {fill(copy.correctWas, { answer: correctAnswer })}
+                  </p>
+                )}
                 <button type="button" onClick={reset} className="mt-4 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-brand-green font-poppins text-xs font-black uppercase text-[#07111D] transition-[filter,transform] hover:brightness-105 active:scale-[0.99]">
                   <RotateCcw className="size-4" /> {copy.newRun}
                 </button>
@@ -603,6 +1373,32 @@ export function RoadToGoal({ backHref }: { backHref?: string } = {}) {
               </motion.div>
             )}
           </AnimatePresence>
+
+          {liveError && (
+            <p className="relative z-10 mt-2 rounded-lg border border-brand-orange/30 bg-brand-orange/10 px-2 py-1.5 text-center font-poppins text-[9px] font-bold text-brand-orange">
+              {liveError}
+            </p>
+          )}
+
+          {live && proof && (phase === 'cashed' || phase === 'complete' || phase === 'tackled') && (
+            <details className="relative z-10 mt-2 rounded-lg border border-white/10 bg-[#06142E]/55 px-2.5 py-2 font-poppins text-[8px] text-white/55">
+              <summary className="cursor-pointer font-black uppercase tracking-wider text-brand-cyan">
+                {locale === 'ka' ? 'სამართლიანი თამაშის მტკიცებულება' : 'Fair-play proof'}
+              </summary>
+              <div className="mt-2 break-all leading-relaxed">
+                <div className={proofVerified === true ? 'text-brand-green' : proofVerified === false ? 'text-brand-orange' : 'text-white/55'}>
+                  {proofVerified === null
+                    ? (locale === 'ka' ? 'მტკიცებულება მოწმდება…' : 'Verifying proof…')
+                    : proofVerified
+                      ? (locale === 'ka' ? '✓ მტკიცებულება გადამოწმებულია' : '✓ Proof independently verified')
+                      : (locale === 'ka' ? '⚠ მტკიცებულება ვერ დადასტურდა' : '⚠ Proof verification failed')}
+                </div>
+                <div>commit: {proof.commit_hash}</div>
+                <div>seed: {proof.server_seed}</div>
+                <div>{proof.zones.length} {locale === 'ka' ? 'დადასტურებული გათამაშება' : 'verified rolls'}</div>
+              </div>
+            </details>
+          )}
 
           {phase !== 'idle' && (
             <div className="relative z-10 mt-3 flex items-center gap-1.5 border-t border-white/15 pt-3">
