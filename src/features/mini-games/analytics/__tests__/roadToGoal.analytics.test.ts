@@ -13,7 +13,7 @@ import {
 describe('Road to Goal browser analytics', () => {
   beforeEach(() => {
     trackEvent.mockReset();
-    vi.stubEnv('NEXT_PUBLIC_VERCEL_ENV', 'production');
+    vi.stubEnv('NEXT_PUBLIC_ROAD_TO_GOAL_ANALYTICS_ENABLED', 'true');
   });
 
   afterEach(() => {
@@ -78,8 +78,15 @@ describe('Road to Goal browser analytics', () => {
     );
   });
 
-  it('does not send browser events from Vercel preview/staging', () => {
-    vi.stubEnv('NEXT_PUBLIC_VERCEL_ENV', 'preview');
+  it('does not send browser events unless production analytics are explicitly enabled', () => {
+    vi.stubEnv('NEXT_PUBLIC_ROAD_TO_GOAL_ANALYTICS_ENABLED', 'false');
+    trackRoadToGoalCardViewed({ destination: 'demo', enabled: false });
+
+    expect(trackEvent).not.toHaveBeenCalled();
+  });
+
+  it('defaults to disabled when the analytics flag is absent', () => {
+    vi.stubEnv('NEXT_PUBLIC_ROAD_TO_GOAL_ANALYTICS_ENABLED', '');
     trackRoadToGoalCardViewed({ destination: 'demo', enabled: false });
 
     expect(trackEvent).not.toHaveBeenCalled();

@@ -455,6 +455,16 @@ export function RoadToGoal({
     roundId: null as string | null,
   });
   const analyticsMode: RoadToGoalAnalyticsMode = live ? 'live' : 'demo';
+  const analyticsContextRef = useRef({
+    mode: analyticsMode,
+    locale,
+    newRunsEnabled,
+  });
+  analyticsContextRef.current = {
+    mode: analyticsMode,
+    locale,
+    newRunsEnabled,
+  };
 
   useEffect(() => () => timers.current.forEach((id) => window.clearTimeout(id)), []);
 
@@ -468,15 +478,16 @@ export function RoadToGoal({
   }, [liveState?.round_id, phase, progress]);
 
   useEffect(() => {
+    const context = analyticsContextRef.current;
     const mountedAt = Date.now();
     let activeStartedAt = document.visibilityState === 'hidden' ? null : mountedAt;
     let activeDurationMs = 0;
     let ended = false;
 
     trackRoadToGoalViewed({
-      mode: analyticsMode,
-      locale,
-      newRunsEnabled,
+      mode: context.mode,
+      locale: context.locale,
+      newRunsEnabled: context.newRunsEnabled,
     });
 
     const stopActiveClock = () => {
@@ -490,7 +501,7 @@ export function RoadToGoal({
       stopActiveClock();
       const state = analyticsStateRef.current;
       trackRoadToGoalEngagementEnded({
-        mode: analyticsMode,
+        mode: context.mode,
         reason,
         durationMs: Date.now() - mountedAt,
         activeDurationMs,
@@ -516,7 +527,7 @@ export function RoadToGoal({
       window.removeEventListener('pagehide', onPageHide);
       finish('unmount');
     };
-  }, [analyticsMode, locale, newRunsEnabled]);
+  }, []);
 
   const later = (fn: () => void, delay: number) => {
     const id = window.setTimeout(fn, delay);

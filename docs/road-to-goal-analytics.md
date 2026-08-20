@@ -1,9 +1,10 @@
 # Road to Goal analytics
 
-Road to Goal analytics are production-only. Browser capture is blocked on
-Vercel preview deployments and staging intentionally has no public PostHog key.
-The backend additionally requires `NODE_ENV=prod` before emitting any Road to
-Goal event. The feature flags remain independent of analytics.
+Road to Goal analytics are production-only. Browser capture requires the
+dedicated `NEXT_PUBLIC_ROAD_TO_GOAL_ANALYTICS_ENABLED=true` opt-in; it remains
+false or unset on staging even if a shared PostHog key is present. The backend
+additionally requires `NODE_ENV=prod` before emitting any Road to Goal event.
+The gameplay feature flags remain independent of analytics.
 
 ## Event contract
 

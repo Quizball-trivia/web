@@ -8,9 +8,9 @@ function capture(
   event: string,
   properties?: Record<string, string | number | boolean | null | undefined>,
 ): void {
-  // Staging is deployed as a Vercel preview and intentionally has no PostHog
-  // key. Keep the explicit preview guard as a second line of defence.
-  if (process.env.NEXT_PUBLIC_VERCEL_ENV === 'preview') return;
+  // Road-to-Goal analytics are a production-only, explicit opt-in. This stays
+  // off in staging even if a shared PostHog key is accidentally inherited.
+  if (process.env.NEXT_PUBLIC_ROAD_TO_GOAL_ANALYTICS_ENABLED !== 'true') return;
   trackEvent(event, properties);
 }
 
