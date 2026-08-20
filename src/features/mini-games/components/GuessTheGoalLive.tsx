@@ -195,6 +195,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
     async (optionId: string) => {
       if (!session || busy || phase !== 'watch') return;
       setBusy(true);
+      setError(null);
       setPicked(optionId);
       try {
         // Same-option retries replay the stored result server-side, so a
@@ -222,6 +223,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
     async (optionId: string) => {
       if (!session || busy) return;
       setBusy(true);
+      setError(null);
       setBonusPicked(optionId);
       try {
         const result = await guessTheGoalApi.bonus(session.session_id, optionId);
