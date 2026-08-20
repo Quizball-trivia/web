@@ -146,7 +146,7 @@ export function FootballGrid({ backHref }: { backHref?: string } = {}) {
   const boardRef = useRef(board);
   const gridWrapRef = useRef<HTMLDivElement>(null);
   const cellRefs = useRef<Array<HTMLButtonElement | null>>([]);
-  const visitStartedAtRef = useRef(Date.now());
+  const visitStartedAtRef = useRef<number | null>(null);
   const activeStartedAtRef = useRef<number | null>(null);
   const activeDurationMsRef = useRef(0);
   const viewTrackedRef = useRef(false);
@@ -178,6 +178,8 @@ export function FootballGrid({ backHref }: { backHref?: string } = {}) {
   // not capture typed answers or every tap; the aggregate counters answer the
   // product questions without leaking free-text or creating noisy event volume.
   useEffect(() => {
+    const effectStartedAt = Date.now();
+    visitStartedAtRef.current ??= effectStartedAt;
     if (engagementCleanupTimerRef.current !== null) {
       window.clearTimeout(engagementCleanupTimerRef.current);
       engagementCleanupTimerRef.current = null;
@@ -191,7 +193,7 @@ export function FootballGrid({ backHref }: { backHref?: string } = {}) {
       viewTrackedRef.current = true;
       trackFootballGridViewed(initialContext);
     }
-    activeStartedAtRef.current = document.visibilityState === 'visible' ? Date.now() : null;
+    activeStartedAtRef.current = document.visibilityState === 'visible' ? effectStartedAt : null;
 
     const accrueActiveTime = (now: number) => {
       if (activeStartedAtRef.current === null) return;
@@ -216,7 +218,7 @@ export function FootballGrid({ backHref }: { backHref?: string } = {}) {
         surface: 'demo',
         gridId: stats.lastGridId,
         opponentType: 'bot',
-        elapsedSeconds: (now - visitStartedAtRef.current) / 1_000,
+        elapsedSeconds: (now - (visitStartedAtRef.current ?? now)) / 1_000,
         activeSeconds: activeDurationMsRef.current / 1_000,
         matchesStarted: stats.matchesStarted,
         matchesCompleted: stats.matchesCompleted,

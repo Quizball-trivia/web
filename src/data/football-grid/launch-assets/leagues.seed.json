@@ -11,7 +11,7 @@
   { "id": "argentine-primera", "labelEn": "Argentine Primera División", "labelKa": "არგენტინის პრიმერა დივიზიონი", "countryCode": "ar", "short": "AR", "color": "#75aadb", "providerUrl": "https://media.api-sports.io/football/leagues/128.png" },
   { "id": "super-lig", "labelEn": "Süper Lig", "labelKa": "თურქეთის სუპერლიგა", "countryCode": "tr", "short": "TR", "color": "#e30a17", "providerUrl": "https://media.api-sports.io/football/leagues/203.png" },
   { "id": "belgian-pro-league", "labelEn": "Belgian Pro League", "labelKa": "ბელგიის პრო ლიგა", "countryCode": "be", "short": "BE", "color": "#111827", "providerUrl": "https://media.api-sports.io/football/leagues/144.png" },
-  { "id": "major-league-soccer", "labelEn": "Major League Soccer", "labelKa": "MLS", "countryCode": "us", "short": "MLS", "color": "#e31b23", "providerUrl": "https://media.api-sports.io/football/leagues/253.png" },
+  { "id": "major-league-soccer", "labelEn": "Major League Soccer", "labelKa": "მეიჯორ ლიგ სოკერი", "countryCode": "us", "short": "MLS", "color": "#e31b23", "providerUrl": "https://media.api-sports.io/football/leagues/253.png" },
   { "id": "saudi-pro-league", "labelEn": "Saudi Pro League", "labelKa": "საუდის პრო ლიგა", "countryCode": "sa", "short": "SPL", "color": "#006c35", "providerUrl": "https://media.api-sports.io/football/leagues/307.png" },
   { "id": "erovnuli-liga", "labelEn": "Erovnuli Liga", "labelKa": "ეროვნული ლიგა", "countryCode": "ge", "short": "EL", "color": "#7c2d12", "providerUrl": "https://media.api-sports.io/football/leagues/327.png" }
 ]
