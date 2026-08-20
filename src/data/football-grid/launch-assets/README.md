@@ -38,7 +38,9 @@ recorded Quizball fallback; it must never hotlink an unknown replacement.
 Runtime delivery policy:
 
 - `npm run grid-assets:publish` uploads every packaged Grid asset to the public
-  `imgs/football-grid/v1` Supabase CDN prefix and verifies every object;
+  `imgs/football-grid/v1` Supabase CDN prefix and verifies every object. A
+  publish reuses byte-identical objects and refuses to overwrite a changed file
+  inside an immutable release; bump the release prefix for changed artwork;
 - backend `npm run grid:cdn:players` downloads and normalizes player portraits,
   uploads them to that same prefix, records the original URL in provenance
   metadata, and commits database URLs in guarded batches;

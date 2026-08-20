@@ -121,7 +121,7 @@ async function uploadAsset(asset) {
       apikey: serviceKey,
       'Content-Type': asset.contentType,
       'Cache-Control': 'max-age=31536000, immutable',
-      'x-upsert': 'true',
+      'x-upsert': 'false',
     },
     body: asset.bytes,
     signal: AbortSignal.timeout(30_000),
@@ -129,6 +129,21 @@ async function uploadAsset(asset) {
   if (!response.ok) {
     throw new Error(`upload returned ${response.status}: ${(await response.text()).slice(0, 240)}`);
   }
+}
+
+async function inspectExistingAsset(asset) {
+  const response = await fetch(asset.publicUrl, {
+    cache: 'no-store',
+    signal: AbortSignal.timeout(30_000),
+  });
+  if (response.status === 404) return false;
+  if (!response.ok) throw new Error(`existing-object check returned ${response.status}`);
+  const bytes = Buffer.from(await response.arrayBuffer());
+  const digest = createHash('sha256').update(bytes).digest('hex');
+  if (digest !== asset.sha256) {
+    throw new Error(`immutable release collision; bump FOOTBALL_GRID_CDN_RELEASE before publishing ${asset.objectPath}`);
+  }
+  return true;
 }
 
 async function verifyAsset(asset) {
@@ -169,10 +184,18 @@ if (dryRun) {
 }
 
 let uploadFailures = [];
+let uploaded = 0;
+let reused = 0;
 if (!verifyOnly) {
-  uploadFailures = await runConcurrent(assets, UPLOAD_CONCURRENCY, (asset) => (
-    withRetry(`upload ${asset.objectPath}`, () => uploadAsset(asset))
-  ));
+  uploadFailures = await runConcurrent(assets, UPLOAD_CONCURRENCY, async (asset) => {
+    const exists = await withRetry(`inspect ${asset.objectPath}`, () => inspectExistingAsset(asset));
+    if (exists) {
+      reused += 1;
+      return;
+    }
+    await withRetry(`upload ${asset.objectPath}`, () => uploadAsset(asset));
+    uploaded += 1;
+  });
 }
 const verificationFailures = await runConcurrent(assets, VERIFY_CONCURRENCY, (asset) => (
   withRetry(`verify ${asset.objectPath}`, () => verifyAsset(asset))
@@ -200,7 +223,8 @@ console.log(JSON.stringify({
   publicBase,
   assetCount: assets.length,
   totalBytes: assets.reduce((total, asset) => total + asset.byteLength, 0),
-  uploaded: verifyOnly ? 0 : assets.length - uploadFailures.length,
+  uploaded,
+  reused,
   verified: assets.length - verificationFailures.length,
   failureCount: failures.length,
   failures: failures.slice(0, 25),
