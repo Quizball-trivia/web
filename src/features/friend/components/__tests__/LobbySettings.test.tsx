@@ -121,6 +121,12 @@ describe("LobbySettings Football Grid mode", () => {
     expect(screen.queryByText("friend.categoriesTitle")).toBeNull();
     expect(screen.queryByText("friend.randomCategories")).toBeNull();
   });
+
+  it("locks a Grid lobby that already contains more than two players", () => {
+    renderSettings(makeLobby("football_grid", 3));
+
+    expect(screen.getByText("friend.partyLockedHint")).toBeTruthy();
+  });
 });
 
 describe("LobbySettings optional second-half category", () => {

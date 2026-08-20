@@ -9,7 +9,8 @@ An entry is launch-safe only when it has:
 - English and Georgian labels;
 - a primary visual and a deterministic Quizball fallback;
 - source/provider and rights-review metadata for third-party visuals;
-- a validation status produced by `scripts/build-football-grid-assets.mjs`.
+- generated coverage from `scripts/build-football-grid-assets.mjs` and a passing
+  report from `scripts/validate-football-grid-assets.mjs`.
 
 Asset families:
 
@@ -22,8 +23,9 @@ Asset families:
 - `leagues.json`: 15 launch leagues;
 - `competitions.json`: 24 launch trophies/competitions;
 - `wildcards.json`: 12 launch wildcard criteria;
-- `coverage.json`: generated gate totals. Every `runtime_unresolved` value must
-  be zero before launch.
+- `coverage.json`: generated gate totals. Every `runtimeUnresolved` value must
+  be zero and every `rightsCleared` value must equal its family total before
+  launch.
 
 Third-party marks and portraits still require the applicable provider/trademark
 review. When approval is absent or an image fails, the renderer must use the

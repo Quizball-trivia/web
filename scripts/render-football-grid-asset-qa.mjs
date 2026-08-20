@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { pathToFileURL, fileURLToPath } from 'node:url';
@@ -70,5 +70,6 @@ ${section('flags', 'Flag package sample', flagSamples.map((row) => tile(row.labe
 <script>window.qa={broken:[]};document.querySelectorAll('img').forEach((img)=>{img.addEventListener('error',()=>{img.closest('.tile').classList.add('broken');window.qa.broken.push(img.alt);});});</script>
 </body></html>`;
 
+await mkdir(path.dirname(destination), { recursive: true });
 await writeFile(destination, html);
 console.log(destination);

@@ -47,6 +47,24 @@ const IDLE_SEARCH: FootballGridSearchStatePayload = {
   searchId: null,
 };
 
+function resetGridState() {
+  return {
+    search: IDLE_SEARCH,
+    state: null,
+    opponent: null,
+    capabilities: null,
+    completed: null,
+    rematch: null,
+    lastCommandResult: null,
+    lastTurnResolved: null,
+    pendingCommandId: null,
+    reportedAttemptIds: [],
+    searchCancellationPending: false,
+    error: null,
+    serverTimeOffsetMs: 0,
+  };
+}
+
 function serverOffset(serverNow: string): number {
   const serverMs = Date.parse(serverNow);
   return Number.isFinite(serverMs) ? serverMs - Date.now() : 0;
@@ -167,34 +185,6 @@ export const useFootballGridStore = create<FootballGridStoreState>((set) => ({
   })),
   setError: (payload) => set({ error: payload, pendingCommandId: null }),
   requestSearchCancellation: () => set({ searchCancellationPending: true }),
-  beginFreshSearch: () => set({
-    search: IDLE_SEARCH,
-    state: null,
-    opponent: null,
-    capabilities: null,
-    completed: null,
-    rematch: null,
-    lastCommandResult: null,
-    lastTurnResolved: null,
-    pendingCommandId: null,
-    reportedAttemptIds: [],
-    searchCancellationPending: false,
-    error: null,
-    serverTimeOffsetMs: 0,
-  }),
-  clear: () => set({
-    search: IDLE_SEARCH,
-    state: null,
-    opponent: null,
-    capabilities: null,
-    completed: null,
-    rematch: null,
-    lastCommandResult: null,
-    lastTurnResolved: null,
-    pendingCommandId: null,
-    reportedAttemptIds: [],
-    searchCancellationPending: false,
-    error: null,
-    serverTimeOffsetMs: 0,
-  }),
+  beginFreshSearch: () => set(resetGridState()),
+  clear: () => set(resetGridState()),
 }));

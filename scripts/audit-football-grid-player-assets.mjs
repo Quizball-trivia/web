@@ -47,7 +47,9 @@ const malformedImageUrls = withImage.filter((player) => {
     return true;
   }
 });
-const domains = Object.entries(withImage.reduce((result, player) => {
+const malformedImageUrlIds = new Set(malformedImageUrls.map((player) => player.id));
+const parsableImages = withImage.filter((player) => !malformedImageUrlIds.has(player.id));
+const domains = Object.entries(parsableImages.reduce((result, player) => {
   const domain = new URL(player.image_url).hostname;
   result[domain] = (result[domain] ?? 0) + 1;
   return result;
@@ -55,10 +57,14 @@ const domains = Object.entries(withImage.reduce((result, player) => {
 
 const probeRows = [];
 for (const domain of domains) {
-  const candidates = withImage.filter((player) => new URL(player.image_url).hostname === domain.domain).slice(0, 3);
+  const candidates = parsableImages.filter((player) => new URL(player.image_url).hostname === domain.domain).slice(0, 3);
   for (const player of candidates) {
     try {
-      const response = await fetch(player.image_url, { method: 'HEAD', redirect: 'follow' });
+      const response = await fetch(player.image_url, {
+        method: 'HEAD',
+        redirect: 'follow',
+        signal: AbortSignal.timeout(15_000),
+      });
       probeRows.push({ playerId: player.id, domain: domain.domain, status: response.status, ok: response.ok });
     } catch (error) {
       probeRows.push({ playerId: player.id, domain: domain.domain, status: null, ok: false, error: error instanceof Error ? error.message : String(error) });

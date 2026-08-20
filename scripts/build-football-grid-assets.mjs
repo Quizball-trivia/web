@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { createHash } from 'node:crypto';
-import { copyFile, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, readdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
@@ -12,8 +12,16 @@ const dataDir = path.join(root, 'src/data/football-grid/launch-assets');
 const publicDir = path.join(root, 'public/assets/football-grid');
 const flagSourceDir = path.join(root, 'node_modules/flag-icons/flags/4x3');
 const shouldFetch = process.argv.includes('--fetch');
-const supabaseUrl = (process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').replace(/\/$/, '');
+// The public asset bucket origin is not a credential. Keeping the checked-in
+// origin as a fallback makes registry generation deterministic in clean CI
+// checkouts where application env files are intentionally unavailable.
+const supabaseUrl = (
+  process.env.SUPABASE_URL
+  ?? process.env.NEXT_PUBLIC_SUPABASE_URL
+  ?? 'https://nsdfiprfmhdqhbfxfwpv.supabase.co'
+).replace(/\/$/, '');
 const userAgent = 'QuizballFootballGridAssets/1.0 (nika@quizball.io)';
+const PROVIDER_TIMEOUT_MS = 15_000;
 
 const corruptClubIds = new Set([
   'wl-anzhi-makhachkala', 'wl-barnet', 'wl-beveren', 'wl-bournemouth',
@@ -97,8 +105,8 @@ async function writeBadge(family, id, options) {
 }
 
 async function buildCountries() {
-  const names = (await import('node:fs/promises')).readdir(flagSourceDir);
-  const files = (await names).filter((file) => file.endsWith('.svg')).sort();
+  const names = await readdir(flagSourceDir);
+  const files = names.filter((file) => file.endsWith('.svg')).sort();
   const en = new Intl.DisplayNames(['en'], { type: 'region' });
   const ka = new Intl.DisplayNames(['ka'], { type: 'region' });
   const outputDir = path.join(publicDir, 'flags');
@@ -114,8 +122,14 @@ async function buildCountries() {
     if (custom) {
       [labelEn, labelKa, kind] = custom;
     } else {
-      labelEn = en.of(code.toUpperCase());
-      labelKa = ka.of(code.toUpperCase());
+      try {
+        labelEn = en.of(code.toUpperCase());
+        labelKa = ka.of(code.toUpperCase());
+      } catch (error) {
+        if (!(error instanceof RangeError)) throw error;
+        labelEn = undefined;
+        labelKa = undefined;
+      }
     }
     await copyFile(path.join(flagSourceDir, file), path.join(outputDir, file));
     rows.push({
@@ -145,6 +159,7 @@ async function fetchWikipediaClubCrest(replacement, club) {
   });
   const listResponse = await fetch(`https://en.wikipedia.org/w/api.php?${listParams}`, {
     headers: { 'user-agent': userAgent },
+    signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
   });
   if (!listResponse.ok) throw new Error(`Wikipedia page request ${listResponse.status}`);
   const listData = await listResponse.json();
@@ -164,13 +179,17 @@ async function fetchWikipediaClubCrest(replacement, club) {
   });
   const infoResponse = await fetch(`https://en.wikipedia.org/w/api.php?${infoParams}`, {
     headers: { 'user-agent': userAgent },
+    signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
   });
   if (!infoResponse.ok) throw new Error(`Wikipedia image request ${infoResponse.status}`);
   const infoData = await infoResponse.json();
   const info = Object.values(infoData?.query?.pages ?? {})[0]?.imageinfo?.[0];
   if (!info?.thumburl && !info?.url) throw new Error(`no image URL for ${crestFile}`);
   const downloadUrl = info.thumburl ?? info.url;
-  const imageResponse = await fetch(downloadUrl, { headers: { 'user-agent': userAgent } });
+  const imageResponse = await fetch(downloadUrl, {
+    headers: { 'user-agent': userAgent },
+    signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
+  });
   if (!imageResponse.ok) throw new Error(`crest download ${imageResponse.status}`);
   const mime = imageResponse.headers.get('content-type')?.split(';')[0] || info.mime || 'image/png';
   const ext = mime === 'image/svg+xml' ? 'svg' : mime === 'image/jpeg' ? 'jpg' : mime === 'image/webp' ? 'webp' : 'png';
@@ -195,7 +214,10 @@ async function fetchWikipediaClubCrest(replacement, club) {
 }
 
 async function fetchDirectClubCrest(replacement, club) {
-  const response = await fetch(replacement.directUrl, { headers: { 'user-agent': userAgent } });
+  const response = await fetch(replacement.directUrl, {
+    headers: { 'user-agent': userAgent },
+    signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
+  });
   if (!response.ok) throw new Error(`direct crest download ${response.status}`);
   const mime = response.headers.get('content-type')?.split(';')[0] || 'image/svg+xml';
   if (!mime.startsWith('image/')) throw new Error(`unexpected content type ${mime}`);
@@ -238,11 +260,16 @@ async function loadCachedClubCrest(replacement) {
 async function buildClubs() {
   const clubs = JSON.parse(await readFile(path.join(root, 'src/data/clubs.json'), 'utf8'));
   const replacements = await readJson('club-replacements.seed.json');
+  const existing = await readJson('clubs.json').catch(() => []);
+  const existingById = new Map(existing.map((club) => [club.id, club]));
   const replacementById = new Map(replacements.map((replacement) => [replacement.id, replacement]));
   const clubById = new Map(clubs.map((club) => [club.id, club]));
+  const emergencyFallbackPath = await writeBadge('clubs', '_launch-fallback', {
+    label: 'Football club', short: '?', color: '#25314f', icon: 'club fallback',
+  });
   const rows = [];
   for (const club of clubs) {
-    const fallbackPath = await writeBadge('clubs', club.id, {
+    const ownedBadgePath = await writeBadge('clubs', `${club.id}-fallback`, {
       label: club.label,
       short: initials(club.label),
       color: club.primaryColor || hashColor(club.id),
@@ -257,17 +284,31 @@ async function buildClubs() {
       rightsStatus: 'trademark-provider-review',
     };
     let primaryError = null;
-    if (corruptClubIds.has(club.id)) {
+    const previous = existingById.get(club.id);
+    const reusableProviderPrimary = previous?.providerCandidate
+      ?? (previous?.primary?.provider !== 'Quizball' ? previous?.primary : null);
+    if (
+      corruptClubIds.has(club.id)
+      && !shouldFetch
+      && (reusableProviderPrimary?.assetPath || reusableProviderPrimary?.publicUrl)
+    ) {
+      primary = reusableProviderPrimary;
+    } else if (corruptClubIds.has(club.id)) {
       const replacement = replacementById.get(club.id);
       if (replacement?.aliasAssetPath) {
-        const bytes = await readFile(path.join(root, 'public', replacement.aliasAssetPath.replace(/^\/+/, '')));
-        primary = {
-          provider: 'Quizball static assets',
-          assetPath: replacement.aliasAssetPath,
-          sha256: createHash('sha256').update(bytes).digest('hex'),
-          provenance: `verified-local-alias:${replacement.aliasAssetPath}`,
-          rightsStatus: 'trademark-provider-review',
-        };
+        try {
+          const bytes = await readFile(path.join(root, 'public', replacement.aliasAssetPath.replace(/^\/+/, '')));
+          primary = {
+            provider: 'Quizball static assets',
+            assetPath: replacement.aliasAssetPath,
+            sha256: createHash('sha256').update(bytes).digest('hex'),
+            provenance: `verified-local-alias:${replacement.aliasAssetPath}`,
+            rightsStatus: 'trademark-provider-review',
+          };
+        } catch (error) {
+          primary = null;
+          primaryError = error instanceof Error ? error.message : String(error);
+        }
       } else if (replacement?.aliasClubId || replacement?.aliasLogo) {
         const alias = replacement.aliasClubId ? clubById.get(replacement.aliasClubId) : null;
         const aliasLogo = replacement.aliasLogo ?? alias?.logo;
@@ -303,6 +344,18 @@ async function buildClubs() {
         primaryError = 'replacement source not configured or fetch disabled';
       }
     }
+    let providerCandidate = null;
+    let fallbackPath = ownedBadgePath;
+    if (!primary?.assetPath && !primary?.publicUrl) {
+      providerCandidate = primary;
+      fallbackPath = emergencyFallbackPath;
+      primary = {
+        provider: 'Quizball',
+        assetPath: ownedBadgePath,
+        license: 'proprietary',
+        rightsStatus: 'owned',
+      };
+    }
     rows.push({
       id: club.id,
       labelEn: club.label,
@@ -311,10 +364,11 @@ async function buildClubs() {
       countryEn: club.country || null,
       countryKa: club.countryKa || null,
       primary,
+      providerCandidate,
       fallback: { type: 'quizball-monogram', assetPath: fallbackPath },
       primaryDisabledReason: primary ? null : (corruptClubIds.has(club.id) ? 'known-corrupt-placeholder' : null),
       primaryError,
-      runtimeResolved: true,
+      runtimeResolved: Boolean(primary?.assetPath || primary?.publicUrl || fallbackPath),
     });
   }
   await writeJson('clubs.json', rows);
@@ -333,6 +387,7 @@ async function fetchWikipediaPortrait(manager) {
     });
     const pageResponse = await fetch(`https://en.wikipedia.org/w/api.php?${params}`, {
       headers: { 'user-agent': userAgent },
+      signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
     });
     if (!pageResponse.ok) throw new Error(`Wikipedia page request ${pageResponse.status}`);
     const pageData = await pageResponse.json();
@@ -348,13 +403,17 @@ async function fetchWikipediaPortrait(manager) {
   });
   const infoResponse = await fetch(`${apiBase}?${infoParams}`, {
     headers: { 'user-agent': userAgent },
+    signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
   });
   if (!infoResponse.ok) throw new Error(`Wikipedia image request ${infoResponse.status}`);
   const infoData = await infoResponse.json();
   const info = Object.values(infoData?.query?.pages ?? {})[0]?.imageinfo?.[0];
   if (!info?.thumburl && !info?.url) throw new Error('Wikipedia image has no URL');
   const downloadUrl = info.thumburl ?? info.url;
-  const imageResponse = await fetch(downloadUrl, { headers: { 'user-agent': userAgent } });
+  const imageResponse = await fetch(downloadUrl, {
+    headers: { 'user-agent': userAgent },
+    signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
+  });
   if (!imageResponse.ok) throw new Error(`Portrait download ${imageResponse.status}`);
   const mime = imageResponse.headers.get('content-type')?.split(';')[0] || info.mime || 'image/jpeg';
   const ext = mime === 'image/png' ? 'png' : mime === 'image/webp' ? 'webp' : 'jpg';
@@ -384,30 +443,55 @@ async function fetchWikipediaPortrait(manager) {
 
 async function buildManagers() {
   const seeds = await readJson('managers.seed.json');
+  const existing = await readJson('managers.json').catch(() => []);
+  const existingById = new Map(existing.map((manager) => [manager.id, manager]));
   const rows = [];
   await mkdir(path.join(publicDir, 'managers'), { recursive: true });
+  const emergencyFallbackPath = await writeBadge('managers', '_launch-fallback', {
+    label: 'Football manager', short: '?', color: '#25314f', icon: 'manager fallback',
+  });
   for (const manager of seeds) {
-    const fallbackPath = await writeBadge('managers', `${manager.id}-fallback`, {
+    const ownedPortraitPath = await writeBadge('managers', `${manager.id}-fallback`, {
       label: manager.labelEn,
       short: initials(manager.labelEn, 2),
       color: hashColor(manager.id),
       icon: 'manager portrait',
     });
-    let primary = null;
+    const previous = existingById.get(manager.id);
+    let providerCandidate = previous?.providerCandidate
+      ?? (previous?.primary?.source?.provider === 'Wikimedia / Wikipedia' ? previous.primary : null);
     let primaryError = null;
     if (shouldFetch) {
       try {
-        primary = await fetchWikipediaPortrait(manager);
+        providerCandidate = await fetchWikipediaPortrait(manager);
       } catch (error) {
         primaryError = error instanceof Error ? error.message : String(error);
       }
     }
+    const source = providerCandidate?.source;
+    const portraitRightsCleared = Boolean(
+      source?.artist
+      && source?.credit
+      && /^(CC BY(?:-SA)?|CC0)(?:\s|$)/i.test(source?.license ?? ''),
+    );
+    const primary = portraitRightsCleared
+      ? {
+          ...providerCandidate,
+          source: { ...source, rightsStatus: 'cleared-for-launch' },
+        }
+      : {
+          type: 'quizball-manager-badge',
+          assetPath: ownedPortraitPath,
+          source: { provider: 'Quizball', license: 'proprietary', rightsStatus: 'owned' },
+        };
+    const fallbackPath = portraitRightsCleared ? ownedPortraitPath : emergencyFallbackPath;
     rows.push({
       ...manager,
       primary,
+      providerCandidate: portraitRightsCleared ? null : providerCandidate,
       fallback: { type: 'quizball-manager-badge', assetPath: fallbackPath },
       primaryError,
-      runtimeResolved: true,
+      runtimeResolved: Boolean(primary?.assetPath || fallbackPath),
     });
   }
   await writeJson('managers.json', rows);
@@ -415,7 +499,10 @@ async function buildManagers() {
 }
 
 async function fetchProviderAsset(url, outputFile) {
-  const response = await fetch(url, { headers: { 'user-agent': userAgent } });
+  const response = await fetch(url, {
+    headers: { 'user-agent': userAgent },
+    signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
+  });
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   const mime = response.headers.get('content-type')?.split(';')[0] ?? '';
   if (!mime.startsWith('image/')) throw new Error(`unexpected content type ${mime || 'missing'}`);
@@ -426,19 +513,26 @@ async function fetchProviderAsset(url, outputFile) {
 
 async function buildLeagues() {
   const seeds = await readJson('leagues.seed.json');
+  const existing = await readJson('leagues.json').catch(() => []);
+  const existingById = new Map(existing.map((league) => [league.id, league]));
   const rows = [];
   await mkdir(path.join(publicDir, 'leagues'), { recursive: true });
+  const emergencyFallbackPath = await writeBadge('leagues', '_launch-fallback', {
+    label: 'Football league', short: '?', color: '#25314f', icon: 'league fallback',
+  });
   for (const league of seeds) {
-    const fallbackPath = await writeBadge('leagues', `${league.id}-fallback`, {
+    const ownedBadgePath = await writeBadge('leagues', `${league.id}-fallback`, {
       label: league.labelEn, short: league.short, color: league.color, icon: 'league',
     });
-    let primary = null;
+    const previous = existingById.get(league.id);
+    let providerCandidate = previous?.providerCandidate
+      ?? (previous?.primary?.source?.provider === 'API-Sports' ? previous.primary : null);
     let primaryError = null;
     if (shouldFetch) {
       try {
         const file = `${league.id}.png`;
         const { bytes, mime } = await fetchProviderAsset(league.providerUrl, path.join(publicDir, 'leagues', file));
-        primary = {
+        providerCandidate = {
           assetPath: `/assets/football-grid/leagues/${file}`,
           sha256: createHash('sha256').update(bytes).digest('hex'),
           mime,
@@ -452,7 +546,19 @@ async function buildLeagues() {
         primaryError = error instanceof Error ? error.message : String(error);
       }
     }
-    rows.push({ ...league, primary, fallback: { type: 'quizball-league-badge', assetPath: fallbackPath }, primaryError, runtimeResolved: true });
+    const primary = {
+      type: 'quizball-league-badge',
+      assetPath: ownedBadgePath,
+      source: { provider: 'Quizball', license: 'proprietary', rightsStatus: 'owned' },
+    };
+    rows.push({
+      ...league,
+      primary,
+      providerCandidate,
+      fallback: { type: 'quizball-league-badge', assetPath: emergencyFallbackPath },
+      primaryError,
+      runtimeResolved: Boolean(primary.assetPath || emergencyFallbackPath),
+    });
   }
   await writeJson('leagues.json', rows);
   return rows;
@@ -461,6 +567,9 @@ async function buildLeagues() {
 async function buildOwnedBadges(seedFile, outputFile, family, fallbackType) {
   const seeds = await readJson(seedFile);
   const rows = [];
+  const fallbackPath = await writeBadge(family, '_launch-fallback', {
+    label: `${family} fallback`, short: '?', color: '#25314f', icon: `${family} fallback`,
+  });
   for (const item of seeds) {
     const assetPath = await writeBadge(family, item.id, {
       label: item.labelEn, short: item.short || initials(item.labelEn), color: item.color, icon: item.icon,
@@ -472,8 +581,8 @@ async function buildOwnedBadges(seedFile, outputFile, family, fallbackType) {
         assetPath,
         source: { provider: 'Quizball', license: 'proprietary', rightsStatus: 'owned' },
       },
-      fallback: { type: fallbackType, assetPath },
-      runtimeResolved: true,
+      fallback: { type: fallbackType, assetPath: fallbackPath },
+      runtimeResolved: Boolean(assetPath || fallbackPath),
     });
   }
   await writeJson(outputFile, rows);
@@ -481,7 +590,33 @@ async function buildOwnedBadges(seedFile, outputFile, family, fallbackType) {
 }
 
 function unresolved(rows) {
-  return rows.filter((row) => !row.runtimeResolved || !row.id || !row.labelEn || !row.labelKa || !row.fallback).length;
+  return rows.filter((row) => !row.runtimeResolved || !row.id || !row.labelEn || !row.labelKa
+    || !row.fallback?.assetPath).length;
+}
+
+function primaryRightsCleared(row, family) {
+  if (family === 'countries') return row.source?.license === 'MIT';
+  const status = row.primary?.source?.rightsStatus ?? row.primary?.rightsStatus;
+  return status === 'owned' || status === 'cleared-for-launch';
+}
+
+function familyCoverage(rows, family) {
+  const countries = family === 'countries';
+  return {
+    total: rows.length,
+    primaryReady: rows.filter((row) => countries ? row.assetPath : row.primary).length,
+    fallbackReady: rows.filter((row) => countries ? row.fallback : row.fallback?.assetPath).length,
+    primaryRightsCleared: rows.filter((row) => primaryRightsCleared(row, family)).length,
+    // Every generated fallback is Quizball-owned. This counter is the actual
+    // launch gate: each row must have at least one cleared visual available.
+    rightsCleared: rows.filter((row) => (
+      primaryRightsCleared(row, family)
+      || (countries ? Boolean(row.assetPath) : Boolean(row.fallback?.assetPath))
+    )).length,
+    runtimeUnresolved: countries
+      ? rows.filter((row) => !row.runtimeResolved).length
+      : unresolved(rows),
+  };
 }
 
 async function main() {
@@ -498,20 +633,22 @@ async function main() {
 
   const coverage = {
     generatedAt: new Date().toISOString(),
-    fetchMode: shouldFetch ? 'provider-assets-fetched' : 'fallbacks-only',
+    fetchMode: shouldFetch ? 'provider-assets-fetched' : 'cached-provider-assets-reused',
     families: {
-      clubs: { total: clubs.length, primaryReady: clubs.filter((row) => row.primary).length, fallbackReady: clubs.filter((row) => row.fallback).length, runtimeUnresolved: unresolved(clubs) },
-      countries: { total: countries.length, primaryReady: countries.filter((row) => row.assetPath).length, fallbackReady: countries.filter((row) => row.fallback).length, runtimeUnresolved: countries.filter((row) => !row.runtimeResolved).length },
-      managers: { total: managers.length, primaryReady: managers.filter((row) => row.primary).length, fallbackReady: managers.filter((row) => row.fallback).length, runtimeUnresolved: unresolved(managers) },
-      leagues: { total: leagues.length, primaryReady: leagues.filter((row) => row.primary).length, fallbackReady: leagues.filter((row) => row.fallback).length, runtimeUnresolved: unresolved(leagues) },
-      competitions: { total: competitions.length, primaryReady: competitions.filter((row) => row.primary).length, fallbackReady: competitions.filter((row) => row.fallback).length, runtimeUnresolved: unresolved(competitions) },
-      wildcards: { total: wildcards.length, primaryReady: wildcards.filter((row) => row.primary).length, fallbackReady: wildcards.filter((row) => row.fallback).length, runtimeUnresolved: unresolved(wildcards) },
+      clubs: familyCoverage(clubs, 'clubs'),
+      countries: familyCoverage(countries, 'countries'),
+      managers: familyCoverage(managers, 'managers'),
+      leagues: familyCoverage(leagues, 'leagues'),
+      competitions: familyCoverage(competitions, 'competitions'),
+      wildcards: familyCoverage(wildcards, 'wildcards'),
     },
   };
   coverage.runtimeUnresolved = Object.values(coverage.families).reduce((sum, family) => sum + family.runtimeUnresolved, 0);
   await writeJson('coverage.json', coverage);
   console.log(JSON.stringify(coverage, null, 2));
-  if (coverage.runtimeUnresolved !== 0) process.exitCode = 1;
+  const rightsUncleared = Object.values(coverage.families)
+    .reduce((sum, family) => sum + family.total - family.rightsCleared, 0);
+  if (coverage.runtimeUnresolved !== 0 || rightsUncleared !== 0) process.exitCode = 1;
 }
 
 await main();

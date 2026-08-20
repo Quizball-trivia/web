@@ -1,5 +1,5 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { FootballGridState } from '@/lib/realtime/socket.types';
 import { useFootballGridStore } from '@/stores/footballGrid.store';
 
@@ -49,6 +49,10 @@ describe('useRealtimeFootballGrid', () => {
     socket.on.mockClear();
     socket.off.mockClear();
     useFootballGridStore.getState().clear();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('joins the unique Grid queue as soon as the live route opens', async () => {
@@ -125,6 +129,31 @@ describe('useRealtimeFootballGrid', () => {
       locale: 'en',
     }));
     expect(useFootballGridStore.getState().pendingCommandId).toEqual(expect.any(String));
+    unmount();
+  });
+
+  it('clears a dropped pending command and resyncs the authoritative match', () => {
+    vi.useFakeTimers();
+    const { result, unmount } = renderHook(() => useRealtimeFootballGrid({ enabled: true, selfUserId: 'self', locale: 'en', autoStart: false }));
+    act(() => {
+      useFootballGridStore.getState().setState({
+        matchId: 'match-1',
+        state: state({ phase: 'turn', status: 'active', currentPlayerUserId: 'self', stateVersion: 7 }),
+        serverNow: new Date().toISOString(),
+      });
+    });
+
+    act(() => {
+      expect(result.current.actions.pass()).toBe(true);
+    });
+    expect(useFootballGridStore.getState().pendingCommandId).not.toBeNull();
+
+    act(() => {
+      vi.advanceTimersByTime(5_000);
+    });
+
+    expect(useFootballGridStore.getState().pendingCommandId).toBeNull();
+    expect(socket.emit).toHaveBeenCalledWith('grid:resync', { matchId: 'match-1' });
     unmount();
   });
 });

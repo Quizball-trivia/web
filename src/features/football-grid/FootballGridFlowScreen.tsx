@@ -73,8 +73,12 @@ export const FOOTBALL_GRID_COPY = {
     rematch: 'Rematch',
     waitingRematch: 'Waiting for opponent…',
     rematchAccepted: 'Rematch accepted',
+    declineRematch: 'Decline rematch',
     newOpponent: 'Find new opponent',
     backToPlay: 'Back to play',
+    you: 'You',
+    opponent: 'Opponent',
+    claimed: 'Claimed',
     sampleAnswers: 'Other valid answers',
     xp: 'XP earned',
     coins: 'Coins earned',
@@ -115,8 +119,12 @@ export const FOOTBALL_GRID_COPY = {
     rematch: 'რევანში',
     waitingRematch: 'ველოდებით მეტოქეს…',
     rematchAccepted: 'რევანში მიღებულია',
+    declineRematch: 'რევანშზე უარი',
     newOpponent: 'ახალი მეტოქე',
     backToPlay: 'თამაშებზე დაბრუნება',
+    you: 'შენ',
+    opponent: 'მეტოქე',
+    claimed: 'დაკავებულია',
     sampleAnswers: 'სხვა სწორი პასუხები',
     xp: 'მიღებული XP',
     coins: 'მიღებული მონეტები',
@@ -182,12 +190,12 @@ function CriterionHeader({ criterion, locale }: { criterion: FootballGridCriteri
   );
 }
 
-function ClaimedCell({ claim, isMine }: { claim: FootballGridClaimState; isMine: boolean }) {
+function ClaimedCell({ claim, isMine, claimedLabel }: { claim: FootballGridClaimState; isMine: boolean; claimedLabel: string }) {
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center overflow-hidden p-1.5">
       <ClaimPortrait claim={claim} />
       <span className="mt-1 line-clamp-2 text-center text-[8px] font-extrabold uppercase leading-tight text-white sm:text-[10px]">
-        {claim.displayName ?? 'Claimed'}
+        {claim.displayName ?? claimedLabel}
       </span>
       <span className={cn('absolute inset-x-0 bottom-0 h-1', isMine ? 'bg-brand-blue' : 'bg-brand-yellow')} />
     </div>
@@ -196,7 +204,7 @@ function ClaimedCell({ claim, isMine }: { claim: FootballGridClaimState; isMine:
 
 function ClaimPortrait({ claim }: { claim: FootballGridClaimState }) {
   const [failed, setFailed] = useState(false);
-  const source = claim.imageUrl ?? `https://api.dicebear.com/9.x/lorelei/svg?seed=${encodeURIComponent(claim.footballPlayerId)}&radius=50`;
+  const source = claim.imageUrl;
   const initials = (claim.displayName ?? '?')
     .split(/\s+/)
     .map((part) => part[0])
@@ -204,7 +212,7 @@ function ClaimPortrait({ claim }: { claim: FootballGridClaimState }) {
     .slice(0, 2)
     .toLocaleUpperCase();
 
-  if (failed) {
+  if (!source || failed) {
     return <span className="grid size-10 place-items-center rounded-full bg-white/10 text-xs font-black text-white/65 sm:size-14">{initials}</span>;
   }
   return <img src={source} alt="" className="size-10 rounded-full bg-white/10 object-cover object-top sm:size-14" onError={() => setFailed(true)} />;
@@ -251,7 +259,7 @@ export function MatchBoard({
                 selectedCell === cellIndex && 'border-brand-yellow bg-brand-yellow/10 shadow-[0_0_0_3px_rgba(255,229,0,0.12)]',
               )}
             >
-              {claim ? <ClaimedCell claim={claim} isMine={claim.claimantUserId === selfUserId} /> : (
+              {claim ? <ClaimedCell claim={claim} isMine={claim.claimantUserId === selfUserId} claimedLabel={FOOTBALL_GRID_COPY[locale].claimed} /> : (
                 <span className="absolute inset-0 grid place-items-center text-2xl font-black text-white/[0.08] sm:text-4xl">+</span>
               )}
             </button>
@@ -543,7 +551,7 @@ export function FootballGridFlowScreen() {
 
           <div className="mt-7 grid grid-cols-2 gap-3">
             <div className="rounded-2xl border border-brand-blue-light bg-brand-blue/15 p-4"><p className="text-xs font-bold uppercase text-white/45">{player.username}</p><p className="mt-1 text-4xl font-black">{myClaims}</p></div>
-            <div className="rounded-2xl border border-brand-yellow/50 bg-brand-yellow/10 p-4"><p className="truncate text-xs font-bold uppercase text-white/45">{grid.opponent?.username ?? 'Opponent'}</p><p className="mt-1 text-4xl font-black">{theirClaims}</p></div>
+            <div className="rounded-2xl border border-brand-yellow/50 bg-brand-yellow/10 p-4"><p className="truncate text-xs font-bold uppercase text-white/45">{grid.opponent?.username ?? copy.opponent}</p><p className="mt-1 text-4xl font-black">{theirClaims}</p></div>
           </div>
 
           {grid.completed.rewards && (
@@ -576,7 +584,7 @@ export function FootballGridFlowScreen() {
             {source === 'matchmaking' && (!rematchPending || grid.rematch?.status === 'declined' || grid.rematch?.status === 'expired') && (
               <button type="button" onClick={handleFindNew} className="w-full rounded-2xl bg-brand-blue px-6 py-4 font-black uppercase">{copy.newOpponent}</button>
             )}
-            {rematchPending && !accepted && <button type="button" onClick={grid.actions.declineRematch} className="w-full rounded-2xl border border-white/15 px-6 py-4 font-bold text-white/70">{copy.backToPlay}</button>}
+            {rematchPending && !accepted && <button type="button" onClick={grid.actions.declineRematch} className="w-full rounded-2xl border border-white/15 px-6 py-4 font-bold text-white/70">{copy.declineRematch}</button>}
             <button type="button" onClick={() => { grid.actions.clear(); router.push('/play'); }} className="w-full rounded-2xl border border-white/15 px-6 py-4 font-bold text-white/70">{copy.backToPlay}</button>
           </div>
         </div>
@@ -604,8 +612,8 @@ export function FootballGridFlowScreen() {
         </header>
 
         <div className="mb-3 flex gap-2">
-          <PlayerSeat name={player.username} avatar={player.avatar} customization={player.avatarCustomization} active={state.currentPlayerUserId === selfUserId} color="blue" label="You" />
-          <PlayerSeat name={grid.opponent?.username ?? 'Opponent'} avatar={grid.opponent?.avatarUrl ?? 'avatar-2'} customization={grid.opponent?.avatarCustomization} active={Boolean(state.currentPlayerUserId && state.currentPlayerUserId !== selfUserId)} color="yellow" label="Opponent" />
+          <PlayerSeat name={player.username} avatar={player.avatar} customization={player.avatarCustomization} active={state.currentPlayerUserId === selfUserId} color="blue" label={copy.you} />
+          <PlayerSeat name={grid.opponent?.username ?? copy.opponent} avatar={grid.opponent?.avatarUrl ?? 'avatar-2'} customization={grid.opponent?.avatarCustomization} active={Boolean(state.currentPlayerUserId && state.currentPlayerUserId !== selfUserId)} color="yellow" label={copy.opponent} />
         </div>
 
         <div className="mb-3 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3 text-center">

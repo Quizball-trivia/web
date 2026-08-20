@@ -13,9 +13,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/arsenal.svg"
+      "assetPath": "/assets/football-grid/clubs/arsenal-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -35,9 +36,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/aston-villa.svg"
+      "assetPath": "/assets/football-grid/clubs/aston-villa-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -57,9 +59,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/blackburn-rovers.svg"
+      "assetPath": "/assets/football-grid/clubs/blackburn-rovers-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -79,9 +82,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/chelsea.svg"
+      "assetPath": "/assets/football-grid/clubs/chelsea-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -101,9 +105,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/everton.svg"
+      "assetPath": "/assets/football-grid/clubs/everton-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -123,9 +128,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/leeds-united.svg"
+      "assetPath": "/assets/football-grid/clubs/leeds-united-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -145,9 +151,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/leicester-city.svg"
+      "assetPath": "/assets/football-grid/clubs/leicester-city-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -167,9 +174,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/liverpool.svg"
+      "assetPath": "/assets/football-grid/clubs/liverpool-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -189,9 +197,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/manchester-city.svg"
+      "assetPath": "/assets/football-grid/clubs/manchester-city-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -211,9 +220,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/manchester-united.svg"
+      "assetPath": "/assets/football-grid/clubs/manchester-united-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -233,9 +243,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/newcastle-united.svg"
+      "assetPath": "/assets/football-grid/clubs/newcastle-united-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -255,9 +266,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/nottingham-forest.svg"
+      "assetPath": "/assets/football-grid/clubs/nottingham-forest-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -277,9 +289,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/sunderland.svg"
+      "assetPath": "/assets/football-grid/clubs/sunderland-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -299,9 +312,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/tottenham-hotspur.svg"
+      "assetPath": "/assets/football-grid/clubs/tottenham-hotspur-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -321,9 +335,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/west-ham-united.svg"
+      "assetPath": "/assets/football-grid/clubs/west-ham-united-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -343,9 +358,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/athletic-club.svg"
+      "assetPath": "/assets/football-grid/clubs/athletic-club-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -365,9 +381,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/atletico-de-madrid.svg"
+      "assetPath": "/assets/football-grid/clubs/atletico-de-madrid-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -387,9 +404,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/ca-osasuna.svg"
+      "assetPath": "/assets/football-grid/clubs/ca-osasuna-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -409,9 +427,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/celta-de-vigo.svg"
+      "assetPath": "/assets/football-grid/clubs/celta-de-vigo-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -431,9 +450,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/fc-barcelona.svg"
+      "assetPath": "/assets/football-grid/clubs/fc-barcelona-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -453,9 +473,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/rc-deportivo-de-la-coruna.svg"
+      "assetPath": "/assets/football-grid/clubs/rc-deportivo-de-la-coruna-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -475,9 +496,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/rcd-espanyol.svg"
+      "assetPath": "/assets/football-grid/clubs/rcd-espanyol-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -497,9 +519,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/real-betis.svg"
+      "assetPath": "/assets/football-grid/clubs/real-betis-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -519,9 +542,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/real-madrid-cf.svg"
+      "assetPath": "/assets/football-grid/clubs/real-madrid-cf-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -541,9 +565,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/real-sociedad.svg"
+      "assetPath": "/assets/football-grid/clubs/real-sociedad-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -563,9 +588,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/real-zaragoza.svg"
+      "assetPath": "/assets/football-grid/clubs/real-zaragoza-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -585,9 +611,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/sevilla-fc.svg"
+      "assetPath": "/assets/football-grid/clubs/sevilla-fc-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -607,9 +634,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/valencia-cf.svg"
+      "assetPath": "/assets/football-grid/clubs/valencia-cf-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -629,9 +657,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/villarreal-cf.svg"
+      "assetPath": "/assets/football-grid/clubs/villarreal-cf-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -651,9 +680,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/ac-milan.svg"
+      "assetPath": "/assets/football-grid/clubs/ac-milan-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -673,9 +703,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/acf-fiorentina.svg"
+      "assetPath": "/assets/football-grid/clubs/acf-fiorentina-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -695,9 +726,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/as-roma.svg"
+      "assetPath": "/assets/football-grid/clubs/as-roma-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -717,9 +749,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/atalanta-bc.svg"
+      "assetPath": "/assets/football-grid/clubs/atalanta-bc-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -739,9 +772,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/bologna-fc-1909.svg"
+      "assetPath": "/assets/football-grid/clubs/bologna-fc-1909-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -761,9 +795,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/genoa-cfc.svg"
+      "assetPath": "/assets/football-grid/clubs/genoa-cfc-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -783,9 +818,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/inter-milan.svg"
+      "assetPath": "/assets/football-grid/clubs/inter-milan-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -805,9 +841,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/juventus.svg"
+      "assetPath": "/assets/football-grid/clubs/juventus-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -827,9 +864,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/palermo-fc.svg"
+      "assetPath": "/assets/football-grid/clubs/palermo-fc-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -849,9 +887,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/parma-calcio-1913.svg"
+      "assetPath": "/assets/football-grid/clubs/parma-calcio-1913-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -871,9 +910,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/sampdoria.svg"
+      "assetPath": "/assets/football-grid/clubs/sampdoria-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -893,9 +933,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/ss-lazio.svg"
+      "assetPath": "/assets/football-grid/clubs/ss-lazio-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -915,9 +956,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/ssc-napoli.svg"
+      "assetPath": "/assets/football-grid/clubs/ssc-napoli-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -937,9 +979,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/torino-fc.svg"
+      "assetPath": "/assets/football-grid/clubs/torino-fc-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -959,9 +1002,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/1-fc-kaiserslautern.svg"
+      "assetPath": "/assets/football-grid/clubs/1-fc-kaiserslautern-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -981,9 +1025,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/1-fc-koln.svg"
+      "assetPath": "/assets/football-grid/clubs/1-fc-koln-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1003,9 +1048,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/bayer-04-leverkusen.svg"
+      "assetPath": "/assets/football-grid/clubs/bayer-04-leverkusen-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1025,9 +1071,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/borussia-dortmund.svg"
+      "assetPath": "/assets/football-grid/clubs/borussia-dortmund-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1047,9 +1094,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/borussia-monchengladbach.svg"
+      "assetPath": "/assets/football-grid/clubs/borussia-monchengladbach-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1069,9 +1117,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/eintracht-frankfurt.svg"
+      "assetPath": "/assets/football-grid/clubs/eintracht-frankfurt-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1091,9 +1140,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/fc-bayern-munich.svg"
+      "assetPath": "/assets/football-grid/clubs/fc-bayern-munich-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1113,9 +1163,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/fc-schalke-04.svg"
+      "assetPath": "/assets/football-grid/clubs/fc-schalke-04-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1135,9 +1186,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/fc-st-pauli.svg"
+      "assetPath": "/assets/football-grid/clubs/fc-st-pauli-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1157,9 +1209,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/hamburger-sv.svg"
+      "assetPath": "/assets/football-grid/clubs/hamburger-sv-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1179,9 +1232,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/hertha-bsc.svg"
+      "assetPath": "/assets/football-grid/clubs/hertha-bsc-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1201,9 +1255,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/sc-freiburg.svg"
+      "assetPath": "/assets/football-grid/clubs/sc-freiburg-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1223,9 +1278,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/tsv-1860-munich.svg"
+      "assetPath": "/assets/football-grid/clubs/tsv-1860-munich-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1245,9 +1301,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/vfb-stuttgart.svg"
+      "assetPath": "/assets/football-grid/clubs/vfb-stuttgart-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1267,9 +1324,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/werder-bremen.svg"
+      "assetPath": "/assets/football-grid/clubs/werder-bremen-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1289,9 +1347,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/as-monaco.svg"
+      "assetPath": "/assets/football-grid/clubs/as-monaco-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1311,9 +1370,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/as-saint-etienne.svg"
+      "assetPath": "/assets/football-grid/clubs/as-saint-etienne-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1333,9 +1393,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/fc-girondins-de-bordeaux.svg"
+      "assetPath": "/assets/football-grid/clubs/fc-girondins-de-bordeaux-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1355,9 +1416,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/losc-lille.svg"
+      "assetPath": "/assets/football-grid/clubs/losc-lille-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1377,9 +1439,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/montpellier-hsc.svg"
+      "assetPath": "/assets/football-grid/clubs/montpellier-hsc-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1399,9 +1462,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/ogc-nice.svg"
+      "assetPath": "/assets/football-grid/clubs/ogc-nice-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1421,9 +1485,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/olympique-de-marseille.svg"
+      "assetPath": "/assets/football-grid/clubs/olympique-de-marseille-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1443,9 +1508,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/olympique-lyonnais.svg"
+      "assetPath": "/assets/football-grid/clubs/olympique-lyonnais-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1465,9 +1531,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/paris-saint-germain.svg"
+      "assetPath": "/assets/football-grid/clubs/paris-saint-germain-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1487,9 +1554,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/rc-lens.svg"
+      "assetPath": "/assets/football-grid/clubs/rc-lens-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1509,9 +1577,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/rc-strasbourg-alsace.svg"
+      "assetPath": "/assets/football-grid/clubs/rc-strasbourg-alsace-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1531,9 +1600,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/stade-de-reims.svg"
+      "assetPath": "/assets/football-grid/clubs/stade-de-reims-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1553,9 +1623,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/stade-rennais-fc.svg"
+      "assetPath": "/assets/football-grid/clubs/stade-rennais-fc-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1575,9 +1646,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/afc-ajax.svg"
+      "assetPath": "/assets/football-grid/clubs/afc-ajax-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1597,9 +1669,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/feyenoord.svg"
+      "assetPath": "/assets/football-grid/clubs/feyenoord-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1619,9 +1692,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/psv-eindhoven.svg"
+      "assetPath": "/assets/football-grid/clubs/psv-eindhoven-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1641,9 +1715,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/fc-porto.svg"
+      "assetPath": "/assets/football-grid/clubs/fc-porto-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1663,9 +1738,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/sc-braga.svg"
+      "assetPath": "/assets/football-grid/clubs/sc-braga-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1685,9 +1761,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/sl-benfica.svg"
+      "assetPath": "/assets/football-grid/clubs/sl-benfica-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1707,9 +1784,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/sporting-cp.svg"
+      "assetPath": "/assets/football-grid/clubs/sporting-cp-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1729,9 +1807,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/celtic.svg"
+      "assetPath": "/assets/football-grid/clubs/celtic-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1751,9 +1830,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/rangers.svg"
+      "assetPath": "/assets/football-grid/clubs/rangers-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1773,9 +1853,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/boca-juniors.svg"
+      "assetPath": "/assets/football-grid/clubs/boca-juniors-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1795,9 +1876,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/independiente.svg"
+      "assetPath": "/assets/football-grid/clubs/independiente-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1817,9 +1899,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/racing-club.svg"
+      "assetPath": "/assets/football-grid/clubs/racing-club-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1839,9 +1922,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/river-plate.svg"
+      "assetPath": "/assets/football-grid/clubs/river-plate-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1861,9 +1945,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/san-lorenzo-de-almagro.svg"
+      "assetPath": "/assets/football-grid/clubs/san-lorenzo-de-almagro-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1883,9 +1968,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/corinthians.svg"
+      "assetPath": "/assets/football-grid/clubs/corinthians-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1905,9 +1991,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/flamengo.svg"
+      "assetPath": "/assets/football-grid/clubs/flamengo-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1927,9 +2014,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/santos-fc.svg"
+      "assetPath": "/assets/football-grid/clubs/santos-fc-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1949,9 +2037,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/sao-paulo-fc.svg"
+      "assetPath": "/assets/football-grid/clubs/sao-paulo-fc-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1971,9 +2060,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/fc-dinamo-tbilisi.svg"
+      "assetPath": "/assets/football-grid/clubs/fc-dinamo-tbilisi-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -1993,9 +2083,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/fc-dinamo-batumi.svg"
+      "assetPath": "/assets/football-grid/clubs/fc-dinamo-batumi-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2015,9 +2106,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/fc-torpedo-kutaisi.svg"
+      "assetPath": "/assets/football-grid/clubs/fc-torpedo-kutaisi-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2037,9 +2129,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/fc-dila-gori.svg"
+      "assetPath": "/assets/football-grid/clubs/fc-dila-gori-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2059,9 +2152,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/fc-samtredia.svg"
+      "assetPath": "/assets/football-grid/clubs/fc-samtredia-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2081,9 +2175,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/fc-kolkheti-1913-poti.svg"
+      "assetPath": "/assets/football-grid/clubs/fc-kolkheti-1913-poti-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2103,9 +2198,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/fc-iberia-1999.svg"
+      "assetPath": "/assets/football-grid/clubs/fc-iberia-1999-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2125,9 +2221,10 @@
       "provenance": "quizball-club-registry",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/zlatan-fc.svg"
+      "assetPath": "/assets/football-grid/clubs/zlatan-fc-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2147,9 +2244,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-al-nassr.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-al-nassr-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2169,9 +2267,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-al-qadsiah.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-al-qadsiah-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2191,9 +2290,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-ales.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-ales-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2213,9 +2313,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-atletico-mineiro.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-atletico-mineiro-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2235,9 +2336,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-banfield.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-banfield-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2257,9 +2359,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-basel.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-basel-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2279,9 +2382,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-besiktas.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-besiktas-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2301,9 +2405,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-bordeaux.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-bordeaux-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2323,9 +2428,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-bordeaux-b.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-bordeaux-b-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2345,9 +2451,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-botafogo.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-botafogo-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2367,9 +2474,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-brescia.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-brescia-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2389,9 +2497,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-chemnitzer-fc.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-chemnitzer-fc-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2411,9 +2520,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-chicago-fire.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-chicago-fire-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2433,9 +2543,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-cobreloa.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-cobreloa-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2455,9 +2566,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-como.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-como-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2477,9 +2589,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-cruzeiro.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-cruzeiro-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2499,9 +2612,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-cska-sofia.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-cska-sofia-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2521,9 +2635,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-dinamo-zagreb.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-dinamo-zagreb-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2543,9 +2658,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-dynamo-kyiv.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-dynamo-kyiv-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2565,9 +2681,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-eibar.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-eibar-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2587,9 +2704,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-fiorentina.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-fiorentina-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2609,9 +2727,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-fluminense.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-fluminense-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2631,9 +2750,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-fulham.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-fulham-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2653,9 +2773,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-galatasaray.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-galatasaray-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2675,9 +2796,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-genk.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-genk-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2697,9 +2819,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-go-ahead-eagles.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-go-ahead-eagles-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2719,9 +2842,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-gremio.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-gremio-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2741,9 +2865,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-groningen.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-groningen-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2763,9 +2888,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-internacional.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-internacional-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2785,9 +2911,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-internazionale.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-internazionale-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2807,9 +2934,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-juventude.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-juventude-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2829,9 +2957,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-kaiserslautern.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-kaiserslautern-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2851,9 +2980,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-la-galaxy.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-la-galaxy-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2873,9 +3003,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-liefering.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-liefering-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2895,9 +3026,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-malmo-ff.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-malmo-ff-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2917,9 +3049,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-marseille.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-marseille-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2939,9 +3072,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-metz.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-metz-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2961,9 +3095,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-millonarios.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-millonarios-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -2983,9 +3118,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-monterrey.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-monterrey-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3005,9 +3141,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-nancy.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-nancy-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3027,9 +3164,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-palmeiras.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-palmeiras-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3049,9 +3187,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-queens-park-rangers.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-queens-park-rangers-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3071,9 +3210,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-rennes.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-rennes-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3093,9 +3233,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-salernitana.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-salernitana-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3115,9 +3256,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-udinese.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-udinese-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3137,9 +3279,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-vissel-kobe.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-vissel-kobe-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3159,9 +3302,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-wolfsburg.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-wolfsburg-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3181,9 +3325,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-znicz-pruszkow.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-znicz-pruszkow-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3203,9 +3348,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-al-mokawloon.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-al-mokawloon-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3225,9 +3371,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-al-duhail.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-al-duhail-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3247,9 +3394,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-al-ettifaq.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-al-ettifaq-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3269,9 +3417,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-al-gharafa.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-al-gharafa-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3291,9 +3440,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-al-ittihad.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-al-ittihad-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3313,9 +3463,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-al-rayyan.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-al-rayyan-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3335,9 +3486,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-anderlecht.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-anderlecht-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3364,9 +3516,10 @@
       "licenseUrl": "//en.wikipedia.org/wiki/File:FC_Anzhi_Makhachkala_logo.svg",
       "rightsStatus": "metadata-captured-review-required"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-anzhi-makhachkala.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-anzhi-makhachkala-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3386,9 +3539,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-auxerre.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-auxerre-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3415,9 +3569,10 @@
       "licenseUrl": "//en.wikipedia.org/wiki/File:Barnet_FC.svg",
       "rightsStatus": "metadata-captured-review-required"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-barnet.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-barnet-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3437,9 +3592,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-bayer-leverkusen.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-bayer-leverkusen-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3459,9 +3615,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-benfica.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-benfica-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3488,9 +3645,10 @@
       "licenseUrl": "//en.wikipedia.org/wiki/File:KSKBeveren.png",
       "rightsStatus": "metadata-captured-review-required"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-beveren.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-beveren-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3510,9 +3668,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-birmingham-city.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-birmingham-city-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3532,9 +3691,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-bolton-wanderers.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-bolton-wanderers-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3554,9 +3714,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-boulogne.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-boulogne-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3576,9 +3737,10 @@
       "provenance": "verified-local-alias:/clubs/afc-bournemouth.webp",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-bournemouth.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-bournemouth-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3598,9 +3760,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-brentford.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-brentford-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3620,9 +3783,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-brest.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-brest-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3642,9 +3806,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-caen.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-caen-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3664,9 +3829,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-cannes.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-cannes-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3686,9 +3852,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-cardiff-city.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-cardiff-city-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3708,9 +3875,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-colo-colo.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-colo-colo-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3737,9 +3905,10 @@
       "licenseUrl": "//en.wikipedia.org/wiki/File:Coventry_City_FC_crest.svg",
       "rightsStatus": "metadata-captured-review-required"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-coventry-city.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-coventry-city-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3759,9 +3928,10 @@
       "provenance": "verified-local-alias:/clubs/crystal-palace.webp",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-crystal-palace.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-crystal-palace-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3788,9 +3958,10 @@
       "licenseUrl": "//en.wikipedia.org/wiki/File:PFK_CSKA_Logo.svg",
       "rightsStatus": "metadata-captured-review-required"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-cska-moscow.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-cska-moscow-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3817,9 +3988,10 @@
       "licenseUrl": "//en.wikipedia.org/wiki/File:D.C._United_logo_(2016).svg",
       "rightsStatus": "metadata-captured-review-required"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-d-c-united.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-d-c-united-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3846,9 +4018,10 @@
       "licenseUrl": "//en.wikipedia.org/wiki/File:FC_Den_Bosch_logo.svg",
       "rightsStatus": "metadata-captured-review-required"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-den-bosch.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-den-bosch-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3868,9 +4041,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-derby-county.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-derby-county-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3897,9 +4071,10 @@
       "licenseUrl": "//en.wikipedia.org/wiki/File:Dijon_FCO_logo.svg",
       "rightsStatus": "metadata-captured-review-required"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-dijon.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-dijon-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3919,9 +4094,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-emirates-club.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-emirates-club-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3948,9 +4124,10 @@
       "licenseUrl": "//en.wikipedia.org/wiki/File:Envigado_FC_logo_2018.png",
       "rightsStatus": "metadata-captured-review-required"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-envigado.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-envigado-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3970,9 +4147,10 @@
       "provenance": "verified-alias:rcd-espanyol",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-espanyol.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-espanyol-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -3992,9 +4170,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-fenerbahce.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-fenerbahce-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4021,9 +4200,10 @@
       "licenseUrl": "//en.wikipedia.org/wiki/File:SC_Heerenveen_logo.svg",
       "rightsStatus": "metadata-captured-review-required"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-heerenveen.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-heerenveen-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4043,9 +4223,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-inter-miami.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-inter-miami-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4065,9 +4246,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-inter-zapresic.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-inter-zapresic-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4087,9 +4269,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-lech-poznan.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-lech-poznan-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4109,9 +4292,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-leyton-orient.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-leyton-orient-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4131,9 +4315,10 @@
       "provenance": "verified-alias:losc-lille",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-lille.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-lille-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4153,9 +4338,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-lyon.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-lyon-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4182,9 +4368,10 @@
       "licenseUrl": "//en.wikipedia.org/wiki/File:M%C3%A1laga_CF.svg",
       "rightsStatus": "metadata-captured-review-required"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-malaga.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-malaga-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4204,9 +4391,10 @@
       "provenance": "verified-local-alias:/clubs/rcd-mallorca.webp",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-mallorca.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-mallorca-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4226,9 +4414,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-maritimo.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-maritimo-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4248,9 +4437,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-marsala.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-marsala-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4270,9 +4460,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-martigues.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-martigues-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4299,9 +4490,10 @@
       "licenseUrl": "//en.wikipedia.org/wiki/File:FC_Metalurh_Donetsk.png",
       "rightsStatus": "metadata-captured-review-required"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-metalurh-donetsk.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-metalurh-donetsk-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4321,9 +4513,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-millwall.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-millwall-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4343,9 +4536,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-monza.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-monza-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4365,9 +4559,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-new-york-city-fc.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-new-york-city-fc-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4394,9 +4589,10 @@
       "licenseUrl": "//en.wikipedia.org/wiki/File:New_York_Red_Bulls_logo.svg",
       "rightsStatus": "metadata-captured-review-required"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-new-york-red-bulls.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-new-york-red-bulls-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4416,9 +4612,10 @@
       "provenance": "verified-alias:ogc-nice",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-nice.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-nice-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4445,9 +4642,10 @@
       "licenseUrl": "//en.wikipedia.org/wiki/File:N%C3%AEmes_Olympique_2018_logo.svg",
       "rightsStatus": "metadata-captured-review-required"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-nimes.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-nimes-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4467,9 +4665,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-norwich-city.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-norwich-city-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4489,9 +4688,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-olympiacos.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-olympiacos-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4511,9 +4711,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-orlando-city.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-orlando-city-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4540,9 +4741,10 @@
       "licenseUrl": "//en.wikipedia.org/wiki/File:PAOK_FC_EMBLEM.png",
       "rightsStatus": "metadata-captured-review-required"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-paok.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-paok-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4569,9 +4771,10 @@
       "licenseUrl": null,
       "rightsStatus": "metadata-captured-review-required"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-perth-glory.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-perth-glory-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4598,9 +4801,10 @@
       "licenseUrl": "//en.wikipedia.org/wiki/File:Qingdao_Huanghai_logo.svg",
       "rightsStatus": "metadata-captured-review-required"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-qingdao-huanghai.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-qingdao-huanghai-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4620,9 +4824,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-queretaro.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-queretaro-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4642,9 +4847,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-rayo-vallecano.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-rayo-vallecano-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4664,9 +4870,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-rb-leipzig.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-rb-leipzig-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4686,9 +4893,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-red-bull-salzburg.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-red-bull-salzburg-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4708,9 +4916,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-reggina.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-reggina-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4730,9 +4939,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-rosario-central.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-rosario-central-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4754,9 +4964,10 @@
       "sourceFile": "https://www.jleague.jp/image/clubs/tosu.svg",
       "rightsStatus": "official-provider-review-required"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-sagan-tosu.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-sagan-tosu-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4776,9 +4987,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-southampton.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-southampton-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4805,9 +5017,10 @@
       "licenseUrl": "//en.wikipedia.org/wiki/File:Real_Sporting_de_Gijon.svg",
       "rightsStatus": "metadata-captured-review-required"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-sporting-gijon.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-sporting-gijon-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4834,9 +5047,10 @@
       "licenseUrl": null,
       "rightsStatus": "metadata-captured-review-required"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-stoke-city.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-stoke-city-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4856,9 +5070,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-vasco-da-gama.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-vasco-da-gama-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4878,9 +5093,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-west-bromwich-albion.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-west-bromwich-albion-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4907,9 +5123,10 @@
       "licenseUrl": "//en.wikipedia.org/wiki/File:Willem_II_logo.svg",
       "rightsStatus": "metadata-captured-review-required"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-willem-ii.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-willem-ii-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4936,9 +5153,10 @@
       "licenseUrl": "//en.wikipedia.org/wiki/File:Real_Zaragoza_logo.svg",
       "rightsStatus": "metadata-captured-review-required"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-zaragoza.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-zaragoza-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4958,9 +5176,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-zrinjski.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-zrinjski-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -4980,9 +5199,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-adana-demirspor.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-adana-demirspor-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5002,9 +5222,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-all-boys.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-all-boys-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5024,9 +5245,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-basaksehir.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-basaksehir-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5046,9 +5268,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-bryne.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-bryne-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5068,9 +5291,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-danubio.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-danubio-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5090,9 +5314,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-dynamo-moscow.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-dynamo-moscow-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5112,9 +5337,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-el-mokawloon.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-el-mokawloon-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5134,9 +5360,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-estudiantes-de-la-plata.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-estudiantes-de-la-plata-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5156,9 +5383,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-hamburger-sv.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-hamburger-sv-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5178,9 +5406,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-hebei-china-fortune.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-hebei-china-fortune-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5200,9 +5429,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-los-angeles-fc.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-los-angeles-fc-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5222,9 +5452,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-melbourne-victory.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-melbourne-victory-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5244,9 +5475,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-molde.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-molde-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5266,9 +5498,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-club-nacional-de-football.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-club-nacional-de-football-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5288,9 +5521,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-trabzonspor.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-trabzonspor-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5310,9 +5544,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-venezia.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-venezia-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5332,9 +5567,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-vfl-wolfsburg.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-vfl-wolfsburg-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5354,9 +5590,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-shanghai-shenhua.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-shanghai-shenhua-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5376,9 +5613,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-nurnberg.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-nurnberg-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5398,9 +5636,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-al-shabab.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-al-shabab-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5420,9 +5659,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-al-ahli.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-al-ahli-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5442,9 +5682,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-al-arabi.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-al-arabi-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5464,9 +5705,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-alania.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-alania-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5486,9 +5728,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-anorthosis.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-anorthosis-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5508,9 +5751,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-bastia.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-bastia-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5530,9 +5774,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-grasshoppers.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-grasshoppers-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5552,9 +5797,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-grosseto.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-grosseto-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5574,9 +5820,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-hajduk-split.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-hajduk-split-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5596,9 +5843,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-inter-baku.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-inter-baku-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5618,9 +5866,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-karlsruher.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-karlsruher-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5640,9 +5889,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-lanceros.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-lanceros-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5662,9 +5912,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-lask.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-lask-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5684,9 +5935,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-le-havre.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-le-havre-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5706,9 +5958,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-luzern.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-luzern-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5728,9 +5981,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-notts-county.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-notts-county-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5750,9 +6004,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-perugia.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-perugia-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5772,9 +6027,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-pescara.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-pescara-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5794,9 +6050,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-portsmouth.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-portsmouth-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5816,9 +6073,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-quimper.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-quimper-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5838,9 +6096,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-red-star.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-red-star-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5860,9 +6119,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-rw-ahlen.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-rw-ahlen-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5882,9 +6142,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-rubin-kazan.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-rubin-kazan-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5904,9 +6165,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-saarbrucken.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-saarbrucken-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5926,9 +6188,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-sheffield-united.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-sheffield-united-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5948,9 +6211,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-siena.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-siena-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5970,9 +6234,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-sion.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-sion-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -5992,9 +6257,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-spartak-moscow.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-spartak-moscow-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -6014,9 +6280,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-spartak-subotica.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-spartak-subotica-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -6036,9 +6303,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-st-gallen.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-st-gallen-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -6058,9 +6326,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-talleres.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-talleres-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -6080,9 +6349,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-teplice.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-teplice-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -6102,9 +6372,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-toulouse.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-toulouse-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -6124,9 +6395,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-usti.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-usti-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -6146,9 +6418,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-lubeck.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-lubeck-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -6168,9 +6441,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-bochum.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-bochum-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -6190,9 +6464,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-zeljeznicar.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-zeljeznicar-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,
@@ -6212,9 +6487,10 @@
       "provenance": "wikipedia-import",
       "rightsStatus": "trademark-provider-review"
     },
+    "providerCandidate": null,
     "fallback": {
       "type": "quizball-monogram",
-      "assetPath": "/assets/football-grid/clubs/wl-zurich.svg"
+      "assetPath": "/assets/football-grid/clubs/wl-zurich-fallback.svg"
     },
     "primaryDisabledReason": null,
     "primaryError": null,

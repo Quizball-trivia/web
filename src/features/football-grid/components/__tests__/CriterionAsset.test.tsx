@@ -1,4 +1,4 @@
-import { fireEvent, render } from '@testing-library/react';
+import { render } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import type { FootballGridCriterionView } from '@/lib/realtime/socket.types';
 import { CriterionAsset } from '../CriterionAsset';
@@ -17,14 +17,22 @@ function criterion(overrides: Partial<FootballGridCriterionView> = {}): Football
 }
 
 describe('CriterionAsset', () => {
-  it('falls back from a remote club primary to the packaged local crest', () => {
+  it('uses the packaged club visual while the provider primary awaits rights clearance', () => {
     const { container } = render(<CriterionAsset criterion={criterion()} />);
     const primary = container.querySelector('img');
-    expect(primary?.getAttribute('src')).toContain('/storage/v1/object/public/imgs/club-logos/');
+    expect(primary?.getAttribute('src')).toBe('/assets/football-grid/clubs/fc-barcelona-fallback.svg');
+  });
 
-    fireEvent.error(primary as HTMLImageElement);
+  it('prefers an exact club match before ambiguous suffix matches', () => {
+    const { container } = render(<CriterionAsset criterion={criterion({
+      id: 'manchester-city',
+      key: 'city',
+      labelEn: 'Manchester City',
+      labelKa: 'მანჩესტერ სიტი',
+      assetKey: 'city',
+    })} />);
 
-    expect(container.querySelector('img')?.getAttribute('src')).toBe('/assets/football-grid/clubs/fc-barcelona.svg');
+    expect(container.querySelector('img')?.getAttribute('src')).toBe('/assets/football-grid/clubs/manchester-city-fallback.svg');
   });
 
   it('resolves a country directly to its packaged flag', () => {

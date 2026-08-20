@@ -74,12 +74,15 @@ function validateRows(family, rows) {
     });
     else addFailure(`${owner}: primary visual has no local path or public URL`);
     if (!row.primary?.provider && !row.primary?.source?.provider) addFailure(`${owner}: missing primary provider metadata`);
+    if (primaryPath && primaryPath === row.fallback?.assetPath) {
+      addFailure(`${owner}: primary and fallback must be distinct assets`);
+    }
   }
 }
 
 function sniff(bytes) {
   const text = bytes.subarray(0, 256).toString('utf8').trimStart();
-  if (text.startsWith('<svg') || text.startsWith('<?xml') && text.includes('<svg')) return 'svg';
+  if (text.includes('<svg')) return 'svg';
   if (bytes.length >= 8 && bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))) return 'png';
   if (bytes.length >= 3 && bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255) return 'jpg';
   if (bytes.length >= 12 && bytes.subarray(0, 4).toString() === 'RIFF' && bytes.subarray(8, 12).toString() === 'WEBP') return 'webp';
@@ -144,6 +147,10 @@ if (coverage.runtimeUnresolved !== 0) addFailure(`coverage: ${coverage.runtimeUn
 for (const [family, count] of Object.entries(expected)) {
   if (coverage.families?.[family]?.total !== count) addFailure(`coverage:${family}: incorrect total`);
   if (coverage.families?.[family]?.runtimeUnresolved !== 0) addFailure(`coverage:${family}: unresolved rows`);
+  if (coverage.families?.[family]?.rightsCleared !== count) addFailure(`coverage:${family}: uncleared launch visuals`);
+  if (!Number.isInteger(coverage.families?.[family]?.primaryRightsCleared)) {
+    addFailure(`coverage:${family}: missing primary-rights counter`);
+  }
 }
 
 const players = await readJson('players-summary.json');
@@ -159,7 +166,7 @@ const result = {
   players: { usable: players.usableRows, primaryPortraits: players.primaryPortraits, fallbacks: players.deterministicFallbacks },
   localAssets: localAssets.size,
   remoteAssets: remoteAssets.length,
-  runtimeUnresolved: failures.length,
+  failureCount: failures.length,
   remotePrimaryWarnings: warnings.length,
   warnings,
   failures,

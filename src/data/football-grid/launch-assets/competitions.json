@@ -18,7 +18,7 @@
     },
     "fallback": {
       "type": "quizball-competition-badge",
-      "assetPath": "/assets/football-grid/competitions/fifa-world-cup.svg"
+      "assetPath": "/assets/football-grid/competitions/_launch-fallback.svg"
     },
     "runtimeResolved": true
   },
@@ -41,7 +41,7 @@
     },
     "fallback": {
       "type": "quizball-competition-badge",
-      "assetPath": "/assets/football-grid/competitions/uefa-euro.svg"
+      "assetPath": "/assets/football-grid/competitions/_launch-fallback.svg"
     },
     "runtimeResolved": true
   },
@@ -64,7 +64,7 @@
     },
     "fallback": {
       "type": "quizball-competition-badge",
-      "assetPath": "/assets/football-grid/competitions/copa-america.svg"
+      "assetPath": "/assets/football-grid/competitions/_launch-fallback.svg"
     },
     "runtimeResolved": true
   },
@@ -87,7 +87,7 @@
     },
     "fallback": {
       "type": "quizball-competition-badge",
-      "assetPath": "/assets/football-grid/competitions/africa-cup-of-nations.svg"
+      "assetPath": "/assets/football-grid/competitions/_launch-fallback.svg"
     },
     "runtimeResolved": true
   },
@@ -110,7 +110,7 @@
     },
     "fallback": {
       "type": "quizball-competition-badge",
-      "assetPath": "/assets/football-grid/competitions/afc-asian-cup.svg"
+      "assetPath": "/assets/football-grid/competitions/_launch-fallback.svg"
     },
     "runtimeResolved": true
   },
@@ -133,7 +133,7 @@
     },
     "fallback": {
       "type": "quizball-competition-badge",
-      "assetPath": "/assets/football-grid/competitions/uefa-nations-league.svg"
+      "assetPath": "/assets/football-grid/competitions/_launch-fallback.svg"
     },
     "runtimeResolved": true
   },
@@ -156,7 +156,7 @@
     },
     "fallback": {
       "type": "quizball-competition-badge",
-      "assetPath": "/assets/football-grid/competitions/uefa-champions-league.svg"
+      "assetPath": "/assets/football-grid/competitions/_launch-fallback.svg"
     },
     "runtimeResolved": true
   },
@@ -179,7 +179,7 @@
     },
     "fallback": {
       "type": "quizball-competition-badge",
-      "assetPath": "/assets/football-grid/competitions/uefa-europa-league.svg"
+      "assetPath": "/assets/football-grid/competitions/_launch-fallback.svg"
     },
     "runtimeResolved": true
   },
@@ -202,7 +202,7 @@
     },
     "fallback": {
       "type": "quizball-competition-badge",
-      "assetPath": "/assets/football-grid/competitions/uefa-conference-league.svg"
+      "assetPath": "/assets/football-grid/competitions/_launch-fallback.svg"
     },
     "runtimeResolved": true
   },
@@ -225,7 +225,7 @@
     },
     "fallback": {
       "type": "quizball-competition-badge",
-      "assetPath": "/assets/football-grid/competitions/fifa-club-world-cup.svg"
+      "assetPath": "/assets/football-grid/competitions/_launch-fallback.svg"
     },
     "runtimeResolved": true
   },
@@ -248,7 +248,7 @@
     },
     "fallback": {
       "type": "quizball-competition-badge",
-      "assetPath": "/assets/football-grid/competitions/copa-libertadores.svg"
+      "assetPath": "/assets/football-grid/competitions/_launch-fallback.svg"
     },
     "runtimeResolved": true
   },
@@ -271,7 +271,7 @@
     },
     "fallback": {
       "type": "quizball-competition-badge",
-      "assetPath": "/assets/football-grid/competitions/premier-league-title.svg"
+      "assetPath": "/assets/football-grid/competitions/_launch-fallback.svg"
     },
     "runtimeResolved": true
   },
@@ -294,7 +294,7 @@
     },
     "fallback": {
       "type": "quizball-competition-badge",
-      "assetPath": "/assets/football-grid/competitions/la-liga-title.svg"
+      "assetPath": "/assets/football-grid/competitions/_launch-fallback.svg"
     },
     "runtimeResolved": true
   },
@@ -317,7 +317,7 @@
     },
     "fallback": {
       "type": "quizball-competition-badge",
-      "assetPath": "/assets/football-grid/competitions/serie-a-title.svg"
+      "assetPath": "/assets/football-grid/competitions/_launch-fallback.svg"
     },
     "runtimeResolved": true
   },
@@ -340,7 +340,7 @@
     },
     "fallback": {
       "type": "quizball-competition-badge",
-      "assetPath": "/assets/football-grid/competitions/bundesliga-title.svg"
+      "assetPath": "/assets/football-grid/competitions/_launch-fallback.svg"
     },
     "runtimeResolved": true
   },
@@ -363,7 +363,7 @@
     },
     "fallback": {
       "type": "quizball-competition-badge",
-      "assetPath": "/assets/football-grid/competitions/ligue-1-title.svg"
+      "assetPath": "/assets/football-grid/competitions/_launch-fallback.svg"
     },
     "runtimeResolved": true
   },
@@ -386,7 +386,7 @@
     },
     "fallback": {
       "type": "quizball-competition-badge",
-      "assetPath": "/assets/football-grid/competitions/fa-cup.svg"
+      "assetPath": "/assets/football-grid/competitions/_launch-fallback.svg"
     },
     "runtimeResolved": true
   },
@@ -409,7 +409,7 @@
     },
     "fallback": {
       "type": "quizball-competition-badge",
-      "assetPath": "/assets/football-grid/competitions/efl-cup.svg"
+      "assetPath": "/assets/football-grid/competitions/_launch-fallback.svg"
     },
     "runtimeResolved": true
   },
@@ -432,7 +432,7 @@
     },
     "fallback": {
       "type": "quizball-competition-badge",
-      "assetPath": "/assets/football-grid/competitions/copa-del-rey.svg"
+      "assetPath": "/assets/football-grid/competitions/_launch-fallback.svg"
     },
     "runtimeResolved": true
   },
@@ -455,7 +455,7 @@
     },
     "fallback": {
       "type": "quizball-competition-badge",
-      "assetPath": "/assets/football-grid/competitions/coppa-italia.svg"
+      "assetPath": "/assets/football-grid/competitions/_launch-fallback.svg"
     },
     "runtimeResolved": true
   },
@@ -478,7 +478,7 @@
     },
     "fallback": {
       "type": "quizball-competition-badge",
-      "assetPath": "/assets/football-grid/competitions/dfb-pokal.svg"
+      "assetPath": "/assets/football-grid/competitions/_launch-fallback.svg"
     },
     "runtimeResolved": true
   },
@@ -501,7 +501,7 @@
     },
     "fallback": {
       "type": "quizball-competition-badge",
-      "assetPath": "/assets/football-grid/competitions/coupe-de-france.svg"
+      "assetPath": "/assets/football-grid/competitions/_launch-fallback.svg"
     },
     "runtimeResolved": true
   },
@@ -524,7 +524,7 @@
     },
     "fallback": {
       "type": "quizball-competition-badge",
-      "assetPath": "/assets/football-grid/competitions/knvb-cup.svg"
+      "assetPath": "/assets/football-grid/competitions/_launch-fallback.svg"
     },
     "runtimeResolved": true
   },
@@ -547,7 +547,7 @@
     },
     "fallback": {
       "type": "quizball-competition-badge",
-      "assetPath": "/assets/football-grid/competitions/taca-de-portugal.svg"
+      "assetPath": "/assets/football-grid/competitions/_launch-fallback.svg"
     },
     "runtimeResolved": true
   }

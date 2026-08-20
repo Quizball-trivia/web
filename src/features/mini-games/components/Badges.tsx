@@ -13,8 +13,10 @@ function localFootballGridCrest(clubId: string): string {
 function shouldUseLocalCrest(source: string): boolean {
   if (!/^https?:\/\//i.test(source)) return true;
   try {
-    const hostname = new URL(source).hostname;
-    return hostname === 'localhost' || hostname === '127.0.0.1';
+    const hostname = new URL(source).hostname
+      .toLowerCase()
+      .replace(/^\[|\]$/g, '');
+    return hostname === 'localhost' || hostname === '::1' || hostname.startsWith('127.');
   } catch {
     return true;
   }

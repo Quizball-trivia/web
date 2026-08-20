@@ -14,6 +14,7 @@ import { translate, normalizeLocale } from '@/lib/i18n/messages';
 import { toast } from 'sonner';
 import { getMe } from '@/lib/api/endpoints';
 import { useAuthStore } from '@/stores/auth.store';
+import { createRealtimeCommandId } from '@/lib/realtime/command-id';
 import type {
   DraftState,
   ErrorPayload,
@@ -73,6 +74,16 @@ let _handlersRegistered = false;
 // for a short window.
 let _lastDbOutageErrorAtMs = 0;
 const DB_OUTAGE_QUEUE_LEFT_WINDOW_MS = 3_000;
+const GRID_RESYNC_THROTTLE_MS = 1_000;
+const _lastGridResyncAtByMatchId = new Map<string, number>();
+
+function emitGridResyncThrottled(socket: ReturnType<typeof getSocket>, matchId: string): void {
+  const now = Date.now();
+  const lastEmittedAt = _lastGridResyncAtByMatchId.get(matchId) ?? 0;
+  if (now - lastEmittedAt < GRID_RESYNC_THROTTLE_MS) return;
+  _lastGridResyncAtByMatchId.set(matchId, now);
+  socket.emit('grid:resync', { matchId });
+}
 
 function getQueryClient(): QueryClient | null {
   return _queryClient;
@@ -810,7 +821,7 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
     if (gridStore.searchCancellationPending) {
       socket.emit('grid:forfeit', {
         matchId: data.matchId,
-        commandId: globalThis.crypto.randomUUID(),
+        commandId: createRealtimeCommandId(),
         expectedStateVersion: data.state.stateVersion,
       });
     }
@@ -830,9 +841,19 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
   socket.on('grid:paused', (data) => applyGridState('grid:paused', data));
   socket.on('grid:resumed', (data) => applyGridState('grid:resumed', data));
   socket.on('grid:turn_resolved', (data: FootballGridTurnResolvedPayload) => {
+    logger.info('Socket event grid:turn_resolved', {
+      matchId: data.matchId,
+      stateVersion: data.state.stateVersion,
+      outcome: data.outcome,
+    });
     useFootballGridStore.getState().setTurnResolved(data);
   });
   socket.on('grid:command_result', (data: FootballGridCommandResultPayload) => {
+    logger.info('Socket event grid:command_result', {
+      matchId: data.matchId,
+      commandId: data.commandId,
+      outcome: data.outcome,
+    });
     useFootballGridStore.getState().setCommandResult(data);
   });
   socket.on('grid:completed', (data: FootballGridCompletedPayload) => {
@@ -841,12 +862,20 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       stateVersion: data.terminalStateVersion,
       completionReason: data.state.completionReason,
     });
+    _lastGridResyncAtByMatchId.delete(data.matchId);
     useFootballGridStore.getState().setCompleted(data);
   });
   socket.on('grid:rematch_state', (data: FootballGridRematchStatePayload) => {
+    logger.info('Socket event grid:rematch_state', {
+      seriesId: data.seriesId,
+      seriesVersion: data.seriesVersion,
+      status: data.status,
+      acceptedPlayers: data.acceptedUserIds.length,
+    });
     useFootballGridStore.getState().setRematch(data);
   });
   socket.on('grid:report_received', ({ attemptId }) => {
+    logger.info('Socket event grid:report_received', { attemptId });
     useFootballGridStore.getState().markAttemptReported(attemptId);
   });
   socket.on('grid:error', (data: ErrorPayload) => {
@@ -862,7 +891,7 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       current.state?.matchId &&
       (gridCode === 'STALE_STATE' || gridCode === 'LATE_COMMAND' || gridCode === 'COMMAND_IN_PROGRESS')
     ) {
-      socket.emit('grid:resync', { matchId: current.state.matchId });
+      emitGridResyncThrottled(socket, current.state.matchId);
     }
   });
 }
@@ -872,4 +901,5 @@ export function resetSocketHandlers(): void {
   _handlersRegistered = false;
   _queryClient = null;
   _lastDbOutageErrorAtMs = 0;
+  _lastGridResyncAtByMatchId.clear();
 }

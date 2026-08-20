@@ -18,7 +18,12 @@ type RegistryItem = {
   labelEn?: string;
   labelKa?: string;
   assetPath?: string;
-  primary?: { assetPath?: string; publicUrl?: string };
+  primary?: {
+    assetPath?: string;
+    publicUrl?: string;
+    rightsStatus?: string;
+    source?: { rightsStatus?: string };
+  };
   fallback?: { assetPath?: string };
 };
 
@@ -40,29 +45,39 @@ function comparable(value: string | null | undefined): string {
     .replace(/^-|-$/g, '');
 }
 
+function isLaunchClearedPrimary(item: RegistryItem): boolean {
+  const status = item.primary?.source?.rightsStatus ?? item.primary?.rightsStatus;
+  return status === 'owned' || status === 'cleared-for-launch';
+}
+
 function resolveRegistryAssets(criterion: FootballGridCriterionView): string[] {
   const key = criterion.assetKey?.trim() ?? '';
-  if (/^(https?:\/\/|\/)/.test(key)) return [key];
+  if (key.startsWith('/')) return [key];
 
   const candidates = [key, criterion.key, criterion.id, criterion.labelEn, criterion.labelKa]
     .map(comparable)
     .filter(Boolean);
   const registry = REGISTRIES[criterion.family] ?? [];
-  const item = registry.find((candidate) => {
-    const values = [candidate.id, candidate.labelEn, candidate.labelKa].map(comparable);
-    return candidates.some((value) => values.some((registryValue) => (
-      registryValue === value ||
-      registryValue.endsWith(`-${value}`) ||
-      value.endsWith(`-${registryValue}`)
-    )));
-  });
+  const valuesOf = (candidate: RegistryItem) => (
+    [candidate.id, candidate.labelEn, candidate.labelKa].map(comparable)
+  );
+  const item = registry.find((candidate) => (
+    candidates.some((value) => valuesOf(candidate).includes(value))
+  )) ?? registry.find((candidate) => (
+    candidates.some((value) => valuesOf(candidate).some((registryValue) => (
+      registryValue.endsWith(`-${value}`) || value.endsWith(`-${registryValue}`)
+    )))
+  ));
   if (!item) return [];
 
-  // Local reviewed assets are deterministic and work offline. Club primaries
-  // intentionally remain remote because they are the real crests; all others
-  // use the packaged launch asset first.
+  // Third-party candidates remain recorded in the registries for audit, but
+  // the runtime only renders primaries whose launch rights are explicitly
+  // cleared. Every row has a packaged Quizball fallback.
   if (criterion.family === 'club') {
-    return [item.primary?.publicUrl, item.fallback?.assetPath].filter((value): value is string => Boolean(value));
+    return [
+      isLaunchClearedPrimary(item) ? item.primary?.publicUrl ?? item.primary?.assetPath : null,
+      item.fallback?.assetPath,
+    ].filter((value): value is string => Boolean(value));
   }
   return [item.assetPath, item.primary?.assetPath, item.fallback?.assetPath]
     .filter((value, index, values): value is string => Boolean(value) && values.indexOf(value) === index);

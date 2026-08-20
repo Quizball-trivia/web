@@ -52,9 +52,9 @@ export function LobbySettings({
   const settings = lobby?.settings;
   const serverMode = settings?.gameMode ?? 'friendly_possession';
   const memberCount = lobby?.members.length ?? 0;
-  // Auction seats 3 by design, so a full auction lobby is at capacity — not an
-  // oversized 1v1 lobby that has to fall back to party standings mode.
-  const isPartyLocked = memberCount > 2 && serverMode !== 'auction' && serverMode !== 'football_grid';
+  // Auction seats 3 by design. Every other non-party mode, including Football
+  // Grid, must be locked out once a lobby has more than two members.
+  const isPartyLocked = memberCount > 2 && serverMode !== 'auction';
   const serverIsPublic = lobby?.isPublic ?? false;
   const serverIsRandom = settings?.friendlyRandom ?? true;
 

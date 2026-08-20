@@ -11,7 +11,11 @@ export type LobbyGameMode = 'friendly_possession' | 'friendly_party_quiz' | 'foo
  * Deliberately excludes 'auction': auction matches run on their own socket
  * protocol and route (`/auction`), never through the possession reducers.
  */
-export type MatchVariant = Exclude<LobbyGameMode, 'auction'>;
+export type MatchVariant = Exclude<LobbyGameMode, 'auction' | 'football_grid'>;
+export type LobbyChallengeGameMode = Extract<
+  LobbyGameMode,
+  'friendly_possession' | 'friendly_party_quiz' | 'football_grid'
+>;
 export type LobbyStatus = 'waiting' | 'active' | 'closed';
 export type MatchPhase =
   | 'NORMAL_PLAY'
@@ -1461,7 +1465,7 @@ export interface LobbyChallengeInvitePayload {
   inviteCode: string;
   fromUser: LobbyChallengeUser;
   expiresAt: string;
-  gameMode: 'friendly_possession' | 'friendly_party_quiz' | 'football_grid';
+  gameMode: LobbyChallengeGameMode;
 }
 
 export interface LobbyChallengeCreatedPayload {
@@ -1469,7 +1473,7 @@ export interface LobbyChallengeCreatedPayload {
   lobbyId: string;
   inviteCode: string;
   toUserId: string;
-  gameMode: 'friendly_possession' | 'friendly_party_quiz' | 'football_grid';
+  gameMode: LobbyChallengeGameMode;
 }
 
 export interface LobbyChallengeStatusPayload {
@@ -1514,7 +1518,7 @@ export interface ClientToServerEvents {
     data: { mode: MatchMode; isPublic?: boolean; correlationId?: string },
     ack?: (result: LobbyCreateResult) => void
   ) => void;
-  'lobby:challenge': (data: { toUserId: string; gameMode?: 'friendly_possession' | 'friendly_party_quiz' | 'football_grid' }) => void;
+  'lobby:challenge': (data: { toUserId: string; gameMode?: LobbyChallengeGameMode }) => void;
   'lobby:challenge_accept': (data: { invitationId: string }) => void;
   'lobby:challenge_decline': (data: { invitationId: string }) => void;
   'lobby:join_by_code': (

@@ -17,7 +17,7 @@
     },
     "fallback": {
       "type": "quizball-wildcard-badge",
-      "assetPath": "/assets/football-grid/wildcards/position-gk.svg"
+      "assetPath": "/assets/football-grid/wildcards/_launch-fallback.svg"
     },
     "runtimeResolved": true
   },
@@ -39,7 +39,7 @@
     },
     "fallback": {
       "type": "quizball-wildcard-badge",
-      "assetPath": "/assets/football-grid/wildcards/position-def.svg"
+      "assetPath": "/assets/football-grid/wildcards/_launch-fallback.svg"
     },
     "runtimeResolved": true
   },
@@ -61,7 +61,7 @@
     },
     "fallback": {
       "type": "quizball-wildcard-badge",
-      "assetPath": "/assets/football-grid/wildcards/position-mid.svg"
+      "assetPath": "/assets/football-grid/wildcards/_launch-fallback.svg"
     },
     "runtimeResolved": true
   },
@@ -83,7 +83,7 @@
     },
     "fallback": {
       "type": "quizball-wildcard-badge",
-      "assetPath": "/assets/football-grid/wildcards/position-fwd.svg"
+      "assetPath": "/assets/football-grid/wildcards/_launch-fallback.svg"
     },
     "runtimeResolved": true
   },
@@ -105,7 +105,7 @@
     },
     "fallback": {
       "type": "quizball-wildcard-badge",
-      "assetPath": "/assets/football-grid/wildcards/born-1960s.svg"
+      "assetPath": "/assets/football-grid/wildcards/_launch-fallback.svg"
     },
     "runtimeResolved": true
   },
@@ -127,7 +127,7 @@
     },
     "fallback": {
       "type": "quizball-wildcard-badge",
-      "assetPath": "/assets/football-grid/wildcards/born-1970s.svg"
+      "assetPath": "/assets/football-grid/wildcards/_launch-fallback.svg"
     },
     "runtimeResolved": true
   },
@@ -149,7 +149,7 @@
     },
     "fallback": {
       "type": "quizball-wildcard-badge",
-      "assetPath": "/assets/football-grid/wildcards/born-1980s.svg"
+      "assetPath": "/assets/football-grid/wildcards/_launch-fallback.svg"
     },
     "runtimeResolved": true
   },
@@ -171,7 +171,7 @@
     },
     "fallback": {
       "type": "quizball-wildcard-badge",
-      "assetPath": "/assets/football-grid/wildcards/born-1990s.svg"
+      "assetPath": "/assets/football-grid/wildcards/_launch-fallback.svg"
     },
     "runtimeResolved": true
   },
@@ -193,7 +193,7 @@
     },
     "fallback": {
       "type": "quizball-wildcard-badge",
-      "assetPath": "/assets/football-grid/wildcards/international-caps-100.svg"
+      "assetPath": "/assets/football-grid/wildcards/_launch-fallback.svg"
     },
     "runtimeResolved": true
   },
@@ -215,7 +215,7 @@
     },
     "fallback": {
       "type": "quizball-wildcard-badge",
-      "assetPath": "/assets/football-grid/wildcards/major-leagues-3.svg"
+      "assetPath": "/assets/football-grid/wildcards/_launch-fallback.svg"
     },
     "runtimeResolved": true
   },
@@ -237,7 +237,7 @@
     },
     "fallback": {
       "type": "quizball-wildcard-badge",
-      "assetPath": "/assets/football-grid/wildcards/titles-multiple-countries.svg"
+      "assetPath": "/assets/football-grid/wildcards/_launch-fallback.svg"
     },
     "runtimeResolved": true
   },
@@ -259,7 +259,7 @@
     },
     "fallback": {
       "type": "quizball-wildcard-badge",
-      "assetPath": "/assets/football-grid/wildcards/ballon-dor-winner.svg"
+      "assetPath": "/assets/football-grid/wildcards/_launch-fallback.svg"
     },
     "runtimeResolved": true
   }

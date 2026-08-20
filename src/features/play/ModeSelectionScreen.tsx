@@ -493,9 +493,9 @@ export function ModeSelectionScreen({
         />
         <MiniModeCard
           bg={colors.red.mid}
-          title={t('play.ticTacToeTitle')}
-          subtitle={t('play.ticTacToeSubtitle')}
-          iconSrc="/assets/tictactoe-card-icon.png?v=3"
+          title={t('play.footballGridTitle')}
+          subtitle={t('play.footballGridSubtitle')}
+          iconSrc="/assets/football-grid-card-icon.svg"
           badge={t('play.freeKicksNewBadge')}
           href="/football-grid?source=matchmaking"
         />

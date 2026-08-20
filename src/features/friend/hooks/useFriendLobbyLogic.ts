@@ -115,7 +115,7 @@ export function useFriendLobbyLogic({
     (state) => state.activeAuctionMatch?.matchId ?? null
   );
   const activeFootballGridMatchId = useFootballGridStore(
-    (state) => state.state?.matchId ?? null
+    (state) => state.state && state.state.phase !== 'terminal' ? state.state.matchId : null
   );
   const startSession = useGameSessionStore((state) => state.startSession);
 
@@ -659,6 +659,7 @@ export function useFriendLobbyLogic({
   };
 
   const handleLeaveLobby = () => {
+    useFootballGridStore.getState().clear();
     leavingRef.current = true;
     inviteJoinCancelledRef.current = true;
     createdRef.current = true;

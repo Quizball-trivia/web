@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { useRealtimeConnection } from '@/lib/realtime/useRealtimeConnection';
 import { useFootballGridStore } from '@/stores/footballGrid.store';
 import type { FootballGridState } from '@/lib/realtime/socket.types';
+import { createRealtimeCommandId } from '@/lib/realtime/command-id';
 
 interface UseRealtimeFootballGridOptions {
   enabled: boolean;
@@ -12,14 +13,12 @@ interface UseRealtimeFootballGridOptions {
   autoStart?: boolean;
 }
 
-function createCommandId(): string {
-  return globalThis.crypto.randomUUID();
-}
+const PENDING_COMMAND_TIMEOUT_MS = 5_000;
 
 function versionedCommand(state: FootballGridState) {
   return {
     matchId: state.matchId,
-    commandId: createCommandId(),
+    commandId: createRealtimeCommandId(),
     expectedStateVersion: state.stateVersion,
   };
 }
@@ -91,7 +90,7 @@ export function useRealtimeFootballGrid({
     if (!me || me.handoffAcknowledged) return;
     const key = `${state.matchId}:${state.stateVersion}`;
     if (handoffCommandRef.current?.key === key) return;
-    const commandId = createCommandId();
+    const commandId = createRealtimeCommandId();
     handoffCommandRef.current = { key, commandId };
     socket.emit('grid:match_found_ack', {
       matchId: state.matchId,
@@ -106,7 +105,7 @@ export function useRealtimeFootballGrid({
     if (!me || me.ready) return;
     const key = `${state.matchId}:${state.stateVersion}`;
     if (readyCommandRef.current?.key === key) return;
-    const commandId = createCommandId();
+    const commandId = createRealtimeCommandId();
     readyCommandRef.current = { key, commandId };
     socket.emit('grid:client_ready', {
       matchId: state.matchId,
@@ -115,15 +114,32 @@ export function useRealtimeFootballGrid({
     });
   }, [enabled, selfUserId, socket, state]);
 
+  const activeMatchId = state?.matchId ?? null;
+  const activeMatchIsTerminal = state?.phase === 'terminal';
+  const handoffAcknowledged = Boolean(
+    selfUserId && state?.players.find((player) => player.userId === selfUserId)?.handoffAcknowledged,
+  );
+
   useEffect(() => {
-    if (!enabled || !selfUserId || !state || state.phase === 'terminal') return;
-    const me = state.players.find((player) => player.userId === selfUserId);
-    if (!me?.handoffAcknowledged) return;
-    const heartbeat = () => socket.emit('grid:presence_heartbeat', { matchId: state.matchId });
+    if (!enabled || !activeMatchId || activeMatchIsTerminal || !handoffAcknowledged) return;
+    const heartbeat = () => socket.emit('grid:presence_heartbeat', { matchId: activeMatchId });
     heartbeat();
     const intervalId = window.setInterval(heartbeat, 5_000);
     return () => window.clearInterval(intervalId);
-  }, [enabled, selfUserId, socket, state]);
+  }, [activeMatchId, activeMatchIsTerminal, enabled, handoffAcknowledged, socket]);
+
+  useEffect(() => {
+    if (!enabled || !pendingCommandId) return;
+    const timerId = window.setTimeout(() => {
+      const latest = useFootballGridStore.getState();
+      if (latest.pendingCommandId !== pendingCommandId) return;
+      latest.markCommandPending(null);
+      if (latest.state?.matchId) {
+        socket.emit('grid:resync', { matchId: latest.state.matchId });
+      }
+    }, PENDING_COMMAND_TIMEOUT_MS);
+    return () => window.clearTimeout(timerId);
+  }, [enabled, pendingCommandId, socket]);
 
   // The terminal outbox is acknowledged only after React has committed the
   // full results payload. A reload before this effect simply causes the server
@@ -208,7 +224,7 @@ export function useRealtimeFootballGrid({
     if (!current.completed || !current.rematch || current.rematch.status !== 'pending') return false;
     socket.emit('grid:rematch_accept', {
       matchId: current.completed.matchId,
-      commandId: createCommandId(),
+      commandId: createRealtimeCommandId(),
       expectedSeriesVersion: current.rematch.seriesVersion,
     });
     return true;
