@@ -23,6 +23,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { QuitMatchModal } from '@/components/match/QuitMatchModal';
 import { useLocale } from '@/contexts/LocaleContext';
+import { footballGridAssetUrl } from '@/lib/football-grid/assets';
 import { usePlayer } from '@/contexts/PlayerContext';
 import { useAuthStore } from '@/stores/auth.store';
 import type {
@@ -149,6 +150,9 @@ function useRemaining(deadlineAt: string | null, serverTimeOffsetMs: number): nu
   return remaining;
 }
 
+const GRID_AVATAR_FALLBACK = footballGridAssetUrl('/assets/store/avatars/avatar_male_white.webp')!;
+const resolveGridAvatarAsset = (asset: string) => footballGridAssetUrl(asset) ?? GRID_AVATAR_FALLBACK;
+
 export function PlayerSeat({
   name,
   avatar,
@@ -169,7 +173,7 @@ export function PlayerSeat({
       active ? (color === 'blue' ? 'border-brand-blue-light bg-brand-blue/20' : 'border-brand-yellow bg-brand-yellow/10') : 'border-white/10 bg-white/[0.04]')}
     >
       <div className={cn('rounded-full p-0.5', color === 'blue' ? 'bg-brand-blue' : 'bg-brand-yellow')}>
-        <AvatarDisplay customization={customization ?? { base: avatar }} size="sm" />
+        <AvatarDisplay customization={customization ?? { base: avatar }} size="sm" assetResolver={resolveGridAvatarAsset} />
       </div>
       <div className="min-w-0">
         <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-white/45">{label}</p>
@@ -204,7 +208,7 @@ function ClaimedCell({ claim, isMine, claimedLabel }: { claim: FootballGridClaim
 
 function ClaimPortrait({ claim }: { claim: FootballGridClaimState }) {
   const [failed, setFailed] = useState(false);
-  const source = claim.imageUrl;
+  const source = footballGridAssetUrl(claim.imageUrl);
   const initials = (claim.displayName ?? '?')
     .split(/\s+/)
     .map((part) => part[0])
@@ -297,7 +301,7 @@ export function SearchScreen({
 
         <div className="relative mx-auto my-10 grid max-w-sm grid-cols-[1fr_auto_1fr] items-center gap-4">
           <div className="rounded-[28px] border border-brand-blue-light bg-brand-blue/15 p-4 shadow-[0_0_40px_rgba(22,69,255,.18)]">
-            <AvatarDisplay customization={customization ?? { base: avatar }} size="lg" className="mx-auto" />
+            <AvatarDisplay customization={customization ?? { base: avatar }} size="lg" className="mx-auto" assetResolver={resolveGridAvatarAsset} />
             <p className="mt-2 truncate text-sm font-black">{playerName}</p>
           </div>
           <div className="relative grid size-12 place-items-center rounded-full bg-brand-yellow text-lg font-black text-surface-page">

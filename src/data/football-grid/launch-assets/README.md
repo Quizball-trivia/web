@@ -11,6 +11,8 @@ An entry is launch-safe only when it has:
 - source/provider and rights-review metadata for third-party visuals;
 - generated coverage from `scripts/build-football-grid-assets.mjs` and a passing
   report from `scripts/validate-football-grid-assets.mjs`.
+- a verified entry in `cdn-manifest.json`, published under the immutable
+  `imgs/football-grid/v1` first-party CDN prefix.
 
 Asset families:
 
@@ -26,7 +28,19 @@ Asset families:
 - `coverage.json`: generated gate totals. Every `runtimeUnresolved` value must
   be zero and every `rightsCleared` value must equal its family total before
   launch.
+- `cdn-manifest.json`: checksums and public CDN URLs for every packaged Grid
+  image, icon, flag, fallback, and the `/play` card icon.
 
 Third-party marks and portraits still require the applicable provider/trademark
 review. When approval is absent or an image fails, the renderer must use the
 recorded Quizball fallback; it must never hotlink an unknown replacement.
+
+Runtime delivery policy:
+
+- `npm run grid-assets:publish` uploads every packaged Grid asset to the public
+  `imgs/football-grid/v1` Supabase CDN prefix and verifies every object;
+- backend `npm run grid:cdn:players` downloads and normalizes player portraits,
+  uploads them to that same prefix, records the original URL in provenance
+  metadata, and commits database URLs in guarded batches;
+- the frontend rejects any Grid image URL outside the Quizball Supabase public
+  `imgs` bucket or the configured first-party Grid CDN origin.

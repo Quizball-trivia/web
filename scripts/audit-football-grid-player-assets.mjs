@@ -25,7 +25,7 @@ const players = [];
 for (let from = 0; ; from += pageSize) {
   const { data, error } = await supabase
     .from('football_players')
-    .select('id,name,display_name,image_url,data_quality_status,active_status')
+    .select('id,name,display_name,image_url,data_quality_status,active_status,source_payload')
     .order('id', { ascending: true })
     .range(from, from + pageSize - 1);
   if (error) throw error;
@@ -49,6 +49,20 @@ const malformedImageUrls = withImage.filter((player) => {
 });
 const malformedImageUrlIds = new Set(malformedImageUrls.map((player) => player.id));
 const parsableImages = withImage.filter((player) => !malformedImageUrlIds.has(player.id));
+const firstPartyOrigin = new URL(url).origin;
+const isFirstPartyCdnUrl = (value) => {
+  try {
+    const candidate = new URL(value);
+    return candidate.origin === firstPartyOrigin
+      && candidate.pathname.startsWith('/storage/v1/object/public/imgs/');
+  } catch {
+    return false;
+  }
+};
+const externalPortraits = parsableImages.filter((player) => !isFirstPartyCdnUrl(player.image_url));
+const generatedFallbacks = usable.filter((player) => (
+  player.source_payload?.image_cdn?.used_owned_fallback === true
+));
 const domains = Object.entries(parsableImages.reduce((result, player) => {
   const domain = new URL(player.image_url).hostname;
   result[domain] = (result[domain] ?? 0) + 1;
@@ -72,7 +86,11 @@ for (const domain of domains) {
   }
 }
 
-const runtimeUnresolved = missingEnglishLabel.length + missingGeorgianLabel.length + malformedImageUrls.length;
+const runtimeUnresolved = missingEnglishLabel.length
+  + missingGeorgianLabel.length
+  + malformedImageUrls.length
+  + withFallback.length
+  + externalPortraits.length;
 const summary = {
   auditedAt: new Date().toISOString(),
   source: 'public.football_players',
@@ -83,18 +101,19 @@ const summary = {
     result[player.data_quality_status ?? 'missing'] = (result[player.data_quality_status ?? 'missing'] ?? 0) + 1;
     return result;
   }, {})).map(([status, count]) => ({ status, count })),
-  primaryPortraits: withImage.length,
-  deterministicFallbacks: withFallback.length,
-  fallbackPlayerIds: withFallback.map((player) => player.id),
+  primaryPortraits: withImage.length - generatedFallbacks.length,
+  deterministicFallbacks: generatedFallbacks.length,
+  fallbackPlayerIds: generatedFallbacks.map((player) => player.id),
   labelPolicy: {
     en: 'display_name.en, then canonical name',
     ka: 'display_name.ka, then official canonical name',
   },
   imagePolicy: {
-    primary: 'validated HTTPS provider URL',
-    fallback: 'Quizball generated initials avatar',
+    primary: 'validated first-party Supabase CDN URL',
+    fallback: 'Quizball-generated initials portrait on the first-party CDN',
   },
   domains,
+  externalPortraits: externalPortraits.length,
   providerProbes: probeRows,
   malformedImageUrls: malformedImageUrls.map((player) => player.id),
   runtimeUnresolved,

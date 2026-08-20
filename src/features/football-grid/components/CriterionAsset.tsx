@@ -10,6 +10,7 @@ import leagues from '@/data/football-grid/launch-assets/leagues.json';
 import managers from '@/data/football-grid/launch-assets/managers.json';
 import competitions from '@/data/football-grid/launch-assets/competitions.json';
 import wildcards from '@/data/football-grid/launch-assets/wildcards.json';
+import { footballGridAssetUrl } from '@/lib/football-grid/assets';
 import type { FootballGridCriterionView } from '@/lib/realtime/socket.types';
 import { cn } from '@/lib/utils';
 
@@ -52,7 +53,10 @@ function isLaunchClearedPrimary(item: RegistryItem): boolean {
 
 function resolveRegistryAssets(criterion: FootballGridCriterionView): string[] {
   const key = criterion.assetKey?.trim() ?? '';
-  if (key.startsWith('/')) return [key];
+  if (key.startsWith('/')) {
+    const resolved = footballGridAssetUrl(key);
+    return resolved ? [resolved] : [];
+  }
 
   const candidates = [key, criterion.key, criterion.id, criterion.labelEn, criterion.labelKa]
     .map(comparable)
@@ -77,9 +81,10 @@ function resolveRegistryAssets(criterion: FootballGridCriterionView): string[] {
     return [
       isLaunchClearedPrimary(item) ? item.primary?.publicUrl ?? item.primary?.assetPath : null,
       item.fallback?.assetPath,
-    ].filter((value): value is string => Boolean(value));
+    ].map(footballGridAssetUrl).filter((value): value is string => Boolean(value));
   }
   return [item.assetPath, item.primary?.assetPath, item.fallback?.assetPath]
+    .map(footballGridAssetUrl)
     .filter((value, index, values): value is string => Boolean(value) && values.indexOf(value) === index);
 }
 
