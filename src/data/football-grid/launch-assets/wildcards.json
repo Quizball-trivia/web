@@ -1,0 +1,266 @@
+[
+  {
+    "id": "position-gk",
+    "labelEn": "Goalkeeper",
+    "labelKa": "მეკარე",
+    "short": "GK",
+    "icon": "hand",
+    "color": "#f59e0b",
+    "primary": {
+      "type": "quizball-wildcard-badge",
+      "assetPath": "/assets/football-grid/wildcards/position-gk.svg",
+      "source": {
+        "provider": "Quizball",
+        "license": "proprietary",
+        "rightsStatus": "owned"
+      }
+    },
+    "fallback": {
+      "type": "quizball-wildcard-badge",
+      "assetPath": "/assets/football-grid/wildcards/position-gk.svg"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "position-def",
+    "labelEn": "Defender",
+    "labelKa": "მცველი",
+    "short": "DEF",
+    "icon": "shield",
+    "color": "#2563eb",
+    "primary": {
+      "type": "quizball-wildcard-badge",
+      "assetPath": "/assets/football-grid/wildcards/position-def.svg",
+      "source": {
+        "provider": "Quizball",
+        "license": "proprietary",
+        "rightsStatus": "owned"
+      }
+    },
+    "fallback": {
+      "type": "quizball-wildcard-badge",
+      "assetPath": "/assets/football-grid/wildcards/position-def.svg"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "position-mid",
+    "labelEn": "Midfielder",
+    "labelKa": "ნახევარმცველი",
+    "short": "MID",
+    "icon": "route",
+    "color": "#16a34a",
+    "primary": {
+      "type": "quizball-wildcard-badge",
+      "assetPath": "/assets/football-grid/wildcards/position-mid.svg",
+      "source": {
+        "provider": "Quizball",
+        "license": "proprietary",
+        "rightsStatus": "owned"
+      }
+    },
+    "fallback": {
+      "type": "quizball-wildcard-badge",
+      "assetPath": "/assets/football-grid/wildcards/position-mid.svg"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "position-fwd",
+    "labelEn": "Forward",
+    "labelKa": "თავდამსხმელი",
+    "short": "FWD",
+    "icon": "target",
+    "color": "#dc2626",
+    "primary": {
+      "type": "quizball-wildcard-badge",
+      "assetPath": "/assets/football-grid/wildcards/position-fwd.svg",
+      "source": {
+        "provider": "Quizball",
+        "license": "proprietary",
+        "rightsStatus": "owned"
+      }
+    },
+    "fallback": {
+      "type": "quizball-wildcard-badge",
+      "assetPath": "/assets/football-grid/wildcards/position-fwd.svg"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "born-1960s",
+    "labelEn": "Born in the 1960s",
+    "labelKa": "დაბადებული 1960-იანებში",
+    "short": "60s",
+    "icon": "calendar",
+    "color": "#78716c",
+    "primary": {
+      "type": "quizball-wildcard-badge",
+      "assetPath": "/assets/football-grid/wildcards/born-1960s.svg",
+      "source": {
+        "provider": "Quizball",
+        "license": "proprietary",
+        "rightsStatus": "owned"
+      }
+    },
+    "fallback": {
+      "type": "quizball-wildcard-badge",
+      "assetPath": "/assets/football-grid/wildcards/born-1960s.svg"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "born-1970s",
+    "labelEn": "Born in the 1970s",
+    "labelKa": "დაბადებული 1970-იანებში",
+    "short": "70s",
+    "icon": "calendar",
+    "color": "#a16207",
+    "primary": {
+      "type": "quizball-wildcard-badge",
+      "assetPath": "/assets/football-grid/wildcards/born-1970s.svg",
+      "source": {
+        "provider": "Quizball",
+        "license": "proprietary",
+        "rightsStatus": "owned"
+      }
+    },
+    "fallback": {
+      "type": "quizball-wildcard-badge",
+      "assetPath": "/assets/football-grid/wildcards/born-1970s.svg"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "born-1980s",
+    "labelEn": "Born in the 1980s",
+    "labelKa": "დაბადებული 1980-იანებში",
+    "short": "80s",
+    "icon": "calendar",
+    "color": "#0f766e",
+    "primary": {
+      "type": "quizball-wildcard-badge",
+      "assetPath": "/assets/football-grid/wildcards/born-1980s.svg",
+      "source": {
+        "provider": "Quizball",
+        "license": "proprietary",
+        "rightsStatus": "owned"
+      }
+    },
+    "fallback": {
+      "type": "quizball-wildcard-badge",
+      "assetPath": "/assets/football-grid/wildcards/born-1980s.svg"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "born-1990s",
+    "labelEn": "Born in the 1990s",
+    "labelKa": "დაბადებული 1990-იანებში",
+    "short": "90s",
+    "icon": "calendar",
+    "color": "#7c3aed",
+    "primary": {
+      "type": "quizball-wildcard-badge",
+      "assetPath": "/assets/football-grid/wildcards/born-1990s.svg",
+      "source": {
+        "provider": "Quizball",
+        "license": "proprietary",
+        "rightsStatus": "owned"
+      }
+    },
+    "fallback": {
+      "type": "quizball-wildcard-badge",
+      "assetPath": "/assets/football-grid/wildcards/born-1990s.svg"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "international-caps-100",
+    "labelEn": "100+ international caps",
+    "labelKa": "100+ მატჩი ნაკრებში",
+    "short": "100+",
+    "icon": "badge-100",
+    "color": "#0891b2",
+    "primary": {
+      "type": "quizball-wildcard-badge",
+      "assetPath": "/assets/football-grid/wildcards/international-caps-100.svg",
+      "source": {
+        "provider": "Quizball",
+        "license": "proprietary",
+        "rightsStatus": "owned"
+      }
+    },
+    "fallback": {
+      "type": "quizball-wildcard-badge",
+      "assetPath": "/assets/football-grid/wildcards/international-caps-100.svg"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "major-leagues-3",
+    "labelEn": "Played in 3+ major leagues",
+    "labelKa": "ნათამაშები 3+ ტოპ ლიგაში",
+    "short": "3+",
+    "icon": "layers",
+    "color": "#4f46e5",
+    "primary": {
+      "type": "quizball-wildcard-badge",
+      "assetPath": "/assets/football-grid/wildcards/major-leagues-3.svg",
+      "source": {
+        "provider": "Quizball",
+        "license": "proprietary",
+        "rightsStatus": "owned"
+      }
+    },
+    "fallback": {
+      "type": "quizball-wildcard-badge",
+      "assetPath": "/assets/football-grid/wildcards/major-leagues-3.svg"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "titles-multiple-countries",
+    "labelEn": "League champion in multiple countries",
+    "labelKa": "ჩემპიონი რამდენიმე ქვეყანაში",
+    "short": "2C+",
+    "icon": "crown",
+    "color": "#b45309",
+    "primary": {
+      "type": "quizball-wildcard-badge",
+      "assetPath": "/assets/football-grid/wildcards/titles-multiple-countries.svg",
+      "source": {
+        "provider": "Quizball",
+        "license": "proprietary",
+        "rightsStatus": "owned"
+      }
+    },
+    "fallback": {
+      "type": "quizball-wildcard-badge",
+      "assetPath": "/assets/football-grid/wildcards/titles-multiple-countries.svg"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ballon-dor-winner",
+    "labelEn": "Ballon d’Or winner",
+    "labelKa": "ოქროს ბურთის მფლობელი",
+    "short": "B’D",
+    "icon": "medal",
+    "color": "#ca8a04",
+    "primary": {
+      "type": "quizball-wildcard-badge",
+      "assetPath": "/assets/football-grid/wildcards/ballon-dor-winner.svg",
+      "source": {
+        "provider": "Quizball",
+        "license": "proprietary",
+        "rightsStatus": "owned"
+      }
+    },
+    "fallback": {
+      "type": "quizball-wildcard-badge",
+      "assetPath": "/assets/football-grid/wildcards/ballon-dor-winner.svg"
+    },
+    "runtimeResolved": true
+  }
+]

@@ -2,11 +2,17 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X as XIcon, Trophy, Bot, Handshake } from 'lucide-react';
+import { X as XIcon, Trophy, UserRound, Handshake } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { MiniGameShell, StatPill } from './MiniGameShell';
 import { ClubCrest, FlagChip } from './Badges';
 import { GRID_CONFIGS, type GridAnswer, type GridConfig } from '../data/footballGrid';
+import {
+  trackFootballGridDemoCompleted,
+  trackFootballGridEngagementEnded,
+  trackFootballGridPlayStarted,
+  trackFootballGridViewed,
+} from '../footballGrid.analytics';
 import { matchesName } from '../lib/matching';
 import { useMiniT } from '../lib/i18n';
 
@@ -32,6 +38,18 @@ interface Strike {
   y1: number;
   x2: number;
   y2: number;
+}
+
+interface VisitAnalytics {
+  lastGridId: string;
+  matchesStarted: number;
+  matchesCompleted: number;
+  cellSelections: number;
+  answersSubmitted: number;
+  correctAnswers: number;
+  wrongAnswers: number;
+  passes: number;
+  timeouts: number;
 }
 
 function lineWinner(board: (Owner | null)[]): { owner: Owner; line: number[] } | null {
@@ -128,6 +146,26 @@ export function FootballGrid({ backHref }: { backHref?: string } = {}) {
   const boardRef = useRef(board);
   const gridWrapRef = useRef<HTMLDivElement>(null);
   const cellRefs = useRef<Array<HTMLButtonElement | null>>([]);
+  const visitStartedAtRef = useRef(Date.now());
+  const activeStartedAtRef = useRef<number | null>(null);
+  const activeDurationMsRef = useRef(0);
+  const viewTrackedRef = useRef(false);
+  const engagementEndedRef = useRef(false);
+  const engagementCleanupTimerRef = useRef<number | null>(null);
+  const matchStartedAtRef = useRef<number | null>(null);
+  const matchTurnsRef = useRef(0);
+  const matchCompletedRef = useRef(false);
+  const visitAnalyticsRef = useRef<VisitAnalytics>({
+    lastGridId: GRID_CONFIGS[0].id,
+    matchesStarted: 0,
+    matchesCompleted: 0,
+    cellSelections: 0,
+    answersSubmitted: 0,
+    correctAnswers: 0,
+    wrongAnswers: 0,
+    passes: 0,
+    timeouts: 0,
+  });
   useEffect(() => {
     boardRef.current = board;
   }, [board]);
@@ -135,6 +173,73 @@ export function FootballGrid({ backHref }: { backHref?: string } = {}) {
   const grid: GridConfig = GRID_CONFIGS[gridIndex % GRID_CONFIGS.length];
   const yourCells = board.filter((c) => c === 'you').length;
   const aiCells = board.filter((c) => c === 'ai').length;
+
+  // One view and one aggregate engagement event per visit. We intentionally do
+  // not capture typed answers or every tap; the aggregate counters answer the
+  // product questions without leaking free-text or creating noisy event volume.
+  useEffect(() => {
+    if (engagementCleanupTimerRef.current !== null) {
+      window.clearTimeout(engagementCleanupTimerRef.current);
+      engagementCleanupTimerRef.current = null;
+    }
+    const initialContext = {
+      surface: 'demo',
+      gridId: GRID_CONFIGS[0].id,
+      opponentType: 'bot',
+    } as const;
+    if (!viewTrackedRef.current) {
+      viewTrackedRef.current = true;
+      trackFootballGridViewed(initialContext);
+    }
+    activeStartedAtRef.current = document.visibilityState === 'visible' ? Date.now() : null;
+
+    const accrueActiveTime = (now: number) => {
+      if (activeStartedAtRef.current === null) return;
+      activeDurationMsRef.current += Math.max(0, now - activeStartedAtRef.current);
+      activeStartedAtRef.current = null;
+    };
+    const handleVisibilityChange = () => {
+      const now = Date.now();
+      if (document.visibilityState === 'visible') {
+        if (activeStartedAtRef.current === null) activeStartedAtRef.current = now;
+      } else {
+        accrueActiveTime(now);
+      }
+    };
+    const finishEngagement = () => {
+      if (engagementEndedRef.current) return;
+      engagementEndedRef.current = true;
+      const now = Date.now();
+      accrueActiveTime(now);
+      const stats = visitAnalyticsRef.current;
+      trackFootballGridEngagementEnded({
+        surface: 'demo',
+        gridId: stats.lastGridId,
+        opponentType: 'bot',
+        elapsedSeconds: (now - visitStartedAtRef.current) / 1_000,
+        activeSeconds: activeDurationMsRef.current / 1_000,
+        matchesStarted: stats.matchesStarted,
+        matchesCompleted: stats.matchesCompleted,
+        cellSelections: stats.cellSelections,
+        answersSubmitted: stats.answersSubmitted,
+        correctAnswers: stats.correctAnswers,
+        wrongAnswers: stats.wrongAnswers,
+        passes: stats.passes,
+        timeouts: stats.timeouts,
+      });
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('pagehide', finishEngagement);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('pagehide', finishEngagement);
+      // React Strict Mode performs an immediate setup/cleanup/setup cycle in
+      // development. Deferring the cleanup lets the second setup cancel it,
+      // while a real route change still emits the visit summary.
+      engagementCleanupTimerRef.current = window.setTimeout(finishEngagement, 0);
+    };
+  }, []);
 
   useEffect(() => () => timers.current.forEach((id) => window.clearTimeout(id)), []);
   const later = (fn: () => void, ms: number) => {
@@ -179,6 +284,8 @@ export function FootballGrid({ backHref }: { backHref?: string } = {}) {
       setRemaining(Math.max(0, left));
       if (left <= 0) {
         window.clearInterval(id);
+        visitAnalyticsRef.current.timeouts += 1;
+        matchTurnsRef.current += 1;
         setFlash('timeout');
         later(() => {
           setFlash(null);
@@ -191,7 +298,18 @@ export function FootballGrid({ backHref }: { backHref?: string } = {}) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [phase, activeCell]);
 
-  const start = () => {
+  const beginGame = (targetGridIndex: number) => {
+    const targetGrid = GRID_CONFIGS[targetGridIndex % GRID_CONFIGS.length];
+    visitAnalyticsRef.current.lastGridId = targetGrid.id;
+    visitAnalyticsRef.current.matchesStarted += 1;
+    matchStartedAtRef.current = Date.now();
+    matchTurnsRef.current = 0;
+    matchCompletedRef.current = false;
+    trackFootballGridPlayStarted({
+      surface: 'demo',
+      gridId: targetGrid.id,
+      opponentType: 'bot',
+    });
     setBoard(Array(9).fill(null));
     setClaims({});
     setActiveCell(null);
@@ -204,8 +322,36 @@ export function FootballGrid({ backHref }: { backHref?: string } = {}) {
     setPhase('pick');
   };
 
+  const start = () => beginGame(gridIndex);
+
   const settle = (nextBoard: (Owner | null)[]): boolean => {
     const win = lineWinner(nextBoard);
+    const finishedResult = win
+      ? win.owner === 'you' ? 'win' : 'loss'
+      : nextBoard.every((c) => c !== null)
+        ? (() => {
+            const humanClaims = nextBoard.filter((c) => c === 'you').length;
+            const opponentClaims = nextBoard.filter((c) => c === 'ai').length;
+            return humanClaims > opponentClaims ? 'win' : opponentClaims > humanClaims ? 'loss' : 'draw';
+          })()
+        : null;
+    if (finishedResult && !matchCompletedRef.current) {
+      matchCompletedRef.current = true;
+      visitAnalyticsRef.current.matchesCompleted += 1;
+      trackFootballGridDemoCompleted({
+        surface: 'demo',
+        gridId: grid.id,
+        opponentType: 'bot',
+        result: finishedResult,
+        completionReason: win ? 'line' : 'board_full',
+        durationSeconds: matchStartedAtRef.current
+          ? (Date.now() - matchStartedAtRef.current) / 1_000
+          : 0,
+        turns: matchTurnsRef.current,
+        humanClaims: nextBoard.filter((c) => c === 'you').length,
+        opponentClaims: nextBoard.filter((c) => c === 'ai').length,
+      });
+    }
     if (win) {
       setWinLine(win.line);
       setResult(win.owner);
@@ -228,6 +374,7 @@ export function FootballGrid({ backHref }: { backHref?: string } = {}) {
     later(() => {
       const prev = boardRef.current;
       const cell = pickAiCell(prev);
+      matchTurnsRef.current += 1;
       if (Math.random() < AI_SUCCESS) {
         const row = Math.floor(cell / 3);
         const col = cell % 3;
@@ -250,6 +397,7 @@ export function FootballGrid({ backHref }: { backHref?: string } = {}) {
 
   const pickCell = (i: number) => {
     if (phase !== 'pick' || board[i] !== null) return;
+    visitAnalyticsRef.current.cellSelections += 1;
     setActiveCell(i);
     setInput('');
     deadlineRef.current = Date.now() + ANSWER_MS;
@@ -263,8 +411,11 @@ export function FootballGrid({ backHref }: { backHref?: string } = {}) {
     const row = Math.floor(activeCell / 3);
     const col = activeCell % 3;
     const answers = grid.cells[row][col];
+    visitAnalyticsRef.current.answersSubmitted += 1;
+    matchTurnsRef.current += 1;
     const hit = answers.find((a) => matchesName(input, [a.name, ...a.accepted]).ok);
     if (hit) {
+      visitAnalyticsRef.current.correctAnswers += 1;
       const cell = activeCell;
       const next = [...boardRef.current];
       next[cell] = 'you';
@@ -274,6 +425,7 @@ export function FootballGrid({ backHref }: { backHref?: string } = {}) {
       setInput('');
       if (!settle(next)) startAiTurn();
     } else {
+      visitAnalyticsRef.current.wrongAnswers += 1;
       setFlash('wrong');
       later(() => {
         setFlash(null);
@@ -286,14 +438,17 @@ export function FootballGrid({ backHref }: { backHref?: string } = {}) {
 
   const passTurn = () => {
     if (phase !== 'answer') return;
+    visitAnalyticsRef.current.passes += 1;
+    matchTurnsRef.current += 1;
     setActiveCell(null);
     setInput('');
     startAiTurn();
   };
 
   const nextGame = () => {
-    setGridIndex((g) => g + 1);
-    start();
+    const nextGridIndex = gridIndex + 1;
+    setGridIndex(nextGridIndex);
+    beginGame(nextGridIndex);
   };
 
   const activeRow = activeCell !== null ? Math.floor(activeCell / 3) : null;
@@ -306,14 +461,14 @@ export function FootballGrid({ backHref }: { backHref?: string } = {}) {
       title={t('Football Tic Tac Toe')}
       subtitle={t('Claim cells with players — three in a row wins')}
       accent="#1CB0F6"
-      headerRight={<StatPill label={t('You · AI')} value={`${yourCells} · ${aiCells}`} color="#1CB0F6" />}
+      headerRight={<StatPill label={t('You · Opponent')} value={`${yourCells} · ${aiCells}`} color="#1CB0F6" />}
     >
       {phase === 'idle' ? (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
           <div className="text-5xl">⚽</div>
           <div className="font-poppins text-xl font-black uppercase text-brand-cyan">{t('Football Tic Tac Toe')}</div>
           <p className="max-w-xs font-poppins text-sm font-semibold leading-snug text-white/60">
-            {t('Pick a cell and name a player who played for that club AND that nation. The AI answers back — line up three to win.')}
+            {t('Pick a cell and name a player who played for that club AND that nation. Your opponent answers back — line up three to win.')}
           </p>
           <button type="button" onClick={start} className="h-14 w-full max-w-xs rounded-2xl bg-brand-cyan font-poppins text-lg font-black uppercase tracking-wide text-black">
             {t('Start match')}
@@ -434,7 +589,7 @@ export function FootballGrid({ backHref }: { backHref?: string } = {}) {
               {phase === 'ai' && (
                 <motion.div key="ai" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="rounded-2xl border-2 border-brand-red-soft/30 bg-brand-red-soft/[0.06] p-3 text-center">
                   <span className="font-poppins text-sm font-black uppercase tracking-wide text-brand-red-soft">
-                    {aiNote === 'missed' ? t('AI blanked — your turn!') : t('AI is thinking…')}
+                    {aiNote === 'missed' ? t('Opponent blanked — your turn!') : t('Opponent is thinking…')}
                   </span>
                 </motion.div>
               )}
@@ -465,13 +620,13 @@ export function FootballGrid({ backHref }: { backHref?: string } = {}) {
                     {result === 'you' ? (
                       <Trophy className="size-7 text-brand-yellow" />
                     ) : result === 'ai' ? (
-                      <Bot className="size-7 text-brand-red-soft" />
+                      <UserRound className="size-7 text-brand-red-soft" />
                     ) : (
                       <Handshake className="size-7 text-white/60" />
                     )}
                   </motion.div>
                   <div className={`font-poppins text-2xl font-black uppercase ${result === 'you' ? 'text-brand-green-light' : result === 'ai' ? 'text-brand-red' : 'text-white/70'}`}>
-                    {result === 'you' ? t('You win!') : result === 'ai' ? t('AI wins') : t('Draw')}
+                    {result === 'you' ? t('You win!') : result === 'ai' ? t('Opponent wins') : t('Draw')}
                   </div>
                   <p className="font-poppins text-xs font-semibold text-white/50">
                     {winLine ? t('Three in a row!') : t('Board full — {a} cells vs {b}', { a: yourCells, b: aiCells })}
@@ -481,7 +636,7 @@ export function FootballGrid({ backHref }: { backHref?: string } = {}) {
                       {t('You')} {yourCells}
                     </span>
                     <span className="rounded-full bg-brand-red-soft/15 px-3 py-1 font-poppins text-[11px] font-black tabular-nums text-brand-red-soft">
-                      AI {aiCells}
+                      {t('Opponent')} {aiCells}
                     </span>
                   </div>
                   <button
@@ -517,7 +672,7 @@ function RowCells({
   const t = useMiniT();
   return (
     <>
-      <div className="flex items-center justify-center rounded-xl bg-brand-blue">
+      <div className="flex items-center justify-center overflow-hidden rounded-xl bg-brand-blue">
         <ClubCrest club={club} size={26} />
       </div>
       {[0, 1, 2].map((col) => {

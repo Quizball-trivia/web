@@ -1,0 +1,43 @@
+{
+  "generatedAt": "2026-08-19T18:47:46.146Z",
+  "fetchMode": "provider-assets-fetched",
+  "families": {
+    "clubs": {
+      "total": 276,
+      "primaryReady": 276,
+      "fallbackReady": 276,
+      "runtimeUnresolved": 0
+    },
+    "countries": {
+      "total": 271,
+      "primaryReady": 271,
+      "fallbackReady": 271,
+      "runtimeUnresolved": 0
+    },
+    "managers": {
+      "total": 60,
+      "primaryReady": 60,
+      "fallbackReady": 60,
+      "runtimeUnresolved": 0
+    },
+    "leagues": {
+      "total": 15,
+      "primaryReady": 15,
+      "fallbackReady": 15,
+      "runtimeUnresolved": 0
+    },
+    "competitions": {
+      "total": 24,
+      "primaryReady": 24,
+      "fallbackReady": 24,
+      "runtimeUnresolved": 0
+    },
+    "wildcards": {
+      "total": 12,
+      "primaryReady": 12,
+      "fallbackReady": 12,
+      "runtimeUnresolved": 0
+    }
+  },
+  "runtimeUnresolved": 0
+}

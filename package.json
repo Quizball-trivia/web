@@ -16,7 +16,10 @@
     "colors:audit": "node scripts/audit-brand-colors.mjs --report",
     "colors:check": "node scripts/audit-brand-colors.mjs",
     "colors:update": "node scripts/audit-brand-colors.mjs --update",
-    "colors:unmapped": "node scripts/audit-brand-colors.mjs --unmapped"
+    "colors:unmapped": "node scripts/audit-brand-colors.mjs --unmapped",
+    "grid-assets:build": "node scripts/build-football-grid-assets.mjs --fetch",
+    "grid-assets:check-players": "node scripts/audit-football-grid-player-assets.mjs",
+    "grid-assets:validate": "node scripts/validate-football-grid-assets.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

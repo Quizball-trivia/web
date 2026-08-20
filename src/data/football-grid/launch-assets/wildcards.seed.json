@@ -1,0 +1,14 @@
+[
+  { "id": "position-gk", "labelEn": "Goalkeeper", "labelKa": "მეკარე", "short": "GK", "icon": "hand", "color": "#f59e0b" },
+  { "id": "position-def", "labelEn": "Defender", "labelKa": "მცველი", "short": "DEF", "icon": "shield", "color": "#2563eb" },
+  { "id": "position-mid", "labelEn": "Midfielder", "labelKa": "ნახევარმცველი", "short": "MID", "icon": "route", "color": "#16a34a" },
+  { "id": "position-fwd", "labelEn": "Forward", "labelKa": "თავდამსხმელი", "short": "FWD", "icon": "target", "color": "#dc2626" },
+  { "id": "born-1960s", "labelEn": "Born in the 1960s", "labelKa": "დაბადებული 1960-იანებში", "short": "60s", "icon": "calendar", "color": "#78716c" },
+  { "id": "born-1970s", "labelEn": "Born in the 1970s", "labelKa": "დაბადებული 1970-იანებში", "short": "70s", "icon": "calendar", "color": "#a16207" },
+  { "id": "born-1980s", "labelEn": "Born in the 1980s", "labelKa": "დაბადებული 1980-იანებში", "short": "80s", "icon": "calendar", "color": "#0f766e" },
+  { "id": "born-1990s", "labelEn": "Born in the 1990s", "labelKa": "დაბადებული 1990-იანებში", "short": "90s", "icon": "calendar", "color": "#7c3aed" },
+  { "id": "international-caps-100", "labelEn": "100+ international caps", "labelKa": "100+ მატჩი ნაკრებში", "short": "100+", "icon": "badge-100", "color": "#0891b2" },
+  { "id": "major-leagues-3", "labelEn": "Played in 3+ major leagues", "labelKa": "ნათამაშები 3+ ტოპ ლიგაში", "short": "3+", "icon": "layers", "color": "#4f46e5" },
+  { "id": "titles-multiple-countries", "labelEn": "League champion in multiple countries", "labelKa": "ჩემპიონი რამდენიმე ქვეყანაში", "short": "2C+", "icon": "crown", "color": "#b45309" },
+  { "id": "ballon-dor-winner", "labelEn": "Ballon d’Or winner", "labelKa": "ოქროს ბურთის მფლობელი", "short": "B’D", "icon": "medal", "color": "#ca8a04" }
+]

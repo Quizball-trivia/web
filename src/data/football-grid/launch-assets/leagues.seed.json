@@ -1,0 +1,17 @@
+[
+  { "id": "premier-league", "labelEn": "Premier League", "labelKa": "ინგლისის პრემიერ ლიგა", "countryCode": "gb-eng", "short": "PL", "color": "#37003c", "providerUrl": "https://media.api-sports.io/football/leagues/39.png" },
+  { "id": "la-liga", "labelEn": "La Liga", "labelKa": "ლა ლიგა", "countryCode": "es", "short": "LL", "color": "#ff4b44", "providerUrl": "https://media.api-sports.io/football/leagues/140.png" },
+  { "id": "serie-a", "labelEn": "Serie A", "labelKa": "სერია A", "countryCode": "it", "short": "SA", "color": "#0067b1", "providerUrl": "https://media.api-sports.io/football/leagues/135.png" },
+  { "id": "bundesliga", "labelEn": "Bundesliga", "labelKa": "ბუნდესლიგა", "countryCode": "de", "short": "BL", "color": "#d20515", "providerUrl": "https://media.api-sports.io/football/leagues/78.png" },
+  { "id": "ligue-1", "labelEn": "Ligue 1", "labelKa": "ლიგა 1", "countryCode": "fr", "short": "L1", "color": "#091c3e", "providerUrl": "https://media.api-sports.io/football/leagues/61.png" },
+  { "id": "eredivisie", "labelEn": "Eredivisie", "labelKa": "ერედივიზიე", "countryCode": "nl", "short": "ER", "color": "#e4002b", "providerUrl": "https://media.api-sports.io/football/leagues/88.png" },
+  { "id": "primeira-liga", "labelEn": "Primeira Liga", "labelKa": "პრიმეირა ლიგა", "countryCode": "pt", "short": "PT", "color": "#006847", "providerUrl": "https://media.api-sports.io/football/leagues/94.png" },
+  { "id": "brasileirao", "labelEn": "Campeonato Brasileiro Série A", "labelKa": "ბრაზილიის სერია A", "countryCode": "br", "short": "BR", "color": "#009c3b", "providerUrl": "https://media.api-sports.io/football/leagues/71.png" },
+  { "id": "scottish-premiership", "labelEn": "Scottish Premiership", "labelKa": "შოტლანდიის პრემიერშიპი", "countryCode": "gb-sct", "short": "SP", "color": "#163a6b", "providerUrl": "https://media.api-sports.io/football/leagues/179.png" },
+  { "id": "argentine-primera", "labelEn": "Argentine Primera División", "labelKa": "არგენტინის პრიმერა დივიზიონი", "countryCode": "ar", "short": "AR", "color": "#75aadb", "providerUrl": "https://media.api-sports.io/football/leagues/128.png" },
+  { "id": "super-lig", "labelEn": "Süper Lig", "labelKa": "თურქეთის სუპერლიგა", "countryCode": "tr", "short": "TR", "color": "#e30a17", "providerUrl": "https://media.api-sports.io/football/leagues/203.png" },
+  { "id": "belgian-pro-league", "labelEn": "Belgian Pro League", "labelKa": "ბელგიის პრო ლიგა", "countryCode": "be", "short": "BE", "color": "#111827", "providerUrl": "https://media.api-sports.io/football/leagues/144.png" },
+  { "id": "major-league-soccer", "labelEn": "Major League Soccer", "labelKa": "MLS", "countryCode": "us", "short": "MLS", "color": "#e31b23", "providerUrl": "https://media.api-sports.io/football/leagues/253.png" },
+  { "id": "saudi-pro-league", "labelEn": "Saudi Pro League", "labelKa": "საუდის პრო ლიგა", "countryCode": "sa", "short": "SPL", "color": "#006c35", "providerUrl": "https://media.api-sports.io/football/leagues/307.png" },
+  { "id": "erovnuli-liga", "labelEn": "Erovnuli Liga", "labelKa": "ეროვნული ლიგა", "countryCode": "ge", "short": "EL", "color": "#7c2d12", "providerUrl": "https://media.api-sports.io/football/leagues/327.png" }
+]

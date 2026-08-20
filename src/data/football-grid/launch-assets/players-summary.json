@@ -1,0 +1,76 @@
+{
+  "auditedAt": "2026-08-19T18:34:43.151Z",
+  "source": "public.football_players",
+  "totalRows": 50245,
+  "usableRows": 49659,
+  "excludedRows": 586,
+  "excludedByStatus": [
+    {
+      "status": "needs_review",
+      "count": 586
+    }
+  ],
+  "primaryPortraits": 49658,
+  "deterministicFallbacks": 1,
+  "fallbackPlayerIds": [
+    "7217ae63-70da-4482-82a7-18129b701733"
+  ],
+  "labelPolicy": {
+    "en": "display_name.en, then canonical name",
+    "ka": "display_name.ka, then official canonical name"
+  },
+  "imagePolicy": {
+    "primary": "validated HTTPS provider URL",
+    "fallback": "Quizball generated initials avatar"
+  },
+  "domains": [
+    {
+      "domain": "img.a.transfermarkt.technology",
+      "count": 49564
+    },
+    {
+      "domain": "nsdfiprfmhdqhbfxfwpv.supabase.co",
+      "count": 94
+    }
+  ],
+  "providerProbes": [
+    {
+      "playerId": "000084ce-98e1-4e68-a342-39f6766c4091",
+      "domain": "img.a.transfermarkt.technology",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "playerId": "0000d2f0-9d90-47e5-b38a-b027702b79ba",
+      "domain": "img.a.transfermarkt.technology",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "playerId": "0001fb33-8a58-49a5-aee7-6a3702adadf9",
+      "domain": "img.a.transfermarkt.technology",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "playerId": "0a806284-64e0-4d2f-b77f-eed347ac6dfc",
+      "domain": "nsdfiprfmhdqhbfxfwpv.supabase.co",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "playerId": "0d41d451-deba-4fc3-999c-381bd55d566f",
+      "domain": "nsdfiprfmhdqhbfxfwpv.supabase.co",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "playerId": "0e72b630-dcd1-496c-8d85-65022ac184df",
+      "domain": "nsdfiprfmhdqhbfxfwpv.supabase.co",
+      "status": 200,
+      "ok": true
+    }
+  ],
+  "malformedImageUrls": [],
+  "runtimeUnresolved": 0
+}

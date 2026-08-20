@@ -1,0 +1,4067 @@
+[
+  {
+    "id": "ad",
+    "labelEn": "Andorra",
+    "labelKa": "ანდორა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ad.svg",
+    "fallback": "AD",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ae",
+    "labelEn": "United Arab Emirates",
+    "labelKa": "არაბთა გაერთიანებული საამიროები",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ae.svg",
+    "fallback": "AE",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "af",
+    "labelEn": "Afghanistan",
+    "labelKa": "ავღანეთი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/af.svg",
+    "fallback": "AF",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ag",
+    "labelEn": "Antigua & Barbuda",
+    "labelKa": "ანტიგუა და ბარბუდა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ag.svg",
+    "fallback": "AG",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ai",
+    "labelEn": "Anguilla",
+    "labelKa": "ანგილია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ai.svg",
+    "fallback": "AI",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "al",
+    "labelEn": "Albania",
+    "labelKa": "ალბანეთი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/al.svg",
+    "fallback": "AL",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "am",
+    "labelEn": "Armenia",
+    "labelKa": "სომხეთი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/am.svg",
+    "fallback": "AM",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ao",
+    "labelEn": "Angola",
+    "labelKa": "ანგოლა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ao.svg",
+    "fallback": "AO",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "aq",
+    "labelEn": "Antarctica",
+    "labelKa": "ანტარქტიკა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/aq.svg",
+    "fallback": "AQ",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ar",
+    "labelEn": "Argentina",
+    "labelKa": "არგენტინა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ar.svg",
+    "fallback": "AR",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "arab",
+    "labelEn": "Arab League",
+    "labelKa": "არაბული ლიგა",
+    "kind": "organization",
+    "assetPath": "/assets/football-grid/flags/arab.svg",
+    "fallback": "ARAB",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "as",
+    "labelEn": "American Samoa",
+    "labelKa": "ამერიკის სამოა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/as.svg",
+    "fallback": "AS",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "asean",
+    "labelEn": "ASEAN",
+    "labelKa": "ASEAN",
+    "kind": "organization",
+    "assetPath": "/assets/football-grid/flags/asean.svg",
+    "fallback": "ASEAN",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "at",
+    "labelEn": "Austria",
+    "labelKa": "ავსტრია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/at.svg",
+    "fallback": "AT",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "au",
+    "labelEn": "Australia",
+    "labelKa": "ავსტრალია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/au.svg",
+    "fallback": "AU",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "aw",
+    "labelEn": "Aruba",
+    "labelKa": "არუბა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/aw.svg",
+    "fallback": "AW",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ax",
+    "labelEn": "Åland Islands",
+    "labelKa": "ალანდის კუნძულები",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ax.svg",
+    "fallback": "AX",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "az",
+    "labelEn": "Azerbaijan",
+    "labelKa": "აზერბაიჯანი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/az.svg",
+    "fallback": "AZ",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ba",
+    "labelEn": "Bosnia & Herzegovina",
+    "labelKa": "ბოსნია და ჰერცეგოვინა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ba.svg",
+    "fallback": "BA",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "bb",
+    "labelEn": "Barbados",
+    "labelKa": "ბარბადოსი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/bb.svg",
+    "fallback": "BB",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "bd",
+    "labelEn": "Bangladesh",
+    "labelKa": "ბანგლადეში",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/bd.svg",
+    "fallback": "BD",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "be",
+    "labelEn": "Belgium",
+    "labelKa": "ბელგია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/be.svg",
+    "fallback": "BE",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "bf",
+    "labelEn": "Burkina Faso",
+    "labelKa": "ბურკინა-ფასო",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/bf.svg",
+    "fallback": "BF",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "bg",
+    "labelEn": "Bulgaria",
+    "labelKa": "ბულგარეთი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/bg.svg",
+    "fallback": "BG",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "bh",
+    "labelEn": "Bahrain",
+    "labelKa": "ბაჰრეინი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/bh.svg",
+    "fallback": "BH",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "bi",
+    "labelEn": "Burundi",
+    "labelKa": "ბურუნდი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/bi.svg",
+    "fallback": "BI",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "bj",
+    "labelEn": "Benin",
+    "labelKa": "ბენინი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/bj.svg",
+    "fallback": "BJ",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "bl",
+    "labelEn": "St. Barthélemy",
+    "labelKa": "სენ-ბართელმი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/bl.svg",
+    "fallback": "BL",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "bm",
+    "labelEn": "Bermuda",
+    "labelKa": "ბერმუდა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/bm.svg",
+    "fallback": "BM",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "bn",
+    "labelEn": "Brunei",
+    "labelKa": "ბრუნეი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/bn.svg",
+    "fallback": "BN",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "bo",
+    "labelEn": "Bolivia",
+    "labelKa": "ბოლივია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/bo.svg",
+    "fallback": "BO",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "bq",
+    "labelEn": "Caribbean Netherlands",
+    "labelKa": "კარიბის ნიდერლანდები",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/bq.svg",
+    "fallback": "BQ",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "br",
+    "labelEn": "Brazil",
+    "labelKa": "ბრაზილია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/br.svg",
+    "fallback": "BR",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "bs",
+    "labelEn": "Bahamas",
+    "labelKa": "ბაჰამის კუნძულები",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/bs.svg",
+    "fallback": "BS",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "bt",
+    "labelEn": "Bhutan",
+    "labelKa": "ბუტანი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/bt.svg",
+    "fallback": "BT",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "bv",
+    "labelEn": "Bouvet Island",
+    "labelKa": "ბუვე",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/bv.svg",
+    "fallback": "BV",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "bw",
+    "labelEn": "Botswana",
+    "labelKa": "ბოტსვანა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/bw.svg",
+    "fallback": "BW",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "by",
+    "labelEn": "Belarus",
+    "labelKa": "ბელარუსი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/by.svg",
+    "fallback": "BY",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "bz",
+    "labelEn": "Belize",
+    "labelKa": "ბელიზი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/bz.svg",
+    "fallback": "BZ",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ca",
+    "labelEn": "Canada",
+    "labelKa": "კანადა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ca.svg",
+    "fallback": "CA",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "cc",
+    "labelEn": "Cocos (Keeling) Islands",
+    "labelKa": "ქოქოსის (კილინგის) კუნძულები",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/cc.svg",
+    "fallback": "CC",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "cd",
+    "labelEn": "Congo - Kinshasa",
+    "labelKa": "კონგო - კინშასა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/cd.svg",
+    "fallback": "CD",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "cefta",
+    "labelEn": "CEFTA",
+    "labelKa": "CEFTA",
+    "kind": "organization",
+    "assetPath": "/assets/football-grid/flags/cefta.svg",
+    "fallback": "CEFTA",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "cf",
+    "labelEn": "Central African Republic",
+    "labelKa": "ცენტრალური აფრიკის რესპუბლიკა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/cf.svg",
+    "fallback": "CF",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "cg",
+    "labelEn": "Congo - Brazzaville",
+    "labelKa": "კონგო - ბრაზავილი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/cg.svg",
+    "fallback": "CG",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ch",
+    "labelEn": "Switzerland",
+    "labelKa": "შვეიცარია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ch.svg",
+    "fallback": "CH",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ci",
+    "labelEn": "Côte d’Ivoire",
+    "labelKa": "კოტ-დივუარი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ci.svg",
+    "fallback": "CI",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ck",
+    "labelEn": "Cook Islands",
+    "labelKa": "კუკის კუნძულები",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ck.svg",
+    "fallback": "CK",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "cl",
+    "labelEn": "Chile",
+    "labelKa": "ჩილე",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/cl.svg",
+    "fallback": "CL",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "cm",
+    "labelEn": "Cameroon",
+    "labelKa": "კამერუნი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/cm.svg",
+    "fallback": "CM",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "cn",
+    "labelEn": "China",
+    "labelKa": "ჩინეთი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/cn.svg",
+    "fallback": "CN",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "co",
+    "labelEn": "Colombia",
+    "labelKa": "კოლუმბია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/co.svg",
+    "fallback": "CO",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "cp",
+    "labelEn": "Clipperton Island",
+    "labelKa": "კლიპერტონის კუნძული",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/cp.svg",
+    "fallback": "CP",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "cr",
+    "labelEn": "Costa Rica",
+    "labelKa": "კოსტა-რიკა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/cr.svg",
+    "fallback": "CR",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "cu",
+    "labelEn": "Cuba",
+    "labelKa": "კუბა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/cu.svg",
+    "fallback": "CU",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "cv",
+    "labelEn": "Cape Verde",
+    "labelKa": "კაბო-ვერდე",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/cv.svg",
+    "fallback": "CV",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "cw",
+    "labelEn": "Curaçao",
+    "labelKa": "კიურასაო",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/cw.svg",
+    "fallback": "CW",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "cx",
+    "labelEn": "Christmas Island",
+    "labelKa": "შობის კუნძული",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/cx.svg",
+    "fallback": "CX",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "cy",
+    "labelEn": "Cyprus",
+    "labelKa": "კვიპროსი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/cy.svg",
+    "fallback": "CY",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "cz",
+    "labelEn": "Czechia",
+    "labelKa": "ჩეხეთი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/cz.svg",
+    "fallback": "CZ",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "de",
+    "labelEn": "Germany",
+    "labelKa": "გერმანია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/de.svg",
+    "fallback": "DE",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "dg",
+    "labelEn": "Diego Garcia",
+    "labelKa": "დიეგო-გარსია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/dg.svg",
+    "fallback": "DG",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "dj",
+    "labelEn": "Djibouti",
+    "labelKa": "ჯიბუტი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/dj.svg",
+    "fallback": "DJ",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "dk",
+    "labelEn": "Denmark",
+    "labelKa": "დანია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/dk.svg",
+    "fallback": "DK",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "dm",
+    "labelEn": "Dominica",
+    "labelKa": "დომინიკა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/dm.svg",
+    "fallback": "DM",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "do",
+    "labelEn": "Dominican Republic",
+    "labelKa": "დომინიკელთა რესპუბლიკა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/do.svg",
+    "fallback": "DO",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "dz",
+    "labelEn": "Algeria",
+    "labelKa": "ალჟირი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/dz.svg",
+    "fallback": "DZ",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "eac",
+    "labelEn": "East African Community",
+    "labelKa": "აღმოსავლეთ აფრიკის გაერთიანება",
+    "kind": "organization",
+    "assetPath": "/assets/football-grid/flags/eac.svg",
+    "fallback": "EAC",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ec",
+    "labelEn": "Ecuador",
+    "labelKa": "ეკვადორი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ec.svg",
+    "fallback": "EC",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ee",
+    "labelEn": "Estonia",
+    "labelKa": "ესტონეთი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ee.svg",
+    "fallback": "EE",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "eg",
+    "labelEn": "Egypt",
+    "labelKa": "ეგვიპტე",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/eg.svg",
+    "fallback": "EG",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "eh",
+    "labelEn": "Western Sahara",
+    "labelKa": "დასავლეთ საჰარა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/eh.svg",
+    "fallback": "EH",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "er",
+    "labelEn": "Eritrea",
+    "labelKa": "ერიტრეა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/er.svg",
+    "fallback": "ER",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "es-ct",
+    "labelEn": "Catalonia",
+    "labelKa": "კატალონია",
+    "kind": "subdivision",
+    "assetPath": "/assets/football-grid/flags/es-ct.svg",
+    "fallback": "ES-CT",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "es-ga",
+    "labelEn": "Galicia",
+    "labelKa": "გალისია",
+    "kind": "subdivision",
+    "assetPath": "/assets/football-grid/flags/es-ga.svg",
+    "fallback": "ES-GA",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "es-pv",
+    "labelEn": "Basque Country",
+    "labelKa": "ბასკეთი",
+    "kind": "subdivision",
+    "assetPath": "/assets/football-grid/flags/es-pv.svg",
+    "fallback": "ES-PV",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "es",
+    "labelEn": "Spain",
+    "labelKa": "ესპანეთი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/es.svg",
+    "fallback": "ES",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "et",
+    "labelEn": "Ethiopia",
+    "labelKa": "ეთიოპია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/et.svg",
+    "fallback": "ET",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "eu",
+    "labelEn": "European Union",
+    "labelKa": "ევროკავშირი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/eu.svg",
+    "fallback": "EU",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "fi",
+    "labelEn": "Finland",
+    "labelKa": "ფინეთი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/fi.svg",
+    "fallback": "FI",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "fj",
+    "labelEn": "Fiji",
+    "labelKa": "ფიჯი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/fj.svg",
+    "fallback": "FJ",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "fk",
+    "labelEn": "Falkland Islands",
+    "labelKa": "ფოლკლენდის კუნძულები",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/fk.svg",
+    "fallback": "FK",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "fm",
+    "labelEn": "Micronesia",
+    "labelKa": "მიკრონეზია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/fm.svg",
+    "fallback": "FM",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "fo",
+    "labelEn": "Faroe Islands",
+    "labelKa": "ფარერის კუნძულები",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/fo.svg",
+    "fallback": "FO",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "fr",
+    "labelEn": "France",
+    "labelKa": "საფრანგეთი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/fr.svg",
+    "fallback": "FR",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ga",
+    "labelEn": "Gabon",
+    "labelKa": "გაბონი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ga.svg",
+    "fallback": "GA",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "gb-eng",
+    "labelEn": "England",
+    "labelKa": "ინგლისი",
+    "kind": "football-nation",
+    "assetPath": "/assets/football-grid/flags/gb-eng.svg",
+    "fallback": "GB-ENG",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "gb-nir",
+    "labelEn": "Northern Ireland",
+    "labelKa": "ჩრდილოეთ ირლანდია",
+    "kind": "football-nation",
+    "assetPath": "/assets/football-grid/flags/gb-nir.svg",
+    "fallback": "GB-NIR",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "gb-sct",
+    "labelEn": "Scotland",
+    "labelKa": "შოტლანდია",
+    "kind": "football-nation",
+    "assetPath": "/assets/football-grid/flags/gb-sct.svg",
+    "fallback": "GB-SCT",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "gb-wls",
+    "labelEn": "Wales",
+    "labelKa": "უელსი",
+    "kind": "football-nation",
+    "assetPath": "/assets/football-grid/flags/gb-wls.svg",
+    "fallback": "GB-WLS",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "gb",
+    "labelEn": "United Kingdom",
+    "labelKa": "გაერთიანებული სამეფო",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/gb.svg",
+    "fallback": "GB",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "gd",
+    "labelEn": "Grenada",
+    "labelKa": "გრენადა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/gd.svg",
+    "fallback": "GD",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ge",
+    "labelEn": "Georgia",
+    "labelKa": "საქართველო",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ge.svg",
+    "fallback": "GE",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "gf",
+    "labelEn": "French Guiana",
+    "labelKa": "საფრანგეთის გვიანა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/gf.svg",
+    "fallback": "GF",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "gg",
+    "labelEn": "Guernsey",
+    "labelKa": "გერნსი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/gg.svg",
+    "fallback": "GG",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "gh",
+    "labelEn": "Ghana",
+    "labelKa": "განა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/gh.svg",
+    "fallback": "GH",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "gi",
+    "labelEn": "Gibraltar",
+    "labelKa": "გიბრალტარი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/gi.svg",
+    "fallback": "GI",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "gl",
+    "labelEn": "Greenland",
+    "labelKa": "გრენლანდია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/gl.svg",
+    "fallback": "GL",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "gm",
+    "labelEn": "Gambia",
+    "labelKa": "გამბია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/gm.svg",
+    "fallback": "GM",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "gn",
+    "labelEn": "Guinea",
+    "labelKa": "გვინეა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/gn.svg",
+    "fallback": "GN",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "gp",
+    "labelEn": "Guadeloupe",
+    "labelKa": "გვადელუპა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/gp.svg",
+    "fallback": "GP",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "gq",
+    "labelEn": "Equatorial Guinea",
+    "labelKa": "ეკვატორული გვინეა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/gq.svg",
+    "fallback": "GQ",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "gr",
+    "labelEn": "Greece",
+    "labelKa": "საბერძნეთი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/gr.svg",
+    "fallback": "GR",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "gs",
+    "labelEn": "South Georgia & South Sandwich Islands",
+    "labelKa": "სამხრეთ ჯორჯია და სამხრეთ სენდვიჩის კუნძულები",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/gs.svg",
+    "fallback": "GS",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "gt",
+    "labelEn": "Guatemala",
+    "labelKa": "გვატემალა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/gt.svg",
+    "fallback": "GT",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "gu",
+    "labelEn": "Guam",
+    "labelKa": "გუამი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/gu.svg",
+    "fallback": "GU",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "gw",
+    "labelEn": "Guinea-Bissau",
+    "labelKa": "გვინეა-ბისაუ",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/gw.svg",
+    "fallback": "GW",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "gy",
+    "labelEn": "Guyana",
+    "labelKa": "გაიანა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/gy.svg",
+    "fallback": "GY",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "hk",
+    "labelEn": "Hong Kong SAR China",
+    "labelKa": "ჰონკონგის სპეციალური ადმინისტრაციული რეგიონი, ჩინეთი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/hk.svg",
+    "fallback": "HK",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "hm",
+    "labelEn": "Heard & McDonald Islands",
+    "labelKa": "ჰერდი და მაკდონალდის კუნძულები",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/hm.svg",
+    "fallback": "HM",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "hn",
+    "labelEn": "Honduras",
+    "labelKa": "ჰონდურასი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/hn.svg",
+    "fallback": "HN",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "hr",
+    "labelEn": "Croatia",
+    "labelKa": "ხორვატია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/hr.svg",
+    "fallback": "HR",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ht",
+    "labelEn": "Haiti",
+    "labelKa": "ჰაიტი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ht.svg",
+    "fallback": "HT",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "hu",
+    "labelEn": "Hungary",
+    "labelKa": "უნგრეთი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/hu.svg",
+    "fallback": "HU",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ic",
+    "labelEn": "Canary Islands",
+    "labelKa": "კანარის კუნძულები",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ic.svg",
+    "fallback": "IC",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "id",
+    "labelEn": "Indonesia",
+    "labelKa": "ინდონეზია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/id.svg",
+    "fallback": "ID",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ie",
+    "labelEn": "Ireland",
+    "labelKa": "ირლანდია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ie.svg",
+    "fallback": "IE",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "il",
+    "labelEn": "Israel",
+    "labelKa": "ისრაელი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/il.svg",
+    "fallback": "IL",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "im",
+    "labelEn": "Isle of Man",
+    "labelKa": "მენის კუნძული",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/im.svg",
+    "fallback": "IM",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "in",
+    "labelEn": "India",
+    "labelKa": "ინდოეთი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/in.svg",
+    "fallback": "IN",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "io",
+    "labelEn": "British Indian Ocean Territory",
+    "labelKa": "ბრიტანეთის ტერიტორია ინდოეთის ოკეანეში",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/io.svg",
+    "fallback": "IO",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "iq",
+    "labelEn": "Iraq",
+    "labelKa": "ერაყი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/iq.svg",
+    "fallback": "IQ",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ir",
+    "labelEn": "Iran",
+    "labelKa": "ირანი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ir.svg",
+    "fallback": "IR",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "is",
+    "labelEn": "Iceland",
+    "labelKa": "ისლანდია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/is.svg",
+    "fallback": "IS",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "it",
+    "labelEn": "Italy",
+    "labelKa": "იტალია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/it.svg",
+    "fallback": "IT",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "je",
+    "labelEn": "Jersey",
+    "labelKa": "ჯერსი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/je.svg",
+    "fallback": "JE",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "jm",
+    "labelEn": "Jamaica",
+    "labelKa": "იამაიკა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/jm.svg",
+    "fallback": "JM",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "jo",
+    "labelEn": "Jordan",
+    "labelKa": "იორდანია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/jo.svg",
+    "fallback": "JO",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "jp",
+    "labelEn": "Japan",
+    "labelKa": "იაპონია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/jp.svg",
+    "fallback": "JP",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ke",
+    "labelEn": "Kenya",
+    "labelKa": "კენია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ke.svg",
+    "fallback": "KE",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "kg",
+    "labelEn": "Kyrgyzstan",
+    "labelKa": "ყირგიზეთი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/kg.svg",
+    "fallback": "KG",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "kh",
+    "labelEn": "Cambodia",
+    "labelKa": "კამბოჯა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/kh.svg",
+    "fallback": "KH",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ki",
+    "labelEn": "Kiribati",
+    "labelKa": "კირიბატი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ki.svg",
+    "fallback": "KI",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "km",
+    "labelEn": "Comoros",
+    "labelKa": "კომორის კუნძულები",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/km.svg",
+    "fallback": "KM",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "kn",
+    "labelEn": "St. Kitts & Nevis",
+    "labelKa": "სენტ-კიტსი და ნევისი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/kn.svg",
+    "fallback": "KN",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "kp",
+    "labelEn": "North Korea",
+    "labelKa": "ჩრდილოეთ კორეა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/kp.svg",
+    "fallback": "KP",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "kr",
+    "labelEn": "South Korea",
+    "labelKa": "სამხრეთ კორეა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/kr.svg",
+    "fallback": "KR",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "kw",
+    "labelEn": "Kuwait",
+    "labelKa": "ქუვეითი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/kw.svg",
+    "fallback": "KW",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ky",
+    "labelEn": "Cayman Islands",
+    "labelKa": "კაიმანის კუნძულები",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ky.svg",
+    "fallback": "KY",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "kz",
+    "labelEn": "Kazakhstan",
+    "labelKa": "ყაზახეთი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/kz.svg",
+    "fallback": "KZ",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "la",
+    "labelEn": "Laos",
+    "labelKa": "ლაოსი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/la.svg",
+    "fallback": "LA",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "lb",
+    "labelEn": "Lebanon",
+    "labelKa": "ლიბანი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/lb.svg",
+    "fallback": "LB",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "lc",
+    "labelEn": "St. Lucia",
+    "labelKa": "სენტ-ლუსია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/lc.svg",
+    "fallback": "LC",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "li",
+    "labelEn": "Liechtenstein",
+    "labelKa": "ლიხტენშტაინი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/li.svg",
+    "fallback": "LI",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "lk",
+    "labelEn": "Sri Lanka",
+    "labelKa": "შრი-ლანკა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/lk.svg",
+    "fallback": "LK",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "lr",
+    "labelEn": "Liberia",
+    "labelKa": "ლიბერია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/lr.svg",
+    "fallback": "LR",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ls",
+    "labelEn": "Lesotho",
+    "labelKa": "ლესოთო",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ls.svg",
+    "fallback": "LS",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "lt",
+    "labelEn": "Lithuania",
+    "labelKa": "ლიეტუვა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/lt.svg",
+    "fallback": "LT",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "lu",
+    "labelEn": "Luxembourg",
+    "labelKa": "ლუქსემბურგი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/lu.svg",
+    "fallback": "LU",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "lv",
+    "labelEn": "Latvia",
+    "labelKa": "ლატვია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/lv.svg",
+    "fallback": "LV",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ly",
+    "labelEn": "Libya",
+    "labelKa": "ლიბია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ly.svg",
+    "fallback": "LY",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ma",
+    "labelEn": "Morocco",
+    "labelKa": "მაროკო",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ma.svg",
+    "fallback": "MA",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "mc",
+    "labelEn": "Monaco",
+    "labelKa": "მონაკო",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/mc.svg",
+    "fallback": "MC",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "md",
+    "labelEn": "Moldova",
+    "labelKa": "მოლდოვა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/md.svg",
+    "fallback": "MD",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "me",
+    "labelEn": "Montenegro",
+    "labelKa": "მონტენეგრო",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/me.svg",
+    "fallback": "ME",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "mf",
+    "labelEn": "St. Martin",
+    "labelKa": "სენ-მარტენი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/mf.svg",
+    "fallback": "MF",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "mg",
+    "labelEn": "Madagascar",
+    "labelKa": "მადაგასკარი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/mg.svg",
+    "fallback": "MG",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "mh",
+    "labelEn": "Marshall Islands",
+    "labelKa": "მარშალის კუნძულები",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/mh.svg",
+    "fallback": "MH",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "mk",
+    "labelEn": "North Macedonia",
+    "labelKa": "ჩრდილოეთ მაკედონია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/mk.svg",
+    "fallback": "MK",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ml",
+    "labelEn": "Mali",
+    "labelKa": "მალი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ml.svg",
+    "fallback": "ML",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "mm",
+    "labelEn": "Myanmar (Burma)",
+    "labelKa": "მიანმარი (ბირმა)",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/mm.svg",
+    "fallback": "MM",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "mn",
+    "labelEn": "Mongolia",
+    "labelKa": "მონღოლეთი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/mn.svg",
+    "fallback": "MN",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "mo",
+    "labelEn": "Macao SAR China",
+    "labelKa": "მაკაოს სპეციალური ადმინისტრაციული რეგიონი, ჩინეთი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/mo.svg",
+    "fallback": "MO",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "mp",
+    "labelEn": "Northern Mariana Islands",
+    "labelKa": "ჩრდილოეთ მარიანას კუნძულები",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/mp.svg",
+    "fallback": "MP",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "mq",
+    "labelEn": "Martinique",
+    "labelKa": "მარტინიკა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/mq.svg",
+    "fallback": "MQ",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "mr",
+    "labelEn": "Mauritania",
+    "labelKa": "მავრიტანია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/mr.svg",
+    "fallback": "MR",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ms",
+    "labelEn": "Montserrat",
+    "labelKa": "მონსერატი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ms.svg",
+    "fallback": "MS",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "mt",
+    "labelEn": "Malta",
+    "labelKa": "მალტა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/mt.svg",
+    "fallback": "MT",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "mu",
+    "labelEn": "Mauritius",
+    "labelKa": "მავრიკი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/mu.svg",
+    "fallback": "MU",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "mv",
+    "labelEn": "Maldives",
+    "labelKa": "მალდივები",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/mv.svg",
+    "fallback": "MV",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "mw",
+    "labelEn": "Malawi",
+    "labelKa": "მალავი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/mw.svg",
+    "fallback": "MW",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "mx",
+    "labelEn": "Mexico",
+    "labelKa": "მექსიკა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/mx.svg",
+    "fallback": "MX",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "my",
+    "labelEn": "Malaysia",
+    "labelKa": "მალაიზია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/my.svg",
+    "fallback": "MY",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "mz",
+    "labelEn": "Mozambique",
+    "labelKa": "მოზამბიკი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/mz.svg",
+    "fallback": "MZ",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "na",
+    "labelEn": "Namibia",
+    "labelKa": "ნამიბია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/na.svg",
+    "fallback": "NA",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "nc",
+    "labelEn": "New Caledonia",
+    "labelKa": "ახალი კალედონია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/nc.svg",
+    "fallback": "NC",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ne",
+    "labelEn": "Niger",
+    "labelKa": "ნიგერი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ne.svg",
+    "fallback": "NE",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "nf",
+    "labelEn": "Norfolk Island",
+    "labelKa": "ნორფოლკის კუნძული",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/nf.svg",
+    "fallback": "NF",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ng",
+    "labelEn": "Nigeria",
+    "labelKa": "ნიგერია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ng.svg",
+    "fallback": "NG",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ni",
+    "labelEn": "Nicaragua",
+    "labelKa": "ნიკარაგუა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ni.svg",
+    "fallback": "NI",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "nl",
+    "labelEn": "Netherlands",
+    "labelKa": "ნიდერლანდები",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/nl.svg",
+    "fallback": "NL",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "no",
+    "labelEn": "Norway",
+    "labelKa": "ნორვეგია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/no.svg",
+    "fallback": "NO",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "np",
+    "labelEn": "Nepal",
+    "labelKa": "ნეპალი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/np.svg",
+    "fallback": "NP",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "nr",
+    "labelEn": "Nauru",
+    "labelKa": "ნაურუ",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/nr.svg",
+    "fallback": "NR",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "nu",
+    "labelEn": "Niue",
+    "labelKa": "ნიუე",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/nu.svg",
+    "fallback": "NU",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "nz",
+    "labelEn": "New Zealand",
+    "labelKa": "ახალი ზელანდია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/nz.svg",
+    "fallback": "NZ",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "om",
+    "labelEn": "Oman",
+    "labelKa": "ომანი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/om.svg",
+    "fallback": "OM",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "pa",
+    "labelEn": "Panama",
+    "labelKa": "პანამა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/pa.svg",
+    "fallback": "PA",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "pc",
+    "labelEn": "Pacific Community",
+    "labelKa": "წყნარი ოკეანის გაერთიანება",
+    "kind": "organization",
+    "assetPath": "/assets/football-grid/flags/pc.svg",
+    "fallback": "PC",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "pe",
+    "labelEn": "Peru",
+    "labelKa": "პერუ",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/pe.svg",
+    "fallback": "PE",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "pf",
+    "labelEn": "French Polynesia",
+    "labelKa": "საფრანგეთის პოლინეზია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/pf.svg",
+    "fallback": "PF",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "pg",
+    "labelEn": "Papua New Guinea",
+    "labelKa": "პაპუა-ახალი გვინეა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/pg.svg",
+    "fallback": "PG",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ph",
+    "labelEn": "Philippines",
+    "labelKa": "ფილიპინები",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ph.svg",
+    "fallback": "PH",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "pk",
+    "labelEn": "Pakistan",
+    "labelKa": "პაკისტანი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/pk.svg",
+    "fallback": "PK",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "pl",
+    "labelEn": "Poland",
+    "labelKa": "პოლონეთი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/pl.svg",
+    "fallback": "PL",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "pm",
+    "labelEn": "St. Pierre & Miquelon",
+    "labelKa": "სენ-პიერი და მიკელონი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/pm.svg",
+    "fallback": "PM",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "pn",
+    "labelEn": "Pitcairn Islands",
+    "labelKa": "პიტკერნის კუნძულები",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/pn.svg",
+    "fallback": "PN",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "pr",
+    "labelEn": "Puerto Rico",
+    "labelKa": "პუერტო-რიკო",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/pr.svg",
+    "fallback": "PR",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ps",
+    "labelEn": "Palestinian Territories",
+    "labelKa": "პალესტინის ტერიტორიები",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ps.svg",
+    "fallback": "PS",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "pt",
+    "labelEn": "Portugal",
+    "labelKa": "პორტუგალია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/pt.svg",
+    "fallback": "PT",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "pw",
+    "labelEn": "Palau",
+    "labelKa": "პალაუ",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/pw.svg",
+    "fallback": "PW",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "py",
+    "labelEn": "Paraguay",
+    "labelKa": "პარაგვაი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/py.svg",
+    "fallback": "PY",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "qa",
+    "labelEn": "Qatar",
+    "labelKa": "კატარი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/qa.svg",
+    "fallback": "QA",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "re",
+    "labelEn": "Réunion",
+    "labelKa": "რეუნიონი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/re.svg",
+    "fallback": "RE",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ro",
+    "labelEn": "Romania",
+    "labelKa": "რუმინეთი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ro.svg",
+    "fallback": "RO",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "rs",
+    "labelEn": "Serbia",
+    "labelKa": "სერბეთი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/rs.svg",
+    "fallback": "RS",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ru",
+    "labelEn": "Russia",
+    "labelKa": "რუსეთი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ru.svg",
+    "fallback": "RU",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "rw",
+    "labelEn": "Rwanda",
+    "labelKa": "რუანდა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/rw.svg",
+    "fallback": "RW",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "sa",
+    "labelEn": "Saudi Arabia",
+    "labelKa": "საუდის არაბეთი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/sa.svg",
+    "fallback": "SA",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "sb",
+    "labelEn": "Solomon Islands",
+    "labelKa": "სოლომონის კუნძულები",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/sb.svg",
+    "fallback": "SB",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "sc",
+    "labelEn": "Seychelles",
+    "labelKa": "სეიშელის კუნძულები",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/sc.svg",
+    "fallback": "SC",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "sd",
+    "labelEn": "Sudan",
+    "labelKa": "სუდანი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/sd.svg",
+    "fallback": "SD",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "se",
+    "labelEn": "Sweden",
+    "labelKa": "შვედეთი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/se.svg",
+    "fallback": "SE",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "sg",
+    "labelEn": "Singapore",
+    "labelKa": "სინგაპური",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/sg.svg",
+    "fallback": "SG",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "sh-ac",
+    "labelEn": "Ascension Island",
+    "labelKa": "ასენსიონის კუნძული",
+    "kind": "territory",
+    "assetPath": "/assets/football-grid/flags/sh-ac.svg",
+    "fallback": "SH-AC",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "sh-hl",
+    "labelEn": "Saint Helena",
+    "labelKa": "წმინდა ელენეს კუნძული",
+    "kind": "territory",
+    "assetPath": "/assets/football-grid/flags/sh-hl.svg",
+    "fallback": "SH-HL",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "sh-ta",
+    "labelEn": "Tristan da Cunha",
+    "labelKa": "ტრისტან-და-კუნია",
+    "kind": "territory",
+    "assetPath": "/assets/football-grid/flags/sh-ta.svg",
+    "fallback": "SH-TA",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "sh",
+    "labelEn": "St. Helena",
+    "labelKa": "წმინდა ელენეს კუნძული",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/sh.svg",
+    "fallback": "SH",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "si",
+    "labelEn": "Slovenia",
+    "labelKa": "სლოვენია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/si.svg",
+    "fallback": "SI",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "sj",
+    "labelEn": "Svalbard & Jan Mayen",
+    "labelKa": "შპიცბერგენი და იან-მაიენი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/sj.svg",
+    "fallback": "SJ",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "sk",
+    "labelEn": "Slovakia",
+    "labelKa": "სლოვაკეთი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/sk.svg",
+    "fallback": "SK",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "sl",
+    "labelEn": "Sierra Leone",
+    "labelKa": "სიერა-ლეონე",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/sl.svg",
+    "fallback": "SL",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "sm",
+    "labelEn": "San Marino",
+    "labelKa": "სან-მარინო",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/sm.svg",
+    "fallback": "SM",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "sn",
+    "labelEn": "Senegal",
+    "labelKa": "სენეგალი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/sn.svg",
+    "fallback": "SN",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "so",
+    "labelEn": "Somalia",
+    "labelKa": "სომალი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/so.svg",
+    "fallback": "SO",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "sr",
+    "labelEn": "Suriname",
+    "labelKa": "სურინამი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/sr.svg",
+    "fallback": "SR",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ss",
+    "labelEn": "South Sudan",
+    "labelKa": "სამხრეთ სუდანი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ss.svg",
+    "fallback": "SS",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "st",
+    "labelEn": "São Tomé & Príncipe",
+    "labelKa": "სან-ტომე და პრინსიპი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/st.svg",
+    "fallback": "ST",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "sv",
+    "labelEn": "El Salvador",
+    "labelKa": "სალვადორი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/sv.svg",
+    "fallback": "SV",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "sx",
+    "labelEn": "Sint Maarten",
+    "labelKa": "სინტ-მარტენი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/sx.svg",
+    "fallback": "SX",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "sy",
+    "labelEn": "Syria",
+    "labelKa": "სირია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/sy.svg",
+    "fallback": "SY",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "sz",
+    "labelEn": "Eswatini",
+    "labelKa": "სვაზილენდი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/sz.svg",
+    "fallback": "SZ",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "tc",
+    "labelEn": "Turks & Caicos Islands",
+    "labelKa": "თერქს-ქაიქოსის კუნძულები",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/tc.svg",
+    "fallback": "TC",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "td",
+    "labelEn": "Chad",
+    "labelKa": "ჩადი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/td.svg",
+    "fallback": "TD",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "tf",
+    "labelEn": "French Southern Territories",
+    "labelKa": "ფრანგული სამხრეთის ტერიტორიები",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/tf.svg",
+    "fallback": "TF",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "tg",
+    "labelEn": "Togo",
+    "labelKa": "ტოგო",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/tg.svg",
+    "fallback": "TG",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "th",
+    "labelEn": "Thailand",
+    "labelKa": "ტაილანდი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/th.svg",
+    "fallback": "TH",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "tj",
+    "labelEn": "Tajikistan",
+    "labelKa": "ტაჯიკეთი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/tj.svg",
+    "fallback": "TJ",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "tk",
+    "labelEn": "Tokelau",
+    "labelKa": "ტოკელაუ",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/tk.svg",
+    "fallback": "TK",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "tl",
+    "labelEn": "Timor-Leste",
+    "labelKa": "ტიმორ-ლესტე",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/tl.svg",
+    "fallback": "TL",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "tm",
+    "labelEn": "Turkmenistan",
+    "labelKa": "თურქმენეთი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/tm.svg",
+    "fallback": "TM",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "tn",
+    "labelEn": "Tunisia",
+    "labelKa": "ტუნისი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/tn.svg",
+    "fallback": "TN",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "to",
+    "labelEn": "Tonga",
+    "labelKa": "ტონგა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/to.svg",
+    "fallback": "TO",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "tr",
+    "labelEn": "Türkiye",
+    "labelKa": "თურქეთი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/tr.svg",
+    "fallback": "TR",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "tt",
+    "labelEn": "Trinidad & Tobago",
+    "labelKa": "ტრინიდადი და ტობაგო",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/tt.svg",
+    "fallback": "TT",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "tv",
+    "labelEn": "Tuvalu",
+    "labelKa": "ტუვალუ",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/tv.svg",
+    "fallback": "TV",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "tw",
+    "labelEn": "Taiwan",
+    "labelKa": "ტაივანი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/tw.svg",
+    "fallback": "TW",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "tz",
+    "labelEn": "Tanzania",
+    "labelKa": "ტანზანია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/tz.svg",
+    "fallback": "TZ",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ua",
+    "labelEn": "Ukraine",
+    "labelKa": "უკრაინა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ua.svg",
+    "fallback": "UA",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ug",
+    "labelEn": "Uganda",
+    "labelKa": "უგანდა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ug.svg",
+    "fallback": "UG",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "um",
+    "labelEn": "U.S. Outlying Islands",
+    "labelKa": "აშშ-ის შორეული კუნძულები",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/um.svg",
+    "fallback": "UM",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "un",
+    "labelEn": "United Nations",
+    "labelKa": "გაერო",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/un.svg",
+    "fallback": "UN",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "us",
+    "labelEn": "United States",
+    "labelKa": "ამერიკის შეერთებული შტატები",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/us.svg",
+    "fallback": "US",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "uy",
+    "labelEn": "Uruguay",
+    "labelKa": "ურუგვაი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/uy.svg",
+    "fallback": "UY",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "uz",
+    "labelEn": "Uzbekistan",
+    "labelKa": "უზბეკეთი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/uz.svg",
+    "fallback": "UZ",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "va",
+    "labelEn": "Vatican City",
+    "labelKa": "ქალაქი ვატიკანი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/va.svg",
+    "fallback": "VA",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "vc",
+    "labelEn": "St. Vincent & Grenadines",
+    "labelKa": "სენტ-ვინსენტი და გრენადინები",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/vc.svg",
+    "fallback": "VC",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ve",
+    "labelEn": "Venezuela",
+    "labelKa": "ვენესუელა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ve.svg",
+    "fallback": "VE",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "vg",
+    "labelEn": "British Virgin Islands",
+    "labelKa": "ბრიტანეთის ვირჯინის კუნძულები",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/vg.svg",
+    "fallback": "VG",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "vi",
+    "labelEn": "U.S. Virgin Islands",
+    "labelKa": "აშშ-ის ვირჯინის კუნძულები",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/vi.svg",
+    "fallback": "VI",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "vn",
+    "labelEn": "Vietnam",
+    "labelKa": "ვიეტნამი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/vn.svg",
+    "fallback": "VN",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "vu",
+    "labelEn": "Vanuatu",
+    "labelKa": "ვანუატუ",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/vu.svg",
+    "fallback": "VU",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "wf",
+    "labelEn": "Wallis & Futuna",
+    "labelKa": "უოლისი და ფუტუნა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/wf.svg",
+    "fallback": "WF",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ws",
+    "labelEn": "Samoa",
+    "labelKa": "სამოა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ws.svg",
+    "fallback": "WS",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "xk",
+    "labelEn": "Kosovo",
+    "labelKa": "კოსოვო",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/xk.svg",
+    "fallback": "XK",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "xx",
+    "labelEn": "Unknown / neutral",
+    "labelKa": "უცნობი / ნეიტრალური",
+    "kind": "fallback",
+    "assetPath": "/assets/football-grid/flags/xx.svg",
+    "fallback": "XX",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "ye",
+    "labelEn": "Yemen",
+    "labelKa": "იემენი",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/ye.svg",
+    "fallback": "YE",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "yt",
+    "labelEn": "Mayotte",
+    "labelKa": "მაიოტა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/yt.svg",
+    "fallback": "YT",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "za",
+    "labelEn": "South Africa",
+    "labelKa": "სამხრეთ აფრიკის რესპუბლიკა",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/za.svg",
+    "fallback": "ZA",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "zm",
+    "labelEn": "Zambia",
+    "labelKa": "ზამბია",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/zm.svg",
+    "fallback": "ZM",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "zw",
+    "labelEn": "Zimbabwe",
+    "labelKa": "ზიმბაბვე",
+    "kind": "region",
+    "assetPath": "/assets/football-grid/flags/zw.svg",
+    "fallback": "ZW",
+    "source": {
+      "provider": "flag-icons",
+      "packageVersion": "7.5.0",
+      "license": "MIT",
+      "url": "https://github.com/lipis/flag-icons"
+    },
+    "runtimeResolved": true
+  }
+]
