@@ -1323,7 +1323,7 @@ export interface paths {
                                 inviteCode: string;
                                 displayName: string;
                                 /** @enum {string} */
-                                gameMode: "friendly_possession" | "friendly_party_quiz" | "ranked_sim";
+                                gameMode: "friendly_possession" | "friendly_party_quiz" | "football_grid" | "auction" | "ranked_sim";
                                 isPublic: boolean;
                                 /** Format: date-time */
                                 createdAt: string;
@@ -2220,7 +2220,7 @@ export interface paths {
                 query?: {
                     userId?: string;
                     purchaseId?: string;
-                    eventType?: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset" | "admin_account_ban" | "admin_account_unban" | "free_kicks_stake" | "free_kicks_payout" | "road_to_goal_stake" | "road_to_goal_payout";
+                    eventType?: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset" | "admin_account_ban" | "admin_account_unban" | "free_kicks_stake" | "free_kicks_payout" | "road_to_goal_stake" | "road_to_goal_payout" | "guess_the_goal_reward";
                     outcome?: "success" | "failure";
                     from?: string;
                     to?: string;
@@ -2244,7 +2244,7 @@ export interface paths {
                                 /** Format: uuid */
                                 id: string;
                                 /** @enum {string} */
-                                eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset" | "admin_account_ban" | "admin_account_unban" | "free_kicks_stake" | "free_kicks_payout" | "road_to_goal_stake" | "road_to_goal_payout";
+                                eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset" | "admin_account_ban" | "admin_account_unban" | "free_kicks_stake" | "free_kicks_payout" | "road_to_goal_stake" | "road_to_goal_payout" | "guess_the_goal_reward";
                                 /** @enum {string} */
                                 outcome: "success" | "failure";
                                 /** Format: uuid */
@@ -9191,7 +9191,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset" | "admin_account_ban" | "admin_account_unban" | "free_kicks_stake" | "free_kicks_payout" | "road_to_goal_stake" | "road_to_goal_payout";
+            eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset" | "admin_account_ban" | "admin_account_unban" | "free_kicks_stake" | "free_kicks_payout" | "road_to_goal_stake" | "road_to_goal_payout" | "guess_the_goal_reward";
             /** @enum {string} */
             outcome: "success" | "failure";
             /** Format: uuid */
@@ -9227,7 +9227,7 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
-                eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset" | "admin_account_ban" | "admin_account_unban" | "free_kicks_stake" | "free_kicks_payout" | "road_to_goal_stake" | "road_to_goal_payout";
+                eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset" | "admin_account_ban" | "admin_account_unban" | "free_kicks_stake" | "free_kicks_payout" | "road_to_goal_stake" | "road_to_goal_payout" | "guess_the_goal_reward";
                 /** @enum {string} */
                 outcome: "success" | "failure";
                 /** Format: uuid */

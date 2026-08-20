@@ -3,7 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useFriendLobbyLogic } from '../useFriendLobbyLogic';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { useAuctionActiveMatchStore } from '@/stores/auctionActiveMatch.store';
-import type { LobbyState } from '@/lib/realtime/socket.types';
+import { useFootballGridStore } from '@/stores/footballGrid.store';
+import type { FootballGridState, LobbyState } from '@/lib/realtime/socket.types';
 
 const mocks = vi.hoisted(() => ({
   socketEmit: vi.fn(),
@@ -566,5 +567,36 @@ describe('useFriendLobbyLogic auction hand-off', () => {
       expect(mocks.routerPush).toHaveBeenCalledWith('/game');
     });
     expect(mocks.routerPush).not.toHaveBeenCalledWith('/auction');
+  });
+});
+
+describe('useFriendLobbyLogic Football Grid hand-off', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.useRealTimers();
+    useRealtimeMatchStore.getState().reset();
+    useFootballGridStore.getState().clear();
+  });
+
+  it('navigates both friend-lobby players to the live Grid route', async () => {
+    const lobby = makeLobby('GRID10');
+    act(() => {
+      useRealtimeMatchStore.getState().setLobby({
+        ...lobby,
+        status: 'active',
+        settings: { ...lobby.settings, gameMode: 'football_grid' },
+      });
+      useFootballGridStore.setState({
+        state: { matchId: 'grid-match-1' } as FootballGridState,
+      });
+    });
+
+    const { result } = renderHook(() => useFriendLobbyLogic({ roomCode: 'GRID10', isHost: true }));
+
+    await waitFor(() => {
+      expect(result.current.isFootballGridLobby).toBe(true);
+      expect(mocks.routerPush).toHaveBeenCalledWith('/football-grid?source=friend_lobby');
+    });
+    expect(mocks.routerPush).not.toHaveBeenCalledWith('/game');
   });
 });

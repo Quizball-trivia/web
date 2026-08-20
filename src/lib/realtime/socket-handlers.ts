@@ -2,6 +2,7 @@ import { getSocket, getSocketDebugSnapshot, logSocketDebug } from './socket-clie
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { useRankedMatchmakingStore } from '@/stores/rankedMatchmaking.store';
 import { useAuctionActiveMatchStore } from '@/stores/auctionActiveMatch.store';
+import { useFootballGridStore } from '@/stores/footballGrid.store';
 import { useGameSessionStore } from '@/stores/gameSession.store';
 import { QueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queries/queryKeys';
@@ -51,6 +52,13 @@ import type {
   AuctionRejoinAvailablePayload,
   AuctionMatchFinishedPayload,
   AuctionPlayerForfeitedPayload,
+  FootballGridCommandResultPayload,
+  FootballGridCompletedPayload,
+  FootballGridMatchFoundPayload,
+  FootballGridRematchStatePayload,
+  FootballGridSearchStatePayload,
+  FootballGridStatePayload,
+  FootballGridTurnResolvedPayload,
 } from './socket.types';
 
 // Module-level ref so handlers always read the latest queryClient
@@ -770,6 +778,75 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
     const selfUserId = useRealtimeMatchStore.getState().selfUserId;
     if (data.userId === selfUserId) {
       auctionStore.clear();
+    }
+  });
+
+  // Football Grid is route-independent in the same way as Auction: match
+  // handoff and reconnect snapshots can arrive while the player is still in a
+  // friend lobby or elsewhere in the app. Keep the authoritative payloads in
+  // one global store, then let `/football-grid` render and acknowledge them.
+  socket.on('grid:search_state', (data: FootballGridSearchStatePayload) => {
+    logger.info('Socket event grid:search_state', {
+      state: data.state,
+      searchId: data.searchId,
+    });
+    useFootballGridStore.getState().setSearchState(data);
+  });
+  socket.on('grid:match_found', (data: FootballGridMatchFoundPayload) => {
+    logger.info('Socket event grid:match_found', {
+      matchId: data.matchId,
+      opponentId: data.opponent.id,
+      stateVersion: data.state.stateVersion,
+    });
+    useFootballGridStore.getState().setMatchFound(data);
+  });
+  const applyGridState = (eventName: string, data: FootballGridStatePayload) => {
+    logger.info(`Socket event ${eventName}`, {
+      matchId: data.matchId,
+      phase: data.state.phase,
+      stateVersion: data.state.stateVersion,
+    });
+    useFootballGridStore.getState().setState(data);
+  };
+  socket.on('grid:loading_state', (data) => applyGridState('grid:loading_state', data));
+  socket.on('grid:countdown', (data) => applyGridState('grid:countdown', data));
+  socket.on('grid:state', (data) => applyGridState('grid:state', data));
+  socket.on('grid:paused', (data) => applyGridState('grid:paused', data));
+  socket.on('grid:resumed', (data) => applyGridState('grid:resumed', data));
+  socket.on('grid:turn_resolved', (data: FootballGridTurnResolvedPayload) => {
+    useFootballGridStore.getState().setTurnResolved(data);
+  });
+  socket.on('grid:command_result', (data: FootballGridCommandResultPayload) => {
+    useFootballGridStore.getState().setCommandResult(data);
+  });
+  socket.on('grid:completed', (data: FootballGridCompletedPayload) => {
+    logger.info('Socket event grid:completed', {
+      matchId: data.matchId,
+      stateVersion: data.terminalStateVersion,
+      completionReason: data.state.completionReason,
+    });
+    useFootballGridStore.getState().setCompleted(data);
+  });
+  socket.on('grid:rematch_state', (data: FootballGridRematchStatePayload) => {
+    useFootballGridStore.getState().setRematch(data);
+  });
+  socket.on('grid:report_received', ({ attemptId }) => {
+    useFootballGridStore.getState().markAttemptReported(attemptId);
+  });
+  socket.on('grid:error', (data: ErrorPayload) => {
+    logger.warn('Socket event grid:error', {
+      code: data.code,
+      gridCode: data.meta?.gridCode ?? null,
+      message: data.message,
+    });
+    const current = useFootballGridStore.getState();
+    current.setError(data);
+    const gridCode = typeof data.meta?.gridCode === 'string' ? data.meta.gridCode : data.code;
+    if (
+      current.state?.matchId &&
+      (gridCode === 'STALE_STATE' || gridCode === 'LATE_COMMAND' || gridCode === 'COMMAND_IN_PROGRESS')
+    ) {
+      socket.emit('grid:resync', { matchId: current.state.matchId });
     }
   });
 }

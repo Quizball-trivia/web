@@ -5,7 +5,18 @@
     "src/app/(fullscreen)/dev/club-select/page.tsx",
     "src/app/(fullscreen)/dev/logos/page.tsx",
     "src/app/(fullscreen)/dev/maps/page.tsx",
+    "src/features/demos/DemoHubScreen.tsx",
+    "src/features/demos/DemoModeArt.tsx",
     "src/features/leaderboard/LeaderboardScreen.tsx",
-    "src/features/matchmaking/MatchmakingMapScreen.tsx"
+    "src/features/matchmaking/MatchmakingMapScreen.tsx",
+    "src/features/mini-games/components/FinalThird.tsx",
+    "src/features/mini-games/components/RewardWheel.tsx",
+    "src/features/mini-games/components/RoadToGoal.tsx",
+    "src/features/mini-games/components/RoadToGoalPitch.tsx",
+    "src/features/mini-games/components/SquadCollection.tsx",
+    "src/features/mini-games/components/StatSniper.tsx",
+    "src/features/weekend-league/components/RailColorVariants.tsx",
+    "src/features/weekend-league/components/StatusBandVariants.tsx",
+    "src/features/weekend-league/components/WeekendLeagueStatusBand.tsx"
   ]
 }

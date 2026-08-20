@@ -17,6 +17,7 @@ const expected = {
   wildcards: 12,
 };
 const failures = [];
+const warnings = [];
 const localAssets = new Map();
 const remoteAssets = [];
 
@@ -26,6 +27,10 @@ async function readJson(file) {
 
 function addFailure(message) {
   failures.push(message);
+}
+
+function addWarning(message) {
+  warnings.push(message);
 }
 
 function collectAsset(assetPath, checksum, owner) {
@@ -62,7 +67,11 @@ function validateRows(family, rows) {
 
     const primaryPath = row.primary?.assetPath;
     if (primaryPath) collectAsset(primaryPath, row.primary.sha256, owner);
-    else if (row.primary?.publicUrl) remoteAssets.push({ url: row.primary.publicUrl, owner });
+    else if (row.primary?.publicUrl) remoteAssets.push({
+      url: row.primary.publicUrl,
+      owner,
+      hasLocalFallback: Boolean(row.fallback?.assetPath),
+    });
     else addFailure(`${owner}: primary visual has no local path or public URL`);
     if (!row.primary?.provider && !row.primary?.source?.provider) addFailure(`${owner}: missing primary provider metadata`);
   }
@@ -109,10 +118,14 @@ async function validateRemoteAssets() {
         });
         const contentType = response.headers.get('content-type') ?? '';
         if (!response.ok || !contentType.startsWith('image/')) {
-          addFailure(`${current.owner}: remote primary failed (${response.status}, ${contentType || 'no content type'})`);
+          const message = `${current.owner}: remote primary failed (${response.status}, ${contentType || 'no content type'})`;
+          if (current.hasLocalFallback) addWarning(message);
+          else addFailure(message);
         }
       } catch (error) {
-        addFailure(`${current.owner}: remote primary request failed: ${error instanceof Error ? error.message : String(error)}`);
+        const message = `${current.owner}: remote primary request failed: ${error instanceof Error ? error.message : String(error)}`;
+        if (current.hasLocalFallback) addWarning(message);
+        else addFailure(message);
       }
     }
   });
@@ -147,6 +160,8 @@ const result = {
   localAssets: localAssets.size,
   remoteAssets: remoteAssets.length,
   runtimeUnresolved: failures.length,
+  remotePrimaryWarnings: warnings.length,
+  warnings,
   failures,
 };
 console.log(JSON.stringify(result, null, 2));

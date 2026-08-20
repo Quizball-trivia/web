@@ -7,6 +7,7 @@ import { useRealtimeConnection } from "@/lib/realtime/useRealtimeConnection";
 import { getSocket } from "@/lib/realtime/socket-client";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import { useAuctionActiveMatchStore } from "@/stores/auctionActiveMatch.store";
+import { useFootballGridStore } from "@/stores/footballGrid.store";
 import { useRankedMatchmakingStore } from "@/stores/rankedMatchmaking.store";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useAuthStore } from "@/stores/auth.store";
@@ -112,6 +113,9 @@ export function useFriendLobbyLogic({
   // flips as soon as the host's `lobby:start` creates the auction match.
   const activeAuctionMatchId = useAuctionActiveMatchStore(
     (state) => state.activeAuctionMatch?.matchId ?? null
+  );
+  const activeFootballGridMatchId = useFootballGridStore(
+    (state) => state.state?.matchId ?? null
   );
   const startSession = useGameSessionStore((state) => state.startSession);
 
@@ -490,6 +494,7 @@ export function useFriendLobbyLogic({
   // earlier match would yank a waiting lobby onto `/auction`. `/auction` picks
   // the match up through its own rejoin-on-connect handshake.
   const isAuctionLobby = activeLobby?.settings.gameMode === "auction";
+  const isFootballGridLobby = activeLobby?.settings.gameMode === "football_grid";
   const auctionHandoffReady =
     isAuctionLobby &&
     Boolean(activeAuctionMatchId) &&
@@ -505,13 +510,28 @@ export function useFriendLobbyLogic({
     router.push("/auction");
   }, [activeAuctionMatchId, activeLobby?.lobbyId, auctionHandoffReady, clearStartMatchTimeout, router]);
 
+  const footballGridHandoffReady =
+    isFootballGridLobby &&
+    Boolean(activeFootballGridMatchId) &&
+    (isStartingMatch || activeLobby?.status === "active");
+
+  useEffect(() => {
+    if (!footballGridHandoffReady) return;
+    clearStartMatchTimeout();
+    logger.info("Football Grid lobby match started, navigating to live grid", {
+      lobbyId: activeLobby?.lobbyId ?? null,
+      matchId: activeFootballGridMatchId,
+    });
+    router.push("/football-grid?source=friend_lobby");
+  }, [activeFootballGridMatchId, activeLobby?.lobbyId, clearStartMatchTimeout, footballGridHandoffReady, router]);
+
   useEffect(() => {
     if (!draft && !hasActiveMatch) return;
     // An auction lobby never hands off through the possession `/game` route.
-    if (isAuctionLobby) return;
+    if (isAuctionLobby || isFootballGridLobby) return;
     clearStartMatchTimeout();
     router.push("/game");
-  }, [clearStartMatchTimeout, draft, hasActiveMatch, isAuctionLobby, router]);
+  }, [clearStartMatchTimeout, draft, hasActiveMatch, isAuctionLobby, isFootballGridLobby, router]);
 
   useEffect(() => {
     if (!error) return;
@@ -703,6 +723,7 @@ export function useFriendLobbyLogic({
   return {
     lobby: activeLobby,
     isAuctionLobby,
+    isFootballGridLobby,
     members,
     lobbyCode,
     isResolvingInvite,

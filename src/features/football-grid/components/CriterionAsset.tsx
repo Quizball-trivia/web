@@ -1,0 +1,114 @@
+'use client';
+
+/* eslint-disable @next/next/no-img-element -- Grid criterion art is resolved from a reviewed runtime registry. */
+
+import { useMemo, useState } from 'react';
+import { Award, Globe2, Shield, Trophy, UserRound, UsersRound, Zap } from 'lucide-react';
+import clubs from '@/data/football-grid/launch-assets/clubs.json';
+import countries from '@/data/football-grid/launch-assets/countries.json';
+import leagues from '@/data/football-grid/launch-assets/leagues.json';
+import managers from '@/data/football-grid/launch-assets/managers.json';
+import competitions from '@/data/football-grid/launch-assets/competitions.json';
+import wildcards from '@/data/football-grid/launch-assets/wildcards.json';
+import type { FootballGridCriterionView } from '@/lib/realtime/socket.types';
+import { cn } from '@/lib/utils';
+
+type RegistryItem = {
+  id: string;
+  labelEn?: string;
+  labelKa?: string;
+  assetPath?: string;
+  primary?: { assetPath?: string; publicUrl?: string };
+  fallback?: { assetPath?: string };
+};
+
+const REGISTRIES: Partial<Record<FootballGridCriterionView['family'], RegistryItem[]>> = {
+  club: clubs as RegistryItem[],
+  country: countries as RegistryItem[],
+  league: leagues as RegistryItem[],
+  manager: managers as RegistryItem[],
+  trophy_award: competitions as RegistryItem[],
+  wildcard: wildcards as RegistryItem[],
+};
+
+function comparable(value: string | null | undefined): string {
+  return (value ?? '')
+    .toLocaleLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9\u10a0-\u10ff]+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+function resolveRegistryAssets(criterion: FootballGridCriterionView): string[] {
+  const key = criterion.assetKey?.trim() ?? '';
+  if (/^(https?:\/\/|\/)/.test(key)) return [key];
+
+  const candidates = [key, criterion.key, criterion.id, criterion.labelEn, criterion.labelKa]
+    .map(comparable)
+    .filter(Boolean);
+  const registry = REGISTRIES[criterion.family] ?? [];
+  const item = registry.find((candidate) => {
+    const values = [candidate.id, candidate.labelEn, candidate.labelKa].map(comparable);
+    return candidates.some((value) => values.some((registryValue) => (
+      registryValue === value ||
+      registryValue.endsWith(`-${value}`) ||
+      value.endsWith(`-${registryValue}`)
+    )));
+  });
+  if (!item) return [];
+
+  // Local reviewed assets are deterministic and work offline. Club primaries
+  // intentionally remain remote because they are the real crests; all others
+  // use the packaged launch asset first.
+  if (criterion.family === 'club') {
+    return [item.primary?.publicUrl, item.fallback?.assetPath].filter((value): value is string => Boolean(value));
+  }
+  return [item.assetPath, item.primary?.assetPath, item.fallback?.assetPath]
+    .filter((value, index, values): value is string => Boolean(value) && values.indexOf(value) === index);
+}
+
+const FAMILY_ICONS = {
+  club: Shield,
+  country: Globe2,
+  league: Trophy,
+  manager: UserRound,
+  teammate: UsersRound,
+  trophy_award: Award,
+  wildcard: Zap,
+} satisfies Record<FootballGridCriterionView['family'], typeof Shield>;
+
+interface CriterionAssetProps {
+  criterion: FootballGridCriterionView;
+  className?: string;
+}
+
+export function CriterionAsset({ criterion, className }: CriterionAssetProps) {
+  const sources = useMemo(() => resolveRegistryAssets(criterion), [criterion]);
+  const [failedSources, setFailedSources] = useState<string[]>([]);
+  const source = sources.find((candidate) => !failedSources.includes(candidate)) ?? null;
+  const Icon = FAMILY_ICONS[criterion.family];
+
+  if (source) {
+    return (
+      <img
+        src={source}
+        alt=""
+        className={cn('object-contain', className)}
+        onError={() => setFailedSources((current) => current.includes(source) ? current : [...current, source])}
+      />
+    );
+  }
+
+  return (
+    <span
+      aria-hidden="true"
+      className={cn(
+        'grid place-items-center rounded-2xl bg-white/10 text-white/80 ring-1 ring-inset ring-white/10',
+        className,
+      )}
+    >
+      <Icon className="size-1/2" strokeWidth={2.2} />
+    </span>
+  );
+}

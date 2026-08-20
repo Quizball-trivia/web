@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { PublicLobby } from "@/lib/domain/lobby";
-import { ArrowRight, Loader2, Trophy, Users } from "lucide-react";
+import { ArrowRight, Grid3X3, Loader2, Trophy, Users } from "lucide-react";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 
 const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
@@ -55,6 +55,11 @@ export function LobbyCard({ lobby, onJoin, isJoining }: LobbyCardProps) {
              {lobby.gameMode === 'ranked_sim' && (
                 <Badge variant="secondary" className="px-1.5 py-0 h-5 text-[10px] gap-1 bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
                    <Trophy className="size-3" /> Ranked
+                </Badge>
+             )}
+             {lobby.gameMode === 'football_grid' && (
+                <Badge variant="secondary" className="h-5 gap-1 border-brand-blue/20 bg-brand-blue/10 px-1.5 py-0 text-[10px] text-brand-blue-light">
+                   <Grid3X3 className="size-3" /> Grid
                 </Badge>
              )}
            </div>
