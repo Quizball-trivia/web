@@ -222,6 +222,14 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
   const [busy, setBusy] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
   const [gallery, setGallery] = useState<GgtGallery | null>(null);
+
+  /** Whole published pool solved — replays pay nothing, so the idle card must
+   *  stop promising coins. Falls back to counts when the backend predates the
+   *  pool_exhausted field. */
+  const poolExhausted = gallery
+    ? (gallery.pool_exhausted ?? (gallery.solved > 0 && gallery.solved >= gallery.total))
+    : false;
+  const coinsCapped = gallery ? gallery.coins_today >= gallery.daily_coin_cap : false;
   const [showGallery, setShowGallery] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { addXP } = usePlayer();
@@ -494,6 +502,9 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
   const mainMoves = session?.goal.main_moves ?? 1;
   const duration = timeline?.duration ?? 0;
 
+  /** Display-only replay position ("Move 2/5") — scoring no longer derives
+   *  from it, so a fast guess on a short goal isn't punished for the author's
+   *  step count. */
   const revealedMoves = useMemo(() => {
     if (!timeline) return 1;
     const elapsed = Math.min(time, timeline.duration);
@@ -504,15 +515,26 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
     return Math.max(1, Math.min(revealed, mainMoves));
   }, [timeline, time, mainMoves]);
 
+  /** Mirrors the server's decay so the preview can't drift from settlement.
+   *  New backends send full_points_seconds and settle on elapsed time; an old
+   *  backend (field absent) still settles by revealed-move count, so the
+   *  preview keeps the legacy formula there — mismatched formulas would show
+   *  one number while the server awards another during rolling deploys. */
   const potential = useMemo(() => {
     if (!session) return 0;
-    const span = Math.max(1, mainMoves - 1);
-    const stepIdx = Math.max(0, Math.min(revealedMoves - 1, mainMoves - 1));
-    const raw = Math.round(
-      session.max_points - ((session.max_points - session.min_points) * stepIdx) / span
-    );
-    return Math.max(session.min_points, Math.min(session.max_points, raw));
-  }, [session, revealedMoves, mainMoves]);
+    const max = session.max_points;
+    const min = session.min_points;
+    const windowS = session.full_points_seconds;
+    if (windowS == null) {
+      const span = Math.max(1, mainMoves - 1);
+      const stepIdx = Math.max(0, Math.min(revealedMoves - 1, mainMoves - 1));
+      const raw = Math.round(max - ((max - min) * stepIdx) / span);
+      return Math.max(min, Math.min(max, raw));
+    }
+    const fraction = Math.max(0, Math.min(1, time / windowS));
+    const raw = Math.round(max - (max - min) * fraction);
+    return Math.max(min, Math.min(max, raw));
+  }, [session, time, mainMoves, revealedMoves]);
 
   /** Animation position: loop the replay while watching; freeze at full when
    *  revealed. The score clock (time) is monotonic — only the drawing loops. */
@@ -617,7 +639,11 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
         </div>
       )}
 
-      <GgtLegend />
+      {/* Legend is hidden during the timed watch phase: on a 390px phone it
+          pushed the four answer options below the fold and players scrolled
+          while their score decayed. Glyphs are taught pre-kickoff (idle) and
+          re-shown at reveal. */}
+      {phase !== 'watch' && <GgtLegend />}
     </div>
   );
 
@@ -691,10 +717,31 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
               {t('Guess the Goal')}
             </h2>
             <p className="max-w-xs text-sm font-semibold leading-relaxed text-black/80">
-              {t(
-                'A legendary goal replays on the coaching board. The earlier you name it, the more you earn — first solve of each goal pays coins and XP.'
-              )}
+              {poolExhausted
+                ? t(
+                    'You have solved every goal in the library. Replays keep your mind sharp — no repeat rewards, all glory.'
+                  )
+                : gallery
+                  ? t(
+                      'A legendary goal replays on the coaching board. The earlier you name it, the more you earn — first solve of each goal pays coins and XP.'
+                    )
+                  : t(
+                      'A legendary goal replays on the coaching board. Name it early — the earlier you guess, the more it scores.'
+                    )}
             </p>
+            {gallery && !poolExhausted && (
+              <div
+                className="rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-wider text-black"
+                style={{ backgroundColor: 'rgba(0,0,0,0.14)' }}
+              >
+                {coinsCapped
+                  ? t('Daily coins earned — more tomorrow')
+                  : t('Today: {today}/{cap} coins', {
+                      today: gallery.coins_today,
+                      cap: gallery.daily_coin_cap,
+                    })}
+              </div>
+            )}
             {error && <p className="max-w-xs text-xs font-bold text-black">{error}</p>}
             <button
               type="button"
@@ -704,6 +751,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
             >
               <Play className="size-5 fill-current" /> {t('Kick off')}
             </button>
+            <GgtLegend />
           </motion.div>
           {gallery && (
             <motion.div
