@@ -28,6 +28,8 @@ const KA: Record<string, string> = {
   "(daily cap)": "(დღიური ლიმიტი)",
   "Already solved before — no repeat rewards": "უკვე ამოცნობილი გაქვს — განმეორებაზე ჯილდო აღარ გეძლევა",
   "Something went wrong — try again": "რაღაც შეცდომაა — სცადე თავიდან",
+  "Watch the real goal": "ნახე ნამდვილი გოლი",
+  "Back to the board": "დაფაზე დაბრუნება",
   "Couldn't load your game": "თამაში ვერ ჩაიტვირთა",
 
   // Shared

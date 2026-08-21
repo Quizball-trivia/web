@@ -124,7 +124,7 @@ function MiniModeCard({
         <div className="absolute top-2.5 right-2.5 md:top-4 md:right-4 z-20 flex items-center gap-1.5">
           {badge && (
             <div
-              className={`rounded-full px-2.5 py-1 text-[8px] md:text-[11px] uppercase tracking-wide ${dark ? 'bg-black text-brand-yellow' : 'bg-brand-yellow text-black'}`}
+              className="rounded-full bg-brand-yellow px-2.5 py-1 text-[8px] uppercase tracking-wide text-black md:text-[11px]"
               style={poppins}
             >
               {badge}
@@ -140,20 +140,28 @@ function MiniModeCard({
           )}
         </div>
       )}
-      <Image
-        src={iconSrc}
-        alt=""
-        width={200}
-        height={200}
-        className="pointer-events-none absolute bottom-2 right-3 z-0 h-20 w-20 object-contain opacity-90 md:bottom-3 md:right-5 md:h-32 md:w-32"
-      />
       <div className="relative z-10 flex h-full flex-col">
-        <h3 className={`pr-12 text-[1.05rem] md:text-[clamp(1.4rem,2.2vw,2rem)] leading-[1.1] uppercase break-words [hyphens:auto] ${text}`} style={poppins}>
+        {/* keep-all: Georgian has no hyphenation — auto-hyphens split words
+            mid-syllable with no visible hyphen ("გამოწვევ/ა"). */}
+        <h3
+          className={`${badge || badge2 ? 'pr-12' : 'pr-1'} text-[1rem] md:text-[clamp(1.4rem,2.2vw,2rem)] leading-[1.12] uppercase [overflow-wrap:normal] [word-break:keep-all] [hyphens:none] ${text}`}
+          style={poppins}
+        >
           {title}
         </h3>
-        <p className={`mt-1.5 text-[10px] md:text-[14px] uppercase ${dark ? 'text-black/70' : 'text-white/80'}`} style={poppins}>
+        <p className={`mt-1.5 text-[10px] uppercase md:text-[14px] ${dark ? 'text-black/70' : 'text-white/80'}`} style={poppins}>
           {subtitle}
         </p>
+        {/* icon lives in flow below the text — it can never cover it */}
+        <div className="mt-auto flex justify-end pt-1.5">
+          <Image
+            src={iconSrc}
+            alt=""
+            width={200}
+            height={200}
+            className="pointer-events-none h-14 w-14 object-contain opacity-90 md:h-28 md:w-28"
+          />
+        </div>
       </div>
     </>
   );

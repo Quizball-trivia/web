@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { useLocale } from "@/contexts/LocaleContext";
+import { trackEvent } from "@/lib/posthog";
 import { isRoadToGoalEnabled } from "@/lib/features/roadToGoal";
 import {
   trackRoadToGoalCardClicked,
@@ -17,7 +18,7 @@ const GAMES = [
     href: "/free-kicks",
     titleKey: "play.freeKicksTitle",
     descKey: "play.freeKicksSubtitle",
-    iconSrc: "/assets/free-kicks-card-icon.png",
+    iconSrc: "/assets/free-kicks-card-icon.png?v=2",
     live: true,
   },
   {
@@ -25,7 +26,7 @@ const GAMES = [
     href: isRoadToGoalEnabled ? "/road-to-goal" : "/demos/mini-road-to-goal?from=/mini-games",
     titleKey: "play.roadToGoalTitle",
     descKey: "play.roadToGoalSubtitle",
-    iconSrc: "/assets/road-to-goal-card-icon.png",
+    iconSrc: "/assets/road-to-goal-card-icon.png?v=2",
     live: isRoadToGoalEnabled,
   },
   {
@@ -33,7 +34,7 @@ const GAMES = [
     href: "/guess-the-goal",
     titleKey: "miniGames.guessTheGoalTitle",
     descKey: "miniGames.guessTheGoalSubtitle",
-    iconSrc: "/assets/guess-the-goal-card-icon.png",
+    iconSrc: "/assets/guess-the-goal-card-icon.png?v=2",
     live: true,
   },
 ] as const;
@@ -59,20 +60,18 @@ function GameCard({ game, index }: { game: MiniGameEntry; index: number }) {
     >
       <Link
         href={game.href}
-        onClick={game.key === "road-to-goal"
-          ? () => trackRoadToGoalCardClicked({
+        onClick={() => {
+          trackEvent("mini_game_card_clicked", { game: game.key });
+          if (game.key === "road-to-goal") {
+            trackRoadToGoalCardClicked({
               destination: roadToGoalDestination,
               enabled: game.live,
-            })
-          : undefined}
+            });
+          }
+        }}
         className="relative flex min-h-[184px] w-full flex-col overflow-hidden rounded-[8px] p-3.5 text-center text-black transition-all hover:brightness-105 active:translate-y-[2px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white md:min-h-[268px] md:rounded-[20px] md:p-6"
         style={{ backgroundColor: "#FF9600" }}
       >
-        {game.live ? (
-          <div className="absolute left-2.5 top-2.5 inline-flex items-center rounded-full bg-black px-2.5 py-1 text-[9px] font-black uppercase tracking-wide text-brand-yellow md:left-3 md:top-3 md:px-3 md:text-[11px]">
-            {t("miniGames.hubLiveBadge")}
-          </div>
-        ) : null}
         <h3 className="font-poppins mt-6 flex min-h-[2.1rem] items-start justify-center px-2 text-center text-[16px] uppercase leading-[1.1] md:mt-8 md:min-h-[3.5rem] md:text-[28px] md:leading-[0.95]">
           {t(game.titleKey)}
         </h3>
