@@ -42,6 +42,10 @@ export interface GgtSession {
   server_now: string;
   started_at: string;
   grace_ms: number;
+  /** Seconds of play over which the score decays MAX→MIN — mirrors the
+   *  server's decay so the client preview can't drift from settlement.
+   *  Optional for rolling deploys against an older backend. */
+  full_points_seconds?: number;
   max_points: number;
   min_points: number;
   goal: {
@@ -93,6 +97,8 @@ export interface GgtBonusOutcome {
 export interface GgtStats {
   solved: number;
   total: number;
+  /** Optional for rolling deploys against an older backend. */
+  pool_exhausted?: boolean;
   coins_today: number;
   daily_coin_cap: number;
 }
@@ -110,6 +116,8 @@ export interface GgtGalleryGoal {
 export interface GgtGallery {
   solved: number;
   total: number;
+  /** Optional for rolling deploys against an older backend. */
+  pool_exhausted?: boolean;
   coins_earned: number;
   xp_earned: number;
   daily_coin_cap: number;
