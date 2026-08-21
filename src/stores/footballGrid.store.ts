@@ -145,16 +145,22 @@ export const useFootballGridStore = create<FootballGridStoreState>((set) => ({
       completed: payload,
       // Only human-vs-human non-random series may offer a rematch; the
       // backend's `eligible` flag is the authority (bot and random-queue
-      // matches would be rejected server-side).
-      rematch: payload.rematch?.eligible
-        ? {
-            seriesId: payload.rematch.seriesId,
-            seriesVersion: payload.rematch.seriesVersion,
-            status: 'pending',
-            acceptedUserIds: payload.rematch.acceptedUserIds,
-            expiresAt: payload.rematch.expiresAt,
-          }
-        : null,
+      // matches would be rejected server-side). A redelivered completion
+      // must not regress a newer rematch broadcast to its older snapshot.
+      rematch: (() => {
+        if (!payload.rematch?.eligible) return current.rematch && current.completed?.matchId === payload.matchId ? current.rematch : null;
+        const offered = {
+          seriesId: payload.rematch.seriesId,
+          seriesVersion: payload.rematch.seriesVersion,
+          status: 'pending' as const,
+          acceptedUserIds: payload.rematch.acceptedUserIds,
+          expiresAt: payload.rematch.expiresAt,
+        };
+        if (current.rematch && current.rematch.seriesId === offered.seriesId && current.rematch.seriesVersion > offered.seriesVersion) {
+          return current.rematch;
+        }
+        return offered;
+      })(),
       pendingCommandId: null,
       error: null,
       serverTimeOffsetMs: serverOffset(payload.serverNow),

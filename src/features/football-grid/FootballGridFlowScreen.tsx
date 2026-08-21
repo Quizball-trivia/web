@@ -696,7 +696,10 @@ export function FootballGridFlowScreen() {
   const handledTurnResolutionsRef = useRef(new Set<string>());
   const statsRef = useRef({ selections: 0, answers: 0, correct: 0, wrong: 0, passes: 0, timeouts: 0 });
   const latestStateRef = useRef(grid.state);
-  const remaining = useRemaining(grid.state?.turnDeadlineAt ?? grid.state?.phaseDeadlineAt ?? null, grid.serverTimeOffsetMs);
+  const remaining = useRemaining(
+    grid.state?.turnDeadlineAt ?? grid.state?.phaseDeadlineAt ?? grid.state?.reconnectDeadlineAt ?? null,
+    grid.serverTimeOffsetMs,
+  );
   const isMyTurn = Boolean(grid.state?.phase === 'turn' && grid.state.currentPlayerUserId === selfUserId);
 
   useEffect(() => {

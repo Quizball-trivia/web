@@ -274,8 +274,8 @@ function ResultScenario({ outcome }: { outcome: 'win' | 'loss' | 'draw' }) {
         </div>
         <div className="mt-3 rounded-2xl bg-white/5 p-4 font-black text-brand-blue-light">+{won ? 70 : 50} {copy.xp}</div>
         <div className="mt-7 space-y-3">
-          {won && <button type="button" className="w-full rounded-2xl bg-brand-yellow px-6 py-4 font-black uppercase text-surface-page">{copy.rematch}</button>}
-          <button type="button" className="w-full rounded-2xl bg-brand-blue px-6 py-4 font-black uppercase">{copy.newOpponent}</button>
+          {won && <button type="button" className="w-full rounded-2xl bg-brand-green px-6 py-4 font-black uppercase text-white">{copy.rematch}</button>}
+          {!won && <button type="button" className="w-full rounded-2xl bg-brand-blue px-6 py-4 font-black uppercase">{copy.newOpponent}</button>}
           <button type="button" className="w-full rounded-2xl border border-white/15 px-6 py-4 font-bold text-white/70">{copy.backToPlay}</button>
         </div>
       </div>
