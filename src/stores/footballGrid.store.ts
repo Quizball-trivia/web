@@ -143,7 +143,10 @@ export const useFootballGridStore = create<FootballGridStoreState>((set) => ({
     return {
       state: payload.state,
       completed: payload,
-      rematch: payload.rematch
+      // Only human-vs-human non-random series may offer a rematch; the
+      // backend's `eligible` flag is the authority (bot and random-queue
+      // matches would be rejected server-side).
+      rematch: payload.rematch?.eligible
         ? {
             seriesId: payload.rematch.seriesId,
             seriesVersion: payload.rematch.seriesVersion,
@@ -157,8 +160,12 @@ export const useFootballGridStore = create<FootballGridStoreState>((set) => ({
       serverTimeOffsetMs: serverOffset(payload.serverNow),
     };
   }),
-
-  setRematch: (payload) => set({ rematch: payload }),
+  setRematch: (payload) => set((current) => {
+    // Rematch broadcasts can arrive out of order across reconnects; never let
+    // an older series version regress a terminal state back to pending.
+    if (current.rematch && payload.seriesVersion < current.rematch.seriesVersion) return current;
+    return { rematch: payload };
+  }),
   setCommandResult: (payload) => set((current) => ({
     lastCommandResult: payload,
     pendingCommandId: current.pendingCommandId === payload.commandId ? null : current.pendingCommandId,
