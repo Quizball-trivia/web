@@ -522,7 +522,7 @@ export function useFriendLobbyLogic({
       lobbyId: activeLobby?.lobbyId ?? null,
       matchId: activeFootballGridMatchId,
     });
-    router.push("/football-grid?source=friend_lobby");
+    router.push("/tic-tac-toe?source=friend_lobby");
   }, [activeFootballGridMatchId, activeLobby?.lobbyId, clearStartMatchTimeout, footballGridHandoffReady, router]);
 
   useEffect(() => {

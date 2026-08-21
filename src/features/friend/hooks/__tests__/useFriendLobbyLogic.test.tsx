@@ -641,7 +641,7 @@ describe('useFriendLobbyLogic Football Grid hand-off', () => {
 
     await waitFor(() => {
       expect(result.current.isFootballGridLobby).toBe(true);
-      expect(mocks.routerPush).toHaveBeenCalledWith('/football-grid?source=friend_lobby');
+      expect(mocks.routerPush).toHaveBeenCalledWith('/tic-tac-toe?source=friend_lobby');
     });
     expect(mocks.routerPush).not.toHaveBeenCalledWith('/game');
   });

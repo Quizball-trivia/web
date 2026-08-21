@@ -86,8 +86,10 @@ export const FOOTBALL_GRID_COPY = {
     xp: 'XP earned',
     coins: 'Coins earned',
     signIn: 'Sign in to play online',
-    signInBody: 'Football Grid is a live 1v1 mode. Sign in to match with another player or a smart opponent.',
+    signInBody: 'Football Tic Tac Toe is a live 1v1 mode. Sign in to match with another player or a smart opponent.',
     goSignIn: 'Go to sign in',
+    unavailable: 'Football Tic Tac Toe is temporarily unavailable',
+    unavailableBody: 'We could not start matchmaking right now. Your account and progress are safe.',
     retry: 'Try again',
   },
   ka: {
@@ -136,8 +138,10 @@ export const FOOTBALL_GRID_COPY = {
     xp: 'მიღებული XP',
     coins: 'მიღებული მონეტები',
     signIn: 'ონლაინ სათამაშოდ შედი ანგარიშზე',
-    signInBody: 'Football Grid არის 1v1 ონლაინ რეჟიმი. შედი ანგარიშზე და ითამაშე სხვა მოთამაშესთან ან ჭკვიან მეტოქესთან.',
+    signInBody: 'საფეხბურთო იქს-ნული არის 1v1 ონლაინ რეჟიმი. შედი ანგარიშზე და ითამაშე სხვა მოთამაშესთან ან ჭკვიან მეტოქესთან.',
     goSignIn: 'შესვლა',
+    unavailable: 'საფეხბურთო იქს-ნული დროებით მიუწვდომელია',
+    unavailableBody: 'მატჩის ძიება ახლა ვერ დავიწყეთ. შენი ანგარიში და პროგრესი უსაფრთხოდაა.',
     retry: 'თავიდან ცდა',
   },
 } as const;
@@ -468,7 +472,37 @@ export function SearchScreen({
   );
 }
 
-function PhaseOverlay({ state, remaining, copy }: { state: FootballGridState; remaining: number; copy: typeof FOOTBALL_GRID_COPY.en | typeof FOOTBALL_GRID_COPY.ka }) {
+export function FootballGridNoticeScreen({
+  kind,
+  title,
+  body,
+  actionLabel,
+  onAction,
+}: {
+  kind: 'auth' | 'unavailable' | 'loading';
+  title: string;
+  body?: string;
+  actionLabel?: string;
+  onAction?: () => void;
+}) {
+  const Icon = kind === 'auth' ? UserRoundSearch : kind === 'loading' ? LoaderCircle : AlertTriangle;
+  return (
+    <main className="grid min-h-dvh place-items-center bg-surface-page-alt px-5 text-center text-white">
+      <div className="w-full max-w-md rounded-[32px] border border-white/10 bg-white/5 p-8 shadow-[0_24px_90px_rgba(0,0,0,.28)]">
+        <Icon className={cn('mx-auto mb-4 size-14', kind === 'loading' ? 'animate-spin text-brand-blue-light' : 'text-brand-yellow')} />
+        <h1 className="text-2xl font-black uppercase leading-tight">{title}</h1>
+        {body && <p className="mt-3 text-sm leading-relaxed text-white/55">{body}</p>}
+        {actionLabel && onAction && (
+          <button type="button" onClick={onAction} className="mt-6 w-full rounded-2xl bg-brand-blue px-5 py-4 font-black uppercase text-white">
+            {actionLabel}
+          </button>
+        )}
+      </div>
+    </main>
+  );
+}
+
+export function PhaseOverlay({ state, remaining, copy }: { state: FootballGridState; remaining: number; copy: typeof FOOTBALL_GRID_COPY.en | typeof FOOTBALL_GRID_COPY.ka }) {
   if (state.phase === 'turn' || state.phase === 'terminal') return null;
   const isPaused = state.phase === 'paused';
   const isInterrupted = state.phase === 'service_interruption';
@@ -634,32 +668,32 @@ export function FootballGridFlowScreen() {
   };
 
   if (authStatus === 'loading') {
-    return <main className="grid min-h-dvh place-items-center bg-surface-page-alt"><LoaderCircle className="size-10 animate-spin text-brand-blue-light" /></main>;
+    return <FootballGridNoticeScreen kind="loading" title={copy.loading} />;
   }
 
   if (!selfUserId) {
     return (
-      <main className="grid min-h-dvh place-items-center bg-surface-page-alt px-5 text-center text-white">
-        <div className="max-w-md rounded-[32px] border border-white/10 bg-white/5 p-8">
-          <UserRoundSearch className="mx-auto mb-4 size-14 text-brand-yellow" />
-          <h1 className="text-2xl font-black uppercase">{copy.signIn}</h1>
-          <p className="mt-3 text-sm leading-relaxed text-white/55">{copy.signInBody}</p>
-          <button type="button" onClick={() => router.push('/auth')} className="mt-6 w-full rounded-2xl bg-brand-blue px-5 py-4 font-black uppercase text-white">{copy.goSignIn}</button>
-        </div>
-      </main>
+      <FootballGridNoticeScreen
+        kind="auth"
+        title={copy.signIn}
+        body={copy.signInBody}
+        actionLabel={copy.goSignIn}
+        onAction={() => router.push('/auth')}
+      />
     );
   }
 
   if (!grid.state && !grid.completed) {
     if (grid.error && grid.search.state === 'idle') {
+      const unavailable = grid.error.code === 'GRID_UNAVAILABLE' || grid.error.code === 'GRID_QUEUE_UNAVAILABLE';
       return (
-        <main className="grid min-h-dvh place-items-center bg-surface-page-alt px-5 text-center text-white">
-          <div className="max-w-md rounded-[32px] border border-white/10 bg-white/5 p-8">
-            <AlertTriangle className="mx-auto mb-4 size-12 text-brand-yellow" />
-            <h1 className="text-2xl font-black uppercase">{grid.error.message}</h1>
-            <button type="button" onClick={grid.actions.startSearch} className="mt-6 rounded-2xl bg-brand-blue px-7 py-4 font-black uppercase">{copy.retry}</button>
-          </div>
-        </main>
+        <FootballGridNoticeScreen
+          kind="unavailable"
+          title={unavailable ? copy.unavailable : grid.error.message}
+          body={unavailable ? copy.unavailableBody : undefined}
+          actionLabel={copy.retry}
+          onAction={grid.actions.startSearch}
+        />
       );
     }
     return <SearchScreen playerName={player.username} avatar={player.avatar} customization={player.avatarCustomization} status={grid.search.state} onCancel={handleCancel} copy={copy} />;

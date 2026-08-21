@@ -498,7 +498,7 @@ export function ModeSelectionScreen({
           subtitle={t('play.footballGridSubtitle')}
           iconSrc={footballGridAssetUrl('/assets/football-grid-card-icon.svg')!}
           badge={t('play.freeKicksNewBadge')}
-          href="/football-grid?source=matchmaking"
+          href="/tic-tac-toe?source=matchmaking"
         />
         <MiniModeCard
           bg={colors.yellow.base}
