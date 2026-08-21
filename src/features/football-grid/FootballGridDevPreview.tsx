@@ -20,9 +20,11 @@ import {
 import { useLocale } from '@/contexts/LocaleContext';
 import { usePlayer } from '@/contexts/PlayerContext';
 import { footballGridAssetUrl } from '@/lib/football-grid/assets';
-import type { FootballGridCriterionView, FootballGridState } from '@/lib/realtime/socket.types';
+import type { FootballGridCriterionView, FootballGridState, OpponentInfo } from '@/lib/realtime/socket.types';
 import { cn } from '@/lib/utils';
 import { MiniGameShell, StatPill } from '@/features/mini-games/components/MiniGameShell';
+import { AvatarDisplay } from '@/components/AvatarDisplay';
+import { AnimatedCounter } from '@/features/game/results/AnimatedCounter';
 import {
   FOOTBALL_GRID_COPY,
   FootballGridNoticeScreen,
@@ -81,6 +83,13 @@ const PREVIEW_STATE: FootballGridState = {
   pausedFromPhase: null,
   reconnectDeadlineAt: null,
   completionReason: null,
+};
+
+const PREVIEW_OPPONENT: OpponentInfo = {
+  id: 'preview-rival',
+  username: 'Giorgi 10',
+  avatarUrl: null,
+  avatarCustomization: { skin: 'skin_male_dark', hair: 'hair_cornrows', jersey: 'jersey_barcelona' },
 };
 
 type ScenarioId =
@@ -154,7 +163,12 @@ function stateForScenario(scenario: ScenarioId): FootballGridState {
         ? phase
         : 'active',
     currentPlayerUserId: scenario === 'opponent-turn' ? 'preview-rival' : 'preview-self',
-    phaseDeadlineAt: ['handoff', 'loading', 'countdown'].includes(phase) ? new Date(Date.now() + 3_000).toISOString() : null,
+    phaseDeadlineAt: ['handoff', 'loading', 'countdown'].includes(phase)
+      ? new Date(Date.now() + 3_000).toISOString()
+      : phase === 'paused'
+        ? new Date(Date.now() + 20_000).toISOString()
+        : null,
+    reconnectDeadlineAt: phase === 'paused' ? new Date(Date.now() + 20_000).toISOString() : null,
     turnDeadlineAt: phase === 'turn' ? new Date(Date.now() + 16_000).toISOString() : null,
     pausedAt: phase === 'paused' || phase === 'service_interruption' ? new Date().toISOString() : null,
     pausedFromPhase: phase === 'paused' || phase === 'service_interruption' ? 'turn' : null,
@@ -212,7 +226,7 @@ function MatchScenario({ scenario }: { scenario: ScenarioId }) {
           reportableAttempt={feedback && feedback !== 'correct' ? 'preview-attempt' : null}
           onReport={() => undefined}
         />
-        <PhaseOverlay state={state} remaining={scenario === 'countdown' ? 3_000 : 16_000} copy={copy} />
+        <PhaseOverlay state={state} remaining={scenario === 'countdown' ? 3_000 : scenario === 'paused' ? 20_000 : 16_000} copy={copy} />
       </div>
     </MiniGameShell>
   );
@@ -221,24 +235,42 @@ function MatchScenario({ scenario }: { scenario: ScenarioId }) {
 function ResultScenario({ outcome }: { outcome: 'win' | 'loss' | 'draw' }) {
   const { locale } = useLocale();
   const copy = FOOTBALL_GRID_COPY[locale];
+  const { player } = usePlayer();
   const won = outcome === 'win';
   const draw = outcome === 'draw';
-  const Icon = won ? Trophy : draw ? RotateCcw : Flag;
   const title = won ? copy.resultWin : draw ? copy.resultDraw : copy.resultLoss;
   const myScore = won ? 3 : 2;
   const opponentScore = won ? 1 : draw ? 2 : 3;
 
   return (
-    <main className="min-h-dvh overflow-y-auto bg-surface-page-alt px-5 py-10 text-center text-white">
-      <div className="mx-auto max-w-xl">
-        <div className={cn('mx-auto grid size-24 place-items-center rounded-[30px]', won ? 'bg-brand-yellow text-surface-page' : draw ? 'bg-white/10 text-white' : 'bg-brand-blue text-white')}>
-          <Icon className="size-12" />
-        </div>
-        <p className="mt-6 text-xs font-black uppercase tracking-[0.22em] text-white/40">{copy.title}</p>
-        <h1 className="mt-2 text-4xl font-black uppercase tracking-tight">{title}</h1>
-        <div className="mt-7 grid grid-cols-2 gap-3">
-          <div className="rounded-2xl border border-brand-blue-light bg-brand-blue/15 p-4"><p className="text-xs font-bold uppercase text-white/45">quizballPro</p><p className="mt-1 text-4xl font-black">{myScore}</p></div>
-          <div className="rounded-2xl border border-brand-yellow/50 bg-brand-yellow/10 p-4"><p className="text-xs font-bold uppercase text-white/45">Giorgi 10</p><p className="mt-1 text-4xl font-black">{opponentScore}</p></div>
+    <main className="min-h-dvh overflow-y-auto bg-surface-page-alt bg-cover bg-center bg-no-repeat px-5 py-10 text-center text-white" style={{ backgroundImage: `url(${footballGridAssetUrl('/assets/bg-pattern.webp')})` }}>
+      <div className="mx-auto max-w-xl font-poppins">
+        <p className="text-xs font-black uppercase tracking-[0.22em] text-white/40">{copy.title}</p>
+        <h1
+          className="mt-2 font-poppins text-[2.5rem] font-black uppercase leading-[1.3] tracking-[0] sm:text-[3rem]"
+          style={{ color: won ? '#22C55E' : draw ? '#FACC15' : '#FB3101' }}
+        >
+          {title}
+        </h1>
+        <div className="mt-6 grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-5">
+          <div className="flex min-w-0 flex-col items-center gap-2">
+            <AvatarDisplay customization={player.avatarCustomization ?? { base: player.avatar }} size="lg" shape="square" />
+            <span className="w-full truncate text-sm font-semibold uppercase text-white">{player.username}</span>
+          </div>
+          <div className="flex h-[44px] min-w-[110px] items-center justify-center rounded-[20px] bg-brand-blue px-5 text-2xl font-semibold tabular-nums text-white sm:h-[51px] sm:min-w-[133px] sm:px-6 sm:text-[36px]">
+            <AnimatedCounter from={0} to={myScore} delay={0.25} />
+            <span className="mx-1 sm:mx-1.5">:</span>
+            <AnimatedCounter from={0} to={opponentScore} delay={0.25} />
+          </div>
+          <div className="flex min-w-0 flex-col items-center gap-2">
+            <AvatarDisplay
+              customization={PREVIEW_OPPONENT.avatarCustomization ?? { base: undefined }}
+              size="lg"
+              shape="square"
+              className="-scale-x-100"
+            />
+            <span className="w-full truncate text-sm font-semibold uppercase text-white">{PREVIEW_OPPONENT.username}</span>
+          </div>
         </div>
         <div className="mt-3 rounded-2xl bg-white/5 p-4 font-black text-brand-blue-light">+{won ? 70 : 50} {copy.xp}</div>
         <div className="mt-7 space-y-3">
@@ -256,13 +288,16 @@ function ScenarioSurface({ scenario }: { scenario: ScenarioId }) {
   const copy = FOOTBALL_GRID_COPY[locale];
   const { player } = usePlayer();
 
-  if (scenario === 'searching' || scenario === 'pairing') {
+  if (scenario === 'searching' || scenario === 'pairing' || scenario === 'handoff' || scenario === 'loading' || scenario === 'countdown') {
+    const matchedScenario = scenario === 'handoff' || scenario === 'loading' || scenario === 'countdown';
     return (
       <SearchScreen
         playerName={player.username}
         avatar={player.avatar}
         customization={player.avatarCustomization}
-        status={scenario === 'pairing' ? 'pairing' : 'searching'}
+        status={matchedScenario ? 'matched' : scenario === 'pairing' ? 'pairing' : 'searching'}
+        opponent={matchedScenario ? PREVIEW_OPPONENT : null}
+        countdownSeconds={scenario === 'countdown' ? 3 : null}
         onCancel={() => undefined}
         copy={copy}
       />

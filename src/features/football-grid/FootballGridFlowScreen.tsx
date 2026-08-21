@@ -5,16 +5,11 @@ import { AnimatePresence, motion } from 'motion/react';
 import {
   AlertTriangle,
   Check,
-  Clock3,
   Coins,
-  Flag,
   LoaderCircle,
-  RotateCcw,
   Sparkles,
-  Trophy,
   UserRoundSearch,
   X,
-  Zap,
 } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
@@ -28,7 +23,9 @@ import type {
   FootballGridCompletionReason,
   FootballGridCriterionView,
   FootballGridState,
+  OpponentInfo,
 } from '@/lib/realtime/socket.types';
+import type { AvatarCustomization } from '@/types/game';
 import { cn } from '@/lib/utils';
 import {
   trackFootballGridEngagementEnded,
@@ -36,6 +33,7 @@ import {
   trackFootballGridViewed,
 } from '@/features/mini-games/footballGrid.analytics';
 import { MiniGameShell, StatPill } from '@/features/mini-games/components/MiniGameShell';
+import { AnimatedCounter } from '@/features/game/results/AnimatedCounter';
 import { CriterionAsset } from './components/CriterionAsset';
 import { useRealtimeFootballGrid } from './realtime/useRealtimeFootballGrid';
 
@@ -47,9 +45,9 @@ export const FOOTBALL_GRID_COPY = {
     pickTurn: 'Your turn — pick a cell',
     opponentThinking: 'Opponent is thinking…',
     searching: 'Finding your opponent',
-    searchingBody: "We're checking for a live player now. If nobody is available, a smart rank-matched opponent will step in.",
+    searchingBody: 'Looking for a player…',
     cancel: 'Cancel search',
-    matching: 'Building the board',
+    matching: 'Building the board…',
     ready: 'Opponent found',
     loading: 'Loading match',
     getReady: 'Get ready',
@@ -57,7 +55,8 @@ export const FOOTBALL_GRID_COPY = {
     theirTurn: "Opponent's move",
     pickCell: 'Pick an empty square, then name a footballer who matches both clues.',
     answerPlaceholder: 'Type a footballer…',
-    submit: 'Go',
+    submit: 'Submit',
+    submitShort: 'Submit',
     pass: 'Pass',
     correct: 'Square claimed!',
     wrong: 'That answer does not match both clues.',
@@ -65,6 +64,7 @@ export const FOOTBALL_GRID_COPY = {
     alreadyUsed: 'That footballer has already been used.',
     paused: 'Match paused',
     pausedBody: 'Waiting for the connection to recover. Your turn time is protected.',
+    reconnectWindow: 'Time left to reconnect',
     interrupted: 'Match temporarily interrupted',
     interruptedBody: 'The match is safely paused while we restore the game service.',
     report: 'Report missing answer',
@@ -99,9 +99,9 @@ export const FOOTBALL_GRID_COPY = {
     pickTurn: 'შენი ჯერია — აირჩიე უჯრა',
     opponentThinking: 'მეტოქე ფიქრობს…',
     searching: 'ვეძებთ მეტოქეს',
-    searchingBody: 'ჯერ ონლაინ მოთამაშეს ვეძებთ. თუ ვერ მოიძებნა, შენს დონეზე მორგებული ჭკვიანი მეტოქე ჩაერთვება.',
+    searchingBody: 'ვეძებთ მოთამაშეს…',
     cancel: 'ძიების გაუქმება',
-    matching: 'ვქმნით დაფას',
+    matching: 'ვქმნით დაფას…',
     ready: 'მეტოქე ნაპოვნია',
     loading: 'მატჩი იტვირთება',
     getReady: 'მოემზადე',
@@ -109,7 +109,8 @@ export const FOOTBALL_GRID_COPY = {
     theirTurn: 'მეტოქის სვლაა',
     pickCell: 'აირჩიე ცარიელი უჯრა და ჩაწერე ფეხბურთელი, რომელიც ორივე პირობას აკმაყოფილებს.',
     answerPlaceholder: 'ჩაწერე ფეხბურთელი…',
-    submit: 'წადი',
+    submit: 'დადასტურება',
+    submitShort: 'დასტ.',
     pass: 'გამოტოვება',
     correct: 'უჯრა შენია!',
     wrong: 'პასუხი ორივე პირობას არ აკმაყოფილებს.',
@@ -117,6 +118,7 @@ export const FOOTBALL_GRID_COPY = {
     alreadyUsed: 'ეს ფეხბურთელი უკვე გამოყენებულია.',
     paused: 'მატჩი შეჩერებულია',
     pausedBody: 'კავშირის აღდგენას ველოდებით. სვლის დრო დაცულია.',
+    reconnectWindow: 'დარჩენილი დრო',
     interrupted: 'მატჩი დროებით შეჩერდა',
     interruptedBody: 'თამაშის აღდგენამდე მატჩი უსაფრთხოდ არის დაპაუზებული.',
     report: 'დაკარგული პასუხის შეტყობინება',
@@ -162,7 +164,20 @@ function useRemaining(deadlineAt: string | null, serverTimeOffsetMs: number): nu
 
 const GRID_AVATAR_FALLBACK = footballGridAssetUrl('/assets/store/avatars/avatar_male_white.webp')!;
 const GRID_BACKGROUND = footballGridAssetUrl('/assets/bg-pattern.webp')!;
+const GRID_BACKGROUND_STYLE = { backgroundImage: `url(${GRID_BACKGROUND})` };
+/** Mode accent — matches the Tic Tac Toe card on /play (colors.red.mid). */
+const GRID_ACCENT = '#E04242';
 const resolveGridAvatarAsset = (asset: string) => footballGridAssetUrl(asset) ?? GRID_AVATAR_FALLBACK;
+
+/** Fixed roster the opponent card cycles through while searching (deterministic — no hydration drift). */
+const SEARCH_CYCLE_AVATARS: AvatarCustomization[] = [
+  { skin: 'skin_male_white', hair: 'hair_ronaldo_goat', jersey: 'jersey_real' },
+  { skin: 'skin_male_dark', hair: 'hair_cornrows', jersey: 'jersey_barcelona' },
+  { skin: 'skin_male_white_alt', hair: 'hair_wave', jersey: 'jersey_liverpool', facialHair: 'beard' },
+  { skin: 'skin_male_dark_alt', hair: 'hair_buzz', jersey: 'jersey_brazil_retro' },
+  { skin: 'skin_male_white', hair: 'hair_curly_crop', jersey: 'jersey_milan', glasses: 'glasses_wayfarer' },
+  { skin: 'skin_male_dark', hair: 'hair_hamsik', jersey: 'jersey_psg_retro' },
+];
 
 function CriterionHeader({
   criterion,
@@ -266,6 +281,22 @@ export function MatchBoard({
   );
 }
 
+/** Three dots that fade in sequence — the "opponent is thinking" pulse. */
+function ThinkingDots() {
+  return (
+    <span aria-hidden className="ml-0.5 inline-flex gap-[3px]">
+      {[0, 1, 2].map((index) => (
+        <motion.span
+          key={index}
+          className="size-[3px] self-center rounded-full bg-current"
+          animate={{ opacity: [0.25, 1, 0.25] }}
+          transition={{ repeat: Infinity, duration: 1.2, delay: index * 0.18, ease: 'easeInOut' }}
+        />
+      ))}
+    </span>
+  );
+}
+
 export function FootballGridTurnPanel({
   state,
   locale,
@@ -314,7 +345,11 @@ export function FootballGridTurnPanel({
             exit={{ opacity: 0 }}
             className="rounded-2xl border-2 border-brand-red-soft/30 bg-brand-red-soft/[0.06] p-3 text-center"
           >
-            <span className="font-poppins text-sm font-black uppercase tracking-wide text-brand-red-soft">{copy.opponentThinking}</span>
+            <span className="inline-flex items-baseline font-poppins text-sm font-black uppercase tracking-wide text-brand-red-soft">
+              <span aria-hidden>{copy.opponentThinking.replace(/[….]+$/, '')}</span>
+              <ThinkingDots />
+              <span className="sr-only">{copy.opponentThinking}</span>
+            </span>
           </motion.div>
         ) : selectedCell === null || !selectedRow || !selectedColumn ? (
           <motion.div
@@ -369,9 +404,14 @@ export function FootballGridTurnPanel({
               <button
                 type="submit"
                 disabled={!answer.trim() || pending}
-                className="h-12 rounded-xl bg-brand-green px-4 font-poppins font-black uppercase text-white transition-colors hover:bg-brand-green-deep disabled:opacity-50"
+                className="h-12 shrink-0 rounded-xl bg-brand-green px-3 font-poppins font-black uppercase text-white transition-colors hover:bg-brand-green-deep disabled:opacity-50 sm:px-4"
               >
-                {pending ? <LoaderCircle className="size-5 animate-spin" /> : copy.submit}
+                {pending ? <LoaderCircle className="size-5 animate-spin" /> : (
+                  <>
+                    <span className="sm:hidden">{copy.submitShort}</span>
+                    <span className="hidden sm:inline">{copy.submit}</span>
+                  </>
+                )}
               </button>
               <button
                 type="button"
@@ -411,6 +451,8 @@ export function SearchScreen({
   avatar,
   customization,
   status,
+  opponent,
+  countdownSeconds = null,
   onCancel,
   copy,
 }: {
@@ -418,55 +460,109 @@ export function SearchScreen({
   avatar: string;
   customization?: Parameters<typeof AvatarDisplay>[0]['customization'] | null;
   status: 'idle' | 'searching' | 'pairing' | 'matched';
+  opponent?: OpponentInfo | null;
+  /** Kickoff countdown (seconds). When set, replaces the mini-grid animation — ranked-showdown style. */
+  countdownSeconds?: number | null;
   onCancel: () => void;
   copy: typeof FOOTBALL_GRID_COPY.en | typeof FOOTBALL_GRID_COPY.ka;
 }) {
+  const paired = status === 'pairing' || status === 'matched';
+  const [cycleIndex, setCycleIndex] = useState(0);
+  useEffect(() => {
+    if (opponent || paired) return;
+    const interval = window.setInterval(() => setCycleIndex((index) => (index + 1) % SEARCH_CYCLE_AVATARS.length), 900);
+    return () => window.clearInterval(interval);
+  }, [opponent, paired]);
+  const opponentCustomization = opponent
+    ? opponent.avatarCustomization ?? { base: opponent.avatarUrl ?? undefined }
+    : SEARCH_CYCLE_AVATARS[cycleIndex];
   return (
-    <main className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-surface-page-alt px-5 py-10 text-white">
-      <div className="absolute inset-0 opacity-60 [background:radial-gradient(circle_at_50%_25%,rgba(22,69,255,.34),transparent_38%),linear-gradient(135deg,transparent_48%,rgba(255,229,0,.06)_48%_55%,transparent_55%)]" />
+    <main className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-surface-page-alt bg-cover bg-center bg-no-repeat px-5 py-10 text-white" style={GRID_BACKGROUND_STYLE}>
       <div className="relative z-10 w-full max-w-xl text-center">
-        <div className="mx-auto mb-7 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-brand-yellow">
-          <Zap className="size-4" fill="currentColor" /> {copy.title}
-        </div>
-        <h1 className="text-3xl font-black uppercase tracking-tight sm:text-5xl">{status === 'pairing' ? copy.matching : copy.searching}</h1>
-        <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-white/55 sm:text-base">{copy.searchingBody}</p>
+        <h1 className="text-3xl font-black uppercase tracking-tight sm:text-5xl">{opponent || status === 'pairing' ? copy.ready : copy.searching}</h1>
+        <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-white/55 sm:text-base">{opponent ? copy.getReady : status === 'pairing' ? copy.matching : copy.searchingBody}</p>
 
         <div className="relative mx-auto my-10 grid max-w-sm grid-cols-[1fr_auto_1fr] items-center gap-4">
-          <div className="rounded-[28px] border border-brand-blue-light bg-brand-blue/15 p-4 shadow-[0_0_40px_rgba(22,69,255,.18)]">
+          <div className="rounded-[28px] bg-brand-blue p-4 shadow-[0_14px_40px_rgba(22,69,255,.35)]">
             <AvatarDisplay customization={customization ?? { base: avatar }} size="lg" className="mx-auto" assetResolver={resolveGridAvatarAsset} />
-            <p className="mt-2 truncate text-sm font-black">{playerName}</p>
+            <p className="mt-2 truncate text-sm font-black text-white">{playerName}</p>
           </div>
-          <div className="relative grid size-12 place-items-center rounded-full bg-brand-yellow text-lg font-black text-surface-page">
+          <motion.div
+            className="relative z-10 grid size-12 place-items-center rounded-full bg-white text-lg font-black text-surface-page shadow-[0_10px_30px_rgba(0,0,0,.4)]"
+            animate={{ scale: [1, 1.08, 1] }}
+            transition={{ repeat: Infinity, duration: 1.6, ease: 'easeInOut' }}
+          >
             VS
-            <span className="absolute inset-0 -z-10 animate-ping rounded-full bg-brand-yellow/20" />
-          </div>
-          <div className="relative overflow-hidden rounded-[28px] border border-white/10 bg-white/5 p-4">
-            <div className="mx-auto grid size-24 place-items-center rounded-full bg-white/5">
-              <UserRoundSearch className="size-12 animate-pulse text-white/35" />
-            </div>
-            <div className="mx-auto mt-3 h-3 w-20 animate-pulse rounded-full bg-white/10" />
-            <motion.span
-              className="absolute inset-y-0 w-20 bg-gradient-to-r from-transparent via-white/10 to-transparent"
-              animate={{ x: [-100, 240] }}
-              transition={{ repeat: Infinity, duration: 1.8, ease: 'linear' }}
-            />
+            <span className="absolute inset-0 -z-10 animate-ping rounded-full bg-white/20" />
+          </motion.div>
+          <div className="relative overflow-hidden rounded-[28px] bg-brand-yellow p-4 text-surface-page shadow-[0_14px_40px_rgba(255,229,0,.22)]">
+            <AnimatePresence mode="popLayout" initial={false}>
+              <motion.div
+                key={opponent ? 'opponent' : paired ? 'silhouette' : cycleIndex}
+                initial={{ opacity: 0, scale: 0.7, y: 6 }}
+                animate={{ opacity: opponent ? 1 : 0.85, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.7, y: -6 }}
+                transition={{ type: 'spring', stiffness: 380, damping: 26 }}
+              >
+                <AvatarDisplay
+                  customization={opponentCustomization}
+                  size="lg"
+                  className={cn('mx-auto -scale-x-100', !opponent && paired && 'opacity-50 brightness-0')}
+                  assetResolver={resolveGridAvatarAsset}
+                />
+              </motion.div>
+            </AnimatePresence>
+            {opponent ? (
+              <p className="mt-2 truncate text-sm font-black">{opponent.username}</p>
+            ) : (
+              <div className="mx-auto mt-3 h-3 w-20 animate-pulse rounded-full bg-black/15" />
+            )}
+            {!opponent && (
+              <motion.span
+                className="absolute inset-y-0 w-20 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+                animate={{ x: [-100, 240] }}
+                transition={{ repeat: Infinity, duration: 1.8, ease: 'linear' }}
+              />
+            )}
           </div>
         </div>
 
-        <div className="mx-auto mb-9 grid w-36 grid-cols-3 gap-2">
-          {Array.from({ length: 9 }, (_, index) => (
-            <motion.span
-              key={index}
-              className="aspect-square rounded-lg border border-white/10 bg-white/5"
-              animate={{ backgroundColor: ['rgba(255,255,255,.04)', index % 2 ? '#1645ff' : '#ffe500', 'rgba(255,255,255,.04)'] }}
-              transition={{ repeat: Infinity, duration: 1.6, delay: index * 0.08 }}
-            />
-          ))}
-        </div>
+        {countdownSeconds !== null ? (
+          <div className="mb-9 grid h-24 place-items-center">
+            <AnimatePresence mode="popLayout" initial={false}>
+              <motion.p
+                key={countdownSeconds}
+                initial={{ scale: 0.5, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 1.4, opacity: 0 }}
+                transition={{ type: 'spring', stiffness: 320, damping: 22 }}
+                className="text-7xl font-black tabular-nums text-brand-yellow"
+              >
+                {countdownSeconds}
+              </motion.p>
+            </AnimatePresence>
+          </div>
+        ) : (
+          <div className="mx-auto mb-9 grid w-36 grid-cols-3 gap-2">
+            {Array.from({ length: 9 }, (_, index) => (
+              <motion.span
+                key={index}
+                className="aspect-square rounded-lg bg-white/[0.06]"
+                animate={{
+                  backgroundColor: ['rgba(255,255,255,.06)', index % 2 ? '#1645ff' : '#ffe500', 'rgba(255,255,255,.06)'],
+                  scale: [1, 1.12, 1],
+                }}
+                transition={{ repeat: Infinity, duration: 1.8, delay: (index % 3) * 0.14 + Math.floor(index / 3) * 0.14, ease: 'easeInOut' }}
+              />
+            ))}
+          </div>
+        )}
 
-        <button type="button" onClick={onCancel} className="rounded-2xl border border-white/15 px-6 py-3 text-sm font-bold text-white/70 transition hover:bg-white/5 hover:text-white">
-          {copy.cancel}
-        </button>
+        {!opponent && (
+          <button type="button" onClick={onCancel} className="rounded-2xl border border-white/15 px-6 py-3 text-sm font-bold text-white/70 transition hover:bg-white/5 hover:text-white">
+            {copy.cancel}
+          </button>
+        )}
       </div>
     </main>
   );
@@ -487,7 +583,7 @@ export function FootballGridNoticeScreen({
 }) {
   const Icon = kind === 'auth' ? UserRoundSearch : kind === 'loading' ? LoaderCircle : AlertTriangle;
   return (
-    <main className="grid min-h-dvh place-items-center bg-surface-page-alt px-5 text-center text-white">
+    <main className="grid min-h-dvh place-items-center bg-surface-page-alt bg-cover bg-center bg-no-repeat px-5 text-center text-white" style={GRID_BACKGROUND_STYLE}>
       <div className="w-full max-w-md rounded-[32px] border border-white/10 bg-white/5 p-8 shadow-[0_24px_90px_rgba(0,0,0,.28)]">
         <Icon className={cn('mx-auto mb-4 size-14', kind === 'loading' ? 'animate-spin text-brand-blue-light' : 'text-brand-yellow')} />
         <h1 className="text-2xl font-black uppercase leading-tight">{title}</h1>
@@ -508,13 +604,56 @@ export function PhaseOverlay({ state, remaining, copy }: { state: FootballGridSt
   const isInterrupted = state.phase === 'service_interruption';
   const title = isInterrupted ? copy.interrupted : isPaused ? copy.paused : state.phase === 'countdown' ? copy.getReady : state.phase === 'handoff' ? copy.ready : copy.loading;
   const body = isInterrupted ? copy.interruptedBody : isPaused ? copy.pausedBody : null;
+  // Paused matches carry a hard reconnect deadline — show it ticking down so the
+  // waiting player knows how long the match can stay frozen (parity with ranked).
+  const pausedSeconds = isPaused ? Math.max(0, Math.ceil(remaining / 1_000)) : null;
+
+  // Paused / interrupted use the ranked "waiting for ready" card treatment,
+  // tinted with the mode's own accent (the Tic Tac Toe card colour on /play).
+  if (isPaused || isInterrupted) {
+    return (
+      <div className="absolute inset-0 z-30 grid place-items-center bg-surface-page-alt/55 px-6 text-center backdrop-blur-[1.5px]">
+        <motion.div
+          initial={{ y: 12, scale: 0.98, opacity: 0 }}
+          animate={{ y: 0, scale: 1, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 280, damping: 25 }}
+          className="relative flex w-full max-w-sm flex-col items-center overflow-hidden rounded-[20px] px-6 py-7 shadow-2xl sm:px-7"
+          style={{ backgroundColor: GRID_ACCENT }}
+        >
+          <div className="font-poppins text-[11px] font-black uppercase leading-tight tracking-[0.2em] text-white/70">
+            {copy.title}
+          </div>
+          <div className="mt-2 max-w-[18rem] text-balance font-poppins text-2xl font-black uppercase leading-tight text-white">
+            {title}
+          </div>
+          <div className="mt-5 flex size-20 items-center justify-center rounded-full border border-white/20 bg-black/15">
+            {isInterrupted ? (
+              <AlertTriangle className="size-9 text-white" />
+            ) : (
+              <span className="font-poppins text-3xl font-black tabular-nums text-white">{pausedSeconds}</span>
+            )}
+          </div>
+          {!isInterrupted && (
+            <div className="mt-3 font-poppins text-[10px] font-black uppercase tracking-[0.18em] text-white/70">
+              {copy.reconnectWindow}
+            </div>
+          )}
+          {body && (
+            <div className="mt-4 max-w-[17rem] text-balance font-poppins text-sm font-semibold leading-snug text-white/85">
+              {body}
+            </div>
+          )}
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="absolute inset-0 z-30 grid place-items-center bg-surface-page-alt/85 px-6 text-center backdrop-blur-md">
       <div>
-        {isInterrupted ? <AlertTriangle className="mx-auto mb-4 size-12 text-brand-yellow" /> : isPaused ? <Clock3 className="mx-auto mb-4 size-12 text-brand-yellow" /> : <LoaderCircle className="mx-auto mb-4 size-12 animate-spin text-brand-blue-light" />}
+        <LoaderCircle className="mx-auto mb-4 size-12 animate-spin text-brand-blue-light" />
         <h2 className="text-2xl font-black uppercase text-white">{title}</h2>
         {state.phase === 'countdown' && <p className="mt-3 text-6xl font-black tabular-nums text-brand-yellow">{Math.max(1, Math.ceil(remaining / 1_000))}</p>}
-        {body && <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-white/55">{body}</p>}
       </div>
     </div>
   );
@@ -699,6 +838,21 @@ export function FootballGridFlowScreen() {
     return <SearchScreen playerName={player.username} avatar={player.avatar} customization={player.avatarCustomization} status={grid.search.state} onCancel={handleCancel} copy={copy} />;
   }
 
+  if (grid.state && (grid.state.phase === 'handoff' || grid.state.phase === 'loading' || grid.state.phase === 'countdown')) {
+    return (
+      <SearchScreen
+        playerName={player.username}
+        avatar={player.avatar}
+        customization={player.avatarCustomization}
+        status="matched"
+        opponent={grid.opponent}
+        countdownSeconds={grid.state.phase === 'countdown' ? Math.max(1, Math.ceil(remaining / 1_000)) : null}
+        onCancel={handleCancel}
+        copy={copy}
+      />
+    );
+  }
+
   if (grid.completed && grid.state?.phase === 'terminal') {
     const won = grid.state.winnerUserId === selfUserId;
     const draw = !grid.state.winnerUserId;
@@ -707,17 +861,46 @@ export function FootballGridFlowScreen() {
     const rematchPending = grid.rematch?.status === 'pending';
     const accepted = Boolean(grid.rematch?.acceptedUserIds.includes(selfUserId));
     return (
-      <main className="min-h-dvh overflow-y-auto bg-surface-page-alt px-5 py-10 text-white">
-        <div className="mx-auto max-w-xl text-center">
-          <div className={cn('mx-auto grid size-24 place-items-center rounded-[30px]', won ? 'bg-brand-yellow text-surface-page' : draw ? 'bg-white/10 text-white' : 'bg-brand-blue text-white')}>
-            {won ? <Trophy className="size-12" /> : draw ? <RotateCcw className="size-11" /> : <Flag className="size-11" />}
-          </div>
-          <p className="mt-6 text-xs font-black uppercase tracking-[0.22em] text-white/40">{copy.title}</p>
-          <h1 className="mt-2 text-4xl font-black uppercase tracking-tight">{completionTitle(grid.state.completionReason, won, draw, copy)}</h1>
+      <main className="min-h-dvh overflow-y-auto bg-surface-page-alt bg-cover bg-center bg-no-repeat px-5 py-10 text-white" style={GRID_BACKGROUND_STYLE}>
+        <div className="mx-auto max-w-xl text-center font-poppins">
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-white/40">{copy.title}</p>
+          <h1
+            className="mt-2 font-poppins text-[2.5rem] font-black uppercase leading-[1.3] tracking-[0] sm:text-[3rem]"
+            style={{ color: won ? '#22C55E' : draw ? '#FACC15' : '#FB3101' }}
+          >
+            {completionTitle(grid.state.completionReason, won, draw, copy)}
+          </h1>
 
-          <div className="mt-7 grid grid-cols-2 gap-3">
-            <div className="rounded-2xl border border-brand-blue-light bg-brand-blue/15 p-4"><p className="text-xs font-bold uppercase text-white/45">{player.username}</p><p className="mt-1 text-4xl font-black">{myClaims}</p></div>
-            <div className="rounded-2xl border border-brand-yellow/50 bg-brand-yellow/10 p-4"><p className="truncate text-xs font-bold uppercase text-white/45">{grid.opponent?.username ?? copy.opponent}</p><p className="mt-1 text-4xl font-black">{theirClaims}</p></div>
+          {/* Player · score · opponent — mirrors the ranked results hero. */}
+          <div className="mt-6 grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-5">
+            <div className="flex min-w-0 flex-col items-center gap-2">
+              <AvatarDisplay
+                customization={player.avatarCustomization ?? { base: player.avatar }}
+                size="lg"
+                shape="square"
+                assetResolver={resolveGridAvatarAsset}
+              />
+              <span className="w-full truncate text-sm font-semibold uppercase text-white">{player.username}</span>
+            </div>
+
+            <div className="flex flex-col items-center">
+              <div className="flex h-[44px] min-w-[110px] items-center justify-center rounded-[20px] bg-brand-blue px-5 text-2xl font-semibold tabular-nums text-white sm:h-[51px] sm:min-w-[133px] sm:px-6 sm:text-[36px]">
+                <AnimatedCounter from={0} to={myClaims} delay={0.25} />
+                <span className="mx-1 sm:mx-1.5">:</span>
+                <AnimatedCounter from={0} to={theirClaims} delay={0.25} />
+              </div>
+            </div>
+
+            <div className="flex min-w-0 flex-col items-center gap-2">
+              <AvatarDisplay
+                customization={grid.opponent?.avatarCustomization ?? { base: grid.opponent?.avatarUrl ?? undefined }}
+                size="lg"
+                shape="square"
+                className="-scale-x-100"
+                assetResolver={resolveGridAvatarAsset}
+              />
+              <span className="w-full truncate text-sm font-semibold uppercase text-white">{grid.opponent?.username ?? copy.opponent}</span>
+            </div>
           </div>
 
           {grid.completed.rewards && (
@@ -743,11 +926,14 @@ export function FootballGridFlowScreen() {
 
           <div className="mt-7 space-y-3">
             {rematchPending && (
-              <button type="button" disabled={accepted} onClick={grid.actions.acceptRematch} className="w-full rounded-2xl bg-brand-yellow px-6 py-4 font-black uppercase text-surface-page disabled:opacity-60">
+              <button type="button" disabled={accepted} onClick={grid.actions.acceptRematch} className="w-full rounded-2xl bg-brand-green px-6 py-4 font-black uppercase text-white transition-colors hover:bg-brand-green-deep disabled:opacity-60">
                 {accepted ? copy.waitingRematch : copy.rematch}
               </button>
             )}
-            {source === 'matchmaking' && (!rematchPending || grid.rematch?.status === 'declined' || grid.rematch?.status === 'expired') && (
+            {/* Hide "find new" while a rematch window is live or the series
+                has already started its next match, so a public search cannot
+                race the pending rematch handoff. */}
+            {source === 'matchmaking' && (!grid.rematch || grid.rematch.status === 'declined' || grid.rematch.status === 'expired') && (
               <button type="button" onClick={handleFindNew} className="w-full rounded-2xl bg-brand-blue px-6 py-4 font-black uppercase">{copy.newOpponent}</button>
             )}
             {rematchPending && !accepted && <button type="button" onClick={grid.actions.declineRematch} className="w-full rounded-2xl border border-white/15 px-6 py-4 font-bold text-white/70">{copy.declineRematch}</button>}
