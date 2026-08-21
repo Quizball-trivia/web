@@ -10,19 +10,23 @@
  *
  * Deliberately does NOT import the demo component or its bundled goal data:
  * the demo's client-side answers must never enter this route's module graph.
+ *
+ * Framed as a NATIVE app page (transparent background, hub-style header) —
+ * not the MiniGameShell, whose painted backdrop made the game read as a
+ * separate window inside the app shell.
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ChevronRight, Play, RotateCcw, WifiOff } from 'lucide-react';
+import Link from 'next/link';
+import { ArrowLeft, ChevronRight, Clapperboard, Play, RotateCcw, WifiOff } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
-import { MiniGameShell, StatPill } from './MiniGameShell';
 import { TacticsBoard2D, BOARD_VIEW_W, BOARD_VIEW_H } from './TacticsBoard2D';
 import { GgtActionGlyph, GgtLegend, GGT_ACTION_META, GGT_OPTION_CLASS, ggtOptionStyle, type GgtOptionState } from './guessTheGoalUi';
 import { buildTimeline, type TacticsGoalDef, type TacticsStepKind } from '../lib/tacticsEngine';
 import { useMiniLocale, useMiniT } from '../lib/i18n';
-import { useStoreWallet } from '@/lib/queries/store.queries';
 import { queryKeys } from '@/lib/queries/queryKeys';
+import { trackEvent } from '@/lib/posthog';
 import { usePlayer } from '@/contexts/PlayerContext';
 import { CoinIcon } from '@/features/store/components/CoinIcon';
 import {
@@ -41,6 +45,16 @@ const LOOP_HOLD = 1.6;
  *  guess itself takes a request to arrive — bias the shown clock FORWARD so
  *  the displayed potential can only understate what the server will score. */
 const SKEW_PAD_MS = 400;
+
+/** watch?v=, youtu.be/, shorts/, embed/ → bare video id (null if unparseable). */
+function youtubeEmbed(url: string): { id: string; start: number } | null {
+  const m = url.match(
+    /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{6,20})/
+  );
+  if (!m) return null;
+  const t = url.match(/[?&](?:t|start)=(\d+)/);
+  return { id: m[1], start: t ? Number(t[1]) : 0 };
+}
 
 function newNonce(): string {
   return typeof crypto !== 'undefined' && 'randomUUID' in crypto
@@ -68,7 +82,6 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
   const t = useMiniT();
   const locale = useMiniLocale();
   const queryClient = useQueryClient();
-  const { data: wallet } = useStoreWallet();
 
   const [phase, setPhase] = useState<Phase>('loading');
   const [session, setSession] = useState<GgtSession | null>(null);
@@ -77,6 +90,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
   const [picked, setPicked] = useState<string | null>(null);
   const [bonusPicked, setBonusPicked] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { addXP } = usePlayer();
   const [time, setTime] = useState(0);
@@ -95,31 +109,51 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
   const boardGoal = useMemo(() => (session ? toBoardGoal(session) : null), [session]);
   const timeline = useMemo(() => (boardGoal ? buildTimeline(boardGoal) : null), [boardGoal]);
 
-  const adoptSession = useCallback((next: GgtSession) => {
+  const adoptSession = useCallback((next: GgtSession, resumed = false) => {
     offsetRef.current = new Date(next.server_now).getTime() - Date.now();
     setTime(0);
     setSession(next);
-    setOutcome(null);
+    setOutcome(next.outcome ?? null);
     setBonusOutcome(null);
-    setPicked(null);
+    setPicked(next.guess_option_id ?? null);
     setBonusPicked(null);
+    setShowVideo(false);
     setError(null);
     // 'guessed' without a bonus payload should not happen (the server only
     // parks in 'guessed' when a bonus exists) — degrade to the done panel so
     // the user always has a Next Goal button.
     setPhase(next.state === 'guessed' ? (next.bonus ? 'bonus' : 'bonus_done') : 'watch');
+    trackEvent('ggt_session_started', {
+      resumed,
+      repeat_view: next.max_points < 100,
+      difficulty: next.goal.difficulty,
+      main_moves: next.goal.main_moves,
+      duration_seconds: next.goal.duration_seconds,
+      solved: next.progress.solved,
+      total_goals: next.progress.total,
+    });
   }, []);
 
   const loadCurrent = useCallback(() => {
     guessTheGoalApi
       .current()
       .then((existing) => {
-        if (existing) adoptSession(existing);
-        else setPhase('idle');
+        if (existing) {
+          adoptSession(existing, true);
+          trackEvent('ggt_screen_viewed', { entry: 'resumed' });
+        } else {
+          setPhase('idle');
+          trackEvent('ggt_screen_viewed', { entry: 'idle' });
+        }
       })
       .catch((err) => {
-        if (err instanceof GuessTheGoalApiError && err.status === 503) setPhase('disabled');
-        else setPhase('load_error');
+        if (err instanceof GuessTheGoalApiError && err.status === 503) {
+          setPhase('disabled');
+          trackEvent('ggt_screen_viewed', { entry: 'disabled' });
+        } else {
+          setPhase('load_error');
+          trackEvent('ggt_error', { stage: 'load' });
+        }
         void err;
       });
   }, [adoptSession]);
@@ -130,10 +164,14 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
     loadCurrent();
   }, [loadCurrent]);
 
+  const loadedOnceRef = useRef(false);
   useEffect(() => {
     // A failed resume must NOT fall through to 'idle': Kick off from there
     // would abandon a session (and its pending bonus) the user still has.
-    // (Fetch only — phase already mounts as 'loading'.)
+    // Ref-guarded: Strict Mode's double-mount must not double-fire the
+    // request or the screen-view/session-start analytics.
+    if (loadedOnceRef.current) return;
+    loadedOnceRef.current = true;
     loadCurrent();
   }, [loadCurrent]);
 
@@ -179,13 +217,14 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
           if (err.status === 409) {
             const existing = await guessTheGoalApi.current().catch(() => null);
             if (existing) {
-              adoptSession(existing);
+              adoptSession(existing, true);
               return;
             }
           }
         }
       }
       setError(t('Something went wrong — try again'));
+      trackEvent('ggt_error', { stage: 'start' });
     } finally {
       setBusy(false);
     }
@@ -197,6 +236,8 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
       setBusy(true);
       setError(null);
       setPicked(optionId);
+      // Sampled before the request so network latency doesn't inflate it.
+      const watchSeconds = Math.round(serverElapsed());
       try {
         // Same-option retries replay the stored result server-side, so a
         // timeout here is safe to re-submit.
@@ -207,16 +248,30 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
           void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
         }
         if (result.awards.xp > 0) addXP(result.awards.xp);
+        trackEvent('ggt_guess_submitted', {
+          correct: result.correct,
+          points: result.points,
+          revealed_moves: result.revealed_moves,
+          main_moves: session.goal.main_moves,
+          watch_seconds: watchSeconds,
+          difficulty: session.goal.difficulty,
+          first_solve: result.awards.first_solve,
+          coins_awarded: result.awards.coins,
+          xp_awarded: result.awards.xp,
+          daily_cap_reached: result.awards.daily_cap_reached,
+          has_bonus: Boolean(result.bonus),
+        });
       } catch (err) {
         // picked is KEPT: retrying the same option replays the stored result
         // server-side, so the retry button re-submits it safely.
         setError(t('Something went wrong — try again'));
+        trackEvent('ggt_error', { stage: 'guess' });
         void err;
       } finally {
         setBusy(false);
       }
     },
-    [session, busy, phase, queryClient, addXP, t]
+    [session, busy, phase, queryClient, addXP, t, serverElapsed]
   );
 
   const submitBonus = useCallback(
@@ -233,8 +288,16 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
           void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
         }
         if (result.awards.xp > 0) addXP(result.awards.xp);
+        trackEvent('ggt_bonus_answered', {
+          correct: result.correct,
+          bonus_points: result.bonus_points,
+          coins_awarded: result.awards.coins,
+          xp_awarded: result.awards.xp,
+          difficulty: session.goal.difficulty,
+        });
       } catch (err) {
         setError(t('Something went wrong — try again'));
+        trackEvent('ggt_error', { stage: 'bonus' });
         void err;
       } finally {
         setBusy(false);
@@ -274,6 +337,8 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
       : duration;
   const goalFlash = phase !== 'watch' || (duration > 0 && animTime >= duration - 0.05);
 
+  const video = outcome?.video_url ? youtubeEmbed(outcome.video_url) : null;
+
   const inGame = phase === 'watch' || phase === 'reveal' || phase === 'bonus' || phase === 'bonus_done';
   const activeKind = useMemo<TacticsStepKind | null>(() => {
     if (phase !== 'watch' || !timeline) return null;
@@ -291,14 +356,12 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
 
   const pitchColumn = session && boardGoal && timeline && (
     <div className="flex flex-col gap-1.5 lg:flex-[3]">
-      <div className="flex items-baseline justify-between px-1">
-        <div className="flex items-baseline gap-3">
-          <span className="font-poppins text-[11px] font-black uppercase tracking-wider text-white/45">
-            {t('Solved {n}/{total}', { n: session.progress.solved, total: session.progress.total })}
-          </span>
-        </div>
+      <div className="flex items-center justify-between gap-2 px-1">
+        <span className="shrink-0 font-poppins text-[11px] font-black uppercase tracking-wider text-white/45">
+          {t('Solved {n}/{total}', { n: session.progress.solved, total: session.progress.total })}
+        </span>
         {phase === 'watch' ? (
-          <span className="font-poppins text-[11px] font-black uppercase tracking-wider text-brand-yellow">
+          <span className="shrink-0 font-poppins text-[11px] font-black uppercase tracking-wider text-brand-yellow">
             {t('Answer now · +{points}', { points: potential })}
           </span>
         ) : outcome ? (
@@ -310,53 +373,75 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
         ) : null}
       </div>
 
+      {phase === 'watch' && (
+        <div className="flex items-center gap-2 px-1">
+          <span className="shrink-0 rounded-full bg-white/[0.07] px-2.5 py-1 font-poppins text-[10px] font-black uppercase tracking-wide text-white/80">
+            {t('Move {n}/{total}', { n: revealedMoves, total: mainMoves })}
+          </span>
+          {activeKind && !goalFlash && (
+            <span
+              className="flex shrink-0 items-center gap-1.5 rounded-full bg-white/[0.07] px-2.5 py-1 font-poppins text-[10px] font-black uppercase tracking-wide"
+              style={{ color: activeKind === 'shot' ? '#FFE500' : '#ffffff' }}
+            >
+              <GgtActionGlyph kind={activeKind} color={activeKind === 'shot' ? '#FFE500' : '#ffffff'} />
+              {GGT_ACTION_META[activeKind].label[locale]}
+            </span>
+          )}
+        </div>
+      )}
+
       <div
-        className="relative w-full overflow-hidden rounded-2xl"
+        className="relative w-full overflow-hidden rounded-2xl bg-black"
         style={{ aspectRatio: `${BOARD_VIEW_W} / ${BOARD_VIEW_H}` }}
       >
-        <TacticsBoard2D goal={boardGoal} timeline={timeline} t={animTime} goalFlash={goalFlash} />
-        {phase === 'watch' && (
-          <div className="absolute left-2 top-2 flex items-center gap-1.5">
-            <div className="rounded-full bg-black/50 px-3 py-1.5 font-poppins text-[11px] font-black uppercase tracking-wide text-white/80 backdrop-blur">
-              {t('Move {n}/{total}', { n: revealedMoves, total: mainMoves })}
-            </div>
-            {activeKind && !goalFlash && (
-              <div
-                className="flex items-center gap-1.5 rounded-full bg-black/50 px-3 py-1.5 font-poppins text-[11px] font-black uppercase tracking-wide backdrop-blur"
-                style={{ color: activeKind === 'shot' ? '#FFE500' : '#ffffff' }}
-              >
-                <GgtActionGlyph kind={activeKind} color={activeKind === 'shot' ? '#FFE500' : '#ffffff'} />
-                {GGT_ACTION_META[activeKind].label[locale]}
-              </div>
-            )}
-          </div>
+        {showVideo && video ? (
+          <iframe
+            src={`https://www.youtube-nocookie.com/embed/${video.id}?autoplay=1&rel=0${video.start ? `&start=${video.start}` : ''}`}
+            title={pick(outcome?.title)}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            className="absolute inset-0 h-full w-full"
+          />
+        ) : (
+          <TacticsBoard2D goal={boardGoal} timeline={timeline} t={animTime} goalFlash={goalFlash} />
         )}
       </div>
+
+      {video && phase !== 'watch' && (
+        <button
+          type="button"
+          onClick={() => setShowVideo((v) => !v)}
+          className="mx-auto flex h-10 items-center justify-center gap-2 rounded-full bg-white/[0.07] px-5 font-poppins text-[12px] font-black uppercase tracking-wide text-white transition-colors hover:bg-white/[0.12]"
+        >
+          <Clapperboard className="size-4 text-brand-yellow" />
+          {showVideo ? t('Back to the board') : t('Watch the real goal')}
+        </button>
+      )}
 
       <GgtLegend />
     </div>
   );
 
   return (
-    <MiniGameShell
-      title={t('Guess the Goal')}
-      subtitle={t('Name the iconic goal — real rewards, server-scored')}
-      accent="#58CC02"
-      backHref={backHref}
-      wide
-      disclaimer={false}
-      headerRight={
-        <StatPill
-          label={t('Coins')}
-          value={
-            <span className="inline-flex items-center gap-1">
-              <CoinIcon className="size-4" />
-              {wallet?.coins ?? '—'}
-            </span>
-          }
-        />
-      }
-    >
+    <div className="min-h-screen font-fun">
+      <div className="mx-auto flex min-h-[calc(100dvh-4rem)] max-w-[430px] flex-col px-4 py-6 md:px-8 md:py-8 lg:max-w-6xl">
+        <div className="mb-4 md:mb-6">
+          <div className="flex items-center gap-3 md:gap-4">
+            <Link
+              href={backHref ?? '/mini-games'}
+              aria-label={t('Back')}
+              className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 md:size-11"
+            >
+              <ArrowLeft className="size-5 md:size-6" />
+            </Link>
+            <h1 className="font-poppins text-[20px] uppercase leading-[1.1] text-white md:text-[32px]">
+              {t('Guess the Goal')}
+            </h1>
+          </div>
+          <p className="mt-1.5 pl-12 text-[11px] font-black uppercase tracking-[0.04em] text-white/55 md:pl-[60px] md:text-sm md:tracking-[0.08em]">
+            {t('Name the iconic goal — real rewards, server-scored')}
+          </p>
+        </div>
       {phase === 'loading' && (
         <div className="flex flex-1 items-center justify-center font-poppins text-sm font-bold uppercase text-white/40">
           {t('Loading…')}
@@ -389,32 +474,32 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
       )}
 
       {phase === 'idle' && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-1 flex-col items-center justify-center gap-5 text-center"
-        >
-          <div className="text-6xl">📋</div>
-          <div>
-            <h2 className="font-poppins text-2xl font-black uppercase text-white">{t('Guess the Goal')}</h2>
-            <p className="mx-auto mt-2 max-w-xs text-sm font-semibold leading-relaxed text-white/60">
+        <div className="flex flex-1 items-center justify-center">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex w-full max-w-md flex-col items-center gap-4 rounded-[20px] p-8 text-center text-black md:p-10"
+            style={{ backgroundColor: '#FF9600' }}
+          >
+            <h2 className="font-poppins text-2xl uppercase leading-[1.05] md:text-3xl">
+              {t('Guess the Goal')}
+            </h2>
+            <p className="max-w-xs text-sm font-semibold leading-relaxed text-black/80">
               {t(
                 'A legendary goal replays on the coaching board. The earlier you name it, the more you earn — first solve of each goal pays coins and XP.'
               )}
             </p>
-          </div>
-          {error && (
-            <p className="max-w-xs text-xs font-semibold text-brand-red">{error}</p>
-          )}
-          <button
-            type="button"
-            onClick={start}
-            disabled={busy}
-            className="flex h-14 w-full max-w-xs items-center justify-center gap-2 rounded-2xl bg-brand-green-bright font-poppins text-lg font-black uppercase tracking-wide text-black disabled:opacity-60"
-          >
-            <Play className="size-5 fill-current" /> {t('Kick off')}
-          </button>
-        </motion.div>
+            {error && <p className="max-w-xs text-xs font-bold text-black">{error}</p>}
+            <button
+              type="button"
+              onClick={start}
+              disabled={busy}
+              className="font-poppins mt-2 inline-flex h-[50px] min-w-[200px] items-center justify-center gap-2 rounded-[20px] bg-black px-8 text-[20px] uppercase tracking-wide text-white transition-all hover:brightness-110 active:translate-y-[2px] disabled:opacity-60"
+            >
+              <Play className="size-5 fill-current" /> {t('Kick off')}
+            </button>
+          </motion.div>
+        </div>
       )}
 
       {inGame && session && (
@@ -592,6 +677,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
           </div>
         </div>
       )}
-    </MiniGameShell>
+      </div>
+    </div>
   );
 }

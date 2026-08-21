@@ -53,6 +53,10 @@ export interface GgtSession {
     duration_seconds: number;
   };
   bonus?: { question: GgtI18nText; options: GgtOption[] };
+  /** Present when state = 'guessed': the settled reveal, so a refresh
+   *  mid-session restores title/fact/points/video. */
+  outcome?: GgtGuessOutcome;
+  guess_option_id?: string;
   progress: { solved: number; total: number };
 }
 
@@ -72,6 +76,8 @@ export interface GgtGuessOutcome {
   revealed_moves: number;
   title: GgtI18nText;
   fun_fact: GgtI18nText | null;
+  /** Real footage — the server only sends this AFTER the guess. */
+  video_url: string | null;
   bonus?: { question: GgtI18nText; options: GgtOption[] };
   awards: GgtAwards;
   session_state: "guessed" | "complete";

@@ -75,7 +75,7 @@ function buildCsp(nonce: string): string {
     "style-src 'self' 'unsafe-inline'",
     `script-src ${scriptSrc.join(" ")}`,
     `connect-src ${connectSrc.join(" ")}`,
-    "frame-src 'self' https://accounts.google.com https://*.facebook.com https://www.facebook.com",
+    "frame-src 'self' https://accounts.google.com https://*.facebook.com https://www.facebook.com https://www.youtube-nocookie.com",
     "worker-src 'self' blob:",
     "media-src 'self' blob: data: https:",
     "manifest-src 'self'",
