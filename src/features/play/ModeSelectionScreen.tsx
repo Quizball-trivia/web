@@ -25,6 +25,7 @@ import { RailNavyGradient as WeekendLeagueRail } from '@/features/weekend-league
 import { trackWlBannerClicked, trackWlBannerViewed } from '@/lib/analytics/game-events';
 
 import { getNextTierBand } from '@/utils/rankedTier';
+import { footballGridAssetUrl } from '@/lib/football-grid/assets';
 
 const PLAY_ENTRANCE_SESSION_KEY = 'quizball.playEntranceSeen';
 const PLAY_ENTRANCE_INITIAL = { opacity: 0.88, scale: 0.985 } as const;
@@ -493,11 +494,11 @@ export function ModeSelectionScreen({
         />
         <MiniModeCard
           bg={colors.red.mid}
-          title={t('play.ticTacToeTitle')}
-          subtitle={t('play.ticTacToeSubtitle')}
-          iconSrc="/assets/tictactoe-card-icon.png?v=3"
+          title={t('play.footballGridTitle')}
+          subtitle={t('play.footballGridSubtitle')}
+          iconSrc={footballGridAssetUrl('/assets/football-grid-card-icon.svg')!}
           badge={t('play.freeKicksNewBadge')}
-          href="/demos/mini-football-grid?from=/play"
+          href="/tic-tac-toe?source=matchmaking"
         />
         <MiniModeCard
           bg={colors.yellow.base}

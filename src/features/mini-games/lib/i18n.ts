@@ -40,6 +40,7 @@ const KA: Record<string, string> = {
   "Try again": "სცადე თავიდან",
   "Next": "შემდეგი",
   "Back": "უკან",
+  "Opponent": "მეტოქე",
 
   // Accumulator
   "Accumulator": "ექსპრესი",
@@ -307,16 +308,17 @@ const KA: Record<string, string> = {
   // Football Tic Tac Toe
   "Football Tic Tac Toe": "საფეხბურთო იქს-ნული",
   "Claim cells with players — three in a row wins": "დაიკავე უჯრები ფეხბურთელებით — სამი ზედიზედ იგებს",
-  "Pick a cell and name a player who played for that club AND that nation. The AI answers back — line up three to win.":
-    "აირჩიე უჯრა და დაასახელე ფეხბურთელი, რომელიც ამ კლუბშიც ითამაშა და ამ ქვეყნის ნაკრებშიც. AI გიპასუხებს — ააწყვე სამი ზედიზედ.",
+  "You · Opponent": "შენ · მეტოქე",
+  "Pick a cell and name a player who played for that club AND that nation. Your opponent answers back — line up three to win.":
+    "აირჩიე უჯრა და დაასახელე ფეხბურთელი, რომელიც ამ კლუბშიც ითამაშა და ამ ქვეყნის ნაკრებშიც. მეტოქე გიპასუხებს — ააწყვე სამი ზედიზედ.",
   "Start match": "მატჩის დაწყება",
   "Your turn — pick a cell": "შენი ჯერია — აირჩიე უჯრა",
   "Not a match — turn passes": "არ ემთხვევა — ჯერი გადადის",
   "Time's up — turn passes": "დრო ამოიწურა — ჯერი გადადის",
   "Pass": "გადაცემა",
-  "AI blanked — your turn!": "AI-მ ვერ გაიხსენა — შენი ჯერია!",
-  "AI is thinking…": "AI ფიქრობს…",
-  "AI wins": "AI იგებს",
+  "Opponent blanked — your turn!": "მეტოქემ ვერ გაიხსენა — შენი ჯერია!",
+  "Opponent is thinking…": "მეტოქე ფიქრობს…",
+  "Opponent wins": "მეტოქე იგებს",
   "Three in a row!": "სამი ზედიზედ!",
   "Board full — {a} cells vs {b}": "დაფა შეივსო — {a} უჯრა {b}-ის წინააღმდეგ",
   "New grid": "ახალი ბადე",

@@ -1,8 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
 import { findClubByName } from '@/lib/clubs';
-import { CountryFlag } from '@/components/CountryFlag';
+import { footballGridAssetUrl } from '@/lib/football-grid/assets';
 import { normalizeCountryCode } from '@/lib/geo/countryCode';
 
 /** Club crest resolved from a club name via getClub(). Renders nothing when the
@@ -10,14 +11,21 @@ import { normalizeCountryCode } from '@/lib/geo/countryCode';
  *  features' components. */
 export function ClubCrest({ club, size = 24, className = '' }: { club?: string | null; size?: number; className?: string }) {
   const resolved = findClubByName(club ?? null);
+  const [failedSource, setFailedSource] = useState<string | null>(null);
   if (!resolved) return null;
+
+  const fallbackSource = footballGridAssetUrl(`/assets/football-grid/clubs/${resolved.id}.svg`);
+  const primarySource = footballGridAssetUrl(resolved.logo);
+  if (!fallbackSource) return null;
+  const useFallback = !primarySource || failedSource === primarySource;
   return (
     <Image
-      src={resolved.logo}
+      src={useFallback ? fallbackSource : primarySource}
       alt={resolved.label}
       width={size * 2}
       height={size * 2}
       unoptimized
+      onError={useFallback ? undefined : () => setFailedSource(primarySource)}
       className={`object-contain drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)] ${className}`}
       style={{ width: size, height: size }}
     />
@@ -36,10 +44,12 @@ export function FlagChip({
   height?: number;
   className?: string;
 }) {
-  if (!normalizeCountryCode(country)) return null;
+  const code = normalizeCountryCode(country);
+  const source = code ? footballGridAssetUrl(`/assets/football-grid/flags/${code}.svg`) : null;
+  if (!source) return null;
   return (
     <span className={`block overflow-hidden rounded-[3px] shadow-[0_1px_3px_rgba(0,0,0,0.4)] ${className}`} style={{ width, height }}>
-      <CountryFlag code={country} className="!block !h-full !w-full" style={{ backgroundSize: 'cover', backgroundPosition: 'center' }} />
+      <Image src={source} alt="" width={width * 2} height={height * 2} unoptimized className="block h-full w-full object-cover" />
     </span>
   );
 }

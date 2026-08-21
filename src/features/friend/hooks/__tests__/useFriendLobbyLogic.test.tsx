@@ -3,7 +3,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useFriendLobbyLogic } from '../useFriendLobbyLogic';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { useAuctionActiveMatchStore } from '@/stores/auctionActiveMatch.store';
-import type { LobbyState } from '@/lib/realtime/socket.types';
+import { useFootballGridStore } from '@/stores/footballGrid.store';
+import type { FootballGridState, LobbyState } from '@/lib/realtime/socket.types';
 
 const mocks = vi.hoisted(() => ({
   socketEmit: vi.fn(),
@@ -108,6 +109,48 @@ function makeLobby(inviteCode: string): LobbyState {
         isHost: true,
       },
     ],
+  };
+}
+
+function makeFootballGridState(overrides: Partial<FootballGridState> = {}): FootballGridState {
+  const criterion = (id: string) => ({
+    id,
+    key: id,
+    family: 'club' as const,
+    labelEn: id,
+    labelKa: id,
+    assetKey: null,
+    difficulty: 'normal' as const,
+  });
+  return {
+    matchId: 'grid-match-1',
+    status: 'handoff',
+    phase: 'handoff',
+    board: {
+      boardId: 'grid-board-1',
+      boardVersion: 1,
+      checksum: 'checksum',
+      rows: [criterion('r1'), criterion('r2'), criterion('r3')],
+      columns: [criterion('c1'), criterion('c2'), criterion('c3')],
+    },
+    players: [
+      { userId: 'user-1', seat: 1, isBot: false, handoffAcknowledged: false, ready: false, noActionTimeouts: 0, pauseBudgetRemainingMs: 30_000 },
+      { userId: 'user-2', seat: 2, isBot: false, handoffAcknowledged: false, ready: false, noActionTimeouts: 0, pauseBudgetRemainingMs: 30_000 },
+    ],
+    openerUserId: 'user-1',
+    currentPlayerUserId: null,
+    winnerUserId: null,
+    turnNumber: 0,
+    stateVersion: 1,
+    claims: [],
+    phaseDeadlineAt: new Date(Date.now() + 10_000).toISOString(),
+    turnDeadlineAt: null,
+    turnRemainingMs: null,
+    pausedAt: null,
+    pausedFromPhase: null,
+    reconnectDeadlineAt: null,
+    completionReason: null,
+    ...overrides,
   };
 }
 
@@ -566,5 +609,64 @@ describe('useFriendLobbyLogic auction hand-off', () => {
       expect(mocks.routerPush).toHaveBeenCalledWith('/game');
     });
     expect(mocks.routerPush).not.toHaveBeenCalledWith('/auction');
+  });
+});
+
+describe('useFriendLobbyLogic Football Grid hand-off', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.useRealTimers();
+    useRealtimeMatchStore.getState().reset();
+    useFootballGridStore.getState().clear();
+  });
+
+  it('navigates both friend-lobby players to the live Grid route', async () => {
+    const lobby = makeLobby('GRID10');
+    act(() => {
+      useRealtimeMatchStore.getState().setLobby({
+        ...lobby,
+        status: 'active',
+        settings: { ...lobby.settings, gameMode: 'football_grid' },
+        members: [
+          ...lobby.members,
+          { userId: 'user-2', username: 'Rival', avatarUrl: null, isReady: true, isHost: false },
+        ],
+      });
+      useFootballGridStore.setState({
+        state: makeFootballGridState(),
+      });
+    });
+
+    const { result } = renderHook(() => useFriendLobbyLogic({ roomCode: 'GRID10', isHost: true }));
+
+    await waitFor(() => {
+      expect(result.current.isFootballGridLobby).toBe(true);
+      expect(mocks.routerPush).toHaveBeenCalledWith('/tic-tac-toe?source=friend_lobby');
+    });
+    expect(mocks.routerPush).not.toHaveBeenCalledWith('/game');
+  });
+
+  it('does not route a new lobby using terminal state from an earlier Grid match', async () => {
+    const lobby = makeLobby('GRID20');
+    act(() => {
+      useRealtimeMatchStore.getState().setLobby({
+        ...lobby,
+        status: 'active',
+        settings: { ...lobby.settings, gameMode: 'football_grid' },
+      });
+      useFootballGridStore.setState({
+        state: makeFootballGridState({
+          matchId: 'old-grid-match',
+          status: 'completed',
+          phase: 'terminal',
+          stateVersion: 12,
+          completionReason: 'board_full',
+        }),
+      });
+    });
+
+    const { result } = renderHook(() => useFriendLobbyLogic({ roomCode: 'GRID20', isHost: true }));
+    await waitFor(() => expect(result.current.isFootballGridLobby).toBe(true));
+    expect(mocks.routerPush).not.toHaveBeenCalledWith('/football-grid?source=friend_lobby');
   });
 });

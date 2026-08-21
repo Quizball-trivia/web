@@ -3,7 +3,7 @@
 import { optimizedRemoteImageProps } from "@/lib/images/remoteImage";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { Check, Eye, EyeOff, Gavel, Lock, Search, Shuffle, Trophy } from "lucide-react";
+import { Check, Eye, EyeOff, Gavel, Grid3X3, Lock, Search, Shuffle, Trophy } from "lucide-react";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
@@ -28,6 +28,7 @@ type SettingsPatch = Partial<LobbySettingsState> & { isPublic?: boolean };
 const MODE_TABS: ReadonlyArray<{ value: LobbyGameMode; labelKey: MessageKey }> = [
   { value: 'friendly_possession', labelKey: 'friend.classic' },
   { value: 'friendly_party_quiz', labelKey: 'friend.partyQuiz' },
+  { value: 'football_grid', labelKey: 'friend.footballGrid' },
   { value: 'ranked_sim', labelKey: 'friend.rankedSim' },
   { value: 'auction', labelKey: 'friend.auction' },
 ];
@@ -35,6 +36,7 @@ const MODE_TABS: ReadonlyArray<{ value: LobbyGameMode; labelKey: MessageKey }> =
 const MODE_DESCRIPTION_KEYS: Record<LobbyGameMode, MessageKey> = {
   friendly_possession: 'friend.classicDescription',
   friendly_party_quiz: 'friend.partyQuizDescription',
+  football_grid: 'friend.footballGridDescription',
   ranked_sim: 'friend.rankedSimDescription',
   auction: 'friend.auctionDescription',
 };
@@ -50,8 +52,8 @@ export function LobbySettings({
   const settings = lobby?.settings;
   const serverMode = settings?.gameMode ?? 'friendly_possession';
   const memberCount = lobby?.members.length ?? 0;
-  // Auction seats 3 by design, so a full auction lobby is at capacity — not an
-  // oversized 1v1 lobby that has to fall back to party standings mode.
+  // Auction seats 3 by design. Every other non-party mode, including Football
+  // Grid, must be locked out once a lobby has more than two members.
   const isPartyLocked = memberCount > 2 && serverMode !== 'auction';
   const serverIsPublic = lobby?.isPublic ?? false;
   const serverIsRandom = settings?.friendlyRandom ?? true;
@@ -111,6 +113,7 @@ export function LobbySettings({
   const mode = optimisticMode ?? serverMode;
   const isFriendlyMode = mode === 'friendly_possession' || mode === 'friendly_party_quiz';
   const isAuctionMode = mode === 'auction';
+  const isFootballGridMode = mode === 'football_grid';
   const isPublic = optimisticPublic ?? serverIsPublic;
   const isRandom = optimisticRandom ?? serverIsRandom;
   // Classic supports an optional second-half pick; party quiz stays
@@ -787,6 +790,26 @@ export function LobbySettings({
               style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 500, fontSize: 12, lineHeight: 1.45 }}
             >
               {t("friend.auctionDescriptionLong")}
+            </p>
+          </div>
+        )}
+
+        {isFootballGridMode && (
+          <div className="flex flex-col items-center gap-2.5 rounded-[14px] border border-brand-blue/30 bg-brand-blue/10 p-5 text-center">
+            <div className="flex size-14 items-center justify-center rounded-2xl bg-brand-blue">
+              <Grid3X3 className="size-7 text-brand-yellow" strokeWidth={2.5} />
+            </div>
+            <h4
+              className="uppercase text-white"
+              style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 16, letterSpacing: '0.04em' }}
+            >
+              {t("friend.footballGrid")}
+            </h4>
+            <p
+              className="max-w-xs text-white/65"
+              style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 500, fontSize: 12, lineHeight: 1.45 }}
+            >
+              {t("friend.footballGridDescriptionLong")}
             </p>
           </div>
         )}

@@ -106,6 +106,29 @@ describe("LobbySettings auction mode", () => {
   });
 });
 
+describe("LobbySettings Football Grid mode", () => {
+  it("renders Football Grid as a selectable mode tab", () => {
+    renderSettings(makeLobby("friendly_possession"));
+
+    expect(screen.getByRole("button", { name: "friend.footballGrid" })).toBeTruthy();
+  });
+
+  it("shows the Grid rules and never renders quiz category controls", () => {
+    renderSettings(makeLobby("football_grid", 2));
+
+    expect(screen.getByText("friend.footballGridDescription")).toBeTruthy();
+    expect(screen.getByText("friend.footballGridDescriptionLong")).toBeTruthy();
+    expect(screen.queryByText("friend.categoriesTitle")).toBeNull();
+    expect(screen.queryByText("friend.randomCategories")).toBeNull();
+  });
+
+  it("locks a Grid lobby that already contains more than two players", () => {
+    renderSettings(makeLobby("football_grid", 3));
+
+    expect(screen.getByText("friend.partyLockedHint")).toBeTruthy();
+  });
+});
+
 describe("LobbySettings optional second-half category", () => {
   const MULTI_CATEGORIES = [
     { id: "cat-1", name: "Legends", icon: "⚽", imageUrl: null },

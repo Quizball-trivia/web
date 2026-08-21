@@ -10,6 +10,7 @@ import {
 import { registerSocketHandlers } from './socket-handlers';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { useRankedMatchmakingStore } from '@/stores/rankedMatchmaking.store';
+import { useFootballGridStore } from '@/stores/footballGrid.store';
 import { useQueryClient } from '@tanstack/react-query';
 import { logger } from '@/utils/logger';
 
@@ -34,6 +35,7 @@ export function useRealtimeConnection({ enabled, selfUserId }: RealtimeConnectio
         realtimeStore.reset();
         realtimeStore.setSelfUserId(null);
         useRankedMatchmakingStore.getState().clearRankedMatchmaking();
+        useFootballGridStore.getState().clear();
         disconnectSocket();
         stopConnectionQualityMonitor();
       }
@@ -53,6 +55,7 @@ export function useRealtimeConnection({ enabled, selfUserId }: RealtimeConnectio
       });
       realtimeStore.reset();
       useRankedMatchmakingStore.getState().clearRankedMatchmaking();
+      useFootballGridStore.getState().clear();
       realtimeStore.setSelfUserId(selfUserId);
       connectedRealtimeUserId = selfUserId;
       reconnectSocket();

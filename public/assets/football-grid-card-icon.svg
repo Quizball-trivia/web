@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320" role="img" aria-labelledby="title desc">
+  <title id="title">Football Grid</title>
+  <desc id="desc">A three by three football answer grid</desc>
+  <defs>
+    <linearGradient id="pitch" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#1645ff"/>
+      <stop offset="1" stop-color="#091c78"/>
+    </linearGradient>
+  </defs>
+  <rect x="18" y="18" width="284" height="284" rx="66" fill="url(#pitch)"/>
+  <g fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" opacity=".9">
+    <path d="M66 112h188M66 160h188M66 208h188M112 66v188M160 66v188M208 66v188"/>
+  </g>
+  <circle cx="160" cy="160" r="28" fill="#ffe500" stroke="#fff" stroke-width="6"/>
+  <path d="m160 143 16 12-6 19h-20l-6-19Z" fill="#111827"/>
+</svg>

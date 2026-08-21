@@ -13,6 +13,6 @@ export interface PublicLobby {
   memberCount: number;
   maxMembers: number;
   createdAt: string;
-  gameMode: 'friendly_possession' | 'friendly_party_quiz' | 'ranked_sim';
+  gameMode: 'friendly_possession' | 'friendly_party_quiz' | 'football_grid' | 'ranked_sim' | 'auction';
   isPublic: boolean;
 }
