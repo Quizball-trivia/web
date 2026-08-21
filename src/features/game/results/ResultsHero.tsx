@@ -80,31 +80,36 @@ export function ResultsHero({
       </div>
 
       <div className="mx-auto w-full max-w-[1100px]">
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-6">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-3 sm:gap-6">
           {/* Player (Left) — tier shield frame when ranked, plain avatar otherwise */}
-          <div className="flex items-center gap-3 justify-self-start sm:gap-4">
-            {playerTier ? (
-              <RankFrameCard
-                tier={playerTier}
-                tierLabel={tierLabelOf(playerTier)}
-                rpLabel={
-                  (playerDisplayRp ?? preMatchRankedProfile?.rp) != null
-                    ? `${playerDisplayRp ?? preMatchRankedProfile?.rp}RP`
-                    : undefined
-                }
-                customization={playerAvatarCustomization ?? { base: playerAvatar }}
-                sizes="(min-width: 640px) 150px, 100px"
-                className="w-[100px] shrink-0 sm:w-[150px]"
-              />
-            ) : (
-              <div className="flex size-24 shrink-0 items-center justify-center">
-                <AvatarDisplay
+          <div className="flex min-w-0 items-center gap-3 justify-self-stretch sm:gap-4">
+            <div className="flex w-[100px] shrink-0 flex-col items-center gap-2 sm:w-[150px]">
+              {playerTier ? (
+                <RankFrameCard
+                  tier={playerTier}
+                  tierLabel={tierLabelOf(playerTier)}
+                  rpLabel={
+                    (playerDisplayRp ?? preMatchRankedProfile?.rp) != null
+                      ? `${playerDisplayRp ?? preMatchRankedProfile?.rp}RP`
+                      : undefined
+                  }
                   customization={playerAvatarCustomization ?? { base: playerAvatar }}
-                  size="lg"
-                  shape="square"
+                  sizes="(min-width: 640px) 150px, 100px"
+                  className="w-[100px] shrink-0 sm:w-[150px]"
                 />
-              </div>
-            )}
+              ) : (
+                <div className="flex size-24 shrink-0 items-center justify-center">
+                  <AvatarDisplay
+                    customization={playerAvatarCustomization ?? { base: playerAvatar }}
+                    size="lg"
+                    shape="square"
+                  />
+                </div>
+              )}
+              {showAddFriendButton ? (
+                <div aria-hidden="true" className="h-8 shrink-0 sm:h-9" />
+              ) : null}
+            </div>
             <div className="hidden min-w-0 sm:block">
               <div
                 className="truncate font-poppins font-semibold uppercase text-white text-base sm:text-lg md:text-xl"
@@ -142,8 +147,8 @@ export function ResultsHero({
           </div>
 
           {/* Opponent (Right) — tier shield frame when ranked, plain avatar otherwise */}
-          <div className="flex flex-row-reverse items-center gap-3 justify-self-end sm:gap-4">
-            <div className="flex shrink-0 flex-col items-center gap-2">
+          <div className="flex min-w-0 flex-row-reverse items-center gap-3 justify-self-stretch sm:gap-4">
+            <div className="flex w-[100px] shrink-0 flex-col items-center gap-2 sm:w-[150px]">
               {opponentTier ? (
                 <RankFrameCard
                   tier={opponentTier}
@@ -164,9 +169,13 @@ export function ResultsHero({
                   />
                 </div>
               )}
-              {showAddFriendButton && (
-                <AddOpponentFriendButton opponentId={opponentId} opponentUsername={opponentUsername} />
-              )}
+              {showAddFriendButton ? (
+                <div className="relative h-8 w-full shrink-0 sm:h-9">
+                  <div className="absolute right-0 top-0">
+                    <AddOpponentFriendButton opponentId={opponentId} opponentUsername={opponentUsername} />
+                  </div>
+                </div>
+              ) : null}
             </div>
             <div className="hidden min-w-0 text-right sm:block">
               <div
