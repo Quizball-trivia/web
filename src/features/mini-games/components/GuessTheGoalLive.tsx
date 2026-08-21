@@ -17,9 +17,10 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import Link from 'next/link';
-import { ArrowLeft, ChevronRight, Clapperboard, Play, RotateCcw, WifiOff } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Clapperboard, LayoutGrid, Play, RotateCcw, Star, WifiOff, X } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { TacticsBoard2D, BOARD_VIEW_W, BOARD_VIEW_H } from './TacticsBoard2D';
 import { GgtActionGlyph, GgtLegend, GGT_ACTION_META, GGT_OPTION_CLASS, ggtOptionStyle, type GgtOptionState } from './guessTheGoalUi';
@@ -34,11 +35,21 @@ import {
   GuessTheGoalApiError,
   type GgtGuessOutcome,
   type GgtBonusOutcome,
+  type GgtGallery,
   type GgtI18nText,
   type GgtSession,
 } from '@/lib/repositories/guessTheGoal.repo';
 
-type Phase = 'loading' | 'load_error' | 'idle' | 'watch' | 'reveal' | 'bonus' | 'bonus_done' | 'disabled';
+type Phase =
+  | 'loading'
+  | 'load_error'
+  | 'idle'
+  | 'starting'
+  | 'watch'
+  | 'reveal'
+  | 'bonus'
+  | 'bonus_done'
+  | 'disabled';
 
 const LOOP_HOLD = 1.6;
 /** Display-clock pad: the server_now offset lags by response transit, and the
@@ -47,6 +58,125 @@ const LOOP_HOLD = 1.6;
 const SKEW_PAD_MS = 400;
 
 /** watch?v=, youtu.be/, shorts/, embed/ → bare video id (null if unparseable). */
+const DIFF_META: Record<string, { label: { en: string; ka: string }; color: string }> = {
+  easy: { label: { en: 'Easy', ka: 'მარტივი' }, color: '#38B60E' },
+  medium: { label: { en: 'Medium', ka: 'საშუალო' }, color: '#FFE500' },
+  hard: { label: { en: 'Hard', ka: 'რთული' }, color: '#FB3101' },
+};
+
+function GgtGalleryPanel({
+  gallery,
+  locale,
+  t,
+  pick,
+  onClose,
+}: {
+  gallery: GgtGallery;
+  locale: 'en' | 'ka';
+  t: (key: string, vars?: Record<string, string | number>) => string;
+  pick: (text: GgtI18nText | null | undefined) => string;
+  onClose?: () => void;
+}) {
+  const pct = gallery.total > 0 ? Math.round((gallery.solved / gallery.total) * 100) : 0;
+  const rank: Record<string, number> = { easy: 0, medium: 1, hard: 2 };
+  // Solved cards then locked placeholders, grouped easy -> medium -> hard.
+  // Unsolved goals arrive as counts only — the server never enumerates them.
+  const difficulties = [
+    ...new Set([...gallery.goals.map((g) => g.difficulty), ...Object.keys(gallery.locked)]),
+  ].sort((a, b) => (rank[a] ?? 3) - (rank[b] ?? 3));
+  const ordered = difficulties.flatMap((difficulty) => [
+    ...gallery.goals
+      .filter((g) => g.difficulty === difficulty)
+      .map((goal) => ({ kind: 'solved' as const, difficulty, goal })),
+    ...Array.from({ length: gallery.locked[difficulty] ?? 0 }, () => ({
+      kind: 'locked' as const,
+      difficulty,
+      goal: null,
+    })),
+  ]);
+  return (
+    <div className="flex w-full flex-col gap-3">
+      <div className="flex items-center justify-between gap-2 px-1">
+        <p className="font-poppins text-[12px] font-black uppercase tracking-wider text-white/60">
+          {t('Your collection')}
+        </p>
+        <div className="flex items-center gap-3">
+          <p className="font-poppins text-[12px] font-black uppercase tracking-wider text-white">
+            {gallery.solved}
+            <span className="text-white/40">/{gallery.total}</span>
+          </p>
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label={t('Back')}
+              className="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand-blue text-white transition-all hover:brightness-110 active:translate-y-[1px]"
+            >
+              <X className="size-5" />
+            </button>
+          )}
+        </div>
+      </div>
+      <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+        <div
+          className="h-full rounded-full bg-brand-green-bright transition-[width] duration-500"
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <div className="flex items-center gap-4 px-1">
+        <span className="flex items-center gap-1.5 font-poppins text-[12px] font-black uppercase text-brand-green-bright">
+          <CoinIcon className="size-4" /> {gallery.coins_earned}
+        </span>
+        <span className="font-poppins text-[12px] font-black uppercase text-white/70">
+          {gallery.xp_earned} XP
+        </span>
+      </div>
+      <div className="grid grid-cols-2 gap-2.5 md:grid-cols-3 lg:grid-cols-4">
+        {ordered.map((entry, i) =>
+          entry.kind === 'solved' ? (
+            <div
+              key={`s-${i}`}
+              className="flex min-h-[92px] flex-col items-center justify-between gap-2 rounded-xl bg-brand-green-bright p-3 text-center"
+            >
+              <p className="font-poppins text-[11px] font-black uppercase leading-snug text-black">
+                {pick(entry.goal.title)}
+              </p>
+              <div className="flex w-full items-center justify-between gap-1">
+                <span className="font-poppins text-[10px] font-black uppercase text-black">
+                  +{entry.goal.points}
+                </span>
+                <span className="flex items-center gap-1.5">
+                  {entry.goal.bonus_correct && <Star className="size-3 fill-black text-black" />}
+                  {entry.goal.video_url && <Clapperboard className="size-3 text-black/60" />}
+                  <span className="font-poppins text-[10px] font-black text-black/60">
+                    {entry.goal.year}
+                  </span>
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div
+              key={`u-${i}`}
+              className="flex min-h-[92px] flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed border-white/15 p-3"
+            >
+              <span className="font-poppins text-lg font-black text-white/25">???</span>
+              <span
+                className="rounded-full px-2 py-0.5 font-poppins text-[9px] font-black uppercase tracking-wide"
+                style={{
+                  color: DIFF_META[entry.difficulty]?.color ?? '#ffffff',
+                  backgroundColor: 'rgba(255,255,255,0.06)',
+                }}
+              >
+                {DIFF_META[entry.difficulty]?.label[locale] ?? entry.difficulty}
+              </span>
+            </div>
+          )
+        )}
+      </div>
+    </div>
+  );
+}
+
 function youtubeEmbed(url: string): { id: string; start: number } | null {
   const m = url.match(
     /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{6,20})/
@@ -91,6 +221,8 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
   const [bonusPicked, setBonusPicked] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
+  const [gallery, setGallery] = useState<GgtGallery | null>(null);
+  const [showGallery, setShowGallery] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { addXP } = usePlayer();
   const [time, setTime] = useState(0);
@@ -134,29 +266,32 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
     });
   }, []);
 
-  const loadCurrent = useCallback(() => {
-    guessTheGoalApi
-      .current()
-      .then((existing) => {
-        if (existing) {
-          adoptSession(existing, true);
-          trackEvent('ggt_screen_viewed', { entry: 'resumed' });
-        } else {
-          setPhase('idle');
-          trackEvent('ggt_screen_viewed', { entry: 'idle' });
-        }
-      })
-      .catch((err) => {
-        if (err instanceof GuessTheGoalApiError && err.status === 503) {
-          setPhase('disabled');
-          trackEvent('ggt_screen_viewed', { entry: 'disabled' });
-        } else {
-          setPhase('load_error');
-          trackEvent('ggt_error', { stage: 'load' });
-        }
-        void err;
-      });
-  }, [adoptSession]);
+  const loadCurrent = useCallback(
+    (track = true) => {
+      guessTheGoalApi
+        .current()
+        .then((existing) => {
+          if (existing) {
+            adoptSession(existing, true);
+            if (track) trackEvent('ggt_screen_viewed', { entry: 'resumed' });
+          } else {
+            setPhase('idle');
+            if (track) trackEvent('ggt_screen_viewed', { entry: 'idle' });
+          }
+        })
+        .catch((err) => {
+          if (err instanceof GuessTheGoalApiError && err.status === 503) {
+            setPhase('disabled');
+            if (track) trackEvent('ggt_screen_viewed', { entry: 'disabled' });
+          } else {
+            setPhase('load_error');
+            trackEvent('ggt_error', { stage: 'load' });
+          }
+          void err;
+        });
+    },
+    [adoptSession]
+  );
 
   const retryLoad = useCallback(() => {
     setPhase('loading');
@@ -175,6 +310,38 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
     loadCurrent();
   }, [loadCurrent]);
 
+  useEffect(() => {
+    // Progress data feeds the home screen and the collection overlay; reveal
+    // and bonus_done refresh it so the numbers are current after every solve,
+    // and opening the overlay always refetches so it can never show stale
+    // totals from before the last solve.
+    if (!showGallery && phase !== 'idle' && phase !== 'reveal' && phase !== 'bonus_done') return;
+    let cancelled = false;
+    guessTheGoalApi
+      .gallery()
+      .then((data) => {
+        if (!cancelled) setGallery(data);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [phase, showGallery]);
+
+  useEffect(() => {
+    if (!showGallery) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowGallery(false);
+    };
+    window.addEventListener('keydown', onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      window.removeEventListener('keydown', onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [showGallery]);
+
   /** Server-clock elapsed seconds past the grace window. */
   const serverElapsed = useCallback((): number => {
     if (!session) return 0;
@@ -183,7 +350,9 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
   }, [session]);
 
   useEffect(() => {
-    if (phase !== 'watch' || !timeline) return undefined;
+    // The board freezes the instant an answer is locked in — the reveal takes
+    // over whenever the server responds.
+    if (phase !== 'watch' || !timeline || picked !== null) return undefined;
     let raf = 0;
     const tick = () => {
       setTime(serverElapsed());
@@ -191,12 +360,15 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [phase, timeline, serverElapsed]);
+  }, [phase, timeline, serverElapsed, picked]);
 
   const start = useCallback(async () => {
     if (busy) return;
     setBusy(true);
     setError(null);
+    // Optimistic: swap to the board skeleton NOW — the session request rides
+    // inside the transition instead of blocking the tap.
+    setPhase('starting');
     // The nonce survives retries so a lost response can't mint two sessions.
     if (!nonceRef.current) nonceRef.current = newNonce();
     try {
@@ -223,6 +395,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
           }
         }
       }
+      setPhase('idle');
       setError(t('Something went wrong — try again'));
       trackEvent('ggt_error', { stage: 'start' });
     } finally {
@@ -262,8 +435,15 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
           has_bonus: Boolean(result.bonus),
         });
       } catch (err) {
-        // picked is KEPT: retrying the same option replays the stored result
-        // server-side, so the retry button re-submits it safely.
+        if (err instanceof GuessTheGoalApiError && err.status >= 400 && err.status < 500) {
+          // Definite rejection (session gone/answered in another tab): a
+          // same-option retry can never succeed — reconcile with the server.
+          setPhase('loading');
+          loadCurrent(false);
+          return;
+        }
+        // picked is KEPT: an ambiguous failure (timeout/5xx) may have
+        // committed, and a same-option retry replays the stored result.
         setError(t('Something went wrong — try again'));
         trackEvent('ggt_error', { stage: 'guess' });
         void err;
@@ -271,7 +451,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
         setBusy(false);
       }
     },
-    [session, busy, phase, queryClient, addXP, t, serverElapsed]
+    [session, busy, phase, queryClient, addXP, t, serverElapsed, loadCurrent]
   );
 
   const submitBonus = useCallback(
@@ -296,6 +476,11 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
           difficulty: session.goal.difficulty,
         });
       } catch (err) {
+        if (err instanceof GuessTheGoalApiError && err.status >= 400 && err.status < 500) {
+          setPhase('loading');
+          loadCurrent(false);
+          return;
+        }
         setError(t('Something went wrong — try again'));
         trackEvent('ggt_error', { stage: 'bonus' });
         void err;
@@ -303,7 +488,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
         setBusy(false);
       }
     },
-    [session, busy, queryClient, addXP, t]
+    [session, busy, queryClient, addXP, t, loadCurrent]
   );
 
   const mainMoves = session?.goal.main_moves ?? 1;
@@ -407,15 +592,29 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
         )}
       </div>
 
-      {video && phase !== 'watch' && (
-        <button
-          type="button"
-          onClick={() => setShowVideo((v) => !v)}
-          className="mx-auto flex h-10 items-center justify-center gap-2 rounded-full bg-white/[0.07] px-5 font-poppins text-[12px] font-black uppercase tracking-wide text-white transition-colors hover:bg-white/[0.12]"
-        >
-          <Clapperboard className="size-4 text-brand-yellow" />
-          {showVideo ? t('Back to the board') : t('Watch the real goal')}
-        </button>
+      {(phase === 'reveal' || phase === 'bonus_done' || (video && phase !== 'watch')) && (
+        <div className="flex items-center justify-center gap-2.5">
+          {video && (
+            <button
+              type="button"
+              onClick={() => setShowVideo((v) => !v)}
+              className="flex h-10 items-center justify-center gap-2 rounded-full bg-brand-yellow px-5 font-poppins text-[12px] font-black uppercase tracking-wide text-black transition-all hover:brightness-105 active:translate-y-[1px]"
+            >
+              <Clapperboard className="size-4" />
+              {showVideo ? t('Back to the board') : t('Watch the real goal')}
+            </button>
+          )}
+          {(phase === 'reveal' || phase === 'bonus_done') && gallery && (
+            <button
+              type="button"
+              onClick={() => setShowGallery(true)}
+              className="flex h-10 items-center justify-center gap-2 rounded-full bg-brand-blue px-5 font-poppins text-[12px] font-black uppercase tracking-wide text-white transition-all hover:brightness-110 active:translate-y-[1px]"
+            >
+              <LayoutGrid className="size-4" />
+              {t('Your collection')}
+            </button>
+          )}
+        </div>
       )}
 
       <GgtLegend />
@@ -465,16 +664,23 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
       )}
 
       {phase === 'disabled' && (
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 text-center">
+        <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
           <WifiOff className="size-10 text-white/30" />
           <p className="max-w-xs font-poppins text-sm font-bold uppercase leading-relaxed text-white/55">
             {t('Guess the Goal is warming up — check back soon')}
           </p>
+          <button
+            type="button"
+            onClick={retryLoad}
+            className="flex h-12 w-full max-w-[220px] items-center justify-center rounded-2xl bg-white/10 font-poppins text-sm font-black uppercase tracking-wide text-white transition-colors hover:bg-white/20"
+          >
+            {t('Try again')}
+          </button>
         </div>
       )}
 
       {phase === 'idle' && (
-        <div className="flex flex-1 items-center justify-center">
+        <div className="flex flex-1 flex-col items-center gap-8 pb-8 pt-2 md:pt-6">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -499,6 +705,46 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
               <Play className="size-5 fill-current" /> {t('Kick off')}
             </button>
           </motion.div>
+          {gallery && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="w-full max-w-3xl"
+            >
+              <GgtGalleryPanel gallery={gallery} locale={locale} t={t} pick={pick} />
+            </motion.div>
+          )}
+        </div>
+      )}
+
+      {phase === 'starting' && (
+        <div
+          role="status"
+          aria-busy="true"
+          aria-label={t('Loading…')}
+          className="flex min-h-0 flex-1 flex-col gap-3 pt-1 lg:my-auto lg:flex-none lg:flex-row lg:items-start lg:justify-center lg:gap-6"
+        >
+          <div className="flex flex-col gap-1.5 lg:flex-[3]">
+            <div className="h-[26px]" />
+            <div
+              className="w-full animate-pulse rounded-2xl bg-[#4a9c53]/40"
+              style={{ aspectRatio: `${BOARD_VIEW_W} / ${BOARD_VIEW_H}` }}
+            />
+            <GgtLegend />
+          </div>
+          <div className="flex flex-col gap-2 lg:flex-[2]">
+            <div className="h-[22px]" />
+            <div className="flex flex-col gap-2.5">
+              {[0, 1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="min-h-[52px] animate-pulse rounded-[16px] border-2 border-white/10 bg-white/[0.04] sm:min-h-[56px]"
+                  style={{ animationDelay: `${i * 120}ms` }}
+                />
+              ))}
+            </div>
+          </div>
         </div>
       )}
 
@@ -530,7 +776,11 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
                             : isPicked
                               ? 'wrong'
                               : 'dim'
-                          : 'idle';
+                          : picked !== null
+                            ? isPicked
+                              ? 'locked'
+                              : 'dim'
+                            : 'idle';
                       return (
                         <button
                           key={option.id}
@@ -622,7 +872,11 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
                             : isPicked
                               ? 'wrong'
                               : 'dim'
-                          : 'idle';
+                          : bonusPicked !== null
+                            ? isPicked
+                              ? 'locked'
+                              : 'dim'
+                            : 'idle';
                       return (
                         <button
                           key={option.id}
@@ -678,6 +932,38 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
         </div>
       )}
       </div>
+
+      {typeof document !== 'undefined' &&
+        createPortal(
+          <AnimatePresence>
+            {showGallery && gallery && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                role="dialog"
+                aria-modal="true"
+                aria-label={t('Your collection')}
+                className="fixed inset-0 z-[100] overflow-y-auto bg-[#0d1220]/95 backdrop-blur-md"
+                onClick={() => setShowGallery(false)}
+              >
+                <div
+                  className="mx-auto max-w-3xl px-4 pb-32 pt-6 md:py-12"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <GgtGalleryPanel
+                    gallery={gallery}
+                    locale={locale}
+                    t={t}
+                    pick={pick}
+                    onClose={() => setShowGallery(false)}
+                  />
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>,
+          document.body
+        )}
     </div>
   );
 }
