@@ -1,10 +1,16 @@
 "use client";
 
+import { useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { useLocale } from "@/contexts/LocaleContext";
 import { trackEvent } from "@/lib/posthog";
+import { isRoadToGoalEnabled } from "@/lib/features/roadToGoal";
+import {
+  trackRoadToGoalCardClicked,
+  trackRoadToGoalCardViewed,
+} from "@/features/mini-games/analytics/roadToGoal.analytics";
 
 const GAMES = [
   {
@@ -17,11 +23,11 @@ const GAMES = [
   },
   {
     key: "road-to-goal",
-    href: "/demos/mini-road-to-goal?from=/mini-games",
+    href: isRoadToGoalEnabled ? "/road-to-goal" : "/demos/mini-road-to-goal?from=/mini-games",
     titleKey: "play.roadToGoalTitle",
     descKey: "play.roadToGoalSubtitle",
     iconSrc: "/assets/road-to-goal-card-icon.png?v=2",
-    live: false,
+    live: isRoadToGoalEnabled,
   },
   {
     key: "guess-the-goal",
@@ -37,6 +43,16 @@ type MiniGameEntry = (typeof GAMES)[number];
 
 function GameCard({ game, index }: { game: MiniGameEntry; index: number }) {
   const { t } = useLocale();
+  const roadToGoalDestination = game.live ? "live" : "demo";
+
+  useEffect(() => {
+    if (game.key !== "road-to-goal") return;
+    trackRoadToGoalCardViewed({
+      destination: roadToGoalDestination,
+      enabled: game.live,
+    });
+  }, [game.key, game.live, roadToGoalDestination]);
+
   return (
     <div
       className="relative flex h-full animate-in fade-in slide-in-from-bottom-2 duration-300"
@@ -44,7 +60,15 @@ function GameCard({ game, index }: { game: MiniGameEntry; index: number }) {
     >
       <Link
         href={game.href}
-        onClick={() => trackEvent("mini_game_card_clicked", { game: game.key })}
+        onClick={() => {
+          trackEvent("mini_game_card_clicked", { game: game.key });
+          if (game.key === "road-to-goal") {
+            trackRoadToGoalCardClicked({
+              destination: roadToGoalDestination,
+              enabled: game.live,
+            });
+          }
+        }}
         className="relative flex min-h-[184px] w-full flex-col overflow-hidden rounded-[8px] p-3.5 text-center text-black transition-all hover:brightness-105 active:translate-y-[2px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white md:min-h-[268px] md:rounded-[20px] md:p-6"
         style={{ backgroundColor: "#FF9600" }}
       >

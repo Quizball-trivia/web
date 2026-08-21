@@ -16,6 +16,7 @@ export interface TriviaQuestion {
   options: string[];
   answer: number;
   difficulty: 'easy' | 'medium' | 'hard';
+  image?: { url: string; width: number; height: number };
 }
 
 interface BilingualTrivia extends Omit<TriviaQuestion, 'q' | 'options'> {
