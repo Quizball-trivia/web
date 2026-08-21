@@ -97,6 +97,29 @@ export interface GgtStats {
   daily_coin_cap: number;
 }
 
+export interface GgtGalleryGoal {
+  title: GgtI18nText;
+  year: number;
+  difficulty: string;
+  points: number;
+  bonus_correct: boolean | null;
+  video_url: string | null;
+  solved_at: string;
+}
+
+export interface GgtGallery {
+  solved: number;
+  total: number;
+  coins_earned: number;
+  xp_earned: number;
+  daily_coin_cap: number;
+  coins_today: number;
+  /** Solved goals only — unsolved goals exist solely as per-difficulty counts
+   *  in `locked` (their titles are the quiz answers). */
+  goals: GgtGalleryGoal[];
+  locked: Record<string, number>;
+}
+
 export class GuessTheGoalApiError extends Error {
   constructor(
     message: string,
@@ -162,5 +185,9 @@ export const guessTheGoalApi = {
 
   stats(): Promise<GgtStats> {
     return call("/api/v1/guess-the-goal/stats", "GET");
+  },
+
+  gallery(): Promise<GgtGallery> {
+    return call("/api/v1/guess-the-goal/gallery", "GET");
   },
 };
