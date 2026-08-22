@@ -92,7 +92,10 @@ function PodiumColumn({
         <span className="font-poppins text-lg font-black text-white" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{rank}</span>
         <span className="font-poppins text-sm font-black tabular-nums text-white" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{formatProfit(score)}</span>
         <span className="mt-0.5 font-poppins text-[9px] font-black tabular-nums text-white/90" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
-          ⚡{chemistry} · ×{multiplier.toFixed(1)}
+          ⚡{chemistry}
+          {/* The multiplier never touches a non-positive score — printing it
+              next to a loss claims math that didn't happen. */}
+          {score > 0 && multiplier > 1 ? ` · ×${multiplier.toFixed(1)}` : ''}
         </span>
       </div>
     </motion.div>
@@ -416,7 +419,7 @@ export function AuctionResultsScreen({
 
                 {/* Stat pills */}
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <ChemistryBadge total={player.chemistry} multiplier={player.multiplier} />
+                  <ChemistryBadge total={player.chemistry} multiplier={player.multiplier} profit={player.profit} />
                   <span className="rounded-md bg-white/8 px-2 py-1 text-[10px] font-bold text-white/70" style={poppins}>
                     {t('auctionGame.playersFilled', { filled: player.filledCount })}
                   </span>

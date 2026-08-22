@@ -761,9 +761,14 @@ export function getTotalFutureValue(team: AuctionTeam): number {
 }
 
 /** Profit = squad's later-season value − what was paid (starting budget minus
- *  what's left). Can be negative if you overpaid or bought decliners. */
+ *  what's left). Can be negative if you overpaid or bought decliners. Uses the
+ *  seat's recorded starting budget (server-sent) with a 0-clamp on spend, in
+ *  parity with auction-rules.getSquadProfit — legacy states created under a
+ *  different economy must not fabricate negative spend (fake profit). */
 export function getSquadProfit(player: AuctionPlayer): number {
-  return getTotalFutureValue(player.team) - (STARTING_BUDGET - player.budget);
+  const startingBudget = player.startingBudget ?? STARTING_BUDGET;
+  const spent = Math.max(0, startingBudget - player.budget);
+  return getTotalFutureValue(player.team) - spent;
 }
 
 /** Profit scaled by chemistry — the score the winner is decided on. Mirrors the

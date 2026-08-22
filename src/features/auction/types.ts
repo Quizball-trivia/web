@@ -57,6 +57,10 @@ export interface AuctionPlayer {
   tier?: string | null;
   rp?: number | null;
   budget: number;
+  /** Budget the seat started with (server-sent). Spend = this − budget,
+   *  clamped at 0 — keeps client profit math in parity with the server when
+   *  legacy states were created under a different economy. */
+  startingBudget?: number | null;
   team: AuctionTeam;
   isBot: boolean;
   isEliminated: boolean;
@@ -152,6 +156,9 @@ export interface AuctionGameState {
     positionGroup: PositionGroup;
     optionA: SoloPickOption;
     optionB: SoloPickOption;
+    /** 'A' | 'B' once the seat's choice landed (broadcast to every client).
+     *  Renders the locked-in state until the server starts the next round. */
+    selectedOption?: 'A' | 'B' | null;
     /** Deadline (epoch ms, server-offset-corrected) when the server resolves
      *  the pick to the default option; drives the countdown on every seat. */
     endsAt?: number | null;

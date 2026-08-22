@@ -171,7 +171,9 @@ function PlayerSide({
         />
       </motion.div>
 
-      {/* Budget pill — same style as RP pill in ranked showdown */}
+      {/* Budget pill — same style as RP pill in ranked showdown. Uses the
+          seat's recorded starting budget so a future economy change can't
+          make this pill lie about what the seat actually got. */}
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -179,7 +181,7 @@ function PlayerSide({
         className="mt-2 sm:mt-3 flex h-6 w-[80px] items-center justify-center rounded-[8px] bg-brand-yellow text-[10px] uppercase text-surface-page sm:h-10 sm:w-[160px] sm:rounded-[12px] sm:text-[17px] md:w-[180px]"
         style={poppins}
       >
-        {formatMoney(STARTING_BUDGET)}
+        {formatMoney(player.startingBudget ?? STARTING_BUDGET)}
       </motion.div>
 
       {/* Username */}
@@ -214,26 +216,34 @@ export function AuctionShowdownScreen({
   players,
   humanPlayerId,
   onComplete,
+  readyMode = 'simulated',
 }: {
   players: AuctionPlayer[];
   humanPlayerId: string;
   onComplete: () => void;
+  /**
+   * 'simulated' (mock flow) flips each seat ready on a staggered timer.
+   * 'seated' (live match) staggers the same animation, but the seats are
+   * genuinely connected — the server only assembles matches from live
+   * clients — so the badges reflect real presence rather than theatre.
+   */
+  readyMode?: 'simulated' | 'seated';
 }) {
   const { t } = useLocale();
-  // Simulate the ranked "connecting → ready" flow: each player flips ready on a
-  // staggered timer; once all are ready we hold a beat then advance. (No backend
-  // yet — when multiplayer lands, drive `readyIds` from real presence acks.)
   const [readyIds, setReadyIds] = useState<Set<string>>(new Set());
   const allReady = players.length > 0 && players.every((p) => readyIds.has(p.id));
 
   useEffect(() => {
+    // Both modes stagger the flip for the reveal beat; in 'seated' mode every
+    // player is already on the socket room, so this is pacing, not simulation.
+    void readyMode;
     const timers = players.map((p, i) =>
       setTimeout(() => {
         setReadyIds((prev) => new Set(prev).add(p.id));
       }, 700 + i * 350),
     );
     return () => timers.forEach(clearTimeout);
-  }, [players]);
+  }, [players, readyMode]);
 
   useEffect(() => {
     if (!allReady) return;

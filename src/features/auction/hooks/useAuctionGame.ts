@@ -62,6 +62,13 @@ export interface AuctionActions {
   cancelSearch?: () => void;
   /** Permanently leave/forfeit the live match (live mode only). */
   forfeit?: () => void;
+  /**
+   * Clears the once-per-mount start latch so the next startGame goes through.
+   * Needed at forfeit time: the server detaches a forfeiter from the match
+   * room, so no match_finished ever lifts it, and Play Again can land before
+   * the player_forfeited echo does (live mode only).
+   */
+  resetSearchLatch?: () => void;
   /** Opt in to rejoin a paused match after a reload (live mode only). */
   rejoin?: (matchId: string) => void;
   pendingTurnAction?: AuctionPendingTurnAction | null;

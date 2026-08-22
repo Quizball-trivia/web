@@ -171,7 +171,7 @@ describe('auction realtime adapter', () => {
     }
   });
 
-  it('clamps turn deadlines against synced server time when an offset is available', () => {
+  it('converts deadlines onto the client clock via the offset and clamps expired ones', () => {
     const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-06-20T09:59:50.000Z'));
     try {
       const clientState = toClientAuctionState(matchState({
@@ -184,7 +184,25 @@ describe('auction realtime adapter', () => {
         serverTimeOffsetMs: 20_000,
       });
 
-      expect(clientState.currentRound?.turnEndsAt).toBe(Date.parse('2026-06-20T10:00:10.000Z'));
+      // Server truth: the 10:00:05 deadline already passed (server now =
+      // 10:00:10). Converting onto the client clock (deadline − offset =
+      // 09:59:45) lands in the past, so the clamp pins it at client-now —
+      // the countdown reads zero instead of a phantom 20 extra seconds.
+      expect(clientState.currentRound?.turnEndsAt).toBe(Date.parse('2026-06-20T09:59:50.000Z'));
+
+      const futureState = toClientAuctionState(matchState({
+        phase: 'bidding',
+        currentRound: round({
+          currentTurnSeatId: 'seat-human',
+          turnEndsAt: '2026-06-20T10:00:30.000Z',
+        }),
+      }), {
+        serverTimeOffsetMs: 20_000,
+      });
+
+      // True remaining is 20s (server 10:00:10 → 10:00:30); on this skewed
+      // client clock that renders as 09:59:50 → 10:00:10.
+      expect(futureState.currentRound?.turnEndsAt).toBe(Date.parse('2026-06-20T10:00:10.000Z'));
     } finally {
       nowSpy.mockRestore();
     }

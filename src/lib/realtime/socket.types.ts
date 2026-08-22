@@ -822,6 +822,9 @@ export interface PublicAuctionPlayer {
    *  optional so older cached payloads still parse. */
   isBot?: boolean;
   budget: number;
+  /** Budget the seat started with. Absent on legacy payloads → assume the
+   *  current constant; spend/profit math must use this, not the constant. */
+  startingBudget?: number | null;
   team: PublicAuctionTeam;
   isEliminated: boolean;
   /** Quit / disconnect-forfeited (ranks below everyone; no coins). */

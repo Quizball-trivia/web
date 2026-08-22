@@ -92,7 +92,15 @@ export function useBiddingViewModel(
 
   const competitorsNeedingPos = round
     ? state.players.filter(
-        (p) => p.id !== humanPlayerId && !p.isEliminated && needsPosition(p, round.positionGroup),
+        (p) => (
+          p.id !== humanPlayerId
+          && !p.isEliminated
+          // Folded this lot, or quit the match entirely — neither is still
+          // competing for it.
+          && !p.forfeited
+          && !round.foldedIds.includes(p.id)
+          && needsPosition(p, round.positionGroup)
+        ),
       ).length
     : 0;
 

@@ -117,7 +117,11 @@ export function applyAuctionRealtimeEvent(
       return withPatchedState(current, {
         ...current.publicState,
         version: stateVersion,
-        phase: current.publicState.phase === 'solo_pick' ? 'created' : current.publicState.phase,
+        // Keep the solo_pick phase: downgrading to 'created' mapped to
+        // 'matchmaking' client-side and flashed the formation/"GET READY"
+        // beat between every solo-pick round until round_started landed.
+        // SoloPickScreen renders the locked-in state off selectedOption.
+        phase: current.publicState.phase,
         seats: replaceSeat(current.publicState.seats, event.payload.player),
         soloPick: current.publicState.soloPick
           ? {

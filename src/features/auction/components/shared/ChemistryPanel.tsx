@@ -72,17 +72,24 @@ function linkLabel(link: ChemLink): string {
   return link.key;
 }
 
-/** Compact "⚡ 24/33 · ×2.4" badge with a strength colour. */
+/** Compact "⚡ 24/33 · ×2.4" badge with a strength colour. Pass `profit` to
+ *  hide the multiplier on non-positive profit — chemistry never amplifies
+ *  losses, so printing "×2.1" next to one claims math that didn't happen. */
 export function ChemistryBadge({
   total,
   multiplier,
+  profit,
   className = '',
 }: {
   total: number;
   multiplier: number;
+  profit?: number;
   className?: string;
 }) {
   const tier = chemistryTier(total);
+  // The multiplier never touches a non-positive profit — printing "×2.1" (or
+  // even a meaningless ×1.0) next to a loss claims math that didn't happen.
+  const showMultiplier = !(typeof profit === 'number' && profit <= 0);
   return (
     <span
       className={cn(
@@ -93,7 +100,11 @@ export function ChemistryBadge({
     >
       <Zap className="size-3" fill="currentColor" />
       {total}/{MAX_SQUAD_CHEMISTRY}
-      <span className="opacity-60">·</span>×{multiplier.toFixed(1)}
+      {showMultiplier && (
+        <>
+          <span className="opacity-60">·</span>×{multiplier.toFixed(1)}
+        </>
+      )}
     </span>
   );
 }
