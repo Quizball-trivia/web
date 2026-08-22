@@ -496,7 +496,7 @@ export function ModeSelectionScreen({
           bg={colors.red.mid}
           title={t('play.footballGridTitle')}
           subtitle={t('play.footballGridSubtitle')}
-          iconSrc={footballGridAssetUrl('/assets/football-grid-card-icon.svg')!}
+          iconSrc={footballGridAssetUrl('/assets/football-grid/card-icon.png')!}
           badge={t('play.freeKicksNewBadge')}
           href="/tic-tac-toe?source=matchmaking"
         />

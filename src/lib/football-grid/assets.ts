@@ -34,6 +34,8 @@ export function footballGridAssetUrl(value: string | null | undefined): string |
   if (!source) return null;
   if (/^https:\/\//i.test(source)) return isAllowedFirstPartyUrl(source) ? source : null;
   if (source === '/assets/football-grid-card-icon.svg') return `${FOOTBALL_GRID_CDN_BASE_URL}/ui/card-icon.svg`;
+  // Play-hub card icon shared with the mobile app's bundled artwork.
+  if (source === '/assets/football-grid/card-icon.png') return `${FOOTBALL_GRID_CDN_BASE_URL}/ui/card-icon.png`;
   if (source === '/assets/bg-pattern.webp') return `${FOOTBALL_GRID_CDN_BASE_URL}/ui/bg-pattern.webp`;
   const avatarPrefix = '/assets/store/';
   if (source.startsWith(avatarPrefix)) {
