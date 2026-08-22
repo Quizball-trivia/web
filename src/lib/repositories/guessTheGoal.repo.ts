@@ -82,6 +82,9 @@ export interface GgtGuessOutcome {
   fun_fact: GgtI18nText | null;
   /** Real footage — the server only sends this AFTER the guess. */
   video_url: string | null;
+  /** Verified goal window in the upload; the embed plays exactly this range. */
+  clip_start_s?: number | null;
+  clip_end_s?: number | null;
   bonus?: { question: GgtI18nText; options: GgtOption[] };
   awards: GgtAwards;
   session_state: "guessed" | "complete";

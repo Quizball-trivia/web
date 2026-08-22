@@ -177,13 +177,17 @@ function GgtGalleryPanel({
   );
 }
 
-function youtubeEmbed(url: string): { id: string; start: number } | null {
+function youtubeEmbed(url: string, clipEndS?: number | null): { id: string; start: number; end?: number } | null {
   const m = url.match(
     /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{6,20})/
   );
   if (!m) return null;
   const t = url.match(/[?&](?:t|start)=(\d+)/);
-  return { id: m[1], start: t ? Number(t[1]) : 0 };
+  const start = t ? Number(t[1]) : 0;
+  // A verified clip window beats the URL's own offset — the player stops at
+  // the end of the goal sequence instead of rolling into post-match footage.
+  const end = clipEndS && clipEndS > start ? clipEndS : undefined;
+  return { id: m[1], start, end };
 }
 
 function newNonce(): string {
@@ -544,7 +548,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
       : duration;
   const goalFlash = phase !== 'watch' || (duration > 0 && animTime >= duration - 0.05);
 
-  const video = outcome?.video_url ? youtubeEmbed(outcome.video_url) : null;
+  const video = outcome?.video_url ? youtubeEmbed(outcome.video_url, outcome.clip_end_s) : null;
 
   const inGame = phase === 'watch' || phase === 'reveal' || phase === 'bonus' || phase === 'bonus_done';
   const activeKind = useMemo<TacticsStepKind | null>(() => {
@@ -603,7 +607,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
       >
         {showVideo && video ? (
           <iframe
-            src={`https://www.youtube-nocookie.com/embed/${video.id}?autoplay=1&rel=0${video.start ? `&start=${video.start}` : ''}`}
+            src={`https://www.youtube-nocookie.com/embed/${video.id}?autoplay=1&rel=0${video.start ? `&start=${video.start}` : ''}${video.end ? `&end=${video.end}` : ''}`}
             title={pick(outcome?.title)}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
