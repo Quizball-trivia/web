@@ -155,8 +155,10 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
   // Start matchmaking as soon as the screen opens — searching comes first, the
   // formation is shown later (briefly) once a match is found.
   const [auctionStarted, setAuctionStarted] = useState(true);
-  // Once all 3 bidders are in we play a short "GET READY" countdown before the
-  // formation reveal. Tracked so it only plays once per match.
+  // Once all 3 bidders are in we play the 3-seat showdown (ranked-style face-off)
+  // then a short "GET READY" countdown before the formation reveal. Tracked so
+  // each plays once per match.
+  const [showdownDone, setShowdownDone] = useState(false);
   const [countdownDone, setCountdownDone] = useState(false);
   // Leave/forfeit confirmation while in an active match.
   const [showQuitModal, setShowQuitModal] = useState(false);
@@ -268,6 +270,7 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
     setAuctionStarted(true);
     setPeakJoined(1);
     setResultsRevealed(false);
+    setShowdownDone(false);
     setCountdownDone(false);
     actions.startGame(3);
   }, [actions]);
@@ -287,6 +290,9 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
   const handleForfeit = useCallback(() => {
     setShowQuitModal(false);
     actions.forfeit?.();
+    // Lift the start latch NOW: Play Again can be tapped before the server's
+    // player_forfeited echo arrives, and the echo is only a backstop reset.
+    actions.resetSearchLatch?.();
     // Show the results screen right away (forfeit = loss, no coins); the match
     // keeps going server-side for the remaining players.
     setVoluntarilyForfeited(true);
@@ -325,14 +331,16 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
   // coins). Takes priority over every other branch once the player has left.
   if (forfeited && state && resolvedHumanPlayerId) {
     return (
-      <AuctionResultsScreen
-        state={state}
-        humanPlayerId={resolvedHumanPlayerId}
-        onPlayAgain={handlePlayAgain}
-        onExit={handleExit}
-        forfeited
-        removed={removedByServer}
-      />
+      <>
+        <AuctionResultsScreen
+          state={state}
+          humanPlayerId={resolvedHumanPlayerId}
+          onPlayAgain={handlePlayAgain}
+          onExit={handleExit}
+          forfeited
+          removed={removedByServer}
+        />
+      </>
     );
   }
 
@@ -399,10 +407,21 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
   // 'created' -> client 'matchmaking': a match exists and all players are
   // connecting. The SERVER has already chosen the formation (it's in `state`)
   // and holds the round behind its UI-ready gate until everyone is ready.
-  // While that gate waits we play a short "GET READY" countdown, then the
-  // server's formation reveal. The server — not these timers — decides when the
-  // round actually starts (phase advances to 'clue-reveal').
+  // While that gate waits we play the ranked-style 3-seat showdown, then a
+  // short "GET READY" countdown, then the server's formation reveal. The
+  // server — not these timers — decides when the round actually starts
+  // (phase advances to 'clue-reveal').
   if (state.phase === 'matchmaking') {
+    if (!showdownDone) {
+      return (
+        <AuctionShowdownScreen
+          players={state.players}
+          humanPlayerId={resolvedHumanPlayerId}
+          readyMode="seated"
+          onComplete={() => setShowdownDone(true)}
+        />
+      );
+    }
     if (!countdownDone) {
       return (
         <MatchCountdown
@@ -433,7 +452,7 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
         <button
           type="button"
           onClick={() => setShowQuitModal(true)}
-          aria-label={t('common.cancel')}
+          aria-label={t('possession.leaveMatch')}
           className="fixed left-3 top-3 z-50 flex size-10 items-center justify-center rounded-full bg-black/40 text-white/80 backdrop-blur transition hover:bg-black/60 hover:text-white"
         >
           <X className="size-5" />
@@ -493,6 +512,7 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
 
   return <MockSearchingScreen error={error} />;
 }
+
 
 // Fallback searching screen: the mock flow's loader and the live flow's
 // error/auth state. The happy-path live searching UI is owned by `LottieSearch`

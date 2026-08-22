@@ -1622,6 +1622,8 @@
     "sold": "SOLD!",
     "trueValue": "True Value",
     "soldFor": "Sold For",
+    "unsold": "Unsold",
+    "unsoldSub": "No bids — back to the pool",
     "joinedSquad": "{name} joined {owner} squad",
     "joinedYourSquad": "{name} joined your squad",
     "niceSigning": "Nice signing!",

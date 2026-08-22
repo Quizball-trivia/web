@@ -210,6 +210,17 @@ export function RevealScreen({
                     </div>
                   </div>
                 )}
+
+                {!winner && stage >= 3 && (
+                  <div className="relative rounded-[16px] bg-white/10 px-6 py-3 text-center">
+                    <div className="font-poppins text-lg font-black uppercase tracking-wide text-white/85">
+                      {t('auctionGame.unsold')}
+                    </div>
+                    <div className="mt-0.5 text-[10px] font-bold uppercase text-white/45" style={poppins}>
+                      {t('auctionGame.unsoldSub')}
+                    </div>
+                  </div>
+                )}
               </motion.div>
             )}
           </AnimatePresence>

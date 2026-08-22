@@ -265,6 +265,10 @@ export function useRealtimeAuctionMatch({
     }
   }, []);
   const pendingTurnActionRef = useRef<AuctionPendingTurnAction | null>(null);
+  // Latch for solo-pick submissions (keyed matchId:pickStartedAt): rapid taps
+  // on A then B must not emit twice. Cleared on rejection so a transient
+  // failure can be retried until the pick resolves.
+  const soloPickSentRef = useRef<string | null>(null);
   const publicStateRef = useRef<AuctionRealtimeState['publicState']>(null);
   const searchRef = useRef<AuctionSearchState | null>(null);
   const searchCancelledRef = useRef(false);
@@ -715,6 +719,10 @@ export function useRealtimeAuctionMatch({
       if (event.type === 'round_revealed') {
         revealReadyKeyRef.current = null;
       }
+      if (event.type === 'state' || event.type === 'match_finished') {
+        // The pick resolved (or the match moved on) — allow future picks.
+        soloPickSentRef.current = null;
+      }
       setError(null);
     };
 
@@ -744,6 +752,7 @@ export function useRealtimeAuctionMatch({
         return;
       }
       clearPendingForMatch(null);
+      soloPickSentRef.current = null;
       setError(friendlyAuctionError(payload, locale));
     };
     const rememberMatchId = (matchId: string | undefined | null) => {
@@ -986,6 +995,13 @@ export function useRealtimeAuctionMatch({
       // remaining players only saw lots quietly stop being contested.
       if (payload.userId !== selfUserId) {
         setMatchNotice({ id: Date.now(), kind: 'opponent-forfeited', seatId: payload.seatId });
+      } else {
+        // Our own forfeit: the server detaches us from the match room right
+        // after this emit, so auction:match_finished never reaches us and
+        // publicPhase never becomes 'finished'. Clear the start latch or the
+        // results screen's "Play Again" silently no-ops.
+        startRequestedRef.current = false;
+        activeMatchIdRef.current = null;
       }
     };
 
@@ -1051,6 +1067,9 @@ export function useRealtimeAuctionMatch({
     startGame: () => {
       requestStart({ force: publicPhase === 'finished' });
     },
+    resetSearchLatch: () => {
+      startRequestedRef.current = false;
+    },
     placeBid: (amount: number) => {
       if (!matchId) return;
       if (pendingTurnActionRef.current) return;
@@ -1099,7 +1118,10 @@ export function useRealtimeAuctionMatch({
       });
     },
     pickSoloOption: (option: 'A' | 'B') => {
-      if (!matchId) return;
+      if (!matchId || !publicState?.soloPick) return;
+      const pickKey = `${matchId}:${publicState.soloPick.startedAt}`;
+      if (soloPickSentRef.current === pickKey) return;
+      soloPickSentRef.current = pickKey;
       socket.emit('auction:solo_pick_select', { matchId, option });
     },
     forfeit: () => {
@@ -1145,6 +1167,7 @@ export function useRealtimeAuctionMatch({
     matchId,
     pendingTurnAction,
     publicPhase,
+    publicState,
     publicStateVersion,
     requestStart,
     setPendingTurnActionValue,

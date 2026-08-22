@@ -9,6 +9,7 @@ import { CountdownTimer } from '../bidding/CountdownTimer';
 import { SnapshotClues } from '../bidding/parts/SnapshotClues';
 import { POS_COLORS, AUCTION_PURPLE } from '../../constants/auction.constants';
 import { useLocale } from '@/contexts/LocaleContext';
+import { cn } from '@/lib/utils';
 import { usePositionLabel } from '../../hooks/usePositionLabel';
 import { SCREEN_GLOW } from '../shared/ScreenBackdrop';
 import { AuctionScreen } from '../shared/AuctionScreen';
@@ -34,6 +35,9 @@ export function SoloPickScreen({
   const pick = state.soloPick;
   const isHumanPicking = pick ? pick.playerId === humanPlayerId : true;
   const picker = pick ? state.players.find((p) => p.id === pick.playerId) ?? null : null;
+  // The seat's choice has landed (broadcast to everyone): lock both options
+  // until the server starts the next round instead of re-arming the buttons.
+  const picked = pick?.selectedOption ?? null;
 
   // Mock-mode only: stand in for the bot that owns this pick. In a live match
   // the server decides for bots and rejects anyone choosing on another seat's
@@ -118,9 +122,14 @@ export function SoloPickScreen({
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            whileTap={{ scale: 0.98 }}
+            whileTap={{ scale: picked ? 1 : 0.98 }}
             onClick={() => actions.pickSoloOption('A')}
-            className="flex w-full items-center gap-3 rounded-[18px] bg-brand-green p-4 text-left active:translate-y-[2px]"
+            disabled={Boolean(picked)}
+            className={cn(
+              'flex w-full items-center gap-3 rounded-[18px] bg-brand-green p-4 text-left active:translate-y-[2px]',
+              picked && picked !== 'A' && 'opacity-45',
+              picked === 'A' && 'ring-4 ring-white/70',
+            )}
           >
             <PlayerPhoto footballer={pick.optionA.footballer} size={56} className="shrink-0" />
             <div className="min-w-0 flex-1">
@@ -142,20 +151,26 @@ export function SoloPickScreen({
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            whileTap={{ scale: 0.98 }}
+            whileTap={{ scale: picked ? 1 : 0.98 }}
             onClick={() => actions.pickSoloOption('B')}
-            className="flex w-full items-center gap-3 rounded-[18px] p-4 text-left active:translate-y-[2px]"
+            disabled={Boolean(picked)}
+            className={cn(
+              'flex w-full items-center gap-3 rounded-[18px] p-4 text-left active:translate-y-[2px]',
+              picked && picked !== 'B' && 'opacity-45',
+              picked === 'B' && 'ring-4 ring-white/70',
+            )}
             style={{ backgroundColor: AUCTION_PURPLE }}
           >
             <div className="flex size-14 shrink-0 items-center justify-center rounded-full bg-white/15 text-3xl">❓</div>
             <div className="min-w-0 flex-1">
               <div className="mb-1 font-poppins text-[10px] font-black uppercase text-white/80">{t('auctionGame.mysteryPlayer')}</div>
-              {/* Scouting lots show the actual snapshot NUMBERS — bare facet
-                  labels ("Goals", "Assists"…) carry no information. */}
+              {/* Fully blind until chosen: the mystery's snapshot NUMBERS are
+                  server-side only (a devtools reader could otherwise identify
+                  the player), so render skeleton rows, never zeroed stats. */}
               {pick.optionB.footballer.snapshots?.length ? (
                 <SnapshotClues
                   snapshots={pick.optionB.footballer.snapshots}
-                  visibleClues={5}
+                  visibleClues={0}
                   variant="panel"
                   position={pick.optionB.footballer.positionGroup}
                 />
@@ -179,10 +194,15 @@ export function SoloPickScreen({
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.2 }}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.97 }}
+            whileHover={{ scale: picked ? 1 : 1.02 }}
+            whileTap={{ scale: picked ? 1 : 0.97 }}
             onClick={() => actions.pickSoloOption('A')}
-            className="flex flex-col items-center gap-3 rounded-[22px] bg-brand-green p-6 sm:p-8 text-center transition-transform hover:brightness-105 active:translate-y-[2px]"
+            disabled={Boolean(picked)}
+            className={cn(
+              'flex flex-col items-center gap-3 rounded-[22px] bg-brand-green p-6 sm:p-8 text-center transition-transform hover:brightness-105 active:translate-y-[2px]',
+              picked && picked !== 'A' && 'opacity-45',
+              picked === 'A' && 'ring-4 ring-white/70',
+            )}
           >
             <PlayerPhoto footballer={pick.optionA.footballer} size={80} />
             <div className="font-poppins text-sm font-black uppercase text-black/70">
@@ -207,10 +227,15 @@ export function SoloPickScreen({
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.97 }}
+            whileHover={{ scale: picked ? 1 : 1.02 }}
+            whileTap={{ scale: picked ? 1 : 0.97 }}
             onClick={() => actions.pickSoloOption('B')}
-            className="flex flex-col items-center gap-3 rounded-[22px] p-6 sm:p-8 text-center transition-transform hover:brightness-110 active:translate-y-[2px]"
+            disabled={Boolean(picked)}
+            className={cn(
+              'flex flex-col items-center gap-3 rounded-[22px] p-6 sm:p-8 text-center transition-transform hover:brightness-110 active:translate-y-[2px]',
+              picked && picked !== 'B' && 'opacity-45',
+              picked === 'B' && 'ring-4 ring-white/70',
+            )}
             style={{ backgroundColor: AUCTION_PURPLE }}
           >
             <motion.div
@@ -227,7 +252,7 @@ export function SoloPickScreen({
               <div className="mt-1 w-full text-left">
                 <SnapshotClues
                   snapshots={pick.optionB.footballer.snapshots}
-                  visibleClues={5}
+                  visibleClues={0}
                   variant="panel"
                   position={pick.optionB.footballer.positionGroup}
                 />

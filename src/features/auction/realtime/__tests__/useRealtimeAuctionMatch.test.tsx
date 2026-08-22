@@ -766,16 +766,72 @@ describe('useRealtimeAuctionMatch', () => {
     expect(result.current.actions.pendingTurnAction).toBeNull();
 
     act(() => {
+      socketMock.trigger('auction:solo_pick_started', {
+        matchId: 'match-1',
+        stateVersion: 3,
+        soloPick: {
+          playerSeatId: 'seat-human',
+          positionGroup: 'FWD',
+          optionA: { type: 'revealed', footballer: { positionGroup: 'FWD', startingPrice: 20_000_000, trueValue: 30_000_000, clues: [], snapshots: [] } },
+          optionB: { type: 'mystery', footballer: { positionGroup: 'FWD', startingPrice: 20_000_000, trueValue: 90_000_000, clues: [], snapshots: [] } },
+          selectedOption: null,
+          startedAt: new Date().toISOString(),
+        },
+      });
+    });
+
+    act(() => {
       result.current.actions.pickSoloOption('B');
+      // Rapid double-tap on the same pick must emit exactly once.
+      result.current.actions.pickSoloOption('A');
     });
 
     expect(socketMock.emit).toHaveBeenCalledWith('auction:solo_pick_select', {
       matchId: 'match-1',
       option: 'B',
     });
+    expect(socketMock.emit.mock.calls.filter(([event]) => event === 'auction:solo_pick_select')).toHaveLength(1);
   });
 
-  it('uses serverNow from auction events to adapt turn deadlines with server-clock offset', () => {
+  it('converts turn deadlines onto the client clock using the serverNow offset', () => {
+    const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-06-20T10:00:00.000Z'));
+    try {
+      const { result } = renderHook(() => useRealtimeAuctionMatch({
+        enabled: true,
+        selfUserId: 'user-1',
+        locale: 'en',
+        formation: '2-2-2',
+        humanAvatarSeed: 'avatar-1',
+      }));
+
+      act(() => {
+        socketMock.trigger('auction:match_started', {
+          matchId: 'match-1',
+          locale: 'en',
+          // Server is 10s ahead of this client.
+          serverNow: '2026-06-20T10:00:10.000Z',
+          state: matchState({
+            version: 1,
+            phase: 'bidding',
+            currentRound: round({
+              currentTurnSeatId: 'seat-human',
+              turnEndsAt: '2026-06-20T10:00:05.000Z',
+            }),
+          }),
+        });
+      });
+
+      expect(result.current.state?.phase).toBe('bidding');
+      // Server truth: the 10:00:05 deadline already passed on the server
+      // clock (server now = 10:00:10). The client-clock conversion must land
+      // at/below client-now so the countdown reads zero — not 10 fake seconds.
+      expect(result.current.state?.currentRound?.turnEndsAt).toBe(Date.parse('2026-06-20T10:00:00.000Z'));
+    } finally {
+      nowSpy.mockRestore();
+    }
+  });
+
+  it('keeps true remaining time for a future deadline despite client clock skew', () => {
     const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-06-20T10:00:00.000Z'));
     try {
       const { result } = renderHook(() => useRealtimeAuctionMatch({
@@ -796,13 +852,14 @@ describe('useRealtimeAuctionMatch', () => {
             phase: 'bidding',
             currentRound: round({
               currentTurnSeatId: 'seat-human',
-              turnEndsAt: '2026-06-20T10:00:05.000Z',
+              turnEndsAt: '2026-06-20T10:00:20.000Z',
             }),
           }),
         });
       });
 
-      expect(result.current.state?.phase).toBe('bidding');
+      // True remaining = 10s (server 10:00:10 → 10:00:20). On this client's
+      // clock that renders as 10:00:00 → 10:00:10.
       expect(result.current.state?.currentRound?.turnEndsAt).toBe(Date.parse('2026-06-20T10:00:10.000Z'));
     } finally {
       nowSpy.mockRestore();

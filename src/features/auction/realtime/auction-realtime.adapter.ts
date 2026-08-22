@@ -67,6 +67,7 @@ export function toClientAuctionState(
           positionGroup: publicState.soloPick.positionGroup,
           optionA: toClientSoloPickOption(publicState.soloPick.optionA, 'solo-a'),
           optionB: toClientSoloPickOption(publicState.soloPick.optionB, 'solo-b'),
+          selectedOption: publicState.soloPick.selectedOption,
           // Server auto-resolves the pick SOLO_PICK_MS after startedAt; the
           // derived deadline drives the countdown every seat can watch. The
           // past is NOT clamped to now (rejoining 6s into a pick must show the
@@ -154,6 +155,7 @@ function toClientPlayer(
     tier: player.tier ?? null,
     rp: player.rp ?? null,
     budget: player.budget,
+    startingBudget: player.startingBudget ?? null,
     team: {
       formation,
       slots: {
@@ -262,8 +264,12 @@ function toClientTurnEndsAt(turnEndsAt: string | null, serverTimeOffsetMs: numbe
   if (!turnEndsAt) return null;
   const parsed = Date.parse(turnEndsAt);
   if (!Number.isFinite(parsed)) return null;
-  const syncedNowMs = Date.now() + (serverTimeOffsetMs ?? 0);
-  return Math.max(syncedNowMs, parsed);
+  // Convert the server-epoch instant onto THIS client's clock: consumers
+  // subtract raw Date.now(), so returning the server-clock value made every
+  // countdown drift by the device's skew (a phone 30s slow saw each turn run
+  // ~30s long). Clamped so a just-started turn never renders negative.
+  const offset = serverTimeOffsetMs ?? 0;
+  return Math.max(Date.now(), parsed - offset);
 }
 
 function getTotalRounds(formation: Formation, playerCount: number): number {
