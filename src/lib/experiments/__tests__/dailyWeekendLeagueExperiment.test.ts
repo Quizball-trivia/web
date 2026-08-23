@@ -44,10 +44,14 @@ describe('daily Weekend League experiment', () => {
 
     await expect(loadDailyWeekendLeagueExperimentVariant({
       createdAt: '2026-07-01T00:00:00.000Z',
+      country: 'GE',
     })).resolves.toBe('test');
 
     expect(posthogMock.setPersonPropertiesForFlags).toHaveBeenCalledWith(
-      { created_at: '2026-07-01T00:00:00.000Z' },
+      {
+        created_at: '2026-07-01T00:00:00.000Z',
+        country: 'GE',
+      },
       false,
     );
     expect(posthogMock.getFeatureFlag).toHaveBeenCalledWith(
@@ -76,6 +80,7 @@ describe('daily Weekend League experiment', () => {
 
     await expect(loadDailyWeekendLeagueExperimentVariant({
       createdAt: '2026-07-01T00:00:00.000Z',
+      country: 'GE',
     })).resolves.toBe('test');
 
     expect(posthogMock.getFeatureFlag).toHaveBeenCalledTimes(1);
@@ -91,6 +96,7 @@ describe('daily Weekend League experiment', () => {
 
     await expect(loadDailyWeekendLeagueExperimentVariant({
       createdAt: '2026-07-01T00:00:00.000Z',
+      country: 'GE',
     })).resolves.toBe('not_enrolled');
 
     expect(posthogMock.getFeatureFlag).not.toHaveBeenCalled();
@@ -101,8 +107,20 @@ describe('daily Weekend League experiment', () => {
 
     await expect(loadDailyWeekendLeagueExperimentVariant({
       createdAt: '2026-07-01T00:00:00.000Z',
+      country: 'GE',
     })).resolves.toBe('not_enrolled');
 
+    expect(posthogMock.reloadFeatureFlags).not.toHaveBeenCalled();
+    expect(posthogMock.getFeatureFlag).not.toHaveBeenCalled();
+  });
+
+  it('does no flag work for users outside Georgia', async () => {
+    await expect(loadDailyWeekendLeagueExperimentVariant({
+      createdAt: '2026-07-01T00:00:00.000Z',
+      country: 'US',
+    })).resolves.toBe('not_enrolled');
+
+    expect(posthogMock.setPersonPropertiesForFlags).not.toHaveBeenCalled();
     expect(posthogMock.reloadFeatureFlags).not.toHaveBeenCalled();
     expect(posthogMock.getFeatureFlag).not.toHaveBeenCalled();
   });
