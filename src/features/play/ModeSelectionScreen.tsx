@@ -176,19 +176,21 @@ function MiniModeCard({
           {ctaLabel}
         </div>
 
-        <Image
-          src={iconSrc}
-          alt=""
-          width={200}
-          height={200}
-          className="pointer-events-none absolute bottom-4 right-4 hidden h-28 w-28 object-contain opacity-90 lg:block"
-        />
-        <div className="mt-auto hidden pt-8 lg:block">
+        <div className="mt-auto hidden items-end gap-3 pt-6 lg:flex">
           <div
-            className="flex h-14 w-[180px] items-center justify-center rounded-[8px] bg-black text-xl uppercase tracking-wide text-white"
+            className="flex h-11 w-[136px] shrink-0 items-center justify-center rounded-[8px] bg-black text-base uppercase tracking-wide text-white"
             style={poppins}
           >
             {ctaLabel}
+          </div>
+          <div className="flex min-w-0 flex-1 justify-end">
+            <Image
+              src={iconSrc}
+              alt=""
+              width={200}
+              height={200}
+              className="pointer-events-none h-24 w-full max-w-24 object-contain object-right opacity-90"
+            />
           </div>
         </div>
       </div>
