@@ -305,6 +305,7 @@ function DevResultsContent() {
             preMatchRankedProfile={preMatchRankedProfile}
             preMatchProgression={preMatchProgression}
             unlockedAchievements={withAchievements ? ACHIEVEMENT_SAMPLES : []}
+            winStreakCount={3}
             onPlayAgain={() => setReplayKey((k) => k + 1)}
             onMainMenu={() => router.push('/play')}
           />

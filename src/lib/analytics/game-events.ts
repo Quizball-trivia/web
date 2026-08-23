@@ -421,6 +421,8 @@ export function trackRankedPlayAgainClicked(props: {
   cachedTickets?: number | null;
   walletFetching?: boolean;
   playAgainDisabled?: boolean;
+  winStreakExperimentVariant?: string | null;
+  winStreakCount?: number | null;
 }): void {
   trackEvent('ranked_play_again_clicked', {
     match_id: props.matchId ?? null,
@@ -430,6 +432,18 @@ export function trackRankedPlayAgainClicked(props: {
     cached_tickets: props.cachedTickets ?? null,
     wallet_fetching: Boolean(props.walletFetching),
     play_again_disabled: Boolean(props.playAgainDisabled),
+    win_streak_experiment_variant: props.winStreakExperimentVariant ?? null,
+    win_streak_count: props.winStreakCount ?? null,
+  });
+}
+
+export function trackRankedWinStreakPromptShown(props: {
+  matchId?: string | null;
+  winStreakCount: number;
+}): void {
+  trackEvent('ranked_win_streak_prompt_shown', {
+    match_id: props.matchId ?? null,
+    win_streak_count: props.winStreakCount,
   });
 }
 
