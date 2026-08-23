@@ -60,6 +60,27 @@ type OpenModalProps = Omit<DailyChallengeCompleteModalProps, "open">;
 function DailyChallengeCompleteModalExperiment(props: OpenModalProps) {
   const createdAt = useAuthStore((state) => state.user?.created_at);
   const country = useAuthStore((state) => state.user?.country);
+  const assignmentKey = country?.trim().toUpperCase() ?? "unknown";
+
+  return (
+    <DailyChallengeCompleteModalExperimentAssignment
+      key={assignmentKey}
+      {...props}
+      country={country}
+      createdAt={createdAt}
+    />
+  );
+}
+
+function DailyChallengeCompleteModalExperimentAssignment({
+  country,
+  createdAt,
+  ...props
+}: OpenModalProps & {
+  country?: string | null;
+  createdAt?: string | null;
+}) {
+  const isEligibleCountry = country?.trim().toUpperCase() === "GE";
   const weekendLeagueQuery = useQuery({
     queryKey: queryKeys.weekendLeague.current(),
     queryFn: getWeekendLeagueCurrent,
@@ -73,9 +94,10 @@ function DailyChallengeCompleteModalExperiment(props: OpenModalProps) {
   const trackedPromptRef = useRef(false);
 
   useEffect(() => {
+    if (!isEligibleCountry) return;
+
     if (
-      country?.trim().toUpperCase() !== "GE"
-      || !weekendLeagueQuery.isSuccess
+      !weekendLeagueQuery.isSuccess
       || weekendLeagueQuery.isFetching
       || !tournament
     ) {
@@ -99,6 +121,7 @@ function DailyChallengeCompleteModalExperiment(props: OpenModalProps) {
   }, [
     country,
     createdAt,
+    isEligibleCountry,
     tournament,
     weekendLeagueQuery.isFetching,
     weekendLeagueQuery.isSuccess,
@@ -112,7 +135,7 @@ function DailyChallengeCompleteModalExperiment(props: OpenModalProps) {
   });
   const { action: ctaAction, currentQp, state: ctaState, targetQp } = ctaDecision;
   const weekendLeagueCta: DailyChallengeWeekendLeagueCta | undefined =
-    experimentVariant === "test" && tournament
+    isEligibleCountry && experimentVariant === "test" && tournament
       ? {
           state: ctaState,
           action: ctaAction,
@@ -132,7 +155,12 @@ function DailyChallengeCompleteModalExperiment(props: OpenModalProps) {
       : undefined;
 
   useEffect(() => {
-    if (!tournament || experimentVariant !== "test" || trackedPromptRef.current) return;
+    if (
+      !isEligibleCountry
+      || !tournament
+      || experimentVariant !== "test"
+      || trackedPromptRef.current
+    ) return;
     trackedPromptRef.current = true;
     trackDailyWeekendLeagueCtaShown({
       state: ctaState,
@@ -146,6 +174,7 @@ function DailyChallengeCompleteModalExperiment(props: OpenModalProps) {
     ctaState,
     currentQp,
     experimentVariant,
+    isEligibleCountry,
     targetQp,
     tournament,
   ]);
