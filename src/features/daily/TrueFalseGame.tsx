@@ -24,7 +24,7 @@ const poppins = {
 interface TrueFalseGameProps {
   session: TrueFalseSession;
   onBack: () => void;
-  onComplete: (score: number) => void;
+  onComplete: (score: number, nextPath?: string) => void;
   /** Skip the daily-challenge completion modal and fire onComplete as soon
    *  as the last question resolves (embedded/promo flows). */
   autoComplete?: boolean;
@@ -273,7 +273,7 @@ export function TrueFalseGame({
         title={session.title}
         correct={correctCount}
         total={session.questionCount}
-        onDone={() => onComplete(correctCount)}
+        onDone={(nextPath) => onComplete(correctCount, nextPath)}
       />
     </div>
   );
