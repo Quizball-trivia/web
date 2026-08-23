@@ -5,6 +5,7 @@ export const DAILY_WEEKEND_LEAGUE_EXPERIMENT_KEY = 'daily-completion-weekend-lea
 export type DailyWeekendLeagueExperimentVariant = 'control' | 'test' | 'not_enrolled';
 
 const FLAG_LOAD_TIMEOUT_MS = 4_000;
+const ELIGIBLE_COUNTRY = 'GE';
 
 /**
  * Load the flag only after the completion modal and live Weekend League status
@@ -13,16 +14,27 @@ const FLAG_LOAD_TIMEOUT_MS = 4_000;
  */
 export function loadDailyWeekendLeagueExperimentVariant({
   createdAt,
+  country,
 }: {
   createdAt?: string | null;
+  country?: string | null;
 }): Promise<DailyWeekendLeagueExperimentVariant> {
-  if (typeof window === 'undefined' || !process.env.NEXT_PUBLIC_POSTHOG_KEY) {
+  const normalizedCountry = country?.trim().toUpperCase();
+  if (
+    typeof window === 'undefined'
+    || !process.env.NEXT_PUBLIC_POSTHOG_KEY
+    || normalizedCountry !== ELIGIBLE_COUNTRY
+  ) {
     return Promise.resolve('not_enrolled');
   }
 
-  if (createdAt) {
-    posthog.setPersonPropertiesForFlags({ created_at: createdAt }, false);
-  }
+  posthog.setPersonPropertiesForFlags(
+    {
+      created_at: createdAt ?? undefined,
+      country: normalizedCountry,
+    },
+    false,
+  );
 
   const flagsWereAlreadyLoaded = posthog.featureFlags.hasLoadedFlags;
   posthog.featureFlags.setReloadingPaused(false);
