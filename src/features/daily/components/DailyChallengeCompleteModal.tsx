@@ -1,15 +1,41 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { motion } from "motion/react";
-import { Trophy } from "lucide-react";
+import { ChevronRight, Target, Ticket, Trophy } from "lucide-react";
 import { useLocale } from "@/contexts/LocaleContext";
+import { getWeekendLeagueCurrent } from "@/lib/api/endpoints";
+import {
+  trackDailyWeekendLeagueCtaClicked,
+  trackDailyWeekendLeagueCtaShown,
+} from "@/lib/analytics/game-events";
+import {
+  loadDailyWeekendLeagueExperimentVariant,
+  type DailyWeekendLeagueExperimentVariant,
+} from "@/lib/experiments/dailyWeekendLeagueExperiment";
+import {
+  resolveDailyWeekendLeagueCta,
+  type DailyWeekendLeagueCtaAction,
+  type DailyWeekendLeagueCtaState,
+} from "@/lib/experiments/dailyWeekendLeagueCta";
+import { queryKeys } from "@/lib/queries/queryKeys";
+import { useAuthStore } from "@/stores/auth.store";
+
+export interface DailyChallengeWeekendLeagueCta {
+  state: DailyWeekendLeagueCtaState;
+  action: DailyWeekendLeagueCtaAction;
+  currentQp: number;
+  targetQp: number;
+  onClick: () => void;
+}
 
 interface DailyChallengeCompleteModalProps {
   open: boolean;
   title: string;
   correct: number;
   total: number;
-  onDone: () => void;
+  onDone: (nextPath?: string) => void;
 }
 
 export function DailyChallengeCompleteModal({
@@ -19,8 +45,128 @@ export function DailyChallengeCompleteModal({
   total,
   onDone,
 }: DailyChallengeCompleteModalProps) {
-  const { t } = useLocale();
   if (!open) return null;
+
+  const contentProps = { title, correct, total, onDone };
+  if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) {
+    return <DailyChallengeCompleteModalContent {...contentProps} />;
+  }
+
+  return <DailyChallengeCompleteModalExperiment {...contentProps} />;
+}
+
+type OpenModalProps = Omit<DailyChallengeCompleteModalProps, "open">;
+
+function DailyChallengeCompleteModalExperiment(props: OpenModalProps) {
+  const createdAt = useAuthStore((state) => state.user?.created_at);
+  const weekendLeagueQuery = useQuery({
+    queryKey: queryKeys.weekendLeague.current(),
+    queryFn: getWeekendLeagueCurrent,
+    staleTime: 0,
+  });
+  const [experimentVariant, setExperimentVariant] =
+    useState<DailyWeekendLeagueExperimentVariant>("not_enrolled");
+  const assignmentRef = useRef<Promise<DailyWeekendLeagueExperimentVariant> | null>(null);
+  const trackedPromptRef = useRef(false);
+
+  useEffect(() => {
+    if (
+      !weekendLeagueQuery.isSuccess
+      || !weekendLeagueQuery.isFetchedAfterMount
+    ) {
+      return;
+    }
+
+    if (!assignmentRef.current) {
+      assignmentRef.current = loadDailyWeekendLeagueExperimentVariant({ createdAt });
+    }
+
+    let active = true;
+    void assignmentRef.current.then((variant) => {
+      if (active) setExperimentVariant(variant);
+    });
+    return () => {
+      active = false;
+    };
+  }, [createdAt, weekendLeagueQuery.isFetchedAfterMount, weekendLeagueQuery.isSuccess]);
+
+  const tournament = weekendLeagueQuery.data?.tournament ?? null;
+  const you = weekendLeagueQuery.data?.you ?? null;
+  const ctaDecision = resolveDailyWeekendLeagueCta({
+    points: you?.qp.points,
+    target: tournament?.qp_target ?? you?.qp.target,
+    qualified: you?.qp.qualified,
+    entered: you?.entered,
+    tournamentStatus: tournament?.status,
+  });
+  const { action: ctaAction, currentQp, state: ctaState, targetQp } = ctaDecision;
+  const weekendLeagueCta: DailyChallengeWeekendLeagueCta | undefined =
+    experimentVariant === "test"
+      ? {
+          state: ctaState,
+          action: ctaAction,
+          currentQp,
+          targetQp,
+          onClick: () => {
+            trackDailyWeekendLeagueCtaClicked({
+              state: ctaState,
+              action: ctaAction,
+              currentQp,
+              targetQp,
+              tournamentStatus: tournament?.status ?? null,
+            });
+            props.onDone(ctaDecision.nextPath);
+          },
+        }
+      : undefined;
+
+  useEffect(() => {
+    if (experimentVariant !== "test" || trackedPromptRef.current) return;
+    trackedPromptRef.current = true;
+    trackDailyWeekendLeagueCtaShown({
+      state: ctaState,
+      action: ctaAction,
+      currentQp,
+      targetQp,
+      tournamentStatus: tournament?.status ?? null,
+    });
+  }, [
+    ctaAction,
+    ctaState,
+    currentQp,
+    experimentVariant,
+    targetQp,
+    tournament?.status,
+  ]);
+
+  return (
+    <DailyChallengeCompleteModalContent
+      {...props}
+      weekendLeagueCta={weekendLeagueCta}
+    />
+  );
+}
+
+export function DailyChallengeCompleteModalContent({
+  title,
+  correct,
+  total,
+  onDone,
+  weekendLeagueCta,
+}: OpenModalProps & { weekendLeagueCta?: DailyChallengeWeekendLeagueCta }) {
+  const { t } = useLocale();
+
+  const isWeekendLeagueEntered = weekendLeagueCta?.state === "entered";
+  const isWeekendLeagueQualified = weekendLeagueCta?.state === "qualified";
+  const displayedQp = weekendLeagueCta
+    ? Math.max(0, Math.min(weekendLeagueCta.currentQp, weekendLeagueCta.targetQp))
+    : 0;
+  const remainingQp = weekendLeagueCta
+    ? Math.max(0, weekendLeagueCta.targetQp - displayedQp)
+    : 0;
+  const qpProgress = weekendLeagueCta?.targetQp
+    ? Math.round((displayedQp / weekendLeagueCta.targetQp) * 100)
+    : 0;
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
@@ -31,7 +177,7 @@ export function DailyChallengeCompleteModal({
         initial={{ opacity: 0, scale: 0.9, y: 16 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 280, damping: 22 }}
-        className="w-full max-w-sm rounded-[24px] bg-brand-blue p-7 text-center sm:p-8"
+        className="max-h-[calc(100dvh-2rem)] w-full max-w-sm overflow-y-auto rounded-[24px] bg-brand-blue p-7 text-center sm:p-8"
       >
         <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-white/12">
           <Trophy className="size-8 text-brand-yellow" />
@@ -56,10 +202,91 @@ export function DailyChallengeCompleteModal({
           {t("dailyGames.completionGreat")}
         </p>
 
+        {weekendLeagueCta && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.18, duration: 0.28 }}
+            className="mt-5 border-y border-white/15 py-4 text-left"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex size-9 shrink-0 items-center justify-center text-brand-yellow">
+                {isWeekendLeagueQualified || isWeekendLeagueEntered ? (
+                  <Ticket className="size-6" aria-hidden />
+                ) : (
+                  <Target className="size-6" aria-hidden />
+                )}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="font-poppins text-[11px] font-semibold uppercase tracking-[0.12em] text-white/60">
+                    {t("weekendLeague.title")}
+                  </p>
+                  <span className="shrink-0 font-poppins text-[10px] font-semibold uppercase tracking-wide text-brand-green-light">
+                    {isWeekendLeagueEntered
+                      ? t("weekendLeague.joinedCta")
+                      : isWeekendLeagueQualified
+                        ? t("weekendLeague.qualified")
+                        : t("weekendLeague.stageQualifying")}
+                  </span>
+                </div>
+                <p className="mt-1 font-poppins text-sm font-semibold text-white">
+                  {t("weekendLeague.qpProgress", {
+                    current: displayedQp,
+                    target: weekendLeagueCta.targetQp,
+                  })}
+                </p>
+              </div>
+            </div>
+
+            <div
+              role="progressbar"
+              aria-label={t("weekendLeague.qpProgress", {
+                current: displayedQp,
+                target: weekendLeagueCta.targetQp,
+              })}
+              aria-valuemin={0}
+              aria-valuemax={weekendLeagueCta.targetQp}
+              aria-valuenow={displayedQp}
+              className="mt-3 h-2.5 overflow-hidden rounded-full bg-black/18"
+            >
+              <div
+                className="h-full rounded-full bg-brand-green-light transition-[width] duration-500"
+                style={{ width: `${qpProgress}%` }}
+              />
+            </div>
+
+            <p className="mt-2 font-poppins text-[11px] font-semibold text-white/65">
+              {remainingQp > 0
+                ? t("weekendLeague.qpNeeded", { count: remainingQp })
+                : isWeekendLeagueEntered
+                  ? t("weekendLeague.enteredTitle")
+                  : t("weekendLeague.qualified")}
+            </p>
+
+            <button
+              type="button"
+              onClick={weekendLeagueCta.onClick}
+              className="mt-3 flex h-11 w-full items-center justify-center gap-1.5 rounded-[22px] bg-brand-yellow font-poppins text-xs font-semibold uppercase tracking-wide text-black transition-colors hover:bg-brand-yellow-deep"
+            >
+              {weekendLeagueCta.action === "play_ranked"
+                ? t("weekendLeague.playRanked")
+                : weekendLeagueCta.action === "join_league"
+                  ? t("weekendLeague.joinCta")
+                  : t("weekendLeague.viewLeague")}
+              <ChevronRight className="size-4" aria-hidden />
+            </button>
+          </motion.div>
+        )}
+
         <button
           type="button"
-          onClick={onDone}
-          className="mt-6 h-12 w-full rounded-[28px] bg-brand-yellow font-poppins text-sm font-semibold uppercase tracking-wide text-black transition-colors hover:bg-brand-yellow-deep"
+          onClick={() => onDone()}
+          className={`h-12 w-full rounded-[28px] font-poppins text-sm font-semibold uppercase tracking-wide transition-colors ${
+            weekendLeagueCta
+              ? "mt-2 text-white/70 hover:text-white"
+              : "mt-6 bg-brand-yellow text-black hover:bg-brand-yellow-deep"
+          }`}
         >
           {t("dailyGames.backToChallenges")}
         </button>

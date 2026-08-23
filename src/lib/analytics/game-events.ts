@@ -681,6 +681,42 @@ export function trackDailyChallengeCompleted(props: {
   });
 }
 
+type DailyWeekendLeagueCtaAnalyticsProps = {
+  state: 'qualifying' | 'qualified' | 'entered';
+  action: 'play_ranked' | 'join_league' | 'view_league';
+  currentQp: number;
+  targetQp: number;
+  tournamentStatus: string | null;
+};
+
+function dailyWeekendLeagueCtaProperties(props: DailyWeekendLeagueCtaAnalyticsProps) {
+  return {
+    state: props.state,
+    action: props.action,
+    current_qp: props.currentQp,
+    target_qp: props.targetQp,
+    tournament_status: props.tournamentStatus,
+  };
+}
+
+export function trackDailyWeekendLeagueCtaShown(
+  props: DailyWeekendLeagueCtaAnalyticsProps,
+) {
+  trackEvent(
+    'daily_weekend_league_cta_shown',
+    dailyWeekendLeagueCtaProperties(props),
+  );
+}
+
+export function trackDailyWeekendLeagueCtaClicked(
+  props: DailyWeekendLeagueCtaAnalyticsProps,
+) {
+  trackEvent(
+    'daily_weekend_league_cta_clicked',
+    dailyWeekendLeagueCtaProperties(props),
+  );
+}
+
 export function trackStoreViewed() {
   trackEvent('store_viewed');
 }
