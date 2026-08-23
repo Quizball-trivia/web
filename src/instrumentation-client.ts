@@ -22,10 +22,10 @@ if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_POSTHOG_KEY) {
       // tap-heavy game that's huge event volume and fully redundant with our
       // ~60 named events — disabled to cut the bill.
       autocapture: false,
-      // Do not fetch flags during normal app startup. The mobile-verification
-      // experiment temporarily unpauses + reloads flags only when an eligible
-      // new user finishes the profile step. This preserves the old request-cost
-      // guard instead of restoring a /flags request for every app visit.
+      // Do not fetch flags during normal app startup. Experiment helpers
+      // temporarily unpause + reload only after application-level eligibility
+      // is known. This preserves the request-cost guard instead of restoring a
+      // /flags request for every app visit.
       advanced_disable_feature_flags: false,
       advanced_disable_feature_flags_on_first_load: true,
       // Session replays are a major event/ingest cost driver and are not part of
@@ -36,7 +36,7 @@ if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_POSTHOG_KEY) {
       capture_performance: false,
     });
     // identify() normally reloads flags automatically. Keep those reloads
-    // paused globally; the experiment helper owns the narrow manual reload.
+    // paused globally; experiment helpers own their narrow manual reloads.
     posthog.featureFlags.setReloadingPaused(true);
   } catch (error) {
     console.error('PostHog initialization error:', error);
