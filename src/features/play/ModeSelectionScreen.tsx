@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { ModeConfirmModal } from '@/components/shared/ModeConfirmModal';
 import { AuctionModeModal } from '@/features/auction/components/AuctionModeModal';
 import { HomeRecentMatches } from '@/components/shared/HomeRecentMatches';
-import { ArrowRight, MessageCircle } from 'lucide-react';
+import { MessageCircle } from 'lucide-react';
 import { SocialLinks } from '@/components/shared/SocialLinks';
 import { ContactModal } from '@/components/shared/ContactModal';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -123,7 +123,7 @@ function MiniModeCard({
   const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
   const text = dark ? 'text-black' : 'text-white';
   const cardClassName = cn(
-    'relative block h-full min-h-[150px] md:min-h-[220px] cursor-pointer overflow-hidden rounded-[10px] p-3.5 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2',
+    'relative block h-full min-h-[250px] lg:min-h-[300px] cursor-pointer overflow-hidden rounded-[10px] p-3.5 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2',
     className,
   );
   const inner = (
@@ -160,20 +160,36 @@ function MiniModeCard({
         <p className={`mt-1.5 text-[10px] uppercase md:text-[14px] ${dark ? 'text-black/70' : 'text-white/80'}`} style={poppins}>
           {subtitle}
         </p>
-        {/* CTA and icon share the bottom row, keeping all cards structurally
-            identical while ensuring artwork never covers translated copy. */}
-        <div className="mt-auto flex items-end justify-between gap-2 pt-3">
-          <span className={`inline-flex items-center gap-1.5 text-[10px] uppercase md:text-[13px] ${text}`} style={poppins}>
-            {ctaLabel}
-            <ArrowRight className="size-3.5 md:size-4" aria-hidden />
-          </span>
+        <div className="mt-2 flex flex-1 items-center justify-center lg:hidden">
           <Image
             src={iconSrc}
             alt=""
             width={200}
             height={200}
-            className="pointer-events-none h-16 w-16 shrink-0 object-contain opacity-90 md:h-28 md:w-28"
+            className="pointer-events-none h-[104px] w-[104px] object-contain opacity-90"
           />
+        </div>
+        <div
+          className="mt-2 flex h-9 w-full items-center justify-center rounded-[8px] bg-black text-[12px] uppercase tracking-wide text-white lg:hidden"
+          style={poppins}
+        >
+          {ctaLabel}
+        </div>
+
+        <Image
+          src={iconSrc}
+          alt=""
+          width={200}
+          height={200}
+          className="pointer-events-none absolute bottom-4 right-4 hidden h-28 w-28 object-contain opacity-90 lg:block"
+        />
+        <div className="mt-auto hidden pt-8 lg:block">
+          <div
+            className="flex h-14 w-[180px] items-center justify-center rounded-[8px] bg-black text-xl uppercase tracking-wide text-white"
+            style={poppins}
+          >
+            {ctaLabel}
+          </div>
         </div>
       </div>
     </>
