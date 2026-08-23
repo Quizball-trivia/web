@@ -11,6 +11,7 @@ import { QuitMatchModal } from '@/components/match/QuitMatchModal';
 import { useRealtimeConnectionHealth } from '@/lib/realtime/connection-health';
 import { poppins, AUCTION_QUIT_MODAL_THEME, AUCTION_PURPLE } from './constants/auction.constants';
 import { useAuctionGame } from './hooks/useAuctionGame';
+import { useAuctionAudio } from './hooks/useAuctionAudio';
 import {
   useRealtimeAuctionMatch,
   type AuctionMatchNotice,
@@ -58,6 +59,7 @@ function AuctionMockFlowScreen({ username, avatarSeed }: Omit<AuctionFlowScreenP
   const router = useRouter();
   const { state, actions, humanPlayerId } = useAuctionGame(username, avatarSeed);
   const [mockSearching, setMockSearching] = useState(true);
+  useAuctionAudio({ state, humanPlayerId, enabled: !mockSearching });
 
   useEffect(() => {
     // Start the game immediately (mock matchmaking)
@@ -236,6 +238,7 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
 
   const resolvedHumanPlayerId =
     humanPlayerId ?? state?.players.find((player) => !player.isBot)?.id ?? state?.players[0]?.id ?? null;
+  useAuctionAudio({ state, humanPlayerId: resolvedHumanPlayerId });
   const connectionWarning =
     connectionHealth.phase === 'reconnecting' || connectionHealth.phase === 'disconnected'
       ? t('common.reconnecting')
