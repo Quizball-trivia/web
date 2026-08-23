@@ -125,6 +125,53 @@ describe('gameSounds', () => {
     expect(howlInstances[0]?.play).toHaveBeenCalledTimes(1);
   });
 
+  it('plays Auction with the ranked stadium loop while ranked BGM stays globally disabled', async () => {
+    const { GAME_SOUND_VOLUME, playBgm } = await import('../gameSounds');
+
+    playBgm('auction');
+
+    expect(HowlMock).toHaveBeenCalledWith(expect.objectContaining({
+      loop: true,
+      preload: true,
+      src: ['/sounds/ranked_demo.wav'],
+      volume: GAME_SOUND_VOLUME.auctionBgm,
+    }));
+    expect(howlInstances[0]?.play).toHaveBeenCalledTimes(1);
+  });
+
+  it('maps Auction bids to the selected money-handling effect at a restrained volume', async () => {
+    const { playSfx } = await import('../gameSounds');
+
+    playSfx('auctionBid');
+
+    expect(HowlMock).toHaveBeenCalledWith(expect.objectContaining({
+      preload: true,
+      src: ['/sounds/auction/mixkit-free/bid-coins-handling.mp3'],
+      volume: 0.34,
+    }));
+    expect(howlInstances[0]?.play).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    ['auctionClue', '/sounds/auction/mixkit-free/stat-player-select.mp3', 0.3],
+    ['auctionFold', '/sounds/auction/mixkit-free/fold-paper-slide.mp3', 0.32],
+    ['auctionWarning', '/sounds/auction/mixkit-free/warning-racing-countdown.mp3', 0.28],
+    ['auctionReveal', '/sounds/auction/mixkit-free/sold-service-bell.mp3', 0.34],
+    ['auctionWon', '/sounds/auction/mixkit-free/won-casino-bling.mp3', 0.3],
+    ['auctionFinished', '/sounds/auction/mixkit-free/finish-crowd-ovation.mp3', 0.22],
+  ] as const)('maps %s to the approved Auction effect', async (name, src, volume) => {
+    const { playSfx } = await import('../gameSounds');
+
+    playSfx(name);
+
+    expect(HowlMock).toHaveBeenCalledWith(expect.objectContaining({
+      preload: true,
+      src: [src],
+      volume,
+    }));
+    expect(howlInstances[0]?.play).toHaveBeenCalledTimes(1);
+  });
+
   it('does not queue duplicate BGM plays for the same active track', async () => {
     const { playBgm } = await import('../gameSounds');
 
