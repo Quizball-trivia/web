@@ -1,6 +1,8 @@
 export type DailyWeekendLeagueCtaState = 'qualifying' | 'qualified' | 'entered';
 export type DailyWeekendLeagueCtaAction = 'play_ranked' | 'join_league' | 'view_league';
 
+export const DEFAULT_WEEKEND_LEAGUE_QP_TARGET = 200;
+
 export interface DailyWeekendLeagueCtaDecision {
   state: DailyWeekendLeagueCtaState;
   action: DailyWeekendLeagueCtaAction;
@@ -23,7 +25,7 @@ export function resolveDailyWeekendLeagueCta({
   tournamentStatus?: string | null;
 }): DailyWeekendLeagueCtaDecision {
   const currentQp = Math.max(0, points ?? 0);
-  const targetQp = Math.max(1, target ?? 200);
+  const targetQp = Math.max(1, target ?? DEFAULT_WEEKEND_LEAGUE_QP_TARGET);
   const isEntered = entered ?? false;
   const isQualified = qualified ?? currentQp >= targetQp;
   const state: DailyWeekendLeagueCtaState = isEntered
