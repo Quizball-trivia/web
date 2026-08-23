@@ -30,9 +30,15 @@ import {
   markRankedQueueIntent,
   trackExitToPlayStarted,
   trackRankedPlayAgainClicked,
+  trackRankedWinStreakPromptShown,
   trackResultsMainMenuClicked,
   type ExitToPlaySource,
 } from "@/lib/analytics/game-events";
+import {
+  getPostMatchWinStreakCount,
+  loadRankedWinStreakExperimentVariant,
+  type RankedWinStreakExperimentVariant,
+} from "@/lib/experiments/rankedWinStreakExperiment";
 
 const POSSESSION_TOTAL_QUESTIONS_FALLBACK = 12;
 const RANKED_BOOT_TIMEOUT_MS = 90_000;
@@ -99,6 +105,80 @@ export function GameStageRouter() {
     matchType === "ranked" && !walletFetching && !hasRankedTicket
       ? t("modeConfirm.notEnoughTickets")
       : null;
+
+  const finalResults = realtimeMatch.finalResults;
+  const resultMatchId = finalResults?.matchId ?? realtimeMatch.matchId ?? null;
+  const eligibleWinStreakCount = getPostMatchWinStreakCount({
+    matchType,
+    winnerId: finalResults?.winnerId,
+    selfUserId,
+    cancelledNoContest: finalResults?.cancelledNoContest === true,
+    preMatchWinStreak: stableRankedProfile?.currentWinStreak,
+  });
+  const winStreakAssignmentKey =
+    resultMatchId && eligibleWinStreakCount != null
+      ? `${resultMatchId}:${eligibleWinStreakCount}`
+      : null;
+  const [resolvedWinStreakAssignment, setResolvedWinStreakAssignment] = useState<{
+    key: string;
+    variant: RankedWinStreakExperimentVariant;
+  } | null>(null);
+  const winStreakExperimentVariant =
+    resolvedWinStreakAssignment?.key === winStreakAssignmentKey
+      ? resolvedWinStreakAssignment.variant
+      : 'not_enrolled';
+  const winStreakAssignmentRef = useRef<{
+    key: string;
+    promise: Promise<RankedWinStreakExperimentVariant>;
+  } | null>(null);
+  const trackedWinStreakPromptRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!winStreakAssignmentKey || eligibleWinStreakCount == null) return;
+
+    let assignment = winStreakAssignmentRef.current;
+    if (assignment?.key !== winStreakAssignmentKey) {
+      assignment = {
+        key: winStreakAssignmentKey,
+        promise: loadRankedWinStreakExperimentVariant({
+          streakCount: eligibleWinStreakCount,
+          createdAt: authUser?.created_at,
+        }),
+      };
+      winStreakAssignmentRef.current = assignment;
+    }
+
+    let active = true;
+    void assignment.promise.then((variant) => {
+      if (active) {
+        setResolvedWinStreakAssignment({
+          key: winStreakAssignmentKey,
+          variant,
+        });
+      }
+    });
+    return () => {
+      active = false;
+    };
+  }, [authUser?.created_at, eligibleWinStreakCount, winStreakAssignmentKey]);
+
+  useEffect(() => {
+    if (
+      winStreakExperimentVariant !== 'test'
+      || !resultMatchId
+      || eligibleWinStreakCount == null
+    ) {
+      return;
+    }
+
+    const promptKey = `${resultMatchId}:${eligibleWinStreakCount}`;
+    if (trackedWinStreakPromptRef.current === promptKey) return;
+    trackedWinStreakPromptRef.current = promptKey;
+    trackRankedWinStreakPromptShown({
+      matchId: resultMatchId,
+      winStreakCount: eligibleWinStreakCount,
+    });
+  }, [eligibleWinStreakCount, resultMatchId, winStreakExperimentVariant]);
 
   const returningToLobbyRef = useRef(false);
   const forfeitedMatchIdRef = useRef<string | null>(null);
@@ -698,6 +778,9 @@ export function GameStageRouter() {
           unlockedAchievements={unlockedAchievements}
           playAgainDisabled={playAgainDisabled}
           playAgainHint={playAgainHint}
+          winStreakCount={
+            winStreakExperimentVariant === 'test' ? eligibleWinStreakCount : null
+          }
           onPlayAgain={async () => {
             if (matchType === "ranked") {
               trackRankedPlayAgainClicked({
@@ -708,6 +791,8 @@ export function GameStageRouter() {
                 cachedTickets: storeWallet?.tickets ?? null,
                 walletFetching,
                 playAgainDisabled,
+                winStreakExperimentVariant,
+                winStreakCount: eligibleWinStreakCount,
               });
               // Revalidate against the live wallet — the cached value can lag
               // the post-match invalidation refetch (mirrors play/page.tsx).

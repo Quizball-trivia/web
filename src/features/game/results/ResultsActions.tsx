@@ -11,6 +11,7 @@
  */
 
 import { useState } from 'react';
+import { Flame } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
 import { AchievementUnlockStrip } from '@/components/match/AchievementUnlockStrip';
 import type { AchievementUnlockPayload } from '@/lib/realtime/socket.types';
@@ -34,6 +35,7 @@ export function ResultsActions({
   opponentQuestionResults,
   playAgainDisabled = false,
   playAgainHint = null,
+  winStreakCount = null,
   onPlayAgain,
   onMainMenu,
 }: {
@@ -54,6 +56,8 @@ export function ResultsActions({
   playAgainDisabled?: boolean;
   /** Optional helper text under the Play Again CTA (e.g. "not enough tickets"). */
   playAgainHint?: string | null;
+  /** Optional post-win streak cue shown above the Play Again CTA. */
+  winStreakCount?: number | null;
   onPlayAgain: () => void | Promise<void>;
   onMainMenu: () => void;
 }) {
@@ -90,6 +94,16 @@ export function ResultsActions({
           opponentQuestionResults={opponentQuestionResults}
           t={t}
         />
+
+        {winStreakCount != null && winStreakCount >= 2 && (
+          <div
+            data-testid="win-streak-prompt"
+            className="flex items-center justify-center gap-2 py-0.5 font-poppins text-sm font-semibold uppercase tracking-wide text-brand-yellow md:text-base"
+          >
+            <Flame aria-hidden="true" className="size-4 fill-current" />
+            <span>{winStreakCount} {t('profileScreen.winStreak')}</span>
+          </div>
+        )}
 
         <button
           onClick={handlePlayAgain}

@@ -226,6 +226,25 @@ describe('RealtimeResultsScreen — head-to-head label', () => {
 });
 
 describe('RealtimeResultsScreen — action callbacks', () => {
+  it('shows the win-streak cue above Play Again only after a win', () => {
+    const { unmount } = renderResults({
+      finalWinnerId: SELF_ID,
+      winStreakCount: 3,
+    });
+
+    expect(screen.getByTestId('win-streak-prompt')).toHaveTextContent(/3 win streak/i);
+
+    unmount();
+    renderResults({
+      finalWinnerId: OPP_ID,
+      playerScore: 1,
+      opponentScore: 3,
+      winStreakCount: 3,
+    });
+
+    expect(screen.queryByTestId('win-streak-prompt')).not.toBeInTheDocument();
+  });
+
   it('calls onPlayAgain when the play-again button is clicked', () => {
     const { onPlayAgain } = renderResults();
     fireEvent.click(screen.getByRole('button', { name: /play again/i }));
