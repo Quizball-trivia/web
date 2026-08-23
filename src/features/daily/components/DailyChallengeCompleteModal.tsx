@@ -59,6 +59,7 @@ type OpenModalProps = Omit<DailyChallengeCompleteModalProps, "open">;
 
 function DailyChallengeCompleteModalExperiment(props: OpenModalProps) {
   const createdAt = useAuthStore((state) => state.user?.created_at);
+  const country = useAuthStore((state) => state.user?.country);
   const weekendLeagueQuery = useQuery({
     queryKey: queryKeys.weekendLeague.current(),
     queryFn: getWeekendLeagueCurrent,
@@ -73,7 +74,8 @@ function DailyChallengeCompleteModalExperiment(props: OpenModalProps) {
 
   useEffect(() => {
     if (
-      !weekendLeagueQuery.isSuccess
+      country?.trim().toUpperCase() !== "GE"
+      || !weekendLeagueQuery.isSuccess
       || weekendLeagueQuery.isFetching
       || !tournament
     ) {
@@ -81,7 +83,10 @@ function DailyChallengeCompleteModalExperiment(props: OpenModalProps) {
     }
 
     if (!assignmentRef.current) {
-      assignmentRef.current = loadDailyWeekendLeagueExperimentVariant({ createdAt });
+      assignmentRef.current = loadDailyWeekendLeagueExperimentVariant({
+        createdAt,
+        country,
+      });
     }
 
     let active = true;
@@ -92,6 +97,7 @@ function DailyChallengeCompleteModalExperiment(props: OpenModalProps) {
       active = false;
     };
   }, [
+    country,
     createdAt,
     tournament,
     weekendLeagueQuery.isFetching,
