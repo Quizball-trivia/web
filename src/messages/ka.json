@@ -1562,6 +1562,8 @@
     "searchStatusStep1": "შენი მაგიდა მზადდება…",
     "searchStatusStep2": "მეტოქე შემოვიდა…",
     "searchStatusStep3": "ბოლო მოთამაშე შემოვიდა…",
+    "waitingBidder": "ველოდებით",
+    "aiBidder": "AI მოთამაშე",
     "auctionStarting": "აუქციონი იწყება…",
     "countdownReady": "მოემზადე",
     "countdownGo": "წავიდა!",

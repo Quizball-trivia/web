@@ -1117,6 +1117,9 @@ export interface AuctionSearchStartedPayload {
   queuedUserCount: number;
   seatsNeeded: number;
   fallbackAt: string;
+  /** Present on roster-aware servers. Optional for a safe rolling deploy. */
+  queuedPlayers?: AuctionQueuedPlayerSummary[];
+  botCount?: number;
 }
 
 export interface AuctionSearchStatusPayload {
@@ -1125,6 +1128,14 @@ export interface AuctionSearchStatusPayload {
   queuedUserCount: number;
   seatsNeeded: number;
   fallbackAt: string;
+  /** Present on roster-aware servers. Optional for a safe rolling deploy. */
+  queuedPlayers?: AuctionQueuedPlayerSummary[];
+  botCount?: number;
+}
+
+export interface AuctionQueuedPlayerSummary {
+  userId: string;
+  displayName: string;
 }
 
 export interface AuctionSearchCancelledPayload {

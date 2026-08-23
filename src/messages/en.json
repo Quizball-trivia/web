@@ -1562,6 +1562,8 @@
     "searchStatusStep1": "Preparing your bid desk…",
     "searchStatusStep2": "Rival bidder detected…",
     "searchStatusStep3": "Final bidder connected…",
+    "waitingBidder": "Waiting",
+    "aiBidder": "AI bidder",
     "auctionStarting": "Auction starting…",
     "countdownReady": "Get Ready",
     "countdownGo": "Go!",

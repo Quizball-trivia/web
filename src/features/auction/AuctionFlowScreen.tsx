@@ -143,7 +143,7 @@ function AuctionMockFlowScreen({ username, avatarSeed }: Omit<AuctionFlowScreenP
   return <MockSearchingScreen />;
 }
 
-function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<AuctionFlowScreenProps, 'mode'>) {
+function AuctionRealtimeFlowScreen({ username, avatarSeed, avatarCustomization }: Omit<AuctionFlowScreenProps, 'mode'>) {
   const router = useRouter();
   const { locale, t } = useLocale();
   // A match already exists when we arrive from a friend lobby or the app-shell
@@ -170,10 +170,6 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
   // Brief "Finalizing Match" beat before the results screen reveals (ranked
   // style). Gated so it plays once when the match first reaches 'results'.
   const [resultsRevealed, setResultsRevealed] = useState(false);
-  // Highest bidder-join count seen so far. Matchmaking counts only ever grow
-  // toward a full lobby; holding the peak keeps the searching screen from
-  // visually regressing (3 found → 1) during the match-found handoff churn.
-  const [peakJoined, setPeakJoined] = useState(1);
   const authUser = useAuthStore((store) => store.user);
   const authStatus = useAuthStore((store) => store.status);
   const connectionHealth = useRealtimeConnectionHealth();
@@ -211,15 +207,7 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
     humanAvatarCustomization: avatarCustomization,
   });
 
-  // Grow the peak join count monotonically as the lobby fills / a match is
-  // found. Never shrinks mid-search, so the searching UI can't regress. Adjusted
-  // during render (React's sanctioned derive-from-props pattern) rather than in
-  // an effect, so it re-renders in place with no extra commit.
   const currentJoined = search?.phase === 'match_found' ? 3 : Math.max(search?.queuedUserCount ?? 1, 1);
-  if (currentJoined > peakJoined) {
-    setPeakJoined(currentJoined);
-  }
-  const joinedShown = Math.max(peakJoined, currentJoined);
 
   // Involuntary server removal (drop / reconnect-limit forfeit) and voluntary
   // quit both route to the same results/exit flow; `removedByServer` only picks
@@ -271,7 +259,6 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
     setVoluntarilyForfeited(false);
     setAttachMatchId(null);
     setAuctionStarted(true);
-    setPeakJoined(1);
     setResultsRevealed(false);
     setShowdownDone(false);
     setCountdownDone(false);
@@ -394,12 +381,14 @@ function AuctionRealtimeFlowScreen({ avatarSeed, avatarCustomization }: Omit<Auc
         </div>
       );
     }
-    // Hold the peak join count so the searching screen shows the full lineup
-    // (never regresses) until the countdown/intro takes over.
     return (
       <LottieSearch
-        joined={joinedShown}
+        joined={currentJoined}
         total={3}
+        players={search?.queuedPlayers}
+        botCount={search?.botCount ?? 0}
+        selfUserId={authUser?.id ?? null}
+        selfDisplayName={username}
         selfAvatarSeed={avatarSeed}
         selfAvatarCustomization={avatarCustomization}
         onCancel={auctionStarted && !state && !attachMatchId ? handleCancelSearch : undefined}

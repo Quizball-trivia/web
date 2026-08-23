@@ -151,7 +151,8 @@ export type AuctionSearchState = {
   seatsNeeded: number;
   fallbackAt: string | null;
   fallbackAtMs: number | null;
-  botCount?: number;
+  queuedPlayers: Array<{ userId: string; displayName: string }>;
+  botCount: number;
   humanUserIds?: string[];
   /** Server-authoritative pre-match countdown end, converted to client clock. */
   countdownEndsAtMs?: number | null;
@@ -417,6 +418,8 @@ export function useRealtimeAuctionMatch({
         seatsNeeded: 2,
         fallbackAt: null,
         fallbackAtMs: null,
+        queuedPlayers: [],
+        botCount: 0,
       });
       emitAuctionSearchStart();
       return;
@@ -873,6 +876,7 @@ export function useRealtimeAuctionMatch({
         fallbackAt: null,
         fallbackAtMs: null,
         botCount: payload.botCount,
+        queuedPlayers: searchRef.current?.queuedPlayers ?? [],
         humanUserIds: [...payload.humanUserIds],
         countdownEndsAtMs,
       });
@@ -922,6 +926,8 @@ export function useRealtimeAuctionMatch({
         seatsNeeded: 0,
         fallbackAt: null,
         fallbackAtMs: null,
+        queuedPlayers: [],
+        botCount: 0,
       });
     };
     const onOpponentDisconnected = (payload: AuctionOpponentDisconnectedPayload) => {
@@ -1155,6 +1161,8 @@ export function useRealtimeAuctionMatch({
         seatsNeeded: 0,
         fallbackAt: null,
         fallbackAtMs: null,
+        queuedPlayers: [],
+        botCount: 0,
       });
       if (socket.connected) {
         socket.emit('auction:search_cancel');
@@ -1218,6 +1226,8 @@ function toAuctionSearchState(
     seatsNeeded: payload.seatsNeeded,
     fallbackAt: payload.fallbackAt,
     fallbackAtMs: Number.isFinite(fallbackAtMs) ? fallbackAtMs : null,
+    queuedPlayers: payload.queuedPlayers?.map((player) => ({ ...player })) ?? [],
+    botCount: payload.botCount ?? 0,
   };
 }
 

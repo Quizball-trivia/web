@@ -273,6 +273,11 @@ describe('useRealtimeAuctionMatch', () => {
         queuedUserCount: 2,
         seatsNeeded: 1,
         fallbackAt: '2026-06-20T10:00:12.000Z',
+        queuedPlayers: [
+          { userId: 'user-1', displayName: 'Web Player' },
+          { userId: 'user-2', displayName: 'Mobile Player' },
+        ],
+        botCount: 0,
       });
     });
 
@@ -281,6 +286,11 @@ describe('useRealtimeAuctionMatch', () => {
       searchId: 'search-1',
       queuedUserCount: 2,
       seatsNeeded: 1,
+      queuedPlayers: [
+        { userId: 'user-1', displayName: 'Web Player' },
+        { userId: 'user-2', displayName: 'Mobile Player' },
+      ],
+      botCount: 0,
     });
   });
 

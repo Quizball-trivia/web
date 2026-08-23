@@ -86,6 +86,8 @@ const realtimeMock = vi.hoisted(() => ({
       seatsNeeded: number;
       fallbackAt: string | null;
       fallbackAtMs: number | null;
+      queuedPlayers?: Array<{ userId: string; displayName: string }>;
+      botCount?: number;
     } | null;
     pause?: {
       matchId: string;
@@ -164,12 +166,26 @@ vi.mock('../components/screens/FormationReveal', () => ({
 vi.mock('../components/screens/LottieSearch', () => ({
   // Stub the Lottie searching screen (the real one needs a WASM player +
   // IntersectionObserver, unavailable in jsdom). Renders the testable surface.
-  LottieSearch: ({ joined, total, onCancel }: { joined: number; total: number; onCancel?: () => void }) => (
+  LottieSearch: ({
+    joined,
+    total,
+    players,
+    botCount,
+    onCancel,
+  }: {
+    joined: number;
+    total: number;
+    players?: Array<{ userId: string; displayName: string }>;
+    botCount?: number;
+    onCancel?: () => void;
+  }) => (
     <div data-testid="lottie-search">
       <span>Finding players</span>
       <span>
         {joined}/{total} players found
       </span>
+      {players?.map((player) => <span key={player.userId}>{player.displayName}</span>)}
+      {botCount ? <span>AI bidder</span> : null}
       {onCancel && (
         <button type="button" onClick={onCancel}>
           Cancel
@@ -303,6 +319,11 @@ describe('AuctionFlowScreen live mode', () => {
         seatsNeeded: 1,
         fallbackAt: '2026-06-20T10:00:12.000Z',
         fallbackAtMs: Date.parse('2026-06-20T10:00:12.000Z'),
+        queuedPlayers: [
+          { userId: 'user-1', displayName: 'Player' },
+          { userId: 'user-2', displayName: 'Mobile Rival' },
+        ],
+        botCount: 0,
       },
     };
 
@@ -311,6 +332,8 @@ describe('AuctionFlowScreen live mode', () => {
     // Search shows immediately on mount (no formation gate to click through).
     expect(screen.getByText('Finding players')).toBeInTheDocument();
     expect(screen.getByText('2/3 players found')).toBeInTheDocument();
+    expect(screen.getByText('Player')).toBeInTheDocument();
+    expect(screen.getByText('Mobile Rival')).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
 
