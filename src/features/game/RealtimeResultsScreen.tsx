@@ -31,6 +31,7 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
     unlockedAchievements = [],
     playAgainDisabled = false,
     playAgainHint = null,
+    winStreakCount = null,
     onPlayAgain,
     onMainMenu,
   } = props;
@@ -160,6 +161,7 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
           opponentQuestionResults={opponentQuestionResults}
           playAgainDisabled={playAgainDisabled}
           playAgainHint={playAgainHint}
+          winStreakCount={playerWon ? winStreakCount : null}
           onPlayAgain={onPlayAgain}
           onMainMenu={onMainMenu}
         />
