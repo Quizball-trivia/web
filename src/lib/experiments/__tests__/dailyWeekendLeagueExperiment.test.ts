@@ -59,6 +59,43 @@ describe('daily Weekend League experiment', () => {
     ]);
   });
 
+  it('waits for the refreshed value when flags were already loaded', async () => {
+    posthogMock.featureFlags.hasLoadedFlags = true;
+    posthogMock.getFeatureFlag.mockReturnValue('test');
+    posthogMock.onFeatureFlags.mockImplementation((callback) => {
+      posthogMock.reloadFeatureFlags.mockImplementation(() => {
+        callback([], {}, { errorsLoading: false });
+        callback(
+          [DAILY_WEEKEND_LEAGUE_EXPERIMENT_KEY],
+          { [DAILY_WEEKEND_LEAGUE_EXPERIMENT_KEY]: 'test' },
+          { errorsLoading: false },
+        );
+      });
+      return vi.fn();
+    });
+
+    await expect(loadDailyWeekendLeagueExperimentVariant({
+      createdAt: '2026-07-01T00:00:00.000Z',
+    })).resolves.toBe('test');
+
+    expect(posthogMock.getFeatureFlag).toHaveBeenCalledTimes(1);
+  });
+
+  it('falls back to the current UI when flag loading fails', async () => {
+    posthogMock.onFeatureFlags.mockImplementation((callback) => {
+      posthogMock.reloadFeatureFlags.mockImplementation(() => {
+        callback([], {}, { errorsLoading: true });
+      });
+      return vi.fn();
+    });
+
+    await expect(loadDailyWeekendLeagueExperimentVariant({
+      createdAt: '2026-07-01T00:00:00.000Z',
+    })).resolves.toBe('not_enrolled');
+
+    expect(posthogMock.getFeatureFlag).not.toHaveBeenCalled();
+  });
+
   it('does no flag work outside production analytics', async () => {
     vi.stubEnv('NEXT_PUBLIC_POSTHOG_KEY', '');
 

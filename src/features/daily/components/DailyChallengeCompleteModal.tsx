@@ -62,8 +62,10 @@ function DailyChallengeCompleteModalExperiment(props: OpenModalProps) {
   const weekendLeagueQuery = useQuery({
     queryKey: queryKeys.weekendLeague.current(),
     queryFn: getWeekendLeagueCurrent,
-    staleTime: 0,
+    staleTime: 30_000,
   });
+  const tournament = weekendLeagueQuery.data?.tournament ?? null;
+  const you = weekendLeagueQuery.data?.you ?? null;
   const [experimentVariant, setExperimentVariant] =
     useState<DailyWeekendLeagueExperimentVariant>("not_enrolled");
   const assignmentRef = useRef<Promise<DailyWeekendLeagueExperimentVariant> | null>(null);
@@ -72,7 +74,8 @@ function DailyChallengeCompleteModalExperiment(props: OpenModalProps) {
   useEffect(() => {
     if (
       !weekendLeagueQuery.isSuccess
-      || !weekendLeagueQuery.isFetchedAfterMount
+      || weekendLeagueQuery.isFetching
+      || !tournament
     ) {
       return;
     }
@@ -88,10 +91,12 @@ function DailyChallengeCompleteModalExperiment(props: OpenModalProps) {
     return () => {
       active = false;
     };
-  }, [createdAt, weekendLeagueQuery.isFetchedAfterMount, weekendLeagueQuery.isSuccess]);
-
-  const tournament = weekendLeagueQuery.data?.tournament ?? null;
-  const you = weekendLeagueQuery.data?.you ?? null;
+  }, [
+    createdAt,
+    tournament,
+    weekendLeagueQuery.isFetching,
+    weekendLeagueQuery.isSuccess,
+  ]);
   const ctaDecision = resolveDailyWeekendLeagueCta({
     points: you?.qp.points,
     target: tournament?.qp_target ?? you?.qp.target,
@@ -101,7 +106,7 @@ function DailyChallengeCompleteModalExperiment(props: OpenModalProps) {
   });
   const { action: ctaAction, currentQp, state: ctaState, targetQp } = ctaDecision;
   const weekendLeagueCta: DailyChallengeWeekendLeagueCta | undefined =
-    experimentVariant === "test"
+    experimentVariant === "test" && tournament
       ? {
           state: ctaState,
           action: ctaAction,
@@ -121,7 +126,7 @@ function DailyChallengeCompleteModalExperiment(props: OpenModalProps) {
       : undefined;
 
   useEffect(() => {
-    if (experimentVariant !== "test" || trackedPromptRef.current) return;
+    if (!tournament || experimentVariant !== "test" || trackedPromptRef.current) return;
     trackedPromptRef.current = true;
     trackDailyWeekendLeagueCtaShown({
       state: ctaState,
@@ -136,7 +141,7 @@ function DailyChallengeCompleteModalExperiment(props: OpenModalProps) {
     currentQp,
     experimentVariant,
     targetQp,
-    tournament?.status,
+    tournament,
   ]);
 
   return (
