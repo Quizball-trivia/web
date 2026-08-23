@@ -89,6 +89,8 @@ function RpProgressBar({ current, target }: { current: number; target: number })
 
 interface ModeSelectionScreenProps {
   onSelectMode: (mode: 'ranked' | 'friendly' | 'solo') => void;
+  /** Opens the normal confirmation modal immediately for deep-linked flows. */
+  initialMode?: 'ranked' | 'friendly' | 'solo';
   /** If provided, called when ranked card is clicked BEFORE the confirm modal opens.
    *  Return `true` to prevent the confirm modal from showing (i.e. the caller handles it). */
   onRankedIntercept?: () => boolean;
@@ -101,6 +103,7 @@ interface ModeSelectionScreenProps {
 
 export function ModeSelectionScreen({
   onSelectMode,
+  initialMode,
   onRankedIntercept,
   ticketsRemaining = 0,
   matchStatsSummary = null,
@@ -120,7 +123,11 @@ export function ModeSelectionScreen({
     trackWlBannerViewed();
   }, []);
   const { isEventMode } = useActiveEventMode();
-  const [selectedMode, setSelectedMode] = useState<'ranked' | 'friendly' | 'solo' | null>(null);
+  // Ranked and Friendly open the shared confirmation modal. Daily and the
+  // optional modes navigate directly or open their own modal.
+  const [selectedMode, setSelectedMode] = useState<'ranked' | 'friendly' | 'solo' | null>(
+    initialMode ?? null,
+  );
   const [playEntranceAnimation] = useState(shouldPlayEntranceAnimation);
   const isPlacementInProgress = rankedProfile ? rankedProfile.placementStatus !== 'placed' : false;
   const placementPlayed = rankedProfile?.placementPlayed ?? 0;

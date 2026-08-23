@@ -3,6 +3,10 @@ import {
   clearCampaignAttribution,
   getCampaignAttributionAnalyticsProperties,
 } from '@/features/campaign-quiz/campaignAttribution';
+import type {
+  DailyWeekendLeagueCtaAction,
+  DailyWeekendLeagueCtaState,
+} from '@/lib/experiments/dailyWeekendLeagueCta';
 
 type AuthMethod = 'google' | 'facebook' | 'email' | 'phone';
 
@@ -679,6 +683,42 @@ export function trackDailyChallengeCompleted(props: {
     xp_awarded: props.xpAwarded,
     coins_awarded: props.coinsAwarded,
   });
+}
+
+type DailyWeekendLeagueCtaAnalyticsProps = {
+  state: DailyWeekendLeagueCtaState;
+  action: DailyWeekendLeagueCtaAction;
+  currentQp: number;
+  targetQp: number;
+  tournamentStatus: string | null;
+};
+
+function dailyWeekendLeagueCtaProperties(props: DailyWeekendLeagueCtaAnalyticsProps) {
+  return {
+    state: props.state,
+    action: props.action,
+    current_qp: props.currentQp,
+    target_qp: props.targetQp,
+    tournament_status: props.tournamentStatus,
+  };
+}
+
+export function trackDailyWeekendLeagueCtaShown(
+  props: DailyWeekendLeagueCtaAnalyticsProps,
+) {
+  trackEvent(
+    'daily_weekend_league_cta_shown',
+    dailyWeekendLeagueCtaProperties(props),
+  );
+}
+
+export function trackDailyWeekendLeagueCtaClicked(
+  props: DailyWeekendLeagueCtaAnalyticsProps,
+) {
+  trackEvent(
+    'daily_weekend_league_cta_clicked',
+    dailyWeekendLeagueCtaProperties(props),
+  );
 }
 
 export function trackStoreViewed() {

@@ -22,7 +22,7 @@ const poppins = {
 interface CareerPathGameProps {
   session: CareerPathSession;
   onBack: () => void;
-  onComplete: (score: number) => void;
+  onComplete: (score: number, nextPath?: string) => void;
 }
 
 export function CareerPathGame({
@@ -203,7 +203,7 @@ export function CareerPathGame({
         title={session.title}
         correct={correctCount}
         total={session.questionCount}
-        onDone={() => onComplete(correctCount)}
+        onDone={(nextPath) => onComplete(correctCount, nextPath)}
       />
     </div>
   );

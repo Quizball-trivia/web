@@ -21,7 +21,7 @@ const poppins = {
 interface HighLowGameProps {
   session: HighLowSession;
   onBack: () => void;
-  onComplete: (score: number) => void;
+  onComplete: (score: number, nextPath?: string) => void;
 }
 
 export function HighLowGame({
@@ -260,7 +260,7 @@ export function HighLowGame({
         title={session.title}
         correct={roundScore}
         total={session.roundCount}
-        onDone={() => onComplete(roundScore)}
+        onDone={(nextPath) => onComplete(roundScore, nextPath)}
       />
     </div>
   );
