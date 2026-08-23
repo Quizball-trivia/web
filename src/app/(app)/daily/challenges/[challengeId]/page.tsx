@@ -87,13 +87,13 @@ export default function ChallengePage() {
   }, [challengeType, router]);
 
   const handleComplete = useCallback(
-    (score: number) => {
+    (score: number, nextPath?: string) => {
       if (!challengeType || completeOnceRef.current) return;
       completeOnceRef.current = true;
 
       // Navigate back instantly — the completion write + cache refresh run in
       // the background so the user isn't stuck waiting on a round-trip.
-      router.replace("/daily/challenges");
+      router.replace(nextPath ?? "/daily/challenges");
 
       void (async () => {
         // Only a failed completion WRITE may surface the failure toast and
