@@ -3,6 +3,10 @@ import {
   clearCampaignAttribution,
   getCampaignAttributionAnalyticsProperties,
 } from '@/features/campaign-quiz/campaignAttribution';
+import type {
+  DailyWeekendLeagueCtaAction,
+  DailyWeekendLeagueCtaState,
+} from '@/lib/experiments/dailyWeekendLeagueCta';
 
 type AuthMethod = 'google' | 'facebook' | 'email' | 'phone';
 
@@ -682,8 +686,8 @@ export function trackDailyChallengeCompleted(props: {
 }
 
 type DailyWeekendLeagueCtaAnalyticsProps = {
-  state: 'qualifying' | 'qualified' | 'entered';
-  action: 'play_ranked' | 'join_league' | 'view_league';
+  state: DailyWeekendLeagueCtaState;
+  action: DailyWeekendLeagueCtaAction;
   currentQp: number;
   targetQp: number;
   tournamentStatus: string | null;
