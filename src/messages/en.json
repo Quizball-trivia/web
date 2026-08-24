@@ -1554,6 +1554,14 @@
     "messageRequired": "Please enter a message."
   },
   "auctionGame": {
+    "audioControls": "Sound controls",
+    "audioControlsDescription": "Choose what you hear during the auction.",
+    "backgroundMusic": "Background music",
+    "backgroundMusicDescription": "Stadium soundtrack throughout the match",
+    "soundEffects": "Sound effects",
+    "soundEffectsDescription": "Bids, clues, bells and result sounds",
+    "audioOn": "On",
+    "audioOff": "Off",
     "findingPlayers": "Finding Players",
     "lookingForOpponents": "Looking for {count} opponents...",
     "searchStatus": "{count}/3 players found",
