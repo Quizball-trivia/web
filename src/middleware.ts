@@ -57,6 +57,9 @@ function buildCsp(nonce: string): string {
     `'nonce-${nonce}'`,
     "'strict-dynamic'",
     "https:",
+    // dotlottie's player compiles a wasm module (auction search animation);
+    // wasm-unsafe-eval permits only WebAssembly.compile, not JS eval.
+    "'wasm-unsafe-eval'",
     isDevelopment ? "'unsafe-eval'" : null,
     isDevelopment ? "'unsafe-inline'" : null,
   ].filter(Boolean);

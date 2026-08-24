@@ -20,6 +20,7 @@ import { usePlayer } from '@/contexts/PlayerContext';
 import { useAuthStore } from '@/stores/auth.store';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { useRankedMatchmakingStore } from '@/stores/rankedMatchmaking.store';
+import { useAuctionActiveMatchStore } from '@/stores/auctionActiveMatch.store';
 import { useGameSessionStore } from '@/stores/gameSession.store';
 import { useStoreWallet } from '@/lib/queries/store.queries';
 import { useIncomingFriendRequestCount } from '@/lib/queries/social.queries';
@@ -70,6 +71,7 @@ export function useAppShellViewModel() {
   const clearRejoinAvailable = useRealtimeMatchStore((state) => state.clearRejoinAvailable);
   const autoRejoinSuppressedMatchId = useRealtimeMatchStore((state) => state.autoRejoinSuppressedMatchId);
   const resetRealtime = useRealtimeMatchStore((state) => state.reset);
+  const activeAuctionMatch = useAuctionActiveMatchStore((state) => state.activeAuctionMatch);
   const startSession = useGameSessionStore((state) => state.startSession);
   const setGameStage = useGameSessionStore((state) => state.setStage);
   const [socketConnected, setSocketConnected] = useState(() => getSocket().connected);
@@ -170,6 +172,13 @@ export function useAppShellViewModel() {
     !partyDropoutForActiveMatch &&
     !inLobbyRoom &&
     !currentPath.startsWith('/game');
+  // Auction "still in a live auction — rejoin" banner. Route-gated off /auction
+  // (the auction flow screen owns the in-match handshake there) and /game.
+  const showAuctionRejoinBanner =
+    !!activeAuctionMatch &&
+    !inLobbyRoom &&
+    !currentPath.startsWith('/game') &&
+    !currentPath.startsWith('/auction');
   const completedMatchBanner = matchBanner.finalResults
     ? {
         matchId: matchBanner.matchId!,
@@ -325,6 +334,16 @@ export function useAppShellViewModel() {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- handleRejoinMatch is recreated every render; the offer key + ref guard make this fire at most once per offer
   }, [autoRejoinOffer?.key]);
 
+  // Rejoin a live auction from the home/play banner. Navigating to /auction
+  // remounts AuctionFlowScreen, which captures the match id from this store in
+  // a mount-time lazy initializer — so the store must NOT be cleared here or
+  // the screen reads null and starts a fresh search instead of re-attaching.
+  // The banner is already route-gated off /auction; the store clears naturally
+  // on the next auction:state / match_finished event.
+  const handleRejoinAuction = () => {
+    router.push('/auction');
+  };
+
   const handleReturnToDraft = () => {
     if (!activeDraftBanner) return;
 
@@ -410,6 +429,9 @@ export function useAppShellViewModel() {
     showRankedLobbyBanner,
     showDraftBanner,
     showRejoinBanner,
+    activeAuctionMatch,
+    showAuctionRejoinBanner,
+    handleRejoinAuction,
     showCompletedMatchBanner,
     showForfeitPendingBanner,
     showPartyDropoutBanner,

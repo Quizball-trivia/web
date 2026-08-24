@@ -1,6 +1,7 @@
 import { getSocket, getSocketDebugSnapshot, logSocketDebug } from './socket-client';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { useRankedMatchmakingStore } from '@/stores/rankedMatchmaking.store';
+import { useAuctionActiveMatchStore } from '@/stores/auctionActiveMatch.store';
 import { useGameSessionStore } from '@/stores/gameSession.store';
 import { QueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queries/queryKeys';
@@ -12,6 +13,10 @@ import { toast } from 'sonner';
 import { getMe } from '@/lib/api/endpoints';
 import { useAuthStore } from '@/stores/auth.store';
 import type {
+  AuctionStatePayload,
+  AuctionRejoinAvailablePayload,
+  AuctionMatchFinishedPayload,
+  AuctionPlayerForfeitedPayload,
   DraftState,
   ErrorPayload,
   ForceLogoutPayload,
@@ -694,6 +699,34 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
   socket.on('presence:online_count', (data: PresenceOnlineCountPayload) => {
     logger.info('Socket event presence:online_count', { onlineUsers: data.onlineUsers });
     store.setOnlineUsers(data);
+  });
+
+  // Auction out-of-match affordance. The auction realtime layer only mounts on
+  // `/auction`; these app-wide handlers capture the server's connect-time
+  // handshake (rejoinActiveAuctionMatchOnConnect) while the user is elsewhere,
+  // feeding the AppShell "still in an auction — rejoin" banner. On `/auction`
+  // the local `useRealtimeAuctionMatch` owns the flow — the banner is route-
+  // gated off there, so these writes are harmless (they only feed the banner).
+  const auctionStore = useAuctionActiveMatchStore.getState();
+  socket.on('auction:state', (data: AuctionStatePayload) => {
+    const selfUserId = useRealtimeMatchStore.getState().selfUserId;
+    auctionStore.setFromState(data, selfUserId);
+  });
+  socket.on('auction:rejoin_available', (data: AuctionRejoinAvailablePayload) => {
+    logger.info('Socket event auction:rejoin_available', { matchId: data.matchId });
+    auctionStore.setFromRejoinAvailable(data);
+  });
+  socket.on('auction:match_finished', (data: AuctionMatchFinishedPayload) => {
+    const selfUserId = useRealtimeMatchStore.getState().selfUserId;
+    if (!selfUserId || data.state.seats.some((seat) => seat.userId === selfUserId)) {
+      auctionStore.clear();
+    }
+  });
+  socket.on('auction:player_forfeited', (data: AuctionPlayerForfeitedPayload) => {
+    const selfUserId = useRealtimeMatchStore.getState().selfUserId;
+    if (data.userId === selfUserId) {
+      auctionStore.clear();
+    }
   });
 }
 
