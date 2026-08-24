@@ -151,7 +151,11 @@ export type AuctionSearchState = {
   seatsNeeded: number;
   fallbackAt: string | null;
   fallbackAtMs: number | null;
-  queuedPlayers: Array<{ userId: string; displayName: string }>;
+  queuedPlayers: Array<{
+    userId: string;
+    displayName: string;
+    avatarCustomization?: AvatarCustomization | null;
+  }>;
   botCount: number;
   botPlayers: Array<{ seatId: string; displayName: string }>;
   humanUserIds?: string[];

@@ -146,11 +146,12 @@ function toClientPlayer(
     ? options.humanAvatarSeed ?? 'avatar-1'
     : `avatar-${(index % 4) + 1}`;
 
-  // Human → real layered avatar (from the logged-in user, client-side).
-  // Real opponent → their avatar from the server (avatarCustomization).
+  // Every real seat prefers the server snapshot so all clients render the same
+  // saved outfit. The local auth copy is only a rolling-deploy fallback for the
+  // current user when an older server does not include avatarCustomization.
   // Bot / no data → a deterministic random avatar keyed by seatId.
   const avatarCustomization: AvatarCustomization = isHuman
-    ? options.humanAvatarCustomization ?? player.avatarCustomization ?? { base: avatarSeed }
+    ? player.avatarCustomization ?? options.humanAvatarCustomization ?? { base: avatarSeed }
     : player.avatarCustomization ?? randomBotAvatar(player.seatId);
 
   return {

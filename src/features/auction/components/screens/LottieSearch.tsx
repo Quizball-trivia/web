@@ -22,7 +22,13 @@ const SEARCH_LOTTIES = [
   '/assets/auction-search-3.lottie', // 3 bidders (full)
 ] as const;
 
-const EMPTY_SEARCH_PLAYERS: Array<{ userId: string; displayName: string }> = [];
+type SearchPlayer = {
+  userId: string;
+  displayName: string;
+  avatarCustomization?: AvatarCustomization | null;
+};
+
+const EMPTY_SEARCH_PLAYERS: SearchPlayer[] = [];
 const DEMO_SEARCH_PLAYERS = [
   { userId: 'demo-self', displayName: 'Web Player' },
   { userId: 'demo-rival-1', displayName: 'Mobile Rival' },
@@ -44,7 +50,7 @@ function lottieForJoined(joined: number, total: number) {
 export interface LottieSearchProps {
   joined: number;
   total?: number;
-  players?: Array<{ userId: string; displayName: string }>;
+  players?: SearchPlayer[];
   botCount?: number;
   botPlayers?: Array<{ seatId: string; displayName: string }>;
   selfUserId?: string | null;
@@ -161,6 +167,7 @@ export function LottieSearch({
       userId: selfUserId ?? 'self',
       displayName: selfPlayer?.displayName || selfDisplayName || t('auctionGame.youLabel'),
       isSelf: true,
+      avatarCustomization: selfPlayer?.avatarCustomization ?? selfAvatarCustomization,
     },
     ...rivals.map((player) => ({ ...player, isSelf: false })),
   ].slice(0, total);
@@ -170,6 +177,7 @@ export function LottieSearch({
       userId: player.seatId,
       displayName: player.displayName,
       isSelf: false,
+      avatarCustomization: null,
     }));
   const unnamedBotCount = Math.max(
     0,
@@ -182,6 +190,7 @@ export function LottieSearch({
       userId: `bot-${index}`,
       displayName: t('auctionGame.aiBidder'),
       isSelf: false,
+      avatarCustomization: null,
     })),
   ];
 
@@ -236,7 +245,7 @@ export function LottieSearch({
                 filled={Boolean(slot)}
                 name={slot?.displayName ?? t('auctionGame.waitingBidder')}
                 isSelf={slot?.isSelf}
-                customization={slot?.isSelf ? selfAvatarCustomization : undefined}
+                customization={slot?.avatarCustomization}
                 avatarSeed={slot?.isSelf ? selfAvatarSeed : undefined}
               />
             );

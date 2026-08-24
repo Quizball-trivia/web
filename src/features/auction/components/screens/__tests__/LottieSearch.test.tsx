@@ -30,8 +30,17 @@ vi.mock('../../shared/ScreenBackdrop', () => ({
 }));
 
 vi.mock('../../shared/FramedAvatar', () => ({
-  FramedAvatar: ({ filled }: { filled: boolean }) => (
-    <div data-testid={filled ? 'filled-seat' : 'empty-seat'} />
+  FramedAvatar: ({
+    filled,
+    customization,
+  }: {
+    filled: boolean;
+    customization?: { jersey?: string } | null;
+  }) => (
+    <div
+      data-testid={filled ? 'filled-seat' : 'empty-seat'}
+      data-jersey={customization?.jersey}
+    />
   ),
 }));
 
@@ -75,5 +84,33 @@ describe('LottieSearch queue roster', () => {
     expect(screen.getByLabelText('Goal Goblin')).toBeVisible();
     expect(screen.getByLabelText('Pressing Machine')).toBeVisible();
     expect(screen.queryByLabelText('AI bidder')).not.toBeInTheDocument();
+  });
+
+  it('renders an opponent with the avatar customization supplied by the server', () => {
+    render(
+      <LottieSearch
+        joined={2}
+        total={3}
+        players={[
+          { userId: 'self-1', displayName: 'Web Player' },
+          {
+            userId: 'rival-1',
+            displayName: 'Mobile Rival',
+            avatarCustomization: {
+              skin: 'skin_male_white',
+              jersey: 'jersey_red',
+              hair: 'hair_boy_basic',
+            },
+          },
+        ]}
+        selfUserId="self-1"
+      />,
+    );
+
+    expect(
+      screen.getAllByTestId('filled-seat').some(
+        (seat) => seat.getAttribute('data-jersey') === 'jersey_red',
+      ),
+    ).toBe(true);
   });
 });
