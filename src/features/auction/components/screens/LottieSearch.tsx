@@ -147,7 +147,6 @@ export function LottieSearch({
   joined,
   total = 3,
   players = EMPTY_SEARCH_PLAYERS,
-  botCount = 0,
   botPlayers = [],
   selfUserId,
   selfDisplayName,
@@ -179,20 +178,11 @@ export function LottieSearch({
       isSelf: false,
       avatarCustomization: null,
     }));
-  const unnamedBotCount = Math.max(
-    0,
-    Math.min(botCount - namedBotSlots.length, total - humanSlots.length - namedBotSlots.length),
-  );
-  const slots = [
-    ...humanSlots,
-    ...namedBotSlots,
-    ...Array.from({ length: unnamedBotCount }, (_, index) => ({
-      userId: `bot-${index}`,
-      displayName: t('auctionGame.aiBidder'),
-      isSelf: false,
-      avatarCustomization: null,
-    })),
-  ];
+  // `botCount` can briefly represent a staged capacity slot before the server
+  // has selected a persistent/ephemeral bot profile. Never invent a generic
+  // "AI player" identity for that interim state. A bot card becomes filled
+  // only when `botPlayers` carries the actual selected smart-bot name.
+  const slots = [...humanSlots, ...namedBotSlots];
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-surface-page-alt">
