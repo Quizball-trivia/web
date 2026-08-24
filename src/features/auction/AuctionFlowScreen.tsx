@@ -22,6 +22,7 @@ import { AuctionGameScreen } from './components/AuctionGameScreen';
 import { AuctionResultsScreen } from './components/AuctionResultsScreen';
 import { AuctionStatusOverlay } from './components/shared/AuctionStatusOverlay';
 import { AuctionPrimaryButton } from './components/shared/AuctionPrimaryButton';
+import { AuctionAudioControl } from './components/shared/AuctionAudioControl';
 import { FormationReveal } from './components/screens/FormationReveal';
 import { LottieSearch } from './components/screens/LottieSearch';
 import { MatchCountdown } from './components/screens/MatchCountdown';
@@ -42,17 +43,21 @@ interface AuctionFlowScreenProps {
 }
 
 export function AuctionFlowScreen({ username, avatarSeed, avatarCustomization, mode = 'mock' }: AuctionFlowScreenProps) {
-  if (mode === 'live') {
-    return (
+  const flow =
+    mode === 'live' ? (
       <AuctionRealtimeFlowScreen
         username={username}
         avatarSeed={avatarSeed}
         avatarCustomization={avatarCustomization}
       />
-    );
-  }
+    ) : <AuctionMockFlowScreen username={username} avatarSeed={avatarSeed} />;
 
-  return <AuctionMockFlowScreen username={username} avatarSeed={avatarSeed} />;
+  return (
+    <div className="relative min-h-screen">
+      {flow}
+      <AuctionAudioControl />
+    </div>
+  );
 }
 
 function AuctionMockFlowScreen({ username, avatarSeed }: Omit<AuctionFlowScreenProps, 'mode'>) {

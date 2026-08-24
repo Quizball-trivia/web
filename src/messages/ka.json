@@ -1554,6 +1554,14 @@
     "messageRequired": "გთხოვთ შეიყვანოთ შეტყობინება."
   },
   "auctionGame": {
+    "audioControls": "ხმის პარამეტრები",
+    "audioControlsDescription": "აირჩიე, რას მოუსმენ აუქციონის დროს.",
+    "backgroundMusic": "ფონური მუსიკა",
+    "backgroundMusicDescription": "სტადიონის მუსიკა მთელი მატჩის განმავლობაში",
+    "soundEffects": "ხმოვანი ეფექტები",
+    "soundEffectsDescription": "ფსონების, მინიშნებების, ზარისა და შედეგების ხმები",
+    "audioOn": "ჩართული",
+    "audioOff": "გამორთული",
     "findingPlayers": "მოთამაშეების ძებნა",
     "lookingForOpponents": "მიმდინარეობს {count} მოწინააღმდეგის ძებნა...",
     "searchStatus": "ნაპოვნია {count}/3 მოთამაშე",
