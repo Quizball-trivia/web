@@ -10,6 +10,8 @@ import { useBiddingViewModel } from '../../hooks/useBiddingViewModel';
 import { useRoundIntro } from '../../hooks/useRoundIntro';
 import { SPRING } from '../../constants/motion';
 import { AuctionRoundIntro } from '../screens/AuctionRoundIntro';
+import { SCREEN_GLOW } from '../shared/ScreenBackdrop';
+import { AuctionScreen } from '../shared/AuctionScreen';
 import { StadiumBoard } from './StadiumBoard';
 import { CountdownTimer } from './CountdownTimer';
 import { CluesList } from './parts/CluesList';
@@ -17,6 +19,63 @@ import { SnapshotClues } from './parts/SnapshotClues';
 import { StudyCountdown } from './parts/StudyCountdown';
 import { TurnControls } from './parts/TurnControls';
 import { SitOutWaiting } from './parts/SitOutWaiting';
+
+function StadiumMysteryLoadingState({
+  mysteryLabel,
+  statusLabel,
+}: {
+  mysteryLabel: string;
+  statusLabel: string;
+}) {
+  return (
+    <AuctionScreen
+      glow={SCREEN_GLOW.bidding}
+      className="flex h-[100dvh] min-h-0 items-center justify-center px-4 py-8"
+    >
+      <motion.div
+        data-testid="stadium-mystery-loading"
+        role="status"
+        aria-live="polite"
+        initial={{ opacity: 0, y: 18, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={SPRING.settle}
+        className="relative z-10 w-full max-w-sm overflow-hidden rounded-[28px] border-2 border-white/15 bg-brand-blue px-5 py-6 text-center shadow-[0_18px_60px_rgba(0,0,0,0.5)]"
+      >
+        <div aria-hidden="true" className="absolute -right-14 -top-16 size-48 rotate-12 rounded-[42px] bg-white/5" />
+        <div aria-hidden="true" className="absolute -bottom-20 -left-12 size-48 -rotate-12 rounded-[42px] bg-black/10" />
+
+        <motion.div
+          aria-hidden="true"
+          animate={{ y: [0, -6, 0], rotate: [-3, 3, -3] }}
+          transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
+          className="relative mx-auto flex size-20 items-center justify-center rounded-full border-2 border-white/15 bg-black/20 text-4xl shadow-[0_8px_24px_rgba(0,0,0,0.25)]"
+        >
+          ❓
+        </motion.div>
+
+        <p className="relative mt-4 font-poppins text-xl font-black uppercase tracking-wide text-white">
+          {mysteryLabel}
+        </p>
+
+        <div aria-hidden="true" className="relative mt-5 space-y-2.5">
+          {[76, 92, 64].map((width, index) => (
+            <motion.div
+              key={width}
+              animate={{ opacity: [0.35, 0.75, 0.35] }}
+              transition={{ duration: 1.4, repeat: Infinity, delay: index * 0.18 }}
+              className="flex h-10 items-center gap-3 rounded-xl border border-white/10 bg-black/15 px-3"
+            >
+              <span className="size-5 shrink-0 rounded-md bg-white/20" />
+              <span className="h-2.5 rounded-full bg-white/25" style={{ width: `${width}%` }} />
+            </motion.div>
+          ))}
+        </div>
+
+        <p className="relative mt-4 font-poppins text-sm font-semibold text-white/70">{statusLabel}</p>
+      </motion.div>
+    </AuctionScreen>
+  );
+}
 
 /**
  * Desktop "stadium" bidding layout: the three squads' pitches fill the top as
@@ -61,7 +120,14 @@ export function StadiumBiddingScreen({
     pendingTurnAction,
   } = vm;
 
-  if (!vm.ready || !round || !humanPlayer) return null;
+  if (!vm.ready || !round || !humanPlayer) {
+    return (
+      <StadiumMysteryLoadingState
+        mysteryLabel={t('auctionGame.mysteryPlayer')}
+        statusLabel={t('auctionGame.preparingMysteryPlayer')}
+      />
+    );
+  }
 
   const showControls = allCluesRevealed && !studyEndsAt && isBidding;
 

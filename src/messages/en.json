@@ -1589,6 +1589,7 @@
     "round": "Round {round}",
     "startingPriceLabel": "Starting price",
     "mysteryPlayer": "Mystery Player",
+    "preparingMysteryPlayer": "Preparing player clues…",
     "rivalsWantThis": "{count} rival wants this",
     "rivalsWantThisPlural": "{count} rivals want this",
     "highestBid": "Highest Bid",
