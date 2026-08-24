@@ -1147,6 +1147,9 @@ export interface AuctionMatchFoundPayload {
   matchId: string;
   humanUserIds: string[];
   botCount: number;
+  /** Assigned bot personas. Optional while older backend deployments are
+   * still in rotation; the UI falls back to the generic translated label. */
+  botPlayers?: Array<{ seatId: string; displayName: string }>;
   locale: 'en' | 'ka';
   formation: AuctionFormationName;
   /** Absolute server time (ISO) the pre-match countdown ends — all clients

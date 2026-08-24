@@ -46,6 +46,7 @@ export interface LottieSearchProps {
   total?: number;
   players?: Array<{ userId: string; displayName: string }>;
   botCount?: number;
+  botPlayers?: Array<{ seatId: string; displayName: string }>;
   selfUserId?: string | null;
   selfDisplayName?: string | null;
   selfAvatarSeed?: string | null;
@@ -141,6 +142,7 @@ export function LottieSearch({
   total = 3,
   players = EMPTY_SEARCH_PLAYERS,
   botCount = 0,
+  botPlayers = [],
   selfUserId,
   selfDisplayName,
   selfAvatarSeed,
@@ -162,9 +164,21 @@ export function LottieSearch({
     },
     ...rivals.map((player) => ({ ...player, isSelf: false })),
   ].slice(0, total);
+  const namedBotSlots = botPlayers
+    .slice(0, Math.max(0, total - humanSlots.length))
+    .map((player) => ({
+      userId: player.seatId,
+      displayName: player.displayName,
+      isSelf: false,
+    }));
+  const unnamedBotCount = Math.max(
+    0,
+    Math.min(botCount - namedBotSlots.length, total - humanSlots.length - namedBotSlots.length),
+  );
   const slots = [
     ...humanSlots,
-    ...Array.from({ length: Math.max(0, Math.min(botCount, total - humanSlots.length)) }, (_, index) => ({
+    ...namedBotSlots,
+    ...Array.from({ length: unnamedBotCount }, (_, index) => ({
       userId: `bot-${index}`,
       displayName: t('auctionGame.aiBidder'),
       isSelf: false,
