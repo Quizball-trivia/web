@@ -392,6 +392,7 @@ function AuctionRealtimeFlowScreen({ username, avatarSeed, avatarCustomization }
         total={3}
         players={search?.queuedPlayers}
         botCount={search?.botCount ?? 0}
+        botPlayers={search?.botPlayers}
         selfUserId={authUser?.id ?? null}
         selfDisplayName={username}
         selfAvatarSeed={avatarSeed}

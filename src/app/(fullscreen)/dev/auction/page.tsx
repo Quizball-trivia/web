@@ -254,15 +254,38 @@ const SCENARIOS: Scenario[] = [
   },
   {
     id: 'lottie-2',
-    label: 'Search — 2 joined (Shoes)',
+    label: 'Search — smart bot joined (Shoes)',
     group: 'Auction search',
-    render: () => <LottieSearch joined={2} total={3} selfAvatarSeed="avatar-1" onCancel={() => {}} />,
+    render: () => (
+      <LottieSearch
+        joined={2}
+        total={3}
+        selfDisplayName="YouPlayer"
+        selfAvatarSeed="avatar-1"
+        botCount={1}
+        botPlayers={[{ seatId: 'bot-1', displayName: 'CarlosGol99' }]}
+        onCancel={() => {}}
+      />
+    ),
   },
   {
     id: 'lottie-3',
-    label: 'Search — 3 full (#3)',
+    label: 'Search — smart bots full (#3)',
     group: 'Auction search',
-    render: () => <LottieSearch joined={3} total={3} selfAvatarSeed="avatar-1" onCancel={() => {}} />,
+    render: () => (
+      <LottieSearch
+        joined={3}
+        total={3}
+        selfDisplayName="YouPlayer"
+        selfAvatarSeed="avatar-1"
+        botCount={2}
+        botPlayers={[
+          { seatId: 'bot-1', displayName: 'CarlosGol99' },
+          { seatId: 'bot-2', displayName: 'FutbolMaster' },
+        ]}
+        onCancel={() => {}}
+      />
+    ),
   },
   {
     id: 'match-countdown',

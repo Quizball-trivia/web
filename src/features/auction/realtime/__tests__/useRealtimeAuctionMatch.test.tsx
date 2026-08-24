@@ -318,6 +318,7 @@ describe('useRealtimeAuctionMatch', () => {
         matchId: 'match-1',
         humanUserIds: ['user-1', 'user-2'],
         botCount: 1,
+        botPlayers: [{ seatId: 'seat-bot-1', displayName: 'Goal Goblin' }],
         locale: 'en',
         formation: '2-2-2',
       });
@@ -327,6 +328,7 @@ describe('useRealtimeAuctionMatch', () => {
       phase: 'match_found',
       queuedUserCount: 2,
       botCount: 1,
+      botPlayers: [{ seatId: 'seat-bot-1', displayName: 'Goal Goblin' }],
     });
     expect(result.current.matchId).toBeNull();
 

@@ -56,4 +56,24 @@ describe('LottieSearch queue roster', () => {
     expect(screen.getAllByTestId('filled-seat')).toHaveLength(2);
     expect(screen.getByTestId('empty-seat')).toBeInTheDocument();
   });
+
+  it('shows the assigned smart bot name instead of the generic AI label', () => {
+    render(
+      <LottieSearch
+        joined={3}
+        total={3}
+        players={[{ userId: 'self-1', displayName: 'Web Player' }]}
+        botCount={2}
+        botPlayers={[
+          { seatId: 'bot-seat-1', displayName: 'Goal Goblin' },
+          { seatId: 'bot-seat-2', displayName: 'Pressing Machine' },
+        ]}
+        selfUserId="self-1"
+      />,
+    );
+
+    expect(screen.getByLabelText('Goal Goblin')).toBeVisible();
+    expect(screen.getByLabelText('Pressing Machine')).toBeVisible();
+    expect(screen.queryByLabelText('AI bidder')).not.toBeInTheDocument();
+  });
 });

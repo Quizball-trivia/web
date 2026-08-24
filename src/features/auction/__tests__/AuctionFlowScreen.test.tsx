@@ -88,6 +88,7 @@ const realtimeMock = vi.hoisted(() => ({
       fallbackAtMs: number | null;
       queuedPlayers?: Array<{ userId: string; displayName: string }>;
       botCount?: number;
+      botPlayers?: Array<{ seatId: string; displayName: string }>;
     } | null;
     pause?: {
       matchId: string;
@@ -171,12 +172,14 @@ vi.mock('../components/screens/LottieSearch', () => ({
     total,
     players,
     botCount,
+    botPlayers,
     onCancel,
   }: {
     joined: number;
     total: number;
     players?: Array<{ userId: string; displayName: string }>;
     botCount?: number;
+    botPlayers?: Array<{ seatId: string; displayName: string }>;
     onCancel?: () => void;
   }) => (
     <div data-testid="lottie-search">
@@ -185,7 +188,8 @@ vi.mock('../components/screens/LottieSearch', () => ({
         {joined}/{total} players found
       </span>
       {players?.map((player) => <span key={player.userId}>{player.displayName}</span>)}
-      {botCount ? <span>AI bidder</span> : null}
+      {botPlayers?.map((player) => <span key={player.seatId}>{player.displayName}</span>)}
+      {botCount && !botPlayers?.length ? <span>AI bidder</span> : null}
       {onCancel && (
         <button type="button" onClick={onCancel}>
           Cancel
