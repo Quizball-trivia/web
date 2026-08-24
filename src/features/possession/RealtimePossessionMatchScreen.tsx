@@ -10,6 +10,7 @@ import { ConnectionQualitySignal } from '@/components/shared/ConnectionQualitySi
 import { useLocale } from '@/contexts/LocaleContext';
 import { useMatchUiReadyAcks } from '@/lib/match/useMatchUiReadyAcks';
 import { useMatchStagePresence } from '@/lib/realtime/useMatchStagePresence';
+import { useMatchVisibilitySignals } from '@/lib/realtime/useMatchVisibilitySignals';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { selectHasResolvedRound } from '@/stores/realtime-match/selectors';
 import { BarBattleFlightOverlay } from './components/BarBattleFlightOverlay';
@@ -123,6 +124,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
     waitingForReady?.phase,
   ]);
   useMatchStagePresence({ matchId, stageKey: stagePresenceKey, enabled: hasMatch && !finalResults });
+  useMatchVisibilitySignals({ matchId, enabled: hasMatch && !finalResults });
 
   const waitingReadyLabel = waitingForReady
     ? t('possession.playersReadyCount', { ready: waitingForReady.readyCount, total: waitingForReady.totalCount })
