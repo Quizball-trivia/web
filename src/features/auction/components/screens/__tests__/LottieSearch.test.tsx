@@ -86,6 +86,22 @@ describe('LottieSearch queue roster', () => {
     expect(screen.queryByLabelText('AI bidder')).not.toBeInTheDocument();
   });
 
+  it('keeps an unnamed staged bot seat empty instead of inventing an AI player name', () => {
+    render(
+      <LottieSearch
+        joined={2}
+        total={3}
+        players={[{ userId: 'self-1', displayName: 'Web Player' }]}
+        selfUserId="self-1"
+        botCount={1}
+      />,
+    );
+
+    expect(screen.queryByLabelText('AI bidder')).not.toBeInTheDocument();
+    expect(screen.getAllByTestId('filled-seat')).toHaveLength(1);
+    expect(screen.getAllByTestId('empty-seat')).toHaveLength(2);
+  });
+
   it('renders an opponent with the avatar customization supplied by the server', () => {
     render(
       <LottieSearch
