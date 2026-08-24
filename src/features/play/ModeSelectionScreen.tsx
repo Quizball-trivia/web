@@ -448,7 +448,7 @@ export function ModeSelectionScreen({
 
             {/* Desktop: bottom-left PLAY */}
             <div className="mt-auto hidden pt-8 lg:block">
-              <div className="flex h-[56px] w-[180px] items-center justify-center rounded-[8px] bg-black text-xl uppercase tracking-wide text-white" style={poppins}>
+              <div className="flex h-11 w-[136px] shrink-0 items-center justify-center rounded-[8px] bg-black text-base uppercase tracking-wide text-white" style={poppins}>
                 {t('common.play')}
               </div>
             </div>
@@ -502,7 +502,7 @@ export function ModeSelectionScreen({
 
             {/* Desktop: bottom-left PLAY */}
             <div className="mt-auto hidden pt-8 lg:block">
-              <div className="flex h-[56px] w-[180px] items-center justify-center rounded-[8px] bg-black text-xl uppercase tracking-wide text-white" style={poppins}>
+              <div className="flex h-11 w-[136px] shrink-0 items-center justify-center rounded-[8px] bg-black text-base uppercase tracking-wide text-white" style={poppins}>
                 {t('common.play')}
               </div>
             </div>
@@ -555,7 +555,7 @@ export function ModeSelectionScreen({
                 {t('common.play')}
               </div>
               <div className="mt-auto hidden pt-8 lg:block">
-                <div className="flex h-[56px] w-[180px] items-center justify-center rounded-[8px] bg-black text-xl uppercase tracking-wide text-white" style={poppins}>
+                <div className="flex h-11 w-[136px] shrink-0 items-center justify-center rounded-[8px] bg-black text-base uppercase tracking-wide text-white" style={poppins}>
                   {t('common.play')}
                 </div>
               </div>
