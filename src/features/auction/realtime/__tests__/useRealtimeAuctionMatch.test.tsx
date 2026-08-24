@@ -692,6 +692,45 @@ describe('useRealtimeAuctionMatch', () => {
     expect(result.current.matchId).toBe('match-1');
   });
 
+  it('keeps an opponent marked disconnected until that exact seat resumes', () => {
+    const { result } = renderHook(() => useRealtimeAuctionMatch({
+      enabled: true,
+      selfUserId: 'user-1',
+      locale: 'en',
+      formation: '2-2-2',
+      humanAvatarSeed: 'avatar-1',
+    }));
+
+    act(() => {
+      socketMock.trigger('auction:opponent_disconnected', {
+        matchId: 'match-1',
+        seatId: 'seat-bot-1',
+        userId: 'user-2',
+        pauseUntil: '2026-06-20T10:00:30.000Z',
+        graceMs: 30_000,
+        remainingReconnects: 2,
+        reason: 'disconnect',
+        serverNow: '2026-06-20T10:00:00.000Z',
+      });
+    });
+
+    expect(result.current.disconnectedSeatIds).toEqual(['seat-bot-1']);
+
+    act(() => {
+      socketMock.trigger('auction:resume', {
+        matchId: 'match-1',
+        seatId: 'seat-bot-1',
+        userId: 'user-2',
+        reason: 'reconnected',
+        state: matchState({ version: 2, phase: 'bidding' }),
+        stateVersion: 2,
+        serverNow: '2026-06-20T10:00:05.000Z',
+      });
+    });
+
+    expect(result.current.disconnectedSeatIds).toEqual([]);
+  });
+
   it('hydrates match state and blocks duplicate bid/fold emits while a turn action is pending', async () => {
     const { result } = renderHook(() => useRealtimeAuctionMatch({
       enabled: true,

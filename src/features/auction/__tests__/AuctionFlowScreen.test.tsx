@@ -100,6 +100,7 @@ const realtimeMock = vi.hoisted(() => ({
       remainingReconnects: number;
       reason: 'disconnect' | 'reconnect_limit' | 'disconnect_timeout';
     } | null;
+    selfForfeited?: boolean;
   },
 }));
 
@@ -204,6 +205,22 @@ vi.mock('../components/AuctionGameScreen', () => ({
     <div
       data-testid="auction-game"
       data-server-driven-transitions={String(Boolean(serverDrivenTransitions))}
+    />
+  ),
+}));
+
+vi.mock('../components/AuctionResultsScreen', () => ({
+  AuctionResultsScreen: ({
+    forfeited,
+    removed,
+  }: {
+    forfeited?: boolean;
+    removed?: boolean;
+  }) => (
+    <div
+      data-testid="auction-results"
+      data-forfeited={String(Boolean(forfeited))}
+      data-removed={String(Boolean(removed))}
     />
   ),
 }));
@@ -371,5 +388,22 @@ describe('AuctionFlowScreen live mode', () => {
     expect(screen.getByText('Player disconnected')).toBeInTheDocument();
     expect(screen.getByText('Continues in 30s')).toBeInTheDocument();
     expect(screen.getByText('2 reconnects left')).toBeInTheDocument();
+  });
+
+  it('shows the removed result after the reconnect grace period expires', () => {
+    realtimeMock.result = {
+      state: {
+        phase: 'bidding',
+        players: [{ id: 'seat-human', isBot: false }],
+      },
+      humanPlayerId: 'seat-human',
+      selfForfeited: true,
+    };
+
+    render(<AuctionFlowScreen username="Player" avatarSeed="avatar-1" mode="live" />);
+
+    expect(screen.getByTestId('auction-results')).toHaveAttribute('data-forfeited', 'true');
+    expect(screen.getByTestId('auction-results')).toHaveAttribute('data-removed', 'true');
+    expect(screen.queryByTestId('lottie-search')).not.toBeInTheDocument();
   });
 });

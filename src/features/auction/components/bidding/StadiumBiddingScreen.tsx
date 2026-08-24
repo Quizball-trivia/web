@@ -89,10 +89,12 @@ export function StadiumBiddingScreen({
   state,
   actions,
   humanPlayerId,
+  disconnectedSeatIds = [],
 }: {
   state: AuctionGameState;
   actions: AuctionActions;
   humanPlayerId: string;
+  disconnectedSeatIds?: readonly string[];
 }) {
   const { t } = useLocale();
   const posLabel = usePositionLabel();
@@ -149,7 +151,12 @@ export function StadiumBiddingScreen({
 
       {/* Stadiums row — full formation visible, never covered by the panel. */}
       <div className="min-h-0 flex-1 pt-2 md:pt-3">
-        <StadiumBoard state={state} humanPlayerId={humanPlayerId} activePosition={round.positionGroup} />
+        <StadiumBoard
+          state={state}
+          humanPlayerId={humanPlayerId}
+          activePosition={round.positionGroup}
+          disconnectedSeatIds={disconnectedSeatIds}
+        />
       </div>
 
       {/* Clue + auction panel — floating brand-blue card, breathing room above

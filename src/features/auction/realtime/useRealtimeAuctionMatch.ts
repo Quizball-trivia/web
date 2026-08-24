@@ -95,6 +95,8 @@ export interface UseRealtimeAuctionMatchResult {
   pause: AuctionPauseState | null;
   /** Transient announcement about another seat (dropped / returned / quit). */
   matchNotice: AuctionMatchNotice | null;
+  /** Human seats currently inside their reconnect grace window. */
+  disconnectedSeatIds: readonly string[];
   /** Set when reloading into a paused match this client was disconnected from. */
   rejoinAvailable: AuctionRejoinAvailablePayload | null;
   /** Server resume "get ready" countdown end (this client's clock). */
@@ -187,6 +189,7 @@ export function useRealtimeAuctionMatch({
   // players a rival dropping or quitting was previously invisible — the board
   // simply froze, or lots went uncontested with no explanation.
   const [matchNotice, setMatchNotice] = useState<AuctionMatchNotice | null>(null);
+  const [disconnectedSeatIds, setDisconnectedSeatIds] = useState<readonly string[]>([]);
   // Reload-into-paused-match: server prompts to rejoin; we show a prompt and the
   // user opts in (auction:rejoin). Mirrors ranked's rejoin handshake.
   const [rejoinAvailable, setRejoinAvailable] = useState<AuctionRejoinAvailablePayload | null>(null);
@@ -398,6 +401,7 @@ export function useRealtimeAuctionMatch({
     setPendingTurnActionValue(null);
     setWaitingForReady(null);
     setPause(null);
+    setDisconnectedSeatIds([]);
     setError(null);
     setRealtimeState(EMPTY_AUCTION_REALTIME_STATE);
     ignoredMatchIdsRef.current.clear();
@@ -517,6 +521,7 @@ export function useRealtimeAuctionMatch({
         setPendingTurnActionValue(null);
         setWaitingForReady(null);
         setPause(null);
+        setDisconnectedSeatIds([]);
         setSearchValue(null);
         searchCancelledRef.current = false;
         ignoredMatchIdsRef.current.clear();
@@ -817,6 +822,7 @@ export function useRealtimeAuctionMatch({
       }
       // The match is over — a later reconnect must not try to re-attach to it.
       activeMatchIdRef.current = null;
+      setDisconnectedSeatIds([]);
       apply({ type: 'match_finished', payload });
     };
     const onWaitingForReady = (payload: AuctionWaitingForReadyPayload) => {
@@ -941,6 +947,9 @@ export function useRealtimeAuctionMatch({
     const onOpponentDisconnected = (payload: AuctionOpponentDisconnectedPayload) => {
       updateServerTimeOffset(payload.serverNow);
       setError(null);
+      setDisconnectedSeatIds((current) => (
+        current.includes(payload.seatId) ? current : [...current, payload.seatId]
+      ));
       // Play continues until the turn order reaches the missing seat, at which
       // point the board hard-pauses. Announce the drop now so that freeze has a
       // cause the other two players can see coming.
@@ -948,6 +957,9 @@ export function useRealtimeAuctionMatch({
     };
     const onPaused = (payload: AuctionPausedPayload) => {
       const pauseOffset = updateServerTimeOffset(payload.serverNow);
+      setDisconnectedSeatIds((current) => (
+        current.includes(payload.seatId) ? current : [...current, payload.seatId]
+      ));
       apply({
         type: 'state',
         payload: {
@@ -973,6 +985,7 @@ export function useRealtimeAuctionMatch({
         },
       });
       setPause(null);
+      setDisconnectedSeatIds((current) => current.filter((seatId) => seatId !== payload.seatId));
       setResumeCountdownEndsAtMs(null);
       setRejoinAvailable(null);
       setError(null);
@@ -1004,6 +1017,7 @@ export function useRealtimeAuctionMatch({
         },
       });
       setPause(null);
+      setDisconnectedSeatIds((current) => current.filter((seatId) => seatId !== payload.seatId));
       setPendingTurnActionValue(null);
       // A three-player match just became a two-player one. Without this the
       // remaining players only saw lots quietly stop being contested.
@@ -1016,6 +1030,11 @@ export function useRealtimeAuctionMatch({
         // results screen's "Play Again" silently no-ops.
         startRequestedRef.current = false;
         activeMatchIdRef.current = null;
+        try {
+          window.sessionStorage.removeItem(LAST_AUCTION_MATCH_KEY);
+        } catch {
+          // Storage unavailable — the in-memory state still transitions.
+        }
       }
     };
 
@@ -1211,6 +1230,7 @@ export function useRealtimeAuctionMatch({
     waitingForReady,
     pause,
     matchNotice,
+    disconnectedSeatIds,
     rejoinAvailable,
     resumeCountdownEndsAtMs,
     search,

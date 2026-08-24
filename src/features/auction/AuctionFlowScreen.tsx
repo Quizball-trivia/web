@@ -195,6 +195,7 @@ function AuctionRealtimeFlowScreen({ username, avatarSeed, avatarCustomization }
     waitingForReady,
     pause,
     matchNotice,
+    disconnectedSeatIds,
     rejoinAvailable,
     resumeCountdownEndsAtMs,
     search,
@@ -448,6 +449,7 @@ function AuctionRealtimeFlowScreen({ username, avatarSeed, avatarCustomization }
           actions={actions}
           humanPlayerId={resolvedHumanPlayerId}
           serverDrivenTransitions
+          disconnectedSeatIds={disconnectedSeatIds}
         />
         {/* Leave button — opens the quit/forfeit confirmation. */}
         <AuctionLeaveControl

@@ -1589,6 +1589,7 @@
     "waitingForPlayersReady": "Waiting for players...",
     "auctionPaused": "Auction paused",
     "playerDisconnected": "Player disconnected",
+    "disconnected": "Disconnected",
     "playerDisconnectedContinueIfNotReturn": "Continues if they don't return in {seconds}s",
     "lastReconnect": "Last reconnect",
     "reconnectsLeftOne": "{count} reconnect left",

@@ -27,10 +27,12 @@ export function BiddingScreen({
   state,
   actions,
   humanPlayerId,
+  disconnectedSeatIds = [],
 }: {
   state: AuctionGameState;
   actions: AuctionActions;
   humanPlayerId: string;
+  disconnectedSeatIds?: readonly string[];
 }) {
   const { t } = useLocale();
   const posLabel = usePositionLabel();
@@ -278,7 +280,13 @@ export function BiddingScreen({
 
         {/* All squads — sits directly below the bidding controls */}
         <div className="px-4 pb-5 pt-1">
-          <AllSquads state={state} humanPlayerId={humanPlayerId} pitchSize="md" activePosition={round.positionGroup} />
+          <AllSquads
+            state={state}
+            humanPlayerId={humanPlayerId}
+            pitchSize="md"
+            activePosition={round.positionGroup}
+            disconnectedSeatIds={disconnectedSeatIds}
+          />
         </div>
       </div>
     </AuctionScreen>
