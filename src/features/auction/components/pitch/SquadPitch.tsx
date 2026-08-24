@@ -1,0 +1,274 @@
+'use client';
+
+import { useCallback, useMemo, useRef, useState } from 'react';
+import { motion } from 'motion/react';
+import type { AuctionPlayer, Formation, PositionGroup } from '../../types';
+import { getRemainingSlots, lastName, computeSquadChemistry, MAX_PLAYER_CHEMISTRY } from '../../data';
+import { POS_COLORS, poppins } from '../../constants/auction.constants';
+import { useLocale } from '@/contexts/LocaleContext';
+import { PlayerPhoto } from '../shared/PlayerPhoto';
+import { ClubCrest } from '../shared/ClubCrest';
+import { LeagueLogo } from '../shared/LeagueLogo';
+import { FlagChip } from '../shared/FlagChip';
+import { getLeagueForClub } from '../../data/leagues';
+
+const CHEM_DOT_COLOR = '#58CC02';
+
+/** Vertical stadium pitch — lays out the formation rows + filled/empty slots. */
+export function SquadPitch({
+  player,
+  formation,
+  highlightId,
+  size = 'md',
+  activePosition,
+  showYouBadge,
+  needGlow,
+  isHuman,
+  fill = false,
+  showChemistry = false,
+}: {
+  player: AuctionPlayer;
+  formation: Formation;
+  highlightId?: string;
+  size?: 'sm' | 'md' | 'lg';
+  activePosition?: PositionGroup;
+  showYouBadge?: boolean;
+  needGlow?: boolean;
+  isHuman?: boolean;
+  /** Fill the parent's height instead of the fixed 4/5 card aspect. Used by the
+   *  full-screen stadium layout where each pitch is a tall column. */
+  fill?: boolean;
+  /** Show each player's club crest, nation flag and league badge under their
+   *  photo, plus 3 dots filled to their chemistry (0…3). */
+  showChemistry?: boolean;
+}) {
+  const { t } = useLocale();
+
+  // Fill mode gets whatever height the viewport leaves it, but the player
+  // stacks (photo + name + chips + dots) are pixel-sized — on short screens
+  // they overlap rows and spill past the goal lines. Measure the pitch and
+  // scale the stacks so 4 rows always fit. 400px is the height at which the
+  // full-size lg stack fits exactly; callback ref so remeasure survives
+  // conditional remounts.
+  const [pitchH, setPitchH] = useState(0);
+  const roRef = useRef<ResizeObserver | null>(null);
+  const measureRef = useCallback((node: HTMLDivElement | null) => {
+    roRef.current?.disconnect();
+    roRef.current = null;
+    if (node && typeof ResizeObserver !== 'undefined') {
+      const ro = new ResizeObserver(([entry]) => setPitchH(entry.contentRect.height));
+      ro.observe(node);
+      roRef.current = ro;
+    }
+  }, []);
+  // Applies in BOTH sizing modes: fill pitches vary with the viewport, and the
+  // fixed-aspect (4/5) pitches shrink with container width on small phones —
+  // either way a short pitch must shrink its player stacks to keep rows apart.
+  const scale = pitchH > 0 ? Math.min(1, Math.max(0.55, pitchH / 400)) : 1;
+
+  const circle = Math.round((size === 'lg' ? 44 : size === 'md' ? 36 : 28) * scale);
+  const nameFsPx = Math.max(8, Math.round((size === 'lg' ? 11 : size === 'md' ? 9 : 8) * scale));
+  const badgeSize = Math.max(10, Math.round((size === 'lg' ? 16 : size === 'md' ? 15 : 11) * scale));
+  const dotSize = Math.max(3, Math.round((size === 'lg' ? 5 : size === 'md' ? 5 : 4) * scale));
+  const remaining = getRemainingSlots(player.team);
+  const perPlayerChem = useMemo(
+    () => (showChemistry ? computeSquadChemistry(player.team).perPlayer : {}),
+    [showChemistry, player.team],
+  );
+
+  return (
+    <motion.div
+      ref={measureRef}
+      className={`relative overflow-hidden rounded-[12px] ${fill ? 'h-full w-full' : ''}`}
+      style={fill ? undefined : { aspectRatio: '4/5' }}
+      animate={
+        needGlow
+          ? {
+              boxShadow: isHuman
+                ? '0 0 0 3px rgba(255,229,0,0.9), 0 0 18px rgba(255,229,0,0.35)'
+                : '0 0 0 3px rgba(255,255,255,0.5), 0 0 14px rgba(255,255,255,0.18)',
+            }
+          : { boxShadow: '0 0 0 0px rgba(255,229,0,0)' }
+      }
+      transition={{ duration: 0.3 }}
+    >
+      {/* Real stadium turf — same asset as the ranked possession pitch. The
+          source image is landscape (goal lines left/right); rotate it 90° so
+          the goal areas sit at top & bottom, matching the vertical formation.
+          The img's CSS width = container HEIGHT and CSS height = container WIDTH
+          (because rotation swaps axes); object-fill stretches it edge-to-edge so
+          both goal areas stay fully visible. */}
+      {/* Raw <img> on purpose: this is a rotated (-90°), axis-swapped, object-fill
+          stretched background; next/image manages intrinsic sizing/layout and
+          would fight the rotation + w-[125%] overflow trick. */}
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={fill ? '/assets/stadium-green-vertical.webp' : '/assets/stadium-green.webp'}
+        alt=""
+        aria-hidden
+        draggable={false}
+        className={
+          fill
+            // Pre-rotated portrait asset (goals top & bottom) so the pitch
+            // markings match the vertical formation without CSS rotation
+            // tricks, which cannot cover an arbitrary-aspect box.
+            ? 'absolute inset-0 h-full w-full object-fill'
+            : 'absolute left-1/2 top-1/2 h-[80%] w-[125%] max-w-none -translate-x-1/2 -translate-y-1/2 -rotate-90 object-fill'
+        }
+      />
+      <div aria-hidden className="absolute inset-0 bg-black/15" />
+
+      {/* "YOU" badge — top-right corner of the pitch */}
+      {showYouBadge && (
+        <span
+          className="absolute right-2 top-2 z-30 rounded-full bg-brand-yellow px-3 py-1 text-sm font-black uppercase text-surface-page shadow-[0_2px_8px_rgba(0,0,0,0.4)]"
+          style={poppins}
+        >
+          {t('auctionGame.youBadge')}
+        </span>
+      )}
+
+      {(() => {
+        // Display rows top→bottom. y is spread evenly between the FWD band (top)
+        // and the GK band (bottom) so multi-band formations (e.g. 4-2-3-1) sit
+        // correctly. A per-position offset keeps slot indexing continuous when a
+        // group spans two rows (MID 3 then MID 2).
+        const rows = formation.rows;
+        // Band range leaves room for the full player stack (photo + name +
+        // chip row + chem dots): the GK stack grows upward and the FWD stack
+        // downward, so pushing bands to the very edges clips photos.
+        const TOP = 14;
+        const BOTTOM = 88;
+        const step = rows.length > 1 ? (BOTTOM - TOP) / (rows.length - 1) : 0;
+        const posOffset: Record<PositionGroup, number> = { GK: 0, DEF: 0, MID: 0, FWD: 0 };
+        return rows.map((row, rowIdx) => {
+          const { pos, count } = row;
+          const yPct = TOP + step * rowIdx;
+          const startIndex = posOffset[pos];
+          posOffset[pos] += count;
+          const filled = player.team.slots[pos];
+          const needsMore = remaining[pos] > 0;
+          const isActiveRow = activePosition === pos && needsMore;
+
+          return (
+            <div
+              key={`${pos}-${rowIdx}`}
+              className="absolute left-0 right-0 flex justify-center"
+              style={{ top: `${yPct}%`, transform: 'translateY(-50%)' }}
+            >
+              <div
+                className="flex items-start justify-center"
+                style={{ gap: size === 'lg' ? 10 : size === 'md' ? 6 : 4, padding: '0 4px' }}
+              >
+                {Array.from({ length: count }).map((_, slot) => {
+                  const i = startIndex + slot;
+                  const f = filled[i];
+                  const isNew = f && highlightId === f.id;
+                  const isEmpty = !f;
+                  const isPulsing = isEmpty && isActiveRow;
+
+                  return (
+                    <div key={`${rowIdx}-${slot}`} className={`flex items-center gap-0.5 ${pos === 'GK' ? 'flex-col-reverse' : 'flex-col'}`}>
+                      <motion.div
+                        initial={isNew ? { scale: 0, rotate: -180 } : false}
+                        animate={
+                          isNew
+                            ? { scale: 1, rotate: 0 }
+                            : isPulsing
+                              ? { boxShadow: [`0 0 0px ${POS_COLORS[pos]}00`, `0 0 12px ${POS_COLORS[pos]}60`, `0 0 0px ${POS_COLORS[pos]}00`] }
+                              : {}
+                        }
+                        transition={
+                          isNew
+                            ? { type: 'spring', stiffness: 260, damping: 14 }
+                            : isPulsing
+                              ? { duration: 1.5, repeat: Infinity }
+                              : undefined
+                        }
+                        className="rounded-full flex items-center justify-center overflow-hidden"
+                        style={{
+                          width: circle,
+                          height: circle,
+                          border: f
+                            ? isNew
+                              ? `2.5px solid ${POS_COLORS[pos]}`
+                              : '2.5px solid rgba(255,255,255,0.55)'
+                            : isPulsing
+                              ? `2px dashed ${POS_COLORS[pos]}`
+                              : '2px dashed rgba(255,255,255,0.45)',
+                          backgroundColor: f
+                            ? 'rgba(0,0,0,0.35)'
+                            : isPulsing
+                              ? `${POS_COLORS[pos]}22`
+                              : 'rgba(0,0,0,0.35)',
+                          boxShadow: isNew
+                            ? `0 0 14px ${POS_COLORS[pos]}60`
+                            : '0 2px 6px rgba(0,0,0,0.45)',
+                        }}
+                      >
+                        {f ? (
+                          <PlayerPhoto footballer={f} size={circle - 4} />
+                        ) : (
+                          <span
+                            className="font-black"
+                            style={{
+                              fontSize: circle * 0.3,
+                              ...poppins,
+                              color: isPulsing ? POS_COLORS[pos] : 'rgba(255,255,255,0.7)',
+                            }}
+                          >
+                            {pos}
+                          </span>
+                        )}
+                      </motion.div>
+                      {f && (
+                        <motion.span
+                          initial={isNew ? { opacity: 0, y: 4 } : false}
+                          animate={isNew ? { opacity: 1, y: 0 } : {}}
+                          transition={isNew ? { delay: 0.3 } : undefined}
+                          className="text-white/90 text-center leading-tight font-semibold"
+                          style={{ fontSize: nameFsPx, maxWidth: circle + 20, ...poppins, textShadow: '0 1px 3px rgba(0,0,0,0.8)' }}
+                        >
+                          {lastName(f.name)}
+                        </motion.span>
+                      )}
+                      {f && showChemistry && (f.nationality || f.league || f.club) && (
+                        <>
+                          {/* Nation flag · league badge · club crest — EA FC-card
+                              order, on a dark chip so low-contrast crests stay
+                              visible on the turf. League falls back to the club's
+                              country league when the player has no explicit league
+                              (display only). */}
+                          <div className="flex items-center justify-center gap-1 rounded-full bg-black/60 px-1.5 py-0.5 shadow-[0_1px_3px_rgba(0,0,0,0.55)]">
+                            <FlagChip country={f.nationality} width={badgeSize + 4} height={Math.round((badgeSize + 4) * 0.67)} />
+                            <LeagueLogo league={f.league ?? getLeagueForClub(f.club)?.name} size={badgeSize} />
+                            <ClubCrest club={f.club} size={badgeSize} />
+                          </div>
+                          {/* Chemistry dots (0…3) */}
+                          <div className="flex items-center justify-center gap-[3px]">
+                            {Array.from({ length: MAX_PLAYER_CHEMISTRY }).map((_, d) => (
+                              <span
+                                key={d}
+                                className="rounded-full"
+                                style={{
+                                  width: dotSize,
+                                  height: dotSize,
+                                  backgroundColor: d < (perPlayerChem[f.id] ?? 0) ? CHEM_DOT_COLOR : 'rgba(255,255,255,0.22)',
+                                  boxShadow: d < (perPlayerChem[f.id] ?? 0) ? `0 0 4px ${CHEM_DOT_COLOR}99` : 'none',
+                                }}
+                              />
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        });
+      })()}
+    </motion.div>
+  );
+}

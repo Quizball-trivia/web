@@ -12,21 +12,32 @@ const SOUND_FILES = {
   // Shared wrong-answer buzzer for daily challenges and ranked gameplay.
   wrongAnswer: "/sounds/wrong_answer.mp3",
   imposterReveal: "/sounds/imposter.wav",
+  auctionClue: "/sounds/auction/mixkit-free/stat-player-select.mp3",
+  auctionBid: "/sounds/auction/mixkit-free/bid-coins-handling.mp3",
+  auctionFold: "/sounds/auction/mixkit-free/fold-paper-slide.mp3",
+  auctionReveal: "/sounds/auction/mixkit-free/sold-service-bell.mp3",
+  auctionWon: "/sounds/auction/mixkit-free/won-casino-bling.mp3",
+  auctionWarning: "/sounds/auction/mixkit-free/warning-racing-countdown.mp3",
+  auctionFinished: "/sounds/auction/mixkit-free/finish-crowd-ovation.mp3",
 } as const;
 
 const BGM_FILES = {
   ranked: "/sounds/ranked_demo.wav",
+  // Auction deliberately shares ranked's stadium loop so both competitive
+  // modes feel like part of the same QuizBall match family.
+  auction: "/sounds/ranked_demo.wav",
   kickoff: "/sounds/gameplay_soundtrack.m4a",
   search: "/sounds/quizball-search.mp3",
 } as const;
 
-type SoundName = keyof typeof SOUND_FILES;
-type BgmName = keyof typeof BGM_FILES;
+export type SoundName = keyof typeof SOUND_FILES;
+export type BgmName = keyof typeof BGM_FILES;
 
 // ─── Volume defaults ─────────────────────────────────────────────
 export const GAME_SOUND_VOLUME = {
   sfx: 0.3,
   rankedBgm: 0.025,
+  auctionBgm: 0.025,
   // The kickoff track is mastered ~8 dB louder than the search loop
   // (-9.7 vs -17.8 LUFS), so it's played quieter to match search's
   // perceived level. 0.025 * 10^(-8/20) ≈ 0.01.
@@ -37,6 +48,7 @@ export const GAME_SOUND_VOLUME = {
 // so this is a one-liner to revive whenever we want music back.
 const BGM_ENABLED = false;
 const MUTE_STORAGE_KEY = 'quizball_audio_muted';
+const MUTE_CHANGED_EVENT = 'quizball:audio-muted-changed';
 
 // ─── Howl instances (lazy-loaded) ────────────────────────────────
 const sounds: Partial<Record<SoundName, Howl>> = {};
@@ -47,6 +59,13 @@ const SOUND_VOLUME: Partial<Record<SoundName, number>> = {
   dailyCorrect: 0.55,
   wrongAnswer: 0.5,
   imposterReveal: 0.7,
+  auctionClue: 0.3,
+  auctionBid: 0.34,
+  auctionFold: 0.32,
+  auctionReveal: 0.34,
+  auctionWon: 0.3,
+  auctionWarning: 0.28,
+  auctionFinished: 0.22,
 };
 
 function getSound(name: SoundName): Howl {
@@ -83,14 +102,20 @@ export function setMasterVolume(vol: number) {
 let _muted = false;
 let mutePreferenceLoaded = false;
 
-/** Mute / unmute all sounds */
-export function setMuted(muted: boolean) {
+interface SetMutedOptions {
+  /** Keep an active music track paused while unmuting sound effects. */
+  resumeBgm?: boolean;
+}
+
+/** Mute / unmute all sounds. Active music resumes by default for legacy callers. */
+export function setMuted(muted: boolean, { resumeBgm = true }: SetMutedOptions = {}) {
   ensureMutePreferenceLoaded();
   _muted = muted;
   Howler.mute(muted);
   persistMutePreference(muted);
   setFallbackMuted(muted);
-  if (!muted) resumeActiveBgm();
+  if (!muted && resumeBgm) resumeActiveBgm();
+  if (typeof window !== 'undefined') window.dispatchEvent(new Event(MUTE_CHANGED_EVENT));
 }
 
 /** Check if currently muted */
@@ -103,6 +128,16 @@ export function toggleMute(): boolean {
   ensureMutePreferenceLoaded();
   setMuted(!_muted);
   return _muted;
+}
+
+export function subscribeMuted(listener: () => void): () => void {
+  if (typeof window === 'undefined') return () => undefined;
+  window.addEventListener(MUTE_CHANGED_EVENT, listener);
+  window.addEventListener('storage', listener);
+  return () => {
+    window.removeEventListener(MUTE_CHANGED_EVENT, listener);
+    window.removeEventListener('storage', listener);
+  };
 }
 
 /** Preload all sounds (call on game start) */
@@ -161,6 +196,7 @@ function ensureMutePreferenceLoaded(): void {
 function getBgmVolume(name: BgmName): number {
   if (name === 'kickoff') return GAME_SOUND_VOLUME.kickoffBgm;
   if (name === 'search') return GAME_SOUND_VOLUME.searchBgm;
+  if (name === 'auction') return GAME_SOUND_VOLUME.auctionBgm;
   return GAME_SOUND_VOLUME.rankedBgm;
 }
 
@@ -251,7 +287,7 @@ export function preloadBgm(name: BgmName) {
  * Idempotent: calling with the currently-playing track is a no-op.
  */
 export function playBgm(name: BgmName) {
-  if (!BGM_ENABLED && name !== 'kickoff' && name !== 'search') return;
+  if (!BGM_ENABLED && name !== 'auction' && name !== 'kickoff' && name !== 'search') return;
   try {
     ensureMutePreferenceLoaded();
     ensureBgmLifecycleHandlers();

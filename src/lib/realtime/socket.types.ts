@@ -748,7 +748,7 @@ export interface WarmupScoresPayload {
 }
 
 export type AuctionPositionGroup = 'GK' | 'DEF' | 'MID' | 'FWD';
-export type AuctionFormationName = '4-3-3' | '4-4-2' | '3-5-2' | '4-2-3-1' | '3-4-3';
+export type AuctionFormationName = '2-2-2';
 export type AuctionMatchPhase =
   | 'created'
   | 'clue_reveal'
@@ -779,6 +779,25 @@ export interface PublicAuctionFootballer {
   imageUrl?: string | null;
   currentClub?: string | null;
   nationality?: string | null;
+  league?: string | null;
+  /**
+   * Career seasons for scouting-snapshot lots, chronological. Pre-reveal the
+   * final (scoring) season arrives with valueEur 0 — the server withholds the
+   * answer to the price gamble until the reveal.
+   */
+  snapshots?: AuctionSeasonSnapshotPayload[];
+}
+
+export interface AuctionSeasonSnapshotPayload {
+  season: string;
+  league: string;
+  age: number | null;
+  apps: number;
+  goals: number;
+  assists?: number;
+  cleanSheets?: number;
+  conceded?: number;
+  valueEur: number;
 }
 
 export interface PublicAuctionTeam {
@@ -792,8 +811,16 @@ export interface PublicAuctionPlayer {
   displayName: string;
   /** Real user's layered avatar (opponents). Null for bots → client randomizes. */
   avatarCustomization?: AvatarCustomization | null;
-  isBot: boolean;
+  /** Ranked identity for the showdown/lineup cards (tier frame + RP). */
+  tier?: string | null;
+  rp?: number | null;
+  /** Server-only since the bot-concealment pass — never sent to clients. Kept
+   *  optional so older cached payloads still parse. */
+  isBot?: boolean;
   budget: number;
+  /** Budget the seat started with. Absent on legacy payloads → assume the
+   *  current constant; spend/profit math must use this, not the constant. */
+  startingBudget?: number | null;
   team: PublicAuctionTeam;
   isEliminated: boolean;
   /** Quit / disconnect-forfeited (ranks below everyone; no coins). */
@@ -848,13 +875,13 @@ export interface PublicAuctionSoloPickState {
 export interface PublicAuctionPlayerRanking {
   seatId: string;
   userId?: string | null;
-  isBot: boolean;
   displayName: string;
   rank: number;
   isComplete: boolean;
   totalTrueValue: number;
   budgetRemaining: number;
-  player: PublicAuctionPlayer;
+  /** Absent on rankings computed by legacy server states. */
+  player?: PublicAuctionPlayer;
 }
 
 export interface PublicAuctionMatchState {
@@ -912,6 +939,9 @@ export interface AuctionSearchStartedPayload {
   queuedUserCount: number;
   seatsNeeded: number;
   fallbackAt: string;
+  /** Present on roster-aware servers. Optional for a safe rolling deploy. */
+  queuedPlayers?: AuctionQueuedPlayerSummary[];
+  botCount?: number;
 }
 
 export interface AuctionSearchStatusPayload {
@@ -920,6 +950,16 @@ export interface AuctionSearchStatusPayload {
   queuedUserCount: number;
   seatsNeeded: number;
   fallbackAt: string;
+  /** Present on roster-aware servers. Optional for a safe rolling deploy. */
+  queuedPlayers?: AuctionQueuedPlayerSummary[];
+  botCount?: number;
+}
+
+export interface AuctionQueuedPlayerSummary {
+  userId: string;
+  displayName: string;
+  /** Saved layered avatar so every waiting-room client renders the same outfit. */
+  avatarCustomization?: AvatarCustomization | null;
 }
 
 export interface AuctionSearchCancelledPayload {
@@ -931,8 +971,18 @@ export interface AuctionMatchFoundPayload {
   matchId: string;
   humanUserIds: string[];
   botCount: number;
+  /** Assigned bot personas. Optional while older backend deployments are
+   * still in rotation; the UI falls back to the generic translated label. */
+  botPlayers?: Array<{ seatId: string; displayName: string }>;
   locale: 'en' | 'ka';
   formation: AuctionFormationName;
+  /** Server clock used to compensate for local clock skew. Optional during a
+   * rolling deploy; older backends only sent countdownEndsAt. */
+  serverNow?: string;
+  /** Absolute server time when the filled lineup hands over to showdown. */
+  lineupEndsAt?: string;
+  /** Absolute server time when showdown hands over to the countdown. */
+  showdownEndsAt?: string;
   /** Absolute server time (ISO) the pre-match countdown ends — all clients
    *  count down to this same instant so they start in sync. */
   countdownEndsAt?: string;

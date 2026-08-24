@@ -1,0 +1,849 @@
+'use client';
+
+import { useState, useCallback, useEffect, useMemo } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { useRouter } from 'next/navigation';
+import { useLocale } from '@/contexts/LocaleContext';
+import { useAuthStore } from '@/stores/auth.store';
+import { useAuctionActiveMatchStore } from '@/stores/auctionActiveMatch.store';
+import { QuitMatchModal } from '@/components/match/QuitMatchModal';
+import { useRealtimeConnectionHealth } from '@/lib/realtime/connection-health';
+import { poppins, AUCTION_QUIT_MODAL_THEME, AUCTION_PURPLE } from './constants/auction.constants';
+import { useAuctionGame } from './hooks/useAuctionGame';
+import { useAuctionAudio } from './hooks/useAuctionAudio';
+import {
+  useRealtimeAuctionMatch,
+  type AuctionMatchNotice,
+  type AuctionPauseState,
+} from './realtime/useRealtimeAuctionMatch';
+import { AuctionShowdownScreen } from './components/AuctionShowdownScreen';
+import { AuctionGameScreen } from './components/AuctionGameScreen';
+import { AuctionResultsScreen } from './components/AuctionResultsScreen';
+import { AuctionStatusOverlay } from './components/shared/AuctionStatusOverlay';
+import { AuctionPrimaryButton } from './components/shared/AuctionPrimaryButton';
+import { AuctionAudioControl } from './components/shared/AuctionAudioControl';
+import { AuctionLeaveControl } from './components/shared/AuctionLeaveControl';
+import { FormationReveal } from './components/screens/FormationReveal';
+import { LottieSearch } from './components/screens/LottieSearch';
+import { MatchCountdown } from './components/screens/MatchCountdown';
+import type { AuctionFormationName } from '@/lib/realtime/socket.types';
+import type { AvatarCustomization } from '@/types/game';
+import type { AuctionGameState } from './types';
+
+// The matchmaking search still sends a formation name (the hook requires one),
+// but the SERVER picks the real formation randomly and ignores this value.
+const LIVE_AUCTION_FORMATION_NAME: AuctionFormationName = '2-2-2';
+const FALLBACK_SHOWDOWN_HOLD_MS = 2_500;
+const FALLBACK_COUNTDOWN_MS = 5_000;
+
+type AuctionPreMatchStage = 'lineup' | 'showdown' | 'countdown' | 'done';
+
+type AuctionPreMatchSchedule = {
+  matchId: string;
+  lineupEndsAtMs: number;
+  showdownEndsAtMs: number;
+  countdownEndsAtMs: number;
+};
+
+interface AuctionFlowScreenProps {
+  username: string;
+  avatarSeed: string;
+  /** Real logged-in user's layered avatar — rendered on the human seat. */
+  avatarCustomization?: AvatarCustomization | null;
+  mode?: 'mock' | 'live';
+}
+
+export function AuctionFlowScreen({ username, avatarSeed, avatarCustomization, mode = 'mock' }: AuctionFlowScreenProps) {
+  const flow =
+    mode === 'live' ? (
+      <AuctionRealtimeFlowScreen
+        username={username}
+        avatarSeed={avatarSeed}
+        avatarCustomization={avatarCustomization}
+      />
+    ) : <AuctionMockFlowScreen username={username} avatarSeed={avatarSeed} />;
+
+  return (
+    <div className="relative min-h-screen">
+      {flow}
+      <AuctionAudioControl />
+    </div>
+  );
+}
+
+function AuctionMockFlowScreen({ username, avatarSeed }: Omit<AuctionFlowScreenProps, 'mode'>) {
+  const router = useRouter();
+  const { state, actions, humanPlayerId } = useAuctionGame(username, avatarSeed);
+  const [mockSearching, setMockSearching] = useState(true);
+  useAuctionAudio({ state, humanPlayerId, enabled: !mockSearching });
+
+  useEffect(() => {
+    // Start the game immediately (mock matchmaking)
+    actions.startGame(3);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only on mount
+  }, []);
+
+  useEffect(() => {
+    if (mockSearching && state.players.length > 0) {
+      // Simulate matchmaking delay
+      const timer = setTimeout(() => {
+        setMockSearching(false);
+        actions.setPhase('showdown');
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [mockSearching, state.players.length, actions]);
+
+  const handleShowdownComplete = useCallback(() => {
+    actions.setPhase('formation');
+  }, [actions]);
+
+  const handlePlayAgain = useCallback(() => {
+    setMockSearching(true);
+    actions.startGame(3);
+    setTimeout(() => {
+      setMockSearching(false);
+      actions.setPhase('showdown');
+    }, 2000);
+  }, [actions]);
+
+  const handleExit = useCallback(() => {
+    router.push('/play');
+  }, [router]);
+
+  // Searching state
+  if (mockSearching) {
+    return <MockSearchingScreen />;
+  }
+
+  // Showdown
+  if (state.phase === 'showdown') {
+    return (
+      <AuctionShowdownScreen
+        players={state.players}
+        humanPlayerId={humanPlayerId}
+        onComplete={handleShowdownComplete}
+      />
+    );
+  }
+
+  // Game phases
+  if (
+    state.phase === 'formation' ||
+    state.phase === 'clue-reveal' ||
+    state.phase === 'bidding' ||
+    state.phase === 'reveal' ||
+    state.phase === 'solo-pick'
+  ) {
+    return (
+      <>
+        <AuctionGameScreen
+          state={state}
+          actions={actions}
+          humanPlayerId={humanPlayerId}
+        />
+        <AuctionLeaveControl ariaLabel="Leave preview" onClick={handleExit} />
+      </>
+    );
+  }
+
+  // Results
+  if (state.phase === 'results') {
+    return (
+      <AuctionResultsScreen
+        state={state}
+        humanPlayerId={humanPlayerId}
+        onPlayAgain={handlePlayAgain}
+        onExit={handleExit}
+      />
+    );
+  }
+
+  return <MockSearchingScreen />;
+}
+
+function AuctionRealtimeFlowScreen({ username, avatarSeed, avatarCustomization }: Omit<AuctionFlowScreenProps, 'mode'>) {
+  const router = useRouter();
+  const { locale, t } = useLocale();
+  // A match already exists when we arrive from a friend lobby or the app-shell
+  // "still in an auction" banner. Captured once on mount: the store is cleared
+  // as the match settles, and we must not flip to search mode mid-match.
+  // Dropped on "play again" so the next round queues a fresh search instead of
+  // re-attaching to the finished match.
+  const [attachMatchId, setAttachMatchId] = useState(
+    () => useAuctionActiveMatchStore.getState().activeAuctionMatch?.matchId ?? null,
+  );
+  // Start matchmaking as soon as the screen opens — searching comes first, the
+  // formation is shown later (briefly) once a match is found.
+  const [auctionStarted, setAuctionStarted] = useState(true);
+  // Boundary callbacks only force a render; the stage itself is derived from
+  // the server schedule below, so delayed browser timers cannot make the
+  // client invent a different timeline.
+  const [preMatchClock, setPreMatchClock] = useState<{ matchId: string | null; nowMs: number }>({
+    matchId: null,
+    nowMs: 0,
+  });
+  // Leave/forfeit confirmation while in an active match.
+  const [showQuitModal, setShowQuitModal] = useState(false);
+  // After forfeiting, show the results screen immediately (like ranked) with a
+  // "you forfeited" state + no coins — instead of bouncing back to /play.
+  const [voluntarilyForfeited, setVoluntarilyForfeited] = useState(false);
+  // Brief "Finalizing Match" beat before the results screen reveals (ranked
+  // style). Gated so it plays once when the match first reaches 'results'.
+  const [resultsRevealed, setResultsRevealed] = useState(false);
+  const authUser = useAuthStore((store) => store.user);
+  const authStatus = useAuthStore((store) => store.status);
+  const connectionHealth = useRealtimeConnectionHealth();
+  const authRequired =
+    authStatus === 'anonymous' ||
+    (authStatus === 'authenticated' && !authUser?.id);
+  const realtimeEnabled = authStatus === 'authenticated' && Boolean(authUser?.id);
+  const {
+    state,
+    actions,
+    humanPlayerId,
+    status,
+    error,
+    versionGapDetected,
+    waitingForReady,
+    pause,
+    matchNotice,
+    disconnectedSeatIds,
+    rejoinAvailable,
+    resumeCountdownEndsAtMs,
+    search,
+    coinsAwarded,
+    apEarned,
+    selfForfeited,
+    attachUnavailable,
+    restoringFromReload,
+  } = useRealtimeAuctionMatch({
+    enabled: realtimeEnabled,
+    autoStart: auctionStarted,
+    matchmakingMode: 'search',
+    attachMatchId,
+    selfUserId: authUser?.id ?? null,
+    locale: locale === 'ka' ? 'ka' : 'en',
+    formation: LIVE_AUCTION_FORMATION_NAME,
+    humanAvatarSeed: avatarSeed,
+    humanAvatarCustomization: avatarCustomization,
+  });
+
+  const currentJoined = search?.phase === 'match_found' ? 3 : Math.max(search?.queuedUserCount ?? 1, 1);
+
+  // The server sends one absolute schedule to every browser. We move between
+  // stages at those boundaries rather than chaining local animation callbacks,
+  // so web and mobile cannot drift apart. The fallback schedule only supports
+  // a safe rolling deployment against an older backend.
+  const foundMatchId = search?.phase === 'match_found' ? search.matchId ?? null : null;
+  const preMatchSchedule = useMemo<AuctionPreMatchSchedule | null>(() => {
+    if (!foundMatchId || search?.phase !== 'match_found') return null;
+    const hasServerSchedule =
+      search.lineupEndsAtMs !== null && search.lineupEndsAtMs !== undefined &&
+      search.showdownEndsAtMs !== null && search.showdownEndsAtMs !== undefined &&
+      search.countdownEndsAtMs !== null && search.countdownEndsAtMs !== undefined;
+    const legacyCountdownEndsAtMs = search.countdownEndsAtMs ?? null;
+    if (!hasServerSchedule && legacyCountdownEndsAtMs === null) return null;
+    const lineupEndsAtMs = hasServerSchedule
+      ? search.lineupEndsAtMs!
+      : legacyCountdownEndsAtMs! - FALLBACK_SHOWDOWN_HOLD_MS;
+    const showdownEndsAtMs = hasServerSchedule
+      ? search.showdownEndsAtMs!
+      : legacyCountdownEndsAtMs!;
+    const countdownEndsAtMs = hasServerSchedule
+      ? search.countdownEndsAtMs!
+      : legacyCountdownEndsAtMs! + FALLBACK_COUNTDOWN_MS;
+    return { matchId: foundMatchId, lineupEndsAtMs, showdownEndsAtMs, countdownEndsAtMs };
+  }, [
+    foundMatchId,
+    search?.phase,
+    search?.lineupEndsAtMs,
+    search?.showdownEndsAtMs,
+    search?.countdownEndsAtMs,
+  ]);
+  const preMatchStage: AuctionPreMatchStage | null = (() => {
+    if (!preMatchSchedule) return null;
+    const now = preMatchClock.matchId === preMatchSchedule.matchId
+      ? preMatchClock.nowMs
+      : Number.NEGATIVE_INFINITY;
+    if (now < preMatchSchedule.lineupEndsAtMs) return 'lineup';
+    if (now < preMatchSchedule.showdownEndsAtMs) return 'showdown';
+    if (now < preMatchSchedule.countdownEndsAtMs) return 'countdown';
+    return 'done';
+  })();
+  useEffect(() => {
+    if (!preMatchSchedule) return;
+    const now = Date.now();
+    const updateClock = () => setPreMatchClock({
+      matchId: preMatchSchedule.matchId,
+      nowMs: Date.now(),
+    });
+    const timers = [
+      now,
+      preMatchSchedule.lineupEndsAtMs,
+      preMatchSchedule.showdownEndsAtMs,
+      preMatchSchedule.countdownEndsAtMs,
+    ]
+      .filter((boundary) => boundary >= now)
+      .map((boundary) => window.setTimeout(
+        updateClock,
+        Math.max(0, boundary - Date.now()) + 20,
+      ));
+    return () => timers.forEach((timer) => window.clearTimeout(timer));
+  }, [
+    preMatchSchedule,
+  ]);
+
+  // Involuntary server removal (drop / reconnect-limit forfeit) and voluntary
+  // quit both route to the same results/exit flow; `removedByServer` only picks
+  // the honest "removed from the match" copy over "you forfeited".
+  const removedByServer = selfForfeited && !voluntarilyForfeited;
+  const forfeited = voluntarilyForfeited || removedByServer;
+
+  // The match we came in to re-attach to is gone (grace expired / it ended
+  // while we were away). Drop the attach target so the search screen can
+  // auto-start a fresh one and re-enable its cancel button instead of hanging.
+  // Derived during render (same pattern as peakJoined above) rather than in an
+  // effect, so it settles in one commit.
+  if (attachUnavailable && attachMatchId) {
+    setAttachMatchId(null);
+  }
+
+  const resolvedHumanPlayerId =
+    humanPlayerId ?? state?.players.find((player) => !player.isBot)?.id ?? state?.players[0]?.id ?? null;
+  useAuctionAudio({ state, humanPlayerId: resolvedHumanPlayerId });
+  const connectionWarning =
+    connectionHealth.phase === 'reconnecting' || connectionHealth.phase === 'disconnected'
+      ? t('common.reconnecting')
+      : connectionHealth.phase === 'error'
+        ? t('common.connectionBad')
+        : null;
+  // Non-blocking top warning strip. waiting-for-ready is the per-phase UI-ready
+  // gate the server opens between rounds — it fires constantly during normal
+  // play, so it must stay a thin strip, NOT a full-screen overlay (that would
+  // flash over the live game). Only genuinely blocking moments (finalizing /
+  // loading results) use the centered AuctionStatusOverlay.
+  // "Waiting for players" carries readyCount/totalCount, so say how many we're
+  // waiting on rather than an open-ended stall — with three players a single
+  // slow client holds the other two for up to 8s.
+  const waitingMessage = waitingForReady
+    ? waitingForReady.totalCount > 0
+      ? t('auctionGame.waitingForPlayersReadyCount', {
+          ready: waitingForReady.readyCount,
+          total: waitingForReady.totalCount,
+        })
+      : t('auctionGame.waitingForPlayersReady')
+    : null;
+  const liveWarningMessage =
+    error ??
+    connectionWarning ??
+    waitingMessage ??
+    (versionGapDetected ? t('auctionGame.stateChangedReconnect') : null);
+
+  const handlePlayAgain = useCallback(() => {
+    setVoluntarilyForfeited(false);
+    setAttachMatchId(null);
+    setAuctionStarted(true);
+    setResultsRevealed(false);
+    actions.startGame(3);
+  }, [actions]);
+
+  const handleExit = useCallback(() => {
+    router.push('/play');
+  }, [router]);
+
+  // Leaving an in-progress match asks for confirmation (like ranked): keep
+  // playing / leave temporarily (rejoinable) / forfeit (match continues for the
+  // others, this player gets their result screen).
+  const handleLeaveTemporary = useCallback(() => {
+    setShowQuitModal(false);
+    router.push('/play');
+  }, [router]);
+
+  const handleForfeit = useCallback(() => {
+    setShowQuitModal(false);
+    actions.forfeit?.();
+    // Lift the start latch NOW: Play Again can be tapped before the server's
+    // player_forfeited echo arrives, and the echo is only a backstop reset.
+    actions.resetSearchLatch?.();
+    // Show the results screen right away (forfeit = loss, no coins); the match
+    // keeps going server-side for the remaining players.
+    setVoluntarilyForfeited(true);
+  }, [actions]);
+
+  const handleCancelSearch = useCallback(() => {
+    actions.cancelSearch?.();
+    router.push('/play');
+  }, [actions, router]);
+
+  const handleRejoin = useCallback(() => {
+    if (rejoinAvailable) actions.rejoin?.(rejoinAvailable.matchId);
+  }, [actions, rejoinAvailable]);
+
+  // "Finalizing Match" beat: hold a short overlay the first time the match
+  // reaches 'results', then reveal the results screen (ranked-style). Skipped
+  // when the match arrives ALREADY finished (reload-recovery replay) — nothing
+  // is being finalized, so the beat reads as a glitch.
+  const isResultsPhase = state?.phase === 'results';
+  const statePhase = state?.phase ?? null;
+  // Derived during render (same sanctioned pattern as peakJoined below): true
+  // once any LIVE phase was seen this session.
+  const [sawLivePhase, setSawLivePhase] = useState(false);
+  if (statePhase && statePhase !== 'results' && !sawLivePhase) {
+    setSawLivePhase(true);
+  }
+  useEffect(() => {
+    if (!isResultsPhase || resultsRevealed) return;
+    // Reload-recovery arrives ALREADY finished — reveal immediately (the
+    // overlay below is also gated on sawLivePhase so it never flashes).
+    const id = window.setTimeout(() => setResultsRevealed(true), sawLivePhase ? 600 : 0);
+    return () => window.clearTimeout(id);
+  }, [isResultsPhase, resultsRevealed, sawLivePhase]);
+
+  // Forfeited: show the results screen immediately with the forfeit state (no
+  // coins). Takes priority over every other branch once the player has left.
+  if (forfeited && state && resolvedHumanPlayerId) {
+    return (
+      <>
+        <AuctionResultsScreen
+          state={state}
+          humanPlayerId={resolvedHumanPlayerId}
+          onPlayAgain={handlePlayAgain}
+          onExit={handleExit}
+          forfeited
+          removed={removedByServer}
+        />
+      </>
+    );
+  }
+
+  // Reloaded into a paused match we were disconnected from: prompt to rejoin
+  // (ranked-style handshake) instead of auto-joining.
+  if (rejoinAvailable && !resumeCountdownEndsAtMs) {
+    return (
+      <AuctionRejoinPrompt
+        graceMs={rejoinAvailable.graceMs}
+        onRejoin={handleRejoin}
+        onExit={handleExit}
+      />
+    );
+  }
+
+  // Resume "get ready" countdown after opting to rejoin, before the match
+  // unpauses (server-authoritative end time).
+  if (resumeCountdownEndsAtMs) {
+    return (
+      <MatchCountdown
+        players={state?.players ?? []}
+        endsAtMs={resumeCountdownEndsAtMs}
+        onComplete={() => {}}
+      />
+    );
+  }
+
+  if (!state || !resolvedHumanPlayerId || status === 'auth_required') {
+    const searchError =
+      status === 'auth_required' && authRequired ? t('auctionGame.signInToPlay') : error;
+    // Error / auth states fall back to the plain screen (it shows the message);
+    // the normal searching state shows the Lottie loaders that swap as bidders join.
+    if (searchError) {
+      return <MockSearchingScreen error={searchError} />;
+    }
+    // Reload-recovery: we're re-attaching to a known match, not queueing — a
+    // bare spinner instead of the "table is getting ready" search animation,
+    // which reads as matchmaking having restarted.
+    if (restoringFromReload) {
+      return (
+        <div
+          role="status"
+          aria-live="polite"
+          className="flex min-h-screen items-center justify-center bg-surface-page"
+        >
+          <div className="size-9 animate-spin rounded-full border-[4px] border-white/15 border-t-brand-yellow" />
+          <span className="sr-only">{t('common.loading')}</span>
+        </div>
+      );
+    }
+    return (
+      <LottieSearch
+        joined={currentJoined}
+        total={3}
+        players={search?.queuedPlayers}
+        botCount={search?.botCount ?? 0}
+        botPlayers={search?.botPlayers}
+        selfUserId={authUser?.id ?? null}
+        selfDisplayName={username}
+        selfAvatarSeed={avatarSeed}
+        selfAvatarCustomization={avatarCustomization}
+        onCancel={auctionStarted && !state && !attachMatchId ? handleCancelSearch : undefined}
+      />
+    );
+  }
+
+  // A newly matched table always gets the complete pre-match story even though
+  // the backend has already hydrated the live round behind its UI-ready gate:
+  // 1) full connected lineup, 2) showdown, 3) shared five-second countdown.
+  // AuctionGameScreen then runs its round intro and emits auction:ui_ready;
+  // the server will not reveal the first clue until every connected human has
+  // acknowledged that point (or the bounded safety ceiling is reached).
+  if (foundMatchId) {
+    const stage = preMatchSchedule?.matchId === foundMatchId
+      ? preMatchStage
+      : 'lineup';
+    if (stage === 'lineup') {
+      return (
+        <LottieSearch
+          joined={3}
+          total={3}
+          players={search?.queuedPlayers}
+          botCount={search?.botCount ?? 0}
+          botPlayers={search?.botPlayers}
+          selfUserId={authUser?.id ?? null}
+          selfDisplayName={username}
+          selfAvatarSeed={avatarSeed}
+          selfAvatarCustomization={avatarCustomization}
+        />
+      );
+    }
+    if (stage === 'showdown') {
+      return (
+        <AuctionShowdownScreen
+          players={state.players}
+          humanPlayerId={resolvedHumanPlayerId}
+          readyMode="seated"
+          onComplete={() => {}}
+        />
+      );
+    }
+    if (stage === 'countdown') {
+      return (
+        <MatchCountdown
+          players={state.players}
+          endsAtMs={preMatchSchedule?.countdownEndsAtMs ?? search?.countdownEndsAtMs ?? null}
+          onComplete={() => setPreMatchClock({ matchId: foundMatchId, nowMs: Date.now() })}
+        />
+      );
+    }
+  }
+
+  // Legacy/hydration fallback: if a matching state reaches this client without
+  // a match_found schedule, still show the server-selected formation while its
+  // UI-ready gate keeps the first clue closed.
+  if (state.phase === 'matchmaking') {
+    return <FormationReveal state={state} onContinue={() => {}} autoAdvanceMs={1500} />;
+  }
+
+  if (
+    state.phase === 'clue-reveal' ||
+    state.phase === 'bidding' ||
+    state.phase === 'reveal' ||
+    state.phase === 'solo-pick'
+  ) {
+    return (
+      <>
+        <AuctionGameScreen
+          state={state}
+          actions={actions}
+          humanPlayerId={resolvedHumanPlayerId}
+          serverDrivenTransitions
+          disconnectedSeatIds={disconnectedSeatIds}
+        />
+        {/* Leave button — opens the quit/forfeit confirmation. */}
+        <AuctionLeaveControl
+          ariaLabel={t('possession.leaveMatch')}
+          onClick={() => setShowQuitModal(true)}
+        />
+        {liveWarningMessage && (
+          <LiveAuctionWarning
+            message={liveWarningMessage}
+          />
+        )}
+        {matchNotice && (
+          <LiveAuctionNotice
+            key={matchNotice.id}
+            notice={matchNotice}
+            playerName={seatName(state, matchNotice.seatId)}
+          />
+        )}
+        {pause && (
+          <LiveAuctionPauseOverlay pause={pause} playerName={seatName(state, pause.seatId)} />
+        )}
+        <QuitMatchModal
+          open={showQuitModal}
+          onOpenChange={setShowQuitModal}
+          onConfirm={handleForfeit}
+          onSecondaryConfirm={handleLeaveTemporary}
+          playerClubId={authUser?.favorite_club ?? null}
+          theme={AUCTION_QUIT_MODAL_THEME}
+        />
+      </>
+    );
+  }
+
+  if (state.phase === 'results') {
+    // Results mount underneath; the brief "finalizing" beat fades out on top of
+    // them (ranked style) via AnimatePresence, so it no longer hard-cuts.
+    return (
+      <>
+        <AuctionResultsScreen
+          state={state}
+          humanPlayerId={resolvedHumanPlayerId}
+          onPlayAgain={handlePlayAgain}
+          onExit={handleExit}
+          coinsAwarded={coinsAwarded}
+          apEarned={apEarned}
+        />
+        <AnimatePresence>
+          {!resultsRevealed && sawLivePhase && (
+            <AuctionStatusOverlay
+              key="finalizing"
+              title={t('auctionGame.finalizingMatch')}
+              subtitle={t('auctionGame.calculatingResults')}
+            />
+          )}
+        </AnimatePresence>
+      </>
+    );
+  }
+
+  return <MockSearchingScreen error={error} />;
+}
+
+
+// Fallback searching screen: the mock flow's loader and the live flow's
+// error/auth state. The happy-path live searching UI is owned by `LottieSearch`
+// (this is only rendered when `error` is set or in the standalone mock flow).
+export function MockSearchingScreen({ error }: { error?: string | null }) {
+  const { t } = useLocale();
+  const detail = error ?? t('auctionGame.lookingForOpponents', { count: 2 });
+
+  return (
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-surface-page">
+      <div className="relative z-10 flex flex-col items-center gap-5">
+        <div className="relative">
+          <div className="size-20 rounded-full border-[5px] border-white/10 border-t-brand-yellow animate-spin" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/assets/brand/goal-ball-small.webp"
+              alt=""
+              aria-hidden="true"
+              draggable={false}
+              width={28}
+              height={28}
+              className="block size-7 object-contain"
+            />
+          </div>
+        </div>
+        <div className="text-center">
+          <h2
+            className="font-poppins text-xl font-black uppercase text-white"
+            style={poppins}
+          >
+            {error ? t('auctionGame.auctionUnavailable') : t('auctionGame.findingPlayers')}
+          </h2>
+          <p
+            className="mt-1.5 font-poppins text-xs font-semibold text-white/40 uppercase"
+            style={poppins}
+          >
+            {detail}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function LiveAuctionWarning({ message }: { message: string }) {
+  return (
+    <div className="pointer-events-none fixed inset-x-0 top-4 z-50 flex justify-center px-4">
+      <div
+        className="max-w-sm rounded-[12px] border border-brand-yellow/40 bg-surface-deep/90 px-4 py-2 text-center font-poppins text-xs font-bold uppercase text-brand-yellow shadow-2xl backdrop-blur"
+        style={poppins}
+      >
+        {message}
+      </div>
+    </div>
+  );
+}
+
+/** Display name for a seat, or null when the seat isn't in the state yet. */
+function seatName(state: AuctionGameState | null, seatId: string): string | null {
+  return state?.players.find((player) => player.id === seatId)?.username ?? null;
+}
+
+/**
+ * Transient, non-blocking announcement that something happened to another seat.
+ * Deliberately not an overlay: these fire while the board is still playable
+ * (a rival drops but the turn order hasn't reached them yet), so blocking the
+ * screen would be worse than the silence it replaces.
+ */
+function LiveAuctionNotice({
+  notice,
+  playerName,
+}: {
+  notice: AuctionMatchNotice;
+  playerName: string | null;
+}) {
+  const { t } = useLocale();
+  const [visible, setVisible] = useState(true);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setVisible(false), 4500);
+    return () => window.clearTimeout(timeout);
+  }, []);
+
+  const name = playerName ?? t('auctionGame.anOpponent');
+  const copy =
+    notice.kind === 'opponent-disconnected'
+      ? t('auctionGame.opponentLostConnection', { name })
+      : notice.kind === 'opponent-returned'
+        ? t('auctionGame.opponentReconnected', { name })
+        : t('auctionGame.opponentLeftMatch', { name });
+  const tone =
+    notice.kind === 'opponent-returned'
+      ? 'border-brand-green/40 bg-brand-green/15 text-brand-green'
+      : notice.kind === 'opponent-forfeited'
+        ? 'border-brand-red/40 bg-brand-red/15 text-brand-red'
+        : 'border-brand-yellow/40 bg-brand-yellow/15 text-brand-yellow';
+
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          initial={{ opacity: 0, y: -12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -12 }}
+          role="status"
+          aria-live="polite"
+          className="pointer-events-none fixed inset-x-0 top-14 z-[70] flex justify-center px-4"
+        >
+          <div
+            className={`rounded-full border-2 px-4 py-2 text-center font-poppins text-xs font-black uppercase tracking-wide backdrop-blur ${tone}`}
+          >
+            {copy}
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+function LiveAuctionPauseOverlay({
+  pause,
+  playerName,
+}: {
+  pause: AuctionPauseState;
+  /** Who dropped. With three players "a player disconnected" is not enough. */
+  playerName: string | null;
+}) {
+  const { t } = useLocale();
+  const [nowMs, setNowMs] = useState(() => Date.now());
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => setNowMs(Date.now()), 250);
+    return () => window.clearInterval(intervalId);
+  }, []);
+
+  const seconds = Math.max(0, Math.ceil((pause.pauseUntilMs - nowMs) / 1000));
+  const reconnectCopy =
+    pause.remainingReconnects <= 0
+      ? t('auctionGame.lastReconnect')
+      : pause.remainingReconnects === 1
+        ? t('auctionGame.reconnectsLeftOne', { count: pause.remainingReconnects })
+        : t('auctionGame.reconnectsLeftMany', { count: pause.remainingReconnects });
+
+  return (
+    <div className="fixed inset-0 z-[80] flex items-center justify-center bg-surface-page-alt/75 px-4 backdrop-blur-[2px]">
+      <div className="w-full max-w-sm rounded-[20px] bg-brand-blue px-6 py-6 text-center shadow-2xl">
+        <div
+          className="font-poppins text-[11px] font-semibold uppercase tracking-[0.28em] text-white/60"
+          style={poppins}
+        >
+          {t('auctionGame.auctionPaused')}
+        </div>
+        <div
+          className="mt-2 font-poppins text-xl font-semibold uppercase text-white"
+          style={poppins}
+        >
+          {playerName
+            ? t('auctionGame.namedPlayerDisconnected', { name: playerName })
+            : t('auctionGame.playerDisconnected')}
+        </div>
+        <div
+          className="mt-1 font-poppins text-sm font-semibold text-white/70"
+          style={poppins}
+        >
+          {t('auctionGame.playerDisconnectedContinueIfNotReturn', { seconds })}
+        </div>
+        <div
+          className="mt-4 inline-flex items-center justify-center rounded-full bg-black/30 px-6 py-2 font-poppins text-3xl font-semibold tabular-nums text-white"
+          style={poppins}
+        >
+          {seconds}
+        </div>
+        <div
+          className="mt-3 font-poppins text-xs font-semibold uppercase tracking-wide text-brand-yellow"
+          style={poppins}
+        >
+          {reconnectCopy}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Shown on reload into a paused match this player was disconnected from. Ranked-
+ * style opt-in: the player taps Rejoin (→ resume countdown) before grace expires.
+ */
+function AuctionRejoinPrompt({
+  graceMs,
+  onRejoin,
+  onExit,
+}: {
+  graceMs: number;
+  onRejoin: () => void;
+  onExit: () => void;
+}) {
+  const { t } = useLocale();
+  const [endsAtMs] = useState(() => Date.now() + Math.max(0, graceMs));
+  const [seconds, setSeconds] = useState(() => Math.max(0, Math.ceil((endsAtMs - Date.now()) / 1000)));
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setSeconds(Math.max(0, Math.ceil((endsAtMs - Date.now()) / 1000)));
+    }, 250);
+    return () => window.clearInterval(id);
+  }, [endsAtMs]);
+
+  return (
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-surface-page-alt px-4">
+      <div
+        className="relative z-10 w-full max-w-sm rounded-[20px] px-6 py-7 text-center shadow-2xl"
+        style={{ background: AUCTION_PURPLE }}
+      >
+        <div className="font-poppins text-xl font-black uppercase text-white" style={poppins}>
+          {t('auctionGame.rejoinTitle')}
+        </div>
+        <div className="mt-1.5 font-poppins text-sm font-semibold text-white/75" style={poppins}>
+          {t('auctionGame.rejoinSubtitle')}
+        </div>
+        <div
+          className="mx-auto mt-4 inline-flex items-center justify-center rounded-full bg-black/30 px-6 py-2 font-poppins text-3xl font-black tabular-nums text-white"
+          style={poppins}
+        >
+          {seconds}
+        </div>
+        <div className="mt-5 flex flex-col gap-3">
+          <AuctionPrimaryButton onClick={onRejoin} size="wide">
+            {t('auctionGame.rejoinButton')}
+          </AuctionPrimaryButton>
+          <AuctionPrimaryButton onClick={onExit} size="wide" variant="outline">
+            {t('auctionGame.rejoinExit')}
+          </AuctionPrimaryButton>
+        </div>
+      </div>
+    </div>
+  );
+}
