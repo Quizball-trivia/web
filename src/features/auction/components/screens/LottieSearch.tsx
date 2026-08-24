@@ -94,12 +94,8 @@ function SeatFrame({
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -4 }}
-          className={`relative z-20 mt-2 flex min-h-7 w-full items-center justify-center truncate rounded-full border px-2 text-center font-poppins text-[10px] font-black uppercase leading-none tracking-[0.06em] ${
-            filled
-              ? isSelf
-                ? 'border-brand-yellow/40 bg-brand-yellow/10 text-brand-yellow'
-                : 'border-white/20 bg-black/45 text-white'
-              : 'border-white/10 bg-black/20 text-white/35'
+          className={`relative z-20 mt-2 w-full truncate text-center font-poppins text-[10px] font-black uppercase leading-4 tracking-[0.06em] ${
+            filled ? (isSelf ? 'text-brand-yellow' : 'text-white') : 'text-white/35'
           }`}
           style={poppins}
           title={name ?? undefined}
