@@ -22,6 +22,8 @@ import { AuctionResultsScreen } from '@/features/auction/components/AuctionResul
 import { LottieSearch, LottieSearchDemo } from '@/features/auction/components/screens/LottieSearch';
 import { MatchCountdown } from '@/features/auction/components/screens/MatchCountdown';
 import { AuctionStatusOverlay } from '@/features/auction/components/shared/AuctionStatusOverlay';
+import { AuctionAudioControl } from '@/features/auction/components/shared/AuctionAudioControl';
+import { AuctionLeaveControl } from '@/features/auction/components/shared/AuctionLeaveControl';
 import { LocaleProvider, useLocale } from '@/contexts/LocaleContext';
 import type { AuctionActions } from '@/features/auction/hooks/useAuctionGame';
 import type {
@@ -149,7 +151,13 @@ function ShowdownScenario() {
 }
 
 function Game({ state }: { state: AuctionGameState }) {
-  return <AuctionGameScreen state={state} actions={makeActions()} humanPlayerId={HUMAN_ID} />;
+  return (
+    <>
+      <AuctionGameScreen state={state} actions={makeActions()} humanPlayerId={HUMAN_ID} />
+      <AuctionLeaveControl ariaLabel="Leave preview" onClick={() => {}} />
+      <AuctionAudioControl />
+    </>
+  );
 }
 
 /** EXPERIMENTAL full-screen 3-stadium layout with the clue/bid overlay. */

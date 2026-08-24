@@ -63,8 +63,9 @@ function AudioPreferenceRow({ checked, description, icon: Icon, label, onChecked
 }
 
 /**
- * Compact in-match audio controls. The button sits beside Auction's leave
- * control on the left because timers and solo-pick controls occupy the right.
+ * Compact in-match audio controls. Mobile uses a split HUD (leave on the left,
+ * audio on the right) so the controls never crowd the auction ribbon. Desktop
+ * keeps the familiar side-by-side controls on the left.
  */
 export function AuctionAudioControl() {
   const { t } = useLocale();
@@ -90,11 +91,8 @@ export function AuctionAudioControl() {
 
   return (
     <div
-      className="fixed z-[60]"
-      style={{
-        left: 'max(3.75rem, calc(env(safe-area-inset-left) + 3.75rem))',
-        top: 'max(0.75rem, env(safe-area-inset-top))',
-      }}
+      data-testid="auction-audio-control"
+      className="fixed right-[calc(env(safe-area-inset-right)+0.75rem)] top-[calc(env(safe-area-inset-top)+0.25rem)] z-[60] sm:left-[calc(env(safe-area-inset-left)+3.75rem)] sm:right-auto sm:top-[calc(env(safe-area-inset-top)+0.75rem)]"
     >
       <Popover>
         <PopoverTrigger asChild>
@@ -109,7 +107,7 @@ export function AuctionAudioControl() {
 
         <PopoverContent
           side="bottom"
-          align="start"
+          align="end"
           sideOffset={8}
           collisionPadding={12}
           className="z-[75] w-[min(18rem,calc(100vw-1.5rem))] rounded-[18px] border-white/15 bg-brand-blue p-3 text-white shadow-[0_20px_60px_rgba(0,0,0,0.55)]"
