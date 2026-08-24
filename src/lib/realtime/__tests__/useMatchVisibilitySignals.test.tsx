@@ -88,6 +88,30 @@ describe('useMatchVisibilitySignals', () => {
     }
   });
 
+  it('does not duplicate a transition that fires during the reconnect baseline window', async () => {
+    vi.useFakeTimers();
+    try {
+      const { useMatchVisibilitySignals } = await import('../useMatchVisibilitySignals');
+      renderHook(() => useMatchVisibilitySignals({ matchId: 'm1' }));
+
+      act(() => {
+        fireConnect();
+        fireVisibilityChange('visible');
+      });
+      expect(emitMock.mock.calls).toEqual([
+        ['match:visibility_signal', { matchId: 'm1', signal: 'visible' }],
+      ]);
+
+      // The delayed baseline dedupes against the transition that already fired.
+      act(() => {
+        vi.advanceTimersByTime(2_500);
+      });
+      expect(emitMock).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('cleans up listeners and stops emitting after unmount or when disabled', async () => {
     const { useMatchVisibilitySignals } = await import('../useMatchVisibilitySignals');
 

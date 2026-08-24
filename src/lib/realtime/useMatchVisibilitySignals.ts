@@ -52,10 +52,13 @@ export function useMatchVisibilitySignals({
     // real transitions always differ from it and still flow.
     let baselineTimer: number | null = null;
     const handleConnect = () => {
+      // Reset immediately so the first post-reconnect transition emits; the
+      // delayed baseline then goes through normal dedupe and cannot duplicate
+      // a transition that already fired during the wait.
+      lastEmitted = null;
       if (baselineTimer !== null) window.clearTimeout(baselineTimer);
       baselineTimer = window.setTimeout(() => {
         baselineTimer = null;
-        lastEmitted = null;
         handleVisibilityChange();
       }, 2_500);
     };
