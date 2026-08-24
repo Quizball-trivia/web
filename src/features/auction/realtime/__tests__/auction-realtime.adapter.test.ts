@@ -244,6 +244,37 @@ describe('auction realtime adapter', () => {
     });
   });
 
+  it('keeps the completed reveal visible when a snapshot temporarily has no current round', () => {
+    const revealedRound = round({
+      revealed: true,
+      roundIndex: 4,
+      winnerSeatId: 'seat-human',
+      winningBid: 45_000_000,
+      highestBidderSeatId: 'seat-human',
+      highestBid: 45_000_000,
+      footballer: {
+        id: 'card-reconnect',
+        name: 'Reconnect Forward',
+        positionGroup: 'FWD',
+        trueValue: 80_000_000,
+        startingPrice: 20_000_000,
+        clues: ['Clue one', 'Clue two', 'Clue three'],
+      },
+    });
+    const clientState = toClientAuctionState(matchState({
+      phase: 'reveal',
+      currentRound: null,
+      completedRounds: [revealedRound],
+    }));
+
+    expect(clientState.phase).toBe('reveal');
+    expect(clientState.roundIndex).toBe(4);
+    expect(clientState.currentRound?.footballer).toMatchObject({
+      id: 'card-reconnect',
+      name: 'Reconnect Forward',
+    });
+  });
+
   it('maps solo-pick snapshots with one revealed option and one mystery option', () => {
     const publicState = matchState({
       phase: 'solo_pick',

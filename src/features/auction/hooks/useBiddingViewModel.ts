@@ -11,8 +11,8 @@ import { POS_COLORS } from '../constants/auction.constants';
  * line-for-line; this is the single source so they can't drift.
  *
  * When the round/human seat isn't available yet, `ready` is false and the
- * screens should render nothing — the other fields carry safe defaults so
- * callers never have to null-check each one.
+ * screens should render their visible transition state — the other fields
+ * carry safe defaults so callers never have to null-check each one.
  */
 export interface BiddingViewModel {
   ready: boolean;

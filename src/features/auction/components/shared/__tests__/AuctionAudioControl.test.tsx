@@ -51,6 +51,16 @@ describe('AuctionAudioControl', () => {
     expect(screen.getByRole('switch', { name: 'Sound effects: On' })).toBeChecked();
   });
 
+  it('places audio on the mobile right edge and returns it beside leave on larger screens', () => {
+    render(<AuctionAudioControl />);
+
+    expect(screen.getByTestId('auction-audio-control')).toHaveClass(
+      'right-[calc(env(safe-area-inset-right)+0.75rem)]',
+      'sm:left-[calc(env(safe-area-inset-left)+3.75rem)]',
+      'sm:right-auto',
+    );
+  });
+
   it('changes only the selected audio preference', async () => {
     render(<AuctionAudioControl />);
     fireEvent.click(screen.getByRole('button', { name: 'Sound controls' }));

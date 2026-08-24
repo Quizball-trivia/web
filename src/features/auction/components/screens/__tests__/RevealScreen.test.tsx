@@ -14,6 +14,7 @@ vi.mock('@/contexts/LocaleContext', () => ({
       if (key === 'auctionGame.joinedYourSquad') return `${String(params?.name ?? 'Player')} joined your squad`;
       if (key === 'auctionGame.joinedSquad') return `${String(params?.name ?? 'Player')} joined ${String(params?.owner ?? 'opponent')}`;
       if (key === 'auctionGame.nextRound') return 'Next Round';
+      if (key === 'auctionGame.confirmingTransfer') return 'Confirming transfer…';
       return key;
     },
   }),
@@ -157,5 +158,24 @@ describe('RevealScreen', () => {
       vi.advanceTimersByTime(1);
     });
     expect(testActions.confirmReveal).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows a visible transition state instead of a black screen when reveal data is late', () => {
+    const missingRoundState = {
+      ...state(),
+      currentRound: null,
+      completedRounds: [],
+    };
+
+    render(
+      <RevealScreen
+        state={missingRoundState}
+        actions={actions()}
+        humanPlayerId="seat-human"
+        serverDrivenTransitions
+      />,
+    );
+
+    expect(screen.getByText('Confirming transfer…')).toBeInTheDocument();
   });
 });

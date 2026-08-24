@@ -2,7 +2,6 @@
 
 import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useAuthStore } from '@/stores/auth.store';
@@ -23,6 +22,7 @@ import { AuctionResultsScreen } from './components/AuctionResultsScreen';
 import { AuctionStatusOverlay } from './components/shared/AuctionStatusOverlay';
 import { AuctionPrimaryButton } from './components/shared/AuctionPrimaryButton';
 import { AuctionAudioControl } from './components/shared/AuctionAudioControl';
+import { AuctionLeaveControl } from './components/shared/AuctionLeaveControl';
 import { FormationReveal } from './components/screens/FormationReveal';
 import { LottieSearch } from './components/screens/LottieSearch';
 import { MatchCountdown } from './components/screens/MatchCountdown';
@@ -125,11 +125,14 @@ function AuctionMockFlowScreen({ username, avatarSeed }: Omit<AuctionFlowScreenP
     state.phase === 'solo-pick'
   ) {
     return (
-      <AuctionGameScreen
-        state={state}
-        actions={actions}
-        humanPlayerId={humanPlayerId}
-      />
+      <>
+        <AuctionGameScreen
+          state={state}
+          actions={actions}
+          humanPlayerId={humanPlayerId}
+        />
+        <AuctionLeaveControl ariaLabel="Leave preview" onClick={handleExit} />
+      </>
     );
   }
 
@@ -447,14 +450,10 @@ function AuctionRealtimeFlowScreen({ username, avatarSeed, avatarCustomization }
           serverDrivenTransitions
         />
         {/* Leave button — opens the quit/forfeit confirmation. */}
-        <button
-          type="button"
+        <AuctionLeaveControl
+          ariaLabel={t('possession.leaveMatch')}
           onClick={() => setShowQuitModal(true)}
-          aria-label={t('possession.leaveMatch')}
-          className="fixed left-3 top-3 z-50 flex size-10 items-center justify-center rounded-full bg-black/40 text-white/80 backdrop-blur transition hover:bg-black/60 hover:text-white"
-        >
-          <X className="size-5" />
-        </button>
+        />
         {liveWarningMessage && (
           <LiveAuctionWarning
             message={liveWarningMessage}

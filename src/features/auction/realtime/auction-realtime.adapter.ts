@@ -43,6 +43,12 @@ export function toClientAuctionState(
   publicState: PublicAuctionMatchState,
   options: AuctionStateAdapterOptions = {},
 ): AuctionGameState {
+  // A reconnect/full-state response can arrive after the backend has already
+  // moved the revealed lot into completedRounds. Keep that last revealed lot
+  // mounted while the client is still in the reveal phase; otherwise the
+  // reveal screen receives `null` and desktop renders an empty black frame.
+  const activeRound = publicState.currentRound
+    ?? (publicState.phase === 'reveal' ? publicState.completedRounds.at(-1) ?? null : null);
   const formation = toClientFormation(
     publicState.seats[0]?.team.formation,
     publicState.formation,
@@ -55,10 +61,10 @@ export function toClientAuctionState(
     phase: toClientPhase(publicState.phase),
     players,
     formation,
-    currentRound: publicState.currentRound
-      ? toClientRound(publicState.currentRound, options)
+    currentRound: activeRound
+      ? toClientRound(activeRound, options)
       : null,
-    roundIndex: publicState.currentRound?.roundIndex ?? publicState.completedRounds.length,
+    roundIndex: activeRound?.roundIndex ?? publicState.completedRounds.length,
     totalRounds: getTotalRounds(formation, publicState.seats.length),
     completedRounds: publicState.completedRounds.map((round) => toClientRound(round, options)),
     soloPick: publicState.soloPick
