@@ -66,7 +66,22 @@ export function RevealScreen({
     actions.confirmReveal();
   }, [actions, holdDone, round, serverDrivenTransitions, stage, state.roundIndex]);
 
-  if (!round) return null;
+  if (!round) {
+    return (
+      <AuctionScreen className="flex items-center justify-center px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col items-center gap-3 text-center"
+        >
+          <div className="size-10 animate-spin rounded-full border-4 border-white/20 border-t-brand-yellow" />
+          <p className="font-poppins text-sm font-black uppercase tracking-[0.14em] text-white/75">
+            {t('auctionGame.confirmingTransfer')}
+          </p>
+        </motion.div>
+      </AuctionScreen>
+    );
+  }
 
   const winner = state.players.find((p) => p.id === round.winnerId);
   const posColor = POS_COLORS[round.positionGroup];

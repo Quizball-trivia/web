@@ -224,18 +224,44 @@ function BidStatusBar({
             </motion.span>
           )}
         </div>
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={amount}
-            initial={{ scale: 1.1, opacity: 0.5 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={SPRING.snap}
-            className="font-poppins text-lg font-black tabular-nums leading-none text-brand-yellow"
-          >
-            {amount}
-          </motion.div>
+        <div className="relative h-[1.2rem] min-w-[5rem] overflow-visible" aria-live="polite">
+          <AnimatePresence initial={false} mode="popLayout">
+            <motion.div
+              key={amount}
+              initial={{ y: 10, scale: 1.24, opacity: 0, filter: 'brightness(1.8)' }}
+              animate={{
+                y: 0,
+                scale: [1.24, 0.96, 1],
+                opacity: 1,
+                filter: ['brightness(1.8)', 'brightness(1.25)', 'brightness(1)'],
+                textShadow: [
+                  '0 0 20px rgba(255,229,0,0.95)',
+                  '0 0 10px rgba(255,229,0,0.5)',
+                  '0 0 0 rgba(255,229,0,0)',
+                ],
+              }}
+              exit={{ y: -8, scale: 0.92, opacity: 0 }}
+              transition={{ duration: 0.42, times: [0, 0.62, 1] }}
+              className="absolute left-0 top-0 font-poppins text-lg font-black tabular-nums leading-none text-brand-yellow"
+              data-testid="desktop-current-bid"
+            >
+              {amount}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+        <AnimatePresence initial={false} mode="wait">
+          {by && (
+            <motion.div
+              key={by}
+              initial={{ opacity: 0, x: -5 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 5 }}
+              className="mt-0.5 font-poppins text-[10px] font-semibold text-white/50"
+            >
+              {by}
+            </motion.div>
+          )}
         </AnimatePresence>
-        {by && <div className="mt-0.5 font-poppins text-[10px] font-semibold text-white/50">{by}</div>}
       </div>
       <div className="text-right">
         <div className="font-poppins text-[9px] font-black uppercase tracking-wide text-white/70">{budgetLabel}</div>

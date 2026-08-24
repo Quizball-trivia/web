@@ -1668,6 +1668,7 @@
     "finalizingMatch": "Finalizing Match",
     "calculatingResults": "Calculating final standings…",
     "loadingResults": "Loading results…",
+    "confirmingTransfer": "Confirming transfer…",
     "opponentLeftTitle": "A bidder left",
     "opponentLeftSubtitle": "Wrapping up the auction…",
     "eliminated": "Eliminated",
