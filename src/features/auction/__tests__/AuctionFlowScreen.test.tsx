@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { UseRealtimeAuctionMatchParams } from '../realtime/useRealtimeAuctionMatch';
 import { AuctionFlowScreen } from '../AuctionFlowScreen';
@@ -89,6 +89,10 @@ const realtimeMock = vi.hoisted(() => ({
       queuedPlayers?: Array<{ userId: string; displayName: string }>;
       botCount?: number;
       botPlayers?: Array<{ seatId: string; displayName: string }>;
+      matchId?: string | null;
+      lineupEndsAtMs?: number | null;
+      showdownEndsAtMs?: number | null;
+      countdownEndsAtMs?: number | null;
     } | null;
     pause?: {
       matchId: string;
@@ -209,6 +213,16 @@ vi.mock('../components/AuctionGameScreen', () => ({
   ),
 }));
 
+vi.mock('../components/AuctionShowdownScreen', () => ({
+  AuctionShowdownScreen: () => <div data-testid="auction-showdown" />,
+}));
+
+vi.mock('../components/screens/MatchCountdown', () => ({
+  MatchCountdown: ({ endsAtMs }: { endsAtMs?: number | null }) => (
+    <div data-testid="auction-countdown" data-ends-at={String(endsAtMs ?? '')} />
+  ),
+}));
+
 vi.mock('../components/AuctionResultsScreen', () => ({
   AuctionResultsScreen: ({
     forfeited,
@@ -250,6 +264,7 @@ describe('AuctionFlowScreen live mode', () => {
   });
 
   afterEach(() => {
+    vi.useRealTimers();
     vi.restoreAllMocks();
   });
 
@@ -360,6 +375,56 @@ describe('AuctionFlowScreen live mode', () => {
 
     expect(realtimeMock.cancelSearch).toHaveBeenCalledTimes(1);
     expect(pushMock).toHaveBeenCalledWith('/play');
+  });
+
+  it('keeps all clients on the server-timed lineup, showdown and five-second countdown before play', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(1_000);
+    realtimeMock.result = {
+      state: {
+        phase: 'bidding',
+        players: [
+          { id: 'seat-human', isBot: false },
+          { id: 'seat-human-2', isBot: false },
+          { id: 'seat-bot', isBot: true },
+        ],
+      },
+      humanPlayerId: 'seat-human',
+      search: {
+        phase: 'match_found',
+        matchId: 'match-1',
+        searchId: 'search-1',
+        locale: 'en',
+        queuedUserCount: 2,
+        seatsNeeded: 1,
+        fallbackAt: null,
+        fallbackAtMs: null,
+        queuedPlayers: [
+          { userId: 'user-1', displayName: 'Player' },
+          { userId: 'user-2', displayName: 'Mobile Rival' },
+        ],
+        botCount: 1,
+        botPlayers: [{ seatId: 'seat-bot', displayName: 'Goal Goblin' }],
+        lineupEndsAtMs: 3_500,
+        showdownEndsAtMs: 6_000,
+        countdownEndsAtMs: 11_000,
+      },
+    };
+
+    render(<AuctionFlowScreen username="Player" avatarSeed="avatar-1" mode="live" />);
+
+    expect(screen.getByTestId('lottie-search')).toBeInTheDocument();
+    expect(screen.getByText('3/3 players found')).toBeInTheDocument();
+    expect(screen.queryByTestId('auction-game')).not.toBeInTheDocument();
+
+    act(() => vi.advanceTimersByTime(2_521));
+    expect(screen.getByTestId('auction-showdown')).toBeInTheDocument();
+
+    act(() => vi.advanceTimersByTime(2_500));
+    expect(screen.getByTestId('auction-countdown')).toHaveAttribute('data-ends-at', '11000');
+
+    act(() => vi.advanceTimersByTime(5_000));
+    expect(screen.getByTestId('auction-game')).toBeInTheDocument();
   });
 
   it('shows a live pause overlay when the server pauses for a disconnected auction player', () => {

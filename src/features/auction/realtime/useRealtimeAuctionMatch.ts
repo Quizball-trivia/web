@@ -147,6 +147,8 @@ export type AuctionMatchNotice = {
 
 export type AuctionSearchState = {
   phase: 'starting' | 'queued' | 'match_found' | 'cancelled';
+  /** Present once the server has locked the three-seat lineup. */
+  matchId?: string | null;
   searchId: string | null;
   locale: 'en' | 'ka';
   queuedUserCount: number;
@@ -161,6 +163,9 @@ export type AuctionSearchState = {
   botCount: number;
   botPlayers: Array<{ seatId: string; displayName: string }>;
   humanUserIds?: string[];
+  /** Server-authoritative pre-match boundaries, converted to client clock. */
+  lineupEndsAtMs?: number | null;
+  showdownEndsAtMs?: number | null;
   /** Server-authoritative pre-match countdown end, converted to client clock. */
   countdownEndsAtMs?: number | null;
 };
@@ -872,15 +877,20 @@ export function useRealtimeAuctionMatch({
         ignoredMatchIdsRef.current.add(payload.matchId);
         return;
       }
-      // Convert the server's absolute countdown end to this client's clock
-      // (server time - offset) so all 3 players count down to the same instant.
-      const offset = serverTimeOffsetMsRef.current ?? 0;
-      const countdownServerMs = payload.countdownEndsAt ? Date.parse(payload.countdownEndsAt) : NaN;
-      const countdownEndsAtMs = Number.isFinite(countdownServerMs)
-        ? countdownServerMs - offset
-        : null;
+      // Convert every server-owned pre-match boundary to this client's clock.
+      // This keeps web/mobile on the same lineup, showdown and countdown even
+      // when their device clocks differ.
+      const measuredOffset = payload.serverNow
+        ? updateServerTimeOffset(payload.serverNow)
+        : serverTimeOffsetMsRef.current;
+      const offset = measuredOffset ?? 0;
+      const toClientTime = (value?: string): number | null => {
+        const serverMs = value ? Date.parse(value) : NaN;
+        return Number.isFinite(serverMs) ? serverMs - offset : null;
+      };
       setSearchValue({
         phase: 'match_found',
+        matchId: payload.matchId,
         searchId: searchRef.current?.searchId ?? null,
         locale: payload.locale,
         queuedUserCount: payload.humanUserIds.length,
@@ -891,7 +901,9 @@ export function useRealtimeAuctionMatch({
         botPlayers: payload.botPlayers?.map((player) => ({ ...player })) ?? [],
         queuedPlayers: searchRef.current?.queuedPlayers ?? [],
         humanUserIds: [...payload.humanUserIds],
-        countdownEndsAtMs,
+        lineupEndsAtMs: toClientTime(payload.lineupEndsAt),
+        showdownEndsAtMs: toClientTime(payload.showdownEndsAt),
+        countdownEndsAtMs: toClientTime(payload.countdownEndsAt),
       });
       startRequestedRef.current = true;
       // Remember the match we now belong to so a socket that (re)connects before
@@ -1379,11 +1391,11 @@ function shouldClearWaitingForReadyAfterEvent(event: Parameters<typeof applyAuct
 }
 
 function shouldClearSearchAfterEvent(event: Parameters<typeof applyAuctionRealtimeEvent>[1]): boolean {
-  return (
-    event.type === 'match_started' ||
-    event.type === 'state' ||
-    event.type === 'match_finished'
-  );
+  // Keep match_found through the full lineup/showdown/countdown sequence. The
+  // backend intentionally emits live state immediately after match_found so it
+  // can open its all-human UI-ready gate; clearing here let React skip the
+  // entire pre-match sequence on fast connections.
+  return event.type === 'match_finished';
 }
 
 function getUiReadyPhase(phase: NonNullable<AuctionRealtimeState['publicState']>['phase']): AuctionUiReadyPhase | null {

@@ -1154,6 +1154,13 @@ export interface AuctionMatchFoundPayload {
   botPlayers?: Array<{ seatId: string; displayName: string }>;
   locale: 'en' | 'ka';
   formation: AuctionFormationName;
+  /** Server clock used to compensate for local clock skew. Optional during a
+   * rolling deploy; older backends only sent countdownEndsAt. */
+  serverNow?: string;
+  /** Absolute server time when the filled lineup hands over to showdown. */
+  lineupEndsAt?: string;
+  /** Absolute server time when showdown hands over to the countdown. */
+  showdownEndsAt?: string;
   /** Absolute server time (ISO) the pre-match countdown ends — all clients
    *  count down to this same instant so they start in sync. */
   countdownEndsAt?: string;
