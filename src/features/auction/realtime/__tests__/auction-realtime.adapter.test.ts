@@ -114,6 +114,33 @@ describe('auction realtime adapter', () => {
     expect(clientState.totalRounds).toBe(21);
   });
 
+  it('prefers the server avatar snapshot over a stale local outfit', () => {
+    const self = player('seat-human', 'You', 'user-1');
+    self.avatarCustomization = {
+      skin: 'skin_male_white',
+      jersey: 'jersey_red',
+      hair: 'hair_boy_basic',
+    };
+
+    const clientState = toClientAuctionState(matchState({
+      seats: [
+        self,
+        player('seat-bot-1', 'Bot 1', null),
+        player('seat-bot-2', 'Bot 2', null),
+      ],
+    }), {
+      humanSeatId: 'seat-human',
+      humanAvatarSeed: 'avatar-1',
+      humanAvatarCustomization: {
+        skin: 'skin_male_white',
+        jersey: 'jersey_green',
+        hair: 'hair_boy_basic',
+      },
+    });
+
+    expect(clientState.players[0]?.avatarCustomization?.jersey).toBe('jersey_red');
+  });
+
   it('carries the server ranking order through, best first', () => {
     // Coins are paid against the server's placings, so the results screen has to
     // render this exact order rather than re-sorting locally (a local tiebreak
