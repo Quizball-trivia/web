@@ -68,6 +68,12 @@ export type FootballLogicSession = Extract<
 export type DailyChallengeCompletionResult =
   components["schemas"]["CompleteDailyChallengeResponse"];
 
+export type DailyComebackState =
+  components["schemas"]["DailyComebackStateResponse"];
+
+export type SetDailyComebackReminderResult =
+  components["schemas"]["SetDailyComebackReminderResponse"];
+
 export type ResetDailyChallengeResult =
   components["schemas"]["ResetDailyChallengeResponse"];
 

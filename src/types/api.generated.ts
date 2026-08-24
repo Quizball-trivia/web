@@ -5451,6 +5451,123 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/daily-challenges/comeback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get server-authoritative Daily comeback streak and reminder state */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Projected streak, bonus, and reminder availability */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            projectedStreakDays: number;
+                            tomorrowBonusCoins: number;
+                            rewardEnabled: boolean;
+                            remindersEnabled: boolean;
+                            reminderScheduled: boolean;
+                            /** Format: date-time */
+                            reminderAt: string | null;
+                        };
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/daily-challenges/comeback/reminder": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Schedule or cancel the next Daily Challenge reminder */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        enabled: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description Reminder state updated */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            enabled: boolean;
+                            /** Format: date-time */
+                            reminderAt: string | null;
+                        };
+                    };
+                };
+                /** @description Daily reminders are not enabled */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/daily-challenges/{challengeType}/complete": {
         parameters: {
             query?: never;
@@ -5491,6 +5608,9 @@ export interface paths {
                             /** @enum {boolean} */
                             completedToday: true;
                             coinsAwarded: number;
+                            streakBonusAwarded: number;
+                            dailyStreakDays: number;
+                            nextStreakBonusCoins: number;
                             xpAwarded: number;
                             wallet?: {
                                 coins: number;
@@ -8298,11 +8418,28 @@ export interface components {
             /** @enum {boolean} */
             completedToday: true;
             coinsAwarded: number;
+            streakBonusAwarded: number;
+            dailyStreakDays: number;
+            nextStreakBonusCoins: number;
             xpAwarded: number;
             wallet?: {
                 coins: number;
                 tickets: number;
             };
+        };
+        DailyComebackStateResponse: {
+            projectedStreakDays: number;
+            tomorrowBonusCoins: number;
+            rewardEnabled: boolean;
+            remindersEnabled: boolean;
+            reminderScheduled: boolean;
+            /** Format: date-time */
+            reminderAt: string | null;
+        };
+        SetDailyComebackReminderResponse: {
+            enabled: boolean;
+            /** Format: date-time */
+            reminderAt: string | null;
         };
         ResetDailyChallengeResponse: {
             /** @enum {string} */
