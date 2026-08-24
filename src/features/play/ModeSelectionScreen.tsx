@@ -22,7 +22,7 @@ import { useActiveEventMode } from '@/lib/hooks/useActiveEventMode';
 import { colors } from '@/lib/colors';
 import { isAuctionCardEnabled, isMiniGamesEnabled, isTicTacToeEnabled } from '@/lib/features/playModes';
 import { PlayAnnouncements } from './PlayAnnouncements';
-import { RailNavyGradient as WeekendLeagueRail } from '@/features/weekend-league/components/RailColorVariants';
+import { WeekendLeagueProgressExperimentRail } from '@/features/weekend-league/components/WeekendLeagueProgressExperimentRail';
 import { trackWlBannerClicked, trackWlBannerViewed } from '@/lib/analytics/game-events';
 
 import { getNextTierBand } from '@/utils/rankedTier';
@@ -337,7 +337,7 @@ export function ModeSelectionScreen({
       {/* Instrumented at the placement, not inside Rail — the dev gallery
           mounts every Rail variant and would fire an impression per skin. */}
       <div onClickCapture={trackWlBannerClicked}>
-        <WeekendLeagueRail />
+        <WeekendLeagueProgressExperimentRail />
       </div>
 
       {/* ─── 1. Ranked Hero Card ─── */}
