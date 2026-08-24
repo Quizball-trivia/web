@@ -45,10 +45,19 @@ export function useMatchVisibilitySignals({
     const handleFocus = () => emit('focus');
     const handlePageHide = () => emit('pagehide');
     // Re-establish the current state after a reconnect so transitions missed
-    // while offline don't leave the server with a dangling episode.
+    // while offline don't leave the server with a dangling episode. Delayed:
+    // the server rejoins the match room asynchronously after connect (50ms
+    // hydration batch; longer for paused matches), and an instant emit would
+    // be dropped by its room-membership gate. A lost baseline is one row —
+    // real transitions always differ from it and still flow.
+    let baselineTimer: number | null = null;
     const handleConnect = () => {
-      lastEmitted = null;
-      handleVisibilityChange();
+      if (baselineTimer !== null) window.clearTimeout(baselineTimer);
+      baselineTimer = window.setTimeout(() => {
+        baselineTimer = null;
+        lastEmitted = null;
+        handleVisibilityChange();
+      }, 2_500);
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
@@ -58,6 +67,7 @@ export function useMatchVisibilitySignals({
     socket.on('connect', handleConnect);
 
     return () => {
+      if (baselineTimer !== null) window.clearTimeout(baselineTimer);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('blur', handleBlur);
       window.removeEventListener('focus', handleFocus);

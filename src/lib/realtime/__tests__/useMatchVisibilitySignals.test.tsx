@@ -59,25 +59,33 @@ describe('useMatchVisibilitySignals', () => {
     ]);
   });
 
-  it('does not advance state while disconnected and re-establishes it on connect', async () => {
-    const { useMatchVisibilitySignals } = await import('../useMatchVisibilitySignals');
-    renderHook(() => useMatchVisibilitySignals({ matchId: 'm1' }));
+  it('does not advance state while disconnected and re-establishes it after the reconnect grace delay', async () => {
+    vi.useFakeTimers();
+    try {
+      const { useMatchVisibilitySignals } = await import('../useMatchVisibilitySignals');
+      renderHook(() => useMatchVisibilitySignals({ matchId: 'm1' }));
 
-    socketMock.connected = false;
-    act(() => {
-      fireVisibilityChange('hidden');
-    });
-    expect(emitMock).not.toHaveBeenCalled();
+      socketMock.connected = false;
+      act(() => {
+        fireVisibilityChange('hidden');
+      });
+      expect(emitMock).not.toHaveBeenCalled();
 
-    socketMock.connected = true;
-    act(() => {
-      fireConnect();
-    });
-    // Current state (still hidden) is emitted after reconnect, so the
-    // server-side episode is not left dangling.
-    expect(emitMock.mock.calls).toEqual([
-      ['match:visibility_signal', { matchId: 'm1', signal: 'hidden' }],
-    ]);
+      socketMock.connected = true;
+      act(() => {
+        fireConnect();
+      });
+      // Baseline emit waits out the server's async match-room rejoin window.
+      expect(emitMock).not.toHaveBeenCalled();
+      act(() => {
+        vi.advanceTimersByTime(2_500);
+      });
+      expect(emitMock.mock.calls).toEqual([
+        ['match:visibility_signal', { matchId: 'm1', signal: 'hidden' }],
+      ]);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('cleans up listeners and stops emitting after unmount or when disabled', async () => {
