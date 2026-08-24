@@ -1589,6 +1589,7 @@
     "waitingForPlayersReady": "ველოდებით მოთამაშეებს...",
     "auctionPaused": "აუქციონი დაპაუზებულია",
     "playerDisconnected": "მოთამაშე გაითიშა",
+    "disconnected": "გაითიშა",
     "playerDisconnectedContinueIfNotReturn": "თუ არ დაბრუნდა, გაგრძელდება {seconds} წამში",
     "lastReconnect": "ბოლო დაბრუნება",
     "reconnectsLeftOne": "დარჩა {count} დაბრუნება",

@@ -12,7 +12,7 @@
  * Dev-only: lives under /dev/* which bypasses AppAuthGate in development.
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, type ReactNode } from 'react';
 import { QuitMatchModal } from '@/components/match/QuitMatchModal';
 import { AUCTION_QUIT_MODAL_THEME } from '@/features/auction/constants/auction.constants';
 import { AuctionGameScreen } from '@/features/auction/components/AuctionGameScreen';
@@ -144,16 +144,39 @@ type Scenario = {
   render: () => React.ReactNode;
 };
 
+/** Keep locale fixtures deterministic even when the tester has a different
+ * app-wide language saved in local storage. */
+function ForcedLocale({ locale, children }: { locale: 'en' | 'ka'; children: ReactNode }) {
+  const { setLocale } = useLocale();
+
+  useEffect(() => {
+    setLocale(locale);
+  }, [locale, setLocale]);
+
+  return children;
+}
+
 function ShowdownScenario() {
   return (
     <AuctionShowdownScreen players={basePlayers()} humanPlayerId={HUMAN_ID} onComplete={() => {}} />
   );
 }
 
-function Game({ state }: { state: AuctionGameState }) {
+function Game({
+  state,
+  disconnectedSeatIds = [],
+}: {
+  state: AuctionGameState;
+  disconnectedSeatIds?: readonly string[];
+}) {
   return (
     <>
-      <AuctionGameScreen state={state} actions={makeActions()} humanPlayerId={HUMAN_ID} />
+      <AuctionGameScreen
+        state={state}
+        actions={makeActions()}
+        humanPlayerId={HUMAN_ID}
+        disconnectedSeatIds={disconnectedSeatIds}
+      />
       <AuctionLeaveControl ariaLabel="Leave preview" onClick={() => {}} />
       <AuctionAudioControl />
     </>
@@ -161,8 +184,21 @@ function Game({ state }: { state: AuctionGameState }) {
 }
 
 /** EXPERIMENTAL full-screen 3-stadium layout with the clue/bid overlay. */
-function StadiumGame({ state }: { state: AuctionGameState }) {
-  return <StadiumBiddingScreen state={state} actions={makeActions()} humanPlayerId={HUMAN_ID} />;
+function StadiumGame({
+  state,
+  disconnectedSeatIds = [],
+}: {
+  state: AuctionGameState;
+  disconnectedSeatIds?: readonly string[];
+}) {
+  return (
+    <StadiumBiddingScreen
+      state={state}
+      actions={makeActions()}
+      humanPlayerId={HUMAN_ID}
+      disconnectedSeatIds={disconnectedSeatIds}
+    />
+  );
 }
 
 /** The REAL quit/leave/forfeit modal currently used in matches (same as ranked).
@@ -387,6 +423,51 @@ const SCENARIOS: Scenario[] = [
     ),
   },
   {
+    id: 'bidding-disconnected-en',
+    label: 'Disconnected pitch (EN/mobile)',
+    group: 'Reconnect UX',
+    render: () => (
+      <LocaleProvider initialLocale="en">
+        <ForcedLocale locale="en">
+          <Game
+            disconnectedSeatIds={['bot-1']}
+            state={baseState({
+              phase: 'bidding',
+              currentRound: makeRound({
+                bids: [{ playerId: HUMAN_ID, amount: 120_000_000 }],
+                highestBidderId: HUMAN_ID,
+                highestBid: 120_000_000,
+                currentTurnId: 'bot-2',
+                turnEndsAt: Date.now() + RAISE_TURN_MS,
+              }),
+            })}
+          />
+        </ForcedLocale>
+      </LocaleProvider>
+    ),
+  },
+  {
+    id: 'bidding-disconnected-ka',
+    label: 'Disconnected pitch (KA/mobile)',
+    group: 'Reconnect UX',
+    render: () => (
+      <LocaleProvider initialLocale="ka">
+        <ForcedLocale locale="ka">
+          <Game
+            disconnectedSeatIds={['bot-1']}
+            state={baseState({
+              phase: 'bidding',
+              currentRound: makeRound({
+                currentTurnId: 'bot-2',
+                turnEndsAt: Date.now() + RAISE_TURN_MS,
+              }),
+            })}
+          />
+        </ForcedLocale>
+      </LocaleProvider>
+    ),
+  },
+  {
     id: 'bidding-rival-folded',
     label: 'Bidding — a rival folded',
     group: 'Round',
@@ -556,6 +637,48 @@ const SCENARIOS: Scenario[] = [
       />
     ),
   },
+  {
+    id: 'stadium-disconnected-en',
+    label: 'Disconnected pitch (EN/desktop)',
+    group: 'Reconnect UX',
+    render: () => (
+      <LocaleProvider initialLocale="en">
+        <ForcedLocale locale="en">
+          <StadiumGame
+            disconnectedSeatIds={['bot-1']}
+            state={baseState({
+              phase: 'bidding',
+              currentRound: makeRound({
+                currentTurnId: 'bot-2',
+                turnEndsAt: Date.now() + RAISE_TURN_MS,
+              }),
+            })}
+          />
+        </ForcedLocale>
+      </LocaleProvider>
+    ),
+  },
+  {
+    id: 'stadium-disconnected-ka',
+    label: 'Disconnected pitch (KA/desktop)',
+    group: 'Reconnect UX',
+    render: () => (
+      <LocaleProvider initialLocale="ka">
+        <ForcedLocale locale="ka">
+          <StadiumGame
+            disconnectedSeatIds={['bot-1']}
+            state={baseState({
+              phase: 'bidding',
+              currentRound: makeRound({
+                currentTurnId: 'bot-2',
+                turnEndsAt: Date.now() + RAISE_TURN_MS,
+              }),
+            })}
+          />
+        </ForcedLocale>
+      </LocaleProvider>
+    ),
+  },
   { id: 'finalizing', label: 'Overlay — Finalizing match', group: 'End', render: () => <FinalizingOverlayScenario /> },
   { id: 'loading-results', label: 'Overlay — Loading results', group: 'End', render: () => <LoadingResultsOverlayScenario /> },
   { id: 'results-win', label: 'Results — YOU win (+500)', group: 'End', render: () => <ResultsScenario humanWins coinsAwarded={500} /> },
@@ -624,6 +747,13 @@ export default function DevAuctionPage() {
   const [activeId, setActiveId] = useState<string>('formation-4-3-3');
   const [nonce, setNonce] = useState(0); // bump to force remount (replay animations)
 
+  useEffect(() => {
+    const requestedScenario = new URLSearchParams(window.location.search).get('scenario');
+    if (requestedScenario && SCENARIOS.some((scenario) => scenario.id === requestedScenario)) {
+      queueMicrotask(() => setActiveId(requestedScenario));
+    }
+  }, []);
+
   const active = SCENARIOS.find((s) => s.id === activeId) ?? SCENARIOS[0];
   const replay = useCallback(() => setNonce((n) => n + 1), []);
 
@@ -633,7 +763,40 @@ export default function DevAuctionPage() {
     <div className="flex h-dvh w-full flex-col overflow-hidden bg-surface-page">
       {/* Toolbar */}
       <div className="shrink-0 z-[200] border-b border-white/10 bg-black/85 backdrop-blur px-3 py-2">
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-2 md:hidden">
+          <label htmlFor="auction-harness-scenario" className="shrink-0 font-poppins text-[10px] font-bold uppercase text-brand-yellow">
+            Scenario
+          </label>
+          <select
+            id="auction-harness-scenario"
+            value={active.id}
+            onChange={(event) => {
+              setActiveId(event.target.value);
+              setNonce((n) => n + 1);
+            }}
+            className="min-w-0 flex-1 rounded-md border border-white/15 bg-surface-page-alt px-2 py-1.5 font-poppins text-xs font-semibold text-white"
+          >
+            {groups.map((group) => (
+              <optgroup key={group} label={group}>
+                {SCENARIOS.filter((scenario) => scenario.group === group).map((scenario) => (
+                  <option key={scenario.id} value={scenario.id}>
+                    {scenario.label}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={replay}
+            className="shrink-0 rounded-md bg-brand-green px-2.5 py-1.5 font-poppins text-[11px] font-bold uppercase text-white"
+            aria-label="Replay scenario"
+          >
+            ↻
+          </button>
+        </div>
+
+        <div className="hidden flex-wrap items-center gap-2 md:flex">
           <span className="font-poppins text-xs font-bold uppercase tracking-wide text-brand-yellow">
             Auction UI harness
           </span>
