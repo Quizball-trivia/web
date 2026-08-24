@@ -295,6 +295,8 @@ describe('useRealtimeAuctionMatch', () => {
   });
 
   it('tracks match_found and then reuses match_started hydration for the auction flow', () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-06-20T10:00:01.000Z'));
     const { result } = renderHook(() => useRealtimeAuctionMatch({
       enabled: true,
       autoStart: false,
@@ -321,14 +323,22 @@ describe('useRealtimeAuctionMatch', () => {
         botPlayers: [{ seatId: 'seat-bot-1', displayName: 'Goal Goblin' }],
         locale: 'en',
         formation: '2-2-2',
+        serverNow: '2026-06-20T10:00:00.000Z',
+        lineupEndsAt: '2026-06-20T10:00:02.500Z',
+        showdownEndsAt: '2026-06-20T10:00:05.000Z',
+        countdownEndsAt: '2026-06-20T10:00:10.000Z',
       });
     });
 
     expect(result.current.search).toMatchObject({
       phase: 'match_found',
+      matchId: 'match-1',
       queuedUserCount: 2,
       botCount: 1,
       botPlayers: [{ seatId: 'seat-bot-1', displayName: 'Goal Goblin' }],
+      lineupEndsAtMs: Date.parse('2026-06-20T10:00:03.500Z'),
+      showdownEndsAtMs: Date.parse('2026-06-20T10:00:06.000Z'),
+      countdownEndsAtMs: Date.parse('2026-06-20T10:00:11.000Z'),
     });
     expect(result.current.matchId).toBeNull();
 
@@ -344,7 +354,9 @@ describe('useRealtimeAuctionMatch', () => {
       });
     });
 
-    expect(result.current.search).toBeNull();
+    // Live state must not erase match_found: the flow still owes the user the
+    // connected-lineup, showdown and countdown sequence before mounting play.
+    expect(result.current.search).toMatchObject({ phase: 'match_found', matchId: 'match-1' });
     expect(result.current.matchId).toBe('match-1');
     expect(result.current.state?.phase).toBe('bidding');
   });
