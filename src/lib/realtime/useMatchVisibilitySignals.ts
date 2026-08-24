@@ -26,13 +26,16 @@ export function useMatchVisibilitySignals({
     if (!enabled || !matchId) return;
     if (typeof document === 'undefined') return;
 
-    let lastSignal: MatchVisibilitySignal | null = null;
+    const socket = getSocket();
+    // Tracks the last signal that actually reached the wire — a transition
+    // observed while disconnected must not advance it, or the paired closer
+    // ('visible' after a dropped 'hidden') arrives orphaned after reconnect.
+    let lastEmitted: MatchVisibilitySignal | null = null;
     const emit = (signal: MatchVisibilitySignal) => {
-      if (signal === lastSignal) return;
-      lastSignal = signal;
-      const socket = getSocket();
+      if (signal === lastEmitted) return;
       if (!socket.connected) return;
       socket.emit('match:visibility_signal', { matchId, signal });
+      lastEmitted = signal;
     };
 
     const handleVisibilityChange = () => {
@@ -41,17 +44,25 @@ export function useMatchVisibilitySignals({
     const handleBlur = () => emit('blur');
     const handleFocus = () => emit('focus');
     const handlePageHide = () => emit('pagehide');
+    // Re-establish the current state after a reconnect so transitions missed
+    // while offline don't leave the server with a dangling episode.
+    const handleConnect = () => {
+      lastEmitted = null;
+      handleVisibilityChange();
+    };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('blur', handleBlur);
     window.addEventListener('focus', handleFocus);
     window.addEventListener('pagehide', handlePageHide);
+    socket.on('connect', handleConnect);
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('blur', handleBlur);
       window.removeEventListener('focus', handleFocus);
       window.removeEventListener('pagehide', handlePageHide);
+      socket.off('connect', handleConnect);
     };
   }, [enabled, matchId]);
 }
