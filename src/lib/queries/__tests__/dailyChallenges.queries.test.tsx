@@ -28,6 +28,9 @@ const completionResult: DailyChallengeCompletionResult = {
   challengeType: "moneyDrop",
   completedToday: true,
   coinsAwarded: 25,
+  streakBonusAwarded: 0,
+  dailyStreakDays: 1,
+  nextStreakBonusCoins: 0,
   xpAwarded: 10,
 };
 
