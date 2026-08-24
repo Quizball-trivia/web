@@ -1,8 +1,19 @@
 "use client";
 
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 
 import { useLocale } from '@/contexts/LocaleContext';
+import {
+  trackRankedLossRecoveryPlayAgainClicked,
+  trackRankedLossRecoveryPromptShown,
+} from '@/lib/analytics/game-events';
+import {
+  getRankedLossRecoveryCue,
+  loadRankedLossRecoveryExperimentVariant,
+  type RankedLossRecoveryExperimentVariant,
+} from '@/lib/experiments/rankedLossRecoveryExperiment';
+import { useAuthStore } from '@/stores/auth.store';
 
 import { RankedProgressionPanel } from './results/RankedProgressionPanel';
 import { ResultsActions } from './results/ResultsActions';
@@ -73,6 +84,57 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
     showRankReveal,
     tierTransitionPhase,
   } = useMatchResultViewModel(props);
+  const createdAt = useAuthStore((state) => state.user?.created_at);
+  const [lossRecoveryVariant, setLossRecoveryVariant] =
+    useState<RankedLossRecoveryExperimentVariant>('not_enrolled');
+  const lossRecoveryAssignmentRef =
+    useRef<Promise<RankedLossRecoveryExperimentVariant> | null>(null);
+  const trackedLossRecoveryRef = useRef(false);
+  const lossRecoveryCue = useMemo(() => getRankedLossRecoveryCue({
+    matchType,
+    playerWon,
+    isDraw,
+    isCancelledNoContest,
+    isPlacementMatch,
+    oldRp: oldRP,
+    newRp: newRP,
+  }), [
+    isCancelledNoContest,
+    isDraw,
+    isPlacementMatch,
+    matchType,
+    newRP,
+    oldRP,
+    playerWon,
+  ]);
+
+  useEffect(() => {
+    if (!lossRecoveryCue) return;
+    if (!lossRecoveryAssignmentRef.current) {
+      lossRecoveryAssignmentRef.current = loadRankedLossRecoveryExperimentVariant(createdAt);
+    }
+    let active = true;
+    void lossRecoveryAssignmentRef.current.then((variant) => {
+      if (active) setLossRecoveryVariant(variant);
+    });
+    return () => {
+      active = false;
+    };
+  }, [createdAt, lossRecoveryCue]);
+
+  useEffect(() => {
+    if (
+      lossRecoveryVariant !== 'test'
+      || !lossRecoveryCue
+      || trackedLossRecoveryRef.current
+    ) return;
+    trackedLossRecoveryRef.current = true;
+    trackRankedLossRecoveryPromptShown(lossRecoveryCue);
+  }, [lossRecoveryCue, lossRecoveryVariant]);
+
+  const visibleLossRecoveryCue = lossRecoveryVariant === 'test'
+    ? lossRecoveryCue
+    : null;
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-surface-page-alt p-3 md:p-6">
@@ -162,7 +224,15 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
           playAgainDisabled={playAgainDisabled}
           playAgainHint={playAgainHint}
           winStreakCount={playerWon ? winStreakCount : null}
-          onPlayAgain={onPlayAgain}
+          lossRecoveryCue={visibleLossRecoveryCue}
+          onPlayAgain={() => {
+            if (visibleLossRecoveryCue) {
+              trackRankedLossRecoveryPlayAgainClicked({
+                rpToRecover: visibleLossRecoveryCue.rpToRecover,
+              });
+            }
+            return onPlayAgain();
+          }}
           onMainMenu={onMainMenu}
         />
       </motion.div>

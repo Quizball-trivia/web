@@ -11,10 +11,11 @@
  */
 
 import { useState } from 'react';
-import { Flame } from 'lucide-react';
+import { Flame, RotateCcw } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
 import { AchievementUnlockStrip } from '@/components/match/AchievementUnlockStrip';
 import type { AchievementUnlockPayload } from '@/lib/realtime/socket.types';
+import type { RankedLossRecoveryCue } from '@/lib/experiments/rankedLossRecoveryExperiment';
 import { MatchStatsDropdown } from './ResultsStatsPanel';
 
 type LocaleT = ReturnType<typeof useLocale>['t'];
@@ -36,6 +37,7 @@ export function ResultsActions({
   playAgainDisabled = false,
   playAgainHint = null,
   winStreakCount = null,
+  lossRecoveryCue = null,
   onPlayAgain,
   onMainMenu,
 }: {
@@ -58,6 +60,8 @@ export function ResultsActions({
   playAgainHint?: string | null;
   /** Optional post-win streak cue shown above the Play Again CTA. */
   winStreakCount?: number | null;
+  /** Minimal recovery cue shown only to the Ranked-loss test variant. */
+  lossRecoveryCue?: RankedLossRecoveryCue | null;
   onPlayAgain: () => void | Promise<void>;
   onMainMenu: () => void;
 }) {
@@ -102,6 +106,19 @@ export function ResultsActions({
           >
             <Flame aria-hidden="true" className="size-4 fill-current" />
             <span>{winStreakCount} {t('profileScreen.winStreak')}</span>
+          </div>
+        )}
+
+        {lossRecoveryCue && (
+          <div
+            data-testid="ranked-loss-recovery-prompt"
+            className="flex min-h-8 items-center justify-center gap-2 px-1 font-poppins text-xs font-semibold md:text-sm"
+          >
+            <RotateCcw className="size-4 shrink-0 text-brand-blue" aria-hidden />
+            <span className="text-white">{t('results.oneWinEraseLoss')}</span>
+            <span className="shrink-0 text-brand-yellow">
+              {t('results.rpToRecover', { count: lossRecoveryCue.rpToRecover })}
+            </span>
           </div>
         )}
 

@@ -3,13 +3,19 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "motion/react";
-import { ChevronRight, Target, Ticket, Trophy } from "lucide-react";
+import { Bell, Check, ChevronRight, Flame, Target, Ticket, Trophy } from "lucide-react";
 import { useLocale } from "@/contexts/LocaleContext";
 import { getWeekendLeagueCurrent } from "@/lib/api/endpoints";
 import {
+  trackDailyComebackPromptShown,
+  trackDailyComebackReminder,
   trackDailyWeekendLeagueCtaClicked,
   trackDailyWeekendLeagueCtaShown,
 } from "@/lib/analytics/game-events";
+import {
+  loadDailyComebackExperimentVariant,
+  type DailyComebackExperimentVariant,
+} from "@/lib/experiments/dailyComebackExperiment";
 import {
   loadDailyWeekendLeagueExperimentVariant,
   type DailyWeekendLeagueExperimentVariant,
@@ -20,6 +26,10 @@ import {
   type DailyWeekendLeagueCtaState,
 } from "@/lib/experiments/dailyWeekendLeagueCta";
 import { queryKeys } from "@/lib/queries/queryKeys";
+import {
+  getDailyComebackState,
+  setDailyComebackReminder,
+} from "@/lib/repositories/dailyChallenges.repo";
 import { useAuthStore } from "@/stores/auth.store";
 
 export interface DailyChallengeWeekendLeagueCta {
@@ -28,6 +38,14 @@ export interface DailyChallengeWeekendLeagueCta {
   currentQp: number;
   targetQp: number;
   onClick: () => void;
+}
+
+export interface DailyChallengeComebackCta {
+  streakDays: number;
+  tomorrowBonusCoins: number;
+  remindersEnabled: boolean;
+  reminderScheduled: boolean;
+  onReminder: () => Promise<void>;
 }
 
 interface DailyChallengeCompleteModalProps {
@@ -85,13 +103,27 @@ function DailyChallengeCompleteModalExperimentAssignment({
     queryKey: queryKeys.weekendLeague.current(),
     queryFn: getWeekendLeagueCurrent,
     staleTime: 30_000,
+    enabled: isEligibleCountry,
+  });
+  const comebackQuery = useQuery({
+    queryKey: queryKeys.dailyChallenges.comeback(),
+    queryFn: getDailyComebackState,
+    staleTime: 30_000,
   });
   const tournament = weekendLeagueQuery.data?.tournament ?? null;
   const you = weekendLeagueQuery.data?.you ?? null;
-  const [experimentVariant, setExperimentVariant] =
+  const [weekendLeagueVariant, setWeekendLeagueVariant] =
     useState<DailyWeekendLeagueExperimentVariant>("not_enrolled");
-  const assignmentRef = useRef<Promise<DailyWeekendLeagueExperimentVariant> | null>(null);
-  const trackedPromptRef = useRef(false);
+  const [weekendLeagueAssignmentResolved, setWeekendLeagueAssignmentResolved] = useState(false);
+  const [comebackVariant, setComebackVariant] =
+    useState<DailyComebackExperimentVariant>("not_enrolled");
+  const [reminderScheduledByClick, setReminderScheduledByClick] = useState(false);
+  const weekendLeagueAssignmentRef =
+    useRef<Promise<DailyWeekendLeagueExperimentVariant> | null>(null);
+  const comebackAssignmentRef =
+    useRef<Promise<DailyComebackExperimentVariant> | null>(null);
+  const trackedWeekendLeaguePromptRef = useRef(false);
+  const trackedComebackPromptRef = useRef(false);
 
   useEffect(() => {
     if (!isEligibleCountry) return;
@@ -99,21 +131,24 @@ function DailyChallengeCompleteModalExperimentAssignment({
     if (
       !weekendLeagueQuery.isSuccess
       || weekendLeagueQuery.isFetching
-      || !tournament
     ) {
       return;
     }
 
-    if (!assignmentRef.current) {
-      assignmentRef.current = loadDailyWeekendLeagueExperimentVariant({
+    if (!tournament) return;
+
+    if (!weekendLeagueAssignmentRef.current) {
+      weekendLeagueAssignmentRef.current = loadDailyWeekendLeagueExperimentVariant({
         createdAt,
         country,
       });
     }
 
     let active = true;
-    void assignmentRef.current.then((variant) => {
-      if (active) setExperimentVariant(variant);
+    void weekendLeagueAssignmentRef.current.then((variant) => {
+      if (!active) return;
+      setWeekendLeagueVariant(variant);
+      setWeekendLeagueAssignmentResolved(true);
     });
     return () => {
       active = false;
@@ -126,6 +161,39 @@ function DailyChallengeCompleteModalExperimentAssignment({
     weekendLeagueQuery.isFetching,
     weekendLeagueQuery.isSuccess,
   ]);
+  const weekendLeagueResolved = !isEligibleCountry
+    || weekendLeagueAssignmentResolved
+    || (weekendLeagueQuery.isSuccess && !weekendLeagueQuery.isFetching && !tournament);
+
+  // The existing Daily→Weekend League experiment owns this surface while its
+  // flag is active. The comeback experiment only enrolls after that flag no
+  // longer assigns the player, preventing two treatments in one modal.
+  useEffect(() => {
+    if (
+      !weekendLeagueResolved
+      || weekendLeagueVariant !== "not_enrolled"
+      || !comebackQuery.isSuccess
+      || comebackQuery.isFetching
+    ) return;
+
+    if (!comebackAssignmentRef.current) {
+      comebackAssignmentRef.current = loadDailyComebackExperimentVariant(createdAt);
+    }
+    let active = true;
+    void comebackAssignmentRef.current.then((variant) => {
+      if (active) setComebackVariant(variant);
+    });
+    return () => {
+      active = false;
+    };
+  }, [
+    comebackQuery.isFetching,
+    comebackQuery.isSuccess,
+    createdAt,
+    weekendLeagueResolved,
+    weekendLeagueVariant,
+  ]);
+
   const ctaDecision = resolveDailyWeekendLeagueCta({
     points: you?.qp.points,
     target: tournament?.qp_target ?? you?.qp.target,
@@ -135,7 +203,7 @@ function DailyChallengeCompleteModalExperimentAssignment({
   });
   const { action: ctaAction, currentQp, state: ctaState, targetQp } = ctaDecision;
   const weekendLeagueCta: DailyChallengeWeekendLeagueCta | undefined =
-    isEligibleCountry && experimentVariant === "test" && tournament
+    isEligibleCountry && weekendLeagueVariant === "test" && tournament
       ? {
           state: ctaState,
           action: ctaAction,
@@ -154,14 +222,47 @@ function DailyChallengeCompleteModalExperimentAssignment({
         }
       : undefined;
 
+  const comebackState = comebackQuery.data;
+  const reminderScheduled = reminderScheduledByClick
+    || comebackState?.reminderScheduled === true;
+  const comebackCta: DailyChallengeComebackCta | undefined =
+    comebackVariant === "test" && comebackState
+      ? {
+          streakDays: comebackState.projectedStreakDays,
+          tomorrowBonusCoins: comebackState.tomorrowBonusCoins,
+          remindersEnabled: comebackState.remindersEnabled,
+          reminderScheduled,
+          onReminder: async () => {
+            trackDailyComebackReminder({
+              outcome: "clicked",
+              streakDays: comebackState.projectedStreakDays,
+            });
+            try {
+              await setDailyComebackReminder(true);
+              setReminderScheduledByClick(true);
+              trackDailyComebackReminder({
+                outcome: "scheduled",
+                streakDays: comebackState.projectedStreakDays,
+              });
+            } catch (error) {
+              trackDailyComebackReminder({
+                outcome: "failed",
+                streakDays: comebackState.projectedStreakDays,
+              });
+              throw error;
+            }
+          },
+        }
+      : undefined;
+
   useEffect(() => {
     if (
       !isEligibleCountry
       || !tournament
-      || experimentVariant !== "test"
-      || trackedPromptRef.current
+      || weekendLeagueVariant !== "test"
+      || trackedWeekendLeaguePromptRef.current
     ) return;
-    trackedPromptRef.current = true;
+    trackedWeekendLeaguePromptRef.current = true;
     trackDailyWeekendLeagueCtaShown({
       state: ctaState,
       action: ctaAction,
@@ -173,16 +274,31 @@ function DailyChallengeCompleteModalExperimentAssignment({
     ctaAction,
     ctaState,
     currentQp,
-    experimentVariant,
+    weekendLeagueVariant,
     isEligibleCountry,
     targetQp,
     tournament,
   ]);
 
+  useEffect(() => {
+    if (
+      comebackVariant !== "test"
+      || !comebackState
+      || trackedComebackPromptRef.current
+    ) return;
+    trackedComebackPromptRef.current = true;
+    trackDailyComebackPromptShown({
+      streakDays: comebackState.projectedStreakDays,
+      tomorrowBonusCoins: comebackState.tomorrowBonusCoins,
+      remindersEnabled: comebackState.remindersEnabled,
+    });
+  }, [comebackState, comebackVariant]);
+
   return (
     <DailyChallengeCompleteModalContent
       {...props}
       weekendLeagueCta={weekendLeagueCta}
+      comebackCta={comebackCta}
     />
   );
 }
@@ -193,8 +309,14 @@ export function DailyChallengeCompleteModalContent({
   total,
   onDone,
   weekendLeagueCta,
-}: OpenModalProps & { weekendLeagueCta?: DailyChallengeWeekendLeagueCta }) {
+  comebackCta,
+}: OpenModalProps & {
+  weekendLeagueCta?: DailyChallengeWeekendLeagueCta;
+  comebackCta?: DailyChallengeComebackCta;
+}) {
   const { t } = useLocale();
+  const [reminderPending, setReminderPending] = useState(false);
+  const [reminderFailed, setReminderFailed] = useState(false);
 
   const isWeekendLeagueEntered = weekendLeagueCta?.state === "entered";
   const isWeekendLeagueQualified = weekendLeagueCta?.state === "qualified";
@@ -241,6 +363,83 @@ export function DailyChallengeCompleteModalContent({
         <p className="mt-4 font-poppins text-sm font-semibold text-white">
           {t("dailyGames.completionGreat")}
         </p>
+
+        {comebackCta && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15, duration: 0.28 }}
+            className="mt-5 border-y border-white/15 py-4 text-left"
+          >
+            <div className="flex items-center gap-2 text-brand-yellow">
+              <Flame className="size-5 fill-current" aria-hidden />
+              <p className="font-poppins text-base font-semibold text-white">
+                {t("dailyGames.dayStreak", { count: comebackCta.streakDays })}
+              </p>
+            </div>
+
+            <div className="mt-3 flex items-center justify-between gap-1.5" aria-label={t("dailyGames.streakProgress")}>
+              {Array.from({ length: 7 }, (_, index) => {
+                const day = index + 1;
+                const complete = day <= comebackCta.streakDays;
+                return (
+                  <div
+                    key={day}
+                    className={`flex size-8 items-center justify-center rounded-full border font-poppins text-xs font-semibold ${
+                      complete
+                        ? "border-brand-yellow bg-brand-yellow text-black"
+                        : "border-white/25 text-white/45"
+                    }`}
+                  >
+                    {complete ? <Check className="size-4" aria-hidden /> : day}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-3 rounded-[16px] bg-black/18 px-4 py-3">
+              <p className="font-poppins text-[10px] font-semibold uppercase tracking-[0.12em] text-white/55">
+                {t("dailyGames.tomorrowsStreakReward")}
+              </p>
+              <p className="mt-1 font-poppins text-sm font-semibold leading-snug text-white">
+                {comebackCta.tomorrowBonusCoins > 0
+                  ? t("dailyGames.tomorrowCoinReward", { count: comebackCta.tomorrowBonusCoins })
+                  : t("dailyGames.keepStreakTomorrow")}
+              </p>
+            </div>
+
+            {comebackCta.remindersEnabled && (
+              <button
+                type="button"
+                disabled={comebackCta.reminderScheduled || reminderPending}
+                onClick={() => {
+                  setReminderPending(true);
+                  setReminderFailed(false);
+                  void comebackCta.onReminder()
+                    .catch(() => setReminderFailed(true))
+                    .finally(() => setReminderPending(false));
+                }}
+                className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-[22px] bg-brand-yellow font-poppins text-xs font-semibold uppercase tracking-wide text-black transition-colors hover:bg-brand-yellow-deep disabled:cursor-default disabled:opacity-80"
+              >
+                {comebackCta.reminderScheduled ? (
+                  <Check className="size-4" aria-hidden />
+                ) : (
+                  <Bell className="size-4" aria-hidden />
+                )}
+                {comebackCta.reminderScheduled
+                  ? t("dailyGames.reminderSetTomorrow")
+                  : reminderPending
+                    ? t("dailyGames.savingReminder")
+                    : t("dailyGames.remindMeTomorrow")}
+              </button>
+            )}
+            {reminderFailed && (
+              <p className="mt-2 text-center font-poppins text-xs text-red-200">
+                {t("dailyGames.reminderSaveFailed")}
+              </p>
+            )}
+          </motion.div>
+        )}
 
         {weekendLeagueCta && (
           <motion.div
@@ -323,7 +522,7 @@ export function DailyChallengeCompleteModalContent({
           type="button"
           onClick={() => onDone()}
           className={`h-12 w-full rounded-[28px] font-poppins text-sm font-semibold uppercase tracking-wide transition-colors ${
-            weekendLeagueCta
+            weekendLeagueCta || comebackCta
               ? "mt-2 text-white/70 hover:text-white"
               : "mt-6 bg-brand-yellow text-black hover:bg-brand-yellow-deep"
           }`}
