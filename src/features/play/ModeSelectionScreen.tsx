@@ -524,7 +524,7 @@ export function ModeSelectionScreen({
             className="relative col-span-2 cursor-pointer overflow-hidden rounded-[10px] md:min-h-0 p-3 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2 lg:col-span-1"
             style={{ backgroundColor: '#6B2FB3' }}
           >
-            <span className="absolute right-2 top-2 z-20 rounded-full bg-black/60 px-2 py-0.5 text-[10px] uppercase tracking-wide text-white" style={poppins}>
+            <span className="absolute top-2.5 right-2.5 md:top-4 md:right-4 z-20 rounded-full bg-brand-yellow px-2.5 py-1 text-[8px] md:text-[11px] uppercase tracking-wide text-black" style={poppins}>
               {t('play.auctionNewBadge')}
             </span>
             <Image
