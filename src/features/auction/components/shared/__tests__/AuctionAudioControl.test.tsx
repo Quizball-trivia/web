@@ -5,7 +5,8 @@ import { AuctionAudioControl } from '../AuctionAudioControl';
 
 const audio = vi.hoisted(() => ({
   muted: false,
-  setMuted: vi.fn((muted: boolean) => {
+  setMuted: vi.fn((muted: boolean, options?: { resumeBgm?: boolean }) => {
+    void options;
     audio.muted = muted;
   }),
 }));
@@ -71,7 +72,16 @@ describe('AuctionAudioControl', () => {
 
     render(<AuctionAudioControl />);
 
-    await waitFor(() => expect(audio.setMuted).toHaveBeenCalledWith(false));
+    await waitFor(() => expect(audio.setMuted).toHaveBeenCalledWith(false, { resumeBgm: true }));
     expect(audio.muted).toBe(false);
+  });
+
+  it('does not resume background music when only sound effects are enabled', async () => {
+    audio.muted = true;
+    setUserPreferences({ soundEnabled: true, musicEnabled: false });
+
+    render(<AuctionAudioControl />);
+
+    await waitFor(() => expect(audio.setMuted).toHaveBeenCalledWith(false, { resumeBgm: false }));
   });
 });

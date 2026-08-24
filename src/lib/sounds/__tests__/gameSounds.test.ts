@@ -194,6 +194,17 @@ describe('gameSounds', () => {
     expect(howlInstances[0]?.play).toHaveBeenCalledTimes(2);
   });
 
+  it('can unmute sound effects without resuming active BGM', async () => {
+    const { playBgm, setMuted } = await import('../gameSounds');
+
+    playBgm('search');
+    setMuted(true);
+    setMuted(false, { resumeBgm: false });
+
+    expect(howlerMuteMock).toHaveBeenCalledWith(false);
+    expect(howlInstances[0]?.play).toHaveBeenCalledTimes(1);
+  });
+
   it('persists the global mute preference across module reloads', async () => {
     const { setMuted } = await import('../gameSounds');
 

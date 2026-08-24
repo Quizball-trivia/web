@@ -102,14 +102,19 @@ export function setMasterVolume(vol: number) {
 let _muted = false;
 let mutePreferenceLoaded = false;
 
-/** Mute / unmute all sounds */
-export function setMuted(muted: boolean) {
+interface SetMutedOptions {
+  /** Keep an active music track paused while unmuting sound effects. */
+  resumeBgm?: boolean;
+}
+
+/** Mute / unmute all sounds. Active music resumes by default for legacy callers. */
+export function setMuted(muted: boolean, { resumeBgm = true }: SetMutedOptions = {}) {
   ensureMutePreferenceLoaded();
   _muted = muted;
   Howler.mute(muted);
   persistMutePreference(muted);
   setFallbackMuted(muted);
-  if (!muted) resumeActiveBgm();
+  if (!muted && resumeBgm) resumeActiveBgm();
   if (typeof window !== 'undefined') window.dispatchEvent(new Event(MUTE_CHANGED_EVENT));
 }
 

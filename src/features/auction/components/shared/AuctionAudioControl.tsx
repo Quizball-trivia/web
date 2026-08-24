@@ -77,11 +77,14 @@ export function AuctionAudioControl() {
   // enabled. Disabling both remains scoped to Auction and does not unexpectedly
   // mute the rest of the app.
   useEffect(() => {
-    if ((soundEnabled || musicEnabled) && isMuted()) setMuted(false);
+    if ((soundEnabled || musicEnabled) && isMuted()) {
+      setMuted(false, { resumeBgm: musicEnabled });
+    }
   }, [musicEnabled, soundEnabled]);
 
   const updatePreference = (key: 'soundEnabled' | 'musicEnabled', checked: boolean) => {
-    if (checked && isMuted()) setMuted(false);
+    const nextMusicEnabled = key === 'musicEnabled' ? checked : musicEnabled;
+    if (checked && isMuted()) setMuted(false, { resumeBgm: nextMusicEnabled });
     setUserPreferences({ [key]: checked });
   };
 
