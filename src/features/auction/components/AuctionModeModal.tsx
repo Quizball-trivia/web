@@ -1,8 +1,9 @@
 'use client';
 
+import { useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'motion/react';
-import { Swords } from 'lucide-react';
+import { ScrollText, Swords } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -13,6 +14,7 @@ import { ModalCloseButton } from '@/components/shared/ModalCloseButton';
 import { cn } from '@/lib/utils';
 import { useLocale } from '@/contexts/LocaleContext';
 import { poppins, AUCTION_PURPLE } from '../constants/auction.constants';
+import { AuctionRulesModal } from './AuctionRulesModal';
 
 interface AuctionModeModalProps {
   isOpen: boolean;
@@ -25,6 +27,7 @@ interface AuctionModeModalProps {
 /** Auction mode dialog — icon hero on top → title → rules → yellow CTA. */
 export function AuctionModeModal({ isOpen, onOpenChange, onFindOnline }: AuctionModeModalProps) {
   const { t } = useLocale();
+  const [rulesOpen, setRulesOpen] = useState(false);
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent
@@ -77,8 +80,20 @@ export function AuctionModeModal({ isOpen, onOpenChange, onFindOnline }: Auction
             <Swords className="size-5" strokeWidth={2.5} />
             {t('play.auctionFindOpponents')}
           </motion.button>
+
+          {/* Secondary: the full how-it-works list in its own modal. */}
+          <button
+            type="button"
+            onClick={() => setRulesOpen(true)}
+            className="mx-auto mt-3 flex items-center justify-center gap-1.5 rounded-xl px-4 py-2 font-poppins text-sm font-bold uppercase tracking-wide text-white/85 transition-colors hover:bg-black/20 hover:text-white"
+          >
+            <ScrollText className="size-4" strokeWidth={2.5} />
+            {t('play.auctionRulesButton')}
+          </button>
         </div>
       </DialogContent>
+
+      <AuctionRulesModal isOpen={rulesOpen} onOpenChange={setRulesOpen} />
     </Dialog>
   );
 }

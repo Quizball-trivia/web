@@ -545,9 +545,12 @@ export const FOOTBALLERS: Footballer[] = RAW_FOOTBALLERS.map((f) => {
     club,
     league,
     snapshots,
-    // A scouting lot reveals one season's stats one-by-one, so its reveal-step
-    // count is the number of stat facets.
-    clues: [...SNAPSHOT_STAT_STEPS],
+    // Server parity: the lot opens at the SCOUT season's own market value —
+    // the first figure the card shows.
+    startingPrice: snapshots[0]?.valueEur ?? f.startingPrice,
+    // Reveal steps: one season's stats one-by-one, then up to two authored
+    // text hints (server parity — clue_1/clue_2 follow the facets).
+    clues: [...SNAPSHOT_STAT_STEPS, ...(f.clues ?? []).slice(0, 2)],
     imageUrl: f.imageUrl ?? getFootballerPlaceholderImage(f.id),
   };
 });

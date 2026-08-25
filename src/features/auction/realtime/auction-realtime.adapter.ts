@@ -21,7 +21,8 @@ import { SOLO_PICK_MS } from '../data';
 
 const POSITION_GROUPS = ['GK', 'DEF', 'MID', 'FWD'] as const satisfies readonly PositionGroup[];
 const DEFAULT_AUCTION_CLUE_COUNT = 3;
-const SNAPSHOT_CLUE_COUNT = 5;
+// Snapshot lots: five stat facets + two authored text hints.
+const SNAPSHOT_CLUE_COUNT = 7;
 
 export interface AuctionStateAdapterOptions {
   humanSeatId?: string | null;

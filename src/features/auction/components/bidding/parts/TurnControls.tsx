@@ -9,8 +9,9 @@ import type { AuctionActions } from '../../../hooks/useAuctionGame';
  * The human's turn controls: a "waiting" spinner (action in flight), or a clean
  * one-row [Fold] [Bid] pair. The bid button submits `minBid` (server-computed:
  * opening = starting price, later turns = +one increment); it shows the raise on
- * top and the resulting total underneath. Fold is hidden for a forced opener.
- * Shared by both bidding layouts.
+ * top and the resulting total underneath. The opener may pass like anyone else
+ * (labelled "Pass" instead of "Fold" on the opening turn — nothing to fold out
+ * of yet); if every seat passes the lot goes unsold. Shared by both layouts.
  */
 export function TurnControls({
   minBid,
@@ -53,15 +54,13 @@ export function TurnControls({
         </div>
       )}
       <div className="flex gap-2">
-        {!mustOpen && (
-          <button
-            type="button"
-            onClick={onFold}
-            className="flex h-11 shrink-0 items-center justify-center rounded-2xl bg-brand-red px-6 font-poppins text-sm font-black uppercase text-white transition-colors hover:bg-brand-red/90"
-          >
-            {t('auctionGame.fold')}
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={onFold}
+          className="flex h-11 shrink-0 items-center justify-center rounded-2xl bg-brand-red px-6 font-poppins text-sm font-black uppercase text-white transition-colors hover:bg-brand-red/90"
+        >
+          {mustOpen ? t('auctionGame.pass') : t('auctionGame.fold')}
+        </button>
         <motion.button
           type="button"
           whileTap={canAfford ? { scale: 0.98 } : undefined}
