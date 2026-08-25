@@ -23,6 +23,7 @@ export function GauntletHeader({
   secondsLeft,
   spectator = false,
   step,
+  stepKind = 'question',
   rankPill,
   onQuit,
 }: {
@@ -35,6 +36,10 @@ export function GauntletHeader({
   spectator?: boolean;
   /** "2/5" when the round holds several questions. */
   step?: string;
+  /** who-am-i is ONE question revealed clue by clue — its pill counts CLUES
+   *  ("მინიშნება 2/5"), not questions ("კითხვა 1/5" confused the final's
+   *  players, Aug-24 report). */
+  stepKind?: 'question' | 'clue';
   rankPill?: React.ReactNode;
   onQuit: () => void;
 }) {
@@ -50,7 +55,8 @@ export function GauntletHeader({
         timeLeft={secondsLeft}
         centerLabel={
           step
-            ? t('possession.questionCounter', { current: step.split('/')[0], total: step.split('/')[1] })
+            ? t(stepKind === 'clue' ? 'weekendLeague.clueCounter' : 'possession.questionCounter',
+                { current: step.split('/')[0], total: step.split('/')[1] })
             : t('possession.questionCounter', { current: 1, total: 1 })
         }
       />
