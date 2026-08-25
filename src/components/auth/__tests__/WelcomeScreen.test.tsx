@@ -200,6 +200,7 @@ vi.mock('@/lib/auth/google-identity', () => ({
 // Analytics — we assert event names + payloads.
 const trackLoginCompletedMock = vi.fn();
 const trackSignupCompletedMock = vi.fn();
+const trackSignupPageViewMock = vi.fn();
 const trackSignupStartedMock = vi.fn();
 const trackInAppBrowserBlockedMock = vi.fn();
 vi.mock('@/lib/analytics/game-events', () => ({
@@ -207,6 +208,7 @@ vi.mock('@/lib/analytics/game-events', () => ({
     trackInAppBrowserBlockedMock(browser, isIOS, isAndroid),
   trackLoginCompleted: (method: string) => trackLoginCompletedMock(method),
   trackSignupCompleted: (method: string) => trackSignupCompletedMock(method),
+  trackSignupPageView: () => trackSignupPageViewMock(),
   trackSignupStarted: (method: string) => trackSignupStartedMock(method),
 }));
 
@@ -339,12 +341,14 @@ beforeEach(() => {
   postAuthRedirectMock.redirect = null;
   trackLoginCompletedMock.mockClear();
   trackSignupCompletedMock.mockClear();
+  trackSignupPageViewMock.mockClear();
   trackSignupStartedMock.mockClear();
   trackInAppBrowserBlockedMock.mockClear();
 });
 
 afterEach(() => {
   vi.useRealTimers();
+  window.history.replaceState({}, '', '/');
 });
 
 // ---------------------------------------------------------------------------
@@ -352,6 +356,15 @@ afterEach(() => {
 // ---------------------------------------------------------------------------
 
 describe('WelcomeScreen — landing chrome', () => {
+  it('tracks arrival on the signup panel from an SEO quiz CTA', async () => {
+    window.history.replaceState({}, '', '/en?signup=1&source=club-badges-quiz');
+
+    render(<WelcomeScreen />);
+
+    await waitFor(() => expect(trackSignupPageViewMock).toHaveBeenCalledOnce());
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+  });
+
   it('renders the hero with kickoff CTA and the brand logo', () => {
     render(<WelcomeScreen />);
     expect(screen.getByTestId('app-logo')).toBeInTheDocument();

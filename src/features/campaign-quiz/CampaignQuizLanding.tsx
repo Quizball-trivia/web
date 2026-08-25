@@ -163,7 +163,6 @@ export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken
               alt="QuizBall"
               width={218}
               height={64}
-              priority
               className="h-10 w-auto object-contain sm:h-12"
             />
           </Link>
@@ -258,8 +257,10 @@ export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken
                   src={content.heroImage}
                   alt={content.heroImageAlt}
                   fill
-                  sizes="(min-width: 1024px) 40vw, 90vw"
+                  sizes="(min-width: 1024px) min(40vw, 512px), calc(100vw - 2rem)"
                   priority
+                  fetchPriority="high"
+                  quality={60}
                   className="object-cover"
                 />
               </div>

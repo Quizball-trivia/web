@@ -4,14 +4,14 @@ import { SITE_URL } from "@/lib/seo/site";
 import { LOCALES } from "@/lib/i18n/locale";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const now = new Date();
   const entry = (
     path: string,
     changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"],
     priority: number,
+    lastModified?: Date,
   ): MetadataRoute.Sitemap[number] => ({
     url: `${SITE_URL}${path}`,
-    lastModified: now,
+    ...(lastModified ? { lastModified } : {}),
     changeFrequency,
     priority,
   });
@@ -45,14 +45,35 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   const campaignEntries: MetadataRoute.Sitemap = [
-    entry('/en/football-quiz', 'weekly', 0.9),
+    entry(
+      '/en/football-quiz',
+      'weekly',
+      0.9,
+      campaignPages
+        .map((page) => validLastModified(page.updated_at))
+        .filter((date): date is Date => Boolean(date))
+        .sort((a, b) => b.getTime() - a.getTime())[0],
+    ),
     ...(campaignPages.some((page) => page.locale_mode === 'en_ka')
-      ? [entry('/ka/football-quiz', 'weekly', 0.9)]
+      ? [entry(
+          '/ka/football-quiz',
+          'weekly',
+          0.9,
+          campaignPages
+            .filter((page) => page.locale_mode === 'en_ka')
+            .map((page) => validLastModified(page.updated_at))
+            .filter((date): date is Date => Boolean(date))
+            .sort((a, b) => b.getTime() - a.getTime())[0],
+        )]
       : []),
     ...campaignPages.flatMap((page) => {
       const english = {
-        ...entry(`/en/football-quiz/${page.slug}`, 'monthly', 0.8),
-        lastModified: validLastModified(page.updated_at),
+        ...entry(
+          `/en/football-quiz/${page.slug}`,
+          'monthly',
+          0.8,
+          validLastModified(page.updated_at),
+        ),
       };
       return page.locale_mode === 'en_ka'
         ? [english, { ...english, url: `${SITE_URL}/ka/football-quiz/${page.slug}` }]

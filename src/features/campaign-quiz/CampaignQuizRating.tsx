@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { Star } from 'lucide-react';
-import { useAuthStore } from '@/stores/auth.store';
 import { rateCampaignQuiz } from './campaignQuiz.api';
 import { trackCampaignQuizRating } from './campaignQuiz.analytics';
 import type { CampaignQuizRating as Rating } from './campaignQuiz.types';
@@ -13,7 +12,6 @@ interface CampaignQuizRatingProps {
 }
 
 export function CampaignQuizRating({ slug, initialRating }: CampaignQuizRatingProps) {
-  const authStatus = useAuthStore((state) => state.status);
   const [aggregate, setAggregate] = useState(initialRating);
   const [hovered, setHovered] = useState(0);
   const [selected, setSelected] = useState(0);
@@ -26,10 +24,10 @@ export function CampaignQuizRating({ slug, initialRating }: CampaignQuizRatingPr
     setSubmitting(true);
 
     try {
-      const nextAggregate = await rateCampaignQuiz(slug, rating);
-      setAggregate(nextAggregate);
+      const result = await rateCampaignQuiz(slug, rating);
+      setAggregate(result.rating);
       setMessage('Thanks — your rating has been saved.');
-      trackCampaignQuizRating(slug, rating, authStatus === 'authenticated');
+      trackCampaignQuizRating(slug, rating, result.authenticated);
     } catch {
       setSelected(0);
       setMessage('We could not save your rating. Please try again.');
@@ -60,7 +58,7 @@ export function CampaignQuizRating({ slug, initialRating }: CampaignQuizRatingPr
             <button
               key={rating}
               type="button"
-              disabled={submitting || authStatus === 'loading'}
+              disabled={submitting}
               onMouseEnter={() => setHovered(rating)}
               onFocus={() => setHovered(rating)}
               onBlur={() => setHovered(0)}

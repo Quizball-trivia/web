@@ -23,6 +23,7 @@ import { WelcomeTierRoadSection } from './WelcomeTierRoadSection';
 import { WelcomeLeaderboardSection } from './WelcomeLeaderboardSection';
 import { WelcomeFooter } from './WelcomeFooter';
 import { rememberCampaignAttributionFromSignupUrl } from '@/features/campaign-quiz/campaignAttribution';
+import { trackSignupPageView } from '@/lib/analytics/game-events';
 
 export function WelcomeScreen() {
   const cspNonce = useCspNonce();
@@ -127,6 +128,7 @@ export function WelcomeScreen() {
     if (url.searchParams.get('signup') !== '1') return;
 
     rememberCampaignAttributionFromSignupUrl(url);
+    trackSignupPageView();
     campaignSignupHandledRef.current = true;
     handleAuthModeChange('signup');
     handleLoginDialogOpenChange(true);

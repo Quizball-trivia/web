@@ -29,7 +29,12 @@ const recordingMocks = vi.hoisted(() => ({
   stopSessionRecording: vi.fn(),
 }));
 
+const campaignAttributionMocks = vi.hoisted(() => ({
+  hasRecentCampaignAttribution: vi.fn(() => false),
+}));
+
 vi.mock('@/lib/posthog', () => recordingMocks);
+vi.mock('@/features/campaign-quiz/campaignAttribution', () => campaignAttributionMocks);
 
 import { PostHogPageView } from '../PostHogProvider';
 
@@ -38,6 +43,7 @@ describe('PostHogPageView', () => {
     vi.clearAllMocks();
     navigationMocks.pathname = '/game';
     navigationMocks.searchParams = new URLSearchParams();
+    campaignAttributionMocks.hasRecentCampaignAttribution.mockReturnValue(false);
   });
 
   it('emits the pending results-exit landing event once /play is reached', async () => {
@@ -105,6 +111,29 @@ describe('PostHogPageView', () => {
 
   it('records the quiz hub page', async () => {
     navigationMocks.pathname = '/ka/football-quiz';
+
+    render(<PostHogPageView />);
+
+    await waitFor(() => {
+      expect(recordingMocks.startSessionRecording).toHaveBeenCalled();
+    });
+  });
+
+  it('continues recording on a campaign signup landing page', async () => {
+    navigationMocks.pathname = '/en';
+    navigationMocks.searchParams = new URLSearchParams('signup=1');
+
+    render(<PostHogPageView />);
+
+    await waitFor(() => {
+      expect(recordingMocks.startSessionRecording).toHaveBeenCalled();
+    });
+    expect(recordingMocks.stopSessionRecording).not.toHaveBeenCalled();
+  });
+
+  it('continues recording after the one-shot signup query is removed', async () => {
+    navigationMocks.pathname = '/en';
+    campaignAttributionMocks.hasRecentCampaignAttribution.mockReturnValue(true);
 
     render(<PostHogPageView />);
 

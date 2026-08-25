@@ -2,10 +2,11 @@
 
 import { Suspense, useEffect } from 'react';
 import type { ReactElement } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useSearchParams } from 'next/navigation';
 import { consumeExitToPlayPending, trackExitToPlayLanded } from '@/lib/analytics/game-events';
 import { startSessionRecording, stopSessionRecording } from '@/lib/posthog';
 import { LOCALES } from '@/lib/i18n/locale';
+import { hasRecentCampaignAttribution } from '@/features/campaign-quiz/campaignAttribution';
 
 // Only the real SEO quiz routes (/:locale/football-quiz and one slug below
 // it), not any URL containing the substring — 404s like /en/football-quiz-foo
@@ -13,6 +14,7 @@ import { LOCALES } from '@/lib/i18n/locale';
 const FOOTBALL_QUIZ_PATH = new RegExp(
   `^/(${LOCALES.join('|')})/football-quiz(/[^/]+)?/?$`,
 );
+const LOCALIZED_LANDING_PATH = new RegExp(`^/(${LOCALES.join('|')})/?$`);
 
 export function PostHogPageView(): ReactElement {
   return (
@@ -24,18 +26,22 @@ export function PostHogPageView(): ReactElement {
 
 function PostHogPageViewInner(): ReactElement {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   // ($pageview comes from capture_pageview: 'history_change' in the PostHog
   // init — nothing to do per-route here.)
 
   useEffect(() => {
     if (!pathname) return;
-    if (FOOTBALL_QUIZ_PATH.test(pathname)) {
+    const isCampaignSignupLanding =
+      LOCALIZED_LANDING_PATH.test(pathname) &&
+      (searchParams.get('signup') === '1' || hasRecentCampaignAttribution());
+    if (FOOTBALL_QUIZ_PATH.test(pathname) || isCampaignSignupLanding) {
       startSessionRecording();
     } else {
       stopSessionRecording();
     }
-  }, [pathname]);
+  }, [pathname, searchParams]);
 
   useEffect(() => {
     if (!pathname) return;

@@ -5,6 +5,12 @@ export const SITE_TAGLINE = "The 1v1 Football Trivia Game";
 export const SITE_DESCRIPTION =
   "Quizball is a fast-paced football trivia game. Challenge friends to 1v1 multiplayer football quiz duels, climb the ranked leaderboard, and prove you know the beautiful game.";
 
+export const SITE_ICON_PATH = "/assets/brand/quizball-icon-512.png";
+
+export const SITE_OG_IMAGE_PATH = "/assets/brand/quizball-og-1200x630.png";
+
+export const SITE_OG_IMAGE_ALT = "QuizBall — the 1v1 football trivia game";
+
 // Canonical production URL. Hardcoded so Vercel preview/branch deploys
 // can never leak `*.vercel.app` into canonical/sitemap/OpenGraph URLs.
 // NEXT_PUBLIC_SITE_URL is honored as an override for self-hosting.

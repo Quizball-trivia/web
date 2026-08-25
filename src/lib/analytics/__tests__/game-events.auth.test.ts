@@ -14,6 +14,7 @@ vi.mock('@/features/campaign-quiz/campaignAttribution', () => ({
 }));
 
 import {
+  trackSignupPageView,
   trackSignupStarted,
   trackOnboardingCompleted,
   trackLoginCompleted,
@@ -40,6 +41,23 @@ describe('auth analytics events', () => {
     expect(trackEventMock).toHaveBeenCalledWith('auth_started', { method: 'facebook' });
     // still dual-fires the legacy event during the dashboard transition
     expect(trackEventMock).toHaveBeenCalledWith('signup_started', { method: 'facebook' });
+  });
+
+  it('tracks the campaign signup landing between CTA click and auth intent', () => {
+    getCampaignPropertiesMock.mockReturnValue({
+      source: 'campaign_quiz',
+      quiz_slug: 'club-badges',
+      campaign_conversion_id: '11111111-1111-4111-8111-111111111111',
+    });
+
+    trackSignupPageView();
+
+    expect(trackEventMock).toHaveBeenCalledWith('signup_page_view', {
+      auth_mode: 'signup',
+      source: 'campaign_quiz',
+      quiz_slug: 'club-badges',
+      campaign_conversion_id: '11111111-1111-4111-8111-111111111111',
+    });
   });
 
   it('adds persisted quiz campaign context to auth intent', () => {

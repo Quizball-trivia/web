@@ -2,10 +2,11 @@
 
 import Link from 'next/link';
 import { trackCampaignSignupClick } from './campaignQuiz.analytics';
+import type { CampaignCtaPlacement } from './campaignAttribution';
 
 interface CampaignSignupLinkProps {
   slug: string;
-  placement: 'header' | 'score' | 'footer' | 'rating';
+  placement: CampaignCtaPlacement;
   href: string;
   className?: string;
   children: React.ReactNode;

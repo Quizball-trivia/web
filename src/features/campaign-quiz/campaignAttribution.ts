@@ -209,6 +209,10 @@ export function rememberCampaignAttributionFromSignupUrl(url: URL): void {
 
   const source = url.searchParams.get('source');
   if (!source) return;
+  if (source === 'football-quiz-hub-header') {
+    rememberCampaignAttribution({ quizSlug: 'football-quiz', placement: 'hero' });
+    return;
+  }
   const suffixes: Array<[string, CampaignCtaPlacement]> = [
     ['-quiz-header', 'header'],
     ['-quiz-footer', 'footer'],
@@ -256,6 +260,12 @@ export function getCampaignAttributionAnalyticsProperties(): Record<string, stri
       ? { quiz_total_questions: attribution.quiz_total_questions }
       : {}),
   };
+}
+
+export function hasRecentCampaignAttribution(maxAgeMs = 15 * 60 * 1000): boolean {
+  const attribution = readStored() ?? readAuthenticatedStored();
+  if (!attribution) return false;
+  return Date.now() - Date.parse(attribution.captured_at) <= maxAgeMs;
 }
 
 /**

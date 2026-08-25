@@ -1,5 +1,4 @@
 import { API_BASE_URL } from '@/lib/config';
-import { getSupabaseAccessToken } from '@/lib/auth/supabase';
 import type {
   CampaignQuiz,
   CampaignQuizAnswer,
@@ -32,7 +31,7 @@ export async function getCampaignQuiz(slug: string, previewToken?: string): Prom
   const response = await fetch(
     `${API_BASE_URL}/api/v1/campaign-quizzes/${encodeURIComponent(slug)}${preview}`,
     {
-      cache: 'no-store',
+      ...(previewToken ? { cache: 'no-store' as const } : { next: { revalidate: 300 } }),
       headers: { Accept: 'application/json' },
       signal: requestSignal(),
     },
@@ -42,7 +41,7 @@ export async function getCampaignQuiz(slug: string, previewToken?: string): Prom
 
 export async function listCampaignQuizPages(locale: 'en' | 'ka' = 'en'): Promise<CampaignQuizHubPage[]> {
   const response = await fetch(`${API_BASE_URL}/api/v1/campaign-quizzes?locale=${locale}`, {
-    cache: 'no-store',
+    next: { revalidate: 300 },
     headers: { Accept: 'application/json' },
     signal: requestSignal(),
   });
@@ -51,7 +50,7 @@ export async function listCampaignQuizPages(locale: 'en' | 'ka' = 'en'): Promise
 
 export async function resolveCampaignQuizRoute(slug: string): Promise<CampaignQuizRoute> {
   const response = await fetch(`${API_BASE_URL}/api/v1/campaign-quizzes/routes/${encodeURIComponent(slug)}`, {
-    cache: 'no-store',
+    next: { revalidate: 300 },
     headers: { Accept: 'application/json' },
     signal: requestSignal(),
   });
@@ -87,9 +86,11 @@ export async function answerCampaignQuizQuestion(input: {
 export async function rateCampaignQuiz(
   slug: string,
   rating: number,
-): Promise<CampaignQuizRating> {
+): Promise<{ rating: CampaignQuizRating; authenticated: boolean }> {
   // Signed-out visitors can rate too; the backend keys those by a hashed
-  // client address. Only attach a token when one already exists.
+  // client address. Load Supabase only after a rating interaction instead of
+  // adding the full auth SDK to every organic-search visitor's initial bundle.
+  const { getSupabaseAccessToken } = await import('@/lib/auth/supabase');
   const accessToken = await getSupabaseAccessToken().catch(() => null);
 
   const response = await fetch(
@@ -106,5 +107,8 @@ export async function rateCampaignQuiz(
       signal: requestSignal(),
     },
   );
-  return parseJson<CampaignQuizRating>(response);
+  return {
+    rating: await parseJson<CampaignQuizRating>(response),
+    authenticated: Boolean(accessToken),
+  };
 }
