@@ -315,19 +315,64 @@ describe('usePossessionRoundTransition', () => {
       upcomingQIndex: 12,
     });
 
-    // A NEW penalty round while the overlay is still visible re-captures
-    // (back-to-back transition) instead of replaying "Penalty 1".
+    // A newer question payload arriving mid-overlay must NOT rewrite the
+    // visible title (the "Penalty 3 → 4" mid-overlay flip): the freeze is
+    // keyed on the resolved round, and only a NEW roundResult re-keys it.
     rerender({
       phase: 'PENALTY_SHOOTOUT',
       pendingQuestion: makeQuestion(13, 2, 'penalty', 'Changed Penalty'),
     });
 
     expect(result.current.transitionSnapshot).toEqual({
-      title: 'Penalty 2',
+      title: 'Penalty 1',
       categoryName: '',
       subtitle: 'Sudden Death',
-      upcomingQIndex: 13,
+      upcomingQIndex: 12,
     });
+  });
+
+  it('re-captures the penalty overlay when a genuinely new round resolves (back-to-back)', async () => {
+    const { result, rerender } = renderHook((props: {
+      pendingQuestion: ResolvedMatchQuestionPayload | null;
+      roundResult: MatchRoundResultPayload;
+    }) => usePossessionRoundTransition({
+      phase: 'PENALTY_SHOOTOUT',
+      half: 2,
+      penaltySuddenDeath: false,
+      firstQuestionIntro: false,
+      secondHalfQuestionIntro: false,
+      currentQuestionIndex: 12,
+      localQuestion: makeQuestion(12, 1, 'penalty', 'Penalty'),
+      pendingQuestion: props.pendingQuestion,
+      roundResult: props.roundResult,
+      roundResultHoldDone: true,
+      isPenaltyQuestion: true,
+      isShotQuestion: false,
+      isLastAttackQuestion: false,
+      goalCelebration: null,
+    }), {
+      initialProps: {
+        pendingQuestion: makeQuestion(13, 2, 'penalty', 'Penalty'),
+        roundResult: { ...makeRoundResult('penalty', 1), qIndex: 12 },
+      },
+    });
+
+    act(() => {
+      vi.advanceTimersByTime(PENALTY_COUNTDOWN_MS + 100);
+    });
+    await act(async () => {});
+
+    expect(result.current.showPenaltyTransition).toBe(true);
+    expect(result.current.transitionSnapshot.title).toBe('Penalty 2');
+
+    rerender({
+      pendingQuestion: makeQuestion(14, 3, 'penalty', 'Penalty'),
+      roundResult: { ...makeRoundResult('penalty', 2), qIndex: 13 },
+    });
+    await act(async () => {});
+
+    expect(result.current.transitionSnapshot.title).toBe('Penalty 3');
+    expect(result.current.transitionSnapshot.upcomingQIndex).toBe(14);
   });
 
   it('waits for the final field result hold before starting the penalty countdown', async () => {

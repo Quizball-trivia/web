@@ -42,6 +42,11 @@ import type {
 
 type Side = 'player' | 'opponent';
 
+// How long the suppression probe keeps re-checking for the splash/pitch
+// anchors after a question or phase change. Covers the 3s reveal window in
+// which transition overlays hold the anchors at opacity 0.
+const ANCHOR_PROBE_WINDOW_MS = 3500;
+
 function resolveBaseFlightPoints(
   pointsEarned: number,
   questionKind?: MatchAnswerAckPayload['questionKind'] | MatchRoundResultPayload['questionKind'],
@@ -316,21 +321,38 @@ export function usePossessionBarBattleFlights() {
       return;
     }
 
+    // Keep probing briefly instead of sampling one frame: the pitch-avatar
+    // anchors mount LATE on phase changes (penalty markers only exist once the
+    // penalty pitch renders) and the question panel's anchors pass through
+    // opacity:0 during transitions. A single-frame sample deciding "no anchors
+    // → don't suppress" is what let the avatar score splash and the flight
+    // overlay draw their +N at the same time during penalty reveals.
     let frame: number | null = null;
-    const update = () => setSuppressScoreSplash(hasUsableAnchors());
+    let cancelled = false;
+    const probeDeadline = Date.now() + ANCHOR_PROBE_WINDOW_MS;
+    const update = () => {
+      if (cancelled) return;
+      const usable = hasUsableAnchors();
+      setSuppressScoreSplash(usable);
+      if (!usable && Date.now() < probeDeadline && typeof window.requestAnimationFrame === 'function') {
+        frame = window.requestAnimationFrame(update);
+      }
+    };
     if (typeof window.requestAnimationFrame === 'function') {
       frame = window.requestAnimationFrame(update);
     } else {
       update();
     }
-    window.addEventListener('resize', update);
+    const onResize = () => setSuppressScoreSplash(hasUsableAnchors());
+    window.addEventListener('resize', onResize);
     return () => {
+      cancelled = true;
       if (frame !== null && typeof window.cancelAnimationFrame === 'function') {
         window.cancelAnimationFrame(frame);
       }
-      window.removeEventListener('resize', update);
+      window.removeEventListener('resize', onResize);
     };
-  }, [enabled, currentQIndex]);
+  }, [enabled, currentQIndex, barBattleMatch.currentPhaseKind, barBattleMatch.possessionPhaseKind]);
 
   const phaseKindFromState = barBattleMatch.currentPhaseKind
     ?? barBattleMatch.possessionPhaseKind
