@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { cn } from '@/lib/utils';
 import { EASE } from '../../../constants/motion';
@@ -29,6 +30,18 @@ export function CluesList({
   const chars = clues.reduce((s, c) => s + c.length, 0);
   const textSize = chars > 320 ? 'text-sm' : 'text-[15px] sm:text-base';
 
+  // Each newly revealed clue scrolls itself into view — on small screens the
+  // text hints sit below the fold of the scrollable card, and a reveal nobody
+  // sees is no reveal. `nearest` keeps it gentle when already visible.
+  const lastRevealedRef = useRef<HTMLDivElement | null>(null);
+  const prevVisibleRef = useRef(visibleClues);
+  useEffect(() => {
+    if (visibleClues > prevVisibleRef.current) {
+      lastRevealedRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    prevVisibleRef.current = visibleClues;
+  }, [visibleClues]);
+
   return (
     <div className="space-y-2.5">
       {clues.map((clue, i) => {
@@ -36,6 +49,7 @@ export function CluesList({
         return (
           <div
             key={i}
+            ref={revealed && i === visibleClues - 1 ? lastRevealedRef : undefined}
             className={cn(
               'flex items-start gap-3 rounded-xl px-3 py-2.5 transition-colors',
               'bg-black/25',

@@ -28,6 +28,7 @@ vi.mock('@/contexts/LocaleContext', () => ({
         'auctionGame.budgetAmount': `Budget: ${String(params?.amount ?? '$0')}`,
         'auctionGame.maxBidAmount': `Max bid: ${String(params?.amount ?? '$0')}`,
         'auctionGame.fold': 'Fold',
+        'auctionGame.pass': 'Pass',
         'auctionGame.bidPlacedWaiting': 'Bid placed - waiting...',
         'auctionGame.foldPlacedWaiting': 'Fold sent - waiting...',
         'auctionGame.eliminatedWatching': 'You are eliminated - watching',
@@ -158,7 +159,7 @@ describe('BiddingScreen', () => {
     expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
   });
 
-  it('labels the opening bid with the starting price and hides fold', () => {
+  it('labels the opening bid with the starting price and offers Pass', () => {
     const openingRound = round({ bids: [], highestBidderId: null, highestBid: 0 });
 
     render(
@@ -169,8 +170,10 @@ describe('BiddingScreen', () => {
       />,
     );
 
-    // Opening a lot bids the starting price outright, and the opener can't fold.
+    // Opening a lot bids the starting price outright — or the opener passes
+    // (the forced-open rule is gone; the button reads Pass, not Fold).
     expect(screen.getByRole('button', { name: /BID \$20M/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Pass' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Fold' })).not.toBeInTheDocument();
   });
 
