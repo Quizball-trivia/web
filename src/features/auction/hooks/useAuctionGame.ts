@@ -576,7 +576,14 @@ export function useAuctionGame(
         if (!prev.soloPick) return prev;
         const { playerId, positionGroup, optionA, optionB } = prev.soloPick;
         const chosen = option === 'A' ? optionA : optionB;
-        const cost = chosen.footballer.startingPrice;
+        // Server parity: solo selection charges min(sticker, per-slot budget
+        // cap) — charging the raw sticker here could drive a mock budget
+        // negative where the live engine would have discounted the charge.
+        const picker = prev.players.find((p) => p.id === playerId);
+        const cost = Math.max(0, Math.min(
+          chosen.footballer.startingPrice,
+          picker ? getMaxBid(picker) : chosen.footballer.startingPrice,
+        ));
 
         const updatedPlayers = assignPlayer(
           prev.players,
