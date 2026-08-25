@@ -4,17 +4,22 @@ import { ApiError } from "@/lib/api/api";
 import type { LeaderboardType } from "@/lib/domain/leaderboard";
 import type { AvatarCustomization } from "@/types/game";
 
+// The ranked endpoints send rp/tier/trend; the auction endpoints send
+// auctionPoints and omit the ranked-only fields. One response type serves
+// both, so everything mode-specific is optional here and the mapper fills
+// the gaps.
 export interface LeaderboardEntryResponse {
   userId: string;
   rank: number;
   username: string;
   avatarUrl: string | null;
   avatarCustomization: AvatarCustomization | null;
-  rp: number;
-  tier: string;
+  rp?: number;
+  auctionPoints?: number;
+  tier?: string;
   country: string | null;
-  trend: 'up' | 'down' | 'same';
-  trendValue: number;
+  trend?: 'up' | 'down' | 'same';
+  trendValue?: number;
 }
 
 export interface LeaderboardApiResponse {
@@ -39,12 +44,13 @@ export interface UserRankResponse {
   avatarUrl: string | null;
   avatarCustomization: AvatarCustomization | null;
   country: string | null;
-  rp: number;
-  tier: string;
+  rp?: number;
+  auctionPoints?: number;
+  tier?: string;
   rank: number;
   total: number;
-  trend: 'up' | 'down' | 'same';
-  trendValue: number;
+  trend?: 'up' | 'down' | 'same';
+  trendValue?: number;
 }
 
 async function requestJson<T>(path: string): Promise<T> {
@@ -84,6 +90,32 @@ export async function getUserRank(type: LeaderboardType = "global", season?: str
   const seasonParam = season ? `&season=${encodeURIComponent(season)}` : "";
   const data = await requestJson<UserRankResponse | null>(
     `/api/v1/ranked/leaderboard/me?scope=${scope}${seasonParam}`
+  );
+  return { data, error: null };
+}
+
+/**
+ * Auction leaderboard — same response shape as the ranked board, but ranked by
+ * Auction Points. `rp` carries the AP total (the backend mirrors the ranked
+ * contract field-for-field), so the existing mappers and row components apply
+ * unchanged.
+ */
+export async function getAuctionLeaderboard(
+  type: LeaderboardType = "global",
+  limit = 50,
+  offset = 0,
+) {
+  const scope = scopeFromType(type);
+  const data = await requestJson<LeaderboardApiResponse>(
+    `/api/v1/auction/leaderboard?scope=${scope}&limit=${limit}&offset=${offset}`
+  );
+  return { data: data.entries, error: null };
+}
+
+export async function getAuctionUserRank(type: LeaderboardType = "global") {
+  const scope = scopeFromType(type);
+  const data = await requestJson<UserRankResponse | null>(
+    `/api/v1/auction/leaderboard/me?scope=${scope}`
   );
   return { data, error: null };
 }

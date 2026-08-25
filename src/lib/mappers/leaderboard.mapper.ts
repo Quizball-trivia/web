@@ -15,11 +15,11 @@ export function toLeaderboardEntry(
     avatar: entry.avatarUrl || entry.userId,
     avatarCustomization: entry.avatarCustomization,
     country: entry.country,
-    tier: entry.tier,
-    rankPoints: entry.rp,
+    tier: entry.tier ?? '',
+    rankPoints: entry.rp ?? entry.auctionPoints ?? 0,
     isCurrentUser: entry.userId === currentUserId,
-    trend: entry.trend,
-    trendValue: entry.trendValue,
+    trend: entry.trend ?? 'same',
+    trendValue: entry.trendValue ?? 0,
   };
 }
 
@@ -27,15 +27,15 @@ export function toUserRank(entry: UserRankResponse): UserRank {
   return {
     id: entry.userId,
     rank: entry.rank,
-    rankPoints: entry.rp,
+    rankPoints: entry.rp ?? entry.auctionPoints ?? 0,
     username: entry.username,
     avatar: entry.avatarUrl || entry.userId,
     avatarCustomization: entry.avatarCustomization,
     country: entry.country,
-    tier: entry.tier,
+    tier: entry.tier ?? '',
     isCurrentUser: true,
-    trend: entry.trend,
-    trendValue: entry.trendValue,
+    trend: entry.trend ?? 'same',
+    trendValue: entry.trendValue ?? 0,
     total: entry.total,
   };
 }
