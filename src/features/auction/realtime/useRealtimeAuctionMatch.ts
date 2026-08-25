@@ -1337,10 +1337,6 @@ const AUCTION_ERROR_MESSAGES: Record<string, { en: string; ka: string }> = {
     en: 'You already hold the highest bid.',
     ka: 'თქვენ უკვე გაქვთ უმაღლესი ფსონი.',
   },
-  auction_opening_bidder_cannot_fold: {
-    en: 'The first bidder has to open — you cannot fold here.',
-    ka: 'პირველმა მოთამაშემ უნდა გახსნას — აქ ვერ გაჰყვებით.',
-  },
   auction_seat_cannot_bid: {
     en: "You can't bid on this player.",
     ka: 'ამ მოთამაშეზე ვერ დადებთ ფსონს.',

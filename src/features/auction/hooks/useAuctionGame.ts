@@ -247,8 +247,14 @@ export function useAuctionGame(
           winningBid: 0,
           revealed: false,
           countdownEndsAt: null,
-          // Random turn order among the players who need this position.
-          turnOrder: shuffle(needers.map((p) => p.id)),
+          // Opener ROTATES among the needers with the round count (server
+          // parity) — a random shuffle could hand one player the opening
+          // turn many rounds in a row.
+          turnOrder: (() => {
+            const ids = needers.map((p) => p.id);
+            const offset = prev.completedRounds.length % Math.max(1, ids.length);
+            return [...ids.slice(offset), ...ids.slice(0, offset)];
+          })(),
           currentTurnId: null,
           foldedIds: [],
           turnEndsAt: null,
@@ -293,11 +299,13 @@ export function useAuctionGame(
       // Nobody else can act.
       if (!nextId) {
         if (round.highestBidderId) return resolveWin(prev, round);
-        // Everyone folded with no bid → unsold, move on.
-        return advanceToNextRound({
+        // Everyone passed with no bid → unsold, but still REVEAL the card
+        // (server parity: winnerless reveal, RevealScreen's unsold branch).
+        return {
           ...prev,
-          completedRounds: [...prev.completedRounds, { ...round, currentTurnId: null, turnEndsAt: null, revealed: true }],
-        });
+          phase: 'reveal' as AuctionPhase,
+          currentRound: { ...round, currentTurnId: null, turnEndsAt: null, winnerId: null, winningBid: 0, revealed: true },
+        };
       }
 
       return {
@@ -319,11 +327,16 @@ export function useAuctionGame(
       clueRevealTimerRef.current = setTimeout(() => {
         setState((prev) => {
           if (prev.phase !== 'clue-reveal' || !prev.currentRound) return prev;
+          // Reveal steps land in PAIRS (server parity): seven steps at one
+          // per tick made the scouting phase drag.
           return {
             ...prev,
             currentRound: {
               ...prev.currentRound,
-              clueRevealIndex: prev.currentRound.clueRevealIndex + 1,
+              clueRevealIndex: Math.min(
+                prev.currentRound.clues.length,
+                prev.currentRound.clueRevealIndex + 2,
+              ),
             },
           };
         });
@@ -352,11 +365,12 @@ export function useAuctionGame(
         const round = prev.currentRound;
         const firstId = nextBidderId({ ...round, currentTurnId: round.turnOrder[round.turnOrder.length - 1] ?? null }, prev.players);
         if (!firstId) {
-          // No one needs the player → unsold, advance.
-          return advanceToNextRound({
+          // No one can bid → unsold, revealed winnerless (server parity).
+          return {
             ...prev,
-            completedRounds: [...prev.completedRounds, { ...round, revealed: true }],
-          });
+            phase: 'reveal' as AuctionPhase,
+            currentRound: { ...round, currentTurnId: null, turnEndsAt: null, winnerId: null, winningBid: 0, revealed: true },
+          };
         }
         return {
           ...prev,
@@ -379,18 +393,8 @@ export function useAuctionGame(
         if (prev.phase !== 'bidding' || !prev.currentRound?.currentTurnId) return prev;
         const round = prev.currentRound;
         const turnId = round.currentTurnId!;
-        // Forced opener (no standing bid) can't fold on timeout — auto-bid the
-        // starting price (nextBidderId guaranteed they can afford it).
-        if (!round.highestBidderId) {
-          const bidded = {
-            ...round,
-            bids: [...round.bids, { playerId: turnId, amount: round.startingPrice }],
-            highestBidderId: turnId,
-            highestBid: round.startingPrice,
-          };
-          return resolveOrAdvanceTurn(prev, bidded);
-        }
-        // Otherwise timeout = auto-fold.
+        // Timeout = auto-fold, opening turn included (mirrors the server: the
+        // auto-buy at the starting price is gone — nobody is forced to buy).
         const folded = { ...round, foldedIds: [...round.foldedIds, turnId] };
         return resolveOrAdvanceTurn(prev, folded);
       });
@@ -422,18 +426,16 @@ export function useAuctionGame(
         // heuristic; replaced by the real AI difficulty system later).
         const willingness = Math.round(r.footballer.value * (0.75 + Math.random() * 0.55));
 
-        // Forced opener (no standing bid) must bid — can't fold.
-        const mustOpen = !r.highestBidderId;
+        // The opener may pass like anyone else (mirrors the server): a bot
+        // never opens a lot priced above its willingness.
         const canAfford = maxBid >= minBid;
         const wantsIt = minBid <= willingness;
         const randomFold = Math.random() < 0.12;
 
-        if (!mustOpen && (!canAfford || !wantsIt || randomFold)) {
+        if (!canAfford || !wantsIt || randomFold) {
           const folded = { ...r, foldedIds: [...r.foldedIds, turnId] };
           return resolveOrAdvanceTurn(prev, folded);
         }
-        // (A forced opener always reaches here; nextBidderId guarantees they can
-        //  afford the starting price, so the bid below is valid.)
 
         // Bid: minimum raise most of the time, sometimes a bump.
         const bump = Math.random() < 0.35 ? MIN_BID_INCREMENT * (1 + Math.floor(Math.random() * 4)) : 0;
@@ -548,14 +550,11 @@ export function useAuctionGame(
     const cur = stateRef.current;
     if (!cur.currentRound || cur.phase !== 'bidding') return;
     if (cur.currentRound.currentTurnId !== HUMAN_PLAYER_ID) return;
-    // The forced opener (no standing bid) cannot fold — they must bid.
-    if (!cur.currentRound.highestBidderId) return;
     clearAllTimers();
     setState((prev) => {
       if (!prev.currentRound || prev.phase !== 'bidding') return prev;
       const round = prev.currentRound;
       if (round.currentTurnId !== HUMAN_PLAYER_ID) return prev;
-      if (!round.highestBidderId) return prev;
       const folded = { ...round, foldedIds: [...round.foldedIds, HUMAN_PLAYER_ID] };
       return resolveOrAdvanceTurn(prev, folded);
     });
@@ -577,7 +576,14 @@ export function useAuctionGame(
         if (!prev.soloPick) return prev;
         const { playerId, positionGroup, optionA, optionB } = prev.soloPick;
         const chosen = option === 'A' ? optionA : optionB;
-        const cost = chosen.footballer.startingPrice;
+        // Server parity: solo selection charges min(sticker, per-slot budget
+        // cap) — charging the raw sticker here could drive a mock budget
+        // negative where the live engine would have discounted the charge.
+        const picker = prev.players.find((p) => p.id === playerId);
+        const cost = Math.max(0, Math.min(
+          chosen.footballer.startingPrice,
+          picker ? getMaxBid(picker) : chosen.footballer.startingPrice,
+        ));
 
         const updatedPlayers = assignPlayer(
           prev.players,

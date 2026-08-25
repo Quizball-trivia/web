@@ -530,7 +530,7 @@ describe('auction realtime reducer', () => {
     expect(next.publicState?.seats.find((seat) => seat.seatId === 'seat-bot-1')?.budget).toBe(1_000_000_000);
   });
 
-  it('maps season snapshots through and pads snapshot lots to five clue slots', () => {
+  it('maps season snapshots through and pads snapshot lots to seven clue slots', () => {
     const snapshots = [
       { season: '2020/21', league: 'La Liga', age: 19, apps: 20, goals: 3, valueEur: 5_000_000 },
       { season: '2022/23', league: 'La Liga', age: 21, apps: 36, goals: 11, valueEur: 30_000_000 },
@@ -553,7 +553,8 @@ describe('auction realtime reducer', () => {
     expect(footballer.snapshots).toHaveLength(3);
     // Null age is preserved so the UI renders "—" instead of a fake 0.
     expect(footballer.snapshots![2].age).toBeNull();
-    // Facet-unlock cadence is driven by clue count: snapshot lots pad to 5.
-    expect(clientState.currentRound!.clues).toHaveLength(5);
+    // Facet-unlock cadence is driven by clue count: snapshot lots pad to 7
+    // (five stat facets + two authored text hints).
+    expect(clientState.currentRound!.clues).toHaveLength(7);
   });
 });
