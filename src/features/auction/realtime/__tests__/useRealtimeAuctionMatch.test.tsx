@@ -821,7 +821,7 @@ describe('useRealtimeAuctionMatch', () => {
 
     act(() => {
       socketMock.trigger('auction:error', {
-        code: 'auction_not_your_turn',
+        code: 'auction_not_current_turn',
         message: 'Not your turn',
       });
     });

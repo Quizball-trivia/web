@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { useLocale } from '@/contexts/LocaleContext';
 import { POS_COLORS } from '../../constants/auction.constants';
@@ -26,10 +26,17 @@ export function AuctionRoundIntro({ roundIndex, positionGroup, onDone }: Auction
   const posLabel = usePositionLabel();
   const posColor = POS_COLORS[positionGroup];
 
+  // Latest-ref so an unstable onDone identity (parent re-renders are constant
+  // while auction events stream in) can't reset the timer — the intro must run
+  // exactly once for its full duration per mount.
+  const onDoneRef = useRef(onDone);
   useEffect(() => {
-    const timeout = window.setTimeout(onDone, ROUND_INTRO_MS);
-    return () => window.clearTimeout(timeout);
+    onDoneRef.current = onDone;
   }, [onDone]);
+  useEffect(() => {
+    const timeout = window.setTimeout(() => onDoneRef.current(), ROUND_INTRO_MS);
+    return () => window.clearTimeout(timeout);
+  }, []);
 
   return (
     <motion.div

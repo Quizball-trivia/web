@@ -589,6 +589,47 @@ describe('useFriendLobbyLogic auction hand-off', () => {
     expect(mocks.routerPush).not.toHaveBeenCalledWith('/auction');
   });
 
+  it('still navigates to /auction when the lobby snapshot is cleared before hand-off', async () => {
+    // A descriptor already present while the lobby is WAITING is some earlier
+    // match — it must be treated as stale, not as the started match.
+    act(() => {
+      useAuctionActiveMatchStore.getState().setFromRejoinAvailable({
+        matchId: 'stale-earlier-match',
+      } as Parameters<
+        ReturnType<typeof useAuctionActiveMatchStore.getState>['setFromRejoinAvailable']
+      >[0]);
+      useRealtimeMatchStore.getState().setLobby(makeAuctionLobby('waiting'));
+    });
+
+    const { result } = renderHook(() =>
+      useFriendLobbyLogic({ roomCode: 'AUCT10', isHost: false }),
+    );
+    await waitFor(() => {
+      expect(result.current.lobby?.inviteCode).toBe('AUCT10');
+    });
+
+    // session:state(IN_ACTIVE_MATCH) clears the snapshot before this client
+    // observes the active flip. The STALE descriptor alone must not route.
+    act(() => {
+      useRealtimeMatchStore.setState({ lobby: null });
+    });
+    expect(mocks.routerPush).not.toHaveBeenCalledWith('/auction');
+
+    // The freshly started match's descriptor lands — now the hand-off fires.
+    act(() => {
+      useAuctionActiveMatchStore.getState().setFromRejoinAvailable({
+        matchId: 'auction-match-cleared-lobby',
+      } as Parameters<
+        ReturnType<typeof useAuctionActiveMatchStore.getState>['setFromRejoinAvailable']
+      >[0]);
+    });
+
+    await waitFor(() => {
+      expect(mocks.routerPush).toHaveBeenCalledWith('/auction');
+    });
+    expect(mocks.routerPush).not.toHaveBeenCalledWith('/game');
+  });
+
   it('routes a non-auction lobby to /game, not /auction', async () => {
     act(() => {
       useRealtimeMatchStore.getState().setLobby(makeLobby('NAYRR5'));

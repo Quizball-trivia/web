@@ -36,35 +36,6 @@ export function RevealScreen({
 }) {
   const { t } = useLocale();
   const round = state.currentRound;
-  const [stage, setStage] = useState(0);
-  const [showSold, setShowSold] = useState(true);
-  const [holdDone, setHoldDone] = useState(false);
-  const serverRevealAckedRoundRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    const timers = [
-      setTimeout(() => setShowSold(false), 700),
-      setTimeout(() => setStage(1), 400),
-      setTimeout(() => setStage(2), 700),
-      setTimeout(() => setStage(3), 1000),
-      setTimeout(() => setStage(4), 1300),
-      setTimeout(() => setStage(5), 1600),
-      // Everything is on screen at 1.6s; hold the full picture a short beat
-      // before acking so the server doesn't sweep into the next round instantly.
-      // Full picture on screen at 1.6s; hold it so the sold player is
-      // actually readable before the server sweeps into the next round.
-      setTimeout(() => setHoldDone(true), 6000),
-    ];
-    return () => timers.forEach(clearTimeout);
-  }, []);
-
-  useEffect(() => {
-    if (!serverDrivenTransitions || stage < 5 || !holdDone || !round) return;
-    const revealKey = `${state.roundIndex}:${round.footballer.id}`;
-    if (serverRevealAckedRoundRef.current === revealKey) return;
-    serverRevealAckedRoundRef.current = revealKey;
-    actions.confirmReveal();
-  }, [actions, holdDone, round, serverDrivenTransitions, stage, state.roundIndex]);
 
   if (!round) {
     return (
@@ -82,6 +53,65 @@ export function RevealScreen({
       </AuctionScreen>
     );
   }
+
+  // Remount the staged body per reveal identity: the screen can mount on the
+  // spinner (round still null) or stay mounted across rounds, and mount-only
+  // timers would have already elapsed when late round data lands — skipping
+  // the stagger and acking the reveal instantly. A fresh mount also resets
+  // stage/holdDone atomically, so a completed reveal can never leak its "done"
+  // state into the next identity and ack it on arrival.
+  return (
+    <RevealBody
+      key={`${state.roundIndex}:${round.footballer.id}`}
+      state={state}
+      round={round}
+      actions={actions}
+      humanPlayerId={humanPlayerId}
+      serverDrivenTransitions={serverDrivenTransitions}
+    />
+  );
+}
+
+function RevealBody({
+  state,
+  round,
+  actions,
+  humanPlayerId,
+  serverDrivenTransitions,
+}: {
+  state: AuctionGameState;
+  round: NonNullable<AuctionGameState['currentRound']>;
+  actions: AuctionActions;
+  humanPlayerId: string;
+  serverDrivenTransitions: boolean;
+}) {
+  const { t } = useLocale();
+  const [stage, setStage] = useState(0);
+  const [showSold, setShowSold] = useState(true);
+  const [holdDone, setHoldDone] = useState(false);
+  const serverRevealAckedRef = useRef(false);
+
+  useEffect(() => {
+    const timers = [
+      setTimeout(() => setShowSold(false), 700),
+      setTimeout(() => setStage(1), 400),
+      setTimeout(() => setStage(2), 700),
+      setTimeout(() => setStage(3), 1000),
+      setTimeout(() => setStage(4), 1300),
+      setTimeout(() => setStage(5), 1600),
+      // Full picture on screen at 1.6s; hold it so the sold player is
+      // actually readable before the server sweeps into the next round.
+      setTimeout(() => setHoldDone(true), 6000),
+    ];
+    return () => timers.forEach(clearTimeout);
+  }, []);
+
+  useEffect(() => {
+    if (!serverDrivenTransitions || stage < 5 || !holdDone) return;
+    if (serverRevealAckedRef.current) return;
+    serverRevealAckedRef.current = true;
+    actions.confirmReveal();
+  }, [actions, holdDone, serverDrivenTransitions, stage]);
 
   const winner = state.players.find((p) => p.id === round.winnerId);
   const posColor = POS_COLORS[round.positionGroup];
