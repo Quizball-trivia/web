@@ -5,10 +5,10 @@ import { getLeague } from '../../data/leagues';
 import { poppins } from '../../constants/auction.constants';
 
 /**
- * A league crest. There is no league logo asset set yet, so this falls back to
- * a styled colour badge with the league's 2-char tag. It is asset-ready: the
- * moment a league gains a `logo` URL in leagues.ts, the real crest renders
- * instead with no change here. Renders nothing for an unknown league.
+ * A league crest. Every current league in leagues.ts sets a `logo` URL, which
+ * renders the real crest; the styled colour badge with the league's 2-char tag
+ * is the fallback for any future league added without an asset. Renders
+ * nothing for an unknown league.
  */
 export function LeagueLogo({
   league,

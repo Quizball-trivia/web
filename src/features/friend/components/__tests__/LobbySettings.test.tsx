@@ -91,16 +91,26 @@ describe("LobbySettings auction mode", () => {
   });
 
   it("keeps the mode tabs available for a full 3-player auction lobby", () => {
-    // memberCount > 2 forces party-locked mode for every other game mode; a
-    // full auction lobby is at capacity, not overflowing, so the tabs stay.
+    // Only >3 members forces the party-locked view; a full 3-seat auction
+    // lobby is at capacity, not overflowing, so the tabs stay.
     renderSettings(makeLobby("auction", 3));
 
     expect(screen.getByRole("button", { name: "friend.auction" })).toBeTruthy();
     expect(screen.queryByText("friend.partyLockedHint")).toBeNull();
   });
 
-  it("still party-locks a 3-player classic lobby", () => {
-    renderSettings(makeLobby("friendly_possession", 3));
+  it("keeps tabs for a 3-player lobby but disables modes that seat only two", () => {
+    renderSettings(makeLobby("friendly_party_quiz", 3));
+
+    expect(screen.queryByText("friend.partyLockedHint")).toBeNull();
+    const auctionTab = screen.getByRole("button", { name: "friend.auction" });
+    expect((auctionTab as HTMLButtonElement).disabled).toBe(false);
+    const classicTab = screen.getByRole("button", { name: "friend.classic" });
+    expect((classicTab as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it("party-locks a lobby only past auction capacity (4+ members)", () => {
+    renderSettings(makeLobby("friendly_party_quiz", 4));
 
     expect(screen.getByText("friend.partyLockedHint")).toBeTruthy();
   });

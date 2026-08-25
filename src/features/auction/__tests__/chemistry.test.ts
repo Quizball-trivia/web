@@ -36,7 +36,7 @@ describe('computeSquadChemistry', () => {
     expect(computeSquadChemistry(team([])).total).toBe(0);
   });
 
-  it('gives a club link at 2 sharing players (club threshold 2/4/7)', () => {
+  it('gives a club link at 2 sharing players (club thresholds 2/3/4)', () => {
     const t = team([fb({ club: 'Real Madrid CF' }), fb({ club: 'Real Madrid CF' })]);
     const chem = computeSquadChemistry(t);
     // Each earns 1 club point; nations are unique so no nation link.
@@ -44,7 +44,7 @@ describe('computeSquadChemistry', () => {
     expect(Object.values(chem.perPlayer)).toEqual([1, 1]);
   });
 
-  it('gives a league link at 2 sharing players (league threshold 2/4/6, rescaled for 7-a-side)', () => {
+  it('gives a league link at 2 sharing players (league thresholds 2/4/6, rescaled for 7-a-side)', () => {
     const two = team([fb({ league: 'La Liga' }), fb({ league: 'La Liga' })]);
     expect(computeSquadChemistry(two).total).toBe(2); // each earns 1
 
@@ -56,7 +56,7 @@ describe('computeSquadChemistry', () => {
     expect(computeSquadChemistry(three).total).toBe(3); // still tier 1, each earns 1
   });
 
-  it('gives a nation link at 2 sharing players (nation threshold 2/5/8)', () => {
+  it('gives a nation link at 2 sharing players (nation thresholds 2/4/6)', () => {
     const t = team([fb({ nationality: 'Brazil' }), fb({ nationality: 'Brazil' })]);
     expect(computeSquadChemistry(t).total).toBe(2);
   });

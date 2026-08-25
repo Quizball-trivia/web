@@ -128,6 +128,14 @@ export function useAuctionGame(
     soloPick: null,
   });
 
+  // Committed-state mirror for event handlers: lets user actions validate
+  // against the latest committed state OUTSIDE setState updaters, which must
+  // stay pure (React may replay or abandon them).
+  const stateRef = useRef(state);
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
+
   const poolRef = useRef<Record<PositionGroup, Footballer[]>>({
     GK: [],
     DEF: [],
@@ -498,6 +506,18 @@ export function useAuctionGame(
 
   const placeBid = useCallback(
     (amount: number) => {
+      // Validate against committed state BEFORE touching timers: a rejected
+      // action must leave the turn timer alive (no auto-advance otherwise),
+      // and the setState updater below must stay pure. The updater re-checks
+      // everything, so a stale ref can at worst clear timers for an action the
+      // updater then rejects — never corrupt state.
+      const cur = stateRef.current;
+      if (!cur.currentRound || cur.phase !== 'bidding') return;
+      if (cur.currentRound.currentTurnId !== HUMAN_PLAYER_ID) return;
+      const curHuman = cur.players.find((p) => p.id === HUMAN_PLAYER_ID);
+      if (!curHuman || curHuman.isEliminated) return;
+      if (amount > getMaxBid(curHuman)) return;
+      if (amount < getMinBid(cur.currentRound)) return;
       clearAllTimers();
       setState((prev) => {
         if (!prev.currentRound || prev.phase !== 'bidding') return prev;
@@ -525,12 +545,16 @@ export function useAuctionGame(
   );
 
   const fold = useCallback(() => {
+    const cur = stateRef.current;
+    if (!cur.currentRound || cur.phase !== 'bidding') return;
+    if (cur.currentRound.currentTurnId !== HUMAN_PLAYER_ID) return;
+    // The forced opener (no standing bid) cannot fold — they must bid.
+    if (!cur.currentRound.highestBidderId) return;
     clearAllTimers();
     setState((prev) => {
       if (!prev.currentRound || prev.phase !== 'bidding') return prev;
       const round = prev.currentRound;
       if (round.currentTurnId !== HUMAN_PLAYER_ID) return prev;
-      // The forced opener (no standing bid) cannot fold — they must bid.
       if (!round.highestBidderId) return prev;
       const folded = { ...round, foldedIds: [...round.foldedIds, HUMAN_PLAYER_ID] };
       return resolveOrAdvanceTurn(prev, folded);

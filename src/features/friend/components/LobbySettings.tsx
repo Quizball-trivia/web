@@ -39,6 +39,15 @@ const MODE_DESCRIPTION_KEYS: Record<LobbyGameMode, MessageKey> = {
   auction: 'friend.auctionDescription',
 };
 
+// Max lobby members each mode can seat — a tab is switchable only while the
+// current member count fits (mirrors the server's LOBBY_MODE_CAPACITY check).
+const MODE_CAPACITY: Record<LobbyGameMode, number> = {
+  friendly_possession: 2,
+  friendly_party_quiz: 6,
+  ranked_sim: 2,
+  auction: 3,
+};
+
 export function LobbySettings({
   isHost,
   lobby,
@@ -50,9 +59,10 @@ export function LobbySettings({
   const settings = lobby?.settings;
   const serverMode = settings?.gameMode ?? 'friendly_possession';
   const memberCount = lobby?.members.length ?? 0;
-  // Auction seats 3 by design. Every other non-party mode must be locked out
-  // once a lobby has more than two members.
-  const isPartyLocked = memberCount > 2 && serverMode !== 'auction';
+  // Only party quiz seats more than 3, so past that the tabs disappear
+  // entirely; at exactly 3 the tabs stay and per-tab capacity gating below
+  // decides what's switchable (party ⇄ auction both seat 3+).
+  const isPartyLocked = memberCount > 3;
   const serverIsPublic = lobby?.isPublic ?? false;
   const serverIsRandom = settings?.friendlyRandom ?? true;
 
@@ -490,23 +500,29 @@ export function LobbySettings({
             </div>
           ) : (
             <div className="grid grid-cols-2 bg-surface-deep rounded-[14px] p-1 gap-1">
-              {MODE_TABS.map(({ value, labelKey }) => (
-                <button
-                  key={value}
-                  onClick={() => handleModeChange(value)}
-                  disabled={!canEdit}
-                  aria-pressed={mode === value}
-                  style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 13, letterSpacing: '0.04em' }}
-                  className={cn(
-                    "py-2.5 rounded-[10px] uppercase transition-colors",
-                    mode === value
-                      ? "bg-brand-blue text-white"
-                      : "text-white/55 hover:text-white"
-                  )}
-                >
-                  {t(labelKey)}
-                </button>
-              ))}
+              {MODE_TABS.map(({ value, labelKey }) => {
+                const overCapacity = memberCount > MODE_CAPACITY[value];
+                return (
+                  <button
+                    key={value}
+                    onClick={() => handleModeChange(value)}
+                    disabled={!canEdit || overCapacity}
+                    aria-pressed={mode === value}
+                    title={overCapacity ? t("friend.errorModeCapacity") : undefined}
+                    style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 13, letterSpacing: '0.04em' }}
+                    className={cn(
+                      "py-2.5 rounded-[10px] uppercase transition-colors",
+                      mode === value
+                        ? "bg-brand-blue text-white"
+                        : overCapacity
+                          ? "text-white/25 cursor-not-allowed"
+                          : "text-white/55 hover:text-white"
+                    )}
+                  >
+                    {t(labelKey)}
+                  </button>
+                );
+              })}
             </div>
           )}
           <p

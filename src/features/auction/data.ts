@@ -607,8 +607,8 @@ export function getTotalTeamValue(team: AuctionTeam): number {
 // 7 players earns up to 3 points from how many squadmates share their club,
 // league and nation (each dimension has its own tier thresholds, FC-style). A
 // player's points are the sum across the three dimensions, capped at 3; the
-// squad total scales the team's value by chem ÷ 10. With a 7-a-side squad the
-// max is 7 × 3 = 21 → ×2.1.
+// squad total feeds chemistryMultiplier (1 + chem ÷ 10), applied to profit.
+// With a 7-a-side squad the max is 7 × 3 = 21 → ×3.1.
 
 export const MAX_PLAYER_CHEMISTRY = 3;
 export const MAX_SQUAD_CHEMISTRY = AUCTION_SQUAD_SIZE * MAX_PLAYER_CHEMISTRY; // 21
