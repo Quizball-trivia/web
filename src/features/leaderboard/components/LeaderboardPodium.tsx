@@ -15,11 +15,6 @@ interface LeaderboardPodiumProps {
    * region-gated `isEventMode`.
    */
   eventMode?: boolean;
-  /**
-   * Use gold/silver/bronze bars instead of the ranked green/yellow/blue. The
-   * Weekend League podium opts in; /leaderboard keeps the ranked palette.
-   */
-  medalColors?: boolean;
 }
 
 const poppins = {
@@ -68,8 +63,7 @@ const eventPodiumConfig: Record<
   },
 };
 
-/** Medal palette — gold / silver / bronze. Opted into via `medalColors`. */
-const medalPodiumConfig: Record<
+const podiumConfig: Record<
   PodiumRank,
   {
     height: string;
@@ -102,43 +96,7 @@ const medalPodiumConfig: Record<
   },
 };
 
-const podiumConfig: Record<
-  PodiumRank,
-  {
-    height: string;
-    bg: string;
-    nameColor: string;
-    rpColor: string;
-    order: string;
-  }
-> = {
-  1: {
-    // Middle, tallest — green
-    height: "h-40 sm:h-52",
-    bg: "#38B60E",
-    nameColor: "text-white",
-    rpColor: "text-brand-yellow",
-    order: "order-2",
-  },
-  2: {
-    // Left — yellow
-    height: "h-32 sm:h-40",
-    bg: "#FFE500",
-    nameColor: "text-black",
-    rpColor: "text-black",
-    order: "order-1",
-  },
-  3: {
-    // Right — blue
-    height: "h-24 sm:h-32",
-    bg: "#1645FF",
-    nameColor: "text-white",
-    rpColor: "text-brand-yellow",
-    order: "order-3",
-  },
-};
-
-export function LeaderboardPodium({ topThree, onEntryClick, eventMode, medalColors = false }: LeaderboardPodiumProps) {
+export function LeaderboardPodium({ topThree, onEntryClick, eventMode }: LeaderboardPodiumProps) {
   const { isEventMode: regionEventMode } = useActiveEventMode();
   const isEventMode = eventMode ?? regionEventMode;
 
@@ -161,7 +119,7 @@ export function LeaderboardPodium({ topThree, onEntryClick, eventMode, medalColo
       <div className="overflow-visible px-4 pt-10 sm:px-6 sm:pt-14">
         <div className="flex items-end justify-center gap-2 sm:gap-4 w-full max-w-md mx-auto">
           {players.map(({ entry, rank }) => {
-            const config = (medalColors ? medalPodiumConfig : podiumConfig)[rank];
+            const config = podiumConfig[rank];
 
             if (!entry) {
               return <div key={rank} className={`flex-1 ${config.order}`} />;
