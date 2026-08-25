@@ -63,7 +63,7 @@ const QUESTIONS: SimQuestion[] = [
     kind: 'true_false',
     question: { prompt: i18n('Zidane scored twice in the 1998 World Cup final.', 'ზიდანმა 1998 წლის მუნდიალის ფინალში ორი გოლი გაიტანა.') },
     evaluation: { correct_id: 'true' },
-    points: 150,
+    points: 500,
   },
   {
     kind: 'put_in_order',
@@ -79,7 +79,7 @@ const QUESTIONS: SimQuestion[] = [
       ],
     },
     evaluation: { order: ['a', 'b', 'c', 'd'] },
-    points: 150,
+    points: 500,
   },
   {
     kind: 'mcq',
@@ -94,7 +94,7 @@ const QUESTIONS: SimQuestion[] = [
       image: null,
     },
     evaluation: { correct_id: 'a' },
-    points: 200,
+    points: 500,
   },
   {
     kind: 'career_path',
@@ -111,7 +111,7 @@ const QUESTIONS: SimQuestion[] = [
       display_answer: i18n('Cristiano Ronaldo', 'კრიშტიანუ რონალდუ'),
       accepted_answers: ['ronaldo', 'cristiano ronaldo', 'cristiano', 'რონალდუ'],
     },
-    points: 250,
+    points: 500,
   },
   {
     kind: 'who_am_i',
@@ -128,7 +128,7 @@ const QUESTIONS: SimQuestion[] = [
       display_answer: i18n('Lionel Messi', 'ლიონელ მესი'),
       accepted_answers: ['messi', 'lionel messi', 'leo messi', 'მესი'],
     },
-    points: 300,
+    points: 100,
   },
 ];
 
