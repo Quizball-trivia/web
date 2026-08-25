@@ -2001,7 +2001,11 @@
     "gCareerPrompt": "Whose career is this?",
     "gTimeUp": "Time's up",
     "gYou": "You",
-    "gPlayerN": "Player {n}"
+    "gPlayerN": "Player {n}",
+    "clueCounter": "CLUE {current}/{total}",
+    "finalCheckInBody": "Mark yourself ready before the final kicks off. Miss the window and your finalist spot goes unused.",
+    "finalCheckedInBody": "Sit tight — the final starts for all finalists at once.",
+    "finalSpectatorCheckinBody": "Finalists are checking in — the final starts when the clock hits zero. You'll watch the stream."
   },
   "wlAward": {
     "title1": "Weekend League Champion",
