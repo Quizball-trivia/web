@@ -13,6 +13,7 @@ import {
   getCampaignAttributionAnalyticsProperties,
   getCampaignAttributionHeader,
   getOrCreateCampaignConversionId,
+  hasRecentCampaignAttribution,
   hydrateCampaignAttributionFromUrl,
   rememberCampaignAttribution,
   rememberCampaignAttributionFromSignupUrl,
@@ -54,6 +55,13 @@ describe('campaign attribution handoff', () => {
       quiz_score: 12,
       quiz_total_questions: 15,
     });
+  });
+
+  it('only treats recent campaign attribution as replay-eligible', () => {
+    rememberCampaignAttribution({ quizSlug: 'club-badges', placement: 'score' });
+
+    expect(hasRecentCampaignAttribution()).toBe(true);
+    expect(hasRecentCampaignAttribution(-1)).toBe(false);
   });
 
   it('uses one conversion ID throughout the same quiz journey', () => {
@@ -113,6 +121,17 @@ describe('campaign attribution handoff', () => {
     expect(getCampaignAttributionAnalyticsProperties()).toMatchObject({
       quiz_slug: 'arsenal',
       cta_placement: 'header',
+    });
+  });
+
+  it('recovers attribution from the football quiz hub signup link', () => {
+    rememberCampaignAttributionFromSignupUrl(
+      new URL('https://quizball.io/en?signup=1&source=football-quiz-hub-header'),
+    );
+
+    expect(getCampaignAttributionAnalyticsProperties()).toMatchObject({
+      quiz_slug: 'football-quiz',
+      cta_placement: 'hero',
     });
   });
 

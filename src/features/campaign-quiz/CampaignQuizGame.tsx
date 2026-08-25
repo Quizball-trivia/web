@@ -4,8 +4,6 @@ import { useMemo, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Check, RotateCcw, X } from 'lucide-react';
-import { motion } from 'motion/react';
-import { useAuthStore } from '@/stores/auth.store';
 import { answerCampaignQuizQuestion } from './campaignQuiz.api';
 import {
   trackCampaignQuizAnswer,
@@ -77,7 +75,6 @@ export function CampaignQuizGame({
   scoreTemplate = 'You scored {score}/{total} — sign up free to save your score and defend it in a ranked duel.',
   previewToken,
 }: CampaignQuizGameProps) {
-  const authStatus = useAuthStore((state) => state.status);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, AnswerResult>>({});
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
@@ -159,10 +156,7 @@ export function CampaignQuizGame({
   };
 
   if (complete) {
-    const isAuthenticated = authStatus === 'authenticated';
-    const ctaHref = isAuthenticated
-      ? '/play'
-      : `/${locale}?signup=1&source=${slug}-quiz`;
+    const ctaHref = `/${locale}?signup=1&source=${slug}-quiz`;
     const guestScoreCopy = scoreTemplate
       .replace('{score}', String(score))
       .replace('{total}', String(questions.length));
@@ -191,19 +185,15 @@ export function CampaignQuizGame({
 
         <div className="px-5 py-7 text-center sm:px-10 sm:py-9">
           <p className="mx-auto max-w-xl text-base font-semibold leading-relaxed text-white/85 sm:text-lg">
-            {isAuthenticated
-              ? 'Ready for a tougher test? Take your football knowledge into a ranked duel.'
-              : guestScoreCopy}
+            {guestScoreCopy}
           </p>
           <Link
             href={ctaHref}
             onClick={() => {
-              if (!isAuthenticated) {
-                trackCampaignSignupClick(slug, 'score', {
-                  score,
-                  totalQuestions: questions.length,
-                });
-              }
+              trackCampaignSignupClick(slug, 'score', {
+                score,
+                totalQuestions: questions.length,
+              });
             }}
             className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-brand-yellow px-6 text-base font-bold text-black transition-colors hover:bg-brand-yellow/90 sm:w-auto"
           >
@@ -352,11 +342,7 @@ export function CampaignQuizGame({
               ) : null}
 
               {result ? (
-                <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mt-4 px-4 py-4"
-                >
+                <div className="mt-4 px-4 py-4">
                   <p className={`font-black ${result.correct ? 'text-brand-green-light' : 'text-brand-red-light'}`}>
                     {result.correct ? 'Correct — well played!' : 'Not quite — the correct answer is highlighted.'}
                   </p>
@@ -373,7 +359,7 @@ export function CampaignQuizGame({
                     {currentIndex === questions.length - 1 ? 'See my score' : 'Next question'}
                     <ArrowRight className="size-4" aria-hidden />
                   </button>
-                </motion.div>
+                </div>
               ) : null}
             </section>
           );

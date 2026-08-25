@@ -67,7 +67,10 @@ export async function generateMetadata({ params, searchParams }: CampaignQuizPag
         description,
         url: pageUrl,
         locale: isGeorgian ? 'ka_GE' : 'en_GB',
-        images: [{ url: absoluteImage(ogImage), width: 1200, height: 1200, alt: ogAlt }],
+        // CMS artwork is currently 4:3, while future dedicated OG assets may
+        // be 1.91:1. Omitting guessed dimensions lets crawlers use the real
+        // image ratio instead of advertising every asset as 1200×1200.
+        images: [{ url: absoluteImage(ogImage), alt: ogAlt }],
       },
       twitter: {
         card: 'summary_large_image',

@@ -178,6 +178,14 @@ export function trackSignupStarted(method: AuthMethod = 'google') {
   trackEvent('signup_started', { method, ...campaign });
 }
 
+export function trackSignupPageView() {
+  const campaign = getCampaignAttributionAnalyticsProperties();
+  trackEvent('signup_page_view', {
+    auth_mode: 'signup',
+    ...campaign,
+  });
+}
+
 export function trackSignupCompleted(method: AuthMethod = 'google') {
   // Legacy helper retained for older callers. New signup funnels must use the
   // backend account_created event; client code cannot authoritatively tell a
