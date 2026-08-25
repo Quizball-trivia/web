@@ -2,6 +2,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useFriendLobbyLogic } from '../useFriendLobbyLogic';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
+import { useAuctionActiveMatchStore } from '@/stores/auctionActiveMatch.store';
 import type { LobbyState } from '@/lib/realtime/socket.types';
 
 const mocks = vi.hoisted(() => ({
@@ -530,5 +531,82 @@ describe('useFriendLobbyLogic invite links', () => {
         questionCount: 10,
       });
     });
+  });
+});
+
+describe('useFriendLobbyLogic auction hand-off', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.useRealTimers();
+    useRealtimeMatchStore.getState().reset();
+    useAuctionActiveMatchStore.getState().clear();
+  });
+
+  function makeAuctionLobby(status: LobbyState['status'] = 'active'): LobbyState {
+    const lobby = makeLobby('AUCT10');
+    return {
+      ...lobby,
+      status,
+      settings: { ...lobby.settings, gameMode: 'auction' },
+    };
+  }
+
+  it('navigates to /auction once an auction lobby match exists', async () => {
+    act(() => {
+      useRealtimeMatchStore.getState().setLobby(makeAuctionLobby('active'));
+      useAuctionActiveMatchStore.getState().setFromRejoinAvailable({
+        matchId: 'auction-match-1',
+      } as Parameters<
+        ReturnType<typeof useAuctionActiveMatchStore.getState>['setFromRejoinAvailable']
+      >[0]);
+    });
+
+    renderHook(() => useFriendLobbyLogic({ roomCode: 'AUCT10', isHost: true }));
+
+    await waitFor(() => {
+      expect(mocks.routerPush).toHaveBeenCalledWith('/auction');
+    });
+    expect(mocks.routerPush).not.toHaveBeenCalledWith('/game');
+  });
+
+  it('stays put while the auction lobby is still waiting', async () => {
+    act(() => {
+      useRealtimeMatchStore.getState().setLobby(makeAuctionLobby('waiting'));
+      useAuctionActiveMatchStore.getState().setFromRejoinAvailable({
+        matchId: 'stale-auction-match',
+      } as Parameters<
+        ReturnType<typeof useAuctionActiveMatchStore.getState>['setFromRejoinAvailable']
+      >[0]);
+    });
+
+    const { result } = renderHook(() =>
+      useFriendLobbyLogic({ roomCode: 'AUCT10', isHost: true }),
+    );
+
+    await waitFor(() => {
+      expect(result.current.isAuctionLobby).toBe(true);
+    });
+    expect(mocks.routerPush).not.toHaveBeenCalledWith('/auction');
+  });
+
+  it('routes a non-auction lobby to /game, not /auction', async () => {
+    act(() => {
+      useRealtimeMatchStore.getState().setLobby(makeLobby('NAYRR5'));
+    });
+
+    renderHook(() => useFriendLobbyLogic({ roomCode: 'NAYRR5', isHost: true }));
+
+    act(() => {
+      useRealtimeMatchStore.getState().setDraftStart({
+        lobbyId: 'lobby-NAYRR5',
+        categories: [],
+        turnUserId: 'user-1',
+      } as Parameters<ReturnType<typeof useRealtimeMatchStore.getState>['setDraftStart']>[0]);
+    });
+
+    await waitFor(() => {
+      expect(mocks.routerPush).toHaveBeenCalledWith('/game');
+    });
+    expect(mocks.routerPush).not.toHaveBeenCalledWith('/auction');
   });
 });

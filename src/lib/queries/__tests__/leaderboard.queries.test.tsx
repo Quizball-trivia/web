@@ -45,6 +45,8 @@ describe("leaderboard query auth gating", () => {
     setStatus("authenticated");
     renderHook(() => useLeaderboard("global"), { wrapper });
 
-    await waitFor(() => expect(getLeaderboardMock).toHaveBeenCalledWith("global"));
+    await waitFor(() =>
+      expect(getLeaderboardMock).toHaveBeenCalledWith("global", 50, 0, undefined),
+    );
   });
 });

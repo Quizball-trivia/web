@@ -18,6 +18,7 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource }: FriendLobb
   const { t } = useLocale();
   const {
     lobby,
+    isAuctionLobby,
     members,
     lobbyCode,
     isResolvingInvite,
@@ -42,29 +43,48 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource }: FriendLobb
   const settings = lobby?.settings;
   const isCurrentHost = Boolean(me?.isHost) || (isHost && roomCode.trim().toLowerCase() === "new");
   const allReady = members.length > 0 && members.every((member) => member.isReady);
-  const isPartyMode = settings?.gameMode === "friendly_party_quiz" || members.length > 2;
-  // Lobby capacity by mode: party quiz holds up to 6; classic + ranked sim are 1v1 (2).
-  const lobbyMaxMembers = settings?.gameMode === "friendly_party_quiz" ? 6 : 2;
+  const isPartyMode =
+    settings?.gameMode === "friendly_party_quiz" || (members.length > 2 && !isAuctionLobby);
+  // Lobby capacity by mode: party quiz holds up to 6; auction seats 3 (empty
+  // seats become bots); classic + ranked sim are 1v1 (2).
+  const lobbyMaxMembers =
+    settings?.gameMode === "friendly_party_quiz" ? 6 : isAuctionLobby ? 3 : 2;
+  // Auction generates its own match content — lobby quiz categories do not
+  // apply to it.
   const hasFriendlyCategories =
+    isAuctionLobby ||
     settings?.friendlyRandom ||
     Boolean(settings?.friendlyCategoryAId);
-  const readyCopy =
-    settings?.gameMode === "ranked_sim"
+  const readyCopy = isAuctionLobby
+    ? t("friend.readyCopyAuction")
+    : settings?.gameMode === "ranked_sim"
       ? t("friend.readyCopyRanked")
       : isPartyMode
         ? t("friend.readyCopyParty")
         : t("friend.readyCopyClassic");
+  const isHostStartableMode =
+    settings?.gameMode === "friendly_possession" ||
+    settings?.gameMode === "friendly_party_quiz" ||
+    isAuctionLobby;
   const canStartMatch =
     Boolean(
       isCurrentHost &&
         allReady &&
         lobby?.status === "waiting" &&
-        (settings?.gameMode === "friendly_possession" || settings?.gameMode === "friendly_party_quiz") &&
+        isHostStartableMode &&
         hasFriendlyCategories &&
         !isStartingMatch
     );
-  const startLabel = isPartyMode ? t("friend.startPartyQuiz") : t("friend.startMatch");
-  const statusCopy = allReady
+  const startLabel = isAuctionLobby
+    ? t("friend.startAuction")
+    : isPartyMode
+      ? t("friend.startPartyQuiz")
+      : t("friend.startMatch");
+  const statusCopy = isAuctionLobby
+    ? allReady
+      ? t("friend.everyoneReady")
+      : t("friend.waitingEveryoneReady")
+    : allReady
     ? isPartyMode
       ? t("friend.everyoneReady")
       : t("friend.bothPlayersReady")
@@ -263,7 +283,7 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource }: FriendLobb
                 </span>
               </button>
 
-              {(settings?.gameMode === "friendly_possession" || settings?.gameMode === "friendly_party_quiz") && (
+              {isHostStartableMode && (
                 <button
                   onClick={actions.handleStartMatch}
                   disabled={!canStartMatch}

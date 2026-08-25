@@ -2,9 +2,11 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useLocale } from "@/contexts/LocaleContext";
+import type { MessageKey } from "@/lib/i18n/messages";
 import { useRealtimeConnection } from "@/lib/realtime/useRealtimeConnection";
 import { getSocket } from "@/lib/realtime/socket-client";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
+import { useAuctionActiveMatchStore } from "@/stores/auctionActiveMatch.store";
 import { useRankedMatchmakingStore } from "@/stores/rankedMatchmaking.store";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useAuthStore } from "@/stores/auth.store";
@@ -55,6 +57,15 @@ export function parseFriendLobbyInviteSource(value: string | null): FriendLobbyI
   return "shared_link";
 }
 
+/**
+ * Lobby error codes we render our own localized copy for. Everything else falls
+ * through to the server's (English) message.
+ */
+const LOBBY_ERROR_COPY_KEYS: Record<string, MessageKey> = {
+  LOBBY_MODE_CAPACITY: "friend.errorModeCapacity",
+  MEMBER_BUSY: "friend.errorMemberBusy",
+};
+
 const INVITE_STATE_CONFIRMATION_TIMEOUT_MS = 4_000;
 const INVITE_STATE_CONFIRMATION_MAX_RETRIES = 2;
 
@@ -96,6 +107,12 @@ export function useFriendLobbyLogic({
   const clearError = useRealtimeMatchStore((state) => state.clearError);
   const pendingLobbyHandoffCode = useRealtimeMatchStore((state) => state.pendingLobbyHandoffCode);
   const clearLobbyHandoff = useRealtimeMatchStore((state) => state.clearLobbyHandoff);
+  // Auction lobbies hand off to `/auction`, not `/game`. The app-wide socket
+  // handlers write the server's `auction:state` snapshot into this store, so it
+  // flips as soon as the host's `lobby:start` creates the auction match.
+  const activeAuctionMatchId = useAuctionActiveMatchStore(
+    (state) => state.activeAuctionMatch?.matchId ?? null
+  );
   const startSession = useGameSessionStore((state) => state.startSession);
 
   // Queries
@@ -473,11 +490,33 @@ export function useFriendLobbyLogic({
     });
   }, [activeLobby, selfUserId, isHost]);
 
+  // Auction hand-off. Only an auction-mode lobby routes here, and only once the
+  // host has actually started it — otherwise a leftover auction banner from an
+  // earlier match would yank a waiting lobby onto `/auction`. `/auction` picks
+  // the match up through its own rejoin-on-connect handshake.
+  const isAuctionLobby = activeLobby?.settings.gameMode === "auction";
+  const auctionHandoffReady =
+    isAuctionLobby &&
+    Boolean(activeAuctionMatchId) &&
+    (isStartingMatch || activeLobby?.status === "active");
+
+  useEffect(() => {
+    if (!auctionHandoffReady) return;
+    clearStartMatchTimeout();
+    logger.info("Auction lobby match started, navigating to /auction", {
+      lobbyId: activeLobby?.lobbyId ?? null,
+      matchId: activeAuctionMatchId,
+    });
+    router.push("/auction");
+  }, [activeAuctionMatchId, activeLobby?.lobbyId, auctionHandoffReady, clearStartMatchTimeout, router]);
+
   useEffect(() => {
     if (!draft && !hasActiveMatch) return;
+    // An auction lobby never hands off through the possession `/game` route.
+    if (isAuctionLobby) return;
     clearStartMatchTimeout();
     router.push("/game");
-  }, [clearStartMatchTimeout, draft, hasActiveMatch, router]);
+  }, [clearStartMatchTimeout, draft, hasActiveMatch, isAuctionLobby, router]);
 
   useEffect(() => {
     if (!error) return;
@@ -490,7 +529,10 @@ export function useFriendLobbyLogic({
       error.code === "NOT_HOST" ||
       error.code === "LOBBY_NOT_FOUND" ||
       error.code === "NOT_IN_LOBBY" ||
-      error.code === "TRANSITION_IN_PROGRESS";
+      error.code === "TRANSITION_IN_PROGRESS" ||
+      // Rejected mode switch (too many members for the target mode) — rolls the
+      // optimistic tab back to whatever the server still holds.
+      error.code === "LOBBY_MODE_CAPACITY";
     const isTransientSettingsBusy = error.code === "LOBBY_SETTINGS_LOCKED";
     const isInviteTransitionBusy = isResolvingInvite && error.code === "TRANSITION_IN_PROGRESS";
     const isInviteNotFound =
@@ -514,7 +556,10 @@ export function useFriendLobbyLogic({
       setIsStartingMatch(false);
     }, 0);
     if (!isTransientSettingsBusy && !isInviteTransitionBusy && !isInviteNotFound) {
-      toast.error(error.message);
+      // Server messages are raw English. Codes we have localized copy for get it;
+      // anything else still surfaces the server's own message rather than nothing.
+      const localizedKey = LOBBY_ERROR_COPY_KEYS[error.code];
+      toast.error(localizedKey ? t(localizedKey) : error.message);
     }
     clearError();
 
@@ -524,7 +569,7 @@ export function useFriendLobbyLogic({
       }
       clearTimeout(stopStartingTimer);
     };
-  }, [clearError, clearStartMatchTimeout, error, inviteJoinFailure, isPreparingMatch, isResolvingInvite]);
+  }, [clearError, clearStartMatchTimeout, error, inviteJoinFailure, isPreparingMatch, isResolvingInvite, t]);
 
   // 3. Actions
   const copyCode = async () => {
@@ -661,6 +706,7 @@ export function useFriendLobbyLogic({
 
   return {
     lobby: activeLobby,
+    isAuctionLobby,
     members,
     lobbyCode,
     isResolvingInvite,

@@ -3,7 +3,7 @@
 import { optimizedRemoteImageProps } from "@/lib/images/remoteImage";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { Check, Eye, EyeOff, Lock, Search, Shuffle, Trophy } from "lucide-react";
+import { Check, Eye, EyeOff, Gavel, Lock, Search, Shuffle, Trophy } from "lucide-react";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
@@ -11,7 +11,9 @@ import { CategorySummary } from "@/lib/domain";
 import type { LobbyGameMode, LobbySettings as LobbySettingsState, LobbyState } from "@/lib/realtime/socket.types";
 import { logger } from "@/utils/logger";
 import { useLocale } from "@/contexts/LocaleContext";
+import type { MessageKey } from "@/lib/i18n/messages";
 import { trackCategorySelected } from "@/lib/analytics/game-events";
+import { AUCTION_PURPLE } from "@/features/auction/constants/auction.constants";
 
 interface LobbySettingsProps {
   isHost: boolean;
@@ -22,6 +24,20 @@ interface LobbySettingsProps {
 }
 
 type SettingsPatch = Partial<LobbySettingsState> & { isPublic?: boolean };
+
+const MODE_TABS: ReadonlyArray<{ value: LobbyGameMode; labelKey: MessageKey }> = [
+  { value: 'friendly_possession', labelKey: 'friend.classic' },
+  { value: 'friendly_party_quiz', labelKey: 'friend.partyQuiz' },
+  { value: 'ranked_sim', labelKey: 'friend.rankedSim' },
+  { value: 'auction', labelKey: 'friend.auction' },
+];
+
+const MODE_DESCRIPTION_KEYS: Record<LobbyGameMode, MessageKey> = {
+  friendly_possession: 'friend.classicDescription',
+  friendly_party_quiz: 'friend.partyQuizDescription',
+  ranked_sim: 'friend.rankedSimDescription',
+  auction: 'friend.auctionDescription',
+};
 
 export function LobbySettings({
   isHost,
@@ -34,7 +50,9 @@ export function LobbySettings({
   const settings = lobby?.settings;
   const serverMode = settings?.gameMode ?? 'friendly_possession';
   const memberCount = lobby?.members.length ?? 0;
-  const isPartyLocked = memberCount > 2;
+  // Auction seats 3 by design. Every other non-party mode must be locked out
+  // once a lobby has more than two members.
+  const isPartyLocked = memberCount > 2 && serverMode !== 'auction';
   const serverIsPublic = lobby?.isPublic ?? false;
   const serverIsRandom = settings?.friendlyRandom ?? true;
 
@@ -92,6 +110,7 @@ export function LobbySettings({
 
   const mode = optimisticMode ?? serverMode;
   const isFriendlyMode = mode === 'friendly_possession' || mode === 'friendly_party_quiz';
+  const isAuctionMode = mode === 'auction';
   const isPublic = optimisticPublic ?? serverIsPublic;
   const isRandom = optimisticRandom ?? serverIsRandom;
 
@@ -470,46 +489,24 @@ export function LobbySettings({
               </div>
             </div>
           ) : (
-            <div className="flex bg-surface-deep rounded-[14px] p-1 gap-1">
-              <button
-                onClick={() => handleModeChange('friendly_possession')}
-                disabled={!canEdit}
-                style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 13, letterSpacing: '0.04em' }}
-                className={cn(
-                  "flex-1 py-2.5 rounded-[10px] uppercase transition-colors",
-                  mode === 'friendly_possession'
-                    ? "bg-brand-blue text-white"
-                    : "text-white/55 hover:text-white"
-                )}
-              >
-                {t("friend.classic")}
-              </button>
-              <button
-                onClick={() => handleModeChange('friendly_party_quiz')}
-                disabled={!canEdit}
-                style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 13, letterSpacing: '0.04em' }}
-                className={cn(
-                  "flex-1 py-2.5 rounded-[10px] uppercase transition-colors",
-                  mode === 'friendly_party_quiz'
-                    ? "bg-brand-blue text-white"
-                    : "text-white/55 hover:text-white"
-                )}
-              >
-                {t("friend.partyQuiz")}
-              </button>
-              <button
-                onClick={() => handleModeChange('ranked_sim')}
-                disabled={!canEdit}
-                style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 13, letterSpacing: '0.04em' }}
-                className={cn(
-                  "flex-1 py-2.5 rounded-[10px] uppercase transition-colors",
-                  mode === 'ranked_sim'
-                    ? "bg-brand-blue text-white"
-                    : "text-white/55 hover:text-white"
-                )}
-              >
-                {t("friend.rankedSim")}
-              </button>
+            <div className="grid grid-cols-2 bg-surface-deep rounded-[14px] p-1 gap-1">
+              {MODE_TABS.map(({ value, labelKey }) => (
+                <button
+                  key={value}
+                  onClick={() => handleModeChange(value)}
+                  disabled={!canEdit}
+                  aria-pressed={mode === value}
+                  style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 13, letterSpacing: '0.04em' }}
+                  className={cn(
+                    "py-2.5 rounded-[10px] uppercase transition-colors",
+                    mode === value
+                      ? "bg-brand-blue text-white"
+                      : "text-white/55 hover:text-white"
+                  )}
+                >
+                  {t(labelKey)}
+                </button>
+              ))}
             </div>
           )}
           <p
@@ -518,11 +515,7 @@ export function LobbySettings({
           >
             {isPartyLocked
               ? t("friend.partyDescription")
-              : mode === 'friendly_possession'
-                ? t("friend.classicDescription")
-                : mode === 'friendly_party_quiz'
-                  ? t("friend.partyQuizDescription")
-                : t("friend.rankedSimDescription")}
+              : t(MODE_DESCRIPTION_KEYS[mode])}
           </p>
         </div>
 
@@ -687,6 +680,30 @@ export function LobbySettings({
                 </div>
               </>
             )}
+          </div>
+        )}
+
+        {/* Auction Info — categories don't apply, so this replaces the picker. */}
+        {isAuctionMode && (
+          <div className="p-5 rounded-[14px] bg-white/[0.05] flex flex-col items-center text-center gap-2.5">
+            <div
+              className="size-14 rounded-full flex items-center justify-center"
+              style={{ background: AUCTION_PURPLE }}
+            >
+              <Gavel className="size-7 text-white" strokeWidth={2.5} />
+            </div>
+            <h4
+              className="text-white uppercase"
+              style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 16, letterSpacing: '0.04em' }}
+            >
+              {t("friend.auctionHeader")}
+            </h4>
+            <p
+              className="text-white/65 max-w-xs"
+              style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 500, fontSize: 12, lineHeight: 1.45 }}
+            >
+              {t("friend.auctionDescriptionLong")}
+            </p>
           </div>
         )}
 
