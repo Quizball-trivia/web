@@ -1,4 +1,5 @@
 import posthog from 'posthog-js';
+import { preparePostHogCapture } from '@/lib/analytics/posthog-capture-policy';
 
 // PostHog runs on PROD ONLY: NEXT_PUBLIC_POSTHOG_KEY exists solely in the
 // Production Vercel env (staging's key removed 2026-08-19 — staging must send
@@ -33,7 +34,16 @@ if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_POSTHOG_KEY) {
       // the bill; re-enable temporarily if a specific debugging/abuse
       // investigation needs replays.
       disable_session_recording: true,
-      capture_performance: false,
+      // Search Console has too little traffic for field Core Web Vitals data.
+      // Capture one batched $web_vitals event on public football quiz pages so
+      // mobile LCP, CLS and INP can be optimized from real visits. Network
+      // timings stay off; before_send drops vitals from the high-volume game.
+      capture_performance: {
+        network_timing: false,
+        web_vitals: true,
+        web_vitals_allowed_metrics: ['LCP', 'CLS', 'FCP', 'INP'],
+      },
+      before_send: preparePostHogCapture,
     });
     // identify() normally reloads flags automatically. Keep those reloads
     // paused globally; experiment helpers own their narrow manual reloads.

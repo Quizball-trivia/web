@@ -40,6 +40,7 @@ import { PostHogPageView } from '../PostHogProvider';
 
 describe('PostHogPageView', () => {
   beforeEach(() => {
+    vi.useRealTimers();
     vi.clearAllMocks();
     navigationMocks.pathname = '/game';
     navigationMocks.searchParams = new URLSearchParams();
@@ -74,14 +75,25 @@ describe('PostHogPageView', () => {
   });
 
   it('starts session recording on football-quiz pages', async () => {
+    vi.useFakeTimers();
     navigationMocks.pathname = '/en/football-quiz/liverpool';
 
     render(<PostHogPageView />);
 
-    await waitFor(() => {
-      expect(recordingMocks.startSessionRecording).toHaveBeenCalled();
-    });
+    expect(recordingMocks.startSessionRecording).not.toHaveBeenCalled();
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect(recordingMocks.startSessionRecording).toHaveBeenCalled();
     expect(recordingMocks.stopSessionRecording).not.toHaveBeenCalled();
+  });
+
+  it('starts SEO recording on the visitor\'s first interaction', () => {
+    vi.useFakeTimers();
+    navigationMocks.pathname = '/en/football-quiz/career-path';
+
+    render(<PostHogPageView />);
+    window.dispatchEvent(new Event('pointerdown'));
+
+    expect(recordingMocks.startSessionRecording).toHaveBeenCalledTimes(1);
   });
 
   it('stops session recording everywhere else', async () => {
@@ -110,13 +122,13 @@ describe('PostHogPageView', () => {
   });
 
   it('records the quiz hub page', async () => {
+    vi.useFakeTimers();
     navigationMocks.pathname = '/ka/football-quiz';
 
     render(<PostHogPageView />);
 
-    await waitFor(() => {
-      expect(recordingMocks.startSessionRecording).toHaveBeenCalled();
-    });
+    await vi.advanceTimersByTimeAsync(5_000);
+    expect(recordingMocks.startSessionRecording).toHaveBeenCalled();
   });
 
   it('continues recording on a campaign signup landing page', async () => {
