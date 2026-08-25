@@ -79,8 +79,8 @@ export const metadata: Metadata = {
     images: [SITE_OG_IMAGE_PATH],
   },
   icons: {
-    icon: SITE_ICON_PATH,
-    shortcut: SITE_ICON_PATH,
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
     apple: SITE_ICON_PATH,
   },
   // Google Search Console / OAuth brand verification. Next.js renders
