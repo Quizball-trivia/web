@@ -66,11 +66,11 @@ const ROUND_SECONDS = SECONDS_PER_QUESTION * QUESTIONS_PER_ROUND;
 
 // maxPoints mirror the backend exactly: 5×30, 5×30, 5×40, 5×40, 300 puzzle.
 export const ROUNDS: RoundDef[] = [
-  { index: 0, type: 'trueFalse', maxPoints: 150, seconds: ROUND_SECONDS, label: 'True or False' },
-  { index: 1, type: 'putInOrder', maxPoints: 150, seconds: ROUND_SECONDS * 2, label: 'Put In Order' },
-  { index: 2, type: 'mcq', maxPoints: 200, seconds: ROUND_SECONDS, label: 'Multiple Choice' },
-  { index: 3, type: 'careerPath', maxPoints: 200, seconds: ROUND_SECONDS, label: 'Career Path' },
-  { index: 4, type: 'whoAmI', maxPoints: 300, seconds: ROUND_SECONDS, label: 'Who Am I?' },
+  { index: 0, type: 'trueFalse', maxPoints: 500, seconds: ROUND_SECONDS, label: 'True or False' },
+  { index: 1, type: 'putInOrder', maxPoints: 500, seconds: ROUND_SECONDS * 2, label: 'Put In Order' },
+  { index: 2, type: 'mcq', maxPoints: 500, seconds: ROUND_SECONDS, label: 'Multiple Choice' },
+  { index: 3, type: 'careerPath', maxPoints: 500, seconds: ROUND_SECONDS, label: 'Career Path' },
+  { index: 4, type: 'whoAmI', maxPoints: 100, seconds: ROUND_SECONDS, label: 'Who Am I?' },
 ];
 
 export const ROUND_LABEL_KEYS: Record<string, MessageKey> = {
@@ -142,7 +142,7 @@ export const QUESTIONS: RoundQuestion[][] = [
       options: ['Lionel Messi', 'Neymar', 'Luis Suárez', 'Ronaldinho'],
       correctIndex: 0,
       // Mirrors ranked's clue decay: 300 → 240 → 180 → 120 → 60.
-      cluePoints: [300, 240, 180, 120, 60],
+      cluePoints: [100, 80, 60, 40, 20],
     },
   ],
   [
@@ -198,7 +198,7 @@ export const QUESTIONS: RoundQuestion[][] = [
       ],
       options: ['Iker Casillas', 'Gianluigi Buffon', 'Manuel Neuer', 'Petr Čech'],
       correctIndex: 1,
-      cluePoints: [300, 240, 180, 120, 60],
+      cluePoints: [100, 80, 60, 40, 20],
     },
   ],
   [
@@ -254,7 +254,7 @@ export const QUESTIONS: RoundQuestion[][] = [
       ],
       options: ['Antoine Griezmann', 'Karim Benzema', 'Kylian Mbappé', 'Ousmane Dembélé'],
       correctIndex: 2,
-      cluePoints: [300, 240, 180, 120, 60],
+      cluePoints: [100, 80, 60, 40, 20],
     },
   ],
 ];
