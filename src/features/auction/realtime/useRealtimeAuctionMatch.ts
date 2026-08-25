@@ -634,12 +634,21 @@ export function useRealtimeAuctionMatch({
     socket,
   ]);
 
+  // Depend on scalar slices of publicState, not the object: every applied event
+  // produces a new publicState reference, and re-running this effect on each one
+  // would clear the pending reconnect timer while the latch below blocks a
+  // reschedule — the recovery would then never fire.
+  const gapRecoveryMatchId = publicState?.matchId ?? null;
+  // Terminal-phase BOOLEAN, not the raw phase: mid-match phase churn (clue →
+  // bidding → reveal) must not re-run the effect, or its cleanup cancels the
+  // pending reconnect timer while the matchId latch blocks a reschedule.
+  const gapRecoveryFinished = (publicState?.phase ?? null) === 'finished';
   useEffect(() => {
-    if (!enabled || !isConnected || !publicState || !realtimeState.versionGapDetected) {
+    if (!enabled || !isConnected || !gapRecoveryMatchId || !realtimeState.versionGapDetected) {
       recoveredVersionGapKeyRef.current = null;
       return;
     }
-    if (publicState.phase === 'finished') return;
+    if (gapRecoveryFinished) return;
     // Spectators (forfeited/eliminated) should not drive the reconnect recovery:
     // they'd reconnect on every version gap forever with nothing to re-sync.
     if (!isLiveParticipant) return;
@@ -650,7 +659,7 @@ export function useRealtimeAuctionMatch({
     // this reconnect every few seconds forever. One reconnect per match is the
     // most a genuine one-off gap should ever need; the rejoin-on-connect and
     // the next full state snapshot self-heal the rest.
-    const gapKey = publicState.matchId;
+    const gapKey = gapRecoveryMatchId;
     if (recoveredVersionGapKeyRef.current === gapKey) return;
     recoveredVersionGapKeyRef.current = gapKey;
 
@@ -668,7 +677,7 @@ export function useRealtimeAuctionMatch({
         versionGapReconnectTimerRef.current = null;
       }
     };
-  }, [enabled, isConnected, isLiveParticipant, publicState, realtimeState.versionGapDetected]);
+  }, [enabled, isConnected, isLiveParticipant, gapRecoveryMatchId, gapRecoveryFinished, realtimeState.versionGapDetected]);
 
   useEffect(() => {
     if (!enabled || !matchId || publicState?.phase === 'finished') return;

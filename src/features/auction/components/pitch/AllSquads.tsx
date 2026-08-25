@@ -64,7 +64,7 @@ function SquadColumn({
             animate={{ scale: 1, rotate: 0, y: 0 }}
             transition={{ type: 'spring', stiffness: 500, damping: 14 }}
             className="shrink-0"
-            title="Leading bid"
+            title={t('auctionGame.rivalLeading')}
           >
             <Crown className="size-4 text-brand-yellow" fill="currentColor" />
           </motion.span>
@@ -170,6 +170,7 @@ export function AllSquads({
                   key={p.id}
                   type="button"
                   onClick={() => setActiveId(p.id)}
+                  aria-pressed={sel}
                   className={`min-w-0 flex-1 truncate rounded-full px-2 py-1.5 text-[11px] font-black uppercase transition-colors ${
                     sel ? 'bg-brand-yellow text-black' : 'text-white/60'
                   }`}

@@ -495,20 +495,43 @@ export function useFriendLobbyLogic({
   // the match up through its own rejoin-on-connect handshake.
   const isAuctionLobby = activeLobby?.settings.gameMode === "auction";
   const isFootballGridLobby = activeLobby?.settings.gameMode === "football_grid";
-  const auctionHandoffReady =
-    isAuctionLobby &&
-    Boolean(activeAuctionMatchId) &&
-    (isStartingMatch || activeLobby?.status === "active");
+  // Hand-off bookkeeping, all read/written inside effects (never during render):
+  // - wasAuctionLobby: the snapshot can be cleared out from under us
+  //   (session:state IN_ACTIVE_MATCH empties it once the match starts, esp. for
+  //   non-hosts), so remember the lobby's auction-ness.
+  // - staleAuctionMatchId: any descriptor observed while the lobby is still
+  //   WAITING belongs to some earlier match. Only a DIFFERENT id (or the server
+  //   flipping the lobby active while it's present) proves the started match.
+  const wasAuctionLobbyRef = useRef(false);
+  const staleAuctionMatchIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    // Fresh room → fresh baselines.
+    wasAuctionLobbyRef.current = false;
+    staleAuctionMatchIdRef.current = null;
+  }, [roomCode]);
+  useEffect(() => {
+    if (!activeLobby) return;
+    wasAuctionLobbyRef.current = activeLobby.settings.gameMode === "auction";
+    if (activeLobby.status === "waiting" && !isStartingMatch) {
+      staleAuctionMatchIdRef.current = activeAuctionMatchId;
+    }
+  }, [activeAuctionMatchId, activeLobby, isStartingMatch]);
 
   useEffect(() => {
-    if (!auctionHandoffReady) return;
+    if (!activeAuctionMatchId) return;
+    const isFreshMatch = activeAuctionMatchId !== staleAuctionMatchIdRef.current;
+    const ready = activeLobby
+      ? activeLobby.settings.gameMode === "auction" &&
+        (activeLobby.status === "active" || (isStartingMatch && isFreshMatch))
+      : wasAuctionLobbyRef.current && isFreshMatch;
+    if (!ready) return;
     clearStartMatchTimeout();
     logger.info("Auction lobby match started, navigating to /auction", {
       lobbyId: activeLobby?.lobbyId ?? null,
       matchId: activeAuctionMatchId,
     });
     router.push("/auction");
-  }, [activeAuctionMatchId, activeLobby?.lobbyId, auctionHandoffReady, clearStartMatchTimeout, router]);
+  }, [activeAuctionMatchId, activeLobby, clearStartMatchTimeout, isStartingMatch, router]);
 
   const footballGridHandoffReady =
     isFootballGridLobby &&

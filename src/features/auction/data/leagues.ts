@@ -1,11 +1,10 @@
 /**
  * League metadata for the auction chemistry UI.
  *
- * Leagues are one of the three chemistry dimensions (with club + nation). There
- * is no league logo asset set yet, so `logo` is left undefined and the UI falls
- * back to a styled colour badge (see LeagueLogo). The structure is asset-ready:
- * drop a URL/path into `logo` and the badge is replaced by the real crest with
- * no other code change.
+ * Leagues are one of the three chemistry dimensions (with club + nation). Every
+ * current entry sets `logo`, which renders the real crest; the styled colour
+ * badge (see LeagueLogo) is the fallback for any future league added without
+ * an asset.
  */
 import { getClub } from '@/lib/clubs';
 
