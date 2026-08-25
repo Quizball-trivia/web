@@ -15,6 +15,7 @@ const FOOTBALL_QUIZ_PATH = new RegExp(
   `^/(${LOCALES.join('|')})/football-quiz(/[^/]+)?/?$`,
 );
 const LOCALIZED_LANDING_PATH = new RegExp(`^/(${LOCALES.join('|')})/?$`);
+const SEO_RECORDING_DELAY_MS = 5_000;
 
 export function PostHogPageView(): ReactElement {
   return (
@@ -36,11 +37,38 @@ function PostHogPageViewInner(): ReactElement {
     const isCampaignSignupLanding =
       LOCALIZED_LANDING_PATH.test(pathname) &&
       (searchParams.get('signup') === '1' || hasRecentCampaignAttribution());
-    if (FOOTBALL_QUIZ_PATH.test(pathname) || isCampaignSignupLanding) {
+
+    if (isCampaignSignupLanding) {
       startSessionRecording();
-    } else {
-      stopSessionRecording();
+      return;
     }
+
+    if (!FOOTBALL_QUIZ_PATH.test(pathname)) {
+      stopSessionRecording();
+      return;
+    }
+
+    // The recorder is valuable for the SEO-to-signup investigation, but its
+    // ~60 KiB lazy bundle must not compete with the LCP image. Start after the
+    // critical paint, or sooner once the visitor actively engages.
+    let started = false;
+    const start = () => {
+      if (started) return;
+      started = true;
+      window.clearTimeout(timeoutId);
+      window.removeEventListener('pointerdown', start);
+      window.removeEventListener('keydown', start);
+      startSessionRecording();
+    };
+    const timeoutId = window.setTimeout(start, SEO_RECORDING_DELAY_MS);
+    window.addEventListener('pointerdown', start, { once: true, passive: true });
+    window.addEventListener('keydown', start, { once: true });
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      window.removeEventListener('pointerdown', start);
+      window.removeEventListener('keydown', start);
+    };
   }, [pathname, searchParams]);
 
   useEffect(() => {
