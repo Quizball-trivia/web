@@ -5,7 +5,7 @@
 // states. Rendered by BOTH the clean dev route (/dev/auction-stadium) and the
 // live route's opt-in preview (/auction?stadium=1) so there is one source.
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { LocaleProvider } from '@/contexts/LocaleContext';
 import { StadiumBiddingScreen } from './StadiumBiddingScreen';
 import type { AuctionActions } from '../../hooks/useAuctionGame';
@@ -79,11 +79,15 @@ const SCENARIOS: { key: string; label: string; make: () => AuctionGameState }[] 
 export function StadiumBiddingPreview() {
   const [key, setKey] = useState('clue');
   const scenario = SCENARIOS.find((s) => s.key === key) ?? SCENARIOS[0];
+  // Build the scenario state once per selection: make() bakes Date.now() into
+  // the deadlines, so calling it on every render would push the countdowns
+  // forward forever and they'd never reach zero.
+  const scenarioState = useMemo(() => scenario.make(), [scenario]);
 
   return (
     <LocaleProvider>
       <div className="relative">
-        <StadiumBiddingScreen key={key} state={scenario.make()} actions={noop} humanPlayerId={HUMAN_ID} />
+        <StadiumBiddingScreen key={key} state={scenarioState} actions={noop} humanPlayerId={HUMAN_ID} />
         {/* Floating scenario switcher (dev-only; top-left corner so it clears the
             stadium headers — the real game has no switcher). */}
         <div className="fixed left-2 top-2 z-50 flex gap-1 rounded-full border border-white/10 bg-black/70 p-1 backdrop-blur">

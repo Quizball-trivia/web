@@ -178,4 +178,89 @@ describe('RevealScreen', () => {
 
     expect(screen.getByText('Confirming transfer…')).toBeInTheDocument();
   });
+
+  it('runs the full staged reveal when round data arrives after mount', () => {
+    const missingRoundState = {
+      ...state(),
+      currentRound: null,
+      completedRounds: [],
+    };
+    const testActions = actions();
+
+    const { rerender } = render(
+      <RevealScreen
+        state={missingRoundState}
+        actions={testActions}
+        humanPlayerId="seat-human"
+        serverDrivenTransitions
+      />,
+    );
+
+    // Long spinner wait — mount-keyed timers would have fully elapsed by now.
+    act(() => {
+      vi.advanceTimersByTime(10_000);
+    });
+    expect(testActions.confirmReveal).not.toHaveBeenCalled();
+
+    rerender(
+      <RevealScreen
+        state={state()}
+        actions={testActions}
+        humanPlayerId="seat-human"
+        serverDrivenTransitions
+      />,
+    );
+
+    // The reveal must restage from the moment the data landed, not ack at once.
+    act(() => {
+      vi.advanceTimersByTime(5_999);
+    });
+    expect(testActions.confirmReveal).not.toHaveBeenCalled();
+
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
+    expect(testActions.confirmReveal).toHaveBeenCalledTimes(1);
+  });
+
+  it('restages a new reveal identity instead of acking it instantly', () => {
+    const testActions = actions();
+
+    const { rerender } = render(
+      <RevealScreen
+        state={state()}
+        actions={testActions}
+        humanPlayerId="seat-human"
+        serverDrivenTransitions
+      />,
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(6_000);
+    });
+    expect(testActions.confirmReveal).toHaveBeenCalledTimes(1);
+
+    // Next lot arrives while the screen stays mounted: new identity must run
+    // its own full staged reveal, not inherit the finished stage/holdDone.
+    const nextState = state();
+    nextState.roundIndex = 1;
+    rerender(
+      <RevealScreen
+        state={nextState}
+        actions={testActions}
+        humanPlayerId="seat-human"
+        serverDrivenTransitions
+      />,
+    );
+
+    act(() => {
+      vi.advanceTimersByTime(5_999);
+    });
+    expect(testActions.confirmReveal).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
+    expect(testActions.confirmReveal).toHaveBeenCalledTimes(2);
+  });
 });
