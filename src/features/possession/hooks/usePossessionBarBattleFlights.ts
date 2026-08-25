@@ -352,7 +352,7 @@ export function usePossessionBarBattleFlights() {
       }
       window.removeEventListener('resize', onResize);
     };
-  }, [enabled, currentQIndex, barBattleMatch.currentPhaseKind, barBattleMatch.possessionPhaseKind]);
+  }, [enabled, currentKey, barBattleMatch.currentPhaseKind, barBattleMatch.possessionPhaseKind]);
 
   const phaseKindFromState = barBattleMatch.currentPhaseKind
     ?? barBattleMatch.possessionPhaseKind
