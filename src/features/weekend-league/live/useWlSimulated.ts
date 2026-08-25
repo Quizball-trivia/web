@@ -63,7 +63,7 @@ const QUESTIONS: SimQuestion[] = [
     kind: 'true_false',
     question: { prompt: i18n('Zidane scored twice in the 1998 World Cup final.', 'ზიდანმა 1998 წლის მუნდიალის ფინალში ორი გოლი გაიტანა.') },
     evaluation: { correct_id: 'true' },
-    points: 500,
+    points: 100,
   },
   {
     kind: 'put_in_order',
@@ -79,7 +79,7 @@ const QUESTIONS: SimQuestion[] = [
       ],
     },
     evaluation: { order: ['a', 'b', 'c', 'd'] },
-    points: 500,
+    points: 100,
   },
   {
     kind: 'mcq',
@@ -94,7 +94,7 @@ const QUESTIONS: SimQuestion[] = [
       image: null,
     },
     evaluation: { correct_id: 'a' },
-    points: 500,
+    points: 100,
   },
   {
     kind: 'career_path',
@@ -111,7 +111,7 @@ const QUESTIONS: SimQuestion[] = [
       display_answer: i18n('Cristiano Ronaldo', 'კრიშტიანუ რონალდუ'),
       accepted_answers: ['ronaldo', 'cristiano ronaldo', 'cristiano', 'რონალდუ'],
     },
-    points: 500,
+    points: 100,
   },
   {
     kind: 'who_am_i',
@@ -172,7 +172,7 @@ function simBoard(game: number, round: number, myScore: number): WlBoardRow[] {
   const rows: WlBoardRow[] = BOT_NAMES.map((name, i) => ({
     user_id: `sim-bot-${i}`,
     nickname: name,
-    points: Math.max(0, Math.round((round + 1) * (170 - i * 6) + ((i * 37 + game * 91) % 60))),
+    points: Math.max(0, Math.round((round + 1) * (360 - i * 13) + ((i * 37 + game * 91) % 120))),
     time_ms_total: 30_000 + i * 1_800,
     rank: 0,
   }));
