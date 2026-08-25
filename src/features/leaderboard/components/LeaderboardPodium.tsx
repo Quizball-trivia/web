@@ -90,8 +90,8 @@ const podiumConfig: Record<
   3: {
     height: "h-24 sm:h-32",
     bg: "#CD7F32",
-    nameColor: "text-white",
-    rpColor: "text-white",
+    nameColor: "text-black",
+    rpColor: "text-black",
     order: "order-3",
   },
 };
