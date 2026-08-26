@@ -20,7 +20,12 @@ import {
 import { useLocale } from '@/contexts/LocaleContext';
 import { usePlayer } from '@/contexts/PlayerContext';
 import { footballGridAssetUrl } from '@/lib/football-grid/assets';
-import type { FootballGridCriterionView, FootballGridState, OpponentInfo } from '@/lib/realtime/socket.types';
+import type {
+  FootballGridCompletedPayload,
+  FootballGridCriterionView,
+  FootballGridState,
+  OpponentInfo,
+} from '@/lib/realtime/socket.types';
 import { cn } from '@/lib/utils';
 import { MiniGameShell, StatPill } from '@/features/mini-games/components/MiniGameShell';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
@@ -29,8 +34,10 @@ import {
   FOOTBALL_GRID_COPY,
   FootballGridNoticeScreen,
   FootballGridTurnPanel,
+  GridRewardChips,
   MatchBoard,
   PhaseOverlay,
+  ResultSampleGallery,
   SearchScreen,
 } from './FootballGridFlowScreen';
 
@@ -91,6 +98,33 @@ const PREVIEW_OPPONENT: OpponentInfo = {
   avatarUrl: null,
   avatarCustomization: { skin: 'skin_male_dark', hair: 'hair_cornrows', jersey: 'jersey_barcelona' },
 };
+
+const PREVIEW_RESULT_SAMPLES: FootballGridCompletedPayload['samples'] = [
+  {
+    cellIndex: 0,
+    players: [
+      { playerId: '662e7c41-0436-4be0-a5dc-8b3fabe93ecf', name: 'Thierry Henry', imageUrl: 'https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/player-images/662e7c41-0436-4be0-a5dc-8b3fabe93ecf.webp', imageAssetKey: null },
+      { playerId: '70dc16b3-f5c1-4c31-b386-34c6999cd837', name: 'Patrick Vieira', imageUrl: 'https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/football-grid/v1/players/70dc16b3-f5c1-4c31-b386-34c6999cd837.webp', imageAssetKey: null },
+      { playerId: '2ee9513d-f64a-47f0-b43b-dc934bfacf6e', name: 'Olivier Giroud', imageUrl: 'https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/football-grid/v1/players/2ee9513d-f64a-47f0-b43b-dc934bfacf6e.webp', imageAssetKey: null },
+    ],
+  },
+  {
+    cellIndex: 1,
+    players: [
+      { playerId: 'a40f8645-200d-4a4b-9c3b-08e70e642e29', name: 'Gabriel Jesus', imageUrl: 'https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/football-grid/v1/players/a40f8645-200d-4a4b-9c3b-08e70e642e29.webp', imageAssetKey: null },
+      { playerId: '76ad088d-765f-4f1d-a35c-e7effbae230e', name: 'Gabriel Martinelli', imageUrl: 'https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/football-grid/v1/players/76ad088d-765f-4f1d-a35c-e7effbae230e.webp', imageAssetKey: null },
+      { playerId: '0d41d451-deba-4fc3-999c-381bd55d566f', name: 'Gilberto Silva', imageUrl: 'https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/player-images/0d41d451-deba-4fc3-999c-381bd55d566f.webp', imageAssetKey: null },
+    ],
+  },
+  {
+    cellIndex: 2,
+    players: [
+      { playerId: '9c90e944-d94b-4c0c-99bc-40401f3cb3fe', name: 'Cesc Fàbregas', imageUrl: 'https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/football-grid/v1/players/9c90e944-d94b-4c0c-99bc-40401f3cb3fe.webp', imageAssetKey: null },
+      { playerId: '764741cd-3e44-46d7-8e94-b9f182069b3a', name: 'Mikel Arteta', imageUrl: 'https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/football-grid/v1/players/764741cd-3e44-46d7-8e94-b9f182069b3a.webp', imageAssetKey: null },
+      { playerId: '91f8aaa1-ffec-441b-ae1c-4d724ae98da8', name: 'Santi Cazorla', imageUrl: 'https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/football-grid/v1/players/91f8aaa1-ffec-441b-ae1c-4d724ae98da8.webp', imageAssetKey: null },
+    ],
+  },
+];
 
 type ScenarioId =
   | 'searching'
@@ -203,8 +237,10 @@ function MatchScenario({ scenario }: { scenario: ScenarioId }) {
       onBack={() => undefined}
       disclaimer={false}
       backgroundImageUrl={footballGridAssetUrl('/assets/bg-pattern.webp')!}
+      wide
+      scrollable
     >
-      <div className="mt-2 flex flex-1 flex-col">
+      <div className="mx-auto mt-2 flex w-full max-w-xl flex-1 flex-col">
         <MatchBoard
           state={state}
           selfUserId="preview-self"
@@ -244,11 +280,14 @@ function ResultScenario({ outcome }: { outcome: 'win' | 'loss' | 'draw' }) {
 
   return (
     <main className="min-h-dvh overflow-y-auto bg-surface-page-alt bg-cover bg-center bg-no-repeat px-5 py-10 text-center text-white" style={{ backgroundImage: `url(${footballGridAssetUrl('/assets/bg-pattern.webp')})` }}>
-      <div className="mx-auto max-w-xl font-poppins">
+      <div className="mx-auto max-w-3xl font-poppins">
+        <div className="mx-auto max-w-xl">
         <p className="text-xs font-black uppercase tracking-[0.22em] text-white/40">{copy.title}</p>
         <h1
-          className="mt-2 font-poppins text-[2.5rem] font-black uppercase leading-[1.3] tracking-[0] sm:text-[3rem]"
-          style={{ color: won ? '#22C55E' : draw ? '#FACC15' : '#FB3101' }}
+          className={cn(
+            'mt-2 font-poppins text-[2.5rem] font-black uppercase leading-[1.3] tracking-[0] sm:text-[3rem]',
+            won ? 'text-brand-green' : draw ? 'text-brand-yellow' : 'text-brand-red',
+          )}
         >
           {title}
         </h1>
@@ -272,10 +311,24 @@ function ResultScenario({ outcome }: { outcome: 'win' | 'loss' | 'draw' }) {
             <span className="w-full truncate text-sm font-semibold uppercase text-white">{PREVIEW_OPPONENT.username}</span>
           </div>
         </div>
-        <div className="mt-3 rounded-2xl bg-white/5 p-4 font-black text-brand-blue-light">+{won ? 70 : 50} {copy.xp}</div>
-        <div className="mt-7 space-y-3">
+        {/* Fixture amounts mirror the settlement values (ranked-parity coins,
+            AP-style TP: win 50 / draw 30 / loss 10). */}
+        <GridRewardChips
+          xp={won ? 70 : 50}
+          tp={won ? 50 : draw ? 30 : 10}
+          coins={won ? 700 : 250}
+        />
+        </div>
+        <ResultSampleGallery
+          samples={PREVIEW_RESULT_SAMPLES}
+          board={PREVIEW_STATE.board}
+          locale={locale}
+          title={copy.sampleAnswers}
+          body={copy.sampleAnswersBody}
+        />
+        <div className="mx-auto mt-7 max-w-xl space-y-3">
           {won && <button type="button" className="w-full rounded-2xl bg-brand-green px-6 py-4 font-black uppercase text-white">{copy.rematch}</button>}
-          {!won && <button type="button" className="w-full rounded-2xl bg-brand-blue px-6 py-4 font-black uppercase">{copy.newOpponent}</button>}
+          {!won && <button type="button" className="w-full rounded-2xl bg-brand-green px-6 py-4 font-black uppercase text-white transition-colors hover:bg-brand-green-deep">{copy.newOpponent}</button>}
           <button type="button" className="w-full rounded-2xl border border-white/15 px-6 py-4 font-bold text-white/70">{copy.backToPlay}</button>
         </div>
       </div>
@@ -319,7 +372,7 @@ export function FootballGridDevPreview() {
   const selected = SCENARIOS.find((item) => item.id === scenario)!;
 
   return (
-    <div className="relative min-h-dvh bg-[#080b15]">
+    <div className="relative min-h-dvh bg-surface-page-alt">
       <ScenarioSurface scenario={scenario} />
 
       <button
@@ -332,7 +385,7 @@ export function FootballGridDevPreview() {
       </button>
 
       {panelOpen && (
-        <aside className="fixed bottom-4 right-4 top-4 z-[210] w-[min(340px,calc(100vw-32px))] overflow-y-auto rounded-[28px] border border-white/15 bg-[#0c1020]/95 p-4 text-white shadow-[0_30px_100px_rgba(0,0,0,.55)] backdrop-blur-2xl">
+        <aside className="fixed bottom-4 right-4 top-4 z-[210] w-[min(340px,calc(100vw-32px))] overflow-y-auto rounded-[28px] border border-white/15 bg-surface-page-alt/95 p-4 text-white shadow-[0_30px_100px_rgba(0,0,0,.55)] backdrop-blur-2xl">
           <div className="pr-12">
             <p className="font-poppins text-[10px] font-black uppercase tracking-[0.22em] text-brand-yellow">Development route</p>
             <h1 className="mt-1 font-poppins text-xl font-black uppercase leading-tight">Tic Tac Toe UI workshop</h1>

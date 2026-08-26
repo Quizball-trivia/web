@@ -1,13 +1,14 @@
 'use client';
 
+/* eslint-disable @next/next/no-img-element -- Player art is restricted to the reviewed first-party Grid CDN. */
+
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   AlertTriangle,
   Check,
-  Coins,
   LoaderCircle,
-  Sparkles,
+  UserRound,
   UserRoundSearch,
   X,
 } from 'lucide-react';
@@ -21,6 +22,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import type {
   FootballGridClaimState,
   FootballGridCompletionReason,
+  FootballGridCompletedPayload,
   FootballGridCriterionView,
   FootballGridState,
   OpponentInfo,
@@ -34,6 +36,7 @@ import {
 } from '@/features/mini-games/footballGrid.analytics';
 import { MiniGameShell, StatPill } from '@/features/mini-games/components/MiniGameShell';
 import { AnimatedCounter } from '@/features/game/results/AnimatedCounter';
+import { CoinRewardChip, RewardChip } from '@/features/game/results/RankedProgressionPanel';
 import { CriterionAsset } from './components/CriterionAsset';
 import { useRealtimeFootballGrid } from './realtime/useRealtimeFootballGrid';
 
@@ -78,11 +81,12 @@ export const FOOTBALL_GRID_COPY = {
     rematchAccepted: 'Rematch accepted',
     declineRematch: 'Decline rematch',
     newOpponent: 'Find new opponent',
-    backToPlay: 'Back to play',
+    backToPlay: 'Back to home',
     you: 'You',
     opponent: 'Opponent',
     claimed: 'Claimed',
     sampleAnswers: 'Other valid answers',
+    sampleAnswersBody: 'Different examples for each intersection',
     xp: 'XP earned',
     coins: 'Coins earned',
     signIn: 'Sign in to play online',
@@ -132,11 +136,12 @@ export const FOOTBALL_GRID_COPY = {
     rematchAccepted: 'რევანში მიღებულია',
     declineRematch: 'რევანშზე უარი',
     newOpponent: 'ახალი მეტოქე',
-    backToPlay: 'თამაშებზე დაბრუნება',
+    backToPlay: 'მთავარზე დაბრუნება',
     you: 'შენ',
     opponent: 'მეტოქე',
     claimed: 'დაკავებულია',
     sampleAnswers: 'სხვა სწორი პასუხები',
+    sampleAnswersBody: 'განსხვავებული მაგალითები თითოეული უჯრისთვის',
     xp: 'მიღებული XP',
     coins: 'მიღებული მონეტები',
     signIn: 'ონლაინ სათამაშოდ შედი ანგარიშზე',
@@ -189,19 +194,53 @@ function CriterionHeader({
   axis: 'column' | 'row';
 }) {
   const label = locale === 'ka' ? criterion.labelKa || criterion.labelEn : criterion.labelEn;
+  const portrait = criterion.family === 'manager' || criterion.family === 'teammate';
   if (axis === 'row') {
     return (
-      <div title={label} className="flex min-w-0 items-center justify-center overflow-hidden rounded-xl bg-brand-blue p-1.5">
-        <CriterionAsset criterion={criterion} className="size-7 sm:size-8" />
+      <div
+        title={label}
+        className="flex min-w-0 items-center justify-center overflow-hidden rounded-[20px] border border-white/10 bg-gradient-to-b from-brand-blue to-brand-blue/75 p-1.5 shadow-[0_10px_24px_rgba(11,51,190,.28)]"
+      >
+        <span className={cn('grid size-10 place-items-center sm:size-12', portrait && 'overflow-hidden rounded-full')}>
+          <CriterionAsset criterion={criterion} className={portrait ? 'size-full' : 'size-8 sm:size-10'} />
+        </span>
         <span className="sr-only">{label}</span>
       </div>
     );
   }
   return (
-    <div className="flex min-h-12 min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl bg-brand-yellow px-1 py-1.5 text-center">
-      <CriterionAsset criterion={criterion} className="size-6" />
-      <span className="line-clamp-2 font-poppins text-[8px] font-black uppercase leading-tight tracking-wide text-black/80 sm:text-[9px]">{label}</span>
+    <div className="flex min-h-[68px] min-w-0 flex-col items-center justify-center gap-1 rounded-[20px] border border-yellow-200/40 bg-gradient-to-b from-brand-yellow-soft to-brand-yellow px-1.5 py-2 text-center shadow-[0_10px_24px_rgba(255,214,0,.13)] sm:min-h-[82px]">
+      <span className={cn('grid size-9 place-items-center sm:size-11', portrait && 'overflow-hidden rounded-full')}>
+        <CriterionAsset criterion={criterion} className={portrait ? 'size-full' : 'size-7 sm:size-9'} />
+      </span>
+      <span className="line-clamp-2 font-poppins text-[9px] font-black uppercase leading-[1.05] tracking-[0.01em] text-black/80 sm:text-[10px]">{label}</span>
     </div>
+  );
+}
+
+function FootballGridPortrait({
+  source,
+  className,
+}: {
+  source: string | null | undefined;
+  className?: string;
+}) {
+  const [failed, setFailed] = useState(false);
+  const resolved = footballGridAssetUrl(source);
+  if (!resolved || failed) {
+    return (
+      <span aria-hidden="true" className={cn('grid place-items-center rounded-full bg-white/10 text-white/55 ring-2 ring-white/15', className)}>
+        <UserRound className="size-1/2" />
+      </span>
+    );
+  }
+  return (
+    <img
+      src={resolved}
+      alt=""
+      className={cn('rounded-full object-cover ring-2 ring-white/25', className)}
+      onError={() => setFailed(true)}
+    />
   );
 }
 
@@ -211,8 +250,12 @@ function ClaimedCell({ claim, isMine, claimedLabel }: { claim: FootballGridClaim
       initial={{ scale: 0.4, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       transition={{ type: 'spring', stiffness: 420, damping: 18 }}
-      className="absolute inset-0 flex flex-col items-center justify-center overflow-hidden p-1"
+      className="absolute inset-0 flex flex-col items-center justify-center gap-1 overflow-hidden p-1"
     >
+      <FootballGridPortrait
+        source={claim.imageUrl}
+        className="size-9 shadow-[0_5px_15px_rgba(0,0,0,.35)] sm:size-11"
+      />
       <span className={cn('line-clamp-3 text-center font-poppins text-[9px] font-black leading-tight sm:text-[10px]', isMine ? 'text-brand-cyan' : 'text-brand-red-soft')}>
         {claim.displayName ?? claimedLabel}
       </span>
@@ -243,7 +286,7 @@ export function MatchBoard({
   const claims = useMemo(() => new Map(state.claims.map((claim) => [claim.cellIndex, claim])), [state.claims]);
   const isMyTurn = state.phase === 'turn' && state.currentPlayerUserId === selfUserId;
   return (
-    <div className="grid grid-cols-[44px_repeat(3,minmax(0,1fr))] gap-1.5">
+    <div className="grid grid-cols-[50px_repeat(3,minmax(0,1fr))] gap-2 sm:grid-cols-[64px_repeat(3,minmax(0,1fr))]">
       <div />
       {state.board.columns.map((criterion) => <CriterionHeader key={criterion.id} criterion={criterion} locale={locale} axis="column" />)}
       {state.board.rows.flatMap((row, rowIndex) => [
@@ -260,7 +303,7 @@ export function MatchBoard({
               onClick={() => onSelect(cellIndex)}
               aria-label={`${locale === 'ka' ? row.labelKa : row.labelEn} × ${locale === 'ka' ? column.labelKa : column.labelEn}`}
               className={cn(
-                'relative aspect-square overflow-hidden rounded-xl border-2 p-1 text-center transition-colors',
+                'relative aspect-square overflow-hidden rounded-[18px] border-2 p-1 text-center transition-colors sm:rounded-[20px]',
                 claim && (claim.claimantUserId === selfUserId
                   ? 'border-brand-cyan bg-brand-cyan/20'
                   : 'border-brand-red-soft bg-brand-red-soft/15'),
@@ -278,6 +321,108 @@ export function MatchBoard({
         }),
       ])}
     </div>
+  );
+}
+
+/** Ranked-style animated reward chips (spring-in, rolling counter, shine). */
+export function GridRewardChips({ xp, tp, coins }: { xp: number; tp: number; coins: number }) {
+  if (xp <= 0 && tp <= 0 && coins <= 0) return null;
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-2">
+      {xp > 0 && <RewardChip amount={xp} delay={0.7} bg="#1CB0F6" suffix="XP" />}
+      {tp > 0 && <RewardChip amount={tp} delay={0.9} bg="#58CC02" suffix="TP" />}
+      {coins > 0 && <CoinRewardChip amount={coins} delay={1.1} />}
+    </div>
+  );
+}
+
+export function ResultSampleGallery({
+  samples,
+  board,
+  locale,
+  title,
+  body,
+}: {
+  samples: FootballGridCompletedPayload['samples'];
+  board: FootballGridState['board'];
+  locale: 'en' | 'ka';
+  title: string;
+  body: string;
+}) {
+  const shown = samples.slice(0, 3);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const activeSample = shown[Math.min(activeIndex, Math.max(0, shown.length - 1))];
+  const labelFor = (criterion: FootballGridCriterionView) => (
+    locale === 'ka' ? criterion.labelKa || criterion.labelEn : criterion.labelEn
+  );
+
+  const renderCard = (sample: (typeof shown)[number]) => {
+    const row = board.rows[Math.floor(sample.cellIndex / 3)];
+    const column = board.columns[sample.cellIndex % 3];
+    return (
+      <article
+        key={sample.cellIndex}
+        className="relative overflow-hidden rounded-[22px] border border-white/10 bg-gradient-to-b from-brand-blue to-brand-blue/75 p-3 shadow-[0_10px_28px_rgba(11,51,190,.3)]"
+      >
+        <div className="flex items-start gap-2.5">
+          <span className="grid size-9 shrink-0 place-items-center rounded-full bg-brand-yellow font-poppins text-xs font-black text-black shadow-[0_6px_18px_rgba(255,229,0,.3)] sm:size-10">
+            {sample.cellIndex + 1}
+          </span>
+          <p className="line-clamp-3 pt-0.5 font-poppins text-[11px] font-black uppercase leading-tight text-white/80 sm:text-xs">
+            {row && column ? `${labelFor(row)} × ${labelFor(column)}` : `#${sample.cellIndex + 1}`}
+          </p>
+        </div>
+        <div className="mt-3 space-y-2">
+          {sample.players.slice(0, 3).map((answerItem) => (
+            <div key={answerItem.playerId} className="flex min-w-0 items-center gap-2.5 rounded-[18px] bg-black/25 p-1.5 pr-2.5">
+              <FootballGridPortrait
+                source={answerItem.imageUrl ?? answerItem.imageAssetKey}
+                className="size-12 shrink-0 bg-surface-input shadow-[0_5px_16px_rgba(0,0,0,.3)] sm:size-14"
+              />
+              <span className="line-clamp-2 min-w-0 font-poppins text-[11px] font-bold leading-tight text-white/90 sm:text-xs">
+                {answerItem.name}
+              </span>
+            </div>
+          ))}
+        </div>
+      </article>
+    );
+  };
+
+  return (
+    <section className="mt-7 text-left">
+      <div className="px-1">
+        <h2 className="font-poppins text-sm font-black uppercase tracking-wide text-white/75">{title}</h2>
+        <p className="mt-1 text-xs font-semibold text-white/35">{body}</p>
+      </div>
+      {/* Mobile: one card + segmented switcher (same pattern as the auction
+          squad-pitch tabs) instead of three stacked cards. */}
+      <div className="mt-4 sm:hidden">
+        {shown.length > 1 && (
+          <div className="mx-auto mb-3 flex max-w-[240px] rounded-full bg-white/[0.06] p-1">
+            {shown.map((sample, index) => (
+              <button
+                key={sample.cellIndex}
+                type="button"
+                onClick={() => setActiveIndex(index)}
+                aria-pressed={index === activeIndex}
+                className={cn(
+                  'min-w-0 flex-1 rounded-full px-2 py-1.5 font-poppins text-[11px] font-black uppercase transition-colors',
+                  index === activeIndex ? 'bg-brand-yellow text-black' : 'text-white/60',
+                )}
+              >
+                {sample.cellIndex + 1}
+              </button>
+            ))}
+          </div>
+        )}
+        {activeSample && renderCard(activeSample)}
+      </div>
+      {/* Desktop: full 3-up grid. */}
+      <div className="mt-4 hidden gap-3 sm:grid sm:grid-cols-3">
+        {shown.map(renderCard)}
+      </div>
+    </section>
   );
 }
 
@@ -865,11 +1010,14 @@ export function FootballGridFlowScreen() {
     const accepted = Boolean(grid.rematch?.acceptedUserIds.includes(selfUserId));
     return (
       <main className="min-h-dvh overflow-y-auto bg-surface-page-alt bg-cover bg-center bg-no-repeat px-5 py-10 text-white" style={GRID_BACKGROUND_STYLE}>
-        <div className="mx-auto max-w-xl text-center font-poppins">
+        <div className="mx-auto max-w-3xl text-center font-poppins">
+          <div className="mx-auto max-w-xl">
           <p className="text-xs font-black uppercase tracking-[0.22em] text-white/40">{copy.title}</p>
           <h1
-            className="mt-2 font-poppins text-[2.5rem] font-black uppercase leading-[1.3] tracking-[0] sm:text-[3rem]"
-            style={{ color: won ? '#22C55E' : draw ? '#FACC15' : '#FB3101' }}
+            className={cn(
+              'mt-2 font-poppins text-[2.5rem] font-black uppercase leading-[1.3] tracking-[0] sm:text-[3rem]',
+              won ? 'text-brand-green' : draw ? 'text-brand-yellow' : 'text-brand-red',
+            )}
           >
             {completionTitle(grid.state.completionReason, won, draw, copy)}
           </h1>
@@ -907,27 +1055,25 @@ export function FootballGridFlowScreen() {
           </div>
 
           {grid.completed.rewards && (
-            <div className="mt-3 grid grid-cols-2 gap-3">
-              <div className="flex items-center justify-center gap-2 rounded-2xl bg-white/5 p-4"><Sparkles className="size-5 text-brand-blue-light" /><span className="font-black">+{grid.completed.rewards.xp} {copy.xp}</span></div>
-              {grid.completed.rewards.coins > 0 && <div className="flex items-center justify-center gap-2 rounded-2xl bg-white/5 p-4"><Coins className="size-5 text-brand-yellow" /><span className="font-black">+{grid.completed.rewards.coins} {copy.coins}</span></div>}
-            </div>
+            <GridRewardChips
+              xp={grid.completed.rewards.xp}
+              tp={grid.completed.rewards.tp ?? 0}
+              coins={grid.completed.rewards.coins}
+            />
           )}
+          </div>
 
           {grid.completed.samples.length > 0 && (
-            <div className="mt-7 rounded-[28px] border border-white/10 bg-white/[0.035] p-5 text-left">
-              <h2 className="text-sm font-black uppercase tracking-wide text-white/60">{copy.sampleAnswers}</h2>
-              <div className="mt-3 space-y-2">
-                {grid.completed.samples.slice(0, 3).map((sample) => (
-                  <div key={sample.cellIndex} className="flex items-center gap-3 rounded-xl bg-white/5 p-2.5">
-                    <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-brand-blue text-xs font-black">{sample.cellIndex + 1}</span>
-                    <span className="truncate text-sm font-bold text-white/75">{sample.players.map((answerItem) => answerItem.name).join(' · ')}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
+            <ResultSampleGallery
+              samples={grid.completed.samples}
+              board={grid.state.board}
+              locale={locale}
+              title={copy.sampleAnswers}
+              body={copy.sampleAnswersBody}
+            />
           )}
 
-          <div className="mt-7 space-y-3">
+          <div className="mx-auto mt-7 max-w-xl space-y-3">
             {rematchPending && (
               <button type="button" disabled={accepted} onClick={grid.actions.acceptRematch} className="w-full rounded-2xl bg-brand-green px-6 py-4 font-black uppercase text-white transition-colors hover:bg-brand-green-deep disabled:opacity-60">
                 {accepted ? copy.waitingRematch : copy.rematch}
@@ -937,7 +1083,7 @@ export function FootballGridFlowScreen() {
                 has already started its next match, so a public search cannot
                 race the pending rematch handoff. */}
             {source === 'matchmaking' && (!grid.rematch || grid.rematch.status === 'declined' || grid.rematch.status === 'expired') && (
-              <button type="button" onClick={handleFindNew} className="w-full rounded-2xl bg-brand-blue px-6 py-4 font-black uppercase">{copy.newOpponent}</button>
+              <button type="button" onClick={handleFindNew} className="w-full rounded-2xl bg-brand-green px-6 py-4 font-black uppercase text-white transition-colors hover:bg-brand-green-deep">{copy.newOpponent}</button>
             )}
             {rematchPending && !accepted && <button type="button" onClick={grid.actions.declineRematch} className="w-full rounded-2xl border border-white/15 px-6 py-4 font-bold text-white/70">{copy.declineRematch}</button>}
             <button type="button" onClick={() => { grid.actions.clear(); router.push('/play'); }} className="w-full rounded-2xl border border-white/15 px-6 py-4 font-bold text-white/70">{copy.backToPlay}</button>
@@ -966,8 +1112,10 @@ export function FootballGridFlowScreen() {
         onBack={() => setShowQuit(true)}
         disclaimer={false}
         backgroundImageUrl={GRID_BACKGROUND}
+        wide
+        scrollable
       >
-        <div className="mt-2 flex flex-1 flex-col">
+        <div className="mx-auto mt-2 flex w-full max-w-xl flex-1 flex-col">
         <MatchBoard state={state} selfUserId={selfUserId} locale={locale} selectedCell={selectedCell} onSelect={(cell) => { statsRef.current.selections += 1; setSelectedCell(cell); setAnswer(''); grid.actions.clearCommandFeedback(); }} />
           <FootballGridTurnPanel
             state={state}

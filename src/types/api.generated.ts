@@ -7174,8 +7174,7 @@ export interface paths {
                             to_final_seconds: number;
                         };
                         config?: {
-                            /** @enum {number} */
-                            rules_version?: 1;
+                            rules_version?: 1 | 2 | 3;
                             launch_edition?: boolean;
                             /**
                              * @default live
@@ -8242,6 +8241,7 @@ export interface paths {
                                 avatarCustomization?: unknown;
                                 auctionPoints: number;
                                 country: string | null;
+                                tier: string | null;
                                 rank: number;
                             }[];
                         };
@@ -8308,6 +8308,7 @@ export interface paths {
                             avatarCustomization?: unknown;
                             auctionPoints: number;
                             country: string | null;
+                            tier: string | null;
                             rank: number;
                             total: number;
                         } | null;
@@ -9017,6 +9018,143 @@ export interface paths {
                 };
             };
         };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/football-grid/leaderboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the Football Tic Tac Toe leaderboard */
+        get: {
+            parameters: {
+                query?: {
+                    scope?: "global" | "country";
+                    limit?: number;
+                    offset?: number | null;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Football Tic Tac Toe leaderboard */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            entries: {
+                                /** Format: uuid */
+                                userId: string;
+                                username: string;
+                                avatarUrl: string | null;
+                                avatarCustomization?: unknown;
+                                ticTacToePoints: number;
+                                country: string | null;
+                                tier: string | null;
+                                rank: number;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Invalid query parameters */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/football-grid/leaderboard/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get the authenticated user's Football Tic Tac Toe rank */
+        get: {
+            parameters: {
+                query?: {
+                    scope?: "global" | "country";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Rank information, or null when unranked */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            userId: string;
+                            username: string;
+                            avatarUrl: string | null;
+                            avatarCustomization?: unknown;
+                            ticTacToePoints: number;
+                            country: string | null;
+                            tier: string | null;
+                            rank: number;
+                            total: number;
+                        } | null;
+                    };
+                };
+                /** @description Invalid query parameters */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;

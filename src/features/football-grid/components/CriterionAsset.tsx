@@ -114,7 +114,12 @@ export function CriterionAsset({ criterion, className }: CriterionAssetProps) {
       <img
         src={source}
         alt=""
-        className={cn('object-contain', className)}
+        className={cn(
+          criterion.family === 'manager' || criterion.family === 'teammate'
+            ? 'rounded-full object-cover'
+            : 'object-contain',
+          className,
+        )}
         onError={() => setFailedSources((current) => current.includes(source) ? current : [...current, source])}
       />
     );
@@ -124,7 +129,7 @@ export function CriterionAsset({ criterion, className }: CriterionAssetProps) {
     <span
       aria-hidden="true"
       className={cn(
-        'grid place-items-center rounded-2xl bg-white/10 text-white/80 ring-1 ring-inset ring-white/10',
+        'grid place-items-center rounded-full bg-white/10 text-white/80 ring-1 ring-inset ring-white/15',
         className,
       )}
     >

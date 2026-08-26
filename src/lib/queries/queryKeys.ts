@@ -40,6 +40,10 @@ export const queryKeys = {
       [...queryKeys.leaderboard.all, "auction", "list", type] as const,
     auctionUser: (userId: string, type: LeaderboardType) =>
       [...queryKeys.leaderboard.all, "auction", "user", userId, type] as const,
+    ticTacToeList: (type: LeaderboardType) =>
+      [...queryKeys.leaderboard.all, "tic-tac-toe", "list", type] as const,
+    ticTacToeUser: (userId: string, type: LeaderboardType) =>
+      [...queryKeys.leaderboard.all, "tic-tac-toe", "user", userId, type] as const,
   },
   ranked: {
     all: ["ranked"] as const,

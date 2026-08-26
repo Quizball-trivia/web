@@ -19,6 +19,7 @@ export function MiniGameShell({
   children,
   backHref = '/dev/mini-games',
   wide = false,
+  scrollable = false,
   disclaimer = true,
   onBack,
   backgroundImageUrl = '/assets/bg-pattern.webp',
@@ -31,6 +32,8 @@ export function MiniGameShell({
   backHref?: string;
   /** Desktop: widen the play area (e.g. for a side-by-side layout). */
   wide?: boolean;
+  /** Allow tall game boards to extend and use the page scroll area. */
+  scrollable?: boolean;
   /** Live modes grant real rewards — they suppress the prototype footer. */
   disclaimer?: boolean;
   /** Live matches can intercept back navigation to show a forfeit warning. */
@@ -41,7 +44,9 @@ export function MiniGameShell({
   const t = useMiniT();
   return (
     <div
-      className="relative flex min-h-[100dvh] flex-col overflow-hidden bg-surface-page-alt bg-cover bg-center bg-no-repeat text-white"
+      className={`relative flex min-h-[100dvh] flex-col bg-surface-page-alt bg-cover bg-center bg-no-repeat text-white ${
+        scrollable ? 'overflow-x-hidden' : 'overflow-hidden'
+      }`}
       style={{ backgroundImage: `url(${backgroundImageUrl})` }}
     >
       {/* Ambient glow */}

@@ -404,7 +404,7 @@ export function RankedProgressionPanel({
  * number ROLLS up from zero, then a shine sweeps across once — earning,
  * not appearing. Coins and QP share this so the pair reads as one system.
  */
-function RewardChip({
+export function RewardChip({
   amount,
   delay,
   bg,
@@ -452,7 +452,7 @@ function RewardChip({
   );
 }
 
-function CoinRewardChip({ amount, delay }: { amount: number; delay: number }) {
+export function CoinRewardChip({ amount, delay }: { amount: number; delay: number }) {
   return <RewardChip amount={amount} delay={delay} bg="#FFE500" icon={<CoinIcon size={24} />} />;
 }
 
