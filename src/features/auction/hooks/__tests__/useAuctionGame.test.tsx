@@ -60,17 +60,27 @@ describe('useAuctionGame rejected actions', () => {
     expect(progressed).toBe(true);
   });
 
-  it('keeps the turn timer alive when a forced-opener fold is rejected', async () => {
+  it('accepts an opening pass on the human turn and keeps the match moving', async () => {
     const { result } = await driveToBidding();
     const roundBefore = result.current.state.currentRound!;
     const turnBefore = roundBefore.currentTurnId;
 
-    // With no standing bid the current turn holder cannot fold; on a bot's
-    // turn the human's fold is rejected anyway. Both are pure no-ops.
+    // The opener may PASS now (the forced-open rule is gone). On the human's
+    // turn the fold must be accepted and move the round along; on a bot's
+    // turn the human's fold stays a pure no-op.
     act(() => {
       result.current.actions.fold();
     });
-    expect(result.current.state.currentRound?.currentTurnId).toBe(turnBefore);
+    const mid = result.current.state;
+    if (turnBefore === 'human-player') {
+      const acted =
+        mid.phase !== 'bidding' ||
+        (mid.currentRound?.foldedIds ?? []).includes('human-player') ||
+        mid.currentRound?.currentTurnId !== turnBefore;
+      expect(acted).toBe(true);
+    } else {
+      expect(mid.currentRound?.currentTurnId).toBe(turnBefore);
+    }
 
     await act(async () => {
       await vi.advanceTimersByTimeAsync(OPENING_TURN_MS + RAISE_TURN_MS + 10_000);
