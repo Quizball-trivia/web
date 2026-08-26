@@ -142,7 +142,7 @@ export function BiddingScreen({
               <div className="space-y-2.5">
                 <SnapshotClues snapshots={round.footballer.snapshots} visibleClues={visibleClues} variant="card" accent={posColor} position={round.footballer.positionGroup} />
                 {/* Authored text hints follow the stat facets as the last reveal steps. */}
-                {round.clues.length > SNAPSHOT_STAT_STEPS.length && (
+                {round.clues.slice(SNAPSHOT_STAT_STEPS.length).some(Boolean) && (
                   <CluesList
                     clues={round.clues.slice(SNAPSHOT_STAT_STEPS.length)}
                     visibleClues={Math.max(0, visibleClues - SNAPSHOT_STAT_STEPS.length)}
