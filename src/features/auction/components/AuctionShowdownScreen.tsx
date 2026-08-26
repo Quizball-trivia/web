@@ -231,7 +231,14 @@ export function AuctionShowdownScreen({
 }) {
   const { t } = useLocale();
   const [readyIds, setReadyIds] = useState<Set<string>>(new Set());
-  const allReady = players.length > 0 && players.every((p) => readyIds.has(p.id));
+  // The showdown must hold at least 3s even when every player flips ready
+  // instantly — matches the server's prematch schedule minimum.
+  const [minHoldDone, setMinHoldDone] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setMinHoldDone(true), 3_000);
+    return () => clearTimeout(t);
+  }, []);
+  const allReady = minHoldDone && players.length > 0 && players.every((p) => readyIds.has(p.id));
 
   useEffect(() => {
     // Both modes stagger the flip for the reveal beat; in 'seated' mode every
