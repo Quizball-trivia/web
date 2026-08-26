@@ -590,9 +590,10 @@ export function useFriendLobbyLogic({
       }, 0);
     }
     clearStartMatchTimeout();
-    const stopStartingTimer = setTimeout(() => {
-      setIsStartingMatch(false);
-    }, 0);
+    // clearError() changes this effect's dependencies immediately. Keep the
+    // recovery update out of the effect cleanup path so it cannot be cancelled
+    // while the host is returning from a failed server-side start.
+    queueMicrotask(() => setIsStartingMatch(false));
     if (!isTransientSettingsBusy && !isInviteTransitionBusy && !isInviteNotFound) {
       // Server messages are raw English. Codes we have localized copy for get it;
       // anything else still surfaces the server's own message rather than nothing.
@@ -605,7 +606,6 @@ export function useFriendLobbyLogic({
       if (timer) {
         clearTimeout(timer);
       }
-      clearTimeout(stopStartingTimer);
     };
   }, [clearError, clearStartMatchTimeout, error, inviteJoinFailure, isPreparingMatch, isResolvingInvite, t]);
 

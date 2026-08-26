@@ -687,6 +687,39 @@ describe('useFriendLobbyLogic Football Grid hand-off', () => {
     expect(mocks.routerPush).not.toHaveBeenCalledWith('/game');
   });
 
+  it('returns the host to the lobby when Grid match creation fails', async () => {
+    const lobby = makeLobby('GRID15');
+    act(() => {
+      useRealtimeMatchStore.getState().setLobby({
+        ...lobby,
+        settings: { ...lobby.settings, gameMode: 'football_grid' },
+        members: [
+          { ...lobby.members[0], isReady: true },
+          { userId: 'user-2', username: 'Rival', avatarUrl: null, isReady: true, isHost: false },
+        ],
+      });
+    });
+
+    const { result } = renderHook(() => useFriendLobbyLogic({ roomCode: 'GRID15', isHost: true }));
+
+    act(() => result.current.actions.handleStartMatch());
+    expect(result.current.isStartingMatch).toBe(true);
+
+    act(() => {
+      useRealtimeMatchStore.getState().setError({
+        code: 'MATCH_CREATE_FAILED',
+        message: 'Unable to start Football Tic Tac Toe',
+      });
+    });
+
+    await waitFor(() => {
+      expect(result.current.isStartingMatch).toBe(false);
+      expect(result.current.isPreparingMatch).toBe(false);
+      expect(useRealtimeMatchStore.getState().error).toBeNull();
+    });
+    expect(mocks.toastError).toHaveBeenCalledWith('Unable to start Football Tic Tac Toe');
+  });
+
   it('does not route a new lobby using terminal state from an earlier Grid match', async () => {
     const lobby = makeLobby('GRID20');
     act(() => {
