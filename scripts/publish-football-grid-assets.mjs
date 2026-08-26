@@ -85,7 +85,15 @@ async function listFiles(directory, prefix = '') {
 }
 
 async function loadAssets() {
-  const files = await listFiles(gridAssetDir);
+  const files = (await listFiles(gridAssetDir)).map((entry) => (
+    entry.relative === 'card-icon.png'
+      ? {
+          ...entry,
+          relative: 'ui/card-icon.png',
+          localPath: '/assets/football-grid/card-icon.png',
+        }
+      : entry
+  ));
   const avatarFiles = await listFiles(avatarAssetDir);
   files.push(...avatarFiles.map((entry) => ({
     ...entry,
