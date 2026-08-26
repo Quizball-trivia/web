@@ -1158,7 +1158,9 @@ export interface AuctionMatchFoundPayload {
   botCount: number;
   /** Assigned bot personas. Optional while older backend deployments are
    * still in rotation; the UI falls back to the generic translated label. */
-  botPlayers?: Array<{ seatId: string; displayName: string }>;
+  /** joinDelayMs: ms after receipt when each bot pops into the lineup —
+   *  bots arrive staggered like a real queue (absent = show immediately). */
+  botPlayers?: Array<{ seatId: string; displayName: string; joinDelayMs?: number }>;
   locale: 'en' | 'ka';
   formation: AuctionFormationName;
   /** Server clock used to compensate for local clock skew. Optional during a

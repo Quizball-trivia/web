@@ -52,7 +52,7 @@ export interface LottieSearchProps {
   total?: number;
   players?: SearchPlayer[];
   botCount?: number;
-  botPlayers?: Array<{ seatId: string; displayName: string }>;
+  botPlayers?: Array<{ seatId: string; displayName: string; joinDelayMs?: number }>;
   selfUserId?: string | null;
   selfDisplayName?: string | null;
   selfAvatarSeed?: string | null;
@@ -156,9 +156,29 @@ export function LottieSearch({
   src,
 }: LottieSearchProps) {
   const { t } = useLocale();
-  const lottieSrc = src ?? lottieForJoined(joined, total);
   const elapsed = useElapsedSeconds();
-  const status = t(statusKey(joined, total));
+
+  // Bots pop into the lineup at their server-chosen joinDelayMs (measured
+  // from when the lineup payload arrived) instead of materializing as a
+  // block — the fill reads like a real queue.
+  const [botsArrivedAt, setBotsArrivedAt] = useState<number | null>(null);
+  const [staggerNow, setStaggerNow] = useState(0);
+  useEffect(() => {
+    if (botPlayers.length === 0) { setBotsArrivedAt(null); return; }
+    setBotsArrivedAt((prev) => prev ?? Date.now());
+  }, [botPlayers.length]);
+  const maxJoinDelay = botPlayers.reduce((max, bot) => Math.max(max, bot.joinDelayMs ?? 0), 0);
+  const allBotsVisibleAt = (botsArrivedAt ?? 0) + maxJoinDelay;
+  useEffect(() => {
+    if (botsArrivedAt === null || Date.now() >= allBotsVisibleAt) return;
+    const timer = setInterval(() => setStaggerNow(Date.now()), 250);
+    return () => clearInterval(timer);
+  }, [botsArrivedAt, allBotsVisibleAt]);
+  void staggerNow;
+  const visibleBots = botsArrivedAt === null
+    ? []
+    : botPlayers.filter((bot) => Date.now() - botsArrivedAt >= (bot.joinDelayMs ?? 0));
+
   const selfPlayer = players.find((player) => player.userId === selfUserId);
   const rivals = players.filter((player) => player.userId !== selfUserId);
   const humanSlots = [
@@ -170,7 +190,7 @@ export function LottieSearch({
     },
     ...rivals.map((player) => ({ ...player, isSelf: false })),
   ].slice(0, total);
-  const namedBotSlots = botPlayers
+  const namedBotSlots = visibleBots
     .slice(0, Math.max(0, total - humanSlots.length))
     .map((player) => ({
       userId: player.seatId,
@@ -183,6 +203,11 @@ export function LottieSearch({
   // "AI player" identity for that interim state. A bot card becomes filled
   // only when `botPlayers` carries the actual selected smart-bot name.
   const slots = [...humanSlots, ...namedBotSlots];
+  // Status copy and the loader animation follow the VISIBLE lineup, so the
+  // "2/3" moment lands exactly when the second seat pops in.
+  const visibleJoined = Math.min(total, slots.length);
+  const lottieSrc = src ?? lottieForJoined(visibleJoined, total);
+  const status = t(statusKey(visibleJoined, total));
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-surface-page-alt">
