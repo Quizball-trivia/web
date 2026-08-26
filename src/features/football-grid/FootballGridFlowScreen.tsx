@@ -252,12 +252,10 @@ function ClaimedCell({ claim, isMine, claimedLabel }: { claim: FootballGridClaim
       transition={{ type: 'spring', stiffness: 420, damping: 18 }}
       className="absolute inset-0 flex flex-col items-center justify-center gap-1 overflow-hidden p-1"
     >
-      {claim.imageUrl && (
-        <FootballGridPortrait
-          source={claim.imageUrl}
-          className="size-9 shadow-[0_5px_15px_rgba(0,0,0,.35)] sm:size-11"
-        />
-      )}
+      <FootballGridPortrait
+        source={claim.imageUrl}
+        className="size-9 shadow-[0_5px_15px_rgba(0,0,0,.35)] sm:size-11"
+      />
       <span className={cn('line-clamp-3 text-center font-poppins text-[9px] font-black leading-tight sm:text-[10px]', isMine ? 'text-brand-cyan' : 'text-brand-red-soft')}>
         {claim.displayName ?? claimedLabel}
       </span>
