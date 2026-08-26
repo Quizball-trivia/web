@@ -1,7 +1,6 @@
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { TierFrameAvatar } from "@/components/TierFrameAvatar";
 import type { LeaderboardEntry } from "@/lib/domain/leaderboard";
-import { Trophy } from "lucide-react";
 import { useActiveEventMode } from "@/lib/hooks/useActiveEventMode";
 
 interface LeaderboardPodiumProps {
@@ -162,10 +161,6 @@ export function LeaderboardPodium({ topThree, onEntryClick, eventMode }: Leaderb
                       size="sm"
                       countryCode={entry.country}
                     />
-                  </div>
-                  {/* Trophy badge */}
-                  <div className="absolute -top-1 -left-1 flex size-5 sm:size-6 items-center justify-center rounded-full bg-brand-yellow shadow ring-2 ring-surface-page">
-                    <Trophy className="size-3 sm:size-3.5 text-black" strokeWidth={2.5} />
                   </div>
                 </div>
 
