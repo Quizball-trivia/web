@@ -16,6 +16,7 @@ import { useLocale } from '@/contexts/LocaleContext';
 import { SquadPitch } from '../pitch/SquadPitch';
 import { ProgressDots } from '../pitch/ProgressDots';
 import { ChemistryBadge } from '../shared/ChemistryPanel';
+import { DisconnectedPitchOverlay } from '../pitch/DisconnectedPitchOverlay';
 
 /** One stadium column: compact header + a pitch showing the full formation. */
 function StadiumColumn({
@@ -23,11 +24,13 @@ function StadiumColumn({
   state,
   humanPlayerId,
   activePosition,
+  disconnected,
 }: {
   player: AuctionPlayer;
   state: AuctionGameState;
   humanPlayerId: string;
   activePosition?: PositionGroup;
+  disconnected?: boolean;
 }) {
   const { t } = useLocale();
   const isHuman = player.id === humanPlayerId;
@@ -70,18 +73,21 @@ function StadiumColumn({
           proper cards on desktop instead of stretching edge-to-edge. The full
           formation (FWD → GK) is always visible because nothing overlaps it. */}
       <div className="flex min-h-0 w-full flex-1 items-center justify-center">
-        <div className="relative h-full w-full max-w-[460px]">
-          <SquadPitch
-            player={player}
-            formation={state.formation}
-            highlightId={state.currentRound?.winnerId ?? undefined}
-            size="lg"
-            activePosition={activePosition}
-            needGlow={showNeedGlow}
-            isHuman={isHuman}
-            fill
-            showChemistry
-          />
+        <div className="relative h-full w-full max-w-[460px] overflow-hidden rounded-[18px]">
+          <div className={`h-full w-full ${disconnected ? 'brightness-[0.28] saturate-50 blur-[1px]' : ''}`}>
+            <SquadPitch
+              player={player}
+              formation={state.formation}
+              highlightId={state.currentRound?.winnerId ?? undefined}
+              size="lg"
+              activePosition={activePosition}
+              needGlow={showNeedGlow}
+              isHuman={isHuman}
+              fill
+              showChemistry
+            />
+          </div>
+          {disconnected && <DisconnectedPitchOverlay playerName={player.username} />}
         </div>
       </div>
 
@@ -102,13 +108,16 @@ export function StadiumBoard({
   state,
   humanPlayerId,
   activePosition,
+  disconnectedSeatIds = [],
 }: {
   state: AuctionGameState;
   humanPlayerId: string;
   activePosition?: PositionGroup;
+  disconnectedSeatIds?: readonly string[];
 }) {
   // Keep YOU in the centre column; split the others around the human.
   const ordered = orderPlayersHumanCentered(state.players, humanPlayerId);
+  const disconnectedSeats = new Set(disconnectedSeatIds);
 
   return (
     <div className="mx-auto flex h-full max-w-7xl items-stretch justify-center gap-2 px-2 md:gap-6 md:px-6">
@@ -119,6 +128,7 @@ export function StadiumBoard({
           state={state}
           humanPlayerId={humanPlayerId}
           activePosition={activePosition}
+          disconnected={disconnectedSeats.has(player.id)}
         />
       ))}
     </div>

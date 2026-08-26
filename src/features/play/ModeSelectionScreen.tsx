@@ -20,8 +20,9 @@ import { useObjectivesEnabled } from '@/lib/hooks/useObjectivesEnabled';
 import { useActiveEventMode } from '@/lib/hooks/useActiveEventMode';
 
 import { colors } from '@/lib/colors';
+import { isAuctionCardEnabled, isMiniGamesEnabled, isTicTacToeEnabled } from '@/lib/features/playModes';
 import { PlayAnnouncements } from './PlayAnnouncements';
-import { RailNavyGradient as WeekendLeagueRail } from '@/features/weekend-league/components/RailColorVariants';
+import { WeekendLeagueProgressExperimentRail } from '@/features/weekend-league/components/WeekendLeagueProgressExperimentRail';
 import { trackWlBannerClicked, trackWlBannerViewed } from '@/lib/analytics/game-events';
 
 import { getNextTierBand } from '@/utils/rankedTier';
@@ -98,6 +99,8 @@ function MiniModeCard({
   iconSrc,
   badge,
   badge2 = null,
+  ctaLabel,
+  className,
   href,
   onClick,
 }: {
@@ -110,6 +113,8 @@ function MiniModeCard({
   badge?: string | null;
   /** Second pill next to the first (e.g. NEW + game count). */
   badge2?: string | null;
+  ctaLabel: string;
+  className?: string;
   /** Route target — renders a real link (a11y, open-in-new-tab). */
   href?: string;
   /** Modal opener — used when there is no href. */
@@ -117,8 +122,10 @@ function MiniModeCard({
 }) {
   const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
   const text = dark ? 'text-black' : 'text-white';
-  const className =
-    'relative block min-h-[150px] md:min-h-[220px] cursor-pointer overflow-hidden rounded-[10px] p-3.5 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2';
+  const cardClassName = cn(
+    'relative block h-full min-h-[250px] lg:min-h-[300px] cursor-pointer overflow-hidden rounded-[10px] p-3.5 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2',
+    className,
+  );
   const inner = (
     <>
       {(badge || badge2) && (
@@ -153,22 +160,45 @@ function MiniModeCard({
         <p className={`mt-1.5 text-[10px] uppercase md:text-[14px] ${dark ? 'text-black/70' : 'text-white/80'}`} style={poppins}>
           {subtitle}
         </p>
-        {/* icon lives in flow below the text — it can never cover it */}
-        <div className="mt-auto flex justify-end pt-1.5">
+        <div className="mt-2 flex flex-1 items-center justify-center lg:hidden">
           <Image
             src={iconSrc}
             alt=""
             width={200}
             height={200}
-            className="pointer-events-none h-14 w-14 object-contain opacity-90 md:h-28 md:w-28"
+            className="pointer-events-none h-[104px] w-[104px] object-contain opacity-90"
           />
+        </div>
+        <div
+          className="mt-2 flex h-9 w-full items-center justify-center rounded-[8px] bg-black text-[12px] uppercase tracking-wide text-white lg:hidden"
+          style={poppins}
+        >
+          {ctaLabel}
+        </div>
+
+        <div className="mt-auto hidden items-end gap-3 pt-6 lg:flex">
+          <div
+            className="flex h-11 w-[136px] shrink-0 items-center justify-center rounded-[8px] bg-black text-base uppercase tracking-wide text-white"
+            style={poppins}
+          >
+            {ctaLabel}
+          </div>
+          <div className="flex min-w-0 flex-1 justify-end">
+            <Image
+              src={iconSrc}
+              alt=""
+              width={200}
+              height={200}
+              className="pointer-events-none h-24 w-full max-w-24 object-contain object-right opacity-90"
+            />
+          </div>
         </div>
       </div>
     </>
   );
   if (href) {
     return (
-      <Link href={href} className={className} style={{ backgroundColor: bg }}>
+      <Link href={href} className={cardClassName} style={{ backgroundColor: bg }}>
         {inner}
       </Link>
     );
@@ -184,7 +214,7 @@ function MiniModeCard({
       }}
       role="button"
       tabIndex={0}
-      className={className}
+      className={cardClassName}
       style={{ backgroundColor: bg }}
     >
       {inner}
@@ -194,6 +224,8 @@ function MiniModeCard({
 
 interface ModeSelectionScreenProps {
   onSelectMode: (mode: 'ranked' | 'friendly' | 'solo') => void;
+  /** Opens the normal confirmation modal immediately for deep-linked flows. */
+  initialMode?: 'ranked' | 'friendly' | 'solo';
   /** If provided, called when ranked card is clicked BEFORE the confirm modal opens.
    *  Return `true` to prevent the confirm modal from showing (i.e. the caller handles it). */
   onRankedIntercept?: () => boolean;
@@ -206,6 +238,7 @@ interface ModeSelectionScreenProps {
 
 export function ModeSelectionScreen({
   onSelectMode,
+  initialMode,
   onRankedIntercept,
   ticketsRemaining = 0,
   matchStatsSummary = null,
@@ -225,8 +258,11 @@ export function ModeSelectionScreen({
     trackWlBannerViewed();
   }, []);
   const { isEventMode } = useActiveEventMode();
-  // 'friendly' launches moved off this screen with the 2x2 grid redesign.
-  const [selectedMode, setSelectedMode] = useState<'ranked' | 'solo' | null>(null);
+  // Ranked and Friendly open the shared confirmation modal. Daily and the
+  // optional modes navigate directly or open their own modal.
+  const [selectedMode, setSelectedMode] = useState<'ranked' | 'friendly' | 'solo' | null>(
+    initialMode ?? null,
+  );
   const [auctionModalOpen, setAuctionModalOpen] = useState(false);
   const [playEntranceAnimation] = useState(shouldPlayEntranceAnimation);
   const isPlacementInProgress = rankedProfile ? rankedProfile.placementStatus !== 'placed' : false;
@@ -250,6 +286,13 @@ export function ModeSelectionScreen({
   // Shared Poppins style for body/label/button text (replaces the old
   // font-black/font-bold Duolingo weights). Only Poppins 600 is loaded.
   const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
+  const secondaryModeCount = 2
+    + Number(isAuctionCardEnabled)
+    + Number(isTicTacToeEnabled)
+    + Number(isMiniGamesEnabled);
+  const lastCardMobileSpan = secondaryModeCount % 2 === 1
+    ? 'col-span-2 lg:col-span-1'
+    : undefined;
 
   useEffect(() => {
     if (!playEntranceAnimation) return;
@@ -294,7 +337,7 @@ export function ModeSelectionScreen({
       {/* Instrumented at the placement, not inside Rail — the dev gallery
           mounts every Rail variant and would fire an impression per skin. */}
       <div onClickCapture={trackWlBannerClicked}>
-        <WeekendLeagueRail />
+        <WeekendLeagueProgressExperimentRail />
       </div>
 
       {/* ─── 1. Ranked Hero Card ─── */}
@@ -482,23 +525,18 @@ export function ModeSelectionScreen({
       {/* ─── 1b. Announcements ─── */}
       <PlayAnnouncements />
 
-      {/* ─── 2. Mode Grid (2×2): Auction · Tic-Tac-Toe / Daily · Mini Games ─── */}
-      <div className="grid grid-cols-2 gap-3 md:gap-4">
+      {/* ─── 2. Equal Mode Cards ───
+          With the default flags this is a balanced three-card desktop row.
+          On mobile, Friendly + Daily share the first row and Auction spans the
+          second so the odd card never leaves a dead half-column. */}
+      <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-3">
         <MiniModeCard
-          bg="#6B2FB3"
-          title={t('play.auctionTitle')}
-          subtitle={t('play.auctionSubtitle')}
-          badge={t('play.freeKicksNewBadge')}
-          iconSrc="/assets/auction-card-icon.webp"
-          onClick={() => setAuctionModalOpen(true)}
-        />
-        <MiniModeCard
-          bg={colors.red.mid}
-          title={t('play.footballGridTitle')}
-          subtitle={t('play.footballGridSubtitle')}
-          iconSrc={footballGridAssetUrl('/assets/football-grid/card-icon.png')!}
-          badge={t('play.freeKicksNewBadge')}
-          href="/tic-tac-toe?source=matchmaking"
+          bg={colors.blue.brand}
+          title={t('play.friendlyMatch')}
+          subtitle={t('play.friendlySubtitle')}
+          iconSrc="/assets/friendly_match-icon.webp"
+          ctaLabel={t('common.play')}
+          onClick={() => setSelectedMode('friendly')}
         />
         <MiniModeCard
           bg={colors.yellow.base}
@@ -506,17 +544,46 @@ export function ModeSelectionScreen({
           title={t('play.dailyChallenge')}
           subtitle={t('play.dailySubtitle')}
           iconSrc="/assets/daily_chllangeicon.webp"
+          ctaLabel={t('common.play')}
           href="/daily/challenges"
         />
-        <MiniModeCard
-          bg={colors.orange.base}
-          dark
-          title={t('play.miniGamesTitle')}
-          subtitle={t('play.miniGamesSubtitle')}
-          iconSrc="/assets/minigames-card-icon.png?v=3"
-          badge={t('play.freeKicksNewBadge')}
-          href="/mini-games"
-        />
+        {isAuctionCardEnabled && (
+          <MiniModeCard
+            bg="#6B2FB3"
+            title={t('play.auctionTitle')}
+            subtitle={t('play.auctionSubtitle')}
+            badge={t('play.freeKicksNewBadge')}
+            iconSrc="/assets/auction-card-icon.webp"
+            ctaLabel={t('common.play')}
+            className={!isTicTacToeEnabled && !isMiniGamesEnabled ? lastCardMobileSpan : undefined}
+            onClick={() => setAuctionModalOpen(true)}
+          />
+        )}
+        {isTicTacToeEnabled && (
+          <MiniModeCard
+            bg={colors.red.mid}
+            title={t('play.footballGridTitle')}
+            subtitle={t('play.footballGridSubtitle')}
+            iconSrc={footballGridAssetUrl('/assets/football-grid/card-icon.png')!}
+            badge={t('play.freeKicksNewBadge')}
+            ctaLabel={t('common.play')}
+            className={!isMiniGamesEnabled ? lastCardMobileSpan : undefined}
+            href="/tic-tac-toe?source=matchmaking"
+          />
+        )}
+        {isMiniGamesEnabled && (
+          <MiniModeCard
+            bg={colors.orange.base}
+            dark
+            title={t('play.miniGamesTitle')}
+            subtitle={t('play.miniGamesSubtitle')}
+            iconSrc="/assets/minigames-card-icon.png?v=3"
+            badge={t('play.freeKicksNewBadge')}
+            ctaLabel={t('common.play')}
+            className={lastCardMobileSpan}
+            href="/mini-games"
+          />
+        )}
       </div>
 
       {/* ─── 3. Objectives ─── */}

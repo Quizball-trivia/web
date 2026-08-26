@@ -36,10 +36,60 @@ export function RevealScreen({
 }) {
   const { t } = useLocale();
   const round = state.currentRound;
+
+  if (!round) {
+    return (
+      <AuctionScreen className="flex items-center justify-center px-4">
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col items-center gap-3 text-center"
+        >
+          <div className="size-10 animate-spin rounded-full border-4 border-white/20 border-t-brand-yellow" />
+          <p className="font-poppins text-sm font-black uppercase tracking-[0.14em] text-white/75">
+            {t('auctionGame.confirmingTransfer')}
+          </p>
+        </motion.div>
+      </AuctionScreen>
+    );
+  }
+
+  // Remount the staged body per reveal identity: the screen can mount on the
+  // spinner (round still null) or stay mounted across rounds, and mount-only
+  // timers would have already elapsed when late round data lands — skipping
+  // the stagger and acking the reveal instantly. A fresh mount also resets
+  // stage/holdDone atomically, so a completed reveal can never leak its "done"
+  // state into the next identity and ack it on arrival.
+  return (
+    <RevealBody
+      key={`${state.roundIndex}:${round.footballer.id}`}
+      state={state}
+      round={round}
+      actions={actions}
+      humanPlayerId={humanPlayerId}
+      serverDrivenTransitions={serverDrivenTransitions}
+    />
+  );
+}
+
+function RevealBody({
+  state,
+  round,
+  actions,
+  humanPlayerId,
+  serverDrivenTransitions,
+}: {
+  state: AuctionGameState;
+  round: NonNullable<AuctionGameState['currentRound']>;
+  actions: AuctionActions;
+  humanPlayerId: string;
+  serverDrivenTransitions: boolean;
+}) {
+  const { t } = useLocale();
   const [stage, setStage] = useState(0);
   const [showSold, setShowSold] = useState(true);
   const [holdDone, setHoldDone] = useState(false);
-  const serverRevealAckedRoundRef = useRef<string | null>(null);
+  const serverRevealAckedRef = useRef(false);
 
   useEffect(() => {
     const timers = [
@@ -49,8 +99,6 @@ export function RevealScreen({
       setTimeout(() => setStage(3), 1000),
       setTimeout(() => setStage(4), 1300),
       setTimeout(() => setStage(5), 1600),
-      // Everything is on screen at 1.6s; hold the full picture a short beat
-      // before acking so the server doesn't sweep into the next round instantly.
       // Full picture on screen at 1.6s; hold it so the sold player is
       // actually readable before the server sweeps into the next round.
       setTimeout(() => setHoldDone(true), 6000),
@@ -59,14 +107,11 @@ export function RevealScreen({
   }, []);
 
   useEffect(() => {
-    if (!serverDrivenTransitions || stage < 5 || !holdDone || !round) return;
-    const revealKey = `${state.roundIndex}:${round.footballer.id}`;
-    if (serverRevealAckedRoundRef.current === revealKey) return;
-    serverRevealAckedRoundRef.current = revealKey;
+    if (!serverDrivenTransitions || stage < 5 || !holdDone) return;
+    if (serverRevealAckedRef.current) return;
+    serverRevealAckedRef.current = true;
     actions.confirmReveal();
-  }, [actions, holdDone, round, serverDrivenTransitions, stage, state.roundIndex]);
-
-  if (!round) return null;
+  }, [actions, holdDone, serverDrivenTransitions, stage]);
 
   const winner = state.players.find((p) => p.id === round.winnerId);
   const posColor = POS_COLORS[round.positionGroup];
@@ -207,6 +252,17 @@ export function RevealScreen({
                     </div>
                     <div className="font-poppins text-2xl font-black text-white tabular-nums leading-tight">
                       {formatMoney(round.winningBid)}
+                    </div>
+                  </div>
+                )}
+
+                {!winner && stage >= 3 && (
+                  <div className="relative rounded-[16px] bg-white/10 px-6 py-3 text-center">
+                    <div className="font-poppins text-lg font-black uppercase tracking-wide text-white/85">
+                      {t('auctionGame.unsold')}
+                    </div>
+                    <div className="mt-0.5 text-[10px] font-bold uppercase text-white/45" style={poppins}>
+                      {t('auctionGame.unsoldSub')}
                     </div>
                   </div>
                 )}

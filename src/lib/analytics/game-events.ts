@@ -3,6 +3,10 @@ import {
   clearCampaignAttribution,
   getCampaignAttributionAnalyticsProperties,
 } from '@/features/campaign-quiz/campaignAttribution';
+import type {
+  DailyWeekendLeagueCtaAction,
+  DailyWeekendLeagueCtaState,
+} from '@/lib/experiments/dailyWeekendLeagueCta';
 
 type AuthMethod = 'google' | 'facebook' | 'email' | 'phone';
 
@@ -172,6 +176,14 @@ export function trackSignupStarted(method: AuthMethod = 'google') {
   const campaign = getCampaignAttributionAnalyticsProperties();
   trackEvent('auth_started', { method, ...campaign });
   trackEvent('signup_started', { method, ...campaign });
+}
+
+export function trackSignupPageView() {
+  const campaign = getCampaignAttributionAnalyticsProperties();
+  trackEvent('signup_page_view', {
+    auth_mode: 'signup',
+    ...campaign,
+  });
 }
 
 export function trackSignupCompleted(method: AuthMethod = 'google') {
@@ -421,6 +433,8 @@ export function trackRankedPlayAgainClicked(props: {
   cachedTickets?: number | null;
   walletFetching?: boolean;
   playAgainDisabled?: boolean;
+  winStreakExperimentVariant?: string | null;
+  winStreakCount?: number | null;
 }): void {
   trackEvent('ranked_play_again_clicked', {
     match_id: props.matchId ?? null,
@@ -430,6 +444,18 @@ export function trackRankedPlayAgainClicked(props: {
     cached_tickets: props.cachedTickets ?? null,
     wallet_fetching: Boolean(props.walletFetching),
     play_again_disabled: Boolean(props.playAgainDisabled),
+    win_streak_experiment_variant: props.winStreakExperimentVariant ?? null,
+    win_streak_count: props.winStreakCount ?? null,
+  });
+}
+
+export function trackRankedWinStreakPromptShown(props: {
+  matchId?: string | null;
+  winStreakCount: number;
+}): void {
+  trackEvent('ranked_win_streak_prompt_shown', {
+    match_id: props.matchId ?? null,
+    win_streak_count: props.winStreakCount,
   });
 }
 
@@ -664,6 +690,101 @@ export function trackDailyChallengeCompleted(props: {
     total_questions: props.totalQuestions,
     xp_awarded: props.xpAwarded,
     coins_awarded: props.coinsAwarded,
+  });
+}
+
+type DailyWeekendLeagueCtaAnalyticsProps = {
+  state: DailyWeekendLeagueCtaState;
+  action: DailyWeekendLeagueCtaAction;
+  currentQp: number;
+  targetQp: number;
+  tournamentStatus: string | null;
+};
+
+function dailyWeekendLeagueCtaProperties(props: DailyWeekendLeagueCtaAnalyticsProps) {
+  return {
+    state: props.state,
+    action: props.action,
+    current_qp: props.currentQp,
+    target_qp: props.targetQp,
+    tournament_status: props.tournamentStatus,
+  };
+}
+
+export function trackDailyWeekendLeagueCtaShown(
+  props: DailyWeekendLeagueCtaAnalyticsProps,
+) {
+  trackEvent(
+    'daily_weekend_league_cta_shown',
+    dailyWeekendLeagueCtaProperties(props),
+  );
+}
+
+export function trackDailyWeekendLeagueCtaClicked(
+  props: DailyWeekendLeagueCtaAnalyticsProps,
+) {
+  trackEvent(
+    'daily_weekend_league_cta_clicked',
+    dailyWeekendLeagueCtaProperties(props),
+  );
+}
+
+export function trackDailyComebackPromptShown(props: {
+  streakDays: number;
+  tomorrowBonusCoins: number;
+  remindersEnabled: boolean;
+}) {
+  trackEvent('daily_comeback_prompt_shown', {
+    streak_days: props.streakDays,
+    tomorrow_bonus_coins: props.tomorrowBonusCoins,
+    reminders_enabled: props.remindersEnabled,
+  });
+}
+
+export function trackDailyComebackReminder(props: {
+  outcome: 'clicked' | 'scheduled' | 'failed';
+  streakDays: number;
+}) {
+  trackEvent(`daily_comeback_reminder_${props.outcome}`, {
+    streak_days: props.streakDays,
+    channel: 'email',
+  });
+}
+
+export function trackRankedLossRecoveryPromptShown(props: {
+  previousRp: number;
+  currentRp: number;
+  rpToRecover: number;
+}) {
+  trackEvent('ranked_loss_recovery_prompt_shown', {
+    previous_rp: props.previousRp,
+    current_rp: props.currentRp,
+    rp_to_recover: props.rpToRecover,
+  });
+}
+
+export function trackRankedLossRecoveryPlayAgainClicked(props: {
+  rpToRecover: number;
+}) {
+  trackEvent('ranked_loss_recovery_play_again_clicked', {
+    rp_to_recover: props.rpToRecover,
+  });
+}
+
+export function trackWeekendLeagueProgressRail(
+  outcome: 'shown' | 'clicked',
+  props: {
+    state: 'qualifying' | 'qualified' | 'entered';
+    currentQp: number;
+    targetQp: number;
+    tournamentStatus: string;
+  },
+) {
+  trackEvent(`weekend_league_progress_rail_${outcome}`, {
+    state: props.state,
+    current_qp: props.currentQp,
+    target_qp: props.targetQp,
+    tournament_status: props.tournamentStatus,
   });
 }
 

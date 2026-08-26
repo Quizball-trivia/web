@@ -412,6 +412,7 @@ const KA: Record<string, string> = {
   "Every round the field is cut — answer right and fast to stay in it. Nine rounds from {n} players down to one.":
     "ყოველ რაუნდში ველი მცირდება — უპასუხე სწორად და სწრაფად, რომ დარჩე. ცხრა რაუნდი {n} მოთამაშიდან ერთამდე.",
   "Kick off": "დაწყება",
+  "Your collection": "შენი კოლექცია",
   "Fastest {cap} survive": "ყველაზე სწრაფი {cap} რჩება",
   "Field": "ველი",
   "You made the cut!": "გადარჩი!",

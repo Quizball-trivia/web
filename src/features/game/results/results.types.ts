@@ -43,6 +43,8 @@ export interface RealtimeResultsScreenProps {
   playAgainDisabled?: boolean;
   /** Optional helper text under the Play Again CTA (e.g. "not enough tickets"). */
   playAgainHint?: string | null;
+  /** Optional post-win streak cue shown above the Play Again CTA. */
+  winStreakCount?: number | null;
   onPlayAgain: () => void | Promise<void>;
   onMainMenu: () => void;
 }

@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from 'motion/react';
 import type { AuctionGameState } from '../../types';
 import type { AuctionActions } from '../../hooks/useAuctionGame';
-import { formatMoney, OPENING_TURN_MS, RAISE_TURN_MS } from '../../data';
+import { formatMoney, OPENING_TURN_MS, RAISE_TURN_MS, SNAPSHOT_STAT_STEPS } from '../../data';
 import { useLocale } from '@/contexts/LocaleContext';
 import { usePositionLabel } from '../../hooks/usePositionLabel';
 import { useBiddingViewModel } from '../../hooks/useBiddingViewModel';
@@ -27,10 +27,12 @@ export function BiddingScreen({
   state,
   actions,
   humanPlayerId,
+  disconnectedSeatIds = [],
 }: {
   state: AuctionGameState;
   actions: AuctionActions;
   humanPlayerId: string;
+  disconnectedSeatIds?: readonly string[];
 }) {
   const { t } = useLocale();
   const posLabel = usePositionLabel();
@@ -137,7 +139,18 @@ export function BiddingScreen({
 
             {/* Clues — scouting snapshots when available, else text clues */}
             {round.footballer.snapshots?.length ? (
-              <SnapshotClues snapshots={round.footballer.snapshots} visibleClues={visibleClues} variant="card" accent={posColor} position={round.footballer.positionGroup} />
+              <div className="space-y-2.5">
+                <SnapshotClues snapshots={round.footballer.snapshots} visibleClues={visibleClues} variant="card" accent={posColor} position={round.footballer.positionGroup} />
+                {/* Authored text hints follow the stat facets as the last reveal steps. */}
+                {round.clues.length > SNAPSHOT_STAT_STEPS.length && (
+                  <CluesList
+                    clues={round.clues.slice(SNAPSHOT_STAT_STEPS.length)}
+                    visibleClues={Math.max(0, visibleClues - SNAPSHOT_STAT_STEPS.length)}
+                    variant="card"
+                    accent={posColor}
+                  />
+                )}
+              </div>
             ) : (
               <CluesList clues={round.clues} visibleClues={visibleClues} variant="card" accent={posColor} />
             )}
@@ -278,7 +291,13 @@ export function BiddingScreen({
 
         {/* All squads — sits directly below the bidding controls */}
         <div className="px-4 pb-5 pt-1">
-          <AllSquads state={state} humanPlayerId={humanPlayerId} pitchSize="md" activePosition={round.positionGroup} />
+          <AllSquads
+            state={state}
+            humanPlayerId={humanPlayerId}
+            pitchSize="md"
+            activePosition={round.positionGroup}
+            disconnectedSeatIds={disconnectedSeatIds}
+          />
         </div>
       </div>
     </AuctionScreen>

@@ -545,9 +545,12 @@ export const FOOTBALLERS: Footballer[] = RAW_FOOTBALLERS.map((f) => {
     club,
     league,
     snapshots,
-    // A scouting lot reveals one season's stats one-by-one, so its reveal-step
-    // count is the number of stat facets.
-    clues: [...SNAPSHOT_STAT_STEPS],
+    // Server parity: the lot opens at the SCOUT season's own market value —
+    // the first figure the card shows.
+    startingPrice: snapshots[0]?.valueEur ?? f.startingPrice,
+    // Reveal steps: one season's stats one-by-one, then up to two authored
+    // text hints (server parity — clue_1/clue_2 follow the facets).
+    clues: [...SNAPSHOT_STAT_STEPS, ...(f.clues ?? []).slice(0, 2)],
     imageUrl: f.imageUrl ?? getFootballerPlaceholderImage(f.id),
   };
 });
@@ -607,8 +610,8 @@ export function getTotalTeamValue(team: AuctionTeam): number {
 // 7 players earns up to 3 points from how many squadmates share their club,
 // league and nation (each dimension has its own tier thresholds, FC-style). A
 // player's points are the sum across the three dimensions, capped at 3; the
-// squad total scales the team's value by chem ÷ 10. With a 7-a-side squad the
-// max is 7 × 3 = 21 → ×2.1.
+// squad total feeds chemistryMultiplier (1 + chem ÷ 10), applied to profit.
+// With a 7-a-side squad the max is 7 × 3 = 21 → ×3.1.
 
 export const MAX_PLAYER_CHEMISTRY = 3;
 export const MAX_SQUAD_CHEMISTRY = AUCTION_SQUAD_SIZE * MAX_PLAYER_CHEMISTRY; // 21
@@ -761,9 +764,14 @@ export function getTotalFutureValue(team: AuctionTeam): number {
 }
 
 /** Profit = squad's later-season value − what was paid (starting budget minus
- *  what's left). Can be negative if you overpaid or bought decliners. */
+ *  what's left). Can be negative if you overpaid or bought decliners. Uses the
+ *  seat's recorded starting budget (server-sent) with a 0-clamp on spend, in
+ *  parity with auction-rules.getSquadProfit — legacy states created under a
+ *  different economy must not fabricate negative spend (fake profit). */
 export function getSquadProfit(player: AuctionPlayer): number {
-  return getTotalFutureValue(player.team) - (STARTING_BUDGET - player.budget);
+  const startingBudget = player.startingBudget ?? STARTING_BUDGET;
+  const spent = Math.max(0, startingBudget - player.budget);
+  return getTotalFutureValue(player.team) - spent;
 }
 
 /** Profit scaled by chemistry — the score the winner is decided on. Mirrors the

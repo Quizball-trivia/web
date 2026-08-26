@@ -114,6 +114,33 @@ describe('auction realtime adapter', () => {
     expect(clientState.totalRounds).toBe(21);
   });
 
+  it('prefers the server avatar snapshot over a stale local outfit', () => {
+    const self = player('seat-human', 'You', 'user-1');
+    self.avatarCustomization = {
+      skin: 'skin_male_white',
+      jersey: 'jersey_red',
+      hair: 'hair_boy_basic',
+    };
+
+    const clientState = toClientAuctionState(matchState({
+      seats: [
+        self,
+        player('seat-bot-1', 'Bot 1', null),
+        player('seat-bot-2', 'Bot 2', null),
+      ],
+    }), {
+      humanSeatId: 'seat-human',
+      humanAvatarSeed: 'avatar-1',
+      humanAvatarCustomization: {
+        skin: 'skin_male_white',
+        jersey: 'jersey_green',
+        hair: 'hair_boy_basic',
+      },
+    });
+
+    expect(clientState.players[0]?.avatarCustomization?.jersey).toBe('jersey_red');
+  });
+
   it('carries the server ranking order through, best first', () => {
     // Coins are paid against the server's placings, so the results screen has to
     // render this exact order rather than re-sorting locally (a local tiebreak
@@ -171,7 +198,7 @@ describe('auction realtime adapter', () => {
     }
   });
 
-  it('clamps turn deadlines against synced server time when an offset is available', () => {
+  it('converts deadlines onto the client clock via the offset and clamps expired ones', () => {
     const nowSpy = vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2026-06-20T09:59:50.000Z'));
     try {
       const clientState = toClientAuctionState(matchState({
@@ -184,7 +211,25 @@ describe('auction realtime adapter', () => {
         serverTimeOffsetMs: 20_000,
       });
 
-      expect(clientState.currentRound?.turnEndsAt).toBe(Date.parse('2026-06-20T10:00:10.000Z'));
+      // Server truth: the 10:00:05 deadline already passed (server now =
+      // 10:00:10). Converting onto the client clock (deadline − offset =
+      // 09:59:45) lands in the past, so the clamp pins it at client-now —
+      // the countdown reads zero instead of a phantom 20 extra seconds.
+      expect(clientState.currentRound?.turnEndsAt).toBe(Date.parse('2026-06-20T09:59:50.000Z'));
+
+      const futureState = toClientAuctionState(matchState({
+        phase: 'bidding',
+        currentRound: round({
+          currentTurnSeatId: 'seat-human',
+          turnEndsAt: '2026-06-20T10:00:30.000Z',
+        }),
+      }), {
+        serverTimeOffsetMs: 20_000,
+      });
+
+      // True remaining is 20s (server 10:00:10 → 10:00:30); on this skewed
+      // client clock that renders as 09:59:50 → 10:00:10.
+      expect(futureState.currentRound?.turnEndsAt).toBe(Date.parse('2026-06-20T10:00:10.000Z'));
     } finally {
       nowSpy.mockRestore();
     }
@@ -223,6 +268,37 @@ describe('auction realtime adapter', () => {
       value: 80_000_000,
       nationality: 'Georgia',
       imageUrl: 'https://example.com/player.png',
+    });
+  });
+
+  it('keeps the completed reveal visible when a snapshot temporarily has no current round', () => {
+    const revealedRound = round({
+      revealed: true,
+      roundIndex: 4,
+      winnerSeatId: 'seat-human',
+      winningBid: 45_000_000,
+      highestBidderSeatId: 'seat-human',
+      highestBid: 45_000_000,
+      footballer: {
+        id: 'card-reconnect',
+        name: 'Reconnect Forward',
+        positionGroup: 'FWD',
+        trueValue: 80_000_000,
+        startingPrice: 20_000_000,
+        clues: ['Clue one', 'Clue two', 'Clue three'],
+      },
+    });
+    const clientState = toClientAuctionState(matchState({
+      phase: 'reveal',
+      currentRound: null,
+      completedRounds: [revealedRound],
+    }));
+
+    expect(clientState.phase).toBe('reveal');
+    expect(clientState.roundIndex).toBe(4);
+    expect(clientState.currentRound?.footballer).toMatchObject({
+      id: 'card-reconnect',
+      name: 'Reconnect Forward',
     });
   });
 
@@ -454,7 +530,7 @@ describe('auction realtime reducer', () => {
     expect(next.publicState?.seats.find((seat) => seat.seatId === 'seat-bot-1')?.budget).toBe(1_000_000_000);
   });
 
-  it('maps season snapshots through and pads snapshot lots to five clue slots', () => {
+  it('maps season snapshots through and pads snapshot lots to seven clue slots', () => {
     const snapshots = [
       { season: '2020/21', league: 'La Liga', age: 19, apps: 20, goals: 3, valueEur: 5_000_000 },
       { season: '2022/23', league: 'La Liga', age: 21, apps: 36, goals: 11, valueEur: 30_000_000 },
@@ -477,7 +553,8 @@ describe('auction realtime reducer', () => {
     expect(footballer.snapshots).toHaveLength(3);
     // Null age is preserved so the UI renders "—" instead of a fake 0.
     expect(footballer.snapshots![2].age).toBeNull();
-    // Facet-unlock cadence is driven by clue count: snapshot lots pad to 5.
-    expect(clientState.currentRound!.clues).toHaveLength(5);
+    // Facet-unlock cadence is driven by clue count: snapshot lots pad to 7
+    // (five stat facets + two authored text hints).
+    expect(clientState.currentRound!.clues).toHaveLength(7);
   });
 });

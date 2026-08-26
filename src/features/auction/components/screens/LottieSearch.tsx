@@ -22,6 +22,19 @@ const SEARCH_LOTTIES = [
   '/assets/auction-search-3.lottie', // 3 bidders (full)
 ] as const;
 
+type SearchPlayer = {
+  userId: string;
+  displayName: string;
+  avatarCustomization?: AvatarCustomization | null;
+};
+
+const EMPTY_SEARCH_PLAYERS: SearchPlayer[] = [];
+const DEMO_SEARCH_PLAYERS = [
+  { userId: 'demo-self', displayName: 'Web Player' },
+  { userId: 'demo-rival-1', displayName: 'Mobile Rival' },
+  { userId: 'demo-rival-2', displayName: 'Third Bidder' },
+] as const;
+
 function lottieForJoined(joined: number, total: number) {
   const idx = Math.min(Math.max(joined, 1), total) - 1;
   return SEARCH_LOTTIES[Math.min(idx, SEARCH_LOTTIES.length - 1)];
@@ -30,13 +43,18 @@ function lottieForJoined(joined: number, total: number) {
 /**
  * Auction "searching for opponents" screen built around a Lottie loader.
  *
- * The Lottie animation loops as the hero. The join count (1→2→3) is layered on
- * top as bidder chips + rotating status copy — the `queued` phase gives us a
- * count only (no rival avatars), so seat 0 is "You" and the rest are chips.
+ * The Lottie animation loops as the hero. The server-authoritative queue roster
+ * fills the three seats in real time, while the count drives the animation and
+ * rotating status copy.
  */
 export interface LottieSearchProps {
   joined: number;
   total?: number;
+  players?: SearchPlayer[];
+  botCount?: number;
+  botPlayers?: Array<{ seatId: string; displayName: string }>;
+  selfUserId?: string | null;
+  selfDisplayName?: string | null;
   selfAvatarSeed?: string | null;
   /** The real user's layered avatar — rendered on the "You" seat. */
   selfAvatarCustomization?: AvatarCustomization | null;
@@ -49,25 +67,51 @@ export interface LottieSearchProps {
 function SeatFrame({
   width,
   filled,
+  name,
+  isSelf = false,
   customization,
   avatarSeed,
 }: {
   width: number;
   filled: boolean;
+  name?: string | null;
+  isSelf?: boolean;
   customization?: AvatarCustomization | null;
   avatarSeed?: string | null;
 }) {
-  if (!filled) {
-    return <FramedAvatar width={width} filled={false} />;
-  }
+  const labelWidth = Math.max(width + 16, 96);
+
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.8, y: 10 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-    >
-      <FramedAvatar width={width} customization={customization} avatarSeed={avatarSeed} />
-    </motion.div>
+    <div className="flex shrink-0 flex-col items-center" style={{ width: labelWidth }}>
+      <motion.div
+        initial={filled ? { opacity: 0, scale: 0.8, y: 10 } : false}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+      >
+        <FramedAvatar
+          width={width}
+          filled={filled}
+          customization={filled ? customization : undefined}
+          avatarSeed={filled ? avatarSeed : undefined}
+        />
+      </motion.div>
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={name ?? 'waiting'}
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -4 }}
+          className={`relative z-20 mt-2 w-full truncate text-center font-poppins text-[10px] font-black uppercase leading-4 tracking-[0.06em] ${
+            filled ? (isSelf ? 'text-brand-yellow' : 'text-white') : 'text-white/35'
+          }`}
+          style={poppins}
+          title={name ?? undefined}
+          aria-label={name ?? undefined}
+        >
+          <span className="block w-full truncate">{name ?? '—'}</span>
+        </motion.div>
+      </AnimatePresence>
+    </div>
   );
 }
 
@@ -102,6 +146,10 @@ function formatElapsed(totalSeconds: number): string {
 export function LottieSearch({
   joined,
   total = 3,
+  players = EMPTY_SEARCH_PLAYERS,
+  botPlayers = [],
+  selfUserId,
+  selfDisplayName,
   selfAvatarSeed,
   selfAvatarCustomization,
   onCancel,
@@ -111,6 +159,30 @@ export function LottieSearch({
   const lottieSrc = src ?? lottieForJoined(joined, total);
   const elapsed = useElapsedSeconds();
   const status = t(statusKey(joined, total));
+  const selfPlayer = players.find((player) => player.userId === selfUserId);
+  const rivals = players.filter((player) => player.userId !== selfUserId);
+  const humanSlots = [
+    {
+      userId: selfUserId ?? 'self',
+      displayName: selfPlayer?.displayName || selfDisplayName || t('auctionGame.youLabel'),
+      isSelf: true,
+      avatarCustomization: selfPlayer?.avatarCustomization ?? selfAvatarCustomization,
+    },
+    ...rivals.map((player) => ({ ...player, isSelf: false })),
+  ].slice(0, total);
+  const namedBotSlots = botPlayers
+    .slice(0, Math.max(0, total - humanSlots.length))
+    .map((player) => ({
+      userId: player.seatId,
+      displayName: player.displayName,
+      isSelf: false,
+      avatarCustomization: null,
+    }));
+  // `botCount` can briefly represent a staged capacity slot before the server
+  // has selected a persistent/ephemeral bot profile. Never invent a generic
+  // "AI player" identity for that interim state. A bot card becomes filled
+  // only when `botPlayers` carries the actual selected smart-bot name.
+  const slots = [...humanSlots, ...namedBotSlots];
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-surface-page-alt">
@@ -154,9 +226,20 @@ export function LottieSearch({
         {/* Seats — three equal slots; rivals fill in as they join (matches the
             countdown screen's sizing so the lineup doesn't resize on handoff). */}
         <div className="mt-6 flex items-start justify-center gap-3">
-          <SeatFrame width={LINEUP_CARD_WIDTH} filled customization={selfAvatarCustomization} avatarSeed={selfAvatarSeed} />
-          <SeatFrame width={LINEUP_CARD_WIDTH} filled={joined > 1} />
-          <SeatFrame width={LINEUP_CARD_WIDTH} filled={joined > 2} />
+          {Array.from({ length: total }, (_, index) => {
+            const slot = slots[index];
+            return (
+              <SeatFrame
+                key={slot?.userId ?? `empty-${index}`}
+                width={LINEUP_CARD_WIDTH}
+                filled={Boolean(slot)}
+                name={slot?.displayName ?? t('auctionGame.waitingBidder')}
+                isSelf={slot?.isSelf}
+                customization={slot?.avatarCustomization}
+                avatarSeed={slot?.isSelf ? selfAvatarSeed : undefined}
+              />
+            );
+          })}
         </div>
 
         {onCancel && (
@@ -192,6 +275,15 @@ export function LottieSearchDemo({ src }: { src?: string }) {
     };
   }, []);
   return (
-    <LottieSearch joined={joined} total={3} selfAvatarSeed="avatar-1" onCancel={() => {}} src={src} />
+    <LottieSearch
+      joined={joined}
+      total={3}
+      players={DEMO_SEARCH_PLAYERS.slice(0, joined)}
+      selfUserId="demo-self"
+      selfDisplayName="Web Player"
+      selfAvatarSeed="avatar-1"
+      onCancel={() => {}}
+      src={src}
+    />
   );
 }

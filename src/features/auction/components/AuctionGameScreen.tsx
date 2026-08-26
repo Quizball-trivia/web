@@ -26,11 +26,13 @@ export function AuctionGameScreen({
   actions,
   humanPlayerId,
   serverDrivenTransitions = false,
+  disconnectedSeatIds = [],
 }: {
   state: AuctionGameState;
   actions: AuctionActions;
   humanPlayerId: string;
   serverDrivenTransitions?: boolean;
+  disconnectedSeatIds?: readonly string[];
 }) {
   const isDesktop = useIsDesktop();
 
@@ -43,9 +45,19 @@ export function AuctionGameScreen({
   } else if (state.phase === 'clue-reveal' || state.phase === 'bidding') {
     key = 'bidding';
     content = isDesktop ? (
-      <StadiumBiddingScreen state={state} actions={actions} humanPlayerId={humanPlayerId} />
+      <StadiumBiddingScreen
+        state={state}
+        actions={actions}
+        humanPlayerId={humanPlayerId}
+        disconnectedSeatIds={disconnectedSeatIds}
+      />
     ) : (
-      <BiddingScreen state={state} actions={actions} humanPlayerId={humanPlayerId} />
+      <BiddingScreen
+        state={state}
+        actions={actions}
+        humanPlayerId={humanPlayerId}
+        disconnectedSeatIds={disconnectedSeatIds}
+      />
     );
   } else if (state.phase === 'reveal') {
     key = 'reveal';

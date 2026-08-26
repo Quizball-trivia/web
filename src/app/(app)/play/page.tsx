@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { ModeSelectionScreen } from "@/features/play/ModeSelectionScreen";
 import { useGameSessionStore } from "@/stores/gameSession.store";
 import { useQueryClient } from "@tanstack/react-query";
@@ -26,8 +26,9 @@ import { logSocketDebug } from "@/lib/realtime/socket-client";
 // Ranked entry costs 1 ticket — mirrors ModeConfirmModal's CONFIG.ranked.entryCost.
 const RANKED_TICKET_COST = 1;
 
-export default function PlayPage() {
+function PlayContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { t } = useLocale();
   const startSession = useGameSessionStore((state) => state.startSession);
   const resetRealtime = useRealtimeMatchStore((state) => state.reset);
@@ -174,6 +175,7 @@ export default function PlayPage() {
     <div className="relative min-h-full overflow-hidden">
       <div className="relative z-10">
         <ModeSelectionScreen
+          initialMode={searchParams.get("mode") === "ranked" ? "ranked" : undefined}
           onSelectMode={(mode) => {
             trackModeSelected(mode);
             if (mode === "solo") {
@@ -193,5 +195,13 @@ export default function PlayPage() {
         />
       </div>
     </div>
+  );
+}
+
+export default function PlayPage() {
+  return (
+    <Suspense fallback={null}>
+      <PlayContent />
+    </Suspense>
   );
 }

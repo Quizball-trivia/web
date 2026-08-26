@@ -16,7 +16,7 @@ export const WL_LAST_WEEK_QUESTIONS: SimQuestion[] = [
     "evaluation": {
       "correct_id": "false"
     },
-    "points": 150
+    "points": 100
   },
   {
     "kind": "put_in_order",
@@ -70,7 +70,7 @@ export const WL_LAST_WEEK_QUESTIONS: SimQuestion[] = [
         "03161d91-adba-454e-816a-f98414ee798b"
       ]
     },
-    "points": 150
+    "points": 100
   },
   {
     "kind": "mcq",
@@ -120,7 +120,7 @@ export const WL_LAST_WEEK_QUESTIONS: SimQuestion[] = [
     "evaluation": {
       "correct_id": "7dc08c0c-058a-4b0a-a7de-7e36de4bd33d"
     },
-    "points": 200
+    "points": 100
   },
   {
     "kind": "career_path",
@@ -166,7 +166,7 @@ export const WL_LAST_WEEK_QUESTIONS: SimQuestion[] = [
         "სადიო"
       ]
     },
-    "points": 250
+    "points": 100
   },
   {
     "kind": "who_am_i",
@@ -223,6 +223,6 @@ export const WL_LAST_WEEK_QUESTIONS: SimQuestion[] = [
         "დიეგო"
       ]
     },
-    "points": 300
+    "points": 100
   }
 ];

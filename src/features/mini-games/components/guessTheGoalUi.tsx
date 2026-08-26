@@ -10,12 +10,13 @@ import type { CSSProperties } from 'react';
 import type { TacticsStepKind } from '../lib/tacticsEngine';
 import { useMiniLocale } from '../lib/i18n';
 
-export type GgtOptionState = 'idle' | 'correct' | 'wrong' | 'dim';
+export type GgtOptionState = 'idle' | 'locked' | 'correct' | 'wrong' | 'dim';
 
 /** Ranked-match answer card look (PossessionQuestionPanel). */
 export function ggtOptionStyle(state: GgtOptionState): CSSProperties {
   return {
-    backgroundColor: state === 'correct' ? '#38B60E' : 'transparent',
+    backgroundColor:
+      state === 'correct' ? '#38B60E' : state === 'locked' ? 'rgba(255,229,0,0.14)' : 'transparent',
     border:
       state === 'correct'
         ? '2px solid transparent'
@@ -28,7 +29,9 @@ export function ggtOptionStyle(state: GgtOptionState): CSSProperties {
         ? '0 1.76px 6.334px 1.32px rgba(56,182,14,0.25)'
         : state === 'wrong'
           ? '0 1.76px 6.334px 1.32px rgba(251,49,1,0.25)'
-          : '0 0 6.334px 1.32px rgba(255,229,0,0.25)',
+          : state === 'locked'
+            ? '0 0 10px 2px rgba(255,229,0,0.45)'
+            : '0 0 6.334px 1.32px rgba(255,229,0,0.25)',
     opacity: state === 'dim' ? 0.4 : 1,
   };
 }

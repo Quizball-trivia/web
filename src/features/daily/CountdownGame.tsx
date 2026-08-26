@@ -30,7 +30,7 @@ interface CountdownQuestion {
 interface CountdownGameProps {
   session: CountdownSession;
   onBack: () => void;
-  onComplete: (score: number) => void;
+  onComplete: (score: number, nextPath?: string) => void;
 }
 
 export function CountdownGame({ session, onBack, onComplete }: CountdownGameProps) {
@@ -207,7 +207,7 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
           total={totalAnswerSlots}
           // Score = raw answers found; the backend pays the per-answer coin
           // reward (COINS_PER_SCORE_POINT.countdown), so no client multiplier.
-          onDone={() => onComplete(totalFound)}
+          onDone={(nextPath) => onComplete(totalFound, nextPath)}
         />
       </div>
     );

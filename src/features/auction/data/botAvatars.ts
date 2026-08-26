@@ -30,17 +30,21 @@ function pick<T>(list: readonly T[], n: number): T {
  */
 export function randomBotAvatar(seed: string): AvatarCustomization {
   const h = hashSeed(seed);
+  // `>>>` keeps the shifted hash unsigned: `>>` reinterprets hashes ≥ 2^31 as
+  // negative, a negative `n % length` indexes `list[undefined]`, and a negative
+  // remainder is always `< 4` — half of all bots lost jersey/hair layers and
+  // always wore glasses + facial hair.
   const avatar: AvatarCustomization = {
     skin: pick(SKIN_IDS, h),
-    jersey: pick(JERSEY_IDS, h >> 3),
-    hair: pick(HAIR_IDS, h >> 7),
+    jersey: pick(JERSEY_IDS, h >>> 3),
+    hair: pick(HAIR_IDS, h >>> 7),
   };
   // ~40% of bots wear glasses, ~40% have facial hair — varied but not on everyone.
-  if (GLASSES_IDS.length && (h >> 11) % 10 < 4) {
-    avatar.glasses = pick(GLASSES_IDS, h >> 13);
+  if (GLASSES_IDS.length && (h >>> 11) % 10 < 4) {
+    avatar.glasses = pick(GLASSES_IDS, h >>> 13);
   }
-  if (FACIAL_HAIR_IDS.length && (h >> 17) % 10 < 4) {
-    avatar.facialHair = pick(FACIAL_HAIR_IDS, h >> 19);
+  if (FACIAL_HAIR_IDS.length && (h >>> 17) % 10 < 4) {
+    avatar.facialHair = pick(FACIAL_HAIR_IDS, h >>> 19);
   }
   return avatar;
 }

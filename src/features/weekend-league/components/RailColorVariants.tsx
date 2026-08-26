@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Clock3 } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
 import { LAUNCH_EDITION, poppins, QP_TARGET } from '../constants';
 import { colors } from '@/lib/colors';
@@ -172,6 +172,83 @@ export const RailNavyGradient = () => (
     }}
   />
 );
+
+export type WeekendLeagueProgressRailState = 'qualifying' | 'qualified' | 'entered';
+
+/** Personalized experiment variant. It deliberately keeps the exact live
+ * navy→blue surface and the existing whole-card League link; only the static
+ * launch copy is replaced with server QP, state, and deadline data. */
+export function RailNavyGradientProgress({
+  state,
+  currentQp,
+  targetQp,
+  countdownLabel,
+}: {
+  state: WeekendLeagueProgressRailState;
+  currentQp: number;
+  targetQp: number;
+  countdownLabel: string;
+}) {
+  const { t } = useLocale();
+  const safeTarget = Math.max(1, targetQp);
+  const displayedQp = Math.max(0, Math.min(currentQp, safeTarget));
+  const progress = Math.round((displayedQp / safeTarget) * 100);
+  const remaining = Math.max(0, safeTarget - displayedQp);
+  const stateLabel = state === 'entered'
+    ? t('weekendLeague.enteredTitle')
+    : state === 'qualified'
+      ? t('weekendLeague.qualified')
+      : t('weekendLeague.stageQualifying');
+
+  return (
+    <Link
+      href={LEAGUE_TAB_HREF}
+      className="group relative block overflow-hidden rounded-[10px] transition-[filter] hover:brightness-110"
+      style={{
+        backgroundImage: `linear-gradient(90deg, #060C1A 0%, #0B1432 30%, #12296E 65%, ${colors.blue.brand} 100%)`,
+      }}
+    >
+      <div className="relative z-10 px-4 py-3 md:px-6">
+        <div className="flex items-center gap-3">
+          <h2 className="min-w-0 flex-1 truncate text-[15px] uppercase italic leading-none text-white lg:text-lg" style={poppins}>
+            {t('weekendLeague.title')}
+          </h2>
+          <span className="rounded-full border border-brand-green-light px-2 py-0.5 text-[9px] uppercase text-brand-green-light sm:text-[10px]" style={poppins}>
+            {stateLabel}
+          </span>
+          <span className="flex shrink-0 items-center gap-1 whitespace-nowrap text-[12px] uppercase text-brand-yellow sm:text-[13px]" style={poppins}>
+            <Clock3 className="size-3.5" aria-hidden />
+            {countdownLabel}
+          </span>
+          <ArrowRight className="size-4 shrink-0 text-white/60 transition-transform group-hover:translate-x-0.5" />
+        </div>
+
+        <div className="mt-2 flex items-center gap-3">
+          <div
+            className="h-1.5 flex-1 overflow-hidden rounded-full bg-black/25"
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={safeTarget}
+            aria-valuenow={displayedQp}
+          >
+            <div className="h-full rounded-full bg-brand-green-light" style={{ width: `${progress}%` }} />
+          </div>
+          <span className="shrink-0 whitespace-nowrap text-[12px] uppercase text-white sm:text-[13px]" style={poppins}>
+            <span className="text-brand-green-light">{displayedQp}</span> / {safeTarget} QP
+          </span>
+        </div>
+
+        <p className="mt-1 truncate text-[10px] uppercase text-white/65 sm:text-[11px]" style={poppins}>
+          {state === 'qualifying'
+            ? t('weekendLeague.qpLeftRanked', { count: remaining })
+            : state === 'qualified'
+              ? t('weekendLeague.readyToEnter')
+              : t('weekendLeague.entryConfirmed')}
+        </p>
+      </div>
+    </Link>
+  );
+}
 
 /** 6 — Gold: treats the league as the premium prize event. Dark text. */
 export const RailGold = () => (

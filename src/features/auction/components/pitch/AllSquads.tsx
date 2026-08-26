@@ -19,6 +19,7 @@ import { useLocale } from '@/contexts/LocaleContext';
 import { SquadPitch } from './SquadPitch';
 import { ProgressDots } from './ProgressDots';
 import { ChemistryBadge } from '../shared/ChemistryPanel';
+import { DisconnectedPitchOverlay } from './DisconnectedPitchOverlay';
 
 /** One squad: name + crown, budget/value, pitch, progress dots. */
 function SquadColumn({
@@ -28,6 +29,7 @@ function SquadColumn({
   highlightId,
   pitchSize,
   activePosition,
+  disconnected,
 }: {
   player: AuctionPlayer;
   state: AuctionGameState;
@@ -35,6 +37,7 @@ function SquadColumn({
   highlightId?: string;
   pitchSize: 'sm' | 'md' | 'lg';
   activePosition?: PositionGroup;
+  disconnected?: boolean;
 }) {
   const { t } = useLocale();
   const isHuman = player.id === humanPlayerId;
@@ -61,7 +64,7 @@ function SquadColumn({
             animate={{ scale: 1, rotate: 0, y: 0 }}
             transition={{ type: 'spring', stiffness: 500, damping: 14 }}
             className="shrink-0"
-            title="Leading bid"
+            title={t('auctionGame.rivalLeading')}
           >
             <Crown className="size-4 text-brand-yellow" fill="currentColor" />
           </motion.span>
@@ -97,18 +100,21 @@ function SquadColumn({
       </div>
 
       {/* Pitch */}
-      <div className="mx-auto w-full max-w-[320px]">
-        <SquadPitch
-          player={player}
-          formation={state.formation}
-          highlightId={highlightId}
-          size={pitchSize}
-          activePosition={activePosition}
-          showYouBadge={isHuman}
-          needGlow={showNeedGlow}
-          isHuman={isHuman}
-          showChemistry
-        />
+      <div className="relative mx-auto w-full max-w-[320px] overflow-hidden rounded-[18px]">
+        <div className={disconnected ? 'brightness-[0.28] saturate-50 blur-[1px]' : undefined}>
+          <SquadPitch
+            player={player}
+            formation={state.formation}
+            highlightId={highlightId}
+            size={pitchSize}
+            activePosition={activePosition}
+            showYouBadge={isHuman}
+            needGlow={showNeedGlow}
+            isHuman={isHuman}
+            showChemistry
+          />
+        </div>
+        {disconnected && <DisconnectedPitchOverlay playerName={player.username} />}
       </div>
 
       {/* Progress dots */}
@@ -127,12 +133,14 @@ export function AllSquads({
   highlightId,
   pitchSize = 'md',
   activePosition,
+  disconnectedSeatIds = [],
 }: {
   state: AuctionGameState;
   humanPlayerId: string;
   highlightId?: string;
   pitchSize?: 'sm' | 'md' | 'lg';
   activePosition?: PositionGroup;
+  disconnectedSeatIds?: readonly string[];
 }) {
   const { t } = useLocale();
   // Keep YOU in the center column on desktop: split the others around the human.
@@ -146,6 +154,7 @@ export function AllSquads({
   const [activeId, setActiveId] = useState(humanPlayerId);
   const activePlayer = tabOrder.find((p) => p.id === activeId) ?? tabOrder[0];
 
+  const disconnectedSeats = new Set(disconnectedSeatIds);
   const colProps = { state, humanPlayerId, highlightId, pitchSize, activePosition };
 
   return (
@@ -161,6 +170,7 @@ export function AllSquads({
                   key={p.id}
                   type="button"
                   onClick={() => setActiveId(p.id)}
+                  aria-pressed={sel}
                   className={`min-w-0 flex-1 truncate rounded-full px-2 py-1.5 text-[11px] font-black uppercase transition-colors ${
                     sel ? 'bg-brand-yellow text-black' : 'text-white/60'
                   }`}
@@ -173,14 +183,19 @@ export function AllSquads({
           </div>
         )}
         <div className="flex justify-center">
-          <SquadColumn player={activePlayer} {...colProps} />
+          <SquadColumn player={activePlayer} disconnected={disconnectedSeats.has(activePlayer.id)} {...colProps} />
         </div>
       </div>
 
       {/* ── Desktop: full 3-up grid ── */}
       <div className="hidden lg:grid grid-cols-3 gap-3 w-full justify-items-center">
         {sorted.map((player) => (
-          <SquadColumn key={player.id} player={player} {...colProps} />
+          <SquadColumn
+            key={player.id}
+            player={player}
+            disconnected={disconnectedSeats.has(player.id)}
+            {...colProps}
+          />
         ))}
       </div>
     </>

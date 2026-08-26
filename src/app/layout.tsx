@@ -7,8 +7,17 @@ import "@fontsource/poppins/700.css";
 import "@fontsource/poppins/800.css";
 import "@fontsource/poppins/900.css";
 import "flag-icons/css/flag-icons.min.css";
-import { Providers } from "./providers";
-import { SITE_URL, SITE_NAME, SITE_TAGLINE, SITE_DESCRIPTION, IS_PRODUCTION_DEPLOYMENT } from "@/lib/seo/site";
+import { RouteProviders } from "./route-providers";
+import {
+  SITE_URL,
+  SITE_NAME,
+  SITE_TAGLINE,
+  SITE_DESCRIPTION,
+  SITE_ICON_PATH,
+  SITE_OG_IMAGE_ALT,
+  SITE_OG_IMAGE_PATH,
+  IS_PRODUCTION_DEPLOYMENT,
+} from "@/lib/seo/site";
 import { explicitLocaleFromPathname, localeFromPathname } from "@/lib/i18n/locale";
 import "../styles/globals.css";
 
@@ -52,14 +61,14 @@ export const metadata: Metadata = {
     title: `${SITE_NAME} — ${SITE_TAGLINE}`,
     description: SITE_DESCRIPTION,
     url: SITE_URL,
-    locale: "en_US",
+    locale: "en_GB",
     alternateLocale: ["ka_GE"],
     images: [
       {
-        url: "/assets/brand/quziball-logo-2.png",
+        url: SITE_OG_IMAGE_PATH,
         width: 1200,
-        height: 1200,
-        alt: `${SITE_NAME} logo`,
+        height: 630,
+        alt: SITE_OG_IMAGE_ALT,
       },
     ],
   },
@@ -67,12 +76,12 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: `${SITE_NAME} — ${SITE_TAGLINE}`,
     description: SITE_DESCRIPTION,
-    images: ["/assets/brand/quziball-logo-2.png"],
+    images: [SITE_OG_IMAGE_PATH],
   },
   icons: {
-    icon: "/assets/brand/quziball-logo-2.png",
-    shortcut: "/assets/brand/quziball-logo-2.png",
-    apple: "/assets/brand/quziball-logo-2.png",
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: SITE_ICON_PATH,
   },
   // Google Search Console / OAuth brand verification. Next.js renders
   // this as `<meta name="google-site-verification" content="..." />`
@@ -101,7 +110,7 @@ const jsonLd = [
     "@type": "Organization",
     name: SITE_NAME,
     url: SITE_URL,
-    logo: `${SITE_URL}/assets/brand/quziball-logo-2.png`,
+    logo: `${SITE_URL}${SITE_ICON_PATH}`,
     sameAs: [],
   },
   {
@@ -122,7 +131,7 @@ const jsonLd = [
     name: SITE_NAME,
     description: SITE_DESCRIPTION,
     url: SITE_URL,
-    image: `${SITE_URL}/assets/brand/quziball-logo-2.png`,
+    image: `${SITE_URL}${SITE_OG_IMAGE_PATH}`,
     applicationCategory: "GameApplication",
     genre: ["Trivia", "Sports", "Football", "Quiz", "Multiplayer"],
     operatingSystem: "Web, iOS, Android",
@@ -157,6 +166,7 @@ export default async function RootLayout({
   // geo signal so first-time visitors in Georgia default to Georgian — without
   // overriding a saved choice, account preference, or explicit URL locale.
   const geoCountry = headerList.get("x-vercel-ip-country");
+  const isFootballQuizRoute = /^\/(en|ka)\/football-quiz(?:\/[^/]+)?\/?$/.test(pathname);
 
   return (
     <html lang={locale} className="dark" suppressHydrationWarning>
@@ -172,7 +182,14 @@ export default async function RootLayout({
           suppressHydrationWarning
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        <Providers initialLocale={explicitLocale} geoCountry={geoCountry} cspNonce={cspNonce}>{children}</Providers>
+        <RouteProviders
+          isSeoRoute={isFootballQuizRoute}
+          initialLocale={explicitLocale}
+          geoCountry={geoCountry}
+          cspNonce={cspNonce}
+        >
+          {children}
+        </RouteProviders>
       </body>
     </html>
   );

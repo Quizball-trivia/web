@@ -4,6 +4,8 @@ import type {
   ListAdminDailyChallengesResponse,
   ListDailyChallengesResponse,
   DailyChallengeCompletionResult,
+  DailyComebackState,
+  SetDailyComebackReminderResult,
   ResetDailyChallengeResult,
   DailyChallengeType,
 } from "@/lib/domain/dailyChallenge";
@@ -39,6 +41,18 @@ export async function completeDailyChallenge(
   return apiFetch("post", "/api/v1/daily-challenges/{challengeType}/complete", {
     params: { challengeType },
     body,
+  });
+}
+
+export async function getDailyComebackState(): Promise<DailyComebackState> {
+  return apiFetch("get", "/api/v1/daily-challenges/comeback");
+}
+
+export async function setDailyComebackReminder(
+  enabled: boolean
+): Promise<SetDailyComebackReminderResult> {
+  return apiFetch("put", "/api/v1/daily-challenges/comeback/reminder", {
+    body: { enabled },
   });
 }
 

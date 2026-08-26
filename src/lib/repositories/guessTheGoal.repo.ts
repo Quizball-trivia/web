@@ -42,6 +42,10 @@ export interface GgtSession {
   server_now: string;
   started_at: string;
   grace_ms: number;
+  /** Seconds of play over which the score decays MAX→MIN — mirrors the
+   *  server's decay so the client preview can't drift from settlement.
+   *  Optional for rolling deploys against an older backend. */
+  full_points_seconds?: number;
   max_points: number;
   min_points: number;
   goal: {
@@ -78,6 +82,9 @@ export interface GgtGuessOutcome {
   fun_fact: GgtI18nText | null;
   /** Real footage — the server only sends this AFTER the guess. */
   video_url: string | null;
+  /** Verified goal window in the upload; the embed plays exactly this range. */
+  clip_start_s?: number | null;
+  clip_end_s?: number | null;
   bonus?: { question: GgtI18nText; options: GgtOption[] };
   awards: GgtAwards;
   session_state: "guessed" | "complete";
@@ -93,8 +100,35 @@ export interface GgtBonusOutcome {
 export interface GgtStats {
   solved: number;
   total: number;
+  /** Optional for rolling deploys against an older backend. */
+  pool_exhausted?: boolean;
   coins_today: number;
   daily_coin_cap: number;
+}
+
+export interface GgtGalleryGoal {
+  title: GgtI18nText;
+  year: number;
+  difficulty: string;
+  points: number;
+  bonus_correct: boolean | null;
+  video_url: string | null;
+  solved_at: string;
+}
+
+export interface GgtGallery {
+  solved: number;
+  total: number;
+  /** Optional for rolling deploys against an older backend. */
+  pool_exhausted?: boolean;
+  coins_earned: number;
+  xp_earned: number;
+  daily_coin_cap: number;
+  coins_today: number;
+  /** Solved goals only — unsolved goals exist solely as per-difficulty counts
+   *  in `locked` (their titles are the quiz answers). */
+  goals: GgtGalleryGoal[];
+  locked: Record<string, number>;
 }
 
 export class GuessTheGoalApiError extends Error {
@@ -162,5 +196,9 @@ export const guessTheGoalApi = {
 
   stats(): Promise<GgtStats> {
     return call("/api/v1/guess-the-goal/stats", "GET");
+  },
+
+  gallery(): Promise<GgtGallery> {
+    return call("/api/v1/guess-the-goal/gallery", "GET");
   },
 };

@@ -95,6 +95,8 @@ export interface UseRealtimeAuctionMatchResult {
   pause: AuctionPauseState | null;
   /** Transient announcement about another seat (dropped / returned / quit). */
   matchNotice: AuctionMatchNotice | null;
+  /** Human seats currently inside their reconnect grace window. */
+  disconnectedSeatIds: readonly string[];
   /** Set when reloading into a paused match this client was disconnected from. */
   rejoinAvailable: AuctionRejoinAvailablePayload | null;
   /** Server resume "get ready" countdown end (this client's clock). */
@@ -145,14 +147,25 @@ export type AuctionMatchNotice = {
 
 export type AuctionSearchState = {
   phase: 'starting' | 'queued' | 'match_found' | 'cancelled';
+  /** Present once the server has locked the three-seat lineup. */
+  matchId?: string | null;
   searchId: string | null;
   locale: 'en' | 'ka';
   queuedUserCount: number;
   seatsNeeded: number;
   fallbackAt: string | null;
   fallbackAtMs: number | null;
-  botCount?: number;
+  queuedPlayers: Array<{
+    userId: string;
+    displayName: string;
+    avatarCustomization?: AvatarCustomization | null;
+  }>;
+  botCount: number;
+  botPlayers: Array<{ seatId: string; displayName: string }>;
   humanUserIds?: string[];
+  /** Server-authoritative pre-match boundaries, converted to client clock. */
+  lineupEndsAtMs?: number | null;
+  showdownEndsAtMs?: number | null;
   /** Server-authoritative pre-match countdown end, converted to client clock. */
   countdownEndsAtMs?: number | null;
 };
@@ -181,6 +194,7 @@ export function useRealtimeAuctionMatch({
   // players a rival dropping or quitting was previously invisible — the board
   // simply froze, or lots went uncontested with no explanation.
   const [matchNotice, setMatchNotice] = useState<AuctionMatchNotice | null>(null);
+  const [disconnectedSeatIds, setDisconnectedSeatIds] = useState<readonly string[]>([]);
   // Reload-into-paused-match: server prompts to rejoin; we show a prompt and the
   // user opts in (auction:rejoin). Mirrors ranked's rejoin handshake.
   const [rejoinAvailable, setRejoinAvailable] = useState<AuctionRejoinAvailablePayload | null>(null);
@@ -265,6 +279,10 @@ export function useRealtimeAuctionMatch({
     }
   }, []);
   const pendingTurnActionRef = useRef<AuctionPendingTurnAction | null>(null);
+  // Latch for solo-pick submissions (keyed matchId:pickStartedAt): rapid taps
+  // on A then B must not emit twice. Cleared on rejection so a transient
+  // failure can be retried until the pick resolves.
+  const soloPickSentRef = useRef<string | null>(null);
   const publicStateRef = useRef<AuctionRealtimeState['publicState']>(null);
   const searchRef = useRef<AuctionSearchState | null>(null);
   const searchCancelledRef = useRef(false);
@@ -388,6 +406,7 @@ export function useRealtimeAuctionMatch({
     setPendingTurnActionValue(null);
     setWaitingForReady(null);
     setPause(null);
+    setDisconnectedSeatIds([]);
     setError(null);
     setRealtimeState(EMPTY_AUCTION_REALTIME_STATE);
     ignoredMatchIdsRef.current.clear();
@@ -413,6 +432,9 @@ export function useRealtimeAuctionMatch({
         seatsNeeded: 2,
         fallbackAt: null,
         fallbackAtMs: null,
+        queuedPlayers: [],
+        botCount: 0,
+        botPlayers: [],
       });
       emitAuctionSearchStart();
       return;
@@ -504,6 +526,7 @@ export function useRealtimeAuctionMatch({
         setPendingTurnActionValue(null);
         setWaitingForReady(null);
         setPause(null);
+        setDisconnectedSeatIds([]);
         setSearchValue(null);
         searchCancelledRef.current = false;
         ignoredMatchIdsRef.current.clear();
@@ -611,12 +634,21 @@ export function useRealtimeAuctionMatch({
     socket,
   ]);
 
+  // Depend on scalar slices of publicState, not the object: every applied event
+  // produces a new publicState reference, and re-running this effect on each one
+  // would clear the pending reconnect timer while the latch below blocks a
+  // reschedule — the recovery would then never fire.
+  const gapRecoveryMatchId = publicState?.matchId ?? null;
+  // Terminal-phase BOOLEAN, not the raw phase: mid-match phase churn (clue →
+  // bidding → reveal) must not re-run the effect, or its cleanup cancels the
+  // pending reconnect timer while the matchId latch blocks a reschedule.
+  const gapRecoveryFinished = (publicState?.phase ?? null) === 'finished';
   useEffect(() => {
-    if (!enabled || !isConnected || !publicState || !realtimeState.versionGapDetected) {
+    if (!enabled || !isConnected || !gapRecoveryMatchId || !realtimeState.versionGapDetected) {
       recoveredVersionGapKeyRef.current = null;
       return;
     }
-    if (publicState.phase === 'finished') return;
+    if (gapRecoveryFinished) return;
     // Spectators (forfeited/eliminated) should not drive the reconnect recovery:
     // they'd reconnect on every version gap forever with nothing to re-sync.
     if (!isLiveParticipant) return;
@@ -627,7 +659,7 @@ export function useRealtimeAuctionMatch({
     // this reconnect every few seconds forever. One reconnect per match is the
     // most a genuine one-off gap should ever need; the rejoin-on-connect and
     // the next full state snapshot self-heal the rest.
-    const gapKey = publicState.matchId;
+    const gapKey = gapRecoveryMatchId;
     if (recoveredVersionGapKeyRef.current === gapKey) return;
     recoveredVersionGapKeyRef.current = gapKey;
 
@@ -645,7 +677,7 @@ export function useRealtimeAuctionMatch({
         versionGapReconnectTimerRef.current = null;
       }
     };
-  }, [enabled, isConnected, isLiveParticipant, publicState, realtimeState.versionGapDetected]);
+  }, [enabled, isConnected, isLiveParticipant, gapRecoveryMatchId, gapRecoveryFinished, realtimeState.versionGapDetected]);
 
   useEffect(() => {
     if (!enabled || !matchId || publicState?.phase === 'finished') return;
@@ -715,6 +747,10 @@ export function useRealtimeAuctionMatch({
       if (event.type === 'round_revealed') {
         revealReadyKeyRef.current = null;
       }
+      if (event.type === 'state' || event.type === 'match_finished') {
+        // The pick resolved (or the match moved on) — allow future picks.
+        soloPickSentRef.current = null;
+      }
       setError(null);
     };
 
@@ -744,6 +780,7 @@ export function useRealtimeAuctionMatch({
         return;
       }
       clearPendingForMatch(null);
+      soloPickSentRef.current = null;
       setError(friendlyAuctionError(payload, locale));
     };
     const rememberMatchId = (matchId: string | undefined | null) => {
@@ -799,6 +836,7 @@ export function useRealtimeAuctionMatch({
       }
       // The match is over — a later reconnect must not try to re-attach to it.
       activeMatchIdRef.current = null;
+      setDisconnectedSeatIds([]);
       apply({ type: 'match_finished', payload });
     };
     const onWaitingForReady = (payload: AuctionWaitingForReadyPayload) => {
@@ -848,15 +886,20 @@ export function useRealtimeAuctionMatch({
         ignoredMatchIdsRef.current.add(payload.matchId);
         return;
       }
-      // Convert the server's absolute countdown end to this client's clock
-      // (server time - offset) so all 3 players count down to the same instant.
-      const offset = serverTimeOffsetMsRef.current ?? 0;
-      const countdownServerMs = payload.countdownEndsAt ? Date.parse(payload.countdownEndsAt) : NaN;
-      const countdownEndsAtMs = Number.isFinite(countdownServerMs)
-        ? countdownServerMs - offset
-        : null;
+      // Convert every server-owned pre-match boundary to this client's clock.
+      // This keeps web/mobile on the same lineup, showdown and countdown even
+      // when their device clocks differ.
+      const measuredOffset = payload.serverNow
+        ? updateServerTimeOffset(payload.serverNow)
+        : serverTimeOffsetMsRef.current;
+      const offset = measuredOffset ?? 0;
+      const toClientTime = (value?: string): number | null => {
+        const serverMs = value ? Date.parse(value) : NaN;
+        return Number.isFinite(serverMs) ? serverMs - offset : null;
+      };
       setSearchValue({
         phase: 'match_found',
+        matchId: payload.matchId,
         searchId: searchRef.current?.searchId ?? null,
         locale: payload.locale,
         queuedUserCount: payload.humanUserIds.length,
@@ -864,8 +907,12 @@ export function useRealtimeAuctionMatch({
         fallbackAt: null,
         fallbackAtMs: null,
         botCount: payload.botCount,
+        botPlayers: payload.botPlayers?.map((player) => ({ ...player })) ?? [],
+        queuedPlayers: searchRef.current?.queuedPlayers ?? [],
         humanUserIds: [...payload.humanUserIds],
-        countdownEndsAtMs,
+        lineupEndsAtMs: toClientTime(payload.lineupEndsAt),
+        showdownEndsAtMs: toClientTime(payload.showdownEndsAt),
+        countdownEndsAtMs: toClientTime(payload.countdownEndsAt),
       });
       startRequestedRef.current = true;
       // Remember the match we now belong to so a socket that (re)connects before
@@ -913,11 +960,17 @@ export function useRealtimeAuctionMatch({
         seatsNeeded: 0,
         fallbackAt: null,
         fallbackAtMs: null,
+        queuedPlayers: [],
+        botCount: 0,
+        botPlayers: [],
       });
     };
     const onOpponentDisconnected = (payload: AuctionOpponentDisconnectedPayload) => {
       updateServerTimeOffset(payload.serverNow);
       setError(null);
+      setDisconnectedSeatIds((current) => (
+        current.includes(payload.seatId) ? current : [...current, payload.seatId]
+      ));
       // Play continues until the turn order reaches the missing seat, at which
       // point the board hard-pauses. Announce the drop now so that freeze has a
       // cause the other two players can see coming.
@@ -925,6 +978,9 @@ export function useRealtimeAuctionMatch({
     };
     const onPaused = (payload: AuctionPausedPayload) => {
       const pauseOffset = updateServerTimeOffset(payload.serverNow);
+      setDisconnectedSeatIds((current) => (
+        current.includes(payload.seatId) ? current : [...current, payload.seatId]
+      ));
       apply({
         type: 'state',
         payload: {
@@ -950,6 +1006,7 @@ export function useRealtimeAuctionMatch({
         },
       });
       setPause(null);
+      setDisconnectedSeatIds((current) => current.filter((seatId) => seatId !== payload.seatId));
       setResumeCountdownEndsAtMs(null);
       setRejoinAvailable(null);
       setError(null);
@@ -981,11 +1038,24 @@ export function useRealtimeAuctionMatch({
         },
       });
       setPause(null);
+      setDisconnectedSeatIds((current) => current.filter((seatId) => seatId !== payload.seatId));
       setPendingTurnActionValue(null);
       // A three-player match just became a two-player one. Without this the
       // remaining players only saw lots quietly stop being contested.
       if (payload.userId !== selfUserId) {
         setMatchNotice({ id: Date.now(), kind: 'opponent-forfeited', seatId: payload.seatId });
+      } else {
+        // Our own forfeit: the server detaches us from the match room right
+        // after this emit, so auction:match_finished never reaches us and
+        // publicPhase never becomes 'finished'. Clear the start latch or the
+        // results screen's "Play Again" silently no-ops.
+        startRequestedRef.current = false;
+        activeMatchIdRef.current = null;
+        try {
+          window.sessionStorage.removeItem(LAST_AUCTION_MATCH_KEY);
+        } catch {
+          // Storage unavailable — the in-memory state still transitions.
+        }
       }
     };
 
@@ -1051,6 +1121,9 @@ export function useRealtimeAuctionMatch({
     startGame: () => {
       requestStart({ force: publicPhase === 'finished' });
     },
+    resetSearchLatch: () => {
+      startRequestedRef.current = false;
+    },
     placeBid: (amount: number) => {
       if (!matchId) return;
       if (pendingTurnActionRef.current) return;
@@ -1099,7 +1172,10 @@ export function useRealtimeAuctionMatch({
       });
     },
     pickSoloOption: (option: 'A' | 'B') => {
-      if (!matchId) return;
+      if (!matchId || !publicState?.soloPick) return;
+      const pickKey = `${matchId}:${publicState.soloPick.startedAt}`;
+      if (soloPickSentRef.current === pickKey) return;
+      soloPickSentRef.current = pickKey;
       socket.emit('auction:solo_pick_select', { matchId, option });
     },
     forfeit: () => {
@@ -1133,6 +1209,9 @@ export function useRealtimeAuctionMatch({
         seatsNeeded: 0,
         fallbackAt: null,
         fallbackAtMs: null,
+        queuedPlayers: [],
+        botCount: 0,
+        botPlayers: [],
       });
       if (socket.connected) {
         socket.emit('auction:search_cancel');
@@ -1145,6 +1224,7 @@ export function useRealtimeAuctionMatch({
     matchId,
     pendingTurnAction,
     publicPhase,
+    publicState,
     publicStateVersion,
     requestStart,
     setPendingTurnActionValue,
@@ -1171,6 +1251,7 @@ export function useRealtimeAuctionMatch({
     waitingForReady,
     pause,
     matchNotice,
+    disconnectedSeatIds,
     rejoinAvailable,
     resumeCountdownEndsAtMs,
     search,
@@ -1195,6 +1276,9 @@ function toAuctionSearchState(
     seatsNeeded: payload.seatsNeeded,
     fallbackAt: payload.fallbackAt,
     fallbackAtMs: Number.isFinite(fallbackAtMs) ? fallbackAtMs : null,
+    queuedPlayers: payload.queuedPlayers?.map((player) => ({ ...player })) ?? [],
+    botCount: payload.botCount ?? 0,
+    botPlayers: [],
   };
 }
 
@@ -1252,10 +1336,6 @@ const AUCTION_ERROR_MESSAGES: Record<string, { en: string; ka: string }> = {
   auction_high_bidder_self_bid: {
     en: 'You already hold the highest bid.',
     ka: 'თქვენ უკვე გაქვთ უმაღლესი ფსონი.',
-  },
-  auction_opening_bidder_cannot_fold: {
-    en: 'The first bidder has to open — you cannot fold here.',
-    ka: 'პირველმა მოთამაშემ უნდა გახსნას — აქ ვერ გაჰყვებით.',
   },
   auction_seat_cannot_bid: {
     en: "You can't bid on this player.",
@@ -1316,11 +1396,11 @@ function shouldClearWaitingForReadyAfterEvent(event: Parameters<typeof applyAuct
 }
 
 function shouldClearSearchAfterEvent(event: Parameters<typeof applyAuctionRealtimeEvent>[1]): boolean {
-  return (
-    event.type === 'match_started' ||
-    event.type === 'state' ||
-    event.type === 'match_finished'
-  );
+  // Keep match_found through the full lineup/showdown/countdown sequence. The
+  // backend intentionally emits live state immediately after match_found so it
+  // can open its all-human UI-ready gate; clearing here let React skip the
+  // entire pre-match sequence on fast connections.
+  return event.type === 'match_finished';
 }
 
 function getUiReadyPhase(phase: NonNullable<AuctionRealtimeState['publicState']>['phase']): AuctionUiReadyPhase | null {

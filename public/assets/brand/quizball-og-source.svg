@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#061115"/>
+  <circle cx="1120" cy="80" r="220" fill="#1645ff" opacity="0.16"/>
+  <circle cx="1080" cy="590" r="260" fill="#24c400" opacity="0.10"/>
+  <!-- quizball-email-logo.jpg is composited at x=58, y=105 in the PNG build step. -->
+  <rect x="520" y="150" width="590" height="7" rx="3.5" fill="#24c400"/>
+  <text x="520" y="270" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="78" font-weight="700">THE 1V1</text>
+  <text x="522" y="340" fill="#ffe500" font-family="Arial, Helvetica, sans-serif" font-size="42" font-weight="700">FOOTBALL TRIVIA GAME</text>
+  <text x="522" y="412" fill="#c8d5d8" font-family="Arial, Helvetica, sans-serif" font-size="29">Play free quizzes. Then face real fans.</text>
+</svg>

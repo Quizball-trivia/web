@@ -330,6 +330,13 @@ export type MatchStagePresencePayload = {
   stageKey: string;
 };
 
+export type MatchVisibilitySignal = 'hidden' | 'visible' | 'blur' | 'focus' | 'pagehide';
+
+export type MatchVisibilitySignalPayload = {
+  matchId: string;
+  signal: MatchVisibilitySignal;
+};
+
 export interface MatchWaitingForReadyPayload {
   matchId: string;
   phase: MatchUiReadyPhase;
@@ -822,6 +829,9 @@ export interface PublicAuctionPlayer {
    *  optional so older cached payloads still parse. */
   isBot?: boolean;
   budget: number;
+  /** Budget the seat started with. Absent on legacy payloads → assume the
+   *  current constant; spend/profit math must use this, not the constant. */
+  startingBudget?: number | null;
   team: PublicAuctionTeam;
   isEliminated: boolean;
   /** Quit / disconnect-forfeited (ranks below everyone; no coins). */
@@ -1114,6 +1124,9 @@ export interface AuctionSearchStartedPayload {
   queuedUserCount: number;
   seatsNeeded: number;
   fallbackAt: string;
+  /** Present on roster-aware servers. Optional for a safe rolling deploy. */
+  queuedPlayers?: AuctionQueuedPlayerSummary[];
+  botCount?: number;
 }
 
 export interface AuctionSearchStatusPayload {
@@ -1122,6 +1135,16 @@ export interface AuctionSearchStatusPayload {
   queuedUserCount: number;
   seatsNeeded: number;
   fallbackAt: string;
+  /** Present on roster-aware servers. Optional for a safe rolling deploy. */
+  queuedPlayers?: AuctionQueuedPlayerSummary[];
+  botCount?: number;
+}
+
+export interface AuctionQueuedPlayerSummary {
+  userId: string;
+  displayName: string;
+  /** Saved layered avatar so every waiting-room client renders the same outfit. */
+  avatarCustomization?: AvatarCustomization | null;
 }
 
 export interface AuctionSearchCancelledPayload {
@@ -1133,8 +1156,18 @@ export interface AuctionMatchFoundPayload {
   matchId: string;
   humanUserIds: string[];
   botCount: number;
+  /** Assigned bot personas. Optional while older backend deployments are
+   * still in rotation; the UI falls back to the generic translated label. */
+  botPlayers?: Array<{ seatId: string; displayName: string }>;
   locale: 'en' | 'ka';
   formation: AuctionFormationName;
+  /** Server clock used to compensate for local clock skew. Optional during a
+   * rolling deploy; older backends only sent countdownEndsAt. */
+  serverNow?: string;
+  /** Absolute server time when the filled lineup hands over to showdown. */
+  lineupEndsAt?: string;
+  /** Absolute server time when showdown hands over to the countdown. */
+  showdownEndsAt?: string;
   /** Absolute server time (ISO) the pre-match countdown ends — all clients
    *  count down to this same instant so they start in sync. */
   countdownEndsAt?: string;
@@ -1227,8 +1260,8 @@ export interface AuctionTurnTimeoutPayload {
   matchId: string;
   roundId: string;
   seatId: string;
-  action: 'bid' | 'fold';
-  amount?: number;
+  /** A timeout is always a pass — the opener auto-buy no longer exists. */
+  action: 'fold';
   round: PublicAuctionRoundState;
   stateVersion: number;
 }
@@ -1574,6 +1607,7 @@ export interface ClientToServerEvents {
   'match:resume_ui_ready': (data: { matchId: string }) => void;
   'match:presence_heartbeat': (data: MatchStagePresencePayload) => void;
   'match:stage_ready': (data: MatchStagePresencePayload) => void;
+  'match:visibility_signal': (data: MatchVisibilitySignalPayload) => void;
   'match:leave': (data?: { matchId?: string }) => void;
   'match:rejoin': (data?: { matchId?: string }) => void;
   'match:forfeit': (data?: { matchId?: string }) => void;

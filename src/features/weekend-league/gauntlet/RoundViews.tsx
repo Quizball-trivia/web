@@ -23,6 +23,7 @@ export interface RoundHeaderModel {
   secondsLeft: number;
   spectator?: boolean;
   step?: string;
+  stepKind?: 'question' | 'clue';
   /** Always-on placement pill (mobile) — rendered left of the score line. */
   rankPill?: React.ReactNode;
   onQuit: () => void;

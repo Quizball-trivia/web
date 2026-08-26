@@ -67,9 +67,9 @@ export function resetUser(): void {
   }
 }
 
-// Replay is disabled globally at init (major ingest cost). These scope it to
-// the public SEO quiz pages only: start when a visitor is on /football-quiz,
-// stop again when they navigate anywhere else so app sessions stay unrecorded.
+// Replay is disabled globally at init (major ingest cost). These helpers scope
+// it to public SEO quiz pages and the short campaign-attributed signup landing
+// window, then stop it before the visitor enters the wider app.
 // posthog.startSessionRecording() flips disable_session_recording back off
 // internally, so it works despite the init-time kill switch.
 export function startSessionRecording(): void {

@@ -48,7 +48,9 @@ import { queryKeys } from '@/lib/queries/queryKeys';
 import { useWlLive, type WlLiveScreen, type WlLiveState } from './useWlLive';
 
 const WHO_AM_I_CLUES = 5;
-const WHO_AM_I_POINTS = [300, 240, 180, 120, 60];
+// Ranked-parity scoring (2026-08-25): the puzzle is worth one ranked
+// question, paid by how few clues were needed — no longer a match-decider.
+const WHO_AM_I_POINTS = [100, 80, 60, 40, 20];
 
 function pick(text: unknown, locale: Locale): string {
   if (typeof text === 'string') return text;
@@ -156,9 +158,14 @@ export function WlLiveFlowView({
       ? (live.screen.attempt?.game_index ?? currentGameIndex ?? 0)
       : currentGameIndex ?? live.gameIndex;
   const ladderNow = wlLadder(checkedInCount ?? 0);
-  const rankField = gameIdxNow <= 0
+  // Game 3: checkedInCount is now FINALIST-scoped (server change) — it IS the
+  // field. Running it through the qualifier ladder shrank a 22-finalist final
+  // to a phantom 19-player field (Codex review).
+  const rankField = gameIdxNow >= 3
     ? (checkedInCount ?? 0)
-    : ladderNow[Math.min(2, gameIdxNow - 1)] ?? 0;
+    : gameIdxNow <= 0
+      ? (checkedInCount ?? 0)
+      : ladderNow[Math.min(2, gameIdxNow - 1)] ?? 0;
   const rankCut = gameIdxNow >= 3 ? 3 : ladderNow[gameIdxNow] ?? 0;
   // Rank at the moment the question opened — the delta on reveal is measured
   // against it (render-time adjustment, same pattern as lastResult below).
@@ -225,7 +232,7 @@ export function WlLiveFlowView({
   }
 
   // Money-drop budget chain (display only — the server re-derives its own):
-  // 300 enters question 1; each question's budget is the last ack's carry; a
+  // 500 enters question 1; each question's budget is the last ack's carry; a
   // played question with no accepted answer zeroes it (daily rules).
   // Render-time adjustment (converges: the second pass finds the attempt
   // budgeted + settled and sets nothing).
@@ -233,8 +240,8 @@ export function WlLiveFlowView({
     budgets: Record<string, number>;
     lastCarry: number;
     settled: Record<string, 'ack' | 'zero'>;
-  }>({ budgets: {}, lastCarry: 300, settled: {} });
-  let moneyBudget = 300;
+  }>({ budgets: {}, lastCarry: 500, settled: {} });
+  let moneyBudget = 500;
   {
     const scr = live.screen;
     const att = scr.kind === 'question' || scr.kind === 'reveal' ? scr.attempt : null;
@@ -243,10 +250,10 @@ export function WlLiveFlowView({
       if (!(att.attempt_id in next.budgets)) {
         // A reconnect snapshot carries the SERVER-derived budget for its
         // attempt — without it, a mid-round reload would restart the display
-        // chain at 300 (the server clamps regardless; this is honesty).
+        // chain at 500 (the server clamps regardless; this is honesty).
         const snap = live.snapshotMoneyBudget;
         const entering = att.question_index === 0
-          ? 300
+          ? 500
           : snap?.attemptId === att.attempt_id ? snap.budget : next.lastCarry;
         next = { ...next, budgets: { ...next.budgets, [att.attempt_id]: entering } };
       }
@@ -259,7 +266,7 @@ export function WlLiveFlowView({
         next = { ...next, lastCarry: 0, settled: { ...next.settled, [att.attempt_id]: 'zero' } };
       }
       if (next !== mdChain) setMdChain(next);
-      moneyBudget = next.budgets[att.attempt_id] ?? 300;
+      moneyBudget = next.budgets[att.attempt_id] ?? 500;
     }
   }
   // The player's submitted sheet, kept OUTSIDE the question screen: the
@@ -337,6 +344,7 @@ export function WlLiveFlowView({
         )}
         <div className="mx-auto flex min-h-[80vh] w-full max-w-xl flex-col justify-center px-4">
           <CheckInPanel
+            stage={status === 'final_checkin' ? 'final' : 'qualifier'}
             spectator
             checkedIn={false}
             ready={checkedInCount ?? 0}
@@ -362,6 +370,7 @@ export function WlLiveFlowView({
       <Immersive>
         <div className="mx-auto flex min-h-[80vh] w-full max-w-xl flex-col justify-center px-4">
           <CheckInPanel
+            stage={status === 'final_checkin' ? 'final' : 'qualifier'}
             checkedIn={checkedIn}
             ready={checkedInCount ?? 0}
             registered={registered ?? 0}
@@ -1008,7 +1017,7 @@ function LiveGameResult({
 // ── Question rendering per kind ─────────────────────────────────────────────
 
 function QuestionScreen({
-  attempt, answered, locale, serverNow, submitAnswer, retryNonce, spectator, score, rank, rankInfo = null, introCounts, moneyBudget = 300, mdSheet = null, onMdSheet, spectatorBoard = null, revealed = false, splashProps, onExit,
+  attempt, answered, locale, serverNow, submitAnswer, retryNonce, spectator, score, rank, rankInfo = null, introCounts, moneyBudget = 500, mdSheet = null, onMdSheet, spectatorBoard = null, revealed = false, splashProps, onExit,
 }: {
   attempt: WlDispatchEventPayload;
   answered: { accepted: boolean } | null;
@@ -1046,6 +1055,18 @@ function QuestionScreen({
 
   const round = { ...(ROUNDS[attempt.round_index] ?? ROUNDS[0]), index: attempt.round_index };
   const windowSec = Math.max(1, Math.round((attempt.deadlineAt - attempt.playableAt) / 1000));
+  // who-am-i is one question over 5 clue windows: the pill tracks the CLUE the
+  // player is on (ticks with the same clock that scores), not "question 1/5".
+  const isWhoAmI = attempt.kind === 'who_am_i';
+  const clueNo = isWhoAmI
+    ? Math.min(
+        WHO_AM_I_CLUES,
+        Math.max(1, 1 + Math.floor(
+          (serverNow() - attempt.playableAt)
+          / Math.max(1, (attempt.deadlineAt - attempt.playableAt) / WHO_AM_I_CLUES),
+        )),
+      )
+    : 0;
   const header: RoundHeaderModel = {
     gameIndex: attempt.game_index,
     round,
@@ -1055,7 +1076,8 @@ function QuestionScreen({
     // ranked parity, so the countdown never starts on an unread question.
     secondsLeft: ready ? secondsLeft : windowSec,
     spectator,
-    step: `${attempt.question_index + 1}/5`,
+    step: isWhoAmI ? `${clueNo}/${WHO_AM_I_CLUES}` : `${attempt.question_index + 1}/5`,
+    stepKind: isWhoAmI ? 'clue' : 'question',
     // Desktop carries placement in the fixed rail; the pill is the mobile
     // always-on equivalent, top-left on the score line.
     rankPill: rankInfo != null ? <span className="xl:hidden"><RankPill {...rankInfo} /></span> : undefined,
