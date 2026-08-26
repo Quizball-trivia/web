@@ -80,6 +80,40 @@ export function useAuctionUserRank(
   });
 }
 
+export function useTicTacToeLeaderboard(
+  type: LeaderboardType,
+  currentUserId?: string,
+  enabled = true,
+) {
+  const isAuthenticated = useAuthStore((state) => state.status === 'authenticated');
+  return useQuery({
+    queryKey: queryKeys.leaderboard.ticTacToeList(type),
+    queryFn: async () => {
+      const { data, error } = await leaderboardRepo.getTicTacToeLeaderboard(type);
+      if (error) throw new Error('Failed to fetch Tic Tac Toe leaderboard');
+      return data.map((entry) => toLeaderboardEntry(entry, currentUserId));
+    },
+    enabled: isAuthenticated && enabled,
+  });
+}
+
+export function useTicTacToeUserRank(
+  userId: string,
+  type: LeaderboardType = 'global',
+  enabled = true,
+) {
+  const isAuthenticated = useAuthStore((state) => state.status === 'authenticated');
+  return useQuery({
+    queryKey: queryKeys.leaderboard.ticTacToeUser(userId, type),
+    queryFn: async () => {
+      const { data, error } = await leaderboardRepo.getTicTacToeUserRank(type);
+      if (error) throw new Error('Failed to fetch Tic Tac Toe user rank');
+      return data ? toUserRank(data) : null;
+    },
+    enabled: isAuthenticated && !!userId && enabled,
+  });
+}
+
 export function useLeaderboardSeasons() {
   const isAuthenticated = useAuthStore((state) => state.status === 'authenticated');
   return useQuery({

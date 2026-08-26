@@ -1077,7 +1077,8 @@ export interface FootballGridCompletedPayload extends FootballGridStatePayload {
       imageAssetKey: string | null;
     }>;
   }>;
-  rewards?: { xp: number; coins: number; eligibilityReason?: string };
+  /** `tp` = Tic Tac Toe Points (mode leaderboard currency); optional so older backends stay compatible. */
+  rewards?: { xp: number; coins: number; tp?: number; eligibilityReason?: string };
   rematch?: {
     seriesId: string;
     seriesVersion: number;

@@ -12,6 +12,8 @@ import {
   useAuctionUserRank,
   useLeaderboard,
   useLeaderboardSeasons,
+  useTicTacToeLeaderboard,
+  useTicTacToeUserRank,
   useUserRank,
 } from "@/lib/queries/leaderboard.queries";
 import type { LeaderboardType } from "@/lib/domain/leaderboard";
@@ -41,13 +43,13 @@ const TABS: { value: LeaderboardType; labelKey: MessageKey }[] = [
   { value: "country", labelKey: "leaderboard.tabCountry" },
 ];
 
-/** Which game mode's board is shown. Ranked keeps seasons + RP; auction is a
- *  single all-time board scored in Auction Points. */
-type LeaderboardMode = "ranked" | "auction";
+/** Ranked keeps seasons + RP. Auction/AP and Tic Tac Toe/TP are all-time. */
+type LeaderboardMode = "ranked" | "auction" | "ticTacToe";
 
 const MODE_TABS: { value: LeaderboardMode; labelKey: MessageKey }[] = [
   { value: "ranked", labelKey: "leaderboard.tabRanked" },
   { value: "auction", labelKey: "leaderboard.tabAuction" },
+  { value: "ticTacToe", labelKey: "leaderboard.tabTicTacToe" },
 ];
 
 /** Stands in for `seasonId === null` (the live season) inside the select, which
@@ -63,33 +65,52 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
   const [seasonId, setSeasonId] = useState<string | null>(null);
 
   const isAuction = mode === "auction";
+  const isTicTacToe = mode === "ticTacToe";
+  const isRanked = mode === "ranked";
 
   const { data: seasonsData } = useLeaderboardSeasons();
   const archivedSeasons = useMemo(() => seasonsData?.seasons ?? [], [seasonsData]);
   const currentSeasonNumber = seasonsData?.currentSeasonNumber ?? archivedSeasons.length + 1;
   // Seasons are a ranked-only concept; the auction board is all-time.
-  const isArchivedView = !isAuction && seasonId !== null;
+  const isArchivedView = isRanked && seasonId !== null;
 
   // Only the visible mode fetches; switching tabs kicks off the other board.
   const rankedBoard = useLeaderboard(
     activeTab,
     currentPlayerId,
     seasonId ?? undefined,
-    !isAuction,
+    isRanked,
   );
   const auctionBoard = useAuctionLeaderboard(activeTab, currentPlayerId, isAuction);
-  const { data: entries, isLoading, isError } = isAuction ? auctionBoard : rankedBoard;
+  const ticTacToeBoard = useTicTacToeLeaderboard(activeTab, currentPlayerId, isTicTacToe);
+  const activeBoard = isAuction ? auctionBoard : isTicTacToe ? ticTacToeBoard : rankedBoard;
+  const { data: entries, isLoading, isError } = activeBoard;
 
   const rankedUserRank = useUserRank(
     currentPlayerId ?? "",
     activeTab,
     seasonId ?? undefined,
-    !isAuction,
+    isRanked,
   );
   const auctionUserRank = useAuctionUserRank(currentPlayerId ?? "", activeTab, isAuction);
-  const { data: userRank } = isAuction ? auctionUserRank : rankedUserRank;
+  const ticTacToeUserRank = useTicTacToeUserRank(currentPlayerId ?? "", activeTab, isTicTacToe);
+  const activeUserRank = isAuction
+    ? auctionUserRank
+    : isTicTacToe
+      ? ticTacToeUserRank
+      : rankedUserRank;
+  const { data: userRank } = activeUserRank;
 
-  const pointsUnit = isAuction ? t("leaderboard.colAP") : t("leaderboard.colRP");
+  const pointsUnit = isAuction
+    ? t("leaderboard.colAP")
+    : isTicTacToe
+      ? t("leaderboard.colTP")
+      : t("leaderboard.colRP");
+  const subtitle = isAuction
+    ? t("leaderboard.auctionSubtitle")
+    : isTicTacToe
+      ? t("leaderboard.ticTacToeSubtitle")
+      : t("leaderboard.subtitle");
 
   const accentHex = isEventMode ? "#FF6C0A" : undefined;
 
@@ -148,7 +169,7 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
               {t("leaderboard.title")}
             </h1>
             <p className="mt-2 text-[11px] sm:text-[13px] font-black uppercase tracking-[0.08em] text-white/70">
-              {isAuction ? t("leaderboard.auctionSubtitle") : t("leaderboard.subtitle")}
+              {subtitle}
             </p>
           </div>
 
@@ -172,7 +193,7 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
             transition={{ duration: 0.35, delay: 0.05 }}
             className="relative"
           >
-            <UserRankStrip userEntry={userEntry} pointsUnit={pointsUnit} hideTier={isAuction} />
+            <UserRankStrip userEntry={userEntry} pointsUnit={pointsUnit} hideTier={!isRanked} />
             {/* Betsson badge — event only, sits on the top-right border edge */}
             {isEventMode && (
               <div
@@ -196,7 +217,7 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
         >
           <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b border-white/10">
             <div
-              className="flex items-center gap-7"
+                className="flex items-center gap-4 sm:gap-7"
               role="tablist"
               aria-label={t("leaderboard.modeTablistAriaLabel")}
             >
@@ -229,8 +250,8 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
             </div>
 
             <div className="flex min-w-0 flex-1 items-center justify-end gap-2 pb-2 sm:flex-none">
-              {/* Seasons are ranked-only; the auction board is all-time. */}
-              {!isAuction && seasonOptions.length > 1 && (
+              {/* Seasons are ranked-only; AP and TP boards are all-time. */}
+              {isRanked && seasonOptions.length > 1 && (
                 <LeaderboardSelect
                   eyebrow={t("leaderboard.seasonEyebrow")}
                   ariaLabel={t("leaderboard.seasonSelectAriaLabel")}
@@ -309,10 +330,10 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
                 {t("leaderboard.rankings")}
               </h2>
 
-              {entries.length === 0 && isAuction ? (
+              {entries.length === 0 && !isRanked ? (
                 <div className="rounded-[10px] border-2 border-white/10 px-4 py-8 text-center">
                   <p className="text-sm font-fun font-black uppercase tracking-wide text-white/60">
-                    {t("leaderboard.auctionEmpty")}
+                    {isAuction ? t("leaderboard.auctionEmpty") : t("leaderboard.ticTacToeEmpty")}
                   </p>
                 </div>
               ) : (

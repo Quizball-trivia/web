@@ -34,6 +34,8 @@ vi.mock('@/lib/repositories/leaderboard.repo', () => ({
   getLeaderboardSeasons: (...args: unknown[]) => getLeaderboardSeasonsMock(...args),
   getAuctionLeaderboard: vi.fn(async () => ({ data: [], error: null })),
   getAuctionUserRank: vi.fn(async () => ({ data: null, error: null })),
+  getTicTacToeLeaderboard: vi.fn(async () => ({ data: [], error: null })),
+  getTicTacToeUserRank: vi.fn(async () => ({ data: null, error: null })),
 }));
 
 const SEASON_1 = { id: 'season-1', seasonNumber: 1, startedAt: '2026-01-01', endedAt: '2026-04-01' };
@@ -67,8 +69,8 @@ describe('LeaderboardScreen — header bar', () => {
     expect(seasonTrigger).toHaveTextContent('Season 2');
     expect(screen.getByRole('button', { name: 'Select region' })).toHaveTextContent('Global');
 
-    // The old pill rows were `role="tab"` — only the two mode tabs remain.
-    expect(screen.getAllByRole('tab')).toHaveLength(2);
+    // The old pill rows were `role="tab"` — only the three mode tabs remain.
+    expect(screen.getAllByRole('tab')).toHaveLength(3);
   });
 
   it('switches season from the dropdown and refetches that season', async () => {
