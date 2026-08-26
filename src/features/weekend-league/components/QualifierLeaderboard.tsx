@@ -61,7 +61,7 @@ export function QualifierLeaderboard({
       {/* eventMode={false}: the Weekend League has its own identity — it must not
           inherit the Betsson/World Cup event skin from the region hook. */}
       <div className="mb-5">
-        <LeaderboardPodium topThree={topThree} eventMode={false} medalColors />
+        <LeaderboardPodium topThree={topThree} eventMode={false} />
       </div>
 
       {/* Points, not QP or RP: these are scored inside the weekend games. */}
