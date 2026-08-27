@@ -22,6 +22,7 @@ import { markRankedQueueIntent, trackModeSelected } from "@/lib/analytics/game-e
 import { shuffleArray } from "@/lib/utils";
 import { useLocale } from "@/contexts/LocaleContext";
 import { logSocketDebug } from "@/lib/realtime/socket-client";
+import { MobileVerificationReminderExperiment } from "@/features/play/MobileVerificationReminderExperiment";
 
 // Ranked entry costs 1 ticket — mirrors ModeConfirmModal's CONFIG.ranked.entryCost.
 const RANKED_TICKET_COST = 1;
@@ -175,6 +176,7 @@ function PlayContent() {
     <div className="relative min-h-full overflow-hidden">
       <div className="relative z-10">
         <ModeSelectionScreen
+          playHomeNotice={<MobileVerificationReminderExperiment />}
           initialMode={searchParams.get("mode") === "ranked" ? "ranked" : undefined}
           onSelectMode={(mode) => {
             trackModeSelected(mode);
