@@ -28,7 +28,12 @@ import { PasswordForm } from "@/features/auth/PasswordForm";
 import { toast } from "sonner";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
 import { useLocale } from "@/contexts/LocaleContext";
-import { trackSettingsOpened } from "@/lib/analytics/game-events";
+import {
+  trackMobileVerificationCompleted,
+  trackMobileVerificationFailed,
+  trackMobileVerificationStarted,
+  trackSettingsOpened,
+} from "@/lib/analytics/game-events";
 import { resetOwnOnboarding, updateMe } from "@/lib/api/endpoints";
 import { startGeorgianPhoneLink, resetPassword, verifyGeorgianPhoneLink } from "@/lib/auth/auth.service";
 import { normalizeGeorgianPhone, validateGeorgianPhone, validateOtp } from "@/lib/auth/validation";
@@ -46,6 +51,10 @@ import {
 
 interface SettingsScreenProps {
   onBack: () => void;
+}
+
+function elapsedSince(startedAt: number): number {
+  return Math.max(0, Date.now() - startedAt);
 }
 
 export function SettingsScreen({ onBack }: SettingsScreenProps) {
@@ -80,6 +89,9 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [phoneNotice, setPhoneNotice] = useState<string | null>(null);
   const [isUpdatingPhone, setIsUpdatingPhone] = useState(false);
+  const phoneFlowStartedAtRef = useRef(Date.now());
+  const phoneSendAttemptsRef = useRef(0);
+  const phoneVerifyAttemptsRef = useRef(0);
 
   const isInitialMount = useRef(true);
   const deletionConfirmWord = t("settings.deleteAccountConfirmWord");
@@ -159,6 +171,9 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
     setPhoneOtp("");
     setPhoneError(null);
     setPhoneNotice(null);
+    phoneFlowStartedAtRef.current = Date.now();
+    phoneSendAttemptsRef.current = 0;
+    phoneVerifyAttemptsRef.current = 0;
   };
 
   const openPhoneDialog = () => {
@@ -179,6 +194,14 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
       ? validateGeorgianPhone(phoneInput)
       : validateOtp(phoneOtp);
     if (errorKey) {
+      trackMobileVerificationFailed({
+        source: 'settings',
+        step: phoneStep,
+        reason: phoneStep === 'phone' ? 'invalid_phone' : 'invalid_otp',
+        attempt: phoneStep === 'phone'
+          ? phoneSendAttemptsRef.current + 1
+          : phoneVerifyAttemptsRef.current + 1,
+      });
       setPhoneError(t(errorKey));
       return;
     }
@@ -186,24 +209,54 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
     setIsUpdatingPhone(true);
     try {
       if (phoneStep === "phone") {
+        const attempt = ++phoneSendAttemptsRef.current;
         const result = await startGeorgianPhoneLink(normalizedPhone);
         setPhoneInput(result.phone);
         if (!result.otp_required) {
+          trackMobileVerificationCompleted({
+            source: 'settings',
+            method: 'already_verified',
+            sendAttempts: attempt,
+            verifyAttempts: phoneVerifyAttemptsRef.current,
+            timeToCompleteMs: elapsedSince(phoneFlowStartedAtRef.current),
+          });
           toast.success(t("settings.phoneAlreadyLinked"));
           setPhoneDialogOpen(false);
           return;
         }
+        trackMobileVerificationStarted({
+          source: 'settings',
+          attempt,
+          timeToStartMs: elapsedSince(phoneFlowStartedAtRef.current),
+        });
         setPhoneStep("otp");
         setPhoneNotice(t("settings.phoneCodeSent", { phone: result.phone }));
         toast.success(t("settings.phoneCodeSent", { phone: result.phone }));
         return;
       }
 
+      const attempt = ++phoneVerifyAttemptsRef.current;
       const updated = await verifyGeorgianPhoneLink(normalizedPhone, phoneOtp);
       setAuthenticated(updated);
+      trackMobileVerificationCompleted({
+        source: 'settings',
+        method: 'otp',
+        sendAttempts: phoneSendAttemptsRef.current,
+        verifyAttempts: attempt,
+        timeToCompleteMs: elapsedSince(phoneFlowStartedAtRef.current),
+      });
       toast.success(t("settings.phoneLinkSuccess"));
       setPhoneDialogOpen(false);
     } catch (error) {
+      const numberInUse = error instanceof ApiError && error.status === 409;
+      trackMobileVerificationFailed({
+        source: 'settings',
+        step: phoneStep,
+        reason: numberInUse ? 'number_in_use' : 'request_failed',
+        attempt: phoneStep === 'phone'
+          ? phoneSendAttemptsRef.current
+          : phoneVerifyAttemptsRef.current,
+      });
       if (error instanceof ApiError && error.status === 409) {
         setPhoneError(t("settings.phoneLinkedElsewhere"));
       } else if (phoneStep === "otp") {

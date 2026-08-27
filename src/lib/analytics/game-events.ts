@@ -222,6 +222,7 @@ type MobileVerificationFailureReason =
   | 'request_failed';
 
 const MOBILE_VERIFICATION_SOURCE = 'onboarding' as const;
+type MobileVerificationSource = 'onboarding' | 'play_home_reminder' | 'settings';
 
 export function trackMobileVerificationPromptShown() {
   trackEvent('mobile_verification_prompt_shown', {
@@ -232,9 +233,10 @@ export function trackMobileVerificationPromptShown() {
 export function trackMobileVerificationStarted(props: {
   attempt: number;
   timeToStartMs: number;
+  source?: MobileVerificationSource;
 }) {
   trackEvent('mobile_verification_started', {
-    source: MOBILE_VERIFICATION_SOURCE,
+    source: props.source ?? MOBILE_VERIFICATION_SOURCE,
     attempt: props.attempt,
     time_to_start_ms: props.timeToStartMs,
   });
@@ -245,9 +247,10 @@ export function trackMobileVerificationCompleted(props: {
   sendAttempts: number;
   verifyAttempts: number;
   timeToCompleteMs: number;
+  source?: MobileVerificationSource;
 }) {
   trackEvent('mobile_verification_completed', {
-    source: MOBILE_VERIFICATION_SOURCE,
+    source: props.source ?? MOBILE_VERIFICATION_SOURCE,
     method: props.method,
     send_attempts: props.sendAttempts,
     verify_attempts: props.verifyAttempts,
@@ -270,12 +273,35 @@ export function trackMobileVerificationFailed(props: {
   step: MobileVerificationStep;
   reason: MobileVerificationFailureReason;
   attempt: number;
+  source?: MobileVerificationSource;
 }) {
   trackEvent('mobile_verification_failed', {
-    source: MOBILE_VERIFICATION_SOURCE,
+    source: props.source ?? MOBILE_VERIFICATION_SOURCE,
     step: props.step,
     reason: props.reason,
     attempt: props.attempt,
+  });
+}
+
+export function trackMobileVerificationReminderShown() {
+  trackEvent('mobile_verification_reminder_shown', {
+    source: 'play_home',
+  });
+}
+
+export function trackMobileVerificationReminderClicked() {
+  trackEvent('mobile_verification_reminder_clicked', {
+    source: 'play_home',
+    action: 'verify',
+  });
+}
+
+export function trackMobileVerificationReminderDismissed(props: {
+  snoozeDays: number;
+}) {
+  trackEvent('mobile_verification_reminder_dismissed', {
+    source: 'play_home',
+    snooze_days: props.snoozeDays,
   });
 }
 
