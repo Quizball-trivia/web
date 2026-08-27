@@ -51,6 +51,8 @@ function syncAnalyticsUser(user: User): void {
       country: user.country,
       favorite_club: user.favorite_club,
       preferred_language: user.preferred_language,
+      onboarding_complete: user.onboarding_complete,
+      phone_verified_at: user.phone_verified_at,
       level: user.progression?.level,
     },
     {

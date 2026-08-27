@@ -434,6 +434,19 @@
     "skip": "Maybe later",
     "sendFailed": "We couldn't send the code. Please try again."
   },
+  "mobileVerificationReminder": {
+    "eyebrow": "Account security",
+    "title": "Verify your mobile number",
+    "body": "Protect your account and make recovery easier. It takes about one minute.",
+    "cta": "Verify now",
+    "later": "Later",
+    "time": "1 min",
+    "dialogTitle": "Verify your mobile",
+    "phoneDescription": "Enter a Georgian mobile number and we'll send a six-digit code.",
+    "otpDescription": "Enter the six-digit code sent by SMS.",
+    "verified": "Mobile verified",
+    "verifiedBody": "Your account now has an extra layer of protection."
+  },
   "partyResults": {
     "youWonPartyQuiz": "You won the party quiz!",
     "takesFirst": "{winner} takes first!",

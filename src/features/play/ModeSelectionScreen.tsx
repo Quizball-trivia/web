@@ -224,6 +224,8 @@ function MiniModeCard({
 
 interface ModeSelectionScreenProps {
   onSelectMode: (mode: 'ranked' | 'friendly' | 'solo') => void;
+  /** Optional experiment-owned content immediately below the Weekend League rail. */
+  playHomeNotice?: React.ReactNode;
   /** Opens the normal confirmation modal immediately for deep-linked flows. */
   initialMode?: 'ranked' | 'friendly' | 'solo';
   /** If provided, called when ranked card is clicked BEFORE the confirm modal opens.
@@ -238,6 +240,7 @@ interface ModeSelectionScreenProps {
 
 export function ModeSelectionScreen({
   onSelectMode,
+  playHomeNotice,
   initialMode,
   onRankedIntercept,
   ticketsRemaining = 0,
@@ -339,6 +342,8 @@ export function ModeSelectionScreen({
       <div onClickCapture={trackWlBannerClicked}>
         <WeekendLeagueProgressExperimentRail />
       </div>
+
+      {playHomeNotice}
 
       {/* ─── 1. Ranked Hero Card ─── */}
       <div
