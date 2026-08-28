@@ -1,6 +1,6 @@
 // Weekend League — a weekly synchronized tournament.
 //
-// The week runs: entry closes Friday 12:00 → everyone plays the same qualifier
+// The week runs: entry closes Friday 24:00 → everyone plays the same qualifier
 // Saturday 14:00 (Georgian time) → the top 24 return for a knockout playoff
 // Sunday 14:00. This file types the whole thing; it is a FRONTEND PROTOTYPE
 // driven by mock data (see mock-data.ts) so the flow can be demoed end to end
@@ -9,8 +9,8 @@
 import type { MessageKey } from '@/lib/i18n/messages';
 
 export type LeaguePhase =
-  | 'upcoming' // before entry closes (before Fri 12:00)
-  | 'entry_open' // Mon → Fri 12:00: claim your one weekly entry
+  | 'upcoming' // before entry closes (before Fri 24:00)
+  | 'entry_open' // Mon → Fri 24:00: claim your one weekly entry
   | 'qualifier_live' // Sat 14:00: the qualifier quiz is running
   | 'qualifier_done' // qualifier finished, top 24 known, waiting for Sunday
   | 'playoffs_live' // Sun 14:00: knockout bracket for the top 24

@@ -55,17 +55,14 @@ export function ScheduleTimeline({
   onGold?: boolean;
 }) {
   const { t, locale } = useLocale();
+
   const statuses = STATUS_BY_PHASE[phase];
   // Real dates, not the static schedule strings: the hardcoded
   // "qualifyingShort" said "Mon 12:00" while entry actually closes Friday
-  // 12:00 (owner report 2026-08-28) — milestones carry the tournament's own
+  // 24:00 (owner reports 2026-08-28) — milestones carry the tournament's own
   // timestamps, so format those and keep the strings only as a null fallback.
-  const geDay = new Intl.DateTimeFormat(locale === 'ka' ? 'ka' : 'en-GB', {
-    timeZone: 'Asia/Tbilisi',
-    weekday: 'short',
-  });
   const when = (m: Milestone | null, fallback: string) =>
-    m ? `${geDay.format(m.targetMs)}${locale === 'ka' ? '.' : ''} ${m.timeLabel}` : fallback;
+    m ? formatStageWhen(m.targetMs, m.timeLabel, locale) : fallback;
   const stages: { title: string; when: string; m: Milestone | null }[] = [
     { title: t('weekendLeague.stageQualifying'), when: when(milestones?.entry ?? null, t('weekendLeague.qualifyingShort')), m: milestones?.entry ?? null },
     { title: t('weekendLeague.stageSaturday'), when: when(milestones?.qualifier ?? null, t('weekendLeague.qualifierShort')), m: milestones?.qualifier ?? null },
@@ -97,4 +94,19 @@ export function ScheduleTimeline({
       })}
     </div>
   );
+}
+
+/**
+ * "პარ. 24:00" / "Fri 12:00" for a milestone. A midnight deadline is
+ * "Friday 24:00" to a player, not "Saturday 00:00", so an exact-midnight
+ * timestamp borrows the previous day's weekday. Exported for tests.
+ */
+export function formatStageWhen(targetMs: number, timeLabel: string, locale: string): string {
+  const geDay = new Intl.DateTimeFormat(locale === 'ka' ? 'ka' : 'en-GB', {
+    timeZone: 'Asia/Tbilisi',
+    weekday: 'short',
+  });
+  const midnight = timeLabel === '00:00';
+  const day = geDay.format(midnight ? targetMs - 1 : targetMs);
+  return `${day}${locale === 'ka' ? '.' : ''} ${midnight ? '24:00' : timeLabel}`;
 }
