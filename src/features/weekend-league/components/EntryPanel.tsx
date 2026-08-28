@@ -9,7 +9,7 @@ import { LeagueCountdown } from './LeagueCountdown';
 
 type EntryMode = 'locked' | 'open' | 'entered';
 
-/** The weekly-entry claim card. One free entry per week; closes Friday 12:00. */
+/** The weekly-entry claim card. One free entry per week; closes Friday midnight. */
 export function EntryPanel({
   mode,
   countdownTarget,
