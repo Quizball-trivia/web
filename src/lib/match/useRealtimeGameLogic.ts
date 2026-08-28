@@ -4,6 +4,13 @@ import { useRealtimeMatchStore, type MatchQuestionState } from '@/stores/realtim
 import { getSocket } from '@/lib/realtime/socket-client';
 import { logger } from '@/utils/logger';
 import { QUESTION_REVEAL_MS } from '@/features/possession/types/possession.types';
+
+// Reveal watchdog: how far past the server's playableAt the options may stay
+// hidden before the client force-opens them, and how often to check. The slack
+// absorbs normal clock-sync jitter so the watchdog can never fire before the
+// primary reveal timer on a healthy client.
+const REVEAL_WATCHDOG_SLACK_MS = 1500;
+const REVEAL_WATCHDOG_POLL_MS = 500;
 import {
   GOAL_CELEBRATION_MS,
   PENALTY_RESULT_DISPLAY_DELAY_MS,
@@ -176,7 +183,12 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
       : QUESTION_REVEAL_MS;
     const revealTimer = setTimeout(() => {
       if (matchPausedRef.current) return;
-      optionsShownAtRef.current ??= getSyncedNowMs();
+      // A throttled/late timer delivery (background tab) can fire after the
+      // answer window already expired — opening the options then would let
+      // the player interact with a dead round the resolver has moved past.
+      const now = getSyncedNowMs();
+      if (normalizedQuestionDeadlineAtMs !== null && now >= normalizedQuestionDeadlineAtMs) return;
+      optionsShownAtRef.current ??= now;
       setShowOptions(true);
       setQuestionPhase('playing');
       if (matchSlice.matchId !== null) {
@@ -185,7 +197,39 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
     }, revealDelayMs);
 
     return () => clearTimeout(revealTimer);
-  }, [blockReveal, currentQuestionIndex, emitQuestionRevealedAck, getSyncedNowMs, matchPaused, matchSlice.matchId, normalizedPlayableAtMs, setQuestionPhase, startCountdownActive]);
+  }, [blockReveal, currentQuestionIndex, emitQuestionRevealedAck, getSyncedNowMs, matchPaused, matchSlice.matchId, normalizedPlayableAtMs, normalizedQuestionDeadlineAtMs, setQuestionPhase, startCountdownActive]);
+
+  // Reveal WATCHDOG. The one-shot reveal timer above can be lost — a stale
+  // matchPausedRef at effect run, background-tab setTimeout throttling on
+  // mobile, or a dep flap clearing the pending timer without rescheduling —
+  // leaving the question permanently locked with the answer window burning
+  // (player report: "it never let me take the kick"; prod shows shootout
+  // rounds where a player never answered despite being connected). Poll while
+  // options are hidden and force the reveal once the server-authoritative
+  // playableAt is comfortably past but the deadline has not yet expired.
+  useEffect(() => {
+    if (showOptions || currentQuestionIndex === undefined) return;
+    if (matchPaused || startCountdownActive || blockReveal) return;
+    if (normalizedPlayableAtMs === null) return; // no authoritative window to heal from
+    const watchdog = setInterval(() => {
+      if (matchPausedRef.current) return;
+      const now = getSyncedNowMs();
+      const overdue = now >= normalizedPlayableAtMs + REVEAL_WATCHDOG_SLACK_MS;
+      const beforeDeadline = normalizedQuestionDeadlineAtMs === null || now < normalizedQuestionDeadlineAtMs;
+      if (!overdue || !beforeDeadline) return;
+      logger.warn('Reveal watchdog forced options open', {
+        qIndex: currentQuestionIndex,
+        lateMs: now - normalizedPlayableAtMs,
+      });
+      optionsShownAtRef.current ??= now;
+      setShowOptions(true);
+      setQuestionPhase('playing');
+      if (matchSlice.matchId !== null) {
+        emitQuestionRevealedAck(matchSlice.matchId, currentQuestionIndex);
+      }
+    }, REVEAL_WATCHDOG_POLL_MS);
+    return () => clearInterval(watchdog);
+  }, [blockReveal, currentQuestionIndex, emitQuestionRevealedAck, getSyncedNowMs, matchPaused, matchSlice.matchId, normalizedPlayableAtMs, normalizedQuestionDeadlineAtMs, setQuestionPhase, showOptions, startCountdownActive]);
 
   // Tracks the actual options-unlock instant; cleared when options hide.
   useEffect(() => {
