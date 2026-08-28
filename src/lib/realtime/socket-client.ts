@@ -54,21 +54,22 @@ function authRecoveryRetryDelayMs(): number {
 // on the next allowed event.
 const FAILURE_TRACK_WINDOW_MS = 60_000;
 const FAILURE_TRACK_MAX_PER_WINDOW = 10;
-let failureWindowStartMs = 0;
-let failureWindowCount = 0;
+// Timestamps of the tracked (sent) failure events inside the sliding window —
+// a true rolling limit, so a burst straddling a window boundary can never emit
+// more than FAILURE_TRACK_MAX_PER_WINDOW in ANY 60s span.
+let sentFailureTimestamps: number[] = [];
 let failuresSuppressed = 0;
 
 function trackSocketConnectionFailedThrottled(reason: string): void {
   const now = Date.now();
-  if (now - failureWindowStartMs > FAILURE_TRACK_WINDOW_MS) {
-    failureWindowStartMs = now;
-    failureWindowCount = 0;
-  }
-  if (failureWindowCount >= FAILURE_TRACK_MAX_PER_WINDOW) {
+  sentFailureTimestamps = sentFailureTimestamps.filter(
+    (ts) => now - ts <= FAILURE_TRACK_WINDOW_MS,
+  );
+  if (sentFailureTimestamps.length >= FAILURE_TRACK_MAX_PER_WINDOW) {
     failuresSuppressed += 1;
     return;
   }
-  failureWindowCount += 1;
+  sentFailureTimestamps.push(now);
   const suppressed = failuresSuppressed;
   failuresSuppressed = 0;
   try {
