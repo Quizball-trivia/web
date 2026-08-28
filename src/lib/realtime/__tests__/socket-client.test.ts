@@ -221,3 +221,85 @@ describe('socket-client auth/reconnect reliability', () => {
     });
   });
 });
+
+describe('reconnect storm protection', () => {
+  beforeEach(() => {
+    vi.resetModules();
+    vi.clearAllMocks();
+    vi.useFakeTimers();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  async function setupStorm() {
+    const fake = createFakeSocket();
+    ioMock.mockImplementation(() => fake.socket);
+    getSupabaseAccessTokenMock.mockResolvedValue(
+      makeJwt({ exp: Math.floor(Date.now() / 1000) + 3600, iat: Math.floor(Date.now() / 1000) - 600 }),
+    );
+    const mod = await import('../socket-client');
+    mod.getSocket();
+    const analytics = await import('@/lib/analytics/game-events');
+    return { ...fake, mod, trackFailed: vi.mocked(analytics.trackSocketConnectionFailed) };
+  }
+
+  it('backs off auth-recovery retries exponentially instead of a fixed 1s loop', async () => {
+    const { handlers, socket } = await setupStorm();
+    const authError = { message: 'Authentication required' };
+
+    // Failure 1: retries after ~1s.
+    handlers.get('connect_error')!(authError);
+    await vi.advanceTimersByTimeAsync(1_100);
+    expect(socket.connect).toHaveBeenCalledTimes(1);
+
+    // Failure 2: the next retry must wait ~2s, NOT fire at 1s again.
+    handlers.get('connect_error')!(authError);
+    await vi.advanceTimersByTimeAsync(1_100);
+    expect(socket.connect).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(1_100);
+    expect(socket.connect).toHaveBeenCalledTimes(2);
+
+    // Failure 3: ~4s.
+    handlers.get('connect_error')!(authError);
+    await vi.advanceTimersByTimeAsync(2_200);
+    expect(socket.connect).toHaveBeenCalledTimes(2);
+    await vi.advanceTimersByTimeAsync(2_200);
+    expect(socket.connect).toHaveBeenCalledTimes(3);
+  });
+
+  it('resets the auth-recovery backoff after a successful connect', async () => {
+    const { handlers, socket } = await setupStorm();
+    const authError = { message: 'Authentication required' };
+
+    handlers.get('connect_error')!(authError);
+    await vi.advanceTimersByTimeAsync(1_100);
+    handlers.get('connect_error')!(authError);
+    await vi.advanceTimersByTimeAsync(2_200);
+    expect(socket.connect).toHaveBeenCalledTimes(2);
+
+    handlers.get('connect')!();
+
+    // Backoff ladder reset: next failure retries at the base ~1s again.
+    handlers.get('connect_error')!(authError);
+    await vi.advanceTimersByTimeAsync(1_100);
+    expect(socket.connect).toHaveBeenCalledTimes(3);
+  });
+
+  it('throttles connection-failure analytics to a burst per window and reports the suppressed count', async () => {
+    const { handlers, trackFailed } = await setupStorm();
+
+    // A retry storm: 25 non-auth failures in one window.
+    for (let i = 0; i < 25; i += 1) {
+      handlers.get('connect_error')!({ message: 'websocket error' });
+    }
+    expect(trackFailed).toHaveBeenCalledTimes(10);
+
+    // Next window: the first allowed event carries the suppressed tally.
+    await vi.advanceTimersByTimeAsync(61_000);
+    handlers.get('connect_error')!({ message: 'websocket error' });
+    expect(trackFailed).toHaveBeenCalledTimes(11);
+    expect(trackFailed).toHaveBeenLastCalledWith('websocket error (+15 suppressed)');
+  });
+});
