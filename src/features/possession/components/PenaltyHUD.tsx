@@ -81,12 +81,17 @@ export function PenaltyHUD({
     playerAttempts: penaltyPlayerAttempts?.length ?? penaltyPlayerScore,
     opponentAttempts: penaltyOpponentAttempts?.length ?? penaltyOpponentScore,
   });
-  latestPenaltyRef.current = {
-    playerScore: penaltyPlayerScore,
-    opponentScore: penaltyOpponentScore,
-    playerAttempts: penaltyPlayerAttempts?.length ?? penaltyPlayerScore,
-    opponentAttempts: penaltyOpponentAttempts?.length ?? penaltyOpponentScore,
-  };
+  // Synced from an effect (not during render) so the deferred capture below
+  // can only ever observe COMMITTED values — a concurrent render that React
+  // discards must not leak into the baseline.
+  useEffect(() => {
+    latestPenaltyRef.current = {
+      playerScore: penaltyPlayerScore,
+      opponentScore: penaltyOpponentScore,
+      playerAttempts: penaltyPlayerAttempts?.length ?? penaltyPlayerScore,
+      opponentAttempts: penaltyOpponentAttempts?.length ?? penaltyOpponentScore,
+    };
+  });
   useEffect(() => {
     if (!isPenaltySuddenDeath) {
       setSdBaseline(null);

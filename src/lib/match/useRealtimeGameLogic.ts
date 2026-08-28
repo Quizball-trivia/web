@@ -183,7 +183,12 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
       : QUESTION_REVEAL_MS;
     const revealTimer = setTimeout(() => {
       if (matchPausedRef.current) return;
-      optionsShownAtRef.current ??= getSyncedNowMs();
+      // A throttled/late timer delivery (background tab) can fire after the
+      // answer window already expired — opening the options then would let
+      // the player interact with a dead round the resolver has moved past.
+      const now = getSyncedNowMs();
+      if (normalizedQuestionDeadlineAtMs !== null && now >= normalizedQuestionDeadlineAtMs) return;
+      optionsShownAtRef.current ??= now;
       setShowOptions(true);
       setQuestionPhase('playing');
       if (matchSlice.matchId !== null) {
@@ -192,7 +197,7 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
     }, revealDelayMs);
 
     return () => clearTimeout(revealTimer);
-  }, [blockReveal, currentQuestionIndex, emitQuestionRevealedAck, getSyncedNowMs, matchPaused, matchSlice.matchId, normalizedPlayableAtMs, setQuestionPhase, startCountdownActive]);
+  }, [blockReveal, currentQuestionIndex, emitQuestionRevealedAck, getSyncedNowMs, matchPaused, matchSlice.matchId, normalizedPlayableAtMs, normalizedQuestionDeadlineAtMs, setQuestionPhase, startCountdownActive]);
 
   // Reveal WATCHDOG. The one-shot reveal timer above can be lost — a stale
   // matchPausedRef at effect run, background-tab setTimeout throttling on

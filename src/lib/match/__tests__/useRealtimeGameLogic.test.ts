@@ -690,5 +690,10 @@ describe('reveal watchdog', () => {
     vi.setSystemTime(new Date(now + 30_000));
     await act(async () => { vi.advanceTimersByTime(600); });
     expect(result.current.state.showOptions).toBe(false);
+
+    // The PRIMARY reveal timer (scheduled for +5s) now fires late, after the
+    // deadline. Its own guard must also refuse to reopen the dead round.
+    await act(async () => { vi.advanceTimersByTime(5_000); });
+    expect(result.current.state.showOptions).toBe(false);
   });
 });
