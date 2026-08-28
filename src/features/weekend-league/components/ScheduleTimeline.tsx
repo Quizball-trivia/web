@@ -54,12 +54,22 @@ export function ScheduleTimeline({
   /** Rendered on the gold (entered) card — dark text/connector variants. */
   onGold?: boolean;
 }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const statuses = STATUS_BY_PHASE[phase];
+  // Real dates, not the static schedule strings: the hardcoded
+  // "qualifyingShort" said "Mon 12:00" while entry actually closes Friday
+  // 12:00 (owner report 2026-08-28) — milestones carry the tournament's own
+  // timestamps, so format those and keep the strings only as a null fallback.
+  const geDay = new Intl.DateTimeFormat(locale === 'ka' ? 'ka' : 'en-GB', {
+    timeZone: 'Asia/Tbilisi',
+    weekday: 'short',
+  });
+  const when = (m: Milestone | null, fallback: string) =>
+    m ? `${geDay.format(m.targetMs)}${locale === 'ka' ? '.' : ''} ${m.timeLabel}` : fallback;
   const stages: { title: string; when: string; m: Milestone | null }[] = [
-    { title: t('weekendLeague.stageQualifying'), when: t('weekendLeague.qualifyingShort'), m: milestones?.entry ?? null },
-    { title: t('weekendLeague.stageSaturday'), when: t('weekendLeague.qualifierShort'), m: milestones?.qualifier ?? null },
-    { title: t('weekendLeague.stageFinal'), when: t('weekendLeague.playoffsShort'), m: milestones?.playoffs ?? null },
+    { title: t('weekendLeague.stageQualifying'), when: when(milestones?.entry ?? null, t('weekendLeague.qualifyingShort')), m: milestones?.entry ?? null },
+    { title: t('weekendLeague.stageSaturday'), when: when(milestones?.qualifier ?? null, t('weekendLeague.qualifierShort')), m: milestones?.qualifier ?? null },
+    { title: t('weekendLeague.stageFinal'), when: when(milestones?.playoffs ?? null, t('weekendLeague.playoffsShort')), m: milestones?.playoffs ?? null },
   ];
 
   return (
