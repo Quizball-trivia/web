@@ -218,8 +218,9 @@ export function PossessionQuestionPanel({
 
   const questionCounterLabel = isPenaltyPhase
     ? isPenaltySuddenDeath
-      // Sudden death restarts as a one-shot set; no "sudden death" wording.
-      ? t('possession.questionCounter', { current: 1, total: 1 })
+      // Sudden-death kicks are still penalties — the generic "Question 1/1"
+      // label here read as a glitch to players mid-shootout (bug report).
+      ? t('possession.suddenDeath')
       : t('possession.penaltyRound', {
         round: penaltyDisplayRound ?? 1,
         max: penaltyDisplayTotal ?? MAX_PENALTY_ROUNDS,
