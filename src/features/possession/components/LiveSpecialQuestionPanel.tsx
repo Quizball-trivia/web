@@ -61,7 +61,9 @@ export function LiveSpecialQuestionPanel(props: LiveSpecialQuestionPanelProps) {
   const displayQuestionNum = qIndex + 1;
   const counterLabel = isPenaltyPhase
     ? isPenaltySuddenDeath
-      ? t('possession.questionCounter', { current: 1, total: 1 })
+      // Keep the penalty identity in sudden death — "Question 1/1" read as a
+      // glitch to players (bug report); mirror PossessionQuestionPanel.
+      ? t('possession.suddenDeath')
       : t('possession.penaltyRound', {
         round: penaltyDisplayRound ?? 1,
         max: penaltyDisplayTotal ?? MAX_PENALTY_ROUNDS,
