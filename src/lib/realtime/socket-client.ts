@@ -32,7 +32,51 @@ let authRecoveryState: AuthRecoveryState | null = null;
 let authRecoveryAttemptId = 0;
 const ACCESS_TOKEN_REFRESH_SKEW_MS = 30_000;
 const RECENT_ACCESS_TOKEN_SETTLE_MS = 1_500;
-const AUTH_RECOVERY_RETRY_MS = 1_000;
+// Auth-recovery retry backoff. The old fixed 1s retry looped FOREVER at 1/s
+// on a client that could not reach the server, and every retry is a manual
+// connect() which also resets the socket.io manager's own backoff — observed
+// in prod as a single phone emitting 1,205 connection-failure events in 10
+// minutes. Exponential with a cap keeps recovery fast for the common one-off
+// token expiry while taming the dead-network case; a successful connect
+// resets the ladder.
+const AUTH_RECOVERY_RETRY_BASE_MS = 1_000;
+const AUTH_RECOVERY_RETRY_MAX_MS = 30_000;
+let authRecoveryConsecutiveFailures = 0;
+
+function authRecoveryRetryDelayMs(): number {
+  const exp = Math.min(authRecoveryConsecutiveFailures, 5); // 1s,2s,4s,8s,16s,30s
+  return Math.min(AUTH_RECOVERY_RETRY_BASE_MS * 2 ** exp, AUTH_RECOVERY_RETRY_MAX_MS);
+}
+
+// Failure-event throttle: a flapping mobile connection can attempt reconnects
+// several times per second for minutes; tracking every failure floods PostHog
+// and fires monitoring alerts off a SINGLE user. Allow a small burst per
+// rolling window, then swallow the rest and report how many were suppressed
+// on the next allowed event.
+const FAILURE_TRACK_WINDOW_MS = 60_000;
+const FAILURE_TRACK_MAX_PER_WINDOW = 10;
+// Timestamps of the tracked (sent) failure events inside the sliding window —
+// a true rolling limit, so a burst straddling a window boundary can never emit
+// more than FAILURE_TRACK_MAX_PER_WINDOW in ANY 60s span.
+let sentFailureTimestamps: number[] = [];
+let failuresSuppressed = 0;
+
+function trackSocketConnectionFailedThrottled(reason: string): void {
+  const now = Date.now();
+  sentFailureTimestamps = sentFailureTimestamps.filter(
+    (ts) => now - ts <= FAILURE_TRACK_WINDOW_MS,
+  );
+  if (sentFailureTimestamps.length >= FAILURE_TRACK_MAX_PER_WINDOW) {
+    failuresSuppressed += 1;
+    return;
+  }
+  sentFailureTimestamps.push(now);
+  const suppressed = failuresSuppressed;
+  failuresSuppressed = 0;
+  try {
+    trackSocketConnectionFailed(suppressed > 0 ? `${reason} (+${suppressed} suppressed)` : reason);
+  } catch { /* best-effort */ }
+}
 const SOCKET_DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_SOCKET === 'true';
 const CONNECTION_PING_INTERVAL_MS = 4_000;
 const CONNECTION_PING_TIMEOUT_MS = 2_500;
@@ -155,14 +199,16 @@ async function recoverSocketAuthAndReconnect(
     cancelled: false,
     promise: Promise.resolve(),
   };
+  const retryDelayMs = authRecoveryRetryDelayMs();
+  authRecoveryConsecutiveFailures += 1;
   socketDebug('auth recovery retry scheduled', {
     attemptId: recovery.id,
-    delayMs: AUTH_RECOVERY_RETRY_MS,
+    delayMs: retryDelayMs,
     ...socketSnapshot(socket),
   });
 
   recovery.promise = (async () => {
-    await wait(AUTH_RECOVERY_RETRY_MS);
+    await wait(retryDelayMs);
     if (recovery.cancelled) {
       return;
     }
@@ -274,6 +320,7 @@ function createSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
     withCredentials: true,
   });
   socket.on('connect', () => {
+    authRecoveryConsecutiveFailures = 0;
     socketDebug('socket authenticated/connected', socketSnapshot(socket));
     logger.info('Socket connected', { socketId: socket.id });
     markRealtimeConnected();
@@ -305,7 +352,7 @@ function createSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
     }
     logger.warn('Socket connect error', { message: error.message });
     markRealtimeConnectionError(error.message);
-    try { trackSocketConnectionFailed(error.message); } catch { /* best-effort */ }
+    trackSocketConnectionFailedThrottled(error.message);
   });
   // Reconnect lifecycle events fire on the MANAGER (socket.io), not the
   // Socket — the previous socket.on('reconnect_attempt') listeners never
@@ -318,7 +365,7 @@ function createSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
   socket.io.on('reconnect_failed', () => {
     logger.warn('Socket reconnect failed');
     markRealtimeConnectionError('reconnect_failed');
-    try { trackSocketConnectionFailed('reconnect_failed'); } catch { /* best-effort */ }
+    trackSocketConnectionFailedThrottled('reconnect_failed');
   });
   return socket;
 }
