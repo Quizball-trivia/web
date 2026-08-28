@@ -609,3 +609,91 @@ describe('useRealtimeGameLogic', () => {
     expect(result.current.state.opponentScore).toBe(80);
   });
 });
+
+describe('reveal watchdog', () => {
+  beforeEach(() => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    vi.clearAllMocks();
+    useRealtimeMatchStore.getState().reset();
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('force-opens options when the primary reveal timer is lost to a clock jump (backgrounded tab)', async () => {
+    vi.setSystemTime(new Date('2026-08-28T12:00:00.000Z'));
+    seedMatch();
+    const store = useRealtimeMatchStore.getState();
+    const now = Date.now();
+
+    const { result } = renderHook(() =>
+      useRealtimeGameLogic({ transitionDelayMs: 1600 })
+    );
+
+    act(() => store.setMatchQuestion({
+      ...makeQuestion(12, 'penalty', 1),
+      playableAt: new Date(now + 5_000).toISOString(),
+      deadlineAt: new Date(now + 120_000).toISOString(),
+    }));
+    expect(result.current.state.showOptions).toBe(false);
+
+    // Simulate iOS Safari resuming from background: wall-clock leaps far past
+    // playableAt while the pending 5s setTimeout has NOT fired.
+    vi.setSystemTime(new Date(now + 60_000));
+    await act(async () => { vi.advanceTimersByTime(600); });
+
+    expect(result.current.state.showOptions).toBe(true);
+    // The forced reveal still acks, so the server clock stays authoritative.
+    expect(getSocketEmitCalls('match:question_revealed').length).toBeGreaterThan(0);
+  });
+
+  it('never fires before playableAt + slack on a healthy client', async () => {
+    vi.setSystemTime(new Date('2026-08-28T13:00:00.000Z'));
+    seedMatch();
+    const store = useRealtimeMatchStore.getState();
+    const now = Date.now();
+
+    const { result } = renderHook(() =>
+      useRealtimeGameLogic({ transitionDelayMs: 1600 })
+    );
+
+    act(() => store.setMatchQuestion({
+      ...makeQuestion(13, 'penalty', 2),
+      playableAt: new Date(now + 5_000).toISOString(),
+      deadlineAt: new Date(now + 15_000).toISOString(),
+    }));
+
+    // Two watchdog polls elapse well before playableAt — nothing may open.
+    await act(async () => { vi.advanceTimersByTime(1_100); });
+    expect(result.current.state.showOptions).toBe(false);
+  });
+
+  it('does not force a reveal after the answer deadline has passed', async () => {
+    vi.setSystemTime(new Date('2026-08-28T14:00:00.000Z'));
+    seedMatch();
+    const store = useRealtimeMatchStore.getState();
+    const now = Date.now();
+
+    const { result } = renderHook(() =>
+      useRealtimeGameLogic({ transitionDelayMs: 1600 })
+    );
+
+    act(() => store.setMatchQuestion({
+      ...makeQuestion(14, 'penalty', 1),
+      playableAt: new Date(now + 5_000).toISOString(),
+      deadlineAt: new Date(now + 15_000).toISOString(),
+    }));
+
+    // Clock leaps past the DEADLINE: opening the options now would let the
+    // player answer a dead round — the round resolver handles it instead.
+    vi.setSystemTime(new Date(now + 30_000));
+    await act(async () => { vi.advanceTimersByTime(600); });
+    expect(result.current.state.showOptions).toBe(false);
+
+    // The PRIMARY reveal timer (scheduled for +5s) now fires late, after the
+    // deadline. Its own guard must also refuse to reopen the dead round.
+    await act(async () => { vi.advanceTimersByTime(5_000); });
+    expect(result.current.state.showOptions).toBe(false);
+  });
+});
