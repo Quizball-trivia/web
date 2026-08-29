@@ -500,6 +500,13 @@ function Immersive({ children, resetKey }: { children: React.ReactNode; resetKey
   useEffect(() => {
     ref.current?.scrollTo(0, 0);
   }, [resetKey]);
+  // The page underneath must not scroll while the overlay is up — without
+  // this, scrolling past the board reveals the league tab behind it.
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, []);
   return (
     <div ref={ref} className="fixed inset-0 z-50 overflow-y-auto overscroll-contain">
       <GauntletBackdrop>{children}</GauntletBackdrop>
@@ -684,6 +691,7 @@ function ScreenBody({
               result={lastResult ?? { game_index: finishedIndex }}
               board={board}
               breakUntilMs={breakUntilMs}
+              onExit={onExit}
             />
           );
         }
@@ -831,7 +839,7 @@ function ScreenBody({
       const { result, eliminated } = screen;
       if (role === 'spectator') {
         return (
-          <SpectatorGameResult result={result} board={board} breakUntilMs={breakUntilMs} />
+          <SpectatorGameResult result={result} board={board} breakUntilMs={breakUntilMs} onExit={onExit} />
         );
       }
       return (
@@ -875,11 +883,12 @@ function ScreenBody({
 /** Spectators get the same elimination theatre, then the board — the cut
  *  is public information, only the personal verdict is player-only. */
 function SpectatorGameResult({
-  result, board, breakUntilMs,
+  result, board, breakUntilMs, onExit,
 }: {
   result: { game_index: number; field?: number; advanced?: number | null };
   board: WlBoardRow[];
   breakUntilMs: number | null;
+  onExit: () => void;
 }) {
   const { t } = useLocale();
   const [phase, setPhase] = useState<'cut' | 'board'>('cut');
@@ -915,6 +924,13 @@ function SpectatorGameResult({
       <div className="mt-2 w-full">
         <BoardStrip board={board} selfUserId={null} rows={24} />
       </div>
+      <button
+        type="button"
+        onClick={onExit}
+        className="mx-auto mt-6 flex items-center gap-1.5 font-poppins text-[12px] font-bold uppercase tracking-widest text-white/40 hover:text-white"
+      >
+        <LogOut className="size-4" /> {t('weekendLeague.gQuit')}
+      </button>
     </div>
   );
 }
