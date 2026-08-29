@@ -25,7 +25,7 @@ export interface paths {
                         /** Format: uri */
                         redirect_to?: string;
                         /** @enum {string} */
-                        locale?: "en" | "ka";
+                        locale?: "en" | "ka" | "es";
                     };
                 };
             };
