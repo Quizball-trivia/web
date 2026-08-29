@@ -1,8 +1,9 @@
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import type { AuctionActions } from '../../../hooks/useAuctionGame';
 import { FORMATIONS } from '../../../data';
-import type { AuctionGameState, AuctionPlayer, AuctionRound } from '../../../types';
+import type { AuctionGameState, AuctionPlayer, AuctionRound, Footballer, PositionGroup } from '../../../types';
 import { BiddingScreen } from '../BiddingScreen';
 
 vi.mock('@/contexts/LocaleContext', () => ({
@@ -21,6 +22,9 @@ vi.mock('@/contexts/LocaleContext', () => ({
         'auctionGame.bidAmount': `BID ${String(params?.amount ?? '$20M')}`,
         'auctionGame.raiseBy': `+${String(params?.amount ?? '$10M')}`,
         'auctionGame.bidTotalAmount': `Bid: ${String(params?.amount ?? '$0')}`,
+        'auctionGame.raiseBreakdown': `${String(params?.previous ?? '$0')} + ${String(params?.raise ?? '$10M')} raise`,
+        'auctionGame.customBidRange': `Or bid any amount from ${String(params?.min ?? '$0')} to ${String(params?.max ?? '$0')}`,
+        'auctionGame.customBidLabel': 'Custom bid amount in millions',
         'auctionGame.cannotAffordRaise': 'Not enough budget',
         'auctionGame.biddingOpensIn': 'Bidding opens in',
         'auctionGame.leftAmount': `Left: ${String(params?.amount ?? '$0')}`,
@@ -115,6 +119,42 @@ function state(overrides: Partial<AuctionGameState> = {}): AuctionGameState {
   };
 }
 
+/**
+ * The default fixture leaves all 11 slots empty, so the per-slot budget reserve
+ * drives maxBid to 0 and every bid control is disabled. These states give the
+ * human one slot left and a full budget, which is what a real late lot looks
+ * like — maxBid is then the whole budget.
+ */
+function stateWithBidRoom(overrides: Partial<AuctionGameState> = {}): AuctionGameState {
+  const filled = (group: PositionGroup, count: number): Footballer[] =>
+    Array.from({ length: count }, (_, i) => ({
+      id: `${group}-${i}`,
+      name: `Filled ${group} ${i}`,
+      positionGroup: group,
+      value: 20_000_000,
+      startingPrice: 20_000_000,
+      clues: [],
+      nationality: 'Georgia',
+    }));
+
+  const human = player('seat-human', {
+    budget: 100_000_000,
+    team: {
+      formation,
+      // 2-2-2 with every slot filled except one FWD — the group this lot is
+      // for. One empty slot means no budget reserve, so maxBid == budget.
+      slots: {
+        GK: filled('GK', 1),
+        DEF: filled('DEF', 2),
+        MID: filled('MID', 2),
+        FWD: filled('FWD', 1),
+      },
+    },
+  });
+
+  return state({ players: [human, player('seat-bot')], ...overrides });
+}
+
 function actions(overrides: Partial<AuctionActions> = {}): AuctionActions {
   return {
     startGame: vi.fn(),
@@ -149,14 +189,95 @@ describe('BiddingScreen', () => {
     expect(screen.queryByRole('button', { name: 'Fold' })).not.toBeInTheDocument();
   });
 
-  it('offers exactly one raise button plus fold once a bid stands', () => {
-    render(<BiddingScreen state={state()} actions={actions()} humanPlayerId="seat-human" />);
+  it('offers the quick raise, a custom-amount input and fold once a bid stands', () => {
+    render(<BiddingScreen state={stateWithBidRoom()} actions={actions()} humanPlayerId="seat-human" />);
 
-    // Standing bid of $25M → the only raise on offer is +$10M, no presets.
-    expect(screen.getByRole('button', { name: /\+\$10M/ })).toBeInTheDocument();
+    // Standing bid of $25M → quick bid is the $35M total, not a bare "+$10M".
+    expect(screen.getByRole('button', { name: /BID \$35M/ })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Fold' })).toBeInTheDocument();
+    // The custom input is back; the five fixed presets are still gone.
+    expect(screen.getByRole('spinbutton')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /ALL IN|MIN|\+\$25M|\+\$50M/i })).not.toBeInTheDocument();
-    expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
+  });
+
+  it('submits a custom amount that is not a multiple of the raise increment', async () => {
+    const user = userEvent.setup();
+    const gameActions = actions();
+
+    render(<BiddingScreen state={stateWithBidRoom()} actions={gameActions} humanPlayerId="seat-human" />);
+
+    await user.type(screen.getByRole('spinbutton'), '41.6');
+    await user.click(screen.getByRole('button', { name: 'Bid' }));
+
+    expect(gameActions.placeBid).toHaveBeenCalledWith(41_600_000);
+  });
+
+  it('rejects a custom amount below the minimum bid', async () => {
+    const user = userEvent.setup();
+    const gameActions = actions();
+
+    render(<BiddingScreen state={stateWithBidRoom()} actions={gameActions} humanPlayerId="seat-human" />);
+
+    // Standing bid $25M → minimum is $35M, so $30M must not be submittable.
+    await user.type(screen.getByRole('spinbutton'), '30');
+
+    expect(screen.getByRole('button', { name: 'Bid' })).toBeDisabled();
+    expect(gameActions.placeBid).not.toHaveBeenCalled();
+  });
+
+  it('submits the exact amount typed rather than rounding to display precision', async () => {
+    const user = userEvent.setup();
+    const gameActions = actions();
+
+    render(<BiddingScreen state={stateWithBidRoom()} actions={gameActions} humanPlayerId="seat-human" />);
+
+    // 41.06 must not become 41.1M — that would charge more than was entered.
+    await user.type(screen.getByRole('spinbutton'), '41.06');
+    await user.click(screen.getByRole('button', { name: 'Bid' }));
+
+    expect(gameActions.placeBid).toHaveBeenCalledWith(41_060_000);
+  });
+
+  it('keeps the typed amount after submitting so a rejected bid is not lost', async () => {
+    const user = userEvent.setup();
+    const gameActions = actions();
+
+    render(<BiddingScreen state={stateWithBidRoom()} actions={gameActions} humanPlayerId="seat-human" />);
+
+    const input = screen.getByRole('spinbutton');
+    await user.type(input, '41.6');
+    await user.click(screen.getByRole('button', { name: 'Bid' }));
+
+    expect(input).toHaveValue(41.6);
+  });
+
+  it('shows the raise broken down so a non-round total explains itself', () => {
+    render(<BiddingScreen state={stateWithBidRoom()} actions={actions()} humanPlayerId="seat-human" />);
+
+    // Standing bid $25M + $10M = $35M. The subtext must show the arithmetic,
+    // which is what stops a non-round total reading as a broken increment.
+    expect(screen.getByText('$25M + $10M raise')).toBeInTheDocument();
+  });
+
+  it('suggests a placeholder its own Bid button will accept', () => {
+    // A $350K opening price must not suggest "0.3" — that parses below the
+    // minimum and leaves the button permanently disabled.
+    const cheapLot = round({
+      bids: [],
+      highestBidderId: null,
+      highestBid: 0,
+      startingPrice: 350_000,
+    });
+
+    render(
+      <BiddingScreen
+        state={stateWithBidRoom({ currentRound: cheapLot })}
+        actions={actions()}
+        humanPlayerId="seat-human"
+      />,
+    );
+
+    expect(screen.getByRole('spinbutton')).toHaveAttribute('placeholder', '0.35');
   });
 
   it('labels the opening bid with the starting price and offers Pass', () => {
