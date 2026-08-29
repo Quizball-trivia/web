@@ -38,8 +38,8 @@ import type { PlayerStats } from '@/types/game';
 import type { MatchStatsSummary, ModeMatchStatsSummary, HeadToHeadSummary, RankPosition, PreviousNickname } from '@/lib/domain';
 import { LOCALES, type MessageKey } from '@/lib/i18n/messages';
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
+import { shouldShowProfileSeasonSelector } from './profileSeasonControls';
 
-import { getTierVisual } from '@/utils/tierVisuals';
 import { RANKED_TIER_BANDS, getNextTierBand } from '@/utils/rankedTier';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useTierLabel } from '@/hooks/useTierLabel';
@@ -141,7 +141,6 @@ export function ProfileWeb({
   const placementPlayed = rankedProfile?.placementPlayed ?? 0;
   const placementRequired = Math.max(1, rankedProfile?.placementRequired ?? 3);
   const displayRp = isPlacementInProgress ? 0 : (rankedProfile?.rp ?? 0);
-  const tierVisual = rankedProfile ? getTierVisual(rankedProfile.tier) : getTierVisual('Academy');
   const rankedDataReady = !rankedProfileLoading && rankedProfile !== null;
   const showRankTier = rankedDataReady && !isPlacementInProgress;
 
@@ -200,6 +199,19 @@ export function ProfileWeb({
 
   const rankedSeasons = matchStatsSummary?.rankedSeasons;
   const showSeasonSplit = isEventMode && !!rankedSeasons;
+  const showProfileSeasonSelector = shouldShowProfileSeasonSelector({
+    isSelf,
+    archivedSeasonCount: archivedSeasons.length,
+    rankedProfile,
+    rankedProfileLoading,
+    matchStatsSummary,
+  });
+
+  useEffect(() => {
+    if (!showProfileSeasonSelector && profileSeasonId !== null) {
+      setProfileSeasonId(null);
+    }
+  }, [profileSeasonId, showProfileSeasonSelector]);
 
 
 
@@ -621,8 +633,8 @@ export function ProfileWeb({
               className="h-full rounded-[20px] overflow-hidden bg-surface-card/40 backdrop-blur-sm"
             >
               <div className="p-5 flex flex-col items-center">
-                {isSelf && archivedSeasons.length > 0 && (
-                  <div className="mb-4 flex items-center justify-center gap-2">
+                {showProfileSeasonSelector && (
+                  <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
                     <button type="button" onClick={() => setProfileSeasonId(null)} className={seasonPillClass(profileSeasonId === null)}>
                       {t('leaderboard.season', { n: currentSeasonNumber })}
                     </button>
@@ -717,13 +729,16 @@ export function ProfileWeb({
                       className="text-xl uppercase text-white"
                       style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, letterSpacing: '0', lineHeight: 1 }}
                     >
-                      Unranked
+                      {t("profileScreen.unranked")}
                     </h2>
                     <p className="font-poppins text-[11px] font-semibold uppercase text-white/50 mt-2 mb-4">
-                      Placement {placementPlayed}/{placementRequired}
+                      {t("profileScreen.placementProgressShort", {
+                        played: placementPlayed,
+                        required: placementRequired,
+                      })}
                     </p>
                     <p className="font-poppins text-xs font-semibold uppercase text-white/70 text-center">
-                      Play placement matches to get your rank.
+                      {t("profileScreen.placementRankHint")}
                     </p>
                   </>
                 )}
