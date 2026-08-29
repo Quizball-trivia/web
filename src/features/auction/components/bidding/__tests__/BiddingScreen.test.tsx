@@ -23,7 +23,8 @@ vi.mock('@/contexts/LocaleContext', () => ({
         'auctionGame.raiseBy': `+${String(params?.amount ?? '$10M')}`,
         'auctionGame.bidTotalAmount': `Bid: ${String(params?.amount ?? '$0')}`,
         'auctionGame.raiseBreakdown': `${String(params?.previous ?? '$0')} + ${String(params?.raise ?? '$10M')} raise`,
-        'auctionGame.customBidRange': `Or bid any amount from ${String(params?.min ?? '$0')} to ${String(params?.max ?? '$0')}`,
+        'auctionGame.customBidRange': `Or bid any amount from ${String(params?.min ?? '0')}M to ${String(params?.max ?? '0')}M`,
+        'auctionGame.customBidInvalid': `Enter an amount between ${String(params?.min ?? '0')}M and ${String(params?.max ?? '0')}M`,
         'auctionGame.customBidLabel': 'Custom bid amount in millions',
         'auctionGame.cannotAffordRaise': 'Not enough budget',
         'auctionGame.biddingOpensIn': 'Bidding opens in',
@@ -257,6 +258,33 @@ describe('BiddingScreen', () => {
     // Standing bid $25M + $10M = $35M. The subtext must show the arithmetic,
     // which is what stops a non-round total reading as a broken increment.
     expect(screen.getByText('$25M + $10M raise')).toBeInTheDocument();
+  });
+
+  it('states the bounds in the unit the field expects, exactly', async () => {
+    const user = userEvent.setup();
+
+    render(<BiddingScreen state={stateWithBidRoom()} actions={actions()} humanPlayerId="seat-human" />);
+
+    // Bounds are millions, not formatMoney's rounded "$35M" — a rounded bound
+    // can be below the real minimum and get rejected when typed back.
+    expect(screen.getByText('Or bid any amount from 35M to 100M')).toBeInTheDocument();
+
+    // An out-of-range value must say why, not just turn red.
+    await user.type(screen.getByRole('spinbutton'), '30');
+    expect(screen.getByText('Enter an amount between 35M and 100M')).toBeInTheDocument();
+    expect(screen.getByRole('spinbutton')).toHaveAttribute('aria-invalid', 'true');
+  });
+
+  it('rejects sub-euro precision rather than rounding it into a different bid', async () => {
+    const user = userEvent.setup();
+    const gameActions = actions();
+
+    render(<BiddingScreen state={stateWithBidRoom()} actions={gameActions} humanPlayerId="seat-human" />);
+
+    await user.type(screen.getByRole('spinbutton'), '41.0000006');
+
+    expect(screen.getByRole('button', { name: 'Bid' })).toBeDisabled();
+    expect(gameActions.placeBid).not.toHaveBeenCalled();
   });
 
   it('suggests a placeholder its own Bid button will accept', () => {

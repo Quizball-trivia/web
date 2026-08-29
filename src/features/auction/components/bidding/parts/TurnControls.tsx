@@ -53,14 +53,15 @@ export function TurnControls({
   const parsedCustom = useMemo(() => {
     const trimmed = customInput.trim();
     if (!trimmed) return null;
-    // Reject anything Number() would coerce loosely (hex, whitespace-only,
-    // exponent forms) — only plain decimal millions are a real bid.
-    if (!/^\d+(\.\d+)?$/.test(trimmed)) return null;
+    // Plain decimal millions only, and at most 6 decimals — one euro. Anything
+    // finer is not a representable bid, and rounding it would submit a
+    // different amount than the player typed.
+    if (!/^\d+(\.\d{1,6})?$/.test(trimmed)) return null;
     const millions = Number(trimmed);
     if (!Number.isFinite(millions)) return null;
-    // Whole euros, not display precision: rounding to 0.1M would submit a
-    // different amount than typed, and a narrow [minBid, maxBid] window can
-    // sit entirely between two 0.1M steps — 27 prod cards are priced off it.
+    // Whole euros, not display precision: snapping to 0.1M could submit more
+    // than was typed, and a narrow [minBid, maxBid] window can sit entirely
+    // between two 0.1M steps — 27 prod cards are priced off that grid.
     const amount = Math.round(millions * MILLION);
     return Number.isSafeInteger(amount) ? amount : null;
   }, [customInput]);
@@ -79,6 +80,10 @@ export function TurnControls({
 
   // Raising above the minimum needs headroom; opening a lot is always exact.
   const canRaiseAboveMin = canAfford && maxBid > minBid;
+  // The hint has to be typeable: formatMoney rounds to 1 decimal, so a
+  // 35,050,000 bound renders "$35.0M" — typing that back is below the minimum
+  // and gets rejected. Show exact millions, matching the input's own unit.
+  const inMillions = (amount: number) => String(Number((amount / MILLION).toFixed(6)));
   const isCustomValid = parsedCustom !== null && parsedCustom >= minBid && parsedCustom <= maxBid;
   const showCustomHint = parsedCustom !== null && !isCustomValid;
 
@@ -184,10 +189,15 @@ export function TurnControls({
               showCustomHint ? 'text-brand-red' : 'text-white/45'
             }`}
           >
-            {t('auctionGame.customBidRange', {
-              min: formatMoney(minBid),
-              max: formatMoney(maxBid),
-            })}
+            {showCustomHint
+              ? t('auctionGame.customBidInvalid', {
+                  min: inMillions(minBid),
+                  max: inMillions(maxBid),
+                })
+              : t('auctionGame.customBidRange', {
+                  min: inMillions(minBid),
+                  max: inMillions(maxBid),
+                })}
           </p>
         </div>
       )}
