@@ -38,6 +38,9 @@ export interface RealtimeResultsScreenProps {
   rankedOutcome?: RankedMatchOutcomePayload | null;
   preMatchRankedProfile?: RankedProfileResponse | null;
   preMatchProgression?: UserProgression | null;
+  /** WL acquisition Test A: the QP-earned toast, injected by the experiment
+   *  layer; control arm passes nothing and the layout is unchanged. */
+  qpToastSlot?: React.ReactNode;
   unlockedAchievements?: AchievementUnlockPayload[];
   /** Grays out the Play Again CTA (e.g. ranked replay with 0 tickets). */
   playAgainDisabled?: boolean;
