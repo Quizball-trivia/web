@@ -9,7 +9,7 @@ vi.mock('@/features/campaign-quiz/campaignQuiz.api', () => ({
 import { generateMetadata } from '@/app/[locale]/football-quiz/page';
 
 describe('football quiz hub metadata', () => {
-  it('does not advertise a Georgian alternate until localized pages exist', async () => {
+  it('advertises Spanish while withholding Georgian until localized pages exist', async () => {
     listCampaignQuizPagesMock.mockResolvedValue([
       {
         slug: 'club-badges',
@@ -23,6 +23,7 @@ describe('football quiz hub metadata', () => {
 
     expect(metadata.alternates?.languages).toEqual({
       en: 'https://quizball.io/en/football-quiz',
+      es: 'https://quizball.io/es/quiz-de-futbol',
       'x-default': 'https://quizball.io/en/football-quiz',
     });
   });

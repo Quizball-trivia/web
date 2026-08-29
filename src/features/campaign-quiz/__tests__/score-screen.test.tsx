@@ -20,15 +20,15 @@ describe('campaign score screen', () => {
   it('uses brand blue and the loading ball, not the sparkles icon', async () => {
     render(<CampaignQuizGame slug="club-badges" locale="ka" questions={[q('1')]} />);
     fireEvent.click(screen.getByText('A'));
-    await waitFor(() => screen.getByText('See my score'));
-    fireEvent.click(screen.getByText('See my score'));
+    await waitFor(() => screen.getByText('შედეგის ნახვა'));
+    fireEvent.click(screen.getByText('შედეგის ნახვა'));
     const card = await screen.findByTestId('campaign-quiz-score');
     expect(card.className).toContain('bg-brand-blue');
     expect(card.className).not.toContain('surface-card-deeper');
     const img = card.querySelector('img');
     expect(img?.getAttribute('src') ?? '').toContain('goal-ball-small');
     expect(card.querySelector('.lucide-sparkles')).toBeNull();
-    expect(screen.getByRole('link', { name: 'Play Ranked' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'რეიტინგული თამაში' })).toHaveAttribute(
       'href',
       '/ka?signup=1&source=club-badges-quiz',
     );
