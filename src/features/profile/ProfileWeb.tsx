@@ -150,15 +150,23 @@ export function ProfileWeb({
   const { data: seasonsData } = useLeaderboardSeasons();
   const archivedSeasons = seasonsData?.seasons ?? [];
   const currentSeasonNumber = seasonsData?.currentSeasonNumber ?? archivedSeasons.length + 1;
+  const showProfileSeasonSelector = shouldShowProfileSeasonSelector({
+    isSelf,
+    archivedSeasonCount: archivedSeasons.length,
+    rankedProfile,
+    rankedProfileLoading,
+    matchStatsSummary,
+  });
+  const selectedProfileSeasonId = showProfileSeasonSelector ? profileSeasonId : null;
   const { data: archivedRank, isLoading: archivedRankLoading } = useUserRank(
-    isSelf && profileSeasonId ? player.id : '',
+    isSelf && selectedProfileSeasonId ? player.id : '',
     'global',
-    profileSeasonId ?? undefined,
+    selectedProfileSeasonId ?? undefined,
   );
   const { data: archivedCountryRank } = useUserRank(
-    isSelf && profileSeasonId ? player.id : '',
+    isSelf && selectedProfileSeasonId ? player.id : '',
     'country',
-    profileSeasonId ?? undefined,
+    selectedProfileSeasonId ?? undefined,
   );
   const seasonPillClass = (on: boolean) =>
     `inline-flex h-7 items-center justify-center gap-1 rounded-full px-3 text-[10px] sm:text-[11px] font-black uppercase tracking-wide transition-all active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 ${
@@ -199,19 +207,6 @@ export function ProfileWeb({
 
   const rankedSeasons = matchStatsSummary?.rankedSeasons;
   const showSeasonSplit = isEventMode && !!rankedSeasons;
-  const showProfileSeasonSelector = shouldShowProfileSeasonSelector({
-    isSelf,
-    archivedSeasonCount: archivedSeasons.length,
-    rankedProfile,
-    rankedProfileLoading,
-    matchStatsSummary,
-  });
-
-  useEffect(() => {
-    if (!showProfileSeasonSelector && profileSeasonId !== null) {
-      setProfileSeasonId(null);
-    }
-  }, [profileSeasonId, showProfileSeasonSelector]);
 
 
 
@@ -646,7 +641,7 @@ export function ProfileWeb({
                     ))}
                   </div>
                 )}
-                {profileSeasonId !== null ? (
+                {selectedProfileSeasonId !== null ? (
                   archivedRankLoading ? (
                     <div className="animate-pulse space-y-3 w-full flex flex-col items-center">
                       <div className="h-5 w-32 bg-white/15 rounded" />
