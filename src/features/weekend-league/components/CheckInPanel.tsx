@@ -13,6 +13,7 @@ import { LeagueCountdown } from './LeagueCountdown';
  * window and you're out of this week's qualifier.
  */
 export function CheckInPanel({
+  stage = 'qualifier',
   checkedIn,
   ready,
   registered,
@@ -21,6 +22,9 @@ export function CheckInPanel({
   onStart,
   spectator = false,
 }: {
+  /** Saturday qualifier vs Sunday final — the copy must say which one starts
+   *  (the final's check-in card read "the qualifier starts…", Aug-24 report). */
+  stage?: 'qualifier' | 'final';
   checkedIn: boolean;
   ready: number;
   registered: number;
@@ -33,6 +37,7 @@ export function CheckInPanel({
   spectator?: boolean;
 }) {
   const { t } = useLocale();
+  const fin = stage === 'final';
   const pct = registered > 0 ? Math.round((ready / registered) * 100) : 0;
 
   return (
@@ -55,7 +60,7 @@ export function CheckInPanel({
             {t('weekendLeague.checkedIn')}
           </div>
           <p className="mx-auto mt-1 max-w-xs font-poppins text-[13px] font-semibold text-white/65">
-            {t('weekendLeague.checkedInBody')}
+            {t(fin ? 'weekendLeague.finalCheckedInBody' : 'weekendLeague.checkedInBody')}
           </p>
         </>
       ) : spectator ? (
@@ -69,7 +74,7 @@ export function CheckInPanel({
             {t('weekendLeague.checkInTitle')}
           </div>
           <p className="mx-auto mt-1 max-w-sm font-poppins text-[13px] font-semibold text-white/65">
-            {t('weekendLeague.spectatorCheckinBody')}
+            {t(fin ? 'weekendLeague.finalSpectatorCheckinBody' : 'weekendLeague.spectatorCheckinBody')}
           </p>
         </>
       ) : (
@@ -78,7 +83,7 @@ export function CheckInPanel({
             {t('weekendLeague.checkInTitle')}
           </div>
           <p className="mx-auto mt-1 max-w-sm font-poppins text-[13px] font-semibold text-white/65">
-            {t('weekendLeague.checkInBody')}
+            {t(fin ? 'weekendLeague.finalCheckInBody' : 'weekendLeague.checkInBody')}
           </p>
         </>
       )}
