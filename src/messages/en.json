@@ -1997,7 +1997,9 @@
     "clueCounter": "CLUE {current}/{total}",
     "finalCheckInBody": "Mark yourself ready before the final kicks off. Miss the window and your finalist spot goes unused.",
     "finalCheckedInBody": "Sit tight — the final starts for all finalists at once.",
-    "finalSpectatorCheckinBody": "Finalists are checking in — the final starts when the clock hits zero. You'll watch the stream."
+    "finalSpectatorCheckinBody": "Finalists are checking in — the final starts when the clock hits zero. You'll watch the stream.",
+    "qpToastRemaining": "{n} QP to Weekend League",
+    "qpToastQualified": "Qualified — register now"
   },
   "wlAward": {
     "title1": "Weekend League Champion",
