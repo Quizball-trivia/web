@@ -13,6 +13,13 @@ import {
   loadRankedLossRecoveryExperimentVariant,
   type RankedLossRecoveryExperimentVariant,
 } from '@/lib/experiments/rankedLossRecoveryExperiment';
+import {
+  getWlQpToastCue,
+  loadWlQpToastExperimentVariant,
+  type WlQpToastExperimentVariant,
+} from '@/lib/experiments/wlQpToastExperiment';
+import { WlQpToast } from '@/features/weekend-league/components/WlQpToast';
+import { trackWlQpToastClicked, trackWlQpToastShown } from '@/lib/analytics/game-events';
 import { useAuthStore } from '@/stores/auth.store';
 
 import { RankedProgressionPanel } from './results/RankedProgressionPanel';
@@ -43,6 +50,7 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
     playAgainDisabled = false,
     playAgainHint = null,
     winStreakCount = null,
+    qpToastSlot,
     onPlayAgain,
     onMainMenu,
   } = props;
@@ -58,6 +66,7 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
     rpChange,
     coinsAwarded,
     qpAwarded,
+    myOutcome,
     oldRP,
     newRP,
     rpTierInfo,
@@ -136,6 +145,56 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
     ? lossRecoveryCue
     : null;
 
+  // WL acquisition Test A: QP-earned toast between the RP panel and actions.
+  // Only loads its flag once a ranked match actually banked QP (no accidental
+  // exposures on friendlies/cancellations), same shape as loss-recovery above.
+  const country = useAuthStore((state) => state.user?.country);
+  const [qpToastVariant, setQpToastVariant] =
+    useState<WlQpToastExperimentVariant>('not_enrolled');
+  const qpToastAssignmentRef =
+    useRef<Promise<WlQpToastExperimentVariant> | null>(null);
+  const trackedQpToastRef = useRef(false);
+  const qpToastCue = useMemo(() => getWlQpToastCue({
+    matchType,
+    isCancelledNoContest,
+    qpAwarded,
+    qpWeekTotal: myOutcome?.qpWeekTotal ?? null,
+  }), [isCancelledNoContest, matchType, myOutcome?.qpWeekTotal, qpAwarded]);
+
+  useEffect(() => {
+    // A supplied slot (dev playground) replaces the experiment entirely —
+    // loading the flag for it would record a phantom PostHog exposure.
+    if (qpToastSlot !== undefined || !qpToastCue) return;
+    if (!qpToastAssignmentRef.current) {
+      qpToastAssignmentRef.current = loadWlQpToastExperimentVariant({ country, createdAt });
+    }
+    let active = true;
+    void qpToastAssignmentRef.current.then((variant) => {
+      if (active) setQpToastVariant(variant);
+    });
+    return () => {
+      active = false;
+    };
+  }, [country, createdAt, qpToastCue, qpToastSlot]);
+
+  const qpToast = qpToastSlot
+    ?? (qpToastVariant === 'test' && qpToastCue
+      ? (
+        <WlQpToast
+          gainedQp={qpToastCue.gainedQp}
+          previousQp={qpToastCue.previousQp}
+          onShown={() => {
+            // Counted only once the entrance animation lands — a player who
+            // bailed during the 450ms delay was never actually shown it.
+            if (trackedQpToastRef.current) return;
+            trackedQpToastRef.current = true;
+            trackWlQpToastShown(qpToastCue.gainedQp, qpToastCue.previousQp + qpToastCue.gainedQp);
+          }}
+          onOpen={() => trackWlQpToastClicked(qpToastCue.previousQp + qpToastCue.gainedQp)}
+        />
+      )
+      : null);
+
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-surface-page-alt p-3 md:p-6">
       <div
@@ -206,6 +265,8 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
           showRankReveal={showRankReveal}
           tierTransitionPhase={tierTransitionPhase}
         />
+
+        {qpToast}
 
         <ResultsActions
           t={t}

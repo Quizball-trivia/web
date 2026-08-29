@@ -99,7 +99,7 @@ export function RankedProgressionPanel({
       {matchType === 'ranked' && (
         <>
           {isCancelledNoContest && refundedTickets > 0 && (
-            <div className="flex justify-center border-t border-white/10 pt-4 md:pt-6">
+            <div className="flex justify-center pt-4 md:pt-6">
               <TicketRefundChip amount={refundedTickets} label={t('results.ticketRefunded')} delay={0.45} />
             </div>
           )}
@@ -476,7 +476,7 @@ function TicketRefundChip({ amount, label, delay }: { amount: number; label: str
         ease: 'easeOut',
       }}
       className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 font-poppins font-semibold tabular-nums leading-none text-[17px] sm:py-2 sm:text-[21px]"
-      style={{ backgroundColor: '#58CC02', color: '#FFFFFF', boxShadow: '0 4px 0 #2F7D05' }}
+      style={{ backgroundColor: '#58CC02', color: '#FFFFFF' }}
       role="status"
       aria-live="polite"
       aria-label={label}
