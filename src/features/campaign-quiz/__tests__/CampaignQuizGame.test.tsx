@@ -88,4 +88,15 @@ describe('CampaignQuizGame', () => {
     });
     expect(answerCampaignQuizQuestion).toHaveBeenCalledTimes(2);
   });
+
+  it('uses Spanish UI copy and requests Spanish answer content', async () => {
+    render(<CampaignQuizGame slug="liverpool" questions={questions.slice(0, 1)} locale="es" />);
+
+    expect(screen.getByText('Pregunta 1 de 1')).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Jürgen Klopp' }));
+    await screen.findByText('Klopp led the title win.');
+
+    expect(answerCampaignQuizQuestion).toHaveBeenCalledWith(expect.objectContaining({ locale: 'es' }));
+    expect(screen.getByRole('button', { name: /Ver mi puntuación/i })).toBeInTheDocument();
+  });
 });

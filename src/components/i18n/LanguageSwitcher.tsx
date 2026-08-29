@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LOCALES, isLocale, type Locale } from "@/lib/i18n/locale";
 import { cn } from "@/lib/utils";
+import { swapCampaignLocalePath } from "@/features/campaign-quiz/campaignQuiz.routes";
 
 interface LanguageSwitcherProps {
   // Server-rendered fallback locale used on the very first paint. After
@@ -12,6 +13,7 @@ interface LanguageSwitcherProps {
   // the root layout to re-render.
   locale: Locale;
   className?: string;
+  locales?: readonly Locale[];
 }
 
 // Short, all-caps labels for the segmented toggle. Flag classes come from
@@ -19,18 +21,23 @@ interface LanguageSwitcherProps {
 const SHORT: Record<Locale, string> = {
   en: "EN",
   ka: "KA",
+  es: "ES",
 };
 const FLAG: Record<Locale, string> = {
   en: "fi-gb",
   ka: "fi-ge",
+  es: "fi-es",
 };
 const FULL_NAME: Record<Locale, string> = {
   en: "English",
   ka: "ქართული",
+  es: "Español",
 };
 
 // Swap the leading /:locale segment of the current path with the target locale.
 function swapLocale(pathname: string, target: Locale): string {
+  const campaignPath = swapCampaignLocalePath(pathname, target);
+  if (campaignPath) return campaignPath;
   const segments = pathname.split("/").filter(Boolean);
   if (segments.length === 0 || !isLocale(segments[0])) {
     return `/${target}`;
@@ -39,7 +46,7 @@ function swapLocale(pathname: string, target: Locale): string {
   return `/${segments.join("/")}`;
 }
 
-export function LanguageSwitcher({ locale, className }: LanguageSwitcherProps) {
+export function LanguageSwitcher({ locale, className, locales = LOCALES }: LanguageSwitcherProps) {
   const pathname = usePathname() ?? `/${locale}`;
   const firstSegment = pathname.split("/").filter(Boolean)[0];
   const activeLocale: Locale = isLocale(firstSegment) ? firstSegment : locale;
@@ -53,7 +60,7 @@ export function LanguageSwitcher({ locale, className }: LanguageSwitcherProps) {
       role="group"
       aria-label="Language"
     >
-      {LOCALES.map((code) => {
+      {locales.map((code) => {
         const active = code === activeLocale;
         const href = swapLocale(pathname, code);
         return (

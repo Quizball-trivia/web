@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { listCampaignQuizPages } from "@/features/campaign-quiz/campaignQuiz.api";
 import { SITE_URL } from "@/lib/seo/site";
 import { LOCALES } from "@/lib/i18n/locale";
+import { campaignQuizPath } from "@/features/campaign-quiz/campaignQuiz.routes";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entry = (
@@ -54,6 +55,15 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         .filter((date): date is Date => Boolean(date))
         .sort((a, b) => b.getTime() - a.getTime())[0],
     ),
+    entry(
+      '/es/quiz-de-futbol',
+      'weekly',
+      0.9,
+      campaignPages
+        .map((page) => validLastModified(page.updated_at))
+        .filter((date): date is Date => Boolean(date))
+        .sort((a, b) => b.getTime() - a.getTime())[0],
+    ),
     ...(campaignPages.some((page) => page.locale_mode === 'en_ka')
       ? [entry(
           '/ka/football-quiz',
@@ -75,9 +85,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
           validLastModified(page.updated_at),
         ),
       };
+      const spanish = {
+        ...english,
+        url: `${SITE_URL}${campaignQuizPath(page.slug, 'es')}`,
+      };
       return page.locale_mode === 'en_ka'
-        ? [english, { ...english, url: `${SITE_URL}/ka/football-quiz/${page.slug}` }]
-        : [english];
+        ? [english, { ...english, url: `${SITE_URL}/ka/football-quiz/${page.slug}` }, spanish]
+        : [english, spanish];
     }),
   ];
 

@@ -17,6 +17,20 @@ describe('inferLocaleFromSignals', () => {
     })).toBe('ka');
   });
 
+  it('uses Spanish for regional Spanish browser language tags', () => {
+    expect(inferLocaleFromSignals({
+      languages: ['es-MX', 'en-US'],
+      timeZone: 'America/Mexico_City',
+    })).toBe('es');
+  });
+
+  it('keeps the explicit Georgian country signal ahead of a Spanish browser language', () => {
+    expect(inferLocaleFromSignals({
+      languages: ['es-ES'],
+      country: 'GE',
+    })).toBe('ka');
+  });
+
   it('falls back to English for unsupported browser languages and timezones', () => {
     expect(inferLocaleFromSignals({
       languages: ['fr-FR'],

@@ -224,7 +224,7 @@ function AuctionRealtimeFlowScreen({ username, avatarSeed, avatarCustomization }
     matchmakingMode: 'search',
     attachMatchId,
     selfUserId: authUser?.id ?? null,
-    locale: locale === 'ka' ? 'ka' : 'en',
+    locale,
     formation: LIVE_AUCTION_FORMATION_NAME,
     humanAvatarSeed: avatarSeed,
     humanAvatarCustomization: avatarCustomization,

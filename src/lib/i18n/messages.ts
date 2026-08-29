@@ -1,14 +1,16 @@
 import en from "@/messages/en.json";
+import es from "@/messages/es.json";
 import ka from "@/messages/ka.json";
 
-export type Locale = "en" | "ka";
+export type Locale = "en" | "ka" | "es";
 
 export const LOCALES = [
-  { code: "en", name: "English", nativeName: "English", flag: "🇬🇧" },
-  { code: "ka", name: "Georgian", nativeName: "ქართული", flag: "🇬🇪" },
+  { code: "en", name: "English", nativeName: "English", flag: "🇬🇧", countryCode: "gb", shortName: "ENG" },
+  { code: "ka", name: "Georgian", nativeName: "ქართული", flag: "🇬🇪", countryCode: "ge", shortName: "GEO" },
+  { code: "es", name: "Spanish", nativeName: "Español", flag: "🇪🇸", countryCode: "es", shortName: "ESP" },
 ] as const;
 
-export const messages = { en, ka } as const;
+export const messages = { en, ka, es } as const;
 
 type Primitive = string | number | boolean | null;
 type DotPrefix<TPrefix extends string, TKey extends string> = TPrefix extends "" ? TKey : `${TPrefix}.${TKey}`;
@@ -24,7 +26,7 @@ type DotNestedKeys<TValue, TPrefix extends string = ""> = TValue extends Primiti
 export type MessageKey = DotNestedKeys<typeof en>;
 
 export function isSupportedLocale(value: string | null | undefined): value is Locale {
-  return value === "en" || value === "ka";
+  return value === "en" || value === "ka" || value === "es";
 }
 
 export function normalizeLocale(value: string | null | undefined): Locale {
@@ -33,6 +35,9 @@ export function normalizeLocale(value: string | null | undefined): Locale {
   }
   if (value?.toLowerCase().startsWith("ka")) {
     return "ka";
+  }
+  if (value?.toLowerCase().startsWith("es")) {
+    return "es";
   }
   return "en";
 }

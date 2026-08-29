@@ -279,7 +279,7 @@ export function splitHeading(heading: string): { heroLead: string; heroHighlight
 export function getCampaignQuizContent(
   slug: string,
   page?: CampaignQuizPage | null,
-  locale: 'en' | 'ka' = 'en',
+  locale: 'en' | 'ka' | 'es' = 'en',
 ): CampaignQuizPageContent | undefined {
   if (!page) return CAMPAIGN_QUIZ_CONTENT[slug];
   const fallback = CAMPAIGN_QUIZ_CONTENT[slug];
@@ -300,8 +300,14 @@ export function getCampaignQuizContent(
     lede: page.lede,
     playHeading: locale === 'ka'
       ? `დაიწყე ${page.breadcrumb_label}`
-      : `Kick off the ${page.breadcrumb_label}`,
-    aboutEyebrow: locale === 'ka' ? 'ისტორია კითხვების მიღმა' : 'The story behind the questions',
+      : locale === 'es'
+        ? `Empieza ${page.breadcrumb_label}`
+        : `Kick off the ${page.breadcrumb_label}`,
+    aboutEyebrow: locale === 'ka'
+      ? 'ისტორია კითხვების მიღმა'
+      : locale === 'es'
+        ? 'La historia detrás de las preguntas'
+        : 'The story behind the questions',
     aboutHeading: page.about_heading,
     aboutParagraphs: paragraphs,
     aboutBlocks: page.about_blocks,

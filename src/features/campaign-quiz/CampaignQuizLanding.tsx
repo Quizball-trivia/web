@@ -29,11 +29,14 @@ import {
   type CampaignQuizPageContent,
 } from './campaignQuiz.content';
 import type { CampaignQuiz, CampaignQuizAboutBlock } from './campaignQuiz.types';
+import type { Locale } from '@/lib/i18n/messages';
+import { campaignHubPath, campaignQuizPath } from './campaignQuiz.routes';
+import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 
 interface CampaignQuizLandingProps {
   content: CampaignQuizPageContent;
   quiz: CampaignQuiz;
-  locale?: 'en' | 'ka';
+  locale?: Locale;
   previewToken?: string;
 }
 
@@ -81,6 +84,7 @@ const COPY = {
     relatedQuizzes: 'Related football quizzes',
     allQuizzes: 'All football quizzes',
     playQuiz: 'Play',
+    footer: '© 2026 QuizBall. Football trivia built for proper competition.',
   },
   ka: {
     rankedTrivia: 'რეიტინგული ფეხბურთის ტრივია',
@@ -105,6 +109,32 @@ const COPY = {
     relatedQuizzes: 'მსგავსი ფეხბურთის ქვიზები',
     allQuizzes: 'ყველა ფეხბურთის ქვიზი',
     playQuiz: 'ითამაშე',
+    footer: '© 2026 QuizBall. ფეხბურთის ტრივია ნამდვილი შეჯიბრებისთვის.',
+  },
+  es: {
+    rankedTrivia: 'Trivia de fútbol clasificatoria',
+    playRanked: 'Jugar clasificatoria',
+    home: 'Inicio',
+    footballQuiz: 'Quiz de Fútbol',
+    verifiedQuestions: 'preguntas verificadas',
+    startQuiz: 'Empezar el quiz',
+    noLogin: 'No necesitas iniciar sesión',
+    easy: 'fáciles',
+    medium: 'medias',
+    hard: 'difíciles',
+    soloWarmup: 'Calentamiento individual',
+    answerPrompt: 'Elige una respuesta para cada pregunta. Tu puntuación aparece al instante.',
+    factChecked: 'Preguntas verificadas',
+    fiveMinutes: 'Unos 5 minutos',
+    instantScore: 'Puntuación instantánea',
+    readyRanked: '¿Listo para la clasificatoria?',
+    fairPlay: 'Creado para el juego limpio',
+    publicOnly: 'Estas preguntas públicas de calentamiento están separadas del banco clasificatorio.',
+    keepPlaying: 'Sigue jugando',
+    relatedQuizzes: 'Quizzes de fútbol relacionados',
+    allQuizzes: 'Todos los quizzes de fútbol',
+    playQuiz: 'Jugar',
+    footer: '© 2026 QuizBall. Trivia de fútbol creada para competir de verdad.',
   },
 } as const;
 
@@ -132,6 +162,7 @@ function groupAboutBlocks(blocks: CampaignQuizAboutBlock[]): AboutSection[] {
 export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken }: CampaignQuizLandingProps) {
   const playId = `play-${content.slug}-quiz`;
   const copy = COPY[locale];
+  const hubPath = campaignHubPath(locale);
   const difficultyCounts = quiz.difficulty_counts ?? quiz.questions.reduce(
     (counts, question) => {
       counts[question.difficulty] += 1;
@@ -172,6 +203,7 @@ export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken
               <Swords className="size-4 text-brand-yellow" aria-hidden />
               {copy.rankedTrivia}
             </span>
+            <LanguageSwitcher locale={locale} locales={['en', 'ka', 'es']} className="hidden sm:inline-flex" />
             <CampaignSignupLink
               slug={quiz.slug}
               placement="header"
@@ -198,7 +230,7 @@ export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken
               <BreadcrumbSeparator className="text-white/25" />
               <BreadcrumbItem>
                 <BreadcrumbLink asChild>
-                  <Link href={`/${locale}/football-quiz`} className="text-white/50 hover:text-brand-yellow">
+                  <Link href={hubPath} className="text-white/50 hover:text-brand-yellow">
                     {copy.footballQuiz}
                   </Link>
                 </BreadcrumbLink>
@@ -384,7 +416,7 @@ export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken
               </h2>
             </div>
             <Link
-              href={`/${locale}/football-quiz`}
+              href={hubPath}
               className="group inline-flex items-center gap-2 text-sm font-semibold text-brand-yellow transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow"
             >
               {copy.allQuizzes}
@@ -404,7 +436,7 @@ export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken
                   key={slug}
                   fromSlug={quiz.slug}
                   targetSlug={slug}
-                  href={`/${locale}/football-quiz/${slug}`}
+                  href={campaignQuizPath(slug, locale)}
                   aria-label={`${copy.playQuiz} ${relatedLabel}`}
                   title={relatedLabel}
                   className="group flex min-h-28 items-center justify-center py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow"
@@ -430,7 +462,7 @@ export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken
         </section>
 
         <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8">
-          <CampaignQuizRating slug={quiz.slug} initialRating={quiz.rating} />
+          <CampaignQuizRating slug={quiz.slug} initialRating={quiz.rating} locale={locale} />
         </section>
       </main>
 
@@ -446,7 +478,7 @@ export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken
             />
           </Link>
           <p className="text-center text-xs font-medium text-white/35 sm:text-right">
-            © 2026 QuizBall. Football trivia built for proper competition.
+            {copy.footer}
           </p>
         </div>
       </footer>

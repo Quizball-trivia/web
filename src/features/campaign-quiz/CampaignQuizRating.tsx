@@ -5,13 +5,36 @@ import { Star } from 'lucide-react';
 import { rateCampaignQuiz } from './campaignQuiz.api';
 import { trackCampaignQuizRating } from './campaignQuiz.analytics';
 import type { CampaignQuizRating as Rating } from './campaignQuiz.types';
+import type { Locale } from '@/lib/i18n/messages';
 
 interface CampaignQuizRatingProps {
   slug: string;
   initialRating: Rating;
+  locale?: Locale;
 }
 
-export function CampaignQuizRating({ slug, initialRating }: CampaignQuizRatingProps) {
+export function CampaignQuizRating({ slug, initialRating, locale = 'en' }: CampaignQuizRatingProps) {
+  const copy = locale === 'es'
+    ? {
+        saved: 'Gracias, hemos guardado tu valoración.',
+        failed: 'No pudimos guardar tu valoración. Inténtalo de nuevo.',
+        heading: '¿Cómo valorarías este quiz?',
+        first: 'Sé la primera persona en valorarlo.',
+        rate: 'Valorar',
+        outOf: 'de 5',
+        rating: 'valoración',
+        ratings: 'valoraciones',
+      }
+    : {
+        saved: 'Thanks — your rating has been saved.',
+        failed: 'We could not save your rating. Please try again.',
+        heading: 'How would you rate this quiz?',
+        first: 'Be the first player to rate it.',
+        rate: 'Rate',
+        outOf: 'out of 5',
+        rating: 'rating',
+        ratings: 'ratings',
+      };
   const [aggregate, setAggregate] = useState(initialRating);
   const [hovered, setHovered] = useState(0);
   const [selected, setSelected] = useState(0);
@@ -26,11 +49,11 @@ export function CampaignQuizRating({ slug, initialRating }: CampaignQuizRatingPr
     try {
       const result = await rateCampaignQuiz(slug, rating);
       setAggregate(result.rating);
-      setMessage('Thanks — your rating has been saved.');
+      setMessage(copy.saved);
       trackCampaignQuizRating(slug, rating, result.authenticated);
     } catch {
       setSelected(0);
-      setMessage('We could not save your rating. Please try again.');
+      setMessage(copy.failed);
     } finally {
       setSubmitting(false);
     }
@@ -43,12 +66,12 @@ export function CampaignQuizRating({ slug, initialRating }: CampaignQuizRatingPr
       className="scroll-mt-24 rounded-[24px] border-0 bg-brand-blue px-5 py-7 text-center sm:px-8"
     >
       <h2 id="quiz-rating-heading" className="text-xl font-black text-white">
-        How would you rate this quiz?
+        {copy.heading}
       </h2>
       <p className="mt-1 text-sm font-semibold text-white/75">
         {aggregate.count > 0 && aggregate.average !== null
-          ? `${aggregate.average.toFixed(1)} out of 5 from ${aggregate.count.toLocaleString('en-GB')} rating${aggregate.count === 1 ? '' : 's'}`
-          : 'Be the first player to rate it.'}
+          ? `${aggregate.average.toFixed(1)} ${copy.outOf} · ${aggregate.count.toLocaleString(locale === 'es' ? 'es-ES' : 'en-GB')} ${aggregate.count === 1 ? copy.rating : copy.ratings}`
+          : copy.first}
       </p>
 
       <div className="mt-4 flex justify-center gap-1" onMouseLeave={() => setHovered(0)}>
@@ -63,7 +86,7 @@ export function CampaignQuizRating({ slug, initialRating }: CampaignQuizRatingPr
               onFocus={() => setHovered(rating)}
               onBlur={() => setHovered(0)}
               onClick={() => void submit(rating)}
-              aria-label={`Rate ${rating} out of 5`}
+              aria-label={`${copy.rate} ${rating} ${copy.outOf}`}
               className="rounded-xl p-1.5 transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow disabled:opacity-60"
             >
               <Star

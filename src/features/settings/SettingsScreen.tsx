@@ -40,7 +40,7 @@ import { normalizeGeorgianPhone, validateGeorgianPhone, validateOtp } from "@/li
 import { useGeorgianPhoneAuthAvailability } from "@/lib/auth/useGeorgianPhoneAuthAvailability";
 import { ApiError } from "@/lib/api/api";
 import { requestAccountDeletion } from "@/lib/repositories/users.repo";
-import { type Locale } from "@/lib/i18n/messages";
+import { LOCALES, type Locale } from "@/lib/i18n/messages";
 import { trackLanguageSwitched } from "@/lib/analytics/game-events";
 import {
   DEFAULT_USER_PREFERENCES,
@@ -304,12 +304,11 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
     toast.success(t("settings.resetTrainingSuccess"));
   };
 
-  const toggleLanguage = async () => {
-    if (isLanguageSaving) {
+  const changeLanguage = async (newLocale: Locale) => {
+    if (isLanguageSaving || newLocale === locale) {
       return;
     }
 
-    const newLocale = locale === 'en' ? 'ka' : 'en';
     trackLanguageSwitched(locale, newLocale);
     setLocale(newLocale);
     setIsLanguageSaving(true);
@@ -319,11 +318,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
         const updated = await updateMe({ preferred_language: newLocale });
         setAuthenticated({ ...user, preferred_language: updated.preferred_language ?? newLocale });
       }
-      toast.success(
-        newLocale === 'en'
-          ? t("settings.languageSwitchedEnglish")
-          : t("settings.languageSwitchedGeorgian")
-      );
+      toast.success(t("settings.languageUpdated"));
     } catch {
       setLocale(locale as Locale);
       toast.error(t("settings.languageUpdateFailed"));
@@ -345,23 +340,27 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
       <div className="space-y-8">
          {/* Language & Experience */}
          <SettingsSection title={t("settings.languageAndExperience")} icon={<Globe className="size-5" />}>
-            <div className="p-4 flex items-center justify-between hover:bg-white/[0.04] transition-colors cursor-pointer" onClick={toggleLanguage}>
-               <div className="flex items-center gap-4">
-                  <div className="size-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-xl shadow-sm border border-blue-500/20">
-                     {locale === 'en' ? '🇺🇸' : '🇬🇪'}
-                  </div>
-                  <div>
-                     <div className="font-medium text-white">
-                       {locale === 'en' ? t("settings.languageCurrentEnglish") : t("settings.languageCurrentGeorgian")}
-                     </div>
-                     <div className="text-xs text-white/55">
-                       {locale === 'en' ? t("settings.switchToGeorgian") : t("settings.switchToEnglish")}
-                     </div>
-                  </div>
-               </div>
-               <Button variant="ghost" size="sm" className="font-semibold text-brand-green hover:text-brand-green hover:bg-brand-green/10" disabled={isLanguageSaving}>
-                  {t("common.change")}
-               </Button>
+            <div className="grid grid-cols-3 gap-2 p-3" role="group" aria-label={t("settings.languageAndExperience")}>
+              {LOCALES.map((language) => {
+                const selected = locale === language.code;
+                return (
+                  <button
+                    key={language.code}
+                    type="button"
+                    onClick={() => void changeLanguage(language.code)}
+                    aria-pressed={selected}
+                    disabled={isLanguageSaving}
+                    className={`flex min-h-20 flex-col items-center justify-center gap-1 rounded-xl border px-2 py-3 text-center transition-all disabled:opacity-50 ${
+                      selected
+                        ? "border-brand-green bg-brand-green/15 text-white shadow-[0_0_0_1px_rgba(39,174,96,0.2)]"
+                        : "border-white/10 bg-white/[0.025] text-white/60 hover:border-white/25 hover:bg-white/[0.05] hover:text-white"
+                    }`}
+                  >
+                    <span className="text-2xl leading-none" aria-hidden>{language.flag}</span>
+                    <span className="font-poppins text-xs font-semibold leading-tight">{language.nativeName}</span>
+                  </button>
+                );
+              })}
             </div>
             <SettingsToggle
                label={t("settings.pingIndicator")}

@@ -2,7 +2,7 @@ import { cache } from 'react';
 import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { ArrowRight, Swords } from 'lucide-react';
 import { AppShellPageChrome } from '@/components/layout/app-shell/AppShellPageChrome';
 import {
@@ -145,6 +145,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   const languages = {
     en: `${SITE_URL}/en/football-quiz`,
     ...(hasGeorgianHub ? { ka: `${SITE_URL}/ka/football-quiz` } : {}),
+    es: `${SITE_URL}/es/quiz-de-futbol`,
     'x-default': `${SITE_URL}/en/football-quiz`,
   };
   return {
@@ -175,6 +176,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
 
 export default async function FootballQuizHubPage({ params }: { params: Promise<{ locale: string }> }) {
   const { locale: rawLocale } = await params;
+  if (rawLocale === 'es') permanentRedirect('/es/quiz-de-futbol');
   if (rawLocale !== 'en' && rawLocale !== 'ka') notFound();
   const locale = rawLocale as 'en' | 'ka';
   const copy = HUB_COPY[locale];

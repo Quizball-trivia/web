@@ -6,6 +6,7 @@ import type {
   CampaignQuizHubPage,
   CampaignQuizRoute,
 } from './campaignQuiz.types';
+import type { Locale } from '@/lib/i18n/messages';
 
 export class CampaignQuizApiError extends Error {
   constructor(public readonly status: number) {
@@ -26,10 +27,15 @@ async function parseJson<T>(response: Response): Promise<T> {
   return response.json() as Promise<T>;
 }
 
-export async function getCampaignQuiz(slug: string, previewToken?: string): Promise<CampaignQuiz> {
-  const preview = previewToken ? `?preview=${encodeURIComponent(previewToken)}` : '';
+export async function getCampaignQuiz(
+  slug: string,
+  previewToken?: string,
+  locale: Locale = 'en',
+): Promise<CampaignQuiz> {
+  const searchParams = new URLSearchParams({ locale });
+  if (previewToken) searchParams.set('preview', previewToken);
   const response = await fetch(
-    `${API_BASE_URL}/api/v1/campaign-quizzes/${encodeURIComponent(slug)}${preview}`,
+    `${API_BASE_URL}/api/v1/campaign-quizzes/${encodeURIComponent(slug)}?${searchParams.toString()}`,
     {
       ...(previewToken ? { cache: 'no-store' as const } : { next: { revalidate: 300 } }),
       headers: { Accept: 'application/json' },
@@ -39,7 +45,7 @@ export async function getCampaignQuiz(slug: string, previewToken?: string): Prom
   return parseJson<CampaignQuiz>(response);
 }
 
-export async function listCampaignQuizPages(locale: 'en' | 'ka' = 'en'): Promise<CampaignQuizHubPage[]> {
+export async function listCampaignQuizPages(locale: Locale = 'en'): Promise<CampaignQuizHubPage[]> {
   const response = await fetch(`${API_BASE_URL}/api/v1/campaign-quizzes?locale=${locale}`, {
     next: { revalidate: 300 },
     headers: { Accept: 'application/json' },
@@ -62,9 +68,10 @@ export async function answerCampaignQuizQuestion(input: {
   questionId: string;
   selectedOptionId: string;
   previewToken?: string;
+  locale?: Locale;
 }): Promise<CampaignQuizAnswer> {
   const response = await fetch(
-    `${API_BASE_URL}/api/v1/campaign-quizzes/${encodeURIComponent(input.slug)}/answers`,
+    `${API_BASE_URL}/api/v1/campaign-quizzes/${encodeURIComponent(input.slug)}/answers?locale=${encodeURIComponent(input.locale ?? 'en')}`,
     {
       method: 'POST',
       credentials: 'include',

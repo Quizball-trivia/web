@@ -13,5 +13,7 @@ describe('locale pathname helpers', () => {
   it('detects explicit localized public routes', () => {
     expect(localeFromPathname('/ka/terms')).toBe('ka');
     expect(explicitLocaleFromPathname('/ka/terms')).toBe('ka');
+    expect(localeFromPathname('/es/quiz-de-futbol')).toBe('es');
+    expect(explicitLocaleFromPathname('/es/quiz-de-futbol')).toBe('es');
   });
 });
