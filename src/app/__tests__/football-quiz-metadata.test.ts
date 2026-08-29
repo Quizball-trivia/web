@@ -7,6 +7,7 @@ vi.mock('@/features/campaign-quiz/campaignQuiz.api', () => ({
 }));
 
 import { generateMetadata } from '@/app/[locale]/football-quiz/page';
+import { generateMetadata as generateSpanishMetadata } from '@/app/[locale]/quiz-de-futbol/page';
 
 describe('football quiz hub metadata', () => {
   it('advertises Spanish while withholding Georgian until localized pages exist', async () => {
@@ -20,6 +21,16 @@ describe('football quiz hub metadata', () => {
     ]);
 
     const metadata = await generateMetadata({ params: Promise.resolve({ locale: 'en' }) });
+
+    expect(metadata.alternates?.languages).toEqual({
+      en: 'https://quizball.io/en/football-quiz',
+      es: 'https://quizball.io/es/quiz-de-futbol',
+      'x-default': 'https://quizball.io/en/football-quiz',
+    });
+  });
+
+  it('does not advertise an unavailable Georgian hub from the Spanish page', async () => {
+    const metadata = await generateSpanishMetadata({ params: Promise.resolve({ locale: 'es' }) });
 
     expect(metadata.alternates?.languages).toEqual({
       en: 'https://quizball.io/en/football-quiz',

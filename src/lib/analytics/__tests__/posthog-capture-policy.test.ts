@@ -15,6 +15,8 @@ describe('PostHog capture policy', () => {
     'https://quizball.io/en/football-quiz',
     'https://quizball.io/en/football-quiz/career-path?utm_source=google',
     '/ka/football-quiz/club-badges',
+    'https://quizball.io/es/quiz-de-futbol',
+    '/es/quiz-de-futbol/trayectoria-del-jugador?utm_source=google',
   ])('keeps Web Vitals for public football quiz pages: %s', (url) => {
     expect(preparePostHogCapture(webVitals(url))?.event).toBe('$web_vitals');
   });

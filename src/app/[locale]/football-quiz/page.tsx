@@ -13,6 +13,7 @@ import type { CampaignQuizHubPage } from '@/features/campaign-quiz/campaignQuiz.
 import { CampaignQuizHubPageView } from '@/features/campaign-quiz/CampaignQuizHubPageView';
 import { CampaignTrackedLink } from '@/features/campaign-quiz/CampaignTrackedLink';
 import { CampaignSignupLink } from '@/features/campaign-quiz/CampaignSignupLink';
+import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 import {
   SITE_NAME,
   SITE_OG_IMAGE_ALT,
@@ -203,14 +204,21 @@ export default async function FootballQuizHubPage({ params }: { params: Promise<
       <header className="relative z-10 bg-surface-page-alt/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:h-20 lg:px-8">
           <Link href={`/${locale}`} aria-label="QuizBall home"><Image src="/assets/brand/quizball-logo.webp" alt="QuizBall" width={218} height={64} className="h-10 w-auto object-contain sm:h-12" /></Link>
-          <CampaignSignupLink
-            slug="football-quiz"
-            placement="hero"
-            href={`/${locale}?signup=1&source=football-quiz-hub-header`}
-            className="inline-flex min-h-10 items-center rounded-lg bg-brand-yellow px-4 text-sm font-semibold text-black hover:bg-brand-yellow/90"
-          >
-            {copy.playRanked}
-          </CampaignSignupLink>
+          <div className="flex items-center gap-3">
+            <LanguageSwitcher
+              locale={locale}
+              locales={pages.some((page) => page.locale_mode === 'en_ka') ? ['en', 'ka', 'es'] : ['en', 'es']}
+              className="hidden sm:inline-flex"
+            />
+            <CampaignSignupLink
+              slug="football-quiz"
+              placement="hero"
+              href={`/${locale}?signup=1&source=football-quiz-hub-header`}
+              className="inline-flex min-h-10 items-center rounded-lg bg-brand-yellow px-4 text-sm font-semibold text-black hover:bg-brand-yellow/90"
+            >
+              {copy.playRanked}
+            </CampaignSignupLink>
+          </div>
         </div>
       </header>
 

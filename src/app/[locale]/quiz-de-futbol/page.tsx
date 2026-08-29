@@ -17,7 +17,6 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       canonical,
       languages: {
         en: `${SITE_URL}/en/football-quiz`,
-        ka: `${SITE_URL}/ka/football-quiz`,
         es: canonical,
         'x-default': `${SITE_URL}/en/football-quiz`,
       },
@@ -29,7 +28,7 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
       description: DESCRIPTION,
       url: canonical,
       locale: 'es_ES',
-      alternateLocale: ['en_GB', 'ka_GE'],
+      alternateLocale: ['en_GB'],
     },
   };
 }

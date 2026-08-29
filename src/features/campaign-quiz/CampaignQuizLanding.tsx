@@ -203,7 +203,11 @@ export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken
               <Swords className="size-4 text-brand-yellow" aria-hidden />
               {copy.rankedTrivia}
             </span>
-            <LanguageSwitcher locale={locale} locales={['en', 'ka', 'es']} className="hidden sm:inline-flex" />
+            <LanguageSwitcher
+              locale={locale}
+              locales={content.localeMode === 'en_ka' ? ['en', 'ka', 'es'] : ['en', 'es']}
+              className="hidden sm:inline-flex"
+            />
             <CampaignSignupLink
               slug={quiz.slug}
               placement="header"

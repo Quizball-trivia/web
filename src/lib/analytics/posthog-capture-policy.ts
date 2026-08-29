@@ -1,7 +1,7 @@
 import type { CaptureResult } from 'posthog-js';
 import { sanitizePostHogCapture } from './sanitize-url';
 
-const FOOTBALL_QUIZ_PATH = /^\/(?:en|ka)\/football-quiz(?:\/[^/?#]+)?\/?$/;
+const FOOTBALL_QUIZ_PATH = /^\/(?:(?:en|ka)\/football-quiz|es\/quiz-de-futbol)(?:\/[^/?#]+)?\/?$/;
 
 function isFootballQuizUrl(value: unknown): boolean {
   if (typeof value !== 'string' || value.length === 0) return false;
