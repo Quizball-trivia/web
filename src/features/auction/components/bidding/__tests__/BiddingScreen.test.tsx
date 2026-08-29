@@ -308,6 +308,27 @@ describe('BiddingScreen', () => {
     expect(screen.getByRole('spinbutton')).toHaveAttribute('placeholder', '0.35');
   });
 
+  it('suggests the exact minimum rather than one rounded above it', () => {
+    // 51,060,001 must not suggest "51.07" — that overstates the minimum by
+    // €9,999 and quietly costs the player money if they accept it.
+    const oddLot = round({
+      bids: [],
+      highestBidderId: null,
+      highestBid: 0,
+      startingPrice: 51_060_001,
+    });
+
+    render(
+      <BiddingScreen
+        state={stateWithBidRoom({ currentRound: oddLot })}
+        actions={actions()}
+        humanPlayerId="seat-human"
+      />,
+    );
+
+    expect(screen.getByRole('spinbutton')).toHaveAttribute('placeholder', '51.060001');
+  });
+
   it('labels the opening bid with the starting price and offers Pass', () => {
     const openingRound = round({ bids: [], highestBidderId: null, highestBid: 0 });
 
