@@ -4,6 +4,8 @@ const SPANISH_PUBLIC_SLUGS: Record<string, string> = {
   'guess-the-player': 'adivina-el-jugador',
   'career-path': 'trayectoria-del-jugador',
   'club-badges': 'escudos-de-futbol',
+  argentina: 'seleccion-argentina',
+  spain: 'seleccion-espanola',
 };
 
 const SOURCE_SLUGS_BY_SPANISH_SLUG = Object.fromEntries(

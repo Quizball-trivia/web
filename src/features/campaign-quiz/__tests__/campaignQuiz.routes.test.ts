@@ -10,10 +10,13 @@ describe('localized campaign quiz routes', () => {
     expect(campaignQuizPath('guess-the-player', 'es')).toBe('/es/quiz-de-futbol/adivina-el-jugador');
     expect(campaignQuizPath('career-path', 'es')).toBe('/es/quiz-de-futbol/trayectoria-del-jugador');
     expect(campaignQuizPath('club-badges', 'es')).toBe('/es/quiz-de-futbol/escudos-de-futbol');
+    expect(campaignQuizPath('argentina', 'es')).toBe('/es/quiz-de-futbol/seleccion-argentina');
+    expect(campaignQuizPath('spain', 'es')).toBe('/es/quiz-de-futbol/seleccion-espanola');
   });
 
   it('maps localized public slugs back to their source campaign record', () => {
     expect(campaignSourceSlug('adivina-el-jugador', 'es')).toBe('guess-the-player');
+    expect(campaignSourceSlug('seleccion-argentina', 'es')).toBe('argentina');
   });
 
   it('switches equivalent English and Spanish campaign URLs', () => {
