@@ -12,7 +12,11 @@ import { CampaignSignupLink } from './CampaignSignupLink';
 import { campaignQuizPath, type CampaignQuizLocale } from './campaignQuiz.routes';
 import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 
-const POPULAR_QUIZ_SLUGS = ['club-badges', 'career-path', 'everton', 'liverpool'] as const;
+const POPULAR_QUIZ_SLUGS = {
+  en: ['club-badges', 'career-path', 'everton', 'liverpool'],
+  ka: ['club-badges', 'career-path', 'everton', 'liverpool'],
+  es: ['guess-the-player', 'club-badges', 'real-madrid', 'barcelona'],
+} as const satisfies Record<CampaignQuizLocale, readonly string[]>;
 
 const HUB_COPY = {
   en: {
@@ -41,7 +45,7 @@ const HUB_COPY = {
     title: 'Quiz de Fútbol — Preguntas y Trivia Gratis',
     intro: 'Elige un quiz, responde preguntas de fútbol verificadas y recibe tu puntuación al instante. Todos los quizzes individuales son gratis y no necesitan cuenta.',
     popularHeading: 'Quizzes de fútbol populares',
-    popularBody: 'Empieza con escudos, trayectorias, Everton y Liverpool: formatos que ya funcionan bien entre aficionados al fútbol.',
+    popularBody: 'Empieza con jugadores, escudos, Real Madrid y Barcelona: retos pensados para aficionados de España y Latinoamérica.',
     playFree: 'Jugar gratis', verifiedHeading: 'Trivia de fútbol con datos verificados',
     verifiedBody: 'Los quizzes públicos de QuizBall incluyen preguntas verificadas sobre clubes, competiciones, futbolistas y momentos históricos.',
     rankedHeading: 'Lleva tu puntuación a los duelos clasificatorios',
@@ -84,7 +88,9 @@ function QuizCard({ page, locale, label, preload = false }: {
 export async function CampaignQuizHub({ locale }: { locale: CampaignQuizLocale }) {
   const copy = HUB_COPY[locale];
   const pages = await loadHubPages(locale);
-  const popularPages = POPULAR_QUIZ_SLUGS.flatMap((slug) => {
+  const popularSlugs = POPULAR_QUIZ_SLUGS[locale];
+  const popularSlugSet = new Set<string>(popularSlugs);
+  const popularPages = popularSlugs.flatMap((slug) => {
     const page = pages.find((candidate) => candidate.slug === slug);
     return page ? [page] : [];
   });
@@ -92,7 +98,7 @@ export async function CampaignQuizHub({ locale }: { locale: CampaignQuizLocale }
     .map((category) => ({
       category,
       pages: pages.filter(
-        (page) => page.category === category && !POPULAR_QUIZ_SLUGS.includes(page.slug as typeof POPULAR_QUIZ_SLUGS[number]),
+        (page) => page.category === category && !popularSlugSet.has(page.slug),
       ),
     }))
     .filter((group) => group.pages.length > 0);
