@@ -6,6 +6,7 @@ import { useLocale } from '@/contexts/LocaleContext';
 import { cn } from '@/lib/utils';
 import { getI18nText } from '@/lib/utils/i18n';
 import { useActiveAnnouncements, type AnnouncementItem } from '@/lib/queries/announcements.queries';
+import type { Locale } from '@/lib/i18n/messages';
 
 type AnnouncementType = AnnouncementItem['type'];
 
@@ -18,23 +19,24 @@ const TYPE_STYLES: Record<AnnouncementType, { bg: string; icon: string }> = {
 // Short month names per locale. We format the date ourselves rather than relying
 // on Intl.DateTimeFormat('ka-GE') — browser ICU builds vary and some fall back
 // to English month abbreviations, which is exactly the bug this avoids.
-const MONTHS_SHORT: Record<'en' | 'ka', readonly string[]> = {
+const MONTHS_SHORT: Record<Locale, readonly string[]> = {
   en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
   ka: ['იან', 'თებ', 'მარ', 'აპრ', 'მაი', 'ივნ', 'ივლ', 'აგვ', 'სექ', 'ოქტ', 'ნოე', 'დეკ'],
+  es: ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sept', 'oct', 'nov', 'dic'],
 };
 
-function formatAnnouncementDate(iso: string, locale: 'en' | 'ka'): string {
+function formatAnnouncementDate(iso: string, locale: Locale): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return '';
   const month = MONTHS_SHORT[locale][d.getMonth()] ?? '';
   const day = d.getDate();
   const year = d.getFullYear();
-  return locale === 'ka' ? `${day} ${month} ${year}` : `${month} ${day}, ${year}`;
+  return locale === 'en' ? `${month} ${day}, ${year}` : `${day} ${month} ${year}`;
 }
 
 export function PlayAnnouncements() {
   const { t, locale } = useLocale();
-  const dateLocale: 'en' | 'ka' = locale === 'ka' ? 'ka' : 'en';
+  const dateLocale: Locale = locale;
   const { data } = useActiveAnnouncements();
   const announcements = data?.items ?? [];
   // Collapsed by default — each item is a tappable header the user can expand.

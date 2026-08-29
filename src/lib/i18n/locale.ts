@@ -5,7 +5,7 @@ import { isSupportedLocale, type Locale } from "./messages";
 
 export { isSupportedLocale as isLocale, type Locale } from "./messages";
 
-export const LOCALES = ["en", "ka"] as const satisfies readonly Locale[];
+export const LOCALES = ["en", "ka", "es"] as const satisfies readonly Locale[];
 
 export const DEFAULT_LOCALE: Locale = "en";
 
@@ -25,9 +25,11 @@ export function explicitLocaleFromPathname(pathname: string): Locale | undefined
 export const OG_LOCALE: Record<Locale, string> = {
   en: "en_US",
   ka: "ka_GE",
+  es: "es_ES",
 };
 
 export const HTML_LANG: Record<Locale, string> = {
   en: "en",
   ka: "ka",
+  es: "es",
 };

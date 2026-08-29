@@ -274,7 +274,123 @@ const ka: LocaleCopy = {
   },
 };
 
-const copy: Record<Locale, LocaleCopy> = { en, ka };
+const es: LocaleCopy = {
+  about: {
+    metaTitle: "Acerca de QuizBall – Juego de Trivia de Fútbol Multijugador",
+    metaDescription:
+      "Aprende sobre QuizBall, un juego multijugador de trivia de fútbol donde los aficionados responden preguntas, controlan la posesión, marcan goles y compiten con amigos.",
+    title: "Acerca de QuizBall",
+    subtitle: "Trivia de fútbol multijugador — más parecida a un partido que a un concurso",
+    paragraphs: [
+      "QuizBall es un juego de preguntas y respuestas de fútbol multijugador creado para aficionados que buscan más que un simple concurso.",
+      "En lugar de solo responder preguntas para obtener puntos, los jugadores compiten en partidos de fútbol en vivo. Las respuestas correctas te ayudan a controlar la posesión, crear impulso y marcar goles. El objetivo es que el conocimiento del fútbol se sienta como un partido real: competitivo, rápido, social y tenso.",
+      "QuizBall está diseñado para aficionados que siguen clubes, jugadores, torneos, fichajes, historia del fútbol y los pequeños detalles que hacen interesante el juego. Puedes desafiar a amigos, poner a prueba tu coeficiente intelectual futbolístico, subir en la clasificación y demostrar quién conoce realmente el juego.",
+      "Nuestra misión es convertir las trivias de fútbol en una experiencia competitiva real, más cercana a un juego que a un quiz estático.",
+      "QuizBall se encuentra en desarrollo y mejora continua. Se añadirán nuevos modos, preguntas, clasificaciones y funciones sociales con el tiempo.",
+    ],
+  },
+  terms: {
+    metaTitle: "Términos de Servicio – QuizBall",
+    metaDescription:
+      "Lee los Términos de Servicio de QuizBall — las reglas para jugar nuestro juego de trivia de fútbol y usar la plataforma.",
+    title: "Términos de Servicio",
+    updated: "Última actualización: 30 de enero de 2026",
+    sections: [
+      {
+        title: "1. Aceptación de los Términos",
+        body: 'Al acceder o utilizar QuizBall ("el Servicio"), aceptas regirte por estos Términos de Servicio. Si no estás de acuerdo con alguna parte de los términos, no podrás acceder al Servicio.',
+      },
+      {
+        title: "2. Descripción del Servicio",
+        body: "QuizBall es un juego de trivia de fútbol multijugador en tiempo real. Proporcionamos una plataforma para que los usuarios compitan en partidos de trivia, ganen clasificaciones y sigan su progreso. Nos reservamos el derecho de modificar o descontinuar el Servicio en cualquier momento sin previo aviso.",
+      },
+      {
+        title: "3. Cuentas de Usuario",
+        body: "Eres responsable de mantener la confidencialidad de las credenciales de tu cuenta. Aceptas asumir la responsabilidad de todas las actividades que ocurran bajo tu cuenta. Nos reservamos el derecho de cerrar cuentas que violen nuestras directrices comunitarias o hagan trampa en competiciones.",
+      },
+      {
+        title: "4. Moneda Virtual y Objetos",
+        body: 'El Servicio puede incluir moneda virtual ("Monedas") u objetos. Estos objetos no tienen valor en el mundo real y no pueden canjearse por dinero en efectivo. No garantizamos ni somos responsables de la persistencia de los datos del usuario o los objetos virtuales.',
+      },
+      {
+        title: "5. Conducta Prohibida",
+        body: "Aceptas no utilizar el Servicio para ningún propósito ilegal ni para:",
+        bullets: [
+          "Acosar, abusar o dañar a otra persona.",
+          "Usar bots, trampas o software de automatización.",
+          "Interferir con el correcto funcionamiento del Servicio.",
+        ],
+      },
+      {
+        title: "6. Limitación de Responsabilidad",
+        body: "En ningún caso QuizBall, ni sus directores, empleados, socios, agentes, proveedores o afiliados, serán responsables de ningún daño indirecto, incidental, especial, consecuente o punitivo, incluyendo, entre otros, la pérdida de beneficios, datos, uso, buena voluntad u otras pérdidas intangibles.",
+      },
+      {
+        title: "7. Cambios en los Términos",
+        body: "Nos reservamos el derecho, a nuestra única discreción, de modificar o reemplazar estos Términos en cualquier momento. Si una revisión es material, intentaremos proporcionar un aviso de al menos 30 días antes de que cualquier término nuevo entre en vigor.",
+      },
+      {
+        title: "8. Contacto",
+        body: "Si tienes alguna pregunta sobre estos Términos, contáctanos en support@quizball.io.",
+      },
+    ],
+  },
+  privacy: {
+    metaTitle: "Política de privacidad – QuizBall",
+    metaDescription:
+      "Lee la Política de Privacidad de QuizBall: cómo recopilamos, usamos y protegemos los datos cuando juegas a nuestro juego de trivia de fútbol.",
+    title: "Política de privacidad",
+    updated: "Última actualización: 30 de enero de 2026",
+    sections: [
+      {
+        title: "1. Introducción",
+        body: 'QuizBall ("nosotros", "nuestro" o "nuestra") opera el sitio web quizball.io y la aplicación móvil (el "Servicio"). Esta página te informa sobre nuestras políticas relativas a la recopilación, uso y divulgación de datos personales cuando utilizas nuestro Servicio y las opciones que tienes asociadas a esos datos.',
+      },
+      {
+        title: "2. Recopilación y uso de información",
+        body: "Recopilamos varios tipos de información para diversos fines, con el objetivo de proporcionarte y mejorar nuestro Servicio:",
+        bullets: [
+          "Datos personales: Al utilizar nuestro Servicio, podemos solicitarte cierta información de identificación personal (por ejemplo, dirección de correo electrónico o apodo).",
+          "Datos de uso: También podemos recopilar información sobre cómo se accede y se utiliza el Servicio (por ejemplo, estadísticas de juego e información del dispositivo).",
+        ],
+      },
+      {
+        title: "3. Uso de Datos",
+        body: "QuizBall utiliza los datos recopilados para diversos fines:",
+        bullets: [
+          "Proporcionar y mantener el Servicio",
+          "Notificarte sobre cambios en nuestro Servicio",
+          "Permitirte participar en funciones interactivas",
+          "Proporcionar atención y soporte al cliente",
+          "Supervisar el uso del Servicio",
+        ],
+      },
+      {
+        title: "4. Seguridad de Datos",
+        body: "La seguridad de tus datos es importante para nosotros, pero recuerda que ningún método de transmisión por Internet ni de almacenamiento electrónico es 100 % seguro. Aunque nos esforzamos por utilizar medios comercialmente aceptables para proteger tus Datos Personales, no podemos garantizar su seguridad absoluta.",
+      },
+      {
+        title: "5. Servicios de terceros",
+        body: 'Podemos emplear a empresas y personas externas para facilitar nuestro Servicio ("Proveedores de Servicios"), proporcionarlo en nuestro nombre o ayudarnos a analizar cómo se utiliza. Estos terceros tienen acceso a tus Datos Personales solo para realizar estas tareas en nuestro nombre y están obligados a no divulgarlos ni utilizarlos para ningún otro propósito.',
+      },
+      {
+        title: "6. Retención y eliminación de datos",
+        body: "Puedes solicitar la eliminación de tu cuenta de QuizBall y los datos personales asociados iniciando sesión, abriendo Configuración, entrando en Cuenta y seguridad y seleccionando Eliminar cuenta. Tu cuenta se deshabilita inmediatamente y se programa para su eliminación. También puedes contactarnos en privacy@quizball.io para obtener ayuda.",
+      },
+    ],
+  },
+  landing: {
+    metaTitle: "QuizBall – Juego Multijugador de Trivia de Fútbol",
+    metaDescription:
+      "Juega batallas de trivia de fútbol en vivo con amigos. Responde preguntas, controla la posesión, marca goles y sube en la clasificación.",
+    languageSwitch: "English",
+    aboutLink: "Sobre nosotros",
+    termsLink: "Términos",
+    privacyLink: "Privacidad",
+  },
+};
+
+const copy: Record<Locale, LocaleCopy> = { en, ka, es };
 
 export function getCopy(locale: Locale): LocaleCopy {
   return copy[locale];

@@ -13,6 +13,7 @@ import {
   resolveCampaignQuizRoute,
 } from '@/features/campaign-quiz/campaignQuiz.api';
 import { SITE_NAME, SITE_URL } from '@/lib/seo/site';
+import { campaignQuizPath } from '@/features/campaign-quiz/campaignQuiz.routes';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,7 +22,8 @@ interface CampaignQuizPageProps {
   searchParams: Promise<{ preview?: string }>;
 }
 
-const loadQuiz = cache((slug: string, preview?: string) => getCampaignQuiz(slug, preview));
+const loadQuiz = cache((slug: string, preview: string | undefined, locale: 'en' | 'ka') =>
+  getCampaignQuiz(slug, preview, locale));
 
 export function generateStaticParams() {
   return CAMPAIGN_QUIZ_SLUGS.map((slug) => ({ locale: 'en', slug }));
@@ -36,7 +38,7 @@ export async function generateMetadata({ params, searchParams }: CampaignQuizPag
   if (locale !== 'en' && locale !== 'ka') return {};
 
   try {
-    const quiz = await loadQuiz(slug, preview);
+    const quiz = await loadQuiz(slug, preview, locale);
     const content = getCampaignQuizContent(slug, quiz.page, locale);
     if (!content) return {};
     if (locale === 'ka' && content.localeMode !== 'en_ka') return {};
@@ -54,12 +56,17 @@ export async function generateMetadata({ params, searchParams }: CampaignQuizPag
           'x-default': `${SITE_URL}/en/football-quiz/${content.slug}`,
         }
       : { en: `${SITE_URL}/en/football-quiz/${content.slug}` };
+    const localizedLanguages = {
+      ...languages,
+      es: `${SITE_URL}${campaignQuizPath(content.slug, 'es')}`,
+      'x-default': `${SITE_URL}/en/football-quiz/${content.slug}`,
+    };
 
     return {
       title: { absolute: title },
       description,
       robots: preview ? { index: false, follow: false } : undefined,
-      alternates: { canonical: pageUrl, languages },
+      alternates: { canonical: pageUrl, languages: localizedLanguages },
       openGraph: {
         type: 'website',
         siteName: SITE_NAME,
@@ -86,11 +93,12 @@ export async function generateMetadata({ params, searchParams }: CampaignQuizPag
 
 export default async function CampaignQuizPage({ params, searchParams }: CampaignQuizPageProps) {
   const [{ locale, slug }, { preview }] = await Promise.all([params, searchParams]);
+  if (locale === 'es') permanentRedirect(campaignQuizPath(slug, 'es'));
   if (locale !== 'en' && locale !== 'ka') notFound();
 
   let quiz;
   try {
-    quiz = await loadQuiz(slug, preview);
+    quiz = await loadQuiz(slug, preview, locale);
   } catch (error) {
     if (!(error instanceof CampaignQuizApiError) || error.status !== 404) throw error;
     const route = await resolveCampaignQuizRoute(slug).catch(() => null);

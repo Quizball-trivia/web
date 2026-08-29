@@ -13,6 +13,11 @@ function isGeorgianLanguageTag(value: string | null | undefined): boolean {
   return normalized === 'ka' || normalized?.startsWith('ka-') === true;
 }
 
+function isSpanishLanguageTag(value: string | null | undefined): boolean {
+  const normalized = value?.trim().toLowerCase().replace('_', '-');
+  return normalized === 'es' || normalized?.startsWith('es-') === true;
+}
+
 export function inferLocaleFromSignals({
   languages,
   language,
@@ -35,6 +40,10 @@ export function inferLocaleFromSignals({
 
   if (timeZone === 'Asia/Tbilisi') {
     return 'ka';
+  }
+
+  if (browserLanguages.some(isSpanishLanguageTag)) {
+    return 'es';
   }
 
   return 'en';

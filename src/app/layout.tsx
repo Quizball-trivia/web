@@ -118,7 +118,7 @@ const jsonLd = [
     "@type": "WebSite",
     name: SITE_NAME,
     url: SITE_URL,
-    inLanguage: ["en", "ka"],
+    inLanguage: ["en", "ka", "es"],
     potentialAction: {
       "@type": "SearchAction",
       target: `${SITE_URL}/social?q={search_term_string}`,
@@ -135,7 +135,7 @@ const jsonLd = [
     applicationCategory: "GameApplication",
     genre: ["Trivia", "Sports", "Football", "Quiz", "Multiplayer"],
     operatingSystem: "Web, iOS, Android",
-    inLanguage: ["en", "ka"],
+    inLanguage: ["en", "ka", "es"],
     keywords: "football trivia, football quiz, soccer quiz, multiplayer football game",
     offers: {
       "@type": "Offer",

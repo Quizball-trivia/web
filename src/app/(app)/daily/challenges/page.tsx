@@ -21,10 +21,11 @@ import { prefetchDailyChallengeSession } from "@/features/daily/dailyChallengeSe
 function getLocalResetTime(locale: string) {
   const reset = new Date();
   reset.setUTCHours(24, 0, 0, 0); // next 00:00 UTC
-  return new Intl.DateTimeFormat(locale === "ka" ? "ka-GE" : "en-US", {
+  const intlLocale = locale === "ka" ? "ka-GE" : locale === "es" ? "es-ES" : "en-US";
+  return new Intl.DateTimeFormat(intlLocale, {
     hour: "2-digit",
     minute: "2-digit",
-    hourCycle: locale === "ka" ? "h23" : "h12",
+    hourCycle: locale === "en" ? "h12" : "h23",
   }).format(reset);
 }
 

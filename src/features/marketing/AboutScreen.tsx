@@ -15,7 +15,7 @@ interface AboutScreenProps {
   locale: Locale;
 }
 
-const BACK_LABEL: Record<Locale, string> = { en: "Back", ka: "უკან" };
+const BACK_LABEL: Record<Locale, string> = { en: "Back", ka: "უკან", es: "Volver" };
 
 export function AboutScreen({ copy, locale }: AboutScreenProps) {
   const router = useRouter();

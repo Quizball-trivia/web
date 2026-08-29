@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import en from "@/messages/en.json";
+import es from "@/messages/es.json";
 import ka from "@/messages/ka.json";
 
 function flatten(obj: unknown, prefix = ""): string[] {
@@ -27,12 +28,28 @@ describe("i18n message parity", () => {
     expect(kaKeys).toEqual(enKeys);
   });
 
+  it("en.json and es.json have identical key sets", () => {
+    const enKeys = flatten(en).sort();
+    const esKeys = flatten(es).sort();
+    expect(esKeys).toEqual(enKeys);
+  });
+
   it("no ka.json value is empty", () => {
     for (const key of flatten(ka)) {
       const value = getByPath(ka, key);
       expect(
         typeof value === "string" && value.length > 0,
         `ka.json missing or empty translation for ${key}`,
+      ).toBe(true);
+    }
+  });
+
+  it("no es.json value is empty", () => {
+    for (const key of flatten(es)) {
+      const value = getByPath(es, key);
+      expect(
+        typeof value === "string" && value.length > 0,
+        `es.json missing or empty translation for ${key}`,
       ).toBe(true);
     }
   });

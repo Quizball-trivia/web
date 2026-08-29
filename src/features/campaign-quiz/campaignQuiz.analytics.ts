@@ -21,7 +21,7 @@ function journeyProperties(slug: string, reset = false) {
     : {};
 }
 
-export function trackCampaignQuizHubView(locale: 'en' | 'ka'): void {
+export function trackCampaignQuizHubView(locale: 'en' | 'ka' | 'es'): void {
   trackEvent('campaign_quiz_hub_view', {
     ...CAMPAIGN_PROPS,
     locale,

@@ -7,6 +7,7 @@ import { logger } from '@/utils/logger';
 import type { AuctionActions, AuctionPendingTurnAction } from '../hooks/useAuctionGame';
 import type { AuctionGameState } from '../types';
 import type { AvatarCustomization } from '@/types/game';
+import type { Locale } from '@/lib/i18n/messages';
 import type {
   AuctionBiddingStartedPayload,
   AuctionBidAcceptedPayload,
@@ -75,7 +76,7 @@ export interface UseRealtimeAuctionMatchParams {
    */
   attachMatchId?: string | null;
   selfUserId: string | null;
-  locale: 'en' | 'ka';
+  locale: Locale;
   formation?: AuctionFormationName;
   humanAvatarSeed: string;
   /** Real logged-in user's layered avatar (rendered on the human seat). */
@@ -150,7 +151,7 @@ export type AuctionSearchState = {
   /** Present once the server has locked the three-seat lineup. */
   matchId?: string | null;
   searchId: string | null;
-  locale: 'en' | 'ka';
+  locale: Locale;
   queuedUserCount: number;
   seatsNeeded: number;
   fallbackAt: string | null;
@@ -1309,14 +1310,16 @@ function toAuctionPauseState(
 // Map server auction error codes to friendly, localized messages. The server
 // sends raw English + a code (e.g. "auction_search_blocked"); we never show
 // that verbatim. Unknown codes fall back to a generic translated message.
-const AUCTION_ERROR_MESSAGES: Record<string, { en: string; ka: string }> = {
+const AUCTION_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
   auction_search_blocked: {
     en: "You're already in a match. Reconnecting…",
     ka: 'თქვენ უკვე მატჩში ხართ. ხელახლა დაკავშირება…',
+    es: 'Ya estás en una partida. Reconectando…',
   },
   auction_content_unavailable: {
     en: 'No auction content is available right now.',
     ka: 'ამჟამად აუქციონის კონტენტი მიუწვდომელია.',
+    es: 'No hay contenido de subasta disponible ahora mismo.',
   },
   // Turn-action rejections. These are the ones a player actually hits mid-match
   // (double-tap, losing a race to a rival, tapping after their turn passed), so
@@ -1324,39 +1327,47 @@ const AUCTION_ERROR_MESSAGES: Record<string, { en: string; ka: string }> = {
   auction_not_current_turn: {
     en: "That turn has already passed — your bid wasn't placed.",
     ka: 'სვლა უკვე დასრულდა — თქვენი ფსონი არ განთავსდა.',
+    es: 'Ese turno ya terminó; tu puja no se realizó.',
   },
   auction_no_active_bidding: {
     en: 'Bidding is not open right now.',
     ka: 'ვაჭრობა ამჟამად დახურულია.',
+    es: 'Las pujas no están abiertas ahora mismo.',
   },
   auction_seat_already_folded: {
     en: 'You already folded on this player.',
     ka: 'თქვენ უკვე გაჰყევით ამ მოთამაშეზე.',
+    es: 'Ya te retiraste de la puja por este jugador.',
   },
   auction_high_bidder_self_bid: {
     en: 'You already hold the highest bid.',
     ka: 'თქვენ უკვე გაქვთ უმაღლესი ფსონი.',
+    es: 'Ya tienes la puja más alta.',
   },
   auction_seat_cannot_bid: {
     en: "You can't bid on this player.",
     ka: 'ამ მოთამაშეზე ვერ დადებთ ფსონს.',
+    es: 'No puedes pujar por este jugador.',
   },
   auction_invalid_bid: {
     en: "That bid isn't valid any more — the price moved.",
     ka: 'ფსონი აღარ არის მოქმედი — ფასი შეიცვალა.',
+    es: 'Esa puja ya no es válida; el precio ha cambiado.',
   },
   auction_solo_pick_not_yours: {
     en: "That choice belongs to another player.",
     ka: 'ეს არჩევანი სხვა მოთამაშეს ეკუთვნის.',
+    es: 'Esa elección pertenece a otro jugador.',
   },
 };
 
 const AUCTION_ERROR_GENERIC = {
   en: 'Something went wrong. Please try again.',
   ka: 'რაღაც შეცდომა მოხდა. სცადეთ თავიდან.',
+  es: 'Algo salió mal. Inténtalo de nuevo.',
 };
 
-function friendlyAuctionError(payload: AuctionErrorPayload, locale: 'en' | 'ka'): string {
+function friendlyAuctionError(payload: AuctionErrorPayload, locale: Locale): string {
   const mapped = AUCTION_ERROR_MESSAGES[payload.code]?.[locale];
   return mapped ?? AUCTION_ERROR_GENERIC[locale];
 }

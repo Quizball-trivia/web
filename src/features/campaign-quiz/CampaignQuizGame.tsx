@@ -13,6 +13,7 @@ import {
   trackCampaignSignupClick,
 } from './campaignQuiz.analytics';
 import type { CampaignQuizQuestion } from './campaignQuiz.types';
+import type { Locale } from '@/lib/i18n/messages';
 
 type AnswerResult = {
   selectedOptionId: string;
@@ -24,10 +25,64 @@ type AnswerResult = {
 interface CampaignQuizGameProps {
   slug: string;
   questions: CampaignQuizQuestion[];
-  locale?: 'en' | 'ka';
+  locale?: Locale;
   scoreTemplate?: string;
   previewToken?: string;
 }
+
+const UI_COPY = {
+  en: {
+    answerError: 'We could not check that answer. Please try again.',
+    fullTime: 'Full time',
+    youScored: 'You scored',
+    playRanked: 'Play Ranked',
+    playAgain: 'Play the quiz again',
+    question: 'Question',
+    of: 'of',
+    correctCount: 'correct',
+    correctAnswer: 'Correct answer',
+    incorrectAnswer: 'Your answer was incorrect',
+    checking: 'Checking your answer…',
+    correctFeedback: 'Correct — well played!',
+    incorrectFeedback: 'Not quite — the correct answer is highlighted.',
+    score: 'See my score',
+    next: 'Next question',
+  },
+  ka: {
+    answerError: 'პასუხის შემოწმება ვერ მოხერხდა. სცადეთ თავიდან.',
+    fullTime: 'მატჩი დასრულდა',
+    youScored: 'თქვენი შედეგია',
+    playRanked: 'რეიტინგული თამაში',
+    playAgain: 'კიდევ ერთხელ თამაში',
+    question: 'კითხვა',
+    of: '/',
+    correctCount: 'სწორი',
+    correctAnswer: 'სწორი პასუხი',
+    incorrectAnswer: 'თქვენი პასუხი არასწორი იყო',
+    checking: 'პასუხი მოწმდება…',
+    correctFeedback: 'სწორია — კარგად ითამაშეთ!',
+    incorrectFeedback: 'სწორი პასუხი მონიშნულია.',
+    score: 'შედეგის ნახვა',
+    next: 'შემდეგი კითხვა',
+  },
+  es: {
+    answerError: 'No pudimos comprobar esa respuesta. Inténtalo de nuevo.',
+    fullTime: 'Final del partido',
+    youScored: 'Has acertado',
+    playRanked: 'Jugar clasificatoria',
+    playAgain: 'Jugar de nuevo',
+    question: 'Pregunta',
+    of: 'de',
+    correctCount: 'correctas',
+    correctAnswer: 'Respuesta correcta',
+    incorrectAnswer: 'Tu respuesta fue incorrecta',
+    checking: 'Comprobando tu respuesta…',
+    correctFeedback: '¡Correcto, bien jugado!',
+    incorrectFeedback: 'No exactamente; la respuesta correcta está resaltada.',
+    score: 'Ver mi puntuación',
+    next: 'Siguiente pregunta',
+  },
+} as const satisfies Record<Locale, Record<string, string>>;
 
 /**
  * Career-path prompts often just spell out the same club sequence that is
@@ -75,6 +130,7 @@ export function CampaignQuizGame({
   scoreTemplate = 'You scored {score}/{total} — sign up free to save your score and defend it in a ranked duel.',
   previewToken,
 }: CampaignQuizGameProps) {
+  const copy = UI_COPY[locale];
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, AnswerResult>>({});
   const [selectedOptionId, setSelectedOptionId] = useState<string | null>(null);
@@ -107,6 +163,7 @@ export function CampaignQuizGame({
         questionId: question.id,
         selectedOptionId: optionId,
         previewToken,
+        locale,
       });
       setAnswers((current) => ({
         ...current,
@@ -127,7 +184,7 @@ export function CampaignQuizGame({
       });
     } catch {
       setSelectedOptionId(null);
-      setError('We could not check that answer. Please try again.');
+      setError(copy.answerError);
     } finally {
       setSubmitting(false);
     }
@@ -176,10 +233,10 @@ export function CampaignQuizGame({
             className="mx-auto size-14 object-contain"
           />
           <p className="mt-4 text-xs font-bold uppercase tracking-[0.22em] text-white/70">
-            Full time
+            {copy.fullTime}
           </p>
           <h2 className="mt-1 text-3xl font-black text-white sm:text-4xl">
-            You scored <span className="text-brand-yellow">{score}/{questions.length}</span>
+            {copy.youScored} <span className="text-brand-yellow">{score}/{questions.length}</span>
           </h2>
         </div>
 
@@ -197,7 +254,7 @@ export function CampaignQuizGame({
             }}
             className="mt-6 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-lg bg-brand-yellow px-6 text-base font-bold text-black transition-colors hover:bg-brand-yellow/90 sm:w-auto"
           >
-            Play Ranked
+            {copy.playRanked}
             <ArrowRight className="size-5" aria-hidden />
           </Link>
           <button
@@ -206,7 +263,7 @@ export function CampaignQuizGame({
             className="mx-auto mt-5 flex items-center gap-2 text-sm font-bold text-white/75 transition-colors hover:text-white"
           >
             <RotateCcw className="size-4" aria-hidden />
-            Play the quiz again
+            {copy.playAgain}
           </button>
         </div>
       </div>
@@ -224,10 +281,10 @@ export function CampaignQuizGame({
 
       <div className="flex items-stretch gap-2.5">
         <div className="flex h-12 min-w-0 flex-1 items-center justify-center rounded-2xl bg-brand-blue px-4 font-semibold text-white sm:h-14 sm:text-lg">
-          Question {currentIndex + 1} of {questions.length}
+          {copy.question} {currentIndex + 1} {copy.of} {questions.length}
         </div>
         <div className="flex h-12 min-w-28 shrink-0 items-center justify-center rounded-2xl bg-brand-blue px-4 font-semibold text-white sm:h-14 sm:text-lg">
-          {score} correct
+          {score} {copy.correctCount}
         </div>
       </div>
 
@@ -318,10 +375,10 @@ export function CampaignQuizGame({
                     >
                       <span className="leading-[1.15] [overflow-wrap:anywhere]">{option.text}</span>
                       {result && option.id === result.correctOptionId ? (
-                        <Check className="ml-auto size-5 shrink-0" aria-label="Correct answer" />
+                        <Check className="ml-auto size-5 shrink-0" aria-label={copy.correctAnswer} />
                       ) : null}
                       {result && option.id === result.selectedOptionId && !result.correct ? (
-                        <X className="ml-auto size-5 shrink-0" aria-label="Your answer was incorrect" />
+                        <X className="ml-auto size-5 shrink-0" aria-label={copy.incorrectAnswer} />
                       ) : null}
                     </button>
                   );
@@ -331,7 +388,7 @@ export function CampaignQuizGame({
               {submitting ? (
                 <div className="mt-4 flex items-center justify-center gap-2 text-sm font-bold text-white/55">
                   <span className="size-2 animate-pulse rounded-full bg-brand-yellow" />
-                  Checking your answer…
+                  {copy.checking}
                 </div>
               ) : null}
 
@@ -344,7 +401,7 @@ export function CampaignQuizGame({
               {result ? (
                 <div className="mt-4 px-4 py-4">
                   <p className={`font-black ${result.correct ? 'text-brand-green-light' : 'text-brand-red-light'}`}>
-                    {result.correct ? 'Correct — well played!' : 'Not quite — the correct answer is highlighted.'}
+                    {result.correct ? copy.correctFeedback : copy.incorrectFeedback}
                   </p>
                   {result.explanation ? (
                     <p className="mt-1 text-sm font-medium leading-relaxed text-white/65">
@@ -356,7 +413,7 @@ export function CampaignQuizGame({
                     onClick={goNext}
                     className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-lg bg-brand-blue px-5 font-bold text-white transition-colors hover:bg-brand-blue/90 sm:w-auto"
                   >
-                    {currentIndex === questions.length - 1 ? 'See my score' : 'Next question'}
+                    {currentIndex === questions.length - 1 ? copy.score : copy.next}
                     <ArrowRight className="size-4" aria-hidden />
                   </button>
                 </div>
