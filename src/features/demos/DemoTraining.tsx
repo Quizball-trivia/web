@@ -9,7 +9,7 @@ import { getDemoGameQuestions } from "./data/demoQuestions";
 
 const TRAINING_QUESTION_COUNT = 12;
 
-function demoBanCategories(locale: "en" | "ka"): CategorySummary[] {
+function demoBanCategories(locale: "en" | "ka" | "es"): CategorySummary[] {
   const name = (en: string, ka: string) => (locale === "ka" ? ka : en);
   return [
     { id: "demo-cat-1", name: name("World Cup", "მსოფლიო ჩემპიონატი"), slug: "world-cup", icon: "🏆" },

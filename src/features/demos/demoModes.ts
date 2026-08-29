@@ -375,5 +375,5 @@ export function findDemoMode(slug: string): DemoModeCard | undefined {
 }
 
 export function demoText(text: DemoI18nText, locale: Locale): string {
-  return text[locale] ?? text.en;
+  return locale === 'ka' ? text.ka : text.en;
 }

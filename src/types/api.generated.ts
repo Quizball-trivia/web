@@ -25,7 +25,7 @@ export interface paths {
                         /** Format: uri */
                         redirect_to?: string;
                         /** @enum {string} */
-                        locale?: "en" | "ka";
+                        locale?: "en" | "ka" | "es";
                     };
                 };
             };
@@ -8364,7 +8364,7 @@ export interface paths {
                     "application/json": {
                         text: string;
                         /** @enum {string} */
-                        locale: "en" | "ka";
+                        locale: "en" | "ka" | "es";
                         /** @default cms-import */
                         promptVersion?: string;
                         /**
@@ -8443,7 +8443,7 @@ export interface paths {
                 content: {
                     "application/json": {
                         /** @enum {string} */
-                        locale: "en" | "ka";
+                        locale: "en" | "ka" | "es";
                         /** @default cms-import */
                         promptVersion?: string;
                         /**

@@ -85,14 +85,16 @@ const KA_MONTHS = ["იანვარი", "თებერვალი", "მ�
   "ივლისი", "აგვისტო", "სექტემბერი", "ოქტომბერი", "ნოემბერი", "დეკემბერი"];
 const EN_MONTHS = ["January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"];
+const ES_MONTHS = ["enero", "febrero", "marzo", "abril", "mayo", "junio",
+  "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
 
 /** Date-only label: "8 აგვისტო 2026" / "8 August 2026" — callers add their
  *  own framing ("Weekend League · ", the ceremony sentence). */
-export function wlAwardWeekLabel(eventSlug: string, locale: "ka" | "en" = "ka"): string | undefined {
+export function wlAwardWeekLabel(eventSlug: string, locale: "ka" | "en" | "es" = "ka"): string | undefined {
   if (!isWlAwardSlug(eventSlug)) return undefined;
   const m = eventSlug.match(/(\d{4})-(\d{2})-(\d{2})$/);
   if (!m) return undefined;
-  const months = locale === "ka" ? KA_MONTHS : EN_MONTHS;
+  const months = locale === "ka" ? KA_MONTHS : locale === "es" ? ES_MONTHS : EN_MONTHS;
   const month = months[Number(m[2]) - 1] ?? m[2];
   return `${Number(m[3])} ${month} ${m[1]}`;
 }

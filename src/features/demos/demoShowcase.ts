@@ -9,7 +9,7 @@ import {
 export type DemoI18nText = { en: string; ka: string };
 
 export function tt(text: DemoI18nText, locale: Locale): string {
-  return text[locale] ?? text.en;
+  return locale === 'ka' ? text.ka : text.en;
 }
 
 // ── Hero ─────────────────────────────────────────────────────────────────────

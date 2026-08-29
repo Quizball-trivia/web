@@ -39,6 +39,7 @@ import { AnimatedCounter } from '@/features/game/results/AnimatedCounter';
 import { CoinRewardChip, RewardChip } from '@/features/game/results/RankedProgressionPanel';
 import { CriterionAsset } from './components/CriterionAsset';
 import { useRealtimeFootballGrid } from './realtime/useRealtimeFootballGrid';
+import type { Locale } from '@/lib/i18n/messages';
 
 export const FOOTBALL_GRID_COPY = {
   en: {
@@ -151,7 +152,64 @@ export const FOOTBALL_GRID_COPY = {
     unavailableBody: 'მატჩის ძიება ახლა ვერ დავიწყეთ. შენი ანგარიში და პროგრესი უსაფრთხოდაა.',
     retry: 'თავიდან ცდა',
   },
+  es: {
+    title: 'Fútbol: Tres en raya',
+    subtitle: 'Ocupa casillas con jugadores — consigue tres en raya para ganar',
+    scoreLabel: 'Tú · Oponente',
+    pickTurn: 'Tu turno — elige una casilla',
+    opponentThinking: 'El oponente está pensando…',
+    searching: 'Buscando a tu oponente',
+    searchingBody: 'Buscando un jugador…',
+    cancel: 'Cancelar búsqueda',
+    matching: 'Creando el tablero…',
+    ready: 'Oponente encontrado',
+    loading: 'Cargando partido',
+    getReady: 'Prepárate',
+    yourTurn: 'Tu turno',
+    theirTurn: 'Turno del oponente',
+    pickCell: 'Elige una casilla vacía y nombra a un futbolista que coincida con ambas pistas.',
+    answerPlaceholder: 'Escribe un futbolista…',
+    submit: 'Enviar',
+    submitShort: 'Enviar',
+    pass: 'Pasar',
+    correct: '¡Casilla reclamada!',
+    wrong: 'Esa respuesta no coincide con ambas pistas.',
+    ambiguous: 'Sé más específico — añade el nombre completo.',
+    alreadyUsed: 'Ese futbolista ya se ha usado.',
+    paused: 'Partido pausado',
+    pausedBody: 'Esperando a que se recupere la conexión. Tu tiempo de turno está protegido.',
+    reconnectWindow: 'Tiempo para reconectar',
+    interrupted: 'Partido temporalmente interrumpido',
+    interruptedBody: 'El partido está pausado de forma segura mientras restauramos el servicio.',
+    report: 'Informar de una respuesta no reconocida',
+    reported: 'Informe enviado — gracias',
+    quit: 'Abandonar partido',
+    resultWin: 'Controlas el tablero',
+    resultLoss: 'El oponente gana',
+    resultDraw: 'Tablero bloqueado',
+    rematch: 'Revancha',
+    waitingRematch: 'Esperando al oponente…',
+    rematchAccepted: 'Revancha aceptada',
+    declineRematch: 'Rechazar revancha',
+    newOpponent: 'Buscar nuevo oponente',
+    backToPlay: 'Volver al inicio',
+    you: 'Tú',
+    opponent: 'Oponente',
+    claimed: 'Reclamado',
+    sampleAnswers: 'Otras respuestas válidas',
+    sampleAnswersBody: 'Diferentes ejemplos para cada intersección',
+    xp: 'XP ganados',
+    coins: 'Monedas ganadas',
+    signIn: 'Inicia sesión para jugar online',
+    signInBody: 'Fútbol: Tres en raya es un modo 1 contra 1 en vivo. Inicia sesión para enfrentarte a otro jugador o a un oponente inteligente.',
+    goSignIn: 'Ir a iniciar sesión',
+    unavailable: 'Fútbol: Tres en raya no está disponible temporalmente',
+    unavailableBody: 'No hemos podido iniciar la búsqueda de oponentes. Tu cuenta y tu progreso están seguros.',
+    retry: 'Intentar de nuevo',
+  },
 } as const;
+
+type FootballGridCopy = (typeof FOOTBALL_GRID_COPY)[keyof typeof FOOTBALL_GRID_COPY];
 
 function useRemaining(deadlineAt: string | null, serverTimeOffsetMs: number): number {
   const [remaining, setRemaining] = useState(0);
@@ -190,7 +248,7 @@ function CriterionHeader({
   axis,
 }: {
   criterion: FootballGridCriterionView;
-  locale: 'en' | 'ka';
+  locale: Locale;
   axis: 'column' | 'row';
 }) {
   const label = locale === 'ka' ? criterion.labelKa || criterion.labelEn : criterion.labelEn;
@@ -279,7 +337,7 @@ export function MatchBoard({
 }: {
   state: FootballGridState;
   selfUserId: string;
-  locale: 'en' | 'ka';
+  locale: Locale;
   selectedCell: number | null;
   onSelect: (cell: number) => void;
 }) {
@@ -345,7 +403,7 @@ export function ResultSampleGallery({
 }: {
   samples: FootballGridCompletedPayload['samples'];
   board: FootballGridState['board'];
-  locale: 'en' | 'ka';
+  locale: Locale;
   title: string;
   body: string;
 }) {
@@ -459,7 +517,7 @@ export function FootballGridTurnPanel({
   onReport,
 }: {
   state: FootballGridState;
-  locale: 'en' | 'ka';
+  locale: Locale;
   isMyTurn: boolean;
   selectedCell: number | null;
   remaining: number;
@@ -609,7 +667,7 @@ export function SearchScreen({
   /** Kickoff countdown (seconds). When set, replaces the mini-grid animation — ranked-showdown style. */
   countdownSeconds?: number | null;
   onCancel: () => void;
-  copy: typeof FOOTBALL_GRID_COPY.en | typeof FOOTBALL_GRID_COPY.ka;
+  copy: FootballGridCopy;
 }) {
   const paired = status === 'pairing' || status === 'matched';
   const [cycleIndex, setCycleIndex] = useState(0);
@@ -743,7 +801,7 @@ export function FootballGridNoticeScreen({
   );
 }
 
-export function PhaseOverlay({ state, remaining, copy }: { state: FootballGridState; remaining: number; copy: typeof FOOTBALL_GRID_COPY.en | typeof FOOTBALL_GRID_COPY.ka }) {
+export function PhaseOverlay({ state, remaining, copy }: { state: FootballGridState; remaining: number; copy: FootballGridCopy }) {
   if (state.phase === 'turn' || state.phase === 'terminal') return null;
   const isPaused = state.phase === 'paused';
   const isInterrupted = state.phase === 'service_interruption';
@@ -804,7 +862,7 @@ export function PhaseOverlay({ state, remaining, copy }: { state: FootballGridSt
   );
 }
 
-function completionTitle(reason: FootballGridCompletionReason | null, won: boolean, draw: boolean, copy: typeof FOOTBALL_GRID_COPY.en | typeof FOOTBALL_GRID_COPY.ka) {
+function completionTitle(reason: FootballGridCompletionReason | null, won: boolean, draw: boolean, copy: FootballGridCopy) {
   if (reason === 'administrative_cancel') return copy.interrupted;
   if (draw) return copy.resultDraw;
   return won ? copy.resultWin : copy.resultLoss;
@@ -815,6 +873,7 @@ export function FootballGridFlowScreen() {
   const searchParams = useSearchParams();
   const { locale } = useLocale();
   const copy = FOOTBALL_GRID_COPY[locale];
+  const contentLocale = locale === 'es' ? 'en' : locale;
   const { player } = usePlayer();
   const authUser = useAuthStore((current) => current.user);
   const authStatus = useAuthStore((current) => current.status);
@@ -823,7 +882,7 @@ export function FootballGridFlowScreen() {
   const grid = useRealtimeFootballGrid({
     enabled: authStatus === 'authenticated' && Boolean(selfUserId),
     selfUserId,
-    locale,
+    locale: contentLocale,
     autoStart: source === 'matchmaking',
   });
   const [selectedCell, setSelectedCell] = useState<number | null>(null);

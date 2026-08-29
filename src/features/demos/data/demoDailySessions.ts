@@ -13,6 +13,7 @@ type L = Locale;
 const pick = (locale: L, en: string, ka: string) => (locale === "ka" ? ka : en);
 
 function moneyDropSession(locale: L): MoneyDropSession {
+  const contentLocale = locale === 'es' ? 'en' : locale;
   return {
     challengeType: "moneyDrop",
     title: pick(locale, "Money Drop", "ფულის ვარდნა"),
@@ -26,10 +27,10 @@ function moneyDropSession(locale: L): MoneyDropSession {
     startingMoney: 1000,
     questions: DEMO_QUESTIONS.slice(0, 10).map((q) => ({
       id: q.id,
-      category: q.category[locale],
+      category: q.category[contentLocale],
       difficulty: q.difficulty,
-      prompt: q.prompt[locale],
-      options: q.options.map((option) => option[locale]),
+      prompt: q.prompt[contentLocale],
+      options: q.options.map((option) => option[contentLocale]),
       correctAnswerIndex: q.correctIndex,
       clue: null,
     })),

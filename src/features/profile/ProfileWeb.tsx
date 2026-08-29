@@ -36,7 +36,7 @@ import { toast } from 'sonner';
 
 import type { PlayerStats } from '@/types/game';
 import type { MatchStatsSummary, ModeMatchStatsSummary, HeadToHeadSummary, RankPosition, PreviousNickname } from '@/lib/domain';
-import type { MessageKey } from '@/lib/i18n/messages';
+import { LOCALES, type MessageKey } from '@/lib/i18n/messages';
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
 
 import { getTierVisual } from '@/utils/tierVisuals';
@@ -828,42 +828,28 @@ export function ProfileWeb({
                   <div className="flex items-center justify-between py-3.5">
                     <span className="font-poppins text-sm font-semibold uppercase text-white/50">{t("profileScreen.language")}</span>
                     <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={async () => {
-                          try {
-                            await onLanguageChange?.('ka');
-                          } catch {
-                            toast.error(t('profile.failedToUpdateLanguage'));
-                          }
-                        }}
-                        disabled={isUpdating}
-                        className={`inline-flex h-9 min-w-[80px] items-center justify-center gap-1.5 rounded-[20px] px-3 font-poppins text-sm font-semibold uppercase transition-colors active:translate-y-[1px] ${
-                          preferredLanguage === 'ka'
-                            ? 'bg-brand-green text-white'
-                            : 'border-2 border-brand-green text-white hover:bg-brand-green/10'
-                        }`}
-                      >
-                        <CountryFlag code="ge" className="text-base shrink-0 overflow-hidden rounded-sm" />
-                        GEO
-                      </button>
-                      <button
-                        onClick={async () => {
-                          try {
-                            await onLanguageChange?.('en');
-                          } catch {
-                            toast.error(t('profile.failedToUpdateLanguage'));
-                          }
-                        }}
-                        disabled={isUpdating}
-                        className={`inline-flex h-9 min-w-[80px] items-center justify-center gap-1.5 rounded-[20px] px-3 font-poppins text-sm font-semibold uppercase transition-colors active:translate-y-[1px] ${
-                          preferredLanguage === 'en'
-                            ? 'bg-brand-green text-white'
-                            : 'border-2 border-brand-green text-white hover:bg-brand-green/10'
-                        }`}
-                      >
-                        <CountryFlag code="gb" className="text-base shrink-0 overflow-hidden rounded-sm" />
-                        ENG
-                      </button>
+                      {LOCALES.map((language) => (
+                        <button
+                          key={language.code}
+                          onClick={async () => {
+                            try {
+                              await onLanguageChange?.(language.code);
+                            } catch {
+                              toast.error(t('profile.failedToUpdateLanguage'));
+                            }
+                          }}
+                          disabled={isUpdating}
+                          aria-pressed={preferredLanguage === language.code}
+                          className={`inline-flex h-9 min-w-[64px] items-center justify-center gap-1 rounded-[20px] px-2 font-poppins text-xs font-semibold uppercase transition-colors active:translate-y-[1px] ${
+                            preferredLanguage === language.code
+                              ? 'bg-brand-green text-white'
+                              : 'border-2 border-brand-green text-white hover:bg-brand-green/10'
+                          }`}
+                        >
+                          <CountryFlag code={language.countryCode} className="text-sm shrink-0 overflow-hidden rounded-sm" />
+                          {language.shortName}
+                        </button>
+                      ))}
                     </div>
                   </div>
                 </div>
