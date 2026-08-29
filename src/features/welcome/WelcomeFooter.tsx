@@ -5,6 +5,7 @@ import { Brain, Swords, MessageCircle } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
 import { SocialLinks } from '@/components/shared/SocialLinks';
 import { ContactModal } from '@/components/shared/ContactModal';
+import { campaignHubPath } from '@/features/campaign-quiz/campaignQuiz.routes';
 
 interface WelcomeFooterProps {
   duelsCount: number;
@@ -57,7 +58,7 @@ export function WelcomeFooter({ duelsCount, verifiedQuestionsCount }: WelcomeFoo
           </Link>
           <span className="text-white/20">|</span>
           <Link
-            href="/en/football-quiz"
+            href={campaignHubPath(locale)}
             className="font-bold text-white/40 hover:text-brand-cyan transition-colors"
           >
             {t('welcome.quizzes')}
