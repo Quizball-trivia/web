@@ -101,12 +101,19 @@ export function ScheduleTimeline({
  * "Friday 24:00" to a player, not "Saturday 00:00", so an exact-midnight
  * timestamp borrows the previous day's weekday. Exported for tests.
  */
+// Explicit weekday names instead of Intl: a runtime without Georgian ICU data
+// (server rendering, slim Node builds) silently falls back to English, which
+// put "Fri. 24:00" on the Georgian page (owner report 2026-08-29). Georgia is
+// fixed UTC+4, so the weekday is plain arithmetic.
+const GE_OFFSET_MS = 4 * 60 * 60 * 1000;
+const WEEKDAYS: Record<string, readonly string[]> = {
+  ka: ['კვ.', 'ორშ.', 'სამ.', 'ოთხ.', 'ხუთ.', 'პარ.', 'შაბ.'],
+  en: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+};
+
 export function formatStageWhen(targetMs: number, timeLabel: string, locale: string): string {
-  const geDay = new Intl.DateTimeFormat(locale === 'ka' ? 'ka' : 'en-GB', {
-    timeZone: 'Asia/Tbilisi',
-    weekday: 'short',
-  });
   const midnight = timeLabel === '00:00';
-  const day = geDay.format(midnight ? targetMs - 1 : targetMs);
-  return `${day}${locale === 'ka' ? '.' : ''} ${midnight ? '24:00' : timeLabel}`;
+  const dayIndex = new Date((midnight ? targetMs - 1 : targetMs) + GE_OFFSET_MS).getUTCDay();
+  const day = (WEEKDAYS[locale] ?? WEEKDAYS.en)[dayIndex];
+  return `${day} ${midnight ? '24:00' : timeLabel}`;
 }
