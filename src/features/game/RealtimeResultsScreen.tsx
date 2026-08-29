@@ -162,7 +162,9 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
   }), [isCancelledNoContest, matchType, myOutcome?.qpWeekTotal, qpAwarded]);
 
   useEffect(() => {
-    if (!qpToastCue) return;
+    // A supplied slot (dev playground) replaces the experiment entirely —
+    // loading the flag for it would record a phantom PostHog exposure.
+    if (qpToastSlot !== undefined || !qpToastCue) return;
     if (!qpToastAssignmentRef.current) {
       qpToastAssignmentRef.current = loadWlQpToastExperimentVariant({ country, createdAt });
     }
@@ -173,13 +175,7 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
     return () => {
       active = false;
     };
-  }, [country, createdAt, qpToastCue]);
-
-  useEffect(() => {
-    if (qpToastVariant !== 'test' || !qpToastCue || trackedQpToastRef.current) return;
-    trackedQpToastRef.current = true;
-    trackWlQpToastShown(qpToastCue.gainedQp, qpToastCue.previousQp + qpToastCue.gainedQp);
-  }, [qpToastCue, qpToastVariant]);
+  }, [country, createdAt, qpToastCue, qpToastSlot]);
 
   const qpToast = qpToastSlot
     ?? (qpToastVariant === 'test' && qpToastCue
@@ -187,6 +183,13 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
         <WlQpToast
           gainedQp={qpToastCue.gainedQp}
           previousQp={qpToastCue.previousQp}
+          onShown={() => {
+            // Counted only once the entrance animation lands — a player who
+            // bailed during the 450ms delay was never actually shown it.
+            if (trackedQpToastRef.current) return;
+            trackedQpToastRef.current = true;
+            trackWlQpToastShown(qpToastCue.gainedQp, qpToastCue.previousQp + qpToastCue.gainedQp);
+          }}
           onOpen={() => trackWlQpToastClicked(qpToastCue.previousQp + qpToastCue.gainedQp)}
         />
       )

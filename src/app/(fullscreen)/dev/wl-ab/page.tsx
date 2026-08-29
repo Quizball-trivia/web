@@ -9,6 +9,7 @@
 // Toggle variants per section; the RIGHT column always shows control.
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { AnimatePresence, motion } from 'motion/react';
 import { ArrowRight, Clock3, PartyPopper, Trophy, X } from 'lucide-react';
 
@@ -217,14 +218,14 @@ export default function DevWlAbPage() {
         </div>
 
         <Section title={<T k="testA" lang={lang} />}>
-          <a
+          <Link
             href="/dev/results?qpToast=1"
             className="inline-flex items-center gap-2 rounded-[10px] bg-brand-green px-5 py-2.5 text-[13px] uppercase text-white"
             style={poppins}
           >
             {lang === 'ka' ? 'ნახე რეალურ შედეგების ეკრანზე' : 'Open on the REAL results screen'}
             <ArrowRight className="size-4" />
-          </a>
+          </Link>
           <p className="mt-2 text-[12px] text-white/40" style={poppins}>
             {lang === 'ka'
               ? '/dev/results — ნამდვილი RealtimeResultsScreen, გვერდით პანელში "WL QP toast (A/B)" გადამრთველი'

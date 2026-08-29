@@ -2034,7 +2034,9 @@
     "clueCounter": "PISTA {current}/{total}",
     "finalCheckInBody": "Marca que estás listo antes de que empiece la final. Si te pierdes la ventana, tu puesto de finalista se perderá.",
     "finalCheckedInBody": "Espera — la final empieza a la vez para todos los finalistas.",
-    "finalSpectatorCheckinBody": "Los finalistas están confirmando su asistencia — la final empieza cuando el reloj llega a cero. Verás la transmisión."
+    "finalSpectatorCheckinBody": "Los finalistas están confirmando su asistencia — la final empieza cuando el reloj llega a cero. Verás la transmisión.",
+    "qpToastRemaining": "{n} QP para la Liga del Finde",
+    "qpToastQualified": "Clasificado — regístrate ya"
   },
   "wlAward": {
     "title1": "Campeón de Weekend League",

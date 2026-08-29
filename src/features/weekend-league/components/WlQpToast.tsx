@@ -7,7 +7,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { motion } from 'motion/react';
+import { motion, useReducedMotion } from 'motion/react';
 import { ArrowRight } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
 
@@ -19,14 +19,18 @@ export function WlQpToast({
   targetQp = 200,
   href = '/events',
   onOpen,
+  onShown,
 }: {
   gainedQp: number;
   previousQp: number;
   targetQp?: number;
   href?: string;
   onOpen?: () => void;
+  /** Fires when the entrance animation completes — the toast is actually visible. */
+  onShown?: () => void;
 }) {
-  const { locale } = useLocale();
+  const { t } = useLocale();
+  const reducedMotion = useReducedMotion();
   const newQp = Math.min(targetQp, previousQp + gainedQp);
   const remaining = Math.max(0, targetQp - newQp);
   const [fill, setFill] = useState(previousQp / targetQp);
@@ -36,14 +40,15 @@ export function WlQpToast({
   }, [newQp, targetQp]);
 
   const tail = remaining > 0
-    ? (locale === 'ka' ? `უიქენდის ლიგამდე ${remaining} ქულა` : `${remaining} QP to Weekend League`)
-    : (locale === 'ka' ? 'კვალიფიცირებული ხარ — დარეგისტრირდი' : 'Qualified — register now');
+    ? t('weekendLeague.qpToastRemaining', { n: remaining })
+    : t('weekendLeague.qpToastQualified');
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 18, scale: 0.97 }}
+      initial={reducedMotion ? false : { opacity: 0, y: 18, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ delay: 0.45, duration: 0.28, ease: 'easeOut' }}
+      transition={reducedMotion ? { duration: 0 } : { delay: 0.45, duration: 0.28, ease: 'easeOut' }}
+      onAnimationComplete={onShown}
       className="mx-auto w-full max-w-sm"
     >
       <Link
