@@ -158,10 +158,10 @@ export function TurnControls({
                 aria-invalid={showCustomHint || undefined}
                 aria-describedby={customRangeHintId}
                 className="h-9 w-full rounded-xl bg-transparent pl-6 pr-6 font-poppins text-sm font-semibold tabular-nums text-white outline-none placeholder:text-white/30"
-                // Ceil, never round: a placeholder that rounds *down* (350K →
-                // "0.3") suggests an amount its own Bid button rejects. Kept
-                // unpadded so a $11.6M minimum reads as 11.6, not a round 12.
-                placeholder={String(Math.ceil((minBid / MILLION) * 100) / 100)}
+                // Exact, never rounded: a placeholder that rounds down suggests
+                // an amount its own Bid button rejects, and one that rounds up
+                // overstates the minimum (51.060001M → "51.07M", €9,999 high).
+                placeholder={inMillions(minBid)}
               />
               <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 font-poppins text-[11px] font-bold text-white/40">
                 M
