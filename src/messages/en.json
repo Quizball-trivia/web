@@ -363,6 +363,8 @@
     "daysAgo": "{count}d ago",
     "next": "Next",
     "unranked": "Unranked",
+    "placementProgressShort": "Placement {played}/{required}",
+    "placementRankHint": "Play placement matches to get your rank.",
     "rpToNextTier": "{rp} RP to next tier",
     "toNextLeagueLabel": "to next tier",
     "seasonOf": "of {total} players",
