@@ -585,6 +585,15 @@ export function trackWlCheckinCompleted(stage: 'qualifier' | 'final') {
   trackEvent('wl_checkin_completed', { stage });
 }
 
+/** Test A (ranked-results-wl-qp-toast): the QP toast rendered / was tapped. */
+export function trackWlQpToastShown(gainedQp: number, newQpTotal: number) {
+  trackEvent('wl_qp_toast_shown', { gained_qp: gainedQp, new_qp_total: newQpTotal });
+}
+
+export function trackWlQpToastClicked(newQpTotal: number) {
+  trackEvent('wl_qp_toast_clicked', { new_qp_total: newQpTotal });
+}
+
 export function trackCategorySelected(categoryId: string, categoryName: string) {
   trackEvent('category_selected', {
     category_id: categoryId,

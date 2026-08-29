@@ -16,6 +16,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { RealtimeResultsScreen } from '@/features/game/RealtimeResultsScreen';
+import { WlQpToast } from '@/features/weekend-league/components/WlQpToast';
 import { getRankedTierProgress } from '@/utils/rankedTier';
 import type {
   AchievementUnlockPayload,
@@ -129,6 +130,9 @@ function DevResultsContent() {
   const [opponentCorrect, setOpponentCorrect] = useState(0);
   const [totalQuestions, setTotalQuestions] = useState(0);
   const [withAchievements, setWithAchievements] = useState(false);
+  // WL acquisition Test A — preselect via /dev/results?qpToast=1
+  const [withQpToast, setWithQpToast] = useState(() =>
+    typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('qpToast') === '1');
   const [withProgression, setWithProgression] = useState(true);
   const [withQuestionDots, setWithQuestionDots] = useState(true);
   const [friendButtonState, setFriendButtonState] = useState<FriendButtonState>('none');
@@ -305,6 +309,7 @@ function DevResultsContent() {
             preMatchRankedProfile={preMatchRankedProfile}
             preMatchProgression={preMatchProgression}
             unlockedAchievements={withAchievements ? ACHIEVEMENT_SAMPLES : []}
+            qpToastSlot={withQpToast ? <WlQpToast key={`qp-${replayKey}`} gainedQp={25} previousQp={78} /> : undefined}
             winStreakCount={3}
             onPlayAgain={() => setReplayKey((k) => k + 1)}
             onMainMenu={() => router.push('/play')}
@@ -430,6 +435,7 @@ function DevResultsContent() {
         {/* Toggles */}
         <Group label="Extras">
           <Toggle checked={withAchievements} onChange={setWithAchievements} label="Achievements" />
+          <Toggle checked={withQpToast} onChange={setWithQpToast} label="WL QP toast (A/B)" />
           <Toggle checked={withProgression} onChange={setWithProgression} label="XP / Level" />
           <Toggle checked={withQuestionDots} onChange={setWithQuestionDots} label="Question dots" />
         </Group>
