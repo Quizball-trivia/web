@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { trackCampaignSignupClick } from './campaignQuiz.analytics';
 import type { CampaignCtaPlacement } from './campaignAttribution';
 
@@ -19,13 +19,18 @@ export function CampaignSignupLink({
   className,
   children,
 }: CampaignSignupLinkProps) {
+  const router = useRouter();
+
   return (
-    <Link
-      href={href}
+    <button
+      type="button"
       className={className}
-      onClick={() => trackCampaignSignupClick(slug, placement)}
+      onClick={() => {
+        trackCampaignSignupClick(slug, placement);
+        router.push(href);
+      }}
     >
       {children}
-    </Link>
+    </button>
   );
 }

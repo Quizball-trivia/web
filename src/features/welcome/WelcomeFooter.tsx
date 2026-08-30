@@ -14,6 +14,8 @@ interface WelcomeFooterProps {
 
 export function WelcomeFooter({ duelsCount, verifiedQuestionsCount }: WelcomeFooterProps) {
   const { t, locale } = useLocale();
+  const quizzesHref = locale === 'ka' ? campaignHubPath('en') : campaignHubPath(locale);
+
   return (
     <footer className="py-10 font-poppins">
       <div className="mx-auto max-w-4xl px-6">
@@ -58,7 +60,7 @@ export function WelcomeFooter({ duelsCount, verifiedQuestionsCount }: WelcomeFoo
           </Link>
           <span className="text-white/20">|</span>
           <Link
-            href={campaignHubPath(locale)}
+            href={quizzesHref}
             className="font-bold text-white/40 hover:text-brand-cyan transition-colors"
           >
             {t('welcome.quizzes')}

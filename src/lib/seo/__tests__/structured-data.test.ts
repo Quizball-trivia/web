@@ -31,9 +31,12 @@ describe("site structured data", () => {
       about: { "@id": SITE_SCHEMA_IDS.game },
     });
     expect(game).toMatchObject({
+      "@type": "Game",
       publisher: { "@id": SITE_SCHEMA_IDS.organization },
       isPartOf: { "@id": SITE_SCHEMA_IDS.website },
     });
+    expect(game).not.toHaveProperty("applicationCategory");
+    expect(game).not.toHaveProperty("operatingSystem");
   });
 
   it("contains only the official profiles from the shared social-link source", () => {
