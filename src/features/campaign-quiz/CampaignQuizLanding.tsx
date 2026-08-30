@@ -28,6 +28,7 @@ import {
   splitHeading,
   type CampaignQuizPageContent,
 } from './campaignQuiz.content';
+import { getCampaignQuizGuide } from './campaignQuiz.guides';
 import type { CampaignQuiz, CampaignQuizAboutBlock } from './campaignQuiz.types';
 import type { Locale } from '@/lib/i18n/messages';
 import { campaignHubPath, campaignQuizPath } from './campaignQuiz.routes';
@@ -178,6 +179,7 @@ export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken
     content.aboutBlocks
       ?? content.aboutParagraphs.map((text, index) => ({ id: String(index), type: 'paragraph' as const, text })),
   );
+  const guide = getCampaignQuizGuide(content.slug, locale);
 
   return (
     <div className="relative min-h-screen overflow-x-hidden bg-surface-page-alt font-poppins text-white">
@@ -368,6 +370,32 @@ export function CampaignQuizLanding({ content, quiz, locale = 'en', previewToken
                   : <p key={section.id}>{section.text}</p>
               ))}
             </div>
+
+            {guide ? (
+              <section className="mt-10 border-t border-white/10 pt-8" aria-labelledby={`${content.slug}-guide-heading`}>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-brand-cyan">
+                  {guide.eyebrow}
+                </p>
+                <h3 id={`${content.slug}-guide-heading`} className="mt-2 text-xl font-semibold text-white sm:text-2xl">
+                  {guide.heading}
+                </h3>
+                <p className="mt-4 text-[15px] font-medium leading-7 text-white/65 sm:text-base">
+                  {guide.introduction}
+                </p>
+                <ul className="mt-5 list-disc space-y-3 pl-5 text-[15px] font-medium leading-7 text-white/65 marker:text-brand-yellow sm:text-base">
+                  {guide.tips.map((tip) => (
+                    <li key={tip} className="pl-2">{tip}</li>
+                  ))}
+                </ul>
+                <Link
+                  href={campaignQuizPath(guide.practiceSlug, locale)}
+                  className="mt-6 inline-flex items-center gap-2 font-semibold text-brand-yellow transition-colors hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow"
+                >
+                  {guide.practiceLabel}
+                  <ArrowRight className="size-4" aria-hidden />
+                </Link>
+              </section>
+            ) : null}
           </article>
 
           <div>

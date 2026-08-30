@@ -362,7 +362,11 @@ describe('WelcomeScreen — landing chrome', () => {
     render(<WelcomeScreen />);
 
     await waitFor(() => expect(trackSignupPageViewMock).toHaveBeenCalledOnce());
-    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toBeInTheDocument();
+    expect(dialog).toHaveTextContent('welcome.signupTitle');
+    expect(screen.getByPlaceholderText('welcome.emailPlaceholder')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText('welcome.confirmPasswordPlaceholder')).toBeInTheDocument();
   });
 
   it('renders the hero with kickoff CTA and the brand logo', () => {

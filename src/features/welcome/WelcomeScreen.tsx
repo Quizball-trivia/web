@@ -47,6 +47,7 @@ export function WelcomeScreen() {
     showFacebookLogin,
     authMode,
     handleAuthModeChange,
+    handleCampaignSignup,
     authEmail,
     setAuthEmail,
     authPassword,
@@ -130,11 +131,10 @@ export function WelcomeScreen() {
     rememberCampaignAttributionFromSignupUrl(url);
     trackSignupPageView();
     campaignSignupHandledRef.current = true;
-    handleAuthModeChange('signup');
-    handleLoginDialogOpenChange(true);
+    handleCampaignSignup();
     url.searchParams.delete('signup');
     window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
-  }, [handleAuthModeChange, handleLoginDialogOpenChange]);
+  }, [handleCampaignSignup]);
 
   return (
     <div className="min-h-screen w-full bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat font-sans text-foreground flex flex-col overflow-x-hidden">

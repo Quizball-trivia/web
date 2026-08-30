@@ -189,6 +189,17 @@ export function useWelcomeAuthController() {
     [resetAuthForm],
   );
 
+  const handleCampaignSignup = useCallback(() => {
+    if (authInAppBrowser) {
+      showOpenInBrowserInstructions();
+      return;
+    }
+    setAuthMode('signup');
+    resetAuthForm();
+    setShowAdvancedAuth(true);
+    setLoginOpen(true);
+  }, [authInAppBrowser, resetAuthForm, showOpenInBrowserInstructions]);
+
   // Exchange a Google id_token (from the overlaid GIS button) for a session.
   // In-app browsers should not reach this path because protected landing CTAs
   // are intercepted before the login dialog opens.
@@ -574,6 +585,7 @@ export function useWelcomeAuthController() {
     // Auth panel mode + form fields
     authMode,
     handleAuthModeChange,
+    handleCampaignSignup,
     authEmail,
     setAuthEmail,
     authPassword,

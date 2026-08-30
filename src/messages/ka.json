@@ -323,6 +323,8 @@
     "allCategoriesDescription": "დაათვალიერე QuizBall-ის კატეგორიების სრული სია.",
     "loginTitle": "შედი QuizBall-ში",
     "loginDescription": "შეინახე პროგრესი, აიმაღლე დონე და ითამაშე ონლაინ შენი ანგარიშით.",
+    "signupTitle": "შექმენი QuizBall-ის უფასო ანგარიში",
+    "signupDescription": "გააგრძელე Google-ით ან შექმენი ანგარიში ელფოსტით. ეს უფასოა.",
     "continueWithGoogle": "გააგრძელე Google-ით",
     "continueWithFacebook": "გააგრძელე Facebook-ით",
     "authOr": "ან",

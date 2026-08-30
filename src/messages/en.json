@@ -832,6 +832,8 @@
     "allCategoriesDescription": "Explore the full QuizBall category list.",
     "loginTitle": "Sign in to QuizBall",
     "loginDescription": "Save progress, rank up, and play online with your account.",
+    "signupTitle": "Create your free QuizBall account",
+    "signupDescription": "Continue with Google or create an account with email. It’s free.",
     "continueWithGoogle": "Continue with Google",
     "continueWithFacebook": "Continue with Facebook",
     "authOr": "or",
