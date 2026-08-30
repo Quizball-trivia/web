@@ -834,6 +834,8 @@
     "allCategoriesDescription": "Explora la lista completa de categorías de QuizBall.",
     "loginTitle": "Iniciar sesión en QuizBall",
     "loginDescription": "Guarda tu progreso, sube de rango y juega online con tu cuenta.",
+    "signupTitle": "Crea tu cuenta gratis de QuizBall",
+    "signupDescription": "Continúa con Google o crea una cuenta con tu email. Es gratis.",
     "continueWithGoogle": "Continuar con Google",
     "continueWithFacebook": "Continuar con Facebook",
     "authOr": "o",

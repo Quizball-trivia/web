@@ -143,10 +143,18 @@ export function WelcomeLoginDialog({
           <>
             <DialogHeader className="text-center">
               <DialogTitle className="text-center font-poppins text-[22px] font-semibold text-white sm:text-[26px]">
-                {t('welcome.loginTitle')}
+                {t(
+                  effectiveAuthMode === 'signup'
+                    ? 'welcome.signupTitle'
+                    : 'welcome.loginTitle',
+                )}
               </DialogTitle>
               <DialogDescription className="mt-3 text-center font-poppins text-[13px] font-medium leading-snug text-white/80 sm:text-[14px]">
-                {t('welcome.loginDescription')}
+                {t(
+                  effectiveAuthMode === 'signup'
+                    ? 'welcome.signupDescription'
+                    : 'welcome.loginDescription',
+                )}
               </DialogDescription>
             </DialogHeader>
             {!inOtpStep ? (
