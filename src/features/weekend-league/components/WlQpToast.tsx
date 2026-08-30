@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { motion, useReducedMotion } from 'motion/react';
 import { ArrowRight } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
+import { LEAGUE_TAB_HREF } from './StatusBandVariants';
 
 const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
 
@@ -17,7 +18,7 @@ export function WlQpToast({
   gainedQp,
   previousQp,
   targetQp = 200,
-  href = '/events',
+  href = LEAGUE_TAB_HREF,
   onOpen,
   onShown,
 }: {
@@ -54,24 +55,27 @@ export function WlQpToast({
       <Link
         href={href}
         onClick={onOpen}
-        className="block rounded-[12px] px-4 py-3 text-left transition-colors hover:bg-white/[0.04]"
+        className="block rounded-[14px] px-4 py-3 text-left transition-[filter] hover:brightness-110 active:brightness-95"
+        style={{ backgroundImage: 'linear-gradient(180deg, #1645FF 0%, #1A35A1 100%)' }}
       >
         <div className="flex items-center justify-between">
-          <span className="text-[15px] uppercase text-brand-blue" style={poppins}>
+          <span className="text-[15px] uppercase text-brand-yellow" style={poppins}>
             +{gainedQp} QP
           </span>
-          <span className="flex items-center gap-1 text-[12px] uppercase text-white/60" style={poppins}>
+          <span className="flex items-center gap-1.5 text-[12px] uppercase text-white" style={poppins}>
             {tail}
-            <ArrowRight className="size-3.5" />
+            <span className="flex size-5 items-center justify-center rounded-full bg-white">
+              <ArrowRight className="size-3.5 text-brand-blue" />
+            </span>
           </span>
         </div>
-        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/20">
           <div
-            className="h-full rounded-full bg-brand-blue transition-[width] duration-700 ease-out"
+            className="h-full rounded-full bg-brand-yellow transition-[width] duration-700 ease-out"
             style={{ width: `${Math.round(fill * 100)}%` }}
           />
         </div>
-        <div className="mt-1 text-right text-[11px] tabular-nums text-white/40" style={poppins}>
+        <div className="mt-1 text-right text-[11px] tabular-nums text-white/60" style={poppins}>
           {newQp}/{targetQp} QP
         </div>
       </Link>

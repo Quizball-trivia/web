@@ -12,6 +12,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'motion/react';
 import { ArrowRight, Clock3, PartyPopper, Trophy, X } from 'lucide-react';
+import { WeekendLeaguePromoCard } from '@/features/weekend-league/components/WeekendLeaguePromoCard';
 
 const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
 
@@ -216,6 +217,17 @@ export default function DevWlAbPage() {
             </button>
           </div>
         </div>
+
+        <Section title={lang === 'ka' ? 'პრომო ბარათი (Figma 1722:253)' : 'Promo card (Figma 1722:253)'}>
+          <div className="flex justify-center">
+            <WeekendLeaguePromoCard
+              registeredCount={600}
+              kickoffMs={Date.now() + ((6 - new Date().getDay() + 7) % 7 || 7) * 86_400_000}
+              onStart={() => {}}
+              onClose={() => {}}
+            />
+          </div>
+        </Section>
 
         <Section title={<T k="testA" lang={lang} />}>
           <Link
