@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { motion, useReducedMotion } from 'motion/react';
 import { ArrowRight } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
+import { LEAGUE_TAB_HREF } from './StatusBandVariants';
 
 const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
 
@@ -17,7 +18,7 @@ export function WlQpToast({
   gainedQp,
   previousQp,
   targetQp = 200,
-  href = '/events',
+  href = LEAGUE_TAB_HREF,
   onOpen,
   onShown,
 }: {
@@ -54,15 +55,17 @@ export function WlQpToast({
       <Link
         href={href}
         onClick={onOpen}
-        className="block rounded-[12px] px-4 py-3 text-left transition-colors hover:bg-white/[0.04]"
+        className="block rounded-[12px] bg-brand-blue/[0.12] px-4 py-3 text-left transition-colors hover:bg-brand-blue/[0.20] active:bg-brand-blue/[0.24]"
       >
         <div className="flex items-center justify-between">
           <span className="text-[15px] uppercase text-brand-blue" style={poppins}>
             +{gainedQp} QP
           </span>
-          <span className="flex items-center gap-1 text-[12px] uppercase text-white/60" style={poppins}>
+          <span className="flex items-center gap-1.5 text-[12px] uppercase text-white/70" style={poppins}>
             {tail}
-            <ArrowRight className="size-3.5" />
+            <span className="flex size-5 items-center justify-center rounded-full bg-brand-blue">
+              <ArrowRight className="size-3.5 text-white" />
+            </span>
           </span>
         </div>
         <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
