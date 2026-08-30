@@ -72,16 +72,19 @@ export function buildSiteStructuredData() {
         },
       },
       {
-        "@type": "VideoGame",
+        // Keep this as a general Game entity. Schema.org models VideoGame as
+        // a SoftwareApplication, which makes validators expect a real review
+        // or aggregateRating. QuizBall does not yet have a site-wide rating,
+        // so declaring the narrower type would create invalid rich-result
+        // markup unless we invented one.
+        "@type": "Game",
         "@id": SITE_SCHEMA_IDS.game,
         name: SITE_NAME,
         alternateName: "QuizBall",
         description: SITE_DESCRIPTION,
         url: SITE_URL,
         image: `${SITE_URL}${SITE_OG_IMAGE_PATH}`,
-        applicationCategory: "GameApplication",
         genre: ["Trivia", "Sports", "Football", "Quiz", "Multiplayer"],
-        operatingSystem: "Web, iOS, Android",
         inLanguage: ["en", "ka", "es"],
         keywords: "football trivia, football quiz, soccer quiz, multiplayer football game",
         publisher: { "@id": SITE_SCHEMA_IDS.organization },
