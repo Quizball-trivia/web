@@ -5,10 +5,8 @@
     "src/app/(fullscreen)/dev/club-select/page.tsx",
     "src/app/(fullscreen)/dev/logos/page.tsx",
     "src/app/(fullscreen)/dev/maps/page.tsx",
-    "src/app/(fullscreen)/dev/penalty-score-bug/page.tsx",
     "src/features/leaderboard/LeaderboardScreen.tsx",
     "src/features/matchmaking/MatchmakingMapScreen.tsx",
-    "src/features/profile/ProfileWeb.tsx",
     "src/features/weekend-league/components/RailColorVariants.tsx",
     "src/features/weekend-league/components/StatusBandVariants.tsx",
     "src/features/weekend-league/components/WeekendLeagueStatusBand.tsx"

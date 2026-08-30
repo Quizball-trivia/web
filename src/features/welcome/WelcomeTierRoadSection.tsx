@@ -9,6 +9,7 @@ import { tierConfig, type TierName } from '@/utils/tierVisuals';
 import { AvatarPreview } from '@/components/AvatarPreview';
 import { DEFAULT_HAIR_ID, DEFAULT_SKIN_ID } from '@/lib/avatars/parts';
 import type { AvatarCustomization } from '@/types/game';
+import { useTierLabel } from '@/hooks/useTierLabel';
 
 // Generic showcase character for the tier cards: default boy hair + PSG jersey.
 const TIER_SHOWCASE_AVATAR: AvatarCustomization = {
@@ -23,6 +24,7 @@ interface WelcomeTierRoadSectionProps {
 
 export function WelcomeTierRoadSection({ onStartClimbing }: WelcomeTierRoadSectionProps) {
   const { t } = useLocale();
+  const tierLabelOf = useTierLabel();
   return (
     <section className="py-12 md:py-20 overflow-hidden">
       <div className="max-w-6xl mx-auto px-6">
@@ -62,7 +64,7 @@ export function WelcomeTierRoadSection({ onStartClimbing }: WelcomeTierRoadSecti
                   <div className={`relative z-10 mb-2 ${isTop ? 'w-[78px] md:w-[96px]' : 'w-[62px] md:w-[76px]'}`}>
                     <Image
                       src={`/assets/ranks/${slug}_frame.png`}
-                      alt={band.tier}
+                      alt={tierLabelOf(band.tier)}
                       width={isTop ? 96 : 76}
                       height={isTop ? 130 : 103}
                       className="w-full h-auto object-contain"
@@ -79,7 +81,7 @@ export function WelcomeTierRoadSection({ onStartClimbing }: WelcomeTierRoadSecti
                   <div className={`text-center font-black text-[9px] md:text-[11px] uppercase tracking-wide leading-tight ${
                     isTop ? 'text-fuchsia-300' : visual?.color ?? 'text-white'
                   }`}>
-                    {band.tier}
+                    {tierLabelOf(band.tier)}
                   </div>
 
                   <div className="text-[9px] md:text-[10px] text-white/60 font-semibold text-center mt-0.5 whitespace-nowrap">

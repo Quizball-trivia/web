@@ -12,6 +12,36 @@ export interface CampaignQuizGuide {
 type GuideLocale = Extract<CampaignQuizLocale, 'en' | 'es'>;
 
 const GUIDES: Record<string, Partial<Record<GuideLocale, CampaignQuizGuide>>> = {
+  'guess-the-player': {
+    en: {
+      eyebrow: 'Guess the player quiz tips',
+      heading: 'How to guess a football player from the clues',
+      introduction:
+        'Treat every clue as a filter. Nationality narrows the field, the club sequence makes it smaller, and one unusual achievement often identifies the player.',
+      tips: [
+        'Start with nationality and position. Together they can remove most of the four choices before you use a club clue.',
+        'Read clubs in order. A return spell, loan or move between leagues is often more useful than the biggest club in the list.',
+        'Use trophies and records as confirmation. Distinctive achievements are strong clues, but check that they fit the full career.',
+        'Replay with a fresh set. Repetition helps you connect players to career routes instead of memorising one answer.',
+      ],
+      practiceSlug: 'career-path',
+      practiceLabel: 'Practise with the Football Career Path quiz',
+    },
+    es: {
+      eyebrow: 'Consejos para Adivina el jugador',
+      heading: 'Cómo adivinar el futbolista a partir de las pistas',
+      introduction:
+        'Usa cada pista como un filtro. La nacionalidad reduce las opciones, la secuencia de clubes las acota todavía más y un logro poco habitual suele revelar al jugador.',
+      tips: [
+        'Empieza por la nacionalidad y la posición. Juntas pueden descartar casi todas las opciones antes de mirar los clubes.',
+        'Lee los clubes en orden. Una cesión, una segunda etapa o un cambio de liga suele ser más útil que el club más famoso.',
+        'Usa títulos y récords para confirmar. Los logros especiales son buenas pistas, pero deben encajar con toda la trayectoria.',
+        'Vuelve a jugar con un grupo nuevo. La repetición ayuda a relacionar futbolistas y carreras sin memorizar una sola respuesta.',
+      ],
+      practiceSlug: 'career-path',
+      practiceLabel: 'Practica con el quiz de trayectorias de futbolistas',
+    },
+  },
   'career-path': {
     en: {
       eyebrow: 'Career path quiz tips',

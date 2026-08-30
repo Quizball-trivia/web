@@ -1,6 +1,7 @@
 import { cache } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { headers } from 'next/headers';
 import { ArrowRight, Swords } from 'lucide-react';
 import { AppShellPageChrome } from '@/components/layout/app-shell/AppShellPageChrome';
 import { CAMPAIGN_QUIZ_CONTENT } from './campaignQuiz.content';
@@ -11,6 +12,8 @@ import { CampaignTrackedLink } from './CampaignTrackedLink';
 import { CampaignSignupLink } from './CampaignSignupLink';
 import { campaignQuizPath, type CampaignQuizLocale } from './campaignQuiz.routes';
 import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
+import { buildCampaignQuizHubJsonLd, serializeCampaignHubJsonLd } from './campaignQuiz.hub-seo';
+import { SITE_URL } from '@/lib/seo/site';
 
 const POPULAR_QUIZ_SLUGS = {
   en: ['club-badges', 'career-path', 'everton', 'liverpool'],
@@ -24,7 +27,7 @@ const HUB_COPY = {
     title: 'Football Quiz — Play Free Football Quizzes & Trivia',
     intro: 'Pick a quiz, answer verified football questions and get your score instantly. Every solo quiz is free to start and needs no account.',
     popularHeading: 'Popular football quizzes in the UK',
-    popularBody: 'Start with club badges, career paths, Everton and Liverpool — the quizzes UK football fans engage with most.',
+    popularBody: 'Start with useful football quiz questions on club badges, career paths, Everton and Liverpool — the quizzes UK football fans engage with most.',
     playFree: 'Play free', verifiedHeading: 'Football trivia, checked properly',
     verifiedBody: 'QuizBall’s public quizzes use verified questions covering clubs, competitions, players and football history.',
     methodologyLink: 'How QuizBall checks every question',
@@ -47,7 +50,7 @@ const HUB_COPY = {
     title: 'Quiz de Fútbol — Preguntas y Trivia Gratis',
     intro: 'Elige un quiz, responde preguntas de fútbol verificadas y recibe tu puntuación al instante. Todos los quizzes individuales son gratis y no necesitan cuenta.',
     popularHeading: 'Quizzes de fútbol populares',
-    popularBody: 'Empieza con jugadores, escudos, Real Madrid y Barcelona: retos pensados para aficionados de España y Latinoamérica.',
+    popularBody: 'Empieza con preguntas de fútbol para adivinar el futbolista, reconocer escudos y poner a prueba cuánto sabes del Real Madrid y el Barcelona.',
     playFree: 'Jugar gratis', verifiedHeading: 'Trivia de fútbol con datos verificados',
     verifiedBody: 'Los quizzes públicos de QuizBall incluyen preguntas verificadas sobre clubes, competiciones, futbolistas y momentos históricos.',
     methodologyLink: 'Cómo revisa QuizBall cada pregunta',
@@ -106,9 +109,20 @@ export async function CampaignQuizHub({ locale }: { locale: CampaignQuizLocale }
       ),
     }))
     .filter((group) => group.pages.length > 0);
+  const headerList = await headers();
+  const nonce = headerList.get('x-nonce') ?? undefined;
+  const hubUrl = `${SITE_URL}${locale === 'es' ? '/es/quiz-de-futbol' : `/${locale}/football-quiz`}`;
+  const jsonLd = buildCampaignQuizHubJsonLd({
+    locale,
+    url: hubUrl,
+    title: copy.title,
+    description: copy.intro,
+    pages,
+  });
 
   return (
     <div className="relative min-h-screen bg-surface-page-alt font-poppins text-white">
+      <script nonce={nonce} type="application/ld+json" suppressHydrationWarning dangerouslySetInnerHTML={{ __html: serializeCampaignHubJsonLd(jsonLd) }} />
       <CampaignQuizHubPageView locale={locale} />
       <AppShellPageChrome />
       <header className="relative z-10 bg-surface-page-alt/80 backdrop-blur-md">

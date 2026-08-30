@@ -39,3 +39,14 @@ describe('football quiz hub metadata', () => {
     });
   });
 });
+
+describe('Spanish football quiz hub metadata', () => {
+  it('uses the branded large preview for social and search surfaces', async () => {
+    const metadata = await generateSpanishMetadata({ params: Promise.resolve({ locale: 'es' }) });
+
+    expect(metadata.openGraph?.images).toEqual([
+      expect.objectContaining({ width: 1200, height: 630 }),
+    ]);
+    expect(metadata.twitter).toMatchObject({ card: 'summary_large_image' });
+  });
+});

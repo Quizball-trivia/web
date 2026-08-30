@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound, permanentRedirect } from 'next/navigation';
+import { headers } from 'next/headers';
 import { ArrowRight, Swords } from 'lucide-react';
 import { AppShellPageChrome } from '@/components/layout/app-shell/AppShellPageChrome';
 import {
@@ -20,6 +21,7 @@ import {
   SITE_OG_IMAGE_PATH,
   SITE_URL,
 } from '@/lib/seo/site';
+import { buildCampaignQuizHubJsonLd, serializeCampaignHubJsonLd } from '@/features/campaign-quiz/campaignQuiz.hub-seo';
 
 const TITLE = 'Football Quiz — Play Free Football Quizzes & Trivia | QuizBall';
 const DESCRIPTION = 'Play free football quizzes on clubs, players, badges, career paths and Premier League history. Instant scores, no sign-up needed.';
@@ -33,7 +35,7 @@ const HUB_COPY = {
     h1: 'Football Quiz — Play Free Football Quizzes & Trivia',
     lede: 'Pick a quiz, answer verified football questions and get your score instantly. Every solo quiz is free to start and needs no account.',
     popularHeading: 'Popular football quizzes in the UK',
-    popularBody: 'Start with the quizzes UK football fans are playing most: club badges, career paths, Everton and Liverpool.',
+    popularBody: 'Start with useful football quiz questions on club badges, career paths, Everton and Liverpool — the quizzes UK football fans are playing most.',
     groups: {
       team: 'Club quizzes',
       league: 'League quizzes',
@@ -199,9 +201,20 @@ export default async function FootballQuizHubPage({ params }: { params: Promise<
       ),
     }))
     .filter((group) => group.pages.length > 0);
+  const headerList = await headers();
+  const nonce = headerList.get('x-nonce') ?? undefined;
+  const hubUrl = `${SITE_URL}/${locale}/football-quiz`;
+  const jsonLd = buildCampaignQuizHubJsonLd({
+    locale,
+    url: hubUrl,
+    title: locale === 'ka' ? KA_TITLE : TITLE,
+    description: locale === 'ka' ? KA_DESCRIPTION : DESCRIPTION,
+    pages,
+  });
 
   return (
     <div className="relative min-h-screen bg-surface-page-alt font-poppins text-white">
+      <script nonce={nonce} type="application/ld+json" suppressHydrationWarning dangerouslySetInnerHTML={{ __html: serializeCampaignHubJsonLd(jsonLd) }} />
       <CampaignQuizHubPageView locale={locale} />
       <AppShellPageChrome />
       <header className="relative z-10 bg-surface-page-alt/80 backdrop-blur-md">
