@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { Check, ChevronDown } from "lucide-react";
 import {
   DropdownMenu,
@@ -43,6 +43,8 @@ function swapLocale(pathname: string, target: Locale): string {
 
 export function LanguageSwitcher({ locale, className, locales = LOCALE_CODES }: LanguageSwitcherProps) {
   const pathname = usePathname() ?? `/${locale}`;
+  const searchParams = useSearchParams();
+  const queryString = searchParams.toString();
   const firstSegment = pathname.split("/").filter(Boolean)[0];
   const activeLocale: Locale = isLocale(firstSegment) ? firstSegment : locale;
   const activeOption = OPTIONS_BY_CODE[activeLocale];
@@ -84,10 +86,12 @@ export function LanguageSwitcher({ locale, className, locales = LOCALE_CODES }: 
         {locales.map((code) => {
           const option = OPTIONS_BY_CODE[code];
           const active = code === activeLocale;
+          const localePath = swapLocale(pathname, code);
+          const href = queryString ? `${localePath}?${queryString}` : localePath;
           return (
             <DropdownMenuItem key={code} asChild className="p-0 focus:bg-transparent">
               <Link
-                href={swapLocale(pathname, code)}
+                href={href}
                 hrefLang={code}
                 lang={code}
                 aria-current={active ? "page" : undefined}
