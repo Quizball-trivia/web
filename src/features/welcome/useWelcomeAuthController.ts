@@ -333,10 +333,10 @@ export function useWelcomeAuthController() {
         return;
       }
 
+      trackAuthStarted('email', authMode === 'signup' ? 'signup' : 'signin');
       setAuthSubmitting(true);
       try {
         if (authMode === 'signup') {
-          trackAuthStarted('email', 'signup');
           const redirectTo = getAuthRedirectUrl('/auth/callback');
           const result = await register({
             email: authEmail,

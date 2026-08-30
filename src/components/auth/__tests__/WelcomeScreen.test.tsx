@@ -547,6 +547,7 @@ describe('WelcomeScreen — email signin / signup', () => {
     const submit = screen.getByText(/welcome\.signInWithEmail/);
     fireEvent.click(submit);
     await waitFor(() => expect(loginMock).toHaveBeenCalledWith('user@example.com', 'secret'));
+    expect(trackAuthStartedMock).toHaveBeenCalledWith('email', 'signin');
     expect(trackLoginCompletedMock).toHaveBeenCalledWith('email');
     await waitFor(() => expect(bootstrapMock).toHaveBeenCalledWith({ force: true }));
   });
