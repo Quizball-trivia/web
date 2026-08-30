@@ -276,6 +276,16 @@ export function splitHeading(heading: string): { heroLead: string; heroHighlight
   };
 }
 
+export function campaignMetadataTitle(
+  page: Pick<CampaignQuizPage, 'breadcrumb_label' | 'seo_title'>,
+  locale: 'en' | 'ka' | 'es',
+): string {
+  if (locale === 'es') {
+    return `${page.breadcrumb_label} — Juega gratis | QuizBall`;
+  }
+  return page.seo_title;
+}
+
 export function getCampaignQuizContent(
   slug: string,
   page?: CampaignQuizPage | null,
@@ -292,7 +302,7 @@ export function getCampaignQuizContent(
   return {
     slug,
     title: page.h1,
-    metadataTitle: page.seo_title,
+    metadataTitle: campaignMetadataTitle(page, locale),
     description: page.meta_description,
     breadcrumbLabel: page.breadcrumb_label,
     heroLead: heading.heroLead,
