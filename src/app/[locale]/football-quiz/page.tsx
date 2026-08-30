@@ -43,6 +43,7 @@ const HUB_COPY = {
     playFree: 'Play free',
     checkedHeading: 'Football trivia, checked properly',
     checkedBody: 'QuizBall’s public quizzes use verified questions covering clubs, competitions, players and the moments supporters still argue about. Your result appears as soon as the final answer is in.',
+    methodologyLink: 'How QuizBall checks every question',
     rankedHeading: 'Take your score into ranked duels',
     rankedBody: 'Solo quizzes are the warm-up. Sign up free when you are ready to face real fans, turn correct answers into possession and climb the QuizBall leaderboard.',
   },
@@ -62,6 +63,7 @@ const HUB_COPY = {
     playFree: 'ითამაშე უფასოდ',
     checkedHeading: 'სწორად გადამოწმებული ფეხბურთის ტრივია',
     checkedBody: 'QuizBall-ის საჯარო ქვიზები მოიცავს გადამოწმებულ კითხვებს კლუბებზე, ტურნირებზე, მოთამაშეებსა და დასამახსოვრებელ მომენტებზე. საბოლოო პასუხის შემდეგ შედეგს მყისიერად მიიღებ.',
+    methodologyLink: 'როგორ ამოწმებს QuizBall კითხვებს',
     rankedHeading: 'გადაიტანე შენი შედეგი რეიტინგულ დუელებში',
     rankedBody: 'სოლო ქვიზები გახურებაა. დარეგისტრირდი უფასოდ, დაუპირისპირდი ნამდვილ გულშემატკივრებს და აიწიე QuizBall-ის რეიტინგში.',
   },
@@ -76,6 +78,7 @@ const HUB_COPY = {
   playFree: string;
   checkedHeading: string;
   checkedBody: string;
+  methodologyLink: string;
   rankedHeading: string;
   rankedBody: string;
 }>;
@@ -261,7 +264,14 @@ export default async function FootballQuizHubPage({ params }: { params: Promise<
         </section>
 
         <section className="mx-auto grid max-w-7xl gap-10 px-4 pb-20 sm:px-6 lg:grid-cols-2 lg:px-8">
-          <div><h2 className="text-2xl font-semibold">{copy.checkedHeading}</h2><p className="mt-4 font-medium leading-7 text-white/65">{copy.checkedBody}</p></div>
+          <div>
+            <h2 className="text-2xl font-semibold">{copy.checkedHeading}</h2>
+            <p className="mt-4 font-medium leading-7 text-white/65">{copy.checkedBody}</p>
+            <Link href={`/${locale}/editorial-methodology`} className="mt-4 inline-flex items-center gap-2 font-semibold text-brand-cyan hover:underline">
+              {copy.methodologyLink}
+              <ArrowRight className="size-4" aria-hidden />
+            </Link>
+          </div>
           <div><h2 className="flex items-center gap-3 text-2xl font-semibold"><Swords className="size-6 text-brand-yellow" aria-hidden />{copy.rankedHeading}</h2><p className="mt-4 font-medium leading-7 text-white/65">{copy.rankedBody}</p></div>
         </section>
       </main>

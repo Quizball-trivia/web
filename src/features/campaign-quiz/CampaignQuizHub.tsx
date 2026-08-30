@@ -27,6 +27,7 @@ const HUB_COPY = {
     popularBody: 'Start with club badges, career paths, Everton and Liverpool — the quizzes UK football fans engage with most.',
     playFree: 'Play free', verifiedHeading: 'Football trivia, checked properly',
     verifiedBody: 'QuizBall’s public quizzes use verified questions covering clubs, competitions, players and football history.',
+    methodologyLink: 'How QuizBall checks every question',
     rankedHeading: 'Take your score into ranked duels',
     rankedBody: 'Solo quizzes are the warm-up. Sign up free to face real fans and climb the QuizBall leaderboard.',
     groups: { team: 'Club quizzes', league: 'League quizzes', quiz_type: 'Football challenges', article: 'Football trivia' },
@@ -37,6 +38,7 @@ const HUB_COPY = {
     popularHeading: 'პოპულარული ფეხბურთის ქვიზები', popularBody: 'დაიწყე ყველაზე პოპულარული ქვიზებით.',
     playFree: 'ითამაშე უფასოდ', verifiedHeading: 'გადამოწმებული ფეხბურთის ტრივია',
     verifiedBody: 'QuizBall-ის საჯარო ქვიზები მოიცავს გადამოწმებულ კითხვებს კლუბებზე, ტურნირებსა და მოთამაშეებზე.',
+    methodologyLink: 'როგორ ამოწმებს QuizBall კითხვებს',
     rankedHeading: 'გადადი რეიტინგულ დუელებში', rankedBody: 'დარეგისტრირდი უფასოდ და დაუპირისპირდი ნამდვილ გულშემატკივრებს.',
     groups: { team: 'კლუბების ქვიზები', league: 'ლიგების ქვიზები', quiz_type: 'ფეხბურთის გამოწვევები', article: 'ფეხბურთის ტრივია' },
   },
@@ -48,6 +50,7 @@ const HUB_COPY = {
     popularBody: 'Empieza con jugadores, escudos, Real Madrid y Barcelona: retos pensados para aficionados de España y Latinoamérica.',
     playFree: 'Jugar gratis', verifiedHeading: 'Trivia de fútbol con datos verificados',
     verifiedBody: 'Los quizzes públicos de QuizBall incluyen preguntas verificadas sobre clubes, competiciones, futbolistas y momentos históricos.',
+    methodologyLink: 'Cómo revisa QuizBall cada pregunta',
     rankedHeading: 'Lleva tu puntuación a los duelos clasificatorios',
     rankedBody: 'Los quizzes individuales son el calentamiento. Regístrate gratis para enfrentarte a aficionados reales y subir en la clasificación.',
     groups: { team: 'Quizzes de clubes', league: 'Quizzes de ligas', quiz_type: 'Retos de fútbol', article: 'Trivia de fútbol' },
@@ -55,6 +58,7 @@ const HUB_COPY = {
 } as const satisfies Record<CampaignQuizLocale, {
   ranked: string; eyebrow: string; title: string; intro: string; popularHeading: string;
   popularBody: string; playFree: string; verifiedHeading: string; verifiedBody: string;
+  methodologyLink: string;
   rankedHeading: string; rankedBody: string; groups: Record<CampaignQuizHubPage['category'], string>;
 }>;
 
@@ -133,7 +137,14 @@ export async function CampaignQuizHub({ locale }: { locale: CampaignQuizLocale }
           {groups.map((group) => <div key={group.category}><h2 className="text-2xl font-semibold sm:text-3xl">{copy.groups[group.category]}</h2><div className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{group.pages.map((page) => <QuizCard key={page.slug} page={page} locale={locale} label={copy.playFree} />)}</div></div>)}
         </section>
         <section className="mx-auto grid max-w-7xl gap-10 px-4 pb-20 sm:px-6 lg:grid-cols-2 lg:px-8">
-          <div><h2 className="text-2xl font-semibold">{copy.verifiedHeading}</h2><p className="mt-4 font-medium leading-7 text-white/65">{copy.verifiedBody}</p></div>
+          <div>
+            <h2 className="text-2xl font-semibold">{copy.verifiedHeading}</h2>
+            <p className="mt-4 font-medium leading-7 text-white/65">{copy.verifiedBody}</p>
+            <Link href={`/${locale}/editorial-methodology`} className="mt-4 inline-flex items-center gap-2 font-semibold text-brand-cyan hover:underline">
+              {copy.methodologyLink}
+              <ArrowRight className="size-4" aria-hidden />
+            </Link>
+          </div>
           <div><h2 className="flex items-center gap-3 text-2xl font-semibold"><Swords className="size-6 text-brand-yellow" aria-hidden />{copy.rankedHeading}</h2><p className="mt-4 font-medium leading-7 text-white/65">{copy.rankedBody}</p></div>
         </section>
       </main>

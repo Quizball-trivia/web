@@ -21,15 +21,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // routes 308-redirect to /en/... so they don't belong in the index.
   // App/product routes (/play, /leaderboard, /store, /game, /auth, etc.)
   // are client-only and intentionally excluded.
-  const routes: Array<[string, MetadataRoute.Sitemap[number]["changeFrequency"], number]> = [
+  const editorialContentUpdated = new Date("2026-08-30T00:00:00.000Z");
+  const routes: Array<[
+    string,
+    MetadataRoute.Sitemap[number]["changeFrequency"],
+    number,
+    Date?,
+  ]> = [
     ["", "daily", 1],
-    ["/about", "monthly", 0.6],
+    ["/about", "monthly", 0.7, editorialContentUpdated],
+    ["/editorial-methodology", "monthly", 0.6, editorialContentUpdated],
     ["/terms", "yearly", 0.3],
     ["/privacy", "yearly", 0.3],
   ];
 
   const localizedEntries = LOCALES.flatMap((locale) =>
-    routes.map(([suffix, freq, prio]) => entry(`/${locale}${suffix}`, freq, prio)),
+    routes.map(([suffix, freq, prio, lastModified]) =>
+      entry(`/${locale}${suffix}`, freq, prio, lastModified)),
   );
 
   const validLastModified = (value: string): Date | undefined => {
