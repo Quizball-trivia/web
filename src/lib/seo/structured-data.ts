@@ -99,7 +99,7 @@ export function buildSiteStructuredData() {
 
 interface EditorialPageStructuredDataInput {
   locale: Locale;
-  path: "/about" | "/editorial-methodology";
+  path: "/about" | "/editorial-methodology" | "/press";
   title: string;
   description: string;
   pageType: "AboutPage" | "WebPage";
@@ -126,5 +126,73 @@ export function buildEditorialPageStructuredData({
     isPartOf: { "@id": SITE_SCHEMA_IDS.website },
     about: { "@id": SITE_SCHEMA_IDS.organization },
     mainEntity: { "@id": SITE_SCHEMA_IDS.organization },
+  };
+}
+
+interface ResearchReportStructuredDataInput {
+  locale: "en" | "es";
+  title: string;
+  description: string;
+}
+
+export function buildResearchReportStructuredData({
+  locale,
+  title,
+  description,
+}: ResearchReportStructuredDataInput) {
+  const pageUrl = `${SITE_URL}/${locale}/football-knowledge-index`;
+  const articleId = `${pageUrl}#article`;
+  const datasetId = `${pageUrl}#dataset`;
+
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        "@id": `${pageUrl}#webpage`,
+        url: pageUrl,
+        name: title,
+        description,
+        inLanguage: LANGUAGE_TAG[locale],
+        datePublished: "2026-08-30",
+        dateModified: "2026-08-30",
+        isPartOf: { "@id": SITE_SCHEMA_IDS.website },
+        about: { "@id": SITE_SCHEMA_IDS.game },
+        mainEntity: { "@id": articleId },
+      },
+      {
+        "@type": "Article",
+        "@id": articleId,
+        headline: title,
+        description,
+        url: pageUrl,
+        inLanguage: LANGUAGE_TAG[locale],
+        datePublished: "2026-08-30",
+        dateModified: "2026-08-30",
+        image: `${SITE_URL}${SITE_OG_IMAGE_PATH}`,
+        author: { "@id": SITE_SCHEMA_IDS.organization },
+        publisher: { "@id": SITE_SCHEMA_IDS.organization },
+        about: { "@id": datasetId },
+        mainEntityOfPage: { "@id": `${pageUrl}#webpage` },
+      },
+      {
+        "@type": "Dataset",
+        "@id": datasetId,
+        name: "QuizBall Football Knowledge Index 2026 aggregate dataset",
+        description:
+          "Anonymized aggregate performance from QuizBall public football quizzes between 1 June and 30 August 2026.",
+        url: pageUrl,
+        inLanguage: ["en-GB", "es"],
+        temporalCoverage: "2026-06-01/2026-08-30",
+        creator: { "@id": SITE_SCHEMA_IDS.organization },
+        publisher: { "@id": SITE_SCHEMA_IDS.organization },
+        license: `${SITE_URL}/${locale}/terms`,
+        distribution: {
+          "@type": "DataDownload",
+          encodingFormat: "text/csv",
+          contentUrl: `${SITE_URL}/data/quizball-football-knowledge-index-2026.csv`,
+        },
+      },
+    ],
   };
 }

@@ -22,6 +22,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // App/product routes (/play, /leaderboard, /store, /game, /auth, etc.)
   // are client-only and intentionally excluded.
   const editorialContentUpdated = new Date("2026-08-30T00:00:00.000Z");
+  const researchReportPublished = new Date("2026-08-30T00:00:00.000Z");
   const routes: Array<[
     string,
     MetadataRoute.Sitemap[number]["changeFrequency"],
@@ -38,6 +39,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const localizedEntries = LOCALES.flatMap((locale) =>
     routes.map(([suffix, freq, prio, lastModified]) =>
       entry(`/${locale}${suffix}`, freq, prio, lastModified)),
+  );
+
+  const researchReportEntries = (["en", "es"] as const).map((locale) =>
+    entry(
+      `/${locale}/football-knowledge-index`,
+      "monthly",
+      0.7,
+      researchReportPublished,
+    ),
+  );
+
+  const pressResourceEntries = (["en", "es"] as const).map((locale) =>
+    entry(`/${locale}/press`, "monthly", 0.6, editorialContentUpdated),
   );
 
   const validLastModified = (value: string): Date | undefined => {
@@ -103,5 +117,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }),
   ];
 
-  return [...localizedEntries, ...campaignEntries];
+  return [
+    ...localizedEntries,
+    ...researchReportEntries,
+    ...pressResourceEntries,
+    ...campaignEntries,
+  ];
 }
