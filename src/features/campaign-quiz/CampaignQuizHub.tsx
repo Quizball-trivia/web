@@ -21,36 +21,16 @@ const POPULAR_QUIZ_SLUGS = {
   es: ['guess-the-player', 'club-badges', 'real-madrid', 'barcelona'],
 } as const satisfies Record<CampaignQuizLocale, readonly string[]>;
 
-const PRIORITY_GUIDES = {
-  en: [
-    { slug: 'guess-the-player', title: 'Guess the player', body: 'Read nationality, club and achievement clues, then identify the footballer from four options.' },
-    { slug: 'club-badges', title: 'Football badges quiz', body: 'Match crests, symbols and city details to the correct football club.' },
-    { slug: 'career-path', title: 'Career path challenge', body: 'Follow a verified transfer route from academy to final club and name the player.' },
-  ],
-  ka: [
-    { slug: 'guess-the-player', title: 'გამოიცანი ფეხბურთელი', body: 'წაიკითხე მინიშნებები ეროვნებაზე, კლუბებსა და მიღწევებზე და ამოიცანი მოთამაშე.' },
-    { slug: 'club-badges', title: 'კლუბების ემბლემები', body: 'დააკავშირე ემბლემის სიმბოლოები და ქალაქის დეტალები სწორ კლუბთან.' },
-    { slug: 'career-path', title: 'კარიერის გზა', body: 'მიჰყევი გადამოწმებულ სატრანსფერო გზას და გამოიცანი ფეხბურთელი.' },
-  ],
-  es: [
-    { slug: 'guess-the-player', title: 'Adivina el futbolista', body: 'Lee pistas sobre nacionalidad, clubes y logros para identificar al jugador entre cuatro opciones.' },
-    { slug: 'club-badges', title: 'Quiz de escudos de fútbol', body: 'Relaciona símbolos, colores y detalles de la ciudad con el club correcto.' },
-    { slug: 'career-path', title: 'Trayectorias de futbolistas', body: 'Sigue una ruta de fichajes verificada, desde la cantera hasta el último club, y nombra al jugador.' },
-  ],
-} as const satisfies Record<CampaignQuizLocale, readonly { slug: string; title: string; body: string }[]>;
-
 const HUB_COPY = {
   en: {
     ranked: 'Play Ranked', eyebrow: 'Free football trivia',
     title: 'Football Quiz — Play Free Football Quizzes & Trivia',
     intro: 'Pick a quiz, answer verified football questions and get your score instantly. Every solo quiz is free to start and needs no account.',
     popularHeading: 'Popular football quizzes in the UK',
-    popularBody: 'Start with club badges, career paths, Everton and Liverpool — the quizzes UK football fans engage with most.',
+    popularBody: 'Start with useful football quiz questions on club badges, career paths, Everton and Liverpool — the quizzes UK football fans engage with most.',
     playFree: 'Play free', verifiedHeading: 'Football trivia, checked properly',
     verifiedBody: 'QuizBall’s public quizzes use verified questions covering clubs, competitions, players and football history.',
     methodologyLink: 'How QuizBall checks every question',
-    findHeading: 'Choose a football quiz challenge',
-    findBody: 'Practise with useful football quiz questions by clue type, then move between related quizzes without losing your place.',
     rankedHeading: 'Take your score into ranked duels',
     rankedBody: 'Solo quizzes are the warm-up. Sign up free to face real fans and climb the QuizBall leaderboard.',
     groups: { team: 'Club quizzes', league: 'League quizzes', quiz_type: 'Football challenges', article: 'Football trivia' },
@@ -62,8 +42,6 @@ const HUB_COPY = {
     playFree: 'ითამაშე უფასოდ', verifiedHeading: 'გადამოწმებული ფეხბურთის ტრივია',
     verifiedBody: 'QuizBall-ის საჯარო ქვიზები მოიცავს გადამოწმებულ კითხვებს კლუბებზე, ტურნირებსა და მოთამაშეებზე.',
     methodologyLink: 'როგორ ამოწმებს QuizBall კითხვებს',
-    findHeading: 'აირჩიე საფეხბურთო გამოწვევა',
-    findBody: 'შეამოწმე ცოდნა მოთამაშეების, ემბლემებისა და კარიერის გზების მიხედვით და მარტივად გადადი მსგავს ქვიზებზე.',
     rankedHeading: 'გადადი რეიტინგულ დუელებში', rankedBody: 'დარეგისტრირდი უფასოდ და დაუპირისპირდი ნამდვილ გულშემატკივრებს.',
     groups: { team: 'კლუბების ქვიზები', league: 'ლიგების ქვიზები', quiz_type: 'ფეხბურთის გამოწვევები', article: 'ფეხბურთის ტრივია' },
   },
@@ -72,12 +50,10 @@ const HUB_COPY = {
     title: 'Quiz de Fútbol — Preguntas y Trivia Gratis',
     intro: 'Elige un quiz, responde preguntas de fútbol verificadas y recibe tu puntuación al instante. Todos los quizzes individuales son gratis y no necesitan cuenta.',
     popularHeading: 'Quizzes de fútbol populares',
-    popularBody: 'Empieza con jugadores, escudos, Real Madrid y Barcelona: retos pensados para aficionados de España y Latinoamérica.',
+    popularBody: 'Empieza con preguntas de fútbol para adivinar el futbolista, reconocer escudos y poner a prueba cuánto sabes del Real Madrid y el Barcelona.',
     playFree: 'Jugar gratis', verifiedHeading: 'Trivia de fútbol con datos verificados',
     verifiedBody: 'Los quizzes públicos de QuizBall incluyen preguntas verificadas sobre clubes, competiciones, futbolistas y momentos históricos.',
     methodologyLink: 'Cómo revisa QuizBall cada pregunta',
-    findHeading: 'Elige tu reto de fútbol',
-    findBody: 'Practica con preguntas de fútbol organizadas por tipo de pista y pasa fácilmente a otros quizzes relacionados.',
     rankedHeading: 'Lleva tu puntuación a los duelos clasificatorios',
     rankedBody: 'Los quizzes individuales son el calentamiento. Regístrate gratis para enfrentarte a aficionados reales y subir en la clasificación.',
     groups: { team: 'Quizzes de clubes', league: 'Quizzes de ligas', quiz_type: 'Retos de fútbol', article: 'Trivia de fútbol' },
@@ -86,7 +62,6 @@ const HUB_COPY = {
   ranked: string; eyebrow: string; title: string; intro: string; popularHeading: string;
   popularBody: string; playFree: string; verifiedHeading: string; verifiedBody: string;
   methodologyLink: string;
-  findHeading: string; findBody: string;
   rankedHeading: string; rankedBody: string; groups: Record<CampaignQuizHubPage['category'], string>;
 }>;
 
@@ -134,8 +109,6 @@ export async function CampaignQuizHub({ locale }: { locale: CampaignQuizLocale }
       ),
     }))
     .filter((group) => group.pages.length > 0);
-  const priorityGuides = PRIORITY_GUIDES[locale].filter((guide) =>
-    pages.some((page) => page.slug === guide.slug));
   const headerList = await headers();
   const nonce = headerList.get('x-nonce') ?? undefined;
   const hubUrl = `${SITE_URL}${locale === 'es' ? '/es/quiz-de-futbol' : `/${locale}/football-quiz`}`;
@@ -172,21 +145,6 @@ export async function CampaignQuizHub({ locale }: { locale: CampaignQuizLocale }
             <h2 className="text-2xl font-semibold sm:text-3xl">{copy.popularHeading}</h2>
             <p className="mt-3 max-w-2xl font-medium leading-7 text-white/65">{copy.popularBody}</p>
             <div className="mt-7 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{popularPages.map((page, index) => <QuizCard key={page.slug} page={page} locale={locale} label={copy.playFree} preload={index === 0} />)}</div>
-          </section>
-        ) : null}
-        {priorityGuides.length ? (
-          <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 sm:pb-20 lg:px-8" aria-labelledby="football-quiz-guide-heading">
-            <h2 id="football-quiz-guide-heading" className="text-2xl font-semibold sm:text-3xl">{copy.findHeading}</h2>
-            <p className="mt-3 max-w-3xl font-medium leading-7 text-white/65">{copy.findBody}</p>
-            <div className="mt-7 grid gap-4 md:grid-cols-3">
-              {priorityGuides.map((guide) => (
-                <Link key={guide.slug} href={campaignQuizPath(guide.slug, locale)} className="group rounded-2xl border border-white/10 bg-white/[0.035] p-5 transition-colors hover:border-brand-cyan/60">
-                  <h3 className="font-semibold text-white group-hover:text-brand-yellow">{guide.title}</h3>
-                  <p className="mt-2 text-sm font-medium leading-6 text-white/55">{guide.body}</p>
-                  <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-brand-cyan">{copy.playFree}<ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden /></span>
-                </Link>
-              ))}
-            </div>
           </section>
         ) : null}
         <section className="mx-auto max-w-7xl space-y-14 px-4 pb-16 sm:px-6 sm:pb-24 lg:px-8">
