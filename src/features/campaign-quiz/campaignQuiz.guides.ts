@@ -17,7 +17,7 @@ const GUIDES: Record<string, Partial<Record<GuideLocale, CampaignQuizGuide>>> = 
       eyebrow: 'Guess the player quiz tips',
       heading: 'How to guess a football player from the clues',
       introduction:
-        'Treat every clue as a filter. Nationality narrows the field, the club sequence makes it smaller, and one unusual achievement often identifies the player.',
+        'To guess the football player, treat every clue as a filter. Start with nationality, then use the club sequence. One unusual achievement can often confirm the answer.',
       tips: [
         'Start with nationality and position. Together they can remove most of the four choices before you use a club clue.',
         'Read clubs in order. A return spell, loan or move between leagues is often more useful than the biggest club in the list.',
@@ -74,7 +74,7 @@ const GUIDES: Record<string, Partial<Record<GuideLocale, CampaignQuizGuide>>> = 
   },
   'club-badges': {
     en: {
-      eyebrow: 'Club badge quiz tips',
+      eyebrow: 'Football badge quiz tips',
       heading: 'How to recognise a football club badge',
       introduction:
         'A crest is easier to remember when you connect its details to a place or story instead of memorising the whole image.',
