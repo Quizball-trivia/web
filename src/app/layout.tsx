@@ -19,6 +19,10 @@ import {
   IS_PRODUCTION_DEPLOYMENT,
 } from "@/lib/seo/site";
 import { explicitLocaleFromPathname, localeFromPathname } from "@/lib/i18n/locale";
+import {
+  buildSiteStructuredData,
+  serializeJsonLd,
+} from "@/lib/seo/structured-data";
 import "../styles/globals.css";
 
 export const metadata: Metadata = {
@@ -104,48 +108,6 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-const jsonLd = [
-  {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    name: SITE_NAME,
-    url: SITE_URL,
-    logo: `${SITE_URL}${SITE_ICON_PATH}`,
-    sameAs: [],
-  },
-  {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    name: SITE_NAME,
-    url: SITE_URL,
-    inLanguage: ["en", "ka", "es"],
-    potentialAction: {
-      "@type": "SearchAction",
-      target: `${SITE_URL}/social?q={search_term_string}`,
-      "query-input": "required name=search_term_string",
-    },
-  },
-  {
-    "@context": "https://schema.org",
-    "@type": "VideoGame",
-    name: SITE_NAME,
-    description: SITE_DESCRIPTION,
-    url: SITE_URL,
-    image: `${SITE_URL}${SITE_OG_IMAGE_PATH}`,
-    applicationCategory: "GameApplication",
-    genre: ["Trivia", "Sports", "Football", "Quiz", "Multiplayer"],
-    operatingSystem: "Web, iOS, Android",
-    inLanguage: ["en", "ka", "es"],
-    keywords: "football trivia, football quiz, soccer quiz, multiplayer football game",
-    offers: {
-      "@type": "Offer",
-      price: "0",
-      priceCurrency: "USD",
-      availability: "https://schema.org/InStock",
-    },
-  },
-];
-
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -166,7 +128,7 @@ export default async function RootLayout({
   // geo signal so first-time visitors in Georgia default to Georgian — without
   // overriding a saved choice, account preference, or explicit URL locale.
   const geoCountry = headerList.get("x-vercel-ip-country");
-  const isFootballQuizRoute = /^\/(en|ka)\/football-quiz(?:\/[^/]+)?\/?$/.test(pathname);
+  const isFootballQuizRoute = /^\/(?:(?:en|ka)\/football-quiz|es\/quiz-de-futbol)(?:\/[^/]+)?\/?$/.test(pathname);
 
   return (
     <html lang={locale} className="dark" suppressHydrationWarning>
@@ -180,7 +142,7 @@ export default async function RootLayout({
           nonce={cspNonce}
           type="application/ld+json"
           suppressHydrationWarning
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(buildSiteStructuredData()) }}
         />
         <RouteProviders
           isSeoRoute={isFootballQuizRoute}
