@@ -22,4 +22,14 @@ describe('campaign quiz guides', () => {
     const guide = getCampaignQuizGuide('guess-the-player', 'es');
     expect(`${guide?.heading} ${guide?.introduction}`.toLowerCase()).toContain('adivinar el futbolista');
   });
+
+  it('uses the natural English target phrases in visible guidance', () => {
+    const playerGuide = getCampaignQuizGuide('guess-the-player', 'en');
+    const badgeGuide = getCampaignQuizGuide('club-badges', 'en');
+
+    expect(`${playerGuide?.heading} ${playerGuide?.introduction}`.toLowerCase())
+      .toContain('guess the football player');
+    expect(`${badgeGuide?.eyebrow} ${badgeGuide?.heading}`.toLowerCase())
+      .toContain('football badge quiz');
+  });
 });
