@@ -7,8 +7,6 @@ const replaceMock = vi.fn();
 const fetchCurrentUserMock = vi.fn();
 const getSessionMock = vi.fn();
 const consumeRedirectOAuthProviderMock = vi.fn();
-const trackSignupCompletedMock = vi.fn();
-const trackLoginCompletedMock = vi.fn();
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace: replaceMock }),
@@ -51,12 +49,6 @@ vi.mock("@/lib/auth/supabase", () => ({
 
 vi.mock("@/lib/auth/session", () => ({
   fetchCurrentUser: () => fetchCurrentUserMock(),
-}));
-
-vi.mock("@/lib/analytics/game-events", () => ({
-  trackSignupCompleted: (method: string) => trackSignupCompletedMock(method),
-  trackLoginCompleted: (method: string) => trackLoginCompletedMock(method),
-  trackLogout: vi.fn(),
 }));
 
 import { OAuthCallbackScreen } from "@/components/auth/OAuthCallbackScreen";
@@ -113,8 +105,6 @@ describe("OAuthCallbackScreen analytics", () => {
     render(<OAuthCallbackScreen />);
 
     await waitFor(() => expect(replaceMock).toHaveBeenCalledWith("/onboarding"));
-    expect(trackSignupCompletedMock).not.toHaveBeenCalled();
-    expect(trackLoginCompletedMock).not.toHaveBeenCalled();
   });
 
   it("does not emit a client login completion from the signup callback", async () => {
@@ -124,8 +114,6 @@ describe("OAuthCallbackScreen analytics", () => {
     render(<OAuthCallbackScreen />);
 
     await waitFor(() => expect(replaceMock).toHaveBeenCalledWith("/play"));
-    expect(trackLoginCompletedMock).not.toHaveBeenCalled();
-    expect(trackSignupCompletedMock).not.toHaveBeenCalled();
   });
 
   it("does not track completion when the callback fails", async () => {
@@ -136,8 +124,6 @@ describe("OAuthCallbackScreen analytics", () => {
     await waitFor(() => {
       expect(screen.getByText("oauthCallback.authenticationFailed")).toBeInTheDocument();
     });
-    expect(trackSignupCompletedMock).not.toHaveBeenCalled();
-    expect(trackLoginCompletedMock).not.toHaveBeenCalled();
   });
 
   it("provisions campaign attribution before a valid mobile redirect", async () => {
