@@ -42,10 +42,8 @@ export function WelcomeNavbar() {
         )}
       </div>
 
-      {/* Centered switcher — mobile only. Nudged down so it clears the wide
-          "Powered by Betsson" logo on the left instead of overlapping it, and
-          scaled down a touch so it reads smaller on mobile than on desktop. */}
-      <div className="flex shrink-0 justify-center md:hidden translate-y-10 scale-90 origin-top">
+      {/* The compact dropdown stays centred without growing as locales are added. */}
+      <div className="flex shrink-0 justify-center md:hidden">
         <LanguageSwitcher locale={locale} />
       </div>
 
