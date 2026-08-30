@@ -78,7 +78,12 @@ Spain or Mexico has a defensible sample.
 
 - native review of the Spanish copy;
 - Spain and Mexico reported separately;
-- at least 100 relevant starts per market before comparative claims;
+- comparative claims require, per market and within the same reporting window,
+  at least 100 relevant quiz starts, 800 eligible answered questions and 40
+  completed quizzes;
+- define the comparison denominator before analysis as correct eligible answers
+  divided by all eligible answers for the stated clue type, excluding skipped
+  and unserved questions, and publish the numerator and denominator;
 - local player/club examples and source verification;
 - no claim that Spanish speakers are one homogeneous audience.
 
@@ -89,7 +94,7 @@ Spain or Mexico has a defensible sample.
 > tipos de pistas —escudos, trayectorias, nacionalidad o logros— reconocen mejor
 > los aficionados de [ESPAÑA/MÉXICO].
 >
-> El dato que podría encajar con vuestra audiencia es [INSERTAR HALLAZGO,
+> El dato que podría encajar con su audiencia es [INSERTAR HALLAZGO,
 > PERIODO Y MUESTRA VERIFICADOS]. Podemos compartir el CSV agregado, la
 > metodología, las limitaciones y un corte específico para vuestro mercado. La
 > propuesta es el hallazgo editorial, no una petición de publicar un enlace.
@@ -106,4 +111,3 @@ Before any approach, the owner must approve:
 3. every number and its reporting window;
 4. destination asset and tracking parameters;
 5. whether one follow-up is allowed.
-
