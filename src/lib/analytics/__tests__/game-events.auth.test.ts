@@ -15,18 +15,14 @@ vi.mock('@/features/campaign-quiz/campaignAttribution', () => ({
 
 import {
   trackSignupPageView,
-  trackSignupStarted,
+  trackAuthStarted,
   trackOnboardingCompleted,
   trackLoginCompleted,
   trackMatchStarted,
 } from '../game-events';
 
-// These tests pin the PROD-STYLE analytics shape restored by d3780cf
-// ("test: restore prod-style posthog behavior"): plain { method } payloads,
-// no in_app_browser enrichment, no persisted-method attribution. The richer
-// shape from the auth-migration branch (b55912e) was deliberately rolled
-// back; the previous version of this file still asserted it and failed ever
-// since.
+// These tests pin the canonical auth contract: one intent event with method +
+// mode, campaign properties when present, and backend-only account conversion.
 describe('auth analytics events', () => {
   beforeEach(() => {
     trackEventMock.mockClear();
@@ -35,12 +31,14 @@ describe('auth analytics events', () => {
     clearCampaignAttributionMock.mockClear();
   });
 
-  it('auth_started carries the method and dual-fires the legacy signup_started', () => {
-    trackSignupStarted('facebook');
+  it('auth_started carries method and mode without legacy duplicate events', () => {
+    trackAuthStarted('facebook', 'signup');
 
-    expect(trackEventMock).toHaveBeenCalledWith('auth_started', { method: 'facebook' });
-    // still dual-fires the legacy event during the dashboard transition
-    expect(trackEventMock).toHaveBeenCalledWith('signup_started', { method: 'facebook' });
+    expect(trackEventMock).toHaveBeenCalledTimes(1);
+    expect(trackEventMock).toHaveBeenCalledWith('auth_started', {
+      method: 'facebook',
+      auth_mode: 'signup',
+    });
   });
 
   it('tracks the campaign signup landing between CTA click and auth intent', () => {
@@ -68,10 +66,11 @@ describe('auth analytics events', () => {
       quiz_score: 11,
     });
 
-    trackSignupStarted('email');
+    trackAuthStarted('email', 'signup');
 
     expect(trackEventMock).toHaveBeenCalledWith('auth_started', {
       method: 'email',
+      auth_mode: 'signup',
       source: 'campaign_quiz',
       quiz_slug: 'liverpool',
       cta_placement: 'score',

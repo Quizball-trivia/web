@@ -199,17 +199,15 @@ vi.mock('@/lib/auth/google-identity', () => ({
 
 // Analytics — we assert event names + payloads.
 const trackLoginCompletedMock = vi.fn();
-const trackSignupCompletedMock = vi.fn();
 const trackSignupPageViewMock = vi.fn();
-const trackSignupStartedMock = vi.fn();
+const trackAuthStartedMock = vi.fn();
 const trackInAppBrowserBlockedMock = vi.fn();
 vi.mock('@/lib/analytics/game-events', () => ({
   trackInAppBrowserBlocked: (browser: string, isIOS: boolean, isAndroid: boolean) =>
     trackInAppBrowserBlockedMock(browser, isIOS, isAndroid),
   trackLoginCompleted: (method: string) => trackLoginCompletedMock(method),
-  trackSignupCompleted: (method: string) => trackSignupCompletedMock(method),
   trackSignupPageView: () => trackSignupPageViewMock(),
-  trackSignupStarted: (method: string) => trackSignupStartedMock(method),
+  trackAuthStarted: (method: string, mode: string) => trackAuthStartedMock(method, mode),
 }));
 
 // React Query hooks. Categories returns an empty list so the categories
@@ -340,9 +338,8 @@ beforeEach(() => {
   inAppBrowserMock.platform = 'other';
   postAuthRedirectMock.redirect = null;
   trackLoginCompletedMock.mockClear();
-  trackSignupCompletedMock.mockClear();
   trackSignupPageViewMock.mockClear();
-  trackSignupStartedMock.mockClear();
+  trackAuthStartedMock.mockClear();
   trackInAppBrowserBlockedMock.mockClear();
 });
 
@@ -367,6 +364,19 @@ describe('WelcomeScreen — landing chrome', () => {
     expect(dialog).toHaveTextContent('welcome.signupTitle');
     expect(screen.getByPlaceholderText('welcome.emailPlaceholder')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('welcome.confirmPasswordPlaceholder')).toBeInTheDocument();
+  });
+
+  it('tracks a manual signup-panel reach once per dialog open', async () => {
+    render(<WelcomeScreen />);
+    openLoginDialog();
+    openAuthOptions();
+
+    fireEvent.click(screen.getByText(/welcome\.signUpTab/));
+    await waitFor(() => expect(trackSignupPageViewMock).toHaveBeenCalledTimes(1));
+
+    fireEvent.click(screen.getByText(/welcome\.signInTab/));
+    fireEvent.click(screen.getByText(/welcome\.signUpTab/));
+    expect(trackSignupPageViewMock).toHaveBeenCalledTimes(1);
   });
 
   it('renders the hero with kickoff CTA and the brand logo', () => {
@@ -452,7 +462,7 @@ describe('WelcomeScreen — landing chrome', () => {
       expect(screen.getByTestId('modal-close')).toBeInTheDocument();
       expect(signInWithGoogleIdentityMock).not.toHaveBeenCalled();
       expect(socialLoginMock).not.toHaveBeenCalled();
-      expect(trackSignupStartedMock).not.toHaveBeenCalledWith('google');
+      expect(trackAuthStartedMock).not.toHaveBeenCalledWith('google', 'signin');
     },
   );
 
@@ -474,7 +484,7 @@ describe('WelcomeScreen — Google sign-in flow', () => {
     render(<WelcomeScreen />);
     openLoginDialog();
     clickContinueWithGoogle();
-    expect(trackSignupStartedMock).toHaveBeenCalledWith('google');
+    expect(trackAuthStartedMock).toHaveBeenCalledWith('google', 'signin');
     await waitFor(() => expect(signInWithGoogleIdentityMock).toHaveBeenCalledWith('test-google-client'));
     expect(socialLoginWithIdTokenMock).toHaveBeenCalledWith('google', 'tok', 'nonce', undefined);
     expect(bootstrapMock).toHaveBeenCalledWith({ force: true });
@@ -520,7 +530,7 @@ describe('WelcomeScreen — Google sign-in flow', () => {
     act(() => {
       lastGoogleButtonCredentialCb?.({ idToken: 'btn-tok', nonce: 'btn-nonce' });
     });
-    expect(trackSignupStartedMock).toHaveBeenCalledWith('google');
+    expect(trackAuthStartedMock).toHaveBeenCalledWith('google', 'signin');
     await waitFor(() =>
       expect(socialLoginWithIdTokenMock).toHaveBeenCalledWith('google', 'btn-tok', 'btn-nonce', undefined),
     );
@@ -537,6 +547,7 @@ describe('WelcomeScreen — email signin / signup', () => {
     const submit = screen.getByText(/welcome\.signInWithEmail/);
     fireEvent.click(submit);
     await waitFor(() => expect(loginMock).toHaveBeenCalledWith('user@example.com', 'secret'));
+    expect(trackAuthStartedMock).toHaveBeenCalledWith('email', 'signin');
     expect(trackLoginCompletedMock).toHaveBeenCalledWith('email');
     await waitFor(() => expect(bootstrapMock).toHaveBeenCalledWith({ force: true }));
   });
@@ -555,8 +566,7 @@ describe('WelcomeScreen — email signin / signup', () => {
       redirect_to: `${window.location.origin}/auth/callback`,
       locale: 'en',
     }));
-    expect(trackSignupStartedMock).toHaveBeenCalledWith('email');
-    expect(trackSignupCompletedMock).not.toHaveBeenCalled();
+    expect(trackAuthStartedMock).toHaveBeenCalledWith('email', 'signup');
     await waitFor(() => expect(bootstrapMock).toHaveBeenCalled());
   });
 
@@ -746,7 +756,7 @@ describe('WelcomeScreen — phone OTP', () => {
     fireEvent.change(phoneInput, { target: { value: '555000111' } });
     const sendButton = screen.getByText(/welcome\.sendCode/);
     fireEvent.click(sendButton);
-    expect(trackSignupStartedMock).not.toHaveBeenCalledWith('phone');
+    expect(trackAuthStartedMock).not.toHaveBeenCalledWith('phone', 'signin');
     await waitFor(() => expect(startGeorgianPhoneOtpMock).toHaveBeenCalledWith('+995555000111'));
     // After the code is sent the modal collapses to a focused step showing the
     // persistent inline "code sent" hint + a change-number affordance.

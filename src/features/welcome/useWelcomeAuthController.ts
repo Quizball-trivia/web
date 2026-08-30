@@ -37,7 +37,7 @@ import { useLocale } from '@/contexts/LocaleContext';
 import {
   trackInAppBrowserBlocked,
   trackLoginCompleted,
-  trackSignupStarted,
+  trackAuthStarted,
 } from '@/lib/analytics/game-events';
 
 import type { AuthPanelMode } from './welcome.types';
@@ -207,7 +207,7 @@ export function useWelcomeAuthController() {
     async (credential: GoogleCredential) => {
       if (googleCredentialInFlightRef.current) return;
       googleCredentialInFlightRef.current = true;
-      trackSignupStarted('google');
+      trackAuthStarted('google', authMode === 'signup' ? 'signup' : 'signin');
       setSocialSubmitting('google');
       try {
         await socialLoginWithIdToken('google', credential.idToken, credential.nonce);
@@ -236,7 +236,7 @@ export function useWelcomeAuthController() {
         setSocialSubmitting(null);
       }
     },
-    [bootstrap, setBanned, t],
+    [authMode, bootstrap, setBanned, t],
   );
 
   // Fallback for when the overlaid GIS button never rendered: try One Tap,
@@ -249,7 +249,7 @@ export function useWelcomeAuthController() {
       return;
     }
 
-    trackSignupStarted('google');
+    trackAuthStarted('google', authMode === 'signup' ? 'signup' : 'signin');
     setSocialSubmitting('google');
 
     if (googleClientId) {
@@ -291,6 +291,7 @@ export function useWelcomeAuthController() {
     }
   }, [
     authInAppBrowser,
+    authMode,
     bootstrap,
     googleClientId,
     setBanned,
@@ -304,7 +305,7 @@ export function useWelcomeAuthController() {
       showOpenInBrowserInstructions();
       return;
     }
-    trackSignupStarted('facebook');
+    trackAuthStarted('facebook', authMode === 'signup' ? 'signup' : 'signin');
     setSocialSubmitting('facebook');
 
     try {
@@ -315,7 +316,7 @@ export function useWelcomeAuthController() {
       console.error('Facebook login failed', error);
       setSocialSubmitting(null);
     }
-  }, [authInAppBrowser, showOpenInBrowserInstructions, socialSubmitting]);
+  }, [authInAppBrowser, authMode, showOpenInBrowserInstructions, socialSubmitting]);
 
   const handleEmailAuth = useCallback(
     async (event: React.FormEvent<HTMLFormElement>) => {
@@ -332,10 +333,10 @@ export function useWelcomeAuthController() {
         return;
       }
 
+      trackAuthStarted('email', authMode === 'signup' ? 'signup' : 'signin');
       setAuthSubmitting(true);
       try {
         if (authMode === 'signup') {
-          trackSignupStarted('email');
           const redirectTo = getAuthRedirectUrl('/auth/callback');
           const result = await register({
             email: authEmail,
