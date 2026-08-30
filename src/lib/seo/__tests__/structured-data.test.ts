@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { SOCIAL_LINKS } from "@/lib/social-links";
 import {
   buildEditorialPageStructuredData,
+  buildResearchReportStructuredData,
   buildSiteStructuredData,
   serializeJsonLd,
   SITE_SCHEMA_IDS,
@@ -62,5 +63,30 @@ describe("editorial page structured data", () => {
       isPartOf: { "@id": SITE_SCHEMA_IDS.website },
       about: { "@id": SITE_SCHEMA_IDS.organization },
     });
+  });
+});
+
+describe("research report structured data", () => {
+  it("connects the report article and aggregate dataset to the site graph", () => {
+    const result = buildResearchReportStructuredData({
+      locale: "es",
+      title: "Índice de conocimiento futbolístico",
+      description: "Resultados agregados y anónimos.",
+    });
+
+    expect(result["@graph"]).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        "@type": "Article",
+        "@id": "https://quizball.io/es/football-knowledge-index#article",
+        publisher: { "@id": SITE_SCHEMA_IDS.organization },
+      }),
+      expect.objectContaining({
+        "@type": "Dataset",
+        temporalCoverage: "2026-06-01/2026-08-30",
+        distribution: expect.objectContaining({
+          contentUrl: "https://quizball.io/data/quizball-football-knowledge-index-2026.csv",
+        }),
+      }),
+    ]));
   });
 });

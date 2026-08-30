@@ -29,6 +29,8 @@ export interface AboutCredibilityCopy {
   title: string;
   body: string;
   methodologyLink: string;
+  reportLink: string;
+  pressLink: string;
   exploreHeading: string;
   exploreBody: string;
   hubLink: string;
@@ -205,6 +207,8 @@ export const ABOUT_CREDIBILITY_COPY: Record<Locale, AboutCredibilityCopy> = {
     body:
       "QuizBall documents how questions are sourced, reviewed and corrected. Public search quizzes also remain separately controlled from the ranked match pool.",
     methodologyLink: "Read our editorial methodology",
+    reportLink: "Read the 2026 Football Knowledge Index",
+    pressLink: "Press and citation resources",
     exploreHeading: "Explore QuizBall",
     exploreBody:
       "Browse every free football quiz or start with Career Path and Club Badges—two formats fans engage with most.",
@@ -218,6 +222,8 @@ export const ABOUT_CREDIBILITY_COPY: Record<Locale, AboutCredibilityCopy> = {
     body:
       "QuizBall განმარტავს, როგორ ვეძებთ, ვამოწმებთ და ვასწორებთ კითხვებს. საჯარო საძიებო ქვიზები რეიტინგული მატჩების კითხვების ბანკისგან ცალკე იმართება.",
     methodologyLink: "წაიკითხეთ ჩვენი სარედაქციო მეთოდოლოგია",
+    reportLink: "წაიკითხეთ 2026 წლის Football Knowledge Index",
+    pressLink: "პრესისა და ციტირების რესურსები",
     exploreHeading: "აღმოაჩინეთ QuizBall",
     exploreBody:
       "დაათვალიერეთ ყველა უფასო საფეხბურთო ქვიზი ან დაიწყეთ კარიერისა და ემბლემების ყველაზე პოპულარული ფორმატებით.",
@@ -231,6 +237,8 @@ export const ABOUT_CREDIBILITY_COPY: Record<Locale, AboutCredibilityCopy> = {
     body:
       "QuizBall explica cómo se investigan, revisan y corrigen las preguntas. Los quizzes públicos también se gestionan por separado del banco de partidas clasificatorias.",
     methodologyLink: "Lee nuestra metodología editorial",
+    reportLink: "Lee el Índice de conocimiento futbolístico 2026",
+    pressLink: "Recursos para prensa y citas",
     exploreHeading: "Explora QuizBall",
     exploreBody:
       "Descubre todos los quizzes de fútbol o empieza con Trayectorias y Escudos, dos formatos especialmente útiles para los aficionados.",

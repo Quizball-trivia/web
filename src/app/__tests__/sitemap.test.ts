@@ -29,6 +29,13 @@ describe('sitemap lastModified signals', () => {
       .toEqual(new Date('2026-08-30T00:00:00.000Z'));
     expect(entries.find((entry) => entry.url.endsWith('/es/editorial-methodology'))?.lastModified)
       .toEqual(new Date('2026-08-30T00:00:00.000Z'));
+    expect(entries.find((entry) => entry.url.endsWith('/en/football-knowledge-index'))?.lastModified)
+      .toEqual(new Date('2026-08-30T00:00:00.000Z'));
+    expect(entries.some((entry) => entry.url.endsWith('/es/football-knowledge-index'))).toBe(true);
+    expect(entries.some((entry) => entry.url.endsWith('/ka/football-knowledge-index'))).toBe(false);
+    expect(entries.some((entry) => entry.url.endsWith('/en/press'))).toBe(true);
+    expect(entries.some((entry) => entry.url.endsWith('/es/press'))).toBe(true);
+    expect(entries.some((entry) => entry.url.endsWith('/ka/press'))).toBe(false);
     expect(hub?.lastModified).toEqual(new Date('2026-08-20T12:30:00.000Z'));
     expect(liverpool?.lastModified).toEqual(new Date('2026-08-20T12:30:00.000Z'));
     expect(entries.some((entry) => entry.url.endsWith('/ka/football-quiz'))).toBe(false);

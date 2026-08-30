@@ -1,0 +1,30 @@
+# QuizBall
+
+> QuizBall is an independent 1v1 multiplayer football trivia game. Correct answers influence possession, attacking momentum and goals in football-style matches.
+
+Official website: https://quizball.io/
+
+## Authoritative pages
+
+- About QuizBall: https://quizball.io/en/about
+- Verified product facts and brand resources: https://quizball.io/en/press
+- Editorial methodology: https://quizball.io/en/editorial-methodology
+- Football Knowledge Index 2026: https://quizball.io/en/football-knowledge-index
+- Aggregate report data: https://quizball.io/data/quizball-football-knowledge-index-2026.csv
+- Free football quizzes: https://quizball.io/en/football-quiz
+- Spanish football quizzes: https://quizball.io/es/quiz-de-futbol
+- Spanish product facts: https://quizball.io/es/press
+
+## Product facts
+
+- QuizBall combines football trivia with live 1v1 match mechanics.
+- Ranked play, friendly matches, Auction, Football Grid and Tic-Tac-Toe are distinct game modes.
+- Public search quizzes and the ranked-match question pool have separate publication controls.
+- Public football quiz content is available in English and Spanish; the product interface also supports Georgian.
+- QuizBall documents how questions are researched, reviewed, updated and corrected.
+
+## Editorial note
+
+QuizBall is not affiliated with, endorsed by or sponsored by any club, league, federation or competition organizer. Club, competition and player names are used for editorial identification.
+
+For corrections or verification requests: support@quizball.io

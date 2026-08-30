@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, BookCheck, ChevronLeft, Info, ShieldCheck } from "lucide-react";
+import { ArrowRight, BarChart3, BookCheck, ChevronLeft, Info, Newspaper, ShieldCheck } from "lucide-react";
 import { AppLogo } from "@/components/AppLogo";
 import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 import { campaignHubPath, campaignQuizPath } from "@/features/campaign-quiz/campaignQuiz.routes";
@@ -21,6 +21,7 @@ const BACK_LABEL: Record<Locale, string> = {
 export function AboutScreen({ copy, locale }: AboutScreenProps) {
   const credibility = ABOUT_CREDIBILITY_COPY[locale];
   const quizLocale = locale === "ka" ? "en" : locale;
+  const reportLocale = locale === "es" ? "es" : "en";
 
   return (
     <div className="relative min-h-screen w-full bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat font-poppins text-white">
@@ -75,6 +76,20 @@ export function AboutScreen({ copy, locale }: AboutScreenProps) {
             >
               <BookCheck className="size-4" aria-hidden />
               {credibility.methodologyLink}
+            </Link>
+            <Link
+              href={`/${reportLocale}/football-knowledge-index`}
+              className="mt-3 inline-flex min-h-10 items-center gap-2 font-semibold text-brand-cyan hover:underline"
+            >
+              <BarChart3 className="size-4" aria-hidden />
+              {credibility.reportLink}
+            </Link>
+            <Link
+              href={`/${reportLocale}/press`}
+              className="mt-3 inline-flex min-h-10 items-center gap-2 font-semibold text-brand-cyan hover:underline"
+            >
+              <Newspaper className="size-4" aria-hidden />
+              {credibility.pressLink}
             </Link>
           </div>
 

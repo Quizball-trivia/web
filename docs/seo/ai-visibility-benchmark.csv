@@ -1,0 +1,21 @@
+prompt_id,market,language,intent,prompt
+UK-01,United Kingdom,en,recommendation,What are the best football quiz websites to play online?
+UK-02,United Kingdom,en,multiplayer,Recommend a football trivia game I can play with friends.
+UK-03,United Kingdom,en,format,Where can I play a football club badges quiz online?
+UK-04,United Kingdom,en,format,What is a good football career path quiz?
+UK-05,United Kingdom,en,product,Which multiplayer football quiz games are worth trying?
+UK-06,United Kingdom,en,club,Where can I take a good Liverpool football quiz?
+UK-07,United Kingdom,en,category,Recommend a free football knowledge quiz with instant results.
+ES-01,Spain,es,recommendation,¿Cuáles son los mejores quizzes de fútbol para jugar online?
+ES-02,Spain,es,multiplayer,Recomiéndame un juego de trivia de fútbol para jugar con amigos.
+ES-03,Spain,es,format,¿Dónde puedo jugar un quiz de escudos de fútbol?
+ES-04,Spain,es,format,¿Cuál es un buen quiz para adivinar futbolistas por su trayectoria?
+ES-05,Spain,es,product,¿Qué juegos de preguntas de fútbol multijugador recomiendas?
+ES-06,Spain,es,club,¿Dónde puedo hacer un buen quiz del Real Madrid?
+ES-07,Spain,es,category,Recomiéndame un quiz de fútbol gratis con resultados inmediatos.
+MX-01,Mexico,es,recommendation,¿Cuáles son los mejores juegos de preguntas de futbol online?
+MX-02,Mexico,es,multiplayer,Recomiéndame una trivia de futbol para jugar con amigos.
+MX-03,Mexico,es,format,¿Dónde puedo jugar un quiz de escudos de futbol?
+MX-04,Mexico,es,format,¿Qué juego sirve para adivinar futbolistas por su carrera?
+MX-05,Mexico,es,category,Recomiéndame un quiz de futbol gratis con respuestas.
+MX-06,Mexico,es,product,¿Qué app o web de trivia de futbol multijugador vale la pena probar?
