@@ -55,26 +55,27 @@ export function WlQpToast({
       <Link
         href={href}
         onClick={onOpen}
-        className="block rounded-[12px] bg-brand-blue/[0.12] px-4 py-3 text-left transition-colors hover:bg-brand-blue/[0.20] active:bg-brand-blue/[0.24]"
+        className="block rounded-[14px] px-4 py-3 text-left transition-[filter] hover:brightness-110 active:brightness-95"
+        style={{ backgroundImage: 'linear-gradient(180deg, #1645FF 0%, #1A35A1 100%)' }}
       >
         <div className="flex items-center justify-between">
-          <span className="text-[15px] uppercase text-brand-blue" style={poppins}>
+          <span className="text-[15px] uppercase text-brand-yellow" style={poppins}>
             +{gainedQp} QP
           </span>
-          <span className="flex items-center gap-1.5 text-[12px] uppercase text-white/70" style={poppins}>
+          <span className="flex items-center gap-1.5 text-[12px] uppercase text-white" style={poppins}>
             {tail}
-            <span className="flex size-5 items-center justify-center rounded-full bg-brand-blue">
-              <ArrowRight className="size-3.5 text-white" />
+            <span className="flex size-5 items-center justify-center rounded-full bg-white">
+              <ArrowRight className="size-3.5 text-brand-blue" />
             </span>
           </span>
         </div>
-        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
+        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/20">
           <div
-            className="h-full rounded-full bg-brand-blue transition-[width] duration-700 ease-out"
+            className="h-full rounded-full bg-brand-yellow transition-[width] duration-700 ease-out"
             style={{ width: `${Math.round(fill * 100)}%` }}
           />
         </div>
-        <div className="mt-1 text-right text-[11px] tabular-nums text-white/40" style={poppins}>
+        <div className="mt-1 text-right text-[11px] tabular-nums text-white/60" style={poppins}>
           {newQp}/{targetQp} QP
         </div>
       </Link>

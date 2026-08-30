@@ -9,7 +9,9 @@ import { useWeekendLeague, type WeekendLeagueController } from './use-weekend-le
 import type { WeekendLeagueLiveExtras } from './use-weekend-league-live';
 import type { WeekendLeagueState } from './types';
 import { LeagueHeader } from './components/LeagueHeader';
+import { useRouter } from 'next/navigation';
 import { YourStatusCard } from './components/YourStatusCard';
+import { WeekendLeaguePromoCard } from './components/WeekendLeaguePromoCard';
 import { HowItWorks } from './components/HowItWorks';
 import { PrizesPanel } from './components/PrizesPanel';
 import { QualifierLeaderboard } from './components/QualifierLeaderboard';
@@ -45,6 +47,11 @@ export function WeekendLeagueScreen({
   // players go through the socket flow via onJoinLive/onWatchLive.
   const playable = controller ? controller.playable === true && !controller.live : true;
   const [simulating, setSimulating] = useState(false);
+  const router = useRouter();
+  // Owner call 2026-08-30: before a player has entered, the events tab leads
+  // with the designed promo card (Figma 1722:253) instead of the header +
+  // explainer stack. Entered players keep the personal header (QP, status).
+  const promoHero = (wl.phase === 'upcoming' || wl.phase === 'entry_open') && !wl.hasEntered;
 
   if (simulating) {
     return <WlLiveSimFlow onExit={() => setSimulating(false)} />;
@@ -76,7 +83,19 @@ export function WeekendLeagueScreen({
         >
           {/* Once a game is live the entry/QP card is spent — the screen is just
               play + live standings. Before kickoff it's the countdown card. */}
-          {wl.phase !== 'qualifier_live' && wl.phase !== 'playoffs_live' && (
+          {promoHero && (
+            <div className="flex justify-center">
+              <WeekendLeaguePromoCard
+                registeredCount={wl.registered}
+                kickoffMs={wl.milestones?.qualifier.targetMs ?? null}
+                onStart={(controller?.canEnter ?? true)
+                  ? wl.enterLeague
+                  : () => router.push('/play')}
+              />
+            </div>
+          )}
+
+          {!promoHero && wl.phase !== 'qualifier_live' && wl.phase !== 'playoffs_live' && (
             <LeagueHeader
               phase={wl.phase}
               status={controller?.status}
@@ -171,18 +190,10 @@ function PhaseContent({
   const { t } = useLocale();
   const { phase } = wl;
 
-  // The blue header card owns the countdown + entry state, so before the
-  // week opens the page is just the format explainer and the prize ladder.
-  if (phase === 'upcoming') {
-    return (
-      <>
-        <HowItWorks />
-        <PrizesPanel />
-      </>
-    );
-  }
-
-  if (phase === 'entry_open') {
+  // Pre-entry the promo hero already carries the format and prize story;
+  // the explainer stack only renders once the player has entered.
+  if (phase === 'upcoming' || phase === 'entry_open') {
+    if (!wl.hasEntered) return null;
     return (
       <>
         <HowItWorks />
