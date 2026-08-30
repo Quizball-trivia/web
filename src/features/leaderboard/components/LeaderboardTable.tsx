@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { getTierAccent } from "@/utils/tierVisuals";
 import { useLocale } from "@/contexts/LocaleContext";
 import { useActiveEventMode } from "@/lib/hooks/useActiveEventMode";
+import { useTierLabel } from "@/hooks/useTierLabel";
 
 interface LeaderboardTableProps {
   entries: LeaderboardEntry[];
@@ -33,6 +34,7 @@ const poppins = {
 
 export function LeaderboardTable({ entries, currentUserId, onEntryClick, eventMode, pointsLabel }: LeaderboardTableProps) {
   const { t } = useLocale();
+  const tierLabelOf = useTierLabel();
   const { isEventMode: regionEventMode } = useActiveEventMode();
   const isEventMode = eventMode ?? regionEventMode;
   return (
@@ -113,6 +115,7 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick, eventMo
                       <div className="block sm:hidden">
                         <TierFrameAvatar
                           tier={entry.tier}
+                          frameAlt={tierLabelOf(entry.tier)}
                           avatarCustomization={entry.avatarCustomization}
                           avatarFallback={entry.avatar || "avatar-1"}
                           countryCode={entry.country}
@@ -122,6 +125,7 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick, eventMo
                       <div className="hidden sm:block">
                         <TierFrameAvatar
                           tier={entry.tier}
+                          frameAlt={tierLabelOf(entry.tier)}
                           avatarCustomization={entry.avatarCustomization}
                           avatarFallback={entry.avatar || "avatar-1"}
                           countryCode={entry.country}
@@ -139,7 +143,7 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick, eventMo
                         className="block truncate text-[10px] sm:text-sm font-fun font-black uppercase tracking-wide"
                         style={{ color: (isEventMode && isFirst) || isCurrentUser ? "#FFFFFF" : tierAccent }}
                       >
-                        {entry.tier}
+                        {tierLabelOf(entry.tier)}
                       </span>
                     </div>
 
