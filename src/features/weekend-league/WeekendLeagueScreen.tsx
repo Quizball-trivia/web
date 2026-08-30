@@ -52,6 +52,9 @@ export function WeekendLeagueScreen({
   // with the designed promo card (Figma 1722:253) instead of the header +
   // explainer stack. Entered players keep the personal header (QP, status).
   const promoHero = (wl.phase === 'upcoming' || wl.phase === 'entry_open') && !wl.hasEntered;
+  // Entry needs BOTH an open window and 200 QP — canEnter alone is only the
+  // window (review catch: unqualified taps hit /enter and got a wrong toast).
+  const canEnterNow = (controller?.canEnter ?? true) && (controller?.qpQualified ?? true);
 
   if (simulating) {
     return <WlLiveSimFlow onExit={() => setSimulating(false)} />;
@@ -88,9 +91,8 @@ export function WeekendLeagueScreen({
               <WeekendLeaguePromoCard
                 registeredCount={wl.registered}
                 kickoffMs={wl.milestones?.qualifier.targetMs ?? null}
-                onStart={(controller?.canEnter ?? true)
-                  ? wl.enterLeague
-                  : () => router.push('/play')}
+                ctaLabel={canEnterNow ? undefined : t('weekendLeague.promoCtaEarn')}
+                onStart={canEnterNow ? wl.enterLeague : () => router.push('/play')}
               />
             </div>
           )}

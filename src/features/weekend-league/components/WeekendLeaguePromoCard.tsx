@@ -11,6 +11,8 @@ import { X } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
 import { getWeekendLeagueCurrent } from '@/lib/api/endpoints';
 import { queryKeys } from '@/lib/queries/queryKeys';
+import { useAuthStore } from '@/stores/auth.store';
+import { wlNow } from '../wlClock';
 
 const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
 
@@ -28,8 +30,12 @@ function Countdown({ targetMs }: { targetMs: number | null }) {
   const { t } = useLocale();
   const [leftMs, setLeftMs] = useState<number | null>(null);
   useEffect(() => {
-    if (targetMs == null) return;
-    const tick = () => setLeftMs(Math.max(0, targetMs - Date.now()));
+    if (targetMs == null) {
+      setLeftMs(null);
+      return;
+    }
+    // wlNow: the server-synced WL clock — device skew must not shift kickoff.
+    const tick = () => setLeftMs(Math.max(0, targetMs - wlNow()));
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
@@ -53,7 +59,6 @@ function Countdown({ targetMs }: { targetMs: number | null }) {
             <span
               className="text-[30px] leading-none text-brand-yellow tabular-nums"
               style={poppins}
-              suppressHydrationWarning
             >
               {leftMs == null ? '00' : pad(c.v)}
             </span>
@@ -69,6 +74,7 @@ export function WeekendLeaguePromoCard({
   registeredCount,
   kickoffMs,
   finalists = 24,
+  ctaLabel,
   onStart,
   onClose,
 }: {
@@ -76,14 +82,16 @@ export function WeekendLeaguePromoCard({
   /** Game-1 kickoff; null renders a 00:00:00:00 placeholder. */
   kickoffMs: number | null;
   finalists?: number;
+  /** Overrides the CTA text — the grind path must not masquerade as entry. */
+  ctaLabel?: string;
   onStart: () => void;
   onClose?: () => void;
 }) {
   const { t } = useLocale();
   const stages = [
-    { title: t('weekendLeague.promoStage1'), highlight: '1/3', body: t('weekendLeague.promoAdvance') },
-    { title: t('weekendLeague.promoStage2'), highlight: '1/3', body: t('weekendLeague.promoAdvance') },
-    { title: t('weekendLeague.promoStage3'), highlight: String(finalists), body: t('weekendLeague.promoToFinal') },
+    { title: t('weekendLeague.promoStage1'), highlight: '1/3', prefix: t('weekendLeague.promoAdvancePrefix'), suffix: t('weekendLeague.promoAdvanceSuffix') },
+    { title: t('weekendLeague.promoStage2'), highlight: '1/3', prefix: t('weekendLeague.promoAdvancePrefix'), suffix: t('weekendLeague.promoAdvanceSuffix') },
+    { title: t('weekendLeague.promoStage3'), highlight: String(finalists), prefix: t('weekendLeague.promoFinalPrefix'), suffix: t('weekendLeague.promoFinalSuffix') },
   ];
 
   return (
@@ -119,9 +127,9 @@ export function WeekendLeaguePromoCard({
           <div key={s.title} className="rounded-[12px] px-2 py-2.5" style={{ backgroundColor: STAGE_CARD_BG }}>
             <div className="text-[13px] text-white/50" style={poppins}>{s.title}</div>
             <div className="mt-1 text-[10.5px] leading-snug text-white" style={poppins}>
-              {t('weekendLeague.promoBest')}{' '}
-              <span className="text-brand-yellow">{s.highlight}</span>{' '}
-              {s.body}
+              {s.prefix}
+              <span className="text-brand-yellow">{s.highlight}</span>
+              {s.suffix}
             </div>
           </div>
         ))}
@@ -163,7 +171,7 @@ export function WeekendLeaguePromoCard({
         className="mt-5 w-full rounded-[14px] bg-brand-green py-3.5 text-[17px] uppercase text-white transition-opacity hover:opacity-90 active:opacity-80"
         style={poppins}
       >
-        {t('weekendLeague.promoCta')}
+        {ctaLabel ?? t('weekendLeague.promoCta')}
       </button>
     </div>
   );
@@ -178,10 +186,12 @@ export function WeekendLeaguePromoCardLive({
   onStart: () => void;
   onClose?: () => void;
 }) {
+  const userId = useAuthStore((state) => state.user?.id);
   const query = useQuery({
     queryKey: queryKeys.weekendLeague.current(),
     queryFn: getWeekendLeagueCurrent,
     staleTime: 30_000,
+    enabled: userId != null,
   });
   const tournament = query.data?.tournament ?? null;
   if (!tournament) return null;

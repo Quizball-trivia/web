@@ -2060,9 +2060,6 @@
     "promoStage1": "Game I",
     "promoStage2": "Game II",
     "promoStage3": "Game III",
-    "promoBest": "Top",
-    "promoAdvance": "advance to the next stage",
-    "promoToFinal": "reach the final",
     "promoWinnerGets": "The winner gets a",
     "promoVoucher": "voucher",
     "promoStores": "for Wolt, Zoommer or PlayStation Store",
@@ -2071,7 +2068,12 @@
     "promoDays": "days",
     "promoHours": "hrs",
     "promoMinutes": "min",
-    "promoSeconds": "sec"
+    "promoSeconds": "sec",
+    "promoAdvancePrefix": "Top ",
+    "promoAdvanceSuffix": " advance to the next stage",
+    "promoFinalPrefix": "Top ",
+    "promoFinalSuffix": " reach the final",
+    "promoCtaEarn": "Play ranked to earn QP"
   },
   "wlAward": {
     "title1": "Weekend League Champion",

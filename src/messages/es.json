@@ -2060,9 +2060,6 @@
     "promoStage1": "Partido I",
     "promoStage2": "Partido II",
     "promoStage3": "Partido III",
-    "promoBest": "El mejor",
-    "promoAdvance": "avanza a la siguiente fase",
-    "promoToFinal": "a la final",
     "promoWinnerGets": "El ganador recibe un",
     "promoVoucher": "vale",
     "promoStores": "para Wolt, Zoommer o PlayStation Store",
@@ -2071,7 +2068,12 @@
     "promoDays": "días",
     "promoHours": "h",
     "promoMinutes": "min",
-    "promoSeconds": "seg"
+    "promoSeconds": "seg",
+    "promoAdvancePrefix": "Los mejores ",
+    "promoAdvanceSuffix": " avanzan a la siguiente fase",
+    "promoFinalPrefix": "Los mejores ",
+    "promoFinalSuffix": " llegan a la final",
+    "promoCtaEarn": "Juega ranked para ganar QP"
   },
   "wlAward": {
     "title1": "Campeón de Weekend League",

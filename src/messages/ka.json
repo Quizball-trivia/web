@@ -2060,9 +2060,6 @@
     "promoStage1": "თამაში I",
     "promoStage2": "თამაში II",
     "promoStage3": "თამაში III",
-    "promoBest": "საუკეთესო",
-    "promoAdvance": "გადადის შემდეგ ეტაპზე",
-    "promoToFinal": "ფინალში",
     "promoWinnerGets": "გამარჯვებული მოიგებს",
     "promoVoucher": "ვაუჩერს",
     "promoStores": "Wolt, Zoommer ან PlayStation Store-ის მაღაზიებში",
@@ -2071,7 +2068,12 @@
     "promoDays": "დღე",
     "promoHours": "სთ",
     "promoMinutes": "წთ",
-    "promoSeconds": "წმ"
+    "promoSeconds": "წმ",
+    "promoAdvancePrefix": "საუკეთესო ",
+    "promoAdvanceSuffix": " გადადის შემდეგ ეტაპზე",
+    "promoFinalPrefix": "საუკეთესო ",
+    "promoFinalSuffix": " ფინალში",
+    "promoCtaEarn": "ითამაშე რანკედი QP-სთვის"
   },
   "wlAward": {
     "title1": "Weekend League-ის ჩემპიონი",
