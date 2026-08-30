@@ -2,6 +2,7 @@ import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { TierFrameAvatar } from "@/components/TierFrameAvatar";
 import type { LeaderboardEntry } from "@/lib/domain/leaderboard";
 import { useActiveEventMode } from "@/lib/hooks/useActiveEventMode";
+import { useTierLabel } from "@/hooks/useTierLabel";
 
 interface LeaderboardPodiumProps {
   topThree: LeaderboardEntry[];
@@ -97,6 +98,7 @@ const podiumConfig: Record<
 
 export function LeaderboardPodium({ topThree, onEntryClick, eventMode }: LeaderboardPodiumProps) {
   const { isEventMode: regionEventMode } = useActiveEventMode();
+  const tierLabelOf = useTierLabel();
   const isEventMode = eventMode ?? regionEventMode;
 
   const [first, second, third] = [
@@ -227,6 +229,7 @@ export function LeaderboardPodium({ topThree, onEntryClick, eventMode }: Leaderb
                 <div className="hidden sm:block">
                   <TierFrameAvatar
                     tier={entry.tier}
+                    frameAlt={tierLabelOf(entry.tier)}
                     avatarCustomization={entry.avatarCustomization}
                     avatarFallback={entry.avatar || `avatar-${rank}`}
                     countryCode={entry.country}
@@ -236,6 +239,7 @@ export function LeaderboardPodium({ topThree, onEntryClick, eventMode }: Leaderb
                 <div className="block sm:hidden">
                   <TierFrameAvatar
                     tier={entry.tier}
+                    frameAlt={tierLabelOf(entry.tier)}
                     avatarCustomization={entry.avatarCustomization}
                     avatarFallback={entry.avatar || `avatar-${rank}`}
                     countryCode={entry.country}
