@@ -18,6 +18,8 @@ const TIER_FRAME_SLUGS: Record<string, string> = {
 
 interface TierFrameAvatarProps {
   tier: string;
+  /** Localized accessible label for the tier artwork. */
+  frameAlt?: string;
   avatarCustomization?: AvatarCustomization | null;
   avatarFallback?: string;
   countryCode?: string | null;
@@ -35,6 +37,7 @@ const SIZES = {
 
 export function TierFrameAvatar({
   tier,
+  frameAlt,
   avatarCustomization,
   avatarFallback = 'avatar-1',
   countryCode,
@@ -51,7 +54,7 @@ export function TierFrameAvatar({
       {/* Card frame — background */}
       <Image
         src={`/assets/ranks/${slug}_frame.png`}
-        alt={tier}
+        alt={frameAlt ?? tier}
         width={frame}
         height={frameHeight}
         className="absolute inset-0 w-full h-full object-contain pointer-events-none"

@@ -22,6 +22,7 @@ import { WelcomeCategoriesDialog } from './WelcomeCategoriesDialog';
 import { WelcomeTierRoadSection } from './WelcomeTierRoadSection';
 import { WelcomeLeaderboardSection } from './WelcomeLeaderboardSection';
 import { WelcomeFooter } from './WelcomeFooter';
+import { WelcomeSeoSection } from './WelcomeSeoSection';
 import { rememberCampaignAttributionFromSignupUrl } from '@/features/campaign-quiz/campaignAttribution';
 import { trackSignupPageView } from '@/lib/analytics/game-events';
 
@@ -193,6 +194,8 @@ export function WelcomeScreen() {
       </div>
 
       <WelcomeTierRoadSection onStartClimbing={handleProtectedWelcomeAction} />
+
+      <WelcomeSeoSection />
 
       <WelcomeFooter duelsCount={duelsCount} verifiedQuestionsCount={verifiedQuestionsCount} />
 

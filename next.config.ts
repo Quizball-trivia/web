@@ -50,8 +50,9 @@ const nextConfig: NextConfig = {
     // Local assets may carry a cache-busting query (e.g. /assets/coin-1.png?v=2
     // after an in-place asset regeneration). Omitting `search` allows any query.
     localPatterns: [{ pathname: "/**" }],
-    // Whitelist the explicit qualities used by lib/images/remoteImage.ts.
-    qualities: [70, 75, 90],
+    // Whitelist the explicit qualities used by remote images and the
+    // performance-sensitive campaign quiz hero.
+    qualities: [60, 70, 75, 90],
     remotePatterns: [
       ...(process.env.NODE_ENV === "development"
         ? [

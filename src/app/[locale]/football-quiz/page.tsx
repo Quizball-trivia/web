@@ -3,6 +3,7 @@ import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound, permanentRedirect } from 'next/navigation';
+import { headers } from 'next/headers';
 import { ArrowRight, Swords } from 'lucide-react';
 import { AppShellPageChrome } from '@/components/layout/app-shell/AppShellPageChrome';
 import {
@@ -20,12 +21,25 @@ import {
   SITE_OG_IMAGE_PATH,
   SITE_URL,
 } from '@/lib/seo/site';
+import { buildCampaignQuizHubJsonLd, serializeCampaignHubJsonLd } from '@/features/campaign-quiz/campaignQuiz.hub-seo';
 
 const TITLE = 'Football Quiz — Play Free Football Quizzes & Trivia | QuizBall';
 const DESCRIPTION = 'Play free football quizzes on clubs, players, badges, career paths and Premier League history. Instant scores, no sign-up needed.';
 const KA_TITLE = 'ფეხბურთის ქვიზი — ითამაშე უფასოდ | QuizBall';
 const KA_DESCRIPTION = 'ითამაშე უფასო ფეხბურთის ქვიზები კლუბებზე, მოთამაშეებზე, ემბლემებსა და პრემიერ ლიგის ისტორიაზე. მიიღე შედეგი მყისიერად.';
 const POPULAR_QUIZ_SLUGS = ['club-badges', 'career-path', 'everton', 'liverpool'] as const;
+const PRIORITY_GUIDES = {
+  en: [
+    { slug: 'guess-the-player', title: 'Guess the player', body: 'Read nationality, club and achievement clues, then identify the footballer from four options.' },
+    { slug: 'club-badges', title: 'Football badges quiz', body: 'Match crests, symbols and city details to the correct football club.' },
+    { slug: 'career-path', title: 'Career path challenge', body: 'Follow a verified transfer route from academy to final club and name the player.' },
+  ],
+  ka: [
+    { slug: 'guess-the-player', title: 'გამოიცანი ფეხბურთელი', body: 'წაიკითხე მინიშნებები ეროვნებაზე, კლუბებსა და მიღწევებზე და ამოიცანი მოთამაშე.' },
+    { slug: 'club-badges', title: 'კლუბების ემბლემები', body: 'დააკავშირე ემბლემის სიმბოლოები და ქალაქის დეტალები სწორ კლუბთან.' },
+    { slug: 'career-path', title: 'კარიერის გზა', body: 'მიჰყევი გადამოწმებულ სატრანსფერო გზას და გამოიცანი ფეხბურთელი.' },
+  ],
+} as const satisfies Record<'en' | 'ka', readonly { slug: string; title: string; body: string }[]>;
 const HUB_COPY = {
   en: {
     playRanked: 'Play Ranked',
@@ -44,6 +58,8 @@ const HUB_COPY = {
     checkedHeading: 'Football trivia, checked properly',
     checkedBody: 'QuizBall’s public quizzes use verified questions covering clubs, competitions, players and the moments supporters still argue about. Your result appears as soon as the final answer is in.',
     methodologyLink: 'How QuizBall checks every question',
+    findHeading: 'Choose a football quiz challenge',
+    findBody: 'Practise with useful football quiz questions by clue type, then move between related quizzes without losing your place.',
     rankedHeading: 'Take your score into ranked duels',
     rankedBody: 'Solo quizzes are the warm-up. Sign up free when you are ready to face real fans, turn correct answers into possession and climb the QuizBall leaderboard.',
   },
@@ -64,6 +80,8 @@ const HUB_COPY = {
     checkedHeading: 'სწორად გადამოწმებული ფეხბურთის ტრივია',
     checkedBody: 'QuizBall-ის საჯარო ქვიზები მოიცავს გადამოწმებულ კითხვებს კლუბებზე, ტურნირებზე, მოთამაშეებსა და დასამახსოვრებელ მომენტებზე. საბოლოო პასუხის შემდეგ შედეგს მყისიერად მიიღებ.',
     methodologyLink: 'როგორ ამოწმებს QuizBall კითხვებს',
+    findHeading: 'აირჩიე საფეხბურთო გამოწვევა',
+    findBody: 'შეამოწმე ცოდნა მოთამაშეების, ემბლემებისა და კარიერის გზების მიხედვით და მარტივად გადადი მსგავს ქვიზებზე.',
     rankedHeading: 'გადაიტანე შენი შედეგი რეიტინგულ დუელებში',
     rankedBody: 'სოლო ქვიზები გახურებაა. დარეგისტრირდი უფასოდ, დაუპირისპირდი ნამდვილ გულშემატკივრებს და აიწიე QuizBall-ის რეიტინგში.',
   },
@@ -79,6 +97,8 @@ const HUB_COPY = {
   checkedHeading: string;
   checkedBody: string;
   methodologyLink: string;
+  findHeading: string;
+  findBody: string;
   rankedHeading: string;
   rankedBody: string;
 }>;
@@ -199,9 +219,22 @@ export default async function FootballQuizHubPage({ params }: { params: Promise<
       ),
     }))
     .filter((group) => group.pages.length > 0);
+  const priorityGuides = PRIORITY_GUIDES[locale].filter((guide) =>
+    pages.some((page) => page.slug === guide.slug));
+  const headerList = await headers();
+  const nonce = headerList.get('x-nonce') ?? undefined;
+  const hubUrl = `${SITE_URL}/${locale}/football-quiz`;
+  const jsonLd = buildCampaignQuizHubJsonLd({
+    locale,
+    url: hubUrl,
+    title: locale === 'ka' ? KA_TITLE : TITLE,
+    description: locale === 'ka' ? KA_DESCRIPTION : DESCRIPTION,
+    pages,
+  });
 
   return (
     <div className="relative min-h-screen bg-surface-page-alt font-poppins text-white">
+      <script nonce={nonce} type="application/ld+json" suppressHydrationWarning dangerouslySetInnerHTML={{ __html: serializeCampaignHubJsonLd(jsonLd) }} />
       <CampaignQuizHubPageView locale={locale} />
       <AppShellPageChrome />
       <header className="relative z-10 bg-surface-page-alt/80 backdrop-blur-md">
@@ -245,6 +278,22 @@ export default async function FootballQuizHubPage({ params }: { params: Promise<
                   playFree={copy.playFree}
                   preload={index === 0}
                 />
+              ))}
+            </div>
+          </section>
+        ) : null}
+
+        {priorityGuides.length > 0 ? (
+          <section className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 sm:pb-20 lg:px-8" aria-labelledby="football-quiz-guide-heading">
+            <h2 id="football-quiz-guide-heading" className="text-2xl font-semibold sm:text-3xl">{copy.findHeading}</h2>
+            <p className="mt-3 max-w-3xl font-medium leading-7 text-white/65">{copy.findBody}</p>
+            <div className="mt-7 grid gap-4 md:grid-cols-3">
+              {priorityGuides.map((guide) => (
+                <Link key={guide.slug} href={`/${locale}/football-quiz/${guide.slug}`} className="group rounded-2xl border border-white/10 bg-white/[0.035] p-5 transition-colors hover:border-brand-cyan/60">
+                  <h3 className="font-semibold text-white group-hover:text-brand-yellow">{guide.title}</h3>
+                  <p className="mt-2 text-sm font-medium leading-6 text-white/55">{guide.body}</p>
+                  <span className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-brand-cyan">{copy.playFree}<ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden /></span>
+                </Link>
               ))}
             </div>
           </section>
