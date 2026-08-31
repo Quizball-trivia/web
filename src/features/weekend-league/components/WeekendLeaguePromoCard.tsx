@@ -75,6 +75,8 @@ export function WeekendLeaguePromoCard({
   kickoffMs,
   finalists = 24,
   ctaLabel,
+  qp = null,
+  qpTarget = 200,
   onStart,
   onClose,
 }: {
@@ -84,6 +86,9 @@ export function WeekendLeaguePromoCard({
   finalists?: number;
   /** Overrides the CTA text — the grind path must not masquerade as entry. */
   ctaLabel?: string;
+  /** Player's QP balance; renders the progress-to-entry bar when below target. */
+  qp?: number | null;
+  qpTarget?: number;
   onStart: () => void;
   onClose?: () => void;
 }) {
@@ -142,6 +147,8 @@ export function WeekendLeaguePromoCard({
           alt=""
           width={640}
           height={640}
+          priority
+          sizes="(max-width: 640px) 46vw, 200px"
           className="relative z-10 -ml-3 w-[46%] shrink-0 -rotate-2 object-contain"
         />
         <div className="-ml-6 flex-1 rounded-[14px] bg-white py-4 pl-9 pr-3 text-center">
@@ -164,6 +171,29 @@ export function WeekendLeaguePromoCard({
       <div className="mt-2">
         <Countdown targetMs={kickoffMs} />
       </div>
+
+      {qp != null && qp < qpTarget && (
+        <div className="mx-auto mt-5 w-full max-w-[320px]">
+          <div className="text-[15px] text-white" style={poppins}>
+            {qp.toLocaleString()}
+            <span className="text-[12px] text-white/60"> / {qpTarget.toLocaleString()} QP</span>
+          </div>
+          <div className="mt-1.5 flex items-center gap-2">
+            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-black/25">
+              <div
+                className="h-full rounded-full bg-brand-green-light transition-[width] duration-500"
+                style={{ width: `${Math.min(100, Math.round((qp / qpTarget) * 100))}%` }}
+              />
+            </div>
+            <span className="text-[11px] text-brand-green-light" style={poppins}>
+              {Math.min(100, Math.round((qp / qpTarget) * 100))}%
+            </span>
+          </div>
+          <div className="mt-1 text-[11px] uppercase tracking-wide text-white/60" style={poppins}>
+            {t('weekendLeague.qpNeeded', { count: qpTarget - qp })}
+          </div>
+        </div>
+      )}
 
       <button
         type="button"
