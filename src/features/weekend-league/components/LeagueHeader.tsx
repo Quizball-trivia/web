@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import { Check, Ticket, Users } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
@@ -375,6 +376,41 @@ export function LeagueHeader({
 
           </div>
         </div>
+
+        {/* Voucher visual — same artwork block as the promo card, so the
+            entered player keeps seeing what the weekend pays out. Pre-event
+            only: live and result states need the space for standings. */}
+        {(phase === 'upcoming' || phase === 'entry_open' || phase === 'completed') && (
+        <motion.div
+          initial={{ opacity: 0, y: 14, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          // On a fresh join the block waits for the QP drain + checkmark
+          // spring, then slides in as the closing beat of the sequence.
+          transition={{ delay: vanishing ? 1.05 : 0, duration: 0.35, ease: 'easeOut' }}
+          className="relative mx-auto mt-5 flex w-full max-w-[420px] items-center px-4">
+          <Image
+            src="/assets/wl-promo-vouchers.png"
+            alt=""
+            width={640}
+            height={640}
+            priority
+            sizes="(max-width: 640px) 42vw, 176px"
+            className="relative z-10 -ml-1 w-[42%] shrink-0 -rotate-2 object-contain"
+          />
+          <div className={`-ml-6 flex-1 rounded-[14px] py-3.5 pl-9 pr-3 text-center ${gold ? 'bg-white' : 'bg-white/[0.06]'}`}>
+            <p className={`text-[11px] leading-snug ${gold ? 'text-black' : 'text-white/80'}`} style={poppins}>
+              {t('weekendLeague.promoWinnerGets')}
+            </p>
+            <p className="my-0.5 text-[17px] uppercase leading-tight" style={{ ...poppins, fontWeight: 800 }}>
+              <span className="text-brand-green">200₾ </span>
+              <span className={gold ? 'text-black' : 'text-white'}>{t('weekendLeague.promoVoucher')}</span>
+            </p>
+            <p className={`text-[11px] leading-snug ${gold ? 'text-black' : 'text-white/80'}`} style={poppins}>
+              {t('weekendLeague.promoStores')}
+            </p>
+          </div>
+        </motion.div>
+        )}
       </div>
 
       <div className="relative px-4 pb-5 lg:px-6">

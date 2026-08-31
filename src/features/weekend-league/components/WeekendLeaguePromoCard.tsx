@@ -142,6 +142,8 @@ export function WeekendLeaguePromoCard({
           alt=""
           width={640}
           height={640}
+          priority
+          sizes="(max-width: 640px) 46vw, 200px"
           className="relative z-10 -ml-3 w-[46%] shrink-0 -rotate-2 object-contain"
         />
         <div className="-ml-6 flex-1 rounded-[14px] bg-white py-4 pl-9 pr-3 text-center">
