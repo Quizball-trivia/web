@@ -379,14 +379,17 @@ export function LeagueHeader({
 
         {/* Voucher visual — same artwork block as the promo card, so the
             entered player keeps seeing what the weekend pays out. Pre-event
-            only: live and result states need the space for standings. */}
+            and completed (owner call 2026-08-31); the live/qualifier-result
+            states keep the space for standings. */}
         {(phase === 'upcoming' || phase === 'entry_open' || phase === 'completed') && (
         <motion.div
           initial={{ opacity: 0, y: 14, scale: 0.97 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          // On a fresh join the block waits for the QP drain + checkmark
-          // spring, then slides in as the closing beat of the sequence.
-          transition={{ delay: vanishing ? 1.05 : 0, duration: 0.35, ease: 'easeOut' }}
+          // Joining swaps the promo card for a freshly MOUNTED header, so the
+          // in-place drain ceremony (vanishing) rarely runs — a small mount
+          // delay lets the gold card paint first, and the long delay still
+          // applies on the in-header join path.
+          transition={{ delay: vanishing ? 1.05 : 0.25, duration: 0.35, ease: 'easeOut' }}
           className="relative mx-auto mt-5 flex w-full max-w-[420px] items-center px-4">
           <Image
             src="/assets/wl-promo-vouchers.png"

@@ -91,6 +91,8 @@ export function WeekendLeagueScreen({
               <WeekendLeaguePromoCard
                 registeredCount={wl.registered}
                 kickoffMs={wl.milestones?.qualifier.targetMs ?? null}
+                qp={controller?.qpQualified ? null : controller?.qp ?? null}
+                qpTarget={controller?.qpTarget ?? 200}
                 ctaLabel={canEnterNow ? undefined : t('weekendLeague.promoCtaEarn')}
                 onStart={canEnterNow ? wl.enterLeague : () => router.push('/play')}
               />
