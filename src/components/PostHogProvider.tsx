@@ -7,6 +7,7 @@ import { consumeExitToPlayPending, trackExitToPlayLanded } from '@/lib/analytics
 import { startSessionRecording, stopSessionRecording } from '@/lib/posthog';
 import { LOCALES } from '@/lib/i18n/locale';
 import { hasRecentCampaignAttribution } from '@/features/campaign-quiz/campaignAttribution';
+import { rememberUtmFromUrl } from '@/lib/analytics/utmAttribution';
 
 // Only the real SEO quiz routes (/:locale/football-quiz and one slug below
 // it), not any URL containing the substring — 404s like /en/football-quiz-foo
@@ -31,6 +32,14 @@ function PostHogPageViewInner(): ReactElement {
 
   // ($pageview comes from capture_pageview: 'history_change' in the PostHog
   // init — nothing to do per-route here.)
+
+  // Capture first-touch UTM on ANY tagged landing (campaign traffic arrives on
+  // /en, /play, football-quiz pages, ... — not just the welcome screen) so the
+  // backend `account_created` event can be attributed to the campaign.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    rememberUtmFromUrl(new URL(window.location.href));
+  }, [pathname, searchParams]);
 
   useEffect(() => {
     if (!pathname) return;
