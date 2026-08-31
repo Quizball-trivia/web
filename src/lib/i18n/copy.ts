@@ -49,12 +49,7 @@ const en: LocaleCopy = {
     title: "About QuizBall",
     subtitle: "Multiplayer football trivia — closer to a match than a quiz",
     paragraphs: [
-      "QuizBall is a multiplayer football trivia game built for fans who want more than a simple quiz.",
-      "Instead of only answering questions for points, players compete in live football-style matches. Correct answers help you control possession, create momentum, and score goals. The goal is to make football knowledge feel like an actual match: competitive, fast, social, and tense.",
-      "QuizBall is designed for fans who follow clubs, players, tournaments, transfers, football history, and the small details that make the game interesting. You can challenge friends, test your football IQ, climb the leaderboard, and prove who really knows the game.",
-      "Our mission is to turn football trivia into a real competitive experience — closer to a game than a static quiz.",
-      "QuizBall is currently being developed and improved continuously. New modes, questions, rankings, and social features will be added over time.",
-      "Alongside multiplayer matches, QuizBall publishes free football quizzes for fans who want to practise specific topics. We document how those questions are sourced, reviewed, updated and corrected in our editorial methodology.",
+      "QuizBall is a multiplayer football trivia game where correct answers win possession, create chances and score goals. Play live 1v1 matches, challenge friends, return for daily formats and climb the leaderboard.",
     ],
   },
   terms: {
@@ -167,12 +162,7 @@ const ka: LocaleCopy = {
     subtitle:
       "მრავალმოთამაშიანი საფეხბურთო ქვიზი — უფრო მეტი, ვიდრე უბრალოდ კითხვები",
     paragraphs: [
-      "QuizBall არის მრავალმოთამაშიანი საფეხბურთო ქვიზი, რომელიც შექმნილია იმ გულშემატკივრებისთვის, ვისაც მარტივ კითხვებზე მეტი სურს.",
-      "ქულებისთვის კითხვებზე პასუხის გაცემის ნაცვლად, მოთამაშეები ერთმანეთს რეალურ დროში, საფეხბურთო მატჩის სტილში ეჯიბრებიან. სწორი პასუხები გეხმარებათ ბურთის ფლობაში, უპირატესობის მოპოვებასა და გოლების გატანაში. ჩვენი მიზანია, ფეხბურთის ცოდნა ნამდვილ მატჩად ვაქციოთ: კონკურენტულ, სწრაფ, სოციალურ და დაძაბულ გამოცდილებად.",
-      "QuizBall შექმნილია მათთვის, ვინც თვალს ადევნებს კლუბებს, მოთამაშეებს, ტურნირებს, ტრანსფერებს, ფეხბურთის ისტორიასა და იმ წვრილმან დეტალებს, რაც ამ თამაშს ასე საინტერესოს ხდის. თქვენ შეგიძლიათ გამოიწვიოთ მეგობრები, შეამოწმოთ თქვენი საფეხბურთო IQ, დაწინაურდეთ რეიტინგში და დაამტკიცოთ, ვინ ფლობს საუკეთესო ცოდნას.",
-      "ჩვენი მიზანი, საფეხბურთო ქვიზი ნამდვილ შეჯიბრად ვაქციოთ — ის უფრო ახლოსაა თამაშთან, ვიდრე სტატიკურ კითხვარებთან.",
-      "QuizBall ამჟამად განვითარების პროცესშია და მუდმივად იხვეწება. დროთა განმავლობაში დაემატება ახალი რეჟიმები, კითხვები, რეიტინგები და სოციალური ფუნქციები.",
-      "მრავალმოთამაშიან მატჩებთან ერთად QuizBall აქვეყნებს უფასო საფეხბურთო ქვიზებს ცალკეული თემების სავარჯიშოდ. ჩვენს სარედაქციო მეთოდოლოგიაში აღწერილია, როგორ ვეძებთ, ვამოწმებთ, ვაახლებთ და ვასწორებთ კითხვებს.",
+      "QuizBall არის მრავალმოთამაშიანი საფეხბურთო ქვიზი, სადაც სწორი პასუხები გაძლევს ბურთის ფლობას, ქმნის საგოლე შანსებს და გატანინებს გოლებს. ითამაშე ცოცხალი 1v1 მატჩები, გამოიწვიე მეგობრები, დაბრუნდი ყოველდღიური ფორმატებისთვის და დაწინაურდი ლიდერბორდზე.",
     ],
   },
   terms: {
@@ -284,12 +274,7 @@ const es: LocaleCopy = {
     title: "Acerca de QuizBall",
     subtitle: "Trivia de fútbol multijugador — más parecida a un partido que a un concurso",
     paragraphs: [
-      "QuizBall es un juego de preguntas y respuestas de fútbol multijugador creado para aficionados que buscan más que un simple concurso.",
-      "En lugar de solo responder preguntas para obtener puntos, los jugadores compiten en partidos de fútbol en vivo. Las respuestas correctas te ayudan a controlar la posesión, crear impulso y marcar goles. El objetivo es que el conocimiento del fútbol se sienta como un partido real: competitivo, rápido, social y tenso.",
-      "QuizBall está diseñado para aficionados que siguen clubes, jugadores, torneos, fichajes, historia del fútbol y los pequeños detalles que hacen interesante el juego. Puedes desafiar a amigos, poner a prueba tu coeficiente intelectual futbolístico, subir en la clasificación y demostrar quién conoce realmente el juego.",
-      "Nuestra misión es convertir las trivias de fútbol en una experiencia competitiva real, más cercana a un juego que a un quiz estático.",
-      "QuizBall se encuentra en desarrollo y mejora continua. Se añadirán nuevos modos, preguntas, clasificaciones y funciones sociales con el tiempo.",
-      "Además de las partidas multijugador, QuizBall publica quizzes de fútbol gratuitos para practicar temas concretos. Nuestra metodología editorial explica cómo investigamos, revisamos, actualizamos y corregimos esas preguntas.",
+      "QuizBall es un juego multijugador de trivia de fútbol donde las respuestas correctas ganan la posesión, crean ocasiones y marcan goles. Juega partidos 1 contra 1, desafía a tus amigos, vuelve para nuevos formatos diarios y sube en la clasificación.",
     ],
   },
   terms: {
