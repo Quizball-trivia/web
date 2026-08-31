@@ -104,7 +104,10 @@ export const FEATURED_NAMES = [
   'serie a',
 ];
 
-export const FEATURED_CATEGORY_LIMIT = 40;
+// Twelve cards fill every landing breakpoint (2 / 3 / 4 columns) without
+// shipping dozens of below-the-fold images and DOM nodes on first load. The
+// remaining categories stay available through the existing Browse All flow.
+export const FEATURED_CATEGORY_LIMIT = 12;
 
 // Fallback colors for categories not in the mapping
 export const FALLBACK_COLORS = ['#E74C3C', '#3498DB', '#2ECC71', '#9B59B6', '#F39C12', '#1ABC9C', '#E67E22', '#2980B9'];

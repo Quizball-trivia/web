@@ -25,22 +25,22 @@ const STANDARD_CATEGORY_IMAGE_SIZES = '(min-width: 1024px) 240px, (min-width: 64
 
 function WelcomeCategoriesSkeleton() {
   return (
-    <section className="py-6 md:py-8" aria-hidden="true">
-      <div>
-        <div className="mb-6">
-          <div className="h-6 w-56 rounded-md bg-white/10" />
-          <div className="mt-2 h-4 w-44 rounded-md bg-white/5" />
+    <section className="px-6 py-12 md:py-20" aria-hidden="true">
+      <div className="mx-auto max-w-5xl">
+        <div className="mb-10 flex flex-col items-center">
+          <div className="h-8 w-56 rounded-md bg-white/10" />
+          <div className="mt-3 h-5 w-44 rounded-md bg-white/5" />
         </div>
-        <div className="grid grid-cols-3 gap-2.5 md:gap-5">
-          {Array.from({ length: 15 }).map((_, i) => (
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 md:gap-4">
+          {Array.from({ length: 12 }).map((_, i) => (
             <div
               key={i}
-              className="aspect-[3/4] rounded-2xl border border-white/10 bg-white/[0.04] md:aspect-auto md:min-h-[190px] md:max-h-[240px]"
+              className="min-h-[124px] rounded-2xl border border-white/10 bg-white/[0.04] md:min-h-[138px]"
             />
           ))}
         </div>
-        <div className="mt-6 flex justify-center">
-          <div className="h-11 w-64 rounded-xl bg-white/[0.06]" />
+        <div className="mt-8 flex justify-center">
+          <div className="h-14 w-[280px] rounded-[20px] bg-white/[0.06]" />
         </div>
       </div>
     </section>
@@ -58,7 +58,7 @@ export function WelcomeCategoriesSection({
   if (featuredCategories.length === 0) return <WelcomeCategoriesSkeleton />;
 
   return (
-      <section className="px-6 py-12 md:py-20">
+      <section className="px-6 py-12 md:py-20 [content-visibility:auto] [contain-intrinsic-size:auto_620px]">
         <div className="max-w-5xl mx-auto">
           <h2 className="text-center text-2xl md:text-3xl font-black text-white mb-3">
             {t('welcome.categoriesTitle')}

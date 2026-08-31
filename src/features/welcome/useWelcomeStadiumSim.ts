@@ -6,11 +6,10 @@
  * Owns all of the landing animation state: stadium cycle/phase,
  * player position, ball ownership, goal visibility, target goal,
  * shot mode, in-flight score animations, score counter, and the
- * randomized demo-player loadout used by the hero avatars.
+ * deterministic demo-player loadout used by the hero avatars.
  *
  * Drives three effects:
- *  - shuffle demo players post-mount (SSR-safe initialiser starts
- *    with the deterministic loadout; client re-shuffles after paint).
+ *  - defer non-critical animation work until the visitor first interacts.
  *  - subheading phrase rotation (`currentPhraseIndex`).
  *  - per-cycle stadium animation timeline that fires score flights,
  *    morphs into bars, runs charge/battle/result, and either fires
@@ -24,7 +23,7 @@
  * attach.
  */
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { GOAL_CELEBRATION_MS, GOAL_SHOT_TO_CELEBRATION_MS } from '@/features/possession/realtimePossession.helpers';
 import type { BarBattleState } from '@/features/possession/components/BarBattleOverlay';
 import { FLIGHT_TOTAL_MS, type FlightSpec } from '@/features/possession/components/BarBattleFlightOverlay';
@@ -58,6 +57,7 @@ import type { DemoPlayer, LandingGoalSide } from './welcome.types';
 const LANDING_SCORE_HANDOFF_MS = FLIGHT_TOTAL_MS + 420;
 
 export function useWelcomeStadiumSim() {
+  const [animationReady, setAnimationReady] = useState(false);
   const [currentPhraseIndex, setCurrentPhraseIndex] = useState(0);
   const [stadiumPhase, setStadiumPhase] = useState(0);
   const [stadiumCycle, setStadiumCycle] = useState(0);
@@ -79,10 +79,10 @@ export function useWelcomeStadiumSim() {
   const landingPositionRef = useRef(50);
   const landingTimersRef = useRef<ReturnType<typeof setTimeout>[]>([]);
 
-  // Start with a deterministic loadout so SSR and client first paint match
-  // (Math.random in useState breaks hydration). Re-shuffle after mount so
-  // returning visitors see variety without affecting the SEO-critical HTML.
-  const [demoPlayers, setDemoPlayers] = useState<{
+  // Keep one deterministic loadout for the full visit. The previous
+  // post-hydration shuffle downloaded a second set of layered avatar images
+  // and repainted the hero during the Core Web Vitals measurement window.
+  const demoPlayers = useMemo<{
     left: DemoPlayer;
     right: DemoPlayer;
     crowd: DemoPlayer[];
@@ -96,33 +96,48 @@ export function useWelcomeStadiumSim() {
       right: make(1, 'Thiago'),
       crowd: [make(2, 'Santi'), make(3, 'Jamal'), make(4, 'Enzo')],
     };
-  });
+  }, []);
 
   useEffect(() => {
-    const shuffledNames = [...DEMO_PLAYER_NAMES].sort(() => Math.random() - 0.5);
-    const shuffledLoadouts = [...DEMO_AVATAR_LOADOUTS].sort(() => Math.random() - 0.5);
-    const make = (index: number, fallbackName: string): DemoPlayer => ({
-      name: shuffledNames[index] ?? fallbackName,
-      avatarCustomization: shuffledLoadouts[index] ?? DEMO_AVATAR_LOADOUTS[index % DEMO_AVATAR_LOADOUTS.length],
-    });
-    queueMicrotask(() => {
-      setDemoPlayers({
-        left: make(0, 'Mason'),
-        right: make(1, 'Thiago'),
-        crowd: [make(2, 'Santi'), make(3, 'Jamal'), make(4, 'Enzo')],
-      });
-    });
+    if (
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) return;
+
+    // The stadium contains the largest painted image on mobile. Automatically
+    // starting its SVG/motion timeline caused that image to be repainted six
+    // seconds after load, turning an otherwise fast first paint into a 6s+
+    // LCP. Start the decorative loop only after the first real interaction;
+    // Core Web Vitals has finalized LCP by then, and idle visitors avoid the
+    // animation's CPU/image work entirely.
+    let frameId: number | null = null;
+    const start = () => {
+      window.removeEventListener('pointerdown', start);
+      window.removeEventListener('keydown', start);
+      frameId = window.requestAnimationFrame(() => setAnimationReady(true));
+    };
+
+    window.addEventListener('pointerdown', start, { passive: true, once: true });
+    window.addEventListener('keydown', start, { once: true });
+
+    return () => {
+      window.removeEventListener('pointerdown', start);
+      window.removeEventListener('keydown', start);
+      if (frameId !== null) window.cancelAnimationFrame(frameId);
+    };
   }, []);
 
   // Subheading rotation
   useEffect(() => {
+    if (!animationReady) return;
     const timer = setInterval(() => {
       setCurrentPhraseIndex((prev) => (prev + 1) % SUBHEADING_PHRASE_KEYS.length);
     }, 3000);
     return () => clearInterval(timer);
-  }, []);
+  }, [animationReady]);
 
   useEffect(() => {
+    if (!animationReady) return;
     landingTimersRef.current.forEach((timer) => clearTimeout(timer));
     landingTimersRef.current = [];
 
@@ -289,7 +304,7 @@ export function useWelcomeStadiumSim() {
       landingTimersRef.current.forEach((timer) => clearTimeout(timer));
       landingTimersRef.current = [];
     };
-  }, [stadiumCycle]);
+  }, [animationReady, stadiumCycle]);
 
   useEffect(() => {
     if (landingScore.left < 3 && landingScore.right < 3) return;

@@ -37,14 +37,15 @@ export function WelcomeHero({ sim, duelsCount, onKickOff }: WelcomeHeroProps) {
   const rightScore = landingScore.right;
 
   return (
-    <main className="flex-1 flex flex-col lg:flex-row items-center max-w-7xl mx-auto w-full px-6 py-8 md:py-12 lg:py-0 gap-10 md:gap-12 lg:gap-16">
+    <>
+      {/* This bitmap is the mobile LCP candidate. SVG <image> requests are
+          otherwise assigned Low priority even though the pitch is visible in
+          the first viewport. Hoist an explicit preload into the document
+          head so it can download alongside the critical CSS. */}
+      <link rel="preload" as="image" href="/assets/stadium-green.webp" fetchPriority="high" />
+      <main className="flex-1 flex flex-col lg:flex-row items-center max-w-7xl mx-auto w-full px-6 py-8 md:py-12 lg:py-0 gap-10 md:gap-12 lg:gap-16">
       {/* LEFT: Stadium sim */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.6 }}
-        className="order-2 lg:order-1 flex-1 flex items-center justify-center w-full max-w-3xl lg:max-w-none relative"
-      >
+      <div className="order-2 lg:order-1 flex-1 flex items-center justify-center w-full max-w-3xl lg:max-w-none relative">
         <div className="w-full max-w-3xl">
           <div className="mb-4 flex items-center justify-between gap-3 px-1 md:px-2">
             <div className="flex items-center gap-3 flex-1 min-w-0 rounded-2xl bg-surface-page px-3 py-2.5">
@@ -189,15 +190,13 @@ export function WelcomeHero({ sim, duelsCount, onKickOff }: WelcomeHeroProps) {
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
 
       {/* RIGHT: Copy & CTA */}
-      <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-        className="order-1 lg:order-2 flex-1 flex flex-col items-center lg:items-start text-center lg:text-left max-w-xl relative lg:pl-8 xl:pl-12"
-      >
+      {/* Keep the SEO-critical heading visible in the server paint. The old
+          motion wrapper emitted opacity:0 until hydration, turning this text
+          into a 9s LCP candidate on throttled mobile CPUs. */}
+      <div className="order-1 lg:order-2 flex-1 flex flex-col items-center lg:items-start text-center lg:text-left max-w-xl relative lg:pl-8 xl:pl-12">
                 <div className="absolute -left-11 md:-left-22 top-10 md:top-14 w-16 md:w-24 h-32 md:h-48 overflow-hidden pointer-events-none md:hidden">
           {/* PERF: the edge fade is BAKED into the -faded asset instead of a
               runtime mask-image. A masked element under an infinite rotate
@@ -263,7 +262,8 @@ export function WelcomeHero({ sim, duelsCount, onKickOff }: WelcomeHeroProps) {
         >
           {t('welcome.kickOff')}
         </Button>
-      </motion.div>
-    </main>
+      </div>
+      </main>
+    </>
   );
 }

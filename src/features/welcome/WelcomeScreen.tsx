@@ -151,7 +151,10 @@ export function WelcomeScreen() {
 
   return (
     <div className="min-h-screen w-full bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat font-sans text-foreground flex flex-col overflow-x-hidden">
-      {googleClientId ? (
+      {/* Google Identity is only needed after the visitor opens auth. Loading
+          its ~100 KiB SDK on every landing visit competed with the hero LCP
+          and added main-thread work for visitors who never signed in. */}
+      {loginOpen && googleClientId ? (
         <Script
           src="https://accounts.google.com/gsi/client"
           nonce={cspNonce}
@@ -170,7 +173,7 @@ export function WelcomeScreen() {
       />
 
       {/* ─── World Cup Event Zone ─── */}
-      <div className="relative max-w-7xl mx-auto w-full px-2 md:px-4 pt-8 pb-4">
+      <div className="relative max-w-7xl mx-auto w-full px-2 md:px-4 pt-8 pb-4 [content-visibility:auto] [contain-intrinsic-size:auto_1800px]">
         {/* Categories */}
         <div className="pb-10">
           <WelcomeCategoriesSection

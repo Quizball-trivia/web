@@ -34,6 +34,15 @@ const sizeClasses: Record<NonNullable<AvatarDisplayProps['size']>, string> = {
   xxl: 'size-28 sm:size-32 md:size-36',
 };
 
+const imageSizes: Record<NonNullable<AvatarDisplayProps['size']>, string> = {
+  xs: '32px',
+  sm: '(min-width: 640px) 48px, 40px',
+  md: '64px',
+  lg: '96px',
+  xl: '128px',
+  xxl: '(min-width: 768px) 144px, 128px',
+};
+
 export function AvatarDisplay({
   customization,
   size = 'md',
@@ -67,7 +76,8 @@ export function AvatarDisplay({
             src={skinAsset}
             alt="Avatar"
             fill
-            unoptimized
+            sizes={imageSizes[size]}
+            quality={60}
             className="object-contain"
           />
           {AVATAR_SLOTS.map((slot) => {
@@ -79,6 +89,8 @@ export function AvatarDisplay({
                 key={slot}
                 src={part.asset}
                 alt=""
+                loading="lazy"
+                decoding="async"
                 className="pointer-events-none absolute object-contain"
                 style={{
                   top: `${part.position.top}%`,
