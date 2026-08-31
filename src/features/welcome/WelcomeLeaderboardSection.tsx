@@ -28,7 +28,7 @@ export function WelcomeLeaderboardSection({
   // rather than the region-gated `isEventMode` the components default to.
   const { eventEnabled } = useActiveEventMode();
   return (
-    <section className="py-6 md:py-8">
+    <section className="py-6 md:py-8 [content-visibility:auto] [contain-intrinsic-size:auto_760px]">
       <div className="mx-auto w-full max-w-3xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

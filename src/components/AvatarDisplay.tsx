@@ -34,6 +34,17 @@ const sizeClasses: Record<NonNullable<AvatarDisplayProps['size']>, string> = {
   xxl: 'size-28 sm:size-32 md:size-36',
 };
 
+const imageSizes: Record<NonNullable<AvatarDisplayProps['size']>, string> = {
+  // The image lives inside the 88%-high, 495:543 aspect-ratio wrapper,
+  // making its rendered width roughly 80% of the outer avatar size.
+  xs: '26px',
+  sm: '(min-width: 640px) 38px, 32px',
+  md: '51px',
+  lg: '77px',
+  xl: '103px',
+  xxl: '(min-width: 768px) 115px, 103px',
+};
+
 export function AvatarDisplay({
   customization,
   size = 'md',
@@ -67,7 +78,8 @@ export function AvatarDisplay({
             src={skinAsset}
             alt="Avatar"
             fill
-            unoptimized
+            sizes={imageSizes[size]}
+            quality={60}
             className="object-contain"
           />
           {AVATAR_SLOTS.map((slot) => {
@@ -79,6 +91,8 @@ export function AvatarDisplay({
                 key={slot}
                 src={part.asset}
                 alt=""
+                loading="lazy"
+                decoding="async"
                 className="pointer-events-none absolute object-contain"
                 style={{
                   top: `${part.position.top}%`,
