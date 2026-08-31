@@ -91,6 +91,12 @@ export function WeekendLeagueScreen({
               <WeekendLeaguePromoCard
                 registeredCount={wl.registered}
                 kickoffMs={wl.milestones?.qualifier.targetMs ?? null}
+                qp={controller
+                  ? (controller.qpQualified ? null : controller.qp ?? null)
+                  // Playground has no live controller — sample balance so the
+                  // indicator is visible unless the QUALIFIED toggle is on.
+                  : (wl.qualified ? null : 53)}
+                qpTarget={controller?.qpTarget ?? 200}
                 ctaLabel={canEnterNow ? undefined : t('weekendLeague.promoCtaEarn')}
                 onStart={canEnterNow ? wl.enterLeague : () => router.push('/play')}
               />
@@ -98,6 +104,9 @@ export function WeekendLeagueScreen({
           )}
 
           {!promoHero && wl.phase !== 'qualifier_live' && wl.phase !== 'playoffs_live' && (
+            <div className={['upcoming', 'entry_open', 'completed'].includes(wl.phase)
+              ? 'mx-auto w-full max-w-md'
+              : 'w-full'}>
             <LeagueHeader
               phase={wl.phase}
               status={controller?.status}
@@ -115,6 +124,7 @@ export function WeekendLeagueScreen({
               }
               onEnter={wl.enterLeague}
             />
+            </div>
           )}
 
           {/* The blue header card already carries status + countdown + the
@@ -192,10 +202,11 @@ function PhaseContent({
   const { t } = useLocale();
   const { phase } = wl;
 
-  // Pre-entry the promo hero already carries the format and prize story;
-  // the explainer stack only renders once the player has entered.
+  // The promo hero leads pre-entry, but the full prize ladder and the
+  // how-it-works explainer stay below it — the card's one-line voucher blurb
+  // is a hook, not the story (owner call 2026-08-31, restoring the pre-promo
+  // stack).
   if (phase === 'upcoming' || phase === 'entry_open') {
-    if (!wl.hasEntered) return null;
     return (
       <>
         <HowItWorks />
