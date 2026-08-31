@@ -20,6 +20,12 @@ const BACK_LABEL: Record<Locale, string> = {
   es: "Volver",
 };
 
+const HOME_LABEL: Record<Locale, string> = {
+  en: "QuizBall home",
+  ka: "QuizBall-ის მთავარი გვერდი",
+  es: "Inicio de QuizBall",
+};
+
 const MODE_COLORS = [
   colors.blue.brand,
   colors.green.base,
@@ -45,7 +51,7 @@ export function AboutScreen({ copy, locale }: AboutScreenProps) {
         >
           <ChevronLeft className="size-5" aria-hidden />
         </Link>
-        <Link href={`/${locale}`} aria-label="QuizBall home">
+        <Link href={`/${locale}`} aria-label={HOME_LABEL[locale]}>
           <AppLogo size="sm" />
         </Link>
         <LanguageSwitcher locale={locale} />
