@@ -67,17 +67,17 @@ export const ABOUT_GAME_MODES_COPY: Record<Locale, AboutGameModesCopy> = {
       "Ranked turns the same football questions into a short live match against another player.",
     rankedSteps: [
       {
-        title: "1. Block a category",
+        title: "Block a category",
         body:
           "Three random football categories appear. Each player blocks one, and the match uses the category left on the pitch.",
       },
       {
-        title: "2. Win possession",
+        title: "Win possession",
         body:
           "Both players answer live questions. Correct answers move possession, build attacks and create chances to score.",
       },
       {
-        title: "3. Score and climb",
+        title: "Score and climb",
         body:
           "Goals decide the result. After the match, Rank Points update your tier and position on the leaderboard.",
       },
@@ -123,17 +123,17 @@ export const ABOUT_GAME_MODES_COPY: Record<Locale, AboutGameModesCopy> = {
       "რეიტინგულ რეჟიმში საფეხბურთო კითხვები სხვა მოთამაშესთან მოკლე, ცოცხალ მატჩად იქცევა.",
     rankedSteps: [
       {
-        title: "1. დაბლოკე კატეგორია",
+        title: "დაბლოკე კატეგორია",
         body:
           "ჩნდება სამი შემთხვევითი საფეხბურთო კატეგორია. თითოეული მოთამაშე ბლოკავს ერთს და მატჩი დარჩენილ კატეგორიაში ტარდება.",
       },
       {
-        title: "2. მოიპოვე ბურთი",
+        title: "მოიპოვე ბურთი",
         body:
           "ორივე მოთამაშე ერთდროულად პასუხობს კითხვებს. სწორი პასუხები გაძლევს ბურთის ფლობას, ავითარებს შეტევას და ქმნის საგოლე შანსებს.",
       },
       {
-        title: "3. გაიტანე და დაწინაურდი",
+        title: "გაიტანე და დაწინაურდი",
         body:
           "მატჩის შედეგს გოლები წყვეტს. თამაშის შემდეგ RP ცვლის შენს კატეგორიასა და ადგილს ლიდერბორდზე.",
       },
@@ -179,17 +179,17 @@ export const ABOUT_GAME_MODES_COPY: Record<Locale, AboutGameModesCopy> = {
       "El modo clasificatorio convierte las preguntas de fútbol en un partido corto y en vivo contra otro jugador.",
     rankedSteps: [
       {
-        title: "1. Bloquea una categoría",
+        title: "Bloquea una categoría",
         body:
           "Aparecen tres categorías de fútbol al azar. Cada jugador bloquea una y el partido se disputa con la categoría restante.",
       },
       {
-        title: "2. Gana la posesión",
+        title: "Gana la posesión",
         body:
           "Los dos jugadores responden preguntas en vivo. Las respuestas correctas mueven la posesión, construyen ataques y crean ocasiones de gol.",
       },
       {
-        title: "3. Marca y sube",
+        title: "Marca y sube",
         body:
           "Los goles deciden el resultado. Al terminar, los Puntos de Rango actualizan tu nivel y tu posición en la clasificación.",
       },
