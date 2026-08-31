@@ -133,7 +133,7 @@ export function LeagueHeader({
             className="mt-1.5 font-poppins text-[1.6rem] font-black uppercase leading-none text-white sm:text-3xl"
             style={poppins}
           >
-            {t('weekendLeague.title')}
+            {t('weekendLeague.promoTitle')}
           </h1>
 
           <div
@@ -222,7 +222,7 @@ export function LeagueHeader({
             className={`mt-2 font-poppins text-[1.75rem] font-black uppercase leading-none transition-colors duration-700 sm:text-4xl ${gold ? 'text-black/90' : 'text-white'}`}
             style={poppins}
           >
-            {t('weekendLeague.title')}
+            {t('weekendLeague.promoTitle')}
           </motion.h1>
         </div>
 

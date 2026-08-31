@@ -91,7 +91,11 @@ export function WeekendLeagueScreen({
               <WeekendLeaguePromoCard
                 registeredCount={wl.registered}
                 kickoffMs={wl.milestones?.qualifier.targetMs ?? null}
-                qp={controller?.qpQualified ? null : controller?.qp ?? null}
+                qp={controller
+                  ? (controller.qpQualified ? null : controller.qp ?? null)
+                  // Playground has no live controller — sample balance so the
+                  // indicator is visible unless the QUALIFIED toggle is on.
+                  : (wl.qualified ? null : 53)}
                 qpTarget={controller?.qpTarget ?? 200}
                 ctaLabel={canEnterNow ? undefined : t('weekendLeague.promoCtaEarn')}
                 onStart={canEnterNow ? wl.enterLeague : () => router.push('/play')}
