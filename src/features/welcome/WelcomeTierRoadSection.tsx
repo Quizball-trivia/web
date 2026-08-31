@@ -26,7 +26,7 @@ export function WelcomeTierRoadSection({ onStartClimbing }: WelcomeTierRoadSecti
   const { t } = useLocale();
   const tierLabelOf = useTierLabel();
   return (
-    <section className="py-12 md:py-20 overflow-hidden">
+    <section className="py-12 md:py-20 overflow-hidden [content-visibility:auto] [contain-intrinsic-size:auto_720px]">
       <div className="max-w-6xl mx-auto px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
