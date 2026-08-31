@@ -35,12 +35,14 @@ const sizeClasses: Record<NonNullable<AvatarDisplayProps['size']>, string> = {
 };
 
 const imageSizes: Record<NonNullable<AvatarDisplayProps['size']>, string> = {
-  xs: '32px',
-  sm: '(min-width: 640px) 48px, 40px',
-  md: '64px',
-  lg: '96px',
-  xl: '128px',
-  xxl: '(min-width: 768px) 144px, 128px',
+  // The image lives inside the 88%-high, 495:543 aspect-ratio wrapper,
+  // making its rendered width roughly 80% of the outer avatar size.
+  xs: '26px',
+  sm: '(min-width: 640px) 38px, 32px',
+  md: '51px',
+  lg: '77px',
+  xl: '103px',
+  xxl: '(min-width: 768px) 115px, 103px',
 };
 
 export function AvatarDisplay({
