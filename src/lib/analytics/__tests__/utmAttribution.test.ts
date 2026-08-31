@@ -85,3 +85,31 @@ describe('utmAttribution', () => {
     expect(getUtmAttributionHeader()).not.toBeNull();
   });
 });
+
+describe('utmAttribution future-dated storage', () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-08-31T12:00:00.000Z'));
+  });
+  afterEach(() => vi.useRealTimers());
+
+  it('discards a record stamped far in the future and captures fresh attribution', () => {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      utm_source: 'stale',
+      captured_at: '2027-01-01T00:00:00.000Z',
+    }));
+    expect(getUtmAttributionHeader()).toBeNull();
+
+    rememberUtmFromUrl(new URL('https://quizball.io/en?utm_source=tiktok'));
+    expect(decodeHeader(getUtmAttributionHeader()!)).toMatchObject({ utm_source: 'tiktok' });
+  });
+
+  it('still accepts a slightly-ahead client clock', () => {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      utm_source: 'tiktok',
+      captured_at: '2026-08-31T12:02:00.000Z',
+    }));
+    expect(decodeHeader(getUtmAttributionHeader()!)).toMatchObject({ utm_source: 'tiktok' });
+  });
+});

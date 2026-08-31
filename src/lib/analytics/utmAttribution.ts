@@ -16,6 +16,10 @@
 
 const STORAGE_KEY = 'quizball_utm_attribution';
 const MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
+// Mirrors the backend's skew allowance. Without an upper bound a record
+// stamped in the future would never expire AND would suppress fresh capture,
+// pinning attribution to a stale campaign indefinitely.
+const MAX_FUTURE_SKEW_MS = 5 * 60 * 1000;
 // Mirrors the backend validation in src/core/utm-attribution.ts.
 const VALUE_RE = /^[A-Za-z0-9._\-|]{1,64}$/;
 
@@ -34,7 +38,9 @@ function isValid(value: unknown, nowMs = Date.now()): value is UtmAttribution {
     if (optional !== undefined && (typeof optional !== 'string' || !VALUE_RE.test(optional))) return false;
   }
   const capturedAtMs = typeof item.captured_at === 'string' ? Date.parse(item.captured_at) : NaN;
-  return Number.isFinite(capturedAtMs) && nowMs - capturedAtMs <= MAX_AGE_MS;
+  if (!Number.isFinite(capturedAtMs)) return false;
+  if (capturedAtMs > nowMs + MAX_FUTURE_SKEW_MS) return false;
+  return nowMs - capturedAtMs <= MAX_AGE_MS;
 }
 
 function readStored(): UtmAttribution | null {
