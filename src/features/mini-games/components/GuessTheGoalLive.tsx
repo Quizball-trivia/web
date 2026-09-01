@@ -326,8 +326,12 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
         .current()
         .then((existing) => {
           if (existing) {
-            adoptSession(existing, true);
-            if (track) trackEvent('ggt_screen_viewed', { entry: 'resumed' });
+            // Landing always shows the menu + collection (owner decision);
+            // the open goal waits behind the button instead of swallowing
+            // the navigation. Kick off resumes it — nothing is abandoned.
+            resumableRef.current = existing;
+            setPhase('idle');
+            if (track) trackEvent('ggt_screen_viewed', { entry: 'resumable' });
           } else {
             setPhase('idle');
             if (track) trackEvent('ggt_screen_viewed', { entry: 'idle' });
@@ -418,6 +422,12 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
 
   const start = useCallback(async () => {
     if (busy) return;
+    if (resumableRef.current) {
+      const resume = resumableRef.current;
+      resumableRef.current = null;
+      adoptSession(resume, true);
+      return;
+    }
     setBusy(true);
     setError(null);
     // Optimistic: swap to the board skeleton NOW — the session request rides
@@ -598,6 +608,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
   // the real footage automatically — "back to the board" stays one tap away.
   // Once per session: pressing back must not re-trigger the flip.
   const autoFlippedForRef = useRef<string | null>(null);
+  const resumableRef = useRef<GgtSession | null>(null);
   useEffect(() => {
     if (!hasVideo || !session) return;
     if (phase !== 'reveal' && phase !== 'bonus_done') return;
@@ -817,11 +828,15 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
             <button
               type="button"
               onClick={start}
-              disabled={busy || dailyLimitReached}
+              disabled={busy || (dailyLimitReached && !resumableRef.current)}
               className="font-poppins mt-2 inline-flex h-[50px] min-w-[200px] items-center justify-center gap-2 rounded-[20px] bg-black px-8 text-[20px] uppercase tracking-wide text-white transition-all hover:brightness-110 active:translate-y-[2px] disabled:opacity-60"
             >
               <Play className="size-5 fill-current" />{' '}
-              {dailyLimitReached ? t('Back tomorrow') : t('Kick off')}
+              {resumableRef.current
+                ? t('Continue')
+                : dailyLimitReached
+                  ? t('Back tomorrow')
+                  : t('Kick off')}
             </button>
             {isAdmin && (
               <button

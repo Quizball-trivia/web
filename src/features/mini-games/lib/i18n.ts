@@ -411,6 +411,7 @@ const KA: Record<string, string> = {
   "Every round the field is cut — answer right and fast to stay in it. Nine rounds from {n} players down to one.":
     "ყოველ რაუნდში ველი მცირდება — უპასუხე სწორად და სწრაფად, რომ დარჩე. ცხრა რაუნდი {n} მოთამაშიდან ერთამდე.",
   "Kick off": "დაწყება",
+  "Continue": "გააგრძელე",
   "A legendary goal replays on the coaching board. Name it — the first solve of each goal pays coins and XP.":
     "ლეგენდარული გოლი საწვრთნელ დაფაზე მეორდება. ამოიცანი — ყოველი გოლის პირველი ამოცნობა ქოინებსა და XP-ს იძლევა.",
   "A legendary goal replays on the coaching board. Watch the moves and name the goal.":
