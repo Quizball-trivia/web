@@ -1,6 +1,8 @@
 "use client";
 
 import Image from "next/image";
+import { MiniGamesGrid } from "@/features/mini-games/components/MiniGamesGrid";
+import { guessTheGoalApi, type GgtStats } from "@/lib/repositories/guessTheGoal.repo";
 import { useCallback, useEffect, useMemo, useState, type MouseEvent } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, RotateCcw } from "lucide-react";
@@ -200,13 +202,20 @@ export default function DailyChallengesPage() {
     () => challenges.filter((c) => c.completedToday).length,
     [challenges],
   );
+  // Guess the Goal contributes to the day's coin total even though it is not
+  // a challenge: the counter should mean "coins this page can still pay you".
+  const [ggtStats, setGgtStats] = useState<GgtStats | null>(null);
+  useEffect(() => {
+    guessTheGoalApi.stats().then(setGgtStats).catch(() => {});
+  }, []);
   const totalCoins = useMemo(
-    () => challenges.reduce((sum, c) => sum + c.coinReward, 0),
-    [challenges],
+    () => challenges.reduce((sum, c) => sum + c.coinReward, 0) + (ggtStats?.daily_max_coins ?? ggtStats?.daily_coin_cap ?? 0),
+    [challenges, ggtStats],
   );
   const earnedCoins = useMemo(
-    () => challenges.filter((c) => c.completedToday).reduce((sum, c) => sum + c.coinReward, 0),
-    [challenges],
+    () => challenges.filter((c) => c.completedToday).reduce((sum, c) => sum + c.coinReward, 0)
+      + Math.min(ggtStats?.coins_today ?? 0, ggtStats?.daily_max_coins ?? 0),
+    [challenges, ggtStats],
   );
   // The client-side Guess-the-Card daily counts toward completion progress
   // only; the coin counter reflects real (server-credited) rewards alone.
@@ -287,6 +296,19 @@ export default function DailyChallengesPage() {
             />
           </div>
         )}
+
+        {/* Mini games — the hub tab is hidden for now, so its games live here
+            in the hub's own card design. Not daily challenges: separate
+            rewards, no coin-total participation. */}
+        <div className="mt-6 md:mt-10">
+          <h2 className="font-poppins text-[16px] uppercase leading-[1.1] text-white md:text-[24px]">
+            {t('miniGames.hubTitle')}
+          </h2>
+          <p className="mt-1 mb-3 text-[10px] font-black uppercase tracking-[0.04em] text-white/55 md:mb-5 md:text-sm">
+            {t('miniGames.hubSubtitle')}
+          </p>
+          <MiniGamesGrid only={["guess-the-goal"]} />
+        </div>
 
         {!isLoading && (
           <div className="mt-4 flex flex-col items-center lg:hidden">
