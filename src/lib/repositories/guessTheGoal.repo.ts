@@ -104,6 +104,11 @@ export interface GgtStats {
   pool_exhausted?: boolean;
   coins_today: number;
   daily_coin_cap: number;
+  /** Optional for rolling deploys against an older backend. */
+  goals_today?: number;
+  daily_goal_limit?: number;
+  daily_limit_reached?: boolean;
+  daily_max_coins?: number;
 }
 
 export interface GgtGalleryGoal {
@@ -114,6 +119,12 @@ export interface GgtGalleryGoal {
   bonus_correct: boolean | null;
   video_url: string | null;
   solved_at: string;
+  /** Live choreography for the collection's board replay — solved goals only,
+   *  so nothing here is still a secret. Optional for rolling deploys. */
+  players?: GgtPlayer[];
+  steps?: GgtStep[];
+  clip_start_s?: number | null;
+  clip_end_s?: number | null;
 }
 
 export interface GgtGallery {
@@ -125,6 +136,10 @@ export interface GgtGallery {
   xp_earned: number;
   daily_coin_cap: number;
   coins_today: number;
+  /** Optional for rolling deploys against an older backend. */
+  goals_today?: number;
+  daily_goal_limit?: number;
+  daily_limit_reached?: boolean;
   /** Solved goals only — unsolved goals exist solely as per-difficulty counts
    *  in `locked` (their titles are the quiz answers). */
   goals: GgtGalleryGoal[];
@@ -134,14 +149,16 @@ export interface GgtGallery {
 export class GuessTheGoalApiError extends Error {
   constructor(
     message: string,
-    public readonly status: number
+    public readonly status: number,
+    /** Machine code from the error body's details (e.g. GGT_DAILY_LIMIT_REACHED). */
+    public readonly code: string | null = null
   ) {
     super(message);
     this.name = "GuessTheGoalApiError";
   }
 }
 
-async function call<T>(path: string, method: "GET" | "POST", body?: unknown): Promise<T> {
+async function call<T>(path: string, method: "GET" | "POST" | "DELETE", body?: unknown): Promise<T> {
   const headers = new Headers({ "Content-Type": "application/json" });
   const token = await getSupabaseAccessToken();
   if (token) headers.set("Authorization", `Bearer ${token}`);
@@ -162,7 +179,9 @@ async function call<T>(path: string, method: "GET" | "POST", body?: unknown): Pr
       (payload as { message?: string; error?: { message?: string } } | null)?.message
       ?? (payload as { error?: { message?: string } } | null)?.error?.message
       ?? `Request failed (${response.status})`;
-    throw new GuessTheGoalApiError(message, response.status);
+    const code =
+      (payload as { details?: { code?: string } } | null)?.details?.code ?? null;
+    throw new GuessTheGoalApiError(message, response.status, code);
   }
   return payload as T;
 }
@@ -192,6 +211,25 @@ export const guessTheGoalApi = {
     return call(`/api/v1/guess-the-goal/sessions/${sessionId}/bonus`, "POST", {
       option_id: optionId,
     });
+  },
+
+  devResetToday(): Promise<{ removed: number }> {
+    return call("/api/v1/guess-the-goal/dev/reset-today", "DELETE");
+  },
+
+  /** Admin-only: the full published pool (boards + clips) for content review. */
+  devAllGoals(): Promise<{
+    goals: Array<{
+      title: GgtI18nText;
+      year: number;
+      difficulty: string;
+      featured_rank: number | null;
+      video_url: string | null;
+      players?: GgtPlayer[];
+      steps?: GgtStep[];
+    }>;
+  }> {
+    return call("/api/v1/guess-the-goal/dev/all-goals", "GET");
   },
 
   stats(): Promise<GgtStats> {

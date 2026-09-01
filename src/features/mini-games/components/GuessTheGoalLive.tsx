@@ -29,6 +29,7 @@ import { useMiniLocale, useMiniT } from '../lib/i18n';
 import { queryKeys } from '@/lib/queries/queryKeys';
 import { trackEvent } from '@/lib/posthog';
 import { usePlayer } from '@/contexts/PlayerContext';
+import { useAuthStore } from '@/stores/auth.store';
 import { CoinIcon } from '@/features/store/components/CoinIcon';
 import {
   guessTheGoalApi,
@@ -64,6 +65,56 @@ const DIFF_META: Record<string, { label: { en: string; ka: string }; color: stri
   hard: { label: { en: 'Hard', ka: 'რთული' }, color: '#FB3101' },
 };
 
+/** Looping board replay for the collection overlay — its own clock, nothing
+ *  shared with the live session. */
+function GgtBoardReplay({
+  players,
+  steps,
+}: {
+  players: NonNullable<GgtGallery['goals'][number]['players']>;
+  steps: NonNullable<GgtGallery['goals'][number]['steps']>;
+}) {
+  const goal = useMemo<TacticsGoalDef>(
+    () => ({
+      id: 'gallery-replay',
+      title: '',
+      options: [],
+      answerIndex: -1,
+      funFact: '',
+      players: players as TacticsGoalDef['players'],
+      steps: steps as TacticsGoalDef['steps'],
+      bonus: { question: '', options: [], answerIndex: -1 },
+    }),
+    [players, steps]
+  );
+  const timeline = useMemo(() => buildTimeline(goal), [goal]);
+  const [t, setT] = useState(0);
+  useEffect(() => {
+    const startedAt = performance.now();
+    let raf = 0;
+    const tick = () => {
+      setT(((performance.now() - startedAt) / 1000) % (timeline.duration + LOOP_HOLD));
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [timeline]);
+  const anim = Math.min(t, timeline.duration);
+  return (
+    <div
+      className="w-full overflow-hidden rounded-2xl bg-black"
+      style={{ aspectRatio: `${BOARD_VIEW_W} / ${BOARD_VIEW_H}` }}
+    >
+      <TacticsBoard2D
+        goal={goal}
+        timeline={timeline}
+        t={anim}
+        goalFlash={timeline.duration > 0 && anim >= timeline.duration - 0.05}
+      />
+    </div>
+  );
+}
+
 function GgtGalleryPanel({
   gallery,
   locale,
@@ -77,6 +128,11 @@ function GgtGalleryPanel({
   pick: (text: GgtI18nText | null | undefined) => string;
   onClose?: () => void;
 }) {
+  const [watch, setWatch] = useState<{
+    goal: GgtGallery['goals'][number];
+    title: string;
+    mode: 'board' | 'video';
+  } | null>(null);
   const pct = gallery.total > 0 ? Math.round((gallery.solved / gallery.total) * 100) : 0;
   const rank: Record<string, number> = { easy: 0, medium: 1, hard: 2 };
   // Solved cards then locked placeholders, grouped easy -> medium -> hard.
@@ -134,9 +190,19 @@ function GgtGalleryPanel({
       <div className="grid grid-cols-2 gap-2.5 md:grid-cols-3 lg:grid-cols-4">
         {ordered.map((entry, i) =>
           entry.kind === 'solved' ? (
-            <div
+            <button
               key={`s-${i}`}
-              className="flex min-h-[92px] flex-col items-center justify-between gap-2 rounded-xl bg-brand-green-bright p-3 text-center"
+              type="button"
+              disabled={!entry.goal.video_url && !(entry.goal.players && entry.goal.steps)}
+              onClick={() =>
+                (entry.goal.video_url || (entry.goal.players && entry.goal.steps)) &&
+                setWatch({
+                  goal: entry.goal,
+                  title: pick(entry.goal.title),
+                  mode: entry.goal.players && entry.goal.steps ? 'board' : 'video',
+                })
+              }
+              className="flex min-h-[92px] flex-col items-center justify-between gap-2 rounded-xl bg-brand-green-bright p-3 text-center transition-all enabled:cursor-pointer enabled:hover:brightness-105 enabled:active:translate-y-[1px]"
             >
               <p className="font-poppins text-[11px] font-black uppercase leading-snug text-black">
                 {pick(entry.goal.title)}
@@ -153,7 +219,7 @@ function GgtGalleryPanel({
                   </span>
                 </span>
               </div>
-            </div>
+            </button>
           ) : (
             <div
               key={`u-${i}`}
@@ -173,6 +239,45 @@ function GgtGalleryPanel({
           )
         )}
       </div>
+      {watch && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" onClick={() => setWatch(null)}>
+          <div className="w-full max-w-2xl" onClick={(e) => e.stopPropagation()}>
+            <p className="mb-2 text-center font-poppins text-[12px] font-black uppercase text-white">{watch.title}</p>
+            {watch.goal.players && watch.goal.steps && watch.goal.video_url && (
+              <div className="mb-2 flex items-center justify-center gap-2">
+                {(['board', 'video'] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => setWatch({ ...watch, mode })}
+                    className={`rounded-full px-4 py-1.5 font-poppins text-[11px] font-black uppercase tracking-wide transition-all ${
+                      mode === 'board' ? 'bg-brand-yellow text-black' : 'bg-brand-blue text-white'
+                    } ${watch.mode === mode ? 'ring-2 ring-white' : 'opacity-55 hover:opacity-90'}`}
+                  >
+                    {mode === 'board' ? t('Board') : t('Video')}
+                  </button>
+                ))}
+              </div>
+            )}
+            {watch.mode === 'board' && watch.goal.players && watch.goal.steps ? (
+              <GgtBoardReplay players={watch.goal.players} steps={watch.goal.steps} />
+            ) : !watch.goal.video_url ? null : /^https?:\/\/[^ ]+\.mp4(\?|$)/i.test(watch.goal.video_url) ? (
+              <video src={watch.goal.video_url} autoPlay controls playsInline className="aspect-video w-full rounded-2xl bg-black" />
+            ) : (
+              <iframe
+                src={`https://www.youtube-nocookie.com/embed/${(watch.goal.video_url.match(/(?:watch\?v=|youtu\.be\/|shorts\/|embed\/)([A-Za-z0-9_-]{6,20})/) ?? [])[1] ?? ''}?autoplay=1&rel=0${watch.goal.clip_start_s ? `&start=${watch.goal.clip_start_s}` : ''}${watch.goal.clip_end_s ? `&end=${watch.goal.clip_end_s}` : ''}`}
+                title={watch.title}
+                allow="autoplay; encrypted-media"
+                allowFullScreen
+                className="aspect-video w-full rounded-2xl bg-black"
+              />
+            )}
+            <button type="button" onClick={() => setWatch(null)} className="mx-auto mt-3 block rounded-full bg-white/15 px-5 py-2 font-poppins text-[12px] font-black uppercase text-white">
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -233,7 +338,48 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
   const poolExhausted = gallery
     ? (gallery.pool_exhausted ?? (gallery.solved > 0 && gallery.solved >= gallery.total))
     : false;
-  const coinsCapped = gallery ? gallery.coins_today >= gallery.daily_coin_cap : false;
+  /** Five goals a day. Optional-chained so an older backend (no limit fields)
+   *  simply behaves as before rather than locking the mode out. */
+  const dailyLimit = gallery?.daily_goal_limit ?? null;
+  const goalsToday = gallery?.goals_today ?? 0;
+  const dailyLimitReached = gallery?.daily_limit_reached ?? false;
+  const isAdmin = useAuthStore.getState().user?.role === 'admin';
+  /** Admin content browser: the whole pool rendered through the normal
+   *  collection panel, every card unlocked. */
+  const [devAll, setDevAll] = useState<GgtGallery | null>(null);
+  const devToggleAllGoals = useCallback(async () => {
+    if (devAll) {
+      setDevAll(null);
+      return;
+    }
+    try {
+      const { goals } = await guessTheGoalApi.devAllGoals();
+      setDevAll({
+        solved: goals.length,
+        total: goals.length,
+        coins_earned: 0,
+        xp_earned: 0,
+        daily_coin_cap: 0,
+        coins_today: 0,
+        goals: goals.map((g) => ({
+          title: g.title,
+          year: g.year,
+          difficulty: g.difficulty,
+          points: g.featured_rank ?? 0,
+          bonus_correct: null,
+          video_url: g.video_url,
+          solved_at: '',
+          players: g.players,
+          steps: g.steps,
+        })),
+        locked: {},
+      });
+    } catch {
+      setError(t('Something went wrong — try again'));
+    }
+  }, [devAll, t]);
+
+  const goalsLeftToday = dailyLimit === null ? null : Math.max(0, dailyLimit - goalsToday);
   const [showGallery, setShowGallery] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { addXP } = usePlayer();
@@ -284,8 +430,12 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
         .current()
         .then((existing) => {
           if (existing) {
-            adoptSession(existing, true);
-            if (track) trackEvent('ggt_screen_viewed', { entry: 'resumed' });
+            // Landing always shows the menu + collection (owner decision);
+            // the open goal waits behind the button instead of swallowing
+            // the navigation. Kick off resumes it — nothing is abandoned.
+            resumableRef.current = existing;
+            setPhase('idle');
+            if (track) trackEvent('ggt_screen_viewed', { entry: 'resumable' });
           } else {
             setPhase('idle');
             if (track) trackEvent('ggt_screen_viewed', { entry: 'idle' });
@@ -310,6 +460,26 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
     setError(null);
     loadCurrent();
   }, [loadCurrent]);
+
+  const devResetToday = useCallback(async () => {
+    try {
+      await guessTheGoalApi.devResetToday();
+      genRef.current += 1;
+      resumableRef.current = null;
+      setSession(null);
+      setOutcome(null);
+      setBonusOutcome(null);
+      setPicked(null);
+      setError(null);
+      // Through 'loading' so the menu is guaranteed to re-render (a ref
+      // change alone leaves a stale 'Continue' label on screen).
+      setPhase('loading');
+      loadCurrent(false);
+      guessTheGoalApi.gallery().then(setGallery).catch(() => {});
+    } catch {
+      setError(t('Something went wrong — try again'));
+    }
+  }, [t, loadCurrent]);
 
   const loadedOnceRef = useRef(false);
   useEffect(() => {
@@ -376,18 +546,27 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
 
   const start = useCallback(async () => {
     if (busy) return;
+    if (resumableRef.current) {
+      const resume = resumableRef.current;
+      resumableRef.current = null;
+      adoptSession(resume, true);
+      return;
+    }
     setBusy(true);
     setError(null);
     // Optimistic: swap to the board skeleton NOW — the session request rides
     // inside the transition instead of blocking the tap.
     setPhase('starting');
+    const gen = genRef.current;
     // The nonce survives retries so a lost response can't mint two sessions.
     if (!nonceRef.current) nonceRef.current = newNonce();
     try {
       const next = await guessTheGoalApi.start(nonceRef.current);
       nonceRef.current = null;
+      if (gen !== genRef.current) return;
       adoptSession(next);
     } catch (err) {
+      if (gen !== genRef.current) return;
       if (err instanceof GuessTheGoalApiError) {
         if (err.status === 503) {
           setPhase('disabled');
@@ -399,7 +578,18 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
         if (err.status >= 400 && err.status < 500) {
           nonceRef.current = null;
           if (err.status === 409) {
+            if (err.code === 'GGT_DAILY_LIMIT_REACHED') {
+              // The idle card disables PLAY, so reaching here means its
+              // gallery data was stale — refresh it so the card catches up.
+              setPhase('idle');
+              setError(t('All {limit} goals played — come back tomorrow', {
+                limit: gallery?.daily_goal_limit ?? 5,
+              }));
+              guessTheGoalApi.gallery().then(setGallery).catch(() => {});
+              return;
+            }
             const existing = await guessTheGoalApi.current().catch(() => null);
+            if (gen !== genRef.current) return;
             if (existing) {
               adoptSession(existing, true);
               return;
@@ -413,7 +603,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
     } finally {
       setBusy(false);
     }
-  }, [busy, adoptSession, t]);
+  }, [busy, adoptSession, t, gallery?.daily_goal_limit]);
 
   const submitGuess = useCallback(
     async (optionId: string) => {
@@ -423,10 +613,12 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
       setPicked(optionId);
       // Sampled before the request so network latency doesn't inflate it.
       const watchSeconds = Math.round(serverElapsed());
+      const gen = genRef.current;
       try {
         // Same-option retries replay the stored result server-side, so a
         // timeout here is safe to re-submit.
         const result = await guessTheGoalApi.guess(session.session_id, optionId);
+        if (gen !== genRef.current) return;
         setOutcome(result);
         setPhase('reveal');
         if (result.awards.coins > 0) {
@@ -447,6 +639,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
           has_bonus: Boolean(result.bonus),
         });
       } catch (err) {
+        if (gen !== genRef.current) return;
         if (err instanceof GuessTheGoalApiError && err.status >= 400 && err.status < 500) {
           // Definite rejection (session gone/answered in another tab): a
           // same-option retry can never succeed — reconcile with the server.
@@ -472,8 +665,10 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
       setBusy(true);
       setError(null);
       setBonusPicked(optionId);
+      const gen = genRef.current;
       try {
         const result = await guessTheGoalApi.bonus(session.session_id, optionId);
+        if (gen !== genRef.current) return;
         setBonusOutcome(result);
         setPhase('bonus_done');
         if (result.awards.coins > 0) {
@@ -488,6 +683,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
           difficulty: session.goal.difficulty,
         });
       } catch (err) {
+        if (gen !== genRef.current) return;
         if (err instanceof GuessTheGoalApiError && err.status >= 400 && err.status < 500) {
           setPhase('loading');
           loadCurrent(false);
@@ -519,36 +715,77 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
     return Math.max(1, Math.min(revealed, mainMoves));
   }, [timeline, time, mainMoves]);
 
-  /** Mirrors the server's decay so the preview can't drift from settlement.
-   *  New backends send full_points_seconds and settle on elapsed time; an old
-   *  backend (field absent) still settles by revealed-move count, so the
-   *  preview keeps the legacy formula there — mismatched formulas would show
-   *  one number while the server awards another during rolling deploys. */
-  const potential = useMemo(() => {
-    if (!session) return 0;
-    const max = session.max_points;
-    const min = session.min_points;
-    const windowS = session.full_points_seconds;
-    if (windowS == null) {
-      const span = Math.max(1, mainMoves - 1);
-      const stepIdx = Math.max(0, Math.min(revealedMoves - 1, mainMoves - 1));
-      const raw = Math.round(max - ((max - min) * stepIdx) / span);
-      return Math.max(min, Math.min(max, raw));
-    }
-    const fraction = Math.max(0, Math.min(1, time / windowS));
-    const raw = Math.round(max - (max - min) * fraction);
-    return Math.max(min, Math.min(max, raw));
-  }, [session, time, mainMoves, revealedMoves]);
+  /** No time decay (owner decision): a correct guess pays the session's full
+   *  max_points, which is already reduced for replayed goals. */
+  const potential = session?.max_points ?? 0;
+
+  /** Post-reveal board replay: a local clock, separate from the score clock,
+   *  so the finished board can be re-animated on demand. */
+  const [boardReplaying, setBoardReplaying] = useState(false);
+  const [replayT, setReplayT] = useState(0);
+  useEffect(() => {
+    if (!boardReplaying || duration <= 0) return undefined;
+    const startedAt = performance.now();
+    let raf = 0;
+    const tick = () => {
+      const elapsed = (performance.now() - startedAt) / 1000;
+      if (elapsed >= duration) {
+        setBoardReplaying(false);
+        return;
+      }
+      setReplayT(elapsed);
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [boardReplaying, duration]);
+  useEffect(() => {
+    setBoardReplaying(false);
+  }, [session?.session_id, showVideo]);
 
   /** Animation position: loop the replay while watching; freeze at full when
    *  revealed. The score clock (time) is monotonic — only the drawing loops. */
   const animTime =
     phase === 'watch' && duration > 0
       ? Math.min(time % (duration + LOOP_HOLD), duration)
-      : duration;
-  const goalFlash = phase !== 'watch' || (duration > 0 && animTime >= duration - 0.05);
+      : boardReplaying
+        ? Math.min(replayT, duration)
+        : duration;
+  const goalFlash = boardReplaying
+    ? duration > 0 && animTime >= duration - 0.05
+    : phase !== 'watch' || (duration > 0 && animTime >= duration - 0.05);
 
-  const video = outcome?.video_url ? youtubeEmbed(outcome.video_url, outcome.clip_end_s) : null;
+  // Clips we host ourselves play in a normal <video>; anything still pointing
+  // at YouTube keeps the iframe. Self-hosted is the fallback-proof path — an
+  // embed can be switched off by the rights holder at any time.
+  const selfHostedVideo = outcome?.video_url && /^https?:\/\/[^ ]+\.mp4(\?|$)/i.test(outcome.video_url)
+    ? outcome.video_url
+    : null;
+  const video = !selfHostedVideo && outcome?.video_url
+    ? youtubeEmbed(outcome.video_url, outcome.clip_end_s)
+    : null;
+  const hasVideo = Boolean(selfHostedVideo || video);
+
+  // Owner decision: once the answer (and bonus, if any) is settled, flip to
+  // the real footage automatically — "back to the board" stays one tap away.
+  // Once per session: pressing back must not re-trigger the flip.
+  const autoFlippedForRef = useRef<string | null>(null);
+  const [videoMuted, setVideoMuted] = useState(false);
+  const resumableRef = useRef<GgtSession | null>(null);
+  /** Bumped whenever the user backs out or resets: in-flight start/guess/bonus
+   *  responses from before the bump must not reopen the game. */
+  const genRef = useRef(0);
+  useEffect(() => {
+    if (!hasVideo || !session) return;
+    if (phase !== 'reveal' && phase !== 'bonus_done') return;
+    if (autoFlippedForRef.current === session.session_id) return;
+    autoFlippedForRef.current = session.session_id;
+    // No user gesture in this async chain — Safari/iOS blocks audible
+    // autoplay, which would land the flip on a paused frame. Muted plays;
+    // the controls (and the flip button) restore sound.
+    setVideoMuted(true);
+    setShowVideo(true);
+  }, [phase, hasVideo, session]);
 
   const inGame = phase === 'watch' || phase === 'reveal' || phase === 'bonus' || phase === 'bonus_done';
   const activeKind = useMemo<TacticsStepKind | null>(() => {
@@ -573,7 +810,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
         </span>
         {phase === 'watch' ? (
           <span className="shrink-0 font-poppins text-[11px] font-black uppercase tracking-wider text-brand-yellow">
-            {t('Answer now · +{points}', { points: potential })}
+            {t('+{points} points', { points: potential })}
           </span>
         ) : outcome ? (
           <span
@@ -601,11 +838,23 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
         </div>
       )}
 
-      <div
+      <motion.div
         className="relative w-full overflow-hidden rounded-2xl bg-black"
-        style={{ aspectRatio: `${BOARD_VIEW_W} / ${BOARD_VIEW_H}` }}
+        style={{ aspectRatio: `${BOARD_VIEW_W} / ${BOARD_VIEW_H}`, transformStyle: 'preserve-3d', perspective: 1200 }}
+        animate={{ rotateY: showVideo ? 360 : 0 }}
+        transition={{ duration: 0.55, ease: 'easeInOut' }}
       >
-        {showVideo && video ? (
+        {showVideo && selfHostedVideo ? (
+          <video
+            src={`${selfHostedVideo}${outcome?.clip_start_s ? `#t=${outcome.clip_start_s}` : ''}`}
+            title={pick(outcome?.title)}
+            autoPlay
+            muted={videoMuted}
+            controls
+            playsInline
+            className="absolute inset-0 h-full w-full"
+          />
+        ) : showVideo && video ? (
           <iframe
             src={`https://www.youtube-nocookie.com/embed/${video.id}?autoplay=1&rel=0${video.start ? `&start=${video.start}` : ''}${video.end ? `&end=${video.end}` : ''}`}
             title={pick(outcome?.title)}
@@ -616,25 +865,42 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
         ) : (
           <TacticsBoard2D goal={boardGoal} timeline={timeline} t={animTime} goalFlash={goalFlash} />
         )}
-      </div>
+      </motion.div>
 
-      {(phase === 'reveal' || phase === 'bonus_done' || (video && phase !== 'watch')) && (
-        <div className="flex items-center justify-center gap-2.5">
-          {video && (
+      {(phase === 'reveal' || phase === 'bonus_done' || (hasVideo && phase !== 'watch')) && (
+        <div className="flex flex-wrap items-center justify-center gap-2.5">
+          {hasVideo && (
             <button
               type="button"
-              onClick={() => setShowVideo((v) => !v)}
-              className="flex h-10 items-center justify-center gap-2 rounded-full bg-brand-yellow px-5 font-poppins text-[12px] font-black uppercase tracking-wide text-black transition-all hover:brightness-105 active:translate-y-[1px]"
+              onClick={() => {
+                setVideoMuted(false);
+                setShowVideo((v) => !v);
+              }}
+              className="flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-brand-yellow px-5 font-poppins text-[12px] font-black uppercase tracking-wide text-black transition-all hover:brightness-105 active:translate-y-[1px]"
             >
               <Clapperboard className="size-4" />
               {showVideo ? t('Back to the board') : t('Watch the real goal')}
+            </button>
+          )}
+          {!showVideo && (
+            <button
+              type="button"
+              disabled={boardReplaying}
+              onClick={() => {
+                setReplayT(0);
+                setBoardReplaying(true);
+              }}
+              className="flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-white/10 px-5 font-poppins text-[12px] font-black uppercase tracking-wide text-white transition-all hover:bg-white/20 active:translate-y-[1px] disabled:opacity-50"
+            >
+              <RotateCcw className="size-4" />
+              {t('Replay board')}
             </button>
           )}
           {(phase === 'reveal' || phase === 'bonus_done') && gallery && (
             <button
               type="button"
               onClick={() => setShowGallery(true)}
-              className="flex h-10 items-center justify-center gap-2 rounded-full bg-brand-blue px-5 font-poppins text-[12px] font-black uppercase tracking-wide text-white transition-all hover:brightness-110 active:translate-y-[1px]"
+              className="flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-brand-blue px-5 font-poppins text-[12px] font-black uppercase tracking-wide text-white transition-all hover:brightness-110 active:translate-y-[1px]"
             >
               <LayoutGrid className="size-4" />
               {t('Your collection')}
@@ -656,13 +922,52 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
       <div className="mx-auto flex min-h-[calc(100dvh-4rem)] max-w-[430px] flex-col px-4 py-6 md:px-8 md:py-8 lg:max-w-6xl">
         <div className="mb-4 md:mb-6">
           <div className="flex items-center gap-3 md:gap-4">
-            <Link
-              href={backHref ?? '/mini-games'}
-              aria-label={t('Back')}
-              className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 md:size-11"
-            >
-              <ArrowLeft className="size-5 md:size-6" />
-            </Link>
+            {phase === 'idle' || phase === 'disabled' || phase === 'load_error' ? (
+              <Link
+                href={backHref ?? '/mini-games'}
+                aria-label={t('Back')}
+                className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 md:size-11"
+              >
+                <ArrowLeft className="size-5 md:size-6" />
+              </Link>
+            ) : (
+              <button
+                type="button"
+                aria-label={t('Back')}
+                onClick={() => {
+                  // Mid-goal back returns to the game's own menu + collection;
+                  // an unanswered goal stays resumable behind 'Continue'. A
+                  // pending bonus is preserved the same way — synthesized as a
+                  // 'guessed' session so resume lands on the bonus question.
+                  genRef.current += 1;
+                  setError(null);
+                  if (session && !outcome) {
+                    resumableRef.current = session;
+                  } else if (
+                    session &&
+                    outcome &&
+                    outcome.session_state === 'guessed' &&
+                    outcome.bonus &&
+                    phase !== 'bonus_done'
+                  ) {
+                    resumableRef.current = {
+                      ...session,
+                      state: 'guessed',
+                      outcome,
+                      bonus: outcome.bonus,
+                      guess_option_id: picked ?? undefined,
+                    };
+                  }
+                  setSession(null);
+                  setOutcome(null);
+                  setPhase('idle');
+                  guessTheGoalApi.gallery().then(setGallery).catch(() => {});
+                }}
+                className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 md:size-11"
+              >
+                <ArrowLeft className="size-5 md:size-6" />
+              </button>
+            )}
             <h1 className="font-poppins text-[20px] uppercase leading-[1.1] text-white md:text-[32px]">
               {t('Guess the Goal')}
             </h1>
@@ -727,22 +1032,22 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
                   )
                 : gallery
                   ? t(
-                      'A legendary goal replays on the coaching board. The earlier you name it, the more you earn — first solve of each goal pays coins and XP.'
+                      'A legendary goal replays on the coaching board. Name it — the first solve of each goal pays coins and XP.'
                     )
                   : t(
-                      'A legendary goal replays on the coaching board. Name it early — the earlier you guess, the more it scores.'
+                      'A legendary goal replays on the coaching board. Watch the moves and name the goal.'
                     )}
             </p>
-            {gallery && !poolExhausted && (
+            {gallery && !poolExhausted && goalsLeftToday !== null && (
               <div
                 className="rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-wider text-black"
                 style={{ backgroundColor: 'rgba(0,0,0,0.14)' }}
               >
-                {coinsCapped
-                  ? t('Daily coins earned — more tomorrow')
-                  : t('Today: {today}/{cap} coins', {
-                      today: gallery.coins_today,
-                      cap: gallery.daily_coin_cap,
+                {dailyLimitReached
+                  ? t('All {limit} goals played — come back tomorrow', { limit: dailyLimit ?? 0 })
+                  : t('{left} of {limit} goals left today', {
+                      left: goalsLeftToday,
+                      limit: dailyLimit ?? 0,
                     })}
               </div>
             )}
@@ -750,14 +1055,45 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
             <button
               type="button"
               onClick={start}
-              disabled={busy}
+              disabled={busy || (dailyLimitReached && !resumableRef.current)}
               className="font-poppins mt-2 inline-flex h-[50px] min-w-[200px] items-center justify-center gap-2 rounded-[20px] bg-black px-8 text-[20px] uppercase tracking-wide text-white transition-all hover:brightness-110 active:translate-y-[2px] disabled:opacity-60"
             >
-              <Play className="size-5 fill-current" /> {t('Kick off')}
+              <Play className="size-5 fill-current" />{' '}
+              {resumableRef.current
+                ? t('Continue')
+                : dailyLimitReached
+                  ? t('Back tomorrow')
+                  : t('Kick off')}
             </button>
+            {isAdmin && (
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={devResetToday}
+                  className="font-poppins rounded-full bg-black/20 px-4 py-1.5 text-[10px] font-black uppercase tracking-wider text-black"
+                >
+                  DEV: reset today
+                </button>
+                <button
+                  type="button"
+                  onClick={devToggleAllGoals}
+                  className="font-poppins rounded-full bg-black/20 px-4 py-1.5 text-[10px] font-black uppercase tracking-wider text-black"
+                >
+                  {devAll ? 'DEV: hide all goals' : 'DEV: all goals'}
+                </button>
+              </div>
+            )}
             <GgtLegend />
           </motion.div>
-          {gallery && (
+          {devAll && (
+            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-3xl">
+              <p className="mb-2 px-1 font-poppins text-[12px] font-black uppercase tracking-wider text-brand-yellow">
+                DEV: all {devAll.total} published goals
+              </p>
+              <GgtGalleryPanel gallery={devAll} locale={locale} t={t} pick={pick} />
+            </motion.div>
+          )}
+          {gallery && !devAll && (
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
@@ -862,7 +1198,9 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
                       <p className="px-1 font-poppins text-sm font-black uppercase leading-snug text-white">
                         {pick(outcome.title)}
                       </p>
-                      {outcome.fun_fact && (
+                      {/* Held back while a bonus is pending — fun facts routinely
+                          name the exact person/number the bonus asks about. */}
+                      {outcome.fun_fact && !(outcome.session_state === 'guessed' && outcome.bonus) && (
                         <p className="rounded-xl bg-white/[0.05] px-3.5 py-2.5 text-xs font-semibold leading-relaxed text-white/65">
                           {pick(outcome.fun_fact)}
                         </p>
@@ -945,6 +1283,11 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
                   </div>
                   {phase === 'bonus_done' && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-1 flex flex-col gap-2">
+                      {outcome?.fun_fact && (
+                        <p className="rounded-xl bg-white/[0.05] px-3.5 py-2.5 text-xs font-semibold leading-relaxed text-white/65">
+                          {pick(outcome.fun_fact)}
+                        </p>
+                      )}
                       {bonusOutcome && (bonusOutcome.awards.coins > 0 || bonusOutcome.awards.xp > 0) && (
                         <p className="flex items-center gap-2 px-1 font-poppins text-[12px] font-black uppercase text-brand-green-bright">
                           <CoinIcon className="size-4" /> +{bonusOutcome.awards.coins} · +{bonusOutcome.awards.xp} XP

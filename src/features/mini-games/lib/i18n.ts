@@ -16,7 +16,6 @@ const KA: Record<string, string> = {
   "Guess the Goal": "გამოიცანი გოლი",
   "Name the iconic goal — real rewards, server-scored": "ამოიცანი ლეგენდარული გოლი — რეალური ჯილდოები",
   "Solved {n}/{total}": "ამოცნობილი {n}/{total}",
-  "Answer now · +{points}": "უპასუხე ახლა · +{points}",
   "+{points} points": "+{points} ქულა",
   "Move {n}/{total}": "სვლა {n}/{total}",
   "Which goal is this?": "რომელი გოლია ეს?",
@@ -30,6 +29,9 @@ const KA: Record<string, string> = {
   "Something went wrong — try again": "რაღაც შეცდომაა — სცადე თავიდან",
   "Watch the real goal": "ნახე ნამდვილი გოლი",
   "Back to the board": "დაფაზე დაბრუნება",
+  "Board": "დაფა",
+  "Video": "ვიდეო",
+  "Replay board": "გაიმეორე სვლები",
   "Couldn't load your game": "თამაში ვერ ჩაიტვირთა",
 
   // Shared
@@ -412,6 +414,16 @@ const KA: Record<string, string> = {
   "Every round the field is cut — answer right and fast to stay in it. Nine rounds from {n} players down to one.":
     "ყოველ რაუნდში ველი მცირდება — უპასუხე სწორად და სწრაფად, რომ დარჩე. ცხრა რაუნდი {n} მოთამაშიდან ერთამდე.",
   "Kick off": "დაწყება",
+  "Continue": "გააგრძელე",
+  "A legendary goal replays on the coaching board. Name it — the first solve of each goal pays coins and XP.":
+    "ლეგენდარული გოლი საწვრთნელ დაფაზე მეორდება. ამოიცანი — ყოველი გოლის პირველი ამოცნობა ქოინებსა და XP-ს იძლევა.",
+  "A legendary goal replays on the coaching board. Watch the moves and name the goal.":
+    "ლეგენდარული გოლი საწვრთნელ დაფაზე მეორდება. უყურე სვლებს და ამოიცანი გოლი.",
+  "Back tomorrow": "ხვალ გნახავთ",
+  "All {limit} goals played — come back tomorrow": "დღეს {limit}-ვე გოლი ნათამაშებია — დაბრუნდი ხვალ",
+  "{left} of {limit} goals left today": "დღეს დარჩა {left} გოლი {limit}-დან",
+  "Daily coins earned — more tomorrow": "დღევანდელი ქოინები აღებულია — მეტი ხვალ",
+  "Today: {today}/{cap} coins": "დღეს: {today}/{cap} ქოინი",
   "Your collection": "შენი კოლექცია",
   "Fastest {cap} survive": "ყველაზე სწრაფი {cap} რჩება",
   "Field": "ველი",

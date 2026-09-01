@@ -84,9 +84,14 @@ export function GgtLegend() {
         <span
           key={kind}
           className="flex items-center gap-1.5 rounded-full px-2.5 py-1"
-          style={{ backgroundColor: '#5da95b', color: '#12241a' }}
+          style={{ backgroundColor: 'rgba(0,0,0,0.22)', color: '#FFFFFF' }}
         >
-          <GgtActionGlyph kind={kind} color={GGT_ACTION_META[kind].color} />
+          {/* Board-accurate glyph colors, except the near-black carry/run
+              arrows which vanish on the translucent chip. */}
+          <GgtActionGlyph
+            kind={kind}
+            color={kind === 'carry' || kind === 'run' ? '#FFFFFF' : GGT_ACTION_META[kind].color}
+          />
           {GGT_ACTION_META[kind].label[locale].replace('!', '')}
         </span>
       ))}
