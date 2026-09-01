@@ -405,6 +405,16 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
         if (err.status >= 400 && err.status < 500) {
           nonceRef.current = null;
           if (err.status === 409) {
+            if (err.code === 'GGT_DAILY_LIMIT_REACHED') {
+              // The idle card disables PLAY, so reaching here means its
+              // gallery data was stale — refresh it so the card catches up.
+              setPhase('idle');
+              setError(t('All {limit} goals played — come back tomorrow', {
+                limit: gallery?.daily_goal_limit ?? 5,
+              }));
+              guessTheGoalApi.gallery().then(setGallery).catch(() => {});
+              return;
+            }
             const existing = await guessTheGoalApi.current().catch(() => null);
             if (existing) {
               adoptSession(existing, true);
@@ -419,7 +429,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
     } finally {
       setBusy(false);
     }
-  }, [busy, adoptSession, t]);
+  }, [busy, adoptSession, t, gallery?.daily_goal_limit]);
 
   const submitGuess = useCallback(
     async (optionId: string) => {

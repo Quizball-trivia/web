@@ -142,7 +142,9 @@ export interface GgtGallery {
 export class GuessTheGoalApiError extends Error {
   constructor(
     message: string,
-    public readonly status: number
+    public readonly status: number,
+    /** Machine code from the error body's details (e.g. GGT_DAILY_LIMIT_REACHED). */
+    public readonly code: string | null = null
   ) {
     super(message);
     this.name = "GuessTheGoalApiError";
@@ -170,7 +172,9 @@ async function call<T>(path: string, method: "GET" | "POST", body?: unknown): Pr
       (payload as { message?: string; error?: { message?: string } } | null)?.message
       ?? (payload as { error?: { message?: string } } | null)?.error?.message
       ?? `Request failed (${response.status})`;
-    throw new GuessTheGoalApiError(message, response.status);
+    const code =
+      (payload as { details?: { code?: string } } | null)?.details?.code ?? null;
+    throw new GuessTheGoalApiError(message, response.status, code);
   }
   return payload as T;
 }
