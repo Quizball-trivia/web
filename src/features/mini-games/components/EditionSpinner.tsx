@@ -6,9 +6,8 @@ import { useMiniT } from '../lib/i18n';
 import { EDITION_LABEL } from '../lib/guessCard';
 import { FIFA_EDITIONS, type FifaEdition } from '../data/guessFifaCard';
 
-/** The reel can also land on ICONS (a chance to draw a legend). */
-export type SpinTarget = FifaEdition | 'ICONS';
-const REEL: SpinTarget[] = [...FIFA_EDITIONS, 'ICONS'];
+export type SpinTarget = FifaEdition;
+const REEL: SpinTarget[] = FIFA_EDITIONS;
 
 /** Horizontal reel of edition tiles that decelerates and lands on `target`.
  *  The strip's left edge is anchored at the viewport centre (left-1/2), so the
@@ -57,28 +56,12 @@ export function EditionSpinner({ target, onDone }: { target: SpinTarget; onDone:
             window.setTimeout(onDone, 560);
           }}
         >
-          {strip.map((e, i) =>
-            e === 'ICONS' ? <IconTile key={i} /> : <EditionTile key={i} label={EDITION_LABEL[e] ?? e} />,
-          )}
+          {strip.map((e, i) => (
+            <EditionTile key={i} label={EDITION_LABEL[e] ?? e} />
+          ))}
         </motion.div>
       </div>
       <p className="mt-5 font-poppins text-xs font-semibold text-white/35">{t('Guess the player from the drawn edition')}</p>
-    </div>
-  );
-}
-
-/** The special ICONS tile — a chance to draw a legend. */
-function IconTile() {
-  return (
-    <div
-      className="flex h-[116px] w-[92px] shrink-0 flex-col items-center justify-center gap-1 rounded-2xl border border-[#caa94f]/60 shadow-[0_6px_16px_rgba(0,0,0,0.4)]"
-      style={{ background: 'linear-gradient(160deg, #2b2b31 0%, #1b1b20 55%, #101014 100%)' }}
-    >
-      <span className="font-poppins text-[26px] font-black leading-none text-[#e9d8a6]" style={{ textShadow: '0 1px 6px rgba(233,216,166,0.5)' }}>
-        ★
-      </span>
-      <span className="font-poppins text-[13px] font-black uppercase tracking-widest text-[#e9d8a6]">Icon</span>
-      <span className="mt-1 h-1 w-6 rounded-full bg-[#e9d8a6]/40" />
     </div>
   );
 }

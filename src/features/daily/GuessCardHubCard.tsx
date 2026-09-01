@@ -51,7 +51,7 @@ export function GuessCardHubCard({
         ) : null}
 
         <h3 className={`font-poppins flex min-h-[2.1rem] items-start justify-center px-7 text-center text-[16px] uppercase leading-[1.1] md:min-h-[3.5rem] md:px-0 md:text-[28px] md:mt-2 md:leading-[0.95] ${isCompleted ? "text-white md:mt-8" : "text-black"}`}>
-          {mt("Guess the Card")}
+          {mt("FIFA Cards")}
         </h3>
         <p className={`mt-3 mb-4 text-center text-[10px] font-bold leading-snug [word-spacing:0.1em] md:mt-5 md:mb-6 md:text-[18px] md:font-semibold md:leading-snug md:px-4 md:[word-spacing:normal] ${isCompleted ? "text-white/75 md:text-white/80" : "text-black/80"}`}>
           {mt("A gold card, stats only — name the player across 10 editions.")}

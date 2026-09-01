@@ -1,58 +1,46 @@
 import { FIFA_CARDS, type FifaCard } from "@/features/mini-games/data/guessFifaCard";
-import { ICON_CARDS } from "@/features/mini-games/data/guessFifaIcons";
 import type { GuessableCard } from "@/features/mini-games/lib/guessCard";
 
 /**
- * MOCK daily set — 10 fixed "questions" for the Guess-the-Card daily. This is
- * placeholder data; the questions will be authored in the CMS with real data
- * later. The 4 gold cards are hand-authored from reference FUT cards; the 6
- * Icons reference the bundled icon set (3 "What If" Georgian legends + 3 real
- * Icons). Faces are borrowed from the dataset by name where a card exists.
+ * MOCK daily set — 10 fixed "questions" (placeholder for the CMS). Four
+ * hand-authored gold cards from reference FUT cards + six regular FIFA players
+ * pulled straight from the dataset. Real player faces show on reveal (SoFIFA
+ * face ids: hand-authored ones are set explicitly, dataset ones already carry them).
  */
-
 const norm = (s: string) => s.toLowerCase().normalize("NFKD").replace(/[^a-z]/g, "");
 
-/** Reuse a verified SoFIFA face id from the dataset for a hand-authored card. */
-function faceOf(surname: string): Pick<FifaCard, "photoId" | "photoVer"> {
-  const key = norm(surname);
-  const hit = FIFA_CARDS.find((c) => c.photoId && norm(c.name).includes(key));
-  return hit ? { photoId: hit.photoId, photoVer: hit.photoVer } : {};
-}
-
-const gold = (c: Omit<FifaCard, "photoId" | "photoVer"> & { face: string }): FifaCard => {
-  const { face, ...rest } = c;
-  return { ...rest, ...faceOf(face) };
-};
-
 const MOCK_GOLD: FifaCard[] = [
-  gold({
+  {
     id: "daily-ramires", edition: "FIFA13", editionLabel: "FIFA 13", name: "Ramires", accepted: ["Ramires"],
     overall: 81, position: "CM", nation: "Brazil", nationCode: "br", league: "Premier League", club: "Chelsea",
-    stats: { pac: 88, sho: 68, pas: 79, dri: 82, def: 76, phy: 72 }, face: "Ramires",
-  }),
-  gold({
+    stats: { pac: 88, sho: 68, pas: 79, dri: 82, def: 76, phy: 72 }, photoId: 184943, photoVer: "16",
+  },
+  {
     id: "daily-gervinho", edition: "FIFA15", editionLabel: "FIFA 15", name: "Gervinho", accepted: ["Gervinho"],
     overall: 81, position: "LW", nation: "Ivory Coast", nationCode: "ci", league: "Serie A", club: "AS Roma",
-    stats: { pac: 93, sho: 69, pas: 72, dri: 83, def: 40, phy: 64 }, face: "Gervinho",
-  }),
-  gold({
+    stats: { pac: 93, sho: 69, pas: 72, dri: 83, def: 40, phy: 64 }, photoId: 170733, photoVer: "16",
+  },
+  {
     id: "daily-smalling", edition: "FIFA17", editionLabel: "FIFA 17", name: "Chris Smalling", accepted: ["Chris Smalling", "Smalling"],
     overall: 84, position: "CB", nation: "England", nationCode: "gb-eng", league: "Premier League", club: "Manchester United",
-    stats: { pac: 77, sho: 46, pas: 56, dri: 62, def: 84, phy: 84 }, face: "Smalling",
-  }),
-  gold({
+    stats: { pac: 77, sho: 46, pas: 56, dri: 62, def: 84, phy: 84 }, photoId: 189881, photoVer: "16",
+  },
+  {
     id: "daily-el-shaarawy", edition: "FIFA12", editionLabel: "FIFA 12", name: "Stephan El Shaarawy", accepted: ["Stephan El Shaarawy", "El Shaarawy", "Shaarawy"],
     overall: 73, position: "CAM", nation: "Italy", nationCode: "it", league: "Serie A", club: "AC Milan",
-    stats: { pac: 81, sho: 70, pas: 70, dri: 79, def: 50, phy: 60 }, face: "El Shaarawy",
-  }),
+    stats: { pac: 81, sho: 70, pas: 70, dri: 79, def: 50, phy: 60 }, photoId: 190813, photoVer: "16",
+  },
 ];
 
-const icon = (surname: string): GuessableCard | null =>
-  ICON_CARDS.find((c) => norm(c.name).includes(norm(surname))) ?? null;
+// Six regular FIFA players, pulled from the dataset so they carry real faces.
+function player(query: string): FifaCard | null {
+  const key = norm(query);
+  const matches = FIFA_CARDS.filter((c) => norm(c.name).includes(key));
+  return matches.find((c) => c.photoId) ?? matches[0] ?? null;
+}
 
-// 3 "What If" Georgian legends, then 3 accurate real Icons.
-const ICONS = ["Arveladze", "Kipiani", "Ketsbaia", "Zidane", "Henry", "Ronaldinho"]
-  .map(icon)
-  .filter((c): c is GuessableCard => c !== null);
+const PLAYERS = ["De Bruyne", "Modric", "Lewandowski", "van Dijk", "Benzema", "Kroos"]
+  .map(player)
+  .filter((c): c is FifaCard => c !== null);
 
-export const DAILY_CARD_SET: GuessableCard[] = [...MOCK_GOLD, ...ICONS];
+export const DAILY_CARD_SET: GuessableCard[] = [...MOCK_GOLD, ...PLAYERS];

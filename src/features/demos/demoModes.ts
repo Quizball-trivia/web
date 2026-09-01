@@ -250,7 +250,7 @@ const ALL_MINI_GAME_DEMO_MODES: DemoModeCard[] = [
   },
   {
     slug: "mini-guess-fifa-card",
-    title: { en: "Guess the Card", ka: "გამოიცანი ბარათი" },
+    title: { en: "FIFA Cards", ka: "FIFA ბარათები" },
     description: {
       en: "A gold FUT card, stats only — name the player as nation, league and club unlock.",
       ka: "ოქროს FUT ბარათი მხოლოდ სტატისტიკით — გამოიცანი მოთამაშე, სანამ ქვეყანა, ლიგა და კლუბი გაიხსნება.",

@@ -1,8 +1,7 @@
 import { FIFA_CARDS, type FifaCard, type FifaEdition } from '../data/guessFifaCard';
-import type { IconCard } from '../data/guessFifaIcons';
 
-/** A card the player guesses — a normal edition card or an Icon. */
-export type GuessableCard = FifaCard | IconCard;
+/** A card the player guesses. */
+export type GuessableCard = FifaCard;
 
 /** Points for naming a card (all clues are shown up front — flat per solve). */
 export const POINTS_PER_SOLVE = 10;

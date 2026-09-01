@@ -38,7 +38,7 @@ export function GuessCardDailyResult({
         <h2 className="font-poppins text-[22px] font-semibold uppercase text-white sm:text-[26px]">
           {alreadyPlayed ? t("Today's round is done") : t("Daily complete!")}
         </h2>
-        <p className="mt-1 font-poppins text-sm font-medium text-white/80">{t("Guess the Card")}</p>
+        <p className="mt-1 font-poppins text-sm font-medium text-white/80">{t("FIFA Cards")}</p>
 
         {/* coins hero */}
         <div className="mt-5 rounded-[18px] bg-black/18 px-5 py-4">

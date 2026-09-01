@@ -14,7 +14,6 @@ import { EditionSpinner, type SpinTarget } from "@/features/mini-games/component
 import { useMiniT } from "@/features/mini-games/lib/i18n";
 import { matchesName } from "@/features/mini-games/lib/matching";
 import { POINTS_PER_SOLVE, ROUND_SIZE, rand, IDENTITY_CLUES, type IdentityClue, type RoundResult, type GuessableCard } from "@/features/mini-games/lib/guessCard";
-import type { FifaCard } from "@/features/mini-games/data/guessFifaCard";
 import { DAILY_CARD_SET } from "./dailyCardSet";
 
 type Status = "spin" | "clue" | "result";
@@ -70,8 +69,7 @@ export function GuessTheCardDailyGame({
   const beginCard = useCallback((i: number) => {
     const drawn = roundRef.current[i] ?? null;
     pendingRef.current = drawn;
-    const isIcon = !!drawn && "playStyle" in drawn && !!drawn.playStyle;
-    const target: SpinTarget = isIcon ? "ICONS" : ((drawn as FifaCard | null)?.edition ?? "FC26");
+    const target: SpinTarget = drawn?.edition ?? "FC26";
     setShownClue(rand(IDENTITY_CLUES)); // one clue shown, the other two hidden
     setManualReveals([]);
     setOutcome(null);

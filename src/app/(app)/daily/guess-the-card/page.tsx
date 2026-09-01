@@ -30,7 +30,7 @@ export default function GuessCardDailyPage() {
   }
 
   if (phase === "intro") {
-    return <DailyChallengeIntro title={t("Guess the Card")} onDone={() => setPhase("play")} />;
+    return <DailyChallengeIntro title={t("FIFA Cards")} onDone={() => setPhase("play")} />;
   }
 
   return <GuessTheCardDailyGame onExit={goHub} />;

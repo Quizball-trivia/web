@@ -8,15 +8,11 @@ import { FutCard } from './FutCard';
 import { useMiniT } from '../lib/i18n';
 import { matchesName } from '../lib/matching';
 import { PLAYABLE_EDITIONS } from '../data/guessFifaCard';
-import { pickIcon } from '../data/guessFifaIcons';
 import { EditionSpinner, type SpinTarget } from './EditionSpinner';
 import { POINTS_PER_SOLVE, ROUND_SIZE, MAX_SCORE, rand, pickCard, IDENTITY_CLUES, type IdentityClue, type RoundResult, type GuessableCard } from '../lib/guessCard';
 
 type Status = 'spin' | 'clue' | 'result';
 type Screen = 'play' | 'summary';
-
-/** Chance a spin lands on ICONS (a legend) instead of an edition. */
-const ICON_CHANCE = 0.2;
 
 export function GuessFifaCard({ backHref }: { backHref?: string } = {}) {
   const t = useMiniT();
@@ -49,22 +45,11 @@ export function GuessFifaCard({ backHref }: { backHref?: string } = {}) {
   // Spin to draw the next card: pick an edition (or ICONS), then a card from it.
   // The card stays hidden (pendingRef) until the reel lands.
   const beginCard = useCallback(() => {
-    let drawn: GuessableCard | null = null;
-    let target: SpinTarget;
-    if (Math.random() < ICON_CHANCE) {
-      drawn = pickIcon(usedRef.current);
-      target = 'ICONS';
-    } else {
-      target = rand(PLAYABLE_EDITIONS);
-    }
-    if (!drawn) {
-      const edition = target === 'ICONS' ? rand(PLAYABLE_EDITIONS) : target;
-      drawn = pickCard(usedRef.current, edition);
-      target = edition;
-    }
+    const edition = rand(PLAYABLE_EDITIONS);
+    const drawn = pickCard(usedRef.current, edition);
     if (drawn) usedRef.current.add(drawn.name);
     pendingRef.current = drawn;
-    setTargetEdition(target);
+    setTargetEdition(edition);
     setShownClue(rand(IDENTITY_CLUES)); // one clue shown, the other two hidden
     setManualReveals([]);
     setOutcome(null);
@@ -158,7 +143,7 @@ export function GuessFifaCard({ backHref }: { backHref?: string } = {}) {
   return (
     <MiniGameShell
       backHref={backHref}
-      title="Guess the Card"
+      title="FIFA Cards"
       subtitle={t('Spin for a FIFA edition, then name the player from the card')}
       accent="#FFD54A"
       headerRight={

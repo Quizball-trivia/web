@@ -526,8 +526,9 @@ const KA: Record<string, string> = {
   "Next attack risks the whole pot — the goal resets to {n} zones.":
     "შემდეგი შეტევა მთელ ბანკს რისკავს — კარი ისევ {n} ზონამდე ბრუნდება.",
 
-  // Guess the Card
+  // FIFA Cards
   "Guess the Card": "გამოიცანი ბარათი",
+  "FIFA Cards": "FIFA ბარათები",
   "Spin for a FIFA edition, then name the player from the stats":
     "დაატრიალე FIFA-ს გამოცემა და სტატისტიკით გამოიცანი მოთამაშე",
   "Spinning the edition…": "ვირჩევთ გამოცემას…",

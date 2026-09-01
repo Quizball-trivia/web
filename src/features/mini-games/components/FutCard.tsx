@@ -5,10 +5,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Lock } from 'lucide-react';
 import { footballGridAssetUrl } from '@/lib/football-grid/assets';
 import { ClubCrest } from './Badges';
-import { PlayStyleIcon, type PlayStyle } from './PlayStyleIcon';
 import type { FifaCardStats } from '../data/guessFifaCard';
 
-/** Everything FutCard needs — satisfied by both a FifaCard and an IconCard. */
+/** Everything FutCard needs (satisfied by a FifaCard). */
 export interface FutCardData {
   id: string;
   editionLabel: string;
@@ -22,10 +21,6 @@ export interface FutCardData {
   stats: FifaCardStats;
   photoId?: number;
   photoVer?: string;
-  /** Present only on Icon cards — switches the card to the icon design. */
-  playStyle?: PlayStyle;
-  /** Icon of an imagined ("what if") legend. */
-  whatIf?: boolean;
 }
 
 const GOLD_BG = [
@@ -34,19 +29,10 @@ const GOLD_BG = [
   'linear-gradient(180deg, #f9e6a4 0%, #f0d488 20%, #e5c164 48%, #d3ab46 76%, #c69b38 100%)',
 ].join(', ');
 
-// Icons get the classic pale parchment look instead of gold.
-const ICON_BG = [
-  'radial-gradient(135% 85% at 50% 0%, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0) 42%)',
-  'radial-gradient(130% 110% at 50% 104%, rgba(120,96,40,0.4) 0%, rgba(120,96,40,0) 52%)',
-  'linear-gradient(180deg, #f7f0dd 0%, #ecdfbe 22%, #ddcc9c 50%, #cbb47b 78%, #bfa869 100%)',
-].join(', ');
-
 /**
- * An EA-style player card, recreated in CSS (no EA assets). Renders a gold card
- * for a normal player or the pale "Icon" design (with a PlayStyle badge, and a
- * "What If" tag for imagined legends) when the card carries a `playStyle`. The
- * three identity slots — nation, league, club — start hidden and unlock as
- * `stage` climbs; the name + face are hidden until `revealName`.
+ * An EA-style gold player card, recreated in CSS. The three identity slots —
+ * nation, league, club — start hidden (one shown per card) and unlock on tap or
+ * when the round resolves; the name + face are hidden until `revealName`.
  */
 export function FutCard({
   card,
@@ -68,7 +54,6 @@ export function FutCard({
   /** Whether tapping a locked clue is currently allowed (tokens available). */
   revealable?: boolean;
 }) {
-  const isIcon = !!card.playStyle;
   const s = card.stats;
   const statCols: Array<Array<[string, number]>> = [
     [['PAC', s.pac], ['SHO', s.sho], ['PAS', s.pas]],
@@ -86,7 +71,7 @@ export function FutCard({
     <div className="relative mx-auto w-full max-w-[336px] select-none" style={{ aspectRatio: '300 / 424' }}>
       <div
         className="absolute inset-0 overflow-hidden rounded-[22px]"
-        style={{ background: isIcon ? ICON_BG : GOLD_BG, boxShadow: frame }}
+        style={{ background: GOLD_BG, boxShadow: frame }}
       >
         {/* metallic diagonal sheen */}
         <div
@@ -107,15 +92,6 @@ export function FutCard({
             {card.editionLabel}
           </span>
         </div>
-
-        {/* "what if" tag — imagined legend cards */}
-        {card.whatIf && (
-          <div className="absolute left-1/2 top-3 z-30 -translate-x-1/2">
-            <span className="rounded-full bg-[#3a2c08]/85 px-3 py-1 font-poppins text-[10px] font-black uppercase tracking-[0.18em] text-[#f4e3a2]">
-              What If
-            </span>
-          </div>
-        )}
 
         {/* upper section: portrait behind, rating column in front */}
         <div className="relative h-[264px]">
@@ -173,18 +149,8 @@ export function FutCard({
           </AnimatePresence>
         </div>
 
-        {/* PlayStyle (icon cards only) */}
-        {card.playStyle && (
-          <div className="relative z-10 mt-1.5 flex justify-center">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#33270a]/12 px-3 py-1 font-poppins text-[11px] font-black uppercase tracking-wide text-[#33270a]">
-              <PlayStyleIcon name={card.playStyle} size={16} className="text-[#33270a]" />
-              {card.playStyle}
-            </span>
-          </div>
-        )}
-
         {/* stats: two columns split by a hairline */}
-        <div className={`relative z-10 flex items-stretch justify-center px-4 pb-4 text-[#241b05] ${card.playStyle ? 'mt-1.5' : 'mt-2'}`}>
+        <div className="relative z-10 mt-2 flex items-stretch justify-center px-4 pb-4 text-[#241b05]">
           {statCols.map((col, i) => (
             <div key={i} className={`flex flex-col gap-2 ${i === 0 ? 'pr-6' : 'border-l border-[#33270a]/25 pl-6'}`}>
               {col.map(([label, value]) => (
