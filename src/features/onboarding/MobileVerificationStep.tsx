@@ -224,7 +224,6 @@ export function MobileVerificationStep({
                     autoComplete="tel-national"
                     type="tel"
                     inputMode="numeric"
-                    maxLength={9}
                     value={phoneDigits}
                     onChange={(event) => {
                       setPhoneDigits(

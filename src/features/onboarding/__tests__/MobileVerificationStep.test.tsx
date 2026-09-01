@@ -211,6 +211,22 @@ describe('MobileVerificationStep phone input and failure reasons', () => {
     expect((input as HTMLInputElement).value).toBe('577123456');
   });
 
+  it('handles a PASTED leading-zero number (no native maxlength truncation)', async () => {
+    vi.mocked(startGeorgianPhoneLink).mockResolvedValue({
+      message: 'Verification code sent', phone: '+995577123456', otp_required: true,
+    });
+    const { input } = renderStep();
+    // A paste delivers the whole string at once; capping before normalization
+    // would drop the last digit and post an 8-digit number.
+    fireEvent.paste(input, { clipboardData: { getData: () => '0577123456' } });
+    fireEvent.input(input, { target: { value: '0577123456' } });
+    expect((input as HTMLInputElement).value).toBe('577123456');
+    fireEvent.click(screen.getByRole('button', { name: 'Send code' }));
+    await waitFor(() => {
+      expect(startGeorgianPhoneLink).toHaveBeenCalledWith('+995577123456');
+    });
+  });
+
   it('disables submit only while the field is empty, so short input still explains itself', async () => {
     const { input } = renderStep();
     const submit = screen.getByRole('button', { name: 'Send code' });
