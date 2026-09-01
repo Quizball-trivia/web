@@ -234,6 +234,12 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
     ? (gallery.pool_exhausted ?? (gallery.solved > 0 && gallery.solved >= gallery.total))
     : false;
   const coinsCapped = gallery ? gallery.coins_today >= gallery.daily_coin_cap : false;
+  /** Five goals a day. Optional-chained so an older backend (no limit fields)
+   *  simply behaves as before rather than locking the mode out. */
+  const dailyLimit = gallery?.daily_goal_limit ?? null;
+  const goalsToday = gallery?.goals_today ?? 0;
+  const dailyLimitReached = gallery?.daily_limit_reached ?? false;
+  const goalsLeftToday = dailyLimit === null ? null : Math.max(0, dailyLimit - goalsToday);
   const [showGallery, setShowGallery] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { addXP } = usePlayer();
@@ -548,7 +554,16 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
       : duration;
   const goalFlash = phase !== 'watch' || (duration > 0 && animTime >= duration - 0.05);
 
-  const video = outcome?.video_url ? youtubeEmbed(outcome.video_url, outcome.clip_end_s) : null;
+  // Clips we host ourselves play in a normal <video>; anything still pointing
+  // at YouTube keeps the iframe. Self-hosted is the fallback-proof path — an
+  // embed can be switched off by the rights holder at any time.
+  const selfHostedVideo = outcome?.video_url && /^https?:\/\/[^ ]+\.mp4(\?|$)/i.test(outcome.video_url)
+    ? outcome.video_url
+    : null;
+  const video = !selfHostedVideo && outcome?.video_url
+    ? youtubeEmbed(outcome.video_url, outcome.clip_end_s)
+    : null;
+  const hasVideo = Boolean(selfHostedVideo || video);
 
   const inGame = phase === 'watch' || phase === 'reveal' || phase === 'bonus' || phase === 'bonus_done';
   const activeKind = useMemo<TacticsStepKind | null>(() => {
@@ -605,7 +620,16 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
         className="relative w-full overflow-hidden rounded-2xl bg-black"
         style={{ aspectRatio: `${BOARD_VIEW_W} / ${BOARD_VIEW_H}` }}
       >
-        {showVideo && video ? (
+        {showVideo && selfHostedVideo ? (
+          <video
+            src={`${selfHostedVideo}${outcome?.clip_start_s ? `#t=${outcome.clip_start_s}` : ''}`}
+            title={pick(outcome?.title)}
+            autoPlay
+            controls
+            playsInline
+            className="absolute inset-0 h-full w-full"
+          />
+        ) : showVideo && video ? (
           <iframe
             src={`https://www.youtube-nocookie.com/embed/${video.id}?autoplay=1&rel=0${video.start ? `&start=${video.start}` : ''}${video.end ? `&end=${video.end}` : ''}`}
             title={pick(outcome?.title)}
@@ -618,9 +642,9 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
         )}
       </div>
 
-      {(phase === 'reveal' || phase === 'bonus_done' || (video && phase !== 'watch')) && (
+      {(phase === 'reveal' || phase === 'bonus_done' || (hasVideo && phase !== 'watch')) && (
         <div className="flex items-center justify-center gap-2.5">
-          {video && (
+          {hasVideo && (
             <button
               type="button"
               onClick={() => setShowVideo((v) => !v)}
@@ -738,22 +762,30 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
                 className="rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-wider text-black"
                 style={{ backgroundColor: 'rgba(0,0,0,0.14)' }}
               >
-                {coinsCapped
-                  ? t('Daily coins earned — more tomorrow')
-                  : t('Today: {today}/{cap} coins', {
-                      today: gallery.coins_today,
-                      cap: gallery.daily_coin_cap,
-                    })}
+                {dailyLimitReached
+                  ? t('All {limit} goals played — come back tomorrow', { limit: dailyLimit ?? 0 })
+                  : goalsLeftToday !== null
+                    ? t('{left} of {limit} goals left today', {
+                        left: goalsLeftToday,
+                        limit: dailyLimit ?? 0,
+                      })
+                    : coinsCapped
+                      ? t('Daily coins earned — more tomorrow')
+                      : t('Today: {today}/{cap} coins', {
+                          today: gallery.coins_today,
+                          cap: gallery.daily_coin_cap,
+                        })}
               </div>
             )}
             {error && <p className="max-w-xs text-xs font-bold text-black">{error}</p>}
             <button
               type="button"
               onClick={start}
-              disabled={busy}
+              disabled={busy || dailyLimitReached}
               className="font-poppins mt-2 inline-flex h-[50px] min-w-[200px] items-center justify-center gap-2 rounded-[20px] bg-black px-8 text-[20px] uppercase tracking-wide text-white transition-all hover:brightness-110 active:translate-y-[2px] disabled:opacity-60"
             >
-              <Play className="size-5 fill-current" /> {t('Kick off')}
+              <Play className="size-5 fill-current" />{' '}
+              {dailyLimitReached ? t('Back tomorrow') : t('Kick off')}
             </button>
             <GgtLegend />
           </motion.div>

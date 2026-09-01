@@ -412,6 +412,11 @@ const KA: Record<string, string> = {
   "Every round the field is cut — answer right and fast to stay in it. Nine rounds from {n} players down to one.":
     "ყოველ რაუნდში ველი მცირდება — უპასუხე სწორად და სწრაფად, რომ დარჩე. ცხრა რაუნდი {n} მოთამაშიდან ერთამდე.",
   "Kick off": "დაწყება",
+  "Back tomorrow": "ხვალ გნახავთ",
+  "All {limit} goals played — come back tomorrow": "დღეს {limit}-ვე გოლი ნათამაშებია — დაბრუნდი ხვალ",
+  "{left} of {limit} goals left today": "დღეს დარჩა {left} გოლი {limit}-დან",
+  "Daily coins earned — more tomorrow": "დღევანდელი ქოინები აღებულია — მეტი ხვალ",
+  "Today: {today}/{cap} coins": "დღეს: {today}/{cap} ქოინი",
   "Your collection": "შენი კოლექცია",
   "Fastest {cap} survive": "ყველაზე სწრაფი {cap} რჩება",
   "Field": "ველი",

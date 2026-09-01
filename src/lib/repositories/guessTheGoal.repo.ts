@@ -104,6 +104,10 @@ export interface GgtStats {
   pool_exhausted?: boolean;
   coins_today: number;
   daily_coin_cap: number;
+  /** Optional for rolling deploys against an older backend. */
+  goals_today?: number;
+  daily_goal_limit?: number;
+  daily_limit_reached?: boolean;
 }
 
 export interface GgtGalleryGoal {
@@ -125,6 +129,10 @@ export interface GgtGallery {
   xp_earned: number;
   daily_coin_cap: number;
   coins_today: number;
+  /** Optional for rolling deploys against an older backend. */
+  goals_today?: number;
+  daily_goal_limit?: number;
+  daily_limit_reached?: boolean;
   /** Solved goals only — unsolved goals exist solely as per-difficulty counts
    *  in `locked` (their titles are the quiz answers). */
   goals: GgtGalleryGoal[];
