@@ -164,7 +164,6 @@ async function validateCdnManifest(manifest) {
 
   const expectedPaths = new Set([
     ...await listPackagedAssetPaths(path.join(root, 'public/assets/football-grid')),
-    ...await listPackagedAssetPaths(path.join(root, 'public/assets/store'), '/assets/store'),
     '/assets/football-grid-card-icon.svg',
     '/assets/bg-pattern.webp',
   ]);
@@ -230,9 +229,26 @@ if (players.domains.some((domain) => domain.domain !== new URL(firstPartyOrigin)
 if (players.usableRows !== players.primaryPortraits + players.deterministicFallbacks) addFailure('players: usable coverage does not add up');
 if (players.providerProbes.length === 0 || players.providerProbes.some((probe) => !probe.ok)) addFailure('players: provider probe failed');
 
+// Avatar store assets are app-served (not on the Grid CDN), but Grid still
+// renders them; check they exist on disk and decode as images.
+async function validateStoreAvatarAssets() {
+  const storeDir = path.join(root, 'public/assets/store');
+  const paths = await listPackagedAssetPaths(storeDir, '/assets/store');
+  if (paths.length === 0) addFailure('store-avatars: no packaged assets found');
+  for (const assetPath of paths) {
+    try {
+      const bytes = await readFile(path.join(root, 'public', assetPath.replace(/^\/+/, '')));
+      if (!sniff(bytes)) addFailure(`store-avatars: unsupported or corrupt asset ${assetPath}`);
+    } catch (error) {
+      addFailure(`store-avatars: cannot read ${assetPath}: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+  return paths.length;
+}
+
 const cdnManifest = await readJson('cdn-manifest.json');
 const cdn = await validateCdnManifest(cdnManifest);
-await Promise.all([validateLocalAssets(), validateRemoteAssets()]);
+const [storeAvatarAssets] = await Promise.all([validateStoreAvatarAssets(), validateLocalAssets(), validateRemoteAssets()]);
 
 const result = {
   validatedAt: new Date().toISOString(),
@@ -241,6 +257,7 @@ const result = {
   localAssets: localAssets.size,
   remoteAssets: remoteAssets.length,
   cdnAssets: cdn.entriesByPath.size,
+  storeAvatarAssets,
   failureCount: failures.length,
   remotePrimaryWarnings: warnings.length,
   warnings,

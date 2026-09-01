@@ -8,7 +8,6 @@ import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const gridAssetDir = path.join(root, 'public/assets/football-grid');
-const avatarAssetDir = path.join(root, 'public/assets/store');
 const cardIcon = path.join(root, 'public/assets/football-grid-card-icon.svg');
 const backgroundPattern = path.join(root, 'public/assets/bg-pattern.webp');
 const manifestPath = path.join(root, 'src/data/football-grid/launch-assets/cdn-manifest.json');
@@ -94,12 +93,6 @@ async function loadAssets() {
         }
       : entry
   ));
-  const avatarFiles = await listFiles(avatarAssetDir);
-  files.push(...avatarFiles.map((entry) => ({
-    ...entry,
-    relative: `avatar/${entry.relative}`,
-    localPath: `/assets/store/${entry.relative}`,
-  })));
   files.push({ file: cardIcon, relative: 'ui/card-icon.svg', localPath: '/assets/football-grid-card-icon.svg' });
   files.push({ file: backgroundPattern, relative: 'ui/bg-pattern.webp', localPath: '/assets/bg-pattern.webp' });
   const assets = [];
