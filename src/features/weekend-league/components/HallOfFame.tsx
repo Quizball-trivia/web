@@ -16,15 +16,24 @@ import { poppins } from '../constants';
 const MEDAL_TINT = ['text-brand-gold', 'text-white/70', 'text-[#CD7F32]'] as const;
 
 /** "2026-08-29" (the event's Saturday) as a short Georgia-time date label. */
-function editionLabel(weekKey: string, locale: string): string {
+function intlLocale(locale: string): string {
+  return locale === 'ka' ? 'ka-GE' : locale === 'es' ? 'es-ES' : 'en-GB';
+}
+
+function editionLabel(weekKey: string, locale: string, currentYear: number): string {
   const ms = Date.parse(`${weekKey}T00:00:00Z`);
   if (Number.isNaN(ms)) return weekKey;
-  return new Intl.DateTimeFormat(locale === 'ka' ? 'ka-GE' : locale === 'es' ? 'es-ES' : 'en-GB', {
+  // Past seasons must stay unambiguous once the history spans a year boundary.
+  const sameYear = new Date(ms).getUTCFullYear() === currentYear;
+  return new Intl.DateTimeFormat(intlLocale(locale), {
     day: 'numeric', month: 'short', timeZone: 'UTC',
+    ...(sameYear ? {} : { year: 'numeric' }),
   }).format(ms);
 }
 
-function Medals({ gold, silver, bronze }: { gold: number; silver: number; bronze: number }) {
+function Medals({
+  gold, silver, bronze, labels,
+}: { gold: number; silver: number; bronze: number; labels: [string, string, string] }) {
   const cells: Array<[number, string]> = [[gold, '🥇'], [silver, '🥈'], [bronze, '🥉']];
   return (
     <span className="flex items-center gap-2 tabular-nums">
@@ -36,7 +45,7 @@ function Medals({ gold, silver, bronze }: { gold: number; silver: number; bronze
         >
           <span className={count > 0 ? '' : 'grayscale opacity-50'} aria-hidden>{icon}</span>
           {count}
-          <span className="sr-only">{['gold', 'silver', 'bronze'][i]}</span>
+          <span className="sr-only">{labels[i]}</span>
         </span>
       ))}
     </span>
@@ -53,7 +62,41 @@ export function HallOfFame({ data }: { data?: WlHallOfFameResponse }) {
     enabled: data == null,
   });
   const hof = data ?? query.data;
-  if (!hof || hof.editions.length === 0) return null;
+  const currentYear = new Date().getUTCFullYear();
+  const medalLabels: [string, string, string] = [
+    t('weekendLeague.hofGold'), t('weekendLeague.hofSilver'), t('weekendLeague.hofBronze'),
+  ];
+
+  // Distinct states: a failed fetch must not look like "no events yet".
+  if (!hof) {
+    if (query.isLoading) {
+      return (
+        <section aria-busy="true" className="space-y-2.5">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="h-[76px] animate-pulse rounded-[16px] bg-white/[0.04]" />
+          ))}
+        </section>
+      );
+    }
+    if (query.isError) {
+      return (
+        <section className="rounded-[16px] bg-white/[0.04] px-4 py-5 text-center">
+          <p className="text-[13px] text-white/60" style={poppins}>{t('weekendLeague.hofError')}</p>
+          <button
+            type="button"
+            onClick={() => void query.refetch()}
+            className="mt-2.5 rounded-full bg-white/[0.08] px-4 py-1.5 text-[12px] uppercase text-white/70 hover:text-white"
+            style={poppins}
+          >
+            {t('weekendLeague.hofRetry')}
+          </button>
+        </section>
+      );
+    }
+    return null;
+  }
+  // No completed edition yet is a real, legible state — not a blank gap.
+  if (hof.editions.length === 0 && hof.all_time.length === 0) return null;
 
   const tabs: Array<{ key: 'editions' | 'allTime'; label: string }> = [
     { key: 'editions', label: t('weekendLeague.hofPastWinners') },
@@ -91,10 +134,10 @@ export function HallOfFame({ data }: { data?: WlHallOfFameResponse }) {
             <div key={edition.week_key} className="rounded-[16px] bg-white/[0.04] px-4 py-3">
               <div className="mb-2 flex items-baseline justify-between">
                 <span className="text-[13px] uppercase text-white" style={poppins}>
-                  {editionLabel(edition.week_key, locale)}
+                  {editionLabel(edition.week_key, locale, currentYear)}
                 </span>
                 <span className="text-[11px] text-white/40" style={poppins}>
-                  {t('weekendLeague.hofEntrants', { count: edition.entrants })}
+                  {t('weekendLeague.hofEntrants', { count: edition.entrants.toLocaleString(intlLocale(locale)) })}
                 </span>
               </div>
               <ol className="space-y-1">
@@ -110,7 +153,7 @@ export function HallOfFame({ data }: { data?: WlHallOfFameResponse }) {
                       {p.nickname ?? '—'}
                     </span>
                     <span className="shrink-0 text-[13px] tabular-nums text-white/50" style={poppins}>
-                      {p.points.toLocaleString()}
+                      {p.points.toLocaleString(intlLocale(locale))}
                     </span>
                   </li>
                 ))}
@@ -131,12 +174,9 @@ export function HallOfFame({ data }: { data?: WlHallOfFameResponse }) {
               <span className="min-w-0 flex-1 truncate text-[14px] text-white" style={poppins}>
                 {row.nickname ?? '—'}
               </span>
-              <Medals gold={row.gold} silver={row.silver} bronze={row.bronze} />
+              <Medals gold={row.gold} silver={row.silver} bronze={row.bronze} labels={medalLabels} />
             </div>
           ))}
-          <p className="px-4 pb-3 pt-1 text-[11px] leading-snug text-white/35" style={poppins}>
-            {t('weekendLeague.hofMedalNote')}
-          </p>
         </div>
       )}
     </section>

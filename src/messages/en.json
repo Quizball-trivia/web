@@ -2070,7 +2070,11 @@
     "hofPastWinners": "Past winners",
     "hofAllTime": "All-time",
     "hofEntrants": "{count} players",
-    "hofMedalNote": "Ranked by medals — scoring changed between editions, so point totals are not comparable."
+    "hofGold": "gold",
+    "hofSilver": "silver",
+    "hofBronze": "bronze",
+    "hofError": "Couldn't load past winners.",
+    "hofRetry": "Try again"
   },
   "wlAward": {
     "title1": "Weekend League Champion",

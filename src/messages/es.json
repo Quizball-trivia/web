@@ -2067,7 +2067,11 @@
     "hofPastWinners": "Ganadores",
     "hofAllTime": "Histórico",
     "hofEntrants": "{count} jugadores",
-    "hofMedalNote": "Clasificado por medallas: la puntuación cambió entre ediciones, así que los totales no son comparables."
+    "hofGold": "oro",
+    "hofSilver": "plata",
+    "hofBronze": "bronce",
+    "hofError": "No se pudieron cargar los ganadores.",
+    "hofRetry": "Reintentar"
   },
   "wlAward": {
     "title1": "Campeón de Weekend League",
