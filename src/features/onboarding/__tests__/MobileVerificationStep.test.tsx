@@ -30,6 +30,8 @@ vi.mock('@/contexts/LocaleContext', () => ({
         'mobileVerificationExperiment.privacyNote': 'Privacy note',
         'mobileVerificationExperiment.skip': 'Maybe later',
         'mobileVerificationExperiment.sendFailed': 'Send failed',
+        'mobileVerificationExperiment.sendFailedReason': "Couldn't send: {reason}",
+        'mobileVerificationExperiment.phoneHint': 'Georgian mobile only',
         'settings.phoneSendCode': 'Send code',
         'settings.phoneVerifyCode': 'Verify phone',
         'settings.phoneLinkedElsewhere': 'Number already linked',
@@ -107,7 +109,7 @@ describe('MobileVerificationStep', () => {
     render(<MobileVerificationStep isCompleting={false} onContinue={onContinue} />);
 
     expect(analytics.shown).toHaveBeenCalledTimes(1);
-    fireEvent.input(screen.getByPlaceholderText('+995 5XX XXX XXX'), {
+    fireEvent.input(screen.getByPlaceholderText('5XX XXX XXX'), {
       target: { value: '577123456' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Send code' }));
@@ -146,7 +148,7 @@ describe('MobileVerificationStep', () => {
 
     render(<MobileVerificationStep isCompleting={false} onContinue={onContinue} />);
 
-    fireEvent.input(screen.getByPlaceholderText('+995 5XX XXX XXX'), {
+    fireEvent.input(screen.getByPlaceholderText('5XX XXX XXX'), {
       target: { value: '577123456' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Send code' }));
@@ -160,7 +162,7 @@ describe('MobileVerificationStep', () => {
   it('keeps invalid phone input client-side and records the validation failure', () => {
     render(<MobileVerificationStep isCompleting={false} onContinue={vi.fn()} />);
 
-    fireEvent.input(screen.getByPlaceholderText('+995 5XX XXX XXX'), {
+    fireEvent.input(screen.getByPlaceholderText('5XX XXX XXX'), {
       target: { value: '123' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Send code' }));
@@ -172,5 +174,96 @@ describe('MobileVerificationStep', () => {
       reason: 'invalid_phone',
       attempt: 1,
     });
+  });
+});
+
+describe('MobileVerificationStep phone input and failure reasons', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  const renderStep = () => {
+    const onContinue = vi.fn().mockResolvedValue(undefined);
+    render(<MobileVerificationStep isCompleting={false} onContinue={onContinue} />);
+    return { onContinue, input: screen.getByPlaceholderText('5XX XXX XXX') };
+  };
+
+  it('always posts canonical E.164 regardless of how the digits are typed', async () => {
+    vi.mocked(startGeorgianPhoneLink).mockResolvedValue({
+      message: 'Verification code sent', phone: '+995577123456', otp_required: true,
+    });
+    const { input } = renderStep();
+    // Spaces, letters and a leading zero are stripped by the field itself.
+    fireEvent.input(input, { target: { value: '0 5a77 123-456' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Send code' }));
+    await waitFor(() => {
+      expect(startGeorgianPhoneLink).toHaveBeenCalledWith('+995577123456');
+    });
+  });
+
+  it('caps input at 9 digits so an over-long number cannot be submitted', () => {
+    const { input } = renderStep();
+    fireEvent.input(input, { target: { value: '5771234567890' } });
+    expect((input as HTMLInputElement).value).toBe('577123456');
+  });
+
+  it('strips a leading national 0 instead of truncating a valid number', () => {
+    const { input } = renderStep();
+    fireEvent.input(input, { target: { value: '0577123456' } });
+    expect((input as HTMLInputElement).value).toBe('577123456');
+  });
+
+  it('disables submit only while the field is empty, so short input still explains itself', async () => {
+    const { input } = renderStep();
+    const submit = screen.getByRole('button', { name: 'Send code' });
+    expect(submit).toBeDisabled();
+    fireEvent.input(input, { target: { value: '577' } });
+    expect(submit).not.toBeDisabled();
+    fireEvent.click(submit);
+    expect(await screen.findByText('Invalid Georgian phone')).toBeInTheDocument();
+    expect(startGeorgianPhoneLink).not.toHaveBeenCalled();
+  });
+
+  it('rejects a non-mobile Georgian number locally, without calling the API', async () => {
+    const { input } = renderStep();
+    fireEvent.input(input, { target: { value: '322334455' } }); // Tbilisi landline
+    fireEvent.click(screen.getByRole('button', { name: 'Send code' }));
+    expect(await screen.findByText('Invalid Georgian phone')).toBeInTheDocument();
+    expect(startGeorgianPhoneLink).not.toHaveBeenCalled();
+    expect(analytics.failed).toHaveBeenCalledWith(
+      expect.objectContaining({ reason: 'invalid_phone' }),
+    );
+  });
+
+  it('shows the SERVER reason on a 400 instead of a bare "try again"', async () => {
+    const { ApiError } = await import('@/lib/api/api');
+    vi.mocked(startGeorgianPhoneLink).mockRejectedValue(
+      new ApiError('Invalid phone number for SMS delivery', 400, null),
+    );
+    const { input } = renderStep();
+    fireEvent.input(input, { target: { value: '577123456' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Send code' }));
+    expect(
+      await screen.findByText("Couldn't send: Invalid phone number for SMS delivery"),
+    ).toBeInTheDocument();
+    expect(analytics.failed).toHaveBeenCalledWith(
+      expect.objectContaining({ reason: 'request_failed' }),
+    );
+  });
+
+  it('still shows the dedicated message when the number belongs to another account (409)', async () => {
+    const { ApiError } = await import('@/lib/api/api');
+    vi.mocked(startGeorgianPhoneLink).mockRejectedValue(new ApiError('conflict', 409, null));
+    const { input } = renderStep();
+    fireEvent.input(input, { target: { value: '577123456' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Send code' }));
+    expect(await screen.findByText('Number already linked')).toBeInTheDocument();
+  });
+
+  it('falls back to the generic message when a non-400 failure carries no usable reason', async () => {
+    const { ApiError } = await import('@/lib/api/api');
+    vi.mocked(startGeorgianPhoneLink).mockRejectedValue(new ApiError('boom', 502, null));
+    const { input } = renderStep();
+    fireEvent.input(input, { target: { value: '577123456' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Send code' }));
+    expect(await screen.findByText('Send failed')).toBeInTheDocument();
   });
 });

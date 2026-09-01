@@ -434,7 +434,10 @@
     "changeNumber": "Change number",
     "privacyNote": "We only use this number for account access and essential service messages.",
     "skip": "Maybe later",
-    "sendFailed": "We couldn't send the code. Please try again."
+    "sendFailed": "We couldn't send the code. Please try again.",
+    "sendFailedReason": "We couldn't send the code: {reason}",
+    "phoneHint": "Georgian mobile only — 9 digits starting with 5",
+    "phoneDigitsLabel": "Mobile number"
   },
   "mobileVerificationReminder": {
     "eyebrow": "Account security",
