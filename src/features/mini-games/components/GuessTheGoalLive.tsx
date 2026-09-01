@@ -580,7 +580,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
         </span>
         {phase === 'watch' ? (
           <span className="shrink-0 font-poppins text-[11px] font-black uppercase tracking-wider text-brand-yellow">
-            {t('Answer now · +{points}', { points: potential })}
+            {t('+{points} points', { points: potential })}
           </span>
         ) : outcome ? (
           <span

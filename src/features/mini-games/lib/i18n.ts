@@ -16,7 +16,6 @@ const KA: Record<string, string> = {
   "Guess the Goal": "გამოიცანი გოლი",
   "Name the iconic goal — real rewards, server-scored": "ამოიცანი ლეგენდარული გოლი — რეალური ჯილდოები",
   "Solved {n}/{total}": "ამოცნობილი {n}/{total}",
-  "Answer now · +{points}": "უპასუხე ახლა · +{points}",
   "+{points} points": "+{points} ქულა",
   "Move {n}/{total}": "სვლა {n}/{total}",
   "Which goal is this?": "რომელი გოლია ეს?",
