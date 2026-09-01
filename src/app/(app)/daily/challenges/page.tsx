@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
+import { MiniGamesGrid } from "@/features/mini-games/components/MiniGamesGrid";
 import { useCallback, useEffect, useMemo, useState, type MouseEvent } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, RotateCcw } from "lucide-react";
@@ -271,32 +271,18 @@ export default function DailyChallengesPage() {
           </div>
         )}
 
-        {/* Guess the Goal — a daily ritual of its own (5 goals/day), so it
-            belongs on this page, but it is NOT a daily challenge: it has its
-            own rewards and does not count toward the coin totals above. */}
-        <Link
-          href="/guess-the-goal"
-          className="mt-4 flex items-center gap-4 overflow-hidden rounded-[10px] bg-brand-blue p-4 transition-all active:translate-y-[2px] focus-visible:outline-none focus-visible:ring-2 md:mt-6 md:p-6"
-        >
-          <Image
-            src="/assets/guess-the-goal-card-icon.png?v=2"
-            alt=""
-            width={120}
-            height={120}
-            className="size-16 shrink-0 object-contain md:size-24"
-          />
-          <div className="min-w-0 flex-1">
-            <p className="font-poppins text-[15px] font-semibold uppercase leading-tight text-white md:text-[26px]">
-              {t('miniGames.guessTheGoalTitle')}
-            </p>
-            <p className="font-poppins mt-1 text-[10px] uppercase leading-snug text-white/80 md:text-sm">
-              {t('miniGames.guessTheGoalSubtitle')}
-            </p>
-          </div>
-          <div className="font-poppins flex h-9 shrink-0 items-center justify-center rounded-[8px] bg-black px-4 text-[12px] uppercase tracking-wide text-white md:h-11 md:px-6 md:text-base">
-            {t('common.play')}
-          </div>
-        </Link>
+        {/* Mini games — the hub tab is hidden for now, so its games live here
+            in the hub's own card design. Not daily challenges: separate
+            rewards, no coin-total participation. */}
+        <div className="mt-6 md:mt-10">
+          <h2 className="font-poppins text-[16px] uppercase leading-[1.1] text-white md:text-[24px]">
+            {t('miniGames.hubTitle')}
+          </h2>
+          <p className="mt-1 mb-3 text-[10px] font-black uppercase tracking-[0.04em] text-white/55 md:mb-5 md:text-sm">
+            {t('miniGames.hubSubtitle')}
+          </p>
+          <MiniGamesGrid />
+        </div>
 
         {!isLoading && challenges.length > 0 && (
           <div className="mt-4 flex flex-col items-center lg:hidden">
