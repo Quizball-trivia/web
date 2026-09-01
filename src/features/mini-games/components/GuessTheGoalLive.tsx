@@ -268,6 +268,9 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
   const devResetToday = useCallback(async () => {
     try {
       await guessTheGoalApi.devResetToday();
+      resumableRef.current = null;
+      setSession(null);
+      setOutcome(null);
       guessTheGoalApi.gallery().then(setGallery).catch(() => {});
       setPhase('idle');
       setError(null);
@@ -734,13 +737,32 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
       <div className="mx-auto flex min-h-[calc(100dvh-4rem)] max-w-[430px] flex-col px-4 py-6 md:px-8 md:py-8 lg:max-w-6xl">
         <div className="mb-4 md:mb-6">
           <div className="flex items-center gap-3 md:gap-4">
-            <Link
-              href={backHref ?? '/mini-games'}
-              aria-label={t('Back')}
-              className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 md:size-11"
-            >
-              <ArrowLeft className="size-5 md:size-6" />
-            </Link>
+            {phase === 'idle' || phase === 'disabled' || phase === 'load_error' ? (
+              <Link
+                href={backHref ?? '/mini-games'}
+                aria-label={t('Back')}
+                className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 md:size-11"
+              >
+                <ArrowLeft className="size-5 md:size-6" />
+              </Link>
+            ) : (
+              <button
+                type="button"
+                aria-label={t('Back')}
+                onClick={() => {
+                  // Mid-goal back returns to the game's own menu + collection;
+                  // an unanswered goal stays resumable behind 'Continue'.
+                  if (session && !outcome) resumableRef.current = session;
+                  setSession(null);
+                  setOutcome(null);
+                  setPhase('idle');
+                  guessTheGoalApi.gallery().then(setGallery).catch(() => {});
+                }}
+                className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 md:size-11"
+              >
+                <ArrowLeft className="size-5 md:size-6" />
+              </button>
+            )}
             <h1 className="font-poppins text-[20px] uppercase leading-[1.1] text-white md:text-[32px]">
               {t('Guess the Goal')}
             </h1>
