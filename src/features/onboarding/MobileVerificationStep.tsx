@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useLocale } from '@/contexts/LocaleContext';
 import { startGeorgianPhoneLink, verifyGeorgianPhoneLink } from '@/lib/auth/auth.service';
-import { normalizeGeorgianPhone, validateGeorgianPhone, validateOtp } from '@/lib/auth/validation';
+import { validateGeorgianPhone, validateOtp } from '@/lib/auth/validation';
 import {
   trackMobileVerificationCompleted,
   trackMobileVerificationFailed,
@@ -36,7 +36,9 @@ export function MobileVerificationStep({
   const { t } = useLocale();
   const setAuthenticated = useAuthStore((state) => state.setAuthenticated);
   const [step, setStep] = useState<Step>('phone');
-  const [phoneInput, setPhoneInput] = useState('');
+  // 9 national digits only; the +995 prefix is fixed in the UI so the value
+  // posted is always canonical E.164 and cannot disagree with the server.
+  const [phoneDigits, setPhoneDigits] = useState('');
   const [otp, setOtp] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -59,7 +61,7 @@ export function MobileVerificationStep({
     setError(null);
     setNotice(null);
 
-    const validationError = validateGeorgianPhone(phoneInput);
+    const validationError = validateGeorgianPhone(`+995${phoneDigits}`);
     if (validationError) {
       trackMobileVerificationFailed({
         step: 'phone',
@@ -71,11 +73,11 @@ export function MobileVerificationStep({
     }
 
     const attempt = ++sendAttemptsRef.current;
-    const phone = normalizeGeorgianPhone(phoneInput);
+    const phone = `+995${phoneDigits}`;
     setIsSubmitting(true);
     try {
       const result = await startGeorgianPhoneLink(phone);
-      setPhoneInput(result.phone);
+      setPhoneDigits(result.phone.replace(/^\+995/, ''));
 
       if (!result.otp_required) {
         trackMobileVerificationCompleted({
@@ -101,10 +103,15 @@ export function MobileVerificationStep({
         reason: numberInUse ? 'number_in_use' : 'request_failed',
         attempt,
       });
+      const reason = requestError instanceof ApiError && requestError.status === 400
+        ? requestError.message?.trim()
+        : null;
       setError(
         numberInUse
           ? t('settings.phoneLinkedElsewhere')
-          : t('mobileVerificationExperiment.sendFailed'),
+          : reason
+            ? t('mobileVerificationExperiment.sendFailedReason', { reason })
+            : t('mobileVerificationExperiment.sendFailed'),
       );
     } finally {
       setIsSubmitting(false);
@@ -130,7 +137,7 @@ export function MobileVerificationStep({
     setIsSubmitting(true);
     try {
       const user = await verifyGeorgianPhoneLink(
-        normalizeGeorgianPhone(phoneInput),
+        `+995${phoneDigits}`,
         otp,
       );
       setAuthenticated(user);
@@ -194,7 +201,7 @@ export function MobileVerificationStep({
           {step === 'phone'
             ? t('mobileVerificationExperiment.description')
             : t('mobileVerificationExperiment.codeDescription', {
-                phone: normalizeGeorgianPhone(phoneInput),
+                phone: `+995${phoneDigits}`,
               })}
         </p>
 
@@ -208,21 +215,33 @@ export function MobileVerificationStep({
                 <span className="mb-2 block font-poppins text-xs font-semibold uppercase tracking-wide text-white/70">
                   {t('mobileVerificationExperiment.phoneLabel')}
                 </span>
-                <div className="relative">
-                  <Phone className="pointer-events-none absolute left-4 top-1/2 size-4 -translate-y-1/2 text-white/45" />
+                <div className="flex items-stretch gap-2">
+                  <div className="flex h-[56px] shrink-0 items-center gap-2 rounded-[18px] border-2 border-white/15 bg-white/10 px-3 font-poppins text-base font-semibold text-white/80">
+                    <Phone className="size-4 text-white/45" />
+                    +995
+                  </div>
                   <Input
-                    autoComplete="tel"
+                    autoComplete="tel-national"
                     type="tel"
-                    value={phoneInput}
+                    inputMode="numeric"
+                    value={phoneDigits}
                     onChange={(event) => {
-                      setPhoneInput(event.target.value);
+                      setPhoneDigits(
+                        event.target.value
+                          .replace(/\D/g, '')
+                          .replace(/^0+/, '')
+                          .slice(0, 9),
+                      );
                       setError(null);
                     }}
-                    placeholder={t('welcome.phonePlaceholder')}
-                    className="h-[56px] rounded-[18px] border-2 border-white/15 bg-white/10 pl-11 font-poppins text-base font-semibold text-white placeholder:text-white/40 focus-visible:border-white/40 focus-visible:ring-0 focus-visible:ring-offset-0"
+                    placeholder="5XX XXX XXX"
+                    className="h-[56px] flex-1 rounded-[18px] border-2 border-white/15 bg-white/10 font-poppins text-base font-semibold tracking-wide text-white placeholder:text-white/40 focus-visible:border-white/40 focus-visible:ring-0 focus-visible:ring-offset-0"
                     disabled={busy}
                   />
                 </div>
+                <p className="mt-2 font-poppins text-xs text-white/50">
+                  {t('mobileVerificationExperiment.phoneHint')}
+                </p>
               </label>
             ) : (
               <label className="block">
@@ -258,7 +277,11 @@ export function MobileVerificationStep({
 
             <Button
               type="submit"
-              disabled={busy || !phoneInput || (step === 'otp' && otp.length === 0)}
+              disabled={
+                busy
+                || (step === 'phone' && phoneDigits.length === 0)
+                || (step === 'otp' && otp.length === 0)
+              }
               className="h-[56px] w-full rounded-[28px] bg-brand-yellow font-poppins text-sm font-semibold uppercase tracking-wide text-black hover:bg-brand-yellow-deep disabled:opacity-60"
             >
               {busy ? (
