@@ -15,6 +15,44 @@ import { WlLiveSimFlow } from '@/features/weekend-league/live/WlLiveSimFlow';
 import { WlComponentGallery } from '@/features/weekend-league/live/WlComponentGallery';
 import { BoardStrip } from '@/features/weekend-league/live/WlLiveFlow';
 
+// Real prod podiums (2026-08-08 .. 2026-08-29) so the hall of fame renders
+// with truthful shapes here — the live page fetches /hall-of-fame instead.
+const HALL_OF_FAME_FIXTURE = {
+  editions: [
+    { week_key: '2026-08-29', entrants: 120, podium: [
+      { rank: 1, nickname: 'kartvela', avatar_url: null, points: 1880 },
+      { rank: 2, nickname: 'PONCHOLO', avatar_url: null, points: 1730 },
+      { rank: 3, nickname: 'კირილე მიმინოშვილი', avatar_url: null, points: 1720 },
+    ] },
+    { week_key: '2026-08-22', entrants: 122, podium: [
+      { rank: 1, nickname: 'TsotneLomsadze', avatar_url: null, points: 744 },
+      { rank: 2, nickname: 'Nikusha FC', avatar_url: null, points: 740 },
+      { rank: 3, nickname: 'owms', avatar_url: null, points: 711 },
+    ] },
+    { week_key: '2026-08-15', entrants: 128, podium: [
+      { rank: 1, nickname: 'TsotneLomsadze', avatar_url: null, points: 733 },
+      { rank: 2, nickname: 'xardzo', avatar_url: null, points: 725 },
+      { rank: 3, nickname: 'მახატა', avatar_url: null, points: 720 },
+    ] },
+    { week_key: '2026-08-08', entrants: 102, podium: [
+      { rank: 1, nickname: 'კირილე მიმინოშვილი', avatar_url: null, points: 836 },
+      { rank: 2, nickname: 'AchiLFC', avatar_url: null, points: 822 },
+      { rank: 3, nickname: 'TsotneLomsadze', avatar_url: null, points: 782 },
+    ] },
+  ],
+  all_time: [
+    { nickname: 'TsotneLomsadze', avatar_url: null, gold: 2, silver: 0, bronze: 1, finals_played: 4 },
+    { nickname: 'კირილე მიმინოშვილი', avatar_url: null, gold: 1, silver: 0, bronze: 1, finals_played: 4 },
+    { nickname: 'kartvela', avatar_url: null, gold: 1, silver: 0, bronze: 0, finals_played: 1 },
+    { nickname: 'Nikusha FC', avatar_url: null, gold: 0, silver: 1, bronze: 0, finals_played: 4 },
+    { nickname: 'AchiLFC', avatar_url: null, gold: 0, silver: 1, bronze: 0, finals_played: 4 },
+    { nickname: 'PONCHOLO', avatar_url: null, gold: 0, silver: 1, bronze: 0, finals_played: 2 },
+    { nickname: 'xardzo', avatar_url: null, gold: 0, silver: 1, bronze: 0, finals_played: 2 },
+    { nickname: 'მახატა', avatar_url: null, gold: 0, silver: 0, bronze: 1, finals_played: 3 },
+    { nickname: 'owms', avatar_url: null, gold: 0, silver: 0, bronze: 1, finals_played: 1 },
+  ],
+};
+
 export default function DevWlPage() {
   const [mode, setMode] = useState<'league' | 'sim' | 'gallery'>('league');
 
@@ -50,7 +88,7 @@ export default function DevWlPage() {
           <PlayCircle className="size-4 text-brand-purple" /> Simulate live match
         </button>
       </div>
-      <WeekendLeagueScreen showControls />
+      <WeekendLeagueScreen showControls hallOfFame={HALL_OF_FAME_FIXTURE} />
     </div>
   );
 }

@@ -39,6 +39,24 @@ export function getWeekendLeagueStandings(): Promise<WlStandingsResponse> {
   return apiFetch("get", "/api/v1/weekend-league/standings" as never) as Promise<WlStandingsResponse>;
 }
 
+export interface WlHallOfFameEdition {
+  week_key: string;
+  entrants: number;
+  podium: Array<{ rank: number; nickname: string | null; avatar_url: string | null; points: number }>;
+}
+export interface WlHallOfFameEntry {
+  nickname: string | null; avatar_url: string | null;
+  gold: number; silver: number; bronze: number; finals_played: number;
+}
+export interface WlHallOfFameResponse {
+  editions: WlHallOfFameEdition[];
+  all_time: WlHallOfFameEntry[];
+}
+export function getWeekendLeagueHallOfFame(): Promise<WlHallOfFameResponse> {
+  // Path not yet in api.generated.ts (regenerate on the next openapi pass).
+  return apiFetch("get", "/api/v1/weekend-league/hall-of-fame" as never) as Promise<WlHallOfFameResponse>;
+}
+
 export function getWeekendLeagueQp() {
   return apiFetch("get", "/api/v1/weekend-league/qp");
 }

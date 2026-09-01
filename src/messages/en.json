@@ -2065,7 +2065,12 @@
     "promoAdvanceSuffix": " advance to the next stage",
     "promoFinalPrefix": "Top ",
     "promoFinalSuffix": " reach the final",
-    "promoCtaEarn": "Play ranked to earn QP"
+    "promoCtaEarn": "Play ranked to earn QP",
+    "hofTitle": "Hall of Fame",
+    "hofPastWinners": "Past winners",
+    "hofAllTime": "All-time",
+    "hofEntrants": "{count} players",
+    "hofMedalNote": "Ranked by medals — scoring changed between editions, so point totals are not comparable."
   },
   "wlAward": {
     "title1": "Weekend League Champion",
