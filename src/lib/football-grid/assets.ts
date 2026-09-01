@@ -37,11 +37,13 @@ export function footballGridAssetUrl(value: string | null | undefined): string |
   // Play-hub card icon shared with the mobile app's bundled artwork.
   if (source === '/assets/football-grid/card-icon.png') return `${FOOTBALL_GRID_CDN_BASE_URL}/ui/card-icon.png`;
   if (source === '/assets/bg-pattern.webp') return `${FOOTBALL_GRID_CDN_BASE_URL}/ui/bg-pattern.webp`;
+  // Avatar store assets are app-served everywhere else (store, profile, matches);
+  // serving them the same way here means new catalog assets need no CDN publish.
   const avatarPrefix = '/assets/store/';
   if (source.startsWith(avatarPrefix)) {
     const relative = source.slice(avatarPrefix.length).split('?')[0];
-    if (!relative || relative.split('/').some((segment) => segment === '.' || segment === '..')) return null;
-    return `${FOOTBALL_GRID_CDN_BASE_URL}/avatar/${encodeAssetPath(relative)}`;
+    if (!relative || relative.split('/').some((segment) => segment === '' || segment === '.' || segment === '..')) return null;
+    return source;
   }
   const prefix = '/assets/football-grid/';
   if (!source.startsWith(prefix)) return null;

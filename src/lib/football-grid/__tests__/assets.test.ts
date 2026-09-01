@@ -17,9 +17,15 @@ describe('footballGridAssetUrl', () => {
       .toBe(`${FOOTBALL_GRID_CDN_BASE_URL}/ui/bg-pattern.webp`);
   });
 
-  it('maps shared avatar layers into the Grid CDN avatar namespace', () => {
+  it('serves shared avatar layers from the app like every other mode', () => {
     expect(footballGridAssetUrl('/assets/store/jersey_green.webp?v=2'))
-      .toBe(`${FOOTBALL_GRID_CDN_BASE_URL}/avatar/jersey_green.webp`);
+      .toBe('/assets/store/jersey_green.webp?v=2');
+  });
+
+  it('rejects store paths with traversal or empty segments', () => {
+    expect(footballGridAssetUrl('/assets/store/../../api/foo')).toBeNull();
+    expect(footballGridAssetUrl('/assets/store/')).toBeNull();
+    expect(footballGridAssetUrl('/assets/store//jersey_green.webp')).toBeNull();
   });
 
   it('keeps existing first-party player and club CDN URLs', () => {

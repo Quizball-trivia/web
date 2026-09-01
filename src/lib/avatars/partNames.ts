@@ -55,6 +55,7 @@ const PART_NAME_KEY_MAP: Record<string, MessageKey> = {
   "Roma": "store.partRoma",
   "Juventus": "store.partJuventus",
   "Ajax": "store.partAjax",
+  "Mimino": "store.partMimino",
   "Wave": "store.partWave",
   "Curly Crop": "store.partCurlyCrop",
   "Cornrows": "store.partCornrows",
