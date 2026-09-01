@@ -281,7 +281,7 @@ export default function DailyChallengesPage() {
           <p className="mt-1 mb-3 text-[10px] font-black uppercase tracking-[0.04em] text-white/55 md:mb-5 md:text-sm">
             {t('miniGames.hubSubtitle')}
           </p>
-          <MiniGamesGrid />
+          <MiniGamesGrid only={["guess-the-goal"]} />
         </div>
 
         {!isLoading && challenges.length > 0 && (

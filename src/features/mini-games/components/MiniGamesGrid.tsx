@@ -98,11 +98,13 @@ export function MiniGameCard({ game, index }: { game: MiniGameEntry; index: numb
   );
 }
 
-/** The full three-game grid in the hub's own styling. */
-export function MiniGamesGrid() {
+/** The hub grid, optionally narrowed — Daily Challenges shows only
+ *  Guess the Goal while the other games stay behind the hidden hub tab. */
+export function MiniGamesGrid({ only }: { only?: ReadonlyArray<MiniGameEntry["key"]> }) {
+  const games = only ? MINI_GAMES.filter((game) => only.includes(game.key)) : MINI_GAMES;
   return (
     <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-5">
-      {MINI_GAMES.map((game, index) => (
+      {games.map((game, index) => (
         <MiniGameCard key={game.key} game={game} index={index} />
       ))}
     </div>
