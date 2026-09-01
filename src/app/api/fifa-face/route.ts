@@ -1,21 +1,31 @@
 import { type NextRequest } from "next/server";
+import { FIFA_CARDS } from "@/features/mini-games/data/guessFifaCard";
+import { DAILY_CARD_SET } from "@/features/daily/dailyCardSet";
 
 /**
  * Proxies a SoFIFA player face for the "Guess the Card" reveal. SoFIFA's image
  * CDN 403s hotlinks (it requires a sofifa.com Referer that a browser can't
  * send), so we fetch it server-side with that Referer and stream it back from
- * our own origin. Inputs are numeric-only and the host is hardcoded, so there's
- * no SSRF surface.
+ * our own origin. Only id/version pairs that exist in our card dataset are
+ * accepted, so the proxy can't be used to enumerate SoFIFA or amplify traffic
+ * beyond the game's own ~720 faces.
  */
 export const runtime = "nodejs";
 
 const ID_RE = /^\d{1,7}$/;
 const VER_RE = /^\d{2}$/;
+const UPSTREAM_TIMEOUT_MS = 5000;
+
+const KNOWN_FACES = new Set<string>(
+  [...FIFA_CARDS, ...DAILY_CARD_SET]
+    .filter((c) => c.photoId && c.photoVer)
+    .map((c) => `${c.photoId}:${c.photoVer}`),
+);
 
 export async function GET(request: NextRequest) {
   const id = request.nextUrl.searchParams.get("id") ?? "";
   const ver = request.nextUrl.searchParams.get("v") ?? "";
-  if (!ID_RE.test(id) || !VER_RE.test(ver)) {
+  if (!ID_RE.test(id) || !VER_RE.test(ver) || !KNOWN_FACES.has(`${Number(id)}:${ver}`)) {
     return new Response("bad request", { status: 400 });
   }
 
@@ -29,6 +39,7 @@ export async function GET(request: NextRequest) {
         "User-Agent":
           "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
       },
+      signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
       // let Next cache the fetched image at the data layer too
       next: { revalidate: 604800 },
     });

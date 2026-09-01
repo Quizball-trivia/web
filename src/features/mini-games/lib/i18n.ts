@@ -560,6 +560,9 @@ const KA: Record<string, string> = {
   "Coins earned": "მოგებული ქოინები",
   "Solved": "ამოცნობილი",
   "New cards at reset": "ახალი ბარათები განახლებისას",
+  "Come back tomorrow": "დაბრუნდი ხვალ",
+  "Reveal clue": "მინიშნების გახსნა",
+  "Hidden clue": "დამალული მინიშნება",
   "Back to challenges": "გამოწვევებში დაბრუნება",
   "A gold card, stats only — name the player across 10 editions.":
     "ოქროს ბარათი, მხოლოდ სტატისტიკა — გამოიცანი მოთამაშე 10 გამოცემიდან.",

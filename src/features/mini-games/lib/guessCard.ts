@@ -3,12 +3,14 @@ import { FIFA_CARDS, type FifaCard, type FifaEdition } from '../data/guessFifaCa
 /** A card the player guesses. */
 export type GuessableCard = FifaCard;
 
-/** Points for naming a card (all clues are shown up front — flat per solve). */
-export const POINTS_PER_SOLVE = 10;
-/** Cards per round (also the daily-challenge daily cap). */
-export const ROUND_SIZE = 10;
-/** Highest score obtainable in one round. */
-export const MAX_SCORE = ROUND_SIZE * POINTS_PER_SOLVE;
+export {
+  POINTS_PER_SOLVE,
+  ROUND_SIZE,
+  MAX_SCORE,
+  IDENTITY_CLUES,
+  clueReveal,
+  type IdentityClue,
+} from './guessCardConstants';
 
 export interface RoundResult {
   card: GuessableCard;
@@ -24,19 +26,6 @@ export const EDITION_LABEL: Record<string, string> = (() => {
 })();
 
 export const rand = <T,>(a: readonly T[]): T => a[Math.floor(Math.random() * a.length)];
-
-/** The three identity clues on a card. During play one is shown and two are
- *  hidden (random); all three reveal once the player answers or gives up. */
-export type IdentityClue = 'nation' | 'league' | 'club';
-export const IDENTITY_CLUES: IdentityClue[] = ['nation', 'league', 'club'];
-
-export function clueReveal(shown: IdentityClue, all: boolean) {
-  return {
-    nation: all || shown === 'nation',
-    league: all || shown === 'league',
-    club: all || shown === 'club',
-  };
-}
 
 /** Random unused card from a given edition (falls back to any if all used). */
 export function pickCard(used: Set<string>, edition: FifaEdition): FifaCard | null {

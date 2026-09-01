@@ -8,12 +8,12 @@ import { QuitGameDialog } from "./QuitGameDialog";
 import { useResultSplash } from "./components/useResultSplash";
 import { ResultSplash } from "./components/ResultSplash";
 import { GuessCardDailyResult } from "./GuessCardDailyResult";
-import { coinsForScore, saveGuessCardDailyRecord, type GuessCardDailyRecord } from "./guessCardDaily";
+import { saveGuessCardDailyRecord, tbilisiDayKey, type GuessCardDailyRecord } from "./guessCardDaily";
 import { FutCard } from "@/features/mini-games/components/FutCard";
 import { EditionSpinner, type SpinTarget } from "@/features/mini-games/components/EditionSpinner";
 import { useMiniT } from "@/features/mini-games/lib/i18n";
 import { matchesName } from "@/features/mini-games/lib/matching";
-import { POINTS_PER_SOLVE, ROUND_SIZE, rand, IDENTITY_CLUES, type IdentityClue, type RoundResult, type GuessableCard } from "@/features/mini-games/lib/guessCard";
+import { POINTS_PER_SOLVE, ROUND_SIZE, IDENTITY_CLUES, type IdentityClue, type RoundResult, type GuessableCard } from "@/features/mini-games/lib/guessCard";
 import { DAILY_CARD_SET } from "./dailyCardSet";
 
 type Status = "spin" | "clue" | "result";
@@ -70,7 +70,11 @@ export function GuessTheCardDailyGame({
     const drawn = roundRef.current[i] ?? null;
     pendingRef.current = drawn;
     const target: SpinTarget = drawn?.edition ?? "FC26";
-    setShownClue(rand(IDENTITY_CLUES)); // one clue shown, the other two hidden
+    // One clue shown, the other two hidden — derived from day + card so a
+    // mid-round reload can't reroll which clue is free.
+    let h = 0;
+    for (const ch of tbilisiDayKey() + (drawn?.id ?? i)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+    setShownClue(IDENTITY_CLUES[h % IDENTITY_CLUES.length]);
     setManualReveals([]);
     setOutcome(null);
     setInput("");
@@ -84,10 +88,21 @@ export function GuessTheCardDailyGame({
     const id = window.setTimeout(() => {
       if (startedRef.current) return;
       startedRef.current = true;
-      // shuffle the fixed 10 once per round (client-side, so no SSR mismatch)
+      // Shuffle the fixed 10 deterministically from the Georgia-time day key
+      // (client-side, so no SSR mismatch): everyone gets the same order on a
+      // given day, and reloading mid-round can't reroll it.
+      let seed = 0;
+      for (const ch of tbilisiDayKey()) seed = (seed * 31 + ch.charCodeAt(0)) >>> 0;
+      const nextRand = () => {
+        seed = (seed + 0x6d2b79f5) >>> 0;
+        let t = seed;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
       const shuffled = [...DAILY_CARD_SET];
       for (let j = shuffled.length - 1; j > 0; j--) {
-        const k = Math.floor(Math.random() * (j + 1));
+        const k = Math.floor(nextRand() * (j + 1));
         [shuffled[j], shuffled[k]] = [shuffled[k], shuffled[j]];
       }
       roundRef.current = shuffled;
@@ -100,7 +115,7 @@ export function GuessTheCardDailyGame({
     const results = resultsRef.current;
     const score = results.reduce((s, r) => s + r.points, 0);
     const solved = results.filter((r) => r.solved).length;
-    const rec = saveGuessCardDailyRecord({ score, coins: coinsForScore(score), solved, total: DAILY_TOTAL });
+    const rec = saveGuessCardDailyRecord({ score, solved, total: DAILY_TOTAL });
     setFinalRecord(rec);
     onFinished?.(rec);
   }, [onFinished]);
@@ -212,9 +227,10 @@ export function GuessTheCardDailyGame({
                           onChange={(e) => setInput(e.target.value)}
                           onKeyDown={(e) => e.key === "Enter" && submit()}
                           placeholder={t("Name the player…")}
+                          aria-label={t("Name the player…")}
                           autoComplete="off"
                           spellCheck={false}
-                          className="font-poppins h-14 w-full rounded-[14px] border-none bg-brand-blue px-5 pr-14 text-center text-base uppercase text-white outline-none placeholder:text-white/50 placeholder:normal-case placeholder:tracking-normal focus:outline-none"
+                          className="font-poppins h-14 w-full rounded-[14px] border-none bg-brand-blue px-5 pr-14 text-center text-base uppercase text-white outline-none placeholder:text-white/50 placeholder:normal-case placeholder:tracking-normal focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow"
                           style={{ fontWeight: 600, boxShadow: "0 1.76px 6.334px 1.32px rgba(22, 69, 255, 0.25)" }}
                         />
                         <button type="button" onClick={submit} disabled={!input.trim()} aria-label={t("Go")} className="absolute right-3 top-1/2 inline-flex size-9 -translate-y-1/2 items-center justify-center rounded-full text-white/85 transition-colors hover:bg-white/10 disabled:opacity-40">

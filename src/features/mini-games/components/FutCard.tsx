@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Lock } from 'lucide-react';
 import { footballGridAssetUrl } from '@/lib/football-grid/assets';
+import { useMiniT } from '../lib/i18n';
 import { ClubCrest } from './Badges';
 import type { FifaCardStats } from '../data/guessFifaCard';
 
@@ -207,7 +208,6 @@ function Portrait({ card, reveal }: { card: FutCardData; reveal: boolean }) {
 /** One identity row (nation/league/club). Hidden = a locked, pulsing chip. */
 function IdentitySlot({
   revealed,
-  kind,
   children,
   revealable = false,
   onReveal,
@@ -218,6 +218,7 @@ function IdentitySlot({
   revealable?: boolean;
   onReveal?: () => void;
 }) {
+  const mt = useMiniT();
   const tappable = !revealed && revealable && !!onReveal;
   return (
     <div className="relative mb-1.5 flex h-[42px] w-full flex-col items-center justify-center">
@@ -225,6 +226,7 @@ function IdentitySlot({
           already cached when the slot reveals — otherwise a fast solve reveals
           before the CDN image has loaded. Visibility + pop are animated. */}
       <motion.div
+        aria-hidden={!revealed}
         animate={{ opacity: revealed ? 1 : 0, scale: revealed ? 1 : 0.6 }}
         transition={{ type: 'spring', stiffness: 380, damping: 18 }}
         className="flex flex-col items-center gap-0.5"
@@ -237,7 +239,7 @@ function IdentitySlot({
             <motion.button
               type="button"
               onClick={onReveal}
-              aria-label={`Reveal ${kind}`}
+              aria-label={mt('Reveal clue')}
               animate={{ boxShadow: ['0 0 6px rgba(255,213,74,0.4)', '0 0 12px rgba(255,213,74,0.7)', '0 0 6px rgba(255,213,74,0.4)'] }}
               transition={{ duration: 1.4, repeat: Infinity }}
               className="flex h-[27px] w-[36px] items-center justify-center rounded-[5px] border-2 border-brand-yellow bg-brand-yellow/25 active:scale-95"
@@ -247,7 +249,7 @@ function IdentitySlot({
           ) : (
             <div className="flex h-[25px] w-[34px] items-center justify-center rounded-[5px] border border-dashed border-[#33270a]/40 bg-[#33270a]/12">
               <motion.span animate={{ opacity: [0.35, 0.7, 0.35] }} transition={{ duration: 1.6, repeat: Infinity }}>
-                <Lock className="size-3.5 text-[#33270a]/70" aria-label={`${kind} hidden`} />
+                <Lock className="size-3.5 text-[#33270a]/70" aria-label={mt('Hidden clue')} />
               </motion.span>
             </div>
           )}

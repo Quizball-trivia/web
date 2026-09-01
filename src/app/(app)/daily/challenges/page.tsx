@@ -14,7 +14,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useLocale } from "@/contexts/LocaleContext";
 import { prefetchDailyChallengeSession } from "@/features/daily/dailyChallengeSessionPrefetch";
 import { GuessCardHubCard } from "@/features/daily/GuessCardHubCard";
-import { useGuessCardDailyStatus, DAILY_MAX_COINS } from "@/features/daily/guessCardDaily";
+import { useGuessCardDailyStatus } from "@/features/daily/guessCardDaily";
 
 // Challenges reset at 00:00 UTC. Show that moment as a wall-clock time in the
 // viewer's own timezone (auto-detected by Intl) so a Georgia user sees 04:00
@@ -161,8 +161,8 @@ export default function DailyChallengesPage() {
   const router = useRouter();
   const authUser = useAuthStore((state) => state.user);
   const { data: challenges = [], isLoading } = useDailyChallenges();
-  // Frontend-only Guess-the-Card daily (no backend type yet) — its completion
-  // and coins live client-side and fold into the hub totals below.
+  // Frontend-only Guess-the-Card daily (no backend type yet) — completion is
+  // client-side and counts toward card progress; coin totals stay server-only.
   const guessCard = useGuessCardDailyStatus();
   // Computed client-side only (depends on the browser's timezone), so it stays
   // empty on the server and first paint to avoid a hydration mismatch.
@@ -208,12 +208,12 @@ export default function DailyChallengesPage() {
     () => challenges.filter((c) => c.completedToday).reduce((sum, c) => sum + c.coinReward, 0),
     [challenges],
   );
-  // Fold the client-side Guess-the-Card daily into the hub totals.
-  const guessCoins = guessCard.completedToday ? guessCard.record?.coins ?? 0 : 0;
+  // The client-side Guess-the-Card daily counts toward completion progress
+  // only; the coin counter reflects real (server-credited) rewards alone.
   const totalCards = challenges.length + 1;
   const combinedCompleted = completedCount + (guessCard.completedToday ? 1 : 0);
-  const combinedTotalCoins = totalCoins + DAILY_MAX_COINS;
-  const combinedEarnedCoins = earnedCoins + guessCoins;
+  const combinedTotalCoins = totalCoins;
+  const combinedEarnedCoins = earnedCoins;
   const progressPct = totalCards > 0 ? (combinedCompleted / totalCards) * 100 : 0;
 
   return (
@@ -282,7 +282,7 @@ export default function DailyChallengesPage() {
             <GuessCardHubCard
               index={challenges.length}
               completedToday={guessCard.completedToday}
-              earnedCoins={guessCoins}
+              score={guessCard.record?.score ?? 0}
               onClick={() => router.push("/daily/guess-the-card")}
             />
           </div>

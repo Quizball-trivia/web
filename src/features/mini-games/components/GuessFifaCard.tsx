@@ -191,9 +191,10 @@ export function GuessFifaCard({ backHref }: { backHref?: string } = {}) {
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && submit()}
                         placeholder={t('Name the player…')}
+                        aria-label={t('Name the player…')}
                         autoComplete="off"
                         spellCheck={false}
-                        className="font-poppins h-14 w-full rounded-[14px] border-none bg-brand-blue px-5 pr-14 text-center text-base uppercase text-white outline-none placeholder:text-white/50 placeholder:normal-case placeholder:tracking-normal focus:outline-none"
+                        className="font-poppins h-14 w-full rounded-[14px] border-none bg-brand-blue px-5 pr-14 text-center text-base uppercase text-white outline-none placeholder:text-white/50 placeholder:normal-case placeholder:tracking-normal focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-yellow"
                         style={{ fontWeight: 600 }}
                       />
                       <button type="button" onClick={submit} disabled={!input.trim()} aria-label={t('Go')} className="absolute right-3 top-1/2 inline-flex size-9 -translate-y-1/2 items-center justify-center rounded-full text-white/85 transition-colors hover:bg-white/10 disabled:opacity-40">

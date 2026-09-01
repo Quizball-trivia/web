@@ -1,11 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import { CheckCircle2 } from "lucide-react";
 import { motion } from "motion/react";
 import { useLocale } from "@/contexts/LocaleContext";
 import { useMiniT } from "@/features/mini-games/lib/i18n";
-import { DAILY_MAX_COINS, DAILY_XP_REWARD } from "./guessCardDaily";
 
 /**
  * Hub tile for the frontend-only Guess-the-Card daily. Mirrors ChallengeCard's
@@ -15,12 +13,12 @@ import { DAILY_MAX_COINS, DAILY_XP_REWARD } from "./guessCardDaily";
 export function GuessCardHubCard({
   index,
   completedToday,
-  earnedCoins,
+  score,
   onClick,
 }: {
   index: number;
   completedToday: boolean;
-  earnedCoins: number;
+  score: number;
   onClick: () => void;
 }) {
   const { t } = useLocale();
@@ -57,34 +55,11 @@ export function GuessCardHubCard({
           {mt("A gold card, stats only — name the player across 10 editions.")}
         </p>
 
-        {!isCompleted ? (
-          <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between gap-2 md:hidden">
-            <span className="inline-flex h-6 items-center gap-1 rounded-full bg-white/70 px-2.5 text-[10px] font-black text-brand-gold-ink">
-              {DAILY_MAX_COINS}
-              <Image src="/assets/coin-1.png?v=2" alt="" width={16} height={16} className="size-4 object-contain" />
-            </span>
-            <span className="inline-flex h-6 items-center gap-1 rounded-full bg-brand-green-light px-2.5 text-[10px] font-black text-white">
-              {DAILY_XP_REWARD} XP
-            </span>
-          </div>
-        ) : null}
-        {!isCompleted ? (
-          <div className="mt-auto mb-3 hidden w-full items-center justify-between gap-2 md:flex">
-            <span className="inline-flex h-8 items-center gap-1.5 rounded-full bg-white/70 px-3.5 text-[16px] font-black tabular-nums text-brand-gold-ink">
-              {DAILY_MAX_COINS}
-              <Image src="/assets/coin-1.png?v=2" alt="" width={20} height={20} className="size-5 object-contain" />
-            </span>
-            <span className="inline-flex h-8 items-center gap-1 rounded-full bg-brand-green-light px-3.5 text-[16px] font-black text-white">
-              {DAILY_XP_REWARD} XP
-            </span>
-          </div>
-        ) : null}
-
-        <div className={`justify-center ${isCompleted ? "mt-auto flex" : "hidden md:flex"}`}>
+        <div className={`justify-center ${isCompleted ? "mt-auto flex" : "mt-auto flex"}`}>
           <span className={`font-poppins inline-flex h-[34px] min-w-[120px] items-center justify-center rounded-[14px] px-5 text-[15px] uppercase tracking-wide md:h-[50px] md:min-w-[200px] md:rounded-[20px] md:px-8 md:text-[24px] ${
             isCompleted ? "bg-white text-brand-green-darkest" : "bg-black text-white"
           }`}>
-            {isCompleted ? `+${earnedCoins}` : t("dailyGames.hubPlay")}
+            {isCompleted ? score : t("dailyGames.hubPlay")}
           </span>
         </div>
       </button>
