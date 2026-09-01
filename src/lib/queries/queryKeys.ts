@@ -105,5 +105,6 @@ export const queryKeys = {
     all: ["weekendLeague"] as const,
     current: () => [...queryKeys.weekendLeague.all, "current"] as const,
     qp: () => [...queryKeys.weekendLeague.all, "qp"] as const,
+    hallOfFame: () => [...queryKeys.weekendLeague.all, "hallOfFame"] as const,
   },
 };

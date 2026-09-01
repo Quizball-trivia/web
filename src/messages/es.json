@@ -2062,7 +2062,16 @@
     "promoAdvanceSuffix": " avanzan a la siguiente fase",
     "promoFinalPrefix": "Los mejores ",
     "promoFinalSuffix": " llegan a la final",
-    "promoCtaEarn": "Juega ranked para ganar QP"
+    "promoCtaEarn": "Juega ranked para ganar QP",
+    "hofTitle": "Salón de la fama",
+    "hofPastWinners": "Ganadores",
+    "hofAllTime": "Histórico",
+    "hofEntrants": "{count} jugadores",
+    "hofGold": "oro",
+    "hofSilver": "plata",
+    "hofBronze": "bronce",
+    "hofError": "No se pudieron cargar los ganadores.",
+    "hofRetry": "Reintentar"
   },
   "wlAward": {
     "title1": "Campeón de Weekend League",

@@ -2065,7 +2065,16 @@
     "promoAdvanceSuffix": " გადადის შემდეგ ეტაპზე",
     "promoFinalPrefix": "საუკეთესო ",
     "promoFinalSuffix": " ფინალში",
-    "promoCtaEarn": "ითამაშე რანკედი QP-სთვის"
+    "promoCtaEarn": "ითამაშე რანკედი QP-სთვის",
+    "hofTitle": "დიდების დარბაზი",
+    "hofPastWinners": "გამარჯვებულები",
+    "hofAllTime": "საერთო",
+    "hofEntrants": "{count} მოთამაშე",
+    "hofGold": "ოქრო",
+    "hofSilver": "ვერცხლი",
+    "hofBronze": "ბრინჯაო",
+    "hofError": "გამარჯვებულების ჩატვირთვა ვერ მოხერხდა.",
+    "hofRetry": "თავიდან ცდა"
   },
   "wlAward": {
     "title1": "Weekend League-ის ჩემპიონი",
