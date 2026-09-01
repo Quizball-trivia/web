@@ -768,23 +768,31 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
                     )}
             </p>
             {gallery && !poolExhausted && (
-              <div
-                className="rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-wider text-black"
-                style={{ backgroundColor: 'rgba(0,0,0,0.14)' }}
-              >
-                {dailyLimitReached
-                  ? t('All {limit} goals played — come back tomorrow', { limit: dailyLimit ?? 0 })
-                  : goalsLeftToday !== null
-                    ? t('{left} of {limit} goals left today', {
-                        left: goalsLeftToday,
-                        limit: dailyLimit ?? 0,
-                      })
-                    : coinsCapped
-                      ? t('Daily coins earned — more tomorrow')
-                      : t('Today: {today}/{cap} coins', {
-                          today: gallery.coins_today,
-                          cap: gallery.daily_coin_cap,
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                {goalsLeftToday !== null && (
+                  <div
+                    className="rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-wider text-black"
+                    style={{ backgroundColor: 'rgba(0,0,0,0.14)' }}
+                  >
+                    {dailyLimitReached
+                      ? t('All {limit} goals played — come back tomorrow', { limit: dailyLimit ?? 0 })
+                      : t('{left} of {limit} goals left today', {
+                          left: goalsLeftToday,
+                          limit: dailyLimit ?? 0,
                         })}
+                  </div>
+                )}
+                <div
+                  className="rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-wider text-black"
+                  style={{ backgroundColor: 'rgba(0,0,0,0.14)' }}
+                >
+                  {coinsCapped
+                    ? t('Daily coins earned — more tomorrow')
+                    : t('Today: {today}/{cap} coins', {
+                        today: gallery.coins_today,
+                        cap: gallery.daily_coin_cap,
+                      })}
+                </div>
               </div>
             )}
             {error && <p className="max-w-xs text-xs font-bold text-black">{error}</p>}
