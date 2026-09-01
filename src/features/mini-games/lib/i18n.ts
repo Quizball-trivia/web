@@ -29,6 +29,9 @@ const KA: Record<string, string> = {
   "Something went wrong — try again": "რაღაც შეცდომაა — სცადე თავიდან",
   "Watch the real goal": "ნახე ნამდვილი გოლი",
   "Back to the board": "დაფაზე დაბრუნება",
+  "Board": "დაფა",
+  "Video": "ვიდეო",
+  "Replay board": "გაიმეორე სვლები",
   "Couldn't load your game": "თამაში ვერ ჩაიტვირთა",
 
   // Shared

@@ -119,6 +119,10 @@ export interface GgtGalleryGoal {
   bonus_correct: boolean | null;
   video_url: string | null;
   solved_at: string;
+  /** Live choreography for the collection's board replay — solved goals only,
+   *  so nothing here is still a secret. Optional for rolling deploys. */
+  players?: GgtPlayer[];
+  steps?: GgtStep[];
 }
 
 export interface GgtGallery {
@@ -209,6 +213,21 @@ export const guessTheGoalApi = {
 
   devResetToday(): Promise<{ removed: number }> {
     return call("/api/v1/guess-the-goal/dev/reset-today", "DELETE");
+  },
+
+  /** Admin-only: the full published pool (boards + clips) for content review. */
+  devAllGoals(): Promise<{
+    goals: Array<{
+      title: GgtI18nText;
+      year: number;
+      difficulty: string;
+      featured_rank: number | null;
+      video_url: string | null;
+      players?: GgtPlayer[];
+      steps?: GgtStep[];
+    }>;
+  }> {
+    return call("/api/v1/guess-the-goal/dev/all-goals", "GET");
   },
 
   stats(): Promise<GgtStats> {
