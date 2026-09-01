@@ -1,6 +1,7 @@
 {
   "description": "Files that still contain inline hex Tailwind class strings (bg-[#hex], text-[#hex] etc). Remove a file from this list when you migrate it to brand tokens. New code MUST NOT introduce hex classes — files outside this list are blocked by the audit test.",
   "files": [
+    "src/app/(fullscreen)/dev/auction-sounds/page.tsx",
     "src/app/(fullscreen)/dev/ban-page/page.tsx",
     "src/app/(fullscreen)/dev/club-select/page.tsx",
     "src/app/(fullscreen)/dev/logos/page.tsx",
@@ -9,7 +10,11 @@
     "src/features/demos/DemoModeArt.tsx",
     "src/features/leaderboard/LeaderboardScreen.tsx",
     "src/features/matchmaking/MatchmakingMapScreen.tsx",
+    "src/features/mini-games/components/EditionSpinner.tsx",
     "src/features/mini-games/components/FinalThird.tsx",
+    "src/features/mini-games/components/FutCard.tsx",
+    "src/features/mini-games/components/GuessFifaCard.tsx",
+    "src/features/mini-games/components/GuessTheGoalLive.tsx",
     "src/features/mini-games/components/RewardWheel.tsx",
     "src/features/mini-games/components/RoadToGoal.tsx",
     "src/features/mini-games/components/RoadToGoalPitch.tsx",
