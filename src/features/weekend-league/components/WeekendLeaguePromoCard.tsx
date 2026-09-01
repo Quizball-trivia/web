@@ -70,6 +70,20 @@ function Countdown({ targetMs }: { targetMs: number | null }) {
   );
 }
 
+/** "დარეგისტრირებულია 57 მოთამაშე" with the count in brand yellow. Splitting on
+ *  the placeholder keeps ka/es word order intact — {n} is mid-sentence there. */
+function RegisteredLine({ count }: { count: number }) {
+  const { t } = useLocale();
+  const [before, after] = t('weekendLeague.promoRegistered', { n: '\u0000' }).split('\u0000');
+  return (
+    <p className="mt-2 text-[13px] text-white/50" style={poppins}>
+      {before}
+      <span className="text-brand-yellow">{count.toLocaleString()}</span>
+      {after}
+    </p>
+  );
+}
+
 export function WeekendLeaguePromoCard({
   registeredCount,
   kickoffMs,
@@ -119,9 +133,6 @@ export function WeekendLeaguePromoCard({
       <h2 className="text-[28px] uppercase leading-tight text-white" style={poppins}>
         {t('weekendLeague.promoTitle')}
       </h2>
-      <p className="mt-1 text-[13px] text-white/50" style={poppins}>
-        {t('weekendLeague.promoRegistered', { n: registeredCount })}
-      </p>
 
       <p className="mt-4 text-[13px] text-white" style={poppins}>
         {t('weekendLeague.promoFormat', { finalists })}
@@ -192,6 +203,13 @@ export function WeekendLeaguePromoCard({
           <div className="mt-1 text-[11px] uppercase tracking-wide text-white/60" style={poppins}>
             {t('weekendLeague.qpNeeded', { count: qpTarget - qp })}
           </div>
+          <RegisteredLine count={registeredCount} />
+        </div>
+      )}
+
+      {(qp == null || qp >= qpTarget) && (
+        <div className="mx-auto mt-5 w-full max-w-[320px]">
+          <RegisteredLine count={registeredCount} />
         </div>
       )}
 
