@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { MiniGamesGrid } from "@/features/mini-games/components/MiniGamesGrid";
+import { guessTheGoalApi, type GgtStats } from "@/lib/repositories/guessTheGoal.repo";
 import { useCallback, useEffect, useMemo, useState, type MouseEvent } from "react";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, RotateCcw } from "lucide-react";
@@ -195,13 +196,20 @@ export default function DailyChallengesPage() {
     () => challenges.filter((c) => c.completedToday).length,
     [challenges],
   );
+  // Guess the Goal contributes to the day's coin total even though it is not
+  // a challenge: the counter should mean "coins this page can still pay you".
+  const [ggtStats, setGgtStats] = useState<GgtStats | null>(null);
+  useEffect(() => {
+    guessTheGoalApi.stats().then(setGgtStats).catch(() => {});
+  }, []);
   const totalCoins = useMemo(
-    () => challenges.reduce((sum, c) => sum + c.coinReward, 0),
-    [challenges],
+    () => challenges.reduce((sum, c) => sum + c.coinReward, 0) + (ggtStats?.daily_max_coins ?? 0),
+    [challenges, ggtStats],
   );
   const earnedCoins = useMemo(
-    () => challenges.filter((c) => c.completedToday).reduce((sum, c) => sum + c.coinReward, 0),
-    [challenges],
+    () => challenges.filter((c) => c.completedToday).reduce((sum, c) => sum + c.coinReward, 0)
+      + Math.min(ggtStats?.coins_today ?? 0, ggtStats?.daily_max_coins ?? 0),
+    [challenges, ggtStats],
   );
   const progressPct = challenges.length > 0 ? (completedCount / challenges.length) * 100 : 0;
 

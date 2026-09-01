@@ -84,7 +84,7 @@ export function GgtLegend() {
         <span
           key={kind}
           className="flex items-center gap-1.5 rounded-full px-2.5 py-1"
-          style={{ backgroundColor: '#5da95b', color: '#12241a' }}
+          style={{ backgroundColor: '#38B60E', color: '#0b2405' }}
         >
           <GgtActionGlyph kind={kind} color={GGT_ACTION_META[kind].color} />
           {GGT_ACTION_META[kind].label[locale].replace('!', '')}

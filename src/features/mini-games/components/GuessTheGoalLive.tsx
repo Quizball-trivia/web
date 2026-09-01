@@ -233,7 +233,6 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
   const poolExhausted = gallery
     ? (gallery.pool_exhausted ?? (gallery.solved > 0 && gallery.solved >= gallery.total))
     : false;
-  const coinsCapped = gallery ? gallery.coins_today >= gallery.daily_coin_cap : false;
   /** Five goals a day. Optional-chained so an older backend (no limit fields)
    *  simply behaves as before rather than locking the mode out. */
   const dailyLimit = gallery?.daily_goal_limit ?? null;
@@ -535,26 +534,9 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
     return Math.max(1, Math.min(revealed, mainMoves));
   }, [timeline, time, mainMoves]);
 
-  /** Mirrors the server's decay so the preview can't drift from settlement.
-   *  New backends send full_points_seconds and settle on elapsed time; an old
-   *  backend (field absent) still settles by revealed-move count, so the
-   *  preview keeps the legacy formula there — mismatched formulas would show
-   *  one number while the server awards another during rolling deploys. */
-  const potential = useMemo(() => {
-    if (!session) return 0;
-    const max = session.max_points;
-    const min = session.min_points;
-    const windowS = session.full_points_seconds;
-    if (windowS == null) {
-      const span = Math.max(1, mainMoves - 1);
-      const stepIdx = Math.max(0, Math.min(revealedMoves - 1, mainMoves - 1));
-      const raw = Math.round(max - ((max - min) * stepIdx) / span);
-      return Math.max(min, Math.min(max, raw));
-    }
-    const fraction = Math.max(0, Math.min(1, time / windowS));
-    const raw = Math.round(max - (max - min) * fraction);
-    return Math.max(min, Math.min(max, raw));
-  }, [session, time, mainMoves, revealedMoves]);
+  /** No time decay (owner decision): a correct guess pays the session's full
+   *  max_points, which is already reduced for replayed goals. */
+  const potential = session?.max_points ?? 0;
 
   /** Animation position: loop the replay while watching; freeze at full when
    *  revealed. The score clock (time) is monotonic — only the drawing loops. */
@@ -761,38 +743,23 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
                   )
                 : gallery
                   ? t(
-                      'A legendary goal replays on the coaching board. The earlier you name it, the more you earn — first solve of each goal pays coins and XP.'
+                      'A legendary goal replays on the coaching board. Name it — the first solve of each goal pays coins and XP.'
                     )
                   : t(
-                      'A legendary goal replays on the coaching board. Name it early — the earlier you guess, the more it scores.'
+                      'A legendary goal replays on the coaching board. Watch the moves and name the goal.'
                     )}
             </p>
-            {gallery && !poolExhausted && (
-              <div className="flex flex-wrap items-center justify-center gap-2">
-                {goalsLeftToday !== null && (
-                  <div
-                    className="rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-wider text-black"
-                    style={{ backgroundColor: 'rgba(0,0,0,0.14)' }}
-                  >
-                    {dailyLimitReached
-                      ? t('All {limit} goals played — come back tomorrow', { limit: dailyLimit ?? 0 })
-                      : t('{left} of {limit} goals left today', {
-                          left: goalsLeftToday,
-                          limit: dailyLimit ?? 0,
-                        })}
-                  </div>
-                )}
-                <div
-                  className="rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-wider text-black"
-                  style={{ backgroundColor: 'rgba(0,0,0,0.14)' }}
-                >
-                  {coinsCapped
-                    ? t('Daily coins earned — more tomorrow')
-                    : t('Today: {today}/{cap} coins', {
-                        today: gallery.coins_today,
-                        cap: gallery.daily_coin_cap,
-                      })}
-                </div>
+            {gallery && !poolExhausted && goalsLeftToday !== null && (
+              <div
+                className="rounded-full px-4 py-1.5 text-[11px] font-black uppercase tracking-wider text-black"
+                style={{ backgroundColor: 'rgba(0,0,0,0.14)' }}
+              >
+                {dailyLimitReached
+                  ? t('All {limit} goals played — come back tomorrow', { limit: dailyLimit ?? 0 })
+                  : t('{left} of {limit} goals left today', {
+                      left: goalsLeftToday,
+                      limit: dailyLimit ?? 0,
+                    })}
               </div>
             )}
             {error && <p className="max-w-xs text-xs font-bold text-black">{error}</p>}

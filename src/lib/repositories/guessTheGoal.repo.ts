@@ -108,6 +108,7 @@ export interface GgtStats {
   goals_today?: number;
   daily_goal_limit?: number;
   daily_limit_reached?: boolean;
+  daily_max_coins?: number;
 }
 
 export interface GgtGalleryGoal {
