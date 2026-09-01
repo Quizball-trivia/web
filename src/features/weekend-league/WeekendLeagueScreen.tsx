@@ -12,6 +12,8 @@ import { LeagueHeader } from './components/LeagueHeader';
 import { useRouter } from 'next/navigation';
 import { YourStatusCard } from './components/YourStatusCard';
 import { WeekendLeaguePromoCard } from './components/WeekendLeaguePromoCard';
+import { HallOfFame } from './components/HallOfFame';
+import type { WlHallOfFameResponse } from '@/lib/api/endpoints';
 import { HowItWorks } from './components/HowItWorks';
 import { PrizesPanel } from './components/PrizesPanel';
 import { QualifierLeaderboard } from './components/QualifierLeaderboard';
@@ -29,10 +31,13 @@ export function WeekendLeagueScreen({
   showControls = true,
   initial,
   controller,
+  hallOfFame,
   onJoinLive,
   onWatchLive,
 }: {
   showControls?: boolean;
+  /** Fixture override for the playground; live pages let the component fetch. */
+  hallOfFame?: WlHallOfFameResponse;
   initial?: Partial<WeekendLeagueState>;
   controller?: WeekendLeagueController & Partial<WeekendLeagueLiveExtras>;
   /** Live-mode handlers: open the real socket-driven game/spectator flow. */
@@ -176,6 +181,7 @@ export function WeekendLeagueScreen({
 
           <PhaseContent
             wl={wl}
+            hallOfFame={hallOfFame}
             onJoin={playable ? () => setSimulating(true) : onJoinLive}
             onJoinFinal={playable ? () => setSimulating(true) : onJoinLive}
             onWatch={playable ? () => setSimulating(true) : onWatchLive}
@@ -188,11 +194,14 @@ export function WeekendLeagueScreen({
 
 function PhaseContent({
   wl,
+  hallOfFame,
   onJoin,
   onJoinFinal,
   onWatch,
 }: {
   wl: WeekendLeagueController;
+  /** Fixture override for the playground; live pages let the component fetch. */
+  hallOfFame?: WlHallOfFameResponse;
   /** Absent handler = that action isn't available — its CTA is not rendered. */
   onJoin?: () => void;
   /** The Sunday final runs the same gauntlet with only the finalists. */
@@ -211,6 +220,7 @@ function PhaseContent({
       <>
         <HowItWorks />
         <PrizesPanel />
+        <HallOfFame data={hallOfFame} />
       </>
     );
   }
@@ -280,6 +290,7 @@ function PhaseContent({
       <>
         <QualifierLeaderboard entries={wl.leaderboard} yourRank={wl.yourRank} />
         <PrizesPanel highlightRank={wl.yourRank} />
+        <HallOfFame data={hallOfFame} />
       </>
     );
   }
