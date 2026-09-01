@@ -209,7 +209,7 @@ export default function DailyChallengesPage() {
     guessTheGoalApi.stats().then(setGgtStats).catch(() => {});
   }, []);
   const totalCoins = useMemo(
-    () => challenges.reduce((sum, c) => sum + c.coinReward, 0) + (ggtStats?.daily_max_coins ?? 0),
+    () => challenges.reduce((sum, c) => sum + c.coinReward, 0) + (ggtStats?.daily_max_coins ?? ggtStats?.daily_coin_cap ?? 0),
     [challenges, ggtStats],
   );
   const earnedCoins = useMemo(

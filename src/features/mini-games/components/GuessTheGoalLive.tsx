@@ -193,9 +193,9 @@ function GgtGalleryPanel({
             <button
               key={`s-${i}`}
               type="button"
-              disabled={!entry.goal.video_url && !entry.goal.players}
+              disabled={!entry.goal.video_url && !(entry.goal.players && entry.goal.steps)}
               onClick={() =>
-                (entry.goal.video_url || entry.goal.players) &&
+                (entry.goal.video_url || (entry.goal.players && entry.goal.steps)) &&
                 setWatch({
                   goal: entry.goal,
                   title: pick(entry.goal.title),
@@ -265,7 +265,7 @@ function GgtGalleryPanel({
               <video src={watch.goal.video_url} autoPlay controls playsInline className="aspect-video w-full rounded-2xl bg-black" />
             ) : (
               <iframe
-                src={`https://www.youtube-nocookie.com/embed/${(watch.goal.video_url.match(/(?:watch\?v=|youtu\.be\/|shorts\/|embed\/)([A-Za-z0-9_-]{6,20})/) ?? [])[1] ?? ''}?autoplay=1&rel=0`}
+                src={`https://www.youtube-nocookie.com/embed/${(watch.goal.video_url.match(/(?:watch\?v=|youtu\.be\/|shorts\/|embed\/)([A-Za-z0-9_-]{6,20})/) ?? [])[1] ?? ''}?autoplay=1&rel=0${watch.goal.clip_start_s ? `&start=${watch.goal.clip_start_s}` : ''}${watch.goal.clip_end_s ? `&end=${watch.goal.clip_end_s}` : ''}`}
                 title={watch.title}
                 allow="autoplay; encrypted-media"
                 allowFullScreen
@@ -344,19 +344,6 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
   const goalsToday = gallery?.goals_today ?? 0;
   const dailyLimitReached = gallery?.daily_limit_reached ?? false;
   const isAdmin = useAuthStore.getState().user?.role === 'admin';
-  const devResetToday = useCallback(async () => {
-    try {
-      await guessTheGoalApi.devResetToday();
-      resumableRef.current = null;
-      setSession(null);
-      setOutcome(null);
-      guessTheGoalApi.gallery().then(setGallery).catch(() => {});
-      setPhase('idle');
-      setError(null);
-    } catch {
-      setError(t('Something went wrong — try again'));
-    }
-  }, [t]);
   /** Admin content browser: the whole pool rendered through the normal
    *  collection panel, every card unlocked. */
   const [devAll, setDevAll] = useState<GgtGallery | null>(null);
@@ -474,6 +461,26 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
     loadCurrent();
   }, [loadCurrent]);
 
+  const devResetToday = useCallback(async () => {
+    try {
+      await guessTheGoalApi.devResetToday();
+      genRef.current += 1;
+      resumableRef.current = null;
+      setSession(null);
+      setOutcome(null);
+      setBonusOutcome(null);
+      setPicked(null);
+      setError(null);
+      // Through 'loading' so the menu is guaranteed to re-render (a ref
+      // change alone leaves a stale 'Continue' label on screen).
+      setPhase('loading');
+      loadCurrent(false);
+      guessTheGoalApi.gallery().then(setGallery).catch(() => {});
+    } catch {
+      setError(t('Something went wrong — try again'));
+    }
+  }, [t, loadCurrent]);
+
   const loadedOnceRef = useRef(false);
   useEffect(() => {
     // A failed resume must NOT fall through to 'idle': Kick off from there
@@ -550,13 +557,16 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
     // Optimistic: swap to the board skeleton NOW — the session request rides
     // inside the transition instead of blocking the tap.
     setPhase('starting');
+    const gen = genRef.current;
     // The nonce survives retries so a lost response can't mint two sessions.
     if (!nonceRef.current) nonceRef.current = newNonce();
     try {
       const next = await guessTheGoalApi.start(nonceRef.current);
       nonceRef.current = null;
+      if (gen !== genRef.current) return;
       adoptSession(next);
     } catch (err) {
+      if (gen !== genRef.current) return;
       if (err instanceof GuessTheGoalApiError) {
         if (err.status === 503) {
           setPhase('disabled');
@@ -579,6 +589,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
               return;
             }
             const existing = await guessTheGoalApi.current().catch(() => null);
+            if (gen !== genRef.current) return;
             if (existing) {
               adoptSession(existing, true);
               return;
@@ -602,10 +613,12 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
       setPicked(optionId);
       // Sampled before the request so network latency doesn't inflate it.
       const watchSeconds = Math.round(serverElapsed());
+      const gen = genRef.current;
       try {
         // Same-option retries replay the stored result server-side, so a
         // timeout here is safe to re-submit.
         const result = await guessTheGoalApi.guess(session.session_id, optionId);
+        if (gen !== genRef.current) return;
         setOutcome(result);
         setPhase('reveal');
         if (result.awards.coins > 0) {
@@ -626,6 +639,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
           has_bonus: Boolean(result.bonus),
         });
       } catch (err) {
+        if (gen !== genRef.current) return;
         if (err instanceof GuessTheGoalApiError && err.status >= 400 && err.status < 500) {
           // Definite rejection (session gone/answered in another tab): a
           // same-option retry can never succeed — reconcile with the server.
@@ -651,8 +665,10 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
       setBusy(true);
       setError(null);
       setBonusPicked(optionId);
+      const gen = genRef.current;
       try {
         const result = await guessTheGoalApi.bonus(session.session_id, optionId);
+        if (gen !== genRef.current) return;
         setBonusOutcome(result);
         setPhase('bonus_done');
         if (result.awards.coins > 0) {
@@ -667,6 +683,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
           difficulty: session.goal.difficulty,
         });
       } catch (err) {
+        if (gen !== genRef.current) return;
         if (err instanceof GuessTheGoalApiError && err.status >= 400 && err.status < 500) {
           setPhase('loading');
           loadCurrent(false);
@@ -753,12 +770,20 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
   // the real footage automatically — "back to the board" stays one tap away.
   // Once per session: pressing back must not re-trigger the flip.
   const autoFlippedForRef = useRef<string | null>(null);
+  const [videoMuted, setVideoMuted] = useState(false);
   const resumableRef = useRef<GgtSession | null>(null);
+  /** Bumped whenever the user backs out or resets: in-flight start/guess/bonus
+   *  responses from before the bump must not reopen the game. */
+  const genRef = useRef(0);
   useEffect(() => {
     if (!hasVideo || !session) return;
     if (phase !== 'reveal' && phase !== 'bonus_done') return;
     if (autoFlippedForRef.current === session.session_id) return;
     autoFlippedForRef.current = session.session_id;
+    // No user gesture in this async chain — Safari/iOS blocks audible
+    // autoplay, which would land the flip on a paused frame. Muted plays;
+    // the controls (and the flip button) restore sound.
+    setVideoMuted(true);
     setShowVideo(true);
   }, [phase, hasVideo, session]);
 
@@ -824,6 +849,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
             src={`${selfHostedVideo}${outcome?.clip_start_s ? `#t=${outcome.clip_start_s}` : ''}`}
             title={pick(outcome?.title)}
             autoPlay
+            muted={videoMuted}
             controls
             playsInline
             className="absolute inset-0 h-full w-full"
@@ -846,7 +872,10 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
           {hasVideo && (
             <button
               type="button"
-              onClick={() => setShowVideo((v) => !v)}
+              onClick={() => {
+                setVideoMuted(false);
+                setShowVideo((v) => !v);
+              }}
               className="flex h-10 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-brand-yellow px-5 font-poppins text-[12px] font-black uppercase tracking-wide text-black transition-all hover:brightness-105 active:translate-y-[1px]"
             >
               <Clapperboard className="size-4" />
@@ -907,8 +936,28 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
                 aria-label={t('Back')}
                 onClick={() => {
                   // Mid-goal back returns to the game's own menu + collection;
-                  // an unanswered goal stays resumable behind 'Continue'.
-                  if (session && !outcome) resumableRef.current = session;
+                  // an unanswered goal stays resumable behind 'Continue'. A
+                  // pending bonus is preserved the same way — synthesized as a
+                  // 'guessed' session so resume lands on the bonus question.
+                  genRef.current += 1;
+                  setError(null);
+                  if (session && !outcome) {
+                    resumableRef.current = session;
+                  } else if (
+                    session &&
+                    outcome &&
+                    outcome.session_state === 'guessed' &&
+                    outcome.bonus &&
+                    phase !== 'bonus_done'
+                  ) {
+                    resumableRef.current = {
+                      ...session,
+                      state: 'guessed',
+                      outcome,
+                      bonus: outcome.bonus,
+                      guess_option_id: picked ?? undefined,
+                    };
+                  }
                   setSession(null);
                   setOutcome(null);
                   setPhase('idle');

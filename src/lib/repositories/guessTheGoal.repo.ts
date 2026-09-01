@@ -123,6 +123,8 @@ export interface GgtGalleryGoal {
    *  so nothing here is still a secret. Optional for rolling deploys. */
   players?: GgtPlayer[];
   steps?: GgtStep[];
+  clip_start_s?: number | null;
+  clip_end_s?: number | null;
 }
 
 export interface GgtGallery {
