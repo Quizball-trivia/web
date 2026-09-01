@@ -29,6 +29,7 @@ import { useMiniLocale, useMiniT } from '../lib/i18n';
 import { queryKeys } from '@/lib/queries/queryKeys';
 import { trackEvent } from '@/lib/posthog';
 import { usePlayer } from '@/contexts/PlayerContext';
+import { useAuthStore } from '@/stores/auth.store';
 import { CoinIcon } from '@/features/store/components/CoinIcon';
 import {
   guessTheGoalApi,
@@ -263,6 +264,17 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
   const dailyLimit = gallery?.daily_goal_limit ?? null;
   const goalsToday = gallery?.goals_today ?? 0;
   const dailyLimitReached = gallery?.daily_limit_reached ?? false;
+  const isAdmin = useAuthStore.getState().user?.role === 'admin';
+  const devResetToday = useCallback(async () => {
+    try {
+      await guessTheGoalApi.devResetToday();
+      guessTheGoalApi.gallery().then(setGallery).catch(() => {});
+      setPhase('idle');
+      setError(null);
+    } catch {
+      setError(t('Something went wrong — try again'));
+    }
+  }, [t]);
   const goalsLeftToday = dailyLimit === null ? null : Math.max(0, dailyLimit - goalsToday);
   const [showGallery, setShowGallery] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -811,6 +823,15 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
               <Play className="size-5 fill-current" />{' '}
               {dailyLimitReached ? t('Back tomorrow') : t('Kick off')}
             </button>
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={devResetToday}
+                className="font-poppins rounded-full bg-black/20 px-4 py-1.5 text-[10px] font-black uppercase tracking-wider text-black"
+              >
+                DEV: reset today
+              </button>
+            )}
             <GgtLegend />
           </motion.div>
           {gallery && (

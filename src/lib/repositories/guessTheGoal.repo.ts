@@ -152,7 +152,7 @@ export class GuessTheGoalApiError extends Error {
   }
 }
 
-async function call<T>(path: string, method: "GET" | "POST", body?: unknown): Promise<T> {
+async function call<T>(path: string, method: "GET" | "POST" | "DELETE", body?: unknown): Promise<T> {
   const headers = new Headers({ "Content-Type": "application/json" });
   const token = await getSupabaseAccessToken();
   if (token) headers.set("Authorization", `Bearer ${token}`);
@@ -205,6 +205,10 @@ export const guessTheGoalApi = {
     return call(`/api/v1/guess-the-goal/sessions/${sessionId}/bonus`, "POST", {
       option_id: optionId,
     });
+  },
+
+  devResetToday(): Promise<{ removed: number }> {
+    return call("/api/v1/guess-the-goal/dev/reset-today", "DELETE");
   },
 
   stats(): Promise<GgtStats> {
