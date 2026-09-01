@@ -58,13 +58,13 @@ describe('useRealtimeFootballGrid', () => {
   it('joins the unique Grid queue as soon as the live route opens', async () => {
     const { unmount } = renderHook(() => useRealtimeFootballGrid({ enabled: true, selfUserId: 'self', locale: 'en' }));
 
-    await waitFor(() => expect(socket.emit).toHaveBeenCalledWith('grid:search_start', { locale: 'en' }));
+    await waitFor(() => expect(socket.emit).toHaveBeenCalledWith('grid:search_start', { locale: 'en', theme: 'european' }));
     unmount();
   });
 
   it('persists cancellation intent when the player leaves before a searchId arrives', async () => {
     const { result, unmount } = renderHook(() => useRealtimeFootballGrid({ enabled: true, selfUserId: 'self', locale: 'en' }));
-    await waitFor(() => expect(socket.emit).toHaveBeenCalledWith('grid:search_start', { locale: 'en' }));
+    await waitFor(() => expect(socket.emit).toHaveBeenCalledWith('grid:search_start', { locale: 'en', theme: 'european' }));
 
     act(() => result.current.actions.cancelSearch());
     expect(useFootballGridStore.getState().searchCancellationPending).toBe(true);

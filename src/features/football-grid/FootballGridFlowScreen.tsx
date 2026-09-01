@@ -17,6 +17,11 @@ import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { QuitMatchModal } from '@/components/match/QuitMatchModal';
 import { useLocale } from '@/contexts/LocaleContext';
 import { footballGridAssetUrl } from '@/lib/football-grid/assets';
+import {
+  loadGridTypeaheadRoster,
+  searchGridPlayers,
+  type GridTypeaheadPreparedPlayer,
+} from '@/lib/football-grid/typeahead';
 import { usePlayer } from '@/contexts/PlayerContext';
 import { useAuthStore } from '@/stores/auth.store';
 import type {
@@ -35,6 +40,7 @@ import {
   trackFootballGridViewed,
 } from '@/features/mini-games/footballGrid.analytics';
 import { MiniGameShell, StatPill } from '@/features/mini-games/components/MiniGameShell';
+import { useRealtimeConnectionHealth } from '@/lib/realtime/connection-health';
 import { AnimatedCounter } from '@/features/game/results/AnimatedCounter';
 import { CoinRewardChip, RewardChip } from '@/features/game/results/RankedProgressionPanel';
 import { CriterionAsset } from './components/CriterionAsset';
@@ -68,6 +74,11 @@ export const FOOTBALL_GRID_COPY = {
     alreadyUsed: 'That footballer has already been used.',
     paused: 'Match paused',
     pausedBody: 'Waiting for the connection to recover. Your turn time is protected.',
+    opponentDisconnected: 'Opponent disconnected',
+    opponentDisconnectedBody: 'If they do not return before the timer runs out, you win the match.',
+    selfDisconnected: 'Connection lost',
+    selfDisconnectedBody: 'Reconnecting… get back before the timer runs out or the match is forfeited.',
+    reconnectingStrip: 'Reconnecting…',
     reconnectWindow: 'Time left to reconnect',
     interrupted: 'Match temporarily interrupted',
     interruptedBody: 'The match is safely paused while we restore the game service.',
@@ -77,6 +88,15 @@ export const FOOTBALL_GRID_COPY = {
     resultWin: 'You own the grid',
     resultLoss: 'Opponent takes it',
     resultDraw: 'Grid locked',
+    noteOpponentLeft: 'Opponent left the match',
+    noteYouLeft: 'You left the match',
+    noteOpponentDisconnected: 'Opponent lost connection',
+    noteYouDisconnected: 'Connection was lost',
+    noteOpponentIdle: 'Opponent stopped responding',
+    noteYouIdle: 'You ran out of move time',
+    noteOpponentNoShow: 'Opponent never joined',
+    noteYouNoShow: 'You did not join in time',
+    noteBothDisconnected: 'Both players disconnected',
     rematch: 'Rematch',
     waitingRematch: 'Waiting for opponent…',
     rematchAccepted: 'Rematch accepted',
@@ -98,7 +118,7 @@ export const FOOTBALL_GRID_COPY = {
     retry: 'Try again',
   },
   ka: {
-    title: 'საფეხბურთო იქს-ნული',
+    title: 'იქს ნული',
     subtitle: 'დაიკავე უჯრები ფეხბურთელებით — სამი ზედიზედ იგებს',
     scoreLabel: 'შენ · მეტოქე',
     pickTurn: 'შენი ჯერია — აირჩიე უჯრა',
@@ -123,6 +143,11 @@ export const FOOTBALL_GRID_COPY = {
     alreadyUsed: 'ეს ფეხბურთელი უკვე გამოყენებულია.',
     paused: 'მატჩი შეჩერებულია',
     pausedBody: 'კავშირის აღდგენას ველოდებით. სვლის დრო დაცულია.',
+    opponentDisconnected: 'მეტოქე გაითიშა',
+    opponentDisconnectedBody: 'თუ დროის ამოწურვამდე არ დაბრუნდა, მატჩს შენ მოიგებ.',
+    selfDisconnected: 'კავშირი გაწყდა',
+    selfDisconnectedBody: 'ვუკავშირდებით… დაბრუნდი დროის ამოწურვამდე, თორემ მატჩი ჩაგეთვლება.',
+    reconnectingStrip: 'ვუკავშირდებით…',
     reconnectWindow: 'დარჩენილი დრო',
     interrupted: 'მატჩი დროებით შეჩერდა',
     interruptedBody: 'თამაშის აღდგენამდე მატჩი უსაფრთხოდ არის დაპაუზებული.',
@@ -132,6 +157,15 @@ export const FOOTBALL_GRID_COPY = {
     resultWin: 'ბადე შენია',
     resultLoss: 'მეტოქემ მოიგო',
     resultDraw: 'ფრე',
+    noteOpponentLeft: 'მეტოქემ დატოვა მატჩი',
+    noteYouLeft: 'მატჩი დატოვე',
+    noteOpponentDisconnected: 'მეტოქეს კავშირი გაუწყდა',
+    noteYouDisconnected: 'კავშირი გაწყდა',
+    noteOpponentIdle: 'მეტოქემ სვლები გამოტოვა',
+    noteYouIdle: 'სვლის დრო ამოგეწურა',
+    noteOpponentNoShow: 'მეტოქე არ შემოვიდა',
+    noteYouNoShow: 'დროულად ვერ შემოხვედი',
+    noteBothDisconnected: 'ორივე მოთამაშე გაითიშა',
     rematch: 'რევანში',
     waitingRematch: 'ველოდებით მეტოქეს…',
     rematchAccepted: 'რევანში მიღებულია',
@@ -146,9 +180,9 @@ export const FOOTBALL_GRID_COPY = {
     xp: 'მიღებული XP',
     coins: 'მიღებული მონეტები',
     signIn: 'ონლაინ სათამაშოდ შედი ანგარიშზე',
-    signInBody: 'საფეხბურთო იქს-ნული არის 1v1 ონლაინ რეჟიმი. შედი ანგარიშზე და ითამაშე სხვა მოთამაშესთან ან ჭკვიან მეტოქესთან.',
+    signInBody: 'იქს ნული არის 1v1 ონლაინ რეჟიმი. შედი ანგარიშზე და ითამაშე ონლაინ.',
     goSignIn: 'შესვლა',
-    unavailable: 'საფეხბურთო იქს-ნული დროებით მიუწვდომელია',
+    unavailable: 'იქს ნული დროებით მიუწვდომელია',
     unavailableBody: 'მატჩის ძიება ახლა ვერ დავიწყეთ. შენი ანგარიში და პროგრესი უსაფრთხოდაა.',
     retry: 'თავიდან ცდა',
   },
@@ -206,6 +240,20 @@ export const FOOTBALL_GRID_COPY = {
     unavailable: 'Fútbol: Tres en raya no está disponible temporalmente',
     unavailableBody: 'No hemos podido iniciar la búsqueda de oponentes. Tu cuenta y tu progreso están seguros.',
     retry: 'Intentar de nuevo',
+    noteOpponentLeft: 'El rival abandonó el partido',
+    noteYouLeft: 'Abandonaste el partido',
+    noteOpponentDisconnected: 'El rival perdió la conexión',
+    noteYouDisconnected: 'Se perdió la conexión',
+    noteOpponentIdle: 'El rival dejó de responder',
+    noteYouIdle: 'Se te acabó el tiempo de jugada',
+    noteOpponentNoShow: 'El rival nunca se unió',
+    noteYouNoShow: 'No te uniste a tiempo',
+    noteBothDisconnected: 'Ambos jugadores se desconectaron',
+    opponentDisconnected: 'Rival desconectado',
+    opponentDisconnectedBody: 'Si no vuelve antes de que acabe el tiempo, ganas el partido.',
+    selfDisconnected: 'Conexión perdida',
+    selfDisconnectedBody: 'Reconectando… vuelve antes de que acabe el tiempo o perderás el partido.',
+    reconnectingStrip: 'Reconectando…',
   },
 } as const;
 
@@ -241,6 +289,18 @@ const SEARCH_CYCLE_AVATARS: AvatarCustomization[] = [
   { skin: 'skin_male_white', hair: 'hair_curly_crop', jersey: 'jersey_milan', glasses: 'glasses_wayfarer' },
   { skin: 'skin_male_dark', hair: 'hair_hamsik', jersey: 'jersey_psg_retro' },
 ];
+
+// The board assembles during the 5s pre-match countdown: headers and cells
+// pop in one by one (mount-time stagger — the board is hidden behind the
+// loading overlay until the countdown phase reveals it).
+const BOARD_BUILD_CONTAINER = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.06, delayChildren: 0.1 } },
+} as const;
+const BOARD_BUILD_ITEM = {
+  hidden: { opacity: 0, scale: 0.5, y: 10 },
+  visible: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring', stiffness: 380, damping: 26 } },
+} as const;
 
 function CriterionHeader({
   criterion,
@@ -344,7 +404,14 @@ export function MatchBoard({
   const claims = useMemo(() => new Map(state.claims.map((claim) => [claim.cellIndex, claim])), [state.claims]);
   const isMyTurn = state.phase === 'turn' && state.currentPlayerUserId === selfUserId;
   return (
-    <div className="grid grid-cols-[50px_repeat(3,minmax(0,1fr))] gap-2 sm:grid-cols-[64px_repeat(3,minmax(0,1fr))]">
+    <motion.div
+      variants={BOARD_BUILD_CONTAINER}
+      initial="hidden"
+      // Held hidden while the loading overlay covers the screen; the switch to
+      // the countdown phase reveals the board and fires the build-in stagger.
+      animate={state.phase === 'handoff' || state.phase === 'loading' ? 'hidden' : 'visible'}
+      className="grid grid-cols-[50px_repeat(3,minmax(0,1fr))] gap-2 sm:grid-cols-[64px_repeat(3,minmax(0,1fr))]"
+    >
       <div />
       {state.board.columns.map((criterion) => <CriterionHeader key={criterion.id} criterion={criterion} locale={locale} axis="column" />)}
       {state.board.rows.flatMap((row, rowIndex) => [
@@ -354,8 +421,9 @@ export function MatchBoard({
           const claim = claims.get(cellIndex);
           const selectable = isMyTurn && !claim;
           return (
-            <button
+            <motion.button
               key={`${row.id}-${column.id}`}
+              variants={BOARD_BUILD_ITEM}
               type="button"
               disabled={!selectable}
               onClick={() => onSelect(cellIndex)}
@@ -374,11 +442,11 @@ export function MatchBoard({
               {claim ? <ClaimedCell claim={claim} isMine={claim.claimantUserId === selfUserId} claimedLabel={FOOTBALL_GRID_COPY[locale].claimed} /> : (
                 <span className="absolute inset-0 grid place-items-center font-poppins text-lg font-black text-white/15">·</span>
               )}
-            </button>
+            </motion.button>
           );
         }),
       ])}
-    </div>
+    </motion.div>
   );
 }
 
@@ -500,6 +568,19 @@ function ThinkingDots() {
   );
 }
 
+/** Loads the release roster once per page and keeps it for every turn. */
+function useGridTypeaheadRoster(): GridTypeaheadPreparedPlayer[] {
+  const [roster, setRoster] = useState<GridTypeaheadPreparedPlayer[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    void loadGridTypeaheadRoster().then((players) => {
+      if (!cancelled) setRoster(players);
+    });
+    return () => { cancelled = true; };
+  }, []);
+  return roster;
+}
+
 export function FootballGridTurnPanel({
   state,
   locale,
@@ -532,6 +613,49 @@ export function FootballGridTurnPanel({
   onReport?: (attemptId: string) => void;
 }) {
   const copy = FOOTBALL_GRID_COPY[locale];
+  const roster = useGridTypeaheadRoster();
+  const [highlightIndex, setHighlightIndex] = useState(-1);
+  const [suggestionsDismissed, setSuggestionsDismissed] = useState(false);
+  const suggestions = useMemo(() => (
+    pending || suggestionsDismissed ? [] : searchGridPlayers(roster, answer, locale === 'es' ? 'en' : locale, 6)
+  ), [roster, answer, locale, pending, suggestionsDismissed]);
+
+  // Picking a suggestion FILLS the box; the player still presses submit. The
+  // list spans the whole roster (it cannot be filtered to the cell's valid
+  // answers without handing out the answers), so auto-submitting turned a
+  // mistaken tap into an instantly spent turn — "Neymar" is one keystroke away
+  // on an Arsenal x France cell.
+  const pickSuggestion = (index: number) => {
+    const suggestion = suggestions[index];
+    if (!suggestion) return;
+    const text = locale === 'ka' && suggestion.nameKa ? suggestion.nameKa : suggestion.nameEn;
+    setSuggestionsDismissed(true);
+    setHighlightIndex(-1);
+    onAnswerChange(text);
+  };
+
+  const handleAnswerChange = (value: string) => {
+    setSuggestionsDismissed(false);
+    setHighlightIndex(-1);
+    onAnswerChange(value);
+  };
+
+  const handleAnswerKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (suggestions.length === 0) return;
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      setHighlightIndex((current) => (current + 1) % suggestions.length);
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      setHighlightIndex((current) => (current <= 0 ? suggestions.length - 1 : current - 1));
+    } else if (event.key === 'Enter' && highlightIndex >= 0) {
+      event.preventDefault();
+      pickSuggestion(highlightIndex);
+    } else if (event.key === 'Escape') {
+      setSuggestionsDismissed(true);
+      setHighlightIndex(-1);
+    }
+  };
   const selectedRow = selectedCell === null ? null : state.board.rows[Math.floor(selectedCell / 3)];
   const selectedColumn = selectedCell === null ? null : state.board.columns[selectedCell % 3];
   const fullTurnMs = Math.max(20_000, state.turnRemainingMs ?? 0);
@@ -595,15 +719,48 @@ export function FootballGridTurnPanel({
                 style={{ width: `${remainingRatio * 100}%` }}
               />
             </div>
-            <div className="flex gap-2">
+            <div className="relative flex gap-2">
               <input
                 autoFocus
                 value={answer}
-                onChange={(event) => onAnswerChange(event.target.value)}
+                onChange={(event) => handleAnswerChange(event.target.value)}
+                onKeyDown={handleAnswerKeyDown}
                 placeholder={copy.answerPlaceholder}
                 maxLength={100}
+                autoComplete="off"
+                role="combobox"
+                aria-expanded={suggestions.length > 0}
+                aria-controls="grid-typeahead-listbox"
                 className="h-12 min-w-0 flex-1 rounded-xl border-none bg-brand-blue px-3 text-center text-base font-bold text-white outline-none placeholder:text-white/60"
               />
+              {suggestions.length > 0 && (
+                <ul
+                  id="grid-typeahead-listbox"
+                  role="listbox"
+                  className="absolute inset-x-0 top-full z-20 mt-1 overflow-hidden rounded-xl border border-white/10 bg-surface-card-deep shadow-xl shadow-black/40"
+                >
+                  {suggestions.map((suggestion, index) => (
+                    <li key={suggestion.id} role="option" aria-selected={index === highlightIndex}>
+                      <button
+                        type="button"
+                        onMouseDown={(event) => { event.preventDefault(); pickSuggestion(index); }}
+                        onMouseEnter={() => setHighlightIndex(index)}
+                        className={cn(
+                          'flex w-full items-baseline justify-between gap-2 px-3 py-2.5 text-left',
+                          index === highlightIndex ? 'bg-brand-blue/40' : 'hover:bg-white/5',
+                        )}
+                      >
+                        <span className="truncate font-poppins text-sm font-bold text-white">
+                          {locale === 'ka' && suggestion.nameKa ? suggestion.nameKa : suggestion.nameEn}
+                        </span>
+                        {locale === 'ka' && suggestion.nameKa && (
+                          <span className="shrink-0 font-poppins text-[10px] font-semibold text-white/40">{suggestion.nameEn}</span>
+                        )}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
               <button
                 type="submit"
                 disabled={!answer.trim() || pending}
@@ -676,6 +833,20 @@ export function SearchScreen({
     const interval = window.setInterval(() => setCycleIndex((index) => (index + 1) % SEARCH_CYCLE_AVATARS.length), 900);
     return () => window.clearInterval(interval);
   }, [opponent, paired]);
+  // Elapsed search clock (ranked/auction parity): starts when the search
+  // screen mounts, freezes once an opponent is locked in.
+  // Stamped inside the effect: Date.now() during render is impure (and lints).
+  const searchStartRef = useRef<number | null>(null);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  useEffect(() => {
+    if (opponent || paired) return;
+    searchStartRef.current ??= Date.now();
+    const interval = window.setInterval(() => {
+      setElapsedSeconds(Math.floor((Date.now() - (searchStartRef.current ?? Date.now())) / 1000));
+    }, 500);
+    return () => window.clearInterval(interval);
+  }, [opponent, paired]);
+  const elapsedLabel = `${Math.floor(elapsedSeconds / 60)}:${String(elapsedSeconds % 60).padStart(2, '0')}`;
   const opponentCustomization = opponent
     ? opponent.avatarCustomization ?? { base: opponent.avatarUrl ?? undefined }
     : SEARCH_CYCLE_AVATARS[cycleIndex];
@@ -684,6 +855,9 @@ export function SearchScreen({
       <div className="relative z-10 w-full max-w-xl text-center">
         <h1 className="text-3xl font-black uppercase tracking-tight sm:text-5xl">{opponent || status === 'pairing' ? copy.ready : copy.searching}</h1>
         <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-white/55 sm:text-base">{opponent ? copy.getReady : status === 'pairing' ? copy.matching : copy.searchingBody}</p>
+        {!opponent && !paired && (
+          <p className="mt-2 font-poppins text-lg font-black tabular-nums text-white/70">{elapsedLabel}</p>
+        )}
 
         <div className="relative mx-auto my-10 grid max-w-sm grid-cols-[1fr_auto_1fr] items-center gap-4">
           <div className="rounded-[28px] bg-brand-blue p-4 shadow-[0_14px_40px_rgba(22,69,255,.35)]">
@@ -801,12 +975,17 @@ export function FootballGridNoticeScreen({
   );
 }
 
-export function PhaseOverlay({ state, remaining, copy }: { state: FootballGridState; remaining: number; copy: FootballGridCopy }) {
+export function PhaseOverlay({ state, remaining, copy, selfDisconnected = false }: { state: FootballGridState; remaining: number; copy: FootballGridCopy; selfDisconnected?: boolean }) {
   if (state.phase === 'turn' || state.phase === 'terminal') return null;
   const isPaused = state.phase === 'paused';
   const isInterrupted = state.phase === 'service_interruption';
-  const title = isInterrupted ? copy.interrupted : isPaused ? copy.paused : state.phase === 'countdown' ? copy.getReady : state.phase === 'handoff' ? copy.ready : copy.loading;
-  const body = isInterrupted ? copy.interruptedBody : isPaused ? copy.pausedBody : null;
+  // A pause always means someone lost presence. If OUR transport is degraded,
+  // we are (or may be) the absent one — otherwise it is the opponent, and the
+  // grace copy tells the waiting player they win on timeout (ranked parity).
+  const pausedTitle = selfDisconnected ? copy.selfDisconnected : copy.opponentDisconnected;
+  const pausedBody = selfDisconnected ? copy.selfDisconnectedBody : copy.opponentDisconnectedBody;
+  const title = isInterrupted ? copy.interrupted : isPaused ? pausedTitle : state.phase === 'countdown' ? copy.getReady : state.phase === 'handoff' ? copy.ready : copy.loading;
+  const body = isInterrupted ? copy.interruptedBody : isPaused ? pausedBody : null;
   // Paused matches carry a hard reconnect deadline — show it ticking down so the
   // waiting player knows how long the match can stay frozen (parity with ranked).
   const pausedSeconds = isPaused ? Math.max(0, Math.ceil(remaining / 1_000)) : null;
@@ -851,12 +1030,30 @@ export function PhaseOverlay({ state, remaining, copy }: { state: FootballGridSt
     );
   }
 
+  // Countdown: keep the board VISIBLE — it is assembling underneath (the
+  // build-in stagger) — and float the get-ready banner above it instead of
+  // blurring everything out.
+  if (state.phase === 'countdown') {
+    return (
+      <div className="pointer-events-none absolute inset-x-0 top-2 z-30 flex justify-center">
+        <motion.div
+          initial={{ y: -16, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 320, damping: 24 }}
+          className="flex items-center gap-3 rounded-2xl bg-black/60 px-5 py-2.5 shadow-xl shadow-black/30 backdrop-blur-sm"
+        >
+          <span className="font-poppins text-sm font-black uppercase tracking-wide text-white">{title}</span>
+          <span className="font-poppins text-2xl font-black tabular-nums text-brand-yellow">{Math.max(1, Math.ceil(remaining / 1_000))}</span>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="absolute inset-0 z-30 grid place-items-center bg-surface-page-alt/85 px-6 text-center backdrop-blur-md">
       <div>
         <LoaderCircle className="mx-auto mb-4 size-12 animate-spin text-brand-blue-light" />
         <h2 className="text-2xl font-black uppercase text-white">{title}</h2>
-        {state.phase === 'countdown' && <p className="mt-3 text-6xl font-black tabular-nums text-brand-yellow">{Math.max(1, Math.ceil(remaining / 1_000))}</p>}
       </div>
     </div>
   );
@@ -866,6 +1063,25 @@ function completionTitle(reason: FootballGridCompletionReason | null, won: boole
   if (reason === 'administrative_cancel') return copy.interrupted;
   if (draw) return copy.resultDraw;
   return won ? copy.resultWin : copy.resultLoss;
+}
+
+// Why the match ended, when it didn't play out on the board (ranked parity:
+// a forfeit/disconnect win should never look like an earned 0:0).
+function completionNote(reason: FootballGridCompletionReason | null, won: boolean, copy: FootballGridCopy) {
+  switch (reason) {
+    case 'forfeit':
+      return won ? copy.noteOpponentLeft : copy.noteYouLeft;
+    case 'disconnect_timeout':
+      return won ? copy.noteOpponentDisconnected : copy.noteYouDisconnected;
+    case 'no_action_timeouts':
+      return won ? copy.noteOpponentIdle : copy.noteYouIdle;
+    case 'loading_no_show':
+      return won ? copy.noteOpponentNoShow : copy.noteYouNoShow;
+    case 'simultaneous_disconnect':
+      return copy.noteBothDisconnected;
+    default:
+      return null;
+  }
 }
 
 export function FootballGridFlowScreen() {
@@ -879,12 +1095,20 @@ export function FootballGridFlowScreen() {
   const authStatus = useAuthStore((current) => current.status);
   const selfUserId = authUser?.id ?? null;
   const source = searchParams.get('source') === 'friend_lobby' ? 'friend_lobby' : 'matchmaking';
+  const packParam = searchParams?.get('pack') ?? null;
+  const theme = ['european', 'england', 'spain', 'italy', 'germany', 'france', 'brazil', 'turkey', 'argentina', 'georgia'].includes(packParam ?? '')
+    ? packParam!
+    : 'european';
   const grid = useRealtimeFootballGrid({
     enabled: authStatus === 'authenticated' && Boolean(selfUserId),
     selfUserId,
     locale: contentLocale,
+    theme,
     autoStart: source === 'matchmaking',
   });
+  const connectionHealth = useRealtimeConnectionHealth();
+  const connectionDegraded =
+    connectionHealth.phase === 'reconnecting' || connectionHealth.phase === 'disconnected' || connectionHealth.phase === 'error';
   const [selectedCell, setSelectedCell] = useState<number | null>(null);
   const [answer, setAnswer] = useState('');
   const [showQuit, setShowQuit] = useState(false);
@@ -1047,7 +1271,18 @@ export function FootballGridFlowScreen() {
 
   if (grid.state && (grid.state.phase === 'handoff' || grid.state.phase === 'loading' || grid.state.phase === 'countdown')) {
     return (
-      <SearchScreen
+      <>
+        {/* The pre-board screens froze silently when the transport dropped
+            (observed: countdown stuck at 1) — surface the drop here too. */}
+        {connectionDegraded && (
+          <div className="pointer-events-none fixed inset-x-0 top-3 z-50 flex justify-center">
+            <div role="status" aria-live="polite" className="flex items-center gap-2 rounded-full bg-black/70 px-4 py-1.5 shadow-lg backdrop-blur-sm">
+              <LoaderCircle className="size-3.5 animate-spin text-brand-yellow" aria-hidden="true" />
+              <span className="font-poppins text-[11px] font-black uppercase tracking-wide text-white">{copy.reconnectingStrip}</span>
+            </div>
+          </div>
+        )}
+        <SearchScreen
         playerName={player.username}
         avatar={player.avatar}
         customization={player.avatarCustomization}
@@ -1057,6 +1292,7 @@ export function FootballGridFlowScreen() {
         onCancel={handleCancel}
         copy={copy}
       />
+      </>
     );
   }
 
@@ -1080,6 +1316,11 @@ export function FootballGridFlowScreen() {
           >
             {completionTitle(grid.state.completionReason, won, draw, copy)}
           </h1>
+          {completionNote(grid.state.completionReason, won, copy) && (
+            <p className="mt-1 font-poppins text-sm font-semibold text-white/60">
+              {completionNote(grid.state.completionReason, won, copy)}
+            </p>
+          )}
 
           {/* Player · score · opponent — mirrors the ranked results hero. */}
           <div className="mt-6 grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-5">
@@ -1193,7 +1434,18 @@ export function FootballGridFlowScreen() {
             onReport={grid.actions.reportMissingAnswer}
           />
         {grid.error && <div className="mt-3 rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-center text-xs font-bold text-red-200">{grid.error.message}</div>}
-          <PhaseOverlay state={state} remaining={remaining} copy={copy} />
+          {/* Non-blocking transport warning during live play (auction parity):
+              the paused overlay only appears once the SERVER pauses the match,
+              which lags the local drop — this strip covers that gap. */}
+          {connectionDegraded && state.phase !== 'paused' && (
+            <div className="pointer-events-none absolute inset-x-0 top-2 z-40 flex justify-center">
+              <div role="status" aria-live="polite" className="flex items-center gap-2 rounded-full bg-black/70 px-4 py-1.5 shadow-lg backdrop-blur-sm">
+                <LoaderCircle className="size-3.5 animate-spin text-brand-yellow" aria-hidden="true" />
+                <span className="font-poppins text-[11px] font-black uppercase tracking-wide text-white">{copy.reconnectingStrip}</span>
+              </div>
+            </div>
+          )}
+          <PhaseOverlay state={state} remaining={remaining} copy={copy} selfDisconnected={connectionDegraded} />
         </div>
       </MiniGameShell>
       <QuitMatchModal open={showQuit} onOpenChange={setShowQuit} onConfirm={() => { setShowQuit(false); grid.actions.forfeit(); }} description={copy.quit} />

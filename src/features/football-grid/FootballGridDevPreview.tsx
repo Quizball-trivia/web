@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useMemo, useState } from 'react';
+import { FormEvent, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -40,6 +40,8 @@ import {
   ResultSampleGallery,
   SearchScreen,
 } from './FootballGridFlowScreen';
+import { CriterionAsset } from './components/CriterionAsset';
+import { FootballGridModeModal } from './components/FootballGridModeModal';
 
 function criterion(
   id: string,
@@ -145,14 +147,18 @@ type ScenarioId =
   | 'unavailable'
   | 'win'
   | 'loss'
-  | 'draw';
+  | 'draw'
+  | 'packs'
+  | 'mode-modal';
 
 const SCENARIOS: Array<{
   id: ScenarioId;
   label: string;
-  group: 'Matchmaking' | 'Match' | 'Feedback' | 'System' | 'Results';
+  group: 'Matchmaking' | 'Match' | 'Feedback' | 'System' | 'Results' | 'Content';
   icon: typeof Search;
 }> = [
+  { id: 'packs', label: 'League packs (draft release)', group: 'Content', icon: LayoutGrid },
+  { id: 'mode-modal', label: 'Mode modal + league picker', group: 'Content', icon: Flag },
   { id: 'searching', label: 'Finding opponent', group: 'Matchmaking', icon: Search },
   { id: 'pairing', label: 'Building board', group: 'Matchmaking', icon: LayoutGrid },
   { id: 'handoff', label: 'Opponent found', group: 'Matchmaking', icon: CheckCircle2 },
@@ -174,7 +180,7 @@ const SCENARIOS: Array<{
   { id: 'draw', label: 'Draw', group: 'Results', icon: RotateCcw },
 ];
 
-const GROUPS = ['Matchmaking', 'Match', 'Feedback', 'System', 'Results'] as const;
+const GROUPS = ['Matchmaking', 'Match', 'Feedback', 'System', 'Results', 'Content'] as const;
 
 function stateForScenario(scenario: ScenarioId): FootballGridState {
   const phase = scenario === 'handoff'
@@ -362,8 +368,165 @@ function ScenarioSurface({ scenario }: { scenario: ScenarioId }) {
   if (scenario === 'unavailable') {
     return <FootballGridNoticeScreen kind="unavailable" title={copy.unavailable} body={copy.unavailableBody} actionLabel={copy.retry} onAction={() => undefined} />;
   }
+  if (scenario === 'packs') return <PackBrowserScenario />;
+  if (scenario === 'mode-modal') return <ModeModalScenario />;
   if (scenario === 'win' || scenario === 'loss' || scenario === 'draw') return <ResultScenario outcome={scenario} />;
   return <MatchScenario key={scenario} scenario={scenario} />;
+}
+
+interface PackPreviewCriterion {
+  key: string; family: FootballGridCriterionView['family'];
+  labelEn: string; labelKa: string; assetKey: string | null; difficulty: 'easy' | 'normal' | 'hard';
+}
+interface PackPreviewBoard {
+  id: string; difficulty: string; familiarityScore: number;
+  rows: PackPreviewCriterion[]; columns: PackPreviewCriterion[];
+  cells: Array<{ cellIndex: number; answers: number; samples: string[] }>;
+}
+interface PackPreviewPayload {
+  release: { version: number; status: string } | null;
+  themes: Array<{ theme: string; boards: number }>;
+  boards: PackPreviewBoard[];
+}
+
+function toCriterionView2(criterion: PackPreviewCriterion): FootballGridCriterionView {
+  return {
+    id: criterion.key, key: criterion.key, family: criterion.family,
+    labelEn: criterion.labelEn, labelKa: criterion.labelKa,
+    assetKey: criterion.assetKey, difficulty: criterion.difficulty,
+  };
+}
+
+function PackBrowserScenario() {
+  const [payload, setPayload] = useState<PackPreviewPayload | null>(null);
+  const [theme, setTheme] = useState<string | null>(null);
+  const [releaseKind, setReleaseKind] = useState<'draft' | 'published'>('draft');
+  const [error, setError] = useState<string | null>(null);
+  const requestSeq = useRef(0);
+
+  const load = async (nextTheme: string | null, kind: 'draft' | 'published') => {
+    setError(null);
+    const seq = ++requestSeq.current;
+    try {
+      const { API_BASE_URL } = await import('@/lib/config');
+      const { getSupabaseAccessToken } = await import('@/lib/auth/supabase');
+      const token = await getSupabaseAccessToken();
+      const params = new URLSearchParams({ release: kind, limit: '40' });
+      if (nextTheme) params.set('theme', nextTheme);
+      const res = await fetch(`${API_BASE_URL}/api/v1/football-grid/pack-preview?${params}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        credentials: 'include',
+      });
+      if (!res.ok) throw new Error(`pack-preview ${res.status}`);
+      const json = await res.json() as PackPreviewPayload;
+      // Drop stale responses: fast chip-switching must not render the previous
+      // pack's boards under the newly selected chip.
+      if (seq === requestSeq.current) setPayload(json);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    }
+  };
+
+  useState(() => { void load(null, releaseKind); return undefined; });
+
+  return (
+    <main className="min-h-dvh overflow-y-auto bg-surface-page-alt px-5 py-8 text-white">
+      <div className="mx-auto max-w-5xl">
+        <h1 className="font-poppins text-2xl font-black uppercase">League pack review</h1>
+        <p className="mt-1 text-sm text-white/50">
+          Release: {payload?.release ? `v${payload.release.version} (${payload.release.status})` : '—'}
+          <button
+            type="button"
+            className="ml-3 rounded-lg border border-white/20 px-2 py-0.5 text-xs font-bold"
+            onClick={() => {
+              const next = releaseKind === 'draft' ? 'published' : 'draft';
+              setReleaseKind(next); setTheme(null); void load(null, next);
+            }}
+          >
+            switch to {releaseKind === 'draft' ? 'published' : 'draft'}
+          </button>
+        </p>
+        {error && <p className="mt-3 rounded-xl bg-red-500/15 px-3 py-2 text-sm text-red-300">{error} — is FOOTBALL_GRID_PACK_PREVIEW_ENABLED=true on the backend?</p>}
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          {(payload?.themes ?? []).map((entry) => (
+            <button
+              key={entry.theme}
+              type="button"
+              onClick={() => { setTheme(entry.theme); void load(entry.theme, releaseKind); }}
+              className={cn(
+                'rounded-xl border px-3 py-2 font-poppins text-xs font-black uppercase',
+                theme === entry.theme ? 'border-brand-yellow bg-brand-yellow text-surface-page' : 'border-white/15 bg-white/[0.05] text-white/80',
+              )}
+            >
+              {entry.theme} · {entry.boards}
+            </button>
+          ))}
+        </div>
+
+        <div className="mt-6 space-y-8">
+          {payload?.boards.map((board) => (
+            <section key={board.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
+              <p className="mb-3 text-xs font-bold uppercase tracking-wide text-white/45">
+                {board.difficulty} · familiarity {Math.round(board.familiarityScore)}
+              </p>
+              <div className="grid max-w-xl grid-cols-[90px_repeat(3,minmax(0,1fr))] gap-1.5">
+                <div />
+                {board.columns.map((column) => (
+                  <div key={column.key} className="flex flex-col items-center gap-1 rounded-xl bg-brand-blue/25 p-2 text-center">
+                    <CriterionAsset criterion={toCriterionView2(column)} className="size-8" />
+                    <span className="text-[10px] font-bold leading-tight text-white/80">{column.labelEn}</span>
+                  </div>
+                ))}
+                {board.rows.flatMap((row, rowIndex) => [
+                  <div key={row.key} className="flex flex-col items-center justify-center gap-1 rounded-xl bg-brand-blue/25 p-2 text-center">
+                    <CriterionAsset criterion={toCriterionView2(row)} className="size-8" />
+                    <span className="text-[10px] font-bold leading-tight text-white/80">{row.labelEn}</span>
+                  </div>,
+                  ...board.columns.map((column, columnIndex) => {
+                    const cell = board.cells.find((candidate) => candidate.cellIndex === rowIndex * 3 + columnIndex);
+                    return (
+                      <div key={`${row.key}-${column.key}`} className="rounded-xl border border-white/10 bg-black/25 p-2">
+                        <p className="text-right font-poppins text-[10px] font-black text-brand-cyan">{cell?.answers ?? 0}</p>
+                        <p className="mt-1 text-[10px] leading-snug text-white/60">{(cell?.samples ?? []).join(', ')}</p>
+                      </div>
+                    );
+                  }),
+                ])}
+              </div>
+            </section>
+          ))}
+        </div>
+      </div>
+    </main>
+  );
+}
+
+function ModeModalScenario() {
+  const [open, setOpen] = useState(true);
+  return (
+    <main className="grid min-h-dvh place-items-center bg-surface-page-alt text-white">
+      {!open && (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="rounded-2xl bg-brand-yellow px-6 py-3 font-poppins font-black uppercase text-black"
+        >
+          Reopen mode modal
+        </button>
+      )}
+      <FootballGridModeModal
+        isOpen={open}
+        onOpenChange={setOpen}
+        onFindOnline={(pack) => {
+          // Workshop: show the chosen pack instead of navigating.
+          window.alert !== undefined; // no-op, avoid dialogs
+          console.log('[dev] would queue for pack:', pack);
+          setOpen(false);
+        }}
+      />
+    </main>
+  );
 }
 
 export function FootballGridDevPreview() {

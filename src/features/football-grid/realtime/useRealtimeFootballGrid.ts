@@ -5,11 +5,14 @@ import { useRealtimeConnection } from '@/lib/realtime/useRealtimeConnection';
 import { useFootballGridStore } from '@/stores/footballGrid.store';
 import type { FootballGridState } from '@/lib/realtime/socket.types';
 import { createRealtimeCommandId } from '@/lib/realtime/command-id';
+import { markGridMatchLeftBehind } from '@/lib/realtime/socket-handlers';
 
 interface UseRealtimeFootballGridOptions {
   enabled: boolean;
   selfUserId: string | null;
   locale: 'en' | 'ka';
+  /** League pack to queue for; defaults to the full European mix. */
+  theme?: string;
   autoStart?: boolean;
 }
 
@@ -27,6 +30,7 @@ export function useRealtimeFootballGrid({
   enabled,
   selfUserId,
   locale,
+  theme = 'european',
   autoStart = true,
 }: UseRealtimeFootballGridOptions) {
   const socket = useRealtimeConnection({ enabled, selfUserId });
@@ -52,16 +56,37 @@ export function useRealtimeFootballGrid({
     if (!enabled) return;
     searchSuppressedRef.current = false;
     autoStartAttemptedRef.current = true;
+    // Mark BEFORE the reset: beginFreshSearch() nulls the match, so this is the
+    // last moment the outgoing match id is observable.
+    markGridMatchLeftBehind(useFootballGridStore.getState().state?.matchId);
     useFootballGridStore.getState().beginFreshSearch();
-    socket.emit('grid:search_start', { locale });
-  }, [enabled, locale, socket]);
+    socket.emit('grid:search_start', { locale, theme });
+  }, [enabled, locale, socket, theme]);
 
   useEffect(() => {
     if (!enabled || !autoStart || autoStartAttemptedRef.current || searchSuppressedRef.current) return;
-    if (state || completed || search.state !== 'idle') return;
+    // A terminal state does NOT block auto-start: setCompleted writes both
+    // `completed` and a terminal `state`, so guarding on `state` alone made the
+    // stale-result branch below unreachable and stranded the player on an old
+    // results screen instead of starting the search they asked for.
+    if ((state && state.phase !== 'terminal') || search.state !== 'idle') return;
+    if (completed) {
+      // A redelivered result from a match that terminated while the user was
+      // away (e.g. a disconnect forfeit) landed just as they pressed PLAY.
+      // Let the ack effect commit it first (rAF), then clear it and start the
+      // fresh search — ranked/auction parity: the PLAY intent always wins
+      // over a stale result screen.
+      const timerId = window.setTimeout(() => {
+        autoStartAttemptedRef.current = true;
+        markGridMatchLeftBehind(useFootballGridStore.getState().state?.matchId);
+        useFootballGridStore.getState().beginFreshSearch();
+        socket.emit('grid:search_start', { locale, theme });
+      }, 250);
+      return () => window.clearTimeout(timerId);
+    }
     autoStartAttemptedRef.current = true;
-    socket.emit('grid:search_start', { locale });
-  }, [autoStart, completed, enabled, locale, search.state, socket, state]);
+    socket.emit('grid:search_start', { locale, theme });
+  }, [autoStart, completed, enabled, locale, search.state, socket, state, theme]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -75,14 +100,14 @@ export function useRealtimeFootballGrid({
       if (latest.state?.matchId) {
         socket.emit('grid:resync', { matchId: latest.state.matchId });
       } else if (latest.search.state === 'searching' && !searchSuppressedRef.current) {
-        socket.emit('grid:search_start', { locale });
+        socket.emit('grid:search_start', { locale, theme });
       }
     };
     socket.on('connect', handleConnect);
     return () => {
       socket.off('connect', handleConnect);
     };
-  }, [enabled, locale, socket]);
+  }, [enabled, locale, socket, theme]);
 
   useEffect(() => {
     if (!enabled || !selfUserId || !state || state.phase !== 'handoff') return;

@@ -18,10 +18,10 @@ function criterion(overrides: Partial<FootballGridCriterionView> = {}): Football
 }
 
 describe('CriterionAsset', () => {
-  it('uses the packaged club visual while the provider primary awaits rights clearance', () => {
+  it('renders the real club crest first (owner rights decision 2026-08-27)', () => {
     const { container } = render(<CriterionAsset criterion={criterion()} />);
     const primary = container.querySelector('img');
-    expect(primary?.getAttribute('src')).toBe(`${FOOTBALL_GRID_CDN_BASE_URL}/clubs/fc-barcelona-fallback.svg`);
+    expect(primary?.getAttribute('src')).toContain('imgs/club-logos/fc-barcelona.webp');
   });
 
   it('prefers an exact club match before ambiguous suffix matches', () => {
@@ -33,7 +33,7 @@ describe('CriterionAsset', () => {
       assetKey: 'city',
     })} />);
 
-    expect(container.querySelector('img')?.getAttribute('src')).toBe(`${FOOTBALL_GRID_CDN_BASE_URL}/clubs/manchester-city-fallback.svg`);
+    expect(container.querySelector('img')?.getAttribute('src')).toContain('imgs/club-logos/manchester-city.webp');
   });
 
   it('resolves a country directly to its packaged flag', () => {
