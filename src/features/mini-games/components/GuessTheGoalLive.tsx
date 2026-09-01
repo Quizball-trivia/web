@@ -77,6 +77,7 @@ function GgtGalleryPanel({
   pick: (text: GgtI18nText | null | undefined) => string;
   onClose?: () => void;
 }) {
+  const [watch, setWatch] = useState<{ url: string; title: string } | null>(null);
   const pct = gallery.total > 0 ? Math.round((gallery.solved / gallery.total) * 100) : 0;
   const rank: Record<string, number> = { easy: 0, medium: 1, hard: 2 };
   // Solved cards then locked placeholders, grouped easy -> medium -> hard.
@@ -134,9 +135,12 @@ function GgtGalleryPanel({
       <div className="grid grid-cols-2 gap-2.5 md:grid-cols-3 lg:grid-cols-4">
         {ordered.map((entry, i) =>
           entry.kind === 'solved' ? (
-            <div
+            <button
               key={`s-${i}`}
-              className="flex min-h-[92px] flex-col items-center justify-between gap-2 rounded-xl bg-brand-green-bright p-3 text-center"
+              type="button"
+              disabled={!entry.goal.video_url}
+              onClick={() => entry.goal.video_url && setWatch({ url: entry.goal.video_url, title: pick(entry.goal.title) })}
+              className="flex min-h-[92px] flex-col items-center justify-between gap-2 rounded-xl bg-brand-green-bright p-3 text-center transition-all enabled:cursor-pointer enabled:hover:brightness-105 enabled:active:translate-y-[1px]"
             >
               <p className="font-poppins text-[11px] font-black uppercase leading-snug text-black">
                 {pick(entry.goal.title)}
@@ -153,7 +157,7 @@ function GgtGalleryPanel({
                   </span>
                 </span>
               </div>
-            </div>
+            </button>
           ) : (
             <div
               key={`u-${i}`}
@@ -173,6 +177,27 @@ function GgtGalleryPanel({
           )
         )}
       </div>
+      {watch && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" onClick={() => setWatch(null)}>
+          <div className="w-full max-w-2xl" onClick={(e) => e.stopPropagation()}>
+            <p className="mb-2 text-center font-poppins text-[12px] font-black uppercase text-white">{watch.title}</p>
+            {/^https?:\/\/[^ ]+\.mp4(\?|$)/i.test(watch.url) ? (
+              <video src={watch.url} autoPlay controls playsInline className="aspect-video w-full rounded-2xl bg-black" />
+            ) : (
+              <iframe
+                src={`https://www.youtube-nocookie.com/embed/${(watch.url.match(/(?:watch\?v=|youtu\.be\/|shorts\/|embed\/)([A-Za-z0-9_-]{6,20})/) ?? [])[1] ?? ''}?autoplay=1&rel=0`}
+                title={watch.title}
+                allow="autoplay; encrypted-media"
+                allowFullScreen
+                className="aspect-video w-full rounded-2xl bg-black"
+              />
+            )}
+            <button type="button" onClick={() => setWatch(null)} className="mx-auto mt-3 block rounded-full bg-white/15 px-5 py-2 font-poppins text-[12px] font-black uppercase text-white">
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
