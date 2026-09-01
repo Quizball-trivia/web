@@ -637,6 +637,15 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
     productSlug: "avatar_jersey_ajax",
     position: { top: 43, left: 13, width: 70 },
   },
+  {
+    id: "jersey_mimino",
+    slot: "jersey",
+    name: "Mimino",
+    asset: "/assets/store/jersey_mimino.webp?v=2",
+    priceCoins: 5000,
+    productSlug: "avatar_jersey_mimino",
+    position: { top: 43, left: 13, width: 70 },
+  },
 ];
 
 export const JERSEY_PARTS: AvatarPart[] = [...JERSEY_COLOR_PARTS, ...JERSEY_DESIGN_PARTS];

@@ -537,6 +537,47 @@ const KA: Record<string, string> = {
   "{pct}% goal": "გოლის შანსი {pct}%",
   "Next attack risks the whole pot — the goal resets to {n} zones.":
     "შემდეგი შეტევა მთელ ბანკს რისკავს — კარი ისევ {n} ზონამდე ბრუნდება.",
+
+  // FIFA Cards
+  "Guess the Card": "გამოიცანი ბარათი",
+  "FIFA Cards": "FIFA ბარათები",
+  "Spin for a FIFA edition, then name the player from the stats":
+    "დაატრიალე FIFA-ს გამოცემა და სტატისტიკით გამოიცანი მოთამაშე",
+  "Spinning the edition…": "ვირჩევთ გამოცემას…",
+  "Locked in!": "დაფიქსირდა!",
+  "Guess the player from the drawn edition": "გამოიცანი მოთამაშე ამოსული გამოცემიდან",
+  "Card": "ბარათი",
+  "No clues": "მინიშნების გარეშე",
+  "{clue} unlocks in": "{clue} გამოჩნდება",
+  "Final clue — answer now": "ბოლო მინიშნება — უპასუხე ახლა",
+  "Name the player…": "დაასახელე მოთამაშე…",
+  "Named on stats alone": "მხოლოდ სტატისტიკით გამოიცანი",
+  "Guessed with {n} clue(s)": "გამოიცანი {n} მინიშნებით",
+  "Round complete": "რაუნდი დასრულდა",
+  "of {max} · {n}/{total} named": "{max}-დან · {n}/{total} გამოცნობილი",
+
+  // Guess the Card — daily challenge
+  "Card {n}/{total}": "ბარათი {n}/{total}",
+  "Spin for a FIFA edition, then name the player from the card":
+    "დაატრიალე FIFA-ს გამოცემა და გამოიცანი მოთამაშე ბარათით",
+  "Give up": "დანებება",
+  "Wrong!": "არასწორია!",
+  "Tap a lock to reveal a clue": "დააჭირე ბოქლომს მინიშნების გასახსნელად",
+  "Clue revealed": "მინიშნება გახსნილია",
+  "The answer": "პასუხი",
+  "{clue} unlocks next": "შემდეგ იხსნება: {clue}",
+  "Nice — +{p}": "ყოჩაღ — +{p}",
+  "Daily complete!": "დღიური დასრულდა!",
+  "Today's round is done": "დღევანდელი რაუნდი დასრულებულია",
+  "Coins earned": "მოგებული ქოინები",
+  "Solved": "ამოცნობილი",
+  "New cards at reset": "ახალი ბარათები განახლებისას",
+  "Come back tomorrow": "დაბრუნდი ხვალ",
+  "Reveal clue": "მინიშნების გახსნა",
+  "Hidden clue": "დამალული მინიშნება",
+  "Back to challenges": "გამოწვევებში დაბრუნება",
+  "A gold card, stats only — name the player across 10 editions.":
+    "ოქროს ბარათი, მხოლოდ სტატისტიკა — გამოიცანი მოთამაშე 10 გამოცემიდან.",
 };
 
 export function useMiniLocale(): MiniLocale {
