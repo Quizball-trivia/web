@@ -168,6 +168,11 @@ export function ModeSelectionScreen({
   // Shared Poppins style for body/label/button text (replaces the old
   // font-black/font-bold Duolingo weights). Only Poppins 600 is loaded.
   const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
+  // Friendly + Daily always render; Auction and Mini Games are flag-gated.
+  // An odd count would strand the last card on a half-width mobile row, so
+  // that card spans the row instead.
+  const secondaryCardCount = 2 + Number(isAuctionCardEnabled) + Number(isMiniGamesEnabled);
+  const lastCardMobileSpan = secondaryCardCount % 2 === 1 ? 'col-span-2 lg:col-span-1' : undefined;
 
   useEffect(() => {
     if (!playEntranceAnimation) return;
@@ -307,6 +312,17 @@ export function ModeSelectionScreen({
                     ? <>{t('play.rpToTier', { rp: Math.max(0, (nextTierTargetRp ?? 0) - displayRp) })}<span className="text-brand-yellow">{tierLabelOf(nextTierBand.tier)}</span></>
                     : t('play.maxRankReached')}
               </div>
+              {/* Betsson badge — in flow below the rank text so it can never
+                  cover it, whatever height the text block reaches. */}
+              {isEventMode && (
+                <div
+                  className="mt-2 inline-flex flex-col items-start rounded-lg px-3 py-1.5"
+                  style={{ backgroundColor: '#1a1a1a', border: '1px solid rgba(255,255,255,0.15)' }}
+                >
+                  <span className="text-[8px] font-bold uppercase tracking-wider text-white/60 leading-none">Powered by</span>
+                  <Image src="/assets/betsson/3.png" alt="Betsson Sport" width={96} height={18} className="h-4 w-auto object-contain mt-0.5" />
+                </div>
+              )}
             </div>
           </div>
 
@@ -387,16 +403,6 @@ export function ModeSelectionScreen({
           </div>
         </div>
 
-        {/* Betsson badge — bottom-right on desktop only, event only */}
-        {isEventMode && (
-          <div
-            className="hidden lg:flex absolute bottom-4 right-4 z-20 flex-col items-start rounded-lg px-3 py-1.5"
-            style={{ backgroundColor: '#1a1a1a', border: '1px solid rgba(255,255,255,0.15)' }}
-          >
-            <span className="text-[8px] font-bold uppercase tracking-wider text-white/60 leading-none">Powered by</span>
-            <Image src="/assets/betsson/3.png" alt="Betsson Sport" width={96} height={18} className="h-4 w-auto object-contain mt-0.5" />
-          </div>
-        )}
       </div>
 
       {/* ─── 1b. Announcements ─── */}
@@ -406,7 +412,10 @@ export function ModeSelectionScreen({
       <div
         className={cn(
           'grid grid-cols-2 gap-3 md:gap-4',
-          isAuctionCardEnabled && (isMiniGamesEnabled ? 'lg:grid-cols-4' : 'lg:grid-cols-3'),
+          // Desktop columns track the number of cards actually rendered, so a
+          // disabled flag never leaves an empty column or wraps a lone card.
+          secondaryCardCount === 4 && 'lg:grid-cols-4',
+          secondaryCardCount === 3 && 'lg:grid-cols-3',
         )}
       >
         {/* Friendly Match */}
@@ -433,7 +442,7 @@ export function ModeSelectionScreen({
           />
           <div className="relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left">
             <h3
-              className="text-[0.95rem] leading-[1.05] uppercase text-white break-words [hyphens:auto] md:text-[clamp(1.5rem,2.4vw,2.25rem)]"
+              className="text-[0.95rem] leading-[1.05] uppercase text-white [overflow-wrap:normal] [word-break:keep-all] [hyphens:none] md:text-[clamp(1.5rem,2.4vw,2.25rem)]"
               style={friendlyTitleStyle}
             >
               {t('play.friendlyMatch')}
@@ -464,17 +473,9 @@ export function ModeSelectionScreen({
         </div>
 
         {/* Daily Challenge */}
-        <div
-          onClick={() => router.push('/daily/challenges')}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              router.push('/daily/challenges');
-            }
-          }}
-          role="button"
-          tabIndex={0}
-          className="relative cursor-pointer overflow-hidden rounded-[10px] md:min-h-0 p-3 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
+        <Link
+          href="/daily/challenges"
+          className="relative block cursor-pointer overflow-hidden rounded-[10px] md:min-h-0 p-3 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
           style={{ backgroundColor: colors.yellow.base }}
         >
           {/* Desktop watermark icon (mobile uses inline icon below) */}
@@ -487,7 +488,7 @@ export function ModeSelectionScreen({
           />
           <div className="relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left">
             <h3
-              className="text-[0.95rem] leading-[1.05] uppercase text-black break-words [hyphens:auto] md:text-[clamp(1.5rem,2.4vw,2.25rem)]"
+              className="text-[0.95rem] leading-[1.05] uppercase text-black [overflow-wrap:normal] [word-break:keep-all] [hyphens:none] md:text-[clamp(1.5rem,2.4vw,2.25rem)]"
               style={dailyTitleStyle}
             >
               {t('play.dailyChallenge')}
@@ -515,7 +516,7 @@ export function ModeSelectionScreen({
               </div>
             </div>
           </div>
-        </div>
+        </Link>
 
         {/* Auction (beta) — spans the mobile 2-col row so it never orphans */}
         {isAuctionCardEnabled && (
@@ -530,10 +531,8 @@ export function ModeSelectionScreen({
             role="button"
             tabIndex={0}
             className={cn(
-              'relative cursor-pointer overflow-hidden rounded-[10px] md:min-h-0 p-3 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2 lg:col-span-1',
-              // Auction is the odd 3rd card on mobile ONLY while mini games are
-              // hidden; with mini games on it pairs with them in a 2x2.
-              !isMiniGamesEnabled && 'col-span-2',
+              'relative cursor-pointer overflow-hidden rounded-[10px] md:min-h-0 p-3 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2',
+              !isMiniGamesEnabled && lastCardMobileSpan,
             )}
             style={{ backgroundColor: '#6B2FB3' }}
           >
@@ -549,7 +548,7 @@ export function ModeSelectionScreen({
             />
             <div className="relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left">
               <h3
-                className="text-[0.95rem] leading-[1.05] uppercase text-white break-words [hyphens:auto] md:text-[clamp(1.5rem,2.4vw,2.25rem)]"
+                className="text-[0.95rem] leading-[1.05] uppercase text-white [overflow-wrap:normal] [word-break:keep-all] [hyphens:none] md:text-[clamp(1.5rem,2.4vw,2.25rem)]"
                 style={poppins}
               >
                 {t('play.auctionTitle')}
@@ -578,17 +577,12 @@ export function ModeSelectionScreen({
 
         {/* Mini Games — same card family as the row above. */}
         {isMiniGamesEnabled && (
-          <div
-            onClick={() => router.push('/mini-games')}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                router.push('/mini-games');
-              }
-            }}
-            role="button"
-            tabIndex={0}
-            className="relative cursor-pointer overflow-hidden rounded-[10px] md:min-h-0 p-3 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
+          <Link
+            href="/mini-games"
+            className={cn(
+              'relative block cursor-pointer overflow-hidden rounded-[10px] md:min-h-0 p-3 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2',
+              lastCardMobileSpan,
+            )}
             style={{ backgroundColor: colors.orange.base }}
           >
             <span className="absolute top-2.5 right-2.5 md:top-4 md:right-4 z-20 rounded-full bg-black px-2.5 py-1 text-[8px] md:text-[11px] uppercase tracking-wide text-white" style={poppins}>
@@ -603,7 +597,7 @@ export function ModeSelectionScreen({
             />
             <div className="relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left">
               <h3
-                className="text-[0.95rem] leading-[1.05] uppercase text-black break-words [hyphens:auto] md:text-[clamp(1.5rem,2.4vw,2.25rem)]"
+                className="pr-14 text-[0.95rem] leading-[1.05] uppercase text-black [overflow-wrap:normal] [word-break:keep-all] [hyphens:none] md:pr-24 md:text-[clamp(1.5rem,2.4vw,2.25rem)]"
                 style={poppins}
               >
                 {t('play.miniGamesTitle')}
@@ -627,7 +621,7 @@ export function ModeSelectionScreen({
                 </div>
               </div>
             </div>
-          </div>
+          </Link>
         )}
       </div>
 
