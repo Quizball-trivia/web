@@ -557,6 +557,18 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
     : null;
   const hasVideo = Boolean(selfHostedVideo || video);
 
+  // Owner decision: once the answer (and bonus, if any) is settled, flip to
+  // the real footage automatically — "back to the board" stays one tap away.
+  // Once per session: pressing back must not re-trigger the flip.
+  const autoFlippedForRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!hasVideo || !session) return;
+    if (phase !== 'reveal' && phase !== 'bonus_done') return;
+    if (autoFlippedForRef.current === session.session_id) return;
+    autoFlippedForRef.current = session.session_id;
+    setShowVideo(true);
+  }, [phase, hasVideo, session]);
+
   const inGame = phase === 'watch' || phase === 'reveal' || phase === 'bonus' || phase === 'bonus_done';
   const activeKind = useMemo<TacticsStepKind | null>(() => {
     if (phase !== 'watch' || !timeline) return null;
@@ -608,9 +620,11 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
         </div>
       )}
 
-      <div
+      <motion.div
         className="relative w-full overflow-hidden rounded-2xl bg-black"
-        style={{ aspectRatio: `${BOARD_VIEW_W} / ${BOARD_VIEW_H}` }}
+        style={{ aspectRatio: `${BOARD_VIEW_W} / ${BOARD_VIEW_H}`, transformStyle: 'preserve-3d', perspective: 1200 }}
+        animate={{ rotateY: showVideo ? 360 : 0 }}
+        transition={{ duration: 0.55, ease: 'easeInOut' }}
       >
         {showVideo && selfHostedVideo ? (
           <video
@@ -632,7 +646,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
         ) : (
           <TacticsBoard2D goal={boardGoal} timeline={timeline} t={animTime} goalFlash={goalFlash} />
         )}
-      </div>
+      </motion.div>
 
       {(phase === 'reveal' || phase === 'bonus_done' || (hasVideo && phase !== 'watch')) && (
         <div className="flex items-center justify-center gap-2.5">
