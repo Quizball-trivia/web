@@ -528,7 +528,7 @@ const CARDS_FIFA15: FifaCard[] = [
     name: "Ezequiel Garay", accepted: ["Ezequiel Garay", "E. Garay", "Ezequiel Marcelo Garay", "Garay"],
     overall: 83, position: "CB",
     nation: "Argentina", nationCode: "ar", league: "Russian Premier League", club: "Zenit St. Petersburg",
-    stats: { pac: 52, sho: 57, pas: 68, dri: 64, def: 86, phy: 78 },
+    stats: { pac: 52, sho: 57, pas: 68, dri: 64, def: 86, phy: 78 }, photoId: 170481, photoVer: "20",
   },
   {
     id: "fifa15-hulk", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -584,14 +584,14 @@ const CARDS_FIFA15: FifaCard[] = [
     name: "João Moutinho", accepted: ["João Moutinho", "João Filipe Iria Santos Moutinho", "Moutinho"],
     overall: 83, position: "CM",
     nation: "Portugal", nationCode: "pt", league: "French Ligue 1", club: "AS Monaco",
-    stats: { pac: 74, sho: 75, pas: 83, dri: 82, def: 71, phy: 72 }, photoId: 162347, photoVer: "20",
+    stats: { pac: 74, sho: 75, pas: 83, dri: 82, def: 71, phy: 72 }, photoId: 162347, photoVer: "24",
   },
   {
     id: "fifa15-juan-cuadrado", edition: "FIFA15", editionLabel: "FIFA 15",
     name: "Juan Cuadrado", accepted: ["Juan Cuadrado", "J. Cuadrado", "Juan Guillermo Cuadrado Bello", "Cuadrado"],
     overall: 83, position: "RM",
     nation: "Colombia", nationCode: "co", league: "Italian Serie A", club: "Fiorentina",
-    stats: { pac: 93, sho: 77, pas: 76, dri: 87, def: 57, phy: 71 },
+    stats: { pac: 93, sho: 77, pas: 76, dri: 87, def: 57, phy: 71 }, photoId: 193082, photoVer: "24",
   },
   {
     id: "fifa15-jeremy-toulalan", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -1049,7 +1049,7 @@ const CARDS_FIFA16: FifaCard[] = [
     name: "Naldo", accepted: ["Naldo", "Ronaldo Aparecido Rodrigues"],
     overall: 85, position: "CB",
     nation: "Brazil", nationCode: "br", league: "German 1. Bundesliga", club: "VfL Wolfsburg",
-    stats: { pac: 73, sho: 69, pas: 64, dri: 63, def: 88, phy: 76 },
+    stats: { pac: 73, sho: 69, pas: 64, dri: 63, def: 88, phy: 76 }, photoId: 171919, photoVer: "20",
   },
   {
     id: "fifa16-pique", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1245,7 +1245,7 @@ const CARDS_FIFA16: FifaCard[] = [
     name: "Nicolás Otamendi", accepted: ["Nicolás Otamendi", "N. Otamendi", "Nicolás Hernán Gonzalo Otamendi", "Otamendi"],
     overall: 84, position: "CB",
     nation: "Argentina", nationCode: "ar", league: "English Premier League", club: "Manchester City",
-    stats: { pac: 75, sho: 56, pas: 56, dri: 54, def: 87, phy: 82 }, photoId: 192366, photoVer: "19",
+    stats: { pac: 75, sho: 56, pas: 56, dri: 54, def: 87, phy: 82 }, photoId: 192366, photoVer: "24",
   },
   {
     id: "fifa16-oscar", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1336,7 +1336,7 @@ const CARDS_FIFA16: FifaCard[] = [
     name: "Ezequiel Garay", accepted: ["Ezequiel Garay", "E. Garay", "Ezequiel Marcelo Garay", "Garay"],
     overall: 83, position: "CB",
     nation: "Argentina", nationCode: "ar", league: "Russian Premier League", club: "Zenit St. Petersburg",
-    stats: { pac: 52, sho: 57, pas: 68, dri: 64, def: 87, phy: 78 },
+    stats: { pac: 52, sho: 57, pas: 68, dri: 64, def: 87, phy: 78 }, photoId: 170481, photoVer: "20",
   },
   {
     id: "fifa16-falcao", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1364,7 +1364,7 @@ const CARDS_FIFA16: FifaCard[] = [
     name: "João Moutinho", accepted: ["João Moutinho", "João Filipe Iria Santos Moutinho", "Moutinho"],
     overall: 83, position: "CAM",
     nation: "Portugal", nationCode: "pt", league: "French Ligue 1", club: "AS Monaco",
-    stats: { pac: 71, sho: 76, pas: 83, dri: 82, def: 71, phy: 71 }, photoId: 162347, photoVer: "20",
+    stats: { pac: 71, sho: 76, pas: 83, dri: 82, def: 71, phy: 71 }, photoId: 162347, photoVer: "24",
   },
   {
     id: "fifa16-jeremy-mathieu", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1427,7 +1427,7 @@ const CARDS_FIFA16: FifaCard[] = [
     name: "Nicolás Gaitán", accepted: ["Nicolás Gaitán", "N. Gaitán", "Osvaldo Nicolás Fabián Gaitán", "Gaitán"],
     overall: 83, position: "LM",
     nation: "Argentina", nationCode: "ar", league: "Portuguese Liga ZON SAGRES", club: "SL Benfica",
-    stats: { pac: 83, sho: 74, pas: 84, dri: 86, def: 40, phy: 57 },
+    stats: { pac: 83, sho: 74, pas: 84, dri: 86, def: 40, phy: 57 }, photoId: 184144, photoVer: "23",
   },
   {
     id: "fifa16-per-mertesacker", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1441,7 +1441,7 @@ const CARDS_FIFA16: FifaCard[] = [
     name: "Radja Nainggolan", accepted: ["Radja Nainggolan", "R. Nainggolan", "Nainggolan"],
     overall: 83, position: "CM",
     nation: "Belgium", nationCode: "be", league: "Italian Serie A", club: "Roma",
-    stats: { pac: 80, sho: 78, pas: 79, dri: 81, def: 81, phy: 84 }, photoId: 178518, photoVer: "19",
+    stats: { pac: 80, sho: 78, pas: 79, dri: 81, def: 81, phy: 84 }, photoId: 178518, photoVer: "23",
   },
   {
     id: "fifa16-sami-khedira", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1920,7 +1920,7 @@ const CARDS_FIFA17: FifaCard[] = [
     name: "Nicolás Gaitán", accepted: ["Nicolás Gaitán", "N. Gaitán", "Osvaldo Nicolás Fabián Gaitán", "Gaitán"],
     overall: 85, position: "LM",
     nation: "Argentina", nationCode: "ar", league: "Spain Primera Division", club: "Atlético de Madrid",
-    stats: { pac: 82, sho: 74, pas: 83, dri: 86, def: 39, phy: 58 },
+    stats: { pac: 82, sho: 74, pas: 83, dri: 86, def: 39, phy: 58 }, photoId: 184144, photoVer: "23",
   },
   {
     id: "fifa17-nicolas-otamendi", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1983,7 +1983,7 @@ const CARDS_FIFA17: FifaCard[] = [
     name: "Alex Sandro", accepted: ["Alex Sandro", "Alex Sandro Lobo Silva", "Sandro"],
     overall: 84, position: "LB",
     nation: "Brazil", nationCode: "br", league: "Italian Serie A", club: "Juventus",
-    stats: { pac: 87, sho: 64, pas: 75, dri: 81, def: 79, phy: 76 }, photoId: 191043, photoVer: "21",
+    stats: { pac: 87, sho: 64, pas: 75, dri: 81, def: 79, phy: 76 }, photoId: 191043, photoVer: "24",
   },
   {
     id: "fifa17-arda-turan", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -2046,7 +2046,7 @@ const CARDS_FIFA17: FifaCard[] = [
     name: "Ezequiel Garay", accepted: ["Ezequiel Garay", "E. Garay", "Ezequiel Marcelo Garay", "Garay"],
     overall: 84, position: "CB",
     nation: "Argentina", nationCode: "ar", league: "Spain Primera Division", club: "Valencia CF",
-    stats: { pac: 52, sho: 57, pas: 68, dri: 64, def: 87, phy: 81 },
+    stats: { pac: 52, sho: 57, pas: 68, dri: 64, def: 87, phy: 81 }, photoId: 170481, photoVer: "20",
   },
   {
     id: "fifa17-hatem-ben-arfa", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -2095,7 +2095,7 @@ const CARDS_FIFA17: FifaCard[] = [
     name: "Naldo", accepted: ["Naldo", "Ronaldo Aparecido Rodrigues"],
     overall: 84, position: "CB",
     nation: "Brazil", nationCode: "br", league: "German 1. Bundesliga", club: "FC Schalke 04",
-    stats: { pac: 72, sho: 69, pas: 64, dri: 62, def: 86, phy: 74 },
+    stats: { pac: 72, sho: 69, pas: 64, dri: 62, def: 86, phy: 74 }, photoId: 171919, photoVer: "20",
   },
   {
     id: "fifa17-nemanja-matic", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -2109,7 +2109,7 @@ const CARDS_FIFA17: FifaCard[] = [
     name: "Radja Nainggolan", accepted: ["Radja Nainggolan", "R. Nainggolan", "Nainggolan"],
     overall: 84, position: "CM",
     nation: "Belgium", nationCode: "be", league: "Italian Serie A", club: "Roma",
-    stats: { pac: 79, sho: 78, pas: 78, dri: 81, def: 81, phy: 84 }, photoId: 178518, photoVer: "19",
+    stats: { pac: 79, sho: 78, pas: 78, dri: 81, def: 81, phy: 84 }, photoId: 178518, photoVer: "23",
   },
   {
     id: "fifa17-romelu-lukaku", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -2165,7 +2165,7 @@ const CARDS_FIFA17: FifaCard[] = [
     name: "Ömer Toprak", accepted: ["Ömer Toprak", "Ö. Toprak", "Toprak"],
     overall: 84, position: "CB",
     nation: "Turkey", nationCode: "tr", league: "German 1. Bundesliga", club: "Bayer 04 Leverkusen",
-    stats: { pac: 76, sho: 39, pas: 62, dri: 67, def: 86, phy: 75 },
+    stats: { pac: 76, sho: 39, pas: 62, dri: 67, def: 86, phy: 75 }, photoId: 185239, photoVer: "24",
   },
 ];
 
@@ -2490,7 +2490,7 @@ const CARDS_FIFA18: FifaCard[] = [
     name: "Dries Mertens", accepted: ["Dries Mertens", "D. Mertens", "Mertens"],
     overall: 86, position: "CF",
     nation: "Belgium", nationCode: "be", league: "Italian Serie A", club: "Napoli",
-    stats: { pac: 90, sho: 82, pas: 79, dri: 89, def: 36, phy: 55 }, photoId: 175943, photoVer: "22",
+    stats: { pac: 90, sho: 82, pas: 79, dri: 89, def: 36, phy: 55 }, photoId: 175943, photoVer: "24",
   },
   {
     id: "fifa18-franck-ribery", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2672,7 +2672,7 @@ const CARDS_FIFA18: FifaCard[] = [
     name: "Kamil Glik", accepted: ["Kamil Glik", "K. Glik", "Kamil Jacek Glik", "Glik"],
     overall: 85, position: "CB",
     nation: "Poland", nationCode: "pl", league: "French Ligue 1", club: "AS Monaco",
-    stats: { pac: 56, sho: 32, pas: 44, dri: 53, def: 86, phy: 84 },
+    stats: { pac: 56, sho: 32, pas: 44, dri: 53, def: 86, phy: 84 }, photoId: 190547, photoVer: "24",
   },
   {
     id: "fifa18-lorenzo-insigne", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2707,7 +2707,7 @@ const CARDS_FIFA18: FifaCard[] = [
     name: "Yannick Carrasco", accepted: ["Yannick Carrasco", "Y. Carrasco", "Yannick Ferreira Carrasco", "Carrasco"],
     overall: 85, position: "LM",
     nation: "Belgium", nationCode: "be", league: "Spain Primera Division", club: "Atlético de Madrid",
-    stats: { pac: 88, sho: 79, pas: 78, dri: 88, def: 29, phy: 63 }, photoId: 208418, photoVer: "23",
+    stats: { pac: 88, sho: 79, pas: 78, dri: 88, def: 29, phy: 63 }, photoId: 208418, photoVer: "24",
   },
   {
     id: "fifa18-angel-di-maria", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2735,7 +2735,7 @@ const CARDS_FIFA18: FifaCard[] = [
     name: "Alejandro Gómez", accepted: ["Alejandro Gómez", "A. Gómez", "Alejandro Darío Gómez", "Gómez"],
     overall: 84, position: "CF",
     nation: "Argentina", nationCode: "ar", league: "Italian Serie A", club: "Atalanta",
-    stats: { pac: 90, sho: 77, pas: 80, dri: 89, def: 31, phy: 58 }, photoId: 143076, photoVer: "22",
+    stats: { pac: 90, sho: 77, pas: 80, dri: 89, def: 31, phy: 58 }, photoId: 143076, photoVer: "23",
   },
   {
     id: "fifa18-ander-herrera", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2749,7 +2749,7 @@ const CARDS_FIFA18: FifaCard[] = [
     name: "Bruno", accepted: ["Bruno", "Bruno Soriano Llido"],
     overall: 84, position: "CM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Villarreal CF",
-    stats: { pac: 41, sho: 72, pas: 79, dri: 75, def: 78, phy: 77 },
+    stats: { pac: 41, sho: 72, pas: 79, dri: 75, def: 78, phy: 77 }, photoId: 184120, photoVer: "20",
   },
   {
     id: "fifa18-dani-alves", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2805,14 +2805,14 @@ const CARDS_FIFA18: FifaCard[] = [
     name: "Kalidou Koulibaly", accepted: ["Kalidou Koulibaly", "K. Koulibaly", "Koulibaly"],
     overall: 84, position: "CB",
     nation: "Senegal", nationCode: "sn", league: "Italian Serie A", club: "Napoli",
-    stats: { pac: 73, sho: 26, pas: 43, dri: 56, def: 85, phy: 86 }, photoId: 201024, photoVer: "23",
+    stats: { pac: 73, sho: 26, pas: 43, dri: 56, def: 85, phy: 86 }, photoId: 201024, photoVer: "24",
   },
   {
     id: "fifa18-kevin-strootman", edition: "FIFA18", editionLabel: "FIFA 18",
     name: "Kevin Strootman", accepted: ["Kevin Strootman", "K. Strootman", "Strootman"],
     overall: 84, position: "CM",
     nation: "Netherlands", nationCode: "nl", league: "Italian Serie A", club: "Roma",
-    stats: { pac: 67, sho: 74, pas: 82, dri: 78, def: 78, phy: 82 },
+    stats: { pac: 67, sho: 74, pas: 82, dri: 78, def: 78, phy: 82 }, photoId: 189712, photoVer: "24",
   },
   {
     id: "fifa18-koke", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2826,7 +2826,7 @@ const CARDS_FIFA18: FifaCard[] = [
     name: "Konstantinos Manolas", accepted: ["Konstantinos Manolas", "K. Manolas", "Manolas"],
     overall: 84, position: "CB",
     nation: "Greece", nationCode: "gr", league: "Italian Serie A", club: "Roma",
-    stats: { pac: 80, sho: 19, pas: 42, dri: 60, def: 86, phy: 83 },
+    stats: { pac: 80, sho: 19, pas: 42, dri: 60, def: 86, phy: 83 }, photoId: 192774, photoVer: "22",
   },
   {
     id: "fifa18-laurent-koscielny", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -3298,7 +3298,7 @@ const CARDS_FIFA19: FifaCard[] = [
     name: "Naldo", accepted: ["Naldo", "Ronaldo Aparecido Rodrigues"],
     overall: 86, position: "CB",
     nation: "Brazil", nationCode: "br", league: "German 1. Bundesliga", club: "FC Schalke 04",
-    stats: { pac: 63, sho: 69, pas: 64, dri: 61, def: 87, phy: 74 },
+    stats: { pac: 63, sho: 69, pas: 64, dri: 61, def: 87, phy: 74 }, photoId: 171919, photoVer: "20",
   },
   {
     id: "fifa19-nemanja-matic", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3403,7 +3403,7 @@ const CARDS_FIFA19: FifaCard[] = [
     name: "Fabinho", accepted: ["Fabinho", "Fábio Henrique Tavares"],
     overall: 85, position: "CDM",
     nation: "Brazil", nationCode: "br", league: "English Premier League", club: "Liverpool",
-    stats: { pac: 71, sho: 69, pas: 78, dri: 77, def: 84, phy: 84 }, photoId: 209499, photoVer: "23",
+    stats: { pac: 71, sho: 69, pas: 78, dri: 77, def: 84, phy: 84 }, photoId: 209499, photoVer: "24",
   },
   {
     id: "fifa19-falcao", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3452,7 +3452,7 @@ const CARDS_FIFA19: FifaCard[] = [
     name: "Konstantinos Manolas", accepted: ["Konstantinos Manolas", "K. Manolas", "Manolas"],
     overall: 85, position: "CB",
     nation: "Greece", nationCode: "gr", league: "Italian Serie A", club: "Roma",
-    stats: { pac: 83, sho: 18, pas: 42, dri: 61, def: 86, phy: 82 },
+    stats: { pac: 83, sho: 18, pas: 42, dri: 61, def: 86, phy: 82 }, photoId: 192774, photoVer: "22",
   },
   {
     id: "fifa19-marco-asensio", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3966,7 +3966,7 @@ const CARDS_FIFA20: FifaCard[] = [
     name: "Milan Škriniar", accepted: ["Milan Škriniar", "M. Škriniar", "Škriniar"],
     overall: 86, position: "CB",
     nation: "Slovakia", nationCode: "sk", league: "Italian Serie A", club: "Inter",
-    stats: { pac: 69, sho: 41, pas: 59, dri: 66, def: 87, phy: 82 }, photoId: 232363, photoVer: "23",
+    stats: { pac: 69, sho: 41, pas: 59, dri: 66, def: 87, phy: 82 }, photoId: 232363, photoVer: "24",
   },
   {
     id: "fifa20-miralem-pjanic", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4015,7 +4015,7 @@ const CARDS_FIFA20: FifaCard[] = [
     name: "Alejandro Gómez", accepted: ["Alejandro Gómez", "A. Gómez", "Alejandro Darío Gómez", "Gómez"],
     overall: 85, position: "CAM",
     nation: "Argentina", nationCode: "ar", league: "Italian Serie A", club: "Atalanta",
-    stats: { pac: 89, sho: 78, pas: 81, dri: 86, def: 39, phy: 55 }, photoId: 143076, photoVer: "22",
+    stats: { pac: 89, sho: 78, pas: 81, dri: 86, def: 39, phy: 55 }, photoId: 143076, photoVer: "23",
   },
   {
     id: "fifa20-alex-sandro", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4029,7 +4029,7 @@ const CARDS_FIFA20: FifaCard[] = [
     name: "Allan", accepted: ["Allan", "Allan Marques Loureiro"],
     overall: 85, position: "CM",
     nation: "Brazil", nationCode: "br", league: "Italian Serie A", club: "Napoli",
-    stats: { pac: 75, sho: 71, pas: 78, dri: 84, def: 85, phy: 84 },
+    stats: { pac: 75, sho: 71, pas: 78, dri: 84, def: 85, phy: 84 }, photoId: 199914, photoVer: "23",
   },
   {
     id: "fifa20-andrew-robertson", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4148,7 +4148,7 @@ const CARDS_FIFA20: FifaCard[] = [
     name: "Konstantinos Manolas", accepted: ["Konstantinos Manolas", "K. Manolas", "Manolas"],
     overall: 85, position: "CB",
     nation: "Greece", nationCode: "gr", league: "Italian Serie A", club: "Napoli",
-    stats: { pac: 82, sho: 25, pas: 42, dri: 60, def: 86, phy: 81 },
+    stats: { pac: 82, sho: 25, pas: 42, dri: 60, def: 86, phy: 81 }, photoId: 192774, photoVer: "22",
   },
   {
     id: "fifa20-marcelo", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4550,7 +4550,7 @@ const CARDS_FIFA21: FifaCard[] = [
     name: "Alejandro Gómez", accepted: ["Alejandro Gómez", "A. Gómez", "Alejandro Darío Gómez", "Gómez"],
     overall: 86, position: "CAM",
     nation: "Argentina", nationCode: "ar", league: "Italian Serie A", club: "Atalanta",
-    stats: { pac: 90, sho: 79, pas: 84, dri: 88, def: 39, phy: 55 }, photoId: 143076, photoVer: "22",
+    stats: { pac: 90, sho: 79, pas: 84, dri: 88, def: 39, phy: 55 }, photoId: 143076, photoVer: "23",
   },
   {
     id: "fifa21-carvajal", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -6103,7 +6103,7 @@ const CARDS_FIFA23: FifaCard[] = [
     name: "Marco Reus", accepted: ["Marco Reus", "M. Reus", "Reus"],
     overall: 85, position: "CAM",
     nation: "Germany", nationCode: "de", league: "Bundesliga", club: "Borussia Dortmund",
-    stats: { pac: 70, sho: 84, pas: 84, dri: 85, def: 53, phy: 65 }, photoId: 188350, photoVer: "22",
+    stats: { pac: 70, sho: 84, pas: 84, dri: 85, def: 53, phy: 65 }, photoId: 188350, photoVer: "24",
   },
   {
     id: "fifa23-marcos-acuna", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -7327,7 +7327,7 @@ const CARDS_FC25: FifaCard[] = [
     name: "William Saliba", accepted: ["William Saliba", "Saliba"],
     overall: 87, position: "CB",
     nation: "France", nationCode: "fr", league: "Premier League", club: "Arsenal",
-    stats: { pac: 82, sho: 39, pas: 70, dri: 74, def: 87, phy: 83 },
+    stats: { pac: 82, sho: 39, pas: 70, dri: 74, def: 87, phy: 83 }, photoId: 243715, photoVer: "24",
   },
   {
     id: "fc25-ilkay-gundogan", edition: "FC25", editionLabel: "FC 25",
@@ -7341,7 +7341,7 @@ const CARDS_FC25: FifaCard[] = [
     name: "Alexis Mac Allister", accepted: ["Alexis Mac Allister", "Allister"],
     overall: 86, position: "CM",
     nation: "Argentina", nationCode: "ar", league: "Premier League", club: "Liverpool",
-    stats: { pac: 69, sho: 82, pas: 85, dri: 84, def: 76, phy: 76 },
+    stats: { pac: 69, sho: 82, pas: 85, dri: 84, def: 76, phy: 76 }, photoId: 239837, photoVer: "24",
   },
   {
     id: "fc25-bremer", edition: "FC25", editionLabel: "FC 25",
@@ -7355,7 +7355,7 @@ const CARDS_FC25: FifaCard[] = [
     name: "Carvajal", accepted: ["Carvajal"],
     overall: 86, position: "RB",
     nation: "Spain", nationCode: "es", league: "LALIGA EA SPORTS", club: "Real Madrid",
-    stats: { pac: 81, sho: 58, pas: 79, dri: 81, def: 81, phy: 79 }, photoId: 204963, photoVer: "22",
+    stats: { pac: 81, sho: 58, pas: 79, dri: 81, def: 81, phy: 79 }, photoId: 204963, photoVer: "24",
   },
   {
     id: "fc25-cristiano-ronaldo", edition: "FC25", editionLabel: "FC 25",
@@ -7376,14 +7376,14 @@ const CARDS_FC25: FifaCard[] = [
     name: "Granit Xhaka", accepted: ["Granit Xhaka", "Xhaka"],
     overall: 86, position: "CDM",
     nation: "Switzerland", nationCode: "ch", league: "Bundesliga", club: "Leverkusen",
-    stats: { pac: 50, sho: 75, pas: 85, dri: 74, def: 79, phy: 82 },
+    stats: { pac: 50, sho: 75, pas: 85, dri: 74, def: 79, phy: 82 }, photoId: 199503, photoVer: "24",
   },
   {
     id: "fc25-grimaldo", edition: "FC25", editionLabel: "FC 25",
     name: "Grimaldo", accepted: ["Grimaldo"],
     overall: 86, position: "LM",
     nation: "Spain", nationCode: "es", league: "Bundesliga", club: "Leverkusen",
-    stats: { pac: 74, sho: 73, pas: 88, dri: 85, def: 76, phy: 71 },
+    stats: { pac: 74, sho: 73, pas: 88, dri: 85, def: 76, phy: 71 }, photoId: 210035, photoVer: "24",
   },
   {
     id: "fc25-hakan-calhanoglu", edition: "FC25", editionLabel: "FC 25",
@@ -7397,7 +7397,7 @@ const CARDS_FC25: FifaCard[] = [
     name: "Jonathan Tah", accepted: ["Jonathan Tah", "Tah"],
     overall: 86, position: "CB",
     nation: "Germany", nationCode: "de", league: "Bundesliga", club: "Leverkusen",
-    stats: { pac: 71, sho: 38, pas: 60, dri: 62, def: 86, phy: 84 },
+    stats: { pac: 71, sho: 38, pas: 60, dri: 62, def: 86, phy: 84 }, photoId: 213331, photoVer: "24",
   },
   {
     id: "fc25-joshua-kimmich", edition: "FC25", editionLabel: "FC 25",
@@ -7467,7 +7467,7 @@ const CARDS_FC25: FifaCard[] = [
     name: "Alexander Isak", accepted: ["Alexander Isak", "Isak"],
     overall: 85, position: "ST",
     nation: "Sweden", nationCode: "se", league: "Premier League", club: "Newcastle Utd",
-    stats: { pac: 85, sho: 84, pas: 73, dri: 86, def: 39, phy: 74 },
+    stats: { pac: 85, sho: 84, pas: 73, dri: 86, def: 39, phy: 74 }, photoId: 233731, photoVer: "24",
   },
   {
     id: "fc25-andrew-robertson", edition: "FC25", editionLabel: "FC 25",
@@ -7495,7 +7495,7 @@ const CARDS_FC25: FifaCard[] = [
     name: "Cole Palmer", accepted: ["Cole Palmer", "Palmer"],
     overall: 85, position: "RM",
     nation: "England", nationCode: "gb-eng", league: "Premier League", club: "Chelsea",
-    stats: { pac: 75, sho: 82, pas: 83, dri: 86, def: 50, phy: 66 },
+    stats: { pac: 75, sho: 82, pas: 83, dri: 86, def: 50, phy: 66 }, photoId: 257534, photoVer: "24",
   },
   {
     id: "fc25-david-alaba", edition: "FC25", editionLabel: "FC 25",
@@ -7551,7 +7551,7 @@ const CARDS_FC25: FifaCard[] = [
     name: "Leroy Sané", accepted: ["Leroy Sané", "Sané"],
     overall: 85, position: "RM",
     nation: "Germany", nationCode: "de", league: "Bundesliga", club: "FC Bayern München",
-    stats: { pac: 90, sho: 83, pas: 80, dri: 86, def: 37, phy: 70 }, photoId: 222492, photoVer: "21",
+    stats: { pac: 90, sho: 83, pas: 80, dri: 86, def: 37, phy: 70 }, photoId: 222492, photoVer: "24",
   },
   {
     id: "fc25-lois-openda", edition: "FC25", editionLabel: "FC 25",
@@ -7579,28 +7579,28 @@ const CARDS_FC25: FifaCard[] = [
     name: "Nico Schlotterbeck", accepted: ["Nico Schlotterbeck", "Schlotterbeck"],
     overall: 85, position: "CB",
     nation: "Germany", nationCode: "de", league: "Bundesliga", club: "Borussia Dortmund",
-    stats: { pac: 77, sho: 59, pas: 70, dri: 73, def: 85, phy: 82 },
+    stats: { pac: 77, sho: 59, pas: 70, dri: 73, def: 85, phy: 82 }, photoId: 247819, photoVer: "24",
   },
   {
     id: "fc25-nico-williams", edition: "FC25", editionLabel: "FC 25",
     name: "Nico Williams", accepted: ["Nico Williams", "Williams"],
     overall: 85, position: "LM",
     nation: "Spain", nationCode: "es", league: "LALIGA EA SPORTS", club: "Athletic Club",
-    stats: { pac: 93, sho: 75, pas: 78, dri: 86, def: 36, phy: 65 },
+    stats: { pac: 93, sho: 75, pas: 78, dri: 86, def: 36, phy: 65 }, photoId: 256516, photoVer: "24",
   },
   {
     id: "fc25-ollie-watkins", edition: "FC25", editionLabel: "FC 25",
     name: "Ollie Watkins", accepted: ["Ollie Watkins", "Watkins"],
     overall: 85, position: "ST",
     nation: "England", nationCode: "gb-eng", league: "Premier League", club: "Aston Villa",
-    stats: { pac: 85, sho: 83, pas: 73, dri: 80, def: 50, phy: 83 },
+    stats: { pac: 85, sho: 83, pas: 73, dri: 80, def: 50, phy: 83 }, photoId: 221697, photoVer: "24",
   },
   {
     id: "fc25-palhinha", edition: "FC25", editionLabel: "FC 25",
     name: "Palhinha", accepted: ["Palhinha"],
     overall: 85, position: "CDM",
     nation: "Portugal", nationCode: "pt", league: "Bundesliga", club: "FC Bayern München",
-    stats: { pac: 52, sho: 68, pas: 72, dri: 74, def: 85, phy: 90 },
+    stats: { pac: 52, sho: 68, pas: 72, dri: 74, def: 85, phy: 90 }, photoId: 229391, photoVer: "24",
   },
   {
     id: "fc25-riyad-mahrez", edition: "FC25", editionLabel: "FC 25",
@@ -7635,7 +7635,7 @@ const CARDS_FC25: FifaCard[] = [
     name: "Vitinha", accepted: ["Vitinha"],
     overall: 85, position: "CM",
     nation: "Portugal", nationCode: "pt", league: "Ligue 1 McDonald's", club: "Paris SG",
-    stats: { pac: 72, sho: 77, pas: 84, dri: 87, def: 73, phy: 68 },
+    stats: { pac: 72, sho: 77, pas: 84, dri: 87, def: 73, phy: 68 }, photoId: 255253, photoVer: "24",
   },
   {
     id: "fc25-eder-militao", edition: "FC25", editionLabel: "FC 25",
@@ -7656,7 +7656,7 @@ const CARDS_FC25: FifaCard[] = [
     name: "Aleix García", accepted: ["Aleix García", "García"],
     overall: 84, position: "CM",
     nation: "Spain", nationCode: "es", league: "Bundesliga", club: "Leverkusen",
-    stats: { pac: 67, sho: 77, pas: 85, dri: 84, def: 76, phy: 68 },
+    stats: { pac: 67, sho: 77, pas: 85, dri: 84, def: 76, phy: 68 }, photoId: 228813, photoVer: "24",
   },
   {
     id: "fc25-artem-dovbyk", edition: "FC25", editionLabel: "FC 25",
@@ -7705,21 +7705,21 @@ const CARDS_FC25: FifaCard[] = [
     name: "Jeremie Frimpong", accepted: ["Jeremie Frimpong", "Frimpong"],
     overall: 84, position: "RM",
     nation: "Holland", nationCode: "nl", league: "Bundesliga", club: "Leverkusen",
-    stats: { pac: 93, sho: 62, pas: 75, dri: 86, def: 75, phy: 69 },
+    stats: { pac: 93, sho: 62, pas: 75, dri: 86, def: 75, phy: 69 }, photoId: 253149, photoVer: "24",
   },
   {
     id: "fc25-julian-alvarez", edition: "FC25", editionLabel: "FC 25",
     name: "Julián Álvarez", accepted: ["Julián Álvarez", "Álvarez"],
     overall: 84, position: "ST",
     nation: "Argentina", nationCode: "ar", league: "LALIGA EA SPORTS", club: "Atlético de Madrid",
-    stats: { pac: 85, sho: 84, pas: 80, dri: 85, def: 57, phy: 78 },
+    stats: { pac: 85, sho: 84, pas: 80, dri: 85, def: 57, phy: 78 }, photoId: 246191, photoVer: "24",
   },
   {
     id: "fc25-kalidou-koulibaly", edition: "FC25", editionLabel: "FC 25",
     name: "Kalidou Koulibaly", accepted: ["Kalidou Koulibaly", "Koulibaly"],
     overall: 84, position: "CB",
     nation: "Senegal", nationCode: "sn", league: "ROSHN Saudi League", club: "Al Hilal",
-    stats: { pac: 76, sho: 48, pas: 64, dri: 67, def: 85, phy: 84 }, photoId: 201024, photoVer: "23",
+    stats: { pac: 76, sho: 48, pas: 64, dri: 67, def: 85, phy: 84 }, photoId: 201024, photoVer: "24",
   },
   {
     id: "fc25-kingsley-coman", edition: "FC25", editionLabel: "FC 25",
@@ -7740,7 +7740,7 @@ const CARDS_FC25: FifaCard[] = [
     name: "Manuel Akanji", accepted: ["Manuel Akanji", "Akanji"],
     overall: 84, position: "CB",
     nation: "Switzerland", nationCode: "ch", league: "Premier League", club: "Manchester City",
-    stats: { pac: 78, sho: 48, pas: 71, dri: 75, def: 85, phy: 82 },
+    stats: { pac: 78, sho: 48, pas: 71, dri: 75, def: 85, phy: 82 }, photoId: 229237, photoVer: "24",
   },
   {
     id: "fc25-matthijs-de-ligt", edition: "FC25", editionLabel: "FC 25",
@@ -7754,7 +7754,7 @@ const CARDS_FC25: FifaCard[] = [
     name: "Nathan Aké", accepted: ["Nathan Aké", "Aké"],
     overall: 84, position: "CB",
     nation: "Holland", nationCode: "nl", league: "Premier League", club: "Manchester City",
-    stats: { pac: 76, sho: 53, pas: 72, dri: 75, def: 84, phy: 77 },
+    stats: { pac: 76, sho: 53, pas: 72, dri: 75, def: 84, phy: 77 }, photoId: 208920, photoVer: "24",
   },
   {
     id: "fc25-raphinha", edition: "FC25", editionLabel: "FC 25",
@@ -7768,7 +7768,7 @@ const CARDS_FC25: FifaCard[] = [
     name: "Rodrigo De Paul", accepted: ["Rodrigo De Paul", "De Paul"],
     overall: 84, position: "CM",
     nation: "Argentina", nationCode: "ar", league: "LALIGA EA SPORTS", club: "Atlético de Madrid",
-    stats: { pac: 76, sho: 77, pas: 83, dri: 82, def: 76, phy: 82 },
+    stats: { pac: 76, sho: 77, pas: 83, dri: 82, def: 76, phy: 82 }, photoId: 212616, photoVer: "24",
   },
   {
     id: "fc25-ruben-neves", edition: "FC25", editionLabel: "FC 25",
@@ -7782,14 +7782,14 @@ const CARDS_FC25: FifaCard[] = [
     name: "Serhou Guirassy", accepted: ["Serhou Guirassy", "Guirassy"],
     overall: 84, position: "ST",
     nation: "Guinea", nationCode: "gn", league: "Bundesliga", club: "Borussia Dortmund",
-    stats: { pac: 69, sho: 86, pas: 71, dri: 80, def: 39, phy: 79 },
+    stats: { pac: 69, sho: 86, pas: 71, dri: 80, def: 39, phy: 79 }, photoId: 215441, photoVer: "24",
   },
   {
     id: "fc25-viktor-gyokeres", edition: "FC25", editionLabel: "FC 25",
     name: "Viktor Gyökeres", accepted: ["Viktor Gyökeres", "Gyökeres"],
     overall: 84, position: "ST",
     nation: "Sweden", nationCode: "se", league: "Liga Portugal", club: "Sporting CP",
-    stats: { pac: 90, sho: 83, pas: 67, dri: 80, def: 36, phy: 91 },
+    stats: { pac: 90, sho: 83, pas: 67, dri: 80, def: 36, phy: 91 }, photoId: 241651, photoVer: "24",
   },
 ];
 
@@ -7911,14 +7911,14 @@ const CARDS_FC26: FifaCard[] = [
     name: "Vitinha", accepted: ["Vitinha", "Vítor Machado Ferreira"],
     overall: 89, position: "CM",
     nation: "Portugal", nationCode: "pt", league: "Ligue 1", club: "Paris Saint-Germain",
-    stats: { pac: 72, sho: 80, pas: 86, dri: 90, def: 75, phy: 70 },
+    stats: { pac: 72, sho: 80, pas: 86, dri: 90, def: 75, phy: 70 }, photoId: 255253, photoVer: "24",
   },
   {
     id: "fc26-alexander-isak", edition: "FC26", editionLabel: "FC 26",
     name: "Alexander Isak", accepted: ["Alexander Isak", "A. Isak", "Isak"],
     overall: 88, position: "ST",
     nation: "Sweden", nationCode: "se", league: "Premier League", club: "Liverpool",
-    stats: { pac: 83, sho: 89, pas: 73, dri: 85, def: 39, phy: 76 },
+    stats: { pac: 83, sho: 89, pas: 73, dri: 85, def: 39, phy: 76 }, photoId: 233731, photoVer: "24",
   },
   {
     id: "fc26-bukayo-saka", edition: "FC26", editionLabel: "FC 26",
@@ -7967,7 +7967,7 @@ const CARDS_FC26: FifaCard[] = [
     name: "Alexis Mac Allister", accepted: ["Alexis Mac Allister", "A. Mac Allister", "Allister"],
     overall: 87, position: "CM",
     nation: "Argentina", nationCode: "ar", league: "Premier League", club: "Liverpool",
-    stats: { pac: 66, sho: 82, pas: 85, dri: 85, def: 78, phy: 76 },
+    stats: { pac: 66, sho: 82, pas: 85, dri: 85, def: 78, phy: 76 }, photoId: 239837, photoVer: "24",
   },
   {
     id: "fc26-bruno-fernandes", edition: "FC26", editionLabel: "FC 26",
@@ -7981,7 +7981,7 @@ const CARDS_FC26: FifaCard[] = [
     name: "Cole Palmer", accepted: ["Cole Palmer", "C. Palmer", "Cole Jermaine Palmer", "Palmer"],
     overall: 87, position: "CAM",
     nation: "England", nationCode: "gb-eng", league: "Premier League", club: "Chelsea",
-    stats: { pac: 75, sho: 83, pas: 87, dri: 87, def: 50, phy: 65 },
+    stats: { pac: 75, sho: 83, pas: 87, dri: 87, def: 50, phy: 65 }, photoId: 257534, photoVer: "24",
   },
   {
     id: "fc26-declan-rice", edition: "FC26", editionLabel: "FC 26",
@@ -8002,7 +8002,7 @@ const CARDS_FC26: FifaCard[] = [
     name: "Jonathan Tah", accepted: ["Jonathan Tah", "J. Tah", "Jonathan Glao Tah", "Tah"],
     overall: 87, position: "CB",
     nation: "Germany", nationCode: "de", league: "Bundesliga", club: "FC Bayern München",
-    stats: { pac: 63, sho: 38, pas: 60, dri: 63, def: 87, phy: 86 },
+    stats: { pac: 63, sho: 38, pas: 60, dri: 63, def: 87, phy: 86 }, photoId: 213331, photoVer: "24",
   },
   {
     id: "fc26-jules-kounde", edition: "FC26", editionLabel: "FC 26",
@@ -8016,7 +8016,7 @@ const CARDS_FC26: FifaCard[] = [
     name: "Julián Alvarez", accepted: ["Julián Alvarez", "J. Alvarez", "Julián Álvarez", "Alvarez"],
     overall: 87, position: "ST",
     nation: "Argentina", nationCode: "ar", league: "La Liga", club: "Atlético Madrid",
-    stats: { pac: 85, sho: 87, pas: 81, dri: 87, def: 57, phy: 79 },
+    stats: { pac: 85, sho: 87, pas: 81, dri: 87, def: 57, phy: 79 }, photoId: 246191, photoVer: "24",
   },
   {
     id: "fc26-kevin-de-bruyne", edition: "FC26", editionLabel: "FC 26",
@@ -8051,7 +8051,7 @@ const CARDS_FC26: FifaCard[] = [
     name: "Moisés Caicedo", accepted: ["Moisés Caicedo", "M. Caicedo", "Moisés Isaac Caicedo Corozo", "Caicedo"],
     overall: 87, position: "CDM",
     nation: "Ecuador", nationCode: "ec", league: "Premier League", club: "Chelsea",
-    stats: { pac: 71, sho: 64, pas: 78, dri: 81, def: 84, phy: 82 },
+    stats: { pac: 71, sho: 64, pas: 78, dri: 81, def: 84, phy: 82 }, photoId: 256079, photoVer: "24",
   },
   {
     id: "fc26-nicolo-barella", edition: "FC26", editionLabel: "FC 26",
@@ -8065,7 +8065,7 @@ const CARDS_FC26: FifaCard[] = [
     name: "Serhou Guirassy", accepted: ["Serhou Guirassy", "S. Guirassy", "Serhou Yadaly Guirassy", "Guirassy"],
     overall: 87, position: "ST",
     nation: "Guinea", nationCode: "gn", league: "Bundesliga", club: "Borussia Dortmund",
-    stats: { pac: 72, sho: 88, pas: 76, dri: 83, def: 45, phy: 83 },
+    stats: { pac: 72, sho: 88, pas: 76, dri: 83, def: 45, phy: 83 }, photoId: 215441, photoVer: "24",
   },
   {
     id: "fc26-victor-osimhen", edition: "FC26", editionLabel: "FC 26",
@@ -8079,14 +8079,14 @@ const CARDS_FC26: FifaCard[] = [
     name: "Viktor Gyökeres", accepted: ["Viktor Gyökeres", "V. Gyökeres", "Viktor Einar Gyökeres", "Gyökeres"],
     overall: 87, position: "ST",
     nation: "Sweden", nationCode: "se", league: "Premier League", club: "Arsenal",
-    stats: { pac: 90, sho: 86, pas: 73, dri: 81, def: 36, phy: 91 },
+    stats: { pac: 90, sho: 86, pas: 73, dri: 81, def: 36, phy: 91 }, photoId: 241651, photoVer: "24",
   },
   {
     id: "fc26-william-saliba", edition: "FC26", editionLabel: "FC 26",
     name: "William Saliba", accepted: ["William Saliba", "W. Saliba", "William Alain André Gabriel Saliba", "Saliba"],
     overall: 87, position: "CB",
     nation: "France", nationCode: "fr", league: "Premier League", club: "Arsenal",
-    stats: { pac: 77, sho: 39, pas: 68, dri: 72, def: 87, phy: 83 },
+    stats: { pac: 77, sho: 39, pas: 68, dri: 72, def: 87, phy: 83 }, photoId: 243715, photoVer: "24",
   },
   {
     id: "fc26-antonio-rudiger", edition: "FC26", editionLabel: "FC 26",
@@ -8114,7 +8114,7 @@ const CARDS_FC26: FifaCard[] = [
     name: "Ibrahima Konaté", accepted: ["Ibrahima Konaté", "I. Konaté", "Konaté"],
     overall: 86, position: "CB",
     nation: "France", nationCode: "fr", league: "Premier League", club: "Liverpool",
-    stats: { pac: 77, sho: 34, pas: 63, dri: 69, def: 86, phy: 85 },
+    stats: { pac: 77, sho: 34, pas: 63, dri: 69, def: 86, phy: 85 }, photoId: 237678, photoVer: "24",
   },
   {
     id: "fc26-lionel-messi", edition: "FC26", editionLabel: "FC 26",
@@ -8128,21 +8128,21 @@ const CARDS_FC26: FifaCard[] = [
     name: "Michael Olise", accepted: ["Michael Olise", "M. Olise", "Michael Akpovie Olise", "Olise"],
     overall: 86, position: "RM",
     nation: "France", nationCode: "fr", league: "Bundesliga", club: "FC Bayern München",
-    stats: { pac: 78, sho: 80, pas: 84, dri: 87, def: 50, phy: 66 },
+    stats: { pac: 78, sho: 80, pas: 84, dri: 87, def: 50, phy: 66 }, photoId: 247827, photoVer: "24",
   },
   {
     id: "fc26-nico-williams", edition: "FC26", editionLabel: "FC 26",
     name: "Nico Williams", accepted: ["Nico Williams", "Nicholas Williams Arthuer", "Williams"],
     overall: 86, position: "LM",
     nation: "Spain", nationCode: "es", league: "La Liga", club: "Athletic Club",
-    stats: { pac: 93, sho: 76, pas: 80, dri: 87, def: 36, phy: 66 },
+    stats: { pac: 93, sho: 76, pas: 80, dri: 87, def: 36, phy: 66 }, photoId: 256516, photoVer: "24",
   },
   {
     id: "fc26-nuno-mendes", edition: "FC26", editionLabel: "FC 26",
     name: "Nuno Mendes", accepted: ["Nuno Mendes", "Nuno Alexandre Tavares Mendes", "Mendes"],
     overall: 86, position: "LB",
     nation: "Portugal", nationCode: "pt", league: "Ligue 1", club: "Paris Saint-Germain",
-    stats: { pac: 95, sho: 65, pas: 76, dri: 82, def: 80, phy: 77 },
+    stats: { pac: 95, sho: 65, pas: 76, dri: 82, def: 80, phy: 77 }, photoId: 252145, photoVer: "24",
   },
   {
     id: "fc26-paulo-dybala", edition: "FC26", editionLabel: "FC 26",
@@ -8205,14 +8205,14 @@ const CARDS_FC26: FifaCard[] = [
     name: "Bryan Mbeumo", accepted: ["Bryan Mbeumo", "B. Mbeumo", "Bryan Tetsadong Marceau Mbeumo", "Mbeumo"],
     overall: 85, position: "RW",
     nation: "Cameroon", nationCode: "cm", league: "Premier League", club: "Manchester United",
-    stats: { pac: 88, sho: 84, pas: 79, dri: 84, def: 49, phy: 76 },
+    stats: { pac: 88, sho: 84, pas: 79, dri: 84, def: 49, phy: 76 }, photoId: 243014, photoVer: "24",
   },
   {
     id: "fc26-carvajal", edition: "FC26", editionLabel: "FC 26",
     name: "Carvajal", accepted: ["Carvajal", "Daniel Carvajal Ramos"],
     overall: 85, position: "RB",
     nation: "Spain", nationCode: "es", league: "La Liga", club: "Real Madrid",
-    stats: { pac: 80, sho: 58, pas: 79, dri: 81, def: 81, phy: 79 }, photoId: 204963, photoVer: "22",
+    stats: { pac: 80, sho: 58, pas: 79, dri: 81, def: 81, phy: 79 }, photoId: 204963, photoVer: "24",
   },
   {
     id: "fc26-cristiano-ronaldo", edition: "FC26", editionLabel: "FC 26",
@@ -8226,14 +8226,14 @@ const CARDS_FC26: FifaCard[] = [
     name: "Dani Olmo", accepted: ["Dani Olmo", "Daniel Olmo Carvajal", "Olmo"],
     overall: 85, position: "CAM",
     nation: "Spain", nationCode: "es", league: "La Liga", club: "FC Barcelona",
-    stats: { pac: 73, sho: 79, pas: 83, dri: 87, def: 50, phy: 56 },
+    stats: { pac: 73, sho: 79, pas: 83, dri: 87, def: 50, phy: 56 }, photoId: 244260, photoVer: "24",
   },
   {
     id: "fc26-dayotchanculle-upamecano", edition: "FC26", editionLabel: "FC 26",
     name: "Dayotchanculle Upamecano", accepted: ["Dayotchanculle Upamecano", "D. Upamecano", "Dayotchanculle Oswald Upamecano", "Upamecano"],
     overall: 85, position: "CB",
     nation: "France", nationCode: "fr", league: "Bundesliga", club: "FC Bayern München",
-    stats: { pac: 77, sho: 45, pas: 64, dri: 73, def: 84, phy: 84 },
+    stats: { pac: 77, sho: 45, pas: 64, dri: 73, def: 84, phy: 84 }, photoId: 229558, photoVer: "24",
   },
   {
     id: "fc26-desire-doue", edition: "FC26", editionLabel: "FC 26",
@@ -8247,7 +8247,7 @@ const CARDS_FC26: FifaCard[] = [
     name: "Fabián Ruiz", accepted: ["Fabián Ruiz", "Fabián Ruiz Peña", "Ruiz"],
     overall: 85, position: "CM",
     nation: "Spain", nationCode: "es", league: "Ligue 1", club: "Paris Saint-Germain",
-    stats: { pac: 61, sho: 77, pas: 80, dri: 81, def: 75, phy: 72 },
+    stats: { pac: 61, sho: 77, pas: 80, dri: 81, def: 75, phy: 72 }, photoId: 226271, photoVer: "24",
   },
   {
     id: "fc26-federico-dimarco", edition: "FC26", editionLabel: "FC 26",
@@ -8261,7 +8261,7 @@ const CARDS_FC26: FifaCard[] = [
     name: "Granit Xhaka", accepted: ["Granit Xhaka", "G. Xhaka", "Xhaka"],
     overall: 85, position: "CDM",
     nation: "Switzerland", nationCode: "ch", league: "Premier League", club: "Sunderland",
-    stats: { pac: 47, sho: 75, pas: 85, dri: 74, def: 78, phy: 82 },
+    stats: { pac: 47, sho: 75, pas: 85, dri: 74, def: 78, phy: 82 }, photoId: 199503, photoVer: "24",
   },
   {
     id: "fc26-heung-min-son", edition: "FC26", editionLabel: "FC 26",
@@ -8275,7 +8275,7 @@ const CARDS_FC26: FifaCard[] = [
     name: "Iñigo Martínez", accepted: ["Iñigo Martínez", "Íñigo Martínez Berridi", "Martínez"],
     overall: 85, position: "CB",
     nation: "Spain", nationCode: "es", league: "Pro League", club: "Al Nassr",
-    stats: { pac: 71, sho: 57, pas: 72, dri: 68, def: 85, phy: 80 },
+    stats: { pac: 71, sho: 57, pas: 72, dri: 68, def: 85, phy: 80 }, photoId: 204525, photoVer: "24",
   },
   {
     id: "fc26-joao-neves", edition: "FC26", editionLabel: "FC 26",
@@ -8303,7 +8303,7 @@ const CARDS_FC26: FifaCard[] = [
     name: "Marcus Thuram", accepted: ["Marcus Thuram", "M. Thuram", "Marcus Lilian Thuram-Ulien", "Thuram"],
     overall: 85, position: "ST",
     nation: "France", nationCode: "fr", league: "Serie A", club: "Inter",
-    stats: { pac: 86, sho: 83, pas: 76, dri: 82, def: 50, phy: 80 },
+    stats: { pac: 86, sho: 83, pas: 76, dri: 82, def: 50, phy: 80 }, photoId: 228093, photoVer: "24",
   },
   {
     id: "fc26-n-golo-kante", edition: "FC26", editionLabel: "FC 26",
@@ -8317,14 +8317,14 @@ const CARDS_FC26: FifaCard[] = [
     name: "Nico Schlotterbeck", accepted: ["Nico Schlotterbeck", "N. Schlotterbeck", "Nico Cedric Schlotterbeck", "Schlotterbeck"],
     overall: 85, position: "CB",
     nation: "Germany", nationCode: "de", league: "Bundesliga", club: "Borussia Dortmund",
-    stats: { pac: 74, sho: 60, pas: 75, dri: 73, def: 85, phy: 82 },
+    stats: { pac: 74, sho: 60, pas: 75, dri: 73, def: 85, phy: 82 }, photoId: 247819, photoVer: "24",
   },
   {
     id: "fc26-patrik-schick", edition: "FC26", editionLabel: "FC 26",
     name: "Patrik Schick", accepted: ["Patrik Schick", "P. Schick", "Schick"],
     overall: 85, position: "ST",
     nation: "Czechia", nationCode: "cz", league: "Bundesliga", club: "Bayer 04 Leverkusen",
-    stats: { pac: 72, sho: 83, pas: 71, dri: 81, def: 38, phy: 77 }, photoId: 234236, photoVer: "23",
+    stats: { pac: 72, sho: 83, pas: 71, dri: 81, def: 38, phy: 77 }, photoId: 234236, photoVer: "24",
   },
   {
     id: "fc26-philip-foden", edition: "FC26", editionLabel: "FC 26",
@@ -8345,28 +8345,28 @@ const CARDS_FC26: FifaCard[] = [
     name: "Ryan Gravenberch", accepted: ["Ryan Gravenberch", "R. Gravenberch", "Ryan Jiro Gravenberch", "Gravenberch"],
     overall: 85, position: "CDM",
     nation: "Netherlands", nationCode: "nl", league: "Premier League", club: "Liverpool",
-    stats: { pac: 76, sho: 76, pas: 81, dri: 85, def: 81, phy: 81 },
+    stats: { pac: 76, sho: 76, pas: 81, dri: 85, def: 81, phy: 81 }, photoId: 246104, photoVer: "24",
   },
   {
     id: "fc26-scott-mctominay", edition: "FC26", editionLabel: "FC 26",
     name: "Scott McTominay", accepted: ["Scott McTominay", "S. McTominay", "Scott Francis McTominay", "McTominay"],
     overall: 85, position: "CM",
     nation: "Scotland", nationCode: "gb-sct", league: "Serie A", club: "Napoli",
-    stats: { pac: 76, sho: 82, pas: 77, dri: 80, def: 80, phy: 85 },
+    stats: { pac: 76, sho: 82, pas: 77, dri: 80, def: 80, phy: 85 }, photoId: 237238, photoVer: "24",
   },
   {
     id: "fc26-youri-tielemans", edition: "FC26", editionLabel: "FC 26",
     name: "Youri Tielemans", accepted: ["Youri Tielemans", "Y. Tielemans", "Tielemans"],
     overall: 85, position: "CM",
     nation: "Belgium", nationCode: "be", league: "Premier League", club: "Aston Villa",
-    stats: { pac: 54, sho: 79, pas: 85, dri: 80, def: 75, phy: 72 }, photoId: 216393, photoVer: "23",
+    stats: { pac: 54, sho: 79, pas: 85, dri: 80, def: 75, phy: 72 }, photoId: 216393, photoVer: "24",
   },
   {
     id: "fc26-alphonso-davies", edition: "FC26", editionLabel: "FC 26",
     name: "Alphonso Davies", accepted: ["Alphonso Davies", "A. Davies", "Alphonso Boyle Davies", "Davies"],
     overall: 84, position: "LB",
     nation: "Canada", nationCode: "ca", league: "Bundesliga", club: "FC Bayern München",
-    stats: { pac: 94, sho: 66, pas: 78, dri: 85, def: 74, phy: 76 }, photoId: 234396, photoVer: "23",
+    stats: { pac: 94, sho: 66, pas: 78, dri: 85, def: 74, phy: 76 }, photoId: 234396, photoVer: "24",
   },
   {
     id: "fc26-aurelien-tchouameni", edition: "FC26", editionLabel: "FC 26",
@@ -8380,7 +8380,7 @@ const CARDS_FC26: FifaCard[] = [
     name: "Benjamin Pavard", accepted: ["Benjamin Pavard", "B. Pavard", "Pavard"],
     overall: 84, position: "CB",
     nation: "France", nationCode: "fr", league: "Ligue 1", club: "Olympique de Marseille",
-    stats: { pac: 75, sho: 67, pas: 76, dri: 75, def: 86, phy: 79 },
+    stats: { pac: 75, sho: 67, pas: 76, dri: 75, def: 86, phy: 79 }, photoId: 226851, photoVer: "24",
   },
   {
     id: "fc26-bernardo-silva", edition: "FC26", editionLabel: "FC 26",
@@ -8394,14 +8394,14 @@ const CARDS_FC26: FifaCard[] = [
     name: "Denzel Dumfries", accepted: ["Denzel Dumfries", "D. Dumfries", "Denzel Justus Morris Dumfries", "Dumfries"],
     overall: 84, position: "RB",
     nation: "Netherlands", nationCode: "nl", league: "Serie A", club: "Inter",
-    stats: { pac: 84, sho: 70, pas: 75, dri: 79, def: 79, phy: 84 },
+    stats: { pac: 84, sho: 70, pas: 75, dri: 79, def: 79, phy: 84 }, photoId: 233096, photoVer: "24",
   },
   {
     id: "fc26-enzo-fernandez", edition: "FC26", editionLabel: "FC 26",
     name: "Enzo Fernández", accepted: ["Enzo Fernández", "E. Fernández", "Enzo Jeremías Fernández", "Fernández"],
     overall: 84, position: "CM",
     nation: "Argentina", nationCode: "ar", league: "Premier League", club: "Chelsea",
-    stats: { pac: 68, sho: 75, pas: 85, dri: 81, def: 73, phy: 75 },
+    stats: { pac: 68, sho: 75, pas: 85, dri: 81, def: 73, phy: 75 }, photoId: 247090, photoVer: "24",
   },
   {
     id: "fc26-exequiel-palacios", edition: "FC26", editionLabel: "FC 26",
@@ -8415,7 +8415,7 @@ const CARDS_FC26: FifaCard[] = [
     name: "Grimaldo", accepted: ["Grimaldo", "Alejandro Grimaldo García"],
     overall: 84, position: "LM",
     nation: "Spain", nationCode: "es", league: "Bundesliga", club: "Bayer 04 Leverkusen",
-    stats: { pac: 72, sho: 73, pas: 87, dri: 85, def: 74, phy: 67 },
+    stats: { pac: 72, sho: 73, pas: 87, dri: 85, def: 74, phy: 67 }, photoId: 210035, photoVer: "24",
   },
   {
     id: "fc26-joao-cancelo", edition: "FC26", editionLabel: "FC 26",
@@ -8429,14 +8429,14 @@ const CARDS_FC26: FifaCard[] = [
     name: "Joško Gvardiol", accepted: ["Joško Gvardiol", "J. Gvardiol", "Gvardiol"],
     overall: 84, position: "LB",
     nation: "Croatia", nationCode: "hr", league: "Premier League", club: "Manchester City",
-    stats: { pac: 78, sho: 71, pas: 75, dri: 78, def: 84, phy: 82 },
+    stats: { pac: 78, sho: 71, pas: 75, dri: 78, def: 84, phy: 82 }, photoId: 251517, photoVer: "24",
   },
   {
     id: "fc26-manuel-locatelli", edition: "FC26", editionLabel: "FC 26",
     name: "Manuel Locatelli", accepted: ["Manuel Locatelli", "M. Locatelli", "Locatelli"],
     overall: 84, position: "CDM",
     nation: "Italy", nationCode: "it", league: "Serie A", club: "Juventus",
-    stats: { pac: 63, sho: 69, pas: 80, dri: 76, def: 81, phy: 78 },
+    stats: { pac: 63, sho: 69, pas: 80, dri: 76, def: 81, phy: 78 }, photoId: 222077, photoVer: "24",
   },
   {
     id: "fc26-marc-cucurella", edition: "FC26", editionLabel: "FC 26",
@@ -8450,14 +8450,14 @@ const CARDS_FC26: FifaCard[] = [
     name: "Marcos Llorente", accepted: ["Marcos Llorente", "Marcos Llorente Moreno", "Llorente"],
     overall: 84, position: "RB",
     nation: "Spain", nationCode: "es", league: "La Liga", club: "Atlético Madrid",
-    stats: { pac: 89, sho: 79, pas: 78, dri: 81, def: 78, phy: 82 }, photoId: 226161, photoVer: "22",
+    stats: { pac: 89, sho: 79, pas: 78, dri: 81, def: 78, phy: 82 }, photoId: 226161, photoVer: "24",
   },
   {
     id: "fc26-rodrigo-de-paul", edition: "FC26", editionLabel: "FC 26",
     name: "Rodrigo De Paul", accepted: ["Rodrigo De Paul", "R. De Paul", "Rodrigo Javier de Paul", "De Paul"],
     overall: 84, position: "CM",
     nation: "Argentina", nationCode: "ar", league: "Major League Soccer", club: "Inter Miami",
-    stats: { pac: 75, sho: 78, pas: 83, dri: 83, def: 76, phy: 83 },
+    stats: { pac: 75, sho: 78, pas: 83, dri: 83, def: 76, phy: 83 }, photoId: 212616, photoVer: "24",
   },
   {
     id: "fc26-ruben-neves", edition: "FC26", editionLabel: "FC 26",
@@ -8471,7 +8471,7 @@ const CARDS_FC26: FifaCard[] = [
     name: "Sancet", accepted: ["Sancet", "Oihan Sancet Tirapu"],
     overall: 84, position: "CAM",
     nation: "Spain", nationCode: "es", league: "La Liga", club: "Athletic Club",
-    stats: { pac: 76, sho: 83, pas: 80, dri: 85, def: 70, phy: 82 },
+    stats: { pac: 76, sho: 83, pas: 80, dri: 85, def: 70, phy: 82 }, photoId: 244675, photoVer: "24",
   },
   {
     id: "fc26-sergej-milinkovic-savic", edition: "FC26", editionLabel: "FC 26",
@@ -8492,7 +8492,7 @@ const CARDS_FC26: FifaCard[] = [
     name: "Álex Baena", accepted: ["Álex Baena", "Alejandro Baena Rodríguez", "Baena"],
     overall: 84, position: "LM",
     nation: "Spain", nationCode: "es", league: "La Liga", club: "Atlético Madrid",
-    stats: { pac: 79, sho: 76, pas: 84, dri: 82, def: 65, phy: 68 },
+    stats: { pac: 79, sho: 76, pas: 84, dri: 82, def: 65, phy: 68 }, photoId: 257279, photoVer: "24",
   },
 ];
 

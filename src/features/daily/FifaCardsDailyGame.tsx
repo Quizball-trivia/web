@@ -102,12 +102,6 @@ export function FifaCardsDailyGame({ session, onBack, onComplete }: FifaCardsDai
     setSpinKey((k) => k + 1);
   }, []);
 
-  // Kick off the first spin after mount (client-only so nothing animates during SSR).
-  useEffect(() => {
-    const id = window.setTimeout(beginCard, 0);
-    return () => window.clearTimeout(id);
-  }, [beginCard]);
-
   const finishRound = useCallback(() => {
     if (completedRef.current) return;
     completedRef.current = true;
@@ -115,6 +109,17 @@ export function FifaCardsDailyGame({ session, onBack, onComplete }: FifaCardsDai
     const score = outcomes.filter((o) => o.solved).length * pointsPerSolve;
     onComplete(score, undefined, outcomes);
   }, [onComplete, pointsPerSolve]);
+
+  // Kick off the first spin after mount (client-only so nothing animates during SSR).
+  // An empty set can't be played — complete immediately so the player isn't stuck.
+  useEffect(() => {
+    if (total === 0) {
+      finishRound();
+      return;
+    }
+    const id = window.setTimeout(beginCard, 0);
+    return () => window.clearTimeout(id);
+  }, [beginCard, finishRound, total]);
 
   const nextCard = useCallback(() => {
     clearAdvance();

@@ -121,6 +121,12 @@ def primary_position(positions: str) -> str:
 def is_gk(pos: str) -> bool:
     return pos == "GK"
 
+def name_key(s: str) -> str:
+    """Face-index key: accent-stripped, lower-cased tokens sorted, hyphens split —
+    sources disagree on word order and hyphenation for East-Asian and compound names."""
+    toks = re.split(r"[\s\-]+", strip_accents(s or "").lower())
+    return " ".join(sorted(t for t in toks if t))
+
 def latin_ok(s: str) -> bool:
     """True if every letter is Latin (drops Arabic/Cyrillic/etc. fragments)."""
     for ch in s:
@@ -199,12 +205,24 @@ class Bucket:
         return len(self.by_name)
 
 buckets = defaultdict(Bucket)
+# name key -> (photoId, photoVer) from every parsed row with a real face, across all sources
+FACE_INDEX: dict = {}
 
 def truthy(v):
     return str(v).strip().lower() in ("yes", "true", "1") if v is not None else False
 
 def make_card(ed, name_short, name_long, overall, pos, nation, league, club, stats,
               photo_id=None, real_face=None):
+    # index the face first: a player who misses this edition's rating cut may still
+    # be the only source of a photo for their card in another edition
+    _pid = to_int(photo_id)
+    if _pid and truthy(real_face):
+        _disp = display_name(name_short, name_long)
+        if _disp:
+            _key = name_key(_disp)
+            _prev = FACE_INDEX.get(_key)
+            if _prev is None or ed > int(_prev[1]):
+                FACE_INDEX[_key] = (_pid, str(ed))
     if overall is None or overall < MIN_OVERALL: return None
     if is_gk(pos): return None
     if not (nation and club): return None
@@ -226,6 +244,10 @@ def make_card(ed, name_short, name_long, overall, pos, nation, league, club, sta
     if pid and truthy(real_face):
         card["photoId"] = pid
         card["photoVer"] = str(ed)
+        key = name_key(disp)
+        prev = FACE_INDEX.get(key)
+        if prev is None or ed > int(prev[1]):
+            FACE_INDEX[key] = (pid, str(ed))
     return card
 
 # ---- parsers per schema ----------------------------------------------------
@@ -370,10 +392,10 @@ def main():
     # Reuse a player's face across editions: sources for FC25/FC26 carry no face
     # id, so map name -> (id, most-recent ver) from the editions that do, then
     # fill the rest. The same person's face is fine on any of their cards.
-    face_by_name = {}
+    face_by_name = dict(FACE_INDEX)
     for c in cards:
         if "photoId" in c:
-            k = strip_accents(c["name"]).lower()
+            k = name_key(c["name"])
             prev = face_by_name.get(k)
             if prev is None or int(c["photoVer"]) > int(prev[1]):
                 face_by_name[k] = (c["photoId"], c["photoVer"])
@@ -382,7 +404,7 @@ def main():
         if "photoId" in c:
             c["faceSource"] = "own"
         else:
-            hit = face_by_name.get(strip_accents(c["name"]).lower())
+            hit = face_by_name.get(name_key(c["name"]))
             if hit:
                 c["photoId"], c["photoVer"] = hit
                 c["faceSource"] = "name-match"

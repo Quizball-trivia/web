@@ -3844,7 +3844,9 @@
    "phy": 83
   },
   "id": "fc25-william-saliba",
-  "faceSource": "none",
+  "photoId": 243715,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc25-william-saliba"
  },
  {
@@ -3898,7 +3900,9 @@
    "phy": 76
   },
   "id": "fc25-alexis-mac-allister",
-  "faceSource": "none",
+  "photoId": 239837,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc25-alexis-mac-allister"
  },
  {
@@ -3951,7 +3955,7 @@
   },
   "id": "fc25-carvajal",
   "photoId": 204963,
-  "photoVer": "22",
+  "photoVer": "24",
   "faceSource": "name-match",
   "sourceKey": "sofifa:fc25-carvajal"
  },
@@ -4033,7 +4037,9 @@
    "phy": 82
   },
   "id": "fc25-granit-xhaka",
-  "faceSource": "none",
+  "photoId": 199503,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc25-granit-xhaka"
  },
  {
@@ -4058,7 +4064,9 @@
    "phy": 71
   },
   "id": "fc25-grimaldo",
-  "faceSource": "none",
+  "photoId": 210035,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc25-grimaldo"
  },
  {
@@ -4112,7 +4120,9 @@
    "phy": 84
   },
   "id": "fc25-jonathan-tah",
-  "faceSource": "none",
+  "photoId": 213331,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc25-jonathan-tah"
  },
  {
@@ -4388,7 +4398,9 @@
    "phy": 74
   },
   "id": "fc25-alexander-isak",
-  "faceSource": "none",
+  "photoId": 233731,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc25-alexander-isak"
  },
  {
@@ -4498,7 +4510,9 @@
    "phy": 66
   },
   "id": "fc25-cole-palmer",
-  "faceSource": "none",
+  "photoId": 257534,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc25-cole-palmer"
  },
  {
@@ -4721,7 +4735,7 @@
   },
   "id": "fc25-leroy-sane",
   "photoId": 222492,
-  "photoVer": "21",
+  "photoVer": "24",
   "faceSource": "name-match",
   "sourceKey": "sofifa:fc25-leroy-sane"
  },
@@ -4830,7 +4844,9 @@
    "phy": 82
   },
   "id": "fc25-nico-schlotterbeck",
-  "faceSource": "none",
+  "photoId": 247819,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc25-nico-schlotterbeck"
  },
  {
@@ -4856,7 +4872,9 @@
    "phy": 65
   },
   "id": "fc25-nico-williams",
-  "faceSource": "none",
+  "photoId": 256516,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc25-nico-williams"
  },
  {
@@ -4882,7 +4900,9 @@
    "phy": 83
   },
   "id": "fc25-ollie-watkins",
-  "faceSource": "none",
+  "photoId": 221697,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc25-ollie-watkins"
  },
  {
@@ -4907,7 +4927,9 @@
    "phy": 90
   },
   "id": "fc25-palhinha",
-  "faceSource": "none",
+  "photoId": 229391,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc25-palhinha"
  },
  {
@@ -5044,7 +5066,9 @@
    "phy": 68
   },
   "id": "fc25-vitinha",
-  "faceSource": "none",
+  "photoId": 255253,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc25-vitinha"
  },
  {
@@ -5126,7 +5150,9 @@
    "phy": 68
   },
   "id": "fc25-aleix-garcia",
-  "faceSource": "none",
+  "photoId": 228813,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc25-aleix-garcia"
  },
  {
@@ -5314,7 +5340,9 @@
    "phy": 69
   },
   "id": "fc25-jeremie-frimpong",
-  "faceSource": "none",
+  "photoId": 253149,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc25-jeremie-frimpong"
  },
  {
@@ -5340,7 +5368,9 @@
    "phy": 78
   },
   "id": "fc25-julian-alvarez",
-  "faceSource": "none",
+  "photoId": 246191,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc25-julian-alvarez"
  },
  {
@@ -5367,7 +5397,7 @@
   },
   "id": "fc25-kalidou-koulibaly",
   "photoId": 201024,
-  "photoVer": "23",
+  "photoVer": "24",
   "faceSource": "name-match",
   "sourceKey": "sofifa:fc25-kalidou-koulibaly"
  },
@@ -5450,7 +5480,9 @@
    "phy": 82
   },
   "id": "fc25-manuel-akanji",
-  "faceSource": "none",
+  "photoId": 229237,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc25-manuel-akanji"
  },
  {
@@ -5504,7 +5536,9 @@
    "phy": 77
   },
   "id": "fc25-nathan-ake",
-  "faceSource": "none",
+  "photoId": 208920,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc25-nathan-ake"
  },
  {
@@ -5557,7 +5591,9 @@
    "phy": 82
   },
   "id": "fc25-rodrigo-de-paul",
-  "faceSource": "none",
+  "photoId": 212616,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc25-rodrigo-de-paul"
  },
  {
@@ -5611,7 +5647,9 @@
    "phy": 79
   },
   "id": "fc25-serhou-guirassy",
-  "faceSource": "none",
+  "photoId": 215441,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc25-serhou-guirassy"
  },
  {
@@ -5637,7 +5675,9 @@
    "phy": 91
   },
   "id": "fc25-viktor-gyokeres",
-  "faceSource": "none",
+  "photoId": 241651,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc25-viktor-gyokeres"
  },
  {
@@ -6129,7 +6169,9 @@
    "phy": 70
   },
   "id": "fc26-vitinha",
-  "faceSource": "none",
+  "photoId": 255253,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-vitinha"
  },
  {
@@ -6156,7 +6198,9 @@
    "phy": 76
   },
   "id": "fc26-alexander-isak",
-  "faceSource": "none",
+  "photoId": 233731,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-alexander-isak"
  },
  {
@@ -6357,7 +6401,9 @@
    "phy": 76
   },
   "id": "fc26-alexis-mac-allister",
-  "faceSource": "none",
+  "photoId": 239837,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-alexis-mac-allister"
  },
  {
@@ -6414,7 +6460,9 @@
    "phy": 65
   },
   "id": "fc26-cole-palmer",
-  "faceSource": "none",
+  "photoId": 257534,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-cole-palmer"
  },
  {
@@ -6500,7 +6548,9 @@
    "phy": 86
   },
   "id": "fc26-jonathan-tah",
-  "faceSource": "none",
+  "photoId": 213331,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-jonathan-tah"
  },
  {
@@ -6558,7 +6608,9 @@
    "phy": 79
   },
   "id": "fc26-julian-alvarez",
-  "faceSource": "none",
+  "photoId": 246191,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-julian-alvarez"
  },
  {
@@ -6701,7 +6753,9 @@
    "phy": 82
   },
   "id": "fc26-moises-caicedo",
-  "faceSource": "none",
+  "photoId": 256079,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-moises-caicedo"
  },
  {
@@ -6758,7 +6812,9 @@
    "phy": 83
   },
   "id": "fc26-serhou-guirassy",
-  "faceSource": "none",
+  "photoId": 215441,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-serhou-guirassy"
  },
  {
@@ -6816,7 +6872,9 @@
    "phy": 91
   },
   "id": "fc26-viktor-gyokeres",
-  "faceSource": "none",
+  "photoId": 241651,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-viktor-gyokeres"
  },
  {
@@ -6844,7 +6902,9 @@
    "phy": 83
   },
   "id": "fc26-william-saliba",
-  "faceSource": "none",
+  "photoId": 243715,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-william-saliba"
  },
  {
@@ -6958,7 +7018,9 @@
    "phy": 85
   },
   "id": "fc26-ibrahima-konate",
-  "faceSource": "none",
+  "photoId": 237678,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-ibrahima-konate"
  },
  {
@@ -7016,7 +7078,9 @@
    "phy": 66
   },
   "id": "fc26-michael-olise",
-  "faceSource": "none",
+  "photoId": 247827,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-michael-olise"
  },
  {
@@ -7043,7 +7107,9 @@
    "phy": 66
   },
   "id": "fc26-nico-williams",
-  "faceSource": "none",
+  "photoId": 256516,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-nico-williams"
  },
  {
@@ -7070,7 +7136,9 @@
    "phy": 77
   },
   "id": "fc26-nuno-mendes",
-  "faceSource": "none",
+  "photoId": 252145,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-nuno-mendes"
  },
  {
@@ -7329,7 +7397,9 @@
    "phy": 76
   },
   "id": "fc26-bryan-mbeumo",
-  "faceSource": "none",
+  "photoId": 243014,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-bryan-mbeumo"
  },
  {
@@ -7356,7 +7426,7 @@
   },
   "id": "fc26-carvajal",
   "photoId": 204963,
-  "photoVer": "22",
+  "photoVer": "24",
   "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-carvajal"
  },
@@ -7413,7 +7483,9 @@
    "phy": 56
   },
   "id": "fc26-dani-olmo",
-  "faceSource": "none",
+  "photoId": 244260,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-dani-olmo"
  },
  {
@@ -7441,7 +7513,9 @@
    "phy": 84
   },
   "id": "fc26-dayotchanculle-upamecano",
-  "faceSource": "none",
+  "photoId": 229558,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-dayotchanculle-upamecano"
  },
  {
@@ -7495,7 +7569,9 @@
    "phy": 72
   },
   "id": "fc26-fabian-ruiz",
-  "faceSource": "none",
+  "photoId": 226271,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-fabian-ruiz"
  },
  {
@@ -7549,7 +7625,9 @@
    "phy": 82
   },
   "id": "fc26-granit-xhaka",
-  "faceSource": "none",
+  "photoId": 199503,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-granit-xhaka"
  },
  {
@@ -7603,7 +7681,9 @@
    "phy": 80
   },
   "id": "fc26-inigo-martinez",
-  "faceSource": "none",
+  "photoId": 204525,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-inigo-martinez"
  },
  {
@@ -7717,7 +7797,9 @@
    "phy": 80
   },
   "id": "fc26-marcus-thuram",
-  "faceSource": "none",
+  "photoId": 228093,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-marcus-thuram"
  },
  {
@@ -7774,7 +7856,9 @@
    "phy": 82
   },
   "id": "fc26-nico-schlotterbeck",
-  "faceSource": "none",
+  "photoId": 247819,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-nico-schlotterbeck"
  },
  {
@@ -7802,7 +7886,7 @@
   },
   "id": "fc26-patrik-schick",
   "photoId": 234236,
-  "photoVer": "23",
+  "photoVer": "24",
   "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-patrik-schick"
  },
@@ -7889,7 +7973,9 @@
    "phy": 81
   },
   "id": "fc26-ryan-gravenberch",
-  "faceSource": "none",
+  "photoId": 246104,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-ryan-gravenberch"
  },
  {
@@ -7917,7 +8003,9 @@
    "phy": 85
   },
   "id": "fc26-scott-mctominay",
-  "faceSource": "none",
+  "photoId": 237238,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-scott-mctominay"
  },
  {
@@ -7945,7 +8033,7 @@
   },
   "id": "fc26-youri-tielemans",
   "photoId": 216393,
-  "photoVer": "23",
+  "photoVer": "24",
   "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-youri-tielemans"
  },
@@ -7975,7 +8063,7 @@
   },
   "id": "fc26-alphonso-davies",
   "photoId": 234396,
-  "photoVer": "23",
+  "photoVer": "24",
   "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-alphonso-davies"
  },
@@ -8033,7 +8121,9 @@
    "phy": 79
   },
   "id": "fc26-benjamin-pavard",
-  "faceSource": "none",
+  "photoId": 226851,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-benjamin-pavard"
  },
  {
@@ -8090,7 +8180,9 @@
    "phy": 84
   },
   "id": "fc26-denzel-dumfries",
-  "faceSource": "none",
+  "photoId": 233096,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-denzel-dumfries"
  },
  {
@@ -8118,7 +8210,9 @@
    "phy": 75
   },
   "id": "fc26-enzo-fernandez",
-  "faceSource": "none",
+  "photoId": 247090,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-enzo-fernandez"
  },
  {
@@ -8172,7 +8266,9 @@
    "phy": 67
   },
   "id": "fc26-grimaldo",
-  "faceSource": "none",
+  "photoId": 210035,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-grimaldo"
  },
  {
@@ -8228,7 +8324,9 @@
    "phy": 82
   },
   "id": "fc26-josko-gvardiol",
-  "faceSource": "none",
+  "photoId": 251517,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-josko-gvardiol"
  },
  {
@@ -8255,7 +8353,9 @@
    "phy": 78
   },
   "id": "fc26-manuel-locatelli",
-  "faceSource": "none",
+  "photoId": 222077,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-manuel-locatelli"
  },
  {
@@ -8310,7 +8410,7 @@
   },
   "id": "fc26-marcos-llorente",
   "photoId": 226161,
-  "photoVer": "22",
+  "photoVer": "24",
   "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-marcos-llorente"
  },
@@ -8339,7 +8439,9 @@
    "phy": 83
   },
   "id": "fc26-rodrigo-de-paul",
-  "faceSource": "none",
+  "photoId": 212616,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-rodrigo-de-paul"
  },
  {
@@ -8394,7 +8496,9 @@
    "phy": 82
   },
   "id": "fc26-sancet",
-  "faceSource": "none",
+  "photoId": 244675,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-sancet"
  },
  {
@@ -8480,7 +8584,9 @@
    "phy": 68
   },
   "id": "fc26-alex-baena",
-  "faceSource": "none",
+  "photoId": 257279,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fc26-alex-baena"
  },
  {
@@ -10432,7 +10538,9 @@
    "phy": 78
   },
   "id": "fifa15-ezequiel-garay",
-  "faceSource": "none",
+  "photoId": 170481,
+  "photoVer": "20",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fifa15-ezequiel-garay"
  },
  {
@@ -10663,7 +10771,7 @@
   },
   "id": "fifa15-joao-moutinho",
   "photoId": 162347,
-  "photoVer": "20",
+  "photoVer": "24",
   "faceSource": "name-match",
   "sourceKey": "sofifa:fifa15-joao-moutinho"
  },
@@ -10692,7 +10800,9 @@
    "phy": 71
   },
   "id": "fifa15-juan-cuadrado",
-  "faceSource": "none",
+  "photoId": 193082,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fifa15-juan-cuadrado"
  },
  {
@@ -12575,7 +12685,9 @@
    "phy": 76
   },
   "id": "fifa16-naldo",
-  "faceSource": "none",
+  "photoId": 171919,
+  "photoVer": "20",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fifa16-naldo"
  },
  {
@@ -13387,7 +13499,7 @@
   },
   "id": "fifa16-nicolas-otamendi",
   "photoId": 192366,
-  "photoVer": "19",
+  "photoVer": "24",
   "faceSource": "name-match",
   "sourceKey": "sofifa:fifa16-nicolas-otamendi"
  },
@@ -13761,7 +13873,9 @@
    "phy": 78
   },
   "id": "fifa16-ezequiel-garay",
-  "faceSource": "none",
+  "photoId": 170481,
+  "photoVer": "20",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fifa16-ezequiel-garay"
  },
  {
@@ -13876,7 +13990,7 @@
   },
   "id": "fifa16-joao-moutinho",
   "photoId": 162347,
-  "photoVer": "20",
+  "photoVer": "24",
   "faceSource": "name-match",
   "sourceKey": "sofifa:fifa16-joao-moutinho"
  },
@@ -14137,7 +14251,9 @@
    "phy": 57
   },
   "id": "fifa16-nicolas-gaitan",
-  "faceSource": "none",
+  "photoId": 184144,
+  "photoVer": "23",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fifa16-nicolas-gaitan"
  },
  {
@@ -14194,7 +14310,7 @@
   },
   "id": "fifa16-radja-nainggolan",
   "photoId": 178518,
-  "photoVer": "19",
+  "photoVer": "23",
   "faceSource": "name-match",
   "sourceKey": "sofifa:fifa16-radja-nainggolan"
  },
@@ -16176,7 +16292,9 @@
    "phy": 58
   },
   "id": "fifa17-nicolas-gaitan",
-  "faceSource": "none",
+  "photoId": 184144,
+  "photoVer": "23",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fifa17-nicolas-gaitan"
  },
  {
@@ -16436,7 +16554,7 @@
   },
   "id": "fifa17-alex-sandro",
   "photoId": 191043,
-  "photoVer": "21",
+  "photoVer": "24",
   "faceSource": "name-match",
   "sourceKey": "sofifa:fifa17-alex-sandro"
  },
@@ -16698,7 +16816,9 @@
    "phy": 81
   },
   "id": "fifa17-ezequiel-garay",
-  "faceSource": "none",
+  "photoId": 170481,
+  "photoVer": "20",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fifa17-ezequiel-garay"
  },
  {
@@ -16897,7 +17017,9 @@
    "phy": 74
   },
   "id": "fifa17-naldo",
-  "faceSource": "none",
+  "photoId": 171919,
+  "photoVer": "20",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fifa17-naldo"
  },
  {
@@ -16954,7 +17076,7 @@
   },
   "id": "fifa17-radja-nainggolan",
   "photoId": 178518,
-  "photoVer": "19",
+  "photoVer": "23",
   "faceSource": "name-match",
   "sourceKey": "sofifa:fifa17-radja-nainggolan"
  },
@@ -17187,7 +17309,9 @@
    "phy": 75
   },
   "id": "fifa17-omer-toprak",
-  "faceSource": "none",
+  "photoId": 185239,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fifa17-omer-toprak"
  },
  {
@@ -18527,7 +18651,7 @@
   },
   "id": "fifa18-dries-mertens",
   "photoId": 175943,
-  "photoVer": "22",
+  "photoVer": "24",
   "faceSource": "name-match",
   "sourceKey": "sofifa:fifa18-dries-mertens"
  },
@@ -19278,7 +19402,9 @@
    "phy": 84
   },
   "id": "fifa18-kamil-glik",
-  "faceSource": "none",
+  "photoId": 190547,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fifa18-kamil-glik"
  },
  {
@@ -19424,7 +19550,7 @@
   },
   "id": "fifa18-yannick-carrasco",
   "photoId": 208418,
-  "photoVer": "23",
+  "photoVer": "24",
   "faceSource": "name-match",
   "sourceKey": "sofifa:fifa18-yannick-carrasco"
  },
@@ -19541,7 +19667,7 @@
   },
   "id": "fifa18-alejandro-gomez",
   "photoId": 143076,
-  "photoVer": "22",
+  "photoVer": "23",
   "faceSource": "name-match",
   "sourceKey": "sofifa:fifa18-alejandro-gomez"
  },
@@ -19597,7 +19723,9 @@
    "phy": 77
   },
   "id": "fifa18-bruno",
-  "faceSource": "none",
+  "photoId": 184120,
+  "photoVer": "20",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fifa18-bruno"
  },
  {
@@ -19827,7 +19955,7 @@
   },
   "id": "fifa18-kalidou-koulibaly",
   "photoId": 201024,
-  "photoVer": "23",
+  "photoVer": "24",
   "faceSource": "name-match",
   "sourceKey": "sofifa:fifa18-kalidou-koulibaly"
  },
@@ -19855,7 +19983,9 @@
    "phy": 82
   },
   "id": "fifa18-kevin-strootman",
-  "faceSource": "none",
+  "photoId": 189712,
+  "photoVer": "24",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fifa18-kevin-strootman"
  },
  {
@@ -19910,7 +20040,9 @@
    "phy": 83
   },
   "id": "fifa18-konstantinos-manolas",
-  "faceSource": "none",
+  "photoId": 192774,
+  "photoVer": "22",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fifa18-konstantinos-manolas"
  },
  {
@@ -21859,7 +21991,9 @@
    "phy": 74
   },
   "id": "fifa19-naldo",
-  "faceSource": "none",
+  "photoId": 171919,
+  "photoVer": "20",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fifa19-naldo"
  },
  {
@@ -22293,7 +22427,7 @@
   },
   "id": "fifa19-fabinho",
   "photoId": 209499,
-  "photoVer": "23",
+  "photoVer": "24",
   "faceSource": "name-match",
   "sourceKey": "sofifa:fifa19-fabinho"
  },
@@ -22495,7 +22629,9 @@
    "phy": 82
   },
   "id": "fifa19-konstantinos-manolas",
-  "faceSource": "none",
+  "photoId": 192774,
+  "photoVer": "22",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fifa19-konstantinos-manolas"
  },
  {
@@ -24610,7 +24746,7 @@
   },
   "id": "fifa20-milan-skriniar",
   "photoId": 232363,
-  "photoVer": "23",
+  "photoVer": "24",
   "faceSource": "name-match",
   "sourceKey": "sofifa:fifa20-milan-skriniar"
  },
@@ -24815,7 +24951,7 @@
   },
   "id": "fifa20-alejandro-gomez",
   "photoId": 143076,
-  "photoVer": "22",
+  "photoVer": "23",
   "faceSource": "name-match",
   "sourceKey": "sofifa:fifa20-alejandro-gomez"
  },
@@ -24871,7 +25007,9 @@
    "phy": 84
   },
   "id": "fifa20-allan",
-  "faceSource": "none",
+  "photoId": 199914,
+  "photoVer": "23",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fifa20-allan"
  },
  {
@@ -25365,7 +25503,9 @@
    "phy": 81
   },
   "id": "fifa20-konstantinos-manolas",
-  "faceSource": "none",
+  "photoId": 192774,
+  "photoVer": "22",
+  "faceSource": "name-match",
   "sourceKey": "sofifa:fifa20-konstantinos-manolas"
  },
  {
@@ -27021,7 +27161,7 @@
   },
   "id": "fifa21-alejandro-gomez",
   "photoId": 143076,
-  "photoVer": "22",
+  "photoVer": "23",
   "faceSource": "name-match",
   "sourceKey": "sofifa:fifa21-alejandro-gomez"
  },
@@ -33440,7 +33580,7 @@
   },
   "id": "fifa23-marco-reus",
   "photoId": 188350,
-  "photoVer": "22",
+  "photoVer": "24",
   "faceSource": "name-match",
   "sourceKey": "sofifa:fifa23-marco-reus"
  },
