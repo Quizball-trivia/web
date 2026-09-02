@@ -28,6 +28,9 @@ export interface FifaCardStats {
   phy: number;
 }
 
+/** Fame-based guess difficulty (fewer stars / older / lower-rated = harder). */
+export type FifaCardDifficulty = "easy" | "medium" | "hard" | "veryHard";
+
 export interface FifaCard {
   id: string;
   edition: FifaEdition;
@@ -45,6 +48,10 @@ export interface FifaCard {
   league: string;
   club: string;
   stats: FifaCardStats;
+  /** Guess difficulty (from peak career reputation + overall + era) — drives the daily hard/easy mix. */
+  difficulty: FifaCardDifficulty;
+  /** SoFIFA international reputation for THIS edition, 1-5 stars (absent where the source omits it). */
+  internationalReputation?: number;
   /** SoFIFA face id + 2-digit edition for the reveal photo (served via /api/fifa-face). */
   photoId?: number;
   photoVer?: string;
@@ -67,6 +74,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 93, position: "CF",
     nation: "Argentina", nationCode: "ar", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 93, sho: 89, pas: 86, dri: 96, def: 27, phy: 63 }, photoId: 158023, photoVer: "15",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa15-cristiano-ronaldo", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -74,6 +82,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 92, position: "LW",
     nation: "Portugal", nationCode: "pt", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 93, sho: 93, pas: 81, dri: 91, def: 32, phy: 79 }, photoId: 20801, photoVer: "15",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa15-arjen-robben", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -81,6 +90,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 90, position: "RM",
     nation: "Netherlands", nationCode: "nl", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 93, sho: 86, pas: 83, dri: 92, def: 32, phy: 64 }, photoId: 9014, photoVer: "15",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa15-zlatan-ibrahimovic", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -88,6 +98,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 90, position: "ST",
     nation: "Sweden", nationCode: "se", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 76, sho: 91, pas: 81, dri: 86, def: 34, phy: 86 }, photoId: 41236, photoVer: "15",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa15-iniesta", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -95,6 +106,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 89, position: "CM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 75, sho: 72, pas: 89, dri: 91, def: 59, phy: 63 }, photoId: 41, photoVer: "15",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa15-luis-suarez", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -102,6 +114,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 89, position: "ST",
     nation: "Uruguay", nationCode: "uy", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 83, sho: 87, pas: 79, dri: 88, def: 42, phy: 79 }, photoId: 176580, photoVer: "15",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa15-bastian-schweinsteiger", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -109,6 +122,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 88, position: "CM",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 61, sho: 81, pas: 85, dri: 82, def: 78, phy: 80 }, photoId: 121944, photoVer: "15",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa15-eden-hazard", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -116,6 +130,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 88, position: "LM",
     nation: "Belgium", nationCode: "be", league: "English Premier League", club: "Chelsea",
     stats: { pac: 90, sho: 82, pas: 84, dri: 91, def: 32, phy: 64 }, photoId: 183277, photoVer: "15",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa15-falcao", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -123,6 +138,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 88, position: "ST",
     nation: "Colombia", nationCode: "co", league: "English Premier League", club: "Manchester United",
     stats: { pac: 77, sho: 86, pas: 64, dri: 81, def: 40, phy: 73 }, photoId: 167397, photoVer: "15",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa15-franck-ribery", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -130,6 +146,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 88, position: "LM",
     nation: "France", nationCode: "fr", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 89, sho: 78, pas: 85, dri: 92, def: 29, phy: 62 }, photoId: 156616, photoVer: "15",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa15-robin-van-persie", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -137,6 +154,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 88, position: "ST",
     nation: "Netherlands", nationCode: "nl", league: "English Premier League", club: "Manchester United",
     stats: { pac: 74, sho: 90, pas: 82, dri: 83, def: 33, phy: 68 }, photoId: 7826, photoVer: "15",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa15-david-silva", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -144,6 +162,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 87, position: "LM",
     nation: "Spain", nationCode: "es", league: "English Premier League", club: "Manchester City",
     stats: { pac: 76, sho: 77, pas: 86, dri: 89, def: 33, phy: 57 }, photoId: 168542, photoVer: "15",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa15-gareth-bale", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -151,6 +170,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 87, position: "RM",
     nation: "Wales", nationCode: "gb-wls", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 94, sho: 83, pas: 83, dri: 84, def: 63, phy: 81 }, photoId: 173731, photoVer: "15",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa15-luka-modric", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -158,6 +178,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 87, position: "CM",
     nation: "Croatia", nationCode: "hr", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 76, sho: 74, pas: 85, dri: 89, def: 71, phy: 70 }, photoId: 177003, photoVer: "15",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa15-philipp-lahm", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -165,6 +186,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 87, position: "CDM",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 76, sho: 56, pas: 84, dri: 83, def: 87, phy: 67 }, photoId: 121939, photoVer: "15",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa15-robert-lewandowski", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -172,6 +194,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 87, position: "ST",
     nation: "Poland", nationCode: "pl", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 80, sho: 84, pas: 74, dri: 85, def: 39, phy: 78 }, photoId: 188545, photoVer: "15",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa15-sergio-ramos", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -179,6 +202,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 87, position: "CB",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 79, sho: 61, pas: 71, dri: 66, def: 87, phy: 82 }, photoId: 155862, photoVer: "15",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa15-thiago-silva", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -186,6 +210,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 87, position: "CB",
     nation: "Brazil", nationCode: "br", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 78, sho: 57, pas: 72, dri: 72, def: 90, phy: 80 }, photoId: 164240, photoVer: "15",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa15-james-rodriguez", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -193,6 +218,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 86, position: "CAM",
     nation: "Colombia", nationCode: "co", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 79, sho: 80, pas: 84, dri: 85, def: 40, phy: 72 }, photoId: 198710, photoVer: "15",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa15-marco-reus", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -200,6 +226,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 86, position: "LM",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "Borussia Dortmund",
     stats: { pac: 91, sho: 86, pas: 84, dri: 86, def: 33, phy: 65 }, photoId: 188350, photoVer: "15",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa15-mats-hummels", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -207,6 +234,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "Borussia Dortmund",
     stats: { pac: 66, sho: 59, pas: 75, dri: 71, def: 88, phy: 78 }, photoId: 178603, photoVer: "15",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa15-mesut-ozil", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -214,6 +242,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 86, position: "CAM",
     nation: "Germany", nationCode: "de", league: "English Premier League", club: "Arsenal",
     stats: { pac: 74, sho: 74, pas: 86, dri: 87, def: 27, phy: 58 }, photoId: 176635, photoVer: "15",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa15-neymar", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -221,6 +250,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 86, position: "LW",
     nation: "Brazil", nationCode: "br", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 90, sho: 80, pas: 72, dri: 92, def: 30, phy: 58 }, photoId: 190871, photoVer: "15",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa15-sergio-aguero", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -228,6 +258,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 86, position: "ST",
     nation: "Argentina", nationCode: "ar", league: "English Premier League", club: "Manchester City",
     stats: { pac: 88, sho: 86, pas: 77, dri: 88, def: 28, phy: 66 }, photoId: 153079, photoVer: "15",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa15-thomas-muller", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -235,6 +266,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 86, position: "RM",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 81, sho: 84, pas: 82, dri: 80, def: 46, phy: 72 }, photoId: 189596, photoVer: "15",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa15-vincent-kompany", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -242,6 +274,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Belgium", nationCode: "be", league: "English Premier League", club: "Manchester City",
     stats: { pac: 73, sho: 56, pas: 69, dri: 67, def: 87, phy: 81 }, photoId: 139720, photoVer: "15",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa15-wayne-rooney", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -249,6 +282,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 86, position: "ST",
     nation: "England", nationCode: "gb-eng", league: "English Premier League", club: "Manchester United",
     stats: { pac: 76, sho: 87, pas: 80, dri: 83, def: 44, phy: 87 }, photoId: 54050, photoVer: "15",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa15-xavi", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -256,6 +290,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 66, sho: 72, pas: 91, dri: 85, def: 60, phy: 58 }, photoId: 10535, photoVer: "15",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa15-yaya-toure", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -263,6 +298,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Côte d'Ivoire", nationCode: "ci", league: "English Premier League", club: "Manchester City",
     stats: { pac: 76, sho: 82, pas: 81, dri: 79, def: 80, phy: 90 }, photoId: 20289, photoVer: "15",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa15-angel-di-maria", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -270,6 +306,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 86, position: "CAM",
     nation: "Argentina", nationCode: "ar", league: "English Premier League", club: "Manchester United",
     stats: { pac: 90, sho: 79, pas: 83, dri: 87, def: 57, phy: 71 }, photoId: 183898, photoVer: "15",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa15-arturo-vidal", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -277,6 +314,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Chile", nationCode: "cl", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 78, sho: 78, pas: 80, dri: 81, def: 81, phy: 83 }, photoId: 181872, photoVer: "15",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa15-carlos-tevez", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -284,6 +322,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "Argentina", nationCode: "ar", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 86, sho: 86, pas: 78, dri: 87, def: 46, phy: 84 }, photoId: 143001, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-diego-costa", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -291,6 +330,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "Spain", nationCode: "es", league: "English Premier League", club: "Chelsea",
     stats: { pac: 82, sho: 83, pas: 63, dri: 79, def: 40, phy: 88 }, photoId: 179844, photoVer: "15",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa15-edinson-cavani", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -298,6 +338,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "Uruguay", nationCode: "uy", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 79, sho: 83, pas: 70, dri: 80, def: 41, phy: 81 }, photoId: 179813, photoVer: "15",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa15-javi-martinez", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -305,6 +346,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Spain", nationCode: "es", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 53, sho: 61, pas: 72, dri: 68, def: 84, phy: 85 }, photoId: 177610, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-juan-mata", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -312,6 +354,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 85, position: "CAM",
     nation: "Spain", nationCode: "es", league: "English Premier League", club: "Manchester United",
     stats: { pac: 74, sho: 75, pas: 84, dri: 87, def: 31, phy: 60 }, photoId: 178088, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-jerome-boateng", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -319,6 +362,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 77, sho: 50, pas: 66, dri: 69, def: 83, phy: 82 }, photoId: 183907, photoVer: "15",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa15-karim-benzema", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -326,6 +370,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "France", nationCode: "fr", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 84, sho: 84, pas: 75, dri: 82, def: 30, phy: 74 }, photoId: 165153, photoVer: "15",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa15-mario-gotze", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -333,6 +378,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 85, position: "CAM",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 80, sho: 74, pas: 82, dri: 89, def: 35, phy: 63 }, photoId: 192318, photoVer: "15",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa15-sergio-busquets", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -340,6 +386,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 85, position: "CDM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 56, sho: 59, pas: 78, dri: 75, def: 81, phy: 81 }, photoId: 189511, photoVer: "15",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa15-toni-kroos", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -347,6 +394,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Germany", nationCode: "de", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 58, sho: 81, pas: 89, dri: 84, def: 58, phy: 69 }, photoId: 182521, photoVer: "15",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa15-alexis-sanchez", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -354,6 +402,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 84, position: "RW",
     nation: "Chile", nationCode: "cl", league: "English Premier League", club: "Arsenal",
     stats: { pac: 88, sho: 81, pas: 75, dri: 87, def: 39, phy: 66 }, photoId: 184941, photoVer: "15",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa15-andrea-pirlo", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -361,6 +410,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 84, position: "CM",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 43, sho: 69, pas: 91, dri: 82, def: 55, phy: 59 }, photoId: 7763, photoVer: "15",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa15-arda-turan", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -368,6 +418,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 84, position: "LM",
     nation: "Turkey", nationCode: "tr", league: "Spain Primera Division", club: "Atlético de Madrid",
     stats: { pac: 76, sho: 74, pas: 83, dri: 86, def: 61, phy: 72 }, photoId: 143745, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-cesc-fabregas", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -375,6 +426,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 84, position: "CM",
     nation: "Spain", nationCode: "es", league: "English Premier League", club: "Chelsea",
     stats: { pac: 68, sho: 79, pas: 88, dri: 81, def: 64, phy: 63 }, photoId: 162895, photoVer: "15",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa15-daniele-de-rossi", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -382,6 +434,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 84, position: "CDM",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Roma",
     stats: { pac: 68, sho: 71, pas: 79, dri: 75, def: 82, phy: 84 }, photoId: 53302, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-diego-godin", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -389,6 +442,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Uruguay", nationCode: "uy", league: "Spain Primera Division", club: "Atlético de Madrid",
     stats: { pac: 67, sho: 48, pas: 62, dri: 60, def: 86, phy: 78 }, photoId: 182493, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-giorgio-chiellini", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -396,6 +450,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 76, sho: 51, pas: 55, dri: 56, def: 87, phy: 86 }, photoId: 138956, photoVer: "15",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa15-gonzalo-higuain", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -403,6 +458,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 84, position: "ST",
     nation: "Argentina", nationCode: "ar", league: "Italian Serie A", club: "Napoli",
     stats: { pac: 81, sho: 84, pas: 68, dri: 80, def: 30, phy: 71 }, photoId: 167664, photoVer: "15",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa15-klaas-jan-huntelaar", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -410,6 +466,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 84, position: "ST",
     nation: "Netherlands", nationCode: "nl", league: "German 1. Bundesliga", club: "FC Schalke 04",
     stats: { pac: 68, sho: 85, pas: 64, dri: 72, def: 32, phy: 73 }, photoId: 148803, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-medhi-benatia", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -417,6 +474,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Morocco", nationCode: "ma", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 75, sho: 45, pas: 54, dri: 64, def: 88, phy: 84 }, photoId: 177509, photoVer: "19",
+    difficulty: "veryHard", internationalReputation: 2,
   },
   {
     id: "fifa15-oscar", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -424,6 +482,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 84, position: "CAM",
     nation: "Brazil", nationCode: "br", league: "English Premier League", club: "Chelsea",
     stats: { pac: 81, sho: 75, pas: 80, dri: 85, def: 43, phy: 44 }, photoId: 188152, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-pique", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -431,6 +490,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 66, sho: 54, pas: 69, dri: 60, def: 86, phy: 76 }, photoId: 152729, photoVer: "15",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa15-sami-khedira", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -438,6 +498,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 84, position: "CDM",
     nation: "Germany", nationCode: "de", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 56, sho: 69, pas: 74, dri: 65, def: 83, phy: 86 }, photoId: 179846, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-samir-nasri", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -445,6 +506,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 84, position: "LM",
     nation: "France", nationCode: "fr", league: "English Premier League", club: "Manchester City",
     stats: { pac: 79, sho: 76, pas: 84, dri: 86, def: 39, phy: 60 }, photoId: 165239, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-santi-cazorla", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -452,6 +514,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 84, position: "LM",
     nation: "Spain", nationCode: "es", league: "English Premier League", club: "Arsenal",
     stats: { pac: 73, sho: 78, pas: 85, dri: 87, def: 31, phy: 61 }, photoId: 146562, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-wesley-sneijder", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -459,6 +522,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 84, position: "CAM",
     nation: "Netherlands", nationCode: "nl", league: "Turkish Süper Lig", club: "Galatasaray SK",
     stats: { pac: 75, sho: 80, pas: 87, dri: 84, def: 48, phy: 63 }, photoId: 139869, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-xabi-alonso", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -466,6 +530,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 84, position: "CDM",
     nation: "Spain", nationCode: "es", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 55, sho: 71, pas: 86, dri: 68, def: 78, phy: 72 }, photoId: 45197, photoVer: "15",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa15-aaron-ramsey", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -473,6 +538,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 83, position: "CM",
     nation: "Wales", nationCode: "gb-wls", league: "English Premier League", club: "Arsenal",
     stats: { pac: 71, sho: 78, pas: 79, dri: 80, def: 70, phy: 77 }, photoId: 186561, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-andrea-barzagli", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -480,6 +546,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 83, position: "CB",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 75, sho: 36, pas: 58, dri: 59, def: 86, phy: 79 }, photoId: 137186, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-antonio-candreva", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -487,6 +554,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 83, position: "RW",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Lazio",
     stats: { pac: 85, sho: 79, pas: 82, dri: 84, def: 57, phy: 74 },
+    difficulty: "veryHard", internationalReputation: 2,
   },
   {
     id: "fifa15-blaise-matuidi", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -494,6 +562,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 83, position: "CDM",
     nation: "France", nationCode: "fr", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 78, sho: 67, pas: 76, dri: 76, def: 84, phy: 82 }, photoId: 170890, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-claudio-marchisio", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -501,6 +570,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 83, position: "CM",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 79, sho: 76, pas: 81, dri: 83, def: 74, phy: 79 }, photoId: 173210, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-dani-alves", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -508,6 +578,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 83, position: "RB",
     nation: "Brazil", nationCode: "br", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 86, sho: 70, pas: 79, dri: 83, def: 76, phy: 68 }, photoId: 146530, photoVer: "15",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa15-daniel-sturridge", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -515,6 +586,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 83, position: "ST",
     nation: "England", nationCode: "gb-eng", league: "English Premier League", club: "Liverpool",
     stats: { pac: 89, sho: 82, pas: 69, dri: 81, def: 29, phy: 70 }, photoId: 171833, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-edin-dzeko", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -522,6 +594,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 83, position: "ST",
     nation: "Bosnia and Herzegovina", nationCode: "ba", league: "English Premier League", club: "Manchester City",
     stats: { pac: 71, sho: 84, pas: 68, dri: 78, def: 36, phy: 71 }, photoId: 180930, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-ezequiel-garay", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -529,6 +602,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 83, position: "CB",
     nation: "Argentina", nationCode: "ar", league: "Russian Premier League", club: "Zenit St. Petersburg",
     stats: { pac: 52, sho: 57, pas: 68, dri: 64, def: 86, phy: 78 }, photoId: 170481, photoVer: "20",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-hulk", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -536,6 +610,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 83, position: "RW",
     nation: "Brazil", nationCode: "br", league: "Russian Premier League", club: "Zenit St. Petersburg",
     stats: { pac: 85, sho: 87, pas: 80, dri: 81, def: 43, phy: 86 }, photoId: 189362, photoVer: "15",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa15-isco", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -543,6 +618,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 83, position: "CAM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 76, sho: 76, pas: 82, dri: 86, def: 32, phy: 62 }, photoId: 197781, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 2,
   },
   {
     id: "fifa15-ivan-rakitic", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -550,6 +626,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 83, position: "CAM",
     nation: "Croatia", nationCode: "hr", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 69, sho: 82, pas: 87, dri: 81, def: 55, phy: 67 }, photoId: 168651, photoVer: "15",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa15-javier-mascherano", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -557,6 +634,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 83, position: "CB",
     nation: "Argentina", nationCode: "ar", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 69, sho: 59, pas: 70, dri: 69, def: 84, phy: 80 }, photoId: 142754, photoVer: "15",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa15-jefferson-farfan", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -564,6 +642,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 83, position: "RM",
     nation: "Peru", nationCode: "pe", league: "German 1. Bundesliga", club: "FC Schalke 04",
     stats: { pac: 87, sho: 77, pas: 80, dri: 84, def: 37, phy: 76 }, photoId: 158133, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-jesus-navas", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -571,6 +650,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 83, position: "RM",
     nation: "Spain", nationCode: "es", league: "English Premier League", club: "Manchester City",
     stats: { pac: 91, sho: 71, pas: 78, dri: 84, def: 29, phy: 53 }, photoId: 146536, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-john-terry", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -578,6 +658,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 83, position: "CB",
     nation: "England", nationCode: "gb-eng", league: "English Premier League", club: "Chelsea",
     stats: { pac: 41, sho: 47, pas: 56, dri: 52, def: 84, phy: 80 }, photoId: 13732, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-joao-moutinho", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -585,6 +666,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 83, position: "CM",
     nation: "Portugal", nationCode: "pt", league: "French Ligue 1", club: "AS Monaco",
     stats: { pac: 74, sho: 75, pas: 83, dri: 82, def: 71, phy: 72 }, photoId: 162347, photoVer: "24",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-juan-cuadrado", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -592,6 +674,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 83, position: "RM",
     nation: "Colombia", nationCode: "co", league: "Italian Serie A", club: "Fiorentina",
     stats: { pac: 93, sho: 77, pas: 76, dri: 87, def: 57, phy: 71 }, photoId: 193082, photoVer: "24",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-jeremy-toulalan", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -599,6 +682,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 83, position: "CDM",
     nation: "France", nationCode: "fr", league: "French Ligue 1", club: "AS Monaco",
     stats: { pac: 53, sho: 50, pas: 77, dri: 71, def: 79, phy: 82 }, photoId: 112253, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-mario-mandzukic", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -606,6 +690,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 83, position: "ST",
     nation: "Croatia", nationCode: "hr", league: "Spain Primera Division", club: "Atlético de Madrid",
     stats: { pac: 75, sho: 82, pas: 61, dri: 75, def: 43, phy: 87 }, photoId: 181783, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-miralem-pjanic", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -613,6 +698,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 83, position: "CM",
     nation: "Bosnia and Herzegovina", nationCode: "ba", league: "Italian Serie A", club: "Roma",
     stats: { pac: 72, sho: 75, pas: 85, dri: 84, def: 63, phy: 66 }, photoId: 180206, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-miranda", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -620,6 +706,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 83, position: "CB",
     nation: "Brazil", nationCode: "br", league: "Spain Primera Division", club: "Atlético de Madrid",
     stats: { pac: 76, sho: 49, pas: 56, dri: 57, def: 84, phy: 79 }, photoId: 168609, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-negredo", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -627,6 +714,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 83, position: "ST",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Valencia CF",
     stats: { pac: 73, sho: 83, pas: 68, dri: 77, def: 39, phy: 82 }, photoId: 146439, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-nemanja-vidic", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -634,6 +722,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 83, position: "CB",
     nation: "Serbia", nationCode: "rs", league: "Italian Serie A", club: "Inter",
     stats: { pac: 52, sho: 39, pas: 55, dri: 51, def: 84, phy: 83 }, photoId: 140601, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-paul-pogba", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -641,6 +730,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 83, position: "CM",
     nation: "France", nationCode: "fr", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 76, sho: 78, pas: 79, dri: 83, def: 73, phy: 88 }, photoId: 195864, photoVer: "15",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa15-pedro", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -648,6 +738,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 83, position: "LW",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 83, sho: 76, pas: 78, dri: 84, def: 37, phy: 60 }, photoId: 189505, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-pepe", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -655,6 +746,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 83, position: "CB",
     nation: "Portugal", nationCode: "pt", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 73, sho: 51, pas: 58, dri: 59, def: 84, phy: 83 }, photoId: 120533, photoVer: "15",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa15-per-mertesacker", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -662,6 +754,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 83, position: "CB",
     nation: "Germany", nationCode: "de", league: "English Premier League", club: "Arsenal",
     stats: { pac: 31, sho: 41, pas: 57, dri: 48, def: 87, phy: 76 }, photoId: 53612, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-ilkay-gundogan", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -669,6 +762,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 83, position: "CM",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "Borussia Dortmund",
     stats: { pac: 79, sho: 70, pas: 83, dri: 86, def: 67, phy: 70 }, photoId: 186942, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-kagawa", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -676,6 +770,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 83, position: "CAM",
     nation: "Japan", nationCode: "jp", league: "German 1. Bundesliga", club: "Borussia Dortmund",
     stats: { pac: 82, sho: 73, pas: 76, dri: 88, def: 32, phy: 49 }, photoId: 189358, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-alex", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -683,6 +778,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 82, position: "CB",
     nation: "Brazil", nationCode: "br", league: "Italian Serie A", club: "AC Milan",
     stats: { pac: 54, sho: 64, pas: 53, dri: 55, def: 84, phy: 83 }, photoId: 136130, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-borja-valero", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -690,6 +786,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 82, position: "CM",
     nation: "Spain", nationCode: "es", league: "Italian Serie A", club: "Fiorentina",
     stats: { pac: 71, sho: 74, pas: 85, dri: 81, def: 65, phy: 67 },
+    difficulty: "veryHard", internationalReputation: 2,
   },
   {
     id: "fifa15-danny", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -697,6 +794,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 82, position: "LW",
     nation: "Portugal", nationCode: "pt", league: "Russian Premier League", club: "Zenit St. Petersburg",
     stats: { pac: 85, sho: 76, pas: 81, dri: 84, def: 33, phy: 56 },
+    difficulty: "veryHard", internationalReputation: 2,
   },
   {
     id: "fifa15-dante", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -704,6 +802,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 82, position: "CB",
     nation: "Brazil", nationCode: "br", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 64, sho: 56, pas: 72, dri: 71, def: 83, phy: 76 }, photoId: 158625, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-diego", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -711,6 +810,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 82, position: "CAM",
     nation: "Brazil", nationCode: "br", league: "Turkish Süper Lig", club: "Fenerbahçe SK",
     stats: { pac: 75, sho: 73, pas: 84, dri: 85, def: 39, phy: 64 }, photoId: 136138, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-ezequiel-lavezzi", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -718,6 +818,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 82, position: "LW",
     nation: "Argentina", nationCode: "ar", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 87, sho: 76, pas: 75, dri: 85, def: 32, phy: 73 }, photoId: 159065, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-gabi", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -725,6 +826,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 82, position: "CM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Atlético de Madrid",
     stats: { pac: 68, sho: 72, pas: 80, dri: 76, def: 75, phy: 73 }, photoId: 146954, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-mario-gomez", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -732,6 +834,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 82, position: "ST",
     nation: "Germany", nationCode: "de", league: "Italian Serie A", club: "Fiorentina",
     stats: { pac: 75, sho: 82, pas: 60, dri: 70, def: 30, phy: 79 }, photoId: 150418, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-pablo-zabaleta", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -739,6 +842,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 82, position: "RB",
     nation: "Argentina", nationCode: "ar", league: "English Premier League", club: "Manchester City",
     stats: { pac: 74, sho: 52, pas: 74, dri: 75, def: 83, phy: 82 }, photoId: 142784, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa15-rodrigo-palacio", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -746,6 +850,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 82, position: "ST",
     nation: "Argentina", nationCode: "ar", league: "Italian Serie A", club: "Inter",
     stats: { pac: 85, sho: 82, pas: 77, dri: 84, def: 31, phy: 60 }, photoId: 152999, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 2,
   },
   {
     id: "fifa15-steven-gerrard", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -753,6 +858,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 82, position: "CDM",
     nation: "England", nationCode: "gb-eng", league: "English Premier League", club: "Liverpool",
     stats: { pac: 63, sho: 83, pas: 85, dri: 75, def: 70, phy: 81 }, photoId: 13743, photoVer: "15",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa15-thiago-motta", edition: "FIFA15", editionLabel: "FIFA 15",
@@ -760,6 +866,7 @@ const CARDS_FIFA15: FifaCard[] = [
     overall: 82, position: "CDM",
     nation: "Italy", nationCode: "it", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 50, sho: 66, pas: 78, dri: 73, def: 79, phy: 84 }, photoId: 49370, photoVer: "15",
+    difficulty: "veryHard", internationalReputation: 3,
   },
 ];
 
@@ -770,6 +877,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 94, position: "RW",
     nation: "Argentina", nationCode: "ar", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 92, sho: 88, pas: 86, dri: 95, def: 24, phy: 62 }, photoId: 158023, photoVer: "16",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa16-cristiano-ronaldo", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -777,6 +885,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 93, position: "LW",
     nation: "Portugal", nationCode: "pt", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 92, sho: 93, pas: 80, dri: 91, def: 33, phy: 78 }, photoId: 20801, photoVer: "16",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa16-arjen-robben", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -784,6 +893,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 90, position: "RM",
     nation: "Netherlands", nationCode: "nl", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 92, sho: 86, pas: 82, dri: 92, def: 32, phy: 64 }, photoId: 9014, photoVer: "16",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa16-luis-suarez", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -791,6 +901,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 90, position: "ST",
     nation: "Uruguay", nationCode: "uy", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 83, sho: 88, pas: 79, dri: 87, def: 42, phy: 79 }, photoId: 176580, photoVer: "16",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa16-eden-hazard", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -798,6 +909,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 89, position: "LM",
     nation: "Belgium", nationCode: "be", league: "English Premier League", club: "Chelsea",
     stats: { pac: 90, sho: 82, pas: 84, dri: 92, def: 32, phy: 64 }, photoId: 183277, photoVer: "16",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa16-zlatan-ibrahimovic", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -805,6 +917,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 89, position: "ST",
     nation: "Sweden", nationCode: "se", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 73, sho: 90, pas: 81, dri: 85, def: 31, phy: 86 }, photoId: 41236, photoVer: "16",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa16-david-silva", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -812,6 +925,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 88, position: "CAM",
     nation: "Spain", nationCode: "es", league: "English Premier League", club: "Manchester City",
     stats: { pac: 73, sho: 74, pas: 89, dri: 89, def: 32, phy: 59 }, photoId: 168542, photoVer: "16",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa16-iniesta", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -819,6 +933,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 88, position: "CM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 75, sho: 72, pas: 87, dri: 90, def: 59, phy: 60 }, photoId: 41, photoVer: "16",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa16-neymar", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -826,6 +941,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 88, position: "LW",
     nation: "Brazil", nationCode: "br", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 90, sho: 80, pas: 72, dri: 92, def: 30, phy: 57 }, photoId: 190871, photoVer: "16",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa16-thiago-silva", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -833,6 +949,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 88, position: "CB",
     nation: "Brazil", nationCode: "br", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 74, sho: 57, pas: 73, dri: 73, def: 90, phy: 79 }, photoId: 164240, photoVer: "16",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa16-cesc-fabregas", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -840,6 +957,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 87, position: "CM",
     nation: "Spain", nationCode: "es", league: "English Premier League", club: "Chelsea",
     stats: { pac: 63, sho: 78, pas: 90, dri: 81, def: 64, phy: 65 }, photoId: 162895, photoVer: "16",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa16-franck-ribery", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -847,6 +965,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 87, position: "LM",
     nation: "France", nationCode: "fr", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 87, sho: 77, pas: 84, dri: 91, def: 25, phy: 59 }, photoId: 156616, photoVer: "16",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa16-gareth-bale", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -854,6 +973,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 87, position: "RM",
     nation: "Wales", nationCode: "gb-wls", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 94, sho: 83, pas: 82, dri: 84, def: 63, phy: 81 }, photoId: 173731, photoVer: "16",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa16-giorgio-chiellini", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -861,6 +981,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 87, position: "CB",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 77, sho: 47, pas: 56, dri: 58, def: 90, phy: 84 }, photoId: 138956, photoVer: "16",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa16-james-rodriguez", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -868,6 +989,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 87, position: "CAM",
     nation: "Colombia", nationCode: "co", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 78, sho: 86, pas: 85, dri: 85, def: 43, phy: 72 }, photoId: 198710, photoVer: "16",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa16-jerome-boateng", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -875,6 +997,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 87, position: "CB",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 79, sho: 50, pas: 69, dri: 68, def: 87, phy: 84 }, photoId: 183907, photoVer: "16",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa16-luka-modric", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -882,6 +1005,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 87, position: "CM",
     nation: "Croatia", nationCode: "hr", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 76, sho: 75, pas: 84, dri: 89, def: 71, phy: 68 }, photoId: 177003, photoVer: "16",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa16-mesut-ozil", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -889,6 +1013,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 87, position: "CAM",
     nation: "Germany", nationCode: "de", league: "English Premier League", club: "Arsenal",
     stats: { pac: 72, sho: 74, pas: 85, dri: 86, def: 24, phy: 57 }, photoId: 176635, photoVer: "16",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa16-philipp-lahm", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -896,6 +1021,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 87, position: "CDM",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 75, sho: 56, pas: 84, dri: 85, def: 87, phy: 66 }, photoId: 121939, photoVer: "16",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa16-robert-lewandowski", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -903,6 +1029,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 87, position: "ST",
     nation: "Poland", nationCode: "pl", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 80, sho: 85, pas: 74, dri: 84, def: 38, phy: 80 }, photoId: 188545, photoVer: "16",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa16-sergio-aguero", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -910,6 +1037,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 87, position: "ST",
     nation: "Argentina", nationCode: "ar", league: "English Premier League", club: "Manchester City",
     stats: { pac: 89, sho: 87, pas: 77, dri: 89, def: 23, phy: 68 }, photoId: 153079, photoVer: "16",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa16-sergio-ramos", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -917,6 +1045,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 87, position: "CB",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 79, sho: 63, pas: 72, dri: 69, def: 87, phy: 81 }, photoId: 155862, photoVer: "16",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa16-toni-kroos", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -924,6 +1053,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 87, position: "CM",
     nation: "Germany", nationCode: "de", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 56, sho: 81, pas: 88, dri: 82, def: 66, phy: 69 }, photoId: 182521, photoVer: "16",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa16-alexis-sanchez", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -931,6 +1061,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 86, position: "LW",
     nation: "Chile", nationCode: "cl", league: "English Premier League", club: "Arsenal",
     stats: { pac: 87, sho: 83, pas: 78, dri: 88, def: 39, phy: 73 }, photoId: 184941, photoVer: "16",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa16-arturo-vidal", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -938,6 +1069,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Chile", nationCode: "cl", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 77, sho: 79, pas: 80, dri: 81, def: 83, phy: 83 }, photoId: 181872, photoVer: "16",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa16-bastian-schweinsteiger", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -945,6 +1077,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Germany", nationCode: "de", league: "English Premier League", club: "Manchester United",
     stats: { pac: 52, sho: 79, pas: 85, dri: 79, def: 77, phy: 78 }, photoId: 121944, photoVer: "16",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa16-carlos-tevez", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -952,6 +1085,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 86, position: "ST",
     nation: "Argentina", nationCode: "ar", league: "Argentina Primera División", club: "Boca Juniors",
     stats: { pac: 87, sho: 88, pas: 76, dri: 88, def: 45, phy: 84 }, photoId: 143001, photoVer: "16",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-diego-costa", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -959,6 +1093,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 86, position: "ST",
     nation: "Spain", nationCode: "es", league: "English Premier League", club: "Chelsea",
     stats: { pac: 82, sho: 83, pas: 63, dri: 79, def: 40, phy: 88 }, photoId: 179844, photoVer: "16",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa16-karim-benzema", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -966,6 +1101,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 86, position: "ST",
     nation: "France", nationCode: "fr", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 83, sho: 84, pas: 76, dri: 81, def: 22, phy: 75 }, photoId: 165153, photoVer: "16",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa16-kevin-de-bruyne", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -973,6 +1109,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 86, position: "CAM",
     nation: "Belgium", nationCode: "be", league: "English Premier League", club: "Manchester City",
     stats: { pac: 77, sho: 83, pas: 86, dri: 84, def: 40, phy: 75 }, photoId: 192985, photoVer: "16",
+    difficulty: "easy", internationalReputation: 3,
   },
   {
     id: "fifa16-marco-reus", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -980,6 +1117,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 86, position: "LM",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "Borussia Dortmund",
     stats: { pac: 90, sho: 84, pas: 85, dri: 86, def: 39, phy: 64 }, photoId: 188350, photoVer: "16",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa16-mats-hummels", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -987,6 +1125,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "Borussia Dortmund",
     stats: { pac: 64, sho: 58, pas: 74, dri: 70, def: 88, phy: 77 }, photoId: 178603, photoVer: "16",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa16-paul-pogba", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -994,6 +1133,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "France", nationCode: "fr", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 77, sho: 80, pas: 82, dri: 86, def: 74, phy: 88 }, photoId: 195864, photoVer: "16",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa16-sergio-busquets", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1001,6 +1141,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 86, position: "CDM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 53, sho: 59, pas: 78, dri: 75, def: 83, phy: 81 }, photoId: 189511, photoVer: "16",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa16-thomas-muller", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1008,6 +1149,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 86, position: "CF",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 77, sho: 84, pas: 80, dri: 79, def: 46, phy: 72 }, photoId: 189596, photoVer: "16",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa16-wayne-rooney", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1015,6 +1157,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 86, position: "ST",
     nation: "England", nationCode: "gb-eng", league: "English Premier League", club: "Manchester United",
     stats: { pac: 75, sho: 86, pas: 81, dri: 81, def: 47, phy: 87 }, photoId: 54050, photoVer: "16",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa16-david-alaba", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1022,6 +1165,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 85, position: "LB",
     nation: "Austria", nationCode: "at", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 86, sho: 72, pas: 81, dri: 83, def: 84, phy: 72 }, photoId: 197445, photoVer: "16",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa16-diego-godin", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1029,6 +1173,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Uruguay", nationCode: "uy", league: "Spain Primera Division", club: "Atlético de Madrid",
     stats: { pac: 70, sho: 48, pas: 63, dri: 62, def: 87, phy: 78 }, photoId: 182493, photoVer: "16",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-edinson-cavani", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1036,6 +1181,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "Uruguay", nationCode: "uy", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 76, sho: 83, pas: 71, dri: 81, def: 42, phy: 80 }, photoId: 179813, photoVer: "16",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa16-john-terry", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1043,6 +1189,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "England", nationCode: "gb-eng", league: "English Premier League", club: "Chelsea",
     stats: { pac: 34, sho: 47, pas: 57, dri: 52, def: 87, phy: 81 }, photoId: 13732, photoVer: "16",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-naldo", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1050,6 +1197,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Brazil", nationCode: "br", league: "German 1. Bundesliga", club: "VfL Wolfsburg",
     stats: { pac: 73, sho: 69, pas: 64, dri: 63, def: 88, phy: 76 }, photoId: 171919, photoVer: "20",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-pique", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1057,6 +1205,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 64, sho: 61, pas: 70, dri: 64, def: 86, phy: 76 }, photoId: 152729, photoVer: "16",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa16-santi-cazorla", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1064,6 +1213,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 85, position: "CAM",
     nation: "Spain", nationCode: "es", league: "English Premier League", club: "Arsenal",
     stats: { pac: 73, sho: 78, pas: 85, dri: 87, def: 57, phy: 64 }, photoId: 146562, photoVer: "16",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-vincent-kompany", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1071,6 +1221,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Belgium", nationCode: "be", league: "English Premier League", club: "Manchester City",
     stats: { pac: 69, sho: 54, pas: 62, dri: 65, def: 86, phy: 81 }, photoId: 139720, photoVer: "16",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa16-yaya-toure", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1078,6 +1229,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Côte d'Ivoire", nationCode: "ci", league: "English Premier League", club: "Manchester City",
     stats: { pac: 76, sho: 83, pas: 81, dri: 79, def: 70, phy: 86 }, photoId: 20289, photoVer: "16",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa16-angel-di-maria", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1085,6 +1237,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 85, position: "CAM",
     nation: "Argentina", nationCode: "ar", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 88, sho: 79, pas: 83, dri: 86, def: 49, phy: 70 }, photoId: 183898, photoVer: "16",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa16-alexandre-lacazette", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1092,6 +1245,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 84, position: "ST",
     nation: "France", nationCode: "fr", league: "French Ligue 1", club: "Olympique Lyonnais",
     stats: { pac: 88, sho: 85, pas: 74, dri: 85, def: 34, phy: 73 }, photoId: 193301, photoVer: "16",
+    difficulty: "veryHard", internationalReputation: 2,
   },
   {
     id: "fifa16-andrea-barzagli", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1099,6 +1253,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 75, sho: 36, pas: 55, dri: 59, def: 88, phy: 77 }, photoId: 137186, photoVer: "16",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-andrea-pirlo", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1106,6 +1261,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 84, position: "CM",
     nation: "Italy", nationCode: "it", league: "USA Major League Soccer", club: "New York City FC",
     stats: { pac: 41, sho: 69, pas: 93, dri: 79, def: 52, phy: 58 }, photoId: 7763, photoVer: "16",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa16-blaise-matuidi", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1113,6 +1269,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 84, position: "CDM",
     nation: "France", nationCode: "fr", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 75, sho: 67, pas: 77, dri: 75, def: 83, phy: 81 }, photoId: 170890, photoVer: "16",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-claudio-marchisio", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1120,6 +1277,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 84, position: "CM",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 81, sho: 74, pas: 82, dri: 83, def: 77, phy: 78 }, photoId: 173210, photoVer: "16",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-coutinho", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1127,6 +1285,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 84, position: "CAM",
     nation: "Brazil", nationCode: "br", league: "English Premier League", club: "Liverpool",
     stats: { pac: 82, sho: 74, pas: 81, dri: 87, def: 33, phy: 56 }, photoId: 189242, photoVer: "16",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa16-dani-alves", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1134,6 +1293,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 84, position: "RB",
     nation: "Brazil", nationCode: "br", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 86, sho: 70, pas: 76, dri: 83, def: 78, phy: 69 }, photoId: 146530, photoVer: "16",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa16-gonzalo-higuain", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1141,6 +1301,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 84, position: "ST",
     nation: "Argentina", nationCode: "ar", league: "Italian Serie A", club: "Napoli",
     stats: { pac: 80, sho: 85, pas: 68, dri: 81, def: 22, phy: 71 }, photoId: 167664, photoVer: "16",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa16-hulk", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1148,6 +1309,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 84, position: "RW",
     nation: "Brazil", nationCode: "br", league: "Russian Premier League", club: "Zenit St. Petersburg",
     stats: { pac: 85, sho: 87, pas: 81, dri: 82, def: 43, phy: 86 }, photoId: 189362, photoVer: "16",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa16-isco", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1155,6 +1317,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 84, position: "CAM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 75, sho: 76, pas: 81, dri: 87, def: 40, phy: 63 }, photoId: 197781, photoVer: "16",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-ivan-rakitic", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1162,6 +1325,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 84, position: "CM",
     nation: "Croatia", nationCode: "hr", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 68, sho: 82, pas: 86, dri: 82, def: 56, phy: 67 }, photoId: 168651, photoVer: "16",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa16-jackson-martinez", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1169,6 +1333,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 84, position: "ST",
     nation: "Colombia", nationCode: "co", league: "Spain Primera Division", club: "Atlético de Madrid",
     stats: { pac: 81, sho: 82, pas: 67, dri: 79, def: 44, phy: 85 },
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-javi-martinez", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1176,6 +1341,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Spain", nationCode: "es", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 52, sho: 61, pas: 71, dri: 65, def: 84, phy: 79 }, photoId: 177610, photoVer: "16",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-javier-pastore", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1183,6 +1349,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 84, position: "CM",
     nation: "Argentina", nationCode: "ar", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 74, sho: 77, pas: 84, dri: 86, def: 58, phy: 68 }, photoId: 191180, photoVer: "16",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-jordi-alba", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1190,6 +1357,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 84, position: "LB",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 92, sho: 69, pas: 75, dri: 82, def: 80, phy: 75 }, photoId: 189332, photoVer: "16",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-juan-mata", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1197,6 +1365,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 84, position: "RM",
     nation: "Spain", nationCode: "es", league: "English Premier League", club: "Manchester United",
     stats: { pac: 71, sho: 75, pas: 84, dri: 87, def: 27, phy: 55 }, photoId: 178088, photoVer: "16",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-marco-verratti", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1204,6 +1373,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 84, position: "CM",
     nation: "Italy", nationCode: "it", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 68, sho: 58, pas: 83, dri: 87, def: 78, phy: 69 }, photoId: 199556, photoVer: "16",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-mario-gotze", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1211,6 +1381,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 84, position: "CAM",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 72, sho: 73, pas: 81, dri: 88, def: 32, phy: 62 }, photoId: 192318, photoVer: "16",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa16-medhi-benatia", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1218,6 +1389,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Morocco", nationCode: "ma", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 65, sho: 44, pas: 54, dri: 61, def: 86, phy: 83 }, photoId: 177509, photoVer: "19",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-miralem-pjanic", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1225,6 +1397,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 84, position: "CM",
     nation: "Bosnia and Herzegovina", nationCode: "ba", league: "Italian Serie A", club: "Roma",
     stats: { pac: 72, sho: 75, pas: 85, dri: 84, def: 63, phy: 66 }, photoId: 180206, photoVer: "16",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-miranda", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1232,6 +1405,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Brazil", nationCode: "br", league: "Italian Serie A", club: "Inter",
     stats: { pac: 76, sho: 49, pas: 56, dri: 57, def: 86, phy: 80 }, photoId: 168609, photoVer: "16",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-nemanja-matic", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1239,6 +1413,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 84, position: "CDM",
     nation: "Serbia", nationCode: "rs", league: "English Premier League", club: "Chelsea",
     stats: { pac: 67, sho: 70, pas: 77, dri: 75, def: 82, phy: 88 }, photoId: 191202, photoVer: "16",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-nicolas-otamendi", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1246,6 +1421,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Argentina", nationCode: "ar", league: "English Premier League", club: "Manchester City",
     stats: { pac: 75, sho: 56, pas: 56, dri: 54, def: 87, phy: 82 }, photoId: 192366, photoVer: "24",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-oscar", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1253,6 +1429,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 84, position: "CAM",
     nation: "Brazil", nationCode: "br", league: "English Premier League", club: "Chelsea",
     stats: { pac: 79, sho: 75, pas: 81, dri: 84, def: 43, phy: 47 }, photoId: 188152, photoVer: "16",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-pepe", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1260,6 +1437,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Portugal", nationCode: "pt", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 73, sho: 51, pas: 58, dri: 59, def: 86, phy: 82 }, photoId: 120533, photoVer: "16",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa16-robin-van-persie", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1267,6 +1445,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 84, position: "ST",
     nation: "Netherlands", nationCode: "nl", league: "Turkish Süper Lig", club: "Fenerbahçe SK",
     stats: { pac: 67, sho: 86, pas: 81, dri: 81, def: 33, phy: 67 }, photoId: 7826, photoVer: "16",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa16-steven-gerrard", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1274,6 +1453,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 84, position: "CM",
     nation: "England", nationCode: "gb-eng", league: "USA Major League Soccer", club: "LA Galaxy",
     stats: { pac: 54, sho: 82, pas: 86, dri: 75, def: 69, phy: 80 }, photoId: 13743, photoVer: "16",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa16-wesley-sneijder", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1281,6 +1461,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 84, position: "CAM",
     nation: "Netherlands", nationCode: "nl", league: "Turkish Süper Lig", club: "Galatasaray SK",
     stats: { pac: 74, sho: 80, pas: 86, dri: 84, def: 45, phy: 61 }, photoId: 139869, photoVer: "16",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-xabi-alonso", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1288,6 +1469,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 84, position: "CDM",
     nation: "Spain", nationCode: "es", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 33, sho: 69, pas: 88, dri: 77, def: 76, phy: 70 }, photoId: 45197, photoVer: "16",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa16-antonio-candreva", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1295,6 +1477,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 83, position: "RW",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Lazio",
     stats: { pac: 86, sho: 81, pas: 82, dri: 85, def: 45, phy: 74 },
+    difficulty: "veryHard", internationalReputation: 2,
   },
   {
     id: "fifa16-arda-turan", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1302,6 +1485,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 83, position: "RM",
     nation: "Turkey", nationCode: "tr", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 75, sho: 74, pas: 82, dri: 87, def: 61, phy: 73 }, photoId: 143745, photoVer: "16",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-benedikt-howedes", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1309,6 +1493,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 83, position: "CB",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "FC Schalke 04",
     stats: { pac: 65, sho: 47, pas: 63, dri: 65, def: 85, phy: 78 }, photoId: 179784, photoVer: "16",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-daniel-sturridge", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1316,6 +1501,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 83, position: "ST",
     nation: "England", nationCode: "gb-eng", league: "English Premier League", club: "Liverpool",
     stats: { pac: 89, sho: 83, pas: 69, dri: 81, def: 25, phy: 70 }, photoId: 171833, photoVer: "16",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-daniele-de-rossi", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1323,6 +1509,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 83, position: "CDM",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Roma",
     stats: { pac: 68, sho: 66, pas: 74, dri: 72, def: 83, phy: 84 }, photoId: 53302, photoVer: "16",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-david-luiz", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1330,6 +1517,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 83, position: "CB",
     nation: "Brazil", nationCode: "br", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 73, sho: 64, pas: 73, dri: 73, def: 83, phy: 77 }, photoId: 179944, photoVer: "16",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa16-ezequiel-garay", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1337,6 +1525,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 83, position: "CB",
     nation: "Argentina", nationCode: "ar", league: "Russian Premier League", club: "Zenit St. Petersburg",
     stats: { pac: 52, sho: 57, pas: 68, dri: 64, def: 87, phy: 78 }, photoId: 170481, photoVer: "20",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-falcao", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1344,6 +1533,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 83, position: "ST",
     nation: "Colombia", nationCode: "co", league: "English Premier League", club: "Chelsea",
     stats: { pac: 72, sho: 82, pas: 64, dri: 79, def: 37, phy: 73 }, photoId: 167397, photoVer: "16",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa16-gary-cahill", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1351,6 +1541,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 83, position: "CB",
     nation: "England", nationCode: "gb-eng", league: "English Premier League", club: "Chelsea",
     stats: { pac: 73, sho: 58, pas: 52, dri: 62, def: 86, phy: 76 }, photoId: 164468, photoVer: "16",
+    difficulty: "veryHard", internationalReputation: 2,
   },
   {
     id: "fifa16-javier-mascherano", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1358,6 +1549,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 83, position: "CB",
     nation: "Argentina", nationCode: "ar", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 68, sho: 59, pas: 71, dri: 69, def: 85, phy: 80 }, photoId: 142754, photoVer: "16",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa16-joao-moutinho", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1365,6 +1557,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 83, position: "CAM",
     nation: "Portugal", nationCode: "pt", league: "French Ligue 1", club: "AS Monaco",
     stats: { pac: 71, sho: 76, pas: 83, dri: 82, def: 71, phy: 71 }, photoId: 162347, photoVer: "24",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-jeremy-mathieu", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1372,6 +1565,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 83, position: "CB",
     nation: "France", nationCode: "fr", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 76, sho: 64, pas: 66, dri: 55, def: 84, phy: 82 }, photoId: 112316, photoVer: "16",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-laurent-koscielny", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1379,6 +1573,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 83, position: "CB",
     nation: "France", nationCode: "fr", league: "English Premier League", club: "Arsenal",
     stats: { pac: 78, sho: 40, pas: 62, dri: 65, def: 84, phy: 75 }, photoId: 165229, photoVer: "16",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-leighton-baines", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1386,6 +1581,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 83, position: "LB",
     nation: "England", nationCode: "gb-eng", league: "English Premier League", club: "Everton",
     stats: { pac: 75, sho: 75, pas: 81, dri: 77, def: 82, phy: 74 }, photoId: 163631, photoVer: "16",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-leonardo-bonucci", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1393,6 +1589,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 83, position: "CB",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 71, sho: 50, pas: 66, dri: 67, def: 85, phy: 81 }, photoId: 184344, photoVer: "16",
+    difficulty: "veryHard", internationalReputation: 2,
   },
   {
     id: "fifa16-marcelo", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1400,6 +1597,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 83, position: "LB",
     nation: "Brazil", nationCode: "br", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 81, sho: 68, pas: 77, dri: 84, def: 81, phy: 79 }, photoId: 176676, photoVer: "16",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa16-marek-hamsik", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1407,6 +1605,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 83, position: "CAM",
     nation: "Slovakia", nationCode: "sk", league: "Italian Serie A", club: "Napoli",
     stats: { pac: 74, sho: 77, pas: 81, dri: 82, def: 58, phy: 70 }, photoId: 171877, photoVer: "16",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-mario-mandzukic", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1414,6 +1613,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 83, position: "ST",
     nation: "Croatia", nationCode: "hr", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 77, sho: 82, pas: 62, dri: 76, def: 38, phy: 86 }, photoId: 181783, photoVer: "16",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-nemanja-vidic", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1421,6 +1621,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 83, position: "CB",
     nation: "Serbia", nationCode: "rs", league: "Italian Serie A", club: "Inter",
     stats: { pac: 52, sho: 33, pas: 48, dri: 50, def: 85, phy: 80 }, photoId: 140601, photoVer: "16",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-nicolas-gaitan", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1428,6 +1629,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 83, position: "LM",
     nation: "Argentina", nationCode: "ar", league: "Portuguese Liga ZON SAGRES", club: "SL Benfica",
     stats: { pac: 83, sho: 74, pas: 84, dri: 86, def: 40, phy: 57 }, photoId: 184144, photoVer: "23",
+    difficulty: "veryHard", internationalReputation: 2,
   },
   {
     id: "fifa16-per-mertesacker", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1435,6 +1637,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 83, position: "CB",
     nation: "Germany", nationCode: "de", league: "English Premier League", club: "Arsenal",
     stats: { pac: 31, sho: 41, pas: 57, dri: 48, def: 88, phy: 75 }, photoId: 53612, photoVer: "16",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-radja-nainggolan", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1442,6 +1645,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 83, position: "CM",
     nation: "Belgium", nationCode: "be", league: "Italian Serie A", club: "Roma",
     stats: { pac: 80, sho: 78, pas: 79, dri: 81, def: 81, phy: 84 }, photoId: 178518, photoVer: "23",
+    difficulty: "veryHard", internationalReputation: 2,
   },
   {
     id: "fifa16-sami-khedira", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1449,6 +1653,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 83, position: "CDM",
     nation: "Germany", nationCode: "de", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 62, sho: 70, pas: 73, dri: 70, def: 83, phy: 86 }, photoId: 179846, photoVer: "16",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-samir-nasri", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1456,6 +1661,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 83, position: "LM",
     nation: "France", nationCode: "fr", league: "English Premier League", club: "Manchester City",
     stats: { pac: 81, sho: 76, pas: 83, dri: 86, def: 38, phy: 58 }, photoId: 165239, photoVer: "16",
+    difficulty: "veryHard", internationalReputation: 3,
   },
   {
     id: "fifa16-sokratis", edition: "FIFA16", editionLabel: "FIFA 16",
@@ -1463,6 +1669,7 @@ const CARDS_FIFA16: FifaCard[] = [
     overall: 83, position: "CB",
     nation: "Greece", nationCode: "gr", league: "German 1. Bundesliga", club: "Borussia Dortmund",
     stats: { pac: 75, sho: 53, pas: 57, dri: 60, def: 86, phy: 83 }, photoId: 172879, photoVer: "16",
+    difficulty: "veryHard", internationalReputation: 2,
   },
 ];
 
@@ -1473,6 +1680,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 94, position: "LW",
     nation: "Portugal", nationCode: "pt", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 92, sho: 92, pas: 81, dri: 91, def: 33, phy: 80 }, photoId: 20801, photoVer: "17",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa17-lionel-messi", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1480,6 +1688,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 93, position: "RW",
     nation: "Argentina", nationCode: "ar", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 89, sho: 90, pas: 86, dri: 96, def: 26, phy: 61 }, photoId: 158023, photoVer: "17",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa17-luis-suarez", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1487,6 +1696,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 92, position: "ST",
     nation: "Uruguay", nationCode: "uy", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 82, sho: 90, pas: 79, dri: 87, def: 42, phy: 79 }, photoId: 176580, photoVer: "17",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa17-neymar", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1494,6 +1704,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 92, position: "LW",
     nation: "Brazil", nationCode: "br", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 91, sho: 84, pas: 78, dri: 95, def: 30, phy: 56 }, photoId: 190871, photoVer: "17",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa17-gareth-bale", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1501,6 +1712,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 90, position: "RW",
     nation: "Wales", nationCode: "gb-wls", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 94, sho: 87, pas: 84, dri: 86, def: 57, phy: 76 }, photoId: 173731, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-jerome-boateng", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1508,6 +1720,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 90, position: "CB",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 79, sho: 50, pas: 72, dri: 68, def: 90, phy: 85 }, photoId: 183907, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-robert-lewandowski", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1515,6 +1728,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 90, position: "ST",
     nation: "Poland", nationCode: "pl", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 81, sho: 87, pas: 74, dri: 85, def: 38, phy: 82 }, photoId: 188545, photoVer: "17",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa17-zlatan-ibrahimovic", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1522,6 +1736,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 90, position: "ST",
     nation: "Sweden", nationCode: "se", league: "English Premier League", club: "Manchester United",
     stats: { pac: 72, sho: 90, pas: 81, dri: 85, def: 31, phy: 86 }, photoId: 41236, photoVer: "17",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa17-luka-modric", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1529,6 +1744,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 89, position: "CM",
     nation: "Croatia", nationCode: "hr", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 74, sho: 75, pas: 86, dri: 89, def: 72, phy: 66 }, photoId: 177003, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-mesut-ozil", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1536,6 +1752,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 89, position: "CAM",
     nation: "Germany", nationCode: "de", league: "English Premier League", club: "Arsenal",
     stats: { pac: 72, sho: 74, pas: 87, dri: 86, def: 24, phy: 58 }, photoId: 176635, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-sergio-aguero", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1543,6 +1760,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 89, position: "ST",
     nation: "Argentina", nationCode: "ar", league: "English Premier League", club: "Manchester City",
     stats: { pac: 89, sho: 88, pas: 75, dri: 89, def: 23, phy: 70 }, photoId: 153079, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-sergio-ramos", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1550,6 +1768,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 89, position: "CB",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 78, sho: 63, pas: 70, dri: 71, def: 87, phy: 83 }, photoId: 155862, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-thiago-silva", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1557,6 +1776,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 89, position: "CB",
     nation: "Brazil", nationCode: "br", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 74, sho: 57, pas: 73, dri: 73, def: 90, phy: 79 }, photoId: 164240, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-antoine-griezmann", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1564,6 +1784,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 88, position: "ST",
     nation: "France", nationCode: "fr", league: "Spain Primera Division", club: "Atlético de Madrid",
     stats: { pac: 86, sho: 85, pas: 78, dri: 87, def: 30, phy: 67 }, photoId: 194765, photoVer: "17",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa17-diego-godin", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1571,6 +1792,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 88, position: "CB",
     nation: "Uruguay", nationCode: "uy", league: "Spain Primera Division", club: "Atlético de Madrid",
     stats: { pac: 65, sho: 48, pas: 65, dri: 63, def: 88, phy: 79 }, photoId: 182493, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-eden-hazard", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1578,6 +1800,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 88, position: "LM",
     nation: "Belgium", nationCode: "be", league: "English Premier League", club: "Chelsea",
     stats: { pac: 90, sho: 81, pas: 82, dri: 91, def: 32, phy: 64 }, photoId: 183277, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-giorgio-chiellini", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1585,6 +1808,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 88, position: "CB",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 74, sho: 46, pas: 53, dri: 58, def: 90, phy: 85 }, photoId: 138956, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-gonzalo-higuain", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1592,6 +1816,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 88, position: "ST",
     nation: "Argentina", nationCode: "ar", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 80, sho: 87, pas: 68, dri: 82, def: 24, phy: 75 }, photoId: 167664, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-iniesta", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1599,6 +1824,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 88, position: "CM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 73, sho: 72, pas: 87, dri: 90, def: 59, phy: 60 }, photoId: 41, photoVer: "17",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa17-kevin-de-bruyne", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1606,6 +1832,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 88, position: "CAM",
     nation: "Belgium", nationCode: "be", league: "English Premier League", club: "Manchester City",
     stats: { pac: 77, sho: 83, pas: 86, dri: 84, def: 40, phy: 75 }, photoId: 192985, photoVer: "17",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa17-marco-reus", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1613,6 +1840,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 88, position: "LM",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "Borussia Dortmund",
     stats: { pac: 90, sho: 85, pas: 84, dri: 86, def: 40, phy: 63 }, photoId: 188350, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-paul-pogba", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1620,6 +1848,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 88, position: "CM",
     nation: "France", nationCode: "fr", league: "English Premier League", club: "Manchester United",
     stats: { pac: 77, sho: 80, pas: 83, dri: 87, def: 72, phy: 87 }, photoId: 195864, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-pepe", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1627,6 +1856,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 88, position: "CB",
     nation: "Portugal", nationCode: "pt", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 71, sho: 51, pas: 56, dri: 59, def: 88, phy: 81 }, photoId: 120533, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-philipp-lahm", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1634,6 +1864,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 88, position: "RB",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 68, sho: 56, pas: 82, dri: 84, def: 86, phy: 64 }, photoId: 121939, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-toni-kroos", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1641,6 +1872,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 88, position: "CM",
     nation: "Germany", nationCode: "de", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 45, sho: 80, pas: 88, dri: 79, def: 69, phy: 70 }, photoId: 182521, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-alexis-sanchez", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1648,6 +1880,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 87, position: "LW",
     nation: "Chile", nationCode: "cl", league: "English Premier League", club: "Arsenal",
     stats: { pac: 86, sho: 82, pas: 79, dri: 88, def: 39, phy: 75 }, photoId: 184941, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-arjen-robben", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1655,6 +1888,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 87, position: "RM",
     nation: "Netherlands", nationCode: "nl", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 86, sho: 85, pas: 81, dri: 90, def: 32, phy: 62 }, photoId: 9014, photoVer: "17",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa17-arturo-vidal", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1662,6 +1896,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 87, position: "CM",
     nation: "Chile", nationCode: "cl", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 77, sho: 81, pas: 80, dri: 79, def: 84, phy: 84 }, photoId: 181872, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-david-alaba", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1669,6 +1904,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 87, position: "LB",
     nation: "Austria", nationCode: "at", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 86, sho: 73, pas: 81, dri: 83, def: 83, phy: 73 }, photoId: 197445, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-david-silva", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1676,6 +1912,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 87, position: "CAM",
     nation: "Spain", nationCode: "es", league: "English Premier League", club: "Manchester City",
     stats: { pac: 68, sho: 72, pas: 87, dri: 87, def: 32, phy: 59 }, photoId: 168542, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-ivan-rakitic", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1683,6 +1920,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 87, position: "CM",
     nation: "Croatia", nationCode: "hr", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 66, sho: 84, pas: 86, dri: 82, def: 59, phy: 66 }, photoId: 168651, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-james-rodriguez", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1690,6 +1928,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 87, position: "CAM",
     nation: "Colombia", nationCode: "co", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 76, sho: 85, pas: 85, dri: 85, def: 40, phy: 68 }, photoId: 198710, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-karim-benzema", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1697,6 +1936,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 87, position: "ST",
     nation: "France", nationCode: "fr", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 81, sho: 84, pas: 77, dri: 82, def: 22, phy: 74 }, photoId: 165153, photoVer: "17",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa17-leonardo-bonucci", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1704,6 +1944,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 87, position: "CB",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 70, sho: 53, pas: 68, dri: 69, def: 87, phy: 81 }, photoId: 184344, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-mats-hummels", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1711,6 +1952,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 87, position: "CB",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 64, sho: 58, pas: 74, dri: 71, def: 88, phy: 77 }, photoId: 178603, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-sergio-busquets", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1718,6 +1960,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 87, position: "CDM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 42, sho: 59, pas: 79, dri: 74, def: 83, phy: 81 }, photoId: 189511, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-thomas-muller", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1725,6 +1968,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 87, position: "CF",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 78, sho: 83, pas: 77, dri: 78, def: 46, phy: 72 }, photoId: 189596, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-angel-di-maria", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1732,6 +1976,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 87, position: "RW",
     nation: "Argentina", nationCode: "ar", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 87, sho: 79, pas: 84, dri: 87, def: 47, phy: 70 }, photoId: 183898, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-andrea-barzagli", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1739,6 +1984,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 75, sho: 37, pas: 56, dri: 63, def: 89, phy: 79 }, photoId: 137186, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-blaise-matuidi", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1746,6 +1992,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 86, position: "CDM",
     nation: "France", nationCode: "fr", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 79, sho: 67, pas: 78, dri: 76, def: 83, phy: 84 }, photoId: 170890, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-cesc-fabregas", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1753,6 +2000,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Spain", nationCode: "es", league: "English Premier League", club: "Chelsea",
     stats: { pac: 63, sho: 77, pas: 89, dri: 81, def: 61, phy: 64 }, photoId: 162895, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-claudio-marchisio", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1760,6 +2008,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 77, sho: 74, pas: 83, dri: 83, def: 76, phy: 75 }, photoId: 173210, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-dimitri-payet", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1767,6 +2016,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 86, position: "LM",
     nation: "France", nationCode: "fr", league: "English Premier League", club: "West Ham United",
     stats: { pac: 77, sho: 78, pas: 87, dri: 87, def: 42, phy: 70 }, photoId: 177388, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-franck-ribery", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1774,6 +2024,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 86, position: "LM",
     nation: "France", nationCode: "fr", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 82, sho: 76, pas: 83, dri: 90, def: 25, phy: 59 }, photoId: 156616, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-jordi-alba", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1781,6 +2032,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 86, position: "LB",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 93, sho: 69, pas: 75, dri: 83, def: 81, phy: 75 }, photoId: 189332, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-marcelo", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1788,6 +2040,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 86, position: "LB",
     nation: "Brazil", nationCode: "br", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 79, sho: 69, pas: 80, dri: 84, def: 82, phy: 80 }, photoId: 176676, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-miranda", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1795,6 +2048,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Brazil", nationCode: "br", league: "Italian Serie A", club: "Inter",
     stats: { pac: 75, sho: 49, pas: 56, dri: 64, def: 89, phy: 77 }, photoId: 168609, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-pierre-emerick-aubameyang", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1802,6 +2056,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 86, position: "ST",
     nation: "Gabon", nationCode: "ga", league: "German 1. Bundesliga", club: "Borussia Dortmund",
     stats: { pac: 96, sho: 84, pas: 75, dri: 80, def: 37, phy: 71 }, photoId: 188567, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-pique", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1809,6 +2064,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 61, sho: 61, pas: 70, dri: 64, def: 86, phy: 76 }, photoId: 152729, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-santi-cazorla", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1816,6 +2072,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 86, position: "CAM",
     nation: "Spain", nationCode: "es", league: "English Premier League", club: "Arsenal",
     stats: { pac: 71, sho: 78, pas: 85, dri: 86, def: 57, phy: 64 }, photoId: 146562, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-vincent-kompany", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1823,6 +2080,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Belgium", nationCode: "be", league: "English Premier League", club: "Manchester City",
     stats: { pac: 69, sho: 54, pas: 62, dri: 65, def: 86, phy: 81 }, photoId: 139720, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-alexandre-lacazette", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1830,6 +2088,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "France", nationCode: "fr", league: "French Ligue 1", club: "Olympique Lyonnais",
     stats: { pac: 86, sho: 82, pas: 75, dri: 85, def: 34, phy: 76 }, photoId: 193301, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-coutinho", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1837,6 +2096,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 85, position: "CAM",
     nation: "Brazil", nationCode: "br", league: "English Premier League", club: "Liverpool",
     stats: { pac: 82, sho: 74, pas: 82, dri: 87, def: 33, phy: 56 }, photoId: 189242, photoVer: "17",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa17-dani-alves", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1844,6 +2104,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 85, position: "RB",
     nation: "Brazil", nationCode: "br", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 87, sho: 70, pas: 76, dri: 82, def: 78, phy: 69 }, photoId: 146530, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-diego-costa", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1851,6 +2112,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "Spain", nationCode: "es", league: "English Premier League", club: "Chelsea",
     stats: { pac: 75, sho: 82, pas: 63, dri: 77, def: 40, phy: 88 }, photoId: 179844, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-edinson-cavani", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1858,6 +2120,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "Uruguay", nationCode: "uy", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 76, sho: 83, pas: 71, dri: 79, def: 42, phy: 80 }, photoId: 179813, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-filipe-luis", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1865,6 +2128,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 85, position: "LB",
     nation: "Brazil", nationCode: "br", league: "Spain Primera Division", club: "Atlético de Madrid",
     stats: { pac: 80, sho: 62, pas: 77, dri: 77, def: 82, phy: 79 }, photoId: 164169, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-henrikh-mkhitaryan", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1872,6 +2136,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 85, position: "RM",
     nation: "Armenia", nationCode: "am", league: "English Premier League", club: "Manchester United",
     stats: { pac: 83, sho: 77, pas: 81, dri: 87, def: 55, phy: 70 }, photoId: 192883, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-javier-mascherano", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1879,6 +2144,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Argentina", nationCode: "ar", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 66, sho: 53, pas: 71, dri: 69, def: 85, phy: 80 }, photoId: 142754, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-javier-pastore", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1886,6 +2152,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Argentina", nationCode: "ar", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 74, sho: 77, pas: 84, dri: 86, def: 58, phy: 68 }, photoId: 191180, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-laurent-koscielny", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1893,6 +2160,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "France", nationCode: "fr", league: "English Premier League", club: "Arsenal",
     stats: { pac: 78, sho: 40, pas: 62, dri: 65, def: 85, phy: 78 }, photoId: 165229, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-marco-verratti", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1900,6 +2168,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Italy", nationCode: "it", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 68, sho: 58, pas: 83, dri: 87, def: 78, phy: 68 }, photoId: 199556, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-marek-hamsik", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1907,6 +2176,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Slovakia", nationCode: "sk", league: "Italian Serie A", club: "Napoli",
     stats: { pac: 76, sho: 78, pas: 83, dri: 82, def: 64, phy: 69 }, photoId: 171877, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-miralem-pjanic", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1914,6 +2184,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Bosnia and Herzegovina", nationCode: "ba", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 74, sho: 75, pas: 86, dri: 84, def: 64, phy: 68 }, photoId: 180206, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-nicolas-gaitan", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1921,6 +2192,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 85, position: "LM",
     nation: "Argentina", nationCode: "ar", league: "Spain Primera Division", club: "Atlético de Madrid",
     stats: { pac: 82, sho: 74, pas: 83, dri: 86, def: 39, phy: 58 }, photoId: 184144, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-nicolas-otamendi", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1928,6 +2200,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Argentina", nationCode: "ar", league: "English Premier League", club: "Manchester City",
     stats: { pac: 72, sho: 56, pas: 56, dri: 53, def: 85, phy: 82 }, photoId: 192366, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-paulo-dybala", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1935,6 +2208,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "Argentina", nationCode: "ar", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 88, sho: 86, pas: 76, dri: 90, def: 23, phy: 66 }, photoId: 211110, photoVer: "17",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa17-riyad-mahrez", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1942,6 +2216,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 85, position: "RM",
     nation: "Algeria", nationCode: "dz", league: "English Premier League", club: "Leicester City",
     stats: { pac: 82, sho: 77, pas: 80, dri: 88, def: 30, phy: 58 }, photoId: 204485, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-toby-alderweireld", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1949,6 +2224,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Belgium", nationCode: "be", league: "English Premier League", club: "Tottenham Hotspur",
     stats: { pac: 66, sho: 58, pas: 71, dri: 64, def: 86, phy: 79 }, photoId: 184087, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-willian", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1956,6 +2232,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 85, position: "RM",
     nation: "Brazil", nationCode: "br", league: "English Premier League", club: "Chelsea",
     stats: { pac: 89, sho: 74, pas: 80, dri: 86, def: 51, phy: 63 }, photoId: 180403, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-ilkay-gundogan", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1963,6 +2240,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Germany", nationCode: "de", league: "English Premier League", club: "Manchester City",
     stats: { pac: 75, sho: 72, pas: 84, dri: 87, def: 63, phy: 72 }, photoId: 186942, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-aaron-ramsey", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1970,6 +2248,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 84, position: "CM",
     nation: "Wales", nationCode: "gb-wls", league: "English Premier League", club: "Arsenal",
     stats: { pac: 69, sho: 77, pas: 80, dri: 81, def: 68, phy: 76 }, photoId: 186561, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-aduriz", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1977,6 +2256,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 84, position: "ST",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Athletic Club de Bilbao",
     stats: { pac: 70, sho: 83, pas: 64, dri: 76, def: 46, phy: 79 }, photoId: 106231, photoVer: "17",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa17-alex-sandro", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1984,6 +2264,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 84, position: "LB",
     nation: "Brazil", nationCode: "br", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 87, sho: 64, pas: 75, dri: 81, def: 79, phy: 76 }, photoId: 191043, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-arda-turan", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1991,6 +2272,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 84, position: "CM",
     nation: "Turkey", nationCode: "tr", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 73, sho: 74, pas: 83, dri: 86, def: 61, phy: 73 }, photoId: 143745, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-azpilicueta", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -1998,6 +2280,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 84, position: "LB",
     nation: "Spain", nationCode: "es", league: "English Premier League", club: "Chelsea",
     stats: { pac: 79, sho: 56, pas: 75, dri: 74, def: 84, phy: 77 }, photoId: 184432, photoVer: "17",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa17-benedikt-howedes", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -2005,6 +2288,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "FC Schalke 04",
     stats: { pac: 65, sho: 47, pas: 63, dri: 65, def: 84, phy: 78 }, photoId: 179784, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-chris-smalling", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -2012,6 +2296,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "England", nationCode: "gb-eng", league: "English Premier League", club: "Manchester United",
     stats: { pac: 77, sho: 46, pas: 56, dri: 62, def: 84, phy: 84 }, photoId: 189881, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-christian-eriksen", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -2019,6 +2304,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 84, position: "CAM",
     nation: "Denmark", nationCode: "dk", league: "English Premier League", club: "Tottenham Hotspur",
     stats: { pac: 76, sho: 76, pas: 84, dri: 84, def: 44, phy: 59 }, photoId: 190460, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-daniel-sturridge", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -2026,6 +2312,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 84, position: "ST",
     nation: "England", nationCode: "gb-eng", league: "English Premier League", club: "Liverpool",
     stats: { pac: 89, sho: 83, pas: 69, dri: 81, def: 25, phy: 70 }, photoId: 171833, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-david-luiz", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -2033,6 +2320,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Brazil", nationCode: "br", league: "English Premier League", club: "Chelsea",
     stats: { pac: 73, sho: 64, pas: 73, dri: 71, def: 83, phy: 79 }, photoId: 179944, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-douglas-costa", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -2040,6 +2328,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 84, position: "LM",
     nation: "Brazil", nationCode: "br", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 92, sho: 78, pas: 78, dri: 86, def: 49, phy: 63 }, photoId: 190483, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-ezequiel-garay", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -2047,6 +2336,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Argentina", nationCode: "ar", league: "Spain Primera Division", club: "Valencia CF",
     stats: { pac: 52, sho: 57, pas: 68, dri: 64, def: 87, phy: 81 }, photoId: 170481, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-hatem-ben-arfa", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -2054,6 +2344,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 84, position: "CAM",
     nation: "France", nationCode: "fr", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 82, sho: 82, pas: 79, dri: 88, def: 40, phy: 74 }, photoId: 161648, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-javi-martinez", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -2061,6 +2352,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Spain", nationCode: "es", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 52, sho: 61, pas: 70, dri: 65, def: 84, phy: 78 }, photoId: 177610, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-john-terry", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -2068,6 +2360,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "England", nationCode: "gb-eng", league: "English Premier League", club: "Chelsea",
     stats: { pac: 34, sho: 47, pas: 57, dri: 51, def: 86, phy: 80 }, photoId: 13732, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-jonas", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -2075,6 +2368,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 84, position: "ST",
     nation: "Brazil", nationCode: "br", league: "Portuguese Liga ZON SAGRES", club: "SL Benfica",
     stats: { pac: 72, sho: 85, pas: 78, dri: 84, def: 35, phy: 65 }, photoId: 176769, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-juan-mata", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -2082,6 +2376,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 84, position: "CAM",
     nation: "Spain", nationCode: "es", league: "English Premier League", club: "Manchester United",
     stats: { pac: 68, sho: 75, pas: 84, dri: 85, def: 32, phy: 54 }, photoId: 178088, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-mario-gotze", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -2089,6 +2384,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 84, position: "CAM",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "Borussia Dortmund",
     stats: { pac: 70, sho: 70, pas: 78, dri: 89, def: 31, phy: 61 }, photoId: 192318, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-naldo", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -2096,6 +2392,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Brazil", nationCode: "br", league: "German 1. Bundesliga", club: "FC Schalke 04",
     stats: { pac: 72, sho: 69, pas: 64, dri: 62, def: 86, phy: 74 }, photoId: 171919, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-nemanja-matic", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -2103,6 +2400,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 84, position: "CDM",
     nation: "Serbia", nationCode: "rs", league: "English Premier League", club: "Chelsea",
     stats: { pac: 67, sho: 70, pas: 76, dri: 72, def: 81, phy: 88 }, photoId: 191202, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-radja-nainggolan", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -2110,6 +2408,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 84, position: "CM",
     nation: "Belgium", nationCode: "be", league: "Italian Serie A", club: "Roma",
     stats: { pac: 79, sho: 78, pas: 78, dri: 81, def: 81, phy: 84 }, photoId: 178518, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-romelu-lukaku", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -2117,6 +2416,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 84, position: "ST",
     nation: "Belgium", nationCode: "be", league: "English Premier League", club: "Everton",
     stats: { pac: 82, sho: 82, pas: 66, dri: 74, def: 34, phy: 84 }, photoId: 192505, photoVer: "17",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa17-sokratis", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -2124,6 +2424,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Greece", nationCode: "gr", league: "German 1. Bundesliga", club: "Borussia Dortmund",
     stats: { pac: 78, sho: 51, pas: 55, dri: 60, def: 85, phy: 83 }, photoId: 172879, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-thiago", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -2131,6 +2432,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 84, position: "CM",
     nation: "Spain", nationCode: "es", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 72, sho: 75, pas: 82, dri: 89, def: 57, phy: 62 }, photoId: 189509, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-wayne-rooney", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -2138,6 +2440,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 84, position: "CAM",
     nation: "England", nationCode: "gb-eng", league: "English Premier League", club: "Manchester United",
     stats: { pac: 71, sho: 84, pas: 81, dri: 79, def: 53, phy: 86 }, photoId: 54050, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-xabi-alonso", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -2145,6 +2448,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 84, position: "CDM",
     nation: "Spain", nationCode: "es", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 33, sho: 70, pas: 87, dri: 75, def: 76, phy: 71 }, photoId: 45197, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-yaya-toure", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -2152,6 +2456,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 84, position: "CM",
     nation: "Côte d'Ivoire", nationCode: "ci", league: "English Premier League", club: "Manchester City",
     stats: { pac: 74, sho: 83, pas: 81, dri: 77, def: 69, phy: 84 }, photoId: 20289, photoVer: "17",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa17-ever-banega", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -2159,6 +2464,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 84, position: "CAM",
     nation: "Argentina", nationCode: "ar", league: "Italian Serie A", club: "Inter",
     stats: { pac: 71, sho: 71, pas: 85, dri: 83, def: 64, phy: 69 }, photoId: 178562, photoVer: "17",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa17-omer-toprak", edition: "FIFA17", editionLabel: "FIFA 17",
@@ -2166,6 +2472,7 @@ const CARDS_FIFA17: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Turkey", nationCode: "tr", league: "German 1. Bundesliga", club: "Bayer 04 Leverkusen",
     stats: { pac: 76, sho: 39, pas: 62, dri: 67, def: 86, phy: 75 }, photoId: 185239, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
 ];
 
@@ -2176,6 +2483,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 94, position: "LW",
     nation: "Portugal", nationCode: "pt", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 90, sho: 93, pas: 82, dri: 90, def: 33, phy: 80 }, photoId: 20801, photoVer: "18",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa18-lionel-messi", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2183,6 +2491,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 93, position: "RW",
     nation: "Argentina", nationCode: "ar", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 89, sho: 90, pas: 86, dri: 96, def: 26, phy: 61 }, photoId: 158023, photoVer: "18",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa18-luis-suarez", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2190,6 +2499,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 92, position: "ST",
     nation: "Uruguay", nationCode: "uy", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 82, sho: 90, pas: 79, dri: 87, def: 42, phy: 81 }, photoId: 176580, photoVer: "18",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa18-neymar", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2197,6 +2507,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 92, position: "LW",
     nation: "Brazil", nationCode: "br", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 92, sho: 84, pas: 79, dri: 95, def: 30, phy: 60 }, photoId: 190871, photoVer: "18",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa18-robert-lewandowski", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2204,6 +2515,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 91, position: "ST",
     nation: "Poland", nationCode: "pl", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 81, sho: 88, pas: 75, dri: 86, def: 38, phy: 82 }, photoId: 188545, photoVer: "18",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa18-eden-hazard", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2211,6 +2523,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 90, position: "LW",
     nation: "Belgium", nationCode: "be", league: "English Premier League", club: "Chelsea",
     stats: { pac: 90, sho: 82, pas: 84, dri: 92, def: 32, phy: 66 }, photoId: 183277, photoVer: "18",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa18-gonzalo-higuain", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2218,6 +2531,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 90, position: "ST",
     nation: "Argentina", nationCode: "ar", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 79, sho: 87, pas: 70, dri: 83, def: 25, phy: 74 }, photoId: 167664, photoVer: "18",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa18-sergio-ramos", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2225,6 +2539,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 90, position: "CB",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 76, sho: 63, pas: 71, dri: 71, def: 88, phy: 83 }, photoId: 155862, photoVer: "18",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa18-toni-kroos", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2232,6 +2547,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 90, position: "CM",
     nation: "Germany", nationCode: "de", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 56, sho: 81, pas: 89, dri: 81, def: 73, phy: 70 }, photoId: 182521, photoVer: "18",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa18-alexis-sanchez", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2239,6 +2555,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 89, position: "LM",
     nation: "Chile", nationCode: "cl", league: "English Premier League", club: "Arsenal",
     stats: { pac: 86, sho: 84, pas: 80, dri: 89, def: 40, phy: 78 }, photoId: 184941, photoVer: "18",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa18-gareth-bale", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2246,6 +2563,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 89, position: "RW",
     nation: "Wales", nationCode: "gb-wls", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 94, sho: 87, pas: 84, dri: 86, def: 57, phy: 76 }, photoId: 173731, photoVer: "18",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa18-giorgio-chiellini", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2253,6 +2571,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 89, position: "CB",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 74, sho: 46, pas: 56, dri: 59, def: 90, phy: 85 }, photoId: 138956, photoVer: "18",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa18-kevin-de-bruyne", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2260,6 +2579,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 89, position: "CAM",
     nation: "Belgium", nationCode: "be", league: "English Premier League", club: "Manchester City",
     stats: { pac: 75, sho: 84, pas: 88, dri: 85, def: 45, phy: 75 }, photoId: 192985, photoVer: "18",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa18-luka-modric", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2267,6 +2587,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 89, position: "CM",
     nation: "Croatia", nationCode: "hr", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 73, sho: 75, pas: 86, dri: 89, def: 72, phy: 65 }, photoId: 177003, photoVer: "18",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa18-sergio-aguero", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2274,6 +2595,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 89, position: "ST",
     nation: "Argentina", nationCode: "ar", league: "English Premier League", club: "Manchester City",
     stats: { pac: 87, sho: 88, pas: 75, dri: 89, def: 23, phy: 72 }, photoId: 153079, photoVer: "18",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa18-antoine-griezmann", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2281,6 +2603,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 88, position: "ST",
     nation: "France", nationCode: "fr", league: "Spain Primera Division", club: "Atlético de Madrid",
     stats: { pac: 86, sho: 85, pas: 78, dri: 87, def: 30, phy: 68 }, photoId: 194765, photoVer: "18",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa18-arjen-robben", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2288,6 +2611,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 88, position: "RM",
     nation: "Netherlands", nationCode: "nl", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 86, sho: 86, pas: 81, dri: 91, def: 32, phy: 63 }, photoId: 9014, photoVer: "18",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa18-diego-godin", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2295,6 +2619,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 88, position: "CB",
     nation: "Uruguay", nationCode: "uy", league: "Spain Primera Division", club: "Atlético de Madrid",
     stats: { pac: 65, sho: 48, pas: 65, dri: 63, def: 88, phy: 78 }, photoId: 182493, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-jerome-boateng", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2302,6 +2627,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 88, position: "CB",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 75, sho: 50, pas: 72, dri: 67, def: 88, phy: 84 }, photoId: 183907, photoVer: "18",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa18-leonardo-bonucci", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2309,6 +2635,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 88, position: "CB",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "AC Milan",
     stats: { pac: 68, sho: 54, pas: 70, dri: 70, def: 87, phy: 81 }, photoId: 184344, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-mats-hummels", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2316,6 +2643,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 88, position: "CB",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 64, sho: 58, pas: 75, dri: 71, def: 89, phy: 76 }, photoId: 178603, photoVer: "18",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa18-mesut-ozil", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2323,6 +2651,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 88, position: "CAM",
     nation: "Germany", nationCode: "de", league: "English Premier League", club: "Arsenal",
     stats: { pac: 71, sho: 74, pas: 87, dri: 86, def: 24, phy: 58 }, photoId: 176635, photoVer: "18",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa18-paulo-dybala", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2330,6 +2659,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 88, position: "CAM",
     nation: "Argentina", nationCode: "ar", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 86, sho: 85, pas: 81, dri: 91, def: 24, phy: 67 }, photoId: 211110, photoVer: "18",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa18-pierre-emerick-aubameyang", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2337,6 +2667,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 88, position: "ST",
     nation: "Gabon", nationCode: "ga", league: "German 1. Bundesliga", club: "Borussia Dortmund",
     stats: { pac: 96, sho: 84, pas: 75, dri: 81, def: 37, phy: 71 }, photoId: 188567, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-thiago", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2344,6 +2675,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 88, position: "CM",
     nation: "Spain", nationCode: "es", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 72, sho: 75, pas: 85, dri: 90, def: 62, phy: 63 }, photoId: 189509, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-thiago-silva", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2351,6 +2683,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 88, position: "CB",
     nation: "Brazil", nationCode: "br", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 72, sho: 56, pas: 73, dri: 73, def: 89, phy: 79 }, photoId: 164240, photoVer: "18",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa18-zlatan-ibrahimovic", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2358,6 +2691,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 88, position: "ST",
     nation: "Sweden", nationCode: "se", league: "English Premier League", club: "Manchester United",
     stats: { pac: 65, sho: 88, pas: 81, dri: 82, def: 32, phy: 82 }, photoId: 41236, photoVer: "18",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa18-arturo-vidal", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2365,6 +2699,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 87, position: "CDM",
     nation: "Chile", nationCode: "cl", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 75, sho: 81, pas: 80, dri: 79, def: 83, phy: 84 }, photoId: 181872, photoVer: "18",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa18-christian-eriksen", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2372,6 +2707,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 87, position: "CAM",
     nation: "Denmark", nationCode: "dk", league: "English Premier League", club: "Tottenham Hotspur",
     stats: { pac: 75, sho: 78, pas: 88, dri: 84, def: 47, phy: 63 }, photoId: 190460, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-david-silva", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2379,6 +2715,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 87, position: "CAM",
     nation: "Spain", nationCode: "es", league: "English Premier League", club: "Manchester City",
     stats: { pac: 68, sho: 72, pas: 87, dri: 87, def: 38, phy: 61 }, photoId: 168542, photoVer: "18",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa18-edinson-cavani", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2386,6 +2723,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 87, position: "ST",
     nation: "Uruguay", nationCode: "uy", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 77, sho: 83, pas: 72, dri: 80, def: 42, phy: 81 }, photoId: 179813, photoVer: "18",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa18-iniesta", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2393,6 +2731,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 87, position: "CM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 71, sho: 70, pas: 87, dri: 90, def: 58, phy: 58 }, photoId: 41, photoVer: "18",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa18-ivan-rakitic", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2400,6 +2739,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 87, position: "CM",
     nation: "Croatia", nationCode: "hr", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 65, sho: 84, pas: 86, dri: 83, def: 60, phy: 66 }, photoId: 168651, photoVer: "18",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa18-marcelo", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2407,6 +2747,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 87, position: "LB",
     nation: "Brazil", nationCode: "br", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 78, sho: 69, pas: 80, dri: 85, def: 82, phy: 79 }, photoId: 176676, photoVer: "18",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa18-marco-verratti", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2414,6 +2755,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 87, position: "CM",
     nation: "Italy", nationCode: "it", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 65, sho: 59, pas: 84, dri: 89, def: 79, phy: 68 }, photoId: 199556, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-marek-hamsik", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2421,6 +2763,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 87, position: "CM",
     nation: "Slovakia", nationCode: "sk", league: "Italian Serie A", club: "Napoli",
     stats: { pac: 74, sho: 80, pas: 84, dri: 84, def: 68, phy: 71 }, photoId: 171877, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-n-golo-kante", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2428,6 +2771,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 87, position: "CDM",
     nation: "France", nationCode: "fr", league: "English Premier League", club: "Chelsea",
     stats: { pac: 81, sho: 66, pas: 75, dri: 79, def: 81, phy: 84 }, photoId: 215914, photoVer: "18",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa18-paul-pogba", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2435,6 +2779,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 87, position: "CM",
     nation: "France", nationCode: "fr", league: "English Premier League", club: "Manchester United",
     stats: { pac: 74, sho: 79, pas: 84, dri: 85, def: 68, phy: 88 }, photoId: 195864, photoVer: "18",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa18-pique", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2442,6 +2787,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 87, position: "CB",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 65, sho: 61, pas: 69, dri: 65, def: 86, phy: 76 }, photoId: 152729, photoVer: "18",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa18-alex-sandro", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2449,6 +2795,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 86, position: "LB",
     nation: "Brazil", nationCode: "br", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 86, sho: 65, pas: 77, dri: 81, def: 81, phy: 84 }, photoId: 191043, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-cesc-fabregas", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2456,6 +2803,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Spain", nationCode: "es", league: "English Premier League", club: "Chelsea",
     stats: { pac: 63, sho: 77, pas: 88, dri: 80, def: 61, phy: 64 }, photoId: 162895, photoVer: "18",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa18-coutinho", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2463,6 +2811,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 86, position: "LW",
     nation: "Brazil", nationCode: "br", league: "English Premier League", club: "Liverpool",
     stats: { pac: 82, sho: 78, pas: 83, dri: 88, def: 35, phy: 64 }, photoId: 189242, photoVer: "18",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa18-david-alaba", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2470,6 +2819,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 86, position: "LB",
     nation: "Austria", nationCode: "at", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 86, sho: 73, pas: 81, dri: 80, def: 82, phy: 74 }, photoId: 197445, photoVer: "18",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa18-david-luiz", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2477,6 +2827,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Brazil", nationCode: "br", league: "English Premier League", club: "Chelsea",
     stats: { pac: 70, sho: 64, pas: 74, dri: 71, def: 84, phy: 81 }, photoId: 179944, photoVer: "18",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa18-diego-costa", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2484,6 +2835,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 86, position: "ST",
     nation: "Spain", nationCode: "es", league: "English Premier League", club: "Chelsea",
     stats: { pac: 75, sho: 83, pas: 65, dri: 76, def: 40, phy: 88 }, photoId: 179844, photoVer: "18",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa18-dries-mertens", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2491,6 +2843,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 86, position: "CF",
     nation: "Belgium", nationCode: "be", league: "Italian Serie A", club: "Napoli",
     stats: { pac: 90, sho: 82, pas: 79, dri: 89, def: 36, phy: 55 }, photoId: 175943, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-franck-ribery", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2498,6 +2851,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 86, position: "LM",
     nation: "France", nationCode: "fr", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 82, sho: 76, pas: 83, dri: 90, def: 25, phy: 58 }, photoId: 156616, photoVer: "18",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa18-harry-kane", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2505,6 +2859,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 86, position: "ST",
     nation: "England", nationCode: "gb-eng", league: "English Premier League", club: "Tottenham Hotspur",
     stats: { pac: 71, sho: 87, pas: 72, dri: 78, def: 42, phy: 83 }, photoId: 202126, photoVer: "18",
+    difficulty: "easy", internationalReputation: 3,
   },
   {
     id: "fifa18-isco", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2512,6 +2867,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 71, sho: 83, pas: 82, dri: 89, def: 54, phy: 62 }, photoId: 197781, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-james-rodriguez", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2519,6 +2875,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 86, position: "CAM",
     nation: "Colombia", nationCode: "co", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 76, sho: 85, pas: 85, dri: 83, def: 40, phy: 68 }, photoId: 198710, photoVer: "18",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa18-javi-martinez", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2526,6 +2883,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Spain", nationCode: "es", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 50, sho: 60, pas: 69, dri: 65, def: 86, phy: 80 }, photoId: 177610, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-karim-benzema", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2533,6 +2891,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 86, position: "ST",
     nation: "France", nationCode: "fr", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 78, sho: 84, pas: 77, dri: 82, def: 22, phy: 74 }, photoId: 165153, photoVer: "18",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa18-marco-reus", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2540,6 +2899,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 86, position: "LM",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "Borussia Dortmund",
     stats: { pac: 88, sho: 87, pas: 84, dri: 86, def: 39, phy: 64 }, photoId: 188350, photoVer: "18",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa18-miranda", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2547,6 +2907,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Brazil", nationCode: "br", league: "Italian Serie A", club: "Inter",
     stats: { pac: 71, sho: 49, pas: 60, dri: 67, def: 88, phy: 77 }, photoId: 168609, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-pepe", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2554,6 +2915,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Portugal", nationCode: "pt", league: "Turkish Süper Lig", club: "Beşiktaş JK",
     stats: { pac: 68, sho: 51, pas: 57, dri: 61, def: 86, phy: 80 }, photoId: 120533, photoVer: "18",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa18-radja-nainggolan", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2561,6 +2923,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Belgium", nationCode: "be", league: "Italian Serie A", club: "Roma",
     stats: { pac: 78, sho: 80, pas: 78, dri: 82, def: 81, phy: 83 }, photoId: 178518, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-romelu-lukaku", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2568,6 +2931,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 86, position: "ST",
     nation: "Belgium", nationCode: "be", league: "English Premier League", club: "Manchester United",
     stats: { pac: 83, sho: 85, pas: 70, dri: 74, def: 34, phy: 84 }, photoId: 192505, photoVer: "18",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa18-sergio-busquets", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2575,6 +2939,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 86, position: "CDM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 40, sho: 59, pas: 79, dri: 74, def: 82, phy: 81 }, photoId: 189511, photoVer: "18",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa18-sokratis", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2582,6 +2947,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Greece", nationCode: "gr", league: "German 1. Bundesliga", club: "Borussia Dortmund",
     stats: { pac: 78, sho: 52, pas: 55, dri: 60, def: 87, phy: 84 }, photoId: 172879, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-thomas-muller", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2589,6 +2955,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 86, position: "CF",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 77, sho: 82, pas: 77, dri: 78, def: 46, phy: 71 }, photoId: 189596, photoVer: "18",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa18-toby-alderweireld", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2596,6 +2963,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Belgium", nationCode: "be", league: "English Premier League", club: "Tottenham Hotspur",
     stats: { pac: 66, sho: 58, pas: 72, dri: 65, def: 87, phy: 80 }, photoId: 184087, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-alexandre-lacazette", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2603,6 +2971,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "France", nationCode: "fr", league: "English Premier League", club: "Arsenal",
     stats: { pac: 86, sho: 83, pas: 71, dri: 85, def: 38, phy: 77 }, photoId: 193301, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-andrea-barzagli", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2610,6 +2979,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 71, sho: 34, pas: 57, dri: 64, def: 88, phy: 73 }, photoId: 137186, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-azpilicueta", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2617,6 +2987,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Spain", nationCode: "es", league: "English Premier League", club: "Chelsea",
     stats: { pac: 79, sho: 55, pas: 75, dri: 74, def: 86, phy: 78 }, photoId: 184432, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-blaise-matuidi", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2624,6 +2995,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 85, position: "CDM",
     nation: "France", nationCode: "fr", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 78, sho: 67, pas: 77, dri: 75, def: 83, phy: 84 }, photoId: 170890, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-casemiro", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2631,6 +3003,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 85, position: "CDM",
     nation: "Brazil", nationCode: "br", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 62, sho: 68, pas: 74, dri: 72, def: 84, phy: 86 }, photoId: 200145, photoVer: "24",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa18-claudio-marchisio", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2638,6 +3011,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 78, sho: 72, pas: 83, dri: 84, def: 76, phy: 74 }, photoId: 173210, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-filipe-luis", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2645,6 +3019,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 85, position: "LB",
     nation: "Brazil", nationCode: "br", league: "Spain Primera Division", club: "Atlético de Madrid",
     stats: { pac: 79, sho: 62, pas: 77, dri: 77, def: 82, phy: 79 }, photoId: 164169, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-henrikh-mkhitaryan", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2652,6 +3027,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 85, position: "RM",
     nation: "Armenia", nationCode: "am", league: "English Premier League", club: "Manchester United",
     stats: { pac: 86, sho: 79, pas: 80, dri: 87, def: 54, phy: 70 }, photoId: 192883, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-jan-vertonghen", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2659,6 +3035,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Belgium", nationCode: "be", league: "English Premier League", club: "Tottenham Hotspur",
     stats: { pac: 67, sho: 65, pas: 73, dri: 70, def: 85, phy: 81 }, photoId: 172871, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-jordi-alba", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2666,6 +3043,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 85, position: "LB",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 93, sho: 69, pas: 75, dri: 82, def: 81, phy: 72 }, photoId: 189332, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-kamil-glik", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2673,6 +3051,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Poland", nationCode: "pl", league: "French Ligue 1", club: "AS Monaco",
     stats: { pac: 56, sho: 32, pas: 44, dri: 53, def: 86, phy: 84 }, photoId: 190547, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-lorenzo-insigne", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2680,6 +3059,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 85, position: "LW",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Napoli",
     stats: { pac: 90, sho: 74, pas: 82, dri: 89, def: 25, phy: 50 }, photoId: 198219, photoVer: "18",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa18-miralem-pjanic", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2687,6 +3067,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Bosnia and Herzegovina", nationCode: "ba", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 74, sho: 71, pas: 86, dri: 86, def: 67, phy: 69 }, photoId: 180206, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-raphael-varane", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2694,6 +3075,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "France", nationCode: "fr", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 79, sho: 45, pas: 61, dri: 64, def: 84, phy: 79 }, photoId: 201535, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-vincent-kompany", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2701,6 +3083,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Belgium", nationCode: "be", league: "English Premier League", club: "Manchester City",
     stats: { pac: 63, sho: 54, pas: 65, dri: 64, def: 84, phy: 83 }, photoId: 139720, photoVer: "18",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa18-yannick-carrasco", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2708,6 +3091,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 85, position: "LM",
     nation: "Belgium", nationCode: "be", league: "Spain Primera Division", club: "Atlético de Madrid",
     stats: { pac: 88, sho: 79, pas: 78, dri: 88, def: 29, phy: 63 }, photoId: 208418, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-angel-di-maria", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2715,6 +3099,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 85, position: "RW",
     nation: "Argentina", nationCode: "ar", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 86, sho: 77, pas: 82, dri: 86, def: 47, phy: 68 }, photoId: 183898, photoVer: "18",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa18-ilkay-gundogan", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2722,6 +3107,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Germany", nationCode: "de", league: "English Premier League", club: "Manchester City",
     stats: { pac: 71, sho: 74, pas: 83, dri: 87, def: 64, phy: 71 }, photoId: 186942, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-aduriz", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2729,6 +3115,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 84, position: "ST",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Athletic Club de Bilbao",
     stats: { pac: 70, sho: 83, pas: 64, dri: 76, def: 46, phy: 79 }, photoId: 106231, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-alejandro-gomez", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2736,6 +3123,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 84, position: "CF",
     nation: "Argentina", nationCode: "ar", league: "Italian Serie A", club: "Atalanta",
     stats: { pac: 90, sho: 77, pas: 80, dri: 89, def: 31, phy: 58 }, photoId: 143076, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-ander-herrera", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2743,6 +3131,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 84, position: "CM",
     nation: "Spain", nationCode: "es", league: "English Premier League", club: "Manchester United",
     stats: { pac: 73, sho: 72, pas: 81, dri: 83, def: 78, phy: 77 }, photoId: 191740, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-bruno", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2750,6 +3139,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 84, position: "CM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Villarreal CF",
     stats: { pac: 41, sho: 72, pas: 79, dri: 75, def: 78, phy: 77 }, photoId: 184120, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-dani-alves", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2757,6 +3147,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 84, position: "RB",
     nation: "Brazil", nationCode: "br", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 82, sho: 68, pas: 81, dri: 85, def: 77, phy: 66 }, photoId: 146530, photoVer: "18",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa18-dimitri-payet", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2764,6 +3155,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 84, position: "LW",
     nation: "France", nationCode: "fr", league: "French Ligue 1", club: "Olympique de Marseille",
     stats: { pac: 75, sho: 78, pas: 86, dri: 87, def: 37, phy: 70 }, photoId: 177388, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-edin-dzeko", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2771,6 +3163,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 84, position: "ST",
     nation: "Bosnia and Herzegovina", nationCode: "ba", league: "Italian Serie A", club: "Roma",
     stats: { pac: 64, sho: 83, pas: 70, dri: 74, def: 32, phy: 72 }, photoId: 180930, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-falcao", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2778,6 +3171,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 84, position: "ST",
     nation: "Colombia", nationCode: "co", league: "French Ligue 1", club: "AS Monaco",
     stats: { pac: 69, sho: 84, pas: 68, dri: 78, def: 37, phy: 74 }, photoId: 167397, photoVer: "18",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa18-gary-cahill", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2785,6 +3179,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "England", nationCode: "gb-eng", league: "English Premier League", club: "Chelsea",
     stats: { pac: 63, sho: 58, pas: 52, dri: 61, def: 84, phy: 78 }, photoId: 164468, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-ivan-perisic", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2792,6 +3187,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 84, position: "LM",
     nation: "Croatia", nationCode: "hr", league: "Italian Serie A", club: "Inter",
     stats: { pac: 84, sho: 80, pas: 78, dri: 82, def: 42, phy: 75 }, photoId: 181458, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-juan-mata", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2799,6 +3195,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 84, position: "CAM",
     nation: "Spain", nationCode: "es", league: "English Premier League", club: "Manchester United",
     stats: { pac: 67, sho: 76, pas: 84, dri: 84, def: 32, phy: 54 }, photoId: 178088, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-kalidou-koulibaly", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2806,6 +3203,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Senegal", nationCode: "sn", league: "Italian Serie A", club: "Napoli",
     stats: { pac: 73, sho: 26, pas: 43, dri: 56, def: 85, phy: 86 }, photoId: 201024, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-kevin-strootman", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2813,6 +3211,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 84, position: "CM",
     nation: "Netherlands", nationCode: "nl", league: "Italian Serie A", club: "Roma",
     stats: { pac: 67, sho: 74, pas: 82, dri: 78, def: 78, phy: 82 }, photoId: 189712, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-koke", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2820,6 +3219,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 84, position: "CM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Atlético de Madrid",
     stats: { pac: 70, sho: 75, pas: 86, dri: 82, def: 63, phy: 75 }, photoId: 193747, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-konstantinos-manolas", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2827,6 +3227,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Greece", nationCode: "gr", league: "Italian Serie A", club: "Roma",
     stats: { pac: 80, sho: 19, pas: 42, dri: 60, def: 86, phy: 83 }, photoId: 192774, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-laurent-koscielny", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2834,6 +3235,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "France", nationCode: "fr", league: "English Premier League", club: "Arsenal",
     stats: { pac: 75, sho: 41, pas: 62, dri: 65, def: 85, phy: 78 }, photoId: 165229, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-medhi-benatia", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2841,6 +3243,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Morocco", nationCode: "ma", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 74, sho: 42, pas: 54, dri: 64, def: 85, phy: 82 }, photoId: 177509, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-pedro", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2848,6 +3251,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 84, position: "RW",
     nation: "Spain", nationCode: "es", league: "English Premier League", club: "Chelsea",
     stats: { pac: 82, sho: 77, pas: 77, dri: 85, def: 37, phy: 62 }, photoId: 189505, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-sami-khedira", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2855,6 +3259,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 84, position: "CM",
     nation: "Germany", nationCode: "de", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 64, sho: 74, pas: 80, dri: 76, def: 80, phy: 84 }, photoId: 179846, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-shkodran-mustafi", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2862,6 +3267,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Germany", nationCode: "de", league: "English Premier League", club: "Arsenal",
     stats: { pac: 67, sho: 57, pas: 63, dri: 62, def: 83, phy: 79 }, photoId: 192227, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa18-willian", edition: "FIFA18", editionLabel: "FIFA 18",
@@ -2869,6 +3275,7 @@ const CARDS_FIFA18: FifaCard[] = [
     overall: 84, position: "RW",
     nation: "Brazil", nationCode: "br", league: "English Premier League", club: "Chelsea",
     stats: { pac: 88, sho: 76, pas: 81, dri: 86, def: 49, phy: 64 }, photoId: 180403, photoVer: "18",
+    difficulty: "hard", internationalReputation: 3,
   },
 ];
 
@@ -2879,6 +3286,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 94, position: "ST",
     nation: "Portugal", nationCode: "pt", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 90, sho: 93, pas: 81, dri: 89, def: 35, phy: 79 }, photoId: 20801, photoVer: "19",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa19-lionel-messi", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -2886,6 +3294,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 94, position: "CF",
     nation: "Argentina", nationCode: "ar", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 88, sho: 91, pas: 88, dri: 96, def: 32, phy: 61 }, photoId: 158023, photoVer: "19",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa19-neymar", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -2893,6 +3302,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 92, position: "LW",
     nation: "Brazil", nationCode: "br", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 92, sho: 84, pas: 83, dri: 95, def: 32, phy: 59 }, photoId: 190871, photoVer: "19",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa19-eden-hazard", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -2900,6 +3310,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 91, position: "LW",
     nation: "Belgium", nationCode: "be", league: "English Premier League", club: "Chelsea",
     stats: { pac: 91, sho: 82, pas: 86, dri: 94, def: 35, phy: 67 }, photoId: 183277, photoVer: "19",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa19-kevin-de-bruyne", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -2907,6 +3318,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 91, position: "CAM",
     nation: "Belgium", nationCode: "be", league: "English Premier League", club: "Manchester City",
     stats: { pac: 77, sho: 86, pas: 92, dri: 87, def: 60, phy: 78 }, photoId: 192985, photoVer: "19",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa19-luis-suarez", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -2914,6 +3326,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 91, position: "ST",
     nation: "Uruguay", nationCode: "uy", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 80, sho: 90, pas: 79, dri: 88, def: 52, phy: 85 }, photoId: 176580, photoVer: "19",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa19-luka-modric", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -2921,6 +3334,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 91, position: "CM",
     nation: "Croatia", nationCode: "hr", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 76, sho: 76, pas: 90, dri: 91, def: 70, phy: 67 }, photoId: 177003, photoVer: "19",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa19-sergio-ramos", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -2928,6 +3342,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 91, position: "CB",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 75, sho: 63, pas: 71, dri: 71, def: 91, phy: 84 }, photoId: 155862, photoVer: "19",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa19-diego-godin", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -2935,6 +3350,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 90, position: "CB",
     nation: "Uruguay", nationCode: "uy", league: "Spain Primera Division", club: "Atlético de Madrid",
     stats: { pac: 68, sho: 48, pas: 65, dri: 62, def: 89, phy: 84 }, photoId: 182493, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-robert-lewandowski", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -2942,6 +3358,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 90, position: "ST",
     nation: "Poland", nationCode: "pl", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 78, sho: 89, pas: 75, dri: 85, def: 41, phy: 82 }, photoId: 188545, photoVer: "19",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa19-toni-kroos", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -2949,6 +3366,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 90, position: "CM",
     nation: "Germany", nationCode: "de", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 67, sho: 82, pas: 89, dri: 82, def: 74, phy: 69 }, photoId: 182521, photoVer: "19",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa19-antoine-griezmann", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -2956,6 +3374,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 89, position: "ST",
     nation: "France", nationCode: "fr", league: "Spain Primera Division", club: "Atlético de Madrid",
     stats: { pac: 86, sho: 86, pas: 81, dri: 89, def: 50, phy: 70 }, photoId: 194765, photoVer: "19",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa19-david-silva", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -2963,6 +3382,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 89, position: "CAM",
     nation: "Spain", nationCode: "es", league: "English Premier League", club: "Manchester City",
     stats: { pac: 66, sho: 74, pas: 87, dri: 90, def: 50, phy: 60 }, photoId: 168542, photoVer: "19",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa19-edinson-cavani", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -2970,6 +3390,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 89, position: "ST",
     nation: "Uruguay", nationCode: "uy", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 76, sho: 87, pas: 72, dri: 80, def: 52, phy: 83 }, photoId: 179813, photoVer: "19",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa19-giorgio-chiellini", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -2977,6 +3398,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 89, position: "CB",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 69, sho: 46, pas: 56, dri: 58, def: 91, phy: 82 }, photoId: 138956, photoVer: "19",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa19-harry-kane", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -2984,6 +3406,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 89, position: "ST",
     nation: "England", nationCode: "gb-eng", league: "English Premier League", club: "Tottenham Hotspur",
     stats: { pac: 70, sho: 90, pas: 79, dri: 80, def: 47, phy: 83 }, photoId: 202126, photoVer: "19",
+    difficulty: "easy", internationalReputation: 3,
   },
   {
     id: "fifa19-isco", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -2991,6 +3414,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 89, position: "CAM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 72, sho: 81, pas: 85, dri: 93, def: 61, phy: 62 }, photoId: 197781, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-mats-hummels", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -2998,6 +3422,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 89, position: "CB",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 65, sho: 58, pas: 76, dri: 72, def: 90, phy: 76 }, photoId: 178603, photoVer: "19",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa19-n-golo-kante", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3005,6 +3430,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 89, position: "CDM",
     nation: "France", nationCode: "fr", league: "English Premier League", club: "Chelsea",
     stats: { pac: 80, sho: 66, pas: 77, dri: 81, def: 87, phy: 84 }, photoId: 215914, photoVer: "19",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa19-paulo-dybala", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3012,6 +3438,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 89, position: "CAM",
     nation: "Argentina", nationCode: "ar", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 85, sho: 85, pas: 84, dri: 91, def: 28, phy: 66 }, photoId: 211110, photoVer: "19",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa19-sergio-aguero", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3019,6 +3446,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 89, position: "ST",
     nation: "Argentina", nationCode: "ar", league: "English Premier League", club: "Manchester City",
     stats: { pac: 84, sho: 89, pas: 76, dri: 89, def: 28, phy: 73 }, photoId: 153079, photoVer: "19",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa19-casemiro", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3026,6 +3454,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 88, position: "CDM",
     nation: "Brazil", nationCode: "br", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 62, sho: 69, pas: 75, dri: 72, def: 87, phy: 88 }, photoId: 200145, photoVer: "19",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa19-christian-eriksen", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3033,6 +3462,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 88, position: "CAM",
     nation: "Denmark", nationCode: "dk", league: "English Premier League", club: "Tottenham Hotspur",
     stats: { pac: 74, sho: 82, pas: 89, dri: 86, def: 53, phy: 64 }, photoId: 190460, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-coutinho", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3040,6 +3470,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 88, position: "LW",
     nation: "Brazil", nationCode: "br", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 81, sho: 81, pas: 86, dri: 91, def: 45, phy: 64 }, photoId: 189242, photoVer: "19",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa19-gareth-bale", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3047,6 +3478,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 88, position: "RW",
     nation: "Wales", nationCode: "gb-wls", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 95, sho: 88, pas: 84, dri: 85, def: 58, phy: 76 }, photoId: 173731, photoVer: "19",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa19-gonzalo-higuain", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3054,6 +3486,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 88, position: "ST",
     nation: "Argentina", nationCode: "ar", league: "Italian Serie A", club: "AC Milan",
     stats: { pac: 73, sho: 87, pas: 70, dri: 83, def: 31, phy: 74 }, photoId: 167664, photoVer: "19",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa19-james-rodriguez", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3061,6 +3494,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 88, position: "CAM",
     nation: "Colombia", nationCode: "co", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 72, sho: 86, pas: 88, dri: 86, def: 50, phy: 67 }, photoId: 198710, photoVer: "19",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa19-lorenzo-insigne", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3068,6 +3502,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 88, position: "LW",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Napoli",
     stats: { pac: 90, sho: 76, pas: 84, dri: 91, def: 36, phy: 50 }, photoId: 198219, photoVer: "19",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa19-marcelo", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3075,6 +3510,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 88, position: "LB",
     nation: "Brazil", nationCode: "br", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 82, sho: 71, pas: 83, dri: 90, def: 81, phy: 82 }, photoId: 176676, photoVer: "19",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa19-mohamed-salah", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3082,6 +3518,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 88, position: "RW",
     nation: "Egypt", nationCode: "eg", league: "English Premier League", club: "Liverpool",
     stats: { pac: 92, sho: 84, pas: 79, dri: 89, def: 45, phy: 72 }, photoId: 209331, photoVer: "19",
+    difficulty: "easy", internationalReputation: 3,
   },
   {
     id: "fifa19-paul-pogba", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3089,6 +3526,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 88, position: "CM",
     nation: "France", nationCode: "fr", league: "English Premier League", club: "Manchester United",
     stats: { pac: 75, sho: 79, pas: 86, dri: 85, def: 69, phy: 87 }, photoId: 195864, photoVer: "19",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa19-sergio-busquets", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3096,6 +3534,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 88, position: "CDM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 43, sho: 62, pas: 79, dri: 78, def: 85, phy: 80 }, photoId: 189511, photoVer: "19",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa19-thiago-silva", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3103,6 +3542,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 88, position: "CB",
     nation: "Brazil", nationCode: "br", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 71, sho: 54, pas: 73, dri: 69, def: 88, phy: 79 }, photoId: 164240, photoVer: "19",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa19-alexis-sanchez", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3110,6 +3550,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 87, position: "LW",
     nation: "Chile", nationCode: "cl", league: "English Premier League", club: "Manchester United",
     stats: { pac: 82, sho: 83, pas: 79, dri: 89, def: 45, phy: 77 }, photoId: 184941, photoVer: "19",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa19-ciro-immobile", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3117,6 +3558,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 87, position: "ST",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Lazio",
     stats: { pac: 82, sho: 87, pas: 63, dri: 82, def: 39, phy: 76 }, photoId: 192387, photoVer: "19",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa19-dries-mertens", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3124,6 +3566,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 87, position: "CF",
     nation: "Belgium", nationCode: "be", league: "Italian Serie A", club: "Napoli",
     stats: { pac: 89, sho: 83, pas: 80, dri: 91, def: 34, phy: 55 }, photoId: 175943, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-iniesta", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3131,6 +3574,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 87, position: "CM",
     nation: "Spain", nationCode: "es", league: "Japanese J. League Division 1", club: "Vissel Kobe",
     stats: { pac: 69, sho: 70, pas: 87, dri: 90, def: 61, phy: 57 }, photoId: 41, photoVer: "19",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa19-ivan-rakitic", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3138,6 +3582,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 87, position: "CM",
     nation: "Croatia", nationCode: "hr", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 62, sho: 84, pas: 87, dri: 82, def: 72, phy: 69 }, photoId: 168651, photoVer: "19",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa19-jan-vertonghen", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3145,6 +3590,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 87, position: "CB",
     nation: "Belgium", nationCode: "be", league: "English Premier League", club: "Tottenham Hotspur",
     stats: { pac: 63, sho: 63, pas: 73, dri: 72, def: 88, phy: 79 }, photoId: 172871, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-jordi-alba", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3152,6 +3598,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 87, position: "LB",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 93, sho: 69, pas: 79, dri: 83, def: 79, phy: 72 }, photoId: 189332, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-kalidou-koulibaly", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3159,6 +3606,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 87, position: "CB",
     nation: "Senegal", nationCode: "sn", league: "Italian Serie A", club: "Napoli",
     stats: { pac: 72, sho: 26, pas: 46, dri: 59, def: 88, phy: 86 }, photoId: 201024, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-kylian-mbappe", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3166,6 +3614,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 87, position: "RW",
     nation: "France", nationCode: "fr", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 96, sho: 81, pas: 79, dri: 89, def: 39, phy: 72 }, photoId: 231747, photoVer: "19",
+    difficulty: "easy", internationalReputation: 3,
   },
   {
     id: "fifa19-marek-hamsik", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3173,6 +3622,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 87, position: "CM",
     nation: "Slovakia", nationCode: "sk", league: "Italian Serie A", club: "Napoli",
     stats: { pac: 70, sho: 80, pas: 84, dri: 84, def: 72, phy: 69 }, photoId: 171877, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-mauro-icardi", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3180,6 +3630,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 87, position: "ST",
     nation: "Argentina", nationCode: "ar", league: "Italian Serie A", club: "Inter",
     stats: { pac: 78, sho: 85, pas: 61, dri: 79, def: 36, phy: 72 }, photoId: 201399, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-pierre-emerick-aubameyang", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3187,6 +3638,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 87, position: "ST",
     nation: "Gabon", nationCode: "ga", league: "English Premier League", club: "Arsenal",
     stats: { pac: 94, sho: 84, pas: 75, dri: 80, def: 37, phy: 70 }, photoId: 188567, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-pique", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3194,6 +3646,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 87, position: "CB",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 55, sho: 61, pas: 69, dri: 65, def: 87, phy: 76 }, photoId: 152729, photoVer: "19",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa19-romelu-lukaku", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3201,6 +3654,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 87, position: "ST",
     nation: "Belgium", nationCode: "be", league: "English Premier League", club: "Manchester United",
     stats: { pac: 84, sho: 84, pas: 76, dri: 75, def: 35, phy: 87 }, photoId: 192505, photoVer: "19",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa19-samuel-umtiti", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3208,6 +3662,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 87, position: "CB",
     nation: "France", nationCode: "fr", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 72, sho: 64, pas: 71, dri: 72, def: 88, phy: 82 }, photoId: 205600, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-alex-sandro", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3215,6 +3670,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 86, position: "LB",
     nation: "Brazil", nationCode: "br", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 85, sho: 65, pas: 77, dri: 81, def: 82, phy: 83 }, photoId: 191043, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-azpilicueta", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3222,6 +3678,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Spain", nationCode: "es", league: "English Premier League", club: "Chelsea",
     stats: { pac: 76, sho: 55, pas: 78, dri: 73, def: 87, phy: 77 }, photoId: 184432, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-douglas-costa", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3229,6 +3686,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 86, position: "LM",
     nation: "Brazil", nationCode: "br", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 95, sho: 75, pas: 81, dri: 91, def: 43, phy: 65 }, photoId: 190483, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-fernandinho", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3236,6 +3694,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 86, position: "CDM",
     nation: "Brazil", nationCode: "br", league: "English Premier League", club: "Manchester City",
     stats: { pac: 67, sho: 74, pas: 78, dri: 79, def: 83, phy: 79 }, photoId: 135507, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-ivan-perisic", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3243,6 +3702,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 86, position: "LM",
     nation: "Croatia", nationCode: "hr", league: "Italian Serie A", club: "Inter",
     stats: { pac: 86, sho: 80, pas: 80, dri: 84, def: 62, phy: 78 }, photoId: 181458, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-jerome-boateng", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3250,6 +3710,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 73, sho: 50, pas: 72, dri: 65, def: 85, phy: 83 }, photoId: 183907, photoVer: "19",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa19-leonardo-bonucci", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3257,6 +3718,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 61, sho: 58, pas: 69, dri: 70, def: 87, phy: 80 }, photoId: 184344, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-leroy-sane", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3264,6 +3726,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 86, position: "LW",
     nation: "Germany", nationCode: "de", league: "English Premier League", club: "Manchester City",
     stats: { pac: 95, sho: 81, pas: 78, dri: 86, def: 38, phy: 70 }, photoId: 222492, photoVer: "19",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa19-marco-verratti", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3271,6 +3734,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Italy", nationCode: "it", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 65, sho: 60, pas: 84, dri: 89, def: 79, phy: 66 }, photoId: 199556, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-medhi-benatia", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3278,6 +3742,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Morocco", nationCode: "ma", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 70, sho: 45, pas: 54, dri: 64, def: 87, phy: 85 }, photoId: 177509, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-mesut-ozil", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3285,6 +3750,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 86, position: "CAM",
     nation: "Germany", nationCode: "de", league: "English Premier League", club: "Arsenal",
     stats: { pac: 70, sho: 73, pas: 86, dri: 85, def: 24, phy: 58 }, photoId: 176635, photoVer: "19",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa19-miralem-pjanic", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3292,6 +3758,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Bosnia and Herzegovina", nationCode: "ba", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 66, sho: 70, pas: 86, dri: 86, def: 73, phy: 69 }, photoId: 180206, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-naldo", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3299,6 +3766,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Brazil", nationCode: "br", league: "German 1. Bundesliga", club: "FC Schalke 04",
     stats: { pac: 63, sho: 69, pas: 64, dri: 61, def: 87, phy: 74 }, photoId: 171919, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-nemanja-matic", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3306,6 +3774,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 86, position: "CDM",
     nation: "Serbia", nationCode: "rs", league: "English Premier League", club: "Manchester United",
     stats: { pac: 56, sho: 71, pas: 79, dri: 76, def: 83, phy: 83 }, photoId: 191202, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-nicolas-otamendi", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3313,6 +3782,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Argentina", nationCode: "ar", league: "English Premier League", club: "Manchester City",
     stats: { pac: 60, sho: 57, pas: 63, dri: 59, def: 86, phy: 80 }, photoId: 192366, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-parejo", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3320,6 +3790,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Valencia CF",
     stats: { pac: 47, sho: 80, pas: 88, dri: 79, def: 71, phy: 71 }, photoId: 189513, photoVer: "19",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa19-raphael-varane", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3327,6 +3798,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "France", nationCode: "fr", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 84, sho: 45, pas: 61, dri: 64, def: 86, phy: 80 }, photoId: 201535, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-roberto-firmino", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3334,6 +3806,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 86, position: "CF",
     nation: "Brazil", nationCode: "br", league: "English Premier League", club: "Liverpool",
     stats: { pac: 77, sho: 83, pas: 80, dri: 86, def: 61, phy: 78 }, photoId: 201942, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-sadio-mane", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3341,6 +3814,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 86, position: "LW",
     nation: "Senegal", nationCode: "sn", league: "English Premier League", club: "Liverpool",
     stats: { pac: 94, sho: 80, pas: 76, dri: 87, def: 42, phy: 73 }, photoId: 208722, photoVer: "19",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa19-thiago", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3348,6 +3822,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Spain", nationCode: "es", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 73, sho: 74, pas: 84, dri: 90, def: 67, phy: 63 }, photoId: 189509, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-thomas-muller", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3355,6 +3830,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 86, position: "CF",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 74, sho: 83, pas: 80, dri: 78, def: 50, phy: 71 }, photoId: 189596, photoVer: "19",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa19-arjen-robben", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3362,6 +3838,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 85, position: "RM",
     nation: "Netherlands", nationCode: "nl", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 79, sho: 85, pas: 81, dri: 88, def: 32, phy: 62 }, photoId: 9014, photoVer: "19",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa19-arturo-vidal", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3369,6 +3846,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 85, position: "CDM",
     nation: "Chile", nationCode: "cl", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 57, sho: 80, pas: 79, dri: 77, def: 84, phy: 83 }, photoId: 181872, photoVer: "19",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa19-blaise-matuidi", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3376,6 +3854,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 85, position: "CDM",
     nation: "France", nationCode: "fr", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 78, sho: 68, pas: 77, dri: 79, def: 83, phy: 83 }, photoId: 170890, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-david-alaba", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3383,6 +3862,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 85, position: "LB",
     nation: "Austria", nationCode: "at", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 82, sho: 73, pas: 80, dri: 80, def: 81, phy: 75 }, photoId: 197445, photoVer: "19",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa19-diego-costa", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3390,6 +3870,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Atlético de Madrid",
     stats: { pac: 75, sho: 83, pas: 64, dri: 76, def: 49, phy: 87 }, photoId: 179844, photoVer: "19",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa19-edin-dzeko", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3397,6 +3878,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "Bosnia and Herzegovina", nationCode: "ba", league: "Italian Serie A", club: "Roma",
     stats: { pac: 66, sho: 85, pas: 71, dri: 75, def: 46, phy: 73 }, photoId: 180930, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-fabinho", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3404,6 +3886,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 85, position: "CDM",
     nation: "Brazil", nationCode: "br", league: "English Premier League", club: "Liverpool",
     stats: { pac: 71, sho: 69, pas: 78, dri: 77, def: 84, phy: 84 }, photoId: 209499, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-falcao", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3411,6 +3894,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "Colombia", nationCode: "co", league: "French Ligue 1", club: "AS Monaco",
     stats: { pac: 67, sho: 84, pas: 69, dri: 78, def: 43, phy: 74 }, photoId: 167397, photoVer: "19",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa19-filipe-luis", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3418,6 +3902,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 85, position: "LB",
     nation: "Brazil", nationCode: "br", league: "Spain Primera Division", club: "Atlético de Madrid",
     stats: { pac: 75, sho: 62, pas: 78, dri: 78, def: 81, phy: 79 }, photoId: 164169, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-franck-ribery", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3425,6 +3910,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 85, position: "LM",
     nation: "France", nationCode: "fr", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 78, sho: 76, pas: 82, dri: 88, def: 30, phy: 57 }, photoId: 156616, photoVer: "19",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa19-iago-aspas", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3432,6 +3918,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 85, position: "RW",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "RC Celta de Vigo",
     stats: { pac: 81, sho: 86, pas: 77, dri: 86, def: 35, phy: 65 }, photoId: 192629, photoVer: "19",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa19-joshua-kimmich", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3439,6 +3926,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 85, position: "RB",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 73, sho: 68, pas: 83, dri: 82, def: 77, phy: 73 }, photoId: 212622, photoVer: "19",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa19-koke", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3446,6 +3934,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 85, position: "LM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Atlético de Madrid",
     stats: { pac: 69, sho: 75, pas: 88, dri: 82, def: 69, phy: 78 }, photoId: 193747, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-konstantinos-manolas", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3453,6 +3942,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Greece", nationCode: "gr", league: "Italian Serie A", club: "Roma",
     stats: { pac: 83, sho: 18, pas: 42, dri: 61, def: 86, phy: 82 }, photoId: 192774, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-marco-asensio", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3460,6 +3950,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 85, position: "LW",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 81, sho: 84, pas: 83, dri: 85, def: 43, phy: 60 }, photoId: 220834, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-marco-reus", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3467,6 +3958,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 85, position: "LM",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "Borussia Dortmund",
     stats: { pac: 85, sho: 86, pas: 82, dri: 86, def: 44, phy: 64 }, photoId: 188350, photoVer: "19",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa19-miranda", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3474,6 +3966,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Brazil", nationCode: "br", league: "Italian Serie A", club: "Inter",
     stats: { pac: 68, sho: 49, pas: 60, dri: 68, def: 88, phy: 76 }, photoId: 168609, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-nabil-fekir", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3481,6 +3974,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 85, position: "CAM",
     nation: "France", nationCode: "fr", league: "French Ligue 1", club: "Olympique Lyonnais",
     stats: { pac: 79, sho: 82, pas: 81, dri: 89, def: 33, phy: 79 }, photoId: 216594, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-paulinho", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3488,6 +3982,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Brazil", nationCode: "br", league: "Chinese Super League", club: "Guangzhou FC",
     stats: { pac: 73, sho: 81, pas: 77, dri: 81, def: 79, phy: 84 }, photoId: 187961, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-pepe", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3495,6 +3990,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Portugal", nationCode: "pt", league: "Turkish Süper Lig", club: "Beşiktaş JK",
     stats: { pac: 68, sho: 51, pas: 57, dri: 61, def: 85, phy: 81 }, photoId: 120533, photoVer: "19",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa19-radja-nainggolan", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3502,6 +3998,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Belgium", nationCode: "be", league: "Italian Serie A", club: "Inter",
     stats: { pac: 75, sho: 79, pas: 78, dri: 82, def: 83, phy: 83 }, photoId: 178518, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-raheem-sterling", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3509,6 +4006,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 85, position: "RW",
     nation: "England", nationCode: "gb-eng", league: "English Premier League", club: "Manchester City",
     stats: { pac: 93, sho: 73, pas: 76, dri: 88, def: 47, phy: 56 }, photoId: 202652, photoVer: "19",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa19-riyad-mahrez", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3516,6 +4014,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 85, position: "RW",
     nation: "Algeria", nationCode: "dz", league: "English Premier League", club: "Manchester City",
     stats: { pac: 85, sho: 79, pas: 81, dri: 90, def: 37, phy: 59 }, photoId: 204485, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-sami-khedira", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3523,6 +4022,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Germany", nationCode: "de", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 57, sho: 76, pas: 80, dri: 78, def: 81, phy: 83 }, photoId: 179846, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-saul", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3530,6 +4030,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Atlético de Madrid",
     stats: { pac: 70, sho: 77, pas: 79, dri: 82, def: 78, phy: 76 }, photoId: 208421, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-sergej-milinkovic-savic", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3537,6 +4038,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Serbia", nationCode: "rs", league: "Italian Serie A", club: "Lazio",
     stats: { pac: 69, sho: 79, pas: 80, dri: 83, def: 77, phy: 84 }, photoId: 223848, photoVer: "19",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa19-toby-alderweireld", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3544,6 +4046,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Belgium", nationCode: "be", league: "English Premier League", club: "Tottenham Hotspur",
     stats: { pac: 62, sho: 57, pas: 72, dri: 65, def: 88, phy: 78 }, photoId: 184087, photoVer: "19",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-vincent-kompany", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3551,6 +4054,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Belgium", nationCode: "be", league: "English Premier League", club: "Manchester City",
     stats: { pac: 56, sho: 54, pas: 65, dri: 65, def: 85, phy: 81 }, photoId: 139720, photoVer: "19",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa19-virgil-van-dijk", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3558,6 +4062,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Netherlands", nationCode: "nl", league: "English Premier League", club: "Liverpool",
     stats: { pac: 71, sho: 60, pas: 67, dri: 70, def: 85, phy: 84 }, photoId: 203376, photoVer: "19",
+    difficulty: "easy", internationalReputation: 3,
   },
   {
     id: "fifa19-yacine-brahimi", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3565,6 +4070,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 85, position: "LM",
     nation: "Algeria", nationCode: "dz", league: "Portuguese Liga ZON SAGRES", club: "FC Porto",
     stats: { pac: 80, sho: 75, pas: 78, dri: 90, def: 41, phy: 59 },
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa19-zlatan-ibrahimovic", edition: "FIFA19", editionLabel: "FIFA 19",
@@ -3572,6 +4078,7 @@ const CARDS_FIFA19: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "Sweden", nationCode: "se", league: "USA Major League Soccer", club: "LA Galaxy",
     stats: { pac: 59, sho: 86, pas: 77, dri: 78, def: 34, phy: 78 }, photoId: 41236, photoVer: "19",
+    difficulty: "easy", internationalReputation: 5,
   },
 ];
 
@@ -3582,6 +4089,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 94, position: "RW",
     nation: "Argentina", nationCode: "ar", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 87, sho: 92, pas: 92, dri: 96, def: 39, phy: 66 }, photoId: 158023, photoVer: "20",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa20-cristiano-ronaldo", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3589,6 +4097,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 93, position: "ST",
     nation: "Portugal", nationCode: "pt", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 90, sho: 93, pas: 82, dri: 89, def: 35, phy: 78 }, photoId: 20801, photoVer: "20",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa20-neymar-jr", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3596,6 +4105,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 92, position: "LW",
     nation: "Brazil", nationCode: "br", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 91, sho: 85, pas: 87, dri: 95, def: 32, phy: 58 }, photoId: 190871, photoVer: "20",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa20-eden-hazard", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3603,6 +4113,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 91, position: "LW",
     nation: "Belgium", nationCode: "be", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 91, sho: 83, pas: 86, dri: 94, def: 35, phy: 66 }, photoId: 183277, photoVer: "20",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa20-kevin-de-bruyne", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3610,6 +4121,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 91, position: "CAM",
     nation: "Belgium", nationCode: "be", league: "English Premier League", club: "Manchester City",
     stats: { pac: 76, sho: 86, pas: 92, dri: 86, def: 61, phy: 78 }, photoId: 192985, photoVer: "20",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa20-luka-modric", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3617,6 +4129,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 90, position: "CM",
     nation: "Croatia", nationCode: "hr", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 74, sho: 76, pas: 89, dri: 89, def: 72, phy: 66 }, photoId: 177003, photoVer: "20",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa20-mohamed-salah", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3624,6 +4137,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 90, position: "RW",
     nation: "Egypt", nationCode: "eg", league: "English Premier League", club: "Liverpool",
     stats: { pac: 93, sho: 86, pas: 81, dri: 89, def: 45, phy: 74 }, photoId: 209331, photoVer: "20",
+    difficulty: "easy", internationalReputation: 3,
   },
   {
     id: "fifa20-virgil-van-dijk", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3631,6 +4145,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 90, position: "CB",
     nation: "Netherlands", nationCode: "nl", league: "English Premier League", club: "Liverpool",
     stats: { pac: 77, sho: 60, pas: 70, dri: 71, def: 90, phy: 86 }, photoId: 203376, photoVer: "20",
+    difficulty: "easy", internationalReputation: 3,
   },
   {
     id: "fifa20-antoine-griezmann", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3638,6 +4153,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 89, position: "CF",
     nation: "France", nationCode: "fr", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 81, sho: 86, pas: 84, dri: 89, def: 57, phy: 72 }, photoId: 194765, photoVer: "20",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa20-giorgio-chiellini", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3645,6 +4161,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 89, position: "CB",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 68, sho: 46, pas: 58, dri: 60, def: 90, phy: 82 }, photoId: 138956, photoVer: "20",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa20-harry-kane", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3652,6 +4169,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 89, position: "ST",
     nation: "England", nationCode: "gb-eng", league: "English Premier League", club: "Tottenham Hotspur",
     stats: { pac: 70, sho: 91, pas: 79, dri: 81, def: 47, phy: 83 }, photoId: 202126, photoVer: "20",
+    difficulty: "easy", internationalReputation: 3,
   },
   {
     id: "fifa20-kalidou-koulibaly", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3659,6 +4177,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 89, position: "CB",
     nation: "Senegal", nationCode: "sn", league: "Italian Serie A", club: "Napoli",
     stats: { pac: 71, sho: 28, pas: 54, dri: 67, def: 89, phy: 87 }, photoId: 201024, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa20-kylian-mbappe", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3666,6 +4185,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 89, position: "ST",
     nation: "France", nationCode: "fr", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 96, sho: 84, pas: 78, dri: 90, def: 39, phy: 75 }, photoId: 231747, photoVer: "20",
+    difficulty: "easy", internationalReputation: 3,
   },
   {
     id: "fifa20-luis-suarez", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3673,6 +4193,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 89, position: "ST",
     nation: "Uruguay", nationCode: "uy", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 73, sho: 89, pas: 80, dri: 84, def: 51, phy: 84 }, photoId: 176580, photoVer: "20",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa20-n-golo-kante", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3680,6 +4201,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 89, position: "CDM",
     nation: "France", nationCode: "fr", league: "English Premier League", club: "Chelsea",
     stats: { pac: 78, sho: 65, pas: 77, dri: 81, def: 87, phy: 83 }, photoId: 215914, photoVer: "20",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa20-robert-lewandowski", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3687,6 +4209,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 89, position: "ST",
     nation: "Poland", nationCode: "pl", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 77, sho: 87, pas: 74, dri: 85, def: 41, phy: 82 }, photoId: 188545, photoVer: "20",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa20-sergio-aguero", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3694,6 +4217,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 89, position: "ST",
     nation: "Argentina", nationCode: "ar", league: "English Premier League", club: "Manchester City",
     stats: { pac: 80, sho: 90, pas: 77, dri: 88, def: 33, phy: 74 }, photoId: 153079, photoVer: "20",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa20-sergio-busquets", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3701,6 +4225,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 89, position: "CDM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 42, sho: 62, pas: 80, dri: 80, def: 85, phy: 80 }, photoId: 189511, photoVer: "20",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa20-sergio-ramos", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3708,6 +4233,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 89, position: "CB",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 72, sho: 68, pas: 75, dri: 73, def: 87, phy: 85 }, photoId: 155862, photoVer: "20",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa20-christian-eriksen", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3715,6 +4241,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 88, position: "CAM",
     nation: "Denmark", nationCode: "dk", league: "English Premier League", club: "Tottenham Hotspur",
     stats: { pac: 73, sho: 81, pas: 90, dri: 84, def: 53, phy: 63 }, photoId: 190460, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa20-david-silva", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3722,6 +4249,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 88, position: "CAM",
     nation: "Spain", nationCode: "es", league: "English Premier League", club: "Manchester City",
     stats: { pac: 65, sho: 74, pas: 88, dri: 89, def: 52, phy: 57 }, photoId: 168542, photoVer: "20",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa20-diego-godin", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3729,6 +4257,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 88, position: "CB",
     nation: "Uruguay", nationCode: "uy", league: "Italian Serie A", club: "Inter",
     stats: { pac: 60, sho: 48, pas: 64, dri: 61, def: 89, phy: 83 }, photoId: 182493, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa20-edinson-cavani", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3736,6 +4265,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 88, position: "ST",
     nation: "Uruguay", nationCode: "uy", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 75, sho: 86, pas: 72, dri: 79, def: 55, phy: 83 }, photoId: 179813, photoVer: "20",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa20-marco-reus", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3743,6 +4273,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 88, position: "CAM",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "Borussia Dortmund",
     stats: { pac: 85, sho: 88, pas: 84, dri: 87, def: 45, phy: 66 }, photoId: 188350, photoVer: "20",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa20-paul-pogba", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3750,6 +4281,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 88, position: "CM",
     nation: "France", nationCode: "fr", league: "English Premier League", club: "Manchester United",
     stats: { pac: 74, sho: 81, pas: 86, dri: 85, def: 66, phy: 86 }, photoId: 195864, photoVer: "20",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa20-paulo-dybala", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3757,6 +4289,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 88, position: "CAM",
     nation: "Argentina", nationCode: "ar", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 83, sho: 82, pas: 84, dri: 90, def: 43, phy: 64 }, photoId: 211110, photoVer: "20",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa20-pierre-emerick-aubameyang", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3764,6 +4297,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 88, position: "ST",
     nation: "Gabon", nationCode: "ga", league: "English Premier League", club: "Arsenal",
     stats: { pac: 94, sho: 85, pas: 75, dri: 80, def: 37, phy: 69 }, photoId: 188567, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa20-pique", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3771,6 +4305,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 88, position: "CB",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 56, sho: 61, pas: 72, dri: 68, def: 88, phy: 80 }, photoId: 152729, photoVer: "20",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa20-raheem-sterling", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3778,6 +4313,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 88, position: "RW",
     nation: "England", nationCode: "gb-eng", league: "English Premier League", club: "Manchester City",
     stats: { pac: 93, sho: 79, pas: 78, dri: 89, def: 45, phy: 57 }, photoId: 202652, photoVer: "20",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa20-sadio-mane", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3785,6 +4321,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 88, position: "LW",
     nation: "Senegal", nationCode: "sn", league: "English Premier League", club: "Liverpool",
     stats: { pac: 94, sho: 83, pas: 77, dri: 89, def: 44, phy: 74 }, photoId: 208722, photoVer: "20",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa20-toni-kroos", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3792,6 +4329,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 88, position: "CM",
     nation: "Germany", nationCode: "de", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 45, sho: 80, pas: 90, dri: 81, def: 70, phy: 69 }, photoId: 182521, photoVer: "20",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa20-aymeric-laporte", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3799,6 +4337,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 87, position: "CB",
     nation: "France", nationCode: "fr", league: "English Premier League", club: "Manchester City",
     stats: { pac: 64, sho: 50, pas: 71, dri: 68, def: 88, phy: 82 }, photoId: 212218, photoVer: "20",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa20-bernardo-silva", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3806,6 +4345,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 87, position: "RW",
     nation: "Portugal", nationCode: "pt", league: "English Premier League", club: "Manchester City",
     stats: { pac: 81, sho: 76, pas: 83, dri: 92, def: 51, phy: 67 }, photoId: 218667, photoVer: "20",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa20-casemiro", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3813,6 +4353,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 87, position: "CDM",
     nation: "Brazil", nationCode: "br", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 62, sho: 72, pas: 75, dri: 72, def: 85, phy: 89 }, photoId: 200145, photoVer: "20",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa20-dries-mertens", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3820,6 +4361,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 87, position: "CF",
     nation: "Belgium", nationCode: "be", league: "Italian Serie A", club: "Napoli",
     stats: { pac: 88, sho: 83, pas: 80, dri: 91, def: 35, phy: 53 }, photoId: 175943, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa20-fernandinho", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3827,6 +4369,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 87, position: "CDM",
     nation: "Brazil", nationCode: "br", league: "English Premier League", club: "Manchester City",
     stats: { pac: 66, sho: 74, pas: 79, dri: 78, def: 84, phy: 79 }, photoId: 135507, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa20-jan-vertonghen", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3834,6 +4377,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 87, position: "CB",
     nation: "Belgium", nationCode: "be", league: "English Premier League", club: "Tottenham Hotspur",
     stats: { pac: 63, sho: 63, pas: 74, dri: 72, def: 87, phy: 79 }, photoId: 172871, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa20-jordi-alba", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3841,6 +4385,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 87, position: "LB",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 90, sho: 69, pas: 81, dri: 83, def: 79, phy: 73 }, photoId: 189332, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa20-karim-benzema", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3848,6 +4393,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 87, position: "CF",
     nation: "France", nationCode: "fr", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 76, sho: 82, pas: 80, dri: 86, def: 39, phy: 77 }, photoId: 165153, photoVer: "20",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa20-lorenzo-insigne", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3855,6 +4401,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 87, position: "CF",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Napoli",
     stats: { pac: 89, sho: 79, pas: 85, dri: 91, def: 35, phy: 47 }, photoId: 198219, photoVer: "20",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa20-mats-hummels", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3862,6 +4409,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 87, position: "CB",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "Borussia Dortmund",
     stats: { pac: 51, sho: 58, pas: 76, dri: 72, def: 89, phy: 76 }, photoId: 178603, photoVer: "20",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa20-thiago", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3869,6 +4417,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 87, position: "CM",
     nation: "Spain", nationCode: "es", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 69, sho: 74, pas: 85, dri: 90, def: 69, phy: 63 }, photoId: 189509, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa20-thiago-silva", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3876,6 +4425,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 87, position: "CB",
     nation: "Brazil", nationCode: "br", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 62, sho: 54, pas: 72, dri: 72, def: 87, phy: 78 }, photoId: 164240, photoVer: "20",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa20-toby-alderweireld", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3883,6 +4433,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 87, position: "CB",
     nation: "Belgium", nationCode: "be", league: "English Premier League", club: "Tottenham Hotspur",
     stats: { pac: 64, sho: 55, pas: 72, dri: 66, def: 88, phy: 79 }, photoId: 184087, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa20-son", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3890,6 +4441,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 87, position: "CF",
     nation: "Korea Republic", nationCode: "kr", league: "English Premier League", club: "Tottenham Hotspur",
     stats: { pac: 88, sho: 86, pas: 80, dri: 87, def: 42, phy: 68 }, photoId: 200104, photoVer: "20",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa20-alexandre-lacazette", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3897,6 +4449,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 86, position: "ST",
     nation: "France", nationCode: "fr", league: "English Premier League", club: "Arsenal",
     stats: { pac: 82, sho: 85, pas: 75, dri: 86, def: 40, phy: 74 }, photoId: 193301, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa20-ciro-immobile", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3904,6 +4457,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 86, position: "ST",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Lazio",
     stats: { pac: 80, sho: 85, pas: 63, dri: 81, def: 39, phy: 76 }, photoId: 192387, photoVer: "20",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa20-coutinho", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3911,6 +4465,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 86, position: "LW",
     nation: "Brazil", nationCode: "br", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 79, sho: 80, pas: 84, dri: 90, def: 52, phy: 64 }, photoId: 189242, photoVer: "20",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa20-isco", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3918,6 +4473,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 86, position: "CAM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 71, sho: 77, pas: 83, dri: 91, def: 59, phy: 60 }, photoId: 197781, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa20-ivan-rakitic", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3925,6 +4481,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Croatia", nationCode: "hr", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 62, sho: 81, pas: 86, dri: 81, def: 74, phy: 70 }, photoId: 168651, photoVer: "20",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa20-joshua-kimmich", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3932,6 +4489,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 86, position: "RB",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 72, sho: 69, pas: 86, dri: 84, def: 79, phy: 78 }, photoId: 212622, photoVer: "20",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa20-leonardo-bonucci", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3939,6 +4497,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 58, sho: 58, pas: 69, dri: 70, def: 87, phy: 79 }, photoId: 184344, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa20-leroy-sane", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3946,6 +4505,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 86, position: "LW",
     nation: "Germany", nationCode: "de", league: "English Premier League", club: "Manchester City",
     stats: { pac: 95, sho: 81, pas: 79, dri: 86, def: 38, phy: 70 }, photoId: 222492, photoVer: "20",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa20-marco-verratti", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3953,6 +4513,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Italy", nationCode: "it", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 65, sho: 60, pas: 84, dri: 90, def: 79, phy: 66 }, photoId: 199556, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa20-marquinhos", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3960,6 +4521,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Brazil", nationCode: "br", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 74, sho: 41, pas: 73, dri: 70, def: 86, phy: 77 }, photoId: 207865, photoVer: "20",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa20-milan-skriniar", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3967,6 +4529,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Slovakia", nationCode: "sk", league: "Italian Serie A", club: "Inter",
     stats: { pac: 69, sho: 41, pas: 59, dri: 66, def: 87, phy: 82 }, photoId: 232363, photoVer: "24",
+    difficulty: "hard", internationalReputation: 1,
   },
   {
     id: "fifa20-miralem-pjanic", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3974,6 +4537,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Bosnia and Herzegovina", nationCode: "ba", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 68, sho: 68, pas: 87, dri: 85, def: 75, phy: 67 }, photoId: 180206, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa20-parejo", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3981,6 +4545,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Valencia CF",
     stats: { pac: 41, sho: 80, pas: 88, dri: 79, def: 70, phy: 69 }, photoId: 189513, photoVer: "20",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa20-roberto-firmino", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3988,6 +4553,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 86, position: "CF",
     nation: "Brazil", nationCode: "br", league: "English Premier League", club: "Liverpool",
     stats: { pac: 77, sho: 82, pas: 80, dri: 87, def: 61, phy: 78 }, photoId: 201942, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa20-samuel-umtiti", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -3995,6 +4561,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "France", nationCode: "fr", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 69, sho: 63, pas: 69, dri: 69, def: 86, phy: 82 }, photoId: 205600, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa20-thomas-muller", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4002,6 +4569,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 86, position: "CAM",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 72, sho: 83, pas: 79, dri: 78, def: 55, phy: 71 }, photoId: 189596, photoVer: "20",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa20-angel-di-maria", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4009,6 +4577,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 86, position: "RW",
     nation: "Argentina", nationCode: "ar", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 84, sho: 79, pas: 84, dri: 87, def: 48, phy: 68 }, photoId: 183898, photoVer: "20",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa20-alejandro-gomez", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4016,6 +4585,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 85, position: "CAM",
     nation: "Argentina", nationCode: "ar", league: "Italian Serie A", club: "Atalanta",
     stats: { pac: 89, sho: 78, pas: 81, dri: 86, def: 39, phy: 55 }, photoId: 143076, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa20-alex-sandro", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4023,6 +4593,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 85, position: "LB",
     nation: "Brazil", nationCode: "br", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 83, sho: 65, pas: 77, dri: 80, def: 82, phy: 82 }, photoId: 191043, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa20-allan", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4030,6 +4601,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Brazil", nationCode: "br", league: "Italian Serie A", club: "Napoli",
     stats: { pac: 75, sho: 71, pas: 78, dri: 84, def: 85, phy: 84 }, photoId: 199914, photoVer: "23",
+    difficulty: "veryHard", internationalReputation: 2,
   },
   {
     id: "fifa20-andrew-robertson", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4037,6 +4609,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 85, position: "LB",
     nation: "Scotland", nationCode: "gb-sct", league: "English Premier League", club: "Liverpool",
     stats: { pac: 85, sho: 62, pas: 77, dri: 79, def: 80, phy: 75 }, photoId: 216267, photoVer: "20",
+    difficulty: "hard", internationalReputation: 1,
   },
   {
     id: "fifa20-axel-witsel", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4044,6 +4617,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 85, position: "CDM",
     nation: "Belgium", nationCode: "be", league: "German 1. Bundesliga", club: "Borussia Dortmund",
     stats: { pac: 73, sho: 74, pas: 80, dri: 79, def: 83, phy: 81 }, photoId: 177413, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa20-blaise-matuidi", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4051,6 +4625,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 85, position: "CDM",
     nation: "France", nationCode: "fr", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 75, sho: 66, pas: 76, dri: 78, def: 83, phy: 81 }, photoId: 170890, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa20-bruno-fernandes", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4058,6 +4633,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 85, position: "CAM",
     nation: "Portugal", nationCode: "pt", league: "Portuguese Liga ZON SAGRES", club: "Sporting CP",
     stats: { pac: 77, sho: 83, pas: 87, dri: 85, def: 65, phy: 74 }, photoId: 212198, photoVer: "24",
+    difficulty: "medium", internationalReputation: 2,
   },
   {
     id: "fifa20-carvajal", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4065,6 +4641,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 85, position: "RB",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 81, sho: 47, pas: 78, dri: 81, def: 82, phy: 80 }, photoId: 204963, photoVer: "20",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa20-clement-lenglet", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4072,6 +4649,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "France", nationCode: "fr", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 75, sho: 45, pas: 68, dri: 65, def: 86, phy: 80 }, photoId: 220440, photoVer: "20",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa20-david-alaba", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4079,6 +4657,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 85, position: "LB",
     nation: "Austria", nationCode: "at", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 83, sho: 73, pas: 81, dri: 80, def: 80, phy: 76 }, photoId: 197445, photoVer: "20",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa20-fabinho", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4086,6 +4665,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 85, position: "CDM",
     nation: "Brazil", nationCode: "br", league: "English Premier League", club: "Liverpool",
     stats: { pac: 68, sho: 69, pas: 78, dri: 77, def: 85, phy: 83 }, photoId: 209499, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa20-frenkie-de-jong", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4093,6 +4673,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Netherlands", nationCode: "nl", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 79, sho: 64, pas: 84, dri: 87, def: 76, phy: 76 }, photoId: 228702, photoVer: "24",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa20-gareth-bale", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4100,6 +4681,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 85, position: "RW",
     nation: "Wales", nationCode: "gb-wls", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 91, sho: 87, pas: 82, dri: 82, def: 58, phy: 76 }, photoId: 173731, photoVer: "20",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa20-gonzalo-higuain", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4107,6 +4689,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "Argentina", nationCode: "ar", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 63, sho: 85, pas: 71, dri: 80, def: 31, phy: 71 }, photoId: 167664, photoVer: "20",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa20-hakim-ziyech", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4114,6 +4697,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 85, position: "CAM",
     nation: "Morocco", nationCode: "ma", league: "Holland Eredivisie", club: "Ajax",
     stats: { pac: 80, sho: 75, pas: 86, dri: 83, def: 50, phy: 66 }, photoId: 208670, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa20-iago-aspas", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4121,6 +4705,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "RC Celta de Vigo",
     stats: { pac: 78, sho: 84, pas: 77, dri: 85, def: 35, phy: 64 }, photoId: 192629, photoVer: "20",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa20-james-rodriguez", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4128,6 +4713,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 85, position: "CAM",
     nation: "Colombia", nationCode: "co", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 55, sho: 86, pas: 87, dri: 86, def: 50, phy: 63 }, photoId: 198710, photoVer: "20",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa20-jose-gimenez", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4135,6 +4721,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Uruguay", nationCode: "uy", league: "Spain Primera Division", club: "Atlético de Madrid",
     stats: { pac: 69, sho: 45, pas: 52, dri: 54, def: 86, phy: 82 }, photoId: 216460, photoVer: "20",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa20-koke", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4142,6 +4729,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 85, position: "RM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Atlético de Madrid",
     stats: { pac: 68, sho: 75, pas: 86, dri: 82, def: 74, phy: 79 }, photoId: 193747, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa20-konstantinos-manolas", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4149,6 +4737,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Greece", nationCode: "gr", league: "Italian Serie A", club: "Napoli",
     stats: { pac: 82, sho: 25, pas: 42, dri: 60, def: 86, phy: 81 }, photoId: 192774, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa20-marcelo", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4156,6 +4745,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 85, position: "LB",
     nation: "Brazil", nationCode: "br", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 81, sho: 74, pas: 83, dri: 89, def: 77, phy: 79 }, photoId: 176676, photoVer: "20",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa20-matthijs-de-ligt", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4163,6 +4753,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Netherlands", nationCode: "nl", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 67, sho: 58, pas: 66, dri: 68, def: 83, phy: 84 }, photoId: 235243, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa20-mauro-icardi", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4170,6 +4761,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "Argentina", nationCode: "ar", league: "Italian Serie A", club: "Inter",
     stats: { pac: 75, sho: 84, pas: 61, dri: 77, def: 36, phy: 69 }, photoId: 201399, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa20-niklas-sule", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4177,6 +4769,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 72, sho: 42, pas: 55, dri: 50, def: 86, phy: 82 }, photoId: 212190, photoVer: "20",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa20-raphael-varane", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4184,6 +4777,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "France", nationCode: "fr", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 83, sho: 45, pas: 62, dri: 63, def: 85, phy: 80 }, photoId: 201535, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa20-rodri", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4191,6 +4785,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 85, position: "CDM",
     nation: "Spain", nationCode: "es", league: "English Premier League", club: "Manchester City",
     stats: { pac: 67, sho: 68, pas: 77, dri: 77, def: 82, phy: 80 }, photoId: 231866, photoVer: "20",
+    difficulty: "easy", internationalReputation: 2,
   },
   {
     id: "fifa20-romelu-lukaku", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4198,6 +4793,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "Belgium", nationCode: "be", league: "Italian Serie A", club: "Inter",
     stats: { pac: 75, sho: 82, pas: 73, dri: 72, def: 35, phy: 84 }, photoId: 192505, photoVer: "20",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa20-saul", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4205,6 +4801,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Atlético de Madrid",
     stats: { pac: 70, sho: 78, pas: 79, dri: 81, def: 78, phy: 78 }, photoId: 208421, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa20-sergej-milinkovic-savic", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4212,6 +4809,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Serbia", nationCode: "rs", league: "Italian Serie A", club: "Lazio",
     stats: { pac: 67, sho: 79, pas: 80, dri: 83, def: 77, phy: 84 }, photoId: 223848, photoVer: "20",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa20-zlatan-ibrahimovic", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4219,6 +4817,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "Sweden", nationCode: "se", league: "USA Major League Soccer", club: "LA Galaxy",
     stats: { pac: 56, sho: 88, pas: 77, dri: 77, def: 34, phy: 78 }, photoId: 41236, photoVer: "20",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa20-edin-dzeko", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4226,6 +4825,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 84, position: "ST",
     nation: "Bosnia and Herzegovina", nationCode: "ba", league: "Italian Serie A", club: "Roma",
     stats: { pac: 60, sho: 84, pas: 71, dri: 75, def: 46, phy: 73 }, photoId: 180930, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa20-javi-martinez", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4233,6 +4833,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 84, position: "CDM",
     nation: "Spain", nationCode: "es", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 48, sho: 55, pas: 69, dri: 63, def: 86, phy: 83 }, photoId: 177610, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa20-joao-moutinho", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4240,6 +4841,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 84, position: "CM",
     nation: "Portugal", nationCode: "pt", league: "English Premier League", club: "Wolverhampton Wanderers",
     stats: { pac: 56, sho: 75, pas: 85, dri: 82, def: 71, phy: 67 }, photoId: 162347, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa20-lucas-leiva", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4247,6 +4849,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 84, position: "CDM",
     nation: "Brazil", nationCode: "br", league: "Italian Serie A", club: "Lazio",
     stats: { pac: 62, sho: 66, pas: 76, dri: 78, def: 83, phy: 73 }, photoId: 176266, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa20-marek-hamsik", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4254,6 +4857,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 84, position: "CM",
     nation: "Slovakia", nationCode: "sk", league: "Chinese Super League", club: "Dalian Professional Football Club",
     stats: { pac: 69, sho: 77, pas: 83, dri: 83, def: 72, phy: 69 }, photoId: 171877, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa20-mesut-ozil", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4261,6 +4865,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 84, position: "CAM",
     nation: "Germany", nationCode: "de", league: "English Premier League", club: "Arsenal",
     stats: { pac: 70, sho: 72, pas: 86, dri: 84, def: 24, phy: 56 }, photoId: 176635, photoVer: "20",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa20-pepe", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4268,6 +4873,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Portugal", nationCode: "pt", league: "Portuguese Liga ZON SAGRES", club: "FC Porto",
     stats: { pac: 67, sho: 51, pas: 57, dri: 60, def: 85, phy: 85 }, photoId: 120533, photoVer: "20",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa20-sokratis", edition: "FIFA20", editionLabel: "FIFA 20",
@@ -4275,6 +4881,7 @@ const CARDS_FIFA20: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Greece", nationCode: "gr", league: "English Premier League", club: "Arsenal",
     stats: { pac: 72, sho: 51, pas: 52, dri: 60, def: 84, phy: 83 }, photoId: 172879, photoVer: "20",
+    difficulty: "hard", internationalReputation: 3,
   },
 ];
 
@@ -4285,6 +4892,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 93, position: "RW",
     nation: "Argentina", nationCode: "ar", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 85, sho: 92, pas: 91, dri: 95, def: 38, phy: 65 }, photoId: 158023, photoVer: "21",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa21-cristiano-ronaldo", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4292,6 +4900,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 92, position: "ST",
     nation: "Portugal", nationCode: "pt", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 89, sho: 93, pas: 81, dri: 89, def: 35, phy: 77 }, photoId: 20801, photoVer: "21",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa21-kevin-de-bruyne", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4299,6 +4908,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 91, position: "CAM",
     nation: "Belgium", nationCode: "be", league: "English Premier League", club: "Manchester City",
     stats: { pac: 76, sho: 86, pas: 93, dri: 88, def: 64, phy: 78 }, photoId: 192985, photoVer: "21",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa21-neymar-jr", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4306,6 +4916,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 91, position: "LW",
     nation: "Brazil", nationCode: "br", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 91, sho: 85, pas: 86, dri: 94, def: 36, phy: 59 }, photoId: 190871, photoVer: "21",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa21-robert-lewandowski", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4313,6 +4924,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 91, position: "ST",
     nation: "Poland", nationCode: "pl", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 78, sho: 91, pas: 78, dri: 85, def: 43, phy: 82 }, photoId: 188545, photoVer: "21",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa21-kylian-mbappe", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4320,6 +4932,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 90, position: "ST",
     nation: "France", nationCode: "fr", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 96, sho: 86, pas: 78, dri: 91, def: 39, phy: 76 }, photoId: 231747, photoVer: "21",
+    difficulty: "easy", internationalReputation: 3,
   },
   {
     id: "fifa21-mohamed-salah", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4327,6 +4940,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 90, position: "RW",
     nation: "Egypt", nationCode: "eg", league: "English Premier League", club: "Liverpool",
     stats: { pac: 93, sho: 86, pas: 81, dri: 90, def: 45, phy: 75 }, photoId: 209331, photoVer: "21",
+    difficulty: "easy", internationalReputation: 3,
   },
   {
     id: "fifa21-sadio-mane", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4334,6 +4948,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 90, position: "LW",
     nation: "Senegal", nationCode: "sn", league: "English Premier League", club: "Liverpool",
     stats: { pac: 94, sho: 85, pas: 80, dri: 90, def: 44, phy: 76 }, photoId: 208722, photoVer: "21",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa21-virgil-van-dijk", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4341,6 +4956,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 90, position: "CB",
     nation: "Netherlands", nationCode: "nl", league: "English Premier League", club: "Liverpool",
     stats: { pac: 76, sho: 60, pas: 71, dri: 71, def: 91, phy: 86 }, photoId: 203376, photoVer: "21",
+    difficulty: "easy", internationalReputation: 3,
   },
   {
     id: "fifa21-casemiro", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4348,6 +4964,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 89, position: "CDM",
     nation: "Brazil", nationCode: "br", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 65, sho: 73, pas: 76, dri: 72, def: 86, phy: 91 }, photoId: 200145, photoVer: "21",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa21-karim-benzema", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4355,6 +4972,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 89, position: "CF",
     nation: "France", nationCode: "fr", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 74, sho: 85, pas: 81, dri: 86, def: 40, phy: 76 }, photoId: 165153, photoVer: "21",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa21-sergio-aguero", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4362,6 +4980,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 89, position: "ST",
     nation: "Argentina", nationCode: "ar", league: "English Premier League", club: "Manchester City",
     stats: { pac: 78, sho: 90, pas: 77, dri: 88, def: 33, phy: 73 }, photoId: 153079, photoVer: "21",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa21-sergio-ramos", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4369,6 +4988,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 89, position: "CB",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 71, sho: 70, pas: 76, dri: 73, def: 88, phy: 85 }, photoId: 155862, photoVer: "21",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa21-eden-hazard", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4376,6 +4996,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 88, position: "LW",
     nation: "Belgium", nationCode: "be", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 88, sho: 82, pas: 83, dri: 92, def: 35, phy: 66 }, photoId: 183277, photoVer: "21",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa21-harry-kane", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4383,6 +5004,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 88, position: "ST",
     nation: "England", nationCode: "gb-eng", league: "English Premier League", club: "Tottenham Hotspur",
     stats: { pac: 68, sho: 91, pas: 80, dri: 80, def: 47, phy: 83 }, photoId: 202126, photoVer: "21",
+    difficulty: "easy", internationalReputation: 3,
   },
   {
     id: "fifa21-joshua-kimmich", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4390,6 +5012,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 88, position: "CDM",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 71, sho: 72, pas: 86, dri: 84, def: 81, phy: 79 }, photoId: 212622, photoVer: "21",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa21-kalidou-koulibaly", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4397,6 +5020,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 88, position: "CB",
     nation: "Senegal", nationCode: "sn", league: "Italian Serie A", club: "Napoli",
     stats: { pac: 75, sho: 28, pas: 55, dri: 68, def: 89, phy: 86 }, photoId: 201024, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-n-golo-kante", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4404,6 +5028,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 88, position: "CDM",
     nation: "France", nationCode: "fr", league: "English Premier League", club: "Chelsea",
     stats: { pac: 77, sho: 66, pas: 76, dri: 81, def: 86, phy: 82 }, photoId: 215914, photoVer: "21",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa21-paulo-dybala", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4411,6 +5036,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 88, position: "CF",
     nation: "Argentina", nationCode: "ar", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 85, sho: 85, pas: 84, dri: 92, def: 43, phy: 63 }, photoId: 211110, photoVer: "21",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa21-raheem-sterling", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4418,6 +5044,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 88, position: "LW",
     nation: "England", nationCode: "gb-eng", league: "English Premier League", club: "Manchester City",
     stats: { pac: 93, sho: 81, pas: 79, dri: 90, def: 45, phy: 67 }, photoId: 202652, photoVer: "21",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa21-toni-kroos", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4425,6 +5052,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 88, position: "CM",
     nation: "Germany", nationCode: "de", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 54, sho: 81, pas: 91, dri: 81, def: 71, phy: 69 }, photoId: 182521, photoVer: "21",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa21-andrew-robertson", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4432,6 +5060,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 87, position: "LB",
     nation: "Scotland", nationCode: "gb-sct", league: "English Premier League", club: "Liverpool",
     stats: { pac: 82, sho: 62, pas: 80, dri: 80, def: 81, phy: 76 }, photoId: 216267, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-antoine-griezmann", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4439,6 +5068,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 87, position: "ST",
     nation: "France", nationCode: "fr", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 79, sho: 85, pas: 84, dri: 88, def: 57, phy: 72 }, photoId: 194765, photoVer: "21",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa21-aymeric-laporte", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4446,6 +5076,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 87, position: "CB",
     nation: "France", nationCode: "fr", league: "English Premier League", club: "Manchester City",
     stats: { pac: 63, sho: 50, pas: 72, dri: 68, def: 88, phy: 81 }, photoId: 212218, photoVer: "21",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa21-bernardo-silva", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4453,6 +5084,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 87, position: "RW",
     nation: "Portugal", nationCode: "pt", league: "English Premier League", club: "Manchester City",
     stats: { pac: 81, sho: 77, pas: 83, dri: 92, def: 51, phy: 67 }, photoId: 218667, photoVer: "21",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa21-bruno-fernandes", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4460,6 +5092,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 87, position: "CAM",
     nation: "Portugal", nationCode: "pt", league: "English Premier League", club: "Manchester United",
     stats: { pac: 77, sho: 83, pas: 88, dri: 85, def: 68, phy: 75 }, photoId: 212198, photoVer: "21",
+    difficulty: "medium", internationalReputation: 2,
   },
   {
     id: "fifa21-ciro-immobile", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4467,6 +5100,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 87, position: "ST",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Lazio",
     stats: { pac: 84, sho: 88, pas: 67, dri: 83, def: 39, phy: 77 }, photoId: 192387, photoVer: "21",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa21-fabinho", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4474,6 +5108,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 87, position: "CDM",
     nation: "Brazil", nationCode: "br", league: "English Premier League", club: "Liverpool",
     stats: { pac: 67, sho: 69, pas: 79, dri: 77, def: 85, phy: 83 }, photoId: 209499, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-giorgio-chiellini", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4481,6 +5116,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 87, position: "CB",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 66, sho: 46, pas: 58, dri: 60, def: 90, phy: 79 }, photoId: 138956, photoVer: "21",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa21-jadon-sancho", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4488,6 +5124,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 87, position: "RM",
     nation: "England", nationCode: "gb-eng", league: "German 1. Bundesliga", club: "Borussia Dortmund",
     stats: { pac: 83, sho: 74, pas: 81, dri: 91, def: 37, phy: 64 }, photoId: 233049, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-luis-suarez", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4495,6 +5132,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 87, position: "ST",
     nation: "Uruguay", nationCode: "uy", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 70, sho: 90, pas: 82, dri: 83, def: 51, phy: 83 }, photoId: 176580, photoVer: "21",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa21-luka-modric", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4502,6 +5140,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 87, position: "CM",
     nation: "Croatia", nationCode: "hr", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 73, sho: 76, pas: 89, dri: 88, def: 71, phy: 66 }, photoId: 177003, photoVer: "21",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa21-pierre-emerick-aubameyang", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4509,6 +5148,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 87, position: "ST",
     nation: "Gabon", nationCode: "ga", league: "English Premier League", club: "Arsenal",
     stats: { pac: 93, sho: 86, pas: 75, dri: 80, def: 38, phy: 69 }, photoId: 188567, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-roberto-firmino", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4516,6 +5156,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 87, position: "CF",
     nation: "Brazil", nationCode: "br", league: "English Premier League", club: "Liverpool",
     stats: { pac: 77, sho: 80, pas: 81, dri: 90, def: 61, phy: 78 }, photoId: 201942, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-sergio-busquets", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4523,6 +5164,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 87, position: "CDM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 42, sho: 62, pas: 80, dri: 80, def: 83, phy: 77 }, photoId: 189511, photoVer: "21",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa21-trent-alexander-arnold", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4530,6 +5172,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 87, position: "RB",
     nation: "England", nationCode: "gb-eng", league: "English Premier League", club: "Liverpool",
     stats: { pac: 80, sho: 66, pas: 87, dri: 80, def: 80, phy: 71 }, photoId: 231281, photoVer: "21",
+    difficulty: "medium", internationalReputation: 2,
   },
   {
     id: "fifa21-angel-di-maria", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4537,6 +5180,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 87, position: "RW",
     nation: "Argentina", nationCode: "ar", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 83, sho: 81, pas: 85, dri: 88, def: 48, phy: 68 }, photoId: 183898, photoVer: "21",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa21-son", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4544,6 +5188,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 87, position: "LM",
     nation: "Korea Republic", nationCode: "kr", league: "English Premier League", club: "Tottenham Hotspur",
     stats: { pac: 88, sho: 86, pas: 80, dri: 87, def: 43, phy: 69 }, photoId: 200104, photoVer: "21",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa21-alejandro-gomez", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4551,6 +5196,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 86, position: "CAM",
     nation: "Argentina", nationCode: "ar", league: "Italian Serie A", club: "Atalanta",
     stats: { pac: 90, sho: 79, pas: 84, dri: 88, def: 39, phy: 55 }, photoId: 143076, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-carvajal", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4558,6 +5204,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 86, position: "RB",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 80, sho: 54, pas: 78, dri: 80, def: 82, phy: 80 }, photoId: 204963, photoVer: "21",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa21-david-silva", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4565,6 +5212,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 86, position: "CAM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Real Sociedad",
     stats: { pac: 64, sho: 74, pas: 88, dri: 88, def: 52, phy: 55 }, photoId: 168542, photoVer: "21",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa21-jamie-vardy", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4572,6 +5220,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 86, position: "ST",
     nation: "England", nationCode: "gb-eng", league: "English Premier League", club: "Leicester City",
     stats: { pac: 88, sho: 85, pas: 66, dri: 78, def: 55, phy: 75 }, photoId: 208830, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-jordan-henderson", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4579,6 +5228,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 86, position: "CDM",
     nation: "England", nationCode: "gb-eng", league: "English Premier League", club: "Liverpool",
     stats: { pac: 65, sho: 74, pas: 84, dri: 79, def: 81, phy: 82 }, photoId: 183711, photoVer: "21",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa21-jordi-alba", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4586,6 +5236,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 86, position: "LB",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 88, sho: 69, pas: 81, dri: 83, def: 78, phy: 72 }, photoId: 189332, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-marco-verratti", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4593,6 +5244,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Italy", nationCode: "it", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 64, sho: 60, pas: 85, dri: 90, def: 79, phy: 67 }, photoId: 199556, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-mats-hummels", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4600,6 +5252,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "Borussia Dortmund",
     stats: { pac: 58, sho: 58, pas: 77, dri: 72, def: 89, phy: 77 }, photoId: 178603, photoVer: "21",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa21-paul-pogba", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4607,6 +5260,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "France", nationCode: "fr", league: "English Premier League", club: "Manchester United",
     stats: { pac: 73, sho: 81, pas: 86, dri: 85, def: 66, phy: 85 }, photoId: 195864, photoVer: "21",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa21-pique", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4614,6 +5268,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 57, sho: 61, pas: 71, dri: 67, def: 86, phy: 80 }, photoId: 152729, photoVer: "21",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa21-raphael-varane", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4621,6 +5276,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "France", nationCode: "fr", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 82, sho: 49, pas: 64, dri: 64, def: 87, phy: 82 }, photoId: 201535, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-thomas-muller", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4628,6 +5284,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 86, position: "CAM",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 68, sho: 82, pas: 82, dri: 78, def: 56, phy: 71 }, photoId: 189596, photoVer: "21",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa21-alex-sandro", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4635,6 +5292,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 85, position: "LB",
     nation: "Brazil", nationCode: "br", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 81, sho: 65, pas: 77, dri: 80, def: 81, phy: 81 }, photoId: 191043, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-christian-eriksen", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4642,6 +5300,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 85, position: "CAM",
     nation: "Denmark", nationCode: "dk", league: "Italian Serie A", club: "Inter",
     stats: { pac: 72, sho: 81, pas: 88, dri: 81, def: 53, phy: 63 }, photoId: 190460, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-clement-lenglet", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4649,6 +5308,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "France", nationCode: "fr", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 74, sho: 45, pas: 67, dri: 65, def: 87, phy: 81 }, photoId: 220440, photoVer: "21",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa21-diego-godin", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4656,6 +5316,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Uruguay", nationCode: "uy", league: "Italian Serie A", club: "Inter",
     stats: { pac: 57, sho: 48, pas: 64, dri: 61, def: 87, phy: 79 }, photoId: 182493, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-dries-mertens", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4663,6 +5324,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 85, position: "CF",
     nation: "Belgium", nationCode: "be", league: "Italian Serie A", club: "Napoli",
     stats: { pac: 86, sho: 82, pas: 80, dri: 89, def: 35, phy: 51 }, photoId: 175943, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-frenkie-de-jong", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4670,6 +5332,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Netherlands", nationCode: "nl", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 80, sho: 64, pas: 84, dri: 87, def: 76, phy: 77 }, photoId: 228702, photoVer: "21",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa21-georginio-wijnaldum", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4677,6 +5340,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Netherlands", nationCode: "nl", league: "English Premier League", club: "Liverpool",
     stats: { pac: 76, sho: 75, pas: 81, dri: 86, def: 78, phy: 79 }, photoId: 181291, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-hakim-ziyech", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4684,6 +5348,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 85, position: "CAM",
     nation: "Morocco", nationCode: "ma", league: "English Premier League", club: "Chelsea",
     stats: { pac: 80, sho: 76, pas: 87, dri: 84, def: 50, phy: 66 }, photoId: 208670, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-kai-havertz", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4691,6 +5356,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 85, position: "CAM",
     nation: "Germany", nationCode: "de", league: "English Premier League", club: "Chelsea",
     stats: { pac: 84, sho: 81, pas: 79, dri: 85, def: 45, phy: 67 }, photoId: 235790, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-koke", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4698,6 +5364,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Atlético de Madrid",
     stats: { pac: 67, sho: 75, pas: 85, dri: 81, def: 76, phy: 80 }, photoId: 193747, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-kyle-walker", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4705,6 +5372,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 85, position: "RB",
     nation: "England", nationCode: "gb-eng", league: "English Premier League", club: "Manchester City",
     stats: { pac: 92, sho: 63, pas: 76, dri: 77, def: 80, phy: 82 }, photoId: 188377, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-leonardo-bonucci", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4712,6 +5380,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 60, sho: 58, pas: 69, dri: 70, def: 87, phy: 77 }, photoId: 184344, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-leroy-sane", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4719,6 +5388,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 85, position: "LM",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 93, sho: 81, pas: 79, dri: 86, def: 38, phy: 67 }, photoId: 222492, photoVer: "21",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa21-lorenzo-insigne", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4726,6 +5396,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 85, position: "LW",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Napoli",
     stats: { pac: 88, sho: 78, pas: 83, dri: 91, def: 36, phy: 44 }, photoId: 198219, photoVer: "21",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa21-luis-alberto", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4733,6 +5404,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 85, position: "CAM",
     nation: "Spain", nationCode: "es", league: "Italian Serie A", club: "Lazio",
     stats: { pac: 74, sho: 76, pas: 86, dri: 85, def: 58, phy: 59 }, photoId: 198706, photoVer: "21",
+    difficulty: "veryHard", internationalReputation: 2,
   },
   {
     id: "fifa21-marco-reus", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4740,6 +5412,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 85, position: "CAM",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "Borussia Dortmund",
     stats: { pac: 80, sho: 86, pas: 84, dri: 85, def: 45, phy: 63 }, photoId: 188350, photoVer: "21",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa21-marcus-rashford", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4747,6 +5420,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 85, position: "LM",
     nation: "England", nationCode: "gb-eng", league: "English Premier League", club: "Manchester United",
     stats: { pac: 91, sho: 83, pas: 78, dri: 86, def: 45, phy: 78 }, photoId: 231677, photoVer: "21",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa21-marquinhos", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4754,6 +5428,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Brazil", nationCode: "br", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 72, sho: 41, pas: 73, dri: 70, def: 87, phy: 78 }, photoId: 207865, photoVer: "21",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa21-matthijs-de-ligt", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4761,6 +5436,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Netherlands", nationCode: "nl", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 72, sho: 59, pas: 66, dri: 69, def: 85, phy: 84 }, photoId: 235243, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-mauro-icardi", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4768,6 +5444,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "Argentina", nationCode: "ar", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 73, sho: 85, pas: 65, dri: 78, def: 36, phy: 68 }, photoId: 201399, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-memphis-depay", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4775,6 +5452,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 85, position: "CF",
     nation: "Netherlands", nationCode: "nl", league: "French Ligue 1", club: "Olympique Lyonnais",
     stats: { pac: 86, sho: 83, pas: 81, dri: 84, def: 32, phy: 80 }, photoId: 202556, photoVer: "21",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa21-milan-skriniar", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4782,6 +5460,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Slovakia", nationCode: "sk", league: "Italian Serie A", club: "Inter",
     stats: { pac: 69, sho: 41, pas: 59, dri: 66, def: 87, phy: 81 }, photoId: 232363, photoVer: "21",
+    difficulty: "hard", internationalReputation: 1,
   },
   {
     id: "fifa21-miralem-pjanic", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4789,6 +5468,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Bosnia and Herzegovina", nationCode: "ba", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 67, sho: 68, pas: 87, dri: 85, def: 75, phy: 67 }, photoId: 180206, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-parejo", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4796,6 +5476,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Villarreal CF",
     stats: { pac: 50, sho: 83, pas: 90, dri: 81, def: 71, phy: 69 }, photoId: 189513, photoVer: "21",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa21-ricardo-pereira", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4803,6 +5484,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 85, position: "RB",
     nation: "Portugal", nationCode: "pt", league: "English Premier League", club: "Leicester City",
     stats: { pac: 83, sho: 66, pas: 79, dri: 82, def: 81, phy: 76 }, photoId: 210243, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-riyad-mahrez", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4810,6 +5492,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 85, position: "RW",
     nation: "Algeria", nationCode: "dz", league: "English Premier League", club: "Manchester City",
     stats: { pac: 83, sho: 79, pas: 81, dri: 90, def: 38, phy: 59 }, photoId: 204485, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-rodri", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4817,6 +5500,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 85, position: "CDM",
     nation: "Spain", nationCode: "es", league: "English Premier League", club: "Manchester City",
     stats: { pac: 65, sho: 68, pas: 77, dri: 77, def: 82, phy: 79 }, photoId: 231866, photoVer: "21",
+    difficulty: "easy", internationalReputation: 2,
   },
   {
     id: "fifa21-romelu-lukaku", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4824,6 +5508,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "Belgium", nationCode: "be", league: "Italian Serie A", club: "Inter",
     stats: { pac: 81, sho: 83, pas: 76, dri: 75, def: 38, phy: 84 }, photoId: 192505, photoVer: "21",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa21-serge-gnabry", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4831,6 +5516,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 85, position: "RM",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 82, sho: 83, pas: 78, dri: 86, def: 43, phy: 70 }, photoId: 206113, photoVer: "21",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa21-sergej-milinkovic-savic", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4838,6 +5524,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Serbia", nationCode: "rs", league: "Italian Serie A", club: "Lazio",
     stats: { pac: 69, sho: 79, pas: 80, dri: 83, def: 79, phy: 85 }, photoId: 223848, photoVer: "21",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa21-thiago", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4845,6 +5532,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Spain", nationCode: "es", league: "English Premier League", club: "Liverpool",
     stats: { pac: 64, sho: 72, pas: 85, dri: 90, def: 70, phy: 62 }, photoId: 189509, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-thiago-silva", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4852,6 +5540,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Brazil", nationCode: "br", league: "English Premier League", club: "Chelsea",
     stats: { pac: 59, sho: 54, pas: 72, dri: 71, def: 86, phy: 78 }, photoId: 164240, photoVer: "21",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa21-timo-werner", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4859,6 +5548,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "Germany", nationCode: "de", league: "English Premier League", club: "Chelsea",
     stats: { pac: 91, sho: 85, pas: 69, dri: 84, def: 35, phy: 71 }, photoId: 212188, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-toby-alderweireld", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4866,6 +5556,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Belgium", nationCode: "be", league: "English Premier League", club: "Tottenham Hotspur",
     stats: { pac: 63, sho: 55, pas: 72, dri: 67, def: 87, phy: 79 }, photoId: 184087, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-axel-witsel", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4873,6 +5564,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 84, position: "CDM",
     nation: "Belgium", nationCode: "be", league: "German 1. Bundesliga", club: "Borussia Dortmund",
     stats: { pac: 63, sho: 73, pas: 81, dri: 79, def: 82, phy: 82 }, photoId: 177413, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-azpilicueta", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4880,6 +5572,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 84, position: "RB",
     nation: "Spain", nationCode: "es", league: "English Premier League", club: "Chelsea",
     stats: { pac: 67, sho: 55, pas: 77, dri: 72, def: 84, phy: 76 }, photoId: 184432, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-david-alaba", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4887,6 +5580,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Austria", nationCode: "at", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 77, sho: 70, pas: 81, dri: 79, def: 83, phy: 76 }, photoId: 197445, photoVer: "21",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa21-douglas-costa", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4894,6 +5588,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 84, position: "LM",
     nation: "Brazil", nationCode: "br", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 93, sho: 73, pas: 79, dri: 91, def: 43, phy: 59 }, photoId: 190483, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-fernandinho", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4901,6 +5596,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Brazil", nationCode: "br", league: "English Premier League", club: "Manchester City",
     stats: { pac: 64, sho: 72, pas: 78, dri: 78, def: 85, phy: 79 }, photoId: 135507, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-iago-aspas", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4908,6 +5604,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 84, position: "ST",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "RC Celta de Vigo",
     stats: { pac: 82, sho: 85, pas: 78, dri: 86, def: 35, phy: 63 }, photoId: 192629, photoVer: "21",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa21-idrissa-gueye", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4915,6 +5612,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 84, position: "CDM",
     nation: "Senegal", nationCode: "sn", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 69, sho: 61, pas: 71, dri: 78, def: 85, phy: 79 }, photoId: 193474, photoVer: "21",
+    difficulty: "veryHard", internationalReputation: 2,
   },
   {
     id: "fifa21-isco", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4922,6 +5620,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 84, position: "CAM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 68, sho: 75, pas: 82, dri: 90, def: 59, phy: 59 }, photoId: 197781, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-jesus-corona", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4929,6 +5628,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 84, position: "RM",
     nation: "Mexico", nationCode: "mx", league: "Portuguese Liga ZON SAGRES", club: "FC Porto",
     stats: { pac: 84, sho: 68, pas: 78, dri: 88, def: 77, phy: 60 }, photoId: 193165, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-jesus-navas", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4936,6 +5636,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 84, position: "RB",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Sevilla FC",
     stats: { pac: 87, sho: 69, pas: 79, dri: 83, def: 80, phy: 58 }, photoId: 146536, photoVer: "21",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa21-josip-ilicic", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4943,6 +5644,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 84, position: "CF",
     nation: "Slovenia", nationCode: "si", league: "Italian Serie A", club: "Atalanta",
     stats: { pac: 70, sho: 86, pas: 84, dri: 85, def: 43, phy: 68 }, photoId: 200647, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-lucas-digne", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4950,6 +5652,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 84, position: "LB",
     nation: "France", nationCode: "fr", league: "English Premier League", club: "Everton",
     stats: { pac: 78, sho: 69, pas: 80, dri: 79, def: 80, phy: 76 }, photoId: 200458, photoVer: "21",
+    difficulty: "veryHard", internationalReputation: 2,
   },
   {
     id: "fifa21-lucas-leiva", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4957,6 +5660,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 84, position: "CDM",
     nation: "Brazil", nationCode: "br", league: "Italian Serie A", club: "Lazio",
     stats: { pac: 60, sho: 66, pas: 76, dri: 78, def: 83, phy: 71 }, photoId: 176266, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-pizzi", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4964,6 +5668,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 84, position: "RM",
     nation: "Portugal", nationCode: "pt", league: "Portuguese Liga ZON SAGRES", club: "SL Benfica",
     stats: { pac: 75, sho: 78, pas: 83, dri: 83, def: 65, phy: 68 }, photoId: 197965, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-stefan-de-vrij", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4971,6 +5676,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Netherlands", nationCode: "nl", league: "Italian Serie A", club: "Inter",
     stats: { pac: 68, sho: 41, pas: 62, dri: 68, def: 86, phy: 75 }, photoId: 198176, photoVer: "21",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa21-wissam-ben-yedder", edition: "FIFA21", editionLabel: "FIFA 21",
@@ -4978,6 +5684,7 @@ const CARDS_FIFA21: FifaCard[] = [
     overall: 84, position: "ST",
     nation: "France", nationCode: "fr", league: "French Ligue 1", club: "AS Monaco",
     stats: { pac: 84, sho: 83, pas: 77, dri: 87, def: 39, phy: 63 }, photoId: 199451, photoVer: "21",
+    difficulty: "hard", internationalReputation: 2,
   },
 ];
 
@@ -4988,6 +5695,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 93, position: "RW",
     nation: "Argentina", nationCode: "ar", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 85, sho: 92, pas: 91, dri: 95, def: 34, phy: 65 }, photoId: 158023, photoVer: "22",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa22-robert-lewandowski", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -4995,6 +5703,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 92, position: "ST",
     nation: "Poland", nationCode: "pl", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 78, sho: 92, pas: 79, dri: 86, def: 44, phy: 82 }, photoId: 188545, photoVer: "22",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa22-cristiano-ronaldo", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5002,6 +5711,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 91, position: "ST",
     nation: "Portugal", nationCode: "pt", league: "English Premier League", club: "Manchester United",
     stats: { pac: 87, sho: 94, pas: 80, dri: 88, def: 34, phy: 75 }, photoId: 20801, photoVer: "22",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa22-kevin-de-bruyne", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5009,6 +5719,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 91, position: "CM",
     nation: "Belgium", nationCode: "be", league: "English Premier League", club: "Manchester City",
     stats: { pac: 76, sho: 86, pas: 93, dri: 88, def: 64, phy: 78 }, photoId: 192985, photoVer: "22",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa22-kylian-mbappe", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5016,6 +5727,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 91, position: "ST",
     nation: "France", nationCode: "fr", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 97, sho: 88, pas: 80, dri: 92, def: 36, phy: 77 }, photoId: 231747, photoVer: "22",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa22-neymar-jr", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5023,6 +5735,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 91, position: "LW",
     nation: "Brazil", nationCode: "br", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 91, sho: 83, pas: 86, dri: 94, def: 37, phy: 63 }, photoId: 190871, photoVer: "22",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa22-harry-kane", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5030,6 +5743,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 90, position: "ST",
     nation: "England", nationCode: "gb-eng", league: "English Premier League", club: "Tottenham Hotspur",
     stats: { pac: 70, sho: 91, pas: 83, dri: 83, def: 47, phy: 83 }, photoId: 202126, photoVer: "22",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa22-n-golo-kante", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5037,6 +5751,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 90, position: "CDM",
     nation: "France", nationCode: "fr", league: "English Premier League", club: "Chelsea",
     stats: { pac: 78, sho: 66, pas: 75, dri: 82, def: 87, phy: 83 }, photoId: 215914, photoVer: "22",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa22-casemiro", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5044,6 +5759,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 89, position: "CDM",
     nation: "Brazil", nationCode: "br", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 65, sho: 73, pas: 76, dri: 73, def: 86, phy: 90 }, photoId: 200145, photoVer: "22",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa22-joshua-kimmich", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5051,6 +5767,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 89, position: "CDM",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 70, sho: 73, pas: 86, dri: 84, def: 83, phy: 79 }, photoId: 212622, photoVer: "22",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa22-karim-benzema", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5058,6 +5775,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 89, position: "CF",
     nation: "France", nationCode: "fr", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 76, sho: 86, pas: 81, dri: 87, def: 39, phy: 77 }, photoId: 165153, photoVer: "22",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa22-mohamed-salah", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5065,6 +5783,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 89, position: "RW",
     nation: "Egypt", nationCode: "eg", league: "English Premier League", club: "Liverpool",
     stats: { pac: 90, sho: 87, pas: 81, dri: 90, def: 45, phy: 75 }, photoId: 209331, photoVer: "22",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa22-sadio-mane", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5072,6 +5791,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 89, position: "LW",
     nation: "Senegal", nationCode: "sn", league: "English Premier League", club: "Liverpool",
     stats: { pac: 91, sho: 83, pas: 80, dri: 89, def: 44, phy: 77 }, photoId: 208722, photoVer: "22",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa22-virgil-van-dijk", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5079,6 +5799,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 89, position: "CB",
     nation: "Netherlands", nationCode: "nl", league: "English Premier League", club: "Liverpool",
     stats: { pac: 78, sho: 60, pas: 71, dri: 72, def: 91, phy: 84 }, photoId: 203376, photoVer: "22",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa22-son", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5086,6 +5807,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 89, position: "LM",
     nation: "Korea Republic", nationCode: "kr", league: "English Premier League", club: "Tottenham Hotspur",
     stats: { pac: 88, sho: 87, pas: 82, dri: 86, def: 43, phy: 69 }, photoId: 200104, photoVer: "22",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa22-bruno-fernandes", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5093,6 +5815,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 88, position: "CAM",
     nation: "Portugal", nationCode: "pt", league: "English Premier League", club: "Manchester United",
     stats: { pac: 75, sho: 86, pas: 89, dri: 84, def: 70, phy: 77 }, photoId: 212198, photoVer: "22",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa22-erling-haaland", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5100,6 +5823,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 88, position: "ST",
     nation: "Norway", nationCode: "no", league: "German 1. Bundesliga", club: "Borussia Dortmund",
     stats: { pac: 89, sho: 91, pas: 65, dri: 80, def: 45, phy: 88 }, photoId: 239085, photoVer: "22",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa22-luis-suarez", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5107,6 +5831,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 88, position: "ST",
     nation: "Uruguay", nationCode: "uy", league: "Spain Primera Division", club: "Atlético de Madrid",
     stats: { pac: 72, sho: 90, pas: 82, dri: 84, def: 47, phy: 83 }, photoId: 176580, photoVer: "22",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa22-raheem-sterling", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5114,6 +5839,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 88, position: "LW",
     nation: "England", nationCode: "gb-eng", league: "English Premier League", club: "Manchester City",
     stats: { pac: 91, sho: 82, pas: 79, dri: 87, def: 45, phy: 66 }, photoId: 202652, photoVer: "22",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa22-romelu-lukaku", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5121,6 +5847,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 88, position: "ST",
     nation: "Belgium", nationCode: "be", league: "English Premier League", club: "Chelsea",
     stats: { pac: 84, sho: 87, pas: 74, dri: 78, def: 39, phy: 83 }, photoId: 192505, photoVer: "22",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa22-sergio-ramos", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5128,6 +5855,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 88, position: "CB",
     nation: "Spain", nationCode: "es", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 70, sho: 70, pas: 76, dri: 74, def: 88, phy: 84 }, photoId: 155862, photoVer: "22",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa22-toni-kroos", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5135,6 +5863,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 88, position: "CM",
     nation: "Germany", nationCode: "de", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 53, sho: 81, pas: 91, dri: 81, def: 71, phy: 68 }, photoId: 182521, photoVer: "22",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa22-andrew-robertson", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5142,6 +5871,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 87, position: "LB",
     nation: "Scotland", nationCode: "gb-sct", league: "English Premier League", club: "Liverpool",
     stats: { pac: 84, sho: 61, pas: 81, dri: 81, def: 82, phy: 76 }, photoId: 216267, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa22-ciro-immobile", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5149,6 +5879,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 87, position: "ST",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Lazio",
     stats: { pac: 86, sho: 87, pas: 67, dri: 81, def: 39, phy: 77 }, photoId: 192387, photoVer: "22",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa22-frenkie-de-jong", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5156,6 +5887,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 87, position: "CM",
     nation: "Netherlands", nationCode: "nl", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 81, sho: 69, pas: 85, dri: 88, def: 77, phy: 78 }, photoId: 228702, photoVer: "22",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa22-jadon-sancho", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5163,6 +5895,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 87, position: "RM",
     nation: "England", nationCode: "gb-eng", league: "English Premier League", club: "Manchester United",
     stats: { pac: 81, sho: 76, pas: 82, dri: 91, def: 36, phy: 65 }, photoId: 233049, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa22-leon-goretzka", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5170,6 +5903,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 87, position: "CM",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 81, sho: 82, pas: 82, dri: 84, def: 81, phy: 86 }, photoId: 209658, photoVer: "22",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa22-luka-modric", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5177,6 +5911,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 87, position: "CM",
     nation: "Croatia", nationCode: "hr", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 73, sho: 76, pas: 89, dri: 88, def: 72, phy: 66 }, photoId: 177003, photoVer: "22",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa22-marco-verratti", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5184,6 +5919,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 87, position: "CM",
     nation: "Italy", nationCode: "it", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 64, sho: 61, pas: 87, dri: 91, def: 79, phy: 67 }, photoId: 199556, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa22-marquinhos", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5191,6 +5927,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 87, position: "CB",
     nation: "Brazil", nationCode: "br", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 81, sho: 53, pas: 75, dri: 74, def: 89, phy: 81 }, photoId: 207865, photoVer: "22",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa22-paul-pogba", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5198,6 +5935,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 87, position: "CM",
     nation: "France", nationCode: "fr", league: "English Premier League", club: "Manchester United",
     stats: { pac: 71, sho: 81, pas: 86, dri: 86, def: 65, phy: 83 }, photoId: 195864, photoVer: "22",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa22-paulo-dybala", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5205,6 +5943,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 87, position: "CF",
     nation: "Argentina", nationCode: "ar", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 84, sho: 86, pas: 86, dri: 90, def: 40, phy: 60 }, photoId: 211110, photoVer: "22",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa22-ruben-dias", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5212,6 +5951,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 87, position: "CB",
     nation: "Portugal", nationCode: "pt", league: "English Premier League", club: "Manchester City",
     stats: { pac: 61, sho: 38, pas: 65, dri: 68, def: 88, phy: 88 }, photoId: 239818, photoVer: "22",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa22-sergio-aguero", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5219,6 +5959,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 87, position: "ST",
     nation: "Argentina", nationCode: "ar", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 71, sho: 89, pas: 75, dri: 87, def: 33, phy: 69 }, photoId: 153079, photoVer: "22",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa22-thomas-muller", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5226,6 +5967,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 87, position: "CAM",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 67, sho: 84, pas: 83, dri: 80, def: 56, phy: 71 }, photoId: 189596, photoVer: "22",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa22-trent-alexander-arnold", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5233,6 +5975,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 87, position: "RB",
     nation: "England", nationCode: "gb-eng", league: "English Premier League", club: "Liverpool",
     stats: { pac: 79, sho: 68, pas: 88, dri: 80, def: 80, phy: 72 }, photoId: 231281, photoVer: "22",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa22-angel-di-maria", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5240,6 +5983,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 87, position: "RW",
     nation: "Argentina", nationCode: "ar", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 83, sho: 81, pas: 86, dri: 87, def: 48, phy: 69 }, photoId: 183898, photoVer: "22",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa22-aymeric-laporte", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5247,6 +5991,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Spain", nationCode: "es", league: "English Premier League", club: "Manchester City",
     stats: { pac: 63, sho: 50, pas: 72, dri: 69, def: 86, phy: 80 }, photoId: 212218, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa22-bernardo-silva", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5254,6 +5999,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 86, position: "CAM",
     nation: "Portugal", nationCode: "pt", league: "English Premier League", club: "Manchester City",
     stats: { pac: 80, sho: 76, pas: 83, dri: 91, def: 54, phy: 67 }, photoId: 218667, photoVer: "22",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa22-fabinho", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5261,6 +6007,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 86, position: "CDM",
     nation: "Brazil", nationCode: "br", league: "English Premier League", club: "Liverpool",
     stats: { pac: 67, sho: 69, pas: 78, dri: 78, def: 85, phy: 83 }, photoId: 209499, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa22-gerard-moreno", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5268,6 +6015,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 86, position: "ST",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Villarreal CF",
     stats: { pac: 79, sho: 86, pas: 77, dri: 84, def: 46, phy: 73 }, photoId: 208093, photoVer: "22",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa22-giorgio-chiellini", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5275,6 +6023,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 68, sho: 46, pas: 60, dri: 59, def: 89, phy: 85 }, photoId: 138956, photoVer: "22",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa22-jamie-vardy", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5282,6 +6031,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 86, position: "ST",
     nation: "England", nationCode: "gb-eng", league: "English Premier League", club: "Leicester City",
     stats: { pac: 85, sho: 84, pas: 70, dri: 80, def: 52, phy: 73 }, photoId: 208830, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa22-jordi-alba", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5289,6 +6039,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 86, position: "LB",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 86, sho: 69, pas: 81, dri: 83, def: 77, phy: 71 }, photoId: 189332, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa22-joao-cancelo", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5296,6 +6047,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 86, position: "RB",
     nation: "Portugal", nationCode: "pt", league: "English Premier League", club: "Manchester City",
     stats: { pac: 85, sho: 71, pas: 83, dri: 84, def: 80, phy: 72 }, photoId: 210514, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa22-kalidou-koulibaly", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5303,6 +6055,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Senegal", nationCode: "sn", league: "Italian Serie A", club: "Napoli",
     stats: { pac: 81, sho: 28, pas: 51, dri: 65, def: 87, phy: 85 }, photoId: 201024, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa22-kingsley-coman", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5310,6 +6063,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 86, position: "LM",
     nation: "France", nationCode: "fr", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 93, sho: 76, pas: 79, dri: 88, def: 30, phy: 60 }, photoId: 213345, photoVer: "22",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa22-lorenzo-insigne", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5317,6 +6071,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 86, position: "LW",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Napoli",
     stats: { pac: 87, sho: 78, pas: 85, dri: 90, def: 36, phy: 45 }, photoId: 198219, photoVer: "22",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa22-marcos-llorente", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5324,6 +6079,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Atlético de Madrid",
     stats: { pac: 88, sho: 80, pas: 81, dri: 82, def: 78, phy: 82 }, photoId: 226161, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa22-mats-hummels", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5331,6 +6087,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "Borussia Dortmund",
     stats: { pac: 56, sho: 59, pas: 77, dri: 73, def: 89, phy: 77 }, photoId: 178603, photoVer: "22",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa22-milan-skriniar", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5338,6 +6095,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Slovakia", nationCode: "sk", league: "Italian Serie A", club: "Inter",
     stats: { pac: 80, sho: 41, pas: 53, dri: 69, def: 87, phy: 84 }, photoId: 232363, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa22-parejo", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5345,6 +6103,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Villarreal CF",
     stats: { pac: 50, sho: 83, pas: 90, dri: 81, def: 71, phy: 69 }, photoId: 189513, photoVer: "22",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa22-raphael-varane", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5352,6 +6111,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "France", nationCode: "fr", league: "English Premier League", club: "Manchester United",
     stats: { pac: 82, sho: 49, pas: 64, dri: 65, def: 87, phy: 82 }, photoId: 201535, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa22-riyad-mahrez", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5359,6 +6119,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 86, position: "RW",
     nation: "Algeria", nationCode: "dz", league: "English Premier League", club: "Manchester City",
     stats: { pac: 81, sho: 79, pas: 81, dri: 90, def: 38, phy: 60 }, photoId: 204485, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa22-rodri", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5366,6 +6127,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 86, position: "CDM",
     nation: "Spain", nationCode: "es", league: "English Premier League", club: "Manchester City",
     stats: { pac: 61, sho: 70, pas: 77, dri: 78, def: 82, phy: 82 }, photoId: 231866, photoVer: "22",
+    difficulty: "easy", internationalReputation: 3,
   },
   {
     id: "fifa22-sergio-busquets", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5373,6 +6135,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 86, position: "CDM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 42, sho: 62, pas: 79, dri: 80, def: 82, phy: 75 }, photoId: 189511, photoVer: "22",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa22-thiago", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5380,6 +6143,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Spain", nationCode: "es", league: "English Premier League", club: "Liverpool",
     stats: { pac: 63, sho: 72, pas: 86, dri: 90, def: 70, phy: 66 }, photoId: 189509, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa22-achraf-hakimi", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5387,6 +6151,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 85, position: "RB",
     nation: "Morocco", nationCode: "ma", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 95, sho: 71, pas: 78, dri: 83, def: 76, phy: 78 }, photoId: 235212, photoVer: "22",
+    difficulty: "medium", internationalReputation: 2,
   },
   {
     id: "fifa22-alejandro-gomez", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5394,6 +6159,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 85, position: "CAM",
     nation: "Argentina", nationCode: "ar", league: "Spain Primera Division", club: "Sevilla FC",
     stats: { pac: 87, sho: 78, pas: 84, dri: 87, def: 39, phy: 55 }, photoId: 143076, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa22-antoine-griezmann", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5401,6 +6167,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "France", nationCode: "fr", league: "Spain Primera Division", club: "Atlético de Madrid",
     stats: { pac: 80, sho: 84, pas: 84, dri: 87, def: 52, phy: 72 }, photoId: 194765, photoVer: "22",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa22-carvajal", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5408,6 +6175,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 85, position: "RB",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 80, sho: 54, pas: 78, dri: 80, def: 81, phy: 80 }, photoId: 204963, photoVer: "22",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa22-david-silva", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5415,6 +6183,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 85, position: "CAM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Real Sociedad",
     stats: { pac: 63, sho: 74, pas: 87, dri: 87, def: 52, phy: 53 }, photoId: 168542, photoVer: "22",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa22-eden-hazard", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5422,6 +6191,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 85, position: "LW",
     nation: "Belgium", nationCode: "be", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 84, sho: 80, pas: 82, dri: 88, def: 35, phy: 63 }, photoId: 183277, photoVer: "22",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa22-edinson-cavani", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5429,6 +6199,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "Uruguay", nationCode: "uy", league: "English Premier League", club: "Manchester United",
     stats: { pac: 66, sho: 86, pas: 70, dri: 76, def: 51, phy: 79 }, photoId: 179813, photoVer: "22",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa22-jorginho", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5436,6 +6207,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Italy", nationCode: "it", league: "English Premier League", club: "Chelsea",
     stats: { pac: 55, sho: 67, pas: 86, dri: 81, def: 73, phy: 73 }, photoId: 205498, photoVer: "22",
+    difficulty: "veryHard", internationalReputation: 2,
   },
   {
     id: "fifa22-koke", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5443,6 +6215,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Atlético de Madrid",
     stats: { pac: 70, sho: 75, pas: 85, dri: 81, def: 79, phy: 80 }, photoId: 193747, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa22-kyle-walker", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5450,6 +6223,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 85, position: "RB",
     nation: "England", nationCode: "gb-eng", league: "English Premier League", club: "Manchester City",
     stats: { pac: 92, sho: 63, pas: 76, dri: 78, def: 80, phy: 82 }, photoId: 188377, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa22-lautaro-martinez", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5457,6 +6231,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "Argentina", nationCode: "ar", league: "Italian Serie A", club: "Inter",
     stats: { pac: 84, sho: 81, pas: 72, dri: 85, def: 48, phy: 84 }, photoId: 231478, photoVer: "22",
+    difficulty: "easy", internationalReputation: 3,
   },
   {
     id: "fifa22-leonardo-bonucci", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5464,6 +6239,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Italy", nationCode: "it", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 64, sho: 58, pas: 69, dri: 72, def: 86, phy: 80 }, photoId: 184344, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa22-marco-reus", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5471,6 +6247,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 85, position: "CAM",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "Borussia Dortmund",
     stats: { pac: 73, sho: 84, pas: 84, dri: 85, def: 47, phy: 63 }, photoId: 188350, photoVer: "22",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa22-marcus-rashford", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5478,6 +6255,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 85, position: "LM",
     nation: "England", nationCode: "gb-eng", league: "English Premier League", club: "Manchester United",
     stats: { pac: 90, sho: 84, pas: 79, dri: 84, def: 43, phy: 77 }, photoId: 231677, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa22-matthijs-de-ligt", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5485,6 +6263,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Netherlands", nationCode: "nl", league: "Italian Serie A", club: "Juventus",
     stats: { pac: 73, sho: 59, pas: 60, dri: 69, def: 84, phy: 87 }, photoId: 235243, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa22-memphis-depay", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5492,6 +6271,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 85, position: "CF",
     nation: "Netherlands", nationCode: "nl", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 82, sho: 83, pas: 82, dri: 84, def: 30, phy: 79 }, photoId: 202556, photoVer: "22",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa22-oyarzabal", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5499,6 +6279,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 85, position: "LW",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Real Sociedad",
     stats: { pac: 82, sho: 82, pas: 81, dri: 84, def: 41, phy: 63 }, photoId: 230142, photoVer: "22",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa22-pierre-emerick-aubameyang", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5506,6 +6287,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "Gabon", nationCode: "ga", league: "English Premier League", club: "Arsenal",
     stats: { pac: 89, sho: 85, pas: 75, dri: 80, def: 35, phy: 69 }, photoId: 188567, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa22-roberto-firmino", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5513,6 +6295,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 85, position: "CF",
     nation: "Brazil", nationCode: "br", league: "English Premier League", club: "Liverpool",
     stats: { pac: 77, sho: 78, pas: 79, dri: 89, def: 59, phy: 78 }, photoId: 201942, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa22-serge-gnabry", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5520,6 +6303,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 85, position: "RM",
     nation: "Germany", nationCode: "de", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 83, sho: 84, pas: 79, dri: 86, def: 43, phy: 69 }, photoId: 206113, photoVer: "22",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa22-sergej-milinkovic-savic", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5527,6 +6311,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Serbia", nationCode: "rs", league: "Italian Serie A", club: "Lazio",
     stats: { pac: 68, sho: 79, pas: 80, dri: 81, def: 79, phy: 86 }, photoId: 223848, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa22-stefan-de-vrij", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5534,6 +6319,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Netherlands", nationCode: "nl", league: "Italian Serie A", club: "Inter",
     stats: { pac: 72, sho: 41, pas: 64, dri: 70, def: 87, phy: 79 }, photoId: 198176, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa22-thiago-silva", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5541,6 +6327,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Brazil", nationCode: "br", league: "English Premier League", club: "Chelsea",
     stats: { pac: 53, sho: 54, pas: 72, dri: 72, def: 86, phy: 78 }, photoId: 164240, photoVer: "22",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa22-wilfred-ndidi", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5548,6 +6335,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 85, position: "CDM",
     nation: "Nigeria", nationCode: "ng", league: "English Premier League", club: "Leicester City",
     stats: { pac: 67, sho: 62, pas: 69, dri: 74, def: 87, phy: 83 }, photoId: 226790, photoVer: "22",
+    difficulty: "veryHard", internationalReputation: 1,
   },
   {
     id: "fifa22-ilkay-gundogan", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5555,6 +6343,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Germany", nationCode: "de", league: "English Premier League", club: "Manchester City",
     stats: { pac: 65, sho: 80, pas: 85, dri: 86, def: 73, phy: 72 }, photoId: 186942, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa22-david-alaba", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5562,6 +6351,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Austria", nationCode: "at", league: "Spain Primera Division", club: "Real Madrid CF",
     stats: { pac: 77, sho: 70, pas: 81, dri: 80, def: 83, phy: 76 }, photoId: 197445, photoVer: "22",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa22-dries-mertens", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5569,6 +6359,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 84, position: "CF",
     nation: "Belgium", nationCode: "be", league: "Italian Serie A", club: "Napoli",
     stats: { pac: 85, sho: 82, pas: 80, dri: 88, def: 34, phy: 50 }, photoId: 175943, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa22-dusan-tadic", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5576,6 +6367,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 84, position: "LW",
     nation: "Serbia", nationCode: "rs", league: "Holland Eredivisie", club: "Ajax",
     stats: { pac: 69, sho: 81, pas: 85, dri: 85, def: 43, phy: 76 }, photoId: 199434, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa22-fernando", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5583,6 +6375,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 84, position: "CDM",
     nation: "Brazil", nationCode: "br", league: "Spain Primera Division", club: "Sevilla FC",
     stats: { pac: 66, sho: 62, pas: 75, dri: 74, def: 83, phy: 82 }, photoId: 184134, photoVer: "22",
+    difficulty: "veryHard", internationalReputation: 2,
   },
   {
     id: "fifa22-georginio-wijnaldum", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5590,6 +6383,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 84, position: "CM",
     nation: "Netherlands", nationCode: "nl", league: "French Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 77, sho: 75, pas: 80, dri: 86, def: 79, phy: 79 }, photoId: 181291, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa22-harry-maguire", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5597,6 +6391,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "England", nationCode: "gb-eng", league: "English Premier League", club: "Manchester United",
     stats: { pac: 50, sho: 55, pas: 69, dri: 70, def: 85, phy: 87 }, photoId: 203263, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa22-iago-aspas", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5604,6 +6399,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 84, position: "ST",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "RC Celta de Vigo",
     stats: { pac: 82, sho: 85, pas: 79, dri: 86, def: 35, phy: 63 }, photoId: 192629, photoVer: "22",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa22-jesus-navas", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5611,6 +6407,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 84, position: "RB",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "Sevilla FC",
     stats: { pac: 87, sho: 69, pas: 81, dri: 83, def: 79, phy: 58 }, photoId: 146536, photoVer: "22",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa22-jordan-henderson", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5618,6 +6415,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 84, position: "CDM",
     nation: "England", nationCode: "gb-eng", league: "English Premier League", club: "Liverpool",
     stats: { pac: 66, sho: 74, pas: 83, dri: 79, def: 78, phy: 81 }, photoId: 183711, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa22-josip-ilicic", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5625,6 +6423,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 84, position: "CF",
     nation: "Slovenia", nationCode: "si", league: "Italian Serie A", club: "Atalanta",
     stats: { pac: 75, sho: 86, pas: 84, dri: 86, def: 40, phy: 67 }, photoId: 200647, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa22-kieran-trippier", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5632,6 +6431,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 84, position: "RB",
     nation: "England", nationCode: "gb-eng", league: "Spain Primera Division", club: "Atlético de Madrid",
     stats: { pac: 73, sho: 63, pas: 82, dri: 77, def: 80, phy: 72 }, photoId: 186345, photoVer: "22",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa22-lucas-digne", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5639,6 +6439,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 84, position: "LB",
     nation: "France", nationCode: "fr", league: "English Premier League", club: "Everton",
     stats: { pac: 79, sho: 69, pas: 80, dri: 80, def: 80, phy: 76 }, photoId: 200458, photoVer: "22",
+    difficulty: "veryHard", internationalReputation: 2,
   },
   {
     id: "fifa22-luis-alberto", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5646,6 +6447,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 84, position: "CAM",
     nation: "Spain", nationCode: "es", league: "Italian Serie A", club: "Lazio",
     stats: { pac: 60, sho: 76, pas: 86, dri: 84, def: 57, phy: 59 }, photoId: 198706, photoVer: "22",
+    difficulty: "veryHard", internationalReputation: 2,
   },
   {
     id: "fifa22-marcel-sabitzer", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5653,6 +6455,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 84, position: "CM",
     nation: "Austria", nationCode: "at", league: "German 1. Bundesliga", club: "FC Bayern München",
     stats: { pac: 78, sho: 84, pas: 81, dri: 80, def: 67, phy: 78 }, photoId: 204923, photoVer: "22",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa22-pique", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5660,6 +6463,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Spain", nationCode: "es", league: "Spain Primera Division", club: "FC Barcelona",
     stats: { pac: 58, sho: 61, pas: 71, dri: 68, def: 85, phy: 78 }, photoId: 152729, photoVer: "22",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa22-stefan-savic", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5667,6 +6471,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Montenegro", nationCode: "me", league: "Spain Primera Division", club: "Atlético de Madrid",
     stats: { pac: 64, sho: 35, pas: 57, dri: 58, def: 87, phy: 76 }, photoId: 204639, photoVer: "22",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa22-wissam-ben-yedder", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5674,6 +6479,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 84, position: "ST",
     nation: "France", nationCode: "fr", league: "French Ligue 1", club: "AS Monaco",
     stats: { pac: 82, sho: 84, pas: 77, dri: 87, def: 39, phy: 70 }, photoId: 199451, photoVer: "22",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa22-zlatan-ibrahimovic", edition: "FIFA22", editionLabel: "FIFA 22",
@@ -5681,6 +6487,7 @@ const CARDS_FIFA22: FifaCard[] = [
     overall: 84, position: "ST",
     nation: "Sweden", nationCode: "se", league: "Italian Serie A", club: "AC Milan",
     stats: { pac: 65, sho: 87, pas: 78, dri: 79, def: 34, phy: 77 }, photoId: 41236, photoVer: "22",
+    difficulty: "easy", internationalReputation: 5,
   },
 ];
 
@@ -5691,6 +6498,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 91, position: "CF",
     nation: "France", nationCode: "fr", league: "La Liga", club: "Real Madrid",
     stats: { pac: 80, sho: 88, pas: 83, dri: 87, def: 39, phy: 78 }, photoId: 165153, photoVer: "23",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa23-kevin-de-bruyne", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5698,6 +6506,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 91, position: "CM",
     nation: "Belgium", nationCode: "be", league: "Premier League", club: "Manchester City",
     stats: { pac: 74, sho: 88, pas: 93, dri: 87, def: 64, phy: 77 }, photoId: 192985, photoVer: "23",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa23-kylian-mbappe", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5705,6 +6514,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 91, position: "ST",
     nation: "France", nationCode: "fr", league: "Ligue 1", club: "Paris Saint Germain",
     stats: { pac: 97, sho: 89, pas: 80, dri: 92, def: 36, phy: 76 }, photoId: 231747, photoVer: "23",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa23-lionel-messi", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5712,6 +6522,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 91, position: "RW",
     nation: "Argentina", nationCode: "ar", league: "Ligue 1", club: "Paris Saint Germain",
     stats: { pac: 81, sho: 89, pas: 90, dri: 94, def: 34, phy: 64 }, photoId: 158023, photoVer: "23",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa23-robert-lewandowski", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5719,6 +6530,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 91, position: "ST",
     nation: "Poland", nationCode: "pl", league: "La Liga", club: "FC Barcelona",
     stats: { pac: 75, sho: 91, pas: 79, dri: 86, def: 44, phy: 83 }, photoId: 188545, photoVer: "23",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa23-cristiano-ronaldo", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5726,6 +6538,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 90, position: "ST",
     nation: "Portugal", nationCode: "pt", league: "Premier League", club: "Manchester United",
     stats: { pac: 81, sho: 92, pas: 78, dri: 85, def: 34, phy: 75 }, photoId: 20801, photoVer: "23",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa23-mohamed-salah", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5733,6 +6546,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 90, position: "RW",
     nation: "Egypt", nationCode: "eg", league: "Premier League", club: "Liverpool",
     stats: { pac: 90, sho: 89, pas: 82, dri: 90, def: 45, phy: 75 }, photoId: 209331, photoVer: "23",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa23-virgil-van-dijk", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5740,6 +6554,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 90, position: "CB",
     nation: "Netherlands", nationCode: "nl", league: "Premier League", club: "Liverpool",
     stats: { pac: 81, sho: 60, pas: 71, dri: 72, def: 91, phy: 86 }, photoId: 203376, photoVer: "23",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa23-casemiro", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5747,6 +6562,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 89, position: "CDM",
     nation: "Brazil", nationCode: "br", league: "Premier League", club: "Manchester United",
     stats: { pac: 63, sho: 73, pas: 75, dri: 72, def: 87, phy: 90 }, photoId: 200145, photoVer: "23",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa23-harry-kane", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5754,6 +6570,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 89, position: "ST",
     nation: "England", nationCode: "gb-eng", league: "Premier League", club: "Tottenham Hotspur",
     stats: { pac: 68, sho: 91, pas: 83, dri: 82, def: 47, phy: 82 }, photoId: 202126, photoVer: "23",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa23-joshua-kimmich", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5761,6 +6578,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 89, position: "CDM",
     nation: "Germany", nationCode: "de", league: "Bundesliga", club: "FC Bayern München",
     stats: { pac: 68, sho: 72, pas: 87, dri: 84, def: 83, phy: 79 }, photoId: 212622, photoVer: "23",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa23-n-golo-kante", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5768,6 +6586,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 89, position: "CDM",
     nation: "France", nationCode: "fr", league: "Premier League", club: "Chelsea",
     stats: { pac: 72, sho: 66, pas: 74, dri: 81, def: 87, phy: 82 }, photoId: 215914, photoVer: "23",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa23-neymar-jr", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5775,6 +6594,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 89, position: "LW",
     nation: "Brazil", nationCode: "br", league: "Ligue 1", club: "Paris Saint Germain",
     stats: { pac: 87, sho: 83, pas: 85, dri: 93, def: 37, phy: 61 }, photoId: 190871, photoVer: "23",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fifa23-sadio-mane", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5782,6 +6602,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 89, position: "LM",
     nation: "Senegal", nationCode: "sn", league: "Bundesliga", club: "FC Bayern München",
     stats: { pac: 90, sho: 83, pas: 80, dri: 88, def: 44, phy: 77 }, photoId: 208722, photoVer: "23",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa23-son", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5789,6 +6610,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 89, position: "LW",
     nation: "Korea Republic", nationCode: "kr", league: "Premier League", club: "Tottenham Hotspur",
     stats: { pac: 88, sho: 89, pas: 82, dri: 86, def: 42, phy: 69 }, photoId: 200104, photoVer: "23",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa23-bernardo-silva", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5796,6 +6618,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 88, position: "CAM",
     nation: "Portugal", nationCode: "pt", league: "Premier League", club: "Manchester City",
     stats: { pac: 77, sho: 78, pas: 84, dri: 92, def: 61, phy: 68 }, photoId: 218667, photoVer: "23",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa23-erling-haaland", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5803,6 +6626,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 88, position: "ST",
     nation: "Norway", nationCode: "no", league: "Premier League", club: "Manchester City",
     stats: { pac: 89, sho: 91, pas: 65, dri: 80, def: 49, phy: 87 }, photoId: 239085, photoVer: "23",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fifa23-joao-cancelo", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5810,6 +6634,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 88, position: "LB",
     nation: "Portugal", nationCode: "pt", league: "Premier League", club: "Manchester City",
     stats: { pac: 85, sho: 73, pas: 85, dri: 85, def: 81, phy: 73 }, photoId: 210514, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa23-luka-modric", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5817,6 +6642,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 88, position: "CM",
     nation: "Croatia", nationCode: "hr", league: "La Liga", club: "Real Madrid",
     stats: { pac: 73, sho: 76, pas: 89, dri: 88, def: 72, phy: 66 }, photoId: 177003, photoVer: "23",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa23-marquinhos", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5824,6 +6650,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 88, position: "CB",
     nation: "Brazil", nationCode: "br", league: "Ligue 1", club: "Paris Saint Germain",
     stats: { pac: 79, sho: 56, pas: 75, dri: 74, def: 89, phy: 80 }, photoId: 207865, photoVer: "23",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa23-ruben-dias", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5831,6 +6658,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 88, position: "CB",
     nation: "Portugal", nationCode: "pt", league: "Premier League", club: "Manchester City",
     stats: { pac: 63, sho: 39, pas: 66, dri: 68, def: 88, phy: 88 }, photoId: 239818, photoVer: "23",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa23-toni-kroos", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5838,6 +6666,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 88, position: "CM",
     nation: "Germany", nationCode: "de", league: "La Liga", club: "Real Madrid",
     stats: { pac: 53, sho: 81, pas: 90, dri: 81, def: 71, phy: 68 }, photoId: 182521, photoVer: "23",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa23-andrew-robertson", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5845,6 +6674,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 87, position: "LB",
     nation: "Scotland", nationCode: "gb-sct", league: "Premier League", club: "Liverpool",
     stats: { pac: 80, sho: 61, pas: 81, dri: 81, def: 82, phy: 76 }, photoId: 216267, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa23-antonio-rudiger", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5852,6 +6682,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 87, position: "CB",
     nation: "Germany", nationCode: "de", league: "La Liga", club: "Real Madrid",
     stats: { pac: 82, sho: 53, pas: 71, dri: 67, def: 86, phy: 85 }, photoId: 205452, photoVer: "23",
+    difficulty: "medium", internationalReputation: 2,
   },
   {
     id: "fifa23-fabinho", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5859,6 +6690,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 87, position: "CDM",
     nation: "Brazil", nationCode: "br", league: "Premier League", club: "Liverpool",
     stats: { pac: 66, sho: 69, pas: 78, dri: 77, def: 86, phy: 83 }, photoId: 209499, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa23-frenkie-de-jong", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5866,6 +6698,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 87, position: "CM",
     nation: "Netherlands", nationCode: "nl", league: "La Liga", club: "FC Barcelona",
     stats: { pac: 82, sho: 69, pas: 86, dri: 87, def: 77, phy: 78 }, photoId: 228702, photoVer: "23",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa23-kalidou-koulibaly", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5873,6 +6706,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 87, position: "CB",
     nation: "Senegal", nationCode: "sn", league: "Premier League", club: "Chelsea",
     stats: { pac: 82, sho: 33, pas: 59, dri: 68, def: 88, phy: 85 }, photoId: 201024, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa23-leon-goretzka", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5880,6 +6714,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 87, position: "CM",
     nation: "Germany", nationCode: "de", league: "Bundesliga", club: "FC Bayern München",
     stats: { pac: 78, sho: 82, pas: 82, dri: 83, def: 81, phy: 86 }, photoId: 209658, photoVer: "23",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa23-marco-verratti", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5887,6 +6722,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 87, position: "CM",
     nation: "Italy", nationCode: "it", league: "Ligue 1", club: "Paris Saint Germain",
     stats: { pac: 60, sho: 61, pas: 87, dri: 91, def: 79, phy: 66 }, photoId: 199556, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa23-rodri", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5894,6 +6730,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 87, position: "CDM",
     nation: "Spain", nationCode: "es", league: "Premier League", club: "Manchester City",
     stats: { pac: 58, sho: 72, pas: 78, dri: 79, def: 83, phy: 84 }, photoId: 231866, photoVer: "23",
+    difficulty: "easy", internationalReputation: 3,
   },
   {
     id: "fifa23-thomas-muller", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5901,6 +6738,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 87, position: "CAM",
     nation: "Germany", nationCode: "de", league: "Bundesliga", club: "FC Bayern München",
     stats: { pac: 69, sho: 84, pas: 83, dri: 80, def: 56, phy: 71 }, photoId: 189596, photoVer: "23",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa23-trent-alexander-arnold", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5908,6 +6746,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 87, position: "RB",
     nation: "England", nationCode: "gb-eng", league: "Premier League", club: "Liverpool",
     stats: { pac: 76, sho: 69, pas: 89, dri: 80, def: 80, phy: 73 }, photoId: 231281, photoVer: "23",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa23-aymeric-laporte", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5915,6 +6754,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Spain", nationCode: "es", league: "Premier League", club: "Manchester City",
     stats: { pac: 61, sho: 50, pas: 72, dri: 69, def: 86, phy: 79 }, photoId: 212218, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa23-bruno-fernandes", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5922,6 +6762,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 86, position: "CAM",
     nation: "Portugal", nationCode: "pt", league: "Premier League", club: "Manchester United",
     stats: { pac: 72, sho: 86, pas: 88, dri: 81, def: 67, phy: 76 }, photoId: 212198, photoVer: "23",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa23-christopher-nkunku", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5929,6 +6770,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 86, position: "CF",
     nation: "France", nationCode: "fr", league: "Bundesliga", club: "RB Leipzig",
     stats: { pac: 88, sho: 81, pas: 83, dri: 88, def: 65, phy: 66 }, photoId: 232411, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa23-ciro-immobile", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5936,6 +6778,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 86, position: "ST",
     nation: "Italy", nationCode: "it", league: "Serie A", club: "Lazio",
     stats: { pac: 85, sho: 87, pas: 68, dri: 80, def: 39, phy: 75 }, photoId: 192387, photoVer: "23",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa23-david-alaba", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5943,6 +6786,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Austria", nationCode: "at", league: "La Liga", club: "Real Madrid",
     stats: { pac: 79, sho: 71, pas: 83, dri: 80, def: 85, phy: 77 }, photoId: 197445, photoVer: "23",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa23-kingsley-coman", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5950,6 +6794,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 86, position: "LM",
     nation: "France", nationCode: "fr", league: "Bundesliga", club: "FC Bayern München",
     stats: { pac: 92, sho: 77, pas: 79, dri: 87, def: 30, phy: 61 }, photoId: 213345, photoVer: "23",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa23-lautaro-martinez", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5957,6 +6802,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 86, position: "ST",
     nation: "Argentina", nationCode: "ar", league: "Serie A", club: "Inter",
     stats: { pac: 83, sho: 83, pas: 72, dri: 85, def: 48, phy: 84 }, photoId: 231478, photoVer: "23",
+    difficulty: "easy", internationalReputation: 3,
   },
   {
     id: "fifa23-marcelo-brozovic", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5964,6 +6810,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 86, position: "CDM",
     nation: "Croatia", nationCode: "hr", league: "Serie A", club: "Inter",
     stats: { pac: 69, sho: 74, pas: 81, dri: 81, def: 81, phy: 78 }, photoId: 216352, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa23-milan-skriniar", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5971,6 +6818,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Slovakia", nationCode: "sk", league: "Serie A", club: "Inter",
     stats: { pac: 78, sho: 41, pas: 57, dri: 69, def: 88, phy: 86 }, photoId: 232363, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa23-nicolo-barella", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5978,6 +6826,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Italy", nationCode: "it", league: "Serie A", club: "Inter",
     stats: { pac: 79, sho: 76, pas: 83, dri: 84, def: 77, phy: 81 }, photoId: 224232, photoVer: "23",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa23-parejo", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5985,6 +6834,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Spain", nationCode: "es", league: "La Liga", club: "Villarreal",
     stats: { pac: 50, sho: 83, pas: 90, dri: 80, def: 71, phy: 68 }, photoId: 189513, photoVer: "23",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa23-paulo-dybala", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5992,6 +6842,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 86, position: "CF",
     nation: "Argentina", nationCode: "ar", league: "Serie A", club: "Roma",
     stats: { pac: 80, sho: 85, pas: 85, dri: 90, def: 40, phy: 59 }, photoId: 211110, photoVer: "23",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa23-raheem-sterling", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -5999,6 +6850,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 86, position: "LW",
     nation: "England", nationCode: "gb-eng", league: "Premier League", club: "Chelsea",
     stats: { pac: 90, sho: 80, pas: 78, dri: 86, def: 45, phy: 67 }, photoId: 202652, photoVer: "23",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa23-riyad-mahrez", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6006,6 +6858,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 86, position: "RW",
     nation: "Algeria", nationCode: "dz", league: "Premier League", club: "Manchester City",
     stats: { pac: 80, sho: 83, pas: 81, dri: 90, def: 38, phy: 60 }, photoId: 204485, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa23-romelu-lukaku", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6013,6 +6866,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 86, position: "ST",
     nation: "Belgium", nationCode: "be", league: "Serie A", club: "Inter",
     stats: { pac: 80, sho: 85, pas: 75, dri: 77, def: 38, phy: 82 }, photoId: 192505, photoVer: "23",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa23-sergej-milinkovic-savic", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6020,6 +6874,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Serbia", nationCode: "rs", league: "Serie A", club: "Lazio",
     stats: { pac: 68, sho: 80, pas: 82, dri: 82, def: 79, phy: 86 }, photoId: 223848, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa23-thiago", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6027,6 +6882,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Spain", nationCode: "es", league: "Premier League", club: "Liverpool",
     stats: { pac: 61, sho: 72, pas: 87, dri: 90, def: 72, phy: 69 }, photoId: 189509, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa23-thiago-silva", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6034,6 +6890,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Brazil", nationCode: "br", league: "Premier League", club: "Chelsea",
     stats: { pac: 49, sho: 54, pas: 73, dri: 72, def: 87, phy: 76 }, photoId: 164240, photoVer: "23",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa23-vini-jr", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6041,6 +6898,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 86, position: "LW",
     nation: "Brazil", nationCode: "br", league: "La Liga", club: "Real Madrid",
     stats: { pac: 95, sho: 79, pas: 74, dri: 90, def: 29, phy: 67 }, photoId: 238794, photoVer: "23",
+    difficulty: "easy", internationalReputation: 2,
   },
   {
     id: "fifa23-diogo-jota", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6048,6 +6906,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 85, position: "CF",
     nation: "Portugal", nationCode: "pt", league: "Premier League", club: "Liverpool",
     stats: { pac: 85, sho: 83, pas: 75, dri: 85, def: 57, phy: 77 }, photoId: 224458, photoVer: "23",
+    difficulty: "veryHard", internationalReputation: 2,
   },
   {
     id: "fifa23-filip-kostic", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6055,6 +6914,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 85, position: "LM",
     nation: "Serbia", nationCode: "rs", league: "Serie A", club: "Juventus",
     stats: { pac: 84, sho: 78, pas: 82, dri: 82, def: 68, phy: 80 }, photoId: 208574, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa23-gerard-moreno", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6062,6 +6922,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "Spain", nationCode: "es", league: "La Liga", club: "Villarreal",
     stats: { pac: 78, sho: 86, pas: 77, dri: 83, def: 46, phy: 72 }, photoId: 208093, photoVer: "23",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa23-iago-aspas", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6069,6 +6930,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "Spain", nationCode: "es", league: "La Liga", club: "Celta de Vigo",
     stats: { pac: 82, sho: 85, pas: 79, dri: 86, def: 35, phy: 63 }, photoId: 192629, photoVer: "23",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa23-jamie-vardy", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6076,6 +6938,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "England", nationCode: "gb-eng", league: "Championship", club: "Leicester City",
     stats: { pac: 84, sho: 84, pas: 70, dri: 79, def: 52, phy: 72 }, photoId: 208830, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa23-jordi-alba", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6083,6 +6946,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 85, position: "LB",
     nation: "Spain", nationCode: "es", league: "La Liga", club: "FC Barcelona",
     stats: { pac: 84, sho: 70, pas: 82, dri: 82, def: 77, phy: 70 }, photoId: 189332, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa23-jorginho", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6090,6 +6954,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Italy", nationCode: "it", league: "Premier League", club: "Chelsea",
     stats: { pac: 54, sho: 67, pas: 86, dri: 81, def: 73, phy: 73 }, photoId: 205498, photoVer: "23",
+    difficulty: "veryHard", internationalReputation: 2,
   },
   {
     id: "fifa23-kyle-walker", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6097,6 +6962,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 85, position: "RB",
     nation: "England", nationCode: "gb-eng", league: "Premier League", club: "Manchester City",
     stats: { pac: 91, sho: 63, pas: 77, dri: 78, def: 80, phy: 82 }, photoId: 188377, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa23-marco-reus", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6104,6 +6970,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 85, position: "CAM",
     nation: "Germany", nationCode: "de", league: "Bundesliga", club: "Borussia Dortmund",
     stats: { pac: 70, sho: 84, pas: 84, dri: 85, def: 53, phy: 65 }, photoId: 188350, photoVer: "24",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa23-marcos-acuna", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6111,6 +6978,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 85, position: "LB",
     nation: "Argentina", nationCode: "ar", league: "La Liga", club: "Sevilla",
     stats: { pac: 76, sho: 74, pas: 83, dri: 87, def: 80, phy: 83 }, photoId: 224334, photoVer: "24",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa23-matthijs-de-ligt", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6118,6 +6986,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Netherlands", nationCode: "nl", league: "Bundesliga", club: "FC Bayern München",
     stats: { pac: 75, sho: 59, pas: 61, dri: 69, def: 84, phy: 87 }, photoId: 235243, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa23-memphis-depay", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6125,6 +6994,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 85, position: "CF",
     nation: "Netherlands", nationCode: "nl", league: "La Liga", club: "FC Barcelona",
     stats: { pac: 83, sho: 84, pas: 82, dri: 86, def: 30, phy: 79 }, photoId: 202556, photoVer: "23",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa23-nabil-fekir", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6132,6 +7002,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 85, position: "CAM",
     nation: "France", nationCode: "fr", league: "La Liga", club: "Real Betis",
     stats: { pac: 83, sho: 82, pas: 82, dri: 87, def: 38, phy: 80 }, photoId: 216594, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa23-niklas-sule", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6139,6 +7010,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Germany", nationCode: "de", league: "Bundesliga", club: "Borussia Dortmund",
     stats: { pac: 71, sho: 48, pas: 66, dri: 59, def: 85, phy: 83 }, photoId: 212190, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa23-patrik-schick", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6146,6 +7018,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "Czech Republic", nationCode: "cz", league: "Bundesliga", club: "Bayer 04 Leverkusen",
     stats: { pac: 78, sho: 83, pas: 71, dri: 83, def: 36, phy: 76 }, photoId: 234236, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa23-paul-pogba", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6153,6 +7026,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "France", nationCode: "fr", league: "Serie A", club: "Juventus",
     stats: { pac: 67, sho: 80, pas: 85, dri: 85, def: 62, phy: 80 }, photoId: 195864, photoVer: "23",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa23-pedri", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6160,6 +7034,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Spain", nationCode: "es", league: "La Liga", club: "FC Barcelona",
     stats: { pac: 79, sho: 67, pas: 81, dri: 87, def: 68, phy: 73 }, photoId: 251854, photoVer: "23",
+    difficulty: "medium", internationalReputation: 2,
   },
   {
     id: "fifa23-philip-foden", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6167,6 +7042,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 85, position: "LW",
     nation: "England", nationCode: "gb-eng", league: "Premier League", club: "Manchester City",
     stats: { pac: 82, sho: 78, pas: 81, dri: 88, def: 56, phy: 60 }, photoId: 237692, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa23-pierre-emerick-aubameyang", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6174,6 +7050,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "Gabon", nationCode: "ga", league: "Premier League", club: "Chelsea",
     stats: { pac: 87, sho: 84, pas: 74, dri: 79, def: 36, phy: 68 }, photoId: 188567, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa23-serge-gnabry", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6181,6 +7058,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 85, position: "RM",
     nation: "Germany", nationCode: "de", league: "Bundesliga", club: "FC Bayern München",
     stats: { pac: 82, sho: 84, pas: 79, dri: 85, def: 43, phy: 69 }, photoId: 206113, photoVer: "23",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa23-sergio-busquets", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6188,6 +7066,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 85, position: "CDM",
     nation: "Spain", nationCode: "es", league: "La Liga", club: "FC Barcelona",
     stats: { pac: 42, sho: 62, pas: 79, dri: 79, def: 82, phy: 73 }, photoId: 189511, photoVer: "23",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fifa23-theo-hernandez", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6195,6 +7074,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 85, position: "LB",
     nation: "France", nationCode: "fr", league: "Serie A", club: "Milan",
     stats: { pac: 93, sho: 72, pas: 76, dri: 81, def: 78, phy: 83 }, photoId: 232656, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa23-yannick-carrasco", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6202,6 +7082,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 85, position: "LM",
     nation: "Belgium", nationCode: "be", league: "La Liga", club: "Atlético Madrid",
     stats: { pac: 89, sho: 82, pas: 80, dri: 87, def: 53, phy: 67 }, photoId: 208418, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa23-ilkay-gundogan", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6209,6 +7090,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Germany", nationCode: "de", league: "Premier League", club: "Manchester City",
     stats: { pac: 64, sho: 80, pas: 85, dri: 85, def: 72, phy: 72 }, photoId: 186942, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa23-achraf-hakimi", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6216,6 +7098,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 84, position: "RB",
     nation: "Morocco", nationCode: "ma", league: "Ligue 1", club: "Paris Saint Germain",
     stats: { pac: 92, sho: 75, pas: 79, dri: 80, def: 75, phy: 78 }, photoId: 235212, photoVer: "23",
+    difficulty: "medium", internationalReputation: 2,
   },
   {
     id: "fifa23-alessandro-bastoni", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6223,6 +7106,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Italy", nationCode: "it", league: "Serie A", club: "Inter",
     stats: { pac: 73, sho: 35, pas: 69, dri: 71, def: 86, phy: 82 }, photoId: 237383, photoVer: "23",
+    difficulty: "medium", internationalReputation: 1,
   },
   {
     id: "fifa23-alphonso-davies", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6230,6 +7114,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 84, position: "LB",
     nation: "Canada", nationCode: "ca", league: "Bundesliga", club: "FC Bayern München",
     stats: { pac: 94, sho: 66, pas: 77, dri: 85, def: 76, phy: 77 }, photoId: 234396, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa23-declan-rice", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6237,6 +7122,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 84, position: "CDM",
     nation: "England", nationCode: "gb-eng", league: "Premier League", club: "West Ham United",
     stats: { pac: 71, sho: 64, pas: 74, dri: 76, def: 82, phy: 83 }, photoId: 234378, photoVer: "23",
+    difficulty: "medium", internationalReputation: 1,
   },
   {
     id: "fifa23-dusan-vlahovic", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6244,6 +7130,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 84, position: "ST",
     nation: "Serbia", nationCode: "rs", league: "Serie A", club: "Juventus",
     stats: { pac: 80, sho: 85, pas: 66, dri: 78, def: 28, phy: 79 }, photoId: 246430, photoVer: "23",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa23-federico-chiesa", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6251,6 +7138,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 84, position: "LW",
     nation: "Italy", nationCode: "it", league: "Serie A", club: "Juventus",
     stats: { pac: 91, sho: 81, pas: 76, dri: 86, def: 48, phy: 73 }, photoId: 235805, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa23-federico-valverde", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6258,6 +7146,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 84, position: "CM",
     nation: "Uruguay", nationCode: "uy", league: "La Liga", club: "Real Madrid",
     stats: { pac: 87, sho: 74, pas: 80, dri: 79, def: 78, phy: 80 }, photoId: 239053, photoVer: "23",
+    difficulty: "medium", internationalReputation: 1,
   },
   {
     id: "fifa23-fikayo-tomori", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6265,6 +7154,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "England", nationCode: "gb-eng", league: "Serie A", club: "Milan",
     stats: { pac: 86, sho: 40, pas: 60, dri: 66, def: 86, phy: 81 }, photoId: 232756, photoVer: "23",
+    difficulty: "veryHard", internationalReputation: 2,
   },
   {
     id: "fifa23-jadon-sancho", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6272,6 +7162,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 84, position: "LW",
     nation: "England", nationCode: "gb-eng", league: "Premier League", club: "Manchester United",
     stats: { pac: 81, sho: 74, pas: 81, dri: 89, def: 36, phy: 59 }, photoId: 233049, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa23-joao-felix", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6279,6 +7170,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 84, position: "CF",
     nation: "Portugal", nationCode: "pt", league: "La Liga", club: "Atlético Madrid",
     stats: { pac: 83, sho: 80, pas: 81, dri: 88, def: 40, phy: 67 }, photoId: 242444, photoVer: "23",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa23-jude-bellingham", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6286,6 +7178,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 84, position: "CM",
     nation: "England", nationCode: "gb-eng", league: "Bundesliga", club: "Borussia Dortmund",
     stats: { pac: 75, sho: 75, pas: 78, dri: 84, def: 77, phy: 80 }, photoId: 252371, photoVer: "23",
+    difficulty: "easy", internationalReputation: 2,
   },
   {
     id: "fifa23-jules-kounde", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6293,6 +7186,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "France", nationCode: "fr", league: "La Liga", club: "FC Barcelona",
     stats: { pac: 84, sho: 45, pas: 64, dri: 74, def: 85, phy: 78 }, photoId: 241486, photoVer: "24",
+    difficulty: "medium", internationalReputation: 2,
   },
   {
     id: "fifa23-kai-havertz", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6300,6 +7194,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 84, position: "CAM",
     nation: "Germany", nationCode: "de", league: "Premier League", club: "Chelsea",
     stats: { pac: 81, sho: 79, pas: 79, dri: 84, def: 45, phy: 66 }, photoId: 235790, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa23-lorenzo-pellegrini", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6307,6 +7202,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 84, position: "CAM",
     nation: "Italy", nationCode: "it", league: "Serie A", club: "Roma",
     stats: { pac: 79, sho: 77, pas: 83, dri: 84, def: 74, phy: 78 }, photoId: 228251, photoVer: "23",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa23-lucas-hernandez", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6314,6 +7210,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "France", nationCode: "fr", league: "Bundesliga", club: "FC Bayern München",
     stats: { pac: 77, sho: 54, pas: 70, dri: 71, def: 84, phy: 80 }, photoId: 220814, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa23-luis-diaz", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6321,6 +7218,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 84, position: "LW",
     nation: "Colombia", nationCode: "co", league: "Premier League", club: "Liverpool",
     stats: { pac: 91, sho: 80, pas: 75, dri: 87, def: 34, phy: 73 }, photoId: 241084, photoVer: "23",
+    difficulty: "hard", internationalReputation: 1,
   },
   {
     id: "fifa23-martin-degaard", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6328,6 +7226,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 84, position: "CAM",
     nation: "Norway", nationCode: "no", league: "Premier League", club: "Arsenal",
     stats: { pac: 76, sho: 75, pas: 86, dri: 84, def: 58, phy: 63 }, photoId: 222665, photoVer: "23",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fifa23-mason-mount", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6335,6 +7234,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 84, position: "CAM",
     nation: "England", nationCode: "gb-eng", league: "Premier League", club: "Chelsea",
     stats: { pac: 74, sho: 81, pas: 85, dri: 82, def: 55, phy: 67 }, photoId: 233064, photoVer: "23",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fifa23-moussa-diaby", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6342,6 +7242,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 84, position: "RM",
     nation: "France", nationCode: "fr", league: "Bundesliga", club: "Bayer 04 Leverkusen",
     stats: { pac: 93, sho: 73, pas: 75, dri: 87, def: 42, phy: 59 }, photoId: 241852, photoVer: "23",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa23-rafael-leao", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6349,6 +7250,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 84, position: "LW",
     nation: "Portugal", nationCode: "pt", league: "Serie A", club: "Milan",
     stats: { pac: 91, sho: 77, pas: 73, dri: 86, def: 27, phy: 74 }, photoId: 241721, photoVer: "24",
+    difficulty: "hard", internationalReputation: 1,
   },
   {
     id: "fifa23-reece-james", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6356,6 +7258,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 84, position: "RWB",
     nation: "England", nationCode: "gb-eng", league: "Premier League", club: "Chelsea",
     stats: { pac: 81, sho: 70, pas: 82, dri: 82, def: 80, phy: 82 }, photoId: 238074, photoVer: "23",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa23-sandro-tonali", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6363,6 +7266,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 84, position: "CDM",
     nation: "Italy", nationCode: "it", league: "Serie A", club: "Milan",
     stats: { pac: 81, sho: 73, pas: 81, dri: 79, def: 79, phy: 82 }, photoId: 241096, photoVer: "23",
+    difficulty: "hard", internationalReputation: 1,
   },
   {
     id: "fifa23-wilfred-ndidi", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6370,6 +7274,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 84, position: "CDM",
     nation: "Nigeria", nationCode: "ng", league: "Championship", club: "Leicester City",
     stats: { pac: 66, sho: 62, pas: 68, dri: 73, def: 85, phy: 83 }, photoId: 226790, photoVer: "23",
+    difficulty: "veryHard", internationalReputation: 1,
   },
   {
     id: "fifa23-youri-tielemans", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6377,6 +7282,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 84, position: "CM",
     nation: "Belgium", nationCode: "be", league: "Championship", club: "Leicester City",
     stats: { pac: 56, sho: 80, pas: 86, dri: 81, def: 70, phy: 73 }, photoId: 216393, photoVer: "23",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fifa23-eder-militao", edition: "FIFA23", editionLabel: "FIFA 23",
@@ -6384,6 +7290,7 @@ const CARDS_FIFA23: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Brazil", nationCode: "br", league: "La Liga", club: "Real Madrid",
     stats: { pac: 86, sho: 50, pas: 70, dri: 72, def: 85, phy: 82 }, photoId: 240130, photoVer: "23",
+    difficulty: "hard", internationalReputation: 2,
   },
 ];
 
@@ -6394,6 +7301,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 91, position: "ST",
     nation: "Norway", nationCode: "no", league: "Premier League", club: "Manchester City",
     stats: { pac: 89, sho: 93, pas: 66, dri: 80, def: 45, phy: 88 }, photoId: 239085, photoVer: "24",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fc24-kevin-de-bruyne", edition: "FC24", editionLabel: "FC 24",
@@ -6401,6 +7309,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 91, position: "CM",
     nation: "Belgium", nationCode: "be", league: "Premier League", club: "Manchester City",
     stats: { pac: 72, sho: 88, pas: 94, dri: 87, def: 65, phy: 78 }, photoId: 192985, photoVer: "24",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fc24-kylian-mbappe", edition: "FC24", editionLabel: "FC 24",
@@ -6408,6 +7317,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 91, position: "ST",
     nation: "France", nationCode: "fr", league: "Ligue 1", club: "Paris Saint Germain",
     stats: { pac: 97, sho: 90, pas: 80, dri: 92, def: 36, phy: 78 }, photoId: 231747, photoVer: "24",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fc24-harry-kane", edition: "FC24", editionLabel: "FC 24",
@@ -6415,6 +7325,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 90, position: "ST",
     nation: "England", nationCode: "gb-eng", league: "Bundesliga", club: "FC Bayern München",
     stats: { pac: 69, sho: 93, pas: 84, dri: 83, def: 49, phy: 83 }, photoId: 202126, photoVer: "24",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fc24-karim-benzema", edition: "FC24", editionLabel: "FC 24",
@@ -6422,6 +7333,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 90, position: "CF",
     nation: "France", nationCode: "fr", league: "Pro League", club: "Al Ittihad",
     stats: { pac: 79, sho: 88, pas: 83, dri: 87, def: 39, phy: 78 }, photoId: 165153, photoVer: "24",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fc24-lionel-messi", edition: "FC24", editionLabel: "FC 24",
@@ -6429,6 +7341,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 90, position: "CF",
     nation: "Argentina", nationCode: "ar", league: "Major League Soccer", club: "Inter Miami",
     stats: { pac: 80, sho: 87, pas: 90, dri: 94, def: 33, phy: 64 }, photoId: 158023, photoVer: "24",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fc24-robert-lewandowski", edition: "FC24", editionLabel: "FC 24",
@@ -6436,6 +7349,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 90, position: "ST",
     nation: "Poland", nationCode: "pl", league: "La Liga", club: "FC Barcelona",
     stats: { pac: 75, sho: 91, pas: 80, dri: 87, def: 44, phy: 84 }, photoId: 188545, photoVer: "24",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fc24-casemiro", edition: "FC24", editionLabel: "FC 24",
@@ -6443,6 +7357,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 89, position: "CDM",
     nation: "Brazil", nationCode: "br", league: "Premier League", club: "Manchester United",
     stats: { pac: 63, sho: 75, pas: 79, dri: 73, def: 89, phy: 88 }, photoId: 200145, photoVer: "24",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fc24-mohamed-salah", edition: "FC24", editionLabel: "FC 24",
@@ -6450,6 +7365,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 89, position: "RW",
     nation: "Egypt", nationCode: "eg", league: "Premier League", club: "Liverpool",
     stats: { pac: 89, sho: 87, pas: 81, dri: 88, def: 45, phy: 76 }, photoId: 209331, photoVer: "24",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fc24-neymar-jr", edition: "FC24", editionLabel: "FC 24",
@@ -6457,6 +7373,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 89, position: "LW",
     nation: "Brazil", nationCode: "br", league: "Pro League", club: "Al Hilal",
     stats: { pac: 86, sho: 83, pas: 85, dri: 93, def: 37, phy: 61 }, photoId: 190871, photoVer: "24",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fc24-rodri", edition: "FC24", editionLabel: "FC 24",
@@ -6464,6 +7381,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 89, position: "CDM",
     nation: "Spain", nationCode: "es", league: "Premier League", club: "Manchester City",
     stats: { pac: 58, sho: 73, pas: 80, dri: 80, def: 85, phy: 84 }, photoId: 231866, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc24-ruben-dias", edition: "FC24", editionLabel: "FC 24",
@@ -6471,6 +7389,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 89, position: "CB",
     nation: "Portugal", nationCode: "pt", league: "Premier League", club: "Manchester City",
     stats: { pac: 62, sho: 39, pas: 66, dri: 69, def: 89, phy: 87 }, photoId: 239818, photoVer: "24",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fc24-vini-jr", edition: "FC24", editionLabel: "FC 24",
@@ -6478,6 +7397,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 89, position: "LW",
     nation: "Brazil", nationCode: "br", league: "La Liga", club: "Real Madrid",
     stats: { pac: 95, sho: 82, pas: 78, dri: 90, def: 29, phy: 68 }, photoId: 238794, photoVer: "24",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fc24-virgil-van-dijk", edition: "FC24", editionLabel: "FC 24",
@@ -6485,6 +7405,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 89, position: "CB",
     nation: "Netherlands", nationCode: "nl", league: "Premier League", club: "Liverpool",
     stats: { pac: 78, sho: 60, pas: 71, dri: 72, def: 89, phy: 86 }, photoId: 203376, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc24-antoine-griezmann", edition: "FC24", editionLabel: "FC 24",
@@ -6492,6 +7413,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 88, position: "ST",
     nation: "France", nationCode: "fr", league: "La Liga", club: "Atlético Madrid",
     stats: { pac: 80, sho: 88, pas: 87, dri: 88, def: 58, phy: 75 }, photoId: 194765, photoVer: "24",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fc24-bernardo-silva", edition: "FC24", editionLabel: "FC 24",
@@ -6499,6 +7421,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 88, position: "CM",
     nation: "Portugal", nationCode: "pt", league: "Premier League", club: "Manchester City",
     stats: { pac: 69, sho: 78, pas: 86, dri: 92, def: 70, phy: 69 }, photoId: 218667, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc24-bruno-fernandes", edition: "FC24", editionLabel: "FC 24",
@@ -6506,6 +7429,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 88, position: "CAM",
     nation: "Portugal", nationCode: "pt", league: "Premier League", club: "Manchester United",
     stats: { pac: 71, sho: 86, pas: 90, dri: 83, def: 69, phy: 77 }, photoId: 212198, photoVer: "24",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fc24-federico-valverde", edition: "FC24", editionLabel: "FC 24",
@@ -6513,6 +7437,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 88, position: "CM",
     nation: "Uruguay", nationCode: "uy", league: "La Liga", club: "Real Madrid",
     stats: { pac: 88, sho: 82, pas: 84, dri: 84, def: 80, phy: 82 }, photoId: 239053, photoVer: "24",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fc24-joshua-kimmich", edition: "FC24", editionLabel: "FC 24",
@@ -6520,6 +7445,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 88, position: "CDM",
     nation: "Germany", nationCode: "de", league: "Bundesliga", club: "FC Bayern München",
     stats: { pac: 70, sho: 74, pas: 88, dri: 84, def: 82, phy: 79 }, photoId: 212622, photoVer: "24",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fc24-victor-osimhen", edition: "FC24", editionLabel: "FC 24",
@@ -6527,6 +7453,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 88, position: "ST",
     nation: "Nigeria", nationCode: "ng", league: "Serie A", club: "Napoli",
     stats: { pac: 90, sho: 86, pas: 66, dri: 83, def: 42, phy: 82 }, photoId: 232293, photoVer: "24",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fc24-frenkie-de-jong", edition: "FC24", editionLabel: "FC 24",
@@ -6534,6 +7461,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 87, position: "CM",
     nation: "Netherlands", nationCode: "nl", league: "La Liga", club: "FC Barcelona",
     stats: { pac: 82, sho: 69, pas: 86, dri: 87, def: 77, phy: 78 }, photoId: 228702, photoVer: "24",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fc24-lautaro-martinez", edition: "FC24", editionLabel: "FC 24",
@@ -6541,6 +7469,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 87, position: "ST",
     nation: "Argentina", nationCode: "ar", league: "Serie A", club: "Inter",
     stats: { pac: 80, sho: 86, pas: 71, dri: 85, def: 48, phy: 85 }, photoId: 231478, photoVer: "24",
+    difficulty: "easy", internationalReputation: 3,
   },
   {
     id: "fc24-luka-modric", edition: "FC24", editionLabel: "FC 24",
@@ -6548,6 +7477,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 87, position: "CM",
     nation: "Croatia", nationCode: "hr", league: "La Liga", club: "Real Madrid",
     stats: { pac: 72, sho: 76, pas: 89, dri: 87, def: 72, phy: 66 }, photoId: 177003, photoVer: "24",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fc24-marquinhos", edition: "FC24", editionLabel: "FC 24",
@@ -6555,6 +7485,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 87, position: "CB",
     nation: "Brazil", nationCode: "br", league: "Ligue 1", club: "Paris Saint Germain",
     stats: { pac: 78, sho: 56, pas: 75, dri: 74, def: 89, phy: 80 }, photoId: 207865, photoVer: "24",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fc24-martin-degaard", edition: "FC24", editionLabel: "FC 24",
@@ -6562,6 +7493,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 87, position: "CAM",
     nation: "Norway", nationCode: "no", league: "Premier League", club: "Arsenal",
     stats: { pac: 72, sho: 81, pas: 88, dri: 87, def: 61, phy: 64 }, photoId: 222665, photoVer: "24",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fc24-son", edition: "FC24", editionLabel: "FC 24",
@@ -6569,6 +7501,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 87, position: "LW",
     nation: "Korea Republic", nationCode: "kr", league: "Premier League", club: "Tottenham Hotspur",
     stats: { pac: 87, sho: 88, pas: 80, dri: 84, def: 42, phy: 70 }, photoId: 200104, photoVer: "24",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fc24-andrew-robertson", edition: "FC24", editionLabel: "FC 24",
@@ -6576,6 +7509,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 86, position: "LB",
     nation: "Scotland", nationCode: "gb-sct", league: "Premier League", club: "Liverpool",
     stats: { pac: 80, sho: 61, pas: 82, dri: 81, def: 81, phy: 77 }, photoId: 216267, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc24-bukayo-saka", edition: "FC24", editionLabel: "FC 24",
@@ -6583,6 +7517,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 86, position: "RW",
     nation: "England", nationCode: "gb-eng", league: "Premier League", club: "Arsenal",
     stats: { pac: 85, sho: 81, pas: 79, dri: 87, def: 60, phy: 70 }, photoId: 246669, photoVer: "24",
+    difficulty: "medium", internationalReputation: 2,
   },
   {
     id: "fc24-christopher-nkunku", edition: "FC24", editionLabel: "FC 24",
@@ -6590,6 +7525,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 86, position: "CF",
     nation: "France", nationCode: "fr", league: "Premier League", club: "Chelsea",
     stats: { pac: 82, sho: 81, pas: 83, dri: 88, def: 62, phy: 67 }, photoId: 232411, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc24-cristiano-ronaldo", edition: "FC24", editionLabel: "FC 24",
@@ -6597,6 +7533,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 86, position: "ST",
     nation: "Portugal", nationCode: "pt", league: "Pro League", club: "Al Nassr",
     stats: { pac: 77, sho: 88, pas: 75, dri: 80, def: 34, phy: 74 }, photoId: 20801, photoVer: "24",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fc24-jamal-musiala", edition: "FC24", editionLabel: "FC 24",
@@ -6604,6 +7541,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 86, position: "CAM",
     nation: "Germany", nationCode: "de", league: "Bundesliga", club: "FC Bayern München",
     stats: { pac: 85, sho: 75, pas: 76, dri: 91, def: 63, phy: 61 }, photoId: 256790, photoVer: "24",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fc24-joao-cancelo", edition: "FC24", editionLabel: "FC 24",
@@ -6611,6 +7549,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 86, position: "LB",
     nation: "Portugal", nationCode: "pt", league: "La Liga", club: "FC Barcelona",
     stats: { pac: 81, sho: 73, pas: 85, dri: 84, def: 80, phy: 72 }, photoId: 210514, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc24-jude-bellingham", edition: "FC24", editionLabel: "FC 24",
@@ -6618,6 +7557,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "England", nationCode: "gb-eng", league: "La Liga", club: "Real Madrid",
     stats: { pac: 76, sho: 78, pas: 80, dri: 85, def: 78, phy: 82 }, photoId: 252371, photoVer: "24",
+    difficulty: "easy", internationalReputation: 3,
   },
   {
     id: "fc24-khvicha-kvaratskhelia", edition: "FC24", editionLabel: "FC 24",
@@ -6625,6 +7565,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 86, position: "LW",
     nation: "Georgia", nationCode: "ge", league: "Serie A", club: "Napoli",
     stats: { pac: 84, sho: 80, pas: 81, dri: 87, def: 41, phy: 71 }, photoId: 247635, photoVer: "24",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fc24-matthijs-de-ligt", edition: "FC24", editionLabel: "FC 24",
@@ -6632,6 +7573,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Netherlands", nationCode: "nl", league: "Bundesliga", club: "FC Bayern München",
     stats: { pac: 66, sho: 61, pas: 64, dri: 68, def: 85, phy: 86 }, photoId: 235243, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc24-n-golo-kante", edition: "FC24", editionLabel: "FC 24",
@@ -6639,6 +7581,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 86, position: "CDM",
     nation: "France", nationCode: "fr", league: "Pro League", club: "Al Ittihad",
     stats: { pac: 69, sho: 65, pas: 73, dri: 80, def: 85, phy: 77 }, photoId: 215914, photoVer: "24",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fc24-nicolo-barella", edition: "FC24", editionLabel: "FC 24",
@@ -6646,6 +7589,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Italy", nationCode: "it", league: "Serie A", club: "Inter",
     stats: { pac: 78, sho: 78, pas: 82, dri: 85, def: 78, phy: 80 }, photoId: 224232, photoVer: "24",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fc24-ousmane-dembele", edition: "FC24", editionLabel: "FC 24",
@@ -6653,6 +7597,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 86, position: "RW",
     nation: "France", nationCode: "fr", league: "Ligue 1", club: "Paris Saint Germain",
     stats: { pac: 93, sho: 77, pas: 81, dri: 87, def: 36, phy: 57 }, photoId: 231443, photoVer: "24",
+    difficulty: "easy", internationalReputation: 3,
   },
   {
     id: "fc24-parejo", edition: "FC24", editionLabel: "FC 24",
@@ -6660,6 +7605,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Spain", nationCode: "es", league: "La Liga", club: "Villarreal",
     stats: { pac: 49, sho: 83, pas: 90, dri: 80, def: 73, phy: 69 }, photoId: 189513, photoVer: "24",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fc24-paulo-dybala", edition: "FC24", editionLabel: "FC 24",
@@ -6667,6 +7613,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 86, position: "CF",
     nation: "Argentina", nationCode: "ar", league: "Serie A", club: "Roma",
     stats: { pac: 80, sho: 85, pas: 85, dri: 90, def: 40, phy: 60 }, photoId: 211110, photoVer: "24",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fc24-pedri", edition: "FC24", editionLabel: "FC 24",
@@ -6674,6 +7621,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Spain", nationCode: "es", league: "La Liga", club: "FC Barcelona",
     stats: { pac: 78, sho: 69, pas: 82, dri: 88, def: 70, phy: 74 }, photoId: 251854, photoVer: "24",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fc24-rafael-leao", edition: "FC24", editionLabel: "FC 24",
@@ -6681,6 +7629,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 86, position: "LW",
     nation: "Portugal", nationCode: "pt", league: "Serie A", club: "Milan",
     stats: { pac: 93, sho: 80, pas: 75, dri: 87, def: 27, phy: 76 }, photoId: 241721, photoVer: "24",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fc24-riyad-mahrez", edition: "FC24", editionLabel: "FC 24",
@@ -6688,6 +7637,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 86, position: "RM",
     nation: "Algeria", nationCode: "dz", league: "Pro League", club: "Al Ahli Jeddah",
     stats: { pac: 79, sho: 81, pas: 81, dri: 89, def: 38, phy: 60 }, photoId: 204485, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc24-ronald-araujo", edition: "FC24", editionLabel: "FC 24",
@@ -6695,6 +7645,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Uruguay", nationCode: "uy", league: "La Liga", club: "FC Barcelona",
     stats: { pac: 79, sho: 51, pas: 65, dri: 62, def: 86, phy: 84 }, photoId: 253163, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc24-sadio-mane", edition: "FC24", editionLabel: "FC 24",
@@ -6702,6 +7653,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 86, position: "CF",
     nation: "Senegal", nationCode: "sn", league: "Pro League", club: "Al Nassr",
     stats: { pac: 85, sho: 83, pas: 79, dri: 87, def: 44, phy: 74 }, photoId: 208722, photoVer: "24",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fc24-sandro-tonali", edition: "FC24", editionLabel: "FC 24",
@@ -6709,6 +7661,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 86, position: "CDM",
     nation: "Italy", nationCode: "it", league: "Premier League", club: "Newcastle United",
     stats: { pac: 84, sho: 74, pas: 81, dri: 81, def: 82, phy: 84 }, photoId: 241096, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc24-sergej-milinkovic-savic", edition: "FC24", editionLabel: "FC 24",
@@ -6716,6 +7669,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Serbia", nationCode: "rs", league: "Pro League", club: "Al Hilal",
     stats: { pac: 68, sho: 80, pas: 82, dri: 82, def: 79, phy: 86 }, photoId: 223848, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc24-toni-kroos", edition: "FC24", editionLabel: "FC 24",
@@ -6723,6 +7677,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Germany", nationCode: "de", league: "La Liga", club: "Real Madrid",
     stats: { pac: 51, sho: 80, pas: 90, dri: 81, def: 70, phy: 71 }, photoId: 182521, photoVer: "24",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fc24-trent-alexander-arnold", edition: "FC24", editionLabel: "FC 24",
@@ -6730,6 +7685,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 86, position: "RB",
     nation: "England", nationCode: "gb-eng", league: "Premier League", club: "Liverpool",
     stats: { pac: 76, sho: 69, pas: 90, dri: 79, def: 80, phy: 73 }, photoId: 231281, photoVer: "24",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fc24-eder-militao", edition: "FC24", editionLabel: "FC 24",
@@ -6737,6 +7693,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Brazil", nationCode: "br", league: "La Liga", club: "Real Madrid",
     stats: { pac: 85, sho: 50, pas: 69, dri: 71, def: 86, phy: 82 }, photoId: 240130, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc24-ilkay-gundogan", edition: "FC24", editionLabel: "FC 24",
@@ -6744,6 +7701,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Germany", nationCode: "de", league: "La Liga", club: "FC Barcelona",
     stats: { pac: 62, sho: 81, pas: 84, dri: 86, def: 72, phy: 73 }, photoId: 186942, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc24-alessandro-bastoni", edition: "FC24", editionLabel: "FC 24",
@@ -6751,6 +7709,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Italy", nationCode: "it", league: "Serie A", club: "Inter",
     stats: { pac: 73, sho: 35, pas: 72, dri: 73, def: 86, phy: 83 }, photoId: 237383, photoVer: "24",
+    difficulty: "medium", internationalReputation: 2,
   },
   {
     id: "fc24-antonio-rudiger", edition: "FC24", editionLabel: "FC 24",
@@ -6758,6 +7717,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Germany", nationCode: "de", league: "La Liga", club: "Real Madrid",
     stats: { pac: 82, sho: 54, pas: 71, dri: 66, def: 84, phy: 86 }, photoId: 205452, photoVer: "24",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fc24-aymeric-laporte", edition: "FC24", editionLabel: "FC 24",
@@ -6765,6 +7725,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Spain", nationCode: "es", league: "Pro League", club: "Al Nassr",
     stats: { pac: 61, sho: 50, pas: 73, dri: 69, def: 86, phy: 78 }, photoId: 212218, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc24-ciro-immobile", edition: "FC24", editionLabel: "FC 24",
@@ -6772,6 +7733,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "Italy", nationCode: "it", league: "Serie A", club: "Lazio",
     stats: { pac: 85, sho: 87, pas: 68, dri: 78, def: 39, phy: 74 }, photoId: 192387, photoVer: "24",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fc24-david-alaba", edition: "FC24", editionLabel: "FC 24",
@@ -6779,6 +7741,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Austria", nationCode: "at", league: "La Liga", club: "Real Madrid",
     stats: { pac: 79, sho: 71, pas: 83, dri: 80, def: 85, phy: 77 }, photoId: 197445, photoVer: "24",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fc24-declan-rice", edition: "FC24", editionLabel: "FC 24",
@@ -6786,6 +7749,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 85, position: "CDM",
     nation: "England", nationCode: "gb-eng", league: "Premier League", club: "Arsenal",
     stats: { pac: 71, sho: 65, pas: 75, dri: 77, def: 83, phy: 83 }, photoId: 234378, photoVer: "24",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fc24-diogo-jota", edition: "FC24", editionLabel: "FC 24",
@@ -6793,6 +7757,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 85, position: "CF",
     nation: "Portugal", nationCode: "pt", league: "Premier League", club: "Liverpool",
     stats: { pac: 82, sho: 82, pas: 75, dri: 85, def: 57, phy: 77 }, photoId: 224458, photoVer: "24",
+    difficulty: "veryHard", internationalReputation: 2,
   },
   {
     id: "fc24-domenico-berardi", edition: "FC24", editionLabel: "FC 24",
@@ -6800,6 +7765,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 85, position: "RW",
     nation: "Italy", nationCode: "it", league: "Serie A", club: "Sassuolo",
     stats: { pac: 82, sho: 83, pas: 81, dri: 87, def: 36, phy: 72 }, photoId: 210935, photoVer: "24",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fc24-florian-wirtz", edition: "FC24", editionLabel: "FC 24",
@@ -6807,6 +7773,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 85, position: "CAM",
     nation: "Germany", nationCode: "de", league: "Bundesliga", club: "Bayer 04 Leverkusen",
     stats: { pac: 74, sho: 76, pas: 83, dri: 87, def: 52, phy: 63 }, photoId: 256630, photoVer: "24",
+    difficulty: "easy", internationalReputation: 3,
   },
   {
     id: "fc24-giovanni-di-lorenzo", edition: "FC24", editionLabel: "FC 24",
@@ -6814,6 +7781,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 85, position: "RB",
     nation: "Italy", nationCode: "it", league: "Serie A", club: "Napoli",
     stats: { pac: 85, sho: 67, pas: 75, dri: 79, def: 82, phy: 82 },
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fc24-hakan-calhanoglu", edition: "FC24", editionLabel: "FC 24",
@@ -6821,6 +7789,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Turkey", nationCode: "tr", league: "Serie A", club: "Inter",
     stats: { pac: 67, sho: 80, pas: 86, dri: 85, def: 70, phy: 66 }, photoId: 208128, photoVer: "24",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fc24-iago-aspas", edition: "FC24", editionLabel: "FC 24",
@@ -6828,6 +7797,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "Spain", nationCode: "es", league: "La Liga", club: "Celta de Vigo",
     stats: { pac: 81, sho: 85, pas: 79, dri: 86, def: 35, phy: 64 }, photoId: 192629, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc24-jack-grealish", edition: "FC24", editionLabel: "FC 24",
@@ -6835,6 +7805,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 85, position: "LW",
     nation: "England", nationCode: "gb-eng", league: "Premier League", club: "Manchester City",
     stats: { pac: 76, sho: 76, pas: 84, dri: 88, def: 53, phy: 73 }, photoId: 206517, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc24-john-stones", edition: "FC24", editionLabel: "FC 24",
@@ -6842,6 +7813,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "England", nationCode: "gb-eng", league: "Premier League", club: "Manchester City",
     stats: { pac: 72, sho: 52, pas: 75, dri: 77, def: 85, phy: 77 }, photoId: 203574, photoVer: "24",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fc24-jules-kounde", edition: "FC24", editionLabel: "FC 24",
@@ -6849,6 +7821,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "France", nationCode: "fr", league: "La Liga", club: "FC Barcelona",
     stats: { pac: 84, sho: 45, pas: 68, dri: 75, def: 86, phy: 80 }, photoId: 241486, photoVer: "24",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fc24-kieran-trippier", edition: "FC24", editionLabel: "FC 24",
@@ -6856,6 +7829,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 85, position: "RB",
     nation: "England", nationCode: "gb-eng", league: "Premier League", club: "Newcastle United",
     stats: { pac: 68, sho: 65, pas: 86, dri: 79, def: 82, phy: 72 }, photoId: 186345, photoVer: "24",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fc24-kingsley-coman", edition: "FC24", editionLabel: "FC 24",
@@ -6863,6 +7837,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 85, position: "LM",
     nation: "France", nationCode: "fr", league: "Bundesliga", club: "FC Bayern München",
     stats: { pac: 89, sho: 76, pas: 79, dri: 87, def: 30, phy: 62 }, photoId: 213345, photoVer: "24",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fc24-leon-goretzka", edition: "FC24", editionLabel: "FC 24",
@@ -6870,6 +7845,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Germany", nationCode: "de", league: "Bundesliga", club: "FC Bayern München",
     stats: { pac: 78, sho: 81, pas: 81, dri: 83, def: 80, phy: 86 }, photoId: 209658, photoVer: "24",
+    difficulty: "medium", internationalReputation: 4,
   },
   {
     id: "fc24-marcos-acuna", edition: "FC24", editionLabel: "FC 24",
@@ -6877,6 +7853,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 85, position: "LB",
     nation: "Argentina", nationCode: "ar", league: "La Liga", club: "Sevilla",
     stats: { pac: 75, sho: 74, pas: 83, dri: 83, def: 81, phy: 84 }, photoId: 224334, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc24-marcus-rashford", edition: "FC24", editionLabel: "FC 24",
@@ -6884,6 +7861,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 85, position: "LW",
     nation: "England", nationCode: "gb-eng", league: "Premier League", club: "Manchester United",
     stats: { pac: 90, sho: 86, pas: 78, dri: 84, def: 42, phy: 74 }, photoId: 231677, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc24-philip-foden", edition: "FC24", editionLabel: "FC 24",
@@ -6891,6 +7869,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 85, position: "LW",
     nation: "England", nationCode: "gb-eng", league: "Premier League", club: "Manchester City",
     stats: { pac: 81, sho: 79, pas: 82, dri: 88, def: 57, phy: 60 }, photoId: 237692, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc24-raphael-varane", edition: "FC24", editionLabel: "FC 24",
@@ -6898,6 +7877,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "France", nationCode: "fr", league: "Premier League", club: "Manchester United",
     stats: { pac: 79, sho: 49, pas: 64, dri: 67, def: 86, phy: 78 }, photoId: 201535, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc24-rodrygo", edition: "FC24", editionLabel: "FC 24",
@@ -6905,6 +7885,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 85, position: "RW",
     nation: "Brazil", nationCode: "br", league: "La Liga", club: "Real Madrid",
     stats: { pac: 88, sho: 81, pas: 79, dri: 86, def: 31, phy: 62 }, photoId: 243812, photoVer: "24",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fc24-theo-hernandez", edition: "FC24", editionLabel: "FC 24",
@@ -6912,6 +7893,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 85, position: "LB",
     nation: "France", nationCode: "fr", league: "Serie A", club: "Milan",
     stats: { pac: 93, sho: 71, pas: 76, dri: 81, def: 78, phy: 84 }, photoId: 232656, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc24-thomas-partey", edition: "FC24", editionLabel: "FC 24",
@@ -6919,6 +7901,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 85, position: "CDM",
     nation: "Ghana", nationCode: "gh", league: "Premier League", club: "Arsenal",
     stats: { pac: 68, sho: 71, pas: 82, dri: 80, def: 81, phy: 82 }, photoId: 209989, photoVer: "24",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fc24-achraf-hakimi", edition: "FC24", editionLabel: "FC 24",
@@ -6926,6 +7909,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 84, position: "RB",
     nation: "Morocco", nationCode: "ma", league: "Ligue 1", club: "Paris Saint Germain",
     stats: { pac: 92, sho: 75, pas: 80, dri: 80, def: 75, phy: 78 }, photoId: 235212, photoVer: "24",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fc24-aurelien-tchouameni", edition: "FC24", editionLabel: "FC 24",
@@ -6933,6 +7917,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 84, position: "CDM",
     nation: "France", nationCode: "fr", league: "La Liga", club: "Real Madrid",
     stats: { pac: 73, sho: 69, pas: 79, dri: 78, def: 81, phy: 81 }, photoId: 241637, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc24-bremer", edition: "FC24", editionLabel: "FC 24",
@@ -6940,6 +7925,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Brazil", nationCode: "br", league: "Serie A", club: "Juventus",
     stats: { pac: 80, sho: 50, pas: 56, dri: 65, def: 85, phy: 83 }, photoId: 239580, photoVer: "24",
+    difficulty: "medium", internationalReputation: 1,
   },
   {
     id: "fc24-bruno-guimaraes", edition: "FC24", editionLabel: "FC 24",
@@ -6947,6 +7933,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 84, position: "CM",
     nation: "Brazil", nationCode: "br", league: "Premier League", club: "Newcastle United",
     stats: { pac: 71, sho: 74, pas: 81, dri: 84, def: 80, phy: 81 }, photoId: 247851, photoVer: "24",
+    difficulty: "medium", internationalReputation: 2,
   },
   {
     id: "fc24-federico-chiesa", edition: "FC24", editionLabel: "FC 24",
@@ -6954,6 +7941,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 84, position: "LM",
     nation: "Italy", nationCode: "it", league: "Serie A", club: "Juventus",
     stats: { pac: 91, sho: 82, pas: 76, dri: 86, def: 53, phy: 75 }, photoId: 235805, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc24-fikayo-tomori", edition: "FC24", editionLabel: "FC 24",
@@ -6961,6 +7949,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "England", nationCode: "gb-eng", league: "Serie A", club: "Milan",
     stats: { pac: 86, sho: 40, pas: 59, dri: 66, def: 86, phy: 82 }, photoId: 232756, photoVer: "24",
+    difficulty: "veryHard", internationalReputation: 2,
   },
   {
     id: "fc24-gabriel", edition: "FC24", editionLabel: "FC 24",
@@ -6968,6 +7957,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Brazil", nationCode: "br", league: "Premier League", club: "Arsenal",
     stats: { pac: 70, sho: 41, pas: 62, dri: 60, def: 85, phy: 82 }, photoId: 232580, photoVer: "24",
+    difficulty: "medium", internationalReputation: 2,
   },
   {
     id: "fc24-gabriel-jesus", edition: "FC24", editionLabel: "FC 24",
@@ -6975,6 +7965,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 84, position: "ST",
     nation: "Brazil", nationCode: "br", league: "Premier League", club: "Arsenal",
     stats: { pac: 83, sho: 82, pas: 75, dri: 88, def: 40, phy: 77 }, photoId: 230666, photoVer: "24",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fc24-gabriel-martinelli", edition: "FC24", editionLabel: "FC 24",
@@ -6982,6 +7973,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 84, position: "LW",
     nation: "Brazil", nationCode: "br", league: "Premier League", club: "Arsenal",
     stats: { pac: 89, sho: 78, pas: 76, dri: 86, def: 46, phy: 72 }, photoId: 251566, photoVer: "24",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fc24-ismael-bennacer", edition: "FC24", editionLabel: "FC 24",
@@ -6989,6 +7981,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 84, position: "CDM",
     nation: "Algeria", nationCode: "dz", league: "Serie A", club: "Milan",
     stats: { pac: 80, sho: 72, pas: 81, dri: 86, def: 79, phy: 78 },
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fc24-james-maddison", edition: "FC24", editionLabel: "FC 24",
@@ -6996,6 +7989,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 84, position: "CAM",
     nation: "England", nationCode: "gb-eng", league: "Premier League", club: "Tottenham Hotspur",
     stats: { pac: 71, sho: 81, pas: 86, dri: 86, def: 54, phy: 63 }, photoId: 220697, photoVer: "24",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fc24-julian-brandt", edition: "FC24", editionLabel: "FC 24",
@@ -7003,6 +7997,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 84, position: "CAM",
     nation: "Germany", nationCode: "de", league: "Bundesliga", club: "Borussia Dortmund",
     stats: { pac: 71, sho: 80, pas: 84, dri: 86, def: 51, phy: 70 }, photoId: 212194, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc24-kim-min-jae", edition: "FC24", editionLabel: "FC 24",
@@ -7010,6 +8005,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Korea Republic", nationCode: "kr", league: "Bundesliga", club: "FC Bayern München",
     stats: { pac: 80, sho: 33, pas: 58, dri: 64, def: 85, phy: 84 },
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fc24-lisandro-martinez", edition: "FC24", editionLabel: "FC 24",
@@ -7017,6 +8013,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Argentina", nationCode: "ar", league: "Premier League", club: "Manchester United",
     stats: { pac: 73, sho: 59, pas: 78, dri: 79, def: 85, phy: 83 }, photoId: 239301, photoVer: "24",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fc24-lucas-hernandez", edition: "FC24", editionLabel: "FC 24",
@@ -7024,6 +8021,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "France", nationCode: "fr", league: "Ligue 1", club: "Paris Saint Germain",
     stats: { pac: 76, sho: 54, pas: 70, dri: 70, def: 84, phy: 78 }, photoId: 220814, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc24-luis-diaz", edition: "FC24", editionLabel: "FC 24",
@@ -7031,6 +8029,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 84, position: "LW",
     nation: "Colombia", nationCode: "co", league: "Premier League", club: "Liverpool",
     stats: { pac: 91, sho: 81, pas: 75, dri: 87, def: 34, phy: 74 }, photoId: 241084, photoVer: "24",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fc24-mikel-merino", edition: "FC24", editionLabel: "FC 24",
@@ -7038,6 +8037,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 84, position: "CM",
     nation: "Spain", nationCode: "es", league: "La Liga", club: "Real Sociedad",
     stats: { pac: 72, sho: 78, pas: 82, dri: 82, def: 83, phy: 82 }, photoId: 225193, photoVer: "24",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fc24-moussa-diaby", edition: "FC24", editionLabel: "FC 24",
@@ -7045,6 +8045,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 84, position: "RM",
     nation: "France", nationCode: "fr", league: "Premier League", club: "Aston Villa",
     stats: { pac: 95, sho: 73, pas: 75, dri: 86, def: 42, phy: 59 }, photoId: 241852, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc24-niklas-sule", edition: "FC24", editionLabel: "FC 24",
@@ -7052,6 +8053,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Germany", nationCode: "de", league: "Bundesliga", club: "Borussia Dortmund",
     stats: { pac: 73, sho: 51, pas: 68, dri: 62, def: 85, phy: 85 }, photoId: 212190, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc24-pierre-emile-h-jbjerg", edition: "FC24", editionLabel: "FC 24",
@@ -7059,6 +8061,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 84, position: "CDM",
     nation: "Denmark", nationCode: "dk", league: "Premier League", club: "Tottenham Hotspur",
     stats: { pac: 55, sho: 73, pas: 78, dri: 78, def: 81, phy: 82 }, photoId: 213648, photoVer: "24",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fc24-randal-kolo-muani", edition: "FC24", editionLabel: "FC 24",
@@ -7066,6 +8069,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 84, position: "ST",
     nation: "France", nationCode: "fr", league: "Ligue 1", club: "Paris Saint Germain",
     stats: { pac: 91, sho: 78, pas: 73, dri: 86, def: 38, phy: 67 }, photoId: 237679, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc24-raphinha", edition: "FC24", editionLabel: "FC 24",
@@ -7073,6 +8077,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 84, position: "RW",
     nation: "Brazil", nationCode: "br", league: "La Liga", club: "FC Barcelona",
     stats: { pac: 91, sho: 79, pas: 78, dri: 86, def: 53, phy: 73 }, photoId: 233419, photoVer: "24",
+    difficulty: "medium", internationalReputation: 3,
   },
   {
     id: "fc24-reece-james", edition: "FC24", editionLabel: "FC 24",
@@ -7080,6 +8085,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 84, position: "RB",
     nation: "England", nationCode: "gb-eng", league: "Premier League", club: "Chelsea",
     stats: { pac: 80, sho: 72, pas: 83, dri: 82, def: 82, phy: 81 }, photoId: 238074, photoVer: "24",
+    difficulty: "hard", internationalReputation: 2,
   },
   {
     id: "fc24-ruben-neves", edition: "FC24", editionLabel: "FC 24",
@@ -7087,6 +8093,7 @@ const CARDS_FC24: FifaCard[] = [
     overall: 84, position: "CDM",
     nation: "Portugal", nationCode: "pt", league: "Pro League", club: "Al Hilal",
     stats: { pac: 60, sho: 75, pas: 86, dri: 77, def: 76, phy: 73 }, photoId: 224293, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
 ];
 
@@ -7097,6 +8104,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 91, position: "ST",
     nation: "Norway", nationCode: "no", league: "Premier League", club: "Manchester City",
     stats: { pac: 88, sho: 92, pas: 70, dri: 81, def: 45, phy: 88 }, photoId: 239085, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-kylian-mbappe", edition: "FC25", editionLabel: "FC 25",
@@ -7104,6 +8112,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 91, position: "ST",
     nation: "France", nationCode: "fr", league: "LALIGA EA SPORTS", club: "Real Madrid",
     stats: { pac: 97, sho: 90, pas: 80, dri: 92, def: 36, phy: 78 }, photoId: 231747, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-rodri", edition: "FC25", editionLabel: "FC 25",
@@ -7111,6 +8120,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 91, position: "CDM",
     nation: "Spain", nationCode: "es", league: "Premier League", club: "Manchester City",
     stats: { pac: 66, sho: 80, pas: 86, dri: 84, def: 87, phy: 85 }, photoId: 231866, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-harry-kane", edition: "FC25", editionLabel: "FC 25",
@@ -7118,6 +8128,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 90, position: "ST",
     nation: "England", nationCode: "gb-eng", league: "Bundesliga", club: "FC Bayern München",
     stats: { pac: 65, sho: 93, pas: 84, dri: 83, def: 49, phy: 82 }, photoId: 202126, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-jude-bellingham", edition: "FC25", editionLabel: "FC 25",
@@ -7125,6 +8136,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 90, position: "CAM",
     nation: "England", nationCode: "gb-eng", league: "LALIGA EA SPORTS", club: "Real Madrid",
     stats: { pac: 80, sho: 87, pas: 83, dri: 88, def: 78, phy: 83 }, photoId: 252371, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-kevin-de-bruyne", edition: "FC25", editionLabel: "FC 25",
@@ -7132,6 +8144,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 90, position: "CM",
     nation: "Belgium", nationCode: "be", league: "Premier League", club: "Manchester City",
     stats: { pac: 67, sho: 87, pas: 94, dri: 87, def: 65, phy: 78 }, photoId: 192985, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-vini-jr", edition: "FC25", editionLabel: "FC 25",
@@ -7139,6 +8152,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 90, position: "LW",
     nation: "Brazil", nationCode: "br", league: "LALIGA EA SPORTS", club: "Real Madrid",
     stats: { pac: 95, sho: 84, pas: 81, dri: 91, def: 29, phy: 69 }, photoId: 238794, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-lautaro-martinez", edition: "FC25", editionLabel: "FC 25",
@@ -7146,6 +8160,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 89, position: "ST",
     nation: "Argentina", nationCode: "ar", league: "Serie A Enilive", club: "Lombardia FC",
     stats: { pac: 82, sho: 88, pas: 75, dri: 87, def: 54, phy: 85 }, photoId: 231478, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-martin-degaard", edition: "FC25", editionLabel: "FC 25",
@@ -7153,6 +8168,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 89, position: "CM",
     nation: "Norway", nationCode: "no", league: "Premier League", club: "Arsenal",
     stats: { pac: 70, sho: 82, pas: 89, dri: 89, def: 67, phy: 66 }, photoId: 222665, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-mohamed-salah", edition: "FC25", editionLabel: "FC 25",
@@ -7160,6 +8176,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 89, position: "RW",
     nation: "Egypt", nationCode: "eg", league: "Premier League", club: "Liverpool",
     stats: { pac: 89, sho: 87, pas: 82, dri: 88, def: 45, phy: 75 }, photoId: 209331, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-virgil-van-dijk", edition: "FC25", editionLabel: "FC 25",
@@ -7167,6 +8184,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 89, position: "CB",
     nation: "Holland", nationCode: "nl", league: "Premier League", club: "Liverpool",
     stats: { pac: 78, sho: 60, pas: 71, dri: 71, def: 89, phy: 86 }, photoId: 203376, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-antoine-griezmann", edition: "FC25", editionLabel: "FC 25",
@@ -7174,6 +8192,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 88, position: "ST",
     nation: "France", nationCode: "fr", league: "LALIGA EA SPORTS", club: "Atlético de Madrid",
     stats: { pac: 80, sho: 88, pas: 87, dri: 89, def: 59, phy: 75 }, photoId: 194765, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-antonio-rudiger", edition: "FC25", editionLabel: "FC 25",
@@ -7181,6 +8200,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 88, position: "CB",
     nation: "Germany", nationCode: "de", league: "LALIGA EA SPORTS", club: "Real Madrid",
     stats: { pac: 82, sho: 55, pas: 73, dri: 70, def: 86, phy: 86 }, photoId: 205452, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-bernardo-silva", edition: "FC25", editionLabel: "FC 25",
@@ -7188,6 +8208,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 88, position: "CM",
     nation: "Portugal", nationCode: "pt", league: "Premier League", club: "Manchester City",
     stats: { pac: 75, sho: 78, pas: 86, dri: 92, def: 71, phy: 69 }, photoId: 218667, photoVer: "24",
+    difficulty: "hard",
   },
   {
     id: "fc25-federico-valverde", edition: "FC25", editionLabel: "FC 25",
@@ -7195,6 +8216,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 88, position: "CM",
     nation: "Uruguay", nationCode: "uy", league: "LALIGA EA SPORTS", club: "Real Madrid",
     stats: { pac: 88, sho: 82, pas: 84, dri: 84, def: 80, phy: 84 }, photoId: 239053, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-florian-wirtz", edition: "FC25", editionLabel: "FC 25",
@@ -7202,6 +8224,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 88, position: "CAM",
     nation: "Germany", nationCode: "de", league: "Bundesliga", club: "Leverkusen",
     stats: { pac: 81, sho: 78, pas: 87, dri: 89, def: 50, phy: 67 }, photoId: 256630, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-lionel-messi", edition: "FC25", editionLabel: "FC 25",
@@ -7209,6 +8232,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 88, position: "RW",
     nation: "Argentina", nationCode: "ar", league: "MLS", club: "Inter Miami CF",
     stats: { pac: 79, sho: 85, pas: 87, dri: 92, def: 33, phy: 64 }, photoId: 158023, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-phil-foden", edition: "FC25", editionLabel: "FC 25",
@@ -7216,6 +8240,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 88, position: "RW",
     nation: "England", nationCode: "gb-eng", league: "Premier League", club: "Manchester City",
     stats: { pac: 86, sho: 86, pas: 85, dri: 90, def: 57, phy: 63 },
+    difficulty: "easy",
   },
   {
     id: "fc25-robert-lewandowski", edition: "FC25", editionLabel: "FC 25",
@@ -7223,6 +8248,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 88, position: "ST",
     nation: "Poland", nationCode: "pl", league: "LALIGA EA SPORTS", club: "FC Barcelona",
     stats: { pac: 75, sho: 88, pas: 79, dri: 86, def: 44, phy: 84 }, photoId: 188545, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-ruben-dias", edition: "FC25", editionLabel: "FC 25",
@@ -7230,6 +8256,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 88, position: "CB",
     nation: "Portugal", nationCode: "pt", league: "Premier League", club: "Manchester City",
     stats: { pac: 67, sho: 39, pas: 70, dri: 69, def: 89, phy: 87 }, photoId: 239818, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-alessandro-bastoni", edition: "FC25", editionLabel: "FC 25",
@@ -7237,6 +8264,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 87, position: "CB",
     nation: "Italy", nationCode: "it", league: "Serie A Enilive", club: "Lombardia FC",
     stats: { pac: 75, sho: 43, pas: 75, dri: 76, def: 87, phy: 83 }, photoId: 237383, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-bruno-fernandes", edition: "FC25", editionLabel: "FC 25",
@@ -7244,6 +8272,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 87, position: "CAM",
     nation: "Portugal", nationCode: "pt", league: "Premier League", club: "Man Utd",
     stats: { pac: 70, sho: 85, pas: 88, dri: 83, def: 65, phy: 75 }, photoId: 212198, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-bukayo-saka", edition: "FC25", editionLabel: "FC 25",
@@ -7251,6 +8280,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 87, position: "RW",
     nation: "England", nationCode: "gb-eng", league: "Premier League", club: "Arsenal",
     stats: { pac: 85, sho: 83, pas: 81, dri: 88, def: 60, phy: 70 }, photoId: 246669, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-declan-rice", edition: "FC25", editionLabel: "FC 25",
@@ -7258,6 +8288,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 87, position: "CDM",
     nation: "England", nationCode: "gb-eng", league: "Premier League", club: "Arsenal",
     stats: { pac: 73, sho: 72, pas: 82, dri: 79, def: 84, phy: 85 }, photoId: 234378, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-frenkie-de-jong", edition: "FC25", editionLabel: "FC 25",
@@ -7265,6 +8296,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 87, position: "CM",
     nation: "Holland", nationCode: "nl", league: "LALIGA EA SPORTS", club: "FC Barcelona",
     stats: { pac: 82, sho: 69, pas: 86, dri: 87, def: 77, phy: 78 }, photoId: 228702, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-heung-min-son", edition: "FC25", editionLabel: "FC 25",
@@ -7272,6 +8304,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 87, position: "ST",
     nation: "Korea Republic", nationCode: "kr", league: "Premier League", club: "Spurs",
     stats: { pac: 87, sho: 89, pas: 81, dri: 85, def: 42, phy: 73 },
+    difficulty: "hard",
   },
   {
     id: "fc25-jamal-musiala", edition: "FC25", editionLabel: "FC 25",
@@ -7279,6 +8312,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 87, position: "CAM",
     nation: "Germany", nationCode: "de", league: "Bundesliga", club: "FC Bayern München",
     stats: { pac: 84, sho: 81, pas: 78, dri: 90, def: 63, phy: 64 }, photoId: 256790, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-marquinhos", edition: "FC25", editionLabel: "FC 25",
@@ -7286,6 +8320,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 87, position: "CB",
     nation: "Brazil", nationCode: "br", league: "Ligue 1 McDonald's", club: "Paris SG",
     stats: { pac: 79, sho: 56, pas: 75, dri: 74, def: 89, phy: 81 }, photoId: 207865, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-neymar-jr", edition: "FC25", editionLabel: "FC 25",
@@ -7293,6 +8328,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 87, position: "LW",
     nation: "Brazil", nationCode: "br", league: "ROSHN Saudi League", club: "Al Hilal",
     stats: { pac: 85, sho: 79, pas: 84, dri: 92, def: 37, phy: 60 }, photoId: 190871, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-nicolo-barella", edition: "FC25", editionLabel: "FC 25",
@@ -7300,6 +8336,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 87, position: "CM",
     nation: "Italy", nationCode: "it", league: "Serie A Enilive", club: "Lombardia FC",
     stats: { pac: 81, sho: 78, pas: 83, dri: 86, def: 80, phy: 82 }, photoId: 224232, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-paulo-dybala", edition: "FC25", editionLabel: "FC 25",
@@ -7307,6 +8344,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 87, position: "CAM",
     nation: "Argentina", nationCode: "ar", league: "Serie A Enilive", club: "AS Roma",
     stats: { pac: 80, sho: 85, pas: 84, dri: 89, def: 41, phy: 65 }, photoId: 211110, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-theo-hernandez", edition: "FC25", editionLabel: "FC 25",
@@ -7314,6 +8352,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 87, position: "LB",
     nation: "France", nationCode: "fr", league: "Serie A Enilive", club: "Milano FC",
     stats: { pac: 95, sho: 76, pas: 78, dri: 84, def: 81, phy: 89 }, photoId: 232656, photoVer: "24",
+    difficulty: "hard",
   },
   {
     id: "fc25-victor-osimhen", edition: "FC25", editionLabel: "FC 25",
@@ -7321,6 +8360,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 87, position: "ST",
     nation: "Nigeria", nationCode: "ng", league: "Serie A Enilive", club: "SSC Napoli",
     stats: { pac: 89, sho: 84, pas: 65, dri: 81, def: 42, phy: 82 }, photoId: 232293, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-william-saliba", edition: "FC25", editionLabel: "FC 25",
@@ -7328,6 +8368,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 87, position: "CB",
     nation: "France", nationCode: "fr", league: "Premier League", club: "Arsenal",
     stats: { pac: 82, sho: 39, pas: 70, dri: 74, def: 87, phy: 83 }, photoId: 243715, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-ilkay-gundogan", edition: "FC25", editionLabel: "FC 25",
@@ -7335,6 +8376,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 87, position: "CM",
     nation: "Germany", nationCode: "de", league: "Premier League", club: "Manchester City",
     stats: { pac: 62, sho: 83, pas: 85, dri: 87, def: 74, phy: 73 }, photoId: 186942, photoVer: "24",
+    difficulty: "hard",
   },
   {
     id: "fc25-alexis-mac-allister", edition: "FC25", editionLabel: "FC 25",
@@ -7342,6 +8384,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Argentina", nationCode: "ar", league: "Premier League", club: "Liverpool",
     stats: { pac: 69, sho: 82, pas: 85, dri: 84, def: 76, phy: 76 }, photoId: 239837, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-bremer", edition: "FC25", editionLabel: "FC 25",
@@ -7349,6 +8392,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Brazil", nationCode: "br", league: "Serie A Enilive", club: "Juventus",
     stats: { pac: 82, sho: 50, pas: 58, dri: 66, def: 86, phy: 85 }, photoId: 239580, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-carvajal", edition: "FC25", editionLabel: "FC 25",
@@ -7356,6 +8400,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 86, position: "RB",
     nation: "Spain", nationCode: "es", league: "LALIGA EA SPORTS", club: "Real Madrid",
     stats: { pac: 81, sho: 58, pas: 79, dri: 81, def: 81, phy: 79 }, photoId: 204963, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-cristiano-ronaldo", edition: "FC25", editionLabel: "FC 25",
@@ -7363,6 +8408,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 86, position: "ST",
     nation: "Portugal", nationCode: "pt", league: "ROSHN Saudi League", club: "Al Nassr",
     stats: { pac: 77, sho: 88, pas: 77, dri: 80, def: 34, phy: 77 }, photoId: 20801, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-gabriel", edition: "FC25", editionLabel: "FC 25",
@@ -7370,6 +8416,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Brazil", nationCode: "br", league: "Premier League", club: "Arsenal",
     stats: { pac: 69, sho: 41, pas: 63, dri: 61, def: 86, phy: 82 }, photoId: 232580, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-granit-xhaka", edition: "FC25", editionLabel: "FC 25",
@@ -7377,6 +8424,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 86, position: "CDM",
     nation: "Switzerland", nationCode: "ch", league: "Bundesliga", club: "Leverkusen",
     stats: { pac: 50, sho: 75, pas: 85, dri: 74, def: 79, phy: 82 }, photoId: 199503, photoVer: "24",
+    difficulty: "hard",
   },
   {
     id: "fc25-grimaldo", edition: "FC25", editionLabel: "FC 25",
@@ -7384,6 +8432,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 86, position: "LM",
     nation: "Spain", nationCode: "es", league: "Bundesliga", club: "Leverkusen",
     stats: { pac: 74, sho: 73, pas: 88, dri: 85, def: 76, phy: 71 }, photoId: 210035, photoVer: "24",
+    difficulty: "hard",
   },
   {
     id: "fc25-hakan-calhanoglu", edition: "FC25", editionLabel: "FC 25",
@@ -7391,6 +8440,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 86, position: "CDM",
     nation: "Turkey", nationCode: "tr", league: "Serie A Enilive", club: "Lombardia FC",
     stats: { pac: 71, sho: 80, pas: 87, dri: 85, def: 79, phy: 76 }, photoId: 208128, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-jonathan-tah", edition: "FC25", editionLabel: "FC 25",
@@ -7398,6 +8448,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Germany", nationCode: "de", league: "Bundesliga", club: "Leverkusen",
     stats: { pac: 71, sho: 38, pas: 60, dri: 62, def: 86, phy: 84 }, photoId: 213331, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-joshua-kimmich", edition: "FC25", editionLabel: "FC 25",
@@ -7405,6 +8456,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 86, position: "RB",
     nation: "Germany", nationCode: "de", league: "Bundesliga", club: "FC Bayern München",
     stats: { pac: 69, sho: 74, pas: 88, dri: 84, def: 81, phy: 77 }, photoId: 212622, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-joao-cancelo", edition: "FC25", editionLabel: "FC 25",
@@ -7412,6 +8464,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 86, position: "LB",
     nation: "Portugal", nationCode: "pt", league: "ROSHN Saudi League", club: "Al Hilal",
     stats: { pac: 81, sho: 73, pas: 85, dri: 85, def: 80, phy: 72 }, photoId: 210514, photoVer: "24",
+    difficulty: "hard",
   },
   {
     id: "fc25-karim-benzema", edition: "FC25", editionLabel: "FC 25",
@@ -7419,6 +8472,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 86, position: "ST",
     nation: "France", nationCode: "fr", league: "ROSHN Saudi League", club: "Al Ittihad",
     stats: { pac: 77, sho: 85, pas: 81, dri: 84, def: 38, phy: 77 }, photoId: 165153, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-luka-modric", edition: "FC25", editionLabel: "FC 25",
@@ -7426,6 +8480,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Croatia", nationCode: "hr", league: "LALIGA EA SPORTS", club: "Real Madrid",
     stats: { pac: 72, sho: 76, pas: 88, dri: 87, def: 71, phy: 64 }, photoId: 177003, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-ousmane-dembele", edition: "FC25", editionLabel: "FC 25",
@@ -7433,6 +8488,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 86, position: "RW",
     nation: "France", nationCode: "fr", league: "Ligue 1 McDonald's", club: "Paris SG",
     stats: { pac: 92, sho: 75, pas: 82, dri: 88, def: 41, phy: 57 }, photoId: 231443, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-pedri", edition: "FC25", editionLabel: "FC 25",
@@ -7440,6 +8496,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Spain", nationCode: "es", league: "LALIGA EA SPORTS", club: "FC Barcelona",
     stats: { pac: 77, sho: 69, pas: 82, dri: 88, def: 70, phy: 74 }, photoId: 251854, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-rafael-leao", edition: "FC25", editionLabel: "FC 25",
@@ -7447,6 +8504,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 86, position: "LW",
     nation: "Portugal", nationCode: "pt", league: "Serie A Enilive", club: "Milano FC",
     stats: { pac: 94, sho: 79, pas: 80, dri: 87, def: 28, phy: 77 }, photoId: 241721, photoVer: "24",
+    difficulty: "hard",
   },
   {
     id: "fc25-rodrygo", edition: "FC25", editionLabel: "FC 25",
@@ -7454,6 +8512,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 86, position: "RW",
     nation: "Brazil", nationCode: "br", league: "LALIGA EA SPORTS", club: "Real Madrid",
     stats: { pac: 89, sho: 81, pas: 79, dri: 88, def: 31, phy: 64 }, photoId: 243812, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-trent-alexander-arnold", edition: "FC25", editionLabel: "FC 25",
@@ -7461,6 +8520,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 86, position: "RB",
     nation: "England", nationCode: "gb-eng", league: "Premier League", club: "Liverpool",
     stats: { pac: 75, sho: 72, pas: 90, dri: 80, def: 80, phy: 74 }, photoId: 231281, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-alexander-isak", edition: "FC25", editionLabel: "FC 25",
@@ -7468,6 +8528,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "Sweden", nationCode: "se", league: "Premier League", club: "Newcastle Utd",
     stats: { pac: 85, sho: 84, pas: 73, dri: 86, def: 39, phy: 74 }, photoId: 233731, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-andrew-robertson", edition: "FC25", editionLabel: "FC 25",
@@ -7475,6 +8536,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 85, position: "LB",
     nation: "Scotland", nationCode: "gb-sct", league: "Premier League", club: "Liverpool",
     stats: { pac: 78, sho: 61, pas: 82, dri: 79, def: 81, phy: 78 }, photoId: 216267, photoVer: "24",
+    difficulty: "hard",
   },
   {
     id: "fc25-aurelien-tchouameni", edition: "FC25", editionLabel: "FC 25",
@@ -7482,6 +8544,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 85, position: "CDM",
     nation: "France", nationCode: "fr", league: "LALIGA EA SPORTS", club: "Real Madrid",
     stats: { pac: 73, sho: 69, pas: 79, dri: 78, def: 82, phy: 82 }, photoId: 241637, photoVer: "24",
+    difficulty: "hard",
   },
   {
     id: "fc25-bruno-guimaraes", edition: "FC25", editionLabel: "FC 25",
@@ -7489,6 +8552,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 85, position: "CDM",
     nation: "Brazil", nationCode: "br", league: "Premier League", club: "Newcastle Utd",
     stats: { pac: 68, sho: 75, pas: 83, dri: 84, def: 79, phy: 83 }, photoId: 247851, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-cole-palmer", edition: "FC25", editionLabel: "FC 25",
@@ -7496,6 +8560,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 85, position: "RM",
     nation: "England", nationCode: "gb-eng", league: "Premier League", club: "Chelsea",
     stats: { pac: 75, sho: 82, pas: 83, dri: 86, def: 50, phy: 66 }, photoId: 257534, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-david-alaba", edition: "FC25", editionLabel: "FC 25",
@@ -7503,6 +8568,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Austria", nationCode: "at", league: "LALIGA EA SPORTS", club: "Real Madrid",
     stats: { pac: 79, sho: 71, pas: 83, dri: 80, def: 85, phy: 77 }, photoId: 197445, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-diogo-jota", edition: "FC25", editionLabel: "FC 25",
@@ -7510,6 +8576,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "Portugal", nationCode: "pt", league: "Premier League", club: "Liverpool",
     stats: { pac: 82, sho: 82, pas: 75, dri: 84, def: 57, phy: 79 }, photoId: 224458, photoVer: "24",
+    difficulty: "veryHard",
   },
   {
     id: "fc25-james-maddison", edition: "FC25", editionLabel: "FC 25",
@@ -7517,6 +8584,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 85, position: "CAM",
     nation: "England", nationCode: "gb-eng", league: "Premier League", club: "Spurs",
     stats: { pac: 71, sho: 81, pas: 86, dri: 86, def: 54, phy: 63 }, photoId: 220697, photoVer: "24",
+    difficulty: "hard",
   },
   {
     id: "fc25-john-stones", edition: "FC25", editionLabel: "FC 25",
@@ -7524,6 +8592,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "England", nationCode: "gb-eng", league: "Premier League", club: "Manchester City",
     stats: { pac: 69, sho: 58, pas: 75, dri: 79, def: 85, phy: 77 }, photoId: 203574, photoVer: "24",
+    difficulty: "hard",
   },
   {
     id: "fc25-jules-kounde", edition: "FC25", editionLabel: "FC 25",
@@ -7531,6 +8600,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 85, position: "RB",
     nation: "France", nationCode: "fr", league: "LALIGA EA SPORTS", club: "FC Barcelona",
     stats: { pac: 84, sho: 45, pas: 70, dri: 75, def: 86, phy: 80 }, photoId: 241486, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-julian-brandt", edition: "FC25", editionLabel: "FC 25",
@@ -7538,6 +8608,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 85, position: "CAM",
     nation: "Germany", nationCode: "de", league: "Bundesliga", club: "Borussia Dortmund",
     stats: { pac: 71, sho: 79, pas: 85, dri: 86, def: 50, phy: 70 }, photoId: 212194, photoVer: "24",
+    difficulty: "hard",
   },
   {
     id: "fc25-khvicha-kvaratskhelia", edition: "FC25", editionLabel: "FC 25",
@@ -7545,6 +8616,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 85, position: "LW",
     nation: "Georgia", nationCode: "ge", league: "Serie A Enilive", club: "SSC Napoli",
     stats: { pac: 86, sho: 79, pas: 80, dri: 86, def: 41, phy: 71 }, photoId: 247635, photoVer: "24",
+    difficulty: "hard",
   },
   {
     id: "fc25-leroy-sane", edition: "FC25", editionLabel: "FC 25",
@@ -7552,6 +8624,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 85, position: "RM",
     nation: "Germany", nationCode: "de", league: "Bundesliga", club: "FC Bayern München",
     stats: { pac: 90, sho: 83, pas: 80, dri: 86, def: 37, phy: 70 }, photoId: 222492, photoVer: "24",
+    difficulty: "hard",
   },
   {
     id: "fc25-lois-openda", edition: "FC25", editionLabel: "FC 25",
@@ -7559,6 +8632,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "Belgium", nationCode: "be", league: "Bundesliga", club: "RB Leipzig",
     stats: { pac: 93, sho: 84, pas: 69, dri: 81, def: 31, phy: 79 },
+    difficulty: "hard",
   },
   {
     id: "fc25-mikel-merino", edition: "FC25", editionLabel: "FC 25",
@@ -7566,6 +8640,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Spain", nationCode: "es", league: "Premier League", club: "Arsenal",
     stats: { pac: 72, sho: 79, pas: 82, dri: 82, def: 83, phy: 82 }, photoId: 225193, photoVer: "24",
+    difficulty: "hard",
   },
   {
     id: "fc25-n-golo-kante", edition: "FC25", editionLabel: "FC 25",
@@ -7573,6 +8648,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 85, position: "CDM",
     nation: "France", nationCode: "fr", league: "ROSHN Saudi League", club: "Al Ittihad",
     stats: { pac: 76, sho: 65, pas: 73, dri: 80, def: 85, phy: 78 }, photoId: 215914, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-nico-schlotterbeck", edition: "FC25", editionLabel: "FC 25",
@@ -7580,6 +8656,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Germany", nationCode: "de", league: "Bundesliga", club: "Borussia Dortmund",
     stats: { pac: 77, sho: 59, pas: 70, dri: 73, def: 85, phy: 82 }, photoId: 247819, photoVer: "24",
+    difficulty: "hard",
   },
   {
     id: "fc25-nico-williams", edition: "FC25", editionLabel: "FC 25",
@@ -7587,6 +8664,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 85, position: "LM",
     nation: "Spain", nationCode: "es", league: "LALIGA EA SPORTS", club: "Athletic Club",
     stats: { pac: 93, sho: 75, pas: 78, dri: 86, def: 36, phy: 65 }, photoId: 256516, photoVer: "24",
+    difficulty: "hard",
   },
   {
     id: "fc25-ollie-watkins", edition: "FC25", editionLabel: "FC 25",
@@ -7594,6 +8672,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "England", nationCode: "gb-eng", league: "Premier League", club: "Aston Villa",
     stats: { pac: 85, sho: 83, pas: 73, dri: 80, def: 50, phy: 83 }, photoId: 221697, photoVer: "24",
+    difficulty: "veryHard",
   },
   {
     id: "fc25-palhinha", edition: "FC25", editionLabel: "FC 25",
@@ -7601,6 +8680,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 85, position: "CDM",
     nation: "Portugal", nationCode: "pt", league: "Bundesliga", club: "FC Bayern München",
     stats: { pac: 52, sho: 68, pas: 72, dri: 74, def: 85, phy: 90 }, photoId: 229391, photoVer: "24",
+    difficulty: "hard",
   },
   {
     id: "fc25-riyad-mahrez", edition: "FC25", editionLabel: "FC 25",
@@ -7608,6 +8688,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 85, position: "RM",
     nation: "Algeria", nationCode: "dz", league: "ROSHN Saudi League", club: "Al Ahli",
     stats: { pac: 79, sho: 81, pas: 81, dri: 88, def: 39, phy: 62 }, photoId: 204485, photoVer: "24",
+    difficulty: "hard",
   },
   {
     id: "fc25-ronald-araujo", edition: "FC25", editionLabel: "FC 25",
@@ -7615,6 +8696,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Uruguay", nationCode: "uy", league: "LALIGA EA SPORTS", club: "FC Barcelona",
     stats: { pac: 82, sho: 53, pas: 64, dri: 62, def: 85, phy: 84 }, photoId: 253163, photoVer: "24",
+    difficulty: "hard",
   },
   {
     id: "fc25-sandro-tonali", edition: "FC25", editionLabel: "FC 25",
@@ -7622,6 +8704,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 85, position: "CDM",
     nation: "Italy", nationCode: "it", league: "Premier League", club: "Newcastle Utd",
     stats: { pac: 84, sho: 74, pas: 81, dri: 81, def: 82, phy: 82 }, photoId: 241096, photoVer: "24",
+    difficulty: "hard",
   },
   {
     id: "fc25-sergej-milinkovic-savic", edition: "FC25", editionLabel: "FC 25",
@@ -7629,6 +8712,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Serbia", nationCode: "rs", league: "ROSHN Saudi League", club: "Al Hilal",
     stats: { pac: 64, sho: 80, pas: 81, dri: 82, def: 78, phy: 88 }, photoId: 223848, photoVer: "24",
+    difficulty: "hard",
   },
   {
     id: "fc25-vitinha", edition: "FC25", editionLabel: "FC 25",
@@ -7636,6 +8720,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Portugal", nationCode: "pt", league: "Ligue 1 McDonald's", club: "Paris SG",
     stats: { pac: 72, sho: 77, pas: 84, dri: 87, def: 73, phy: 68 }, photoId: 255253, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-eder-militao", edition: "FC25", editionLabel: "FC 25",
@@ -7643,6 +8728,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Brazil", nationCode: "br", league: "LALIGA EA SPORTS", club: "Real Madrid",
     stats: { pac: 85, sho: 50, pas: 69, dri: 71, def: 85, phy: 82 }, photoId: 240130, photoVer: "24",
+    difficulty: "hard",
   },
   {
     id: "fc25-achraf-hakimi", edition: "FC25", editionLabel: "FC 25",
@@ -7650,6 +8736,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 84, position: "RB",
     nation: "Morocco", nationCode: "ma", league: "Ligue 1 McDonald's", club: "Paris SG",
     stats: { pac: 91, sho: 76, pas: 80, dri: 80, def: 75, phy: 78 }, photoId: 235212, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-aleix-garcia", edition: "FC25", editionLabel: "FC 25",
@@ -7657,6 +8744,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 84, position: "CM",
     nation: "Spain", nationCode: "es", league: "Bundesliga", club: "Leverkusen",
     stats: { pac: 67, sho: 77, pas: 85, dri: 84, def: 76, phy: 68 }, photoId: 228813, photoVer: "24",
+    difficulty: "hard",
   },
   {
     id: "fc25-artem-dovbyk", edition: "FC25", editionLabel: "FC 25",
@@ -7664,6 +8752,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 84, position: "ST",
     nation: "Ukraine", nationCode: "ua", league: "Serie A Enilive", club: "AS Roma",
     stats: { pac: 84, sho: 85, pas: 69, dri: 79, def: 34, phy: 81 },
+    difficulty: "hard",
   },
   {
     id: "fc25-federico-chiesa", edition: "FC25", editionLabel: "FC 25",
@@ -7671,6 +8760,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 84, position: "RW",
     nation: "Italy", nationCode: "it", league: "Premier League", club: "Liverpool",
     stats: { pac: 93, sho: 83, pas: 76, dri: 86, def: 52, phy: 75 }, photoId: 235805, photoVer: "24",
+    difficulty: "hard",
   },
   {
     id: "fc25-federico-dimarco", edition: "FC25", editionLabel: "FC 25",
@@ -7678,6 +8768,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 84, position: "LB",
     nation: "Italy", nationCode: "it", league: "Serie A Enilive", club: "Lombardia FC",
     stats: { pac: 80, sho: 77, pas: 84, dri: 83, def: 78, phy: 81 },
+    difficulty: "hard",
   },
   {
     id: "fc25-francesco-acerbi", edition: "FC25", editionLabel: "FC 25",
@@ -7685,6 +8776,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Italy", nationCode: "it", league: "Serie A Enilive", club: "Lombardia FC",
     stats: { pac: 60, sho: 50, pas: 64, dri: 65, def: 86, phy: 80 },
+    difficulty: "hard",
   },
   {
     id: "fc25-iago-aspas", edition: "FC25", editionLabel: "FC 25",
@@ -7692,6 +8784,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 84, position: "ST",
     nation: "Spain", nationCode: "es", league: "LALIGA EA SPORTS", club: "RC Celta",
     stats: { pac: 81, sho: 86, pas: 79, dri: 86, def: 35, phy: 65 }, photoId: 192629, photoVer: "24",
+    difficulty: "hard",
   },
   {
     id: "fc25-jack-grealish", edition: "FC25", editionLabel: "FC 25",
@@ -7699,6 +8792,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 84, position: "LW",
     nation: "England", nationCode: "gb-eng", league: "Premier League", club: "Manchester City",
     stats: { pac: 76, sho: 76, pas: 82, dri: 88, def: 53, phy: 73 }, photoId: 206517, photoVer: "24",
+    difficulty: "hard",
   },
   {
     id: "fc25-jeremie-frimpong", edition: "FC25", editionLabel: "FC 25",
@@ -7706,6 +8800,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 84, position: "RM",
     nation: "Holland", nationCode: "nl", league: "Bundesliga", club: "Leverkusen",
     stats: { pac: 93, sho: 62, pas: 75, dri: 86, def: 75, phy: 69 }, photoId: 253149, photoVer: "24",
+    difficulty: "hard",
   },
   {
     id: "fc25-julian-alvarez", edition: "FC25", editionLabel: "FC 25",
@@ -7713,6 +8808,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 84, position: "ST",
     nation: "Argentina", nationCode: "ar", league: "LALIGA EA SPORTS", club: "Atlético de Madrid",
     stats: { pac: 85, sho: 84, pas: 80, dri: 85, def: 57, phy: 78 }, photoId: 246191, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-kalidou-koulibaly", edition: "FC25", editionLabel: "FC 25",
@@ -7720,6 +8816,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Senegal", nationCode: "sn", league: "ROSHN Saudi League", club: "Al Hilal",
     stats: { pac: 76, sho: 48, pas: 64, dri: 67, def: 85, phy: 84 }, photoId: 201024, photoVer: "24",
+    difficulty: "hard",
   },
   {
     id: "fc25-kingsley-coman", edition: "FC25", editionLabel: "FC 25",
@@ -7727,6 +8824,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 84, position: "LM",
     nation: "France", nationCode: "fr", league: "Bundesliga", club: "FC Bayern München",
     stats: { pac: 89, sho: 75, pas: 79, dri: 87, def: 30, phy: 62 }, photoId: 213345, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-luis-diaz", edition: "FC25", editionLabel: "FC 25",
@@ -7734,6 +8832,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 84, position: "LW",
     nation: "Colombia", nationCode: "co", league: "Premier League", club: "Liverpool",
     stats: { pac: 90, sho: 80, pas: 75, dri: 87, def: 39, phy: 75 }, photoId: 241084, photoVer: "24",
+    difficulty: "hard",
   },
   {
     id: "fc25-manuel-akanji", edition: "FC25", editionLabel: "FC 25",
@@ -7741,6 +8840,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Switzerland", nationCode: "ch", league: "Premier League", club: "Manchester City",
     stats: { pac: 78, sho: 48, pas: 71, dri: 75, def: 85, phy: 82 }, photoId: 229237, photoVer: "24",
+    difficulty: "hard",
   },
   {
     id: "fc25-matthijs-de-ligt", edition: "FC25", editionLabel: "FC 25",
@@ -7748,6 +8848,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Holland", nationCode: "nl", league: "Premier League", club: "Man Utd",
     stats: { pac: 62, sho: 61, pas: 63, dri: 67, def: 85, phy: 83 }, photoId: 235243, photoVer: "24",
+    difficulty: "hard",
   },
   {
     id: "fc25-nathan-ake", edition: "FC25", editionLabel: "FC 25",
@@ -7755,6 +8856,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "Holland", nationCode: "nl", league: "Premier League", club: "Manchester City",
     stats: { pac: 76, sho: 53, pas: 72, dri: 75, def: 84, phy: 77 }, photoId: 208920, photoVer: "24",
+    difficulty: "hard",
   },
   {
     id: "fc25-raphinha", edition: "FC25", editionLabel: "FC 25",
@@ -7762,6 +8864,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 84, position: "RW",
     nation: "Brazil", nationCode: "br", league: "LALIGA EA SPORTS", club: "FC Barcelona",
     stats: { pac: 91, sho: 79, pas: 78, dri: 86, def: 53, phy: 73 }, photoId: 233419, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-rodrigo-de-paul", edition: "FC25", editionLabel: "FC 25",
@@ -7769,6 +8872,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 84, position: "CM",
     nation: "Argentina", nationCode: "ar", league: "LALIGA EA SPORTS", club: "Atlético de Madrid",
     stats: { pac: 76, sho: 77, pas: 83, dri: 82, def: 76, phy: 82 }, photoId: 212616, photoVer: "24",
+    difficulty: "hard",
   },
   {
     id: "fc25-ruben-neves", edition: "FC25", editionLabel: "FC 25",
@@ -7776,6 +8880,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 84, position: "CDM",
     nation: "Portugal", nationCode: "pt", league: "ROSHN Saudi League", club: "Al Hilal",
     stats: { pac: 57, sho: 75, pas: 86, dri: 77, def: 77, phy: 77 }, photoId: 224293, photoVer: "24",
+    difficulty: "hard",
   },
   {
     id: "fc25-serhou-guirassy", edition: "FC25", editionLabel: "FC 25",
@@ -7783,6 +8888,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 84, position: "ST",
     nation: "Guinea", nationCode: "gn", league: "Bundesliga", club: "Borussia Dortmund",
     stats: { pac: 69, sho: 86, pas: 71, dri: 80, def: 39, phy: 79 }, photoId: 215441, photoVer: "24",
+    difficulty: "easy",
   },
   {
     id: "fc25-viktor-gyokeres", edition: "FC25", editionLabel: "FC 25",
@@ -7790,6 +8896,7 @@ const CARDS_FC25: FifaCard[] = [
     overall: 84, position: "ST",
     nation: "Sweden", nationCode: "se", league: "Liga Portugal", club: "Sporting CP",
     stats: { pac: 90, sho: 83, pas: 67, dri: 80, def: 36, phy: 91 }, photoId: 241651, photoVer: "24",
+    difficulty: "easy",
   },
 ];
 
@@ -7800,6 +8907,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 91, position: "ST",
     nation: "France", nationCode: "fr", league: "La Liga", club: "Real Madrid",
     stats: { pac: 97, sho: 90, pas: 81, dri: 92, def: 37, phy: 76 }, photoId: 231747, photoVer: "24",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fc26-mohamed-salah", edition: "FC26", editionLabel: "FC 26",
@@ -7807,6 +8915,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 91, position: "RM",
     nation: "Egypt", nationCode: "eg", league: "Premier League", club: "Liverpool",
     stats: { pac: 89, sho: 88, pas: 86, dri: 90, def: 45, phy: 76 }, photoId: 209331, photoVer: "24",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fc26-erling-haaland", edition: "FC26", editionLabel: "FC 26",
@@ -7814,6 +8923,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 90, position: "ST",
     nation: "Norway", nationCode: "no", league: "Premier League", club: "Manchester City",
     stats: { pac: 86, sho: 91, pas: 70, dri: 80, def: 45, phy: 88 }, photoId: 239085, photoVer: "24",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fc26-jude-bellingham", edition: "FC26", editionLabel: "FC 26",
@@ -7821,6 +8931,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 90, position: "CAM",
     nation: "England", nationCode: "gb-eng", league: "La Liga", club: "Real Madrid",
     stats: { pac: 80, sho: 86, pas: 83, dri: 90, def: 78, phy: 85 }, photoId: 252371, photoVer: "24",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fc26-ousmane-dembele", edition: "FC26", editionLabel: "FC 26",
@@ -7828,6 +8939,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 90, position: "ST",
     nation: "France", nationCode: "fr", league: "Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 91, sho: 88, pas: 83, dri: 93, def: 50, phy: 69 }, photoId: 231443, photoVer: "24",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fc26-rodri", edition: "FC26", editionLabel: "FC 26",
@@ -7835,6 +8947,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 90, position: "CDM",
     nation: "Spain", nationCode: "es", league: "Premier League", club: "Manchester City",
     stats: { pac: 65, sho: 80, pas: 86, dri: 84, def: 86, phy: 85 }, photoId: 231866, photoVer: "24",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fc26-virgil-van-dijk", edition: "FC26", editionLabel: "FC 26",
@@ -7842,6 +8955,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 90, position: "CB",
     nation: "Netherlands", nationCode: "nl", league: "Premier League", club: "Liverpool",
     stats: { pac: 73, sho: 60, pas: 72, dri: 72, def: 90, phy: 87 }, photoId: 203376, photoVer: "24",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fc26-achraf-hakimi", edition: "FC26", editionLabel: "FC 26",
@@ -7849,6 +8963,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 89, position: "RB",
     nation: "Morocco", nationCode: "ma", league: "Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 92, sho: 79, pas: 82, dri: 83, def: 82, phy: 79 }, photoId: 235212, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-federico-valverde", edition: "FC26", editionLabel: "FC 26",
@@ -7856,6 +8971,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 89, position: "CM",
     nation: "Uruguay", nationCode: "uy", league: "La Liga", club: "Real Madrid",
     stats: { pac: 88, sho: 84, pas: 84, dri: 84, def: 83, phy: 85 }, photoId: 239053, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-florian-wirtz", edition: "FC26", editionLabel: "FC 26",
@@ -7863,6 +8979,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 89, position: "CAM",
     nation: "Germany", nationCode: "de", league: "Premier League", club: "Liverpool",
     stats: { pac: 80, sho: 82, pas: 88, dri: 90, def: 54, phy: 67 }, photoId: 256630, photoVer: "24",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fc26-harry-kane", edition: "FC26", editionLabel: "FC 26",
@@ -7870,6 +8987,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 89, position: "ST",
     nation: "England", nationCode: "gb-eng", league: "Bundesliga", club: "FC Bayern München",
     stats: { pac: 64, sho: 92, pas: 83, dri: 82, def: 48, phy: 82 }, photoId: 202126, photoVer: "24",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fc26-joshua-kimmich", edition: "FC26", editionLabel: "FC 26",
@@ -7877,6 +8995,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 89, position: "CDM",
     nation: "Germany", nationCode: "de", league: "Bundesliga", club: "FC Bayern München",
     stats: { pac: 72, sho: 74, pas: 89, dri: 84, def: 83, phy: 79 }, photoId: 212622, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-lamine-yamal", edition: "FC26", editionLabel: "FC 26",
@@ -7884,6 +9003,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 89, position: "RM",
     nation: "Spain", nationCode: "es", league: "La Liga", club: "FC Barcelona",
     stats: { pac: 85, sho: 81, pas: 86, dri: 90, def: 23, phy: 53 },
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fc26-pedri", edition: "FC26", editionLabel: "FC 26",
@@ -7891,6 +9011,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 89, position: "CM",
     nation: "Spain", nationCode: "es", league: "La Liga", club: "FC Barcelona",
     stats: { pac: 77, sho: 73, pas: 85, dri: 91, def: 78, phy: 77 }, photoId: 251854, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-raphinha", edition: "FC26", editionLabel: "FC 26",
@@ -7898,6 +9019,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 89, position: "LM",
     nation: "Brazil", nationCode: "br", league: "La Liga", club: "FC Barcelona",
     stats: { pac: 91, sho: 84, pas: 85, dri: 87, def: 53, phy: 75 }, photoId: 233419, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-vini-jr", edition: "FC26", editionLabel: "FC 26",
@@ -7905,6 +9027,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 89, position: "LW",
     nation: "Brazil", nationCode: "br", league: "La Liga", club: "Real Madrid",
     stats: { pac: 95, sho: 84, pas: 81, dri: 91, def: 29, phy: 69 }, photoId: 238794, photoVer: "24",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fc26-vitinha", edition: "FC26", editionLabel: "FC 26",
@@ -7912,6 +9035,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 89, position: "CM",
     nation: "Portugal", nationCode: "pt", league: "Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 72, sho: 80, pas: 86, dri: 90, def: 75, phy: 70 }, photoId: 255253, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-alexander-isak", edition: "FC26", editionLabel: "FC 26",
@@ -7919,6 +9043,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 88, position: "ST",
     nation: "Sweden", nationCode: "se", league: "Premier League", club: "Liverpool",
     stats: { pac: 83, sho: 89, pas: 73, dri: 85, def: 39, phy: 76 }, photoId: 233731, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-bukayo-saka", edition: "FC26", editionLabel: "FC 26",
@@ -7926,6 +9051,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 88, position: "RW",
     nation: "England", nationCode: "gb-eng", league: "Premier League", club: "Arsenal",
     stats: { pac: 84, sho: 82, pas: 85, dri: 88, def: 60, phy: 73 }, photoId: 246669, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-gabriel", edition: "FC26", editionLabel: "FC 26",
@@ -7933,6 +9059,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 88, position: "CB",
     nation: "Brazil", nationCode: "br", league: "Premier League", club: "Arsenal",
     stats: { pac: 64, sho: 44, pas: 64, dri: 65, def: 88, phy: 84 }, photoId: 232580, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-jamal-musiala", edition: "FC26", editionLabel: "FC 26",
@@ -7940,6 +9067,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 88, position: "CAM",
     nation: "Germany", nationCode: "de", league: "Bundesliga", club: "FC Bayern München",
     stats: { pac: 80, sho: 82, pas: 80, dri: 90, def: 66, phy: 65 }, photoId: 256790, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-lautaro-martinez", edition: "FC26", editionLabel: "FC 26",
@@ -7947,6 +9075,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 88, position: "ST",
     nation: "Argentina", nationCode: "ar", league: "Serie A", club: "Inter",
     stats: { pac: 81, sho: 88, pas: 75, dri: 84, def: 51, phy: 83 }, photoId: 231478, photoVer: "24",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fc26-robert-lewandowski", edition: "FC26", editionLabel: "FC 26",
@@ -7954,6 +9083,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 88, position: "ST",
     nation: "Poland", nationCode: "pl", league: "La Liga", club: "FC Barcelona",
     stats: { pac: 74, sho: 89, pas: 79, dri: 85, def: 44, phy: 84 }, photoId: 188545, photoVer: "24",
+    difficulty: "easy", internationalReputation: 5,
   },
   {
     id: "fc26-alessandro-bastoni", edition: "FC26", editionLabel: "FC 26",
@@ -7961,6 +9091,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 87, position: "CB",
     nation: "Italy", nationCode: "it", league: "Serie A", club: "Inter",
     stats: { pac: 74, sho: 46, pas: 75, dri: 76, def: 88, phy: 82 }, photoId: 237383, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-alexis-mac-allister", edition: "FC26", editionLabel: "FC 26",
@@ -7968,6 +9099,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 87, position: "CM",
     nation: "Argentina", nationCode: "ar", league: "Premier League", club: "Liverpool",
     stats: { pac: 66, sho: 82, pas: 85, dri: 85, def: 78, phy: 76 }, photoId: 239837, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-bruno-fernandes", edition: "FC26", editionLabel: "FC 26",
@@ -7975,6 +9107,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 87, position: "CAM",
     nation: "Portugal", nationCode: "pt", league: "Premier League", club: "Manchester United",
     stats: { pac: 67, sho: 83, pas: 89, dri: 83, def: 65, phy: 75 }, photoId: 212198, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-cole-palmer", edition: "FC26", editionLabel: "FC 26",
@@ -7982,6 +9115,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 87, position: "CAM",
     nation: "England", nationCode: "gb-eng", league: "Premier League", club: "Chelsea",
     stats: { pac: 75, sho: 83, pas: 87, dri: 87, def: 50, phy: 65 }, photoId: 257534, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-declan-rice", edition: "FC26", editionLabel: "FC 26",
@@ -7989,6 +9123,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 87, position: "CDM",
     nation: "England", nationCode: "gb-eng", league: "Premier League", club: "Arsenal",
     stats: { pac: 72, sho: 73, pas: 84, dri: 80, def: 83, phy: 83 }, photoId: 234378, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-frenkie-de-jong", edition: "FC26", editionLabel: "FC 26",
@@ -7996,6 +9131,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 87, position: "CM",
     nation: "Netherlands", nationCode: "nl", league: "La Liga", club: "FC Barcelona",
     stats: { pac: 82, sho: 71, pas: 85, dri: 87, def: 78, phy: 77 }, photoId: 228702, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-jonathan-tah", edition: "FC26", editionLabel: "FC 26",
@@ -8003,6 +9139,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 87, position: "CB",
     nation: "Germany", nationCode: "de", league: "Bundesliga", club: "FC Bayern München",
     stats: { pac: 63, sho: 38, pas: 60, dri: 63, def: 87, phy: 86 }, photoId: 213331, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-jules-kounde", edition: "FC26", editionLabel: "FC 26",
@@ -8010,6 +9147,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 87, position: "RB",
     nation: "France", nationCode: "fr", league: "La Liga", club: "FC Barcelona",
     stats: { pac: 84, sho: 47, pas: 74, dri: 79, def: 86, phy: 84 }, photoId: 241486, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-julian-alvarez", edition: "FC26", editionLabel: "FC 26",
@@ -8017,6 +9155,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 87, position: "ST",
     nation: "Argentina", nationCode: "ar", league: "La Liga", club: "Atlético Madrid",
     stats: { pac: 85, sho: 87, pas: 81, dri: 87, def: 57, phy: 79 }, photoId: 246191, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-kevin-de-bruyne", edition: "FC26", editionLabel: "FC 26",
@@ -8024,6 +9163,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 87, position: "CM",
     nation: "Belgium", nationCode: "be", league: "Serie A", club: "Napoli",
     stats: { pac: 66, sho: 83, pas: 92, dri: 84, def: 65, phy: 72 }, photoId: 192985, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-khvicha-kvaratskhelia", edition: "FC26", editionLabel: "FC 26",
@@ -8031,6 +9171,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 87, position: "LW",
     nation: "Georgia", nationCode: "ge", league: "Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 86, sho: 80, pas: 83, dri: 88, def: 58, phy: 78 }, photoId: 247635, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-marquinhos", edition: "FC26", editionLabel: "FC 26",
@@ -8038,6 +9179,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 87, position: "CB",
     nation: "Brazil", nationCode: "br", league: "Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 78, sho: 56, pas: 75, dri: 74, def: 89, phy: 80 }, photoId: 207865, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-martin-degaard", edition: "FC26", editionLabel: "FC 26",
@@ -8045,6 +9187,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 87, position: "CM",
     nation: "Norway", nationCode: "no", league: "Premier League", club: "Arsenal",
     stats: { pac: 68, sho: 79, pas: 88, dri: 87, def: 67, phy: 65 }, photoId: 222665, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-moises-caicedo", edition: "FC26", editionLabel: "FC 26",
@@ -8052,6 +9195,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 87, position: "CDM",
     nation: "Ecuador", nationCode: "ec", league: "Premier League", club: "Chelsea",
     stats: { pac: 71, sho: 64, pas: 78, dri: 81, def: 84, phy: 82 }, photoId: 256079, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-nicolo-barella", edition: "FC26", editionLabel: "FC 26",
@@ -8059,6 +9203,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 87, position: "CM",
     nation: "Italy", nationCode: "it", league: "Serie A", club: "Inter",
     stats: { pac: 80, sho: 78, pas: 84, dri: 86, def: 81, phy: 76 }, photoId: 224232, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-serhou-guirassy", edition: "FC26", editionLabel: "FC 26",
@@ -8066,6 +9211,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 87, position: "ST",
     nation: "Guinea", nationCode: "gn", league: "Bundesliga", club: "Borussia Dortmund",
     stats: { pac: 72, sho: 88, pas: 76, dri: 83, def: 45, phy: 83 }, photoId: 215441, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-victor-osimhen", edition: "FC26", editionLabel: "FC 26",
@@ -8073,6 +9219,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 87, position: "ST",
     nation: "Nigeria", nationCode: "ng", league: "Süper Lig", club: "Galatasaray SK",
     stats: { pac: 92, sho: 84, pas: 65, dri: 81, def: 42, phy: 84 }, photoId: 232293, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-viktor-gyokeres", edition: "FC26", editionLabel: "FC 26",
@@ -8080,6 +9227,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 87, position: "ST",
     nation: "Sweden", nationCode: "se", league: "Premier League", club: "Arsenal",
     stats: { pac: 90, sho: 86, pas: 73, dri: 81, def: 36, phy: 91 }, photoId: 241651, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-william-saliba", edition: "FC26", editionLabel: "FC 26",
@@ -8087,6 +9235,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 87, position: "CB",
     nation: "France", nationCode: "fr", league: "Premier League", club: "Arsenal",
     stats: { pac: 77, sho: 39, pas: 68, dri: 72, def: 87, phy: 83 }, photoId: 243715, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-antonio-rudiger", edition: "FC26", editionLabel: "FC 26",
@@ -8094,6 +9243,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Germany", nationCode: "de", league: "La Liga", club: "Real Madrid",
     stats: { pac: 79, sho: 55, pas: 72, dri: 70, def: 84, phy: 86 }, photoId: 205452, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-bruno-guimaraes", edition: "FC26", editionLabel: "FC 26",
@@ -8101,6 +9251,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Brazil", nationCode: "br", league: "Premier League", club: "Newcastle United",
     stats: { pac: 66, sho: 75, pas: 84, dri: 84, def: 79, phy: 81 }, photoId: 247851, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-hakan-calhanoglu", edition: "FC26", editionLabel: "FC 26",
@@ -8108,6 +9259,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 86, position: "CDM",
     nation: "Türkiye", nationCode: "tr", league: "Serie A", club: "Inter",
     stats: { pac: 71, sho: 81, pas: 87, dri: 82, def: 81, phy: 73 }, photoId: 208128, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-ibrahima-konate", edition: "FC26", editionLabel: "FC 26",
@@ -8115,6 +9267,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "France", nationCode: "fr", league: "Premier League", club: "Liverpool",
     stats: { pac: 77, sho: 34, pas: 63, dri: 69, def: 86, phy: 85 }, photoId: 237678, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-lionel-messi", edition: "FC26", editionLabel: "FC 26",
@@ -8122,6 +9275,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 86, position: "RW",
     nation: "Argentina", nationCode: "ar", league: "Major League Soccer", club: "Inter Miami",
     stats: { pac: 78, sho: 85, pas: 85, dri: 90, def: 33, phy: 64 }, photoId: 158023, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-michael-olise", edition: "FC26", editionLabel: "FC 26",
@@ -8129,6 +9283,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 86, position: "RM",
     nation: "France", nationCode: "fr", league: "Bundesliga", club: "FC Bayern München",
     stats: { pac: 78, sho: 80, pas: 84, dri: 87, def: 50, phy: 66 }, photoId: 247827, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-nico-williams", edition: "FC26", editionLabel: "FC 26",
@@ -8136,6 +9291,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 86, position: "LM",
     nation: "Spain", nationCode: "es", league: "La Liga", club: "Athletic Club",
     stats: { pac: 93, sho: 76, pas: 80, dri: 87, def: 36, phy: 66 }, photoId: 256516, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-nuno-mendes", edition: "FC26", editionLabel: "FC 26",
@@ -8143,6 +9299,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 86, position: "LB",
     nation: "Portugal", nationCode: "pt", league: "Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 95, sho: 65, pas: 76, dri: 82, def: 80, phy: 77 }, photoId: 252145, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-paulo-dybala", edition: "FC26", editionLabel: "FC 26",
@@ -8150,6 +9307,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 86, position: "CAM",
     nation: "Argentina", nationCode: "ar", league: "Serie A", club: "Roma",
     stats: { pac: 80, sho: 85, pas: 84, dri: 87, def: 41, phy: 64 }, photoId: 211110, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-ruben-dias", edition: "FC26", editionLabel: "FC 26",
@@ -8157,6 +9315,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Portugal", nationCode: "pt", league: "Premier League", club: "Manchester City",
     stats: { pac: 59, sho: 39, pas: 69, dri: 69, def: 86, phy: 84 }, photoId: 239818, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-sandro-tonali", edition: "FC26", editionLabel: "FC 26",
@@ -8164,6 +9323,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 86, position: "CDM",
     nation: "Italy", nationCode: "it", league: "Premier League", club: "Newcastle United",
     stats: { pac: 79, sho: 74, pas: 82, dri: 80, def: 81, phy: 83 }, photoId: 241096, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-tijjani-reijnders", edition: "FC26", editionLabel: "FC 26",
@@ -8171,6 +9331,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 86, position: "CM",
     nation: "Netherlands", nationCode: "nl", league: "Premier League", club: "Manchester City",
     stats: { pac: 79, sho: 79, pas: 82, dri: 85, def: 77, phy: 77 },
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-trent-alexander-arnold", edition: "FC26", editionLabel: "FC 26",
@@ -8178,6 +9339,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 86, position: "RB",
     nation: "England", nationCode: "gb-eng", league: "La Liga", club: "Real Madrid",
     stats: { pac: 76, sho: 72, pas: 89, dri: 80, def: 80, phy: 74 }, photoId: 231281, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-willian-pacho", edition: "FC26", editionLabel: "FC 26",
@@ -8185,6 +9347,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 86, position: "CB",
     nation: "Ecuador", nationCode: "ec", league: "Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 80, sho: 34, pas: 62, dri: 62, def: 86, phy: 86 },
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-antoine-griezmann", edition: "FC26", editionLabel: "FC 26",
@@ -8192,6 +9355,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "France", nationCode: "fr", league: "La Liga", club: "Atlético Madrid",
     stats: { pac: 77, sho: 86, pas: 85, dri: 88, def: 59, phy: 73 }, photoId: 194765, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-bremer", edition: "FC26", editionLabel: "FC 26",
@@ -8199,6 +9363,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Brazil", nationCode: "br", league: "Serie A", club: "Juventus",
     stats: { pac: 82, sho: 50, pas: 58, dri: 66, def: 86, phy: 80 }, photoId: 239580, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-bryan-mbeumo", edition: "FC26", editionLabel: "FC 26",
@@ -8206,6 +9371,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 85, position: "RW",
     nation: "Cameroon", nationCode: "cm", league: "Premier League", club: "Manchester United",
     stats: { pac: 88, sho: 84, pas: 79, dri: 84, def: 49, phy: 76 }, photoId: 243014, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-carvajal", edition: "FC26", editionLabel: "FC 26",
@@ -8213,6 +9379,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 85, position: "RB",
     nation: "Spain", nationCode: "es", league: "La Liga", club: "Real Madrid",
     stats: { pac: 80, sho: 58, pas: 79, dri: 81, def: 81, phy: 79 }, photoId: 204963, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-cristiano-ronaldo", edition: "FC26", editionLabel: "FC 26",
@@ -8220,6 +9387,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "Portugal", nationCode: "pt", league: "Pro League", club: "Al Nassr",
     stats: { pac: 76, sho: 88, pas: 76, dri: 80, def: 34, phy: 76 }, photoId: 20801, photoVer: "24",
+    difficulty: "easy", internationalReputation: 3,
   },
   {
     id: "fc26-dani-olmo", edition: "FC26", editionLabel: "FC 26",
@@ -8227,6 +9395,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 85, position: "CAM",
     nation: "Spain", nationCode: "es", league: "La Liga", club: "FC Barcelona",
     stats: { pac: 73, sho: 79, pas: 83, dri: 87, def: 50, phy: 56 }, photoId: 244260, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-dayotchanculle-upamecano", edition: "FC26", editionLabel: "FC 26",
@@ -8234,6 +9403,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "France", nationCode: "fr", league: "Bundesliga", club: "FC Bayern München",
     stats: { pac: 77, sho: 45, pas: 64, dri: 73, def: 84, phy: 84 }, photoId: 229558, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-desire-doue", edition: "FC26", editionLabel: "FC 26",
@@ -8241,6 +9411,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 85, position: "RW",
     nation: "France", nationCode: "fr", league: "Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 83, sho: 80, pas: 77, dri: 90, def: 55, phy: 74 },
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-fabian-ruiz", edition: "FC26", editionLabel: "FC 26",
@@ -8248,6 +9419,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Spain", nationCode: "es", league: "Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 61, sho: 77, pas: 80, dri: 81, def: 75, phy: 72 }, photoId: 226271, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-federico-dimarco", edition: "FC26", editionLabel: "FC 26",
@@ -8255,6 +9427,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 85, position: "LB",
     nation: "Italy", nationCode: "it", league: "Serie A", club: "Inter",
     stats: { pac: 80, sho: 78, pas: 84, dri: 82, def: 79, phy: 77 },
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-granit-xhaka", edition: "FC26", editionLabel: "FC 26",
@@ -8262,6 +9435,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 85, position: "CDM",
     nation: "Switzerland", nationCode: "ch", league: "Premier League", club: "Sunderland",
     stats: { pac: 47, sho: 75, pas: 85, dri: 74, def: 78, phy: 82 }, photoId: 199503, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-heung-min-son", edition: "FC26", editionLabel: "FC 26",
@@ -8269,6 +9443,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 85, position: "LW",
     nation: "Korea Republic", nationCode: "kr", league: "Major League Soccer", club: "Los Angeles FC",
     stats: { pac: 84, sho: 84, pas: 81, dri: 83, def: 42, phy: 73 },
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-inigo-martinez", edition: "FC26", editionLabel: "FC 26",
@@ -8276,6 +9451,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Spain", nationCode: "es", league: "Pro League", club: "Al Nassr",
     stats: { pac: 71, sho: 57, pas: 72, dri: 68, def: 85, phy: 80 }, photoId: 204525, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-joao-neves", edition: "FC26", editionLabel: "FC 26",
@@ -8283,6 +9459,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Portugal", nationCode: "pt", league: "Ligue 1", club: "Paris Saint-Germain",
     stats: { pac: 74, sho: 71, pas: 80, dri: 84, def: 82, phy: 83 },
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-karim-benzema", edition: "FC26", editionLabel: "FC 26",
@@ -8290,6 +9467,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "France", nationCode: "fr", league: "Pro League", club: "Al Ittihad",
     stats: { pac: 75, sho: 84, pas: 81, dri: 83, def: 38, phy: 77 }, photoId: 165153, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-luis-diaz", edition: "FC26", editionLabel: "FC 26",
@@ -8297,6 +9475,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 85, position: "LM",
     nation: "Colombia", nationCode: "co", league: "Bundesliga", club: "FC Bayern München",
     stats: { pac: 88, sho: 81, pas: 76, dri: 87, def: 45, phy: 75 }, photoId: 241084, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-marcus-thuram", edition: "FC26", editionLabel: "FC 26",
@@ -8304,6 +9483,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "France", nationCode: "fr", league: "Serie A", club: "Inter",
     stats: { pac: 86, sho: 83, pas: 76, dri: 82, def: 50, phy: 80 }, photoId: 228093, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-n-golo-kante", edition: "FC26", editionLabel: "FC 26",
@@ -8311,6 +9491,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 85, position: "CDM",
     nation: "France", nationCode: "fr", league: "Pro League", club: "Al Ittihad",
     stats: { pac: 77, sho: 65, pas: 73, dri: 80, def: 85, phy: 79 }, photoId: 215914, photoVer: "24",
+    difficulty: "easy", internationalReputation: 3,
   },
   {
     id: "fc26-nico-schlotterbeck", edition: "FC26", editionLabel: "FC 26",
@@ -8318,6 +9499,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 85, position: "CB",
     nation: "Germany", nationCode: "de", league: "Bundesliga", club: "Borussia Dortmund",
     stats: { pac: 74, sho: 60, pas: 75, dri: 73, def: 85, phy: 82 }, photoId: 247819, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-patrik-schick", edition: "FC26", editionLabel: "FC 26",
@@ -8325,6 +9507,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 85, position: "ST",
     nation: "Czechia", nationCode: "cz", league: "Bundesliga", club: "Bayer 04 Leverkusen",
     stats: { pac: 72, sho: 83, pas: 71, dri: 81, def: 38, phy: 77 }, photoId: 234236, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-philip-foden", edition: "FC26", editionLabel: "FC 26",
@@ -8332,6 +9515,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 85, position: "RW",
     nation: "England", nationCode: "gb-eng", league: "Premier League", club: "Manchester City",
     stats: { pac: 81, sho: 81, pas: 82, dri: 89, def: 57, phy: 57 }, photoId: 237692, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-rodrygo", edition: "FC26", editionLabel: "FC 26",
@@ -8339,6 +9523,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 85, position: "RW",
     nation: "Brazil", nationCode: "br", league: "La Liga", club: "Real Madrid",
     stats: { pac: 88, sho: 80, pas: 79, dri: 87, def: 31, phy: 64 }, photoId: 243812, photoVer: "24",
+    difficulty: "easy", internationalReputation: 4,
   },
   {
     id: "fc26-ryan-gravenberch", edition: "FC26", editionLabel: "FC 26",
@@ -8346,6 +9531,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 85, position: "CDM",
     nation: "Netherlands", nationCode: "nl", league: "Premier League", club: "Liverpool",
     stats: { pac: 76, sho: 76, pas: 81, dri: 85, def: 81, phy: 81 }, photoId: 246104, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-scott-mctominay", edition: "FC26", editionLabel: "FC 26",
@@ -8353,6 +9539,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Scotland", nationCode: "gb-sct", league: "Serie A", club: "Napoli",
     stats: { pac: 76, sho: 82, pas: 77, dri: 80, def: 80, phy: 85 }, photoId: 237238, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-youri-tielemans", edition: "FC26", editionLabel: "FC 26",
@@ -8360,6 +9547,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 85, position: "CM",
     nation: "Belgium", nationCode: "be", league: "Premier League", club: "Aston Villa",
     stats: { pac: 54, sho: 79, pas: 85, dri: 80, def: 75, phy: 72 }, photoId: 216393, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-alphonso-davies", edition: "FC26", editionLabel: "FC 26",
@@ -8367,6 +9555,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 84, position: "LB",
     nation: "Canada", nationCode: "ca", league: "Bundesliga", club: "FC Bayern München",
     stats: { pac: 94, sho: 66, pas: 78, dri: 85, def: 74, phy: 76 }, photoId: 234396, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-aurelien-tchouameni", edition: "FC26", editionLabel: "FC 26",
@@ -8374,6 +9563,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 84, position: "CDM",
     nation: "France", nationCode: "fr", league: "La Liga", club: "Real Madrid",
     stats: { pac: 71, sho: 69, pas: 79, dri: 78, def: 81, phy: 82 }, photoId: 241637, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-benjamin-pavard", edition: "FC26", editionLabel: "FC 26",
@@ -8381,6 +9571,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 84, position: "CB",
     nation: "France", nationCode: "fr", league: "Ligue 1", club: "Olympique de Marseille",
     stats: { pac: 75, sho: 67, pas: 76, dri: 75, def: 86, phy: 79 }, photoId: 226851, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-bernardo-silva", edition: "FC26", editionLabel: "FC 26",
@@ -8388,6 +9579,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 84, position: "CM",
     nation: "Portugal", nationCode: "pt", league: "Premier League", club: "Manchester City",
     stats: { pac: 61, sho: 78, pas: 83, dri: 89, def: 71, phy: 65 }, photoId: 218667, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-denzel-dumfries", edition: "FC26", editionLabel: "FC 26",
@@ -8395,6 +9587,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 84, position: "RB",
     nation: "Netherlands", nationCode: "nl", league: "Serie A", club: "Inter",
     stats: { pac: 84, sho: 70, pas: 75, dri: 79, def: 79, phy: 84 }, photoId: 233096, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-enzo-fernandez", edition: "FC26", editionLabel: "FC 26",
@@ -8402,6 +9595,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 84, position: "CM",
     nation: "Argentina", nationCode: "ar", league: "Premier League", club: "Chelsea",
     stats: { pac: 68, sho: 75, pas: 85, dri: 81, def: 73, phy: 75 }, photoId: 247090, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-exequiel-palacios", edition: "FC26", editionLabel: "FC 26",
@@ -8409,6 +9603,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 84, position: "CM",
     nation: "Argentina", nationCode: "ar", league: "Bundesliga", club: "Bayer 04 Leverkusen",
     stats: { pac: 62, sho: 76, pas: 80, dri: 82, def: 81, phy: 71 },
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-grimaldo", edition: "FC26", editionLabel: "FC 26",
@@ -8416,6 +9611,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 84, position: "LM",
     nation: "Spain", nationCode: "es", league: "Bundesliga", club: "Bayer 04 Leverkusen",
     stats: { pac: 72, sho: 73, pas: 87, dri: 85, def: 74, phy: 67 }, photoId: 210035, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-joao-cancelo", edition: "FC26", editionLabel: "FC 26",
@@ -8423,6 +9619,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 84, position: "RB",
     nation: "Portugal", nationCode: "pt", league: "Pro League", club: "Al Hilal",
     stats: { pac: 83, sho: 73, pas: 84, dri: 84, def: 78, phy: 74 }, photoId: 210514, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-josko-gvardiol", edition: "FC26", editionLabel: "FC 26",
@@ -8430,6 +9627,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 84, position: "LB",
     nation: "Croatia", nationCode: "hr", league: "Premier League", club: "Manchester City",
     stats: { pac: 78, sho: 71, pas: 75, dri: 78, def: 84, phy: 82 }, photoId: 251517, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-manuel-locatelli", edition: "FC26", editionLabel: "FC 26",
@@ -8437,6 +9635,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 84, position: "CDM",
     nation: "Italy", nationCode: "it", league: "Serie A", club: "Juventus",
     stats: { pac: 63, sho: 69, pas: 80, dri: 76, def: 81, phy: 78 }, photoId: 222077, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-marc-cucurella", edition: "FC26", editionLabel: "FC 26",
@@ -8444,6 +9643,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 84, position: "LB",
     nation: "Spain", nationCode: "es", league: "Premier League", club: "Chelsea",
     stats: { pac: 75, sho: 64, pas: 79, dri: 80, def: 82, phy: 79 },
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-marcos-llorente", edition: "FC26", editionLabel: "FC 26",
@@ -8451,6 +9651,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 84, position: "RB",
     nation: "Spain", nationCode: "es", league: "La Liga", club: "Atlético Madrid",
     stats: { pac: 89, sho: 79, pas: 78, dri: 81, def: 78, phy: 82 }, photoId: 226161, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-rodrigo-de-paul", edition: "FC26", editionLabel: "FC 26",
@@ -8458,6 +9659,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 84, position: "CM",
     nation: "Argentina", nationCode: "ar", league: "Major League Soccer", club: "Inter Miami",
     stats: { pac: 75, sho: 78, pas: 83, dri: 83, def: 76, phy: 83 }, photoId: 212616, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-ruben-neves", edition: "FC26", editionLabel: "FC 26",
@@ -8465,6 +9667,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 84, position: "CDM",
     nation: "Portugal", nationCode: "pt", league: "Pro League", club: "Al Hilal",
     stats: { pac: 57, sho: 75, pas: 87, dri: 77, def: 77, phy: 76 }, photoId: 224293, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-sancet", edition: "FC26", editionLabel: "FC 26",
@@ -8472,6 +9675,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 84, position: "CAM",
     nation: "Spain", nationCode: "es", league: "La Liga", club: "Athletic Club",
     stats: { pac: 76, sho: 83, pas: 80, dri: 85, def: 70, phy: 82 }, photoId: 244675, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-sergej-milinkovic-savic", edition: "FC26", editionLabel: "FC 26",
@@ -8479,6 +9683,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 84, position: "CM",
     nation: "Serbia", nationCode: "rs", league: "Pro League", club: "Al Hilal",
     stats: { pac: 62, sho: 80, pas: 81, dri: 81, def: 78, phy: 88 }, photoId: 223848, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-theo-hernandez", edition: "FC26", editionLabel: "FC 26",
@@ -8486,6 +9691,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 84, position: "LB",
     nation: "France", nationCode: "fr", league: "Pro League", club: "Al Hilal",
     stats: { pac: 90, sho: 76, pas: 78, dri: 83, def: 79, phy: 83 }, photoId: 232656, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
   {
     id: "fc26-alex-baena", edition: "FC26", editionLabel: "FC 26",
@@ -8493,6 +9699,7 @@ const CARDS_FC26: FifaCard[] = [
     overall: 84, position: "LM",
     nation: "Spain", nationCode: "es", league: "La Liga", club: "Atlético Madrid",
     stats: { pac: 79, sho: 76, pas: 84, dri: 82, def: 65, phy: 68 }, photoId: 257279, photoVer: "24",
+    difficulty: "hard", internationalReputation: 3,
   },
 ];
 
