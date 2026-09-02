@@ -562,6 +562,11 @@ const KA: Record<string, string> = {
     "დაატრიალე FIFA-ს გამოცემა და გამოიცანი მოთამაშე ბარათით",
   "Give up": "დანებება",
   "Wrong!": "არასწორია!",
+  // Difficulty labels (demo preview of the daily's balanced mix; "Easy"/"Hard" defined above)
+  "Medium": "საშუალო",
+  "Very hard": "ძალიან რთული",
+  "Medium/Easy": "საშუალო/მარტივი",
+  "Pre-FIFA 20": "FIFA 20-მდე",
   "Tap a lock to reveal a clue": "დააჭირე ბოქლომს მინიშნების გასახსნელად",
   "Clue revealed": "მინიშნება გახსნილია",
   "The answer": "პასუხი",
