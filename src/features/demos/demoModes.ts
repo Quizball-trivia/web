@@ -349,6 +349,13 @@ const DAILY_DEMO_COPY: Record<DailyChallengeType, { title: DemoI18nText; descrip
       ka: "ორი სურათი, ერთი ფეხბურთელი — ამოხსენი ვიზუალური თავსატეხი.",
     },
   },
+  fifaCards: {
+    title: { en: "FIFA Cards", ka: "FIFA ბარათები" },
+    description: {
+      en: "A gold card, stats only — name the player before the clues run out.",
+      ka: "ოქროს ბარათი მხოლოდ სტატისტიკით — გამოიცანი მოთამაშე, სანამ მინიშნებები ამოიწურება.",
+    },
+  },
 };
 
 // Hidden from the hub per owner (2026-08-13); routes stay reachable directly.

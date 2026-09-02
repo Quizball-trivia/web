@@ -7,7 +7,7 @@ import {
   resetDailyChallengeDev,
 } from "@/lib/repositories/dailyChallenges.repo";
 import { toDailyChallengeSession } from "@/lib/mappers/dailyChallenge.mapper";
-import type { DailyChallengeSummary, DailyChallengeType } from "@/lib/domain/dailyChallenge";
+import type { CompleteDailyChallengeRequest, DailyChallengeSummary, DailyChallengeType } from "@/lib/domain/dailyChallenge";
 import { useLocale } from "@/contexts/LocaleContext";
 import {
   DAILY_CHALLENGE_COMPLETION_RETRY_DELAYS_MS,
@@ -52,7 +52,10 @@ export function useCompleteDailyChallenge(challengeType: DailyChallengeType) {
     key[0] === "dailyChallenges" && key[1] === "list";
 
   return useMutation({
-    mutationFn: (score: number) => completeDailyChallenge(challengeType, score),
+    mutationFn: (input: number | { score: number; outcomes?: CompleteDailyChallengeRequest["outcomes"] }) =>
+      typeof input === "number"
+        ? completeDailyChallenge(challengeType, input)
+        : completeDailyChallenge(challengeType, input.score, input.outcomes),
     // Flip the challenge to completed the INSTANT completion starts, before the
     // network write — so the card is blurred and unpressable by the time the
     // user lands back on the hub, with no wait for the round-trip. Snapshot the
