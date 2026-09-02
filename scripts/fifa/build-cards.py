@@ -3,7 +3,7 @@
 Build the "Guess the FIFA Card" dataset.
 
 Downloads public, community-mirrored SoFIFA/FUTWIZ player exports (facts: name,
-rating, 6 face stats, nation, league, club) for editions FIFA 18 -> EA FC 26,
+rating, 6 face stats, nation, league, club) for editions FIFA 15 -> EA FC 26,
 keeps the top ~60 gold OUTFIELD cards per edition, generates typo/accent-tolerant
 "accepted answer" variants, and emits:
 
@@ -18,13 +18,14 @@ Data sources are third-party mirrors of SoFIFA / FUTWIZ (see SOURCES). We store
 only factual attributes and recreate the card art ourselves (no EA assets).
 """
 from __future__ import annotations
-import csv, io, re, sys, urllib.request, unicodedata
+import csv, io, json, re, sys, urllib.request, unicodedata
+from pathlib import Path
 from collections import defaultdict
 
 UA = {"User-Agent": "Mozilla/5.0 (fifa-card-builder)"}
-TARGET_PER_EDITION = 60          # keep this many top cards per edition
+TARGET_PER_EDITION = 100         # keep this many top cards per edition
 MIN_PER_EDITION = 30             # warn if a fallback still can't reach this
-MIN_OVERALL = 75                 # "gold" floor (top-60 clears this anyway)
+MIN_OVERALL = 75                 # "gold" floor
 
 # edition code (int) -> display label shown on the card
 EDITION_LABEL = {
@@ -80,6 +81,9 @@ def nation_code(name: str) -> str:
 #   sofifa_version -> one big CSV with a `fifa_version` column (many editions)
 #   sofifa_plain   -> one CSV = one edition, SoFIFA column names
 #   futwiz         -> one CSV = one edition, FUTWIZ column names (Name/OVR/Team/...)
+REPO_ROOT = Path(__file__).resolve().parents[2]
+TS_OUT = REPO_ROOT / "src/features/mini-games/data/guessFifaCard.ts"
+JSON_OUT = REPO_ROOT / "scripts/fifa/cards.json"
 RAW = "https://raw.githubusercontent.com"
 SOURCES = [
     # cheap, one-edition-per-file first
@@ -117,6 +121,12 @@ def primary_position(positions: str) -> str:
 def is_gk(pos: str) -> bool:
     return pos == "GK"
 
+def name_key(s: str) -> str:
+    """Face-index key: accent-stripped, lower-cased tokens sorted, hyphens split —
+    sources disagree on word order and hyphenation for East-Asian and compound names."""
+    toks = re.split(r"[\s\-]+", strip_accents(s or "").lower())
+    return " ".join(sorted(t for t in toks if t))
+
 def latin_ok(s: str) -> bool:
     """True if every letter is Latin (drops Arabic/Cyrillic/etc. fragments)."""
     for ch in s:
@@ -130,9 +140,10 @@ def display_name(short: str, long: str) -> str:
     Dembélé" -> "Ousmane Dembélé", not "Masour Dembélé")."""
     short = (short or "").strip()
     long = (long or "").strip()
-    m = re.match(r"^([A-Za-z])\.\s*(.+)$", short)
-    if m and long:
-        initial = m.group(1).lower()
+    # any single letter initial, including non-ASCII ("İ. Gündoğan", "Á. Di María")
+    m = re.match(r"^(\S)\.\s*(.+)$", short)
+    if m and m.group(1).isalpha() and long:
+        initial = strip_accents(m.group(1)).lower()
         surname = m.group(2)
         given = next((tok for tok in long.split()
                       if strip_accents(tok)[:1].lower() == initial), None) or long.split()[0]
@@ -145,12 +156,27 @@ def accepted_variants(short, long, display):
         v = (v or "").strip()
         if v and latin_ok(v) and v not in out:
             out.append(v)
-    # surname from short name ("L. Messi" -> "Messi") — the app matcher handles the rest
+    # surname from short name ("L. Messi" -> "Messi") — the app matcher handles the rest.
+    # Never accept a generational suffix or particle on its own ("Jr.", "Neto", "II").
     if short:
-        last = short.strip().split()[-1]
-        if last and latin_ok(last) and last not in out and len(last) >= 3:
+        toks = short.strip().split()
+        while toks and _is_suffix_token(toks[-1]):
+            toks.pop()
+        last = toks[-1] if toks else ""
+        core = re.sub(r"[^A-Za-z\u00C0-\u024F]", "", last)
+        # keep the particle with the surname ("De Bruyne", "van Dijk", "de Jong"),
+        # not the bare second half — that's how people actually say the name
+        if len(toks) >= 2 and toks[-2].lower() in PARTICLES:
+            last = f"{toks[-2]} {last}"
+        if last and latin_ok(last) and last not in out and len(core) >= 3:
             out.append(last)
     return out
+
+PARTICLES = {"de", "da", "di", "van", "von", "der", "del", "la", "le", "dos", "el", "al", "du", "des", "den", "ter"}
+
+SUFFIX_TOKENS = {"jr", "jr.", "junior", "sr", "sr.", "ii", "iii", "iv", "filho", "neto"}
+def _is_suffix_token(tok: str) -> bool:
+    return tok.strip().lower() in SUFFIX_TOKENS
 
 def open_csv(url):
     print(f"  fetching {url.split('/')[-1]} ...", flush=True)
@@ -179,12 +205,24 @@ class Bucket:
         return len(self.by_name)
 
 buckets = defaultdict(Bucket)
+# name key -> (photoId, photoVer) from every parsed row with a real face, across all sources
+FACE_INDEX: dict = {}
 
 def truthy(v):
     return str(v).strip().lower() in ("yes", "true", "1") if v is not None else False
 
 def make_card(ed, name_short, name_long, overall, pos, nation, league, club, stats,
               photo_id=None, real_face=None):
+    # index the face first: a player who misses this edition's rating cut may still
+    # be the only source of a photo for their card in another edition
+    _pid = to_int(photo_id)
+    if _pid and truthy(real_face):
+        _disp = display_name(name_short, name_long)
+        if _disp:
+            _key = name_key(_disp)
+            _prev = FACE_INDEX.get(_key)
+            if _prev is None or ed > int(_prev[1]):
+                FACE_INDEX[_key] = (_pid, str(ed))
     if overall is None or overall < MIN_OVERALL: return None
     if is_gk(pos): return None
     if not (nation and club): return None
@@ -206,6 +244,10 @@ def make_card(ed, name_short, name_long, overall, pos, nation, league, club, sta
     if pid and truthy(real_face):
         card["photoId"] = pid
         card["photoVer"] = str(ed)
+        key = name_key(disp)
+        prev = FACE_INDEX.get(key)
+        if prev is None or ed > int(prev[1]):
+            FACE_INDEX[key] = (pid, str(ed))
     return card
 
 # ---- parsers per schema ----------------------------------------------------
@@ -350,25 +392,33 @@ def main():
     # Reuse a player's face across editions: sources for FC25/FC26 carry no face
     # id, so map name -> (id, most-recent ver) from the editions that do, then
     # fill the rest. The same person's face is fine on any of their cards.
-    face_by_name = {}
+    face_by_name = dict(FACE_INDEX)
     for c in cards:
         if "photoId" in c:
-            k = strip_accents(c["name"]).lower()
+            k = name_key(c["name"])
             prev = face_by_name.get(k)
             if prev is None or int(c["photoVer"]) > int(prev[1]):
                 face_by_name[k] = (c["photoId"], c["photoVer"])
     filled = 0
     for c in cards:
-        if "photoId" not in c:
-            hit = face_by_name.get(strip_accents(c["name"]).lower())
+        if "photoId" in c:
+            c["faceSource"] = "own"
+        else:
+            hit = face_by_name.get(name_key(c["name"]))
             if hit:
                 c["photoId"], c["photoVer"] = hit
+                c["faceSource"] = "name-match"
                 filled += 1
+            else:
+                c["faceSource"] = "none"
+        # durable identity for DB upserts: edition + sofifa id when known, else edition + name slug
+        c["sourceKey"] = f"sofifa:{c['edition'].lower()}:{c['photoId']}" if c.get("faceSource") == "own" else f"sofifa:{c['id']}"
     with_face = sum(1 for c in cards if "photoId" in c)
     print(f"  faces: {with_face}/{len(cards)} cards have a photo ({filled} filled by name-match)")
 
     write_ts(cards)
-    print(f"\nWrote {len(cards)} cards -> src/features/mini-games/data/guessFifaCard.ts")
+    write_json(cards)
+    print(f"\nWrote {len(cards)} cards -> {TS_OUT.relative_to(REPO_ROOT)} and {JSON_OUT.relative_to(REPO_ROOT)}")
 
 def ts_str(s):
     return '"' + s.replace("\\", "\\\\").replace('"', '\\"') + '"'
@@ -379,7 +429,7 @@ def write_ts(cards):
     lines = []
     lines.append("// AUTO-GENERATED by scripts/fifa/build-cards.py — do not edit by hand.")
     lines.append("// Factual player attributes mirrored from SoFIFA / FUTWIZ; card art is our own.")
-    lines.append(f"// {len(cards)} cards across {len(WANTED)} editions (FIFA 18 -> EA FC 26).")
+    lines.append(f"// {len(cards)} cards across {len(WANTED)} editions (FIFA 15 -> EA FC 26).")
     lines.append("")
     lines.append("export type FifaEdition =")
     lines.append("  | " + "\n  | ".join(f'"{e}"' for e in editions) + ";")
@@ -421,24 +471,43 @@ def write_ts(cards):
     lines.append("  " + ", ".join(f'"{e}"' for e in playable))
     lines.append("];")
     lines.append("")
-    lines.append("export const FIFA_CARDS: FifaCard[] = [")
+    # One typed array per edition, then concatenated: a single 1,000+ element
+    # literal makes tsc give up ("union type too complex", TS2590).
+    by_edition = {}
     for c in cards:
-        acc = "[" + ", ".join(ts_str(a) for a in c["accepted"]) + "]"
-        st = c["stats"]
-        stats = "{ " + ", ".join(f"{k}: {st[k]}" for k in ("pac","sho","pas","dri","def","phy")) + " }"
-        lines.append("  {")
-        lines.append(f"    id: {ts_str(c['id'])}, edition: {ts_str(c['edition'])}, editionLabel: {ts_str(c['editionLabel'])},")
-        lines.append(f"    name: {ts_str(c['name'])}, accepted: {acc},")
-        lines.append(f"    overall: {c['overall']}, position: {ts_str(c['position'])},")
-        lines.append(f"    nation: {ts_str(c['nation'])}, nationCode: {ts_str(c['nationCode'])}, league: {ts_str(c['league'])}, club: {ts_str(c['club'])},")
-        photo = f" photoId: {c['photoId']}, photoVer: {ts_str(c['photoVer'])}," if "photoId" in c else ""
-        lines.append(f"    stats: {stats},{photo}")
-        lines.append("  },")
-    lines.append("];")
+        by_edition.setdefault(c["edition"], []).append(c)
+    chunk_names = []
+    for ed_key in [EDITION_KEY[e] for e in WANTED if EDITION_KEY[e] in by_edition]:
+        chunk = f"CARDS_{ed_key}"
+        chunk_names.append(chunk)
+        lines.append(f"const {chunk}: FifaCard[] = [")
+        for c in by_edition[ed_key]:
+            acc = "[" + ", ".join(ts_str(a) for a in c["accepted"]) + "]"
+            st = c["stats"]
+            stats = "{ " + ", ".join(f"{k}: {st[k]}" for k in ("pac","sho","pas","dri","def","phy")) + " }"
+            lines.append("  {")
+            lines.append(f"    id: {ts_str(c['id'])}, edition: {ts_str(c['edition'])}, editionLabel: {ts_str(c['editionLabel'])},")
+            lines.append(f"    name: {ts_str(c['name'])}, accepted: {acc},")
+            lines.append(f"    overall: {c['overall']}, position: {ts_str(c['position'])},")
+            lines.append(f"    nation: {ts_str(c['nation'])}, nationCode: {ts_str(c['nationCode'])}, league: {ts_str(c['league'])}, club: {ts_str(c['club'])},")
+            photo = f" photoId: {c['photoId']}, photoVer: {ts_str(c['photoVer'])}," if c.get("photoId") else ""
+            lines.append(f"    stats: {stats},{photo}")
+            lines.append("  },")
+        lines.append("];")
+        lines.append("")
+    lines.append("export const FIFA_CARDS: FifaCard[] = [" + ", ".join(f"...{n}" for n in chunk_names) + "];")
     lines.append("")
-    out = "/Users/nikatalakhadze/web/src/features/mini-games/data/guessFifaCard.ts"
-    with open(out, "w", encoding="utf-8") as f:
+    TS_OUT.parent.mkdir(parents=True, exist_ok=True)
+    with open(TS_OUT, "w", encoding="utf-8") as f:
         f.write("\n".join(lines))
+
+def write_json(cards):
+    """Machine-readable sidecar (all fields incl. sourceKey/faceSource) for the
+    backend data migration and the review gallery."""
+    JSON_OUT.parent.mkdir(parents=True, exist_ok=True)
+    with open(JSON_OUT, "w", encoding="utf-8") as f:
+        json.dump(cards, f, ensure_ascii=False, indent=1)
+        f.write("\n")
 
 if __name__ == "__main__":
     main()

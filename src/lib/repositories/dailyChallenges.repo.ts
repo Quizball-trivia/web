@@ -34,9 +34,10 @@ export async function createDailyChallengeSession(
 
 export async function completeDailyChallenge(
   challengeType: DailyChallengeType,
-  score: number
+  score: number,
+  outcomes?: CompleteDailyChallengeRequest["outcomes"]
 ): Promise<DailyChallengeCompletionResult> {
-  const body: CompleteDailyChallengeRequest = { score };
+  const body: CompleteDailyChallengeRequest = outcomes && outcomes.length > 0 ? { score, outcomes } : { score };
 
   return apiFetch("post", "/api/v1/daily-challenges/{challengeType}/complete", {
     params: { challengeType },

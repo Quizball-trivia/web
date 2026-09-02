@@ -1323,7 +1323,7 @@ export interface paths {
                                 inviteCode: string;
                                 displayName: string;
                                 /** @enum {string} */
-                                gameMode: "friendly_possession" | "friendly_party_quiz" | "ranked_sim";
+                                gameMode: "friendly_possession" | "friendly_party_quiz" | "auction" | "ranked_sim";
                                 isPublic: boolean;
                                 /** Format: date-time */
                                 createdAt: string;
@@ -2220,7 +2220,7 @@ export interface paths {
                 query?: {
                     userId?: string;
                     purchaseId?: string;
-                    eventType?: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset" | "admin_account_ban" | "admin_account_unban";
+                    eventType?: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset" | "admin_account_ban" | "admin_account_unban" | "guess_the_goal_reward";
                     outcome?: "success" | "failure";
                     from?: string;
                     to?: string;
@@ -2244,7 +2244,7 @@ export interface paths {
                                 /** Format: uuid */
                                 id: string;
                                 /** @enum {string} */
-                                eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset" | "admin_account_ban" | "admin_account_unban";
+                                eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset" | "admin_account_ban" | "admin_account_unban" | "guess_the_goal_reward";
                                 /** @enum {string} */
                                 outcome: "success" | "failure";
                                 /** Format: uuid */
@@ -5170,11 +5170,11 @@ export interface paths {
                         "application/json": {
                             items: {
                                 /** @enum {string} */
-                                challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic";
+                                challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
                                 title: string;
                                 description: string;
                                 /** @enum {string} */
-                                iconToken: "dollarSign" | "checkCircle" | "lightbulb" | "timer" | "list" | "users" | "route" | "trendingUp" | "image";
+                                iconToken: "dollarSign" | "checkCircle" | "lightbulb" | "timer" | "list" | "users" | "route" | "trendingUp" | "image" | "cards";
                                 coinReward: number;
                                 xpReward: number;
                                 showOnHome: boolean;
@@ -5220,7 +5220,7 @@ export interface paths {
                 };
                 header?: never;
                 path: {
-                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic";
+                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
                 };
                 cookie?: never;
             };
@@ -5413,6 +5413,38 @@ export interface paths {
                                 acceptedAnswers: string[];
                                 explanation: string | null;
                             }[];
+                        } | {
+                            /** @enum {string} */
+                            challengeType: "fifaCards";
+                            title: string;
+                            description: string;
+                            cardCount: number;
+                            pointsPerSolve: number;
+                            cards: {
+                                /** Format: uuid */
+                                id: string;
+                                edition: string;
+                                editionLabel: string;
+                                name: string;
+                                acceptedAnswers: string[];
+                                overall: number;
+                                position: string;
+                                nation: string;
+                                nationCode: string;
+                                league: string;
+                                club: string;
+                                stats: {
+                                    pac: number;
+                                    sho: number;
+                                    pas: number;
+                                    dri: number;
+                                    def: number;
+                                    phy: number;
+                                };
+                                faceUrl: string | null;
+                                /** @enum {string} */
+                                difficulty: "easy" | "medium" | "hard";
+                            }[];
                         };
                     };
                 };
@@ -5583,7 +5615,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic";
+                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
                 };
                 cookie?: never;
             };
@@ -5592,6 +5624,13 @@ export interface paths {
                     "application/json": {
                         /** @default 0 */
                         score?: number;
+                        outcomes?: {
+                            /** Format: uuid */
+                            cardId: string;
+                            solved: boolean;
+                            /** @default 0 */
+                            cluesRevealed?: number;
+                        }[];
                     };
                 };
             };
@@ -5604,7 +5643,7 @@ export interface paths {
                     content: {
                         "application/json": {
                             /** @enum {string} */
-                            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic";
+                            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
                             /** @enum {boolean} */
                             completedToday: true;
                             coinsAwarded: number;
@@ -5646,6 +5685,15 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
+                /** @description Invalid completion (e.g. FIFA Cards outcomes missing, unknown or duplicate, or no set served today) */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         delete?: never;
@@ -5670,7 +5718,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic";
+                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
                 };
                 cookie?: never;
             };
@@ -5684,7 +5732,7 @@ export interface paths {
                     content: {
                         "application/json": {
                             /** @enum {string} */
-                            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic";
+                            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
                             /** @enum {boolean} */
                             reset: true;
                         };
@@ -5741,11 +5789,11 @@ export interface paths {
                         "application/json": {
                             items: {
                                 /** @enum {string} */
-                                challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic";
+                                challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
                                 title: string;
                                 description: string;
                                 /** @enum {string} */
-                                iconToken: "dollarSign" | "checkCircle" | "lightbulb" | "timer" | "list" | "users" | "route" | "trendingUp" | "image";
+                                iconToken: "dollarSign" | "checkCircle" | "lightbulb" | "timer" | "list" | "users" | "route" | "trendingUp" | "image" | "cards";
                                 coinReward: number;
                                 xpReward: number;
                                 showOnHome: boolean;
@@ -5815,6 +5863,12 @@ export interface paths {
                                     secondsPerQuestion: number;
                                     /** @enum {string} */
                                     challengeType: "footballLogic";
+                                } | {
+                                    /** @default [] */
+                                    categoryIds: string[];
+                                    cardCount: number;
+                                    /** @enum {string} */
+                                    challengeType: "fifaCards";
                                 };
                                 sortOrder: number;
                                 isActive: boolean;
@@ -5876,7 +5930,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic";
+                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
                 };
                 cookie?: never;
             };
@@ -6479,8 +6533,7 @@ export interface paths {
                             to_final_seconds: number;
                         };
                         config?: {
-                            /** @enum {number} */
-                            rules_version?: 1;
+                            rules_version?: 1 | 2 | 3;
                             launch_edition?: boolean;
                             /**
                              * @default live
@@ -7205,6 +7258,1129 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/admin/auction/cards": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Auction cards for CMS review */
+        get: {
+            parameters: {
+                query?: {
+                    page?: number;
+                    limit?: number;
+                    status?: "draft" | "needs_review" | "approved" | "published" | "rejected";
+                    position_group?: "GK" | "DEF" | "MID" | "FWD";
+                    card_type?: "normal" | "safe_star" | "bargain" | "trap" | "obscure_gem" | "lookalike_story" | "legend";
+                    difficulty?: "easy" | "medium" | "hard" | "expert";
+                    fame_bucket?: "superstar" | "known" | "niche" | "obscure" | "legend";
+                    verification_status?: "passed" | "failed" | "needs_review";
+                    search?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Paginated Auction card summaries */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PaginatedAuctionCardsResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not an admin */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/auction/cards/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Auction card detail for CMS review */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Auction card detail */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AuctionCardDetail"];
+                    };
+                };
+                /** @description Invalid card id */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not an admin */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Auction card not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update editable Auction card fields and clues */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        true_value_eur?: number;
+                        starting_price_eur?: number;
+                        /** @enum {string} */
+                        value_type?: "current" | "peak" | "synthetic";
+                        /** @enum {string} */
+                        card_type?: "normal" | "safe_star" | "bargain" | "trap" | "obscure_gem" | "lookalike_story" | "legend";
+                        /** @enum {string} */
+                        difficulty?: "easy" | "medium" | "hard" | "expert";
+                        /** @enum {string} */
+                        verification_status?: "passed" | "failed" | "needs_review";
+                        verification_notes?: string | null;
+                        editor_notes?: string | null;
+                        clues?: {
+                            clue_order: number;
+                            clue_en: string;
+                            clue_ka: string;
+                            clue_kind: string;
+                            /** @default [] */
+                            supported_fact_ids?: string[];
+                        }[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Updated Auction card detail */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AuctionCardDetail"];
+                    };
+                };
+                /** @description Invalid card content */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not an admin */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Auction card not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/v1/admin/auction/cards/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Auction card status */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        status: "draft" | "needs_review" | "approved" | "published" | "rejected";
+                        /** @default false */
+                        force?: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description Updated Auction card detail */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AuctionCardDetail"];
+                    };
+                };
+                /** @description Card is not publishable */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not an admin */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Auction card not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/v1/auction/leaderboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List the Auction leaderboard */
+        get: {
+            parameters: {
+                query?: {
+                    scope?: "global" | "country";
+                    limit?: number;
+                    offset?: number | null;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Auction leaderboard */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            entries: {
+                                /** Format: uuid */
+                                userId: string;
+                                username: string;
+                                avatarUrl: string | null;
+                                avatarCustomization?: unknown;
+                                auctionPoints: number;
+                                country: string | null;
+                                tier: string | null;
+                                rank: number;
+                            }[];
+                        };
+                    };
+                };
+                /** @description Invalid query parameters */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/auction/leaderboard/me": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get the authenticated user's Auction rank */
+        get: {
+            parameters: {
+                query?: {
+                    scope?: "global" | "country";
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Rank information, or null when unranked */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            userId: string;
+                            username: string;
+                            avatarUrl: string | null;
+                            avatarCustomization?: unknown;
+                            auctionPoints: number;
+                            country: string | null;
+                            tier: string | null;
+                            rank: number;
+                            total: number;
+                        } | null;
+                    };
+                };
+                /** @description Invalid query parameters */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Authentication required */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/player-clue-cards/import/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Preview parsed player clue card import (no DB writes) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        text: string;
+                        /** @enum {string} */
+                        locale: "en" | "ka" | "es";
+                        /** @default cms-import */
+                        promptVersion?: string;
+                        /**
+                         * @default medium
+                         * @enum {string}
+                         */
+                        defaultDifficulty?: "easy" | "medium" | "hard";
+                        /** @default editor_first_person */
+                        style?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Parsed preview with match results */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PlayerClueCardPreviewResponse"];
+                    };
+                };
+                /** @description Invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not an admin */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/player-clue-cards/import/commit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Commit player clue card import rows as needs_review or approved */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        locale: "en" | "ka" | "es";
+                        /** @default cms-import */
+                        promptVersion?: string;
+                        /**
+                         * @default medium
+                         * @enum {string}
+                         */
+                        defaultDifficulty?: "easy" | "medium" | "hard";
+                        /**
+                         * @default needs_review
+                         * @enum {string}
+                         */
+                        status?: "needs_review" | "approved";
+                        /** @default false */
+                        force?: boolean;
+                        rows: {
+                            rowIndex: number;
+                            answerName: string;
+                            /** @enum {string|null} */
+                            difficulty?: "easy" | "medium" | "hard" | null;
+                            clue1: string;
+                            clue2: string;
+                            clue3: string;
+                            /** Format: uuid */
+                            footballPlayerId: string;
+                            /** @default  */
+                            originalText?: string;
+                            sourcePlayerNumber?: number | null;
+                            /** @default false */
+                            manualMapping?: boolean;
+                            matchMethod?: string | null;
+                            /** @enum {string|null} */
+                            matchConfidence?: "high" | "medium" | "low" | null;
+                            /** @default [] */
+                            factRiskFlags?: string[];
+                        }[];
+                    };
+                };
+            };
+            responses: {
+                /** @description Commit result with per-row status */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PlayerClueCardCommitResponse"];
+                    };
+                };
+                /** @description Invalid input */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not an admin */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/player-clue-cards/{id}/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update player clue card status (approve, publish, reject) */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        status: "needs_review" | "approved" | "published" | "rejected";
+                        reviewNotes?: string | null;
+                        rejectionReason?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Updated player clue card */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["PlayerClueCardDetail"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not an admin */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Card not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/v1/admin/player-clue-cards/status/bulk": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Bulk update player clue card status (approve, publish, reject) */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        ids: string[];
+                        /** @enum {string} */
+                        status: "approved" | "published" | "rejected";
+                        reviewNotes?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description Number of updated cards */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            updated: number;
+                        };
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not an admin */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/api/v1/admin/auction-pipeline/stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Auction card generation pipeline status counters */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Pipeline stage, attempt and coverage counters */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AuctionPipelineStatsResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not an admin */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/auction-pipeline/workers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Live card generation worker heartbeats */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Workers with stale flags */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AuctionPipelineWorkersResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not an admin */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/auction-pipeline/prompts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Operator prompt overrides for the card pipeline */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Stored prompt overrides */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AuctionPipelinePromptsResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not an admin */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/auction-pipeline/prompts/{key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /** Create or replace a card pipeline prompt override */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    key: "generator_rules" | "verifier_rules" | "judge_rules" | "variant_medium" | "variant_hard";
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        text: string;
+                        /**
+                         * @default append
+                         * @enum {string}
+                         */
+                        mode?: "append" | "replace";
+                    };
+                };
+            };
+            responses: {
+                /** @description Stored prompt override */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AuctionPipelinePrompt"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not an admin */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Invalid prompt key or text */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        post?: never;
+        /** Reset a prompt override so the built-in rules apply again */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    key: "generator_rules" | "verifier_rules" | "judge_rules" | "variant_medium" | "variant_hard";
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Whether an override was removed */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AuctionPipelinePromptResetResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not an admin */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Invalid prompt key */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/admin/auction-pipeline/requeue": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Reset rejected or failed generation tasks back to queued */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        taskIds?: string[];
+                        /** @enum {string} */
+                        filter?: "failed" | "rejected";
+                    };
+                };
+            };
+            responses: {
+                /** @description Number of tasks requeued */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["AuctionPipelineRequeueResponse"];
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Not an admin */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Invalid requeue selector */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -7493,7 +8669,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset" | "admin_account_ban" | "admin_account_unban";
+            eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset" | "admin_account_ban" | "admin_account_unban" | "guess_the_goal_reward";
             /** @enum {string} */
             outcome: "success" | "failure";
             /** Format: uuid */
@@ -7527,7 +8703,7 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
-                eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset" | "admin_account_ban" | "admin_account_unban";
+                eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset" | "admin_account_ban" | "admin_account_unban" | "guess_the_goal_reward";
                 /** @enum {string} */
                 outcome: "success" | "failure";
                 /** Format: uuid */
@@ -8142,11 +9318,11 @@ export interface components {
         };
         DailyChallengeMetadata: {
             /** @enum {string} */
-            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic";
+            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
             title: string;
             description: string;
             /** @enum {string} */
-            iconToken: "dollarSign" | "checkCircle" | "lightbulb" | "timer" | "list" | "users" | "route" | "trendingUp" | "image";
+            iconToken: "dollarSign" | "checkCircle" | "lightbulb" | "timer" | "list" | "users" | "route" | "trendingUp" | "image" | "cards";
             coinReward: number;
             xpReward: number;
             showOnHome: boolean;
@@ -8217,6 +9393,12 @@ export interface components {
             secondsPerQuestion: number;
             /** @enum {string} */
             challengeType: "footballLogic";
+        } | {
+            /** @default [] */
+            categoryIds: string[];
+            cardCount: number;
+            /** @enum {string} */
+            challengeType: "fifaCards";
         };
         AdminDailyChallengeCategoryOption: {
             /** Format: uuid */
@@ -8411,10 +9593,42 @@ export interface components {
                 acceptedAnswers: string[];
                 explanation: string | null;
             }[];
+        } | {
+            /** @enum {string} */
+            challengeType: "fifaCards";
+            title: string;
+            description: string;
+            cardCount: number;
+            pointsPerSolve: number;
+            cards: {
+                /** Format: uuid */
+                id: string;
+                edition: string;
+                editionLabel: string;
+                name: string;
+                acceptedAnswers: string[];
+                overall: number;
+                position: string;
+                nation: string;
+                nationCode: string;
+                league: string;
+                club: string;
+                stats: {
+                    pac: number;
+                    sho: number;
+                    pas: number;
+                    dri: number;
+                    def: number;
+                    phy: number;
+                };
+                faceUrl: string | null;
+                /** @enum {string} */
+                difficulty: "easy" | "medium" | "hard";
+            }[];
         };
         CompleteDailyChallengeResponse: {
             /** @enum {string} */
-            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic";
+            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
             /** @enum {boolean} */
             completedToday: true;
             coinsAwarded: number;
@@ -8443,17 +9657,17 @@ export interface components {
         };
         ResetDailyChallengeResponse: {
             /** @enum {string} */
-            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic";
+            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
             /** @enum {boolean} */
             reset: true;
         };
         AdminDailyChallengeConfigResponse: {
             /** @enum {string} */
-            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic";
+            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
             title: string;
             description: string;
             /** @enum {string} */
-            iconToken: "dollarSign" | "checkCircle" | "lightbulb" | "timer" | "list" | "users" | "route" | "trendingUp" | "image";
+            iconToken: "dollarSign" | "checkCircle" | "lightbulb" | "timer" | "list" | "users" | "route" | "trendingUp" | "image" | "cards";
             coinReward: number;
             xpReward: number;
             showOnHome: boolean;
@@ -8523,6 +9737,12 @@ export interface components {
                 secondsPerQuestion: number;
                 /** @enum {string} */
                 challengeType: "footballLogic";
+            } | {
+                /** @default [] */
+                categoryIds: string[];
+                cardCount: number;
+                /** @enum {string} */
+                challengeType: "fifaCards";
             };
             sortOrder: number;
             isActive: boolean;
@@ -8705,6 +9925,456 @@ export interface components {
         };
         SubmitFeedbackResponse: {
             ok: boolean;
+        };
+        AuctionCardSummary: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            player_id: string;
+            /** @enum {string} */
+            position_group: "GK" | "DEF" | "MID" | "FWD";
+            true_value_eur: number;
+            starting_price_eur: number;
+            /** @enum {string} */
+            value_type: "current" | "peak" | "synthetic";
+            /** @enum {string} */
+            card_type: "normal" | "safe_star" | "bargain" | "trap" | "obscure_gem" | "lookalike_story" | "legend";
+            /** @enum {string} */
+            difficulty: "easy" | "medium" | "hard" | "expert";
+            /** @enum {string} */
+            status: "draft" | "needs_review" | "approved" | "published" | "rejected";
+            generator_model: string | null;
+            verifier_model: string | null;
+            prompt_version: string | null;
+            /** @enum {string} */
+            verification_status: "passed" | "failed" | "needs_review";
+            /** Format: date-time */
+            published_at: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            player: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                display_name: {
+                    [key: string]: unknown;
+                };
+                nationality: string | null;
+                nationality_code: string | null;
+                /** @enum {string|null} */
+                position_group: "GK" | "DEF" | "MID" | "FWD" | null;
+                current_club: string | null;
+                /** @enum {string} */
+                active_status: "active" | "retired" | "legend" | "unknown";
+                image_url: string | null;
+                fame_score: number | null;
+                /** @enum {string|null} */
+                fame_bucket: "superstar" | "known" | "niche" | "obscure" | "legend" | null;
+                /** @enum {string} */
+                data_quality_status: "pending" | "usable" | "needs_review" | "rejected";
+            };
+            clue_count: number;
+        };
+        AuctionCardDetail: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            player_id: string;
+            /** @enum {string} */
+            position_group: "GK" | "DEF" | "MID" | "FWD";
+            true_value_eur: number;
+            starting_price_eur: number;
+            /** @enum {string} */
+            value_type: "current" | "peak" | "synthetic";
+            /** @enum {string} */
+            card_type: "normal" | "safe_star" | "bargain" | "trap" | "obscure_gem" | "lookalike_story" | "legend";
+            /** @enum {string} */
+            difficulty: "easy" | "medium" | "hard" | "expert";
+            /** @enum {string} */
+            status: "draft" | "needs_review" | "approved" | "published" | "rejected";
+            generator_model: string | null;
+            verifier_model: string | null;
+            prompt_version: string | null;
+            /** Format: uuid */
+            generation_run_id: string | null;
+            /** @enum {string} */
+            verification_status: "passed" | "failed" | "needs_review";
+            verification_notes: string | null;
+            editor_notes: string | null;
+            /** Format: date-time */
+            published_at: string | null;
+            /** Format: uuid */
+            published_by: string | null;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            player: {
+                /** Format: uuid */
+                id: string;
+                name: string;
+                display_name: {
+                    [key: string]: unknown;
+                };
+                nationality: string | null;
+                nationality_code: string | null;
+                /** @enum {string|null} */
+                position_group: "GK" | "DEF" | "MID" | "FWD" | null;
+                current_club: string | null;
+                /** @enum {string} */
+                active_status: "active" | "retired" | "legend" | "unknown";
+                image_url: string | null;
+                fame_score: number | null;
+                /** @enum {string|null} */
+                fame_bucket: "superstar" | "known" | "niche" | "obscure" | "legend" | null;
+                /** @enum {string} */
+                data_quality_status: "pending" | "usable" | "needs_review" | "rejected";
+                transfermarkt_id: string | null;
+                wikidata_id: string | null;
+                date_of_birth: string | null;
+                current_value_eur: number | null;
+                peak_value_eur: number | null;
+                source_payload: {
+                    [key: string]: unknown;
+                };
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            };
+            clues: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                auction_card_id: string;
+                clue_order: number;
+                clue_en: string;
+                clue_ka: string;
+                clue_kind: string;
+                supported_fact_ids: string[];
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+            supported_facts: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                player_id: string;
+                fact_type: string;
+                fact_text_en: string;
+                fact_text_ka: string | null;
+                source_name: string | null;
+                source_url: string | null;
+                evidence_quote: string | null;
+                confidence: number | null;
+                /** @enum {string} */
+                status: "candidate" | "verified" | "rejected" | "needs_review";
+                /** @enum {string} */
+                discovered_by: "transfermarkt_dataset" | "wikidata" | "wikipedia" | "llm_research" | "manual" | "derived";
+                verified_by_model: string | null;
+                verifier_notes: string | null;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+            }[];
+            generation_run: {
+                /** Format: uuid */
+                id: string;
+                job_name: string;
+                model_name: string;
+                /** @enum {string} */
+                model_role: "researcher" | "generator" | "verifier" | "translator";
+                prompt_version: string;
+                /** @enum {string} */
+                status: "success" | "failed" | "invalid_json" | "rejected";
+                error_message: string | null;
+                latency_ms: number | null;
+                token_usage: {
+                    [key: string]: unknown;
+                };
+                cost_estimate: number | null;
+                editor_rating: number | null;
+                editor_selected: boolean;
+                /** Format: date-time */
+                created_at: string;
+            } | null;
+        };
+        PaginatedAuctionCardsResponse: {
+            data: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                player_id: string;
+                /** @enum {string} */
+                position_group: "GK" | "DEF" | "MID" | "FWD";
+                true_value_eur: number;
+                starting_price_eur: number;
+                /** @enum {string} */
+                value_type: "current" | "peak" | "synthetic";
+                /** @enum {string} */
+                card_type: "normal" | "safe_star" | "bargain" | "trap" | "obscure_gem" | "lookalike_story" | "legend";
+                /** @enum {string} */
+                difficulty: "easy" | "medium" | "hard" | "expert";
+                /** @enum {string} */
+                status: "draft" | "needs_review" | "approved" | "published" | "rejected";
+                generator_model: string | null;
+                verifier_model: string | null;
+                prompt_version: string | null;
+                /** @enum {string} */
+                verification_status: "passed" | "failed" | "needs_review";
+                /** Format: date-time */
+                published_at: string | null;
+                /** Format: date-time */
+                created_at: string;
+                /** Format: date-time */
+                updated_at: string;
+                player: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    display_name: {
+                        [key: string]: unknown;
+                    };
+                    nationality: string | null;
+                    nationality_code: string | null;
+                    /** @enum {string|null} */
+                    position_group: "GK" | "DEF" | "MID" | "FWD" | null;
+                    current_club: string | null;
+                    /** @enum {string} */
+                    active_status: "active" | "retired" | "legend" | "unknown";
+                    image_url: string | null;
+                    fame_score: number | null;
+                    /** @enum {string|null} */
+                    fame_bucket: "superstar" | "known" | "niche" | "obscure" | "legend" | null;
+                    /** @enum {string} */
+                    data_quality_status: "pending" | "usable" | "needs_review" | "rejected";
+                };
+                clue_count: number;
+            }[];
+            page: number;
+            limit: number;
+            total: number;
+            total_pages: number;
+        };
+        PlayerClueCardPreviewResponse: {
+            rowsParsed: number;
+            matchedCount: number;
+            ambiguousCount: number;
+            unmatchedCount: number;
+            warningCount: number;
+            rows: {
+                rowIndex: number;
+                sourcePlayerNumber: number | null;
+                answerName: string;
+                /** @enum {string} */
+                difficulty: "easy" | "medium" | "hard";
+                clue1: string;
+                clue2: string;
+                clue3: string;
+                warnings: string[];
+                validationErrors: string[];
+                factRiskFlags: string[];
+                originalText: string;
+                /** @enum {string} */
+                matchStatus: "matched" | "ambiguous" | "unmatched";
+                matchedPlayer: {
+                    /** Format: uuid */
+                    footballPlayerId: string;
+                    transfermarktId?: number | null;
+                    name: string;
+                    currentClub?: string | null;
+                    nationality?: string | null;
+                    positionGroup?: string | null;
+                    imageUrl?: string | null;
+                    currentValueEur?: number | null;
+                } | null;
+                candidates: {
+                    /** Format: uuid */
+                    footballPlayerId: string;
+                    transfermarktId?: number | null;
+                    name: string;
+                    currentClub?: string | null;
+                    nationality?: string | null;
+                    positionGroup?: string | null;
+                    imageUrl?: string | null;
+                    currentValueEur?: number | null;
+                }[];
+                matchMethod?: string | null;
+                /** @enum {string|null} */
+                matchConfidence?: "high" | "medium" | "low" | null;
+            }[];
+        };
+        PlayerClueCardCommitResponse: {
+            total: number;
+            inserted: number;
+            updated: number;
+            skippedExisting: number;
+            failed: number;
+            rows: {
+                rowIndex: number;
+                /** @enum {string} */
+                status: "inserted" | "updated" | "skipped_existing" | "failed";
+                /** Format: uuid */
+                clueCardId: string | null;
+                error: string | null;
+            }[];
+        };
+        PlayerClueCardDetail: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            football_player_id: string;
+            transfermarkt_id: number | null;
+            locale: string;
+            clue_1: string;
+            clue_2: string;
+            clue_3: string;
+            difficulty: string;
+            status: string;
+            source: string;
+            generation_provider: string | null;
+            generation_model: string | null;
+            prompt_version: string;
+            evidence: {
+                [key: string]: unknown;
+            };
+            source_payload: {
+                [key: string]: unknown;
+            };
+            review_notes: string | null;
+            rejection_reason: string | null;
+            created_at: string;
+            updated_at: string;
+            playerName: string;
+            playerImageUrl: string | null;
+            playerPositionGroup: string | null;
+            playerNationality: string | null;
+            playerCurrentClub: string | null;
+        };
+        AuctionPipelineStatsResponse: {
+            generated_at: string;
+            totals: {
+                total_tasks: number;
+                terminal_families: number;
+                published_families: number;
+                rejected_families: number;
+                failed_families: number;
+                pass_rate: number | null;
+                recent_pass_rates: {
+                    hours: number;
+                    published: number;
+                    terminal: number;
+                    pass_rate: number | null;
+                }[];
+                eligible_players: number;
+                players_done: number;
+                players_remaining: number;
+                completion_rate: number | null;
+            };
+            stages: {
+                stage: string;
+                count: number;
+            }[];
+            variants: {
+                variant_key: string;
+                count: number;
+                published: number;
+            }[];
+            cards: {
+                published: number;
+                needs_review: number;
+                superseded: number;
+                rejected: number;
+                published_families: number;
+            };
+            attempts_24h: {
+                total: number;
+                success: number;
+                rejected: number;
+                failed: number;
+                by_error_class: {
+                    error_class: string;
+                    count: number;
+                }[];
+            };
+            recent_failures: {
+                /** Format: uuid */
+                id: string;
+                /** Format: uuid */
+                task_id: string;
+                task_stage: string;
+                status: string;
+                error_class: string | null;
+                error_message: string | null;
+                external_call: string | null;
+                created_at: string;
+            }[];
+            latest_snapshot: {
+                /** Format: uuid */
+                id: string;
+                source: string;
+                status: string;
+                player_row_count: number;
+                valuation_row_count: number;
+                created_at: string;
+                promoted_at: string | null;
+            } | null;
+        };
+        AuctionPipelineWorkersResponse: {
+            workers: {
+                worker_id: string;
+                hostname: string;
+                /** Format: uuid */
+                task_id: string | null;
+                player_name: string | null;
+                variant_key: string | null;
+                stage: string | null;
+                started_at: string;
+                updated_at: string;
+                seconds_since_heartbeat: number;
+                is_stale: boolean;
+            }[];
+            live: number;
+            stale: number;
+        };
+        AuctionPipelinePromptsResponse: {
+            items: {
+                key: string;
+                text: string;
+                /** @enum {string} */
+                mode: "append" | "replace";
+                updated_at: string;
+                updated_by: string | null;
+            }[];
+            effective: {
+                [key: string]: {
+                    key: string;
+                    text: string;
+                    /** @enum {string} */
+                    mode: "append" | "replace";
+                    updated_at: string;
+                    updated_by: string | null;
+                };
+            };
+        };
+        AuctionPipelinePrompt: {
+            key: string;
+            text: string;
+            /** @enum {string} */
+            mode: "append" | "replace";
+            updated_at: string;
+            updated_by: string | null;
+        };
+        AuctionPipelineRequeueResponse: {
+            requeued: number;
+        };
+        AuctionPipelinePromptResetResponse: {
+            reset: boolean;
         };
         WlAdminCreateTestResponse: {
             /** Format: uuid */

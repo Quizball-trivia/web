@@ -22,6 +22,8 @@ export interface FutCardData {
   stats: FifaCardStats;
   photoId?: number;
   photoVer?: string;
+  /** Signed, app-relative face URL from the daily-challenge session; wins over photoId. */
+  faceUrl?: string | null;
 }
 
 const GOLD_BG = [
@@ -172,7 +174,7 @@ export function FutCard({
  *  a face image is missing or fails to load). */
 function Portrait({ card, reveal }: { card: FutCardData; reveal: boolean }) {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
-  const src = card.photoId ? `/api/fifa-face?id=${card.photoId}&v=${card.photoVer}` : null;
+  const src = card.faceUrl ?? (card.photoId ? `/api/fifa-face?id=${card.photoId}&v=${card.photoVer}` : null);
   const showPhoto = reveal && src !== null && failedSrc !== src;
 
   return (
