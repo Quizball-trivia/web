@@ -65,6 +65,14 @@ export type FootballLogicSession = Extract<
   { challengeType: "footballLogic" }
 >;
 
+export type FifaCardsSession = Extract<
+  DailyChallengeSession,
+  { challengeType: "fifaCards" }
+>;
+export type FifaCardsSessionCard = FifaCardsSession["cards"][number];
+export type DailyChallengeCardOutcome =
+  NonNullable<CompleteDailyChallengeRequest["outcomes"]>[number];
+
 export type DailyChallengeCompletionResult =
   components["schemas"]["CompleteDailyChallengeResponse"];
 

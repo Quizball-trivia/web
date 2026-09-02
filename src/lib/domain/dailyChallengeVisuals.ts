@@ -74,6 +74,12 @@ export const DAILY_CHALLENGE_VISUALS: Record<DailyChallengeType, ChallengeVisual
     iconColorClass: "text-pink-400",
     iconBgColor: "bg-pink-500/20",
   },
+  fifaCards: {
+    icon: "\u{1F0CF}",
+    iconToken: "cards",
+    iconColorClass: "text-yellow-400",
+    iconBgColor: "bg-yellow-500/20",
+  },
 };
 
 export function toChallengeCard(challenge: DailyChallengeSummary): ChallengeCard {

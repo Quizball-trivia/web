@@ -13,6 +13,7 @@ import { ImposterGame } from "@/features/daily/ImposterGame";
 import { CareerPathGame } from "@/features/daily/CareerPathGame";
 import { HighLowGame } from "@/features/daily/HighLowGame";
 import { FootballLogicGame } from "@/features/daily/FootballLogicGame";
+import { FifaCardsDailyGame } from "@/features/daily/FifaCardsDailyGame";
 import { QuitGameDialog } from "@/features/daily/QuitGameDialog";
 import { DailyChallengeIntro } from "@/features/daily/components/DailyChallengeIntro";
 import { consumeDailyChallengeSession } from "@/features/daily/dailyChallengeSessionPrefetch";
@@ -20,7 +21,7 @@ import { DAILY_CHALLENGE_VISUALS } from "@/lib/domain/dailyChallengeVisuals";
 import { useCompleteDailyChallenge } from "@/lib/queries/dailyChallenges.queries";
 import { queryKeys } from "@/lib/queries/queryKeys";
 import { usePlayer } from "@/contexts/PlayerContext";
-import type { DailyChallengeSession, DailyChallengeType } from "@/lib/domain/dailyChallenge";
+import type { DailyChallengeCardOutcome, DailyChallengeSession, DailyChallengeType } from "@/lib/domain/dailyChallenge";
 import { trackDailyChallengeCompleted, trackDailyChallengeStarted, trackDailyChallengeQuit } from "@/lib/analytics/game-events";
 import { createDailyChallengeSession } from "@/lib/repositories/dailyChallenges.repo";
 import { toDailyChallengeSession } from "@/lib/mappers/dailyChallenge.mapper";
@@ -87,7 +88,7 @@ export default function ChallengePage() {
   }, [challengeType, router]);
 
   const handleComplete = useCallback(
-    (score: number, nextPath?: string) => {
+    (score: number, nextPath?: string, outcomes?: DailyChallengeCardOutcome[]) => {
       if (!challengeType || completeOnceRef.current) return;
       completeOnceRef.current = true;
 
@@ -104,7 +105,7 @@ export default function ChallengePage() {
         try {
           completion = {
             status: "completed",
-            result: await completeMutation.mutateAsync(score),
+            result: await completeMutation.mutateAsync(outcomes && outcomes.length > 0 ? { score, outcomes } : score),
           };
         } catch (error) {
           if (isDailyChallengeAlreadyCompletedError(error)) {
@@ -152,11 +153,6 @@ export default function ChallengePage() {
     if (!challengeType) {
       return;
     }
-    try {
-      trackDailyChallengeStarted(challengeType);
-    } catch (error) {
-      console.error('Analytics trackDailyChallengeStarted failed', error);
-    }
 
     let cancelled = false;
     queueMicrotask(() => {
@@ -179,6 +175,15 @@ export default function ChallengePage() {
       .then((nextSession) => {
         if (cancelled) return;
         setSession(nextSession);
+        // Count a start only once a playable session for THIS challenge exists —
+        // a failed load or a mismatched session shows "unavailable", not a game.
+        if (nextSession.challengeType === challengeType) {
+          try {
+            trackDailyChallengeStarted(challengeType);
+          } catch (error) {
+            console.error('Analytics trackDailyChallengeStarted failed', error);
+          }
+        }
       })
       .catch((error: unknown) => {
         if (cancelled) return;
@@ -228,6 +233,8 @@ export default function ChallengePage() {
         return <HighLowGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
       case "footballLogic":
         return <FootballLogicGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
+      case "fifaCards":
+        return <FifaCardsDailyGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
       default:
         return null;
     }
@@ -235,8 +242,8 @@ export default function ChallengePage() {
 
   const handleBrowserBackConfirm = useCallback(() => {
     setShowBrowserBackDialog(false);
-    router.replace("/daily/challenges");
-  }, [router]);
+    handleBack();
+  }, [handleBack]);
 
   useEffect(() => {
     if (typeof window === "undefined" || guardPushed.current) return undefined;
