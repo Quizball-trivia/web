@@ -13,6 +13,7 @@ import { useMiniT } from "@/features/mini-games/lib/i18n";
 import { matchesName } from "@/features/mini-games/lib/matching";
 import { IDENTITY_CLUES, type IdentityClue } from "@/features/mini-games/lib/guessCardConstants";
 import type { DailyChallengeCardOutcome, FifaCardsSession, FifaCardsSessionCard } from "@/lib/domain/dailyChallenge";
+import { FIFA_EDITIONS, type FifaEdition } from "@/features/mini-games/data/guessFifaCard";
 
 type Status = "spin" | "clue" | "result";
 
@@ -22,11 +23,20 @@ interface FifaCardsDailyGameProps {
   onComplete: (score: number, nextPath?: string, outcomes?: DailyChallengeCardOutcome[]) => void;
 }
 
-/** The free clue is fixed per card for the day, so a reload can't reroll it. */
-function freeClueFor(card: FifaCardsSessionCard): IdentityClue {
-  let h = 0;
+/**
+ * The free clue is fixed for the day (card id + its position in today's set),
+ * so a reload can't reroll it but a card that comes round again months later
+ * may open a different clue.
+ */
+function freeClueFor(card: FifaCardsSessionCard, position: number): IdentityClue {
+  let h = position;
   for (const ch of card.id) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
   return IDENTITY_CLUES[h % IDENTITY_CLUES.length];
+}
+
+/** The spinner only knows the editions we ship; anything else lands on the newest. */
+function spinTargetFor(edition: string): SpinTarget {
+  return (FIFA_EDITIONS as string[]).includes(edition) ? (edition as FifaEdition) : "FC26";
 }
 
 function toFutCard(card: FifaCardsSessionCard): FutCardData {
@@ -73,8 +83,8 @@ export function FifaCardsDailyGame({ session, onBack, onComplete }: FifaCardsDai
   const inputRef = useRef<HTMLInputElement>(null);
 
   const card = cards[index] ?? null;
-  const shownClue = useMemo(() => (card ? freeClueFor(card) : "nation"), [card]);
-  const targetEdition = (card?.edition ?? "FC26") as SpinTarget;
+  const shownClue = useMemo(() => (card ? freeClueFor(card, index) : "nation"), [card, index]);
+  const targetEdition = spinTargetFor(card?.edition ?? "FC26");
 
   const clearAdvance = () => {
     if (advanceRef.current) {

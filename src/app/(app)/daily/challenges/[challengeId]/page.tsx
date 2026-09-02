@@ -175,12 +175,14 @@ export default function ChallengePage() {
       .then((nextSession) => {
         if (cancelled) return;
         setSession(nextSession);
-        // Count a start only once a playable session exists — a failed load
-        // (content unavailable, network) is not a started challenge.
-        try {
-          trackDailyChallengeStarted(challengeType);
-        } catch (error) {
-          console.error('Analytics trackDailyChallengeStarted failed', error);
+        // Count a start only once a playable session for THIS challenge exists —
+        // a failed load or a mismatched session shows "unavailable", not a game.
+        if (nextSession.challengeType === challengeType) {
+          try {
+            trackDailyChallengeStarted(challengeType);
+          } catch (error) {
+            console.error('Analytics trackDailyChallengeStarted failed', error);
+          }
         }
       })
       .catch((error: unknown) => {

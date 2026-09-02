@@ -42,7 +42,9 @@ export async function GET(request: NextRequest) {
   if (!ID_RE.test(id) || !VER_RE.test(ver)) {
     return new Response("bad request", { status: 400 });
   }
-  const allowed = sig ? signatureMatches(id, ver, sig) : KNOWN_FACES.has(`${Number(id)}:${ver}`);
+  // Either proof is enough: a valid backend signature, or a face from the bundled
+  // dataset. A rotated or missing secret must never break faces we ship anyway.
+  const allowed = (sig !== "" && signatureMatches(id, ver, sig)) || KNOWN_FACES.has(`${Number(id)}:${ver}`);
   if (!allowed) {
     return new Response("bad request", { status: 400 });
   }
