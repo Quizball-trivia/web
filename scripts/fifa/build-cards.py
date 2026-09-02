@@ -207,12 +207,49 @@ class Bucket:
 buckets = defaultdict(Bucket)
 # name key -> (photoId, photoVer) from every parsed row with a real face, across all sources
 FACE_INDEX: dict = {}
+# name key -> peak international reputation seen across editions (whole-career fame)
+REP_INDEX: dict = {}
 
 def truthy(v):
     return str(v).strip().lower() in ("yes", "true", "1") if v is not None else False
 
+# ---- difficulty -----------------------------------------------------------
+# Every card gets a difficulty tier ("how hard is this player to *name*") so the
+# daily set can be balanced (e.g. 3 very-hard / 3 hard / 4 medium-easy). Fame is
+# the dominant signal — SoFIFA international reputation, 1-5 stars — nudged by
+# overall rating and how old the edition is (older players fade from memory).
+# Thresholds are deliberately simple/tunable; re-run and eyeball the histogram.
+DIFFICULTY_TIERS = ("easy", "medium", "hard", "veryHard")
+
+def estimate_reputation(overall):
+    """FUTWIZ (FC25) exports carry no reputation column; approximate it from the
+    rating so difficulty still works for that edition. Deliberately coarse."""
+    o = overall or 0
+    if o >= 90: return 5
+    if o >= 87: return 4
+    if o >= 83: return 3
+    if o >= 79: return 2
+    return 1
+
+def difficulty_for(reputation, overall, ed):
+    """Tier from DIFFICULTY_TIERS; higher internal score = harder to guess.
+    `reputation` is the player's PEAK reputation across editions (a whole-career
+    fame signal), so a star early in their career isn't mislabelled — see the
+    REP_INDEX pass in main(). A 4-5* player can never reach veryHard."""
+    rep = reputation or estimate_reputation(overall)
+    ovr = overall or MIN_OVERALL
+    score = (5 - rep) * 22            # fame dominates: 5* -> 0, 1* -> 88
+    score += max(0, 84 - ovr) * 1.0   # a high rating is itself recognisable
+    score += max(0, 26 - ed) * 0.8    # older editions fade a little (FC26 -> 0, FIFA15 -> +8.8)
+    # thresholds chosen for a healthy spread across ~1,200 cards so the daily can
+    # always pull 3 very-hard / 3 hard / 4 medium-easy (see histogram at build time).
+    if score < 23: return "easy"
+    if score < 44: return "medium"
+    if score < 52: return "hard"
+    return "veryHard"
+
 def make_card(ed, name_short, name_long, overall, pos, nation, league, club, stats,
-              photo_id=None, real_face=None):
+              photo_id=None, real_face=None, reputation=None):
     # index the face first: a player who misses this edition's rating cut may still
     # be the only source of a photo for their card in another edition
     _pid = to_int(photo_id)
@@ -237,6 +274,13 @@ def make_card(ed, name_short, name_long, overall, pos, nation, league, club, sta
         "league": (league or "").strip(), "club": club.strip(),
         "stats": {k: int(round(stats[k])) for k in ("pac", "sho", "pas", "dri", "def", "phy")},
     }
+    # edition-accurate reputation (raw source value); `difficulty` is assigned in
+    # a final pass in main() from the player's PEAK reputation across editions.
+    rep = reputation if (reputation and 1 <= reputation <= 5) else None
+    card["internationalReputation"] = rep
+    if rep:
+        rk = name_key(disp)
+        REP_INDEX[rk] = max(REP_INDEX.get(rk, 0), rep)
     # SoFIFA face id + 2-digit edition, only for players with a real face photo
     # (faceless players fall back to our own silhouette). The image is served
     # through /api/fifa-face (SoFIFA's CDN needs a Referer we spoof server-side).
@@ -265,6 +309,7 @@ def parse_sofifa(reader, want_eds, version_col=False):
     c_ver = col("fifa_version") if version_col else None
     c_id = col("sofifa_id", "player_id", "id")
     c_rf = col("real_face")
+    c_ir = col("international_reputation", "international_reputation_rating")
     stat_cols = {k: col(full) for k, full in
                  (("pac","pace"),("sho","shooting"),("pas","passing"),
                   ("dri","dribbling"),("def","defending"),("phy","physic"))}
@@ -296,6 +341,7 @@ def parse_sofifa(reader, want_eds, version_col=False):
             stats,
             photo_id=cell(c_id),
             real_face=cell(c_rf),
+            reputation=to_int(cell(c_ir)),
         )
         if card:
             buckets[ed].add(card); added += 1
@@ -416,6 +462,22 @@ def main():
     with_face = sum(1 for c in cards if "photoId" in c)
     print(f"  faces: {with_face}/{len(cards)} cards have a photo ({filled} filled by name-match)")
 
+    # assign difficulty from PEAK reputation (max across the player's editions) so
+    # a star early in their career isn't tagged very-hard just for an old, low-rep
+    # card; falls back to the card's own reputation, then an overall estimate.
+    key_to_int = {v: k for k, v in EDITION_KEY.items()}
+    for c in cards:
+        peak = REP_INDEX.get(name_key(c["name"]), 0) or (c.get("internationalReputation") or 0)
+        c["difficulty"] = difficulty_for(peak or None, c["overall"], key_to_int[c["edition"]])
+
+    # difficulty spread + old-edition pool, so the daily can pull a balanced mix
+    # (e.g. 3 very-hard / 3 hard / 4 medium-easy, >=5 from before FIFA 20).
+    dist = {t: sum(1 for c in cards if c["difficulty"] == t) for t in DIFFICULTY_TIERS}
+    print("  difficulty: " + ", ".join(f"{t}={dist[t]}" for t in DIFFICULTY_TIERS))
+    for t in DIFFICULTY_TIERS:
+        old = sum(1 for c in cards if c["difficulty"] == t and key_to_int[c["edition"]] < 20)
+        print(f"    {t:<9} {dist[t]:>4}  ({old} pre-FIFA20)")
+
     write_ts(cards)
     write_json(cards)
     print(f"\nWrote {len(cards)} cards -> {TS_OUT.relative_to(REPO_ROOT)} and {JSON_OUT.relative_to(REPO_ROOT)}")
@@ -439,6 +501,9 @@ def write_ts(cards):
         lines.append(f"  {k}: number;")
     lines.append("}")
     lines.append("")
+    lines.append("/** Fame-based guess difficulty (fewer stars / older / lower-rated = harder). */")
+    lines.append('export type FifaCardDifficulty = "easy" | "medium" | "hard" | "veryHard";')
+    lines.append("")
     lines.append("export interface FifaCard {")
     lines.append("  id: string;")
     lines.append("  edition: FifaEdition;")
@@ -456,6 +521,10 @@ def write_ts(cards):
     lines.append("  league: string;")
     lines.append("  club: string;")
     lines.append("  stats: FifaCardStats;")
+    lines.append("  /** Guess difficulty (from peak career reputation + overall + era) — drives the daily hard/easy mix. */")
+    lines.append("  difficulty: FifaCardDifficulty;")
+    lines.append("  /** SoFIFA international reputation for THIS edition, 1-5 stars (absent where the source omits it). */")
+    lines.append("  internationalReputation?: number;")
     lines.append("  /** SoFIFA face id + 2-digit edition for the reveal photo (served via /api/fifa-face). */")
     lines.append("  photoId?: number;")
     lines.append("  photoVer?: string;")
@@ -491,7 +560,9 @@ def write_ts(cards):
             lines.append(f"    overall: {c['overall']}, position: {ts_str(c['position'])},")
             lines.append(f"    nation: {ts_str(c['nation'])}, nationCode: {ts_str(c['nationCode'])}, league: {ts_str(c['league'])}, club: {ts_str(c['club'])},")
             photo = f" photoId: {c['photoId']}, photoVer: {ts_str(c['photoVer'])}," if c.get("photoId") else ""
+            rep = f" internationalReputation: {c['internationalReputation']}," if c.get("internationalReputation") else ""
             lines.append(f"    stats: {stats},{photo}")
+            lines.append(f"    difficulty: {ts_str(c['difficulty'])},{rep}")
             lines.append("  },")
         lines.append("];")
         lines.append("")

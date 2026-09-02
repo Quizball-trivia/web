@@ -9,10 +9,19 @@ import { useMiniT } from '../lib/i18n';
 import { matchesName } from '../lib/matching';
 import { PLAYABLE_EDITIONS } from '../data/guessFifaCard';
 import { EditionSpinner, type SpinTarget } from './EditionSpinner';
-import { POINTS_PER_SOLVE, ROUND_SIZE, MAX_SCORE, rand, pickCard, IDENTITY_CLUES, type IdentityClue, type RoundResult, type GuessableCard } from '../lib/guessCard';
+import { POINTS_PER_SOLVE, ROUND_SIZE, MAX_SCORE, rand, buildDifficultySet, isOldCard, IDENTITY_CLUES, type IdentityClue, type RoundResult, type GuessableCard, type FifaCardDifficulty } from '../lib/guessCard';
 
 type Status = 'spin' | 'clue' | 'result';
 type Screen = 'play' | 'summary';
+
+// Difficulty is only revealed AFTER a guess (result + summary) so the mix can be
+// felt, not read off the card. Colours run green -> red as it gets harder.
+const DIFFICULTY_META: Record<FifaCardDifficulty, { label: string; color: string }> = {
+  easy: { label: 'Easy', color: '#38B60E' },
+  medium: { label: 'Medium', color: '#FFD54A' },
+  hard: { label: 'Hard', color: '#FF8A3D' },
+  veryHard: { label: 'Very hard', color: '#FB3101' },
+};
 
 export function GuessFifaCard({ backHref }: { backHref?: string } = {}) {
   const t = useMiniT();
@@ -28,7 +37,7 @@ export function GuessFifaCard({ backHref }: { backHref?: string } = {}) {
   const [outcome, setOutcome] = useState<{ solved: boolean; points: number; wrong: boolean } | null>(null);
   const [input, setInput] = useState('');
 
-  const usedRef = useRef<Set<string>>(new Set());
+  const roundRef = useRef<GuessableCard[]>([]); // the curated 10 for this round (3 veryHard / 3 hard / 4 medium-easy, >=5 old)
   const pendingRef = useRef<GuessableCard | null>(null); // card drawn by the spin, revealed when it lands
   const cardRef = useRef(card);
   const indexRef = useRef(index);
@@ -42,14 +51,12 @@ export function GuessFifaCard({ backHref }: { backHref?: string } = {}) {
     if (advanceRef.current) { window.clearTimeout(advanceRef.current); advanceRef.current = null; }
   };
 
-  // Spin to draw the next card: pick an edition (or ICONS), then a card from it.
-  // The card stays hidden (pendingRef) until the reel lands.
-  const beginCard = useCallback(() => {
-    const edition = rand(PLAYABLE_EDITIONS);
-    const drawn = pickCard(usedRef.current, edition);
-    if (drawn) usedRef.current.add(drawn.name);
+  // Draw card i of the curated round: the spin lands on that card's edition, and
+  // the card stays hidden (pendingRef) until the reel lands.
+  const beginCard = useCallback((i: number) => {
+    const drawn = roundRef.current[i] ?? null;
     pendingRef.current = drawn;
-    setTargetEdition(edition);
+    if (drawn) setTargetEdition(drawn.edition as SpinTarget);
     setShownClue(rand(IDENTITY_CLUES)); // one clue shown, the other two hidden
     setManualReveals([]);
     setOutcome(null);
@@ -65,20 +72,22 @@ export function GuessFifaCard({ backHref }: { backHref?: string } = {}) {
     const id = window.setTimeout(() => {
       if (startedRef.current) return;
       startedRef.current = true;
-      beginCard();
+      roundRef.current = buildDifficultySet();
+      beginCard(0);
     }, 0);
     return () => window.clearTimeout(id);
   }, [beginCard]);
 
   const nextCard = useCallback(() => {
     clearAdvance();
-    if (indexRef.current + 1 >= ROUND_SIZE) {
+    const next = indexRef.current + 1;
+    if (next >= ROUND_SIZE) {
       setStatus('result');
       setScreen('summary');
       return;
     }
-    setIndex((i) => i + 1);
-    beginCard();
+    setIndex(next);
+    beginCard(next);
   }, [beginCard]);
 
   const resolveCard = useCallback(
@@ -126,12 +135,12 @@ export function GuessFifaCard({ backHref }: { backHref?: string } = {}) {
 
   const playAgain = () => {
     clearAdvance();
-    usedRef.current = new Set();
+    roundRef.current = buildDifficultySet();
     setResults([]);
     setCard(null);
     setIndex(0);
     setScreen('play');
-    beginCard();
+    beginCard(0);
   };
 
   const revealedClues = {
@@ -247,10 +256,32 @@ function ResultBanner({
           </>
         )}
       </div>
+      <div className="flex items-center justify-center gap-2">
+        <DiffPill difficulty={card.difficulty} />
+        {isOldCard(card) && (
+          <span className="rounded-full bg-white/10 px-2.5 py-1 font-poppins text-[10px] font-black uppercase tracking-wider text-white/70">
+            {t('Pre-FIFA 20')}
+          </span>
+        )}
+      </div>
       <button type="button" onClick={onNext} className="h-12 w-full rounded-2xl bg-brand-yellow font-poppins text-base font-black uppercase tracking-wide text-black active:scale-[0.98]">
         {t('Next')}
       </button>
     </motion.div>
+  );
+}
+
+function DiffPill({ difficulty }: { difficulty: FifaCardDifficulty }) {
+  const t = useMiniT();
+  const m = DIFFICULTY_META[difficulty];
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-poppins text-[10px] font-black uppercase tracking-wider"
+      style={{ color: m.color, background: `${m.color}1f` }}
+    >
+      <span className="size-1.5 rounded-full" style={{ background: m.color }} />
+      {t(m.label)}
+    </span>
   );
 }
 
@@ -265,6 +296,14 @@ function Summary({
 }) {
   const t = useMiniT();
   const solvedCount = results.filter((r) => r.solved).length;
+  const mix = results.reduce(
+    (acc, r) => {
+      acc[r.card.difficulty] += 1;
+      if (isOldCard(r.card)) acc.old += 1;
+      return acc;
+    },
+    { easy: 0, medium: 0, hard: 0, veryHard: 0, old: 0 },
+  );
   return (
     <motion.div key="summary" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="flex flex-1 flex-col pt-2">
       <div className="rounded-3xl border-2 border-brand-yellow/40 bg-brand-yellow/[0.06] p-5 text-center">
@@ -274,6 +313,13 @@ function Summary({
         <div className="mt-1 font-poppins text-xs font-semibold text-white/50">
           {t('of {max} · {n}/{total} named', { max: MAX_SCORE, n: solvedCount, total: results.length })}
         </div>
+        {/* the mix this round was dealt with — verifies 3 veryHard / 3 hard / 4 medium-easy + >=5 old */}
+        <div className="mt-3 flex flex-wrap items-center justify-center gap-1.5">
+          <span className="rounded-full px-2 py-0.5 font-poppins text-[10px] font-black uppercase tracking-wider" style={{ color: DIFFICULTY_META.veryHard.color, background: `${DIFFICULTY_META.veryHard.color}1f` }}>{mix.veryHard} {t('Very hard')}</span>
+          <span className="rounded-full px-2 py-0.5 font-poppins text-[10px] font-black uppercase tracking-wider" style={{ color: DIFFICULTY_META.hard.color, background: `${DIFFICULTY_META.hard.color}1f` }}>{mix.hard} {t('Hard')}</span>
+          <span className="rounded-full px-2 py-0.5 font-poppins text-[10px] font-black uppercase tracking-wider" style={{ color: DIFFICULTY_META.medium.color, background: `${DIFFICULTY_META.medium.color}1f` }}>{mix.medium + mix.easy} {t('Medium/Easy')}</span>
+          <span className="rounded-full bg-white/10 px-2 py-0.5 font-poppins text-[10px] font-black uppercase tracking-wider text-white/70">{mix.old} {t('Pre-FIFA 20')}</span>
+        </div>
       </div>
 
       <div className="mt-4 flex-1 space-y-1.5 overflow-y-auto pr-1" style={{ maxHeight: '46vh' }}>
@@ -282,6 +328,7 @@ function Summary({
             <span className="w-12 shrink-0 rounded-md bg-[#3a2c08]/50 px-1.5 py-0.5 text-center font-poppins text-[9px] font-black uppercase tracking-wider text-[#f4e3a2]">
               {r.card.editionLabel}
             </span>
+            <span className="size-2 shrink-0 rounded-full" style={{ background: DIFFICULTY_META[r.card.difficulty].color }} title={DIFFICULTY_META[r.card.difficulty].label} />
             <span className="min-w-0 flex-1 truncate font-poppins text-sm font-bold text-white">{r.card.name}</span>
             <span className={`font-poppins text-sm font-black ${r.solved ? 'text-brand-green' : 'text-brand-red'}`}>
               {r.solved ? `+${r.points}` : t('Missed')}
