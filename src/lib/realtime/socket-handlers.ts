@@ -75,6 +75,9 @@ let _handlersRegistered = false;
 let _lastDbOutageErrorAtMs = 0;
 const DB_OUTAGE_QUEUE_LEFT_WINDOW_MS = 3_000;
 const GRID_RESYNC_THROTTLE_MS = 1_000;
+const GRID_CANCEL_BUSY_MAX_RETRIES = 3;
+const GRID_CANCEL_BUSY_RETRY_MS = 800;
+let _gridCancelBusyRetries = 0;
 const _lastGridResyncAtByMatchId = new Map<string, number>();
 /**
  * Grid matches this client had loaded before the current search started. Only
@@ -822,6 +825,7 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       searchId: data.searchId,
     });
     const gridStore = useFootballGridStore.getState();
+    if (data.state === 'idle') _gridCancelBusyRetries = 0;
     if (gridStore.searchCancellationPending && data.state === 'searching' && data.searchId) {
       socket.emit('grid:search_cancel', { searchId: data.searchId });
     }
@@ -925,6 +929,22 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       message: data.message,
     });
     const current = useFootballGridStore.getState();
+    // A cancel sent within ~1s of grid:search_state can find the search-start
+    // path still holding the user session lock. The server never re-emits a
+    // search state after that, so without a retry the player stays queued
+    // while the UI believes the cancel went through.
+    if (data.code === 'GRID_SEARCH_BUSY' && current.searchCancellationPending && current.search.searchId
+      && _gridCancelBusyRetries < GRID_CANCEL_BUSY_MAX_RETRIES) {
+      _gridCancelBusyRetries += 1;
+      const searchId = current.search.searchId;
+      setTimeout(() => {
+        const latest = useFootballGridStore.getState();
+        if (latest.searchCancellationPending && latest.search.searchId === searchId) {
+          socket.emit('grid:search_cancel', { searchId });
+        }
+      }, GRID_CANCEL_BUSY_RETRY_MS);
+      return;
+    }
     current.setError(data);
     const gridCode = typeof data.meta?.gridCode === 'string' ? data.meta.gridCode : data.code;
     if (
@@ -939,6 +959,7 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
 /** Reset registration state (for testing or socket reconnect). */
 export function resetSocketHandlers(): void {
   _handlersRegistered = false;
+  _gridCancelBusyRetries = 0;
   _queryClient = null;
   _lastDbOutageErrorAtMs = 0;
   _lastGridResyncAtByMatchId.clear();

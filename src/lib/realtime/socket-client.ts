@@ -189,7 +189,6 @@ async function waitForTokenToSettle(token: string): Promise<void> {
 
 async function recoverSocketAuthAndReconnect(
   socket: Socket<ServerToClientEvents, ClientToServerEvents>,
-  attempt = 0,
 ): Promise<void> {
   if (authRecoveryState && !authRecoveryState.cancelled) {
     return authRecoveryState.promise;
@@ -204,7 +203,7 @@ async function recoverSocketAuthAndReconnect(
   authRecoveryConsecutiveFailures += 1;
   socketDebug('auth recovery retry scheduled', {
     attemptId: recovery.id,
-    attempt,
+    consecutiveFailures: authRecoveryConsecutiveFailures,
     delayMs: retryDelayMs,
     ...socketSnapshot(socket),
   });
@@ -232,11 +231,13 @@ async function recoverSocketAuthAndReconnect(
         socket.disconnect();
         return;
       }
-      logger.warn('Socket auth recovery found no Supabase session; retrying', { attempt });
+      logger.warn('Socket auth recovery found no Supabase session; retrying', {
+        consecutiveFailures: authRecoveryConsecutiveFailures,
+      });
       if (authRecoveryState?.id === recovery.id) {
         authRecoveryState = null;
       }
-      void recoverSocketAuthAndReconnect(socket, attempt + 1);
+      void recoverSocketAuthAndReconnect(socket);
       return;
     }
 
