@@ -21,7 +21,6 @@ export const STORAGE_KEYS = {
   DAILY_CHALLENGE_STATE: 'quizball_daily_challenge',
   // Frontend-only daily lock for the Guess-the-Card daily (backend has no type
   // for it yet); keyed by UTC day so it resets with the other dailies.
-  GUESS_CARD_DAILY: 'quizball_guess_card_daily',
   WHEEL_SPIN_TIMESTAMP: 'quizball_wheel_spin',
 
   TRAINING_COMPLETE: 'quizball_training_complete',

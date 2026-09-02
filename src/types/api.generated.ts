@@ -1488,6 +1488,15 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
+                /** @description Query validation failed */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         put?: never;
@@ -1553,6 +1562,15 @@ export interface paths {
                 };
                 /** @description Authentication required */
                 401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Query validation failed */
+                422: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -3108,7 +3126,8 @@ export interface paths {
                 content: {
                     "application/json": {
                         nickname?: string;
-                        country?: string;
+                        /** @enum {string} */
+                        country?: "AD" | "AE" | "AF" | "AG" | "AI" | "AL" | "AM" | "AO" | "AQ" | "AR" | "AS" | "AT" | "AU" | "AW" | "AX" | "AZ" | "BA" | "BB" | "BD" | "BE" | "BF" | "BG" | "BH" | "BI" | "BJ" | "BL" | "BM" | "BN" | "BO" | "BQ" | "BR" | "BS" | "BT" | "BV" | "BW" | "BY" | "BZ" | "CA" | "CC" | "CD" | "CF" | "CG" | "CH" | "CI" | "CK" | "CL" | "CM" | "CN" | "CO" | "CR" | "CU" | "CV" | "CW" | "CX" | "CY" | "CZ" | "DE" | "DJ" | "DK" | "DM" | "DO" | "DZ" | "EC" | "EE" | "EG" | "EH" | "ER" | "ES" | "ET" | "FI" | "FJ" | "FK" | "FM" | "FO" | "FR" | "GA" | "GB" | "GD" | "GE" | "GF" | "GG" | "GH" | "GI" | "GL" | "GM" | "GN" | "GP" | "GQ" | "GR" | "GS" | "GT" | "GU" | "GW" | "GY" | "HK" | "HM" | "HN" | "HR" | "HT" | "HU" | "ID" | "IE" | "IL" | "IM" | "IN" | "IO" | "IQ" | "IR" | "IS" | "IT" | "JE" | "JM" | "JO" | "JP" | "KE" | "KG" | "KH" | "KI" | "KM" | "KN" | "KP" | "KR" | "KW" | "KY" | "KZ" | "LA" | "LB" | "LC" | "LI" | "LK" | "LR" | "LS" | "LT" | "LU" | "LV" | "LY" | "MA" | "MC" | "MD" | "ME" | "MF" | "MG" | "MH" | "MK" | "ML" | "MM" | "MN" | "MO" | "MP" | "MQ" | "MR" | "MS" | "MT" | "MU" | "MV" | "MW" | "MX" | "MY" | "MZ" | "NA" | "NC" | "NE" | "NF" | "NG" | "NI" | "NL" | "NO" | "NP" | "NR" | "NU" | "NZ" | "OM" | "PA" | "PE" | "PF" | "PG" | "PH" | "PK" | "PL" | "PM" | "PN" | "PR" | "PS" | "PT" | "PW" | "PY" | "QA" | "RE" | "RO" | "RS" | "RU" | "RW" | "SA" | "SB" | "SC" | "SD" | "SE" | "SG" | "SH" | "SI" | "SJ" | "SK" | "SL" | "SM" | "SN" | "SO" | "SR" | "SS" | "ST" | "SV" | "SX" | "SY" | "SZ" | "TC" | "TD" | "TF" | "TG" | "TH" | "TJ" | "TK" | "TL" | "TM" | "TN" | "TO" | "TR" | "TT" | "TV" | "TW" | "TZ" | "UA" | "UG" | "UM" | "US" | "UY" | "UZ" | "VA" | "VC" | "VE" | "VG" | "VI" | "VN" | "VU" | "WF" | "WS" | "YE" | "YT" | "ZA" | "ZM" | "ZW";
                         /** Format: uri */
                         avatar_url?: string | null;
                         avatar_customization?: {
@@ -5865,11 +5884,11 @@ export interface paths {
                         "application/json": {
                             items: {
                                 /** @enum {string} */
-                                challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic";
+                                challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
                                 title: string;
                                 description: string;
                                 /** @enum {string} */
-                                iconToken: "dollarSign" | "checkCircle" | "lightbulb" | "timer" | "list" | "users" | "route" | "trendingUp" | "image";
+                                iconToken: "dollarSign" | "checkCircle" | "lightbulb" | "timer" | "list" | "users" | "route" | "trendingUp" | "image" | "cards";
                                 coinReward: number;
                                 xpReward: number;
                                 showOnHome: boolean;
@@ -5915,7 +5934,7 @@ export interface paths {
                 };
                 header?: never;
                 path: {
-                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic";
+                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
                 };
                 cookie?: never;
             };
@@ -6108,6 +6127,38 @@ export interface paths {
                                 acceptedAnswers: string[];
                                 explanation: string | null;
                             }[];
+                        } | {
+                            /** @enum {string} */
+                            challengeType: "fifaCards";
+                            title: string;
+                            description: string;
+                            cardCount: number;
+                            pointsPerSolve: number;
+                            cards: {
+                                /** Format: uuid */
+                                id: string;
+                                edition: string;
+                                editionLabel: string;
+                                name: string;
+                                acceptedAnswers: string[];
+                                overall: number;
+                                position: string;
+                                nation: string;
+                                nationCode: string;
+                                league: string;
+                                club: string;
+                                stats: {
+                                    pac: number;
+                                    sho: number;
+                                    pas: number;
+                                    dri: number;
+                                    def: number;
+                                    phy: number;
+                                };
+                                faceUrl: string | null;
+                                /** @enum {string} */
+                                difficulty: "easy" | "medium" | "hard";
+                            }[];
                         };
                     };
                 };
@@ -6278,7 +6329,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic";
+                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
                 };
                 cookie?: never;
             };
@@ -6287,6 +6338,13 @@ export interface paths {
                     "application/json": {
                         /** @default 0 */
                         score?: number;
+                        outcomes?: {
+                            /** Format: uuid */
+                            cardId: string;
+                            solved: boolean;
+                            /** @default 0 */
+                            cluesRevealed?: number;
+                        }[];
                     };
                 };
             };
@@ -6299,7 +6357,7 @@ export interface paths {
                     content: {
                         "application/json": {
                             /** @enum {string} */
-                            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic";
+                            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
                             /** @enum {boolean} */
                             completedToday: true;
                             coinsAwarded: number;
@@ -6365,7 +6423,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic";
+                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
                 };
                 cookie?: never;
             };
@@ -6379,7 +6437,7 @@ export interface paths {
                     content: {
                         "application/json": {
                             /** @enum {string} */
-                            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic";
+                            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
                             /** @enum {boolean} */
                             reset: true;
                         };
@@ -6436,11 +6494,11 @@ export interface paths {
                         "application/json": {
                             items: {
                                 /** @enum {string} */
-                                challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic";
+                                challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
                                 title: string;
                                 description: string;
                                 /** @enum {string} */
-                                iconToken: "dollarSign" | "checkCircle" | "lightbulb" | "timer" | "list" | "users" | "route" | "trendingUp" | "image";
+                                iconToken: "dollarSign" | "checkCircle" | "lightbulb" | "timer" | "list" | "users" | "route" | "trendingUp" | "image" | "cards";
                                 coinReward: number;
                                 xpReward: number;
                                 showOnHome: boolean;
@@ -6510,6 +6568,12 @@ export interface paths {
                                     secondsPerQuestion: number;
                                     /** @enum {string} */
                                     challengeType: "footballLogic";
+                                } | {
+                                    /** @default [] */
+                                    categoryIds: string[];
+                                    cardCount: number;
+                                    /** @enum {string} */
+                                    challengeType: "fifaCards";
                                 };
                                 sortOrder: number;
                                 isActive: boolean;
@@ -6571,7 +6635,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic";
+                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
                 };
                 cookie?: never;
             };
@@ -8265,6 +8329,15 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
+                /** @description Query validation failed */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         put?: never;
@@ -8325,6 +8398,15 @@ export interface paths {
                 };
                 /** @description Authentication required */
                 401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Query validation failed */
+                422: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -9084,6 +9166,15 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
+                /** @description Query validation failed */
+                422: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
             };
         };
         put?: never;
@@ -9144,6 +9235,15 @@ export interface paths {
                 };
                 /** @description Authentication required */
                 401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Query validation failed */
+                422: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -10362,11 +10462,11 @@ export interface components {
         };
         DailyChallengeMetadata: {
             /** @enum {string} */
-            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic";
+            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
             title: string;
             description: string;
             /** @enum {string} */
-            iconToken: "dollarSign" | "checkCircle" | "lightbulb" | "timer" | "list" | "users" | "route" | "trendingUp" | "image";
+            iconToken: "dollarSign" | "checkCircle" | "lightbulb" | "timer" | "list" | "users" | "route" | "trendingUp" | "image" | "cards";
             coinReward: number;
             xpReward: number;
             showOnHome: boolean;
@@ -10437,6 +10537,12 @@ export interface components {
             secondsPerQuestion: number;
             /** @enum {string} */
             challengeType: "footballLogic";
+        } | {
+            /** @default [] */
+            categoryIds: string[];
+            cardCount: number;
+            /** @enum {string} */
+            challengeType: "fifaCards";
         };
         AdminDailyChallengeCategoryOption: {
             /** Format: uuid */
@@ -10631,10 +10737,42 @@ export interface components {
                 acceptedAnswers: string[];
                 explanation: string | null;
             }[];
+        } | {
+            /** @enum {string} */
+            challengeType: "fifaCards";
+            title: string;
+            description: string;
+            cardCount: number;
+            pointsPerSolve: number;
+            cards: {
+                /** Format: uuid */
+                id: string;
+                edition: string;
+                editionLabel: string;
+                name: string;
+                acceptedAnswers: string[];
+                overall: number;
+                position: string;
+                nation: string;
+                nationCode: string;
+                league: string;
+                club: string;
+                stats: {
+                    pac: number;
+                    sho: number;
+                    pas: number;
+                    dri: number;
+                    def: number;
+                    phy: number;
+                };
+                faceUrl: string | null;
+                /** @enum {string} */
+                difficulty: "easy" | "medium" | "hard";
+            }[];
         };
         CompleteDailyChallengeResponse: {
             /** @enum {string} */
-            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic";
+            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
             /** @enum {boolean} */
             completedToday: true;
             coinsAwarded: number;
@@ -10663,17 +10801,17 @@ export interface components {
         };
         ResetDailyChallengeResponse: {
             /** @enum {string} */
-            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic";
+            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
             /** @enum {boolean} */
             reset: true;
         };
         AdminDailyChallengeConfigResponse: {
             /** @enum {string} */
-            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic";
+            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
             title: string;
             description: string;
             /** @enum {string} */
-            iconToken: "dollarSign" | "checkCircle" | "lightbulb" | "timer" | "list" | "users" | "route" | "trendingUp" | "image";
+            iconToken: "dollarSign" | "checkCircle" | "lightbulb" | "timer" | "list" | "users" | "route" | "trendingUp" | "image" | "cards";
             coinReward: number;
             xpReward: number;
             showOnHome: boolean;
@@ -10743,6 +10881,12 @@ export interface components {
                 secondsPerQuestion: number;
                 /** @enum {string} */
                 challengeType: "footballLogic";
+            } | {
+                /** @default [] */
+                categoryIds: string[];
+                cardCount: number;
+                /** @enum {string} */
+                challengeType: "fifaCards";
             };
             sortOrder: number;
             isActive: boolean;

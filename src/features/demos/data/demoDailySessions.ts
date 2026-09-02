@@ -6,6 +6,8 @@ import type {
 } from "@/lib/domain/dailyChallenge";
 import type { Locale } from "@/lib/i18n/messages";
 import { getPoolSessions } from "./demoPoolSessions";
+import type { FifaCardsSession } from "@/lib/domain/dailyChallenge";
+import { FIFA_CARDS, PLAYABLE_EDITIONS } from "@/features/mini-games/data/guessFifaCard";
 import { DEMO_QUESTIONS } from "./demoQuestions";
 
 type L = Locale;
@@ -290,5 +292,44 @@ export function buildDemoDailySession(
       return pool.highLow;
     case "footballLogic":
       return footballLogicSession(locale);
+    case "fifaCards":
+      return fifaCardsSession(locale);
   }
+}
+
+/**
+ * Demo FIFA Cards round from the bundled free-play dataset: the top-rated card
+ * of each playable edition, ten in total. Faces use the proxy's dataset
+ * allowlist (no signature needed for bundled cards).
+ */
+function fifaCardsSession(locale: Locale): FifaCardsSession {
+  const cards = PLAYABLE_EDITIONS
+    .map((edition) => FIFA_CARDS.filter((card) => card.edition === edition).sort((a, b) => b.overall - a.overall)[0])
+    .filter((card) => card != null)
+    .slice(0, 10);
+  return {
+    challengeType: "fifaCards",
+    title: locale === "ka" ? "FIFA ბარათები" : "FIFA Cards",
+    description: locale === "ka"
+      ? "ოქროს ბარათი მხოლოდ სტატისტიკით — გამოიცანი მოთამაშე."
+      : "A gold card, stats only — name the player.",
+    cardCount: cards.length,
+    pointsPerSolve: 10,
+    cards: cards.map((card) => ({
+      id: card.id,
+      edition: card.edition,
+      editionLabel: card.editionLabel,
+      name: card.name,
+      acceptedAnswers: card.accepted,
+      overall: card.overall,
+      position: card.position,
+      nation: card.nation,
+      nationCode: card.nationCode,
+      league: card.league,
+      club: card.club,
+      stats: card.stats,
+      faceUrl: card.photoId ? `/api/fifa-face?id=${card.photoId}&v=${card.photoVer}` : null,
+      difficulty: card.overall >= 88 ? "easy" : card.overall >= 85 ? "medium" : "hard",
+    })),
+  };
 }

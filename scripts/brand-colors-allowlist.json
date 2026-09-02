@@ -20,6 +20,7 @@
     "src/features/mini-games/components/RoadToGoalPitch.tsx",
     "src/features/mini-games/components/SquadCollection.tsx",
     "src/features/mini-games/components/StatSniper.tsx",
+    "src/features/weekend-league/components/HallOfFame.tsx",
     "src/features/weekend-league/components/RailColorVariants.tsx",
     "src/features/weekend-league/components/StatusBandVariants.tsx",
     "src/features/weekend-league/components/WeekendLeagueStatusBand.tsx"
