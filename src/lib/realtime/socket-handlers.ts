@@ -960,6 +960,9 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
         }, GRID_CANCEL_BUSY_RETRY_MS);
         return;
       }
+      // Budget spent: surface the error, but let a later busy response on the
+      // same search (server recovered, user pressed cancel again) retry afresh.
+      clearGridCancelBusy();
     }
     current.setError(data);
     const gridCode = typeof data.meta?.gridCode === 'string' ? data.meta.gridCode : data.code;
@@ -976,6 +979,7 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
 export function resetSocketHandlers(): void {
   _handlersRegistered = false;
   clearGridCancelBusy();
+  _gridMatchesSeenBeforeSearch.clear();
   _queryClient = null;
   _lastDbOutageErrorAtMs = 0;
   _lastGridResyncAtByMatchId.clear();
