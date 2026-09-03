@@ -9,6 +9,7 @@ import { FriendPlayModal } from '@/components/shared/FriendPlayModal';
 import { AuctionModeModal } from '@/features/auction/components/AuctionModeModal';
 import { FootballGridModeModal } from '@/features/football-grid/components/FootballGridModeModal';
 import { HomeRecentMatches } from '@/components/shared/HomeRecentMatches';
+import { AllGamesGrid } from '@/features/play/AllGamesGrid';
 import { MessageCircle } from 'lucide-react';
 import { SocialLinks } from '@/components/shared/SocialLinks';
 import { ContactModal } from '@/components/shared/ContactModal';
@@ -240,6 +241,9 @@ interface ModeSelectionScreenProps {
 }
 
 
+// Owner call: Recent Matches is hidden on the Play page for now.
+const SHOW_RECENT_MATCHES = false;
+
 export function ModeSelectionScreen({
   onSelectMode,
   playHomeNotice,
@@ -292,18 +296,6 @@ export function ModeSelectionScreen({
   // Shared Poppins style for body/label/button text (replaces the old
   // font-black/font-bold Duolingo weights). Only Poppins 600 is loaded.
   const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
-  const friendlyTitleStyle = {
-    fontFamily: "'Poppins', sans-serif",
-    fontWeight: 600,
-    letterSpacing: "0",
-    lineHeight: 1,
-  } as const;
-  const dailyTitleStyle = {
-    fontFamily: "'Poppins', sans-serif",
-    fontWeight: 600,
-    letterSpacing: "0",
-    lineHeight: 1,
-  } as const;
   const secondaryModeCount = 2
     + Number(isAuctionCardEnabled)
     + Number(isTicTacToeEnabled)
@@ -545,110 +537,12 @@ export function ModeSelectionScreen({
       {/* ─── 1b. Announcements ─── */}
       <PlayAnnouncements />
 
-      {/* ─── 2. Mode Cards — 2×2 (owner call 2026-08-28): Friendly+Daily on
-          the first row, Auction+Tic-Tac-Toe together on the second. Two
-          columns on every breakpoint keeps the cards large and uniform. */}
+      {/* ─── 2. Mode Cards — Auction + Tic-Tac-Toe (owner call: Friendly
+          Match and Daily Challenge cards removed; every other game now lives
+          in the All Games grid below). */}
       <div className="grid grid-cols-2 gap-3 md:gap-4">
         {/* Friendly / Daily / Auction keep the PROD card design (owner call
             2026-08-28): compact bespoke cards, not the MiniModeCard layout. */}
-        {/* Friendly Match */}
-        <div
-          onClick={() => setSelectedMode('friendly')}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              setSelectedMode('friendly');
-            }
-          }}
-          role="button"
-          tabIndex={0}
-          className="relative cursor-pointer overflow-hidden rounded-[10px] md:min-h-0 p-3 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
-          style={{ backgroundColor: colors.blue.brand }}
-        >
-          <Image
-            src="/assets/friendly_match-icon.webp"
-            alt=""
-            width={160}
-            height={160}
-            className="hidden lg:block absolute right-4 bottom-4 h-36 w-36 object-contain opacity-90 pointer-events-none"
-          />
-          <div className="relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left">
-            <h3
-              className="text-[0.95rem] leading-[1.05] uppercase text-white break-words [hyphens:auto] md:text-[clamp(1.5rem,2.4vw,2.25rem)]"
-              style={friendlyTitleStyle}
-            >
-              {t('play.friendlyMatch')}
-            </h3>
-            <p className="mt-1 text-[10px] md:mt-1.5 md:text-base uppercase text-white" style={poppins}>{t('play.friendlySubtitle')}</p>
-            <div className="mt-1.5 flex flex-1 items-center justify-center lg:hidden">
-              <Image
-                src="/assets/friendly_match-icon.webp"
-                alt=""
-                width={500}
-                height={500}
-                className="h-[110px] w-[110px] object-contain pointer-events-none"
-              />
-            </div>
-            <div className="mt-1.5 flex h-[36px] w-full items-center justify-center rounded-[8px] bg-black text-[12px] uppercase tracking-wide text-white lg:hidden" style={poppins}>
-              {t('common.play')}
-            </div>
-            <div className="mt-auto hidden pt-8 lg:block">
-              <div className="flex h-11 w-[136px] shrink-0 items-center justify-center rounded-[8px] bg-black text-base uppercase tracking-wide text-white" style={poppins}>
-                {t('common.play')}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Daily Challenge */}
-        <div
-          onClick={() => router.push('/daily/challenges')}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              router.push('/daily/challenges');
-            }
-          }}
-          role="button"
-          tabIndex={0}
-          className="relative cursor-pointer overflow-hidden rounded-[10px] md:min-h-0 p-3 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
-          style={{ backgroundColor: colors.yellow.base }}
-        >
-          <Image
-            src="/assets/daily_chllangeicon.webp"
-            alt=""
-            width={160}
-            height={160}
-            className="hidden lg:block absolute right-2 bottom-2 h-40 w-40 object-contain opacity-90 pointer-events-none"
-          />
-          <div className="relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left">
-            <h3
-              className="text-[0.95rem] leading-[1.05] uppercase text-black break-words [hyphens:auto] md:text-[clamp(1.5rem,2.4vw,2.25rem)]"
-              style={dailyTitleStyle}
-            >
-              {t('play.dailyChallenge')}
-            </h3>
-            <p className="mt-1 text-[10px] md:mt-1.5 md:text-base uppercase text-black" style={poppins}>{t('play.dailySubtitle')}</p>
-            <div className="mt-1.5 flex flex-1 items-center justify-center lg:hidden">
-              <Image
-                src="/assets/daily_challenge_mobile.webp"
-                alt=""
-                width={528}
-                height={528}
-                className="h-[150px] w-full object-contain pointer-events-none"
-              />
-            </div>
-            <div className="mt-1.5 flex h-[36px] w-full items-center justify-center rounded-[8px] bg-black text-[12px] uppercase tracking-wide text-white lg:hidden" style={poppins}>
-              {t('common.play')}
-            </div>
-            <div className="mt-auto hidden pt-8 lg:block">
-              <div className="flex h-11 w-[136px] shrink-0 items-center justify-center rounded-[8px] bg-black text-base uppercase tracking-wide text-white" style={poppins}>
-                {t('common.play')}
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Auction (beta) — spans the mobile 2-col row so it never orphans */}
         {isAuctionCardEnabled && (
           <div
@@ -922,8 +816,15 @@ export function ModeSelectionScreen({
       </div>
       )}
 
-      {/* ─── 5. Recent Matches ─── */}
-      <HomeRecentMatches collapsedOnly />
+      {/* ─── 5. All Games — every mode as an artwork card, 3 per row on
+              desktop / 2 on mobile (owner call). Sits above Recent Matches. ─── */}
+      <div className="mt-6 md:mt-8">
+        <AllGamesGrid />
+      </div>
+
+      {/* ─── 6. Recent Matches — hidden per owner call; kept mounted behind
+              this flag so it can be restored in one line. ─── */}
+      {SHOW_RECENT_MATCHES && <HomeRecentMatches collapsedOnly />}
 
       {/* ─── 5b. Socials + contact (mobile only — desktop uses the top-left
               header cluster in AppShell) ─── */}

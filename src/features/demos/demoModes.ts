@@ -464,6 +464,11 @@ export const DAILY_DEMO_MODES: DemoModeCard[] = (
 
 const HIDDEN_DAILY_MODES: DemoModeCard[] = HIDDEN_DAILY_TYPES.map(buildDailyCard);
 
+/** Every daily challenge, including the two hidden from the demos hub. */
+export const ALL_DAILY_DEMO_MODES: DemoModeCard[] = (
+  Object.keys(DAILY_DEMO_COPY) as DailyChallengeType[]
+).map(buildDailyCard);
+
 export const ALL_DEMO_MODES: DemoModeCard[] = [
   ...FEATURED_DEMO_MODES,
   ...MINI_GAME_DEMO_MODES,

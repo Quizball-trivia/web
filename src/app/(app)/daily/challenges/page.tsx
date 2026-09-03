@@ -15,6 +15,7 @@ import { useAuthStore } from "@/stores/auth.store";
 import { useQueryClient } from "@tanstack/react-query";
 import { useLocale } from "@/contexts/LocaleContext";
 import { prefetchDailyChallengeSession } from "@/features/daily/dailyChallengeSessionPrefetch";
+import { DailyLobbyMockup } from "@/features/daily/DailyLobbyMockup";
 
 // Challenges reset at 00:00 UTC. Show that moment as a wall-clock time in the
 // viewer's own timezone (auto-detected by Intl) so a Georgia user sees 04:00
@@ -156,7 +157,17 @@ function ChallengeCard({
   );
 }
 
+// LOCAL PREVIEW ONLY: set NEXT_PUBLIC_DAILY_LOBBY_MOCKUP=true in .env.local
+// to render the casino-style lobby mockup instead of this page. Unset in every
+// real environment, so production behaviour is unchanged.
 export default function DailyChallengesPage() {
+  if (process.env.NEXT_PUBLIC_DAILY_LOBBY_MOCKUP === "true") {
+    return <DailyLobbyMockup />;
+  }
+  return <DailyChallengesHub />;
+}
+
+function DailyChallengesHub() {
   const { t, locale } = useLocale();
   const router = useRouter();
   const authUser = useAuthStore((state) => state.user);

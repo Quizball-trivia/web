@@ -7,7 +7,7 @@ const GAME_MODE_IMAGE_BASE = SUPABASE_IMAGE_BASE
   ? `${SUPABASE_IMAGE_BASE}/storage/v1/object/public/imgs/demos/game-modes/2026-08-17`
   : "/assets/demos/game-modes";
 
-const ILLUSTRATED_MODE_SLUGS = new Set([
+export const ILLUSTRATED_MODE_SLUGS = new Set([
   "weekend-league",
   "auction",
   "mini-final-third",
