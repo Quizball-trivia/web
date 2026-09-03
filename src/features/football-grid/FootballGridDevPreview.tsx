@@ -430,7 +430,14 @@ function PackBrowserScenario() {
     }
   };
 
-  useEffect(() => { void load(null, releaseKind); }, []); // eslint-disable-line react-hooks/exhaustive-deps -- initial load only
+  // Strict Mode replays this effect in development; the ref survives the
+  // replay, so only one initial request is sent.
+  const initialLoadRef = useRef(false);
+  useEffect(() => {
+    if (initialLoadRef.current) return;
+    initialLoadRef.current = true;
+    void load(null, releaseKind);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps -- initial load only
 
   return (
     <main className="min-h-dvh overflow-y-auto bg-surface-page-alt px-5 py-8 text-white">
