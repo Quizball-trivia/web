@@ -405,11 +405,13 @@ function PackBrowserScenario() {
   const requestSeq = useRef(0);
 
   const load = async (nextTheme: string | null, kind: 'draft' | 'published') => {
-    setError(null);
     const seq = ++requestSeq.current;
     try {
       const { API_BASE_URL } = await import('@/lib/config');
       const { getSupabaseAccessToken } = await import('@/lib/auth/supabase');
+      // State writes only after the first await, so the initial-load effect
+      // never sets state synchronously.
+      if (seq === requestSeq.current) setError(null);
       const token = await getSupabaseAccessToken();
       const params = new URLSearchParams({ release: kind, limit: '40' });
       if (nextTheme) params.set('theme', nextTheme);
@@ -423,7 +425,8 @@ function PackBrowserScenario() {
       // pack's boards under the newly selected chip.
       if (seq === requestSeq.current) setPayload(json);
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err));
+      // A superseded request must not overwrite the newer request's outcome.
+      if (seq === requestSeq.current) setError(err instanceof Error ? err.message : String(err));
     }
   };
 
