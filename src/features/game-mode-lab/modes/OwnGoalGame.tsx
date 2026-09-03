@@ -298,6 +298,7 @@ function Round({
 
   const handleEndTurn = () => {
     if (turnRef.current !== "you" || outcomeRef.current) return;
+    turnRef.current = "opp"; // sync-block further taps, mirroring handleTap
     startRivalTurn();
   };
 

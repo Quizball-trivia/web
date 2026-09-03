@@ -75,8 +75,12 @@ function CategoryPicker({ onPick }: { onPick: (c: Stat501Category) => void }) {
   );
 }
 
-/** The rival's pick: pressure early, precision late, occasional misjudgement. */
-function pickOpponentPlayer(remaining: Stat501Player[], score: number): Stat501Player {
+/**
+ * The rival's pick: pressure early, precision late, occasional misjudgement.
+ * Returns null when the pool is exhausted (no legal move left).
+ */
+function pickOpponentPlayer(remaining: Stat501Player[], score: number): Stat501Player | null {
+  if (remaining.length === 0) return null;
   const safe = remaining.filter((p) => score - p.stat >= STAT_501_BUST_FLOOR);
   if (safe.length === 0) {
     // Forced bust — take the smallest overshoot.
@@ -123,6 +127,13 @@ function Round({
       setOppThinking(false);
       const remaining = category.players.filter((p) => !usedNow.has(p.name));
       const pick = pickOpponentPlayer(remaining, oppScore);
+      if (!pick) {
+        // Pool exhausted — the rival can't throw, so play passes back.
+        flash("info", "Rival has no players left — your throw.");
+        release();
+        setTurn("you");
+        return;
+      }
       setUsed((prev) => new Set(prev).add(pick.name));
       const next = oppScore - pick.stat;
 

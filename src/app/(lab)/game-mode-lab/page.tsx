@@ -17,7 +17,7 @@ export default function GameModeLabPage() {
           </div>
           <h1 className="text-2xl font-extrabold sm:text-3xl">Game Mode Lab</h1>
           <p className="mx-auto mt-2 max-w-md text-sm text-brand-slate-light">
-            Eight experimental QuizBall modes. Each is a 1–3 minute playable
+            Nine experimental QuizBall modes. Each is a 1–3 minute playable
             prototype — try them all and tell us which we should build for real.
           </p>
         </header>

@@ -3,23 +3,18 @@
 All images sourced from Wikimedia Commons for the internal game-mode prototypes.
 Each line: local file — Commons file · license · author · source page.
 
-- **9320.jpg** — "File:Stopwatch, 1810201155, ako.jpg" · CC BY-SA 4.0 · Ansgar Koreng · https://commons.wikimedia.org/wiki/File:Stopwatch,_1810201155,_ako.jpg
 - **actor.jpg** — "File:Comedy and tragedy masks from the Princess Theatre, Decatur, AL image by Marjorie Kaufman.jpg" · CC BY-SA 4.0 · MiltonPoint · https://commons.wikimedia.org/wiki/File:Comedy_and_tragedy_masks_from_the_Princess_Theatre,_Decatur,_AL_image_by_Marjorie_Kaufman.jpg
 - **aguero.jpg** — "File:Sergio Aguero statue - Etihad Stadium.jpg" · CC BY-SA 4.0 · Christian David · https://commons.wikimedia.org/wiki/File:Sergio_Aguero_statue_-_Etihad_Stadium.jpg
 - **airport.jpg** — "File:Flight departure board at Brisbane Airport, December 2022.jpg" · CC BY-SA 4.0 · Kgbo · https://commons.wikimedia.org/wiki/File:Flight_departure_board_at_Brisbane_Airport,_December_2022.jpg
 - **aura.jpg** — "File:Aviator sunglasses 2.jpg" · CC BY 4.0 · Gohstyman · https://commons.wikimedia.org/wiki/File:Aviator_sunglasses_2.jpg
 - **ballondor.jpg** — "File:Zinedine Zidane's 1998 Ballon d'Or trophy, Real Madrid Museum, Santiago Bernabéu, Madrid, Spain (Ank Kumar, Infosys Limited) 04.jpg" · CC BY-SA 4.0 · Ank Kumar · https://commons.wikimedia.org/wiki/File:Zinedine_Zidane%27s_1998_Ballon_d%27Or_trophy,_Real_Madrid_Museum,_Santiago_Bernab%C3%A9u,_Madrid,_Spain_(Ank_Kumar,_Infosys_Limited)_04.jpg
 - **banana.jpg** — "File:Banane-A-05 cropped.jpg" · Public domain · Priwo · https://commons.wikimedia.org/wiki/File:Banane-A-05_cropped.jpg
-- **beach.jpg** — "File:11957 - Beach Scene at Tropical Palm Beach, Florida back.jpg" · Public domain · Unknown authorUnknown author · https://commons.wikimedia.org/wiki/File:11957_-_Beach_Scene_at_Tropical_Palm_Beach,_Florida_back.jpg
 - **bicycle.jpg** — "File:Ruben Mendoza bicycle kick.jpg" · CC BY 3.0 · .
 - **bigears.jpg** — "File:Trofeo UEFA Champions League.jpg" · CC BY 2.0 · David Flores · https://commons.wikimedia.org/wiki/File:Trofeo_UEFA_Champions_League.jpg
 - **bite.jpg** — "File:Shark Jaws (50669120731).jpg" · Public domain · YVC Biology Department · https://commons.wikimedia.org/wiki/File:Shark_Jaws_(50669120731).jpg
-- **boots.jpg** — "File:Wesley Fry, Boots Erb, Pappy Waldorf and Bob Celeri 1949.jpg" · Public domain · Unknown · https://commons.wikimedia.org/wiki/File:Wesley_Fry,_Boots_Erb,_Pappy_Waldorf_and_Bob_Celeri_1949.jpg
 - **bottlejob.jpg** — "File:Baby and baby milk bottle, Baby feeding, Moscow, Russia.jpg" · CC BY 4.0 · Vyacheslav Argenberg · https://commons.wikimedia.org/wiki/File:Baby_and_baby_milk_bottle,_Baby_feeding,_Moscow,_Russia.jpg
 - **bull.jpg** — "File:TORO BRAVO.jpg" · CC BY-SA 4.0 · PEPE GADEIRAS · https://commons.wikimedia.org/wiki/File:TORO_BRAVO.jpg
 - **bus.jpg** — "File:Mannschaftsbus 1. FC Kaiserslautern 11-2019.jpg" · CC BY-SA 4.0 · Nick-4711 · https://commons.wikimedia.org/wiki/File:Mannschaftsbus_1._FC_Kaiserslautern_11-2019.jpg
-- **champagne.jpg** — "File:Moët & Chandon - 001.jpg" · Public domain · Mutari 21:12, 31 March 2008 (UTC) · https://commons.wikimedia.org/wiki/File:Mo%C3%ABt_%26_Chandon_-_001.jpg
-- **circus.jpg** — "File:Circus Ronaldo door Dirk Annemans.jpg" · CC BY-SA 4.0 · Dirk Annemans · https://commons.wikimedia.org/wiki/File:Circus_Ronaldo_door_Dirk_Annemans.jpg
 - **cobra.jpg** — "File:The Grass Snake - Natrix natrix.jpg" · CC BY 3.0 · Darius Bauzys · https://commons.wikimedia.org/wiki/File:The_Grass_Snake_-_Natrix_natrix.jpg
 - **cold.jpg** — "File:Ice cubes in a glass.jpg" · CC BY 2.0 · Nattu from Male', Maldives · https://commons.wikimedia.org/wiki/File:Ice_cubes_in_a_glass.jpg
 - **collar.jpg** — "File:Eric Cantona Cannes 2009.jpg" · CC BY-SA 3.0 · Georges Biard · https://commons.wikimedia.org/wiki/File:Eric_Cantona_Cannes_2009.jpg
@@ -34,7 +29,6 @@ Each line: local file — Commons file · license · author · source page.
 - **hairdryer.jpg** — "File:Sir Alex Ferguson Statue, Old Trafford - geograph.org.uk - 3244051.jpg" · CC BY-SA 2.0 · David Dixon · https://commons.wikimedia.org/wiki/File:Sir_Alex_Ferguson_Statue,_Old_Trafford_-_geograph.org.uk_-_3244051.jpg
 - **handofgod.jpg** — "File:Placca del Largo Diego Armando Maradona, Napoli.jpg" · CC BY-SA 4.0 · Evvemoscia · https://commons.wikimedia.org/wiki/File:Placca_del_Largo_Diego_Armando_Maradona,_Napoli.jpg
 - **headbutt.jpg** — "File:Zinedine Zidane by Tasnim 03.jpg" · CC BY 4.0 · Hadi Abyar · https://commons.wikimedia.org/wiki/File:Zinedine_Zidane_by_Tasnim_03.jpg
-- **helicopter.jpg** — "File:Royal Air Force Chinook helicopter firing flares over Afghanistan MOD 45158742.jpg" · OGL 2 · Cpl Lee Goddard · https://commons.wikimedia.org/wiki/File:Royal_Air_Force_Chinook_helicopter_firing_flares_over_Afghanistan_MOD_45158742.jpg
 - **king.jpg** — "File:Pele con brasil (cropped).jpg" · Public domain · Unknown authorUnknown author · https://commons.wikimedia.org/wiki/File:Pele_con_brasil_(cropped).jpg
 - **limbs.jpg** — "File:Supporters celebrate winning Brazilian team 08.jpg" · CC BY 3.0 br · Agência Brasil · https://commons.wikimedia.org/wiki/File:Supporters_celebrate_winning_Brazilian_team_08.jpg
 - **lion.jpg** — "File:Zlatan Ibrahimović June 2018.jpg" · CC BY 4.0 · Meghdad Madadi · https://commons.wikimedia.org/wiki/File:Zlatan_Ibrahimovi%C4%87_June_2018.jpg
@@ -42,7 +36,6 @@ Each line: local file — Commons file · license · author · source page.
 - **opengoal.jpg** — "File:Empty Goal Post.jpg" · CC BY-SA 4.0 · Dammy Kaka · https://commons.wikimedia.org/wiki/File:Empty_Goal_Post.jpg
 - **penalty.jpg** — "File:FWC 2018 - Group D - ARG v ISL - Messi penalty kick.jpg" · CC BY-SA 4.0 · Voltmetro · https://commons.wikimedia.org/wiki/File:FWC_2018_-_Group_D_-_ARG_v_ISL_-_Messi_penalty_kick.jpg
 - **pizza.jpg** — "File:Margherita Originale.JPG" · CC BY-SA 3.0 · Mario56 · https://commons.wikimedia.org/wiki/File:Margherita_Originale.JPG
-- **plane.jpg** — "File:Airliner taking off from Heathrow - geograph.org.uk - 112001.jpg" · CC BY-SA 2.0 · David Hawgood · https://commons.wikimedia.org/wiki/File:Airliner_taking_off_from_Heathrow_-_geograph.org.uk_-_112001.jpg
 - **redcard.jpg** — "File:Referee showing a red card (cropped).jpg" · CC BY 4.0 · Keiteay · https://commons.wikimedia.org/wiki/File:Referee_showing_a_red_card_(cropped).jpg
 - **remontada.jpg** — "File:F5 tornado Elie Manitoba 2007.jpg" · CC BY-SA 3.0 · Justin Hobson (Justin1569 at English Wikipedia) · https://commons.wikimedia.org/wiki/File:F5_tornado_Elie_Manitoba_2007.jpg
 - **robot.jpg** — "File:Ha Ha Toys, Planet Robot, Blue, Main Street Toys Exclusive, Double Dose.jpg" · CC BY-SA 3.0 · D J Shin · https://commons.wikimedia.org/wiki/File:Ha_Ha_Toys,_Planet_Robot,_Blue,_Main_Street_Toys_Exclusive,_Double_Dose.jpg
@@ -51,8 +44,6 @@ Each line: local file — Commons file · license · author · source page.
 - **siu.jpg** — "File:Cristiano Ronaldo 0876.jpg" · CC BY-SA 4.0 · YantsImages · https://commons.wikimedia.org/wiki/File:Cristiano_Ronaldo_0876.jpg
 - **slip.jpg** — "File:Steven Gerrard in 2014.jpg" · CC BY-SA 4.0 · Biser Todorov · https://commons.wikimedia.org/wiki/File:Steven_Gerrard_in_2014.jpg
 - **snake.jpg** — "File:The Grass Snake - Natrix natrix.jpg" · CC BY 3.0 · Darius Bauzys · https://commons.wikimedia.org/wiki/File:The_Grass_Snake_-_Natrix_natrix.jpg
-- **socks.jpg** — "File:Colorful Socks and Birkenstocks (21987849469).jpg" · CC BY 2.0 · Eli Christman from Richmond, VA, USA · https://commons.wikimedia.org/wiki/File:Colorful_Socks_and_Birkenstocks_(21987849469).jpg
-- **spider.jpg** — "File:Spider web Luc Viatour.jpg" · CC BY-SA 3.0 · Luc Viatour · https://commons.wikimedia.org/wiki/File:Spider_web_Luc_Viatour.jpg
 - **spot.jpg** — "File:Twelve Yards - geograph.org.uk - 146925.jpg" · CC BY-SA 2.0 · Richard Webb · https://commons.wikimedia.org/wiki/File:Twelve_Yards_-_geograph.org.uk_-_146925.jpg
 - **statue.jpg** — "File:20191225 Zlatan Ibrahimovic staty Malmö stadion 7199 (49429724597).jpg" · CC BY 2.0 · Jenny Andersson / News Oresund · https://commons.wikimedia.org/wiki/File:20191225_Zlatan_Ibrahimovic_staty_Malm%C3%B6_stadion_7199_(49429724597).jpg
 - **stopwatch.jpg** — "File:Stopwatch, 1810201155, ako.jpg" · CC BY-SA 4.0 · Ansgar Koreng · https://commons.wikimedia.org/wiki/File:Stopwatch,_1810201155,_ako.jpg
@@ -61,5 +52,4 @@ Each line: local file — Commons file · license · author · source page.
 - **var.jpg** — "File:Video assistant referee en el Estadio Azteca 2.jpg" · CC BY-SA 4.0 · ProtoplasmaKid · https://commons.wikimedia.org/wiki/File:Video_assistant_referee_en_el_Estadio_Azteca_2.jpg
 - **volvo.jpg** — "File:Volvo V60 (SPA) 1X7A0386.jpg" · CC BY-SA 4.0 · Alexander Migl · https://commons.wikimedia.org/wiki/File:Volvo_V60_(SPA)_1X7A0386.jpg
 - **wall.jpg** — "File:Free kick wall.jpg" · CC BY 4.0 · Keiteay · https://commons.wikimedia.org/wiki/File:Free_kick_wall.jpg
-- **whistle.jpg** — "File:Fußballländerspiel Österreich-Ukraine (01.06.2012) 43.jpg" · FAL · Taxiarchos228 · https://commons.wikimedia.org/wiki/File:Fu%C3%9Fballl%C3%A4nderspiel_%C3%96sterreich-Ukraine_(01.06.2012)_43.jpg
 - **wizard.jpg** — "File:Wizard Hat.jpg" · CC BY-SA 3.0 · unknown author · https://commons.wikimedia.org/wiki/File:Wizard_Hat.jpg

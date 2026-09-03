@@ -93,13 +93,16 @@ export function SayItWithMemesGame({ backHref }: LabProps) {
   };
 
   const revealNext = () => {
-    if (result || gameOver || revealed >= target.revealOrder.length) return;
+    // acquire() is synchronous: two clicks in one frame would otherwise both
+    // pass the state guards and stack timers, skipping a card and mis-scoring.
+    if (result || gameOver || revealed >= target.revealOrder.length || !acquire()) return;
     setTeammateThinking(true);
     schedule(() => {
       setTeammateThinking(false);
       setRevealed((r) => r + 1);
       setLockedUntilReveal(false);
       clearFeedback();
+      release();
     }, thinkDelay(700, 1300));
   };
 

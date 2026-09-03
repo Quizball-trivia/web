@@ -31,11 +31,10 @@ function shuffle<T>(items: T[]): T[] {
 
 export function ConnectionsRaceGame({ backHref }: LabProps) {
   const [attempt, setAttempt] = useState(0);
-  const puzzle = useMemo(
-    () => connectionsPuzzles[Math.floor(Math.random() * connectionsPuzzles.length)],
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- new puzzle per attempt
-    [attempt],
-  );
+  // Rotate from a random start so "Play again" never repeats the puzzle just
+  // solved (with only 3 puzzles, pure random repeated ~1 in 3).
+  const [firstPuzzle] = useState(() => Math.floor(Math.random() * connectionsPuzzles.length));
+  const puzzle = connectionsPuzzles[(firstPuzzle + attempt) % connectionsPuzzles.length];
 
   return (
     <LabShell mode={mode} backHref={backHref}>

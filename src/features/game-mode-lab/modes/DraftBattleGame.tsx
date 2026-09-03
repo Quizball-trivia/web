@@ -93,8 +93,9 @@ export function DraftBattleGame({ backHref }: LabProps) {
     squad.groups[slot?.group ?? "GK"].filter((p) => !draftedNames.has(p.name));
 
   /** Spin: decelerating highlight over the squad chips, lands on a valid squad. */
-  const spin = (excludeId?: string) => {
-    if (!slot || !acquire()) return;
+  /** Returns false when a spin is already in flight (lock held). */
+  const spin = (excludeId?: string): boolean => {
+    if (!slot || !acquire()) return false;
     setWheelState("spinning");
     setLandedSquad(null);
     setOptions([]);
@@ -119,6 +120,7 @@ export function DraftBattleGame({ backHref }: LabProps) {
       schedule(() => tick(step + 1), delay);
     };
     schedule(() => tick(1), 60);
+    return true;
   };
 
   const advanceSlot = () => {
@@ -168,8 +170,9 @@ export function DraftBattleGame({ backHref }: LabProps) {
 
   const handleRespin = () => {
     if (wheelState !== "landed" || respinsLeft <= 0) return;
-    setRespinsLeft((r) => r - 1);
-    spin(landedSquad?.id);
+    // Only consume a re-spin if the spin actually started — a double-click
+    // would otherwise burn one on a spin that never happened.
+    if (spin(landedSquad?.id)) setRespinsLeft((r) => r - 1);
   };
 
   const playMatch = () => {

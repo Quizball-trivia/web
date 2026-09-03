@@ -14,6 +14,7 @@ import { PlayerSearchInput } from "../components/PlayerSearchInput";
 import { rareAnswerQuestions, rarityLabel, type RareAnswer } from "../data/ballKnowledge";
 import { matchesName, thinkDelay } from "../lib/text";
 import { useLabTimers } from "../lib/useLabTimers";
+import { useTurnLock } from "../lib/useTurnLock";
 import { getLabMode } from "../registry";
 
 const mode = getLabMode("ball-knowledge")!;
@@ -44,6 +45,7 @@ interface RoundOutcome {
 
 export function BallKnowledgeGame({ backHref }: LabProps) {
   const { schedule, clearAll } = useLabTimers();
+  const { acquire, release } = useTurnLock();
   const [roundIdx, setRoundIdx] = useState(0);
   const [youTotal, setYouTotal] = useState(0);
   const [oppTotal, setOppTotal] = useState(0);
@@ -62,7 +64,9 @@ export function BallKnowledgeGame({ backHref }: LabProps) {
   }, []);
 
   const handleAnswer = (input: string) => {
-    if (round || gameOver) return;
+    // Enter and the button can both fire in one frame — lock synchronously so
+    // the round's points can't be counted twice.
+    if (round || gameOver || !acquire()) return;
     const answer = question.answers.find((a) => matchesName(input, a.name, a.aliases)) ?? null;
     const youPoints = answer?.points ?? 0;
     setYouTotal((t) => t + youPoints);
@@ -83,6 +87,7 @@ export function BallKnowledgeGame({ backHref }: LabProps) {
   };
 
   const nextRound = () => {
+    release();
     if (roundIdx + 1 >= rareAnswerQuestions.length) {
       setGameOver(true);
       return;
@@ -95,6 +100,7 @@ export function BallKnowledgeGame({ backHref }: LabProps) {
 
   const reset = () => {
     clearAll();
+    release();
     setRoundIdx(0);
     setYouTotal(0);
     setOppTotal(0);
