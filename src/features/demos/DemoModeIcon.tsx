@@ -285,6 +285,115 @@ function IconArtwork({ slug }: { slug: string }) {
           <circle cx="28" cy="39" r="3" />
         </>
       );
+    case "lab-own-goal":
+      // Grid of agent cards, one marked with a skull-ish cross (the Own Goal).
+      return (
+        <>
+          <rect x="7" y="10" width="10" height="8" rx="1.5" />
+          <rect x="19" y="10" width="10" height="8" rx="1.5" />
+          <rect x="31" y="10" width="10" height="8" rx="1.5" />
+          <rect x="7" y="21" width="10" height="8" rx="1.5" />
+          <rect x="19" y="21" width="10" height="8" rx="1.5" />
+          <rect x="31" y="21" width="10" height="8" rx="1.5" />
+          <path d="m21.5 23.5 5 5M26.5 23.5l-5 5" />
+          <path d="M14 34h20M17 38h14" opacity=".55" />
+        </>
+      );
+    case "lab-say-it-with-memes":
+      // Two picture cards feeding a speech bubble with a question mark.
+      return (
+        <>
+          <rect x="6" y="12" width="13" height="13" rx="2" />
+          <path d="m8.5 22 3-3.5 2.5 2.5 2-2 2.5 3" />
+          <circle cx="15" cy="16" r="1.5" />
+          <path d="M22 18.5h5" strokeDasharray="2 2" />
+          <path d="M30 9h12v11H36l-3.5 4v-4H30V9Z" />
+          <path d="M34.5 13c.5-1.5 3.5-1.5 3.5.5 0 1.5-2 1.5-2 3M36 20h.01" />
+          <path d="M10 31h28M14 36h20" opacity=".55" />
+        </>
+      );
+    case "lab-draft-battle":
+      // Spin wheel of squads feeding a drafted shirt.
+      return (
+        <>
+          <circle cx="18" cy="21" r="12" />
+          <path d="M18 9v24M6 21h24M9.5 12.5l17 17M26.5 12.5l-17 17" opacity=".55" />
+          <circle cx="18" cy="21" r="3" />
+          <path d="m35 27 4-2 4 2v5l-2 1v7h-4v-7l-2-1v-5Z" />
+        </>
+      );
+    case "lab-top-10-knockout":
+      // Ranked list with hearts (lives) alongside.
+      return (
+        <>
+          <path d="M8 13h20M8 22h20M8 31h13" />
+          <circle cx="4" cy="13" r="1.5" />
+          <circle cx="4" cy="22" r="1.5" />
+          <circle cx="4" cy="31" r="1.5" />
+          <path d="M36 11c1.8-2.2 5-1 5 1.6 0 2.6-3.5 4.4-5 5.8-1.5-1.4-5-3.2-5-5.8 0-2.6 3.2-3.8 5-1.6Z" />
+          <path d="M36 26c1.5-1.8 4-.8 4 1.3 0 2.1-2.8 3.5-4 4.7-1.2-1.2-4-2.6-4-4.7 0-2.1 2.5-3.1 4-1.3Z" opacity=".55" />
+        </>
+      );
+    case "lab-missing-xi":
+      // Pitch with a 4-3-3 shape, two shirts still blank.
+      return (
+        <>
+          <rect x="8" y="7" width="32" height="34" rx="2" />
+          <path d="M8 24h32" />
+          <circle cx="24" cy="24" r="5" />
+          <circle cx="24" cy="13" r="2.5" />
+          <circle cx="14" cy="34" r="2.5" />
+          <circle cx="34" cy="34" r="2.5" />
+          <path d="M21.5 33h5M24 31.5v3" opacity=".7" />
+        </>
+      );
+    case "lab-ball-knowledge":
+      // Gem with a rarity percentage spark.
+      return (
+        <>
+          <path d="M16 10h16l7 9-15 19L9 19l7-9Z" />
+          <path d="M9 19h30M16 10l8 9 8-9M24 19v19" opacity=".7" />
+          <path d="M38 8v6M35 11h6" />
+        </>
+      );
+    case "lab-bingo-battle":
+      // 3x3 card with a completed diagonal line.
+      return (
+        <>
+          <rect x="9" y="9" width="30" height="30" rx="2" />
+          <path d="M19 9v30M29 9v30M9 19h30M9 29h30" opacity=".55" />
+          <circle cx="14" cy="14" r="3" />
+          <circle cx="24" cy="24" r="3" />
+          <circle cx="34" cy="34" r="3" />
+          <path d="m12 12 24 24" opacity=".7" />
+        </>
+      );
+    case "lab-connections-race":
+      // 4x4 grid with one group of four locked together.
+      return (
+        <>
+          <rect x="7" y="9" width="34" height="8" rx="2" />
+          <rect x="7" y="20" width="7.5" height="8" rx="1.5" />
+          <rect x="16.5" y="20" width="7.5" height="8" rx="1.5" />
+          <rect x="26" y="20" width="7.5" height="8" rx="1.5" />
+          <rect x="35.5" y="20" width="5.5" height="8" rx="1.5" />
+          <rect x="7" y="31" width="7.5" height="8" rx="1.5" opacity=".55" />
+          <rect x="16.5" y="31" width="7.5" height="8" rx="1.5" opacity=".55" />
+          <rect x="26" y="31" width="7.5" height="8" rx="1.5" opacity=".55" />
+          <rect x="35.5" y="31" width="5.5" height="8" rx="1.5" opacity=".55" />
+        </>
+      );
+    case "lab-stat-501":
+      // Dartboard with an arrow landing near the bullseye.
+      return (
+        <>
+          <circle cx="22" cy="26" r="14" />
+          <circle cx="22" cy="26" r="8" opacity=".6" />
+          <circle cx="22" cy="26" r="2.5" />
+          <path d="M22 12v4M22 36v4M8 26h4M32 26h4" opacity=".55" />
+          <path d="m26 22 12-12M34 10h6v6" />
+        </>
+      );
     case "match":
       return (
         <>

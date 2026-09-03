@@ -8,6 +8,15 @@ import { DemoDailyChallenge } from "@/features/demos/DemoDailyChallenge";
 import { DemoTraining } from "@/features/demos/DemoTraining";
 import { DemoWeekendLeague } from "@/features/demos/DemoWeekendLeague";
 import { findDemoMode } from "@/features/demos/demoModes";
+import { BallKnowledgeGame } from "@/features/game-mode-lab/modes/BallKnowledgeGame";
+import { BingoBattleGame } from "@/features/game-mode-lab/modes/BingoBattleGame";
+import { ConnectionsRaceGame } from "@/features/game-mode-lab/modes/ConnectionsRaceGame";
+import { DraftBattleGame } from "@/features/game-mode-lab/modes/DraftBattleGame";
+import { MissingXIGame } from "@/features/game-mode-lab/modes/MissingXIGame";
+import { OwnGoalGame } from "@/features/game-mode-lab/modes/OwnGoalGame";
+import { SayItWithMemesGame } from "@/features/game-mode-lab/modes/SayItWithMemesGame";
+import { Stat501Game } from "@/features/game-mode-lab/modes/Stat501Game";
+import { Top10KnockoutGame } from "@/features/game-mode-lab/modes/Top10KnockoutGame";
 import { Accumulator } from "@/features/mini-games/components/Accumulator";
 import { BetSlipBooster } from "@/features/mini-games/components/BetSlipBooster";
 import { CareerRace } from "@/features/mini-games/components/CareerRace";
@@ -133,6 +142,25 @@ function DemoModePageInner() {
       return <GuessFifaCard backHref={backHref} />;
     case "mini-stat-sniper":
       return <StatSniper backHref={backHref} />;
+    // Concept prototypes (game-mode-lab).
+    case "lab-own-goal":
+      return <OwnGoalGame backHref={backHref} />;
+    case "lab-say-it-with-memes":
+      return <SayItWithMemesGame backHref={backHref} />;
+    case "lab-draft-battle":
+      return <DraftBattleGame backHref={backHref} />;
+    case "lab-top-10-knockout":
+      return <Top10KnockoutGame backHref={backHref} />;
+    case "lab-missing-xi":
+      return <MissingXIGame backHref={backHref} />;
+    case "lab-ball-knowledge":
+      return <BallKnowledgeGame backHref={backHref} />;
+    case "lab-bingo-battle":
+      return <BingoBattleGame backHref={backHref} />;
+    case "lab-connections-race":
+      return <ConnectionsRaceGame backHref={backHref} />;
+    case "lab-stat-501":
+      return <Stat501Game backHref={backHref} />;
     default:
       notFound();
   }
