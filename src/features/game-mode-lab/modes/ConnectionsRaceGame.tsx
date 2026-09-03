@@ -8,6 +8,7 @@ import { DuelHud } from "../components/DuelHud";
 import { EndOverlay, type LabOutcome } from "../components/EndOverlay";
 import { FeedbackBanner, useFeedback } from "../components/FeedbackBanner";
 import { LabShell } from "../components/LabShell";
+import type { LabProps } from "../types";
 import { connectionsPuzzles, type ConnectionsPuzzle } from "../data/connections";
 import { useLabTimers } from "../lib/useLabTimers";
 import { getLabMode } from "../registry";
@@ -28,7 +29,7 @@ function shuffle<T>(items: T[]): T[] {
   return arr;
 }
 
-export function ConnectionsRaceGame() {
+export function ConnectionsRaceGame({ backHref }: LabProps) {
   const [attempt, setAttempt] = useState(0);
   const puzzle = useMemo(
     () => connectionsPuzzles[Math.floor(Math.random() * connectionsPuzzles.length)],
@@ -37,13 +38,25 @@ export function ConnectionsRaceGame() {
   );
 
   return (
-    <LabShell mode={mode}>
-      <Round key={attempt} puzzle={puzzle} onPlayAgain={() => setAttempt((a) => a + 1)} />
+    <LabShell mode={mode} backHref={backHref}>
+      <Round
+        key={attempt}
+        puzzle={puzzle}
+        backHref={backHref}
+        onPlayAgain={() => setAttempt((a) => a + 1)}
+      />
     </LabShell>
   );
 }
 
-function Round({ puzzle, onPlayAgain }: { puzzle: ConnectionsPuzzle; onPlayAgain: () => void }) {
+function Round({
+  puzzle,
+  onPlayAgain,
+  backHref,
+}: {
+  puzzle: ConnectionsPuzzle;
+  onPlayAgain: () => void;
+} & LabProps) {
   const { schedule } = useLabTimers();
   const [deck] = useState(() => shuffle(puzzle.groups.flatMap((g) => g.players)));
   const [selected, setSelected] = useState<string[]>([]);
@@ -245,6 +258,7 @@ function Round({ puzzle, onPlayAgain }: { puzzle: ConnectionsPuzzle; onPlayAgain
           }
           stats={[{ label: "Groups solved", you, opp }]}
           onPlayAgain={onPlayAgain}
+          backHref={backHref}
         />
       ) : null}
     </div>

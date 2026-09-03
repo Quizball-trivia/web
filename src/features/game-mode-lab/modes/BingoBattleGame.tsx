@@ -9,6 +9,7 @@ import { DuelHud } from "../components/DuelHud";
 import { EndOverlay, type LabOutcome } from "../components/EndOverlay";
 import { FeedbackBanner, useFeedback } from "../components/FeedbackBanner";
 import { LabShell } from "../components/LabShell";
+import type { LabProps } from "../types";
 import {
   bingoCategories,
   bingoLines,
@@ -26,7 +27,7 @@ function findLine(filled: boolean[]): number[] | null {
   return bingoLines.find((line) => line.every((i) => filled[i])) ?? null;
 }
 
-export function BingoBattleGame() {
+export function BingoBattleGame({ backHref }: LabProps) {
   const { schedule, clearAll } = useLabTimers();
   const { acquire, release } = useTurnLock();
   const [queueIdx, setQueueIdx] = useState(0);
@@ -116,7 +117,7 @@ export function BingoBattleGame() {
   const oppFilled = oppBoard.filter(Boolean).length;
 
   return (
-    <LabShell mode={mode}>
+    <LabShell mode={mode} backHref={backHref}>
       <DuelHud
         accent={mode.accent}
         turn={phase}
@@ -207,6 +208,7 @@ export function BingoBattleGame() {
           }
           stats={[{ label: "Squares filled", you: yourFilled, opp: oppFilled }]}
           onPlayAgain={reset}
+          backHref={backHref}
         />
       ) : null}
     </LabShell>

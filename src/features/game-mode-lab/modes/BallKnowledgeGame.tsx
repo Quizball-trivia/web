@@ -9,6 +9,7 @@ import { DuelHud } from "../components/DuelHud";
 import { EndOverlay, type LabOutcome } from "../components/EndOverlay";
 import { FeedbackBanner, useFeedback } from "../components/FeedbackBanner";
 import { LabShell } from "../components/LabShell";
+import type { LabProps } from "../types";
 import { PlayerSearchInput } from "../components/PlayerSearchInput";
 import { rareAnswerQuestions, rarityLabel, type RareAnswer } from "../data/ballKnowledge";
 import { matchesName, thinkDelay } from "../lib/text";
@@ -41,7 +42,7 @@ interface RoundOutcome {
   opp: RareAnswer;
 }
 
-export function BallKnowledgeGame() {
+export function BallKnowledgeGame({ backHref }: LabProps) {
   const { schedule, clearAll } = useLabTimers();
   const [roundIdx, setRoundIdx] = useState(0);
   const [youTotal, setYouTotal] = useState(0);
@@ -107,7 +108,7 @@ export function BallKnowledgeGame() {
   const outcome: LabOutcome = youTotal > oppTotal ? "win" : youTotal < oppTotal ? "lose" : "draw";
 
   return (
-    <LabShell mode={mode}>
+    <LabShell mode={mode} backHref={backHref}>
       <DuelHud
         accent={mode.accent}
         turn={null}
@@ -171,6 +172,7 @@ export function BallKnowledgeGame() {
           subline="Deep cuts win games."
           stats={[{ label: "Knowledge points", you: youTotal, opp: oppTotal }]}
           onPlayAgain={reset}
+          backHref={backHref}
         />
       ) : null}
     </LabShell>

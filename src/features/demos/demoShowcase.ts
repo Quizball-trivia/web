@@ -2,6 +2,7 @@ import type { Locale } from "@/lib/i18n/messages";
 import {
   DAILY_DEMO_MODES,
   FEATURED_DEMO_MODES,
+  LAB_DEMO_MODES,
   MINI_GAME_DEMO_MODES,
   type DemoModeCard,
 } from "./demoModes";
@@ -87,7 +88,7 @@ export const SHOWCASE_BENEFITS: ShowcaseBenefit[] = [
 
 // ── Game sections ────────────────────────────────────────────────────────────
 export interface ShowcaseSection {
-  id: "flagship" | "mini" | "daily";
+  id: "flagship" | "mini" | "lab" | "daily";
   accent: string; // hex, used for accents/badges
   eyebrow: DemoI18nText;
   title: DemoI18nText;
@@ -117,6 +118,17 @@ export const SHOWCASE_SECTIONS: ShowcaseSection[] = [
       ka: "1–2 წუთიანი თამაშები ფსონის მექანიკებით — cash-out, ექსპრესი, hi-lo, mines და სხვა — მოთამაშეთა აქტიურობას რეალურ ფსონებს შორისაც ინარჩუნებს.",
     },
     modes: MINI_GAME_DEMO_MODES,
+  },
+  {
+    id: "lab",
+    accent: "#CE82FF",
+    eyebrow: { en: "In development", ka: "მუშავდება" },
+    title: { en: "Concept prototypes", ka: "საკონცეფციო პროტოტიპები" },
+    blurb: {
+      en: "Early playable concepts we're testing before building them for real — social party formats, meme-driven deduction and knowledge-weighted drafting.",
+      ka: "ადრეული სათამაშო კონცეფციები, რომლებსაც ვტესტავთ სრულ დანერგვამდე — სოციალური ფორმატები, მემებზე დაფუძნებული დედუქცია და ცოდნაზე დაშენებული დრაფტი.",
+    },
+    modes: LAB_DEMO_MODES,
   },
   {
     id: "daily",
@@ -155,9 +167,27 @@ const FLAGSHIP_META: Record<string, CardMeta> = {
   },
 };
 
+const FORMAT_VS_RIVAL: DemoI18nText = { en: "1v1 vs rival", ka: "1v1 მეტოქესთან" };
+const FORMAT_TEAM: DemoI18nText = { en: "Team vs team", ka: "გუნდი გუნდზე" };
+const DURATION_MEDIUM: DemoI18nText = { en: "2–3 min", ka: "2–3 წთ" };
+
+// Concept prototypes — formats differ per mode, so they're spelled out.
+const LAB_META: Record<string, CardMeta> = {
+  "lab-own-goal": { duration: DURATION_MEDIUM, format: FORMAT_TEAM },
+  "lab-say-it-with-memes": { duration: DURATION_MEDIUM, format: FORMAT_TEAM },
+  "lab-draft-battle": { duration: DURATION_MEDIUM, format: FORMAT_SINGLE_PLAYER },
+  "lab-top-10-knockout": { duration: DURATION_SHORT, format: FORMAT_VS_RIVAL },
+  "lab-missing-xi": { duration: DURATION_MEDIUM, format: FORMAT_VS_RIVAL },
+  "lab-ball-knowledge": { duration: DURATION_SHORT, format: FORMAT_VS_RIVAL },
+  "lab-bingo-battle": { duration: DURATION_SHORT, format: FORMAT_VS_RIVAL },
+  "lab-connections-race": { duration: DURATION_MEDIUM, format: FORMAT_VS_RIVAL },
+  "lab-stat-501": { duration: DURATION_SHORT, format: FORMAT_VS_RIVAL },
+};
+
 export function getCardMeta(mode: DemoModeCard): CardMeta {
   return (
-    FLAGSHIP_META[mode.slug] ?? {
+    FLAGSHIP_META[mode.slug] ??
+    LAB_META[mode.slug] ?? {
       duration: DURATION_SHORT,
       format: mode.slug.startsWith("mini-") ? FORMAT_SINGLE_PLAYER : FORMAT_DAILY,
     }

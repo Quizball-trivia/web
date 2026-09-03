@@ -16,6 +16,7 @@ interface EndOverlayProps {
   /** Summary rows, e.g. [{ label: "Groups solved", you: "3", opp: "1" }]. */
   stats?: Array<{ label: string; you: React.ReactNode; opp: React.ReactNode }>;
   onPlayAgain: () => void;
+  backHref?: string;
 }
 
 const OUTCOME_STYLES: Record<
@@ -28,7 +29,7 @@ const OUTCOME_STYLES: Record<
 };
 
 /** Full-screen end-of-game overlay with Play Again / Back to lab actions. */
-export function EndOverlay({ outcome, heading, subline, stats, onPlayAgain }: EndOverlayProps) {
+export function EndOverlay({ outcome, heading, subline, stats, onPlayAgain, backHref = "/game-mode-lab" }: EndOverlayProps) {
   const style = OUTCOME_STYLES[outcome];
   const Icon = style.icon;
 
@@ -75,7 +76,9 @@ export function EndOverlay({ outcome, heading, subline, stats, onPlayAgain }: En
             <RotateCcw className="size-4" /> Play Again
           </Button>
           <Button size="lg" variant="outline" asChild>
-            <Link href="/game-mode-lab">Back to Game Mode Lab</Link>
+            <Link href={backHref}>
+              {backHref === "/game-mode-lab" ? "Back to Game Mode Lab" : "Back to all games"}
+            </Link>
           </Button>
         </div>
       </motion.div>

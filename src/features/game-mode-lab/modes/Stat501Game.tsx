@@ -7,6 +7,7 @@ import { DuelHud } from "../components/DuelHud";
 import { EndOverlay, type LabOutcome } from "../components/EndOverlay";
 import { FeedbackBanner, useFeedback } from "../components/FeedbackBanner";
 import { LabShell } from "../components/LabShell";
+import type { LabProps } from "../types";
 import { PlayerSearchInput } from "../components/PlayerSearchInput";
 import {
   STAT_501_BUST_FLOOR,
@@ -37,13 +38,13 @@ interface LogEntry {
   result: "scored" | "bust" | "checkout";
 }
 
-export function Stat501Game() {
+export function Stat501Game({ backHref }: LabProps) {
   const [category, setCategory] = useState<Stat501Category | null>(null);
 
   return (
-    <LabShell mode={mode}>
+    <LabShell mode={mode} backHref={backHref}>
       {category ? (
-        <Round key={category.id} category={category} onExit={() => setCategory(null)} />
+        <Round key={category.id} category={category} backHref={backHref} onExit={() => setCategory(null)} />
       ) : (
         <CategoryPicker onPick={setCategory} />
       )}
@@ -91,7 +92,11 @@ function pickOpponentPlayer(remaining: Stat501Player[], score: number): Stat501P
   return Math.random() < 0.25 && ranked.length > 1 ? ranked[1] : ranked[0];
 }
 
-function Round({ category, onExit }: { category: Stat501Category; onExit: () => void }) {
+function Round({
+  category,
+  onExit,
+  backHref,
+}: { category: Stat501Category; onExit: () => void } & LabProps) {
   const { schedule, clearAll } = useLabTimers();
   const { acquire, release } = useTurnLock();
   const [youScore, setYouScore] = useState(STAT_501_START);
@@ -286,6 +291,7 @@ function Round({ category, onExit }: { category: Stat501Category; onExit: () => 
             },
           ]}
           onPlayAgain={reset}
+          backHref={backHref}
         />
       ) : null}
     </div>

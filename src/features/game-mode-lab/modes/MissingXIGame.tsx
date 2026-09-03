@@ -7,6 +7,7 @@ import { DuelHud } from "../components/DuelHud";
 import { EndOverlay, type LabOutcome } from "../components/EndOverlay";
 import { FeedbackBanner, useFeedback } from "../components/FeedbackBanner";
 import { LabShell } from "../components/LabShell";
+import type { LabProps } from "../types";
 import { PlayerSearchInput } from "../components/PlayerSearchInput";
 import { missingXiMatches, type XiMatch, type XiSlot } from "../data/missingXi";
 import { matchesName, thinkDelay } from "../lib/text";
@@ -24,13 +25,13 @@ function shortName(name: string): string {
   return tokens.length > 2 ? tokens.slice(-2).join(" ") : tokens[tokens.length - 1];
 }
 
-export function MissingXIGame() {
+export function MissingXIGame({ backHref }: LabProps) {
   const [match, setMatch] = useState<XiMatch | null>(null);
 
   return (
-    <LabShell mode={mode}>
+    <LabShell mode={mode} backHref={backHref}>
       {match ? (
-        <Round key={match.id} match={match} onExit={() => setMatch(null)} />
+        <Round key={match.id} match={match} backHref={backHref} onExit={() => setMatch(null)} />
       ) : (
         <MatchPicker onPick={setMatch} />
       )}
@@ -60,7 +61,11 @@ function MatchPicker({ onPick }: { onPick: (m: XiMatch) => void }) {
   );
 }
 
-function Round({ match, onExit }: { match: XiMatch; onExit: () => void }) {
+function Round({
+  match,
+  onExit,
+  backHref,
+}: { match: XiMatch; onExit: () => void } & LabProps) {
   const { schedule, clearAll } = useLabTimers();
   const { acquire, release } = useTurnLock();
   const [claims, setClaims] = useState<Claims>({});
@@ -267,6 +272,7 @@ function Round({ match, onExit }: { match: XiMatch; onExit: () => void }) {
           subline={`${match.teamName} — ${match.matchLabel}`}
           stats={[{ label: "Shirts claimed", you: yourClaims, opp: oppClaims }]}
           onPlayAgain={reset}
+          backHref={backHref}
         />
       ) : null}
     </div>

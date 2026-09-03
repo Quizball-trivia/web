@@ -9,6 +9,7 @@ import { EndOverlay, type LabOutcome } from "../components/EndOverlay";
 import { FeedbackBanner, useFeedback } from "../components/FeedbackBanner";
 import { Hearts } from "../components/Hearts";
 import { LabShell } from "../components/LabShell";
+import type { LabProps } from "../types";
 import { PlayerSearchInput } from "../components/PlayerSearchInput";
 import { top10Categories, type Top10Category } from "../data/top10";
 import { matchesName, thinkDelay } from "../lib/text";
@@ -20,13 +21,13 @@ const mode = getLabMode("top-10-knockout")!;
 
 type Claims = Record<string, "you" | "opp">; // key = entry name
 
-export function Top10KnockoutGame() {
+export function Top10KnockoutGame({ backHref }: LabProps) {
   const [category, setCategory] = useState<Top10Category | null>(null);
 
   return (
-    <LabShell mode={mode}>
+    <LabShell mode={mode} backHref={backHref}>
       {category ? (
-        <Round key={category.id} category={category} onExit={() => setCategory(null)} />
+        <Round key={category.id} category={category} backHref={backHref} onExit={() => setCategory(null)} />
       ) : (
         <CategoryPicker onPick={setCategory} />
       )}
@@ -60,7 +61,11 @@ function CategoryPicker({ onPick }: { onPick: (c: Top10Category) => void }) {
   );
 }
 
-function Round({ category, onExit }: { category: Top10Category; onExit: () => void }) {
+function Round({
+  category,
+  onExit,
+  backHref,
+}: { category: Top10Category; onExit: () => void } & LabProps) {
   const { schedule, clearAll } = useLabTimers();
   const { acquire, release } = useTurnLock();
   const [claims, setClaims] = useState<Claims>({});
@@ -253,6 +258,7 @@ function Round({ category, onExit }: { category: Top10Category; onExit: () => vo
             { label: "Lives left", you: livesYou, opp: livesOpp },
           ]}
           onPlayAgain={reset}
+          backHref={backHref}
         />
       ) : null}
     </div>

@@ -285,6 +285,93 @@ const HIDDEN_MINI_MODES: DemoModeCard[] = ALL_MINI_GAME_DEMO_MODES.filter((mode)
   HIDDEN_MINI_SLUGS.includes(mode.slug),
 );
 
+// Concept prototypes (features/game-mode-lab) — client-only playground used to
+// test new game-mode ideas with users before committing to build them.
+// In-game copy is English-only for now (prototypes); hub cards are bilingual.
+export const LAB_DEMO_MODES: DemoModeCard[] = [
+  {
+    slug: "lab-own-goal",
+    title: { en: "Own Goal", ka: "ავტოგოლი" },
+    description: {
+      en: "Football Codenames — claim your team's meme cards and dodge the Own Goal.",
+      ka: "საფეხბურთო Codenames — დაიკავე შენი გუნდის ბარათები და აარიდე თავი ავტოგოლს.",
+    },
+    group: "featured",
+  },
+  {
+    slug: "lab-say-it-with-memes",
+    title: { en: "Say It With Memes", ka: "თქვი მემებით" },
+    description: {
+      en: "Explain footballers using only meme cards — no words allowed.",
+      ka: "ახსენი ფეხბურთელი მხოლოდ მემ-ბარათებით — სიტყვების გარეშე.",
+    },
+    group: "featured",
+  },
+  {
+    slug: "lab-draft-battle",
+    title: { en: "Draft Battle", ka: "დრაფტ-ბრძოლა" },
+    description: {
+      en: "Spin for legendary squads, draft an XI, prove you know them, chase the cup.",
+      ka: "დაატრიალე ლეგენდარული შემადგენლობები, ააწყვე XI, დაამტკიცე ცოდნა და იბრძოლე თასზე.",
+    },
+    group: "featured",
+  },
+  {
+    slug: "lab-top-10-knockout",
+    title: { en: "Top 10 Knockout", ka: "ტოპ 10 ნოკაუტი" },
+    description: {
+      en: "Take turns naming players from a hidden Top 10 list — three lives each.",
+      ka: "რიგრიგობით დაასახელეთ ფეხბურთელები დამალული ტოპ 10-იდან — სამ-სამი სიცოცხლე.",
+    },
+    group: "featured",
+  },
+  {
+    slug: "lab-missing-xi",
+    title: { en: "Missing XI", ka: "დაკარგული XI" },
+    description: {
+      en: "Rebuild a legendary starting XI shirt by shirt against a rival.",
+      ka: "აღადგინე ლეგენდარული შემადგენლობა პოზიცია-პოზიცია მეტოქესთან ბრძოლაში.",
+    },
+    group: "featured",
+  },
+  {
+    slug: "lab-ball-knowledge",
+    title: { en: "Ball Knowledge", ka: "ღრმა ცოდნა" },
+    description: {
+      en: "Rare answers score big, obvious ones score small — who really knows football?",
+      ka: "იშვიათი პასუხი მეტ ქულას იძლევა, აშკარა — ნაკლებს. ვინ იცის ფეხბურთი მართლა?",
+    },
+    group: "featured",
+  },
+  {
+    slug: "lab-bingo-battle",
+    title: { en: "Bingo Battle", ka: "ბინგო-ბრძოლა" },
+    description: {
+      en: "Place each player on a category square — first to complete a line wins.",
+      ka: "დააყენე ფეხბურთელი შესაბამის უჯრაზე — ვინც ხაზს პირველი შეავსებს, იგებს.",
+    },
+    group: "featured",
+  },
+  {
+    slug: "lab-connections-race",
+    title: { en: "Connections Race", ka: "კავშირების რბოლა" },
+    description: {
+      en: "16 players hide four secret groups — find them before your rival.",
+      ka: "16 ფეხბურთელში ოთხი ფარული ჯგუფია — იპოვე მეტოქეზე ადრე.",
+    },
+    group: "featured",
+  },
+  {
+    slug: "lab-stat-501",
+    title: { en: "Stat 501", ka: "სტატ 501" },
+    description: {
+      en: "Darts with footballers — count down from 501 using real career stats.",
+      ka: "დარტსი ფეხბურთელებით — ჩამოდი 501-დან რეალური სტატისტიკით.",
+    },
+    group: "featured",
+  },
+];
+
 const DAILY_DEMO_COPY: Record<DailyChallengeType, { title: DemoI18nText; description: DemoI18nText }> = {
   moneyDrop: {
     title: { en: "Money Drop", ka: "ფულის ვარდნა" },
@@ -380,6 +467,7 @@ const HIDDEN_DAILY_MODES: DemoModeCard[] = HIDDEN_DAILY_TYPES.map(buildDailyCard
 export const ALL_DEMO_MODES: DemoModeCard[] = [
   ...FEATURED_DEMO_MODES,
   ...MINI_GAME_DEMO_MODES,
+  ...LAB_DEMO_MODES,
   ...DAILY_DEMO_MODES,
   ...HIDDEN_DEMO_MODES,
   ...HIDDEN_MINI_MODES,

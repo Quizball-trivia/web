@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { EndOverlay, type LabOutcome } from "../components/EndOverlay";
 import { LabShell } from "../components/LabShell";
+import type { LabProps } from "../types";
 import {
   FORM_BONUS,
   RESPINS_ALLOWED,
@@ -53,7 +54,7 @@ interface MatchResult {
   won: boolean;
 }
 
-export function DraftBattleGame() {
+export function DraftBattleGame({ backHref }: LabProps) {
   const { schedule, clearAll } = useLabTimers();
   const { acquire, release } = useTurnLock();
 
@@ -248,7 +249,7 @@ export function DraftBattleGame() {
   };
 
   return (
-    <LabShell mode={mode}>
+    <LabShell mode={mode} backHref={backHref}>
       {/* Status strip */}
       <div className="mb-3 flex items-center justify-between rounded-2xl bg-surface-card px-4 py-2.5 text-xs font-bold">
         <span className="text-white">
@@ -515,6 +516,7 @@ export function DraftBattleGame() {
             { label: "Final rating", you: teamRating.toFixed(1), opp: "—" },
           ]}
           onPlayAgain={reset}
+          backHref={backHref}
         />
       ) : null}
     </LabShell>

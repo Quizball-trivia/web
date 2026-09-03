@@ -10,6 +10,7 @@ import { DuelHud } from "../components/DuelHud";
 import { EndOverlay, type LabOutcome } from "../components/EndOverlay";
 import { FeedbackBanner, useFeedback } from "../components/FeedbackBanner";
 import { LabShell } from "../components/LabShell";
+import type { LabProps } from "../types";
 import { PlayerSearchInput } from "../components/PlayerSearchInput";
 import {
   EXPLAIN_PHASE_COUNT,
@@ -39,7 +40,7 @@ interface RoundResult {
   rivalPoints: number;
 }
 
-export function SayItWithMemesGame() {
+export function SayItWithMemesGame({ backHref }: LabProps) {
   const { schedule, clearAll } = useLabTimers();
   const { acquire, release } = useTurnLock();
   const { feedback, flash, clearFeedback } = useFeedback();
@@ -177,7 +178,7 @@ export function SayItWithMemesGame() {
     : Math.round((SIGNAL_POINTS[Math.max(selected.length, 1) - 1] ?? 40) / (retriesUsed > 0 ? 2 : 1));
 
   return (
-    <LabShell mode={mode}>
+    <LabShell mode={mode} backHref={backHref}>
       <DuelHud
         accent={mode.accent}
         oppThinking={false}
@@ -338,6 +339,7 @@ export function SayItWithMemesGame() {
           subline="Meme fluency is a skill."
           stats={[{ label: "Team points", you: youTotal, opp: rivalTotal }]}
           onPlayAgain={reset}
+          backHref={backHref}
         />
       ) : null}
     </LabShell>

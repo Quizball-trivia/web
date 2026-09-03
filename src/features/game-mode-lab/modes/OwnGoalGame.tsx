@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { EndOverlay, type LabOutcome } from "../components/EndOverlay";
 import { FeedbackBanner, useFeedback } from "../components/FeedbackBanner";
 import { LabShell } from "../components/LabShell";
+import type { LabProps } from "../types";
 import {
   OWN_GOAL_TEAM_BLUE,
   OWN_GOAL_TEAM_RED,
@@ -42,13 +43,13 @@ function pickRandom<T>(items: T[]): T {
   return items[Math.floor(Math.random() * items.length)];
 }
 
-export function OwnGoalGame() {
+export function OwnGoalGame({ backHref }: LabProps) {
   const [board, setBoard] = useState<OwnGoalBoard | null>(null);
 
   return (
-    <LabShell mode={mode}>
+    <LabShell mode={mode} backHref={backHref}>
       {board ? (
-        <Round key={board.id} board={board} onExit={() => setBoard(null)} />
+        <Round key={board.id} board={board} backHref={backHref} onExit={() => setBoard(null)} />
       ) : (
         <BoardPicker onPick={setBoard} />
       )}
@@ -97,7 +98,11 @@ function BoardPicker({ onPick }: { onPick: (b: OwnGoalBoard) => void }) {
   );
 }
 
-function Round({ board, onExit }: { board: OwnGoalBoard; onExit: () => void }) {
+function Round({
+  board,
+  onExit,
+  backHref,
+}: { board: OwnGoalBoard; onExit: () => void } & LabProps) {
   const { schedule, clearAll } = useLabTimers();
   const { feedback, flash, clearFeedback } = useFeedback();
 
@@ -510,6 +515,7 @@ function Round({ board, onExit }: { board: OwnGoalBoard; onExit: () => void }) {
           subline={endNote ?? undefined}
           stats={[{ label: "Cards claimed", you: `${youClaimed}/7`, opp: `${rivalClaimed}/7` }]}
           onPlayAgain={reset}
+          backHref={backHref}
         />
       ) : null}
     </div>
