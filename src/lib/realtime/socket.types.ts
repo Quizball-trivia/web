@@ -1010,6 +1010,8 @@ export interface FootballGridState {
 
 export interface FootballGridSearchStartPayload {
   locale?: 'en' | 'ka';
+  /** League pack to queue for; server defaults to 'european'. */
+  theme?: string;
 }
 
 export interface FootballGridVersionedCommandPayload {

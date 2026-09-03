@@ -55,3 +55,14 @@ export function footballGridAssetUrl(value: string | null | undefined): string |
 export function isFirstPartyFootballGridAsset(value: string | null | undefined): boolean {
   return footballGridAssetUrl(value) !== null;
 }
+
+/**
+ * Real club logos live in the legacy first-party bucket (imgs/club-logos),
+ * keyed by the master club registry's `logo` filename. The football-grid CDN's
+ * clubs/<id>.svg files are generated monograms, not real crests.
+ */
+export function footballGridClubLogoUrl(logoFile: string | null | undefined): string | null {
+  const file = logoFile?.trim();
+  if (!file || file.includes('/') || file.includes('..')) return null;
+  return `${supabaseUrl}/storage/v1/object/public/imgs/club-logos/${encodeURIComponent(file)}`;
+}

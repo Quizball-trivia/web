@@ -24,7 +24,7 @@ vi.mock('@/stores/auth.store', () => ({
   },
 }));
 
-import { registerSocketHandlers, resetSocketHandlers } from '../socket-handlers';
+import { markGridMatchLeftBehind, registerSocketHandlers, resetSocketHandlers } from '../socket-handlers';
 
 // ---------------------------------------------------------------------------
 // Minimal mock socket that tracks .on() listeners so we can fire them
@@ -138,6 +138,82 @@ describe('registerSocketHandlers', () => {
       searchId: 'late-search-id',
     });
     expect(useFootballGridStore.getState().searchCancellationPending).toBe(false);
+  });
+
+  it('acks and drops a redelivered Grid result for a match left behind by a fresh search', () => {
+    registerSocketHandlers();
+    // The client must have SEEN this match before the search to consider its
+    // late result stale — mirror the real sequence: in a match, then PLAY.
+    mockSocket.fire('grid:match_found', {
+      matchId: 'old-forfeited-match',
+      state: { matchId: 'old-forfeited-match', stateVersion: 1, phase: 'handoff', players: [] },
+      opponent: { id: 'opponent-id' },
+      capabilities: { canAddFriend: false, canChallenge: false },
+      serverNow: new Date().toISOString(),
+    } as never);
+    // Real PLAY sequence: mark the outgoing match, then reset the store.
+    markGridMatchLeftBehind('old-forfeited-match');
+    useFootballGridStore.getState().beginFreshSearch();
+    useFootballGridStore.getState().setSearchState({ state: 'searching', searchId: 'fresh-search' });
+
+    mockSocket.fire('grid:completed', {
+      matchId: 'old-forfeited-match',
+      terminalStateVersion: 12,
+      ackToken: 'token-1',
+      state: { matchId: 'old-forfeited-match', stateVersion: 12, phase: 'terminal', completionReason: 'forfeit' },
+    } as never);
+
+    expect(mockSocket.socket.emit).toHaveBeenCalledWith('grid:completed_ack', {
+      matchId: 'old-forfeited-match',
+      terminalStateVersion: 12,
+      ackToken: 'token-1',
+    });
+    expect(useFootballGridStore.getState().completed).toBeNull();
+    expect(useFootballGridStore.getState().search.state).toBe('searching');
+  });
+
+  // Regression: suppressing on "searching + no local state" also ate the result
+  // of the match the search had just produced whenever grid:match_found was
+  // delayed or dropped — the player silently lost rewards and the rematch offer.
+  it('surfaces a Grid result for a never-seen match while still searching', () => {
+    registerSocketHandlers();
+    useFootballGridStore.getState().beginFreshSearch();
+    useFootballGridStore.getState().setSearchState({ state: 'searching', searchId: 'fresh-search' });
+
+    mockSocket.fire('grid:completed', {
+      matchId: 'match-we-never-got-found-for',
+      terminalStateVersion: 4,
+      ackToken: 'token-9',
+      state: {
+        matchId: 'match-we-never-got-found-for',
+        stateVersion: 4,
+        phase: 'terminal',
+        completionReason: 'loading_no_show',
+        players: [],
+      },
+    } as never);
+
+    expect(useFootballGridStore.getState().completed?.matchId).toBe('match-we-never-got-found-for');
+  });
+
+  it('still surfaces a Grid result for the match the client is actually in', () => {
+    registerSocketHandlers();
+    mockSocket.fire('grid:match_found', {
+      matchId: 'live-match',
+      state: { matchId: 'live-match', stateVersion: 1, phase: 'handoff', players: [] },
+      opponent: { id: 'opponent-id' },
+      capabilities: { canAddFriend: false, canChallenge: false },
+      serverNow: new Date().toISOString(),
+    } as never);
+
+    mockSocket.fire('grid:completed', {
+      matchId: 'live-match',
+      terminalStateVersion: 20,
+      ackToken: 'token-2',
+      state: { matchId: 'live-match', stateVersion: 20, phase: 'terminal', completionReason: 'completed', players: [] },
+    } as never);
+
+    expect(useFootballGridStore.getState().completed?.matchId).toBe('live-match');
   });
 
   // Regression: the error handler must read selfUserId fresh via getState(),

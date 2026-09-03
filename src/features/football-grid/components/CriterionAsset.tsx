@@ -10,7 +10,8 @@ import leagues from '@/data/football-grid/launch-assets/leagues.json';
 import managers from '@/data/football-grid/launch-assets/managers.json';
 import competitions from '@/data/football-grid/launch-assets/competitions.json';
 import wildcards from '@/data/football-grid/launch-assets/wildcards.json';
-import { footballGridAssetUrl } from '@/lib/football-grid/assets';
+import { footballGridAssetUrl, footballGridClubLogoUrl } from '@/lib/football-grid/assets';
+import masterClubs from '@/data/clubs.json';
 import type { FootballGridCriterionView } from '@/lib/realtime/socket.types';
 import { cn } from '@/lib/utils';
 
@@ -27,6 +28,45 @@ type RegistryItem = {
   };
   fallback?: { assetPath?: string };
 };
+
+const MASTER_CLUB_LOGO_BY_ID = new Map(
+  (masterClubs as Array<{ id: string; logo?: string }>).map((club) => [club.id, club.logo ?? null]),
+);
+
+// Crests uploaded for clubs that exist only as grid criteria (not in the
+// app-wide registry) — sourced 2026-08-28, files live in imgs/club-logos.
+const GRID_EXTRA_CLUB_LOGOS: Record<string, string> = {
+  'stade-rennais': 'stade-rennais.png',
+  'locomotive-tbilisi': 'locomotive-tbilisi.png',
+  'saburtalo-tbilisi': 'saburtalo-tbilisi.png',
+  'san-lorenzo': 'san-lorenzo.png',
+  'santos': 'santos-fc-brazil.png',
+};
+
+// Label/id lookup across BOTH registries for clubs, with the same suffix
+// tolerance the launch-registry matcher uses ("Santos" ↔ "santos-fc").
+const MASTER_CLUB_LOGO_BY_COMPARABLE = new Map<string, string>();
+for (const club of masterClubs as Array<{ id: string; label?: string; logo?: string }>) {
+  if (!club.logo) continue;
+  MASTER_CLUB_LOGO_BY_COMPARABLE.set(club.id, club.logo);
+  if (club.label) MASTER_CLUB_LOGO_BY_COMPARABLE.set(comparable(club.label), club.logo);
+}
+for (const [key, logo] of Object.entries(GRID_EXTRA_CLUB_LOGOS)) {
+  MASTER_CLUB_LOGO_BY_COMPARABLE.set(key, logo);
+}
+
+function masterClubLogoFor(candidates: string[]): string | null {
+  for (const candidate of candidates) {
+    const direct = MASTER_CLUB_LOGO_BY_COMPARABLE.get(candidate);
+    if (direct) return direct;
+  }
+  for (const candidate of candidates) {
+    for (const [key, logo] of MASTER_CLUB_LOGO_BY_COMPARABLE) {
+      if (key.endsWith(`-${candidate}`) || candidate.endsWith(`-${key}`)) return logo;
+    }
+  }
+  return null;
+}
 
 const REGISTRIES: Partial<Record<FootballGridCriterionView['family'], RegistryItem[]>> = {
   club: clubs as RegistryItem[],
@@ -72,16 +112,32 @@ function resolveRegistryAssets(criterion: FootballGridCriterionView): string[] {
       registryValue.endsWith(`-${value}`) || value.endsWith(`-${registryValue}`)
     )))
   ));
-  if (!item) return [];
+  if (!item) {
+    // Clubs added by roster expansion exist only as criteria; resolve their
+    // crest straight from the master/extra registries.
+    if (criterion.family === 'club') {
+      const logo = masterClubLogoFor(candidates);
+      const url = footballGridClubLogoUrl(logo);
+      if (url) return [url];
+    }
+    return [];
+  }
 
-  // Third-party candidates remain recorded in the registries for audit, but
-  // the runtime only renders primaries whose launch rights are explicitly
-  // cleared. Every row has a packaged Quizball fallback.
+  // Owner decision 2026-08-27: render the real club crests, accepting the
+  // trademark exposure the launch-rights gate previously blocked. The real
+  // artwork lives in the legacy imgs/club-logos bucket keyed by the master
+  // registry's logo filename (the grid CDN's clubs/<id>.svg files are
+  // generated monograms). Cleared primaries and the monogram remain as
+  // onError fallbacks so a missing file still degrades gracefully.
   if (criterion.family === 'club') {
+    const masterClub = MASTER_CLUB_LOGO_BY_ID.get(item.id);
     return [
-      isLaunchClearedPrimary(item) ? item.primary?.publicUrl ?? item.primary?.assetPath : null,
-      item.fallback?.assetPath,
-    ].map(footballGridAssetUrl).filter((value): value is string => Boolean(value));
+      footballGridClubLogoUrl(masterClub),
+      ...[
+        isLaunchClearedPrimary(item) ? item.primary?.publicUrl ?? item.primary?.assetPath : null,
+        item.fallback?.assetPath,
+      ].map(footballGridAssetUrl),
+    ].filter((value): value is string => Boolean(value));
   }
   return [item.assetPath, item.primary?.assetPath, item.fallback?.assetPath]
     .map(footballGridAssetUrl)
