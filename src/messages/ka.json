@@ -251,6 +251,8 @@
     "daysAgo": "{count} დღის წინ",
     "next": "შემდეგი",
     "unranked": "ურანგო",
+    "placementProgressShort": "საკვალიფიკაციო {played}/{required}",
+    "placementRankHint": "ითამაშე საკვალიფიკაციო მატჩები რანგის მისაღებად.",
     "rpToNextTier": "{rp} RP შემდეგ ლიგამდე",
     "toNextLeagueLabel": "შემდეგ ლიგამდე",
     "seasonOf": "{total} მოთამაშიდან",

@@ -364,6 +364,8 @@
     "daysAgo": "hace {count}d",
     "next": "Siguiente",
     "unranked": "Sin rango",
+    "placementProgressShort": "Posicionamiento {played}/{required}",
+    "placementRankHint": "Juega partidos de posicionamiento para obtener tu rango.",
     "rpToNextTier": "{rp} RP para el siguiente nivel",
     "toNextLeagueLabel": "al siguiente nivel",
     "seasonOf": "de {total} jugadores",
