@@ -573,10 +573,22 @@ function useGridTypeaheadRoster(): GridTypeaheadPreparedPlayer[] {
   const [roster, setRoster] = useState<GridTypeaheadPreparedPlayer[]>([]);
   useEffect(() => {
     let cancelled = false;
-    void loadGridTypeaheadRoster().then((players) => {
-      if (!cancelled) setRoster(players);
-    });
-    return () => { cancelled = true; };
+    let timerId: number | null = null;
+    // An empty roster means the fetch failed with nothing stored (typically a
+    // session still being recovered); the loader does not cache that, so a
+    // few spaced retries pick it up without a remount.
+    const attempt = (retriesLeft: number) => {
+      void loadGridTypeaheadRoster().then((players) => {
+        if (cancelled) return;
+        if (players.length > 0) setRoster(players);
+        else if (retriesLeft > 0) timerId = window.setTimeout(() => attempt(retriesLeft - 1), 4_000);
+      });
+    };
+    attempt(3);
+    return () => {
+      cancelled = true;
+      if (timerId !== null) window.clearTimeout(timerId);
+    };
   }, []);
   return roster;
 }

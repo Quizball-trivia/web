@@ -75,9 +75,11 @@ export function useRealtimeFootballGrid({
       // away (e.g. a disconnect forfeit) landed just as they pressed PLAY.
       // Let the ack effect commit it first (rAF), then clear it and start the
       // fresh search — ranked/auction parity: the PLAY intent always wins
-      // over a stale result screen.
+      // over a stale result screen. The guard is set now, not in the timer:
+      // any store write inside the 250ms window re-runs this effect, and the
+      // cleanup would otherwise cancel and re-arm the timer indefinitely.
+      autoStartAttemptedRef.current = true;
       const timerId = window.setTimeout(() => {
-        autoStartAttemptedRef.current = true;
         markGridMatchLeftBehind(useFootballGridStore.getState().state?.matchId);
         useFootballGridStore.getState().beginFreshSearch();
         socket.emit('grid:search_start', { locale, theme });

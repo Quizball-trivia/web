@@ -1,6 +1,6 @@
 'use client';
 
-import { FormEvent, useMemo, useRef, useState } from 'react';
+import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -427,7 +427,7 @@ function PackBrowserScenario() {
     }
   };
 
-  useState(() => { void load(null, releaseKind); return undefined; });
+  useEffect(() => { void load(null, releaseKind); }, []); // eslint-disable-line react-hooks/exhaustive-deps -- initial load only
 
   return (
     <main className="min-h-dvh overflow-y-auto bg-surface-page-alt px-5 py-8 text-white">
@@ -465,7 +465,7 @@ function PackBrowserScenario() {
         </div>
 
         <div className="mt-6 space-y-8">
-          {payload?.boards.map((board) => (
+          {(payload?.boards ?? []).map((board) => (
             <section key={board.id} className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
               <p className="mb-3 text-xs font-bold uppercase tracking-wide text-white/45">
                 {board.difficulty} · familiarity {Math.round(board.familiarityScore)}
@@ -520,7 +520,6 @@ function ModeModalScenario() {
         onOpenChange={setOpen}
         onFindOnline={(pack) => {
           // Workshop: show the chosen pack instead of navigating.
-          window.alert !== undefined; // no-op, avoid dialogs
           console.log('[dev] would queue for pack:', pack);
           setOpen(false);
         }}

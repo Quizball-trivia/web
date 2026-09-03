@@ -896,7 +896,9 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
     // is delayed or dropped (the client sits at search_state 'matched' with no
     // state yet, and its real result would vanish along with its rewards and
     // rematch offer).
-    const staleWhileSearching = gridStore.search.state === 'searching'
+    // Any non-idle search counts: the fresh search may already be 'pairing' or
+    // 'matched' (grid:match_found still in flight) when the old result lands.
+    const staleWhileSearching = gridStore.search.state !== 'idle'
       && gridStore.state?.matchId !== data.matchId
       && _gridMatchesSeenBeforeSearch.has(data.matchId);
     if (staleWhileSearching) {

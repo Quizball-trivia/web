@@ -83,9 +83,19 @@ async function fetchRoster(): Promise<PreparedPlayer[]> {
   return stored ? prepare(stored.players) : [];
 }
 
-/** Cached-forever per page load; a stored copy bridges offline/failed loads. */
+/**
+ * Cached per page load once a roster exists; a stored copy bridges offline or
+ * failed loads. An empty result (fetch failed, nothing stored) is not cached,
+ * so the next caller retries instead of playing a whole session without
+ * suggestions.
+ */
 export function loadGridTypeaheadRoster(): Promise<PreparedPlayer[]> {
-  if (!rosterPromise) rosterPromise = fetchRoster();
+  if (!rosterPromise) {
+    rosterPromise = fetchRoster().then((players) => {
+      if (players.length === 0) rosterPromise = null;
+      return players;
+    });
+  }
   return rosterPromise;
 }
 

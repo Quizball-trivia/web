@@ -225,8 +225,10 @@ async function recoverSocketAuthAndReconnect(
       // retry instead. But SIGNED_OUT only flips the auth store to anonymous
       // (it does not disconnect), so without this check a signed-out tab would
       // keep an authenticated socket alive and poll forever.
+      // 'loading' is transient and keeps the session (bootstrap retries), so
+      // only a positively signed-out/banned store may stop the recovery loop.
       const authStatus = useAuthStore.getState().status;
-      if (authStatus !== 'authenticated') {
+      if (authStatus === 'anonymous' || authStatus === 'banned') {
         logger.info('Socket auth recovery stopping: session is no longer authenticated', { authStatus });
         socket.disconnect();
         return;

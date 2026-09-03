@@ -78,8 +78,8 @@ function FootballGridRulesModal({
   );
 }
 
-// France/Netherlands/Brazil/Argentina/Turkey wait on the club-criteria
-// backfill (their current pools generate too few boards to feel fresh).
+// Netherlands is published server-side but has too few boards to feel fresh;
+// it joins the picker after the club-criteria backfill.
 export const GRID_PACKS = [
   { key: 'european', flag: '🌍' },
   { key: 'england', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿' },
@@ -173,6 +173,7 @@ export function FootballGridModeModal({
               <button
                 key={entry.key}
                 type="button"
+                aria-pressed={pack === entry.key}
                 onClick={() => choosePack(entry.key)}
                 className={cn(
                   'flex flex-col items-center gap-1 rounded-2xl border-2 px-2 py-2.5 transition-colors',
@@ -181,7 +182,7 @@ export function FootballGridModeModal({
                     : 'border-white/15 bg-black/15 hover:border-white/35',
                 )}
               >
-                <span className="text-xl leading-none">{entry.flag}</span>
+                <span aria-hidden="true" className="text-xl leading-none">{entry.flag}</span>
                 <span className="font-poppins text-[10px] font-black uppercase leading-tight text-white">
                   {t(`play.gridPack_${entry.key}`)}
                 </span>
