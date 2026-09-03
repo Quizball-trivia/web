@@ -97,6 +97,7 @@ export const FOOTBALL_GRID_COPY = {
     noteOpponentNoShow: 'Opponent never joined',
     noteYouNoShow: 'You did not join in time',
     noteBothDisconnected: 'Both players disconnected',
+    noteNoShow: 'The match did not start in time',
     rematch: 'Rematch',
     waitingRematch: 'Waiting for opponent…',
     rematchAccepted: 'Rematch accepted',
@@ -166,6 +167,7 @@ export const FOOTBALL_GRID_COPY = {
     noteOpponentNoShow: 'მეტოქე არ შემოვიდა',
     noteYouNoShow: 'დროულად ვერ შემოხვედი',
     noteBothDisconnected: 'ორივე მოთამაშე გაითიშა',
+    noteNoShow: 'მატჩი დროულად ვერ დაიწყო',
     rematch: 'რევანში',
     waitingRematch: 'ველოდებით მეტოქეს…',
     rematchAccepted: 'რევანში მიღებულია',
@@ -249,6 +251,7 @@ export const FOOTBALL_GRID_COPY = {
     noteOpponentNoShow: 'El rival nunca se unió',
     noteYouNoShow: 'No te uniste a tiempo',
     noteBothDisconnected: 'Ambos jugadores se desconectaron',
+    noteNoShow: 'El partido no empezó a tiempo',
     opponentDisconnected: 'Rival desconectado',
     opponentDisconnectedBody: 'Si no vuelve antes de que acabe el tiempo, ganas el partido.',
     selfDisconnected: 'Conexión perdida',
@@ -825,6 +828,7 @@ export function SearchScreen({
   status,
   opponent,
   countdownSeconds = null,
+  queuedAt = null,
   onCancel,
   copy,
 }: {
@@ -835,6 +839,8 @@ export function SearchScreen({
   opponent?: OpponentInfo | null;
   /** Kickoff countdown (seconds). When set, replaces the mini-grid animation — ranked-showdown style. */
   countdownSeconds?: number | null;
+  /** Server queue time; a restored/reloaded search resumes its clock instead of restarting at 0:00. */
+  queuedAt?: string | null;
   onCancel: () => void;
   copy: FootballGridCopy;
 }) {
@@ -852,12 +858,13 @@ export function SearchScreen({
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   useEffect(() => {
     if (opponent || paired) return;
-    searchStartRef.current ??= Date.now();
+    const queuedAtMs = queuedAt ? Date.parse(queuedAt) : Number.NaN;
+    searchStartRef.current ??= Number.isFinite(queuedAtMs) ? Math.min(queuedAtMs, Date.now()) : Date.now();
     const interval = window.setInterval(() => {
       setElapsedSeconds(Math.floor((Date.now() - (searchStartRef.current ?? Date.now())) / 1000));
     }, 500);
     return () => window.clearInterval(interval);
-  }, [opponent, paired]);
+  }, [opponent, paired, queuedAt]);
   const elapsedLabel = `${Math.floor(elapsedSeconds / 60)}:${String(elapsedSeconds % 60).padStart(2, '0')}`;
   const opponentCustomization = opponent
     ? opponent.avatarCustomization ?? { base: opponent.avatarUrl ?? undefined }
@@ -1079,7 +1086,7 @@ function completionTitle(reason: FootballGridCompletionReason | null, won: boole
 
 // Why the match ended, when it didn't play out on the board (ranked parity:
 // a forfeit/disconnect win should never look like an earned 0:0).
-function completionNote(reason: FootballGridCompletionReason | null, won: boolean, copy: FootballGridCopy) {
+function completionNote(reason: FootballGridCompletionReason | null, won: boolean, draw: boolean, copy: FootballGridCopy) {
   switch (reason) {
     case 'forfeit':
       return won ? copy.noteOpponentLeft : copy.noteYouLeft;
@@ -1088,6 +1095,9 @@ function completionNote(reason: FootballGridCompletionReason | null, won: boolea
     case 'no_action_timeouts':
       return won ? copy.noteOpponentIdle : copy.noteYouIdle;
     case 'loading_no_show':
+      // No winner means neither side was credited; blaming "you" would be wrong
+      // for the player who did join in time.
+      if (draw) return copy.noteNoShow;
       return won ? copy.noteOpponentNoShow : copy.noteYouNoShow;
     case 'simultaneous_disconnect':
       return copy.noteBothDisconnected;
@@ -1278,7 +1288,7 @@ export function FootballGridFlowScreen() {
         />
       );
     }
-    return <SearchScreen playerName={player.username} avatar={player.avatar} customization={player.avatarCustomization} status={grid.search.state} onCancel={handleCancel} copy={copy} />;
+    return <SearchScreen playerName={player.username} avatar={player.avatar} customization={player.avatarCustomization} status={grid.search.state} queuedAt={grid.search.queuedAt} onCancel={handleCancel} copy={copy} />;
   }
 
   if (grid.state && (grid.state.phase === 'handoff' || grid.state.phase === 'loading' || grid.state.phase === 'countdown')) {
@@ -1328,9 +1338,9 @@ export function FootballGridFlowScreen() {
           >
             {completionTitle(grid.state.completionReason, won, draw, copy)}
           </h1>
-          {completionNote(grid.state.completionReason, won, copy) && (
+          {completionNote(grid.state.completionReason, won, draw, copy) && (
             <p className="mt-1 font-poppins text-sm font-semibold text-white/60">
-              {completionNote(grid.state.completionReason, won, copy)}
+              {completionNote(grid.state.completionReason, won, draw, copy)}
             </p>
           )}
 
