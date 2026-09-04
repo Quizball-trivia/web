@@ -245,6 +245,24 @@ export function RailNavyGradientProgress({
               ? t('weekendLeague.readyToEnter')
               : t('weekendLeague.entryConfirmed')}
         </p>
+
+        {/* Prize teaser — the league's voucher artwork shrunk to a rail-sized
+            icon plus one line, so the weekly reward shows without changing the
+            rail's shape. Text truncates gracefully on narrow screens. */}
+        <div className="mt-2 flex items-center gap-2">
+          <Image
+            src="/assets/wl-promo-vouchers.png"
+            alt=""
+            width={640}
+            height={640}
+            className="h-7 w-auto shrink-0 -rotate-2 object-contain md:h-8"
+          />
+          <p className="min-w-0 truncate text-[10px] uppercase leading-snug text-white/80 sm:text-[11px]" style={poppins}>
+            {t('weekendLeague.promoWinnerGets')}{' '}
+            <span className="text-brand-green-light">200₾</span>{' '}
+            {t('weekendLeague.promoVoucher')} · {t('weekendLeague.promoStores')}
+          </p>
+        </div>
       </div>
     </Link>
   );

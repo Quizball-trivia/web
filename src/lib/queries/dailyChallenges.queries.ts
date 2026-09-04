@@ -9,6 +9,7 @@ import {
 import { toDailyChallengeSession } from "@/lib/mappers/dailyChallenge.mapper";
 import type { CompleteDailyChallengeRequest, DailyChallengeSummary, DailyChallengeType } from "@/lib/domain/dailyChallenge";
 import { useLocale } from "@/contexts/LocaleContext";
+import { useAuthStore } from "@/stores/auth.store";
 import {
   DAILY_CHALLENGE_COMPLETION_RETRY_DELAYS_MS,
   getDailyChallengeCompletionRetryDelay,
@@ -18,9 +19,12 @@ import {
 
 export function useDailyChallenges() {
   const { locale } = useLocale();
+  const authStatus = useAuthStore((state) => state.status);
 
   return useQuery({
     queryKey: queryKeys.dailyChallenges.list(locale),
+    // Guests browse the Play page too — never fire an authed list call for them.
+    enabled: authStatus === "authenticated",
     queryFn: async () => {
       const data = await getDailyChallenges(locale);
       return data.items;

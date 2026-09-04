@@ -3,8 +3,9 @@
 /* eslint-disable @next/next/no-img-element -- icon comes from the reviewed grid CDN registry. */
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { motion } from 'motion/react';
-import { ScrollText, Swords } from 'lucide-react';
+import { Bot, ScrollText, Swords } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -112,10 +113,14 @@ export function FootballGridModeModal({
   isOpen,
   onOpenChange,
   onFindOnline,
+  demoHref,
 }: {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   onFindOnline: (pack: GridPackKey) => void;
+  /** Guest mode: when set, a "try the demo" link renders under the online CTA
+   *  (no opponents, no coins) while onFindOnline opens the sign-in dialog. */
+  demoHref?: string;
 }) {
   const { t } = useLocale();
   const [rulesOpen, setRulesOpen] = useState(false);
@@ -202,6 +207,18 @@ export function FootballGridModeModal({
             <Swords className="size-5" strokeWidth={2.5} />
             {t('play.gridFindOpponents')}
           </motion.button>
+
+          {/* Guest demo — play vs AI, no coins, no opponents. */}
+          {demoHref && (
+            <Link
+              href={demoHref}
+              className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-white/10 uppercase text-white transition-colors hover:bg-white/15"
+              style={{ fontSize: 'clamp(14px, 2.2vw, 16px)', ...poppins }}
+            >
+              <Bot className="size-5" strokeWidth={2.5} />
+              {t('play.guestDemoCta')}
+            </Link>
+          )}
 
           <button
             type="button"

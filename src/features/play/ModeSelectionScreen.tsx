@@ -23,13 +23,15 @@ import { useObjectivesEnabled } from '@/lib/hooks/useObjectivesEnabled';
 import { useActiveEventMode } from '@/lib/hooks/useActiveEventMode';
 
 import { colors } from '@/lib/colors';
-import { isAuctionCardEnabled, isMiniGamesEnabled, isTicTacToeEnabled } from '@/lib/features/playModes';
-import { PlayAnnouncements } from './PlayAnnouncements';
+import { isAuctionCardEnabled, isTicTacToeEnabled } from '@/lib/features/playModes';
 import { WeekendLeagueProgressExperimentRail } from '@/features/weekend-league/components/WeekendLeagueProgressExperimentRail';
 import { trackWlBannerClicked, trackWlBannerViewed } from '@/lib/analytics/game-events';
 
 import { getNextTierBand } from '@/utils/rankedTier';
 import { footballGridAssetUrl } from '@/lib/football-grid/assets';
+import { useAuthStore } from '@/stores/auth.store';
+import { useAuthPromptStore } from '@/stores/authPrompt.store';
+import { GuestAuthDialog } from '@/features/auth/GuestAuthDialog';
 
 const PLAY_ENTRANCE_SESSION_KEY = 'quizball.playEntranceSeen';
 const PLAY_ENTRANCE_INITIAL = { opacity: 0.88, scale: 0.985 } as const;
@@ -285,6 +287,10 @@ export function ModeSelectionScreen({
   const nextTierBand = getNextTierBand(displayRp);
   const nextTierTargetRp = nextTierBand?.minRp ?? null;
   const router = useRouter();
+  // Guest mode: signed-out visitors browse the Play page and try demos, but any
+  // action that needs an account opens the sign-in dialog instead.
+  const isGuest = useAuthStore((state) => state.status) === 'anonymous';
+  const openAuthPrompt = useAuthPromptStore((state) => state.open);
   const objectivesEnabled = useObjectivesEnabled();
   const { data: objectivesData, isLoading: objectivesLoading } = useObjectives({ enabled: objectivesEnabled });
   const rankedTitleStyle = {
@@ -296,13 +302,6 @@ export function ModeSelectionScreen({
   // Shared Poppins style for body/label/button text (replaces the old
   // font-black/font-bold Duolingo weights). Only Poppins 600 is loaded.
   const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
-  const secondaryModeCount = 2
-    + Number(isAuctionCardEnabled)
-    + Number(isTicTacToeEnabled)
-    + Number(isMiniGamesEnabled);
-  const lastCardMobileSpan = secondaryModeCount % 2 === 1
-    ? 'col-span-2 lg:col-span-1'
-    : undefined;
 
   useEffect(() => {
     if (!playEntranceAnimation) return;
@@ -343,24 +342,17 @@ export function ModeSelectionScreen({
       className="max-w-5xl mx-auto px-4 py-3 space-y-4 md:py-6 md:space-y-5 font-fun"
     >
 
-      {/* ─── 0. Weekend League — the weekly objective, aligned to the mode cards ─── */}
-      {/* Instrumented at the placement, not inside Rail — the dev gallery
-          mounts every Rail variant and would fire an impression per skin. */}
-      <div onClickCapture={trackWlBannerClicked}>
-        <WeekendLeagueProgressExperimentRail />
-      </div>
-
-      {playHomeNotice}
-
       {/* ─── 1. Ranked Hero Card ─── */}
       <div
         onClick={() => {
+          if (isGuest) { openAuthPrompt(); return; }
           if (onRankedIntercept?.()) return;
           setSelectedMode('ranked');
         }}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
+            if (isGuest) { openAuthPrompt(); return; }
             if (onRankedIntercept?.()) return;
             setSelectedMode('ranked');
           }
@@ -534,13 +526,40 @@ export function ModeSelectionScreen({
 
       </div>
 
-      {/* ─── 1b. Announcements ─── */}
-      <PlayAnnouncements />
+      {/* ─── 2. Weekend League — the weekly tournament, right under Ranked ─── */}
+      {/* Instrumented at the placement, not inside Rail — the dev gallery
+          mounts every Rail variant and would fire an impression per skin. */}
+      <div
+        onClickCapture={(event) => {
+          trackWlBannerClicked();
+          if (isGuest) {
+            // The rail is a Link to the league tab — guests sign in first.
+            event.preventDefault();
+            event.stopPropagation();
+            openAuthPrompt();
+          }
+        }}
+      >
+        <WeekendLeagueProgressExperimentRail />
+      </div>
+
+      {playHomeNotice}
 
       {/* ─── 2. Mode Cards — Auction + Tic-Tac-Toe (owner call: Friendly
           Match and Daily Challenge cards removed; every other game now lives
           in the All Games grid below). */}
-      <div className="grid grid-cols-2 gap-3 md:gap-4">
+      <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-3">
+        {/* Friendly first (owner call) — the original create/join-room card.
+            Spans the mobile row so three cards never leave a dead half-column. */}
+        <MiniModeCard
+          bg={colors.blue.brand}
+          title={t('play.friendlyMatch')}
+          subtitle={t('play.friendlySubtitle')}
+          iconSrc="/assets/friendly_match-icon.webp"
+          ctaLabel={t('common.play')}
+          onClick={() => (isGuest ? openAuthPrompt() : setSelectedMode('friendly'))}
+          className="col-span-2 lg:col-span-1"
+        />
         {/* Friendly / Daily / Auction keep the PROD card design (owner call
             2026-08-28): compact bespoke cards, not the MiniModeCard layout. */}
         {/* Auction (beta) — spans the mobile 2-col row so it never orphans */}
@@ -648,19 +667,6 @@ export function ModeSelectionScreen({
               </div>
             </div>
           </div>
-        )}
-        {isMiniGamesEnabled && (
-          <MiniModeCard
-            bg={colors.orange.base}
-            dark
-            title={t('play.miniGamesTitle')}
-            subtitle={t('play.miniGamesSubtitle')}
-            iconSrc="/assets/minigames-card-icon.png?v=3"
-            badge={t('play.freeKicksNewBadge')}
-            ctaLabel={t('common.play')}
-            className={lastCardMobileSpan}
-            href="/mini-games"
-          />
         )}
       </div>
 
@@ -868,17 +874,30 @@ export function ModeSelectionScreen({
         onCreateRoom={() => {}}
         onFindOnline={() => {
           setAuctionModalOpen(false);
+          if (isGuest) {
+            openAuthPrompt();
+            return;
+          }
           router.push('/auction');
         }}
+        demoHref={isGuest ? '/demos/auction?from=/play' : undefined}
       />
       <FootballGridModeModal
         isOpen={gridModalOpen}
         onOpenChange={setGridModalOpen}
         onFindOnline={(pack) => {
           setGridModalOpen(false);
+          if (isGuest) {
+            openAuthPrompt();
+            return;
+          }
           router.push(`/tic-tac-toe?source=matchmaking&pack=${pack}`);
         }}
+        demoHref={isGuest ? '/demos/mini-football-grid?from=/play' : undefined}
       />
+      {/* Guest sign-in: mounted only while signed out; every auth-gated tap
+          above funnels into it via useAuthPromptStore. */}
+      {isGuest && <GuestAuthDialog />}
     </motion.div>
   );
 }
