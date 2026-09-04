@@ -47,7 +47,9 @@ export default function AppAuthGate({ children }: AppAuthGateProps) {
     if (status === "anonymous" && !isGuestAllowedPath(pathname)) {
       stopBgm(0);
       rememberPostAuthRedirect(pathname);
-      router.replace("/");
+      // The landing is retired — signed-out visitors land on the guest Play
+      // page, where the header/nav offer the sign-in dialog.
+      router.replace("/play");
     }
   }, [isDevelopmentDevRoute, pathname, status, router]);
 

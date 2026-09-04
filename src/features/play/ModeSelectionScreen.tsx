@@ -10,7 +10,7 @@ import { AuctionModeModal } from '@/features/auction/components/AuctionModeModal
 import { FootballGridModeModal } from '@/features/football-grid/components/FootballGridModeModal';
 import { HomeRecentMatches } from '@/components/shared/HomeRecentMatches';
 import { AllGamesGrid } from '@/features/play/AllGamesGrid';
-import { MessageCircle } from 'lucide-react';
+import { Bot, MessageCircle } from 'lucide-react';
 import { SocialLinks } from '@/components/shared/SocialLinks';
 import { ContactModal } from '@/components/shared/ContactModal';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -31,7 +31,6 @@ import { getNextTierBand } from '@/utils/rankedTier';
 import { footballGridAssetUrl } from '@/lib/football-grid/assets';
 import { useAuthStore } from '@/stores/auth.store';
 import { useAuthPromptStore } from '@/stores/authPrompt.store';
-import { GuestAuthDialog } from '@/features/auth/GuestAuthDialog';
 
 const PLAY_ENTRANCE_SESSION_KEY = 'quizball.playEntranceSeen';
 const PLAY_ENTRANCE_INITIAL = { opacity: 0.88, scale: 0.985 } as const;
@@ -401,6 +400,19 @@ export function ModeSelectionScreen({
                 <div className="flex h-[56px] w-[180px] items-center justify-center rounded-[8px] bg-surface-page text-xl uppercase tracking-wide text-white" style={poppins}>
                   {t('common.play')}
                 </div>
+                {/* Guest demo — ranked 1v1 vs AI; stopPropagation so the
+                    hero's own onClick (auth prompt) doesn't swallow the tap. */}
+                {isGuest && (
+                  <Link
+                    href="/demos/match?from=/play"
+                    onClick={(event) => event.stopPropagation()}
+                    className="mt-2 flex h-10 w-[180px] items-center justify-center gap-1.5 rounded-[8px] bg-black/25 text-[13px] uppercase tracking-wide text-white/90 transition-colors hover:bg-black/35"
+                    style={poppins}
+                  >
+                    <Bot className="size-4" strokeWidth={2.5} />
+                    {t('play.guestDemoCta')}
+                  </Link>
+                )}
               </div>
             </div>
 
@@ -517,8 +529,22 @@ export function ModeSelectionScreen({
                   />
                 )}
               </div>
-              <div className="mb-1 flex h-[44px] w-[120px] items-center justify-center rounded-[8px] bg-surface-page text-[15px] uppercase tracking-wide text-white" style={poppins}>
-                {t('common.play')}
+              <div className="flex flex-col items-end gap-2">
+                <div className="mb-1 flex h-[44px] w-[120px] items-center justify-center rounded-[8px] bg-surface-page text-[15px] uppercase tracking-wide text-white" style={poppins}>
+                  {t('common.play')}
+                </div>
+                {/* Guest demo — ranked 1v1 vs AI (see desktop note). */}
+                {isGuest && (
+                  <Link
+                    href="/demos/match?from=/play"
+                    onClick={(event) => event.stopPropagation()}
+                    className="flex h-9 w-[120px] items-center justify-center gap-1 rounded-[8px] bg-black/25 text-[11px] uppercase tracking-wide text-white/90 transition-colors hover:bg-black/35"
+                    style={poppins}
+                  >
+                    <Bot className="size-3.5" strokeWidth={2.5} />
+                    {t('play.guestDemoCta')}
+                  </Link>
+                )}
               </div>
             </div>
           </div>
@@ -897,7 +923,6 @@ export function ModeSelectionScreen({
       />
       {/* Guest sign-in: mounted only while signed out; every auth-gated tap
           above funnels into it via useAuthPromptStore. */}
-      {isGuest && <GuestAuthDialog />}
     </motion.div>
   );
 }
