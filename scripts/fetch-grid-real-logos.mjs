@@ -9,7 +9,7 @@
  * Usage: node scripts/fetch-grid-real-logos.mjs <outDir>
  */
 import { execFileSync } from 'node:child_process';
-import { existsSync, mkdirSync, readFileSync, writeFileSync, copyFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -98,3 +98,5 @@ for (const league of leagues) {
 }
 writeFileSync(join(OUT, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
 console.log(`\n${Object.keys(manifest.competitions).length} competitions, ${Object.keys(manifest.leagues).length} leagues, ${manifest.failed.length} failed → ${OUT}`);
+// A partial set must not be uploaded by accident: fail the pipeline step.
+if (manifest.failed.length > 0) process.exitCode = 1;

@@ -1453,6 +1453,7 @@ export function FootballGridFlowScreen() {
     opponent: grid.opponent,
     series: grid.series,
     completed: grid.completed,
+    lastGameResult: grid.lastGameResult,
     commandResult: grid.commandResult,
   });
   useFootballGridAudio({

@@ -10,6 +10,7 @@ import {
   trackMatchStarted,
 } from '@/lib/analytics/game-events';
 import { trackEvent } from '@/lib/posthog';
+import type { FootballGridLastGameResult } from '@/stores/footballGrid.store';
 import type {
   FootballGridCommandResultPayload,
   FootballGridCompletedPayload,
@@ -29,6 +30,8 @@ interface FootballGridAnalyticsInput {
   opponent: OpponentInfo | null;
   series: FootballGridSeriesInfo | null;
   completed: FootballGridCompletedPayload | null;
+  /** A previous series game whose result landed after the next game's handoff (never reaches `completed`). */
+  lastGameResult?: FootballGridLastGameResult | null;
   commandResult: FootballGridCommandResultPayload | null;
 }
 
@@ -40,7 +43,7 @@ interface FootballGridAnalyticsInput {
  * key; redelivered payloads never double-count.
  */
 export function useFootballGridAnalytics(input: FootballGridAnalyticsInput): void {
-  const { selfUserId, theme, search, state, opponent, series, completed, commandResult } = input;
+  const { selfUserId, theme, search, state, opponent, series, completed, lastGameResult = null, commandResult } = input;
   const searchRef = useRef<{ searchId: string; startedAt: number } | null>(null);
   const startedMatchesRef = useRef<Set<string>>(new Set());
   const completedMatchesRef = useRef<Set<string>>(new Set());
@@ -154,4 +157,35 @@ export function useFootballGridAnalytics(input: FootballGridAnalyticsInput): voi
       });
     }
   }, [completed, selfUserId, series, theme]);
+
+  // Delayed series-game results skip `completed`; count them here, once.
+  useEffect(() => {
+    if (!lastGameResult || !selfUserId || completedMatchesRef.current.has(lastGameResult.matchId)) return;
+    completedMatchesRef.current.add(lastGameResult.matchId);
+    const opponentPlayer = state?.players.find((player) => player.userId !== selfUserId);
+    const tally = answersRef.current.get(lastGameResult.matchId) ?? { answered: 0, correct: 0 };
+    const startedAt = matchStartedAtRef.current.get(lastGameResult.matchId);
+    const myWins = lastGameResult.series.wins[selfUserId] ?? 0;
+    const theirWins = opponentPlayer ? lastGameResult.series.wins[opponentPlayer.userId] ?? 0 : 0;
+    trackMatchCompleted({
+      matchId: lastGameResult.matchId,
+      mode: MODE,
+      variant: `${theme}:${lastGameResult.series.format}:g${Math.max(1, lastGameResult.series.gameIndex - 1)}`,
+      won: lastGameResult.winnerUserId === selfUserId,
+      score: myWins,
+      opponentScore: theirWins,
+      durationSec: startedAt ? Math.round((Date.now() - startedAt) / 1000) : undefined,
+      questionsAnswered: tally.answered,
+      correctAnswers: tally.correct,
+      opponentIsAi: Boolean(opponentPlayer?.isBot),
+      winnerDecisionMethod: lastGameResult.completionReason ?? null,
+    });
+    trackEvent('grid_game_completed', {
+      match_id: lastGameResult.matchId,
+      mode: MODE,
+      completion_reason: lastGameResult.completionReason ?? null,
+      draw: !lastGameResult.winnerUserId,
+      delayed: true,
+    });
+  }, [lastGameResult, selfUserId, state, theme]);
 }

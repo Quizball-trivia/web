@@ -68,4 +68,16 @@ describe('useFootballGridAnalytics', () => {
     rerender({ ...base, search: { state: 'idle', searchId: null } });
     expect(trackEvent.mock.calls.filter(([name]) => name === 'matchmaking_cancelled')).toHaveLength(1);
   });
+
+  it('counts a delayed previous-game result exactly once', () => {
+    const base = { selfUserId: ME, theme: 'european', opponent: null, commandResult: null, completed: null, search: { state: 'matched' as const, searchId: 'q3' } };
+    const nextGame = state({ matchId: 'm2', phase: 'countdown' });
+    const previous = { matchId: 'm1', winnerUserId: BOT, completionReason: 'line', series: { ...seriesInfo, gameIndex: 2, wins: { [ME]: 0, [BOT]: 1 } } } as never;
+    const { rerender } = renderHook((props: Parameters<typeof useFootballGridAnalytics>[0]) => useFootballGridAnalytics(props), {
+      initialProps: { ...base, state: nextGame, series, lastGameResult: previous },
+    });
+    rerender({ ...base, state: nextGame, series, lastGameResult: previous });
+    expect(trackEvent.mock.calls.filter(([name]) => name === 'match_completed')).toHaveLength(1);
+    expect(trackEvent).toHaveBeenCalledWith('match_completed', expect.objectContaining({ matchId: 'm1', won: false, score: 0, opponentScore: 1, variant: 'european:bo3:g1' }));
+  });
 });
