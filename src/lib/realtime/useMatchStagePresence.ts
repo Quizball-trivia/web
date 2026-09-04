@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { getSocket } from './socket-client';
+import { getSocket, setConnectionQualityInMatch } from './socket-client';
 
 const HEARTBEAT_INTERVAL_MS = 2_500;
 
@@ -22,6 +22,11 @@ export function useMatchStagePresence({
 }: UseMatchStagePresenceOptions): void {
   useEffect(() => {
     if (!enabled || !matchId || !stageKey) return;
+
+    // A match screen is mounted, so RTT is on screen (own indicator + the
+    // opponent's, which is fed by our connection:rtt report). Sample fast here
+    // and let the monitor fall back to its idle cadence everywhere else.
+    setConnectionQualityInMatch(true);
 
     let stopped = false;
     const socket = getSocket();
@@ -56,6 +61,7 @@ export function useMatchStagePresence({
 
     return () => {
       stopped = true;
+      setConnectionQualityInMatch(false);
       window.clearTimeout(readyTimer);
       window.clearInterval(heartbeatTimer);
       socket.off('connect', handleConnect);
