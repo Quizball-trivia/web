@@ -78,9 +78,21 @@ const nextConfig: NextConfig = {
       {
         // Own Supabase storage (question/category images) — lets the
         // optimizer resize the stored 1440×1080 PNGs down to card size.
+        // Still needed: oversized sources bypass the transform endpoint and
+        // are fetched raw (see lib/images/remoteImage.ts).
         protocol: "https",
         hostname: "*.supabase.co",
         pathname: "/storage/v1/object/public/**",
+      },
+      {
+        // Supabase's image-transform endpoint, which lib/images/remoteImage.ts
+        // rewrites public object URLs to: the optimizer fetches a resized WebP
+        // (6.9 MB original -> 53 KB, measured 2026-09-04) instead of the full
+        // stored PNG, and the response carries the object's real cache-control
+        // rather than the `no-cache` /object/public/ always returns.
+        protocol: "https",
+        hostname: "*.supabase.co",
+        pathname: "/storage/v1/render/image/public/**",
       },
       {
         protocol: "https",
