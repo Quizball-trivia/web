@@ -22,6 +22,9 @@ export function MiniGameShell({
   scrollable = false,
   disclaimer = true,
   onBack,
+  hideBack = false,
+  hideHeader = false,
+  headerClassName = '',
   backgroundImageUrl = '/assets/bg-pattern.webp',
 }: {
   title: string;
@@ -38,6 +41,11 @@ export function MiniGameShell({
   disclaimer?: boolean;
   /** Live matches can intercept back navigation to show a forfeit warning. */
   onBack?: () => void;
+  /** Screens that pin their own leave control (like Ranked/Auction) drop the shell arrow. */
+  hideBack?: boolean;
+  /** Match screens with their own HUD render no shell header at all. */
+  hideHeader?: boolean;
+  headerClassName?: string;
   /** Allows live modes to use an owned CDN copy of the shared pitch texture. */
   backgroundImageUrl?: string;
 }) {
@@ -57,12 +65,13 @@ export function MiniGameShell({
       />
 
       {/* Header */}
+      {hideHeader ? null : (
       <header
         className={`relative z-[90] flex items-start gap-2 px-4 pt-4 pb-2 sm:items-center sm:gap-3 sm:px-6 ${
           wide ? 'mx-auto w-full lg:max-w-6xl' : ''
-        }`}
+        } ${headerClassName}`}
       >
-        {onBack ? (
+        {hideBack ? null : onBack ? (
           <button
             type="button"
             onClick={onBack}
@@ -95,6 +104,7 @@ export function MiniGameShell({
         </div>
         {headerRight ? <div className="shrink-0">{headerRight}</div> : null}
       </header>
+      )}
 
       {/* Body */}
       <motion.main

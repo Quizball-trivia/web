@@ -4,9 +4,9 @@
   "bucket": "imgs",
   "objectPrefix": "football-grid/v1",
   "publicBase": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/football-grid/v1",
-  "publishedAt": "2026-09-01T17:42:39.234Z",
-  "assetCount": 1038,
-  "totalBytes": 21482962,
+  "publishedAt": "2026-09-04T07:59:30.351Z",
+  "assetCount": 1042,
+  "totalBytes": 21486735,
   "assets": [
     {
       "localPath": "/assets/football-grid/clubs/_launch-fallback.svg",
@@ -8257,6 +8257,22 @@
       "sha256": "e3e7b5aa85b65b7397dfea0c149be867d06c2491801b249bc9a3229d617fcc08"
     },
     {
+      "localPath": "/assets/football-grid/wildcards/born-2000s.svg",
+      "objectPath": "football-grid/v1/wildcards/born-2000s.svg",
+      "publicUrl": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/football-grid/v1/wildcards/born-2000s.svg",
+      "contentType": "image/svg+xml",
+      "byteLength": 939,
+      "sha256": "2c747a81f9eb25a22b046fc22f05d7b241bf14d21c254741fb3cb37c59acc4bd"
+    },
+    {
+      "localPath": "/assets/football-grid/wildcards/champions-league-2plus.svg",
+      "objectPath": "football-grid/v1/wildcards/champions-league-2plus.svg",
+      "publicUrl": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/football-grid/v1/wildcards/champions-league-2plus.svg",
+      "contentType": "image/svg+xml",
+      "byteLength": 948,
+      "sha256": "7d8d07cb6b8fe6c9de9f5c6100413d9f1c7bd31c1f716d79b7e5f9cca466c809"
+    },
+    {
       "localPath": "/assets/football-grid/wildcards/international-caps-100.svg",
       "objectPath": "football-grid/v1/wildcards/international-caps-100.svg",
       "publicUrl": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/football-grid/v1/wildcards/international-caps-100.svg",
@@ -8271,6 +8287,14 @@
       "contentType": "image/svg+xml",
       "byteLength": 945,
       "sha256": "626b5bd28440e7e4bea536e958a2f077999681b5a4305e220a482111c030000a"
+    },
+    {
+      "localPath": "/assets/football-grid/wildcards/played-for-rivals.svg",
+      "objectPath": "football-grid/v1/wildcards/played-for-rivals.svg",
+      "publicUrl": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/football-grid/v1/wildcards/played-for-rivals.svg",
+      "contentType": "image/svg+xml",
+      "byteLength": 954,
+      "sha256": "7fa720442f2948311ca194536d45e499c592c62b47af021c2f27eeab946bce33"
     },
     {
       "localPath": "/assets/football-grid/wildcards/position-def.svg",
@@ -8311,6 +8335,14 @@
       "contentType": "image/svg+xml",
       "byteLength": 956,
       "sha256": "ddd88103340a693daea92bc4f370e1d7f23de3d1a7a7c51244bd92b4aff935d1"
+    },
+    {
+      "localPath": "/assets/football-grid/wildcards/treble-winner.svg",
+      "objectPath": "football-grid/v1/wildcards/treble-winner.svg",
+      "publicUrl": "https://nsdfiprfmhdqhbfxfwpv.supabase.co/storage/v1/object/public/imgs/football-grid/v1/wildcards/treble-winner.svg",
+      "contentType": "image/svg+xml",
+      "byteLength": 932,
+      "sha256": "07641c4e9d6c63623d57d7c1b091a5b83c9a25f152c76afd7cb6e263dc11f88a"
     }
   ]
 }

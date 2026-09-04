@@ -129,10 +129,12 @@ function MiniModeCard({
     'relative block h-full min-h-[250px] lg:min-h-[300px] cursor-pointer overflow-hidden rounded-[10px] p-3.5 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2',
     className,
   );
+  // Phones: pills sit in flow above the title (Georgian titles are too wide to
+  // share the line with a floating badge); desktop keeps them floating.
   const inner = (
     <>
       {(badge || badge2) && (
-        <div className="absolute top-2.5 right-2.5 md:top-4 md:right-4 z-20 flex items-center gap-1.5">
+        <div className="z-20 mb-1.5 flex items-center gap-1.5 md:absolute md:top-4 md:right-4 md:mb-0">
           {badge && (
             <div
               className="rounded-full bg-brand-yellow px-2.5 py-1 text-[8px] uppercase tracking-wide text-black md:text-[11px]"
@@ -155,7 +157,7 @@ function MiniModeCard({
         {/* keep-all: Georgian has no hyphenation — auto-hyphens split words
             mid-syllable with no visible hyphen ("გამოწვევ/ა"). */}
         <h3
-          className={`${badge || badge2 ? 'pr-12' : 'pr-1'} text-[1rem] md:text-[clamp(1.4rem,2.2vw,2rem)] leading-[1.12] uppercase [overflow-wrap:normal] [word-break:keep-all] [hyphens:none] ${text}`}
+          className={`${badge || badge2 ? 'md:pr-12' : 'pr-1'} text-[1rem] md:text-[clamp(1.4rem,2.2vw,2rem)] leading-[1.12] uppercase [overflow-wrap:normal] [word-break:keep-all] [hyphens:none] ${text}`}
           style={poppins}
         >
           {title}

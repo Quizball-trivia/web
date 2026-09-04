@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-20T14:53:49.876Z",
+  "generatedAt": "2026-09-04T07:34:09.347Z",
   "fetchMode": "cached-provider-assets-reused",
   "families": {
     "clubs": {
@@ -43,11 +43,11 @@
       "runtimeUnresolved": 0
     },
     "wildcards": {
-      "total": 12,
-      "primaryReady": 12,
-      "fallbackReady": 12,
-      "primaryRightsCleared": 12,
-      "rightsCleared": 12,
+      "total": 16,
+      "primaryReady": 16,
+      "fallbackReady": 16,
+      "primaryRightsCleared": 16,
+      "rightsCleared": 16,
       "runtimeUnresolved": 0
     }
   },

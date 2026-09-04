@@ -66,3 +66,18 @@ export function footballGridClubLogoUrl(logoFile: string | null | undefined): st
   if (!file || file.includes('/') || file.includes('..')) return null;
   return `${supabaseUrl}/storage/v1/object/public/imgs/club-logos/${encodeURIComponent(file)}`;
 }
+
+/**
+ * Real competition/league logos (owner decision 2026-09-03) live in mutable
+ * sibling prefixes of imgs/club-logos, uploaded by
+ * scripts/upload-grid-real-logos.mjs, so artwork swaps never need a grid CDN
+ * release bump.
+ */
+export function footballGridRealLogoUrl(
+  prefix: 'competition-logos' | 'league-logos',
+  registryId: string | null | undefined,
+): string | null {
+  const id = registryId?.trim();
+  if (!id || !/^[a-z0-9][a-z0-9-]*$/.test(id)) return null;
+  return `${supabaseUrl}/storage/v1/object/public/imgs/${prefix}/${id}.webp`;
+}

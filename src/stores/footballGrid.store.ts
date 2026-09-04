@@ -6,15 +6,27 @@ import type {
   FootballGridMatchFoundPayload,
   FootballGridRematchStatePayload,
   FootballGridSearchStatePayload,
+  FootballGridSeriesInfo,
   FootballGridState,
   FootballGridStatePayload,
   FootballGridTurnResolvedPayload,
   OpponentInfo,
 } from '@/lib/realtime/socket.types';
 
+/** The game that just ended inside a still-running series, shown as a splash until the next board is live. */
+export interface FootballGridLastGameResult {
+  matchId: string;
+  winnerUserId: string | null;
+  completionReason: FootballGridState['completionReason'];
+  series: FootballGridSeriesInfo;
+}
+
 interface FootballGridStoreState {
   search: FootballGridSearchStatePayload;
   state: FootballGridState | null;
+  /** Best-of-N progress for the current match's series; null for legacy single games. */
+  series: FootballGridSeriesInfo | null;
+  lastGameResult: FootballGridLastGameResult | null;
   opponent: OpponentInfo | null;
   capabilities: FootballGridMatchFoundPayload['capabilities'] | null;
   completed: FootballGridCompletedPayload | null;
@@ -37,6 +49,9 @@ interface FootballGridStoreState {
   clearCommandFeedback: () => void;
   markAttemptReported: (attemptId: string) => void;
   setError: (payload: ErrorPayload | null) => void;
+  /** Records an earlier series game's result that arrived after the next handoff. */
+  recordPreviousGameResult: (payload: FootballGridCompletedPayload) => void;
+  clearLastGameResult: () => void;
   requestSearchCancellation: () => void;
   beginFreshSearch: () => void;
   clear: () => void;
@@ -51,6 +66,8 @@ function resetGridState() {
   return {
     search: IDLE_SEARCH,
     state: null,
+    series: null,
+    lastGameResult: null,
     opponent: null,
     capabilities: null,
     completed: null,
@@ -78,9 +95,21 @@ function isOlderState(current: FootballGridState | null, incoming: FootballGridS
   );
 }
 
+function lastGameResultFrom(payload: FootballGridCompletedPayload): FootballGridLastGameResult | null {
+  if (!payload.series || payload.series.finished) return null;
+  return {
+    matchId: payload.matchId,
+    winnerUserId: payload.state.winnerUserId,
+    completionReason: payload.state.completionReason,
+    series: payload.series,
+  };
+}
+
 export const useFootballGridStore = create<FootballGridStoreState>((set) => ({
   search: IDLE_SEARCH,
   state: null,
+  series: null,
+  lastGameResult: null,
   opponent: null,
   capabilities: null,
   completed: null,
@@ -109,9 +138,15 @@ export const useFootballGridStore = create<FootballGridStoreState>((set) => ({
     };
   }),
 
-  setMatchFound: (payload) => set({
+  setMatchFound: (payload) => set((current) => ({
     search: { state: 'matched', searchId: null },
     state: payload.state,
+    series: payload.series ?? null,
+    // Carried into the next game of the same series so the splash can show
+    // the score while the new board loads; anything else is stale.
+    lastGameResult: current.lastGameResult && current.lastGameResult.series.seriesId === payload.series?.seriesId
+      ? current.lastGameResult
+      : null,
     opponent: payload.opponent,
     capabilities: payload.capabilities,
     completed: null,
@@ -123,12 +158,15 @@ export const useFootballGridStore = create<FootballGridStoreState>((set) => ({
     searchCancellationPending: false,
     error: null,
     serverTimeOffsetMs: serverOffset(payload.serverNow),
-  }),
+  })),
 
   setState: (payload) => set((current) => {
     if (isOlderState(current.state, payload.state)) return current;
     return {
       state: payload.state,
+      series: payload.series ?? current.series,
+      // The splash has done its job once the new game is actually being played.
+      lastGameResult: payload.state.phase === 'turn' ? null : current.lastGameResult,
       error: null,
       pendingCommandId:
         current.pendingCommandId && payload.state.stateVersion > (current.state?.stateVersion ?? -1)
@@ -143,6 +181,8 @@ export const useFootballGridStore = create<FootballGridStoreState>((set) => ({
     return {
       state: payload.state,
       completed: payload,
+      series: payload.series ?? current.series,
+      lastGameResult: lastGameResultFrom(payload),
       // Only human-vs-human non-random series may offer a rematch; the
       // backend's `eligible` flag is the authority (bot and random-queue
       // matches would be rejected server-side). A redelivered completion
@@ -197,6 +237,17 @@ export const useFootballGridStore = create<FootballGridStoreState>((set) => ({
       : [...current.reportedAttemptIds, attemptId],
   })),
   setError: (payload) => set({ error: payload, pendingCommandId: null }),
+  recordPreviousGameResult: (payload) => set((current) => {
+    const result = lastGameResultFrom(payload);
+    if (!result) return current;
+    // Only the immediately preceding game, and only while the next one has not
+    // started playing: a redelivered old result must not bring the splash back.
+    const currentGameIndex = current.series?.gameIndex ?? 0;
+    if (result.series.gameIndex !== currentGameIndex - 1) return current;
+    if (current.state && current.state.matchId !== payload.matchId && current.state.phase === 'turn') return current;
+    return { lastGameResult: result, series: current.series ?? payload.series ?? null };
+  }),
+  clearLastGameResult: () => set({ lastGameResult: null }),
   requestSearchCancellation: () => set({ searchCancellationPending: true }),
   beginFreshSearch: () => set(resetGridState()),
   clear: () => set(resetGridState()),

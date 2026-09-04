@@ -262,5 +262,93 @@
       "assetPath": "/assets/football-grid/wildcards/_launch-fallback.svg"
     },
     "runtimeResolved": true
+  },
+  {
+    "id": "born-2000s",
+    "labelEn": "Born in the 2000s",
+    "labelKa": "დაბადებული 2000-იანებში",
+    "short": "00s",
+    "icon": "calendar",
+    "color": "#0ea5e9",
+    "primary": {
+      "type": "quizball-wildcard-badge",
+      "assetPath": "/assets/football-grid/wildcards/born-2000s.svg",
+      "source": {
+        "provider": "Quizball",
+        "license": "proprietary",
+        "rightsStatus": "owned"
+      }
+    },
+    "fallback": {
+      "type": "quizball-wildcard-badge",
+      "assetPath": "/assets/football-grid/wildcards/_launch-fallback.svg"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "champions-league-2plus",
+    "labelEn": "2+ Champions League titles",
+    "labelKa": "2+ ჩემპიონთა ლიგის ტიტული",
+    "short": "2×CL",
+    "icon": "trophy",
+    "color": "#1d4ed8",
+    "primary": {
+      "type": "quizball-wildcard-badge",
+      "assetPath": "/assets/football-grid/wildcards/champions-league-2plus.svg",
+      "source": {
+        "provider": "Quizball",
+        "license": "proprietary",
+        "rightsStatus": "owned"
+      }
+    },
+    "fallback": {
+      "type": "quizball-wildcard-badge",
+      "assetPath": "/assets/football-grid/wildcards/_launch-fallback.svg"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "treble-winner",
+    "labelEn": "Treble winner",
+    "labelKa": "ტრებლის მფლობელი",
+    "short": "3×",
+    "icon": "crown",
+    "color": "#b45309",
+    "primary": {
+      "type": "quizball-wildcard-badge",
+      "assetPath": "/assets/football-grid/wildcards/treble-winner.svg",
+      "source": {
+        "provider": "Quizball",
+        "license": "proprietary",
+        "rightsStatus": "owned"
+      }
+    },
+    "fallback": {
+      "type": "quizball-wildcard-badge",
+      "assetPath": "/assets/football-grid/wildcards/_launch-fallback.svg"
+    },
+    "runtimeResolved": true
+  },
+  {
+    "id": "played-for-rivals",
+    "labelEn": "Played for both sides of a derby",
+    "labelKa": "ითამაშა დერბის ორივე მხარეს",
+    "short": "DERBY",
+    "icon": "swords",
+    "color": "#dc2626",
+    "primary": {
+      "type": "quizball-wildcard-badge",
+      "assetPath": "/assets/football-grid/wildcards/played-for-rivals.svg",
+      "source": {
+        "provider": "Quizball",
+        "license": "proprietary",
+        "rightsStatus": "owned"
+      }
+    },
+    "fallback": {
+      "type": "quizball-wildcard-badge",
+      "assetPath": "/assets/football-grid/wildcards/_launch-fallback.svg"
+    },
+    "runtimeResolved": true
   }
 ]

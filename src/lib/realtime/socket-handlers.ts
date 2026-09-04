@@ -907,6 +907,20 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
     // PLAY time, so the search state no longer matters — it is 'idle' for a
     // moment after beginFreshSearch() and 'pairing'/'matched' before
     // grid:match_found, and the old result can land in any of those windows.
+    // The result of the previous game in a series that lands after the next
+    // game's handoff: keep the live board, record the score, ACK it here.
+    const previousSeriesGame = gridStore.state?.matchId !== data.matchId
+      && data.series && !data.series.finished
+      && gridStore.series?.seriesId === data.series.seriesId;
+    if (previousSeriesGame) {
+      gridStore.recordPreviousGameResult(data);
+      socket.emit('grid:completed_ack', {
+        matchId: data.matchId,
+        terminalStateVersion: data.terminalStateVersion,
+        ackToken: data.ackToken,
+      });
+      return;
+    }
     const staleWhileSearching = gridStore.state?.matchId !== data.matchId
       && _gridMatchesSeenBeforeSearch.has(data.matchId);
     if (staleWhileSearching) {
