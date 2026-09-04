@@ -47,6 +47,15 @@ const ORIGIN_FETCH_WIDTH = 1080;
 // — every `question-images/` object transforms fine, including the 6.9 MB one.
 // Route anything above this past the transform endpoint anyway so a future
 // oversized upload degrades to a big-but-working image instead of a broken one.
+//
+// This is defence-in-depth, not an active code path: no production image type
+// carries a byte size, so callers do not pass `sourceBytes` and the guard is
+// dormant. Verified 2026-09-04 that it does not need to fire — every object
+// under a user-facing prefix (question-images, categories, football-grid,
+// fifa-faces, club-logos, wl-photo-quiz) transforms with HTTP 200, the largest
+// being 6.9 MB. `QuestionImageCard` also retries with the raw URL on error, so
+// a future oversized upload degrades rather than breaks. Plumb `sourceBytes`
+// through the payload types if storage metadata ever reaches the client.
 const TRANSFORM_MAX_SOURCE_BYTES = 8_000_000;
 
 /**
