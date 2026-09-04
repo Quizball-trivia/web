@@ -133,7 +133,7 @@ describe('gameSounds', () => {
     expect(HowlMock).toHaveBeenCalledWith(expect.objectContaining({
       loop: true,
       preload: true,
-      src: ['/sounds/ranked_demo.wav'],
+      src: ['/sounds/ranked_demo.mp3'],
       volume: GAME_SOUND_VOLUME.auctionBgm,
     }));
     expect(howlInstances[0]?.play).toHaveBeenCalledTimes(1);

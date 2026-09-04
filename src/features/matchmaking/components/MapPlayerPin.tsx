@@ -1,5 +1,7 @@
 "use client";
 
+import { memo } from "react";
+
 import { motion } from "motion/react";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
 import { MAP_W, MAP_H } from "@/lib/geo";
@@ -50,7 +52,17 @@ interface MapPlayerPinProps {
   showFoundState: boolean;
 }
 
-export function MapPlayerPin({
+/**
+ * Memoised: the matchmaking screen cycles `highlightedPin` on a 350ms interval
+ * and churns the visible set every 1.1s, so the parent re-renders ~3x/second
+ * while up to 40 pins (SEARCH_PIN_MAX) are mounted. Each pin renders an SVG
+ * plus an AvatarDisplay, so without this every pin reconciled on every tick
+ * during the entire search wait. Props are three primitives plus `player`,
+ * which comes from a `useMemo(generateFakePlayers, [])` and is referentially
+ * stable, so only the one or two pins whose `highlighted` actually flips
+ * re-render.
+ */
+function MapPlayerPinComponent({
   player,
   highlighted,
   isOpponent,
@@ -138,3 +150,5 @@ export function MapPlayerPin({
     </div>
   );
 }
+
+export const MapPlayerPin = memo(MapPlayerPinComponent);

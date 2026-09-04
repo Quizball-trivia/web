@@ -249,11 +249,13 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
         const now = getSyncedNowMs();
         const effectiveNow = normalizedPlayableAtMs !== null ? Math.max(now, normalizedPlayableAtMs) : now;
         const remainingMs = normalizedQuestionDeadlineAtMs - effectiveNow;
-        if (remainingMs > 0) {
-          setTimeRemaining(Math.ceil(remainingMs / 1000));
-        } else {
-          setTimeRemaining(0);
-        }
+        const next = remainingMs > 0 ? Math.ceil(remainingMs / 1000) : 0;
+        // Sampled at 100ms to keep the deadline accurate, but the rendered
+        // value is whole seconds — so 9 of every 10 ticks previously scheduled
+        // a re-render of the whole match screen for an unchanged number, during
+        // the most latency-sensitive part of the game. Returning the identical
+        // value makes React bail out of the update.
+        setTimeRemaining((prev) => (prev === next ? prev : next));
       };
 
       tick();
@@ -266,11 +268,8 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
     const interval = setInterval(() => {
       const elapsedMs = getSyncedNowMs() - startedAt;
       const remainingMs = QUESTION_PLAYING_MS - elapsedMs;
-      if (remainingMs > 0) {
-        setTimeRemaining(Math.ceil(remainingMs / 1000));
-      } else {
-        setTimeRemaining(0);
-      }
+      const next = remainingMs > 0 ? Math.ceil(remainingMs / 1000) : 0;
+      setTimeRemaining((prev) => (prev === next ? prev : next));
     }, 100);
 
     return () => clearInterval(interval);
