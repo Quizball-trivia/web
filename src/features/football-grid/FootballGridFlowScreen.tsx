@@ -4,14 +4,7 @@
 
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import {
-  AlertTriangle,
-  Check,
-  LoaderCircle,
-  UserRound,
-  UserRoundSearch,
-  X,
-} from 'lucide-react';
+import { AlertTriangle, Check, LoaderCircle, UserRound, UserRoundSearch } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { QuitMatchModal } from '@/components/match/QuitMatchModal';
@@ -31,7 +24,19 @@ import type {
   FootballGridCriterionView,
   FootballGridState,
   OpponentInfo,
+  FootballGridCommandResultPayload,
+  FootballGridSeriesInfo,
 } from '@/lib/realtime/socket.types';
+import type { FootballGridLastGameResult } from '@/stores/footballGrid.store';
+import { useFootballGridStore } from '@/stores/footballGrid.store';
+import { useFootballGridAnalytics } from './hooks/useFootballGridAnalytics';
+import { useFootballGridAudio } from './hooks/useFootballGridAudio';
+import { useFootballGridBoardPreload } from './hooks/useFootballGridBoardPreload';
+import { AuctionAudioControl } from '@/features/auction/components/shared/AuctionAudioControl';
+import { AuctionLeaveControl } from '@/features/auction/components/shared/AuctionLeaveControl';
+import { KickoffCountdownOverlay } from '@/features/possession/components/KickoffCountdownOverlay';
+import { MatchHudAvatar } from '@/features/possession/components/MatchHudPrimitives';
+import { ShowdownScreen } from '@/components/ShowdownScreen';
 import type { AvatarCustomization } from '@/types/game';
 import { cn } from '@/lib/utils';
 import {
@@ -39,7 +44,7 @@ import {
   trackFootballGridPlayStarted,
   trackFootballGridViewed,
 } from '@/features/mini-games/footballGrid.analytics';
-import { MiniGameShell, StatPill } from '@/features/mini-games/components/MiniGameShell';
+import { MiniGameShell } from '@/features/mini-games/components/MiniGameShell';
 import { useRealtimeConnectionHealth } from '@/lib/realtime/connection-health';
 import { AnimatedCounter } from '@/features/game/results/AnimatedCounter';
 import { CoinRewardChip, RewardChip } from '@/features/game/results/RankedProgressionPanel';
@@ -50,13 +55,11 @@ import type { Locale } from '@/lib/i18n/messages';
 export const FOOTBALL_GRID_COPY = {
   en: {
     title: 'Football Tic Tac Toe',
-    subtitle: 'Claim cells with players — three in a row wins',
-    scoreLabel: 'You · Opponent',
-    pickTurn: 'Your turn — pick a cell',
     opponentThinking: 'Opponent is thinking…',
     searching: 'Finding your opponent',
     searchingBody: 'Looking for a player…',
     cancel: 'Cancel search',
+    cancelPick: 'Cancel',
     matching: 'Building the board…',
     ready: 'Opponent found',
     loading: 'Loading match',
@@ -67,7 +70,6 @@ export const FOOTBALL_GRID_COPY = {
     answerPlaceholder: 'Type a footballer…',
     submit: 'Submit',
     submitShort: 'Submit',
-    pass: 'Pass',
     correct: 'Square claimed!',
     wrong: 'That answer does not match both clues.',
     ambiguous: 'Be more specific — add the full name.',
@@ -92,12 +94,37 @@ export const FOOTBALL_GRID_COPY = {
     noteYouLeft: 'You left the match',
     noteOpponentDisconnected: 'Opponent lost connection',
     noteYouDisconnected: 'Connection was lost',
-    noteOpponentIdle: 'Opponent stopped responding',
-    noteYouIdle: 'You ran out of move time',
+    noteOpponentIdle: 'Opponent missed 3 turns in a row — series forfeited',
+    noteYouIdle: 'You missed 3 turns in a row — the series was forfeited',
     noteOpponentNoShow: 'Opponent never joined',
     noteYouNoShow: 'You did not join in time',
     noteBothDisconnected: 'Both players disconnected',
     noteNoShow: 'The match did not start in time',
+    turnPillYou: 'Your turn',
+    turnPillOpponent: "Opponent's turn",
+    skip: 'Skip',
+    requestDraw: 'Request draw',
+    drawRequested: 'Draw requested…',
+    drawLocked: 'Declined — try again in a few turns',
+    drawOfferTitle: 'Opponent offers a draw',
+    drawOfferBody: 'Accept to end this game as a draw and move to the next board.',
+    acceptDraw: 'Accept',
+    declineDraw: 'Decline',
+    drawDeclinedNote: 'Draw declined',
+    gameOf: 'Game {n} of {m}',
+    seriesLead: 'You lead',
+    seriesTrail: 'Opponent leads',
+    seriesLevel: 'All square',
+    nextGameSoon: 'Next board coming up…',
+    gameWon: 'You take game {n}',
+    gameLost: 'Opponent takes game {n}',
+    gameDrawn: 'Game {n} drawn',
+    noteBoardDead: 'No line left for either player',
+    noteDrawAgreed: 'Draw agreed',
+    seriesWin: 'You take the series',
+    seriesLoss: 'Opponent takes the series',
+    seriesDraw: 'Series drawn',
+    tapCellHint: 'Tap a cell, then name a footballer who fits both',
     rematch: 'Rematch',
     waitingRematch: 'Waiting for opponent…',
     rematchAccepted: 'Rematch accepted',
@@ -120,13 +147,11 @@ export const FOOTBALL_GRID_COPY = {
   },
   ka: {
     title: 'იქს ნული',
-    subtitle: 'დაიკავე უჯრები ფეხბურთელებით — სამი ზედიზედ იგებს',
-    scoreLabel: 'შენ · მეტოქე',
-    pickTurn: 'შენი ჯერია — აირჩიე უჯრა',
     opponentThinking: 'მეტოქე ფიქრობს…',
     searching: 'ვეძებთ მეტოქეს',
     searchingBody: 'ვეძებთ მოთამაშეს…',
     cancel: 'ძიების გაუქმება',
+    cancelPick: 'გაუქმება',
     matching: 'ვქმნით დაფას…',
     ready: 'მეტოქე ნაპოვნია',
     loading: 'მატჩი იტვირთება',
@@ -137,7 +162,6 @@ export const FOOTBALL_GRID_COPY = {
     answerPlaceholder: 'ჩაწერე ფეხბურთელი…',
     submit: 'დადასტურება',
     submitShort: 'დასტ.',
-    pass: 'გამოტოვება',
     correct: 'უჯრა შენია!',
     wrong: 'პასუხი ორივე პირობას არ აკმაყოფილებს.',
     ambiguous: 'დააზუსტე — ჩაწერე სრული სახელი.',
@@ -162,12 +186,37 @@ export const FOOTBALL_GRID_COPY = {
     noteYouLeft: 'მატჩი დატოვე',
     noteOpponentDisconnected: 'მეტოქეს კავშირი გაუწყდა',
     noteYouDisconnected: 'კავშირი გაწყდა',
-    noteOpponentIdle: 'მეტოქემ სვლები გამოტოვა',
-    noteYouIdle: 'სვლის დრო ამოგეწურა',
+    noteOpponentIdle: 'მეტოქემ ზედიზედ 3 სვლა გამოტოვა — სერია ჩათვლით მოიგე',
+    noteYouIdle: 'ზედიზედ 3 სვლა გამოტოვე — სერია ჩათვლით წაგებულია',
     noteOpponentNoShow: 'მეტოქე არ შემოვიდა',
     noteYouNoShow: 'დროულად ვერ შემოხვედი',
     noteBothDisconnected: 'ორივე მოთამაშე გაითიშა',
     noteNoShow: 'მატჩი დროულად ვერ დაიწყო',
+    turnPillYou: 'შენი სვლა',
+    turnPillOpponent: 'მეტოქის სვლა',
+    skip: 'გამოტოვება',
+    requestDraw: 'ფრეს შეთავაზება',
+    drawRequested: 'ფრე შეთავაზებულია…',
+    drawLocked: 'უარყოფილია — სცადე რამდენიმე სვლის შემდეგ',
+    drawOfferTitle: 'მეტოქე ფრეს გთავაზობს',
+    drawOfferBody: 'დათანხმდი, რომ ეს თამაში ფრედ დასრულდეს და შემდეგ დაფაზე გადახვიდეთ.',
+    acceptDraw: 'დათანხმება',
+    declineDraw: 'უარყოფა',
+    drawDeclinedNote: 'ფრე უარყოფილია',
+    gameOf: 'თამაში {n} / {m}',
+    seriesLead: 'შენ ლიდერობ',
+    seriesTrail: 'მეტოქე ლიდერობს',
+    seriesLevel: 'თანაბარია',
+    nextGameSoon: 'შემდეგი დაფა მალე…',
+    gameWon: 'შენ მოიგე {n}-ე თამაში',
+    gameLost: 'მეტოქემ მოიგო {n}-ე თამაში',
+    gameDrawn: '{n}-ე თამაში ფრედ დასრულდა',
+    noteBoardDead: 'ხაზი ვერცერთს აღარ გამოსდის',
+    noteDrawAgreed: 'ფრეზე შეთანხმდით',
+    seriesWin: 'სერია შენია',
+    seriesLoss: 'სერია მეტოქემ წაიღო',
+    seriesDraw: 'სერია ფრედ დასრულდა',
+    tapCellHint: 'აირჩიე უჯრა და დაასახელე ფეხბურთელი, რომელიც ორივეს შეესაბამება',
     rematch: 'რევანში',
     waitingRematch: 'ველოდებით მეტოქეს…',
     rematchAccepted: 'რევანში მიღებულია',
@@ -190,13 +239,11 @@ export const FOOTBALL_GRID_COPY = {
   },
   es: {
     title: 'Fútbol: Tres en raya',
-    subtitle: 'Ocupa casillas con jugadores — consigue tres en raya para ganar',
-    scoreLabel: 'Tú · Oponente',
-    pickTurn: 'Tu turno — elige una casilla',
     opponentThinking: 'El oponente está pensando…',
     searching: 'Buscando a tu oponente',
     searchingBody: 'Buscando un jugador…',
     cancel: 'Cancelar búsqueda',
+    cancelPick: 'Cancelar',
     matching: 'Creando el tablero…',
     ready: 'Oponente encontrado',
     loading: 'Cargando partido',
@@ -207,7 +254,6 @@ export const FOOTBALL_GRID_COPY = {
     answerPlaceholder: 'Escribe un futbolista…',
     submit: 'Enviar',
     submitShort: 'Enviar',
-    pass: 'Pasar',
     correct: '¡Casilla reclamada!',
     wrong: 'Esa respuesta no coincide con ambas pistas.',
     ambiguous: 'Sé más específico — añade el nombre completo.',
@@ -246,12 +292,37 @@ export const FOOTBALL_GRID_COPY = {
     noteYouLeft: 'Abandonaste el partido',
     noteOpponentDisconnected: 'El rival perdió la conexión',
     noteYouDisconnected: 'Se perdió la conexión',
-    noteOpponentIdle: 'El rival dejó de responder',
-    noteYouIdle: 'Se te acabó el tiempo de jugada',
+    noteOpponentIdle: 'El rival no jugó 3 turnos seguidos — serie ganada por abandono',
+    noteYouIdle: 'No jugaste 3 turnos seguidos — la serie se perdió por abandono',
     noteOpponentNoShow: 'El rival nunca se unió',
     noteYouNoShow: 'No te uniste a tiempo',
     noteBothDisconnected: 'Ambos jugadores se desconectaron',
     noteNoShow: 'El partido no empezó a tiempo',
+    turnPillYou: 'Tu turno',
+    turnPillOpponent: 'Turno del rival',
+    skip: 'Saltar',
+    requestDraw: 'Pedir tablas',
+    drawRequested: 'Tablas pedidas…',
+    drawLocked: 'Rechazadas — inténtalo en unas jugadas',
+    drawOfferTitle: 'El rival ofrece tablas',
+    drawOfferBody: 'Acepta para terminar esta partida en tablas y pasar al siguiente tablero.',
+    acceptDraw: 'Aceptar',
+    declineDraw: 'Rechazar',
+    drawDeclinedNote: 'Tablas rechazadas',
+    gameOf: 'Partida {n} de {m}',
+    seriesLead: 'Vas ganando',
+    seriesTrail: 'El rival va ganando',
+    seriesLevel: 'Empate',
+    nextGameSoon: 'Siguiente tablero en breve…',
+    gameWon: 'Ganas la partida {n}',
+    gameLost: 'El rival gana la partida {n}',
+    gameDrawn: 'Partida {n} en tablas',
+    noteBoardDead: 'Ningún jugador puede completar una línea',
+    noteDrawAgreed: 'Tablas acordadas',
+    seriesWin: 'Te llevas la serie',
+    seriesLoss: 'El rival se lleva la serie',
+    seriesDraw: 'Serie empatada',
+    tapCellHint: 'Toca una casilla y nombra a un futbolista que encaje en ambas',
     opponentDisconnected: 'Rival desconectado',
     opponentDisconnectedBody: 'Si no vuelve antes de que acabe el tiempo, ganas el partido.',
     selfDisconnected: 'Conexión perdida',
@@ -261,6 +332,211 @@ export const FOOTBALL_GRID_COPY = {
 } as const;
 
 type FootballGridCopy = (typeof FOOTBALL_GRID_COPY)[keyof typeof FOOTBALL_GRID_COPY];
+
+
+// ── Match HUD (top of the board): players · series score · turn · clock · actions ──
+export function GridHud({
+  state,
+  series,
+  selfUserId,
+  selfName,
+  selfCustomization,
+  opponent,
+  remaining,
+  isMyTurn,
+  copy,
+  pendingCommand,
+  myOfferPending,
+  onSkip,
+  onOfferDraw,
+  selfRankPoints = null,
+  opponentRankPoints = null,
+}: {
+  state: FootballGridState;
+  series: FootballGridSeriesInfo | null;
+  selfUserId: string | null;
+  selfName: string;
+  selfCustomization: Parameters<typeof AvatarDisplay>[0]['customization'];
+  selfRankPoints?: number | null;
+  opponentRankPoints?: number | null;
+  opponent: OpponentInfo | null;
+  remaining: number;
+  isMyTurn: boolean;
+  copy: FootballGridCopy;
+  pendingCommand: boolean;
+  myOfferPending: boolean;
+  onSkip: () => void;
+  onOfferDraw: () => void;
+}) {
+  const seconds = Math.max(0, Math.ceil(remaining / 1_000));
+  const fullTurnMs = Math.max(40_000, state.turnRemainingMs ?? 0);
+  const ratio = state.phase === 'turn' ? Math.min(1, Math.max(0, remaining / fullTurnMs)) : 0;
+  const myWins = selfUserId ? series?.wins[selfUserId] ?? 0 : 0;
+  const theirWins = opponent ? series?.wins[opponent.id] ?? 0 : 0;
+  const me = state.players.find((player) => player.userId === selfUserId);
+  const offerLocked = Boolean(me && (me.drawOfferLockedUntilTurn ?? 0) > state.turnNumber);
+  const offerByOpponent = Boolean(state.drawOffer && state.drawOffer.byUserId !== selfUserId);
+  const canOffer = state.phase === 'turn' && !state.drawOffer && !offerLocked && !pendingCommand;
+  const live = state.phase === 'turn';
+  return (
+    <div className="px-1 py-2">
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <MatchHudAvatar customization={selfCustomization ?? null} side="player" rankPoints={selfRankPoints} />
+          <span className="truncate font-poppins text-xs font-black uppercase text-white">{selfName}</span>
+        </div>
+        <div className="flex flex-col items-center">
+          <div className="flex h-9 min-w-[88px] items-center justify-center rounded-xl bg-brand-blue px-3 font-poppins text-xl font-black tabular-nums text-white">
+            {myWins}<span className="mx-1.5 text-white/60">–</span>{theirWins}
+          </div>
+          {series && series.format === 'bo3' && (
+            <span className="mt-0.5 font-poppins text-[10px] font-bold uppercase tracking-wide text-white/50">
+              {fill(copy.gameOf, { n: series.gameIndex, m: 3 })}
+            </span>
+          )}
+        </div>
+        <div className="flex min-w-0 items-center justify-end gap-2">
+          <span className="truncate font-poppins text-xs font-black uppercase text-white">{opponent?.username ?? copy.opponent}</span>
+          <MatchHudAvatar
+            customization={opponent?.avatarCustomization ?? { base: opponent?.avatarUrl ?? undefined }}
+            side="opponent"
+            flipped
+            rankPoints={opponentRankPoints}
+          />
+        </div>
+      </div>
+      <div className="mt-3 flex items-center gap-3">
+        <span
+          className={cn(
+            'shrink-0 rounded-full px-3 py-1 font-poppins text-[11px] font-black uppercase tracking-wide',
+            isMyTurn ? 'bg-brand-yellow text-black' : 'bg-white/10 text-white/70',
+          )}
+          aria-live="polite"
+        >
+          {isMyTurn ? copy.turnPillYou : copy.turnPillOpponent}
+        </span>
+        <div className="flex min-w-0 flex-1 items-center gap-2">
+          <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/10">
+            <div
+              className={cn('h-full rounded-full transition-[width] duration-100', ratio < 0.25 ? 'bg-brand-red' : 'bg-brand-yellow')}
+              style={{ width: `${ratio * 100}%` }}
+            />
+          </div>
+          <span className={cn('w-8 text-right font-poppins text-lg font-black tabular-nums', ratio < 0.25 && live ? 'text-brand-red' : 'text-brand-yellow')}>
+            {live ? seconds : '–'}
+          </span>
+        </div>
+      </div>
+      <div className="mt-2.5 flex gap-2">
+        <button
+          type="button"
+          onClick={onSkip}
+          disabled={!isMyTurn || pendingCommand}
+          className="h-10 flex-1 rounded-xl border-2 border-brand-red-soft/60 font-poppins text-xs font-black uppercase tracking-wide text-brand-red-soft transition-colors hover:bg-brand-red-soft/10 disabled:opacity-35"
+        >
+          {copy.skip}
+        </button>
+        <button
+          type="button"
+          onClick={onOfferDraw}
+          disabled={!canOffer || offerByOpponent}
+          title={offerLocked ? copy.drawLocked : undefined}
+          className="h-10 flex-1 rounded-xl border-2 border-brand-orange/70 font-poppins text-xs font-black uppercase tracking-wide text-brand-orange transition-colors hover:bg-brand-orange/10 disabled:opacity-35"
+        >
+          {myOfferPending ? copy.drawRequested : copy.requestDraw}
+        </button>
+      </div>
+      {offerLocked && !state.drawOffer && (
+        <p className="mt-1.5 text-center font-poppins text-[10px] font-bold text-white/45">{copy.drawLocked}</p>
+      )}
+    </div>
+  );
+}
+
+// ── Incoming draw offer ────────────────────────────────────────────────────────
+export function DrawOfferPrompt({ copy, pending, onRespond }: { copy: FootballGridCopy; pending: boolean; onRespond: (accept: boolean) => void }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 12 }}
+      role="dialog"
+      aria-live="assertive"
+      className="mt-3 rounded-2xl border-2 border-brand-orange bg-brand-orange/10 p-3 text-center"
+    >
+      <p className="font-poppins text-sm font-black uppercase tracking-wide text-brand-orange">{copy.drawOfferTitle}</p>
+      <p className="mt-1 font-poppins text-[12px] font-semibold text-white/70">{copy.drawOfferBody}</p>
+      <div className="mt-2.5 flex gap-2">
+        <button type="button" disabled={pending} onClick={() => onRespond(true)} className="h-10 flex-1 rounded-xl bg-brand-green font-poppins text-xs font-black uppercase text-white hover:bg-brand-green-deep disabled:opacity-50">{copy.acceptDraw}</button>
+        <button type="button" disabled={pending} onClick={() => onRespond(false)} className="h-10 flex-1 rounded-xl border-2 border-white/15 font-poppins text-xs font-black uppercase text-white/80 hover:bg-white/5 disabled:opacity-50">{copy.declineDraw}</button>
+      </div>
+    </motion.div>
+  );
+}
+
+// ── Between games of a series ──────────────────────────────────────────────────
+export function SeriesSplash({
+  result,
+  selfUserId,
+  selfName,
+  selfCustomization,
+  opponent,
+  countdownSeconds,
+  copy,
+}: {
+  result: FootballGridLastGameResult;
+  selfUserId: string | null;
+  selfName: string;
+  selfCustomization: Parameters<typeof AvatarDisplay>[0]['customization'];
+  opponent: OpponentInfo | null;
+  countdownSeconds: number | null;
+  copy: FootballGridCopy;
+}) {
+  const series = result.series;
+  const myWins = selfUserId ? series.wins[selfUserId] ?? 0 : 0;
+  const theirWins = opponent ? series.wins[opponent.id] ?? 0 : 0;
+  const gameTitle = !result.winnerUserId
+    ? fill(copy.gameDrawn, { n: series.gameIndex })
+    : result.winnerUserId === selfUserId
+      ? fill(copy.gameWon, { n: series.gameIndex })
+      : fill(copy.gameLost, { n: series.gameIndex });
+  const lead = myWins === theirWins ? copy.seriesLevel : myWins > theirWins ? copy.seriesLead : copy.seriesTrail;
+  return (
+    <main className="flex min-h-dvh flex-col items-center justify-center bg-surface-page-alt bg-cover bg-center bg-no-repeat px-5 py-10 text-center font-poppins text-white" style={GRID_BACKGROUND_STYLE}>
+      <p className="text-xs font-black uppercase tracking-[0.22em] text-white/40">{fill(copy.gameOf, { n: series.gameIndex + 1, m: 3 })}</p>
+      <h1 className={cn('mt-2 text-[2.2rem] font-black uppercase leading-[1.2] sm:text-[2.8rem]', !result.winnerUserId ? 'text-brand-yellow' : result.winnerUserId === selfUserId ? 'text-brand-green' : 'text-brand-red')}>
+        {gameTitle}
+      </h1>
+      {completionNote(result.completionReason, result.winnerUserId === selfUserId, !result.winnerUserId, copy) && (
+        <p className="mt-1 text-sm font-semibold text-white/60">{completionNote(result.completionReason, result.winnerUserId === selfUserId, !result.winnerUserId, copy)}</p>
+      )}
+      <div className="mt-7 grid w-full max-w-md grid-cols-[1fr_auto_1fr] items-center gap-3">
+        <div className="flex min-w-0 flex-col items-center gap-2">
+          <AvatarDisplay customization={selfCustomization} size="lg" shape="square" assetResolver={resolveGridAvatarAsset} />
+          <span className="w-full truncate text-sm font-semibold uppercase">{selfName}</span>
+        </div>
+        <div className="flex h-[51px] min-w-[120px] items-center justify-center rounded-[20px] bg-brand-blue px-6 text-[32px] font-semibold tabular-nums">
+          {myWins}<span className="mx-1.5 text-white/60">–</span>{theirWins}
+        </div>
+        <div className="flex min-w-0 flex-col items-center gap-2">
+          <AvatarDisplay customization={opponent?.avatarCustomization ?? { base: opponent?.avatarUrl ?? undefined }} size="lg" shape="square" className="-scale-x-100" assetResolver={resolveGridAvatarAsset} />
+          <span className="w-full truncate text-sm font-semibold uppercase">{opponent?.username ?? copy.opponent}</span>
+        </div>
+      </div>
+      <p className="mt-4 text-xs font-black uppercase tracking-wide text-brand-yellow">{lead}</p>
+      <div className="mt-8 flex items-center gap-2 text-white/60">
+        {countdownSeconds !== null ? (
+          <span className="font-poppins text-3xl font-black tabular-nums text-brand-yellow">{countdownSeconds}</span>
+        ) : (
+          <>
+            <LoaderCircle className="size-4 animate-spin text-brand-yellow" aria-hidden="true" />
+            <span className="text-sm font-semibold">{copy.nextGameSoon}</span>
+          </>
+        )}
+      </div>
+    </main>
+  );
+}
 
 function useRemaining(deadlineAt: string | null, serverTimeOffsetMs: number): number {
   const [remaining, setRemaining] = useState(0);
@@ -281,6 +557,8 @@ const GRID_BACKGROUND = footballGridAssetUrl('/assets/bg-pattern.webp')!;
 const GRID_BACKGROUND_STYLE = { backgroundImage: `url(${GRID_BACKGROUND})` };
 /** Mode accent — matches the Tic Tac Toe card on /play (colors.red.mid). */
 const GRID_ACCENT = '#E04242';
+const FOOTBALL_GRID_BOARD_REVEAL_MS = 3_000;
+
 const resolveGridAvatarAsset = (asset: string) => footballGridAssetUrl(asset) ?? GRID_AVATAR_FALLBACK;
 
 /** Fixed roster the opponent card cycles through while searching (deterministic — no hydration drift). */
@@ -322,19 +600,19 @@ function CriterionHeader({
         title={label}
         className="flex min-w-0 items-center justify-center overflow-hidden rounded-[20px] border border-white/10 bg-gradient-to-b from-brand-blue to-brand-blue/75 p-1.5 shadow-[0_10px_24px_rgba(11,51,190,.28)]"
       >
-        <span className={cn('grid size-10 place-items-center sm:size-12', portrait && 'overflow-hidden rounded-full')}>
-          <CriterionAsset criterion={criterion} className={portrait ? 'size-full' : 'size-8 sm:size-10'} />
+        <span className={cn('grid size-11 place-items-center sm:size-14', portrait && 'overflow-hidden rounded-full')}>
+          <CriterionAsset criterion={criterion} className={portrait ? 'size-full' : 'size-9 sm:size-11'} />
         </span>
         <span className="sr-only">{label}</span>
       </div>
     );
   }
   return (
-    <div className="flex min-h-[68px] min-w-0 flex-col items-center justify-center gap-1 rounded-[20px] border border-yellow-200/40 bg-gradient-to-b from-brand-yellow-soft to-brand-yellow px-1.5 py-2 text-center shadow-[0_10px_24px_rgba(255,214,0,.13)] sm:min-h-[82px]">
-      <span className={cn('grid size-9 place-items-center sm:size-11', portrait && 'overflow-hidden rounded-full')}>
-        <CriterionAsset criterion={criterion} className={portrait ? 'size-full' : 'size-7 sm:size-9'} />
+    <div className="flex min-h-[78px] min-w-0 flex-col items-center justify-center gap-1 rounded-[20px] border border-yellow-200/40 bg-gradient-to-b from-brand-yellow-soft to-brand-yellow px-1.5 py-2 text-center shadow-[0_10px_24px_rgba(255,214,0,.13)] sm:min-h-[82px]">
+      <span className={cn('grid size-11 place-items-center sm:size-12', portrait && 'overflow-hidden rounded-full')}>
+        <CriterionAsset criterion={criterion} className={portrait ? 'size-full' : 'size-9 sm:size-10'} />
       </span>
-      <span className="line-clamp-2 font-poppins text-[9px] font-black uppercase leading-[1.05] tracking-[0.01em] text-black/80 sm:text-[10px]">{label}</span>
+      <span lang={locale} className="line-clamp-3 hyphens-auto break-words font-poppins text-[9px] font-black uppercase leading-[1.1] text-black/80 [overflow-wrap:anywhere] sm:text-[10px]">{label}</span>
     </div>
   );
 }
@@ -375,7 +653,7 @@ function ClaimedCell({ claim, isMine, claimedLabel }: { claim: FootballGridClaim
     >
       <FootballGridPortrait
         source={claim.imageUrl}
-        className="size-9 shadow-[0_5px_15px_rgba(0,0,0,.35)] sm:size-11"
+        className="size-11 shadow-[0_5px_15px_rgba(0,0,0,.35)] sm:size-12"
       />
       <span className={cn('line-clamp-3 text-center font-poppins text-[9px] font-black leading-tight sm:text-[10px]', isMine ? 'text-brand-cyan' : 'text-brand-red-soft')}>
         {claim.displayName ?? claimedLabel}
@@ -601,31 +879,29 @@ export function FootballGridTurnPanel({
   locale,
   isMyTurn,
   selectedCell,
-  remaining,
   answer,
   onAnswerChange,
   onSubmit,
-  onPass,
   pending = false,
   feedback,
   reportableAttempt,
   alreadyReported = false,
   onReport,
+  onCancel,
 }: {
   state: FootballGridState;
   locale: Locale;
   isMyTurn: boolean;
   selectedCell: number | null;
-  remaining: number;
   answer: string;
   onAnswerChange: (value: string) => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
-  onPass: () => void;
   pending?: boolean;
-  feedback?: 'correct' | 'wrong' | 'ambiguous' | 'already_used' | 'pass';
+  feedback?: FootballGridCommandResultPayload['outcome'];
   reportableAttempt?: string | null;
   alreadyReported?: boolean;
   onReport?: (attemptId: string) => void;
+  onCancel?: () => void;
 }) {
   const copy = FOOTBALL_GRID_COPY[locale];
   const roster = useGridTypeaheadRoster();
@@ -673,8 +949,16 @@ export function FootballGridTurnPanel({
   };
   const selectedRow = selectedCell === null ? null : state.board.rows[Math.floor(selectedCell / 3)];
   const selectedColumn = selectedCell === null ? null : state.board.columns[selectedCell % 3];
-  const fullTurnMs = Math.max(20_000, state.turnRemainingMs ?? 0);
-  const remainingRatio = Math.min(1, Math.max(0, remaining / fullTurnMs));
+  const cellPicked = selectedCell !== null && Boolean(selectedRow) && Boolean(selectedColumn);
+  // The form no longer remounts per cell, so refocus the box on every pick.
+  const answerInputRef = useRef<HTMLInputElement | null>(null);
+  useEffect(() => {
+    if (isMyTurn && cellPicked) answerInputRef.current?.focus();
+  }, [cellPicked, isMyTurn, selectedCell]);
+
+  const criterionLabel = (criterion: FootballGridCriterionView) => (
+    locale === 'ka' ? criterion.labelKa || criterion.labelEn : criterion.labelEn
+  );
 
   return (
     <div className="mt-3 flex-1">
@@ -693,49 +977,67 @@ export function FootballGridTurnPanel({
               <span className="sr-only">{copy.opponentThinking}</span>
             </span>
           </motion.div>
-        ) : selectedCell === null || !selectedRow || !selectedColumn ? (
+        ) : (
+          <motion.div key="my-turn" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-center">
+            {!cellPicked && (
+              <p className="font-poppins text-[11px] font-bold uppercase tracking-wide text-white/60">{copy.tapCellHint}</p>
+            )}
+            <div className="mt-2 min-h-4 font-poppins text-[11px] font-bold">
+              {feedback === 'correct' && <span className="text-brand-green-light"><Check className="mr-1 inline size-3.5" />{copy.correct}</span>}
+              {feedback === 'wrong' && <span className="text-brand-red-soft">{copy.wrong}</span>}
+              {feedback === 'ambiguous' && <span className="text-brand-yellow">{copy.ambiguous}</span>}
+              {feedback === 'already_used' && <span className="text-brand-red-soft">{copy.alreadyUsed}</span>}
+            </div>
+            {reportableAttempt && feedback !== 'correct' && feedback !== 'pass' && !feedback?.startsWith('draw_') && onReport && (
+              <button
+                type="button"
+                disabled={alreadyReported}
+                onClick={() => onReport(reportableAttempt)}
+                className="mt-1 w-full text-center font-poppins text-[10px] font-bold text-white/40 underline decoration-white/20 underline-offset-4 disabled:no-underline"
+              >
+                {alreadyReported ? copy.reported : copy.report}
+              </button>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Player search sheet — slides up from the bottom once a cell is picked
+          (Tiki-Taka-Toe style): criteria recap, search box, inline suggestions,
+          cancel + submit. Closes when the turn resolves or the player cancels. */}
+      <AnimatePresence>
+        {isMyTurn && cellPicked && selectedRow && selectedColumn && (
           <motion.div
-            key="pick-cell"
+            key="answer-sheet"
+            className="fixed inset-0 z-[80] flex items-end justify-center sm:items-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="rounded-2xl bg-brand-blue/15 p-3 text-center"
           >
-            <span className="font-poppins text-sm font-black uppercase tracking-wide text-white">{copy.pickTurn}</span>
-          </motion.div>
-        ) : (
-          <motion.form
-            key={`answer-${selectedCell}`}
-            onSubmit={onSubmit}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            className={cn(
-              'rounded-2xl border-2 p-3',
-              feedback === 'wrong' || feedback === 'already_used'
-                ? 'border-brand-red bg-brand-red/10'
-                : 'border-brand-blue/60 bg-brand-blue/[0.08]',
-            )}
-          >
-            <div className="mb-2 flex min-w-0 items-center justify-center gap-2">
-              <CriterionAsset criterion={selectedRow} className="size-5 shrink-0" />
-              <span className="truncate font-poppins text-[10px] font-black uppercase text-white/80">
-                {locale === 'ka' ? selectedRow.labelKa || selectedRow.labelEn : selectedRow.labelEn}
-              </span>
-              <span className="font-poppins text-xs font-black text-white/35">×</span>
-              <CriterionAsset criterion={selectedColumn} className="size-5 shrink-0" />
-              <span className="truncate font-poppins text-[10px] font-black uppercase text-white/80">
-                {locale === 'ka' ? selectedColumn.labelKa || selectedColumn.labelEn : selectedColumn.labelEn}
-              </span>
-            </div>
-            <div className="mb-2.5 h-1 overflow-hidden rounded-full bg-white/10">
-              <div
-                className={cn('h-full rounded-full transition-[width] duration-100', remainingRatio < 0.25 ? 'bg-brand-red' : 'bg-brand-cyan')}
-                style={{ width: `${remainingRatio * 100}%` }}
-              />
-            </div>
-            <div className="relative flex gap-2">
+            <button type="button" aria-label={copy.cancelPick} onClick={onCancel} className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" />
+            <motion.form
+              role="dialog"
+              aria-modal="true"
+              onSubmit={(event) => { if (!cellPicked) { event.preventDefault(); return; } onSubmit(event); }}
+              initial={{ y: 48, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 48, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 380, damping: 32 }}
+              className={cn(
+                'relative w-full max-w-md rounded-t-3xl border-t-2 bg-surface-card-deep px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-4 shadow-2xl shadow-black/50 sm:rounded-3xl sm:border-2 sm:pb-4',
+                feedback === 'wrong' || feedback === 'already_used' ? 'border-brand-red/70' : 'border-white/10',
+              )}
+            >
+              <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-white/15 sm:hidden" />
+              <div className="flex min-w-0 items-center justify-center gap-2">
+                <CriterionAsset criterion={selectedRow} className="size-7 shrink-0" />
+                <span className="truncate font-poppins text-xs font-black uppercase text-white">{criterionLabel(selectedRow)}</span>
+                <span className="font-poppins text-sm font-black text-white/35">×</span>
+                <CriterionAsset criterion={selectedColumn} className="size-7 shrink-0" />
+                <span className="truncate font-poppins text-xs font-black uppercase text-white">{criterionLabel(selectedColumn)}</span>
+              </div>
               <input
+                ref={answerInputRef}
                 autoFocus
                 value={answer}
                 onChange={(event) => handleAnswerChange(event.target.value)}
@@ -746,75 +1048,52 @@ export function FootballGridTurnPanel({
                 role="combobox"
                 aria-expanded={suggestions.length > 0}
                 aria-controls="grid-typeahead-listbox"
-                className="h-12 min-w-0 flex-1 rounded-xl border-none bg-brand-blue px-3 text-center text-base font-bold text-white outline-none placeholder:text-white/60"
+                className="mt-3 h-12 w-full rounded-xl border-none bg-brand-blue px-3 text-base font-bold text-white outline-none placeholder:text-white/60"
               />
-              {suggestions.length > 0 && (
-                <ul
-                  id="grid-typeahead-listbox"
-                  role="listbox"
-                  className="absolute inset-x-0 top-full z-20 mt-1 overflow-hidden rounded-xl border border-white/10 bg-surface-card-deep shadow-xl shadow-black/40"
+              <ul
+                id="grid-typeahead-listbox"
+                role="listbox"
+                className={cn('mt-2 max-h-56 overflow-y-auto rounded-xl bg-white/[0.04]', suggestions.length === 0 && 'hidden')}
+              >
+                {suggestions.map((suggestion, index) => (
+                  <li key={suggestion.id} role="option" aria-selected={index === highlightIndex}>
+                    <button
+                      type="button"
+                      onMouseDown={(event) => { event.preventDefault(); pickSuggestion(index); }}
+                      onMouseEnter={() => setHighlightIndex(index)}
+                      className={cn(
+                        'flex w-full items-baseline justify-between gap-2 border-b border-white/5 px-3 py-3 text-left last:border-b-0',
+                        index === highlightIndex ? 'bg-brand-blue/40' : 'hover:bg-white/5',
+                      )}
+                    >
+                      <span className="truncate font-poppins text-sm font-bold text-white">
+                        {locale === 'ka' && suggestion.nameKa ? suggestion.nameKa : suggestion.nameEn}
+                      </span>
+                      {locale === 'ka' && suggestion.nameKa && (
+                        <span className="shrink-0 font-poppins text-[10px] font-semibold text-white/40">{suggestion.nameEn}</span>
+                      )}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              <div className="mt-3 flex gap-2">
+                <button
+                  type="button"
+                  onClick={onCancel}
+                  className="h-12 flex-1 rounded-xl border-2 border-white/15 font-poppins text-xs font-black uppercase tracking-wide text-white/80 hover:bg-white/5"
                 >
-                  {suggestions.map((suggestion, index) => (
-                    <li key={suggestion.id} role="option" aria-selected={index === highlightIndex}>
-                      <button
-                        type="button"
-                        onMouseDown={(event) => { event.preventDefault(); pickSuggestion(index); }}
-                        onMouseEnter={() => setHighlightIndex(index)}
-                        className={cn(
-                          'flex w-full items-baseline justify-between gap-2 px-3 py-2.5 text-left',
-                          index === highlightIndex ? 'bg-brand-blue/40' : 'hover:bg-white/5',
-                        )}
-                      >
-                        <span className="truncate font-poppins text-sm font-bold text-white">
-                          {locale === 'ka' && suggestion.nameKa ? suggestion.nameKa : suggestion.nameEn}
-                        </span>
-                        {locale === 'ka' && suggestion.nameKa && (
-                          <span className="shrink-0 font-poppins text-[10px] font-semibold text-white/40">{suggestion.nameEn}</span>
-                        )}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-              <button
-                type="submit"
-                disabled={!answer.trim() || pending}
-                className="h-12 shrink-0 rounded-xl bg-brand-green px-3 font-poppins font-black uppercase text-white transition-colors hover:bg-brand-green-deep disabled:opacity-50 sm:px-4"
-              >
-                {pending ? <LoaderCircle className="size-5 animate-spin" /> : (
-                  <>
-                    <span className="sm:hidden">{copy.submitShort}</span>
-                    <span className="hidden sm:inline">{copy.submit}</span>
-                  </>
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={onPass}
-                disabled={pending}
-                aria-label={copy.pass}
-                className="flex size-12 shrink-0 items-center justify-center rounded-xl border-2 border-white/10 text-white/40 hover:text-white/70 disabled:opacity-40"
-              >
-                <X className="size-4" />
-              </button>
-            </div>
-            <div className="mt-2 min-h-4 text-center font-poppins text-[11px] font-bold">
-              {feedback === 'correct' && <span className="text-brand-green-light"><Check className="mr-1 inline size-3.5" />{copy.correct}</span>}
-              {feedback === 'wrong' && <span className="text-brand-red-soft">{copy.wrong}</span>}
-              {feedback === 'ambiguous' && <span className="text-brand-yellow">{copy.ambiguous}</span>}
-              {feedback === 'already_used' && <span className="text-brand-red-soft">{copy.alreadyUsed}</span>}
-            </div>
-            {reportableAttempt && feedback !== 'correct' && feedback !== 'pass' && onReport && (
-              <button
-                type="button"
-                disabled={alreadyReported}
-                onClick={() => onReport(reportableAttempt)}
-                className="mt-1 w-full text-center font-poppins text-[10px] font-bold text-white/40 underline decoration-white/20 underline-offset-4 disabled:no-underline"
-              >
-                {alreadyReported ? copy.reported : copy.report}
-              </button>
-            )}
-          </motion.form>
+                  {copy.cancelPick}
+                </button>
+                <button
+                  type="submit"
+                  disabled={!answer.trim() || pending}
+                  className="h-12 flex-[1.4] rounded-xl bg-brand-green font-poppins text-xs font-black uppercase tracking-wide text-white transition-colors hover:bg-brand-green-deep disabled:opacity-50"
+                >
+                  {pending ? <LoaderCircle className="mx-auto size-5 animate-spin" /> : copy.submit}
+                </button>
+              </div>
+            </motion.form>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>
@@ -848,7 +1127,7 @@ export function SearchScreen({
   const [cycleIndex, setCycleIndex] = useState(0);
   useEffect(() => {
     if (opponent || paired) return;
-    const interval = window.setInterval(() => setCycleIndex((index) => (index + 1) % SEARCH_CYCLE_AVATARS.length), 900);
+    const interval = window.setInterval(() => setCycleIndex((index) => (index + 1) % SEARCH_CYCLE_AVATARS.length), 650);
     return () => window.clearInterval(interval);
   }, [opponent, paired]);
   // Elapsed search clock (ranked/auction parity): starts when the search
@@ -883,22 +1162,24 @@ export function SearchScreen({
             <AvatarDisplay customization={customization ?? { base: avatar }} size="lg" className="mx-auto" assetResolver={resolveGridAvatarAsset} />
             <p className="mt-2 truncate text-sm font-black text-white">{playerName}</p>
           </div>
-          <motion.div
-            className="relative z-10 grid size-12 place-items-center rounded-full bg-white text-lg font-black text-surface-page shadow-[0_10px_30px_rgba(0,0,0,.4)]"
-            animate={{ scale: [1, 1.08, 1] }}
-            transition={{ repeat: Infinity, duration: 1.6, ease: 'easeInOut' }}
-          >
-            VS
-            <span className="absolute inset-0 -z-10 animate-ping rounded-full bg-white/20" />
-          </motion.div>
+          <div className="relative z-10 grid place-items-center">
+            <motion.div
+              className="relative grid size-12 place-items-center rounded-full bg-white text-lg font-black text-surface-page shadow-[0_10px_30px_rgba(0,0,0,.4)]"
+              animate={opponent ? { scale: [1, 1.25, 1], rotate: [0, -8, 8, 0] } : { scale: 1 }}
+              transition={{ duration: 0.6, ease: 'easeInOut' }}
+            >
+              VS
+            </motion.div>
+          </div>
           <div className="relative overflow-hidden rounded-[28px] bg-brand-yellow p-4 text-surface-page shadow-[0_14px_40px_rgba(255,229,0,.22)]">
             <AnimatePresence mode="popLayout" initial={false}>
               <motion.div
                 key={opponent ? 'opponent' : paired ? 'silhouette' : cycleIndex}
-                initial={{ opacity: 0, scale: 0.7, y: 6 }}
-                animate={{ opacity: opponent ? 1 : 0.85, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.7, y: -6 }}
-                transition={{ type: 'spring', stiffness: 380, damping: 26 }}
+                initial={{ opacity: 0, rotateY: 90, scale: 0.8 }}
+                animate={{ opacity: opponent ? 1 : 0.85, rotateY: 0, scale: 1 }}
+                exit={{ opacity: 0, rotateY: -90, scale: 0.8 }}
+                transition={{ type: 'spring', stiffness: 420, damping: 28 }}
+                style={{ transformPerspective: 600 }}
               >
                 <AvatarDisplay
                   customization={opponentCustomization}
@@ -912,13 +1193,6 @@ export function SearchScreen({
               <p className="mt-2 truncate text-sm font-black">{opponent.username}</p>
             ) : (
               <div className="mx-auto mt-3 h-3 w-20 animate-pulse rounded-full bg-black/15" />
-            )}
-            {!opponent && (
-              <motion.span
-                className="absolute inset-y-0 w-20 bg-gradient-to-r from-transparent via-white/30 to-transparent"
-                animate={{ x: [-100, 240] }}
-                transition={{ repeat: Infinity, duration: 1.8, ease: 'linear' }}
-              />
             )}
           </div>
         </div>
@@ -1078,10 +1352,25 @@ export function PhaseOverlay({ state, remaining, copy, selfDisconnected = false 
   );
 }
 
-function completionTitle(reason: FootballGridCompletionReason | null, won: boolean, draw: boolean, copy: FootballGridCopy) {
+function completionTitle(
+  reason: FootballGridCompletionReason | null,
+  won: boolean,
+  draw: boolean,
+  copy: FootballGridCopy,
+  series?: FootballGridSeriesInfo | null,
+  selfUserId?: string | null,
+) {
   if (reason === 'administrative_cancel') return copy.interrupted;
+  if (series?.finished && series.format === 'bo3') {
+    if (!series.winnerUserId) return copy.seriesDraw;
+    return series.winnerUserId === selfUserId ? copy.seriesWin : copy.seriesLoss;
+  }
   if (draw) return copy.resultDraw;
   return won ? copy.resultWin : copy.resultLoss;
+}
+
+function fill(template: string, values: Record<string, string | number>): string {
+  return template.replace(/\{(\w+)\}/g, (_, key: string) => String(values[key] ?? ''));
 }
 
 // Why the match ended, when it didn't play out on the board (ranked parity:
@@ -1094,6 +1383,10 @@ function completionNote(reason: FootballGridCompletionReason | null, won: boolea
       return won ? copy.noteOpponentDisconnected : copy.noteYouDisconnected;
     case 'no_action_timeouts':
       return won ? copy.noteOpponentIdle : copy.noteYouIdle;
+    case 'board_dead':
+      return copy.noteBoardDead;
+    case 'draw_agreed':
+      return copy.noteDrawAgreed;
     case 'loading_no_show':
       // No winner means neither side was credited; blaming "you" would be wrong
       // for the player who did join in time.
@@ -1121,12 +1414,30 @@ export function FootballGridFlowScreen() {
   const theme = ['european', 'england', 'spain', 'italy', 'germany', 'france', 'brazil', 'turkey', 'argentina', 'georgia'].includes(packParam ?? '')
     ? packParam!
     : 'european';
+  const boardPreload = useFootballGridBoardPreload(useFootballGridStore((current) => current.state));
   const grid = useRealtimeFootballGrid({
     enabled: authStatus === 'authenticated' && Boolean(selfUserId),
     selfUserId,
     locale: contentLocale,
     theme,
     autoStart: source === 'matchmaking',
+    assetsReady: boardPreload.ready,
+  });
+  useFootballGridAnalytics({
+    selfUserId,
+    theme,
+    search: grid.search,
+    state: grid.state,
+    opponent: grid.opponent,
+    series: grid.series,
+    completed: grid.completed,
+    commandResult: grid.commandResult,
+  });
+  useFootballGridAudio({
+    search: grid.search,
+    state: grid.state,
+    commandResult: grid.commandResult,
+    enabled: authStatus === 'authenticated',
   });
   const connectionHealth = useRealtimeConnectionHealth();
   const connectionDegraded =
@@ -1134,6 +1445,8 @@ export function FootballGridFlowScreen() {
   const [selectedCell, setSelectedCell] = useState<number | null>(null);
   const [answer, setAnswer] = useState('');
   const [showQuit, setShowQuit] = useState(false);
+  // The match this player has already seen the showdown intro for.
+  const [showdownMatchId, setShowdownMatchId] = useState<string | null>(null);
   const viewedRef = useRef(false);
   const engagementEndedRef = useRef(false);
   const engagementCleanupTimerRef = useRef<number | null>(null);
@@ -1248,7 +1561,10 @@ export function FootballGridFlowScreen() {
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
     if (selectedCell === null) return;
-    if (grid.actions.submitAnswer(selectedCell, answer)) statsRef.current.answers += 1;
+    if (grid.actions.submitAnswer(selectedCell, answer)) {
+      statsRef.current.answers += 1;
+      setAnswer('');
+    }
   };
   const handlePass = () => {
     if (grid.actions.pass()) statsRef.current.passes += 1;
@@ -1291,7 +1607,52 @@ export function FootballGridFlowScreen() {
     return <SearchScreen playerName={player.username} avatar={player.avatar} customization={player.avatarCustomization} status={grid.search.state} queuedAt={grid.search.queuedAt} onCancel={handleCancel} copy={copy} />;
   }
 
-  if (grid.state && (grid.state.phase === 'handoff' || grid.state.phase === 'loading' || grid.state.phase === 'countdown')) {
+  // The server countdown is 8 s: the kickoff gate holds for the first 5, then
+  // the board mounts and builds in over the last 3 before the first turn.
+  const boardRevealing = grid.state?.phase === 'countdown' && remaining <= FOOTBALL_GRID_BOARD_REVEAL_MS;
+  const gateSeconds = Math.max(1, Math.ceil((remaining - FOOTBALL_GRID_BOARD_REVEAL_MS) / 1_000));
+  if (grid.state && (grid.state.phase === 'handoff' || grid.state.phase === 'loading' || (grid.state.phase === 'countdown' && !boardRevealing))) {
+    const firstGame = (grid.series?.gameIndex ?? 1) === 1;
+    if (firstGame && grid.opponent && showdownMatchId !== grid.state.matchId) {
+      const opponent = grid.opponent;
+      const matchId = grid.state.matchId;
+      return (
+        <ShowdownScreen
+          matchType="friendly"
+          playerUsername={player.username}
+          playerAvatar={player.avatar}
+          opponentUsername={opponent.username}
+          opponentAvatar={opponent.avatarUrl ?? ''}
+          onComplete={() => setShowdownMatchId(matchId)}
+          playerInfo={{
+            username: player.username,
+            avatar: player.avatar,
+            avatarCustomization: player.avatarCustomization,
+            level: player.level,
+          }}
+          opponentInfo={{
+            username: opponent.username,
+            avatar: opponent.avatarUrl ?? '',
+            avatarCustomization: opponent.avatarCustomization,
+            isAi: opponent.isAiOpponent,
+            pingMs: opponent.pingMs,
+          }}
+        />
+      );
+    }
+    if (grid.lastGameResult && grid.series && grid.lastGameResult.series.seriesId === grid.series.seriesId) {
+      return (
+        <SeriesSplash
+          result={grid.lastGameResult}
+          selfUserId={selfUserId}
+          selfName={player.username}
+          selfCustomization={player.avatarCustomization ?? { base: player.avatar }}
+          opponent={grid.opponent}
+          countdownSeconds={grid.state.phase === 'countdown' ? gateSeconds : null}
+          copy={copy}
+        />
+      );
+    }
     return (
       <>
         {/* The pre-board screens froze silently when the transport dropped
@@ -1304,25 +1665,54 @@ export function FootballGridFlowScreen() {
             </div>
           </div>
         )}
-        <SearchScreen
-        playerName={player.username}
-        avatar={player.avatar}
-        customization={player.avatarCustomization}
-        status="matched"
+        {/* Ranked's kickoff gate: tier-framed avatars with ready ticks, 5 s puck. */}
+        <KickoffCountdownOverlay
+          countdownDisplay={grid.state.phase === 'countdown' ? gateSeconds : 5}
+          phase="kickoff"
+          waiting={grid.state.phase !== 'countdown'}
+          waitingLabel={copy.ready}
+          durationMs={5_000}
+          runKey={`${grid.state.matchId}:${grid.state.phase}`}
+          playerName={player.username}
+          opponentName={grid.opponent?.username ?? copy.opponent}
+          playerAvatarBase={player.avatar}
+          opponentAvatarBase={grid.opponent?.avatarUrl ?? undefined}
+          playerAvatarCustomization={player.avatarCustomization}
+          opponentAvatarCustomization={grid.opponent?.avatarCustomization ?? null}
+          playerRankPoints={player.rankPoints ?? null}
+          opponentRankPoints={grid.opponent?.rp ?? null}
+          playerReady={grid.state.phase === 'countdown' || Boolean(grid.state.players.find((p) => p.userId === selfUserId)?.ready)}
+          opponentReady={grid.state.phase === 'countdown' || Boolean(grid.state.players.find((p) => p.userId !== selfUserId)?.ready)}
+          className="h-dvh min-h-dvh w-screen bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat"
+        />
+      </>
+    );
+  }
+
+  if (grid.completed && grid.state?.phase === 'terminal' && grid.lastGameResult && grid.lastGameResult.matchId === grid.completed.matchId) {
+    return (
+      <SeriesSplash
+        result={grid.lastGameResult}
+        selfUserId={selfUserId}
+        selfName={player.username}
+        selfCustomization={player.avatarCustomization ?? { base: player.avatar }}
         opponent={grid.opponent}
-        countdownSeconds={grid.state.phase === 'countdown' ? Math.max(1, Math.ceil(remaining / 1_000)) : null}
-        onCancel={handleCancel}
+        countdownSeconds={null}
         copy={copy}
       />
-      </>
     );
   }
 
   if (grid.completed && grid.state?.phase === 'terminal') {
     const won = grid.state.winnerUserId === selfUserId;
     const draw = !grid.state.winnerUserId;
-    const myClaims = grid.state.claims.filter((claim) => claim.claimantUserId === selfUserId).length;
-    const theirClaims = grid.state.claims.length - myClaims;
+    const seriesDone = grid.completed.series?.finished && grid.completed.series.format === 'bo3' ? grid.completed.series : null;
+    const myClaims = seriesDone
+      ? (selfUserId ? seriesDone.wins[selfUserId] ?? 0 : 0)
+      : grid.state.claims.filter((claim) => claim.claimantUserId === selfUserId).length;
+    const theirClaims = seriesDone
+      ? (grid.opponent ? seriesDone.wins[grid.opponent.id] ?? 0 : 0)
+      : grid.state.claims.length - myClaims;
     const rematchPending = grid.rematch?.status === 'pending';
     const accepted = Boolean(grid.rematch?.acceptedUserIds.includes(selfUserId));
     return (
@@ -1333,10 +1723,12 @@ export function FootballGridFlowScreen() {
           <h1
             className={cn(
               'mt-2 font-poppins text-[2.5rem] font-black uppercase leading-[1.3] tracking-[0] sm:text-[3rem]',
-              won ? 'text-brand-green' : draw ? 'text-brand-yellow' : 'text-brand-red',
+              seriesDone
+                ? (!seriesDone.winnerUserId ? 'text-brand-yellow' : seriesDone.winnerUserId === selfUserId ? 'text-brand-green' : 'text-brand-red')
+                : won ? 'text-brand-green' : draw ? 'text-brand-yellow' : 'text-brand-red',
             )}
           >
-            {completionTitle(grid.state.completionReason, won, draw, copy)}
+            {completionTitle(grid.state.completionReason, won, draw, copy, grid.completed.series, selfUserId)}
           </h1>
           {completionNote(grid.state.completionReason, won, draw, copy) && (
             <p className="mt-1 font-poppins text-sm font-semibold text-white/60">
@@ -1421,34 +1813,51 @@ export function FootballGridFlowScreen() {
   const reportableAttempt = grid.commandResult?.attemptId ?? null;
   const alreadyReported = Boolean(reportableAttempt && grid.reportedAttemptIds.includes(reportableAttempt));
   const selectedCellIsClaimed = selectedCell !== null && state.claims.some((claim) => claim.cellIndex === selectedCell);
-  const myClaims = state.claims.filter((claim) => claim.claimantUserId === selfUserId).length;
-  const opponentClaims = state.claims.length - myClaims;
-
   return (
     <>
       <MiniGameShell
         title={copy.title}
-        subtitle={copy.subtitle}
         accent="#1CB0F6"
-        headerRight={<StatPill label={copy.scoreLabel} value={`${myClaims} · ${opponentClaims}`} color="#1CB0F6" />}
-        onBack={() => setShowQuit(true)}
+        hideHeader
         disclaimer={false}
         backgroundImageUrl={GRID_BACKGROUND}
         wide
         scrollable
       >
-        <div className="mx-auto mt-2 flex w-full max-w-xl flex-1 flex-col">
+        <div className="mx-auto mt-14 flex w-full max-w-[26rem] flex-1 flex-col sm:mt-16 sm:max-w-[28rem]">
+        <GridHud
+          selfRankPoints={player.rankPoints ?? null}
+          opponentRankPoints={grid.opponent?.rp ?? null}
+          state={state}
+          series={grid.series}
+          selfUserId={selfUserId}
+          selfName={player.username}
+          selfCustomization={player.avatarCustomization ?? { base: player.avatar }}
+          opponent={grid.opponent}
+          remaining={remaining}
+          isMyTurn={isMyTurn}
+          copy={copy}
+          pendingCommand={Boolean(grid.pendingCommandId)}
+          myOfferPending={state.drawOffer?.byUserId === selfUserId}
+          onSkip={handlePass}
+          onOfferDraw={() => { grid.actions.offerDraw(); }}
+        />
+        <AnimatePresence>
+          {state.drawOffer && state.drawOffer.byUserId !== selfUserId && state.phase === 'turn' && (
+            <DrawOfferPrompt key="draw-offer" copy={copy} pending={Boolean(grid.pendingCommandId)} onRespond={(accept) => { grid.actions.respondToDraw(accept); }} />
+          )}
+        </AnimatePresence>
+        <div className="mt-3" />
         <MatchBoard state={state} selfUserId={selfUserId} locale={locale} selectedCell={selectedCell} onSelect={(cell) => { statsRef.current.selections += 1; setSelectedCell(cell); setAnswer(''); grid.actions.clearCommandFeedback(); }} />
           <FootballGridTurnPanel
             state={state}
             locale={locale}
             isMyTurn={isMyTurn}
             selectedCell={selectedCellIsClaimed ? null : selectedCell}
-            remaining={remaining}
             answer={answer}
             onAnswerChange={setAnswer}
             onSubmit={handleSubmit}
-            onPass={handlePass}
+            onCancel={() => { setSelectedCell(null); setAnswer(''); }}
             pending={Boolean(grid.pendingCommandId)}
             feedback={feedback}
             reportableAttempt={reportableAttempt}
@@ -1470,6 +1879,8 @@ export function FootballGridFlowScreen() {
           <PhaseOverlay state={state} remaining={remaining} copy={copy} selfDisconnected={connectionDegraded} />
         </div>
       </MiniGameShell>
+      <AuctionLeaveControl ariaLabel={copy.quit} onClick={() => setShowQuit(true)} />
+      <AuctionAudioControl />
       <QuitMatchModal open={showQuit} onOpenChange={setShowQuit} onConfirm={() => { setShowQuit(false); grid.actions.forfeit(); }} description={copy.quit} />
     </>
   );

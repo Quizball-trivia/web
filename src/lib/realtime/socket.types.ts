@@ -942,6 +942,9 @@ export type FootballGridPhase =
 export type FootballGridCompletionReason =
   | 'line'
   | 'board_full'
+  | 'board_dead'
+  | 'draw_agreed'
+  | 'turn_limit'
   | 'forfeit'
   | 'no_action_timeouts'
   | 'disconnect_timeout'
@@ -975,6 +978,26 @@ export interface FootballGridPlayerState {
   ready: boolean;
   noActionTimeouts: number;
   pauseBudgetRemainingMs: number;
+  /** A declined draw offer locks the offerer out until this turn number. */
+  drawOfferLockedUntilTurn?: number;
+}
+
+export interface FootballGridDrawOffer {
+  byUserId: string;
+  turnNumber: number;
+  offeredAt: string;
+}
+
+/** Best-of-N progress, attached to state and completion payloads. */
+export interface FootballGridSeriesInfo {
+  seriesId: string;
+  format: 'single' | 'bo3';
+  gameIndex: number;
+  targetWins: number;
+  wins: Record<string, number>;
+  draws: number;
+  winnerUserId: string | null;
+  finished: boolean;
 }
 
 export interface FootballGridClaimState {
@@ -1006,6 +1029,7 @@ export interface FootballGridState {
   pausedFromPhase?: 'countdown' | 'turn' | null;
   reconnectDeadlineAt: string | null;
   completionReason: FootballGridCompletionReason | null;
+  drawOffer?: FootballGridDrawOffer | null;
 }
 
 export interface FootballGridSearchStartPayload {
@@ -1036,6 +1060,7 @@ export interface FootballGridSearchStatePayload {
 export interface FootballGridMatchFoundPayload {
   matchId: string;
   state: FootballGridState;
+  series?: FootballGridSeriesInfo | null;
   opponent: OpponentInfo;
   capabilities: {
     canAddFriend: boolean;
@@ -1048,12 +1073,13 @@ export interface FootballGridStatePayload {
   matchId: string;
   state: FootballGridState;
   serverNow: string;
+  series?: FootballGridSeriesInfo | null;
 }
 
 export interface FootballGridCommandResultPayload {
   matchId: string;
   commandId: string;
-  outcome: 'correct' | 'wrong' | 'ambiguous' | 'already_used' | 'pass';
+  outcome: 'correct' | 'wrong' | 'ambiguous' | 'already_used' | 'pass' | 'draw_offered' | 'draw_accepted' | 'draw_declined';
   stateVersion: number;
   resolvedPlayerId: string | null;
   attemptId: string | null;
@@ -1591,6 +1617,8 @@ export interface ClientToServerEvents {
   'grid:client_ready': (data: FootballGridVersionedCommandPayload) => void;
   'grid:submit_answer': (data: FootballGridSubmitAnswerPayload) => void;
   'grid:pass': (data: FootballGridVersionedCommandPayload) => void;
+  'grid:draw_offer': (data: FootballGridVersionedCommandPayload) => void;
+  'grid:draw_respond': (data: FootballGridVersionedCommandPayload & { accept: boolean }) => void;
   'grid:resync': (data: { matchId: string }) => void;
   'grid:completed_ack': (data: { matchId: string; terminalStateVersion: number; ackToken: string }) => void;
   'grid:forfeit': (data: FootballGridVersionedCommandPayload) => void;

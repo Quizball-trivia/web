@@ -10,7 +10,7 @@ import leagues from '@/data/football-grid/launch-assets/leagues.json';
 import managers from '@/data/football-grid/launch-assets/managers.json';
 import competitions from '@/data/football-grid/launch-assets/competitions.json';
 import wildcards from '@/data/football-grid/launch-assets/wildcards.json';
-import { footballGridAssetUrl, footballGridClubLogoUrl } from '@/lib/football-grid/assets';
+import { footballGridAssetUrl, footballGridClubLogoUrl, footballGridRealLogoUrl } from '@/lib/football-grid/assets';
 import masterClubs from '@/data/clubs.json';
 import type { FootballGridCriterionView } from '@/lib/realtime/socket.types';
 import { cn } from '@/lib/utils';
@@ -86,9 +86,22 @@ function comparable(value: string | null | undefined): string {
     .replace(/^-|-$/g, '');
 }
 
+// Criterion labels that differ from the registry's canonical label.
+const LABEL_ALIASES: Record<string, string[]> = {
+  turkey: ['turkiye'],
+  'ivory-coast': ['cote-d-ivoire'],
+  'united-states': ['usa', 'united-states-of-america'],
+  'czech-republic': ['czechia'],
+};
+
 function isLaunchClearedPrimary(item: RegistryItem): boolean {
   const status = item.primary?.source?.rightsStatus ?? item.primary?.rightsStatus;
   return status === 'owned' || status === 'cleared-for-launch';
+}
+
+/** Ordered candidate URLs for a criterion's artwork — the first that loads wins. */
+export function criterionAssetSources(criterion: FootballGridCriterionView): string[] {
+  return resolveRegistryAssets(criterion);
 }
 
 function resolveRegistryAssets(criterion: FootballGridCriterionView): string[] {
@@ -100,7 +113,8 @@ function resolveRegistryAssets(criterion: FootballGridCriterionView): string[] {
 
   const candidates = [key, criterion.key, criterion.id, criterion.labelEn, criterion.labelKa]
     .map(comparable)
-    .filter(Boolean);
+    .filter(Boolean)
+    .flatMap((value) => [value, ...(LABEL_ALIASES[value] ?? [])]);
   const registry = REGISTRIES[criterion.family] ?? [];
   const valuesOf = (candidate: RegistryItem) => (
     [candidate.id, candidate.labelEn, candidate.labelKa].map(comparable)
@@ -139,8 +153,14 @@ function resolveRegistryAssets(criterion: FootballGridCriterionView): string[] {
       ].map(footballGridAssetUrl),
     ].filter((value): value is string => Boolean(value));
   }
-  return [item.assetPath, item.primary?.assetPath, item.fallback?.assetPath]
-    .map(footballGridAssetUrl)
+  // Owner decision 2026-09-03: same call for competitions and leagues — the
+  // real logo first, the drawn Quizball badge only as an onError fallback.
+  const realLogo = criterion.family === 'trophy_award'
+    ? footballGridRealLogoUrl('competition-logos', item.id)
+    : criterion.family === 'league'
+      ? footballGridRealLogoUrl('league-logos', item.id)
+      : null;
+  return [realLogo, ...[item.assetPath, item.primary?.assetPath, item.fallback?.assetPath].map(footballGridAssetUrl)]
     .filter((value, index, values): value is string => Boolean(value) && values.indexOf(value) === index);
 }
 

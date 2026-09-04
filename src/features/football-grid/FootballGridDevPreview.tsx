@@ -27,7 +27,7 @@ import type {
   OpponentInfo,
 } from '@/lib/realtime/socket.types';
 import { cn } from '@/lib/utils';
-import { MiniGameShell, StatPill } from '@/features/mini-games/components/MiniGameShell';
+import { MiniGameShell } from '@/features/mini-games/components/MiniGameShell';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { AnimatedCounter } from '@/features/game/results/AnimatedCounter';
 import {
@@ -237,9 +237,7 @@ function MatchScenario({ scenario }: { scenario: ScenarioId }) {
   return (
     <MiniGameShell
       title={copy.title}
-      subtitle={copy.subtitle}
       accent="#1CB0F6"
-      headerRight={<StatPill label={copy.scoreLabel} value="1 · 1" color="#1CB0F6" />}
       onBack={() => undefined}
       disclaimer={false}
       backgroundImageUrl={footballGridAssetUrl('/assets/bg-pattern.webp')!}
@@ -259,11 +257,9 @@ function MatchScenario({ scenario }: { scenario: ScenarioId }) {
           locale={locale}
           isMyTurn={isMyTurn}
           selectedCell={selectedCell}
-          remaining={scenario === 'countdown' ? 3_000 : 16_000}
           answer={answer}
           onAnswerChange={setAnswer}
           onSubmit={handleSubmit}
-          onPass={() => { setSelectedCell(null); setAnswer(''); }}
           feedback={feedback}
           reportableAttempt={feedback && feedback !== 'correct' ? 'preview-attempt' : null}
           onReport={() => undefined}

@@ -14,6 +14,8 @@ interface UseRealtimeFootballGridOptions {
   /** League pack to queue for; defaults to the full European mix. */
   theme?: string;
   autoStart?: boolean;
+  /** Board artwork warmed — the client only reports ready once it can render the reveal. */
+  assetsReady?: boolean;
 }
 
 const PENDING_COMMAND_TIMEOUT_MS = 5_000;
@@ -32,6 +34,7 @@ export function useRealtimeFootballGrid({
   locale,
   theme = 'european',
   autoStart = true,
+  assetsReady = true,
 }: UseRealtimeFootballGridOptions) {
   const socket = useRealtimeConnection({ enabled, selfUserId });
   const search = useFootballGridStore((current) => current.search);
@@ -39,6 +42,8 @@ export function useRealtimeFootballGrid({
   const opponent = useFootballGridStore((current) => current.opponent);
   const capabilities = useFootballGridStore((current) => current.capabilities);
   const completed = useFootballGridStore((current) => current.completed);
+  const series = useFootballGridStore((current) => current.series);
+  const lastGameResult = useFootballGridStore((current) => current.lastGameResult);
   const rematch = useFootballGridStore((current) => current.rematch);
   const commandResult = useFootballGridStore((current) => current.lastCommandResult);
   const turnResolved = useFootballGridStore((current) => current.lastTurnResolved);
@@ -127,7 +132,7 @@ export function useRealtimeFootballGrid({
   }, [enabled, selfUserId, socket, state]);
 
   useEffect(() => {
-    if (!enabled || !selfUserId || !state || state.phase !== 'loading') return;
+    if (!enabled || !selfUserId || !state || state.phase !== 'loading' || !assetsReady) return;
     const me = state.players.find((player) => player.userId === selfUserId);
     if (!me || me.ready) return;
     const key = `${state.matchId}:${state.stateVersion}`;
@@ -139,7 +144,7 @@ export function useRealtimeFootballGrid({
       commandId,
       expectedStateVersion: state.stateVersion,
     });
-  }, [enabled, selfUserId, socket, state]);
+  }, [assetsReady, enabled, selfUserId, socket, state]);
 
   const activeMatchId = state?.matchId ?? null;
   const activeMatchIsTerminal = state?.phase === 'terminal';
@@ -239,6 +244,29 @@ export function useRealtimeFootballGrid({
     return true;
   }, [socket]);
 
+  /** Offers a draw during a live turn (either player's). Lapses when the turn ends. */
+  const offerDraw = useCallback(() => {
+    const current = useFootballGridStore.getState();
+    const snapshot = current.state;
+    if (!snapshot || !selfUserId || snapshot.phase !== 'turn' || snapshot.drawOffer || current.pendingCommandId) return false;
+    const me = snapshot.players.find((player) => player.userId === selfUserId);
+    if (me && (me.drawOfferLockedUntilTurn ?? 0) > snapshot.turnNumber) return false;
+    const command = versionedCommand(snapshot);
+    current.markCommandPending(command.commandId);
+    socket.emit('grid:draw_offer', command);
+    return true;
+  }, [selfUserId, socket]);
+
+  const respondToDraw = useCallback((accept: boolean) => {
+    const current = useFootballGridStore.getState();
+    const snapshot = current.state;
+    if (!snapshot || !selfUserId || !snapshot.drawOffer || snapshot.drawOffer.byUserId === selfUserId || current.pendingCommandId) return false;
+    const command = versionedCommand(snapshot);
+    current.markCommandPending(command.commandId);
+    socket.emit('grid:draw_respond', { ...command, accept });
+    return true;
+  }, [selfUserId, socket]);
+
   const reportMissingAnswer = useCallback((attemptId: string) => {
     const current = useFootballGridStore.getState();
     if (!attemptId || current.reportedAttemptIds.includes(attemptId)) return false;
@@ -284,6 +312,8 @@ export function useRealtimeFootballGrid({
   return {
     search,
     state,
+    series,
+    lastGameResult,
     me,
     opponent,
     capabilities,
@@ -301,6 +331,8 @@ export function useRealtimeFootballGrid({
       submitAnswer,
       pass,
       forfeit,
+      offerDraw,
+      respondToDraw,
       reportMissingAnswer,
       acceptRematch,
       declineRematch,

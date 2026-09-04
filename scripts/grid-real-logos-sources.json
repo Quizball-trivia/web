@@ -1,0 +1,23 @@
+{
+  "note": "Sources for imgs/competition-logos and imgs/league-logos (owner decision 2026-09-03: real logos everywhere in Football Tic Tac Toe). Re-run scripts/fetch-grid-real-logos.mjs + scripts/upload-grid-real-logos.mjs per Supabase project; prod bucket still needs the same upload at promotion time.",
+  "competitionLogos": {
+    "provider": "API-Sports league logos (https://media.api-sports.io/football/leagues/<id>.png), normalised to 256px webp",
+    "ids": {
+      "uefa-euro": 4, "copa-america": 9, "africa-cup-of-nations": 6, "afc-asian-cup": 7,
+      "uefa-nations-league": 5, "uefa-champions-league": 2, "uefa-europa-league": 3,
+      "uefa-conference-league": 848, "fifa-club-world-cup": 15, "copa-libertadores": 13,
+      "premier-league-title": 39, "la-liga-title": 140, "serie-a-title": 135,
+      "bundesliga-title": 78, "ligue-1-title": 61, "fa-cup": 45, "efl-cup": 48,
+      "copa-del-rey": 143, "coppa-italia": 137, "dfb-pokal": 81, "coupe-de-france": 66,
+      "knvb-cup": 90, "taca-de-portugal": 96
+    },
+    "exceptions": {
+      "fifa-world-cup": "API-Sports id 1 serves a generic placeholder; using Wikimedia Commons 'File:FIFA World Cup Icon (Campionato mondiale di calcio).svg' trophy illustration instead"
+    }
+  },
+  "leagueLogos": {
+    "provider": "API-Sports art already packaged in public/assets/football-grid/leagues/<id>.png (leagues.json providerCandidate), normalised to 256px webp",
+    "ids": ["premier-league", "la-liga", "serie-a", "bundesliga", "ligue-1", "eredivisie", "primeira-liga", "brasileirao", "scottish-premiership", "argentine-primera", "super-lig", "belgian-pro-league", "major-league-soccer", "saudi-pro-league", "erovnuli-liga"]
+  },
+  "uploadedToStaging": "2026-09-03"
+}
