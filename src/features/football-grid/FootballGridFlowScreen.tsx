@@ -955,6 +955,23 @@ export function FootballGridTurnPanel({
   useEffect(() => {
     if (isMyTurn && cellPicked) answerInputRef.current?.focus();
   }, [cellPicked, isMyTurn, selectedCell]);
+  // iOS lays fixed elements against the layout viewport, so the on-screen
+  // keyboard would cover the sheet's buttons; track the visual viewport instead.
+  const [keyboardInset, setKeyboardInset] = useState(0);
+  useEffect(() => {
+    const viewport = typeof window !== 'undefined' ? window.visualViewport : null;
+    if (!viewport || !(isMyTurn && cellPicked)) return;
+    const update = () => setKeyboardInset(Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop));
+    const frame = window.requestAnimationFrame(update);
+    viewport.addEventListener('resize', update);
+    viewport.addEventListener('scroll', update);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      viewport.removeEventListener('resize', update);
+      viewport.removeEventListener('scroll', update);
+      setKeyboardInset(0);
+    };
+  }, [cellPicked, isMyTurn]);
 
   const criterionLabel = (criterion: FootballGridCriterionView) => (
     locale === 'ka' ? criterion.labelKa || criterion.labelEn : criterion.labelEn
@@ -1009,10 +1026,15 @@ export function FootballGridTurnPanel({
         {isMyTurn && cellPicked && selectedRow && selectedColumn && (
           <motion.div
             key="answer-sheet"
-            className="fixed inset-0 z-[80] flex items-end justify-center sm:items-center"
+            className="fixed inset-x-0 top-0 z-[100] flex items-end justify-center sm:items-center"
+            style={{ bottom: keyboardInset }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            onKeyDown={(event) => {
+              // Escape closes the sheet once the suggestion list is already gone.
+              if (event.key === 'Escape' && suggestions.length === 0) { event.preventDefault(); onCancel?.(); }
+            }}
           >
             <button type="button" aria-label={copy.cancelPick} onClick={onCancel} className="absolute inset-0 bg-black/60 backdrop-blur-[2px]" />
             <motion.form
@@ -1030,10 +1052,10 @@ export function FootballGridTurnPanel({
             >
               <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-white/15 sm:hidden" />
               <div className="flex min-w-0 items-center justify-center gap-2">
-                <CriterionAsset criterion={selectedRow} className="size-7 shrink-0" />
+                <CriterionAsset key={`row-${selectedRow.id}`} criterion={selectedRow} className="size-7 shrink-0" />
                 <span className="truncate font-poppins text-xs font-black uppercase text-white">{criterionLabel(selectedRow)}</span>
                 <span className="font-poppins text-sm font-black text-white/35">×</span>
-                <CriterionAsset criterion={selectedColumn} className="size-7 shrink-0" />
+                <CriterionAsset key={`col-${selectedColumn.id}`} criterion={selectedColumn} className="size-7 shrink-0" />
                 <span className="truncate font-poppins text-xs font-black uppercase text-white">{criterionLabel(selectedColumn)}</span>
               </div>
               <input
@@ -1609,7 +1631,8 @@ export function FootballGridFlowScreen() {
 
   // The server countdown is 8 s: the kickoff gate holds for the first 5, then
   // the board mounts and builds in over the last 3 before the first turn.
-  const boardRevealing = grid.state?.phase === 'countdown' && remaining <= FOOTBALL_GRID_BOARD_REVEAL_MS;
+  // A missing/zero deadline means "no countdown data": show the board rather than a frozen gate.
+  const boardRevealing = grid.state?.phase === 'countdown' && (remaining <= 0 || remaining <= FOOTBALL_GRID_BOARD_REVEAL_MS);
   const gateSeconds = Math.max(1, Math.ceil((remaining - FOOTBALL_GRID_BOARD_REVEAL_MS) / 1_000));
   if (grid.state && (grid.state.phase === 'handoff' || grid.state.phase === 'loading' || (grid.state.phase === 'countdown' && !boardRevealing))) {
     const firstGame = (grid.series?.gameIndex ?? 1) === 1;

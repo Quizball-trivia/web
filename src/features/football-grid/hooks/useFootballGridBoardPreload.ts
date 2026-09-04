@@ -5,7 +5,7 @@ import type { FootballGridState } from '@/lib/realtime/socket.types';
 import { criterionAssetSources } from '../components/CriterionAsset';
 
 /** Give slow crests this long, then report ready anyway so a stalled CDN never blocks kickoff. */
-const PRELOAD_TIMEOUT_MS = 2_500;
+const PRELOAD_TIMEOUT_MS = 1_200;
 
 /**
  * Warms the six criterion images of the current board while the kickoff gate
@@ -33,14 +33,21 @@ export function useFootballGridBoardPreload(state: FootballGridState | null): { 
     let cancelled = false;
     let remaining = urls.length;
     const finish = () => { if (!cancelled) setReadyKey(boardKey); };
+    // A hidden tab must never hold the opponent's kickoff on a warm-up.
+    if (document.visibilityState === 'hidden') { finish(); return; }
     const timer = window.setTimeout(finish, PRELOAD_TIMEOUT_MS);
     for (const url of urls) {
       const image = new window.Image();
       image.decoding = 'async';
-      image.onload = image.onerror = () => {
+      const settle = () => {
+        image.onload = null;
+        image.onerror = null;
+        if (cancelled) return;
         remaining -= 1;
         if (remaining === 0) { window.clearTimeout(timer); finish(); }
       };
+      image.onload = settle;
+      image.onerror = settle;
       image.src = url;
     }
     return () => { cancelled = true; window.clearTimeout(timer); };

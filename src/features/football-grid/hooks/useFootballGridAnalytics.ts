@@ -47,7 +47,7 @@ export function useFootballGridAnalytics(input: FootballGridAnalyticsInput): voi
   const completedSeriesRef = useRef<Set<string>>(new Set());
   const matchStartedAtRef = useRef<Map<string, number>>(new Map());
   const answersRef = useRef<Map<string, { answered: number; correct: number }>>(new Map());
-  const lastCommandRef = useRef<string | null>(null);
+  const seenCommandsRef = useRef<{ matchId: string | null; ids: Set<string> }>({ matchId: null, ids: new Set() });
 
   // Matchmaking: started → human found / bot fallback / cancelled.
   useEffect(() => {
@@ -65,7 +65,9 @@ export function useFootballGridAnalytics(input: FootballGridAnalyticsInput): voi
 
   // Match found → started (once per match id).
   useEffect(() => {
-    if (!state || !selfUserId || startedMatchesRef.current.has(state.matchId)) return;
+    // Handoff/loading can still no-show; count the match once both sides are in.
+    if (!state || !selfUserId || state.phase === 'handoff' || state.phase === 'loading') return;
+    if (startedMatchesRef.current.has(state.matchId)) return;
     startedMatchesRef.current.add(state.matchId);
     matchStartedAtRef.current.set(state.matchId, Date.now());
     const opponentPlayer = state.players.find((player) => player.userId !== selfUserId);
@@ -87,8 +89,12 @@ export function useFootballGridAnalytics(input: FootballGridAnalyticsInput): voi
 
   // Turns and draw offers, once per command result.
   useEffect(() => {
-    if (!commandResult || lastCommandRef.current === commandResult.commandId) return;
-    lastCommandRef.current = commandResult.commandId;
+    if (!commandResult) return;
+    const seen = seenCommandsRef.current;
+    if (seen.matchId !== commandResult.matchId) { seen.matchId = commandResult.matchId; seen.ids.clear(); }
+    // Redelivered results after a reconnect carry ids already seen for this match.
+    if (seen.ids.has(commandResult.commandId)) return;
+    seen.ids.add(commandResult.commandId);
     const tally = answersRef.current.get(commandResult.matchId) ?? { answered: 0, correct: 0 };
     if (commandResult.outcome === 'draw_offered') {
       trackEvent('grid_draw_offered', { match_id: commandResult.matchId, mode: MODE });

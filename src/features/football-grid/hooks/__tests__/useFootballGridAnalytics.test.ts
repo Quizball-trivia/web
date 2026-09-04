@@ -26,7 +26,8 @@ const state = (overrides: Record<string, unknown> = {}) => ({
   players: [{ userId: ME, isBot: false }, { userId: BOT, isBot: true }],
   ...overrides,
 }) as never;
-const series = { seriesId: 's1', format: 'bo3', gameIndex: 1, targetWins: 2, wins: { [ME]: 1, [BOT]: 0 }, draws: 0, winnerUserId: null, finished: false } as never;
+const seriesInfo = { seriesId: 's1', format: 'bo3' as const, gameIndex: 1, targetWins: 2, wins: { [ME]: 1, [BOT]: 0 }, draws: 0, winnerUserId: null as string | null, finished: false };
+const series = seriesInfo as never;
 
 describe('useFootballGridAnalytics', () => {
   beforeEach(() => trackEvent.mockClear());
@@ -49,7 +50,7 @@ describe('useFootballGridAnalytics', () => {
     rerender({ ...base, search: { state: 'matched', searchId: 'q1' }, state: state(), series, commandResult: correct });
     expect(trackEvent.mock.calls.filter(([name]) => name === 'grid_turn_submitted')).toHaveLength(1);
 
-    const finished = { ...series, finished: true, winnerUserId: ME, wins: { [ME]: 2, [BOT]: 0 }, gameIndex: 2 };
+    const finished = { ...seriesInfo, finished: true, winnerUserId: ME, wins: { [ME]: 2, [BOT]: 0 }, gameIndex: 2 } as never;
     const completed = { matchId: 'm1', state: state({ phase: 'terminal', winnerUserId: ME, completionReason: 'line' }), series: finished } as never;
     rerender({ ...base, search: { state: 'matched', searchId: 'q1' }, state: state(), series: finished, completed });
     rerender({ ...base, search: { state: 'matched', searchId: 'q1' }, state: state(), series: finished, completed });

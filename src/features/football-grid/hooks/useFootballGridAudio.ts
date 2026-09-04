@@ -61,7 +61,7 @@ export function useFootballGridAudio({ search, state, commandResult, enabled = t
       // The kickoff gate swapped in ranked's kickoff track; hand the loop back.
       if (musicEnabled) playBgm('auction');
     }
-  }, [enabled, musicEnabled, playBgm, playSfx, soundEnabled, state]);
+  }, [enabled, musicEnabled, playBgm, playSfx, soundEnabled, state?.phase, state?.matchId]);
 
   // Answer cues fire once per command result, never on redelivery of the same one.
   const lastCueCommandRef = useRef<string | null>(null);

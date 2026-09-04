@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- Grid criterion art is resolved from a reviewed runtime registry. */
 
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useRef } from 'react';
 import { Award, Globe2, Shield, Trophy, UserRound, UsersRound, Zap } from 'lucide-react';
 import clubs from '@/data/football-grid/launch-assets/clubs.json';
 import countries from '@/data/football-grid/launch-assets/countries.json';
@@ -180,8 +180,16 @@ interface CriterionAssetProps {
 }
 
 export function CriterionAsset({ criterion, className }: CriterionAssetProps) {
-  const sources = useMemo(() => resolveRegistryAssets(criterion), [criterion]);
+  const identity = `${criterion.family}:${criterion.id}:${criterion.assetKey ?? ''}`;
+  // Every state broadcast carries fresh criterion objects; resolve per identity.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const sources = useMemo(() => resolveRegistryAssets(criterion), [identity]);
   const [failedSources, setFailedSources] = useState<string[]>([]);
+  const failedForRef = useRef(identity);
+  if (failedForRef.current !== identity) {
+    failedForRef.current = identity;
+    if (failedSources.length > 0) setFailedSources([]);
+  }
   const source = sources.find((candidate) => !failedSources.includes(candidate)) ?? null;
   const Icon = FAMILY_ICONS[criterion.family];
 
