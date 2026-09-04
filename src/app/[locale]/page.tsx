@@ -1,27 +1,9 @@
-import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import PublicOnlyGate from "@/components/auth/PublicOnlyGate";
-import { WelcomeScreen } from "@/components/auth/WelcomeScreen";
+import { notFound, redirect } from "next/navigation";
 import { isLocale } from "@/lib/i18n/locale";
-import { getCopy } from "@/lib/i18n/copy";
-import { buildLocalizedMetadata } from "@/lib/i18n/metadata";
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}): Promise<Metadata> {
-  const { locale } = await params;
-  if (!isLocale(locale)) return {};
-  const copy = getCopy(locale);
-  return buildLocalizedMetadata({
-    locale,
-    path: "",
-    title: copy.landing.metaTitle,
-    description: copy.landing.metaDescription,
-  });
-}
-
+// The marketing landing is retired — the Play page (with a signed-out guest
+// state) is the front door. Locale indexes only exist to catch old links and
+// cached 308s from the previous "/" → "/en|/ka" redirect.
 export default async function LocalizedLanding({
   params,
 }: {
@@ -31,9 +13,5 @@ export default async function LocalizedLanding({
   if (!isLocale(locale)) {
     notFound();
   }
-  return (
-    <PublicOnlyGate>
-      <WelcomeScreen />
-    </PublicOnlyGate>
-  );
+  redirect("/play");
 }

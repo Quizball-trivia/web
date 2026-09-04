@@ -7,7 +7,10 @@ import type { CampaignQuizRoute } from "@/features/campaign-quiz/campaignQuiz.ty
 // pages are localized; everything else (app, auth, game) is intentionally
 // locale-less and stays unchanged.
 const REDIRECT_FROM_ROOT: Record<string, string> = {
-  "/": `/${DEFAULT_LOCALE}`,
+  // The marketing landing is retired: "/" IS the Play page now (guests get
+  // the signed-out state there). Old cached 308s to /en|/ka still work — the
+  // [locale] index page redirects to /play too.
+  "/": "/play",
   "/about": `/${DEFAULT_LOCALE}/about`,
   "/terms": `/${DEFAULT_LOCALE}/terms`,
   "/privacy": `/${DEFAULT_LOCALE}/privacy`,

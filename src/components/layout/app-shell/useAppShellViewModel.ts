@@ -261,7 +261,8 @@ export function useAppShellViewModel() {
 
   const handleLogout = async () => {
     await logout();
-    router.replace('/');
+    // Land on the guest Play page — the landing no longer exists.
+    router.replace('/play');
   };
 
   const isPathActive = (path: string, exact?: boolean) => isPathActiveHelper(currentPath, path, exact);

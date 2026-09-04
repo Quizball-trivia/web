@@ -84,7 +84,7 @@ export default function ChallengePage() {
         /* analytics best-effort */
       }
     }
-    router.replace("/daily/challenges");
+    router.replace("/play");
   }, [challengeType, router]);
 
   const handleComplete = useCallback(
@@ -94,7 +94,7 @@ export default function ChallengePage() {
 
       // Navigate back instantly — the completion write + cache refresh run in
       // the background so the user isn't stuck waiting on a round-trip.
-      router.replace(nextPath ?? "/daily/challenges");
+      router.replace(nextPath ?? "/play");
 
       void (async () => {
         // Only a failed completion WRITE may surface the failure toast and
@@ -207,7 +207,7 @@ export default function ChallengePage() {
 
   useEffect(() => {
     if (!challengeType) {
-      router.replace("/daily/challenges");
+      router.replace("/play");
     }
   }, [challengeType, router]);
 

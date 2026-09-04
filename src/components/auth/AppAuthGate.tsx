@@ -14,6 +14,18 @@ type AppAuthGateProps = {
   children: React.ReactNode;
 };
 
+/** Routes a signed-out visitor may browse in guest mode: demo play is open,
+ *  and every auth-gated action opens the sign-in dialog instead of redirecting
+ *  to the landing. First step toward retiring the landing page entirely. */
+const GUEST_ALLOWED_ROUTES = ["/play"];
+
+function isGuestAllowedPath(pathname: string | null): boolean {
+  if (!pathname) return false;
+  return GUEST_ALLOWED_ROUTES.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
+  );
+}
+
 export default function AppAuthGate({ children }: AppAuthGateProps) {
   const { t } = useLocale();
   const pathname = usePathname();
@@ -32,10 +44,12 @@ export default function AppAuthGate({ children }: AppAuthGateProps) {
 
   useEffect(() => {
     if (isDevelopmentDevRoute) return;
-    if (status === "anonymous") {
+    if (status === "anonymous" && !isGuestAllowedPath(pathname)) {
       stopBgm(0);
       rememberPostAuthRedirect(pathname);
-      router.replace("/");
+      // The landing is retired — signed-out visitors land on the guest Play
+      // page, where the header/nav offer the sign-in dialog.
+      router.replace("/play");
     }
   }, [isDevelopmentDevRoute, pathname, status, router]);
 
@@ -68,6 +82,12 @@ export default function AppAuthGate({ children }: AppAuthGateProps) {
 
   if (status === "loading") {
     return <LoadingScreen text={t("appAuthGate.warmingUp")} />;
+  }
+
+  // Guest mode: a signed-out visitor browses the allowed routes directly; the
+  // page itself gates auth-only actions behind the sign-in dialog.
+  if (status === "anonymous" && isGuestAllowedPath(pathname)) {
+    return <>{children}</>;
   }
 
   if (status !== "authenticated") {

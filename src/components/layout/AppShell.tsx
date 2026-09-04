@@ -15,9 +15,36 @@ import { AppShellLobbyDebugBadge } from "./app-shell/AppShellLobbyDebugBadge";
 import { AppShellMobileBottomNav } from "./app-shell/AppShellMobileBottomNav";
 import { AppShellProfileMenu } from "./app-shell/AppShellProfileMenu";
 import { ConnectionQualitySignal } from "@/components/shared/ConnectionQualitySignal";
+import { GuestAuthDialog } from "@/features/auth/GuestAuthDialog";
+import { useAuthStore } from "@/stores/auth.store";
+import { useAuthPromptStore } from "@/stores/authPrompt.store";
+import { useLocale } from "@/contexts/LocaleContext";
 
 export function AppShell({ children }: AppShellProps) {
   const vm = useAppShellViewModel();
+  const { t } = useLocale();
+  // Guest mode: signed-out visitors browsing /play get a Sign-in button
+  // instead of the profile/coins cluster, and any nav tap that isn't Play
+  // opens the sign-in dialog instead of navigating.
+  const isGuest = useAuthStore((state) => state.status) === "anonymous";
+  const openAuthPrompt = useAuthPromptStore((state) => state.open);
+  const guestNavGuard = (event: React.MouseEvent) => {
+    if (!isGuest) return;
+    const href = (event.target as HTMLElement).closest("a")?.getAttribute("href");
+    if (!href || href === "/" || href === "/play" || href.startsWith("/play?")) return;
+    event.preventDefault();
+    event.stopPropagation();
+    openAuthPrompt();
+  };
+  const signInButton = (
+    <button
+      type="button"
+      onClick={openAuthPrompt}
+      className="flex h-10 items-center justify-center rounded-xl bg-brand-yellow px-5 font-poppins text-sm font-black uppercase tracking-wide text-black transition-colors hover:bg-brand-yellow-deep"
+    >
+      {t("welcome.signInTab")}
+    </button>
+  );
   const {
     playerStats,
     authUser,
@@ -47,7 +74,7 @@ export function AppShell({ children }: AppShellProps) {
 
       <div className="relative z-10 flex min-h-screen flex-col xl:grid xl:h-dvh xl:grid-cols-[auto_minmax(0,1fr)] xl:overflow-hidden">
         {/* DESKTOP SIDEBAR (>= xl) */}
-        <div className="hidden xl:block">
+        <div className="hidden xl:block" onClickCapture={guestNavGuard}>
           <Sidebar currentPath={currentPath} socialBadgeCount={socialBadgeCount} />
         </div>
 
@@ -69,18 +96,24 @@ export function AppShell({ children }: AppShellProps) {
                 />
               )}
               <ConnectionQualitySignal />
-              <AppShellCurrencyPills variant="desktop" coins={navbarCoins} tickets={navbarTickets} />
+              {isGuest ? (
+                signInButton
+              ) : (
+                <>
+                  <AppShellCurrencyPills variant="desktop" coins={navbarCoins} tickets={navbarTickets} />
 
-              <div className="h-6 w-px bg-border/50" />
+                  <div className="h-6 w-px bg-border/50" />
 
-              <NotificationsDropdown badgeCount={bellBadgeCount} />
+                  <NotificationsDropdown badgeCount={bellBadgeCount} />
 
-              <AppShellProfileMenu
-                variant="desktop"
-                playerStats={playerStats}
-                authUserCountry={authUser?.country}
-                onRequestLogout={() => setShowLogoutConfirm(true)}
-              />
+                  <AppShellProfileMenu
+                    variant="desktop"
+                    playerStats={playerStats}
+                    authUserCountry={authUser?.country}
+                    onRequestLogout={() => setShowLogoutConfirm(true)}
+                  />
+                </>
+              )}
             </div>
           </header>
 
@@ -92,20 +125,28 @@ export function AppShell({ children }: AppShellProps) {
                   {/* min-w-0 lets a long username truncate rather than push the
                       right cluster (incl. the bell) off-screen on narrow phones. */}
                   <div className="z-10 flex min-w-0 items-center gap-2">
-                    <AppShellProfileMenu
-                      variant="mobile"
-                      playerStats={playerStats}
-                      authUserCountry={authUser?.country}
-                      onRequestLogout={() => setShowLogoutConfirm(true)}
-                    />
+                    {!isGuest && (
+                      <AppShellProfileMenu
+                        variant="mobile"
+                        playerStats={playerStats}
+                        authUserCountry={authUser?.country}
+                        onRequestLogout={() => setShowLogoutConfirm(true)}
+                      />
+                    )}
                   </div>
 
                   {/* No ping pill on mobile — it crowded the row / pushed the
                       card down. It stays on desktop and in-match. shrink-0 keeps
                       coins/tickets/bell intact. */}
                   <div className="z-10 flex shrink-0 items-center gap-2">
-                    <AppShellCurrencyPills variant="mobile" coins={navbarCoins} tickets={navbarTickets} />
-                    <NotificationsDropdown badgeCount={bellBadgeCount} />
+                    {isGuest ? (
+                      signInButton
+                    ) : (
+                      <>
+                        <AppShellCurrencyPills variant="mobile" coins={navbarCoins} tickets={navbarTickets} />
+                        <NotificationsDropdown badgeCount={bellBadgeCount} />
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -128,13 +169,17 @@ export function AppShell({ children }: AppShellProps) {
 
       {/* MOBILE / TABLET BOTTOM NAV (< xl) */}
       {showNav && (
-        <div className="xl:hidden">
+        <div className="xl:hidden" onClickCapture={guestNavGuard}>
           <AppShellMobileBottomNav
             isPathActive={isPathActive}
             socialBadgeCount={socialBadgeCount}
           />
         </div>
       )}
+
+      {/* Sign-in dialog for guests — summoned from the header button, gated
+          nav taps, and auth-gated game entries via useAuthPromptStore. */}
+      {isGuest && <GuestAuthDialog />}
 
       <AppShellLogoutDialog
         open={showLogoutConfirm}

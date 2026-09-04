@@ -1609,7 +1609,7 @@ export function FootballGridFlowScreen() {
         title={copy.signIn}
         body={copy.signInBody}
         actionLabel={copy.goSignIn}
-        onAction={() => router.push('/auth')}
+        onAction={() => router.push('/play')}
       />
     );
   }
