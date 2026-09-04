@@ -17,6 +17,7 @@ const socketMock = {
 
 vi.mock('../socket-client', () => ({
   getSocket: () => socketMock,
+  setConnectionQualityInMatch: vi.fn(),
 }));
 
 describe('useMatchStagePresence', () => {
