@@ -53,6 +53,11 @@ const nextConfig: NextConfig = {
     // Whitelist the explicit qualities used by remote images and the
     // performance-sensitive campaign quiz hero.
     qualities: [60, 70, 75, 90],
+    // Next defaults to 60s, so the optimizer re-fetched origin constantly even
+    // for art that never changes. Question/category images are effectively
+    // content-addressed (a replacement gets a new object path), so a long TTL
+    // is safe and keeps optimizer cache misses — each one an origin pull — rare.
+    minimumCacheTTL: 31536000,
     remotePatterns: [
       ...(process.env.NODE_ENV === "development"
         ? [
@@ -61,6 +66,12 @@ const nextConfig: NextConfig = {
               hostname: "127.0.0.1",
               port: "54321",
               pathname: "/storage/v1/object/public/**",
+            },
+            {
+              protocol: "http" as const,
+              hostname: "127.0.0.1",
+              port: "54321",
+              pathname: "/storage/v1/render/image/public/**",
             },
           ]
         : []),
