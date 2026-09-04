@@ -22,10 +22,10 @@ const SOUND_FILES = {
 } as const;
 
 const BGM_FILES = {
-  ranked: "/sounds/ranked_demo.wav",
+  ranked: "/sounds/ranked_demo.mp3",
   // Auction deliberately shares ranked's stadium loop so both competitive
   // modes feel like part of the same QuizBall match family.
-  auction: "/sounds/ranked_demo.wav",
+  auction: "/sounds/ranked_demo.mp3",
   kickoff: "/sounds/gameplay_soundtrack.m4a",
   search: "/sounds/quizball-search.mp3",
 } as const;

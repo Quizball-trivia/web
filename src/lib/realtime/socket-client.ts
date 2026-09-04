@@ -17,6 +17,11 @@ import type { ClientToServerEvents, ServerToClientEvents } from './socket.types'
 
 let connectionPingIntervalId: ReturnType<typeof setInterval> | null = null;
 let connectionPingMonitorRunId = 0;
+let connectionPingInMatch = false;
+// Held so setConnectionQualityInMatch can restart the interval at the other
+// cadence without re-entering startConnectionQualityMonitor (which would mint a
+// new runId and orphan in-flight samples).
+let connectionPingSample: (() => void) | null = null;
 const pendingPingTimeoutIds = new Set<ReturnType<typeof setTimeout>>();
 
 let socketInstance: Socket<ServerToClientEvents, ClientToServerEvents> | null = null;
@@ -78,7 +83,15 @@ function trackSocketConnectionFailedThrottled(reason: string): void {
   } catch { /* best-effort */ }
 }
 const SOCKET_DEBUG_ENABLED = process.env.NEXT_PUBLIC_DEBUG_SOCKET === 'true';
+// In a match the RTT drives the opponent's ping indicator and the
+// connection-health overlay, so it is sampled often. Everywhere else (home,
+// leaderboard, store, profile) nothing renders it — but the monitor runs from
+// the app shell, so a 4s cadence was emitting two frames per sample on every
+// screen. Measured 2026-09-04: 0.86 GB/day of server ingress at 200 concurrent
+// sockets, 8.6 GB/day at 2,000, against a 25.2 GB/day egress baseline — and
+// permessage-deflate does not help, these frames are below its threshold.
 const CONNECTION_PING_INTERVAL_MS = 4_000;
+const CONNECTION_PING_IDLE_INTERVAL_MS = 15_000;
 const CONNECTION_PING_TIMEOUT_MS = 2_500;
 
 function socketDebug(event: string, meta?: Record<string, unknown>): void {
@@ -385,6 +398,24 @@ function createSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
   return socket;
 }
 
+/**
+ * Switches the connection-quality sampling cadence.
+ *
+ * Call with `true` while a match screen is mounted (RTT is displayed and feeds
+ * the opponent's ping indicator) and `false` when it unmounts. Restarts the
+ * interval in place; no-ops when the monitor is not running.
+ */
+export function setConnectionQualityInMatch(inMatch: boolean): void {
+  if (connectionPingInMatch === inMatch) return;
+  connectionPingInMatch = inMatch;
+  if (connectionPingIntervalId === null || connectionPingSample === null) return;
+  clearInterval(connectionPingIntervalId);
+  connectionPingIntervalId = setInterval(
+    connectionPingSample,
+    inMatch ? CONNECTION_PING_INTERVAL_MS : CONNECTION_PING_IDLE_INTERVAL_MS,
+  );
+}
+
 export function startConnectionQualityMonitor(): void {
   if (connectionPingIntervalId !== null) return;
   const runId = ++connectionPingMonitorRunId;
@@ -416,19 +447,26 @@ export function startConnectionQualityMonitor(): void {
       const rttMs = Date.now() - sentAt;
       recordRealtimeRtt(rttMs);
       // Report our RTT so the opponent can be shown this player's ping (the
-      // server only knows each client's RTT if the client tells it). Best-effort.
-      socket.emit('connection:rtt', { rttMs });
+      // server only knows each client's RTT if the client tells it). Only the
+      // opponent's match UI consumes it, so outside a match this second frame
+      // per sample was pure overhead. Best-effort.
+      if (connectionPingInMatch) socket.emit('connection:rtt', { rttMs });
     });
   };
 
+  connectionPingSample = sample;
   sample();
-  connectionPingIntervalId = setInterval(sample, CONNECTION_PING_INTERVAL_MS);
+  connectionPingIntervalId = setInterval(
+    sample,
+    connectionPingInMatch ? CONNECTION_PING_INTERVAL_MS : CONNECTION_PING_IDLE_INTERVAL_MS,
+  );
 }
 
 export function stopConnectionQualityMonitor(): void {
   if (connectionPingIntervalId === null) return;
   clearInterval(connectionPingIntervalId);
   connectionPingIntervalId = null;
+  connectionPingSample = null;
   connectionPingMonitorRunId += 1;
   pendingPingTimeoutIds.forEach((timeoutId) => clearTimeout(timeoutId));
   pendingPingTimeoutIds.clear();
