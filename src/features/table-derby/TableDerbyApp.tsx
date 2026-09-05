@@ -256,6 +256,7 @@ export function TableDerbyApp() {
       const firstIdx = Math.floor(Math.random() * TD_LIST_CATEGORIES.length);
       setCurrentRound(1);
       setStarterSeat(starter);
+      roundClosed.current = false;
       setRound({
         categoryIdx: firstIdx,
         usedCategoryIdxs: [firstIdx],
@@ -278,6 +279,7 @@ export function TableDerbyApp() {
       setCurrentRound(roundNum);
       setStarterSeat(starter);
       setRoundWinner(null);
+      roundClosed.current = false;
       if (roundNum === 2) {
         setCardCategory(TD_CARD_CATEGORIES[Math.floor(Math.random() * TD_CARD_CATEGORIES.length)]);
       }
@@ -327,8 +329,13 @@ export function TableDerbyApp() {
     setFlash({ key: Date.now(), kind });
   }, []);
 
+  // Guards against a skipped round's component still firing its own onEnd.
+  const roundClosed = useRef(false);
+
   const endRound = useCallback(
     (winner: Seat | 'tie') => {
+      if (roundClosed.current) return;
+      roundClosed.current = true;
       setRoundWinner(winner);
       if (winner !== 'tie') setRoundsWon((s) => ({ ...s, [winner]: s[winner] + 1 }));
       later(() => setPhase('roundEnd'), 1100);
@@ -484,6 +491,16 @@ export function TableDerbyApp() {
   /** Whether the match is settled once this round-end screen is confirmed. */
   const matchDecidedNow =
     roundsWon.me >= 3 || roundsWon.op >= 3 || (currentRound >= 4 && roundsWon.me !== roundsWon.op);
+
+  /* Dev-only quick skip: force the current round's outcome. */
+  const inRoundPhase = phase === 'play' || phase === 'cards' || phase === 'box' || phase === 'buzzer' || phase === 'penalties';
+  const devSkip = (result: Seat | 'tie') => {
+    if (phase === 'penalties') {
+      finishMatch(result === 'op' ? 'op' : 'me');
+      return;
+    }
+    endRound(result);
+  };
 
   const resetToHome = () => {
     setRound(null);
@@ -1327,6 +1344,36 @@ export function TableDerbyApp() {
           </motion.main>
         )}
       </AnimatePresence>
+
+      {/* Dev-only round skip — steer outcomes for quick flow testing. */}
+      {process.env.NODE_ENV !== 'production' && inRoundPhase && (
+        <div
+          className="fixed bottom-24 right-2.5 z-50 flex flex-col gap-1 rounded-[10px] p-1.5 opacity-70"
+          style={{ background: 'rgba(0,0,0,0.6)' }}
+        >
+          {(
+            [
+              ['✓', 'me'],
+              ['✗', 'op'],
+              ['=', 'tie'],
+            ] as const
+          ).map(([label, result]) => (
+            <button
+              key={label}
+              type="button"
+              onClick={() => devSkip(result)}
+              className="flex size-8 items-center justify-center rounded-[8px] text-sm"
+              style={{
+                ...TD_DISPLAY,
+                background: result === 'me' ? 'var(--td-orange)' : 'var(--td-charcoal)',
+                color: result === 'me' ? '#0d0d0d' : 'var(--td-white)',
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
