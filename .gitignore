@@ -65,3 +65,6 @@ next-env.d.ts
 # Local agent instructions (not shared)
 CLAUDE.md
 dev-server.log
+
+# Betsson/Table Derby design reference binaries (kept local)
+/branding-refs/
