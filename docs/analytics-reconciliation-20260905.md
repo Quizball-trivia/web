@@ -2,7 +2,8 @@
 
 ## Delivery status
 
-- Live PostHog changes applied; source backup: `analytics-dashboard-backup-20260905.json`.
+- Live PostHog changes applied; raw dashboard snapshots kept out of the public release
+  because they contain account-specific test exclusions.
 - Frontend changes in this branch are NOT deployed. No database changes or migrations.
 - Production branch base: `82c6d2e1` (freshly fetched). Dirty main checkout was untouched.
 
