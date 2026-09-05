@@ -8,6 +8,8 @@ import { DemoDailyChallenge } from "@/features/demos/DemoDailyChallenge";
 import { DemoTraining } from "@/features/demos/DemoTraining";
 import { DemoWeekendLeague } from "@/features/demos/DemoWeekendLeague";
 import { findDemoMode } from "@/features/demos/demoModes";
+import { FifaUniverseMode } from "@/features/fifa-universe/FifaUniverseMode";
+import { isFifaSlug } from "@/features/fifa-universe/registry";
 import { BallKnowledgeGame } from "@/features/game-mode-lab/modes/BallKnowledgeGame";
 import { BingoBattleGame } from "@/features/game-mode-lab/modes/BingoBattleGame";
 import { ConnectionsRaceGame } from "@/features/game-mode-lab/modes/ConnectionsRaceGame";
@@ -70,6 +72,10 @@ function DemoModePageInner() {
 
   if (mode.dailyType) {
     return <DemoDailyChallenge type={mode.dailyType} />;
+  }
+
+  if (isFifaSlug(mode.slug)) {
+    return <FifaUniverseMode slug={mode.slug} backHref={backHref} />;
   }
 
   switch (mode.slug) {

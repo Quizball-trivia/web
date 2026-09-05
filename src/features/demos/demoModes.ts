@@ -1,5 +1,6 @@
 import type { DailyChallengeType } from "@/lib/domain/dailyChallenge";
 import type { Locale } from "@/lib/i18n/messages";
+import { FIFA_MODES } from "@/features/fifa-universe/registry";
 
 type DemoI18nText = { en: string; ka: string };
 
@@ -469,9 +470,17 @@ export const ALL_DAILY_DEMO_MODES: DemoModeCard[] = (
   Object.keys(DAILY_DEMO_COPY) as DailyChallengeType[]
 ).map(buildDailyCard);
 
+// FIFA / FC Universe collection (features/fifa-universe) — card-database
+// prototypes, plus the existing FIFA Cards mini-game as its anchor.
+export const FIFA_DEMO_MODES: DemoModeCard[] = [
+  ...ALL_MINI_GAME_DEMO_MODES.filter((mode) => mode.slug === "mini-guess-fifa-card"),
+  ...FIFA_MODES,
+];
+
 export const ALL_DEMO_MODES: DemoModeCard[] = [
   ...FEATURED_DEMO_MODES,
   ...MINI_GAME_DEMO_MODES,
+  ...FIFA_MODES,
   ...LAB_DEMO_MODES,
   ...DAILY_DEMO_MODES,
   ...HIDDEN_DEMO_MODES,

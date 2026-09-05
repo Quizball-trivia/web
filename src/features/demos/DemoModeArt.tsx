@@ -1,6 +1,8 @@
 import Image from "next/image";
 
 import { DemoModeIcon } from "./DemoModeIcon";
+import { FifaModeArt } from "@/features/fifa-universe/FifaModeArt";
+import { isFifaSlug } from "@/features/fifa-universe/registry";
 
 const SUPABASE_IMAGE_BASE = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim().replace(/\/$/, "");
 const GAME_MODE_IMAGE_BASE = SUPABASE_IMAGE_BASE
@@ -70,6 +72,9 @@ function hash(input: string): number {
  * a screenshot. `className` controls the aspect ratio.
  */
 export function DemoModeArt({ slug, className = "" }: { slug: string; className?: string }) {
+  if (isFifaSlug(slug) || slug === "mini-guess-fifa-card") {
+    return <FifaModeArt slug={slug} className={className} />;
+  }
   if (ILLUSTRATED_MODE_SLUGS.has(slug)) {
     return (
       <div className={`relative overflow-hidden bg-[#07111f] ${className}`} aria-hidden>
