@@ -761,6 +761,10 @@ export interface paths {
                                 hair?: string;
                                 glasses?: string;
                                 facialHair?: string;
+                                headwear?: string;
+                                earwear?: string;
+                                /** @enum {string} */
+                                hairColor?: "natural" | "platinum" | "ginger" | "silver" | "blue_tips" | "pink_streaks";
                             } | null;
                             favorite_club: string | null;
                             preferred_language: string | null;
@@ -1161,6 +1165,10 @@ export interface paths {
                                         hair?: string;
                                         glasses?: string;
                                         facialHair?: string;
+                                        headwear?: string;
+                                        earwear?: string;
+                                        /** @enum {string} */
+                                        hairColor?: "natural" | "platinum" | "ginger" | "silver" | "blue_tips" | "pink_streaks";
                                     } | null;
                                     isAi: boolean;
                                     placement: number | null;
@@ -1177,6 +1185,10 @@ export interface paths {
                                         hair?: string;
                                         glasses?: string;
                                         facialHair?: string;
+                                        headwear?: string;
+                                        earwear?: string;
+                                        /** @enum {string} */
+                                        hairColor?: "natural" | "platinum" | "ginger" | "silver" | "blue_tips" | "pink_streaks";
                                     } | null;
                                     isAi: boolean;
                                     /** @enum {string|null} */
@@ -1341,6 +1353,10 @@ export interface paths {
                                         hair?: string;
                                         glasses?: string;
                                         facialHair?: string;
+                                        headwear?: string;
+                                        earwear?: string;
+                                        /** @enum {string} */
+                                        hairColor?: "natural" | "platinum" | "ginger" | "silver" | "blue_tips" | "pink_streaks";
                                     } | null;
                                 };
                             }[];
@@ -3136,6 +3152,10 @@ export interface paths {
                             hair?: string;
                             glasses?: string;
                             facialHair?: string;
+                            headwear?: string;
+                            earwear?: string;
+                            /** @enum {string} */
+                            hairColor?: "natural" | "platinum" | "ginger" | "silver" | "blue_tips" | "pink_streaks";
                         } | null;
                         favorite_club?: string;
                         preferred_language?: string;
@@ -3807,6 +3827,10 @@ export interface paths {
                                     hair?: string;
                                     glasses?: string;
                                     facialHair?: string;
+                                    headwear?: string;
+                                    earwear?: string;
+                                    /** @enum {string} */
+                                    hairColor?: "natural" | "platinum" | "ginger" | "silver" | "blue_tips" | "pink_streaks";
                                 } | null;
                                 level: number;
                                 pendingDeletion: boolean;
@@ -3884,6 +3908,10 @@ export interface paths {
                                     hair?: string;
                                     glasses?: string;
                                     facialHair?: string;
+                                    headwear?: string;
+                                    earwear?: string;
+                                    /** @enum {string} */
+                                    hairColor?: "natural" | "platinum" | "ginger" | "silver" | "blue_tips" | "pink_streaks";
                                 } | null;
                                 level: number;
                                 pendingDeletion: boolean;
@@ -3966,6 +3994,10 @@ export interface paths {
                                         hair?: string;
                                         glasses?: string;
                                         facialHair?: string;
+                                        headwear?: string;
+                                        earwear?: string;
+                                        /** @enum {string} */
+                                        hairColor?: "natural" | "platinum" | "ginger" | "silver" | "blue_tips" | "pink_streaks";
                                     } | null;
                                     level: number;
                                     pendingDeletion: boolean;
@@ -4003,6 +4035,10 @@ export interface paths {
                                         hair?: string;
                                         glasses?: string;
                                         facialHair?: string;
+                                        headwear?: string;
+                                        earwear?: string;
+                                        /** @enum {string} */
+                                        hairColor?: "natural" | "platinum" | "ginger" | "silver" | "blue_tips" | "pink_streaks";
                                     } | null;
                                     level: number;
                                     pendingDeletion: boolean;
@@ -6157,7 +6193,7 @@ export interface paths {
                                 };
                                 faceUrl: string | null;
                                 /** @enum {string} */
-                                difficulty: "easy" | "medium" | "hard";
+                                difficulty: "easy" | "medium" | "hard" | "veryHard";
                             }[];
                         };
                     };
@@ -6392,6 +6428,15 @@ export interface paths {
                 };
                 /** @description Already completed today */
                 409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Invalid completion (e.g. FIFA Cards outcomes missing, unknown or duplicate, or no set served today) */
+                422: {
                     headers: {
                         [name: string]: unknown;
                     };
@@ -9367,6 +9412,10 @@ export interface components {
                         hair?: string;
                         glasses?: string;
                         facialHair?: string;
+                        headwear?: string;
+                        earwear?: string;
+                        /** @enum {string} */
+                        hairColor?: "natural" | "platinum" | "ginger" | "silver" | "blue_tips" | "pink_streaks";
                     } | null;
                     isAi: boolean;
                     placement: number | null;
@@ -9383,6 +9432,10 @@ export interface components {
                         hair?: string;
                         glasses?: string;
                         facialHair?: string;
+                        headwear?: string;
+                        earwear?: string;
+                        /** @enum {string} */
+                        hairColor?: "natural" | "platinum" | "ginger" | "silver" | "blue_tips" | "pink_streaks";
                     } | null;
                     isAi: boolean;
                     /** @enum {string|null} */
@@ -9922,6 +9975,10 @@ export interface components {
                 hair?: string;
                 glasses?: string;
                 facialHair?: string;
+                headwear?: string;
+                earwear?: string;
+                /** @enum {string} */
+                hairColor?: "natural" | "platinum" | "ginger" | "silver" | "blue_tips" | "pink_streaks";
             } | null;
             favorite_club: string | null;
             preferred_language: string | null;
@@ -9946,6 +10003,10 @@ export interface components {
                 hair?: string;
                 glasses?: string;
                 facialHair?: string;
+                headwear?: string;
+                earwear?: string;
+                /** @enum {string} */
+                hairColor?: "natural" | "platinum" | "ginger" | "silver" | "blue_tips" | "pink_streaks";
             } | null;
             country: string | null;
             favoriteClub: string | null;
@@ -10037,6 +10098,10 @@ export interface components {
                     hair?: string;
                     glasses?: string;
                     facialHair?: string;
+                    headwear?: string;
+                    earwear?: string;
+                    /** @enum {string} */
+                    hairColor?: "natural" | "platinum" | "ginger" | "silver" | "blue_tips" | "pink_streaks";
                 } | null;
                 level: number;
                 pendingDeletion: boolean;
@@ -10075,6 +10140,10 @@ export interface components {
                         hair?: string;
                         glasses?: string;
                         facialHair?: string;
+                        headwear?: string;
+                        earwear?: string;
+                        /** @enum {string} */
+                        hairColor?: "natural" | "platinum" | "ginger" | "silver" | "blue_tips" | "pink_streaks";
                     } | null;
                     level: number;
                     pendingDeletion: boolean;
@@ -10112,6 +10181,10 @@ export interface components {
                         hair?: string;
                         glasses?: string;
                         facialHair?: string;
+                        headwear?: string;
+                        earwear?: string;
+                        /** @enum {string} */
+                        hairColor?: "natural" | "platinum" | "ginger" | "silver" | "blue_tips" | "pink_streaks";
                     } | null;
                     level: number;
                     pendingDeletion: boolean;
@@ -10767,7 +10840,7 @@ export interface components {
                 };
                 faceUrl: string | null;
                 /** @enum {string} */
-                difficulty: "easy" | "medium" | "hard";
+                difficulty: "easy" | "medium" | "hard" | "veryHard";
             }[];
         };
         CompleteDailyChallengeResponse: {

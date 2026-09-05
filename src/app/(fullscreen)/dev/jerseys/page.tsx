@@ -1,5 +1,12 @@
 "use client";
 
+import Link from "next/link";
+
+import { COLLECTION_PARTS } from "@/lib/avatars/collection";
+import { AvatarPreview } from "@/components/AvatarPreview";
+import { MannequinPreview } from "@/features/store/components/ItemCard";
+import { usePartTuning, savePartTuning, tunedPosition, tunedTransform, tunedFrontHairPercent, type PartTransform, type PartTuning } from "@/lib/avatars/usePartTuning";
+import type { AvatarCustomization } from "@/types/game";
 import { useMemo, useState } from "react";
 import {
   JERSEY_PARTS,
@@ -8,7 +15,8 @@ import {
   FACIAL_HAIR_PARTS,
   SKIN_PARTS,
   DEFAULT_SKIN_ID,
-  getSkinPart,
+  EXTRA_PARTS,
+  EXTRA_SLOTS,
   type AvatarPart,
   type AvatarPartPosition,
   type AvatarSlot,
@@ -19,92 +27,15 @@ const SLOTS: { slot: AvatarSlot; label: string; parts: AvatarPart[] }[] = [
   { slot: "hair", label: "Hair", parts: HAIR_PARTS },
   { slot: "glasses", label: "Glasses", parts: GLASSES_PARTS },
   { slot: "facialHair", label: "Facial hair", parts: FACIAL_HAIR_PARTS },
+  ...EXTRA_SLOTS.filter(slot => EXTRA_PARTS.some(p => p.slot === slot)).map(slot => ({ slot, label: ({headwear:"Headwear", earwear:"Earrings", armwear:"Armbands", wristwear:"Wristbands", facePaint:"Face paint"})[slot], parts: EXTRA_PARTS.filter(p => p.slot === slot) })),
 ];
 
-const BOY_HAIR = HAIR_PARTS.find((p) => p.id === "hair_boy_basic")!;
-
-// Store-card mannequin geometry — mirrors MannequinPreview in ItemCard.tsx.
-const MANNEQUIN_FACE_POS = { top: 2, left: 28, width: 44 };
-const MANNEQUIN_DEFAULT_HAIR_POS = { top: -5, left: 22, width: 52 };
-
 type ViewMode = "body" | "card";
+type Store = PartTuning;
 
-function Overlay({ asset, pos }: { asset: string; pos: AvatarPartPosition }) {
-  return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={asset}
-      alt=""
-      className="pointer-events-none absolute object-contain"
-      style={{ top: `${pos.top}%`, left: `${pos.left}%`, width: `${pos.width}%` }}
-    />
-  );
-}
-
-// Mirrors AvatarPreview's DOM/CSS with an injectable item position.
-function BodyPreview({ skinId, part, pos }: { skinId: string; part: AvatarPart; pos: AvatarPartPosition }) {
-  return (
-    <div className="relative w-full" style={{ aspectRatio: "495.25 / 543.03" }}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={getSkinPart(skinId).asset} alt="" className="absolute inset-0 h-full w-full object-contain" />
-      <Overlay asset={part.asset} pos={pos} />
-      {part.slot !== "hair" && <Overlay asset={BOY_HAIR.asset} pos={BOY_HAIR.position} />}
-    </div>
-  );
-}
-
-// Mirrors MannequinPreview's DOM/CSS (head-zone card used for hair/glasses/facial hair).
-function CardPreview({ part, pos }: { part: AvatarPart; pos: AvatarPartPosition }) {
-  return (
-    <div className="relative w-full overflow-hidden" style={{ aspectRatio: "495.25 / 543.03" }}>
-      <div className="absolute inset-0" style={{ transform: "translateY(28%)" }}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src="/assets/manequen_face.webp"
-          alt=""
-          className="pointer-events-none absolute object-contain"
-          style={{
-            top: `${MANNEQUIN_FACE_POS.top}%`,
-            left: `${MANNEQUIN_FACE_POS.left}%`,
-            width: `${MANNEQUIN_FACE_POS.width}%`,
-          }}
-        />
-        {part.slot !== "hair" && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src="/assets/manequen_hair.webp"
-            alt=""
-            className="pointer-events-none absolute object-contain"
-            style={{
-              top: `${MANNEQUIN_DEFAULT_HAIR_POS.top}%`,
-              left: `${MANNEQUIN_DEFAULT_HAIR_POS.left}%`,
-              width: `${MANNEQUIN_DEFAULT_HAIR_POS.width}%`,
-            }}
-          />
-        )}
-        <Overlay asset={part.asset} pos={pos} />
-      </div>
-    </div>
-  );
-}
-
-type Overrides = Record<string, AvatarPartPosition>;
-
-const STORAGE_KEY = "dev-part-tuner-overrides";
-
-interface Store {
-  position: Overrides;
-  storePosition: Overrides;
-}
-
-function loadStore(): Store {
-  if (typeof window === "undefined") return { position: {}, storePosition: {} };
-  try {
-    const raw = JSON.parse(window.localStorage.getItem(STORAGE_KEY) ?? "{}");
-    return { position: raw.position ?? {}, storePosition: raw.storePosition ?? {} };
-  } catch {
-    return { position: {}, storePosition: {} };
-  }
+function BodyPreview({ skinId, part }: { skinId: string; part: AvatarPart }) {
+  const customization = { skin: skinId, jersey: "jersey_green", hair: "hair_boy_basic", [part.slot]: part.id } as AvatarCustomization;
+  return <AvatarPreview customization={customization} width="100%" />;
 }
 
 export default function DevPartTunerPage() {
@@ -112,25 +43,24 @@ export default function DevPartTunerPage() {
   const [slotIdx, setSlotIdx] = useState(0);
   const [view, setView] = useState<ViewMode>("body");
   const [selected, setSelected] = useState<string | null>(null);
-  const [store, setStore] = useState<Store>(loadStore);
+  const store = usePartTuning();
+  const [search, setSearch] = useState("");
+  const [onlyNew, setOnlyNew] = useState(true);
+  const [step, setStep] = useState(0.25);
+  const [saveError, setSaveError] = useState("");
   const [copied, setCopied] = useState(false);
 
   const { parts, slot } = SLOTS[slotIdx];
-  const field: keyof Store = view === "card" ? "storePosition" : "position";
+  const field: "position" | "storePosition" = view === "card" ? "storePosition" : "position";
 
   const save = (next: Store) => {
-    setStore(next);
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    try { savePartTuning(next); setSaveError(""); }
+    catch { setSaveError("Could not save adjustments. Check browser storage and try again."); }
   };
 
-  const effectivePos = (part: AvatarPart): AvatarPartPosition => {
-    if (view === "card") {
-      return store.storePosition[part.id] ?? part.storePosition ?? store.position[part.id] ?? part.position;
-    }
-    return store.position[part.id] ?? part.position;
-  };
+  const effectivePos = (part: AvatarPart) => tunedPosition(part, store, view === "card");
 
-  const overrideCount = Object.keys(store.position).length + Object.keys(store.storePosition).length;
+  const overrideCount = Object.keys(store.position).length + Object.keys(store.storePosition).length + Object.keys(store.hairBehindFace ?? {}).length + Object.keys(store.hairFrontPercent ?? {}).length + Object.keys(store.transform ?? {}).length + Object.keys(store.storeTransform ?? {}).length;
   const exportText = useMemo(() => JSON.stringify(store, null, 2), [store]);
 
   if (process.env.NODE_ENV !== "development") {
@@ -142,7 +72,13 @@ export default function DevPartTunerPage() {
   const nudge = (k: keyof AvatarPartPosition, delta: number) => {
     if (!selectedPart) return;
     const cur = effectivePos(selectedPart);
-    save({ ...store, [field]: { ...store[field], [selectedPart.id]: { ...cur, [k]: cur[k] + delta } } });
+    save({ ...store, [field]: { ...store[field], [selectedPart.id]: { ...cur, [k]: k === "width" ? Math.max(0.25, cur[k] + delta * step) : Math.round((cur[k] + delta * step) * 100) / 100 } } });
+  };
+
+  const transformField = view === "card" ? "storeTransform" : "transform";
+  const updateTransform = (key: keyof PartTransform, value: number) => {
+    if (!selectedPart || !Number.isFinite(value)) return;
+    save({ ...store, [transformField]: { ...store[transformField], [selectedPart.id]: { ...tunedTransform(selectedPart, store, view === "card"), [key]: value } } });
   };
 
   const resetSelected = () => {
@@ -172,14 +108,20 @@ export default function DevPartTunerPage() {
     <div className="min-h-screen bg-surface-page-alt p-6 text-white">
       <div className="sticky top-0 z-10 mb-4 flex flex-wrap items-center gap-3 bg-surface-page-alt py-2">
         <h1 className="text-lg font-semibold">Part tuner</h1>
-        <div className="flex gap-1">
+        <Link href="/dev/store-examples" className="text-sm underline">Open store preview</Link>
+        <p className="w-full text-sm text-white/60">Adjustments save automatically in this browser and update the store, try-on and equipped avatar. Store cards use a separate mannequin fit. Copy the overrides when you’re ready to keep them in the app.</p>
+        {saveError && <p role="alert">{saveError}</p>}
+        <input aria-label="Find item" placeholder="Search player, team or item" value={search} onChange={e => setSearch(e.target.value)} className="rounded bg-white/10 p-2" />
+        <label className="text-sm"><input type="checkbox" checked={onlyNew} onChange={e => setOnlyNew(e.target.checked)} /> New collection only</label>
+        <label className="text-sm">Adjustment step <select aria-label="Adjustment step" className="bg-slate-800 p-1" value={step} onChange={e => setStep(Number(e.target.value))}><option value={0.25}>Fine · 0.25</option><option value={1}>Normal · 1</option><option value={5}>Large · 5</option></select></label>
+        <div className="flex max-w-full flex-wrap gap-1">
           {SLOTS.map((s, i) => (
             <button
               key={s.slot}
               onClick={() => {
                 setSlotIdx(i);
                 setSelected(null);
-                if (s.slot === "jersey") setView("body");
+                if (!["hair", "glasses", "facialHair"].includes(s.slot)) setView("body");
               }}
               className={`rounded px-2 py-1 text-xs ${i === slotIdx ? "bg-purple-600" : "bg-white/10"}`}
             >
@@ -187,8 +129,8 @@ export default function DevPartTunerPage() {
             </button>
           ))}
         </div>
-        {slot !== "jersey" && (
-          <div className="flex gap-1">
+        {["hair", "glasses", "facialHair"].includes(slot) && (
+          <div className="flex max-w-full flex-wrap gap-1">
             {(["body", "card"] as const).map((v) => (
               <button
                 key={v}
@@ -200,7 +142,7 @@ export default function DevPartTunerPage() {
             ))}
           </div>
         )}
-        <div className="flex gap-1">
+        <div className="flex max-w-full flex-wrap gap-1">
           {SKIN_PARTS.map((s) => (
             <button
               key={s.id}
@@ -212,15 +154,48 @@ export default function DevPartTunerPage() {
           ))}
         </div>
         {selectedPart ? (
-          <div className="flex items-center gap-2 rounded bg-white/10 px-3 py-1.5 text-xs">
-            <span className="font-semibold">
+          <div className="flex flex-wrap items-center gap-2 rounded bg-white/10 px-3 py-1.5 text-xs">
+            {selectedPart.slot === "hair" && <div className="flex flex-wrap items-center gap-2 rounded bg-cyan-950 px-2 py-1">
+              <label>Hair layers <select aria-label="Hair layers" className="rounded bg-slate-800 p-1" value={tunedFrontHairPercent(selectedPart, store) !== undefined ? "split" : store.hairBehindFace?.[selectedPart.id] ? "back" : "front"} onChange={e => {
+                const hairBehindFace = { ...store.hairBehindFace };
+                const hairFrontPercent = { ...store.hairFrontPercent };
+                delete hairBehindFace[selectedPart.id];
+                delete hairFrontPercent[selectedPart.id];
+                if (e.target.value === "front") hairBehindFace[selectedPart.id] = false;
+                if (e.target.value === "back") hairBehindFace[selectedPart.id] = true;
+                if (e.target.value === "split") hairFrontPercent[selectedPart.id] = 48;
+                save({ ...store, hairBehindFace, hairFrontPercent });
+              }}>
+                <option value="front">All hair in front</option>
+                <option value="back">Face in front of hair</option>
+                <option value="split">Curls in front · sides behind</option>
+              </select></label>
+              {tunedFrontHairPercent(selectedPart, store) !== undefined && <label className="flex items-center gap-2">Front curls depth
+                <input aria-label="Front curls depth" type="range" min="0" max="100" step="0.5" value={tunedFrontHairPercent(selectedPart, store)} onChange={e => save({ ...store, hairFrontPercent: { ...store.hairFrontPercent, [selectedPart.id]: Number(e.target.value) } })} />
+                <span>{tunedFrontHairPercent(selectedPart, store)}%</span>
+              </label>}
+            </div>}
+            {selectedPart.slot === "glasses" && <div className="flex flex-wrap items-center gap-2 rounded bg-cyan-950 px-2 py-1">
+              <label className="flex items-center gap-2">Tilt
+                <input aria-label="Glasses tilt" type="range" min="-45" max="45" step="0.5" value={tunedTransform(selectedPart, store, view === "card").rotation} onChange={e => updateTransform("rotation", Number(e.target.value))} />
+                <span>{tunedTransform(selectedPart, store, view === "card").rotation}°</span>
+              </label>
+              <label className="flex items-center gap-2">Lens height
+                <input aria-label="Glasses lens height" type="range" min="0.5" max="1.5" step="0.025" value={tunedTransform(selectedPart, store, view === "card").scaleY} onChange={e => updateTransform("scaleY", Number(e.target.value))} />
+                <span>{Math.round(tunedTransform(selectedPart, store, view === "card").scaleY * 100)}%</span>
+              </label>
+              <button className="rounded bg-white/20 px-2 py-1" onClick={() => save({ ...store, [transformField]: { ...store[transformField], [selectedPart.id]: { rotation: 0, scaleY: 1 } } })}>Reset tilt & height</button>
+              <span className="w-full text-white/60">Use ▼ or increase top to lower the glasses. Tilt and height affect the whole frame, including its arms.</span>
+            </div>}
+            <span className="break-all font-semibold">
               {selectedPart.id}
               {view === "card" ? " (card)" : ""}
             </span>
-            <span>
-              top {effectivePos(selectedPart).top} / left {effectivePos(selectedPart).left} / width{" "}
-              {effectivePos(selectedPart).width}
-            </span>
+            {(["top", "left", "width"] as const).map(k => <label key={k}>{k} <input aria-label={k} type="number" step={step} value={effectivePos(selectedPart)[k]} className="w-20 rounded bg-black/40 p-1" onChange={e => {
+              const value = e.target.valueAsNumber;
+              if (!Number.isFinite(value) || (k === "width" && value <= 0)) return;
+              save({ ...store, [field]: { ...store[field], [selectedPart.id]: { ...effectivePos(selectedPart), [k]: value } } });
+            }} /></label>)}
             {(
               [
                 ["top", -1, "▲"],
@@ -249,10 +224,9 @@ export default function DevPartTunerPage() {
         )}
       </div>
 
-      <div className="grid grid-cols-4 gap-4 md:grid-cols-6">
-        {parts.map((part) => {
-          const pos = effectivePos(part);
-          const changed = Boolean(store[field][part.id]);
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4 xl:grid-cols-6">
+        {parts.filter(p => (!onlyNew || COLLECTION_PARTS.some(item => item.id === p.id) || ["hair_short_twists", "glasses_sport_blue", "jersey_celtic"].includes(p.id)) && `${p.name} ${p.id}`.toLowerCase().includes(search.toLowerCase())).map((part) => {
+          const changed = Boolean(store[field][part.id] || store.hairBehindFace?.[part.id] || store.hairFrontPercent?.[part.id] !== undefined || store[transformField]?.[part.id]);
           return (
             <button
               key={part.id}
@@ -260,12 +234,12 @@ export default function DevPartTunerPage() {
               className={`rounded-lg p-2 text-left ${selected === part.id ? "bg-purple-600/30 ring-2 ring-purple-500" : "bg-white/5"}`}
             >
               {view === "card" && slot !== "jersey" ? (
-                <CardPreview part={part} pos={pos} />
+                <div className="h-52 flex justify-center"><MannequinPreview part={part} /></div>
               ) : (
-                <BodyPreview skinId={skin} part={part} pos={pos} />
+                <BodyPreview skinId={skin} part={part} />
               )}
               <div className="mt-1 truncate text-center text-[11px] text-white/70">
-                {part.id}
+                {part.name}
                 {changed ? " *" : ""}
               </div>
             </button>
@@ -274,7 +248,7 @@ export default function DevPartTunerPage() {
       </div>
 
       {overrideCount > 0 && (
-        <pre className="mt-6 rounded bg-black/40 p-4 text-[11px] text-emerald-300">{exportText}</pre>
+        <pre className="mt-6 max-w-full overflow-auto rounded bg-black/40 p-4 text-[11px] text-emerald-300">{exportText}</pre>
       )}
     </div>
   );

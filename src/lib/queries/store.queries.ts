@@ -135,8 +135,8 @@ export const getStoreProductsQuery = () => ({
   ...STORE_PRODUCTS_QUERY_OPTIONS,
 });
 
-export function useStoreProducts() {
-  return useQuery(getStoreProductsQuery());
+export function useStoreProducts(enabled = true) {
+  return useQuery({ ...getStoreProductsQuery(), enabled });
 }
 
 export const getStoreWalletQuery = () => ({
@@ -194,10 +194,10 @@ export const getStoreInventoryQuery = () => ({
   ...STORE_INVENTORY_QUERY_OPTIONS,
 });
 
-export function useStoreInventory() {
+export function useStoreInventory(enabled = true) {
   const authStatus = useAuthStore((state) => state.status);
   return useQuery({
     ...getStoreInventoryQuery(),
-    enabled: authStatus === "authenticated",
+    enabled: enabled && authStatus === "authenticated",
   });
 }
