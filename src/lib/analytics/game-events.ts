@@ -178,6 +178,14 @@ export function trackAuthStarted(
   trackEvent('auth_started', { method, auth_mode: authMode, ...campaign });
 }
 
+export function trackAuthPanelShown(mode: string) {
+  trackEvent('auth_panel_shown', {
+    auth_mode: mode,
+    surface: 'welcome',
+    ...getCampaignAttributionAnalyticsProperties(),
+  });
+}
+
 export function trackSignupPageView() {
   const campaign = getCampaignAttributionAnalyticsProperties();
   trackEvent('signup_page_view', {

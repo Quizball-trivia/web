@@ -1,13 +1,12 @@
 import type { CaptureResult } from 'posthog-js';
 import { sanitizePostHogCapture } from './sanitize-url';
-
-const FOOTBALL_QUIZ_PATH = /^\/(?:(?:en|ka)\/football-quiz|es\/quiz-de-futbol)(?:\/[^/?#]+)?\/?$/;
+import { isSeoAnalyticsPath } from './seo-routes';
 
 function isFootballQuizUrl(value: unknown): boolean {
   if (typeof value !== 'string' || value.length === 0) return false;
 
   try {
-    return FOOTBALL_QUIZ_PATH.test(new URL(value, 'https://quizball.io').pathname);
+    return isSeoAnalyticsPath(new URL(value, 'https://quizball.io').pathname);
   } catch {
     return false;
   }
@@ -15,7 +14,7 @@ function isFootballQuizUrl(value: unknown): boolean {
 
 /**
  * Keep production analytics lean: Core Web Vitals are useful for the public
- * SEO quiz pages, but would add a billable event across the much busier game.
+ * SEO quiz pages and homepages, but not across the much busier game.
  * All other events continue unchanged after URL sanitization.
  */
 export function preparePostHogCapture(result: CaptureResult | null): CaptureResult | null {
