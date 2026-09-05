@@ -26,7 +26,7 @@ export interface Badge {
 type StoredAvatarCustomization = NonNullable<components["schemas"]["UserResponse"]["avatar_customization"]>;
 
 export interface AvatarCustomization extends StoredAvatarCustomization {
-  /** Optional local wardrobe slots; not persisted to the live backend. */
+  /** Additional equipment slots. */
   headwear?: string;
   earwear?: string;
   armwear?: string;

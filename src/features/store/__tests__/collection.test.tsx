@@ -72,14 +72,14 @@ it('applies tuner changes to mounted avatars and restores the default on reset',
 
 it('moves selected hair behind the face without losing fit or helmet rules', async () => {
   const { savePartTuning, TUNING_KEY } = await import('@/lib/avatars/usePartTuning');
-  const customization = avatars.customizationFromAvatarValue('qb-avatar:skin_male_white?hair=hair_valderrama');
+  const customization = avatars.customizationFromAvatarValue('qb-avatar:skin_male_white?hair=hair_haaland');
   const { container, rerender } = render(<><div data-layer="back"><AvatarLayers customization={customization} placement="back" /></div><div data-layer="front"><AvatarLayers customization={customization} /></div></>);
   const hair = '[data-avatar-slot="hair"]';
   expect(container.querySelector(`[data-layer="front"] ${hair}`)).not.toBeNull();
-  act(() => savePartTuning({ position: { hair_valderrama: { top: -19.5, left: 15, width: 64.75 } }, storePosition: {}, hairBehindFace: { hair_valderrama: true } }));
+  act(() => savePartTuning({ position: { hair_haaland: { top: -19.5, left: 15, width: 64.75 } }, storePosition: {}, hairBehindFace: { hair_haaland: true } }));
   expect(container.querySelector(`[data-layer="front"] ${hair}`)).toBeNull();
   expect((container.querySelector(`[data-layer="back"] ${hair} img`) as HTMLImageElement).style.left).toBe('15%');
-  expect(JSON.parse(localStorage.getItem(TUNING_KEY)!).hairBehindFace.hair_valderrama).toBe(true);
+  expect(JSON.parse(localStorage.getItem(TUNING_KEY)!).hairBehindFace.hair_haaland).toBe(true);
   rerender(<AvatarLayers customization={{ ...customization, headwear: 'headwear_cech' }} placement="back" />);
   expect(container.querySelector(hair)).toBeNull();
   act(() => savePartTuning({ position: {}, storePosition: {} }));
@@ -104,7 +104,7 @@ it('splits the fringe and silhouette across the face while retaining fit and col
 
 it('keeps glasses tilt and height independent from position and store-card tuning', async () => {
   const { savePartTuning, tunedTransform, TUNING_KEY } = await import('@/lib/avatars/usePartTuning');
-  const part = parts.GLASSES_PARTS.find(p => p.localOnly)!;
+  const part = parts.GLASSES_PARTS.find(p => p.id === "glasses_sport_blue")!;
   const tuning = { position: { [part.id]: { top: 14, left: 30, width: 40 } }, storePosition: {}, transform: { [part.id]: { rotation: 8, scaleY: 0.8 } }, storeTransform: { [part.id]: { rotation: -5, scaleY: 1.2 } } };
   const { container } = render(<AvatarLayers customization={{ glasses: part.id as never }} />);
   act(() => savePartTuning(tuning));

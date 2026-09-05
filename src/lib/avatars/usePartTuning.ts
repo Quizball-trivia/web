@@ -39,10 +39,10 @@ export function usePartTuning(): PartTuning {
       }
     }
     if (parsed?.hairBehindFace && typeof parsed.hairBehindFace === "object") {
-      result.hairBehindFace = Object.fromEntries(Object.entries(parsed.hairBehindFace).filter(([, value]) => typeof value === "boolean"));
+      result.hairBehindFace = Object.fromEntries(Object.entries(parsed.hairBehindFace).filter(([, value]) => typeof value === "boolean")) as Record<string, boolean>;
     }
     if (parsed?.hairFrontPercent && typeof parsed.hairFrontPercent === "object") {
-      result.hairFrontPercent = Object.fromEntries(Object.entries(parsed.hairFrontPercent).filter(([, value]) => typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 100));
+      result.hairFrontPercent = Object.fromEntries(Object.entries(parsed.hairFrontPercent).filter(([, value]) => typeof value === "number" && Number.isFinite(value) && value >= 0 && value <= 100)) as Record<string, number>;
     }
     for (const field of ["transform", "storeTransform"] as const) {
       if (parsed?.[field] && typeof parsed[field] === "object") {
@@ -82,4 +82,10 @@ export function tunedTransform(part: AvatarPart, tuning: PartTuning, card = fals
 export function partTransformStyle(part: AvatarPart, tuning: PartTuning, card = false) {
   const t = tunedTransform(part, tuning, card);
   return { transform: `rotate(${t.rotation}deg) scaleY(${t.scaleY})`, transformOrigin: "50% 50%" };
+}
+
+export function tunedFrontHairPercent(part: AvatarPart, tuning: PartTuning) {
+  if (tuning.hairFrontPercent?.[part.id] !== undefined) return tuning.hairFrontPercent[part.id];
+  if (tuning.hairBehindFace?.[part.id] !== undefined) return undefined;
+  return part.hairFrontPercent;
 }

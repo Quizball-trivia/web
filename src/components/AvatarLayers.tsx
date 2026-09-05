@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element -- Avatar overlays share absolute geometry. */
 'use client';
 
-import { usePartTuning, tunedPosition, frontHairMask, partTransformStyle } from '@/lib/avatars/usePartTuning';
+import { usePartTuning, tunedPosition, frontHairMask, partTransformStyle, tunedFrontHairPercent } from '@/lib/avatars/usePartTuning';
 import { useId } from 'react';
 import { AVATAR_SLOTS, getAvatarPart } from '@/lib/avatars/parts';
 import type { AvatarCustomization } from '@/types/game';
@@ -15,7 +15,7 @@ const TINTS = {
 } as const;
 
 /** Shared by full previews, purchase modals, profile thumbnails and game avatars. */
-export function AvatarLayers({ customization, placement = "front" }: { customization: AvatarCustomization; placement?: "front" | "back" }) {
+export function AvatarLayers({ customization, placement = "front", assetResolver }: { assetResolver?: (asset: string) => string; customization: AvatarCustomization; placement?: "front" | "back" }) {
   const tuning = usePartTuning();
   const filterId = useId().replaceAll(':', '');
   const color = customization.hairColor;
@@ -31,7 +31,7 @@ export function AvatarLayers({ customization, placement = "front" }: { customiza
     {AVATAR_SLOTS.map(slot => {
       const part = getAvatarPart(customization[slot]);
       if (!part || (slot === 'hair' && hideHair)) return null;
-      const frontPercent = slot === 'hair' ? tuning.hairFrontPercent?.[part.id] : undefined;
+      const frontPercent = slot === 'hair' ? tunedFrontHairPercent(part, tuning) : undefined;
       const splitHair = frontPercent !== undefined;
       const hairBehindFace = slot === 'hair' && tuning.hairBehindFace?.[part.id] === true;
       if (placement === 'back' && part.id !== 'earwear_headphones' && !hairBehindFace && !splitHair) return null;
@@ -40,8 +40,8 @@ export function AvatarLayers({ customization, placement = "front" }: { customiza
       const pos = tunedPosition(part, tuning);
       const position = { ...partTransformStyle(part, tuning), maskImage: splitHair && placement === "front" ? frontHairMask(frontPercent) : undefined, clipPath: part.id === 'earwear_headphones' && placement === 'front' ? 'inset(0 60% 0 0)' : part.clipPath, top: `${pos.top}%`, left: `${pos.left}%`, width: `${pos.width}%` };
       return <span key={slot} data-avatar-slot={slot} data-part-id={part.id}>
-        <img src={part.asset} alt="" className="pointer-events-none absolute object-contain" style={{ ...position, filter: colored && !partial ? `url(#${filterId})` : undefined }} />
-        {colored && partial && <img src={part.asset} alt="" className="pointer-events-none absolute object-contain" style={{ ...position, filter: `url(#${filterId})`, clipPath: color === 'blue_tips' ? 'inset(0 0 58% 0)' : 'polygon(38% 0, 53% 0, 65% 100%, 50% 100%)' }} />}
+        <img src={assetResolver?.(part.asset) ?? part.asset} alt="" className="pointer-events-none absolute object-contain" style={{ ...position, filter: colored && !partial ? `url(#${filterId})` : undefined }} />
+        {colored && partial && <img src={assetResolver?.(part.asset) ?? part.asset} alt="" className="pointer-events-none absolute object-contain" style={{ ...position, filter: `url(#${filterId})`, clipPath: color === 'blue_tips' ? 'inset(0 0 58% 0)' : 'polygon(38% 0, 53% 0, 65% 100%, 50% 100%)' }} />}
       </span>;
     })}
   </>;
