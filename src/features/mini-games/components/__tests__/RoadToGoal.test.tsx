@@ -93,6 +93,14 @@ describe("RoadToGoal live recovery", () => {
     });
   });
 
+  it("describes a final-zone loss as a keeper save", async () => {
+    mocks.current.mockResolvedValue({ ...terminalState, cleared_zones: 10 });
+    render(<RoadToGoal live />);
+    expect(await screen.findByText("Saved!")).toBeInTheDocument();
+    expect(screen.getByText("The keeper saved your final shot. Your stake is gone.")).toBeInTheDocument();
+    expect(screen.queryByText("Tackled!")).not.toBeInTheDocument();
+  });
+
   it("reuses the same start nonce after an ambiguous failure", async () => {
     mocks.start.mockRejectedValue(new TypeError("network unavailable"));
     mocks.get.mockResolvedValue(null);

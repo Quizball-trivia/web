@@ -1,14 +1,15 @@
 'use client';
 
 /**
- * Free Kicks shared footballer, built from CC0 Quaternius packs (bundled at
+ * Shared Blender-remodeled footballer, based on CC0 Quaternius packs (bundled at
  * /assets/demos/score/, built by scripts/build-score-rig.mjs):
  *
  *   player-body.glb  — Universal Base Characters "Superhero Male" (real face:
  *                      textured eyes + eyebrows), UE-style 65-bone skeleton
  *   player-hair.glb  — hair styles rigged to the head bone
  *
- * Kits are painted by a bind-pose banding shader (the skinned mesh's
+ * The new footballer uses separate skinned garment materials. Legacy
+ * kits are painted by a bind-pose banding shader (the skinned mesh's
  * `position` attribute is the T-pose, so fixed bands give stable
  * skin/shirt/shorts/socks/boots zones during animation).
  *
@@ -30,9 +31,11 @@ export interface KitColors {
   accent: string;
   /** Sock colour; defaults to the shorts colour when omitted. */
   socks?: string;
+  boots?: string;
+  gloves?: string;
 }
 
-export const SCORE_BODY_URL = '/assets/demos/score/player-body.glb';
+export const SCORE_BODY_URL = '/assets/demos/score/footballer/footballer.gltf';
 export const SCORE_HAIR_URL = '/assets/demos/score/player-hair.glb';
 
 export type HairStyleName = 'Hair_Buzzed' | 'Hair_SimpleParted' | 'Hair_Long' | 'Hair_Buns';
@@ -111,6 +114,7 @@ export function resolveJoints(root: THREE.Object3D): JointMap | null {
     if (!bone) return null;
     if (!bone.userData.ftRest) {
       bone.userData.ftRest = bone.quaternion.clone();
+      bone.userData.ftFlexSign = name === 'elbL' ? 1 : name === 'elbR' ? -1 : 0;
       const par = new THREE.Quaternion();
       let node: THREE.Object3D | null = bone.parent;
       while (node && node !== root) {
@@ -145,7 +149,10 @@ export function setJoint(joint: THREE.Object3D | undefined, x: number, y = 0, z 
   }
   const par = joint.userData.ftPar as THREE.Quaternion;
   const apose = joint.userData.ftApose as THREE.Quaternion | null;
-  _poseEuler.set(x, y, z);
+  // In the T-pose the forearm runs along X. Flex around its transverse Y
+  // axis; rotating X twists the wrist instead of bending the elbow.
+  const flexSign = joint.userData.ftFlexSign as number;
+  _poseEuler.set(flexSign ? y : x, flexSign ? x * flexSign : y, z);
   _poseQ.setFromEuler(_poseEuler);
   if (apose) _poseQ.multiply(apose);
   _parInvQ.copy(par).invert();
@@ -171,7 +178,9 @@ export function makeKitMaterial(kit: KitColors, skin: string): THREE.MeshStandar
     uShirt: { value: new THREE.Color(kit.shirt) },
     uShorts: { value: new THREE.Color(kit.shorts) },
     uSocks: { value: new THREE.Color(kit.socks ?? kit.shorts) },
-    uBoots: { value: new THREE.Color('#16181d') },
+    uBoots: { value: new THREE.Color(kit.boots ?? '#f0f5df') },
+    uGloves: { value: new THREE.Color(kit.gloves ?? skin) },
+    uAccent: { value: new THREE.Color(kit.accent) },
   };
   mat.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, u);
@@ -187,7 +196,9 @@ uniform vec3 uSkin;
 uniform vec3 uShirt;
 uniform vec3 uShorts;
 uniform vec3 uSocks;
-uniform vec3 uBoots;`,
+uniform vec3 uBoots;
+uniform vec3 uAccent;
+uniform vec3 uGloves;`,
       )
       .replace(
         '#include <color_fragment>',
@@ -201,7 +212,25 @@ uniform vec3 uBoots;`,
   else if (y > 0.56) zone = uShorts;
   else if (y > 0.15) zone = uSocks;
   else zone = uBoots;
-  diffuseColor.rgb = zone;
+  // Tailored panels follow the bind pose, so cuffs and seams deform with
+  // the kit instead of swimming across the skin during a kick.
+  bool shirt = y > 0.94 && y <= 1.55 && ax <= 0.73;
+  if (shirt) {
+    float stripe = (1.0 - smoothstep(0.009, 0.014, abs(ax - 0.145)));
+    zone = mix(zone, uAccent, stripe * 0.35);
+    if ((y > 1.49 && ax < 0.085) || (ax > 0.65 && y > 1.24)) zone = uAccent;
+    if (ax < 0.26 && y < 0.97) zone *= 0.78;
+    // Chest shield and opposite maker mark, visible only on the front.
+    if (vBindPos.z > 0.12 && y > 1.32 && y < 1.39 && ax > 0.08 && ax < 0.125) zone = uAccent;
+  }
+  if (y > 0.56 && y < 0.65) zone = uSkin;
+  if (y > 0.50 && y < 0.54) zone = uAccent;
+  if (y > 0.19 && y < 0.22) zone = mix(uSocks, uAccent, 0.8);
+  if (y < 0.055) zone = vec3(0.025, 0.035, 0.05);
+  if (y > 0.085 && y < 0.12 && vBindPos.z > 0.05) zone = uAccent;
+  if (ax > 0.88 && y > 1.0) zone = uGloves;
+  float knit = sin(vBindPos.y * 920.0) * sin(vBindPos.x * 920.0);
+  diffuseColor.rgb = zone * (1.0 + (shirt ? 0.035 : 0.012) * knit);
 }`,
       );
   };
@@ -230,6 +259,7 @@ export function makeNumberTexture(number: number, accent: string): THREE.CanvasT
 
 export interface PlayerLook {
   skin?: string;
+  headband?: boolean;
   hairColor?: string;
   /** Hair mesh library scene (player-hair.glb); required for hair to show. */
   hair?: THREE.Object3D;
@@ -258,12 +288,34 @@ export function buildPlayerObject(
     roughness: 0.9,
   });
   browMat.userData.owned = true;
+  const garmentMaterials = new Map<string, THREE.MeshStandardMaterial>();
+  const garmentColors: Record<string, string> = {
+    Football_Skin: skinTone,
+    Football_Jersey: kit.shirt,
+    Football_Shorts: kit.shorts,
+    Football_Socks: kit.socks ?? kit.shorts,
+    Football_Boots: kit.boots ?? '#d6ef5a',
+    Football_Sole: '#101820',
+    Football_Trim: kit.accent,
+    Football_Gloves: kit.gloves ?? '#f3f7ed',
+  };
   obj.traverse((child) => {
     const mesh = child as THREE.SkinnedMesh;
     if (!mesh.isSkinnedMesh) return;
     mesh.frustumCulled = false;
+    mesh.castShadow = true;
+    mesh.receiveShadow = true;
     const matName = (mesh.material as THREE.Material)?.name ?? '';
-    if (matName === 'MI_Hair_1') mesh.material = browMat;
+    if (garmentColors[matName]) {
+      let material = garmentMaterials.get(matName);
+      if (!material) {
+        material = new THREE.MeshStandardMaterial({ color: garmentColors[matName], roughness: matName === 'Football_Boots' ? 0.48 : 0.82 });
+        material.userData.owned = true;
+        garmentMaterials.set(matName, material);
+      }
+      mesh.material = material;
+      if (matName === 'Football_Gloves') mesh.visible = !!kit.gloves;
+    } else if (matName === 'MI_Hair_1') mesh.material = browMat;
     else if (matName !== 'MI_Eyes') mesh.material = kitMat;
   });
 
@@ -273,31 +325,65 @@ export function buildPlayerObject(
     const m = /^(index|middle|ring|pinky|thumb)_0([123])_(l|r)$/.exec(node.name);
     if (!m) return;
     const amount = m[1] === 'thumb' ? 0.12 : 0.24 + Number(m[2]) * 0.08;
-    node.rotateZ(m[3] === 'l' ? -amount : amount);
+    const restWorld = node.getWorldQuaternion(new THREE.Quaternion());
+    const curlAxis = new THREE.Vector3(0, 1, 0).applyQuaternion(restWorld.invert());
+    node.rotateOnAxis(curlAxis, m[3] === 'l' ? -amount : amount);
   });
 
   // Hair: styles ship as static meshes in model (bind) space. Placing them
-  // into Head-local space with the Head bone's inverse *bind* matrix (exported
-  // in the hair GLB's extras) glues them exactly like the skinned head verts —
-  // using the bone's live/rest matrix instead made them float.
+  // into Head-local space with the current skeleton's inverse bind matrix
+  // makes them follow the same transform as the skinned head vertices.
+  // The hair library metadata is a fallback for older body assets.
   const head = obj.getObjectByName(UE_BONE.head);
   const headIB = (look.hair?.userData as { headInverseBind?: number[] } | undefined)
     ?.headInverseBind;
   if (head && look.hair && headIB) {
     const inv = new THREE.Matrix4().fromArray(headIB);
+    // Geometry is in model bind space; use this body's actual head bind, not
+    // the old hair library rig's orientation.
+    let foundHeadBind = false;
+    obj.traverse(child => {
+      const mesh = child as THREE.SkinnedMesh;
+      if (!mesh.isSkinnedMesh || foundHeadBind) return;
+      const index = mesh.skeleton.bones.indexOf(head as THREE.Bone);
+      if (index >= 0) { inv.copy(mesh.skeleton.boneInverses[index]); foundHeadBind = true; }
+    });
     const hairMat = new THREE.MeshStandardMaterial({ color: hairColor, roughness: 0.88 });
     hairMat.userData.owned = true;
-    const attach = (nodeName: string) => {
+    const attach = (nodeName: string, crown = false) => {
       const src = look.hair?.getObjectByName(nodeName) as THREE.Mesh | undefined;
       if (!src) return;
       const m = new THREE.Mesh(src.geometry, hairMat);
       m.matrixAutoUpdate = false;
       m.matrix.copy(inv);
+      if (crown) {
+        // Give the cap clearance over the remodeled scalp, including the forehead.
+        m.matrix.multiply(new THREE.Matrix4().makeTranslation(0, 1.71, -.014))
+          .multiply(new THREE.Matrix4().makeScale(1.045, 1.035, 1.045))
+          .multiply(new THREE.Matrix4().makeTranslation(0, -1.71, .014));
+      }
       m.frustumCulled = false;
+      m.castShadow = true;
+      m.name = `fitted-${nodeName}`;
       head.add(m);
     };
     const style = look.hairStyle === undefined ? HAIR_POOL[(h >>> 5) % HAIR_POOL.length] : look.hairStyle;
+    // The long and bun assets are side/back pieces, so they need a crown cap.
+    if (style === 'Hair_Long' || style === 'Hair_Buns') attach('Hair_Buzzed', true);
     if (style) attach(style);
+    if (look.headband) {
+      const vertices: number[] = [], indices: number[] = [];
+      for (let row = 0; row < 2; row++) for (let i = 0; i <= 48; i++) {
+        const angle = i / 48 * Math.PI * 2;
+        vertices.push(Math.cos(angle) * .087, 1.743 + row * .031, -.014 + Math.sin(angle) * .108);
+        if (row === 0 && i < 48) { const a = i, b = i + 49; indices.push(a, b, a + 1, a + 1, b, b + 1); }
+      }
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3)); geometry.setIndex(indices); geometry.computeVertexNormals();
+      geometry.userData.owned = true;
+      const material = new THREE.MeshStandardMaterial({ color: '#10151b', roughness: .95, side: THREE.DoubleSide }); material.userData.owned = true;
+      const band = new THREE.Mesh(geometry, material); band.name = 'fitted-headband'; band.matrixAutoUpdate = false; band.matrix.copy(inv); band.castShadow = true; head.add(band);
+    }
     if (look.beard ?? (h >>> 8) % 5 === 0) attach('Hair_Beard');
   }
 
@@ -310,10 +396,22 @@ export function buildPlayerObject(
     });
     numberMat.userData.owned = true;
     const back = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.3), numberMat);
-    back.position.set(0, 0.14, -0.19);
-    back.rotation.y = Math.PI;
+    // Place the number in model space, then transform into the chest's bind
+    // space. Blender can reorient bone axes without moving the jersey.
+    let inverseBind: THREE.Matrix4 | undefined;
+    obj.traverse((child) => {
+      const mesh = child as THREE.SkinnedMesh;
+      if (!mesh.isSkinnedMesh || inverseBind) return;
+      const index = mesh.skeleton.bones.indexOf(chest as THREE.Bone);
+      if (index >= 0) inverseBind = mesh.skeleton.boneInverses[index];
+    });
+    const mount = new THREE.Matrix4().makeTranslation(0, 1.35, -0.178)
+      .multiply(new THREE.Matrix4().makeRotationY(Math.PI));
+    if (inverseBind) mount.premultiply(inverseBind);
+    back.applyMatrix4(mount);
     chest.add(back);
   }
+  if (garmentMaterials.size) kitMat.dispose();
   return obj;
 }
 
@@ -346,9 +444,9 @@ export function disposeBuiltObject(obj: THREE.Object3D, mixer?: THREE.AnimationM
   obj.traverse((child) => {
     const mesh = child as THREE.Mesh;
     if (!mesh.isMesh && !(mesh as THREE.SkinnedMesh).isSkinnedMesh) return;
-    // The number back-plane is the only geometry allocated in buildPlayerObject;
-    // skinned-mesh geometry is shared with the loader cache — never dispose it.
-    if (mesh.geometry instanceof THREE.PlaneGeometry) mesh.geometry.dispose();
+    // Number planes and fitted headbands belong to this instance; the body
+    // and hair geometry are shared with the loader cache.
+    if (mesh.geometry instanceof THREE.PlaneGeometry || mesh.geometry?.userData.owned) mesh.geometry.dispose();
     const mat = mesh.material;
     if (Array.isArray(mat)) mat.forEach(disposeMat);
     else if (mat) disposeMat(mat);
