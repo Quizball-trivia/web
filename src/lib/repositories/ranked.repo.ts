@@ -31,17 +31,13 @@ async function requestUserRank(scope: "global" | "country"): Promise<RankPositio
   return body ? { rank: body.rank, total: body.total } : null;
 }
 
-async function fetchUserRank(scope: "global" | "country"): Promise<RankPosition | null> {
-  return requestUserRank(scope);
-}
-
 export async function getUserRanks(): Promise<{
   globalRank: RankPosition | null;
   countryRank: RankPosition | null;
 }> {
   const [globalRank, countryRank] = await Promise.all([
-    fetchUserRank("global"),
-    fetchUserRank("country"),
+    requestUserRank("global"),
+    requestUserRank("country"),
   ]);
   return { globalRank, countryRank };
 }

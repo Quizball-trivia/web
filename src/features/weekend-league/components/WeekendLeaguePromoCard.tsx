@@ -28,19 +28,17 @@ function pad(n: number): string {
 
 function Countdown({ targetMs }: { targetMs: number | null }) {
   const { t } = useLocale();
-  const [leftMs, setLeftMs] = useState<number | null>(null);
+  const [nowMs, setNowMs] = useState<number | null>(null);
   useEffect(() => {
-    if (targetMs == null) {
-      setLeftMs(null);
-      return;
-    }
+    if (targetMs == null) return;
     // wlNow: the server-synced WL clock — device skew must not shift kickoff.
-    const tick = () => setLeftMs(Math.max(0, targetMs - wlNow()));
+    const tick = () => setNowMs(wlNow());
     tick();
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, [targetMs]);
 
+  const leftMs = targetMs == null || nowMs == null ? null : Math.max(0, targetMs - nowMs);
   const total = Math.floor((leftMs ?? 0) / 1000);
   const cells = [
     { v: Math.floor(total / 86_400), label: t('weekendLeague.promoDays') },

@@ -38,10 +38,6 @@ function findBestMatch(
   return null;
 }
 
-function getPoints(revealedClues: number): number {
-  return calculateCluesDisplayPoints(revealedClues);
-}
-
 export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
   const { t } = useLocale();
   const secondsPerClueStep = session.secondsPerClueStep;
@@ -129,7 +125,7 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
       setIsCorrect(true);
       setShowResult(true);
 
-      setScore((prev) => prev + getPoints(revealedClues));
+      setScore((prev) => prev + calculateCluesDisplayPoints(revealedClues));
       setStreak((prev) => prev + 1);
 
       if (timerRef.current) {
@@ -278,7 +274,7 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
           {!showResult && (
             <div className="text-center text-sm text-brand-slate mb-4 font-bold flex items-center justify-center gap-1.5">
               <Star className="size-4 text-brand-gold" />
-              Answer now: {getPoints(revealedClues)} points
+              Answer now: {calculateCluesDisplayPoints(revealedClues)} points
             </div>
           )}
 
@@ -340,7 +336,7 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
                 </div>
                 {isCorrect ? (
                   <div className="text-sm text-brand-slate">
-                    {t('dailyGames.pointsAwarded', { points: getPoints(revealedClues) })}
+                    {t('dailyGames.pointsAwarded', { points: calculateCluesDisplayPoints(revealedClues) })}
                   </div>
                 ) : (
                   <div>
