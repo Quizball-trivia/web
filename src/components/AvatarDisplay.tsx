@@ -74,7 +74,7 @@ export function AvatarDisplay({
         {/* Wrapper at canonical Figma aspect ratio so item % positions land precisely.
             h-[88%] leaves ~6% top/bottom margin so the figure's head/feet don't clip the rounded crop. */}
         <div className="relative h-[88%]" style={{ aspectRatio: '495.25 / 543.03' }}>
-          <AvatarLayers assetResolver={assetResolver} customization={merged} placement="back" />
+          <AvatarLayers customization={merged} placement="back" />
       <Image
             src={skinAsset}
             alt="Avatar"
@@ -83,7 +83,7 @@ export function AvatarDisplay({
             quality={60}
             className="object-contain"
           />
-          <AvatarLayers assetResolver={assetResolver} customization={merged} />
+          <AvatarLayers customization={merged} />
         </div>
       </div>
 
