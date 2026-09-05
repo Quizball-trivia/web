@@ -193,6 +193,7 @@ function MilestoneOverlay({
 /* ── page ─────────────────────────────────────────────────────────────── */
 
 export default function DevWlAbPage() {
+  const [kickoffMs] = useState(() => Date.now() + ((6 - new Date().getDay() + 7) % 7 || 7) * 86_400_000);
   const [lang, setLang] = useState<Lang>('ka');
   const [overlay, setOverlay] = useState<100 | 200 | null>(null);
 
@@ -222,7 +223,7 @@ export default function DevWlAbPage() {
           <div className="flex justify-center">
             <WeekendLeaguePromoCard
               registeredCount={600}
-              kickoffMs={Date.now() + ((6 - new Date().getDay() + 7) % 7 || 7) * 86_400_000}
+              kickoffMs={kickoffMs}
               onStart={() => {}}
               onClose={() => {}}
             />
