@@ -1582,7 +1582,9 @@
     "orCopyLink": "ან დააკოპირეთ ბმული",
     "linkCopied": "ბმული დაკოპირდა. ჩასვით თქვენს ბრაუზერში.",
     "copyInviteLink": "მოწვევის ბმულის კოპირება",
-    "inviteLinkCopied": "მოწვევის ბმული დაკოპირდა"
+    "inviteLinkCopied": "მოწვევის ბმული დაკოპირდა",
+    "openNowButton": "გახსენი ბრაუზერში",
+    "breakoutFallbackHint": "არ გაიხსნა? მიჰყევი ქვემოთ მოცემულ ნაბიჯებს."
   },
   "errors": {
     "INTERNAL_ERROR": "რაღაც შეფერხდა",
