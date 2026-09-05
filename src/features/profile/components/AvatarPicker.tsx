@@ -80,7 +80,7 @@ export function AvatarPicker({
   };
 
   const TAB_LABELS: Record<SlotTab, string> = {
-    headwear: t("store.headwearTitle"), earwear: t("store.earringsTitle"), armwear: "Armbands", wristwear: "Wristbands", facePaint: "Face paint",
+    headwear: t("store.headwearTitle"), earwear: t("store.earringsTitle"), armwear: t("store.armbandsTitle"), wristwear: t("store.wristbandsTitle"), facePaint: t("store.facePaintTitle"),
     skin: t('profile.avatarPicker.tabSkin'),
     jersey: t('profile.avatarPicker.tabJersey'),
     hair: t('profile.avatarPicker.tabHair'),
