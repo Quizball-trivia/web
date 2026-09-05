@@ -8,11 +8,13 @@
 //   E. Milestone interstitials at 100 QP and 200 QP
 // Toggle variants per section; the RIGHT column always shows control.
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { AnimatePresence, motion } from 'motion/react';
 import { ArrowRight, Clock3, PartyPopper, Trophy, X } from 'lucide-react';
 import { WeekendLeaguePromoCard } from '@/features/weekend-league/components/WeekendLeaguePromoCard';
+
+import { wlNow } from '@/features/weekend-league/wlClock';
 
 const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
 
@@ -193,6 +195,18 @@ function MilestoneOverlay({
 /* ── page ─────────────────────────────────────────────────────────────── */
 
 export default function DevWlAbPage() {
+  const [kickoffMs, setKickoffMs] = useState<number | null>(null);
+  useEffect(() => {
+    const tick = () => {
+      const now = wlNow();
+      setKickoffMs(current => current !== null && current > now
+        ? current
+        : now + ((6 - new Date(now).getDay() + 7) % 7 || 7) * 86_400_000);
+    };
+    tick();
+    const timer = setInterval(tick, 1000);
+    return () => clearInterval(timer);
+  }, []);
   const [lang, setLang] = useState<Lang>('ka');
   const [overlay, setOverlay] = useState<100 | 200 | null>(null);
 
@@ -222,7 +236,7 @@ export default function DevWlAbPage() {
           <div className="flex justify-center">
             <WeekendLeaguePromoCard
               registeredCount={600}
-              kickoffMs={Date.now() + ((6 - new Date().getDay() + 7) % 7 || 7) * 86_400_000}
+              kickoffMs={kickoffMs}
               onStart={() => {}}
               onClose={() => {}}
             />

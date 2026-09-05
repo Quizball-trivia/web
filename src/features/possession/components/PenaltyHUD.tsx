@@ -92,11 +92,11 @@ export function PenaltyHUD({
       opponentAttempts: penaltyOpponentAttempts?.length ?? penaltyOpponentScore,
     };
   });
+  if (!isPenaltySuddenDeath && sdBaseline !== null) {
+    setSdBaseline(null);
+  }
   useEffect(() => {
-    if (!isPenaltySuddenDeath) {
-      setSdBaseline(null);
-      return;
-    }
+    if (!isPenaltySuddenDeath) return;
     const timer = setTimeout(() => {
       const latest = latestPenaltyRef.current;
       setSdBaseline({
