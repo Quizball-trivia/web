@@ -143,21 +143,6 @@ export function decodeAvatarCustomization(value: string | null | undefined): Ava
  * slots are respected literally — a user who explicitly removed an item keeps
  * it removed. Otherwise slots fall back to what `base` encodes.
  */
-export function resolveAvatarCustomization(c: AvatarCustomization): AvatarCustomization {
-  const defaults = customizationFromAvatarValue(c.base);
-  const hasStructuredSlots = (["skin", "jersey", "hair", "glasses", "facialHair"] as const).some(
-    (slot) => Object.prototype.hasOwnProperty.call(c, slot),
-  );
-  return {
-    skin: c.skin ?? defaults.skin,
-    jersey: hasStructuredSlots ? c.jersey : defaults.jersey,
-    hair: hasStructuredSlots ? c.hair : defaults.hair,
-    glasses: hasStructuredSlots ? c.glasses : defaults.glasses,
-    facialHair: hasStructuredSlots ? c.facialHair : defaults.facialHair,
-    base: c.base ?? defaults.base,
-  };
-}
-
 export function customizationFromAvatarValue(value: string | null | undefined): AvatarCustomization {
   const decoded = decodeAvatarCustomization(value);
   if (decoded) {

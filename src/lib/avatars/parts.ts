@@ -51,6 +51,7 @@ export interface AvatarPart {
   localOnly?: boolean;
   group?: string;
   hideHair?: boolean;
+  hairFrontPercent?: number;
   clipPath?: string;
   free?: boolean;
   priceCoins?: number;
@@ -118,17 +119,16 @@ export function getSkinPart(id: string | null | undefined): SkinPart {
 /* ─────────────── Hair ─────────────── */
 export const HAIR_PARTS: AvatarPart[] = [
   ...COLLECTION_PARTS.filter(p => p.slot === "hair"),
-  ...(process.env.NODE_ENV === "development" ? [{
+  ...([{
     id: "hair_short_twists",
     slot: "hair" as const,
     name: "Short Twists",
     asset: "/assets/store/hair_short_twists.webp",
-    localOnly: true,
     priceCoins: 20000,
     productSlug: "avatar_hair_short_twists",
-    position: { top: -8, left: 22, width: 49 },
+    position: { top: -9.25, left: 23.5, width: 49.75 },
     storePosition: { top: -4, left: 25, width: 46 },
-  }] : []),
+  }]),
   {
     id: "hair_boy_basic",
     slot: "hair",
@@ -254,16 +254,15 @@ export const HAIR_IDS = HAIR_PARTS.map((part) => part.id) as readonly AvatarHair
 // Each glasses PNG has its own native height — top% set so the lens sits over the eyes.
 export const GLASSES_PARTS: AvatarPart[] = [
   ...COLLECTION_PARTS.filter(p => p.slot === "glasses"),
-  ...(process.env.NODE_ENV === "development" ? [{
+  ...([{
     id: "glasses_sport_blue",
     slot: "glasses" as const,
     name: "Blue Sport",
     asset: "/assets/store/accessory_glasses_sport_blue.webp",
-    localOnly: true,
     priceCoins: 15000,
     productSlug: "avatar_glasses_sport_blue",
     position: { top: 14, left: 30, width: 40 },
-  }] : []),
+  }]),
   {
     id: "glasses_wayfarer",
     slot: "glasses",
@@ -406,16 +405,15 @@ export const JERSEY_COLOR_PARTS: AvatarPart[] = [
 
 export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
   ...COLLECTION_PARTS.filter(p => p.slot === "jersey"),
-  ...(process.env.NODE_ENV === "development" ? [{
+  ...([{
     id: "jersey_celtic",
     slot: "jersey" as const,
     name: "Celtic",
     asset: "/assets/store/jersey_celtic.webp",
-    localOnly: true,
     priceCoins: 30000,
     productSlug: "avatar_jersey_celtic",
     position: { top: 43, left: 13, width: 70 },
-  }] : []),
+  }]),
   {
     id: "jersey_real",
     slot: "jersey",

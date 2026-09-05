@@ -80,7 +80,7 @@ export function AvatarPicker({
   };
 
   const TAB_LABELS: Record<SlotTab, string> = {
-    headwear: "Headwear", earwear: "Earrings", armwear: "Armbands", wristwear: "Wristbands", facePaint: "Face paint",
+    headwear: t("store.headwearTitle"), earwear: t("store.earringsTitle"), armwear: "Armbands", wristwear: "Wristbands", facePaint: "Face paint",
     skin: t('profile.avatarPicker.tabSkin'),
     jersey: t('profile.avatarPicker.tabJersey'),
     hair: t('profile.avatarPicker.tabHair'),
@@ -203,7 +203,7 @@ export function AvatarPicker({
 
   const TabBar = (
     <div className="flex flex-wrap gap-2 border-b border-white/10 pb-3">
-      {TAB_ORDER.filter(tab => !(EXTRA_SLOTS as readonly string[]).includes(tab) || (localPreview && getPartsBySlot(tab as AvatarSlot).length > 0)).map((tab) => {
+      {TAB_ORDER.filter(tab => !(EXTRA_SLOTS as readonly string[]).includes(tab) || getPartsBySlot(tab as AvatarSlot).length > 0).map((tab) => {
         const isActive = activeTab === tab;
         return (
           <button
@@ -376,17 +376,17 @@ export function AvatarPicker({
       </div>
 
       {TabBar}
-      {localPreview && activeTab === 'hair' && <fieldset className="flex flex-wrap gap-2">
-        <legend className="mb-2 text-sm text-white/70">Hair colour</legend>
+      {activeTab === 'hair' && <fieldset className="flex flex-wrap gap-2">
+        <legend className="mb-2 text-sm text-white/70">{t("store.hairColour")}</legend>
         {HAIR_COLORS.map(color => <button key={color} type="button" aria-pressed={(draft.hairColor ?? 'natural') === color}
           onClick={() => setDraft(d => ({ ...d, hairColor: color }))}
           className="rounded-full border border-white/20 px-3 py-2 text-xs aria-pressed:border-fuchsia-400 aria-pressed:bg-fuchsia-950">
-          {{natural: 'Natural', platinum: 'Platinum blonde', ginger: 'Ginger', silver: 'Silver', blue_tips: 'Blue tips', pink_streaks: 'Pink streaks'}[color]}
+          {t(`store.${color}`)}
         </button>)}
       </fieldset>}
 
       <div className="pt-1 pb-20">
-        {localPreview && (EXTRA_SLOTS as readonly string[]).includes(activeTab) && renderSlotGrid(activeTab as AvatarSlot, getPartsBySlot(activeTab as AvatarSlot))}
+        {(EXTRA_SLOTS as readonly string[]).includes(activeTab) && renderSlotGrid(activeTab as AvatarSlot, getPartsBySlot(activeTab as AvatarSlot))}
         {activeTab === "skin" && SkinTab}
         {activeTab === "jersey" && renderSlotGrid("jersey", JERSEY_PARTS)}
         {activeTab === "hair" && renderSlotGrid("hair", HAIR_PARTS)}

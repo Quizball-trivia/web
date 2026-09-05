@@ -1,6 +1,6 @@
 "use client";
 
-import { usePartTuning, tunedPosition, frontHairMask, partTransformStyle } from "@/lib/avatars/usePartTuning";
+import { usePartTuning, tunedPosition, frontHairMask, partTransformStyle, tunedFrontHairPercent } from "@/lib/avatars/usePartTuning";
 import Image from "next/image";
 import { motion } from "motion/react";
 import { CoinIcon } from "./CoinIcon";
@@ -67,7 +67,7 @@ const HEAD_VERTICAL_SHIFT_PCT = 28;
 
 export function MannequinPreview({ part }: { part: AvatarPart }) {
   const tuning = usePartTuning();
-  const frontPercent = part.slot === "hair" ? tuning.hairFrontPercent?.[part.id] : undefined;
+  const frontPercent = part.slot === "hair" ? tunedFrontHairPercent(part, tuning) : undefined;
   return (
     <div className="pointer-events-none relative h-full" style={{ aspectRatio: "495.25 / 543.03" }}>
       <div

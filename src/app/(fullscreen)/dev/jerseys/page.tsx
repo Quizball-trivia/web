@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 
+import { COLLECTION_PARTS } from "@/lib/avatars/collection";
 import { AvatarPreview } from "@/components/AvatarPreview";
 import { MannequinPreview } from "@/features/store/components/ItemCard";
-import { usePartTuning, savePartTuning, tunedPosition, tunedTransform, type PartTransform, type PartTuning } from "@/lib/avatars/usePartTuning";
+import { usePartTuning, savePartTuning, tunedPosition, tunedTransform, tunedFrontHairPercent, type PartTransform, type PartTuning } from "@/lib/avatars/usePartTuning";
 import type { AvatarCustomization } from "@/types/game";
 import { useMemo, useState } from "react";
 import {
@@ -155,11 +156,12 @@ export default function DevPartTunerPage() {
         {selectedPart ? (
           <div className="flex flex-wrap items-center gap-2 rounded bg-white/10 px-3 py-1.5 text-xs">
             {selectedPart.slot === "hair" && <div className="flex flex-wrap items-center gap-2 rounded bg-cyan-950 px-2 py-1">
-              <label>Hair layers <select aria-label="Hair layers" className="rounded bg-slate-800 p-1" value={store.hairFrontPercent?.[selectedPart.id] !== undefined ? "split" : store.hairBehindFace?.[selectedPart.id] ? "back" : "front"} onChange={e => {
+              <label>Hair layers <select aria-label="Hair layers" className="rounded bg-slate-800 p-1" value={tunedFrontHairPercent(selectedPart, store) !== undefined ? "split" : store.hairBehindFace?.[selectedPart.id] ? "back" : "front"} onChange={e => {
                 const hairBehindFace = { ...store.hairBehindFace };
                 const hairFrontPercent = { ...store.hairFrontPercent };
                 delete hairBehindFace[selectedPart.id];
                 delete hairFrontPercent[selectedPart.id];
+                if (e.target.value === "front") hairBehindFace[selectedPart.id] = false;
                 if (e.target.value === "back") hairBehindFace[selectedPart.id] = true;
                 if (e.target.value === "split") hairFrontPercent[selectedPart.id] = 48;
                 save({ ...store, hairBehindFace, hairFrontPercent });
@@ -168,9 +170,9 @@ export default function DevPartTunerPage() {
                 <option value="back">Face in front of hair</option>
                 <option value="split">Curls in front · sides behind</option>
               </select></label>
-              {store.hairFrontPercent?.[selectedPart.id] !== undefined && <label className="flex items-center gap-2">Front curls depth
-                <input aria-label="Front curls depth" type="range" min="0" max="100" step="0.5" value={store.hairFrontPercent[selectedPart.id]} onChange={e => save({ ...store, hairFrontPercent: { ...store.hairFrontPercent, [selectedPart.id]: Number(e.target.value) } })} />
-                <span>{store.hairFrontPercent[selectedPart.id]}%</span>
+              {tunedFrontHairPercent(selectedPart, store) !== undefined && <label className="flex items-center gap-2">Front curls depth
+                <input aria-label="Front curls depth" type="range" min="0" max="100" step="0.5" value={tunedFrontHairPercent(selectedPart, store)} onChange={e => save({ ...store, hairFrontPercent: { ...store.hairFrontPercent, [selectedPart.id]: Number(e.target.value) } })} />
+                <span>{tunedFrontHairPercent(selectedPart, store)}%</span>
               </label>}
             </div>}
             {selectedPart.slot === "glasses" && <div className="flex flex-wrap items-center gap-2 rounded bg-cyan-950 px-2 py-1">
@@ -223,7 +225,7 @@ export default function DevPartTunerPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4 xl:grid-cols-6">
-        {parts.filter(p => (!onlyNew || p.localOnly) && `${p.name} ${p.id}`.toLowerCase().includes(search.toLowerCase())).map((part) => {
+        {parts.filter(p => (!onlyNew || COLLECTION_PARTS.some(item => item.id === p.id) || ["hair_short_twists", "glasses_sport_blue", "jersey_celtic"].includes(p.id)) && `${p.name} ${p.id}`.toLowerCase().includes(search.toLowerCase())).map((part) => {
           const changed = Boolean(store[field][part.id] || store.hairBehindFace?.[part.id] || store.hairFrontPercent?.[part.id] !== undefined || store[transformField]?.[part.id]);
           return (
             <button
