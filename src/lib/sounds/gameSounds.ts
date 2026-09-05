@@ -234,6 +234,7 @@ function pauseActiveBgmForPageHide(): void {
   sound.pause();
 }
 
+/** Resume the selected track after unmute or page restore, loading it if deferred. */
 function resumeActiveBgm(): void {
   if (!activeBgm || _muted || isDocumentHidden()) return;
   if (activeBgm === 'kickoff' && kickoffAudioFallback) {
