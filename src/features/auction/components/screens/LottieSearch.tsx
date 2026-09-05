@@ -164,8 +164,10 @@ export function LottieSearch({
   const [botsArrivedAt, setBotsArrivedAt] = useState<number | null>(null);
   const [staggerNow, setStaggerNow] = useState(0);
   useEffect(() => {
-    if (botPlayers.length === 0) { setBotsArrivedAt(null); return; }
-    setBotsArrivedAt((prev) => prev ?? Date.now());
+    const arrivedAt = botPlayers.length === 0 ? null : Date.now();
+    // Measure when the external roster arrives; later ticks use staggerNow.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setBotsArrivedAt((prev) => arrivedAt === null ? null : prev ?? arrivedAt);
   }, [botPlayers.length]);
   const maxJoinDelay = botPlayers.reduce((max, bot) => Math.max(max, bot.joinDelayMs ?? 0), 0);
   const allBotsVisibleAt = (botsArrivedAt ?? 0) + maxJoinDelay;
@@ -174,10 +176,9 @@ export function LottieSearch({
     const timer = setInterval(() => setStaggerNow(Date.now()), 250);
     return () => clearInterval(timer);
   }, [botsArrivedAt, allBotsVisibleAt]);
-  void staggerNow;
   const visibleBots = botsArrivedAt === null
     ? []
-    : botPlayers.filter((bot) => Date.now() - botsArrivedAt >= (bot.joinDelayMs ?? 0));
+    : botPlayers.filter((bot) => Math.max(staggerNow, botsArrivedAt) - botsArrivedAt >= (bot.joinDelayMs ?? 0));
 
   const selfPlayer = players.find((player) => player.userId === selfUserId);
   const rivals = players.filter((player) => player.userId !== selfUserId);

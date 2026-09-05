@@ -435,7 +435,10 @@
     "changeNumber": "Cambiar número",
     "privacyNote": "Solo usamos este número para el acceso a la cuenta y mensajes esenciales del servicio.",
     "skip": "Quizás más tarde",
-    "sendFailed": "No pudimos enviar el código. Inténtalo de nuevo."
+    "sendFailed": "No pudimos enviar el código. Inténtalo de nuevo.",
+    "sendFailedReason": "No pudimos enviar el código: {reason}",
+    "phoneHint": "Solo móviles de Georgia: 9 dígitos que empiezan por 5",
+    "phoneDigitsLabel": "Número de móvil"
   },
   "mobileVerificationReminder": {
     "eyebrow": "Seguridad de la cuenta",

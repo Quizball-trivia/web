@@ -895,7 +895,7 @@ describe('AppShell — logout dialog wiring', () => {
     expect(screen.getByRole('alertdialog')).toBeInTheDocument();
   });
 
-  it('confirming the logout calls the auth store logout and routes home', async () => {
+  it('confirming logout ends the session and returns to the play page', async () => {
     const logoutSpy = vi.fn(async () => {});
     seedAuth({ logout: logoutSpy });
     renderShell();
@@ -905,7 +905,7 @@ describe('AppShell — logout dialog wiring', () => {
     // logout is async; wait a microtask for the await to settle.
     await Promise.resolve();
     expect(logoutSpy).toHaveBeenCalledTimes(1);
-    expect(routerReplaceMock).toHaveBeenCalledWith('/');
+    expect(routerReplaceMock).toHaveBeenCalledWith('/play');
   });
 });
 
