@@ -684,17 +684,6 @@ export function StoreScreen({ localPreview }: { localPreview?: LocalStorePreview
             </motion.section>
           )}
 
-          {['headwear', 'accessories'].map(category => (
-            <section key={category} id={category} hidden={!showCategory(category)}>
-              <SectionHeader title={category === 'headwear' ? t('store.headwearTitle') : t('store.accessoriesTitle')} />
-              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-                {EXTRA_PARTS.filter(part => category === 'headwear' ? part.slot === 'headwear' : part.slot !== 'headwear').filter(matchesSearch).map(part => (
-                  <ItemCard key={part.id} name={translatePartName(part.name)} asset={part.asset} price={(partPriceCoins(part) ?? 0).toLocaleString()} owned={ownedPartIds.has(part.id)}
-                    previewCustomization={{ ...currentCustomization, [part.slot]: part.id }} onBuy={() => openAvatarPartModal(part)} />
-                ))}
-              </div>
-            </section>
-          ))}
 
           {!localPreview && <motion.section
             initial={{ opacity: 0, y: 20 }}
@@ -774,6 +763,18 @@ export function StoreScreen({ localPreview }: { localPreview?: LocalStorePreview
               ))}
             </div>
           </motion.section>
+
+          {['headwear', 'accessories'].map(category => (
+            <section key={category} id={category} hidden={!showCategory(category)}>
+              <SectionHeader title={category === 'headwear' ? t('store.headwearTitle') : t('store.accessoriesTitle')} />
+              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+                {EXTRA_PARTS.filter(part => category === 'headwear' ? part.slot === 'headwear' : part.slot !== 'headwear').filter(matchesSearch).map(part => (
+                  <ItemCard key={part.id} name={translatePartName(part.name)} asset={part.asset} price={(partPriceCoins(part) ?? 0).toLocaleString()} owned={ownedPartIds.has(part.id)}
+                    mannequinPart={part} onBuy={() => openAvatarPartModal(part)} />
+                ))}
+              </div>
+            </section>
+          ))}
 
           <motion.section hidden={!showCategory("glasses")}
             initial={{ opacity: 0, y: 20 }}

@@ -325,8 +325,8 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     "productSlug": "avatar_hair_ronaldinho",
     "storePosition": {
       "top": -2,
-      "left": 21,
-      "width": 50.6
+      "left": 18.75,
+      "width": 46.85
     }
   },
   {
@@ -343,9 +343,9 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     "asset": "/assets/store/collection/hair_neymar_mohawk.webp",
     "productSlug": "avatar_hair_neymar_mohawk",
     "storePosition": {
-      "top": -6,
-      "left": 29,
-      "width": 36.800000000000004
+      "top": -7.25,
+      "left": 27.5,
+      "width": 41.05
     }
   },
   {
@@ -364,8 +364,8 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     "clipPath": "polygon(0 30%, 24% 30%, 36% 100%, 0 100%)",
     "storePosition": {
       "top": 3,
-      "left": 28,
-      "width": 38.64
+      "left": 29,
+      "width": 39.14
     }
   },
   {
@@ -383,8 +383,8 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     "productSlug": "avatar_hair_haaland",
     "storePosition": {
       "top": -1,
-      "left": 24,
-      "width": 44.160000000000004
+      "left": 23,
+      "width": 44.16
     }
   },
   {
@@ -401,9 +401,9 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     "asset": "/assets/store/collection/hair_beckham_mohawk.webp",
     "productSlug": "avatar_hair_beckham_mohawk",
     "storePosition": {
-      "top": -4,
-      "left": 30,
-      "width": 34.96
+      "top": -4.75,
+      "left": 27.75,
+      "width": 39.96
     }
   },
   {
@@ -420,8 +420,8 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     "asset": "/assets/store/collection/hair_valderrama.webp",
     "productSlug": "avatar_hair_valderrama",
     "storePosition": {
-      "top": -17,
-      "left": 5,
+      "top": -20.75,
+      "left": 7.5,
       "width": 70
     },
     "hairFrontPercent": 80.5
@@ -459,9 +459,9 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     "asset": "/assets/store/collection/hair_baggio.webp",
     "productSlug": "avatar_hair_baggio",
     "storePosition": {
-      "top": 0,
-      "left": 23,
-      "width": 46
+      "top": -1.5,
+      "left": 21.25,
+      "width": 48.25
     }
   },
   {
@@ -577,9 +577,9 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     "asset": "/assets/store/collection/hair_spiky.webp",
     "productSlug": "avatar_hair_spiky",
     "storePosition": {
-      "top": -4,
-      "left": 24,
-      "width": 45.080000000000005
+      "top": -13.5,
+      "left": 25,
+      "width": 50.83
     }
   },
   {
@@ -596,9 +596,9 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     "asset": "/assets/store/collection/hair_shoulder_curls.webp",
     "productSlug": "avatar_hair_shoulder_curls",
     "storePosition": {
-      "top": -4,
-      "left": 24,
-      "width": 45.080000000000005
+      "top": -4.75,
+      "left": 24.25,
+      "width": 51.33
     },
     "hairFrontPercent": 79
   },
@@ -616,9 +616,9 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     "asset": "/assets/store/collection/hair_side_shave.webp",
     "productSlug": "avatar_hair_side_shave",
     "storePosition": {
-      "top": -4,
+      "top": -5.25,
       "left": 24,
-      "width": 45.080000000000005
+      "width": 49.58
     },
     "hairFrontPercent": 55
   },
@@ -649,7 +649,12 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     "priceCoins": 15000,
     "group": "Facial hair",
     "asset": "/assets/store/collection/facial_long.webp",
-    "productSlug": "avatar_facial_long"
+    "productSlug": "avatar_facial_long",
+    "storePosition": {
+      "top": 23.75,
+      "left": 36.5,
+      "width": 36
+    }
   },
   {
     "id": "facial_chin_goatee",
@@ -691,6 +696,11 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     "priceCoins": 15000,
     "group": "Accessories",
     "asset": "/assets/store/collection/earwear_hoop.webp",
-    "productSlug": "avatar_earwear_hoop"
+    "productSlug": "avatar_earwear_hoop",
+    "storePosition": {
+      "top": 34,
+      "left": 31,
+      "width": 5.5
+    }
   }
 ];

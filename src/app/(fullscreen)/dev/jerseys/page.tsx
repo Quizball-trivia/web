@@ -40,8 +40,8 @@ function BodyPreview({ skinId, part }: { skinId: string; part: AvatarPart }) {
 
 export default function DevPartTunerPage() {
   const [skin, setSkin] = useState<string>(DEFAULT_SKIN_ID);
-  const [slotIdx, setSlotIdx] = useState(0);
-  const [view, setView] = useState<ViewMode>("body");
+  const [slotIdx, setSlotIdx] = useState(1);
+  const [view, setView] = useState<ViewMode>("card");
   const [selected, setSelected] = useState<string | null>(null);
   const store = usePartTuning();
   const [search, setSearch] = useState("");
@@ -121,7 +121,7 @@ export default function DevPartTunerPage() {
               onClick={() => {
                 setSlotIdx(i);
                 setSelected(null);
-                if (!["hair", "glasses", "facialHair"].includes(s.slot)) setView("body");
+                if (!["hair", "glasses", "facialHair", "headwear", "earwear"].includes(s.slot)) setView("body");
               }}
               className={`rounded px-2 py-1 text-xs ${i === slotIdx ? "bg-purple-600" : "bg-white/10"}`}
             >
@@ -129,7 +129,7 @@ export default function DevPartTunerPage() {
             </button>
           ))}
         </div>
-        {["hair", "glasses", "facialHair"].includes(slot) && (
+        {["hair", "glasses", "facialHair", "headwear", "earwear"].includes(slot) && (
           <div className="flex max-w-full flex-wrap gap-1">
             {(["body", "card"] as const).map((v) => (
               <button
