@@ -76,10 +76,44 @@ export const TD = {
   livesLabel: 'სიცოცხლე',
   poolExhausted: 'ფრე — ახალი კატეგორია!',
 
-  // Round end / match end
+  // Round 2 — ბარათონი
+  round2Name: 'ბარათონი',
+  pickCard: 'აირჩიე ბარათი',
+  opponentPicking: 'ირჩევს ბარათს...',
+  stealChance: 'მოპარვის შანსი!',
+  opponentStealing: 'ცდილობს მოპარვას...',
+  roundDecided: 'რაუნდი გადაწყდა',
+
+  // Round 3 — პაპა კარლოს ყუთი
+  round3Name: 'პაპა კარლოს ყუთი',
+  rollBox: 'დაატრიალე ყუთი და აირჩიე კატეგორია',
+  opponentChoosing: 'ირჩევს კატეგორიას...',
+  questionsLeftSuffix: 'კითხვა',
+
+  // Round 4 — ვინ ვარ მე? (buzzer)
+  round4Name: 'ვინ ვარ მე?',
+  buzz: 'ვიცი!',
+  buzzRules: 'ვინც პირველი დააჭერს — ის პასუხობს',
+  youBuzzed: 'უპასუხე!',
+  opponentBuzzed: 'დააჭირა!',
+  lockedOut: 'ამ კითხვაზე ვეღარ უპასუხებ',
+  answerWas: 'პასუხი:',
+
+  // Penalties
+  penaltiesName: 'პენალტები',
+  penaltiesIntro: '10 შეკითხვა · ვინც პირველი დააჭერს — ის პასუხობს · მინუსი არ არის',
+  suddenDeath: 'გადამწყვეტი შეკითხვა!',
+
+  // Round end / results
   roundWon: 'რაუნდი შენია!',
   roundLost: 'რაუნდი წააგე',
+  roundTie: 'ფრე რაუნდში',
   matchScore: 'ანგარიში რაუნდებში',
+  nextRound: 'შემდეგი რაუნდი',
+  seeResults: 'შედეგები',
+  matchWon: 'მატჩი შენია!',
+  matchLost: 'მატჩი წააგე',
+  resultsTitle: 'მატჩის შედეგი',
   nextRoundsSoon: 'შემდეგი რაუნდები მალე დაემატება',
   playAgain: 'თავიდან თამაში',
   backHome: 'მთავარზე დაბრუნება',

@@ -26,6 +26,12 @@ import {
 } from './components/brand';
 import { CategoryBand, PlayerBoard, ScorePill, TurnTimerBar } from './components/chrome';
 import { DailySolo } from './components/DailySolo';
+import { CardsRound } from './components/CardsRound';
+import { BoxRound } from './components/BoxRound';
+import { BuzzerRound, type BuzzerItem } from './components/BuzzerRound';
+import { TD_CARD_CATEGORIES, type TdCardCategory } from './data/cards';
+import { TD_BOX_CARDS } from './data/box';
+import { TD_WHOAMI } from './data/whoami';
 import {
   QP_LOSS,
   QP_TARGET,
@@ -50,8 +56,35 @@ type Phase =
   | 'rps'
   | 'category'
   | 'play'
+  | 'cards'
+  | 'box'
+  | 'buzzer'
+  | 'penalties'
   | 'roundEnd'
   | 'matchEnd';
+
+function shuffleList<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/** Penalties pool: box trivia flattened into flat buzzer questions. */
+function buildPenaltyPool(): BuzzerItem[] {
+  return shuffleList(
+    TD_BOX_CARDS.flatMap((card) =>
+      card.questions.map((qq, i) => ({
+        id: `${card.id}-${i}`,
+        display: qq.display,
+        aliases: qq.aliases,
+        clues: [qq.q],
+      })),
+    ),
+  );
+}
 type Seat = 'me' | 'op';
 type RpsPick = 'rock' | 'paper' | 'scissors';
 
@@ -123,7 +156,7 @@ export function TableDerbyApp() {
   const [phase, setPhase] = useState<Phase>('home');
   const [opponentName, setOpponentName] = useState<string>(OPPONENT_NAMES[0]);
   const [roundsWon, setRoundsWon] = useState<Record<Seat, number>>({ me: 0, op: 0 });
-  const [roundWinner, setRoundWinner] = useState<Seat | null>(null);
+  const [roundWinner, setRoundWinner] = useState<Seat | 'tie' | null>(null);
   const [round, setRound] = useState<RoundState | null>(null);
   const [flash, setFlash] = useState<Flash | null>(null);
   const [input, setInput] = useState('');
@@ -133,7 +166,18 @@ export function TableDerbyApp() {
   const [qp, setQp] = useState(0);
   const [dailyScore, setDailyScore] = useState<number | null>(null);
   const [menuNotice, setMenuNotice] = useState<string | null>(null);
-  const [qpEarned, setQpEarned] = useState(0);
+  const [qpEarned, setQpEarned] = useState(0); // signed match QP delta
+
+  // Multi-round match flow.
+  const [currentRound, setCurrentRound] = useState(1); // 1..4, 5 = penalties
+  const [starterSeat, setStarterSeat] = useState<Seat>('me');
+  const [cardCategory, setCardCategory] = useState<TdCardCategory | null>(null);
+  const [buzzerItems, setBuzzerItems] = useState<BuzzerItem[]>([]);
+  const [penaltyItems, setPenaltyItems] = useState<BuzzerItem[]>([]);
+  const [penaltySpare, setPenaltySpare] = useState<BuzzerItem[]>([]);
+  const [matchWinner, setMatchWinner] = useState<Seat | null>(null);
+  const [prevQpForResults, setPrevQpForResults] = useState(0);
+  const matchAwarded = useRef(false);
 
   // RPS
   const [myPick, setMyPick] = useState<RpsPick | null>(null);
@@ -153,6 +197,28 @@ export function TableDerbyApp() {
     const found = new Set(round.found.map((f) => f.display));
     return category.answers.filter((a) => !found.has(a.display));
   }, [round, category]);
+
+  /* Dev deep link: /table-derby?round=1|2|3|4|penalties boots straight
+     into that segment vs the scripted opponent (no ticket spent). */
+  useEffect(() => {
+    if (typeof window === 'undefined' || process.env.NODE_ENV === 'production') return;
+    const p = new URLSearchParams(window.location.search).get('round');
+    if (!p) return;
+    setOpponentName(OPPONENT_NAMES[0]);
+    if (p === '1') beginRound('me');
+    else if (p === '2') startLaterRound(2, 'me');
+    else if (p === '3') startLaterRound(3, 'me');
+    else if (p === '4') startLaterRound(4, 'me');
+    else if (p === 'penalties') startLaterRound(5, 'me');
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- boot-once dev hook
+  }, []);
+
+  // Dev-only e2e hook: leak the current expected answer for test scripts.
+  useEffect(() => {
+    if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
+      (window as unknown as { __tdAnswer?: string }).__tdAnswer = remaining[0]?.display;
+    }
+  });
 
   /* ── shell: tickets / QP / daily state ──────────────────────── */
 
@@ -177,6 +243,9 @@ export function TableDerbyApp() {
     setOpponentName(OPPONENT_NAMES[Math.floor(Math.random() * OPPONENT_NAMES.length)]);
     setRoundsWon({ me: 0, op: 0 });
     setRoundWinner(null);
+    setMatchWinner(null);
+    setCurrentRound(1);
+    matchAwarded.current = false;
     setPhase('matchmaking');
     later(() => setPhase('showdown'), 2800);
     later(() => setPhase('rps'), 5400);
@@ -185,6 +254,8 @@ export function TableDerbyApp() {
   const beginRound = useCallback(
     (starter: Seat) => {
       const firstIdx = Math.floor(Math.random() * TD_LIST_CATEGORIES.length);
+      setCurrentRound(1);
+      setStarterSeat(starter);
       setRound({
         categoryIdx: firstIdx,
         usedCategoryIdxs: [firstIdx],
@@ -197,6 +268,30 @@ export function TableDerbyApp() {
       setInput('');
       setPhase('category');
       later(() => setPhase('play'), 3000);
+    },
+    [later],
+  );
+
+  /** Rounds 2-4 and penalties share the intro → play cadence. */
+  const startLaterRound = useCallback(
+    (roundNum: number, starter: Seat) => {
+      setCurrentRound(roundNum);
+      setStarterSeat(starter);
+      setRoundWinner(null);
+      if (roundNum === 2) {
+        setCardCategory(TD_CARD_CATEGORIES[Math.floor(Math.random() * TD_CARD_CATEGORIES.length)]);
+      }
+      if (roundNum === 4) setBuzzerItems(shuffleList(TD_WHOAMI));
+      if (roundNum === 5) {
+        const pool = buildPenaltyPool();
+        setPenaltyItems(pool.slice(0, 10));
+        setPenaltySpare(pool.slice(10));
+      }
+      setPhase('category');
+      later(
+        () => setPhase(roundNum === 2 ? 'cards' : roundNum === 3 ? 'box' : roundNum === 4 ? 'buzzer' : 'penalties'),
+        3000,
+      );
     },
     [later],
   );
@@ -233,18 +328,27 @@ export function TableDerbyApp() {
   }, []);
 
   const endRound = useCallback(
-    (winner: Seat) => {
+    (winner: Seat | 'tie') => {
       setRoundWinner(winner);
-      setRoundsWon((s) => ({ ...s, [winner]: s[winner] + 1 }));
-      // Prototype: the match is one round, so WL qualification points land
-      // here. Real product: awarded server-side at match settlement.
-      const earned = winner === 'me' ? QP_WIN : QP_LOSS;
-      setQpEarned(earned);
-      setQp(addQp(earned));
+      if (winner !== 'tie') setRoundsWon((s) => ({ ...s, [winner]: s[winner] + 1 }));
       later(() => setPhase('roundEnd'), 1100);
     },
     [later],
   );
+
+  /** Match settlement — QP like Quizball ranked: win +25, loss −10 (floor 0).
+   *  Real product: server-side at settlement. */
+  const finishMatch = useCallback((winner: Seat) => {
+    if (!matchAwarded.current) {
+      matchAwarded.current = true;
+      const delta = winner === 'me' ? QP_WIN : -QP_LOSS;
+      setPrevQpForResults(getQp());
+      setQpEarned(delta);
+      setQp(addQp(delta));
+    }
+    setMatchWinner(winner);
+    setPhase('matchEnd');
+  }, []);
 
   const swapCategory = useCallback(() => {
     doFlash('pool');
@@ -357,7 +461,29 @@ export function TableDerbyApp() {
     else applyMiss('me', 'wrong');
   };
 
-  const continueAfterRound = () => setPhase('matchEnd');
+  /** After the round-end screen: next round, penalties, or results. */
+  const continueAfterRound = () => {
+    // Loser starts the next round; a tied round flips the previous starter.
+    const nextStart: Seat =
+      roundWinner === 'me' ? 'op' : roundWinner === 'op' ? 'me' : starterSeat === 'me' ? 'op' : 'me';
+    if (roundsWon.me >= 3 || roundsWon.op >= 3) {
+      finishMatch(roundsWon.me > roundsWon.op ? 'me' : 'op');
+      return;
+    }
+    if (currentRound < 4) {
+      startLaterRound(currentRound + 1, nextStart);
+      return;
+    }
+    if (roundsWon.me === roundsWon.op) {
+      startLaterRound(5, nextStart); // penalties
+      return;
+    }
+    finishMatch(roundsWon.me > roundsWon.op ? 'me' : 'op');
+  };
+
+  /** Whether the match is settled once this round-end screen is confirmed. */
+  const matchDecidedNow =
+    roundsWon.me >= 3 || roundsWon.op >= 3 || (currentRound >= 4 && roundsWon.me !== roundsWon.op);
 
   const resetToHome = () => {
     setRound(null);
@@ -846,10 +972,10 @@ export function TableDerbyApp() {
           </motion.main>
         )}
 
-        {/* ── CATEGORY INTRO ── */}
-        {phase === 'category' && category && (
+        {/* ── ROUND INTRO ── */}
+        {phase === 'category' && (
           <motion.main
-            key={`cat-${round?.usedCategoryIdxs.length ?? 0}`}
+            key={`cat-${currentRound}-${round?.usedCategoryIdxs.length ?? 0}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -858,7 +984,17 @@ export function TableDerbyApp() {
             <div className="flex items-center gap-3">
               <StarburstGlyph size={20} />
               <span className="text-lg text-white md:text-xl" style={TD_DISPLAY}>
-                {TD.roundLabel} 1 · {TD.round1Name}
+                {currentRound === 5
+                  ? TD.penaltiesName
+                  : `${TD.roundLabel} ${currentRound} · ${
+                      currentRound === 1
+                        ? TD.round1Name
+                        : currentRound === 2
+                          ? TD.round2Name
+                          : currentRound === 3
+                            ? TD.round3Name
+                            : TD.round4Name
+                    }`}
               </span>
               <StarburstGlyph size={20} rotate={20} />
             </div>
@@ -868,7 +1004,11 @@ export function TableDerbyApp() {
               transition={{ type: 'spring', damping: 16 }}
               className="w-full max-w-2xl"
             >
-              <CategoryBand prompt={category.prompt} />
+              {currentRound === 1 && category && <CategoryBand prompt={category.prompt} />}
+              {currentRound === 2 && cardCategory && <CategoryBand prompt={cardCategory.prompt} />}
+              {currentRound === 3 && <CategoryBand prompt={TD.rollBox} />}
+              {currentRound === 4 && <CategoryBand prompt={`${TD.buzzRules} · +10 / −10`} />}
+              {currentRound === 5 && <CategoryBand prompt={TD.penaltiesIntro} />}
             </motion.div>
           </motion.main>
         )}
@@ -970,6 +1110,76 @@ export function TableDerbyApp() {
           </motion.main>
         )}
 
+        {/* ── ROUND 2: CARDS ── */}
+        {phase === 'cards' && cardCategory && (
+          <motion.main
+            key="cards"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="relative z-10 flex min-h-dvh w-full flex-col justify-center px-3 py-4 md:px-8"
+          >
+            <CardsRound
+              category={cardCategory}
+              starter={starterSeat}
+              roundsWon={roundsWon}
+              opponentName={opponentName}
+              onEnd={(w) => endRound(w)}
+            />
+          </motion.main>
+        )}
+
+        {/* ── ROUND 3: PAPA CARLO'S BOX ── */}
+        {phase === 'box' && (
+          <motion.main
+            key="box"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="relative z-10 flex min-h-dvh w-full flex-col justify-center px-3 py-4 md:px-8"
+          >
+            <BoxRound starter={starterSeat} roundsWon={roundsWon} opponentName={opponentName} onEnd={(w) => endRound(w)} />
+          </motion.main>
+        )}
+
+        {/* ── ROUND 4: WHO AM I (BUZZER) ── */}
+        {phase === 'buzzer' && buzzerItems.length > 0 && (
+          <motion.main
+            key="buzzer"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="relative z-10 flex min-h-dvh w-full flex-col justify-center px-3 py-4 md:px-8"
+          >
+            <BuzzerRound
+              items={buzzerItems}
+              roundsWon={roundsWon}
+              opponentName={opponentName}
+              onEnd={(w) => endRound(w)}
+            />
+          </motion.main>
+        )}
+
+        {/* ── PENALTIES ── */}
+        {phase === 'penalties' && penaltyItems.length > 0 && (
+          <motion.main
+            key="penalties"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="relative z-10 flex min-h-dvh w-full flex-col justify-center px-3 py-4 md:px-8"
+          >
+            <BuzzerRound
+              items={penaltyItems}
+              extraPool={penaltySpare}
+              penaltyMode
+              roundsWon={roundsWon}
+              opponentName={opponentName}
+              onEnd={(w) => finishMatch(w === 'op' ? 'op' : 'me')}
+            />
+          </motion.main>
+        )}
+
         {/* ── ROUND END ── */}
         {phase === 'roundEnd' && roundWinner && (
           <motion.main
@@ -985,15 +1195,16 @@ export function TableDerbyApp() {
               transition={{ type: 'spring', damping: 12 }}
               className="rounded-[12px] px-10 py-6"
               style={{
-                background: roundWinner === 'me' ? 'var(--td-orange)' : 'var(--td-steel-deep)',
+                background:
+                  roundWinner === 'me' ? 'var(--td-orange)' : roundWinner === 'tie' ? 'var(--td-paper)' : 'var(--td-steel-deep)',
                 boxShadow: '7px 7px 0 #000',
               }}
             >
               <span
                 className="text-3xl md:text-4xl"
-                style={{ ...TD_DISPLAY, color: roundWinner === 'me' ? '#0d0d0d' : 'var(--td-white)' }}
+                style={{ ...TD_DISPLAY, color: roundWinner === 'op' ? 'var(--td-white)' : '#0d0d0d' }}
               >
-                {roundWinner === 'me' ? TD.roundWon : TD.roundLost}
+                {roundWinner === 'me' ? TD.roundWon : roundWinner === 'tie' ? TD.roundTie : TD.roundLost}
               </span>
             </motion.div>
             <div className="flex items-center gap-3">
@@ -1011,7 +1222,7 @@ export function TableDerbyApp() {
               className="rounded-[12px] px-8 py-3.5"
               style={{ ...TD_DISPLAY, background: 'var(--td-white)', color: '#0d0d0d', boxShadow: '5px 5px 0 #000', fontSize: 15 }}
             >
-              {TD.nextRoundsSoon}
+              {matchDecidedNow ? TD.seeResults : TD.nextRound}
             </motion.button>
           </motion.main>
         )}
@@ -1025,24 +1236,74 @@ export function TableDerbyApp() {
             exit={{ opacity: 0 }}
             className="relative z-10 flex min-h-dvh flex-col items-center justify-center gap-7 px-6"
           >
-            <TdLogoSticker variant="whiteOnOrange" scale={0.9} tilt={-3} />
-            <span className="text-4xl text-white" style={TD_DISPLAY}>
-              {roundsWon.me} - {roundsWon.op}
+            <span className="text-[11px] text-white/55" style={TD_DISPLAY}>
+              {TD.resultsTitle}
             </span>
-            {qpEarned > 0 && (
-              <div
-                className="flex items-center gap-2 rounded-[10px] px-4 py-2"
-                style={{ background: 'var(--td-orange)', boxShadow: '4px 4px 0 #000', transform: 'rotate(-2deg)' }}
+            <motion.div
+              initial={{ scale: 0.7, rotate: -6, opacity: 0 }}
+              animate={{ scale: 1, rotate: -3, opacity: 1 }}
+              transition={{ type: 'spring', damping: 12 }}
+              className="rounded-[12px] px-10 py-6"
+              style={{
+                background: matchWinner === 'me' ? 'var(--td-orange)' : 'var(--td-steel-deep)',
+                boxShadow: '7px 7px 0 #000',
+              }}
+            >
+              <span
+                className="text-3xl md:text-4xl"
+                style={{ ...TD_DISPLAY, color: matchWinner === 'me' ? '#0d0d0d' : 'var(--td-white)' }}
               >
-                <BoltGlyph size={16} color="#0d0d0d" />
-                <span className="text-sm" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
-                  +{qpEarned} {TD.qpEarned}
+                {matchWinner === 'me' ? TD.matchWon : TD.matchLost}
+              </span>
+            </motion.div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-white/70" style={TD_DISPLAY}>
+                {TD.matchScore}
+              </span>
+              <span className="text-3xl text-white" style={TD_DISPLAY}>
+                {roundsWon.me} - {roundsWon.op}
+              </span>
+            </div>
+
+            {/* QP settlement — ranked-style results card */}
+            <div
+              className="w-full max-w-sm rounded-[16px] px-5 py-5"
+              style={{ background: 'var(--td-charcoal)', boxShadow: '6px 6px 0 #000' }}
+            >
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] text-white/60" style={TD_DISPLAY}>
+                  {TD.wlQpLabel}
                 </span>
+                <motion.span
+                  initial={{ scale: 1.6, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.4, type: 'spring', damping: 11 }}
+                  className="text-2xl"
+                  style={{ ...TD_DISPLAY, color: qpEarned >= 0 ? 'var(--td-orange)' : 'var(--td-steel)' }}
+                >
+                  {qpEarned >= 0 ? `+${qpEarned}` : `−${-qpEarned}`}
+                </motion.span>
               </div>
-            )}
-            <p className="text-center text-sm text-white/70" style={TD_DISPLAY}>
-              {TD.nextRoundsSoon}
-            </p>
+              <div className="mt-3 h-3 w-full overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.12)' }}>
+                <motion.div
+                  initial={{ width: `${Math.min(100, Math.round((prevQpForResults / QP_TARGET) * 100))}%` }}
+                  animate={{ width: `${Math.min(100, Math.round((qp / QP_TARGET) * 100))}%` }}
+                  transition={{ delay: 0.7, duration: 0.9, ease: 'easeOut' }}
+                  className="h-full rounded-full"
+                  style={{ background: 'var(--td-orange)' }}
+                />
+              </div>
+              <div className="mt-2 flex items-center justify-between">
+                <span className="text-[11px] tabular-nums text-white/70" style={TD_DISPLAY}>
+                  {Math.min(qp, QP_TARGET)}/{QP_TARGET}
+                </span>
+                {qp >= QP_TARGET && (
+                  <span className="text-[11px]" style={{ ...TD_DISPLAY, color: 'var(--td-orange)' }}>
+                    {TD.wlQualified}
+                  </span>
+                )}
+              </div>
+            </div>
             <div className="flex gap-3">
               <motion.button
                 type="button"

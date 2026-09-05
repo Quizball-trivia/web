@@ -57,7 +57,8 @@ export function getQp(): number {
 }
 
 export function addQp(delta: number): number {
-  const next = getQp() + delta;
+  // Losses subtract (ranked-style results screen); floor at 0 like RP.
+  const next = Math.max(0, getQp() + delta);
   write('td.qp', next);
   return next;
 }

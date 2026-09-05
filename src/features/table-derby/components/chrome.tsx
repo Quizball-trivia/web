@@ -14,11 +14,14 @@ export function ScorePill({
   roundsOp,
   inRoundMe,
   inRoundOp,
+  sep = '-',
 }: {
   roundsMe: number;
   roundsOp: number;
   inRoundMe: number;
   inRoundOp: number;
+  /** ":" for rounds whose scores can go negative. */
+  sep?: string;
 }) {
   return (
     <div className="flex items-center gap-1.5">
@@ -35,7 +38,9 @@ export function ScorePill({
           style={{ background: 'var(--td-orange)', clipPath: 'polygon(18% 0, 100% 0, 82% 100%, 0 100%)' }}
         >
           <span className="text-[12px] tabular-nums md:text-sm" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
-            {inRoundMe}-{inRoundOp}
+            {inRoundMe}
+            {sep}
+            {inRoundOp}
           </span>
         </div>
         <span className="flex w-9 items-center justify-center text-xl text-white md:w-11 md:text-2xl" style={TD_DISPLAY}>
