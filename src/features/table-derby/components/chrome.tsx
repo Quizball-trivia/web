@@ -27,18 +27,18 @@ export function ScorePill({
         className="flex items-stretch overflow-hidden rounded-[8px]"
         style={{ background: '#0d0d0d', boxShadow: '3px 3px 0 rgba(0,0,0,0.5)' }}
       >
-        <span className="flex w-9 items-center justify-center text-xl text-white" style={TD_DISPLAY}>
+        <span className="flex w-9 items-center justify-center text-xl text-white md:w-11 md:text-2xl" style={TD_DISPLAY}>
           {roundsMe}
         </span>
         <div
           className="flex items-center px-2.5"
           style={{ background: 'var(--td-orange)', clipPath: 'polygon(18% 0, 100% 0, 82% 100%, 0 100%)' }}
         >
-          <span className="text-[12px] tabular-nums" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
+          <span className="text-[12px] tabular-nums md:text-sm" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
             {inRoundMe}-{inRoundOp}
           </span>
         </div>
-        <span className="flex w-9 items-center justify-center text-xl text-white" style={TD_DISPLAY}>
+        <span className="flex w-9 items-center justify-center text-xl text-white md:w-11 md:text-2xl" style={TD_DISPLAY}>
           {roundsOp}
         </span>
       </div>
@@ -75,7 +75,7 @@ export function CategoryBand({ prompt, compact = false }: { prompt: string; comp
       </div>
       <p
         className="relative text-white"
-        style={{ ...TD_DISPLAY, fontSize: compact ? 13 : 'clamp(16px, 2.6vw, 24px)', lineHeight: 1.15 }}
+        style={{ ...TD_DISPLAY, fontSize: compact ? 'clamp(13px, 1.5vw, 17px)' : 'clamp(16px, 2.6vw, 24px)', lineHeight: 1.15 }}
       >
         {prompt}
       </p>
@@ -89,7 +89,7 @@ function Heart({ alive }: { alive: boolean }) {
   return (
     <motion.svg
       viewBox="0 0 24 22"
-      className="h-4 w-4 md:h-5 md:w-5"
+      className="h-4 w-4 md:h-6 md:w-6"
       animate={alive ? { scale: 1, opacity: 1 } : { scale: [1.25, 0.9, 1], opacity: 0.28 }}
       transition={{ duration: 0.4 }}
       aria-hidden
@@ -126,7 +126,7 @@ export function PlayerBoard({
   const mirror = side === 'right';
   const lastAnswers = answers.slice(-4);
   return (
-    <div className={`flex h-[min(300px,34dvh)] min-w-0 flex-1 items-stretch gap-1.5 ${mirror ? 'flex-row-reverse' : ''}`}>
+    <div className={`flex h-[min(300px,34dvh)] min-w-0 flex-1 items-stretch gap-1.5 md:h-[360px] ${mirror ? 'flex-row-reverse' : ''}`}>
       {/* answers panel */}
       <div
         className="relative min-w-0 flex-1 rounded-[10px] px-3 pb-8 pt-2"
@@ -144,7 +144,7 @@ export function PlayerBoard({
                 key={a}
                 initial={{ opacity: 0, y: 8, scale: 0.96 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                className={`truncate border-b py-1 text-[11px] text-white md:text-sm ${mirror ? 'text-right' : ''}`}
+                className={`truncate border-b py-1 text-[11px] text-white md:py-1.5 md:text-base ${mirror ? 'text-right' : ''}`}
                 style={{ ...TD_DISPLAY, borderColor: 'var(--td-line)' }}
               >
                 {a}
@@ -179,14 +179,14 @@ export function PlayerBoard({
       </div>
       {/* orange tab: count + hearts */}
       <div
-        className="flex w-10 shrink-0 flex-col items-center gap-1.5 self-start rounded-[10px] px-1 pb-2.5 md:w-12"
+        className="flex w-10 shrink-0 flex-col items-center gap-1.5 self-start rounded-[10px] px-1 pb-2.5 md:w-14 md:gap-2 md:pb-3"
         style={{ background: 'var(--td-orange)', boxShadow: '4px 5px 0 rgba(0,0,0,0.5)' }}
       >
         <motion.span
           key={count}
           initial={{ scale: 1.4 }}
           animate={{ scale: 1 }}
-          className="pt-1 text-2xl md:text-3xl"
+          className="pt-1 text-2xl md:text-4xl"
           style={{ ...TD_DISPLAY, color: '#0d0d0d' }}
         >
           {count}

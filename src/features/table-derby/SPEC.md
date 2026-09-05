@@ -8,6 +8,27 @@ the UI.** Internal code/docs stay English.
 Match container: 1v1 real-time, best-of-4 rounds (rounds won decide; 2–2 →
 penalties tiebreaker). Details per round below as they are specified.
 
+## Product shell (owner: 2026-09-05 "menu, main match, daily challenges,
+## weekend league, leaderboard; every user has tickets, 5 each")
+
+- **Menu**: Table Derby hero card (costs 1 ticket) + Daily Challenges +
+  Weekend League + Leaderboard. Ticket pill under the logo.
+- **Tickets**: 5 per user. *Prototype assumptions to confirm:* refill to 5
+  every Georgian day; only the 1v1 match costs a ticket (daily challenge
+  is free); 0 tickets → play blocked with a "renews tomorrow" notice.
+- **Daily challenge** (prototype): solo ჩამოთვალე — one deterministic
+  category per Georgian day, 3 lives, 10s per answer, score = correct
+  answers, one attempt/day.
+- **Weekend League** (prototype): matches earn qualification points —
+  win +25 / loss +10, target 200 (values borrowed from Quizball WL —
+  confirm for Table Derby); progress bar + rules + "prizes by
+  Betsson.sport" (prize fulfilment is Betsson-side per the brief);
+  qualified state shows a banner, entry CTA still "coming".
+- **Leaderboard** (prototype): weekly list, mock players + your row (your
+  QP), highlighted.
+- Shell state is localStorage in the prototype (`lib/state.ts`); all of it
+  moves server-side in the real build.
+
 ---
 
 ## Round 1 — ჩამოთვალე ("List them")

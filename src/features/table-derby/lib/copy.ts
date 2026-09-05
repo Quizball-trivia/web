@@ -8,6 +8,42 @@ export const TD = {
   playCta: 'თამაშის დაწყება',
   poweredBy: 'betsson.sport', // brand wordmark, not translatable copy
 
+  // Menu
+  menuMatchSub: 'პირისპირ დუელი · 4 რაუნდი',
+  menuDaily: 'დღიური გამოწვევები',
+  menuDailySub: 'ყოველდღე ახალი გამოწვევა',
+  menuDailyNew: 'ახალი',
+  menuDailyDone: 'შესრულებულია',
+  menuWl: 'უიქენდის ლიგა',
+  menuWlSub: 'დააგროვე ქულები და მოხვდი ლიგაში',
+  menuLb: 'ლიდერბორდი',
+  menuLbSub: 'საუკეთესო მოთამაშეები',
+  playNow: 'თამაში',
+  ticketCost: '1 ბილეთი',
+  tickets: 'ბილეთები',
+  noTickets: 'ბილეთები აღარ გაქვს — განახლდება ხვალ',
+  back: 'უკან',
+
+  // Daily
+  dailyToday: 'დღევანდელი გამოწვევა',
+  dailyYourScore: 'შენი შედეგი',
+  dailyComeBack: 'ახალი გამოწვევა ხვალ',
+  dailyFinish: 'დასრულება',
+
+  // Weekend League
+  wlQpLabel: 'საკვალიფიკაციო ქულები',
+  wlHowTo: 'ითამაშე მაგიდის დერბი და დააგროვე ქულები',
+  wlWin: 'მოგება: +25 ქულა',
+  wlLoss: 'წაგება: +10 ქულა',
+  wlSchedule: 'ლიგა იწყება ყოველ შაბათს',
+  wlPrizes: 'პრიზები Betsson.sport-ისგან',
+  wlQualified: 'კვალიფიკაცია მიღებულია!',
+  wlEnterSoon: 'ლიგაში შესვლა · მალე',
+  qpEarned: 'საკვალიფიკაციო ქულა',
+
+  // Leaderboard
+  lbWeekly: 'კვირის რეიტინგი',
+
   // Matchmaking
   searching: 'მოწინააღმდეგის ძებნა',
   found: 'მოწინააღმდეგე ნაპოვნია!',

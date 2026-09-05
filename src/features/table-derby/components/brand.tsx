@@ -80,7 +80,7 @@ function IconBase({ children, size, color }: { children: React.ReactNode; size: 
   );
 }
 
-export function BeerIcon({ size = 28, color = 'currentColor' }: { size?: number; color?: string }) {
+export function BeerIcon({ size = 28, color = 'currentColor', cutout = 'var(--td-black)' }: { size?: number; color?: string; cutout?: string }) {
   return (
     <IconBase size={size} color={color}>
       <path
@@ -88,55 +88,55 @@ export function BeerIcon({ size = 28, color = 'currentColor' }: { size?: number;
         d="M12 16c-1.8-2.6-.4-6.4 3-6.9.8-2.6 4-3.6 6.2-2 1.6-1.8 4.6-1.6 6 .4 3-.8 5.8 1.8 5 4.8 1.6 1.2 1.9 3.4.6 4.9V38a4 4 0 0 1-4 4H16a4 4 0 0 1-4-4V16Z"
       />
       <path fill="currentColor" d="M34 20h4a4 4 0 0 1 4 4v6a4 4 0 0 1-4 4h-4v-4h3a1 1 0 0 0 1-1v-4a1 1 0 0 0-1-1h-3v-4Z" />
-      <path stroke="var(--td-black)" strokeWidth="2.4" strokeLinecap="round" d="M18 15c3 2 8 2 12-.5" opacity="0.9" />
+      <path stroke={cutout} strokeWidth="2.4" strokeLinecap="round" d="M18 15c3 2 8 2 12-.5" opacity="0.9" />
     </IconBase>
   );
 }
 
-export function BallIcon({ size = 28, color = 'currentColor' }: { size?: number; color?: string }) {
+export function BallIcon({ size = 28, color = 'currentColor', cutout = 'var(--td-black)' }: { size?: number; color?: string; cutout?: string }) {
   return (
     <IconBase size={size} color={color}>
       <circle cx="24" cy="24" r="18" fill="currentColor" />
       <path
-        fill="var(--td-black)"
+        fill={cutout}
         d="m24 15 5.7 4.1-2.2 6.7h-7l-2.2-6.7L24 15Zm-12.6 4.7 4.6 1.2 1.5 6.9-3.7 3.4-4.2-3.6c.2-2.9 1-5.6 2.6-7.9h-.8Zm25.2 0c1.6 2.3 2.4 5 2.6 7.9l-4.2 3.6-3.7-3.4 1.5-6.9 4.6-1.2h-.8ZM19 34.6h10l1.7 4.3A15 15 0 0 1 24 40c-2.4 0-4.6-.4-6.7-1.1l1.7-4.3Z"
       />
     </IconBase>
   );
 }
 
-export function CardsIcon({ size = 28, color = 'currentColor' }: { size?: number; color?: string }) {
+export function CardsIcon({ size = 28, color = 'currentColor', cutout = 'var(--td-black)' }: { size?: number; color?: string; cutout?: string }) {
   return (
     <IconBase size={size} color={color}>
       <rect x="18" y="7" width="17" height="24" rx="2.5" fill="currentColor" transform="rotate(8 26 19)" />
       <rect x="24" y="12" width="15" height="22" rx="2.5" fill="currentColor" transform="rotate(18 31 23)" opacity="0.85" />
       <circle cx="15" cy="26" r="8.5" fill="currentColor" />
-      <circle cx="15" cy="26" r="4.5" fill="none" stroke="var(--td-black)" strokeWidth="2.4" />
-      <path fill="var(--td-black)" d="M27 15.5c1.8-2.4 5.4-.9 5.2 1.9-.1 1.8-2.2 3.4-4.2 4.9-2-1.3-4.2-2.7-4.5-4.5-.4-2.8 3.1-4.6 3.5-2.3Z" opacity="0.9" />
+      <circle cx="15" cy="26" r="4.5" fill="none" stroke={cutout} strokeWidth="2.4" />
+      <path fill={cutout} d="M27 15.5c1.8-2.4 5.4-.9 5.2 1.9-.1 1.8-2.2 3.4-4.2 4.9-2-1.3-4.2-2.7-4.5-4.5-.4-2.8 3.1-4.6 3.5-2.3Z" opacity="0.9" />
     </IconBase>
   );
 }
 
-export function TargetIcon({ size = 28, color = 'currentColor' }: { size?: number; color?: string }) {
+export function TargetIcon({ size = 28, color = 'currentColor', cutout = 'var(--td-white)' }: { size?: number; color?: string; cutout?: string }) {
   return (
     <IconBase size={size} color={color}>
       <circle cx="24" cy="24" r="18" fill="currentColor" />
-      <circle cx="24" cy="24" r="12.5" fill="none" stroke="var(--td-white)" strokeWidth="2.2" />
-      <circle cx="24" cy="24" r="6.5" fill="none" stroke="var(--td-white)" strokeWidth="2.2" />
-      <circle cx="24" cy="24" r="2" fill="var(--td-white)" />
-      <path stroke="var(--td-white)" strokeWidth="2.4" strokeLinecap="round" d="M24 24 38 10" />
-      <path fill="var(--td-white)" d="M36 8h7l-3.2 3L43 14h-7V8Z" />
+      <circle cx="24" cy="24" r="12.5" fill="none" stroke={cutout} strokeWidth="2.2" />
+      <circle cx="24" cy="24" r="6.5" fill="none" stroke={cutout} strokeWidth="2.2" />
+      <circle cx="24" cy="24" r="2" fill={cutout} />
+      <path stroke={cutout} strokeWidth="2.4" strokeLinecap="round" d="M24 24 38 10" />
+      <path fill={cutout} d="M36 8h7l-3.2 3L43 14h-7V8Z" />
     </IconBase>
   );
 }
 
-export function RoundIconsRow({ size = 26, color = 'var(--td-orange)', gap = 10 }: { size?: number; color?: string; gap?: number }) {
+export function RoundIconsRow({ size = 26, color = 'var(--td-orange)', gap = 10, cutout }: { size?: number; color?: string; gap?: number; cutout?: string }) {
   return (
     <div className="flex items-center" style={{ gap }} aria-hidden>
-      <BeerIcon size={size} color={color} />
-      <BallIcon size={size} color={color} />
-      <CardsIcon size={size} color={color} />
-      <TargetIcon size={size} color={color} />
+      <BeerIcon size={size} color={color} cutout={cutout} />
+      <BallIcon size={size} color={color} cutout={cutout} />
+      <CardsIcon size={size} color={color} cutout={cutout} />
+      <TargetIcon size={size} color={color} cutout={cutout ?? 'var(--td-white)'} />
     </div>
   );
 }
@@ -232,6 +232,32 @@ export function MuralBackdrop({ dim = 1 }: { dim?: number }) {
       <div className="absolute" style={{ left: '8%', top: '46%' }}>
         <XGlyph size={40} color="var(--td-charcoal-pattern)" />
       </div>
+    </div>
+  );
+}
+
+/* ── Ticket pill (daily entry tickets) ──────────────────────────── */
+
+export function TicketGlyph({ size = 18, color = '#0d0d0d' }: { size?: number; color?: string }) {
+  return (
+    <svg viewBox="0 0 44 30" width={size * 1.45} height={size} fill={color} aria-hidden>
+      <path d="M4 4h36a2 2 0 0 1 2 2v5.2a5 5 0 0 0 0 7.6V24a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-5.2a5 5 0 0 0 0-7.6V6a2 2 0 0 1 2-2Z" />
+      <path stroke="var(--td-orange)" strokeWidth="2" strokeDasharray="3 3" d="M28 5v20" fill="none" />
+    </svg>
+  );
+}
+
+export function TicketPill({ count, label }: { count: number | null; label: string }) {
+  return (
+    <div
+      className="flex items-center gap-2 rounded-full py-1.5 pl-2.5 pr-3.5"
+      style={{ background: 'var(--td-orange)', boxShadow: '3px 3px 0 rgba(0,0,0,0.5)' }}
+      aria-label={label}
+    >
+      <TicketGlyph size={15} />
+      <span className="text-sm leading-none" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
+        {count ?? '·'}
+      </span>
     </div>
   );
 }
