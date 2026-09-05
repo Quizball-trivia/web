@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const howlerVolumeMock = vi.hoisted(() => vi.fn());
 const howlerMuteMock = vi.hoisted(() => vi.fn());
@@ -54,6 +54,19 @@ describe('gameSounds', () => {
     vi.clearAllMocks();
     window.localStorage.clear();
     howlInstances.length = 0;
+    vi.spyOn(window, 'addEventListener');
+    vi.spyOn(document, 'addEventListener');
+  });
+
+  afterEach(() => {
+    for (const [type, listener, options] of vi.mocked(window.addEventListener).mock.calls) {
+      window.removeEventListener(type, listener, options);
+    }
+    for (const [type, listener, options] of vi.mocked(document.addEventListener).mock.calls) {
+      document.removeEventListener(type, listener, options);
+    }
+    vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   it('does not download effects or music when the saved preference is muted', async () => {
@@ -114,6 +127,66 @@ describe('gameSounds', () => {
     playBgm('search');
     expect(HowlMock).toHaveBeenCalledTimes(1);
     expect(howlInstances[0]?.play).toHaveBeenCalledTimes(1);
+  });
+
+  it.each(['focus', 'pageshow', 'visibilitychange'])('keeps deferred music off after effects-only unmute and %s', async (eventName) => {
+    window.localStorage.setItem('quizball_audio_muted', 'true');
+    const { playBgm, setMuted } = await import('../gameSounds');
+    playBgm('search');
+    setMuted(false, { resumeBgm: false });
+    const target = eventName === 'visibilitychange' ? document : window;
+    target.dispatchEvent(new Event(eventName));
+    expect(HowlMock).not.toHaveBeenCalled();
+  });
+
+  it('keeps loaded music paused after effects-only unmute until explicitly started', async () => {
+    const { playBgm, setMuted } = await import('../gameSounds');
+    playBgm('search');
+    const sound = howlInstances[0]!;
+    sound.playing.mockReturnValue(true);
+    setMuted(true);
+    setMuted(false, { resumeBgm: false });
+    expect(sound.pause).toHaveBeenCalledTimes(1);
+    sound.playing.mockReturnValue(false);
+    window.dispatchEvent(new Event('focus'));
+    expect(sound.play).toHaveBeenCalledTimes(1);
+    playBgm('search');
+    expect(sound.play).toHaveBeenCalledTimes(2);
+  });
+
+  it.each([false, true])('stops fallback music when switching tracks (muted: %s)', async (muted) => {
+    const fallback = { play: vi.fn().mockResolvedValue(undefined), pause: vi.fn(), currentTime: 12 };
+    vi.stubGlobal('Audio', vi.fn(function createAudioMock() { return fallback; }));
+    HowlMock.mockImplementationOnce(function unavailableHowl() { throw new Error('Howler unavailable'); });
+    const { playBgm, setMuted } = await import('../gameSounds');
+    playBgm('kickoff');
+    expect(fallback.play).toHaveBeenCalledTimes(1);
+    if (muted) setMuted(true);
+    playBgm('search');
+    expect(fallback.pause).toHaveBeenCalledTimes(1);
+    expect(fallback.currentTime).toBe(0);
+    if (muted) setMuted(false);
+    expect(fallback.play).toHaveBeenCalledTimes(1);
+    expect(howlInstances[0]?.config.src).toEqual(['/sounds/quizball-search.mp3']);
+    expect(howlInstances[0]?.play).toHaveBeenCalledTimes(1);
+  });
+
+  it('preserves the active fallback when the same track is requested while muted', async () => {
+    const fallback = { play: vi.fn().mockResolvedValue(undefined), pause: vi.fn(), currentTime: 12 };
+    vi.stubGlobal('Audio', vi.fn(function createAudioMock() { return fallback; }));
+    HowlMock.mockImplementationOnce(function unavailableHowl() { throw new Error('Howler unavailable'); });
+    const { playBgm, setMuted } = await import('../gameSounds');
+    playBgm('kickoff');
+    playBgm('kickoff');
+    expect(fallback.play).toHaveBeenCalledTimes(1);
+    expect(HowlMock).toHaveBeenCalledTimes(1);
+    setMuted(true);
+    playBgm('kickoff');
+    expect(fallback.pause).not.toHaveBeenCalled();
+    expect(fallback.currentTime).toBe(12);
+    setMuted(false);
+    expect(fallback.play).toHaveBeenCalledTimes(2);
+    expect(HowlMock).toHaveBeenCalledTimes(1);
   });
 
   it('uses lowered gameplay SFX volume for one-shot sounds', async () => {

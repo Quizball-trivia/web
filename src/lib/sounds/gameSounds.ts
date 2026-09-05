@@ -110,6 +110,10 @@ interface SetMutedOptions {
 /** Mute / unmute all sounds. Active music resumes by default for legacy callers. */
 export function setMuted(muted: boolean, { resumeBgm = true }: SetMutedOptions = {}) {
   ensureMutePreferenceLoaded();
+  if (!muted) {
+    bgmAutoResumeEnabled = resumeBgm;
+    if (!resumeBgm) pauseActiveBgmForPageHide();
+  }
   _muted = muted;
   Howler.mute(muted);
   persistMutePreference(muted);
@@ -162,6 +166,7 @@ export function unloadAll() {
 
 const bgmInstances: Partial<Record<BgmName, Howl>> = {};
 let activeBgm: BgmName | null = null;
+let bgmAutoResumeEnabled = true;
 let kickoffAudioFallback: HTMLAudioElement | null = null;
 let lifecycleHandlersInstalled = false;
 
@@ -236,7 +241,7 @@ function pauseActiveBgmForPageHide(): void {
 
 /** Resume the selected track after unmute or page restore, loading it if deferred. */
 function resumeActiveBgm(): void {
-  if (!activeBgm || _muted || isDocumentHidden()) return;
+  if (!activeBgm || !bgmAutoResumeEnabled || _muted || isDocumentHidden()) return;
   if (activeBgm === 'kickoff' && kickoffAudioFallback) {
     void kickoffAudioFallback.play().catch(() => {});
     return;
@@ -301,11 +306,19 @@ export function playBgm(name: BgmName) {
   try {
     ensureMutePreferenceLoaded();
     ensureBgmLifecycleHandlers();
-    if (activeBgm === name && bgmInstances[name]) {
+    const wasAutoResumeEnabled = bgmAutoResumeEnabled;
+    bgmAutoResumeEnabled = true;
+    if (activeBgm === name && (bgmInstances[name] || (name === 'kickoff' && kickoffAudioFallback))) {
       const current = bgmInstances[name];
       current?.off('fade');
       current?.volume(getBgmVolume(name));
+      if (!wasAutoResumeEnabled) resumeActiveBgm();
       return;
+    }
+    if (name !== 'kickoff' && kickoffAudioFallback) {
+      kickoffAudioFallback.pause();
+      kickoffAudioFallback.currentTime = 0;
+      kickoffAudioFallback = null;
     }
     for (const [key, instance] of Object.entries(bgmInstances)) {
       if (key !== name) instance?.stop();
