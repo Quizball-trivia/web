@@ -1,5 +1,5 @@
-import { render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { act, cleanup, render, screen } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { LottieSearch } from '../LottieSearch';
 
 vi.mock('@lottiefiles/dotlottie-react', () => ({
@@ -129,4 +129,30 @@ describe('LottieSearch queue roster', () => {
       ),
     ).toBe(true);
   });
+});
+
+
+afterEach(() => { cleanup(); vi.useRealTimers(); });
+
+it('restarts the join delay for a replacement bot in the same seat', () => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date('2026-09-05T12:00:00Z'));
+  const { rerender } = render(<LottieSearch joined={2} botPlayers={[{ seatId: 'seat', displayName: 'First bot', joinDelayMs: 1000 }]} />);
+  act(() => { vi.advanceTimersByTime(1000); });
+  expect(screen.getByLabelText('First bot')).toBeVisible();
+  rerender(<LottieSearch joined={2} botPlayers={[{ seatId: 'seat', displayName: 'Replacement bot', joinDelayMs: 1000 }]} />);
+  expect(screen.queryByLabelText('Replacement bot')).not.toBeInTheDocument();
+  act(() => { vi.advanceTimersByTime(1000); });
+  expect(screen.getByLabelText('Replacement bot')).toBeVisible();
+});
+
+it('does not restart a join delay for an equivalent roster payload', () => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date('2026-09-05T12:00:00Z'));
+  const bot = { seatId: 'seat', displayName: 'Same bot', joinDelayMs: 1000 };
+  const { rerender } = render(<LottieSearch joined={2} botPlayers={[bot]} />);
+  act(() => { vi.advanceTimersByTime(500); });
+  rerender(<LottieSearch joined={2} botPlayers={[{ ...bot }]} />);
+  act(() => { vi.advanceTimersByTime(500); });
+  expect(screen.getByLabelText('Same bot')).toBeVisible();
 });
