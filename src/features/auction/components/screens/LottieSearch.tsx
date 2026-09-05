@@ -161,25 +161,31 @@ export function LottieSearch({
   // Bots pop into the lineup at their server-chosen joinDelayMs (measured
   // from when the lineup payload arrived) instead of materializing as a
   // block — the fill reads like a real queue.
-  const botRosterKey = JSON.stringify(botPlayers.map(bot => [bot.seatId, bot.displayName, bot.joinDelayMs ?? 0]));
-  const [botsArrivedAt, setBotsArrivedAt] = useState<number | null>(null);
+  const botKeys = botPlayers.map(bot => JSON.stringify([bot.seatId, bot.displayName, bot.joinDelayMs ?? 0]));
+  const botRosterKey = JSON.stringify(botKeys);
+  const [botArrivals, setBotArrivals] = useState<Record<string, number>>({});
   const [staggerNow, setStaggerNow] = useState(0);
   useEffect(() => {
-    const arrivedAt = botRosterKey === '[]' ? null : Date.now();
-    // Measure when the external roster arrives; later ticks use staggerNow.
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setBotsArrivedAt(arrivedAt);
+    const keys: string[] = JSON.parse(botRosterKey);
+    // Sample the arrival clock in the effect, outside the state updater.
+    // eslint-disable-next-line react-hooks/purity
+    const now = Date.now();
+    // Preserve existing arrivals when only part of the external roster changes.
+    setBotArrivals(previous => Object.fromEntries(keys.map(key => [key, previous[key] ?? now])));
   }, [botRosterKey]);
-  const maxJoinDelay = botPlayers.reduce((max, bot) => Math.max(max, bot.joinDelayMs ?? 0), 0);
-  const allBotsVisibleAt = (botsArrivedAt ?? 0) + maxJoinDelay;
+  const allBotsVisibleAt = botPlayers.reduce((latest, bot, index) => {
+    const arrivedAt = botArrivals[botKeys[index]];
+    return arrivedAt === undefined ? latest : Math.max(latest, arrivedAt + (bot.joinDelayMs ?? 0));
+  }, 0);
   useEffect(() => {
-    if (botsArrivedAt === null || Date.now() >= allBotsVisibleAt) return;
+    if (Date.now() >= allBotsVisibleAt) return;
     const timer = setInterval(() => setStaggerNow(Date.now()), 250);
     return () => clearInterval(timer);
-  }, [botsArrivedAt, allBotsVisibleAt]);
-  const visibleBots = botsArrivedAt === null
-    ? []
-    : botPlayers.filter((bot) => Math.max(staggerNow, botsArrivedAt) - botsArrivedAt >= (bot.joinDelayMs ?? 0));
+  }, [allBotsVisibleAt]);
+  const visibleBots = botPlayers.filter((bot, index) => {
+    const arrivedAt = botArrivals[botKeys[index]];
+    return arrivedAt !== undefined && Math.max(staggerNow, arrivedAt) - arrivedAt >= (bot.joinDelayMs ?? 0);
+  });
 
   const selfPlayer = players.find((player) => player.userId === selfUserId);
   const rivals = players.filter((player) => player.userId !== selfUserId);
