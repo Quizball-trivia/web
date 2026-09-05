@@ -175,11 +175,11 @@ export const getStoreWalletQuery = () => ({
   ...STORE_WALLET_QUERY_OPTIONS,
 });
 
-export function useStoreWallet() {
+export function useStoreWallet(options?: { enabled?: boolean }) {
   const authStatus = useAuthStore((state) => state.status);
   return useQuery<StoreWalletResponse>({
     ...getStoreWalletQuery(),
-    enabled: authStatus === "authenticated",
+    enabled: authStatus === "authenticated" && options?.enabled !== false,
   });
 }
 
