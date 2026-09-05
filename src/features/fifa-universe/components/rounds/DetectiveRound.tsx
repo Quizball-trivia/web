@@ -65,7 +65,7 @@ export function DetectiveRound({ level, used, onDone }: RoundProps) {
             <Silhouette height={104} />
           )}
           {!is('photo') && (
-            <button type="button" disabled={over || coins < COST.photo} onClick={() => reveal('photo')} className="absolute inset-x-2 bottom-2 flex items-center justify-center gap-1 rounded-lg bg-[#3a2c08]/85 py-1.5 font-poppins text-[11px] font-black text-[#f4e3a2] disabled:opacity-50">
+            <button type="button" disabled={over || coins < COST.photo} onClick={() => reveal('photo')} className="absolute inset-x-2 bottom-2 flex items-center justify-center gap-1 rounded-lg bg-fut-badge/85 py-1.5 font-poppins text-[11px] font-black text-fut-gold-light disabled:opacity-50">
               <Camera className="size-3.5" /> {COST.photo}
             </button>
           )}

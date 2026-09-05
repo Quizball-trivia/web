@@ -71,7 +71,7 @@ export function MissingRound({ level, used, onDone }: RoundProps) {
         <span className="font-poppins text-[11px] font-black uppercase tracking-wider text-brand-yellow">{Math.ceil(Math.max(0, ROUND_MS - elapsed) / 1000)}s</span>
       </div>
       <TimerBar progress={Math.min(1, elapsed / ROUND_MS)} />
-      <div className="mt-3 space-y-2 rounded-2xl border border-white/[0.08] bg-gradient-to-b from-[#1a3a1a] to-[#0f260f] p-3">
+      <div className="mt-3 space-y-2 rounded-2xl border border-white/[0.08] bg-gradient-to-b from-surface-mode-card to-surface-mode-trough-deep p-3">
         {rows.map((r) => (
           <div key={r.label} className="flex flex-wrap items-end justify-center gap-2">
             {r.cards.map((c) => {

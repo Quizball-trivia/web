@@ -124,7 +124,7 @@ export function StatBattle({ backHref }: { backHref?: string }) {
             {/* the table: rival's face-down hand, then the played pair */}
             <div className="mt-3 flex justify-center gap-1.5">
               {rivalHand.map((c) => (
-                <div key={c.id} className="h-[58px] w-[42px] rounded-md border border-[#7c5e1e]/40" style={{ background: 'linear-gradient(157deg, #c9a84c 0%, #8a6a1f 100%)' }} />
+                <div key={c.id} className="h-[58px] w-[42px] rounded-md border border-fut-border/40" style={{ background: 'linear-gradient(157deg, #c9a84c 0%, #8a6a1f 100%)' }} />
               ))}
             </div>
             <div className="my-3 flex min-h-[210px] items-center justify-center gap-6">
