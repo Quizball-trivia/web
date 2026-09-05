@@ -41,6 +41,7 @@ export function FutCard({
   card,
   revealed,
   revealName,
+  revealFace,
   highlight = null,
   onRevealClue,
   revealable = false,
@@ -50,6 +51,8 @@ export function FutCard({
   revealed: { nation: boolean; league: boolean; club: boolean };
   /** Flip the name plate open + show the face (solved or timed out). */
   revealName: boolean;
+  /** Show the face independently of the name (progressive-reveal modes); defaults to revealName. */
+  revealFace?: boolean;
   /** Tint the frame after a result. */
   highlight?: 'correct' | 'reveal' | null;
   /** Spend a clue-reveal token to unlock a hidden clue (tap its lock). */
@@ -100,7 +103,7 @@ export function FutCard({
         <div className="relative h-[264px]">
           {/* portrait / face */}
           <div className="absolute inset-x-0 bottom-0 z-0 flex items-end justify-end pr-1">
-            <Portrait card={card} reveal={revealName} />
+            <Portrait card={card} reveal={revealFace ?? revealName} />
           </div>
 
           {/* rating / identity column */}

@@ -1,7 +1,10 @@
 import type { Locale } from "@/lib/i18n/messages";
+import { FIFA_MODE_BY_SLUG } from "@/features/fifa-universe/registry";
+import { PLAYABLE_EDITIONS } from "@/features/mini-games/data/guessFifaCard";
 import {
   DAILY_DEMO_MODES,
   FEATURED_DEMO_MODES,
+  FIFA_DEMO_MODES,
   LAB_DEMO_MODES,
   MINI_GAME_DEMO_MODES,
   type DemoModeCard,
@@ -88,7 +91,7 @@ export const SHOWCASE_BENEFITS: ShowcaseBenefit[] = [
 
 // ── Game sections ────────────────────────────────────────────────────────────
 export interface ShowcaseSection {
-  id: "flagship" | "mini" | "lab" | "daily";
+  id: "flagship" | "mini" | "fifa" | "lab" | "daily";
   accent: string; // hex, used for accents/badges
   eyebrow: DemoI18nText;
   title: DemoI18nText;
@@ -118,6 +121,17 @@ export const SHOWCASE_SECTIONS: ShowcaseSection[] = [
       ka: "1–2 წუთიანი თამაშები ფსონის მექანიკებით — cash-out, ექსპრესი, hi-lo, mines და სხვა — მოთამაშეთა აქტიურობას რეალურ ფსონებს შორისაც ინარჩუნებს.",
     },
     modes: MINI_GAME_DEMO_MODES,
+  },
+  {
+    id: "fifa",
+    accent: "#FFD54A",
+    eyebrow: { en: "Card-database collection", ka: "ბარათების ბაზის კოლექცია" },
+    title: { en: "FIFA / FC Universe", ka: "FIFA / FC სამყარო" },
+    blurb: {
+      en: `Fourteen games built on ${PLAYABLE_EDITIONS.length} editions of player ratings (FIFA 15 → FC 26) — guess the card, read a career from its OVR curve, battle with a hand of cards, draft an XI. Solo, 1v1 and party meta-modes.`,
+      ka: `თოთხმეტი თამაში ${PLAYABLE_EDITIONS.length} გამოშვების რეიტინგებზე (FIFA 15 → FC 26) — გამოიცანი ბარათი, წაიკითხე კარიერა OVR-ის მრუდიდან, იბრძოლე ბარათებით, ააწყვე XI. სოლო, 1v1 და პარტი მეტა-რეჟიმები.`,
+    },
+    modes: FIFA_DEMO_MODES,
   },
   {
     id: "lab",
@@ -185,6 +199,8 @@ const LAB_META: Record<string, CardMeta> = {
 };
 
 export function getCardMeta(mode: DemoModeCard): CardMeta {
+  const fifa = FIFA_MODE_BY_SLUG.get(mode.slug);
+  if (fifa) return { duration: fifa.duration, format: fifa.format };
   return (
     FLAGSHIP_META[mode.slug] ??
     LAB_META[mode.slug] ?? {
