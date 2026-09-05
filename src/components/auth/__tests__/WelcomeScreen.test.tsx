@@ -200,6 +200,7 @@ vi.mock('@/lib/auth/google-identity', () => ({
 // Analytics — we assert event names + payloads.
 const trackLoginCompletedMock = vi.fn();
 const trackSignupPageViewMock = vi.fn();
+const trackAuthPanelShownMock = vi.fn();
 const trackAuthStartedMock = vi.fn();
 const trackInAppBrowserBlockedMock = vi.fn();
 vi.mock('@/lib/analytics/game-events', () => ({
@@ -207,6 +208,7 @@ vi.mock('@/lib/analytics/game-events', () => ({
     trackInAppBrowserBlockedMock(browser, isIOS, isAndroid),
   trackLoginCompleted: (method: string) => trackLoginCompletedMock(method),
   trackSignupPageView: () => trackSignupPageViewMock(),
+  trackAuthPanelShown: (mode: string) => trackAuthPanelShownMock(mode),
   trackAuthStarted: (method: string, mode: string) => trackAuthStartedMock(method, mode),
 }));
 
