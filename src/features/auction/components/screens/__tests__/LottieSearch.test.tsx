@@ -156,3 +156,17 @@ it('does not restart a join delay for an equivalent roster payload', () => {
   act(() => { vi.advanceTimersByTime(500); });
   expect(screen.getByLabelText('Same bot')).toBeVisible();
 });
+
+it('keeps an existing bot visible when another bot joins the roster', () => {
+  vi.useFakeTimers();
+  vi.setSystemTime(new Date('2026-09-05T12:00:00Z'));
+  const first = { seatId: 'first', displayName: 'First bot', joinDelayMs: 1000 };
+  const { rerender } = render(<LottieSearch joined={2} botPlayers={[first]} />);
+  act(() => { vi.advanceTimersByTime(1000); });
+  expect(screen.getByLabelText('First bot')).toBeVisible();
+  rerender(<LottieSearch joined={3} botPlayers={[first, { seatId: 'second', displayName: 'Second bot', joinDelayMs: 1000 }]} />);
+  expect(screen.getByLabelText('First bot')).toBeVisible();
+  expect(screen.queryByLabelText('Second bot')).not.toBeInTheDocument();
+  act(() => { vi.advanceTimersByTime(1000); });
+  expect(screen.getByLabelText('Second bot')).toBeVisible();
+});
