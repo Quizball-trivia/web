@@ -161,14 +161,15 @@ export function LottieSearch({
   // Bots pop into the lineup at their server-chosen joinDelayMs (measured
   // from when the lineup payload arrived) instead of materializing as a
   // block — the fill reads like a real queue.
+  const botRosterKey = JSON.stringify(botPlayers.map(bot => [bot.seatId, bot.displayName, bot.joinDelayMs ?? 0]));
   const [botsArrivedAt, setBotsArrivedAt] = useState<number | null>(null);
   const [staggerNow, setStaggerNow] = useState(0);
   useEffect(() => {
-    const arrivedAt = botPlayers.length === 0 ? null : Date.now();
+    const arrivedAt = botRosterKey === '[]' ? null : Date.now();
     // Measure when the external roster arrives; later ticks use staggerNow.
     // eslint-disable-next-line react-hooks/set-state-in-effect
-    setBotsArrivedAt((prev) => arrivedAt === null ? null : prev ?? arrivedAt);
-  }, [botPlayers.length]);
+    setBotsArrivedAt(arrivedAt);
+  }, [botRosterKey]);
   const maxJoinDelay = botPlayers.reduce((max, bot) => Math.max(max, bot.joinDelayMs ?? 0), 0);
   const allBotsVisibleAt = (botsArrivedAt ?? 0) + maxJoinDelay;
   useEffect(() => {
