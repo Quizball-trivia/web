@@ -23,7 +23,6 @@ import { WelcomeTierRoadSection } from './WelcomeTierRoadSection';
 import { WelcomeLeaderboardSection } from './WelcomeLeaderboardSection';
 import { WelcomeFooter } from './WelcomeFooter';
 import { rememberCampaignAttributionFromSignupUrl } from '@/features/campaign-quiz/campaignAttribution';
-import { useAuthPanelTracking } from '@/lib/analytics/useAuthPanelTracking';
 
 export function WelcomeScreen() {
   const cspNonce = useCspNonce();
@@ -135,7 +134,6 @@ export function WelcomeScreen() {
     window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
   }, [handleCampaignSignup]);
 
-  useAuthPanelTracking(loginOpen, authMode);
 
   return (
     <div className="min-h-screen w-full bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat font-sans text-foreground flex flex-col overflow-x-hidden">
