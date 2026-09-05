@@ -1,5 +1,6 @@
 "use client";
 
+import { usePartTuning, tunedPosition, frontHairMask, partTransformStyle, tunedFrontHairPercent } from "@/lib/avatars/usePartTuning";
 import Image from "next/image";
 import { motion } from "motion/react";
 import { CoinIcon } from "./CoinIcon";
@@ -64,7 +65,9 @@ const MANNEQUIN_DEFAULT_HAIR_POS = { top: -5, left: 22, width: 52 };
 // the wrapper down so the head zone lands in the middle of the card frame.
 const HEAD_VERTICAL_SHIFT_PCT = 28;
 
-function MannequinPreview({ part }: { part: AvatarPart }) {
+export function MannequinPreview({ part }: { part: AvatarPart }) {
+  const tuning = usePartTuning();
+  const frontPercent = part.slot === "hair" ? tunedFrontHairPercent(part, tuning) : undefined;
   return (
     <div className="pointer-events-none relative h-full" style={{ aspectRatio: "495.25 / 543.03" }}>
       <div
@@ -76,6 +79,7 @@ function MannequinPreview({ part }: { part: AvatarPart }) {
           alt=""
           className="pointer-events-none absolute object-contain"
           style={{
+            zIndex: part.slot === "hair" && (tuning.hairBehindFace?.[part.id] || frontPercent !== undefined) ? 1 : undefined,
             top: `${MANNEQUIN_FACE_POS.top}%`,
             left: `${MANNEQUIN_FACE_POS.left}%`,
             width: `${MANNEQUIN_FACE_POS.width}%`,
@@ -93,18 +97,24 @@ function MannequinPreview({ part }: { part: AvatarPart }) {
             }}
           />
         )}
+        {frontPercent !== undefined && <img src={part.asset} alt="" className="pointer-events-none absolute object-contain" style={{
+          top: `${tunedPosition(part, tuning, true).top}%`, left: `${tunedPosition(part, tuning, true).left}%`, width: `${tunedPosition(part, tuning, true).width}%`,
+          zIndex: 2, maskImage: frontHairMask(frontPercent), clipPath: part.clipPath,
+        }} />}
         {(() => {
           // Prefer the part's store-specific tuning when present, fall back to
           // the canonical preview position. This lets individual parts ship a
           // `storePosition` override in parts.ts when their store-card alignment
           // differs from the live AvatarPreview.
-          const pos = part.storePosition ?? part.position;
+          const pos = tunedPosition(part, tuning, true);
           return (
             <img
               src={part.asset}
               alt=""
               className="pointer-events-none absolute object-contain drop-shadow-[0_4px_12px_rgba(0,0,0,0.4)]"
               style={{
+                ...partTransformStyle(part, tuning, true),
+                clipPath: part.clipPath,
                 top: `${pos.top}%`,
                 left: `${pos.left}%`,
                 width: `${pos.width}%`,

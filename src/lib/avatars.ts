@@ -1,5 +1,7 @@
 import type { AvatarCustomization } from "@/types/game";
 import {
+  EXTRA_SLOTS,
+  getAvatarPart,
   DEFAULT_HAIR_ID,
   DEFAULT_JERSEY_ID,
   DEFAULT_SKIN_ID,
@@ -95,6 +97,8 @@ export function encodeAvatarCustomization(c: AvatarCustomization): string {
   if (c.hair) params.set("hair", c.hair);
   if (c.glasses) params.set("glasses", c.glasses);
   if (c.facialHair) params.set("facial", c.facialHair);
+  for (const slot of EXTRA_SLOTS) if (c[slot]) params.set(slot, c[slot]!);
+  if (c.hairColor && c.hairColor !== "natural") params.set("hairColor", c.hairColor);
   const qs = params.toString();
   return `${AVATAR_URI_PREFIX}${c.skin}${qs ? `?${qs}` : ""}`;
 }
@@ -114,6 +118,11 @@ export function decodeAvatarCustomization(value: string | null | undefined): Ava
     hair: readKnownParam(params.get("hair"), HAIR_IDS),
     glasses: readKnownParam(params.get("glasses"), GLASSES_IDS),
     facialHair: readKnownParam(params.get("facial"), FACIAL_HAIR_IDS),
+    ...Object.fromEntries(EXTRA_SLOTS.flatMap(slot => {
+      const id = params.get(slot);
+      return id && getAvatarPart(id)?.slot === slot ? [[slot, id]] : [];
+    })),
+    ...(readKnownParam(params.get("hairColor"), HAIR_COLORS) ? { hairColor: readKnownParam(params.get("hairColor"), HAIR_COLORS) } : {}),
   };
 }
 
@@ -134,25 +143,11 @@ export function decodeAvatarCustomization(value: string | null | undefined): Ava
  * slots are respected literally — a user who explicitly removed an item keeps
  * it removed. Otherwise slots fall back to what `base` encodes.
  */
-export function resolveAvatarCustomization(c: AvatarCustomization): AvatarCustomization {
-  const defaults = customizationFromAvatarValue(c.base);
-  const hasStructuredSlots = (["skin", "jersey", "hair", "glasses", "facialHair"] as const).some(
-    (slot) => Object.prototype.hasOwnProperty.call(c, slot),
-  );
-  return {
-    skin: c.skin ?? defaults.skin,
-    jersey: hasStructuredSlots ? c.jersey : defaults.jersey,
-    hair: hasStructuredSlots ? c.hair : defaults.hair,
-    glasses: hasStructuredSlots ? c.glasses : defaults.glasses,
-    facialHair: hasStructuredSlots ? c.facialHair : defaults.facialHair,
-    base: c.base ?? defaults.base,
-  };
-}
-
 export function customizationFromAvatarValue(value: string | null | undefined): AvatarCustomization {
   const decoded = decodeAvatarCustomization(value);
   if (decoded) {
     return {
+      ...decoded,
       skin: decoded.skin || DEFAULT_SKIN_ID,
       jersey: decoded.jersey,
       hair: decoded.hair,
@@ -172,4 +167,13 @@ export function customizationFromAvatarValue(value: string | null | undefined): 
     jersey: DEFAULT_JERSEY_ID,
     hair: DEFAULT_HAIR_ID,
   };
+}
+
+export const HAIR_COLORS = ['natural', 'platinum', 'ginger', 'silver', 'blue_tips', 'pink_streaks'] as const;
+
+/** Preserve explicit empty slots and all local wardrobe fields in every renderer. */
+export function resolveAvatarCustomization(c: AvatarCustomization): AvatarCustomization {
+  const defaults = customizationFromAvatarValue(c.base);
+  const structured = ['skin', 'jersey', 'hair', 'glasses', 'facialHair', ...EXTRA_SLOTS].some(slot => Object.prototype.hasOwnProperty.call(c, slot));
+  return structured ? { ...c, skin: c.skin ?? defaults.skin } : { ...defaults, ...c };
 }

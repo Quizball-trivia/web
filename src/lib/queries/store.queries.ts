@@ -135,8 +135,8 @@ export const getStoreProductsQuery = () => ({
   ...STORE_PRODUCTS_QUERY_OPTIONS,
 });
 
-export function useStoreProducts() {
-  return useQuery(getStoreProductsQuery());
+export function useStoreProducts(enabled = true) {
+  return useQuery({ ...getStoreProductsQuery(), enabled });
 }
 
 export const getStoreWalletQuery = () => ({
@@ -175,11 +175,11 @@ export const getStoreWalletQuery = () => ({
   ...STORE_WALLET_QUERY_OPTIONS,
 });
 
-export function useStoreWallet() {
+export function useStoreWallet(options?: { enabled?: boolean }) {
   const authStatus = useAuthStore((state) => state.status);
   return useQuery<StoreWalletResponse>({
     ...getStoreWalletQuery(),
-    enabled: authStatus === "authenticated",
+    enabled: authStatus === "authenticated" && options?.enabled !== false,
   });
 }
 
@@ -194,10 +194,10 @@ export const getStoreInventoryQuery = () => ({
   ...STORE_INVENTORY_QUERY_OPTIONS,
 });
 
-export function useStoreInventory() {
+export function useStoreInventory(enabled = true) {
   const authStatus = useAuthStore((state) => state.status);
   return useQuery({
     ...getStoreInventoryQuery(),
-    enabled: authStatus === "authenticated",
+    enabled: enabled && authStatus === "authenticated",
   });
 }
