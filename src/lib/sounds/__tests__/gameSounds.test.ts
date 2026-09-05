@@ -56,6 +56,66 @@ describe('gameSounds', () => {
     howlInstances.length = 0;
   });
 
+  it('does not download effects or music when the saved preference is muted', async () => {
+    window.localStorage.setItem('quizball_audio_muted', 'true');
+    const { preloadAll, preloadBgm, playBgm } = await import('../gameSounds');
+    preloadAll();
+    preloadBgm('search');
+    playBgm('search');
+    expect(HowlMock).not.toHaveBeenCalled();
+  });
+
+  it('loads deferred music once when the user unmutes', async () => {
+    window.localStorage.setItem('quizball_audio_muted', 'true');
+    const { playBgm, setMuted } = await import('../gameSounds');
+    playBgm('search');
+    playBgm('search');
+    expect(HowlMock).not.toHaveBeenCalled();
+    setMuted(false);
+    expect(HowlMock).toHaveBeenCalledTimes(1);
+    expect(howlInstances[0]?.config.src).toEqual(['/sounds/quizball-search.mp3']);
+    expect(howlInstances[0]?.play).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not load stopped deferred music after unmuting', async () => {
+    window.localStorage.setItem('quizball_audio_muted', 'true');
+    const { playBgm, stopBgm, setMuted } = await import('../gameSounds');
+    playBgm('search');
+    stopBgm();
+    setMuted(false);
+    expect(HowlMock).not.toHaveBeenCalled();
+  });
+
+  it('only loads the latest deferred track when unmuted', async () => {
+    window.localStorage.setItem('quizball_audio_muted', 'true');
+    const { playBgm, setMuted } = await import('../gameSounds');
+    playBgm('search');
+    playBgm('kickoff');
+    setMuted(false);
+    expect(HowlMock).toHaveBeenCalledTimes(1);
+    expect(howlInstances[0]?.config.src).toEqual(['/sounds/gameplay_soundtrack.m4a']);
+  });
+
+  it('respects unmuting effects without resuming deferred music', async () => {
+    window.localStorage.setItem('quizball_audio_muted', 'true');
+    const { playBgm, playSfx, setMuted } = await import('../gameSounds');
+    playBgm('search');
+    setMuted(false, { resumeBgm: false });
+    expect(HowlMock).not.toHaveBeenCalled();
+    playSfx('kick');
+    expect(howlInstances[0]?.config.src).toEqual(['/sounds/kick.mp3']);
+  });
+
+  it('allows an explicit music start after an effects-only unmute', async () => {
+    window.localStorage.setItem('quizball_audio_muted', 'true');
+    const { playBgm, setMuted } = await import('../gameSounds');
+    playBgm('search');
+    setMuted(false, { resumeBgm: false });
+    playBgm('search');
+    expect(HowlMock).toHaveBeenCalledTimes(1);
+    expect(howlInstances[0]?.play).toHaveBeenCalledTimes(1);
+  });
+
   it('uses lowered gameplay SFX volume for one-shot sounds', async () => {
     const { GAME_SOUND_VOLUME, playSfx } = await import('../gameSounds');
 
