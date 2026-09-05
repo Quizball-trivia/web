@@ -85,7 +85,7 @@ export function MannequinPreview({ part }: { part: AvatarPart }) {
             width: `${MANNEQUIN_FACE_POS.width}%`,
           }}
         />
-        {part.slot !== "hair" && (
+        {part.slot !== "hair" && !part.hideHair && (
           <img
             src="/assets/manequen_hair.webp"
             alt=""
