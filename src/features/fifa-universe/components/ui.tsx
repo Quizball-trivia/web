@@ -223,7 +223,7 @@ export function NameInput({
   return (
     <div className="relative">
       {focused && suggestions.length > 0 && !disabled && (
-        <ul className="absolute bottom-full left-0 right-0 z-20 mb-1.5 overflow-hidden rounded-xl border border-white/10 bg-[#0f1a2e] shadow-xl">
+        <ul className="absolute bottom-full left-0 right-0 z-20 mb-1.5 overflow-hidden rounded-xl border border-white/10 bg-fut-menu shadow-xl">
           {suggestions.map((n, i) => (
             <li key={n}>
               <button type="button" onMouseDown={(e) => { e.preventDefault(); submit(n); }} onMouseEnter={() => setHighlight(i)} className={`w-full px-4 py-2.5 text-left font-poppins text-sm font-bold text-white ${i === highlight ? 'bg-brand-blue/40' : ''}`}>
@@ -327,7 +327,7 @@ export function Summary({
           {rows.map((r) => (
             <div key={r.key} className="flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.03] px-3 py-2">
               {r.tag && (
-                <span className="w-14 shrink-0 rounded-md bg-[#3a2c08]/50 px-1.5 py-0.5 text-center font-poppins text-[9px] font-black uppercase tracking-wider text-[#f4e3a2]">{r.tag}</span>
+                <span className="w-14 shrink-0 rounded-md bg-fut-badge/50 px-1.5 py-0.5 text-center font-poppins text-[9px] font-black uppercase tracking-wider text-fut-gold-light">{r.tag}</span>
               )}
               <span className="min-w-0 flex-1 truncate font-poppins text-sm font-bold text-white">{r.label}</span>
               <span className={`font-poppins text-sm font-black ${r.ok === true ? 'text-brand-green' : r.ok === false ? 'text-brand-red' : 'text-white/70'}`}>{r.right}</span>

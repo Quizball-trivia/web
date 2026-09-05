@@ -109,6 +109,15 @@
 }
 
 @theme inline {
+  /* FIFA card artwork palette, shared by cards, clues and squad pitches. */
+  --color-fut-badge: #3a2c08;
+  --color-fut-gold-light: #f4e3a2;
+  --color-fut-ink: #33270a;
+  --color-fut-ink-deep: #241b05;
+  --color-fut-border: #7c5e1e;
+  --color-fut-pitch: #1f4a1f;
+  --color-fut-menu: #0f1a2e;
+
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
   --color-card: hsl(var(--card));
