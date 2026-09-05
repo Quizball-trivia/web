@@ -1542,7 +1542,9 @@
     "orCopyLink": "O copia el enlace",
     "linkCopied": "Enlace copiado. Pégalo en tu navegador.",
     "copyInviteLink": "Copiar enlace de invitación",
-    "inviteLinkCopied": "Enlace de invitación copiado"
+    "inviteLinkCopied": "Enlace de invitación copiado",
+    "openNowButton": "Abrir en el navegador",
+    "breakoutFallbackHint": "¿No pasó nada? Sigue los pasos de abajo."
   },
   "errors": {
     "INTERNAL_ERROR": "Algo salió mal",

@@ -3,7 +3,9 @@
 import { useMemo, useState } from 'react';
 import { DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useLocale } from '@/contexts/LocaleContext';
+import { tryOpenInExternalBrowser } from '@/lib/auth/in-app-browser';
 import type { InAppBrowserApp, Platform } from '@/lib/auth/in-app-browser';
+import { trackEvent } from '@/lib/posthog';
 import { normalizePostAuthRedirect, peekPostAuthRedirect } from '@/lib/auth/postAuthRedirect';
 
 interface InAppBrowserInstructionsProps {
@@ -14,6 +16,22 @@ interface InAppBrowserInstructionsProps {
 export function InAppBrowserInstructions({ platform, app }: InAppBrowserInstructionsProps) {
   const { t } = useLocale();
   const [copied, setCopied] = useState(false);
+  const [breakoutTried, setBreakoutTried] = useState(false);
+  const canBreakout = platform === 'ios' || platform === 'android';
+
+  // One tap beats homework: FB/IG visitors converted at ~6% vs 65% from
+  // YouTube (30d to 2026-09-05) because this modal only offered manual steps.
+  // Attempt the scheme-based escape first; the instructions remain as the
+  // fallback for webviews that swallow the scheme.
+  const handleOpenInBrowser = () => {
+    setBreakoutTried(true);
+    const attempted = tryOpenInExternalBrowser(window.location.href);
+    trackEvent('in_app_browser_breakout_attempted', {
+      app: app ?? 'unknown',
+      platform,
+      scheme_dispatched: attempted,
+    });
+  };
   const usesBottomRightMenu = app === 'messenger' || app === 'facebook';
   const hasMenuInstructions = platform === 'ios' || platform === 'android';
 
@@ -49,6 +67,21 @@ export function InAppBrowserInstructions({ platform, app }: InAppBrowserInstruct
           {t('inAppBrowser.body')}
         </DialogDescription>
       </DialogHeader>
+
+      {canBreakout && (
+        <button
+          type="button"
+          onClick={handleOpenInBrowser}
+          className="mt-4 flex min-h-12 w-full items-center justify-center rounded-2xl bg-white px-4 text-center font-poppins text-[13px] font-semibold uppercase text-brand-blue transition-colors hover:bg-white/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/45"
+        >
+          {t('inAppBrowser.openNowButton')}
+        </button>
+      )}
+      {breakoutTried && (
+        <p className="mt-2 text-center font-poppins text-[11px] font-medium text-white/70 sm:text-[12px]">
+          {t('inAppBrowser.breakoutFallbackHint')}
+        </p>
+      )}
 
       <div className="mt-4 rounded-2xl bg-black/20 p-3.5 text-left font-poppins text-[12px] font-medium leading-relaxed text-white/90 sm:mt-5 sm:p-4 sm:text-[14px]">
         {hasMenuInstructions ? (

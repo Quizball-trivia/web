@@ -1545,7 +1545,9 @@
     "orCopyLink": "Or copy the link",
     "linkCopied": "Link copied. Paste it in your browser.",
     "copyInviteLink": "Copy invite link",
-    "inviteLinkCopied": "Invite link copied"
+    "inviteLinkCopied": "Invite link copied",
+    "openNowButton": "Open in browser",
+    "breakoutFallbackHint": "Nothing happened? Follow the steps below."
   },
   "errors": {
     "INTERNAL_ERROR": "Something went wrong",
