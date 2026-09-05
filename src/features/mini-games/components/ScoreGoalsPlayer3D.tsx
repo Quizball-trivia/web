@@ -337,8 +337,8 @@ export function buildPlayerObject(
   const head = obj.getObjectByName(UE_BONE.head);
   const headIB = (look.hair?.userData as { headInverseBind?: number[] } | undefined)
     ?.headInverseBind;
-  if (head && look.hair && headIB) {
-    const inv = new THREE.Matrix4().fromArray(headIB);
+  let inv = headIB ? new THREE.Matrix4().fromArray(headIB) : undefined;
+  if (head && look.hair) {
     // Geometry is in model bind space; use this body's actual head bind, not
     // the old hair library rig's orientation.
     let foundHeadBind = false;
@@ -346,8 +346,11 @@ export function buildPlayerObject(
       const mesh = child as THREE.SkinnedMesh;
       if (!mesh.isSkinnedMesh || foundHeadBind) return;
       const index = mesh.skeleton.bones.indexOf(head as THREE.Bone);
-      if (index >= 0) { inv.copy(mesh.skeleton.boneInverses[index]); foundHeadBind = true; }
+      if (index >= 0) { inv = mesh.skeleton.boneInverses[index].clone(); foundHeadBind = true; }
     });
+  }
+  if (head && look.hair && inv) {
+    const headBind = inv;
     const hairMat = new THREE.MeshStandardMaterial({ color: hairColor, roughness: 0.88 });
     hairMat.userData.owned = true;
     const attach = (nodeName: string, crown = false) => {
@@ -355,7 +358,7 @@ export function buildPlayerObject(
       if (!src) return;
       const m = new THREE.Mesh(src.geometry, hairMat);
       m.matrixAutoUpdate = false;
-      m.matrix.copy(inv);
+      m.matrix.copy(headBind);
       if (crown) {
         // Give the cap clearance over the remodeled scalp, including the forehead.
         m.matrix.multiply(new THREE.Matrix4().makeTranslation(0, 1.71, -.014))
@@ -382,7 +385,7 @@ export function buildPlayerObject(
       geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3)); geometry.setIndex(indices); geometry.computeVertexNormals();
       geometry.userData.owned = true;
       const material = new THREE.MeshStandardMaterial({ color: '#10151b', roughness: .95, side: THREE.DoubleSide }); material.userData.owned = true;
-      const band = new THREE.Mesh(geometry, material); band.name = 'fitted-headband'; band.matrixAutoUpdate = false; band.matrix.copy(inv); band.castShadow = true; head.add(band);
+      const band = new THREE.Mesh(geometry, material); band.name = 'fitted-headband'; band.matrixAutoUpdate = false; band.matrix.copy(headBind); band.castShadow = true; head.add(band);
     }
     if (look.beard ?? (h >>> 8) % 5 === 0) attach('Hair_Beard');
   }

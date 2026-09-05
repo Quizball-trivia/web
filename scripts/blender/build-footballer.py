@@ -2,7 +2,7 @@
 Run from the repository root with Blender --background --python this-file.
 The retained idle/kick motion is the previously bundled retargeted Mixamo work.
 """
-import bpy, bmesh, math, json
+import bpy, bmesh, math, json, struct
 from pathlib import Path
 from mathutils import Vector, Quaternion, Matrix
 
@@ -226,10 +226,23 @@ for m in bpy.data.materials:
         bs.inputs['Base Color'].default_value=(.028,.018,.012,1)
 
 # Restore the eye texture pruned from the legacy mocap GLB.
+def eye_texture_path(score_dir):
+    data = (score_dir / 'player-body.glb').read_bytes()
+    json_length = struct.unpack_from('<I', data, 12)[0]
+    document = json.loads(data[20:20 + json_length])
+    material = next(m for m in document['materials'] if m.get('name') == 'MI_Eyes')
+    texture_index = material['pbrMetallicRoughness']['baseColorTexture']['index']
+    image_index = document['textures'][texture_index]['source']
+    uri = document['images'][image_index].get('uri')
+    if not uri or uri.startswith('data:'):
+        raise RuntimeError('Run node scripts/externalize-score-textures.mjs before building the footballer')
+    return score_dir / uri
+
 eye=next((o for o in bpy.context.scene.objects if o.type=='MESH' and any(m and m.name=='MI_Eyes' for m in o.data.materials)),None)
 if eye:
     m=eye.data.materials[0];m.use_nodes=True
-    tex=m.node_tree.nodes.new('ShaderNodeTexImage');tex.image=bpy.data.images.load(str(next((ROOT/'public/assets/demos/score').glob('player-eyes-*.png'))))
+    tex=m.node_tree.nodes.new('ShaderNodeTexImage')
+    tex.image=bpy.data.images.load(str(eye_texture_path(ROOT/'public/assets/demos/score')))
     m.node_tree.links.new(tex.outputs['Color'],m.node_tree.nodes.get('Principled BSDF').inputs['Base Color'])
 
 # Merge garment pieces by semantic material: only seven extra draw calls for

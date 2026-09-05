@@ -65,6 +65,7 @@ interface PlayerLook {
 }
 
 const MULTIPLIERS = [1.03, 1.08, 1.15, 1.24, 1.36, 1.52, 1.72, 1.98, 2.35, 2.9, 4] as const;
+const FINAL_ZONE = MULTIPLIERS.length - 1;
 const START_X = -1.7;
 const FIRST_ZONE_X = 1.5;
 const ZONE_GAP = 3.25;
@@ -104,7 +105,7 @@ function zoneX(index: number) {
 
 function runnerTargetX(progress: number) {
   if (progress <= 0) return START_X;
-  if (progress >= MULTIPLIERS.length - 1) return ROAD_SHOT_X;
+  if (progress >= FINAL_ZONE) return ROAD_SHOT_X;
   return zoneX(progress - 1) + 0.9;
 }
 
@@ -223,7 +224,7 @@ function Runner({ progress, phase, finish, actionStyle, onReady }: { actionStyle
     if (previousPhase.current !== phase) phaseStart.current = now;
     previousPhase.current = phase;
 
-    if (progress >= 10) {
+    if (progress >= FINAL_ZONE) {
       const shotTime = finish.current.elapsed ?? 0;
       const yaw = Math.PI / 2 - .25;
       const contact = player.children[0]?.userData.roadKickContact as THREE.Vector3 | undefined;
@@ -243,7 +244,7 @@ function Runner({ progress, phase, finish, actionStyle, onReady }: { actionStyle
       return;
     }
 
-    if (phase === 'correct' && dribbleStart.current != null && progress < MULTIPLIERS.length - 1) {
+    if (phase === 'correct' && dribbleStart.current != null && progress < FINAL_ZONE) {
       const t = clamp01((now - dribbleStart.current) / 1.05);
       motion.current.name = 'dribble';
       motion.current.time = t * 1.25;
@@ -275,7 +276,7 @@ function Runner({ progress, phase, finish, actionStyle, onReady }: { actionStyle
       player.rotation.y = THREE.MathUtils.damp(player.rotation.y, Math.PI / 2, 6, delta);
     } else {
       player.position.y = Math.sin(now * 2.2) * 0.012;
-      player.rotation.y = THREE.MathUtils.damp(player.rotation.y, progress >= 10 ? Math.PI / 2 - .25 : 0, 7, delta);
+      player.rotation.y = THREE.MathUtils.damp(player.rotation.y, progress >= FINAL_ZONE ? Math.PI / 2 - .25 : 0, 7, delta);
       poseIdle(joint, now);
     }
   }, -2);
@@ -400,7 +401,7 @@ function MatchBall({ progress, phase, finish, saveStyle, actionStyle, tackleCloc
       ball.position.y = bounceHeight(.17, 1.1, t * .72, .17);
       ball.position.z = PLAYER_Z + Math.sin(t * Math.PI) * 0.28;
 
-    } else if (phase === 'correct' && dribbleStart.current != null && progress < MULTIPLIERS.length - 1) {
+    } else if (phase === 'correct' && dribbleStart.current != null && progress < FINAL_ZONE) {
       const t = clamp01((now - dribbleStart.current) / 1.05);
       const drive = easeInOut(t);
       const arc = Math.sin(t * Math.PI);
@@ -449,7 +450,7 @@ function ZoneCardRail({ progress, labels }: { progress: number; labels: RoadPitc
       return <li key={index} aria-current={active ? 'step' : undefined} className={`min-w-0 flex-1 rounded-xl px-2 py-2 sm:px-4 ${active ? 'bg-brand-yellow text-black' : 'text-white'}`}>
         <div className={`mb-1 flex items-center justify-between text-[8px] font-semibold uppercase tracking-wider sm:text-[10px] ${active ? 'text-black/70' : 'text-white/80'}`}><span>Zone {String(index + 1).padStart(2, '0')}</span>{cleared && <span aria-label={labels.safe}>✓</span>}</div>
         <div className="font-poppins text-base font-bold leading-none tabular-nums sm:text-xl">{multiplier.toFixed(2)}<span className="ml-0.5 text-xs opacity-60">×</span></div>
-        {active && <div className="mt-1 hidden truncate text-[8px] font-semibold uppercase tracking-wider sm:block">{index === 10 ? 'Goalkeeper' : labels.target}</div>}
+        {active && <div className="mt-1 hidden truncate text-[8px] font-semibold uppercase tracking-wider sm:block">{index === FINAL_ZONE ? 'Goalkeeper' : labels.target}</div>}
       </li>;
     })}
   </ol>;
@@ -502,7 +503,7 @@ function CameraRig({ progress, phase }: { progress: number; phase: RoadPitchPhas
     const runnerX = runnerTargetX(progress);
     const extra = phase === 'tackle' || phase === 'tackled' ? 0.8 : 0;
     const correctFocus = phase === 'correct' && progress < MULTIPLIERS.length ? zoneX(progress) + 1.2 : null;
-    const final = progress >= 10;
+    const final = progress >= FINAL_ZONE;
     const focusX = final ? (ROAD_SHOT_X + GOAL_X) / 2 : correctFocus ?? runnerX + 1.05 + extra;
     state.camera.position.x = THREE.MathUtils.damp(state.camera.position.x, focusX - (final ? 5.5 : 0), 4.8, delta);
     state.camera.position.y = THREE.MathUtils.damp(state.camera.position.y, final ? 7 : 4.9, 5, delta);
@@ -541,10 +542,10 @@ function RoadScene({ progress, phase, actionStyle }: Omit<RoadPitchState, 'label
       <Pitch />
       <RoadGoal finish={finish} />
       <Suspense fallback={null}>
-      {MULTIPLIERS.map((_, index) => index < 10 && Math.abs(index - progress) <= 3 && <Defender key={`defender-${index}`} index={index} active={index === progress && progress < MULTIPLIERS.length} cleared={index < progress} tackling={tackling} beaten={dribblingPast && index === progress} onReady={registerDefender} />)}
+      {MULTIPLIERS.map((_, index) => index < FINAL_ZONE && Math.abs(index - progress) <= 3 && <Defender key={`defender-${index}`} index={index} active={index === progress && progress < MULTIPLIERS.length} cleared={index < progress} tackling={tackling} beaten={dribblingPast && index === progress} onReady={registerDefender} />)}
       <RoadKeeper finish={finish} saveStyle={FOOTBALL_STYLES[actionStyle].keeper} />
       <Runner progress={progress} phase={phase} finish={finish} actionStyle={actionStyle} onReady={registerRunner} />
-      <RoadTackle active={tackling && progress < 10} runner={runnerRoot} defender={defenderRoot} onElapsed={updateTackleClock} />
+      <RoadTackle active={tackling && progress < FINAL_ZONE} runner={runnerRoot} defender={defenderRoot} onElapsed={updateTackleClock} />
       <MatchBall actionStyle={actionStyle} progress={progress} phase={phase} finish={finish} saveStyle={FOOTBALL_STYLES[actionStyle].keeper} tackleClock={tackleClock} />
       </Suspense>
       <CameraRig progress={progress} phase={phase} />
@@ -563,7 +564,7 @@ export function RoadToGoalPitch({ progress, phase, labels, onFailure, actionStyl
       </CanvasFailureBoundary>
       <div className="pointer-events-none absolute inset-x-3 top-3 z-20 flex items-center justify-between sm:inset-x-5 sm:top-4">
         <div className="flex items-center gap-3"><Image src="/assets/brand/quizball-logo.webp" alt="Quizball" width={179} height={148} className="h-8 w-auto" /><span className="hidden h-7 w-px bg-white/20 sm:block" /><span className="font-poppins text-xs font-semibold text-white sm:text-sm">Road to Goal</span></div>
-        <span className="rounded-full border border-white/15 bg-[#081724]/75 px-3 py-1.5 text-[10px] font-semibold tabular-nums text-slate-200">{Math.min(progress + 1, 11)} / 11</span>
+        <span className="rounded-full border border-white/15 bg-[#081724]/75 px-3 py-1.5 text-[10px] font-semibold tabular-nums text-slate-200">{Math.min(progress + 1, MULTIPLIERS.length)} / {MULTIPLIERS.length}</span>
       </div>
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-[#020805]/65 to-transparent sm:h-12 lg:h-16" />
       </div>

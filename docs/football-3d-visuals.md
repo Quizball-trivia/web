@@ -111,6 +111,6 @@ load inside the mounted WebGL canvas.
 - `node scripts/check-footballer-assets.mjs` validates exported clips, skinning,
   textures, finite transforms, planted striking feet and the jump-turn landing.
 - Browser review covers desktop/mobile framing, goals, saves and replay.
-- No physical-device GPU benchmark or full production build was performed.
+- The full repository test suite and a production Webpack build passed; GitHub CI also passed the default build with a clean dependency install. No physical-device GPU benchmark was performed.
 
 Editable model, preview render, and rebuild notes: `art/footballer/`.

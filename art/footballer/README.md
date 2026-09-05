@@ -59,6 +59,13 @@ preview; its default power style uses the jump-turn celebration and parry save.
 
 From the repository root:
 
+The checked-in `player-body.glb` already references its authoritative external eye PNG.
+If rebuilding the base rig from the Quaternius source packs, first run
+`node scripts/build-score-rig.mjs <ubc-dir> <ual1-dir> [hair-dir]`, then
+`node scripts/externalize-score-textures.mjs`. The externalizer requires that
+generated `player-body.glb`. Blender reads the eye material's exact image URI from
+that GLB, so stale hash-named PNGs cannot change which texture is baked.
+
 ```sh
 /Applications/Blender.app/Contents/MacOS/Blender --background --python scripts/blender/build-footballer.py
 node scripts/optimize-footballer.mjs
