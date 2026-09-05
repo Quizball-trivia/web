@@ -1,10 +1,10 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element -- Layered avatar overlays require raw img sizing and absolute positioning. */
 
 import Image from "next/image";
+import { AvatarLayers } from "./AvatarLayers";
 import { resolveAvatarCustomization } from "@/lib/avatars";
-import { AVATAR_SLOTS, getAvatarPart, getSkinPart } from "@/lib/avatars/parts";
+import { getSkinPart } from "@/lib/avatars/parts";
 import type { AvatarCustomization } from "@/types/game";
 
 interface AvatarPreviewProps {
@@ -25,9 +25,10 @@ export function AvatarPreview({ customization, width = 240, className = "" }: Av
 
   return (
     <div
-      className={`relative ${className}`}
+      className={`relative shrink-0 ${className}`}
       style={{ width, aspectRatio: "495.25 / 543.03" }}
     >
+      <AvatarLayers customization={final} placement="back" />
       <Image
         src={skinAsset}
         alt=""
@@ -36,24 +37,7 @@ export function AvatarPreview({ customization, width = 240, className = "" }: Av
         sizes={typeof width === "number" ? `${width}px` : "240px"}
         className="object-contain"
       />
-      {AVATAR_SLOTS.map((slot) => {
-        const partId = final[slot];
-        const part = getAvatarPart(partId);
-        if (!part) return null;
-        return (
-          <img
-            key={slot}
-            src={part.asset}
-            alt=""
-            className="pointer-events-none absolute object-contain"
-            style={{
-              top: `${part.position.top}%`,
-              left: `${part.position.left}%`,
-              width: `${part.position.width}%`,
-            }}
-          />
-        );
-      })}
+      <AvatarLayers customization={final} />
     </div>
   );
 }
