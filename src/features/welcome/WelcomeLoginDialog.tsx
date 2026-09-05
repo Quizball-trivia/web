@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useAuthPanelTracking } from '@/lib/analytics/useAuthPanelTracking';
 import { ChevronDown } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ModalCloseButton } from '@/components/shared/ModalCloseButton';
@@ -97,6 +98,7 @@ export function WelcomeLoginDialog({
   onBackToSignIn,
   onForgotSubmit,
 }: WelcomeLoginDialogProps) {
+  useAuthPanelTracking(open, authMode);
   const { t } = useLocale();
   // Phone is no longer its own tab — it lives under Sign In as an Email|Phone
   // method toggle (only one form shows at a time, keeping the modal short).
