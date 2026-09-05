@@ -14,6 +14,7 @@ vi.mock('@/features/campaign-quiz/campaignAttribution', () => ({
 }));
 
 import {
+  trackAuthPanelShown,
   trackSignupPageView,
   trackAuthStarted,
   trackOnboardingCompleted,
@@ -29,6 +30,17 @@ describe('auth analytics events', () => {
     getCampaignPropertiesMock.mockReset();
     getCampaignPropertiesMock.mockReturnValue({});
     clearCampaignAttributionMock.mockClear();
+  });
+
+  it.each(['signin', 'signup', 'phone'])('records panel exposure for %s with campaign attribution', (mode) => {
+    getCampaignPropertiesMock.mockReturnValue({ source: 'campaign_quiz', quiz_slug: 'career-path' });
+    trackAuthPanelShown(mode);
+    expect(trackEventMock).toHaveBeenCalledExactlyOnceWith('auth_panel_shown', {
+      auth_mode: mode,
+      surface: 'welcome',
+      source: 'campaign_quiz',
+      quiz_slug: 'career-path',
+    });
   });
 
   it('auth_started carries method and mode without legacy duplicate events', () => {

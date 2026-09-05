@@ -23,7 +23,7 @@ import { WelcomeTierRoadSection } from './WelcomeTierRoadSection';
 import { WelcomeLeaderboardSection } from './WelcomeLeaderboardSection';
 import { WelcomeFooter } from './WelcomeFooter';
 import { rememberCampaignAttributionFromSignupUrl } from '@/features/campaign-quiz/campaignAttribution';
-import { trackSignupPageView } from '@/lib/analytics/game-events';
+import { useAuthPanelTracking } from '@/lib/analytics/useAuthPanelTracking';
 
 export function WelcomeScreen() {
   const cspNonce = useCspNonce();
@@ -88,7 +88,6 @@ export function WelcomeScreen() {
   const [duelsCount] = useState(() => getDuelsCount());
   const [verifiedQuestionsCount] = useState(() => getVerifiedQuestionsCount());
   const campaignSignupHandledRef = useRef(false);
-  const signupPageViewTrackedRef = useRef(false);
 
   const sim = useWelcomeStadiumSim();
   const { landingFlights, setLandingFlights } = sim;
@@ -136,18 +135,7 @@ export function WelcomeScreen() {
     window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
   }, [handleCampaignSignup]);
 
-  // Count a signup-page reach whenever the signup panel is actually visible,
-  // regardless of whether it came from an SEO CTA or an in-app tab switch.
-  // Dedupe within one dialog open so re-renders never inflate the total.
-  useEffect(() => {
-    if (!loginOpen) {
-      signupPageViewTrackedRef.current = false;
-      return;
-    }
-    if (authMode !== 'signup' || signupPageViewTrackedRef.current) return;
-    signupPageViewTrackedRef.current = true;
-    trackSignupPageView();
-  }, [authMode, loginOpen]);
+  useAuthPanelTracking(loginOpen, authMode);
 
   return (
     <div className="min-h-screen w-full bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat font-sans text-foreground flex flex-col overflow-x-hidden">

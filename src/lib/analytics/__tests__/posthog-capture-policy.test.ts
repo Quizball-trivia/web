@@ -12,6 +12,9 @@ function webVitals(url?: string): CaptureResult {
 
 describe('PostHog capture policy', () => {
   it.each([
+    'https://quizball.io/en',
+    'https://quizball.io/ka/',
+    'https://quizball.io/es?source=football-quiz',
     'https://quizball.io/en/football-quiz',
     'https://quizball.io/en/football-quiz/career-path?utm_source=google',
     '/ka/football-quiz/club-badges',
@@ -22,7 +25,8 @@ describe('PostHog capture policy', () => {
   });
 
   it.each([
-    'https://quizball.io/en',
+    'https://quizball.io/es/football-quiz',
+    'https://quizball.io/es/quiz-de-futbol/a/b',
     'https://quizball.io/en/play',
     'https://quizball.io/en/football-quiz-extra',
   ])('drops Web Vitals outside the SEO quiz routes: %s', (url) => {

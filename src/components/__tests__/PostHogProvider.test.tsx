@@ -74,9 +74,9 @@ describe('PostHogPageView', () => {
     });
   });
 
-  it('starts session recording on football-quiz pages', async () => {
+  it.each(['/en/football-quiz/liverpool', '/es/quiz-de-futbol', '/es/quiz-de-futbol/adivina-el-jugador'])('starts delayed recording on %s', async (path) => {
     vi.useFakeTimers();
-    navigationMocks.pathname = '/en/football-quiz/liverpool';
+    navigationMocks.pathname = path;
 
     render(<PostHogPageView />);
 

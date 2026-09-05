@@ -5,17 +5,13 @@ import type { ReactElement } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { consumeExitToPlayPending, trackExitToPlayLanded } from '@/lib/analytics/game-events';
 import { startSessionRecording, stopSessionRecording } from '@/lib/posthog';
-import { LOCALES } from '@/lib/i18n/locale';
+import { SEO_QUIZ_PATH, SEO_LANDING_PATH } from '@/lib/analytics/seo-routes';
 import { hasRecentCampaignAttribution } from '@/features/campaign-quiz/campaignAttribution';
 import { rememberUtmFromUrl } from '@/lib/analytics/utmAttribution';
 
 // Only the real SEO quiz routes (/:locale/football-quiz and one slug below
 // it), not any URL containing the substring — 404s like /en/football-quiz-foo
 // must not opt into replay.
-const FOOTBALL_QUIZ_PATH = new RegExp(
-  `^/(${LOCALES.join('|')})/football-quiz(/[^/]+)?/?$`,
-);
-const LOCALIZED_LANDING_PATH = new RegExp(`^/(${LOCALES.join('|')})/?$`);
 const SEO_RECORDING_DELAY_MS = 5_000;
 
 export function PostHogPageView(): ReactElement {
@@ -44,7 +40,7 @@ function PostHogPageViewInner(): ReactElement {
   useEffect(() => {
     if (!pathname) return;
     const isCampaignSignupLanding =
-      LOCALIZED_LANDING_PATH.test(pathname) &&
+      SEO_LANDING_PATH.test(pathname) &&
       (searchParams.get('signup') === '1' || hasRecentCampaignAttribution());
 
     if (isCampaignSignupLanding) {
@@ -52,7 +48,7 @@ function PostHogPageViewInner(): ReactElement {
       return;
     }
 
-    if (!FOOTBALL_QUIZ_PATH.test(pathname)) {
+    if (!SEO_QUIZ_PATH.test(pathname)) {
       stopSessionRecording();
       return;
     }
