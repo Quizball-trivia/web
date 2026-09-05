@@ -12,8 +12,12 @@ import { useIsMobile } from "@/hooks/useMobile";
 import {
   customizationFromAvatarValue,
   encodeAvatarCustomization,
+  HAIR_COLORS,
 } from "@/lib/avatars";
 import {
+  EXTRA_SLOTS,
+  getPartsBySlot,
+  type AvatarSlot,
   ALL_AVATAR_PARTS,
   HAIR_PARTS,
   GLASSES_PARTS,
@@ -33,9 +37,9 @@ import { useLocale } from "@/contexts/LocaleContext";
 import { translatePartName } from "@/lib/avatars/partNames";
 import type { AvatarCustomization } from "@/types/game";
 
-type SlotTab = "skin" | "jersey" | "hair" | "glasses" | "facialHair";
+type SlotTab = "skin" | AvatarSlot;
 
-const TAB_ORDER: SlotTab[] = ["skin", "jersey", "hair", "glasses", "facialHair"];
+const TAB_ORDER: SlotTab[] = ["skin", "jersey", "hair", "glasses", "facialHair", ...EXTRA_SLOTS];
 
 const PURPLE = "#BA02E8";
 
@@ -45,6 +49,7 @@ interface AvatarPickerProps {
   currentCustomization?: AvatarCustomization | null;
   onSelect: (avatarUrl: string) => void;
   isSaving?: boolean;
+  localPreview?: { ownedPartIds: readonly string[]; onPurchase: (slug: string) => void };
 }
 
 export function AvatarPicker({
@@ -53,12 +58,13 @@ export function AvatarPicker({
   currentCustomization,
   onSelect,
   isSaving = false,
+  localPreview,
 }: AvatarPickerProps) {
   const isMobile = useIsMobile();
   const queryClient = useQueryClient();
   const { t } = useLocale();
-  const { data: inventoryData } = useStoreInventory();
-  const { data: productsData } = useStoreProducts();
+  const { data: inventoryData } = useStoreInventory(!localPreview);
+  const { data: productsData } = useStoreProducts(!localPreview);
   const [activeTab, setActiveTab] = useState<SlotTab>("skin");
 
   /**
@@ -74,6 +80,7 @@ export function AvatarPicker({
   };
 
   const TAB_LABELS: Record<SlotTab, string> = {
+    headwear: "Headwear", earwear: "Earrings", armwear: "Armbands", wristwear: "Wristbands", facePaint: "Face paint",
     skin: t('profile.avatarPicker.tabSkin'),
     jersey: t('profile.avatarPicker.tabJersey'),
     hair: t('profile.avatarPicker.tabHair'),
@@ -110,21 +117,21 @@ export function AvatarPicker({
    *  unlock here, since saving an unowned part is rejected server-side
    *  anyway and the mismatch made local saves fail confusingly. */
   const ownedPartIds = useMemo(() => {
-    const set = new Set<string>();
+    const set = new Set<string>(localPreview?.ownedPartIds);
     for (const part of ALL_AVATAR_PARTS) {
       if (part.free) set.add(part.id);
     }
     for (const skin of SKIN_PARTS) {
       if (skin.free) set.add(skin.id);
     }
-    for (const entry of inventoryData?.items ?? []) {
+    for (const entry of (localPreview ? [] : inventoryData?.items ?? [])) {
       const part = ALL_AVATAR_PARTS.find((p) => p.productSlug === entry.slug);
       if (part) set.add(part.id);
       const skin = SKIN_PARTS.find((s) => s.productSlug === entry.slug);
       if (skin) set.add(skin.id);
     }
     return set;
-  }, [inventoryData]);
+  }, [inventoryData, localPreview]);
 
   // Commit the draft look (called by the Save button).
   const handleSave = () => {
@@ -132,10 +139,15 @@ export function AvatarPicker({
   };
 
   const purchaseMutation = useMutation({
-    mutationFn: async (productSlug: string) => purchaseStoreWithCoins({ productSlug }),
+    mutationFn: async (productSlug: string) => {
+      if (localPreview) { localPreview.onPurchase(productSlug); return; }
+      return purchaseStoreWithCoins({ productSlug });
+    },
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.store.inventory() });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
+      if (!localPreview) {
+        void queryClient.invalidateQueries({ queryKey: queryKeys.store.inventory() });
+        void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
+      }
       const p = pendingPurchase;
       // Apply the freshly-bought item to the DRAFT (preview). It's saved when the
       // user taps Save, like any other selection.
@@ -153,7 +165,7 @@ export function AvatarPicker({
         toast.error(t('profile.notEnoughCoins'));
         return;
       }
-      toast.error(t('profile.purchaseFailedRetry'));
+      toast.error(localPreview && error instanceof Error ? error.message : t('profile.purchaseFailedRetry'));
     },
   });
 
@@ -169,7 +181,7 @@ export function AvatarPicker({
   };
 
   const handleSelectPart = (
-    slot: "jersey" | "hair" | "glasses" | "facialHair",
+    slot: AvatarSlot,
     part: AvatarPart | null,
   ) => {
     if (part === null) {
@@ -191,7 +203,7 @@ export function AvatarPicker({
 
   const TabBar = (
     <div className="flex flex-wrap gap-2 border-b border-white/10 pb-3">
-      {TAB_ORDER.map((tab) => {
+      {TAB_ORDER.filter(tab => !(EXTRA_SLOTS as readonly string[]).includes(tab) || (localPreview && getPartsBySlot(tab as AvatarSlot).length > 0)).map((tab) => {
         const isActive = activeTab === tab;
         return (
           <button
@@ -266,7 +278,7 @@ export function AvatarPicker({
 
   /** Generic owned-parts grid for jersey/hair/glasses/facialHair. */
   const renderSlotGrid = (
-    slot: "jersey" | "hair" | "glasses" | "facialHair",
+    slot: AvatarSlot,
     parts: AvatarPart[],
   ) => {
     const currentValue = draft[slot];
@@ -300,7 +312,7 @@ export function AvatarPicker({
             )}
           </button>
 
-          {parts.map((part) => {
+          {parts.filter((part) => localPreview || !part.localOnly).map((part) => {
             const owned = ownedPartIds.has(part.id);
             const selected = currentValue === part.id;
             return (
@@ -364,8 +376,17 @@ export function AvatarPicker({
       </div>
 
       {TabBar}
+      {localPreview && activeTab === 'hair' && <fieldset className="flex flex-wrap gap-2">
+        <legend className="mb-2 text-sm text-white/70">Hair colour</legend>
+        {HAIR_COLORS.map(color => <button key={color} type="button" aria-pressed={(draft.hairColor ?? 'natural') === color}
+          onClick={() => setDraft(d => ({ ...d, hairColor: color }))}
+          className="rounded-full border border-white/20 px-3 py-2 text-xs aria-pressed:border-fuchsia-400 aria-pressed:bg-fuchsia-950">
+          {{natural: 'Natural', platinum: 'Platinum blonde', ginger: 'Ginger', silver: 'Silver', blue_tips: 'Blue tips', pink_streaks: 'Pink streaks'}[color]}
+        </button>)}
+      </fieldset>}
 
-      <div className="pt-1">
+      <div className="pt-1 pb-20">
+        {localPreview && (EXTRA_SLOTS as readonly string[]).includes(activeTab) && renderSlotGrid(activeTab as AvatarSlot, getPartsBySlot(activeTab as AvatarSlot))}
         {activeTab === "skin" && SkinTab}
         {activeTab === "jersey" && renderSlotGrid("jersey", JERSEY_PARTS)}
         {activeTab === "hair" && renderSlotGrid("hair", HAIR_PARTS)}
@@ -470,7 +491,7 @@ export function AvatarPicker({
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
           side="bottom"
-          className="max-h-[92dvh] overflow-y-auto rounded-t-3xl border-t-[3px] border-store-accent bg-store-card p-5 [&>button:last-child]:hidden"
+          className="max-h-[92dvh] overflow-y-auto scroll-pb-24 rounded-t-3xl border-t-[3px] border-store-accent bg-store-card p-5 [&>button:last-child]:hidden"
         >
           <ModalCloseButton onClose={() => onOpenChange(false)} />
           <SheetHeader className="mb-3 text-left">
@@ -484,7 +505,7 @@ export function AvatarPicker({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl max-h-[90dvh] overflow-y-auto rounded-[24px] border-[3px] border-store-accent bg-store-card p-6 sm:p-8 [&>button:last-child]:hidden">
+      <DialogContent className="sm:max-w-3xl max-h-[90dvh] overflow-y-auto scroll-pb-24 rounded-[24px] border-[3px] border-store-accent bg-store-card p-6 sm:p-8 [&>button:last-child]:hidden">
         <ModalCloseButton onClose={() => onOpenChange(false)} />
         <DialogHeader>
           <DialogTitle className="pr-14 font-poppins text-[22px] font-semibold text-white sm:text-[26px]">{t('profile.avatarPicker.title')}</DialogTitle>

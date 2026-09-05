@@ -1,3 +1,4 @@
+import { COLLECTION_PARTS } from "./collection";
 import type { AvatarCustomization } from "@/types/game";
 
 /**
@@ -18,7 +19,7 @@ import type { AvatarCustomization } from "@/types/game";
  * group bounding rect for these and the visual fit is good).
  */
 
-export type AvatarSlot = "jersey" | "facialHair" | "glasses" | "hair";
+export type AvatarSlot = "jersey" | "facialHair" | "glasses" | "hair" | "headwear" | "earwear" | "armwear" | "wristwear" | "facePaint";
 type AvatarSkinId = NonNullable<AvatarCustomization["skin"]>;
 type AvatarHairId = NonNullable<AvatarCustomization["hair"]>;
 type AvatarGlassesId = NonNullable<AvatarCustomization["glasses"]>;
@@ -31,7 +32,7 @@ type AvatarJerseyId = NonNullable<AvatarCustomization["jersey"]>;
  * shows through naturally. (If a hair lacks a face cutout, it'll cover the eyes — that's
  * an asset-level fix, not a code fix.)
  */
-export const AVATAR_SLOTS: readonly AvatarSlot[] = ["jersey", "facialHair", "hair", "glasses"];
+export const AVATAR_SLOTS: readonly AvatarSlot[] = ["jersey", "armwear", "wristwear", "facePaint", "facialHair", "hair", "headwear", "earwear", "glasses"];
 
 export interface AvatarPartPosition {
   /** % from top of the 495.25×543.03 canvas */
@@ -47,6 +48,10 @@ export interface AvatarPart {
   slot: AvatarSlot;
   name: string;
   asset: string;
+  localOnly?: boolean;
+  group?: string;
+  hideHair?: boolean;
+  clipPath?: string;
   free?: boolean;
   priceCoins?: number;
   productSlug?: string;
@@ -112,6 +117,18 @@ export function getSkinPart(id: string | null | undefined): SkinPart {
 
 /* ─────────────── Hair ─────────────── */
 export const HAIR_PARTS: AvatarPart[] = [
+  ...COLLECTION_PARTS.filter(p => p.slot === "hair"),
+  ...(process.env.NODE_ENV === "development" ? [{
+    id: "hair_short_twists",
+    slot: "hair" as const,
+    name: "Short Twists",
+    asset: "/assets/store/hair_short_twists.webp",
+    localOnly: true,
+    priceCoins: 20000,
+    productSlug: "avatar_hair_short_twists",
+    position: { top: -8, left: 22, width: 49 },
+    storePosition: { top: -4, left: 25, width: 46 },
+  }] : []),
   {
     id: "hair_boy_basic",
     slot: "hair",
@@ -236,6 +253,17 @@ export const HAIR_IDS = HAIR_PARTS.map((part) => part.id) as readonly AvatarHair
 //   top% = (eye_center%) − (glasses_height/2 in canvas %)
 // Each glasses PNG has its own native height — top% set so the lens sits over the eyes.
 export const GLASSES_PARTS: AvatarPart[] = [
+  ...COLLECTION_PARTS.filter(p => p.slot === "glasses"),
+  ...(process.env.NODE_ENV === "development" ? [{
+    id: "glasses_sport_blue",
+    slot: "glasses" as const,
+    name: "Blue Sport",
+    asset: "/assets/store/accessory_glasses_sport_blue.webp",
+    localOnly: true,
+    priceCoins: 15000,
+    productSlug: "avatar_glasses_sport_blue",
+    position: { top: 14, left: 30, width: 40 },
+  }] : []),
   {
     id: "glasses_wayfarer",
     slot: "glasses",
@@ -274,6 +302,7 @@ export const GLASSES_IDS = GLASSES_PARTS.map((part) => part.id) as readonly Avat
 // Mouth at canvas y ≈ 183 / 543 = 33.7% (top), 38.3% (bottom).
 // Stache covers upper lip (slightly above mouth top). Beard covers chin/jaw.
 export const FACIAL_HAIR_PARTS: AvatarPart[] = [
+  ...COLLECTION_PARTS.filter(p => p.slot === "facialHair"),
   {
     id: "stache",
     slot: "facialHair",
@@ -376,6 +405,17 @@ export const JERSEY_COLOR_PARTS: AvatarPart[] = [
 ];
 
 export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
+  ...COLLECTION_PARTS.filter(p => p.slot === "jersey"),
+  ...(process.env.NODE_ENV === "development" ? [{
+    id: "jersey_celtic",
+    slot: "jersey" as const,
+    name: "Celtic",
+    asset: "/assets/store/jersey_celtic.webp",
+    localOnly: true,
+    priceCoins: 30000,
+    productSlug: "avatar_jersey_celtic",
+    position: { top: 43, left: 13, width: 70 },
+  }] : []),
   {
     id: "jersey_real",
     slot: "jersey",
@@ -655,7 +695,11 @@ export const JERSEY_IDS = JERSEY_PARTS.map((part) => part.id) as readonly Avatar
 export const DEFAULT_JERSEY_ID = "jersey_green";
 export const DEFAULT_HAIR_ID = "hair_boy_basic";
 
+export const EXTRA_SLOTS = ["headwear", "earwear", "armwear", "wristwear", "facePaint"] as const;
+export const EXTRA_PARTS = COLLECTION_PARTS.filter(p => (EXTRA_SLOTS as readonly string[]).includes(p.slot));
+
 export const ALL_AVATAR_PARTS: AvatarPart[] = [
+  ...EXTRA_PARTS,
   ...JERSEY_PARTS,
   ...HAIR_PARTS,
   ...GLASSES_PARTS,

@@ -1,0 +1,60 @@
+# Generated collection
+
+- **Chelsea** — jersey; 30,000 test coins
+- **Tottenham** — jersey; 30,000 test coins
+- **Benfica** — jersey; 30,000 test coins
+- **Porto** — jersey; 30,000 test coins
+- **Sporting** — jersey; 30,000 test coins
+- **Marseille** — jersey; 30,000 test coins
+- **Galatasaray** — jersey; 30,000 test coins
+- **Fenerbahçe** — jersey; 30,000 test coins
+- **Boca Juniors** — jersey; 30,000 test coins
+- **River Plate** — jersey; 30,000 test coins
+- **Portugal** — jersey; 30,000 test coins
+- **Spain** — jersey; 30,000 test coins
+- **Croatia** — jersey; 30,000 test coins
+- **Japan** — jersey; 30,000 test coins
+- **Morocco** — jersey; 30,000 test coins
+- **Nigeria** — jersey; 30,000 test coins
+- **Mexico** — jersey; 30,000 test coins
+- **Uruguay** — jersey; 30,000 test coins
+- **Retro Goalkeeper** — jersey; 30,000 test coins
+- **Neon Training** — jersey; 30,000 test coins
+- **Street Football** — jersey; 30,000 test coins
+- **Gold Champion** — jersey; 30,000 test coins
+- **Ronaldinho** — hair; 15,000 test coins
+- **Neymar Mohawk** — hair; 15,000 test coins
+- **Zidane** — hair; 15,000 test coins
+- **Haaland** — hair; 15,000 test coins
+- **Beckham Mohawk** — hair; 15,000 test coins
+- **Valderrama** — hair; 15,000 test coins
+- **Gullit** — hair; 15,000 test coins
+- **Baggio** — hair; 15,000 test coins
+- **High Afro** — hair; 15,000 test coins
+- **Braided Bun** — hair; 15,000 test coins
+- **Ponytail** — hair; 15,000 test coins
+- **Messy Fringe** — hair; 15,000 test coins
+- **Mullet** — hair; 15,000 test coins
+- **Spiky Hair** — hair; 15,000 test coins
+- **Shoulder Curls** — hair; 15,000 test coins
+- **Side Shave** — hair; 15,000 test coins
+- **Čech Headguard** — headwear; 15,000 test coins
+- **Backwards Cap** — headwear; 15,000 test coins
+- **Bucket Hat** — headwear; 15,000 test coins
+- **Beanie** — headwear; 15,000 test coins
+- **Sweatband** — headwear; 15,000 test coins
+- **Bandana** — headwear; 15,000 test coins
+- **Clear Glasses** — glasses; 15,000 test coins
+- **Square Sunglasses** — glasses; 15,000 test coins
+- **Heart Shades** — glasses; 15,000 test coins
+- **Future Visor** — glasses; 15,000 test coins
+- **Light Stubble** — facialHair; 15,000 test coins
+- **Boxed Beard** — facialHair; 15,000 test coins
+- **Long Beard** — facialHair; 15,000 test coins
+- **Chin Goatee** — facialHair; 15,000 test coins
+- **Stud Earrings** — earwear; 15,000 test coins
+- **Hoop Earring** — earwear; 15,000 test coins
+- **Headphones** — earwear; 15,000 test coins
+- **Captain’s Armband** — armwear; 15,000 test coins
+- **Wristbands** — wristwear; 15,000 test coins
+- **Face Paint** — facePaint; 15,000 test coins

@@ -1,9 +1,9 @@
-/* eslint-disable @next/next/no-img-element -- Layered avatar overlays require raw img sizing and absolute positioning. */
 
 import Image from 'next/image';
 import { AvatarCustomization } from '../types/game';
+import { AvatarLayers } from './AvatarLayers';
 import { resolveAvatarCustomization } from '@/lib/avatars';
-import { AVATAR_SLOTS, getAvatarPart, getSkinPart } from '@/lib/avatars/parts';
+import { getSkinPart } from '@/lib/avatars/parts';
 import { normalizeCountryCode } from '@/lib/geo/countryCode';
 import { cn } from '@/lib/utils';
 
@@ -76,7 +76,8 @@ export function AvatarDisplay({
         {/* Wrapper at canonical Figma aspect ratio so item % positions land precisely.
             h-[88%] leaves ~6% top/bottom margin so the figure's head/feet don't clip the rounded crop. */}
         <div className="relative h-[88%]" style={{ aspectRatio: '495.25 / 543.03' }}>
-          <Image
+          <AvatarLayers customization={merged} placement="back" />
+      <Image
             src={resolveAsset(skinAsset)}
             alt="Avatar"
             fill
@@ -84,26 +85,7 @@ export function AvatarDisplay({
             quality={60}
             className="object-contain"
           />
-          {AVATAR_SLOTS.map((slot) => {
-            const partId = merged[slot];
-            const part = getAvatarPart(partId);
-            if (!part) return null;
-            return (
-              <img
-                key={slot}
-                src={resolveAsset(part.asset)}
-                alt=""
-                loading="lazy"
-                decoding="async"
-                className="pointer-events-none absolute object-contain"
-                style={{
-                  top: `${part.position.top}%`,
-                  left: `${part.position.left}%`,
-                  width: `${part.position.width}%`,
-                }}
-              />
-            );
-          })}
+          <AvatarLayers customization={merged} />
         </div>
       </div>
 

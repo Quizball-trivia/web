@@ -26,6 +26,13 @@ export interface Badge {
 type StoredAvatarCustomization = NonNullable<components["schemas"]["UserResponse"]["avatar_customization"]>;
 
 export interface AvatarCustomization extends StoredAvatarCustomization {
+  /** Optional local wardrobe slots; not persisted to the live backend. */
+  headwear?: string;
+  earwear?: string;
+  armwear?: string;
+  wristwear?: string;
+  facePaint?: string;
+  hairColor?: "natural" | "platinum" | "ginger" | "silver" | "blue_tips" | "pink_streaks";
   /**
    * Legacy field kept so external URLs (Google avatar) and qb-avatar URIs can pass through.
    * AvatarDisplay decodes this when present.

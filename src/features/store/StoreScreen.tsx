@@ -22,6 +22,7 @@ import {
 import { useLocale } from "@/contexts/LocaleContext";
 import { translatePartName as translateSharedPartName } from "@/lib/avatars/partNames";
 import {
+  EXTRA_PARTS,
   HAIR_PARTS,
   GLASSES_PARTS,
   FACIAL_HAIR_PARTS,
@@ -233,16 +234,31 @@ function TicketCard({ pack, onBuy }: { pack: TicketPackItem; onBuy: (b: TicketPa
 // Map of static English part names → translation keys. Football-related
 // proper nouns (Ramos, Real Madrid, Liverpool, etc.) intentionally stay
 // untranslated since they're brand names.
-export function StoreScreen() {
+export interface LocalStorePreview {
+  category?: string;
+  search?: string;
+  customization: AvatarCustomization;
+  ownedPartIds: readonly string[];
+  coins: number;
+  onEquip: (next: AvatarCustomization) => void;
+  onPurchase: (productSlug: string) => void;
+}
+
+export function StoreScreen({ localPreview }: { localPreview?: LocalStorePreview } = {}) {
   const { t } = useLocale();
+  const isLocalPreview = Boolean(localPreview);
+  const showCategory = (category: string) => !localPreview?.category || localPreview.category === "all" || localPreview.category === category;
+  const normalizeSearch = (value: string) => value.normalize("NFD").replace(/\p{Diacritic}/gu, "").toLocaleLowerCase();
+  const matchesSearch = (part: AvatarPart) => !localPreview?.search || normalizeSearch(part.name).includes(normalizeSearch(localPreview.search.trim()));
   const translatePartName = (name: string) => translateSharedPartName(name, t);
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { data: productsData } = useStoreProducts();
-  const { data: wallet } = useStoreWallet();
-  const { data: inventoryData } = useStoreInventory();
+  const { data: productsData } = useStoreProducts(!localPreview);
+  const { data: remoteWallet } = useStoreWallet({ enabled: !localPreview });
+  const wallet = localPreview ? { coins: localPreview.coins, tickets: 0, ticketPurchaseCooldown: undefined } : remoteWallet;
+  const { data: inventoryData } = useStoreInventory(!localPreview);
   const authUser = useAuthStore((state) => state.user);
   // Dev-allowlist accounts: the backend skips every store economy limit for
   // them, so the UI mirrors that by treating items as always affordable and
@@ -264,26 +280,26 @@ export function StoreScreen() {
 
   /** Currently saved customization (decoded from avatar_url). */
   const currentCustomization = useMemo<AvatarCustomization>(() => {
-    return authUser?.avatar_customization ?? customizationFromAvatarValue(authUser?.avatar_url ?? player.avatarCustomization?.base);
-  }, [authUser?.avatar_customization, authUser?.avatar_url, player.avatarCustomization?.base]);
+    return localPreview?.customization ?? authUser?.avatar_customization ?? customizationFromAvatarValue(authUser?.avatar_url ?? player.avatarCustomization?.base);
+  }, [localPreview?.customization, authUser?.avatar_customization, authUser?.avatar_url, player.avatarCustomization?.base]);
 
   /** Set of part ids the user already owns (free defaults + purchased). */
   const ownedPartIds = useMemo(() => {
-    const set = new Set<string>();
+    const set = new Set<string>(localPreview?.ownedPartIds);
     for (const part of ALL_AVATAR_PARTS) {
       if (part.free) set.add(part.id);
     }
     for (const skin of SKIN_PARTS) {
       if (skin.free) set.add(skin.id);
     }
-    for (const entry of inventoryData?.items ?? []) {
+    for (const entry of (localPreview ? [] : inventoryData?.items ?? [])) {
       const part = ALL_AVATAR_PARTS.find((p) => p.productSlug === entry.slug);
       if (part) set.add(part.id);
       const skin = SKIN_PARTS.find((s) => s.productSlug === entry.slug);
       if (skin) set.add(skin.id);
     }
     return set;
-  }, [inventoryData]);
+  }, [inventoryData, localPreview]);
 
   /**
    * Coin affordability check. While the wallet is still loading we treat
@@ -400,12 +416,12 @@ export function StoreScreen() {
   });
 
   useEffect(() => {
-    trackStoreViewed();
-  }, []);
+    if (!isLocalPreview) trackStoreViewed();
+  }, [isLocalPreview]);
 
   useEffect(() => {
     const purchaseStatus = searchParams.get("purchase");
-    if (!purchaseStatus) return;
+    if (!purchaseStatus || isLocalPreview) return;
     if (purchaseStatus === "success") {
       toast.success(t("store.purchaseCompleted"));
       void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
@@ -418,7 +434,7 @@ export function StoreScreen() {
     params.delete("purchase");
     const cleaned = params.toString();
     router.replace(cleaned ? `?${cleaned}` : pathname, { scroll: false });
-  }, [searchParams, pathname, queryClient, router]);
+  }, [searchParams, pathname, queryClient, router, isLocalPreview, t]);
 
   const coinBundles = useMemo<BundleProps[]>(() => {
     const config: Array<{ id: string; title: string; amount: number; bonus?: number; isPopular?: boolean; slug: string; imageSrc: string }> = [
@@ -520,6 +536,7 @@ export function StoreScreen() {
   /** Persist structured customization to the backend. */
   const persistCustomization = async (next: AvatarCustomization) => {
     try {
+      if (localPreview) { localPreview.onEquip(next); return; }
       const updated = await updateMe({ avatar_customization: next });
       updateStats({ avatarCustomization: next });
       if (authUser) {
@@ -538,7 +555,7 @@ export function StoreScreen() {
     };
     const isOwned = ownedPartIds.has(part.id);
     const modalMode: BuyModalState["mode"] = isOwned ? "equip" : part.productSlug ? "coins" : "none";
-    if (part.productSlug) {
+    if (part.productSlug && !localPreview) {
       trackPurchaseModalOpened(part.productSlug, modalMode, {
         affordable: isOwned || canAffordPart(part),
       });
@@ -570,6 +587,16 @@ export function StoreScreen() {
 
   const handleConfirm = () => {
     if (!buyModal || purchasePending) return;
+    if (localPreview) {
+      if (!buyModal.avatarPart) return;
+      try {
+        if (buyModal.mode === "coins" && buyModal.productSlug) localPreview.onPurchase(buyModal.productSlug);
+        localPreview.onEquip({ ...currentCustomization, [buyModal.avatarPart.slot]: buyModal.avatarPart.id });
+        toast.success(t("store.equipped", { name: buyModal.name }));
+        setBuyModal(null);
+      } catch (error) { toast.error(error instanceof Error ? error.message : "Could not equip item"); }
+      return;
+    }
     if (buyModal.mode === "equip" && buyModal.avatarPart) {
       const part = buyModal.avatarPart;
       void persistCustomization({ ...currentCustomization, [part.slot]: part.id });
@@ -657,7 +684,19 @@ export function StoreScreen() {
             </motion.section>
           )}
 
-          <motion.section
+          {localPreview && ['headwear', 'accessories'].map(category => (
+            <section key={category} id={category} hidden={!showCategory(category)}>
+              <SectionHeader title={category === 'headwear' ? 'Headwear' : 'Accessories'} />
+              <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+                {EXTRA_PARTS.filter(part => category === 'headwear' ? part.slot === 'headwear' : part.slot !== 'headwear').filter(matchesSearch).map(part => (
+                  <ItemCard key={part.id} name={part.name} asset={part.asset} price={(part.priceCoins ?? 0).toLocaleString()} owned={ownedPartIds.has(part.id)}
+                    previewCustomization={{ ...currentCustomization, [part.slot]: part.id }} onBuy={() => openAvatarPartModal(part)} />
+                ))}
+              </div>
+            </section>
+          ))}
+
+          {!localPreview && <motion.section
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.2 }}
@@ -707,16 +746,16 @@ export function StoreScreen() {
                 </motion.div>
               ))}
             </div>
-          </motion.section>
+          </motion.section>}
 
-          <motion.section
+          <motion.section hidden={!showCategory("hair")}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.3 }}
           >
             <SectionHeader title={t("store.hairTitle")} />
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-              {HAIR_PARTS.filter((p) => !p.free).map((part, i) => (
+              {HAIR_PARTS.filter((p) => !p.free && (localPreview || !p.localOnly)).filter(matchesSearch).map((part, i) => (
                 <motion.div
                   key={part.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -736,14 +775,14 @@ export function StoreScreen() {
             </div>
           </motion.section>
 
-          <motion.section
+          <motion.section hidden={!showCategory("glasses")}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.35 }}
           >
             <SectionHeader title={t("store.glassesTitle")} />
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-              {GLASSES_PARTS.map((part, i) => (
+              {GLASSES_PARTS.filter((p) => localPreview || !p.localOnly).filter(matchesSearch).map((part, i) => (
                 <motion.div
                   key={part.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -763,14 +802,14 @@ export function StoreScreen() {
             </div>
           </motion.section>
 
-          <motion.section
+          <motion.section hidden={!showCategory("facialHair")}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.4 }}
           >
             <SectionHeader title={t("store.facialHairTitle")} />
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-              {FACIAL_HAIR_PARTS.map((part, i) => (
+              {FACIAL_HAIR_PARTS.filter(p => localPreview || !p.localOnly).filter(matchesSearch).map((part, i) => (
                 <motion.div
                   key={part.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -790,14 +829,14 @@ export function StoreScreen() {
             </div>
           </motion.section>
 
-          <motion.section
+          <motion.section hidden={!showCategory("jerseys")}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.45 }}
           >
             <SectionHeader title={t("store.jerseysTitle")} />
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-              {JERSEY_DESIGN_PARTS.map((part, i) => (
+              {JERSEY_DESIGN_PARTS.filter((p) => localPreview || !p.localOnly).filter(matchesSearch).map((part, i) => (
                 <motion.div
                   key={part.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -823,7 +862,7 @@ export function StoreScreen() {
               if (purchasePending) return;
               // Dismissing an unaffordable preview isn't a purchase decision —
               // keep it out of the purchase_cancelled funnel.
-              if (buyModal?.productSlug && modalAffordable) {
+              if (!localPreview && buyModal?.productSlug && modalAffordable) {
                 trackPurchaseCancelled(buyModal.productSlug);
               }
               setBuyModal(null);
