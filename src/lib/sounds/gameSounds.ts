@@ -110,6 +110,10 @@ interface SetMutedOptions {
 /** Mute / unmute all sounds. Active music resumes by default for legacy callers. */
 export function setMuted(muted: boolean, { resumeBgm = true }: SetMutedOptions = {}) {
   ensureMutePreferenceLoaded();
+  if (!muted) {
+    bgmAutoResumeEnabled = resumeBgm;
+    if (!resumeBgm) pauseActiveBgmForPageHide();
+  }
   _muted = muted;
   Howler.mute(muted);
   persistMutePreference(muted);
@@ -143,6 +147,7 @@ export function subscribeMuted(listener: () => void): () => void {
 /** Preload all sounds (call on game start) */
 export function preloadAll() {
   ensureMutePreferenceLoaded();
+  if (_muted) return;
   (Object.keys(SOUND_FILES) as SoundName[]).forEach(getSound);
 }
 
@@ -161,6 +166,7 @@ export function unloadAll() {
 
 const bgmInstances: Partial<Record<BgmName, Howl>> = {};
 let activeBgm: BgmName | null = null;
+let bgmAutoResumeEnabled = true;
 let kickoffAudioFallback: HTMLAudioElement | null = null;
 let lifecycleHandlersInstalled = false;
 
@@ -233,15 +239,23 @@ function pauseActiveBgmForPageHide(): void {
   sound.pause();
 }
 
+/** Resume the selected track after unmute or page restore, loading it if deferred. */
 function resumeActiveBgm(): void {
-  if (!activeBgm || _muted || isDocumentHidden()) return;
+  if (!activeBgm || !bgmAutoResumeEnabled || _muted || isDocumentHidden()) return;
   if (activeBgm === 'kickoff' && kickoffAudioFallback) {
     void kickoffAudioFallback.play().catch(() => {});
     return;
   }
 
   const sound = bgmInstances[activeBgm];
-  if (!sound || sound.playing()) return;
+  if (!sound) {
+    // Reuse the normal first-play path, including its best-effort fallback.
+    const deferredTrack = activeBgm;
+    activeBgm = null;
+    playBgm(deferredTrack);
+    return;
+  }
+  if (sound.playing()) return;
   // If Howler is still loading, let the existing play request finish rather
   // than queueing another loop instance. This is the common duplicate-audio
   // path on mobile when the page is backgrounded during startup.
@@ -275,6 +289,7 @@ function ensureBgmLifecycleHandlers(): void {
 export function preloadBgm(name: BgmName) {
   try {
     ensureMutePreferenceLoaded();
+    if (_muted) return;
     ensureBgmLifecycleHandlers();
     getBgm(name);
   } catch {
@@ -291,22 +306,31 @@ export function playBgm(name: BgmName) {
   try {
     ensureMutePreferenceLoaded();
     ensureBgmLifecycleHandlers();
-    if (activeBgm === name) {
+    const wasAutoResumeEnabled = bgmAutoResumeEnabled;
+    bgmAutoResumeEnabled = true;
+    if (activeBgm === name && (bgmInstances[name] || (name === 'kickoff' && kickoffAudioFallback))) {
       const current = bgmInstances[name];
       current?.off('fade');
       current?.volume(getBgmVolume(name));
+      if (!wasAutoResumeEnabled) resumeActiveBgm();
       return;
+    }
+    if (name !== 'kickoff' && kickoffAudioFallback) {
+      kickoffAudioFallback.pause();
+      kickoffAudioFallback.currentTime = 0;
+      kickoffAudioFallback = null;
     }
     for (const [key, instance] of Object.entries(bgmInstances)) {
       if (key !== name) instance?.stop();
     }
+    activeBgm = name;
+    if (_muted) return;
     const sound = getBgm(name);
     // Drop any pending fade-then-stop callback armed by a prior stopBgm —
     // otherwise the lingering fade event will fire on the new playback and
     // silence the track mid-loop.
     sound.off('fade');
     sound.volume(getBgmVolume(name));
-    activeBgm = name;
     if (!isDocumentHidden() && !_muted && !sound.playing()) sound.play();
   } catch {
     if (name !== 'kickoff' || typeof Audio === 'undefined') return;
