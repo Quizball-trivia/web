@@ -50,14 +50,14 @@ export function StoreExamplesScreen() {
             <option value="en">English</option><option value="ka">ქართული</option><option value="es">Español</option>
           </select>
         </div>
-        <section aria-label="Your equipped avatar" className="mt-6 flex flex-wrap items-center justify-center gap-6 rounded-3xl border border-white/15 bg-[#0B1619] px-6 py-8 sm:justify-between">
+        <section aria-label="Your equipped avatar" className="mt-6 flex flex-wrap items-center justify-center gap-6 rounded-3xl border border-white/15 bg-store-card px-6 py-8 sm:justify-between">
           <div className="pt-5"><AvatarPreview customization={state.customization} width={210} /></div>
           <div className="flex min-w-0 flex-col gap-4">
             <div className="flex items-center gap-3"><AvatarDisplay customization={state.customization} size="lg" /><AvatarDisplay customization={state.customization} size="sm" shape="square" /></div>
             <p className="text-sm text-white/60">Profile and game avatar sizes</p>
             <p className="text-lg font-semibold" data-testid="test-coins">{state.coins.toLocaleString()} test coins</p>
             <Link href="/dev/jerseys" className="text-center text-sm underline">Adjust item positions</Link>
-            <button onClick={() => setEditorOpen(true)} className="rounded-2xl bg-[#BA02E8] px-6 py-3 font-semibold">Edit avatar</button>
+            <button onClick={() => setEditorOpen(true)} className="rounded-2xl bg-store-accent px-6 py-3 font-semibold">Edit avatar</button>
             <button onClick={() => { try { commit(freshLocalStore()); } catch { toast.error('Could not reset browser storage'); } }} className="text-sm text-white/60 underline underline-offset-4">Reset test · 2 million coins</button>
           </div>
         </section>
@@ -66,7 +66,7 @@ export function StoreExamplesScreen() {
         <div className="flex gap-2 overflow-x-auto pb-3">
           {[['hair','Player hair'],['jerseys','Jerseys'],['headwear','Headwear'],['accessories','Accessories'],['glasses','Glasses'],['facialHair','Facial hair'],['all','Everything']].map(([id,label]) => <button key={id} type="button" aria-pressed={category === id} onClick={() => setCategory(id)} className="shrink-0 rounded-full border border-white/20 px-4 py-2 text-sm aria-pressed:border-fuchsia-500 aria-pressed:bg-fuchsia-950">{label}</button>)}
         </div>
-        <input type="search" aria-label="Find an item" placeholder="Find a player, team or item…" value={search} onChange={e => setSearch(e.target.value)} className="w-full rounded-xl border border-white/15 bg-[#0b1619] px-4 py-2 text-sm" />
+        <input type="search" aria-label="Find an item" placeholder="Find a player, team or item…" value={search} onChange={e => setSearch(e.target.value)} className="w-full rounded-xl border border-white/15 bg-store-card px-4 py-2 text-sm" />
       </nav>
       <StoreScreen localPreview={localPreview} />
       <AvatarPicker open={editorOpen} onOpenChange={setEditorOpen} currentCustomization={state.customization} localPreview={localPreview} onSelect={value => {
