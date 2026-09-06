@@ -498,11 +498,12 @@ export const COLLECTION_PARTS: AvatarPart[] = [
     "asset": "/assets/store/collection/hair_braided_bun.webp",
     "productSlug": "avatar_hair_braided_bun",
     "storePosition": {
-      "top": -4,
-      "left": 24,
-      "width": 45.080000000000005
+      "top": -7.75,
+      "left": 22.5,
+      "width": 47.08
     },
-    "hairFrontPercent": 56.5
+    "hairFrontPercent": 56.5,
+    "storeHairFrontPercent": 100
   },
   {
     "id": "hair_ponytail",

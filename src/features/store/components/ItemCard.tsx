@@ -67,7 +67,7 @@ const HEAD_VERTICAL_SHIFT_PCT = 28;
 
 export function MannequinPreview({ part }: { part: AvatarPart }) {
   const tuning = usePartTuning();
-  const frontPercent = part.slot === "hair" ? tunedFrontHairPercent(part, tuning) : undefined;
+  const frontPercent = part.slot === "hair" ? part.storeHairFrontPercent ?? tunedFrontHairPercent(part, tuning) : undefined;
   return (
     <div className="pointer-events-none relative h-full" style={{ aspectRatio: "495.25 / 543.03" }}>
       <div
