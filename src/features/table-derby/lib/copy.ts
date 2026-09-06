@@ -21,6 +21,7 @@ export const TD = {
   playNow: 'თამაში',
   ticketCost: '1 ბილეთი',
   tickets: 'ბილეთები',
+  chooseAvatar: 'აირჩიე ავატარი',
   noTickets: 'ბილეთები აღარ გაქვს — განახლდება ხვალ',
   back: 'უკან',
 

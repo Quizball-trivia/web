@@ -12,6 +12,7 @@ import { TD } from '../lib/copy';
 import { TD_BOX_CARDS, type TdBoxQuestion } from '../data/box';
 import { TD_DISPLAY, PERF_DOTS } from './brand';
 import { ScorePill, TurnTimerBar } from './chrome';
+import { MyAvatar, TdAvatar } from './Avatar';
 
 type Seat = 'me' | 'op';
 type BPhase = 'roll' | 'qMe' | 'qOp' | 'stealMe' | 'stealOp' | 'over';
@@ -174,6 +175,8 @@ export function BoxRound({
   };
 
   const myInput = bphase === 'qMe' || bphase === 'stealMe';
+  const myActive = myInput || (bphase === 'roll' && turn === 'me');
+  const opActive = bphase === 'qOp' || bphase === 'stealOp' || (bphase === 'roll' && turn === 'op');
   const canRoll = bphase === 'roll';
   const canPick = bphase === 'roll' && turn === 'me';
   const statusText =
@@ -196,7 +199,7 @@ export function BoxRound({
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-3 md:gap-4">
-      <ScorePill roundsMe={roundsWon.me} roundsOp={roundsWon.op} inRoundMe={scores.me} inRoundOp={scores.op} />
+      <ScorePill roundsMe={roundsWon.me} roundsOp={roundsWon.op} inRoundMe={scores.me} inRoundOp={scores.op} left={<MyAvatar size={40} active={myActive} />} right={<TdAvatar name={opponentName} size={40} active={opActive} />} />
       <p
         className="text-center text-[14px] md:text-base"
         style={{ ...TD_DISPLAY, color: bphase === 'stealMe' ? 'var(--td-orange)' : 'rgba(255,255,255,0.7)' }}

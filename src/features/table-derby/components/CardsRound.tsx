@@ -12,6 +12,7 @@ import { TD } from '../lib/copy';
 import type { TdCard, TdCardCategory } from '../data/cards';
 import { TD_DISPLAY, BoltGlyph, BetssonWordmark } from './brand';
 import { CategoryBand, ScorePill, TurnTimerBar } from './chrome';
+import { MyAvatar, TdAvatar } from './Avatar';
 
 type Seat = 'me' | 'op';
 type CPhase = 'pick' | 'guessMe' | 'guessOp' | 'stealMe' | 'stealOp' | 'over';
@@ -164,6 +165,8 @@ export function CardsRound({
   };
 
   const myInput = cphase === 'guessMe' || cphase === 'stealMe';
+  const myActive = myInput || (cphase === 'pick' && drawer === 'me');
+  const opActive = cphase === 'guessOp' || cphase === 'stealOp' || (cphase === 'pick' && drawer === 'op');
   const statusText =
     cphase === 'pick'
       ? drawer === 'me'
@@ -182,7 +185,7 @@ export function CardsRound({
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-3 md:gap-4">
       <div className="flex justify-center">
-        <ScorePill roundsMe={roundsWon.me} roundsOp={roundsWon.op} inRoundMe={scores.me} inRoundOp={scores.op} />
+        <ScorePill roundsMe={roundsWon.me} roundsOp={roundsWon.op} inRoundMe={scores.me} inRoundOp={scores.op} left={<MyAvatar size={40} active={myActive} />} right={<TdAvatar name={opponentName} size={40} active={opActive} />} />
       </div>
       <CategoryBand prompt={`${TD.round2Name} · ${category.prompt}`} compact />
 

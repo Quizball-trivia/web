@@ -10,6 +10,7 @@ import { matchesName } from '@/features/mini-games/lib/matching';
 import { TD } from '../lib/copy';
 import { TD_DISPLAY } from './brand';
 import { ScorePill, TurnTimerBar } from './chrome';
+import { MyAvatar, TdAvatar } from './Avatar';
 
 type Seat = 'me' | 'op';
 type ZPhase = 'clues' | 'answerMe' | 'answerOp' | 'reveal' | 'over';
@@ -186,7 +187,7 @@ export function BuzzerRound({
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-3 md:gap-4">
-      <ScorePill roundsMe={roundsWon.me} roundsOp={roundsWon.op} inRoundMe={scores.me} inRoundOp={scores.op} sep=":" />
+      <ScorePill roundsMe={roundsWon.me} roundsOp={roundsWon.op} inRoundMe={scores.me} inRoundOp={scores.op} sep=":" left={<MyAvatar size={40} active={zphase === 'answerMe'} />} right={<TdAvatar name={opponentName} size={40} active={zphase === 'answerOp'} />} />
       <div className="flex items-center gap-2.5">
         <span className="text-[13px] text-white/60" style={TD_DISPLAY}>
           {penaltyMode ? TD.penaltiesName : TD.round4Name}

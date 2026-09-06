@@ -15,6 +15,8 @@ export function ScorePill({
   inRoundMe,
   inRoundOp,
   sep = '-',
+  left,
+  right,
 }: {
   roundsMe: number;
   roundsOp: number;
@@ -22,9 +24,13 @@ export function ScorePill({
   inRoundOp: number;
   /** ":" for rounds whose scores can go negative. */
   sep?: string;
+  /** Avatar flanks (me left, opponent right). */
+  left?: React.ReactNode;
+  right?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="flex items-center gap-2.5">
+      {left}
       <XGlyph size={13} color="rgba(255,255,255,0.35)" />
       <div
         className="flex items-stretch overflow-hidden rounded-[8px]"
@@ -48,6 +54,7 @@ export function ScorePill({
         </span>
       </div>
       <XGlyph size={13} color="rgba(255,255,255,0.35)" />
+      {right}
     </div>
   );
 }

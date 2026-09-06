@@ -44,6 +44,12 @@ export function getTickets(): number {
   return Math.max(0, s.count);
 }
 
+/** Dev helper: refill today's tickets. */
+export function resetTickets(): number {
+  write('td.tickets', { day: geDayKey(), count: TICKETS_PER_DAY } satisfies TicketState);
+  return TICKETS_PER_DAY;
+}
+
 export function spendTicket(): number {
   const next = Math.max(0, getTickets() - 1);
   write('td.tickets', { day: geDayKey(), count: next } satisfies TicketState);
@@ -77,6 +83,26 @@ export function getDailyResult(): number | null {
 
 export function setDailyResult(score: number) {
   write('td.daily', { day: geDayKey(), score } satisfies DailyState);
+}
+
+/* ── Avatar: the user's chosen sticker variant ──────────────────── */
+
+let avatarListeners: (() => void)[] = [];
+
+export function subscribeAvatar(cb: () => void): () => void {
+  avatarListeners.push(cb);
+  return () => {
+    avatarListeners = avatarListeners.filter((l) => l !== cb);
+  };
+}
+
+export function getAvatarVariant(): number {
+  return read<number>('td.avatar') ?? 0;
+}
+
+export function setAvatarVariant(v: number) {
+  write('td.avatar', v);
+  avatarListeners.forEach((l) => l());
 }
 
 /** Deterministic per-day category index for the daily challenge. */

@@ -26,6 +26,7 @@ import {
 } from './components/brand';
 import { CategoryBand, PlayerBoard, ScorePill, TurnTimerBar } from './components/chrome';
 import { DailySolo } from './components/DailySolo';
+import { AVATAR_VARIANTS, MyAvatar, TdAvatar } from './components/Avatar';
 import { CardsRound } from './components/CardsRound';
 import { BoxRound } from './components/BoxRound';
 import { BuzzerRound, type BuzzerItem } from './components/BuzzerRound';
@@ -41,6 +42,8 @@ import {
   getDailyResult,
   getQp,
   getTickets,
+  resetTickets,
+  setAvatarVariant,
   setDailyResult,
   spendTicket,
 } from './lib/state';
@@ -167,6 +170,7 @@ export function TableDerbyApp() {
   const [dailyScore, setDailyScore] = useState<number | null>(null);
   const [menuNotice, setMenuNotice] = useState<string | null>(null);
   const [qpEarned, setQpEarned] = useState(0); // signed match QP delta
+  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
 
   // Multi-round match flow.
   const [currentRound, setCurrentRound] = useState(1); // 1..4, 5 = penalties
@@ -527,10 +531,13 @@ export function TableDerbyApp() {
     <div className="td-theme relative min-h-dvh overflow-hidden" style={{ background: 'var(--td-bg)' }}>
       <MuralBackdrop dim={phase === 'home' ? 1 : 0.45} />
 
-      {/* betsson.sport — persistent, top-right like the broadcast */}
-      <div className="absolute right-4 top-4 z-20 md:right-8 md:top-6">
-        <BetssonWordmark tone={phase === 'home' ? 'orange' : 'white'} size={16} />
-      </div>
+      {/* betsson.sport — top-right like the broadcast; the in-round
+          scoreboard (with avatars) owns that zone during gameplay */}
+      {!inRoundPhase && (
+        <div className="absolute right-4 top-4 z-20 md:right-8 md:top-6">
+          <BetssonWordmark tone={phase === 'home' ? 'orange' : 'white'} size={16} />
+        </div>
+      )}
 
       <AnimatePresence mode="wait">
         {/* ── HOME / MENU ── */}
@@ -543,7 +550,55 @@ export function TableDerbyApp() {
             className="relative z-10 mx-auto flex min-h-dvh w-full max-w-xl flex-col items-center justify-center gap-5 px-4 py-16 md:gap-6"
           >
             <TdLogoSticker variant="blackOnWhite" scale={0.9} />
-            <TicketPill count={tickets} label={TD.tickets} />
+            <div className="flex items-center gap-3">
+              <button type="button" onClick={() => setShowAvatarPicker(true)} aria-label={TD.chooseAvatar}>
+                <MyAvatar size={52} />
+              </button>
+              <TicketPill count={tickets} label={TD.tickets} />
+              {process.env.NODE_ENV !== 'production' && (
+                <button
+                  type="button"
+                  onClick={() => setTickets(resetTickets())}
+                  className="rounded-full px-2.5 py-1.5 text-[11px] opacity-60"
+                  style={{ ...TD_DISPLAY, background: 'var(--td-charcoal)', color: 'var(--td-white)', boxShadow: '2px 2px 0 #000' }}
+                  title="dev: reset tickets"
+                >
+                  ↺5
+                </button>
+              )}
+            </div>
+
+            {showAvatarPicker && (
+              <div
+                className="fixed inset-0 z-50 flex items-center justify-center p-6"
+                style={{ background: 'rgba(0,0,0,0.65)' }}
+                onClick={() => setShowAvatarPicker(false)}
+              >
+                <div
+                  className="rounded-[16px] px-6 py-5"
+                  style={{ background: 'var(--td-charcoal)', boxShadow: '6px 6px 0 #000' }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <p className="mb-5 text-center text-sm text-white" style={TD_DISPLAY}>
+                    {TD.chooseAvatar}
+                  </p>
+                  <div className="grid grid-cols-4 gap-5">
+                    {AVATAR_VARIANTS.map((_, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => {
+                          setAvatarVariant(i);
+                          setShowAvatarPicker(false);
+                        }}
+                      >
+                        <TdAvatar name={TD.you} variant={i} size={52} />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* hero: the main match */}
             <motion.button
@@ -888,10 +943,13 @@ export function TableDerbyApp() {
             className="relative z-10 flex min-h-dvh flex-col items-center justify-center gap-6 px-6"
           >
             <motion.div initial={{ x: -120, rotate: -6, opacity: 0 }} animate={{ x: 0, rotate: -3, opacity: 1 }} transition={{ type: 'spring', damping: 14 }}>
-              <div className="rounded-[10px] px-8 py-4" style={{ background: 'var(--td-paper)', boxShadow: '6px 6px 0 #000' }}>
-                <span className="text-2xl md:text-3xl" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
-                  {TD.you}
-                </span>
+              <div className="flex flex-col items-center gap-3">
+                <MyAvatar size={72} />
+                <div className="rounded-[10px] px-8 py-4" style={{ background: 'var(--td-paper)', boxShadow: '6px 6px 0 #000' }}>
+                  <span className="text-2xl md:text-3xl" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
+                    {TD.you}
+                  </span>
+                </div>
               </div>
             </motion.div>
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.35, type: 'spring', damping: 10 }}>
@@ -903,10 +961,13 @@ export function TableDerbyApp() {
               </span>
             </motion.div>
             <motion.div initial={{ x: 120, rotate: 6, opacity: 0 }} animate={{ x: 0, rotate: 2, opacity: 1 }} transition={{ type: 'spring', damping: 14 }}>
-              <div className="rounded-[10px] px-8 py-4" style={{ background: 'var(--td-paper)', boxShadow: '6px 6px 0 #000' }}>
-                <span className="text-2xl md:text-3xl" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
-                  {opponentName}
-                </span>
+              <div className="flex flex-col items-center gap-3">
+                <TdAvatar name={opponentName} size={72} />
+                <div className="rounded-[10px] px-8 py-4" style={{ background: 'var(--td-paper)', boxShadow: '6px 6px 0 #000' }}>
+                  <span className="text-2xl md:text-3xl" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
+                    {opponentName}
+                  </span>
+                </div>
               </div>
             </motion.div>
             <div
@@ -1045,6 +1106,8 @@ export function TableDerbyApp() {
                 roundsOp={roundsWon.op}
                 inRoundMe={round.count.me}
                 inRoundOp={round.count.op}
+                left={<MyAvatar size={40} active={round.turn === 'me'} />}
+                right={<TdAvatar name={opponentName} size={40} active={round.turn === 'op'} />}
               />
             </div>
             <CategoryBand prompt={category.prompt} compact />
@@ -1273,13 +1336,17 @@ export function TableDerbyApp() {
                 {matchWinner === 'me' ? TD.matchWon : TD.matchLost}
               </span>
             </motion.div>
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col items-center gap-2.5">
               <span className="text-sm text-white/70" style={TD_DISPLAY}>
                 {TD.matchScore}
               </span>
-              <span className="text-3xl text-white" style={TD_DISPLAY}>
-                {roundsWon.me} - {roundsWon.op}
-              </span>
+              <div className="flex items-center gap-5">
+                <MyAvatar size={48} />
+                <span className="text-3xl text-white" style={TD_DISPLAY}>
+                  {roundsWon.me} - {roundsWon.op}
+                </span>
+                <TdAvatar name={opponentName} size={48} />
+              </div>
             </div>
 
             {/* QP settlement — ranked-style results card */}
