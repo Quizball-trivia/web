@@ -71,7 +71,7 @@ export function CardBack({ lit = false, className = '' }: { lit?: boolean; class
       className={`relative flex h-[128px] w-[92px] shrink-0 items-center justify-center overflow-hidden rounded-2xl border-2 ${className}`}
       style={{ borderColor: '#cba33c', background: 'linear-gradient(160deg, #2a2008 0%, #0f1420 55%, #1a1408 100%)', boxShadow: '0 8px 18px rgba(0,0,0,0.45)' }}
     >
-      <div aria-hidden className="pointer-events-none absolute inset-[6px] rounded-xl border border-[#cba33c]/40" />
+      <div aria-hidden className="pointer-events-none absolute inset-[6px] rounded-xl border border-fut-gold-light/40" />
       <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: 'linear-gradient(116deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0) 30%, rgba(255,255,255,0) 65%, rgba(255,255,255,0.12) 82%, rgba(255,255,255,0) 100%)' }} />
       <span className="font-poppins text-[34px] font-black" style={{ color: '#e5c164', textShadow: '0 2px 6px rgba(0,0,0,0.6)' }}>?</span>
     </motion.div>

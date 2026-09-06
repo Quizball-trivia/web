@@ -81,7 +81,7 @@ export function DetectiveCard({
   const chip = (k: ClueKey, size: 'lg' | 'md' | 'sm' = 'md', hint?: string) => (
     <span className="flex flex-col items-center gap-0.5">
       <LockChip cost={costs[k]} enabled={can(k)} size={size} onClick={() => onReveal(k)} label={t('Reveal {clue} for {n} coins', { clue: clueName(k), n: costs[k] })} />
-      {hint && <span className="font-poppins text-[8px] font-black uppercase tracking-wider text-[#33270a]/55">{hint}</span>}
+      {hint && <span className="font-poppins text-[8px] font-black uppercase tracking-wider text-fut-ink/55">{hint}</span>}
     </span>
   );
   const frame = over ? (solved ? '0 0 0 2px #38B60E, 0 20px 50px rgba(56,182,14,0.4)' : '0 0 0 2px #FB3101, 0 20px 50px rgba(251,49,1,0.32)') : '0 18px 44px rgba(0,0,0,0.55)';
@@ -93,11 +93,11 @@ export function DetectiveCard({
     <div className="relative mx-auto w-full min-w-[300px] max-w-[336px] select-none" style={{ aspectRatio: '300 / 424' }}>
       <div className="absolute inset-0 overflow-hidden rounded-[22px]" style={{ background: GOLD_BG, boxShadow: frame }}>
         <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: 'linear-gradient(116deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 24%, rgba(255,255,255,0) 60%, rgba(255,255,255,0.32) 78%, rgba(255,255,255,0) 100%)', mixBlendMode: 'soft-light' }} />
-        <div aria-hidden className="pointer-events-none absolute inset-[5px] rounded-[17px] border border-[#7c5e1e]/25" style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35)' }} />
+        <div aria-hidden className="pointer-events-none absolute inset-[5px] rounded-[17px] border border-fut-border/25" style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35)' }} />
 
         {/* the edition is free information */}
         <div className="absolute right-3.5 top-3.5 z-30">
-          <span className="rounded-lg bg-[#3a2c08]/85 px-3 py-1.5 font-poppins text-[15px] font-black uppercase tracking-wider text-[#f4e3a2] shadow-sm">{card.editionLabel}</span>
+          <span className="rounded-lg bg-fut-badge/85 px-3 py-1.5 font-poppins text-[15px] font-black uppercase tracking-wider text-fut-gold-light shadow-sm">{card.editionLabel}</span>
         </div>
 
         <div className="relative h-[264px]">
@@ -122,14 +122,14 @@ export function DetectiveCard({
           </div>
 
           {/* rating / identity column */}
-          <div className="relative z-20 flex w-[96px] flex-col items-center pl-3.5 pt-5 text-[#33270a]">
+          <div className="relative z-20 flex w-[96px] flex-col items-center pl-3.5 pt-5 text-fut-ink">
             <Slot revealed={is('rating')} h={48} locked={chip('rating', 'lg', 'OVR')}>
               <span className="font-poppins text-[49px] font-black leading-[0.82] tracking-tight">{card.overall}</span>
             </Slot>
             <Slot revealed={is('position')} h={30} locked={chip('position', 'sm', t('POS'))}>
               <span className="font-poppins text-[18px] font-black uppercase leading-none tracking-wide">{card.position}</span>
             </Slot>
-            <span className="my-2 h-px w-10 bg-[#33270a]/40" />
+            <span className="my-2 h-px w-10 bg-fut-ink/40" />
             <Slot revealed={is('nation')} h={40} locked={chip('nation', 'md', t('NATION'))}>
               <Flag code={card.nationCode} width={34} height={23} />
               <SlotLabel>{card.nation}</SlotLabel>
@@ -147,20 +147,20 @@ export function DetectiveCard({
 
         {/* name plate */}
         <div className="relative z-10 mx-4 flex h-10 items-center justify-center">
-          <span aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#33270a]/45 to-transparent" />
+          <span aria-hidden className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-fut-ink/45 to-transparent" />
           <AnimatePresence mode="wait" initial={false}>
             {over ? (
-              <motion.span key="name" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="truncate px-2 font-poppins text-[21px] font-black uppercase tracking-wide text-[#241b05]">{card.name}</motion.span>
+              <motion.span key="name" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="truncate px-2 font-poppins text-[21px] font-black uppercase tracking-wide text-fut-ink-deep">{card.name}</motion.span>
             ) : (
-              <motion.span key="masked" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="font-poppins text-[23px] font-black tracking-[0.5em] text-[#33270a]/45">? ? ?</motion.span>
+              <motion.span key="masked" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="font-poppins text-[23px] font-black tracking-[0.5em] text-fut-ink/45">? ? ?</motion.span>
             )}
           </AnimatePresence>
         </div>
 
         {/* stats: each one its own lock */}
-        <div className="relative z-10 mt-2 flex items-stretch justify-center px-4 pb-4 text-[#241b05]">
+        <div className="relative z-10 mt-2 flex items-stretch justify-center px-4 pb-4 text-fut-ink-deep">
           {statCols.map((col, i) => (
-            <div key={i} className={`flex flex-col gap-2 ${i === 0 ? 'pr-5' : 'border-l border-[#33270a]/25 pl-5'}`}>
+            <div key={i} className={`flex flex-col gap-2 ${i === 0 ? 'pr-5' : 'border-l border-fut-ink/25 pl-5'}`}>
               {col.map((k) => (
                 <div key={k} className="flex h-[26px] items-center gap-1.5">
                   <span className="flex w-[52px] justify-end">
@@ -170,7 +170,7 @@ export function DetectiveCard({
                       chip(k, 'sm')
                     )}
                   </span>
-                  <span className="font-poppins text-[12px] font-bold uppercase tracking-wide text-[#33270a]/85">{STAT_SHORT[k]}</span>
+                  <span className="font-poppins text-[12px] font-bold uppercase tracking-wide text-fut-ink/85">{STAT_SHORT[k]}</span>
                 </div>
               ))}
             </div>
@@ -196,7 +196,7 @@ function Slot({ revealed, locked, h, children }: { revealed: boolean; locked: Re
 }
 
 function SlotLabel({ children }: { children: React.ReactNode }) {
-  return <span className="max-w-[86px] truncate text-center font-poppins text-[9px] font-bold uppercase leading-none tracking-wide text-[#33270a]/80">{children}</span>;
+  return <span className="max-w-[86px] truncate text-center font-poppins text-[9px] font-bold uppercase leading-none tracking-wide text-fut-ink/80">{children}</span>;
 }
 
 /** A locked slot: lock icon + coin price. Pulses while affordable, dims when not. */
@@ -213,7 +213,7 @@ function LockChip({ cost, enabled, onClick, label, size = 'md', icon: Icon = Loc
       whileTap={enabled ? { scale: 0.92 } : undefined}
       animate={enabled ? { boxShadow: reduceMotion ? '0 0 10px rgba(255,213,74,0.6)' : ['0 0 6px rgba(255,213,74,0.35)', '0 0 12px rgba(255,213,74,0.7)', '0 0 6px rgba(255,213,74,0.35)'] } : { boxShadow: '0 0 0 rgba(0,0,0,0)' }}
       transition={reduceMotion ? { duration: 0.2 } : { duration: 1.4, repeat: Infinity }}
-      className={`inline-flex items-center gap-1 rounded-[6px] border-2 font-poppins font-black tabular-nums ${dims} ${enabled ? 'border-brand-yellow bg-[#3a2c08]/85 text-brand-yellow' : 'border-dashed border-[#33270a]/40 bg-[#33270a]/12 text-[#33270a]/60'}`}
+      className={`inline-flex items-center gap-1 rounded-[6px] border-2 font-poppins font-black tabular-nums ${dims} ${enabled ? 'border-brand-yellow bg-fut-badge/85 text-brand-yellow' : 'border-dashed border-fut-ink/40 bg-fut-ink/12 text-fut-ink/60'}`}
     >
       <Icon className={iconCls} /> {cost}
     </motion.button>
