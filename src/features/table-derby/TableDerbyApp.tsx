@@ -1098,16 +1098,16 @@ export function TableDerbyApp() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="relative z-10 mx-auto flex min-h-dvh w-full max-w-4xl flex-col justify-center gap-3 px-3 py-4 md:gap-5 md:px-8"
+            className="relative z-10 mx-auto flex min-h-dvh w-full max-w-4xl flex-col justify-center gap-3 px-3 pb-4 pt-24 md:gap-5 md:px-8"
           >
-            <div className="flex justify-center">
+            <div className="fixed inset-x-0 top-0 z-30 flex justify-center pb-4 pt-4" style={{ background: 'linear-gradient(to bottom, rgba(30,30,30,0.92) 55%, transparent)' }}>
               <ScorePill
                 roundsMe={roundsWon.me}
                 roundsOp={roundsWon.op}
                 inRoundMe={round.count.me}
                 inRoundOp={round.count.op}
-                left={<MyAvatar size={40} active={round.turn === 'me'} />}
-                right={<TdAvatar name={opponentName} size={40} active={round.turn === 'op'} />}
+                left={<MyAvatar size={54} active={round.turn === 'me'} />}
+                right={<TdAvatar name={opponentName} size={54} active={round.turn === 'op'} />}
               />
             </div>
             <CategoryBand prompt={category.prompt} compact />

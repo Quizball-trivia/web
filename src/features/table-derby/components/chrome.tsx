@@ -31,29 +31,29 @@ export function ScorePill({
   return (
     <div className="flex items-center gap-2.5">
       {left}
-      <XGlyph size={13} color="rgba(255,255,255,0.35)" />
+      <XGlyph size={15} color="rgba(255,255,255,0.35)" />
       <div
         className="flex items-stretch overflow-hidden rounded-[8px]"
         style={{ background: '#0d0d0d', boxShadow: '3px 3px 0 rgba(0,0,0,0.5)' }}
       >
-        <span className="flex w-11 items-center justify-center text-2xl text-white md:w-14 md:text-3xl" style={TD_DISPLAY}>
+        <span className="flex w-14 items-center justify-center text-3xl text-white md:w-16 md:text-4xl" style={TD_DISPLAY}>
           {roundsMe}
         </span>
         <div
           className="flex items-center px-2.5"
           style={{ background: 'var(--td-orange)', clipPath: 'polygon(18% 0, 100% 0, 82% 100%, 0 100%)' }}
         >
-          <span className="text-[14px] tabular-nums md:text-base" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
+          <span className="text-base tabular-nums md:text-lg" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
             {inRoundMe}
             {sep}
             {inRoundOp}
           </span>
         </div>
-        <span className="flex w-11 items-center justify-center text-2xl text-white md:w-14 md:text-3xl" style={TD_DISPLAY}>
+        <span className="flex w-14 items-center justify-center text-3xl text-white md:w-16 md:text-4xl" style={TD_DISPLAY}>
           {roundsOp}
         </span>
       </div>
-      <XGlyph size={13} color="rgba(255,255,255,0.35)" />
+      <XGlyph size={15} color="rgba(255,255,255,0.35)" />
       {right}
     </div>
   );

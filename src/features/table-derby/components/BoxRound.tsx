@@ -247,8 +247,10 @@ export function BoxRound({
   const faceCards = [cards[lf * 2], cards[lf * 2 + 1]];
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-3 md:gap-4">
-      <ScorePill roundsMe={roundsWon.me} roundsOp={roundsWon.op} inRoundMe={scores.me} inRoundOp={scores.op} left={<MyAvatar size={40} active={myActive} />} right={<TdAvatar name={opponentName} size={40} active={opActive} />} />
+    <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-3 pt-20 md:gap-4">
+      <div className="fixed inset-x-0 top-0 z-30 flex justify-center pb-4 pt-4" style={{ background: 'linear-gradient(to bottom, rgba(30,30,30,0.92) 55%, transparent)' }}>
+        <ScorePill roundsMe={roundsWon.me} roundsOp={roundsWon.op} inRoundMe={scores.me} inRoundOp={scores.op} left={<MyAvatar size={54} active={myActive} />} right={<TdAvatar name={opponentName} size={54} active={opActive} />} />
+      </div>
       <p
         className="text-center text-[14px] md:text-base"
         style={{ ...TD_DISPLAY, color: bphase === 'stealMe' ? 'var(--td-orange)' : 'rgba(255,255,255,0.7)' }}

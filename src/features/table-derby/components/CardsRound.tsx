@@ -183,9 +183,9 @@ export function CardsRound({
               : '';
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col gap-3 md:gap-4">
-      <div className="flex justify-center">
-        <ScorePill roundsMe={roundsWon.me} roundsOp={roundsWon.op} inRoundMe={scores.me} inRoundOp={scores.op} left={<MyAvatar size={40} active={myActive} />} right={<TdAvatar name={opponentName} size={40} active={opActive} />} />
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-2 pt-[68px] md:gap-4">
+      <div className="fixed inset-x-0 top-0 z-30 flex justify-center pb-4 pt-4" style={{ background: 'linear-gradient(to bottom, rgba(30,30,30,0.92) 55%, transparent)' }}>
+        <ScorePill roundsMe={roundsWon.me} roundsOp={roundsWon.op} inRoundMe={scores.me} inRoundOp={scores.op} left={<MyAvatar size={54} active={myActive} />} right={<TdAvatar name={opponentName} size={54} active={opActive} />} />
       </div>
       <CategoryBand prompt={`${TD.round2Name} · ${category.prompt}`} compact />
 
@@ -194,8 +194,8 @@ export function CardsRound({
       </p>
 
       {/* card table */}
-      <div className="relative mx-auto w-full max-w-[520px] md:max-w-[535px]">
-        <div className="grid grid-cols-4 gap-2 md:grid-cols-5 md:gap-3">
+      <div className="relative mx-auto w-full max-w-[498px] md:max-w-[535px]">
+        <div className="grid grid-cols-4 gap-1.5 md:grid-cols-5 md:gap-3">
           {slots.map((sl) => (
             <button
               key={sl.card.id}

@@ -186,8 +186,10 @@ export function BuzzerRound({
   const revealed = item.clues.slice(0, clueIdx);
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-3 md:gap-4">
-      <ScorePill roundsMe={roundsWon.me} roundsOp={roundsWon.op} inRoundMe={scores.me} inRoundOp={scores.op} sep=":" left={<MyAvatar size={40} active={zphase === 'answerMe'} />} right={<TdAvatar name={opponentName} size={40} active={zphase === 'answerOp'} />} />
+    <div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-3 pt-20 md:gap-4">
+      <div className="fixed inset-x-0 top-0 z-30 flex justify-center pb-4 pt-4" style={{ background: 'linear-gradient(to bottom, rgba(30,30,30,0.92) 55%, transparent)' }}>
+        <ScorePill roundsMe={roundsWon.me} roundsOp={roundsWon.op} inRoundMe={scores.me} inRoundOp={scores.op} sep=":" left={<MyAvatar size={54} active={zphase === 'answerMe'} />} right={<TdAvatar name={opponentName} size={54} active={zphase === 'answerOp'} />} />
+      </div>
       <div className="flex items-center gap-2.5">
         <span className="text-[13px] text-white/60" style={TD_DISPLAY}>
           {penaltyMode ? TD.penaltiesName : TD.round4Name}
