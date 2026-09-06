@@ -180,18 +180,18 @@ export function CardsRound({
               : '';
 
   return (
-    <div className="flex h-full w-full flex-col justify-center gap-3 md:gap-4">
+    <div className="mx-auto flex w-full max-w-3xl flex-col gap-3 md:gap-4">
       <div className="flex justify-center">
         <ScorePill roundsMe={roundsWon.me} roundsOp={roundsWon.op} inRoundMe={scores.me} inRoundOp={scores.op} />
       </div>
       <CategoryBand prompt={`${TD.round2Name} · ${category.prompt}`} compact />
 
-      <p className="text-center text-[12px] md:text-sm" style={{ ...TD_DISPLAY, color: cphase === 'stealMe' ? 'var(--td-white)' : 'rgba(0,0,0,0.65)' }}>
+      <p className="text-center text-[12px] md:text-sm" style={{ ...TD_DISPLAY, color: cphase === 'stealMe' ? 'var(--td-orange)' : 'rgba(255,255,255,0.7)' }}>
         {statusText}
       </p>
 
       {/* card table */}
-      <div className="relative mx-auto w-full max-w-[430px]">
+      <div className="relative">
         <div className="grid grid-cols-5 gap-1.5 md:gap-2.5">
           {slots.map((sl) => (
             <button
@@ -257,7 +257,7 @@ export function CardsRound({
         </AnimatePresence>
       </div>
 
-      <TurnTimerBar turnKey={`c-${tick}`} ms={GUESS_MS} running={myInput || cphase === 'guessOp' || cphase === 'stealOp'} onTable />
+      <TurnTimerBar turnKey={`c-${tick}`} ms={GUESS_MS} running={myInput || cphase === 'guessOp' || cphase === 'stealOp'} />
 
       <div className="relative">
         <form
@@ -285,7 +285,7 @@ export function CardsRound({
             whileTap={{ scale: 0.95 }}
             disabled={!myInput}
             className="h-12 shrink-0 rounded-[10px] px-5 text-sm disabled:opacity-40"
-            style={{ ...TD_DISPLAY, background: '#0d0d0d', color: 'var(--td-white)', boxShadow: '4px 4px 0 rgba(0,0,0,0.5)' }}
+            style={{ ...TD_DISPLAY, background: 'var(--td-orange)', color: '#0d0d0d', boxShadow: '4px 4px 0 rgba(0,0,0,0.5)' }}
           >
             {TD.submit}
           </motion.button>
@@ -301,8 +301,8 @@ export function CardsRound({
               className="pointer-events-none absolute -top-9 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-[8px] px-3 py-1 text-[12px]"
               style={{
                 ...TD_DISPLAY,
-                background: flash.good ? '#0d0d0d' : 'var(--td-steel-deep)',
-                color: 'var(--td-white)',
+                background: flash.good ? 'var(--td-orange)' : 'var(--td-steel-deep)',
+                color: flash.good ? '#0d0d0d' : 'var(--td-white)',
                 boxShadow: '3px 3px 0 rgba(0,0,0,0.5)',
               }}
             >

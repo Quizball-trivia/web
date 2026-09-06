@@ -24,7 +24,7 @@ import {
   TicketGlyph,
   PERF_DOTS,
 } from './components/brand';
-import { CategoryBand, PlayerBoard, ScorePill, TableStage, TurnTimerBar } from './components/chrome';
+import { CategoryBand, PlayerBoard, ScorePill, TurnTimerBar } from './components/chrome';
 import { DailySolo } from './components/DailySolo';
 import { CardsRound } from './components/CardsRound';
 import { BoxRound } from './components/BoxRound';
@@ -920,10 +920,14 @@ export function TableDerbyApp() {
 
         {/* ── RPS ── */}
         {phase === 'rps' && (
-          <motion.main key="rps" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10">
-            <TableStage opponentName={opponentName}>
-            <div className="flex flex-1 flex-col items-center justify-center gap-7">
-            <h2 className="text-2xl md:text-3xl" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
+          <motion.main
+            key="rps"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="relative z-10 flex min-h-dvh flex-col items-center justify-center gap-7 px-6"
+          >
+            <h2 className="text-2xl text-white md:text-3xl" style={TD_DISPLAY}>
               {TD.rpsTitle}
             </h2>
             <div className="flex items-center gap-3 md:gap-4">
@@ -982,8 +986,6 @@ export function TableDerbyApp() {
                 )}
               </AnimatePresence>
             </div>
-            </div>
-            </TableStage>
           </motion.main>
         )}
 
@@ -1028,11 +1030,16 @@ export function TableDerbyApp() {
           </motion.main>
         )}
 
-        {/* ── PLAY (on the table, facing the opponent) ── */}
+        {/* ── PLAY ── */}
         {phase === 'play' && round && category && (
-          <motion.main key="play" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10">
-            <TableStage opponentName={opponentName}>
-            <div className="flex justify-center pb-2">
+          <motion.main
+            key="play"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="relative z-10 mx-auto flex min-h-dvh w-full max-w-4xl flex-col justify-center gap-3 px-3 py-4 md:gap-5 md:px-8"
+          >
+            <div className="flex justify-center">
               <ScorePill
                 roundsMe={roundsWon.me}
                 roundsOp={roundsWon.op}
@@ -1040,25 +1047,9 @@ export function TableDerbyApp() {
                 inRoundOp={round.count.op}
               />
             </div>
-            {/* opponent's board sits at the far edge of the table */}
-            <div className="mx-auto w-full max-w-md">
-              <PlayerBoard
-                name={opponentName}
-                side="right"
-                compact
-                lives={round.lives.op}
-                count={round.count.op}
-                answers={round.found.filter((f) => f.by === 'op').map((f) => f.display)}
-                active={round.turn === 'op'}
-                thinking={round.turn === 'op' ? TD.opponentTurn : undefined}
-              />
-            </div>
-            <div className="pt-2.5">
-              <CategoryBand prompt={category.prompt} compact />
-            </div>
-            <div className="min-h-3 flex-1" />
-            {/* my board, near my seat */}
-            <div className="mx-auto w-full max-w-xl">
+            <CategoryBand prompt={category.prompt} compact />
+
+            <div className="flex items-end gap-3 md:gap-6">
               <PlayerBoard
                 name={TD.you}
                 side="left"
@@ -1067,11 +1058,18 @@ export function TableDerbyApp() {
                 answers={round.found.filter((f) => f.by === 'me').map((f) => f.display)}
                 active={round.turn === 'me'}
               />
+              <PlayerBoard
+                name={opponentName}
+                side="right"
+                lives={round.lives.op}
+                count={round.count.op}
+                answers={round.found.filter((f) => f.by === 'op').map((f) => f.display)}
+                active={round.turn === 'op'}
+                thinking={round.turn === 'op' ? TD.opponentTurn : undefined}
+              />
             </div>
 
-            <div className="pt-2.5">
-              <TurnTimerBar turnKey={`t-${round.turnNo}`} ms={TURN_MS} running={!roundWinner} onTable />
-            </div>
+            <TurnTimerBar turnKey={`t-${round.turnNo}`} ms={TURN_MS} running={!roundWinner} />
 
             <div className="relative">
               <form
@@ -1099,7 +1097,7 @@ export function TableDerbyApp() {
                   whileTap={{ scale: 0.95 }}
                   disabled={round.turn !== 'me' || !!roundWinner}
                   className="h-12 shrink-0 rounded-[10px] px-5 text-sm disabled:opacity-40"
-                  style={{ ...TD_DISPLAY, background: '#0d0d0d', color: 'var(--td-white)', boxShadow: '4px 4px 0 rgba(0,0,0,0.5)' }}
+                  style={{ ...TD_DISPLAY, background: 'var(--td-orange)', color: '#0d0d0d', boxShadow: '4px 4px 0 rgba(0,0,0,0.5)' }}
                 >
                   {TD.submit}
                 </motion.button>
@@ -1116,8 +1114,8 @@ export function TableDerbyApp() {
                     className="pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2 rounded-[8px] px-3 py-1 text-[12px]"
                     style={{
                       ...TD_DISPLAY,
-                      background: flash.kind === 'correct' ? '#0d0d0d' : flash.kind === 'pool' ? 'var(--td-white)' : 'var(--td-steel-deep)',
-                      color: flash.kind === 'pool' ? '#0d0d0d' : 'var(--td-white)',
+                      background: flash.kind === 'correct' ? 'var(--td-orange)' : flash.kind === 'pool' ? 'var(--td-white)' : 'var(--td-steel-deep)',
+                      color: flash.kind === 'correct' || flash.kind === 'pool' ? '#0d0d0d' : 'var(--td-white)',
                       boxShadow: '3px 3px 0 rgba(0,0,0,0.5)',
                     }}
                   >
@@ -1126,61 +1124,76 @@ export function TableDerbyApp() {
                 )}
               </AnimatePresence>
             </div>
-            </TableStage>
           </motion.main>
         )}
 
         {/* ── ROUND 2: CARDS ── */}
         {phase === 'cards' && cardCategory && (
-          <motion.main key="cards" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10">
-            <TableStage opponentName={opponentName}>
-              <CardsRound
-                category={cardCategory}
-                starter={starterSeat}
-                roundsWon={roundsWon}
-                opponentName={opponentName}
-                onEnd={(w) => endRound(w)}
-              />
-            </TableStage>
+          <motion.main
+            key="cards"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="relative z-10 flex min-h-dvh w-full flex-col justify-center px-3 py-4 md:px-8"
+          >
+            <CardsRound
+              category={cardCategory}
+              starter={starterSeat}
+              roundsWon={roundsWon}
+              opponentName={opponentName}
+              onEnd={(w) => endRound(w)}
+            />
           </motion.main>
         )}
 
         {/* ── ROUND 3: PAPA CARLO'S BOX ── */}
         {phase === 'box' && (
-          <motion.main key="box" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10">
-            <TableStage opponentName={opponentName}>
-              <BoxRound starter={starterSeat} roundsWon={roundsWon} opponentName={opponentName} onEnd={(w) => endRound(w)} />
-            </TableStage>
+          <motion.main
+            key="box"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="relative z-10 flex min-h-dvh w-full flex-col justify-center px-3 py-4 md:px-8"
+          >
+            <BoxRound starter={starterSeat} roundsWon={roundsWon} opponentName={opponentName} onEnd={(w) => endRound(w)} />
           </motion.main>
         )}
 
         {/* ── ROUND 4: WHO AM I (BUZZER) ── */}
         {phase === 'buzzer' && buzzerItems.length > 0 && (
-          <motion.main key="buzzer" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10">
-            <TableStage opponentName={opponentName}>
-              <BuzzerRound
-                items={buzzerItems}
-                roundsWon={roundsWon}
-                opponentName={opponentName}
-                onEnd={(w) => endRound(w)}
-              />
-            </TableStage>
+          <motion.main
+            key="buzzer"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="relative z-10 flex min-h-dvh w-full flex-col justify-center px-3 py-4 md:px-8"
+          >
+            <BuzzerRound
+              items={buzzerItems}
+              roundsWon={roundsWon}
+              opponentName={opponentName}
+              onEnd={(w) => endRound(w)}
+            />
           </motion.main>
         )}
 
         {/* ── PENALTIES ── */}
         {phase === 'penalties' && penaltyItems.length > 0 && (
-          <motion.main key="penalties" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10">
-            <TableStage opponentName={opponentName}>
-              <BuzzerRound
-                items={penaltyItems}
-                extraPool={penaltySpare}
-                penaltyMode
-                roundsWon={roundsWon}
-                opponentName={opponentName}
-                onEnd={(w) => finishMatch(w === 'op' ? 'op' : 'me')}
-              />
-            </TableStage>
+          <motion.main
+            key="penalties"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="relative z-10 flex min-h-dvh w-full flex-col justify-center px-3 py-4 md:px-8"
+          >
+            <BuzzerRound
+              items={penaltyItems}
+              extraPool={penaltySpare}
+              penaltyMode
+              roundsWon={roundsWon}
+              opponentName={opponentName}
+              onEnd={(w) => finishMatch(w === 'op' ? 'op' : 'me')}
+            />
           </motion.main>
         )}
 
@@ -1335,7 +1348,7 @@ export function TableDerbyApp() {
       {/* Dev-only round skip — steer outcomes for quick flow testing. */}
       {process.env.NODE_ENV !== 'production' && inRoundPhase && (
         <div
-          className="fixed left-2.5 top-24 z-50 flex flex-col gap-1 rounded-[10px] p-1.5 opacity-70"
+          className="fixed bottom-24 right-2.5 z-50 flex flex-col gap-1 rounded-[10px] p-1.5 opacity-70"
           style={{ background: 'rgba(0,0,0,0.6)' }}
         >
           {(

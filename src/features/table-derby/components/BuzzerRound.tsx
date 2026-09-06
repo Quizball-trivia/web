@@ -185,10 +185,10 @@ export function BuzzerRound({
   const revealed = item.clues.slice(0, clueIdx);
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-2xl flex-col items-center justify-center gap-3 md:gap-4">
+    <div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-3 md:gap-4">
       <ScorePill roundsMe={roundsWon.me} roundsOp={roundsWon.op} inRoundMe={scores.me} inRoundOp={scores.op} sep=":" />
       <div className="flex items-center gap-2.5">
-        <span className="text-[11px]" style={{ ...TD_DISPLAY, color: 'rgba(0,0,0,0.6)' }}>
+        <span className="text-[11px] text-white/60" style={TD_DISPLAY}>
           {penaltyMode ? TD.penaltiesName : TD.round4Name}
         </span>
         <span
@@ -232,7 +232,7 @@ export function BuzzerRound({
       {/* buzz + answer row */}
       {zphase === 'answerMe' ? (
         <div className="w-full">
-          <TurnTimerBar turnKey={`z-${tick}`} ms={ANSWER_MS} running onTable />
+          <TurnTimerBar turnKey={`z-${tick}`} ms={ANSWER_MS} running />
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -256,7 +256,7 @@ export function BuzzerRound({
               type="submit"
               whileTap={{ scale: 0.95 }}
               className="h-12 shrink-0 rounded-[10px] px-5 text-sm"
-              style={{ ...TD_DISPLAY, background: '#0d0d0d', color: 'var(--td-white)', boxShadow: '4px 4px 0 rgba(0,0,0,0.5)' }}
+              style={{ ...TD_DISPLAY, background: 'var(--td-orange)', color: '#0d0d0d', boxShadow: '4px 4px 0 rgba(0,0,0,0.5)' }}
             >
               {TD.submit}
             </motion.button>
@@ -272,14 +272,14 @@ export function BuzzerRound({
             className="flex size-24 items-center justify-center rounded-full text-lg disabled:opacity-35 md:size-28 md:text-xl"
             style={{
               ...TD_DISPLAY,
-              background: '#0d0d0d',
-              color: 'var(--td-white)',
-              boxShadow: '0 6px 0 #000, 6px 10px 0 rgba(0,0,0,0.35)',
+              background: 'var(--td-orange)',
+              color: '#0d0d0d',
+              boxShadow: '0 6px 0 var(--td-orange-deep), 6px 10px 0 rgba(0,0,0,0.55)',
             }}
           >
             {TD.buzz}
           </motion.button>
-          <span className="text-[10px]" style={{ ...TD_DISPLAY, color: 'rgba(0,0,0,0.6)' }}>
+          <span className="text-[10px] text-white/50" style={TD_DISPLAY}>
             {locked.me ? TD.lockedOut : zphase === 'answerOp' ? `${opponentName} · ${TD.opponentBuzzed}` : TD.buzzRules}
           </span>
         </div>
@@ -297,8 +297,8 @@ export function BuzzerRound({
               className="pointer-events-none whitespace-nowrap rounded-[8px] px-3 py-1 text-[12px]"
               style={{
                 ...TD_DISPLAY,
-                background: flash.good ? '#0d0d0d' : 'var(--td-steel-deep)',
-                color: 'var(--td-white)',
+                background: flash.good ? 'var(--td-orange)' : 'var(--td-steel-deep)',
+                color: flash.good ? '#0d0d0d' : 'var(--td-white)',
                 boxShadow: '3px 3px 0 rgba(0,0,0,0.5)',
               }}
             >

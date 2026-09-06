@@ -4,52 +4,7 @@
  *  score pill, category lower-third, player boards with hearts. */
 
 import { AnimatePresence, motion } from 'motion/react';
-import { PERF_DOTS, TD_DISPLAY, XGlyph } from './brand';
-
-/* ── Table stage: the match happens ON the show's orange table, with the
-      opponent seated across (far side, wall behind them). ───────────── */
-
-export function TableStage({
-  opponentName,
-  opponentExtra,
-  children,
-}: {
-  opponentName: string;
-  opponentExtra?: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="relative z-10 flex min-h-dvh flex-col">
-      {/* far side: the wall + the opponent's seat */}
-      <div className="flex flex-col items-center justify-end gap-2 pb-3 pt-12" style={{ minHeight: 'clamp(100px, 15dvh, 170px)' }}>
-        <div
-          className="rounded-[8px] px-4 py-1.5"
-          style={{ background: 'var(--td-paper)', boxShadow: '3px 3px 0 rgba(0,0,0,0.55)', transform: 'rotate(-1.5deg)' }}
-        >
-          <span className="text-sm md:text-base" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
-            {opponentName}
-          </span>
-        </div>
-        {opponentExtra}
-      </div>
-      {/* the table itself */}
-      <div className="relative flex flex-1 flex-col">
-        <div
-          aria-hidden
-          className="absolute inset-0"
-          style={{ background: 'var(--td-orange)', clipPath: 'polygon(6% 0, 94% 0, 102% 102%, -2% 102%)' }}
-        >
-          <div className="absolute inset-0" style={PERF_DOTS} />
-          {/* far-edge shading gives the plane its depth */}
-          <div className="absolute inset-x-0 top-0 h-24" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.35), transparent)' }} />
-        </div>
-        <div className="relative z-10 mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 pb-5 pt-5 md:px-8">
-          {children}
-        </div>
-      </div>
-    </div>
-  );
-}
+import { TD_DISPLAY, XGlyph } from './brand';
 
 /* ── Score pill (top): white end numerals = rounds won,
       orange slash center = in-round score ─────────────────────── */
@@ -164,7 +119,6 @@ export function PlayerBoard({
   answers,
   active,
   thinking,
-  compact = false,
 }: {
   name: string;
   side: 'left' | 'right';
@@ -173,15 +127,11 @@ export function PlayerBoard({
   answers: string[];
   active: boolean;
   thinking?: string;
-  /** Facing layout: the opponent's board at the far edge is short. */
-  compact?: boolean;
 }) {
   const mirror = side === 'right';
-  const lastAnswers = answers.slice(compact ? -2 : -4);
+  const lastAnswers = answers.slice(-4);
   return (
-    <div
-      className={`flex min-w-0 flex-1 items-stretch gap-1.5 ${compact ? 'h-[120px] md:h-[136px]' : 'h-[min(240px,26dvh)] md:h-[280px]'} ${mirror ? 'flex-row-reverse' : ''}`}
-    >
+    <div className={`flex h-[min(300px,34dvh)] min-w-0 flex-1 items-stretch gap-1.5 md:h-[360px] ${mirror ? 'flex-row-reverse' : ''}`}>
       {/* answers panel */}
       <div
         className="relative min-w-0 flex-1 rounded-[10px] px-3 pb-8 pt-2"
@@ -207,7 +157,7 @@ export function PlayerBoard({
             ))}
           </AnimatePresence>
           {/* empty ruled lines to keep the board feeling like the show's */}
-          {Array.from({ length: Math.max(0, (compact ? 1 : 3) - lastAnswers.length) }).map((_, i) => (
+          {Array.from({ length: Math.max(0, 3 - lastAnswers.length) }).map((_, i) => (
             <div key={i} className="border-b py-1 text-[11px] md:text-sm" style={{ borderColor: 'var(--td-line)' }}>
               &nbsp;
             </div>
@@ -258,30 +208,16 @@ export function PlayerBoard({
 
 /* ── Turn timer bar (10s) ───────────────────────────────────────── */
 
-export function TurnTimerBar({
-  turnKey,
-  ms,
-  running,
-  onTable = false,
-}: {
-  turnKey: string;
-  ms: number;
-  running: boolean;
-  /** Dark bar for placement on the orange table surface. */
-  onTable?: boolean;
-}) {
+export function TurnTimerBar({ turnKey, ms, running }: { turnKey: string; ms: number; running: boolean }) {
   return (
-    <div
-      className="h-1.5 w-full overflow-hidden rounded-full"
-      style={{ background: onTable ? 'rgba(0,0,0,0.22)' : 'rgba(255,255,255,0.12)' }}
-    >
+    <div className="h-1.5 w-full overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.12)' }}>
       <motion.div
         key={turnKey}
         initial={{ width: '100%' }}
         animate={{ width: running ? '0%' : '100%' }}
         transition={{ duration: running ? ms / 1000 : 0, ease: 'linear' }}
         className="h-full rounded-full"
-        style={{ background: onTable ? '#0d0d0d' : 'var(--td-orange)' }}
+        style={{ background: 'var(--td-orange)' }}
       />
     </div>
   );
