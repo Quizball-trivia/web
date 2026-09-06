@@ -126,9 +126,10 @@ export function XGlyph({ size = 20, color = 'var(--td-white)', rotate = 8 }: { s
   );
 }
 
-/* ── Backdrop: the official set-wall mural (logos deck p.10) — panel
-      strips tiled like the studio wall. `accent` = the orange-highlight
-      variant; default is the all-charcoal one. ────────────────────── */
+/* ── Backdrop: one unified mural composed in the show's style
+      (Georgian-only word collage, 2560×1600, baked #282828 ground —
+      regenerate via scripts/table-derby/compose-mural.html if the word bank changes).
+      `accent` swaps in the official orange-highlight panel. ────────── */
 
 export function MuralBackdrop({ dim = 1, accent = false }: { dim?: number; accent?: boolean }) {
   return (
@@ -137,11 +138,8 @@ export function MuralBackdrop({ dim = 1, accent = false }: { dim?: number; accen
       className="pointer-events-none absolute inset-0 select-none"
       style={{
         opacity: dim,
-        backgroundImage: `url(/assets/table-derby/bg-mural-${accent ? 'accent' : 'dark'}.png)`,
-        // Natural scale, no cover-zoom: at least 980px of artwork width,
-        // centered; the ground color equals the panel's baked background
-        // so uncovered areas blend seamlessly (no bands, no gaps).
-        backgroundSize: 'max(100%, 980px) auto',
+        backgroundImage: `url(/assets/table-derby/bg-mural-${accent ? 'accent' : 'composed'}.png)`,
+        backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
       }}

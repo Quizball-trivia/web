@@ -1,0 +1,89 @@
+<!doctype html>
+<meta charset="utf-8">
+<style>
+  @font-face {
+    font-family: 'NotoGeo';
+    src: url('file:///Users/nikatalakhadze/web/node_modules/@fontsource/noto-sans-georgian/files/noto-sans-georgian-georgian-900-normal.woff2') format('woff2');
+    font-weight: 900;
+  }
+  @font-face {
+    font-family: 'NotoGeoLatin';
+    src: url('file:///Users/nikatalakhadze/web/node_modules/@fontsource/noto-sans-georgian/files/noto-sans-georgian-latin-900-normal.woff2') format('woff2');
+    font-weight: 900;
+  }
+  * { margin: 0; padding: 0; }
+  body { background: #282828; }
+  #canvas {
+    position: relative;
+    width: 2560px;
+    height: 1600px;
+    overflow: hidden;
+    background: #282828;
+  }
+  #flow {
+    position: absolute;
+    inset: -70px -90px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    align-content: flex-start;
+    justify-content: space-between;
+    column-gap: 20px;
+  }
+  .w, .g { margin-top: -26px; }
+  .w {
+    font-family: 'NotoGeoLatin', 'NotoGeo', sans-serif;
+    font-weight: 900;
+    color: #1a1a1a;
+    text-transform: uppercase;
+    line-height: 0.86;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+  }
+  .g { color: #1a1a1a; flex: none; display: flex; align-items: center; }
+</style>
+<div id="canvas"><div id="flow"></div></div>
+<script>
+// deterministic PRNG
+let seed = 20260906;
+const rnd = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+
+const WORDS = [
+  ['გოოოოლ', 300], ['თამაში', 250], ['ბარათონი', 170], ['ჩამოთვალე', 160],
+  ['დერბი', 290], ['მუნდიალი', 170], ['ფინალი', 210], ['ფეხბურთი', 150],
+  ['პენალტების', 120], ['სერია', 160], ['კაპიტანი', 130], ['მცველები', 120],
+  ['ბომბარდირი', 115], ['დარტსი', 150], ['მაგიდის', 150], ['ვინ ვარ მე?', 140],
+  ['პაპა', 140], ['კარლოს', 130], ['ყუთი', 190], ['ბუნდესლიგა', 125],
+  ['გუნდები', 145], ['მეკარე', 160], ['ლეგენდა', 135], ['ოქროს ბურთი', 120],
+  ['26', 330], ['10', 300], ['5', 220], ['7', 260], ['90+1', 150],
+  ['?', 260], ['!', 280], ['დერბი', 160], ['გოლი', 200], ['თამაში', 140],
+  ['ფრე', 170], ['მატჩი', 165], ['ქულა', 140], ['ჩამოთვალე', 120],
+  ['ფეხბურთი', 200], ['მუნდიალი', 130], ['გოლი', 150], ['კარლოს', 170],
+  ['ყუთი', 130], ['სერია', 120], ['დარტსი', 110], ['მეკარე', 120],
+  ['ბარათონი', 220], ['ფინალი', 140], ['გუნდები', 110], ['26', 240],
+  ['თამაში', 180], ['დერბი', 210], ['?', 190], ['10', 200], ['ვალე', 190],
+  ['პაპა', 110], ['მაგიდის', 120], ['ლეგენდა', 170], ['გოოოოლ', 170],
+  ['ბომბარდირი', 140], ['კაპიტანი', 105], ['!', 200], ['ფრე', 130],
+];
+
+const ball = (s) => `<svg width="${s}" height="${s}" viewBox="0 0 48 48"><circle cx="24" cy="24" r="20" fill="none" stroke="#1a1a1a" stroke-width="4"/><path fill="#1a1a1a" d="m24 13 7 5-2.7 8.2h-8.6L17 18l7-5Zm-13 6.5 5 1.5 1.8 8-4.4 4-4.6-4c.2-3.5 1-6.7 2.2-9.5Zm26 0c1.2 2.8 2 6 2.2 9.5l-4.6 4-4.4-4 1.8-8 5-1.5ZM18 37h12l2 4.6A18 18 0 0 1 24 43c-2.8 0-5.5-.5-8-1.4L18 37Z"/></svg>`;
+const bolt = (s) => `<svg width="${s * 0.6}" height="${s}" viewBox="0 0 24 40"><path fill="#1a1a1a" d="M14 0 0 22h8L6 40 24 15h-9L21 0h-7Z"/></svg>`;
+const star = (s) => `<svg width="${s}" height="${s}" viewBox="0 0 40 40"><path fill="#1a1a1a" d="M20 0l3.4 12.2L36 8l-8.6 9.4L40 20l-12.6 2.6L36 32l-12.6-4.2L20 40l-3.4-12.2L4 32l8.6-9.4L0 20l12.6-2.6L4 8l12.6 4.2L20 0Z"/></svg>`;
+const xg = (s) => `<span class="w" style="font-size:${s}px">✕</span>`;
+const sq = (s, r) => `<svg width="${s}" height="${s}" viewBox="0 0 40 40"><rect x="4" y="4" width="32" height="32" rx="4" fill="#1a1a1a" transform="rotate(${r} 20 20)"/></svg>`;
+const dots = (s) => `<svg width="${s * 2.2}" height="${s}" viewBox="0 0 44 20"><circle cx="10" cy="10" r="9" fill="#1a1a1a"/><circle cx="33" cy="10" r="9" fill="#1a1a1a"/></svg>`;
+const GLYPHS = [() => ball(150), () => bolt(230), () => star(120), () => xg(170), () => sq(110, 10), () => dots(70), () => ball(100), () => bolt(150), () => sq(80, -12), () => star(90), () => dots(55), () => xg(120)];
+
+// interleave: every ~3 words, a glyph
+const flow = document.getElementById('flow');
+let gi = 0;
+const items = [];
+const words = [...WORDS];
+// shuffle deterministically
+for (let i = words.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [words[i], words[j]] = [words[j], words[i]]; }
+words.forEach(([t, s], i) => {
+  items.push(`<span class="w" style="font-size:${s}px">${t}</span>`);
+  if (i % 3 === 2 && gi < GLYPHS.length) items.push(`<span class="g">${GLYPHS[gi++]()}</span>`);
+});
+flow.innerHTML = items.join('');
+</script>
