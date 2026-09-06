@@ -30,7 +30,7 @@ describe('Weekend League country prizes', () => {
     expect(getWeekendLeaguePrizes(country).heroAmount).toBe('200₾');
   });
 
-  it.each(['US', 'ES', 'GB', 'DE', 'Spain', 'United States', 'PL', 'AE', 'XK'])('uses Amazon USD prizes for %s', (country) => {
+  it.each(['US', 'ES', 'GB', 'UK', 'DE', 'Spain', 'United States', 'PL', 'AE', 'XK', 'gb-eng', 'gb-sct', 'gb-wls', ' GB-NIR '])('uses Amazon USD prizes for %s', (country) => {
     expect(getWeekendLeaguePrizes(country).tiers.map((tier) => translate('en', tier.prizeKey)))
       .toEqual(['$50 USD Amazon Gift Card', '$25 USD Amazon Gift Card', '$10 USD Amazon Gift Card']);
   });

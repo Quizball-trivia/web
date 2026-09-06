@@ -1,7 +1,7 @@
 import { normalizeCountryCode } from '@/lib/geo/countryCode';
 import { PRIZES } from './mock-data';
 
-// ISO country codes from flag-icons/country.json, plus Kosovo and UK home nations.
+// ISO country codes from flag-icons/country.json, plus Kosovo and UK aliases.
 // Keep the compact code list here instead of bundling the full flag metadata.
 const PRIZE_COUNTRY_CODES = new Set(
   [
@@ -55,7 +55,11 @@ const INTERNATIONAL_PRIZES = {
 /** Saved profile country determines prizes; language and IP do not.
  * Preserve the existing offer while the profile country is missing/unknown. */
 export function getWeekendLeaguePrizes(country: string | null | undefined) {
-  const code = normalizeCountryCode(country);
+  const rawCode = country?.trim().toLowerCase();
+  const normalizedCode = rawCode === 'uk' ? 'gb' : normalizeCountryCode(country);
+  const code = rawCode && PRIZE_COUNTRY_CODES.has(rawCode)
+    ? rawCode
+    : normalizedCode;
   return code != null && code !== 'ge' && PRIZE_COUNTRY_CODES.has(code)
     ? INTERNATIONAL_PRIZES
     : GEORGIA_PRIZES;
