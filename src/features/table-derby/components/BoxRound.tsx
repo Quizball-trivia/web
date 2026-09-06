@@ -10,7 +10,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { matchesName } from '@/features/mini-games/lib/matching';
 import { TD } from '../lib/copy';
 import { TD_BOX_CARDS, type TdBoxQuestion } from '../data/box';
-import { TD_DISPLAY, PERF_DOTS } from './brand';
+import { TD_DISPLAY } from './brand';
 import { ScorePill, TurnTimerBar } from './chrome';
 import { MyAvatar, TdAvatar } from './Avatar';
 
@@ -20,10 +20,14 @@ type BPhase = 'roll' | 'qMe' | 'qOp' | 'stealMe' | 'stealOp' | 'over';
 const ANSWER_MS = 15_000;
 const STEAL_MS = 10_000;
 
-/* Box faces: 4 around (rotateY) + top (rotateX). PLACE positions a face on
- * the cube; VIEW is the cube rotation that brings that face to the front. */
-const PLACE = ['rotateY(0deg)', 'rotateY(90deg)', 'rotateY(180deg)', 'rotateY(270deg)', 'rotateX(90deg)'];
-const VIEW = ['rotateY(0deg)', 'rotateY(-90deg)', 'rotateY(-180deg)', 'rotateY(-270deg)', 'rotateX(-90deg)'];
+/* The box is a Blender-rendered turntable: 24 frames over 72 deg (one
+ * face-to-face period of the pentagon; the sequence loops). Drag spins
+ * it; release snaps to the nearest face, where the live category cards
+ * overlay the front pockets. */
+const FRAMES = 24;
+const DEG_PER_FRAME = 3;
+const FACE_DEG = 72;
+const framePath = (i: number) => `/assets/table-derby/3d/box/box_${String(i).padStart(2, '0')}.webp`;
 
 interface CardState {
   id: string;
@@ -45,7 +49,32 @@ export function BoxRound({
   const [cards, setCards] = useState<CardState[]>(() =>
     TD_BOX_CARDS.map((c) => ({ id: c.id, title: c.title, remaining: [...c.questions] })),
   );
-  const [face, setFace] = useState(0);
+  // turntable rotation (continuous degrees) + drag state
+  const [rot, setRot] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const rotRef = useRef(0);
+  const dragRef = useRef<{ startX: number; startRot: number; cardId: string | null; moved: boolean } | null>(null);
+  const animRef = useRef<number | null>(null);
+  const setRotBoth = (v: number) => {
+    rotRef.current = v;
+    setRot(v);
+  };
+  const animateTo = (target: number, ms = 380) => {
+    if (animRef.current) cancelAnimationFrame(animRef.current);
+    const from = rotRef.current;
+    const start = performance.now();
+    const ease = (t: number) => 1 - Math.pow(1 - t, 3);
+    const step = (now: number) => {
+      const t = Math.min(1, (now - start) / ms);
+      setRotBoth(from + (target - from) * ease(t));
+      if (t < 1) animRef.current = requestAnimationFrame(step);
+      else animRef.current = null;
+    };
+    animRef.current = requestAnimationFrame(step);
+  };
+  useEffect(() => () => {
+    if (animRef.current) cancelAnimationFrame(animRef.current);
+  }, []);
   const [turn, setTurn] = useState<Seat>(starter);
   const [bphase, setBphase] = useState<BPhase>('roll');
   const [scores, setScores] = useState({ me: 0, op: 0 });
@@ -92,6 +121,7 @@ export function BoxRound({
 
   const openCard = (cardId: string, by: Seat) => {
     const s = sref.current;
+    if (s.bphase !== 'roll') return; // already answering
     const card = s.cards.find((c) => c.id === cardId);
     if (!card || card.remaining.length === 0) return;
     const nextQ = card.remaining[0];
@@ -107,12 +137,16 @@ export function BoxRound({
     let t: ReturnType<typeof setTimeout> | null = null;
     if (bphase === 'roll' && turn === 'op') {
       t = setTimeout(() => {
-        setFace((f) => (f + 1 + Math.floor(Math.random() * 4)) % 5); // op "rolls"
-        setTimeout(() => {
-          const pool = sref.current.cards.filter((c) => c.remaining.length > 0);
-          if (pool.length === 0) return;
-          openCard(pool[Math.floor(Math.random() * pool.length)].id, 'op');
-        }, 900);
+        // op picks a card, spins the box to its face, then opens it
+        const pool = sref.current.cards.filter((c) => c.remaining.length > 0);
+        if (pool.length === 0) return;
+        const chosen = pool[Math.floor(Math.random() * pool.length)];
+        const ci = sref.current.cards.findIndex((c) => c.id === chosen.id);
+        const lfTarget = Math.floor(ci / 2);
+        const lfNow = ((Math.round(rotRef.current / FACE_DEG) % 5) + 5) % 5;
+        const delta = (((lfTarget - lfNow) % 5) + 5) % 5 || 5;
+        animateTo(rotRef.current + delta * FACE_DEG, 750);
+        setTimeout(() => openCard(chosen.id, 'op'), 1050);
       }, 1400 + Math.random() * 1200);
     } else if (bphase === 'qOp') {
       t = setTimeout(() => {
@@ -194,8 +228,13 @@ export function BoxRound({
               ? TD.yourTurn
               : '';
 
-  const boxSize = typeof window !== 'undefined' && window.innerWidth >= 768 ? 340 : 280;
-  const half = boxSize / 2;
+  const boxW = typeof window !== 'undefined' && window.innerWidth >= 768 ? 330 : 280;
+  const boxH = Math.round(boxW * (760 / 640));
+  const nearestFaceRot = Math.round(rot / FACE_DEG) * FACE_DEG;
+  const snapped = !dragging && Math.abs(rot - nearestFaceRot) < 3;
+  const frame = ((Math.round(rot / DEG_PER_FRAME) % FRAMES) + FRAMES) % FRAMES;
+  const lf = ((Math.round(rot / FACE_DEG) % 5) + 5) % 5;
+  const faceCards = [cards[lf * 2], cards[lf * 2 + 1]];
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-3 md:gap-4">
@@ -207,73 +246,108 @@ export function BoxRound({
         {statusText}
       </p>
 
-      {/* the box */}
-      <div className="flex items-center gap-3 md:gap-5">
+      {/* the box — Blender turntable, spin it with your finger */}
+      <div className="flex items-center gap-2.5 md:gap-4">
         <button
           type="button"
           disabled={!canRoll}
-          onClick={() => setFace((f) => (f + 4) % 5)}
+          onClick={() => canRoll && animateTo(Math.round(rotRef.current / FACE_DEG) * FACE_DEG - FACE_DEG)}
           className="flex size-12 items-center justify-center rounded-full text-2xl text-white disabled:opacity-30 md:size-14"
           style={{ ...TD_DISPLAY, background: 'var(--td-charcoal)', boxShadow: '3px 3px 0 #000' }}
           aria-label="roll-left"
         >
           ‹
         </button>
-        <div style={{ perspective: 1000, width: boxSize, height: boxSize }}>
-          <motion.div
-            animate={{ transform: `translateZ(-${half}px) ${VIEW[face]}` }}
-            transition={{ type: 'spring', damping: 20, stiffness: 160 }}
-            className="relative h-full w-full"
-            style={{ transformStyle: 'preserve-3d' }}
+        <div
+          className="relative select-none"
+          style={{ width: boxW, height: boxH, touchAction: 'none', cursor: canRoll ? (dragging ? 'grabbing' : 'grab') : 'default' }}
+          onPointerDown={(e) => {
+            if (!canRoll) return;
+            (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+            if (animRef.current) cancelAnimationFrame(animRef.current);
+            const cardEl = (e.target as HTMLElement).closest('[data-card-id]') as HTMLElement | null;
+            dragRef.current = { startX: e.clientX, startRot: rotRef.current, cardId: cardEl?.dataset.cardId ?? null, moved: false };
+          }}
+          onPointerMove={(e) => {
+            const d = dragRef.current;
+            if (!d) return;
+            if (!d.moved && Math.abs(e.clientX - d.startX) > 8) {
+              d.moved = true;
+              setDragging(true);
+            }
+            if (d.moved) setRotBoth(d.startRot + (e.clientX - d.startX) * 0.35);
+          }}
+          onPointerUp={() => {
+            const d = dragRef.current;
+            if (!d) return;
+            dragRef.current = null;
+            setDragging(false);
+            if (d.moved) {
+              animateTo(Math.round(rotRef.current / FACE_DEG) * FACE_DEG);
+            } else if (d.cardId && canPick) {
+              openCard(d.cardId, 'me'); // clean tap on a card
+            }
+          }}
+          onPointerCancel={() => {
+            if (!dragRef.current) return;
+            dragRef.current = null;
+            setDragging(false);
+            animateTo(Math.round(rotRef.current / FACE_DEG) * FACE_DEG);
+          }}
+        >
+          {Array.from({ length: FRAMES }).map((_, i) => (
+            // eslint-disable-next-line @next/next/no-img-element -- local 3D turntable frame
+            <img
+              key={i}
+              src={framePath(i)}
+              alt=""
+              draggable={false}
+              className="pointer-events-none absolute inset-0 h-full w-full object-contain"
+              style={{ opacity: i === frame ? 1 : 0 }}
+            />
+          ))}
+          {/* live category cards over the front pockets */}
+          <div
+            className="absolute flex flex-col transition-opacity duration-200"
+            style={{
+              left: '23%',
+              right: '23%',
+              top: '25%',
+              gap: boxH * 0.085,
+              opacity: snapped ? 1 : 0,
+              pointerEvents: snapped ? 'auto' : 'none',
+            }}
           >
-            {PLACE.map((tf, i) => {
-              const a = cards[i * 2];
-              const b = cards[i * 2 + 1];
-              return (
-                <div
-                  key={i}
-                  className="absolute inset-0 flex flex-col justify-center gap-3 rounded-[16px] p-4"
+            {faceCards.map((card) => (
+              <button
+                key={card.id}
+                type="button"
+                data-card-id={card.remaining.length > 0 ? card.id : undefined}
+                disabled={!canPick || card.remaining.length === 0}
+                className="flex items-center justify-between gap-2 rounded-[8px] px-3 py-2.5 text-left transition-transform enabled:hover:-translate-y-0.5 disabled:opacity-55"
+                style={{ background: 'var(--td-orange)', boxShadow: '3px 3px 0 rgba(0,0,0,0.55)', height: boxH * 0.155 }}
+              >
+                <span className="text-[13px] md:text-[15px]" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
+                  {card.title}
+                </span>
+                <span
+                  className="shrink-0 rounded-full px-2 py-0.5 text-[10px] md:text-[11px]"
                   style={{
-                    transform: `${tf} translateZ(${half}px)`,
-                    background: 'var(--td-orange)',
-                    boxShadow: 'inset 0 0 0 3px rgba(0,0,0,0.25)',
-                    backfaceVisibility: 'hidden',
+                    ...TD_DISPLAY,
+                    background: card.remaining.length > 0 ? '#0d0d0d' : 'rgba(0,0,0,0.35)',
+                    color: card.remaining.length > 0 ? 'var(--td-white)' : 'rgba(255,255,255,0.6)',
                   }}
                 >
-                  <span aria-hidden className="pointer-events-none absolute inset-0 rounded-[16px]" style={PERF_DOTS} />
-                  {[a, b].map((card) => (
-                    <button
-                      key={card.id}
-                      type="button"
-                      disabled={!canPick || card.remaining.length === 0}
-                      onClick={() => openCard(card.id, 'me')}
-                      className="relative flex items-center justify-between gap-2 rounded-[10px] px-3.5 py-3.5 text-left transition-transform enabled:hover:-translate-y-0.5 disabled:opacity-60"
-                      style={{ background: '#141414', boxShadow: '3.5px 3.5px 0 rgba(0,0,0,0.45)' }}
-                    >
-                      <span className="text-[15px] text-white md:text-base" style={TD_DISPLAY}>
-                        {card.title}
-                      </span>
-                      <span
-                        className="shrink-0 rounded-full px-2.5 py-1 text-[11px]"
-                        style={{
-                          ...TD_DISPLAY,
-                          background: card.remaining.length > 0 ? 'var(--td-orange)' : 'rgba(255,255,255,0.15)',
-                          color: card.remaining.length > 0 ? '#0d0d0d' : 'rgba(255,255,255,0.5)',
-                        }}
-                      >
-                        {card.remaining.length} {TD.questionsLeftSuffix}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              );
-            })}
-          </motion.div>
+                  {card.remaining.length} {TD.questionsLeftSuffix}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
         <button
           type="button"
           disabled={!canRoll}
-          onClick={() => setFace((f) => (f + 1) % 5)}
+          onClick={() => canRoll && animateTo(Math.round(rotRef.current / FACE_DEG) * FACE_DEG + FACE_DEG)}
           className="flex size-12 items-center justify-center rounded-full text-2xl text-white disabled:opacity-30 md:size-14"
           style={{ ...TD_DISPLAY, background: 'var(--td-charcoal)', boxShadow: '3px 3px 0 #000' }}
           aria-label="roll-right"
