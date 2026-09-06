@@ -678,7 +678,7 @@ export function TableDerbyApp() {
           >
             {/* header, Quizball-style: pinned to the true top-right corner
                 (where the wordmark used to sit); wordmark moved left */}
-            <div className="absolute right-4 top-3 z-20 flex items-center gap-3 md:right-8 md:top-4">
+            <div className="fixed right-4 top-4 z-20 flex items-center gap-3 md:right-8 md:top-6">
               <div className="flex items-center gap-2">
               {process.env.NODE_ENV !== 'production' && (
                 <button
