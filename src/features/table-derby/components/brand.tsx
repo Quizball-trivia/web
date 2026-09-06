@@ -138,7 +138,9 @@ export function MuralBackdrop({ dim = 1, accent = false }: { dim?: number; accen
       style={{
         opacity: dim,
         backgroundImage: `url(/assets/table-derby/bg-mural-${accent ? 'accent' : 'dark'}.png)`,
-        backgroundSize: 'auto 260px',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
       }}
     />
   );
