@@ -16,6 +16,7 @@ export const DAILY_CHALLENGE_SLUGS: Record<DailyChallengeType, string> = {
   highLow: "higher-or-lower",
   footballLogic: "football-logic",
   fifaCards: "guess-the-card",
+  cardDetective: "card-detective",
   missingXi: "missing-xi",
   passChain: "pass-chain",
   statSniper: "stat-sniper",
