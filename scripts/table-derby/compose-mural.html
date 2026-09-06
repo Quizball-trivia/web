@@ -28,9 +28,9 @@
     align-items: center;
     align-content: flex-start;
     justify-content: space-between;
-    column-gap: 20px;
+    column-gap: 14px;
   }
-  .w, .g { margin-top: -26px; }
+  .w, .g { margin-top: -15px; }
   .w {
     font-family: 'NotoGeoLatin', 'NotoGeo', sans-serif;
     font-weight: 900;
@@ -72,18 +72,23 @@ const star = (s) => `<svg width="${s}" height="${s}" viewBox="0 0 40 40"><path f
 const xg = (s) => `<span class="w" style="font-size:${s}px">✕</span>`;
 const sq = (s, r) => `<svg width="${s}" height="${s}" viewBox="0 0 40 40"><rect x="4" y="4" width="32" height="32" rx="4" fill="#1a1a1a" transform="rotate(${r} 20 20)"/></svg>`;
 const dots = (s) => `<svg width="${s * 2.2}" height="${s}" viewBox="0 0 44 20"><circle cx="10" cy="10" r="9" fill="#1a1a1a"/><circle cx="33" cy="10" r="9" fill="#1a1a1a"/></svg>`;
-const GLYPHS = [() => ball(150), () => bolt(230), () => star(120), () => xg(170), () => sq(110, 10), () => dots(70), () => ball(100), () => bolt(150), () => sq(80, -12), () => star(90), () => dots(55), () => xg(120)];
+const GLYPHS = [() => ball(85), () => bolt(130), () => star(70), () => xg(95), () => sq(62, 10), () => dots(40), () => ball(58), () => bolt(85), () => sq(46, -12), () => star(52), () => dots(32), () => xg(70)];
 
-// interleave: every ~3 words, a glyph
+// Zoom level: global scale on all word sizes; multiple shuffled passes
+// keep the canvas dense at the finer grain.
+const SCALE = 0.56;
+const PASSES = 3;
 const flow = document.getElementById('flow');
 let gi = 0;
 const items = [];
-const words = [...WORDS];
-// shuffle deterministically
-for (let i = words.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [words[i], words[j]] = [words[j], words[i]]; }
-words.forEach(([t, s], i) => {
-  items.push(`<span class="w" style="font-size:${s}px">${t}</span>`);
-  if (i % 3 === 2 && gi < GLYPHS.length) items.push(`<span class="g">${GLYPHS[gi++]()}</span>`);
-});
+for (let pass = 0; pass < PASSES; pass++) {
+  const words = [...WORDS];
+  for (let i = words.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [words[i], words[j]] = [words[j], words[i]]; }
+  words.forEach(([t, s], i) => {
+    const size = Math.round(s * SCALE * (0.85 + rnd() * 0.3));
+    items.push(`<span class="w" style="font-size:${size}px">${t}</span>`);
+    if (i % 3 === 2) items.push(`<span class="g">${GLYPHS[gi++ % GLYPHS.length]()}</span>`);
+  });
+}
 flow.innerHTML = items.join('');
 </script>
