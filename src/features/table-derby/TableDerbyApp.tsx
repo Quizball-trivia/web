@@ -26,6 +26,7 @@ import {
 } from './components/brand';
 import { CategoryBand, PlayerBoard, ScorePill, TurnTimerBar } from './components/chrome';
 import { DailySolo } from './components/DailySolo';
+import { TdLoader } from './components/Loader';
 import { AVATAR_VARIANTS, MyAvatar, TdAvatar } from './components/Avatar';
 import { CardsRound } from './components/CardsRound';
 import { BoxRound } from './components/BoxRound';
@@ -171,6 +172,29 @@ export function TableDerbyApp() {
   const [menuNotice, setMenuNotice] = useState<string | null>(null);
   const [qpEarned, setQpEarned] = useState(0); // signed match QP delta
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
+  const [booting, setBooting] = useState(true);
+
+  // Boot loader (Betsson WebView/iframe entry): brand splash while key
+  // assets warm up, minimum 2.2s so the Quizball lockup registers.
+  useEffect(() => {
+    // dev deep links skip the splash for fast iteration
+    if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('round')) {
+      setBooting(false);
+      return;
+    }
+    const preload = ['/assets/table-derby/logo-paper.svg', '/assets/brand/quizball-logo.webp', '/assets/table-derby/3d/box/box_000.webp']
+      .map(
+        (src) =>
+          new Promise<void>((resolve) => {
+            const img = new Image();
+            img.onload = () => resolve();
+            img.onerror = () => resolve();
+            img.src = src;
+          }),
+      );
+    const minimum = new Promise((r) => setTimeout(r, 2200));
+    void Promise.all([...preload, minimum]).then(() => setBooting(false));
+  }, []);
 
   // Multi-round match flow.
   const [currentRound, setCurrentRound] = useState(1); // 1..4, 5 = penalties
@@ -1411,6 +1435,9 @@ export function TableDerbyApp() {
           </motion.main>
         )}
       </AnimatePresence>
+
+      {/* Boot splash — Quizball brand lockup for the embedded context */}
+      <AnimatePresence>{booting && <TdLoader />}</AnimatePresence>
 
       {/* Dev-only round skip — steer outcomes for quick flow testing. */}
       {process.env.NODE_ENV !== 'production' && inRoundPhase && (
