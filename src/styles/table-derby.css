@@ -13,10 +13,11 @@
 
 .td-theme {
   /* ── Core palette ─────────────────────────────────────────────── */
-  /* Betsson/show orange — the angled key-art panels, the table itself. */
-  --td-orange: #f75b1e;
-  --td-orange-deep: #d9480f;      /* pressed / shadow side of orange     */
-  --td-orange-soft: #ff7a42;      /* hover lift on orange surfaces       */
+  /* Betsson/show orange — sampled from the official vector logo assets
+     (branding-refs/table-derby-logos.pdf). */
+  --td-orange: #ee5a22;
+  --td-orange-deep: #c9491a;      /* pressed / shadow side of orange     */
+  --td-orange-soft: #f4713b;      /* hover lift on orange surfaces       */
 
   /* Set + key-art ground: near-black charcoal with tone-on-tone pattern. */
   --td-black: #141414;            /* page ground                          */

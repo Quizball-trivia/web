@@ -562,7 +562,7 @@ export function TableDerbyApp() {
                   {TD.menuMatchSub}
                 </span>
                 <div className="mt-1 flex items-center justify-between gap-3">
-                  <RoundIconsRow size={24} color="#0d0d0d" cutout="var(--td-orange)" />
+                  <RoundIconsRow size={24} tone="black" />
                   <div className="flex items-center gap-2">
                     <span
                       className="flex items-center gap-1.5 rounded-full bg-black/20 px-3 py-1.5 text-[10px]"
