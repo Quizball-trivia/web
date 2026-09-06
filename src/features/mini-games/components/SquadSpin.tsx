@@ -29,7 +29,7 @@ import {
 type CoreReel = 'club' | 'position' | 'nation';
 type Phase = 'idle' | 'spinning' | 'answering' | 'result';
 const RESPIN_COST = 50;
-const ANSWER_MS = 5000;
+const ANSWER_MS = 15000;
 
 const CLUB_POOL = Array.from(new Set(SQUAD_COMBOS.map((c) => c.club)));
 const POS_POOL: ReelPosition[] = ['GK', 'DEF', 'MID', 'FWD'];
@@ -106,7 +106,7 @@ export function SquadSpin({ backHref }: { backHref?: string } = {}) {
   const timer = useCountdown(ANSWER_MS, { onExpire: finishMiss });
 
   // Roll the active reels, land on `target` + chosen constraints, then open the
-  // 5s answer window. Only core reels can be held; era/trophy re-roll each spin.
+  // 15s answer window. Only core reels can be held; era/trophy re-roll each spin.
   const roll = useCallback(
     (target: SquadCombo, holds: Record<CoreReel, boolean>, r: number) => {
       const eras = Array.from(new Set(target.answers.map((a) => a.era)));
@@ -249,7 +249,7 @@ export function SquadSpin({ backHref }: { backHref?: string } = {}) {
         {phase === 'answering' && (
           <motion.div
             className="h-full rounded-full"
-            style={{ width: `${(1 - timer.progress) * 100}%`, background: timer.secondsLeft <= 2 ? '#FB3101' : '#FFE500' }}
+            style={{ width: `${(1 - timer.progress) * 100}%`, background: timer.secondsLeft <= 3 ? '#FB3101' : '#FFE500' }}
           />
         )}
       </div>

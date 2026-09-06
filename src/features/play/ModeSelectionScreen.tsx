@@ -1,6 +1,7 @@
 import { cn } from '@/lib/utils';
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
+import { SiteFooter } from '@/components/layout/SiteFooter';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -10,9 +11,7 @@ import { AuctionModeModal } from '@/features/auction/components/AuctionModeModal
 import { FootballGridModeModal } from '@/features/football-grid/components/FootballGridModeModal';
 import { HomeRecentMatches } from '@/components/shared/HomeRecentMatches';
 import { AllGamesGrid } from '@/features/play/AllGamesGrid';
-import { Bot, MessageCircle } from 'lucide-react';
-import { SocialLinks } from '@/components/shared/SocialLinks';
-import { ContactModal } from '@/components/shared/ContactModal';
+import { Bot } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useTierLabel } from '@/hooks/useTierLabel';
 import { getI18nText } from '@/lib/utils/i18n';
@@ -605,9 +604,6 @@ export function ModeSelectionScreen({
             className="relative cursor-pointer overflow-hidden rounded-[10px] md:min-h-0 p-3 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
             style={{ backgroundColor: '#6B2FB3' }}
           >
-            <span className="absolute top-2.5 right-2.5 md:top-4 md:right-4 z-20 rounded-full bg-brand-yellow px-2.5 py-1 text-[8px] md:text-[11px] uppercase tracking-wide text-black" style={poppins}>
-              {t('play.auctionNewBadge')}
-            </span>
             <Image
               src="/assets/auction-card-icon.webp"
               alt=""
@@ -658,7 +654,10 @@ export function ModeSelectionScreen({
             className="relative cursor-pointer overflow-hidden rounded-[10px] md:min-h-0 p-3 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
             style={{ backgroundColor: colors.red.mid }}
           >
-            <span className="absolute top-2.5 right-2.5 md:top-4 md:right-4 z-20 rounded-full bg-brand-yellow px-2.5 py-1 text-[8px] md:text-[11px] uppercase tracking-wide text-black" style={poppins}>
+            <span
+              className="absolute right-2 top-2.5 z-20 rotate-[8deg] rounded-md bg-brand-yellow px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-black shadow-[0_3px_10px_rgba(0,0,0,0.35)] md:right-4 md:top-4 md:px-2.5 md:py-1 md:text-[11px]"
+              style={poppins}
+            >
               {t('play.freeKicksNewBadge')}
             </span>
             <Image
@@ -860,29 +859,6 @@ export function ModeSelectionScreen({
               this flag so it can be restored in one line. ─── */}
       {SHOW_RECENT_MATCHES && <HomeRecentMatches collapsedOnly />}
 
-      {/* ─── 5b. Socials + contact (mobile only — desktop uses the top-left
-              header cluster in AppShell) ─── */}
-      <div className="mt-6 flex flex-col items-center gap-3 border-t border-white/6 pt-6 xl:hidden">
-        <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-white/35">
-          {t('welcome.followUs')}
-        </p>
-        <div className="flex items-center gap-2.5">
-          <SocialLinks size="sm" className="gap-2.5" />
-          <ContactModal
-            trigger={
-              <button
-                type="button"
-                aria-label={t('feedback.contactUs')}
-                title={t('feedback.contactUs')}
-                className="flex size-9 items-center justify-center rounded-[14px] bg-brand-yellow text-black shadow-[0_4px_0_rgba(0,0,0,0.25)] transition-transform hover:-translate-y-0.5 active:translate-y-0"
-              >
-                <MessageCircle className="size-4" />
-              </button>
-            }
-          />
-        </div>
-      </div>
-
       {/* ─── 6. Modals ─── */}
       <ModeConfirmModal
         mode={selectedMode !== 'friendly' ? selectedMode : null}
@@ -925,6 +901,7 @@ export function ModeSelectionScreen({
       />
       {/* Guest sign-in: mounted only while signed out; every auth-gated tap
           above funnels into it via useAuthPromptStore. */}
+      <SiteFooter />
     </motion.div>
   );
 }

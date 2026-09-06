@@ -123,4 +123,8 @@ export const roadToGoalApi = {
   heartbeat(): Promise<void> {
     return call("/api/v1/road-to-goal/rounds/heartbeat", "POST", {});
   },
+
+  stats(): Promise<{ playing_now: number; recent_wins: Array<{ nickname: string; amount: number; run_mult: number; settled_at: string }> }> {
+    return call("/api/v1/road-to-goal/stats", "GET");
+  },
 };

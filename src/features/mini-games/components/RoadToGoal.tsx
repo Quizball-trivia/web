@@ -9,6 +9,8 @@ import { AnimatePresence, motion } from 'motion/react';
 import { Check, Flag, LockKeyhole, Play, RotateCcw, Shield, Timer, Trophy, X } from 'lucide-react';
 import { MiniGameShell, StatPill } from './MiniGameShell';
 import { getTrivia, type TriviaQuestion } from '../data/trivia';
+import { playCash } from '../lib/crowdAudio';
+import { LiveActivityStrip } from './LiveActivityStrip';
 import { useMiniLocale } from '../lib/i18n';
 import { useStoreWallet } from '@/lib/queries/store.queries';
 import {
@@ -1068,6 +1070,7 @@ export function RoadToGoal({
           expectedVersion: state.state_version,
           requestNonce: pending.nonce,
         });
+        playCash();
         await finishLiveMutation(next);
       } catch (error) {
         trackRoadToGoalError({
@@ -1091,6 +1094,7 @@ export function RoadToGoal({
     }
     setPayout(currentReturn);
     setBalance((value) => value + currentReturn);
+    playCash();
     trackDemoSettlement('cashed', 'demo_cashout', currentReturn, progress);
     setPhase('cashed');
   };
@@ -1180,6 +1184,7 @@ export function RoadToGoal({
                     })}
                   </div>
 
+                  {live && <LiveActivityStrip fetchStats={roadToGoalApi.stats} className="mb-2" />}
                   {live && (
                     <div className="mt-2 grid gap-2 border-t border-white/10 pt-2">
                       <label className="grid gap-1 font-poppins text-[8px] font-black uppercase tracking-wider text-white/55">
