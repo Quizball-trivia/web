@@ -5206,7 +5206,7 @@ export interface paths {
                         "application/json": {
                             items: {
                                 /** @enum {string} */
-                                challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
+                                challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective";
                                 title: string;
                                 description: string;
                                 /** @enum {string} */
@@ -5256,7 +5256,7 @@ export interface paths {
                 };
                 header?: never;
                 path: {
-                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
+                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective";
                 };
                 cookie?: never;
             };
@@ -5481,6 +5481,52 @@ export interface paths {
                                 /** @enum {string} */
                                 difficulty: "easy" | "medium" | "hard" | "veryHard";
                             }[];
+                        } | {
+                            /** @enum {string} */
+                            challengeType: "cardDetective";
+                            title: string;
+                            description: string;
+                            cardCount: number;
+                            startCoins: number;
+                            clueCosts: {
+                                rating: number;
+                                position: number;
+                                nation: number;
+                                league: number;
+                                club: number;
+                                pac: number;
+                                sho: number;
+                                pas: number;
+                                dri: number;
+                                def: number;
+                                phy: number;
+                            };
+                            wrongGuessCost: number;
+                            cards: {
+                                /** Format: uuid */
+                                id: string;
+                                edition: string;
+                                editionLabel: string;
+                                name: string;
+                                acceptedAnswers: string[];
+                                overall: number;
+                                position: string;
+                                nation: string;
+                                nationCode: string;
+                                league: string;
+                                club: string;
+                                stats: {
+                                    pac: number;
+                                    sho: number;
+                                    pas: number;
+                                    dri: number;
+                                    def: number;
+                                    phy: number;
+                                };
+                                faceUrl: string | null;
+                                /** @enum {string} */
+                                difficulty: "easy" | "medium" | "hard" | "veryHard";
+                            }[];
                         };
                     };
                 };
@@ -5651,7 +5697,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
+                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective";
                 };
                 cookie?: never;
             };
@@ -5666,6 +5712,7 @@ export interface paths {
                             solved: boolean;
                             /** @default 0 */
                             cluesRevealed?: number;
+                            coinsLeft?: number;
                         }[];
                     };
                 };
@@ -5679,7 +5726,7 @@ export interface paths {
                     content: {
                         "application/json": {
                             /** @enum {string} */
-                            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
+                            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective";
                             /** @enum {boolean} */
                             completedToday: true;
                             coinsAwarded: number;
@@ -5754,7 +5801,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
+                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective";
                 };
                 cookie?: never;
             };
@@ -5768,7 +5815,7 @@ export interface paths {
                     content: {
                         "application/json": {
                             /** @enum {string} */
-                            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
+                            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective";
                             /** @enum {boolean} */
                             reset: true;
                         };
@@ -5825,7 +5872,7 @@ export interface paths {
                         "application/json": {
                             items: {
                                 /** @enum {string} */
-                                challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
+                                challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective";
                                 title: string;
                                 description: string;
                                 /** @enum {string} */
@@ -5905,6 +5952,12 @@ export interface paths {
                                     cardCount: number;
                                     /** @enum {string} */
                                     challengeType: "fifaCards";
+                                } | {
+                                    /** @default [] */
+                                    categoryIds: string[];
+                                    cardCount: number;
+                                    /** @enum {string} */
+                                    challengeType: "cardDetective";
                                 };
                                 sortOrder: number;
                                 isActive: boolean;
@@ -5966,7 +6019,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
+                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective";
                 };
                 cookie?: never;
             };
@@ -9382,7 +9435,7 @@ export interface components {
         };
         DailyChallengeMetadata: {
             /** @enum {string} */
-            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
+            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective";
             title: string;
             description: string;
             /** @enum {string} */
@@ -9463,6 +9516,12 @@ export interface components {
             cardCount: number;
             /** @enum {string} */
             challengeType: "fifaCards";
+        } | {
+            /** @default [] */
+            categoryIds: string[];
+            cardCount: number;
+            /** @enum {string} */
+            challengeType: "cardDetective";
         };
         AdminDailyChallengeCategoryOption: {
             /** Format: uuid */
@@ -9689,10 +9748,56 @@ export interface components {
                 /** @enum {string} */
                 difficulty: "easy" | "medium" | "hard" | "veryHard";
             }[];
+        } | {
+            /** @enum {string} */
+            challengeType: "cardDetective";
+            title: string;
+            description: string;
+            cardCount: number;
+            startCoins: number;
+            clueCosts: {
+                rating: number;
+                position: number;
+                nation: number;
+                league: number;
+                club: number;
+                pac: number;
+                sho: number;
+                pas: number;
+                dri: number;
+                def: number;
+                phy: number;
+            };
+            wrongGuessCost: number;
+            cards: {
+                /** Format: uuid */
+                id: string;
+                edition: string;
+                editionLabel: string;
+                name: string;
+                acceptedAnswers: string[];
+                overall: number;
+                position: string;
+                nation: string;
+                nationCode: string;
+                league: string;
+                club: string;
+                stats: {
+                    pac: number;
+                    sho: number;
+                    pas: number;
+                    dri: number;
+                    def: number;
+                    phy: number;
+                };
+                faceUrl: string | null;
+                /** @enum {string} */
+                difficulty: "easy" | "medium" | "hard" | "veryHard";
+            }[];
         };
         CompleteDailyChallengeResponse: {
             /** @enum {string} */
-            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
+            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective";
             /** @enum {boolean} */
             completedToday: true;
             coinsAwarded: number;
@@ -9721,13 +9826,13 @@ export interface components {
         };
         ResetDailyChallengeResponse: {
             /** @enum {string} */
-            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
+            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective";
             /** @enum {boolean} */
             reset: true;
         };
         AdminDailyChallengeConfigResponse: {
             /** @enum {string} */
-            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards";
+            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective";
             title: string;
             description: string;
             /** @enum {string} */
@@ -9807,6 +9912,12 @@ export interface components {
                 cardCount: number;
                 /** @enum {string} */
                 challengeType: "fifaCards";
+            } | {
+                /** @default [] */
+                categoryIds: string[];
+                cardCount: number;
+                /** @enum {string} */
+                challengeType: "cardDetective";
             };
             sortOrder: number;
             isActive: boolean;

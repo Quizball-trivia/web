@@ -70,6 +70,12 @@ export type FifaCardsSession = Extract<
   { challengeType: "fifaCards" }
 >;
 export type FifaCardsSessionCard = FifaCardsSession["cards"][number];
+
+export type CardDetectiveSession = Extract<
+  DailyChallengeSession,
+  { challengeType: "cardDetective" }
+>;
+export type CardDetectiveSessionCard = CardDetectiveSession["cards"][number];
 export type DailyChallengeCardOutcome =
   NonNullable<CompleteDailyChallengeRequest["outcomes"]>[number];
 

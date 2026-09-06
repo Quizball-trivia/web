@@ -583,6 +583,28 @@ const KA: Record<string, string> = {
   "Back to challenges": "გამოწვევებში დაბრუნება",
   "A gold card, stats only — name the player across 10 editions.":
     "ოქროს ბარათი, მხოლოდ სტატისტიკა — გამოიცანი მოთამაშე 10 გამოცემიდან.",
+  // Card Detective (daily + demo)
+  "Tap a lock to buy that clue": "დააჭირე საკეტს მინიშნების საყიდლად",
+  "Today {n} pts": "დღეს {n} ქულა",
+  "Correct now = {n} pts": "სწორი ახლა = {n} ქულა",
+  "Not {name} · −{n} coins": "არა, {name} · −{n} ქოინი",
+  "Revealed": "გახსნილია",
+  "Reveal {clue} for {n} coins": "გახსენი {clue} {n} ქოინად",
+  "photo": "ფოტო",
+  "nation": "ქვეყანა",
+  "position": "პოზიცია",
+  "club": "კლუბი",
+  "league": "ლიგა",
+  "POS": "პოზ",
+  "NATION": "ქვეყანა",
+  "LEAGUE": "ლიგა",
+  "CLUB": "კლუბი",
+  "Dealing…": "ბარათი რიგდება…",
+  "Your card": "შენი ბარათი",
+  "Buy clues on the card, name the player, keep your coins": "იყიდე მინიშნებები ბარათზე, დაასახელე მოთამაშე, შეინარჩუნე ქოინები",
+  "Start": "დაწყება",
+  "Run complete": "რაუნდი დასრულდა",
+  "Rival": "მეტოქე",
 };
 
 export function useMiniLocale(): MiniLocale {
