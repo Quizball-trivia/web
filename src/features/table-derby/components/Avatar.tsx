@@ -74,8 +74,8 @@ export function TdAvatarCard({ color, width = 58 }: { color: AvatarColor; width?
       }}
       aria-hidden
     >
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2">
-        <AvatarPreview customization={tdAvatarCustomization(color)} width={width * 0.84} />
+      <div className="absolute inset-0 flex items-end justify-center">
+        <AvatarPreview customization={tdAvatarCustomization(color)} width={width * 0.84} className="translate-x-[4%]" />
       </div>
     </div>
   );
