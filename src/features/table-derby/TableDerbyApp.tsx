@@ -676,7 +676,7 @@ export function TableDerbyApp() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="relative z-10 mx-auto flex min-h-dvh w-full max-w-2xl flex-col items-center justify-center gap-6 px-4 py-10 md:gap-8"
+            className="relative z-10 mx-auto flex min-h-dvh w-full max-w-2xl flex-col items-center justify-center gap-6 px-4 pb-24 pt-10 md:gap-8"
           >
             {/* header, Quizball-style: pinned to the true top-right corner
                 (where the wordmark used to sit); wordmark moved left */}
@@ -1008,7 +1008,7 @@ export function TableDerbyApp() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="relative z-10 mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-4 px-4 pb-4 pt-16"
+            className="relative z-10 mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-4 px-4 pb-20 pt-16"
           >
             <SectionHeader title={TD.menuLb} onBack={() => setPhase('home')} />
             <p className="text-center text-[12px] text-white/55" style={TD_DISPLAY}>
