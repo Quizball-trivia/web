@@ -49,6 +49,7 @@ export const TD = {
   wlQualified: 'კვალიფიკაცია მიღებულია!',
   wlEnterSoon: 'ლიგაში შესვლა · მალე',
   qpEarned: 'საკვალიფიკაციო ქულა',
+  qpShort: 'ქულა',
 
   // Leaderboard
   lbWeekly: 'კვირის რეიტინგი',

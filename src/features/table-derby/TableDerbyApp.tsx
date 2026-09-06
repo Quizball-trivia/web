@@ -30,6 +30,8 @@ import { TdLoader } from './components/Loader';
 import { MyAvatar, TdAvatar, TD_AVATAR_COLORS, tdAvatarCustomization } from './components/Avatar';
 import { AvatarPreview } from '@/components/AvatarPreview';
 import { TdClubSelect } from './components/ClubSelect';
+import { TdProfileCard, opponentProfile } from './components/ProfileCard';
+import { getClub } from '@/lib/clubs';
 import { CardsRound } from './components/CardsRound';
 import { BoxRound } from './components/BoxRound';
 import { BuzzerRound, type BuzzerItem } from './components/BuzzerRound';
@@ -45,6 +47,8 @@ import {
   dailyCategoryIndex,
   getDailyResult,
   getQp,
+  getAvatarColor,
+  getFavClub,
   getTickets,
   isOnboarded,
   resetOnboarding,
@@ -129,6 +133,10 @@ function categoryAt(idx: number): TdListCategory {
   return TD_LIST_CATEGORIES[idx % TD_LIST_CATEGORIES.length];
 }
 
+function getClubLogo(value: string): string | null {
+  return getClub(value)?.logo ?? null;
+}
+
 function SectionHeader({ title, onBack }: { title: string; onBack: () => void }) {
   return (
     <div className="flex w-full items-center gap-3">
@@ -178,6 +186,7 @@ export function TableDerbyApp() {
   const [tickets, setTickets] = useState<number | null>(null);
   const [qp, setQp] = useState(0);
   const [dailyScore, setDailyScore] = useState<number | null>(null);
+  const [favClub, setFavClubState] = useState<string | null>(null);
   const [menuNotice, setMenuNotice] = useState<string | null>(null);
   const [qpEarned, setQpEarned] = useState(0); // signed match QP delta
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
@@ -272,6 +281,7 @@ export function TableDerbyApp() {
     setTickets(getTickets());
     setQp(getQp());
     setDailyScore(getDailyResult());
+    setFavClubState(getFavClub());
   }, [phase]);
 
   /* ── flow: menu → matchmaking → showdown → rps ──────────────── */
@@ -661,11 +671,30 @@ export function TableDerbyApp() {
             exit={{ opacity: 0 }}
             className="relative z-10 mx-auto flex min-h-dvh w-full max-w-xl flex-col items-center justify-center gap-5 px-4 py-16 md:gap-6"
           >
-            <TdLogoSticker variant="blackOnWhite" scale={0.9} />
-            <div className="flex items-center gap-3">
-              <button type="button" onClick={() => setShowAvatarPicker(true)} aria-label={TD.chooseAvatar}>
-                <MyAvatar size={52} />
+            {/* header: profile + tickets */}
+            <div className="flex w-full items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => setShowAvatarPicker(true)}
+                aria-label={TD.chooseAvatar}
+                className="flex min-w-0 items-center gap-2.5 rounded-full py-1 pl-1 pr-4"
+                style={{ background: 'var(--td-charcoal)', boxShadow: '3px 3px 0 rgba(0,0,0,0.5)' }}
+              >
+                <MyAvatar size={40} />
+                <span className="flex min-w-0 flex-col items-start">
+                  <span className="truncate text-[13px] text-white" style={TD_DISPLAY}>
+                    {TD.you}
+                  </span>
+                  <span className="text-[10px]" style={{ ...TD_DISPLAY, color: 'var(--td-orange)' }}>
+                    {qp} {TD.qpShort}
+                  </span>
+                </span>
+                {favClub && getClubLogo(favClub) && (
+                  // eslint-disable-next-line @next/next/no-img-element -- crest from the club registry
+                  <img src={getClubLogo(favClub)!} alt="" className="h-6 w-6 shrink-0 object-contain" />
+                )}
               </button>
+              <div className="flex items-center gap-2">
               <TicketPill count={tickets} label={TD.tickets} />
               {process.env.NODE_ENV !== 'production' && (
                 <button
@@ -694,7 +723,10 @@ export function TableDerbyApp() {
                   ⟲
                 </button>
               )}
+              </div>
             </div>
+
+            <TdLogoSticker variant="blackOnWhite" scale={0.9} />
 
             {showAvatarPicker && (
               <div
@@ -1072,16 +1104,7 @@ export function TableDerbyApp() {
             exit={{ opacity: 0 }}
             className="relative z-10 flex min-h-dvh flex-col items-center justify-center gap-6 px-6"
           >
-            <motion.div initial={{ x: -120, rotate: -6, opacity: 0 }} animate={{ x: 0, rotate: -3, opacity: 1 }} transition={{ type: 'spring', damping: 14 }}>
-              <div className="flex flex-col items-center gap-3">
-                <MyAvatar size={72} />
-                <div className="rounded-[10px] px-8 py-4" style={{ background: 'var(--td-paper)', boxShadow: '6px 6px 0 #000' }}>
-                  <span className="text-2xl md:text-3xl" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
-                    {TD.you}
-                  </span>
-                </div>
-              </div>
-            </motion.div>
+            <TdProfileCard name={TD.you} color={getAvatarColor()} clubValue={favClub} points={qp} delay={0.15} />
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.35, type: 'spring', damping: 10 }}>
               <span
                 className="block text-5xl md:text-6xl"
@@ -1090,16 +1113,14 @@ export function TableDerbyApp() {
                 VS
               </span>
             </motion.div>
-            <motion.div initial={{ x: 120, rotate: 6, opacity: 0 }} animate={{ x: 0, rotate: 2, opacity: 1 }} transition={{ type: 'spring', damping: 14 }}>
-              <div className="flex flex-col items-center gap-3">
-                <TdAvatar name={opponentName} size={72} />
-                <div className="rounded-[10px] px-8 py-4" style={{ background: 'var(--td-paper)', boxShadow: '6px 6px 0 #000' }}>
-                  <span className="text-2xl md:text-3xl" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
-                    {opponentName}
-                  </span>
-                </div>
-              </div>
-            </motion.div>
+            <TdProfileCard
+              name={opponentName}
+              color={opponentProfile(opponentName).color}
+              clubValue={opponentProfile(opponentName).clubValue}
+              points={opponentProfile(opponentName).points}
+              mirror
+              delay={0.35}
+            />
             <div
               className="mt-2 rounded-full px-4 py-1.5 text-[11px] md:text-xs"
               style={{ ...TD_DISPLAY, background: 'var(--td-white)', color: '#0d0d0d' }}
