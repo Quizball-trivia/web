@@ -238,7 +238,7 @@ export function BoxRound({
               ? TD.yourTurn
               : '';
 
-  const boxW = typeof window !== 'undefined' && window.innerWidth >= 768 ? 390 : 345;
+  const boxW = typeof window !== 'undefined' ? (window.innerWidth >= 768 ? 450 : Math.min(402, window.innerWidth - 28)) : 345;
   const boxH = Math.round(boxW * (760 / 640));
   const nearestFaceRot = Math.round(rot / FACE_DEG) * FACE_DEG;
   const snapped = !dragging && Math.abs(rot - nearestFaceRot) < 3;
