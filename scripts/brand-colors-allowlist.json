@@ -7,7 +7,6 @@
     "src/app/(fullscreen)/dev/maps/page.tsx",
     "src/features/leaderboard/LeaderboardScreen.tsx",
     "src/features/matchmaking/MatchmakingMapScreen.tsx",
-    "src/features/mini-games/components/EditionSpinner.tsx",
     "src/features/mini-games/components/FutCard.tsx",
     "src/features/mini-games/components/GuessTheGoalLive.tsx",
     "src/features/weekend-league/components/HallOfFame.tsx",
