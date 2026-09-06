@@ -42,6 +42,9 @@ export function PrizesPanel({ highlightRank }: { highlightRank?: number | null }
       <p className="mt-2.5 px-1 font-poppins text-[11px] font-medium text-white/35">
         {t('weekendLeague.prizesNote')}
       </p>
+      <p className="mt-1 px-1 font-poppins text-[11px] font-medium text-white/50">
+        {t('weekendLeague.prizesPayoutNote')}
+      </p>
     </section>
   );
 }

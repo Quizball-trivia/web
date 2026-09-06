@@ -2189,7 +2189,8 @@
     "hofSilver": "plata",
     "hofBronze": "bronce",
     "hofError": "No se pudieron cargar los ganadores.",
-    "hofRetry": "Reintentar"
+    "hofRetry": "Reintentar",
+    "prizesPayoutNote": "Todos los premios se entregan antes de que comience la próxima Liga del Finde."
   },
   "wlAward": {
     "title1": "Campeón de Weekend League",
