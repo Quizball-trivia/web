@@ -14,6 +14,7 @@ import { CareerPathGame } from "@/features/daily/CareerPathGame";
 import { HighLowGame } from "@/features/daily/HighLowGame";
 import { FootballLogicGame } from "@/features/daily/FootballLogicGame";
 import { FifaCardsDailyGame } from "@/features/daily/FifaCardsDailyGame";
+import { CardDetectiveDailyGame } from "@/features/daily/CardDetectiveDailyGame";
 import { QuitGameDialog } from "@/features/daily/QuitGameDialog";
 import { DailyChallengeIntro } from "@/features/daily/components/DailyChallengeIntro";
 import { consumeDailyChallengeSession } from "@/features/daily/dailyChallengeSessionPrefetch";
@@ -235,6 +236,9 @@ export default function ChallengePage() {
         return <FootballLogicGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
       case "fifaCards":
         return <FifaCardsDailyGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
+      case "cardDetective":
+
+        return <CardDetectiveDailyGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
       default:
         return null;
     }

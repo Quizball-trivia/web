@@ -80,6 +80,12 @@ export const DAILY_CHALLENGE_VISUALS: Record<DailyChallengeType, ChallengeVisual
     iconColorClass: "text-yellow-400",
     iconBgColor: "bg-yellow-500/20",
   },
+  cardDetective: {
+    icon: "\u{1F50D}",
+    iconToken: "cards",
+    iconColorClass: "text-yellow-400",
+    iconBgColor: "bg-yellow-500/20",
+  },
 };
 
 export function toChallengeCard(challenge: DailyChallengeSummary): ChallengeCard {

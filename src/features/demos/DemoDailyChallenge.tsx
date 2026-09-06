@@ -12,6 +12,7 @@ import { CareerPathGame } from "@/features/daily/CareerPathGame";
 import { HighLowGame } from "@/features/daily/HighLowGame";
 import { FootballLogicGame } from "@/features/daily/FootballLogicGame";
 import { FifaCardsDailyGame } from "@/features/daily/FifaCardsDailyGame";
+import { CardDetectiveDailyGame } from "@/features/daily/CardDetectiveDailyGame";
 import { DailyChallengeIntro } from "@/features/daily/components/DailyChallengeIntro";
 import { useLocale } from "@/contexts/LocaleContext";
 import type { DailyChallengeType } from "@/lib/domain/dailyChallenge";
@@ -93,5 +94,7 @@ export function DemoDailyChallenge({ type }: DemoDailyChallengeProps) {
       return <FootballLogicGame key={attempt} session={session} {...gameProps} />;
     case "fifaCards":
       return <FifaCardsDailyGame key={attempt} session={session} {...gameProps} />;
+    case "cardDetective":
+      return <CardDetectiveDailyGame key={attempt} session={session} {...gameProps} />;
   }
 }

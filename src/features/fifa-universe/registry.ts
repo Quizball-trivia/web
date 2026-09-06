@@ -38,6 +38,8 @@ export const FIFA_MODES: FifaModeMeta[] = [
     title: { en: 'Card Detective', ka: 'ბარათის დეტექტივი' },
     description: { en: 'Everything hidden, 100 clue coins — identify the card using the least information.', ka: 'ყველაფერი დამალულია, 100 მინიშნების ქოინი — ამოიცანი ბარათი მინიმალური ინფორმაციით.' },
     group: 'featured', duration: MEDIUM, format: SOLO, artPlayer: 'Mohamed Salah', artEdition: 'FIFA21',
+    // Plays the daily-challenge build (deal reel + on-card clues) with a demo session.
+    dailyType: 'cardDetective',
   },
   {
     slug: 'fifa-evolution',

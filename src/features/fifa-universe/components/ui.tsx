@@ -194,7 +194,8 @@ export function NameInput({
   const t = useMiniT();
   const [value, setValue] = useState('');
   const [focused, setFocused] = useState(false);
-  const [highlight, setHighlight] = useState(0);
+  // -1 = nothing highlighted: Enter submits the typed text, not a fuzzy neighbour.
+  const [highlight, setHighlight] = useState(-1);
   const ref = useRef<HTMLInputElement>(null);
   useEffect(() => {
     if (!autoFocus || disabled) return;
@@ -205,19 +206,22 @@ export function NameInput({
   const suggestions = useMemo(() => {
     const q = value.trim().toLowerCase();
     if (q.length < 2) return [];
-    return ALL_NAMES.filter((n) => matchesName(q, [n]).ok || n.toLowerCase().includes(q)).slice(0, 5);
+    // Substring hits first (what the player is clearly typing), fuzzy neighbours after.
+    const direct = ALL_NAMES.filter((n) => n.toLowerCase().includes(q));
+    const fuzzy = ALL_NAMES.filter((n) => !direct.includes(n) && matchesName(q, [n]).ok);
+    return [...direct, ...fuzzy].slice(0, 5);
   }, [value]);
 
   const submit = (v: string) => {
     if (disabled || !v.trim()) return;
     setValue('');
-    setHighlight(0);
+    setHighlight(-1);
     onSubmit(v.trim());
   };
   const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'ArrowDown') { e.preventDefault(); setHighlight((h) => Math.min(h + 1, suggestions.length - 1)); }
-    else if (e.key === 'ArrowUp') { e.preventDefault(); setHighlight((h) => Math.max(h - 1, 0)); }
-    else if (e.key === 'Enter') { e.preventDefault(); submit(focused && suggestions[highlight] ? suggestions[highlight] : value); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setHighlight((h) => Math.max(h - 1, -1)); }
+    else if (e.key === 'Enter') { e.preventDefault(); submit(focused && highlight >= 0 && suggestions[highlight] ? suggestions[highlight] : value); }
   };
 
   return (
@@ -238,7 +242,7 @@ export function NameInput({
           ref={ref}
           value={value}
           disabled={disabled}
-          onChange={(e) => { setValue(e.target.value); setHighlight(0); }}
+          onChange={(e) => { setValue(e.target.value); setHighlight(-1); }}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           onKeyDown={onKeyDown}
