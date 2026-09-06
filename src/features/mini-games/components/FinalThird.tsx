@@ -44,6 +44,7 @@ import {
   type FreeKicksState,
   type FreeKicksZone,
 } from '@/lib/repositories/freeKicks.repo';
+import { settleOnce, trackMiniGameRoundStarted } from '../analytics/coinGames.analytics';
 
 const BALL_URL = '/assets/brand/goal-ball-small.webp';
 const MIN_STAKE = 5;
@@ -240,6 +241,7 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
   const queryClient = useQueryClient();
   const { data: wallet, isError: walletError, refetch: refetchWallet } = useStoreWallet();
   const liveStateRef = useRef<FreeKicksState | null>(null);
+  const liveSettledTrackedRef = useRef<string | null>(null);
   const [liveQuestion, setLiveQuestion] = useState<{
     id: string;
     q: string;
@@ -273,6 +275,7 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
     if (prev && prev.round_id === state.round_id && state.state_version < prev.state_version) return;
     liveSeqRef.current += 1;
     liveStateRef.current = state;
+    settleOnce(liveSettledTrackedRef, 'free_kicks', state, state.goals);
     setPot(state.pot_coins);
     setRoundStake(state.stake_coins);
     setAttack(state.attack);
@@ -652,6 +655,7 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
         .then((state) => {
           startNonceRef.current = null;
           applyLiveState(state);
+          trackMiniGameRoundStarted('free_kicks', { roundId: state.round_id, stake: state.stake_coins });
           setLastTake(null);
           selectedRef.current = null;
           setSelected(null);
@@ -840,6 +844,7 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
         .then((next) => {
           liveSeqRef.current += 1;
           liveStateRef.current = next;
+          settleOnce(liveSettledTrackedRef, 'free_kicks', next, next.goals);
           setLastTake(next.payout_coins ?? pot);
           // Refresh the shared wallet cache NOW — the delayed timers below are
           // purely visual and die with the component on navigation.

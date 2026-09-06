@@ -14,6 +14,7 @@ import { playCash } from "@/features/mini-games/lib/crowdAudio";
 import { LiveActivityStrip } from "@/features/mini-games/components/LiveActivityStrip";
 import { RunsBoard } from "@/features/mini-games/components/RunsBoard";
 import { MoneyFlight, flightFrom, type MoneyFlightSpec } from "@/features/mini-games/components/MoneyFlight";
+import { settleOnce, trackMiniGameError, trackMiniGameRoundStarted } from "@/features/mini-games/analytics/coinGames.analytics";
 import { triviaMinesApi, TriviaMinesApiError, type TriviaMinesState } from "@/lib/repositories/triviaMines.repo";
 
 const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
@@ -44,6 +45,8 @@ export function TriviaMinesLive({ backHref = "/play" }: { backHref?: string }) {
   const fetchStats = useCallback(async () => { const s = await triviaMinesApi.stats(); setTopRuns(s.top_runs ?? []); return s; }, []);
   const [qLeft, setQLeft] = useState(0);
   const nonceRef = useRef<string | null>(null);
+  const settledTrackedRef = useRef<string | null>(null);
+  useEffect(() => { settleOnce(settledTrackedRef, "trivia_mines", state, state?.opened.length); }, [state]);
 
   // Resume an open round (refresh, second tab) before offering a new stake.
   useEffect(() => {
@@ -69,7 +72,7 @@ export function TriviaMinesLive({ backHref = "/play" }: { backHref?: string }) {
     return () => window.clearInterval(id);
   }, [state?.phase, state?.question, state?.server_now]);
 
-  const fail = (e: unknown) => setError(e instanceof TriviaMinesApiError ? e.message : t("common.error"));
+  const fail = (e: unknown) => { setError(e instanceof TriviaMinesApiError ? e.message : t("common.error")); trackMiniGameError("trivia_mines", "request", e instanceof TriviaMinesApiError ? e.status : null); };
   const refreshWallet = () => void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
   const reconcile = useCallback(async () => { const s = await triviaMinesApi.current().catch(() => null); if (s) setState(s); }, []);
 
@@ -82,6 +85,7 @@ export function TriviaMinesLive({ backHref = "/play" }: { backHref?: string }) {
     try {
       const s = await triviaMinesApi.start(stake, nonce);
       nonceRef.current = null; setState(s); refreshWallet();
+      trackMiniGameRoundStarted("trivia_mines", { roundId: s.round_id, stake: s.stake_coins });
     } catch (e) {
       if (e instanceof TriviaMinesApiError && e.status === 409) await reconcile();
       if (e instanceof TriviaMinesApiError && e.status < 500) nonceRef.current = null;

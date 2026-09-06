@@ -23,6 +23,7 @@ import countriesRegistry from "@/data/football-grid/launch-assets/countries.json
 import leaguesRegistry from "@/data/football-grid/launch-assets/leagues.json";
 import managersRegistry from "@/data/football-grid/launch-assets/managers.json";
 import competitionsRegistry from "@/data/football-grid/launch-assets/competitions.json";
+import { settleOnce, trackMiniGameError, trackMiniGameRoundStarted } from "@/features/mini-games/analytics/coinGames.analytics";
 import { squadSpinApi, SquadSpinApiError, type SquadSpinPlayer, type SquadSpinReel, type SquadSpinState } from "@/lib/repositories/squadSpin.repo";
 
 const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
@@ -82,6 +83,8 @@ export function SquadSpinLive({ backHref = "/play" }: { backHref?: string }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const stateRef = useRef<SquadSpinState | null>(null);
   const reconcilingRef = useRef(false);
+  const settledTrackedRef = useRef<string | null>(null);
+  useEffect(() => { settleOnce(settledTrackedRef, "squad_spin", state, state?.spins_cleared); }, [state]);
   const fetchStats = useCallback(async () => { const s = await squadSpinApi.stats(); setTopRuns(s.top_runs ?? []); return s; }, []);
 
   // Responses may arrive out of order: never let an older version of the same round overwrite a newer one.
@@ -167,7 +170,7 @@ export function SquadSpinLive({ backHref = "/play" }: { backHref?: string }) {
     return () => window.clearTimeout(id);
   }, [state?.phase, state?.decision_deadline_at, state?.server_now, reconcile]);
 
-  const fail = (e: unknown) => setError(e instanceof SquadSpinApiError ? e.message : t("common.error"));
+  const fail = (e: unknown) => { setError(e instanceof SquadSpinApiError ? e.message : t("common.error")); trackMiniGameError("squad_spin", "request", e instanceof SquadSpinApiError ? e.status : null); };
   const recover = async (e: unknown) => { if (e instanceof SquadSpinApiError && (e.status === 409 || e.status === 404)) await reconcile(); };
   const applyStake = (v: number) => { const next = Math.min(MAX_STAKE, Math.max(MIN_STAKE, Math.floor(v || MIN_STAKE))); setStake(next); setStakeText(String(next)); };
 
@@ -178,6 +181,7 @@ export function SquadSpinLive({ backHref = "/play" }: { backHref?: string }) {
     try {
       const s = await squadSpinApi.start(stake, reels, nonce);
       nonceRef.current = null; applyState(s); refreshWallet();
+      trackMiniGameRoundStarted("squad_spin", { roundId: s.round_id, stake: s.stake_coins, reels: s.reels });
     } catch (e) {
       await recover(e);
       if (e instanceof SquadSpinApiError && e.status < 500) nonceRef.current = null;

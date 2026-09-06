@@ -14,6 +14,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { trackPlayCardClicked } from "@/lib/analytics/game-events";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { CheckCircle2, ChevronLeft, ChevronRight, Clock3, Play, RotateCcw, Search, User, Users, Wifi, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
@@ -287,15 +288,20 @@ function GameCard({
     <Link
       href={hrefFor(mode)}
       onClick={(event) => {
+        const group = PLAY_WITH_COINS_SLUGS.includes(mode.slug) ? "coins" : mode.slug.startsWith("daily-") || mode.slug.startsWith("lab-") ? "daily" : "other";
         if (onOpenMode) {
           event.preventDefault();
+          trackPlayCardClicked({ slug: mode.slug, group, destination: "modal" });
           onOpenMode(mode.slug);
           return;
         }
         if (isGuest && hasRealRoute(mode)) {
           event.preventDefault();
+          trackPlayCardClicked({ slug: mode.slug, group, destination: "auth" });
           openAuthPrompt();
+          return;
         }
+        trackPlayCardClicked({ slug: mode.slug, group, destination: hasRealRoute(mode) ? "route" : "demo" });
       }}
       className={`group flex w-full animate-in fade-in slide-in-from-bottom-2 flex-col overflow-hidden rounded-xl bg-brand-blue duration-300 transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60`}
       style={{ animationDelay: `${Math.min(index * 30, 420)}ms`, animationFillMode: "backwards" }}

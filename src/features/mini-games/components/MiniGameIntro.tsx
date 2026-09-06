@@ -7,6 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import { useLocale } from "@/contexts/LocaleContext";
 import { DemoModeIcon } from "@/features/demos/DemoModeIcon";
 import { MINI_GAME_ICONS } from "./MiniGameIcons";
+import { trackMiniGameIntroStarted, trackMiniGameIntroViewed } from "../analytics/coinGames.analytics";
 
 const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
 
@@ -33,9 +34,13 @@ export function MiniGameIntro({ config, backHref = "/play", resume, children }: 
   useEffect(() => {
     if (!resume) return;
     let cancelled = false;
-    resume().then((active) => { if (!cancelled) { if (active) setStarted(true); setChecking(false); } }).catch(() => { if (!cancelled) setChecking(false); });
+    resume().then((active) => { if (!cancelled) { if (active) { trackMiniGameIntroStarted(config.slug, true); setStarted(true); } setChecking(false); } }).catch(() => { if (!cancelled) setChecking(false); });
     return () => { cancelled = true; };
-  }, [resume]);
+  }, [resume, config.slug]);
+
+  useEffect(() => {
+    if (!started && !checking) trackMiniGameIntroViewed(config.slug);
+  }, [started, checking, config.slug]);
 
   if (started) return <>{children}</>;
 
@@ -69,7 +74,7 @@ export function MiniGameIntro({ config, backHref = "/play", resume, children }: 
         </motion.div>
         <button
           type="button"
-          onClick={() => setStarted(true)}
+          onClick={() => { trackMiniGameIntroStarted(config.slug, false); setStarted(true); }}
           disabled={checking}
           className="mt-5 h-14 w-full rounded-[20px] bg-brand-yellow text-lg font-black uppercase tracking-wide text-black transition-all hover:brightness-105 active:translate-y-[2px] disabled:opacity-60"
           style={poppins}

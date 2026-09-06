@@ -558,6 +558,15 @@ export function trackModeSelected(mode: string) {
   trackEvent('mode_selected', { mode });
 }
 
+/** A card on the Play screen was tapped: which game, which shelf, and where the tap led. */
+export function trackPlayCardClicked(props: {
+  slug: string;
+  group: 'daily' | 'coins' | 'other';
+  destination: 'route' | 'demo' | 'modal' | 'auth';
+}) {
+  trackEvent('play_card_clicked', { slug: props.slug, group: props.group, destination: props.destination });
+}
+
 // ── Weekend League funnel ────────────────────────────────────────────────────
 // banner viewed → banner clicked → tab viewed → entry → check-in. The DB holds
 // the authoritative entry/check-in truth; these exist so the top of the funnel
