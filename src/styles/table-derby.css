@@ -34,7 +34,9 @@
   --td-steel-deep: #2c3e50;
 
   /* ── Semantic ─────────────────────────────────────────────────── */
-  --td-bg: var(--td-black);
+  /* Ground matches the official mural panel's baked-in background
+     (#282828) so the artwork blends seamlessly at any scale. */
+  --td-bg: #282828;
   --td-surface: var(--td-charcoal);
   --td-surface-inverse: var(--td-paper); /* white sticker cards           */
   --td-primary: var(--td-orange);

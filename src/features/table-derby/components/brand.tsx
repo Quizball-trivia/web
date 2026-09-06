@@ -138,7 +138,10 @@ export function MuralBackdrop({ dim = 1, accent = false }: { dim?: number; accen
       style={{
         opacity: dim,
         backgroundImage: `url(/assets/table-derby/bg-mural-${accent ? 'accent' : 'dark'}.png)`,
-        backgroundSize: 'cover',
+        // Natural scale, no cover-zoom: at least 980px of artwork width,
+        // centered; the ground color equals the panel's baked background
+        // so uncovered areas blend seamlessly (no bands, no gaps).
+        backgroundSize: 'max(100%, 980px) auto',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
       }}
