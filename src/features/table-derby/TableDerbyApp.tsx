@@ -1083,7 +1083,13 @@ export function TableDerbyApp() {
               className="w-full max-w-2xl"
             >
               {currentRound === 1 && category && <CategoryBand prompt={category.prompt} />}
-              {currentRound === 2 && cardCategory && <CategoryBand prompt={cardCategory.prompt} />}
+              {currentRound === 2 && cardCategory && (
+                <div className="flex flex-col items-center gap-4">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- local 3D render */}
+                  <img src="/assets/table-derby/3d/cards.png" alt="" className="h-28 w-auto md:h-36" />
+                  <CategoryBand prompt={cardCategory.prompt} />
+                </div>
+              )}
               {currentRound === 3 && <CategoryBand prompt={TD.rollBox} />}
               {currentRound === 4 && <CategoryBand prompt={`${TD.buzzRules} · +10 / −10`} />}
               {currentRound === 5 && <CategoryBand prompt={TD.penaltiesIntro} />}
@@ -1319,6 +1325,10 @@ export function TableDerbyApp() {
             <span className="text-[11px] text-white/55" style={TD_DISPLAY}>
               {TD.resultsTitle}
             </span>
+            {matchWinner === 'me' && (
+              /* eslint-disable-next-line @next/next/no-img-element -- local 3D render */
+              <img src="/assets/table-derby/3d/trophy.png" alt="" className="-my-2 h-32 w-auto md:h-40" />
+            )}
             <motion.div
               initial={{ scale: 0.7, rotate: -6, opacity: 0 }}
               animate={{ scale: 1, rotate: -3, opacity: 1 }}

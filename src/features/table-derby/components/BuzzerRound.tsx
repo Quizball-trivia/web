@@ -267,18 +267,23 @@ export function BuzzerRound({
         <div className="flex flex-col items-center gap-2">
           <motion.button
             type="button"
-            whileTap={{ scale: 0.9 }}
+            whileTap={{ scale: 0.88, y: 4 }}
             onClick={buzz}
             disabled={zphase !== 'clues' || locked.me}
-            className="flex size-28 items-center justify-center rounded-full text-xl disabled:opacity-35 md:size-32 md:text-2xl"
-            style={{
-              ...TD_DISPLAY,
-              background: 'var(--td-orange)',
-              color: '#0d0d0d',
-              boxShadow: '0 6px 0 var(--td-orange-deep), 6px 10px 0 rgba(0,0,0,0.55)',
-            }}
+            className="relative size-36 disabled:opacity-35 md:size-40"
           >
-            {TD.buzz}
+            {/* eslint-disable-next-line @next/next/no-img-element -- local 3D render */}
+            <img
+              src="/assets/table-derby/3d/buzzer.png"
+              alt=""
+              className="pointer-events-none h-full w-full object-contain"
+            />
+            <span
+              className="absolute inset-x-0 top-[40%] text-center text-xl md:text-2xl"
+              style={{ ...TD_DISPLAY, color: 'var(--td-white)' }}
+            >
+              {TD.buzz}
+            </span>
           </motion.button>
           <span className="text-[12px] text-white/50" style={TD_DISPLAY}>
             {locked.me ? TD.lockedOut : zphase === 'answerOp' ? `${opponentName} · ${TD.opponentBuzzed}` : TD.buzzRules}
