@@ -20,23 +20,23 @@ type BPhase = 'roll' | 'qMe' | 'qOp' | 'stealMe' | 'stealOp' | 'over';
 const ANSWER_MS = 15_000;
 const STEAL_MS = 10_000;
 
-/* The box is a Blender-rendered turntable: 24 frames over 72 deg (one
- * face-to-face period of the pentagon; the sequence loops). Drag spins
- * it; release snaps to the nearest face, where the live category cards
- * overlay the front pockets. */
-const FRAMES = 24;
+/* The box is a Blender-rendered turntable: 120 frames over a full 360
+ * deg (each face carries its own baked card colors). Drag spins it;
+ * release snaps to the nearest face, where the text overlays the baked
+ * cards in the front pockets. */
+const FRAMES = 120;
 const DEG_PER_FRAME = 3;
 const FACE_DEG = 72;
-const framePath = (i: number) => `/assets/table-derby/3d/box/box_${String(i).padStart(2, '0')}.webp`;
+const framePath = (i: number) => `/assets/table-derby/3d/box/box_${String(i).padStart(3, '0')}.webp`;
 
-/* Card colors, show-style: every card its own color (green/red pair on
- * the first face like the real prop). Black text on all. */
-const CARD_COLORS = ['#4C9F45', '#D64541', '#E8B62B', '#3E7BC4', '#EE5A22', '#8C4FB0', '#2AA79B', '#D4589B', '#F4F1EC', '#C0CA33'];
+/* Card colors are BAKED into the Blender render (the slabs spin with the
+ * box); the overlay is text-only. Per-color text contrast: */
+const CARD_TEXT = ['#fff', '#fff', '#0d0d0d', '#fff', '#0d0d0d', '#fff', '#0d0d0d', '#0d0d0d', '#0d0d0d', '#0d0d0d'];
 
 /* Pocket rects measured from the rendered frame (percent of 640x760). */
 const POCKETS = [
-  { left: '23.5%', width: '43%', top: '29%', height: '13.6%' },
-  { left: '23.5%', width: '43%', top: '52.8%', height: '12.2%' },
+  { left: '32%', width: '35.8%', top: '29.5%', height: '12.3%' },
+  { left: '32%', width: '35.8%', top: '52.6%', height: '11.6%' },
 ];
 
 interface CardState {
@@ -316,30 +316,34 @@ export function BoxRound({
               style={{ opacity: i === frame ? 1 : 0 }}
             />
           ))}
-          {/* live category cards sitting IN the front pockets */}
+          {/* text over the baked-in cards (the colored slabs spin with the box) */}
           {faceCards.map((card, j) => (
             <button
               key={card.id}
               type="button"
               data-card-id={card.remaining.length > 0 ? card.id : undefined}
               disabled={!canPick || card.remaining.length === 0}
-              className="absolute flex flex-col items-start justify-between overflow-hidden rounded-[5px] px-2.5 py-1.5 text-left transition-opacity duration-200 disabled:opacity-60"
+              className="absolute flex flex-col items-start justify-between overflow-hidden rounded-[6px] px-2 py-1 text-left transition-opacity duration-200"
               style={{
                 ...POCKETS[j],
-                background: CARD_COLORS[(lf * 2 + j) % CARD_COLORS.length],
-                boxShadow: 'inset 0 -3px 0 rgba(0,0,0,0.25)',
-                opacity: snapped ? undefined : 0,
+                opacity: snapped ? 1 : 0,
                 pointerEvents: snapped ? 'auto' : 'none',
               }}
             >
-              <span className="text-[13px] leading-tight md:text-[15px]" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
+              {card.remaining.length === 0 && (
+                <span aria-hidden className="absolute inset-0 rounded-[6px]" style={{ background: 'rgba(0,0,0,0.55)' }} />
+              )}
+              <span
+                className="relative text-[11px] leading-tight md:text-[13px]"
+                style={{ ...TD_DISPLAY, color: CARD_TEXT[(lf * 2 + j) % CARD_TEXT.length] }}
+              >
                 {card.title}
               </span>
               <span
-                className="shrink-0 rounded-full px-2 py-0.5 text-[9px] md:text-[10px]"
+                className="relative shrink-0 rounded-full px-1.5 py-0.5 text-[8px] md:text-[9px]"
                 style={{
                   ...TD_DISPLAY,
-                  background: card.remaining.length > 0 ? 'rgba(0,0,0,0.85)' : 'rgba(0,0,0,0.4)',
+                  background: 'rgba(0,0,0,0.8)',
                   color: card.remaining.length > 0 ? 'var(--td-white)' : 'rgba(255,255,255,0.6)',
                 }}
               >
