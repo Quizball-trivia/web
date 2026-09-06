@@ -235,6 +235,8 @@ export function TableDerbyApp() {
   const [opPick, setOpPick] = useState<RpsPick | null>(null);
   const [rpsResult, setRpsResult] = useState<'me' | 'op' | 'tie' | null>(null);
 
+  // Match-intro stinger: matched -> showdown -> into round 1.
+  const introAudioRef = useRef<HTMLAudioElement | null>(null);
   const timeouts = useRef<ReturnType<typeof setTimeout>[]>([]);
   const later = useCallback((fn: () => void, ms: number) => {
     const t = setTimeout(fn, ms);
@@ -298,7 +300,22 @@ export function TableDerbyApp() {
     setCurrentRound(1);
     matchAwarded.current = false;
     setPhase('matchmaking');
-    later(() => setPhase('showdown'), 2800);
+    // Created on the click (user gesture) so the delayed play is allowed.
+    try {
+      introAudioRef.current ??= new Audio('/assets/betsson/table-derby-intro-sound.m4a');
+      introAudioRef.current.load();
+    } catch {
+      /* audio unsupported/blocked — silent fallback */
+    }
+    later(() => {
+      setPhase('showdown');
+      const a = introAudioRef.current;
+      if (a) {
+        a.currentTime = 0;
+        a.volume = 0.9;
+        void a.play().catch(() => {});
+      }
+    }, 2800);
     later(() => setPhase('rps'), 5400);
   };
 
