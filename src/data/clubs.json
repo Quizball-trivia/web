@@ -2581,5 +2581,41 @@
     "logo": "wl-zurich.png",
     "primaryColor": "#1f2937",
     "hidden": true
+  },
+  {
+    "id": "wl-osasuna",
+    "label": "Osasuna",
+    "value": "Osasuna",
+    "country": "",
+    "logo": "wl-osasuna.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-shakhtar-donetsk",
+    "label": "Shakhtar Donetsk",
+    "value": "Shakhtar Donetsk",
+    "country": "",
+    "logo": "wl-shakhtar-donetsk.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-swindon-town",
+    "label": "Swindon Town",
+    "value": "Swindon Town",
+    "country": "",
+    "logo": "wl-swindon-town.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
+  },
+  {
+    "id": "wl-valenciennes",
+    "label": "Valenciennes",
+    "value": "Valenciennes",
+    "country": "",
+    "logo": "wl-valenciennes.png",
+    "primaryColor": "#1f2937",
+    "hidden": true
   }
 ]
