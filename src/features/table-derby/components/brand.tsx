@@ -126,71 +126,20 @@ export function XGlyph({ size = 20, color = 'var(--td-white)', rotate = 8 }: { s
   );
 }
 
-/* ── Wall mural backdrop (tone-on-tone typographic collage) ─────── */
-
-interface MuralWord {
-  text: string;
-  x: number; // % of width
-  y: number; // % of height
-  rot: number;
-  size: number;
-  orange?: boolean;
-}
-
-// Deterministic layout (SSR-safe). Georgian-only per product rule.
-const MURAL_WORDS: MuralWord[] = [
-  { text: 'ფეხბურთი', x: 2, y: 4, rot: -90, size: 44 },
-  { text: 'გოოოოლ!', x: 18, y: 8, rot: 0, size: 64 },
-  { text: 'პენალტების სერია', x: 44, y: 3, rot: 0, size: 22 },
-  { text: '26', x: 12, y: 30, rot: 0, size: 110 },
-  { text: 'ჩამოთვალე', x: 40, y: 22, rot: -6, size: 34 },
-  { text: 'მუნდიალი', x: 70, y: 10, rot: 90, size: 40 },
-  { text: 'დერბი', x: 58, y: 16, rot: 0, size: 74 },
-  { text: '?', x: 88, y: 8, rot: 12, size: 90 },
-  { text: 'ვინ არის?', x: 78, y: 40, rot: 0, size: 30 },
-  { text: 'თამაში', x: 4, y: 62, rot: 0, size: 56 },
-  { text: 'მცველები', x: 30, y: 52, rot: 0, size: 26 },
-  { text: 'ბუნდესლიგა', x: 48, y: 44, rot: -90, size: 30 },
-  { text: 'ფინალი', x: 60, y: 58, rot: 0, size: 48 },
-  { text: '10', x: 90, y: 56, rot: 0, size: 96 },
-  { text: 'მაგიდის დერბი', x: 20, y: 78, rot: -4, size: 38 },
-  { text: '!', x: 52, y: 74, rot: 0, size: 84 },
-  { text: 'გოლი', x: 66, y: 82, rot: 6, size: 52 },
-  { text: 'კაპიტანი', x: 2, y: 90, rot: 0, size: 28 },
-  { text: 'დარტსი', x: 86, y: 88, rot: -8, size: 26 },
-];
+/* ── Key-art backdrop: tone-on-tone angular maze pattern (the show's
+      poster background — language-free, tiles seamlessly) ─────────── */
 
 export function MuralBackdrop({ dim = 1 }: { dim?: number }) {
   return (
-    <div aria-hidden className="pointer-events-none absolute inset-0 select-none overflow-hidden" style={{ opacity: dim }}>
-      {MURAL_WORDS.map((w, i) => (
-        <span
-          key={i}
-          className="absolute whitespace-nowrap"
-          style={{
-            ...TD_DISPLAY,
-            left: `${w.x}%`,
-            top: `${w.y}%`,
-            fontSize: w.size,
-            color: w.orange ? 'var(--td-orange)' : 'var(--td-charcoal-pattern)',
-            transform: `rotate(${w.rot}deg)`,
-            transformOrigin: 'left top',
-          }}
-        >
-          {w.text}
-        </span>
-      ))}
-      {/* sparse glyph accents, charcoal like the wall */}
-      <div className="absolute" style={{ left: '34%', top: '36%' }}>
-        <BoltGlyph size={64} color="var(--td-charcoal-pattern)" rotate={10} />
-      </div>
-      <div className="absolute" style={{ left: '82%', top: '26%' }}>
-        <StarburstGlyph size={44} color="var(--td-charcoal-pattern)" />
-      </div>
-      <div className="absolute" style={{ left: '8%', top: '46%' }}>
-        <XGlyph size={40} color="var(--td-charcoal-pattern)" />
-      </div>
-    </div>
+    <div
+      aria-hidden
+      className="pointer-events-none absolute inset-0 select-none"
+      style={{
+        opacity: dim,
+        backgroundImage: 'url(/assets/table-derby/bg-maze.svg)',
+        backgroundSize: '440px 440px',
+      }}
+    />
   );
 }
 
