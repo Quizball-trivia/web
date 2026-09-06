@@ -437,6 +437,13 @@ const DAILY_DEMO_COPY: Record<DailyChallengeType, { title: DemoI18nText; descrip
       ka: "ორი სურათი, ერთი ფეხბურთელი — ამოხსენი ვიზუალური თავსატეხი.",
     },
   },
+  cardDetective: {
+    title: { en: "Card Detective", ka: "ბარათის დეტექტივი" },
+    description: {
+      en: "Every slot on the card is a locked clue with a price — name the player with the most coins left.",
+      ka: "ბარათის ყველა უჯრა დახურული მინიშნებაა ფასით — გამოიცანი მოთამაშე რაც შეიძლება მეტი ქოინის შენარჩუნებით.",
+    },
+  },
   fifaCards: {
     title: { en: "FIFA Cards", ka: "FIFA ბარათები" },
     description: {

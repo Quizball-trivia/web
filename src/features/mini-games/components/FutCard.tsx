@@ -285,7 +285,7 @@ function NationFlag({ code }: { code: string }) {
 }
 
 /** League badge — the product's own league-logo asset, else a short text token. */
-function LeagueBadge({ league }: { league: string }) {
+export function LeagueBadge({ league }: { league: string }) {
   const src = leagueLogoUrl(league);
   if (src) {
     // eslint-disable-next-line @next/next/no-img-element

@@ -1,9 +1,8 @@
 'use client';
 
-import { Baby, Fingerprint, ListOrdered, Search, Sparkles, TrendingUp, Users } from 'lucide-react';
+import { Baby, Fingerprint, ListOrdered, Search, TrendingUp, Users } from 'lucide-react';
 import { useMiniT } from '@/features/mini-games/lib/i18n';
 import { RoundsMode } from '../components/RoundsMode';
-import { DetectiveRound, START_COINS } from '../components/rounds/DetectiveRound';
 import { EvolutionRound } from '../components/rounds/EvolutionRound';
 import { FAKE_DELTA, FakeStatRound } from '../components/rounds/FakeStatRound';
 import { MissingRound } from '../components/rounds/MissingRound';
@@ -62,11 +61,4 @@ export function WhosMissing({ backHref }: P) {
   );
 }
 
-export function CardDetective({ backHref }: P) {
-  const t = useMiniT();
-  return (
-    <RoundsMode backHref={backHref} title={t('Card Detective')} subtitle={t('Buy clues, name the player, keep your coins')} icon={Sparkles} tagline={t('Everything starts hidden. Identify the card using the least information possible.')} chips={[t('Solo · 5 cards'), t('{n} clue coins', { n: START_COINS })]} total={5} Round={DetectiveRound} levelFor={ramp(2)}
-      steps={[t('Each card gives you {n} clue coins. Nation and position cost 10, league 15, club 20, rating 25, a single stat 5, the photo 50.', { n: START_COINS }), t('Guess whenever you like — a wrong name costs 15 coins.'), t('Score is coins left × 10. Solving with 80 coins pays 800.')]} />
-  );
-}
 

@@ -12,6 +12,8 @@ interface DailyChallengeHeaderProps {
   hideTimer?: boolean;
   /** Override the centre-pill label; defaults to "Question N/Total" */
   centerLabel?: string;
+  /** Replaces the timer pill (e.g. a coins balance for untimed games). */
+  rightSlot?: React.ReactNode;
   className?: string;
 }
 
@@ -29,6 +31,7 @@ export function DailyChallengeHeader({
   timeLeft,
   hideTimer = false,
   centerLabel,
+  rightSlot,
   className,
 }: DailyChallengeHeaderProps) {
   const { t } = useLocale();
@@ -58,7 +61,15 @@ export function DailyChallengeHeader({
         >
           {label}
         </div>
-        {displayTimer !== null && (
+        {rightSlot ? (
+          <div
+            className="flex min-w-[64px] items-center justify-center gap-1.5 rounded-[16px] bg-brand-blue px-3 text-white h-[40px] sm:h-[52px] sm:min-w-[92px] tabular-nums"
+            style={{ ...poppins, fontSize: 'clamp(14px, 2.2vw, 26px)' }}
+          >
+            {rightSlot}
+          </div>
+        ) : null}
+        {rightSlot === undefined && displayTimer !== null && (
           <div
             className="flex w-[64px] items-center justify-center rounded-[16px] bg-brand-blue text-white h-[40px] sm:h-[52px] sm:w-[92px] tabular-nums"
             style={{ ...poppins, fontSize: 'clamp(14px, 2.2vw, 26px)' }}

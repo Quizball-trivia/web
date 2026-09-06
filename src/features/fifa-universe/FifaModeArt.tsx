@@ -32,23 +32,22 @@ export function FifaModeArt({ slug, className = '' }: { slug: string; className?
   const art = meta ?? { artPlayer: 'Robert Lewandowski', artEdition: 'FIFA18' };
   const card = FIFA_CARDS.find((c) => c.name === art.artPlayer && c.edition === art.artEdition) ?? FIFA_CARDS.find((c) => c.name === art.artPlayer);
   const masked = slug === 'fifa-card-detective' || slug === 'fifa-wonderkid' || slug === 'mini-guess-fifa-card';
+  // Duel-style modes show a second card behind the first.
+  const twoCards = slug === 'fifa-stat-battle' || slug === 'fifa-gauntlet' || slug === 'fifa-higher-lower' || slug === 'fifa-evolution' || slug === 'fifa-draft-battle';
+  const pair = card && twoCards ? FIFA_CARDS.find((c) => c.edition === card.edition && c.name !== card.name && c.difficulty === 'easy') ?? null : null;
   return (
     <div className={`relative overflow-hidden ${className}`} style={{ background: 'linear-gradient(135deg, #1645FF 0%, #0b2a9e 55%, #0f1420 100%)' }} aria-hidden>
-      <div className="pointer-events-none absolute inset-0 opacity-[0.12]" style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.9) 1px, transparent 1px)', backgroundSize: '13px 13px' }} />
-      <div className="pointer-events-none absolute -left-10 -top-12 size-44 rounded-full" style={{ background: 'radial-gradient(circle, rgba(255,229,0,0.35), transparent 68%)' }} />
+      <div className="pointer-events-none absolute -left-10 -top-12 size-44 rounded-full" style={{ background: 'radial-gradient(circle, rgba(255,229,0,0.3), transparent 68%)' }} />
       <Icon className="pointer-events-none absolute -bottom-6 -left-4 size-36 text-white/10" />
-      <div className="absolute inset-0 flex items-center justify-center gap-4">
-        <span className="flex size-12 items-center justify-center rounded-2xl bg-brand-yellow text-black shadow-lg">
-          <Icon className="size-6" />
-        </span>
+      <div className="absolute inset-0 flex items-center justify-center">
         {card && (
-          <div className="rotate-[6deg] drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]">
+          <div className={`${pair ? 'rotate-[-6deg]' : 'rotate-[5deg]'} drop-shadow-[0_12px_22px_rgba(0,0,0,0.5)]`}>
             <MiniFutCard card={card} size="sm" masked={masked} showEdition />
           </div>
         )}
-        {card && (slug === 'fifa-stat-battle' || slug === 'fifa-gauntlet' || slug === 'fifa-higher-lower' || slug === 'fifa-evolution') && (
-          <div className="-ml-8 -rotate-[8deg] drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]">
-            <MiniFutCard card={FIFA_CARDS.find((c) => c.edition === card.edition && c.name !== card.name && c.difficulty === 'easy') ?? card} size="xs" showEdition={false} />
+        {card && pair && (
+          <div className="-ml-5 mt-5 rotate-[7deg] drop-shadow-[0_12px_22px_rgba(0,0,0,0.5)]">
+            <MiniFutCard card={pair} size="xs" showEdition={false} />
           </div>
         )}
       </div>

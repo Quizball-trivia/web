@@ -67,6 +67,7 @@ const DAILY_CHALLENGE_SLUGS = [
   "daily-highLow",
   "daily-footballLogic",
   "daily-fifaCards",
+  "daily-cardDetective",
   "lab-missing-xi",
   "mini-pass-chain",
   "mini-guess-the-goal",

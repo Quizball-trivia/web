@@ -1,4 +1,4 @@
-import type {
+import type { CardDetectiveSession,
   DailyChallengeSession,
   DailyChallengeType,
   FootballLogicSession,
@@ -294,6 +294,8 @@ export function buildDemoDailySession(
       return footballLogicSession(locale);
     case "fifaCards":
       return fifaCardsSession(locale);
+    case "cardDetective":
+      return cardDetectiveSession(locale);
   }
 }
 
@@ -331,5 +333,22 @@ function fifaCardsSession(locale: Locale): FifaCardsSession {
       faceUrl: card.photoId ? `/api/fifa-face?id=${card.photoId}&v=${card.photoVer}` : null,
       difficulty: card.overall >= 88 ? "easy" : card.overall >= 85 ? "medium" : "hard",
     })),
+  };
+}
+
+/** Demo Card Detective round: the same ten bundled cards as the FIFA Cards demo, with the daily's clue prices. */
+function cardDetectiveSession(locale: Locale): CardDetectiveSession {
+  const base = fifaCardsSession(locale);
+  return {
+    challengeType: "cardDetective",
+    title: locale === "ka" ? "ბარათის დეტექტივი" : "Card Detective",
+    description: locale === "ka"
+      ? "ყველაფერი დამალულია, 100 მინიშნების ქოინი — გამოიცანი მოთამაშე მინიმალური ინფორმაციით."
+      : "Everything hidden, 100 clue coins — name the player using the least information.",
+    cardCount: base.cards.length,
+    startCoins: 100,
+    clueCosts: { photo: 90, rating: 25, club: 20, league: 15, nation: 10, position: 10, pac: 5, sho: 5, pas: 5, dri: 5, def: 5, phy: 5 },
+    wrongGuessCost: 15,
+    cards: base.cards,
   };
 }
