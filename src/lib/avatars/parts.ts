@@ -52,6 +52,7 @@ export interface AvatarPart {
   group?: string;
   hideHair?: boolean;
   hairFrontPercent?: number;
+  storeHairFrontPercent?: number;
   clipPath?: string;
   free?: boolean;
   priceCoins?: number;
