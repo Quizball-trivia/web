@@ -680,9 +680,17 @@ export function TableDerbyApp() {
             exit={{ opacity: 0 }}
             className="relative z-10 mx-auto flex min-h-dvh w-full max-w-2xl flex-col items-center justify-center gap-6 px-4 py-10 md:gap-8"
           >
-            {/* header, Quizball-style: pinned to the true top-right corner
-                (where the wordmark used to sit); wordmark moved left */}
-            <div className="fixed right-4 top-4 z-20 flex items-center gap-3 md:right-8 md:top-6">
+            {/* header: logo left + profile right, one line */}
+            <div className="fixed left-4 top-4 z-20 flex h-[79px] items-center md:left-8 md:top-6">
+              {/* eslint-disable-next-line @next/next/no-img-element -- local brand SVG */}
+              <img
+                src="/assets/table-derby/logo-paper.svg"
+                alt="მაგიდის დერბი"
+                className="h-[72px] w-auto"
+                style={{ transform: 'rotate(-3deg)', filter: 'drop-shadow(3px 4px 0 rgba(0,0,0,0.55))' }}
+              />
+            </div>
+            <div className="fixed right-4 top-4 z-20 flex h-[79px] items-center gap-3 md:right-8 md:top-6">
               <div className="flex items-center gap-2">
               {process.env.NODE_ENV !== 'production' && (
                 <button
@@ -745,7 +753,6 @@ export function TableDerbyApp() {
               </button>
             </div>
 
-            <TdLogoSticker variant="blackOnWhite" scale={1.1} />
 
             {showAvatarPicker && (
               <div
