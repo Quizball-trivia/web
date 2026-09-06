@@ -59,6 +59,28 @@ export function TdAvatar({
   );
 }
 
+/** Vertical avatar card for the header — TD branding (charcoal, inset
+ *  orange edge, hard shadow) instead of Quizball's tier frames. */
+export function TdAvatarCard({ color, width = 58 }: { color: AvatarColor; width?: number }) {
+  const height = Math.round(width * 1.36);
+  return (
+    <div
+      className="relative shrink-0 overflow-hidden rounded-[10px]"
+      style={{
+        width,
+        height,
+        background: 'var(--td-charcoal)',
+        boxShadow: '3px 3px 0 rgba(0,0,0,0.5), inset 0 0 0 2px var(--td-orange)',
+      }}
+      aria-hidden
+    >
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2">
+        <AvatarPreview customization={tdAvatarCustomization(color)} width={width * 0.84} />
+      </div>
+    </div>
+  );
+}
+
 /** The player's own avatar — jersey color from onboarding/localStorage;
  *  updates live everywhere when a new one is chosen. */
 export function MyAvatar({ size = 44, active = false }: { size?: number; active?: boolean }) {

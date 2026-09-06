@@ -20,18 +20,17 @@ import {
   MuralBackdrop,
   BoltGlyph,
   StarburstGlyph,
-  TicketPill,
   TicketGlyph,
   PERF_DOTS,
 } from './components/brand';
 import { CategoryBand, PlayerBoard, ScorePill, TurnTimerBar } from './components/chrome';
 import { DailySolo } from './components/DailySolo';
 import { TdLoader } from './components/Loader';
-import { MyAvatar, TdAvatar, TD_AVATAR_COLORS, tdAvatarCustomization } from './components/Avatar';
+import { MyAvatar, TdAvatar, TdAvatarCard, TD_AVATAR_COLORS, tdAvatarCustomization } from './components/Avatar';
 import { AvatarPreview } from '@/components/AvatarPreview';
 import { TdClubSelect } from './components/ClubSelect';
 import { TdProfileCard, opponentProfile } from './components/ProfileCard';
-import { TierFrameAvatar } from '@/components/TierFrameAvatar';
+
 import { MOCK_USER } from './lib/mockUser';
 import { CardsRound } from './components/CardsRound';
 import { BoxRound } from './components/BoxRound';
@@ -708,30 +707,36 @@ export function TableDerbyApp() {
                 </button>
               )}
               </div>
-              <TicketPill count={tickets} label={TD.tickets} />
               <button
                 type="button"
                 onClick={() => setShowAvatarPicker(true)}
                 aria-label={TD.chooseAvatar}
-                className="flex min-w-0 items-center gap-2.5 text-right"
+                className="flex items-center gap-2.5 text-right"
               >
-                <span className="flex min-w-0 flex-col items-end">
-                  <span className="max-w-[10rem] truncate text-[16px] text-white" style={TD_DISPLAY}>
+                <span className="flex flex-col items-end gap-1.5">
+                  <span className="whitespace-nowrap text-[16px] text-white" style={TD_DISPLAY}>
                     {displayName}
                   </span>
-                  <span
-                    className="mt-1 inline-flex flex-col items-center rounded-full px-3 py-1 leading-none"
-                    style={{ background: 'var(--td-orange)', boxShadow: '2px 2px 0 rgba(0,0,0,0.45)' }}
-                  >
-                    <span className="text-[14px] tabular-nums" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
-                      {displayQp}
+                  <span className="flex items-center gap-1.5">
+                    <span
+                      className="flex h-8 items-center gap-1 whitespace-nowrap rounded-full px-3"
+                      style={{ ...TD_DISPLAY, background: 'var(--td-orange)', color: '#0d0d0d', fontSize: 13, boxShadow: '2px 2px 0 rgba(0,0,0,0.45)' }}
+                    >
+                      {displayQp} {TD.qpShort}
                     </span>
-                    <span className="text-[9px] tracking-wide" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
-                      {TD.qpShort}
+                    <span
+                      className="flex h-8 items-center gap-1.5 rounded-full px-3"
+                      style={{ background: 'var(--td-charcoal)', boxShadow: '2px 2px 0 rgba(0,0,0,0.45)' }}
+                      aria-label={TD.tickets}
+                    >
+                      <TicketGlyph size={14} color="var(--td-orange)" />
+                      <span className="text-[13px] leading-none text-white" style={TD_DISPLAY}>
+                        {tickets ?? '·'}
+                      </span>
                     </span>
                   </span>
                 </span>
-                <TierFrameAvatar tier="Academy" avatarCustomization={tdAvatarCustomization(myColor)} size="lg" />
+                <TdAvatarCard color={myColor} width={58} />
               </button>
             </div>
 
