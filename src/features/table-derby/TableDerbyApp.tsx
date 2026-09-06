@@ -24,7 +24,9 @@ import {
   PERF_DOTS,
 } from './components/brand';
 import { CategoryBand, PlayerBoard, ScorePill, TurnTimerBar } from './components/chrome';
-import { DailySolo } from './components/DailySolo';
+import { TdDailyGame, type TdDailyType } from './components/DailyGames';
+import { GuessTheGoal } from '@/features/mini-games/components/GuessTheGoal';
+import { LeagueCountdown } from '@/features/weekend-league/components/LeagueCountdown';
 import { TdLoader } from './components/Loader';
 import { MyAvatar, TdAvatar, TdAvatarCard, TD_AVATAR_COLORS, tdAvatarCustomization } from './components/Avatar';
 import { AvatarPreview } from '@/components/AvatarPreview';
@@ -44,29 +46,26 @@ import {
   QP_TARGET,
   QP_WIN,
   addQp,
-  dailyCategoryIndex,
-  getDailyResult,
   getQp,
   getAvatarColor,
   getFavClub,
   subscribeAvatar,
   getTickets,
   isOnboarded,
+  nextSaturdayMs,
   resetOnboarding,
   resetTickets,
   setAvatarColor,
   type TdAvatarColor,
   setFavClub,
   setOnboarded,
-  setDailyResult,
   spendTicket,
 } from './lib/state';
 
 type Phase =
   | 'home'
   | 'onboarding'
-  | 'daily'
-  | 'dailyPlay'
+  | 'dailyGame'
   | 'wl'
   | 'leaderboard'
   | 'matchmaking'
@@ -182,7 +181,7 @@ export function TableDerbyApp() {
   // Shell state (localStorage-backed; read after mount to stay SSR-safe).
   const [tickets, setTickets] = useState<number | null>(null);
   const [qp, setQp] = useState(0);
-  const [dailyScore, setDailyScore] = useState<number | null>(null);
+  const [dailyGame, setDailyGame] = useState<TdDailyType | 'guessTheGoal' | null>(null);
   const [favClub, setFavClubState] = useState<string | null>(null);
   const myColor = useSyncExternalStore(subscribeAvatar, getAvatarColor, () => 'green' as ReturnType<typeof getAvatarColor>);
   const [menuNotice, setMenuNotice] = useState<string | null>(null);
@@ -275,10 +274,9 @@ export function TableDerbyApp() {
   /* ── shell: tickets / QP / daily state ──────────────────────── */
 
   useEffect(() => {
-    if (phase !== 'home' && phase !== 'wl' && phase !== 'leaderboard' && phase !== 'daily') return;
+    if (phase !== 'home' && phase !== 'wl' && phase !== 'leaderboard') return;
     setTickets(getTickets());
     setQp(getQp());
-    setDailyScore(getDailyResult());
     setFavClubState(getFavClub());
   }, [phase]);
 
@@ -825,155 +823,120 @@ export function TableDerbyApp() {
               </p>
             )}
 
-            {/* sections */}
-            <div className="flex w-full flex-col gap-3">
-              <button
-                type="button"
-                onClick={() => setPhase('daily')}
-                className="flex w-full items-center justify-between gap-3 rounded-[16px] px-5 py-5 text-left md:px-6 md:py-6"
-                style={{ background: 'var(--td-charcoal)', boxShadow: '5px 5px 0 #000' }}
-              >
-                <div className="min-w-0">
-                  <p className="text-xl text-white md:text-2xl" style={TD_DISPLAY}>
-                    {TD.menuDaily}
-                  </p>
-                  <p className="mt-1 truncate text-[12px] text-white/55 md:text-[13px]" style={TD_DISPLAY}>
-                    {TD.menuDailySub}
-                  </p>
-                </div>
-                <span
-                  className="shrink-0 rounded-full px-3 py-1.5 text-[11px] md:text-[12px]"
-                  style={{
-                    ...TD_DISPLAY,
-                    background: dailyScore === null ? 'var(--td-orange)' : 'rgba(255,255,255,0.14)',
-                    color: dailyScore === null ? '#0d0d0d' : 'rgba(255,255,255,0.75)',
-                  }}
-                >
-                  {dailyScore === null ? TD.menuDailyNew : TD.menuDailyDone}
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setPhase('wl')}
-                className="w-full rounded-[16px] px-5 py-5 text-left md:px-6 md:py-6"
-                style={{ background: 'var(--td-charcoal)', boxShadow: '5px 5px 0 #000' }}
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-xl text-white md:text-2xl" style={TD_DISPLAY}>
-                      {TD.menuWl}
-                    </p>
-                    <p className="mt-1 truncate text-[12px] text-white/55 md:text-[13px]" style={TD_DISPLAY}>
-                      {TD.menuWlSub}
-                    </p>
-                  </div>
-                  <span className="shrink-0 text-lg" style={{ ...TD_DISPLAY, color: 'var(--td-orange)' }}>
-                    {Math.min(qp, QP_TARGET)}/{QP_TARGET}
-                  </span>
-                </div>
-                <div className="mt-3 h-2 w-full overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.12)' }}>
-                  <div
-                    className="h-full rounded-full"
-                    style={{ background: 'var(--td-orange)', width: `${Math.min(100, Math.round((qp / QP_TARGET) * 100))}%` }}
-                  />
-                </div>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setPhase('leaderboard')}
-                className="flex w-full items-center justify-between gap-3 rounded-[16px] px-5 py-5 text-left md:px-6 md:py-6"
-                style={{ background: 'var(--td-charcoal)', boxShadow: '5px 5px 0 #000' }}
-              >
-                <div className="min-w-0">
-                  <p className="text-xl text-white md:text-2xl" style={TD_DISPLAY}>
-                    {TD.menuLb}
-                  </p>
-                  <p className="mt-1 truncate text-[12px] text-white/55 md:text-[13px]" style={TD_DISPLAY}>
-                    {TD.menuLbSub}
-                  </p>
-                </div>
-                <span className="shrink-0 text-2xl text-white/40" style={TD_DISPLAY}>
-                  ›
-                </span>
-              </button>
-            </div>
-          </motion.main>
-        )}
-
-        {/* ── DAILY HUB ── */}
-        {phase === 'daily' && (
-          <motion.main
-            key="daily"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="relative z-10 mx-auto flex min-h-dvh w-full max-w-xl flex-col items-center justify-center gap-6 px-4 py-16"
-          >
-            <SectionHeader title={TD.menuDaily} onBack={() => setPhase('home')} />
-            <div
-              className="flex w-full flex-col items-center gap-4 rounded-[16px] px-5 py-7"
-              style={{ background: 'var(--td-charcoal)', boxShadow: '6px 6px 0 #000' }}
+            {/* WL card — second, with the Quizball countdown in TD colors */}
+            <button
+              type="button"
+              onClick={() => setPhase('wl')}
+              className="w-full rounded-[16px] px-5 py-5 text-left md:px-6 md:py-6"
+              style={{ background: 'var(--td-charcoal)', boxShadow: '5px 5px 0 #000' }}
             >
-              <StarburstGlyph size={30} />
-              <p className="text-lg text-white md:text-xl" style={TD_DISPLAY}>
-                {TD.dailyToday}
-              </p>
-              {dailyScore === null ? (
-                <>
-                  <p className="text-center text-[11px] text-white/60" style={TD_DISPLAY}>
-                    {TD.round1Name} · {TD.menuDailySub}
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-xl text-white md:text-2xl" style={TD_DISPLAY}>
+                    {TD.menuWl}
                   </p>
-                  <motion.button
+                  <p className="mt-1 text-[12px] text-white/55 md:text-[13px]" style={TD_DISPLAY}>
+                    {TD.wlJoin}
+                  </p>
+                </div>
+                <span className="shrink-0 text-lg" style={{ ...TD_DISPLAY, color: 'var(--td-orange)' }}>
+                  {Math.min(qp, QP_TARGET)}/{QP_TARGET}
+                </span>
+              </div>
+              <div className="mt-3 flex items-center gap-3">
+                <span className="text-[11px] text-white/50" style={TD_DISPLAY}>
+                  {TD.wlStartsIn}
+                </span>
+                <LeagueCountdown targetMs={nextSaturdayMs()} size="sm" accent="text-[var(--td-orange)]" />
+              </div>
+              <div className="mt-3 h-2 w-full overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.12)' }}>
+                <div
+                  className="h-full rounded-full"
+                  style={{ background: 'var(--td-orange)', width: `${Math.min(100, Math.round((qp / QP_TARGET) * 100))}%` }}
+                />
+              </div>
+            </button>
+
+            {/* Daily challenges — section header + horizontal cards */}
+            <div className="w-full">
+              <div className="mb-2.5 flex items-center gap-2">
+                <BoltGlyph size={16} />
+                <h3 className="text-lg text-white md:text-xl" style={TD_DISPLAY}>
+                  {TD.menuDaily}
+                </h3>
+              </div>
+              <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1">
+                {(
+                  [
+                    { key: 'guessTheGoal', name: TD.dailyGtg, icon: '/assets/guess-the-goal-card-icon.png' },
+                    { key: 'putInOrder', name: TD.dailyPio, emoji: '\u{1F4CB}' },
+                    { key: 'careerPath', name: TD.dailyCp, emoji: '\u{1F6E3}\u{FE0F}' },
+                  ] as const
+                ).map((c) => (
+                  <button
+                    key={c.key}
                     type="button"
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => setPhase('dailyPlay')}
-                    className="rounded-[12px] px-9 py-3.5 text-base"
-                    style={{ ...TD_DISPLAY, background: 'var(--td-orange)', color: '#0d0d0d', boxShadow: '5px 5px 0 #000' }}
+                    onClick={() => {
+                      setDailyGame(c.key);
+                      setPhase('dailyGame');
+                    }}
+                    className="flex w-[31%] shrink-0 snap-start flex-col items-center gap-2.5 rounded-[14px] px-3 py-4"
+                    style={{ background: 'var(--td-charcoal)', boxShadow: '4px 4px 0 #000' }}
                   >
-                    {TD.playNow}
-                  </motion.button>
-                </>
-              ) : (
-                <>
-                  <div
-                    className="flex items-center gap-3 rounded-[10px] px-6 py-3"
-                    style={{ background: 'var(--td-orange)', boxShadow: '4px 4px 0 #000', transform: 'rotate(-2deg)' }}
-                  >
-                    <span className="text-[11px]" style={{ ...TD_DISPLAY, color: 'rgba(0,0,0,0.65)' }}>
-                      {TD.dailyYourScore}
+                    {'icon' in c ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- local game icon
+                      <img src={c.icon} alt="" className="h-12 w-12 object-contain" />
+                    ) : (
+                      <span className="text-4xl leading-none" aria-hidden>
+                        {c.emoji}
+                      </span>
+                    )}
+                    <span className="text-center text-[11px] leading-tight text-white md:text-[12px]" style={TD_DISPLAY}>
+                      {c.name}
                     </span>
-                    <span className="text-3xl" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
-                      {dailyScore}
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-white/60" style={TD_DISPLAY}>
-                    {TD.dailyComeBack}
-                  </p>
-                </>
-              )}
+                  </button>
+                ))}
+              </div>
             </div>
+
+            {/* Leaderboard card */}
+            <button
+              type="button"
+              onClick={() => setPhase('leaderboard')}
+              className="flex w-full items-center justify-between gap-3 rounded-[16px] px-5 py-5 text-left md:px-6 md:py-6"
+              style={{ background: 'var(--td-charcoal)', boxShadow: '5px 5px 0 #000' }}
+            >
+              <div className="min-w-0">
+                <p className="text-xl text-white md:text-2xl" style={TD_DISPLAY}>
+                  {TD.menuLb}
+                </p>
+                <p className="mt-1 truncate text-[12px] text-white/55 md:text-[13px]" style={TD_DISPLAY}>
+                  {TD.menuLbSub}
+                </p>
+              </div>
+              <span className="shrink-0 text-2xl text-white/40" style={TD_DISPLAY}>
+                ›
+              </span>
+            </button>
           </motion.main>
         )}
 
-        {/* ── DAILY PLAY ── */}
-        {phase === 'dailyPlay' && (
+        {/* ── DAILY GAME (Quizball challenges in the TD shell) ── */}
+        {phase === 'dailyGame' && dailyGame && (
           <motion.main
-            key="dailyPlay"
+            key={`dg-${dailyGame}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="relative z-10 mx-auto flex min-h-dvh w-full flex-col justify-center px-3 py-6 md:px-8"
+            className="relative z-10"
           >
-            <DailySolo
-              category={categoryAt(dailyCategoryIndex(TD_LIST_CATEGORIES.length))}
-              onDone={(score) => {
-                setDailyResult(score);
-                setDailyScore(score);
-                setPhase('daily');
-              }}
-            />
+            {dailyGame === 'guessTheGoal' ? (
+              <div className="relative z-10 min-h-dvh">
+                <GuessTheGoal backHref="/table-derby" />
+              </div>
+            ) : (
+              <TdDailyGame type={dailyGame} onExit={() => setPhase('home')} />
+            )}
           </motion.main>
         )}
 
@@ -1038,46 +1001,63 @@ export function TableDerbyApp() {
           </motion.main>
         )}
 
-        {/* ── LEADERBOARD ── */}
+        {/* ── LEADERBOARD (Quizball layout, TD branding) ── */}
         {phase === 'leaderboard' && (
           <motion.main
             key="lb"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="relative z-10 mx-auto flex min-h-dvh w-full max-w-xl flex-col items-center justify-center gap-5 px-4 py-16"
+            className="relative z-10 mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-4 px-4 pb-4 pt-16"
           >
             <SectionHeader title={TD.menuLb} onBack={() => setPhase('home')} />
-            <p className="text-[11px] text-white/55" style={TD_DISPLAY}>
+            <p className="text-center text-[12px] text-white/55" style={TD_DISPLAY}>
               {TD.lbWeekly}
             </p>
-            <div className="w-full overflow-hidden rounded-[16px]" style={{ background: 'var(--td-charcoal)', boxShadow: '6px 6px 0 #000' }}>
+            <div className="min-h-0 flex-1 overflow-y-auto rounded-[16px]" style={{ background: 'var(--td-charcoal)', boxShadow: '6px 6px 0 #000' }}>
               {buildLeaderboard(displayQp).map((row, i) => (
                 <div
                   key={row.name}
                   className="flex items-center gap-3 px-4 py-2.5 md:py-3"
-                  style={{
-                    background: row.me ? 'var(--td-orange)' : i % 2 ? 'rgba(255,255,255,0.03)' : 'transparent',
-                  }}
+                  style={{ background: row.me ? 'rgba(238,90,34,0.14)' : i % 2 ? 'rgba(255,255,255,0.03)' : 'transparent' }}
                 >
-                  <span
-                    className="w-6 text-center text-sm"
-                    style={{ ...TD_DISPLAY, color: row.me ? '#0d0d0d' : 'var(--td-orange)' }}
-                  >
+                  <span className="w-7 text-center text-base" style={{ ...TD_DISPLAY, color: i < 3 ? 'var(--td-orange)' : 'rgba(255,255,255,0.45)' }}>
                     {i + 1}
                   </span>
-                  <span
-                    className="min-w-0 flex-1 truncate text-[13px] md:text-sm"
-                    style={{ ...TD_DISPLAY, color: row.me ? '#0d0d0d' : 'var(--td-white)' }}
-                  >
+                  {row.me ? <MyAvatar size={36} /> : <TdAvatar name={row.name} size={36} />}
+                  <span className="min-w-0 flex-1 truncate text-[14px] text-white" style={TD_DISPLAY}>
                     {row.name}
                   </span>
-                  <span className="text-sm tabular-nums" style={{ ...TD_DISPLAY, color: row.me ? '#0d0d0d' : 'rgba(255,255,255,0.7)' }}>
-                    {row.points}
+                  <span className="text-[14px] tabular-nums" style={{ ...TD_DISPLAY, color: row.me ? 'var(--td-orange)' : 'rgba(255,255,255,0.75)' }}>
+                    {row.points} {TD.qpShort}
                   </span>
                 </div>
               ))}
             </div>
+            {/* pinned your-rank strip, Quizball's UserRankStrip in TD colors */}
+            {(() => {
+              const rows = buildLeaderboard(displayQp);
+              const myIdx = rows.findIndex((r) => r.me);
+              return (
+                <div
+                  className="flex items-center gap-3 rounded-[12px] border-2 px-4 py-3"
+                  style={{ borderColor: 'var(--td-orange)', background: 'var(--td-bg)', boxShadow: '4px 4px 0 rgba(0,0,0,0.5)' }}
+                >
+                  <MyAvatar size={42} />
+                  <div className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate text-[14px] text-white" style={TD_DISPLAY}>
+                      {displayName}
+                    </span>
+                    <span className="text-[11px] text-white/50" style={TD_DISPLAY}>
+                      {TD.lbYourRank}: #{myIdx + 1}
+                    </span>
+                  </div>
+                  <span className="text-lg" style={{ ...TD_DISPLAY, color: 'var(--td-orange)' }}>
+                    {displayQp} {TD.qpShort}
+                  </span>
+                </div>
+              );
+            })()}
           </motion.main>
         )}
 

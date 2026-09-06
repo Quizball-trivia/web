@@ -138,6 +138,16 @@ export function setFavClub(id: string) {
   write('td.club', id);
 }
 
+/** Next Saturday 20:00 Georgia time, epoch ms (WL countdown target). */
+export function nextSaturdayMs(now = Date.now()): number {
+  const ge = new Date(now + GE_OFFSET_MS);
+  const day = ge.getUTCDay(); // 0 Sun ... 6 Sat
+  const daysAhead = (6 - day + 7) % 7;
+  const target = Date.UTC(ge.getUTCFullYear(), ge.getUTCMonth(), ge.getUTCDate() + daysAhead, 20, 0, 0) - GE_OFFSET_MS;
+  if (target <= now) return target + 7 * 86400_000;
+  return target;
+}
+
 /** Deterministic per-day category index for the daily challenge. */
 export function dailyCategoryIndex(total: number): number {
   const day = geDayKey();
