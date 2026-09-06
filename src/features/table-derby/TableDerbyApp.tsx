@@ -32,6 +32,7 @@ import { AvatarPreview } from '@/components/AvatarPreview';
 import { TdClubSelect } from './components/ClubSelect';
 import { TdProfileCard, opponentProfile } from './components/ProfileCard';
 import { getClub } from '@/lib/clubs';
+import { MOCK_USER } from './lib/mockUser';
 import { CardsRound } from './components/CardsRound';
 import { BoxRound } from './components/BoxRound';
 import { BuzzerRound, type BuzzerItem } from './components/BuzzerRound';
@@ -169,7 +170,7 @@ const LB_MOCK: { name: string; points: number }[] = [
 ];
 
 function buildLeaderboard(myQp: number): { name: string; points: number; me?: boolean }[] {
-  const rows = [...LB_MOCK, { name: TD.you, points: myQp, me: true }];
+  const rows = [...LB_MOCK, { name: MOCK_USER.name, points: myQp, me: true }];
   return rows.sort((a, b) => b.points - a.points).slice(0, 10);
 }
 
@@ -543,6 +544,12 @@ export function TableDerbyApp() {
     finishMatch(roundsWon.me > roundsWon.op ? 'me' : 'op');
   };
 
+  /* TEMP identity until the Betsson handoff: fall back to mock data so
+     every profile surface shows real-looking content in testing. */
+  const displayName = MOCK_USER.name;
+  const displayQp = qp > 0 ? qp : MOCK_USER.points;
+  const displayClub = favClub ?? MOCK_USER.club;
+
   /** Whether the match is settled once this round-end screen is confirmed. */
   const matchDecidedNow =
     roundsWon.me >= 3 || roundsWon.op >= 3 || (currentRound >= 4 && roundsWon.me !== roundsWon.op);
@@ -683,15 +690,15 @@ export function TableDerbyApp() {
                 <MyAvatar size={40} />
                 <span className="flex min-w-0 flex-col items-start">
                   <span className="truncate text-[13px] text-white" style={TD_DISPLAY}>
-                    {TD.you}
+                    {displayName}
                   </span>
                   <span className="text-[10px]" style={{ ...TD_DISPLAY, color: 'var(--td-orange)' }}>
-                    {qp} {TD.qpShort}
+                    {displayQp} {TD.qpShort}
                   </span>
                 </span>
-                {favClub && getClubLogo(favClub) && (
+                {getClubLogo(displayClub) && (
                   // eslint-disable-next-line @next/next/no-img-element -- crest from the club registry
-                  <img src={getClubLogo(favClub)!} alt="" className="h-6 w-6 shrink-0 object-contain" />
+                  <img src={getClubLogo(displayClub)!} alt="" className="h-6 w-6 shrink-0 object-contain" />
                 )}
               </button>
               <div className="flex items-center gap-2">
@@ -1035,7 +1042,7 @@ export function TableDerbyApp() {
               {TD.lbWeekly}
             </p>
             <div className="w-full overflow-hidden rounded-[16px]" style={{ background: 'var(--td-charcoal)', boxShadow: '6px 6px 0 #000' }}>
-              {buildLeaderboard(qp).map((row, i) => (
+              {buildLeaderboard(displayQp).map((row, i) => (
                 <div
                   key={row.name}
                   className="flex items-center gap-3 px-4 py-2.5 md:py-3"
@@ -1104,7 +1111,7 @@ export function TableDerbyApp() {
             exit={{ opacity: 0 }}
             className="relative z-10 flex min-h-dvh flex-col items-center justify-center gap-6 px-6"
           >
-            <TdProfileCard name={TD.you} color={getAvatarColor()} clubValue={favClub} points={qp} delay={0.15} />
+            <TdProfileCard name={displayName} color={getAvatarColor()} clubValue={displayClub} points={displayQp} delay={0.15} />
             <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.35, type: 'spring', damping: 10 }}>
               <span
                 className="block text-5xl md:text-6xl"
@@ -1265,7 +1272,7 @@ export function TableDerbyApp() {
 
             <div className="flex items-end gap-3 md:gap-6">
               <PlayerBoard
-                name={TD.you}
+                name={displayName}
                 side="left"
                 lives={round.lives.me}
                 count={round.count.me}
