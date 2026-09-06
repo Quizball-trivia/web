@@ -2150,7 +2150,8 @@
     "hofSilver": "silver",
     "hofBronze": "bronze",
     "hofError": "Couldn't load past winners.",
-    "hofRetry": "Try again"
+    "hofRetry": "Try again",
+    "prizesPayoutNote": "All prizes are paid out before the next Weekend League begins."
   },
   "wlAward": {
     "title1": "Weekend League Champion",
