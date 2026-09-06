@@ -26,11 +26,11 @@ function setCountry(country: string | null) {
 afterEach(() => { cleanup(); settings.locale = 'en'; setCountry(null); });
 
 describe('Weekend League country prizes', () => {
-  it.each(['GE', 'ge', ' Georgia ', 'GEO', null, undefined, '', 'unknown'])('keeps GEL prizes for Georgia or an unknown country: %s', (country) => {
+  it.each(['GE', 'ge', ' Georgia ', 'GEO', null, undefined, '', 'unknown', 'ZZ', 'zz', 'XX', 'EU', 'UN'])('keeps GEL prizes for Georgia or an unknown country: %s', (country) => {
     expect(getWeekendLeaguePrizes(country).heroAmount).toBe('200₾');
   });
 
-  it.each(['US', 'ES', 'GB', 'DE', 'Spain', 'United States'])('uses Amazon USD prizes for %s', (country) => {
+  it.each(['US', 'ES', 'GB', 'DE', 'Spain', 'United States', 'PL', 'AE', 'XK'])('uses Amazon USD prizes for %s', (country) => {
     expect(getWeekendLeaguePrizes(country).tiers.map((tier) => translate('en', tier.prizeKey)))
       .toEqual(['$50 USD Amazon Gift Card', '$25 USD Amazon Gift Card', '$10 USD Amazon Gift Card']);
   });
