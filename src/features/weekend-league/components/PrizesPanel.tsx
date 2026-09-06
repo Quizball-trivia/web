@@ -1,19 +1,20 @@
 'use client';
 
 import { useLocale } from '@/contexts/LocaleContext';
+import { useWeekendLeaguePrizes } from '../use-weekend-league-prizes';
 import { ACCENT_BG, ACCENT_BORDER, ACCENT_TEXT } from '../constants';
-import { PRIZES } from '../mock-data';
 
 /** The prize ladder — rank bands → reward. Optionally highlights the viewer's band. */
 export function PrizesPanel({ highlightRank }: { highlightRank?: number | null }) {
   const { t } = useLocale();
+  const prizes = useWeekendLeaguePrizes();
   return (
     <section>
       <h2 className="mb-3 font-poppins text-lg font-black uppercase tracking-wide text-white">
         {t('weekendLeague.prizes')}
       </h2>
       <div className="flex flex-col gap-2">
-        {PRIZES.map((prize) => {
+        {prizes.tiers.map((prize) => {
           const mine = highlightRank != null && highlightRank >= prize.rankFrom && highlightRank <= prize.rankTo;
           return (
             <div
@@ -39,6 +40,9 @@ export function PrizesPanel({ highlightRank }: { highlightRank?: number | null }
           );
         })}
       </div>
+      <p className="mt-2.5 px-1 font-poppins text-[11px] font-medium text-white/50">
+        {t(prizes.countryRuleKey)}
+      </p>
       <p className="mt-2.5 px-1 font-poppins text-[11px] font-medium text-white/35">
         {t('weekendLeague.prizesNote')}
       </p>
