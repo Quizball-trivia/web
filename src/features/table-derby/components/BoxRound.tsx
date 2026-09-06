@@ -195,11 +195,11 @@ export function BoxRound({
   const half = boxSize / 2;
 
   return (
-    <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-3 md:gap-4">
+    <div className="flex h-full w-full flex-col items-center justify-center gap-3 md:gap-4">
       <ScorePill roundsMe={roundsWon.me} roundsOp={roundsWon.op} inRoundMe={scores.me} inRoundOp={scores.op} />
       <p
         className="text-center text-[12px] md:text-sm"
-        style={{ ...TD_DISPLAY, color: bphase === 'stealMe' ? 'var(--td-orange)' : 'rgba(255,255,255,0.7)' }}
+        style={{ ...TD_DISPLAY, color: bphase === 'stealMe' ? 'var(--td-white)' : 'rgba(0,0,0,0.65)' }}
       >
         {statusText}
       </p>
@@ -232,8 +232,8 @@ export function BoxRound({
                   className="absolute inset-0 flex flex-col justify-center gap-3 rounded-[16px] p-4"
                   style={{
                     transform: `${tf} translateZ(${half}px)`,
-                    background: 'var(--td-orange)',
-                    boxShadow: 'inset 0 0 0 3px rgba(0,0,0,0.25)',
+                    background: '#161616',
+                    boxShadow: 'inset 0 0 0 3px rgba(255,255,255,0.06)',
                     backfaceVisibility: 'hidden',
                   }}
                 >
@@ -245,17 +245,17 @@ export function BoxRound({
                       disabled={!canPick || card.remaining.length === 0}
                       onClick={() => openCard(card.id, 'me')}
                       className="relative flex items-center justify-between gap-2 rounded-[10px] px-3.5 py-3.5 text-left transition-transform enabled:hover:-translate-y-0.5 disabled:opacity-60"
-                      style={{ background: '#141414', boxShadow: '3.5px 3.5px 0 rgba(0,0,0,0.45)' }}
+                      style={{ background: 'var(--td-orange)', boxShadow: '3.5px 3.5px 0 rgba(0,0,0,0.45)' }}
                     >
-                      <span className="text-[13px] text-white md:text-sm" style={TD_DISPLAY}>
+                      <span className="text-[13px] md:text-sm" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
                         {card.title}
                       </span>
                       <span
                         className="shrink-0 rounded-full px-2 py-0.5 text-[10px]"
                         style={{
                           ...TD_DISPLAY,
-                          background: card.remaining.length > 0 ? 'var(--td-orange)' : 'rgba(255,255,255,0.15)',
-                          color: card.remaining.length > 0 ? '#0d0d0d' : 'rgba(255,255,255,0.5)',
+                          background: card.remaining.length > 0 ? '#0d0d0d' : 'rgba(0,0,0,0.35)',
+                          color: card.remaining.length > 0 ? 'var(--td-white)' : 'rgba(255,255,255,0.6)',
                         }}
                       >
                         {card.remaining.length} {TD.questionsLeftSuffix}
@@ -307,6 +307,7 @@ export function BoxRound({
           turnKey={`b-${tick}`}
           ms={bphase === 'qMe' || bphase === 'qOp' ? ANSWER_MS : STEAL_MS}
           running={bphase === 'qMe' || bphase === 'qOp' || bphase === 'stealMe' || bphase === 'stealOp'}
+          onTable
         />
       </div>
 
@@ -335,7 +336,7 @@ export function BoxRound({
             whileTap={{ scale: 0.95 }}
             disabled={!myInput}
             className="h-12 shrink-0 rounded-[10px] px-5 text-sm disabled:opacity-40"
-            style={{ ...TD_DISPLAY, background: 'var(--td-orange)', color: '#0d0d0d', boxShadow: '4px 4px 0 rgba(0,0,0,0.5)' }}
+            style={{ ...TD_DISPLAY, background: '#0d0d0d', color: 'var(--td-white)', boxShadow: '4px 4px 0 rgba(0,0,0,0.5)' }}
           >
             {TD.submit}
           </motion.button>
@@ -351,8 +352,8 @@ export function BoxRound({
               className="pointer-events-none absolute -top-9 left-1/2 z-20 -translate-x-1/2 whitespace-nowrap rounded-[8px] px-3 py-1 text-[12px]"
               style={{
                 ...TD_DISPLAY,
-                background: flash.good ? 'var(--td-orange)' : 'var(--td-steel-deep)',
-                color: flash.good ? '#0d0d0d' : 'var(--td-white)',
+                background: flash.good ? '#0d0d0d' : 'var(--td-steel-deep)',
+                color: 'var(--td-white)',
                 boxShadow: '3px 3px 0 rgba(0,0,0,0.5)',
               }}
             >
