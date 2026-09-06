@@ -175,7 +175,7 @@ export function TableDerbyApp() {
   const [booting, setBooting] = useState(true);
 
   // Boot loader (Betsson WebView/iframe entry): brand splash while key
-  // assets warm up, minimum 2.2s so the Quizball lockup registers.
+  // assets warm up, minimum 5s so the Quizball lockup registers.
   useEffect(() => {
     // dev deep links skip the splash for fast iteration
     if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('round')) {
@@ -192,7 +192,7 @@ export function TableDerbyApp() {
             img.src = src;
           }),
       );
-    const minimum = new Promise((r) => setTimeout(r, 2200));
+    const minimum = new Promise((r) => setTimeout(r, 5000));
     void Promise.all([...preload, minimum]).then(() => setBooting(false));
   }, []);
 
