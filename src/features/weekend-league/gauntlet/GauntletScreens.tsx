@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Check, Crown, Eye, Play, Trophy, Users } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useLocale } from '@/contexts/LocaleContext';
+import { useWeekendLeaguePrizes } from '../use-weekend-league-prizes';
 import { poppins } from '../constants';
 import { LeagueCountdown } from '../components/LeagueCountdown';
 import {
@@ -70,6 +71,7 @@ export function GauntletLobby({
   canPlay: boolean;
 }) {
   const { t } = useLocale();
+  const prizes = useWeekendLeaguePrizes();
   return (
     <div className="mx-auto flex min-h-[80vh] w-full max-w-md flex-col items-center justify-center px-4 py-14 text-center">
       {/* Single solid card — the lobby sits over the patterned page background,
@@ -109,7 +111,7 @@ export function GauntletLobby({
           </div>
           <div className="mt-3 font-poppins text-[12px] font-semibold text-brand-gold">
             <Trophy className="mr-1 inline size-4 align-[-2px]" strokeWidth={2.5} />
-            {t('weekendLeague.championWinsLabel')} {t('weekendLeague.prize1Reward')}
+            {t('weekendLeague.championWinsLabel')} {t(prizes.championRewardKey)}
           </div>
         </div>
 
@@ -425,6 +427,7 @@ export function GameResult({
   void onContinue; // break auto-advances; the explicit CTA was removed (owner)
 
   const { t } = useLocale();
+  const prizes = useWeekendLeaguePrizes();
   if (survived && isLastGame) {
     return (
       <div className="mx-auto flex min-h-[80vh] w-full max-w-xl flex-col items-center justify-center px-4 text-center">
@@ -448,7 +451,7 @@ export function GameResult({
           <div>{t('weekendLeague.gSunday')}</div>
           <div>{t('weekendLeague.gFinalists', { n: game.advance })}</div>
           <div className="flex items-center justify-center gap-1.5 text-brand-gold">
-            <Trophy className="size-4" strokeWidth={2.5} /> {t('weekendLeague.prize1Reward')}
+            <Trophy className="size-4" strokeWidth={2.5} /> {t(prizes.championRewardKey)}
           </div>
         </div>
         <div className="mt-7 w-full space-y-2.5">
