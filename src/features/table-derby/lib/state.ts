@@ -96,11 +96,17 @@ export function subscribeAvatar(cb: () => void): () => void {
   };
 }
 
-export function getAvatarVariant(): number {
-  return read<number>('td.avatar') ?? 0;
+const AVATAR_COLOR_KEYS = ['green', 'blue', 'yellow', 'red', 'violet', 'pink'] as const;
+export type TdAvatarColor = (typeof AVATAR_COLOR_KEYS)[number];
+
+export function getAvatarColor(): TdAvatarColor {
+  const v = read<unknown>('td.avatar');
+  if (typeof v === 'string' && (AVATAR_COLOR_KEYS as readonly string[]).includes(v)) return v as TdAvatarColor;
+  if (typeof v === 'number') return AVATAR_COLOR_KEYS[((v % 6) + 6) % 6]; // legacy sticker index
+  return 'green';
 }
 
-export function setAvatarVariant(v: number) {
+export function setAvatarColor(v: TdAvatarColor) {
   write('td.avatar', v);
   avatarListeners.forEach((l) => l());
 }

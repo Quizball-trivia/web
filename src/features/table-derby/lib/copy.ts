@@ -29,6 +29,7 @@ export const TD = {
   onbWelcome: 'მოგესალმები მაგიდის დერბიში!',
   onbAvatarTitle: 'აირჩიე ავატარი',
   onbClubTitle: 'აირჩიე საყვარელი გუნდი',
+  onbClubSearch: 'მოძებნე და აირჩიე გუნდი',
   onbNext: 'შემდეგი',
   onbStart: 'დაწყება',
 

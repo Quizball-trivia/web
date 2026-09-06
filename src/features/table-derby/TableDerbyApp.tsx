@@ -27,14 +27,16 @@ import {
 import { CategoryBand, PlayerBoard, ScorePill, TurnTimerBar } from './components/chrome';
 import { DailySolo } from './components/DailySolo';
 import { TdLoader } from './components/Loader';
-import { AVATAR_VARIANTS, MyAvatar, TdAvatar } from './components/Avatar';
+import { MyAvatar, TdAvatar, TD_AVATAR_COLORS, tdAvatarCustomization } from './components/Avatar';
+import { AvatarPreview } from '@/components/AvatarPreview';
+import { TdClubSelect } from './components/ClubSelect';
 import { CardsRound } from './components/CardsRound';
 import { BoxRound } from './components/BoxRound';
 import { BuzzerRound, type BuzzerItem } from './components/BuzzerRound';
 import { TD_CARD_CATEGORIES, type TdCardCategory } from './data/cards';
 import { TD_BOX_CARDS } from './data/box';
 import { TD_WHOAMI } from './data/whoami';
-import { TD_CLUBS } from './data/clubs';
+
 import {
   QP_LOSS,
   QP_TARGET,
@@ -47,7 +49,8 @@ import {
   isOnboarded,
   resetOnboarding,
   resetTickets,
-  setAvatarVariant,
+  setAvatarColor,
+  type TdAvatarColor,
   setFavClub,
   setOnboarded,
   setDailyResult,
@@ -180,7 +183,7 @@ export function TableDerbyApp() {
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [booting, setBooting] = useState(true);
   const [onbStep, setOnbStep] = useState<0 | 1>(0);
-  const [onbAvatar, setOnbAvatar] = useState(0);
+  const [onbAvatar, setOnbAvatar] = useState<TdAvatarColor>('green');
   const [onbClub, setOnbClub] = useState<string | null>(null);
 
   // Boot loader (Betsson WebView/iframe entry): brand splash while key
@@ -596,39 +599,28 @@ export function TableDerbyApp() {
             </h2>
 
             {onbStep === 0 ? (
-              <div className="grid grid-cols-4 gap-5">
-                {AVATAR_VARIANTS.map((_, i) => (
+              <div className="grid grid-cols-3 gap-4">
+                {TD_AVATAR_COLORS.map((color) => (
                   <button
-                    key={i}
+                    key={color}
                     type="button"
-                    onClick={() => setOnbAvatar(i)}
-                    className="rounded-full transition-transform hover:-translate-y-0.5"
-                    style={{ outline: onbAvatar === i ? '3px solid var(--td-orange)' : '3px solid transparent', outlineOffset: 4, borderRadius: '999px' }}
+                    onClick={() => setOnbAvatar(color)}
+                    aria-pressed={onbAvatar === color}
+                    className="relative flex size-[76px] items-center justify-center overflow-hidden rounded-full transition-transform hover:-translate-y-0.5"
+                    style={{
+                      background: 'var(--td-charcoal)',
+                      boxShadow: '3px 4px 0 rgba(0,0,0,0.5)',
+                      outline: onbAvatar === color ? '3px solid var(--td-orange)' : '3px solid transparent',
+                      outlineOffset: 3,
+                    }}
                   >
-                    <TdAvatar name={TD.you} variant={i} size={64} />
+                    <AvatarPreview customization={tdAvatarCustomization(color)} width={56} className="translate-y-[6%]" />
                   </button>
                 ))}
               </div>
             ) : (
-              <div className="grid w-full grid-cols-2 gap-2.5">
-                {TD_CLUBS.map((club) => (
-                  <button
-                    key={club.id}
-                    type="button"
-                    onClick={() => setOnbClub(club.id)}
-                    className="flex items-center gap-2.5 rounded-[10px] px-3 py-3 text-left"
-                    style={{
-                      background: onbClub === club.id ? 'var(--td-orange)' : 'var(--td-charcoal)',
-                      boxShadow: '3px 3px 0 rgba(0,0,0,0.5)',
-                      transition: 'background 0.15s',
-                    }}
-                  >
-                    <span aria-hidden className="size-3.5 shrink-0 rounded-full" style={{ background: club.color, boxShadow: '0 0 0 2px rgba(0,0,0,0.35)' }} />
-                    <span className="truncate text-[12px]" style={{ ...TD_DISPLAY, color: onbClub === club.id ? '#0d0d0d' : 'var(--td-white)' }}>
-                      {club.name}
-                    </span>
-                  </button>
-                ))}
+              <div className="w-full">
+                <TdClubSelect value={onbClub ?? ''} onChange={(v) => setOnbClub(v || null)} />
               </div>
             )}
 
@@ -644,7 +636,7 @@ export function TableDerbyApp() {
               disabled={onbStep === 1 && !onbClub}
               onClick={() => {
                 if (onbStep === 0) {
-                  setAvatarVariant(onbAvatar);
+                  setAvatarColor(onbAvatar);
                   setOnbStep(1);
                 } else if (onbClub) {
                   setFavClub(onbClub);
@@ -718,17 +710,19 @@ export function TableDerbyApp() {
                   <p className="mb-5 text-center text-sm text-white" style={TD_DISPLAY}>
                     {TD.chooseAvatar}
                   </p>
-                  <div className="grid grid-cols-4 gap-5">
-                    {AVATAR_VARIANTS.map((_, i) => (
+                  <div className="grid grid-cols-3 gap-4">
+                    {TD_AVATAR_COLORS.map((color) => (
                       <button
-                        key={i}
+                        key={color}
                         type="button"
                         onClick={() => {
-                          setAvatarVariant(i);
+                          setAvatarColor(color);
                           setShowAvatarPicker(false);
                         }}
+                        className="flex size-16 items-center justify-center overflow-hidden rounded-full"
+                        style={{ background: 'var(--td-bg)', boxShadow: '3px 3px 0 rgba(0,0,0,0.5)' }}
                       >
-                        <TdAvatar name={TD.you} variant={i} size={52} />
+                        <AvatarPreview customization={tdAvatarCustomization(color)} width={48} className="translate-y-[6%]" />
                       </button>
                     ))}
                   </div>
