@@ -740,7 +740,16 @@ export function TableDerbyApp() {
               </button>
             </div>
 
-            <TdLogoSticker variant="blackOnWhite" scale={1.1} />
+            <div className="flex flex-col items-center gap-2.5">
+              <TdLogoSticker variant="blackOnWhite" scale={1.1} />
+              <div className="flex items-center gap-2">
+                <span className="text-lg" style={{ ...TD_DISPLAY, color: 'var(--td-orange)' }} aria-hidden>
+                  ✕
+                </span>
+                {/* eslint-disable-next-line @next/next/no-img-element -- local brand asset */}
+                <img src="/assets/brand/quizball-logo.webp" alt="Quizball" className="h-7 w-auto" />
+              </div>
+            </div>
 
             {showAvatarPicker && (
               <div
