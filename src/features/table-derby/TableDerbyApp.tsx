@@ -589,8 +589,13 @@ export function TableDerbyApp() {
       {/* betsson.sport — top-right like the broadcast; the in-round
           scoreboard (with avatars) owns that zone during gameplay */}
       {!inRoundPhase && (
-        <div className="absolute left-4 top-4 z-20 md:left-8 md:top-6">
+        <div className="absolute left-4 top-4 z-20 flex items-center gap-2 md:left-8 md:top-6">
           <BetssonWordmark tone={phase === 'home' ? 'orange' : 'white'} size={16} />
+          <span className="text-sm" style={{ ...TD_DISPLAY, color: 'var(--td-orange)' }} aria-hidden>
+            ✕
+          </span>
+          {/* eslint-disable-next-line @next/next/no-img-element -- local brand asset */}
+          <img src="/assets/brand/quizball-logo.webp" alt="Quizball" className="h-6 w-auto" />
         </div>
       )}
 
@@ -740,16 +745,7 @@ export function TableDerbyApp() {
               </button>
             </div>
 
-            <div className="flex flex-col items-center gap-2.5">
-              <TdLogoSticker variant="blackOnWhite" scale={1.1} />
-              <div className="flex items-center gap-2">
-                <span className="text-lg" style={{ ...TD_DISPLAY, color: 'var(--td-orange)' }} aria-hidden>
-                  ✕
-                </span>
-                {/* eslint-disable-next-line @next/next/no-img-element -- local brand asset */}
-                <img src="/assets/brand/quizball-logo.webp" alt="Quizball" className="h-7 w-auto" />
-              </div>
-            </div>
+            <TdLogoSticker variant="blackOnWhite" scale={1.1} />
 
             {showAvatarPicker && (
               <div
