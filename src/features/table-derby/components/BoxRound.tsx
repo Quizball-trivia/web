@@ -238,7 +238,7 @@ export function BoxRound({
               ? TD.yourTurn
               : '';
 
-  const boxW = typeof window !== 'undefined' && window.innerWidth >= 768 ? 330 : 280;
+  const boxW = typeof window !== 'undefined' && window.innerWidth >= 768 ? 390 : 345;
   const boxH = Math.round(boxW * (760 / 640));
   const nearestFaceRot = Math.round(rot / FACE_DEG) * FACE_DEG;
   const snapped = !dragging && Math.abs(rot - nearestFaceRot) < 3;
@@ -257,17 +257,7 @@ export function BoxRound({
       </p>
 
       {/* the box — Blender turntable, spin it with your finger */}
-      <div className="flex items-center gap-2.5 md:gap-4">
-        <button
-          type="button"
-          disabled={!canRoll}
-          onClick={() => canRoll && animateTo(Math.round(rotRef.current / FACE_DEG) * FACE_DEG - FACE_DEG)}
-          className="flex size-12 items-center justify-center rounded-full text-2xl text-white disabled:opacity-30 md:size-14"
-          style={{ ...TD_DISPLAY, background: 'var(--td-charcoal)', boxShadow: '3px 3px 0 #000' }}
-          aria-label="roll-left"
-        >
-          ‹
-        </button>
+      <div className="flex items-center">
         <div
           className="relative select-none"
           style={{ width: boxW, height: boxH, touchAction: 'none', cursor: canRoll ? (dragging ? 'grabbing' : 'grab') : 'default' }}
@@ -351,17 +341,29 @@ export function BoxRound({
               </span>
             </button>
           ))}
+          <button
+            type="button"
+            disabled={!canRoll}
+            onClick={() => canRoll && animateTo(Math.round(rotRef.current / FACE_DEG) * FACE_DEG - FACE_DEG)}
+            onPointerDown={(e) => e.stopPropagation()}
+            className="absolute left-0 top-[42%] z-10 flex size-11 items-center justify-center rounded-full text-xl text-white disabled:opacity-30"
+            style={{ ...TD_DISPLAY, background: 'var(--td-charcoal)', boxShadow: '3px 3px 0 #000' }}
+            aria-label="roll-left"
+          >
+            ‹
+          </button>
+          <button
+            type="button"
+            disabled={!canRoll}
+            onClick={() => canRoll && animateTo(Math.round(rotRef.current / FACE_DEG) * FACE_DEG + FACE_DEG)}
+            onPointerDown={(e) => e.stopPropagation()}
+            className="absolute right-0 top-[42%] z-10 flex size-11 items-center justify-center rounded-full text-xl text-white disabled:opacity-30"
+            style={{ ...TD_DISPLAY, background: 'var(--td-charcoal)', boxShadow: '3px 3px 0 #000' }}
+            aria-label="roll-right"
+          >
+            ›
+          </button>
         </div>
-        <button
-          type="button"
-          disabled={!canRoll}
-          onClick={() => canRoll && animateTo(Math.round(rotRef.current / FACE_DEG) * FACE_DEG + FACE_DEG)}
-          className="flex size-12 items-center justify-center rounded-full text-2xl text-white disabled:opacity-30 md:size-14"
-          style={{ ...TD_DISPLAY, background: 'var(--td-charcoal)', boxShadow: '3px 3px 0 #000' }}
-          aria-label="roll-right"
-        >
-          ›
-        </button>
       </div>
 
       {/* active question */}
