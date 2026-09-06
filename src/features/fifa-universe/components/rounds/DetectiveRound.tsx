@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Coins } from 'lucide-react';
 import { useMiniT } from '@/features/mini-games/lib/i18n';
 import { matchesName } from '@/features/mini-games/lib/matching';
@@ -23,9 +23,11 @@ export function DetectiveRound({ level, used, onDone }: RoundProps) {
   const [result, setResult] = useState<{ correct: boolean } | null>(null);
   const [wrong, setWrong] = useState<string | null>(null);
   const over = result !== null;
+  const overRef = useRef(false);
+  useEffect(() => { overRef.current = over; }, [over]);
 
   const reveal = (k: ClueKey) => {
-    if (over) return;
+    if (overRef.current) return;
     setBoard((prev) => (prev.open.has(k) || prev.coins < DEFAULT_CLUE_COSTS[k] ? prev : { coins: prev.coins - DEFAULT_CLUE_COSTS[k], open: new Set(prev.open).add(k) }));
   };
   const guess = (v: string) => {

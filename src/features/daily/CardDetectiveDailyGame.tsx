@@ -49,6 +49,10 @@ export function CardDetectiveDailyGame({ session, onBack, onComplete }: CardDete
 
   const { splashProps, fire } = useResultSplash();
   const outcomesRef = useRef<DailyChallengeCardOutcome[]>([]);
+  // A lock animating out keeps its old click handler; the ref lets that stale
+  // closure see the current phase so nothing can be bought after a resolve.
+  const statusRef = useRef<Status>("deal");
+  useEffect(() => { statusRef.current = status; }, [status]);
   const completedRef = useRef(false);
   const advanceRef = useRef<number | null>(null);
 
@@ -114,7 +118,7 @@ export function CardDetectiveDailyGame({ session, onBack, onComplete }: CardDete
   useEffect(() => () => clearAdvance(), []);
 
   const reveal = (k: ClueKey) => {
-    if (status !== "play") return;
+    if (statusRef.current !== "play") return;
     setBoard((prev) => (prev.open.has(k) || prev.coins < costs[k] ? prev : { coins: prev.coins - costs[k], open: new Set(prev.open).add(k) }));
   };
 
