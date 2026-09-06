@@ -196,6 +196,43 @@ describe('registerSocketHandlers', () => {
     expect(useFootballGridStore.getState().completed?.matchId).toBe('match-we-never-got-found-for');
   });
 
+  it('acks a finished old-series result without replacing the newer board', () => {
+    registerSocketHandlers();
+    const series = { seriesId: 'same-series', gameIndex: 2, format: 'bo3', finished: false };
+    mockSocket.fire('grid:match_found', {
+      matchId: 'new-game', series,
+      state: { matchId: 'new-game', stateVersion: 3, phase: 'turn', players: [] },
+      opponent: { id: 'opponent-id' }, capabilities: { canAddFriend: false, canChallenge: false },
+      serverNow: new Date().toISOString(),
+    } as never);
+    mockSocket.fire('grid:completed', {
+      matchId: 'old-game', terminalStateVersion: 20, ackToken: 'old-token',
+      series: { ...series, gameIndex: 1, finished: true },
+      state: { matchId: 'old-game', stateVersion: 20, phase: 'terminal', players: [] },
+    } as never);
+    expect(useFootballGridStore.getState().state?.matchId).toBe('new-game');
+    expect(mockSocket.socket.emit).toHaveBeenCalledWith('grid:completed_ack', {
+      matchId: 'old-game', terminalStateVersion: 20, ackToken: 'old-token',
+    });
+  });
+
+  it('surfaces the next series result when its handoff was lost', () => {
+    registerSocketHandlers();
+    const series = { seriesId: 'same-series', gameIndex: 1, format: 'bo3', finished: false };
+    mockSocket.fire('grid:match_found', {
+      matchId: 'first-game', series,
+      state: { matchId: 'first-game', stateVersion: 20, phase: 'terminal', players: [] },
+      opponent: { id: 'opponent-id' }, capabilities: { canAddFriend: false, canChallenge: false },
+      serverNow: new Date().toISOString(),
+    } as never);
+    mockSocket.fire('grid:completed', {
+      matchId: 'second-game', terminalStateVersion: 20, ackToken: 'second-token',
+      series: { ...series, gameIndex: 2 },
+      state: { matchId: 'second-game', stateVersion: 20, phase: 'terminal', players: [] },
+    } as never);
+    expect(useFootballGridStore.getState().completed?.matchId).toBe('second-game');
+  });
+
   it('still surfaces a Grid result for the match the client is actually in', () => {
     registerSocketHandlers();
     mockSocket.fire('grid:match_found', {

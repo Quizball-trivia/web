@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { useFootballGridStore } from '../footballGrid.store';
-import type { FootballGridState } from '@/lib/realtime/socket.types';
+import type { FootballGridState, FootballGridSeriesInfo } from '@/lib/realtime/socket.types';
 
 function state(overrides: Partial<FootballGridState> = {}): FootballGridState {
   const criterion = (id: string) => ({
@@ -101,5 +101,90 @@ describe('footballGrid.store', () => {
     expect(useFootballGridStore.getState().state).toBeNull();
     expect(useFootballGridStore.getState().opponent).toBeNull();
     expect(useFootballGridStore.getState().search.state).toBe('idle');
+  });
+});
+
+
+function found(matchId: string, version = 1, series?: FootballGridSeriesInfo) {
+  return {
+    matchId, state: state({ matchId, stateVersion: version }), series,
+    opponent: { id: 'rival', username: 'Rival', avatarUrl: null },
+    capabilities: { canAddFriend: true, canChallenge: true },
+    serverNow: new Date().toISOString(),
+  };
+}
+
+function series(gameIndex: number): FootballGridSeriesInfo {
+  return { seriesId: 'series-1', format: 'bo3', gameIndex, targetWins: 2,
+    wins: { self: 1, rival: 0 }, draws: 0, winnerUserId: null, finished: false };
+}
+
+describe('Grid snapshot delivery ordering', () => {
+  beforeEach(() => useFootballGridStore.getState().clear());
+
+  it('ignores old-match snapshots and turn resolutions after the next handoff', () => {
+    const store = useFootballGridStore.getState();
+    store.setMatchFound(found('match-2', 3));
+    store.markCommandPending('current-command');
+    const before = useFootballGridStore.getState();
+    store.setState({ ...found('match-1', 20), state: state({ phase: 'terminal', stateVersion: 20 }) });
+    store.setTurnResolved({ ...found('match-1', 20), actorUserId: 'rival', outcome: 'pass', cellIndex: null, resolvedPlayerId: null });
+    store.setCommandResult({ matchId: 'match-1', commandId: 'old-command', stateVersion: 20, outcome: 'pass', resolvedPlayerId: null, attemptId: null, duplicate: true });
+    expect(useFootballGridStore.getState()).toBe(before);
+  });
+
+  it('ignores stale and repeated handoffs without clearing a pending command', () => {
+    const store = useFootballGridStore.getState();
+    store.setMatchFound(found('match-1', 7));
+    store.markCommandPending('current-command');
+    store.setMatchFound(found('match-1', 1));
+    store.setMatchFound(found('match-1', 7));
+    expect(useFootballGridStore.getState().state?.stateVersion).toBe(7);
+    expect(useFootballGridStore.getState().pendingCommandId).toBe('current-command');
+  });
+
+  it('retires old handoffs across a series transition and a fresh search', () => {
+    const store = useFootballGridStore.getState();
+    store.setMatchFound(found('match-1', 8));
+    store.setMatchFound(found('match-2', 1));
+    store.setMatchFound(found('match-1', 9));
+    expect(useFootballGridStore.getState().state?.matchId).toBe('match-2');
+    store.setState({ ...found('match-2', 20), state: state({ matchId: 'match-2', stateVersion: 20, phase: 'terminal', status: 'completed' }) });
+    store.beginFreshSearch();
+    store.setState(found('match-2', 20));
+    store.setMatchFound(found('match-2', 20));
+    expect(useFootballGridStore.getState().state).toBeNull();
+    store.setState(found('fresh-rejoined-match', 5));
+    expect(useFootballGridStore.getState().state?.matchId).toBe('fresh-rejoined-match');
+  });
+
+  it('accepts a forward series snapshot before handoff, but never an earlier game', () => {
+    const store = useFootballGridStore.getState();
+    store.setMatchFound(found('match-1', 20, series(1)));
+    store.markCommandPending('old-command');
+    store.setState(found('match-2', 1, series(2)));
+    expect(useFootballGridStore.getState().state?.matchId).toBe('match-2');
+    expect(useFootballGridStore.getState().pendingCommandId).toBeNull();
+    store.setState(found('match-1', 21, series(1)));
+    store.setMatchFound(found('unseen-previous-match', 21, series(1)));
+    expect(useFootballGridStore.getState().state?.matchId).toBe('match-2');
+  });
+
+  it('allows PLAY to rejoin the same still-active match when the server redirects the search', () => {
+    const store = useFootballGridStore.getState();
+    store.setMatchFound(found('active-match', 7));
+    store.beginFreshSearch();
+    store.setMatchFound(found('active-match', 8));
+    expect(useFootballGridStore.getState().state?.matchId).toBe('active-match');
+  });
+
+  it('allows an explicit handoff to recover another active match', () => {
+    const store = useFootballGridStore.getState();
+    store.setMatchFound(found('previous-match', 20));
+    store.setMatchFound(found('rejoined-match', 1));
+    expect(useFootballGridStore.getState().state?.matchId).toBe('rejoined-match');
+    store.clear();
+    store.setState(found('previous-match', 30));
+    expect(useFootballGridStore.getState().state?.matchId).toBe('previous-match');
   });
 });

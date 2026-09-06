@@ -4,6 +4,7 @@ import type { FootballGridState } from '@/lib/realtime/socket.types';
 import { useFootballGridStore } from '@/stores/footballGrid.store';
 
 const socket = vi.hoisted(() => ({
+  connected: true,
   emit: vi.fn(),
   on: vi.fn(),
   off: vi.fn(),
@@ -45,6 +46,7 @@ function state(overrides: Partial<FootballGridState> = {}): FootballGridState {
 
 describe('useRealtimeFootballGrid', () => {
   beforeEach(() => {
+    socket.connected = true;
     socket.emit.mockClear();
     socket.on.mockClear();
     socket.off.mockClear();
@@ -155,5 +157,93 @@ describe('useRealtimeFootballGrid', () => {
     expect(useFootballGridStore.getState().pendingCommandId).toBeNull();
     expect(socket.emit).toHaveBeenCalledWith('grid:resync', { matchId: 'match-1' });
     unmount();
+  });
+});
+
+
+describe('Grid ready and handoff retry recovery', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    socket.connected = true;
+    socket.emit.mockClear();
+    socket.on.mockClear();
+    socket.off.mockClear();
+    useFootballGridStore.getState().clear();
+  });
+  afterEach(() => vi.useRealTimers());
+
+  function waiting(phase: 'loading' | 'handoff', version = 3) {
+    const snapshot = state({ phase, status: phase, stateVersion: version });
+    snapshot.players.forEach((player) => { player.handoffAcknowledged = phase === 'loading'; });
+    return { matchId: snapshot.matchId, state: snapshot, serverNow: new Date().toISOString() };
+  }
+
+  it.each(['loading', 'handoff'] as const)('retries a transient %s failure with a stable command ID', (phase) => {
+    const snapshot = waiting(phase);
+    useFootballGridStore.getState().setState(snapshot);
+    const hook = renderHook(() => useRealtimeFootballGrid({ enabled: true, selfUserId: 'self', locale: 'en', autoStart: false }));
+    const event = phase === 'loading' ? 'grid:client_ready' : 'grid:match_found_ack';
+    const first = socket.emit.mock.calls.find(([name]) => name === event)![1];
+    act(() => { useFootballGridStore.getState().setError({ code: 'GRID_PRESENCE_BUSY', message: 'Retry' }); });
+    // Same-version resyncs must not keep resetting the retry timer.
+    for (let i = 0; i < 4; i++) {
+      act(() => {
+        vi.advanceTimersByTime(250);
+        useFootballGridStore.getState().setState({ ...snapshot, state: { ...snapshot.state } });
+      });
+    }
+    const calls = socket.emit.mock.calls.filter(([name]) => name === event);
+    expect(calls).toHaveLength(2);
+    expect(calls[1][1]).toEqual(first);
+    expect(socket.emit).toHaveBeenCalledWith('grid:resync', { matchId: snapshot.matchId });
+    hook.unmount();
+    socket.emit.mockClear();
+    act(() => { vi.advanceTimersByTime(10_000); });
+    expect(socket.emit).not.toHaveBeenCalled();
+  });
+
+  it('stops retrying once readiness is acknowledged', () => {
+    const snapshot = waiting('loading');
+    useFootballGridStore.getState().setState(snapshot);
+    const hook = renderHook(() => useRealtimeFootballGrid({ enabled: true, selfUserId: 'self', locale: 'en', autoStart: false }));
+    act(() => { vi.advanceTimersByTime(1_000); });
+    const acknowledged = waiting('loading', 4);
+    acknowledged.state.players[0].ready = true;
+    act(() => { useFootballGridStore.getState().setState(acknowledged); });
+    socket.emit.mockClear();
+    act(() => { vi.advanceTimersByTime(15_000); });
+    expect(socket.emit.mock.calls.filter(([name]) => name === 'grid:client_ready')).toHaveLength(0);
+    hook.unmount();
+  });
+
+  it('does not buffer retries offline and resumes with the same ID on reconnect', () => {
+    useFootballGridStore.getState().setState(waiting('loading'));
+    const hook = renderHook(() => useRealtimeFootballGrid({ enabled: true, selfUserId: 'self', locale: 'en', autoStart: false }));
+    const first = socket.emit.mock.calls.find(([name]) => name === 'grid:client_ready')![1];
+    socket.connected = false;
+    socket.emit.mockClear();
+    act(() => { vi.advanceTimersByTime(3_000); });
+    expect(socket.emit.mock.calls.filter(([name]) => name === 'grid:client_ready')).toHaveLength(0);
+    socket.connected = true;
+    act(() => {
+      socket.on.mock.calls.find(([name]) => name === 'connect')![1]();
+      vi.advanceTimersByTime(4_000);
+    });
+    expect(socket.emit).toHaveBeenCalledWith('grid:client_ready', first);
+    hook.unmount();
+  });
+
+  it('waits for assets and renews the command when the authoritative version changes', () => {
+    useFootballGridStore.getState().setState(waiting('loading'));
+    const hook = renderHook(({ assetsReady }) => useRealtimeFootballGrid({ enabled: true, selfUserId: 'self', locale: 'en', autoStart: false, assetsReady }), { initialProps: { assetsReady: false } });
+    act(() => { vi.advanceTimersByTime(3_000); });
+    expect(socket.emit.mock.calls.filter(([name]) => name === 'grid:client_ready')).toHaveLength(0);
+    hook.rerender({ assetsReady: true });
+    const first = socket.emit.mock.calls.find(([name]) => name === 'grid:client_ready')![1];
+    act(() => { useFootballGridStore.getState().setState(waiting('loading', 4)); });
+    const last = socket.emit.mock.calls.filter(([name]) => name === 'grid:client_ready').at(-1)![1];
+    expect(last.expectedStateVersion).toBe(4);
+    expect(last.commandId).not.toBe(first.commandId);
+    hook.unmount();
   });
 });

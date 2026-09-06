@@ -849,7 +849,7 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
     // handoff immediately. The route that initiated the search may already be
     // unmounted, so this cleanup must remain global to avoid stranding the
     // opponent in the handoff timeout.
-    if (gridStore.searchCancellationPending) {
+    if (gridStore.searchCancellationPending && !gridStore.supersededMatchIds.includes(data.matchId)) {
       socket.emit('grid:forfeit', {
         matchId: data.matchId,
         commandId: createRealtimeCommandId(),
@@ -911,7 +911,8 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
     // game's handoff: keep the live board, record the score, ACK it here.
     const previousSeriesGame = gridStore.state?.matchId !== data.matchId
       && data.series && !data.series.finished
-      && gridStore.series?.seriesId === data.series.seriesId;
+      && gridStore.series?.seriesId === data.series.seriesId
+      && data.series.gameIndex < gridStore.series.gameIndex;
     if (previousSeriesGame) {
       gridStore.recordPreviousGameResult(data);
       socket.emit('grid:completed_ack', {
@@ -932,6 +933,15 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       return;
     }
     gridStore.setCompleted(data);
+    // Ignored old-game deliveries still need their outbox ACK; they must not
+    // recur forever merely because the player is already on a newer board.
+    if (useFootballGridStore.getState().completed?.ackToken !== data.ackToken) {
+      socket.emit('grid:completed_ack', {
+        matchId: data.matchId,
+        terminalStateVersion: data.terminalStateVersion,
+        ackToken: data.ackToken,
+      });
+    }
   });
   socket.on('grid:rematch_state', (data: FootballGridRematchStatePayload) => {
     logger.info('Socket event grid:rematch_state', {

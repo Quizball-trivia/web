@@ -24,6 +24,7 @@ export interface FootballGridLastGameResult {
 interface FootballGridStoreState {
   search: FootballGridSearchStatePayload;
   state: FootballGridState | null;
+  supersededMatchIds: string[];
   /** Best-of-N progress for the current match's series; null for legacy single games. */
   series: FootballGridSeriesInfo | null;
   lastGameResult: FootballGridLastGameResult | null;
@@ -66,6 +67,7 @@ function resetGridState() {
   return {
     search: IDLE_SEARCH,
     state: null,
+    supersededMatchIds: [],
     series: null,
     lastGameResult: null,
     opponent: null,
@@ -88,11 +90,29 @@ function serverOffset(serverNow: string): number {
 }
 
 function isOlderState(current: FootballGridState | null, incoming: FootballGridState): boolean {
-  return Boolean(
-    current &&
-      current.matchId === incoming.matchId &&
-      incoming.stateVersion < current.stateVersion,
-  );
+  return Boolean(current?.matchId === incoming.matchId && incoming.stateVersion < current.stateVersion);
+}
+
+function isPreviousSeriesGame(current: FootballGridStoreState, payload: FootballGridStatePayload): boolean {
+  return Boolean(current.state?.matchId !== payload.matchId && current.series && payload.series
+    && current.series.seriesId === payload.series.seriesId
+    && payload.series.gameIndex <= current.series.gameIndex);
+}
+
+function shouldIgnoreSnapshot(current: FootballGridStoreState, payload: FootballGridStatePayload): boolean {
+  if (current.supersededMatchIds.includes(payload.matchId) || isOlderState(current.state, payload.state)) return true;
+  if (!current.state || current.state.matchId === payload.matchId) return false;
+  // Ordinary events cannot change matches, except a forward step within the
+  // authoritative series (the next handoff may still be in transit).
+  return !current.series || !payload.series || current.series.seriesId !== payload.series.seriesId
+    || payload.series.gameIndex <= current.series.gameIndex;
+}
+
+function retireCurrentMatch(current: FootballGridStoreState, nextMatchId?: string): string[] {
+  const matchId = current.state?.matchId;
+  return matchId && matchId !== nextMatchId && !current.supersededMatchIds.includes(matchId)
+    ? [...current.supersededMatchIds, matchId]
+    : current.supersededMatchIds;
 }
 
 function lastGameResultFrom(payload: FootballGridCompletedPayload): FootballGridLastGameResult | null {
@@ -108,6 +128,7 @@ function lastGameResultFrom(payload: FootballGridCompletedPayload): FootballGrid
 export const useFootballGridStore = create<FootballGridStoreState>((set) => ({
   search: IDLE_SEARCH,
   state: null,
+  supersededMatchIds: [],
   series: null,
   lastGameResult: null,
   opponent: null,
@@ -138,48 +159,69 @@ export const useFootballGridStore = create<FootballGridStoreState>((set) => ({
     };
   }),
 
-  setMatchFound: (payload) => set((current) => ({
-    search: { state: 'matched', searchId: null },
-    state: payload.state,
-    series: payload.series ?? null,
-    // Carried into the next game of the same series so the splash can show
-    // the score while the new board loads; anything else is stale.
-    lastGameResult: current.lastGameResult && current.lastGameResult.series.seriesId === payload.series?.seriesId
-      ? current.lastGameResult
-      : null,
-    opponent: payload.opponent,
-    capabilities: payload.capabilities,
-    completed: null,
-    rematch: null,
-    lastCommandResult: null,
-    lastTurnResolved: null,
-    pendingCommandId: null,
-    reportedAttemptIds: [],
-    searchCancellationPending: false,
-    error: null,
-    serverTimeOffsetMs: serverOffset(payload.serverNow),
-  })),
+  setMatchFound: (payload) => set((current) => {
+    if (current.supersededMatchIds.includes(payload.matchId)
+      || isOlderState(current.state, payload.state) || isPreviousSeriesGame(current, payload)) return current;
+    if (current.state?.matchId === payload.matchId) {
+      // Rejoin/redelivery enriches the same match without clearing its result,
+      // pending command, or feedback. A stale handoff cannot rewind the board.
+      return {
+        search: { state: 'matched' as const, searchId: null },
+        state: payload.state,
+        series: payload.series ?? current.series,
+        opponent: payload.opponent,
+        capabilities: payload.capabilities,
+        lastGameResult: payload.state.phase === 'turn' ? null : current.lastGameResult,
+        pendingCommandId: payload.state.stateVersion > current.state.stateVersion ? null : current.pendingCommandId,
+        serverTimeOffsetMs: serverOffset(payload.serverNow),
+      };
+    }
+    return {
+      supersededMatchIds: retireCurrentMatch(current, payload.matchId),
+      search: { state: 'matched', searchId: null },
+      state: payload.state,
+      series: payload.series ?? null,
+      // Carried into the next game of the same series so the splash can show
+      // the score while the new board loads; anything else is stale.
+      lastGameResult: current.lastGameResult && current.lastGameResult.series.seriesId === payload.series?.seriesId
+        ? current.lastGameResult
+        : null,
+      opponent: payload.opponent,
+      capabilities: payload.capabilities,
+      completed: null,
+      rematch: null,
+      lastCommandResult: null,
+      lastTurnResolved: null,
+      pendingCommandId: null,
+      reportedAttemptIds: [],
+      searchCancellationPending: false,
+      error: null,
+      serverTimeOffsetMs: serverOffset(payload.serverNow),
+    };
+  }),
 
   setState: (payload) => set((current) => {
-    if (isOlderState(current.state, payload.state)) return current;
+    if (shouldIgnoreSnapshot(current, payload)) return current;
     return {
       state: payload.state,
+      supersededMatchIds: retireCurrentMatch(current, payload.matchId),
       series: payload.series ?? current.series,
       // The splash has done its job once the new game is actually being played.
       lastGameResult: payload.state.phase === 'turn' ? null : current.lastGameResult,
       error: null,
-      pendingCommandId:
-        current.pendingCommandId && payload.state.stateVersion > (current.state?.stateVersion ?? -1)
-          ? null
-          : current.pendingCommandId,
+      completed: current.state?.matchId === payload.matchId ? current.completed : null,
+      rematch: current.state?.matchId === payload.matchId ? current.rematch : null,
+      pendingCommandId: current.state?.matchId === payload.matchId
+        && payload.state.stateVersion <= current.state.stateVersion ? current.pendingCommandId : null,
       serverTimeOffsetMs: serverOffset(payload.serverNow),
     };
   }),
 
   setCompleted: (payload) => set((current) => {
-    if (isOlderState(current.state, payload.state)) return current;
+    if (shouldIgnoreSnapshot(current, payload)) return current;
     return {
       state: payload.state,
+      supersededMatchIds: retireCurrentMatch(current, payload.matchId),
       completed: payload,
       series: payload.series ?? current.series,
       lastGameResult: lastGameResultFrom(payload),
@@ -212,14 +254,19 @@ export const useFootballGridStore = create<FootballGridStoreState>((set) => ({
     if (current.rematch && payload.seriesVersion < current.rematch.seriesVersion) return current;
     return { rematch: payload };
   }),
-  setCommandResult: (payload) => set((current) => ({
-    lastCommandResult: payload,
-    pendingCommandId: current.pendingCommandId === payload.commandId ? null : current.pendingCommandId,
-  })),
+  setCommandResult: (payload) => set((current) => {
+    if (current.supersededMatchIds.includes(payload.matchId)
+      || (current.state && current.state.matchId !== payload.matchId)) return current;
+    return {
+      lastCommandResult: payload,
+      pendingCommandId: current.pendingCommandId === payload.commandId ? null : current.pendingCommandId,
+    };
+  }),
   setTurnResolved: (payload) => set((current) => {
-    if (isOlderState(current.state, payload.state)) return current;
+    if (shouldIgnoreSnapshot(current, payload)) return current;
     return {
       state: payload.state,
+      supersededMatchIds: retireCurrentMatch(current, payload.matchId),
       lastTurnResolved: payload,
       pendingCommandId: null,
       serverTimeOffsetMs: serverOffset(payload.serverNow),
@@ -249,6 +296,11 @@ export const useFootballGridStore = create<FootballGridStoreState>((set) => ({
   }),
   clearLastGameResult: () => set({ lastGameResult: null }),
   requestSearchCancellation: () => set({ searchCancellationPending: true }),
-  beginFreshSearch: () => set(resetGridState()),
+  beginFreshSearch: () => set((current) => ({
+    ...resetGridState(),
+    // The server may redirect PLAY back into a still-resumable active match.
+    // A finished match is safe to retire before the new search gets a handoff.
+    supersededMatchIds: current.state?.phase === 'terminal' ? retireCurrentMatch(current) : current.supersededMatchIds,
+  })),
   clear: () => set(resetGridState()),
 }));

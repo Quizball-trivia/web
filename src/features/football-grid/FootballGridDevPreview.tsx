@@ -1,5 +1,7 @@
 'use client';
 
+import { useDevGameAudio } from '@/lib/sounds/dev/DevGameAudio';
+import type { DevSoundEvent } from '@/lib/sounds/dev/profiles';
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
@@ -53,7 +55,7 @@ function criterion(
   return { id, key: id, family, labelEn, labelKa, assetKey, difficulty: 'normal' };
 }
 
-const PREVIEW_STATE: FootballGridState = {
+export const PREVIEW_STATE: FootballGridState = {
   matchId: 'preview-match',
   status: 'active',
   phase: 'turn',
@@ -535,6 +537,7 @@ function ModeModalScenario() {
 }
 
 export function FootballGridDevPreview() {
+  const audio = useDevGameAudio();
   const [scenario, setScenario] = useState<ScenarioId>('searching');
   const [panelOpen, setPanelOpen] = useState(true);
   const selected = SCENARIOS.find((item) => item.id === scenario)!;
@@ -577,7 +580,7 @@ export function FootballGridDevPreview() {
                       <button
                         key={item.id}
                         type="button"
-                        onClick={() => setScenario(item.id)}
+                        onClick={() => { setScenario(item.id); const cue: Record<string, DevSoundEvent> = { correct: 'correct', wrong: 'wrong', ambiguous: 'wrong', 'already-used': 'wrong', win: 'win', loss: 'lose', draw: 'draw', countdown: 'start', 'your-turn': 'turn', 'answer-entry': 'select' }; audio?.emit(cue[item.id] ?? 'select'); }}
                         className={cn(
                           'flex min-h-16 items-center gap-2 rounded-2xl border px-3 py-2 text-left transition',
                           active

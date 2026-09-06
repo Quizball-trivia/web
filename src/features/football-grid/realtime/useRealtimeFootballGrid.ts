@@ -19,6 +19,8 @@ interface UseRealtimeFootballGridOptions {
 }
 
 const PENDING_COMMAND_TIMEOUT_MS = 5_000;
+const BARRIER_RETRY_INITIAL_MS = 1_000;
+const BARRIER_RETRY_MAX_MS = 4_000;
 
 function versionedCommand(state: FootballGridState) {
   return {
@@ -53,8 +55,7 @@ export function useRealtimeFootballGrid({
   const serverTimeOffsetMs = useFootballGridStore((current) => current.serverTimeOffsetMs);
   const autoStartAttemptedRef = useRef(false);
   const searchSuppressedRef = useRef(false);
-  const handoffCommandRef = useRef<{ key: string; commandId: string } | null>(null);
-  const readyCommandRef = useRef<{ key: string; commandId: string } | null>(null);
+  const barrierCommandRef = useRef<{ key: string; commandId: string } | null>(null);
   const acknowledgedCompletionTokenRef = useRef<string | null>(null);
 
   const startSearch = useCallback(() => {
@@ -98,11 +99,8 @@ export function useRealtimeFootballGrid({
   useEffect(() => {
     if (!enabled) return;
     const handleConnect = () => {
-      // A versioned ACK may have been buffered just as the transport dropped.
-      // Allow the authoritative resync snapshot to trigger it again. Command
-      // IDs remain idempotent server-side, so a duplicate is harmless.
-      handoffCommandRef.current = null;
-      readyCommandRef.current = null;
+      // Reconcile before retrying. The barrier retry keeps its command ID
+      // across reconnects until the authoritative version changes.
       const latest = useFootballGridStore.getState();
       if (latest.state?.matchId) {
         socket.emit('grid:resync', { matchId: latest.state.matchId });
@@ -116,35 +114,47 @@ export function useRealtimeFootballGrid({
     };
   }, [enabled, locale, socket, theme]);
 
-  useEffect(() => {
-    if (!enabled || !selfUserId || !state || state.phase !== 'handoff') return;
-    const me = state.players.find((player) => player.userId === selfUserId);
-    if (!me || me.handoffAcknowledged) return;
-    const key = `${state.matchId}:${state.stateVersion}`;
-    if (handoffCommandRef.current?.key === key) return;
-    const commandId = createRealtimeCommandId();
-    handoffCommandRef.current = { key, commandId };
-    socket.emit('grid:match_found_ack', {
-      matchId: state.matchId,
-      commandId,
-      expectedStateVersion: state.stateVersion,
-    });
-  }, [enabled, selfUserId, socket, state]);
+  const selfParticipant = state?.players.find((player) => player.userId === selfUserId);
+  const barrierEvent = state?.phase === 'handoff' && selfParticipant && !selfParticipant.handoffAcknowledged
+    ? 'grid:match_found_ack'
+    : state?.phase === 'loading' && selfParticipant && !selfParticipant.ready && assetsReady
+      ? 'grid:client_ready'
+      : null;
+  const barrierMatchId = state?.matchId;
+  const barrierVersion = state?.stateVersion;
 
   useEffect(() => {
-    if (!enabled || !selfUserId || !state || state.phase !== 'loading' || !assetsReady) return;
-    const me = state.players.find((player) => player.userId === selfUserId);
-    if (!me || me.ready) return;
-    const key = `${state.matchId}:${state.stateVersion}`;
-    if (readyCommandRef.current?.key === key) return;
-    const commandId = createRealtimeCommandId();
-    readyCommandRef.current = { key, commandId };
-    socket.emit('grid:client_ready', {
-      matchId: state.matchId,
-      commandId,
-      expectedStateVersion: state.stateVersion,
-    });
-  }, [assetsReady, enabled, selfUserId, socket, state]);
+    if (!enabled || !selfUserId || !barrierEvent || !barrierMatchId || barrierVersion === undefined) return;
+    const key = `${selfUserId}:${barrierEvent}:${barrierMatchId}:${barrierVersion}`;
+    if (barrierCommandRef.current?.key !== key) {
+      barrierCommandRef.current = { key, commandId: createRealtimeCommandId() };
+    }
+    const command = {
+      matchId: barrierMatchId,
+      commandId: barrierCommandRef.current.commandId,
+      expectedStateVersion: barrierVersion,
+    };
+    let retryDelayMs = BARRIER_RETRY_INITIAL_MS;
+    let timerId: number;
+    const send = (retry: boolean) => {
+      const latest = useFootballGridStore.getState().state;
+      const me = latest?.players.find((player) => player.userId === selfUserId);
+      if (latest?.matchId !== barrierMatchId || latest.stateVersion !== barrierVersion || !me) return;
+      const waiting = barrierEvent === 'grid:client_ready'
+        ? latest.phase === 'loading' && !me.ready
+        : latest.phase === 'handoff' && !me.handoffAcknowledged;
+      if (!waiting) return;
+      // Do not accumulate buffered commands while the transport is offline.
+      if (socket.connected) {
+        socket.emit(barrierEvent, command);
+        if (retry) socket.emit('grid:resync', { matchId: barrierMatchId });
+      }
+      timerId = window.setTimeout(() => send(true), retryDelayMs);
+      retryDelayMs = Math.min(retryDelayMs * 2, BARRIER_RETRY_MAX_MS);
+    };
+    send(false);
+    return () => window.clearTimeout(timerId);
+  }, [barrierEvent, barrierMatchId, barrierVersion, enabled, selfUserId, socket]);
 
   const activeMatchId = state?.matchId ?? null;
   const activeMatchIsTerminal = state?.phase === 'terminal';
