@@ -1,0 +1,4537 @@
+[
+  {
+    "id": "ranked",
+    "name": "Ranked possession",
+    "group": "Match modes",
+    "source": "features/possession/hooks/usePossessionMatchSounds.ts",
+    "summary": "Shared possession controller: answer verdicts, passes, kick contact and phase whistles already have cues. Goals, saves, selection and end results need dedicated feedback.",
+    "actions": [
+      {
+        "id": "found",
+        "cue": "found",
+        "label": "Match found",
+        "when": "Once when the match becomes ready; do not repeat during reconnect.",
+        "current": null
+      },
+      {
+        "id": "ban",
+        "cue": "lock",
+        "label": "Ban category",
+        "when": "When the category ban is accepted, once per draft action.",
+        "current": null
+      },
+      {
+        "id": "ready",
+        "cue": "ready",
+        "label": "Start round",
+        "when": "When the countdown hands over to active play, after audio is unlocked.",
+        "current": null
+      },
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "lock",
+        "cue": "lock",
+        "label": "Lock in",
+        "when": "Once a valid submission is accepted; disable while pending.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": "correctRanked"
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": "wrongAnswer"
+      },
+      {
+        "id": "tick",
+        "cue": "tick",
+        "label": "Last 3 seconds",
+        "when": "One tick at each whole second: 3, 2, 1. Stop on answer, pause or end.",
+        "current": null
+      },
+      {
+        "id": "timeout",
+        "cue": "timeout",
+        "label": "Time runs out",
+        "when": "Once when the active turn expires. Replaces wrong-answer feedback for no answer.",
+        "current": null
+      },
+      {
+        "id": "pass",
+        "cue": "pass",
+        "label": "Pass completed",
+        "when": "At the ball transfer or chain link animation; throttle rapid repeats.",
+        "current": "pass"
+      },
+      {
+        "id": "kick",
+        "cue": "kick",
+        "label": "Take the shot",
+        "when": "At visible ball contact, not immediately on the shoot button.",
+        "current": "kick"
+      },
+      {
+        "id": "goal",
+        "cue": "goal",
+        "label": "Goal scored",
+        "when": "At goal impact / score reveal, after the kick.",
+        "current": null
+      },
+      {
+        "id": "save",
+        "cue": "save",
+        "label": "Keeper saves",
+        "when": "At glove contact or confirmed miss; no victory sting.",
+        "current": null
+      },
+      {
+        "id": "whistle",
+        "cue": "whistle",
+        "label": "Half / phase ends",
+        "when": "On halftime, shootout transition or final whistle; once per phase.",
+        "current": "whistle"
+      },
+      {
+        "id": "streak",
+        "cue": "streak",
+        "label": "Streak milestone",
+        "when": "At a meaningful confirmed milestone; replace or follow the regular correct cue.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      },
+      {
+        "id": "lose",
+        "cue": "lose",
+        "label": "Lose / eliminated",
+        "when": "On the terminal loss, once. Do not layer on top of the wrong answer.",
+        "current": null
+      },
+      {
+        "id": "draw",
+        "cue": "draw",
+        "label": "Draw",
+        "when": "When the authoritative result is a draw.",
+        "current": null
+      },
+      {
+        "id": "coins",
+        "cue": "coins",
+        "label": "Collect reward",
+        "when": "When a reward is confirmed and visibly added; one cue per award.",
+        "current": null
+      },
+      {
+        "id": "reconnect",
+        "cue": "reconnect",
+        "label": "Play resumes",
+        "when": "Once when the paused match actually resumes.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "found",
+      "ready",
+      "select",
+      "correct",
+      "pass",
+      "kick",
+      "goal",
+      "win"
+    ],
+    "status": "partial"
+  },
+  {
+    "id": "kickoff",
+    "name": "Kickoff / solo",
+    "group": "Match modes",
+    "source": "features/possession/hooks/usePossessionMatchSounds.ts",
+    "summary": "Shared possession controller: answer verdicts, passes, kick contact and phase whistles already have cues. Goals, saves, selection and end results need dedicated feedback.",
+    "actions": [
+      {
+        "id": "found",
+        "cue": "found",
+        "label": "Match found",
+        "when": "Once when the match becomes ready; do not repeat during reconnect.",
+        "current": null
+      },
+      {
+        "id": "ban",
+        "cue": "lock",
+        "label": "Ban category",
+        "when": "When the category ban is accepted, once per draft action.",
+        "current": null
+      },
+      {
+        "id": "ready",
+        "cue": "ready",
+        "label": "Start round",
+        "when": "When the countdown hands over to active play, after audio is unlocked.",
+        "current": null
+      },
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "lock",
+        "cue": "lock",
+        "label": "Lock in",
+        "when": "Once a valid submission is accepted; disable while pending.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": "correctRanked"
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": "wrongAnswer"
+      },
+      {
+        "id": "tick",
+        "cue": "tick",
+        "label": "Last 3 seconds",
+        "when": "One tick at each whole second: 3, 2, 1. Stop on answer, pause or end.",
+        "current": null
+      },
+      {
+        "id": "timeout",
+        "cue": "timeout",
+        "label": "Time runs out",
+        "when": "Once when the active turn expires. Replaces wrong-answer feedback for no answer.",
+        "current": null
+      },
+      {
+        "id": "pass",
+        "cue": "pass",
+        "label": "Pass completed",
+        "when": "At the ball transfer or chain link animation; throttle rapid repeats.",
+        "current": "pass"
+      },
+      {
+        "id": "kick",
+        "cue": "kick",
+        "label": "Take the shot",
+        "when": "At visible ball contact, not immediately on the shoot button.",
+        "current": "kick"
+      },
+      {
+        "id": "goal",
+        "cue": "goal",
+        "label": "Goal scored",
+        "when": "At goal impact / score reveal, after the kick.",
+        "current": null
+      },
+      {
+        "id": "save",
+        "cue": "save",
+        "label": "Keeper saves",
+        "when": "At glove contact or confirmed miss; no victory sting.",
+        "current": null
+      },
+      {
+        "id": "whistle",
+        "cue": "whistle",
+        "label": "Half / phase ends",
+        "when": "On halftime, shootout transition or final whistle; once per phase.",
+        "current": "whistle"
+      },
+      {
+        "id": "streak",
+        "cue": "streak",
+        "label": "Streak milestone",
+        "when": "At a meaningful confirmed milestone; replace or follow the regular correct cue.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      },
+      {
+        "id": "lose",
+        "cue": "lose",
+        "label": "Lose / eliminated",
+        "when": "On the terminal loss, once. Do not layer on top of the wrong answer.",
+        "current": null
+      },
+      {
+        "id": "draw",
+        "cue": "draw",
+        "label": "Draw",
+        "when": "When the authoritative result is a draw.",
+        "current": null
+      },
+      {
+        "id": "coins",
+        "cue": "coins",
+        "label": "Collect reward",
+        "when": "When a reward is confirmed and visibly added; one cue per award.",
+        "current": null
+      },
+      {
+        "id": "reconnect",
+        "cue": "reconnect",
+        "label": "Play resumes",
+        "when": "Once when the paused match actually resumes.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "found",
+      "ready",
+      "select",
+      "correct",
+      "pass",
+      "kick",
+      "goal",
+      "win"
+    ],
+    "status": "partial"
+  },
+  {
+    "id": "friendly",
+    "name": "Friendly possession",
+    "group": "Match modes",
+    "source": "features/possession/hooks/usePossessionMatchSounds.ts",
+    "summary": "Shared possession controller: answer verdicts, passes, kick contact and phase whistles already have cues. Goals, saves, selection and end results need dedicated feedback.",
+    "actions": [
+      {
+        "id": "found",
+        "cue": "found",
+        "label": "Match found",
+        "when": "Once when the match becomes ready; do not repeat during reconnect.",
+        "current": null
+      },
+      {
+        "id": "ban",
+        "cue": "lock",
+        "label": "Ban category",
+        "when": "When the category ban is accepted, once per draft action.",
+        "current": null
+      },
+      {
+        "id": "ready",
+        "cue": "ready",
+        "label": "Start round",
+        "when": "When the countdown hands over to active play, after audio is unlocked.",
+        "current": null
+      },
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "lock",
+        "cue": "lock",
+        "label": "Lock in",
+        "when": "Once a valid submission is accepted; disable while pending.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": "correctRanked"
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": "wrongAnswer"
+      },
+      {
+        "id": "tick",
+        "cue": "tick",
+        "label": "Last 3 seconds",
+        "when": "One tick at each whole second: 3, 2, 1. Stop on answer, pause or end.",
+        "current": null
+      },
+      {
+        "id": "timeout",
+        "cue": "timeout",
+        "label": "Time runs out",
+        "when": "Once when the active turn expires. Replaces wrong-answer feedback for no answer.",
+        "current": null
+      },
+      {
+        "id": "pass",
+        "cue": "pass",
+        "label": "Pass completed",
+        "when": "At the ball transfer or chain link animation; throttle rapid repeats.",
+        "current": "pass"
+      },
+      {
+        "id": "kick",
+        "cue": "kick",
+        "label": "Take the shot",
+        "when": "At visible ball contact, not immediately on the shoot button.",
+        "current": "kick"
+      },
+      {
+        "id": "goal",
+        "cue": "goal",
+        "label": "Goal scored",
+        "when": "At goal impact / score reveal, after the kick.",
+        "current": null
+      },
+      {
+        "id": "save",
+        "cue": "save",
+        "label": "Keeper saves",
+        "when": "At glove contact or confirmed miss; no victory sting.",
+        "current": null
+      },
+      {
+        "id": "whistle",
+        "cue": "whistle",
+        "label": "Half / phase ends",
+        "when": "On halftime, shootout transition or final whistle; once per phase.",
+        "current": "whistle"
+      },
+      {
+        "id": "streak",
+        "cue": "streak",
+        "label": "Streak milestone",
+        "when": "At a meaningful confirmed milestone; replace or follow the regular correct cue.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      },
+      {
+        "id": "lose",
+        "cue": "lose",
+        "label": "Lose / eliminated",
+        "when": "On the terminal loss, once. Do not layer on top of the wrong answer.",
+        "current": null
+      },
+      {
+        "id": "draw",
+        "cue": "draw",
+        "label": "Draw",
+        "when": "When the authoritative result is a draw.",
+        "current": null
+      },
+      {
+        "id": "coins",
+        "cue": "coins",
+        "label": "Collect reward",
+        "when": "When a reward is confirmed and visibly added; one cue per award.",
+        "current": null
+      },
+      {
+        "id": "reconnect",
+        "cue": "reconnect",
+        "label": "Play resumes",
+        "when": "Once when the paused match actually resumes.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "found",
+      "ready",
+      "select",
+      "correct",
+      "pass",
+      "kick",
+      "goal",
+      "win"
+    ],
+    "status": "partial"
+  },
+  {
+    "id": "penalties",
+    "name": "Ranked penalties",
+    "group": "Match modes",
+    "source": "features/possession/hooks/usePossessionMatchSounds.ts",
+    "summary": "Shootout is a possession phase, not a separate top-level game. Preserve animation-aligned kick timing.",
+    "actions": [
+      {
+        "id": "whistle",
+        "cue": "whistle",
+        "label": "Half / phase ends",
+        "when": "On halftime, shootout transition or final whistle; once per phase.",
+        "current": "whistle"
+      },
+      {
+        "id": "ready",
+        "cue": "ready",
+        "label": "Start round",
+        "when": "When the countdown hands over to active play, after audio is unlocked.",
+        "current": null
+      },
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "lock",
+        "cue": "lock",
+        "label": "Lock in",
+        "when": "Once a valid submission is accepted; disable while pending.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": "correctRanked"
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": "wrongAnswer"
+      },
+      {
+        "id": "tick",
+        "cue": "tick",
+        "label": "Last 3 seconds",
+        "when": "One tick at each whole second: 3, 2, 1. Stop on answer, pause or end.",
+        "current": null
+      },
+      {
+        "id": "timeout",
+        "cue": "timeout",
+        "label": "Time runs out",
+        "when": "Once when the active turn expires. Replaces wrong-answer feedback for no answer.",
+        "current": null
+      },
+      {
+        "id": "kick",
+        "cue": "kick",
+        "label": "Take the shot",
+        "when": "At visible ball contact, not immediately on the shoot button.",
+        "current": "kick"
+      },
+      {
+        "id": "goal",
+        "cue": "goal",
+        "label": "Goal scored",
+        "when": "At goal impact / score reveal, after the kick.",
+        "current": null
+      },
+      {
+        "id": "save",
+        "cue": "save",
+        "label": "Keeper saves",
+        "when": "At glove contact or confirmed miss; no victory sting.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      },
+      {
+        "id": "lose",
+        "cue": "lose",
+        "label": "Lose / eliminated",
+        "when": "On the terminal loss, once. Do not layer on top of the wrong answer.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "whistle",
+      "ready",
+      "select",
+      "kick",
+      "goal",
+      "win"
+    ],
+    "status": "partial"
+  },
+  {
+    "id": "party",
+    "name": "Party Quiz",
+    "group": "Match modes",
+    "source": "features/party/realtime/useRealtimePartyQuizViewModel.ts",
+    "summary": "The view model exposes music and mute controls but does not call playSfx. Use local-player verdicts; avoid a sound for every participant.",
+    "actions": [
+      {
+        "id": "found",
+        "cue": "found",
+        "label": "Match found",
+        "when": "Once when the match becomes ready; do not repeat during reconnect.",
+        "current": null
+      },
+      {
+        "id": "ready",
+        "cue": "ready",
+        "label": "Start round",
+        "when": "When the countdown hands over to active play, after audio is unlocked.",
+        "current": null
+      },
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "lock",
+        "cue": "lock",
+        "label": "Lock in",
+        "when": "Once a valid submission is accepted; disable while pending.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "tick",
+        "cue": "tick",
+        "label": "Last 3 seconds",
+        "when": "One tick at each whole second: 3, 2, 1. Stop on answer, pause or end.",
+        "current": null
+      },
+      {
+        "id": "timeout",
+        "cue": "timeout",
+        "label": "Time runs out",
+        "when": "Once when the active turn expires. Replaces wrong-answer feedback for no answer.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "streak",
+        "cue": "streak",
+        "label": "Streak milestone",
+        "when": "At a meaningful confirmed milestone; replace or follow the regular correct cue.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      },
+      {
+        "id": "lose",
+        "cue": "lose",
+        "label": "Lose / eliminated",
+        "when": "On the terminal loss, once. Do not layer on top of the wrong answer.",
+        "current": null
+      },
+      {
+        "id": "draw",
+        "cue": "draw",
+        "label": "Draw",
+        "when": "When the authoritative result is a draw.",
+        "current": null
+      },
+      {
+        "id": "coins",
+        "cue": "coins",
+        "label": "Collect reward",
+        "when": "When a reward is confirmed and visibly added; one cue per award.",
+        "current": null
+      },
+      {
+        "id": "reconnect",
+        "cue": "reconnect",
+        "label": "Play resumes",
+        "when": "Once when the paused match actually resumes.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "found",
+      "ready",
+      "select",
+      "lock",
+      "correct",
+      "next",
+      "win"
+    ],
+    "status": "gap"
+  },
+  {
+    "id": "auction",
+    "name": "Auction",
+    "group": "Match modes",
+    "source": "features/auction/hooks/useAuctionAudio.ts",
+    "summary": "Existing conductor covers clue, bid, fold, reveal, win, warning and finish. Add selection and targeted outbid feedback; distinguish personal results. auctionFinished already plays when the match reaches results.",
+    "actions": [
+      {
+        "id": "found",
+        "cue": "found",
+        "label": "Match found",
+        "when": "Once when the match becomes ready; do not repeat during reconnect.",
+        "current": null
+      },
+      {
+        "id": "ready",
+        "cue": "ready",
+        "label": "Start round",
+        "when": "When the countdown hands over to active play, after audio is unlocked.",
+        "current": null
+      },
+      {
+        "id": "place",
+        "cue": "tap",
+        "label": "Place / reorder",
+        "when": "When a tile or card lands in a new valid position, not during drag.",
+        "current": null
+      },
+      {
+        "id": "reveal",
+        "cue": "reveal",
+        "label": "Reveal clue",
+        "when": "When a new clue becomes visible; one cue per reveal.",
+        "current": "auctionClue"
+      },
+      {
+        "id": "bid",
+        "cue": "bid",
+        "label": "Place a bid",
+        "when": "When your bid is accepted, not on each amount adjustment.",
+        "current": "auctionBid"
+      },
+      {
+        "id": "outbid",
+        "cue": "outbid",
+        "label": "You are outbid",
+        "when": "Only when your leading bid is overtaken; avoid every rival update.",
+        "current": null
+      },
+      {
+        "id": "fold",
+        "cue": "back",
+        "label": "Fold / pass turn",
+        "when": "When your fold is accepted; no sound for repeated clicks.",
+        "current": "auctionFold"
+      },
+      {
+        "id": "tick",
+        "cue": "tick",
+        "label": "Last 3 seconds",
+        "when": "One tick at each whole second: 3, 2, 1. Stop on answer, pause or end.",
+        "current": "auctionWarning"
+      },
+      {
+        "id": "sold",
+        "cue": "sold",
+        "label": "Player sold",
+        "when": "When the winner and price are revealed; delay a personal win flourish.",
+        "current": "auctionReveal"
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": "auctionWon"
+      },
+      {
+        "id": "lose",
+        "cue": "lose",
+        "label": "Lose / eliminated",
+        "when": "On the terminal loss, once. Do not layer on top of the wrong answer.",
+        "current": null
+      },
+      {
+        "id": "coins",
+        "cue": "coins",
+        "label": "Collect reward",
+        "when": "When a reward is confirmed and visibly added; one cue per award.",
+        "current": null
+      },
+      {
+        "id": "reconnect",
+        "cue": "reconnect",
+        "label": "Play resumes",
+        "when": "Once when the paused match actually resumes.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "found",
+      "reveal",
+      "bid",
+      "sold",
+      "win",
+      "coins"
+    ],
+    "status": "partial"
+  },
+  {
+    "id": "football-grid",
+    "name": "Football Tic Tac Toe \u00b7 live",
+    "group": "Match modes",
+    "source": "features/football-grid/hooks/useFootballGridAudio.ts",
+    "summary": "Correct/wrong command results and kickoff whistle are wired. Extend to square selection, claim, turn timeout and best-of-three outcome.",
+    "actions": [
+      {
+        "id": "found",
+        "cue": "found",
+        "label": "Match found",
+        "when": "Once when the match becomes ready; do not repeat during reconnect.",
+        "current": null
+      },
+      {
+        "id": "ready",
+        "cue": "ready",
+        "label": "Start round",
+        "when": "When the countdown hands over to active play, after audio is unlocked.",
+        "current": "whistle"
+      },
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "lock",
+        "cue": "lock",
+        "label": "Lock in",
+        "when": "Once a valid submission is accepted; disable while pending.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": "correctRanked"
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": "wrongAnswer"
+      },
+      {
+        "id": "place",
+        "cue": "tap",
+        "label": "Place / reorder",
+        "when": "When a tile or card lands in a new valid position, not during drag.",
+        "current": null
+      },
+      {
+        "id": "tick",
+        "cue": "tick",
+        "label": "Last 3 seconds",
+        "when": "One tick at each whole second: 3, 2, 1. Stop on answer, pause or end.",
+        "current": null
+      },
+      {
+        "id": "timeout",
+        "cue": "timeout",
+        "label": "Time runs out",
+        "when": "Once when the active turn expires. Replaces wrong-answer feedback for no answer.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      },
+      {
+        "id": "lose",
+        "cue": "lose",
+        "label": "Lose / eliminated",
+        "when": "On the terminal loss, once. Do not layer on top of the wrong answer.",
+        "current": null
+      },
+      {
+        "id": "draw",
+        "cue": "draw",
+        "label": "Draw",
+        "when": "When the authoritative result is a draw.",
+        "current": null
+      },
+      {
+        "id": "reconnect",
+        "cue": "reconnect",
+        "label": "Play resumes",
+        "when": "Once when the paused match actually resumes.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "found",
+      "ready",
+      "select",
+      "lock",
+      "correct",
+      "place",
+      "win"
+    ],
+    "status": "partial"
+  },
+  {
+    "id": "weekend",
+    "name": "Weekend League",
+    "group": "Match modes",
+    "source": "features/weekend-league/gauntlet/RoundViews.tsx",
+    "summary": "Gauntlet has several board types; MoneyDropBoard has explicit verdict SFX. Share answer/timer events across boards and add qualification, elimination and finish feedback. Existing Money Drop correct/wrong coverage is board-specific, so shared rows remain marked as gaps.",
+    "actions": [
+      {
+        "id": "ready",
+        "cue": "ready",
+        "label": "Start round",
+        "when": "When the countdown hands over to active play, after audio is unlocked.",
+        "current": null
+      },
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "place",
+        "cue": "tap",
+        "label": "Place / reorder",
+        "when": "When a tile or card lands in a new valid position, not during drag.",
+        "current": null
+      },
+      {
+        "id": "lock",
+        "cue": "lock",
+        "label": "Lock in",
+        "when": "Once a valid submission is accepted; disable while pending.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "reveal",
+        "cue": "reveal",
+        "label": "Reveal clue",
+        "when": "When a new clue becomes visible; one cue per reveal.",
+        "current": null
+      },
+      {
+        "id": "power",
+        "cue": "power",
+        "label": "Use a lifeline",
+        "when": "When a lifeline is successfully consumed, not when its dialog opens.",
+        "current": null
+      },
+      {
+        "id": "drop",
+        "cue": "drop",
+        "label": "Money drops",
+        "when": "On the falling-money animation, after the answer verdict.",
+        "current": null
+      },
+      {
+        "id": "tick",
+        "cue": "tick",
+        "label": "Last 3 seconds",
+        "when": "One tick at each whole second: 3, 2, 1. Stop on answer, pause or end.",
+        "current": null
+      },
+      {
+        "id": "timeout",
+        "cue": "timeout",
+        "label": "Time runs out",
+        "when": "Once when the active turn expires. Replaces wrong-answer feedback for no answer.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      },
+      {
+        "id": "lose",
+        "cue": "lose",
+        "label": "Lose / eliminated",
+        "when": "On the terminal loss, once. Do not layer on top of the wrong answer.",
+        "current": null
+      },
+      {
+        "id": "coins",
+        "cue": "coins",
+        "label": "Collect reward",
+        "when": "When a reward is confirmed and visibly added; one cue per award.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "ready",
+      "select",
+      "lock",
+      "correct",
+      "next",
+      "win"
+    ],
+    "status": "partial"
+  },
+  {
+    "id": "training",
+    "name": "Training match",
+    "group": "Match modes",
+    "source": "features/training/hooks/useTrainingMatch.ts",
+    "summary": "Local training mirrors possession phases but has no explicit SFX calls in its state controller. Keep tutorials audible only after a user gesture.",
+    "actions": [
+      {
+        "id": "ban",
+        "cue": "lock",
+        "label": "Ban category",
+        "when": "When the category ban is accepted, once per draft action.",
+        "current": null
+      },
+      {
+        "id": "ready",
+        "cue": "ready",
+        "label": "Start round",
+        "when": "When the countdown hands over to active play, after audio is unlocked.",
+        "current": null
+      },
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "tick",
+        "cue": "tick",
+        "label": "Last 3 seconds",
+        "when": "One tick at each whole second: 3, 2, 1. Stop on answer, pause or end.",
+        "current": null
+      },
+      {
+        "id": "timeout",
+        "cue": "timeout",
+        "label": "Time runs out",
+        "when": "Once when the active turn expires. Replaces wrong-answer feedback for no answer.",
+        "current": null
+      },
+      {
+        "id": "pass",
+        "cue": "pass",
+        "label": "Pass completed",
+        "when": "At the ball transfer or chain link animation; throttle rapid repeats.",
+        "current": null
+      },
+      {
+        "id": "kick",
+        "cue": "kick",
+        "label": "Take the shot",
+        "when": "At visible ball contact, not immediately on the shoot button.",
+        "current": null
+      },
+      {
+        "id": "goal",
+        "cue": "goal",
+        "label": "Goal scored",
+        "when": "At goal impact / score reveal, after the kick.",
+        "current": null
+      },
+      {
+        "id": "save",
+        "cue": "save",
+        "label": "Keeper saves",
+        "when": "At glove contact or confirmed miss; no victory sting.",
+        "current": null
+      },
+      {
+        "id": "whistle",
+        "cue": "whistle",
+        "label": "Half / phase ends",
+        "when": "On halftime, shootout transition or final whistle; once per phase.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      },
+      {
+        "id": "lose",
+        "cue": "lose",
+        "label": "Lose / eliminated",
+        "when": "On the terminal loss, once. Do not layer on top of the wrong answer.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "ban",
+      "ready",
+      "select",
+      "correct",
+      "kick",
+      "goal",
+      "win"
+    ],
+    "status": "gap"
+  },
+  {
+    "id": "campaign",
+    "name": "Public football quiz",
+    "group": "Match modes",
+    "source": "features/campaign-quiz/CampaignQuizGame.tsx",
+    "summary": "Public campaign quiz is silent. Play verdicts after the answer API succeeds, with optional soft next-question and completion cues.",
+    "actions": [
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "lock",
+        "cue": "lock",
+        "label": "Lock in",
+        "when": "Once a valid submission is accepted; disable while pending.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      },
+      {
+        "id": "back",
+        "cue": "back",
+        "label": "Back / dismiss",
+        "when": "On deliberate dismissal or cancellation. Quit confirmation stays distinct.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "select",
+      "lock",
+      "correct",
+      "next",
+      "win"
+    ],
+    "status": "gap"
+  },
+  {
+    "id": "true-false",
+    "name": "True or False",
+    "group": "Daily games",
+    "source": "features/daily/TrueFalseGame.tsx",
+    "summary": "Two answer buttons share useResultSplash verdict audio.",
+    "actions": [
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": "dailyCorrect"
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": "wrongAnswer"
+      },
+      {
+        "id": "tick",
+        "cue": "tick",
+        "label": "Last 3 seconds",
+        "when": "One tick at each whole second: 3, 2, 1. Stop on answer, pause or end.",
+        "current": null
+      },
+      {
+        "id": "timeout",
+        "cue": "timeout",
+        "label": "Time runs out",
+        "when": "Once when the active turn expires. Replaces wrong-answer feedback for no answer.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "select",
+      "correct",
+      "next",
+      "win"
+    ],
+    "status": "partial"
+  },
+  {
+    "id": "high-low",
+    "name": "Higher or Lower",
+    "group": "Daily games",
+    "source": "features/daily/HighLowGame.tsx",
+    "summary": "Left/right picks share useResultSplash verdict audio.",
+    "actions": [
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": "dailyCorrect"
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": "wrongAnswer"
+      },
+      {
+        "id": "reveal",
+        "cue": "reveal",
+        "label": "Reveal clue",
+        "when": "When a new clue becomes visible; one cue per reveal.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "select",
+      "correct",
+      "next",
+      "win"
+    ],
+    "status": "partial"
+  },
+  {
+    "id": "career-path",
+    "name": "Career Path",
+    "group": "Daily games",
+    "source": "features/daily/CareerPathGame.tsx",
+    "summary": "Text submission shares useResultSplash. Club trail is static; do not invent repeated reveal ticks.",
+    "actions": [
+      {
+        "id": "lock",
+        "cue": "lock",
+        "label": "Lock in",
+        "when": "Once a valid submission is accepted; disable while pending.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": "dailyCorrect"
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": "wrongAnswer"
+      },
+      {
+        "id": "tick",
+        "cue": "tick",
+        "label": "Last 3 seconds",
+        "when": "One tick at each whole second: 3, 2, 1. Stop on answer, pause or end.",
+        "current": null
+      },
+      {
+        "id": "timeout",
+        "cue": "timeout",
+        "label": "Time runs out",
+        "when": "Once when the active turn expires. Replaces wrong-answer feedback for no answer.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "lock",
+      "correct",
+      "next",
+      "win"
+    ],
+    "status": "partial"
+  },
+  {
+    "id": "clues",
+    "name": "Clues",
+    "group": "Daily games",
+    "source": "features/daily/ClueGame.tsx",
+    "summary": "Progressive clue reveals are silent; correct answer and failed guesses already sound.",
+    "actions": [
+      {
+        "id": "reveal",
+        "cue": "reveal",
+        "label": "Reveal clue",
+        "when": "When a new clue becomes visible; one cue per reveal.",
+        "current": null
+      },
+      {
+        "id": "lock",
+        "cue": "lock",
+        "label": "Lock in",
+        "when": "Once a valid submission is accepted; disable while pending.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": "dailyCorrect"
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": "wrongAnswer"
+      },
+      {
+        "id": "tick",
+        "cue": "tick",
+        "label": "Last 3 seconds",
+        "when": "One tick at each whole second: 3, 2, 1. Stop on answer, pause or end.",
+        "current": null
+      },
+      {
+        "id": "timeout",
+        "cue": "timeout",
+        "label": "Time runs out",
+        "when": "Once when the active turn expires. Replaces wrong-answer feedback for no answer.",
+        "current": null
+      },
+      {
+        "id": "fold",
+        "cue": "back",
+        "label": "Fold / pass turn",
+        "when": "When your fold is accepted; no sound for repeated clicks.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "reveal",
+      "lock",
+      "correct",
+      "next",
+      "win"
+    ],
+    "status": "partial"
+  },
+  {
+    "id": "countdown",
+    "name": "Countdown",
+    "group": "Daily games",
+    "source": "features/daily/CountdownGame.tsx",
+    "summary": "Automatic matching and explicit submissions already play result audio. Failed text changes should remain silent.",
+    "actions": [
+      {
+        "id": "lock",
+        "cue": "lock",
+        "label": "Lock in",
+        "when": "Once a valid submission is accepted; disable while pending.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": "dailyCorrect"
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": "wrongAnswer"
+      },
+      {
+        "id": "tick",
+        "cue": "tick",
+        "label": "Last 3 seconds",
+        "when": "One tick at each whole second: 3, 2, 1. Stop on answer, pause or end.",
+        "current": null
+      },
+      {
+        "id": "timeout",
+        "cue": "timeout",
+        "label": "Time runs out",
+        "when": "Once when the active turn expires. Replaces wrong-answer feedback for no answer.",
+        "current": null
+      },
+      {
+        "id": "fold",
+        "cue": "back",
+        "label": "Fold / pass turn",
+        "when": "When your fold is accepted; no sound for repeated clicks.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "lock",
+      "correct",
+      "next",
+      "win"
+    ],
+    "status": "partial"
+  },
+  {
+    "id": "put-in-order",
+    "name": "Put in Order",
+    "group": "Daily games",
+    "source": "features/daily/PutInOrderGame.tsx",
+    "summary": "Verdict plays on Check order. Drag-end placement and next-round transitions need cues.",
+    "actions": [
+      {
+        "id": "place",
+        "cue": "tap",
+        "label": "Place / reorder",
+        "when": "When a tile or card lands in a new valid position, not during drag.",
+        "current": null
+      },
+      {
+        "id": "lock",
+        "cue": "lock",
+        "label": "Lock in",
+        "when": "Once a valid submission is accepted; disable while pending.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": "dailyCorrect"
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": "wrongAnswer"
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "place",
+      "lock",
+      "correct",
+      "next",
+      "win"
+    ],
+    "status": "partial"
+  },
+  {
+    "id": "imposter",
+    "name": "Imposter",
+    "group": "Daily games",
+    "source": "features/daily/ImposterGame.tsx",
+    "summary": "Selection is silent; reveal sting exists with silent splash to avoid duplicates.",
+    "actions": [
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "lock",
+        "cue": "lock",
+        "label": "Lock in",
+        "when": "Once a valid submission is accepted; disable while pending.",
+        "current": null
+      },
+      {
+        "id": "imposter",
+        "cue": "imposter",
+        "label": "Imposter exposed",
+        "when": "On the identity reveal. Avoid stacking the wrong-answer buzzer.",
+        "current": "imposterReveal"
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": "dailyCorrect"
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "tick",
+        "cue": "tick",
+        "label": "Last 3 seconds",
+        "when": "One tick at each whole second: 3, 2, 1. Stop on answer, pause or end.",
+        "current": null
+      },
+      {
+        "id": "timeout",
+        "cue": "timeout",
+        "label": "Time runs out",
+        "when": "Once when the active turn expires. Replaces wrong-answer feedback for no answer.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "select",
+      "lock",
+      "imposter",
+      "correct",
+      "next",
+      "win"
+    ],
+    "status": "partial"
+  },
+  {
+    "id": "football-logic",
+    "name": "Football Logic",
+    "group": "Daily games",
+    "source": "features/daily/FootballLogicGame.tsx",
+    "summary": "Image puzzle has explicit correct/wrong submission cues.",
+    "actions": [
+      {
+        "id": "lock",
+        "cue": "lock",
+        "label": "Lock in",
+        "when": "Once a valid submission is accepted; disable while pending.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": "dailyCorrect"
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": "wrongAnswer"
+      },
+      {
+        "id": "tick",
+        "cue": "tick",
+        "label": "Last 3 seconds",
+        "when": "One tick at each whole second: 3, 2, 1. Stop on answer, pause or end.",
+        "current": null
+      },
+      {
+        "id": "timeout",
+        "cue": "timeout",
+        "label": "Time runs out",
+        "when": "Once when the active turn expires. Replaces wrong-answer feedback for no answer.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "lock",
+      "correct",
+      "next",
+      "win"
+    ],
+    "status": "partial"
+  },
+  {
+    "id": "money-drop",
+    "name": "Money Drop",
+    "group": "Daily games",
+    "source": "features/daily/MoneyDropGame.tsx",
+    "summary": "Correct/wrong checks money retained, not a single selected answer. Cue sliders on commit only; protect verdict/drop sequencing.",
+    "actions": [
+      {
+        "id": "place",
+        "cue": "tap",
+        "label": "Place / reorder",
+        "when": "When a tile or card lands in a new valid position, not during drag.",
+        "current": null
+      },
+      {
+        "id": "lock",
+        "cue": "lock",
+        "label": "Lock in",
+        "when": "Once a valid submission is accepted; disable while pending.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": "dailyCorrect"
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": "wrongAnswer"
+      },
+      {
+        "id": "drop",
+        "cue": "drop",
+        "label": "Money drops",
+        "when": "On the falling-money animation, after the answer verdict.",
+        "current": null
+      },
+      {
+        "id": "power",
+        "cue": "power",
+        "label": "Use a lifeline",
+        "when": "When a lifeline is successfully consumed, not when its dialog opens.",
+        "current": null
+      },
+      {
+        "id": "reveal",
+        "cue": "reveal",
+        "label": "Reveal clue",
+        "when": "When a new clue becomes visible; one cue per reveal.",
+        "current": null
+      },
+      {
+        "id": "tick",
+        "cue": "tick",
+        "label": "Last 3 seconds",
+        "when": "One tick at each whole second: 3, 2, 1. Stop on answer, pause or end.",
+        "current": null
+      },
+      {
+        "id": "timeout",
+        "cue": "timeout",
+        "label": "Time runs out",
+        "when": "Once when the active turn expires. Replaces wrong-answer feedback for no answer.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      },
+      {
+        "id": "coins",
+        "cue": "coins",
+        "label": "Collect reward",
+        "when": "When a reward is confirmed and visibly added; one cue per award.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "place",
+      "lock",
+      "correct",
+      "drop",
+      "next",
+      "win"
+    ],
+    "status": "partial"
+  },
+  {
+    "id": "mini-final-third",
+    "name": "Free Kicks",
+    "group": "Mini-games",
+    "source": "features/mini-games/components/FinalThird.tsx",
+    "summary": "Live + demo. Existing crowdAudio handles kick, cheer and cashout; new cues fill quiz decisions and saves.",
+    "actions": [
+      {
+        "id": "ready",
+        "cue": "ready",
+        "label": "Start round",
+        "when": "When the countdown hands over to active play, after audio is unlocked.",
+        "current": null
+      },
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "lock",
+        "cue": "lock",
+        "label": "Lock in",
+        "when": "Once a valid submission is accepted; disable while pending.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "reveal",
+        "cue": "reveal",
+        "label": "Reveal clue",
+        "when": "When a new clue becomes visible; one cue per reveal.",
+        "current": null
+      },
+      {
+        "id": "power",
+        "cue": "power",
+        "label": "Use a lifeline",
+        "when": "When a lifeline is successfully consumed, not when its dialog opens.",
+        "current": null
+      },
+      {
+        "id": "kick",
+        "cue": "kick",
+        "label": "Take the shot",
+        "when": "At visible ball contact, not immediately on the shoot button.",
+        "current": "freeKick"
+      },
+      {
+        "id": "goal",
+        "cue": "goal",
+        "label": "Goal scored",
+        "when": "At goal impact / score reveal, after the kick.",
+        "current": "crowdGoal"
+      },
+      {
+        "id": "save",
+        "cue": "save",
+        "label": "Keeper saves",
+        "when": "At glove contact or confirmed miss; no victory sting.",
+        "current": null
+      },
+      {
+        "id": "cash",
+        "cue": "coins",
+        "label": "Cash out",
+        "when": "Only after cashout is confirmed, never for a pending or rejected request.",
+        "current": "cashOut"
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "lose",
+        "cue": "lose",
+        "label": "Lose / eliminated",
+        "when": "On the terminal loss, once. Do not layer on top of the wrong answer.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "ready",
+      "select",
+      "correct",
+      "kick",
+      "goal",
+      "cash"
+    ],
+    "status": "partial"
+  },
+  {
+    "id": "mini-road-to-goal",
+    "name": "Road to Goal",
+    "group": "Mini-games",
+    "source": "features/mini-games/components/RoadToGoal.tsx",
+    "summary": "Feature-gated live + demo. Answer defenders, advance zones, continue or cash out. Trigger rewards only after confirmed settlement.",
+    "actions": [
+      {
+        "id": "ready",
+        "cue": "ready",
+        "label": "Start round",
+        "when": "When the countdown hands over to active play, after audio is unlocked.",
+        "current": null
+      },
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "lock",
+        "cue": "lock",
+        "label": "Lock in",
+        "when": "Once a valid submission is accepted; disable while pending.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "pass",
+        "cue": "pass",
+        "label": "Pass completed",
+        "when": "At the ball transfer or chain link animation; throttle rapid repeats.",
+        "current": null
+      },
+      {
+        "id": "streak",
+        "cue": "streak",
+        "label": "Streak milestone",
+        "when": "At a meaningful confirmed milestone; replace or follow the regular correct cue.",
+        "current": null
+      },
+      {
+        "id": "cash",
+        "cue": "coins",
+        "label": "Cash out",
+        "when": "Only after cashout is confirmed, never for a pending or rejected request.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "lose",
+        "cue": "lose",
+        "label": "Lose / eliminated",
+        "when": "On the terminal loss, once. Do not layer on top of the wrong answer.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "ready",
+      "select",
+      "correct",
+      "pass",
+      "streak",
+      "cash"
+    ],
+    "status": "gap"
+  },
+  {
+    "id": "mini-guess-the-goal",
+    "name": "Guess the Goal",
+    "group": "Mini-games",
+    "source": "features/mini-games/components/GuessTheGoalLive.tsx",
+    "summary": "Live and demo variants. Tactics replay reveals an iconic goal; guess, answer bonus, then advance. No per-frame replay sounds.",
+    "actions": [
+      {
+        "id": "ready",
+        "cue": "ready",
+        "label": "Start round",
+        "when": "When the countdown hands over to active play, after audio is unlocked.",
+        "current": null
+      },
+      {
+        "id": "reveal",
+        "cue": "reveal",
+        "label": "Reveal clue",
+        "when": "When a new clue becomes visible; one cue per reveal.",
+        "current": null
+      },
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "lock",
+        "cue": "lock",
+        "label": "Lock in",
+        "when": "Once a valid submission is accepted; disable while pending.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "power",
+        "cue": "power",
+        "label": "Use a lifeline",
+        "when": "When a lifeline is successfully consumed, not when its dialog opens.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "ready",
+      "reveal",
+      "select",
+      "lock",
+      "correct",
+      "next",
+      "win"
+    ],
+    "status": "gap"
+  },
+  {
+    "id": "mini-guess-fifa-card",
+    "name": "FIFA Cards / Guess the Card",
+    "group": "Mini-games",
+    "source": "features/mini-games/components/GuessFifaCard.tsx",
+    "summary": "Daily route and demo reuse this card puzzle. Reveal identity clues, submit a name, advance cards.",
+    "actions": [
+      {
+        "id": "ready",
+        "cue": "ready",
+        "label": "Start round",
+        "when": "When the countdown hands over to active play, after audio is unlocked.",
+        "current": null
+      },
+      {
+        "id": "reveal",
+        "cue": "reveal",
+        "label": "Reveal clue",
+        "when": "When a new clue becomes visible; one cue per reveal.",
+        "current": null
+      },
+      {
+        "id": "lock",
+        "cue": "lock",
+        "label": "Lock in",
+        "when": "Once a valid submission is accepted; disable while pending.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "tick",
+        "cue": "tick",
+        "label": "Last 3 seconds",
+        "when": "One tick at each whole second: 3, 2, 1. Stop on answer, pause or end.",
+        "current": null
+      },
+      {
+        "id": "timeout",
+        "cue": "timeout",
+        "label": "Time runs out",
+        "when": "Once when the active turn expires. Replaces wrong-answer feedback for no answer.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "ready",
+      "reveal",
+      "lock",
+      "correct",
+      "next",
+      "win"
+    ],
+    "status": "gap"
+  },
+  {
+    "id": "mini-squad-spin",
+    "name": "Squad Spin",
+    "group": "Mini-games",
+    "source": "features/mini-games/components/SquadSpin.tsx",
+    "summary": "Spin club, nation and position; submit a matching footballer.",
+    "actions": [
+      {
+        "id": "spin",
+        "cue": "transition",
+        "label": "Spin starts",
+        "when": "One short start sweep; no continuous wheel-tick loop.",
+        "current": null
+      },
+      {
+        "id": "spinStop",
+        "cue": "reveal",
+        "label": "Wheel stops",
+        "when": "When the result settles, before any reward chime.",
+        "current": null
+      },
+      {
+        "id": "lock",
+        "cue": "lock",
+        "label": "Lock in",
+        "when": "Once a valid submission is accepted; disable while pending.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "spin",
+      "spinStop",
+      "lock",
+      "correct",
+      "win"
+    ],
+    "status": "gap"
+  },
+  {
+    "id": "mini-trivia-spin",
+    "name": "Trivia Spin",
+    "group": "Mini-games",
+    "source": "features/mini-games/components/TriviaSpin.tsx",
+    "summary": "Hidden demo. Answer questions to earn a spin, then reveal the wheel payout.",
+    "actions": [
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "spin",
+        "cue": "transition",
+        "label": "Spin starts",
+        "when": "One short start sweep; no continuous wheel-tick loop.",
+        "current": null
+      },
+      {
+        "id": "spinStop",
+        "cue": "reveal",
+        "label": "Wheel stops",
+        "when": "When the result settles, before any reward chime.",
+        "current": null
+      },
+      {
+        "id": "coins",
+        "cue": "coins",
+        "label": "Collect reward",
+        "when": "When a reward is confirmed and visibly added; one cue per award.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "select",
+      "correct",
+      "spin",
+      "spinStop",
+      "coins"
+    ],
+    "status": "gap"
+  },
+  {
+    "id": "mini-penalty-shootout",
+    "name": "Penalty Shootout \u00b7 demo",
+    "group": "Mini-games",
+    "source": "features/mini-games/components/PenaltyShootout.tsx",
+    "summary": "Hidden demo. Trivia earns a shot; choose shooter or keeper zone across five rounds.",
+    "actions": [
+      {
+        "id": "ready",
+        "cue": "ready",
+        "label": "Start round",
+        "when": "When the countdown hands over to active play, after audio is unlocked.",
+        "current": null
+      },
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "kick",
+        "cue": "kick",
+        "label": "Take the shot",
+        "when": "At visible ball contact, not immediately on the shoot button.",
+        "current": null
+      },
+      {
+        "id": "goal",
+        "cue": "goal",
+        "label": "Goal scored",
+        "when": "At goal impact / score reveal, after the kick.",
+        "current": null
+      },
+      {
+        "id": "save",
+        "cue": "save",
+        "label": "Keeper saves",
+        "when": "At glove contact or confirmed miss; no victory sting.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      },
+      {
+        "id": "lose",
+        "cue": "lose",
+        "label": "Lose / eliminated",
+        "when": "On the terminal loss, once. Do not layer on top of the wrong answer.",
+        "current": null
+      },
+      {
+        "id": "draw",
+        "cue": "draw",
+        "label": "Draw",
+        "when": "When the authoritative result is a draw.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "ready",
+      "select",
+      "correct",
+      "kick",
+      "goal",
+      "win"
+    ],
+    "status": "gap"
+  },
+  {
+    "id": "mini-daily-jackpot",
+    "name": "Daily Jackpot",
+    "group": "Mini-games",
+    "source": "features/mini-games/components/DailyJackpot.tsx",
+    "summary": "Hidden demo. One difficult answer resolves the shared pot.",
+    "actions": [
+      {
+        "id": "lock",
+        "cue": "lock",
+        "label": "Lock in",
+        "when": "Once a valid submission is accepted; disable while pending.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      },
+      {
+        "id": "coins",
+        "cue": "coins",
+        "label": "Collect reward",
+        "when": "When a reward is confirmed and visibly added; one cue per award.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "lock",
+      "correct",
+      "win",
+      "coins"
+    ],
+    "status": "gap"
+  },
+  {
+    "id": "mini-pass-chain",
+    "name": "Pass Chain",
+    "group": "Mini-games",
+    "source": "features/mini-games/components/PassChain.tsx",
+    "summary": "Submit footballers connected by a shared club; score a completed chain.",
+    "actions": [
+      {
+        "id": "lock",
+        "cue": "lock",
+        "label": "Lock in",
+        "when": "Once a valid submission is accepted; disable while pending.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "pass",
+        "cue": "pass",
+        "label": "Pass completed",
+        "when": "At the ball transfer or chain link animation; throttle rapid repeats.",
+        "current": null
+      },
+      {
+        "id": "back",
+        "cue": "back",
+        "label": "Back / dismiss",
+        "when": "On deliberate dismissal or cancellation. Quit confirmation stays distinct.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "lock",
+      "correct",
+      "pass",
+      "win"
+    ],
+    "status": "gap"
+  },
+  {
+    "id": "mini-accumulator",
+    "name": "Accumulator",
+    "group": "Mini-games",
+    "source": "features/mini-games/components/Accumulator.tsx",
+    "summary": "Select legs, lock the slip, resolve each leg and optionally cash out.",
+    "actions": [
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "lock",
+        "cue": "lock",
+        "label": "Lock in",
+        "when": "Once a valid submission is accepted; disable while pending.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "cash",
+        "cue": "coins",
+        "label": "Cash out",
+        "when": "Only after cashout is confirmed, never for a pending or rejected request.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      },
+      {
+        "id": "lose",
+        "cue": "lose",
+        "label": "Lose / eliminated",
+        "when": "On the terminal loss, once. Do not layer on top of the wrong answer.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "select",
+      "lock",
+      "correct",
+      "next",
+      "cash"
+    ],
+    "status": "gap"
+  },
+  {
+    "id": "mini-squad-collection",
+    "name": "Squad Collection",
+    "group": "Mini-games",
+    "source": "features/mini-games/components/SquadCollection.tsx",
+    "summary": "Answer trivia, reveal a footballer card, place it in the formation.",
+    "actions": [
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "reveal",
+        "cue": "reveal",
+        "label": "Reveal clue",
+        "when": "When a new clue becomes visible; one cue per reveal.",
+        "current": null
+      },
+      {
+        "id": "place",
+        "cue": "tap",
+        "label": "Place / reorder",
+        "when": "When a tile or card lands in a new valid position, not during drag.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "select",
+      "correct",
+      "reveal",
+      "place",
+      "win"
+    ],
+    "status": "gap"
+  },
+  {
+    "id": "mini-cash-out-ladder",
+    "name": "Cash Out Ladder",
+    "group": "Mini-games",
+    "source": "features/mini-games/components/CashOutLadder.tsx",
+    "summary": "Answer to climb the multiplier ladder; bank or risk the next question.",
+    "actions": [
+      {
+        "id": "ready",
+        "cue": "ready",
+        "label": "Start round",
+        "when": "When the countdown hands over to active play, after audio is unlocked.",
+        "current": null
+      },
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "streak",
+        "cue": "streak",
+        "label": "Streak milestone",
+        "when": "At a meaningful confirmed milestone; replace or follow the regular correct cue.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "cash",
+        "cue": "coins",
+        "label": "Cash out",
+        "when": "Only after cashout is confirmed, never for a pending or rejected request.",
+        "current": null
+      },
+      {
+        "id": "lose",
+        "cue": "lose",
+        "label": "Lose / eliminated",
+        "when": "On the terminal loss, once. Do not layer on top of the wrong answer.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "ready",
+      "select",
+      "correct",
+      "streak",
+      "cash"
+    ],
+    "status": "gap"
+  },
+  {
+    "id": "mini-bet-slip-booster",
+    "name": "Bet Slip Booster",
+    "group": "Mini-games",
+    "source": "features/mini-games/components/BetSlipBooster.tsx",
+    "summary": "Answer club questions to boost individual legs and reveal the slip outcome.",
+    "actions": [
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "lock",
+        "cue": "lock",
+        "label": "Lock in",
+        "when": "Once a valid submission is accepted; disable while pending.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "power",
+        "cue": "power",
+        "label": "Use a lifeline",
+        "when": "When a lifeline is successfully consumed, not when its dialog opens.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      },
+      {
+        "id": "lose",
+        "cue": "lose",
+        "label": "Lose / eliminated",
+        "when": "On the terminal loss, once. Do not layer on top of the wrong answer.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "select",
+      "correct",
+      "power",
+      "next",
+      "win"
+    ],
+    "status": "gap"
+  },
+  {
+    "id": "mini-half-time-trivia",
+    "name": "Half-Time Trivia",
+    "group": "Mini-games",
+    "source": "features/mini-games/components/HalfTimeTrivia.tsx",
+    "summary": "A 60-second quiz: verdicts, final-three-second ticks and completion.",
+    "actions": [
+      {
+        "id": "ready",
+        "cue": "ready",
+        "label": "Start round",
+        "when": "When the countdown hands over to active play, after audio is unlocked.",
+        "current": null
+      },
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "tick",
+        "cue": "tick",
+        "label": "Last 3 seconds",
+        "when": "One tick at each whole second: 3, 2, 1. Stop on answer, pause or end.",
+        "current": null
+      },
+      {
+        "id": "timeout",
+        "cue": "timeout",
+        "label": "Time runs out",
+        "when": "Once when the active turn expires. Replaces wrong-answer feedback for no answer.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "ready",
+      "select",
+      "correct",
+      "next",
+      "win"
+    ],
+    "status": "gap"
+  },
+  {
+    "id": "mini-odds-board",
+    "name": "Odds Board",
+    "group": "Mini-games",
+    "source": "features/mini-games/components/OddsBoard.tsx",
+    "summary": "Choose a priced answer, commit the stake, resolve and show return.",
+    "actions": [
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "lock",
+        "cue": "lock",
+        "label": "Lock in",
+        "when": "Once a valid submission is accepted; disable while pending.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "coins",
+        "cue": "coins",
+        "label": "Collect reward",
+        "when": "When a reward is confirmed and visibly added; one cue per award.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "lose",
+        "cue": "lose",
+        "label": "Lose / eliminated",
+        "when": "On the terminal loss, once. Do not layer on top of the wrong answer.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "select",
+      "lock",
+      "correct",
+      "coins"
+    ],
+    "status": "gap"
+  },
+  {
+    "id": "mini-football-grid-demo",
+    "name": "Football Tic Tac Toe \u00b7 demo",
+    "group": "Mini-games",
+    "source": "features/mini-games/components/FootballGrid.tsx",
+    "summary": "Local prototype board. Select a square, name a qualifying player, claim a cell and form a line.",
+    "actions": [
+      {
+        "id": "ready",
+        "cue": "ready",
+        "label": "Start round",
+        "when": "When the countdown hands over to active play, after audio is unlocked.",
+        "current": null
+      },
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "lock",
+        "cue": "lock",
+        "label": "Lock in",
+        "when": "Once a valid submission is accepted; disable while pending.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "place",
+        "cue": "tap",
+        "label": "Place / reorder",
+        "when": "When a tile or card lands in a new valid position, not during drag.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      },
+      {
+        "id": "lose",
+        "cue": "lose",
+        "label": "Lose / eliminated",
+        "when": "On the terminal loss, once. Do not layer on top of the wrong answer.",
+        "current": null
+      },
+      {
+        "id": "draw",
+        "cue": "draw",
+        "label": "Draw",
+        "when": "When the authoritative result is a draw.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "ready",
+      "select",
+      "lock",
+      "correct",
+      "place",
+      "win"
+    ],
+    "status": "gap"
+  },
+  {
+    "id": "mini-survivor",
+    "name": "Survivor",
+    "group": "Mini-games",
+    "source": "features/mini-games/components/Survivor.tsx",
+    "summary": "Hidden demo. Increasing question difficulty; first wrong answer ends the run.",
+    "actions": [
+      {
+        "id": "ready",
+        "cue": "ready",
+        "label": "Start round",
+        "when": "When the countdown hands over to active play, after audio is unlocked.",
+        "current": null
+      },
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "streak",
+        "cue": "streak",
+        "label": "Streak milestone",
+        "when": "At a meaningful confirmed milestone; replace or follow the regular correct cue.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "lose",
+        "cue": "lose",
+        "label": "Lose / eliminated",
+        "when": "On the terminal loss, once. Do not layer on top of the wrong answer.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "ready",
+      "select",
+      "correct",
+      "streak",
+      "next",
+      "win"
+    ],
+    "status": "gap"
+  },
+  {
+    "id": "mini-hi-lo-ride",
+    "name": "Hi-Lo Ride",
+    "group": "Mini-games",
+    "source": "features/mini-games/components/HiLoRide.tsx",
+    "summary": "Make a higher/lower stat call, reveal the comparison, bank or continue.",
+    "actions": [
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "reveal",
+        "cue": "reveal",
+        "label": "Reveal clue",
+        "when": "When a new clue becomes visible; one cue per reveal.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "streak",
+        "cue": "streak",
+        "label": "Streak milestone",
+        "when": "At a meaningful confirmed milestone; replace or follow the regular correct cue.",
+        "current": null
+      },
+      {
+        "id": "cash",
+        "cue": "coins",
+        "label": "Cash out",
+        "when": "Only after cashout is confirmed, never for a pending or rejected request.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "lose",
+        "cue": "lose",
+        "label": "Lose / eliminated",
+        "when": "On the terminal loss, once. Do not layer on top of the wrong answer.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "select",
+      "reveal",
+      "correct",
+      "streak",
+      "cash"
+    ],
+    "status": "gap"
+  },
+  {
+    "id": "mini-trivia-mines",
+    "name": "Trivia Mines",
+    "group": "Mini-games",
+    "source": "features/mini-games/components/TriviaMines.tsx",
+    "summary": "Choose a tile, reveal a defender or safe path; scout with trivia and cash out.",
+    "actions": [
+      {
+        "id": "ready",
+        "cue": "ready",
+        "label": "Start round",
+        "when": "When the countdown hands over to active play, after audio is unlocked.",
+        "current": null
+      },
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "reveal",
+        "cue": "reveal",
+        "label": "Reveal clue",
+        "when": "When a new clue becomes visible; one cue per reveal.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "power",
+        "cue": "power",
+        "label": "Use a lifeline",
+        "when": "When a lifeline is successfully consumed, not when its dialog opens.",
+        "current": null
+      },
+      {
+        "id": "pass",
+        "cue": "pass",
+        "label": "Pass completed",
+        "when": "At the ball transfer or chain link animation; throttle rapid repeats.",
+        "current": null
+      },
+      {
+        "id": "cash",
+        "cue": "coins",
+        "label": "Cash out",
+        "when": "Only after cashout is confirmed, never for a pending or rejected request.",
+        "current": null
+      },
+      {
+        "id": "lose",
+        "cue": "lose",
+        "label": "Lose / eliminated",
+        "when": "On the terminal loss, once. Do not layer on top of the wrong answer.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "ready",
+      "select",
+      "reveal",
+      "pass",
+      "cash"
+    ],
+    "status": "gap"
+  },
+  {
+    "id": "mini-quiz-board",
+    "name": "Quiz Board",
+    "group": "Mini-games",
+    "source": "features/mini-games/components/QuizBoard.tsx",
+    "summary": "Select category/value tiles, answer, steal opportunities and reveal scores.",
+    "actions": [
+      {
+        "id": "ready",
+        "cue": "ready",
+        "label": "Start round",
+        "when": "When the countdown hands over to active play, after audio is unlocked.",
+        "current": null
+      },
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "reveal",
+        "cue": "reveal",
+        "label": "Reveal clue",
+        "when": "When a new clue becomes visible; one cue per reveal.",
+        "current": null
+      },
+      {
+        "id": "lock",
+        "cue": "lock",
+        "label": "Lock in",
+        "when": "Once a valid submission is accepted; disable while pending.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      },
+      {
+        "id": "lose",
+        "cue": "lose",
+        "label": "Lose / eliminated",
+        "when": "On the terminal loss, once. Do not layer on top of the wrong answer.",
+        "current": null
+      },
+      {
+        "id": "draw",
+        "cue": "draw",
+        "label": "Draw",
+        "when": "When the authoritative result is a draw.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "ready",
+      "select",
+      "reveal",
+      "lock",
+      "correct",
+      "win"
+    ],
+    "status": "gap"
+  },
+  {
+    "id": "mini-last-one-standing",
+    "name": "Last One Standing",
+    "group": "Mini-games",
+    "source": "features/mini-games/components/LastOneStanding.tsx",
+    "summary": "Demo elimination cuts after each question; use a single local survival/elimination cue.",
+    "actions": [
+      {
+        "id": "ready",
+        "cue": "ready",
+        "label": "Start round",
+        "when": "When the countdown hands over to active play, after audio is unlocked.",
+        "current": null
+      },
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "tick",
+        "cue": "tick",
+        "label": "Last 3 seconds",
+        "when": "One tick at each whole second: 3, 2, 1. Stop on answer, pause or end.",
+        "current": null
+      },
+      {
+        "id": "timeout",
+        "cue": "timeout",
+        "label": "Time runs out",
+        "when": "Once when the active turn expires. Replaces wrong-answer feedback for no answer.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "streak",
+        "cue": "streak",
+        "label": "Streak milestone",
+        "when": "At a meaningful confirmed milestone; replace or follow the regular correct cue.",
+        "current": null
+      },
+      {
+        "id": "lose",
+        "cue": "lose",
+        "label": "Lose / eliminated",
+        "when": "On the terminal loss, once. Do not layer on top of the wrong answer.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "ready",
+      "select",
+      "correct",
+      "next",
+      "streak",
+      "win"
+    ],
+    "status": "gap"
+  },
+  {
+    "id": "mini-golden-goal",
+    "name": "Golden Goal",
+    "group": "Mini-games",
+    "source": "features/mini-games/components/GoldenGoal.tsx",
+    "summary": "Hidden demo. Speed and accuracy move the ball; the first goal ends the duel.",
+    "actions": [
+      {
+        "id": "ready",
+        "cue": "ready",
+        "label": "Start round",
+        "when": "When the countdown hands over to active play, after audio is unlocked.",
+        "current": null
+      },
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "pass",
+        "cue": "pass",
+        "label": "Pass completed",
+        "when": "At the ball transfer or chain link animation; throttle rapid repeats.",
+        "current": null
+      },
+      {
+        "id": "goal",
+        "cue": "goal",
+        "label": "Goal scored",
+        "when": "At goal impact / score reveal, after the kick.",
+        "current": null
+      },
+      {
+        "id": "lose",
+        "cue": "lose",
+        "label": "Lose / eliminated",
+        "when": "On the terminal loss, once. Do not layer on top of the wrong answer.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "ready",
+      "select",
+      "correct",
+      "pass",
+      "goal"
+    ],
+    "status": "gap"
+  },
+  {
+    "id": "mini-career-race",
+    "name": "Career Race",
+    "group": "Mini-games",
+    "source": "features/mini-games/components/CareerRace.tsx",
+    "summary": "Club-by-club trail, buzz in before the rival and submit a guess.",
+    "actions": [
+      {
+        "id": "ready",
+        "cue": "ready",
+        "label": "Start round",
+        "when": "When the countdown hands over to active play, after audio is unlocked.",
+        "current": null
+      },
+      {
+        "id": "reveal",
+        "cue": "reveal",
+        "label": "Reveal clue",
+        "when": "When a new clue becomes visible; one cue per reveal.",
+        "current": null
+      },
+      {
+        "id": "buzz",
+        "cue": "lock",
+        "label": "Buzz in",
+        "when": "When the player wins the buzzer / turn, not on rejected input.",
+        "current": null
+      },
+      {
+        "id": "lock",
+        "cue": "lock",
+        "label": "Lock in",
+        "when": "Once a valid submission is accepted; disable while pending.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      },
+      {
+        "id": "lose",
+        "cue": "lose",
+        "label": "Lose / eliminated",
+        "when": "On the terminal loss, once. Do not layer on top of the wrong answer.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "ready",
+      "reveal",
+      "buzz",
+      "lock",
+      "correct",
+      "win"
+    ],
+    "status": "gap"
+  },
+  {
+    "id": "mini-stat-sniper",
+    "name": "Stat Sniper",
+    "group": "Mini-games",
+    "source": "features/mini-games/components/StatSniper.tsx",
+    "summary": "Slider commits a numeric estimate. Use accuracy tiers, not an incorrect cue for every near miss.",
+    "actions": [
+      {
+        "id": "place",
+        "cue": "tap",
+        "label": "Place / reorder",
+        "when": "When a tile or card lands in a new valid position, not during drag.",
+        "current": null
+      },
+      {
+        "id": "lock",
+        "cue": "lock",
+        "label": "Lock in",
+        "when": "Once a valid submission is accepted; disable while pending.",
+        "current": null
+      },
+      {
+        "id": "reveal",
+        "cue": "reveal",
+        "label": "Reveal clue",
+        "when": "When a new clue becomes visible; one cue per reveal.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "place",
+      "lock",
+      "reveal",
+      "correct",
+      "win"
+    ],
+    "status": "gap"
+  },
+  {
+    "id": "lab-top-10-knockout",
+    "name": "Top 10 Knockout",
+    "group": "Concept lab",
+    "source": "features/game-mode-lab/modes/Top10KnockoutGame.tsx",
+    "summary": "Naming a hidden list entry reveals it; wrong or repeated names cost a life. Client-only prototype; no explicit SFX calls found.",
+    "actions": [
+      {
+        "id": "ready",
+        "cue": "ready",
+        "label": "Start round",
+        "when": "When the countdown hands over to active play, after audio is unlocked.",
+        "current": null
+      },
+      {
+        "id": "lock",
+        "cue": "lock",
+        "label": "Lock in",
+        "when": "Once a valid submission is accepted; disable while pending.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "reveal",
+        "cue": "reveal",
+        "label": "Reveal clue",
+        "when": "When a new clue becomes visible; one cue per reveal.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "lose",
+        "cue": "lose",
+        "label": "Lose / eliminated",
+        "when": "On the terminal loss, once. Do not layer on top of the wrong answer.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "ready",
+      "lock",
+      "correct",
+      "reveal",
+      "win"
+    ],
+    "status": "gap"
+  },
+  {
+    "id": "lab-missing-xi",
+    "name": "Missing XI",
+    "group": "Concept lab",
+    "source": "features/game-mode-lab/modes/MissingXIGame.tsx",
+    "summary": "Pick an empty shirt, name the starter and claim that position. Client-only prototype; no explicit SFX calls found.",
+    "actions": [
+      {
+        "id": "ready",
+        "cue": "ready",
+        "label": "Start round",
+        "when": "When the countdown hands over to active play, after audio is unlocked.",
+        "current": null
+      },
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "lock",
+        "cue": "lock",
+        "label": "Lock in",
+        "when": "Once a valid submission is accepted; disable while pending.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "place",
+        "cue": "tap",
+        "label": "Place / reorder",
+        "when": "When a tile or card lands in a new valid position, not during drag.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      },
+      {
+        "id": "lose",
+        "cue": "lose",
+        "label": "Lose / eliminated",
+        "when": "On the terminal loss, once. Do not layer on top of the wrong answer.",
+        "current": null
+      },
+      {
+        "id": "draw",
+        "cue": "draw",
+        "label": "Draw",
+        "when": "When the authoritative result is a draw.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "ready",
+      "select",
+      "lock",
+      "correct",
+      "place",
+      "win"
+    ],
+    "status": "gap"
+  },
+  {
+    "id": "lab-ball-knowledge",
+    "name": "Ball Knowledge",
+    "group": "Concept lab",
+    "source": "features/game-mode-lab/modes/BallKnowledgeGame.tsx",
+    "summary": "Submit valid players and reveal rarity points. Reserve the flourish for rare-answer milestones. Client-only prototype; no explicit SFX calls found.",
+    "actions": [
+      {
+        "id": "ready",
+        "cue": "ready",
+        "label": "Start round",
+        "when": "When the countdown hands over to active play, after audio is unlocked.",
+        "current": null
+      },
+      {
+        "id": "lock",
+        "cue": "lock",
+        "label": "Lock in",
+        "when": "Once a valid submission is accepted; disable while pending.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "reveal",
+        "cue": "reveal",
+        "label": "Reveal clue",
+        "when": "When a new clue becomes visible; one cue per reveal.",
+        "current": null
+      },
+      {
+        "id": "streak",
+        "cue": "streak",
+        "label": "Streak milestone",
+        "when": "At a meaningful confirmed milestone; replace or follow the regular correct cue.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      },
+      {
+        "id": "lose",
+        "cue": "lose",
+        "label": "Lose / eliminated",
+        "when": "On the terminal loss, once. Do not layer on top of the wrong answer.",
+        "current": null
+      },
+      {
+        "id": "draw",
+        "cue": "draw",
+        "label": "Draw",
+        "when": "When the authoritative result is a draw.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "ready",
+      "lock",
+      "correct",
+      "reveal",
+      "streak",
+      "win"
+    ],
+    "status": "gap"
+  },
+  {
+    "id": "lab-bingo-battle",
+    "name": "Bingo Battle",
+    "group": "Concept lab",
+    "source": "features/game-mode-lab/modes/BingoBattleGame.tsx",
+    "summary": "Place a matching player on a category square or skip; the first line wins. Client-only prototype; no explicit SFX calls found.",
+    "actions": [
+      {
+        "id": "ready",
+        "cue": "ready",
+        "label": "Start round",
+        "when": "When the countdown hands over to active play, after audio is unlocked.",
+        "current": null
+      },
+      {
+        "id": "reveal",
+        "cue": "reveal",
+        "label": "Reveal clue",
+        "when": "When a new clue becomes visible; one cue per reveal.",
+        "current": null
+      },
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "place",
+        "cue": "tap",
+        "label": "Place / reorder",
+        "when": "When a tile or card lands in a new valid position, not during drag.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "fold",
+        "cue": "back",
+        "label": "Fold / pass turn",
+        "when": "When your fold is accepted; no sound for repeated clicks.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      },
+      {
+        "id": "lose",
+        "cue": "lose",
+        "label": "Lose / eliminated",
+        "when": "On the terminal loss, once. Do not layer on top of the wrong answer.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "ready",
+      "reveal",
+      "select",
+      "place",
+      "correct",
+      "win"
+    ],
+    "status": "gap"
+  },
+  {
+    "id": "lab-draft-battle",
+    "name": "Draft Battle",
+    "group": "Concept lab",
+    "source": "features/game-mode-lab/modes/DraftBattleGame.tsx",
+    "summary": "Spin a legendary squad, draft positions, answer form trivia, choose a manager and simulate cup rounds. Client-only prototype; no explicit SFX calls found.",
+    "actions": [
+      {
+        "id": "spin",
+        "cue": "transition",
+        "label": "Spin starts",
+        "when": "One short start sweep; no continuous wheel-tick loop.",
+        "current": null
+      },
+      {
+        "id": "spinStop",
+        "cue": "reveal",
+        "label": "Wheel stops",
+        "when": "When the result settles, before any reward chime.",
+        "current": null
+      },
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "place",
+        "cue": "tap",
+        "label": "Place / reorder",
+        "when": "When a tile or card lands in a new valid position, not during drag.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "power",
+        "cue": "power",
+        "label": "Use a lifeline",
+        "when": "When a lifeline is successfully consumed, not when its dialog opens.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "kick",
+        "cue": "kick",
+        "label": "Take the shot",
+        "when": "At visible ball contact, not immediately on the shoot button.",
+        "current": null
+      },
+      {
+        "id": "goal",
+        "cue": "goal",
+        "label": "Goal scored",
+        "when": "At goal impact / score reveal, after the kick.",
+        "current": null
+      },
+      {
+        "id": "save",
+        "cue": "save",
+        "label": "Keeper saves",
+        "when": "At glove contact or confirmed miss; no victory sting.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      },
+      {
+        "id": "lose",
+        "cue": "lose",
+        "label": "Lose / eliminated",
+        "when": "On the terminal loss, once. Do not layer on top of the wrong answer.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "spin",
+      "spinStop",
+      "select",
+      "place",
+      "correct",
+      "goal",
+      "win"
+    ],
+    "status": "gap"
+  },
+  {
+    "id": "lab-connections-race",
+    "name": "Connections Race",
+    "group": "Concept lab",
+    "source": "features/game-mode-lab/modes/ConnectionsRaceGame.tsx",
+    "summary": "Select four names; a correct group locks into place, a failed group stays editable. Client-only prototype; no explicit SFX calls found.",
+    "actions": [
+      {
+        "id": "ready",
+        "cue": "ready",
+        "label": "Start round",
+        "when": "When the countdown hands over to active play, after audio is unlocked.",
+        "current": null
+      },
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "lock",
+        "cue": "lock",
+        "label": "Lock in",
+        "when": "Once a valid submission is accepted; disable while pending.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "place",
+        "cue": "tap",
+        "label": "Place / reorder",
+        "when": "When a tile or card lands in a new valid position, not during drag.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      },
+      {
+        "id": "lose",
+        "cue": "lose",
+        "label": "Lose / eliminated",
+        "when": "On the terminal loss, once. Do not layer on top of the wrong answer.",
+        "current": null
+      },
+      {
+        "id": "draw",
+        "cue": "draw",
+        "label": "Draw",
+        "when": "When the authoritative result is a draw.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "ready",
+      "select",
+      "lock",
+      "correct",
+      "place",
+      "win"
+    ],
+    "status": "gap"
+  },
+  {
+    "id": "lab-stat-501",
+    "name": "Stat 501",
+    "group": "Concept lab",
+    "source": "features/game-mode-lab/modes/Stat501Game.tsx",
+    "summary": "Submit a player to subtract stats. Bust restores the prior total; a legal finish wins. Client-only prototype; no explicit SFX calls found.",
+    "actions": [
+      {
+        "id": "ready",
+        "cue": "ready",
+        "label": "Start round",
+        "when": "When the countdown hands over to active play, after audio is unlocked.",
+        "current": null
+      },
+      {
+        "id": "lock",
+        "cue": "lock",
+        "label": "Lock in",
+        "when": "Once a valid submission is accepted; disable while pending.",
+        "current": null
+      },
+      {
+        "id": "reveal",
+        "cue": "reveal",
+        "label": "Reveal clue",
+        "when": "When a new clue becomes visible; one cue per reveal.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      },
+      {
+        "id": "lose",
+        "cue": "lose",
+        "label": "Lose / eliminated",
+        "when": "On the terminal loss, once. Do not layer on top of the wrong answer.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "ready",
+      "lock",
+      "reveal",
+      "correct",
+      "win"
+    ],
+    "status": "gap"
+  },
+  {
+    "id": "lab-own-goal",
+    "name": "Own Goal",
+    "group": "Concept lab",
+    "source": "features/game-mode-lab/modes/OwnGoalGame.tsx",
+    "summary": "Scout reveals a clue, teammates flip cards. Rival/neutral cards end the turn; Own Goal ends the match. Client-only prototype; no explicit SFX calls found.",
+    "actions": [
+      {
+        "id": "ready",
+        "cue": "ready",
+        "label": "Start round",
+        "when": "When the countdown hands over to active play, after audio is unlocked.",
+        "current": null
+      },
+      {
+        "id": "reveal",
+        "cue": "reveal",
+        "label": "Reveal clue",
+        "when": "When a new clue becomes visible; one cue per reveal.",
+        "current": null
+      },
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "imposter",
+        "cue": "imposter",
+        "label": "Imposter exposed",
+        "when": "On the identity reveal. Avoid stacking the wrong-answer buzzer.",
+        "current": null
+      },
+      {
+        "id": "fold",
+        "cue": "back",
+        "label": "Fold / pass turn",
+        "when": "When your fold is accepted; no sound for repeated clicks.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      },
+      {
+        "id": "lose",
+        "cue": "lose",
+        "label": "Lose / eliminated",
+        "when": "On the terminal loss, once. Do not layer on top of the wrong answer.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "ready",
+      "reveal",
+      "select",
+      "correct",
+      "next",
+      "win"
+    ],
+    "status": "gap"
+  },
+  {
+    "id": "lab-say-it-with-memes",
+    "name": "Say It With Memes",
+    "group": "Concept lab",
+    "source": "features/game-mode-lab/modes/SayItWithMemesGame.tsx",
+    "summary": "Pick signal cards, request extra cards, guess a player and swap roles. Client-only prototype; no explicit SFX calls found.",
+    "actions": [
+      {
+        "id": "ready",
+        "cue": "ready",
+        "label": "Start round",
+        "when": "When the countdown hands over to active play, after audio is unlocked.",
+        "current": null
+      },
+      {
+        "id": "select",
+        "cue": "select",
+        "label": "Select an answer",
+        "when": "On a committed selection; never on hover or every keystroke.",
+        "current": null
+      },
+      {
+        "id": "place",
+        "cue": "tap",
+        "label": "Place / reorder",
+        "when": "When a tile or card lands in a new valid position, not during drag.",
+        "current": null
+      },
+      {
+        "id": "reveal",
+        "cue": "reveal",
+        "label": "Reveal clue",
+        "when": "When a new clue becomes visible; one cue per reveal.",
+        "current": null
+      },
+      {
+        "id": "lock",
+        "cue": "lock",
+        "label": "Lock in",
+        "when": "Once a valid submission is accepted; disable while pending.",
+        "current": null
+      },
+      {
+        "id": "correct",
+        "cue": "correct",
+        "label": "Correct answer",
+        "when": "On the confirmed result, once per question or command ID.",
+        "current": null
+      },
+      {
+        "id": "wrong",
+        "cue": "wrong",
+        "label": "Wrong answer",
+        "when": "On confirmed incorrect result. Never also play the timeout cue.",
+        "current": null
+      },
+      {
+        "id": "next",
+        "cue": "transition",
+        "label": "Next question",
+        "when": "At the visible question transition, not on data prefetch.",
+        "current": null
+      },
+      {
+        "id": "win",
+        "cue": "win",
+        "label": "Win / complete",
+        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
+        "current": null
+      },
+      {
+        "id": "lose",
+        "cue": "lose",
+        "label": "Lose / eliminated",
+        "when": "On the terminal loss, once. Do not layer on top of the wrong answer.",
+        "current": null
+      },
+      {
+        "id": "draw",
+        "cue": "draw",
+        "label": "Draw",
+        "when": "When the authoritative result is a draw.",
+        "current": null
+      }
+    ],
+    "flow": [
+      "ready",
+      "select",
+      "place",
+      "reveal",
+      "lock",
+      "correct",
+      "win"
+    ],
+    "status": "gap"
+  }
+]
