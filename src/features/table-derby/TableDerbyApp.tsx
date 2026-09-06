@@ -590,7 +590,7 @@ export function TableDerbyApp() {
       {/* betsson.sport — top-right like the broadcast; the in-round
           scoreboard (with avatars) owns that zone during gameplay */}
       {!inRoundPhase && (
-        <div className="absolute right-4 top-4 z-20 md:right-8 md:top-6">
+        <div className="absolute left-4 top-4 z-20 md:left-8 md:top-6">
           <BetssonWordmark tone={phase === 'home' ? 'orange' : 'white'} size={16} />
         </div>
       )}
@@ -676,10 +676,10 @@ export function TableDerbyApp() {
             exit={{ opacity: 0 }}
             className="relative z-10 mx-auto flex min-h-dvh w-full max-w-2xl flex-col items-center justify-center gap-6 px-4 py-10 md:gap-8"
           >
-            {/* header, Quizball-style: avatar card top-RIGHT, tickets next
-                to it; dev buttons tucked far left */}
-            <div className="flex w-full items-center justify-end gap-3">
-              <div className="mr-auto flex items-center gap-2">
+            {/* header, Quizball-style: pinned to the true top-right corner
+                (where the wordmark used to sit); wordmark moved left */}
+            <div className="absolute right-4 top-3 z-20 flex items-center gap-3 md:right-8 md:top-4">
+              <div className="flex items-center gap-2">
               {process.env.NODE_ENV !== 'production' && (
                 <button
                   type="button"
