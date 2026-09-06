@@ -264,7 +264,7 @@ export function PutInOrderGame({ session, onBack, onComplete }: PutInOrderGamePr
         <div className="min-h-full p-3 md:p-4 lg:p-6 lg:flex lg:flex-col lg:justify-center">
           <div className="max-w-2xl lg:max-w-3xl mx-auto w-full">
             <div className="bg-surface-card rounded-xl border-b-4 border-surface-card-deeper p-4 lg:p-5 mb-4 lg:mb-5">
-              <div className="flex items-start gap-2.5 lg:gap-3">
+              <div className="flex items-start justify-center gap-2.5 lg:gap-3">
                 <div className="p-2 lg:p-2.5 rounded-lg lg:rounded-xl bg-brand-cyan/15 shrink-0">
                   <ArrowUpDown className="size-4 lg:size-5 text-brand-cyan" />
                 </div>
@@ -272,7 +272,7 @@ export function PutInOrderGame({ session, onBack, onComplete }: PutInOrderGamePr
                   <p className="mb-1 text-white">
                     {t('dailyGames.dragAndDropInstruction', { instruction: roundInstruction })}
                   </p>
-                  <p className="text-xs lg:text-sm text-brand-slate">{round.prompt}</p>
+                  <p className="text-center text-xs lg:text-sm text-brand-slate">{round.prompt}</p>
                 </div>
               </div>
             </div>

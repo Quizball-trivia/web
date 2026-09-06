@@ -6,6 +6,7 @@ import type { HighLowSession } from "@/lib/domain/dailyChallenge";
 import { shuffleArray } from "@/lib/utils";
 import { getDailyChallengeCopy } from "@/lib/i18n/dailyChallenge";
 import { QuitGameDialog } from "./QuitGameDialog";
+import { DailyGameStage } from "./components/DailyGameStage";
 import { DailyChallengeHeader } from "./components/DailyChallengeHeader";
 import { ResultSplash } from "./components/ResultSplash";
 import { useResultSplash } from "./components/useResultSplash";
@@ -158,19 +159,23 @@ export function HighLowGame({
 
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat text-white">
-      <DailyChallengeHeader
-        onQuit={() => setShowQuitDialog(true)}
-        currentIndex={currentRoundIndex}
-        total={session.roundCount}
-        timeLeft={timeLeft}
-        centerLabel={`${copy.round} ${currentRoundIndex + 1}/${session.roundCount}`}
-      />
-
-      {/* Content */}
-      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-4 py-4">
+      {/* Header + gameplay as one centred composition (shared daily stage). */}
+      <DailyGameStage
+        header={
+          <DailyChallengeHeader
+            onQuit={() => setShowQuitDialog(true)}
+            currentIndex={currentRoundIndex}
+            total={session.roundCount}
+            timeLeft={timeLeft}
+            centerLabel={`${copy.round} ${currentRoundIndex + 1}/${session.roundCount}`}
+            className="px-0 pt-0"
+          />
+        }
+      >
+        <div className="w-full">
         {/* Question card */}
         <div
-          className="rounded-[24px] border border-white/10 bg-white/5 px-5 py-5 text-white backdrop-blur-sm sm:px-6 sm:py-6"
+          className="rounded-[24px] border border-white/10 bg-white/5 px-5 py-5 text-center text-white backdrop-blur-sm sm:px-6 sm:py-6"
           style={{
             fontFamily: "'Poppins', sans-serif",
             fontWeight: 700,
@@ -245,7 +250,8 @@ export function HighLowGame({
           <span className="text-white/55">{copy.score}</span>
           <span className="text-white">{roundScore}</span>
         </div>
-      </div>
+        </div>
+      </DailyGameStage>
 
       <QuitGameDialog
         open={showQuitDialog}

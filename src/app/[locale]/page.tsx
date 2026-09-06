@@ -1,17 +1,10 @@
-import { notFound, redirect } from "next/navigation";
+import { notFound, permanentRedirect } from "next/navigation";
 import { isLocale } from "@/lib/i18n/locale";
 
-// The marketing landing is retired — the Play page (with a signed-out guest
-// state) is the front door. Locale indexes only exist to catch old links and
-// cached 308s from the previous "/" → "/en|/ka" redirect.
-export default async function LocalizedLanding({
-  params,
-}: {
-  params: Promise<{ locale: string }>;
-}) {
+// The Play page served at "/" is the homepage for everyone. Locale roots only
+// exist to catch old links and cached redirects from the previous landing.
+export default async function LocalizedRoot({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  if (!isLocale(locale)) {
-    notFound();
-  }
-  redirect("/play");
+  if (!isLocale(locale)) notFound();
+  permanentRedirect("/");
 }

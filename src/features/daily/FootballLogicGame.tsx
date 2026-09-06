@@ -6,12 +6,13 @@ import { optimizedRemoteImageProps } from "@/lib/images/remoteImage";
 import { useCallback, useEffect, useState } from "react";
 import { CheckCircle2, XCircle } from "lucide-react";
 
-import { Input } from "@/components/ui/input";
+import { DailyAnswerInput } from "./components/DailyAnswerInput";
 import type { FootballLogicSession } from "@/lib/domain/dailyChallenge";
 import { getDailyChallengeCopy } from "@/lib/i18n/dailyChallenge";
 import { fuzzyMatchesAnswer } from "@/lib/answerMatching";
 import { playSfx } from "@/lib/sounds/gameSounds";
 import { QuitGameDialog } from "./QuitGameDialog";
+import { DailyGameStage } from "./components/DailyGameStage";
 import { DailyChallengeHeader } from "./components/DailyChallengeHeader";
 import { EmbeddedCounterPill } from "./components/EmbeddedCounterPill";
 
@@ -114,23 +115,28 @@ export function FootballLogicGame({
 
   return (
     <div className={embedded ? "flex flex-col text-white" : "fixed inset-0 z-40 flex flex-col bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat text-white"}>
-      {embedded ? (
-        <EmbeddedCounterPill current={embedded.current} total={embedded.total} />
-      ) : (
-        <DailyChallengeHeader
-          onQuit={() => setShowQuitDialog(true)}
-          currentIndex={currentQuestionIndex}
-          total={session.questionCount}
-          timeLeft={timeLeft}
-        />
-      )}
-
-      {/* Content */}
-      <div className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center px-4 py-4 overflow-y-auto">
+      {/* Header + gameplay as one centred composition (shared daily stage). */}
+      <DailyGameStage
+        header={
+          embedded ? (
+            <EmbeddedCounterPill current={embedded.current} total={embedded.total} />
+          ) : (
+            <DailyChallengeHeader
+              onQuit={() => setShowQuitDialog(true)}
+              currentIndex={currentQuestionIndex}
+              total={session.questionCount}
+              timeLeft={timeLeft}
+              className="px-0 pt-0"
+            />
+          )
+        }
+        contentClassName={"max-w-[900px]"}
+      >
+        <div className="w-full">
         {/* Question card */}
         {currentQuestion.prompt && (
           <div
-            className="rounded-[24px] border border-white/10 bg-white/5 px-5 py-5 text-white backdrop-blur-sm sm:px-6 sm:py-6"
+            className="rounded-[24px] border border-white/10 bg-white/5 px-5 py-5 text-center text-white backdrop-blur-sm sm:px-6 sm:py-6"
             style={{
               fontFamily: "'Poppins', sans-serif",
               fontWeight: 700,
@@ -153,7 +159,7 @@ export function FootballLogicGame({
             <img
               {...optimizedRemoteImageProps(currentQuestion.imageAUrl, 448)}
               alt="Football logic clue A"
-              className={embedded ? "h-56 w-full rounded-[12px] object-contain" : "h-56 w-full rounded-[12px] object-cover"}
+              className="h-48 w-full rounded-[12px] bg-white/[0.06] object-contain p-4"
             />
           </div>
           <div
@@ -166,47 +172,24 @@ export function FootballLogicGame({
             <img
               {...optimizedRemoteImageProps(currentQuestion.imageBUrl, 448)}
               alt="Football logic clue B"
-              className={embedded ? "h-56 w-full rounded-[12px] object-contain" : "h-56 w-full rounded-[12px] object-cover"}
+              className="h-48 w-full rounded-[12px] bg-white/[0.06] object-contain p-4"
             />
           </div>
         </div>
 
-        {/* Input + submit */}
-        <div className="mt-4 flex flex-col gap-2.5 md:flex-row">
-          <Input
-            value={answer}
-            disabled={resolved}
-            onChange={(event) => setAnswer(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                event.preventDefault();
-                submitAnswer();
-              }
-            }}
-            placeholder={copy.typeYourAnswer}
-            className="h-[48px] sm:h-[56px] rounded-[16px] bg-surface-card-tint border-2 border-surface-card text-white text-center placeholder:text-brand-slate focus:border-brand-cyan focus-visible:border-brand-cyan focus-visible:ring-brand-cyan/50 flex-1"
-            style={{ ...poppins, fontSize: 'clamp(16px, 1.7vw, 22px)', fontWeight: 500 }}
-            autoFocus
-          />
-          <button
-            type="button"
-            disabled={resolved}
-            onClick={submitAnswer}
-            className="flex items-center justify-center rounded-[16px] px-6 h-[48px] sm:h-[56px] transition-shadow duration-150"
-            style={{
-              ...poppins,
-              fontSize: 'clamp(13px, 1.7vw, 20px)',
-              textTransform: 'uppercase',
-              backgroundColor: '#38B60E',
-              color: '#FFFFFF',
-              boxShadow: '0 1.76px 6.334px 1.32px rgba(56,182,14,0.25)',
-              cursor: resolved ? 'default' : 'pointer',
-              opacity: resolved ? 0.5 : 1,
-            }}
-          >
-            {copy.submit}
-          </button>
-        </div>
+        <DailyAnswerInput
+          value={answer}
+          onChange={setAnswer}
+          onSubmit={submitAnswer}
+          placeholder={copy.typeYourAnswer}
+          submitLabel={copy.submit}
+          disabled={resolved}
+        />
+
+        {/* OpenMoji icons are CC BY-SA 4.0 — attribution is a licence condition. */}
+        <p className="mt-3 text-center text-[10px] text-white/30">
+          Icons: <a href="https://openmoji.org" target="_blank" rel="noreferrer" className="underline">OpenMoji</a> (CC BY-SA 4.0)
+        </p>
 
         {/* Result feedback */}
         {resolved && (
@@ -238,7 +221,8 @@ export function FootballLogicGame({
             <span className="text-white">{correctCount}</span>
           </div>
         )}
-      </div>
+        </div>
+      </DailyGameStage>
 
       <QuitGameDialog
         open={showQuitDialog}

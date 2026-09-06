@@ -7,6 +7,7 @@ import type { ImposterSession } from "@/lib/domain/dailyChallenge";
 import { getDailyChallengeCopy } from "@/lib/i18n/dailyChallenge";
 import { playSfx } from "@/lib/sounds/gameSounds";
 import { QuitGameDialog } from "./QuitGameDialog";
+import { DailyGameStage } from "./components/DailyGameStage";
 import { DailyChallengeHeader } from "./components/DailyChallengeHeader";
 import { EmbeddedCounterPill } from "./components/EmbeddedCounterPill";
 import { ResultSplash } from "./components/ResultSplash";
@@ -162,19 +163,23 @@ export function ImposterGame({
 
   return (
     <div className={embedded ? "flex flex-col text-white" : "fixed inset-0 z-40 flex flex-col bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat text-white"}>
-      {embedded ? (
-        <EmbeddedCounterPill current={embedded.current} total={embedded.total} />
-      ) : (
-        <DailyChallengeHeader
-          onQuit={() => setShowQuitDialog(true)}
-          currentIndex={currentQuestionIndex}
-          total={session.questionCount}
-          timeLeft={timeLeft}
-        />
-      )}
-
-      {/* Content */}
-      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 py-4 overflow-y-auto">
+      {/* Header + gameplay as one centred composition (shared daily stage). */}
+      <DailyGameStage
+        header={
+          embedded ? (
+            <EmbeddedCounterPill current={embedded.current} total={embedded.total} />
+          ) : (
+            <DailyChallengeHeader
+              onQuit={() => setShowQuitDialog(true)}
+              currentIndex={currentQuestionIndex}
+              total={session.questionCount}
+              timeLeft={timeLeft}
+              className="px-0 pt-0"
+            />
+          )
+        }
+      >
+        <div className="w-full">
         {/* Question card */}
         <div
           className="flex flex-col rounded-[24px] border border-white/10 bg-white/5 px-5 py-5 text-white backdrop-blur-sm sm:px-6 sm:py-6"
@@ -185,8 +190,8 @@ export function ImposterGame({
             minHeight: 'clamp(80px, 12vw, 140px)',
           }}
         >
-          <p className="leading-snug">{currentQuestion.prompt}</p>
-          <p className="mt-2 text-white/50" style={{ fontSize: 'clamp(11px, 1.3vw, 16px)', fontWeight: 500 }}>
+          <p className="text-center leading-snug">{currentQuestion.prompt}</p>
+          <p className="mt-2 text-center text-white/50" style={{ fontSize: 'clamp(11px, 1.3vw, 16px)', fontWeight: 500 }}>
             {copy.imposterInstruction}
           </p>
         </div>
@@ -272,7 +277,8 @@ export function ImposterGame({
             {copy.submitSelection}
           </button>
         </div>
-      </div>
+        </div>
+      </DailyGameStage>
 
       <QuitGameDialog
         open={showQuitDialog}

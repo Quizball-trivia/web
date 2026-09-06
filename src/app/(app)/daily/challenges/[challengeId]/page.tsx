@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { resolveDailyChallengeType } from "@/lib/domain/dailyChallengeSlugs";
 import { useParams, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -14,6 +15,9 @@ import { CareerPathGame } from "@/features/daily/CareerPathGame";
 import { HighLowGame } from "@/features/daily/HighLowGame";
 import { FootballLogicGame } from "@/features/daily/FootballLogicGame";
 import { CardDetectiveDailyGame } from "@/features/daily/CardDetectiveDailyGame";
+import { MissingXiSoloGame } from "@/features/missing-xi/MissingXiSoloGame";
+import { PassChainGame } from "@/features/daily/PassChainGame";
+import { StatSniperGame } from "@/features/daily/StatSniperGame";
 import { QuitGameDialog } from "@/features/daily/QuitGameDialog";
 import { DailyChallengeIntro } from "@/features/daily/components/DailyChallengeIntro";
 import { consumeDailyChallengeSession } from "@/features/daily/dailyChallengeSessionPrefetch";
@@ -32,9 +36,6 @@ import {
   isDailyChallengeAlreadyCompletedError,
 } from "@/lib/queries/dailyChallengeCompletion";
 
-function isDailyChallengeType(value: string): value is DailyChallengeType {
-  return value in DAILY_CHALLENGE_VISUALS;
-}
 
 export default function ChallengePage() {
   const params = useParams();
@@ -58,7 +59,8 @@ export default function ChallengePage() {
   useEffect(() => {
     if (challengeId === "fifaCards") router.replace("/daily/challenges/cardDetective");
   }, [challengeId, router]);
-  const challengeType = isDailyChallengeType(challengeId) ? challengeId : undefined;
+  // Public slug ("who-am-i") or legacy internal type ("clues") — both resolve.
+  const challengeType = resolveDailyChallengeType(challengeId) ?? undefined;
   const completeMutation = useCompleteDailyChallenge(challengeType ?? "moneyDrop");
 
   const invalidateAfterComplete = useCallback(async () => {
@@ -238,8 +240,13 @@ export default function ChallengePage() {
       case "footballLogic":
         return <FootballLogicGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
       case "cardDetective":
-
         return <CardDetectiveDailyGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
+      case "missingXi":
+        return <MissingXiSoloGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
+      case "passChain":
+        return <PassChainGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
+      case "statSniper":
+        return <StatSniperGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
       default:
         return null;
     }

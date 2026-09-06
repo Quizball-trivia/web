@@ -17,7 +17,7 @@ type AppAuthGateProps = {
 /** Routes a signed-out visitor may browse in guest mode: demo play is open,
  *  and every auth-gated action opens the sign-in dialog instead of redirecting
  *  to the landing. First step toward retiring the landing page entirely. */
-const GUEST_ALLOWED_ROUTES = ["/play"];
+const GUEST_ALLOWED_ROUTES = ["/", "/play"];
 
 function isGuestAllowedPath(pathname: string | null): boolean {
   if (!pathname) return false;
@@ -80,14 +80,16 @@ export default function AppAuthGate({ children }: AppAuthGateProps) {
     return <AccountBannedScreen />;
   }
 
-  if (status === "loading") {
-    return <LoadingScreen text={t("appAuthGate.warmingUp")} />;
+  // Guest-visible routes render straight away, even before the session check
+  // finishes: the server HTML then carries the real page (crawlable, and no
+  // loading screen for guests). A signed-in player sees the guest chrome for
+  // the split second until their session resolves, then the app takes over.
+  if ((status === "loading" || status === "anonymous") && isGuestAllowedPath(pathname)) {
+    return <>{children}</>;
   }
 
-  // Guest mode: a signed-out visitor browses the allowed routes directly; the
-  // page itself gates auth-only actions behind the sign-in dialog.
-  if (status === "anonymous" && isGuestAllowedPath(pathname)) {
-    return <>{children}</>;
+  if (status === "loading") {
+    return <LoadingScreen text={t("appAuthGate.warmingUp")} />;
   }
 
   if (status !== "authenticated") {

@@ -31,6 +31,7 @@ import {
   setDailyComebackReminder,
 } from "@/lib/repositories/dailyChallenges.repo";
 import { useAuthStore } from "@/stores/auth.store";
+import { DailyNextUpRow } from "./DailyNextUpRow";
 
 export interface DailyChallengeWeekendLeagueCta {
   state: DailyWeekendLeagueCtaState;
@@ -331,7 +332,18 @@ export function DailyChallengeCompleteModalContent({
     : 0;
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat px-4 py-6">
+      {/* Same backdrop as the app shell (AppShellPageChrome): the stadium
+          pattern plus its radial tint, no extra scrim. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(circle at top center, rgba(28,176,246,0.08), transparent 32%), radial-gradient(circle at bottom left, rgba(88,204,2,0.06), transparent 28%)",
+        }}
+      />
+      <div className="relative flex w-full max-w-2xl flex-col items-center gap-5">
       <motion.div
         role="dialog"
         aria-modal="true"
@@ -339,7 +351,7 @@ export function DailyChallengeCompleteModalContent({
         initial={{ opacity: 0, scale: 0.9, y: 16 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 280, damping: 22 }}
-        className="max-h-[calc(100dvh-2rem)] w-full max-w-sm overflow-y-auto rounded-[24px] bg-brand-blue p-7 text-center sm:p-8"
+        className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-[24px] bg-brand-blue p-7 text-center sm:p-8"
       >
         <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-white/12">
           <Trophy className="size-8 text-brand-yellow" />
@@ -530,6 +542,10 @@ export function DailyChallengeCompleteModalContent({
           {t("dailyGames.backToChallenges")}
         </button>
       </motion.div>
+
+      {/* Don't end on a dead end — offer the next game, streaming-style. */}
+      <DailyNextUpRow />
+      </div>
     </div>
   );
 }

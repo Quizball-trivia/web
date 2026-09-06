@@ -5920,7 +5920,7 @@ export interface paths {
                         "application/json": {
                             items: {
                                 /** @enum {string} */
-                                challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective";
+                                challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "missingXi" | "passChain" | "statSniper" | "cardDetective";
                                 title: string;
                                 description: string;
                                 /** @enum {string} */
@@ -5970,7 +5970,7 @@ export interface paths {
                 };
                 header?: never;
                 path: {
-                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective";
+                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "missingXi" | "passChain" | "statSniper" | "cardDetective";
                 };
                 cookie?: never;
             };
@@ -6163,6 +6163,121 @@ export interface paths {
                                 acceptedAnswers: string[];
                                 explanation: string | null;
                             }[];
+                        } | {
+
+                            /** @enum {string} */
+                            challengeType: "statSniper";
+                            title: string;
+                            description: string;
+                            questionCount: number;
+                            secondsPerQuestion: number;
+                            questions: {
+                                /** Format: uuid */
+                                id: string;
+                                /** @enum {string} */
+                                difficulty: "easy" | "medium" | "hard";
+                                kind: string;
+                                prompt: string;
+                                unit: string;
+                                value: number;
+                                min: number;
+                                max: number;
+                                step: number;
+                            }[];
+                        } | {
+                            /** @enum {string} */
+                            challengeType: "passChain";
+                            title: string;
+                            description: string;
+                            puzzleCount: number;
+                            secondsPerPuzzle: number;
+                            puzzles: {
+                                /** Format: uuid */
+                                id: string;
+                                /** @enum {string} */
+                                difficulty: "easy" | "medium" | "hard";
+                                par: number;
+                                start: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    name: string;
+                                    clubs: string[];
+                                    imageUrl: string | null;
+                                };
+                                target: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    name: string;
+                                    clubs: string[];
+                                    imageUrl: string | null;
+                                };
+                                solution: {
+                                    player: {
+                                        /** Format: uuid */
+                                        id: string;
+                                        name: string;
+                                        clubs: string[];
+                                        imageUrl: string | null;
+                                    };
+                                    via: string;
+                                    /** @enum {string} */
+                                    kind: "club" | "manager";
+                                }[];
+                            }[];
+                        } | {
+                            /** @enum {string} */
+
+                            challengeType: "missingXi";
+
+                            title: string;
+
+                            description: string;
+
+                            squadCount: number;
+
+                            secondsPerSquad: number;
+
+                            squads: {
+
+                                /** Format: uuid */
+
+                                id: string;
+
+                                /** @enum {string} */
+
+                                difficulty: "easy" | "medium" | "hard";
+
+                                team: string;
+
+                                opponent: string;
+
+                                matchLabel: string;
+
+                                score: string | null;
+
+                                formation: string;
+
+                                slots: {
+
+                                    id: string;
+
+                                    position: string;
+
+                                    number: number | null;
+
+                                    x: number;
+
+                                    y: number;
+
+                                    name: string;
+
+                                    acceptedAnswers: string[];
+                                    imageUrl: string | null;
+
+                                }[];
+
+                            }[];
+
                         } | {
                             /** @enum {string} */
                             challengeType: "fifaCards";
@@ -6396,6 +6511,149 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/daily-challenges/stat-sniper/leaderboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Today's most accurate Stat Sniper players and the caller's rank */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Leaderboard for the current challenge day */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            challengeDay: string;
+                            entries: {
+                                /** Format: uuid */
+                                userId: string;
+                                rank: number;
+                                username: string;
+                                avatarCustomization: unknown;
+                                country: string | null;
+                                score: number;
+                            }[];
+                            me: {
+                                rank: number;
+                                score: number;
+                                total: number;
+                            } | null;
+                        };
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/daily-challenges/pass-chain/link": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Validate one typed link in a Pass Chain puzzle */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        puzzleId: string;
+                        /** Format: uuid */
+                        fromPlayerId: string;
+                        text: string;
+                        locale?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description Link verdict */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {string} */
+                            status: "linked" | "unknown" | "noLink";
+                            player: {
+                                /** Format: uuid */
+                                id: string;
+                                name: string;
+                                clubs: string[];
+                                imageUrl: string | null;
+                            } | null;
+                            viaClub: string | null;
+                            /** @enum {string} */
+                            viaKind: "club" | "manager" | null;
+                            reachesTarget: boolean;
+                            targetClub: string | null;
+                            /** @enum {string} */
+                            targetKind: "club" | "manager" | null;
+                        };
+                    };
+                };
+                /** @description Not authenticated */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Puzzle not found */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/daily-challenges/{challengeType}/complete": {
         parameters: {
             query?: never;
@@ -6411,7 +6669,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective";
+                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "missingXi" | "passChain" | "statSniper" | "cardDetective";
                 };
                 cookie?: never;
             };
@@ -6440,7 +6698,7 @@ export interface paths {
                     content: {
                         "application/json": {
                             /** @enum {string} */
-                            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective";
+                            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "missingXi" | "passChain" | "statSniper" | "cardDetective";
                             /** @enum {boolean} */
                             completedToday: true;
                             coinsAwarded: number;
@@ -6515,7 +6773,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective";
+                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "missingXi" | "passChain" | "statSniper" | "cardDetective";
                 };
                 cookie?: never;
             };
@@ -6529,7 +6787,7 @@ export interface paths {
                     content: {
                         "application/json": {
                             /** @enum {string} */
-                            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective";
+                            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "missingXi" | "passChain" | "statSniper" | "cardDetective";
                             /** @enum {boolean} */
                             reset: true;
                         };
@@ -6586,7 +6844,7 @@ export interface paths {
                         "application/json": {
                             items: {
                                 /** @enum {string} */
-                                challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective";
+                                challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "missingXi" | "passChain" | "statSniper" | "cardDetective";
                                 title: string;
                                 description: string;
                                 /** @enum {string} */
@@ -6663,6 +6921,27 @@ export interface paths {
                                 } | {
                                     /** @default [] */
                                     categoryIds: string[];
+                                    squadCount: number;
+                                    secondsPerSquad: number;
+                                    /** @enum {string} */
+                                    challengeType: "missingXi";
+                                } | {
+                                    /** @default [] */
+                                    categoryIds: string[];
+                                    puzzleCount: number;
+                                    secondsPerPuzzle: number;
+                                    /** @enum {string} */
+                                    challengeType: "passChain";
+                                } | {
+                                    /** @default [] */
+                                    categoryIds: string[];
+                                    questionCount: number;
+                                    secondsPerQuestion: number;
+                                    /** @enum {string} */
+                                    challengeType: "statSniper";
+                                } | {
+                                    /** @default [] */
+                                    categoryIds: string[];
                                     cardCount: number;
                                     /** @enum {string} */
                                     challengeType: "fifaCards";
@@ -6733,7 +7012,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective";
+                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "missingXi" | "passChain" | "statSniper" | "cardDetective";
                 };
                 cookie?: never;
             };
@@ -10588,7 +10867,7 @@ export interface components {
         };
         DailyChallengeMetadata: {
             /** @enum {string} */
-            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective";
+            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "missingXi" | "passChain" | "statSniper" | "cardDetective";
             title: string;
             description: string;
             /** @enum {string} */
@@ -10663,6 +10942,27 @@ export interface components {
             secondsPerQuestion: number;
             /** @enum {string} */
             challengeType: "footballLogic";
+        } | {
+            /** @default [] */
+            categoryIds: string[];
+            squadCount: number;
+            secondsPerSquad: number;
+            /** @enum {string} */
+            challengeType: "missingXi";
+        } | {
+            /** @default [] */
+            categoryIds: string[];
+            puzzleCount: number;
+            secondsPerPuzzle: number;
+            /** @enum {string} */
+            challengeType: "passChain";
+        } | {
+            /** @default [] */
+            categoryIds: string[];
+            questionCount: number;
+            secondsPerQuestion: number;
+            /** @enum {string} */
+            challengeType: "statSniper";
         } | {
             /** @default [] */
             categoryIds: string[];
@@ -10871,6 +11171,94 @@ export interface components {
             }[];
         } | {
             /** @enum {string} */
+            challengeType: "statSniper";
+            title: string;
+            description: string;
+            questionCount: number;
+            secondsPerQuestion: number;
+            questions: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                difficulty: "easy" | "medium" | "hard";
+                kind: string;
+                prompt: string;
+                unit: string;
+                value: number;
+                min: number;
+                max: number;
+                step: number;
+            }[];
+        } | {
+            /** @enum {string} */
+            challengeType: "passChain";
+            title: string;
+            description: string;
+            puzzleCount: number;
+            secondsPerPuzzle: number;
+            puzzles: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                difficulty: "easy" | "medium" | "hard";
+                par: number;
+                start: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    clubs: string[];
+                    imageUrl: string | null;
+                };
+                target: {
+                    /** Format: uuid */
+                    id: string;
+                    name: string;
+                    clubs: string[];
+                    imageUrl: string | null;
+                };
+                solution: {
+                    player: {
+                        /** Format: uuid */
+                        id: string;
+                        name: string;
+                        clubs: string[];
+                        imageUrl: string | null;
+                    };
+                    via: string;
+                    /** @enum {string} */
+                    kind: "club" | "manager";
+                }[];
+            }[];
+        } | {
+            /** @enum {string} */
+            challengeType: "missingXi";
+            title: string;
+            description: string;
+            squadCount: number;
+            secondsPerSquad: number;
+            squads: {
+                /** Format: uuid */
+                id: string;
+                /** @enum {string} */
+                difficulty: "easy" | "medium" | "hard";
+                team: string;
+                opponent: string;
+                matchLabel: string;
+                score: string | null;
+                formation: string;
+                slots: {
+                    id: string;
+                    position: string;
+                    number: number | null;
+                    x: number;
+                    y: number;
+                    name: string;
+                    acceptedAnswers: string[];
+                    imageUrl: string | null;
+                }[];
+            }[];
+        } | {
+            /** @enum {string} */
             challengeType: "fifaCards";
             title: string;
             description: string;
@@ -10950,7 +11338,7 @@ export interface components {
         };
         CompleteDailyChallengeResponse: {
             /** @enum {string} */
-            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective";
+            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "missingXi" | "passChain" | "statSniper" | "cardDetective";
             /** @enum {boolean} */
             completedToday: true;
             coinsAwarded: number;
@@ -10979,13 +11367,13 @@ export interface components {
         };
         ResetDailyChallengeResponse: {
             /** @enum {string} */
-            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective";
+            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "missingXi" | "passChain" | "statSniper" | "cardDetective";
             /** @enum {boolean} */
             reset: true;
         };
         AdminDailyChallengeConfigResponse: {
             /** @enum {string} */
-            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective";
+            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "missingXi" | "passChain" | "statSniper" | "cardDetective";
             title: string;
             description: string;
             /** @enum {string} */
@@ -11059,6 +11447,27 @@ export interface components {
                 secondsPerQuestion: number;
                 /** @enum {string} */
                 challengeType: "footballLogic";
+            } | {
+                /** @default [] */
+                categoryIds: string[];
+                squadCount: number;
+                secondsPerSquad: number;
+                /** @enum {string} */
+                challengeType: "missingXi";
+            } | {
+                /** @default [] */
+                categoryIds: string[];
+                puzzleCount: number;
+                secondsPerPuzzle: number;
+                /** @enum {string} */
+                challengeType: "passChain";
+            } | {
+                /** @default [] */
+                categoryIds: string[];
+                questionCount: number;
+                secondsPerQuestion: number;
+                /** @enum {string} */
+                challengeType: "statSniper";
             } | {
                 /** @default [] */
                 categoryIds: string[];

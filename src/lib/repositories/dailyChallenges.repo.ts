@@ -8,6 +8,8 @@ import type {
   SetDailyComebackReminderResult,
   ResetDailyChallengeResult,
   DailyChallengeType,
+  PassChainLinkResult,
+  StatSniperLeaderboard,
 } from "@/lib/domain/dailyChallenge";
 import { getDailyChallengeLocale } from "@/lib/i18n/dailyChallenge";
 import { type Locale } from "@/lib/i18n/messages";
@@ -43,6 +45,19 @@ export async function completeDailyChallenge(
     params: { challengeType },
     body,
   });
+}
+
+export async function linkPassChain(body: {
+  puzzleId: string;
+  fromPlayerId: string;
+  text: string;
+  locale?: Locale;
+}): Promise<PassChainLinkResult> {
+  return apiFetch("post", "/api/v1/daily-challenges/pass-chain/link", { body });
+}
+
+export async function getStatSniperLeaderboard(): Promise<StatSniperLeaderboard> {
+  return apiFetch("get", "/api/v1/daily-challenges/stat-sniper/leaderboard");
 }
 
 export async function getDailyComebackState(): Promise<DailyComebackState> {

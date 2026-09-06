@@ -22,14 +22,12 @@ import { Top10KnockoutGame } from "@/features/game-mode-lab/modes/Top10KnockoutG
 import { Accumulator } from "@/features/mini-games/components/Accumulator";
 import { BetSlipBooster } from "@/features/mini-games/components/BetSlipBooster";
 import { CareerRace } from "@/features/mini-games/components/CareerRace";
-import { CashOutLadder } from "@/features/mini-games/components/CashOutLadder";
 import { DailyJackpot } from "@/features/mini-games/components/DailyJackpot";
 import { FinalThird } from "@/features/mini-games/components/FinalThird";
 import { FootballGrid } from "@/features/mini-games/components/FootballGrid";
 import { GoldenGoal } from "@/features/mini-games/components/GoldenGoal";
 import { GuessTheGoal } from "@/features/mini-games/components/GuessTheGoal";
 import { HalfTimeTrivia } from "@/features/mini-games/components/HalfTimeTrivia";
-import { HiLoRide } from "@/features/mini-games/components/HiLoRide";
 import { LastOneStanding } from "@/features/mini-games/components/LastOneStanding";
 import { OddsBoard } from "@/features/mini-games/components/OddsBoard";
 import { PassChain } from "@/features/mini-games/components/PassChain";
@@ -117,8 +115,6 @@ function DemoModePageInner() {
       return <Accumulator backHref={backHref} />;
     case "mini-squad-collection":
       return <SquadCollection backHref={backHref} />;
-    case "mini-cash-out-ladder":
-      return <CashOutLadder backHref={backHref} />;
     case "mini-bet-slip-booster":
       return <BetSlipBooster backHref={backHref} />;
     case "mini-half-time-trivia":
@@ -129,8 +125,6 @@ function DemoModePageInner() {
       return <FootballGrid backHref={backHref} />;
     case "mini-survivor":
       return <Survivor backHref={backHref} />;
-    case "mini-hi-lo-ride":
-      return <HiLoRide backHref={backHref} />;
     case "mini-trivia-mines":
       return <TriviaMines backHref={backHref} />;
     case "mini-quiz-board":

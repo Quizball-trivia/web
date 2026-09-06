@@ -1,5 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { DEFAULT_LOCALE } from "@/lib/i18n/locale";
+import { DAILY_CHALLENGE_SLUGS } from "@/lib/domain/dailyChallengeSlugs";
+import { GAME_PAGES } from "@/lib/seo/game-pages";
 import { API_BASE_URL } from "@/lib/config";
 import type { CampaignQuizRoute } from "@/features/campaign-quiz/campaignQuiz.types";
 
@@ -7,13 +9,24 @@ import type { CampaignQuizRoute } from "@/features/campaign-quiz/campaignQuiz.ty
 // pages are localized; everything else (app, auth, game) is intentionally
 // locale-less and stays unchanged.
 const REDIRECT_FROM_ROOT: Record<string, string> = {
-  // The marketing landing is retired: "/" IS the Play page now (guests get
-  // the signed-out state there). Old cached 308s to /en|/ka still work — the
-  // [locale] index page redirects to /play too.
-  "/": "/play",
+  // "/" is served by the Play page in place (see the rewrite below), so the
+  // bare domain is the homepage for guests, players and search engines alike.
+  "/daily": `/${DEFAULT_LOCALE}/daily`,
+  "/games": `/${DEFAULT_LOCALE}/games`,
   "/about": `/${DEFAULT_LOCALE}/about`,
   "/terms": `/${DEFAULT_LOCALE}/terms`,
   "/privacy": `/${DEFAULT_LOCALE}/privacy`,
+  // Bare game landing URLs → default-locale variant (indexable pages).
+  ...Object.fromEntries(
+    GAME_PAGES.map((page) => [`/${page.section}/${page.slug}`, `/${DEFAULT_LOCALE}/${page.section}/${page.slug}`]),
+  ),
+  // Legacy camelCase game routes (old links, bookmarks) → public slugs.
+  ...Object.fromEntries(
+    Object.entries(DAILY_CHALLENGE_SLUGS)
+      // Types whose slug equals the type (imposter, countdown) would redirect to themselves.
+      .filter(([type, slug]) => type !== slug)
+      .map(([type, slug]) => [`/daily/challenges/${type}`, `/daily/challenges/${slug}`]),
+  ),
 };
 
 function originFromEnv(name: string): string | null {
@@ -93,6 +106,17 @@ export async function middleware(req: NextRequest) {
   requestHeaders.set("x-pathname", pathname);
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("Content-Security-Policy", csp);
+
+  // The bare domain IS the Play page: rewrite (not redirect) so the URL stays
+  // "/" — guests get the signed-out state, players the app, crawlers the
+  // server-rendered guest page with a canonical of "/".
+  if (pathname === "/") {
+    const url = req.nextUrl.clone();
+    url.pathname = "/play";
+    const res = NextResponse.rewrite(url, { request: { headers: requestHeaders } });
+    res.headers.set("Content-Security-Policy", csp);
+    return res;
+  }
 
   const redirectTarget = REDIRECT_FROM_ROOT[pathname];
   if (redirectTarget) {

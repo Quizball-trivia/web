@@ -133,15 +133,6 @@ const ALL_MINI_GAME_DEMO_MODES: DemoModeCard[] = [
     group: "featured",
   },
   {
-    slug: "mini-cash-out-ladder",
-    title: { en: "Cash Out Ladder", ka: "Cash Out Ladder" },
-    description: {
-      en: "1x to 32x — bank or climb after each answer; one miss wipes it.",
-      ka: "1x-დან 32x-მდე — ყოველი პასუხის შემდეგ აიღე ან აძვერი; ერთი შეცდომა შლის ყველაფერს.",
-    },
-    group: "featured",
-  },
-  {
     slug: "mini-bet-slip-booster",
     title: { en: "Bet Slip Booster", ka: "Bet Slip Booster" },
     description: {
@@ -183,15 +174,6 @@ const ALL_MINI_GAME_DEMO_MODES: DemoModeCard[] = [
     description: {
       en: "Sudden death — questions get harder until one mistake ends the run.",
       ka: "უეცარი სიკვდილი — კითხვები მძიმდება, ერთი შეცდომა ამთავრებს სერიას.",
-    },
-    group: "featured",
-  },
-  {
-    slug: "mini-hi-lo-ride",
-    title: { en: "Hi-Lo Ride", ka: "Hi-Lo Ride" },
-    description: {
-      en: "Chain higher-or-lower stat calls — hard matchups pay bigger odds.",
-      ka: "მეტი-ნაკლების ჯაჭვი სტატისტიკაზე — რთული წყვილები მეტს იხდიან.",
     },
     group: "featured",
   },
@@ -319,6 +301,7 @@ export const LAB_DEMO_MODES: DemoModeCard[] = [
   },
   {
     slug: "lab-missing-xi",
+    dailyType: "missingXi",
     title: { en: "Missing XI", ka: "დაკარგული XI" },
     description: {
       en: "Rebuild a legendary starting XI shirt by shirt against a rival.",
@@ -433,6 +416,27 @@ const DAILY_DEMO_COPY: Record<DailyChallengeType, { title: DemoI18nText; descrip
     description: {
       en: "Every slot on the card is a locked clue with a price — name the player with the most coins left.",
       ka: "ბარათის ყველა უჯრა დახურული მინიშნებაა ფასით — გამოიცანი მოთამაშე რაც შეიძლება მეტი ქოინის შენარჩუნებით.",
+    },
+  },
+  statSniper: {
+    title: { en: "Stat Sniper", ka: "სტატ-სნაიპერი" },
+    description: {
+      en: "Ten football numbers — slide to your guess, the closer the better.",
+      ka: "დღეში ათი რიცხვი — მიიტანე სლაიდერი ვარაუდამდე, რაც უფრო ახლოს, მით უკეთესი.",
+    },
+  },
+  passChain: {
+    title: { en: "Pass Chain", ka: "პასების ჯაჭვი" },
+    description: {
+      en: "Link two players through shared clubs — fewer links score higher.",
+      ka: "დააკავშირე ორი ფეხბურთელი საერთო კლუბებით — ნაკლები რგოლი, მეტი ქულა.",
+    },
+  },
+  missingXi: {
+    title: { en: "Missing XI", ka: "დაკარგული XI" },
+    description: {
+      en: "Three famous line-ups a day — tap a shirt, name the starter.",
+      ka: "დღეში სამი ცნობილი შემადგენლობა — დააჭირე მაისურს, დაასახელე ფეხბურთელი.",
     },
   },
   fifaCards: {
