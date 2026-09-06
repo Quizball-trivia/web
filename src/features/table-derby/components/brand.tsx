@@ -161,12 +161,12 @@ export function TicketGlyph({ size = 18, color = '#0d0d0d' }: { size?: number; c
 export function TicketPill({ count, label }: { count: number | null; label: string }) {
   return (
     <div
-      className="flex items-center gap-2 rounded-full py-1.5 pl-2.5 pr-3.5"
+      className="flex items-center gap-2 rounded-full py-2.5 pl-3.5 pr-4.5"
       style={{ background: 'var(--td-orange)', boxShadow: '3px 3px 0 rgba(0,0,0,0.5)' }}
       aria-label={label}
     >
-      <TicketGlyph size={15} />
-      <span className="text-sm leading-none" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
+      <TicketGlyph size={19} />
+      <span className="text-lg leading-none" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
         {count ?? '·'}
       </span>
     </div>

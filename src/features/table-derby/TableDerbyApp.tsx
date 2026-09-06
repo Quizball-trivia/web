@@ -7,7 +7,7 @@
  * The round logic mirrors what the server state machine will own later.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { matchesName } from '@/features/mini-games/lib/matching';
 import { TD, OPPONENT_NAMES } from './lib/copy';
@@ -31,7 +31,7 @@ import { MyAvatar, TdAvatar, TD_AVATAR_COLORS, tdAvatarCustomization } from './c
 import { AvatarPreview } from '@/components/AvatarPreview';
 import { TdClubSelect } from './components/ClubSelect';
 import { TdProfileCard, opponentProfile } from './components/ProfileCard';
-import { getClub } from '@/lib/clubs';
+import { TierFrameAvatar } from '@/components/TierFrameAvatar';
 import { MOCK_USER } from './lib/mockUser';
 import { CardsRound } from './components/CardsRound';
 import { BoxRound } from './components/BoxRound';
@@ -50,6 +50,7 @@ import {
   getQp,
   getAvatarColor,
   getFavClub,
+  subscribeAvatar,
   getTickets,
   isOnboarded,
   resetOnboarding,
@@ -134,10 +135,6 @@ function categoryAt(idx: number): TdListCategory {
   return TD_LIST_CATEGORIES[idx % TD_LIST_CATEGORIES.length];
 }
 
-function getClubLogo(value: string): string | null {
-  return getClub(value)?.logo ?? null;
-}
-
 function SectionHeader({ title, onBack }: { title: string; onBack: () => void }) {
   return (
     <div className="flex w-full items-center gap-3">
@@ -188,6 +185,7 @@ export function TableDerbyApp() {
   const [qp, setQp] = useState(0);
   const [dailyScore, setDailyScore] = useState<number | null>(null);
   const [favClub, setFavClubState] = useState<string | null>(null);
+  const myColor = useSyncExternalStore(subscribeAvatar, getAvatarColor, () => 'green' as ReturnType<typeof getAvatarColor>);
   const [menuNotice, setMenuNotice] = useState<string | null>(null);
   const [qpEarned, setQpEarned] = useState(0); // signed match QP delta
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
@@ -676,33 +674,12 @@ export function TableDerbyApp() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="relative z-10 mx-auto flex min-h-dvh w-full max-w-xl flex-col items-center justify-center gap-5 px-4 py-16 md:gap-6"
+            className="relative z-10 mx-auto flex min-h-dvh w-full max-w-2xl flex-col items-center justify-center gap-6 px-4 py-10 md:gap-8"
           >
-            {/* header: profile + tickets */}
-            <div className="flex w-full items-center justify-between gap-3">
-              <button
-                type="button"
-                onClick={() => setShowAvatarPicker(true)}
-                aria-label={TD.chooseAvatar}
-                className="flex min-w-0 items-center gap-2.5 rounded-full py-1 pl-1 pr-4"
-                style={{ background: 'var(--td-charcoal)', boxShadow: '3px 3px 0 rgba(0,0,0,0.5)' }}
-              >
-                <MyAvatar size={40} />
-                <span className="flex min-w-0 flex-col items-start">
-                  <span className="truncate text-[13px] text-white" style={TD_DISPLAY}>
-                    {displayName}
-                  </span>
-                  <span className="text-[10px]" style={{ ...TD_DISPLAY, color: 'var(--td-orange)' }}>
-                    {displayQp} {TD.qpShort}
-                  </span>
-                </span>
-                {getClubLogo(displayClub) && (
-                  // eslint-disable-next-line @next/next/no-img-element -- crest from the club registry
-                  <img src={getClubLogo(displayClub)!} alt="" className="h-6 w-6 shrink-0 object-contain" />
-                )}
-              </button>
-              <div className="flex items-center gap-2">
-              <TicketPill count={tickets} label={TD.tickets} />
+            {/* header, Quizball-style: avatar card top-RIGHT, tickets next
+                to it; dev buttons tucked far left */}
+            <div className="flex w-full items-center justify-end gap-3">
+              <div className="mr-auto flex items-center gap-2">
               {process.env.NODE_ENV !== 'production' && (
                 <button
                   type="button"
@@ -731,9 +708,34 @@ export function TableDerbyApp() {
                 </button>
               )}
               </div>
+              <TicketPill count={tickets} label={TD.tickets} />
+              <button
+                type="button"
+                onClick={() => setShowAvatarPicker(true)}
+                aria-label={TD.chooseAvatar}
+                className="flex min-w-0 items-center gap-2.5 text-right"
+              >
+                <span className="flex min-w-0 flex-col items-end">
+                  <span className="max-w-[10rem] truncate text-[16px] text-white" style={TD_DISPLAY}>
+                    {displayName}
+                  </span>
+                  <span
+                    className="mt-1 inline-flex flex-col items-center rounded-full px-3 py-1 leading-none"
+                    style={{ background: 'var(--td-orange)', boxShadow: '2px 2px 0 rgba(0,0,0,0.45)' }}
+                  >
+                    <span className="text-[14px] tabular-nums" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
+                      {displayQp}
+                    </span>
+                    <span className="text-[9px] tracking-wide" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
+                      {TD.qpShort}
+                    </span>
+                  </span>
+                </span>
+                <TierFrameAvatar tier="Academy" avatarCustomization={tdAvatarCustomization(myColor)} size="lg" />
+              </button>
             </div>
 
-            <TdLogoSticker variant="blackOnWhite" scale={0.9} />
+            <TdLogoSticker variant="blackOnWhite" scale={1.1} />
 
             {showAvatarPicker && (
               <div
@@ -774,35 +776,33 @@ export function TableDerbyApp() {
               type="button"
               whileTap={{ scale: 0.97 }}
               onClick={startMatch}
-              className="relative w-full overflow-hidden rounded-[16px] p-5 text-left md:p-6"
+              className="relative w-full overflow-hidden rounded-[18px] p-6 text-left md:p-8"
               style={{ background: 'var(--td-orange)', boxShadow: '6px 6px 0 #000', transform: 'rotate(-0.8deg)' }}
             >
               <span aria-hidden className="pointer-events-none absolute inset-0" style={PERF_DOTS} />
               <div className="relative flex flex-col gap-2.5">
-                <span className="text-2xl md:text-3xl" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
+                <span className="text-3xl md:text-4xl" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
                   {TD.title}
                 </span>
-                <span className="text-[11px] md:text-xs" style={{ ...TD_DISPLAY, color: 'rgba(0,0,0,0.65)' }}>
+                <span className="text-[13px] md:text-sm" style={{ ...TD_DISPLAY, color: 'rgba(0,0,0,0.65)' }}>
                   {TD.menuMatchSub}
                 </span>
-                <div className="mt-1 flex items-center justify-between gap-3">
-                  <RoundIconsRow size={24} tone="black" />
-                  <div className="flex items-center gap-2">
-                    <span
-                      className="flex items-center gap-1.5 rounded-full bg-black/20 px-3 py-1.5 text-[10px]"
-                      style={{ ...TD_DISPLAY, color: '#0d0d0d' }}
-                    >
-                      <TicketGlyph size={11} />
-                      {TD.ticketCost}
-                    </span>
-                    <span
-                      className="rounded-[10px] bg-black px-5 py-2.5 text-sm text-white md:text-base"
-                      style={TD_DISPLAY}
-                    >
-                      {TD.playNow}
-                    </span>
-                  </div>
+                <div className="mt-2 flex items-center justify-between gap-3">
+                  <RoundIconsRow size={30} tone="black" />
+                  <span
+                    className="flex items-center gap-1.5 rounded-full bg-black/20 px-3.5 py-2 text-[12px]"
+                    style={{ ...TD_DISPLAY, color: '#0d0d0d' }}
+                  >
+                    <TicketGlyph size={12} />
+                    {TD.ticketCost}
+                  </span>
                 </div>
+                <span
+                  className="mt-3 block w-full rounded-[12px] bg-black py-4 text-center text-lg text-white md:text-xl"
+                  style={TD_DISPLAY}
+                >
+                  {TD.playNow}
+                </span>
               </div>
             </motion.button>
 
@@ -820,19 +820,19 @@ export function TableDerbyApp() {
               <button
                 type="button"
                 onClick={() => setPhase('daily')}
-                className="flex w-full items-center justify-between gap-3 rounded-[14px] px-4 py-4 text-left md:px-5"
+                className="flex w-full items-center justify-between gap-3 rounded-[16px] px-5 py-5 text-left md:px-6 md:py-6"
                 style={{ background: 'var(--td-charcoal)', boxShadow: '5px 5px 0 #000' }}
               >
                 <div className="min-w-0">
-                  <p className="text-base text-white md:text-lg" style={TD_DISPLAY}>
+                  <p className="text-xl text-white md:text-2xl" style={TD_DISPLAY}>
                     {TD.menuDaily}
                   </p>
-                  <p className="mt-0.5 truncate text-[10px] text-white/55 md:text-[11px]" style={TD_DISPLAY}>
+                  <p className="mt-1 truncate text-[12px] text-white/55 md:text-[13px]" style={TD_DISPLAY}>
                     {TD.menuDailySub}
                   </p>
                 </div>
                 <span
-                  className="shrink-0 rounded-full px-2.5 py-1 text-[9px] md:text-[10px]"
+                  className="shrink-0 rounded-full px-3 py-1.5 text-[11px] md:text-[12px]"
                   style={{
                     ...TD_DISPLAY,
                     background: dailyScore === null ? 'var(--td-orange)' : 'rgba(255,255,255,0.14)',
@@ -846,23 +846,23 @@ export function TableDerbyApp() {
               <button
                 type="button"
                 onClick={() => setPhase('wl')}
-                className="w-full rounded-[14px] px-4 py-4 text-left md:px-5"
+                className="w-full rounded-[16px] px-5 py-5 text-left md:px-6 md:py-6"
                 style={{ background: 'var(--td-charcoal)', boxShadow: '5px 5px 0 #000' }}
               >
                 <div className="flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-base text-white md:text-lg" style={TD_DISPLAY}>
+                    <p className="text-xl text-white md:text-2xl" style={TD_DISPLAY}>
                       {TD.menuWl}
                     </p>
-                    <p className="mt-0.5 truncate text-[10px] text-white/55 md:text-[11px]" style={TD_DISPLAY}>
+                    <p className="mt-1 truncate text-[12px] text-white/55 md:text-[13px]" style={TD_DISPLAY}>
                       {TD.menuWlSub}
                     </p>
                   </div>
-                  <span className="shrink-0 text-sm" style={{ ...TD_DISPLAY, color: 'var(--td-orange)' }}>
+                  <span className="shrink-0 text-lg" style={{ ...TD_DISPLAY, color: 'var(--td-orange)' }}>
                     {Math.min(qp, QP_TARGET)}/{QP_TARGET}
                   </span>
                 </div>
-                <div className="mt-2.5 h-1.5 w-full overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.12)' }}>
+                <div className="mt-3 h-2 w-full overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.12)' }}>
                   <div
                     className="h-full rounded-full"
                     style={{ background: 'var(--td-orange)', width: `${Math.min(100, Math.round((qp / QP_TARGET) * 100))}%` }}
@@ -873,18 +873,18 @@ export function TableDerbyApp() {
               <button
                 type="button"
                 onClick={() => setPhase('leaderboard')}
-                className="flex w-full items-center justify-between gap-3 rounded-[14px] px-4 py-4 text-left md:px-5"
+                className="flex w-full items-center justify-between gap-3 rounded-[16px] px-5 py-5 text-left md:px-6 md:py-6"
                 style={{ background: 'var(--td-charcoal)', boxShadow: '5px 5px 0 #000' }}
               >
                 <div className="min-w-0">
-                  <p className="text-base text-white md:text-lg" style={TD_DISPLAY}>
+                  <p className="text-xl text-white md:text-2xl" style={TD_DISPLAY}>
                     {TD.menuLb}
                   </p>
-                  <p className="mt-0.5 truncate text-[10px] text-white/55 md:text-[11px]" style={TD_DISPLAY}>
+                  <p className="mt-1 truncate text-[12px] text-white/55 md:text-[13px]" style={TD_DISPLAY}>
                     {TD.menuLbSub}
                   </p>
                 </div>
-                <span className="shrink-0 text-xl text-white/40" style={TD_DISPLAY}>
+                <span className="shrink-0 text-2xl text-white/40" style={TD_DISPLAY}>
                   ›
                 </span>
               </button>
