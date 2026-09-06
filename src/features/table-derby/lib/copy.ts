@@ -25,6 +25,13 @@ export const TD = {
   noTickets: 'ბილეთები აღარ გაქვს — განახლდება ხვალ',
   back: 'უკან',
 
+  // Onboarding (first visit; Betsson passes identity, no auth here)
+  onbWelcome: 'მოგესალმები მაგიდის დერბიში!',
+  onbAvatarTitle: 'აირჩიე ავატარი',
+  onbClubTitle: 'აირჩიე საყვარელი გუნდი',
+  onbNext: 'შემდეგი',
+  onbStart: 'დაწყება',
+
   // Daily
   dailyToday: 'დღევანდელი გამოწვევა',
   dailyYourScore: 'შენი შედეგი',

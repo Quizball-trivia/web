@@ -105,6 +105,33 @@ export function setAvatarVariant(v: number) {
   avatarListeners.forEach((l) => l());
 }
 
+/* ── First-run onboarding (avatar + favorite club) ─────────────── */
+
+export function isOnboarded(): boolean {
+  return read<boolean>('td.onboarded') ?? false;
+}
+
+export function setOnboarded() {
+  write('td.onboarded', true);
+}
+
+export function resetOnboarding() {
+  try {
+    window.localStorage.removeItem('td.onboarded');
+    window.localStorage.removeItem('td.club');
+  } catch {
+    /* storage may be blocked */
+  }
+}
+
+export function getFavClub(): string | null {
+  return read<string>('td.club');
+}
+
+export function setFavClub(id: string) {
+  write('td.club', id);
+}
+
 /** Deterministic per-day category index for the daily challenge. */
 export function dailyCategoryIndex(total: number): number {
   const day = geDayKey();

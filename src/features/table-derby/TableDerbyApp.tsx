@@ -34,6 +34,7 @@ import { BuzzerRound, type BuzzerItem } from './components/BuzzerRound';
 import { TD_CARD_CATEGORIES, type TdCardCategory } from './data/cards';
 import { TD_BOX_CARDS } from './data/box';
 import { TD_WHOAMI } from './data/whoami';
+import { TD_CLUBS } from './data/clubs';
 import {
   QP_LOSS,
   QP_TARGET,
@@ -43,14 +44,19 @@ import {
   getDailyResult,
   getQp,
   getTickets,
+  isOnboarded,
+  resetOnboarding,
   resetTickets,
   setAvatarVariant,
+  setFavClub,
+  setOnboarded,
   setDailyResult,
   spendTicket,
 } from './lib/state';
 
 type Phase =
   | 'home'
+  | 'onboarding'
   | 'daily'
   | 'dailyPlay'
   | 'wl'
@@ -173,6 +179,9 @@ export function TableDerbyApp() {
   const [qpEarned, setQpEarned] = useState(0); // signed match QP delta
   const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [booting, setBooting] = useState(true);
+  const [onbStep, setOnbStep] = useState<0 | 1>(0);
+  const [onbAvatar, setOnbAvatar] = useState(0);
+  const [onbClub, setOnbClub] = useState<string | null>(null);
 
   // Boot loader (Betsson WebView/iframe entry): brand splash while key
   // assets warm up, minimum 5s so the Quizball lockup registers.
@@ -193,7 +202,12 @@ export function TableDerbyApp() {
           }),
       );
     const minimum = new Promise((r) => setTimeout(r, 5000));
-    void Promise.all([...preload, minimum]).then(() => setBooting(false));
+    void Promise.all([...preload, minimum]).then(() => {
+      setBooting(false);
+      // first visit (Betsson users arrive pre-authenticated; identity
+      // comes from the host — this is product onboarding only)
+      if (!isOnboarded()) setPhase('onboarding');
+    });
   }, []);
 
   // Multi-round match flow.
@@ -564,6 +578,88 @@ export function TableDerbyApp() {
       )}
 
       <AnimatePresence mode="wait">
+        {/* ── ONBOARDING (first visit: avatar + favorite club) ── */}
+        {phase === 'onboarding' && (
+          <motion.main
+            key={`onb-${onbStep}`}
+            initial={{ opacity: 0, x: 24 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -24 }}
+            className="relative z-10 mx-auto flex min-h-dvh w-full max-w-md flex-col items-center justify-center gap-7 px-5"
+          >
+            <TdLogoSticker variant="blackOnWhite" scale={0.62} />
+            <p className="text-center text-sm text-white/70" style={TD_DISPLAY}>
+              {TD.onbWelcome}
+            </p>
+            <h2 className="text-center text-2xl text-white" style={TD_DISPLAY}>
+              {onbStep === 0 ? TD.onbAvatarTitle : TD.onbClubTitle}
+            </h2>
+
+            {onbStep === 0 ? (
+              <div className="grid grid-cols-4 gap-5">
+                {AVATAR_VARIANTS.map((_, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setOnbAvatar(i)}
+                    className="rounded-full transition-transform hover:-translate-y-0.5"
+                    style={{ outline: onbAvatar === i ? '3px solid var(--td-orange)' : '3px solid transparent', outlineOffset: 4, borderRadius: '999px' }}
+                  >
+                    <TdAvatar name={TD.you} variant={i} size={64} />
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="grid w-full grid-cols-2 gap-2.5">
+                {TD_CLUBS.map((club) => (
+                  <button
+                    key={club.id}
+                    type="button"
+                    onClick={() => setOnbClub(club.id)}
+                    className="flex items-center gap-2.5 rounded-[10px] px-3 py-3 text-left"
+                    style={{
+                      background: onbClub === club.id ? 'var(--td-orange)' : 'var(--td-charcoal)',
+                      boxShadow: '3px 3px 0 rgba(0,0,0,0.5)',
+                      transition: 'background 0.15s',
+                    }}
+                  >
+                    <span aria-hidden className="size-3.5 shrink-0 rounded-full" style={{ background: club.color, boxShadow: '0 0 0 2px rgba(0,0,0,0.35)' }} />
+                    <span className="truncate text-[12px]" style={{ ...TD_DISPLAY, color: onbClub === club.id ? '#0d0d0d' : 'var(--td-white)' }}>
+                      {club.name}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* progress + CTA */}
+            <div className="flex items-center gap-2" aria-hidden>
+              {[0, 1].map((i) => (
+                <span key={i} className="size-2 rounded-full" style={{ background: onbStep === i ? 'var(--td-orange)' : 'rgba(255,255,255,0.25)' }} />
+              ))}
+            </div>
+            <motion.button
+              type="button"
+              whileTap={{ scale: 0.95 }}
+              disabled={onbStep === 1 && !onbClub}
+              onClick={() => {
+                if (onbStep === 0) {
+                  setAvatarVariant(onbAvatar);
+                  setOnbStep(1);
+                } else if (onbClub) {
+                  setFavClub(onbClub);
+                  setOnboarded();
+                  setPhase('home');
+                }
+              }}
+              className="rounded-[12px] px-10 py-3.5 text-base disabled:opacity-40"
+              style={{ ...TD_DISPLAY, background: 'var(--td-orange)', color: '#0d0d0d', boxShadow: '5px 5px 0 #000' }}
+            >
+              {onbStep === 0 ? TD.onbNext : TD.onbStart}
+            </motion.button>
+          </motion.main>
+        )}
+
         {/* ── HOME / MENU ── */}
         {phase === 'home' && (
           <motion.main
@@ -588,6 +684,22 @@ export function TableDerbyApp() {
                   title="dev: reset tickets"
                 >
                   ↺5
+                </button>
+              )}
+              {process.env.NODE_ENV !== 'production' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    resetOnboarding();
+                    setOnbStep(0);
+                    setOnbClub(null);
+                    setPhase('onboarding');
+                  }}
+                  className="rounded-full px-2.5 py-1.5 text-[11px] opacity-60"
+                  style={{ ...TD_DISPLAY, background: 'var(--td-charcoal)', color: 'var(--td-white)', boxShadow: '2px 2px 0 #000' }}
+                  title="dev: replay onboarding"
+                >
+                  ⟲
                 </button>
               )}
             </div>
