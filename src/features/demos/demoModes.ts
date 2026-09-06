@@ -250,15 +250,6 @@ const ALL_MINI_GAME_DEMO_MODES: DemoModeCard[] = [
     group: "featured",
   },
   {
-    slug: "mini-guess-fifa-card",
-    title: { en: "FIFA Cards", ka: "FIFA ბარათები" },
-    description: {
-      en: "A gold FUT card, stats only — name the player as nation, league and club unlock.",
-      ka: "ოქროს FUT ბარათი მხოლოდ სტატისტიკით — გამოიცანი მოთამაშე, სანამ ქვეყანა, ლიგა და კლუბი გაიხსნება.",
-    },
-    group: "featured",
-  },
-  {
     slug: "mini-stat-sniper",
     title: { en: "Stat Sniper", ka: "სტატ-სნაიპერი" },
     description: {
@@ -454,7 +445,8 @@ const DAILY_DEMO_COPY: Record<DailyChallengeType, { title: DemoI18nText; descrip
 };
 
 // Hidden from the hub per owner (2026-08-13); routes stay reachable directly.
-const HIDDEN_DAILY_TYPES: DailyChallengeType[] = ["clues", "putInOrder"];
+// fifaCards hidden 2026-09-06: Card Detective replaces it as the card daily.
+const HIDDEN_DAILY_TYPES: DailyChallengeType[] = ["clues", "putInOrder", "fifaCards"];
 
 const buildDailyCard = (type: DailyChallengeType): DemoModeCard => ({
   slug: `daily-${type}`,
@@ -479,10 +471,7 @@ export const ALL_DAILY_DEMO_MODES: DemoModeCard[] = (
 
 // FIFA / FC Universe collection (features/fifa-universe) — card-database
 // prototypes, plus the existing FIFA Cards mini-game as its anchor.
-export const FIFA_DEMO_MODES: DemoModeCard[] = [
-  ...ALL_MINI_GAME_DEMO_MODES.filter((mode) => mode.slug === "mini-guess-fifa-card"),
-  ...FIFA_MODES,
-];
+export const FIFA_DEMO_MODES: DemoModeCard[] = [...FIFA_MODES];
 
 export const ALL_DEMO_MODES: DemoModeCard[] = [
   ...FEATURED_DEMO_MODES,

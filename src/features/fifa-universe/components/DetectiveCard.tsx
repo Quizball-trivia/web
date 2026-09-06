@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
-import { Camera, Lock } from 'lucide-react';
+import { Lock } from 'lucide-react';
 import { ClubCrest } from '@/features/mini-games/components/Badges';
 import { LeagueBadge } from '@/features/mini-games/components/FutCard';
 import { useMiniT } from '@/features/mini-games/lib/i18n';
@@ -11,10 +11,10 @@ import { STAT_SHORT, type StatKey } from '../lib/data';
 import { Silhouette } from './MiniFutCard';
 import { Flag } from './ui';
 
-export type ClueKey = 'nation' | 'position' | 'club' | 'league' | 'rating' | 'photo' | StatKey;
+export type ClueKey = 'nation' | 'position' | 'club' | 'league' | 'rating' | StatKey;
 export type ClueCosts = Record<ClueKey, number>;
 /** Free-play prices; the daily gets its prices from the session. */
-export const DEFAULT_CLUE_COSTS: ClueCosts = { photo: 90, rating: 25, club: 20, league: 15, nation: 10, position: 10, pac: 5, sho: 5, pas: 5, dri: 5, def: 5, phy: 5 };
+export const DEFAULT_CLUE_COSTS: ClueCosts = { rating: 25, club: 20, league: 15, nation: 10, position: 10, pac: 5, sho: 5, pas: 5, dri: 5, def: 5, phy: 5 };
 
 const STAT_CLUES: ClueKey[] = ['pac', 'sho', 'pas', 'dri', 'def', 'phy'];
 
@@ -42,7 +42,7 @@ export interface DetectiveCardData {
   league: string;
   club: string;
   stats: FifaCardStats;
-  /** null = no photo available; the photo lock is then disabled. */
+  /** Shown only once the card is resolved; null = silhouette. */
   faceUrl: string | null;
 }
 
@@ -76,8 +76,8 @@ export function DetectiveCard({
 }) {
   const t = useMiniT();
   const is = (k: ClueKey) => over || open.has(k);
-  const can = (k: ClueKey) => !over && !open.has(k) && coins >= costs[k] && (k !== 'photo' || !!card.faceUrl);
-  const clueName = (k: ClueKey) => (k === 'rating' ? 'OVR' : k === 'photo' ? t('photo') : k.length === 3 ? STAT_SHORT[k as StatKey] : t(k));
+  const can = (k: ClueKey) => !over && !open.has(k) && coins >= costs[k];
+  const clueName = (k: ClueKey) => (k === 'rating' ? 'OVR' : k.length === 3 ? STAT_SHORT[k as StatKey] : t(k));
   const chip = (k: ClueKey, size: 'lg' | 'md' | 'sm' = 'md', hint?: string) => (
     <span className="flex flex-col items-center gap-0.5">
       <LockChip cost={costs[k]} enabled={can(k)} size={size} onClick={() => onReveal(k)} label={t('Reveal {clue} for {n} coins', { clue: clueName(k), n: costs[k] })} />
@@ -101,11 +101,11 @@ export function DetectiveCard({
         </div>
 
         <div className="relative h-[264px]">
-          {/* portrait: silhouette with the photo lock on top of it */}
+          {/* portrait: silhouette while investigating, the face once resolved */}
           <div className="absolute inset-x-0 bottom-0 z-0 flex items-end justify-end pr-1">
             <div className="relative flex h-[240px] w-[212px] items-end justify-end">
               <AnimatePresence initial={false}>
-                {is('photo') && card.faceUrl ? (
+                {over && card.faceUrl ? (
                   <Face key="face" card={card} />
                 ) : (
                   <motion.div key="sil" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="absolute bottom-0 right-2">
@@ -113,11 +113,6 @@ export function DetectiveCard({
                   </motion.div>
                 )}
               </AnimatePresence>
-              {!is('photo') && (
-                <div className="absolute inset-0 z-20 flex items-center justify-center pl-8 pt-12">
-                  <LockChip cost={costs.photo} enabled={can('photo')} size="lg" icon={Camera} onClick={() => onReveal('photo')} label={t('Reveal {clue} for {n} coins', { clue: t('photo'), n: costs.photo })} />
-                </div>
-              )}
             </div>
           </div>
 

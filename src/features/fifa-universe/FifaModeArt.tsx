@@ -1,12 +1,11 @@
 'use client';
 
-import { ArrowUpDown, Baby, CreditCard, Crown, Fingerprint, ListOrdered, Search, Skull, Sparkles, Swords, TrendingUp, Users, type LucideIcon } from 'lucide-react';
+import { ArrowUpDown, Baby, Crown, Fingerprint, ListOrdered, Search, Skull, Sparkles, Swords, TrendingUp, Users, type LucideIcon } from 'lucide-react';
 import { FIFA_CARDS } from '@/features/mini-games/data/guessFifaCard';
 import { MiniFutCard } from './components/MiniFutCard';
 import { FIFA_MODE_BY_SLUG } from './registry';
 
 const ICONS: Record<string, LucideIcon> = {
-  'mini-guess-fifa-card': CreditCard,
   'fifa-higher-lower': ArrowUpDown,
   'fifa-stat-battle': Swords,
   'fifa-card-detective': Sparkles,
@@ -31,7 +30,7 @@ export function FifaModeArt({ slug, className = '' }: { slug: string; className?
   const Icon = ICONS[slug] ?? Sparkles;
   const art = meta ?? { artPlayer: 'Robert Lewandowski', artEdition: 'FIFA18' };
   const card = FIFA_CARDS.find((c) => c.name === art.artPlayer && c.edition === art.artEdition) ?? FIFA_CARDS.find((c) => c.name === art.artPlayer);
-  const masked = slug === 'fifa-card-detective' || slug === 'fifa-wonderkid' || slug === 'mini-guess-fifa-card';
+  const masked = slug === 'fifa-card-detective' || slug === 'fifa-wonderkid';
   // Duel-style modes show a second card behind the first.
   const twoCards = slug === 'fifa-stat-battle' || slug === 'fifa-gauntlet' || slug === 'fifa-higher-lower' || slug === 'fifa-evolution' || slug === 'fifa-draft-battle';
   const pair = card && twoCards ? FIFA_CARDS.find((c) => c.edition === card.edition && c.name !== card.name && c.difficulty === 'easy') ?? null : null;

@@ -72,7 +72,7 @@ function hash(input: string): number {
  * a screenshot. `className` controls the aspect ratio.
  */
 export function DemoModeArt({ slug, className = "" }: { slug: string; className?: string }) {
-  if (isFifaSlug(slug) || slug === "mini-guess-fifa-card") {
+  if (isFifaSlug(slug)) {
     return <FifaModeArt slug={slug} className={className} />;
   }
   if (ILLUSTRATED_MODE_SLUGS.has(slug)) {
