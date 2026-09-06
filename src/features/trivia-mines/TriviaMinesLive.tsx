@@ -66,15 +66,35 @@ export function TriviaMinesLive({ backHref = "/play" }: { backHref?: string }) {
   useEffect(() => {
     if (state?.phase !== "question" || !state.question) return;
     const deadline = new Date(state.question.deadline_at).getTime() - (new Date(state.server_now).getTime() - Date.now());
-    const tick = () => setQLeft(Math.max(0, Math.ceil((deadline - Date.now()) / 1000)));
+    let asked = false;
+    const tick = () => {
+      const left = Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+      setQLeft(left);
+      // The server burns the scout after its grace; one re-sync picks the board back up.
+      if (left <= 0 && !asked) { asked = true; window.setTimeout(() => void reconcile(), 2_200); }
+    };
     tick();
     const id = window.setInterval(tick, 250);
     return () => window.clearInterval(id);
-  }, [state?.phase, state?.question, state?.server_now]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state?.phase, state?.question?.question_id]);
 
   const fail = (e: unknown) => { setError(e instanceof TriviaMinesApiError ? e.message : t("common.error")); trackMiniGameError("trivia_mines", "request", e instanceof TriviaMinesApiError ? e.status : null); };
-  const refreshWallet = () => void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
-  const reconcile = useCallback(async () => { const s = await triviaMinesApi.current().catch(() => null); if (s) setState(s); }, []);
+  const refreshWallet = useCallback(() => void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() }), [queryClient]);
+  const stateRef = useRef<TriviaMinesState | null>(null);
+  useEffect(() => { stateRef.current = state; }, [state]);
+  /** Re-sync with the server; when our round is no longer active (sweeper, lost response), fetch it in its settled form. */
+  const reconcile = useCallback(async () => {
+    try {
+      const cur = await triviaMinesApi.current();
+      if (cur) { setState(cur); return; }
+      const mine = stateRef.current;
+      if (!mine) return;
+      const last = await triviaMinesApi.latest();
+      if (last && last.round_id === mine.round_id) { setState(last); if (last.status !== "active") refreshWallet(); }
+    } catch { /* keep current state */ }
+  }, [refreshWallet]);
+  const recover = async (e: unknown) => { if (e instanceof TriviaMinesApiError && (e.status === 409 || e.status === 404)) await reconcile(); };
 
   const applyStake = (v: number) => { const next = Math.min(MAX_STAKE, Math.max(MIN_STAKE, Math.floor(v || MIN_STAKE))); setStake(next); setStakeText(String(next)); };
 
@@ -87,7 +107,7 @@ export function TriviaMinesLive({ backHref = "/play" }: { backHref?: string }) {
       nonceRef.current = null; setState(s); refreshWallet();
       trackMiniGameRoundStarted("trivia_mines", { roundId: s.round_id, stake: s.stake_coins });
     } catch (e) {
-      if (e instanceof TriviaMinesApiError && e.status === 409) await reconcile();
+      await recover(e);
       if (e instanceof TriviaMinesApiError && e.status < 500) nonceRef.current = null;
       fail(e);
     } finally { setBusy(false); }
@@ -96,16 +116,16 @@ export function TriviaMinesLive({ backHref = "/play" }: { backHref?: string }) {
   const pick = async (tile: number) => {
     if (!state || busy || state.phase !== "picking" || state.opened.includes(tile) || state.flagged.includes(tile)) return;
     setBusy(true); setError(null);
-    try { const r = await triviaMinesApi.pick(tile, state.state_version); if (r.state.status === "cashed") playCash(); setState(r.state); if (!r.safe || r.state.status !== "active") refreshWallet(); }
-    catch (e) { if (e instanceof TriviaMinesApiError && e.status === 409) await reconcile(); fail(e); }
+    try { const r = await triviaMinesApi.pick(state.round_id, tile, state.state_version); if (r.state.status === "cashed") playCash(); setState(r.state); if (!r.safe || r.state.status !== "active") refreshWallet(); }
+    catch (e) { await recover(e); fail(e); }
     finally { setBusy(false); }
   };
 
   const scout = async () => {
     if (!state || busy || state.phase !== "picking" || state.scouts_left <= 0) return;
     setBusy(true); setError(null); setSelected(null); setAnswerResult(null);
-    try { setState(await triviaMinesApi.deal(state.state_version)); }
-    catch (e) { if (e instanceof TriviaMinesApiError && e.status === 409) await reconcile(); fail(e); }
+    try { setState(await triviaMinesApi.deal(state.round_id, state.state_version)); }
+    catch (e) { await recover(e); fail(e); }
     finally { setBusy(false); }
   };
 
@@ -113,10 +133,10 @@ export function TriviaMinesLive({ backHref = "/play" }: { backHref?: string }) {
     if (!state?.question || busy || selected) return;
     setSelected(optionId); setBusy(true);
     try {
-      const r = await triviaMinesApi.answer(state.question.question_id, optionId, state.state_version);
+      const r = await triviaMinesApi.answer(state.round_id, state.question.question_id, optionId, state.state_version);
       setAnswerResult({ outcome: r.outcome, correct: r.correct_option_id, flagged: r.flagged_tile });
       window.setTimeout(() => { setState(r.state); setSelected(null); setAnswerResult(null); }, 1400);
-    } catch (e) { setSelected(null); if (e instanceof TriviaMinesApiError && e.status === 409) await reconcile(); fail(e); }
+    } catch (e) { setSelected(null); await recover(e); fail(e); }
     finally { setBusy(false); }
   };
 
@@ -125,13 +145,13 @@ export function TriviaMinesLive({ backHref = "/play" }: { backHref?: string }) {
     const origin = event.currentTarget;
     setBusy(true); setError(null);
     try {
-      const s = await triviaMinesApi.cashout(state.state_version);
+      const s = await triviaMinesApi.cashout(state.round_id, state.state_version);
       playCash();
       setFlight(flightFrom(origin, (s.payout_coins ?? 0) * 17 + 3));
       window.setTimeout(() => setFlight(null), 1200);
       setState(s); refreshWallet();
     }
-    catch (e) { if (e instanceof TriviaMinesApiError && e.status === 409) await reconcile(); fail(e); }
+    catch (e) { await recover(e); fail(e); }
     finally { setBusy(false); }
   };
 

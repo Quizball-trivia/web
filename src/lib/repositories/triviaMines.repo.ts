@@ -77,11 +77,20 @@ export const triviaMinesApi = {
       throw error;
     }
   },
-  pick: (tile: number, expectedVersion: number) => call<TriviaMinesPickResult>("/api/v1/trivia-mines/rounds/pick", "POST", { tile, expected_version: expectedVersion }),
-  deal: (expectedVersion: number) => call<TriviaMinesState>("/api/v1/trivia-mines/rounds/question", "POST", { expected_version: expectedVersion }),
-  answer: (questionId: string, optionId: string, expectedVersion: number) =>
-    call<TriviaMinesAnswerResult>("/api/v1/trivia-mines/rounds/answer", "POST", { question_id: questionId, option_id: optionId, expected_version: expectedVersion }),
-  cashout: (expectedVersion: number) => call<TriviaMinesState>("/api/v1/trivia-mines/rounds/cashout", "POST", { expected_version: expectedVersion }),
+  /** Most recent round in any state (404 when the player never played). */
+  async latest(): Promise<TriviaMinesState | null> {
+    try {
+      return await call<TriviaMinesState>("/api/v1/trivia-mines/rounds/latest", "GET");
+    } catch (error) {
+      if (error instanceof TriviaMinesApiError && error.status === 404) return null;
+      throw error;
+    }
+  },
+  pick: (roundId: string, tile: number, expectedVersion: number) => call<TriviaMinesPickResult>("/api/v1/trivia-mines/rounds/pick", "POST", { round_id: roundId, tile, expected_version: expectedVersion }),
+  deal: (roundId: string, expectedVersion: number) => call<TriviaMinesState>("/api/v1/trivia-mines/rounds/question", "POST", { round_id: roundId, expected_version: expectedVersion }),
+  answer: (roundId: string, questionId: string, optionId: string, expectedVersion: number) =>
+    call<TriviaMinesAnswerResult>("/api/v1/trivia-mines/rounds/answer", "POST", { round_id: roundId, question_id: questionId, option_id: optionId, expected_version: expectedVersion }),
+  cashout: (roundId: string, expectedVersion: number) => call<TriviaMinesState>("/api/v1/trivia-mines/rounds/cashout", "POST", { round_id: roundId, expected_version: expectedVersion }),
   heartbeat: () => call<void>("/api/v1/trivia-mines/rounds/heartbeat", "POST"),
   stats: () => call<{ playing_now: number; recent_wins: Array<{ nickname: string; amount: number; run_mult: number; settled_at: string }>; top_runs: Array<{ nickname: string; run_mult: number }> }>("/api/v1/trivia-mines/stats", "GET"),
 };

@@ -544,7 +544,7 @@ export function DailyChallengeCompleteModalContent({
       </motion.div>
 
       {/* Don't end on a dead end — offer the next game, streaming-style. */}
-      <DailyNextUpRow />
+      <DailyNextUpRow onSelect={(href) => onDone(href)} />
       </div>
     </div>
   );

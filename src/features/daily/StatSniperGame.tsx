@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { motion } from "motion/react";
 import { Crosshair, Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -34,11 +34,12 @@ export function StatSniperGame({
 }: {
   session: StatSniperSession;
   onBack: () => void;
-  onComplete: (score: number) => void;
+  onComplete: (score: number, nextPath?: string) => void;
   /** Demos/guests: no leaderboard fetch (needs auth). */
   demo?: boolean;
 }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const numberLocale = locale === "ka" ? "ka-GE" : locale === "es" ? "es-ES" : "en-GB";
   const questions = session.questions;
   const [index, setIndex] = useState(0);
   const [guess, setGuess] = useState(() => (questions[0] ? midpoint(questions[0]) : 0));
@@ -53,14 +54,20 @@ export function StatSniperGame({
   const q = questions[index];
   const accuracy = Math.round(total / questions.length);
 
+  // The countdown reads the latest guess through a ref: moving the slider must never restart the clock.
+  const guessRef = useRef(guess);
+  useEffect(() => { guessRef.current = guess; }, [guess]);
   const lockIn = useCallback(() => {
     if (!q || phase !== "guessing") return;
-    const points = sniperPoints(guess, q);
+    const current = guessRef.current;
+    const points = sniperPoints(current, q);
     playSfx(points >= 60 ? "dailyCorrect" : "wrongAnswer");
-    setLast({ points, diff: Math.abs(guess - q.value) });
+    setLast({ points, diff: Math.abs(current - q.value) });
     setTotal((s) => s + points);
     setPhase("reveal");
-  }, [guess, phase, q]);
+  }, [phase, q]);
+  const lockInRef = useRef(lockIn);
+  useEffect(() => { lockInRef.current = lockIn; }, [lockIn]);
 
   useEffect(() => {
     if (phase !== "guessing" || done) return;
@@ -68,14 +75,14 @@ export function StatSniperGame({
       setTimeLeft((s) => {
         if (s <= 1) {
           window.clearInterval(id);
-          window.setTimeout(lockIn, 0);
+          window.setTimeout(() => lockInRef.current(), 0);
           return 0;
         }
         return s - 1;
       });
     }, 1000);
     return () => window.clearInterval(id);
-  }, [phase, done, lockIn]);
+  }, [phase, done, index]);
 
   const advance = () => {
     if (index + 1 >= questions.length) {
@@ -116,7 +123,7 @@ export function StatSniperGame({
 
             {/* Guess readout — brand blue */}
             <motion.div key={`${index}-${phase}`} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} className="mt-4 rounded-[20px] bg-brand-blue p-4 text-center" style={{ boxShadow: "0 1.76px 6.334px 1.32px rgba(22, 69, 255, 0.25)" }}>
-              <div className="text-4xl font-black tabular-nums text-white" style={poppins}>{guess.toLocaleString()}</div>
+              <div className="text-4xl font-black tabular-nums text-white" style={poppins}>{guess.toLocaleString(numberLocale)}</div>
               <div className="text-[11px] font-bold uppercase tracking-wide text-white/70" style={poppins}>{q.unit}</div>
             </motion.div>
 
@@ -136,8 +143,8 @@ export function StatSniperGame({
                   <button type="button" onClick={() => nudge(1)} aria-label="+" className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] text-white/70"><Plus className="size-4" /></button>
                 </div>
                 <div className="mt-1 flex justify-between text-[10px] font-bold tabular-nums text-white/35" style={poppins}>
-                  <span>{q.min.toLocaleString()}</span>
-                  <span>{q.max.toLocaleString()}</span>
+                  <span>{q.min.toLocaleString(numberLocale)}</span>
+                  <span>{q.max.toLocaleString(numberLocale)}</span>
                 </div>
                 <button
                   type="button"
@@ -150,13 +157,13 @@ export function StatSniperGame({
               </>
             ) : (
               <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-4 rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center">
-                <p className="text-lg font-black text-white" style={poppins}>{t("statSniper.answer", { value: q.value.toLocaleString(), unit: q.unit })}</p>
+                <p className="text-lg font-black text-white" style={poppins}>{t("statSniper.answer", { value: q.value.toLocaleString(numberLocale), unit: q.unit })}</p>
                 {last && (
                   <div className="mt-2 flex items-center justify-center gap-3 text-sm font-bold" style={poppins}>
                     <span className={cn("rounded-full px-3 py-1", last.points >= 100 ? "bg-brand-yellow/15 text-brand-yellow" : last.points >= 60 ? "bg-brand-green/15 text-brand-green-light" : last.points > 0 ? "bg-brand-orange/15 text-brand-orange" : "bg-brand-red-soft/15 text-brand-red-soft")}>
                       {last.points >= 100 ? <span className="inline-flex items-center gap-1"><Crosshair className="size-3.5" />{t("statSniper.bullseye")}</span> : t("statSniper.points", { points: String(last.points) })}
                     </span>
-                    {last.points < 100 && <span className="text-white/55">{t("statSniper.off", { diff: last.diff.toLocaleString() })}</span>}
+                    {last.points < 100 && <span className="text-white/55">{t("statSniper.off", { diff: last.diff.toLocaleString(numberLocale) })}</span>}
                   </div>
                 )}
                 <button
@@ -181,7 +188,7 @@ export function StatSniperGame({
         title={t("play.statSniperTitle")}
         correct={accuracy}
         total={100}
-        onDone={() => { setBoardKey((k) => k + 1); onComplete(accuracy); }}
+        onDone={(next) => { setBoardKey((k) => k + 1); onComplete(accuracy, next); }}
       />
     </>
   );

@@ -512,11 +512,14 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
         // the server deadline and be scored as a real answer. Just wait out
         // the reveal, then resync — the server resolves the expired question
         // itself (zones slam to 2, answering locks) on the next read.
+        // Re-sync only once the SERVER deadline (with its grace) has passed, otherwise the
+        // same pending question comes back and the reading pause restarts.
+        const serverDeadlineMs = liveQuestion ? liveQuestion.deadlineLocalMs : deadlineMs;
         later(() => {
           setLastAnswer('reset');
           setLiveQuestion(null);
           void resyncLive();
-        }, ANSWER_HOLD_MS);
+        }, Math.max(ANSWER_HOLD_MS, serverDeadlineMs - Date.now() + 400));
         return;
       }
       later(() => {

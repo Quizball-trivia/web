@@ -42,7 +42,7 @@ export function PassChainGame({
 }: {
   session: PassChainSession;
   onBack: () => void;
-  onComplete: (score: number) => void;
+  onComplete: (score: number, nextPath?: string) => void;
   /** Demo/prototype override: validate against a local graph instead of the API. */
   resolveLink?: ResolveLink;
 }) {
@@ -75,11 +75,17 @@ export function PassChainGame({
   const last = chain.length ? chain[chain.length - 1].player : puzzle?.start;
   const links = chain.length + 1;
 
+  // A reveal replaces the attempted chain: the solution's first bridge starts from the original start player.
   const reveal = useCallback(() => {
     setState("revealed");
+    setChain([]);
     setAnswer("");
     setError(null);
   }, []);
+  // Late link responses must not act on a later puzzle or a puzzle already solved/revealed.
+  const puzzleIdRef = useRef<string | null>(null);
+  const stateRef = useRef(state);
+  useEffect(() => { puzzleIdRef.current = puzzles[index]?.id ?? null; stateRef.current = state; }, [puzzles, index, state]);
   const revealRef = useRef(reveal);
   useEffect(() => { revealRef.current = reveal; });
 
@@ -115,20 +121,22 @@ export function PassChainGame({
   const submit = async () => {
     if (!puzzle || !last || state !== "playing" || pending || !answer.trim()) return;
     setPending(true);
+    const requestPuzzleId = puzzle.id;
     try {
       const result = await resolveLink(last.id, answer, puzzle.target.id, puzzle.id, locale);
+      if (puzzleIdRef.current !== requestPuzzleId || stateRef.current !== "playing") return;
       if (result.status === "unknown" || !result.player) {
         playSfx("wrongAnswer");
         setError(t("passChain.unknown"));
         return;
       }
-      if (result.player.id === puzzle.start.id || chain.some((l) => l.player.id === result.player!.id)) {
-        setError(t("passChain.already"));
-        return;
-      }
       if (result.status === "noLink" || !result.viaClub) {
         playSfx("wrongAnswer");
         setError(t("passChain.noLink", { name: surname(result.player.name), last: surname(last.name) }));
+        return;
+      }
+      if (result.player.id === puzzle.start.id || chain.some((l) => l.player.id === result.player!.id)) {
+        setError(t("passChain.already"));
         return;
       }
       playSfx("dailyCorrect");
@@ -256,7 +264,7 @@ export function PassChainGame({
         title={t("play.passChainTitle")}
         correct={solvedCount}
         total={puzzles.length}
-        onDone={() => onComplete(solvedCount)}
+        onDone={(next) => onComplete(solvedCount, next)}
       />
     </>
   );

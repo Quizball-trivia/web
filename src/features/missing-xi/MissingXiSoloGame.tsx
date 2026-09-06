@@ -42,7 +42,7 @@ export function MissingXiSoloGame({
 }: {
   session: MissingXiSession;
   onBack: () => void;
-  onComplete: (score: number) => void;
+  onComplete: (score: number, nextPath?: string) => void;
 }) {
   const { t } = useLocale();
   const squads = session.squads;
@@ -297,7 +297,7 @@ export function MissingXiSoloGame({
         title={t("play.missingXiTitle")}
         correct={totalNamed}
         total={squads.reduce((n, s) => n + s.slots.length, 0)}
-        onDone={() => onComplete(totalNamed)}
+        onDone={(next) => onComplete(totalNamed, next)}
       />
     </>
   );

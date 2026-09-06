@@ -46,16 +46,19 @@ function hrefFor(mode: DemoModeCard): string {
 export function DailyNextUpRow({
   excludeDailyType,
   limit = 3,
+  onSelect,
 }: {
   /** The challenge just completed — never recommend it back. */
   excludeDailyType?: string;
   limit?: number;
+  /** Completion-aware navigation: the modal saves the finished game before following the link. */
+  onSelect?: (href: string) => void;
 }) {
   // Rendered inside modals that some unit tests mount without a
   // QueryClientProvider; render nothing there rather than throwing.
   const hasQueryClient = useHasQueryClient();
   if (!hasQueryClient) return null;
-  return <NextUpSuggestions excludeDailyType={excludeDailyType} limit={limit} />;
+  return <NextUpSuggestions excludeDailyType={excludeDailyType} limit={limit} onSelect={onSelect} />;
 }
 
 function useHasQueryClient(): boolean {
@@ -69,11 +72,9 @@ function useHasQueryClient(): boolean {
 
 function NextUpSuggestions({
   excludeDailyType,
-  limit,
-}: {
+  limit, onSelect }: {
   excludeDailyType?: string;
-  limit: number;
-}) {
+  limit: number; onSelect?: (href: string) => void }) {
   const { t, locale } = useLocale();
   const { data: dailyChallenges = [] } = useDailyChallenges();
 
@@ -109,6 +110,7 @@ function NextUpSuggestions({
           <Link
             key={mode.slug}
             href={hrefFor(mode)}
+            onClick={(event) => { if (onSelect) { event.preventDefault(); onSelect(hrefFor(mode)); } }}
             className="group flex flex-col overflow-hidden rounded-xl bg-brand-blue transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
           >
             <div className="relative aspect-video w-full overflow-hidden">
