@@ -29,6 +29,16 @@ const DEG_PER_FRAME = 3;
 const FACE_DEG = 72;
 const framePath = (i: number) => `/assets/table-derby/3d/box/box_${String(i).padStart(2, '0')}.webp`;
 
+/* Card colors, show-style: every card its own color (green/red pair on
+ * the first face like the real prop). Black text on all. */
+const CARD_COLORS = ['#4C9F45', '#D64541', '#E8B62B', '#3E7BC4', '#EE5A22', '#8C4FB0', '#2AA79B', '#D4589B', '#F4F1EC', '#C0CA33'];
+
+/* Pocket rects measured from the rendered frame (percent of 640x760). */
+const POCKETS = [
+  { left: '23.5%', width: '43%', top: '29%', height: '13.6%' },
+  { left: '23.5%', width: '43%', top: '52.8%', height: '12.2%' },
+];
+
 interface CardState {
   id: string;
   title: string;
@@ -306,43 +316,37 @@ export function BoxRound({
               style={{ opacity: i === frame ? 1 : 0 }}
             />
           ))}
-          {/* live category cards over the front pockets */}
-          <div
-            className="absolute flex flex-col transition-opacity duration-200"
-            style={{
-              left: '23%',
-              right: '23%',
-              top: '25%',
-              gap: boxH * 0.085,
-              opacity: snapped ? 1 : 0,
-              pointerEvents: snapped ? 'auto' : 'none',
-            }}
-          >
-            {faceCards.map((card) => (
-              <button
-                key={card.id}
-                type="button"
-                data-card-id={card.remaining.length > 0 ? card.id : undefined}
-                disabled={!canPick || card.remaining.length === 0}
-                className="flex items-center justify-between gap-2 rounded-[8px] px-3 py-2.5 text-left transition-transform enabled:hover:-translate-y-0.5 disabled:opacity-55"
-                style={{ background: 'var(--td-orange)', boxShadow: '3px 3px 0 rgba(0,0,0,0.55)', height: boxH * 0.155 }}
+          {/* live category cards sitting IN the front pockets */}
+          {faceCards.map((card, j) => (
+            <button
+              key={card.id}
+              type="button"
+              data-card-id={card.remaining.length > 0 ? card.id : undefined}
+              disabled={!canPick || card.remaining.length === 0}
+              className="absolute flex flex-col items-start justify-between overflow-hidden rounded-[5px] px-2.5 py-1.5 text-left transition-opacity duration-200 disabled:opacity-60"
+              style={{
+                ...POCKETS[j],
+                background: CARD_COLORS[(lf * 2 + j) % CARD_COLORS.length],
+                boxShadow: 'inset 0 -3px 0 rgba(0,0,0,0.25)',
+                opacity: snapped ? undefined : 0,
+                pointerEvents: snapped ? 'auto' : 'none',
+              }}
+            >
+              <span className="text-[13px] leading-tight md:text-[15px]" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
+                {card.title}
+              </span>
+              <span
+                className="shrink-0 rounded-full px-2 py-0.5 text-[9px] md:text-[10px]"
+                style={{
+                  ...TD_DISPLAY,
+                  background: card.remaining.length > 0 ? 'rgba(0,0,0,0.85)' : 'rgba(0,0,0,0.4)',
+                  color: card.remaining.length > 0 ? 'var(--td-white)' : 'rgba(255,255,255,0.6)',
+                }}
               >
-                <span className="text-[13px] md:text-[15px]" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
-                  {card.title}
-                </span>
-                <span
-                  className="shrink-0 rounded-full px-2 py-0.5 text-[10px] md:text-[11px]"
-                  style={{
-                    ...TD_DISPLAY,
-                    background: card.remaining.length > 0 ? '#0d0d0d' : 'rgba(0,0,0,0.35)',
-                    color: card.remaining.length > 0 ? 'var(--td-white)' : 'rgba(255,255,255,0.6)',
-                  }}
-                >
-                  {card.remaining.length} {TD.questionsLeftSuffix}
-                </span>
-              </button>
-            ))}
-          </div>
+                {card.remaining.length} {TD.questionsLeftSuffix}
+              </span>
+            </button>
+          ))}
         </div>
         <button
           type="button"
