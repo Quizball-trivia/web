@@ -275,15 +275,9 @@ export function BuzzerRound({
             {/* eslint-disable-next-line @next/next/no-img-element -- local 3D render */}
             <img
               src="/assets/table-derby/3d/buzzer.png"
-              alt=""
+              alt={TD.buzz}
               className="pointer-events-none h-full w-full object-contain"
             />
-            <span
-              className="absolute inset-x-0 top-[40%] text-center text-xl md:text-2xl"
-              style={{ ...TD_DISPLAY, color: 'var(--td-white)' }}
-            >
-              {TD.buzz}
-            </span>
           </motion.button>
           <span className="text-[12px] text-white/50" style={TD_DISPLAY}>
             {locked.me ? TD.lockedOut : zphase === 'answerOp' ? `${opponentName} · ${TD.opponentBuzzed}` : TD.buzzRules}
