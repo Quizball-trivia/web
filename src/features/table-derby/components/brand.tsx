@@ -126,18 +126,19 @@ export function XGlyph({ size = 20, color = 'var(--td-white)', rotate = 8 }: { s
   );
 }
 
-/* ── Key-art backdrop: tone-on-tone angular maze pattern (the show's
-      poster background — language-free, tiles seamlessly) ─────────── */
+/* ── Backdrop: the official set-wall mural (logos deck p.10) — panel
+      strips tiled like the studio wall. `accent` = the orange-highlight
+      variant; default is the all-charcoal one. ────────────────────── */
 
-export function MuralBackdrop({ dim = 1 }: { dim?: number }) {
+export function MuralBackdrop({ dim = 1, accent = false }: { dim?: number; accent?: boolean }) {
   return (
     <div
       aria-hidden
       className="pointer-events-none absolute inset-0 select-none"
       style={{
         opacity: dim,
-        backgroundImage: 'url(/assets/table-derby/bg-maze.svg)',
-        backgroundSize: '440px 440px',
+        backgroundImage: `url(/assets/table-derby/bg-mural-${accent ? 'accent' : 'dark'}.png)`,
+        backgroundSize: 'auto 260px',
       }}
     />
   );
