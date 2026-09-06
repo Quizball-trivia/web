@@ -6203,7 +6203,6 @@ export interface paths {
                             cardCount: number;
                             startCoins: number;
                             clueCosts: {
-                                photo: number;
                                 rating: number;
                                 position: number;
                                 nation: number;
@@ -10910,7 +10909,6 @@ export interface components {
             cardCount: number;
             startCoins: number;
             clueCosts: {
-                photo: number;
                 rating: number;
                 position: number;
                 nation: number;

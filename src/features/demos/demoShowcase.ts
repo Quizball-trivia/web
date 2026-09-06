@@ -128,8 +128,8 @@ export const SHOWCASE_SECTIONS: ShowcaseSection[] = [
     eyebrow: { en: "Card-database collection", ka: "ბარათების ბაზის კოლექცია" },
     title: { en: "FIFA / FC Universe", ka: "FIFA / FC სამყარო" },
     blurb: {
-      en: `Fourteen games built on ${PLAYABLE_EDITIONS.length} editions of player ratings (FIFA 15 → FC 26) — guess the card, read a career from its OVR curve, battle with a hand of cards, draft an XI. Solo, 1v1 and party meta-modes.`,
-      ka: `თოთხმეტი თამაში ${PLAYABLE_EDITIONS.length} გამოშვების რეიტინგებზე (FIFA 15 → FC 26) — გამოიცანი ბარათი, წაიკითხე კარიერა OVR-ის მრუდიდან, იბრძოლე ბარათებით, ააწყვე XI. სოლო, 1v1 და პარტი მეტა-რეჟიმები.`,
+      en: `Thirteen games built on ${PLAYABLE_EDITIONS.length} editions of player ratings (FIFA 15 → FC 26) — guess the card, read a career from its OVR curve, battle with a hand of cards, draft an XI. Solo, 1v1 and party meta-modes.`,
+      ka: `ცამეტი თამაში ${PLAYABLE_EDITIONS.length} გამოშვების რეიტინგებზე (FIFA 15 → FC 26) — გამოიცანი ბარათი, წაიკითხე კარიერა OVR-ის მრუდიდან, იბრძოლე ბარათებით, ააწყვე XI. სოლო, 1v1 და პარტი მეტა-რეჟიმები.`,
     },
     modes: FIFA_DEMO_MODES,
   },

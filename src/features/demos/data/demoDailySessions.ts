@@ -292,8 +292,7 @@ export function buildDemoDailySession(
       return pool.highLow;
     case "footballLogic":
       return footballLogicSession(locale);
-    case "fifaCards":
-      return fifaCardsSession(locale);
+    case "fifaCards": // replaced by Card Detective; the type only lives on for completion history
     case "cardDetective":
       return cardDetectiveSession(locale);
   }
@@ -347,7 +346,7 @@ function cardDetectiveSession(locale: Locale): CardDetectiveSession {
       : "Everything hidden, 100 clue coins — name the player using the least information.",
     cardCount: base.cards.length,
     startCoins: 100,
-    clueCosts: { photo: 90, rating: 25, club: 20, league: 15, nation: 10, position: 10, pac: 5, sho: 5, pas: 5, dri: 5, def: 5, phy: 5 },
+    clueCosts: { rating: 25, club: 20, league: 15, nation: 10, position: 10, pac: 5, sho: 5, pas: 5, dri: 5, def: 5, phy: 5 },
     wrongGuessCost: 15,
     cards: base.cards,
   };

@@ -13,7 +13,6 @@ import { ImposterGame } from "@/features/daily/ImposterGame";
 import { CareerPathGame } from "@/features/daily/CareerPathGame";
 import { HighLowGame } from "@/features/daily/HighLowGame";
 import { FootballLogicGame } from "@/features/daily/FootballLogicGame";
-import { FifaCardsDailyGame } from "@/features/daily/FifaCardsDailyGame";
 import { CardDetectiveDailyGame } from "@/features/daily/CardDetectiveDailyGame";
 import { QuitGameDialog } from "@/features/daily/QuitGameDialog";
 import { DailyChallengeIntro } from "@/features/daily/components/DailyChallengeIntro";
@@ -55,6 +54,10 @@ export default function ChallengePage() {
   const completeOnceRef = useRef(false);
 
   const challengeId = String(params.challengeId ?? "");
+  // FIFA Cards was replaced by Card Detective (2026-09-06); old links land on the new daily.
+  useEffect(() => {
+    if (challengeId === "fifaCards") router.replace("/daily/challenges/cardDetective");
+  }, [challengeId, router]);
   const challengeType = isDailyChallengeType(challengeId) ? challengeId : undefined;
   const completeMutation = useCompleteDailyChallenge(challengeType ?? "moneyDrop");
 
@@ -234,8 +237,6 @@ export default function ChallengePage() {
         return <HighLowGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
       case "footballLogic":
         return <FootballLogicGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
-      case "fifaCards":
-        return <FifaCardsDailyGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
       case "cardDetective":
 
         return <CardDetectiveDailyGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
