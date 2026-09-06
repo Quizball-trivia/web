@@ -589,7 +589,7 @@ export function TableDerbyApp() {
       {/* betsson.sport — top-right like the broadcast; the in-round
           scoreboard (with avatars) owns that zone during gameplay */}
       {!inRoundPhase && (
-        <div className="absolute left-4 top-4 z-20 flex items-center gap-2 md:left-8 md:top-6">
+        <div className="absolute inset-x-0 bottom-4 z-20 flex items-center justify-center gap-2 md:bottom-6">
           <BetssonWordmark tone={phase === 'home' ? 'orange' : 'white'} size={16} />
           <span className="text-sm" style={{ ...TD_DISPLAY, color: 'var(--td-orange)' }} aria-hidden>
             ✕
