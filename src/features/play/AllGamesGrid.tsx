@@ -291,6 +291,12 @@ function GameCard({
         const group = PLAY_WITH_COINS_SLUGS.includes(mode.slug) ? "coins" : mode.slug.startsWith("daily-") || mode.slug.startsWith("lab-") ? "daily" : "other";
         if (onOpenMode) {
           event.preventDefault();
+          // The modal's Solo route is behind the auth gate; a guest gets the sign-in prompt here instead of a bounce back to Play.
+          if (isGuest) {
+            trackPlayCardClicked({ slug: mode.slug, group, destination: "auth" });
+            openAuthPrompt();
+            return;
+          }
           trackPlayCardClicked({ slug: mode.slug, group, destination: "modal" });
           onOpenMode(mode.slug);
           return;
@@ -339,7 +345,7 @@ function GameCard({
         <div className="absolute inset-0 flex items-center justify-center bg-black/45 opacity-0 transition-opacity group-hover:opacity-100">
           <span className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3.5 py-1.5 font-poppins text-[11px] font-bold uppercase text-black md:text-xs">
             <Play className="size-3 fill-current" />
-            {locale === "ka" ? "თამაში" : "Play"}
+            {locale === "ka" ? "თამაში" : locale === "es" ? "Jugar" : "Play"}
           </span>
         </div>
       </div>
@@ -385,6 +391,8 @@ function CardScroller({ children }: { children: React.ReactNode }) {
     observer.observe(el);
     return () => observer.disconnect();
   }, [syncArrows]);
+  // Filtering changes scrollWidth without resizing the scroller; re-check after every render.
+  useEffect(syncArrows);
 
   const scrollByPage = (direction: 1 | -1) => {
     const el = scrollerRef.current;
@@ -493,13 +501,13 @@ function GameSection({
 
 
 type FinderFilter = "all" | "daily" | "coins" | "solo" | "multiplayer" | "online";
-const FINDER_FILTERS: Array<{ id: FinderFilter; en: string; ka: string }> = [
-  { id: "all", en: "All", ka: "ყველა" },
-  { id: "daily", en: "Daily", ka: "დღიური" },
-  { id: "coins", en: "Coins", ka: "მონეტები" },
-  { id: "solo", en: "Solo", ka: "სოლო" },
-  { id: "multiplayer", en: "Multiplayer", ka: "მრავალმოთამაშიანი" },
-  { id: "online", en: "Online", ka: "ონლაინ" },
+const FINDER_FILTERS: Array<{ id: FinderFilter; en: string; ka: string; es: string }> = [
+  { id: "all", en: "All", ka: "ყველა", es: "Todos" },
+  { id: "daily", en: "Daily", ka: "დღიური", es: "Diarios" },
+  { id: "coins", en: "Coins", ka: "მონეტები", es: "Monedas" },
+  { id: "solo", en: "Solo", ka: "სოლო", es: "Solo" },
+  { id: "multiplayer", en: "Multiplayer", ka: "მრავალმოთამაშიანი", es: "Multijugador" },
+  { id: "online", en: "Online", ka: "ონლაინ", es: "En línea" },
 ];
 
 function matchesFilter(mode: DemoModeCard, section: "daily" | "coins", filter: FinderFilter): boolean {
@@ -532,7 +540,7 @@ function GamesFinder({
   const { locale } = useLocale();
   const [open, setOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const label = locale === "ka" ? "მოძებნე თამაში" : "Search games";
+  const label = locale === "ka" ? "მოძებნე თამაში" : locale === "es" ? "Buscar juegos" : "Search games";
   const close = () => {
     onQuery("");
     setOpen(false);
@@ -594,7 +602,7 @@ function GamesFinder({
             filter === entry.id ? "bg-brand-yellow text-black" : "bg-white/[0.07] text-white/60 hover:bg-white/[0.12]"
           }`}
         >
-          {locale === "ka" ? entry.ka : entry.en}
+          {locale === "ka" ? entry.ka : locale === "es" ? entry.es : entry.en}
           <span className={filter === entry.id ? "text-black/50" : "text-white/35"}>{counts[entry.id]}</span>
         </button>
       ))}
