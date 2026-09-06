@@ -186,13 +186,13 @@ export function CardsRound({
       </div>
       <CategoryBand prompt={`${TD.round2Name} · ${category.prompt}`} compact />
 
-      <p className="text-center text-[12px] md:text-sm" style={{ ...TD_DISPLAY, color: cphase === 'stealMe' ? 'var(--td-orange)' : 'rgba(255,255,255,0.7)' }}>
+      <p className="text-center text-[14px] md:text-base" style={{ ...TD_DISPLAY, color: cphase === 'stealMe' ? 'var(--td-orange)' : 'rgba(255,255,255,0.7)' }}>
         {statusText}
       </p>
 
       {/* card table */}
-      <div className="relative">
-        <div className="grid grid-cols-5 gap-1.5 md:gap-2.5">
+      <div className="relative mx-auto w-full max-w-[520px] md:max-w-[535px]">
+        <div className="grid grid-cols-4 gap-2 md:grid-cols-5 md:gap-3">
           {slots.map((sl) => (
             <button
               key={sl.card.id}
@@ -208,7 +208,7 @@ export function CardsRound({
             >
               {!sl.gone && (
                 <span className="flex h-full flex-col items-center justify-center gap-1">
-                  <BoltGlyph size={18} />
+                  <BoltGlyph size={24} />
                   <span className="scale-75 opacity-60">
                     <BetssonWordmark size={8} />
                   </span>
@@ -231,11 +231,11 @@ export function CardsRound({
               style={{ perspective: 800 }}
             >
               <div
-                className="relative flex h-[210px] w-[158px] flex-col items-center justify-center gap-2 rounded-[14px] px-3 md:h-[250px] md:w-[188px]"
+                className="relative flex h-[250px] w-[188px] flex-col items-center justify-center gap-2.5 rounded-[16px] px-4 md:h-[300px] md:w-[226px]"
                 style={{ background: 'var(--td-paper)', boxShadow: '7px 7px 0 rgba(0,0,0,0.7)', transform: 'rotate(-2deg)' }}
               >
                 <span
-                  className="absolute left-2.5 top-2 text-2xl md:text-3xl"
+                  className="absolute left-3 top-2 text-3xl md:text-4xl"
                   style={{ ...TD_DISPLAY, color: 'var(--td-orange)' }}
                 >
                   {current.value}
@@ -244,7 +244,7 @@ export function CardsRound({
                   <BoltGlyph size={20} />
                 </span>
                 {current.lines.map((line) => (
-                  <span key={line} className="text-center text-base md:text-lg" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
+                  <span key={line} className="text-center text-lg md:text-xl" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
                     {line}
                   </span>
                 ))}
@@ -277,14 +277,14 @@ export function CardsRound({
             autoCorrect="off"
             spellCheck={false}
             enterKeyHint="send"
-            className="h-12 min-w-0 flex-1 rounded-[10px] border-0 px-4 text-[15px] text-white outline-none placeholder:text-white/35 disabled:opacity-50"
+            className="h-14 min-w-0 flex-1 rounded-[10px] border-0 px-4 text-base text-white outline-none placeholder:text-white/35 disabled:opacity-50"
             style={{ background: 'var(--td-charcoal)', boxShadow: '4px 4px 0 rgba(0,0,0,0.5)', fontFamily: "'Noto Sans Georgian', sans-serif", fontWeight: 600 }}
           />
           <motion.button
             type="submit"
             whileTap={{ scale: 0.95 }}
             disabled={!myInput}
-            className="h-12 shrink-0 rounded-[10px] px-5 text-sm disabled:opacity-40"
+            className="h-14 shrink-0 rounded-[10px] px-6 text-base disabled:opacity-40"
             style={{ ...TD_DISPLAY, background: 'var(--td-orange)', color: '#0d0d0d', boxShadow: '4px 4px 0 rgba(0,0,0,0.5)' }}
           >
             {TD.submit}

@@ -25,29 +25,29 @@ export function ScorePill({
 }) {
   return (
     <div className="flex items-center gap-1.5">
-      <XGlyph size={10} color="rgba(255,255,255,0.35)" />
+      <XGlyph size={13} color="rgba(255,255,255,0.35)" />
       <div
         className="flex items-stretch overflow-hidden rounded-[8px]"
         style={{ background: '#0d0d0d', boxShadow: '3px 3px 0 rgba(0,0,0,0.5)' }}
       >
-        <span className="flex w-9 items-center justify-center text-xl text-white md:w-11 md:text-2xl" style={TD_DISPLAY}>
+        <span className="flex w-11 items-center justify-center text-2xl text-white md:w-14 md:text-3xl" style={TD_DISPLAY}>
           {roundsMe}
         </span>
         <div
           className="flex items-center px-2.5"
           style={{ background: 'var(--td-orange)', clipPath: 'polygon(18% 0, 100% 0, 82% 100%, 0 100%)' }}
         >
-          <span className="text-[12px] tabular-nums md:text-sm" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
+          <span className="text-[14px] tabular-nums md:text-base" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
             {inRoundMe}
             {sep}
             {inRoundOp}
           </span>
         </div>
-        <span className="flex w-9 items-center justify-center text-xl text-white md:w-11 md:text-2xl" style={TD_DISPLAY}>
+        <span className="flex w-11 items-center justify-center text-2xl text-white md:w-14 md:text-3xl" style={TD_DISPLAY}>
           {roundsOp}
         </span>
       </div>
-      <XGlyph size={10} color="rgba(255,255,255,0.35)" />
+      <XGlyph size={13} color="rgba(255,255,255,0.35)" />
     </div>
   );
 }
@@ -57,7 +57,7 @@ export function ScorePill({
 export function CategoryBand({ prompt, compact = false }: { prompt: string; compact?: boolean }) {
   return (
     <div
-      className={`relative flex w-full items-center gap-3 overflow-hidden rounded-[12px] ${compact ? 'px-3 py-2.5' : 'px-4 py-5'}`}
+      className={`relative flex w-full items-center gap-3 overflow-hidden rounded-[12px] ${compact ? 'px-3.5 py-3' : 'px-4 py-5'}`}
       style={{
         background: 'var(--td-charcoal)',
         boxShadow: '4px 5px 0 rgba(0,0,0,0.5)',
@@ -73,14 +73,14 @@ export function CategoryBand({ prompt, compact = false }: { prompt: string; comp
         }}
       />
       <div
-        className={`flex shrink-0 items-center justify-center ${compact ? 'size-9 rounded-[10px]' : 'size-14 rounded-[14px]'}`}
+        className={`flex shrink-0 items-center justify-center ${compact ? 'size-11 rounded-[10px]' : 'size-16 rounded-[14px]'}`}
         style={{ background: 'var(--td-orange)', transform: 'rotate(-3deg)', boxShadow: '3px 3px 0 rgba(0,0,0,0.45)' }}
       >
-        <span style={{ ...TD_DISPLAY, color: '#0d0d0d', fontSize: compact ? 20 : 30 }}>?</span>
+        <span style={{ ...TD_DISPLAY, color: '#0d0d0d', fontSize: compact ? 24 : 34 }}>?</span>
       </div>
       <p
         className="relative text-white"
-        style={{ ...TD_DISPLAY, fontSize: compact ? 'clamp(13px, 1.5vw, 17px)' : 'clamp(16px, 2.6vw, 24px)', lineHeight: 1.15 }}
+        style={{ ...TD_DISPLAY, fontSize: compact ? 'clamp(15px, 1.9vw, 21px)' : 'clamp(18px, 2.8vw, 28px)', lineHeight: 1.15 }}
       >
         {prompt}
       </p>
@@ -94,7 +94,7 @@ function Heart({ alive }: { alive: boolean }) {
   return (
     <motion.svg
       viewBox="0 0 24 22"
-      className="h-4 w-4 md:h-6 md:w-6"
+      className="h-5 w-5 md:h-7 md:w-7"
       animate={alive ? { scale: 1, opacity: 1 } : { scale: [1.25, 0.9, 1], opacity: 0.28 }}
       transition={{ duration: 0.4 }}
       aria-hidden
@@ -131,7 +131,7 @@ export function PlayerBoard({
   const mirror = side === 'right';
   const lastAnswers = answers.slice(-4);
   return (
-    <div className={`flex h-[min(300px,34dvh)] min-w-0 flex-1 items-stretch gap-1.5 md:h-[360px] ${mirror ? 'flex-row-reverse' : ''}`}>
+    <div className={`flex h-[min(340px,36dvh)] min-w-0 flex-1 items-stretch gap-1.5 md:h-[400px] ${mirror ? 'flex-row-reverse' : ''}`}>
       {/* answers panel */}
       <div
         className="relative min-w-0 flex-1 rounded-[10px] px-3 pb-8 pt-2"
@@ -149,7 +149,7 @@ export function PlayerBoard({
                 key={a}
                 initial={{ opacity: 0, y: 8, scale: 0.96 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                className={`truncate border-b py-1 text-[11px] text-white md:py-1.5 md:text-base ${mirror ? 'text-right' : ''}`}
+                className={`truncate border-b py-1 text-[13px] text-white md:py-2 md:text-lg ${mirror ? 'text-right' : ''}`}
                 style={{ ...TD_DISPLAY, borderColor: 'var(--td-line)' }}
               >
                 {a}
@@ -158,7 +158,7 @@ export function PlayerBoard({
           </AnimatePresence>
           {/* empty ruled lines to keep the board feeling like the show's */}
           {Array.from({ length: Math.max(0, 3 - lastAnswers.length) }).map((_, i) => (
-            <div key={i} className="border-b py-1 text-[11px] md:text-sm" style={{ borderColor: 'var(--td-line)' }}>
+            <div key={i} className="border-b py-1 text-[13px] md:text-lg" style={{ borderColor: 'var(--td-line)' }}>
               &nbsp;
             </div>
           ))}
@@ -168,7 +168,7 @@ export function PlayerBoard({
           <svg viewBox="0 0 24 40" width="8" height="13" fill="var(--td-orange)" aria-hidden>
             <path d="M14 0 0 22h8L6 40 24 15h-9L21 0h-7Z" />
           </svg>
-          <span className="truncate text-[11px] md:text-[13px]" style={{ ...TD_DISPLAY, color: 'var(--td-orange)' }}>
+          <span className="truncate text-[12px] md:text-[15px]" style={{ ...TD_DISPLAY, color: 'var(--td-orange)' }}>
             {name}
           </span>
         </div>
@@ -184,14 +184,14 @@ export function PlayerBoard({
       </div>
       {/* orange tab: count + hearts */}
       <div
-        className="flex w-10 shrink-0 flex-col items-center gap-1.5 self-start rounded-[10px] px-1 pb-2.5 md:w-14 md:gap-2 md:pb-3"
+        className="flex w-12 shrink-0 flex-col items-center gap-1.5 self-start rounded-[10px] px-1 pb-2.5 md:w-16 md:gap-2 md:pb-3"
         style={{ background: 'var(--td-orange)', boxShadow: '4px 5px 0 rgba(0,0,0,0.5)' }}
       >
         <motion.span
           key={count}
           initial={{ scale: 1.4 }}
           animate={{ scale: 1 }}
-          className="pt-1 text-2xl md:text-4xl"
+          className="pt-1 text-3xl md:text-5xl"
           style={{ ...TD_DISPLAY, color: '#0d0d0d' }}
         >
           {count}
@@ -210,7 +210,7 @@ export function PlayerBoard({
 
 export function TurnTimerBar({ turnKey, ms, running }: { turnKey: string; ms: number; running: boolean }) {
   return (
-    <div className="h-1.5 w-full overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.12)' }}>
+    <div className="h-2 w-full overflow-hidden rounded-full md:h-2.5" style={{ background: 'rgba(255,255,255,0.12)' }}>
       <motion.div
         key={turnKey}
         initial={{ width: '100%' }}

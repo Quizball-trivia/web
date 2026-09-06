@@ -1089,14 +1089,14 @@ export function TableDerbyApp() {
                   autoCorrect="off"
                   spellCheck={false}
                   enterKeyHint="send"
-                  className="h-12 min-w-0 flex-1 rounded-[10px] border-0 px-4 text-[15px] text-white outline-none placeholder:text-white/35 disabled:opacity-50"
+                  className="h-14 min-w-0 flex-1 rounded-[10px] border-0 px-4 text-base text-white outline-none placeholder:text-white/35 disabled:opacity-50"
                   style={{ background: 'var(--td-charcoal)', boxShadow: '4px 4px 0 rgba(0,0,0,0.5)', fontFamily: "'Noto Sans Georgian', sans-serif", fontWeight: 600 }}
                 />
                 <motion.button
                   type="submit"
                   whileTap={{ scale: 0.95 }}
                   disabled={round.turn !== 'me' || !!roundWinner}
-                  className="h-12 shrink-0 rounded-[10px] px-5 text-sm disabled:opacity-40"
+                  className="h-14 shrink-0 rounded-[10px] px-6 text-base disabled:opacity-40"
                   style={{ ...TD_DISPLAY, background: 'var(--td-orange)', color: '#0d0d0d', boxShadow: '4px 4px 0 rgba(0,0,0,0.5)' }}
                 >
                   {TD.submit}

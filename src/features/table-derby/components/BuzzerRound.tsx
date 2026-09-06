@@ -188,38 +188,38 @@ export function BuzzerRound({
     <div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-3 md:gap-4">
       <ScorePill roundsMe={roundsWon.me} roundsOp={roundsWon.op} inRoundMe={scores.me} inRoundOp={scores.op} sep=":" />
       <div className="flex items-center gap-2.5">
-        <span className="text-[11px] text-white/60" style={TD_DISPLAY}>
+        <span className="text-[13px] text-white/60" style={TD_DISPLAY}>
           {penaltyMode ? TD.penaltiesName : TD.round4Name}
         </span>
         <span
-          className="rounded-full px-2.5 py-0.5 text-[11px]"
+          className="rounded-full px-3 py-1 text-[13px]"
           style={{ ...TD_DISPLAY, background: 'var(--td-white)', color: '#0d0d0d' }}
         >
           {Math.min(itemIdx + 1, queue.length)}/{queue.length}
         </span>
         {suddenDeath && itemIdx >= items.length && (
-          <span className="rounded-full px-2.5 py-0.5 text-[11px]" style={{ ...TD_DISPLAY, background: 'var(--td-orange)', color: '#0d0d0d' }}>
+          <span className="rounded-full px-3 py-1 text-[13px]" style={{ ...TD_DISPLAY, background: 'var(--td-orange)', color: '#0d0d0d' }}>
             {TD.suddenDeath}
           </span>
         )}
       </div>
 
       {/* clue stack / question */}
-      <div className="flex min-h-[210px] w-full flex-col justify-end gap-2 md:min-h-[240px]">
+      <div className="flex min-h-[250px] w-full flex-col justify-end gap-2.5 md:min-h-[300px]">
         <AnimatePresence initial={false}>
           {revealed.map((clue, i) => (
             <motion.div
               key={`${item.id}-${i}`}
               initial={{ opacity: 0, y: 14, rotate: -1.5 }}
               animate={{ opacity: 1, y: 0, rotate: i % 2 ? 0.8 : -0.8 }}
-              className="rounded-[10px] px-4 py-2.5"
+              className="rounded-[10px] px-4 py-3"
               style={{
                 background: i === revealed.length - 1 ? 'var(--td-paper)' : 'var(--td-charcoal)',
                 boxShadow: '4px 4px 0 rgba(0,0,0,0.55)',
               }}
             >
               <span
-                className="text-[13px] leading-snug md:text-[15px]"
+                className="text-[15px] leading-snug md:text-lg"
                 style={{ ...TD_DISPLAY, color: i === revealed.length - 1 ? '#0d0d0d' : 'rgba(255,255,255,0.85)' }}
               >
                 {clue}
@@ -249,13 +249,13 @@ export function BuzzerRound({
               autoCorrect="off"
               spellCheck={false}
               enterKeyHint="send"
-              className="h-12 min-w-0 flex-1 rounded-[10px] border-0 px-4 text-[15px] text-white outline-none placeholder:text-white/35"
+              className="h-14 min-w-0 flex-1 rounded-[10px] border-0 px-4 text-base text-white outline-none placeholder:text-white/35"
               style={{ background: 'var(--td-charcoal)', boxShadow: '4px 4px 0 rgba(0,0,0,0.5)', fontFamily: "'Noto Sans Georgian', sans-serif", fontWeight: 600 }}
             />
             <motion.button
               type="submit"
               whileTap={{ scale: 0.95 }}
-              className="h-12 shrink-0 rounded-[10px] px-5 text-sm"
+              className="h-14 shrink-0 rounded-[10px] px-6 text-base"
               style={{ ...TD_DISPLAY, background: 'var(--td-orange)', color: '#0d0d0d', boxShadow: '4px 4px 0 rgba(0,0,0,0.5)' }}
             >
               {TD.submit}
@@ -269,7 +269,7 @@ export function BuzzerRound({
             whileTap={{ scale: 0.9 }}
             onClick={buzz}
             disabled={zphase !== 'clues' || locked.me}
-            className="flex size-24 items-center justify-center rounded-full text-lg disabled:opacity-35 md:size-28 md:text-xl"
+            className="flex size-28 items-center justify-center rounded-full text-xl disabled:opacity-35 md:size-32 md:text-2xl"
             style={{
               ...TD_DISPLAY,
               background: 'var(--td-orange)',
@@ -279,7 +279,7 @@ export function BuzzerRound({
           >
             {TD.buzz}
           </motion.button>
-          <span className="text-[10px] text-white/50" style={TD_DISPLAY}>
+          <span className="text-[12px] text-white/50" style={TD_DISPLAY}>
             {locked.me ? TD.lockedOut : zphase === 'answerOp' ? `${opponentName} · ${TD.opponentBuzzed}` : TD.buzzRules}
           </span>
         </div>

@@ -191,14 +191,14 @@ export function BoxRound({
               ? TD.yourTurn
               : '';
 
-  const boxSize = 260;
+  const boxSize = typeof window !== 'undefined' && window.innerWidth >= 768 ? 340 : 280;
   const half = boxSize / 2;
 
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-3 md:gap-4">
       <ScorePill roundsMe={roundsWon.me} roundsOp={roundsWon.op} inRoundMe={scores.me} inRoundOp={scores.op} />
       <p
-        className="text-center text-[12px] md:text-sm"
+        className="text-center text-[14px] md:text-base"
         style={{ ...TD_DISPLAY, color: bphase === 'stealMe' ? 'var(--td-orange)' : 'rgba(255,255,255,0.7)' }}
       >
         {statusText}
@@ -210,7 +210,7 @@ export function BoxRound({
           type="button"
           disabled={!canRoll}
           onClick={() => setFace((f) => (f + 4) % 5)}
-          className="flex size-11 items-center justify-center rounded-full text-xl text-white disabled:opacity-30"
+          className="flex size-12 items-center justify-center rounded-full text-2xl text-white disabled:opacity-30 md:size-14"
           style={{ ...TD_DISPLAY, background: 'var(--td-charcoal)', boxShadow: '3px 3px 0 #000' }}
           aria-label="roll-left"
         >
@@ -247,11 +247,11 @@ export function BoxRound({
                       className="relative flex items-center justify-between gap-2 rounded-[10px] px-3.5 py-3.5 text-left transition-transform enabled:hover:-translate-y-0.5 disabled:opacity-60"
                       style={{ background: '#141414', boxShadow: '3.5px 3.5px 0 rgba(0,0,0,0.45)' }}
                     >
-                      <span className="text-[13px] text-white md:text-sm" style={TD_DISPLAY}>
+                      <span className="text-[15px] text-white md:text-base" style={TD_DISPLAY}>
                         {card.title}
                       </span>
                       <span
-                        className="shrink-0 rounded-full px-2 py-0.5 text-[10px]"
+                        className="shrink-0 rounded-full px-2.5 py-1 text-[11px]"
                         style={{
                           ...TD_DISPLAY,
                           background: card.remaining.length > 0 ? 'var(--td-orange)' : 'rgba(255,255,255,0.15)',
@@ -271,7 +271,7 @@ export function BoxRound({
           type="button"
           disabled={!canRoll}
           onClick={() => setFace((f) => (f + 1) % 5)}
-          className="flex size-11 items-center justify-center rounded-full text-xl text-white disabled:opacity-30"
+          className="flex size-12 items-center justify-center rounded-full text-2xl text-white disabled:opacity-30 md:size-14"
           style={{ ...TD_DISPLAY, background: 'var(--td-charcoal)', boxShadow: '3px 3px 0 #000' }}
           aria-label="roll-right"
         >
@@ -291,10 +291,10 @@ export function BoxRound({
               className="mx-auto w-full max-w-xl rounded-[12px] px-4 py-3.5"
               style={{ background: 'var(--td-paper)', boxShadow: '5px 5px 0 rgba(0,0,0,0.6)', transform: 'rotate(-0.6deg)' }}
             >
-              <span className="text-[10px]" style={{ ...TD_DISPLAY, color: 'var(--td-orange)' }}>
+              <span className="text-[11px]" style={{ ...TD_DISPLAY, color: 'var(--td-orange)' }}>
                 {activeQ.cardTitle}
               </span>
-              <p className="mt-1 text-[14px] leading-snug md:text-base" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
+              <p className="mt-1 text-[16px] leading-snug md:text-lg" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
                 {activeQ.q.q}
               </p>
             </motion.div>
@@ -327,14 +327,14 @@ export function BoxRound({
             autoCorrect="off"
             spellCheck={false}
             enterKeyHint="send"
-            className="h-12 min-w-0 flex-1 rounded-[10px] border-0 px-4 text-[15px] text-white outline-none placeholder:text-white/35 disabled:opacity-50"
+            className="h-14 min-w-0 flex-1 rounded-[10px] border-0 px-4 text-base text-white outline-none placeholder:text-white/35 disabled:opacity-50"
             style={{ background: 'var(--td-charcoal)', boxShadow: '4px 4px 0 rgba(0,0,0,0.5)', fontFamily: "'Noto Sans Georgian', sans-serif", fontWeight: 600 }}
           />
           <motion.button
             type="submit"
             whileTap={{ scale: 0.95 }}
             disabled={!myInput}
-            className="h-12 shrink-0 rounded-[10px] px-5 text-sm disabled:opacity-40"
+            className="h-14 shrink-0 rounded-[10px] px-6 text-base disabled:opacity-40"
             style={{ ...TD_DISPLAY, background: 'var(--td-orange)', color: '#0d0d0d', boxShadow: '4px 4px 0 rgba(0,0,0,0.5)' }}
           >
             {TD.submit}
