@@ -1,5 +1,7 @@
 'use client';
 
+import { ROAD_FINISH_MS } from '../lib/footballMotion';
+
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import Image from 'next/image';
@@ -77,7 +79,7 @@ type Phase = 'idle' | 'question' | 'correct' | 'decision' | 'tackle' | 'tackled'
 const COPY = {
   en: {
     title: 'Road to Goal',
-    subtitle: 'Beat 11 defenders. One football question per zone.',
+    subtitle: 'Beat 10 defenders and the keeper. One football question per zone.',
     balance: 'Balance',
     zone: 'Zone',
     stake: 'Stake',
@@ -94,6 +96,8 @@ const COPY = {
     cleanBody: 'You are through zone {zone}. The next defender is already stepping up.',
     continue: 'Attack zone {zone}',
     cashOut: 'Bank {amount}',
+    saved: 'Saved!',
+    savedBody: 'The keeper saved your final shot. Your stake is gone.',
     tackled: 'Tackled!',
     tackledBody: 'The defender stopped your run in zone {zone}. Your stake is gone.',
     correctWas: 'Correct answer: {answer}',
@@ -101,7 +105,7 @@ const COPY = {
     cashed: 'Run banked',
     cashedBody: '{zones} zones cleared at {mult}×.',
     finalTitle: 'Goal!',
-    finalBody: 'All 11 defenders beaten. A perfect run at 4.00×.',
+    finalBody: 'Ten defenders beaten. Keeper beaten. A perfect run at 4.00×.',
     won: 'You banked {amount}',
     startAgain: 'Play again',
     liveRoute: 'Live route',
@@ -111,7 +115,7 @@ const COPY = {
   },
   ka: {
     title: 'გზა გოლისკენ',
-    subtitle: 'აჯობე 11 მცველს — თითო ზონაში ერთი საფეხბურთო კითხვა.',
+    subtitle: 'აჯობე 10 მცველს და მეკარეს — თითო ზონაში ერთი საფეხბურთო კითხვა.',
     balance: 'ბალანსი',
     zone: 'ზონა',
     stake: 'ფსონი',
@@ -128,6 +132,8 @@ const COPY = {
     cleanBody: 'შენ გაიარე ზონა {zone}. შემდეგი მცველი უკვე გელოდება.',
     continue: 'შეუტიე ზონას {zone}',
     cashOut: 'აიღე {amount}',
+    saved: 'მეკარემ აიღო!',
+    savedBody: 'მეკარემ ბოლო დარტყმა მოიგერია. ფსონი დაიკარგა.',
     tackled: 'ჩაგჭრეს!',
     tackledBody: 'მცველმა გაგაჩერა ზონაში {zone}. ფსონი დაიკარგა.',
     correctWas: 'სწორი პასუხი: {answer}',
@@ -135,7 +141,7 @@ const COPY = {
     cashed: 'მოგება აღებულია',
     cashedBody: 'გაიარე {zones} ზონა — {mult}×.',
     finalTitle: 'გოლი!',
-    finalBody: 'თერთმეტივე მცველი მოტყუებულია. იდეალური გარბენი — 4.00×.',
+    finalBody: 'ათი მცველი და მეკარე დამარცხებულია. იდეალური გარბენი — 4.00×.',
     won: 'აიღე {amount}',
     startAgain: 'კიდევ თამაში',
     liveRoute: 'ცოცხალი მარშრუტი',
@@ -729,7 +735,7 @@ export function RoadToGoal({
       }
       setSelected(-1);
       setPhase('tackle');
-      later(() => setPhase('tackled'), 1_050);
+      later(() => setPhase('tackled'), progress === ZONES - 1 ? ROAD_FINISH_MS : 1_050);
     }, Math.max(0, deadline - serverNow()));
     return () => {
       cancelled = true;
@@ -935,7 +941,7 @@ export function RoadToGoal({
         setPhase(result.survived ? 'correct' : 'tackle');
         later(() => {
           void finishLiveMutation(result.state);
-        }, result.survived ? DRIBBLE_MS : 1_050);
+        }, progress === ZONES - 1 ? ROAD_FINISH_MS : result.survived ? DRIBBLE_MS : 1_050);
       } catch (error) {
         trackRoadToGoalError({
           action: 'answer',
@@ -977,7 +983,7 @@ export function RoadToGoal({
     if (!answeredCorrectly) {
       setPhase('tackle');
       trackDemoSettlement('lost', 'demo_tackle', 0, progress);
-      later(() => setPhase('tackled'), 1_050);
+      later(() => setPhase('tackled'), progress === ZONES - 1 ? ROAD_FINISH_MS : 1_050);
       return;
     }
 
@@ -995,7 +1001,7 @@ export function RoadToGoal({
       } else {
         setPhase('decision');
       }
-    }, DRIBBLE_MS);
+    }, progress === ZONES - 1 ? ROAD_FINISH_MS : DRIBBLE_MS);
   };
 
   const continueRun = async () => {
@@ -1337,9 +1343,9 @@ export function RoadToGoal({
                 <div className="flex size-12 items-center justify-center rounded-full bg-brand-orange text-[#07111D] shadow-[0_0_35px_rgba(255,150,0,.45)]">
                   <Shield className="size-7" />
                 </div>
-                <h2 className="mt-2 font-poppins text-xl font-black uppercase text-brand-orange">{copy.tackled}</h2>
+                <h2 className="mt-2 font-poppins text-xl font-black uppercase text-brand-orange">{progress === ZONES - 1 ? copy.saved : copy.tackled}</h2>
                 <p className="mt-1 max-w-xs font-poppins text-xs font-semibold leading-relaxed text-white/75">
-                  {fill(copy.tackledBody, { zone: progress + 1 })}
+                  {progress === ZONES - 1 ? copy.savedBody : fill(copy.tackledBody, { zone: progress + 1 })}
                 </p>
                 {correctAnswer && (
                   <p className="mt-3 rounded-xl bg-white/[0.04] px-3 py-2 font-poppins text-[10px] font-bold text-white/55">

@@ -1964,6 +1964,13 @@
     "min": "min",
     "sec": "sec",
     "prizes": "Prizes",
+    "prize1AmazonReward": "$50 USD Amazon Gift Card",
+    "prize2AmazonReward": "$25 USD Amazon Gift Card",
+    "prize3AmazonReward": "$10 USD Amazon Gift Card",
+    "promoAmazonGiftCard": "Amazon Gift Card",
+    "promoAmazonStore": "USD · Redeemable on Amazon.com",
+    "prizesGeorgiaRule": "Players whose saved profile country is Georgia receive store vouchers in GEL.",
+    "prizesInternationalRule": "Players whose saved profile country is outside Georgia receive Amazon Gift Cards in USD. Redeemable on Amazon.com only.",
     "prizesNote": "Prizes are awarded on final placement. Fair-play review applies before payout.",
     "you": "You",
     "prize1Label": "Champion",
@@ -2189,7 +2196,8 @@
     "hofSilver": "silver",
     "hofBronze": "bronze",
     "hofError": "Couldn't load past winners.",
-    "hofRetry": "Try again"
+    "hofRetry": "Try again",
+    "prizesPayoutNote": "All prizes are paid out before the next Weekend League begins."
   },
   "wlAward": {
     "title1": "Weekend League Champion",

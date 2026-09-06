@@ -3,8 +3,7 @@
 /**
  * FINAL THIRD — compact three.js free-kick scene.
  *
- * The scene is deliberately asset-free: the footballers are articulated,
- * low-poly rigs with named joints, football proportions and kit details. The
+ * Shared skinned footballers use detailed kits and motion capture. The
  * joints are resolved from each group inside useFrame so React never reads a
  * ref during render (required by the React Compiler lint rules).
  *
@@ -19,6 +18,13 @@ import { Suspense, useEffect, useMemo, useRef, useState, type RefObject } from '
 import { Canvas, useFrame, useLoader, type ThreeEvent } from '@react-three/fiber';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
+import { sampleSavedBall, type KeeperSaveStyle } from '../lib/keeperSaves';
+import { sampleGoalkeeper } from './GoalkeeperMotion';
+import { poseWallHands } from './WallPlayerPose';
+import { netRebound } from '../lib/ballPhysics';
+import { footballStyleForPlayer } from '../lib/footballActions';
+import { sampleStyledShot, SHOT_PROFILES } from '../lib/playerShotPhysics';
+import { useMatchBallTexture, useMatchBallGeometry, usePitchTurf, useStadiumArtwork } from './footballVisuals';
 import { MocapTaker } from './MocapTaker';
 import {
   buildPlayerObject,
@@ -53,8 +59,6 @@ const _ball = new THREE.Vector3();
 const KICK_LEAD_S = 0.45;
 const FLIGHT_S = 0.78;
 const SAVE_CONTACT_S = FLIGHT_S * 0.88;
-const SAVE_GATHER_S = 0.18;
-const SAVE_LAND_S = 0.52;
 
 const PITCH_LINES = [
   { position: [0, 0.007, 5.55] as const, size: [11.2, 0.085] as const, rotation: 0 },
@@ -85,19 +89,9 @@ const HOARD_REAR_W = HOARD_INNER * 2 + HOARD_T;
 const HOARD_SIDE_LEN = HOARD_SIDE_END_Z - (HOARD_REAR_Z - HOARD_T / 2);
 const HOARD_SIDE_Z = HOARD_REAR_Z - HOARD_T / 2 + HOARD_SIDE_LEN / 2;
 const HOARD_Y = HOARD_H / 2 + 0.02;
-const HOARD_LOGO_M = 2.55;
 
 const lerp = THREE.MathUtils.lerp;
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
-const easeInOut = (v: number) => {
-  const t = clamp01(v);
-  return t * t * (3 - 2 * t);
-};
-const easeOut = (v: number) => {
-  const t = clamp01(v);
-  return 1 - (1 - t) * (1 - t);
-};
-
 type TakerId =
   | 'ronaldo'
   | 'messi'
@@ -330,7 +324,8 @@ const TAKER_LOOK: Record<TakerId, { kit: string; shorts: string; socks: string; 
 
 function CameraRig({ kick, shotZone, flying }: { kick: KickSetup; shotZone: Zone | null; flying: boolean }) {
   const look = useRef(new THREE.Vector3(-0.08, 1.05, 0));
-  useFrame((state) => {
+  useFrame((state, delta) => {
+    const blend = 1 - Math.exp(-5.6 * Math.min(delta, 0.1));
     const bx = kick.ball[0];
     const bz = kick.ball[2];
     // Narrow viewports (phones, tall panels) lose horizontal FOV and crop the
@@ -342,56 +337,18 @@ function CameraRig({ kick, shotZone, flying }: { kick: KickSetup; shotZone: Zone
         : 1.6;
     const back = Math.max(0, 1.6 / Math.min(1.6, Math.max(0.55, aspect)) - 1);
     const aimX = flying && shotZone ? (ZONE_POS[shotZone.id]?.[0] ?? 0) * 0.18 + bx * 0.12 : bx;
-    look.current.x = lerp(look.current.x, aimX * 0.48, 0.09);
-    look.current.y = lerp(look.current.y, 1.08, 0.09);
-    look.current.z = lerp(look.current.z, 0.12, 0.09);
-    state.camera.position.x = lerp(state.camera.position.x, 0.48 + bx * 0.46, 0.09);
-    state.camera.position.y = lerp(state.camera.position.y, 2.2 + (bz - 9) * 0.06 + back * 0.9, 0.09);
-    state.camera.position.z = lerp(state.camera.position.z, 13.55 + (bz - 8.4) * 0.58 + back * 6.2, 0.09);
+    look.current.x = lerp(look.current.x, aimX * 0.48, blend);
+    look.current.y = lerp(look.current.y, 1.08, blend);
+    look.current.z = lerp(look.current.z, 0.12, blend);
+    state.camera.position.x = lerp(state.camera.position.x, 0.48 + bx * 0.46, blend);
+    state.camera.position.y = lerp(state.camera.position.y, 2.2 + (bz - 9) * 0.06 + back * 0.9, blend);
+    state.camera.position.z = lerp(state.camera.position.z, 15.1 + (bz - 8.4) * 0.58 + back * 6.2 - (flying ? 0.45 : 0), blend);
     state.camera.lookAt(look.current);
   });
   return null;
 }
 
-/** Momentum carry-over: the scorer wheels off the strike before the
- *  signature pose, so the celebration doesn't snap in. */
-
-function seeded(seed: number): () => number {
-  let value = seed >>> 0;
-  return () => {
-    value = (value * 1664525 + 1013904223) >>> 0;
-    return value / 4294967296;
-  };
-}
-
 /* ── generated textures ───────────────────────────────────────────── */
-
-function useGrassTexture(): THREE.Texture {
-  return useMemo(() => {
-    const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 512;
-    const context = canvas.getContext('2d')!;
-    for (let i = 0; i < 10; i += 1) {
-      context.fillStyle = i % 2 ? '#176526' : '#1d7429';
-      context.fillRect(0, (512 / 10) * i, 512, 512 / 10);
-    }
-    const random = seeded(42);
-    for (let i = 0; i < 2600; i += 1) {
-      const light = random() > 0.54;
-      context.fillStyle = light
-        ? `rgba(175,225,141,${0.018 + random() * 0.035})`
-        : `rgba(0,18,4,${0.018 + random() * 0.04})`;
-      context.fillRect(random() * 512, random() * 512, 1 + random() * 2, 1 + random() * 3);
-    }
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-    texture.repeat.set(2.2, 3.4);
-    texture.anisotropy = 4;
-    texture.colorSpace = THREE.SRGBColorSpace;
-    return texture;
-  }, []);
-}
 
 function useNetTexture(): THREE.Texture {
   return useMemo(() => {
@@ -426,222 +383,22 @@ function useNetTexture(): THREE.Texture {
   }, []);
 }
 
-/** The brand World Cup ball (same art as the loading screen), billboarded. */
-function useBallTexture(): THREE.Texture {
-  return useMemo(() => {
-    const map = new THREE.TextureLoader().load('/assets/brand/goal-ball.webp');
-    map.colorSpace = THREE.SRGBColorSpace;
-    map.anisotropy = 8;
-    return map;
-  }, []);
-}
-
-function useStadiumBackdropTexture(): THREE.Texture {
-  return useMemo(() => {
-    const map = new THREE.TextureLoader().load('/assets/demos/final-third-stadium-georgia-v3.png');
-    map.colorSpace = THREE.SRGBColorSpace;
-    map.anisotropy = 8;
-    return map;
-  }, []);
-}
-
-// Retained for the optional all-3D stadium fallback used during art iteration.
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function useCrowdTexture(): THREE.Texture {
-  return useMemo(() => {
-    const W = 1536;
-    const H = 768;
-    const canvas = document.createElement('canvas');
-    canvas.width = W;
-    canvas.height = H;
-    const ctx = canvas.getContext('2d')!;
-    const random = seeded(2026);
-
-    const shade = (hex: string, f: number) => {
-      const n = parseInt(hex.slice(1), 16);
-      const r = Math.round(((n >> 16) & 255) * f);
-      const g = Math.round(((n >> 8) & 255) * f);
-      const b = Math.round((n & 255) * f);
-      return `rgb(${r},${g},${b})`;
-    };
-
-    // Concrete bowl base.
-    ctx.fillStyle = '#0f141c';
-    ctx.fillRect(0, 0, W, H);
-
-    // A stadium crowd reads as a dense low-contrast mass with structure:
-    // supporter blocks in team colors, everyone else muted, tiers + aisles.
-    const neutrals = ['#39424f', '#2e3642', '#454f5d', '#525c6b', '#3d4653', '#2a3340', '#4c5665'];
-    const mutedKit = ['#6e4a4e', '#3c5a78', '#5a6248', '#6b5a86', '#806246', '#7a3b41'];
-    const lights = ['#9aa4b2', '#aab2be', '#8d97a5'];
-    // Georgian colors — red and white supporter blocks.
-    const homeKit = ['#b8453c', '#a83a32', '#c65048', '#93332c'];
-    const awayKit = ['#c9ced6', '#b8bec7', '#d6dae0', '#aab0ba'];
-    const skins = ['#e8bd94', '#d99b68', '#aa6948', '#70452f', '#c48a62'];
-    const sections = [
-      { from: 0.06, to: 0.19, kit: homeKit },
-      { from: 0.44, to: 0.56, kit: awayKit },
-      { from: 0.81, to: 0.94, kit: homeKit },
-    ];
-    const pickShirt = (u: number) => {
-      const section = sections.find((s) => u >= s.from && u <= s.to);
-      if (section && random() < 0.62) return section.kit[Math.floor(random() * section.kit.length)];
-      const r = random();
-      if (r < 0.6) return neutrals[Math.floor(random() * neutrals.length)];
-      if (r < 0.86) return mutedKit[Math.floor(random() * mutedKit.length)];
-      return lights[Math.floor(random() * lights.length)];
-    };
-
-    // Stairway aisles slicing the tiers vertically.
-    const AISLE_STEP = 192;
-    const AISLE_HALF = 7;
-    const inAisle = (x: number) => {
-      const m = (((x - 96) % AISLE_STEP) + AISLE_STEP) % AISLE_STEP;
-      return m < AISLE_HALF || m > AISLE_STEP - AISLE_HALF;
-    };
-    ctx.fillStyle = '#1a212b';
-    for (let ax = 96; ax < W; ax += AISLE_STEP) ctx.fillRect(ax - AISLE_HALF, 0, AISLE_HALF * 2, H);
-
-    // Two seating tiers with a concourse walkway between them.
-    const tiers = [
-      { top: 22, bottom: 318, rows: 24, base: 0.52, range: 0.3 },
-      { top: 374, bottom: 748, rows: 30, base: 0.74, range: 0.26 },
-    ];
-    for (const tier of tiers) {
-      const rowStep = (tier.bottom - tier.top) / tier.rows;
-      for (let row = 0; row < tier.rows; row += 1) {
-        const y = tier.top + row * rowStep;
-        const depth = tier.base + tier.range * (row / (tier.rows - 1));
-        const offset = (row % 2) * 4.1;
-        for (let x = 4 + offset; x < W; x += 8.2) {
-          if (inAisle(x)) continue;
-          if (random() < 0.045) continue;
-          const jx = x + (random() - 0.5) * 2.6;
-          const jy = y + (random() - 0.5) * 2.4;
-          const f = depth * (0.9 + random() * 0.2);
-          ctx.fillStyle = shade(pickShirt(x / W), f);
-          ctx.beginPath();
-          ctx.ellipse(jx, jy + 4.4, 2.7, 3.5, 0, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.fillStyle = shade(skins[Math.floor(random() * skins.length)], f * 0.95);
-          ctx.beginPath();
-          ctx.arc(jx, jy, 1.9, 0, Math.PI * 2);
-          ctx.fill();
-        }
-        ctx.fillStyle = 'rgba(5, 8, 12, 0.22)';
-        ctx.fillRect(0, y + rowStep - 2, W, 2);
-      }
-    }
-
-    // Concourse walkway with railing highlights.
-    ctx.fillStyle = '#141a23';
-    ctx.fillRect(0, 318, W, 56);
-    ctx.fillStyle = '#303a48';
-    ctx.fillRect(0, 318, W, 3);
-    ctx.fillStyle = '#232b36';
-    ctx.fillRect(0, 371, W, 3);
-
-    // A few supporter flags poking out of the lower tier.
-    for (let i = 0; i < 8; i += 1) {
-      const fx = 50 + random() * (W - 100);
-      const fy = 400 + random() * 300;
-      const kit = random() < 0.5 ? homeKit[0] : awayKit[0];
-      ctx.save();
-      ctx.translate(fx, fy);
-      ctx.rotate((random() - 0.5) * 0.5);
-      ctx.fillStyle = shade('#77808d', 0.9);
-      ctx.fillRect(-0.8, -16, 1.6, 18);
-      ctx.fillStyle = shade(kit, 0.88);
-      ctx.fillRect(0.8, -16, 17, 11);
-      ctx.restore();
-    }
-
-    // Atmospheric falloff — upper tier fades into the stadium gloom, and the
-    // far edges darken so the stands recede behind the floodlit pitch.
-    const fog = ctx.createLinearGradient(0, 0, 0, H);
-    fog.addColorStop(0, 'rgba(7, 11, 17, 0.55)');
-    fog.addColorStop(0.45, 'rgba(7, 11, 17, 0.16)');
-    fog.addColorStop(1, 'rgba(7, 11, 17, 0)');
-    ctx.fillStyle = fog;
-    ctx.fillRect(0, 0, W, H);
-    for (const [x0, x1] of [[0, 200], [W - 200, W]] as const) {
-      const edge = ctx.createLinearGradient(x0 === 0 ? x1 : x0, 0, x0 === 0 ? 0 : W, 0);
-      edge.addColorStop(0, 'rgba(7, 11, 17, 0)');
-      edge.addColorStop(1, 'rgba(7, 11, 17, 0.45)');
-      ctx.fillStyle = edge;
-      ctx.fillRect(x0, 0, x1 - x0, H);
-    }
-
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.colorSpace = THREE.SRGBColorSpace;
-    texture.anisotropy = 4;
-    return texture;
-  }, []);
-}
-
 function useHoardingMap(metres: number): THREE.Texture {
-  return useMemo(() => {
-    // Brand hoarding: QUIZBALL wordmark tiles on brand blue. Canvas aspect
-    // matches the physical tile (HOARD_LOGO_M × visible face height) so the
-    // artwork isn't squeezed, and the repeat count is an integer so no tile
-    // ends mid-wordmark.
-    const canvas = document.createElement('canvas');
-    const W = 512;
-    const H = Math.round((W * (HOARD_H - 0.14)) / HOARD_LOGO_M);
-    canvas.width = W;
-    canvas.height = H;
+  const logo = useLoader(THREE.TextureLoader, '/assets/brand/quizball-logo.webp');
+  const map = useMemo(() => {
+    const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 128;
     const ctx = canvas.getContext('2d')!;
-    const draw = () => {
-      ctx.fillStyle = '#1645FF';
-      ctx.fillRect(0, 0, W, H);
-      // Drawn ball roundel — vector shapes only, no emoji (color-emoji fonts
-      // ignore fillStyle and vary per OS).
-      const cx = 84;
-      const cy = H / 2;
-      ctx.fillStyle = '#FFE500';
-      ctx.beginPath();
-      ctx.arc(cx, cy, 30, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = '#1645FF';
-      ctx.beginPath();
-      ctx.arc(cx, cy, 10, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.strokeStyle = '#1645FF';
-      ctx.lineWidth = 4;
-      for (let i = 0; i < 5; i += 1) {
-        const a = -Math.PI / 2 + (i * 2 * Math.PI) / 5;
-        ctx.beginPath();
-        ctx.moveTo(cx + Math.cos(a) * 10, cy + Math.sin(a) * 10);
-        ctx.lineTo(cx + Math.cos(a) * 24, cy + Math.sin(a) * 24);
-        ctx.stroke();
-      }
-      // Manual letter advance instead of ctx.letterSpacing (Safari < 18.4
-      // ignores the property and would render a narrower wordmark).
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '900 52px Poppins, sans-serif';
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'middle';
-      let x = 136;
-      for (const ch of 'QUIZBALL') {
-        ctx.fillText(ch, x, cy + 2);
-        x += ctx.measureText(ch).width + 4;
-      }
-    };
-    draw();
-    const map = new THREE.CanvasTexture(canvas);
-    map.colorSpace = THREE.SRGBColorSpace;
-    map.wrapS = THREE.RepeatWrapping;
-    map.wrapT = THREE.ClampToEdgeWrapping;
-    map.anisotropy = 4;
-    map.repeat.set(Math.max(1, Math.round(metres / HOARD_LOGO_M)), 1);
-    // On a cold load the first draw may use the sans-serif fallback; redraw
-    // once the real font is in.
-    void document.fonts.ready.then(() => {
-      draw();
-      map.needsUpdate = true;
-    });
-    return map;
-  }, [metres]);
+    ctx.fillStyle = '#10243b'; ctx.fillRect(0, 0, 256, 128);
+    ctx.fillStyle = '#b4f345'; ctx.fillRect(0, 0, 256, 3);
+    const height = 104, width = height * (logo.image.width / logo.image.height);
+    ctx.drawImage(logo.image, (256 - width) / 2, 12, width, height);
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace; texture.wrapS = THREE.RepeatWrapping;
+    texture.repeat.set(Math.max(1, Math.round(metres / 1.6)), 1); texture.anisotropy = 4;
+    return texture;
+  }, [logo, metres]);
+  useEffect(() => () => map.dispose(), [map]);
+  return map;
 }
 
 /* ── articulated footballers ──────────────────────────────────────── */
@@ -718,16 +475,6 @@ interface Timeline {
 
 
 
-/** High saves are sometimes two-fist punches that deflect the ball away. */
-function isPunchSave(zoneId: string, roll: number): boolean {
-  return (zoneId === 'TL' || zoneId === 'TR' || zoneId === 'TC') && roll > 0.55;
-}
-
-function shotRollFrom(start: number | null): number {
-  return start == null ? 0 : Math.abs(Math.sin(start * 761.3));
-}
-
-
 function WallPlayer({
   tl,
   x,
@@ -765,10 +512,10 @@ function WallPlayer({
     setJoint(joint.spine, 0.08);
     setJoint(joint.shoL, -0.32, 0, 0.1);
     setJoint(joint.shoR, -0.32, 0, -0.1);
-    setJoint(joint.elbL, -0.55, 0.85, 0);
-    setJoint(joint.elbR, -0.55, -0.85, 0);
-    setJoint(joint.handL, -0.35, 0, -0.15);
-    setJoint(joint.handR, -0.35, 0, 0.15);
+    setJoint(joint.elbL, -.5);
+    setJoint(joint.elbR, -.5);
+    setJoint(joint.handL, 0);
+    setJoint(joint.handR, 0);
     setJoint(joint.head, 0, -px * 0.035, 0);
 
     const jumpAt = start == null ? null : start + KICK_LEAD_S - 0.035 + delay;
@@ -795,6 +542,7 @@ function WallPlayer({
       setJoint(joint.ankleL, 0);
       setJoint(joint.ankleR, 0);
     }
+    poseWallHands(player, joint);
   });
 
   return (
@@ -816,399 +564,27 @@ function WallPlayer({
 }
 
 
-type KeeperMove = 'jump-catch' | 'high-fly' | 'high-tip' | 'low-sprawl' | 'smother' | 'wrong-way' | 'late' | 'frozen' | 'punch';
-
-/** `roll` is a stable per-shot random (derived from the shot start time) so
- *  the keeper and the ball agree on whether the save is a catch or a punch. */
-function keeperMove(zoneId: string, willSave: boolean, taker: TakerId, roll: number): KeeperMove {
-  if (!willSave) {
-    if (taker === 'messi' || taker === 'neymar' || taker === 'kvara') return 'frozen';
-    if (taker === 'carlos' || taker === 'ronaldinho' || taker === 'juninho') return 'late';
-    return 'wrong-way';
-  }
-  if (isPunchSave(zoneId, roll)) return 'punch';
-  if (zoneId === 'TC') return 'jump-catch';
-  if (zoneId === 'BC') return 'smother';
-  if (zoneId === 'TL' || zoneId === 'TR') return taker === 'beckham' || taker === 'ronaldo' ? 'high-tip' : 'high-fly';
-  return 'low-sprawl';
-}
-
-function poseKeeperReady(now: number, player: THREE.Group, joint: JointMap) {
-  const sway = Math.sin(now * 2.15) * 0.22;
-  const hop = Math.abs(Math.sin(now * 3.4));
-  player.position.set(sway, -0.05 + hop * 0.05, 0.42);
-  player.rotation.set(0.08, 0, -sway * 0.18);
-  setJoint(joint.pelvis, -0.16, 0, -sway * 0.1);
-  setJoint(joint.spine, 0.28);
-  setJoint(joint.hipL, -0.62 + hop * 0.08);
-  setJoint(joint.hipR, -0.62 + hop * 0.08);
-  setJoint(joint.kneeL, 1.08);
-  setJoint(joint.kneeR, 1.08);
-  setJoint(joint.ankleL, -0.28);
-  setJoint(joint.ankleR, -0.28);
-  setJoint(joint.shoL, -0.72, 0, -0.82);
-  setJoint(joint.shoR, -0.72, 0, 0.82);
-  setJoint(joint.elbL, -0.82);
-  setJoint(joint.elbR, -0.82);
-  setJoint(joint.head, -0.16);
-}
-
-function poseKeeperMove(
-  move: KeeperMove,
-  u: number,
-  side: number,
-  target: [number, number],
-  player: THREE.Group,
-  joint: JointMap,
-) {
-  const motion = easeOut(u);
-  if (move === 'jump-catch') {
-    const lift = Math.sin(motion * Math.PI) * 0.78;
-    player.position.set(target[0] * 0.12 * motion, -0.05 + motion * 0.55 + lift, 0.42);
-    player.rotation.set(lerp(0.08, -0.12, motion), 0, 0);
-    setJoint(joint.pelvis, lerp(-0.16, 0.08, motion));
-    setJoint(joint.spine, lerp(0.28, -0.18, motion));
-    setJoint(joint.hipL, lerp(-0.62, -0.22, motion));
-    setJoint(joint.hipR, lerp(-0.62, -0.22, motion));
-    setJoint(joint.kneeL, lerp(1.08, 0.55, motion));
-    setJoint(joint.kneeR, lerp(1.08, 0.55, motion));
-    setJoint(joint.shoL, lerp(-0.72, -2.85, motion), 0, lerp(-0.82, -0.18, motion));
-    setJoint(joint.shoR, lerp(-0.72, -2.85, motion), 0, lerp(0.82, 0.18, motion));
-    setJoint(joint.elbL, lerp(-0.82, -0.12, motion));
-    setJoint(joint.elbR, lerp(-0.82, -0.12, motion));
-    setJoint(joint.head, lerp(-0.16, -0.28, motion));
-    return;
-  }
-  if (move === 'smother') {
-    player.position.set(target[0] * 0.18 * motion, lerp(-0.05, -0.16, motion), lerp(0.42, 0.22, motion));
-    player.rotation.set(lerp(0.08, 1.05, motion), 0, 0);
-    setJoint(joint.pelvis, lerp(-0.16, 0.22, motion));
-    setJoint(joint.spine, lerp(0.28, 0.35, motion));
-    setJoint(joint.hipL, lerp(-0.62, 0.85, motion));
-    setJoint(joint.hipR, lerp(-0.62, 0.7, motion));
-    setJoint(joint.kneeL, lerp(1.08, 1.35, motion));
-    setJoint(joint.kneeR, lerp(1.08, 1.18, motion));
-    setJoint(joint.shoL, lerp(-0.72, -1.55, motion), 0, lerp(-0.82, 0.35, motion));
-    setJoint(joint.shoR, lerp(-0.72, -1.55, motion), 0, lerp(0.82, -0.35, motion));
-    setJoint(joint.elbL, lerp(-0.82, -0.2, motion));
-    setJoint(joint.elbR, lerp(-0.82, -0.2, motion));
-    setJoint(joint.head, lerp(-0.16, 0.22, motion));
-    return;
-  }
-  if (move === 'frozen') {
-    const flinch = Math.sin(motion * Math.PI);
-    player.position.set(side * 0.18 * motion, -0.05 + flinch * 0.12, 0.42);
-    player.rotation.set(0.1, -side * 0.35 * motion, -side * 0.12 * motion);
-    setJoint(joint.pelvis, -0.12);
-    setJoint(joint.spine, 0.2);
-    setJoint(joint.hipL, -0.5);
-    setJoint(joint.hipR, -0.5);
-    setJoint(joint.kneeL, 0.95);
-    setJoint(joint.kneeR, 0.95);
-    setJoint(joint.shoL, lerp(-0.72, -1.35, motion), 0, lerp(-0.82, -1.05, motion));
-    setJoint(joint.shoR, lerp(-0.72, -0.4, motion), 0, lerp(0.82, 0.55, motion));
-    setJoint(joint.head, 0.12, -side * 0.25, 0);
-    return;
-  }
-
-  if (move === 'punch') {
-    const lift = Math.sin(motion * Math.PI) * 0.82;
-    player.position.set(target[0] * 0.68 * motion, -0.05 + motion * 0.42 + lift, 0.42);
-    player.rotation.set(lerp(0.08, -0.2, motion), 0, -Math.sign(target[0] || 1) * motion * 0.35);
-    setJoint(joint.pelvis, lerp(-0.16, 0.06, motion));
-    setJoint(joint.spine, lerp(0.28, -0.22, motion));
-    setJoint(joint.hipL, lerp(-0.62, -0.1, motion));
-    setJoint(joint.hipR, lerp(-0.62, -0.35, motion));
-    setJoint(joint.kneeL, lerp(1.08, 0.4, motion));
-    setJoint(joint.kneeR, lerp(1.08, 0.72, motion));
-    setJoint(joint.shoL, lerp(-0.72, -2.7, motion), 0, lerp(-0.82, -0.12, motion));
-    setJoint(joint.shoR, lerp(-0.72, -2.7, motion), 0, lerp(0.82, 0.12, motion));
-    setJoint(joint.elbL, lerp(-0.82, -0.2, motion));
-    setJoint(joint.elbR, lerp(-0.82, -0.2, motion));
-    setJoint(joint.head, lerp(-0.16, -0.3, motion));
-    return;
-  }
-  const fly = move === 'high-fly' || move === 'high-tip' || move === 'late';
-  const sprawl = move === 'low-sprawl';
-  const wrong = move === 'wrong-way';
-  const reachSide = wrong ? -side : side;
-  const destX = wrong ? reachSide * 1.85 : fly ? target[0] * 0.82 : target[0] * 0.9;
-  const destY = fly ? Math.max(0.28, target[1] - 0.85) : sprawl ? 0.02 : 0.22;
-  const lift = Math.sin(motion * Math.PI) * (fly ? 0.72 : sprawl ? 0.22 : 0.38);
-  const roll = fly ? 1.05 : sprawl ? 1.42 : 1.22;
-  player.position.set(lerp(0, destX, motion), lerp(-0.05, destY, motion) + lift, 0.42);
-  player.rotation.set(sprawl ? lerp(0.08, 0.55, motion) : 0.04, 0, lerp(0, -reachSide * roll, motion));
-  setJoint(joint.pelvis, lerp(-0.16, 0.1, motion), 0, lerp(0, reachSide * 0.12, motion));
-  setJoint(joint.spine, lerp(0.28, fly ? -0.16 : 0.08, motion));
-  const leadArm = move === 'high-tip' ? 1.95 : 1.55;
-  setJoint(joint.shoL, lerp(-0.72, reachSide > 0 ? -0.35 : -2.7, motion), 0, lerp(-0.82, reachSide > 0 ? -leadArm : 0.55, motion));
-  setJoint(joint.shoR, lerp(-0.72, reachSide < 0 ? -0.35 : -2.7, motion), 0, lerp(0.82, reachSide < 0 ? leadArm : -0.55, motion));
-  setJoint(joint.elbL, lerp(-0.82, -0.08, motion));
-  setJoint(joint.elbR, lerp(-0.82, -0.08, motion));
-  setJoint(joint.hipL, lerp(-0.62, fly ? 0.35 : 0.85, motion), 0, -reachSide * 0.18);
-  setJoint(joint.hipR, lerp(-0.62, fly ? -0.15 : 0.2, motion), 0, reachSide * 0.22);
-  setJoint(joint.kneeL, lerp(1.08, fly ? 0.42 : 0.95, motion));
-  setJoint(joint.kneeR, lerp(1.08, fly ? 0.62 : 0.55, motion));
-  setJoint(joint.head, 0, 0, -reachSide * lerp(0, 0.22, motion));
-}
-
-function poseKeeperSave(
-  move: KeeperMove,
-  shotPhase: number,
-  side: number,
-  target: [number, number],
-  player: THREE.Group,
-  joint: JointMap,
-) {
-  const diveStart = KICK_LEAD_S + 0.02;
-  const contactAt = KICK_LEAD_S + SAVE_CONTACT_S;
-  const anticipation = easeInOut((shotPhase - (KICK_LEAD_S - 0.2)) / 0.2);
-  const reach = easeOut((shotPhase - diveStart) / (contactAt - diveStart));
-  const afterContact = Math.max(0, shotPhase - contactAt);
-  const gather = easeOut(afterContact / SAVE_GATHER_S);
-  const landing = easeInOut((afterContact - SAVE_GATHER_S * 0.55) / SAVE_LAND_S);
-  const settle = easeOut((afterContact - SAVE_GATHER_S - SAVE_LAND_S * 0.72) / 0.32);
-  const squeeze = Math.sin(clamp01(afterContact / SAVE_GATHER_S) * Math.PI);
-
-  if (move === 'jump-catch') {
-    const jumpY = lerp(-0.05 - anticipation * 0.09, 0.38, reach) + Math.sin(reach * Math.PI) * 0.3;
-    player.position.set(side * 0.08 * reach, lerp(jumpY, -0.05, landing), lerp(0.42, 0.48, landing));
-    player.rotation.set(lerp(0.08, -0.08, reach), 0, 0);
-    setJoint(joint.pelvis, lerp(-0.16 - anticipation * 0.12, 0.04, reach));
-    setJoint(joint.spine, lerp(0.3 + anticipation * 0.08, -0.12, reach));
-    setJoint(joint.hipL, lerp(-0.62 - anticipation * 0.28, -0.18, reach));
-    setJoint(joint.hipR, lerp(-0.62 - anticipation * 0.28, -0.18, reach));
-    setJoint(joint.kneeL, lerp(1.08 + anticipation * 0.38, 0.5, reach));
-    setJoint(joint.kneeR, lerp(1.08 + anticipation * 0.38, 0.5, reach));
-    setJoint(joint.ankleL, lerp(-0.28, 0.08, reach));
-    setJoint(joint.ankleR, lerp(-0.28, 0.08, reach));
-    setJoint(joint.shoL, lerp(-0.72, -1.35, reach), 0, lerp(-0.82, 2.62, reach));
-    setJoint(joint.shoR, lerp(-0.72, -1.35, reach), 0, lerp(0.82, -2.62, reach));
-    setJoint(joint.elbL, lerp(-0.82, -0.18 - gather * 1.2, reach));
-    setJoint(joint.elbR, lerp(-0.82, -0.18 - gather * 1.2, reach));
-    if (gather > 0) {
-      setJoint(joint.shoL, lerp(-1.35, -0.62, gather), 0, lerp(2.62, 1.62, gather));
-      setJoint(joint.shoR, lerp(-1.35, -0.62, gather), 0, lerp(-2.62, -1.62, gather));
-    }
-    setJoint(joint.head, lerp(-0.16, -0.32, reach) + gather * 0.24);
-    return;
-  }
-
-  if (move === 'smother') {
-    player.position.set(0, lerp(-0.05 - anticipation * 0.1, -0.14, reach), lerp(0.42, 0.18, reach));
-    player.rotation.set(lerp(0.08, 1.02, reach), 0, 0);
-    setJoint(joint.pelvis, lerp(-0.16 - anticipation * 0.12, 0.28, reach));
-    setJoint(joint.spine, lerp(0.28, 0.42, reach));
-    setJoint(joint.hipL, lerp(-0.62 - anticipation * 0.3, 0.92, reach));
-    setJoint(joint.hipR, lerp(-0.62 - anticipation * 0.3, 0.82, reach));
-    setJoint(joint.kneeL, lerp(1.08 + anticipation * 0.36, 1.38, reach));
-    setJoint(joint.kneeR, lerp(1.08 + anticipation * 0.36, 1.26, reach));
-    setJoint(joint.shoL, lerp(-0.72, 1.38, reach), 0, lerp(-0.82, 0.36, gather));
-    setJoint(joint.shoR, lerp(-0.72, 1.38, reach), 0, lerp(0.82, -0.36, gather));
-    setJoint(joint.elbL, lerp(-0.82, -0.18 - gather * 1.18, reach));
-    setJoint(joint.elbR, lerp(-0.82, -0.18 - gather * 1.18, reach));
-    setJoint(joint.head, lerp(-0.16, 0.28, reach));
-    return;
-  }
-
-  // 'punch' is a high corner save where the ball is parried away (the ball-
-  // flight deflects it); pose it as a full high dive reaching the ball, so the
-  // keeper meets a high shot up high rather than sprawling low.
-  const high = move === 'high-fly' || move === 'high-tip' || move === 'punch';
-  const contactRootX = target[0] * (high ? 0.68 : 0.66);
-  const contactRootY = high ? Math.max(0.52, target[1] - 0.78) : 0.08;
-  const flightLift = Math.sin(reach * Math.PI) * (high ? 0.34 : 0.16);
-  const contactRoll = -side * (high ? 0.72 : 0.58);
-  const landedRoll = -side * (high ? 1.38 : 1.46);
-  const landedX = target[0] * (high ? 0.52 : 0.5);
-
-  player.position.set(
-    lerp(lerp(0, contactRootX, reach), landedX, landing),
-    lerp(lerp(-0.05 - anticipation * 0.08, contactRootY, reach) + flightLift, 0.035, landing),
-    lerp(0.42, 0.5, landing),
-  );
-  player.rotation.set(lerp(0.08, high ? -0.04 : 0.28, reach), 0, lerp(0, lerp(contactRoll, landedRoll, landing), reach));
-  setJoint(joint.pelvis, lerp(-0.16 - anticipation * 0.1, 0.12, reach), 0, side * lerp(0, 0.12, gather));
-  setJoint(joint.spine, lerp(0.28, high ? -0.12 : 0.12, reach) + landing * 0.16);
-
-  const reachAngle = side * (high ? 2.95 : 2.66);
-  const wrapAngle = side * (high ? 0.42 : 0.3);
-  setJoint(joint.shoL, lerp(-0.72, -1.18, reach), 0, lerp(-0.82, reachAngle - 0.16, reach));
-  setJoint(joint.shoR, lerp(-0.72, -1.18, reach), 0, lerp(0.82, reachAngle + 0.16, reach));
-  if (gather > 0) {
-    setJoint(joint.shoL, lerp(-1.18, -0.48, gather), 0, lerp(reachAngle - 0.16, wrapAngle + 0.58, gather));
-    setJoint(joint.shoR, lerp(-1.18, -0.48, gather), 0, lerp(reachAngle + 0.16, wrapAngle - 0.58, gather));
-  }
-  setJoint(joint.elbL, lerp(-0.82, -0.12, reach) - gather * 1.42 - squeeze * 0.12);
-  setJoint(joint.elbR, lerp(-0.82, -0.12, reach) - gather * 1.42 - squeeze * 0.12);
-  setJoint(joint.hipL, lerp(-0.62 - anticipation * 0.22, high ? 0.28 : 0.76, reach), 0, -side * 0.12);
-  setJoint(joint.hipR, lerp(-0.62 - anticipation * 0.22, high ? -0.2 : 0.18, reach), 0, side * 0.18);
-  setJoint(joint.kneeL, lerp(1.08 + anticipation * 0.3, high ? 0.46 : 1.02, reach) + landing * 0.36);
-  setJoint(joint.kneeR, lerp(1.08 + anticipation * 0.3, high ? 0.68 : 0.62, reach) + landing * 0.28);
-  setJoint(joint.ankleL, lerp(-0.28, 0.18, reach));
-  setJoint(joint.ankleR, lerp(-0.28, -0.08, reach));
-  setJoint(joint.head, lerp(-0.16, -0.04, reach), side * lerp(0, 0.18, gather), -side * lerp(0, 0.18, landing));
-
-  if (settle > 0) {
-    player.position.y += Math.sin(settle * Math.PI) * 0.035;
-    setJoint(joint.spine, 0.22 - settle * 0.08);
-  }
-}
-
-function updateKeeperCatchPoint(player: THREE.Group, joint: JointMap, catchPoint: THREE.Vector3 | null) {
-  const left = joint.handL;
-  const right = joint.handR;
-  if (!left || !right || !catchPoint) return;
-  player.updateMatrixWorld(true);
-  left.getWorldPosition(catchPoint);
-  right.getWorldPosition(_ball);
-  catchPoint.lerp(_ball, 0.5);
-}
-
-const KEEPER_IDLE_URL = '/assets/demos/score/keeper-idle.glb';
-
-/**
- * Goalkeeper on the UBC body. While waiting he plays the REAL Mixamo mocap
- * ready-idle (retargeted onto this body in keeper-idle.glb); the instant a shot
- * is taken the mixer is paused and the hand-authored dive/catch/save poses take
- * over on the same skeleton via setJoint. The two never run at once — mixer for
- * idle, procedural for saves — so they don't fight over the bones.
- */
-function KeeperBody({
-  tl,
-  shotZone,
-  willSave,
-  settled,
-  scored,
-  taker,
-  catchPoint,
-}: {
-  tl: RefObject<Timeline>;
-  shotZone: Zone | null;
-  willSave: boolean | null;
-  settled: boolean;
-  scored: boolean | null;
-  taker: TakerId;
-  catchPoint: RefObject<THREE.Vector3>;
+function KeeperBody({ tl, shotZone, willSave, catchPoint, saveStyle }: {
+  tl: RefObject<Timeline>; shotZone: Zone | null; willSave: boolean | null;
+  saveStyle: KeeperSaveStyle; settled: boolean; scored: boolean | null; taker: TakerId; catchPoint: RefObject<THREE.Vector3>;
 }) {
-  const gltf = useLoader(GLTFLoader, KEEPER_IDLE_URL);
-  const hairLib = useLoader(GLTFLoader, SCORE_HAIR_URL);
-
-  const built = useMemo(() => {
-    const obj = buildPlayerObject(
-      gltf.scene,
-      { shirt: '#58cc02', shorts: '#071b18', accent: '#071b18', socks: '#58cc02' },
-      'keeper',
-      1,
-      '#071b18',
-      { skin: '#8f563b', hair: hairLib.scene, hairColor: '#17130e', hairStyle: 'Hair_SimpleParted', beard: false },
-    );
-    obj.traverse((c) => {
-      if ((c as THREE.SkinnedMesh).isSkinnedMesh) c.frustumCulled = false;
-    });
-    const mixer = new THREE.AnimationMixer(obj);
-    const idleClip = THREE.AnimationClip.findByName(gltf.animations, 'idle');
-    const idleAction = idleClip ? mixer.clipAction(idleClip) : null;
-    idleAction?.play();
-    return { obj, mixer, idleAction };
-  }, [gltf, hairLib]);
-
+  const gltf = useLoader(GLTFLoader, SCORE_BODY_URL);
+  const hair = useLoader(GLTFLoader, SCORE_HAIR_URL);
+  const obj = useMemo(() => buildPlayerObject(gltf.scene,
+    { shirt: '#e58732', shorts: '#152333', accent: '#eff2df', socks: '#e58732', gloves: '#f3f7ed' },
+    'keeper', 1, '#eff2df', { skin: '#8f563b', hair: hair.scene, hairColor: '#17130e', hairStyle: 'Hair_SimpleParted', beard: false }), [gltf, hair]);
   const root = useRef<THREE.Group>(null);
   const joints = useRef<JointMap | null>(null);
-  const idling = useRef(true);
-
-  useEffect(() => {
-    const { mixer, obj } = built;
-    return () => {
-      mixer.stopAllAction();
-      disposeBuiltObject(obj, mixer);
-    };
-  }, [built]);
-
-  useFrame((state, dt) => {
+  useEffect(() => () => disposeBuiltObject(obj), [obj]);
+  useFrame(({ clock }) => {
     const player = root.current;
     if (!player) return;
-    if (!joints.current || !jointsAttached(player, joints.current)) {
-      joints.current = resolveJoints(player);
-    }
-    const joint = joints.current;
-    if (!joint) return;
-    const now = state.clock.elapsedTime;
-    const start = tl.current?.start ?? null;
-    const shotTarget = shotZone ? ZONE_POS[shotZone.id] : null;
-    const move = shotZone && willSave != null ? keeperMove(shotZone.id, willSave, taker, shotRollFrom(start)) : 'jump-catch';
-    const delay = move === 'late' ? 0.2 : 0.05;
-    const shotPhase = start == null ? -1 : now - start;
-    const dive = clamp01((shotPhase - (KICK_LEAD_S + delay)) / (move === 'jump-catch' ? 0.42 : 0.5));
-
-    // Ready state: no shot yet, outcome unknown, or the save hasn't started —
-    // let the mocap idle play. On a save the reaction begins a beat before the
-    // ball is struck (shotPhase >= KICK_LEAD_S - 0.2); on a beaten dive it
-    // begins once `dive` opens up.
-    const preSave = shotPhase < KICK_LEAD_S - 0.2;
-    const ready = !shotTarget || willSave == null || (willSave ? preSave : dive <= 0);
-
-    if (ready) {
-      if (built.idleAction) {
-        // Play the real Mixamo idle. The clip already animates the whole body,
-        // so don't also drive setJoint — keep the keeper planted and let the
-        // mixer own the pose.
-        if (!idling.current) {
-          idling.current = true;
-          built.idleAction.reset().play();
-        }
-        built.mixer.update(dt);
-        player.position.set(0, -0.05, 0.42);
-        player.rotation.set(0.08, 0, 0);
-      } else {
-        // Fallback if the mocap idle clip failed to load.
-        poseKeeperReady(now, player, joint);
-      }
-      updateKeeperCatchPoint(player, joint, catchPoint.current);
-      return;
-    }
-
-    // A save/dive is underway — hand control to the procedural poses. Stop the
-    // idle mixer so it doesn't fight the setJoint writes.
-    if (idling.current) {
-      idling.current = false;
-      built.idleAction?.stop();
-    }
-
-    const side = shotTarget[0] === 0 ? (shotZone?.id === 'TC' ? 1 : -1) : Math.sign(shotTarget[0]);
-    if (willSave) {
-      poseKeeperSave(move, shotPhase, side, shotTarget, player, joint);
-      updateKeeperCatchPoint(player, joint, catchPoint.current);
-      return;
-    }
-
-    poseKeeperMove(move, dive, side, shotTarget, player, joint);
-
-    // Gravity: once the dive completes, the keeper comes down — flying saves
-    // land on the turf, a jump-catch lands back on its feet.
-    const diveDuration = move === 'jump-catch' ? 0.42 : 0.5;
-    const landing = easeOut(clamp01((shotPhase - (KICK_LEAD_S + delay + diveDuration)) / 0.5));
-    if (landing > 0 && move !== 'smother' && move !== 'frozen') {
-      const groundY = move === 'jump-catch' ? -0.05 : 0.03;
-      player.position.y = lerp(player.position.y, groundY, landing);
-    }
-
-    if (settled && scored === false) {
-      const bounce = Math.abs(Math.sin(now * 7.4));
-      if (move === 'jump-catch' || move === 'high-tip') {
-        player.position.y += bounce * 0.04 * (1 - landing * 0.5);
-        setJoint(joint.shoL, -2.7, 0, -0.2);
-        setJoint(joint.shoR, -2.7, 0, 0.2);
-      }
-    }
-    updateKeeperCatchPoint(player, joint, catchPoint.current);
+    if (!joints.current || !jointsAttached(player, joints.current)) joints.current = resolveJoints(player);
+    if (!joints.current) return;
+    const start = tl.current?.start;
+    sampleGoalkeeper(player, joints.current, shotZone ? ZONE_POS[shotZone.id] : [0, 1.1], start == null ? 0 : clock.elapsedTime - start, willSave === true, catchPoint.current, saveStyle);
   }, -1);
-
-  return (
-    <group ref={root} position={[0, -0.05, 0.42]}>
-      <primitive object={built.obj} />
-    </group>
-  );
+  return <group ref={root}><primitive object={obj} /></group>;
 }
 
 function KeeperPlayer(props: {
@@ -1219,6 +595,7 @@ function KeeperPlayer(props: {
   scored: boolean | null;
   taker: TakerId;
   catchPoint: RefObject<THREE.Vector3>;
+  saveStyle: KeeperSaveStyle;
 }) {
   return (
     <Suspense fallback={null}>
@@ -1533,6 +910,7 @@ interface SceneProps {
   onPick: (zone: Zone) => void;
   zones: Zone[];
   kick: KickSetup;
+  saveStyle: KeeperSaveStyle;
 }
 
 function Scene({
@@ -1548,12 +926,14 @@ function Scene({
   onPick,
   zones,
   kick,
+  saveStyle,
 }: SceneProps) {
-  const grass = useGrassTexture();
+  const { map: grass, bumpMap: grassBump } = usePitchTurf();
   const net = useNetTexture();
-  const ballTexture = useBallTexture();
-  const stadiumBackdrop = useStadiumBackdropTexture();
-  const ball = useRef<THREE.Sprite>(null);
+  const ballTexture = useMatchBallTexture();
+  const ballGeometry = useMatchBallGeometry(0.13);
+  const stadiumBackdrop = useStadiumArtwork();
+  const ball = useRef<THREE.Mesh>(null);
   const ballShadow = useRef<THREE.Mesh>(null);
   const netHit = useRef<NetHit | null>(null);
   const keeperCatch = useRef(new THREE.Vector3(0, 1.15, 0.38));
@@ -1572,9 +952,10 @@ function Scene({
     const ballMesh = ball.current;
     const shadowMesh = ballShadow.current;
     if (!ballMesh) return;
-    // Billboarded sprite: "spin" is the material's in-plane rotation.
+    // Physical sphere rotation makes the panels readable through the flight.
     const spinBall = (amount: number) => {
-      ballMesh.material.rotation -= amount;
+      ballMesh.rotation.x -= amount;
+      ballMesh.rotation.z += amount * 0.35;
     };
 
     const start = timeline.current.start;
@@ -1588,81 +969,26 @@ function Scene({
       return;
     }
 
+    const style = footballStyleForPlayer(kick.id);
     const launch = start + KICK_LEAD_S;
     const [destinationX, destinationY] = ZONE_POS[shotZone.id] ?? [0, 1];
-    const destinationZ = 0.18;
-    const flight = clamp01((now - launch) / FLIGHT_S);
-
-    if (now < launch) {
+    const duration = willSave ? SAVE_CONTACT_S : FLIGHT_S;
+    const age = now - launch;
+    const target = new THREE.Vector3(destinationX, destinationY, willSave ? .42 : .18);
+    if (age < 0) {
       ballMesh.position.copy(_ball);
-    } else if (willSave === true && now >= launch + SAVE_CONTACT_S) {
-      const punch = isPunchSave(shotZone.id, shotRollFrom(start));
-      if (punch) {
-        const t = clamp01((now - launch - SAVE_CONTACT_S) / 0.62);
-        const away = Math.sign(destinationX || (shotRollFrom(start) > 0.77 ? 1 : -1));
-        ballMesh.position.set(
-          lerp(destinationX, destinationX + away * 2.6, easeOut(t)),
-          lerp(destinationY, 0.13, t * t) + Math.sin(t * Math.PI) * 0.85,
-          lerp(0.2, 4.4, easeOut(t)),
-        );
-        spinBall(delta * kick.spin * Math.max(0, 1 - t * 1.1));
-      } else {
-        const gather = easeOut((now - launch - SAVE_CONTACT_S) / SAVE_GATHER_S);
-        ballMesh.position.set(destinationX, destinationY, destinationZ);
-        ballMesh.position.lerp(keeperCatch.current, gather);
-        const spinLeft = 1 - gather;
-        spinBall(delta * kick.spin * spinLeft * 0.9);
-      }
+    } else if (willSave && age >= duration) {
+      // The keeper solves his hands to this exact arrival point, then carries
+      // the ball through the gather and landing. No independent ball lerp.
+      sampleSavedBall(ballMesh.position, target, keeperCatch.current, age - duration, saveStyle);
+      if (saveStyle !== 'catch') spinBall(delta * 4);
+    } else if (!willSave && age >= duration) {
+      netRebound(ballMesh.position, target, age - duration);
+      spinBall(delta * SHOT_PROFILES[style].spin * Math.exp(-(age - duration) * 5));
+      if (!netHit.current) netHit.current = { time: launch + duration, x: destinationX, y: destinationY - GOAL_H / 2, power: .9 };
     } else {
-      const targetFlight = willSave === true ? clamp01(flight / 0.88) : flight;
-      const side = shotZone.x === 50 ? 0 : shotZone.x < 50 ? 1 : -1;
-      // Per-shot flight flavour, seeded off the shot clock so the SAME taker
-      // still varies kick-to-kick — three independent rolls in [0,1).
-      const r1 = Math.abs(Math.sin(start * 913.7));
-      const r2 = Math.abs(Math.sin(start * 547.3 + 1.7));
-      const r3 = Math.abs(Math.sin(start * 311.9 + 4.2));
-      // Curl swings ±60% around the persona's bias — sometimes a whipping
-      // banana, sometimes nearly straight.
-      const curlScale = 0.4 + r2 * 1.2;
-      const curl = (kick.curlBias * curlScale + (Math.abs(side) ? 0.35 : 0)) * (side || (kick.curlBias > 0.5 ? 1 : 0.2));
-      const controlX = destinationX * 0.28 + curl + _ball.x * 0.22;
-      // Low shots sometimes skid UNDER the jumping wall (Ronaldinho's party
-      // trick — near-always for him).
-      const underWall = destinationY < 0.9 && r1 < (kick.id === 'ronaldinho' ? 0.85 : 0.42);
-      // High shots occasionally balloon up and DIP back down late (a dipping
-      // shot over the wall). Adds extra arc height plus a downward pull.
-      const dipper = !underWall && destinationY > 1.0 && r3 < 0.4;
-      const arc = 0.55 + kick.heightBias + (dipper ? 0.9 + r3 * 0.6 : (r1 - 0.5) * 0.4);
-      const controlY = underWall ? 0.32 : Math.max(destinationY, 1.12) + arc;
-      const controlZ = _ball.z * 0.48;
-      const oneMinus = 1 - targetFlight;
-      // Knuckle wobble amplitude also varies per shot — some balls sit dead
-      // still, others swerve unpredictably.
-      const knuckleAmp = kick.knuckle * (0.5 + r2 * 1.1);
-      const wobble = knuckleAmp * Math.sin(targetFlight * 17.5) * (underWall ? 0.04 : 0.11);
-      ballMesh.position.set(
-        oneMinus * oneMinus * _ball.x + 2 * oneMinus * targetFlight * controlX + targetFlight * targetFlight * destinationX + wobble * 0.35,
-        oneMinus * oneMinus * _ball.y + 2 * oneMinus * targetFlight * controlY + targetFlight * targetFlight * destinationY + wobble,
-        oneMinus * oneMinus * _ball.z + 2 * oneMinus * targetFlight * controlZ + targetFlight * targetFlight * destinationZ,
-      );
-      // Spin dies quickly once the ball is in the net.
-      const settledInNet = willSave === false && flight >= 1 ? Math.max(0, 1 - (now - launch - FLIGHT_S) * 2.4) : 1;
-      spinBall(delta * kick.spin * (side === 0 ? 1 : side) * settledInNet);
-
-      if (willSave === false && flight >= 1) {
-        const netTravel = easeInOut((now - launch - FLIGHT_S) / 0.34);
-        ballMesh.position.x = lerp(destinationX, destinationX * 0.92, netTravel);
-        ballMesh.position.y = lerp(destinationY, Math.max(0.22, destinationY - 0.28), netTravel);
-        ballMesh.position.z = lerp(destinationZ, -GOAL_D * 0.62, netTravel);
-        if (!netHit.current || now - netHit.current.time > 1.6) {
-          netHit.current = {
-            time: now,
-            x: destinationX,
-            y: destinationY - GOAL_H / 2,
-            power: 1.35,
-          };
-        }
-      }
+      sampleStyledShot(ballMesh.position, _ball, target, age, duration, style);
+      spinBall(delta * SHOT_PROFILES[style].spin);
     }
 
     if (shadowMesh) {
@@ -1678,22 +1004,22 @@ function Scene({
   return (
     <>
       <hemisphereLight args={['#dceeff', '#174323', 1.05]} />
-      <directionalLight position={[6, 12, 9]} intensity={1.75} color="#fff7df" />
+      <directionalLight position={[6, 12, 9]} intensity={2.5} color="#fff7df" castShadow shadow-mapSize={[2048, 2048]} shadow-camera-left={-12} shadow-camera-right={12} shadow-camera-top={14} shadow-camera-bottom={-12} shadow-normalBias={0.025} shadow-bias={-0.0001} />
       <directionalLight position={[-9, 8, 5]} intensity={0.9} color="#cce4ff" />
-      <pointLight position={[-7, 7, 1]} intensity={15} distance={24} color="#d8f2ff" />
-      <pointLight position={[7, 7, 1]} intensity={15} distance={24} color="#d8f2ff" />
+      <directionalLight position={[-7, 7, -4]} intensity={1.8} color="#a6d7ff" />
 
-      <mesh position={[0, 6, -5.4]} renderOrder={-2}>
-        <planeGeometry args={[30, 16.875]} />
-        <meshBasicMaterial map={stadiumBackdrop} toneMapped={false} fog={false} />
+      <mesh position={[0, 5.4, -7.2]} renderOrder={-2}>
+        <planeGeometry args={[34, 11.5]} />
+        <meshBasicMaterial map={stadiumBackdrop} color="#bdcbd9" toneMapped={false} fog={false} />
       </mesh>
       <Stadium showStructure={false} />
 
       {/* striped pitch and markings */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 4]}>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 4]} receiveShadow>
         <planeGeometry args={[34, 30]} />
-        <meshStandardMaterial map={grass} roughness={0.98} />
+        <meshStandardMaterial map={grass} bumpMap={grassBump} bumpScale={0.009} roughness={0.94} />
       </mesh>
+      {Array.from({ length: 8 }, (_, index) => <mesh key={`mow-${index}`} rotation={[-Math.PI / 2, 0, 0]} position={[0, .001, -9 + index * 4]} receiveShadow><planeGeometry args={[34, 4]} /><meshStandardMaterial color={index % 2 ? '#bbd896' : '#0c2b1c'} transparent opacity={.05} roughness={1} depthWrite={false} /></mesh>)}
       {PITCH_LINES.map((line) => (
         <mesh
           key={`${line.position[0]}-${line.position[2]}`}
@@ -1725,11 +1051,13 @@ function Scene({
         scored={scored}
         taker={kick.id}
         catchPoint={keeperCatch}
+        saveStyle={saveStyle}
       />
       <Suspense fallback={null}>
         <MocapTaker
           key={kick.id}
           tl={timeline}
+          celebrating={settled && scored === true}
           ball={kick.ball}
           aimX={shotZone ? (ZONE_POS[shotZone.id]?.[0] ?? 0) : 0}
           id={kick.id}
@@ -1825,9 +1153,9 @@ function Scene({
       })}
 
       {/* ball and a height-aware ground shadow */}
-      <sprite ref={ball} position={BALL_SPOT.toArray()} scale={[0.32, 0.32, 1]}>
-        <spriteMaterial map={ballTexture} transparent alphaTest={0.35} toneMapped={false} />
-      </sprite>
+      <mesh ref={ball} geometry={ballGeometry} position={BALL_SPOT.toArray()} castShadow>
+        <meshStandardMaterial map={ballTexture} roughness={0.48} metalness={0.03} />
+      </mesh>
       <mesh ref={ballShadow} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.012, 9]}>
         <circleGeometry args={[0.17, 16]} />
         <meshBasicMaterial color="#020906" transparent opacity={0.32} depthWrite={false} />
@@ -1848,6 +1176,7 @@ export function FinalThirdPitch3D({
   settled,
   scored,
   kickSeed,
+  saveStyle,
   onPick,
 }: {
   picking: boolean;
@@ -1861,6 +1190,7 @@ export function FinalThirdPitch3D({
   settled: boolean;
   scored: boolean | null;
   kickSeed: number;
+  saveStyle?: KeeperSaveStyle;
   onPick: (zone: Zone) => void;
 }) {
   const zones: Zone[] = useMemo(
@@ -1881,6 +1211,7 @@ export function FinalThirdPitch3D({
   return (
     <div className="relative mx-auto aspect-[4/3] w-full touch-manipulation overflow-hidden rounded-[24px] border border-white/10 bg-surface-page shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] sm:aspect-[16/10]">
       <Canvas
+        shadows={{ type: THREE.PCFShadowMap }}
         dpr={[1, 1.5]}
         camera={{ position: [0.72, 2.25, 14.8], fov: 43, near: 0.1, far: 70 }}
         gl={{ antialias: true, alpha: false, powerPreference: 'high-performance' }}
@@ -1888,7 +1219,7 @@ export function FinalThirdPitch3D({
       >
         <color attach="background" args={['#07111d']} />
         <fog attach="fog" args={['#07111d', 24, 48]} />
-        <Scene
+        <Suspense fallback={null}><Scene
           key={kick.id}
           picking={picking}
           showZones={showZones ?? picking}
@@ -1902,7 +1233,8 @@ export function FinalThirdPitch3D({
           onPick={onPick}
           zones={zones}
           kick={kick}
-        />
+          saveStyle={saveStyle ?? (['catch', 'parry', 'tip'] as const)[Math.abs(kickSeed) % 3]}
+        /></Suspense>
       </Canvas>
 
       <div

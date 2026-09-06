@@ -9,6 +9,7 @@ import Image from 'next/image';
 import { useQuery } from '@tanstack/react-query';
 import { X } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
+import { useWeekendLeaguePrizes } from '../use-weekend-league-prizes';
 import { getWeekendLeagueCurrent } from '@/lib/api/endpoints';
 import { queryKeys } from '@/lib/queries/queryKeys';
 import { useAuthStore } from '@/stores/auth.store';
@@ -105,6 +106,7 @@ export function WeekendLeaguePromoCard({
   onClose?: () => void;
 }) {
   const { t } = useLocale();
+  const prizes = useWeekendLeaguePrizes();
   const stages = [
     { title: t('weekendLeague.promoStage1'), highlight: '1/3', prefix: t('weekendLeague.promoAdvancePrefix'), suffix: t('weekendLeague.promoAdvanceSuffix') },
     { title: t('weekendLeague.promoStage2'), highlight: '1/3', prefix: t('weekendLeague.promoAdvancePrefix'), suffix: t('weekendLeague.promoAdvanceSuffix') },
@@ -152,10 +154,10 @@ export function WeekendLeaguePromoCard({
       {/* Prize: voucher artwork overlapping the white note card, as designed. */}
       <div className="relative mt-5 flex items-center">
         <Image
-          src="/assets/wl-promo-vouchers.png"
+          src={prizes.artwork}
           alt=""
-          width={640}
-          height={640}
+          width={prizes.artworkWidth}
+          height={prizes.artworkHeight}
           priority
           sizes="(max-width: 640px) 46vw, 200px"
           className="relative z-10 -ml-3 w-[46%] shrink-0 -rotate-2 object-contain"
@@ -165,11 +167,11 @@ export function WeekendLeaguePromoCard({
             {t('weekendLeague.promoWinnerGets')}
           </p>
           <p className="my-0.5 text-[19px] uppercase leading-tight" style={{ ...poppins, fontWeight: 800 }}>
-            <span className="text-brand-green">200₾ </span>
-            <span className="text-black">{t('weekendLeague.promoVoucher')}</span>
+            <span className="text-brand-green">{prizes.heroAmount}{' '}</span>
+            <span className="text-black">{t(prizes.voucherKey)}</span>
           </p>
           <p className="text-[12px] leading-snug text-black" style={poppins}>
-            {t('weekendLeague.promoStores')}
+            {t(prizes.storesKey)}
           </p>
         </div>
       </div>

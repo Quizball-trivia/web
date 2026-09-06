@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Check, Ticket, Users } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useLocale } from '@/contexts/LocaleContext';
+import { useWeekendLeaguePrizes } from '../use-weekend-league-prizes';
 import { colors } from '@/lib/colors';
 import { LAUNCH_EDITION, poppins, QP_TARGET } from '../constants';
 import type { LeaguePhase, Milestone } from '../types';
@@ -56,6 +57,7 @@ export function LeagueHeader({
   onPlayRanked?: () => void;
 }) {
   const { t } = useLocale();
+  const prizes = useWeekendLeaguePrizes();
 
   // ── The join moment ──
   // Entering SPENDS the QP balance on the ticket: the bar drains to zero and
@@ -392,10 +394,10 @@ export function LeagueHeader({
           transition={{ delay: vanishing ? 1.05 : 0.25, duration: 0.35, ease: 'easeOut' }}
           className="relative mx-auto mt-5 flex w-full max-w-[420px] items-center px-4">
           <Image
-            src="/assets/wl-promo-vouchers.png"
+            src={prizes.artwork}
             alt=""
-            width={640}
-            height={640}
+            width={prizes.artworkWidth}
+            height={prizes.artworkHeight}
             priority
             sizes="(max-width: 640px) 42vw, 176px"
             className="relative z-10 -ml-1 w-[42%] shrink-0 -rotate-2 object-contain"
@@ -405,11 +407,11 @@ export function LeagueHeader({
               {t('weekendLeague.promoWinnerGets')}
             </p>
             <p className="my-0.5 text-[17px] uppercase leading-tight" style={{ ...poppins, fontWeight: 800 }}>
-              <span className="text-brand-green">200₾ </span>
-              <span className={gold ? 'text-black' : 'text-white'}>{t('weekendLeague.promoVoucher')}</span>
+              <span className="text-brand-green">{prizes.heroAmount}{' '}</span>
+              <span className={gold ? 'text-black' : 'text-white'}>{t(prizes.voucherKey)}</span>
             </p>
             <p className={`text-[11px] leading-snug ${gold ? 'text-black' : 'text-white/80'}`} style={poppins}>
-              {t('weekendLeague.promoStores')}
+              {t(prizes.storesKey)}
             </p>
           </div>
         </motion.div>

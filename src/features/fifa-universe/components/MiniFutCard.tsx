@@ -72,7 +72,7 @@ export function MiniFutCard({
       <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: 'linear-gradient(116deg, rgba(255,255,255,0.55) 0%, rgba(255,255,255,0) 28%, rgba(255,255,255,0) 62%, rgba(255,255,255,0.3) 80%, rgba(255,255,255,0) 100%)', mixBlendMode: 'soft-light' }} />
 
       {showEdition && (
-        <span className="absolute right-0 top-0 z-20 rounded-bl-md bg-[#3a2c08]/85 px-1.5 py-0.5 font-poppins font-black uppercase tracking-wider text-[#f4e3a2]" style={{ fontSize: 8 * s + 2 }}>
+        <span className="absolute right-0 top-0 z-20 rounded-bl-md bg-fut-badge/85 px-1.5 py-0.5 font-poppins font-black uppercase tracking-wider text-fut-gold-light" style={{ fontSize: 8 * s + 2 }}>
           {editionLabel(card.edition)}
         </span>
       )}
@@ -88,10 +88,10 @@ export function MiniFutCard({
       </div>
 
       {/* rating column */}
-      <div className="absolute z-10 flex flex-col items-center text-[#33270a]" style={{ left: 6 * s, top: 8 * s }}>
+      <div className="absolute z-10 flex flex-col items-center text-fut-ink" style={{ left: 6 * s, top: 8 * s }}>
         <span className="font-poppins font-black leading-none" style={{ fontSize: 26 * s, opacity: hideOverall ? 0.45 : 1 }}>{hideOverall ? '?' : card.overall}</span>
         <span className="font-poppins font-black uppercase leading-none" style={{ fontSize: 10 * s, marginTop: 2 * s }}>{card.position}</span>
-        <span className="bg-[#33270a]/40" style={{ width: 16 * s, height: 1, margin: `${4 * s}px 0` }} />
+        <span className="bg-fut-ink/40" style={{ width: 16 * s, height: 1, margin: `${4 * s}px 0` }} />
         {showIdentity && !masked ? (
           <>
             <Flag code={card.nationCode} width={16 * s + 4} height={11 * s + 3} />
@@ -101,26 +101,26 @@ export function MiniFutCard({
           </>
         ) : (
           <>
-            <span className="rounded-[2px] border border-dashed border-[#33270a]/40" style={{ width: 16 * s + 4, height: 11 * s + 3 }} />
-            <span className="rounded-full border border-dashed border-[#33270a]/40" style={{ width: 16 * s + 4, height: 16 * s + 4, marginTop: 3 * s }} />
+            <span className="rounded-[2px] border border-dashed border-fut-ink/40" style={{ width: 16 * s + 4, height: 11 * s + 3 }} />
+            <span className="rounded-full border border-dashed border-fut-ink/40" style={{ width: 16 * s + 4, height: 16 * s + 4, marginTop: 3 * s }} />
           </>
         )}
       </div>
 
       {/* name plate */}
-      <div className="absolute inset-x-0 z-10 flex items-center justify-center text-[#241b05]" style={{ bottom: showStats ? '20%' : '10%', height: 18 * s + 4 }}>
-        <span aria-hidden className="absolute inset-x-2 top-0 h-px bg-gradient-to-r from-transparent via-[#33270a]/45 to-transparent" />
+      <div className="absolute inset-x-0 z-10 flex items-center justify-center text-fut-ink-deep" style={{ bottom: showStats ? '20%' : '10%', height: 18 * s + 4 }}>
+        <span aria-hidden className="absolute inset-x-2 top-0 h-px bg-gradient-to-r from-transparent via-fut-ink/45 to-transparent" />
         <span className="truncate px-1 font-poppins font-black uppercase tracking-wide" style={{ fontSize: showName && !masked ? 9.5 * s + 2 : 11 * s + 2, letterSpacing: showName && !masked ? undefined : '0.3em', opacity: showName && !masked ? 1 : 0.5 }}>
           {showName && !masked ? card.name : '???'}
         </span>
       </div>
 
       {showStats && (
-        <div className="absolute inset-x-0 bottom-0 z-10 grid grid-cols-3 gap-x-1 px-2 pb-1 text-[#241b05]" style={{ fontSize: 7 * s + 2 }}>
+        <div className="absolute inset-x-0 bottom-0 z-10 grid grid-cols-3 gap-x-1 px-2 pb-1 text-fut-ink-deep" style={{ fontSize: 7 * s + 2 }}>
           {STAT_KEYS.map((k) => (
             <span key={k} className="flex items-baseline justify-center gap-0.5 font-poppins font-black leading-tight">
               <span>{card.stats[k]}</span>
-              <span className="text-[#33270a]/75" style={{ fontSize: 6 * s + 1 }}>{STAT_SHORT[k]}</span>
+              <span className="text-fut-ink/75" style={{ fontSize: 6 * s + 1 }}>{STAT_SHORT[k]}</span>
             </span>
           ))}
         </div>

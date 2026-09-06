@@ -17,3 +17,12 @@ keeper-idle.glb   — Quaternius UBC body (above) with a Mixamo goalkeeper idle
 Rebuilt for the /demos prototypes by scripts/build-*.mjs (textures pruned,
 clips retargeted/resampled, root motion pinned). No third-party textures ship;
 kits are painted procedurally at runtime.
+
+footballer/       — Blender-remodeled derivative of the CC0 UBC body above,
+                    with project-authored football clothing and 30 baked
+                    football action clips. The editable source is at
+                    art/footballer/footballer.blend. The source .blend retains
+                    the original Mixamo idle/kick clips as references; those
+                    two clips are excluded from the runtime footballer export.
+                    Build: scripts/blender/build-footballer.py, followed by
+                    scripts/optimize-footballer.mjs.
