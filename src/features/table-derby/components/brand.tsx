@@ -99,6 +99,30 @@ export function RoundIconsRow({
   );
 }
 
+/* ── Daily-challenge glyphs (flat, official-icon idiom) ─────────── */
+
+/** Put in Order — stacked bars with an ascending arrow. */
+export function OrderGlyph({ size = 40 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 48 48" width={size} height={size} aria-hidden>
+      <rect x="6" y="10" width="24" height="7" rx="3.5" fill="var(--td-orange)" />
+      <rect x="6" y="21" width="18" height="7" rx="3.5" fill="var(--td-orange)" opacity="0.75" />
+      <rect x="6" y="32" width="12" height="7" rx="3.5" fill="var(--td-orange)" opacity="0.5" />
+      <path d="M40 34V16m0 0-5 5m5-5 5 5" stroke="var(--td-orange)" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+    </svg>
+  );
+}
+
+/** Career Path — winding road with a center dash. */
+export function RoadGlyph({ size = 40 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 48 48" width={size} height={size} aria-hidden>
+      <path d="M8 42c14 0 8-16 20-16s4-16 12-16" stroke="var(--td-orange)" strokeWidth="9" strokeLinecap="round" fill="none" />
+      <path d="M8 42c14 0 8-16 20-16s4-16 12-16" stroke="#161616" strokeWidth="2.5" strokeLinecap="round" strokeDasharray="4 5" fill="none" />
+    </svg>
+  );
+}
+
 /* ── Accent glyphs ──────────────────────────────────────────────── */
 
 export function BoltGlyph({ size = 28, color = 'var(--td-orange)', rotate = 0 }: { size?: number; color?: string; rotate?: number }) {

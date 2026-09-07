@@ -21,6 +21,8 @@ import {
   BoltGlyph,
   StarburstGlyph,
   TicketGlyph,
+  OrderGlyph,
+  RoadGlyph,
   PERF_DOTS,
 } from './components/brand';
 import { CategoryBand, PlayerBoard, ScorePill, TurnTimerBar } from './components/chrome';
@@ -890,9 +892,9 @@ export function TableDerbyApp() {
               <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1">
                 {(
                   [
-                    { key: 'guessTheGoal', name: TD.dailyGtg, icon: '/assets/guess-the-goal-card-icon.png' },
-                    { key: 'putInOrder', name: TD.dailyPio, emoji: '\u{1F4CB}' },
-                    { key: 'careerPath', name: TD.dailyCp, emoji: '\u{1F6E3}\u{FE0F}' },
+                    { key: 'guessTheGoal', name: TD.dailyGtg },
+                    { key: 'putInOrder', name: TD.dailyPio },
+                    { key: 'careerPath', name: TD.dailyCp },
                   ] as const
                 ).map((c) => (
                   <button
@@ -902,16 +904,16 @@ export function TableDerbyApp() {
                       setDailyGame(c.key);
                       setPhase('dailyGame');
                     }}
-                    className="flex w-[31%] shrink-0 snap-start flex-col items-center gap-2.5 rounded-[14px] px-3 py-4"
+                    className="flex w-[31%] shrink-0 snap-start flex-col items-center gap-3 rounded-[14px] px-3 py-4"
                     style={{ background: 'var(--td-charcoal)', boxShadow: '4px 4px 0 #000' }}
                   >
-                    {'icon' in c ? (
-                      // eslint-disable-next-line @next/next/no-img-element -- local game icon
-                      <img src={c.icon} alt="" className="h-12 w-12 object-contain" />
+                    {c.key === 'guessTheGoal' ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- official round icon
+                      <img src="/assets/table-derby/icon-ball-orange.svg" alt="" className="h-10 w-10 object-contain" />
+                    ) : c.key === 'putInOrder' ? (
+                      <OrderGlyph size={40} />
                     ) : (
-                      <span className="text-4xl leading-none" aria-hidden>
-                        {c.emoji}
-                      </span>
+                      <RoadGlyph size={40} />
                     )}
                     <span className="text-center text-[11px] leading-tight text-white md:text-[12px]" style={TD_DISPLAY}>
                       {c.name}
@@ -931,9 +933,6 @@ export function TableDerbyApp() {
               <div className="min-w-0">
                 <p className="text-xl text-white md:text-2xl" style={TD_DISPLAY}>
                   {TD.menuLb}
-                </p>
-                <p className="mt-1 truncate text-[12px] text-white/55 md:text-[13px]" style={TD_DISPLAY}>
-                  {TD.menuLbSub}
                 </p>
               </div>
               <span className="shrink-0 text-2xl text-white/40" style={TD_DISPLAY}>
