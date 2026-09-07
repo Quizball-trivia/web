@@ -358,7 +358,10 @@ export function TableDerbyApp() {
       setRoundWinner(null);
       roundClosed.current = false;
       if (roundNum === 2) {
-        setCardCategory(TD_CARD_CATEGORIES[Math.floor(Math.random() * TD_CARD_CATEGORIES.length)]);
+        // Prefer a photo-backed category — the show's cards carry pictures.
+        const photoCats = TD_CARD_CATEGORIES.filter((cat) => cat.cards.some((card) => card.photo));
+        const pool = photoCats.length > 0 ? photoCats : TD_CARD_CATEGORIES;
+        setCardCategory(pool[Math.floor(Math.random() * pool.length)]);
       }
       if (roundNum === 4) setBuzzerItems(shuffleList(TD_WHOAMI));
       if (roundNum === 5) {

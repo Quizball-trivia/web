@@ -61,6 +61,13 @@ export function CardsRound({
 
   const doFlash = (text: string, good: boolean) => setFlash({ key: Date.now(), text, good });
 
+  // Warm the face-photo cache so a drawn card shows its picture instantly.
+  useEffect(() => {
+    for (const card of category.cards) {
+      if (card.photo) new Image().src = `/api/fifa-face?id=${card.photo.id}&v=${card.photo.ver}`;
+    }
+  }, [category]);
+
   // Dev-only e2e hook: leak the current expected answer for test scripts.
   useEffect(() => {
     if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
@@ -246,8 +253,22 @@ export function CardsRound({
                 <span className="absolute right-2.5 top-2">
                   <BoltGlyph size={20} />
                 </span>
+                {current.photo && (
+                  /* eslint-disable-next-line @next/next/no-img-element -- proxied external face */
+                  <img
+                    src={`/api/fifa-face?id=${current.photo.id}&v=${current.photo.ver}`}
+                    alt=""
+                    className="size-[116px] rounded-[12px] object-cover md:size-[140px]"
+                    style={{ background: '#e7e2da', boxShadow: '3px 3px 0 rgba(0,0,0,0.25)' }}
+                    draggable={false}
+                  />
+                )}
                 {current.lines.map((line) => (
-                  <span key={line} className="text-center text-lg md:text-xl" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
+                  <span
+                    key={line}
+                    className={current.photo ? 'text-center text-[13px] leading-tight md:text-[15px]' : 'text-center text-lg md:text-xl'}
+                    style={{ ...TD_DISPLAY, color: current.photo ? 'rgba(13,13,13,0.55)' : '#0d0d0d' }}
+                  >
                     {line}
                   </span>
                 ))}

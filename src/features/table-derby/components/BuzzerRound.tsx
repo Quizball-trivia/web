@@ -272,7 +272,7 @@ export function BuzzerRound({
             whileTap={{ scale: 0.88, y: 4 }}
             onClick={buzz}
             disabled={zphase !== 'clues' || locked.me}
-            className="relative size-36 disabled:opacity-35 md:size-40"
+            className="relative h-32 w-44 disabled:opacity-35 md:h-36 md:w-52"
           >
             {/* eslint-disable-next-line @next/next/no-img-element -- local 3D render */}
             <img

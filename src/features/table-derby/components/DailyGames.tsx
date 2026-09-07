@@ -6,7 +6,11 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
+import { DndContext, PointerSensor, closestCenter, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
+import { SortableContext, arrayMove, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { matchesName } from '@/features/mini-games/lib/matching';
+import { findClubByName } from '@/lib/clubs';
 import { buildDemoDailySession } from '@/features/demos/data/demoDailySessions';
 import type { PutInOrderSession, CareerPathSession } from '@/lib/domain/dailyChallenge';
 import { TacticsBoard2D, BOARD_VIEW_W, BOARD_VIEW_H } from '@/features/mini-games/components/TacticsBoard2D';
@@ -71,9 +75,46 @@ function GameHeader({ title, onExit }: { title: string; onExit: () => void }) {
   );
 }
 
-/* ── Put in Order — tap-arrow reordering vs a 45s round clock ───── */
+/* ── Put in Order — drag-and-drop reordering vs a 45s round clock ── */
 
 const PIO_ROUND_MS = 45_000;
+
+function PioRow({ id, index, label }: { id: string; index: number; label: string }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+  return (
+    <div
+      ref={setNodeRef}
+      {...attributes}
+      {...listeners}
+      className="flex touch-none select-none items-center gap-2.5 rounded-[10px] px-3 py-2.5"
+      style={{
+        background: 'var(--td-charcoal)',
+        boxShadow: isDragging ? '6px 8px 0 rgba(0,0,0,0.55)' : '3px 3px 0 rgba(0,0,0,0.5)',
+        transform: CSS.Transform.toString(transform),
+        transition,
+        zIndex: isDragging ? 20 : undefined,
+        position: 'relative',
+        cursor: isDragging ? 'grabbing' : 'grab',
+        outline: isDragging ? '2px solid var(--td-orange)' : 'none',
+      }}
+    >
+      <span
+        className="flex size-7 shrink-0 items-center justify-center rounded-[6px] text-[13px]"
+        style={{ ...TD_DISPLAY, background: 'var(--td-orange)', color: '#0d0d0d' }}
+      >
+        {index + 1}
+      </span>
+      <span className="min-w-0 flex-1 text-[13px] leading-tight text-white md:text-[15px]" style={TD_DISPLAY}>
+        {label}
+      </span>
+      <span className="flex shrink-0 flex-col gap-[3px] pr-1 opacity-40" aria-hidden>
+        {[0, 1, 2].map((i) => (
+          <span key={i} className="block h-[2.5px] w-4 rounded-full bg-white" />
+        ))}
+      </span>
+    </div>
+  );
+}
 
 function TdPutInOrder({ onDone }: { onDone: (score: number) => void }) {
   const session = useMemo(() => buildDemoDailySession('putInOrder', 'ka') as PutInOrderSession, []);
@@ -112,56 +153,24 @@ function TdPutInOrder({ onDone }: { onDone: (score: number) => void }) {
     return () => clearTimeout(t);
   }, [roundIdx]);
 
-  const move = (idx: number, dir: -1 | 1) => {
-    setOrder((prev) => {
-      const next = [...prev];
-      const j = idx + dir;
-      if (j < 0 || j >= next.length) return prev;
-      [next[idx], next[j]] = [next[j], next[idx]];
-      return next;
-    });
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
+  const onDragEnd = ({ active, over }: DragEndEvent) => {
+    if (!over || active.id === over.id) return;
+    setOrder((prev) => arrayMove(prev, prev.indexOf(String(active.id)), prev.indexOf(String(over.id))));
   };
 
   return (
     <div className="flex w-full flex-col gap-3">
       <CategoryBand prompt={round.prompt} compact />
-      <div className="flex flex-col gap-2">
-        {order.map((id, i) => {
-          const item = round.items.find((it) => it.id === id)!;
-          return (
-            <div
-              key={id}
-              className="flex items-center gap-2.5 rounded-[10px] px-3 py-2.5"
-              style={{ background: 'var(--td-charcoal)', boxShadow: '3px 3px 0 rgba(0,0,0,0.5)' }}
-            >
-              <span
-                className="flex size-7 shrink-0 items-center justify-center rounded-[6px] text-[13px]"
-                style={{ ...TD_DISPLAY, background: 'var(--td-orange)', color: '#0d0d0d' }}
-              >
-                {i + 1}
-              </span>
-              <span className="min-w-0 flex-1 text-[13px] leading-tight text-white md:text-[15px]" style={TD_DISPLAY}>
-                {item.label}
-              </span>
-              <div className="flex shrink-0 gap-1">
-                {([-1, 1] as const).map((dir) => (
-                  <button
-                    key={dir}
-                    type="button"
-                    onClick={() => move(i, dir)}
-                    disabled={dir === -1 ? i === 0 : i === order.length - 1}
-                    className="flex size-8 items-center justify-center rounded-[8px] text-white disabled:opacity-25"
-                    style={{ background: 'rgba(255,255,255,0.08)' }}
-                    aria-label={dir === -1 ? 'up' : 'down'}
-                  >
-                    {dir === -1 ? '▲' : '▼'}
-                  </button>
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+        <SortableContext items={order} strategy={verticalListSortingStrategy}>
+          <div className="flex flex-col gap-2">
+            {order.map((id, i) => (
+              <PioRow key={id} id={id} index={i} label={round.items.find((it) => it.id === id)!.label} />
+            ))}
+          </div>
+        </SortableContext>
+      </DndContext>
       <TurnTimerBar turnKey={`pio-${roundIdx}`} ms={PIO_ROUND_MS} running />
       <div className="relative">
         <motion.button
@@ -189,6 +198,9 @@ const CP_EXTRA_MS = 12_000;
 
 function TdCareerPath({ onDone }: { onDone: (score: number) => void }) {
   const session = useMemo(() => buildDemoDailySession('careerPath', 'ka') as CareerPathSession, []);
+  // The en pool is a parallel translation of the same sessions — its Latin
+  // club names resolve against the crest registry, the ka ones don't.
+  const enSession = useMemo(() => buildDemoDailySession('careerPath', 'en') as CareerPathSession, []);
   const [qIdx, setQIdx] = useState(0);
   const [revealed, setRevealed] = useState(1);
   const [input, setInput] = useState('');
@@ -198,6 +210,12 @@ function TdCareerPath({ onDone }: { onDone: (score: number) => void }) {
   const q = session.questions[qIdx];
   const totalMs = q.clubs.length * CP_REVEAL_MS + CP_EXTRA_MS;
   const done = useRef(false);
+
+  const crests = useMemo(() => {
+    const enClubs = enSession.questions[qIdx]?.clubs;
+    if (!enClubs || enClubs.length !== q.clubs.length) return q.clubs.map(() => null);
+    return enClubs.map((name) => findClubByName(name)?.logo ?? null);
+  }, [enSession, qIdx, q]);
 
   const advance = (total: number) => {
     if (qIdx + 1 >= session.questions.length) {
@@ -273,6 +291,10 @@ function TdCareerPath({ onDone }: { onDone: (score: number) => void }) {
             >
               {i + 1}
             </span>
+            {i < revealed && crests[i] && (
+              /* eslint-disable-next-line @next/next/no-img-element -- registry crest */
+              <img src={crests[i]!} alt="" className="size-7 shrink-0 object-contain" draggable={false} />
+            )}
             <span className="text-[13px] text-white md:text-[15px]" style={TD_DISPLAY}>
               {i < revealed ? club : '???'}
             </span>

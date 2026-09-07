@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { type NextRequest } from "next/server";
 import { FIFA_CARDS } from "@/features/mini-games/data/guessFifaCard";
+import { TD_CARD_CATEGORIES } from "@/features/table-derby/data/cards";
 
 /**
  * Proxies a SoFIFA player face for the FIFA Cards reveal. SoFIFA's image CDN
@@ -24,9 +25,11 @@ const UPSTREAM_TIMEOUT_MS = 5000;
 // Largest size SoFIFA serves; the card renders the face at ~236 CSS px.
 const FACE_SIZE = 240;
 
-const KNOWN_FACES = new Set<string>(
-  FIFA_CARDS.filter((c) => c.photoId && c.photoVer).map((c) => `${c.photoId}:${c.photoVer}`),
-);
+const KNOWN_FACES = new Set<string>([
+  ...FIFA_CARDS.filter((c) => c.photoId && c.photoVer).map((c) => `${c.photoId}:${c.photoVer}`),
+  // Table Derby ბარათონი face cards (bundled data, same CDN).
+  ...TD_CARD_CATEGORIES.flatMap((cat) => cat.cards).filter((c) => c.photo).map((c) => `${c.photo!.id}:${c.photo!.ver}`),
+]);
 
 function signatureMatches(id: string, ver: string, sig: string): boolean {
   const secret = process.env.FIFA_FACE_SIGNING_SECRET;

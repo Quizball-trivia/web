@@ -11,6 +11,8 @@ export interface TdCard {
   lines: string[];
   display: string;
   aliases: string[];
+  /** Real face photo (SoFIFA id/version, served via /api/fifa-face). */
+  photo?: { id: number; ver: string };
 }
 
 export interface TdCardCategory {
@@ -19,12 +21,20 @@ export interface TdCardCategory {
   cards: TdCard[];
 }
 
-const c = (id: string, value: 1 | 2 | 3, lines: string[], display: string, aliases: string[]): TdCard => ({
+const c = (
+  id: string,
+  value: 1 | 2 | 3,
+  lines: string[],
+  display: string,
+  aliases: string[],
+  photo?: { id: number; ver: string },
+): TdCard => ({
   id,
   value,
   lines,
   display,
   aliases: [display, ...aliases],
+  photo,
 });
 
 export const TD_CARD_CATEGORIES: TdCardCategory[] = [
@@ -32,26 +42,26 @@ export const TD_CARD_CATEGORIES: TdCardCategory[] = [
     id: 'african-players',
     prompt: 'აფრიკელი ფეხბურთელები',
     cards: [
-      c('salah', 1, ['ეგვიპტე', 'ლივერპული'], 'სალაჰი', ['salah', 'mo salah', 'მო სალაჰი', 'სალა']),
-      c('mane', 1, ['სენეგალი', 'ლივერპული'], 'მანე', ['mane', 'sadio mane', 'სადიო მანე']),
-      c('drogba', 1, ['კოტ-დივუარი', 'ჩელსი'], 'დროგბა', ['drogba', 'didier drogba', 'დიდიე დროგბა']),
-      c('etoo', 1, ['კამერუნი', 'ბარსელონა'], 'ეტოო', ['etoo', "eto'o", 'samuel etoo', 'სამუელ ეტოო']),
-      c('osimhen', 1, ['ნიგერია', 'ნაპოლი'], 'ოსიმენი', ['osimhen', 'victor osimhen', 'ვიქტორ ოსიმენი']),
-      c('hakimi', 1, ['მაროკო', 'პსჟ'], 'ჰაკიმი', ['hakimi', 'achraf hakimi', 'აშრაფ ჰაკიმი']),
-      c('yaya', 2, ['კოტ-დივუარი', 'მანჩესტერ სიტი'], 'იაია ტურე', ['yaya toure', 'toure', 'ტურე', 'იაია']),
-      c('okocha', 2, ['ნიგერია', 'პსჟ'], 'ოკოჩა', ['okocha', 'jay jay okocha', 'ჯეი ჯეი ოკოჩა']),
-      c('weah', 2, ['ლიბერია', 'მილანი'], 'ვეა', ['weah', 'george weah', 'ჯორჯ ვეა']),
-      c('mahrez', 2, ['ალჟირი', 'მანჩესტერ სიტი'], 'მარეზი', ['mahrez', 'riyad mahrez', 'რიად მარეზი']),
-      c('aubameyang', 2, ['გაბონი', 'არსენალი'], 'ობამეიანგი', ['aubameyang', 'ობამეიანი']),
-      c('koulibaly', 2, ['სენეგალი', 'ნაპოლი'], 'კულიბალი', ['koulibaly', 'kalidou koulibaly']),
-      c('partey', 2, ['განა', 'არსენალი'], 'პარტეი', ['partey', 'thomas partey', 'თომას პარტეი']),
-      c('onana', 2, ['კამერუნი', 'მანჩესტერ იუნაიტედი'], 'ონანა', ['onana', 'andre onana', 'ანდრე ონანა']),
-      c('kessie', 3, ['კოტ-დივუარი', 'მილანი'], 'კესიე', ['kessie', 'franck kessie', 'ფრანკ კესიე']),
-      c('zaha', 3, ['კოტ-დივუარი', 'კრისტალ პალასი'], 'ზაჰა', ['zaha', 'wilfried zaha', 'უილფრიდ ზაჰა']),
-      c('mendy', 3, ['სენეგალი', 'ჩელსი'], 'მენდი', ['mendy', 'edouard mendy', 'ედუარ მენდი']),
-      c('kanu', 3, ['ნიგერია', 'არსენალი'], 'კანუ', ['kanu', 'nwankwo kanu']),
-      c('essien', 3, ['განა', 'ჩელსი'], 'ესიენი', ['essien', 'michael essien', 'მაიკლ ესიენი']),
-      c('adebayor', 3, ['ტოგო', 'არსენალი'], 'ადებაიორი', ['adebayor', 'emmanuel adebayor']),
+      c('salah', 1, ['ეგვიპტე', 'ლივერპული'], 'სალაჰი', ['salah', 'mo salah', 'მო სალაჰი', 'სალა'], { id: 209331, ver: '24' }),
+      c('mane', 1, ['სენეგალი', 'ლივერპული'], 'მანე', ['mane', 'sadio mane', 'სადიო მანე'], { id: 208722, ver: '21' }),
+      c('drogba', 1, ['კოტ-დივუარი', 'ჩელსი'], 'დროგბა', ['drogba', 'didier drogba', 'დიდიე დროგბა'], { id: 31432, ver: '15' }),
+      c('etoo', 1, ['კამერუნი', 'ბარსელონა'], 'ეტოო', ['etoo', "eto'o", 'samuel etoo', 'სამუელ ეტოო'], { id: 9676, ver: '15' }),
+      c('osimhen', 1, ['ნიგერია', 'ნაპოლი'], 'ოსიმენი', ['osimhen', 'victor osimhen', 'ვიქტორ ოსიმენი'], { id: 232293, ver: '24' }),
+      c('hakimi', 1, ['მაროკო', 'პსჟ'], 'ჰაკიმი', ['hakimi', 'achraf hakimi', 'აშრაფ ჰაკიმი'], { id: 235212, ver: '24' }),
+      c('aubameyang', 2, ['გაბონი', 'დორტმუნდი'], 'ობამეიანგი', ['aubameyang', 'ობამეიანი'], { id: 188567, ver: '18' }),
+      c('mahrez', 2, ['ალჟირი', 'მანჩესტერ სიტი'], 'მარეზი', ['mahrez', 'riyad mahrez', 'რიად მარეზი'], { id: 204485, ver: '22' }),
+      c('yaya', 2, ['კოტ-დივუარი', 'მანჩესტერ სიტი'], 'იაია ტურე', ['yaya toure', 'toure', 'ტურე', 'იაია'], { id: 20289, ver: '15' }),
+      c('koulibaly', 2, ['სენეგალი', 'ნაპოლი'], 'კულიბალი', ['koulibaly', 'kalidou koulibaly'], { id: 201024, ver: '20' }),
+      c('partey', 2, ['განა', 'არსენალი'], 'პარტეი', ['partey', 'thomas partey', 'თომას პარტეი'], { id: 209989, ver: '24' }),
+      c('onana', 2, ['კამერუნი', 'მანჩესტერ იუნაიტედი'], 'ონანა', ['onana', 'andre onana', 'ანდრე ონანა'], { id: 226753, ver: '24' }),
+      c('ziyech', 2, ['მაროკო', 'ჩელსი'], 'ზიეში', ['ziyech', 'hakim ziyech', 'ჰაკიმ ზიეში', 'ზიაში'], { id: 208670, ver: '20' }),
+      c('gueye', 2, ['სენეგალი', 'პსჟ'], 'გეიე', ['gueye', 'idrissa gueye', 'იდრისა გეიე'], { id: 193474, ver: '21' }),
+      c('guirassy', 3, ['გვინეა', 'დორტმუნდი'], 'გირასი', ['guirassy', 'serhou guirassy', 'სერჰუ გირასი'], { id: 215441, ver: '24' }),
+      c('benatia', 3, ['მაროკო', 'იუვენტუსი'], 'ბენატია', ['benatia', 'medhi benatia', 'მედი ბენატია'], { id: 177509, ver: '19' }),
+      c('brahimi', 3, ['ალჟირი', 'პორტუ'], 'ბრაჰიმი', ['brahimi', 'yacine brahimi', 'იასინ ბრაჰიმი'], { id: 41236, ver: '19' }),
+      c('ndidi', 3, ['ნიგერია', 'ლესტერი'], 'ნდიდი', ['ndidi', 'wilfred ndidi', 'უილფრედ ნდიდი'], { id: 226790, ver: '22' }),
+      c('mbeumo', 3, ['კამერუნი', 'მანჩესტერ იუნაიტედი'], 'მბემო', ['mbeumo', 'bryan mbeumo', 'ბრაიან მბემო', 'მბეუმო'], { id: 243014, ver: '24' }),
+      c('bennacer', 3, ['ალჟირი', 'მილანი'], 'ბენასერი', ['bennacer', 'ismael bennacer', 'ისმაელ ბენასერი'], { id: 220697, ver: '24' }),
     ],
   },
   {
