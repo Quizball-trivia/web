@@ -30,11 +30,14 @@ export function StatSniperGame({
   session,
   onBack,
   onComplete,
+  onSaveResult,
   demo = false,
 }: {
   session: StatSniperSession;
   onBack: () => void;
   onComplete: (score: number, nextPath?: string) => void;
+  /** Persists the completion BEFORE the results show, so the leaderboard can include this run. */
+  onSaveResult?: (score: number) => Promise<void>;
   /** Demos/guests: no leaderboard fetch (needs auth). */
   demo?: boolean;
 }) {
@@ -84,9 +87,18 @@ export function StatSniperGame({
     return () => window.clearInterval(id);
   }, [phase, done, index]);
 
+  const [saving, setSaving] = useState(false);
   const advance = () => {
     if (index + 1 >= questions.length) {
-      setDone(true);
+      if (saving) return;
+      // Save first, then refresh the board and open the results with the fresh rank on it.
+      setSaving(true);
+      void (async () => {
+        try { await onSaveResult?.(accuracy); } catch { /* the page surfaced the failure; results still show */ }
+        setBoardKey((k) => k + 1);
+        setSaving(false);
+        setDone(true);
+      })();
       return;
     }
     const next = questions[index + 1];

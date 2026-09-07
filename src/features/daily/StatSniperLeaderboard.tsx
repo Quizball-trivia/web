@@ -18,10 +18,13 @@ export function StatSniperLeaderboard({ refreshKey = 0, className }: { refreshKe
   const { player } = usePlayer();
   const [board, setBoard] = useState<Board | null>(null);
 
+  // Refetch on demand (a saved result) and every 15s while visible, so the table moves live.
   useEffect(() => {
     let cancelled = false;
-    getStatSniperLeaderboard().then((b) => { if (!cancelled) setBoard(b); }).catch(() => { if (!cancelled) setBoard(null); });
-    return () => { cancelled = true; };
+    const load = () => getStatSniperLeaderboard().then((b) => { if (!cancelled) setBoard(b); }).catch(() => undefined);
+    void load();
+    const id = window.setInterval(() => void load(), 15_000);
+    return () => { cancelled = true; window.clearInterval(id); };
   }, [refreshKey]);
 
   return (

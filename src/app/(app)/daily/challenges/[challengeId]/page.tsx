@@ -93,16 +93,15 @@ export default function ChallengePage() {
     router.replace("/play");
   }, [challengeType, router]);
 
-  const handleComplete = useCallback(
-    (score: number, nextPath?: string, outcomes?: DailyChallengeCardOutcome[]) => {
-      if (!challengeType || completeOnceRef.current) return;
+  // The completion write, once per session. Games that show a leaderboard call it
+  // before their results screen; everything else goes through handleComplete.
+  const persistRef = useRef<Promise<void> | null>(null);
+  const persistCompletion = useCallback(
+    (score: number, outcomes?: DailyChallengeCardOutcome[]): Promise<void> => {
+      if (!challengeType) return Promise.resolve();
+      if (persistRef.current) return persistRef.current;
       completeOnceRef.current = true;
-
-      // Navigate back instantly — the completion write + cache refresh run in
-      // the background so the user isn't stuck waiting on a round-trip.
-      router.replace(nextPath ?? "/play");
-
-      void (async () => {
+      const run = (async () => {
         // Only a failed completion WRITE may surface the failure toast and
         // re-arm the once-guard; post-write side effects (analytics, local XP,
         // cache invalidation) can fail without the reward being lost, so each
@@ -119,6 +118,7 @@ export default function ChallengePage() {
           } else {
             console.error('Daily challenge completion failed', error);
             completeOnceRef.current = false;
+            persistRef.current = null;
             toast.error(t("dailyGames.completionSaveFailed"));
             await invalidateAfterComplete().catch((invalidateError) => {
               console.error('Post-failure invalidation failed', invalidateError);
@@ -151,8 +151,23 @@ export default function ChallengePage() {
           console.error('Post-completion invalidation failed', invalidateError);
         });
       })();
+      persistRef.current = run;
+      return run;
     },
-    [addXP, challengeType, completeMutation, invalidateAfterComplete, router, t]
+    [addXP, challengeType, completeMutation, invalidateAfterComplete, t]
+  );
+
+  const handleComplete = useCallback(
+    (score: number, nextPath?: string, outcomes?: DailyChallengeCardOutcome[]) => {
+      if (!challengeType) return;
+      const alreadySaved = Boolean(persistRef.current);
+      if (!alreadySaved && completeOnceRef.current) return;
+      // Navigate back instantly — the completion write + cache refresh run in
+      // the background so the user isn't stuck waiting on a round-trip.
+      router.replace(nextPath ?? "/play");
+      if (!alreadySaved) void persistCompletion(score, outcomes);
+    },
+    [challengeType, persistCompletion, router]
   );
 
   useEffect(() => {
@@ -246,11 +261,11 @@ export default function ChallengePage() {
       case "passChain":
         return <PassChainGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
       case "statSniper":
-        return <StatSniperGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
+        return <StatSniperGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} onSaveResult={(score) => persistCompletion(score)} />;
       default:
         return null;
     }
-  }, [handleBack, handleComplete, session]);
+  }, [handleBack, handleComplete, session, persistCompletion]);
 
   const handleBrowserBackConfirm = useCallback(() => {
     setShowBrowserBackDialog(false);

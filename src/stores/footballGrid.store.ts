@@ -160,8 +160,19 @@ export const useFootballGridStore = create<FootballGridStoreState>((set) => ({
   }),
 
   setMatchFound: (payload) => set((current) => {
-    if (current.supersededMatchIds.includes(payload.matchId)
-      || isOlderState(current.state, payload.state) || isPreviousSeriesGame(current, payload)) return current;
+    if (current.supersededMatchIds.includes(payload.matchId) || isPreviousSeriesGame(current, payload)) return current;
+    if (current.state?.matchId === payload.matchId && isOlderState(current.state, payload.state)) {
+      // A resync handoff that lost the race with a newer snapshot still carries the
+      // opponent and capabilities this tab may never have seen: keep the newer
+      // state, take the bootstrap metadata.
+      return {
+        search: { state: 'matched' as const, searchId: null },
+        series: current.series ?? payload.series ?? null,
+        opponent: payload.opponent,
+        capabilities: payload.capabilities,
+      };
+    }
+    if (isOlderState(current.state, payload.state)) return current;
     if (current.state?.matchId === payload.matchId) {
       // Rejoin/redelivery enriches the same match without clearing its result,
       // pending command, or feedback. A stale handoff cannot rewind the board.
@@ -218,7 +229,12 @@ export const useFootballGridStore = create<FootballGridStoreState>((set) => ({
   }),
 
   setCompleted: (payload) => set((current) => {
-    if (shouldIgnoreSnapshot(current, payload)) return current;
+    // A completion is result delivery: only a provably stale one is ignored (superseded
+    // match, older snapshot of the same match, earlier game of the current series).
+    // An unseen match — played in another tab while this one held an old board —
+    // replaces the old board so its result and rematch offer are not lost.
+    if (current.supersededMatchIds.includes(payload.matchId)
+      || isOlderState(current.state, payload.state) || isPreviousSeriesGame(current, payload)) return current;
     return {
       state: payload.state,
       supersededMatchIds: retireCurrentMatch(current, payload.matchId),
