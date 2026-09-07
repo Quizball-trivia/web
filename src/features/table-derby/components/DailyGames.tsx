@@ -349,6 +349,18 @@ const GTG_MIN = 40;
 const GTG_ROUND_MS = 35_000;
 const GTG_LOOP_HOLD = 1.6;
 
+/** The ACTUAL goal footage per demo goal (embeddable YouTube clips, verified
+ *  manually) — shown in place of the board the moment the answer lands, the
+ *  same as Quizball's live Guess the Goal. `end` trims long clips to the
+ *  goal moment. */
+const GTG_VIDEOS: Record<string, { id: string; start?: number; end?: number }> = {
+  'carlos-alberto-1970': { id: 'rrOe_VzGevw' },
+  'maradona-1986': { id: '1wVho3I0NtU', end: 60 },
+  'messi-getafe-2007': { id: 'FtdoIg3Do-k', end: 60 },
+  'bergkamp-1998': { id: 'XsZkCFoqSBs' },
+  'cambiasso-2006': { id: 'COe5Y29-BZY', end: 75 },
+};
+
 function gtgPotential(revealed: number, mainCount: number, looped: boolean): number {
   if (looped) return GTG_MIN;
   const step = Math.max(0, Math.min(revealed - 1, mainCount - 1));
@@ -367,47 +379,33 @@ function TdGuessTheGoal({ onDone }: { onDone: (score: number) => void }) {
 
   const goal = TACTICS_GOALS[roundIdx];
   const timeline = useMemo(() => buildTimeline(goal), [goal]);
-  const pickedRef = useRef<number | null>(null);
-  const pendingTotal = useRef(0);
-  const advanced = useRef(false);
+  const video = GTG_VIDEOS[goal.id];
 
-  const goNext = (total: number) => {
-    if (advanced.current) return;
-    advanced.current = true;
+  const goNext = () => {
     if (roundIdx + 1 >= TACTICS_GOALS.length) {
       done.current = true;
-      setTimeout(() => onDone(total), 600);
+      onDone(score);
     } else {
       setRoundIdx((i) => i + 1);
       setPicked(null);
-      pickedRef.current = null;
-      advanced.current = false;
       setLooped(false);
       setMaxReveal(1);
       timeRef.current = 0;
       setTime(0);
     }
   };
-  const goNextRef = useRef(goNext);
-  useEffect(() => {
-    goNextRef.current = goNext;
-  });
 
-  // Replay clock: loops with a short hold while guessing; after an answer
-  // the FULL goal replay rolls immediately (the payoff), then we advance.
+  // Replay clock — loops with a short hold while guessing; freezes on answer
+  // (the frame flips to the real footage instead).
   useEffect(() => {
+    if (picked !== null) return;
     let raf = 0;
     let last = performance.now();
     const tick = (now: number) => {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       let next = timeRef.current + dt;
-      if (pickedRef.current !== null) {
-        if (next >= timeline.duration + 1.1) {
-          goNextRef.current(pendingTotal.current);
-          return;
-        }
-      } else if (next > timeline.duration + GTG_LOOP_HOLD) {
+      if (next > timeline.duration + GTG_LOOP_HOLD) {
         next = 0;
         setLooped(true);
       }
@@ -422,19 +420,12 @@ function TdGuessTheGoal({ onDone }: { onDone: (score: number) => void }) {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [timeline, roundIdx]);
+  }, [timeline, picked, roundIdx]);
 
   const pick = (i: number) => {
-    if (pickedRef.current !== null || done.current) return;
-    const total = i === goal.answerIndex ? score + gtgPotential(maxReveal, timeline.mainCount, looped) : score;
-    setScore(total);
+    if (picked !== null || done.current) return;
+    setScore((prev) => (i === goal.answerIndex ? prev + gtgPotential(maxReveal, timeline.mainCount, looped) : prev));
     setPicked(i);
-    pickedRef.current = i;
-    pendingTotal.current = total;
-    // roll the full replay from kickoff
-    timeRef.current = 0;
-    setTime(0);
-    setMaxReveal(timeline.mainCount);
   };
 
   const pickRef = useRef(pick);
@@ -455,20 +446,49 @@ function TdGuessTheGoal({ onDone }: { onDone: (score: number) => void }) {
         className="relative w-full overflow-hidden rounded-[14px]"
         style={{ aspectRatio: `${BOARD_VIEW_W} / ${BOARD_VIEW_H}`, boxShadow: '4px 5px 0 rgba(0,0,0,0.55)' }}
       >
-        <TacticsBoard2D goal={goal} timeline={timeline} t={time} goalFlash={picked !== null && time > timeline.duration - 0.5} />
-        <div
-          className="absolute left-2 top-2 rounded-full px-3 py-1.5 text-[11px]"
-          style={{ ...TD_DISPLAY, background: 'rgba(0,0,0,0.6)', color: 'var(--td-white)' }}
-        >
-          {Math.min(maxReveal, timeline.mainCount)}/{timeline.mainCount}
-        </div>
-        <div
-          className="absolute right-2 top-2 rounded-full px-3 py-1.5 text-[11px]"
-          style={{ ...TD_DISPLAY, background: 'var(--td-orange)', color: '#0d0d0d' }}
-        >
-          {gtgPotential(maxReveal, timeline.mainCount, looped)}
-        </div>
+        {picked !== null && video ? (
+          // The real goal moment, on the spot — muted so autoplay always fires.
+          <iframe
+            src={`https://www.youtube-nocookie.com/embed/${video.id}?autoplay=1&mute=1&rel=0&playsinline=1${video.start ? `&start=${video.start}` : ''}${video.end ? `&end=${video.end}` : ''}`}
+            title={goal.title}
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowFullScreen
+            className="absolute inset-0 h-full w-full border-0 bg-black"
+          />
+        ) : (
+          <TacticsBoard2D goal={goal} timeline={timeline} t={time} goalFlash={picked !== null && time > timeline.duration - 0.5} />
+        )}
+        {picked === null && (
+          <>
+            <div
+              className="absolute left-2 top-2 rounded-full px-3 py-1.5 text-[11px]"
+              style={{ ...TD_DISPLAY, background: 'rgba(0,0,0,0.6)', color: 'var(--td-white)' }}
+            >
+              {Math.min(maxReveal, timeline.mainCount)}/{timeline.mainCount}
+            </div>
+            <div
+              className="absolute right-2 top-2 rounded-full px-3 py-1.5 text-[11px]"
+              style={{ ...TD_DISPLAY, background: 'var(--td-orange)', color: '#0d0d0d' }}
+            >
+              {gtgPotential(maxReveal, timeline.mainCount, looped)}
+            </div>
+          </>
+        )}
       </div>
+      {picked !== null && (
+        <motion.button
+          type="button"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6 }}
+          whileTap={{ scale: 0.96 }}
+          onClick={goNext}
+          className="w-full rounded-[12px] py-3 text-[14px]"
+          style={{ ...TD_DISPLAY, background: 'var(--td-orange)', color: '#0d0d0d', boxShadow: '4px 4px 0 rgba(0,0,0,0.5)' }}
+        >
+          {roundIdx + 1 >= TACTICS_GOALS.length ? TD.dailyFinish : TD.onbNext} ›
+        </motion.button>
+      )}
       <TurnTimerBar turnKey={`gtg-${roundIdx}`} ms={GTG_ROUND_MS} running={picked === null} />
       <div className="grid grid-cols-1 gap-2">
         {goal.options.map((opt, i) => {
