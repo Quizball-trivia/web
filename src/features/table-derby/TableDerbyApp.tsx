@@ -34,6 +34,7 @@ import { MyAvatar, TdAvatar, TdAvatarCard, TD_AVATAR_COLORS, tdAvatarCustomizati
 import { AvatarPreview } from '@/components/AvatarPreview';
 import { TdClubSelect } from './components/ClubSelect';
 import { TdProfileCard, opponentProfile } from './components/ProfileCard';
+import { getClub } from '@/lib/clubs';
 
 import { MOCK_USER } from './lib/mockUser';
 import { CardsRound } from './components/CardsRound';
@@ -72,7 +73,6 @@ type Phase =
   | 'leaderboard'
   | 'matchmaking'
   | 'showdown'
-  | 'rps'
   | 'category'
   | 'play'
   | 'cards'
@@ -235,7 +235,8 @@ export function TableDerbyApp() {
   const [prevQpForResults, setPrevQpForResults] = useState(0);
   const matchAwarded = useRef(false);
 
-  // RPS
+  // RPS (played on the showdown screen; picks badge onto the cards)
+  const [rpsReady, setRpsReady] = useState(false);
   const [myPick, setMyPick] = useState<RpsPick | null>(null);
   const [opPick, setOpPick] = useState<RpsPick | null>(null);
   const [rpsResult, setRpsResult] = useState<'me' | 'op' | 'tie' | null>(null);
@@ -321,7 +322,11 @@ export function TableDerbyApp() {
         void a.play().catch(() => {});
       }
     }, 2800);
-    later(() => setPhase('rps'), 5400);
+    setMyPick(null);
+    setOpPick(null);
+    setRpsResult(null);
+    setRpsReady(false);
+    later(() => setRpsReady(true), 4400);
   };
 
   const beginRound = useCallback(
@@ -759,6 +764,10 @@ export function TableDerbyApp() {
                         {tickets ?? '·'}
                       </span>
                     </span>
+                    {getClub(displayClub) && (
+                      // eslint-disable-next-line @next/next/no-img-element -- crest from the club registry
+                      <img src={getClub(displayClub)!.logo} alt="" className="h-7 w-7 shrink-0 object-contain" />
+                    )}
                   </span>
                 </span>
                 <TdAvatarCard color={myColor} width={58} />
@@ -1049,6 +1058,14 @@ export function TableDerbyApp() {
                   <span className="min-w-0 flex-1 truncate text-[14px] text-white" style={TD_DISPLAY}>
                     {row.name}
                   </span>
+                  {(() => {
+                    const clubValue = row.me ? displayClub : opponentProfile(row.name).clubValue;
+                    const club = clubValue ? getClub(clubValue) : null;
+                    return club ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- crest from the club registry
+                      <img src={club.logo} alt="" className="h-5 w-5 shrink-0 object-contain" />
+                    ) : null;
+                  })()}
                   <span className="text-[14px] tabular-nums" style={{ ...TD_DISPLAY, color: row.me ? 'var(--td-orange)' : 'rgba(255,255,255,0.75)' }}>
                     {row.points} {TD.qpShort}
                   </span>
@@ -1066,8 +1083,12 @@ export function TableDerbyApp() {
                 >
                   <MyAvatar size={42} />
                   <div className="flex min-w-0 flex-1 flex-col">
-                    <span className="truncate text-[14px] text-white" style={TD_DISPLAY}>
+                    <span className="flex items-center gap-1.5 truncate text-[14px] text-white" style={TD_DISPLAY}>
                       {displayName}
+                      {getClub(displayClub) && (
+                        // eslint-disable-next-line @next/next/no-img-element -- crest from the club registry
+                        <img src={getClub(displayClub)!.logo} alt="" className="h-5 w-5 shrink-0 object-contain" />
+                      )}
                     </span>
                     <span className="text-[11px] text-white/50" style={TD_DISPLAY}>
                       {TD.lbYourRank}: #{myIdx + 1}
@@ -1113,108 +1134,134 @@ export function TableDerbyApp() {
           </motion.main>
         )}
 
-        {/* ── SHOWDOWN ── */}
+        {/* ── SHOWDOWN + rock-paper-scissors on the cards ── */}
         {phase === 'showdown' && (
           <motion.main
             key="vs"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="relative z-10 flex min-h-dvh flex-col items-center justify-center gap-6 px-6"
+            className="relative z-10 flex min-h-dvh flex-col items-center justify-center gap-4 px-6"
           >
-            <TdProfileCard name={displayName} color={getAvatarColor()} clubValue={displayClub} points={displayQp} delay={0.15} />
-            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.35, type: 'spring', damping: 10 }}>
-              <span
-                className="block text-5xl md:text-6xl"
-                style={{ ...TD_DISPLAY, color: 'var(--td-orange)', transform: 'rotate(-6deg)' }}
-              >
-                VS
-              </span>
-            </motion.div>
-            <TdProfileCard
-              name={opponentName}
-              color={opponentProfile(opponentName).color}
-              clubValue={opponentProfile(opponentName).clubValue}
-              points={opponentProfile(opponentName).points}
-              mirror
-              delay={0.35}
-            />
-            <div
-              className="mt-2 rounded-full px-4 py-1.5 text-[11px] md:text-xs"
-              style={{ ...TD_DISPLAY, background: 'var(--td-white)', color: '#0d0d0d' }}
-            >
-              {TD.bestOfRounds}
-            </div>
-          </motion.main>
-        )}
-
-        {/* ── RPS ── */}
-        {phase === 'rps' && (
-          <motion.main
-            key="rps"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="relative z-10 flex min-h-dvh flex-col items-center justify-center gap-7 px-6"
-          >
-            <h2 className="text-2xl text-white md:text-3xl" style={TD_DISPLAY}>
-              {TD.rpsTitle}
-            </h2>
-            <div className="flex items-center gap-3 md:gap-4">
-              {(Object.keys(RPS_META) as RpsPick[]).map((k) => (
-                <motion.button
-                  key={k}
-                  type="button"
-                  whileTap={{ scale: 0.92 }}
-                  onClick={() => pickRps(k)}
-                  disabled={!!myPick}
-                  className="flex flex-col items-center gap-1.5 rounded-[16px] px-5 py-4 md:px-7 md:py-5"
-                  style={{
-                    background: myPick === k ? 'var(--td-orange)' : 'var(--td-charcoal)',
-                    boxShadow: '5px 5px 0 #000',
-                    opacity: myPick && myPick !== k ? 0.45 : 1,
-                    transition: 'background 0.2s, opacity 0.2s',
-                  }}
-                >
-                  <span className="text-3xl md:text-4xl" aria-hidden>
-                    {RPS_META[k].glyph}
-                  </span>
-                  <span className="text-[11px] text-white md:text-xs" style={TD_DISPLAY}>
-                    {RPS_META[k].label}
-                  </span>
-                </motion.button>
-              ))}
-            </div>
-            <div className="flex h-16 items-center justify-center">
+            <div className="relative">
+              <TdProfileCard name={displayName} color={getAvatarColor()} clubValue={displayClub} points={displayQp} delay={0.15} />
               <AnimatePresence>
-                {opPick && (
+                {myPick && (
                   <motion.div
-                    initial={{ scale: 0.6, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    className="flex items-center gap-4"
+                    key={`me-${myPick}`}
+                    initial={{ scale: 0, rotate: -20 }}
+                    animate={{ scale: 1, rotate: -6 }}
+                    exit={{ scale: 0 }}
+                    transition={{ type: 'spring', damping: 11 }}
+                    className="absolute left-1/2 top-4 z-10 flex size-16 -translate-x-1/2 items-center justify-center rounded-full"
+                    style={{ background: 'var(--td-paper)', boxShadow: '4px 4px 0 rgba(0,0,0,0.55)' }}
                   >
-                    <span className="text-4xl" aria-hidden>
-                      {myPick ? RPS_META[myPick].glyph : ''}
-                    </span>
-                    <span className="text-lg text-white/60" style={TD_DISPLAY}>
-                      —
-                    </span>
-                    <span className="text-4xl" aria-hidden>
-                      {RPS_META[opPick].glyph}
-                    </span>
-                    <span
-                      className="ml-2 rounded-[8px] px-3 py-1.5 text-sm"
-                      style={{
-                        ...TD_DISPLAY,
-                        background: rpsResult === 'tie' ? 'var(--td-white)' : 'var(--td-orange)',
-                        color: '#0d0d0d',
-                      }}
-                    >
-                      {rpsResult === 'tie' ? TD.rpsTie : rpsResult === 'me' ? TD.rpsYouStart : TD.rpsOpponentStarts}
+                    <span className="text-3xl" aria-hidden>
+                      {RPS_META[myPick].glyph}
                     </span>
                   </motion.div>
                 )}
               </AnimatePresence>
+            </div>
+
+            <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.35, type: 'spring', damping: 10 }}>
+              <span className="block text-5xl md:text-6xl" style={{ ...TD_DISPLAY, color: 'var(--td-orange)', transform: 'rotate(-6deg)' }}>
+                VS
+              </span>
+            </motion.div>
+
+            <div className="relative">
+              <TdProfileCard
+                name={opponentName}
+                color={opponentProfile(opponentName).color}
+                clubValue={opponentProfile(opponentName).clubValue}
+                points={opponentProfile(opponentName).points}
+                mirror
+                delay={0.35}
+              />
+              <AnimatePresence>
+                {rpsReady && (
+                  <motion.div
+                    key={opPick ? `op-${opPick}` : 'op-waiting'}
+                    initial={{ scale: 0, rotate: 16 }}
+                    animate={{ scale: 1, rotate: 5 }}
+                    exit={{ scale: 0 }}
+                    transition={{ type: 'spring', damping: 11 }}
+                    className="absolute left-1/2 top-4 z-10 flex size-16 -translate-x-1/2 items-center justify-center rounded-full"
+                    style={{ background: 'var(--td-paper)', boxShadow: '4px 4px 0 rgba(0,0,0,0.55)' }}
+                  >
+                    {opPick ? (
+                      <span className="text-3xl" aria-hidden>
+                        {RPS_META[opPick].glyph}
+                      </span>
+                    ) : (
+                      <motion.span
+                        animate={{ opacity: [0.35, 1, 0.35] }}
+                        transition={{ repeat: Infinity, duration: 1.2 }}
+                        className="text-2xl"
+                        style={{ ...TD_DISPLAY, color: 'var(--td-orange)' }}
+                        aria-hidden
+                      >
+                        ?
+                      </motion.span>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* prompt / result + picks */}
+            <div className="flex h-24 flex-col items-center justify-center gap-2.5">
+              {rpsResult ? (
+                <motion.span
+                  initial={{ scale: 0.6, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  className="rounded-[10px] px-4 py-2 text-base"
+                  style={{
+                    ...TD_DISPLAY,
+                    background: rpsResult === 'tie' ? 'var(--td-white)' : 'var(--td-orange)',
+                    color: '#0d0d0d',
+                    boxShadow: '4px 4px 0 rgba(0,0,0,0.5)',
+                  }}
+                >
+                  {rpsResult === 'tie' ? TD.rpsTie : rpsResult === 'me' ? TD.rpsYouStart : TD.rpsOpponentStarts}
+                </motion.span>
+              ) : rpsReady ? (
+                <>
+                  <span className="text-[13px] text-white/75" style={TD_DISPLAY}>
+                    {TD.rpsTitle}
+                  </span>
+                  <div className="flex items-center gap-2.5">
+                    {(Object.keys(RPS_META) as RpsPick[]).map((k) => (
+                      <motion.button
+                        key={k}
+                        type="button"
+                        whileTap={{ scale: 0.92 }}
+                        onClick={() => pickRps(k)}
+                        disabled={!!myPick}
+                        className="flex flex-col items-center gap-1 rounded-[12px] px-4 py-2.5"
+                        style={{
+                          background: myPick === k ? 'var(--td-orange)' : 'var(--td-charcoal)',
+                          boxShadow: '3px 3px 0 #000',
+                          opacity: myPick && myPick !== k ? 0.45 : 1,
+                          transition: 'background 0.2s, opacity 0.2s',
+                        }}
+                      >
+                        <span className="text-2xl" aria-hidden>
+                          {RPS_META[k].glyph}
+                        </span>
+                        <span className="text-[10px] text-white" style={TD_DISPLAY}>
+                          {RPS_META[k].label}
+                        </span>
+                      </motion.button>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <span className="rounded-full px-4 py-1.5 text-[11px] md:text-xs" style={{ ...TD_DISPLAY, background: 'var(--td-white)', color: '#0d0d0d' }}>
+                  {TD.bestOfRounds}
+                </span>
+              )}
             </div>
           </motion.main>
         )}
@@ -1509,12 +1556,33 @@ export function TableDerbyApp() {
               <span className="text-sm text-white/70" style={TD_DISPLAY}>
                 {TD.matchScore}
               </span>
-              <div className="flex items-center gap-5">
-                <MyAvatar size={48} />
-                <span className="text-3xl text-white" style={TD_DISPLAY}>
+              <div className="flex items-start gap-5">
+                <div className="flex flex-col items-center gap-1.5">
+                  <MyAvatar size={48} />
+                  <span className="flex items-center gap-1 text-[11px] text-white/85" style={TD_DISPLAY}>
+                    {displayName}
+                    {getClub(displayClub) && (
+                      // eslint-disable-next-line @next/next/no-img-element -- crest from the club registry
+                      <img src={getClub(displayClub)!.logo} alt="" className="h-4 w-4 object-contain" />
+                    )}
+                  </span>
+                </div>
+                <span className="mt-2 text-3xl text-white" style={TD_DISPLAY}>
                   {roundsWon.me} - {roundsWon.op}
                 </span>
-                <TdAvatar name={opponentName} size={48} />
+                <div className="flex flex-col items-center gap-1.5">
+                  <TdAvatar name={opponentName} size={48} />
+                  <span className="flex items-center gap-1 text-[11px] text-white/85" style={TD_DISPLAY}>
+                    {opponentName}
+                    {(() => {
+                      const club = opponentProfile(opponentName).clubValue ? getClub(opponentProfile(opponentName).clubValue!) : null;
+                      return club ? (
+                        // eslint-disable-next-line @next/next/no-img-element -- crest from the club registry
+                        <img src={club.logo} alt="" className="h-4 w-4 object-contain" />
+                      ) : null;
+                    })()}
+                  </span>
+                </div>
               </div>
             </div>
 
