@@ -105,6 +105,9 @@ function buildPenaltyPool(): BuzzerItem[] {
 type Seat = 'me' | 'op';
 type RpsPick = 'rock' | 'paper' | 'scissors';
 
+/** WL is hidden for now (owner request) — flip to bring the card back. */
+const WL_ENABLED = false;
+
 const TURN_MS = 10_000;
 const LIVES = 3;
 
@@ -841,6 +844,7 @@ export function TableDerbyApp() {
             )}
 
             {/* WL card — second, with the Quizball countdown in TD colors */}
+            {WL_ENABLED && (
             <button
               type="button"
               onClick={() => setPhase('wl')}
@@ -873,6 +877,7 @@ export function TableDerbyApp() {
                 />
               </div>
             </button>
+            )}
 
             {/* Daily challenges — section header + horizontal cards */}
             <div className="w-full">
