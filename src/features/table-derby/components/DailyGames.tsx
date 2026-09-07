@@ -345,17 +345,47 @@ function TdGuessTheGoal({ onDone }: { onDone: (score: number) => void }) {
 
   const goal = TACTICS_GOALS[roundIdx];
   const timeline = useMemo(() => buildTimeline(goal), [goal]);
+  const pickedRef = useRef<number | null>(null);
+  const pendingTotal = useRef(0);
+  const advanced = useRef(false);
 
-  // replay clock (loops with a short hold, like the broadcast replay)
+  const goNext = (total: number) => {
+    if (advanced.current) return;
+    advanced.current = true;
+    if (roundIdx + 1 >= TACTICS_GOALS.length) {
+      done.current = true;
+      setTimeout(() => onDone(total), 600);
+    } else {
+      setRoundIdx((i) => i + 1);
+      setPicked(null);
+      pickedRef.current = null;
+      advanced.current = false;
+      setLooped(false);
+      setMaxReveal(1);
+      timeRef.current = 0;
+      setTime(0);
+    }
+  };
+  const goNextRef = useRef(goNext);
   useEffect(() => {
-    if (picked !== null) return;
+    goNextRef.current = goNext;
+  });
+
+  // Replay clock: loops with a short hold while guessing; after an answer
+  // the FULL goal replay rolls immediately (the payoff), then we advance.
+  useEffect(() => {
     let raf = 0;
     let last = performance.now();
     const tick = (now: number) => {
       const dt = Math.min(0.05, (now - last) / 1000);
       last = now;
       let next = timeRef.current + dt;
-      if (next > timeline.duration + GTG_LOOP_HOLD) {
+      if (pickedRef.current !== null) {
+        if (next >= timeline.duration + 1.1) {
+          goNextRef.current(pendingTotal.current);
+          return;
+        }
+      } else if (next > timeline.duration + GTG_LOOP_HOLD) {
         next = 0;
         setLooped(true);
       }
@@ -370,30 +400,19 @@ function TdGuessTheGoal({ onDone }: { onDone: (score: number) => void }) {
     };
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [timeline, picked, roundIdx]);
-
-  const advance = (total: number) => {
-    if (roundIdx + 1 >= TACTICS_GOALS.length) {
-      done.current = true;
-      setTimeout(() => onDone(total), 1400);
-    } else {
-      setTimeout(() => {
-        setRoundIdx((i) => i + 1);
-        setPicked(null);
-        setLooped(false);
-        setMaxReveal(1);
-        timeRef.current = 0;
-        setTime(0);
-      }, 1800);
-    }
-  };
+  }, [timeline, roundIdx]);
 
   const pick = (i: number) => {
-    if (picked !== null || done.current) return;
-    setPicked(i);
+    if (pickedRef.current !== null || done.current) return;
     const total = i === goal.answerIndex ? score + gtgPotential(maxReveal, timeline.mainCount, looped) : score;
     setScore(total);
-    advance(total);
+    setPicked(i);
+    pickedRef.current = i;
+    pendingTotal.current = total;
+    // roll the full replay from kickoff
+    timeRef.current = 0;
+    setTime(0);
+    setMaxReveal(timeline.mainCount);
   };
 
   const pickRef = useRef(pick);
@@ -414,7 +433,7 @@ function TdGuessTheGoal({ onDone }: { onDone: (score: number) => void }) {
         className="relative w-full overflow-hidden rounded-[14px]"
         style={{ aspectRatio: `${BOARD_VIEW_W} / ${BOARD_VIEW_H}`, boxShadow: '4px 5px 0 rgba(0,0,0,0.55)' }}
       >
-        <TacticsBoard2D goal={goal} timeline={timeline} t={time} goalFlash={false} />
+        <TacticsBoard2D goal={goal} timeline={timeline} t={time} goalFlash={picked !== null && time > timeline.duration - 0.5} />
         <div
           className="absolute left-2 top-2 rounded-full px-3 py-1.5 text-[11px]"
           style={{ ...TD_DISPLAY, background: 'rgba(0,0,0,0.6)', color: 'var(--td-white)' }}
