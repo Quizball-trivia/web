@@ -44,6 +44,8 @@ export const TD = {
   dailyYourScore: 'შენი შედეგი',
   dailyComeBack: 'ახალი გამოწვევა ხვალ',
   dailyFinish: 'დასრულება',
+  dailyRewardTicket: '+1 ბილეთი',
+  confirmOrder: 'დადასტურება',
 
   // Weekend League
   wlQpLabel: 'საკვალიფიკაციო ქულები',

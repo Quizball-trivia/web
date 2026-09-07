@@ -50,6 +50,12 @@ export function resetTickets(): number {
   return TICKETS_PER_DAY;
 }
 
+export function addTicket(): number {
+  const next = getTickets() + 1;
+  write('td.tickets', { day: geDayKey(), count: next } satisfies TicketState);
+  return next;
+}
+
 export function spendTicket(): number {
   const next = Math.max(0, getTickets() - 1);
   write('td.tickets', { day: geDayKey(), count: next } satisfies TicketState);
@@ -136,6 +142,18 @@ export function getFavClub(): string | null {
 
 export function setFavClub(id: string) {
   write('td.club', id);
+}
+
+/** Daily-challenge reward: first completion per challenge per Georgian
+ *  day grants +1 ticket. Returns whether the reward was granted. */
+export function claimDailyReward(game: string): boolean {
+  const state = read<{ day: string; games: string[] }>('td.dailyReward');
+  const today = geDayKey();
+  const games = state && state.day === today ? state.games : [];
+  if (games.includes(game)) return false;
+  write('td.dailyReward', { day: today, games: [...games, game] });
+  addTicket();
+  return true;
 }
 
 /** Next Saturday 20:00 Georgia time, epoch ms (WL countdown target). */

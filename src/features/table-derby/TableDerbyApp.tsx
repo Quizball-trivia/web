@@ -27,7 +27,6 @@ import {
 } from './components/brand';
 import { CategoryBand, PlayerBoard, ScorePill, TurnTimerBar } from './components/chrome';
 import { TdDailyGame, type TdDailyType } from './components/DailyGames';
-import { GuessTheGoal } from '@/features/mini-games/components/GuessTheGoal';
 import { LeagueCountdown } from '@/features/weekend-league/components/LeagueCountdown';
 import { TdLoader } from './components/Loader';
 import { MyAvatar, TdAvatar, TdAvatarCard, TD_AVATAR_COLORS, tdAvatarCustomization } from './components/Avatar';
@@ -186,7 +185,7 @@ export function TableDerbyApp() {
   // Shell state (localStorage-backed; read after mount to stay SSR-safe).
   const [tickets, setTickets] = useState<number | null>(null);
   const [qp, setQp] = useState(0);
-  const [dailyGame, setDailyGame] = useState<TdDailyType | 'guessTheGoal' | null>(null);
+  const [dailyGame, setDailyGame] = useState<TdDailyType | null>(null);
   const [favClub, setFavClubState] = useState<string | null>(null);
   const myColor = useSyncExternalStore(subscribeAvatar, getAvatarColor, () => 'green' as ReturnType<typeof getAvatarColor>);
   const [menuNotice, setMenuNotice] = useState<string | null>(null);
@@ -960,13 +959,7 @@ export function TableDerbyApp() {
             exit={{ opacity: 0 }}
             className="relative z-10"
           >
-            {dailyGame === 'guessTheGoal' ? (
-              <div className="relative z-10 min-h-dvh">
-                <GuessTheGoal backHref="/table-derby" />
-              </div>
-            ) : (
-              <TdDailyGame type={dailyGame} onExit={() => setPhase('home')} />
-            )}
+            <TdDailyGame type={dailyGame} onExit={() => setPhase('home')} />
           </motion.main>
         )}
 
