@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { MoneyDropGame } from "@/features/daily/MoneyDropGame";
 import { ClueGame } from "@/features/daily/ClueGame";
@@ -57,15 +57,23 @@ export function DemoDailyChallenge({ type, backHref = "/demos", onExit, onEvent,
     else router.push(backHref);
   }, [backHref, onExit, router]);
 
+  // A finished round is submitted once per attempt, at the terminal state when the engine offers one
+  // (Stat Sniper's save hook) and otherwise when the results modal is dismissed.
+  const submittedRef = useRef(false);
+  const submitOnce = useCallback(async (score: number) => {
+    if (submittedRef.current || !onRemoteComplete) return;
+    submittedRef.current = true;
+    await onRemoteComplete(score).catch(() => undefined);
+  }, [onRemoteComplete]);
   const handleComplete = useCallback((score: number) => {
     onEvent?.("complete", { score });
-    // Best effort: the results screen never waits on the network.
-    void onRemoteComplete?.(score).catch(() => undefined);
+    void submitOnce(score);
     setFinalScore(score);
-  }, [onEvent, onRemoteComplete]);
+  }, [onEvent, submitOnce]);
 
   const handleReplay = useCallback(() => {
     onEvent?.("replay");
+    submittedRef.current = false;
     setFinalScore(null);
     setIntroDone(false);
     setAttempt((current) => current + 1);
@@ -79,6 +87,7 @@ export function DemoDailyChallenge({ type, backHref = "/demos", onExit, onEvent,
         isMoney={type === "moneyDrop"}
         onReplay={handleReplay}
         onExit={handleBack}
+        embedded={Boolean(onExit)}
       />
     );
   }
@@ -120,6 +129,6 @@ export function DemoDailyChallenge({ type, backHref = "/demos", onExit, onEvent,
     case "passChain":
       return <PassChainGame key={attempt} session={session} resolveLink={resolveLink ?? resolveDemoPassChainLink} {...gameProps} />;
     case "statSniper":
-      return <StatSniperGame key={attempt} session={session} demo={!leaderboardFetcher} leaderboardFetcher={leaderboardFetcher} {...gameProps} />;
+      return <StatSniperGame key={attempt} session={session} demo={!leaderboardFetcher} leaderboardFetcher={leaderboardFetcher} onSaveResult={onRemoteComplete ? submitOnce : undefined} {...gameProps} />;
   }
 }

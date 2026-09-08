@@ -13,10 +13,19 @@ interface DemoResultScreenProps {
   isMoney?: boolean;
   onReplay: () => void;
   onExit: () => void;
+  /** Public game pages: a guest round, not an investor demo — neutral labels, no "demos". */
+  embedded?: boolean;
 }
 
-export function DemoResultScreen({ title, score, isMoney, onReplay, onExit }: DemoResultScreenProps) {
+const COPY = {
+  en: { done: "Demo complete", round: "Round complete", saved: "money saved", score: "score", again: "Play again", demos: "Back to demos", exit: "Exit" },
+  ka: { done: "დემო დასრულდა", round: "რაუნდი დასრულდა", saved: "შენახული თანხა", score: "ქულა", again: "თავიდან თამაში", demos: "დემოებზე დაბრუნება", exit: "გასვლა" },
+  es: { done: "Demo completada", round: "Ronda completada", saved: "dinero conservado", score: "puntos", again: "Jugar de nuevo", demos: "Volver a las demos", exit: "Salir" },
+} as const;
+
+export function DemoResultScreen({ title, score, isMoney, onReplay, onExit, embedded = false }: DemoResultScreenProps) {
   const { locale } = useLocale();
+  const c = COPY[locale as keyof typeof COPY] ?? COPY.en;
 
   return (
     <div className="fixed inset-0 z-40 flex items-center justify-center bg-surface-page px-4">
@@ -31,19 +40,13 @@ export function DemoResultScreen({ title, score, isMoney, onReplay, onExit }: De
           {title}
         </h2>
         <p className="mt-1 text-[13px] text-white/60" style={poppins}>
-          {locale === "ka" ? "დემო დასრულდა" : "Demo complete"}
+          {embedded ? c.round : c.done}
         </p>
         <div className="mt-5 text-4xl font-bold text-white" style={poppins}>
           {isMoney ? `$${score.toLocaleString()}` : score}
         </div>
         <p className="mt-1 text-[12px] uppercase tracking-wide text-white/50" style={poppins}>
-          {isMoney
-            ? locale === "ka"
-              ? "შენახული თანხა"
-              : "money saved"
-            : locale === "ka"
-              ? "ქულა"
-              : "score"}
+          {isMoney ? c.saved : c.score}
         </p>
         <div className="mt-7 flex flex-col gap-3">
           <button
@@ -53,7 +56,7 @@ export function DemoResultScreen({ title, score, isMoney, onReplay, onExit }: De
             style={{ ...poppins, backgroundColor: colors.green.base }}
           >
             <RotateCcw className="h-4 w-4" />
-            {locale === "ka" ? "თავიდან თამაში" : "Play again"}
+            {c.again}
           </button>
           <button
             type="button"
@@ -62,7 +65,7 @@ export function DemoResultScreen({ title, score, isMoney, onReplay, onExit }: De
             style={poppins}
           >
             <ArrowLeft className="h-4 w-4" />
-            {locale === "ka" ? "დემოებზე დაბრუნება" : "Back to demos"}
+            {embedded ? c.exit : c.demos}
           </button>
         </div>
       </motion.div>

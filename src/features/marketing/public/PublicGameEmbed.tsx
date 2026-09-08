@@ -7,7 +7,8 @@ import { Play, X } from "lucide-react";
 import { useAuthStore } from "@/stores/auth.store";
 import { trackGameComplete, trackGameReplay, trackGameStart, trackGameView } from "@/lib/analytics/public-games.analytics";
 import type { DailyChallengeType } from "@/lib/domain/dailyChallenge";
-import { GuestDailyPlay } from "./GuestDailyPlay";
+/** Daily engines are a separate on-demand chunk too; nothing game-related loads before Play. */
+const GuestDailyPlay = dynamic(() => import("./GuestDailyPlay").then((m) => m.GuestDailyPlay), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 
 /** Every engine lives in one client chunk that is fetched only when a visitor presses Play. */
 const DemoModeView = dynamic(() => import("@/features/demos/DemoModeView").then((m) => m.DemoModeView), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });

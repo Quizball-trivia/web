@@ -36,23 +36,25 @@ export function GuestDailyPlay({ type, modeId, locale, pagePath, onExit, onEvent
   }, [type, locale, modeId]);
 
   if (state.status === "loading") {
-    return <div className="flex min-h-[60vh] items-center justify-center text-sm font-semibold text-white/70">{copy.loading}</div>;
+    return <div role="status" aria-live="polite" className="flex min-h-[60vh] items-center justify-center text-sm font-semibold text-white/70">{copy.loading}</div>;
   }
-  const shared = {
-    type,
-    backHref: pagePath,
-    onExit,
-    onEvent,
-    resolveLink: (fromPlayerId: string, text: string, _targetId: string, puzzleId: string, l: string) => guestApi.linkPassChain({ puzzleId, fromPlayerId, text, locale: l }),
-    leaderboardFetcher: () => guestApi.statSniperLeaderboard(locale),
-  };
+  const shared = { type, backHref: pagePath, onExit, onEvent };
   if (state.status === "sample") {
+    // The sample round must work with the API down: demo link resolver, no remote board, nothing submitted.
     return (
       <>
-        <p className="fixed inset-x-0 top-3 z-[115] mx-auto w-fit rounded-full bg-black/70 px-3 py-1 text-xs font-bold text-brand-yellow backdrop-blur-sm">{copy.sampleFallback}</p>
+        <p role="status" aria-live="polite" className="fixed inset-x-0 top-3 z-[115] mx-auto w-fit rounded-full bg-black/70 px-3 py-1 text-xs font-bold text-brand-yellow backdrop-blur-sm">{copy.sampleFallback}</p>
         <DemoDailyChallenge {...shared} />
       </>
     );
   }
-  return <DemoDailyChallenge {...shared} session={state.session} onRemoteComplete={(score) => guestApi.completeDaily(type, score, locale)} />;
+  return (
+    <DemoDailyChallenge
+      {...shared}
+      session={state.session}
+      resolveLink={(fromPlayerId, text, _targetId, puzzleId, l) => guestApi.linkPassChain({ puzzleId, fromPlayerId, text, locale: l })}
+      leaderboardFetcher={() => guestApi.statSniperLeaderboard(locale)}
+      onRemoteComplete={(score) => guestApi.completeDaily(type, score, locale)}
+    />
+  );
 }

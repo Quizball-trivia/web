@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import { guestApi, type PublicStandings, type PublicStandingsBlock } from "@/lib/repositories/guest.repo";
 
 type Locale = "en" | "ka" | "es";
-const COPY: Record<Locale, { title: string; ranked: string; wl: string; notStarted: string; unavailable: string; updated: string }> = {
-  en: { title: "Standings", ranked: "Ranked", wl: "Weekend League", notStarted: "Weekend League has not started yet.", unavailable: "Standings are temporarily unavailable.", updated: "Updated" },
-  es: { title: "Clasificación", ranked: "Clasificatorio", wl: "Weekend League", notStarted: "La Weekend League aún no ha empezado.", unavailable: "La clasificación no está disponible ahora mismo.", updated: "Actualizado" },
-  ka: { title: "ცხრილი", ranked: "რეიტინგული", wl: "შაბათ-კვირის ლიგა", notStarted: "შაბათ-კვირის ლიგა ჯერ არ დაწყებულა.", unavailable: "ცხრილი დროებით მიუწვდომელია.", updated: "განახლდა" },
+const COPY: Record<Locale, { title: string; ranked: string; wl: string; notStarted: string; pending: string; unavailable: string; updated: string }> = {
+  en: { title: "Standings", ranked: "Ranked", wl: "Weekend League", notStarted: "Weekend League has not started yet.", pending: "Standings appear after the first game.", unavailable: "Standings are temporarily unavailable.", updated: "Updated" },
+  es: { title: "Clasificación", ranked: "Clasificatorio", wl: "Weekend League", notStarted: "La Weekend League aún no ha empezado.", pending: "La clasificación aparece tras el primer juego.", unavailable: "La clasificación no está disponible ahora mismo.", updated: "Actualizado" },
+  ka: { title: "ცხრილი", ranked: "რეიტინგული", wl: "შაბათ-კვირის ლიგა", notStarted: "შაბათ-კვირის ლიგა ჯერ არ დაწყებულა.", pending: "ცხრილი პირველი თამაშის შემდეგ გამოჩნდება.", unavailable: "ცხრილი დროებით მიუწვდომელია.", updated: "განახლდა" },
 };
 
 function Block({ block, label, copy, locale }: { block: PublicStandingsBlock; label: string; copy: (typeof COPY)[Locale]; locale: Locale }) {
@@ -29,7 +29,7 @@ function Block({ block, label, copy, locale }: { block: PublicStandingsBlock; la
           ))}
         </ol>
       ) : (
-        <p className="mt-2 text-sm text-white/65">{block.status === "not_started" ? copy.notStarted : copy.unavailable}</p>
+        <p className="mt-2 text-sm text-white/65">{block.status === "not_started" ? copy.notStarted : block.status === "pending_results" ? copy.pending : copy.unavailable}</p>
       )}
     </div>
   );
