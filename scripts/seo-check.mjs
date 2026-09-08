@@ -49,7 +49,7 @@ for (const [path, status, target] of [["/en/football-games", 308, "/en"], ["/es/
   const loc = (res.headers.get("location") ?? "").replace(/^https?:\/\/[^/]+/, "");
   check(`${path} → ${status}${target ? " " + target : ""}`, res.status === status && (!target || loc === target), `${res.status} ${loc}`);
 }
-for (const path of ["/en/games/auction", "/en/daily/money-drop", "/es/football-games/auction", "/en/football-games/missing-xi", "/en/football-games/nope"]) {
+for (const path of ["/en/games/auction", "/en/daily/money-drop", "/es/football-games/auction", "/en/football-games/football-timeline", "/en/football-games/nope"]) {
   const res = await get(path);
   check(`${path} 404`, res.status === 404, String(res.status));
 }
