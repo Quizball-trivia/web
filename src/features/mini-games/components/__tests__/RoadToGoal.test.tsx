@@ -12,6 +12,7 @@ const mocks = vi.hoisted(() => ({
   cashout: vi.fn(),
   proof: vi.fn(),
   heartbeat: vi.fn(),
+  stats: vi.fn(async () => ({ playing_now: 0, recent_wins: [], top_runs: [] })),
   refetchWallet: vi.fn(),
 }));
 

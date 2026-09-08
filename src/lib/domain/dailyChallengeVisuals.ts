@@ -68,6 +68,24 @@ export const DAILY_CHALLENGE_VISUALS: Record<DailyChallengeType, ChallengeVisual
     iconColorClass: "text-amber-400",
     iconBgColor: "bg-amber-500/20",
   },
+  missingXi: {
+    icon: "\u{1F455}",
+    iconToken: "users",
+    iconColorClass: "text-brand-blue",
+    iconBgColor: "bg-brand-blue/20",
+  },
+  passChain: {
+    icon: "\u{1F517}",
+    iconToken: "route",
+    iconColorClass: "text-brand-cyan",
+    iconBgColor: "bg-brand-cyan/20",
+  },
+  statSniper: {
+    icon: "\u{1F3AF}",
+    iconToken: "trendingUp",
+    iconColorClass: "text-brand-blue",
+    iconBgColor: "bg-brand-blue/20",
+  },
   footballLogic: {
     icon: "\u{1F5BC}\u{FE0F}",
     iconToken: "image",

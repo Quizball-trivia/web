@@ -30,7 +30,10 @@ import { getTrivia, type TriviaQuestion } from '../data/trivia';
 import { useMiniLocale, useMiniT } from '../lib/i18n';
 import { getSoundLevels, playCash, playKick, setCrowdLevel, setCrowdMood, setSfxLevel, startCrowd, stopCrowd } from '../lib/crowdAudio';
 import { CoinIcon } from '@/features/store/components/CoinIcon';
+import { MoneyFlight, seeded } from './MoneyFlight';
 import { ResultSplash } from '@/features/daily/components/ResultSplash';
+import { GoalCelebrationOverlay } from '@/features/possession/components/GoalCelebrationOverlay';
+import { GOAL_CELEBRATION_MS } from '@/features/possession/realtimePossession.helpers';
 import { useResultSplash } from '@/features/daily/components/useResultSplash';
 import { useQueryClient } from '@tanstack/react-query';
 import { useStoreWallet } from '@/lib/queries/store.queries';
@@ -41,6 +44,7 @@ import {
   type FreeKicksState,
   type FreeKicksZone,
 } from '@/lib/repositories/freeKicks.repo';
+import { settleOnce, trackMiniGameRoundStarted } from '../analytics/coinGames.analytics';
 
 const BALL_URL = '/assets/brand/goal-ball-small.webp';
 const MIN_STAKE = 5;
@@ -59,7 +63,10 @@ const FinalThirdPitch3D = dynamic(
   },
 );
 const START_BALANCE = 100;
-const QUESTION_S = 5;
+/** Ranked MCQ timing: 10s to answer once the options appear. */
+const QUESTION_S = 10;
+/** Ranked-style reading pause: the prompt shows alone before the options and the clock appear. */
+const READ_MS = 3000;
 const ANSWER_HOLD_MS = 2000;
 const MIN_OPEN = 2;
 const MAX_OPEN = 6;
@@ -86,13 +93,6 @@ const ZONES: Zone[] = [
 
 
 /** Tiny deterministic PRNG so the fake crowd numbers are stable per attack. */
-function seeded(seed: number): () => number {
-  let s = seed >>> 0;
-  return () => {
-    s = (s * 1664525 + 1013904223) >>> 0;
-    return s / 4294967296;
-  };
-}
 
 const CROWD_NAMES = [
   'გიორგი7', 'ნიკა77', 'ლუკა99', 'თაზო10', 'საბა_fc', 'დათო21',
@@ -193,59 +193,6 @@ function MoneyStack({ count = 3 }: { count?: number }) {
   );
 }
 
-function MoneyFlight({
-  flight,
-}: {
-  flight: { seed: number; ox: number; oy: number; tx: number; ty: number } | null;
-}) {
-  const bits = useMemo(() => {
-    if (!flight) return [];
-    const rnd = seeded(Math.floor(Math.abs(flight.seed)) || 1);
-    return Array.from({ length: 10 }, (_, i) => ({
-      i,
-      delay: i * 0.04,
-      jx: (rnd() - 0.5) * 72,
-      jy: (rnd() - 0.5) * 36,
-      rot: (rnd() - 0.5) * 90,
-      size: 0.62 + rnd() * 0.28,
-    }));
-  }, [flight]);
-
-  if (!flight) return null;
-
-  return (
-    <div className="pointer-events-none fixed inset-0 z-[80] overflow-hidden" aria-hidden>
-      {bits.map((bit) => (
-        <motion.div
-          key={`${flight.seed}-${bit.i}`}
-          className="absolute"
-          initial={{
-            left: flight.ox,
-            top: flight.oy,
-            x: '-50%',
-            y: '-50%',
-            opacity: 0,
-            scale: 0.45,
-            rotate: 0,
-          }}
-          animate={{
-            left: flight.tx,
-            top: flight.ty,
-            x: ['-50%', `calc(-50% + ${bit.jx}px)`, '-50%'],
-            y: ['-50%', `calc(-50% + ${bit.jy - 48}px)`, '-50%'],
-            opacity: [0, 1, 1, 0],
-            scale: [0.45, 1.05, 0.55],
-            rotate: [0, bit.rot, bit.rot * 0.2],
-          }}
-          transition={{ duration: 0.72, delay: bit.delay, ease: [0.2, 0.75, 0.15, 1] }}
-        >
-          <CoinIcon size={Math.round(30 * bit.size)} />
-        </motion.div>
-      ))}
-    </div>
-  );
-}
-
 interface TickerEntry {
   id: number;
   name: string;
@@ -285,11 +232,16 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
   const timersRef = useRef<number[]>([]);
   const selectedRef = useRef<number | null>(null);
   const [qLeft, setQLeft] = useState(QUESTION_S);
+  const [reading, setReading] = useState(false);
+  const [goalSplash, setGoalSplash] = useState(false);
+  /** Seconds the visible countdown/bar run for this question — fixed when the options appear. */
+  const [timerWindowS, setTimerWindowS] = useState(QUESTION_S);
 
   // ── Live (real-coins) mode ──
   const queryClient = useQueryClient();
   const { data: wallet, isError: walletError, refetch: refetchWallet } = useStoreWallet();
   const liveStateRef = useRef<FreeKicksState | null>(null);
+  const liveSettledTrackedRef = useRef<string | null>(null);
   const [liveQuestion, setLiveQuestion] = useState<{
     id: string;
     q: string;
@@ -323,6 +275,7 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
     if (prev && prev.round_id === state.round_id && state.state_version < prev.state_version) return;
     liveSeqRef.current += 1;
     liveStateRef.current = state;
+    settleOnce(liveSettledTrackedRef, 'free_kicks', state, state.goals);
     setPot(state.pot_coins);
     setRoundStake(state.stake_coins);
     setAttack(state.attack);
@@ -348,9 +301,10 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
       optionIds: state.question.options.map((option) => option.id),
       answer: -1,
       deadlineLocalMs,
-      windowS,
+      windowS: Math.min(QUESTION_S, windowS),
     });
-    setQLeft(windowS);
+    setQLeft(Math.min(QUESTION_S, windowS));
+    setReading(true);
   };
 
   const settleLocalRound = (state: FreeKicksState | null) => {
@@ -385,17 +339,7 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
       return;
     }
     applyLiveState(state);
-    if (state.phase === 'question' && state.question) {
-      syncLiveQuestion(state);
-      selectedRef.current = null;
-      setSelected(null);
-      setBeat('question');
-    } else if (state.phase === 'post_goal') {
-      setScored(true);
-      setBeat('goal');
-    } else {
-      setBeat('decide');
-    }
+    routeLiveState(state);
   };
 
   // A nonce identifies one intent; keep it only for failures where the server
@@ -527,11 +471,34 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
     }
   }, [beat]);
 
+  // The ranked goal splash clears itself on the ranked timing; the pot buttons stay.
   useEffect(() => {
-    if (beat !== 'question') return;
+    if (beat !== 'goal') { setGoalSplash(false); return; }
+    setGoalSplash(true);
+    const id = window.setTimeout(() => setGoalSplash(false), GOAL_CELEBRATION_MS);
+    return () => window.clearTimeout(id);
+  }, [beat]);
+
+  // Reading pause: options and the clock stay hidden for READ_MS after a question lands.
+  const questionKey = live && liveQuestion ? liveQuestion.id : qIndex;
+  useEffect(() => {
+    if (beat !== 'question' || !reading) return;
+    const id = window.setTimeout(() => setReading(false), READ_MS);
+    return () => window.clearTimeout(id);
+  }, [beat, reading, questionKey]);
+
+  useEffect(() => {
+    if (beat !== 'question' || reading) return;
     const started = Date.now();
-    const deadlineMs = live && liveQuestion ? liveQuestion.deadlineLocalMs : started + QUESTION_S * 1000;
-    const windowS = live && liveQuestion ? liveQuestion.windowS : QUESTION_S;
+    // One clock for the label, the bar and the timeout: QUESTION_S from the reveal,
+    // never later than the server deadline (which also holds the network grace).
+    const deadlineMs = Math.min(
+      started + QUESTION_S * 1000,
+      live && liveQuestion ? liveQuestion.deadlineLocalMs : Number.POSITIVE_INFINITY
+    );
+    const windowS = Math.max(0.5, (deadlineMs - started) / 1000);
+    setTimerWindowS(windowS);
+    setQLeft(windowS);
     const tick = window.setInterval(() => {
       setQLeft(Math.min(windowS, Math.max(0, (deadlineMs - Date.now()) / 1000)));
     }, 100);
@@ -545,11 +512,14 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
         // the server deadline and be scored as a real answer. Just wait out
         // the reveal, then resync — the server resolves the expired question
         // itself (zones slam to 2, answering locks) on the next read.
+        // Re-sync only once the SERVER deadline (with its grace) has passed, otherwise the
+        // same pending question comes back and the reading pause restarts.
+        const serverDeadlineMs = liveQuestion ? liveQuestion.deadlineLocalMs : deadlineMs;
         later(() => {
           setLastAnswer('reset');
           setLiveQuestion(null);
           void resyncLive();
-        }, ANSWER_HOLD_MS);
+        }, Math.max(ANSWER_HOLD_MS, serverDeadlineMs - Date.now() + 400));
         return;
       }
       later(() => {
@@ -565,7 +535,7 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
     };
     // Restart only when a new question is dealt.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [beat, qIndex, liveQuestion?.id]);
+  }, [beat, qIndex, liveQuestion?.id, reading]);
 
   const demoQuestion: TriviaQuestion = trivia[qIndex % trivia.length];
   const effectiveBalance = live ? (wallet?.coins ?? 0) : balance;
@@ -608,11 +578,14 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
     setAnswerLocked(false);
     setKeeperZone(null);
     setLastAnswer(null);
-    setBeat('decide');
+    enterDecide(false, MIN_OPEN);
   };
 
-  const askQuestion = () => {
-    if (openCount >= MAX_OPEN || answerLocked) return;
+  // `locked`/`open` may be passed explicitly: right after a server transition the
+  // React state in this closure is still the previous attack's (e.g. 6 zones open
+  // before the goal), which made the automatic deal after NEXT ATTACK bail out.
+  const askQuestion = (locked = answerLocked, open = openCount) => {
+    if (open >= MAX_OPEN || locked) return;
     if (live) {
       const state = liveStateRef.current;
       if (!state || liveBusyRef.current) return;
@@ -637,7 +610,38 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
     setSelected(null);
     setQIndex((q) => q + 1);
     setQLeft(QUESTION_S);
+    setReading(true);
     setBeat('question');
+  };
+
+  // Owner rule 2026-09-06: no answer-or-shoot choice. The SERVER now deals the
+  // question inside start / next-attack / correct-answer responses, so a live
+  // state is routed purely by its phase — no second request to chain.
+  const routeLiveState = (state: FreeKicksState) => {
+    if (state.phase === 'question' && state.question) {
+      syncLiveQuestion(state);
+      selectedRef.current = null;
+      setSelected(null);
+      setBeat('question');
+    } else if (state.phase === 'post_goal') {
+      setScored(true);
+      setBeat('goal');
+    } else {
+      // Deciding without a dealt question means answering is locked or every zone is open.
+      setBeat('shoot');
+    }
+  };
+
+  // Demo mode keeps the client-side chain (no server): a new attack asks a
+  // question at once; correct opens a zone and asks again; wrong/late or all
+  // zones open sends the player to pick a shooting angle.
+  const enterDecide = (locked = answerLocked, open = openCount) => {
+    if (locked || open >= MAX_OPEN) {
+      setBeat('shoot');
+      return;
+    }
+    // Deferred so a live call's busy flag has cleared before the deal request.
+    later(() => askQuestion(locked, open), 0);
   };
 
   const startRound = () => {
@@ -654,6 +658,7 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
         .then((state) => {
           startNonceRef.current = null;
           applyLiveState(state);
+          trackMiniGameRoundStarted('free_kicks', { roundId: state.round_id, stake: state.stake_coins });
           setLastTake(null);
           selectedRef.current = null;
           setSelected(null);
@@ -662,7 +667,7 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
           setKeeperZone(null);
           setLastAnswer(null);
           void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
-          setBeat('decide');
+          routeLiveState(state);
         })
         .catch((error) => {
           dropNonceUnlessRetryable(startNonceRef, error);
@@ -718,13 +723,8 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
           fire(correct ? 'correct' : 'wrong', i % 2 === 0 ? 'left' : 'right');
           later(() => {
             setLiveQuestion(null);
-            if (correct) {
-              setLastAnswer('up');
-              setBeat(result.state.open_count >= MAX_OPEN ? 'shoot' : 'decide');
-            } else {
-              setLastAnswer('reset');
-              setBeat('decide');
-            }
+            setLastAnswer(correct ? 'up' : 'reset');
+            routeLiveState(result.state);
           }, ANSWER_HOLD_MS);
         })
         .catch((error) => {
@@ -743,12 +743,12 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
         const next = Math.min(MAX_OPEN, openCount + 1);
         setOpenCount(next);
         setLastAnswer('up');
-        setBeat(next >= MAX_OPEN ? 'shoot' : 'decide');
+        enterDecide(false, next);
       } else {
         setLastAnswer('reset');
         setOpenCount(MIN_OPEN);
         setAnswerLocked(true);
-        setBeat('decide');
+        setBeat('shoot');
       }
     }, ANSWER_HOLD_MS);
   };
@@ -847,6 +847,7 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
         .then((next) => {
           liveSeqRef.current += 1;
           liveStateRef.current = next;
+          settleOnce(liveSettledTrackedRef, 'free_kicks', next, next.goals);
           setLastTake(next.payout_coins ?? pot);
           // Refresh the shared wallet cache NOW — the delayed timers below are
           // purely visual and die with the component on navigation.
@@ -895,7 +896,7 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
           setScored(null);
           setKeeperZone(null);
           setLastAnswer(null);
-          setBeat('decide');
+          routeLiveState(next);
         })
         .catch((error) => {
           dropNonceUnlessRetryable(nextNonceRef, error);
@@ -1089,6 +1090,7 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
             onPick={shoot}
           />
         )}
+        <AnimatePresence>{goalSplash && <GoalCelebrationOverlay key="goal-splash" muted />}</AnimatePresence>
       </motion.div>
 
       {live && liveError && (
@@ -1211,7 +1213,7 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
                 {!answerLocked && openCount < MAX_OPEN && (
                   <button
                     type="button"
-                    onClick={askQuestion}
+                    onClick={() => askQuestion()}
                     className="inline-flex h-14 flex-1 items-center justify-center gap-1.5 rounded-2xl bg-brand-blue font-poppins text-sm font-black uppercase tracking-wide text-white active:scale-[0.98]"
                   >
                     {t('Answer · open zone {n}', { n: openCount + 1 })}
@@ -1238,7 +1240,7 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
               <div className="mb-1.5 flex items-center justify-between font-poppins text-[10px] font-black uppercase tracking-wider text-white/80">
                 <span>{t('Attack {n}', { n: attack + 1 })}</span>
                 <span className={qLeft <= 1.5 && selected === null ? 'text-brand-red' : 'text-brand-yellow'}>
-                  {selected === null ? t('{n}s', { n: Math.max(0, Math.ceil(qLeft)) }) : t('Opening the goal…')}
+                  {reading ? t('Read the question…') : selected === null ? t('{n}s', { n: Math.max(0, Math.ceil(qLeft)) }) : t('Opening the goal…')}
                 </span>
               </div>
               <div className="mb-2 h-1 overflow-hidden rounded-full bg-white/15">
@@ -1247,13 +1249,23 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
                   className={`h-full origin-left rounded-full ${qLeft <= 1.5 && selected === null ? 'bg-brand-red' : 'bg-brand-yellow'}`}
                   style={{
                     transform: 'scaleX(1)',
-                    animation: `ft-q-timer ${live && liveQuestion ? liveQuestion.windowS : QUESTION_S}s linear forwards`,
+                    // Longhands only: mixing the `animation` shorthand with animationPlayState trips React's style reconciliation.
+                    animationName: reading ? 'none' : 'ft-q-timer',
+                    animationDuration: `${timerWindowS}s`,
+                    animationTimingFunction: 'linear',
+                    animationFillMode: 'forwards',
                     animationPlayState: selected === null ? 'running' : 'paused',
                   }}
                 />
               </div>
               <p className="mb-2 font-poppins text-sm font-bold leading-snug text-white">{question.q}</p>
               <div className="grid grid-cols-1 gap-1.5">
+                {reading ? (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex h-24 items-center justify-center font-poppins text-xs font-bold uppercase tracking-wide text-white/60">
+                    {t('Read the question…')}
+                  </motion.div>
+                ) : (
+                  <>
                 {question.options.map((opt, i) => {
                   const locked = selected !== null;
                   const isCorrect = i === question.answer;
@@ -1282,6 +1294,8 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
                     </button>
                   );
                 })}
+                  </>
+                )}
               </div>
               {selected !== null && (
                 <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-2 text-center font-poppins text-[10px] font-bold uppercase tracking-wide text-white/50">
@@ -1296,7 +1310,26 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
             </motion.div>
           )}
 
-          {beat === 'shoot' && <motion.div key="shoot" className="h-10" />}
+          {beat === 'shoot' && (
+            <motion.div key="shoot" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-2 text-center">
+              {lastAnswer === 'up' && (
+                <motion.div initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 320, damping: 16 }} className="mx-auto inline-flex items-center gap-2 rounded-full bg-brand-green/15 px-4 py-2 font-poppins text-sm font-black uppercase text-brand-green">
+                  <Check className="size-4" /> {t('Zone opened! {k} of {max} in play', { k: openCount, max: MAX_OPEN })}
+                </motion.div>
+              )}
+              {lastAnswer === 'reset' && (
+                <motion.div initial={{ scale: 0.7, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 320, damping: 16 }} className="mx-auto inline-flex items-center gap-2 rounded-full bg-brand-red/15 px-4 py-2 font-poppins text-sm font-black uppercase text-brand-red">
+                  <X className="size-4" /> {t('Wrong — goal slams back to {n} zones', { n: MIN_OPEN })}
+                </motion.div>
+              )}
+              <p className="font-poppins text-xs font-bold uppercase tracking-wide text-white/60">
+                {t('{k} zones open · 1 keeper hidden · {pct}% goal', { k: openCount, pct: goalPct })}
+              </p>
+              <p className="font-poppins text-sm font-black uppercase tracking-wide text-brand-yellow">
+                {t('Pick your angle and shoot · {pot} → {next}', { pot: fmt(pot), next: fmt(potential) })}
+              </p>
+            </motion.div>
+          )}
 
           {beat === 'goal' && (
             <motion.div key="goal" initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="space-y-3 text-center">

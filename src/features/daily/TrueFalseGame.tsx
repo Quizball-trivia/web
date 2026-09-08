@@ -9,6 +9,7 @@ import { getDailyChallengeCopy } from "@/lib/i18n/dailyChallenge";
 import { useLocale } from "@/contexts/LocaleContext";
 import { QuitGameDialog } from "./QuitGameDialog";
 import { DailyChallengeHeader } from "./components/DailyChallengeHeader";
+import { DailyGameStage } from "./components/DailyGameStage";
 import { EmbeddedCounterPill } from "./components/EmbeddedCounterPill";
 import { ResultSplash } from "./components/ResultSplash";
 import { useResultSplash } from "./components/useResultSplash";
@@ -163,22 +164,27 @@ export function TrueFalseGame({
 
   return (
     <div className={embedded ? "flex flex-col text-white" : "fixed inset-0 z-40 flex flex-col bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat text-white"}>
-      {embedded ? (
-        <EmbeddedCounterPill current={embedded.current} total={embedded.total} />
-      ) : (
-        <DailyChallengeHeader
-          onQuit={() => setShowQuitDialog(true)}
-          currentIndex={currentQuestionIndex}
-          total={session.questionCount}
-          timeLeft={timeLeft}
-        />
-      )}
-
-      {/* Content */}
-      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-4 py-4">
+      {/* Header + question + answers are ONE centred composition (the shared
+          daily stage) so the counter/timer never floats away from the game. */}
+      <DailyGameStage
+        header={
+          embedded ? (
+            <EmbeddedCounterPill current={embedded.current} total={embedded.total} />
+          ) : (
+            <DailyChallengeHeader
+              onQuit={() => setShowQuitDialog(true)}
+              currentIndex={currentQuestionIndex}
+              total={session.questionCount}
+              timeLeft={timeLeft}
+              className="px-0 pt-0"
+            />
+          )
+        }
+      >
+        <div className="w-full">
         {/* Question card */}
         <div
-          className="flex items-center rounded-[24px] border border-white/10 bg-white/5 px-5 py-5 text-white backdrop-blur-sm sm:px-6 sm:py-6"
+          className="flex items-center justify-center rounded-[24px] border border-white/10 bg-white/5 px-5 py-5 text-center text-white backdrop-blur-sm sm:px-6 sm:py-6"
           style={{
             fontFamily: "'Poppins', sans-serif",
             fontWeight: 700,
@@ -258,7 +264,8 @@ export function TrueFalseGame({
             <span className="text-white">{correctCount}</span>
           </div>
         )}
-      </div>
+        </div>
+      </DailyGameStage>
 
       <QuitGameDialog
         open={showQuitDialog}

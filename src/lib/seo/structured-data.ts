@@ -102,7 +102,7 @@ export function buildSiteStructuredData() {
 
 interface EditorialPageStructuredDataInput {
   locale: Locale;
-  path: "/about" | "/editorial-methodology" | "/press";
+  path: string;
   title: string;
   description: string;
   pageType: "AboutPage" | "WebPage";

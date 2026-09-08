@@ -124,6 +124,7 @@ function IconArtwork({ slug }: { slug: string }) {
           <path d="M24 25v6M21.5 27h5M7 8h6M35 8h6M24 5v6" />
         </>
       );
+    case "daily-passChain":
     case "mini-pass-chain":
       return (
         <>
@@ -275,6 +276,7 @@ function IconArtwork({ slug }: { slug: string }) {
           <path d="M36 12v2M36 18v2M32 16h2M38 16h2" opacity=".7" />
         </>
       );
+    case "daily-statSniper":
     case "mini-stat-sniper":
       return (
         <>

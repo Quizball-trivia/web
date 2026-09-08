@@ -9,7 +9,27 @@ const GAME_MODE_IMAGE_BASE = SUPABASE_IMAGE_BASE
   ? `${SUPABASE_IMAGE_BASE}/storage/v1/object/public/imgs/demos/game-modes/2026-08-17`
   : "/assets/demos/game-modes";
 
+// Artwork generated 2026-09-05 ships with the app: the dated CDN collection
+// does not contain these files. Both FIFA Cards entries share one illustration.
+// Prompts + audit: docs/artwork/.
+const LOCAL_MODE_IMAGES = new Map([
+  ["daily-clues", "daily-clues"],
+  ["daily-putInOrder", "daily-putInOrder"],
+  ["daily-fifaCards", "daily-fifaCards"],
+  ["mini-guess-fifa-card", "daily-fifaCards"],
+  ["lab-own-goal", "lab-own-goal"],
+  ["lab-say-it-with-memes", "lab-say-it-with-memes"],
+  ["lab-draft-battle", "lab-draft-battle"],
+  ["lab-top-10-knockout", "lab-top-10-knockout"],
+  ["lab-missing-xi", "lab-missing-xi"],
+  ["lab-ball-knowledge", "lab-ball-knowledge"],
+  ["lab-bingo-battle", "lab-bingo-battle"],
+  ["lab-connections-race", "lab-connections-race"],
+  ["lab-stat-501", "lab-stat-501"],
+]);
+
 export const ILLUSTRATED_MODE_SLUGS = new Set([
+  ...LOCAL_MODE_IMAGES.keys(),
   "weekend-league",
   "auction",
   "mini-final-third",
@@ -21,13 +41,11 @@ export const ILLUSTRATED_MODE_SLUGS = new Set([
   "mini-pass-chain",
   "mini-accumulator",
   "mini-squad-collection",
-  "mini-cash-out-ladder",
   "mini-bet-slip-booster",
   "mini-half-time-trivia",
   "mini-odds-board",
   "mini-football-grid",
   "mini-survivor",
-  "mini-hi-lo-ride",
   "mini-trivia-mines",
   "mini-quiz-board",
   "mini-last-one-standing",
@@ -71,15 +89,23 @@ function hash(input: string): number {
  * oversized watermark of the same glyph. Conveys the game at a glance without
  * a screenshot. `className` controls the aspect ratio.
  */
-export function DemoModeArt({ slug, className = "" }: { slug: string; className?: string }) {
-  if (isFifaSlug(slug)) {
-    return <FifaModeArt slug={slug} className={className} />;
+// The daily reuses the prototype card's artwork.
+const ART_ALIAS: Record<string, string> = { "daily-passChain": "mini-pass-chain", "daily-statSniper": "mini-stat-sniper" };
+
+export function DemoModeArt({ slug: rawSlug, className = "" }: { slug: string; className?: string }) {
+  const slug = ART_ALIAS[rawSlug] ?? rawSlug;
+  // Owner decision 2026-09-05: the Guess the Card daily uses the FIFA
+  // collection's tile art (a real masked gold card on the pitch gradient).
+  if (isFifaSlug(slug) || slug === "mini-guess-fifa-card" || slug === "daily-fifaCards") {
+    return <FifaModeArt slug={slug === "daily-fifaCards" ? "mini-guess-fifa-card" : slug} className={className} glyph={slug !== "daily-fifaCards"} />;
   }
   if (ILLUSTRATED_MODE_SLUGS.has(slug)) {
     return (
       <div className={`relative overflow-hidden bg-[#07111f] ${className}`} aria-hidden>
         <Image
-          src={`${GAME_MODE_IMAGE_BASE}/${slug}.webp`}
+          src={LOCAL_MODE_IMAGES.has(slug)
+            ? `/assets/demos/game-modes/${LOCAL_MODE_IMAGES.get(slug)}.webp`
+            : `${GAME_MODE_IMAGE_BASE}/${slug}.webp`}
           alt=""
           fill
           sizes="(min-width: 1024px) 50vw, 100vw"

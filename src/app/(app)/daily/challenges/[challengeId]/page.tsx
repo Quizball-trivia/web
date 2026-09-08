@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { resolveDailyChallengeType } from "@/lib/domain/dailyChallengeSlugs";
 import { useParams, useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -14,6 +15,9 @@ import { CareerPathGame } from "@/features/daily/CareerPathGame";
 import { HighLowGame } from "@/features/daily/HighLowGame";
 import { FootballLogicGame } from "@/features/daily/FootballLogicGame";
 import { CardDetectiveDailyGame } from "@/features/daily/CardDetectiveDailyGame";
+import { MissingXiSoloGame } from "@/features/missing-xi/MissingXiSoloGame";
+import { PassChainGame } from "@/features/daily/PassChainGame";
+import { StatSniperGame } from "@/features/daily/StatSniperGame";
 import { QuitGameDialog } from "@/features/daily/QuitGameDialog";
 import { DailyChallengeIntro } from "@/features/daily/components/DailyChallengeIntro";
 import { consumeDailyChallengeSession } from "@/features/daily/dailyChallengeSessionPrefetch";
@@ -32,9 +36,6 @@ import {
   isDailyChallengeAlreadyCompletedError,
 } from "@/lib/queries/dailyChallengeCompletion";
 
-function isDailyChallengeType(value: string): value is DailyChallengeType {
-  return value in DAILY_CHALLENGE_VISUALS;
-}
 
 export default function ChallengePage() {
   const params = useParams();
@@ -58,7 +59,8 @@ export default function ChallengePage() {
   useEffect(() => {
     if (challengeId === "fifaCards") router.replace("/daily/challenges/cardDetective");
   }, [challengeId, router]);
-  const challengeType = isDailyChallengeType(challengeId) ? challengeId : undefined;
+  // Public slug ("who-am-i") or legacy internal type ("clues") — both resolve.
+  const challengeType = resolveDailyChallengeType(challengeId) ?? undefined;
   const completeMutation = useCompleteDailyChallenge(challengeType ?? "moneyDrop");
 
   const invalidateAfterComplete = useCallback(async () => {
@@ -91,16 +93,15 @@ export default function ChallengePage() {
     router.replace("/play");
   }, [challengeType, router]);
 
-  const handleComplete = useCallback(
-    (score: number, nextPath?: string, outcomes?: DailyChallengeCardOutcome[]) => {
-      if (!challengeType || completeOnceRef.current) return;
+  // The completion write, once per session. Games that show a leaderboard call it
+  // before their results screen; everything else goes through handleComplete.
+  const persistRef = useRef<Promise<void> | null>(null);
+  const persistCompletion = useCallback(
+    (score: number, outcomes?: DailyChallengeCardOutcome[]): Promise<void> => {
+      if (!challengeType) return Promise.resolve();
+      if (persistRef.current) return persistRef.current;
       completeOnceRef.current = true;
-
-      // Navigate back instantly — the completion write + cache refresh run in
-      // the background so the user isn't stuck waiting on a round-trip.
-      router.replace(nextPath ?? "/play");
-
-      void (async () => {
+      const run = (async () => {
         // Only a failed completion WRITE may surface the failure toast and
         // re-arm the once-guard; post-write side effects (analytics, local XP,
         // cache invalidation) can fail without the reward being lost, so each
@@ -117,6 +118,7 @@ export default function ChallengePage() {
           } else {
             console.error('Daily challenge completion failed', error);
             completeOnceRef.current = false;
+            persistRef.current = null;
             toast.error(t("dailyGames.completionSaveFailed"));
             await invalidateAfterComplete().catch((invalidateError) => {
               console.error('Post-failure invalidation failed', invalidateError);
@@ -149,8 +151,23 @@ export default function ChallengePage() {
           console.error('Post-completion invalidation failed', invalidateError);
         });
       })();
+      persistRef.current = run;
+      return run;
     },
-    [addXP, challengeType, completeMutation, invalidateAfterComplete, router, t]
+    [addXP, challengeType, completeMutation, invalidateAfterComplete, t]
+  );
+
+  const handleComplete = useCallback(
+    (score: number, nextPath?: string, outcomes?: DailyChallengeCardOutcome[]) => {
+      if (!challengeType) return;
+      const alreadySaved = Boolean(persistRef.current);
+      if (!alreadySaved && completeOnceRef.current) return;
+      // Navigate back instantly — the completion write + cache refresh run in
+      // the background so the user isn't stuck waiting on a round-trip.
+      router.replace(nextPath ?? "/play");
+      if (!alreadySaved) void persistCompletion(score, outcomes);
+    },
+    [challengeType, persistCompletion, router]
   );
 
   useEffect(() => {
@@ -238,12 +255,17 @@ export default function ChallengePage() {
       case "footballLogic":
         return <FootballLogicGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
       case "cardDetective":
-
         return <CardDetectiveDailyGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
+      case "missingXi":
+        return <MissingXiSoloGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
+      case "passChain":
+        return <PassChainGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} />;
+      case "statSniper":
+        return <StatSniperGame key={session.challengeType} session={session} onBack={handleBack} onComplete={handleComplete} onSaveResult={(score) => persistCompletion(score)} />;
       default:
         return null;
     }
-  }, [handleBack, handleComplete, session]);
+  }, [handleBack, handleComplete, session, persistCompletion]);
 
   const handleBrowserBackConfirm = useCallback(() => {
     setShowBrowserBackDialog(false);

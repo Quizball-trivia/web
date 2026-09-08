@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Check, X, Eye, Lock } from 'lucide-react';
-import { MiniGameShell, StatPill } from './MiniGameShell';
+import { MiniGameShell } from './MiniGameShell';
+import { CoinIcon } from '@/features/store/components/CoinIcon';
+import { playCash } from '../lib/crowdAudio';
 import { getTrivia } from '../data/trivia';
 import { formatOdds, money } from '../lib/odds';
 import { useMiniLocale, useMiniT } from '../lib/i18n';
@@ -124,6 +126,7 @@ export function TriviaMines({ backHref }: { backHref?: string } = {}) {
     if (phase !== 'playing' || safePicks === 0) return;
     setPayout(pot);
     setPoints((p) => p + pot);
+    playCash();
     setPhase('cashed');
   };
 
@@ -135,7 +138,6 @@ export function TriviaMines({ backHref }: { backHref?: string } = {}) {
       title={t('Trivia Mines')}
       subtitle={t('Dribble past hidden defenders — scout them with your knowledge')}
       accent="#85E000"
-      headerRight={<StatPill label={t('Points')} value={points.toLocaleString()} color="#85E000" />}
     >
       {phase === 'idle' ? (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-1 flex-col items-center justify-center gap-4">
@@ -150,26 +152,30 @@ export function TriviaMines({ backHref }: { backHref?: string } = {}) {
                 type="button"
                 onClick={() => setStake(s)}
                 className={`rounded-xl border-2 px-5 py-2.5 font-poppins text-sm font-black tabular-nums transition-colors ${
-                  stake === s ? 'border-brand-green-bright bg-brand-green-bright/15 text-brand-green-bright' : 'border-white/10 bg-white/[0.03] text-white/60'
+                  stake === s ? 'border-brand-green bg-brand-green/15 text-brand-green-light' : 'border-white/10 bg-white/[0.03] text-white/60'
                 }`}
               >
                 {s}
               </button>
             ))}
           </div>
-          <button type="button" onClick={start} className="h-14 w-full max-w-xs rounded-2xl bg-brand-green-bright font-poppins text-lg font-black uppercase tracking-wide text-black">
+          <button type="button" onClick={start} className="h-14 w-full max-w-xs rounded-2xl bg-brand-green font-poppins text-lg font-black uppercase tracking-wide text-white">
             {t('Stake {stake} & dribble', { stake: money(stake) })}
           </button>
         </motion.div>
       ) : (
         <div className="mt-2 flex flex-1 flex-col">
-          {/* Pot strip */}
-          <div className="mb-3 flex items-center justify-between rounded-2xl border-2 border-brand-green-bright/30 bg-gradient-to-b from-brand-green-bright/[0.08] to-transparent px-4 py-2.5">
+          {/* Balance sits right above the board so the coins read as the stake source */}
+          <div className="mb-2 flex justify-end">
+            <span className="flex items-center gap-1.5 rounded-full bg-white/[0.06] px-3 py-1.5 font-poppins text-sm font-black tabular-nums text-white"><CoinIcon size={16} />{points.toLocaleString()}</span>
+          </div>
+          {/* Pot strip — brand green */}
+          <div className="mb-3 flex items-center justify-between rounded-2xl border-2 border-brand-green bg-brand-green/15 px-4 py-2.5">
             <div>
               <div className="font-poppins text-[10px] font-black uppercase tracking-wider text-white/45">
                 {phase === 'busted' ? t('Tackled') : phase === 'cashed' ? t('Banked') : t('Pot')}
               </div>
-              <div className={`font-poppins text-xl font-black tabular-nums ${phase === 'busted' ? 'text-brand-red' : phase === 'cashed' ? 'text-brand-green' : 'text-brand-green-bright'}`}>
+              <div className={`font-poppins text-xl font-black tabular-nums ${phase === 'busted' ? 'text-brand-red' : 'text-brand-green-light'}`}>
                 {money(phase === 'busted' ? 0 : phase === 'cashed' ? payout : pot)}
               </div>
             </div>
@@ -202,9 +208,9 @@ export function TriviaMines({ backHref }: { backHref?: string } = {}) {
                       : showDefender
                         ? 'border-brand-red-soft/60 bg-brand-red-soft/10'
                         : isOpen
-                          ? 'border-brand-green-bright/60 bg-brand-green-bright/15'
+                          ? 'border-brand-green/70 bg-brand-green/20'
                           : phase === 'playing'
-                            ? 'border-white/10 bg-white/[0.04] hover:border-brand-green-bright/50'
+                            ? 'border-white/10 bg-white/[0.04] hover:border-brand-blue/60'
                             : 'border-white/10 bg-white/[0.02] opacity-70'
                   }`}
                 >
@@ -225,7 +231,7 @@ export function TriviaMines({ backHref }: { backHref?: string } = {}) {
                       onClick={openScout}
                       disabled={scoutsLeft <= 0}
                       className={`flex h-12 flex-1 items-center justify-center gap-2 rounded-2xl border-2 font-poppins text-sm font-black uppercase transition-colors ${
-                        scoutsLeft > 0 ? 'border-brand-cyan bg-brand-cyan/10 text-brand-cyan' : 'border-white/10 bg-white/[0.02] text-white/25'
+                        scoutsLeft > 0 ? 'border-brand-blue bg-brand-blue text-white' : 'border-white/10 bg-white/[0.02] text-white/25'
                       }`}
                     >
                       <Eye className="size-4" /> {t('Scout ({n} left)', { n: scoutsLeft })}
@@ -248,14 +254,14 @@ export function TriviaMines({ backHref }: { backHref?: string } = {}) {
               )}
 
               {phase === 'question' && (
-                <motion.div key={`scout-${qIndex}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="rounded-2xl border-2 border-brand-cyan/40 bg-white/[0.04] p-3">
+                <motion.div key={`scout-${qIndex}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="rounded-2xl border-2 border-brand-blue/50 bg-white/[0.04] p-3">
                   {scoutMsg ? (
-                    <div className={`py-3 text-center font-poppins text-sm font-black uppercase ${scoutMsg === 'hit' ? 'text-brand-cyan' : 'text-brand-red'}`}>
+                    <div className={`py-3 text-center font-poppins text-sm font-black uppercase ${scoutMsg === 'hit' ? 'text-brand-blue' : 'text-brand-red'}`}>
                       {scoutMsg === 'hit' ? t('Scout report — a defender is marked!') : t('Scout failed — no intel')}
                     </div>
                   ) : (
                     <>
-                      <div className="mb-1.5 flex items-center gap-1.5 font-poppins text-[10px] font-black uppercase tracking-wider text-brand-cyan">
+                      <div className="mb-1.5 flex items-center gap-1.5 font-poppins text-[10px] font-black uppercase tracking-wider text-brand-blue">
                         <Eye className="size-3.5" /> {t('Answer to scout a defender')}
                       </div>
                       <p className="mb-2 font-poppins text-[13px] font-bold leading-snug text-white">{question.q}</p>
@@ -272,7 +278,7 @@ export function TriviaMines({ backHref }: { backHref?: string } = {}) {
                               onClick={() => answerScout(i)}
                               className={`flex items-center justify-between rounded-lg border-2 px-3 py-2 text-left font-poppins text-xs font-bold transition-colors ${
                                 state === 'idle'
-                                  ? 'border-white/10 bg-white/[0.03] text-white hover:border-brand-cyan/50'
+                                  ? 'border-white/10 bg-white/[0.03] text-white hover:border-brand-blue/60'
                                   : state === 'correct'
                                     ? 'border-brand-green bg-brand-green/15 text-white'
                                     : state === 'wrong'
@@ -298,7 +304,7 @@ export function TriviaMines({ backHref }: { backHref?: string } = {}) {
                   <p className="font-poppins text-xs font-semibold text-white/50">
                     {t('A defender got you after {n} clean tiles — the pot is gone.', { n: safePicks })}
                   </p>
-                  <button type="button" onClick={() => setPhase('idle')} className="mt-1 w-full rounded-2xl bg-brand-green-bright py-3.5 font-poppins text-base font-black uppercase text-black">
+                  <button type="button" onClick={() => setPhase('idle')} className="mt-1 w-full rounded-2xl bg-brand-green py-3.5 font-poppins text-base font-black uppercase text-white">
                     {t('New run')}
                   </button>
                 </motion.div>
@@ -310,7 +316,7 @@ export function TriviaMines({ backHref }: { backHref?: string } = {}) {
                   <p className="font-poppins text-xs font-semibold text-white/50">
                     {t('{n} clean dribbles at {mult}x.', { n: safePicks, mult: formatOdds(mult) })}
                   </p>
-                  <button type="button" onClick={() => setPhase('idle')} className="mt-1 w-full rounded-2xl bg-brand-green-bright py-3.5 font-poppins text-base font-black uppercase text-black">
+                  <button type="button" onClick={() => setPhase('idle')} className="mt-1 w-full rounded-2xl bg-brand-green py-3.5 font-poppins text-base font-black uppercase text-white">
                     {t('New run')}
                   </button>
                 </motion.div>

@@ -12,6 +12,10 @@ import { CareerPathGame } from "@/features/daily/CareerPathGame";
 import { HighLowGame } from "@/features/daily/HighLowGame";
 import { FootballLogicGame } from "@/features/daily/FootballLogicGame";
 import { CardDetectiveDailyGame } from "@/features/daily/CardDetectiveDailyGame";
+import { MissingXiSoloGame } from "@/features/missing-xi/MissingXiSoloGame";
+import { PassChainGame } from "@/features/daily/PassChainGame";
+import { StatSniperGame } from "@/features/daily/StatSniperGame";
+import { resolveDemoPassChainLink } from "@/features/demos/data/demoDailySessions";
 import { DailyChallengeIntro } from "@/features/daily/components/DailyChallengeIntro";
 import { useLocale } from "@/contexts/LocaleContext";
 import type { DailyChallengeType } from "@/lib/domain/dailyChallenge";
@@ -93,5 +97,11 @@ export function DemoDailyChallenge({ type }: DemoDailyChallengeProps) {
       return <FootballLogicGame key={attempt} session={session} {...gameProps} />;
     case "cardDetective":
       return <CardDetectiveDailyGame key={attempt} session={session} {...gameProps} />;
+    case "missingXi":
+      return <MissingXiSoloGame key={attempt} session={session} {...gameProps} />;
+    case "passChain":
+      return <PassChainGame key={attempt} session={session} resolveLink={resolveDemoPassChainLink} {...gameProps} />;
+    case "statSniper":
+      return <StatSniperGame key={attempt} session={session} demo {...gameProps} />;
   }
 }

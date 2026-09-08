@@ -1,4 +1,9 @@
-import type { CardDetectiveSession,
+import { missingXiMatches } from "@/features/game-mode-lab/data/missingXi";
+import { CHAIN_PLAYERS, CHAIN_PUZZLES, findChainPlayer, getPlayer, shareClub, solve } from "@/features/mini-games/data/passChain";
+import type { PassChainLinkResult, PassChainPlayer } from "@/lib/domain/dailyChallenge";
+import { getSniperRounds } from "@/features/mini-games/data/statSniper";
+import type {
+  CardDetectiveSession,
   DailyChallengeSession,
   DailyChallengeType,
   FootballLogicSession,
@@ -264,6 +269,90 @@ function footballLogicSession(locale: L): FootballLogicSession {
   };
 }
 
+const toDemoChainPlayer = (p: (typeof CHAIN_PLAYERS)[number]): PassChainPlayer => ({ id: p.id, name: p.name, clubs: p.clubs, imageUrl: null });
+
+/** Demo chains resolve client-side against the prototype's small graph; the real daily asks the API. */
+export async function resolveDemoPassChainLink(fromPlayerId: string, text: string, targetId: string): Promise<PassChainLinkResult> {
+  const from = getPlayer(fromPlayerId);
+  const target = getPlayer(targetId);
+  const candidate = findChainPlayer(text);
+  const none = { player: null, viaClub: null, viaKind: null, reachesTarget: false, targetClub: null, targetKind: null };
+  if (!from || !target) return { status: "unknown", ...none };
+  if (!candidate) return { status: "unknown", ...none };
+  const via = shareClub(from, candidate);
+  if (!via || candidate.id === from.id) return { status: "noLink", ...none };
+  const toTarget = candidate.id === target.id ? via : shareClub(candidate, target);
+  return { status: "linked", player: toDemoChainPlayer(candidate), viaClub: via, viaKind: "club", reachesTarget: Boolean(toTarget), targetClub: toTarget, targetKind: toTarget ? "club" : null };
+}
+
+function statSniperSession(locale: Locale): DailyChallengeSession {
+  const rounds = getSniperRounds(locale === "ka" ? "ka" : "en").slice(0, 5);
+  return {
+    challengeType: "statSniper",
+    title: locale === "ka" ? "სტატ-სნაიპერი" : "Stat Sniper",
+    description: locale === "ka" ? "მიიტანე სლაიდერი შენს ვარაუდამდე." : "Slide to your best guess.",
+    questionCount: rounds.length,
+    secondsPerQuestion: 30,
+    questions: rounds.map((r, i) => ({ id: `demo-stat-sniper-${i}`, difficulty: "easy" as const, kind: "demo", prompt: r.prompt, unit: r.unit, value: r.value, min: r.min, max: r.max, step: r.step })),
+  };
+}
+
+function passChainSession(locale: Locale): DailyChallengeSession {
+  const puzzles = CHAIN_PUZZLES.slice(0, 2).map((puzzle, index) => {
+    const start = getPlayer(puzzle.startId)!;
+    const target = getPlayer(puzzle.endId)!;
+    const par = solve(puzzle.startId, puzzle.endId);
+    // one bridge that the prototype graph guarantees for par-2 puzzles
+    const bridge = CHAIN_PLAYERS.find((p) => p.id !== start.id && p.id !== target.id && shareClub(start, p) && shareClub(p, target));
+    return {
+      id: `demo-pass-chain-${index}`,
+      difficulty: index === 0 ? ("easy" as const) : ("medium" as const),
+      par: Number.isFinite(par) ? par : 2,
+      start: toDemoChainPlayer(start),
+      target: toDemoChainPlayer(target),
+      solution: bridge ? [{ player: toDemoChainPlayer(bridge), via: shareClub(start, bridge) ?? "", kind: "club" as const }] : [],
+    };
+  });
+  return {
+    challengeType: "passChain",
+    title: locale === "ka" ? "პასების ჯაჭვი" : "Pass Chain",
+    description: locale === "ka" ? "დააკავშირე ორი ფეხბურთელი საერთო კლუბებით." : "Link two players through shared clubs.",
+    puzzleCount: puzzles.length,
+    secondsPerPuzzle: 120,
+    puzzles,
+  };
+}
+
+function missingXiSession(locale: Locale): DailyChallengeSession {
+  // Prototype squads until the demo pool carries missing_xi rows.
+  return {
+    challengeType: "missingXi",
+    title: pick(locale, "Missing XI", "დაკარგული XI"),
+    description: pick(locale, "Tap a shirt and name the player who started there.", "დააჭირე მაისურს და დაასახელე, ვინ დაიწყო იქ."),
+    squadCount: missingXiMatches.length,
+    secondsPerSquad: 120,
+    squads: missingXiMatches.map((match) => ({
+      id: `00000000-0000-4000-8000-${match.id.padStart(12, "0").slice(-12)}`,
+      difficulty: "easy",
+      team: match.teamName,
+      opponent: match.matchLabel.replace(/^vs\s+/, "").split(" — ")[0] ?? "",
+      matchLabel: match.matchLabel,
+      score: null,
+      formation: match.formation,
+      slots: match.slots.map((slot) => ({
+        id: slot.id,
+        position: slot.position,
+        number: slot.shirtNumber,
+        x: slot.x,
+        y: slot.y,
+        name: slot.name,
+        acceptedAnswers: [slot.name, ...slot.aliases],
+        imageUrl: null,
+      })),
+    })),
+  };
+}
+
 export function buildDemoDailySession(
   type: DailyChallengeType,
   locale: Locale,
@@ -295,6 +384,12 @@ export function buildDemoDailySession(
     case "fifaCards": // replaced by Card Detective; the type only lives on for completion history
     case "cardDetective":
       return cardDetectiveSession(locale);
+    case "missingXi":
+      return missingXiSession(locale);
+    case "passChain":
+      return passChainSession(locale);
+    case "statSniper":
+      return statSniperSession(locale);
   }
 }
 

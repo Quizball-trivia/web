@@ -1,7 +1,8 @@
 'use client';
 
-import { type ComponentProps, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { type ComponentProps, type ReactNode, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
+import { GameSoundOverrideContext } from '@/lib/sounds/GameSoundOverrideContext';
 import { cn } from '@/lib/utils';
 import { useLocale } from '@/contexts/LocaleContext';
 import { GoalCelebrationOverlay } from './GoalCelebrationOverlay';
@@ -161,6 +162,11 @@ export function PossessionMatchViewport({ model, children, onPenaltySplashComple
   const { t } = useLocale();
   const { showMainUI, hud, pitchProps, goalCelebration, penaltySplash, muted, autoScrollKey } = model;
   const celebrationOwnsBall = Boolean(goalCelebration);
+  const soundOverride = useContext(GameSoundOverrideContext);
+  const cueRef = useRef(soundOverride?.playEvent);
+  useEffect(() => { cueRef.current = soundOverride?.playEvent; }, [soundOverride]);
+  const visibleResult = goalCelebration ? 'goal' : penaltySplash?.visible ? (penaltySplash.result === 'goal' ? 'goal' : 'save') : null;
+  useEffect(() => { if (visibleResult) cueRef.current?.(visibleResult); }, [visibleResult]);
   const {
     containerRef: desktopPitchRef,
     ballSizePx: desktopBallSizePx,

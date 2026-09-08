@@ -25,7 +25,7 @@ const ICONS: Record<string, LucideIcon> = {
  * Hub tile for a FIFA Universe mode: a real gold card from the dataset (face,
  * rating, crest) on the brand-blue pitch gradient, with the mode glyph.
  */
-export function FifaModeArt({ slug, className = '' }: { slug: string; className?: string }) {
+export function FifaModeArt({ slug, className = '', glyph = true }: { slug: string; className?: string; /** Hide the mode glyph (tile shows only the card). */ glyph?: boolean }) {
   const meta = FIFA_MODE_BY_SLUG.get(slug);
   const Icon = ICONS[slug] ?? Sparkles;
   const art = meta ?? { artPlayer: 'Robert Lewandowski', artEdition: 'FIFA18' };
@@ -36,12 +36,18 @@ export function FifaModeArt({ slug, className = '' }: { slug: string; className?
   const pair = card && twoCards ? FIFA_CARDS.find((c) => c.edition === card.edition && c.name !== card.name && c.difficulty === 'easy') ?? null : null;
   return (
     <div className={`relative overflow-hidden ${className}`} style={{ background: 'linear-gradient(135deg, #1645FF 0%, #0b2a9e 55%, #0f1420 100%)' }} aria-hidden>
-      <div className="pointer-events-none absolute -left-10 -top-12 size-44 rounded-full" style={{ background: 'radial-gradient(circle, rgba(255,229,0,0.3), transparent 68%)' }} />
-      <Icon className="pointer-events-none absolute -bottom-6 -left-4 size-36 text-white/10" />
-      <div className="absolute inset-0 flex items-center justify-center">
+      <div className="pointer-events-none absolute inset-0 opacity-[0.12]" style={{ backgroundImage: 'radial-gradient(rgba(255,255,255,0.9) 1px, transparent 1px)', backgroundSize: '13px 13px' }} />
+      <div className="pointer-events-none absolute -left-10 -top-12 size-44 rounded-full" style={{ background: 'radial-gradient(circle, rgba(255,229,0,0.35), transparent 68%)' }} />
+      {glyph && <Icon className="pointer-events-none absolute -bottom-6 -left-4 size-36 text-white/10" />}
+      <div className="absolute inset-0 flex items-center justify-center gap-4">
+        {glyph && (
+          <span className="flex size-12 items-center justify-center rounded-2xl bg-brand-yellow text-black shadow-lg">
+            <Icon className="size-6" />
+          </span>
+        )}
         {card && (
-          <div className={`${pair ? 'rotate-[-6deg]' : 'rotate-[5deg]'} drop-shadow-[0_12px_22px_rgba(0,0,0,0.5)]`}>
-            <MiniFutCard card={card} size="sm" masked={masked} showEdition />
+          <div className={`${pair ? 'rotate-[-6deg]' : 'rotate-[6deg]'} drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)]`}>
+            <MiniFutCard card={card} size={glyph ? 'sm' : 'md'} masked={masked} showEdition />
           </div>
         )}
         {card && pair && (

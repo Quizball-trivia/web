@@ -1,6 +1,8 @@
 'use client';
 
 import { DevAnimationsContent } from './DevAnimationsContent';
+import { DevGameAudioProvider } from '@/lib/sounds/dev/DevGameAudio';
+import { RankedDevAudioObserver } from '@/lib/sounds/dev/RankedDevAudioObserver';
 
 export default function DevAnimationsPage() {
   if (process.env.NODE_ENV !== 'development') {
@@ -10,5 +12,5 @@ export default function DevAnimationsPage() {
       </div>
     );
   }
-  return <DevAnimationsContent />;
+  return <DevGameAudioProvider mode="ranked"><DevAnimationsContent /><RankedDevAudioObserver /></DevGameAudioProvider>;
 }

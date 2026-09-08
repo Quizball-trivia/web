@@ -778,6 +778,8 @@ export function DevAnimationsContent({
   const currentQIndex = useRealtimeMatchStore((s) => s.match?.currentQuestion?.qIndex ?? null);
 
   const stateVersion = useRef(0);
+
+  const submittedQuestion = useRef<unknown>(null);
   const scoreRef = useRef({ meTotal: 0, oppTotal: 0 });
   const goalsRef = useRef({ seat1: 0, seat2: 0 });
   // Penalty shootout sim: tracks accumulated penalty goals and the running
@@ -1007,6 +1009,16 @@ export function DevAnimationsContent({
     const handleDevSocketEmit = (event: Event) => {
       const detail = (event as CustomEvent<DevSocketEmitDetail>).detail;
       if (!detail?.event) return;
+      if (detail.event === 'match:answer') {
+        const input = detail.args[0] as { matchId?: string; qIndex?: number; selectedIndex?: number };
+        const match = store().match;
+        const q = match?.currentQuestion;
+        const index = input?.selectedIndex;
+        if (!q || input.matchId !== q.matchId || input.qIndex !== q.qIndex || typeof index !== 'number' || !Number.isInteger(index) || index < 0 || index > 3 || submittedQuestion.current === q || match?.answerAck?.qIndex === q.qIndex) return;
+        submittedQuestion.current = q;
+        fireOutcome(index === SAMPLE_QUESTIONS[q.qIndex % SAMPLE_QUESTIONS.length].correctIndex ? 'me-correct' : 'opp-correct', null, index);
+        return;
+      }
       if (detail.event === 'match:put_in_order_answer') {
         handlePutInOrderSubmit(detail.args[0]);
         return;
@@ -1759,7 +1771,7 @@ export function DevAnimationsContent({
     if (result.deltas?.goalScoredBySeat === 2) goalsRef.current.seat2 += 1;
   }
 
-  function fireOutcome(outcome: Outcome, boostedSeat: 1 | 2 | null = null) {
+  function fireOutcome(outcome: Outcome, boostedSeat: 1 | 2 | null = null, selectedIndex?: number) {
     // Mobile: auto-dismiss the controls drawer so the animation has the
     // full viewport. Desktop is unaffected (panel is lg:translate-x-0).
     setMobilePanelOpen(false);
@@ -1770,6 +1782,7 @@ export function DevAnimationsContent({
     if (!q) return;
     const result = makeRoundResult(q.qIndex, outcome, scoreRef.current, { me: myPoints, opp: oppPoints }, boostedSeat);
     const me = result.players[SELF_ID];
+    if (selectedIndex !== undefined) me.selectedIndex = selectedIndex;
     const opp = result.players[OPP_ID];
     if (!me || !opp) return;
     const sample = SAMPLE_QUESTIONS[q.qIndex % SAMPLE_QUESTIONS.length];

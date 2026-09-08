@@ -383,18 +383,25 @@ function useNetTexture(): THREE.Texture {
   }, []);
 }
 
+/** One LED tile is 4:1 (Road to Goal's board artwork): brand blue, the wordmark, yellow chevrons, baked scan lines. */
+const HOARD_TILE_W = HOARD_H * 4;
+const HOARD_SCROLL_MPS = 0.65;
+
 function useHoardingMap(metres: number): THREE.Texture {
   const logo = useLoader(THREE.TextureLoader, '/assets/brand/quizball-logo.webp');
   const map = useMemo(() => {
-    const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 128;
+    const canvas = document.createElement('canvas'); canvas.width = 1024; canvas.height = 256;
     const ctx = canvas.getContext('2d')!;
-    ctx.fillStyle = '#10243b'; ctx.fillRect(0, 0, 256, 128);
-    ctx.fillStyle = '#b4f345'; ctx.fillRect(0, 0, 256, 3);
-    const height = 104, width = height * (logo.image.width / logo.image.height);
-    ctx.drawImage(logo.image, (256 - width) / 2, 12, width, height);
+    ctx.fillStyle = '#1645ff'; ctx.fillRect(0, 0, 1024, 256);
+    const logoHeight = 196, logoWidth = logoHeight * (logo.image.width / logo.image.height);
+    ctx.drawImage(logo.image, (1024 - logoWidth) / 2, 30, logoWidth, logoHeight);
+    ctx.strokeStyle = '#ffe500'; ctx.lineWidth = 10;
+    for (const x of [132, 800]) { ctx.beginPath(); ctx.moveTo(x, 96); ctx.lineTo(x + 32, 128); ctx.lineTo(x, 160); ctx.stroke(); }
+    ctx.fillStyle = 'rgba(0, 8, 40, .12)';
+    for (let y = 0; y < 256; y += 4) ctx.fillRect(0, y, 1024, 1);
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace; texture.wrapS = THREE.RepeatWrapping;
-    texture.repeat.set(Math.max(1, Math.round(metres / 1.6)), 1); texture.anisotropy = 4;
+    texture.repeat.set(Math.max(1, metres / HOARD_TILE_W), 1); texture.anisotropy = 8;
     return texture;
   }, [logo, metres]);
   useEffect(() => () => map.dispose(), [map]);
@@ -792,11 +799,26 @@ function HoardingFace({
   map,
   width,
   height,
+  direction = 1,
 }: {
   map: THREE.Texture;
   width: number;
   height: number;
+  /** Scroll direction along the board (side boards run opposite ways so both flow toward the goal). */
+  direction?: 1 | -1;
 }) {
+  const reducedMotion = useRef(false);
+  useEffect(() => {
+    const media = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const update = () => { reducedMotion.current = media.matches; };
+    update();
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
+  useFrame((_, delta) => {
+    if (reducedMotion.current) return;
+    map.offset.setX((map.offset.x - (direction * Math.min(delta, 0.1) * HOARD_SCROLL_MPS) / HOARD_TILE_W + 1) % 1);
+  });
   return (
     <mesh position={[0, 0, HOARD_T / 2 + 0.004]}>
       <planeGeometry args={[width - 0.08, height - 0.14]} />
@@ -830,6 +852,8 @@ function CrowdDeck({
 function Stadium({ crowd, showStructure = true }: { crowd?: THREE.Texture; showStructure?: boolean }) {
   const rearMap = useHoardingMap(HOARD_REAR_W);
   const sideMap = useHoardingMap(HOARD_SIDE_LEN);
+  const sideMapMirror = useMemo(() => { const c = sideMap.clone(); c.needsUpdate = true; return c; }, [sideMap]);
+  useEffect(() => () => sideMapMirror.dispose(), [sideMapMirror]);
 
   return (
     <group>
@@ -877,7 +901,7 @@ function Stadium({ crowd, showStructure = true }: { crowd?: THREE.Texture; showS
             <boxGeometry args={[HOARD_SIDE_LEN, 0.045, 0.02]} />
             <meshBasicMaterial color="#FFE500" toneMapped={false} />
           </mesh>
-          <HoardingFace map={sideMap} width={HOARD_SIDE_LEN} height={HOARD_H} />
+          <HoardingFace map={side === 1 ? sideMap : sideMapMirror} width={HOARD_SIDE_LEN} height={HOARD_H} direction={side} />
         </group>
       ))}
       {([-1, 1] as const).map((side) => (
