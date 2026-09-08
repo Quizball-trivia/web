@@ -1,0 +1,127 @@
+import type { Locale } from "@/lib/i18n/locale";
+import { campaignHubPath, campaignPublicSlug } from "@/features/campaign-quiz/campaignQuiz.routes";
+import { GAME_PAGES, dailyCollectionPath, gamePagePath, type GamePageEntry } from "./game-pages";
+
+/**
+ * Release manifest for the public games catalogue (homepage + game pages).
+ * Copy lives in game-pages.ts; this file answers "does it have a page, how does
+ * a guest play it, which engine runs inline, where does its card go". One
+ * publication predicate (`page`) drives routes, metadata, sitemap, hreflang,
+ * the language switcher and related links; everything else is a 404.
+ */
+export type GuestStrategy =
+  /** The mode's client engine runs inline as a practice round: no account, no wallet, sample content. */
+  | "demo"
+  /** No guest engine yet: the card/page says "Account required" and opens the app sign-in. */
+  | "app";
+
+export type PublicGameGroup = "multiplayer" | "daily" | "coins" | "solo" | "competitive";
+
+/** Where a homepage card sends the visitor. */
+export type CardDestination =
+  | { kind: "page" }
+  /** An established campaign-quiz page owns this intent on production (Career Path, Guess the Player). */
+  | { kind: "quiz"; sourceSlug: string }
+  | { kind: "app"; path: string };
+
+export interface PublicGameMeta {
+  /** Stable analytics/manifest id (never translated display text). */
+  modeId: string;
+  /** Copy key in game-pages.ts. */
+  slug: string;
+  group: PublicGameGroup;
+  guest: GuestStrategy;
+  /** Demo-mode slug whose engine runs inline for guests (required for `demo`). */
+  demoSlug?: string;
+  /** Has public, indexable pages in every locale. */
+  page: boolean;
+  /** Shown as a homepage card; `false` keeps it out of the catalogue. */
+  card: boolean;
+  destination: CardDestination;
+  related: string[];
+  /** Ordering inside its group (lower first). */
+  order: number;
+}
+
+export const PUBLIC_GAME_META: PublicGameMeta[] = [
+  { modeId: "grid", slug: "football-tic-tac-toe", group: "multiplayer", guest: "demo", demoSlug: "mini-football-grid", page: true, card: true, destination: { kind: "page" }, related: ["auction", "moneyDrop", "cardDetective"], order: 0 },
+  { modeId: "auction", slug: "auction", group: "multiplayer", guest: "demo", demoSlug: "auction", page: true, card: true, destination: { kind: "page" }, related: ["grid", "cardDetective", "moneyDrop"], order: 1 },
+  // Friendly rooms need a guest identity on the server (phase 3): card only, opens the app.
+  { modeId: "friendly", slug: "friendly", group: "multiplayer", guest: "app", page: false, card: true, destination: { kind: "app", path: "/friend" }, related: ["grid", "auction", "moneyDrop"], order: 2 },
+  { modeId: "ranked", slug: "ranked", group: "competitive", guest: "app", page: false, card: true, destination: { kind: "app", path: "/play" }, related: [], order: 0 },
+  // Established campaign-quiz pages keep these intents; the cards link there.
+  { modeId: "clues", slug: "who-am-i", group: "daily", guest: "demo", demoSlug: "daily-clues", page: false, card: true, destination: { kind: "quiz", sourceSlug: "guess-the-player" }, related: [], order: 0 },
+  { modeId: "careerPath", slug: "career-path", group: "daily", guest: "demo", demoSlug: "daily-careerPath", page: false, card: true, destination: { kind: "quiz", sourceSlug: "career-path" }, related: [], order: 4 },
+  { modeId: "moneyDrop", slug: "money-drop", group: "daily", guest: "demo", demoSlug: "daily-moneyDrop", page: true, card: true, destination: { kind: "page" }, related: ["trueFalse", "countdown", "highLow"], order: 1 },
+  { modeId: "trueFalse", slug: "true-or-false-football", group: "daily", guest: "demo", demoSlug: "daily-trueFalse", page: true, card: true, destination: { kind: "page" }, related: ["moneyDrop", "highLow", "imposter"], order: 2 },
+  { modeId: "countdown", slug: "countdown", group: "daily", guest: "demo", demoSlug: "daily-countdown", page: true, card: true, destination: { kind: "page" }, related: ["moneyDrop", "imposter", "cardDetective"], order: 3 },
+  { modeId: "highLow", slug: "higher-or-lower", group: "daily", guest: "demo", demoSlug: "daily-highLow", page: true, card: true, destination: { kind: "page" }, related: ["trueFalse", "moneyDrop", "countdown"], order: 5 },
+  { modeId: "imposter", slug: "imposter", group: "daily", guest: "demo", demoSlug: "daily-imposter", page: true, card: true, destination: { kind: "page" }, related: ["trueFalse", "countdown", "cardDetective"], order: 6 },
+  { modeId: "cardDetective", slug: "card-detective", group: "daily", guest: "demo", demoSlug: "daily-cardDetective", page: true, card: true, destination: { kind: "page" }, related: ["countdown", "imposter", "grid"], order: 7 },
+  // Copy for the pages below is not written yet: cards off, pages off (see plan phase 2).
+  { modeId: "footballLogic", slug: "football-logic", group: "daily", guest: "demo", demoSlug: "daily-footballLogic", page: false, card: false, destination: { kind: "page" }, related: [], order: 8 },
+  { modeId: "missingXi", slug: "missing-xi", group: "daily", guest: "demo", demoSlug: "daily-missingXi", page: false, card: false, destination: { kind: "page" }, related: [], order: 9 },
+  { modeId: "passChain", slug: "pass-chain", group: "daily", guest: "demo", demoSlug: "daily-passChain", page: false, card: false, destination: { kind: "page" }, related: [], order: 10 },
+  { modeId: "statSniper", slug: "stat-sniper", group: "daily", guest: "demo", demoSlug: "daily-statSniper", page: false, card: false, destination: { kind: "page" }, related: [], order: 11 },
+  { modeId: "putInOrder", slug: "football-timeline", group: "daily", guest: "demo", demoSlug: "daily-putInOrder", page: false, card: false, destination: { kind: "page" }, related: [], order: 12 },
+  { modeId: "guessTheGoal", slug: "guess-the-goal", group: "solo", guest: "demo", demoSlug: "mini-guess-the-goal", page: true, card: true, destination: { kind: "page" }, related: ["cardDetective", "countdown", "triviaMines"], order: 0 },
+  { modeId: "triviaMines", slug: "trivia-mines", group: "coins", guest: "demo", demoSlug: "mini-trivia-mines", page: true, card: true, destination: { kind: "page" }, related: ["guessTheGoal", "grid", "moneyDrop"], order: 0 },
+  { modeId: "freeKicks", slug: "free-kicks", group: "coins", guest: "demo", demoSlug: "mini-final-third", page: false, card: false, destination: { kind: "page" }, related: [], order: 1 },
+  { modeId: "roadToGoal", slug: "road-to-goal", group: "coins", guest: "demo", demoSlug: "mini-road-to-goal", page: false, card: false, destination: { kind: "page" }, related: [], order: 2 },
+  { modeId: "squadSpin", slug: "squad-spin", group: "coins", guest: "demo", demoSlug: "mini-squad-spin", page: false, card: false, destination: { kind: "page" }, related: [], order: 3 },
+];
+
+export type PublicGame = GamePageEntry & PublicGameMeta;
+
+const COPY_BY_SLUG = new Map(GAME_PAGES.map((entry) => [entry.slug, entry]));
+
+/** Every manifest entry joined with its copy. A missing copy entry is a build error, not a silent drop. */
+export const PUBLIC_GAMES: PublicGame[] = PUBLIC_GAME_META.map((meta) => {
+  const copy = COPY_BY_SLUG.get(meta.slug);
+  if (!copy) throw new Error(`public-games: no copy for "${meta.slug}" in game-pages.ts`);
+  return { ...copy, ...meta };
+});
+
+const BY_MODE_ID = new Map(PUBLIC_GAMES.map((game) => [game.modeId, game]));
+
+/** Modes with indexable pages in every locale. */
+export const PUBLISHED_PUBLIC_GAMES = PUBLIC_GAMES.filter((game) => game.page);
+
+export function findPublicGameByModeId(modeId: string): PublicGame | null {
+  return BY_MODE_ID.get(modeId) ?? null;
+}
+
+/** Resolves a localized URL (folder must match the locale) to a PUBLISHED game, else null → 404. */
+export function findPublishedGame(locale: Locale, folder: string, slug: string): PublicGame | null {
+  const entry = PUBLISHED_PUBLIC_GAMES.find((game) => (game.slugs?.[locale] ?? game.slug) === slug);
+  if (!entry) return null;
+  return gamePagePath(entry, locale).split("/")[2] === folder ? entry : null;
+}
+
+export function homepageCards(group: PublicGameGroup): PublicGame[] {
+  return PUBLIC_GAMES.filter((game) => game.card && game.group === group).sort((a, b) => a.order - b.order);
+}
+
+export function relatedPublishedGames(game: PublicGame): PublicGame[] {
+  const picked = game.related.map(findPublicGameByModeId).filter((g): g is PublicGame => Boolean(g?.page));
+  for (const candidate of PUBLISHED_PUBLIC_GAMES) {
+    if (picked.length >= 3) break;
+    if (candidate.slug !== game.slug && !picked.includes(candidate)) picked.push(candidate);
+  }
+  return picked.slice(0, 3);
+}
+
+/** Where a card links: its page, the established quiz page, or the app. */
+export function cardHref(game: PublicGame, locale: Locale): string {
+  switch (game.destination.kind) {
+    case "page": return gamePagePath(game, locale);
+    case "quiz": {
+      const quizLocale = locale === "ka" ? "en" : locale;
+      return `${campaignHubPath(quizLocale)}/${campaignPublicSlug(game.destination.sourceSlug, quizLocale)}`;
+    }
+    case "app": return game.destination.path;
+  }
+}
+
+export const localeHomePath = (locale: Locale): string => `/${locale}`;
+export { gamePagePath as publicGamePath, dailyCollectionPath };

@@ -3,7 +3,8 @@ import { listCampaignQuizPages } from "@/features/campaign-quiz/campaignQuiz.api
 import { SITE_URL } from "@/lib/seo/site";
 import { LOCALES } from "@/lib/i18n/locale";
 import { campaignQuizPath } from "@/features/campaign-quiz/campaignQuiz.routes";
-import { GAME_PAGES } from "@/lib/seo/game-pages";
+import { dailyCollectionPath, gamePagePath } from "@/lib/seo/game-pages";
+import { PUBLISHED_PUBLIC_GAMES } from "@/lib/seo/public-games";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entry = (
@@ -30,8 +31,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     number,
     Date?,
   ]> = [
-    ["/daily", "daily", 0.9],
-    ["/games", "weekly", 0.9],
+    // "" = the locale homepage (/en, /ka, /es), which is the Football Games hub.
+    ["", "weekly", 1.0],
     ["/about", "monthly", 0.7, editorialContentUpdated],
     ["/editorial-methodology", "monthly", 0.6, editorialContentUpdated],
     ["/terms", "yearly", 0.3],
@@ -55,13 +56,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const pressResourceEntries = (["en", "es"] as const).map((locale) =>
     entry(`/${locale}/press`, "monthly", 0.6, editorialContentUpdated),
   );
-  // One indexable landing page per game mode, in every locale.
-  const gamePagesUpdated = new Date("2026-09-04T00:00:00.000Z");
-  const gamePageEntries = LOCALES.flatMap((locale) =>
-    GAME_PAGES.map((page) =>
-      entry(`/${locale}/${page.section}/${page.slug}`, "weekly", 0.8, gamePagesUpdated),
-    ),
-  );
+  // One indexable page per released public game (localized folder + slug) plus the daily collection.
+  const gamePagesUpdated = new Date("2026-09-07T00:00:00.000Z");
+  const gamePageEntries = LOCALES.flatMap((locale) => [
+    entry(dailyCollectionPath(locale), "daily", 0.8, gamePagesUpdated),
+    ...PUBLISHED_PUBLIC_GAMES.map((game) => entry(gamePagePath(game, locale), "weekly", 0.8, gamePagesUpdated)),
+  ]);
 
   const validLastModified = (value: string): Date | undefined => {
     const date = new Date(value);
@@ -128,7 +128,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     // The homepage: the Play page served at the bare domain (guest state is server-rendered).
-    entry("", "daily", 1),
     ...gamePageEntries,
     ...localizedEntries,
     ...researchReportEntries,

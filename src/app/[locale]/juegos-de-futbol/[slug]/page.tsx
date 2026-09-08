@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
-import { GameLandingPage, gameLandingMetadata, gameLandingStaticParams } from "@/features/marketing/gameLandingPage";
+import { PublicGamePage, publicGameMetadata, publicGameStaticParams } from "@/features/marketing/publicGamePage";
 
 type Params = Promise<{ locale: string; slug: string }>;
+const FOLDER = "juegos-de-futbol";
 
 export function generateStaticParams() {
-  return gameLandingStaticParams("daily");
+  return publicGameStaticParams(FOLDER);
 }
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
-  return gameLandingMetadata("daily", params);
+  return publicGameMetadata(FOLDER, params);
 }
 
 export default function Page({ params }: { params: Params }) {
-  return <GameLandingPage section="daily" params={params} />;
+  return <PublicGamePage folder={FOLDER} params={params} />;
 }

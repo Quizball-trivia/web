@@ -25,9 +25,13 @@ import { DemoBackButton } from "./DemoBackButton";
 
 interface DemoDailyChallengeProps {
   type: DailyChallengeType;
+  backHref?: string;
+  /** Embedded (public game page) use: leave without navigating. */
+  onExit?: () => void;
+  onEvent?: (event: "start" | "complete" | "replay", detail?: { score?: number }) => void;
 }
 
-export function DemoDailyChallenge({ type }: DemoDailyChallengeProps) {
+export function DemoDailyChallenge({ type, backHref = "/demos", onExit, onEvent }: DemoDailyChallengeProps) {
   const router = useRouter();
   const { locale } = useLocale();
   const [attempt, setAttempt] = useState(0);
@@ -40,18 +44,21 @@ export function DemoDailyChallenge({ type }: DemoDailyChallengeProps) {
   );
 
   const handleBack = useCallback(() => {
-    router.push("/demos");
-  }, [router]);
+    if (onExit) onExit();
+    else router.push(backHref);
+  }, [backHref, onExit, router]);
 
   const handleComplete = useCallback((score: number) => {
+    onEvent?.("complete", { score });
     setFinalScore(score);
-  }, []);
+  }, [onEvent]);
 
   const handleReplay = useCallback(() => {
+    onEvent?.("replay");
     setFinalScore(null);
     setIntroDone(false);
     setAttempt((current) => current + 1);
-  }, []);
+  }, [onEvent]);
 
   if (finalScore !== null) {
     return (
@@ -69,7 +76,7 @@ export function DemoDailyChallenge({ type }: DemoDailyChallengeProps) {
     return (
       <>
         <DemoBackButton onClick={handleBack} />
-        <DailyChallengeIntro title={session.title} onDone={() => setIntroDone(true)} />
+        <DailyChallengeIntro title={session.title} onDone={() => { onEvent?.("start"); setIntroDone(true); }} />
       </>
     );
   }

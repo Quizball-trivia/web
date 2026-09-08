@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { DEFAULT_LOCALE } from "@/lib/i18n/locale";
 import { DAILY_CHALLENGE_SLUGS } from "@/lib/domain/dailyChallengeSlugs";
-import { GAME_PAGES } from "@/lib/seo/game-pages";
+import { GAME_PAGES, PUBLIC_GAMES_FOLDER, dailyCollectionPath, gamePageSlug } from "@/lib/seo/game-pages";
 import { API_BASE_URL } from "@/lib/config";
 import type { CampaignQuizRoute } from "@/features/campaign-quiz/campaignQuiz.types";
 
@@ -9,16 +9,19 @@ import type { CampaignQuizRoute } from "@/features/campaign-quiz/campaignQuiz.ty
 // pages are localized; everything else (app, auth, game) is intentionally
 // locale-less and stays unchanged.
 const REDIRECT_FROM_ROOT: Record<string, string> = {
-  // "/" is served by the Play page in place (see the rewrite below), so the
-  // bare domain is the homepage for guests, players and search engines alike.
-  "/daily": `/${DEFAULT_LOCALE}/daily`,
-  "/games": `/${DEFAULT_LOCALE}/games`,
+  // The locale homepage IS the Football Games hub; bare marketing paths go to the default locale.
+  "/daily": dailyCollectionPath(DEFAULT_LOCALE),
+  "/games": `/${DEFAULT_LOCALE}`,
+  "/football-games": `/${DEFAULT_LOCALE}`,
   "/about": `/${DEFAULT_LOCALE}/about`,
   "/terms": `/${DEFAULT_LOCALE}/terms`,
   "/privacy": `/${DEFAULT_LOCALE}/privacy`,
-  // Bare game landing URLs → default-locale variant (indexable pages).
+  // Bare game page URLs → default-locale variant (indexable pages).
   ...Object.fromEntries(
-    GAME_PAGES.map((page) => [`/${page.section}/${page.slug}`, `/${DEFAULT_LOCALE}/${page.section}/${page.slug}`]),
+    GAME_PAGES.map((page) => [
+      `/${PUBLIC_GAMES_FOLDER[DEFAULT_LOCALE]}/${gamePageSlug(page, DEFAULT_LOCALE)}`,
+      `/${DEFAULT_LOCALE}/${PUBLIC_GAMES_FOLDER[DEFAULT_LOCALE]}/${gamePageSlug(page, DEFAULT_LOCALE)}`,
+    ]),
   ),
   // Legacy camelCase game routes (old links, bookmarks) → public slugs.
   ...Object.fromEntries(
@@ -107,14 +110,17 @@ export async function middleware(req: NextRequest) {
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("Content-Security-Policy", csp);
 
-  // The bare domain IS the Play page: rewrite (not redirect) so the URL stays
-  // "/" — guests get the signed-out state, players the app, crawlers the
-  // server-rendered guest page with a canonical of "/".
+  // The bare domain sends visitors to their locale homepage (the Football Games
+  // hub): Georgia → /ka, everyone else → /en, x-default stays /en. Temporary and
+  // uncacheable because the target depends on the visitor's location. Members
+  // reach the app through the homepage's "Open play" control or /play directly.
   if (pathname === "/") {
     const url = req.nextUrl.clone();
-    url.pathname = "/play";
-    const res = NextResponse.rewrite(url, { request: { headers: requestHeaders } });
+    const country = req.headers.get("x-vercel-ip-country")?.trim().toUpperCase() ?? "";
+    url.pathname = `/${country === "GE" ? "ka" : DEFAULT_LOCALE}`;
+    const res = NextResponse.redirect(url, 307);
     res.headers.set("Content-Security-Policy", csp);
+    res.headers.set("Cache-Control", "private, no-store");
     return res;
   }
 
@@ -124,10 +130,10 @@ export async function middleware(req: NextRequest) {
     // Geo-aware landing locale: send visitors physically in Georgia to /ka,
     // everyone else to the default (/en). Only the bare entry routes here are
     // affected; an explicit /en or /ka URL is never rewritten.
-    const country =
-      req.headers.get("x-vercel-ip-country")?.trim().toUpperCase() ?? "";
-    const landingLocale = country === "GE" ? "ka" : DEFAULT_LOCALE;
-    url.pathname = redirectTarget.replace(`/${DEFAULT_LOCALE}`, `/${landingLocale}`);
+    // Deterministic: a permanent redirect must not depend on the visitor's
+    // location (browsers and caches keep 308s), so aliases always land on the
+    // default-locale page; only the bare "/" above is geo-aware.
+    url.pathname = redirectTarget;
     const res = NextResponse.redirect(url, 308);
     res.headers.set("Content-Security-Policy", csp);
     res.headers.set("x-pathname", url.pathname);
