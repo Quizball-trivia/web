@@ -18,7 +18,7 @@ import { StatSniperGame } from "@/features/daily/StatSniperGame";
 import { resolveDemoPassChainLink } from "@/features/demos/data/demoDailySessions";
 import { DailyChallengeIntro } from "@/features/daily/components/DailyChallengeIntro";
 import { useLocale } from "@/contexts/LocaleContext";
-import type { DailyChallengeType } from "@/lib/domain/dailyChallenge";
+import type { DailyChallengeSession, DailyChallengeType, StatSniperLeaderboard } from "@/lib/domain/dailyChallenge";
 import { buildDemoDailySession } from "./data/demoDailySessions";
 import { DemoResultScreen } from "./DemoResultScreen";
 import { DemoBackButton } from "./DemoBackButton";
@@ -29,9 +29,18 @@ interface DemoDailyChallengeProps {
   /** Embedded (public game page) use: leave without navigating. */
   onExit?: () => void;
   onEvent?: (event: "start" | "complete" | "replay", detail?: { score?: number }) => void;
+  /** A real session (guest play) instead of the built-in sample. */
+  session?: DailyChallengeSession;
+  /** Guest play: record the result server-side (no rewards) before the results screen. */
+  onRemoteComplete?: (score: number) => Promise<unknown>;
+  /** Guest play: Pass Chain links resolved by the guest endpoint. */
+  resolveLink?: ResolveLink;
+  /** Guest play: Stat Sniper board from the public endpoint. */
+  leaderboardFetcher?: () => Promise<StatSniperLeaderboard>;
 }
+type ResolveLink = NonNullable<Parameters<typeof PassChainGame>[0]["resolveLink"]>;
 
-export function DemoDailyChallenge({ type, backHref = "/demos", onExit, onEvent }: DemoDailyChallengeProps) {
+export function DemoDailyChallenge({ type, backHref = "/demos", onExit, onEvent, session: sessionOverride, onRemoteComplete, resolveLink, leaderboardFetcher }: DemoDailyChallengeProps) {
   const router = useRouter();
   const { locale } = useLocale();
   const [attempt, setAttempt] = useState(0);
@@ -39,8 +48,8 @@ export function DemoDailyChallenge({ type, backHref = "/demos", onExit, onEvent 
   const [finalScore, setFinalScore] = useState<number | null>(null);
 
   const session = useMemo(
-    () => buildDemoDailySession(type, locale),
-    [type, locale],
+    () => sessionOverride ?? buildDemoDailySession(type, locale),
+    [sessionOverride, type, locale],
   );
 
   const handleBack = useCallback(() => {
@@ -50,8 +59,10 @@ export function DemoDailyChallenge({ type, backHref = "/demos", onExit, onEvent 
 
   const handleComplete = useCallback((score: number) => {
     onEvent?.("complete", { score });
+    // Best effort: the results screen never waits on the network.
+    void onRemoteComplete?.(score).catch(() => undefined);
     setFinalScore(score);
-  }, [onEvent]);
+  }, [onEvent, onRemoteComplete]);
 
   const handleReplay = useCallback(() => {
     onEvent?.("replay");
@@ -107,8 +118,8 @@ export function DemoDailyChallenge({ type, backHref = "/demos", onExit, onEvent 
     case "missingXi":
       return <MissingXiSoloGame key={attempt} session={session} {...gameProps} />;
     case "passChain":
-      return <PassChainGame key={attempt} session={session} resolveLink={resolveDemoPassChainLink} {...gameProps} />;
+      return <PassChainGame key={attempt} session={session} resolveLink={resolveLink ?? resolveDemoPassChainLink} {...gameProps} />;
     case "statSniper":
-      return <StatSniperGame key={attempt} session={session} demo {...gameProps} />;
+      return <StatSniperGame key={attempt} session={session} demo={!leaderboardFetcher} leaderboardFetcher={leaderboardFetcher} {...gameProps} />;
   }
 }

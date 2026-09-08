@@ -33,6 +33,15 @@ bot opponent / virtual points, no saved progress." Practice state never touches 
 engine (Friendly rooms, Ranked, Weekend League) are cards that say "Account required" and open the app sign-in.
 Sign-in links from public pages remember the mode + locale and return there after auth (existing postAuthRedirect).
 
+## Server half (phase 3, 2026-09-08)
+Backend `feat/guest-sessions`: `guest_sessions` (opaque token, sha256 stored) + `guest_daily_completions`; `POST /api/v1/guest/session`
+(30/h per IP); `/api/v1/guest/daily-challenges/*` (240/h per token): today's REAL daily set for a guest (same selection, no served-history,
+no completion gate), completion recorded as best score without coins/XP/streak, Pass Chain link, public Stat Sniper board;
+`GET /api/v1/guest/standings` = read-only Ranked + Weekend League top 5 (alias/rank/score only, 120s cache, honest not_started/unavailable).
+Web: guest token in localStorage, daily public pages play today's real set (sample round only as a fallback), homepage standings snippet.
+NOT done (needs owner decisions + more backend): coin modes with a guest practice balance, guest friendly/Grid/Auction rooms,
+linking guest history to a new account, TR locale.
+
 ## Phases
 1. This change: manifest + validation, routes, redirects, sitemap, hreflang, switcher, public layout, homepage,
    10 game pages with bodies, daily collection, structured data (CollectionPage/ItemList, WebPage+VideoGame+Breadcrumb),

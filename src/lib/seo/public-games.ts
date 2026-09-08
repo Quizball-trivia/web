@@ -41,7 +41,7 @@ export interface PublicGameMeta {
   related: string[];
   /** Ordering inside its group (lower first). */
   order: number;
-  /** Locales whose practice engine is actually localised; others show the practice in English with a notice. */
+  /** Locales whose practice engine is localised; others show it in English with a notice. Daily modes play the real localised set. */
   practiceLocales?: Locale[];
 }
 
@@ -59,17 +59,17 @@ export const PUBLIC_GAME_META: PublicGameMeta[] = [
   // Established campaign-quiz pages keep these intents; the cards link there.
   { modeId: "clues", slug: "who-am-i", group: "daily", guest: "demo", demoSlug: "daily-clues", page: false, card: true, destination: { kind: "quiz", sourceSlug: "guess-the-player" }, related: [], order: 0 },
   { modeId: "careerPath", slug: "career-path", group: "daily", guest: "demo", demoSlug: "daily-careerPath", page: false, card: true, destination: { kind: "quiz", sourceSlug: "career-path" }, related: [], order: 4 },
-  { modeId: "moneyDrop", slug: "money-drop", group: "daily", guest: "demo", demoSlug: "daily-moneyDrop", page: true, card: true, destination: { kind: "page" }, related: ["trueFalse", "countdown", "highLow"], order: 1, practiceLocales: ["en", "ka"] },
-  { modeId: "trueFalse", slug: "true-or-false-football", group: "daily", guest: "demo", demoSlug: "daily-trueFalse", page: true, card: true, destination: { kind: "page" }, related: ["moneyDrop", "highLow", "imposter"], order: 2, practiceLocales: ["en", "ka"] },
-  { modeId: "countdown", slug: "countdown", group: "daily", guest: "demo", demoSlug: "daily-countdown", page: true, card: true, destination: { kind: "page" }, related: ["moneyDrop", "imposter", "cardDetective"], order: 3, practiceLocales: ["en", "ka"] },
-  { modeId: "highLow", slug: "higher-or-lower", group: "daily", guest: "demo", demoSlug: "daily-highLow", page: true, card: true, destination: { kind: "page" }, related: ["trueFalse", "moneyDrop", "countdown"], order: 5, practiceLocales: ["en", "ka"] },
-  { modeId: "imposter", slug: "imposter", group: "daily", guest: "demo", demoSlug: "daily-imposter", page: true, card: true, destination: { kind: "page" }, related: ["trueFalse", "countdown", "cardDetective"], order: 6, practiceLocales: ["en", "ka"] },
-  { modeId: "cardDetective", slug: "card-detective", group: "daily", guest: "demo", demoSlug: "daily-cardDetective", page: true, card: true, destination: { kind: "page" }, related: ["countdown", "imposter", "grid"], order: 7, practiceLocales: ["en", "ka"] },
+  { modeId: "moneyDrop", slug: "money-drop", group: "daily", guest: "demo", demoSlug: "daily-moneyDrop", page: true, card: true, destination: { kind: "page" }, related: ["trueFalse", "countdown", "highLow"], order: 1 },
+  { modeId: "trueFalse", slug: "true-or-false-football", group: "daily", guest: "demo", demoSlug: "daily-trueFalse", page: true, card: true, destination: { kind: "page" }, related: ["moneyDrop", "highLow", "imposter"], order: 2 },
+  { modeId: "countdown", slug: "countdown", group: "daily", guest: "demo", demoSlug: "daily-countdown", page: true, card: true, destination: { kind: "page" }, related: ["moneyDrop", "imposter", "cardDetective"], order: 3 },
+  { modeId: "highLow", slug: "higher-or-lower", group: "daily", guest: "demo", demoSlug: "daily-highLow", page: true, card: true, destination: { kind: "page" }, related: ["trueFalse", "moneyDrop", "countdown"], order: 5 },
+  { modeId: "imposter", slug: "imposter", group: "daily", guest: "demo", demoSlug: "daily-imposter", page: true, card: true, destination: { kind: "page" }, related: ["trueFalse", "countdown", "cardDetective"], order: 6 },
+  { modeId: "cardDetective", slug: "card-detective", group: "daily", guest: "demo", demoSlug: "daily-cardDetective", page: true, card: true, destination: { kind: "page" }, related: ["countdown", "imposter", "grid"], order: 7 },
   // Put in Order is inactive on production: no page until it is switched back on.
-  { modeId: "footballLogic", slug: "football-logic", group: "daily", guest: "demo", demoSlug: "daily-footballLogic", page: true, card: true, destination: { kind: "page" }, related: ["imposter", "countdown", "cardDetective"], order: 8, practiceLocales: ["en", "ka"] },
-  { modeId: "missingXi", slug: "missing-xi", group: "daily", guest: "demo", demoSlug: "daily-missingXi", page: true, card: true, destination: { kind: "page" }, related: ["passChain", "cardDetective", "grid"], order: 9, practiceLocales: ["en", "ka"] },
-  { modeId: "passChain", slug: "pass-chain", group: "daily", guest: "demo", demoSlug: "daily-passChain", page: true, card: true, destination: { kind: "page" }, related: ["missingXi", "grid", "cardDetective"], order: 10, practiceLocales: ["en", "ka"] },
-  { modeId: "statSniper", slug: "stat-sniper", group: "daily", guest: "demo", demoSlug: "daily-statSniper", page: true, card: true, destination: { kind: "page" }, related: ["highLow", "moneyDrop", "trueFalse"], order: 11, practiceLocales: ["en", "ka"] },
+  { modeId: "footballLogic", slug: "football-logic", group: "daily", guest: "demo", demoSlug: "daily-footballLogic", page: true, card: true, destination: { kind: "page" }, related: ["imposter", "countdown", "cardDetective"], order: 8 },
+  { modeId: "missingXi", slug: "missing-xi", group: "daily", guest: "demo", demoSlug: "daily-missingXi", page: true, card: true, destination: { kind: "page" }, related: ["passChain", "cardDetective", "grid"], order: 9 },
+  { modeId: "passChain", slug: "pass-chain", group: "daily", guest: "demo", demoSlug: "daily-passChain", page: true, card: true, destination: { kind: "page" }, related: ["missingXi", "grid", "cardDetective"], order: 10 },
+  { modeId: "statSniper", slug: "stat-sniper", group: "daily", guest: "demo", demoSlug: "daily-statSniper", page: true, card: true, destination: { kind: "page" }, related: ["highLow", "moneyDrop", "trueFalse"], order: 11 },
   { modeId: "putInOrder", slug: "football-timeline", group: "daily", guest: "demo", demoSlug: "daily-putInOrder", page: false, card: false, destination: { kind: "page" }, related: [], order: 12 },
   // The practice prototype (tactical-board animation, multiple choice) is not the real clip game: no page until it is; card opens the app.
   { modeId: "guessTheGoal", slug: "guess-the-goal", group: "solo", guest: "app", page: false, card: true, destination: { kind: "app", path: "/guess-the-goal" }, related: [], order: 0 },

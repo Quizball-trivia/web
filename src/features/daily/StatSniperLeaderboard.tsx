@@ -13,7 +13,7 @@ const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
 
 /** Today's most accurate Stat Sniper players — the main leaderboard's table styling
  *  (green frame, big rank, uppercase names, own row in green) with only rank / player / accuracy. */
-export function StatSniperLeaderboard({ refreshKey = 0, className }: { refreshKey?: number; className?: string }) {
+export function StatSniperLeaderboard({ refreshKey = 0, fetcher = getStatSniperLeaderboard, className }: { refreshKey?: number; /** Guest play reads the public board. */ fetcher?: () => Promise<Board>; className?: string }) {
   const { t } = useLocale();
   const { player } = usePlayer();
   const [board, setBoard] = useState<Board | null>(null);
@@ -21,11 +21,11 @@ export function StatSniperLeaderboard({ refreshKey = 0, className }: { refreshKe
   // Refetch on demand (a saved result) and every 15s while visible, so the table moves live.
   useEffect(() => {
     let cancelled = false;
-    const load = () => getStatSniperLeaderboard().then((b) => { if (!cancelled) setBoard(b); }).catch(() => undefined);
+    const load = () => fetcher().then((b) => { if (!cancelled) setBoard(b); }).catch(() => undefined);
     void load();
     const id = window.setInterval(() => void load(), 15_000);
     return () => { cancelled = true; window.clearInterval(id); };
-  }, [refreshKey]);
+  }, [refreshKey, fetcher]);
 
   return (
     <aside className={cn("w-full", className)}>

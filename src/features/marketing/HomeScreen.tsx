@@ -7,6 +7,7 @@ import type { PublicSurface } from "@/lib/analytics/public-games.analytics";
 import { cardHref, dailyCollectionPath, homepageCards, type PublicGame } from "@/lib/seo/public-games";
 import { PublicLayout, quizHubHref } from "./PublicLayout";
 import { CompetitiveLink, GameCardLink, SignInLink } from "./public/PublicLinks";
+import { StandingsSnippet } from "./public/StandingsSnippet";
 
 function GameCard({ game, locale, surface }: { game: PublicGame; locale: Locale; surface: PublicSurface }) {
   const copy = HOME_COPY[locale].cards;
@@ -89,6 +90,7 @@ export function HomeScreen({ locale }: { locale: Locale }) {
           <aside className="mt-6 lg:mt-0">
             <h2 className="text-base font-bold uppercase text-white/85">{copy.sections.competitive}</h2>
             <div className="mt-3"><Competitive locale={locale} /></div>
+            <StandingsSnippet locale={locale} />
           </aside>
         </div>
       </section>

@@ -6,6 +6,8 @@ import { createPortal } from "react-dom";
 import { Play, X } from "lucide-react";
 import { useAuthStore } from "@/stores/auth.store";
 import { trackGameComplete, trackGameReplay, trackGameStart, trackGameView } from "@/lib/analytics/public-games.analytics";
+import type { DailyChallengeType } from "@/lib/domain/dailyChallenge";
+import { GuestDailyPlay } from "./GuestDailyPlay";
 
 /** Every engine lives in one client chunk that is fetched only when a visitor presses Play. */
 const DemoModeView = dynamic(() => import("@/features/demos/DemoModeView").then((m) => m.DemoModeView), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
@@ -27,8 +29,10 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, engineEmit
   /** Daily engines fire start/complete/replay themselves; others are timed from the Play control. */
   engineEmitsEvents: boolean;
   practiceLocalised: boolean;
-  copy: { start: string; note: string; exit: string; english: string; title: string };
+  copy: { start: string; note: string; exit: string; english: string; title: string; loading: string; sampleFallback: string };
 }) {
+  /** Daily modes play today's real set as a guest; other engines run their practice prototype. */
+  const dailyType = demoSlug.startsWith("daily-") ? (demoSlug.slice("daily-".length) as DailyChallengeType) : null;
   const access = useAuthStore((state) => state.status) === "authenticated" ? "member" : "guest";
   const [playing, setPlaying] = useState(false);
   const sessionRef = useRef<string>("");
@@ -49,6 +53,11 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, engineEmit
     setPlaying(true);
   };
   const exit = () => setPlaying(false);
+  const onEngineEvent = (event: "start" | "complete" | "replay", detail?: { score?: number }) => {
+    if (event === "start") trackGameStart({ modeId, access, sessionId: sessionRef.current });
+    if (event === "complete") trackGameComplete({ modeId, sessionId: sessionRef.current, score: detail?.score, durationMs: Date.now() - startedAtRef.current });
+    if (event === "replay") { trackGameReplay({ modeId, previousSessionId: sessionRef.current }); sessionRef.current = newSessionId(); startedAtRef.current = Date.now(); }
+  };
 
   return (
     <section id="play" aria-label={copy.title} className="mt-6 scroll-mt-24">
@@ -74,16 +83,19 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, engineEmit
           >
             <X className="size-4" /> {copy.exit}
           </button>
-          <DemoModeView
-            slug={demoSlug}
-            backHref={pagePath}
-            onExit={exit}
-            onEvent={(event, detail) => {
-              if (event === "start") trackGameStart({ modeId, access, sessionId: sessionRef.current });
-              if (event === "complete") trackGameComplete({ modeId, sessionId: sessionRef.current, score: detail?.score, durationMs: Date.now() - startedAtRef.current });
-              if (event === "replay") { trackGameReplay({ modeId, previousSessionId: sessionRef.current }); sessionRef.current = newSessionId(); startedAtRef.current = Date.now(); }
-            }}
-          />
+          {dailyType ? (
+            <GuestDailyPlay
+              type={dailyType}
+              modeId={modeId}
+              locale={locale as "en" | "ka" | "es"}
+              pagePath={pagePath}
+              onExit={exit}
+              onEvent={onEngineEvent}
+              copy={{ loading: copy.loading, sampleFallback: copy.sampleFallback }}
+            />
+          ) : (
+            <DemoModeView slug={demoSlug} backHref={pagePath} onExit={exit} onEvent={onEngineEvent} />
+          )}
         </div>,
         document.body,
       )}
