@@ -65,18 +65,18 @@ export const PUBLIC_GAME_META: PublicGameMeta[] = [
   { modeId: "highLow", slug: "higher-or-lower", group: "daily", guest: "demo", demoSlug: "daily-highLow", page: true, card: true, destination: { kind: "page" }, related: ["trueFalse", "moneyDrop", "countdown"], order: 5, practiceLocales: ["en", "ka"] },
   { modeId: "imposter", slug: "imposter", group: "daily", guest: "demo", demoSlug: "daily-imposter", page: true, card: true, destination: { kind: "page" }, related: ["trueFalse", "countdown", "cardDetective"], order: 6, practiceLocales: ["en", "ka"] },
   { modeId: "cardDetective", slug: "card-detective", group: "daily", guest: "demo", demoSlug: "daily-cardDetective", page: true, card: true, destination: { kind: "page" }, related: ["countdown", "imposter", "grid"], order: 7, practiceLocales: ["en", "ka"] },
-  // Copy for the pages below is not written yet: cards off, pages off (see plan phase 2).
-  { modeId: "footballLogic", slug: "football-logic", group: "daily", guest: "demo", demoSlug: "daily-footballLogic", page: false, card: false, destination: { kind: "page" }, related: [], order: 8 },
-  { modeId: "missingXi", slug: "missing-xi", group: "daily", guest: "demo", demoSlug: "daily-missingXi", page: false, card: false, destination: { kind: "page" }, related: [], order: 9 },
-  { modeId: "passChain", slug: "pass-chain", group: "daily", guest: "demo", demoSlug: "daily-passChain", page: false, card: false, destination: { kind: "page" }, related: [], order: 10 },
-  { modeId: "statSniper", slug: "stat-sniper", group: "daily", guest: "demo", demoSlug: "daily-statSniper", page: false, card: false, destination: { kind: "page" }, related: [], order: 11 },
+  // Put in Order is inactive on production: no page until it is switched back on.
+  { modeId: "footballLogic", slug: "football-logic", group: "daily", guest: "demo", demoSlug: "daily-footballLogic", page: true, card: true, destination: { kind: "page" }, related: ["imposter", "countdown", "cardDetective"], order: 8, practiceLocales: ["en", "ka"] },
+  { modeId: "missingXi", slug: "missing-xi", group: "daily", guest: "demo", demoSlug: "daily-missingXi", page: true, card: true, destination: { kind: "page" }, related: ["passChain", "cardDetective", "grid"], order: 9, practiceLocales: ["en", "ka"] },
+  { modeId: "passChain", slug: "pass-chain", group: "daily", guest: "demo", demoSlug: "daily-passChain", page: true, card: true, destination: { kind: "page" }, related: ["missingXi", "grid", "cardDetective"], order: 10, practiceLocales: ["en", "ka"] },
+  { modeId: "statSniper", slug: "stat-sniper", group: "daily", guest: "demo", demoSlug: "daily-statSniper", page: true, card: true, destination: { kind: "page" }, related: ["highLow", "moneyDrop", "trueFalse"], order: 11, practiceLocales: ["en", "ka"] },
   { modeId: "putInOrder", slug: "football-timeline", group: "daily", guest: "demo", demoSlug: "daily-putInOrder", page: false, card: false, destination: { kind: "page" }, related: [], order: 12 },
   // The practice prototype (tactical-board animation, multiple choice) is not the real clip game: no page until it is; card opens the app.
   { modeId: "guessTheGoal", slug: "guess-the-goal", group: "solo", guest: "app", page: false, card: true, destination: { kind: "app", path: "/guess-the-goal" }, related: [], order: 0 },
   { modeId: "triviaMines", slug: "trivia-mines", group: "coins", guest: "demo", demoSlug: "mini-trivia-mines", page: true, card: true, destination: { kind: "page" }, related: ["grid", "moneyDrop", "cardDetective"], order: 0, practiceLocales: ["en", "ka"] },
-  { modeId: "freeKicks", slug: "free-kicks", group: "coins", guest: "demo", demoSlug: "mini-final-third", page: false, card: false, destination: { kind: "page" }, related: [], order: 1 },
-  { modeId: "roadToGoal", slug: "road-to-goal", group: "coins", guest: "demo", demoSlug: "mini-road-to-goal", page: false, card: false, destination: { kind: "page" }, related: [], order: 2 },
-  { modeId: "squadSpin", slug: "squad-spin", group: "coins", guest: "demo", demoSlug: "mini-squad-spin", page: false, card: false, destination: { kind: "page" }, related: [], order: 3 },
+  { modeId: "freeKicks", slug: "free-kicks", group: "coins", guest: "demo", demoSlug: "mini-final-third", page: true, card: true, destination: { kind: "page" }, related: ["roadToGoal", "triviaMines", "squadSpin"], order: 1, practiceLocales: ["en", "ka"] },
+  { modeId: "roadToGoal", slug: "road-to-goal", group: "coins", guest: "demo", demoSlug: "mini-road-to-goal", page: true, card: true, destination: { kind: "page" }, related: ["freeKicks", "triviaMines", "squadSpin"], order: 2, practiceLocales: ["en", "ka"] },
+  { modeId: "squadSpin", slug: "squad-spin", group: "coins", guest: "demo", demoSlug: "mini-squad-spin", page: true, card: true, destination: { kind: "page" }, related: ["triviaMines", "freeKicks", "grid"], order: 3, practiceLocales: ["en", "ka"] },
 ];
 
 export type PublicGame = GamePageEntry & PublicGameMeta;

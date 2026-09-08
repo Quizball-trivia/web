@@ -177,4 +177,123 @@ export const GAME_PAGE_DETAILS: Record<string, Record<Locale, string[]>> = {
       "En esta página juegas con puntos de práctica que no se pueden retirar ni convertir. En la app, los jugadores registrados apuestan monedas reales de su cartera, entre cinco y quinientas, con un bote limitado.",
     ],
   },
+  "football-logic": {
+    en: [
+      "Football Logic is a picture riddle. Two images appear side by side, a club crest next to a landmark, a flag beside an object, an emoji pair, and together they hint at one footballer, one transfer or one famous moment. Read the pair, type the answer, and the next riddle appears.",
+      "Riddles come in three flavours: a transfer told through two crests, a career that only one player fits, and pure wordplay where the pictures sound out a name. Surnames and small typos are accepted; a wrong guess shows the answer so you learn the trick before the next one.",
+      "The practice round uses a fixed set of riddles. In the app, five new riddles arrive every day, each correct answer earns coins and the day counts towards your streak.",
+    ],
+    ka: [
+      "„საფეხბურთო ლოგიკა“ სურათებიანი თავსატეხია. ორი სურათი გვერდიგვერდ ჩნდება — კლუბის ემბლემა და ღირსშესანიშნაობა, დროშა და საგანი, ემოჯის წყვილი — და ერთად ერთ ფეხბურთელს, ტრანსფერს ან ცნობილ მომენტს მიანიშნებს. წაიკითხე წყვილი, ჩაწერე პასუხი და შემდეგი თავსატეხი გამოჩნდება.",
+      "თავსატეხები სამგვარია: ტრანსფერი ორი ემბლემით, კარიერა, რომელსაც მხოლოდ ერთი ფეხბურთელი ერგება, და სიტყვათა თამაში, სადაც სურათები სახელს „ჟღერენ“. გვარი და მცირე შეცდომები მიიღება; არასწორი პასუხი სწორს აჩვენებს, რომ შემდეგისთვის ხერხი ისწავლო.",
+      "სავარჯიშო რაუნდი ფიქსირებულ თავსატეხებს იყენებს. აპლიკაციაში ყოველდღე ხუთი ახალი თავსატეხი მოდის, ყოველი სწორი პასუხი ქოინებს იძლევა და დღე სერიაში ითვლება.",
+    ],
+    es: [
+      "Lógica futbolera es un acertijo visual. Aparecen dos imágenes juntas, un escudo junto a un monumento, una bandera junto a un objeto, un par de emojis, y entre las dos apuntan a un futbolista, un traspaso o un momento famoso. Lee el par, escribe la respuesta y llega el siguiente acertijo.",
+      "Hay tres tipos: un traspaso contado con dos escudos, una carrera que solo encaja con un jugador, y puro juego de palabras donde las imágenes suenan como un nombre. Se aceptan apellidos y erratas pequeñas; un fallo muestra la respuesta para que aprendas el truco antes del siguiente.",
+      "La ronda de práctica usa un set fijo de acertijos. En la app llegan cinco nuevos cada día, cada acierto da monedas y el día cuenta para tu racha.",
+    ],
+  },
+  "missing-xi": {
+    en: [
+      "Missing XI shows a famous starting line-up as eleven shirts on the pitch, in the real formation, with every name hidden. The match is named, for example a Champions League final, and your job is to name the player who started in each position. Tap a shirt, type the name, move on.",
+      "Every line-up is verified against the official match record, so the formation and the eleven starters are exactly right. Names are matched generously in English and Georgian spellings. You can skip a shirt you cannot recall; skipping reveals the face and the name so the squad still reads complete at the end.",
+      "Three line-ups make a day. The practice round uses sample squads; the daily game in the app rotates squads every day, pays coins per shirt named and counts towards your streak.",
+    ],
+    ka: [
+      "„დაკარგული XI“ ცნობილ შემადგენლობას თერთმეტი მაისურით აჩვენებს მოედანზე, ნამდვილი სქემით, დამალული სახელებით. მატჩი დასახელებულია — მაგალითად ჩემპიონთა ლიგის ფინალი — და შენი საქმეა თითოეულ პოზიციაზე დამწყები ფეხბურთელის დასახელება. დააჭირე მაისურს, ჩაწერე სახელი, გააგრძელე.",
+      "ყოველი შემადგენლობა ოფიციალურ მატჩის ჩანაწერთანაა შედარებული, ამიტომ სქემა და თერთმეტი დამწყები ზუსტია. სახელები ლმობიერად მოწმდება ინგლისურ და ქართულ მართლწერაში. მაისური, რომელიც არ გახსოვს, შეგიძლია გამოტოვო; გამოტოვება სახესა და სახელს ამხელს, რომ ბოლოს შემადგენლობა სრული იყოს.",
+      "დღეს სამი შემადგენლობა ქმნის. სავარჯიშო რაუნდი სანიმუშო გუნდებს იყენებს; აპლიკაციის ყოველდღიური თამაში შემადგენლობებს ყოველდღე ცვლის, დასახელებულ მაისურზე ქოინებს იხდის და სერიაში ითვლება.",
+    ],
+    es: [
+      "Once perdido muestra una alineación famosa como once camisetas sobre el campo, en la formación real, con todos los nombres ocultos. El partido está identificado, por ejemplo una final de Champions, y tu tarea es nombrar al jugador que salió de inicio en cada posición. Toca una camiseta, escribe el nombre y sigue.",
+      "Cada alineación está verificada con el acta oficial del partido, así que la formación y los once titulares son exactos. Los nombres se comparan con generosidad. Puedes saltar una camiseta que no recuerdes; saltarla revela la cara y el nombre para que el once quede completo al final.",
+      "Tres alineaciones forman un día. La ronda de práctica usa equipos de muestra; el juego diario de la app cambia las alineaciones cada día, paga monedas por camiseta acertada y cuenta para tu racha.",
+    ],
+  },
+  "pass-chain": {
+    en: [
+      "Pass Chain gives you two footballers who never played together and asks you to connect them. Type a player who shared a club, a manager or a dressing room with the current end of the chain; if the link is real, the chain grows by one and the new player becomes the end. Reach the target and the puzzle is solved.",
+      "Every link is checked against a verified career graph, so a guess only counts when the two players genuinely overlapped. Fewer links score more: every puzzle has a known shortest route, and beating or matching it is the goal. If you are stuck, reveal the shortest chain and move on.",
+      "Two puzzles make a day, one warm-up and one that needs a less obvious bridge. The practice round uses sample puzzles; the daily game in the app rotates puzzles every day, pays coins per solve and counts towards your streak.",
+    ],
+    ka: [
+      "„პასების ჯაჭვი“ ორ ფეხბურთელს გაძლევს, რომლებიც ერთად არასოდეს უთამაშიათ, და მათ დაკავშირებას გთხოვს. ჩაწერე ფეხბურთელი, რომელსაც ჯაჭვის ბოლო წევრთან საერთო კლუბი, მწვრთნელი ან გასახდელი ჰქონდა; თუ კავშირი ნამდვილია, ჯაჭვი ერთით იზრდება და ახალი ფეხბურთელი ბოლო ხდება. მიაღწიე სამიზნეს — თავსატეხი ამოხსნილია.",
+      "ყოველი რგოლი დადასტურებულ კარიერულ გრაფთან მოწმდება, ამიტომ ვარაუდი მხოლოდ მაშინ ითვლება, როცა ორი ფეხბურთელი მართლა იკვეთებოდა. ნაკლები რგოლი — მეტი ქულა: ყოველ თავსატეხს ცნობილი უმოკლესი გზა აქვს. თუ გაიჭედე, გახსენი უმოკლესი ჯაჭვი და გააგრძელე.",
+      "დღეს ორი თავსატეხი ქმნის — გასახურებელი და ისეთი, რომელსაც ნაკლებად აშკარა ხიდი სჭირდება. სავარჯიშო რაუნდი სანიმუშო თავსატეხებს იყენებს; აპლიკაციის ყოველდღიური თამაში თავსატეხებს ყოველდღე ცვლის, ამოხსნაზე ქოინებს იხდის და სერიაში ითვლება.",
+    ],
+    es: [
+      "Cadena de pases te da dos futbolistas que nunca jugaron juntos y te pide conectarlos. Escribe un jugador que compartió club, entrenador o vestuario con el extremo actual de la cadena; si el vínculo es real, la cadena crece en uno y el nuevo jugador pasa a ser el extremo. Llega al objetivo y el puzle está resuelto.",
+      "Cada eslabón se comprueba contra un grafo de carreras verificado, así que una respuesta solo cuenta si los dos jugadores coincidieron de verdad. Menos eslabones, más puntos: cada puzle tiene una ruta más corta conocida y el objetivo es igualarla o mejorarla. Si te atascas, revela la cadena más corta y sigue.",
+      "Dos puzles forman un día, uno de calentamiento y otro que necesita un puente menos evidente. La ronda de práctica usa puzles de muestra; el juego diario de la app los cambia cada día, paga monedas por solución y cuenta para tu racha.",
+    ],
+  },
+  "stat-sniper": {
+    en: [
+      "Stat Sniper is a numbers game. Each question names a real football statistic, such as a player's league goals in a season, a club's record transfer fee or a stadium's capacity, and gives you a slider across a plausible range. Move the slider to your guess and lock it in before the timer runs out.",
+      "Scoring is by proximity: the exact value scores 100, and points fall away the further you land from it, reaching zero at a quarter of the slider's span. Ten questions make a round and your accuracy is the average, so a run of close guesses beats one bullseye and nine wild swings.",
+      "Every fact is traceable to its dataset. The practice round uses a sample set; in the app every player gets the same ten questions each day and the day's accuracy leaderboard ranks them, with coins for your score and a place in your streak.",
+    ],
+    ka: [
+      "„სტატ-სნაიპერი“ რიცხვების თამაშია. ყოველი კითხვა ნამდვილ საფეხბურთო სტატისტიკას ასახელებს — ფეხბურთელის გოლები სეზონში, კლუბის რეკორდული ტრანსფერი, სტადიონის ტევადობა — და სლაიდერს გაძლევს სავარაუდო დიაპაზონზე. მიიტანე სლაიდერი ვარაუდამდე და დააფიქსირე დროის ამოწურვამდე.",
+      "ქულა სიახლოვით ითვლება: ზუსტი მნიშვნელობა 100 ქულაა და ქულები მცირდება, რაც უფრო შორს ხარ, სლაიდერის მეოთხედზე ნულამდე. ათი კითხვა რაუნდია და სიზუსტე საშუალოა, ამიტომ ახლო ვარაუდების სერია ერთ ზუსტსა და ცხრა შორს სჯობს.",
+      "ყოველი ფაქტი თავის მონაცემთა ბაზამდე მიდის. სავარჯიშო რაუნდი სანიმუშო ნაკრებს იყენებს; აპლიკაციაში ყველა მოთამაშე ყოველდღე ერთსა და იმავე ათ კითხვას იღებს და დღის სიზუსტის ლიდერბორდი მათ ალაგებს, ქოინებით შენი ქულისთვის და ადგილით სერიაში.",
+    ],
+    es: [
+      "Francotirador de datos es un juego de números. Cada pregunta nombra una estadística real del fútbol, como los goles de un jugador en una temporada, el fichaje récord de un club o el aforo de un estadio, y te da un deslizador sobre un rango plausible. Mueve el deslizador hasta tu estimación y fíjala antes de que acabe el tiempo.",
+      "Se puntúa por proximidad: el valor exacto vale 100 y los puntos bajan cuanto más lejos caes, hasta cero a un cuarto del recorrido del deslizador. Diez preguntas forman una ronda y tu precisión es la media, así que una serie de estimaciones cercanas gana a un pleno y nueve disparates.",
+      "Cada dato es trazable a su conjunto de datos. La ronda de práctica usa un set de muestra; en la app todos reciben las mismas diez preguntas cada día y la clasificación de precisión del día los ordena, con monedas por tu puntuación y un lugar en tu racha.",
+    ],
+  },
+  "free-kicks": {
+    en: [
+      "Free Kicks is a coin game with a goal wall. You stake coins, and each attack starts with a football question. A correct answer opens another section of the goal and asks the next question; a wrong answer or a timeout locks answering, so you have to shoot with whatever is open.",
+      "When you shoot, you pick a zone; the keeper dives for one of the open zones and the pot pays out according to how many were open, so more correct answers mean a safer shot and a bigger multiplier. Miss and the stake is gone; score and you can cash out or take another attack with the pot on the line.",
+      "On this page you play with practice points that cannot be withdrawn. In the app, signed-in players stake real coins from their wallet, with the same fair odds and the house margin shown on every state.",
+    ],
+    ka: [
+      "„თავისუფალი დარტყმები“ ქოინების თამაშია კარის კედლით. დებ ფსონს და ყოველი შეტევა საფეხბურთო კითხვით იწყება. სწორი პასუხი კარის კიდევ ერთ მონაკვეთს ხსნის და შემდეგ კითხვას სვამს; შეცდომა ან დროის ამოწურვა პასუხებს ბლოკავს და უნდა დაარტყა იმით, რაც გახსნილია.",
+      "დარტყმისას ზონას ირჩევ; მეკარე ერთ-ერთ გახსნილ ზონაში ვარდება და ბანკი გახსნილი ზონების რაოდენობის მიხედვით იხდის — მეტი სწორი პასუხი უფრო უსაფრთხო დარტყმასა და მეტ მულტიპლიკატორს ნიშნავს. ააცილე — ფსონი წავიდა; გაიტანე — აიღე ბანკი ან სცადე შემდეგი შეტევა.",
+      "ამ გვერდზე სავარჯიშო ქულებით თამაშობ, რომელთა გამოტანა შეუძლებელია. აპლიკაციაში ავტორიზებული მოთამაშეები საფულის ნამდვილ ქოინებს დებენ, იმავე სამართლიანი შანსებით და ყოველ მდგომარეობაზე ნაჩვენები სახლის მარჟით.",
+    ],
+    es: [
+      "Tiros libres es un juego con monedas y una barrera en la portería. Apuestas monedas y cada ataque empieza con una pregunta de fútbol. Un acierto abre otra sección de la portería y lanza la siguiente pregunta; un fallo o el tiempo agotado bloquea las respuestas y tienes que tirar con lo que esté abierto.",
+      "Al tirar eliges una zona; el portero se lanza a una de las zonas abiertas y el bote paga según cuántas había abiertas, así que más aciertos significan un tiro más seguro y un multiplicador mayor. Falla y la apuesta se pierde; marca y puedes retirar o jugar otro ataque con el bote en juego.",
+      "En esta página juegas con puntos de práctica que no se pueden retirar. En la app, los jugadores registrados apuestan monedas reales de su cartera, con las mismas probabilidades justas y el margen de la casa visible en cada estado.",
+    ],
+  },
+  "road-to-goal": {
+    en: [
+      "Road to Goal is a ladder of eleven zones from your own box to the opponent's goal. You choose a fixed stake, then answer one football question per zone under a fifteen-second clock. Each correct answer moves you up a zone and raises the multiplier; the questions get harder the closer you get to goal.",
+      "After every zone you decide: cash out what the ladder is worth so far, or continue to the next question with the whole pot at risk. One wrong answer or timeout ends the run and the stake is lost. Clearing all eleven zones pays the top of the ladder.",
+      "On this page you play with practice points only. In the app, signed-in players stake real coins at fixed amounts, the question order is committed before the run starts, and the round proof can be verified afterwards.",
+    ],
+    ka: [
+      "„გზა კარამდე“ თერთმეტი ზონის კიბეა შენი მოედნის ნახევრიდან მოწინააღმდეგის კარამდე. ირჩევ ფიქსირებულ ფსონს და ყოველ ზონაზე ერთ საფეხბურთო კითხვას პასუხობ თხუთმეტწამიან დროში. ყოველი სწორი პასუხი ერთი ზონით წინ გწევს და მულტიპლიკატორს ზრდის; კარისკენ კითხვები რთულდება.",
+      "ყოველი ზონის შემდეგ წყვეტ: აიღე, რაც კიბემ აქამდე მოგცა, ან გააგრძელე შემდეგი კითხვისკენ მთელი ბანკის რისკით. ერთი შეცდომა ან დროის ამოწურვა სერიას ამთავრებს და ფსონი იკარგება. თერთმეტივე ზონის გავლა კიბის მაქსიმუმს იხდის.",
+      "ამ გვერდზე მხოლოდ სავარჯიშო ქულებით თამაშობ. აპლიკაციაში ავტორიზებული მოთამაშეები ფიქსირებული ოდენობით ნამდვილ ქოინებს დებენ, კითხვების რიგი სერიის დაწყებამდე ფიქსირდება და რაუნდის მტკიცებულების გადამოწმება მოგვიანებით შეიძლება.",
+    ],
+    es: [
+      "Camino al gol es una escalera de once zonas desde tu área hasta la portería rival. Eliges una apuesta fija y respondes una pregunta de fútbol por zona con quince segundos de reloj. Cada acierto te sube una zona y aumenta el multiplicador; las preguntas se endurecen cuanto más cerca estás del gol.",
+      "Tras cada zona decides: retirar lo que vale la escalera hasta ahora o seguir a la siguiente pregunta con todo el bote en juego. Un fallo o el tiempo agotado termina la racha y la apuesta se pierde. Superar las once zonas paga el tope de la escalera.",
+      "En esta página juegas solo con puntos de práctica. En la app, los jugadores registrados apuestan monedas reales en cantidades fijas, el orden de las preguntas se fija antes de empezar y la prueba de la ronda puede verificarse después.",
+    ],
+  },
+  "squad-spin": {
+    en: [
+      "Squad Spin is a run of spins. Each spin lands three reels on a club, a position and a nation, and you have fifteen seconds to name a footballer who fits all three, for example a Brazilian forward who played for Chelsea. Four- and five-reel runs add a league, a manager or a trophy and pay more per spin.",
+      "A correct answer multiplies the pot; you then choose to cash out or spin again before the next reels are shown, so you never get to peek first. A wrong answer or a timeout ends the run and the stake is lost. Every combo has at least one verified answer, and names are accepted in English and Georgian spellings with typo tolerance.",
+      "On this page you play with practice points only. In the app, signed-in players stake real coins, the multipliers come from measured accuracy per difficulty tier, and runs are capped at ten spins and forty times the stake.",
+    ],
+    ka: [
+      "Squad Spin ტრიალების სერიაა. ყოველი ტრიალი სამ ბორბალს კლუბზე, პოზიციასა და ქვეყანაზე აჩერებს და გაქვს თხუთმეტი წამი, რომ დაასახელო ფეხბურთელი, რომელიც სამივეს ერგება — მაგალითად ბრაზილიელი თავდამსხმელი, რომელიც ჩელსიში თამაშობდა. ოთხ- და ხუთბორბლიანი სერიები ლიგას, მწვრთნელს ან ტროფეის ამატებს და ტრიალზე მეტს იხდის.",
+      "სწორი პასუხი ბანკს ამრავლებს; შემდეგ ირჩევ — აიღო ბანკი თუ დაატრიალო ისევ — სანამ შემდეგ ბორბლებს დაინახავ, ასე რომ წინასწარ ვერ იჭვრიტები. შეცდომა ან დროის ამოწურვა სერიას ამთავრებს და ფსონი იკარგება. ყოველ კომბინაციას სულ მცირე ერთი დადასტურებული პასუხი აქვს; სახელები ინგლისურად და ქართულად, შეცდომების ტოლერანტობით მიიღება.",
+      "ამ გვერდზე მხოლოდ სავარჯიშო ქულებით თამაშობ. აპლიკაციაში ავტორიზებული მოთამაშეები ნამდვილ ქოინებს დებენ, მულტიპლიკატორები სირთულის დონეების გაზომილი სიზუსტიდან მოდის და სერია ათ ტრიალსა და ფსონის ორმოცმაგზე ჩერდება.",
+    ],
+    es: [
+      "Squad Spin es una racha de giros. Cada giro deja tres carretes en un club, una posición y un país, y tienes quince segundos para nombrar un futbolista que encaje en los tres, por ejemplo un delantero brasileño que jugó en el Chelsea. Las rachas de cuatro y cinco carretes añaden liga, entrenador o trofeo y pagan más por giro.",
+      "Un acierto multiplica el bote; después eliges retirar o girar de nuevo antes de ver los siguientes carretes, así que nunca puedes mirar primero. Un fallo o el tiempo agotado termina la racha y la apuesta se pierde. Cada combinación tiene al menos una respuesta verificada y los nombres se aceptan con tolerancia a erratas.",
+      "En esta página juegas solo con puntos de práctica. En la app, los jugadores registrados apuestan monedas reales, los multiplicadores salen de la precisión medida por nivel de dificultad y las rachas se limitan a diez giros y cuarenta veces la apuesta.",
+    ],
+  },
 };

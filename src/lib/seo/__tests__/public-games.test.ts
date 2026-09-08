@@ -47,7 +47,7 @@ describe("public games manifest", () => {
     expect(findPublishedGame("es", "juegos-de-futbol", "subasta")?.modeId).toBe("auction");
     expect(findPublishedGame("es", "football-games", "auction")).toBeNull();
     expect(findPublishedGame("en", "football-games", "auction")?.modeId).toBe("auction");
-    expect(findPublishedGame("en", "football-games", "missing-xi")).toBeNull();
+    expect(findPublishedGame("en", "football-games", "football-timeline")).toBeNull();
   });
 
   it("cards link to a page, the owning quiz page, or the app", () => {
