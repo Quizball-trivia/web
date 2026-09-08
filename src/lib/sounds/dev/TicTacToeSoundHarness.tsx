@@ -20,7 +20,7 @@ function outcome(claims: FootballGridState['claims']) {
 export function TicTacToeSoundHarness() {
   const [scenarios, setScenarios] = useState(false);
   const audio = useDevGameAudio();
-  return <><div className="relative z-[230] flex gap-3 bg-[#111813] p-3 text-sm text-white"><button className="rounded border border-white/30 px-3 py-2" onClick={() => { audio?.cancel(); setScenarios(false); }}>Play sound match</button><button className="rounded border border-white/30 px-3 py-2" onClick={() => { audio?.cancel(); setScenarios(true); }}>UI scenarios</button></div>{scenarios ? <FootballGridDevPreview /> : <PlayableGrid />}</>;
+  return <><div className="relative z-[230] flex gap-3 bg-surface-page-alt p-3 text-sm text-white"><button className="rounded border border-white/30 px-3 py-2" onClick={() => { audio?.cancel(); setScenarios(false); }}>Play sound match</button><button className="rounded border border-white/30 px-3 py-2" onClick={() => { audio?.cancel(); setScenarios(true); }}>UI scenarios</button></div>{scenarios ? <FootballGridDevPreview /> : <PlayableGrid />}</>;
 }
 
 function PlayableGrid() {
@@ -87,7 +87,7 @@ function PlayableGrid() {
     const value = normalize(answer);
     takeTurn(value === expected || value === expected.split(' ').at(-1));
   }
-  return <main className="min-h-dvh bg-[#101b23] px-4 pb-72 pt-6 text-white"><div className="mx-auto max-w-xl">
+  return <main className="min-h-dvh bg-surface-page-alt px-4 pb-72 pt-6 text-white"><div className="mx-auto max-w-xl">
     <p className="text-xs font-bold uppercase tracking-widest text-lime-300">Tic Tac Toe · sound playground</p>
     <h1 className="mt-2 text-2xl font-bold">Play a quick match</h1>
     <p className="my-3 text-sm text-white/60">Local practice with a scripted rival. Enable the sound mix, then start. This fixture accepts the names in the answer key.</p>

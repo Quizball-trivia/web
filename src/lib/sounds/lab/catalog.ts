@@ -13,14 +13,20 @@ export interface SoundAsset {
   bars: number[];
   previewSeconds?: number;
 }
+/** Assets shipped with the app (originals, CC0 Kenney cues, current game audio). */
 export const SOUND_ASSETS: SoundAsset[] = [
   ...originals,
   ...kenney,
   ...existing,
-  ...quizup,
 ];
+/**
+ * QuizUp reference cues are third-party audio kept OUT of the repository; the
+ * dev sound lab can play them from a local copy under public/sounds/quizup-reference,
+ * but they are never part of the shipped asset set.
+ */
+export const REFERENCE_ASSETS: SoundAsset[] = [...quizup];
 export const ASSET_BY_ID = Object.fromEntries(
-  SOUND_ASSETS.map((asset) => [asset.id, asset]),
+  [...SOUND_ASSETS, ...REFERENCE_ASSETS].map((asset) => [asset.id, asset]),
 );
 export const SOURCE_LABELS: Record<string, string> = {
   original: "Quizball original",

@@ -10,6 +10,13 @@ const { roadToGoalMock } = vi.hoisted(() => ({
 vi.mock("@/features/mini-games/components/RoadToGoal", () => ({
   RoadToGoal: roadToGoalMock,
 }));
+// The route wraps the game in the shared intro screen (router + resume probe); the flag test only cares about the game props.
+vi.mock("@/features/mini-games/components/MiniGameIntro", () => ({
+  MiniGameIntro: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+vi.mock("@/lib/repositories/roadToGoal.repo", () => ({
+  roadToGoalApi: { current: vi.fn(async () => null) },
+}));
 
 describe("Road to Goal route flag", () => {
   beforeEach(() => {

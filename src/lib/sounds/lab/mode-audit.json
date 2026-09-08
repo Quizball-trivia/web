@@ -844,7 +844,7 @@
   },
   {
     "id": "football-grid",
-    "name": "Football Tic Tac Toe \u00b7 live",
+    "name": "Football Tic Tac Toe · live",
     "group": "Match modes",
     "source": "features/football-grid/hooks/useFootballGridAudio.ts",
     "summary": "Correct/wrong command results and kickoff whistle are wired. Extend to square selection, claim, turn timeout and best-of-three outcome.",
@@ -2199,87 +2199,6 @@
     "status": "gap"
   },
   {
-    "id": "mini-guess-fifa-card",
-    "name": "FIFA Cards / Guess the Card",
-    "group": "Mini-games",
-    "source": "features/mini-games/components/GuessFifaCard.tsx",
-    "summary": "Daily route and demo reuse this card puzzle. Reveal identity clues, submit a name, advance cards.",
-    "actions": [
-      {
-        "id": "ready",
-        "cue": "ready",
-        "label": "Start round",
-        "when": "When the countdown hands over to active play, after audio is unlocked.",
-        "current": null
-      },
-      {
-        "id": "reveal",
-        "cue": "reveal",
-        "label": "Reveal clue",
-        "when": "When a new clue becomes visible; one cue per reveal.",
-        "current": null
-      },
-      {
-        "id": "lock",
-        "cue": "lock",
-        "label": "Lock in",
-        "when": "Once a valid submission is accepted; disable while pending.",
-        "current": null
-      },
-      {
-        "id": "correct",
-        "cue": "correct",
-        "label": "Correct answer",
-        "when": "On the confirmed result, once per question or command ID.",
-        "current": null
-      },
-      {
-        "id": "wrong",
-        "cue": "wrong",
-        "label": "Wrong answer",
-        "when": "On confirmed incorrect result. Never also play the timeout cue.",
-        "current": null
-      },
-      {
-        "id": "tick",
-        "cue": "tick",
-        "label": "Last 3 seconds",
-        "when": "One tick at each whole second: 3, 2, 1. Stop on answer, pause or end.",
-        "current": null
-      },
-      {
-        "id": "timeout",
-        "cue": "timeout",
-        "label": "Time runs out",
-        "when": "Once when the active turn expires. Replaces wrong-answer feedback for no answer.",
-        "current": null
-      },
-      {
-        "id": "next",
-        "cue": "transition",
-        "label": "Next question",
-        "when": "At the visible question transition, not on data prefetch.",
-        "current": null
-      },
-      {
-        "id": "win",
-        "cue": "win",
-        "label": "Win / complete",
-        "when": "When the final outcome is visible. Wait for the answer sound to finish.",
-        "current": null
-      }
-    ],
-    "flow": [
-      "ready",
-      "reveal",
-      "lock",
-      "correct",
-      "next",
-      "win"
-    ],
-    "status": "gap"
-  },
-  {
     "id": "mini-squad-spin",
     "name": "Squad Spin",
     "group": "Mini-games",
@@ -2413,7 +2332,7 @@
   },
   {
     "id": "mini-penalty-shootout",
-    "name": "Penalty Shootout \u00b7 demo",
+    "name": "Penalty Shootout · demo",
     "group": "Mini-games",
     "source": "features/mini-games/components/PenaltyShootout.tsx",
     "summary": "Hidden demo. Trivia earns a shot; choose shooter or keeper zone across five rounds.",
@@ -3047,7 +2966,7 @@
   },
   {
     "id": "mini-football-grid-demo",
-    "name": "Football Tic Tac Toe \u00b7 demo",
+    "name": "Football Tic Tac Toe · demo",
     "group": "Mini-games",
     "source": "features/mini-games/components/FootballGrid.tsx",
     "summary": "Local prototype board. Select a square, name a qualifying player, claim a cell and form a line.",
