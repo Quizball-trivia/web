@@ -12,7 +12,16 @@ check("sitemap has entries", urls.length > 20, `${urls.length} urls`);
 check("sitemap excludes bare /", !urls.some((u) => /^https?:\/\/[^/]+\/?$/.test(u)));
 check("sitemap excludes /play and /demos", !urls.some((u) => /\/(play|demos)(\/|$)/.test(u)));
 
-const pages = ["/en", "/ka", "/es", "/en/football-games/auction", "/es/juegos-de-futbol/subasta", "/ka/football-games/football-tic-tac-toe", "/en/football-games/daily-challenges", "/es/juegos-de-futbol/retos-diarios"];
+// Expected hreflang clusters: every member must list exactly these, and each member must exist (reciprocity).
+const clusters = [
+  { en: "/en", ka: "/ka", es: "/es" },
+  { en: "/en/football-games/auction", ka: "/ka/football-games/auction", es: "/es/juegos-de-futbol/subasta" },
+  { en: "/en/football-games/football-tic-tac-toe", ka: "/ka/football-games/football-tic-tac-toe", es: "/es/juegos-de-futbol/tiki-taka-toe" },
+  { en: "/en/football-games/daily-challenges", ka: "/ka/football-games/daily-challenges", es: "/es/juegos-de-futbol/retos-diarios" },
+];
+const expectedAlternates = new Map();
+for (const cluster of clusters) for (const path of Object.values(cluster)) expectedAlternates.set(path, { ...cluster, "x-default": cluster.en });
+const pages = [...expectedAlternates.keys()];
 for (const path of pages) {
   const res = await get(path);
   const html = await res.text();
@@ -21,15 +30,21 @@ for (const path of pages) {
   const canonical = attr(html, /<link rel="canonical" href="([^"]+)"/i);
   const h1 = /<h1[\s>]/i.test(html);
   const alternates = [...html.matchAll(/<link rel="alternate" hreflang="([^"]+)" href="([^"]+)"/gi)].map((m) => [m[1], m[2]]);
-  const self = alternates.find(([, href]) => href.endsWith(path));
+  const expected = expectedAlternates.get(path);
+  const got = Object.fromEntries(alternates.map(([l, h]) => [l, h.replace(/^https?:\/\/[^/]+/, "")]));
+  const exact = Object.keys(expected).length === Object.keys(got).length && Object.entries(expected).every(([l, h]) => got[l] === h);
   check(`${path} 200`, res.status === 200, String(res.status));
   check(`${path} indexable`, !/noindex/i.test(robots + metaRobots), robots || metaRobots || "no robots directive");
   check(`${path} canonical`, Boolean(canonical && canonical.endsWith(path)), canonical ?? "missing");
   check(`${path} h1 in HTML`, h1);
-  check(`${path} hreflang self + x-default`, Boolean(self) && alternates.some(([l]) => l === "x-default"), alternates.map(([l, h]) => `${l}:${h.replace(/^https?:\/\/[^/]+/, "")}`).join(" "));
+  check(`${path} hreflang exact + reciprocal`, exact, JSON.stringify(got));
   check(`${path} in sitemap`, urls.some((u) => u.endsWith(path)));
 }
-for (const [path, status, target] of [["/", 307, null], ["/en/football-games", 308, "/en"], ["/es/juegos-de-futbol", 308, "/es"], ["/football-games/auction", 308, "/en/football-games/auction"], ["/games", 308, "/en"], ["/daily", 308, "/en/football-games/daily-challenges"]]) {
+const rootGe = await fetch(base + "/", { redirect: "manual", headers: { "x-vercel-ip-country": "GE" } });
+check("/ → /ka for Georgia", rootGe.status === 307 && (rootGe.headers.get("location") ?? "").endsWith("/ka"), `${rootGe.status} ${rootGe.headers.get("location")}`);
+const rootUs = await fetch(base + "/", { redirect: "manual", headers: { "x-vercel-ip-country": "US" } });
+check("/ → /en elsewhere, uncacheable", rootUs.status === 307 && (rootUs.headers.get("location") ?? "").endsWith("/en") && /no-store/.test(rootUs.headers.get("cache-control") ?? ""), `${rootUs.status} ${rootUs.headers.get("location")} ${rootUs.headers.get("cache-control")}`);
+for (const [path, status, target] of [["/en/football-games", 308, "/en"], ["/es/juegos-de-futbol", 308, "/es"], ["/football-games/auction", 308, "/en/football-games/auction"], ["/games", 308, "/en"], ["/daily", 308, "/en/football-games/daily-challenges"]]) {
   const res = await get(path);
   const loc = (res.headers.get("location") ?? "").replace(/^https?:\/\/[^/]+/, "");
   check(`${path} → ${status}${target ? " " + target : ""}`, res.status === status && (!target || loc === target), `${res.status} ${loc}`);

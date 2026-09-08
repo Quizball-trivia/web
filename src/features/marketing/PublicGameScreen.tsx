@@ -4,16 +4,16 @@ import { DemoModeArt } from "@/features/demos/DemoModeArt";
 import type { Locale } from "@/lib/i18n/locale";
 import { GAME_PAGE_DETAILS } from "@/lib/seo/game-page-details";
 import { HOME_COPY } from "@/lib/seo/home-copy";
-import { publicGamePath, relatedPublishedGames, type PublicGame } from "@/lib/seo/public-games";
+import { engineEmitsEvents, publicGamePath, relatedPublishedGames, type PublicGame } from "@/lib/seo/public-games";
 import { PublicLayout } from "./PublicLayout";
 import { PublicCardGrid } from "./HomeScreen";
 import { PublicGameEmbed } from "./public/PublicGameEmbed";
 import { SignInLink } from "./public/PublicLinks";
 
-const L: Record<Locale, { howTo: string; details: string; related: string; all: string; account: string; accountText: string; start: string; note: string; exit: string; guest: string; member: string }> = {
-  en: { howTo: "How to play", details: "Rules and details", related: "Related games", all: "All football games", account: "Play the real thing", accountText: "The practice round above is a sample. Sign in to play today's real game, keep your results and earn coins.", start: "Try a practice round", note: "No account needed. Sample content, bot opponents where relevant, virtual points only, nothing is saved.", exit: "Exit practice", guest: "Guest practice", member: "Open in the app" },
-  es: { howTo: "Cómo jugar", details: "Reglas y detalles", related: "Juegos relacionados", all: "Todos los juegos de fútbol", account: "Juega la versión real", accountText: "La ronda de práctica de arriba es una muestra. Inicia sesión para jugar el juego real de hoy, guardar tus resultados y ganar monedas.", start: "Probar una ronda de práctica", note: "Sin cuenta. Contenido de muestra, rivales bot donde aplica, solo puntos virtuales, no se guarda nada.", exit: "Salir de la práctica", guest: "Práctica de invitado", member: "Abrir en la app" },
-  ka: { howTo: "როგორ ვითამაშო", details: "წესები და დეტალები", related: "მსგავსი თამაშები", all: "ყველა საფეხბურთო თამაში", account: "ითამაშე ნამდვილი", accountText: "ზემოთ სავარჯიშო რაუნდია — ნიმუში. შედი ანგარიშში, რომ ითამაშო დღევანდელი ნამდვილი თამაში, შეინახო შედეგები და დააგროვო ქოინები.", start: "სცადე სავარჯიშო რაუნდი", note: "ანგარიშის გარეშე. სანიმუშო შინაარსი, ბოტი მეტოქე სადაც საჭიროა, მხოლოდ ვირტუალური ქულები, არაფერი ინახება.", exit: "სავარჯიშოდან გასვლა", guest: "სტუმრის სავარჯიშო", member: "აპლიკაციაში გახსნა" },
+const L: Record<Locale, { howTo: string; details: string; related: string; all: string; account: string; accountText: string; start: string; note: string; exit: string; guest: string; member: string; english: string }> = {
+  en: { howTo: "How to play", details: "Rules and details", related: "Related games", all: "All football games", account: "Play the real thing", accountText: "The practice round above is a sample. Sign in to play today's real game, keep your results and earn coins.", start: "Try a practice round", note: "No account needed. Sample content, bot opponents where relevant, virtual points only, nothing is saved.", exit: "Exit practice", guest: "Guest practice", member: "Open in the app", english: "The practice round is in English for now." },
+  es: { howTo: "Cómo jugar", details: "Reglas y detalles", related: "Juegos relacionados", all: "Todos los juegos de fútbol", account: "Juega la versión real", accountText: "La ronda de práctica de arriba es una muestra. Inicia sesión para jugar el juego real de hoy, guardar tus resultados y ganar monedas.", start: "Probar una ronda de práctica", note: "Sin cuenta. Contenido de muestra, rivales bot donde aplica, solo puntos virtuales, no se guarda nada.", exit: "Salir de la práctica", guest: "Práctica de invitado", member: "Abrir en la app", english: "La ronda de práctica está en inglés por ahora." },
+  ka: { howTo: "როგორ ვითამაშო", details: "წესები და დეტალები", related: "მსგავსი თამაშები", all: "ყველა საფეხბურთო თამაში", account: "ითამაშე ნამდვილი", accountText: "ზემოთ სავარჯიშო რაუნდია — ნიმუში. შედი ანგარიშში, რომ ითამაშო დღევანდელი ნამდვილი თამაში, შეინახო შედეგები და დააგროვო ქოინები.", start: "სცადე სავარჯიშო რაუნდი", note: "ანგარიშის გარეშე. სანიმუშო შინაარსი, ბოტი მეტოქე სადაც საჭიროა, მხოლოდ ვირტუალური ქულები, არაფერი ინახება.", exit: "სავარჯიშოდან გასვლა", guest: "სტუმრის სავარჯიშო", member: "აპლიკაციაში გახსნა", english: "სავარჯიშო რაუნდი ჯერჯერობით ინგლისურადაა." },
 };
 
 /** One public game page: server-rendered content first, the practice engine on demand below it. */
@@ -40,9 +40,9 @@ export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: L
           <p className="mt-4 text-base leading-relaxed text-white/80 md:text-lg">{copy.intro}</p>
           <p className="mt-3 text-sm font-semibold text-brand-yellow">{game.guest === "demo" ? labels.guest : home.cards.accountRequired}</p>
           {game.guest === "demo" && game.demoSlug ? (
-            <PublicGameEmbed modeId={game.modeId} demoSlug={game.demoSlug} locale={locale} pagePath={path} copy={{ start: labels.start, note: labels.note, exit: labels.exit }} />
+            <PublicGameEmbed modeId={game.modeId} demoSlug={game.demoSlug} locale={locale} pagePath={path} engineEmitsEvents={engineEmitsEvents(game.demoSlug)} practiceLocalised={!game.practiceLocales || game.practiceLocales.includes(locale)} copy={{ start: labels.start, note: labels.note, exit: labels.exit, english: labels.english, title: copy.title }} />
           ) : (
-            <SignInLink href={game.playPath} placement="game_page_hero" modeId={game.modeId} returnTo={game.playPath} className="mt-6 inline-flex h-14 items-center justify-center rounded-full bg-brand-yellow px-8 text-base font-bold uppercase tracking-wide text-black hover:bg-brand-yellow-deep">{home.nav.signIn}</SignInLink>
+            <SignInLink placement="game_page_hero" modeId={game.modeId} returnTo={game.playPath} className="mt-6 inline-flex h-14 items-center justify-center rounded-full bg-brand-yellow px-8 text-base font-bold uppercase tracking-wide text-black hover:bg-brand-yellow-deep">{home.nav.signIn}</SignInLink>
           )}
         </div>
         <div className="overflow-hidden rounded-2xl bg-brand-blue">
@@ -73,7 +73,7 @@ export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: L
       <section className="mt-12 max-w-3xl rounded-2xl border border-white/10 bg-white/[0.04] p-5">
         <h2 className="text-lg font-bold uppercase">{labels.account}</h2>
         <p className="mt-2 text-sm text-white/75">{labels.accountText}</p>
-        <SignInLink href={game.playPath} placement="game_page_account" modeId={game.modeId} returnTo={game.playPath} className="mt-4 inline-flex h-11 items-center rounded-full bg-brand-yellow px-6 text-sm font-bold uppercase tracking-wide text-black hover:bg-brand-yellow-deep">{labels.member}</SignInLink>
+        <SignInLink placement="game_page_account" modeId={game.modeId} returnTo={game.playPath} className="mt-4 inline-flex h-11 items-center rounded-full bg-brand-yellow px-6 text-sm font-bold uppercase tracking-wide text-black hover:bg-brand-yellow-deep">{labels.member}</SignInLink>
       </section>
 
       <section className="mt-12">
@@ -81,7 +81,7 @@ export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: L
           <h2 className="text-xl font-bold uppercase md:text-2xl">{labels.related}</h2>
           <Link href={`/${locale}`} className="text-sm font-bold uppercase tracking-wide text-brand-yellow hover:underline">{labels.all}</Link>
         </div>
-        <div className="mt-4"><PublicCardGrid games={related} locale={locale} surface="public_home" /></div>
+        <div className="mt-4"><PublicCardGrid games={related} locale={locale} surface="public_game" /></div>
       </section>
     </PublicLayout>
   );

@@ -3,11 +3,12 @@ import { DemoModeArt } from "@/features/demos/DemoModeArt";
 import { campaignPublicSlug } from "@/features/campaign-quiz/campaignQuiz.routes";
 import type { Locale } from "@/lib/i18n/locale";
 import { HOME_COPY } from "@/lib/seo/home-copy";
+import type { PublicSurface } from "@/lib/analytics/public-games.analytics";
 import { cardHref, dailyCollectionPath, homepageCards, type PublicGame } from "@/lib/seo/public-games";
 import { PublicLayout, quizHubHref } from "./PublicLayout";
 import { CompetitiveLink, GameCardLink, SignInLink } from "./public/PublicLinks";
 
-function GameCard({ game, locale, surface }: { game: PublicGame; locale: Locale; surface: "public_home" | "daily_collection" }) {
+function GameCard({ game, locale, surface }: { game: PublicGame; locale: Locale; surface: PublicSurface }) {
   const copy = HOME_COPY[locale].cards;
   const text = game.copy[locale];
   const badge = game.guest === "demo" ? copy.practice : copy.accountRequired;
@@ -35,7 +36,7 @@ function GameCard({ game, locale, surface }: { game: PublicGame; locale: Locale;
   );
 }
 
-function CardGrid({ games, locale, surface = "public_home" }: { games: PublicGame[]; locale: Locale; surface?: "public_home" | "daily_collection" }) {
+function CardGrid({ games, locale, surface = "public_home" }: { games: PublicGame[]; locale: Locale; surface?: PublicSurface }) {
   return (
     <div className="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-4">
       {games.map((game) => <GameCard key={game.modeId} game={game} locale={locale} surface={surface} />)}
@@ -52,7 +53,7 @@ function Competitive({ locale }: { locale: Locale }) {
       <div className={card}>
         <h3 className="text-base font-bold uppercase">{c.rankedTitle}</h3>
         <p className="text-sm text-white/75">{c.rankedText}</p>
-        <CompetitiveLink kind="ranked" href="/play" placement="home_competitive" className={cta}>{c.rankedCta}</CompetitiveLink>
+        <CompetitiveLink kind="ranked" href="/play?signin=1&mode=ranked" placement="home_competitive" className={cta}>{c.rankedCta}</CompetitiveLink>
       </div>
       <div className={card}>
         <h3 className="text-base font-bold uppercase">{c.wlTitle}</h3>

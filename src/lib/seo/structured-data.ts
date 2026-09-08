@@ -201,13 +201,15 @@ export function buildResearchReportStructuredData({
 }
 
 /** Locale homepage = Football Games hub: a CollectionPage whose ItemList is the released guest catalogue. */
-export function buildGamesHomeStructuredData({ locale, title, description, games }: {
+export function buildGamesHomeStructuredData({ locale, path, title, description, games }: {
   locale: Locale;
+  /** The page's own path (homepage `/${locale}` or the daily collection). */
+  path?: string;
   title: string;
   description: string;
   games: Array<{ name: string; url: string }>;
 }) {
-  const url = `${SITE_URL}/${locale}`;
+  const url = `${SITE_URL}${path ?? `/${locale}`}`;
   return {
     "@context": "https://schema.org",
     "@graph": [

@@ -43,7 +43,7 @@ function DemoSearchingScreen() {
   );
 }
 
-export function DemoAuction() {
+export function DemoAuction({ onExit }: { onExit?: () => void } = {}) {
   const router = useRouter();
   const { locale } = useLocale();
   const roster = useMemo(() => getDemoAuctionRoster(locale), [locale]);
@@ -99,8 +99,9 @@ export function DemoAuction() {
   }, [actions]);
 
   const handleExit = useCallback(() => {
-    router.push("/demos");
-  }, [router]);
+    if (onExit) onExit();
+    else router.push("/demos");
+  }, [onExit, router]);
 
   if (searching) {
     return <DemoSearchingScreen />;

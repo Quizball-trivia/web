@@ -12,6 +12,7 @@ import {
   trackWeekendLeagueEntryClick,
   type PublicSurface,
 } from "@/lib/analytics/public-games.analytics";
+import { SIGN_IN_PATH } from "@/lib/seo/public-games";
 
 const useAccess = () => (useAuthStore((state) => state.status) === "authenticated" ? "member" : "guest");
 
@@ -30,7 +31,7 @@ export function GameCardLink({ href, modeId, group, surface, destination, classN
  * Sign-in / app entry from a public page: remembers the current public page so
  * the visitor returns here after authentication, and records the intent.
  */
-export function SignInLink({ href = "/play", placement, modeId, returnTo, className, children }: {
+export function SignInLink({ href = SIGN_IN_PATH, placement, modeId, returnTo, className, children }: {
   href?: string; placement: string; modeId?: string; returnTo?: string; className?: string; children: ReactNode;
 }) {
   const pathname = usePathname();
@@ -72,7 +73,7 @@ export function HeaderPlayLink({ signIn, openPlay, className }: { signIn: string
   const access = useAccess();
   const pathname = usePathname();
   return (
-    <Link href="/play" className={className} onClick={() => { if (access === "guest") { rememberPostAuthRedirect(pathname); trackGamesSignupClick({ page: pathname ?? "", placement: "header", destination: "/play" }); } }}>
+    <Link href={access === "member" ? "/play" : SIGN_IN_PATH} className={className} onClick={() => { if (access === "guest") { rememberPostAuthRedirect(pathname); trackGamesSignupClick({ page: pathname ?? "", placement: "header", destination: SIGN_IN_PATH }); } }}>
       {access === "member" ? openPlay : signIn}
     </Link>
   );

@@ -18,10 +18,20 @@ export function buildFriendInviteUrl(code: string, origin?: string): string | nu
   return baseOrigin ? `${baseOrigin}${path}` : path;
 }
 
+/**
+ * Internal destinations a sign-in may return to besides friend invites: the app's
+ * game entry points and the public locale pages (a visitor who signed in from a
+ * public game page lands back on it). Same-origin, path-only, no query/hash.
+ */
+const RETURNABLE_PATH = /^\/(play|auction|tic-tac-toe|friend|weekend-league|free-kicks|road-to-goal|trivia-mines|squad-spin|guess-the-goal|missing-xi|daily\/challenges\/[a-z0-9-]+|(en|ka|es)(\/[a-z0-9-]+(\/[a-z0-9-]+)?)?)\/?$/;
+
 export function normalizePostAuthRedirect(pathname: string | null | undefined): string | null {
   if (!pathname) return null;
   const code = extractFriendInviteCodeFromPath(pathname);
-  return code ? buildFriendInvitePath(code) : null;
+  if (code) return buildFriendInvitePath(code);
+  const path = pathname.split(/[?#]/)[0];
+  if (!path.startsWith("/") || path.startsWith("//") || !RETURNABLE_PATH.test(path)) return null;
+  return path.length > 1 ? path.replace(/\/$/, "") : path;
 }
 
 export function rememberPostAuthRedirect(pathname: string | null | undefined): void {

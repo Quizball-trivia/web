@@ -41,31 +41,39 @@ export interface PublicGameMeta {
   related: string[];
   /** Ordering inside its group (lower first). */
   order: number;
+  /** Locales whose practice engine is actually localised; others show the practice in English with a notice. */
+  practiceLocales?: Locale[];
 }
 
+/** Daily engines report start/complete/replay themselves; other engines are timed from the outer Play control. */
+export const engineEmitsEvents = (demoSlug: string | undefined): boolean => Boolean(demoSlug?.startsWith("daily-"));
+/** Sign-in entry: the Play screen opens its auth dialog for guests when asked to. */
+export const SIGN_IN_PATH = "/play?signin=1";
+
 export const PUBLIC_GAME_META: PublicGameMeta[] = [
-  { modeId: "grid", slug: "football-tic-tac-toe", group: "multiplayer", guest: "demo", demoSlug: "mini-football-grid", page: true, card: true, destination: { kind: "page" }, related: ["auction", "moneyDrop", "cardDetective"], order: 0 },
-  { modeId: "auction", slug: "auction", group: "multiplayer", guest: "demo", demoSlug: "auction", page: true, card: true, destination: { kind: "page" }, related: ["grid", "cardDetective", "moneyDrop"], order: 1 },
+  { modeId: "grid", slug: "football-tic-tac-toe", group: "multiplayer", guest: "demo", demoSlug: "mini-football-grid", page: true, card: true, destination: { kind: "page" }, related: ["auction", "moneyDrop", "cardDetective"], order: 0, practiceLocales: ["en", "ka"] },
+  { modeId: "auction", slug: "auction", group: "multiplayer", guest: "demo", demoSlug: "auction", page: true, card: true, destination: { kind: "page" }, related: ["grid", "cardDetective", "moneyDrop"], order: 1, practiceLocales: ["en", "ka"] },
   // Friendly rooms need a guest identity on the server (phase 3): card only, opens the app.
   { modeId: "friendly", slug: "friendly", group: "multiplayer", guest: "app", page: false, card: true, destination: { kind: "app", path: "/friend" }, related: ["grid", "auction", "moneyDrop"], order: 2 },
   { modeId: "ranked", slug: "ranked", group: "competitive", guest: "app", page: false, card: true, destination: { kind: "app", path: "/play" }, related: [], order: 0 },
   // Established campaign-quiz pages keep these intents; the cards link there.
   { modeId: "clues", slug: "who-am-i", group: "daily", guest: "demo", demoSlug: "daily-clues", page: false, card: true, destination: { kind: "quiz", sourceSlug: "guess-the-player" }, related: [], order: 0 },
   { modeId: "careerPath", slug: "career-path", group: "daily", guest: "demo", demoSlug: "daily-careerPath", page: false, card: true, destination: { kind: "quiz", sourceSlug: "career-path" }, related: [], order: 4 },
-  { modeId: "moneyDrop", slug: "money-drop", group: "daily", guest: "demo", demoSlug: "daily-moneyDrop", page: true, card: true, destination: { kind: "page" }, related: ["trueFalse", "countdown", "highLow"], order: 1 },
-  { modeId: "trueFalse", slug: "true-or-false-football", group: "daily", guest: "demo", demoSlug: "daily-trueFalse", page: true, card: true, destination: { kind: "page" }, related: ["moneyDrop", "highLow", "imposter"], order: 2 },
-  { modeId: "countdown", slug: "countdown", group: "daily", guest: "demo", demoSlug: "daily-countdown", page: true, card: true, destination: { kind: "page" }, related: ["moneyDrop", "imposter", "cardDetective"], order: 3 },
-  { modeId: "highLow", slug: "higher-or-lower", group: "daily", guest: "demo", demoSlug: "daily-highLow", page: true, card: true, destination: { kind: "page" }, related: ["trueFalse", "moneyDrop", "countdown"], order: 5 },
-  { modeId: "imposter", slug: "imposter", group: "daily", guest: "demo", demoSlug: "daily-imposter", page: true, card: true, destination: { kind: "page" }, related: ["trueFalse", "countdown", "cardDetective"], order: 6 },
-  { modeId: "cardDetective", slug: "card-detective", group: "daily", guest: "demo", demoSlug: "daily-cardDetective", page: true, card: true, destination: { kind: "page" }, related: ["countdown", "imposter", "grid"], order: 7 },
+  { modeId: "moneyDrop", slug: "money-drop", group: "daily", guest: "demo", demoSlug: "daily-moneyDrop", page: true, card: true, destination: { kind: "page" }, related: ["trueFalse", "countdown", "highLow"], order: 1, practiceLocales: ["en", "ka"] },
+  { modeId: "trueFalse", slug: "true-or-false-football", group: "daily", guest: "demo", demoSlug: "daily-trueFalse", page: true, card: true, destination: { kind: "page" }, related: ["moneyDrop", "highLow", "imposter"], order: 2, practiceLocales: ["en", "ka"] },
+  { modeId: "countdown", slug: "countdown", group: "daily", guest: "demo", demoSlug: "daily-countdown", page: true, card: true, destination: { kind: "page" }, related: ["moneyDrop", "imposter", "cardDetective"], order: 3, practiceLocales: ["en", "ka"] },
+  { modeId: "highLow", slug: "higher-or-lower", group: "daily", guest: "demo", demoSlug: "daily-highLow", page: true, card: true, destination: { kind: "page" }, related: ["trueFalse", "moneyDrop", "countdown"], order: 5, practiceLocales: ["en", "ka"] },
+  { modeId: "imposter", slug: "imposter", group: "daily", guest: "demo", demoSlug: "daily-imposter", page: true, card: true, destination: { kind: "page" }, related: ["trueFalse", "countdown", "cardDetective"], order: 6, practiceLocales: ["en", "ka"] },
+  { modeId: "cardDetective", slug: "card-detective", group: "daily", guest: "demo", demoSlug: "daily-cardDetective", page: true, card: true, destination: { kind: "page" }, related: ["countdown", "imposter", "grid"], order: 7, practiceLocales: ["en", "ka"] },
   // Copy for the pages below is not written yet: cards off, pages off (see plan phase 2).
   { modeId: "footballLogic", slug: "football-logic", group: "daily", guest: "demo", demoSlug: "daily-footballLogic", page: false, card: false, destination: { kind: "page" }, related: [], order: 8 },
   { modeId: "missingXi", slug: "missing-xi", group: "daily", guest: "demo", demoSlug: "daily-missingXi", page: false, card: false, destination: { kind: "page" }, related: [], order: 9 },
   { modeId: "passChain", slug: "pass-chain", group: "daily", guest: "demo", demoSlug: "daily-passChain", page: false, card: false, destination: { kind: "page" }, related: [], order: 10 },
   { modeId: "statSniper", slug: "stat-sniper", group: "daily", guest: "demo", demoSlug: "daily-statSniper", page: false, card: false, destination: { kind: "page" }, related: [], order: 11 },
   { modeId: "putInOrder", slug: "football-timeline", group: "daily", guest: "demo", demoSlug: "daily-putInOrder", page: false, card: false, destination: { kind: "page" }, related: [], order: 12 },
-  { modeId: "guessTheGoal", slug: "guess-the-goal", group: "solo", guest: "demo", demoSlug: "mini-guess-the-goal", page: true, card: true, destination: { kind: "page" }, related: ["cardDetective", "countdown", "triviaMines"], order: 0 },
-  { modeId: "triviaMines", slug: "trivia-mines", group: "coins", guest: "demo", demoSlug: "mini-trivia-mines", page: true, card: true, destination: { kind: "page" }, related: ["guessTheGoal", "grid", "moneyDrop"], order: 0 },
+  // The practice prototype (tactical-board animation, multiple choice) is not the real clip game: no page until it is; card opens the app.
+  { modeId: "guessTheGoal", slug: "guess-the-goal", group: "solo", guest: "app", page: false, card: true, destination: { kind: "app", path: "/guess-the-goal" }, related: [], order: 0 },
+  { modeId: "triviaMines", slug: "trivia-mines", group: "coins", guest: "demo", demoSlug: "mini-trivia-mines", page: true, card: true, destination: { kind: "page" }, related: ["grid", "moneyDrop", "cardDetective"], order: 0, practiceLocales: ["en", "ka"] },
   { modeId: "freeKicks", slug: "free-kicks", group: "coins", guest: "demo", demoSlug: "mini-final-third", page: false, card: false, destination: { kind: "page" }, related: [], order: 1 },
   { modeId: "roadToGoal", slug: "road-to-goal", group: "coins", guest: "demo", demoSlug: "mini-road-to-goal", page: false, card: false, destination: { kind: "page" }, related: [], order: 2 },
   { modeId: "squadSpin", slug: "squad-spin", group: "coins", guest: "demo", demoSlug: "mini-squad-spin", page: false, card: false, destination: { kind: "page" }, related: [], order: 3 },

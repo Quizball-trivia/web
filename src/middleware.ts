@@ -1,7 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { DEFAULT_LOCALE } from "@/lib/i18n/locale";
 import { DAILY_CHALLENGE_SLUGS } from "@/lib/domain/dailyChallengeSlugs";
-import { GAME_PAGES, PUBLIC_GAMES_FOLDER, dailyCollectionPath, gamePageSlug } from "@/lib/seo/game-pages";
+import { PUBLIC_GAMES_FOLDER, dailyCollectionPath, gamePageSlug } from "@/lib/seo/game-pages";
+import { PUBLISHED_PUBLIC_GAMES } from "@/lib/seo/public-games";
 import { API_BASE_URL } from "@/lib/config";
 import type { CampaignQuizRoute } from "@/features/campaign-quiz/campaignQuiz.types";
 
@@ -18,7 +19,7 @@ const REDIRECT_FROM_ROOT: Record<string, string> = {
   "/privacy": `/${DEFAULT_LOCALE}/privacy`,
   // Bare game page URLs → default-locale variant (indexable pages).
   ...Object.fromEntries(
-    GAME_PAGES.map((page) => [
+    PUBLISHED_PUBLIC_GAMES.map((page) => [
       `/${PUBLIC_GAMES_FOLDER[DEFAULT_LOCALE]}/${gamePageSlug(page, DEFAULT_LOCALE)}`,
       `/${DEFAULT_LOCALE}/${PUBLIC_GAMES_FOLDER[DEFAULT_LOCALE]}/${gamePageSlug(page, DEFAULT_LOCALE)}`,
     ]),

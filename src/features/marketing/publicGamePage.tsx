@@ -86,6 +86,7 @@ export async function DailyCollectionPage({ folder, params }: { folder: string; 
   const copy = COLLECTION_COPY[locale];
   const structuredData = buildGamesHomeStructuredData({
     locale,
+    path: dailyCollectionPath(locale),
     title: copy.metaTitle,
     description: copy.metaDescription,
     games: homepageCards("daily").filter((g) => g.page).map((g) => ({ name: g.copy[locale].title, url: gamePagePath(g, locale) })),

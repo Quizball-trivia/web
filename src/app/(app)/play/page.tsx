@@ -1,5 +1,7 @@
 "use client";
 
+import { useAuthPromptStore } from "@/stores/authPrompt.store";
+import { useAuthStore } from "@/stores/auth.store";
 import { Suspense, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ModeSelectionScreen } from "@/features/play/ModeSelectionScreen";
@@ -30,6 +32,12 @@ const RANKED_TICKET_COST = 1;
 function PlayContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  // Public pages send guests here with ?signin=1: open the sign-in dialog at once.
+  const openAuthPrompt = useAuthPromptStore((state) => state.open);
+  const authStatus = useAuthStore((state) => state.status);
+  useEffect(() => {
+    if (searchParams.get("signin") === "1" && authStatus === "anonymous") openAuthPrompt();
+  }, [searchParams, authStatus, openAuthPrompt]);
   const { t } = useLocale();
   const startSession = useGameSessionStore((state) => state.startSession);
   const resetRealtime = useRealtimeMatchStore((state) => state.reset);
