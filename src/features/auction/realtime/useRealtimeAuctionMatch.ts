@@ -182,8 +182,6 @@ export function useRealtimeAuctionMatch({
   humanAvatarSeed,
   humanAvatarCustomization,
 }: UseRealtimeAuctionMatchParams): UseRealtimeAuctionMatchResult {
-  // Clue cards exist in en/ka/es only; Turkish players get English auction content.
-  const wireLocale = locale === 'tr' ? 'en' : locale;
   const socket = useRealtimeConnection({ enabled, selfUserId });
   const [isConnected, setIsConnected] = useState(() => socket.connected);
   const [realtimeState, setRealtimeState] = useState<AuctionRealtimeState>(
@@ -362,8 +360,8 @@ export function useRealtimeAuctionMatch({
   }, [publicState]);
 
   const emitAuctionSearchStart = useCallback(() => {
-    socket.emit('auction:search_start', { locale: wireLocale, formation });
-  }, [formation, wireLocale, socket]);
+    socket.emit('auction:search_start', { locale: locale, formation });
+  }, [formation, locale, socket]);
 
   // Re-attach a freshly (re)connected socket to a live match without going
   // through search. match_found stops re-running the search on reconnect (that
@@ -430,7 +428,7 @@ export function useRealtimeAuctionMatch({
       setSearchValue({
         phase: 'starting',
         searchId: null,
-        locale: wireLocale,
+        locale: locale,
         queuedUserCount: 1,
         seatsNeeded: 2,
         fallbackAt: null,
@@ -444,12 +442,12 @@ export function useRealtimeAuctionMatch({
     }
 
     setSearchValue(null);
-    socket.emit('auction:start_ai_match', { locale: wireLocale, formation });
+    socket.emit('auction:start_ai_match', { locale: locale, formation });
   }, [
     emitAuctionSearchStart,
     enabled,
     formation,
-    wireLocale,
+    locale,
     matchmakingMode,
     selfUserId,
     setPendingTurnActionValue,
@@ -1207,7 +1205,7 @@ export function useRealtimeAuctionMatch({
       }) ?? {
         phase: 'cancelled',
         searchId: null,
-        locale: wireLocale,
+        locale: locale,
         queuedUserCount: 0,
         seatsNeeded: 0,
         fallbackAt: null,
@@ -1222,7 +1220,7 @@ export function useRealtimeAuctionMatch({
     },
     pendingTurnAction,
   }), [
-    wireLocale,
+    locale,
     currentRoundId,
     matchId,
     pendingTurnAction,
