@@ -31,6 +31,7 @@ const LANGUAGES = [
   { code: 'en', name: 'ENGLISH', nativeName: 'English', countryCode: 'gb' },
   { code: 'ka', name: 'GEORGIAN', nativeName: 'ქართული', countryCode: 'ge' },
   { code: 'es', name: 'SPANISH', nativeName: 'Español', countryCode: 'es' },
+  { code: 'tr', name: 'TURKISH', nativeName: 'Türkçe', countryCode: 'tr' },
 ] as const satisfies readonly { code: Locale; name: string; nativeName: string; countryCode: string }[];
 
 function getAvatarCustomization(color: string | null | undefined): AvatarCustomization {

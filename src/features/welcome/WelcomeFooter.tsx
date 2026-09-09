@@ -14,7 +14,7 @@ interface WelcomeFooterProps {
 
 export function WelcomeFooter({ duelsCount, verifiedQuestionsCount }: WelcomeFooterProps) {
   const { t, locale } = useLocale();
-  const quizzesHref = locale === 'ka' ? campaignHubPath('en') : campaignHubPath(locale);
+  const quizzesHref = campaignHubPath(locale === 'es' ? 'es' : 'en');
 
   return (
     <footer className="py-10 font-poppins">

@@ -18,12 +18,14 @@ const BACK_LABEL: Record<Locale, string> = {
   en: "Back",
   ka: "უკან",
   es: "Volver",
+  tr: "Geri",
 };
 
 const HOME_LABEL: Record<Locale, string> = {
   en: "QuizBall home",
   ka: "QuizBall-ის მთავარი გვერდი",
   es: "Inicio de QuizBall",
+  tr: "QuizBall ana sayfası",
 };
 
 const MODE_COLORS = [
@@ -36,7 +38,7 @@ const MODE_COLORS = [
 export function AboutScreen({ copy, locale }: AboutScreenProps) {
   const credibility = ABOUT_CREDIBILITY_COPY[locale];
   const gameModes = ABOUT_GAME_MODES_COPY[locale];
-  const quizLocale = locale === "ka" ? "en" : locale;
+  const quizLocale = locale === "es" ? "es" : "en";
   const reportLocale = locale === "es" ? "es" : "en";
 
   return (

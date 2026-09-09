@@ -95,8 +95,10 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
 
   const isInitialMount = useRef(true);
   const deletionConfirmWord = t("settings.deleteAccountConfirmWord");
-  const normalizedDeleteConfirmation = deleteConfirmation.trim().toLocaleUpperCase("en-US");
-  const normalizedDeletionConfirmWord = deletionConfirmWord.trim().toLocaleUpperCase("en-US");
+  // Turkish dotted/dotless i: "sil" must uppercase to "SİL", which en-US rules never produce.
+  const confirmWordCasing = locale === "tr" ? "tr-TR" : "en-US";
+  const normalizedDeleteConfirmation = deleteConfirmation.trim().toLocaleUpperCase(confirmWordCasing);
+  const normalizedDeletionConfirmWord = deletionConfirmWord.trim().toLocaleUpperCase(confirmWordCasing);
   const canConfirmDeletion = normalizedDeleteConfirmation === normalizedDeletionConfirmWord && !isDeletingAccount;
   // Dismiss the delete-account dialog (the top-right X — replaces the old
   // bottom "Cancel" button so this modal matches the app-wide close pattern).
@@ -340,7 +342,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
       <div className="space-y-8">
          {/* Language & Experience */}
          <SettingsSection title={t("settings.languageAndExperience")} icon={<Globe className="size-5" />}>
-            <div className="grid grid-cols-3 gap-2 p-3" role="group" aria-label={t("settings.languageAndExperience")}>
+            <div className="grid grid-cols-2 gap-2 p-3 sm:grid-cols-4" role="group" aria-label={t("settings.languageAndExperience")}>
               {LOCALES.map((language) => {
                 const selected = locale === language.code;
                 return (

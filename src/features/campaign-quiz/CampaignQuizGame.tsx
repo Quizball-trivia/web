@@ -82,6 +82,23 @@ const UI_COPY = {
     score: 'Ver mi puntuación',
     next: 'Siguiente pregunta',
   },
+  tr: {
+    answerError: 'Bu cevabı kontrol edemedik. Lütfen tekrar dene.',
+    fullTime: 'Maç sonu',
+    youScored: 'Skorun',
+    playRanked: 'Dereceli oyna',
+    playAgain: 'Quizi tekrar oyna',
+    question: 'Soru',
+    of: '/',
+    correctCount: 'doğru',
+    correctAnswer: 'Doğru cevap',
+    incorrectAnswer: 'Cevabın yanlıştı',
+    checking: 'Cevabın kontrol ediliyor…',
+    correctFeedback: 'Doğru — iyi oynadın!',
+    incorrectFeedback: 'Tam değil; doğru cevap vurgulandı.',
+    score: 'Skorumu gör',
+    next: 'Sonraki soru',
+  },
 } as const satisfies Record<Locale, Record<string, string>>;
 
 /**
