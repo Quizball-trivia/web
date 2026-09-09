@@ -106,7 +106,7 @@ export const HUB_COPY: Record<HubKind, Record<Locale, HubCopy>> = {
     },
     tr: {
       metaTitle: "Günlük Futbol Görevleri — Her Gün Yeni Bir Quiz",
-      metaDescription: "Günde on futbol oyunu: Ben Kimim?, Money Drop, Doğru mu Yanlış mı, Countdown, Kariyer Yolu, Daha Yüksek mi Düşük mü, Sahtekâr, Futbol Mantığı, Zaman Çizelgesi ve Kartı Tahmin Et. Her gün yenilenir; jeton ve XP kazan.",
+      metaDescription: "Her gün yeni futbol oyunları: Ben Kimim?, Money Drop, Doğru mu Yanlış mı, Kariyer Yolu, Stat Sniper, Pas Zinciri, Eksik XI ve daha fazlası. Her gün yenilenir; jeton ve XP kazan.",
       title: "Günlük futbol görevleri",
       intro: "Her gün gece yarısı yeni bir set açılır. Hepsini oyna, serini koru ve her biri için jeton ve XP kazan.",
       ctaPlay: "Bugünün görevlerini oyna",
