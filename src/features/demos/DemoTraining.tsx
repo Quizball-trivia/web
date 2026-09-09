@@ -6,10 +6,11 @@ import { TrainingMatchScreen } from "@/features/training/TrainingMatchScreen";
 import { useLocale } from "@/contexts/LocaleContext";
 import type { CategorySummary } from "@/lib/domain";
 import { getDemoGameQuestions } from "./data/demoQuestions";
+import type { Locale } from "@/lib/i18n/messages";
 
 const TRAINING_QUESTION_COUNT = 12;
 
-function demoBanCategories(locale: "en" | "ka" | "es"): CategorySummary[] {
+function demoBanCategories(locale: Locale): CategorySummary[] {
   const name = (en: string, ka: string) => (locale === "ka" ? ka : en);
   return [
     { id: "demo-cat-1", name: name("World Cup", "მსოფლიო ჩემპიონატი"), slug: "world-cup", icon: "🏆" },

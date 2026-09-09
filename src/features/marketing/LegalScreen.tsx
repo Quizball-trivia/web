@@ -22,7 +22,7 @@ const ICONS: Record<LegalScreenProps["variant"], { icon: LucideIcon; tint: strin
   "about-legal": { icon: Info, tint: "bg-brand-cyan/15", text: "text-brand-cyan" },
 };
 
-const BACK_LABEL: Record<Locale, string> = { en: "Back", ka: "უკან", es: "Volver" };
+const BACK_LABEL: Record<Locale, string> = { en: "Back", ka: "უკან", es: "Volver", tr: "Geri" };
 
 export function LegalScreen({ copy, locale, variant }: LegalScreenProps) {
   const router = useRouter();

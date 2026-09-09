@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import en from "@/messages/en.json";
 import es from "@/messages/es.json";
 import ka from "@/messages/ka.json";
+import tr from "@/messages/tr.json";
 
 function flatten(obj: unknown, prefix = ""): string[] {
   if (typeof obj !== "object" || obj === null) return [];
@@ -32,6 +33,34 @@ describe("i18n message parity", () => {
     const enKeys = flatten(en).sort();
     const esKeys = flatten(es).sort();
     expect(esKeys).toEqual(enKeys);
+  });
+
+  it("en.json and tr.json have identical key sets", () => {
+    const enKeys = flatten(en).sort();
+    const trKeys = flatten(tr).sort();
+    expect(trKeys).toEqual(enKeys);
+  });
+
+  it("no tr.json value is empty", () => {
+    for (const key of flatten(tr)) {
+      const value = getByPath(tr, key);
+      expect(
+        typeof value === "string" && value.length > 0,
+        `tr.json missing or empty translation for ${key}`,
+      ).toBe(true);
+    }
+  });
+
+  it.each([
+    ["ka", ka],
+    ["es", es],
+    ["tr", tr],
+  ] as const)("%s.json keeps every {placeholder} of the English source", (_name, catalog) => {
+    const placeholders = (value: unknown) =>
+      (typeof value === "string" ? value.match(/\{\w+\}/g) ?? [] : []).slice().sort();
+    for (const key of flatten(en)) {
+      expect(placeholders(getByPath(catalog, key)), key).toEqual(placeholders(getByPath(en, key)));
+    }
   });
 
   it("no ka.json value is empty", () => {

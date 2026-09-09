@@ -8,9 +8,9 @@ import { colors } from "@/lib/colors";
 import type { Locale } from "@/lib/i18n/locale";
 import { GAME_PAGES, gamePagePath, type GamePageEntry } from "@/lib/seo/game-pages";
 
-const BACK_LABEL: Record<Locale, string> = { en: "Back", ka: "უკან", es: "Volver" };
-const HOW_TO_PLAY: Record<Locale, string> = { en: "How to play", ka: "როგორ ვითამაშო", es: "Cómo jugar" };
-const MORE_GAMES: Record<Locale, string> = { en: "More games", ka: "სხვა თამაშები", es: "Más juegos" };
+const BACK_LABEL: Record<Locale, string> = { en: "Back", ka: "უკან", es: "Volver", tr: "Geri" };
+const HOW_TO_PLAY: Record<Locale, string> = { en: "How to play", ka: "როგორ ვითამაშო", es: "Cómo jugar", tr: "Nasıl oynanır" };
+const MORE_GAMES: Record<Locale, string> = { en: "More games", ka: "სხვა თამაშები", es: "Más juegos", tr: "Daha fazla oyun" };
 
 /**
  * The public landing page for one game mode: server-rendered, indexable, and
