@@ -182,6 +182,8 @@ export function useRealtimeAuctionMatch({
   humanAvatarSeed,
   humanAvatarCustomization,
 }: UseRealtimeAuctionMatchParams): UseRealtimeAuctionMatchResult {
+  // Clue cards exist in en/ka/es only; Turkish players get English auction content.
+  const wireLocale = locale === 'tr' ? 'en' : locale;
   const socket = useRealtimeConnection({ enabled, selfUserId });
   const [isConnected, setIsConnected] = useState(() => socket.connected);
   const [realtimeState, setRealtimeState] = useState<AuctionRealtimeState>(
@@ -360,8 +362,8 @@ export function useRealtimeAuctionMatch({
   }, [publicState]);
 
   const emitAuctionSearchStart = useCallback(() => {
-    socket.emit('auction:search_start', { locale, formation });
-  }, [formation, locale, socket]);
+    socket.emit('auction:search_start', { locale: wireLocale, formation });
+  }, [formation, wireLocale, socket]);
 
   // Re-attach a freshly (re)connected socket to a live match without going
   // through search. match_found stops re-running the search on reconnect (that
@@ -428,7 +430,7 @@ export function useRealtimeAuctionMatch({
       setSearchValue({
         phase: 'starting',
         searchId: null,
-        locale,
+        locale: wireLocale,
         queuedUserCount: 1,
         seatsNeeded: 2,
         fallbackAt: null,
@@ -442,12 +444,12 @@ export function useRealtimeAuctionMatch({
     }
 
     setSearchValue(null);
-    socket.emit('auction:start_ai_match', { locale, formation });
+    socket.emit('auction:start_ai_match', { locale: wireLocale, formation });
   }, [
     emitAuctionSearchStart,
     enabled,
     formation,
-    locale,
+    wireLocale,
     matchmakingMode,
     selfUserId,
     setPendingTurnActionValue,
@@ -1205,7 +1207,7 @@ export function useRealtimeAuctionMatch({
       }) ?? {
         phase: 'cancelled',
         searchId: null,
-        locale,
+        locale: wireLocale,
         queuedUserCount: 0,
         seatsNeeded: 0,
         fallbackAt: null,
@@ -1220,7 +1222,7 @@ export function useRealtimeAuctionMatch({
     },
     pendingTurnAction,
   }), [
-    locale,
+    wireLocale,
     currentRoundId,
     matchId,
     pendingTurnAction,
@@ -1315,11 +1317,13 @@ const AUCTION_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
     en: "You're already in a match. Reconnecting…",
     ka: 'თქვენ უკვე მატჩში ხართ. ხელახლა დაკავშირება…',
     es: 'Ya estás en una partida. Reconectando…',
+    tr: 'Zaten bir maçtasın. Yeniden bağlanılıyor…',
   },
   auction_content_unavailable: {
     en: 'No auction content is available right now.',
     ka: 'ამჟამად აუქციონის კონტენტი მიუწვდომელია.',
     es: 'No hay contenido de subasta disponible ahora mismo.',
+    tr: 'Şu anda kullanılabilir açık artırma içeriği yok.',
   },
   // Turn-action rejections. These are the ones a player actually hits mid-match
   // (double-tap, losing a race to a rival, tapping after their turn passed), so
@@ -1328,36 +1332,43 @@ const AUCTION_ERROR_MESSAGES: Record<string, Record<Locale, string>> = {
     en: "That turn has already passed — your bid wasn't placed.",
     ka: 'სვლა უკვე დასრულდა — თქვენი ფსონი არ განთავსდა.',
     es: 'Ese turno ya terminó; tu puja no se realizó.',
+    tr: 'O tur çoktan geçti — teklifin verilmedi.',
   },
   auction_no_active_bidding: {
     en: 'Bidding is not open right now.',
     ka: 'ვაჭრობა ამჟამად დახურულია.',
     es: 'Las pujas no están abiertas ahora mismo.',
+    tr: 'Teklif verme şu anda açık değil.',
   },
   auction_seat_already_folded: {
     en: 'You already folded on this player.',
     ka: 'თქვენ უკვე გაჰყევით ამ მოთამაშეზე.',
     es: 'Ya te retiraste de la puja por este jugador.',
+    tr: 'Bu oyuncu için zaten pas geçtin.',
   },
   auction_high_bidder_self_bid: {
     en: 'You already hold the highest bid.',
     ka: 'თქვენ უკვე გაქვთ უმაღლესი ფსონი.',
     es: 'Ya tienes la puja más alta.',
+    tr: 'En yüksek teklif zaten sende.',
   },
   auction_seat_cannot_bid: {
     en: "You can't bid on this player.",
     ka: 'ამ მოთამაშეზე ვერ დადებთ ფსონს.',
     es: 'No puedes pujar por este jugador.',
+    tr: 'Bu oyuncuya teklif veremezsin.',
   },
   auction_invalid_bid: {
     en: "That bid isn't valid any more — the price moved.",
     ka: 'ფსონი აღარ არის მოქმედი — ფასი შეიცვალა.',
     es: 'Esa puja ya no es válida; el precio ha cambiado.',
+    tr: 'Bu teklif artık geçerli değil — fiyat değişti.',
   },
   auction_solo_pick_not_yours: {
     en: "That choice belongs to another player.",
     ka: 'ეს არჩევანი სხვა მოთამაშეს ეკუთვნის.',
     es: 'Esa elección pertenece a otro jugador.',
+    tr: 'Bu seçim başka bir oyuncuya ait.',
   },
 };
 
@@ -1365,6 +1376,7 @@ const AUCTION_ERROR_GENERIC = {
   en: 'Something went wrong. Please try again.',
   ka: 'რაღაც შეცდომა მოხდა. სცადეთ თავიდან.',
   es: 'Algo salió mal. Inténtalo de nuevo.',
+  tr: 'Bir şeyler ters gitti. Lütfen tekrar dene.',
 };
 
 function friendlyAuctionError(payload: AuctionErrorPayload, locale: Locale): string {

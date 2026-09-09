@@ -2,10 +2,10 @@
 
 import { useEffect, useRef } from 'react';
 import { trackCampaignQuizHubView } from './campaignQuiz.analytics';
-import type { Locale } from '@/lib/i18n/messages';
+import type { CampaignQuizLocale } from './campaignQuiz.routes';
 
 interface CampaignQuizHubPageViewProps {
-  locale: Locale;
+  locale: CampaignQuizLocale;
 }
 
 /** Adds campaign context that PostHog's generic pageview event does not have. */

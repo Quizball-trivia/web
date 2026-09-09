@@ -31,7 +31,8 @@ const OPTIONS_BY_CODE = Object.fromEntries(
 
 // Swap the leading /:locale segment of the current path with the target locale.
 function swapLocale(pathname: string, target: Locale): string {
-  const campaignPath = swapCampaignLocalePath(pathname, target);
+  // Campaign quizzes have no Turkish edition yet; a Turkish switch on one lands on the English quiz.
+  const campaignPath = swapCampaignLocalePath(pathname, target === 'tr' ? 'en' : target);
   if (campaignPath) return campaignPath;
   const segments = pathname.split("/").filter(Boolean);
   if (segments.length === 0 || !isLocale(segments[0])) {

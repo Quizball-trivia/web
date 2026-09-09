@@ -20,7 +20,7 @@ type L = Locale;
 const pick = (locale: L, en: string, ka: string) => (locale === "ka" ? ka : en);
 
 function moneyDropSession(locale: L): MoneyDropSession {
-  const contentLocale = locale === 'es' ? 'en' : locale;
+  const contentLocale = locale === 'ka' ? 'ka' : 'en';
   return {
     challengeType: "moneyDrop",
     title: pick(locale, "Money Drop", "ფულის ვარდნა"),

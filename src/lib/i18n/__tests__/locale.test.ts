@@ -15,5 +15,7 @@ describe('locale pathname helpers', () => {
     expect(explicitLocaleFromPathname('/ka/terms')).toBe('ka');
     expect(localeFromPathname('/es/quiz-de-futbol')).toBe('es');
     expect(explicitLocaleFromPathname('/es/quiz-de-futbol')).toBe('es');
+    expect(localeFromPathname('/tr/about')).toBe('tr');
+    expect(explicitLocaleFromPathname('/tr/about')).toBe('tr');
   });
 });

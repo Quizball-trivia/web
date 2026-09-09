@@ -378,7 +378,119 @@ const es: LocaleCopy = {
   },
 };
 
-const copy: Record<Locale, LocaleCopy> = { en, ka, es };
+const tr: LocaleCopy = {
+  about: {
+    metaTitle: "QuizBall Hakkında – Çok Oyunculu Futbol Bilgi Yarışması",
+    metaDescription:
+      "Taraftarların soruları yanıtladığı, topa sahip olduğu, gol attığı ve arkadaşlarıyla yarıştığı çok oyunculu futbol bilgi yarışması QuizBall'u tanı.",
+    title: "QuizBall Hakkında",
+    subtitle: "Çok oyunculu futbol bilgi yarışması — bir quizden çok bir maça yakın",
+    paragraphs: [
+      "QuizBall, doğru cevapların topu kazandırdığı, pozisyon yarattığı ve gol attırdığı çok oyunculu bir futbol bilgi yarışmasıdır. Canlı 1v1 maçlar oyna, arkadaşlarına meydan oku, günlük formatlar için geri dön ve sıralamada yüksel.",
+    ],
+  },
+  terms: {
+    metaTitle: "Hizmet Şartları – QuizBall",
+    metaDescription:
+      "QuizBall Hizmet Şartları'nı oku — futbol bilgi yarışmamızı oynamanın ve platformu kullanmanın kuralları.",
+    title: "Hizmet Şartları",
+    updated: "Son güncelleme: 30 Ocak 2026",
+    sections: [
+      {
+        title: "1. Şartların Kabulü",
+        body: 'QuizBall\'a ("Hizmet") erişerek veya onu kullanarak bu Hizmet Şartları\'na bağlı kalmayı kabul etmiş olursun. Şartların herhangi bir bölümünü kabul etmiyorsan Hizmet\'e erişemezsin.',
+      },
+      {
+        title: "2. Hizmetin Tanımı",
+        body: "QuizBall, gerçek zamanlı çok oyunculu bir futbol bilgi yarışmasıdır. Kullanıcıların quiz maçlarında yarışabileceği, puan kazanabileceği ve ilerlemesini takip edebileceği bir platform sunuyoruz. Hizmet'i herhangi bir zamanda önceden bildirmeksizin değiştirme veya sonlandırma hakkımız saklıdır.",
+      },
+      {
+        title: "3. Kullanıcı Hesapları",
+        body: "Hesap bilgilerinin gizliliğini korumaktan sen sorumlusun. Hesabın altında gerçekleşen tüm etkinliklerin sorumluluğunu kabul etmiş olursun. Topluluk kurallarımızı ihlal eden veya rekabetçi oyunda hile yapan hesapları kapatma hakkımız saklıdır.",
+      },
+      {
+        title: "4. Sanal Para Birimi ve Eşyalar",
+        body: 'Hizmet, sanal para birimi ("Jeton") veya eşyalar içerebilir. Bu eşyaların gerçek dünyada bir değeri yoktur ve nakde çevrilemez. Kullanıcı verilerinin veya sanal eşyaların kalıcılığını garanti etmiyoruz ve bundan sorumlu değiliz.',
+      },
+      {
+        title: "5. Yasaklanan Davranışlar",
+        body: "Hizmet'i yasa dışı hiçbir amaçla kullanmamayı ve aşağıdakileri yapmamayı kabul edersin:",
+        bullets: [
+          "Başka bir kişiyi taciz etmek, kötüye kullanmak veya ona zarar vermek.",
+          "Bot, hile veya otomasyon yazılımı kullanmak.",
+          "Hizmet'in düzgün çalışmasına müdahale etmek.",
+        ],
+      },
+      {
+        title: "6. Sorumluluğun Sınırlandırılması",
+        body: "QuizBall ve yöneticileri, çalışanları, ortakları, temsilcileri, tedarikçileri veya iştirakleri hiçbir durumda kâr, veri, kullanım, itibar veya diğer maddi olmayan kayıplar dahil ancak bunlarla sınırlı olmamak üzere dolaylı, arızi, özel, sonuç olarak ortaya çıkan veya cezai zararlardan sorumlu tutulamaz.",
+      },
+      {
+        title: "7. Şartlardaki Değişiklikler",
+        body: "Bu Şartlar'ı herhangi bir zamanda kendi takdirimize bağlı olarak değiştirme veya yenileme hakkımız saklıdır. Değişiklik önemliyse yeni şartlar yürürlüğe girmeden en az 30 gün önce bildirimde bulunmaya çalışacağız.",
+      },
+      {
+        title: "8. Bize Ulaş",
+        body: "Bu Şartlar hakkında soruların varsa support@quizball.com adresinden bize ulaşabilirsin.",
+      },
+    ],
+  },
+  privacy: {
+    metaTitle: "Gizlilik Politikası – QuizBall",
+    metaDescription:
+      "QuizBall Gizlilik Politikası'nı oku — futbol bilgi yarışmamızı oynarken verileri nasıl topladığımız, kullandığımız ve koruduğumuz.",
+    title: "Gizlilik Politikası",
+    updated: "Son güncelleme: 30 Ocak 2026",
+    sections: [
+      {
+        title: "1. Giriş",
+        body: 'QuizBall ("biz" veya "bizim"), quizball.com web sitesini ve mobil uygulamasını ("Hizmet") işletir. Bu sayfa, Hizmet\'i kullandığında kişisel verilerin toplanması, kullanılması ve paylaşılmasına ilişkin politikalarımız ve bu verilerle ilgili seçeneklerin hakkında seni bilgilendirir.',
+      },
+      {
+        title: "2. Bilgi Toplama ve Kullanma",
+        body: "Hizmet'i sana sunmak ve geliştirmek için çeşitli amaçlarla farklı türde bilgiler topluyoruz:",
+        bullets: [
+          "Kişisel Veriler: Hizmet'i kullanırken senden belirli kişisel tanımlayıcı bilgiler (ör. e-posta adresi, takma ad) vermeni isteyebiliriz.",
+          "Kullanım Verileri: Hizmet'e nasıl erişildiği ve nasıl kullanıldığı hakkında da bilgi toplayabiliriz (ör. oyun istatistikleri, cihaz bilgileri).",
+        ],
+      },
+      {
+        title: "3. Verilerin Kullanımı",
+        body: "QuizBall toplanan verileri çeşitli amaçlarla kullanır:",
+        bullets: [
+          "Hizmet'i sunmak ve sürdürmek",
+          "Hizmet'teki değişiklikler hakkında seni bilgilendirmek",
+          "Etkileşimli özelliklere katılmanı sağlamak",
+          "Müşteri hizmeti ve destek sağlamak",
+          "Hizmet'in kullanımını izlemek",
+        ],
+      },
+      {
+        title: "4. Veri Güvenliği",
+        body: "Verilerinin güvenliği bizim için önemlidir; ancak internet üzerinden hiçbir aktarım yönteminin veya elektronik depolama yönteminin %100 güvenli olmadığını unutma. Kişisel Verilerini korumak için ticari açıdan kabul edilebilir yöntemler kullanmaya çalışsak da mutlak güvenliğini garanti edemeyiz.",
+      },
+      {
+        title: "5. Üçüncü Taraf Hizmetleri",
+        body: 'Hizmet\'i kolaylaştırmak, bizim adımıza sunmak veya nasıl kullanıldığını analiz etmemize yardımcı olmak için üçüncü taraf şirketler ve kişilerle ("Hizmet Sağlayıcılar") çalışabiliriz. Bu üçüncü taraflar Kişisel Verilerine yalnızca bu görevleri bizim adımıza yerine getirmek için erişir ve bu verileri başka bir amaçla ifşa etmemek veya kullanmamakla yükümlüdür.',
+      },
+      {
+        title: "6. Verilerin Saklanması ve Silinmesi",
+        body: "QuizBall hesabının ve ilişkili kişisel verilerinin silinmesini, giriş yapıp Ayarlar'ı açarak, Hesap ve Güvenlik bölümüne gidip Hesabı Sil'i seçerek talep edebilirsin. Hesabın hemen devre dışı bırakılır ve silinmek üzere planlanır. Silme talepleriyle ilgili yardım için privacy@quizball.com adresinden de bize ulaşabilirsin.",
+      },
+    ],
+  },
+  landing: {
+    metaTitle: "QuizBall – Çok Oyunculu Futbol Bilgi Yarışması",
+    metaDescription:
+      "Arkadaşlarınla canlı futbol bilgi yarışması maçları oyna. Soruları yanıtla, topu kontrol et, gol at ve sıralamada yüksel.",
+    languageSwitch: "English",
+    aboutLink: "Hakkımızda",
+    termsLink: "Şartlar",
+    privacyLink: "Gizlilik",
+  },
+};
+
+const copy: Record<Locale, LocaleCopy> = { en, ka, es, tr };
 
 export function getCopy(locale: Locale): LocaleCopy {
   return copy[locale];

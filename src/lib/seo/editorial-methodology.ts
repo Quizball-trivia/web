@@ -198,6 +198,59 @@ const methodologyCopy: Record<Locale, EditorialMethodologyCopy> = {
     careerPathLink: "Quiz de Trayectoria del Jugador",
     clubBadgesLink: "Quiz de Escudos de Fútbol",
   },
+  tr: {
+    metaTitle: "QuizBall Editoryal Metodolojisi — Sorular Nasıl Kontrol Edilir",
+    metaDescription:
+      "QuizBall'un ücretsiz quizleri ve çok oyunculu oyunu için futbol bilgi sorularını nasıl araştırdığını, incelediğini, güncellediğini ve düzelttiğini gör.",
+    backLabel: "QuizBall Hakkında",
+    eyebrow: "Editoryal standartlar",
+    title: "QuizBall futbol quiz sorularını nasıl kontrol eder",
+    intro:
+      "İyi bir futbol bilgi yarışması belirsiz ifadeleri değil bilgiyi sınamalı. Soruları açık, güncel ve adil yapmak için kullandığımız süreç bu.",
+    updated: "Son güncelleme: 30 Ağustos 2026",
+    sections: [
+      {
+        title: "1. Doğrulanabilir bir futbol gerçeğiyle başla",
+        body:
+          "Her soru bir oyuncu, kulüp, turnuva, maç veya rekor hakkında tanımlanabilir bir gerçekle başlar. Mümkün olduğunda kaynaksız listeler yerine resmi turnuva ve kulüp kaynaklarını, yerleşik istatistik veri tabanlarını ve güvenilir haberciliği tercih ederiz.",
+      },
+      {
+        title: "2. Cevabı ve alternatifleri kontrol et",
+        body:
+          "Doğru cevabı, ifadeyi ve her alternatifi birlikte inceleriz. Bir çeldirici soruyu ilginç kılacak kadar makul olmalı, ancak savunulabilir ikinci bir cevap yaratmamalıdır.",
+      },
+      {
+        title: "3. Gerçekler değişebiliyorsa tarih veya sezon ekle",
+        body:
+          "Transferler, rekorlar, sıralamalar ve güncel kadrolar değişir. Değişken gerçeklerle ilgili sorular, cevabın belirsizliğe düşmemesi için ilgili sezonu, turnuvayı veya tarihi içermelidir.",
+      },
+      {
+        title: "4. Zorluğu hile kullanmadan belirle",
+        body:
+          "Zorluk kafa karıştırıcı dil bilgisinden veya gizli varsayımlardan değil, gereken futbol bilgisinden gelmelidir. Erişilebilir soruları daha derin gerçeklerle harmanlarız ve yeterince oyuncu cevapladığında performans verilerini inceleriz.",
+      },
+      {
+        title: "5. Herkese açık quizleri dereceli havuzdan ayrı tut",
+        body:
+          "Arama ziyaretçileri için bir quiz yayınlamak, o soruları otomatik olarak dereceli maçlara eklemez. Herkese açık quiz sayfaları ile rekabetçi soru havuzunun ayrı kullanılabilirlik kontrolleri vardır.",
+      },
+      {
+        title: "6. Önemli hataları düzelt ve gerçek güncellemeleri kaydet",
+        body:
+          "Önemli bir hata bulduğumuzda ilgili soruyu düzeltir veya kaldırırız. Site haritası tarihleri dahil sayfa güncelleme sinyalleri her istekte otomatik olarak değil, yalnızca anlamlı bir içerik güncellemesinden sonra değişmelidir.",
+      },
+    ],
+    correctionHeading: "Yeniden bakılması gereken bir soru mu buldun?",
+    correctionBody:
+      "Quiz adını, soruyu ve düzeltmeyi desteklediğini düşündüğün kaynağı gönder. Temel gerçeği ve ifadeyi inceleyeceğiz.",
+    correctionLink: "support@quizball.io adresine yaz",
+    exploreHeading: "Yöntemi iş başında gör",
+    exploreBody:
+      "QuizBall'un en faydalı iki futbol bilgisi formatıyla başla ya da tüm ücretsiz quizlere göz at.",
+    hubLink: "Tüm futbol quizlerine göz at",
+    careerPathLink: "Futbol Kariyer Yolu Quizi",
+    clubBadgesLink: "Futbol Kulüp Armaları Quizi",
+  },
 };
 
 export const ABOUT_CREDIBILITY_COPY: Record<Locale, AboutCredibilityCopy> = {
@@ -245,6 +298,21 @@ export const ABOUT_CREDIBILITY_COPY: Record<Locale, AboutCredibilityCopy> = {
     hubLink: "Todos los quizzes de fútbol",
     careerPathLink: "Quiz de Trayectoria",
     clubBadgesLink: "Quiz de Escudos",
+  },
+  tr: {
+    eyebrow: "Güvenilir futbol bilgi yarışması için tasarlandı",
+    title: "Açık sorular, kontrol edilmiş gerçekler ve şeffaf güncellemeler",
+    body:
+      "QuizBall soruların nasıl kaynaklandığını, incelendiğini ve düzeltildiğini belgeler. Herkese açık arama quizleri de dereceli maç havuzundan ayrı olarak kontrol edilir.",
+    methodologyLink: "Editoryal metodolojimizi oku",
+    reportLink: "2026 Futbol Bilgi Endeksi'ni oku",
+    pressLink: "Basın ve alıntı kaynakları",
+    exploreHeading: "QuizBall'u keşfet",
+    exploreBody:
+      "Tüm ücretsiz futbol quizlerine göz at ya da taraftarların en çok ilgi gösterdiği iki format olan Kariyer Yolu ve Kulüp Armaları ile başla.",
+    hubLink: "Tüm futbol quizleri",
+    careerPathLink: "Kariyer Yolu Quizi",
+    clubBadgesLink: "Kulüp Armaları Quizi",
   },
 };
 

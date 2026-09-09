@@ -18,6 +18,11 @@ function isSpanishLanguageTag(value: string | null | undefined): boolean {
   return normalized === 'es' || normalized?.startsWith('es-') === true;
 }
 
+function isTurkishLanguageTag(value: string | null | undefined): boolean {
+  const normalized = value?.trim().toLowerCase().replace('_', '-');
+  return normalized === 'tr' || normalized?.startsWith('tr-') === true;
+}
+
 export function inferLocaleFromSignals({
   languages,
   language,
@@ -44,6 +49,10 @@ export function inferLocaleFromSignals({
 
   if (browserLanguages.some(isSpanishLanguageTag)) {
     return 'es';
+  }
+
+  if (browserLanguages.some(isTurkishLanguageTag)) {
+    return 'tr';
   }
 
   return 'en';

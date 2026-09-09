@@ -329,6 +329,98 @@ export const FOOTBALL_GRID_COPY = {
     selfDisconnectedBody: 'Reconectando… vuelve antes de que acabe el tiempo o perderás el partido.',
     reconnectingStrip: 'Reconectando…',
   },
+  tr: {
+    title: 'Futbol Tic Tac Toe',
+    opponentThinking: 'Rakip düşünüyor…',
+    searching: 'Rakibin aranıyor',
+    searchingBody: 'Bir oyuncu aranıyor…',
+    cancel: 'Aramayı iptal et',
+    cancelPick: 'İptal',
+    matching: 'Tahta hazırlanıyor…',
+    ready: 'Rakip bulundu',
+    loading: 'Maç yükleniyor',
+    getReady: 'Hazır ol',
+    yourTurn: 'Senin hamlen',
+    theirTurn: 'Rakibin hamlesi',
+    pickCell: 'Boş bir kare seç, sonra iki ipucuna da uyan bir futbolcu söyle.',
+    answerPlaceholder: 'Bir futbolcu yaz…',
+    submit: 'Gönder',
+    submitShort: 'Gönder',
+    correct: 'Kare alındı!',
+    wrong: 'Bu cevap iki ipucuna da uymuyor.',
+    ambiguous: 'Daha net ol — tam adını ekle.',
+    alreadyUsed: 'Bu futbolcu zaten kullanıldı.',
+    paused: 'Maç duraklatıldı',
+    pausedBody: 'Bağlantının düzelmesi bekleniyor. Hamle süren korunuyor.',
+    opponentDisconnected: 'Rakibin bağlantısı koptu',
+    opponentDisconnectedBody: 'Süre dolmadan geri dönmezse maçı sen kazanırsın.',
+    selfDisconnected: 'Bağlantı koptu',
+    selfDisconnectedBody: 'Yeniden bağlanılıyor… süre dolmadan geri dön, yoksa maç hükmen kaybedilir.',
+    reconnectingStrip: 'Yeniden bağlanılıyor…',
+    reconnectWindow: 'Yeniden bağlanmak için kalan süre',
+    interrupted: 'Maç geçici olarak kesildi',
+    interruptedBody: 'Oyun hizmetini geri getirirken maç güvenli şekilde duraklatıldı.',
+    report: 'Eksik cevabı bildir',
+    reported: 'Bildirildi — teşekkürler',
+    quit: 'Maçtan ayrıl',
+    resultWin: 'Izgara senin',
+    resultLoss: 'Rakip aldı',
+    resultDraw: 'Izgara kilitlendi',
+    noteOpponentLeft: 'Rakip maçtan ayrıldı',
+    noteYouLeft: 'Maçtan ayrıldın',
+    noteOpponentDisconnected: 'Rakibin bağlantısı koptu',
+    noteYouDisconnected: 'Bağlantı koptu',
+    noteOpponentIdle: 'Rakip üst üste 3 hamleyi kaçırdı — seri hükmen bitti',
+    noteYouIdle: 'Üst üste 3 hamleyi kaçırdın — seri hükmen kaybedildi',
+    noteOpponentNoShow: 'Rakip hiç katılmadı',
+    noteYouNoShow: 'Zamanında katılmadın',
+    noteBothDisconnected: 'İki oyuncunun da bağlantısı koptu',
+    noteNoShow: 'Maç zamanında başlamadı',
+    turnPillYou: 'Sıra sende',
+    turnPillOpponent: 'Sıra rakipte',
+    skip: 'Geç',
+    requestDraw: 'Beraberlik teklif et',
+    drawRequested: 'Beraberlik teklif edildi…',
+    drawLocked: 'Reddedildi — birkaç hamle sonra tekrar dene',
+    drawOfferTitle: 'Rakip beraberlik teklif ediyor',
+    drawOfferBody: 'Bu oyunu berabere bitirip sonraki tahtaya geçmek için kabul et.',
+    acceptDraw: 'Kabul et',
+    declineDraw: 'Reddet',
+    drawDeclinedNote: 'Beraberlik reddedildi',
+    gameOf: 'Oyun {n} / {m}',
+    seriesLead: 'Öndesin',
+    seriesTrail: 'Rakip önde',
+    seriesLevel: 'Eşitlik',
+    nextGameSoon: 'Sonraki tahta geliyor…',
+    gameWon: '{n}. oyunu aldın',
+    gameLost: '{n}. oyunu rakip aldı',
+    gameDrawn: '{n}. oyun berabere',
+    noteBoardDead: 'İki oyuncu için de sıra kalmadı',
+    noteDrawAgreed: 'Beraberlik kabul edildi',
+    seriesWin: 'Seriyi aldın',
+    seriesLoss: 'Seriyi rakip aldı',
+    seriesDraw: 'Seri berabere',
+    tapCellHint: 'Bir hücreye dokun, sonra ikisine de uyan bir futbolcu söyle',
+    rematch: 'Rövanş',
+    waitingRematch: 'Rakip bekleniyor…',
+    rematchAccepted: 'Rövanş kabul edildi',
+    declineRematch: 'Rövanşı reddet',
+    newOpponent: 'Yeni rakip bul',
+    backToPlay: 'Ana sayfaya dön',
+    you: 'Sen',
+    opponent: 'Rakip',
+    claimed: 'Alındı',
+    sampleAnswers: 'Diğer geçerli cevaplar',
+    sampleAnswersBody: 'Her kesişim için farklı örnekler',
+    xp: 'Kazanılan XP',
+    coins: 'Kazanılan jeton',
+    signIn: 'Online oynamak için giriş yap',
+    signInBody: 'Futbol Tic Tac Toe canlı bir 1v1 modudur. Başka bir oyuncuyla ya da akıllı bir rakiple eşleşmek için giriş yap.',
+    goSignIn: 'Girişe git',
+    unavailable: 'Futbol Tic Tac Toe geçici olarak kullanılamıyor',
+    unavailableBody: 'Şu anda eşleştirmeyi başlatamadık. Hesabın ve ilerlemen güvende.',
+    retry: 'Tekrar dene',
+  },
 } as const;
 
 type FootballGridCopy = (typeof FOOTBALL_GRID_COPY)[keyof typeof FOOTBALL_GRID_COPY];
@@ -908,7 +1000,7 @@ export function FootballGridTurnPanel({
   const [highlightIndex, setHighlightIndex] = useState(-1);
   const [suggestionsDismissed, setSuggestionsDismissed] = useState(false);
   const suggestions = useMemo(() => (
-    pending || suggestionsDismissed ? [] : searchGridPlayers(roster, answer, locale === 'es' ? 'en' : locale, 6)
+    pending || suggestionsDismissed ? [] : searchGridPlayers(roster, answer, locale === 'ka' ? 'ka' : 'en', 6)
   ), [roster, answer, locale, pending, suggestionsDismissed]);
 
   // Picking a suggestion FILLS the box; the player still presses submit. The
@@ -1426,7 +1518,7 @@ export function FootballGridFlowScreen() {
   const searchParams = useSearchParams();
   const { locale } = useLocale();
   const copy = FOOTBALL_GRID_COPY[locale];
-  const contentLocale = locale === 'es' ? 'en' : locale;
+  const contentLocale = locale === 'ka' ? 'ka' : 'en';
   const { player } = usePlayer();
   const authUser = useAuthStore((current) => current.user);
   const authStatus = useAuthStore((current) => current.status);
