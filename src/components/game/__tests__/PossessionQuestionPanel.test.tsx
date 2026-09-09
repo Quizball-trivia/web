@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PossessionQuestionPanel } from '../PossessionQuestionPanel';
 
@@ -7,6 +7,44 @@ afterEach(() => {
 });
 
 describe('PossessionQuestionPanel', () => {
+  it('only enables the guided tutorial answer', () => {
+    const onAnswer = vi.fn();
+    render(
+      <PossessionQuestionPanel
+        phase="playing"
+        isPenaltyPhase={false}
+        isShotPhase={false}
+        isLastAttackPhase={false}
+        question={{
+          id: 'guided-q',
+          prompt: 'Choose Brazil',
+          options: ['Germany', 'Brazil', 'Argentina', 'Italy'],
+          correctIndex: 1,
+        }}
+        qIndex={0}
+        totalQuestions={12}
+        timeRemaining={null}
+        showOptions
+        selectedAnswer={null}
+        answerStates={['disabled', 'default', 'disabled', 'disabled']}
+        opponentAnswer={null}
+        guidedAnswerIndex={1}
+        onAnswer={onAnswer}
+      />,
+    );
+
+    const buttons = screen.getAllByRole('button');
+    expect(buttons[0]).toBeDisabled();
+    expect(buttons[1]).toBeEnabled();
+    expect(buttons[2]).toBeDisabled();
+    expect(buttons[3]).toBeDisabled();
+
+    fireEvent.click(buttons[0]);
+    fireEvent.click(buttons[1]);
+    expect(onAnswer).toHaveBeenCalledTimes(1);
+    expect(onAnswer).toHaveBeenCalledWith(1);
+  });
+
   it('keeps the opponent pick marker visible on the revealed correct answer', () => {
     render(
       <PossessionQuestionPanel

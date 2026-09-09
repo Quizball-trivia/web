@@ -109,7 +109,8 @@ export function useGameStageState() {
     progression: UserProgression;
   } | null>(null);
 
-  const isMultiplayer = config?.mode !== "solo" && !!config;
+  // Training is a fully local scripted match — never open the realtime socket for it.
+  const isMultiplayer = !!config && config.mode !== "solo" && config.mode !== "training";
   const selfUserId = connectedSelfUserId ?? authUser?.id ?? player.id;
   const realtimeSelfUserId = authUser?.id ?? null;
   const socket = useRealtimeMatchSocket({

@@ -2,13 +2,27 @@
 
 import { useEffect, useRef } from "react";
 import { motion } from "motion/react";
+import { ResultsHero } from "@/features/game/results/ResultsHero";
+import { MatchStatsDropdown } from "@/features/game/results/ResultsStatsPanel";
 import { usePlayer } from "@/contexts/PlayerContext";
+import { usePlayerAvatar } from "@/hooks/usePlayerAvatar";
+import { useLocale } from "@/contexts/LocaleContext";
 import { useTraining } from "../TrainingMatchProvider";
-import { BOT_NAME } from "../constants";
+import { BOT_AVATAR, BOT_NAME } from "../constants";
 
+const TOTAL_QUESTIONS = 12;
+
+/**
+ * Ranked results screen, training edition: same wrapper/hero/stats as the real
+ * RealtimeResultsScreen's friendly variant (tiers hidden, no friend button, no
+ * RP panel) but fully local — and only a Main Menu action, like ranked's
+ * secondary button.
+ */
 export function TrainingResultsStage() {
   const { match, tooltips, onSkip, resultsCopy } = useTraining();
   const { player } = usePlayer();
+  const { avatarUrl: playerResolvedAvatar, avatarCustomization } = usePlayerAvatar();
+  const { t } = useLocale();
   const { state } = match;
   const tooltipFired = useRef(false);
 
@@ -19,67 +33,106 @@ export function TrainingResultsStage() {
     }
   }, [tooltips]);
 
-  const playerWon = state.playerGoals > state.opponentGoals;
-  const isDraw = state.playerGoals === state.opponentGoals;
+  // Ranked folds penalty goals into the displayed score only when the match
+  // actually went to a deciding shootout (i.e. regulation ended level).
+  const regulationTied = state.playerGoals === state.opponentGoals;
+  const hadPenalties = state.penaltyPlayerGoals !== null && state.penaltyOpponentGoals !== null;
+  const decidedByPenalties = hadPenalties && regulationTied;
+  const playerScore = state.playerGoals + (decidedByPenalties ? state.penaltyPlayerGoals ?? 0 : 0);
+  const opponentScore = state.opponentGoals + (decidedByPenalties ? state.penaltyOpponentGoals ?? 0 : 0);
+  const playerWon = playerScore > opponentScore;
+  const isDraw = playerScore === opponentScore;
+  // Ranked hardcodes English literals here; training localizes since its whole
+  // point is teaching in the player's language.
+  const resultHeading = playerWon
+    ? t("training.resultVictory")
+    : isDraw
+      ? t("training.resultDraw")
+      : t("training.resultDefeat");
+
+  const playerQuestionResults = Array.from(
+    { length: TOTAL_QUESTIONS },
+    (_, i) => state.playerQuestionResults[i] ?? null,
+  );
+  const opponentQuestionResults = Array.from(
+    { length: TOTAL_QUESTIONS },
+    (_, i) => state.opponentQuestionResults[i] ?? null,
+  );
+  const playerCorrect = playerQuestionResults.filter((r) => r === "correct").length;
+  const opponentCorrect = opponentQuestionResults.filter((r) => r === "correct").length;
+  const accuracy = Math.round((playerCorrect / TOTAL_QUESTIONS) * 100);
 
   return (
-    <div className="fixed inset-0 z-50 bg-surface-deep flex flex-col items-center justify-center font-fun select-none px-4">
-      {/* Result badge */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-surface-page-alt p-3 md:p-6">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(circle at top center, rgba(28,176,246,0.08), transparent 32%), radial-gradient(circle at bottom left, rgba(88,204,2,0.06), transparent 28%)",
+        }}
+      />
       <motion.div
-        initial={{ scale: 0, rotate: -15 }}
-        animate={{ scale: 1, rotate: 0 }}
-        transition={{ type: "spring", stiffness: 300, damping: 18 }}
-        className={`px-8 py-3 rounded-2xl border-b-4 mb-6 ${
-          playerWon
-            ? "bg-brand-green-light border-brand-green"
-            : isDraw
-              ? "bg-brand-orange border-brand-orange-deep"
-              : "bg-brand-red-soft border-brand-red-soft-deep"
-        }`}
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        className="relative z-10 w-full max-w-[1280px] space-y-4 font-poppins md:space-y-6"
       >
-        <span className="text-2xl font-black text-white uppercase tracking-wider">
-          {playerWon ? "YOU WIN!" : isDraw ? "DRAW" : "DEFEAT"}
-        </span>
-      </motion.div>
+        <ResultsHero
+          playerWon={playerWon}
+          isDraw={isDraw}
+          isCancelledNoContest={false}
+          resultHeading={resultHeading}
+          playerUsername={player.username}
+          playerAvatar={playerResolvedAvatar}
+          playerAvatarCustomization={avatarCustomization ?? null}
+          opponentUsername={BOT_NAME}
+          opponentAvatar={BOT_AVATAR}
+          opponentAvatarCustomization={null}
+          opponentId="coachbot"
+          playerScore={playerScore}
+          opponentScore={opponentScore}
+          totalGamesLabel={t("results.matchComplete")}
+          preMatchRankedProfile={null}
+          playerTier={null}
+          playerDisplayRp={null}
+          opponentTier={null}
+          opponentDisplayRp={null}
+        />
 
-      {/* Score */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3 }}
-        className="flex items-center gap-6 mb-8"
-      >
-        <div className="text-center">
-          <p className="text-sm font-bold text-brand-slate uppercase">{player.username}</p>
-          <p className="text-5xl font-black text-white">{state.playerGoals}</p>
+        {resultsCopy?.message && (
+          <p className="mx-auto max-w-[498px] text-center text-sm font-medium text-white/80">
+            {resultsCopy.message}
+          </p>
+        )}
+
+        <div className="mx-auto flex w-full max-w-[498px] flex-col items-stretch gap-3 pt-2 md:gap-4">
+          <MatchStatsDropdown
+            accuracy={accuracy}
+            playerCorrect={playerCorrect}
+            opponentCorrect={opponentCorrect}
+            totalQuestions={TOTAL_QUESTIONS}
+            playerScore={playerScore}
+            opponentScore={opponentScore}
+            xpEarned={0}
+            level={null}
+            xpToNextLevel={null}
+            playerQuestionResults={playerQuestionResults}
+            opponentQuestionResults={opponentQuestionResults}
+            t={t}
+          />
+
+          <button
+            onClick={onSkip}
+            className="flex h-[64px] w-full items-center justify-center rounded-[20px] border-[3px] border-brand-green bg-transparent font-poppins font-semibold uppercase text-white text-[1.5rem] transition-colors hover:bg-brand-green/10 md:h-[80px] md:text-[28px]"
+          >
+            {resultsCopy?.cta ?? t("results.mainMenu")}
+          </button>
         </div>
-        <span className="text-2xl font-black text-brand-slate">-</span>
-        <div className="text-center">
-          <p className="text-sm font-bold text-brand-slate uppercase">{BOT_NAME}</p>
-          <p className="text-5xl font-black text-white">{state.opponentGoals}</p>
-        </div>
       </motion.div>
-
-      {/* Message */}
-      <motion.p
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
-        className="text-sm font-semibold text-brand-slate-light text-center max-w-xs mb-10 leading-relaxed"
-      >
-        {resultsCopy?.message ?? "Great job! You now know how possession matches work. Time to compete for real!"}
-      </motion.p>
-
-      {/* Play Ranked button */}
-      <motion.button
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.7 }}
-        onClick={onSkip}
-        className="w-full max-w-xs py-4 rounded-2xl bg-brand-green-light border-b-[5px] border-brand-green text-base font-black text-white uppercase tracking-wider active:translate-y-[2px] active:border-b-[3px] transition-all"
-      >
-        {resultsCopy?.cta ?? "PLAY RANKED"}
-      </motion.button>
     </div>
   );
 }

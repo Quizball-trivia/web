@@ -347,6 +347,7 @@ export function LivePutInOrderPanel({
   myRound,
   opponentRound,
   soloMode = false,
+  guidedCorrectOrderIds,
 }: {
   matchId: string;
   qIndex: number;
@@ -361,6 +362,8 @@ export function LivePutInOrderPanel({
   opponentRound: MatchRoundResultPlayer | null;
   /** Single-player mode (promo capture): hide all opponent-facing UI. */
   soloMode?: boolean;
+  /** Tutorial-only: keep submit disabled until this exact order is arranged. */
+  guidedCorrectOrderIds?: readonly string[];
 }) {
   const { t } = useLocale();
   const [userOrder, setUserOrder] = useState<ResolvedPutInOrderQuestionItem[]>(() => [...question.items]);
@@ -371,6 +374,10 @@ export function LivePutInOrderPanel({
   const totalItems = question.items.length;
   const submitted = isSubmitting || Boolean(answerAck?.questionKind === 'putInOrder' && answerAck?.qIndex === qIndex);
   const inputLocked = !showOptions || roundResolved || submitted;
+  const guidedOrderReady = !guidedCorrectOrderIds || (
+    guidedCorrectOrderIds.length === userOrder.length
+    && guidedCorrectOrderIds.every((id, index) => userOrder[index]?.id === id)
+  );
 
   useEffect(() => {
     submissionStartedRef.current = false;
@@ -533,6 +540,7 @@ export function LivePutInOrderPanel({
 
   const handleSubmit = useCallback((options?: { force?: boolean }) => {
     if (!options?.force && inputLocked) return;
+    if (!guidedOrderReady) return;
     if (roundResolved || submitted || submissionStartedRef.current) return;
     submissionStartedRef.current = true;
     setIsSubmitting(true);
@@ -542,7 +550,7 @@ export function LivePutInOrderPanel({
       orderedItemIds: userOrder.map((item) => item.id),
       timeMs: Math.max(0, Math.round((questionDurationSeconds - timeRemaining) * 1000)),
     });
-  }, [inputLocked, matchId, qIndex, questionDurationSeconds, roundResolved, submitted, timeRemaining, userOrder]);
+  }, [guidedOrderReady, inputLocked, matchId, qIndex, questionDurationSeconds, roundResolved, submitted, timeRemaining, userOrder]);
 
   // Auto-submit when timer expires so a no-click run still sends the player's current order to the server.
   useEffect(() => {
@@ -639,7 +647,7 @@ export function LivePutInOrderPanel({
         <button
           type="button"
           onClick={() => handleSubmit()}
-          disabled={inputLocked}
+          disabled={inputLocked || !guidedOrderReady}
           className="w-full rounded-[10px] bg-brand-green py-3 text-sm font-fun font-black uppercase tracking-wide text-white transition-transform hover:bg-brand-green-deep active:translate-y-[2px] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {submitted ? t('possession.submittedOrder') : t('possession.submitOrder')}

@@ -48,6 +48,8 @@ export function LiveSpecialQuestionPanel(props: LiveSpecialQuestionPanelProps) {
     questionDurationSeconds,
     hideTimer = false,
     soloMode = false,
+    guidedPutInOrderIds,
+    guidedCluesAnswers,
     answerAck,
     roundResolved,
     roundResult,
@@ -104,6 +106,7 @@ export function LiveSpecialQuestionPanel(props: LiveSpecialQuestionPanelProps) {
         myRound={myRound}
         opponentRound={opponentRound}
         soloMode={soloMode}
+        guidedCorrectOrderIds={guidedPutInOrderIds}
       />
     );
   } else {
@@ -123,6 +126,7 @@ export function LiveSpecialQuestionPanel(props: LiveSpecialQuestionPanelProps) {
         opponentAnswered={opponentAnswered}
         cluesGuessAck={cluesGuessAck}
         soloMode={soloMode}
+        guidedAcceptedAnswers={guidedCluesAnswers}
       />
     );
   }

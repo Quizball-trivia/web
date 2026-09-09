@@ -5,6 +5,7 @@ import { HalftimeScreen } from "@/features/possession/components/HalftimeScreen"
 import { usePlayerAvatar } from "@/hooks/usePlayerAvatar";
 import { useTraining } from "../TrainingMatchProvider";
 import { BOT_AVATAR, BOT_NAME } from "../constants";
+import { TRAINING_FLOW_SCRIPT } from "../data/trainingScript";
 
 interface HalftimeDraftCategory {
   id: string;
@@ -18,10 +19,13 @@ interface HalftimeDraftCategory {
 export function TrainingHalftimeStage() {
   const { match, tooltips, banCategories } = useTraining();
   const { state } = match;
+  const { startSecondHalf } = match;
   const { avatarUrl: playerResolvedAvatar, avatarCustomization, username: playerName } = usePlayerAvatar();
   const [myBan, setMyBan] = useState<string | null>(null);
   const [opponentBan, setOpponentBan] = useState<string | null>(null);
   const tooltipFired = useRef(false);
+  const playerTargetId = banCategories[TRAINING_FLOW_SCRIPT.halftime.playerCategoryIndex]?.id ?? null;
+  const opponentTargetId = banCategories[TRAINING_FLOW_SCRIPT.halftime.opponentCategoryIndex]?.id ?? null;
 
   useEffect(() => {
     if (!tooltipFired.current) {
@@ -30,26 +34,23 @@ export function TrainingHalftimeStage() {
     }
   }, [tooltips]);
 
-  // Bot bans after delay
+  // Bot bans after delay — waits for the halftime tooltip to be dismissed
   useEffect(() => {
-    const timer = setTimeout(() => {
-      // Bot picks a random category from the available ones
-      const available = banCategories.filter((c) => c.id !== myBan);
-      const pick = available[Math.floor(Math.random() * available.length)];
-      if (pick) setOpponentBan(pick.id);
-    }, 3000);
+    if (tooltips.isPaused) return;
+    if (!myBan || !opponentTargetId) return;
+    const timer = setTimeout(() => setOpponentBan(opponentTargetId), 1400);
     return () => clearTimeout(timer);
-  }, [banCategories, myBan]);
+  }, [myBan, opponentTargetId, tooltips.isPaused]);
 
   // After both bans, advance to second half
   useEffect(() => {
-    if (myBan && opponentBan) {
+    if (myBan && opponentBan && !tooltips.isPaused) {
       const timer = setTimeout(() => {
-        match.startSecondHalf();
+        startSecondHalf();
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [myBan, opponentBan, match]);
+  }, [myBan, opponentBan, tooltips.isPaused, startSecondHalf]);
 
   const categoryOptions: HalftimeDraftCategory[] = banCategories.map((c) => ({
     id: c.id,
@@ -74,8 +75,9 @@ export function TrainingHalftimeStage() {
       firstBanSeat={1}
       myBan={myBan}
       opponentBan={opponentBan}
+      guidedCategoryId={myBan ? null : playerTargetId}
       onBanCategory={(categoryId) => {
-        if (!myBan) setMyBan(categoryId);
+        if (!myBan && categoryId === playerTargetId) setMyBan(categoryId);
       }}
     />
   );

@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ModeConfirmModal } from '@/components/shared/ModeConfirmModal';
 import { FriendPlayModal } from '@/components/shared/FriendPlayModal';
+import { TrainingOfferModal } from '@/features/training/components/TrainingOfferModal';
 import { AuctionModeModal } from '@/features/auction/components/AuctionModeModal';
 import { FootballGridModeModal } from '@/features/football-grid/components/FootballGridModeModal';
 import { HomeRecentMatches } from '@/components/shared/HomeRecentMatches';
@@ -240,6 +241,14 @@ interface ModeSelectionScreenProps {
   /** If provided, called when ranked card is clicked BEFORE the confirm modal opens.
    *  Return `true` to prevent the confirm modal from showing (i.e. the caller handles it). */
   onRankedIntercept?: () => boolean;
+  /** New-player training gate: when `shouldOffer` is true, tapping the ranked card
+   *  first offers a guided training match. Skip marks it seen and continues into
+   *  the normal ranked confirm flow. */
+  trainingOffer?: {
+    shouldOffer: boolean;
+    onPlayTraining: () => void;
+    onSkip: () => void;
+  };
   ticketsRemaining?: number;
   matchStatsSummary?: MatchStatsSummary | null;
   rankedProfile: RankedProfileResponse | null;
@@ -257,6 +266,7 @@ export function ModeSelectionScreen({
   playHomeNotice,
   initialMode,
   onRankedIntercept,
+  trainingOffer,
   ticketsRemaining = 0,
   matchStatsSummary = null,
   rankedProfile,
@@ -290,6 +300,31 @@ export function ModeSelectionScreen({
     if (!shouldPlayEntranceAnimation()) return;
     queueMicrotask(() => setPlayEntranceAnimation(true));
   }, []);
+  const [trainingOfferOpen, setTrainingOfferOpen] = useState(false);
+
+  // Deep-linked flows (`/play?mode=ranked`) open the ranked confirm modal
+  // directly via `initialMode`, bypassing the card click. If the new-player
+  // training offer is due, swap the confirm modal for the offer. Render-phase
+  // state adjustment (React's recommended pattern) — the condition clears
+  // itself immediately, and skipping flips `shouldOffer` off before the
+  // confirm modal is restored.
+  if (trainingOffer?.shouldOffer && selectedMode === 'ranked') {
+    setSelectedMode(null);
+    setTrainingOfferOpen(true);
+  }
+
+  // Ranked entry point shared by the hero card's click and keyboard handlers:
+  // brand-new players get the training offer first; everyone else goes straight
+  // to the confirm modal.
+  const openRankedFlow = () => {
+    if (isGuest) { openAuthPrompt(); return; }
+    if (onRankedIntercept?.()) return;
+    if (trainingOffer?.shouldOffer) {
+      setTrainingOfferOpen(true);
+      return;
+    }
+    setSelectedMode('ranked');
+  };
   const isPlacementInProgress = rankedProfile ? rankedProfile.placementStatus !== 'placed' : false;
   const placementPlayed = rankedProfile?.placementPlayed ?? 0;
   const placementRequired = Math.max(1, rankedProfile?.placementRequired ?? 3);
@@ -365,17 +400,11 @@ export function ModeSelectionScreen({
 
       {/* ─── 1. Ranked Hero Card ─── */}
       <div
-        onClick={() => {
-          if (isGuest) { openAuthPrompt(); return; }
-          if (onRankedIntercept?.()) return;
-          setSelectedMode('ranked');
-        }}
+        onClick={openRankedFlow}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            if (isGuest) { openAuthPrompt(); return; }
-            if (onRankedIntercept?.()) return;
-            setSelectedMode('ranked');
+            openRankedFlow();
           }
         }}
         role="button"
@@ -884,6 +913,21 @@ export function ModeSelectionScreen({
         isOpen={selectedMode === 'friendly'}
         onOpenChange={(open) => !open && setSelectedMode(null)}
       />
+      {trainingOffer && (
+        <TrainingOfferModal
+          isOpen={trainingOfferOpen}
+          onOpenChange={setTrainingOfferOpen}
+          onPlayTraining={() => {
+            setTrainingOfferOpen(false);
+            trainingOffer.onPlayTraining();
+          }}
+          onSkip={() => {
+            setTrainingOfferOpen(false);
+            trainingOffer.onSkip();
+            setSelectedMode('ranked');
+          }}
+        />
+      )}
       <AuctionModeModal
         isOpen={auctionModalOpen}
         onOpenChange={setAuctionModalOpen}

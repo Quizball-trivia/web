@@ -48,6 +48,10 @@ export interface LiveSpecialQuestionPanelProps {
   hideTimer?: boolean;
   /** Single-player modes (promo capture): hide every opponent-facing element. */
   soloMode?: boolean;
+  /** Tutorial gate: submit is enabled only when this exact order is arranged. */
+  guidedPutInOrderIds?: readonly string[];
+  /** Tutorial gate: only these normalized clue answers can be submitted. */
+  guidedCluesAnswers?: readonly string[];
   roundResolved: boolean;
   answerAck: MatchAnswerAckPayload | null;
   roundResult: MatchRoundResultPayload | null;
