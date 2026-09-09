@@ -40,7 +40,7 @@ export default async function EditorialMethodologyPage({
   if (!isLocale(locale)) notFound();
 
   const copy = getEditorialMethodologyCopy(locale);
-  const quizLocale = locale === "ka" ? "en" : locale;
+  const quizLocale = locale === "es" ? "es" : "en";
   const headerList = await headers();
   const nonce = headerList.get("x-nonce") ?? undefined;
   const structuredData = buildEditorialPageStructuredData({
