@@ -22,6 +22,8 @@ import { cn } from "@/lib/utils";
 import type { MessageKey } from "@/lib/i18n/messages";
 
 import { useActiveEventMode } from "@/lib/hooks/useActiveEventMode";
+import { useAuthStore } from "@/stores/auth.store";
+import { useAuthPromptStore } from "@/stores/authPrompt.store";
 import { LeaderboardTable } from "./components/LeaderboardTable";
 import { LeaderboardPodium } from "./components/LeaderboardPodium";
 import { LeaderboardSelect, type LeaderboardSelectOption } from "./components/LeaderboardSelect";
@@ -61,6 +63,12 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
   const { t } = useLocale();
   const { isEventMode } = useActiveEventMode();
   const [activeTab, setActiveTab] = useState<LeaderboardType>("global");
+  // Signed-out visitors browse the global boards; the country board and
+  // player profiles need an account, so those open the sign-in dialog.
+  const isGuest = useAuthStore((state) => state.status) !== "authenticated";
+  const openAuthPrompt = useAuthPromptStore((state) => state.open);
+  // A guest always reads the global board, even if the tab state still says country (sign-out mid-visit).
+  const effectiveTab: LeaderboardType = isGuest ? "global" : activeTab;
   const [mode, setMode] = useState<LeaderboardMode>("ranked");
   const [seasonId, setSeasonId] = useState<string | null>(null);
 
@@ -76,13 +84,13 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
 
   // Only the visible mode fetches; switching tabs kicks off the other board.
   const rankedBoard = useLeaderboard(
-    activeTab,
+    effectiveTab,
     currentPlayerId,
     seasonId ?? undefined,
     isRanked,
   );
-  const auctionBoard = useAuctionLeaderboard(activeTab, currentPlayerId, isAuction);
-  const ticTacToeBoard = useTicTacToeLeaderboard(activeTab, currentPlayerId, isTicTacToe);
+  const auctionBoard = useAuctionLeaderboard(effectiveTab, currentPlayerId, isAuction);
+  const ticTacToeBoard = useTicTacToeLeaderboard(effectiveTab, currentPlayerId, isTicTacToe);
   const activeBoard = isAuction ? auctionBoard : isTicTacToe ? ticTacToeBoard : rankedBoard;
   const { data: entries, isLoading, isError } = activeBoard;
 
@@ -131,11 +139,12 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
   );
 
   const regionOptions = useMemo<LeaderboardSelectOption<LeaderboardType>[]>(
-    () => TABS.map((tab) => ({ value: tab.value, label: t(tab.labelKey) })),
-    [t],
+    () => TABS.filter((tab) => !isGuest || tab.value === "global").map((tab) => ({ value: tab.value, label: t(tab.labelKey) })),
+    [t, isGuest],
   );
 
   const handleEntryClick = (userId: string) => {
+    if (isGuest) { openAuthPrompt(); return; }
     // Prefer the unique nickname for a shareable URL; ids keep working.
     // profileHandle guards the null-nickname 'Player' fallback rows (review).
     const nickname = entries?.find((e) => e.id === userId)?.username;
@@ -269,7 +278,7 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
                 ariaLabel={t("leaderboard.regionSelectAriaLabel")}
                 icon={Globe}
                 options={regionOptions}
-                value={activeTab}
+                value={effectiveTab}
                 onChange={setActiveTab}
                 accentHex={accentHex}
               />

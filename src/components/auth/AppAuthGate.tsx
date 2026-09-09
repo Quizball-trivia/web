@@ -9,22 +9,11 @@ import { isOnboardingComplete } from "@/lib/auth/onboarding";
 import { consumePostAuthRedirect, rememberPostAuthRedirect } from "@/lib/auth/postAuthRedirect";
 import { useLocale } from "@/contexts/LocaleContext";
 import { stopBgm } from "@/lib/sounds/gameSounds";
+import { isGuestAllowedPath } from "@/lib/routes/publicHub";
 
 type AppAuthGateProps = {
   children: React.ReactNode;
 };
-
-/** Routes a signed-out visitor may browse in guest mode: demo play is open,
- *  and every auth-gated action opens the sign-in dialog instead of redirecting
- *  to the landing. First step toward retiring the landing page entirely. */
-const GUEST_ALLOWED_ROUTES = ["/", "/play"];
-
-function isGuestAllowedPath(pathname: string | null): boolean {
-  if (!pathname) return false;
-  return GUEST_ALLOWED_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`),
-  );
-}
 
 export default function AppAuthGate({ children }: AppAuthGateProps) {
   const { t } = useLocale();

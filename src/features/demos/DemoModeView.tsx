@@ -67,7 +67,7 @@ export function DemoModeView({ slug, backHref = "/demos", onExit, onEvent }: {
       return (
         <>
           <DemoBackButton href={backHref} onClick={onExit} />
-          <DemoTraining />
+          <DemoTraining backHref={backHref} onExit={onExit} />
         </>
       );
     case "auction":

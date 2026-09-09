@@ -19,9 +19,10 @@ function demoBanCategories(locale: "en" | "ka" | "es"): CategorySummary[] {
   ];
 }
 
-export function DemoTraining() {
+export function DemoTraining({ backHref = "/demos", onExit }: { backHref?: string; onExit?: () => void } = {}) {
   const router = useRouter();
   const { locale } = useLocale();
+  const embedded = Boolean(onExit);
 
   const questions = useMemo(
     () => getDemoGameQuestions(locale).slice(0, TRAINING_QUESTION_COUNT),
@@ -30,21 +31,22 @@ export function DemoTraining() {
   const banCategories = useMemo(() => demoBanCategories(locale), [locale]);
 
   const handleComplete = useCallback(() => {
-    router.push("/demos");
-  }, [router]);
+    if (onExit) onExit();
+    else router.push(backHref);
+  }, [onExit, backHref, router]);
 
   const resultsCopy = useMemo(
     () =>
       locale === "ka"
         ? {
             message: "ასე გამოიყურება ჩვენი მთავარი 1v1 რეჟიმი — რეიტინგულ თამაშში მოწინააღმდეგე ნამდვილი მოთამაშეა.",
-            cta: "დემოებზე დაბრუნება",
+            cta: embedded ? "დახურვა" : "დემოებზე დაბრუნება",
           }
         : {
             message: "That's our flagship 1v1 mode — in ranked play the opponent is a real player.",
-            cta: "Back to demos",
+            cta: embedded ? "Done" : "Back to demos",
           },
-    [locale],
+    [locale, embedded],
   );
 
   return (

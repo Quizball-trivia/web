@@ -5,8 +5,7 @@ import type { Locale } from "@/lib/i18n/locale";
 import { GAME_PAGE_DETAILS } from "@/lib/seo/game-page-details";
 import { HOME_COPY } from "@/lib/seo/home-copy";
 import { engineEmitsEvents, publicGamePath, relatedPublishedGames, type PublicGame } from "@/lib/seo/public-games";
-import { PublicLayout } from "./PublicLayout";
-import { PublicCardGrid } from "./HomeScreen";
+import { PublicCardGrid, PublicPageFrame } from "./public/PublicCards";
 import { PublicGameEmbed } from "./public/PublicGameEmbed";
 import { SignInLink } from "./public/PublicLinks";
 
@@ -25,7 +24,7 @@ export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: L
   const path = publicGamePath(game, locale);
   const related = relatedPublishedGames(game);
   return (
-    <PublicLayout locale={locale}>
+    <PublicPageFrame>
       <nav aria-label="Breadcrumb" className="text-xs font-semibold uppercase tracking-wide text-white/55">
         <ol className="flex items-center gap-1">
           <li><Link href={`/${locale}`} className="hover:text-white">{home.nav.games}</Link></li>
@@ -83,6 +82,6 @@ export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: L
         </div>
         <div className="mt-4"><PublicCardGrid games={related} locale={locale} surface="public_game" /></div>
       </section>
-    </PublicLayout>
+    </PublicPageFrame>
   );
 }

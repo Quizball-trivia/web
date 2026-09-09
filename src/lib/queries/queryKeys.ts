@@ -31,17 +31,17 @@ export const queryKeys = {
   },
   leaderboard: {
     all: ["leaderboard"] as const,
-    list: (type: LeaderboardType, season?: string) =>
-      [...queryKeys.leaderboard.all, "list", type, season ?? "current"] as const,
+    list: (type: LeaderboardType, season?: string, viewer?: string) =>
+      [...queryKeys.leaderboard.all, "list", type, season ?? "current", viewer ?? "guest"] as const,
     user: (userId: string, type?: LeaderboardType, season?: string) =>
       [...queryKeys.leaderboard.all, "user", userId, type ?? "global", season ?? "current"] as const,
     seasons: () => [...queryKeys.leaderboard.all, "seasons"] as const,
-    auctionList: (type: LeaderboardType) =>
-      [...queryKeys.leaderboard.all, "auction", "list", type] as const,
+    auctionList: (type: LeaderboardType, viewer?: string) =>
+      [...queryKeys.leaderboard.all, "auction", "list", type, viewer ?? "guest"] as const,
     auctionUser: (userId: string, type: LeaderboardType) =>
       [...queryKeys.leaderboard.all, "auction", "user", userId, type] as const,
-    ticTacToeList: (type: LeaderboardType) =>
-      [...queryKeys.leaderboard.all, "tic-tac-toe", "list", type] as const,
+    ticTacToeList: (type: LeaderboardType, viewer?: string) =>
+      [...queryKeys.leaderboard.all, "tic-tac-toe", "list", type, viewer ?? "guest"] as const,
     ticTacToeUser: (userId: string, type: LeaderboardType) =>
       [...queryKeys.leaderboard.all, "tic-tac-toe", "user", userId, type] as const,
   },

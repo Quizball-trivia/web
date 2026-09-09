@@ -14,6 +14,6 @@ export const getFeaturedCategoriesQuery = () => ({
   },
 });
 
-export function useFeaturedCategories() {
-  return useQuery(getFeaturedCategoriesQuery());
+export function useFeaturedCategories(options?: { enabled?: boolean }) {
+  return useQuery({ ...getFeaturedCategoriesQuery(), ...options });
 }

@@ -5,7 +5,7 @@ import { trackEvent } from "@/lib/posthog";
  * completion → registration. Mode ids are the manifest's stable ids, never
  * translated display text, so locales roll up into one report.
  */
-export type PublicSurface = "public_home" | "public_game" | "daily_collection";
+export type PublicSurface = "hub" | "public_home" | "public_game" | "daily_collection";
 type Access = "guest" | "member";
 
 export const trackGameCardClick = (p: { modeId: string; surface: PublicSurface; group: string; destination: string }) =>
@@ -22,9 +22,5 @@ export const trackSignupPromptView = (p: { modeId?: string; placement: string; d
   trackEvent("signup_prompt_view", { mode_id: p.modeId ?? null, placement: p.placement, intended_destination: p.destination });
 export const trackGamesSignupClick = (p: { modeId?: string; page: string; placement: string; destination: string }) =>
   trackEvent("games_signup_click", { mode_id: p.modeId ?? null, originating_page: p.page, prompt_placement: p.placement, intended_destination: p.destination });
-export const trackRankedEntryClick = (p: { access: Access; placement: string }) =>
-  trackEvent("ranked_entry_click", { access_type: p.access, source_placement: p.placement });
-export const trackWeekendLeagueEntryClick = (p: { access: Access; placement: string }) =>
-  trackEvent("weekend_league_entry_click", { access_type: p.access, source_placement: p.placement });
 export const trackPublicGameError = (p: { modeId: string; category: string; stage: string }) =>
   trackEvent("public_game_error", { mode_id: p.modeId, error_category: p.category, stage: p.stage });

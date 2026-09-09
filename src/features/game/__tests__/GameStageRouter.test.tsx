@@ -168,6 +168,7 @@ vi.mock('@/stores/rankedMatchmaking.store', () => ({
 
 vi.mock('@/lib/realtime/useRealtimeConnection', () => ({
   useRealtimeConnection: () => socket,
+  useRealtimeMatchSocket: () => socket,
 }));
 
 vi.mock('@/lib/realtime/socket-client', () => ({

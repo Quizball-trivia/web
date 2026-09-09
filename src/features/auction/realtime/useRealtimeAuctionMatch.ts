@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useRealtimeConnection } from '@/lib/realtime/useRealtimeConnection';
+import { useRealtimeMatchSocket } from '@/lib/realtime/useRealtimeConnection';
 import { reconnectSocket } from '@/lib/realtime/socket-client';
 import { logger } from '@/utils/logger';
 import type { AuctionActions, AuctionPendingTurnAction } from '../hooks/useAuctionGame';
@@ -182,7 +182,7 @@ export function useRealtimeAuctionMatch({
   humanAvatarSeed,
   humanAvatarCustomization,
 }: UseRealtimeAuctionMatchParams): UseRealtimeAuctionMatchResult {
-  const socket = useRealtimeConnection({ enabled, selfUserId });
+  const socket = useRealtimeMatchSocket({ enabled, selfUserId });
   const [isConnected, setIsConnected] = useState(() => socket.connected);
   const [realtimeState, setRealtimeState] = useState<AuctionRealtimeState>(
     EMPTY_AUCTION_REALTIME_STATE,

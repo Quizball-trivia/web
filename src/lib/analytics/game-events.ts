@@ -562,7 +562,7 @@ export function trackModeSelected(mode: string) {
 export function trackPlayCardClicked(props: {
   slug: string;
   group: 'daily' | 'coins' | 'other';
-  destination: 'route' | 'demo' | 'modal' | 'auth';
+  destination: 'route' | 'demo' | 'modal' | 'auth' | 'public_page';
 }) {
   trackEvent('play_card_clicked', { slug: props.slug, group: props.group, destination: props.destination });
 }

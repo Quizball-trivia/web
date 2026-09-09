@@ -3,15 +3,14 @@ import { ChevronRight } from "lucide-react";
 import type { Locale } from "@/lib/i18n/locale";
 import { COLLECTION_COPY, HOME_COPY } from "@/lib/seo/home-copy";
 import { homepageCards } from "@/lib/seo/public-games";
-import { PublicLayout } from "./PublicLayout";
-import { PublicCardGrid } from "./HomeScreen";
+import { PublicCardGrid, PublicPageFrame } from "./public/PublicCards";
 
 /** Narrow collection page for the daily challenges; links back to the homepage hub. */
 export function DailyCollectionScreen({ locale }: { locale: Locale }) {
   const copy = COLLECTION_COPY[locale];
   const home = HOME_COPY[locale];
   return (
-    <PublicLayout locale={locale}>
+    <PublicPageFrame>
       <nav aria-label="Breadcrumb" className="text-xs font-semibold uppercase tracking-wide text-white/55">
         <ol className="flex items-center gap-1">
           <li><Link href={`/${locale}`} className="hover:text-white">{home.nav.games}</Link></li>
@@ -27,6 +26,6 @@ export function DailyCollectionScreen({ locale }: { locale: Locale }) {
       <section className="mt-8">
         <PublicCardGrid games={homepageCards("daily")} locale={locale} surface="daily_collection" />
       </section>
-    </PublicLayout>
+    </PublicPageFrame>
   );
 }

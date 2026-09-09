@@ -117,20 +117,27 @@ export function LocaleProvider({ children, initialLocale, geoCountry }: LocalePr
     storage.set(STORAGE_KEYS.LOCALE, locale);
   }, [locale, pathLocale]);
 
+  // Leaving a localized route (/ka → /leaderboard, or the member redirect
+  // /ka → /play): an explicit browser choice wins, then the account language,
+  // otherwise the language the visitor was just reading in — never a silent
+  // reset to English.
   useEffect(() => {
     if (!hasHydratedRef.current || pathLocale || localeSourceRef.current !== 'path') return;
 
-    const { locale: storedLocale } = readStoredLocale();
-    if (storedLocale === locale) {
+    const { locale: storedLocale, hasStoredLocale } = readStoredLocale();
+    const preferredLocale = isSupportedLocale(preferredLanguage) ? preferredLanguage : null;
+    const nextLocale = hasStoredLocale ? storedLocale : preferredLocale ?? locale;
+    if (!hasStoredLocale && !preferredLocale) storage.set(STORAGE_KEYS.LOCALE, locale);
+    if (nextLocale === locale) {
       localeSourceRef.current = 'app';
       return;
     }
 
     queueMicrotask(() => {
       localeSourceRef.current = 'app';
-      setLocaleState(storedLocale);
+      setLocaleState(nextLocale);
     });
-  }, [locale, pathLocale]);
+  }, [locale, pathLocale, preferredLanguage]);
 
   useEffect(() => {
     if (!hasHydratedRef.current) return;

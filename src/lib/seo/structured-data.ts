@@ -201,6 +201,15 @@ export function buildResearchReportStructuredData({
 }
 
 /** Locale homepage = Football Games hub: a CollectionPage whose ItemList is the released guest catalogue. */
+/** FAQPage for the hub's questions; answers are the same text the page renders. */
+export function buildFaqStructuredData(faq: Array<{ q: string; a: string }>) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faq.map((item) => ({ "@type": "Question", name: item.q, acceptedAnswer: { "@type": "Answer", text: item.a } })),
+  };
+}
+
 export function buildGamesHomeStructuredData({ locale, path, title, description, games }: {
   locale: Locale;
   /** The page's own path (homepage `/${locale}` or the daily collection). */

@@ -7,7 +7,7 @@ import { useLocale } from '@/contexts/LocaleContext';
 import { SocialLinks } from '@/components/shared/SocialLinks';
 import { ContactModal } from '@/components/shared/ContactModal';
 import { campaignHubPath } from '@/features/campaign-quiz/campaignQuiz.routes';
-import { GAME_PAGES, gamePagePath } from '@/lib/seo/game-pages';
+import { PUBLIC_GAMES, cardHref } from '@/lib/seo/public-games';
 import type { Locale } from '@/lib/i18n/locale';
 
 const SECTION: Record<Locale, { games: string; daily: string; company: string; methodology: string; press: string; index: string }> = {
@@ -27,13 +27,16 @@ export function SiteFooter({ locale: forcedLocale }: { locale?: Locale } = {}) {
   const locale = (forcedLocale ?? contextLocale) as Locale;
   const labels = SECTION[locale] ?? SECTION.en;
   const quizzesHref = locale === 'ka' ? campaignHubPath('en') : campaignHubPath(locale);
-  const games = GAME_PAGES.filter((page) => page.section === 'games');
-  const dailies = GAME_PAGES.filter((page) => page.section === 'daily');
+  // Crawlable links only where a page exists: published game pages and the quiz
+  // pages that own Career Path / Who Am I. Account-only modes have no public page.
+  const linkable = PUBLIC_GAMES.filter((game) => game.page || game.destination.kind === 'quiz');
+  const games = linkable.filter((page) => page.section === 'games');
+  const dailies = linkable.filter((page) => page.section === 'daily');
   const linkClass = 'block text-[13px] font-medium text-white/50 transition-colors hover:text-brand-cyan';
 
   const groups: Array<{ title: string; items: Array<{ href: string; label: string }> }> = [
-    { title: labels.games, items: games.map((page) => ({ href: gamePagePath(page, locale), label: page.copy[locale].title })) },
-    { title: labels.daily, items: dailies.map((page) => ({ href: gamePagePath(page, locale), label: page.copy[locale].title })) },
+    { title: labels.games, items: games.map((page) => ({ href: cardHref(page, locale), label: page.copy[locale].title })) },
+    { title: labels.daily, items: dailies.map((page) => ({ href: cardHref(page, locale), label: page.copy[locale].title })) },
     {
       title: labels.company,
       items: [

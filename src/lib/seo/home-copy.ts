@@ -6,8 +6,8 @@ export interface HomeCopy {
   h1: string;
   intro: string;
   accessLine: string;
-  nav: { games: string; quizzes: string; signIn: string; openPlay: string };
-  sections: { play: string; playHint: string; competitive: string; daily: string; dailyHint: string; dailyAll: string; more: string; moreHint: string; whyAccount: string; quizzes: string; faq: string };
+  nav: { games: string; quizzes: string; signIn: string };
+  sections: { competitive: string; daily: string; dailyHint: string; dailyAll: string; whyAccount: string; quizzes: string; faq: string };
   cards: { practice: string; accountRequired: string; guest: string; playLabel: string; rankedTitle: string; rankedText: string; rankedCta: string; wlTitle: string; wlText: string; wlCta: string; quizPage: string };
   whyAccount: string[];
   about: { title: string; text: string };
@@ -22,8 +22,8 @@ export const HOME_COPY: Record<Locale, HomeCopy> = {
     h1: "Free Football Games and Multiplayer Online Trivia",
     intro: "Play football trivia games in your browser. Try a practice round of Football Tic Tac Toe or Football Auction without creating an account. Friendly matches, Ranked play and Weekend League need a Quizball account. Ready to compete? Sign up for Ranked play and Weekend League, where eligible players can compete for real voucher prizes under the competition rules.",
     accessLine: "Guest games need no account. Ranked play and Weekend League require sign-in.",
-    nav: { games: "Football Games", quizzes: "Football Quizzes", signIn: "Sign in", openPlay: "Open play" },
-    sections: { play: "Play a football game", playHint: "Start as a guest. No email, no sign-up.", competitive: "Compete for prizes", daily: "Daily challenges", dailyHint: "A new set every day. Practice here, play the real one in the app.", dailyAll: "All daily challenges", more: "More games", moreHint: "Coin modes use a practice balance as a guest; real coins need an account.", whyAccount: "Why create a Quizball account", quizzes: "Football quizzes", faq: "Questions" },
+    nav: { games: "Football Games", quizzes: "Football Quizzes", signIn: "Sign in" },
+    sections: { competitive: "Compete for prizes", daily: "Daily challenges", dailyHint: "A new set every day. Practice here, play the real one in the app.", dailyAll: "All daily challenges", whyAccount: "Why create a Quizball account", quizzes: "Football quizzes", faq: "Questions" },
     cards: { practice: "Practice round", accountRequired: "Account required", guest: "Play as guest", playLabel: "Play", rankedTitle: "Ranked Play", rankedText: "Test your football knowledge against other players and build your rank. Account required.", rankedCta: "Sign up for Ranked", wlTitle: "Weekend League", wlText: "Enter Quizball's weekend competition and compete for the available voucher prizes. Account required; eligibility and event rules apply.", wlCta: "View Weekend League details", quizPage: "Open the quiz" },
     whyAccount: [
       "Guest games let you try Quizball straight away. Create an account when you want to compete in Ranked play and Weekend League.",
@@ -45,8 +45,8 @@ export const HOME_COPY: Record<Locale, HomeCopy> = {
     h1: "Juegos de Fútbol Gratis y Trivia Online",
     intro: "Juega a juegos de trivia de fútbol en tu navegador. Prueba una ronda de práctica de Tiki Taka Toe o de la subasta sin crear cuenta. Los amistosos, el modo clasificatorio y la Weekend League requieren una cuenta de Quizball. ¿Listo para competir? Regístrate para el modo clasificatorio y la Weekend League, donde los jugadores elegibles compiten por premios en vales según las reglas de cada competición.",
     accessLine: "Los juegos de invitado no necesitan cuenta. El modo clasificatorio y la Weekend League requieren iniciar sesión.",
-    nav: { games: "Juegos de fútbol", quizzes: "Quizzes de fútbol", signIn: "Iniciar sesión", openPlay: "Abrir la app" },
-    sections: { play: "Juega a un juego de fútbol", playHint: "Empieza como invitado. Sin correo ni registro.", competitive: "Compite por premios", daily: "Retos diarios", dailyHint: "Un set nuevo cada día. Practica aquí, juega el real en la app.", dailyAll: "Todos los retos diarios", more: "Más juegos", moreHint: "Los modos con monedas usan un saldo de práctica como invitado; las monedas reales requieren cuenta.", whyAccount: "Por qué crear una cuenta de Quizball", quizzes: "Quizzes de fútbol", faq: "Preguntas" },
+    nav: { games: "Juegos de fútbol", quizzes: "Quizzes de fútbol", signIn: "Iniciar sesión" },
+    sections: { competitive: "Compite por premios", daily: "Retos diarios", dailyHint: "Un set nuevo cada día. Practica aquí, juega el real en la app.", dailyAll: "Todos los retos diarios", whyAccount: "Por qué crear una cuenta de Quizball", quizzes: "Quizzes de fútbol", faq: "Preguntas" },
     cards: { practice: "Ronda de práctica", accountRequired: "Requiere cuenta", guest: "Jugar como invitado", playLabel: "Jugar", rankedTitle: "Modo clasificatorio", rankedText: "Pon a prueba tu fútbol contra otros jugadores y construye tu rango. Requiere cuenta.", rankedCta: "Regístrate para clasificatorio", wlTitle: "Weekend League", wlText: "Entra en la competición de fin de semana de Quizball y compite por los vales disponibles. Requiere cuenta; se aplican reglas de elegibilidad y del evento.", wlCta: "Ver detalles de la Weekend League", quizPage: "Abrir el quiz" },
     whyAccount: [
       "Los juegos de invitado te permiten probar Quizball al instante. Crea una cuenta cuando quieras competir en clasificatorio y en la Weekend League.",
@@ -68,8 +68,8 @@ export const HOME_COPY: Record<Locale, HomeCopy> = {
     h1: "უფასო საფეხბურთო თამაშები და ქვიზები",
     intro: "ითამაშე საფეხბურთო ტრივია ბრაუზერში. სცადე იქს-ნულის ან აუქციონის სავარჯიშო რაუნდი ანგარიშის გარეშე. მეგობრულ მატჩებს, რეიტინგულ თამაშსა და შაბათ-კვირის ლიგას Quizball-ის ანგარიში სჭირდება. მზად ხარ შეჯიბრისთვის? დარეგისტრირდი რეიტინგული თამაშისა და შაბათ-კვირის ლიგისთვის, სადაც უფლებამოსილი მოთამაშეები კონკურსის წესებით ვაუჩერებზე იბრძვიან.",
     accessLine: "სტუმრის თამაშებს ანგარიში არ სჭირდება. რეიტინგულ თამაშსა და შაბათ-კვირის ლიგას შესვლა სჭირდება.",
-    nav: { games: "საფეხბურთო თამაშები", quizzes: "საფეხბურთო ქვიზები", signIn: "შესვლა", openPlay: "აპლიკაციის გახსნა" },
-    sections: { play: "ითამაშე საფეხბურთო თამაში", playHint: "დაიწყე სტუმრად. არც ელფოსტა, არც რეგისტრაცია.", competitive: "იბრძოლე პრიზებისთვის", daily: "ყოველდღიური გამოწვევები", dailyHint: "ყოველდღე ახალი ნაკრები. ივარჯიშე აქ, ნამდვილი აპლიკაციაში ითამაშე.", dailyAll: "ყველა ყოველდღიური გამოწვევა", more: "სხვა თამაშები", moreHint: "ქოინების რეჟიმები სტუმრისთვის სავარჯიშო ბალანსს იყენებს; ნამდვილ ქოინებს ანგარიში სჭირდება.", whyAccount: "რატომ შექმნა Quizball-ის ანგარიში", quizzes: "საფეხბურთო ქვიზები", faq: "კითხვები" },
+    nav: { games: "საფეხბურთო თამაშები", quizzes: "საფეხბურთო ქვიზები", signIn: "შესვლა" },
+    sections: { competitive: "იბრძოლე პრიზებისთვის", daily: "ყოველდღიური გამოწვევები", dailyHint: "ყოველდღე ახალი ნაკრები. ივარჯიშე აქ, ნამდვილი აპლიკაციაში ითამაშე.", dailyAll: "ყველა ყოველდღიური გამოწვევა", whyAccount: "რატომ შექმნა Quizball-ის ანგარიში", quizzes: "საფეხბურთო ქვიზები", faq: "კითხვები" },
     cards: { practice: "სავარჯიშო რაუნდი", accountRequired: "ანგარიშია საჭირო", guest: "ითამაშე სტუმრად", playLabel: "თამაში", rankedTitle: "რეიტინგული თამაში", rankedText: "შეამოწმე ცოდნა სხვა მოთამაშეების წინააღმდეგ და აიწიე რეიტინგში. ანგარიშია საჭირო.", rankedCta: "დარეგისტრირდი რეიტინგულისთვის", wlTitle: "შაბათ-კვირის ლიგა", wlText: "შეუერთდი Quizball-ის შაბათ-კვირის შეჯიბრს და იბრძოლე ხელმისაწვდომი ვაუჩერებისთვის. ანგარიშია საჭირო; მოქმედებს უფლებამოსილებისა და ტურნირის წესები.", wlCta: "ლიგის დეტალები", quizPage: "ქვიზის გახსნა" },
     whyAccount: [
       "სტუმრის თამაშები Quizball-ს მაშინვე გაცნობს. შექმენი ანგარიში, როცა რეიტინგულ თამაშსა და შაბათ-კვირის ლიგაში შეჯიბრი გინდა.",

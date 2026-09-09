@@ -141,6 +141,14 @@ export async function middleware(req: NextRequest) {
     return res;
   }
 
+  // A games folder belongs to exactly one locale (/en|ka/football-games,
+  // /es/juegos-de-futbol). The other combinations never existed: answer 404
+  // here, deterministically, instead of relying on a streamed notFound().
+  const folderMatch = pathname.match(/^\/(en|ka|es)\/(football-games|juegos-de-futbol)(?:\/|$)/);
+  if (folderMatch && (folderMatch[1] === "es") !== (folderMatch[2] === "juegos-de-futbol")) {
+    return new NextResponse("Not found", { status: 404, headers: { "Content-Type": "text/plain; charset=utf-8", "Content-Security-Policy": csp } });
+  }
+
   // Slug changes and retired CMS quiz pages are resolved before Next renders.
   // This is the only reliable way to return a real 410 (rather than a themed
   // 404 page) while keeping redirects locale-aware.

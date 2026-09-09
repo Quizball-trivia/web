@@ -17,11 +17,12 @@ const POLL_INTERVAL_MS = 30_000;
  * /api/v1/system/status every 30s while down; stops the moment the socket is
  * healthy again.
  */
-export function useSystemStatusPoll(): void {
+export function useSystemStatusPoll(enabled = true): void {
   const { connected, updatedAtMs } = useRealtimeConnectionHealth();
   const downSinceRef = useRef<number | null>(null);
 
   useEffect(() => {
+    if (!enabled) return;
     if (connected) {
       downSinceRef.current = null;
       return;
@@ -66,5 +67,5 @@ export function useSystemStatusPoll(): void {
       window.clearTimeout(startTimer);
       if (pollIntervalRef.current !== null) window.clearInterval(pollIntervalRef.current);
     };
-  }, [connected, updatedAtMs]);
+  }, [connected, updatedAtMs, enabled]);
 }

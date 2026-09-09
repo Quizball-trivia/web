@@ -55,6 +55,18 @@ for (const path of ["/en/games/auction", "/en/daily/money-drop", "/es/football-g
 }
 const play = await get("/play");
 check("/play noindex", /noindex/i.test((play.headers.get("x-robots-tag") ?? "") + (await play.text())), String(play.status));
+const board = await get("/leaderboard");
+check("/leaderboard noindex", /noindex/i.test((board.headers.get("x-robots-tag") ?? "") + (await board.text())), String(board.status));
+// The hub is the Play screen: app shell present, exactly one H1, and no /demos links (not served on production).
+for (const path of ["/en", "/ka", "/es"]) {
+  const html = await (await get(path)).text();
+  check(`${path} renders the app shell`, /data-shell="app"/.test(html));
+  check(`${path} has exactly one h1`, (html.match(/<h1[\s>]/gi) ?? []).length === 1, String((html.match(/<h1[\s>]/gi) ?? []).length));
+  check(`${path} has no /demos links`, !/href="\/demos\//.test(html));
+  check(`${path} server HTML is the guest variant`, /data-chrome="guest"/.test(html) && !/data-chrome="member"/.test(html));
+}
+const about = await (await get("/en/about")).text();
+check("/en/about stays outside the app shell", !/data-shell="app"/.test(about));
 const failed = results.filter((r) => !r.ok).length;
 console.log(`\n${results.length - failed}/${results.length} checks passed`);
 process.exit(failed ? 1 : 0);

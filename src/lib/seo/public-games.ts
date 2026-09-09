@@ -99,6 +99,27 @@ export function findPublicGameByModeId(modeId: string): PublicGame | null {
   return BY_MODE_ID.get(modeId) ?? null;
 }
 
+const BY_DEMO_SLUG = new Map(PUBLIC_GAMES.filter((game) => game.demoSlug).map((game) => [game.demoSlug as string, game]));
+
+/**
+ * The Play screen's cards are keyed by demo slug (daily cards also carry the
+ * daily type). Resolves the card to its public game so a signed-out visitor is
+ * sent to the public page / owning quiz instead of an account-only route.
+ */
+export function findPublicGameForCard(card: { slug: string; dailyType?: string | null }): PublicGame | null {
+  return BY_DEMO_SLUG.get(card.slug) ?? (card.dailyType ? BY_MODE_ID.get(card.dailyType) ?? null : null);
+}
+
+/** Where a signed-out visitor goes from a Play card; null = the card needs an account (sign-in dialog). */
+export function guestCardHref(card: { slug: string; dailyType?: string | null }, locale: Locale): string | null {
+  const game = findPublicGameForCard(card);
+  if (!game || !game.card || game.destination.kind === "app") return null;
+  if (game.destination.kind === "page" && !game.page) return null;
+  return cardHref(game, locale);
+}
+
+export const quizHubHref = (locale: Locale): string => campaignHubPath(locale === "ka" ? "en" : locale);
+
 /** Resolves a localized URL (folder must match the locale) to a PUBLISHED game, else null → 404. */
 export function findPublishedGame(locale: Locale, folder: string, slug: string): PublicGame | null {
   const entry = PUBLISHED_PUBLIC_GAMES.find((game) => (game.slugs?.[locale] ?? game.slug) === slug);
@@ -131,5 +152,4 @@ export function cardHref(game: PublicGame, locale: Locale): string {
   }
 }
 
-export const localeHomePath = (locale: Locale): string => `/${locale}`;
 export { gamePagePath as publicGamePath, dailyCollectionPath };

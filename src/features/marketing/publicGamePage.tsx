@@ -8,7 +8,6 @@ import { COLLECTION_COPY, HOME_COPY } from "@/lib/seo/home-copy";
 import { PUBLISHED_PUBLIC_GAMES, findPublishedGame, homepageCards } from "@/lib/seo/public-games";
 import { buildGamesHomeStructuredData, buildPublicGameStructuredData, serializeJsonLd } from "@/lib/seo/structured-data";
 import { PublicGameScreen } from "./PublicGameScreen";
-import { HomeScreen } from "./HomeScreen";
 import { DailyCollectionScreen } from "./DailyCollectionScreen";
 
 type Params = Promise<{ locale: string; slug: string }>;
@@ -17,12 +16,14 @@ type Params = Promise<{ locale: string; slug: string }>;
 const localesForFolder = (folder: string): Locale[] => LOCALES.filter((locale) => PUBLIC_GAMES_FOLDER[locale] === folder);
 const afterLocale = (path: string, locale: Locale) => path.slice(`/${locale}`.length);
 
-async function JsonLd({ data }: { data: unknown }) {
+export async function JsonLd({ data }: { data: unknown }) {
   const nonce = (await headers()).get("x-nonce") ?? undefined;
   return <script nonce={nonce} type="application/ld+json" suppressHydrationWarning dangerouslySetInnerHTML={{ __html: serializeJsonLd(data) }} />;
 }
 
 // ---- game pages ------------------------------------------------------------
+export const dailyCollectionStaticParams = (folder: string) => localesForFolder(folder).map((locale) => ({ locale }));
+
 export function publicGameStaticParams(folder: string) {
   return localesForFolder(folder).flatMap((locale) =>
     PUBLISHED_PUBLIC_GAMES.map((game) => ({ locale, slug: gamePagePath(game, locale).split("/")[3] })),
@@ -31,9 +32,10 @@ export function publicGameStaticParams(folder: string) {
 
 export async function publicGameMetadata(folder: string, params: Params): Promise<Metadata> {
   const { locale, slug } = await params;
-  if (!isLocale(locale)) return {};
+  // Decided here, before any streaming starts, so the response status is a real 404.
+  if (!isLocale(locale)) notFound();
   const game = findPublishedGame(locale, folder, slug);
-  if (!game) return {};
+  if (!game) notFound();
   const copy = game.copy[locale];
   return buildLocalizedMetadata({
     locale,
@@ -69,7 +71,7 @@ export async function PublicGamePage({ folder, params }: { folder: string; param
 // ---- daily collection ------------------------------------------------------
 export async function dailyCollectionMetadata(folder: string, params: Promise<{ locale: string }>): Promise<Metadata> {
   const { locale } = await params;
-  if (!isLocale(locale) || PUBLIC_GAMES_FOLDER[locale] !== folder) return {};
+  if (!isLocale(locale) || PUBLIC_GAMES_FOLDER[locale] !== folder) notFound();
   const copy = COLLECTION_COPY[locale];
   return buildLocalizedMetadata({
     locale,
@@ -95,32 +97,6 @@ export async function DailyCollectionPage({ folder, params }: { folder: string; 
     <>
       <JsonLd data={structuredData} />
       <DailyCollectionScreen locale={locale} />
-    </>
-  );
-}
-
-// ---- locale homepage -------------------------------------------------------
-export async function homeMetadata(params: Promise<{ locale: string }>): Promise<Metadata> {
-  const { locale } = await params;
-  if (!isLocale(locale)) return {};
-  const copy = HOME_COPY[locale];
-  return buildLocalizedMetadata({ locale, path: "", title: copy.metaTitle, description: copy.metaDescription });
-}
-
-export async function HomePage({ params }: { params: Promise<{ locale: string }> }) {
-  const { locale } = await params;
-  if (!isLocale(locale)) notFound();
-  const copy = HOME_COPY[locale];
-  const structuredData = buildGamesHomeStructuredData({
-    locale,
-    title: copy.metaTitle,
-    description: copy.metaDescription,
-    games: PUBLISHED_PUBLIC_GAMES.map((g) => ({ name: g.copy[locale].title, url: gamePagePath(g, locale) })),
-  });
-  return (
-    <>
-      <JsonLd data={structuredData} />
-      <HomeScreen locale={locale} />
     </>
   );
 }

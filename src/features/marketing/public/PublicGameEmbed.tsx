@@ -2,8 +2,8 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
-import { Play, X } from "lucide-react";
+import { Play } from "lucide-react";
+import { PracticeLayer } from "./PracticeLayer";
 import { useAuthStore } from "@/stores/auth.store";
 import { trackGameComplete, trackGameReplay, trackGameStart, trackGameView } from "@/lib/analytics/public-games.analytics";
 import type { DailyChallengeType } from "@/lib/domain/dailyChallenge";
@@ -39,12 +39,10 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, engineEmit
   const sessionRef = useRef<string>("");
   const startedAtRef = useRef(0);
   const launchRef = useRef<HTMLButtonElement>(null);
-  const exitRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => { trackGameView({ modeId, locale, access }); }, [modeId, locale, access]);
   useEffect(() => {
-    if (playing) exitRef.current?.focus();
-    else launchRef.current?.focus({ preventScroll: true });
+    if (!playing) launchRef.current?.focus({ preventScroll: true });
   }, [playing]);
 
   const start = () => {
@@ -74,16 +72,8 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, engineEmit
         <p className="text-sm text-white/65">{copy.note}</p>
         {!practiceLocalised && <p className="text-sm font-semibold text-brand-yellow">{copy.english}</p>}
       </div>
-      {playing && typeof document !== "undefined" && createPortal(
-        <div role="dialog" aria-modal="true" aria-label={copy.title} className="fixed inset-0 z-[80] overflow-y-auto bg-surface-page-alt">
-          <button
-            ref={exitRef}
-            type="button"
-            onClick={exit}
-            className="fixed right-3 top-3 z-[120] inline-flex h-9 items-center gap-1 rounded-full bg-black/60 px-3 text-xs font-bold uppercase tracking-wide text-white backdrop-blur-sm hover:bg-black/80"
-          >
-            <X className="size-4" /> {copy.exit}
-          </button>
+      {playing && (
+        <PracticeLayer title={copy.title} exitLabel={copy.exit} onExit={exit}>
           {dailyType ? (
             <GuestDailyPlay
               type={dailyType}
@@ -97,8 +87,7 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, engineEmit
           ) : (
             <DemoModeView slug={demoSlug} backHref={pagePath} onExit={exit} onEvent={onEngineEvent} />
           )}
-        </div>,
-        document.body,
+        </PracticeLayer>
       )}
     </section>
   );

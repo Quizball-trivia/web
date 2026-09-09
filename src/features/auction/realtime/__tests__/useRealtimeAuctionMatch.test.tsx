@@ -50,6 +50,7 @@ const loggerWarnMock = vi.hoisted(() => vi.fn());
 
 vi.mock('@/lib/realtime/useRealtimeConnection', () => ({
   useRealtimeConnection: () => socketMock.socket,
+  useRealtimeMatchSocket: () => socketMock.socket,
 }));
 
 vi.mock('@/lib/realtime/socket-client', () => ({
