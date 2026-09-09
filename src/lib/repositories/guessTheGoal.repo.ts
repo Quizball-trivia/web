@@ -13,6 +13,8 @@ import { getSupabaseAccessToken } from "@/lib/auth/supabase";
 export interface GgtI18nText {
   en: string;
   ka?: string | null;
+  es?: string | null;
+  tr?: string | null;
 }
 
 export interface GgtPlayer {
