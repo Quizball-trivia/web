@@ -26,6 +26,7 @@ import { TacticsBoard2D, BOARD_VIEW_W, BOARD_VIEW_H } from './TacticsBoard2D';
 import { GgtActionGlyph, GgtLegend, GGT_ACTION_META, GGT_OPTION_CLASS, ggtOptionStyle, type GgtOptionState } from './guessTheGoalUi';
 import { buildTimeline, type TacticsGoalDef, type TacticsStepKind } from '../lib/tacticsEngine';
 import { useMiniLocale, useMiniT } from '../lib/i18n';
+import { useLocale } from '@/contexts/LocaleContext';
 import { queryKeys } from '@/lib/queries/queryKeys';
 import { trackEvent } from '@/lib/posthog';
 import { usePlayer } from '@/contexts/PlayerContext';
@@ -388,12 +389,14 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
   const offsetRef = useRef(0);
   const nonceRef = useRef<string | null>(null);
 
+  // Goal copy is served in every app locale; mini-game chrome stays en/ka.
+  const { locale: textLocale } = useLocale();
   const pick = useCallback(
     (text: GgtI18nText | null | undefined): string => {
       if (!text) return '';
-      return (locale === 'ka' ? text.ka : null) ?? text.en;
+      return (textLocale === 'en' ? null : text[textLocale]) ?? text.en;
     },
-    [locale]
+    [textLocale]
   );
 
   const boardGoal = useMemo(() => (session ? toBoardGoal(session) : null), [session]);
