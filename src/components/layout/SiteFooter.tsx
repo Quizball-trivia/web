@@ -14,6 +14,7 @@ const SECTION: Record<Locale, { games: string; daily: string; company: string; m
   en: { games: 'Game modes', daily: 'Daily challenges', company: 'QuizBall', methodology: 'Editorial methodology', press: 'Press', index: 'Football Knowledge Index' },
   ka: { games: 'თამაშის რეჟიმები', daily: 'ყოველდღიური გამოწვევები', company: 'QuizBall', methodology: 'რედაქციული მეთოდოლოგია', press: 'პრესა', index: 'საფეხბურთო ცოდნის ინდექსი' },
   es: { games: 'Modos de juego', daily: 'Retos diarios', company: 'QuizBall', methodology: 'Metodología editorial', press: 'Prensa', index: 'Índice de conocimiento futbolero' },
+  tr: { games: 'Oyun modları', daily: 'Günlük görevler', company: 'QuizBall', methodology: 'Editoryal metodoloji', press: 'Basın', index: 'Futbol Bilgi Endeksi' },
 };
 
 /**
@@ -26,7 +27,9 @@ export function SiteFooter({ locale: forcedLocale }: { locale?: Locale } = {}) {
   const { t, locale: contextLocale } = useLocale();
   const locale = (forcedLocale ?? contextLocale) as Locale;
   const labels = SECTION[locale] ?? SECTION.en;
-  const quizzesHref = locale === 'ka' ? campaignHubPath('en') : campaignHubPath(locale);
+  // Campaign quizzes, the knowledge index and press pages exist in en/es only.
+  const editorialLocale = locale === 'en' || locale === 'es' ? locale : 'en';
+  const quizzesHref = campaignHubPath(editorialLocale);
   // Crawlable links only where a page exists: published game pages and the quiz
   // pages that own Career Path / Who Am I. Account-only modes have no public page.
   const linkable = PUBLIC_GAMES.filter((game) => game.page || game.destination.kind === 'quiz');
@@ -43,8 +46,8 @@ export function SiteFooter({ locale: forcedLocale }: { locale?: Locale } = {}) {
         { href: `/${locale}/about`, label: t('welcome.aboutUs') },
         { href: quizzesHref, label: t('welcome.quizzes') },
         { href: `/${locale}/editorial-methodology`, label: labels.methodology },
-        { href: `/${locale === 'ka' ? 'en' : locale}/football-knowledge-index`, label: labels.index },
-        { href: `/${locale === 'ka' ? 'en' : locale}/press`, label: labels.press },
+        { href: `/${editorialLocale}/football-knowledge-index`, label: labels.index },
+        { href: `/${editorialLocale}/press`, label: labels.press },
         { href: `/${locale}/terms`, label: t('welcome.termsOfService') },
         { href: `/${locale}/privacy`, label: t('welcome.privacyPolicy') },
       ],

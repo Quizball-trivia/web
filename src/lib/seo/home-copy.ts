@@ -1,4 +1,5 @@
 import type { Locale } from "@/lib/i18n/locale";
+import type { SeoPageLocale } from "./game-pages";
 
 export interface HomeCopy {
   metaTitle: string;
@@ -85,9 +86,32 @@ export const HOME_COPY: Record<Locale, HomeCopy> = {
       { q: "რა ხდება, თუ თამაშის შემდეგ დავრეგისტრირდები?", a: "იმავე თამაშს უბრუნდები, რომელსაც თამაშობდი." },
     ],
   },
+  tr: {
+    metaTitle: "Ücretsiz Futbol Oyunları ve Çok Oyunculu Bilgi Yarışması — QuizBall",
+    metaDescription: "Futbol bilgi oyunlarını çevrimiçi oyna: Tic Tac Toe, Açık Artırma ve dostluk maçları. Misafir olarak başla, sonra Sıralamalı oyuna ve Hafta Sonu Ligi'ne katıl.",
+    h1: "Ücretsiz Futbol Oyunları ve Çok Oyunculu Bilgi Yarışması",
+    intro: "Futbol bilgi oyunlarını tarayıcında oyna. Hesap açmadan Futbol Tic Tac Toe ya da Futbol Açık Artırma'da bir alıştırma turu dene. Dostluk maçları, Sıralamalı oyun ve Hafta Sonu Ligi için Quizball hesabı gerekir. Yarışmaya hazır mısın? Sıralamalı oyun ve Hafta Sonu Ligi'ne kaydol; uygun oyuncular yarışma kurallarına göre gerçek hediye çeki ödülleri için yarışır.",
+    accessLine: "Misafir oyunları için hesap gerekmez. Sıralamalı oyun ve Hafta Sonu Ligi giriş gerektirir.",
+    nav: { games: "Futbol Oyunları", quizzes: "Futbol Quizleri", signIn: "Giriş yap" },
+    sections: { competitive: "Ödüller için yarış", daily: "Günlük görevler", dailyHint: "Her gün yeni bir set. Burada alıştır, gerçeğini uygulamada oyna.", dailyAll: "Tüm günlük görevler", whyAccount: "Neden Quizball hesabı açmalısın", quizzes: "Futbol quizleri", faq: "Sorular" },
+    cards: { practice: "Alıştırma turu", accountRequired: "Hesap gerekir", guest: "Misafir olarak oyna", playLabel: "Oyna", rankedTitle: "Sıralamalı Oyun", rankedText: "Futbol bilgini diğer oyunculara karşı sına ve sıralamanı yükselt. Hesap gerekir.", rankedCta: "Sıralamalı için kaydol", wlTitle: "Hafta Sonu Ligi", wlText: "Quizball'un hafta sonu yarışmasına katıl ve mevcut hediye çeki ödülleri için yarış. Hesap gerekir; uygunluk ve etkinlik kuralları geçerlidir.", wlCta: "Hafta Sonu Ligi ayrıntıları", quizPage: "Quizi aç" },
+    whyAccount: [
+      "Misafir oyunları Quizball'u hemen denemeni sağlar. Sıralamalı oyun ve Hafta Sonu Ligi'nde yarışmak istediğinde hesap aç.",
+      "Sıralamanı yükselt, puan tablosunu takip et ve her yarışmanın kurallarına göre sunulan hediye çeki ödülleri için yarış. Katılmadan önce güncel uygunluk, takvim ve ödül ayrıntılarını kontrol et.",
+      "Misafir alıştırma sonuçları Sıralama puanı, jeton ya da ödül hakkı kazandırmaz.",
+    ],
+    about: { title: "Oyunlar hakkında", text: "Quizball futbol bilgisini çevrimiçi oynayabileceğin oyunlara dönüştürür. Futbol Tic Tac Toe'da oyuncuları kategorilerle eşleştir, Açık Artırma'da seçimlerini yap ya da hesabınla bir dostluk maçında futbol sorularını cevapla. Sevdiğin formatı seç ve kurallarını oyun sayfasında oku. Oyuncular, kulüpler ve ligler hakkındaki futbol quizlerini de keşfedebilir, hazır olduğunda hesap gerektiren yarışmalara geçebilirsin." },
+    quizLinks: { hub: "Tüm futbol quizleri", guessPlayer: "Oyuncuyu Tahmin Et", careerPath: "Kariyer Yolu quizi" },
+    faq: [
+      { q: "Hesap açmadan oynayabilir miyim?", a: "Evet. Buradaki misafir oyunları kaydolmadan oynanabilir. Sıralamalı oyun ve Hafta Sonu Ligi hesap gerektirir." },
+      { q: "Gerçek ödül kazanabilir miyim?", a: "Uygun oyuncular, ödül sunan yarışmalarda hediye çeki ödülleri için yarışabilir. Mevcut ödüller ve nasıl hak kazanılacağı için güncel Sıralamalı ve Hafta Sonu Ligi kurallarını oku." },
+      { q: "Mini oyun puanları Sıralamalı oyuna sayılır mı?", a: "Misafir mini oyun sonuçları Sıralama puanı vermez ve hediye çeki ödüllerine hak kazandırmaz. Sıralama ilerlemesi rekabet modunun kendi kurallarına göre işler." },
+      { q: "Bir oyundan sonra kaydolursam ne olur?", a: "Oynadığın oyuna geri dönersin." },
+    ],
+  },
 };
 
-export const COLLECTION_COPY: Record<Locale, { metaTitle: string; metaDescription: string; h1: string; intro: string; reset: string }> = {
+export const COLLECTION_COPY: Record<SeoPageLocale, { metaTitle: string; metaDescription: string; h1: string; intro: string; reset: string }> = {
   en: { metaTitle: "Daily Football Challenges — A New Set Every Day | QuizBall", metaDescription: "Quizball's daily football challenges: Money Drop, True or False, Countdown, Higher or Lower, Imposter and Card Detective. Practice as a guest; play the real daily in the app.", h1: "Daily football challenges", intro: "A fresh set of football puzzles every day. Try a practice round of each here without an account; the real daily set, coins and streaks live in the app.", reset: "Daily sets reset at midnight, Georgia time." },
   es: { metaTitle: "Retos diarios de fútbol — un set nuevo cada día | QuizBall", metaDescription: "Los retos diarios de Quizball: Money Drop, Verdadero o falso, Countdown, Más o menos, Impostor y Detective de cartas. Practica como invitado; juega el diario real en la app.", h1: "Retos diarios de fútbol", intro: "Un set nuevo de puzles futboleros cada día. Prueba aquí una ronda de práctica de cada uno sin cuenta; el set diario real, las monedas y las rachas están en la app.", reset: "Los sets diarios se renuevan a medianoche, hora de Georgia." },
   ka: { metaTitle: "ყოველდღიური საფეხბურთო გამოწვევები — ახალი ნაკრები ყოველდღე | QuizBall", metaDescription: "Quizball-ის ყოველდღიური გამოწვევები: Money Drop, სწორია თუ არა, Countdown, მეტი თუ ნაკლები, შემპარავი და ბარათის დეტექტივი. ივარჯიშე სტუმრად; ნამდვილი აპლიკაციაშია.", h1: "ყოველდღიური საფეხბურთო გამოწვევები", intro: "ყოველდღე ახალი საფეხბურთო თავსატეხები. სცადე თითოეულის სავარჯიშო რაუნდი აქ ანგარიშის გარეშე; ნამდვილი ყოველდღიური ნაკრები, ქოინები და სერიები აპლიკაციაშია.", reset: "ყოველდღიური ნაკრები შუაღამისას, საქართველოს დროით განახლდება." },

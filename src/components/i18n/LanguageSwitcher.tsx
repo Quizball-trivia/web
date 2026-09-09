@@ -14,7 +14,8 @@ import { LOCALES as LOCALE_CODES, isLocale, type Locale } from "@/lib/i18n/local
 import { LOCALES as LOCALE_OPTIONS } from "@/lib/i18n/messages";
 import { cn } from "@/lib/utils";
 import { swapCampaignLocalePath } from "@/features/campaign-quiz/campaignQuiz.routes";
-import { DAILY_COLLECTION_SLUG, PUBLIC_GAMES_FOLDER, dailyCollectionPath, findGamePageByLocalizedSlug, gamePagePath } from "@/lib/seo/game-pages";
+import { DAILY_COLLECTION_SLUG, PUBLIC_GAMES_FOLDER, dailyCollectionPath, findGamePageByLocalizedSlug, gamePagePath, isSeoPageLocale } from "@/lib/seo/game-pages";
+import { findPublicGameBySlug, isPublishedIn } from "@/lib/seo/public-games";
 
 interface LanguageSwitcherProps {
   // Server-rendered fallback locale used on the very first paint. After
@@ -32,16 +33,20 @@ const OPTIONS_BY_CODE = Object.fromEntries(
 
 // Swap the leading /:locale segment of the current path with the target locale.
 function swapLocale(pathname: string, target: Locale): string {
-  const campaignPath = swapCampaignLocalePath(pathname, target);
+  // Campaign quizzes have no Turkish edition yet; a Turkish switch on one lands on the English quiz.
+  const campaignPath = swapCampaignLocalePath(pathname, target === 'tr' ? 'en' : target);
   if (campaignPath) return campaignPath;
   const segments = pathname.split("/").filter(Boolean);
   // Public game pages have translated folders and slugs (/es/juegos-de-futbol/subasta).
   if (segments.length === 3 && isLocale(segments[0])) {
     const source = segments[0];
     if (segments[1] === PUBLIC_GAMES_FOLDER[source]) {
-      if (segments[2] === DAILY_COLLECTION_SLUG[source]) return dailyCollectionPath(target);
+      if (segments[2] === DAILY_COLLECTION_SLUG[source]) return isSeoPageLocale(target) ? dailyCollectionPath(target) : `/${target}`;
       const entry = findGamePageByLocalizedSlug(source, segments[1], segments[2]);
-      if (entry) return gamePagePath(entry, target);
+      if (entry) {
+        const game = findPublicGameBySlug(entry.slug);
+        return game && isPublishedIn(game, target) ? gamePagePath(entry, target) : `/${target}`;
+      }
     }
   }
   if (segments.length === 0 || !isLocale(segments[0])) {

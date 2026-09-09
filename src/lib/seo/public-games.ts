@@ -1,6 +1,7 @@
 import type { Locale } from "@/lib/i18n/locale";
 import { campaignHubPath, campaignPublicSlug } from "@/features/campaign-quiz/campaignQuiz.routes";
-import { GAME_PAGES, dailyCollectionPath, gamePagePath, type GamePageEntry } from "./game-pages";
+import { GAME_PAGES, SEO_PAGE_LOCALES, dailyCollectionPath, gamePagePath, isSeoPageLocale, type GamePageEntry, type SeoPageLocale } from "./game-pages";
+import { GAME_PAGE_DETAILS } from "./game-page-details";
 
 /**
  * Release manifest for the public games catalogue (homepage + game pages).
@@ -95,6 +96,8 @@ const BY_MODE_ID = new Map(PUBLIC_GAMES.map((game) => [game.modeId, game]));
 /** Modes with indexable pages in every locale. */
 export const PUBLISHED_PUBLIC_GAMES = PUBLIC_GAMES.filter((game) => game.page);
 
+export const findPublicGameBySlug = (slug: string): PublicGame | null => PUBLIC_GAMES.find((game) => game.slug === slug) ?? null;
+
 export function findPublicGameByModeId(modeId: string): PublicGame | null {
   return BY_MODE_ID.get(modeId) ?? null;
 }
@@ -118,12 +121,13 @@ export function guestCardHref(card: { slug: string; dailyType?: string | null },
   return cardHref(game, locale);
 }
 
-export const quizHubHref = (locale: Locale): string => campaignHubPath(locale === "ka" ? "en" : locale);
+export const quizHubHref = (locale: Locale): string => campaignHubPath(campaignLocaleOf(locale));
 
 /** Resolves a localized URL (folder must match the locale) to a PUBLISHED game, else null → 404. */
 export function findPublishedGame(locale: Locale, folder: string, slug: string): PublicGame | null {
+  if (!isSeoPageLocale(locale)) return null;
   const entry = PUBLISHED_PUBLIC_GAMES.find((game) => (game.slugs?.[locale] ?? game.slug) === slug);
-  if (!entry) return null;
+  if (!entry || !isPublishedIn(entry, locale)) return null;
   return gamePagePath(entry, locale).split("/")[2] === folder ? entry : null;
 }
 
@@ -141,11 +145,25 @@ export function relatedPublishedGames(game: PublicGame): PublicGame[] {
 }
 
 /** Where a card links: its page, the established quiz page, or the app. */
+/** Campaign quiz pages exist in en/es only. */
+export const campaignLocaleOf = (locale: Locale): "en" | "es" => (locale === "es" ? "es" : "en");
+
+/** Locales in which this game's public page exists (page flag + a written body). */
+export function publishedLocalesOf(game: PublicGame): SeoPageLocale[] {
+  if (!game.page) return [];
+  return SEO_PAGE_LOCALES.filter((locale) => (GAME_PAGE_DETAILS[game.slug]?.[locale]?.length ?? 0) > 0);
+}
+export const isPublishedIn = (game: PublicGame, locale: Locale): locale is SeoPageLocale =>
+  isSeoPageLocale(locale) && publishedLocalesOf(game).includes(locale);
+
+/** The page a card links to: the locale's page when it exists, otherwise the English page. */
+export const publicPagePathFor = (game: PublicGame, locale: Locale): string => gamePagePath(game, isPublishedIn(game, locale) ? locale : "en");
+
 export function cardHref(game: PublicGame, locale: Locale): string {
   switch (game.destination.kind) {
-    case "page": return gamePagePath(game, locale);
+    case "page": return publicPagePathFor(game, locale);
     case "quiz": {
-      const quizLocale = locale === "ka" ? "en" : locale;
+      const quizLocale = campaignLocaleOf(locale);
       return `${campaignHubPath(quizLocale)}/${campaignPublicSlug(game.destination.sourceSlug, quizLocale)}`;
     }
     case "app": return game.destination.path;

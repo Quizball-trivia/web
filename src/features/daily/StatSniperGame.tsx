@@ -45,7 +45,7 @@ export function StatSniperGame({
   leaderboardFetcher?: () => Promise<StatSniperLeaderboardData>;
 }) {
   const { t, locale } = useLocale();
-  const numberLocale = locale === "ka" ? "ka-GE" : locale === "es" ? "es-ES" : "en-GB";
+  const numberLocale = locale === "ka" ? "ka-GE" : locale === "es" ? "es-ES" : locale === "tr" ? "tr-TR" : "en-GB";
   const questions = session.questions;
   const [index, setIndex] = useState(0);
   const [guess, setGuess] = useState(() => (questions[0] ? midpoint(questions[0]) : 0));

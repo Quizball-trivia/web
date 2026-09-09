@@ -3,8 +3,8 @@ import { listCampaignQuizPages } from "@/features/campaign-quiz/campaignQuiz.api
 import { SITE_URL } from "@/lib/seo/site";
 import { LOCALES } from "@/lib/i18n/locale";
 import { campaignQuizPath } from "@/features/campaign-quiz/campaignQuiz.routes";
-import { dailyCollectionPath, gamePagePath } from "@/lib/seo/game-pages";
-import { PUBLISHED_PUBLIC_GAMES } from "@/lib/seo/public-games";
+import { SEO_PAGE_LOCALES, dailyCollectionPath, gamePagePath } from "@/lib/seo/game-pages";
+import { PUBLISHED_PUBLIC_GAMES, publishedLocalesOf } from "@/lib/seo/public-games";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entry = (
@@ -58,9 +58,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   );
   // One indexable page per released public game (localized folder + slug) plus the daily collection.
   const gamePagesUpdated = new Date("2026-09-07T00:00:00.000Z");
-  const gamePageEntries = LOCALES.flatMap((locale) => [
+  const gamePageEntries = SEO_PAGE_LOCALES.flatMap((locale) => [
     entry(dailyCollectionPath(locale), "daily", 0.8, gamePagesUpdated),
-    ...PUBLISHED_PUBLIC_GAMES.map((game) => entry(gamePagePath(game, locale), "weekly", 0.8, gamePagesUpdated)),
+    ...PUBLISHED_PUBLIC_GAMES.filter((game) => publishedLocalesOf(game).includes(locale)).map((game) => entry(gamePagePath(game, locale), "weekly", 0.8, gamePagesUpdated)),
   ]);
 
   const validLastModified = (value: string): Date | undefined => {

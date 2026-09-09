@@ -30,14 +30,13 @@ import {
 } from './campaignQuiz.content';
 import { getCampaignQuizGuide } from './campaignQuiz.guides';
 import type { CampaignQuiz, CampaignQuizAboutBlock } from './campaignQuiz.types';
-import type { Locale } from '@/lib/i18n/messages';
-import { campaignHubPath, campaignQuizPath } from './campaignQuiz.routes';
+import { campaignHubPath, campaignQuizPath, type CampaignQuizLocale } from './campaignQuiz.routes';
 import { LanguageSwitcher } from '@/components/i18n/LanguageSwitcher';
 
 interface CampaignQuizLandingProps {
   content: CampaignQuizPageContent;
   quiz: CampaignQuiz;
-  locale?: Locale;
+  locale?: CampaignQuizLocale;
   previewToken?: string;
 }
 

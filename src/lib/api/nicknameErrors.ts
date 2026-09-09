@@ -5,7 +5,7 @@ import { ApiError } from "@/lib/api/api";
  * Georgian UI showing an English date reads as a bug.
  */
 export function formatCooldownDate(date: Date, locale: string): string {
-  return date.toLocaleDateString(locale === "ka" ? "ka-GE" : "en-GB", {
+  return date.toLocaleDateString(locale === "ka" ? "ka-GE" : locale === "es" ? "es-ES" : locale === "tr" ? "tr-TR" : "en-GB", {
     day: "numeric",
     month: "long",
     year: "numeric",

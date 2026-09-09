@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { DemoModeArt } from "@/features/demos/DemoModeArt";
-import type { Locale } from "@/lib/i18n/locale";
+import type { SeoPageLocale } from "@/lib/seo/game-pages";
 import { GAME_PAGE_DETAILS } from "@/lib/seo/game-page-details";
 import { HOME_COPY } from "@/lib/seo/home-copy";
 import { engineEmitsEvents, publicGamePath, relatedPublishedGames, type PublicGame } from "@/lib/seo/public-games";
@@ -9,14 +9,14 @@ import { PublicCardGrid, PublicPageFrame } from "./public/PublicCards";
 import { PublicGameEmbed } from "./public/PublicGameEmbed";
 import { SignInLink } from "./public/PublicLinks";
 
-const L: Record<Locale, { howTo: string; details: string; related: string; all: string; account: string; accountText: string; start: string; note: string; exit: string; guest: string; member: string; english: string; noteDaily: string; loading: string; sampleFallback: string; accountTextDaily: string }> = {
+const L: Record<SeoPageLocale, { howTo: string; details: string; related: string; all: string; account: string; accountText: string; start: string; note: string; exit: string; guest: string; member: string; english: string; noteDaily: string; loading: string; sampleFallback: string; accountTextDaily: string }> = {
   en: { howTo: "How to play", details: "Rules and details", related: "Related games", all: "All football games", account: "Play the real thing", accountText: "The practice round above is a sample. Sign in to play today's real game, keep your results and earn coins.", start: "Try a practice round", note: "No account needed. Sample content, bot opponents where relevant, virtual points only, nothing is saved.", exit: "Exit practice", guest: "Guest practice", member: "Open in the app", english: "The practice round is in English for now.", noteDaily: "Today's real set, played as a guest: no coins, no streak. Your best score of the day is kept for this browser's guest session only.", accountTextDaily: "Sign in to earn coins for today's set, keep your streak and appear on the leaderboards.", loading: "Loading today's set…", sampleFallback: "Sample round (today's set could not be loaded)" },
   es: { howTo: "Cómo jugar", details: "Reglas y detalles", related: "Juegos relacionados", all: "Todos los juegos de fútbol", account: "Juega la versión real", accountText: "La ronda de práctica de arriba es una muestra. Inicia sesión para jugar el juego real de hoy, guardar tus resultados y ganar monedas.", start: "Probar una ronda de práctica", note: "Sin cuenta. Contenido de muestra, rivales bot donde aplica, solo puntos virtuales, no se guarda nada.", exit: "Salir de la práctica", guest: "Práctica de invitado", member: "Abrir en la app", english: "La ronda de práctica está en inglés por ahora.", noteDaily: "El set real de hoy, jugado como invitado: sin monedas ni racha. Tu mejor puntuación del día se guarda solo para la sesión de invitado de este navegador.", accountTextDaily: "Inicia sesión para ganar monedas con el set de hoy, mantener tu racha y aparecer en las clasificaciones.", loading: "Cargando el set de hoy…", sampleFallback: "Ronda de muestra (no se pudo cargar el set de hoy)" },
   ka: { howTo: "როგორ ვითამაშო", details: "წესები და დეტალები", related: "მსგავსი თამაშები", all: "ყველა საფეხბურთო თამაში", account: "ითამაშე ნამდვილი", accountText: "ზემოთ სავარჯიშო რაუნდია — ნიმუში. შედი ანგარიშში, რომ ითამაშო დღევანდელი ნამდვილი თამაში, შეინახო შედეგები და დააგროვო ქოინები.", start: "სცადე სავარჯიშო რაუნდი", note: "ანგარიშის გარეშე. სანიმუშო შინაარსი, ბოტი მეტოქე სადაც საჭიროა, მხოლოდ ვირტუალური ქულები, არაფერი ინახება.", exit: "სავარჯიშოდან გასვლა", guest: "სტუმრის სავარჯიშო", member: "აპლიკაციაში გახსნა", english: "სავარჯიშო რაუნდი ჯერჯერობით ინგლისურადაა.", noteDaily: "დღევანდელი ნამდვილი ნაკრები სტუმრად: ქოინებისა და სერიის გარეშე. დღის საუკეთესო ქულა მხოლოდ ამ ბრაუზერის სტუმრის სესიისთვის ინახება.", accountTextDaily: "შედი ანგარიშში, რომ დღევანდელი ნაკრებით ქოინები დააგროვო, სერია შეინარჩუნო და ლიდერბორდზე გამოჩნდე.", loading: "დღევანდელი ნაკრები იტვირთება…", sampleFallback: "სანიმუშო რაუნდი (დღევანდელი ნაკრები ვერ ჩაიტვირთა)" },
 };
 
 /** One public game page: server-rendered content first, the practice engine on demand below it. */
-export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: Locale }) {
+export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: SeoPageLocale }) {
   const copy = game.copy[locale];
   const labels = L[locale];
   const home = HOME_COPY[locale];

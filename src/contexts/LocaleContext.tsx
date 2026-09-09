@@ -51,7 +51,7 @@ function readStoredLocale(): { locale: Locale; hasStoredLocale: boolean } {
   const stored = storage.get<string | null>(STORAGE_KEYS.LOCALE, null);
   // Only treat the stored value as an explicit choice when it's a genuinely
   // supported locale (including regional variants such as `ka-GE` or
-  // `es-MX` that normalizeLocale maps to a supported base language).
+  // `es-MX` or `tr-TR` that normalizeLocale maps to a supported base language).
   // Otherwise an unsupported value like "fr" would normalize to "en" and be
   // mistaken for a deliberate English selection, pinning the user to English
   // instead of honoring preferredLanguage / browser inference.
@@ -59,7 +59,8 @@ function readStoredLocale(): { locale: Locale; hasStoredLocale: boolean } {
   const hasStoredLocale =
     isSupportedLocale(trimmed) ||
     trimmed.toLowerCase().startsWith('ka') ||
-    trimmed.toLowerCase().startsWith('es');
+    trimmed.toLowerCase().startsWith('es') ||
+    trimmed.toLowerCase().startsWith('tr');
   return {
     locale: normalizeLocale(stored),
     hasStoredLocale,

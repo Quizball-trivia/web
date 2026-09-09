@@ -144,7 +144,7 @@ export async function middleware(req: NextRequest) {
   // A games folder belongs to exactly one locale (/en|ka/football-games,
   // /es/juegos-de-futbol). The other combinations never existed: answer 404
   // here, deterministically, instead of relying on a streamed notFound().
-  const folderMatch = pathname.match(/^\/(en|ka|es)\/(football-games|juegos-de-futbol)(?:\/|$)/);
+  const folderMatch = pathname.match(/^\/(en|ka|es|tr)\/(football-games|juegos-de-futbol)(?:\/|$)/);
   if (folderMatch && (folderMatch[1] === "es") !== (folderMatch[2] === "juegos-de-futbol")) {
     return new NextResponse("Not found", { status: 404, headers: { "Content-Type": "text/plain; charset=utf-8", "Content-Security-Policy": csp } });
   }

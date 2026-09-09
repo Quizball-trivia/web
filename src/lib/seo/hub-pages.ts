@@ -54,6 +54,18 @@ export const HUB_COPY: Record<HubKind, Record<Locale, HubCopy>> = {
       sectionDailyHint: "Uno nuevo cada día. Gana monedas y XP.",
       sectionGamesHint: "Juega cuando quieras, contra rivales reales o por monedas.",
     },
+    tr: {
+      metaTitle: "QuizBall — Futbol Bilgi Yarışması Oyunları: 1v1 Maçlar, Günlük Görevler ve Daha Fazlası",
+      metaDescription: "Online futbol bilgi yarışması oyna: canlı dereceli 1v1 maçlar, Ben Kimim? ve Daha Yüksek mi Düşük mü? gibi günlük görevler, futbol tic tac toe, açık artırmalar ve jeton oyunları. Ücretsiz, tarayıcında.",
+      title: "Futbol gibi oynanan futbol bilgi yarışması",
+      intro: "Canlı 1v1 maçlar, her sabah yeni bir günlük görev seti ve jeton için oynayabileceğin mini oyunlar. Aşağıdan bir oyun seç ya da hemen başla.",
+      ctaPlay: "Hemen oyna",
+      ctaSignIn: "Giriş yap",
+      sectionDaily: "Günlük görevler",
+      sectionGames: "Oyun modları",
+      sectionDailyHint: "Her gün yeni bir tane. Jeton ve XP kazan.",
+      sectionGamesHint: "İstediğin zaman oyna; gerçek rakiplere karşı ya da jeton için.",
+    },
   },
   daily: {
     en: {
@@ -92,6 +104,18 @@ export const HUB_COPY: Record<HubKind, Record<Locale, HubCopy>> = {
       sectionDailyHint: "Se renuevan cada día.",
       sectionGamesHint: "Juega cuando quieras.",
     },
+    tr: {
+      metaTitle: "Günlük Futbol Görevleri — Her Gün Yeni Bir Quiz",
+      metaDescription: "Her gün yeni futbol oyunları: Ben Kimim?, Money Drop, Doğru mu Yanlış mı, Kariyer Yolu, Stat Sniper, Pas Zinciri, Eksik XI ve daha fazlası. Her gün yenilenir; jeton ve XP kazan.",
+      title: "Günlük futbol görevleri",
+      intro: "Her gün gece yarısı yeni bir set açılır. Hepsini oyna, serini koru ve her biri için jeton ve XP kazan.",
+      ctaPlay: "Bugünün görevlerini oyna",
+      ctaSignIn: "Giriş yap",
+      sectionDaily: "Bugünün görevleri",
+      sectionGames: "Diğer oyun modları",
+      sectionDailyHint: "Her gün yenilenir.",
+      sectionGamesHint: "İstediğin zaman oyna.",
+    },
   },
   games: {
     en: {
@@ -129,6 +153,18 @@ export const HUB_COPY: Record<HubKind, Record<Locale, HubCopy>> = {
       sectionGames: "Todos los modos",
       sectionDailyHint: "Uno nuevo cada día.",
       sectionGamesHint: "Juega cuando quieras.",
+    },
+    tr: {
+      metaTitle: "Online Futbol Bilgi Yarışması Oyunları — Dereceli 1v1, Açık Artırma, Tic Tac Toe ve Daha Fazlası",
+      metaDescription: "Canlı futbol bilgi yarışması modları: dereceli 1v1 maçlar, oyuncu açık artırmaları, futbol tic tac toe (Tiki-Taka-Toe), frikikler, gole giden yol ve golü tahmin et. Tarayıcında ücretsiz oyna.",
+      title: "Futbol bilgi yarışması oyun modları",
+      intro: "Gerçek rakiplere karşı canlı maçlar ve istediğin zaman oynayabileceğin jeton oyunları. Her mod şansı değil futbol bilgisini ödüllendirir.",
+      ctaPlay: "Hemen oyna",
+      ctaSignIn: "Giriş yap",
+      sectionDaily: "Günlük görevler",
+      sectionGames: "Tüm oyun modları",
+      sectionDailyHint: "Her gün yeni bir tane.",
+      sectionGamesHint: "İstediğin zaman oyna.",
     },
   },
 };

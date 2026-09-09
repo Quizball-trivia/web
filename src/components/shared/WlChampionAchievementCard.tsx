@@ -4,6 +4,7 @@ import { WlChampionMedal, type WlMedalPlace } from "@/components/shared/WlChampi
 import { useLocale } from "@/contexts/LocaleContext";
 import type { MessageKey } from "@/lib/i18n/messages";
 import { cn } from "@/lib/utils";
+import type { Locale } from "@/lib/i18n/messages";
 
 const THEMES: Record<WlMedalPlace, { border: string; glow: string; title: string }> = {
   1: {
@@ -87,14 +88,15 @@ const EN_MONTHS = ["January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December"];
 const ES_MONTHS = ["enero", "febrero", "marzo", "abril", "mayo", "junio",
   "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+const TR_MONTHS = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
 
 /** Date-only label: "8 აგვისტო 2026" / "8 August 2026" — callers add their
  *  own framing ("Weekend League · ", the ceremony sentence). */
-export function wlAwardWeekLabel(eventSlug: string, locale: "ka" | "en" | "es" = "ka"): string | undefined {
+export function wlAwardWeekLabel(eventSlug: string, locale: Locale = "ka"): string | undefined {
   if (!isWlAwardSlug(eventSlug)) return undefined;
   const m = eventSlug.match(/(\d{4})-(\d{2})-(\d{2})$/);
   if (!m) return undefined;
-  const months = locale === "ka" ? KA_MONTHS : locale === "es" ? ES_MONTHS : EN_MONTHS;
+  const months = locale === "ka" ? KA_MONTHS : locale === "es" ? ES_MONTHS : locale === "tr" ? TR_MONTHS : EN_MONTHS;
   const month = months[Number(m[2]) - 1] ?? m[2];
   return `${Number(m[3])} ${month} ${m[1]}`;
 }

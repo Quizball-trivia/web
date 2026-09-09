@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { LOCALES, isLocale } from "@/lib/i18n/locale";
 import { buildLocalizedMetadata } from "@/lib/i18n/metadata";
 import { HOME_COPY } from "@/lib/seo/home-copy";
-import { PUBLISHED_PUBLIC_GAMES, publicGamePath as gamePagePath } from "@/lib/seo/public-games";
+import { PUBLISHED_PUBLIC_GAMES, publicPagePathFor } from "@/lib/seo/public-games";
 import { buildFaqStructuredData, buildGamesHomeStructuredData } from "@/lib/seo/structured-data";
 import { JsonLd } from "@/features/marketing/publicGamePage";
 import { HubBody, HubIntro } from "@/features/marketing/HubSeo";
@@ -36,7 +36,7 @@ export default async function Page({ params }: { params: Params }) {
     locale,
     title: copy.metaTitle,
     description: copy.metaDescription,
-    games: PUBLISHED_PUBLIC_GAMES.map((g) => ({ name: g.copy[locale].title, url: gamePagePath(g, locale) })),
+    games: PUBLISHED_PUBLIC_GAMES.map((g) => ({ name: g.copy[locale].title, url: publicPagePathFor(g, locale) })),
   });
   return (
     <>

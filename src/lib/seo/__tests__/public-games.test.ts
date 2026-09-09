@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { LOCALES } from "@/lib/i18n/locale";
 import { ALL_DEMO_MODES } from "@/features/demos/demoModes";
 import { DAILY_COLLECTION_SLUG, PUBLIC_GAMES_FOLDER, gamePagePath, gamePageSlug } from "@/lib/seo/game-pages";
+import { SEO_PAGE_LOCALES } from "@/lib/seo/game-pages";
 import { GAME_PAGE_DETAILS } from "@/lib/seo/game-page-details";
 import { PUBLIC_GAMES, PUBLISHED_PUBLIC_GAMES, cardHref, findPublishedGame, relatedPublishedGames } from "@/lib/seo/public-games";
 
@@ -22,8 +23,8 @@ describe("public games manifest", () => {
     }
   });
 
-  it("published pages have unique localized paths, no collision with the collection slug, and a body in every locale", () => {
-    for (const locale of LOCALES) {
+  it("published pages have unique localized paths, no collision with the collection slug, and a body in every page locale", () => {
+    for (const locale of SEO_PAGE_LOCALES) {
       const paths = PUBLISHED_PUBLIC_GAMES.map((g) => gamePagePath(g, locale));
       expect(new Set(paths).size).toBe(paths.length);
       for (const game of PUBLISHED_PUBLIC_GAMES) {
@@ -48,6 +49,13 @@ describe("public games manifest", () => {
     expect(findPublishedGame("es", "football-games", "auction")).toBeNull();
     expect(findPublishedGame("en", "football-games", "auction")?.modeId).toBe("auction");
     expect(findPublishedGame("en", "football-games", "football-timeline")).toBeNull();
+  });
+
+  it("a locale without page bodies (tr) is not published and its cards fall back to the English page", () => {
+    expect(findPublishedGame("tr", "football-games", "auction")).toBeNull();
+    const auction = PUBLISHED_PUBLIC_GAMES.find((g) => g.slug === "auction")!;
+    expect(cardHref(auction, "tr")).toBe("/en/football-games/auction");
+    expect(cardHref(auction, "es")).toBe("/es/juegos-de-futbol/subasta");
   });
 
   it("cards link to a page, the owning quiz page, or the app", () => {

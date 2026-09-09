@@ -3,7 +3,8 @@ import { ChevronDown } from "lucide-react";
 import { campaignPublicSlug } from "@/features/campaign-quiz/campaignQuiz.routes";
 import type { Locale } from "@/lib/i18n/locale";
 import { HOME_COPY } from "@/lib/seo/home-copy";
-import { dailyCollectionPath, quizHubHref } from "@/lib/seo/public-games";
+import { campaignLocaleOf, dailyCollectionPath, quizHubHref } from "@/lib/seo/public-games";
+import { isSeoPageLocale } from "@/lib/seo/game-pages";
 import { SignInLink } from "./public/PublicLinks";
 
 const h2 = "font-poppins text-lg font-bold uppercase md:text-xl";
@@ -24,13 +25,13 @@ export function HubIntro({ locale }: { locale: Locale }) {
 /** Server-rendered body under the game cards: daily link, why an account, quiz links, about, FAQ. */
 export function HubBody({ locale }: { locale: Locale }) {
   const copy = HOME_COPY[locale];
-  const quizLocale = locale === "ka" ? "en" : locale;
+  const quizLocale = campaignLocaleOf(locale);
   return (
     <div className="space-y-8 pt-4 font-poppins text-white">
       <section className="max-w-3xl">
         <h2 className={h2}>{copy.sections.daily}</h2>
         <p className="mt-1 text-sm text-white/60">{copy.sections.dailyHint}</p>
-        <Link href={dailyCollectionPath(locale)} className="mt-2 inline-block text-sm font-bold uppercase tracking-wide text-brand-yellow hover:underline">{copy.sections.dailyAll}</Link>
+        <Link href={dailyCollectionPath(isSeoPageLocale(locale) ? locale : "en")} className="mt-2 inline-block text-sm font-bold uppercase tracking-wide text-brand-yellow hover:underline">{copy.sections.dailyAll}</Link>
       </section>
 
       <section className="max-w-3xl">

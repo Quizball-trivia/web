@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { LOCALES, isLocale, type Locale } from "@/lib/i18n/locale";
+import { isLocale, type Locale } from "@/lib/i18n/locale";
 import { buildLocalizedMetadata } from "@/lib/i18n/metadata";
-import { DAILY_COLLECTION_SLUG, PUBLIC_GAMES_FOLDER, dailyCollectionPath, gamePagePath } from "@/lib/seo/game-pages";
+import { DAILY_COLLECTION_SLUG, PUBLIC_GAMES_FOLDER, SEO_PAGE_LOCALES, dailyCollectionPath, gamePagePath, isSeoPageLocale } from "@/lib/seo/game-pages";
 import { COLLECTION_COPY, HOME_COPY } from "@/lib/seo/home-copy";
-import { PUBLISHED_PUBLIC_GAMES, findPublishedGame, homepageCards } from "@/lib/seo/public-games";
+import { PUBLISHED_PUBLIC_GAMES, findPublishedGame, homepageCards, publishedLocalesOf } from "@/lib/seo/public-games";
 import { buildGamesHomeStructuredData, buildPublicGameStructuredData, serializeJsonLd } from "@/lib/seo/structured-data";
 import { PublicGameScreen } from "./PublicGameScreen";
 import { DailyCollectionScreen } from "./DailyCollectionScreen";
@@ -13,7 +13,7 @@ import { DailyCollectionScreen } from "./DailyCollectionScreen";
 type Params = Promise<{ locale: string; slug: string }>;
 
 /** Locales served by a folder (en + ka share football-games, es has juegos-de-futbol). */
-const localesForFolder = (folder: string): Locale[] => LOCALES.filter((locale) => PUBLIC_GAMES_FOLDER[locale] === folder);
+const localesForFolder = (folder: string): Locale[] => SEO_PAGE_LOCALES.filter((locale) => PUBLIC_GAMES_FOLDER[locale] === folder);
 const afterLocale = (path: string, locale: Locale) => path.slice(`/${locale}`.length);
 
 export async function JsonLd({ data }: { data: unknown }) {
@@ -26,7 +26,7 @@ export const dailyCollectionStaticParams = (folder: string) => localesForFolder(
 
 export function publicGameStaticParams(folder: string) {
   return localesForFolder(folder).flatMap((locale) =>
-    PUBLISHED_PUBLIC_GAMES.map((game) => ({ locale, slug: gamePagePath(game, locale).split("/")[3] })),
+    PUBLISHED_PUBLIC_GAMES.filter((game) => publishedLocalesOf(game).includes(locale as (typeof SEO_PAGE_LOCALES)[number])).map((game) => ({ locale, slug: gamePagePath(game, locale).split("/")[3] })),
   );
 }
 
@@ -40,7 +40,7 @@ export async function publicGameMetadata(folder: string, params: Params): Promis
   return buildLocalizedMetadata({
     locale,
     path: afterLocale(gamePagePath(game, locale), locale),
-    paths: Object.fromEntries(LOCALES.map((l) => [l, afterLocale(gamePagePath(game, l), l)])),
+    paths: Object.fromEntries(publishedLocalesOf(game).map((l) => [l, afterLocale(gamePagePath(game, l), l)])),
     title: copy.metaTitle,
     description: copy.metaDescription,
   });
@@ -48,7 +48,7 @@ export async function publicGameMetadata(folder: string, params: Params): Promis
 
 export async function PublicGamePage({ folder, params }: { folder: string; params: Params }) {
   const { locale, slug } = await params;
-  if (!isLocale(locale)) notFound();
+  if (!isLocale(locale) || !isSeoPageLocale(locale)) notFound();
   const game = findPublishedGame(locale, folder, slug);
   if (!game) notFound();
   const copy = game.copy[locale];
@@ -71,12 +71,12 @@ export async function PublicGamePage({ folder, params }: { folder: string; param
 // ---- daily collection ------------------------------------------------------
 export async function dailyCollectionMetadata(folder: string, params: Promise<{ locale: string }>): Promise<Metadata> {
   const { locale } = await params;
-  if (!isLocale(locale) || PUBLIC_GAMES_FOLDER[locale] !== folder) notFound();
+  if (!isLocale(locale) || !isSeoPageLocale(locale) || PUBLIC_GAMES_FOLDER[locale] !== folder) notFound();
   const copy = COLLECTION_COPY[locale];
   return buildLocalizedMetadata({
     locale,
     path: afterLocale(dailyCollectionPath(locale), locale),
-    paths: Object.fromEntries(LOCALES.map((l) => [l, afterLocale(dailyCollectionPath(l), l)])),
+    paths: Object.fromEntries(SEO_PAGE_LOCALES.map((l) => [l, afterLocale(dailyCollectionPath(l), l)])),
     title: copy.metaTitle,
     description: copy.metaDescription,
   });
@@ -84,7 +84,7 @@ export async function dailyCollectionMetadata(folder: string, params: Promise<{ 
 
 export async function DailyCollectionPage({ folder, params }: { folder: string; params: Promise<{ locale: string }> }) {
   const { locale } = await params;
-  if (!isLocale(locale) || PUBLIC_GAMES_FOLDER[locale] !== folder) notFound();
+  if (!isLocale(locale) || !isSeoPageLocale(locale) || PUBLIC_GAMES_FOLDER[locale] !== folder) notFound();
   const copy = COLLECTION_COPY[locale];
   const structuredData = buildGamesHomeStructuredData({
     locale,

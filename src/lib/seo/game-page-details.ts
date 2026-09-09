@@ -1,4 +1,4 @@
-import type { Locale } from "@/lib/i18n/locale";
+import type { SeoPageLocale } from "./game-pages";
 
 /**
  * The body copy of each published game page (rules, scoring, limits, tips),
@@ -6,7 +6,7 @@ import type { Locale } from "@/lib/i18n/locale";
  * A page is only published (public-games.ts `page: true`) once it has a body
  * here in every locale — templated pages with five strings are not indexed.
  */
-export const GAME_PAGE_DETAILS: Record<string, Record<Locale, string[]>> = {
+export const GAME_PAGE_DETAILS: Record<string, Record<SeoPageLocale, string[]>> = {
   "football-tic-tac-toe": {
     en: [
       "Football Tic Tac Toe is played on a three-by-three grid. Each row and each column carries a category: a club, a nation, a league, a trophy or a manager. Every square therefore stands for two categories at once, and you claim it by naming a footballer who fits both, for example a Brazilian who played for Chelsea.",

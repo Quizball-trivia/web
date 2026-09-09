@@ -14,7 +14,7 @@ check("sitemap excludes /play and /demos", !urls.some((u) => /\/(play|demos)(\/|
 
 // Expected hreflang clusters: every member must list exactly these, and each member must exist (reciprocity).
 const clusters = [
-  { en: "/en", ka: "/ka", es: "/es" },
+  { en: "/en", ka: "/ka", es: "/es", tr: "/tr" },
   { en: "/en/football-games/auction", ka: "/ka/football-games/auction", es: "/es/juegos-de-futbol/subasta" },
   { en: "/en/football-games/football-tic-tac-toe", ka: "/ka/football-games/football-tic-tac-toe", es: "/es/juegos-de-futbol/tiki-taka-toe" },
   { en: "/en/football-games/daily-challenges", ka: "/ka/football-games/daily-challenges", es: "/es/juegos-de-futbol/retos-diarios" },
@@ -49,7 +49,7 @@ for (const [path, status, target] of [["/en/football-games", 308, "/en"], ["/es/
   const loc = (res.headers.get("location") ?? "").replace(/^https?:\/\/[^/]+/, "");
   check(`${path} → ${status}${target ? " " + target : ""}`, res.status === status && (!target || loc === target), `${res.status} ${loc}`);
 }
-for (const path of ["/en/games/auction", "/en/daily/money-drop", "/es/football-games/auction", "/en/football-games/football-timeline", "/en/football-games/nope"]) {
+for (const path of ["/en/games/auction", "/en/daily/money-drop", "/es/football-games/auction", "/en/football-games/football-timeline", "/en/football-games/nope", "/tr/football-games/auction", "/tr/football-games/daily-challenges", "/tr/juegos-de-futbol/subasta"]) {
   const res = await get(path);
   check(`${path} 404`, res.status === 404, String(res.status));
 }
@@ -58,12 +58,13 @@ check("/play noindex", /noindex/i.test((play.headers.get("x-robots-tag") ?? "") 
 const board = await get("/leaderboard");
 check("/leaderboard noindex", /noindex/i.test((board.headers.get("x-robots-tag") ?? "") + (await board.text())), String(board.status));
 // The hub is the Play screen: app shell present, exactly one H1, and no /demos links (not served on production).
-for (const path of ["/en", "/ka", "/es"]) {
+for (const path of ["/en", "/ka", "/es", "/tr"]) {
   const html = await (await get(path)).text();
   check(`${path} renders the app shell`, /data-shell="app"/.test(html));
   check(`${path} has exactly one h1`, (html.match(/<h1[\s>]/gi) ?? []).length === 1, String((html.match(/<h1[\s>]/gi) ?? []).length));
   check(`${path} has no /demos links`, !/href="\/demos\//.test(html));
   check(`${path} server HTML is the guest variant`, /data-chrome="guest"/.test(html) && !/data-chrome="member"/.test(html));
+  check(`${path} cards never link to an unpublished locale page`, !/href="\/tr\/football-games\//.test(html));
 }
 const about = await (await get("/en/about")).text();
 check("/en/about stays outside the app shell", !/data-shell="app"/.test(about));

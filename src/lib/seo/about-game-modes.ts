@@ -196,4 +196,60 @@ export const ABOUT_GAME_MODES_COPY: Record<Locale, AboutGameModesCopy> = {
     ],
     rankedMeta: "Normalmente 12–18 preguntas · Unos 5 minutos · Puntos de Rango en juego",
   },
+  tr: {
+    overviewEyebrow: "Oyun",
+    overviewTitle: "Maç gibi oynanan futbol bilgisi",
+    modesEyebrow: "Oyun modları",
+    modesTitle: "QuizBall'u oynama yolları",
+    modesIntro:
+      "Günlük bir görevle ısın, sıralama baskısı olmadan bir arkadaşınla oyna ya da rekabetçi bir 1v1 maça girip tabloda yüksel. Her mod futbol bilgisini farklı şekilde kullanır.",
+    modes: [
+      {
+        id: "ranked",
+        title: "Dereceli 1v1",
+        body:
+          "Canlı bir karşılaşma oyna, doğru cevaplarla topu kazan, gol at ve QuizBall sıralamasında yükselmek için RP kazan.",
+      },
+      {
+        id: "friendly",
+        title: "Dostluk 1v1",
+        body:
+          "Özel bir oda kur ya da bir odaya katıl ve bir arkadaşınla özel kurallarla oyna. Sıralama Puanı riske girmez.",
+      },
+      {
+        id: "daily",
+        title: "Günlük görevler",
+        body:
+          "İpuçları, doğru mu yanlış mı, kariyer yolları, yüksek-düşük ve Money Drop gibi kısa futbol oyunlarından oluşan dönüşümlü bir set oyna, sonra yeni görevler için geri dön.",
+      },
+      {
+        id: "auction",
+        title: "Futbol açık artırması",
+        body:
+          "350M$ bütçeyle gizemli futbolculara teklif ver ve yedi oyunculuk bir kadro kur. Akıllı fiyatlar, kâr ve kadro uyumu kazananı belirler.",
+      },
+    ],
+    rankedEyebrow: "Rekabetçi mod",
+    rankedTitle: "Dereceli 1v1 nasıl işler",
+    rankedIntro:
+      "Dereceli mod, aynı futbol sorularını başka bir oyuncuya karşı kısa bir canlı maça dönüştürür.",
+    rankedSteps: [
+      {
+        title: "Bir kategori engelle",
+        body:
+          "Rastgele üç futbol kategorisi çıkar. Her oyuncu birini engeller ve maç sahada kalan kategoriyle oynanır.",
+      },
+      {
+        title: "Topu kazan",
+        body:
+          "İki oyuncu da canlı soruları yanıtlar. Doğru cevaplar topu ilerletir, atak kurar ve gol fırsatı yaratır.",
+      },
+      {
+        title: "Gol at ve yüksel",
+        body:
+          "Sonucu goller belirler. Maçtan sonra Sıralama Puanı kademeni ve liderlik tablosundaki yerini günceller.",
+      },
+    ],
+    rankedMeta: "Genellikle 12–18 soru · Yaklaşık 5 dakika · Sıralama Puanı riskte",
+  },
 };

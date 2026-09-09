@@ -8,7 +8,7 @@ import { X } from "lucide-react";
 /** Every engine lives in one client chunk that is fetched only when a visitor presses Play. */
 const DemoModeView = dynamic(() => import("@/features/demos/DemoModeView").then((m) => m.DemoModeView), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 
-export const EXIT_LABEL: Record<string, string> = { en: "Exit practice", ka: "სავარჯიშოდან გასვლა", es: "Salir de la práctica" };
+export const EXIT_LABEL: Record<string, string> = { en: "Exit practice", ka: "სავარჯიშოდან გასვლა", es: "Salir de la práctica", tr: "Alıştırmadan çık" };
 
 /**
  * Full-viewport layer for a practice round. The engines are full-screen

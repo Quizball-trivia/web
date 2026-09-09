@@ -1,12 +1,12 @@
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import type { Locale } from "@/lib/i18n/locale";
+import type { SeoPageLocale } from "@/lib/seo/game-pages";
 import { COLLECTION_COPY, HOME_COPY } from "@/lib/seo/home-copy";
 import { homepageCards } from "@/lib/seo/public-games";
 import { PublicCardGrid, PublicPageFrame } from "./public/PublicCards";
 
 /** Narrow collection page for the daily challenges; links back to the homepage hub. */
-export function DailyCollectionScreen({ locale }: { locale: Locale }) {
+export function DailyCollectionScreen({ locale }: { locale: SeoPageLocale }) {
   const copy = COLLECTION_COPY[locale];
   const home = HOME_COPY[locale];
   return (
