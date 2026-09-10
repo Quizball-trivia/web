@@ -558,3 +558,26 @@ describe('auction realtime reducer', () => {
     expect(clientState.currentRound!.clues).toHaveLength(7);
   });
 });
+
+describe('localized clue text', () => {
+  const localizedRound = () => round({
+    footballer: {
+      ...round().footballer,
+      clues: ['Won a major European trophy'],
+      cluesByLocale: {
+        en: ['Won a major European trophy'],
+        tr: ['Büyük bir Avrupa kupası kazandı'],
+      },
+    },
+  });
+
+  it('shows the clue in the app locale when the server carried it', () => {
+    const clientState = toClientAuctionState(matchState({ currentRound: localizedRound() }), { locale: 'tr' });
+    expect(clientState.currentRound?.clues[0]).toBe('Büyük bir Avrupa kupası kazandı');
+  });
+
+  it('falls back to the match-locale clue for a language the server did not carry', () => {
+    const clientState = toClientAuctionState(matchState({ currentRound: localizedRound() }), { locale: 'es' });
+    expect(clientState.currentRound?.clues[0]).toBe('Won a major European trophy');
+  });
+});

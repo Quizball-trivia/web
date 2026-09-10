@@ -783,6 +783,8 @@ export interface PublicAuctionFootballer {
   trueValue?: number;
   startingPrice: number;
   clues?: readonly string[];
+  /** Same steps as `clues` per content locale; the client shows its own language. */
+  cluesByLocale?: Partial<Record<'en' | 'ka' | 'es' | 'tr', readonly string[]>>;
   imageUrl?: string | null;
   currentClub?: string | null;
   nationality?: string | null;
