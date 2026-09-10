@@ -47,6 +47,18 @@ function state(overrides: Partial<FootballGridState> = {}): FootballGridState {
 describe('footballGrid.store', () => {
   beforeEach(() => useFootballGridStore.getState().clear());
 
+  it('accepts board 1 of a new rematch series and ignores the prior series expiry', () => {
+    const old: FootballGridSeriesInfo = { seriesId: 'old', format: 'bo3', gameIndex: 3, targetWins: 2, wins: { self: 2, rival: 0 }, draws: 0, winnerUserId: 'self', finished: true };
+    const found = (matchId: string, series: FootballGridSeriesInfo) => ({ matchId, state: state({ matchId }), series, opponent: { id: 'rival', username: 'Rival', avatarUrl: null }, capabilities: { canAddFriend: true, canChallenge: true }, serverNow: new Date().toISOString() });
+    const store = useFootballGridStore.getState();
+    store.setMatchFound(found('old-final', old));
+    store.setMatchFound(found('new-first', { ...old, seriesId: 'fresh', gameIndex: 1, finished: false, winnerUserId: null, wins: { self: 0, rival: 0 } }));
+    store.setRematch({ seriesId: 'old', seriesVersion: 99, status: 'expired', acceptedUserIds: [], expiresAt: null });
+    expect(useFootballGridStore.getState().state?.matchId).toBe('new-first');
+    expect(useFootballGridStore.getState().rematch).toBeNull();
+    expect(useFootballGridStore.getState().lastGameResult).toBeNull();
+  });
+
   it('captures match handoff and opponent identity without exposing a bot badge', () => {
     useFootballGridStore.getState().setMatchFound({
       matchId: 'match-1',

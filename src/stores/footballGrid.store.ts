@@ -265,9 +265,12 @@ export const useFootballGridStore = create<FootballGridStoreState>((set) => ({
     };
   }),
   setRematch: (payload) => set((current) => {
+    // Versions are scoped to a series. A delayed offer/expiry from the
+    // finished series must not replace the fresh rematch's state.
+    if (current.series && payload.seriesId !== current.series.seriesId) return current;
     // Rematch broadcasts can arrive out of order across reconnects; never let
     // an older series version regress a terminal state back to pending.
-    if (current.rematch && payload.seriesVersion < current.rematch.seriesVersion) return current;
+    if (current.rematch?.seriesId === payload.seriesId && payload.seriesVersion < current.rematch.seriesVersion) return current;
     return { rematch: payload };
   }),
   setCommandResult: (payload) => set((current) => {
