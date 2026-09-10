@@ -64,9 +64,10 @@ export function DemoModeView({ slug, backHref = "/demos", onExit, onEvent }: {
 
   switch (mode.slug) {
     case "match":
+      // Inside a practice layer the training match owns its exit ("Skip training").
       return (
         <>
-          <DemoBackButton href={backHref} onClick={onExit} />
+          {!onExit && <DemoBackButton href={backHref} />}
           <DemoTraining backHref={backHref} onExit={onExit} />
         </>
       );

@@ -46,12 +46,13 @@ function TrainingMatchContent() {
 
 type TrainingMatchScreenProps = Pick<
   ComponentProps<typeof TrainingMatchProvider>,
-  "onComplete" | "banCategoriesOverride" | "questionsOverride" | "resultsCopy"
+  "onComplete" | "banCategoriesOverride" | "banCategoriesFallback" | "questionsOverride" | "resultsCopy"
 >;
 
 export function TrainingMatchScreen({
   onComplete,
   banCategoriesOverride,
+  banCategoriesFallback,
   questionsOverride,
   resultsCopy,
 }: TrainingMatchScreenProps) {
@@ -59,6 +60,7 @@ export function TrainingMatchScreen({
     <TrainingMatchProvider
       onComplete={onComplete}
       banCategoriesOverride={banCategoriesOverride}
+      banCategoriesFallback={banCategoriesFallback}
       questionsOverride={questionsOverride}
       resultsCopy={resultsCopy}
     >

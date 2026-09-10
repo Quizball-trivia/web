@@ -52,6 +52,8 @@ interface TrainingMatchProviderProps {
   onComplete: () => void;
   /** Skip the categories fetch and use these for the ban phase (offline/demo). */
   banCategoriesOverride?: CategorySummary[];
+  /** Used when the real catalog cannot be read (request failed or too few with artwork). */
+  banCategoriesFallback?: CategorySummary[];
   /** Replace the built-in training questions (offline/demo). Must match the 6-per-half structure. */
   questionsOverride?: GameQuestion[];
   /** Overrides the results-screen message + CTA (offline/demo). */
@@ -62,6 +64,7 @@ export function TrainingMatchProvider({
   children,
   onComplete,
   banCategoriesOverride,
+  banCategoriesFallback,
   questionsOverride,
   resultsCopy,
 }: TrainingMatchProviderProps) {
@@ -69,7 +72,7 @@ export function TrainingMatchProvider({
   const completion = useTrainingCompletion();
   const { locale } = useLocale();
 
-  const { data: categoriesData } = useCategoriesList(
+  const { data: categoriesData, isError: categoriesError } = useCategoriesList(
     {
       limit: 100,
       page: 1,
@@ -86,11 +89,13 @@ export function TrainingMatchProvider({
       return banCategoriesOverride.slice(0, BAN_CATEGORY_COUNT);
     }
     const items = categoriesData?.items ?? [];
-    if (items.length === 0) return [];
     const withArt = items.filter((category) => Boolean(category.imageUrl));
-    const pool = withArt.length >= BAN_CATEGORY_COUNT ? withArt : items;
-    return pool.slice(0, BAN_CATEGORY_COUNT);
-  }, [banCategoriesOverride, categoriesData?.items]);
+    if (withArt.length >= BAN_CATEGORY_COUNT) return withArt.slice(0, BAN_CATEGORY_COUNT);
+    // Real catalog unusable (no artwork, or the request failed): the canned set keeps the tutorial playable.
+    if (banCategoriesFallback && (categoriesError || categoriesData)) return banCategoriesFallback.slice(0, BAN_CATEGORY_COUNT);
+    if (items.length === 0) return [];
+    return items.slice(0, BAN_CATEGORY_COUNT);
+  }, [banCategoriesOverride, banCategoriesFallback, categoriesData, categoriesError]);
 
   // In ranked, both bans leave one category. Preload the two scripted
   // survivors and use their real published MCQs for the corresponding halves.

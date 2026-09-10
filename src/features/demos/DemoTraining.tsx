@@ -53,7 +53,7 @@ export function DemoTraining({ backHref = "/demos", onExit }: { backHref?: strin
   return (
     <TrainingMatchScreen
       onComplete={handleComplete}
-      banCategoriesOverride={banCategories}
+      banCategoriesFallback={banCategories}
       questionsOverride={questions}
       resultsCopy={resultsCopy}
     />
