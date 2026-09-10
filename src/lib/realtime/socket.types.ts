@@ -787,6 +787,8 @@ export interface PublicAuctionFootballer {
   trueValue?: number;
   startingPrice: number;
   clues?: readonly string[];
+  /** Same steps as `clues` per content locale; the client shows its own language. */
+  cluesByLocale?: Partial<Record<'en' | 'ka' | 'es' | 'tr', readonly string[]>>;
   imageUrl?: string | null;
   currentClub?: string | null;
   nationality?: string | null;
@@ -958,6 +960,8 @@ export interface FootballGridCriterionView {
   family: 'club' | 'country' | 'league' | 'manager' | 'teammate' | 'trophy_award' | 'wildcard';
   labelEn: string;
   labelKa: string;
+  labelEs?: string | null;
+  labelTr?: string | null;
   assetKey: string | null;
   difficulty: FootballGridDifficulty;
 }

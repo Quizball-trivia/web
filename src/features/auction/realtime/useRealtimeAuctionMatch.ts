@@ -332,9 +332,10 @@ export function useRealtimeAuctionMatch({
             humanAvatarSeed,
             humanAvatarCustomization,
             serverTimeOffsetMs,
+            locale,
           })
         : null,
-    [humanAvatarSeed, humanAvatarCustomization, humanPlayerId, publicState, serverTimeOffsetMs],
+    [humanAvatarSeed, humanAvatarCustomization, humanPlayerId, publicState, serverTimeOffsetMs, locale],
   );
 
   const updateServerTimeOffset = useCallback((serverNow: string | undefined): number | null => {
