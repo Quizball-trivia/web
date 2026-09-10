@@ -332,6 +332,7 @@ export function useRealtimeAuctionMatch({
             humanAvatarSeed,
             humanAvatarCustomization,
             serverTimeOffsetMs,
+            locale,
           })
         : null,
     [humanAvatarSeed, humanAvatarCustomization, humanPlayerId, publicState, serverTimeOffsetMs],
