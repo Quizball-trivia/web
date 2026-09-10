@@ -12,7 +12,7 @@ import { AuctionModeModal } from '@/features/auction/components/AuctionModeModal
 import { FootballGridModeModal } from '@/features/football-grid/components/FootballGridModeModal';
 import { HomeRecentMatches } from '@/components/shared/HomeRecentMatches';
 import { AllGamesGrid } from '@/features/play/AllGamesGrid';
-import { Bot } from 'lucide-react';
+import { Dumbbell } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useTierLabel } from '@/hooks/useTierLabel';
 import { getI18nText } from '@/lib/utils/i18n';
@@ -457,10 +457,10 @@ export function ModeSelectionScreen({
                   <button
                     type="button"
                     onClick={(event) => { event.stopPropagation(); setRankedDemoOpen(true); }}
-                    className="mt-2 flex h-10 w-[180px] items-center justify-center gap-1.5 rounded-[8px] bg-black/25 text-[13px] uppercase tracking-wide text-white/90 transition-colors hover:bg-black/35"
+                    className="mt-2 flex h-[56px] w-[180px] items-center justify-center gap-2 rounded-[8px] bg-brand-yellow text-lg uppercase tracking-wide text-black whitespace-nowrap transition-colors hover:bg-brand-yellow-deep"
                     style={poppins}
                   >
-                    <Bot className="size-4" strokeWidth={2.5} />
+                    <Dumbbell className="size-5 shrink-0" strokeWidth={2.5} />
                     {t('play.guestDemoCta')}
                   </button>
                 )}
@@ -589,10 +589,10 @@ export function ModeSelectionScreen({
                   <button
                     type="button"
                     onClick={(event) => { event.stopPropagation(); setRankedDemoOpen(true); }}
-                    className="flex h-9 w-[120px] items-center justify-center gap-1 rounded-[8px] bg-black/25 text-[11px] uppercase tracking-wide text-white/90 transition-colors hover:bg-black/35"
+                    className="flex h-[44px] w-[120px] items-center justify-center gap-1 rounded-[8px] bg-brand-yellow text-[13px] uppercase tracking-wide text-black whitespace-nowrap transition-colors hover:bg-brand-yellow-deep"
                     style={poppins}
                   >
-                    <Bot className="size-3.5" strokeWidth={2.5} />
+                    <Dumbbell className="size-4 shrink-0" strokeWidth={2.5} />
                     {t('play.guestDemoCta')}
                   </button>
                 )}
