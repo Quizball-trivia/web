@@ -517,11 +517,16 @@ function matchesFilter(mode: DemoModeCard, section: "daily" | "coins", filter: F
   return formatOf(mode.slug) === filter;
 }
 
+// Accent- and case-insensitive so "Gol" finds "Golü" and "sut" finds "Şut" (Turkish ı folds to i).
+function searchKey(value: string): string {
+  return value.trim().toLowerCase().replace(/ı/g, "i").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
 function matchesQuery(mode: DemoModeCard, query: string): boolean {
-  const q = query.trim().toLowerCase();
+  const q = searchKey(query);
   if (!q) return true;
   return [mode.title, mode.description].flatMap((text) => [text.en, text.ka, text.es ?? "", text.tr ?? ""]).concat(mode.slug)
-    .some((text) => text.toLowerCase().includes(q));
+    .some((text) => searchKey(text).includes(q));
 }
 
 /** Search icon that slides open into a field, plus the filter pills. */
