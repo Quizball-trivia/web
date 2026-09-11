@@ -2,6 +2,8 @@
 
 import { useCallback } from "react";
 import { useLocale } from "@/contexts/LocaleContext";
+import { ES } from "./i18n.es";
+import { TR } from "./i18n.tr";
 
 /**
  * Lightweight EN→KA copy layer for the mini-game prototypes. Keys are the
@@ -9,7 +11,7 @@ import { useLocale } from "@/contexts/LocaleContext";
  * from the dictionary falls back to the English key, so untranslated copy
  * renders unchanged rather than breaking.
  */
-export type MiniLocale = "en" | "ka";
+export type MiniLocale = "en" | "ka" | "es" | "tr";
 
 const KA: Record<string, string> = {
   // Guess the Goal (live)
@@ -607,9 +609,11 @@ const KA: Record<string, string> = {
   "Rival": "მეტოქე",
 };
 
+const DICTS: Partial<Record<MiniLocale, Record<string, string>>> = { ka: KA, es: ES, tr: TR };
+
 export function useMiniLocale(): MiniLocale {
   const { locale } = useLocale();
-  return locale === "ka" ? "ka" : "en";
+  return locale;
 }
 
 /** t('Question {n} / {total}', { n: 1, total: 5 }) — EN key, {slot} substitution. */
@@ -617,7 +621,7 @@ export function useMiniT() {
   const locale = useMiniLocale();
   return useCallback(
     (key: string, vars?: Record<string, string | number>) => {
-      let out = locale === "ka" ? (KA[key] ?? key) : key;
+      let out = DICTS[locale]?.[key] ?? key;
       if (vars) {
         for (const [k, v] of Object.entries(vars)) {
           out = out.split(`{${k}}`).join(String(v));
