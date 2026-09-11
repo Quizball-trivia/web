@@ -31,7 +31,7 @@ function PlayerSeason3Survey({userId}:{userId:string}){
         if(document.querySelector('[role="dialog"]')){timer=setTimeout(run,3000);return;}
         const result=await claimSurvey(pending.matchId);
         if(cancelled)return;
-        sessionStorage.removeItem(surveyKey(userId));
+        if(!result.kind)sessionStorage.removeItem(surveyKey(userId));
         if(result.kind){setOrder(null);setWho(null);setIdea('');setDone(false);setError(false);setPrompt({kind:result.kind,matchId:pending.matchId});}
       }catch{if(!cancelled&&++attempts<3)timer=setTimeout(run,3000);}
     };
@@ -44,7 +44,7 @@ function PlayerSeason3Survey({userId}:{userId:string}){
     submitting.current=true;setBusy(true);setError(false);
     try{localStorage.setItem(`${surveyKey(userId)}.snooze`,String(Date.now()+7*86400000));}catch{/* Storage may be disabled. */}
     setPrompt(null);
-    try{await dismissSurvey(prompt.matchId);}catch{/* Local snooze still protects this browser while offline. */}finally{submitting.current=false;setBusy(false);}
+    try{await dismissSurvey(prompt.matchId);sessionStorage.removeItem(surveyKey(userId));}catch{/* Local snooze still protects this browser while offline. */}finally{submitting.current=false;setBusy(false);}
   };
   const send=async()=>{
     if(submitting.current||!prompt)return;
@@ -52,6 +52,7 @@ function PlayerSeason3Survey({userId}:{userId:string}){
     submitting.current=true;setBusy(true);setError(false);
     try{
       await submitSurvey(prompt.matchId,locale,prompt.kind==='vote'?{kind:'vote',removeOrder:order!,removeWho:who!}:{kind:'idea',idea:idea.trim()});
+      try{sessionStorage.removeItem(surveyKey(userId));}catch{/* The server response is already saved. */}
       setDone(true);
     }catch{setError(true);}finally{submitting.current=false;setBusy(false);}
   };
