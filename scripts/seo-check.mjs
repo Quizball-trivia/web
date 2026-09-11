@@ -53,6 +53,30 @@ for (const path of ["/en/games/auction", "/en/daily/money-drop", "/es/football-g
   const res = await get(path);
   check(`${path} 404`, res.status === 404, String(res.status));
 }
+// Every published game page from the sitemap: self-canonical, indexable, one H1, and an exact reciprocal hreflang cluster.
+const gamePaths = urls.map((u) => u.replace(/^https?:\/\/[^/]+/, "")).filter((p) => /^\/(en|ka|es|tr)\/(football-games|juegos-de-futbol)\//.test(p) && !pages.includes(p));
+const alternatesOf = new Map();
+const readAlternates = async (path) => {
+  if (alternatesOf.has(path)) return alternatesOf.get(path);
+  const res = await get(path);
+  const html = await res.text();
+  const got = Object.fromEntries([...html.matchAll(/<link rel="alternate" hreflang="([^"]+)" href="([^"]+)"/gi)].map((m) => [m[1], m[2].replace(/^https?:\/\/[^/]+/, "")]));
+  const entry = { status: res.status, got, canonical: attr(html, /<link rel="canonical" href="([^"]+)"/i), h1s: (html.match(/<h1[\s>]/gi) ?? []).length, noindex: /noindex/i.test((res.headers.get("x-robots-tag") ?? "") + (attr(html, /<meta name="robots" content="([^"]+)"/i) ?? "")) };
+  alternatesOf.set(path, entry);
+  return entry;
+};
+for (const path of gamePaths) {
+  const page = await readAlternates(path);
+  check(`${path} 200 / indexable / canonical / one h1`, page.status === 200 && !page.noindex && Boolean(page.canonical?.endsWith(path)) && page.h1s === 1, `${page.status} h1=${page.h1s} canonical=${page.canonical}`);
+  const members = Object.entries(page.got).filter(([l]) => l !== "x-default");
+  let reciprocal = members.length > 0 && page.got["x-default"] === page.got.en;
+  for (const [, memberPath] of members) {
+    const other = await readAlternates(memberPath);
+    const same = Object.keys(page.got).length === Object.keys(other.got).length && Object.entries(page.got).every(([l, h]) => other.got[l] === h);
+    if (other.status !== 200 || !same) reciprocal = false;
+  }
+  check(`${path} hreflang cluster reciprocal`, reciprocal, JSON.stringify(page.got));
+}
 const play = await get("/play");
 check("/play noindex", /noindex/i.test((play.headers.get("x-robots-tag") ?? "") + (await play.text())), String(play.status));
 const board = await get("/leaderboard");
