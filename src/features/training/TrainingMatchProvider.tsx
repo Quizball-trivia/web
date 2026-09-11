@@ -72,11 +72,13 @@ export function TrainingMatchProvider({
   const completion = useTrainingCompletion();
   const { locale } = useLocale();
 
+  // Same catalog a friendly lobby offers: active, playable, never campaign-only.
   const { data: categoriesData, isError: categoriesError } = useCategoriesList(
     {
       limit: 100,
       page: 1,
       is_active: "true",
+      min_questions: 5,
     },
     { enabled: !banCategoriesOverride },
     locale,
