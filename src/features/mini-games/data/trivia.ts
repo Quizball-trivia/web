@@ -243,11 +243,13 @@ const BANK: BilingualTrivia[] = [
   },
 ];
 
+// The bank is authored in English and Georgian only; other locales read English.
 function resolve(row: BilingualTrivia, locale: MiniLocale): TriviaQuestion {
+  const key = locale === "ka" ? "ka" : "en";
   return {
     ...row,
-    q: row.q[locale],
-    options: row.options.map((o) => o[locale]),
+    q: row.q[key],
+    options: row.options.map((o) => o[key]),
   };
 }
 

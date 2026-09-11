@@ -95,10 +95,11 @@ const BANK: BilingualOddsQuestion[] = [
 ];
 
 export function getOddsQuestions(locale: MiniLocale): OddsQuestion[] {
+  const key = locale === 'ka' ? 'ka' : 'en';
   return BANK.map((row) => ({
     ...row,
-    q: row.q[locale],
-    options: row.options.map((o) => ({ text: o.text[locale], odds: o.odds })),
+    q: row.q[key],
+    options: row.options.map((o) => ({ text: o.text[key], odds: o.odds })),
   }));
 }
 
