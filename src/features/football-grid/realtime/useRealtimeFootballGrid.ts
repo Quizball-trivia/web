@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { useRealtimeConnection } from '@/lib/realtime/useRealtimeConnection';
+import { useRealtimeMatchSocket } from '@/lib/realtime/useRealtimeConnection';
 import { useFootballGridStore } from '@/stores/footballGrid.store';
 import type { FootballGridState } from '@/lib/realtime/socket.types';
 import { createRealtimeCommandId } from '@/lib/realtime/command-id';
@@ -38,7 +38,7 @@ export function useRealtimeFootballGrid({
   autoStart = true,
   assetsReady = true,
 }: UseRealtimeFootballGridOptions) {
-  const socket = useRealtimeConnection({ enabled, selfUserId });
+  const socket = useRealtimeMatchSocket({ enabled, selfUserId });
   const search = useFootballGridStore((current) => current.search);
   const state = useFootballGridStore((current) => current.state);
   const opponent = useFootballGridStore((current) => current.opponent);

@@ -14,6 +14,13 @@ interface LocalizedMetadataInput {
   path: string;
   title: string;
   description: string;
+  /**
+   * Translated paths (after the locale segment) when the page's URL differs per
+   * locale, e.g. { en: "/football-games/auction", es: "/juegos-de-futbol/subasta" }.
+   * Locales missing from the map get no alternate: hreflang must only name
+   * equivalents that really exist. x-default follows the English entry.
+   */
+  paths?: Partial<Record<Locale, string>>;
 }
 
 // Builds canonical, hreflang, og locale/url for any localized public page.
@@ -23,15 +30,20 @@ export function buildLocalizedMetadata({
   path,
   title,
   description,
+  paths,
 }: LocalizedMetadataInput): Metadata {
-  const suffix = path.startsWith("/") || path === "" ? path : `/${path}`;
+  const normalize = (value: string) => (value.startsWith("/") || value === "" ? value : `/${value}`);
+  const suffix = normalize(path);
   const canonical = `${SITE_URL}/${locale}${suffix}`;
 
   const languages: Record<string, string> = {};
   for (const l of LOCALES) {
-    languages[l] = `${SITE_URL}/${l}${suffix}`;
+    const localized = paths ? paths[l] : suffix;
+    if (localized === undefined) continue;
+    languages[l] = `${SITE_URL}/${l}${normalize(localized)}`;
   }
-  languages["x-default"] = `${SITE_URL}/${DEFAULT_LOCALE}${suffix}`;
+  const defaultPath = paths ? paths[DEFAULT_LOCALE] : suffix;
+  if (defaultPath !== undefined) languages["x-default"] = `${SITE_URL}/${DEFAULT_LOCALE}${normalize(defaultPath)}`;
 
   return {
     title,

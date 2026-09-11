@@ -28,12 +28,16 @@ import { trackWlBannerClicked, trackWlBannerViewed } from '@/lib/analytics/game-
 
 import { getNextTierBand } from '@/utils/rankedTier';
 import { footballGridAssetUrl } from '@/lib/football-grid/assets';
-import { useAuthStore } from '@/stores/auth.store';
 import { useAuthPromptStore } from '@/stores/authPrompt.store';
+import { useIsGuest } from '@/lib/auth/useIsGuest';
+import { findPublicGameByModeId, publicGamePath as gamePagePath } from '@/lib/seo/public-games';
+import { PracticeDemo } from '@/features/marketing/public/PracticeLayer';
 
 const PLAY_ENTRANCE_SESSION_KEY = 'quizball.playEntranceSeen';
 const PLAY_ENTRANCE_INITIAL = { opacity: 0.88, scale: 0.985 } as const;
 const PLAY_ENTRANCE_ANIMATE = { opacity: 1, scale: 1 } as const;
+// Keyframes from the pre-state: `initial` stays false so the server HTML and the first client render match.
+const PLAY_ENTRANCE_KEYFRAMES = { opacity: [PLAY_ENTRANCE_INITIAL.opacity, 1], scale: [PLAY_ENTRANCE_INITIAL.scale, 1] };
 const PLAY_ENTRANCE_TRANSITION = { duration: 0.22, ease: 'easeOut' } as const;
 
 function shouldPlayEntranceAnimation() {
@@ -240,6 +244,8 @@ interface ModeSelectionScreenProps {
   matchStatsSummary?: MatchStatsSummary | null;
   rankedProfile: RankedProfileResponse | null;
   rankedProfileLoading?: boolean;
+  /** Server-rendered content the public hub places between the cards and the footer. */
+  beforeFooter?: React.ReactNode;
 }
 
 
@@ -255,6 +261,7 @@ export function ModeSelectionScreen({
   matchStatsSummary = null,
   rankedProfile,
   rankedProfileLoading = false,
+  beforeFooter,
 }: ModeSelectionScreenProps) {
   const { t, locale } = useLocale();
   const tierLabelOf = useTierLabel();
@@ -276,7 +283,13 @@ export function ModeSelectionScreen({
   );
   const [auctionModalOpen, setAuctionModalOpen] = useState(false);
   const [gridModalOpen, setGridModalOpen] = useState(false);
-  const [playEntranceAnimation] = useState(shouldPlayEntranceAnimation);
+  // Seeded false so the server and the first client render agree; the
+  // session check runs after hydration and only then triggers the entrance.
+  const [playEntranceAnimation, setPlayEntranceAnimation] = useState(false);
+  useEffect(() => {
+    if (!shouldPlayEntranceAnimation()) return;
+    queueMicrotask(() => setPlayEntranceAnimation(true));
+  }, []);
   const isPlacementInProgress = rankedProfile ? rankedProfile.placementStatus !== 'placed' : false;
   const placementPlayed = rankedProfile?.placementPlayed ?? 0;
   const placementRequired = Math.max(1, rankedProfile?.placementRequired ?? 3);
@@ -289,8 +302,16 @@ export function ModeSelectionScreen({
   const router = useRouter();
   // Guest mode: signed-out visitors browse the Play page and try demos, but any
   // action that needs an account opens the sign-in dialog instead.
-  const isGuest = useAuthStore((state) => state.status) === 'anonymous';
+  const isGuest = useIsGuest();
   const openAuthPrompt = useAuthPromptStore((state) => state.open);
+  // Guest "vs AI" demo runs the practice engine in a full-screen layer; the
+  // /demos gallery is not served on production. Auction / Grid guests go to
+  // their public pages.
+  const [rankedDemoOpen, setRankedDemoOpen] = useState(false);
+  const publicPageFor = (modeId: string) => {
+    const game = findPublicGameByModeId(modeId);
+    return game?.page ? gamePagePath(game, locale) : undefined;
+  };
   const objectivesEnabled = useObjectivesEnabled();
   const { data: objectivesData, isLoading: objectivesLoading } = useObjectives({ enabled: objectivesEnabled });
   const rankedTitleStyle = {
@@ -336,8 +357,8 @@ export function ModeSelectionScreen({
 
   return (
     <motion.div
-      initial={playEntranceAnimation ? PLAY_ENTRANCE_INITIAL : false}
-      animate={PLAY_ENTRANCE_ANIMATE}
+      initial={false}
+      animate={playEntranceAnimation ? PLAY_ENTRANCE_KEYFRAMES : PLAY_ENTRANCE_ANIMATE}
       transition={playEntranceAnimation ? PLAY_ENTRANCE_TRANSITION : { duration: 0 }}
       className="max-w-5xl mx-auto px-4 py-3 space-y-4 md:py-6 md:space-y-5 font-fun"
     >
@@ -381,12 +402,12 @@ export function ModeSelectionScreen({
                 (~40% of the card) so long locales (e.g. Georgian) wrap onto a
                 second line instead of running under the absolute trophy. */}
             <div className="flex flex-1 min-w-0 flex-col">
-              <h1
+              <h2
                 className="max-w-[20rem] text-[clamp(1.75rem,3vw,2.75rem)] uppercase text-white [overflow-wrap:normal] [word-break:keep-all] [hyphens:none]"
                 style={{ ...rankedTitleStyle, lineHeight: 1.15 }}
               >
                 {isEventMode ? t('play.rankedMatchEvent') : t('play.rankedMatch')}
-              </h1>
+              </h2>
               <div className="mt-1.5 text-lg uppercase tracking-wide text-white/90" style={poppins}>
                 {rankedProfileLoading
                   ? t('play.rankedSubtitle')
@@ -404,15 +425,15 @@ export function ModeSelectionScreen({
                 {/* Guest demo — ranked 1v1 vs AI; stopPropagation so the
                     hero's own onClick (auth prompt) doesn't swallow the tap. */}
                 {isGuest && (
-                  <Link
-                    href="/demos/match?from=/play"
-                    onClick={(event) => event.stopPropagation()}
+                  <button
+                    type="button"
+                    onClick={(event) => { event.stopPropagation(); setRankedDemoOpen(true); }}
                     className="mt-2 flex h-10 w-[180px] items-center justify-center gap-1.5 rounded-[8px] bg-black/25 text-[13px] uppercase tracking-wide text-white/90 transition-colors hover:bg-black/35"
                     style={poppins}
                   >
                     <Bot className="size-4" strokeWidth={2.5} />
                     {t('play.guestDemoCta')}
-                  </Link>
+                  </button>
                 )}
               </div>
             </div>
@@ -465,12 +486,12 @@ export function ModeSelectionScreen({
             {/* Top row: title (left) | RP block (right) */}
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
-                <h1
+                <h2
                   className="text-[1.55rem] leading-[1.05] uppercase text-white [overflow-wrap:normal] [word-break:keep-all] [hyphens:none]"
                   style={rankedTitleStyle}
                 >
                   {t('play.rankedMatch')}
-                </h1>
+                </h2>
                 <div className="mt-1.5 text-[11px] uppercase tracking-wide text-white/90" style={poppins}>
                   {rankedProfileLoading
                     ? t('play.rankedSubtitle')
@@ -536,15 +557,15 @@ export function ModeSelectionScreen({
                 </div>
                 {/* Guest demo — ranked 1v1 vs AI (see desktop note). */}
                 {isGuest && (
-                  <Link
-                    href="/demos/match?from=/play"
-                    onClick={(event) => event.stopPropagation()}
+                  <button
+                    type="button"
+                    onClick={(event) => { event.stopPropagation(); setRankedDemoOpen(true); }}
                     className="flex h-9 w-[120px] items-center justify-center gap-1 rounded-[8px] bg-black/25 text-[11px] uppercase tracking-wide text-white/90 transition-colors hover:bg-black/35"
                     style={poppins}
                   >
                     <Bot className="size-3.5" strokeWidth={2.5} />
                     {t('play.guestDemoCta')}
-                  </Link>
+                  </button>
                 )}
               </div>
             </div>
@@ -556,17 +577,8 @@ export function ModeSelectionScreen({
       {/* ─── 2. Weekend League — the weekly tournament, right under Ranked ─── */}
       {/* Instrumented at the placement, not inside Rail — the dev gallery
           mounts every Rail variant and would fire an impression per skin. */}
-      <div
-        onClickCapture={(event) => {
-          trackWlBannerClicked();
-          if (isGuest) {
-            // The rail is a Link to the league tab — guests sign in first.
-            event.preventDefault();
-            event.stopPropagation();
-            openAuthPrompt();
-          }
-        }}
-      >
+      {/* Guests follow the rail too: the league tab explains "play Ranked to earn QP", and Ranked needs an account. */}
+      <div onClickCapture={() => trackWlBannerClicked()}>
         <WeekendLeagueProgressExperimentRail />
       </div>
 
@@ -884,7 +896,7 @@ export function ModeSelectionScreen({
           }
           router.push('/auction');
         }}
-        demoHref={isGuest ? '/demos/auction?from=/play' : undefined}
+        demoHref={isGuest ? publicPageFor('auction') : undefined}
       />
       <FootballGridModeModal
         isOpen={gridModalOpen}
@@ -897,10 +909,12 @@ export function ModeSelectionScreen({
           }
           router.push(`/tic-tac-toe?source=matchmaking&pack=${pack}`);
         }}
-        demoHref={isGuest ? '/demos/mini-football-grid?from=/play' : undefined}
+        demoHref={isGuest ? publicPageFor('grid') : undefined}
       />
-      {/* Guest sign-in: mounted only while signed out; every auth-gated tap
-          above funnels into it via useAuthPromptStore. */}
+      {rankedDemoOpen && (
+        <PracticeDemo slug="match" title={t('play.guestDemoCta')} locale={locale} backHref="/play" onExit={() => setRankedDemoOpen(false)} />
+      )}
+      {beforeFooter}
       <SiteFooter />
     </motion.div>
   );

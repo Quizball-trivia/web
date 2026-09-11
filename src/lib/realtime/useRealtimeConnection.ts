@@ -75,5 +75,14 @@ export function useRealtimeConnection({ enabled, selfUserId }: RealtimeConnectio
 
   }, [enabled, selfUserId, queryClient]);
 
-  return getSocket();
+  // Guests (and the shell before the session resolves) never construct the socket manager.
+  return enabled && selfUserId ? getSocket() : null;
+}
+
+/**
+ * For the match hooks, which only mount on session-gated game routes and read
+ * the socket unconditionally: same connection ownership, non-null return.
+ */
+export function useRealtimeMatchSocket(options: RealtimeConnectionOptions) {
+  return useRealtimeConnection(options) ?? getSocket();
 }

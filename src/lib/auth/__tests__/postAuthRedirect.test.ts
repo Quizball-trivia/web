@@ -20,13 +20,25 @@ describe('post-auth redirect helpers', () => {
     localStorage.removeItem(STORAGE_KEYS.POST_AUTH_REDIRECT);
   });
 
-  it('normalizes friend room invite paths only', () => {
+  it('normalizes friend room invite paths', () => {
     expect(normalizePostAuthRedirect('/friend/room/abc123')).toBe('/friend/room/ABC123');
     expect(normalizePostAuthRedirect('/friend/room/ABC123/')).toBe('/friend/room/ABC123');
-    expect(normalizePostAuthRedirect('/play')).toBeNull();
     expect(normalizePostAuthRedirect('https://evil.test/friend/room/ABC123')).toBeNull();
     expect(normalizePostAuthRedirect('/friend/room/a')).toBeNull();
     expect(normalizePostAuthRedirect('/friend/room/ABC-123')).toBeNull();
+  });
+
+  it('accepts internal game entry points and public locale pages, nothing else', () => {
+    expect(normalizePostAuthRedirect('/play')).toBe('/play');
+    expect(normalizePostAuthRedirect('/auction')).toBe('/auction');
+    expect(normalizePostAuthRedirect('/en/football-games/auction')).toBe('/en/football-games/auction');
+    expect(normalizePostAuthRedirect('/es/juegos-de-futbol/subasta/')).toBe('/es/juegos-de-futbol/subasta');
+    expect(normalizePostAuthRedirect('/daily/challenges/money-drop')).toBe('/daily/challenges/money-drop');
+    expect(normalizePostAuthRedirect('/en/football-games/auction?x=1#play')).toBe('/en/football-games/auction');
+    expect(normalizePostAuthRedirect('/settings')).toBeNull();
+    expect(normalizePostAuthRedirect('//evil.test/en')).toBeNull();
+    expect(normalizePostAuthRedirect('https://evil.test/en')).toBeNull();
+    expect(normalizePostAuthRedirect('/en/football-games/a/b/c')).toBeNull();
   });
 
   it('builds friend invite paths and absolute urls', () => {

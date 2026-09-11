@@ -99,6 +99,8 @@ export function DemoModeArt({ slug: rawSlug, className = "" }: { slug: string; c
   if (isFifaSlug(slug) || slug === "mini-guess-fifa-card" || slug === "daily-fifaCards") {
     return <FifaModeArt slug={slug === "daily-fifaCards" ? "mini-guess-fifa-card" : slug} className={className} glyph={slug !== "daily-fifaCards"} />;
   }
+  // The Card Detective daily uses the FIFA collection's tile (owner, 2026-09-08).
+  if (slug === "daily-cardDetective") return <FifaModeArt slug="fifa-card-detective" className={className} />;
   if (ILLUSTRATED_MODE_SLUGS.has(slug)) {
     return (
       <div className={`relative overflow-hidden bg-[#07111f] ${className}`} aria-hidden>

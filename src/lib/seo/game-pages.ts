@@ -19,6 +19,7 @@ export interface GamePageCopy {
 }
 
 export interface GamePageEntry {
+  /** Canonical (English) slug; also the manifest key. */
   slug: string;
   section: GamePageSection;
   /** Where "Play" sends the visitor (the auth-gated app route). */
@@ -26,7 +27,40 @@ export interface GamePageEntry {
   /** DemoModeArt slug for the hero illustration. */
   artSlug: string;
   copy: Record<Locale, GamePageCopy>;
+  /** Translated URL slugs; locales not listed use the canonical slug. */
+  slugs?: Partial<Record<Locale, string>>;
 }
+
+/** Locales with a public game page body; the rest (tr today) get the hub only and English pages from the cards. */
+export const SEO_PAGE_LOCALES = ["en", "ka", "es"] as const satisfies readonly Locale[];
+export type SeoPageLocale = (typeof SEO_PAGE_LOCALES)[number];
+export const isSeoPageLocale = (locale: Locale): locale is SeoPageLocale => (SEO_PAGE_LOCALES as readonly Locale[]).includes(locale);
+
+/** Public games live under a localized folder: /en/football-games/…, /es/juegos-de-futbol/…. */
+export const PUBLIC_GAMES_FOLDER: Record<Locale, string> = { en: "football-games", ka: "football-games", es: "juegos-de-futbol", tr: "football-games" };
+export const DAILY_COLLECTION_SLUG: Record<Locale, string> = { en: "daily-challenges", ka: "daily-challenges", es: "retos-diarios", tr: "daily-challenges" };
+
+/** ES slugs from the September keyword map; KA follows EN. */
+const LOCALIZED_SLUGS: Record<string, Partial<Record<Locale, string>>> = {
+  "football-tic-tac-toe": { es: "tiki-taka-toe" },
+  auction: { es: "subasta" },
+  friendly: { es: "partido-amistoso" },
+  "true-or-false-football": { es: "verdadero-o-falso" },
+  "higher-or-lower": { es: "mas-o-menos" },
+  "card-detective": { es: "cartas-de-jugadores" },
+  "guess-the-goal": { es: "adivina-el-gol" },
+  "who-am-i": { es: "quien-soy" },
+  "career-path": { es: "trayectoria-del-jugador" },
+  "football-timeline": { es: "linea-de-tiempo" },
+  "football-logic": { es: "logica-futbolera" },
+  "missing-xi": { es: "once-perdido" },
+  "pass-chain": { es: "cadena-de-pases" },
+  "stat-sniper": { es: "francotirador-de-datos" },
+  "free-kicks": { es: "tiros-libres" },
+  "road-to-goal": { es: "camino-al-gol" },
+  "trivia-mines": { es: "minas-de-trivia" },
+  "squad-spin": { es: "ruleta-de-plantilla" },
+};
 
 const cta = { en: "Play now", ka: "ითამაშე ახლავე", es: "Jugar ahora", tr: "Hemen oyna" } as const;
 
@@ -39,6 +73,7 @@ function daily(
     section: "daily",
     playPath: dailyChallengePlayPath(type),
     artSlug: `daily-${type}`,
+    slugs: LOCALIZED_SLUGS[DAILY_CHALLENGE_SLUGS[type]],
     copy: {
       en: { ...copy.en, cta: cta.en },
       ka: { ...copy.ka, cta: cta.ka },
@@ -59,6 +94,7 @@ function mode(
     section: "games",
     playPath,
     artSlug,
+    slugs: LOCALIZED_SLUGS[slug],
     copy: {
       en: { ...copy.en, cta: cta.en },
       ka: { ...copy.ka, cta: cta.ka },
@@ -477,29 +513,29 @@ export const GAME_PAGES: GamePageEntry[] = [
       reward: "Oynadığın her gün jeton ve XP kazan.",
     },
   }),
-  daily("fifaCards", {
+  daily("cardDetective", {
     en: {
-      metaTitle: "Guess the Card — Name the Player from a FUT-Style Card",
-      metaDescription: "A gold card with stats only. Name the footballer before the clues run out. A new card set every day.",
-      title: "Guess the Card",
-      intro: "A FUT-style gold card, stats revealed one by one, no name and no face. Who is it?",
-      howToPlay: ["Watch the card spin and reveal its stats.", "Type the player as soon as you know.", "Fewer reveals, more points."],
+      metaTitle: "Card Detective — Unlock Clues, Name the Footballer",
+      metaDescription: "Every slot on the player card is a locked clue with a price. Buy the clues you need and name the footballer with the most coins left. Ten cards a day.",
+      title: "Card Detective",
+      intro: "A player card with every slot locked. Each clue costs coins: reveal as little as you can, then name the player.",
+      howToPlay: ["Open a clue: rating, position, club or nation each has a price.", "Type the player as soon as you know.", "The more coins you keep, the more you score."],
       reward: "Earn coins and XP every day you play.",
     },
     ka: {
-      metaTitle: "გამოიცანი ბარათი — დაასახელე ფეხბურთელი FIFA ბარათით",
-      metaDescription: "ოქროს ბარათი მხოლოდ სტატისტიკით. დაასახელე ფეხბურთელი, სანამ მინიშნებები ამოიწურება. ახალი ნაკრები ყოველდღე.",
-      title: "გამოიცანი ბარათი",
-      intro: "FIFA-ს სტილის ოქროს ბარათი, სტატისტიკა სათითაოდ იხსნება, სახელისა და სახის გარეშე. ვინ არის?",
-      howToPlay: ["უყურე, როგორ ტრიალებს ბარათი და იხსნება სტატისტიკა.", "ჩაწერე ფეხბურთელი, როგორც კი მიხვდები.", "ნაკლები გახსნა — მეტი ქულა."],
+      metaTitle: "ბარათის დეტექტივი — გახსენი მინიშნებები, დაასახელე ფეხბურთელი",
+      metaDescription: "ბარათის ყველა უჯრა დახურული მინიშნებაა ფასით. იყიდე საჭირო მინიშნებები და გამოიცანი ფეხბურთელი მაქსიმალური ქოინების შენარჩუნებით. ათი ბარათი ყოველდღე.",
+      title: "ბარათის დეტექტივი",
+      intro: "ფეხბურთელის ბარათი დახურული უჯრებით. ყოველი მინიშნება ქოინები ღირს: გახსენი რაც შეიძლება ცოტა და დაასახელე მოთამაშე.",
+      howToPlay: ["გახსენი მინიშნება: რეიტინგს, პოზიციას, კლუბს და ქვეყანას თავისი ფასი აქვს.", "ჩაწერე ფეხბურთელი, როგორც კი მიხვდები.", "რაც მეტი ქოინი დაგრჩება, მით მეტი ქულა."],
       reward: "დააგროვე მონეტები და XP ყოველდღე.",
     },
     es: {
-      metaTitle: "Adivina la carta — Nombra al jugador por su carta FIFA",
-      metaDescription: "Una carta dorada solo con estadísticas. Nombra al futbolista antes de que se acaben las pistas. Un set nuevo cada día.",
-      title: "Adivina la carta",
-      intro: "Una carta dorada estilo FIFA, estadísticas reveladas una a una, sin nombre ni cara. ¿Quién es?",
-      howToPlay: ["Mira cómo gira la carta y revela sus estadísticas.", "Escribe el jugador en cuanto lo sepas.", "Menos revelaciones, más puntos."],
+      metaTitle: "Detective de cartas — Desbloquea pistas y nombra al futbolista",
+      metaDescription: "Cada casilla de la carta es una pista bloqueada con precio. Compra las pistas que necesites y nombra al futbolista con más monedas restantes. Diez cartas al día.",
+      title: "Detective de cartas",
+      intro: "Una carta de jugador con todas las casillas bloqueadas. Cada pista cuesta monedas: revela lo mínimo y nombra al jugador.",
+      howToPlay: ["Abre una pista: valoración, posición, club o país tienen su precio.", "Escribe el jugador en cuanto lo sepas.", "Cuantas más monedas conserves, más puntos."],
       reward: "Gana monedas y XP cada día que juegues.",
     },
     tr: {
@@ -547,62 +583,96 @@ export const GAME_PAGES: GamePageEntry[] = [
   }),
   mode("auction", "/auction", "auction", {
     en: {
-      metaTitle: "Auction — Build Your Squad by Bidding on Mystery Players",
-      metaDescription: "Bid coins on mystery footballers revealed clue by clue, build the strongest squad and beat your opponent.",
-      title: "Auction",
-      intro: "A mystery player goes on sale each round. Clues reveal their career step by step. Bid smart, build a squad, win.",
-      howToPlay: ["Watch the clues and stats reveal.", "Place bids with your coins against your opponent.", "The better squad at the end wins."],
-      reward: "Win coins and XP per match.",
+      metaTitle: "Football Auction Game | QuizBall",
+      metaDescription: "Play Quizball's Football Auction game online. Bid for footballers and build your team, with guest play available without creating an account.",
+      title: "Football Auction Game",
+      intro: "Build a football team through an auction. Make your bids, watch the available budget and choose the players you want. Read the round's rules before starting and play as a guest without creating an account.",
+      howToPlay: ["Players come up one by one with clues about who they are.", "Bid against the other managers; the highest bid signs the player.", "Fill your line-up within the budget.", "The best-rated complete team wins."],
+      reward: "Coin rewards and rank need an account; guest auctions are practice.",
     },
     ka: {
-      metaTitle: "აუქციონი — შეკრიბე შემადგენლობა იდუმალ ფეხბურთელებზე ტორგით",
-      metaDescription: "იტორგე მონეტებით იდუმალ ფეხბურთელებზე, რომლებიც მინიშნებებით იხსნებიან, შეკრიბე უძლიერესი შემადგენლობა და დაამარცხე მეტოქე.",
-      title: "აუქციონი",
-      intro: "ყოველ რაუნდში იყიდება იდუმალი ფეხბურთელი. მინიშნებები ეტაპობრივად ხსნიან მის კარიერას. იტორგე ჭკვიანურად, შეკრიბე გუნდი, მოიგე.",
-      howToPlay: ["უყურე მინიშნებებისა და სტატისტიკის გახსნას.", "დადე ფსონები მონეტებით მეტოქის წინააღმდეგ.", "ბოლოს უკეთესი შემადგენლობა იმარჯვებს."],
-      reward: "მოიგე მონეტები და XP მატჩზე.",
+      metaTitle: "საფეხბურთო აუქციონი | QuizBall",
+      metaDescription: "ითამაშე Quizball-ის საფეხბურთო აუქციონი ონლაინ. ივაჭრე ფეხბურთელებზე და ააწყვე გუნდი; სტუმრად თამაში ანგარიშის გარეშე.",
+      title: "საფეხბურთო აუქციონი",
+      intro: "ააწყვე გუნდი აუქციონით. დადე ფსონები, უყურე ბიუჯეტს და აირჩიე შენი ფეხბურთელები. წაიკითხე რაუნდის წესები და ითამაშე სტუმრად.",
+      howToPlay: ["ფეხბურთელები სათითაოდ გამოდიან მინიშნებებით.", "ივაჭრე სხვა მენეჯერების წინააღმდეგ; მაქსიმალური ფსონი ფეხბურთელს იძენს.", "შეავსე შემადგენლობა ბიუჯეტის ფარგლებში.", "საუკეთესო რეიტინგის სრული გუნდი იგებს."],
+      reward: "ქოინების ჯილდოებს და რეიტინგს ანგარიში სჭირდება; სტუმრის აუქციონი სავარჯიშოა.",
     },
     es: {
-      metaTitle: "Subasta — Arma tu plantilla pujando por jugadores misteriosos",
-      metaDescription: "Puja monedas por futbolistas misteriosos revelados pista a pista, arma la mejor plantilla y vence a tu rival.",
-      title: "Subasta",
-      intro: "Cada ronda sale a la venta un jugador misterioso. Las pistas revelan su carrera paso a paso. Puja con cabeza, arma tu equipo, gana.",
-      howToPlay: ["Mira cómo se revelan pistas y estadísticas.", "Puja con tus monedas contra tu rival.", "Gana la mejor plantilla al final."],
-      reward: "Gana monedas y XP por partido.",
+      metaTitle: "Juego de subasta de fútbol | QuizBall",
+      metaDescription: "Juega a la subasta de fútbol de Quizball online. Puja por futbolistas y forma tu equipo, con partidas de invitado sin crear cuenta.",
+      title: "Subasta de fútbol",
+      intro: "Forma un equipo de fútbol en una subasta. Haz tus pujas, vigila el presupuesto y elige a los jugadores que quieres. Lee las reglas de la ronda antes de empezar y juega como invitado.",
+      howToPlay: ["Los jugadores salen uno a uno con pistas sobre quiénes son.", "Puja contra los demás mánagers; la puja más alta ficha al jugador.", "Completa tu once dentro del presupuesto.", "Gana el equipo completo mejor valorado."],
+      reward: "Las monedas y el rango requieren cuenta; las subastas de invitado son de práctica.",
     },
     tr: {
-      metaTitle: "Açık Artırma — Gizemli Oyunculara Teklif Vererek Kadronu Kur",
-      metaDescription: "İpucu ipucu açıklanan gizemli futbolculara jetonla teklif ver, en güçlü kadroyu kur ve rakibini yen.",
-      title: "Açık Artırma",
-      intro: "Her tur gizemli bir oyuncu satışa çıkar. İpuçları kariyerini adım adım açıklar. Akıllıca teklif ver, bir kadro kur, kazan.",
-      howToPlay: ["İpuçlarının ve istatistiklerin açılmasını izle.", "Rakibine karşı jetonlarınla teklif ver.", "Sonunda daha iyi kadro kazanır."],
-      reward: "Maç başına jeton ve XP kazan.",
+      metaTitle: "Futbol Açık Artırma Oyunu | QuizBall",
+      metaDescription: "Quizball'un futbol açık artırma oyununu çevrimiçi oyna. Futbolculara teklif ver, kadronu kur; hesap açmadan misafir olarak dene.",
+      title: "Futbol Açık Artırma Oyunu",
+      intro: "Açık artırmayla bir futbol takımı kur. Teklif ver, bütçeni takip et ve istediğin oyuncuları seç. Başlamadan önce tur kurallarını oku; hesap açmadan misafir olarak oynayabilirsin.",
+      howToPlay: ["Oyuncular kim olduklarına dair ipuçlarıyla tek tek gelir.", "Diğer menajerlere karşı teklif ver; en yüksek teklif oyuncuyu alır.", "Kadronu bütçenin içinde tamamla.", "En yüksek puanlı tam kadro kazanır."],
+      reward: "Jeton ödülleri ve sıralama hesap gerektirir; misafir açık artırmaları alıştırmadır.",
+    },
+  }),
+  mode("friendly", "/friend", "match", {
+    en: {
+      metaTitle: "Friendly Football Trivia Matches | QuizBall",
+      metaDescription: "Challenge a friend to a football trivia match on Quizball. Create or join a friendly game in your browser and play without registering first.",
+      title: "Play a Friendly Football Trivia Match",
+      intro: "Play a football trivia match with a friend. Create a room or join one using the invite option, then answer head to head. Ranked points and Weekend League prizes belong to their separate competitive modes.",
+      howToPlay: ["Create a room and share the invite link, or join a friend's room.", "Both players answer the same football questions under the clock.", "Faster correct answers score more.", "The higher total after the final question wins."],
+      reward: "Friendly matches award no ranked points; play for bragging rights.",
+    },
+    ka: {
+      metaTitle: "მეგობრული საფეხბურთო მატჩი | QuizBall",
+      metaDescription: "გამოიწვიე მეგობარი საფეხბურთო ტრივიაში Quizball-ზე. შექმენი ან შეუერთდი მეგობრულ თამაშს ბრაუზერში.",
+      title: "ითამაშე მეგობრული საფეხბურთო მატჩი",
+      intro: "ითამაშე საფეხბურთო ტრივია მეგობართან. შექმენი ოთახი ან შეუერთდი მოწვევით და უპასუხე პირისპირ. რეიტინგული ქულები და შაბათ-კვირის ლიგის პრიზები ცალკე რეჟიმებს ეკუთვნის.",
+      howToPlay: ["შექმენი ოთახი და გააზიარე მოწვევა, ან შეუერთდი მეგობრის ოთახს.", "ორივე მოთამაშე ერთსა და იმავე კითხვებს პასუხობს დროზე.", "სწრაფი სწორი პასუხი მეტ ქულას იძლევა.", "ბოლო კითხვის შემდეგ მეტი ქულა იგებს."],
+      reward: "მეგობრული მატჩი რეიტინგულ ქულებს არ იძლევა.",
+    },
+    es: {
+      metaTitle: "Partidos amistosos de trivia futbolera | QuizBall",
+      metaDescription: "Reta a un amigo a un partido de trivia de fútbol en Quizball. Crea o únete a una partida amistosa en tu navegador.",
+      title: "Juega un partido amistoso de trivia de fútbol",
+      intro: "Juega un partido de trivia futbolera con un amigo. Crea una sala o únete con la invitación y responded cara a cara. Los puntos de clasificación y los premios de la Weekend League pertenecen a sus modos competitivos.",
+      howToPlay: ["Crea una sala y comparte la invitación, o únete a la sala de un amigo.", "Los dos respondéis las mismas preguntas contrarreloj.", "Las respuestas correctas más rápidas puntúan más.", "Gana quien tenga más puntos tras la última pregunta."],
+      reward: "Los amistosos no dan puntos de clasificación.",
+    },
+    tr: {
+      metaTitle: "Arkadaşınla Futbol Bilgi Maçı | QuizBall",
+      metaDescription: "Quizball'da bir arkadaşını futbol bilgi maçına davet et. Tarayıcında oda kur ya da bir odaya katıl.",
+      title: "Arkadaşınla futbol bilgi maçı oyna",
+      intro: "Bir arkadaşınla futbol bilgi maçı oyna. Oda kur ya da davet bağlantısıyla katıl, sonra aynı soruları karşılıklı cevapla. Sıralama puanları ve Hafta Sonu Ligi ödülleri ayrı rekabet modlarına aittir.",
+      howToPlay: ["Oda kur ve daveti paylaş ya da arkadaşının odasına katıl.", "İki oyuncu da aynı futbol sorularını süreye karşı cevaplar.", "Daha hızlı doğru cevaplar daha çok puan getirir.", "Son sorudan sonra toplamı yüksek olan kazanır."],
+      reward: "Dostluk maçları sıralama puanı vermez.",
     },
   }),
   mode("football-tic-tac-toe", "/tic-tac-toe", "mini-football-grid", {
     en: {
-      metaTitle: "Football Tic Tac Toe (Tiki-Taka-Toe) — 1v1 Grid Game",
-      metaDescription: "Live 1v1 football tic tac toe: each cell crosses two criteria, name a player who fits both, three in a row wins. Best of three.",
-      title: "Football Tic Tac Toe (Tiki-Taka-Toe)",
-      intro: "A 3×3 grid of clubs, nations, trophies and teammates. Claim a cell by naming a footballer who fits both criteria. Three in a row wins the board, best of three wins the series.",
-      howToPlay: ["Pick an open cell on your turn.", "Type a player who matches the row and the column.", "Correct claims the cell; three in a line wins."],
-      reward: "Earn coins and Tic Tac Toe points per series.",
+      metaTitle: "Football Tic Tac Toe Online | QuizBall",
+      metaDescription: "Play Football Tic Tac Toe online. Name players who match both grid categories, claim squares and compete for three in a row. Start without an account.",
+      title: "Football Tic Tac Toe",
+      intro: "Match your football knowledge against the grid. Choose a square, name a player who fits both categories, and aim for three in a row. Start as a guest and use the available setup options to choose your game.",
+      howToPlay: ["Pick a square: its row and column are two categories, such as a club and a nation.", "Name a player who fits both. Surnames and small typos are accepted.", "A correct name claims the square; three in a row wins the game.", "Best-of-three series decide close matches."],
+      reward: "Ranked-points rewards need an account; guest games are practice.",
     },
     ka: {
-      metaTitle: "საფეხბურთო იქს-ნული (Tiki-Taka-Toe) — 1v1 ბადის თამაში",
-      metaDescription: "ლაივ 1v1 საფეხბურთო იქს-ნული: ყოველი უჯრა ორ კრიტერიუმს კვეთს, დაასახელე ფეხბურთელი, რომელიც ორივეს ერგება, სამი ზედიზედ იგებს. სამიდან ორი.",
+      metaTitle: "საფეხბურთო იქს-ნული ონლაინ | QuizBall",
+      metaDescription: "ითამაშე საფეხბურთო იქს-ნული ონლაინ. დაასახელე ფეხბურთელები, რომლებიც ორივე კატეგორიას ერგებიან, დაიკავე უჯრები და შეაგროვე სამი ზედიზედ. დაწყება ანგარიშის გარეშე.",
       title: "საფეხბურთო იქს-ნული",
-      intro: "3×3 ბადე კლუბებით, ნაკრებებით, თასებითა და თანაგუნდელებით. დაიკავე უჯრა ფეხბურთელის დასახელებით, რომელიც ორივე კრიტერიუმს ერგება. სამი ზედიზედ იგებს დაფას, სამიდან ორი — სერიას.",
-      howToPlay: ["შენს სვლაზე აირჩიე თავისუფალი უჯრა.", "ჩაწერე ფეხბურთელი, რომელიც სტრიქონსაც და სვეტსაც ერგება.", "სწორი პასუხი უჯრას იკავებს; სამი ერთ ხაზზე იგებს."],
-      reward: "დააგროვე მონეტები და იქს-ნულის ქულები სერიაზე.",
+      intro: "შეამოწმე ცოდნა ბადეზე. აირჩიე უჯრა, დაასახელე ფეხბურთელი, რომელიც ორივე კატეგორიას ერგება, და შეაგროვე სამი ზედიზედ. დაიწყე სტუმრად.",
+      howToPlay: ["აირჩიე უჯრა: მისი სტრიქონი და სვეტი ორი კატეგორიაა, მაგალითად კლუბი და ქვეყანა.", "დაასახელე ფეხბურთელი, რომელიც ორივეს ერგება. გვარი და მცირე შეცდომები მიიღება.", "სწორი პასუხი უჯრას იკავებს; სამი ზედიზედ იგებს.", "თანაბარ მატჩებს სამიდან საუკეთესო სერია წყვეტს."],
+      reward: "რეიტინგული ჯილდოებისთვის ანგარიშია საჭირო; სტუმრის თამაში სავარჯიშოა.",
     },
     es: {
-      metaTitle: "Tres en raya futbolero (Tiki-Taka-Toe) — Juego 1v1",
-      metaDescription: "Tres en raya de fútbol 1v1 en vivo: cada casilla cruza dos criterios, nombra un jugador que cumpla ambos, tres en raya gana. Al mejor de tres.",
-      title: "Tres en raya futbolero",
-      intro: "Una cuadrícula 3×3 de clubes, selecciones, trofeos y compañeros. Ocupa una casilla nombrando a un futbolista que cumpla ambos criterios. Tres en raya gana el tablero; al mejor de tres.",
-      howToPlay: ["Elige una casilla libre en tu turno.", "Escribe un jugador que encaje con la fila y la columna.", "El acierto ocupa la casilla; tres en línea gana."],
-      reward: "Gana monedas y puntos de Tres en raya por serie.",
+      metaTitle: "Tiki Taka Toe: tres en raya futbolero online | QuizBall",
+      metaDescription: "Juega al tres en raya futbolero online. Nombra jugadores que cumplan ambas categorías, conquista casillas y consigue tres en línea. Empieza sin cuenta.",
+      title: "Tiki Taka Toe",
+      intro: "Pon a prueba tu fútbol contra la cuadrícula. Elige una casilla, nombra un jugador que encaje en ambas categorías y busca tres en línea. Empieza como invitado.",
+      howToPlay: ["Elige una casilla: su fila y su columna son dos categorías, por ejemplo un club y un país.", "Nombra un jugador que cumpla ambas. Se aceptan apellidos y erratas pequeñas.", "Un nombre correcto conquista la casilla; tres en línea gana.", "Los partidos igualados se deciden al mejor de tres."],
+      reward: "Las recompensas de puntos requieren cuenta; las partidas de invitado son de práctica.",
     },
     tr: {
       metaTitle: "Futbol Tic Tac Toe (Tiki-Taka-Toe) — 1v1 Izgara Oyunu",
@@ -715,12 +785,95 @@ export const GAME_PAGES: GamePageEntry[] = [
       reward: "Oynadığın her gün jeton ve XP kazan.",
     },
   }),
+  mode("trivia-mines", "/trivia-mines", "mini-trivia-mines", {
+    en: {
+      metaTitle: "Trivia Mines — Football Minesweeper with Questions | QuizBall",
+      metaDescription: "Open tiles, dodge the four defenders and grow the pot. Answer football questions to scout where they hide. Practice as a guest, play for coins with an account.",
+      title: "Trivia Mines",
+      intro: "Twenty-five tiles hide four defenders. Open safe tiles to grow the pot, answer football questions to scout the danger, and bank before you get tackled.",
+      howToPlay: ["Choose a stake (practice points as a guest).", "Open a tile: safe grows the pot, a defender ends the round.", "Scout up to three times by answering a football question.", "Cash out whenever you like after your first safe tile."],
+      reward: "Real coins need an account; guest rounds use practice points only.",
+    },
+    ka: {
+      metaTitle: "ტრივია-მაღაროები — საფეხბურთო კითხვებით | QuizBall",
+      metaDescription: "გახსენი უჯრები, აარიდე ოთხი მცველი და გაზარდე ბანკი. უპასუხე კითხვებს დაზვერვისთვის. სტუმრად სავარჯიშოდ, ანგარიშით ქოინებზე.",
+      title: "ტრივია-მაღაროები",
+      intro: "25 უჯრაში ოთხი მცველი იმალება. გახსენი უსაფრთხო უჯრები, უპასუხე კითხვებს დაზვერვისთვის და აიღე ბანკი, სანამ დაგიჭერენ.",
+      howToPlay: ["აირჩიე ფსონი (სტუმრად — სავარჯიშო ქულები).", "გახსენი უჯრა: უსაფრთხო ბანკს ზრდის, მცველი რაუნდს ამთავრებს.", "დაზვერვა სამჯერ — უპასუხე საფეხბურთო კითხვას.", "აიღე ბანკი ნებისმიერ დროს პირველი უსაფრთხო უჯრის შემდეგ."],
+      reward: "ნამდვილ ქოინებს ანგარიში სჭირდება; სტუმრის რაუნდი სავარჯიშოა.",
+    },
+    es: {
+      metaTitle: "Minas de trivia — buscaminas futbolero | QuizBall",
+      metaDescription: "Abre casillas, esquiva a los cuatro defensas y haz crecer el bote. Responde preguntas de fútbol para descubrir dónde se esconden. Practica como invitado, juega por monedas con cuenta.",
+      title: "Minas de trivia",
+      intro: "Veinticinco casillas esconden cuatro defensas. Abre casillas seguras, responde preguntas para explorar y retira antes de que te entren.",
+      howToPlay: ["Elige una apuesta (puntos de práctica como invitado).", "Abre una casilla: segura hace crecer el bote, un defensa termina la ronda.", "Explora hasta tres veces respondiendo una pregunta de fútbol.", "Retira cuando quieras tras tu primera casilla segura."],
+      reward: "Las monedas reales requieren cuenta; las rondas de invitado usan puntos de práctica.",
+    },
+    tr: {
+      metaTitle: "Bilgi Mayınları — Sorulu Futbol Mayın Tarlası | QuizBall",
+      metaDescription: "Kareleri aç, dört defanstan kaç ve kasayı büyüt. Nerede saklandıklarını bulmak için futbol sorularını cevapla. Misafir olarak alıştır, hesapla jeton için oyna.",
+      title: "Bilgi Mayınları",
+      intro: "Yirmi beş karede dört defans saklanır. Güvenli kareleri açarak kasayı büyüt, tehlikeyi keşfetmek için futbol sorularını cevapla ve yakalanmadan kasayı al.",
+      howToPlay: ["Bir bahis seç (misafir olarak alıştırma puanı).", "Bir kare aç: güvenliyse kasa büyür, defans turu bitirir.", "Bir futbol sorusu cevaplayarak en fazla üç kez keşif yap.", "İlk güvenli kareden sonra istediğin zaman kasayı al."],
+      reward: "Gerçek jeton hesap gerektirir; misafir turları yalnızca alıştırma puanı kullanır.",
+    },
+  }),
+  mode("squad-spin", "/squad-spin", "mini-squad-spin", {
+    en: {
+      metaTitle: "Squad Spin — Name a Player Who Fits Every Reel | QuizBall",
+      metaDescription: "Spin club, position and nation, then name a footballer who fits all three within 15 seconds. Practice as a guest; real coins with an account.",
+      title: "Squad Spin",
+      intro: "The reels land on a club, a position and a nation. Name a player who fits every reel before the clock runs out; each correct answer multiplies the pot.",
+      howToPlay: ["Pick 3, 4 or 5 reels: more reels, tighter clues, bigger multiplier.", "Type a player who matches every reel within 15 seconds.", "Cash out or spin again before the next reels show.", "One miss ends the run."],
+      reward: "Real coins need an account; guest runs use practice points only.",
+    },
+    ka: {
+      metaTitle: "Squad Spin — დაასახელე ფეხბურთელი ყველა ბორბლისთვის | QuizBall",
+      metaDescription: "დაატრიალე კლუბი, პოზიცია და ქვეყანა და 15 წამში დაასახელე ფეხბურთელი, რომელიც სამივეს ერგება. სტუმრად სავარჯიშოდ, ანგარიშით ქოინებზე.",
+      title: "Squad Spin",
+      intro: "ბორბლები ჩერდება კლუბზე, პოზიციასა და ქვეყანაზე. დაასახელე ფეხბურთელი, სანამ დრო ამოიწურება; ყოველი სწორი პასუხი ბანკს ამრავლებს.",
+      howToPlay: ["აირჩიე 3, 4 ან 5 ბორბალი: მეტი ბორბალი — მეტი მულტიპლიკატორი.", "15 წამში ჩაწერე ფეხბურთელი, რომელიც ყველა ბორბალს ერგება.", "აიღე ბანკი ან დაატრიალე ისევ, სანამ შემდეგ ბორბლებს დაინახავ.", "ერთი შეცდომა სერიას ამთავრებს."],
+      reward: "ნამდვილ ქოინებს ანგარიში სჭირდება; სტუმრის სერია სავარჯიშოა.",
+    },
+    es: {
+      metaTitle: "Squad Spin — nombra un jugador que encaje en cada carrete | QuizBall",
+      metaDescription: "Gira club, posición y país y nombra en 15 segundos un futbolista que encaje en los tres. Practica como invitado; monedas reales con cuenta.",
+      title: "Squad Spin",
+      intro: "Los carretes caen en un club, una posición y un país. Nombra un jugador que encaje en todos antes de que acabe el tiempo; cada acierto multiplica el bote.",
+      howToPlay: ["Elige 3, 4 o 5 carretes: más carretes, mayor multiplicador.", "Escribe en 15 segundos un jugador que cumpla todos los carretes.", "Retira o vuelve a girar antes de ver los siguientes carretes.", "Un fallo termina la racha."],
+      reward: "Las monedas reales requieren cuenta; las rachas de invitado usan puntos de práctica.",
+    },
+    tr: {
+      metaTitle: "Squad Spin — Her Makaraya Uyan Oyuncuyu Söyle | QuizBall",
+      metaDescription: "Kulüp, mevki ve ülkeyi çevir, 15 saniye içinde üçüne de uyan bir futbolcu söyle. Misafir olarak alıştır; hesapla gerçek jeton.",
+      title: "Squad Spin",
+      intro: "Makaralar bir kulüp, bir mevki ve bir ülkede durur. Süre bitmeden her makaraya uyan bir oyuncu söyle; her doğru cevap kasayı katlar.",
+      howToPlay: ["3, 4 ya da 5 makara seç: daha çok makara, daha dar ipucu, daha büyük çarpan.", "15 saniye içinde her makaraya uyan bir oyuncu yaz.", "Sonraki makaralar görünmeden kasayı al ya da tekrar çevir.", "Tek bir hata seriyi bitirir."],
+      reward: "Gerçek jeton hesap gerektirir; misafir serileri yalnızca alıştırma puanı kullanır.",
+    },
+  }),
 ];
 
 export function findGamePage(section: GamePageSection, slug: string): GamePageEntry | null {
   return GAME_PAGES.find((entry) => entry.section === section && entry.slug === slug) ?? null;
 }
 
+export function gamePageSlug(entry: GamePageEntry, locale: Locale): string {
+  return entry.slugs?.[locale] ?? entry.slug;
+}
+
+/** /{locale}/{localized folder}/{localized slug} */
 export function gamePagePath(entry: GamePageEntry, locale: Locale): string {
-  return `/${locale}/${entry.section}/${entry.slug}`;
+  return `/${locale}/${PUBLIC_GAMES_FOLDER[locale]}/${gamePageSlug(entry, locale)}`;
+}
+
+export function dailyCollectionPath(locale: Locale): string {
+  return `/${locale}/${PUBLIC_GAMES_FOLDER[locale]}/${DAILY_COLLECTION_SLUG[locale]}`;
+}
+
+/** Resolves a localized public URL (folder must match the locale) to its manifest entry. */
+export function findGamePageByLocalizedSlug(locale: Locale, folder: string, slug: string): GamePageEntry | null {
+  if (folder !== PUBLIC_GAMES_FOLDER[locale]) return null;
+  return GAME_PAGES.find((entry) => gamePageSlug(entry, locale) === slug) ?? null;
 }

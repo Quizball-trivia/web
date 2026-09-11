@@ -16,39 +16,56 @@ import { AppShellMobileBottomNav } from "./app-shell/AppShellMobileBottomNav";
 import { AppShellProfileMenu } from "./app-shell/AppShellProfileMenu";
 import { ConnectionQualitySignal } from "@/components/shared/ConnectionQualitySignal";
 import { GuestAuthDialog } from "@/features/auth/GuestAuthDialog";
-import { useAuthStore } from "@/stores/auth.store";
+import { Suspense } from "react";
+import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
+import { useIsGuest } from "@/lib/auth/useIsGuest";
+import { rememberPostAuthRedirect } from "@/lib/auth/postAuthRedirect";
+import { hubPath, isGuestAllowedPath, publicLocaleOf } from "@/lib/routes/publicHub";
 import { useAuthPromptStore } from "@/stores/authPrompt.store";
 import { useLocale } from "@/contexts/LocaleContext";
 
 export function AppShell({ children }: AppShellProps) {
   const vm = useAppShellViewModel();
-  const { t } = useLocale();
-  // Guest mode: signed-out visitors browsing /play get a Sign-in button
-  // instead of the profile/coins cluster, and any nav tap that isn't Play
-  // opens the sign-in dialog instead of navigating.
-  const isGuest = useAuthStore((state) => state.status) === "anonymous";
+  const { t, locale } = useLocale();
+  // Guest mode: signed-out visitors browsing the hub get a Sign-in button
+  // instead of the profile/coins cluster, and any nav tap that isn't a public
+  // surface opens the sign-in dialog instead of navigating.
+  const isGuest = useIsGuest();
   const openAuthPrompt = useAuthPromptStore((state) => state.open);
+  // Signed-out visitors stay on their locale hub; the geo redirect on "/" is
+  // never the logo target, and members go to their Play.
+  const publicLocale = publicLocaleOf(vm.currentPath);
+  const homeHref = isGuest ? hubPath(publicLocale ?? locale) : "/play";
   const guestNavGuard = (event: React.MouseEvent) => {
     if (!isGuest) return;
     const href = (event.target as HTMLElement).closest("a")?.getAttribute("href");
-    if (!href || href === "/" || href === "/play" || href.startsWith("/play?")) return;
+    if (!href || isGuestAllowedPath(href.split(/[?#]/)[0])) return;
     event.preventDefault();
     event.stopPropagation();
+    // Return to what they asked for after sign-in (non-returnable paths fall through to /play).
+    rememberPostAuthRedirect(href);
+    openAuthPrompt();
+  };
+  const signIn = () => {
+    rememberPostAuthRedirect(vm.currentPath);
     openAuthPrompt();
   };
   const signInButton = (
-    <button
-      type="button"
-      onClick={openAuthPrompt}
-      className="flex h-10 items-center justify-center rounded-xl bg-brand-yellow px-5 font-poppins text-sm font-black uppercase tracking-wide text-black transition-colors hover:bg-brand-yellow-deep"
-    >
-      {t("welcome.signInTab")}
-    </button>
+    <div className="flex items-center gap-2" data-chrome="guest">
+      {/* Suspense: the switcher reads search params, which must not bail the whole shell out of static rendering. */}
+      {publicLocale && <Suspense fallback={null}><LanguageSwitcher locale={publicLocale} className="h-10 min-h-0" /></Suspense>}
+      <button
+        type="button"
+        onClick={signIn}
+        className="flex h-10 items-center justify-center rounded-xl bg-brand-yellow px-5 font-poppins text-sm font-black uppercase tracking-wide text-black transition-colors hover:bg-brand-yellow-deep"
+      >
+        {t("welcome.signInTab")}
+      </button>
+    </div>
   );
   const {
     playerStats,
     authUser,
-    currentPath,
     showHeader,
     showNav,
     isPathActive,
@@ -68,14 +85,14 @@ export function AppShell({ children }: AppShellProps) {
   } = vm;
 
   return (
-    <div className="relative min-h-screen text-foreground">
+    <div className="relative min-h-screen text-foreground" data-shell="app">
       <ChallengeInvitePrompt />
       <AppShellPageChrome />
 
       <div className="relative z-10 flex min-h-screen flex-col xl:grid xl:h-dvh xl:grid-cols-[auto_minmax(0,1fr)] xl:overflow-hidden">
         {/* DESKTOP SIDEBAR (>= xl) */}
         <div className="hidden xl:block" onClickCapture={guestNavGuard}>
-          <Sidebar currentPath={currentPath} socialBadgeCount={socialBadgeCount} />
+          <Sidebar currentPath={vm.navPath} homeHref={homeHref} socialBadgeCount={socialBadgeCount} />
         </div>
 
         <div className="flex min-h-screen min-w-0 flex-col xl:min-h-0">
@@ -172,6 +189,7 @@ export function AppShell({ children }: AppShellProps) {
         <div className="xl:hidden" onClickCapture={guestNavGuard}>
           <AppShellMobileBottomNav
             isPathActive={isPathActive}
+            homeHref={homeHref}
             socialBadgeCount={socialBadgeCount}
           />
         </div>

@@ -200,3 +200,102 @@ export function buildResearchReportStructuredData({
     ],
   };
 }
+
+/** Locale homepage = Football Games hub: a CollectionPage whose ItemList is the released guest catalogue. */
+/** FAQPage for the hub's questions; answers are the same text the page renders. */
+export function buildFaqStructuredData(faq: Array<{ q: string; a: string }>) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faq.map((item) => ({ "@type": "Question", name: item.q, acceptedAnswer: { "@type": "Answer", text: item.a } })),
+  };
+}
+
+export function buildGamesHomeStructuredData({ locale, path, title, description, games }: {
+  locale: Locale;
+  /** The page's own path (homepage `/${locale}` or the daily collection). */
+  path?: string;
+  title: string;
+  description: string;
+  games: Array<{ name: string; url: string }>;
+}) {
+  const url = `${SITE_URL}${path ?? `/${locale}`}`;
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "CollectionPage",
+        "@id": `${url}#page`,
+        url,
+        name: title,
+        description,
+        inLanguage: LANGUAGE_TAG[locale],
+        isPartOf: { "@id": SITE_SCHEMA_IDS.website },
+        about: { "@id": SITE_SCHEMA_IDS.organization },
+        mainEntity: { "@id": `${url}#games` },
+      },
+      {
+        "@type": "ItemList",
+        "@id": `${url}#games`,
+        name: title,
+        numberOfItems: games.length,
+        itemListElement: games.map((game, index) => ({
+          "@type": "ListItem",
+          position: index + 1,
+          name: game.name,
+          url: `${SITE_URL}${game.url}`,
+        })),
+      },
+    ],
+  };
+}
+
+/** One public game page: WebPage + VideoGame (schema.org vocabulary, no rich-result promise) + visible breadcrumb. */
+export function buildPublicGameStructuredData({ locale, path, name, description, homeLabel, free }: {
+  locale: Locale;
+  path: string;
+  name: string;
+  description: string;
+  homeLabel: string;
+  free: boolean;
+}) {
+  const url = `${SITE_URL}${path}`;
+  const home = `${SITE_URL}/${locale}`;
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebPage",
+        "@id": `${url}#page`,
+        url,
+        name,
+        description,
+        inLanguage: LANGUAGE_TAG[locale],
+        isPartOf: { "@id": SITE_SCHEMA_IDS.website },
+        mainEntity: { "@id": `${url}#game` },
+        breadcrumb: { "@id": `${url}#breadcrumb` },
+      },
+      {
+        "@type": "VideoGame",
+        "@id": `${url}#game`,
+        name,
+        url,
+        description,
+        gamePlatform: "Web browser",
+        applicationCategory: "Game",
+        genre: ["Trivia", "Sports"],
+        inLanguage: LANGUAGE_TAG[locale],
+        isAccessibleForFree: free,
+        publisher: { "@id": SITE_SCHEMA_IDS.organization },
+      },
+      {
+        "@type": "BreadcrumbList",
+        "@id": `${url}#breadcrumb`,
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: homeLabel, item: home },
+          { "@type": "ListItem", position: 2, name, item: url },
+        ],
+      },
+    ],
+  };
+}

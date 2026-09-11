@@ -11,15 +11,17 @@ export function useLeaderboard(
   season?: string,
   enabled = true,
 ) {
-  const isAuthenticated = useAuthStore((state) => state.status === 'authenticated');
+  // Boards are public reads; they only wait for the session check so a member's request carries the token.
+  const sessionKnown = useAuthStore((state) => state.status !== 'loading');
   return useQuery({
-    queryKey: queryKeys.leaderboard.list(type, season),
+    // Rows carry isCurrentUser, so the cache is scoped to the viewer (guest or member).
+    queryKey: queryKeys.leaderboard.list(type, season, currentUserId),
     queryFn: async () => {
       const { data, error } = await leaderboardRepo.getLeaderboard(type, 50, 0, season);
       if (error) throw new Error('Failed to fetch leaderboard');
       return data.map((entry) => toLeaderboardEntry(entry, currentUserId));
     },
-    enabled: isAuthenticated && enabled,
+    enabled: sessionKnown && enabled,
   });
 }
 
@@ -51,15 +53,15 @@ export function useAuctionLeaderboard(
   currentUserId?: string,
   enabled = true,
 ) {
-  const isAuthenticated = useAuthStore((state) => state.status === 'authenticated');
+  const sessionKnown = useAuthStore((state) => state.status !== 'loading');
   return useQuery({
-    queryKey: queryKeys.leaderboard.auctionList(type),
+    queryKey: queryKeys.leaderboard.auctionList(type, currentUserId),
     queryFn: async () => {
       const { data, error } = await leaderboardRepo.getAuctionLeaderboard(type);
       if (error) throw new Error('Failed to fetch auction leaderboard');
       return data.map((entry) => toLeaderboardEntry(entry, currentUserId));
     },
-    enabled: isAuthenticated && enabled,
+    enabled: sessionKnown && enabled,
   });
 }
 
@@ -85,15 +87,15 @@ export function useTicTacToeLeaderboard(
   currentUserId?: string,
   enabled = true,
 ) {
-  const isAuthenticated = useAuthStore((state) => state.status === 'authenticated');
+  const sessionKnown = useAuthStore((state) => state.status !== 'loading');
   return useQuery({
-    queryKey: queryKeys.leaderboard.ticTacToeList(type),
+    queryKey: queryKeys.leaderboard.ticTacToeList(type, currentUserId),
     queryFn: async () => {
       const { data, error } = await leaderboardRepo.getTicTacToeLeaderboard(type);
       if (error) throw new Error('Failed to fetch Tic Tac Toe leaderboard');
       return data.map((entry) => toLeaderboardEntry(entry, currentUserId));
     },
-    enabled: isAuthenticated && enabled,
+    enabled: sessionKnown && enabled,
   });
 }
 
@@ -115,7 +117,7 @@ export function useTicTacToeUserRank(
 }
 
 export function useLeaderboardSeasons() {
-  const isAuthenticated = useAuthStore((state) => state.status === 'authenticated');
+  const sessionKnown = useAuthStore((state) => state.status !== 'loading');
   return useQuery({
     queryKey: queryKeys.leaderboard.seasons(),
     queryFn: async () => {
@@ -123,7 +125,7 @@ export function useLeaderboardSeasons() {
       if (error) throw new Error('Failed to fetch leaderboard seasons');
       return data;
     },
-    enabled: isAuthenticated,
+    enabled: sessionKnown,
     staleTime: 5 * 60 * 1000,
   });
 }

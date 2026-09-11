@@ -27,6 +27,10 @@ import { queryKeys } from "@/lib/queries/queryKeys";
 import type { DailyChallengeType } from "@/lib/domain/dailyChallenge";
 import { useAuthStore } from "@/stores/auth.store";
 import { useAuthPromptStore } from "@/stores/authPrompt.store";
+import { useIsGuest } from "@/lib/auth/useIsGuest";
+import { rememberPostAuthRedirect } from "@/lib/auth/postAuthRedirect";
+import { findPublicGameForCard, guestCardHref } from "@/lib/seo/public-games";
+import { trackGameCardClick } from "@/lib/analytics/public-games.analytics";
 import { dailyChallengePlayPath } from "@/lib/domain/dailyChallengeSlugs";
 import { useLocale } from "@/contexts/LocaleContext";
 import { useRouter } from "next/navigation";
@@ -243,11 +247,14 @@ function GameCard({
   onOpenMode?: (slug: string) => void;
 }) {
   const { t, locale } = useLocale();
-  const isGuest = useAuthStore((state) => state.status) === "anonymous";
+  const isGuest = useIsGuest();
   const openAuthPrompt = useAuthPromptStore((state) => state.open);
   const devReset = showDevReset && mode.dailyType
     ? <DailyDevResetButton challengeType={mode.dailyType as DailyChallengeType} title={demoText(mode.title, locale)} />
     : null;
+  // Signed-out visitors go to the public page (or owning quiz) for the mode.
+  const publicGame = findPublicGameForCard(mode);
+  const guestHref = isGuest ? guestCardHref(mode, locale) : null;
   const title = demoText(mode.title, locale);
   const description = demoText(mode.description, locale);
   const format = formatOf(mode.slug);
@@ -287,25 +294,28 @@ function GameCard({
     <div className={`relative flex ${CARD_WIDTH} shrink-0`}>
     {devReset}
     <Link
-      href={hrefFor(mode)}
+      href={guestHref ?? hrefFor(mode)}
       onClick={(event) => {
         const group = PLAY_WITH_COINS_SLUGS.includes(mode.slug) ? "coins" : mode.slug.startsWith("daily-") || mode.slug.startsWith("lab-") ? "daily" : "other";
-        if (onOpenMode) {
-          event.preventDefault();
-          // The modal's Solo route is behind the auth gate; a guest gets the sign-in prompt here instead of a bounce back to Play.
-          if (isGuest) {
-            trackPlayCardClicked({ slug: mode.slug, group, destination: "auth" });
-            openAuthPrompt();
+        if (isGuest) {
+          // Public page when the mode has one; otherwise the sign-in dialog
+          // (never a /demos preview, which production does not serve).
+          if (guestHref && publicGame) {
+            trackPlayCardClicked({ slug: mode.slug, group, destination: "public_page" });
+            trackGameCardClick({ modeId: publicGame.modeId, surface: "hub", group: publicGame.group, destination: publicGame.destination.kind });
             return;
           }
-          trackPlayCardClicked({ slug: mode.slug, group, destination: "modal" });
-          onOpenMode(mode.slug);
-          return;
-        }
-        if (isGuest && hasRealRoute(mode)) {
           event.preventDefault();
           trackPlayCardClicked({ slug: mode.slug, group, destination: "auth" });
+          trackGameCardClick({ modeId: publicGame?.modeId ?? mode.dailyType ?? mode.slug, surface: "hub", group: publicGame?.group ?? group, destination: "auth" });
+          rememberPostAuthRedirect(hasRealRoute(mode) ? hrefFor(mode) : null);
           openAuthPrompt();
+          return;
+        }
+        if (onOpenMode) {
+          event.preventDefault();
+          trackPlayCardClicked({ slug: mode.slug, group, destination: "modal" });
+          onOpenMode(mode.slug);
           return;
         }
         trackPlayCardClicked({ slug: mode.slug, group, destination: hasRealRoute(mode) ? "route" : "demo" });
@@ -620,7 +630,7 @@ function GamesFinder({
  *  two curated horizontal-scroll sections rather than a searchable grid. */
 export function AllGamesGrid() {
   const { t } = useLocale();
-  const isGuest = useAuthStore((state) => state.status) === "anonymous";
+  const isGuest = useIsGuest();
   // Admin-only replay control (hidden for everyone else, including in prod).
   const canUseDevReset = useAuthStore((state) => state.user?.role) === "admin";
   const { data: dailyChallenges = [] } = useDailyChallenges();

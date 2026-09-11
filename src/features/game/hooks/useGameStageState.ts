@@ -5,7 +5,7 @@ import { useShallow } from "zustand/shallow";
 import { useGameSessionStore } from "@/stores/gameSession.store";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useAuthStore } from "@/stores/auth.store";
-import { useRealtimeConnection } from "@/lib/realtime/useRealtimeConnection";
+import { useRealtimeMatchSocket } from "@/lib/realtime/useRealtimeConnection";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import { useRankedMatchmakingStore } from "@/stores/rankedMatchmaking.store";
 import { resolveAvatarUrl } from "@/lib/avatars";
@@ -112,7 +112,7 @@ export function useGameStageState() {
   const isMultiplayer = config?.mode !== "solo" && !!config;
   const selfUserId = connectedSelfUserId ?? authUser?.id ?? player.id;
   const realtimeSelfUserId = authUser?.id ?? null;
-  const socket = useRealtimeConnection({
+  const socket = useRealtimeMatchSocket({
     enabled: isMultiplayer && Boolean(realtimeSelfUserId),
     selfUserId: realtimeSelfUserId,
   });

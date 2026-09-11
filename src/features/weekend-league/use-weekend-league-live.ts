@@ -17,6 +17,8 @@ import { trackWlCheckinCompleted, trackWlEntryCompleted } from '@/lib/analytics/
 import { toast } from 'sonner';
 import { checkinWeekendLeague, enterWeekendLeague, getWeekendLeagueCurrent, getWeekendLeagueStandings } from '@/lib/api/endpoints';
 import { queryKeys } from '@/lib/queries/queryKeys';
+import { rememberPostAuthRedirect } from '@/lib/auth/postAuthRedirect';
+import { useAuthPromptStore } from '@/stores/authPrompt.store';
 import { useAuthStore } from '@/stores/auth.store';
 import { useLocale } from '@/contexts/LocaleContext';
 import type { components } from '@/types/api.generated';
@@ -90,6 +92,9 @@ function toMilestone(
 
 /** Live-only signals layered on top of the prototype controller contract. */
 export interface WeekendLeagueLiveExtras {
+  /** Signed-out visitor: personal actions open the sign-in dialog. */
+  isGuest: boolean;
+  requireAccount: () => void;
   /** Marks a backend-driven controller (the screen uses it to trust server fields). */
   live: true;
   isLoading: boolean;
@@ -150,7 +155,8 @@ export function useWeekendLeagueLive(): WeekendLeagueLiveController {
   const query = useQuery({
     queryKey: queryKeys.weekendLeague.current(),
     queryFn: getWeekendLeagueCurrent,
-    enabled: authStatus === 'authenticated',
+    // Public read: only waits for the session check so a member's request carries the token.
+    enabled: authStatus !== 'loading',
     staleTime: 0,
     refetchInterval: (q) => {
       const t = q.state.data?.tournament;
@@ -177,7 +183,7 @@ export function useWeekendLeagueLive(): WeekendLeagueLiveController {
   const standingsQuery = useQuery({
     queryKey: [...queryKeys.weekendLeague.all, 'standings'],
     queryFn: getWeekendLeagueStandings,
-    enabled: authStatus === 'authenticated',
+    enabled: authStatus !== 'loading',
     refetchInterval: 60_000,
     staleTime: 30_000,
   });
@@ -208,13 +214,33 @@ export function useWeekendLeagueLive(): WeekendLeagueLiveController {
     onError: () => toast.error(t('weekendLeague.entryFailedToast')),
   });
   const { mutate: enterMutate } = enterMutation;
+  // Signed-out visitors browse the league; entering and checking in need an account.
+  const isGuest = authStatus !== 'authenticated';
+  const openAuthPrompt = useAuthPromptStore((state) => state.open);
+  const requireAccount = useCallback(() => {
+    rememberPostAuthRedirect('/events');
+    openAuthPrompt();
+  }, [openAuthPrompt]);
+  // The league snapshot carries personal state ("you"): drop it whenever the
+  // identity changes so a signed-out visitor never sees the previous member's
+  // entry / QP, and a fresh sign-in never keeps a guest snapshot.
+  const identityRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (authStatus === 'loading') return;
+    const identity = authStatus === 'authenticated' ? 'member' : 'guest';
+    if (identityRef.current !== null && identityRef.current !== identity) {
+      queryClient.removeQueries({ queryKey: queryKeys.weekendLeague.all });
+    }
+    identityRef.current = identity;
+  }, [authStatus, queryClient]);
   const enterLeague = useCallback(() => {
+    if (isGuest) { requireAccount(); return; }
     if (status !== 'entry_open') {
       toast.error(t('weekendLeague.entryClosedToast'));
       return;
     }
     enterMutate();
-  }, [status, enterMutate, t]);
+  }, [isGuest, requireAccount, status, enterMutate, t]);
 
   const checkinMutation = useMutation({
     mutationFn: checkinWeekendLeague,
@@ -235,10 +261,11 @@ export function useWeekendLeagueLive(): WeekendLeagueLiveController {
   const { mutate: checkinMutate } = checkinMutation;
   const checkinStageRef = useRef<'qualifier' | 'final'>('qualifier');
   const checkinLeague = useCallback(() => {
+    if (isGuest) { requireAccount(); return; }
     checkinStageRef.current =
       status === 'final_checkin' || status === 'final_live' ? 'final' : 'qualifier';
     checkinMutate();
-  }, [checkinMutate, status]);
+  }, [isGuest, requireAccount, checkinMutate, status]);
 
   const milestones = useMemo(() => {
     // The fallback is NOT invented: the league runs on a fixed weekly calendar
@@ -344,6 +371,8 @@ export function useWeekendLeagueLive(): WeekendLeagueLiveController {
     // top of usable data must not blank the screen into an error card.
     isError: query.isError && query.data === undefined,
     refetch: () => void query.refetch(),
+    isGuest,
+    requireAccount,
     tournamentId: tournament?.id ?? null,
     status: status ?? null,
     checkedIn: status === 'final_checkin' || status === 'final_live'

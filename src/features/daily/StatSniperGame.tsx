@@ -11,7 +11,7 @@ import { DailyChallengeCompleteModal } from "@/features/daily/components/DailyCh
 import { QuitGameDialog } from "@/features/daily/QuitGameDialog";
 import { StatSniperLeaderboard } from "@/features/daily/StatSniperLeaderboard";
 import { playSfx } from "@/lib/sounds/gameSounds";
-import type { StatSniperQuestion, StatSniperSession } from "@/lib/domain/dailyChallenge";
+import type { StatSniperLeaderboard as StatSniperLeaderboardData, StatSniperQuestion, StatSniperSession } from "@/lib/domain/dailyChallenge";
 
 const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
 
@@ -32,14 +32,17 @@ export function StatSniperGame({
   onComplete,
   onSaveResult,
   demo = false,
+  leaderboardFetcher,
 }: {
   session: StatSniperSession;
   onBack: () => void;
   onComplete: (score: number, nextPath?: string) => void;
   /** Persists the completion BEFORE the results show, so the leaderboard can include this run. */
   onSaveResult?: (score: number) => Promise<void>;
-  /** Demos/guests: no leaderboard fetch (needs auth). */
+  /** Demos: no leaderboard fetch. */
   demo?: boolean;
+  /** Guest play: read the board from the public endpoint. */
+  leaderboardFetcher?: () => Promise<StatSniperLeaderboardData>;
 }) {
   const { t, locale } = useLocale();
   const numberLocale = locale === "ka" ? "ka-GE" : locale === "es" ? "es-ES" : locale === "tr" ? "tr-TR" : "en-GB";
@@ -190,7 +193,7 @@ export function StatSniperGame({
             )}
           </div>
 
-          {!demo && <StatSniperLeaderboard refreshKey={boardKey} className="mt-6 lg:mt-0" />}
+          {!demo && <StatSniperLeaderboard refreshKey={boardKey} fetcher={leaderboardFetcher} className="mt-6 lg:mt-0" />}
         </div>
       </DailyGameStage>
 

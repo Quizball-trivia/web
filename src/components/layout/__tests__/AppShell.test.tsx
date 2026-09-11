@@ -198,6 +198,7 @@ interface AuthState {
   logout: () => Promise<void>;
 }
 const defaultAuth = {
+  status: 'authenticated' as const,
   user: { id: 'self-user', country: 'us' },
   logout: vi.fn(async () => {}),
 };

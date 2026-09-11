@@ -12,6 +12,7 @@ const socket = vi.hoisted(() => ({
 
 vi.mock('@/lib/realtime/useRealtimeConnection', () => ({
   useRealtimeConnection: () => socket,
+  useRealtimeMatchSocket: () => socket,
 }));
 
 import { useRealtimeFootballGrid } from '../useRealtimeFootballGrid';

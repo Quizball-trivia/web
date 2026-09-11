@@ -34,9 +34,10 @@ import { useLobbyCommandMachine } from '@/features/friend/hooks/useLobbyCommandM
 
 import { readCachedRankedGeoHint, type RankedGeoHint } from '@/lib/match/rankedGeoHint';
 import {
-  HEADER_PATHS,
   HIDE_NAV_PATHS,
   isPathActive as isPathActiveHelper,
+  navPathOf,
+  showsHeader,
 } from './appShell.helpers';
 
 export function useAppShellViewModel() {
@@ -81,7 +82,7 @@ export function useAppShellViewModel() {
   const activeAuctionMatch = useAuctionActiveMatchStore((state) => state.activeAuctionMatch);
   const startSession = useGameSessionStore((state) => state.startSession);
   const setGameStage = useGameSessionStore((state) => state.setStage);
-  const [socketConnected, setSocketConnected] = useState(() => getSocket().connected);
+  const [socketConnected, setSocketConnected] = useState(false);
   const [rankedGeoHintDebug, setRankedGeoHintDebug] = useState<RankedGeoHint | null>(
     () => readCachedRankedGeoHint(),
   );
@@ -95,7 +96,9 @@ export function useAppShellViewModel() {
 
   // Poll /api/v1/system/status as a fallback when the socket is down >10s, so
   // the outage/recovery signal still reaches the client without a live socket.
-  useSystemStatusPoll();
+  // Guests never connect, so for them the poll would only report "down".
+  const isAuthenticated = authStatus === 'authenticated';
+  useSystemStatusPoll(isAuthenticated);
 
   // Tick once per second so any time-comparison render values stay fresh
   // without calling Date.now() during render: the lobby banner suppression
@@ -114,7 +117,8 @@ export function useAppShellViewModel() {
   // can't be reached and content can't scroll behind them. The hub
   // (`/daily/challenges`) keeps both.
   const inDailyChallengeGame = currentPath.startsWith('/daily/challenges/');
-  const showHeader = !inDailyChallengeGame && HEADER_PATHS.some((p) => (p === '/' ? currentPath === '/' : currentPath.startsWith(p)));
+  const showHeader = !inDailyChallengeGame && showsHeader(currentPath);
+  const navPath = navPathOf(currentPath);
   const showNav = !inDailyChallengeGame && !HIDE_NAV_PATHS.some((path) => currentPath.startsWith(path));
   const inLobbyRoom = currentPath.startsWith('/friend/room');
   const lobbyBannerSuppressed =
@@ -237,8 +241,12 @@ export function useAppShellViewModel() {
   const socialBadgeCount = incomingFriendRequestCount + challengeInviteCount;
   const bellBadgeCount = unreadNotificationCount;
 
+  // The socket manager and the debug poll exist for members only: a guest on
+  // the public hub must not construct a socket or run timers.
   useEffect(() => {
+    if (!isAuthenticated) return;
     const socket = getSocket();
+    setSocketConnected(socket.connected);
     const handleConnect = () => setSocketConnected(true);
     const handleDisconnect = () => setSocketConnected(false);
     socket.on('connect', handleConnect);
@@ -247,9 +255,10 @@ export function useAppShellViewModel() {
       socket.off('connect', handleConnect);
       socket.off('disconnect', handleDisconnect);
     };
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
+    if (!isAuthenticated) return;
     const sync = () => setRankedGeoHintDebug(readCachedRankedGeoHint());
     window.addEventListener('storage', sync);
     const intervalId = window.setInterval(sync, 1500);
@@ -257,7 +266,7 @@ export function useAppShellViewModel() {
       window.removeEventListener('storage', sync);
       window.clearInterval(intervalId);
     };
-  }, []);
+  }, [isAuthenticated]);
 
   const handleLogout = async () => {
     await logout();
@@ -265,7 +274,7 @@ export function useAppShellViewModel() {
     router.replace('/play');
   };
 
-  const isPathActive = (path: string, exact?: boolean) => isPathActiveHelper(currentPath, path, exact);
+  const isPathActive = (path: string, exact?: boolean) => isPathActiveHelper(navPath, path, exact);
 
   const handleReturnToLobby = () => {
     if (!lobbyCode) return;
@@ -433,6 +442,7 @@ export function useAppShellViewModel() {
     authUser,
     // Route
     currentPath,
+    navPath,
     showHeader,
     showNav,
     isPathActive,

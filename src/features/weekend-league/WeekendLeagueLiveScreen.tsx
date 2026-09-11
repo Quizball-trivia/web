@@ -98,7 +98,7 @@ export function WeekendLeagueLiveScreen() {
       showControls={false}
       controller={live}
       onJoinLive={live.hasEntered ? () => { setPinnedId(live.tournamentId); setMode('player'); } : undefined}
-      onWatchLive={() => { setPinnedId(live.tournamentId); setMode('spectator'); }}
+      onWatchLive={() => { if (live.isGuest) { live.requireAccount(); return; } setPinnedId(live.tournamentId); setMode('spectator'); }}
     />
   );
 }
