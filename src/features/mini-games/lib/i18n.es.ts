@@ -166,7 +166,7 @@ export const ES: Record<string, string> = {
   "Pick your shot zone": "Elige tu zona de tiro",
   "4 GOAL · 2 SAVE": "4 GOLES · 2 PARADAS",
   "4 GOAL · 1 SAVE": "4 GOLES · 1 PARADA",
-  "TAKE {amount}": "APUESTA {amount}",
+  "TAKE {amount}": "COBRAR {amount}",
   "NEXT ATTACK": "SIGUIENTE ATAQUE",
   "Next attack risks the whole pot — the keeper resets.": "El siguiente ataque arriesga todo el bote — el portero se reinicia.",
   "The keeper read it — pot lost.": "El portero lo leyó — bote perdido.",

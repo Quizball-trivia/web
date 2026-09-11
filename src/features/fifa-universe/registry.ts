@@ -56,7 +56,7 @@ export const FIFA_MODES: FifaModeMeta[] = [
   {
     slug: 'fifa-fake-stat',
     title: { en: 'One Stat Is Fake', ka: 'ერთი სტატი ყალბია', es: 'Una estadística es falsa', tr: 'Bir İstatistik Sahte' },
-    description: { en: 'A fully revealed card with one doctored attribute — ±10, then ±5, then ±2.', ka: 'სრულად გახსნილი ბარათი ერთი შეცვლილი ატრიბუტით — ±10, შემდეგ ±5, შემდეგ ±2.', es: 'Una carta completamente revelada con un atributo manipulado: ±10, luego ±5, luego ±2.', tr: 'Tamamen gösterilen bir kart, bir tane hileli özellik — ��10, sonra ±5, sonra ±2.' },
+    description: { en: 'A fully revealed card with one doctored attribute — ±10, then ±5, then ±2.', ka: 'სრულად გახსნილი ბარათი ერთი შეცვლილი ატრიბუტით — ±10, შემდეგ ±5, შემდეგ ±2.', es: 'Una carta completamente revelada con un atributo manipulado: ±10, luego ±5, luego ±2.', tr: 'Tamamen gösterilen bir kart, bir tane hileli özellik — ±±10, sonra ±5, sonra ±2.' },
     group: 'featured', duration: SHORT, format: SOLO, artPlayer: 'Neymar Jr', artEdition: 'FIFA18',
   },
   {
