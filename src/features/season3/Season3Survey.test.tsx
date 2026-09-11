@@ -9,9 +9,11 @@ describe('Season 3 survey',()=>{
   afterEach(()=>{vi.useRealTimers();});
   async function open(kind:string){mocks.claim.mockResolvedValue({kind});render(<Season3Survey/>);await screen.findByRole('dialog',{}, {timeout:3000});}
   it('requires nonblank input, sends locale and waits for save before thanks',async()=>{
-    await open('idea');const send=screen.getByRole('button',{name:'Send my response'});expect(send).toBeDisabled();
+    await open('idea');expect(sessionStorage.getItem('survey-test')).not.toBeNull();
+    const send=screen.getByRole('button',{name:'Send my response'});expect(send).toBeDisabled();
     fireEvent.change(screen.getByRole('textbox'),{target:{value:'  Cooperative mode  '}});fireEvent.click(send);
     await screen.findByText('Thanks for your feedback!');expect(mocks.submit).toHaveBeenCalledWith('match','en',{kind:'idea',idea:'Cooperative mode'});
+    expect(sessionStorage.getItem('survey-test')).toBeNull();
   });
   it('requires both separate votes and preserves false',async()=>{
     await open('vote');fireEvent.click(screen.getAllByRole('button',{name:'No, keep it'})[0]!);
