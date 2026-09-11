@@ -21,7 +21,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { DemoModeArt } from "@/features/demos/DemoModeArt";
-import { ALL_DEMO_MODES, type DemoModeCard } from "@/features/demos/demoModes";
+import { ALL_DEMO_MODES, type DemoModeCard, demoText } from "@/features/demos/demoModes";
 import { useDailyChallenges, useResetDailyChallengeDev } from "@/lib/queries/dailyChallenges.queries";
 import { queryKeys } from "@/lib/queries/queryKeys";
 import type { DailyChallengeType } from "@/lib/domain/dailyChallenge";
@@ -32,6 +32,7 @@ import { useLocale } from "@/contexts/LocaleContext";
 import { useRouter } from "next/navigation";
 import { MissingXiModeModal } from "@/features/missing-xi/components/MissingXiModeModal";
 import { CoinIcon } from "@/features/store/components/CoinIcon";
+import type { Locale } from "@/lib/i18n/messages";
 
 /** Real in-app destinations for the modes that have shipped a page. */
 const REAL_ROUTES: Record<string, string> = {
@@ -62,9 +63,9 @@ const LIVE_ONLINE_SLUGS = new Set(["match", "auction", "mini-football-grid", "we
 /** Format badge: solo (yellow) / multiplayer with friends (green) / online (orange). */
 type PlayFormat = "solo" | "multiplayer" | "online";
 const FORMAT_LABEL: Record<PlayFormat, Record<string, string>> = {
-  solo: { en: "Solo", ka: "სოლო", es: "Solo" },
-  multiplayer: { en: "Multiplayer", ka: "მულტიპლეიერი", es: "Multijugador" },
-  online: { en: "Online 1v1", ka: "ონლაინ 1v1", es: "Online 1v1" },
+  solo: { en: "Solo", ka: "სოლო", es: "Solo", tr: "Tek kişilik" },
+  multiplayer: { en: "Multiplayer", ka: "მულტიპლეიერი", es: "Multijugador", tr: "Çok oyunculu" },
+  online: { en: "Online 1v1", ka: "ონლაინ 1v1", es: "Online 1v1", tr: "Online 1v1" },
 };
 const FORMAT_STYLE: Record<PlayFormat, string> = {
   solo: "bg-brand-yellow text-black",
@@ -245,10 +246,10 @@ function GameCard({
   const isGuest = useAuthStore((state) => state.status) === "anonymous";
   const openAuthPrompt = useAuthPromptStore((state) => state.open);
   const devReset = showDevReset && mode.dailyType
-    ? <DailyDevResetButton challengeType={mode.dailyType as DailyChallengeType} title={locale === "ka" ? mode.title.ka : mode.title.en} />
+    ? <DailyDevResetButton challengeType={mode.dailyType as DailyChallengeType} title={demoText(mode.title, locale)} />
     : null;
-  const title = locale === "ka" ? mode.title.ka : mode.title.en;
-  const description = locale === "ka" ? mode.description.ka : mode.description.en;
+  const title = demoText(mode.title, locale);
+  const description = demoText(mode.description, locale);
   const format = formatOf(mode.slug);
 
   // Completed daily: a done state + reset timer, not tappable until it unlocks.
@@ -501,13 +502,13 @@ function GameSection({
 
 
 type FinderFilter = "all" | "daily" | "coins" | "solo" | "multiplayer" | "online";
-const FINDER_FILTERS: Array<{ id: FinderFilter; en: string; ka: string; es: string }> = [
-  { id: "all", en: "All", ka: "ყველა", es: "Todos" },
-  { id: "daily", en: "Daily", ka: "დღიური", es: "Diarios" },
-  { id: "coins", en: "Coins", ka: "მონეტები", es: "Monedas" },
-  { id: "solo", en: "Solo", ka: "სოლო", es: "Solo" },
-  { id: "multiplayer", en: "Multiplayer", ka: "მრავალმოთამაშიანი", es: "Multijugador" },
-  { id: "online", en: "Online", ka: "ონლაინ", es: "En línea" },
+const FINDER_FILTERS: Array<{ id: FinderFilter } & Record<Locale, string>> = [
+  { id: "all", en: "All", ka: "ყველა", es: "Todos", tr: "Tümü" },
+  { id: "daily", en: "Daily", ka: "დღიური", es: "Diarios", tr: "Günlük" },
+  { id: "coins", en: "Coins", ka: "მონეტები", es: "Monedas", tr: "Jeton" },
+  { id: "solo", en: "Solo", ka: "სოლო", es: "Solo", tr: "Tek kişilik" },
+  { id: "multiplayer", en: "Multiplayer", ka: "მრავალმოთამაშიანი", es: "Multijugador", tr: "Çok oyunculu" },
+  { id: "online", en: "Online", ka: "ონლაინ", es: "En línea", tr: "Online" },
 ];
 
 function matchesFilter(mode: DemoModeCard, section: "daily" | "coins", filter: FinderFilter): boolean {
@@ -516,11 +517,16 @@ function matchesFilter(mode: DemoModeCard, section: "daily" | "coins", filter: F
   return formatOf(mode.slug) === filter;
 }
 
+// Accent- and case-insensitive so "Gol" finds "Golü" and "sut" finds "Şut" (Turkish ı folds to i).
+function searchKey(value: string): string {
+  return value.trim().toLowerCase().replace(/ı/g, "i").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
 function matchesQuery(mode: DemoModeCard, query: string): boolean {
-  const q = query.trim().toLowerCase();
+  const q = searchKey(query);
   if (!q) return true;
-  return [mode.title.en, mode.title.ka, mode.description.en, mode.description.ka, mode.slug]
-    .some((text) => text.toLowerCase().includes(q));
+  return [mode.title, mode.description].flatMap((text) => [text.en, text.ka, text.es ?? "", text.tr ?? ""]).concat(mode.slug)
+    .some((text) => searchKey(text).includes(q));
 }
 
 /** Search icon that slides open into a field, plus the filter pills. */
@@ -602,7 +608,7 @@ function GamesFinder({
             filter === entry.id ? "bg-brand-yellow text-black" : "bg-white/[0.07] text-white/60 hover:bg-white/[0.12]"
           }`}
         >
-          {locale === "ka" ? entry.ka : locale === "es" ? entry.es : entry.en}
+          {entry[locale] ?? entry.en}
           <span className={filter === entry.id ? "text-black/50" : "text-white/35"}>{counts[entry.id]}</span>
         </button>
       ))}

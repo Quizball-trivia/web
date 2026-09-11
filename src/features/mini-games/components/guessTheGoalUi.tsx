@@ -9,6 +9,7 @@
 import type { CSSProperties } from 'react';
 import type { TacticsStepKind } from '../lib/tacticsEngine';
 import { useMiniLocale } from '../lib/i18n';
+import type { MiniLocale } from '../lib/i18n';
 
 export type GgtOptionState = 'idle' | 'locked' | 'correct' | 'wrong' | 'dim';
 
@@ -43,12 +44,12 @@ export const GGT_OPTION_CLASS =
  *  games' entries there). */
 export const GGT_ACTION_META: Record<
   TacticsStepKind,
-  { label: { en: string; ka: string }; color: string }
+  { label: Record<MiniLocale, string>; color: string }
 > = {
-  carry: { label: { en: 'Dribble', ka: 'დრიბლინგი' }, color: '#1c2b21' },
-  run: { label: { en: 'Run', ka: 'შერბენა' }, color: '#1c2b21' },
-  pass: { label: { en: 'Pass', ka: 'პასი' }, color: '#ffffff' },
-  shot: { label: { en: 'Shot!', ka: 'დარტყმა!' }, color: '#FFE500' },
+  carry: { label: { en: 'Dribble', ka: 'დრიბლინგი', es: 'Regate', tr: 'Dribling' }, color: '#1c2b21' },
+  run: { label: { en: 'Run', ka: 'შერბენა', es: 'Carrera', tr: 'Koşu' }, color: '#1c2b21' },
+  pass: { label: { en: 'Pass', ka: 'პასი', es: 'Pase', tr: 'Pas' }, color: '#ffffff' },
+  shot: { label: { en: 'Shot!', ka: 'დარტყმა!', es: '¡Tiro!', tr: 'Şut!' }, color: '#FFE500' },
 };
 
 export function GgtActionGlyph({ kind, color }: { kind: TacticsStepKind; color: string }) {

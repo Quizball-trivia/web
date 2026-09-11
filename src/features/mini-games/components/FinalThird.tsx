@@ -296,8 +296,8 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
     const windowS = Math.max(0.5, (deadlineLocalMs - Date.now()) / 1000);
     setLiveQuestion({
       id: state.question.question_id,
-      q: state.question.prompt[miniLocale] ?? state.question.prompt.en,
-      options: state.question.options.map((option) => option.text[miniLocale] ?? option.text.en),
+      q: (state.question.prompt as unknown as Record<string, string | undefined>)[miniLocale] ?? state.question.prompt.en,
+      options: state.question.options.map((option) => (option.text as unknown as Record<string, string | undefined>)[miniLocale] ?? option.text.en),
       optionIds: state.question.options.map((option) => option.id),
       answer: -1,
       deadlineLocalMs,

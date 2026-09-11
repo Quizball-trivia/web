@@ -83,12 +83,13 @@ const SLIP_BANK: BilingualSelection[] = [
 ];
 
 export function getSlip(locale: MiniLocale): Selection[] {
+  const key = locale === 'ka' ? 'ka' : 'en';
   return SLIP_BANK.map((s) => ({
     ...s,
     question: {
       ...s.question,
-      q: s.question.q[locale],
-      options: s.question.options.map((o) => o[locale]),
+      q: s.question.q[key],
+      options: s.question.options.map((o) => o[key]),
     },
   }));
 }
