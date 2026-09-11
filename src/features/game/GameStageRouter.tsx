@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { markSeason3Return } from '@/features/season3/season3.repo';
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { MatchmakingMapScreen } from "@/components/match/MatchmakingMapScreen";
@@ -826,6 +827,9 @@ export function GameStageRouter() {
             logger.info("Socket emit match:play_again", { matchId: realtimeMatch.matchId });
           }}
           onMainMenu={() => {
+            if(matchType==='ranked' && selfUserId && resultMatchId && !finalResults?.cancelledNoContest) {
+              markSeason3Return(selfUserId,resultMatchId);
+            }
             exitToPlay("results_main_menu");
           }}
         />
