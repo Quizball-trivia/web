@@ -710,6 +710,206 @@
     "primaryColor": "#E2231A"
   },
   {
+    "id": "galatasaray",
+    "label": "Galatasaray",
+    "value": "Galatasaray",
+    "country": "Turkey",
+    "countryKa": "თურქეთი",
+    "flag": "🇹🇷",
+    "logo": "galatasaray.webp",
+    "primaryColor": "#A90432"
+  },
+  {
+    "id": "fenerbahce",
+    "label": "Fenerbahçe",
+    "value": "Fenerbahçe",
+    "country": "Turkey",
+    "countryKa": "თურქეთი",
+    "flag": "🇹🇷",
+    "logo": "fenerbahce.webp",
+    "primaryColor": "#00205B"
+  },
+  {
+    "id": "besiktas",
+    "label": "Beşiktaş",
+    "value": "Beşiktaş",
+    "country": "Turkey",
+    "countryKa": "თურქეთი",
+    "flag": "🇹🇷",
+    "logo": "besiktas.webp",
+    "primaryColor": "#000000"
+  },
+  {
+    "id": "trabzonspor",
+    "label": "Trabzonspor",
+    "value": "Trabzonspor",
+    "country": "Turkey",
+    "countryKa": "თურქეთი",
+    "flag": "🇹🇷",
+    "logo": "trabzonspor.webp",
+    "primaryColor": "#7B1E2B"
+  },
+  {
+    "id": "istanbul-basaksehir",
+    "label": "Başakşehir",
+    "value": "Başakşehir",
+    "country": "Turkey",
+    "countryKa": "თურქეთი",
+    "flag": "🇹🇷",
+    "logo": "istanbul-basaksehir.webp",
+    "primaryColor": "#F26522"
+  },
+  {
+    "id": "alanyaspor",
+    "label": "Alanyaspor",
+    "value": "Alanyaspor",
+    "country": "Turkey",
+    "countryKa": "თურქეთი",
+    "flag": "🇹🇷",
+    "logo": "alanyaspor.webp",
+    "primaryColor": "#F58220"
+  },
+  {
+    "id": "samsunspor",
+    "label": "Samsunspor",
+    "value": "Samsunspor",
+    "country": "Turkey",
+    "countryKa": "თურქეთი",
+    "flag": "🇹🇷",
+    "logo": "samsunspor.webp",
+    "primaryColor": "#E30613"
+  },
+  {
+    "id": "goztepe",
+    "label": "Göztepe",
+    "value": "Göztepe",
+    "country": "Turkey",
+    "countryKa": "თურქეთი",
+    "flag": "🇹🇷",
+    "logo": "goztepe.webp",
+    "primaryColor": "#C8102E"
+  },
+  {
+    "id": "konyaspor",
+    "label": "Konyaspor",
+    "value": "Konyaspor",
+    "country": "Turkey",
+    "countryKa": "თურქეთი",
+    "flag": "🇹🇷",
+    "logo": "konyaspor.webp",
+    "primaryColor": "#0E7A3C"
+  },
+  {
+    "id": "gaziantep-fk",
+    "label": "Gaziantep FK",
+    "value": "Gaziantep FK",
+    "country": "Turkey",
+    "countryKa": "თურქეთი",
+    "flag": "🇹🇷",
+    "logo": "gaziantep-fk.webp",
+    "primaryColor": "#E30613"
+  },
+  {
+    "id": "kasimpasa",
+    "label": "Kasımpaşa",
+    "value": "Kasımpaşa",
+    "country": "Turkey",
+    "countryKa": "თურქეთი",
+    "flag": "🇹🇷",
+    "logo": "kasimpasa.webp",
+    "primaryColor": "#003C7D"
+  },
+  {
+    "id": "eyupspor",
+    "label": "Eyüpspor",
+    "value": "Eyüpspor",
+    "country": "Turkey",
+    "countryKa": "თურქეთი",
+    "flag": "🇹🇷",
+    "logo": "eyupspor.webp",
+    "primaryColor": "#6B2C91"
+  },
+  {
+    "id": "caykur-rizespor",
+    "label": "Çaykur Rizespor",
+    "value": "Çaykur Rizespor",
+    "country": "Turkey",
+    "countryKa": "თურქეთი",
+    "flag": "🇹🇷",
+    "logo": "caykur-rizespor.webp",
+    "primaryColor": "#0F7B3F"
+  },
+  {
+    "id": "kocaelispor",
+    "label": "Kocaelispor",
+    "value": "Kocaelispor",
+    "country": "Turkey",
+    "countryKa": "თურქეთი",
+    "flag": "🇹🇷",
+    "logo": "kocaelispor.webp",
+    "primaryColor": "#0A7A3E"
+  },
+  {
+    "id": "genclerbirligi",
+    "label": "Gençlerbirliği",
+    "value": "Gençlerbirliği",
+    "country": "Turkey",
+    "countryKa": "თურქეთი",
+    "flag": "🇹🇷",
+    "logo": "genclerbirligi.webp",
+    "primaryColor": "#C8102E"
+  },
+  {
+    "id": "erzurumspor",
+    "label": "Erzurumspor",
+    "value": "Erzurumspor",
+    "country": "Turkey",
+    "countryKa": "თურქეთი",
+    "flag": "🇹🇷",
+    "logo": "erzurumspor.webp",
+    "primaryColor": "#1B4B9B"
+  },
+  {
+    "id": "amedspor",
+    "label": "Amedspor",
+    "value": "Amedspor",
+    "country": "Turkey",
+    "countryKa": "თურქეთი",
+    "flag": "🇹🇷",
+    "logo": "amedspor.webp",
+    "primaryColor": "#007A3D"
+  },
+  {
+    "id": "corum-fk",
+    "label": "Çorum FK",
+    "value": "Çorum FK",
+    "country": "Turkey",
+    "countryKa": "თურქეთი",
+    "flag": "🇹🇷",
+    "logo": "corum-fk.webp",
+    "primaryColor": "#C8102E"
+  },
+  {
+    "id": "bursaspor",
+    "label": "Bursaspor",
+    "value": "Bursaspor",
+    "country": "Turkey",
+    "countryKa": "თურქეთი",
+    "flag": "🇹🇷",
+    "logo": "bursaspor.webp",
+    "primaryColor": "#0B7B3E"
+  },
+  {
+    "id": "antalyaspor",
+    "label": "Antalyaspor",
+    "value": "Antalyaspor",
+    "country": "Turkey",
+    "countryKa": "თურქეთი",
+    "flag": "🇹🇷",
+    "logo": "antalyaspor.webp",
+    "primaryColor": "#C8102E"
+  },
+  {
     "id": "afc-ajax",
     "label": "AFC Ajax",
     "value": "AFC Ajax",
