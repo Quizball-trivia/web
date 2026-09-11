@@ -116,3 +116,9 @@ Special-round points are authoritative from the script: the panel shows the scri
 
 ### Rebase hygiene
 After rebasing onto the SEO branch, diff `src/messages/{en,es,ka}.json` against `origin/staging` for lost/duplicate keys.
+
+## v3 — Season 3: ranked is MCQ-only (owner, 2026-09-11)
+Who Am I and Put in Order moved to the daily challenges; from Season 3 ranked/friendly possession matches serve MCQs only.
+The tutorial follows: six guided MCQs (indexes 2 and 3 become MCQs, `TRAINING_SPECIAL_ROUND_BUILDERS` emptied, special-panel
+driver and their tooltips removed), same possession table (Q4 wrong → CoachBot goal → 1-1 → penalties). Live pool needs 6 distinct
+MCQs from the surviving category; offline pool unchanged.
