@@ -51,6 +51,7 @@ import { CoinRewardChip, RewardChip } from '@/features/game/results/RankedProgre
 import { CriterionAsset } from './components/CriterionAsset';
 import { useRealtimeFootballGrid } from './realtime/useRealtimeFootballGrid';
 import type { Locale } from '@/lib/i18n/messages';
+import { criterionLabel as localizedCriterionLabel } from './criterionLabel';
 
 export const FOOTBALL_GRID_COPY = {
   en: {
@@ -684,7 +685,7 @@ function CriterionHeader({
   locale: Locale;
   axis: 'column' | 'row';
 }) {
-  const label = locale === 'ka' ? criterion.labelKa || criterion.labelEn : criterion.labelEn;
+  const label = localizedCriterionLabel(criterion, locale);
   const portrait = criterion.family === 'manager' || criterion.family === 'teammate';
   if (axis === 'row') {
     return (
@@ -800,7 +801,7 @@ export function MatchBoard({
               type="button"
               disabled={!selectable}
               onClick={() => onSelect(cellIndex)}
-              aria-label={`${locale === 'ka' ? row.labelKa : row.labelEn} × ${locale === 'ka' ? column.labelKa : column.labelEn}`}
+              aria-label={`${localizedCriterionLabel(row, locale)} × ${localizedCriterionLabel(column, locale)}`}
               className={cn(
                 'relative aspect-square overflow-hidden rounded-[18px] border-2 p-1 text-center transition-colors sm:rounded-[20px]',
                 claim && (claim.claimantUserId === selfUserId
@@ -852,7 +853,7 @@ export function ResultSampleGallery({
   const [activeIndex, setActiveIndex] = useState(0);
   const activeSample = shown[Math.min(activeIndex, Math.max(0, shown.length - 1))];
   const labelFor = (criterion: FootballGridCriterionView) => (
-    locale === 'ka' ? criterion.labelKa || criterion.labelEn : criterion.labelEn
+    localizedCriterionLabel(criterion, locale)
   );
 
   const renderCard = (sample: (typeof shown)[number]) => {
@@ -1066,7 +1067,7 @@ export function FootballGridTurnPanel({
   }, [cellPicked, isMyTurn]);
 
   const criterionLabel = (criterion: FootballGridCriterionView) => (
-    locale === 'ka' ? criterion.labelKa || criterion.labelEn : criterion.labelEn
+    localizedCriterionLabel(criterion, locale)
   );
 
   return (

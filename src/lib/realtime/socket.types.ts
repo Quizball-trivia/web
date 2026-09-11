@@ -787,6 +787,8 @@ export interface PublicAuctionFootballer {
   trueValue?: number;
   startingPrice: number;
   clues?: readonly string[];
+  /** Same steps as `clues` per content locale; the client shows its own language. */
+  cluesByLocale?: Partial<Record<'en' | 'ka' | 'es' | 'tr', readonly string[]>>;
   imageUrl?: string | null;
   currentClub?: string | null;
   nationality?: string | null;
@@ -898,7 +900,7 @@ export interface PublicAuctionPlayerRanking {
 export interface PublicAuctionMatchState {
   matchId: string;
   version: number;
-  locale?: 'en' | 'ka' | 'es';
+  locale?: 'en' | 'ka' | 'es' | 'tr';
   phase: AuctionMatchPhase;
   formation: AuctionFormationName;
   seats: PublicAuctionPlayer[];
@@ -913,12 +915,12 @@ export interface PublicAuctionMatchState {
 
 export interface AuctionStartAiMatchPayload {
   formation?: AuctionFormationName;
-  locale?: 'en' | 'ka' | 'es';
+  locale?: 'en' | 'ka' | 'es' | 'tr';
 }
 
 export interface AuctionSearchStartPayload {
   formation?: AuctionFormationName;
-  locale?: 'en' | 'ka' | 'es';
+  locale?: 'en' | 'ka' | 'es' | 'tr';
 }
 
 export type FootballGridDifficulty = 'easy' | 'normal' | 'hard';
@@ -958,6 +960,8 @@ export interface FootballGridCriterionView {
   family: 'club' | 'country' | 'league' | 'manager' | 'teammate' | 'trophy_award' | 'wildcard';
   labelEn: string;
   labelKa: string;
+  labelEs?: string | null;
+  labelTr?: string | null;
   assetKey: string | null;
   difficulty: FootballGridDifficulty;
 }
@@ -1149,7 +1153,7 @@ export interface AuctionUiReadyPayload {
 
 export interface AuctionSearchStartedPayload {
   searchId: string;
-  locale: 'en' | 'ka' | 'es';
+  locale: 'en' | 'ka' | 'es' | 'tr';
   queuedUserCount: number;
   seatsNeeded: number;
   fallbackAt: string;
@@ -1160,7 +1164,7 @@ export interface AuctionSearchStartedPayload {
 
 export interface AuctionSearchStatusPayload {
   searchId: string;
-  locale: 'en' | 'ka' | 'es';
+  locale: 'en' | 'ka' | 'es' | 'tr';
   queuedUserCount: number;
   seatsNeeded: number;
   fallbackAt: string;
@@ -1190,7 +1194,7 @@ export interface AuctionMatchFoundPayload {
   /** joinDelayMs: ms after receipt when each bot pops into the lineup —
    *  bots arrive staggered like a real queue (absent = show immediately). */
   botPlayers?: Array<{ seatId: string; displayName: string; joinDelayMs?: number }>;
-  locale: 'en' | 'ka' | 'es';
+  locale: 'en' | 'ka' | 'es' | 'tr';
   formation: AuctionFormationName;
   /** Server clock used to compensate for local clock skew. Optional during a
    * rolling deploy; older backends only sent countdownEndsAt. */
@@ -1206,7 +1210,7 @@ export interface AuctionMatchFoundPayload {
 
 export interface AuctionMatchStartedPayload {
   matchId: string;
-  locale: 'en' | 'ka' | 'es';
+  locale: 'en' | 'ka' | 'es' | 'tr';
   state: PublicAuctionMatchState;
   serverNow?: string;
 }

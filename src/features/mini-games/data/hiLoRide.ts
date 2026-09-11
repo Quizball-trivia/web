@@ -128,7 +128,8 @@ const BANK: BilingualMatchup[] = [
 ];
 
 export function getHiLoMatchups(locale: MiniLocale): HiLoMatchup[] {
-  return BANK.map((m) => ({ ...m, stat: m.stat[locale] ?? m.stat.en }));
+  const key = locale === 'ka' ? 'ka' : 'en';
+  return BANK.map((m) => ({ ...m, stat: m.stat[key] ?? m.stat.en }));
 }
 
 /** Crowd accuracy → decimal step odds, with a small house margin. Harder

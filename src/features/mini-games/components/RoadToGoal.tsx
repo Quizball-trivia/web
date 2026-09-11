@@ -11,7 +11,7 @@ import { MiniGameShell, StatPill } from './MiniGameShell';
 import { getTrivia, type TriviaQuestion } from '../data/trivia';
 import { playCash } from '../lib/crowdAudio';
 import { LiveActivityStrip } from './LiveActivityStrip';
-import { useMiniLocale } from '../lib/i18n';
+import { type MiniLocale, useMiniLocale } from '../lib/i18n';
 import { useStoreWallet } from '@/lib/queries/store.queries';
 import {
   acquireRoadToGoalMutation,
@@ -151,6 +151,78 @@ const COPY = {
     target: 'მიზანი',
     finish: 'გოლი',
   },
+  es: {
+    title: "Road to Goal",
+    subtitle: "Vence a 10 defensas y al portero. Una pregunta de fútbol por zona.",
+    balance: "Saldo",
+    zone: "Zona",
+    stake: "Apuesta",
+    introEyebrow: "El desafío de las once zonas",
+    introTitle: "Conócelo. Regatéalo. Guárdalo.",
+    introBody: "Cada respuesta activa una tirada de supervivencia. Las respuestas correctas te dan mejores opciones. Tras cada zona segura, guarda la ganancia o ataca al siguiente defensa.",
+    kickOff: "Empieza por {stake}",
+    noFunds: "No tienes suficientes puntos para esta apuesta",
+    nextReturn: "Siguiente ganancia",
+    currentReturn: "Ganancia actual",
+    question: "Pregunta",
+    answerFast: "Responde antes de que el defensa te cierre",
+    clean: "Defensa superado",
+    cleanBody: "Has superado la zona {zone}. El siguiente defensa ya está saliendo.",
+    continue: "Ataca la zona {zone}",
+    cashOut: "Guarda {amount}",
+    saved: "¡Salvado!",
+    savedBody: "El portero paró tu último disparo. Has perdido tu apuesta.",
+    tackled: "¡Entrada!",
+    tackledBody: "El defensa detuvo tu avance en la zona {zone}. Has perdido tu apuesta.",
+    correctWas: "Respuesta correcta: {answer}",
+    newRun: "Nueva partida",
+    cashed: "Carrera guardada",
+    cashedBody: "{zones} zonas despejadas a {mult}×.",
+    finalTitle: "¡Gol!",
+    finalBody: "Diez defensas superados. Portero superado. Una racha perfecta a 4,00×.",
+    won: "Has ingresado {amount}",
+    startAgain: "Jugar de nuevo",
+    liveRoute: "Ruta en vivo",
+    safe: "despejado",
+    target: "objetivo",
+    finish: "Gol",
+  },
+  tr: {
+    title: "Road to Goal",
+    subtitle: "10 defansı ve kaleciyi geç. Her bölge için bir futbol sorusu.",
+    balance: "Bakiye",
+    zone: "Bölge",
+    stake: "Jeton",
+    introEyebrow: "On bir bölgeli zorlu mücadele",
+    introTitle: "Bil. Çal. Kazan.",
+    introBody: "Her cevap bir hayatta kalma zarı tetikler. Doğru cevaplar sana daha iyi oranlar verir. Her güvenli bölgeden sonra, kazancını al ya da bir sonraki defansa saldır.",
+    kickOff: "{stake} için başla",
+    noFunds: "Bu bahis için yeterli puanın yok",
+    nextReturn: "Sonraki kazanç",
+    currentReturn: "Mevcut kazanç",
+    question: "Soru",
+    answerFast: "Defans kapanmadan cevapla",
+    clean: "Defans aşıldı",
+    cleanBody: "{zone}. bölgeden geçtin. Bir sonraki defans zaten geliyor.",
+    continue: "{zone}. bölgeye saldır",
+    cashOut: "{amount} kazan",
+    saved: "Kurtarıldı!",
+    savedBody: "Kaleci son şutunu kurtardı. Bahsin gitti.",
+    tackled: "Top kapıldı!",
+    tackledBody: "Defans {zone}. bölgedeki koşunu durdurdu. Bahsin gitti.",
+    correctWas: "Doğru cevap: {answer}",
+    newRun: "Yeni tur",
+    cashed: "Koşu kazanıldı",
+    cashedBody: "{zones} bölge temizlendi, çarpan {mult}×.",
+    finalTitle: "Gol!",
+    finalBody: "On defans oyuncusu geçildi. Kaleci geçildi. Mükemmel bir koşu, 4.00×.",
+    won: "{amount} bankaya attın",
+    startAgain: "Tekrar oyna",
+    liveRoute: "Canlı rota",
+    safe: "temizlendi",
+    target: "hedef",
+    finish: "Gol",
+  },
 } as const;
 
 function fill(template: string, values: Record<string, string | number>) {
@@ -243,11 +315,11 @@ function forgetRoadToGoalRound(roundId?: string) {
   }
 }
 
-function localized(value: Record<string, string>, locale: 'en' | 'ka') {
+function localized(value: Record<string, string>, locale: MiniLocale) {
   return value[locale] ?? value.en ?? Object.values(value)[0] ?? '';
 }
 
-function toTriviaQuestion(question: RoadToGoalQuestion, locale: 'en' | 'ka'): TriviaQuestion {
+function toTriviaQuestion(question: RoadToGoalQuestion, locale: MiniLocale): TriviaQuestion {
   return {
     id: question.question_id,
     q: localized(question.prompt, locale),
@@ -427,7 +499,7 @@ export function RoadToGoal({
   newRunsEnabled?: boolean;
 } = {}) {
   const locale = useMiniLocale();
-  const copy = COPY[locale];
+  const copy = COPY[locale] ?? COPY.en;
   const bank = useMemo(() => getTrivia(locale), [locale]);
   const { data: wallet, isError: walletError, refetch: refetchWallet } = useStoreWallet({ enabled: live });
   const [balance, setBalance] = useState(1_000);

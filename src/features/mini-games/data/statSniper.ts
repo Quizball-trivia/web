@@ -90,7 +90,8 @@ const BANK: BilingualRound[] = [
 ];
 
 export function getSniperRounds(locale: MiniLocale): SniperRound[] {
-  return BANK.map((r) => ({ ...r, prompt: r.prompt[locale] ?? r.prompt.en, unit: r.unit[locale] ?? r.unit.en }));
+  const key = locale === 'ka' ? 'ka' : 'en';
+  return BANK.map((r) => ({ ...r, prompt: r.prompt[key] ?? r.prompt.en, unit: r.unit[key] ?? r.unit.en }));
 }
 
 /** Proximity score: 100 at spot-on, fading to 0 at a quarter of the span away.

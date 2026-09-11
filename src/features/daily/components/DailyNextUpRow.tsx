@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { Play } from "lucide-react";
 import { DemoModeArt } from "@/features/demos/DemoModeArt";
-import { ALL_DEMO_MODES, type DemoModeCard } from "@/features/demos/demoModes";
+import { ALL_DEMO_MODES, demoText, type DemoModeCard } from "@/features/demos/demoModes";
 import { useQueryClient } from "@tanstack/react-query";
 import { useDailyChallenges } from "@/lib/queries/dailyChallenges.queries";
 import { useLocale } from "@/contexts/LocaleContext";
@@ -123,7 +123,7 @@ function NextUpSuggestions({
               </span>
             </div>
             <p className="truncate p-2.5 font-poppins text-[13px] font-semibold uppercase text-white md:text-sm">
-              {locale === "ka" ? mode.title.ka : mode.title.en}
+              {demoText(mode.title, locale)}
             </p>
           </Link>
         ))}

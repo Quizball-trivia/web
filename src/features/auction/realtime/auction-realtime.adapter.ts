@@ -30,6 +30,8 @@ export interface AuctionStateAdapterOptions {
   /** The real logged-in user's layered avatar — used for the human seat. */
   humanAvatarCustomization?: AvatarCustomization | null;
   serverTimeOffsetMs?: number | null;
+  /** App locale; text hints are shown in it when the server carried that language. */
+  locale?: 'en' | 'ka' | 'es' | 'tr';
 }
 
 export function findMyAuctionSeatId(
@@ -192,8 +194,8 @@ function toClientPlayer(
 function toClientRound(round: PublicAuctionRoundState, options: AuctionStateAdapterOptions): AuctionRound {
   return {
     positionGroup: round.positionGroup,
-    footballer: toClientFootballer(round.footballer, round.roundId, round),
-    clues: getRoundClues(round),
+    footballer: toClientFootballer(round.footballer, round.roundId, round, options),
+    clues: getRoundClues(round, options.locale),
     clueRevealIndex: round.clueRevealIndex,
     bids: round.bids.map((bid) => ({
       playerId: bid.seatId,
@@ -218,6 +220,7 @@ function toClientFootballer(
   footballer: PublicAuctionFootballer,
   fallbackId: string,
   round?: PublicAuctionRoundState,
+  options?: AuctionStateAdapterOptions,
 ): Footballer {
   return {
     id: footballer.id ?? footballer.clueCardId ?? fallbackId,
@@ -225,7 +228,7 @@ function toClientFootballer(
     positionGroup: footballer.positionGroup,
     value: footballer.trueValue ?? 0,
     startingPrice: footballer.startingPrice,
-    clues: round ? getRoundClues(round) : [...(footballer.clues ?? [])],
+    clues: round ? getRoundClues(round, options?.locale) : [...(footballer.clues ?? [])],
     nationality: footballer.nationality ?? '',
     club: footballer.currentClub ?? null,
     league: footballer.league ?? null,
@@ -249,10 +252,13 @@ function toClientSoloPickOption(
   };
 }
 
-function getRoundClues(round: PublicAuctionRoundState): string[] {
-  const visibleClues = round.footballer.clues?.length
-    ? [...round.footballer.clues]
-    : [...round.revealedClues];
+function getRoundClues(round: PublicAuctionRoundState, locale?: AuctionStateAdapterOptions['locale']): string[] {
+  const localized = locale ? round.footballer.cluesByLocale?.[locale] : undefined;
+  const visibleClues = localized?.length
+    ? [...localized]
+    : round.footballer.clues?.length
+      ? [...round.footballer.clues]
+      : [...round.revealedClues];
 
   if (round.revealed) return visibleClues;
 
