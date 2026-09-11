@@ -8,7 +8,7 @@ import { useCategoriesList } from "@/lib/queries/categories.queries";
 import { useQuestionsList } from "@/lib/queries/questions.queries";
 import { usePreloadImages } from "@/lib/usePreloadImages";
 import type { CategorySummary, GameQuestion } from "@/lib/domain";
-import { BAN_CATEGORY_COUNT } from "./constants";
+import { BAN_CATEGORY_COUNT, TRAINING_BAN_CATEGORY_SLUGS } from "./constants";
 import { QUESTIONS_PER_HALF } from "@/features/possession/types/possession.types";
 import { useLocale } from "@/contexts/LocaleContext";
 import { TRAINING_PENALTY_QUESTIONS } from "./data/trainingQuestions";
@@ -72,13 +72,14 @@ export function TrainingMatchProvider({
   const completion = useTrainingCompletion();
   const { locale } = useLocale();
 
-  // Same catalog a friendly lobby offers: active, playable, never campaign-only.
+  // The pinned tutorial categories, from the playable catalog (active, never campaign-only).
   const { data: categoriesData, isError: categoriesError } = useCategoriesList(
     {
-      limit: 100,
+      limit: 10,
       page: 1,
       is_active: "true",
       min_questions: 5,
+      slugs: TRAINING_BAN_CATEGORY_SLUGS.join(","),
     },
     { enabled: !banCategoriesOverride },
     locale,
@@ -91,6 +92,11 @@ export function TrainingMatchProvider({
       return banCategoriesOverride.slice(0, BAN_CATEGORY_COUNT);
     }
     const items = categoriesData?.items ?? [];
+    // Keep the scripted order: the ban script addresses positions, not names.
+    const pinned = TRAINING_BAN_CATEGORY_SLUGS
+      .map((slug) => items.find((category) => category.slug === slug))
+      .filter((category): category is CategorySummary => Boolean(category?.imageUrl));
+    if (pinned.length >= BAN_CATEGORY_COUNT) return pinned.slice(0, BAN_CATEGORY_COUNT);
     const withArt = items.filter((category) => Boolean(category.imageUrl));
     if (withArt.length >= BAN_CATEGORY_COUNT) return withArt.slice(0, BAN_CATEGORY_COUNT);
     // Real catalog unusable (no artwork, or the request failed): the canned set keeps the tutorial playable.

@@ -91,6 +91,7 @@ describe('daily challenge gameplay modes', () => {
           difficulty: 'easy',
           prompt: 'Who followed this path?',
           clubs: ['Birmingham City', 'Borussia Dortmund', 'Real Madrid'],
+          clubMatchNames: [],
           displayAnswer: 'Jude Bellingham',
           acceptedAnswers: ['Jude Bellingham', 'Bellingham'],
         },
