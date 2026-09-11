@@ -1,4 +1,5 @@
 {
+  "season3": {"eyebrow":"SEZON 3 · SENİN FİKRİN","voteQuestion":"Bu turları 3. sezondan kaldıralım mı? Her biri için ayrı oy ver.","order":"“Sırala” turunu kaldıralım mı?","who":"“Ben Kimim?” turunu kaldıralım mı?","remove":"Evet, kaldırılsın","keep":"Hayır, kalsın","ideaQuestion":"3. sezonda hangi oyun modunu görmek istersin?","placeholder":"Fikrini ve nasıl işleyeceğini anlat…","send":"Yanıtımı gönder","sending":"Kaydediliyor…","thanks":"Fikrin için teşekkürler!","back":"Oyuna dön","later":"Şimdi değil","error":"Kaydedilemedi. Lütfen tekrar dene."},
   "common": {
     "back": "Geri",
     "cancel": "İptal",

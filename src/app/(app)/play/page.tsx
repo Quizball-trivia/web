@@ -1,6 +1,7 @@
 "use client";
 
 import { Suspense, useEffect } from "react";
+import { Season3Survey } from '@/features/season3/Season3Survey';
 import { useRouter, useSearchParams } from "next/navigation";
 import { ModeSelectionScreen } from "@/features/play/ModeSelectionScreen";
 import { useGameSessionStore } from "@/stores/gameSession.store";
@@ -174,6 +175,7 @@ function PlayContent() {
 
   return (
     <div className="relative min-h-full overflow-hidden">
+      <Season3Survey />
       <div className="relative z-10">
         <ModeSelectionScreen
           playHomeNotice={<MobileVerificationReminderExperiment />}
