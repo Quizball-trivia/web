@@ -178,7 +178,15 @@ export function useAuctionTrainingMatch({
     },
     [arm, clearPending],
   );
-  useEffect(() => () => clearPending(), [clearPending]);
+  // StrictMode replays this effect: only the timeout is dropped on cleanup, the pending work
+  // survives and is re-armed on setup (a real unmount never fires again anyway).
+  useEffect(() => {
+    if (pausedAtRef.current === null) arm();
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      timerRef.current = null;
+    };
+  }, [arm]);
 
   useEffect(() => {
     if (isPaused) {

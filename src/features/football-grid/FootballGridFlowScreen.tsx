@@ -505,10 +505,11 @@ export function GridHud({
             isMyTurn ? 'bg-brand-yellow text-black' : 'bg-white/10 text-white/70',
           )}
           aria-live="polite"
+          data-grid-anchor="turn-pill"
         >
           {isMyTurn ? copy.turnPillYou : copy.turnPillOpponent}
         </span>
-        <div className="flex min-w-0 flex-1 items-center gap-2">
+        <div className="flex min-w-0 flex-1 items-center gap-2" data-grid-anchor="turn-timer">
           <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/10">
             <div
               className={cn('h-full rounded-full transition-[width] duration-100', ratio < 0.25 ? 'bg-brand-red' : 'bg-brand-yellow')}
@@ -520,7 +521,7 @@ export function GridHud({
           </span>
         </div>
       </div>
-      <div className="mt-2.5 flex gap-2">
+      <div className="mt-2.5 flex gap-2" data-grid-anchor="hud-actions">
         <button
           type="button"
           onClick={onSkip}
@@ -647,7 +648,7 @@ function useRemaining(deadlineAt: string | null, serverTimeOffsetMs: number): nu
 
 const GRID_AVATAR_FALLBACK = footballGridAssetUrl('/assets/store/avatars/avatar_male_white.webp')!;
 const GRID_BACKGROUND = footballGridAssetUrl('/assets/bg-pattern.webp')!;
-const GRID_BACKGROUND_STYLE = { backgroundImage: `url(${GRID_BACKGROUND})` };
+export const GRID_BACKGROUND_STYLE = { backgroundImage: `url(${GRID_BACKGROUND})` };
 /** Mode accent — matches the Tic Tac Toe card on /play (colors.red.mid). */
 const GRID_ACCENT = '#E04242';
 const FOOTBALL_GRID_BOARD_REVEAL_MS = 3_000;
@@ -768,12 +769,18 @@ export function MatchBoard({
   locale,
   selectedCell,
   onSelect,
+  selectableCells = null,
+  highlightCells = null,
 }: {
   state: FootballGridState;
   selfUserId: string;
   locale: Locale;
   selectedCell: number | null;
   onSelect: (cell: number) => void;
+  /** Training: only these open cells can be picked (they pulse); null = every open cell, as live. */
+  selectableCells?: number[] | null;
+  /** Training: the completed line, lit up before the results. */
+  highlightCells?: number[] | null;
 }) {
   const claims = useMemo(() => new Map(state.claims.map((claim) => [claim.cellIndex, claim])), [state.claims]);
   const isMyTurn = state.phase === 'turn' && state.currentPlayerUserId === selfUserId;
@@ -784,6 +791,7 @@ export function MatchBoard({
       // Held hidden while the loading overlay covers the screen; the switch to
       // the countdown phase reveals the board and fires the build-in stagger.
       animate={state.phase === 'handoff' || state.phase === 'loading' ? 'hidden' : 'visible'}
+      data-grid-anchor="board"
       className="grid grid-cols-[50px_repeat(3,minmax(0,1fr))] gap-2 sm:grid-cols-[64px_repeat(3,minmax(0,1fr))]"
     >
       <div />
@@ -793,7 +801,8 @@ export function MatchBoard({
         ...state.board.columns.map((column, columnIndex) => {
           const cellIndex = rowIndex * 3 + columnIndex;
           const claim = claims.get(cellIndex);
-          const selectable = isMyTurn && !claim;
+          const guided = selectableCells !== null && selectableCells.includes(cellIndex);
+          const selectable = isMyTurn && !claim && (selectableCells === null || guided);
           return (
             <motion.button
               key={`${row.id}-${column.id}`}
@@ -802,8 +811,11 @@ export function MatchBoard({
               disabled={!selectable}
               onClick={() => onSelect(cellIndex)}
               aria-label={`${localizedCriterionLabel(row, locale)} × ${localizedCriterionLabel(column, locale)}`}
+              data-grid-anchor={`cell-${cellIndex}`}
               className={cn(
                 'relative aspect-square overflow-hidden rounded-[18px] border-2 p-1 text-center transition-colors sm:rounded-[20px]',
+                guided && selectable && 'animate-pulse ring-4 ring-brand-yellow ring-offset-2 ring-offset-surface-page-alt',
+                highlightCells?.includes(cellIndex) && 'ring-4 ring-brand-green shadow-[0_0_24px_rgba(56,182,14,0.6)]',
                 claim && (claim.claimantUserId === selfUserId
                   ? 'border-brand-cyan bg-brand-cyan/20'
                   : 'border-brand-red-soft bg-brand-red-soft/15'),
@@ -821,6 +833,82 @@ export function MatchBoard({
         }),
       ])}
     </motion.div>
+  );
+}
+
+/** Results hero — title, why-it-ended note, avatars and the claims/series score (shared with the training results). */
+export function GridResultHero({
+  copy,
+  title,
+  tone,
+  note,
+  selfName,
+  selfCustomization,
+  opponentName,
+  opponentCustomization,
+  myScore,
+  theirScore,
+}: {
+  copy: FootballGridCopy;
+  title: string;
+  tone: 'win' | 'loss' | 'draw';
+  note?: string | null;
+  selfName: string;
+  selfCustomization: Parameters<typeof AvatarDisplay>[0]['customization'];
+  opponentName: string;
+  opponentCustomization: Parameters<typeof AvatarDisplay>[0]['customization'];
+  myScore: number;
+  theirScore: number;
+}) {
+  return (
+    <>
+      <p className="text-xs font-black uppercase tracking-[0.22em] text-white/40">{copy.title}</p>
+      <h1
+        className={cn(
+          'mt-2 font-poppins text-[2.5rem] font-black uppercase leading-[1.3] tracking-[0] sm:text-[3rem]',
+          tone === 'win' ? 'text-brand-green' : tone === 'draw' ? 'text-brand-yellow' : 'text-brand-red',
+        )}
+      >
+        {title}
+      </h1>
+      {note && (
+        <p className="mt-1 font-poppins text-sm font-semibold text-white/60">
+          {note}
+        </p>
+      )}
+
+      {/* Player · score · opponent — mirrors the ranked results hero. */}
+      <div className="mt-6 grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-5">
+        <div className="flex min-w-0 flex-col items-center gap-2">
+          <AvatarDisplay
+            customization={selfCustomization}
+            size="lg"
+            shape="square"
+            assetResolver={resolveGridAvatarAsset}
+          />
+          <span className="w-full truncate text-sm font-semibold uppercase text-white">{selfName}</span>
+        </div>
+
+        <div className="flex flex-col items-center">
+          <div className="flex h-[44px] min-w-[110px] items-center justify-center rounded-[20px] bg-brand-blue px-5 text-2xl font-semibold tabular-nums text-white sm:h-[51px] sm:min-w-[133px] sm:px-6 sm:text-[36px]">
+            <AnimatedCounter from={0} to={myScore} delay={0.25} />
+            <span className="mx-1 sm:mx-1.5">:</span>
+            <AnimatedCounter from={0} to={theirScore} delay={0.25} />
+          </div>
+        </div>
+
+        <div className="flex min-w-0 flex-col items-center gap-2">
+          <AvatarDisplay
+            customization={opponentCustomization}
+            size="lg"
+            shape="square"
+            className="-scale-x-100"
+            assetResolver={resolveGridAvatarAsset}
+          />
+          <span className="w-full truncate text-sm font-semibold uppercase text-white">{opponentName}</span>
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -943,9 +1031,10 @@ function ThinkingDots() {
 }
 
 /** Loads the release roster once per page and keeps it for every turn. */
-function useGridTypeaheadRoster(): GridTypeaheadPreparedPlayer[] {
+function useGridTypeaheadRoster(enabled = true): GridTypeaheadPreparedPlayer[] {
   const [roster, setRoster] = useState<GridTypeaheadPreparedPlayer[]>([]);
   useEffect(() => {
+    if (!enabled) return;
     let cancelled = false;
     let timerId: number | null = null;
     // An empty roster means the fetch failed with nothing stored (typically a
@@ -963,7 +1052,7 @@ function useGridTypeaheadRoster(): GridTypeaheadPreparedPlayer[] {
       cancelled = true;
       if (timerId !== null) window.clearTimeout(timerId);
     };
-  }, []);
+  }, [enabled]);
   return roster;
 }
 
@@ -981,6 +1070,7 @@ export function FootballGridTurnPanel({
   alreadyReported = false,
   onReport,
   onCancel,
+  roster: rosterOverride,
 }: {
   state: FootballGridState;
   locale: Locale;
@@ -995,9 +1085,12 @@ export function FootballGridTurnPanel({
   alreadyReported?: boolean;
   onReport?: (attemptId: string) => void;
   onCancel?: () => void;
+  /** Training: a fixed roster for the suggestions instead of the fetched one (guests have no session to fetch with). */
+  roster?: GridTypeaheadPreparedPlayer[];
 }) {
   const copy = FOOTBALL_GRID_COPY[locale];
-  const roster = useGridTypeaheadRoster();
+  const fetchedRoster = useGridTypeaheadRoster(rosterOverride === undefined);
+  const roster = rosterOverride ?? fetchedRoster;
   const [highlightIndex, setHighlightIndex] = useState(-1);
   const [suggestionsDismissed, setSuggestionsDismissed] = useState(false);
   const suggestions = useMemo(() => (
@@ -1036,6 +1129,7 @@ export function FootballGridTurnPanel({
       event.preventDefault();
       pickSuggestion(highlightIndex);
     } else if (event.key === 'Escape') {
+      event.preventDefault(); // consumed here: the sheet (and the training's skip) must not also react
       setSuggestionsDismissed(true);
       setHighlightIndex(-1);
     }
@@ -1153,6 +1247,7 @@ export function FootballGridTurnPanel({
               </div>
               <input
                 ref={answerInputRef}
+                data-grid-anchor="answer-input"
                 autoFocus
                 value={answer}
                 onChange={(event) => handleAnswerChange(event.target.value)}
@@ -1201,6 +1296,7 @@ export function FootballGridTurnPanel({
                 </button>
                 <button
                   type="submit"
+                  data-grid-anchor="submit"
                   disabled={!answer.trim() || pending}
                   className="h-12 flex-[1.4] rounded-xl bg-brand-green font-poppins text-xs font-black uppercase tracking-wide text-white transition-colors hover:bg-brand-green-deep disabled:opacity-50"
                 >
@@ -1467,7 +1563,7 @@ export function PhaseOverlay({ state, remaining, copy, selfDisconnected = false 
   );
 }
 
-function completionTitle(
+export function completionTitle(
   reason: FootballGridCompletionReason | null,
   won: boolean,
   draw: boolean,
@@ -1490,7 +1586,7 @@ function fill(template: string, values: Record<string, string | number>): string
 
 // Why the match ended, when it didn't play out on the board (ranked parity:
 // a forfeit/disconnect win should never look like an earned 0:0).
-function completionNote(reason: FootballGridCompletionReason | null, won: boolean, draw: boolean, copy: FootballGridCopy) {
+export function completionNote(reason: FootballGridCompletionReason | null, won: boolean, draw: boolean, copy: FootballGridCopy) {
   switch (reason) {
     case 'forfeit':
       return won ? copy.noteOpponentLeft : copy.noteYouLeft;
@@ -1836,55 +1932,20 @@ export function FootballGridFlowScreen() {
       <main className="min-h-dvh overflow-y-auto bg-surface-page-alt bg-cover bg-center bg-no-repeat px-5 py-10 text-white" style={GRID_BACKGROUND_STYLE}>
         <div className="mx-auto max-w-3xl text-center font-poppins">
           <div className="mx-auto max-w-xl">
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-white/40">{copy.title}</p>
-          <h1
-            className={cn(
-              'mt-2 font-poppins text-[2.5rem] font-black uppercase leading-[1.3] tracking-[0] sm:text-[3rem]',
-              seriesDone
-                ? (!seriesDone.winnerUserId ? 'text-brand-yellow' : seriesDone.winnerUserId === selfUserId ? 'text-brand-green' : 'text-brand-red')
-                : won ? 'text-brand-green' : draw ? 'text-brand-yellow' : 'text-brand-red',
-            )}
-          >
-            {completionTitle(grid.state.completionReason, won, draw, copy, grid.completed.series, selfUserId)}
-          </h1>
-          {completionNote(grid.state.completionReason, won, draw, copy) && (
-            <p className="mt-1 font-poppins text-sm font-semibold text-white/60">
-              {completionNote(grid.state.completionReason, won, draw, copy)}
-            </p>
-          )}
-
-          {/* Player · score · opponent — mirrors the ranked results hero. */}
-          <div className="mt-6 grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-5">
-            <div className="flex min-w-0 flex-col items-center gap-2">
-              <AvatarDisplay
-                customization={player.avatarCustomization ?? { base: player.avatar }}
-                size="lg"
-                shape="square"
-                assetResolver={resolveGridAvatarAsset}
-              />
-              <span className="w-full truncate text-sm font-semibold uppercase text-white">{player.username}</span>
-            </div>
-
-            <div className="flex flex-col items-center">
-              <div className="flex h-[44px] min-w-[110px] items-center justify-center rounded-[20px] bg-brand-blue px-5 text-2xl font-semibold tabular-nums text-white sm:h-[51px] sm:min-w-[133px] sm:px-6 sm:text-[36px]">
-                <AnimatedCounter from={0} to={myClaims} delay={0.25} />
-                <span className="mx-1 sm:mx-1.5">:</span>
-                <AnimatedCounter from={0} to={theirClaims} delay={0.25} />
-              </div>
-            </div>
-
-            <div className="flex min-w-0 flex-col items-center gap-2">
-              <AvatarDisplay
-                customization={grid.opponent?.avatarCustomization ?? { base: grid.opponent?.avatarUrl ?? undefined }}
-                size="lg"
-                shape="square"
-                className="-scale-x-100"
-                assetResolver={resolveGridAvatarAsset}
-              />
-              <span className="w-full truncate text-sm font-semibold uppercase text-white">{grid.opponent?.username ?? copy.opponent}</span>
-            </div>
-          </div>
-
+          <GridResultHero
+            copy={copy}
+            title={completionTitle(grid.state.completionReason, won, draw, copy, grid.completed.series, selfUserId)}
+            tone={seriesDone
+              ? (!seriesDone.winnerUserId ? 'draw' : seriesDone.winnerUserId === selfUserId ? 'win' : 'loss')
+              : won ? 'win' : draw ? 'draw' : 'loss'}
+            note={completionNote(grid.state.completionReason, won, draw, copy)}
+            selfName={player.username}
+            selfCustomization={player.avatarCustomization ?? { base: player.avatar }}
+            opponentName={grid.opponent?.username ?? copy.opponent}
+            opponentCustomization={grid.opponent?.avatarCustomization ?? { base: grid.opponent?.avatarUrl ?? undefined }}
+            myScore={myClaims}
+            theirScore={theirClaims}
+          />
           {grid.completed.rewards && (
             <GridRewardChips
               xp={grid.completed.rewards.xp}

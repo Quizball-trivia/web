@@ -9,11 +9,12 @@ import { useAuthStore } from "@/stores/auth.store";
 type TrainingCompleteValue = boolean | Record<string, boolean>;
 const GUEST_SLOT = "guest";
 
-export type TrainingGame = "ranked" | "auction";
+export type TrainingGame = "ranked" | "auction" | "grid";
 
 const KEY_BY_GAME = {
   ranked: STORAGE_KEYS.TRAINING_COMPLETE,
   auction: STORAGE_KEYS.TRAINING_AUCTION_COMPLETE,
+  grid: STORAGE_KEYS.TRAINING_GRID_COMPLETE,
 } as const;
 
 /**
@@ -44,6 +45,7 @@ export function useTrainingCompletion(game: TrainingGame = "ranked") {
   const resetTraining = useCallback(() => {
     storage.remove(STORAGE_KEYS.TRAINING_COMPLETE);
     storage.remove(STORAGE_KEYS.TRAINING_AUCTION_COMPLETE);
+    storage.remove(STORAGE_KEYS.TRAINING_GRID_COMPLETE);
   }, []);
 
   return { isComplete, markComplete, resetTraining };

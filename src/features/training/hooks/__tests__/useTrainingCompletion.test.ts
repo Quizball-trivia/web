@@ -12,9 +12,11 @@ describe('useTrainingCompletion', () => {
   it('keeps the ranked and auction flags apart, per user', () => {
     const ranked = renderHook(() => useTrainingCompletion());
     const auction = renderHook(() => useTrainingCompletion('auction'));
+    const grid = renderHook(() => useTrainingCompletion('grid'));
     act(() => auction.result.current.markComplete());
     expect(auction.result.current.isComplete()).toBe(true);
     expect(ranked.result.current.isComplete()).toBe(false);
+    expect(grid.result.current.isComplete()).toBe(false);
     act(() => useAuthStore.setState({ user: { id: 'user-2' } as never }));
     auction.rerender();
     expect(auction.result.current.isComplete()).toBe(false);

@@ -91,6 +91,18 @@ export function PlayHome({ beforeFooter }: { beforeFooter?: ReactNode } = {}) {
     auctionTrainingCompletion.markComplete();
     setAuctionTrainingSeen(true);
   };
+  const gridTrainingCompletion = useTrainingCompletion("grid");
+  const [gridTrainingSeen, setGridTrainingSeen] = useState(false);
+  const shouldOfferGridTraining = !isGuest && !gridTrainingSeen && !gridTrainingCompletion.isComplete();
+  const startGridTraining = () => {
+    resetRealtime();
+    startSession({ mode: "training", trainingGame: "grid" });
+    router.push("/game");
+  };
+  const skipGridTraining = () => {
+    gridTrainingCompletion.markComplete();
+    setGridTrainingSeen(true);
+  };
   const { data: storeWallet } = useStoreWallet();
   const { data: categoriesData } = useCategoriesList({
     limit: 100,
@@ -252,6 +264,7 @@ export function PlayHome({ beforeFooter }: { beforeFooter?: ReactNode } = {}) {
           beforeFooter={beforeFooter}
           trainingOffer={{ shouldOffer: shouldOfferTraining, onPlayTraining: startTraining, onSkip: skipTraining }}
           auctionTraining={{ shouldOffer: shouldOfferAuctionTraining, onPlay: startAuctionTraining, onSkip: skipAuctionTraining }}
+          gridTraining={{ shouldOffer: shouldOfferGridTraining, onPlay: startGridTraining, onSkip: skipGridTraining }}
         />
       </div>
     </div>

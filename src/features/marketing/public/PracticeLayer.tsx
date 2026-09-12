@@ -9,7 +9,7 @@ import { X } from "lucide-react";
 const DemoModeView = dynamic(() => import("@/features/demos/DemoModeView").then((m) => m.DemoModeView), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 
 /** Engines that render their own way out ("Skip training"); the layer hides its exit control for them. */
-export const SELF_EXITING_ENGINES = new Set(["match", "auction"]);
+export const SELF_EXITING_ENGINES = new Set(["match", "auction", "mini-football-grid"]);
 
 export const EXIT_LABEL: Record<string, string> = { en: "Exit practice", ka: "სავარჯიშოდან გასვლა", es: "Salir de la práctica", tr: "Alıştırmadan çık" };
 

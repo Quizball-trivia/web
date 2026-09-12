@@ -255,6 +255,12 @@ interface ModeSelectionScreenProps {
     onPlay: () => void;
     onSkip: () => void;
   };
+  /** Tic Tac Toe tutorial gate — same shape, offered before the first "Find opponent" in the Tic Tac Toe dialog. */
+  gridTraining?: {
+    shouldOffer: boolean;
+    onPlay: () => void;
+    onSkip: () => void;
+  };
   ticketsRemaining?: number;
   matchStatsSummary?: MatchStatsSummary | null;
   rankedProfile: RankedProfileResponse | null;
@@ -274,6 +280,7 @@ export function ModeSelectionScreen({
   onRankedIntercept,
   trainingOffer,
   auctionTraining,
+  gridTraining,
   ticketsRemaining = 0,
   matchStatsSummary = null,
   rankedProfile,
@@ -300,6 +307,8 @@ export function ModeSelectionScreen({
   );
   const [auctionModalOpen, setAuctionModalOpen] = useState(false);
   const [auctionOfferOpen, setAuctionOfferOpen] = useState(false);
+  // The pack chosen before the Tic Tac Toe offer interrupted "Find opponent" — skipping continues with it.
+  const [gridOffer, setGridOffer] = useState<{ pack: string } | null>(null);
   const [gridModalOpen, setGridModalOpen] = useState(false);
   // Seeded false so the server and the first client render agree; the
   // session check runs after hydration and only then triggers the entrance.
@@ -369,6 +378,15 @@ export function ModeSelectionScreen({
       return;
     }
     auctionTraining?.onPlay();
+  };
+  const startGridTraining = () => {
+    setGridModalOpen(false);
+    if (isGuest) {
+      const href = publicPageFor('grid');
+      if (href) router.push(href);
+      return;
+    }
+    gridTraining?.onPlay();
   };
   // "Training": guests read the public Ranked page (it hosts the same match); members start it in place.
   const startRankedTraining = () => {
@@ -981,10 +999,31 @@ export function ModeSelectionScreen({
             openAuthPrompt();
             return;
           }
+          if (gridTraining?.shouldOffer) {
+            setGridOffer({ pack });
+            return;
+          }
           router.push(`/tic-tac-toe?source=matchmaking&pack=${pack}`);
         }}
-        demoHref={isGuest ? publicPageFor('grid') : undefined}
+        onTraining={startGridTraining}
       />
+      {gridTraining && (
+        <TrainingOfferModal
+          game="grid"
+          isOpen={gridOffer !== null}
+          onOpenChange={(open) => { if (!open) setGridOffer(null); }}
+          onPlayTraining={() => {
+            setGridOffer(null);
+            gridTraining.onPlay();
+          }}
+          onSkip={() => {
+            const pack = gridOffer?.pack ?? 'european';
+            setGridOffer(null);
+            gridTraining.onSkip();
+            router.push(`/tic-tac-toe?source=matchmaking&pack=${pack}`);
+          }}
+        />
+      )}
       <RankedModeModal
         isOpen={rankedModalOpen}
         onOpenChange={setRankedModalOpen}

@@ -1,6 +1,7 @@
 "use client";
 
 import { DemoAuctionTraining } from "@/features/demos/DemoAuctionTraining";
+import { DemoGridTraining } from "@/features/demos/DemoGridTraining";
 import { DemoBackButton } from "@/features/demos/DemoBackButton";
 import { DemoDailyChallenge } from "@/features/demos/DemoDailyChallenge";
 import { DemoTraining } from "@/features/demos/DemoTraining";
@@ -22,7 +23,6 @@ import { BetSlipBooster } from "@/features/mini-games/components/BetSlipBooster"
 import { CareerRace } from "@/features/mini-games/components/CareerRace";
 import { DailyJackpot } from "@/features/mini-games/components/DailyJackpot";
 import { FinalThird } from "@/features/mini-games/components/FinalThird";
-import { FootballGrid } from "@/features/mini-games/components/FootballGrid";
 import { GoldenGoal } from "@/features/mini-games/components/GoldenGoal";
 import { GuessTheGoal } from "@/features/mini-games/components/GuessTheGoal";
 import { HalfTimeTrivia } from "@/features/mini-games/components/HalfTimeTrivia";
@@ -106,7 +106,8 @@ export function DemoModeView({ slug, backHref = "/demos", onExit, onEvent }: {
     case "mini-odds-board":
       return <OddsBoard backHref={backHref} />;
     case "mini-football-grid":
-      return <FootballGrid backHref={backHref} />;
+      // The guided training board owns its exit ("Skip training"), like "match" and "auction".
+      return <DemoGridTraining backHref={backHref} onExit={onExit} />;
     case "mini-survivor":
       return <Survivor backHref={backHref} />;
     case "mini-trivia-mines":

@@ -52,8 +52,8 @@ export const engineEmitsEvents = (demoSlug: string | undefined): boolean => Bool
 export const SIGN_IN_PATH = "/play?signin=1";
 
 export const PUBLIC_GAME_META: PublicGameMeta[] = [
-  { modeId: "grid", slug: "football-tic-tac-toe", group: "multiplayer", guest: "demo", demoSlug: "mini-football-grid", page: true, card: true, destination: { kind: "page" }, related: ["auction", "moneyDrop", "cardDetective"], order: 0, practiceLocales: ["en", "ka"] },
-  { modeId: "auction", slug: "auction", group: "multiplayer", guest: "demo", demoSlug: "auction", page: true, card: true, destination: { kind: "page" }, related: ["grid", "cardDetective", "moneyDrop"], order: 1, practiceLocales: ["en", "ka"] },
+  { modeId: "grid", slug: "football-tic-tac-toe", group: "multiplayer", guest: "demo", demoSlug: "mini-football-grid", page: true, card: true, destination: { kind: "page" }, related: ["auction", "moneyDrop", "cardDetective"], order: 0, practiceLocales: ["en", "ka", "es", "tr"] },
+  { modeId: "auction", slug: "auction", group: "multiplayer", guest: "demo", demoSlug: "auction", page: true, card: true, destination: { kind: "page" }, related: ["grid", "cardDetective", "moneyDrop"], order: 1, practiceLocales: ["en", "ka", "es", "tr"] },
   // Friendly rooms need a guest identity on the server (phase 3): card only, opens the app.
   { modeId: "friendly", slug: "friendly", group: "multiplayer", guest: "app", page: false, card: true, destination: { kind: "app", path: "/friend" }, related: ["grid", "auction", "moneyDrop"], order: 2 },
   { modeId: "ranked", slug: "ranked", group: "competitive", guest: "demo", demoSlug: "match", page: true, card: true, destination: { kind: "page" }, related: ["grid", "auction"], order: 0 },

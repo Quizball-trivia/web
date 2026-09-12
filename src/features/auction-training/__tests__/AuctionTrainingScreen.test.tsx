@@ -1,3 +1,4 @@
+import { StrictMode } from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ROUND_INTRO_MS } from '@/features/auction/components/screens/AuctionRoundIntro';
@@ -82,6 +83,13 @@ describe('AuctionTrainingScreen', () => {
     expect(onComplete).toHaveBeenCalledTimes(1);
     expect(trackEvent).toHaveBeenCalledWith('training_skipped', { game: 'auction', stage: 'clue-reveal' });
     expect(JSON.parse(localStorage.getItem('quizball_training_auction_complete') ?? 'null')).toEqual({ 'user-1': true });
+  });
+
+  it('survives StrictMode effect replay: the search still resolves after GOT IT', async () => {
+    render(<StrictMode><AuctionTrainingScreen onComplete={vi.fn()} /></StrictMode>);
+    gotIt();
+    await tick(AUCTION_TRAINING_SEARCH_MS);
+    expect(tooltip('training.tipAuctionShowdownTitle')).toBeInTheDocument();
   });
 
   it('labels the guest seat and marks the guest slot on skip', () => {

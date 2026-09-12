@@ -16,7 +16,7 @@ export type MatchType = "ranked" | "friendly";
 export interface GameConfig {
   mode: GameMode;
   /** Which guided tutorial a training session runs (default: the ranked match). */
-  trainingGame?: "ranked" | "auction";
+  trainingGame?: "ranked" | "auction" | "grid";
   matchType?: MatchType;
   categoryId?: string;
   categoryIds?: string[];

@@ -1,6 +1,6 @@
 import { trackEvent } from '@/lib/posthog';
 
-export type TrainingGameId = 'ranked' | 'auction';
+export type TrainingGameId = 'ranked' | 'auction' | 'grid';
 
 /** Guided tutorials: one funnel per game so the auction tutorial never pollutes the ranked one. */
 export const trackTrainingStarted = (p: { game: TrainingGameId; access: 'member' | 'guest' }) =>

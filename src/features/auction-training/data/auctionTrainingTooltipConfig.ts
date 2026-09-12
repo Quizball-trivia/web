@@ -1,14 +1,8 @@
-import type { MessageKey } from '@/lib/i18n/messages';
+import type { QueuedTooltipDefinition } from '@/features/training/hooks/useQueuedTooltips';
 import type { AuctionTrainingBeat } from './auctionTrainingScript';
 
-export interface AuctionTrainingTooltip {
-  id: AuctionTrainingBeat;
-  titleKey: MessageKey;
-  messageKey: MessageKey;
-  position: 'top' | 'center' | 'bottom';
-  /** Spotlight selector — `data-auction-anchor` hooks on the live auction components. */
-  highlight?: string;
-}
+/** Spotlight selectors are `data-auction-anchor` hooks on the live auction components. */
+export type AuctionTrainingTooltip = QueuedTooltipDefinition<AuctionTrainingBeat>;
 
 const anchor = (name: string) => `[data-auction-anchor="${name}"]`;
 

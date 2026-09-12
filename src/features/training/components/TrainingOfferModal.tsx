@@ -21,11 +21,14 @@ import { useIsMobile } from "@/hooks/useMobile";
 import { ModalCloseButton } from "@/components/shared/ModalCloseButton";
 import { useLocale } from "@/contexts/LocaleContext";
 import { AUCTION_PURPLE } from "@/features/auction/constants/auction.constants";
+import { footballGridAssetUrl } from "@/lib/football-grid/assets";
 import type { TrainingGame } from "../hooks/useTrainingCompletion";
 
 const OFFER_BY_GAME = {
   ranked: { art: "/assets/ranked-icon.webp", titleRest: "training.offerTitleRest", description: "training.offerDescription", playCta: "training.offerPlayCta", skipCta: "training.offerSkipCta", background: "#38B60E" },
   auction: { art: "/assets/auction-card-icon.webp", titleRest: "training.offerAuctionTitleRest", description: "training.offerAuctionDescription", playCta: "training.offerAuctionPlayCta", skipCta: "training.offerAuctionSkipCta", background: AUCTION_PURPLE },
+  // Same deeper red as the Tic Tac Toe dialog so white text keeps contrast.
+  grid: { art: footballGridAssetUrl("/assets/football-grid/card-icon.png") ?? "/assets/football-grid/card-icon.png", titleRest: "training.offerGridTitleRest", description: "training.offerGridDescription", playCta: "training.offerGridPlayCta", skipCta: "training.offerGridSkipCta", background: "#C13333" },
 } as const;
 
 interface TrainingOfferModalProps {

@@ -24,6 +24,7 @@ import { tierFromRp } from "@/utils/rankedTier";
 import { parseRp } from "@/lib/utils";
 import { TrainingMatchScreen } from "@/features/training/TrainingMatchScreen";
 import { AuctionTrainingScreen } from "@/features/auction-training/AuctionTrainingScreen";
+import { GridTrainingScreen } from "@/features/grid-training/GridTrainingScreen";
 import { useGameStageState } from "@/features/game/hooks/useGameStageState";
 import { useStoreWallet, getStoreWalletQuery } from "@/lib/queries/store.queries";
 import {
@@ -582,6 +583,9 @@ export function GameStageRouter() {
   if (config?.mode === "training") {
     if (config.trainingGame === "auction") {
       return <AuctionTrainingScreen onComplete={() => exitToPlay("training_complete")} />;
+    }
+    if (config.trainingGame === "grid") {
+      return <GridTrainingScreen onComplete={() => exitToPlay("training_complete")} />;
     }
     return <TrainingMatchScreen onComplete={() => exitToPlay("training_complete")} />;
   }

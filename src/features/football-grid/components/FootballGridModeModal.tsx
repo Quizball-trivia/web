@@ -3,9 +3,8 @@
 /* eslint-disable @next/next/no-img-element -- icon comes from the reviewed grid CDN registry. */
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { motion } from 'motion/react';
-import { Bot, ScrollText, Swords } from 'lucide-react';
+import { ScrollText, Swords, Dumbbell } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -113,14 +112,13 @@ export function FootballGridModeModal({
   isOpen,
   onOpenChange,
   onFindOnline,
-  demoHref,
+  onTraining,
 }: {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   onFindOnline: (pack: GridPackKey) => void;
-  /** Guest mode: when set, a "try the demo" link renders under the online CTA
-   *  (no opponents, no coins) while onFindOnline opens the sign-in dialog. */
-  demoHref?: string;
+  /** Guided training board (scripted, vs CoachBot): members play it in place, guests on the public Tic Tac Toe page. */
+  onTraining?: () => void;
 }) {
   const { t } = useLocale();
   const [rulesOpen, setRulesOpen] = useState(false);
@@ -208,16 +206,17 @@ export function FootballGridModeModal({
             {t('play.gridFindOpponents')}
           </motion.button>
 
-          {/* Guest demo — play vs AI, no coins, no opponents. */}
-          {demoHref && (
-            <Link
-              href={demoHref}
+          {/* Training — the scripted tutorial board (no coins, no opponents). */}
+          {onTraining && (
+            <button
+              type="button"
+              onClick={onTraining}
               className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-white/10 uppercase text-white transition-colors hover:bg-white/15"
               style={{ fontSize: 'clamp(14px, 2.2vw, 16px)', ...poppins }}
             >
-              <Bot className="size-5" strokeWidth={2.5} />
+              <Dumbbell className="size-5" strokeWidth={2.5} />
               {t('play.guestDemoCta')}
-            </Link>
+            </button>
           )}
 
           <button
