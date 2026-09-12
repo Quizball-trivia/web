@@ -802,8 +802,17 @@ export function orderPlayersHumanCentered(
   return [...others.slice(0, leftCount), ...human, ...others.slice(leftCount)];
 }
 
+/** Slots a formation asks for — 7 in the live game, fewer in the training auction. */
+export function squadSizeOf(formation: Formation): number {
+  return Object.values(formation.required).reduce((s, v) => s + v, 0);
+}
+
+export function maxSquadChemistryOf(formation: Formation): number {
+  return squadSizeOf(formation) * MAX_PLAYER_CHEMISTRY;
+}
+
 export function isTeamComplete(team: AuctionTeam): boolean {
-  return getFilledCount(team) >= AUCTION_SQUAD_SIZE;
+  return getFilledCount(team) >= squadSizeOf(team.formation);
 }
 
 export const MIN_PLAYER_COST = 20_000_000;

@@ -12,7 +12,8 @@ import {
   computeSquadChemistry,
   chemistryMultiplier,
   orderPlayersHumanCentered,
-  AUCTION_SQUAD_SIZE,
+  squadSizeOf,
+  maxSquadChemistryOf,
 } from '../../data';
 import { poppins } from '../../constants/auction.constants';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -96,7 +97,7 @@ function SquadColumn({
 
       {/* Squad chemistry — total + value multiplier */}
       <div className="mb-2 flex justify-center">
-        <ChemistryBadge total={chem} multiplier={chemistryMultiplier(chem)} />
+        <ChemistryBadge total={chem} multiplier={chemistryMultiplier(chem)} max={maxSquadChemistryOf(state.formation)} />
       </div>
 
       {/* Pitch */}
@@ -119,7 +120,7 @@ function SquadColumn({
 
       {/* Progress dots */}
       <div className="mt-1.5">
-        <ProgressDots filled={filled} total={AUCTION_SQUAD_SIZE} />
+        <ProgressDots filled={filled} total={squadSizeOf(state.formation)} />
       </div>
     </div>
   );

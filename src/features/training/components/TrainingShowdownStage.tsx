@@ -1,17 +1,21 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ShowdownScreen } from "@/components/ShowdownScreen";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { usePlayerAvatar } from "@/hooks/usePlayerAvatar";
+import { tierFromRp } from "@/utils/rankedTier";
 import { useTraining } from "../TrainingMatchProvider";
-import { BOT_AVATAR, BOT_NAME } from "../constants";
+import { BOT_AVATAR, BOT_AVATAR_CUSTOMIZATION, BOT_NAME, BOT_RANK_POINTS } from "../constants";
 
 export function TrainingShowdownStage() {
   const { match, tooltips } = useTraining();
   const { player } = usePlayer();
   const { avatarUrl: playerResolvedAvatar, avatarCustomization } = usePlayerAvatar();
   const tooltipFired = useRef(false);
+  // ShowdownScreen auto-completes on an internal timer that keeps running
+  // under the tooltip — hold the stage transition until GOT IT is pressed.
+  const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
     if (!tooltipFired.current) {
@@ -20,29 +24,37 @@ export function TrainingShowdownStage() {
     }
   }, [tooltips]);
 
+  useEffect(() => {
+    if (completed && !tooltips.isPaused) {
+      match.setStage("banning");
+    }
+  }, [completed, tooltips.isPaused, match]);
+
   return (
     <ShowdownScreen
-      matchType="friendly"
+      matchType="ranked"
       playerUsername={player.username}
       playerAvatar={playerResolvedAvatar}
       opponentUsername={BOT_NAME}
       opponentAvatar={BOT_AVATAR}
-      onComplete={() => match.setStage("banning")}
+      onComplete={() => setCompleted(true)}
       playerInfo={{
         username: player.username,
         avatar: playerResolvedAvatar,
         avatarCustomization,
-        rankPoints: 0,
+        rankPoints: player.rankPoints ?? 0,
         level: player.level,
-        tier: "academy",
+        tier: tierFromRp(player.rankPoints ?? 0),
       }}
       opponentInfo={{
         username: BOT_NAME,
         avatar: BOT_AVATAR,
-        rankPoints: 1200,
-        tier: "silver",
+        avatarCustomization: BOT_AVATAR_CUSTOMIZATION,
+        rankPoints: BOT_RANK_POINTS,
+        tier: tierFromRp(BOT_RANK_POINTS),
         country: "Brazil",
         countryCode: "BR",
+        isAi: true,
       }}
     />
   );

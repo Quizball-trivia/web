@@ -1,3 +1,4 @@
+import { GUEST_LOBBIES_ENABLED } from '@/lib/config';
 import { cn } from '@/lib/utils';
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
@@ -7,11 +8,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ModeConfirmModal } from '@/components/shared/ModeConfirmModal';
 import { FriendPlayModal } from '@/components/shared/FriendPlayModal';
+import { TrainingOfferModal } from '@/features/training/components/TrainingOfferModal';
 import { AuctionModeModal } from '@/features/auction/components/AuctionModeModal';
+import { RankedModeModal } from '@/features/play/RankedModeModal';
 import { FootballGridModeModal } from '@/features/football-grid/components/FootballGridModeModal';
 import { HomeRecentMatches } from '@/components/shared/HomeRecentMatches';
 import { AllGamesGrid } from '@/features/play/AllGamesGrid';
-import { Bot } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useTierLabel } from '@/hooks/useTierLabel';
 import { getI18nText } from '@/lib/utils/i18n';
@@ -240,6 +242,26 @@ interface ModeSelectionScreenProps {
   /** If provided, called when ranked card is clicked BEFORE the confirm modal opens.
    *  Return `true` to prevent the confirm modal from showing (i.e. the caller handles it). */
   onRankedIntercept?: () => boolean;
+  /** New-player training gate: when `shouldOffer` is true, tapping the ranked card
+   *  first offers a guided training match. Skip marks it seen and continues into
+   *  the normal ranked confirm flow. */
+  trainingOffer?: {
+    shouldOffer: boolean;
+    onPlayTraining: () => void;
+    onSkip: () => void;
+  };
+  /** Auction tutorial gate: offered before the first "Find opponents" in the Auction dialog; "Training" there starts it directly. */
+  auctionTraining?: {
+    shouldOffer: boolean;
+    onPlay: () => void;
+    onSkip: () => void;
+  };
+  /** Tic Tac Toe tutorial gate — same shape, offered before the first "Find opponent" in the Tic Tac Toe dialog. */
+  gridTraining?: {
+    shouldOffer: boolean;
+    onPlay: () => void;
+    onSkip: () => void;
+  };
   ticketsRemaining?: number;
   matchStatsSummary?: MatchStatsSummary | null;
   rankedProfile: RankedProfileResponse | null;
@@ -257,6 +279,9 @@ export function ModeSelectionScreen({
   playHomeNotice,
   initialMode,
   onRankedIntercept,
+  trainingOffer,
+  auctionTraining,
+  gridTraining,
   ticketsRemaining = 0,
   matchStatsSummary = null,
   rankedProfile,
@@ -282,6 +307,9 @@ export function ModeSelectionScreen({
     initialMode ?? null,
   );
   const [auctionModalOpen, setAuctionModalOpen] = useState(false);
+  const [auctionOfferOpen, setAuctionOfferOpen] = useState(false);
+  // The pack chosen before the Tic Tac Toe offer interrupted "Find opponent" — skipping continues with it.
+  const [gridOffer, setGridOffer] = useState<{ pack: string } | null>(null);
   const [gridModalOpen, setGridModalOpen] = useState(false);
   // Seeded false so the server and the first client render agree; the
   // session check runs after hydration and only then triggers the entrance.
@@ -290,6 +318,22 @@ export function ModeSelectionScreen({
     if (!shouldPlayEntranceAnimation()) return;
     queueMicrotask(() => setPlayEntranceAnimation(true));
   }, []);
+  const [trainingOfferOpen, setTrainingOfferOpen] = useState(false);
+
+  // Deep-linked flows (`/play?mode=ranked`) open the ranked confirm modal
+  // directly via `initialMode`, bypassing the card click. If the new-player
+  // training offer is due, swap the confirm modal for the offer. Render-phase
+  // state adjustment (React's recommended pattern) — the condition clears
+  // itself immediately, and skipping flips `shouldOffer` off before the
+  // confirm modal is restored.
+  if (trainingOffer?.shouldOffer && selectedMode === 'ranked') {
+    setSelectedMode(null);
+    setTrainingOfferOpen(true);
+  }
+
+  // Ranked entry point shared by the hero card's click and keyboard handlers:
+  // brand-new players get the training offer first; everyone else goes straight
+  // to the confirm modal.
   const isPlacementInProgress = rankedProfile ? rankedProfile.placementStatus !== 'placed' : false;
   const placementPlayed = rankedProfile?.placementPlayed ?? 0;
   const placementRequired = Math.max(1, rankedProfile?.placementRequired ?? 3);
@@ -311,6 +355,51 @@ export function ModeSelectionScreen({
   const publicPageFor = (modeId: string) => {
     const game = findPublicGameByModeId(modeId);
     return game?.page ? gamePagePath(game, locale) : undefined;
+  };
+  // The hero opens the ranked dialog for everyone (same shape as Auction).
+  const [rankedModalOpen, setRankedModalOpen] = useState(false);
+  const openRankedFlow = () => setRankedModalOpen(true);
+  // "Find opponents": guests sign in; brand-new members get the training offer first.
+  const findRankedOpponents = () => {
+    setRankedModalOpen(false);
+    if (isGuest) { openAuthPrompt(); return; }
+    if (onRankedIntercept?.()) return;
+    if (trainingOffer?.shouldOffer) {
+      setTrainingOfferOpen(true);
+      return;
+    }
+    setSelectedMode('ranked');
+  };
+  // Auction "Training": guests read the public Auction page (it hosts the same tutorial); members start it in place.
+  const startAuctionTraining = () => {
+    setAuctionModalOpen(false);
+    if (isGuest) {
+      const href = publicPageFor('auction');
+      if (href) router.push(href);
+      return;
+    }
+    auctionTraining?.onPlay();
+  };
+  const startGridTraining = () => {
+    setGridModalOpen(false);
+    if (isGuest) {
+      const href = publicPageFor('grid');
+      if (href) router.push(href);
+      return;
+    }
+    gridTraining?.onPlay();
+  };
+  // "Training": guests read the public Ranked page (it hosts the same match); members start it in place.
+  const startRankedTraining = () => {
+    setRankedModalOpen(false);
+    if (isGuest) {
+      const href = publicPageFor('ranked');
+      if (href) { router.push(href); return; }
+      setRankedDemoOpen(true);
+      return;
+    }
+    if (trainingOffer) { trainingOffer.onPlayTraining(); return; }
+    setRankedDemoOpen(true);
   };
   const objectivesEnabled = useObjectivesEnabled();
   const { data: objectivesData, isLoading: objectivesLoading } = useObjectives({ enabled: objectivesEnabled });
@@ -365,17 +454,11 @@ export function ModeSelectionScreen({
 
       {/* ─── 1. Ranked Hero Card ─── */}
       <div
-        onClick={() => {
-          if (isGuest) { openAuthPrompt(); return; }
-          if (onRankedIntercept?.()) return;
-          setSelectedMode('ranked');
-        }}
+        onClick={openRankedFlow}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            if (isGuest) { openAuthPrompt(); return; }
-            if (onRankedIntercept?.()) return;
-            setSelectedMode('ranked');
+            openRankedFlow();
           }
         }}
         role="button"
@@ -422,19 +505,6 @@ export function ModeSelectionScreen({
                 <div className="flex h-[56px] w-[180px] items-center justify-center rounded-[8px] bg-surface-page text-xl uppercase tracking-wide text-white" style={poppins}>
                   {t('common.play')}
                 </div>
-                {/* Guest demo — ranked 1v1 vs AI; stopPropagation so the
-                    hero's own onClick (auth prompt) doesn't swallow the tap. */}
-                {isGuest && (
-                  <button
-                    type="button"
-                    onClick={(event) => { event.stopPropagation(); setRankedDemoOpen(true); }}
-                    className="mt-2 flex h-10 w-[180px] items-center justify-center gap-1.5 rounded-[8px] bg-black/25 text-[13px] uppercase tracking-wide text-white/90 transition-colors hover:bg-black/35"
-                    style={poppins}
-                  >
-                    <Bot className="size-4" strokeWidth={2.5} />
-                    {t('play.guestDemoCta')}
-                  </button>
-                )}
               </div>
             </div>
 
@@ -555,18 +625,6 @@ export function ModeSelectionScreen({
                 <div className="mb-1 flex h-[44px] w-[120px] items-center justify-center rounded-[8px] bg-surface-page text-[15px] uppercase tracking-wide text-white" style={poppins}>
                   {t('common.play')}
                 </div>
-                {/* Guest demo — ranked 1v1 vs AI (see desktop note). */}
-                {isGuest && (
-                  <button
-                    type="button"
-                    onClick={(event) => { event.stopPropagation(); setRankedDemoOpen(true); }}
-                    className="flex h-9 w-[120px] items-center justify-center gap-1 rounded-[8px] bg-black/25 text-[11px] uppercase tracking-wide text-white/90 transition-colors hover:bg-black/35"
-                    style={poppins}
-                  >
-                    <Bot className="size-3.5" strokeWidth={2.5} />
-                    {t('play.guestDemoCta')}
-                  </button>
-                )}
               </div>
             </div>
           </div>
@@ -596,7 +654,7 @@ export function ModeSelectionScreen({
           subtitle={t('play.friendlySubtitle')}
           iconSrc="/assets/friendly_match-icon.webp"
           ctaLabel={t('common.play')}
-          onClick={() => (isGuest ? openAuthPrompt() : setSelectedMode('friendly'))}
+          onClick={() => (isGuest && !GUEST_LOBBIES_ENABLED ? openAuthPrompt() : setSelectedMode('friendly'))}
           className="col-span-2 lg:col-span-1"
         />
         {/* Friendly / Daily / Auction keep the PROD card design (owner call
@@ -884,6 +942,21 @@ export function ModeSelectionScreen({
         isOpen={selectedMode === 'friendly'}
         onOpenChange={(open) => !open && setSelectedMode(null)}
       />
+      {trainingOffer && (
+        <TrainingOfferModal
+          isOpen={trainingOfferOpen}
+          onOpenChange={setTrainingOfferOpen}
+          onPlayTraining={() => {
+            setTrainingOfferOpen(false);
+            trainingOffer.onPlayTraining();
+          }}
+          onSkip={() => {
+            setTrainingOfferOpen(false);
+            trainingOffer.onSkip();
+            setSelectedMode('ranked');
+          }}
+        />
+      )}
       <AuctionModeModal
         isOpen={auctionModalOpen}
         onOpenChange={setAuctionModalOpen}
@@ -894,10 +967,31 @@ export function ModeSelectionScreen({
             openAuthPrompt();
             return;
           }
+          if (auctionTraining?.shouldOffer) {
+            setAuctionOfferOpen(true);
+            return;
+          }
           router.push('/auction');
         }}
-        demoHref={isGuest ? publicPageFor('auction') : undefined}
+        onTraining={startAuctionTraining}
+        onPlayWithFriend={isGuest && !GUEST_LOBBIES_ENABLED ? undefined : () => { setAuctionModalOpen(false); setSelectedMode('friendly'); }}
       />
+      {auctionTraining && (
+        <TrainingOfferModal
+          game="auction"
+          isOpen={auctionOfferOpen}
+          onOpenChange={setAuctionOfferOpen}
+          onPlayTraining={() => {
+            setAuctionOfferOpen(false);
+            auctionTraining.onPlay();
+          }}
+          onSkip={() => {
+            setAuctionOfferOpen(false);
+            auctionTraining.onSkip();
+            router.push('/auction');
+          }}
+        />
+      )}
       <FootballGridModeModal
         isOpen={gridModalOpen}
         onOpenChange={setGridModalOpen}
@@ -907,9 +1001,37 @@ export function ModeSelectionScreen({
             openAuthPrompt();
             return;
           }
+          if (gridTraining?.shouldOffer) {
+            setGridOffer({ pack });
+            return;
+          }
           router.push(`/tic-tac-toe?source=matchmaking&pack=${pack}`);
         }}
-        demoHref={isGuest ? publicPageFor('grid') : undefined}
+        onTraining={startGridTraining}
+        onPlayWithFriend={isGuest && !GUEST_LOBBIES_ENABLED ? undefined : () => { setGridModalOpen(false); setSelectedMode('friendly'); }}
+      />
+      {gridTraining && (
+        <TrainingOfferModal
+          game="grid"
+          isOpen={gridOffer !== null}
+          onOpenChange={(open) => { if (!open) setGridOffer(null); }}
+          onPlayTraining={() => {
+            setGridOffer(null);
+            gridTraining.onPlay();
+          }}
+          onSkip={() => {
+            const pack = gridOffer?.pack ?? 'european';
+            setGridOffer(null);
+            gridTraining.onSkip();
+            router.push(`/tic-tac-toe?source=matchmaking&pack=${pack}`);
+          }}
+        />
+      )}
+      <RankedModeModal
+        isOpen={rankedModalOpen}
+        onOpenChange={setRankedModalOpen}
+        onFindOpponents={findRankedOpponents}
+        onTraining={startRankedTraining}
       />
       {rankedDemoOpen && (
         <PracticeDemo slug="match" title={t('play.guestDemoCta')} locale={locale} backHref="/play" onExit={() => setRankedDemoOpen(false)} />

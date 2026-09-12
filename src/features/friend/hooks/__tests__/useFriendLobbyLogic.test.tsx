@@ -33,8 +33,8 @@ vi.mock('@/contexts/PlayerContext', () => ({
 }));
 
 vi.mock('@/stores/auth.store', () => ({
-  useAuthStore: (selector?: (state: { user: { id: string } }) => unknown) => {
-    const state = { user: { id: 'user-1' } };
+  useAuthStore: (selector?: (state: { user: { id: string }; status: string }) => unknown) => {
+    const state = { user: { id: 'user-1' }, status: 'authenticated' };
     return selector ? selector(state) : state;
   },
 }));

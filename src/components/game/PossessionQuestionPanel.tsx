@@ -51,6 +51,8 @@ interface PossessionQuestionPanelProps {
   selectedAnswer: number | null;
   answerStates: AnswerStateArray;
   opponentAnswer: number | null;
+  /** Tutorial-only gate: all other MCQ options are visibly disabled. */
+  guidedAnswerIndex?: number | null;
 
   /**
    * Optional list of other players' picks (party-quiz mode). When provided,
@@ -145,6 +147,7 @@ export function PossessionQuestionPanel({
   selectedAnswer,
   answerStates,
   opponentAnswer,
+  guidedAnswerIndex = null,
   partyPicks,
   showPlayerSplash = false,
   showOpponentSplash = false,
@@ -256,7 +259,7 @@ export function PossessionQuestionPanel({
   );
 
   return (
-    <div className="mt-1.5 px-3 sm:px-4">
+    <div className="mt-1.5 px-3 sm:px-4" data-question-panel="true">
       {partyMatchHeader ? (
         <>
           <div className="flex h-10 items-center gap-2 sm:h-[52px] sm:gap-2.5 lg:hidden">
@@ -406,6 +409,8 @@ export function PossessionQuestionPanel({
           );
           const isWinningAnswer = buttonState === 'selected-correct' || buttonState === 'reveal-correct';
           const isWrongPick = buttonState === 'selected-wrong';
+          const isGuidedTarget = guidedAnswerIndex === i;
+          const isGuidedBlocked = guidedAnswerIndex !== null && !isGuidedTarget;
 
           const isPlayerPicked = selectedAnswer === i;
           const opponentPickedThis = !partyPicks && opponentAnswer === i;
@@ -423,21 +428,21 @@ export function PossessionQuestionPanel({
               key={`${question.id}-${i}`}
               type="button"
               data-mcq-option-index={i}
-              disabled={!showOptions || !isPlaying}
+              data-guided-answer={isGuidedTarget ? 'true' : undefined}
+              disabled={!showOptions || !isPlaying || isGuidedBlocked}
               onClick={() => {
-                if (!showOptions || !isPlaying) return;
+                if (!showOptions || !isPlaying || isGuidedBlocked) return;
                 onAnswer(i);
               }}
               initial={false}
               animate={{
-                opacity: 1,
-                scale: 1,
+                opacity: isGuidedBlocked && isPlaying ? 0.38 : 1,
+                scale: isGuidedTarget && isPlaying ? [1, 1.018, 1] : 1,
               }}
               transition={{
-                type: 'spring',
-                stiffness: 320,
-                damping: 24,
-                mass: 0.75,
+                ...(isGuidedTarget && isPlaying
+                  ? { duration: 1.25, repeat: Infinity, ease: 'easeInOut' as const }
+                  : { type: 'spring' as const, stiffness: 320, damping: 24, mass: 0.75 }),
               }}
               className={`relative flex items-center justify-center overflow-hidden rounded-[16px] transition-shadow duration-150 ${
                 stackedAnswers
@@ -460,8 +465,10 @@ export function PossessionQuestionPanel({
                   ? '0 1.76px 6.334px 1.32px rgba(56,182,14,0.25)'
                   : isWrongPick
                     ? '0 1.76px 6.334px 1.32px rgba(251,49,1,0.25)'
-                    : '0 0 6.334px 1.32px rgba(255,229,0,0.25)',
-                cursor: !showOptions || !isPlaying ? 'default' : 'pointer',
+                    : isGuidedTarget && isPlaying
+                      ? '0 0 14px 3px rgba(255,229,0,0.48)'
+                      : '0 0 6.334px 1.32px rgba(255,229,0,0.25)',
+                cursor: !showOptions || !isPlaying || isGuidedBlocked ? 'default' : 'pointer',
               }}
             >
               {/* Player's pick notch (left) */}

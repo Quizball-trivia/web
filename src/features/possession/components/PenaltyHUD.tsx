@@ -23,6 +23,8 @@ interface PenaltyHUDProps {
   playerPoints?: number;
   opponentPoints?: number;
   penaltyRound: number;
+  /** Number of regulation rounds shown before sudden death. Defaults to ranked's five. */
+  penaltyTotalRounds?: number;
   isPenaltySuddenDeath: boolean;
   isPlayerShooter: boolean;
   playerName: string;
@@ -46,6 +48,7 @@ export function PenaltyHUD({
   playerPoints = 0,
   opponentPoints = 0,
   penaltyRound,
+  penaltyTotalRounds = MAX_PENALTY_ROUNDS,
   isPenaltySuddenDeath,
   playerName,
   opponentName,
@@ -102,29 +105,28 @@ export function PenaltyHUD({
       setSdBaseline({
         playerScore: latest.playerScore,
         opponentScore: latest.opponentScore,
-        // Regulation is always exactly MAX_PENALTY_ROUNDS kicks per side when
-        // SD begins; clamp so a fast first SD kick landing inside the hold
-        // window can never be folded into the baseline.
-        playerAttempts: Math.min(latest.playerAttempts, MAX_PENALTY_ROUNDS),
-        opponentAttempts: Math.min(latest.opponentAttempts, MAX_PENALTY_ROUNDS),
+        // Clamp to the configured regulation length so a fast first SD kick
+        // landing inside the hold window can never be folded into the baseline.
+        playerAttempts: Math.min(latest.playerAttempts, penaltyTotalRounds),
+        opponentAttempts: Math.min(latest.opponentAttempts, penaltyTotalRounds),
       });
     }, SD_PIP_HOLD_MS);
     return () => clearTimeout(timer);
-  }, [isPenaltySuddenDeath]);
+  }, [isPenaltySuddenDeath, penaltyTotalRounds]);
 
   const baseline = isPenaltySuddenDeath ? sdBaseline : null;
   const pipPlayerScore = baseline ? Math.max(0, penaltyPlayerScore - baseline.playerScore) : penaltyPlayerScore;
   const pipOpponentScore = baseline ? Math.max(0, penaltyOpponentScore - baseline.opponentScore) : penaltyOpponentScore;
-  // Only MAX_PENALTY_ROUNDS pip slots render, so keep the MOST RECENT attempts
+  // Only the configured number of pip slots render, so keep the MOST RECENT attempts
   // — otherwise extra sudden-death rounds would silently drop the latest results.
   const playerPips = ((penaltyPlayerAttempts && penaltyPlayerAttempts.length > 0)
     ? (baseline ? penaltyPlayerAttempts.slice(baseline.playerAttempts) : penaltyPlayerAttempts)
     : Array.from({ length: pipPlayerScore }, () => 'goal' as const)
-  ).slice(-MAX_PENALTY_ROUNDS);
+  ).slice(-penaltyTotalRounds);
   const opponentPips = ((penaltyOpponentAttempts && penaltyOpponentAttempts.length > 0)
     ? (baseline ? penaltyOpponentAttempts.slice(baseline.opponentAttempts) : penaltyOpponentAttempts)
     : Array.from({ length: pipOpponentScore }, () => 'goal' as const)
-  ).slice(-MAX_PENALTY_ROUNDS);
+  ).slice(-penaltyTotalRounds);
   const pipClassName = (result: 'goal' | 'miss' | undefined) => {
     if (result === 'goal') return 'bg-brand-green-light border-brand-green-light';
     if (result === 'miss') return 'bg-brand-red-soft border-brand-red-soft';
@@ -164,7 +166,7 @@ export function PenaltyHUD({
         </div>
         <div className="flex min-w-[44px] shrink-0 flex-col items-center justify-center sm:min-w-[100px]">
           <div className="mb-1 hidden text-[10px] font-black uppercase tracking-[0.18em] text-brand-orange sm:block">
-            {isPenaltySuddenDeath ? t('possession.suddenDeath') : t('possession.penaltyRound', { round: penaltyRound, max: MAX_PENALTY_ROUNDS })}
+            {isPenaltySuddenDeath ? t('possession.suddenDeath') : t('possession.penaltyRound', { round: penaltyRound, max: penaltyTotalRounds })}
           </div>
           <motion.div
             animate={timeRemaining <= 2 && phase === 'penalty-playing' ? { scale: [1, 1.1, 1] } : {}}
@@ -201,13 +203,13 @@ export function PenaltyHUD({
       {/* Penalty score pips */}
       <div className="flex justify-center gap-4 px-3">
         <div className="flex gap-1.5">
-          {Array.from({ length: MAX_PENALTY_ROUNDS }).map((_, i) => (
+          {Array.from({ length: penaltyTotalRounds }).map((_, i) => (
             <div key={`pp-${i}`} data-testid="penalty-player-pip" className={`size-3 rounded-full border-2 ${pipClassName(playerPips[i])}`} />
           ))}
         </div>
         <div className="text-[10px] font-black text-white/30 tracking-wider">{t('possession.pens')}</div>
         <div className="flex gap-1.5">
-          {Array.from({ length: MAX_PENALTY_ROUNDS }).map((_, i) => (
+          {Array.from({ length: penaltyTotalRounds }).map((_, i) => (
             <div key={`op-${i}`} data-testid="penalty-opponent-pip" className={`size-3 rounded-full border-2 ${pipClassName(opponentPips[i])}`} />
           ))}
         </div>

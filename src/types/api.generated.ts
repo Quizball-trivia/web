@@ -2254,7 +2254,7 @@ export interface paths {
                 query?: {
                     userId?: string;
                     purchaseId?: string;
-                    eventType?: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset" | "admin_account_ban" | "admin_account_unban" | "free_kicks_stake" | "free_kicks_payout" | "road_to_goal_stake" | "road_to_goal_payout" | "guess_the_goal_reward";
+                    eventType?: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset" | "admin_account_ban" | "admin_account_unban" | "free_kicks_stake" | "free_kicks_payout" | "road_to_goal_stake" | "road_to_goal_payout" | "guess_the_goal_reward" | "trivia_mines_stake" | "trivia_mines_payout" | "trivia_mines_refund" | "squad_spin_stake" | "squad_spin_payout" | "squad_spin_refund";
                     outcome?: "success" | "failure";
                     from?: string;
                     to?: string;
@@ -2278,7 +2278,7 @@ export interface paths {
                                 /** Format: uuid */
                                 id: string;
                                 /** @enum {string} */
-                                eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset" | "admin_account_ban" | "admin_account_unban" | "free_kicks_stake" | "free_kicks_payout" | "road_to_goal_stake" | "road_to_goal_payout" | "guess_the_goal_reward";
+                                eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset" | "admin_account_ban" | "admin_account_unban" | "free_kicks_stake" | "free_kicks_payout" | "road_to_goal_stake" | "road_to_goal_payout" | "guess_the_goal_reward" | "trivia_mines_stake" | "trivia_mines_payout" | "trivia_mines_refund" | "squad_spin_stake" | "squad_spin_payout" | "squad_spin_refund";
                                 /** @enum {string} */
                                 outcome: "success" | "failure";
                                 /** Format: uuid */
@@ -4576,6 +4576,7 @@ export interface paths {
                     parent_id?: string;
                     is_active?: string;
                     min_questions?: number;
+                    slugs?: string;
                     page?: number;
                     limit?: number;
                 };
@@ -5281,7 +5282,7 @@ export interface paths {
                     category_id?: string;
                     status?: "draft" | "published" | "archived";
                     difficulty?: "easy" | "medium" | "hard";
-                    type?: "mcq_single" | "true_false" | "input_text" | "countdown_list" | "clue_chain" | "put_in_order" | "imposter_multi_select" | "career_path" | "high_low" | "football_logic";
+                    type?: "mcq_single" | "true_false" | "input_text" | "countdown_list" | "clue_chain" | "put_in_order" | "imposter_multi_select" | "career_path" | "high_low" | "football_logic" | "missing_xi" | "pass_chain" | "stat_sniper";
                     visibility?: "public" | "wl_private";
                     search?: string;
                     page?: number;
@@ -5331,7 +5332,7 @@ export interface paths {
                         /** Format: uuid */
                         category_id: string;
                         /** @enum {string} */
-                        type: "mcq_single" | "true_false" | "input_text" | "countdown_list" | "clue_chain" | "put_in_order" | "imposter_multi_select" | "career_path" | "high_low" | "football_logic";
+                        type: "mcq_single" | "true_false" | "input_text" | "countdown_list" | "clue_chain" | "put_in_order" | "imposter_multi_select" | "career_path" | "high_low" | "football_logic" | "missing_xi" | "pass_chain" | "stat_sniper";
                         /** @enum {string} */
                         difficulty: "easy" | "medium" | "hard";
                         /** @enum {string} */
@@ -5459,7 +5460,7 @@ export interface paths {
                         /** Format: uuid */
                         category_id?: string;
                         /** @enum {string} */
-                        type?: "mcq_single" | "true_false" | "input_text" | "countdown_list" | "clue_chain" | "put_in_order" | "imposter_multi_select" | "career_path" | "high_low" | "football_logic";
+                        type?: "mcq_single" | "true_false" | "input_text" | "countdown_list" | "clue_chain" | "put_in_order" | "imposter_multi_select" | "career_path" | "high_low" | "football_logic" | "missing_xi" | "pass_chain" | "stat_sniper";
                         /** @enum {string} */
                         difficulty?: "easy" | "medium" | "hard";
                         /** @enum {string} */
@@ -5614,7 +5615,7 @@ export interface paths {
                         category_id: string;
                         questions: {
                             /** @enum {string} */
-                            type: "mcq_single" | "true_false" | "input_text" | "countdown_list" | "clue_chain" | "put_in_order" | "imposter_multi_select" | "career_path" | "high_low" | "football_logic";
+                            type: "mcq_single" | "true_false" | "input_text" | "countdown_list" | "clue_chain" | "put_in_order" | "imposter_multi_select" | "career_path" | "high_low" | "football_logic" | "missing_xi" | "pass_chain" | "stat_sniper";
                             /** @enum {string} */
                             difficulty: "easy" | "medium" | "hard";
                             /** @enum {string} */
@@ -5920,7 +5921,7 @@ export interface paths {
                         "application/json": {
                             items: {
                                 /** @enum {string} */
-                                challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "missingXi" | "passChain" | "statSniper" | "cardDetective";
+                                challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective" | "missingXi" | "passChain" | "statSniper";
                                 title: string;
                                 description: string;
                                 /** @enum {string} */
@@ -5970,7 +5971,7 @@ export interface paths {
                 };
                 header?: never;
                 path: {
-                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "missingXi" | "passChain" | "statSniper" | "cardDetective";
+                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective" | "missingXi" | "passChain" | "statSniper";
                 };
                 cookie?: never;
             };
@@ -6115,6 +6116,7 @@ export interface paths {
                                 difficulty: "easy" | "medium" | "hard";
                                 prompt: string;
                                 clubs: string[];
+                                clubMatchNames: string[];
                                 displayAnswer: string;
                                 acceptedAnswers: string[];
                             }[];
@@ -6164,25 +6166,32 @@ export interface paths {
                                 explanation: string | null;
                             }[];
                         } | {
-
                             /** @enum {string} */
-                            challengeType: "statSniper";
+                            challengeType: "missingXi";
                             title: string;
                             description: string;
-                            questionCount: number;
-                            secondsPerQuestion: number;
-                            questions: {
+                            squadCount: number;
+                            secondsPerSquad: number;
+                            squads: {
                                 /** Format: uuid */
                                 id: string;
                                 /** @enum {string} */
                                 difficulty: "easy" | "medium" | "hard";
-                                kind: string;
-                                prompt: string;
-                                unit: string;
-                                value: number;
-                                min: number;
-                                max: number;
-                                step: number;
+                                team: string;
+                                opponent: string;
+                                matchLabel: string;
+                                score: string | null;
+                                formation: string;
+                                slots: {
+                                    id: string;
+                                    position: string;
+                                    number: number | null;
+                                    x: number;
+                                    y: number;
+                                    name: string;
+                                    acceptedAnswers: string[];
+                                    imageUrl: string | null;
+                                }[];
                             }[];
                         } | {
                             /** @enum {string} */
@@ -6226,58 +6235,24 @@ export interface paths {
                             }[];
                         } | {
                             /** @enum {string} */
-
-                            challengeType: "missingXi";
-
+                            challengeType: "statSniper";
                             title: string;
-
                             description: string;
-
-                            squadCount: number;
-
-                            secondsPerSquad: number;
-
-                            squads: {
-
+                            questionCount: number;
+                            secondsPerQuestion: number;
+                            questions: {
                                 /** Format: uuid */
-
                                 id: string;
-
                                 /** @enum {string} */
-
                                 difficulty: "easy" | "medium" | "hard";
-
-                                team: string;
-
-                                opponent: string;
-
-                                matchLabel: string;
-
-                                score: string | null;
-
-                                formation: string;
-
-                                slots: {
-
-                                    id: string;
-
-                                    position: string;
-
-                                    number: number | null;
-
-                                    x: number;
-
-                                    y: number;
-
-                                    name: string;
-
-                                    acceptedAnswers: string[];
-                                    imageUrl: string | null;
-
-                                }[];
-
+                                kind: string;
+                                prompt: string;
+                                unit: string;
+                                value: number;
+                                min: number;
+                                max: number;
+                                step: number;
                             }[];
-
                         } | {
                             /** @enum {string} */
                             challengeType: "fifaCards";
@@ -6541,7 +6516,7 @@ export interface paths {
                                 userId: string;
                                 rank: number;
                                 username: string;
-                                avatarCustomization: unknown;
+                                avatarCustomization?: unknown;
                                 country: string | null;
                                 score: number;
                             }[];
@@ -6619,11 +6594,11 @@ export interface paths {
                                 imageUrl: string | null;
                             } | null;
                             viaClub: string | null;
-                            /** @enum {string} */
+                            /** @enum {string|null} */
                             viaKind: "club" | "manager" | null;
                             reachesTarget: boolean;
                             targetClub: string | null;
-                            /** @enum {string} */
+                            /** @enum {string|null} */
                             targetKind: "club" | "manager" | null;
                         };
                     };
@@ -6669,7 +6644,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "missingXi" | "passChain" | "statSniper" | "cardDetective";
+                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective" | "missingXi" | "passChain" | "statSniper";
                 };
                 cookie?: never;
             };
@@ -6698,7 +6673,7 @@ export interface paths {
                     content: {
                         "application/json": {
                             /** @enum {string} */
-                            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "missingXi" | "passChain" | "statSniper" | "cardDetective";
+                            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective" | "missingXi" | "passChain" | "statSniper";
                             /** @enum {boolean} */
                             completedToday: true;
                             coinsAwarded: number;
@@ -6773,7 +6748,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "missingXi" | "passChain" | "statSniper" | "cardDetective";
+                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective" | "missingXi" | "passChain" | "statSniper";
                 };
                 cookie?: never;
             };
@@ -6787,7 +6762,7 @@ export interface paths {
                     content: {
                         "application/json": {
                             /** @enum {string} */
-                            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "missingXi" | "passChain" | "statSniper" | "cardDetective";
+                            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective" | "missingXi" | "passChain" | "statSniper";
                             /** @enum {boolean} */
                             reset: true;
                         };
@@ -6844,7 +6819,7 @@ export interface paths {
                         "application/json": {
                             items: {
                                 /** @enum {string} */
-                                challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "missingXi" | "passChain" | "statSniper" | "cardDetective";
+                                challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective" | "missingXi" | "passChain" | "statSniper";
                                 title: string;
                                 description: string;
                                 /** @enum {string} */
@@ -6921,6 +6896,18 @@ export interface paths {
                                 } | {
                                     /** @default [] */
                                     categoryIds: string[];
+                                    cardCount: number;
+                                    /** @enum {string} */
+                                    challengeType: "fifaCards";
+                                } | {
+                                    /** @default [] */
+                                    categoryIds: string[];
+                                    cardCount: number;
+                                    /** @enum {string} */
+                                    challengeType: "cardDetective";
+                                } | {
+                                    /** @default [] */
+                                    categoryIds: string[];
                                     squadCount: number;
                                     secondsPerSquad: number;
                                     /** @enum {string} */
@@ -6939,18 +6926,6 @@ export interface paths {
                                     secondsPerQuestion: number;
                                     /** @enum {string} */
                                     challengeType: "statSniper";
-                                } | {
-                                    /** @default [] */
-                                    categoryIds: string[];
-                                    cardCount: number;
-                                    /** @enum {string} */
-                                    challengeType: "fifaCards";
-                                } | {
-                                    /** @default [] */
-                                    categoryIds: string[];
-                                    cardCount: number;
-                                    /** @enum {string} */
-                                    challengeType: "cardDetective";
                                 };
                                 sortOrder: number;
                                 isActive: boolean;
@@ -7012,7 +6987,7 @@ export interface paths {
                 query?: never;
                 header?: never;
                 path: {
-                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "missingXi" | "passChain" | "statSniper" | "cardDetective";
+                    challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective" | "missingXi" | "passChain" | "statSniper";
                 };
                 cookie?: never;
             };
@@ -10166,7 +10141,7 @@ export interface components {
             /** Format: uuid */
             id: string;
             /** @enum {string} */
-            eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset" | "admin_account_ban" | "admin_account_unban" | "free_kicks_stake" | "free_kicks_payout" | "road_to_goal_stake" | "road_to_goal_payout" | "guess_the_goal_reward";
+            eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset" | "admin_account_ban" | "admin_account_unban" | "free_kicks_stake" | "free_kicks_payout" | "road_to_goal_stake" | "road_to_goal_payout" | "guess_the_goal_reward" | "trivia_mines_stake" | "trivia_mines_payout" | "trivia_mines_refund" | "squad_spin_stake" | "squad_spin_payout" | "squad_spin_refund";
             /** @enum {string} */
             outcome: "success" | "failure";
             /** Format: uuid */
@@ -10202,7 +10177,7 @@ export interface components {
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
-                eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset" | "admin_account_ban" | "admin_account_unban" | "free_kicks_stake" | "free_kicks_payout" | "road_to_goal_stake" | "road_to_goal_payout" | "guess_the_goal_reward";
+                eventType: "checkout_session_created" | "checkout_session_failed" | "webhook_received" | "webhook_signature_invalid" | "fulfillment_succeeded" | "fulfillment_failed" | "manual_adjustment_succeeded" | "manual_adjustment_failed" | "objective_reward_succeeded" | "admin_progression_adjustment" | "leaderboard_reset" | "admin_ticket_window_reset" | "admin_account_ban" | "admin_account_unban" | "free_kicks_stake" | "free_kicks_payout" | "road_to_goal_stake" | "road_to_goal_payout" | "guess_the_goal_reward" | "trivia_mines_stake" | "trivia_mines_payout" | "trivia_mines_refund" | "squad_spin_stake" | "squad_spin_payout" | "squad_spin_refund";
                 /** @enum {string} */
                 outcome: "success" | "failure";
                 /** Format: uuid */
@@ -11014,6 +10989,50 @@ export interface components {
             accepted_answers: string[];
             prompt?: components["schemas"]["I18nField"];
             explanation?: components["schemas"]["I18nField"] & unknown;
+        } | {
+            /** @enum {string} */
+            type: "missing_xi";
+            team: components["schemas"]["I18nField"];
+            opponent: components["schemas"]["I18nField"];
+            match_label: components["schemas"]["I18nField"];
+            formation: string;
+            score?: string | null;
+            season?: number | null;
+            slots: {
+                id: string;
+                position: string;
+                number: number | null;
+                x: number;
+                y: number;
+                name: components["schemas"]["I18nField"];
+                accepted_answers: string[];
+            }[];
+        } | {
+            /** @enum {string} */
+            type: "pass_chain";
+            start_tm_id: number;
+            target_tm_id: number;
+            par: number;
+            bridges?: number | null;
+            solution: {
+                tm_id: number;
+                /** @enum {string} */
+                kind?: "club" | "manager";
+                via: components["schemas"]["I18nField"];
+            }[];
+        } | {
+            /** @enum {string} */
+            type: "stat_sniper";
+            kind: string;
+            prompt: components["schemas"]["I18nField"];
+            unit: components["schemas"]["I18nField"];
+            value: number;
+            min: number;
+            max: number;
+            step: number;
+            source?: {
+                [key: string]: unknown;
+            } | null;
         };
         QuestionResponse: {
             /** Format: uuid */
@@ -11021,7 +11040,7 @@ export interface components {
             /** Format: uuid */
             category_id: string;
             /** @enum {string} */
-            type: "mcq_single" | "true_false" | "input_text" | "countdown_list" | "clue_chain" | "put_in_order" | "imposter_multi_select" | "career_path" | "high_low" | "football_logic";
+            type: "mcq_single" | "true_false" | "input_text" | "countdown_list" | "clue_chain" | "put_in_order" | "imposter_multi_select" | "career_path" | "high_low" | "football_logic" | "missing_xi" | "pass_chain" | "stat_sniper";
             /** @enum {string} */
             difficulty: "easy" | "medium" | "hard";
             /** @enum {string} */
@@ -11099,7 +11118,7 @@ export interface components {
         };
         DailyChallengeMetadata: {
             /** @enum {string} */
-            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "missingXi" | "passChain" | "statSniper" | "cardDetective";
+            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective" | "missingXi" | "passChain" | "statSniper";
             title: string;
             description: string;
             /** @enum {string} */
@@ -11177,6 +11196,18 @@ export interface components {
         } | {
             /** @default [] */
             categoryIds: string[];
+            cardCount: number;
+            /** @enum {string} */
+            challengeType: "fifaCards";
+        } | {
+            /** @default [] */
+            categoryIds: string[];
+            cardCount: number;
+            /** @enum {string} */
+            challengeType: "cardDetective";
+        } | {
+            /** @default [] */
+            categoryIds: string[];
             squadCount: number;
             secondsPerSquad: number;
             /** @enum {string} */
@@ -11195,18 +11226,6 @@ export interface components {
             secondsPerQuestion: number;
             /** @enum {string} */
             challengeType: "statSniper";
-        } | {
-            /** @default [] */
-            categoryIds: string[];
-            cardCount: number;
-            /** @enum {string} */
-            challengeType: "fifaCards";
-        } | {
-            /** @default [] */
-            categoryIds: string[];
-            cardCount: number;
-            /** @enum {string} */
-            challengeType: "cardDetective";
         };
         AdminDailyChallengeCategoryOption: {
             /** Format: uuid */
@@ -11353,6 +11372,7 @@ export interface components {
                 difficulty: "easy" | "medium" | "hard";
                 prompt: string;
                 clubs: string[];
+                clubMatchNames: string[];
                 displayAnswer: string;
                 acceptedAnswers: string[];
             }[];
@@ -11403,23 +11423,31 @@ export interface components {
             }[];
         } | {
             /** @enum {string} */
-            challengeType: "statSniper";
+            challengeType: "missingXi";
             title: string;
             description: string;
-            questionCount: number;
-            secondsPerQuestion: number;
-            questions: {
+            squadCount: number;
+            secondsPerSquad: number;
+            squads: {
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
                 difficulty: "easy" | "medium" | "hard";
-                kind: string;
-                prompt: string;
-                unit: string;
-                value: number;
-                min: number;
-                max: number;
-                step: number;
+                team: string;
+                opponent: string;
+                matchLabel: string;
+                score: string | null;
+                formation: string;
+                slots: {
+                    id: string;
+                    position: string;
+                    number: number | null;
+                    x: number;
+                    y: number;
+                    name: string;
+                    acceptedAnswers: string[];
+                    imageUrl: string | null;
+                }[];
             }[];
         } | {
             /** @enum {string} */
@@ -11463,31 +11491,23 @@ export interface components {
             }[];
         } | {
             /** @enum {string} */
-            challengeType: "missingXi";
+            challengeType: "statSniper";
             title: string;
             description: string;
-            squadCount: number;
-            secondsPerSquad: number;
-            squads: {
+            questionCount: number;
+            secondsPerQuestion: number;
+            questions: {
                 /** Format: uuid */
                 id: string;
                 /** @enum {string} */
                 difficulty: "easy" | "medium" | "hard";
-                team: string;
-                opponent: string;
-                matchLabel: string;
-                score: string | null;
-                formation: string;
-                slots: {
-                    id: string;
-                    position: string;
-                    number: number | null;
-                    x: number;
-                    y: number;
-                    name: string;
-                    acceptedAnswers: string[];
-                    imageUrl: string | null;
-                }[];
+                kind: string;
+                prompt: string;
+                unit: string;
+                value: number;
+                min: number;
+                max: number;
+                step: number;
             }[];
         } | {
             /** @enum {string} */
@@ -11570,7 +11590,7 @@ export interface components {
         };
         CompleteDailyChallengeResponse: {
             /** @enum {string} */
-            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "missingXi" | "passChain" | "statSniper" | "cardDetective";
+            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective" | "missingXi" | "passChain" | "statSniper";
             /** @enum {boolean} */
             completedToday: true;
             coinsAwarded: number;
@@ -11599,13 +11619,13 @@ export interface components {
         };
         ResetDailyChallengeResponse: {
             /** @enum {string} */
-            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "missingXi" | "passChain" | "statSniper" | "cardDetective";
+            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective" | "missingXi" | "passChain" | "statSniper";
             /** @enum {boolean} */
             reset: true;
         };
         AdminDailyChallengeConfigResponse: {
             /** @enum {string} */
-            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "missingXi" | "passChain" | "statSniper" | "cardDetective";
+            challengeType: "moneyDrop" | "trueFalse" | "clues" | "countdown" | "putInOrder" | "imposter" | "careerPath" | "highLow" | "footballLogic" | "fifaCards" | "cardDetective" | "missingXi" | "passChain" | "statSniper";
             title: string;
             description: string;
             /** @enum {string} */
@@ -11682,6 +11702,18 @@ export interface components {
             } | {
                 /** @default [] */
                 categoryIds: string[];
+                cardCount: number;
+                /** @enum {string} */
+                challengeType: "fifaCards";
+            } | {
+                /** @default [] */
+                categoryIds: string[];
+                cardCount: number;
+                /** @enum {string} */
+                challengeType: "cardDetective";
+            } | {
+                /** @default [] */
+                categoryIds: string[];
                 squadCount: number;
                 secondsPerSquad: number;
                 /** @enum {string} */
@@ -11700,18 +11732,6 @@ export interface components {
                 secondsPerQuestion: number;
                 /** @enum {string} */
                 challengeType: "statSniper";
-            } | {
-                /** @default [] */
-                categoryIds: string[];
-                cardCount: number;
-                /** @enum {string} */
-                challengeType: "fifaCards";
-            } | {
-                /** @default [] */
-                categoryIds: string[];
-                cardCount: number;
-                /** @enum {string} */
-                challengeType: "cardDetective";
             };
             sortOrder: number;
             isActive: boolean;

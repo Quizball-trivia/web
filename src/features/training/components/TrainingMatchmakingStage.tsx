@@ -6,7 +6,7 @@ import { useTraining } from "../TrainingMatchProvider";
 import { BOT_AVATAR, BOT_NAME } from "../constants";
 
 export function TrainingMatchmakingStage() {
-  const { match, tooltips } = useTraining();
+  const { match, tooltips, onSkip } = useTraining();
   const [foundOpponent, setFoundOpponent] = useState<{
     id: string;
     username: string;
@@ -49,7 +49,7 @@ export function TrainingMatchmakingStage() {
       matchType="ranked"
       rankedSearchStartedAt={searchStartedAt}
       rankedFoundOpponent={foundOpponent}
-      onCancel={() => match.setStage("results")}
+      onCancel={onSkip}
     />
   );
 }

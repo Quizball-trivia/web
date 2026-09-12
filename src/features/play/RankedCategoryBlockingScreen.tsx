@@ -23,6 +23,7 @@ import { getTierAccent } from '@/utils/tierVisuals';
 import { useLocale } from '@/contexts/LocaleContext';
 import type { AvatarCustomization } from '@/types/game';
 import type { I18nField } from '@/lib/realtime/socket.types';
+import { getI18nText } from '@/lib/utils/i18n';
 
 const poppins = {
   fontFamily: "'Poppins', sans-serif",
@@ -66,6 +67,8 @@ export interface BanCategoryViewProps {
   paused?: boolean;
   pauseSeconds?: number | null;
   soundMuted: boolean;
+  /** Tutorial-only gate: only this category card can be selected. */
+  guidedCategoryId?: string | null;
   onToggleSound: () => void;
   onBanCategory: (categoryId: string) => void;
 }
@@ -149,12 +152,16 @@ export function BanCategoryView({
   paused = false,
   pauseSeconds = null,
   soundMuted,
+  guidedCategoryId = null,
   onToggleSound,
   onBanCategory,
 }: BanCategoryViewProps) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const playerTierColor = player.tier ? getTierAccent(player.tier) : '#94A3B8';
   const opponentTierColor = opponent.tier ? getTierAccent(opponent.tier) : '#94A3B8';
+  const guidedCategory = guidedCategoryId
+    ? categories.find((category) => category.id === guidedCategoryId) ?? null
+    : null;
 
   return (
     <div className="relative min-h-dvh flex flex-col bg-surface-page">
@@ -259,7 +266,9 @@ export function BanCategoryView({
               style={poppins}
             >
               {currentActor === 'player'
-                ? t('possession.halftime.yourTurn')
+                ? guidedCategory
+                  ? t('training.tapGuidedCategory', { category: getI18nText(guidedCategory.name, locale) })
+                  : t('possession.halftime.yourTurn')
                 : t('possession.halftime.opponentBanning')}
             </p>
           ) : (
@@ -281,9 +290,11 @@ export function BanCategoryView({
               const isPlayerBanned = category.id === playerBannedId;
               const isOpponentBanned = category.id === opponentBannedId;
               const isBanned = isPlayerBanned || isOpponentBanned;
+              const isGuidedBlocked = guidedCategoryId !== null && category.id !== guidedCategoryId;
 
               const disabled =
                 paused ||
+                isGuidedBlocked ||
                 (!!playerBannedId && !isPlayerBanned && phase === 'ban') ||
                 isOpponentBanned ||
                 currentActor !== 'player' ||
@@ -301,6 +312,7 @@ export function BanCategoryView({
                   animationIndex={i}
                   isBanned={isBanned}
                   disabled={disabled}
+                  fadedOut={isGuidedBlocked && !playerBannedId}
                   onClick={onBanCategory}
                 />
               );

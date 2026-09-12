@@ -1,6 +1,10 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { TRAINING_QUESTIONS } from "../data/trainingQuestions";
-import { TRAINING_SCRIPT } from "../data/trainingScript";
+import {
+  TRAINING_SCRIPT,
+  getTrainingRequiredAnswerIndex,
+  getTrainingShotPlan,
+} from "../data/trainingScript";
 import type { GameQuestion } from "@/lib/domain";
 import type { Phase, AnswerStateArray } from "@/features/possession/types/possession.types";
 import { QUESTIONS_PER_HALF, TIMER_SECONDS } from "@/features/possession/types/possession.types";
@@ -25,6 +29,7 @@ export type TrainingStage =
   | "banning"
   | "playing"
   | "halftime"
+  | "penalties"
   | "results";
 
 export interface TrainingMatchState {
@@ -52,6 +57,8 @@ export interface TrainingMatchState {
     isPlayerAttacker: boolean;
     variant?: number;
     shotId?: number;
+    /** Ranked freezes the pitch at this position while the attack plays. */
+    originPosition: number;
   };
   showGoalCelebration: boolean;
   goalScorerIsPlayer: boolean;
@@ -62,11 +69,29 @@ export interface TrainingMatchState {
   opponentAnswered: boolean;
   opponentAnsweredCorrectly: boolean | null;
   opponentAnswer: number | null;
-  feedMessage: string;
-  feedDirection: "forward" | "backward" | "neutral";
+  /** Per-question outcome, index = questionIndex — drives the results dots. */
+  playerQuestionResults: Array<"correct" | "wrong" | null>;
+  opponentQuestionResults: Array<"correct" | "wrong" | null>;
+  /** Practice-shootout scoreboard — null until the penalties stage finishes. */
+  penaltyPlayerGoals: number | null;
+  penaltyOpponentGoals: number | null;
+  /**
+   * This round's possession swing, held back during the reveal so the pitch,
+   * goal meter and bar-battle divider stay at the pre-round position while the
+   * bars animate (ranked's field lock). Committed by advanceAfterReveal.
+   */
+  pendingPointDiff: number | null;
 }
 
 const DEFAULT_ANSWER_STATES: AnswerStateArray = ["default", "default", "default", "default"];
+
+function getGuidedAnswerStates(question: GameQuestion, qIndex: number): AnswerStateArray {
+  const requiredIndex = getTrainingRequiredAnswerIndex(TRAINING_SCRIPT[qIndex], question);
+  if (requiredIndex === null) return DEFAULT_ANSWER_STATES;
+  return DEFAULT_ANSWER_STATES.map((_, index) => (
+    index === requiredIndex ? "default" : "disabled"
+  )) as AnswerStateArray;
+}
 
 // The bot script (TRAINING_SCRIPT) is indexed per question, so an override is
 // only usable when it can cover every scripted question. Anything shorter
@@ -112,8 +137,11 @@ export function useTrainingMatch(isPaused: boolean, questionsOverride?: GameQues
     opponentAnswered: false,
     opponentAnsweredCorrectly: null,
     opponentAnswer: null,
-    feedMessage: "",
-    feedDirection: "neutral",
+    playerQuestionResults: [],
+    opponentQuestionResults: [],
+    penaltyPlayerGoals: null,
+    penaltyOpponentGoals: null,
+    pendingPointDiff: null,
   });
 
   const isPausedRef = useRef(isPaused);
@@ -146,11 +174,14 @@ export function useTrainingMatch(isPaused: boolean, questionsOverride?: GameQues
   const startQuestion = useCallback(
     (qIndex: number) => {
       const question = questionsRef.current[qIndex];
+      const script = TRAINING_SCRIPT[qIndex];
       const half = qIndex < QUESTIONS_PER_HALF ? 1 : 2;
       const questionInHalf = qIndex < QUESTIONS_PER_HALF ? qIndex : qIndex - QUESTIONS_PER_HALF;
 
       setState((prev) => {
-        const zone = getZone(prev.playerPosition);
+        const diff = script.startPossessionDiff ?? prev.possessionDiff;
+        const position = positionFromDiff(diff);
+        const zone = getZone(position);
         return {
           ...prev,
           stage: "playing",
@@ -161,36 +192,40 @@ export function useTrainingMatch(isPaused: boolean, questionsOverride?: GameQues
           half,
           showOptions: true,
           selectedAnswer: null,
-          answerStates: DEFAULT_ANSWER_STATES,
+          answerStates: getGuidedAnswerStates(question, qIndex),
           timeRemaining: TIMER_SECONDS,
           shotMode: null,
+          pendingPointDiff: null,
           showGoalCelebration: false,
           showPlayerSplash: false,
           showOpponentSplash: false,
           opponentAnswered: false,
           opponentAnsweredCorrectly: null,
           opponentAnswer: null,
+          possessionDiff: diff,
+          playerPosition: position,
           zone: zone.zone,
           zoneColor: zone.color,
-          zoneKey: getZoneKey(prev.playerPosition),
-          feedMessage: "",
-          feedDirection: "neutral" as const,
+          zoneKey: getZoneKey(position),
         };
       });
 
       if (timerRef.current) clearInterval(timerRef.current);
-      timerRef.current = setInterval(() => {
-        setState((prev) => {
-          if (isPausedRef.current) return prev;
-          if (prev.timeRemaining <= 1) {
-            if (timerRef.current) clearInterval(timerRef.current);
-            return { ...prev, timeRemaining: 0 };
-          }
-          return { ...prev, timeRemaining: prev.timeRemaining - 1 };
-        });
-      }, 1000);
+      // Guided MCQs deliberately have no hidden timeout: the coach permits one
+      // action and waits for it. Free-form rounds may use the normal clock.
+      if (script.requiredAnswer === "free") {
+        timerRef.current = setInterval(() => {
+          setState((prev) => {
+            if (isPausedRef.current) return prev;
+            if (prev.timeRemaining <= 1) {
+              if (timerRef.current) clearInterval(timerRef.current);
+              return { ...prev, timeRemaining: 0 };
+            }
+            return { ...prev, timeRemaining: prev.timeRemaining - 1 };
+          });
+        }, 1000);
+      }
 
-      const script = TRAINING_SCRIPT[qIndex];
       if (botTimerRef.current) clearTimeout(botTimerRef.current);
       botTimerRef.current = setTimeout(() => {
         setState((prev) => {
@@ -218,8 +253,11 @@ export function useTrainingMatch(isPaused: boolean, questionsOverride?: GameQues
         if (prev.selectedAnswer !== null || prev.phase !== "playing") return prev;
         if (!prev.question) return prev;
 
-        const isCorrect = selectedIndex === prev.question.correctIndex;
         const script = TRAINING_SCRIPT[prev.questionIndex];
+        const requiredIndex = getTrainingRequiredAnswerIndex(script, prev.question);
+        if (requiredIndex !== null && selectedIndex !== requiredIndex) return prev;
+
+        const isCorrect = selectedIndex === prev.question.correctIndex;
         const botCorrect = isCorrect
           ? script.botCorrectIfPlayerCorrect
           : script.botCorrectIfPlayerWrong;
@@ -231,34 +269,17 @@ export function useTrainingMatch(isPaused: boolean, questionsOverride?: GameQues
           newAnswerStates[selectedIndex] = "wrong";
         }
 
-        // Points: timeRemaining * 10, capped 0–100
-        const playerPoints = isCorrect ? clamp(prev.timeRemaining * 10, 0, 100) : 0;
-        const botRemainingTime = TIMER_SECONDS - script.botTimeSec;
-        const opponentPoints = botCorrect ? clamp(botRemainingTime * 10, 0, 100) : 0;
+        const playerPoints = script.playerPoints;
+        const opponentPoints = script.opponentPoints;
 
-        // Update possessionDiff by the point difference
+        // Possession swing is computed now but committed AFTER the bar battle
+        // (advanceAfterReveal) so the pitch doesn't move before the bars fight.
         const pointDiff = playerPoints - opponentPoints;
-        const newDiff = prev.possessionDiff + pointDiff;
-        const newPosition = positionFromDiff(newDiff);
-        const newZone = getZone(newPosition);
-        const newZoneKey = getZoneKey(newPosition);
 
-        // Build feed message
-        let feedMessage = "";
-        let feedDirection: "forward" | "backward" | "neutral" = "neutral";
-        if (pointDiff > 0) {
-          feedMessage = `+${pointDiff} → ATTACK!`;
-          feedDirection = "forward";
-        } else if (pointDiff < 0) {
-          feedMessage = `${pointDiff} → Pushed back`;
-          feedDirection = "backward";
-        } else if (isCorrect && botCorrect) {
-          feedMessage = "Both correct → Draw";
-          feedDirection = "neutral";
-        } else {
-          feedMessage = "Both wrong → No change";
-          feedDirection = "neutral";
-        }
+        const playerQuestionResults = [...prev.playerQuestionResults];
+        playerQuestionResults[prev.questionIndex] = isCorrect ? "correct" : "wrong";
+        const opponentQuestionResults = [...prev.opponentQuestionResults];
+        opponentQuestionResults[prev.questionIndex] = botCorrect ? "correct" : "wrong";
 
         if (timerRef.current) clearInterval(timerRef.current);
 
@@ -268,7 +289,7 @@ export function useTrainingMatch(isPaused: boolean, questionsOverride?: GameQues
           botAnswer = prev.question.correctIndex;
         } else {
           const wrongIndices = [0, 1, 2, 3].filter((i) => i !== prev.question!.correctIndex);
-          botAnswer = wrongIndices[Math.floor(Math.random() * wrongIndices.length)];
+          botAnswer = wrongIndices[0] ?? null;
         }
 
         return {
@@ -276,11 +297,7 @@ export function useTrainingMatch(isPaused: boolean, questionsOverride?: GameQues
           selectedAnswer: selectedIndex,
           answerStates: newAnswerStates,
           phase: "reveal",
-          possessionDiff: newDiff,
-          playerPosition: newPosition,
-          zone: newZone.zone,
-          zoneColor: newZone.color,
-          zoneKey: newZoneKey,
+          pendingPointDiff: pointDiff,
           showPlayerSplash: true,
           showOpponentSplash: true,
           playerSplashPoints: playerPoints,
@@ -288,8 +305,8 @@ export function useTrainingMatch(isPaused: boolean, questionsOverride?: GameQues
           opponentAnswered: true,
           opponentAnsweredCorrectly: botCorrect,
           opponentAnswer: botAnswer,
-          feedMessage,
-          feedDirection,
+          playerQuestionResults,
+          opponentQuestionResults,
         };
       });
     },
@@ -308,24 +325,15 @@ export function useTrainingMatch(isPaused: boolean, questionsOverride?: GameQues
       const newAnswerStates: AnswerStateArray = ["disabled", "disabled", "disabled", "disabled"];
       newAnswerStates[prev.question.correctIndex] = "correct";
 
-      const playerPoints = 0; // timed out
-      const botRemainingTime = TIMER_SECONDS - script.botTimeSec;
-      const opponentPoints = botCorrect ? clamp(botRemainingTime * 10, 0, 100) : 0;
+      const playerPoints = 0;
+      const opponentPoints = script.opponentPoints;
 
       const pointDiff = playerPoints - opponentPoints;
-      const newDiff = prev.possessionDiff + pointDiff;
-      const newPosition = positionFromDiff(newDiff);
-      const newZone = getZone(newPosition);
-      const newZoneKey = getZoneKey(newPosition);
 
-      let feedMessage = "";
-      let feedDirection: "forward" | "backward" | "neutral" = "neutral";
-      if (pointDiff < 0) {
-        feedMessage = `${pointDiff} → Pushed back`;
-        feedDirection = "backward";
-      } else {
-        feedMessage = "Both wrong → No change";
-      }
+      const playerQuestionResults = [...prev.playerQuestionResults];
+      playerQuestionResults[prev.questionIndex] = "wrong";
+      const opponentQuestionResults = [...prev.opponentQuestionResults];
+      opponentQuestionResults[prev.questionIndex] = botCorrect ? "correct" : "wrong";
 
       if (timerRef.current) clearInterval(timerRef.current);
 
@@ -334,7 +342,7 @@ export function useTrainingMatch(isPaused: boolean, questionsOverride?: GameQues
         botAnswer = prev.question.correctIndex;
       } else {
         const wrongIndices = [0, 1, 2, 3].filter((i) => i !== prev.question!.correctIndex);
-        botAnswer = wrongIndices[Math.floor(Math.random() * wrongIndices.length)];
+        botAnswer = wrongIndices[0] ?? null;
       }
 
       return {
@@ -342,64 +350,69 @@ export function useTrainingMatch(isPaused: boolean, questionsOverride?: GameQues
         selectedAnswer: -1,
         answerStates: newAnswerStates,
         phase: "reveal",
-        possessionDiff: newDiff,
-        playerPosition: newPosition,
-        zone: newZone.zone,
-        zoneColor: newZone.color,
-        zoneKey: newZoneKey,
+        pendingPointDiff: pointDiff,
         showPlayerSplash: false,
         showOpponentSplash: false,
-        playerSplashPoints: 0,
+        playerSplashPoints: playerPoints,
         opponentSplashPoints: opponentPoints,
         opponentAnswered: true,
         opponentAnsweredCorrectly: botCorrect,
         opponentAnswer: botAnswer,
-        feedMessage,
-        feedDirection,
+        playerQuestionResults,
+        opponentQuestionResults,
       };
     });
   }, []);
 
-  // ─── After reveal, check for shot or advance ───────────────
+  // ─── After reveal (bar battle done): commit the possession swing,
+  //     then check for shot or advance ───────────────
   const advanceAfterReveal = useCallback(() => {
     setState((prev) => {
       if (prev.phase !== "reveal") return prev;
 
-      const isCorrect = prev.selectedAnswer !== null && prev.selectedAnswer >= 0
-        && prev.selectedAnswer === prev.question?.correctIndex;
+      const isCorrect = prev.playerQuestionResults[prev.questionIndex] === "correct";
 
-      // Shot triggers at position >= 75 (player attacking)
-      if (isCorrect && prev.playerPosition >= 75) {
-        const ballOriginX = 30 + (prev.playerPosition / 100) * 440 + 14;
+      // Commit the round's swing now — mirrors ranked, where the field only
+      // moves after the bar battle resolves.
+      const newDiff = prev.possessionDiff + (prev.pendingPointDiff ?? 0);
+      const newPosition = positionFromDiff(newDiff);
+      const newZone = getZone(newPosition);
+      const committed = {
+        possessionDiff: newDiff,
+        playerPosition: newPosition,
+        zone: newZone.zone,
+        zoneColor: newZone.color,
+        zoneKey: getZoneKey(newPosition),
+        pendingPointDiff: null,
+      };
+      const shotPlan = getTrainingShotPlan({
+        script: TRAINING_SCRIPT[prev.questionIndex],
+        playerCorrect: isCorrect,
+        opponentCorrect: prev.opponentAnsweredCorrectly === true,
+        projectedPosition: newPosition,
+      });
+
+      if (shotPlan) {
+        // Like ranked, the logical possession/meter commits immediately, but
+        // the pitch itself stays frozen at the pre-round attack origin until
+        // the shot result sequence has finished.
+        const basePlayerX = 30 + (prev.playerPosition / 100) * 440;
+        const baseOpponentX = basePlayerX - 30;
+        const ballOriginX = shotPlan.isPlayerAttacker
+          ? basePlayerX + 14
+          : baseOpponentX - 14;
         const variant = prev.questionIndex % 5;
         return {
           ...prev,
+          ...committed,
           phase: "shot",
           shotMode: {
-            result: "pending" as const,
+            result: shotPlan.result,
             ballOriginX,
-            isPlayerAttacker: true,
+            isPlayerAttacker: shotPlan.isPlayerAttacker,
             variant,
             shotId: prev.questionIndex,
-          },
-          showPlayerSplash: false,
-          showOpponentSplash: false,
-        };
-      }
-
-      // Opponent shot triggers when player position <= 25
-      if (prev.playerPosition <= 25 && !isCorrect) {
-        const ballOriginX = 30 + ((100 - prev.playerPosition) / 100) * 440 + 14;
-        const variant = prev.questionIndex % 5;
-        return {
-          ...prev,
-          phase: "shot",
-          shotMode: {
-            result: "pending" as const,
-            ballOriginX,
-            isPlayerAttacker: false,
-            variant,
-            shotId: prev.questionIndex,
+            originPosition: prev.playerPosition,
           },
           showPlayerSplash: false,
           showOpponentSplash: false,
@@ -412,6 +425,7 @@ export function useTrainingMatch(isPaused: boolean, questionsOverride?: GameQues
       if (nextIdx === QUESTIONS_PER_HALF && prev.half === 1) {
         return {
           ...prev,
+          ...committed,
           stage: "halftime",
           phase: "halftime",
           showGoalCelebration: false,
@@ -424,7 +438,8 @@ export function useTrainingMatch(isPaused: boolean, questionsOverride?: GameQues
       if (nextIdx >= questionsRef.current.length) {
         return {
           ...prev,
-          stage: "results",
+          ...committed,
+          stage: "penalties",
           phase: "fulltime",
           showGoalCelebration: false,
           showPlayerSplash: false,
@@ -436,6 +451,7 @@ export function useTrainingMatch(isPaused: boolean, questionsOverride?: GameQues
       pendingNextQuestionRef.current = nextIdx;
       return {
         ...prev,
+        ...committed,
         phase: "transitioning",
         showPlayerSplash: false,
         showOpponentSplash: false,
@@ -443,57 +459,73 @@ export function useTrainingMatch(isPaused: boolean, questionsOverride?: GameQues
     });
   }, []);
 
-  // ─── Handle shot result ────────────────────────────────────
-  const resolveShot = useCallback((attackerCorrect: boolean, defenderCorrect: boolean) => {
+  // The result is already present when shot mode begins (ranked parity). These
+  // callbacks advance the VISUAL lifecycle without changing that result:
+  // ball flight → celebration/result → reset → tooltip → next question.
+  const showGoalCelebration = useCallback(() => {
     setState((prev) => {
-      const isPlayerAttacker = prev.shotMode?.isPlayerAttacker ?? true;
-
-      if (attackerCorrect && !defenderCorrect) {
-        // GOAL
-        return {
-          ...prev,
-          phase: "goal",
-          playerGoals: isPlayerAttacker ? prev.playerGoals + 1 : prev.playerGoals,
-          opponentGoals: isPlayerAttacker ? prev.opponentGoals : prev.opponentGoals + 1,
-          showGoalCelebration: true,
-          goalScorerIsPlayer: isPlayerAttacker,
-          shotMode: prev.shotMode ? { ...prev.shotMode, result: "goal" as const } : null,
-          // Reset to midfield after goal
-          possessionDiff: 0,
-          playerPosition: 50,
-          feedMessage: isPlayerAttacker ? "GOOOL!" : "Opponent scores!",
-          feedDirection: isPlayerAttacker ? "forward" as const : "backward" as const,
-        };
+      if (prev.phase !== "shot" || prev.shotMode?.result !== "goal" || prev.showGoalCelebration) {
+        return prev;
       }
-
-      if (defenderCorrect) {
-        // SAVED
-        return {
-          ...prev,
-          phase: "saved",
-          shotMode: prev.shotMode ? { ...prev.shotMode, result: "saved" as const } : null,
-          // Push back toward midfield after save
-          possessionDiff: isPlayerAttacker ? Math.max(prev.possessionDiff - 30, 0) : Math.min(prev.possessionDiff + 30, 0),
-          playerPosition: positionFromDiff(isPlayerAttacker ? Math.max(prev.possessionDiff - 30, 0) : Math.min(prev.possessionDiff + 30, 0)),
-          feedMessage: isPlayerAttacker ? "Saved!" : "Great save!",
-          feedDirection: isPlayerAttacker ? "backward" as const : "forward" as const,
-        };
-      }
-
-      // MISS
+      const isPlayerAttacker = prev.shotMode.isPlayerAttacker;
       return {
         ...prev,
-        phase: "saved",
-        shotMode: prev.shotMode ? { ...prev.shotMode, result: "miss" as const } : null,
-        possessionDiff: isPlayerAttacker ? Math.max(prev.possessionDiff - 30, 0) : Math.min(prev.possessionDiff + 30, 0),
-        playerPosition: positionFromDiff(isPlayerAttacker ? Math.max(prev.possessionDiff - 30, 0) : Math.min(prev.possessionDiff + 30, 0)),
-        feedMessage: "Off target!",
-        feedDirection: "neutral" as const,
+        playerGoals: isPlayerAttacker ? prev.playerGoals + 1 : prev.playerGoals,
+        opponentGoals: isPlayerAttacker ? prev.opponentGoals : prev.opponentGoals + 1,
+        goalScorerIsPlayer: isPlayerAttacker,
+        showGoalCelebration: true,
       };
     });
   }, []);
 
-  // Called after goal celebration or saved phase
+  const finishGoalCelebration = useCallback(() => {
+    setState((prev) => {
+      if (prev.phase !== "shot" || prev.shotMode?.result !== "goal" || !prev.showGoalCelebration) {
+        return prev;
+      }
+      const newPosition = positionFromDiff(0);
+      const newZone = getZone(newPosition);
+      return {
+        ...prev,
+        phase: "goal",
+        possessionDiff: 0,
+        playerPosition: newPosition,
+        zone: newZone.zone,
+        zoneColor: newZone.color,
+        zoneKey: getZoneKey(newPosition),
+        showGoalCelebration: false,
+        shotMode: null,
+      };
+    });
+  }, []);
+
+  const finishShotFlight = useCallback(() => {
+    setState((prev) => {
+      if (
+        prev.phase !== "shot"
+        || !prev.shotMode
+        || (prev.shotMode.result !== "saved" && prev.shotMode.result !== "miss")
+      ) {
+        return prev;
+      }
+      const newDiff = prev.shotMode.isPlayerAttacker
+        ? Math.max(prev.possessionDiff - 30, 0)
+        : Math.min(prev.possessionDiff + 30, 0);
+      const newPosition = positionFromDiff(newDiff);
+      const newZone = getZone(newPosition);
+      return {
+        ...prev,
+        phase: "saved",
+        possessionDiff: newDiff,
+        playerPosition: newPosition,
+        zone: newZone.zone,
+        zoneColor: newZone.color,
+        zoneKey: getZoneKey(newPosition),
+        shotMode: null,
+      };
+    });
+  }, []);
+
   const continueAfterPhase = useCallback(() => {
     setState((prev) => {
       const nextIdx = prev.questionIndex + 1;
@@ -511,7 +543,7 @@ export function useTrainingMatch(isPaused: boolean, questionsOverride?: GameQues
       if (nextIdx >= questionsRef.current.length) {
         return {
           ...prev,
-          stage: "results",
+          stage: "penalties",
           phase: "fulltime",
           showGoalCelebration: false,
           shotMode: null,
@@ -540,6 +572,16 @@ export function useTrainingMatch(isPaused: boolean, questionsOverride?: GameQues
     startQuestion(QUESTIONS_PER_HALF);
   }, [startQuestion]);
 
+  // Practice shootout finished — record the scoreboard and show results.
+  const finishPenalties = useCallback((playerGoals: number, opponentGoals: number) => {
+    setState((prev) => ({
+      ...prev,
+      stage: "results",
+      penaltyPlayerGoals: playerGoals,
+      penaltyOpponentGoals: opponentGoals,
+    }));
+  }, []);
+
   return {
     state,
     setStage,
@@ -547,10 +589,13 @@ export function useTrainingMatch(isPaused: boolean, questionsOverride?: GameQues
     handleAnswer,
     handleTimeout,
     advanceAfterReveal,
-    resolveShot,
+    showGoalCelebration,
+    finishGoalCelebration,
+    finishShotFlight,
     continueAfterPhase,
     dismissPlayerSplash,
     dismissOpponentSplash,
     startSecondHalf,
+    finishPenalties,
   };
 }

@@ -52,6 +52,9 @@ function deriveOpponentName(
   return opponent?.displayName ?? null;
 }
 
+/** sessionStorage key for the last auction match id (rejoin after reload); cleared with the identity. */
+export const LAST_AUCTION_MATCH_KEY = 'auction:last_match_id';
+
 export const useAuctionActiveMatchStore = create<AuctionActiveMatchState>((set) => ({
   activeAuctionMatch: null,
   setFromState: (payload, selfUserId) => {
