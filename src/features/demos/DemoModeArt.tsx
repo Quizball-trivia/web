@@ -101,6 +101,14 @@ export function DemoModeArt({ slug: rawSlug, className = "" }: { slug: string; c
   }
   // The Card Detective daily uses the FIFA collection's tile (owner, 2026-09-08).
   if (slug === "daily-cardDetective") return <FifaModeArt slug="fifa-card-detective" className={className} />;
+  // Ranked (the "match" engine) shows the hub hero's trophy on brand green.
+  if (slug === "match") {
+    return (
+      <div className={`relative flex items-center justify-center overflow-hidden bg-brand-green ${className}`} aria-hidden>
+        <Image src="/assets/brand/ranked-hands-trophy.svg" alt="" width={257} height={294} className="h-[88%] w-auto object-contain object-bottom translate-y-[8%]" />
+      </div>
+    );
+  }
   if (ILLUSTRATED_MODE_SLUGS.has(slug)) {
     return (
       <div className={`relative overflow-hidden bg-[#07111f] ${className}`} aria-hidden>
