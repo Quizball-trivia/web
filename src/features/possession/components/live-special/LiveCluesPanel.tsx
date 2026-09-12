@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { CheckCircle2, XCircle } from 'lucide-react';
 import { motion } from 'motion/react';
 import { getSocket } from '@/lib/realtime/socket-client';
@@ -54,7 +54,6 @@ export function LiveCluesPanel({
   opponentRound,
   cluesGuessAck,
   soloMode = false,
-  guidedAcceptedAnswers,
 }: {
   matchId: string;
   qIndex: number;
@@ -73,8 +72,6 @@ export function LiveCluesPanel({
   /** Single-player mode (promo capture): no opponent card, no give-up, no
    *  deadline auto-give-up — the round waits until the player answers. */
   soloMode?: boolean;
-  /** Tutorial-only: only these normalized guesses may be submitted; give-up is hidden. */
-  guidedAcceptedAnswers?: readonly string[];
 }) {
   const { t } = useLocale();
   const [guess, setGuess] = useState('');
@@ -98,13 +95,6 @@ export function LiveCluesPanel({
       ? resolveI18nText(answerAck.cluesDisplayAnswer, resolvedLocale)
     : null;
   const inputLocked = !showOptions || submitted || pendingGuess || roundResolved;
-  const guidedAnswerSet = useMemo(
-    () => guidedAcceptedAnswers
-      ? new Set(guidedAcceptedAnswers.map((answer) => answer.trim().toLocaleLowerCase()))
-      : null,
-    [guidedAcceptedAnswers],
-  );
-  const guidedGuessReady = !guidedAnswerSet || guidedAnswerSet.has(guess.trim().toLocaleLowerCase());
 
   // Scroll the answer input back into view each time a new clue is revealed,
   // so the user never has to manually scroll down to reach it.
@@ -180,7 +170,7 @@ export function LiveCluesPanel({
   // auto-submit. Cancelled if an ack/round result lands during the grace.
   const autoGiveUpQIndexRef = useRef<number | null>(null);
   useEffect(() => {
-    if (soloMode || guidedAnswerSet) return;
+    if (soloMode) return;
     if (autoGiveUpQIndexRef.current === qIndex) return;
     if (!showOptions || submitted || roundResolved || timeRemaining > 0) return;
     const timer = setTimeout(() => {
@@ -196,13 +186,11 @@ export function LiveCluesPanel({
       getSocket().emit('match:clues_answer', payload);
     }, AUTO_GIVE_UP_GRACE_MS);
     return () => clearTimeout(timer);
-  }, [guidedAnswerSet, matchId, qIndex, questionDurationSeconds, roundResolved, showOptions, soloMode, submitted, timeRemaining]);
+  }, [matchId, qIndex, questionDurationSeconds, roundResolved, showOptions, soloMode, submitted, timeRemaining]);
 
   const emitGuess = useCallback((options?: { giveUp?: boolean }) => {
     if (inputLocked) return;
-    if (options?.giveUp && guidedAnswerSet) return;
     if (!options?.giveUp && !guess.trim()) return;
-    if (!options?.giveUp && !guidedGuessReady) return;
     setPendingGuess(true);
     const payload: MatchCluesAnswerPayload = options?.giveUp
       ? {
@@ -220,7 +208,7 @@ export function LiveCluesPanel({
           timeMs: Math.max(0, Math.round((questionDurationSeconds - timeRemaining) * 1000)),
         };
     getSocket().emit('match:clues_answer', payload);
-  }, [guess, guidedAnswerSet, guidedGuessReady, inputLocked, matchId, qIndex, questionDurationSeconds, timeRemaining]);
+  }, [guess, inputLocked, matchId, qIndex, questionDurationSeconds, timeRemaining]);
 
   return (
     <div className="space-y-3">
@@ -410,7 +398,7 @@ export function LiveCluesPanel({
             <button
               type="button"
               onClick={() => emitGuess()}
-              disabled={!guess.trim() || inputLocked || !guidedGuessReady}
+              disabled={!guess.trim() || inputLocked}
               aria-label={t('possession.submitAnswer')}
               className="font-poppins h-14 rounded-[20px] bg-brand-green text-white outline-none transition-colors hover:bg-brand-green-deep disabled:cursor-not-allowed disabled:opacity-40"
               style={{
@@ -422,7 +410,7 @@ export function LiveCluesPanel({
             >
               {t('possession.submit')}
             </button>
-            {!soloMode && !guidedAnswerSet && (
+            {!soloMode && (
               <button
                 type="button"
                 onClick={() => emitGuess({ giveUp: true })}

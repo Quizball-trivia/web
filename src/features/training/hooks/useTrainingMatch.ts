@@ -1,6 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { TRAINING_QUESTIONS } from "../data/trainingQuestions";
-import { TRAINING_SPECIAL_INDEXES } from "../data/trainingSpecialRounds";
 import {
   TRAINING_SCRIPT,
   getTrainingRequiredAnswerIndex,
@@ -214,7 +213,7 @@ export function useTrainingMatch(isPaused: boolean, questionsOverride?: GameQues
       if (timerRef.current) clearInterval(timerRef.current);
       // Guided MCQs deliberately have no hidden timeout: the coach permits one
       // action and waits for it. Free-form rounds may use the normal clock.
-      if (script.requiredAnswer === "free" && !TRAINING_SPECIAL_INDEXES.has(qIndex)) {
+      if (script.requiredAnswer === "free") {
         timerRef.current = setInterval(() => {
           setState((prev) => {
             if (isPausedRef.current) return prev;
@@ -460,48 +459,6 @@ export function useTrainingMatch(isPaused: boolean, questionsOverride?: GameQues
     });
   }, []);
 
-  // ─── Resolve a special round (put-in-order / who-am-I) ────────
-  // The special panel scores itself and hands the outcome here; the bot's
-  // outcome comes from the same per-question script as MCQ rounds.
-  const resolveSpecialRound = useCallback((playerCorrect: boolean, panelPoints: number) => {
-    // The production panel still reports its live score, but training uses the
-    // manifest's fixed score so dragging/typing speed cannot alter the script.
-    void panelPoints;
-    setState((prev) => {
-      if (prev.selectedAnswer !== null || prev.phase !== "playing") return prev;
-
-      const script = TRAINING_SCRIPT[prev.questionIndex];
-      const botCorrect = playerCorrect
-        ? script.botCorrectIfPlayerCorrect
-        : script.botCorrectIfPlayerWrong;
-      const playerPoints = script.playerPoints;
-      const opponentPoints = script.opponentPoints;
-
-      if (timerRef.current) clearInterval(timerRef.current);
-
-      const playerQuestionResults = [...prev.playerQuestionResults];
-      playerQuestionResults[prev.questionIndex] = playerCorrect ? "correct" : "wrong";
-      const opponentQuestionResults = [...prev.opponentQuestionResults];
-      opponentQuestionResults[prev.questionIndex] = botCorrect ? "correct" : "wrong";
-
-      return {
-        ...prev,
-        selectedAnswer: -2, // resolved marker — this round had no MCQ grid
-        phase: "reveal",
-        pendingPointDiff: playerPoints - opponentPoints,
-        showPlayerSplash: playerPoints > 0,
-        showOpponentSplash: true,
-        playerSplashPoints: playerPoints,
-        opponentSplashPoints: opponentPoints,
-        opponentAnswered: true,
-        opponentAnsweredCorrectly: botCorrect,
-        opponentAnswer: null,
-        playerQuestionResults,
-        opponentQuestionResults,
-      };
-    });
-  }, []);
-
   // The result is already present when shot mode begins (ranked parity). These
   // callbacks advance the VISUAL lifecycle without changing that result:
   // ball flight → celebration/result → reset → tooltip → next question.
@@ -631,7 +588,6 @@ export function useTrainingMatch(isPaused: boolean, questionsOverride?: GameQues
     startQuestion,
     handleAnswer,
     handleTimeout,
-    resolveSpecialRound,
     advanceAfterReveal,
     showGoalCelebration,
     finishGoalCelebration,

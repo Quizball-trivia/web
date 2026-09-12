@@ -1718,10 +1718,6 @@
     "skipTraining": "Skip Training",
     "gotIt": "GOT IT",
     "resultsMessage": "Great job — you know how ranked matches work now. Time to compete for real!",
-    "tipPutInOrderTitle": "NEW: PUT IN ORDER",
-    "tipPutInOrderBody": "A ranked question type! Drag the cards into the right order, then press submit. Every correct position earns points — nail all of them for the full 100.",
-    "tipWhoAmITitle": "NEW: WHO AM I?",
-    "tipWhoAmIBody": "Clues appear one by one — type the player's name as soon as you know it. The earlier you answer, the more points you earn; a wrong guess reveals the next clue.",
     "resultVictory": "VICTORY",
     "resultDraw": "DRAW",
     "resultDefeat": "DEFEAT",
@@ -1729,8 +1725,7 @@
     "tipGoalDemoBody": "Here's what a perfect answer looks like: 100 points for you, 0 for your opponent. Watch — your score flies in, the bars charge all the way, the meter hits 100 and you shoot!",
     "tapGuidedAnswer": "Tap “{answer}” to continue",
     "tapGuidedWrongAnswer": "Tap “{answer}” — this scripted mistake shows the opponent attack",
-    "tapGuidedCategory": "Select “{category}” to continue",
-    "typeGuidedAnswer": "Type “{answer}” to continue"
+    "tapGuidedCategory": "Select “{category}” to continue"
   },
   "showdown": {
     "kickoff": "Kickoff",

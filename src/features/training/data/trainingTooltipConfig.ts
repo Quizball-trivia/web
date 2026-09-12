@@ -88,24 +88,6 @@ export const TOOLTIP_DEFINITIONS: TooltipDefinition[] = [
     position: "bottom",
   },
 
-  // ── Special question types ────────────────────────────────
-  {
-    id: "put-in-order",
-    highlight: "[data-question-panel], [data-special-question-panel]",
-    trigger: { type: "event", event: "putInOrder" },
-    titleKey: "training.tipPutInOrderTitle",
-    messageKey: "training.tipPutInOrderBody",
-    position: "top",
-  },
-  {
-    id: "who-am-i",
-    highlight: "[data-question-panel], [data-special-question-panel]",
-    trigger: { type: "event", event: "clues" },
-    titleKey: "training.tipWhoAmITitle",
-    messageKey: "training.tipWhoAmIBody",
-    position: "top",
-  },
-
   // ── Zone triggers ─────────────────────────────────────────
   {
     id: "att-zone",

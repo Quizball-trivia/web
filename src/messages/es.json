@@ -1718,10 +1718,6 @@
     "skipTraining": "Saltar entrenamiento",
     "gotIt": "ENTENDIDO",
     "resultsMessage": "¡Buen trabajo! Ya sabes cómo funcionan las partidas ranked. ¡Hora de competir de verdad!",
-    "tipPutInOrderTitle": "NUEVO: PON EN ORDEN",
-    "tipPutInOrderBody": "¡Un tipo de pregunta de ranked! Arrastra las tarjetas al orden correcto y pulsa enviar. Cada posición correcta da puntos: acierta todas para los 100.",
-    "tipWhoAmITitle": "NUEVO: ¿QUIÉN SOY?",
-    "tipWhoAmIBody": "Las pistas aparecen una a una: escribe el nombre del jugador en cuanto lo sepas. Cuanto antes respondas, más puntos; un fallo revela la siguiente pista.",
     "resultVictory": "VICTORIA",
     "resultDraw": "EMPATE",
     "resultDefeat": "DERROTA",
@@ -1729,8 +1725,7 @@
     "tipGoalDemoBody": "Así se ve una respuesta perfecta: 100 puntos para ti, 0 para tu rival. Mira: tu puntuación vuela, las barras cargan al máximo, el medidor llega a 100 ¡y disparas!",
     "tapGuidedAnswer": "Toca «{answer}» para continuar",
     "tapGuidedWrongAnswer": "Toca «{answer}»: este error guiado muestra el ataque rival",
-    "tapGuidedCategory": "Selecciona «{category}» para continuar",
-    "typeGuidedAnswer": "Escribe «{answer}» para continuar"
+    "tapGuidedCategory": "Selecciona «{category}» para continuar"
   },
   "showdown": {
     "kickoff": "Saque inicial",

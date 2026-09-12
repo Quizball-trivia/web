@@ -58,7 +58,7 @@ export const TRAINING_SCRIPT: TrainingScriptEntry[] = [
   { requiredAnswer: "correct", botCorrectIfPlayerCorrect: true, botCorrectIfPlayerWrong: false, botDelayMs: 6000, botTimeSec: 7, playerPoints: 60, opponentPoints: 20 },
   // Q4: the explicit 100–50 lesson. From 70% this reaches 95%, NOT a shot.
   { requiredAnswer: "correct", botCorrectIfPlayerCorrect: true, botCorrectIfPlayerWrong: false, botDelayMs: 3500, botTimeSec: 5, playerPoints: 100, opponentPoints: 50 },
-  // Q5: put-in-order. CoachBot pulls the field back from 95% to 80%.
+  // Q5: CoachBot pulls the field back from 95% to 80%.
   { requiredAnswer: "correct", botCorrectIfPlayerCorrect: true, botCorrectIfPlayerWrong: false, botDelayMs: 5500, botTimeSec: 6, playerPoints: 60, opponentPoints: 90 },
   // Q6: both correct; CoachBot is faster. Half ends at 70%.
   { requiredAnswer: "correct", botCorrectIfPlayerCorrect: true, botCorrectIfPlayerWrong: true, botDelayMs: 4000, botTimeSec: 4, playerPoints: 50, opponentPoints: 70 },
@@ -68,7 +68,7 @@ export const TRAINING_SCRIPT: TrainingScriptEntry[] = [
   { requiredAnswer: "correct", botCorrectIfPlayerCorrect: true, botCorrectIfPlayerWrong: false, botDelayMs: 5000, botTimeSec: 6, playerPoints: 40, opponentPoints: 80, startPossessionDiff: 0 },
   // Q8: equal exchange holds the field.
   { requiredAnswer: "correct", botCorrectIfPlayerCorrect: true, botCorrectIfPlayerWrong: false, botDelayMs: 3000, botTimeSec: 3, playerPoints: 50, opponentPoints: 50 },
-  // Q9: who-am-I; CoachBot pushes to 20%.
+  // Q9: CoachBot pushes to 20%.
   { requiredAnswer: "correct", botCorrectIfPlayerCorrect: true, botCorrectIfPlayerWrong: false, botDelayMs: 6000, botTimeSec: 7, playerPoints: 60, opponentPoints: 80 },
   // Q10: player recovers to 30%.
   { requiredAnswer: "correct", botCorrectIfPlayerCorrect: true, botCorrectIfPlayerWrong: false, botDelayMs: 5000, botTimeSec: 6, playerPoints: 60, opponentPoints: 40 },

@@ -5,7 +5,6 @@ import {
   TRAINING_SCRIPT,
   getTrainingRequiredAnswerIndex,
 } from "../../data/trainingScript";
-import { TRAINING_SPECIAL_INDEXES } from "../../data/trainingSpecialRounds";
 import { useTrainingMatch } from "../useTrainingMatch";
 
 describe("useTrainingMatch scripted lesson", () => {
@@ -75,13 +74,9 @@ describe("useTrainingMatch scripted lesson", () => {
 
     const answerAndAdvance = () => {
       const qIndex = result.current.state.questionIndex;
-      if (TRAINING_SPECIAL_INDEXES.has(qIndex)) {
-        act(() => result.current.resolveSpecialRound(true, 100));
-      } else {
-        const question = result.current.state.question!;
-        const required = getTrainingRequiredAnswerIndex(TRAINING_SCRIPT[qIndex], question)!;
-        act(() => result.current.handleAnswer(required));
-      }
+      const question = result.current.state.question!;
+      const required = getTrainingRequiredAnswerIndex(TRAINING_SCRIPT[qIndex], question)!;
+      act(() => result.current.handleAnswer(required));
       act(() => result.current.advanceAfterReveal());
     };
 
@@ -103,14 +98,14 @@ describe("useTrainingMatch scripted lesson", () => {
     expect(result.current.state.playerPosition).toBe(95);
     expect(result.current.state.shotMode).toBeNull();
 
-    answerAndAdvance(); // Q5 special → Q6
+    answerAndAdvance(); // Q5 → Q6
     answerAndAdvance(); // Q6 → halftime
     expect(result.current.state.stage).toBe("halftime");
     act(() => result.current.startSecondHalf());
 
     answerAndAdvance(); // Q7
     answerAndAdvance(); // Q8
-    answerAndAdvance(); // Q9 special
+    answerAndAdvance(); // Q9
     answerAndAdvance(); // Q10
     expect(result.current.state.questionIndex).toBe(10);
     expect(result.current.state.playerPosition).toBe(30);

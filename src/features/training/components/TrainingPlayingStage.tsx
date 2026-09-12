@@ -30,8 +30,6 @@ import {
   getTrainingShotPlan,
 } from "../data/trainingScript";
 import { localizeTrainingQuestion } from "../data/trainingQuestions";
-import { getTrainingSpecialRound } from "../data/trainingSpecialRounds";
-import { TrainingSpecialRoundPanel } from "./TrainingSpecialRoundPanel";
 import { BOT_AVATAR, BOT_NAME, BOT_RANK_POINTS } from "../constants";
 import {
   TRAINING_MATCH_ID,
@@ -99,21 +97,15 @@ export function TrainingPlayingStage() {
   const hasResolvedAnswer =
     isRevealish && state.selectedAnswer !== null && state.question !== null && !payloadsHeld;
 
-  // Special ranked question types (put-in-order / who-am-I) at scripted
-  // indexes — only used by the explicit offline demo pool. Live training uses
-  // the selected categories' real MCQs at every question index.
-  const specialRound = useMemo(
-    () => usingCategoryQuestions ? null : getTrainingSpecialRound(state.questionIndex, locale),
-    [state.questionIndex, locale, usingCategoryQuestions],
-  );
-  const questionKind = specialRound?.kind ?? "multipleChoice";
+  // Season 3: ranked is MCQ-only, so every training round is an MCQ.
+  const questionKind = "multipleChoice" as const;
   const playerAnsweredCorrectly = state.playerQuestionResults[state.questionIndex] === "correct";
   const activeScript = TRAINING_SCRIPT[state.questionIndex];
   const localizedQuestion = useMemo(
     () => state.question ? localizeTrainingQuestion(state.question, locale) : null,
     [locale, state.question],
   );
-  const requiredAnswerIndex = state.question && !specialRound
+  const requiredAnswerIndex = state.question
     ? getTrainingRequiredAnswerIndex(activeScript, state.question)
     : null;
   const projectedDiff = state.possessionDiff + (state.pendingPointDiff ?? 0);
@@ -262,13 +254,6 @@ export function TrainingPlayingStage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Introduce each special question type the first time it appears
-  useEffect(() => {
-    if (specialRound && state.phase === "playing") {
-      tooltips.tryShowEventTooltip(specialRound.kind);
-    }
-  }, [specialRound, state.phase, tooltips]);
-
   // Trigger zone tooltip
   useEffect(() => {
     if (prevZoneKey.current === state.zoneKey) return;
@@ -386,7 +371,7 @@ export function TrainingPlayingStage() {
         playerAvatarCustomization: avatarCustomization,
         playerRankPoints: player.rankPoints ?? 0,
         opponentRankPoints: BOT_RANK_POINTS,
-        timeRemaining: state.phase === "playing" && state.selectedAnswer === null && !specialRound ? state.timeRemaining : null,
+        timeRemaining: state.phase === "playing" && state.selectedAnswer === null ? state.timeRemaining : null,
         half: state.half,
         questionInHalf: state.questionInHalf,
         zone: state.zone,
@@ -429,7 +414,7 @@ export function TrainingPlayingStage() {
     state.half, state.questionInHalf, state.zone, state.zoneColor, state.opponentAnswered,
     state.opponentAnsweredCorrectly, state.playerPosition, state.shotMode, state.showGoalCelebration,
     state.goalScorerIsPlayer, playerName, playerAvatar, avatarCustomization, player.rankPoints,
-    onSkip, isShotVisualPhase, attackerIsMe, mirrored, barBattle, specialRound, visualPlayerPosition,
+    onSkip, isShotVisualPhase, attackerIsMe, mirrored, barBattle, visualPlayerPosition,
   ]);
 
   return (
@@ -437,27 +422,7 @@ export function TrainingPlayingStage() {
       <div className="w-full max-w-lg flex flex-col lg:max-w-7xl lg:flex-row lg:h-[calc(100dvh-2rem)] lg:items-stretch lg:gap-4 lg:px-4">
         <PossessionMatchViewport model={viewportModel}>
           <div className="relative">
-            {specialRound ? (
-              <>
-                {specialRound.kind === "clues" && state.phase === "playing" && !tooltips.isPaused && (
-                  <div className="mx-3 mb-1.5 rounded-xl border border-brand-yellow/50 bg-brand-blue/90 px-3 py-2 text-center font-poppins text-xs font-bold text-white shadow-lg sm:mx-4 sm:text-sm">
-                    {t("training.typeGuidedAnswer", { answer: specialRound.displayAnswer })}
-                  </div>
-                )}
-                <TrainingSpecialRoundPanel
-                  key={state.questionIndex}
-                  round={specialRound}
-                  qIndex={state.questionIndex}
-                  totalQuestions={TOTAL_QUESTIONS}
-                  isPaused={tooltips.isPaused}
-                  botResolved={state.opponentAnsweredCorrectly !== null}
-                  botCorrect={state.opponentAnsweredCorrectly === true}
-                  botPoints={state.opponentSplashPoints}
-                  onResolve={match.resolveSpecialRound}
-                />
-              </>
-            ) : (
-              <>
+            <>
                 {requiredAnswerIndex !== null
                   && localizedQuestion
                   && state.phase === "playing"
@@ -493,8 +458,7 @@ export function TrainingPlayingStage() {
                   onPlayerSplashComplete={match.dismissPlayerSplash}
                   onOpponentSplashComplete={match.dismissOpponentSplash}
                 />
-              </>
-            )}
+            </>
           </div>
         </PossessionMatchViewport>
       </div>
