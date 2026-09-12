@@ -1323,7 +1323,7 @@
     "errorCapabilityRequired": "Bunun için bir hesap gerekli. Devam etmek için kaydol.",
     "guestBadge": "Misafir",
     "playWithFriend": "Bir arkadaşla oyna",
-    "guestKeepResults": "Sonuçlarını saklamak ve dereceli oynamak için kaydol"
+    "guestKeepResults": "Sonraki sonuçlarını kaydetmek ve dereceli oynamak için kaydol"
   },
   "possession": {
     "cluesGuessedAtClue": "ipucu {index}",

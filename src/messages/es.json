@@ -1323,7 +1323,7 @@
     "errorCapabilityRequired": "Para eso hace falta una cuenta. Regístrate para continuar.",
     "guestBadge": "Invitado",
     "playWithFriend": "Jugar con un amigo",
-    "guestKeepResults": "Regístrate para guardar tus resultados y jugar clasificatorias"
+    "guestKeepResults": "Regístrate para guardar tus próximos resultados y jugar clasificatorias"
   },
   "possession": {
     "cluesGuessedAtClue": "pista {index}",

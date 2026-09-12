@@ -11,6 +11,8 @@ import { registerSocketHandlers } from './socket-handlers';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { useRankedMatchmakingStore } from '@/stores/rankedMatchmaking.store';
 import { useFootballGridStore } from '@/stores/footballGrid.store';
+import { LAST_AUCTION_MATCH_KEY, useAuctionActiveMatchStore } from '@/stores/auctionActiveMatch.store';
+import { useGameSessionStore } from '@/stores/gameSession.store';
 import { useQueryClient } from '@tanstack/react-query';
 import { logger } from '@/utils/logger';
 
@@ -20,6 +22,25 @@ interface RealtimeConnectionOptions {
 }
 
 let connectedRealtimeUserId: string | null = null;
+
+/**
+ * Everything scoped to the connected identity. A principal change (guest →
+ * member sign-in, sign-out, account switch) must not carry the previous
+ * player's room, match, auction rejoin key or game config onto the new one.
+ */
+function clearIdentityScopedState(): void {
+  const realtimeStore = useRealtimeMatchStore.getState();
+  realtimeStore.reset();
+  useRankedMatchmakingStore.getState().clearRankedMatchmaking();
+  useFootballGridStore.getState().clear();
+  useAuctionActiveMatchStore.getState().clear();
+  useGameSessionStore.getState().reset();
+  try {
+    window.sessionStorage.removeItem(LAST_AUCTION_MATCH_KEY);
+  } catch {
+    // storage unavailable (private mode): nothing to clear
+  }
+}
 
 export function useRealtimeConnection({ enabled, selfUserId }: RealtimeConnectionOptions) {
   const queryClient = useQueryClient();
@@ -32,10 +53,8 @@ export function useRealtimeConnection({ enabled, selfUserId }: RealtimeConnectio
           previousUserId: connectedRealtimeUserId ?? realtimeStore.selfUserId,
         });
         connectedRealtimeUserId = null;
-        realtimeStore.reset();
+        clearIdentityScopedState();
         realtimeStore.setSelfUserId(null);
-        useRankedMatchmakingStore.getState().clearRankedMatchmaking();
-        useFootballGridStore.getState().clear();
         disconnectSocket();
         stopConnectionQualityMonitor();
       }
@@ -53,9 +72,8 @@ export function useRealtimeConnection({ enabled, selfUserId }: RealtimeConnectio
         previousUserId: connectedRealtimeUserId ?? storeSelfUserId,
         nextUserId: selfUserId,
       });
-      realtimeStore.reset();
-      useRankedMatchmakingStore.getState().clearRankedMatchmaking();
-      useFootballGridStore.getState().clear();
+      clearIdentityScopedState();
+      queryClient.clear();
       realtimeStore.setSelfUserId(selfUserId);
       connectedRealtimeUserId = selfUserId;
       reconnectSocket();

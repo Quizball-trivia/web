@@ -137,3 +137,59 @@ the chaos harness (`scripts/chaos/lobby-lifecycle.ts`) learns guest credentials;
 **Effort (re-estimated):** PR0 3d, PR1 3d, PR2 6d, PR3 5d, PR4 6d, PR5 3d, PR6 4d = 30 working days ≈ 6 weeks elapsed with Codex +
 CodeRabbit on each PR. Dropping `ranked_sim` saves little (auction/grid carry the hard parts). A smaller first release is
 **grid-only rooms** (no auction award persistence, no coin-farming rule): PR0–PR1 + grid subset of PR2–PR5 ≈ 4 weeks.
+
+## As built (2026-09-12) — local commits, not pushed
+Backend `feat/guest-lobbies` (worktree grid-bo3-backend, off origin/staging): PR0+PR1 dc2585e6, PR2 8aee419f, PR3 e61f6042.
+Web `feat/training-mode` (worktree training-mode-web): PR4+PR5 e167257a (on top of the auction/grid training commits).
+Verified locally with both flags on: unit/integration suites (backend 355 files green bar the 8 pre-existing env failures; web 197
+files green), plus a socket-level smoke against the running backend (`scratchpad/guest-lobby-smoke.mjs`): 4 guests provisioned,
+ranked create → CAPABILITY_REQUIRED, guest room opens in Tic Tac Toe, Friendly match refused / Auction allowed, 4th guest refused
+(LOBBY_GUEST_LIMIT), auction/grid/ranked matchmaking refused. Not yet built from the plan: chaos-harness guest credentials, the
+member coin-farming cap (friendly auction still pays members per match — flagged for the owner), PR6 rollout itself.
+
+## Implementation review round (2026-09-12) — Codex on the built diffs, 25 findings, each verified in code
+
+**Fixed (backend):**
+- Global ticket cron paid guests (and tombstones): new migration `20260912130000_ticket_refill_excludes_guests.sql` adds
+  `is_guest = false` to `refill_tickets_global()` and zeroes any guest already topped up; integration test runs the real function.
+- Grid result replay could defer the member's results forever: guests now get a durable `football_grid_reward_eligibility`
+  row (`ineligible`/`guest`), so settled reads and lost-ACK / BO3 replays carry every human.
+- Banned/deleted guests could re-authenticate: `getOrCreateGuest` runs `assertUserAccountActive` on every return path.
+- Socket admission trusted `X-Forwarded-For`: `socketIpBucket` now mirrors `http/client-ip.ts` (local = transport address,
+  deployed = `X-Real-IP` only, mapped IPv4 normalized); exported + unit-tested.
+- Achievement isolation failed open on a lookup error: unresolved players are skipped (fail closed).
+- Sweeper deleted the identity before tombstoning: `guestRepo.retireSession` does tombstone + identity revoke + session delete
+  in ONE transaction; sweep drains in 500-row batches (max 200) and stops on an all-failed batch. Integration-tested.
+- Dev `dev:quick_match` admitted guests to ranked; ranked settlement classified guests as settle-eligible: dev handler refuses
+  guests, settlement uses `isProgressionEligible` (no guest profile, member rated against the anchor RP). Unit-tested.
+- `completeMatch` did a pooled `usersRepo.getByIds` inside its transaction (pool-exhaustion risk): now through `tx`.
+- Drain semantics were incoherent: provisioning off now also refuses NEW guest rooms and NEW guest memberships (rejoin allowed);
+  reconnect off refuses every guest token on both the HTTP principal and the socket (documented in `config.ts`). Unit-tested.
+- `/guest/principal` skipped the shared Redis budget and persisted no country: wired `allowGuestOperation(ip, 'principal')`
+  (429) and detects the country once at provisioning.
+- Play Again created a `friendly_possession` rematch room for guests: guests get `CAPABILITY_REQUIRED` on `match:play_again`.
+- Ready/autostart used the pre-lock lobby read; `startDraft` re-checks only status: ready now re-reads the lobby under the lock
+  (status + current mode) and `startDraft({expectWaiting})` re-validates the guest invariant under its own lock (`guest_rules`).
+- Guests were publicly resolvable: `getPublicProfile`, `assertPublicUserVisible` and nickname resolution exclude guests.
+- Mixed-room warmup dropped the member's personal best too: personal rows for members only, pair row only for two members.
+
+**Fixed (web):**
+- Principal switches leaked state: `useRealtimeConnection` clears game session, auction active match, the auction rejoin
+  sessionStorage key and the query cache on identity change/sign-out (`clearIdentityScopedState`).
+- Guest acquisition raced auth: only a POSITIVELY anonymous visitor resolves a guest, and an in-flight resolution is discarded
+  if the visitor signed in meanwhile.
+- Direct links issued lobby commands before the principal existed: the create/join effect waits for `principal.kind !== 'none'`;
+  a refused guest gets the sign-up prompt once.
+- `/auction` auto-searched for guests: matchmaking autostart is member-only; a guest with no room match (and no rejoin key)
+  is sent back to `/play/friend`.
+- Copy promised carry-over ("keep your results"): now "save your next results" in en/ka/es/tr; the CTA also renders on the
+  ranked-sim results screen; a non-host guest can tap a locked mode to reach sign-up.
+
+**Deferred (documented, not blocking a flags-off merge):**
+- Member coin-farming cap for friendly auction and transactional per-recipient auction award outcomes (pre-existing partial
+  settlement defect) — owner decision on the cap; separate PR.
+- `/game` reload cannot bootstrap realtime before the idle redirect — pre-existing member weakness, separate fix.
+- Single connection owner / guest surface policy (architecture), per-principal concurrent-socket cap, command-family budgets,
+  Redis-outage policy for the shared limiter.
+- Session activity touch from live socket traffic (today: every handshake touches; a 30-day-long single connection is the
+  only gap), analytics `access_type`/guest analytics id, admin adjustment target checks for guest rows.

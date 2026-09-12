@@ -1371,7 +1371,7 @@
     "errorCapabilityRequired": "ამისთვის ანგარიშია საჭირო. დარეგისტრირდი გასაგრძელებლად.",
     "guestBadge": "სტუმარი",
     "playWithFriend": "ითამაშე მეგობართან",
-    "guestKeepResults": "დარეგისტრირდი, რომ შედეგები შეინახო და რეიტინგული ითამაშო"
+    "guestKeepResults": "დარეგისტრირდი, რომ შემდეგი შედეგები შეინახო და რეიტინგული ითამაშო"
   },
   "possession": {
     "cluesGuessedAtClue": "მინიშნება {index}",

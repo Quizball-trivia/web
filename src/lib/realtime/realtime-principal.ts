@@ -67,7 +67,9 @@ export async function ensureGuestPrincipal(locale: string): Promise<GuestPrincip
   const store = useGuestPrincipalStore.getState();
   if (!GUEST_LOBBIES_ENABLED) return null;
   if (store.guest) return store.guest;
-  if (useAuthStore.getState().status === "authenticated") return null;
+  // Only a POSITIVELY anonymous visitor becomes a guest; while auth is still
+  // loading the caller waits (useEnsureGuestPrincipal re-runs on status change).
+  if (useAuthStore.getState().status !== "anonymous") return null;
   if (inflight) return inflight;
   store.setStatus("resolving");
   inflight = (async () => {
@@ -78,6 +80,13 @@ export async function ensureGuestPrincipal(locale: string): Promise<GuestPrincip
         // The stored token was rejected (expired / retired): mint once more.
         token = await getGuestToken(locale);
         guest = await resolveOnce(locale, token);
+      }
+      // The visitor signed in while this was in flight: never publish a guest
+      // over a member session (useRealtimePrincipal would drop it, but the
+      // token must not reach the socket manager in between).
+      if (useAuthStore.getState().status !== "anonymous") {
+        useGuestPrincipalStore.getState().setStatus("idle");
+        return null;
       }
       if (!guest) {
         useGuestPrincipalStore.getState().setStatus("refused");

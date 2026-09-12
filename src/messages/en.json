@@ -1323,7 +1323,7 @@
     "errorCapabilityRequired": "An account is needed for that. Sign up to continue.",
     "guestBadge": "Guest",
     "playWithFriend": "Play with a friend",
-    "guestKeepResults": "Sign up to keep your results and play ranked"
+    "guestKeepResults": "Sign up to save your next results and play ranked"
   },
   "possession": {
     "cluesGuessedAtClue": "clue {index}",

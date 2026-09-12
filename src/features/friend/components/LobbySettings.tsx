@@ -575,7 +575,8 @@ export function LobbySettings({
                       }
                       handleModeChange(value);
                     }}
-                    disabled={!canEdit || overCapacity}
+                    // A guest may always tap a locked mode: the tap opens sign-up, never a settings change.
+                    disabled={guestLocked && principal.kind === 'guest' ? overCapacity : !canEdit || overCapacity}
                     aria-pressed={mode === value}
                     data-guest-locked={guestLocked || undefined}
                     title={overCapacity ? t("friend.errorModeCapacity") : guestLocked ? t("friend.errorModeRequiresAccount") : undefined}

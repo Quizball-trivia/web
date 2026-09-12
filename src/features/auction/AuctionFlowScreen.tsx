@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useRouter } from 'next/navigation';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useAuthStore } from '@/stores/auth.store';
-import { useAuctionActiveMatchStore } from '@/stores/auctionActiveMatch.store';
+import { LAST_AUCTION_MATCH_KEY, useAuctionActiveMatchStore } from '@/stores/auctionActiveMatch.store';
 import { QuitMatchModal } from '@/components/match/QuitMatchModal';
 import { useRealtimeConnectionHealth } from '@/lib/realtime/connection-health';
 import { poppins, AUCTION_QUIT_MODAL_THEME, AUCTION_PURPLE } from './constants/auction.constants';
@@ -207,6 +207,18 @@ function AuctionRealtimeFlowScreen({ username, avatarSeed, avatarCustomization }
     authStatus !== 'loading' &&
     (authStatus !== 'anonymous' || !GUEST_LOBBIES_ENABLED || guestStatus === 'refused');
   const realtimeEnabled = principal.kind !== 'none';
+  // A guest with no match to attach to (direct /auction visit, stale link) has
+  // nothing to search for: back to the friend hub instead of an error.
+  useEffect(() => {
+    if (principal.kind !== 'guest' || attachMatchId) return;
+    let storedMatchId: string | null = null;
+    try {
+      storedMatchId = window.sessionStorage.getItem(LAST_AUCTION_MATCH_KEY);
+    } catch {
+      storedMatchId = null;
+    }
+    if (!storedMatchId) router.replace('/play/friend');
+  }, [attachMatchId, principal.kind, router]);
   const {
     state,
     actions,
@@ -228,7 +240,8 @@ function AuctionRealtimeFlowScreen({ username, avatarSeed, avatarCustomization }
     restoringFromReload,
   } = useRealtimeAuctionMatch({
     enabled: realtimeEnabled,
-    autoStart: auctionStarted,
+    // Matchmaking is member-only; a guest only attaches to its room's match.
+    autoStart: auctionStarted && principal.kind !== 'guest',
     matchmakingMode: 'search',
     attachMatchId,
     selfUserId: principal.userId,
