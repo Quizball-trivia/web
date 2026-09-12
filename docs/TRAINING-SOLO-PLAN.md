@@ -122,3 +122,11 @@ Who Am I and Put in Order moved to the daily challenges; from Season 3 ranked/fr
 The tutorial follows: six guided MCQs (indexes 2 and 3 become MCQs, `TRAINING_SPECIAL_ROUND_BUILDERS` emptied, special-panel
 driver and their tooltips removed), same possession table (Q4 wrong → CoachBot goal → 1-1 → penalties). Live pool needs 6 distinct
 MCQs from the surviving category; offline pool unchanged.
+
+## v4 — owner decision 2026-09-12: keep the FULL scripted match
+The one-half cut (v2/v3) is dropped. The tutorial stays 12 guided MCQs in two halves with the scripted ban phases, halftime
+(mirrored second half, as ranked) and the 4-kick penalty script. Special rounds are already removed (MCQ-only, Season 3).
+Still to do from v2: offline pool fallback + stall fix (4 s / query error), guests always offline, Q6-style "clock actually
+running" round, guest completion key separate from the member map, offer gate waits for the profile, results/accuracy honest,
+tooltip remap after the special-round removal, PenaltyHUD/goal.webp/HalftimeScreen hygiene, tests, analytics events,
+Ranked public page with this engine.
