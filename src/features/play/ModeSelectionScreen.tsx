@@ -13,7 +13,6 @@ import { RankedModeModal } from '@/features/play/RankedModeModal';
 import { FootballGridModeModal } from '@/features/football-grid/components/FootballGridModeModal';
 import { HomeRecentMatches } from '@/components/shared/HomeRecentMatches';
 import { AllGamesGrid } from '@/features/play/AllGamesGrid';
-import { Dumbbell } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useTierLabel } from '@/hooks/useTierLabel';
 import { getI18nText } from '@/lib/utils/i18n';
@@ -469,19 +468,6 @@ export function ModeSelectionScreen({
                 <div className="flex h-[56px] w-[180px] items-center justify-center rounded-[8px] bg-surface-page text-xl uppercase tracking-wide text-white" style={poppins}>
                   {t('common.play')}
                 </div>
-                {/* Guest demo — ranked 1v1 vs AI; stopPropagation so the
-                    hero's own onClick (auth prompt) doesn't swallow the tap. */}
-                {isGuest && (
-                  <button
-                    type="button"
-                    onClick={(event) => { event.stopPropagation(); startRankedTraining(); }}
-                    className="mt-2 flex h-[56px] w-[180px] items-center justify-center gap-2 rounded-[8px] bg-brand-yellow text-lg uppercase tracking-wide text-black whitespace-nowrap transition-colors hover:bg-brand-yellow-deep"
-                    style={poppins}
-                  >
-                    <Dumbbell className="size-5 shrink-0" strokeWidth={2.5} />
-                    {t('play.guestDemoCta')}
-                  </button>
-                )}
               </div>
             </div>
 
@@ -602,18 +588,6 @@ export function ModeSelectionScreen({
                 <div className="mb-1 flex h-[44px] w-[120px] items-center justify-center rounded-[8px] bg-surface-page text-[15px] uppercase tracking-wide text-white" style={poppins}>
                   {t('common.play')}
                 </div>
-                {/* Guest demo — ranked 1v1 vs AI (see desktop note). */}
-                {isGuest && (
-                  <button
-                    type="button"
-                    onClick={(event) => { event.stopPropagation(); startRankedTraining(); }}
-                    className="flex h-[44px] w-[120px] items-center justify-center gap-1 rounded-[8px] bg-brand-yellow text-[13px] uppercase tracking-wide text-black whitespace-nowrap transition-colors hover:bg-brand-yellow-deep"
-                    style={poppins}
-                  >
-                    <Dumbbell className="size-4 shrink-0" strokeWidth={2.5} />
-                    {t('play.guestDemoCta')}
-                  </button>
-                )}
               </div>
             </div>
           </div>
