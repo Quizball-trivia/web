@@ -193,3 +193,15 @@ member coin-farming cap (friendly auction still pays members per match — flagg
   Redis-outage policy for the shared limiter.
 - Session activity touch from live socket traffic (today: every handshake touches; a 30-day-long single connection is the
   only gap), analytics `access_type`/guest analytics id, admin adjustment target checks for guest rows.
+
+### Round 2 (Codex re-review of the fix delta, 2026-09-12)
+Verdicts: 9 FIXED, 12 PARTIAL, 4 DEFERRED-ACCEPTABLE, 0 NOT FIXED. Two new defects, both fixed:
+- **Member regression:** the identity reset also ran when a consumer merely disabled realtime (a member starting solo or
+  training), wiping the game session → `/play` redirect. Now only realtime state clears on disable; identity-scoped state clears
+  when a DIFFERENT identity connects (tracked across disconnects). Regression test `useRealtimeConnection.identity.test.tsx`.
+- **Stale guest auction key:** the friend-hub redirect is derived from the hook's recovery state (`restoringFromReload`,
+  `attachUnavailable`), so a failed rejoin no longer strands a guest on the search screen.
+Remaining PARTIALs are deliberate or deferred: readiness still writes before the lobby lock (a busy lock must not drop a ready
+tap; the draft-start re-validation is the guard), the guest token stays on the device across logout (device identity, member
+session always wins), no-contest/ticket-refund writers and `getUserRank` still trust their callers (guests cannot reach ranked
+matches now that the dev entry is closed), previously settled grid matches with guests do not exist (flags were never on).

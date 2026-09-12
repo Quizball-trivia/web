@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useRouter } from 'next/navigation';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useAuthStore } from '@/stores/auth.store';
-import { LAST_AUCTION_MATCH_KEY, useAuctionActiveMatchStore } from '@/stores/auctionActiveMatch.store';
+import { useAuctionActiveMatchStore } from '@/stores/auctionActiveMatch.store';
 import { QuitMatchModal } from '@/components/match/QuitMatchModal';
 import { useRealtimeConnectionHealth } from '@/lib/realtime/connection-health';
 import { poppins, AUCTION_QUIT_MODAL_THEME, AUCTION_PURPLE } from './constants/auction.constants';
@@ -207,18 +207,6 @@ function AuctionRealtimeFlowScreen({ username, avatarSeed, avatarCustomization }
     authStatus !== 'loading' &&
     (authStatus !== 'anonymous' || !GUEST_LOBBIES_ENABLED || guestStatus === 'refused');
   const realtimeEnabled = principal.kind !== 'none';
-  // A guest with no match to attach to (direct /auction visit, stale link) has
-  // nothing to search for: back to the friend hub instead of an error.
-  useEffect(() => {
-    if (principal.kind !== 'guest' || attachMatchId) return;
-    let storedMatchId: string | null = null;
-    try {
-      storedMatchId = window.sessionStorage.getItem(LAST_AUCTION_MATCH_KEY);
-    } catch {
-      storedMatchId = null;
-    }
-    if (!storedMatchId) router.replace('/play/friend');
-  }, [attachMatchId, principal.kind, router]);
   const {
     state,
     actions,
@@ -250,6 +238,16 @@ function AuctionRealtimeFlowScreen({ username, avatarSeed, avatarCustomization }
     humanAvatarSeed: avatarSeed,
     humanAvatarCustomization: avatarCustomization,
   });
+
+  // A guest with no match to attach to (direct /auction visit, stale or expired
+  // rejoin) has nothing to search for: back to the friend hub instead of an
+  // endless search screen. Derived from the hook's own recovery state so a
+  // failed rejoin re-evaluates it.
+  useEffect(() => {
+    if (principal.kind !== 'guest' || state || restoringFromReload) return;
+    if (attachMatchId && !attachUnavailable) return;
+    router.replace('/play/friend');
+  }, [attachMatchId, attachUnavailable, principal.kind, restoringFromReload, router, state]);
 
   const currentJoined = search?.phase === 'match_found' ? 3 : Math.max(search?.queuedUserCount ?? 1, 1);
 

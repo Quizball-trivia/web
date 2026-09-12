@@ -22,17 +22,26 @@ interface RealtimeConnectionOptions {
 }
 
 let connectedRealtimeUserId: string | null = null;
+// The last identity that owned the connection, kept across consumers that
+// merely disable realtime (solo play, training): only a DIFFERENT identity
+// connecting afterwards is an identity change.
+let lastConnectedIdentityUserId: string | null = null;
+
+/** Realtime-only state; safe to drop whenever the connection goes away. */
+function clearRealtimeState(): void {
+  useRealtimeMatchStore.getState().reset();
+  useRankedMatchmakingStore.getState().clearRankedMatchmaking();
+  useFootballGridStore.getState().clear();
+}
 
 /**
  * Everything scoped to the connected identity. A principal change (guest →
- * member sign-in, sign-out, account switch) must not carry the previous
- * player's room, match, auction rejoin key or game config onto the new one.
+ * member sign-in, account switch) must not carry the previous player's room,
+ * match, auction rejoin key or game config onto the new one. NOT run when the
+ * same identity simply disables realtime (a member starting a solo game).
  */
 function clearIdentityScopedState(): void {
-  const realtimeStore = useRealtimeMatchStore.getState();
-  realtimeStore.reset();
-  useRankedMatchmakingStore.getState().clearRankedMatchmaking();
-  useFootballGridStore.getState().clear();
+  clearRealtimeState();
   useAuctionActiveMatchStore.getState().clear();
   useGameSessionStore.getState().reset();
   try {
@@ -53,7 +62,7 @@ export function useRealtimeConnection({ enabled, selfUserId }: RealtimeConnectio
           previousUserId: connectedRealtimeUserId ?? realtimeStore.selfUserId,
         });
         connectedRealtimeUserId = null;
-        clearIdentityScopedState();
+        clearRealtimeState();
         realtimeStore.setSelfUserId(null);
         disconnectSocket();
         stopConnectionQualityMonitor();
@@ -66,16 +75,22 @@ export function useRealtimeConnection({ enabled, selfUserId }: RealtimeConnectio
     const userChanged =
       (connectedRealtimeUserId !== null && connectedRealtimeUserId !== selfUserId) ||
       (storeSelfUserId !== null && storeSelfUserId !== selfUserId);
+    // A different identity than the last one that held the connection (guest
+    // → member after sign-in, sign-out → sign-in as someone else) even if the
+    // connection was dropped in between.
+    const identityChanged =
+      userChanged || (lastConnectedIdentityUserId !== null && lastConnectedIdentityUserId !== selfUserId);
 
-    if (userChanged) {
+    if (identityChanged) {
       logger.info('Realtime connection switched user context', {
-        previousUserId: connectedRealtimeUserId ?? storeSelfUserId,
+        previousUserId: connectedRealtimeUserId ?? storeSelfUserId ?? lastConnectedIdentityUserId,
         nextUserId: selfUserId,
       });
       clearIdentityScopedState();
       queryClient.clear();
       realtimeStore.setSelfUserId(selfUserId);
       connectedRealtimeUserId = selfUserId;
+      lastConnectedIdentityUserId = selfUserId;
       reconnectSocket();
       return;
     }
@@ -83,6 +98,7 @@ export function useRealtimeConnection({ enabled, selfUserId }: RealtimeConnectio
     logger.info('Realtime connection set self user id', { selfUserId });
     realtimeStore.setSelfUserId(selfUserId);
     connectedRealtimeUserId = selfUserId;
+    lastConnectedIdentityUserId = selfUserId;
     const socket = getSocket();
     if (socket.connected || socket.active) {
       startConnectionQualityMonitor();
