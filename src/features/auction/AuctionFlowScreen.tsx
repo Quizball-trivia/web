@@ -1,5 +1,8 @@
 'use client';
 
+import { GuestResultsCta } from '@/features/friend/components/GuestResultsCta';
+import { GUEST_LOBBIES_ENABLED } from '@/lib/config';
+import { useEnsureGuestPrincipal, useRealtimePrincipal } from '@/lib/realtime/realtime-principal';
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useRouter } from 'next/navigation';
@@ -195,10 +198,15 @@ function AuctionRealtimeFlowScreen({ username, avatarSeed, avatarCustomization }
   const authUser = useAuthStore((store) => store.user);
   const authStatus = useAuthStore((store) => store.status);
   const connectionHealth = useRealtimeConnectionHealth();
+  // Guests reach the live auction only through a friend room (resolved principal).
+  const principal = useRealtimePrincipal();
+  const guestStatus = useEnsureGuestPrincipal(locale);
+  // Anonymous visitors are refused unless guest lobbies are on and a guest principal is (still) resolving.
   const authRequired =
-    authStatus === 'anonymous' ||
-    (authStatus === 'authenticated' && !authUser?.id);
-  const realtimeEnabled = authStatus === 'authenticated' && Boolean(authUser?.id);
+    principal.kind === 'none' &&
+    authStatus !== 'loading' &&
+    (authStatus !== 'anonymous' || !GUEST_LOBBIES_ENABLED || guestStatus === 'refused');
+  const realtimeEnabled = principal.kind !== 'none';
   const {
     state,
     actions,
@@ -223,7 +231,7 @@ function AuctionRealtimeFlowScreen({ username, avatarSeed, avatarCustomization }
     autoStart: auctionStarted,
     matchmakingMode: 'search',
     attachMatchId,
-    selfUserId: authUser?.id ?? null,
+    selfUserId: principal.userId,
     locale,
     formation: LIVE_AUCTION_FORMATION_NAME,
     humanAvatarSeed: avatarSeed,
@@ -472,7 +480,7 @@ function AuctionRealtimeFlowScreen({ username, avatarSeed, avatarCustomization }
         players={search?.queuedPlayers}
         botCount={search?.botCount ?? 0}
         botPlayers={search?.botPlayers}
-        selfUserId={authUser?.id ?? null}
+        selfUserId={principal.userId}
         selfDisplayName={username}
         selfAvatarSeed={avatarSeed}
         selfAvatarCustomization={avatarCustomization}
@@ -499,7 +507,7 @@ function AuctionRealtimeFlowScreen({ username, avatarSeed, avatarCustomization }
           players={search?.queuedPlayers}
           botCount={search?.botCount ?? 0}
           botPlayers={search?.botPlayers}
-          selfUserId={authUser?.id ?? null}
+          selfUserId={principal.userId}
           selfDisplayName={username}
           selfAvatarSeed={avatarSeed}
           selfAvatarCustomization={avatarCustomization}
@@ -594,6 +602,7 @@ function AuctionRealtimeFlowScreen({ username, avatarSeed, avatarCustomization }
           coinsAwarded={coinsAwarded}
           apEarned={apEarned}
         />
+        <div className="mx-auto w-full max-w-[498px] px-4 pb-6"><GuestResultsCta /></div>
         <AnimatePresence>
           {!resultsRevealed && sawLivePhase && (
             <AuctionStatusOverlay

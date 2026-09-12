@@ -1,3 +1,4 @@
+import { useRealtimePrincipal } from '@/lib/realtime/realtime-principal';
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -65,6 +66,10 @@ export function parseFriendLobbyInviteSource(value: string | null): FriendLobbyI
 const LOBBY_ERROR_COPY_KEYS: Record<string, MessageKey> = {
   LOBBY_MODE_CAPACITY: "friend.errorModeCapacity",
   MEMBER_BUSY: "friend.errorMemberBusy",
+  LOBBY_GUEST_LIMIT: "friend.errorGuestLimit",
+  LOBBY_MODE_REQUIRES_ACCOUNT: "friend.errorModeRequiresAccount",
+  RATE_LIMITED: "friend.errorRateLimited",
+  CAPABILITY_REQUIRED: "friend.errorCapabilityRequired",
 };
 
 const INVITE_STATE_CONFIRMATION_TIMEOUT_MS = 4_000;
@@ -95,9 +100,9 @@ export function useFriendLobbyLogic({
   const router = useRouter();
   const { t } = useLocale();
   const { player } = usePlayer();
-  const authUser = useAuthStore((state) => state.user);
-  const selfUserId = authUser?.id ?? player.id;
-  const realtimeSelfUserId = authUser?.id ?? null;
+  const principal = useRealtimePrincipal();
+  const selfUserId = principal.userId ?? player.id;
+  const realtimeSelfUserId = principal.userId;
 
   // Stores
   const lobby = useRealtimeMatchStore((state) => state.lobby);
@@ -128,7 +133,7 @@ export function useFriendLobbyLogic({
   const allCategories = categoriesData?.items ?? [];
 
   // Connection
-  useRealtimeConnection({ enabled: Boolean(realtimeSelfUserId), selfUserId: realtimeSelfUserId });
+  useRealtimeConnection({ enabled: principal.kind !== 'none', selfUserId: realtimeSelfUserId });
   const lobbyCommands = useLobbyCommandMachine();
   const {
     createLobby,

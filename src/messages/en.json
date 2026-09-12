@@ -1316,7 +1316,14 @@
     "firstHalfBadge": "1st half",
     "secondHalfBadge": "2nd half",
     "secondHalfOptional": "2nd half (optional)",
-    "pickSecondHalfHint": "Tap another category to set the second half"
+    "pickSecondHalfHint": "Tap another category to set the second half",
+    "errorGuestLimit": "A room can hold at most 3 guests.",
+    "errorModeRequiresAccount": "Guests can only play Tic Tac Toe, Auction and Ranked sim. Sign up to unlock every mode.",
+    "errorRateLimited": "Too many rooms created. Please wait a while.",
+    "errorCapabilityRequired": "An account is needed for that. Sign up to continue.",
+    "guestBadge": "Guest",
+    "playWithFriend": "Play with a friend",
+    "guestKeepResults": "Sign up to keep your results and play ranked"
   },
   "possession": {
     "cluesGuessedAtClue": "clue {index}",

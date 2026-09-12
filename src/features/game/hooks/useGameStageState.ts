@@ -1,5 +1,6 @@
 "use client";
 
+import { useRealtimePrincipal } from '@/lib/realtime/realtime-principal';
 import { useEffect, useMemo, useState } from "react";
 import { useShallow } from "zustand/shallow";
 import { useGameSessionStore } from "@/stores/gameSession.store";
@@ -111,10 +112,11 @@ export function useGameStageState() {
 
   // Training is a fully local scripted match — never open the realtime socket for it.
   const isMultiplayer = !!config && config.mode !== "solo" && config.mode !== "training";
-  const selfUserId = connectedSelfUserId ?? authUser?.id ?? player.id;
-  const realtimeSelfUserId = authUser?.id ?? null;
+  const principal = useRealtimePrincipal();
+  const selfUserId = connectedSelfUserId ?? principal.userId ?? player.id;
+  const realtimeSelfUserId = principal.userId;
   const socket = useRealtimeMatchSocket({
-    enabled: isMultiplayer && Boolean(realtimeSelfUserId),
+    enabled: isMultiplayer && principal.kind !== 'none',
     selfUserId: realtimeSelfUserId,
   });
   const [socketConnected, setSocketConnected] = useState(() => socket.connected);

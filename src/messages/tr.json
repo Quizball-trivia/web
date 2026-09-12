@@ -1316,7 +1316,14 @@
     "firstHalfBadge": "1. yarı",
     "secondHalfBadge": "2. yarı",
     "secondHalfOptional": "2. yarı (isteğe bağlı)",
-    "pickSecondHalfHint": "2. yarıyı ayarlamak için başka bir kategoriye dokun"
+    "pickSecondHalfHint": "2. yarıyı ayarlamak için başka bir kategoriye dokun",
+    "errorGuestLimit": "Bir odada en fazla 3 misafir olabilir.",
+    "errorModeRequiresAccount": "Misafirler yalnızca Tic Tac Toe, Müzayede ve Dereceli simülasyon oynayabilir. Tüm modlar için kaydol.",
+    "errorRateLimited": "Çok fazla oda oluşturuldu. Lütfen biraz bekle.",
+    "errorCapabilityRequired": "Bunun için bir hesap gerekli. Devam etmek için kaydol.",
+    "guestBadge": "Misafir",
+    "playWithFriend": "Bir arkadaşla oyna",
+    "guestKeepResults": "Sonuçlarını saklamak ve dereceli oynamak için kaydol"
   },
   "possession": {
     "cluesGuessedAtClue": "ipucu {index}",

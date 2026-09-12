@@ -2,6 +2,9 @@
 
 /* eslint-disable @next/next/no-img-element -- Player art is restricted to the reviewed first-party Grid CDN. */
 
+import { GuestResultsCta } from '@/features/friend/components/GuestResultsCta';
+import { GUEST_LOBBIES_ENABLED } from '@/lib/config';
+import { useEnsureGuestPrincipal, useRealtimePrincipal } from '@/lib/realtime/realtime-principal';
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { AlertTriangle, Check, LoaderCircle, UserRound, UserRoundSearch } from 'lucide-react';
@@ -1617,9 +1620,10 @@ export function FootballGridFlowScreen() {
   const copy = FOOTBALL_GRID_COPY[locale];
   const contentLocale = locale === 'ka' ? 'ka' : 'en';
   const { player } = usePlayer();
-  const authUser = useAuthStore((current) => current.user);
   const authStatus = useAuthStore((current) => current.status);
-  const selfUserId = authUser?.id ?? null;
+  const principal = useRealtimePrincipal();
+  const guestStatus = useEnsureGuestPrincipal(locale);
+  const selfUserId = principal.userId;
   const source = searchParams.get('source') === 'friend_lobby' ? 'friend_lobby' : 'matchmaking';
   const packParam = searchParams?.get('pack') ?? null;
   const theme = ['european', 'england', 'spain', 'italy', 'germany', 'france', 'brazil', 'turkey', 'argentina', 'georgia'].includes(packParam ?? '')
@@ -1627,11 +1631,12 @@ export function FootballGridFlowScreen() {
     : 'european';
   const boardPreload = useFootballGridBoardPreload(useFootballGridStore((current) => current.state));
   const grid = useRealtimeFootballGrid({
-    enabled: authStatus === 'authenticated' && Boolean(selfUserId),
+    enabled: principal.kind !== 'none',
     selfUserId,
     locale: contentLocale,
     theme,
-    autoStart: source === 'matchmaking',
+    // A `source` query never authorizes matchmaking: guests only ever arrive from a room.
+    autoStart: source === 'matchmaking' && principal.kind === 'member',
     assetsReady: boardPreload.ready,
   });
   useFootballGridAnalytics({
@@ -1787,7 +1792,9 @@ export function FootballGridFlowScreen() {
     grid.actions.startSearch();
   };
 
-  if (authStatus === 'loading') {
+  // A guest arriving from a room is still resolving its principal for a moment.
+  const guestResolving = authStatus === 'anonymous' && principal.kind === 'none' && guestStatus !== 'refused' && GUEST_LOBBIES_ENABLED;
+  if (authStatus === 'loading' || guestResolving) {
     return <FootballGridNoticeScreen kind="loading" title={copy.loading} />;
   }
 
@@ -1978,6 +1985,7 @@ export function FootballGridFlowScreen() {
               <button type="button" onClick={handleFindNew} className="w-full rounded-2xl bg-brand-green px-6 py-4 font-black uppercase text-white transition-colors hover:bg-brand-green-deep">{copy.newOpponent}</button>
             )}
             {rematchPending && !accepted && <button type="button" onClick={grid.actions.declineRematch} className="w-full rounded-2xl border border-white/15 px-6 py-4 font-bold text-white/70">{copy.declineRematch}</button>}
+            <GuestResultsCta />
             <button type="button" onClick={() => { grid.actions.clear(); router.push('/play'); }} className="w-full rounded-2xl border border-white/15 px-6 py-4 font-bold text-white/70">{copy.backToPlay}</button>
           </div>
         </div>

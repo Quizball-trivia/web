@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Image from 'next/image';
 import { motion } from 'motion/react';
-import { Dumbbell, ScrollText, Swords } from 'lucide-react';
+import { Dumbbell, ScrollText, Swords , Users } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -24,10 +24,12 @@ interface AuctionModeModalProps {
   onFindOnline: () => void;
   /** Guided training auction (scripted, vs bots): members play it in place, guests on the public Auction page. */
   onTraining?: () => void;
+  /** Friend room (link or code); open to guests once guest lobbies ship. */
+  onPlayWithFriend?: () => void;
 }
 
 /** Auction mode dialog — icon hero on top → title → rules → yellow CTA. */
-export function AuctionModeModal({ isOpen, onOpenChange, onFindOnline, onTraining }: AuctionModeModalProps) {
+export function AuctionModeModal({ isOpen, onOpenChange, onFindOnline, onTraining, onPlayWithFriend }: AuctionModeModalProps) {
   const { t } = useLocale();
   const [rulesOpen, setRulesOpen] = useState(false);
   return (
@@ -83,6 +85,17 @@ export function AuctionModeModal({ isOpen, onOpenChange, onFindOnline, onTrainin
             {t('play.auctionFindOpponents')}
           </motion.button>
 
+          {onPlayWithFriend && (
+            <button
+              type="button"
+              onClick={onPlayWithFriend}
+              className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-white/10 uppercase text-white transition-colors hover:bg-white/15"
+              style={{ fontSize: 'clamp(14px, 2.2vw, 16px)', ...poppins }}
+            >
+              <Users className="size-5" strokeWidth={2.5} />
+              {t('friend.playWithFriend')}
+            </button>
+          )}
           {/* Training — the scripted tutorial auction (no coins, no opponents). */}
           {onTraining && (
             <button

@@ -1364,7 +1364,14 @@
     "firstHalfBadge": "1-ლი ტაიმი",
     "secondHalfBadge": "მე-2 ტაიმი",
     "secondHalfOptional": "მე-2 ტაიმი (სასურველი)",
-    "pickSecondHalfHint": "აირჩიე მეორე კატეგორია მე-2 ტაიმისთვის"
+    "pickSecondHalfHint": "აირჩიე მეორე კატეგორია მე-2 ტაიმისთვის",
+    "errorGuestLimit": "ოთახში მაქსიმუმ 3 სტუმარი შეიძლება იყოს.",
+    "errorModeRequiresAccount": "სტუმრებს მხოლოდ Tic Tac Toe, აუქციონისა და რეიტინგული სიმულაციის თამაში შეუძლიათ. დარეგისტრირდი ყველა რეჟიმისთვის.",
+    "errorRateLimited": "ძალიან ბევრი ოთახი შეიქმნა. ცოტა ხანში სცადე.",
+    "errorCapabilityRequired": "ამისთვის ანგარიშია საჭირო. დარეგისტრირდი გასაგრძელებლად.",
+    "guestBadge": "სტუმარი",
+    "playWithFriend": "ითამაშე მეგობართან",
+    "guestKeepResults": "დარეგისტრირდი, რომ შედეგები შეინახო და რეიტინგული ითამაშო"
   },
   "possession": {
     "cluesGuessedAtClue": "მინიშნება {index}",

@@ -4,7 +4,7 @@
 
 import { useState } from 'react';
 import { motion } from 'motion/react';
-import { ScrollText, Swords, Dumbbell } from 'lucide-react';
+import { ScrollText, Swords, Dumbbell, Users } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -113,12 +113,15 @@ export function FootballGridModeModal({
   onOpenChange,
   onFindOnline,
   onTraining,
+  onPlayWithFriend,
 }: {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   onFindOnline: (pack: GridPackKey) => void;
   /** Guided training board (scripted, vs CoachBot): members play it in place, guests on the public Tic Tac Toe page. */
   onTraining?: () => void;
+  /** Friend room (link or code); open to guests once guest lobbies ship. */
+  onPlayWithFriend?: () => void;
 }) {
   const { t } = useLocale();
   const [rulesOpen, setRulesOpen] = useState(false);
@@ -206,6 +209,17 @@ export function FootballGridModeModal({
             {t('play.gridFindOpponents')}
           </motion.button>
 
+          {onPlayWithFriend && (
+            <button
+              type="button"
+              onClick={onPlayWithFriend}
+              className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-white/10 uppercase text-white transition-colors hover:bg-white/15"
+              style={{ fontSize: 'clamp(14px, 2.2vw, 16px)', ...poppins }}
+            >
+              <Users className="size-5" strokeWidth={2.5} />
+              {t('friend.playWithFriend')}
+            </button>
+          )}
           {/* Training — the scripted tutorial board (no coins, no opponents). */}
           {onTraining && (
             <button

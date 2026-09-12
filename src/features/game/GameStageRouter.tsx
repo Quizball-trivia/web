@@ -1,5 +1,6 @@
 "use client";
 
+import { useEnsureGuestPrincipal } from "@/lib/realtime/realtime-principal";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
@@ -54,7 +55,9 @@ function isAiOpponentInfo(opponentInfo: { id?: string; isAiOpponent?: boolean } 
 
 export function GameStageRouter() {
   const router = useRouter();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  // A guest reloading /game mid friend-room match re-resolves its principal here.
+  useEnsureGuestPrincipal(locale);
   const {
     player,
     authUser,

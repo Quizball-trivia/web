@@ -1,3 +1,4 @@
+import { GUEST_LOBBIES_ENABLED } from '@/lib/config';
 import { cn } from '@/lib/utils';
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
@@ -653,7 +654,7 @@ export function ModeSelectionScreen({
           subtitle={t('play.friendlySubtitle')}
           iconSrc="/assets/friendly_match-icon.webp"
           ctaLabel={t('common.play')}
-          onClick={() => (isGuest ? openAuthPrompt() : setSelectedMode('friendly'))}
+          onClick={() => (isGuest && !GUEST_LOBBIES_ENABLED ? openAuthPrompt() : setSelectedMode('friendly'))}
           className="col-span-2 lg:col-span-1"
         />
         {/* Friendly / Daily / Auction keep the PROD card design (owner call
@@ -973,6 +974,7 @@ export function ModeSelectionScreen({
           router.push('/auction');
         }}
         onTraining={startAuctionTraining}
+        onPlayWithFriend={isGuest && !GUEST_LOBBIES_ENABLED ? undefined : () => { setAuctionModalOpen(false); setSelectedMode('friendly'); }}
       />
       {auctionTraining && (
         <TrainingOfferModal
@@ -1006,6 +1008,7 @@ export function ModeSelectionScreen({
           router.push(`/tic-tac-toe?source=matchmaking&pack=${pack}`);
         }}
         onTraining={startGridTraining}
+        onPlayWithFriend={isGuest && !GUEST_LOBBIES_ENABLED ? undefined : () => { setGridModalOpen(false); setSelectedMode('friendly'); }}
       />
       {gridTraining && (
         <TrainingOfferModal

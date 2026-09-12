@@ -1316,7 +1316,14 @@
     "firstHalfBadge": "1.ª parte",
     "secondHalfBadge": "2.ª parte",
     "secondHalfOptional": "2.ª parte (opcional)",
-    "pickSecondHalfHint": "Toca otra categoría para la segunda parte"
+    "pickSecondHalfHint": "Toca otra categoría para la segunda parte",
+    "errorGuestLimit": "Una sala admite como máximo 3 invitados.",
+    "errorModeRequiresAccount": "Los invitados solo pueden jugar Tic Tac Toe, Subasta y Simulación clasificatoria. Regístrate para desbloquear todos los modos.",
+    "errorRateLimited": "Has creado demasiadas salas. Espera un momento.",
+    "errorCapabilityRequired": "Para eso hace falta una cuenta. Regístrate para continuar.",
+    "guestBadge": "Invitado",
+    "playWithFriend": "Jugar con un amigo",
+    "guestKeepResults": "Regístrate para guardar tus resultados y jugar clasificatorias"
   },
   "possession": {
     "cluesGuessedAtClue": "pista {index}",
