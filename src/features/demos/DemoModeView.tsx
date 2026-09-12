@@ -1,6 +1,6 @@
 "use client";
 
-import { DemoAuction } from "@/features/demos/DemoAuction";
+import { DemoAuctionTraining } from "@/features/demos/DemoAuctionTraining";
 import { DemoBackButton } from "@/features/demos/DemoBackButton";
 import { DemoDailyChallenge } from "@/features/demos/DemoDailyChallenge";
 import { DemoTraining } from "@/features/demos/DemoTraining";
@@ -72,12 +72,8 @@ export function DemoModeView({ slug, backHref = "/demos", onExit, onEvent }: {
         </>
       );
     case "auction":
-      return (
-        <>
-          <DemoBackButton href={backHref} onClick={onExit} />
-          <DemoAuction onExit={onExit} />
-        </>
-      );
+      // The guided training auction owns its exit ("Skip training"), like "match".
+      return <DemoAuctionTraining backHref={backHref} onExit={onExit} />;
     case "weekend-league":
       return (
         <>

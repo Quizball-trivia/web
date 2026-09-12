@@ -27,12 +27,18 @@ export function AuctionGameScreen({
   humanPlayerId,
   serverDrivenTransitions = false,
   disconnectedSeatIds = [],
+  clockPausedAt = null,
+  allowedAction = null,
 }: {
   state: AuctionGameState;
   actions: AuctionActions;
   humanPlayerId: string;
   serverDrivenTransitions?: boolean;
   disconnectedSeatIds?: readonly string[];
+  /** Training: clocks freeze at this instant while a tooltip is open. */
+  clockPausedAt?: number | null;
+  /** Training: the one control the guided step allows on the human's turn. */
+  allowedAction?: { kind: 'bid' | 'fold' } | null;
 }) {
   const isDesktop = useIsDesktop();
 
@@ -50,6 +56,8 @@ export function AuctionGameScreen({
         actions={actions}
         humanPlayerId={humanPlayerId}
         disconnectedSeatIds={disconnectedSeatIds}
+        clockPausedAt={clockPausedAt}
+        allowedAction={allowedAction}
       />
     ) : (
       <BiddingScreen
@@ -57,6 +65,8 @@ export function AuctionGameScreen({
         actions={actions}
         humanPlayerId={humanPlayerId}
         disconnectedSeatIds={disconnectedSeatIds}
+        clockPausedAt={clockPausedAt}
+        allowedAction={allowedAction}
       />
     );
   } else if (state.phase === 'reveal') {

@@ -77,6 +77,20 @@ export function PlayHome({ beforeFooter }: { beforeFooter?: ReactNode } = {}) {
     startSession({ mode: "training" });
     router.push("/game");
   };
+  // Auction tutorial gate: offered once before the first "Find opponents" in
+  // the Auction dialog; playing or skipping it marks the auction tutorial seen.
+  const auctionTrainingCompletion = useTrainingCompletion("auction");
+  const [auctionTrainingSeen, setAuctionTrainingSeen] = useState(false);
+  const shouldOfferAuctionTraining = !isGuest && !auctionTrainingSeen && !auctionTrainingCompletion.isComplete();
+  const startAuctionTraining = () => {
+    resetRealtime();
+    startSession({ mode: "training", trainingGame: "auction" });
+    router.push("/game");
+  };
+  const skipAuctionTraining = () => {
+    auctionTrainingCompletion.markComplete();
+    setAuctionTrainingSeen(true);
+  };
   const { data: storeWallet } = useStoreWallet();
   const { data: categoriesData } = useCategoriesList({
     limit: 100,
@@ -237,6 +251,7 @@ export function PlayHome({ beforeFooter }: { beforeFooter?: ReactNode } = {}) {
           rankedProfileLoading={rankedProfileLoading}
           beforeFooter={beforeFooter}
           trainingOffer={{ shouldOffer: shouldOfferTraining, onPlayTraining: startTraining, onSkip: skipTraining }}
+          auctionTraining={{ shouldOffer: shouldOfferAuctionTraining, onPlay: startAuctionTraining, onSkip: skipAuctionTraining }}
         />
       </div>
     </div>

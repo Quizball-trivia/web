@@ -20,12 +20,21 @@ import {
 import { useIsMobile } from "@/hooks/useMobile";
 import { ModalCloseButton } from "@/components/shared/ModalCloseButton";
 import { useLocale } from "@/contexts/LocaleContext";
+import { AUCTION_PURPLE } from "@/features/auction/constants/auction.constants";
+import type { TrainingGame } from "../hooks/useTrainingCompletion";
+
+const OFFER_BY_GAME = {
+  ranked: { art: "/assets/ranked-icon.webp", titleRest: "training.offerTitleRest", description: "training.offerDescription", playCta: "training.offerPlayCta", skipCta: "training.offerSkipCta", background: "#38B60E" },
+  auction: { art: "/assets/auction-card-icon.webp", titleRest: "training.offerAuctionTitleRest", description: "training.offerAuctionDescription", playCta: "training.offerAuctionPlayCta", skipCta: "training.offerAuctionSkipCta", background: AUCTION_PURPLE },
+} as const;
 
 interface TrainingOfferModalProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   onPlayTraining: () => void;
   onSkip: () => void;
+  /** Which tutorial is offered — art, copy and colour follow the game. */
+  game?: TrainingGame;
 }
 
 export function TrainingOfferModal({
@@ -33,9 +42,11 @@ export function TrainingOfferModal({
   onOpenChange,
   onPlayTraining,
   onSkip,
+  game = "ranked",
 }: TrainingOfferModalProps) {
   const { t } = useLocale();
   const isMobile = useIsMobile();
+  const offer = OFFER_BY_GAME[game];
 
   const Body = (
     <div className="relative font-poppins">
@@ -44,16 +55,16 @@ export function TrainingOfferModal({
         style={{ fontSize: "clamp(24px, 5.4vw, 38px)" }}
       >
         <span className="text-brand-yellow">{t("training.offerTitlePrefix")}</span>{" "}
-        {t("training.offerTitleRest")}
+        {t(offer.titleRest)}
       </h2>
 
       <p className="mx-auto mt-3 max-w-[30rem] text-center text-[13px] leading-snug font-bold text-white/85 sm:mt-4 sm:text-sm md:text-base">
-        {t("training.offerDescription")}
+        {t(offer.description)}
       </p>
 
       <div className="relative mx-auto mt-4 h-32 w-full sm:h-40">
         <Image
-          src="/assets/ranked-icon.webp"
+          src={offer.art}
           alt=""
           fill
           className="object-contain opacity-90"
@@ -66,14 +77,14 @@ export function TrainingOfferModal({
           onClick={onPlayTraining}
           className="w-full rounded-2xl bg-black py-3.5 text-center text-sm font-black uppercase tracking-wide text-white transition-transform active:scale-[0.98] sm:text-base"
         >
-          {t("training.offerPlayCta")}
+          {t(offer.playCta)}
         </button>
         <button
           type="button"
           onClick={onSkip}
           className="w-full rounded-2xl bg-white/15 py-3 text-center text-[13px] font-black uppercase tracking-wide text-white/90 transition-transform active:scale-[0.98] sm:text-sm"
         >
-          {t("training.offerSkipCta")}
+          {t(offer.skipCta)}
         </button>
       </div>
     </div>
@@ -85,13 +96,13 @@ export function TrainingOfferModal({
         <SheetContent
           side="bottom"
           className="rounded-t-3xl border-0 px-6 pt-8 pb-8 [&>button]:hidden"
-          style={{ backgroundColor: "#38B60E" }}
+          style={{ backgroundColor: offer.background }}
         >
           <div className="absolute top-5 right-5 z-30">
             <ModalCloseButton onClose={() => onOpenChange(false)} className="!static" />
           </div>
-          <SheetTitle className="sr-only">{t("training.offerTitleRest")}</SheetTitle>
-          <SheetDescription className="sr-only">{t("training.offerDescription")}</SheetDescription>
+          <SheetTitle className="sr-only">{t(offer.titleRest)}</SheetTitle>
+          <SheetDescription className="sr-only">{t(offer.description)}</SheetDescription>
           {Body}
         </SheetContent>
       </Sheet>
@@ -102,13 +113,13 @@ export function TrainingOfferModal({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent
         className="w-[600px] max-w-[calc(100vw-2rem)] max-h-[90vh] overflow-y-auto rounded-3xl border-0 px-5 pt-7 pb-7 sm:px-8 sm:pt-8 sm:pb-8 [&>button]:hidden"
-        style={{ backgroundColor: "#38B60E" }}
+        style={{ backgroundColor: offer.background }}
       >
         <div className="absolute top-6 right-6 z-30">
           <ModalCloseButton onClose={() => onOpenChange(false)} className="!static" />
         </div>
-        <DialogTitle className="sr-only">{t("training.offerTitleRest")}</DialogTitle>
-        <DialogDescription className="sr-only">{t("training.offerDescription")}</DialogDescription>
+        <DialogTitle className="sr-only">{t(offer.titleRest)}</DialogTitle>
+        <DialogDescription className="sr-only">{t(offer.description)}</DialogDescription>
         {Body}
       </DialogContent>
     </Dialog>

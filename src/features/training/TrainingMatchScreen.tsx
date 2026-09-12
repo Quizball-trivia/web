@@ -19,6 +19,11 @@ function TrainingMatchContent() {
   // The playing/penalty stages hydrate a synthetic match into the realtime
   // store to drive the ranked flight pipeline — never let it leak into /play.
   useEffect(() => resetTrainingMatch, []);
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => { if (event.key === "Escape") onSkip(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onSkip]);
 
   return (
     <>

@@ -44,7 +44,7 @@ const SIMPLE_SHOT_OTHER_FLIGHT_MS = 900;
 const RESULT_TOOLTIP_HANDOFF_MS = 600;
 
 export function TrainingPlayingStage() {
-  const { match, tooltips, onSkip, usingCategoryQuestions } = useTraining();
+  const { match, tooltips, onSkip } = useTraining();
   const { player } = usePlayer();
   const { locale, t } = useLocale();
   const { avatarUrl: playerAvatar, avatarCustomization, username: playerName } = usePlayerAvatar();

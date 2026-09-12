@@ -24,6 +24,7 @@ export const STORAGE_KEYS = {
   WHEEL_SPIN_TIMESTAMP: 'quizball_wheel_spin',
 
   TRAINING_COMPLETE: 'quizball_training_complete',
+  TRAINING_AUCTION_COMPLETE: 'quizball_training_auction_complete',
   DEV_MODE: 'quizball_dev_mode',
 } as const;
 

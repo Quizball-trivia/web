@@ -249,6 +249,12 @@ interface ModeSelectionScreenProps {
     onPlayTraining: () => void;
     onSkip: () => void;
   };
+  /** Auction tutorial gate: offered before the first "Find opponents" in the Auction dialog; "Training" there starts it directly. */
+  auctionTraining?: {
+    shouldOffer: boolean;
+    onPlay: () => void;
+    onSkip: () => void;
+  };
   ticketsRemaining?: number;
   matchStatsSummary?: MatchStatsSummary | null;
   rankedProfile: RankedProfileResponse | null;
@@ -267,6 +273,7 @@ export function ModeSelectionScreen({
   initialMode,
   onRankedIntercept,
   trainingOffer,
+  auctionTraining,
   ticketsRemaining = 0,
   matchStatsSummary = null,
   rankedProfile,
@@ -292,6 +299,7 @@ export function ModeSelectionScreen({
     initialMode ?? null,
   );
   const [auctionModalOpen, setAuctionModalOpen] = useState(false);
+  const [auctionOfferOpen, setAuctionOfferOpen] = useState(false);
   const [gridModalOpen, setGridModalOpen] = useState(false);
   // Seeded false so the server and the first client render agree; the
   // session check runs after hydration and only then triggers the entrance.
@@ -351,6 +359,16 @@ export function ModeSelectionScreen({
       return;
     }
     setSelectedMode('ranked');
+  };
+  // Auction "Training": guests read the public Auction page (it hosts the same tutorial); members start it in place.
+  const startAuctionTraining = () => {
+    setAuctionModalOpen(false);
+    if (isGuest) {
+      const href = publicPageFor('auction');
+      if (href) router.push(href);
+      return;
+    }
+    auctionTraining?.onPlay();
   };
   // "Training": guests read the public Ranked page (it hosts the same match); members start it in place.
   const startRankedTraining = () => {
@@ -930,10 +948,30 @@ export function ModeSelectionScreen({
             openAuthPrompt();
             return;
           }
+          if (auctionTraining?.shouldOffer) {
+            setAuctionOfferOpen(true);
+            return;
+          }
           router.push('/auction');
         }}
-        demoHref={isGuest ? publicPageFor('auction') : undefined}
+        onTraining={startAuctionTraining}
       />
+      {auctionTraining && (
+        <TrainingOfferModal
+          game="auction"
+          isOpen={auctionOfferOpen}
+          onOpenChange={setAuctionOfferOpen}
+          onPlayTraining={() => {
+            setAuctionOfferOpen(false);
+            auctionTraining.onPlay();
+          }}
+          onSkip={() => {
+            setAuctionOfferOpen(false);
+            auctionTraining.onSkip();
+            router.push('/auction');
+          }}
+        />
+      )}
       <FootballGridModeModal
         isOpen={gridModalOpen}
         onOpenChange={setGridModalOpen}

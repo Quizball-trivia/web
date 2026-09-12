@@ -82,3 +82,19 @@ render test of the three stages with the scripted state, completion per mode. Ex
 - **Tests**: script simulation, engine pause > every deadline, guided gating incl. custom/Enter/duplicates, both layouts, 3-slot
   progress/results, tooltip order, replay cleanup, storage isolation ranked vs auction and user vs guest, four locales, member/guest/
   Escape exits; plus the existing auction and ranked suites.
+
+## v3 — as built (2026-09-12)
+- Code: `src/features/auction-training/` (screen, scripted engine `useAuctionTrainingMatch`, queued tooltips, fixtures Messi / Zidane /
+  Iniesta / Casillas with authored snapshots + hints ×4 locales, tooltip config), `DemoAuctionTraining` (guest practice on the public
+  Auction page replaces `DemoAuction`), `/dev/auction-training`, analytics `lib/analytics/training.analytics.ts`
+  (training_started/skipped/completed with `game`).
+- Live components got only additive props: `clockPausedAt`, `allowedAction` (AuctionGameScreen → bidding screens → TurnControls /
+  CountdownTimer / StudyCountdown), `playAgainLabel`/`exitLabel` on results, `max` on ChemistryBadge, `data-auction-anchor` hooks.
+  Squad size is now formation-aware everywhere (`squadSizeOf`, `maxSquadChemistryOf`, `isTeamComplete`) — 7 for the live formation.
+- Deviations from v2: no `controlledTransitions` prop — the screen holds Showdown/Formation until the tooltip closes and the
+  RevealScreen's "Next round" button already gates the reveal; `stepId` dropped (the allowed action is cleared on use, and actions are
+  rejected while paused); the starting-price beat fires with the clues beat on the SECOND clue pair (price row visible in both layouts,
+  intro fully cleared); reveal beat at 2.6 s. Guest completion uses its own `guest` slot in the per-user map. The auction offer has its
+  own CTA copy and purple art; Escape = the training's own skip (PracticeLayer no longer binds Escape for self-exiting engines; the ranked
+  training binds it too). Turkish training copy (ranked + auction) is now complete, so the i18n parity test passes again.
+- Codex diff review (10 findings) folded in; full web suite 190 files green.

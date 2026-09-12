@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import type { AuctionGameState } from '../../types';
 import type { AuctionActions } from '../../hooks/useAuctionGame';
-import { formatMoney, computeSquadChemistry, chemistryMultiplier, getFutureValue } from '../../data';
+import { formatMoney, computeSquadChemistry, chemistryMultiplier, getFutureValue, maxSquadChemistryOf } from '../../data';
 import { resolveClubCrestByName } from '@/lib/clubs';
 import { getLeague } from '../../data/leagues';
 import { POS_COLORS, poppins, withAlpha } from '../../constants/auction.constants';
@@ -296,7 +296,7 @@ function RevealBody({
                       ⚡ {t('auctionGame.chemGainBadge', { chem: chemGain })}
                     </motion.span>
                   )}
-                  <ChemistryBadge total={winnerChemNow} multiplier={chemistryMultiplier(winnerChemNow)} />
+                  <ChemistryBadge total={winnerChemNow} multiplier={chemistryMultiplier(winnerChemNow)} max={maxSquadChemistryOf(state.formation)} />
                 </div>
               </motion.div>
             )}
