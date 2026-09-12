@@ -30,7 +30,7 @@ import {
   getTrainingShotPlan,
 } from "../data/trainingScript";
 import { localizeTrainingQuestion } from "../data/trainingQuestions";
-import { BOT_AVATAR, BOT_NAME, BOT_RANK_POINTS } from "../constants";
+import { BOT_AVATAR, BOT_AVATAR_CUSTOMIZATION, BOT_NAME, BOT_RANK_POINTS } from "../constants";
 import {
   TRAINING_MATCH_ID,
   TRAINING_OPPONENT_ID,
@@ -368,6 +368,7 @@ export function TrainingPlayingStage() {
         opponentName: BOT_NAME,
         playerAvatarUrl: playerAvatar,
         opponentAvatarUrl: BOT_AVATAR,
+      opponentAvatarCustomization: BOT_AVATAR_CUSTOMIZATION,
         playerAvatarCustomization: avatarCustomization,
         playerRankPoints: player.rankPoints ?? 0,
         opponentRankPoints: BOT_RANK_POINTS,
@@ -388,6 +389,7 @@ export function TrainingPlayingStage() {
       playerAvatarUrl: playerAvatar,
       playerAvatarCustomization: avatarCustomization,
       opponentAvatarUrl: BOT_AVATAR,
+      opponentAvatarCustomization: BOT_AVATAR_CUSTOMIZATION,
       playerName,
       opponentName: BOT_NAME,
       shotMode: state.shotMode ?? undefined,

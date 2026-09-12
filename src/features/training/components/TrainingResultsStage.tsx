@@ -8,7 +8,7 @@ import { usePlayer } from "@/contexts/PlayerContext";
 import { usePlayerAvatar } from "@/hooks/usePlayerAvatar";
 import { useLocale } from "@/contexts/LocaleContext";
 import { useTraining } from "../TrainingMatchProvider";
-import { BOT_AVATAR, BOT_NAME } from "../constants";
+import { BOT_AVATAR, BOT_AVATAR_CUSTOMIZATION, BOT_NAME } from "../constants";
 
 const TOTAL_QUESTIONS = 12;
 
@@ -91,7 +91,7 @@ export function TrainingResultsStage() {
           playerAvatarCustomization={avatarCustomization ?? null}
           opponentUsername={BOT_NAME}
           opponentAvatar={BOT_AVATAR}
-          opponentAvatarCustomization={null}
+          opponentAvatarCustomization={BOT_AVATAR_CUSTOMIZATION}
           opponentId="coachbot"
           playerScore={playerScore}
           opponentScore={opponentScore}

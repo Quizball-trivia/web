@@ -31,7 +31,7 @@ import {
   TRAINING_PENALTY_SCRIPT,
   getTrainingRequiredAnswerIndex,
 } from "../data/trainingScript";
-import { BOT_AVATAR, BOT_NAME, BOT_RANK_POINTS } from "../constants";
+import { BOT_AVATAR, BOT_AVATAR_CUSTOMIZATION, BOT_NAME, BOT_RANK_POINTS } from "../constants";
 import {
   TRAINING_MATCH_ID,
   TRAINING_OPPONENT_ID,
@@ -377,6 +377,7 @@ export function TrainingPenaltiesStage() {
         opponentName: BOT_NAME,
         playerAvatarUrl: playerAvatar,
         opponentAvatarUrl: BOT_AVATAR,
+      opponentAvatarCustomization: BOT_AVATAR_CUSTOMIZATION,
         playerAvatarCustomization: avatarCustomization,
         opponentRankPoints: BOT_RANK_POINTS,
         timeRemaining: phase === "question" && selectedAnswer === null ? timeRemaining : 0,
@@ -389,6 +390,7 @@ export function TrainingPenaltiesStage() {
       playerAvatarUrl: playerAvatar,
       playerAvatarCustomization: avatarCustomization,
       opponentAvatarUrl: BOT_AVATAR,
+      opponentAvatarCustomization: BOT_AVATAR_CUSTOMIZATION,
       playerName,
       opponentName: BOT_NAME,
       // Ranked zooms 1.8× during penalties (simpleShotAnimation only cancels
@@ -478,6 +480,7 @@ export function TrainingPenaltiesStage() {
         opponentName={BOT_NAME}
         playerAvatarUrl={playerAvatar}
         opponentAvatarUrl={BOT_AVATAR}
+        opponentAvatarCustomization={BOT_AVATAR_CUSTOMIZATION}
         playerAvatarCustomization={avatarCustomization}
         opponentRankPoints={BOT_RANK_POINTS}
       />

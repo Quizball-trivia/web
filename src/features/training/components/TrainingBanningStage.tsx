@@ -9,7 +9,7 @@ import {
   type BanCategoryViewCategory,
 } from "@/features/play/RankedCategoryBlockingScreen";
 import { useTraining } from "../TrainingMatchProvider";
-import { BOT_AVATAR, BOT_NAME, BOT_RANK_POINTS } from "../constants";
+import { BOT_AVATAR, BOT_AVATAR_CUSTOMIZATION, BOT_NAME, BOT_RANK_POINTS } from "../constants";
 import { TRAINING_FLOW_SCRIPT } from "../data/trainingScript";
 
 const TURN_SECONDS = 15;
@@ -88,6 +88,7 @@ export function TrainingBanningStage() {
         id: "training-bot",
         username: BOT_NAME,
         avatar: BOT_AVATAR,
+        avatarCustomization: BOT_AVATAR_CUSTOMIZATION,
         countryCode: "BR",
         rankPoints: BOT_RANK_POINTS,
       }}

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { HalftimeScreen } from "@/features/possession/components/HalftimeScreen";
 import { usePlayerAvatar } from "@/hooks/usePlayerAvatar";
 import { useTraining } from "../TrainingMatchProvider";
-import { BOT_AVATAR, BOT_NAME } from "../constants";
+import { BOT_AVATAR, BOT_AVATAR_CUSTOMIZATION, BOT_NAME } from "../constants";
 import { TRAINING_FLOW_SCRIPT } from "../data/trainingScript";
 
 interface HalftimeDraftCategory {
@@ -69,6 +69,7 @@ export function TrainingHalftimeStage() {
       playerAvatarUrl={playerResolvedAvatar}
       playerAvatarCustomization={avatarCustomization}
       opponentAvatarUrl={BOT_AVATAR}
+      opponentAvatarCustomization={BOT_AVATAR_CUSTOMIZATION}
       playerPosition={state.playerPosition}
       categoryOptions={categoryOptions}
       mySeat={1}

@@ -1,7 +1,17 @@
 import { resolveAvatarUrl } from "@/lib/avatars";
 
+import type { AvatarCustomization } from "@/types/game";
+
 export const BOT_NAME = "CoachBot";
 export const BOT_AVATAR = resolveAvatarUrl("CoachBot");
+/** The coach must never look like the player's default kit: gold champion jersey, cap, silver hair. */
+export const BOT_AVATAR_CUSTOMIZATION: AvatarCustomization = {
+  jersey: "avatar_jersey_gold_champion",
+  headwear: "avatar_headwear_cech",
+  hair: "avatar_hair_gullit",
+  hairColor: "silver",
+  earwear: "avatar_earwear_studs",
+};
 
 /** How many categories to show in each ban phase (matches real ranked flow) */
 export const BAN_CATEGORY_COUNT = 3;

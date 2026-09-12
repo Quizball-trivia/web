@@ -6,7 +6,7 @@ import { usePlayer } from "@/contexts/PlayerContext";
 import { usePlayerAvatar } from "@/hooks/usePlayerAvatar";
 import { tierFromRp } from "@/utils/rankedTier";
 import { useTraining } from "../TrainingMatchProvider";
-import { BOT_AVATAR, BOT_NAME, BOT_RANK_POINTS } from "../constants";
+import { BOT_AVATAR, BOT_AVATAR_CUSTOMIZATION, BOT_NAME, BOT_RANK_POINTS } from "../constants";
 
 export function TrainingShowdownStage() {
   const { match, tooltips } = useTraining();
@@ -49,6 +49,7 @@ export function TrainingShowdownStage() {
       opponentInfo={{
         username: BOT_NAME,
         avatar: BOT_AVATAR,
+        avatarCustomization: BOT_AVATAR_CUSTOMIZATION,
         rankPoints: BOT_RANK_POINTS,
         tier: tierFromRp(BOT_RANK_POINTS),
         country: "Brazil",
