@@ -60,16 +60,16 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, engineEmit
 
   return (
     <section id="play" aria-label={copy.title} className="mt-6 scroll-mt-24">
-      <div className="flex flex-col items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+      <div className="flex flex-col items-start gap-3 rounded-2xl bg-brand-blue p-5">
         <button
           ref={launchRef}
           type="button"
           onClick={start}
-          className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-brand-blue px-8 text-base font-bold uppercase tracking-wide text-white transition-colors hover:bg-brand-blue/90"
+          className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-brand-yellow px-8 text-base font-bold uppercase tracking-wide text-black transition-colors hover:bg-brand-yellow-deep"
         >
           <Play className="size-5" /> {copy.start}
         </button>
-        <p className="text-sm text-white/65">{copy.note}</p>
+        <p className="text-sm text-white/85">{copy.note}</p>
         {!practiceLocalised && <p className="text-sm font-semibold text-brand-yellow">{copy.english}</p>}
       </div>
       {playing && (
