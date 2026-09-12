@@ -9,6 +9,7 @@ import { ModeConfirmModal } from '@/components/shared/ModeConfirmModal';
 import { FriendPlayModal } from '@/components/shared/FriendPlayModal';
 import { TrainingOfferModal } from '@/features/training/components/TrainingOfferModal';
 import { AuctionModeModal } from '@/features/auction/components/AuctionModeModal';
+import { RankedModeModal } from '@/features/play/RankedModeModal';
 import { FootballGridModeModal } from '@/features/football-grid/components/FootballGridModeModal';
 import { HomeRecentMatches } from '@/components/shared/HomeRecentMatches';
 import { AllGamesGrid } from '@/features/play/AllGamesGrid';
@@ -316,15 +317,6 @@ export function ModeSelectionScreen({
   // Ranked entry point shared by the hero card's click and keyboard handlers:
   // brand-new players get the training offer first; everyone else goes straight
   // to the confirm modal.
-  const openRankedFlow = () => {
-    if (isGuest) { openAuthPrompt(); return; }
-    if (onRankedIntercept?.()) return;
-    if (trainingOffer?.shouldOffer) {
-      setTrainingOfferOpen(true);
-      return;
-    }
-    setSelectedMode('ranked');
-  };
   const isPlacementInProgress = rankedProfile ? rankedProfile.placementStatus !== 'placed' : false;
   const placementPlayed = rankedProfile?.placementPlayed ?? 0;
   const placementRequired = Math.max(1, rankedProfile?.placementRequired ?? 3);
@@ -346,6 +338,32 @@ export function ModeSelectionScreen({
   const publicPageFor = (modeId: string) => {
     const game = findPublicGameByModeId(modeId);
     return game?.page ? gamePagePath(game, locale) : undefined;
+  };
+  // The hero opens the ranked dialog for everyone (same shape as Auction).
+  const [rankedModalOpen, setRankedModalOpen] = useState(false);
+  const openRankedFlow = () => setRankedModalOpen(true);
+  // "Find opponents": guests sign in; brand-new members get the training offer first.
+  const findRankedOpponents = () => {
+    setRankedModalOpen(false);
+    if (isGuest) { openAuthPrompt(); return; }
+    if (onRankedIntercept?.()) return;
+    if (trainingOffer?.shouldOffer) {
+      setTrainingOfferOpen(true);
+      return;
+    }
+    setSelectedMode('ranked');
+  };
+  // "Training": guests read the public Ranked page (it hosts the same match); members start it in place.
+  const startRankedTraining = () => {
+    setRankedModalOpen(false);
+    if (isGuest) {
+      const href = publicPageFor('ranked');
+      if (href) { router.push(href); return; }
+      setRankedDemoOpen(true);
+      return;
+    }
+    if (trainingOffer) { trainingOffer.onPlayTraining(); return; }
+    setRankedDemoOpen(true);
   };
   const objectivesEnabled = useObjectivesEnabled();
   const { data: objectivesData, isLoading: objectivesLoading } = useObjectives({ enabled: objectivesEnabled });
@@ -456,7 +474,7 @@ export function ModeSelectionScreen({
                 {isGuest && (
                   <button
                     type="button"
-                    onClick={(event) => { event.stopPropagation(); setRankedDemoOpen(true); }}
+                    onClick={(event) => { event.stopPropagation(); startRankedTraining(); }}
                     className="mt-2 flex h-[56px] w-[180px] items-center justify-center gap-2 rounded-[8px] bg-brand-yellow text-lg uppercase tracking-wide text-black whitespace-nowrap transition-colors hover:bg-brand-yellow-deep"
                     style={poppins}
                   >
@@ -588,7 +606,7 @@ export function ModeSelectionScreen({
                 {isGuest && (
                   <button
                     type="button"
-                    onClick={(event) => { event.stopPropagation(); setRankedDemoOpen(true); }}
+                    onClick={(event) => { event.stopPropagation(); startRankedTraining(); }}
                     className="flex h-[44px] w-[120px] items-center justify-center gap-1 rounded-[8px] bg-brand-yellow text-[13px] uppercase tracking-wide text-black whitespace-nowrap transition-colors hover:bg-brand-yellow-deep"
                     style={poppins}
                   >
@@ -954,6 +972,12 @@ export function ModeSelectionScreen({
           router.push(`/tic-tac-toe?source=matchmaking&pack=${pack}`);
         }}
         demoHref={isGuest ? publicPageFor('grid') : undefined}
+      />
+      <RankedModeModal
+        isOpen={rankedModalOpen}
+        onOpenChange={setRankedModalOpen}
+        onFindOpponents={findRankedOpponents}
+        onTraining={startRankedTraining}
       />
       {rankedDemoOpen && (
         <PracticeDemo slug="match" title={t('play.guestDemoCta')} locale={locale} backHref="/play" onExit={() => setRankedDemoOpen(false)} />

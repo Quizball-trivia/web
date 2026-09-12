@@ -6,7 +6,33 @@ import type { SeoPageLocale } from "./game-pages";
  * A page is only published (public-games.ts `page: true`) once it has a body
  * here in every locale — templated pages with five strings are not indexed.
  */
-export const GAME_PAGE_DETAILS: Record<string, Record<SeoPageLocale, string[]>> = {
+export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, string[]>>> = {
+  ranked: {
+    en: [
+      "Ranked is Quizball's competitive mode: a live one-against-one football trivia match against a real opponent, played for ranked points (RP). Three categories are drawn from the catalogue; each player bans one, and the match is played in the category that survives. Twelve questions in two halves, with a category re-draw at half-time.",
+      "Every question is a possession battle. Both players answer the same question; the faster correct answer wins ground on the pitch. Push the ball to the opponent's goal line to earn a shot, and a shot that beats the keeper is a goal. If the score is level at full time the match goes to penalties: a question decides every kick.",
+      "Winning earns RP and moves you up the tiers, from Academy to the top divisions; losing costs RP. New accounts play three placement matches before they get a tier. Your matches, win rate and rank live on the leaderboard, and the weekend competition takes its qualification points from ranked play.",
+      "The training match on this page is a guided version of exactly that flow: the same ban phase, the same possession rounds and a penalty shoot-out, against CoachBot, with hints at every step. It awards nothing and is not saved. Ranked itself needs an account.",
+    ],
+    ka: [
+      "რეიტინგული Quizball-ის შეჯიბრებითი რეჟიმია: ლაივ ერთი ერთზე საფეხბურთო ტრივია ნამდვილი მეტოქის წინააღმდეგ, რეიტინგული ქულებისთვის (RP). კატალოგიდან სამი კატეგორია ვარდება; თითოეული მოთამაშე ერთს ბანავს და მატჩი გადარჩენილ კატეგორიაში თამაშდება. თორმეტი კითხვა ორ ტაიმად, შესვენებაზე კატეგორიების ხელახალი გათამაშებით.",
+      "ყოველი კითხვა ფლობისთვის ბრძოლაა. ორივე მოთამაშე ერთსა და იმავე კითხვას პასუხობს; უფრო სწრაფი სწორი პასუხი მოედანზე ადგილს იგებს. მიიტანე ბურთი მეტოქის კარის ხაზამდე, რომ დარტყმა მოიპოვო; მეკარისთვის მოგებული დარტყმა გოლია. თუ მატჩი ფრედ დასრულდა, პენალტები იწყება: ყოველ დარტყმას კითხვა წყვეტს.",
+      "მოგება RP-ს გაძლევს და ტიერებში გწევს, აკადემიიდან უმაღლეს დივიზიონებამდე; წაგება RP-ს გაკლებს. ახალი ანგარიში ტიერის მიღებამდე სამ საკვალიფიკაციო მატჩს თამაშობს. შენი მატჩები, მოგების პროცენტი და ადგილი ლიდერბორდზე ჩანს, ხოლო შაბათ-კვირის შეჯიბრი საკვალიფიკაციო ქულებს რეიტინგული თამაშიდან იღებს.",
+      "ამ გვერდის საწვრთნელი მატჩი ზუსტად ამ პროცესის მინიშნებებიანი ვერსიაა: იგივე ბანის ფაზა, იგივე ფლობის რაუნდები და პენალტების სერია CoachBot-ის წინააღმდეგ. ის არაფერს გაძლევს და არ ინახება. თავად რეიტინგულს ანგარიში სჭირდება.",
+    ],
+    es: [
+      "Clasificatoria es el modo competitivo de Quizball: un partido de trivia de fútbol uno contra uno, en vivo, contra un rival real, jugado por puntos de clasificación (RP). Se sortean tres categorías del catálogo; cada jugador veta una y el partido se juega en la que sobrevive. Doce preguntas en dos tiempos, con un nuevo sorteo de categoría en el descanso.",
+      "Cada pregunta es una batalla por la posesión. Los dos responden la misma pregunta; la respuesta correcta más rápida gana terreno en el campo. Lleva el balón hasta la línea de gol del rival para ganar un disparo, y un disparo que supera al portero es gol. Si el marcador está igualado al final, el partido se decide en los penaltis: una pregunta decide cada lanzamiento.",
+      "Ganar da RP y te sube de nivel, desde Academia hasta las divisiones más altas; perder resta RP. Una cuenta nueva juega tres partidos de colocación antes de recibir un nivel. Tus partidos, tu porcentaje de victorias y tu puesto aparecen en la clasificación, y la competición del fin de semana toma sus puntos de clasificación del modo clasificatorio.",
+      "El partido de entrenamiento de esta página es una versión guiada de ese mismo flujo: la misma fase de vetos, las mismas rondas de posesión y una tanda de penaltis contra CoachBot, con pistas en cada paso. No otorga nada y no se guarda. El modo clasificatorio en sí requiere una cuenta.",
+    ],
+    tr: [
+      "Dereceli, Quizball'un rekabet modudur: gerçek bir rakibe karşı canlı, bire bir futbol bilgi maçı, dereceli puan (RP) için oynanır. Katalogdan üç kategori çekilir; her oyuncu birini yasaklar ve maç kalan kategoride oynanır. İki devrede on iki soru, devre arasında yeni kategori çekilişiyle.",
+      "Her soru bir top hakimiyeti mücadelesidir. İki oyuncu da aynı soruyu cevaplar; daha hızlı doğru cevap sahada yer kazandırır. Topu rakibin kale çizgisine kadar götürerek şut hakkı kazan; kaleciyi geçen şut goldür. Maç sonunda skor eşitse penaltılara gidilir: her vuruşu bir soru belirler.",
+      "Kazanmak RP kazandırır ve seni Akademi'den üst liglere doğru yükseltir; kaybetmek RP götürür. Yeni hesaplar bir kademe almadan önce üç yerleştirme maçı oynar. Maçların, kazanma oranın ve sıran liderlik tablosunda görünür; hafta sonu yarışması da katılım puanlarını dereceli maçlardan alır.",
+      "Bu sayfadaki antrenman maçı tam olarak bu akışın yönlendirmeli sürümüdür: aynı yasak aşaması, aynı top hakimiyeti turları ve CoachBot'a karşı bir penaltı serisi, her adımda ipuçlarıyla. Hiçbir şey kazandırmaz ve kaydedilmez. Dereceli modun kendisi hesap gerektirir.",
+    ],
+  },
   "football-tic-tac-toe": {
     en: [
       "Football Tic Tac Toe is played on a three-by-three grid. Each row and each column carries a category: a club, a nation, a league, a trophy or a manager. Every square therefore stands for two categories at once, and you claim it by naming a footballer who fits both, for example a Brazilian who played for Chelsea.",

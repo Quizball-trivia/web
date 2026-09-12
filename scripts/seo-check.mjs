@@ -16,8 +16,9 @@ check("sitemap excludes /play and /demos", !urls.some((u) => /\/(play|demos)(\/|
 const clusters = [
   { en: "/en", ka: "/ka", es: "/es", tr: "/tr" },
   { en: "/en/football-games/auction", ka: "/ka/football-games/auction", es: "/es/juegos-de-futbol/subasta" },
+  { en: "/en/football-games/ranked", ka: "/ka/football-games/ranked", es: "/es/juegos-de-futbol/clasificatoria", tr: "/tr/football-games/ranked" },
   { en: "/en/football-games/football-tic-tac-toe", ka: "/ka/football-games/football-tic-tac-toe", es: "/es/juegos-de-futbol/tiki-taka-toe" },
-  { en: "/en/football-games/daily-challenges", ka: "/ka/football-games/daily-challenges", es: "/es/juegos-de-futbol/retos-diarios" },
+  { en: "/en/football-games/daily-challenges", ka: "/ka/football-games/daily-challenges", es: "/es/juegos-de-futbol/retos-diarios", tr: "/tr/football-games/daily-challenges" },
 ];
 const expectedAlternates = new Map();
 for (const cluster of clusters) for (const path of Object.values(cluster)) expectedAlternates.set(path, { ...cluster, "x-default": cluster.en });
@@ -49,7 +50,7 @@ for (const [path, status, target] of [["/en/football-games", 308, "/en"], ["/es/
   const loc = (res.headers.get("location") ?? "").replace(/^https?:\/\/[^/]+/, "");
   check(`${path} → ${status}${target ? " " + target : ""}`, res.status === status && (!target || loc === target), `${res.status} ${loc}`);
 }
-for (const path of ["/en/games/auction", "/en/daily/money-drop", "/es/football-games/auction", "/en/football-games/football-timeline", "/en/football-games/nope", "/tr/football-games/auction", "/tr/football-games/daily-challenges", "/tr/juegos-de-futbol/subasta"]) {
+for (const path of ["/en/games/auction", "/en/daily/money-drop", "/es/football-games/auction", "/en/football-games/football-timeline", "/en/football-games/nope", "/tr/football-games/auction", "/tr/juegos-de-futbol/subasta"]) {
   const res = await get(path);
   check(`${path} 404`, res.status === 404, String(res.status));
 }
@@ -88,7 +89,11 @@ for (const path of ["/en", "/ka", "/es", "/tr"]) {
   check(`${path} has exactly one h1`, (html.match(/<h1[\s>]/gi) ?? []).length === 1, String((html.match(/<h1[\s>]/gi) ?? []).length));
   check(`${path} has no /demos links`, !/href="\/demos\//.test(html));
   check(`${path} server HTML is the guest variant`, /data-chrome="guest"/.test(html) && !/data-chrome="member"/.test(html));
-  check(`${path} cards never link to an unpublished locale page`, !/href="\/tr\/football-games\//.test(html));
+  // Every locale-folder link on the hub must resolve (a locale without that page links to the English one).
+  const localLinks = [...new Set([...html.matchAll(/href="(\/(?:en|ka|es|tr)\/(?:football-games|juegos-de-futbol)\/[a-z-]+)"/g)].map((m) => m[1]))];
+  const dead = [];
+  for (const link of localLinks) { if ((await get(link)).status !== 200) dead.push(link); }
+  check(`${path} hub links resolve`, dead.length === 0, dead.join(", "));
 }
 const about = await (await get("/en/about")).text();
 check("/en/about stays outside the app shell", !/data-shell="app"/.test(about));

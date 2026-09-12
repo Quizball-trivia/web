@@ -798,6 +798,8 @@
     "sectionPlayCoins": "Play with coins",
     "sectionPlayCoinsHint": "Bet your coins and win more",
     "guestDemoCta": "Training",
+    "rankedFindOpponents": "Find opponents",
+    "rankedModalDescription": "Live 1v1 football trivia against a real opponent: three categories, one ban each, possession rounds and penalties. Win to climb the tiers and the leaderboard.",
     "completed": "Completed",
     "unlocksIn": "Unlocks in {time}",
     "rankedMatch": "Ranked Match",

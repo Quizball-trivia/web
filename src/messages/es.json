@@ -798,6 +798,8 @@
     "sectionPlayCoins": "Juega con monedas",
     "sectionPlayCoinsHint": "Apuesta tus monedas y gana más",
     "guestDemoCta": "Entrenar",
+    "rankedFindOpponents": "Buscar rival",
+    "rankedModalDescription": "Trivia de fútbol 1v1 en vivo contra un rival real: tres categorías, un veto cada uno, rondas de posesión y penaltis. Gana para subir de nivel y en la clasificación.",
     "completed": "Completado",
     "unlocksIn": "Se desbloquea en {time}",
     "rankedMatch": "Partido clasificatorio",

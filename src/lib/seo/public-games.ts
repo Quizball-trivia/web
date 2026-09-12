@@ -56,7 +56,7 @@ export const PUBLIC_GAME_META: PublicGameMeta[] = [
   { modeId: "auction", slug: "auction", group: "multiplayer", guest: "demo", demoSlug: "auction", page: true, card: true, destination: { kind: "page" }, related: ["grid", "cardDetective", "moneyDrop"], order: 1, practiceLocales: ["en", "ka"] },
   // Friendly rooms need a guest identity on the server (phase 3): card only, opens the app.
   { modeId: "friendly", slug: "friendly", group: "multiplayer", guest: "app", page: false, card: true, destination: { kind: "app", path: "/friend" }, related: ["grid", "auction", "moneyDrop"], order: 2 },
-  { modeId: "ranked", slug: "ranked", group: "competitive", guest: "app", page: false, card: true, destination: { kind: "app", path: "/play" }, related: [], order: 0 },
+  { modeId: "ranked", slug: "ranked", group: "competitive", guest: "demo", demoSlug: "match", page: true, card: true, destination: { kind: "page" }, related: ["grid", "auction"], order: 0 },
   // Established campaign-quiz pages keep these intents; the cards link there.
   { modeId: "clues", slug: "who-am-i", group: "daily", guest: "demo", demoSlug: "daily-clues", page: false, card: true, destination: { kind: "quiz", sourceSlug: "guess-the-player" }, related: [], order: 0 },
   { modeId: "careerPath", slug: "career-path", group: "daily", guest: "demo", demoSlug: "daily-careerPath", page: false, card: true, destination: { kind: "quiz", sourceSlug: "career-path" }, related: [], order: 4 },

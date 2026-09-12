@@ -65,7 +65,7 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, engineEmit
           ref={launchRef}
           type="button"
           onClick={start}
-          className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-brand-yellow px-8 text-base font-bold uppercase tracking-wide text-black transition-colors hover:bg-brand-yellow-deep"
+          className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-brand-blue px-8 text-base font-bold uppercase tracking-wide text-white transition-colors hover:bg-brand-blue/90"
         >
           <Play className="size-5" /> {copy.start}
         </button>
