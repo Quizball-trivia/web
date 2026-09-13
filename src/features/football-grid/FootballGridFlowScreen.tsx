@@ -5,7 +5,7 @@
 import { GuestResultsCta } from '@/features/friend/components/GuestResultsCta';
 import { GUEST_LOBBIES_ENABLED } from '@/lib/config';
 import { useEnsureGuestPrincipal, useRealtimePrincipal } from '@/lib/realtime/realtime-principal';
-import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
+import { FormEvent, Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { AlertTriangle, Check, LoaderCircle, UserRound, UserRoundSearch } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -1236,17 +1236,26 @@ export function FootballGridTurnPanel({
               exit={{ y: 48, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 380, damping: 32 }}
               className={cn(
-                'relative w-full max-w-md rounded-t-3xl border-t-2 bg-surface-card-deep px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-4 shadow-2xl shadow-black/50 sm:rounded-3xl sm:border-2 sm:pb-4',
-                feedback === 'wrong' || feedback === 'already_used' ? 'border-brand-red/70' : 'border-white/10',
+                'relative w-full max-w-md rounded-t-3xl border-t-2 bg-surface-card px-4 pb-[calc(env(safe-area-inset-bottom)+1rem)] pt-4 shadow-2xl shadow-black/50 sm:rounded-3xl sm:border-2 sm:pb-4',
+                feedback === 'wrong' || feedback === 'already_used' ? 'border-brand-red/70' : 'border-white/15',
               )}
             >
-              <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-white/15 sm:hidden" />
-              <div className="flex min-w-0 items-center justify-center gap-2">
-                <CriterionAsset key={`row-${selectedRow.id}`} criterion={selectedRow} className="size-7 shrink-0" />
-                <span className="truncate font-poppins text-xs font-black uppercase text-white">{criterionLabel(selectedRow)}</span>
-                <span className="font-poppins text-sm font-black text-white/35">×</span>
-                <CriterionAsset key={`col-${selectedColumn.id}`} criterion={selectedColumn} className="size-7 shrink-0" />
-                <span className="truncate font-poppins text-xs font-black uppercase text-white">{criterionLabel(selectedColumn)}</span>
+              <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-white/20 sm:hidden" />
+              {/* Both criteria in full: logo on a light chip, label wrapping to two lines. */}
+              <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                {[selectedRow, selectedColumn].map((criterion, index) => (
+                  <Fragment key={`${index === 0 ? 'row' : 'col'}-${criterion.id}`}>
+                    {index === 1 && <span className="font-poppins text-lg font-black text-white/40">×</span>}
+                    <div className="flex min-w-0 flex-col items-center gap-1.5 text-center">
+                      <div className="grid size-12 shrink-0 place-items-center rounded-xl bg-white/90 p-1.5">
+                        <CriterionAsset criterion={criterion} className="size-full text-surface-card ring-0" />
+                      </div>
+                      <span className="line-clamp-2 font-poppins text-[11px] font-black uppercase leading-tight text-white">
+                        {criterionLabel(criterion)}
+                      </span>
+                    </div>
+                  </Fragment>
+                ))}
               </div>
               <input
                 ref={answerInputRef}
