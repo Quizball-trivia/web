@@ -18,6 +18,25 @@ interface PlayerContextValue {
 
 const PlayerContext = createContext<PlayerContextValue | null>(null);
 
+const GUEST_BASELINE: Partial<PlayerProfile> = {
+  level: 1,
+  xp: 0,
+  xpToNextLevel: 1000,
+  coins: 0,
+  tickets: 0,
+  totalScore: 0,
+  gamesPlayed: 0,
+  correctAnswers: 0,
+  currentStreak: 0,
+  bestStreak: 0,
+  achievements: [],
+  badges: [],
+  rank: 0,
+  ownedItems: [],
+  rankPoints: 0,
+  completedLevels: [],
+};
+
 export function PlayerProvider({ children }: { children: ReactNode }) {
   const [player, setPlayer] = useState<PlayerProfile>(mockCurrentPlayer);
   const authUser = useAuthStore((state) => state.user);
@@ -51,6 +70,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
       return {
         ...prev,
+        // A guest holds nothing: the mock profile's level, coins, RP and
+        // achievements must never show up in a guest's screens.
+        ...(authUser ? {} : GUEST_BASELINE),
         id: newId ?? prev.id,
         username: newUsername ?? prev.username,
         avatarCustomization: newAvatarCustomization ?? undefined,

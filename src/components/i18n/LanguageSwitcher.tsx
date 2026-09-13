@@ -13,6 +13,7 @@ import {
 import { LOCALES as LOCALE_CODES, isLocale, type Locale } from "@/lib/i18n/locale";
 import { LOCALES as LOCALE_OPTIONS } from "@/lib/i18n/messages";
 import { cn } from "@/lib/utils";
+import { storage, STORAGE_KEYS } from "@/utils/storage";
 import { swapCampaignLocalePath } from "@/features/campaign-quiz/campaignQuiz.routes";
 import { DAILY_COLLECTION_SLUG, PUBLIC_GAMES_FOLDER, dailyCollectionPath, findGamePageByLocalizedSlug, gamePagePath, isSeoPageLocale } from "@/lib/seo/game-pages";
 import { findPublicGameBySlug, isPublishedIn } from "@/lib/seo/public-games";
@@ -109,6 +110,10 @@ export function LanguageSwitcher({ locale, className, locales = LOCALE_CODES }: 
                 href={href}
                 hrefLang={code}
                 lang={code}
+                // An explicit choice: persisted so leaving the localized pages
+                // (creating a room, opening a game) keeps this language instead
+                // of falling back to an earlier inferred one.
+                onClick={() => storage.set(STORAGE_KEYS.LOCALE, code)}
                 aria-current={active ? "page" : undefined}
                 className={cn(
                   "flex min-h-12 w-full items-center gap-3 rounded-[12px] px-3 text-white outline-none transition-colors hover:bg-white/10 focus:bg-white/10",
