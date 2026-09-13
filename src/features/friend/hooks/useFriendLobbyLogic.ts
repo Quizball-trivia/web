@@ -170,7 +170,10 @@ export function useFriendLobbyLogic({
   const [settingsErrorVersion, setSettingsErrorVersion] = useState(0);
   const [isStartingMatch, setIsStartingMatch] = useState(false);
   const [handoffTimedOutCode, setHandoffTimedOutCode] = useState<string | null>(null);
-  const [optimisticReady, setOptimisticReady] = useState<boolean | null>(null);
+  // Bridges the lobby:ready round trip only; tagged with the room so it never
+  // leaks into another lobby. Cleared (during render, per React's derived-state
+  // pattern) once the server agrees or the room changes.
+  const [optimisticReadyState, setOptimisticReadyState] = useState<{ value: boolean; lobbyId: string } | null>(null);
   const [inviteJoinFailureState, setInviteJoinFailure] = useState<InviteJoinFailure | null>(null);
   const [awaitingInviteLobby, setAwaitingInviteLobby] = useState<AwaitingInviteLobbyState | null>(null);
 
@@ -199,6 +202,13 @@ export function useFriendLobbyLogic({
   const lobbyCode = activeLobby?.inviteCode ?? (roomCode === "new" ? "" : normalizedRoomCode ?? roomCode);
   const members = activeLobby?.members ?? [];
   const me = members.find((member) => member.userId === selfUserId);
+  const optimisticReady =
+    optimisticReadyState !== null && optimisticReadyState.lobbyId === activeLobby?.lobbyId ? optimisticReadyState.value : null;
+  if (optimisticReadyState !== null && (optimisticReady === null || me?.isReady === optimisticReady)) {
+    // Server agreed (or the room changed): a later server-side reset (failed
+    // start, party transition) must show instead of a stale "ready".
+    setOptimisticReadyState(null);
+  }
   const otherMembers = members.filter((member) => member.userId !== selfUserId);
   const opponent = otherMembers[0];
 
@@ -644,9 +654,9 @@ export function useFriendLobbyLogic({
   };
 
   const handleReadyToggle = () => {
-    if (!me) return;
+    if (!me || !activeLobby) return;
     const nextReady = !(optimisticReady ?? me.isReady);
-    setOptimisticReady(nextReady);
+    setOptimisticReadyState({ value: nextReady, lobbyId: activeLobby.lobbyId });
     getSocket().emit("lobby:ready", { ready: nextReady });
     logger.info("Socket emit lobby:ready", { ready: nextReady });
   };
@@ -760,16 +770,6 @@ export function useFriendLobbyLogic({
     };
   }, [clearStartMatchTimeout]);
 
-  // The optimistic value only bridges the round trip. Once the server agrees
-  // it is dropped, so a later server-side reset (failed start, party
-  // transition, settings change) shows instead of a stale "ready".
-  const meIsReady = me?.isReady ?? null;
-  useEffect(() => {
-    if (optimisticReady !== null && meIsReady === optimisticReady) setOptimisticReady(null);
-  }, [meIsReady, optimisticReady]);
-  useEffect(() => {
-    setOptimisticReady(null);
-  }, [activeLobby?.lobbyId]);
   const derivedOptimisticReady = optimisticReady !== null && me?.isReady !== optimisticReady
     ? optimisticReady
     : null;
