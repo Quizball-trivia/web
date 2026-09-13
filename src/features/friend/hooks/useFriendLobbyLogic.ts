@@ -760,6 +760,16 @@ export function useFriendLobbyLogic({
     };
   }, [clearStartMatchTimeout]);
 
+  // The optimistic value only bridges the round trip. Once the server agrees
+  // it is dropped, so a later server-side reset (failed start, party
+  // transition, settings change) shows instead of a stale "ready".
+  const meIsReady = me?.isReady ?? null;
+  useEffect(() => {
+    if (optimisticReady !== null && meIsReady === optimisticReady) setOptimisticReady(null);
+  }, [meIsReady, optimisticReady]);
+  useEffect(() => {
+    setOptimisticReady(null);
+  }, [activeLobby?.lobbyId]);
   const derivedOptimisticReady = optimisticReady !== null && me?.isReady !== optimisticReady
     ? optimisticReady
     : null;
