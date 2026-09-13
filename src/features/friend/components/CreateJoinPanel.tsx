@@ -71,8 +71,10 @@ export function CreateJoinPanel({ onActionTriggered }: CreateJoinPanelProps) {
     } catch (error) {
       console.error('Analytics trackFriendInviteAccepted failed', error);
     }
-    toast.info(t("friend.joiningCode", { code }));
+    // Dismissed as soon as the join resolves: the room's Ready button sits where the toast lands.
+    const joiningToast = toast.info(t("friend.joiningCode", { code }));
     void joinByCode(code).then((result) => {
+      toast.dismiss(joiningToast);
       if (!result || result.ok) return;
       toast.error(result.message);
     });

@@ -98,8 +98,9 @@ export function FriendMatchHubPage() {
     }
 
     handleActionTriggered('public_lobby');
-    toast.info(t('friend.toastJoiningCode', { code: targetCode }));
+    const joiningToast = toast.info(t('friend.toastJoiningCode', { code: targetCode }));
     void joinByCode(targetCode).then((result) => {
+      toast.dismiss(joiningToast);
       if (!result) {
         resetJoinNavigationState();
         return;

@@ -3,6 +3,7 @@ import { mockCurrentPlayer } from '@/data/mockData';
 import type { PlayerProfile } from '@/lib/domain';
 import { applyXpReward } from '@/lib/domain/matchXp';
 import { useAuthStore } from '@/stores/auth.store';
+import { useGuestPrincipalStore } from '@/lib/realtime/realtime-principal';
 import { useRankedProfile } from '@/lib/queries/ranked.queries';
 
 interface PlayerContextValue {
@@ -21,13 +22,21 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const [player, setPlayer] = useState<PlayerProfile>(mockCurrentPlayer);
   const authUser = useAuthStore((state) => state.user);
   const { data: rankedProfile } = useRankedProfile({ enabled: Boolean(authUser) });
+  // Friend-room guests are a real (account-less) identity: their server name
+  // and kit drive every gameplay screen instead of the mock profile.
+  const guest = useGuestPrincipalStore((state) => state.guest);
 
   useEffect(() => {
-    if (!authUser) return;
+    const identity = authUser
+      ? { id: authUser.id, username: authUser.nickname ?? authUser.email?.split('@')[0], avatarCustomization: authUser.avatar_customization }
+      : guest
+        ? { id: guest.userId, username: guest.nickname ?? undefined, avatarCustomization: guest.avatarCustomization }
+        : null;
+    if (!identity) return;
 
-    const newId = authUser.id;
-    const newUsername = authUser.nickname ?? authUser.email?.split('@')[0];
-    const newAvatarCustomization = authUser.avatar_customization;
+    const newId = identity.id;
+    const newUsername = identity.username;
+    const newAvatarCustomization = identity.avatarCustomization;
 
     // Sync auth user changes to player context - intentional synchronization pattern
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -47,7 +56,7 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         avatarCustomization: newAvatarCustomization ?? undefined,
       };
     });
-  }, [authUser]);
+  }, [authUser, guest]);
 
   const updateCoins = useCallback((delta: number) => {
     setPlayer(p => ({ ...p, coins: Math.max(0, p.coins + delta) }));
