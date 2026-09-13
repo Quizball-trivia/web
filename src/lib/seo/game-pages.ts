@@ -32,7 +32,7 @@ export interface GamePageEntry {
 }
 
 /** Locales with a public game page body; the rest (tr today) get the hub only and English pages from the cards. */
-export const SEO_PAGE_LOCALES = ["en", "ka", "es"] as const satisfies readonly Locale[];
+export const SEO_PAGE_LOCALES = ["en", "ka", "es", "tr"] as const satisfies readonly Locale[];
 export type SeoPageLocale = (typeof SEO_PAGE_LOCALES)[number];
 export const isSeoPageLocale = (locale: Locale): locale is SeoPageLocale => (SEO_PAGE_LOCALES as readonly Locale[]).includes(locale);
 
@@ -56,6 +56,7 @@ const LOCALIZED_SLUGS: Record<string, Partial<Record<Locale, string>>> = {
   "missing-xi": { es: "once-perdido" },
   "pass-chain": { es: "cadena-de-pases" },
   "stat-sniper": { es: "francotirador-de-datos" },
+  ranked: { es: "clasificatoria" },
   "free-kicks": { es: "tiros-libres" },
   "road-to-goal": { es: "camino-al-gol" },
   "trivia-mines": { es: "minas-de-trivia" },

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEnsureGuestPrincipal } from "@/lib/realtime/realtime-principal";
 import { AlertCircle, ArrowLeft, CheckCircle2, Loader2, LogOut, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LobbyHeader } from "./LobbyHeader";
@@ -15,7 +16,8 @@ interface FriendLobbyScreenProps {
 }
 
 export function FriendLobbyScreen({ roomCode, isHost, inviteSource }: FriendLobbyScreenProps) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  useEnsureGuestPrincipal(locale);
   const {
     lobby,
     isAuctionLobby,

@@ -98,7 +98,7 @@ export function PitchVisualization(props: PitchVisualizationProps) {
   } = usePitchSceneModel({ ...props, playerPosition });
 
   return (
-    <div className={isPortrait ? 'h-full w-full' : 'w-full'}>
+    <div className={isPortrait ? 'h-full w-full' : 'w-full'} data-pitch-root="true">
       {/* Square corners — matches the Figma stadium frame (no rounded edges) */}
       <div className={`relative overflow-hidden ${isPortrait ? 'h-full w-full' : ''}`}>
         {/* Camera zoom wrapper — field container stays anchored, SVG zooms inside */}

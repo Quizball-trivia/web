@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import { useAuthPromptStore } from "@/stores/authPrompt.store";
 import { useAuthStore } from "@/stores/auth.store";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ModeSelectionScreen } from "@/features/play/ModeSelectionScreen";
 import { useGameSessionStore } from "@/stores/gameSession.store";
@@ -27,6 +27,7 @@ import { useLocale } from "@/contexts/LocaleContext";
 import { useIsGuest } from "@/lib/auth/useIsGuest";
 import { logSocketDebug } from "@/lib/realtime/socket-client";
 import { MobileVerificationReminderExperiment } from "@/features/play/MobileVerificationReminderExperiment";
+import { useTrainingCompletion } from "@/features/training/hooks/useTrainingCompletion";
 
 // Ranked entry costs 1 ticket — mirrors ModeConfirmModal's CONFIG.ranked.entryCost.
 const RANKED_TICKET_COST = 1;
@@ -51,6 +52,57 @@ export function PlayHome({ beforeFooter }: { beforeFooter?: ReactNode } = {}) {
   const { data: featuredData } = useFeaturedCategories({ enabled: !isGuest });
   const { data: matchStatsSummary = null } = useMatchStatsSummary();
   const { data: rankedProfile, isLoading: rankedProfileLoading } = useRankedProfile();
+
+  // New-player training gate: offer the guided training match before the very
+  // first ranked qualifier — only for members with zero placement matches who
+  // have not played or skipped it. `trainingSeen` mirrors the stored flag in
+  // state so skipping stops the offer immediately.
+  const trainingCompletion = useTrainingCompletion();
+  const [trainingSeen, setTrainingSeen] = useState(false);
+  const skipTraining = () => {
+    trainingCompletion.markComplete();
+    setTrainingSeen(true);
+  };
+  const shouldOfferTraining =
+    !isGuest
+    && !trainingSeen
+    && !rankedProfileLoading
+    && rankedProfile != null
+    && rankedProfile.placementStatus !== "placed"
+    && (rankedProfile.placementPlayed ?? 0) === 0
+    && !trainingCompletion.isComplete();
+  const startTraining = () => {
+    resetRealtime();
+    useRankedMatchmakingStore.getState().clearRankedMatchmaking();
+    startSession({ mode: "training" });
+    router.push("/game");
+  };
+  // Auction tutorial gate: offered once before the first "Find opponents" in
+  // the Auction dialog; playing or skipping it marks the auction tutorial seen.
+  const auctionTrainingCompletion = useTrainingCompletion("auction");
+  const [auctionTrainingSeen, setAuctionTrainingSeen] = useState(false);
+  const shouldOfferAuctionTraining = !isGuest && !auctionTrainingSeen && !auctionTrainingCompletion.isComplete();
+  const startAuctionTraining = () => {
+    resetRealtime();
+    startSession({ mode: "training", trainingGame: "auction" });
+    router.push("/game");
+  };
+  const skipAuctionTraining = () => {
+    auctionTrainingCompletion.markComplete();
+    setAuctionTrainingSeen(true);
+  };
+  const gridTrainingCompletion = useTrainingCompletion("grid");
+  const [gridTrainingSeen, setGridTrainingSeen] = useState(false);
+  const shouldOfferGridTraining = !isGuest && !gridTrainingSeen && !gridTrainingCompletion.isComplete();
+  const startGridTraining = () => {
+    resetRealtime();
+    startSession({ mode: "training", trainingGame: "grid" });
+    router.push("/game");
+  };
+  const skipGridTraining = () => {
+    gridTrainingCompletion.markComplete();
+    setGridTrainingSeen(true);
+  };
   const { data: storeWallet } = useStoreWallet();
   const { data: categoriesData } = useCategoriesList({
     limit: 100,
@@ -210,6 +262,9 @@ export function PlayHome({ beforeFooter }: { beforeFooter?: ReactNode } = {}) {
           rankedProfile={rankedProfile ?? null}
           rankedProfileLoading={rankedProfileLoading}
           beforeFooter={beforeFooter}
+          trainingOffer={{ shouldOffer: shouldOfferTraining, onPlayTraining: startTraining, onSkip: skipTraining }}
+          auctionTraining={{ shouldOffer: shouldOfferAuctionTraining, onPlay: startAuctionTraining, onSkip: skipAuctionTraining }}
+          gridTraining={{ shouldOffer: shouldOfferGridTraining, onPlay: startGridTraining, onSkip: skipGridTraining }}
         />
       </div>
     </div>

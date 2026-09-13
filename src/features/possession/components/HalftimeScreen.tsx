@@ -36,6 +36,8 @@ interface HalftimeScreenProps {
   firstBanSeat?: 1 | 2 | null;
   myBan?: string | null;
   opponentBan?: string | null;
+  /** Tutorial-only gate: only this category card can be selected. */
+  guidedCategoryId?: string | null;
   onBanCategory?: (categoryId: string) => void;
   onBanPhaseShown?: () => void;
   /** When true this is the pre-penalty category ban — shows a "Penalties" heading. */
@@ -111,6 +113,7 @@ export function HalftimeScreen({
   firstBanSeat = null,
   myBan = null,
   opponentBan = null,
+  guidedCategoryId = null,
   onBanCategory,
   onBanPhaseShown,
   isPenaltyBan = false,
@@ -119,6 +122,9 @@ export function HalftimeScreen({
   const { t, locale } = useLocale();
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [showBanPhase, setShowBanPhase] = useState(false);
+  const guidedCategory = guidedCategoryId
+    ? categoryOptions.find((category) => category.id === guidedCategoryId) ?? null
+    : null;
 
   // Delay showing the ban cards so the score sinks in first
   useEffect(() => {
@@ -387,7 +393,9 @@ export function HalftimeScreen({
                 )}
               >
                 {canBan
-                  ? t('possession.halftime.yourTurn')
+                  ? guidedCategory
+                    ? t('training.tapGuidedCategory', { category: getI18nText(guidedCategory.name, locale) })
+                    : t('possession.halftime.yourTurn')
                   : t('possession.halftime.opponentBanning')}
               </div>
             )}
@@ -399,7 +407,8 @@ export function HalftimeScreen({
                 const isOpponentBan = opponentBan === category.id;
                 const isBanned = isMyBan || isOpponentBan;
                 const isRemaining = bothBansSubmitted && !isMyBan && !isOpponentBan && remainingCategory?.id === category.id;
-                const disabled = isBanned || !canBan;
+                const isGuidedBlocked = guidedCategoryId !== null && category.id !== guidedCategoryId;
+                const disabled = isBanned || !canBan || isGuidedBlocked;
 
                 return (
                   <BanCategoryCard
@@ -410,6 +419,7 @@ export function HalftimeScreen({
                     isBanned={isBanned}
                     isRemaining={isRemaining}
                     disabled={disabled}
+                    fadedOut={isGuidedBlocked && !myBan}
                     onClick={onBanCategory}
                   />
                 );

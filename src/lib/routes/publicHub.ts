@@ -1,3 +1,4 @@
+import { GUEST_LOBBIES_ENABLED } from "@/lib/config";
 import { isLocale, type Locale } from "@/lib/i18n/locale";
 import { PUBLIC_GAMES_FOLDER } from "@/lib/seo/game-pages";
 
@@ -37,10 +38,23 @@ export function publicLocaleOf(pathname: string | null | undefined): Locale | nu
 }
 
 /** Routes a signed-out visitor may browse; every auth-gated action there opens the sign-in dialog. */
+/** Friend-room surfaces guests may use once guest lobbies ship: the hub, rooms, and the three game runtimes. */
+export function isGuestLobbyPath(pathname: string): boolean {
+  return (
+    pathname === "/play/friend" ||
+    pathname === "/friend" ||
+    pathname.startsWith("/friend/room/") ||
+    pathname === "/auction" ||
+    pathname === "/tic-tac-toe" ||
+    pathname === "/game"
+  );
+}
+
 export function isGuestAllowedPath(pathname: string | null | undefined): boolean {
   if (!pathname) return false;
   if (pathname === "/" || pathname === "/play") return true;
   if (pathname === "/leaderboard" || pathname === "/events" || pathname === "/weekend-league") return true;
+  if (GUEST_LOBBIES_ENABLED && isGuestLobbyPath(pathname)) return true;
   return isHubPath(pathname) || isPublicGamePath(pathname);
 }
 

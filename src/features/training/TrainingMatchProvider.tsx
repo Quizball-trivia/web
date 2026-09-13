@@ -5,10 +5,17 @@ import { useTrainingMatch } from "./hooks/useTrainingMatch";
 import { useTrainingTooltips } from "./hooks/useTrainingTooltips";
 import { useTrainingCompletion } from "./hooks/useTrainingCompletion";
 import { useCategoriesList } from "@/lib/queries/categories.queries";
+import { useQuestionsList } from "@/lib/queries/questions.queries";
 import { usePreloadImages } from "@/lib/usePreloadImages";
-import { shuffleArray } from "@/lib/utils";
 import type { CategorySummary, GameQuestion } from "@/lib/domain";
-import { BAN_CATEGORY_COUNT } from "./constants";
+import { BAN_CATEGORY_COUNT, TRAINING_BAN_CATEGORY_SLUGS } from "./constants";
+import { QUESTIONS_PER_HALF } from "@/features/possession/types/possession.types";
+import { useLocale } from "@/contexts/LocaleContext";
+import { TRAINING_PENALTY_QUESTIONS } from "./data/trainingQuestions";
+import { TRAINING_FLOW_SCRIPT } from "./data/trainingScript";
+import { buildTrainingCategoryQuestionPool } from "./data/trainingQuestionPool";
+
+const CATEGORY_QUESTION_FETCH_COUNT = QUESTIONS_PER_HALF + 4;
 
 type TrainingResultsCopy = {
   message: string;
@@ -19,8 +26,14 @@ type TrainingContextValue = {
   match: ReturnType<typeof useTrainingMatch>;
   tooltips: ReturnType<typeof useTrainingTooltips>;
   completion: ReturnType<typeof useTrainingCompletion>;
-  /** Real categories fetched from the API, shuffled and sliced for the ban phase */
+  /** Real categories fetched from the API in a stable order for the scripted ban phase. */
   banCategories: CategorySummary[];
+  /** True once both surviving categories have enough real questions to play. */
+  questionsReady: boolean;
+  /** Category-backed penalty questions (local only for explicit offline overrides). */
+  penaltyQuestions: GameQuestion[];
+  /** Disables canned special rounds when the real category pool is active. */
+  usingCategoryQuestions: boolean;
   onSkip: () => void;
   /** Overrides the results-screen message + CTA (offline/demo). */
   resultsCopy?: TrainingResultsCopy;
@@ -39,6 +52,8 @@ interface TrainingMatchProviderProps {
   onComplete: () => void;
   /** Skip the categories fetch and use these for the ban phase (offline/demo). */
   banCategoriesOverride?: CategorySummary[];
+  /** Used when the real catalog cannot be read (request failed or too few with artwork). */
+  banCategoriesFallback?: CategorySummary[];
   /** Replace the built-in training questions (offline/demo). Must match the 6-per-half structure. */
   questionsOverride?: GameQuestion[];
   /** Overrides the results-screen message + CTA (offline/demo). */
@@ -49,31 +64,89 @@ export function TrainingMatchProvider({
   children,
   onComplete,
   banCategoriesOverride,
+  banCategoriesFallback,
   questionsOverride,
   resultsCopy,
 }: TrainingMatchProviderProps) {
   const tooltips = useTrainingTooltips();
   const completion = useTrainingCompletion();
-  const match = useTrainingMatch(tooltips.isPaused, questionsOverride);
+  const { locale } = useLocale();
 
-  const { data: categoriesData } = useCategoriesList(
+  // The pinned tutorial categories, from the playable catalog (active, never campaign-only).
+  const { data: categoriesData, isError: categoriesError } = useCategoriesList(
     {
-      limit: 100,
+      limit: 10,
       page: 1,
       is_active: "true",
+      min_questions: 5,
+      slugs: TRAINING_BAN_CATEGORY_SLUGS.join(","),
     },
     { enabled: !banCategoriesOverride },
+    locale,
   );
 
-  // Pick BAN_CATEGORY_COUNT random categories for the ban phase.
+  // Use the real category catalog and artwork. The pool is no longer shuffled:
+  // the tutorial scripts the displayed positions, not fake category content.
   const banCategories = useMemo(() => {
     if (banCategoriesOverride) {
       return banCategoriesOverride.slice(0, BAN_CATEGORY_COUNT);
     }
     const items = categoriesData?.items ?? [];
+    // Keep the scripted order: the ban script addresses positions, not names.
+    const pinned = TRAINING_BAN_CATEGORY_SLUGS
+      .map((slug) => items.find((category) => category.slug === slug))
+      .filter((category): category is CategorySummary => Boolean(category?.imageUrl));
+    if (pinned.length >= BAN_CATEGORY_COUNT) return pinned.slice(0, BAN_CATEGORY_COUNT);
+    const withArt = items.filter((category) => Boolean(category.imageUrl));
+    if (withArt.length >= BAN_CATEGORY_COUNT) return withArt.slice(0, BAN_CATEGORY_COUNT);
+    // Real catalog unusable (no artwork, or the request failed): the canned set keeps the tutorial playable.
+    if (banCategoriesFallback && (categoriesError || categoriesData)) return banCategoriesFallback.slice(0, BAN_CATEGORY_COUNT);
     if (items.length === 0) return [];
-    return shuffleArray(items).slice(0, BAN_CATEGORY_COUNT);
-  }, [banCategoriesOverride, categoriesData?.items]);
+    return items.slice(0, BAN_CATEGORY_COUNT);
+  }, [banCategoriesOverride, banCategoriesFallback, categoriesData, categoriesError]);
+
+  // In ranked, both bans leave one category. Preload the two scripted
+  // survivors and use their real published MCQs for the corresponding halves.
+  const firstHalfCategory = banCategories[TRAINING_FLOW_SCRIPT.banning.questionCategoryIndex];
+  const secondHalfCategory = banCategories[TRAINING_FLOW_SCRIPT.halftime.questionCategoryIndex];
+  const shouldFetchCategoryQuestions = !questionsOverride;
+  const firstHalfQuery = useQuestionsList(
+    {
+      category_id: firstHalfCategory?.id,
+      status: "published",
+      type: "mcq_single",
+      page: 1,
+      limit: CATEGORY_QUESTION_FETCH_COUNT,
+    },
+    { enabled: shouldFetchCategoryQuestions && Boolean(firstHalfCategory?.id) },
+    locale,
+  );
+  const secondHalfQuery = useQuestionsList(
+    {
+      category_id: secondHalfCategory?.id,
+      status: "published",
+      type: "mcq_single",
+      page: 1,
+      limit: CATEGORY_QUESTION_FETCH_COUNT,
+    },
+    { enabled: shouldFetchCategoryQuestions && Boolean(secondHalfCategory?.id) },
+    locale,
+  );
+
+  const categoryQuestionPool = useMemo(() => buildTrainingCategoryQuestionPool({
+    firstHalfCategory,
+    secondHalfCategory,
+    firstHalfQuestions: firstHalfQuery.data?.items ?? [],
+    secondHalfQuestions: secondHalfQuery.data?.items ?? [],
+  }), [firstHalfCategory, firstHalfQuery.data?.items, secondHalfCategory, secondHalfQuery.data?.items]);
+  const usingCategoryQuestions = !questionsOverride && categoryQuestionPool !== null;
+  const questionsReady = questionsOverride
+    ? questionsOverride.length >= QUESTIONS_PER_HALF * 2
+    : usingCategoryQuestions;
+  const matchQuestions = questionsOverride ?? categoryQuestionPool?.matchQuestions;
+  const penaltyQuestions = categoryQuestionPool?.penaltyQuestions ?? TRAINING_PENALTY_QUESTIONS;
+
+  const match = useTrainingMatch(tooltips.isPaused, matchQuestions);
 
   // Warm the ban-category images while the match plays so the ban phase is instant.
   const banImageUrls = useMemo(() => banCategories.map((c) => c.imageUrl ?? null), [banCategories]);
@@ -85,7 +158,17 @@ export function TrainingMatchProvider({
   };
 
   return (
-    <TrainingContext.Provider value={{ match, tooltips, completion, banCategories, onSkip, resultsCopy }}>
+    <TrainingContext.Provider value={{
+      match,
+      tooltips,
+      completion,
+      banCategories,
+      questionsReady,
+      penaltyQuestions,
+      usingCategoryQuestions,
+      onSkip,
+      resultsCopy,
+    }}>
       {children}
     </TrainingContext.Provider>
   );

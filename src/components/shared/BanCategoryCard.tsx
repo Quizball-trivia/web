@@ -34,6 +34,7 @@ export const BAN_CARD_TITLE_STYLE = {
 
 const CARD_ENTRANCE_INITIAL = { opacity: 0, y: 20 } as const;
 const CARD_ENTRANCE_ANIMATE = { opacity: 1, y: 0 } as const;
+const CARD_FADED_ANIMATE = { opacity: 0.3, y: 0 } as const;
 const CARD_SPRING = { type: 'spring', stiffness: 200, damping: 20 } as const;
 
 export interface BanCategoryCardCategory {
@@ -95,7 +96,7 @@ function BanCategoryCardComponent({
   return (
     <motion.div
       initial={CARD_ENTRANCE_INITIAL}
-      animate={CARD_ENTRANCE_ANIMATE}
+      animate={fadedOut ? CARD_FADED_ANIMATE : CARD_ENTRANCE_ANIMATE}
       transition={entranceTransition}
       onClick={() => {
         if (!interactive) return;

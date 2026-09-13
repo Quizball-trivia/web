@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { Play } from "lucide-react";
-import { PracticeLayer } from "./PracticeLayer";
+import { PracticeLayer, SELF_EXITING_ENGINES } from "./PracticeLayer";
 import { useAuthStore } from "@/stores/auth.store";
 import { trackGameComplete, trackGameReplay, trackGameStart, trackGameView } from "@/lib/analytics/public-games.analytics";
 import type { DailyChallengeType } from "@/lib/domain/dailyChallenge";
@@ -60,7 +60,7 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, engineEmit
 
   return (
     <section id="play" aria-label={copy.title} className="mt-6 scroll-mt-24">
-      <div className="flex flex-col items-start gap-3 rounded-2xl border border-white/10 bg-white/[0.04] p-5">
+      <div className="flex flex-col items-start gap-3 rounded-2xl bg-brand-blue p-5">
         <button
           ref={launchRef}
           type="button"
@@ -69,11 +69,11 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, engineEmit
         >
           <Play className="size-5" /> {copy.start}
         </button>
-        <p className="text-sm text-white/65">{copy.note}</p>
+        <p className="text-sm text-white/85">{copy.note}</p>
         {!practiceLocalised && <p className="text-sm font-semibold text-brand-yellow">{copy.english}</p>}
       </div>
       {playing && (
-        <PracticeLayer title={copy.title} exitLabel={copy.exit} onExit={exit}>
+        <PracticeLayer title={copy.title} exitLabel={copy.exit} onExit={exit} exitControl={!SELF_EXITING_ENGINES.has(demoSlug)}>
           {dailyType ? (
             <GuestDailyPlay
               type={dailyType}

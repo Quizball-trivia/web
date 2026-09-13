@@ -22,6 +22,7 @@ import { WlQpToast } from '@/features/weekend-league/components/WlQpToast';
 import { trackWlQpToastClicked, trackWlQpToastShown } from '@/lib/analytics/game-events';
 import { useAuthStore } from '@/stores/auth.store';
 
+import { GuestResultsCta } from '@/features/friend/components/GuestResultsCta';
 import { RankedProgressionPanel } from './results/RankedProgressionPanel';
 import { ResultsActions } from './results/ResultsActions';
 import { ResultsHero } from './results/ResultsHero';
@@ -296,6 +297,7 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
           }}
           onMainMenu={onMainMenu}
         />
+        <GuestResultsCta className="mt-3" />
       </motion.div>
     </div>
   );

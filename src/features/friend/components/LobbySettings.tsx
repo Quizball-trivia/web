@@ -1,5 +1,7 @@
 /* eslint-disable @next/next/no-img-element -- Category images are runtime CMS URLs. */
 
+import { useRealtimePrincipal } from "@/lib/realtime/realtime-principal";
+import { useAuthPromptStore } from "@/stores/authPrompt.store";
 import { optimizedRemoteImageProps } from "@/lib/images/remoteImage";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -43,6 +45,9 @@ const MODE_DESCRIPTION_KEYS: Record<LobbyGameMode, MessageKey> = {
 
 // Max lobby members each mode can seat — a tab is switchable only while the
 // current member count fits (mirrors the server's LOBBY_MODE_CAPACITY check).
+/** Mirrors the server's GUEST_ALLOWED_LOBBY_MODES. */
+const GUEST_ALLOWED_MODES: ReadonlySet<LobbyGameMode> = new Set<LobbyGameMode>(['football_grid', 'auction', 'ranked_sim']);
+
 const MODE_CAPACITY: Record<LobbyGameMode, number> = {
   friendly_possession: 2,
   friendly_party_quiz: 6,
@@ -66,6 +71,10 @@ export function LobbySettings({
   // entirely; at exactly 3 the tabs stay and per-tab capacity gating below
   // decides what's switchable (party ⇄ auction both seat 3+).
   const isPartyLocked = memberCount > 3;
+  // A room holding a guest may only play Tic Tac Toe, Auction or Ranked sim (the server enforces the same rule).
+  const hasGuest = Boolean(lobby?.members.some((member) => member.isGuest));
+  const openAuthPrompt = useAuthPromptStore((state) => state.open);
+  const principal = useRealtimePrincipal();
   const serverIsPublic = lobby?.isPublic ?? false;
   const serverIsRandom = settings?.friendlyRandom ?? true;
 
@@ -554,13 +563,23 @@ export function LobbySettings({
             <div className="grid grid-cols-2 bg-surface-deep rounded-[14px] p-1 gap-1">
               {MODE_TABS.map(({ value, labelKey }) => {
                 const overCapacity = memberCount > MODE_CAPACITY[value];
+                const guestLocked = hasGuest && !GUEST_ALLOWED_MODES.has(value);
                 return (
                   <button
                     key={value}
-                    onClick={() => handleModeChange(value)}
-                    disabled={!canEdit || overCapacity}
+                    onClick={() => {
+                      if (guestLocked) {
+                        if (principal.kind === 'guest') openAuthPrompt();
+                        else toast.error(t("friend.errorModeRequiresAccount"));
+                        return;
+                      }
+                      handleModeChange(value);
+                    }}
+                    // A guest may always tap a locked mode: the tap opens sign-up, never a settings change.
+                    disabled={guestLocked && principal.kind === 'guest' ? overCapacity : !canEdit || overCapacity}
                     aria-pressed={mode === value}
-                    title={overCapacity ? t("friend.errorModeCapacity") : undefined}
+                    data-guest-locked={guestLocked || undefined}
+                    title={overCapacity ? t("friend.errorModeCapacity") : guestLocked ? t("friend.errorModeRequiresAccount") : undefined}
                     style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 13, letterSpacing: '0.04em' }}
                     className={cn(
                       "py-2.5 rounded-[10px] uppercase transition-colors",
@@ -568,9 +587,12 @@ export function LobbySettings({
                         ? "bg-brand-blue text-white"
                         : overCapacity
                           ? "text-white/25 cursor-not-allowed"
-                          : "text-white/55 hover:text-white"
+                          : guestLocked
+                            ? "text-white/30"
+                            : "text-white/55 hover:text-white"
                     )}
                   >
+                    {guestLocked && <Lock className="mr-1 inline size-3 align-[-1px]" aria-hidden="true" />}
                     {t(labelKey)}
                   </button>
                 );

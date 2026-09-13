@@ -33,8 +33,8 @@ vi.mock('@/contexts/PlayerContext', () => ({
 }));
 
 vi.mock('@/stores/auth.store', () => ({
-  useAuthStore: (selector?: (state: { user: { id: string } }) => unknown) => {
-    const state = { user: { id: 'user-1' } };
+  useAuthStore: (selector?: (state: { user: { id: string }; status: string }) => unknown) => {
+    const state = { user: { id: 'user-1' }, status: 'authenticated' };
     return selector ? selector(state) : state;
   },
 }));
@@ -250,6 +250,32 @@ describe('useFriendLobbyLogic invite links', () => {
       correlationId: expect.any(String),
     }, expect.any(Function));
     expect(mocks.socketEmit).not.toHaveBeenCalledWith('lobby:join_by_code', expect.anything(), expect.any(Function));
+  });
+
+  it('drops the optimistic ready flag once the server agrees, so a later server reset shows', async () => {
+    const lobby = makeLobby('N3K5UZ');
+    act(() => {
+      useRealtimeMatchStore.getState().setLobby(lobby);
+    });
+    const { result } = renderHook(() => useFriendLobbyLogic({ roomCode: 'N3K5UZ', isHost: true }));
+    await waitFor(() => expect(result.current.lobby?.inviteCode).toBe('N3K5UZ'));
+
+    act(() => result.current.actions.handleReadyToggle());
+    expect(result.current.optimisticReady).toBe(true);
+    expect(mocks.socketEmit).toHaveBeenCalledWith('lobby:ready', { ready: true });
+
+    // Server confirms.
+    act(() => {
+      useRealtimeMatchStore.getState().setLobby({ ...lobby, members: [{ ...lobby.members[0], isReady: true }] });
+    });
+    await waitFor(() => expect(result.current.optimisticReady).toBeNull());
+
+    // A failed start resets everyone: the button must follow the server, not the stale optimistic value.
+    act(() => {
+      useRealtimeMatchStore.getState().setLobby({ ...lobby, members: [{ ...lobby.members[0], isReady: false }] });
+    });
+    await waitFor(() => expect(result.current.optimisticReady).toBeNull());
+    expect(result.current.members[0]?.isReady).toBe(false);
   });
 
   it('does not expose a stale lobby when the URL invite code points to another room', async () => {

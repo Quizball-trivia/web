@@ -222,6 +222,8 @@ interface UseBarBattleParams {
   dividerX: number;
   /** Dev prototype: glow surviving one-sided bars before normal possession movement. */
   unopposedBarPulse?: boolean;
+  /** Local/tutorial drivers can announce an upcoming shot without forging a goal delta. */
+  forceShotResolution?: boolean;
   mySeat?: number | null;
 }
 
@@ -236,6 +238,7 @@ export function useBarBattle({
   phaseKind,
   dividerX,
   unopposedBarPulse = false,
+  forceShotResolution = false,
   mySeat = null,
 }: UseBarBattleParams): BarBattleState | null {
   const matchVariant = useRealtimeMatchStore((s) => s.match?.variant);
@@ -403,7 +406,9 @@ export function useBarBattle({
     const key = roundResult.qIndex;
     const snapDividerX = dividerXRef.current;
     const isShotResolution = Boolean(
-      roundResult.deltas?.goalScoredBySeat || roundResult.deltas?.penaltyOutcome
+      forceShotResolution
+      || roundResult.deltas?.goalScoredBySeat
+      || roundResult.deltas?.penaltyOutcome
     );
     const penaltyOutcome = kind === 'penalty'
       ? roundResult.deltas?.penaltyOutcome ?? null
@@ -502,7 +507,7 @@ export function useBarBattle({
     }, t);
 
     timersRef.current = [t1, t2, t3, tCharge, t4, t5, t6].filter((timer): timer is ReturnType<typeof setTimeout> => timer !== null);
-  }, [roundResult, myRound, opponentRound, phaseKind, matchVariant, unopposedBarPulse]);
+  }, [roundResult, myRound, opponentRound, phaseKind, matchVariant, unopposedBarPulse, forceShotResolution, mySeat]);
 
   // ─── Reset when new question arrives ────────────────────────────────────
   useEffect(() => {

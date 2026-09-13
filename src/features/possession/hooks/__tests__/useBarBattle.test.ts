@@ -384,6 +384,48 @@ describe('useBarBattle', () => {
     });
   });
 
+  it('lets a local scripted driver charge a non-goal shot', async () => {
+    const myRound = makePlayer(80, true);
+    const opponentRound = makePlayer(30, true);
+    const roundResult = makeRoundResult(80, 30);
+
+    const { result } = renderHook(() => useBarBattle({
+      answerAck: {
+        matchId: MATCH_ID,
+        qIndex: 5,
+        questionKind: 'multipleChoice',
+        selectedIndex: 0,
+        isCorrect: true,
+        myTotalPoints: 80,
+        oppAnswered: true,
+        pointsEarned: 80,
+        phaseKind: 'normal',
+        phaseRound: 6,
+      },
+      opponentAnswered: true,
+      opponentRecentPoints: 30,
+      opponentAnsweredCorrectly: true,
+      roundResult,
+      myRound,
+      opponentRound,
+      phaseKind: 'normal',
+      dividerX: 250,
+      forceShotResolution: true,
+    }));
+
+    await act(async () => {});
+    act(() => {
+      vi.advanceTimersByTime(1591);
+    });
+
+    expect(result.current).toMatchObject({
+      phase: 'charge',
+      playerBars: 8,
+      opponentBars: 3,
+      remainingDelta: 5,
+    });
+  });
+
   it('carries penalty save outcome into the charge animation state', async () => {
     const myRound = makePlayer(50, true);
     const opponentRound = makePlayer(0, false);

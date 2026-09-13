@@ -14,6 +14,9 @@
 //   • "OR JOIN" caption + 2:1 (Room Code | Join) row + "Browse Public
 //     Lobbies" secondary CTA — all in a lighter periwinkle blue
 //     (#5C6BFF) so they read as secondary actions against the bg.
+import { ensureGuestPrincipal } from "@/lib/realtime/realtime-principal";
+import { useAuthPromptStore } from "@/stores/authPrompt.store";
+import { useIsGuest } from "@/lib/auth/useIsGuest";
 import Image from "next/image";
 import {
   Dialog,
@@ -50,15 +53,23 @@ const SECONDARY_BG = "#5C6BFF"; // periwinkle (room code + join + browse)
 const SECONDARY_BG_HOVER = "#4A5AF0";
 
 export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const isMobile = useIsMobile();
   const router = useRouter();
+  const isGuest = useIsGuest();
+  const openAuthPrompt = useAuthPromptStore((state) => state.open);
+  // Guests: the room needs a server identity first; when the server refuses, fall back to sign-in.
+  const withPrincipal = async (go: () => void) => {
+    if (!isGuest) { go(); return; }
+    const guest = await ensureGuestPrincipal(locale);
+    if (guest) go(); else openAuthPrompt();
+  };
   const [roomCode, setRoomCode] = useState("");
   const [isJoining, setIsJoining] = useState(false);
 
   const handleCreateRoom = () => {
     onOpenChange(false);
-    router.push("/play/friend?tab=create");
+    void withPrincipal(() => router.push("/play/friend?tab=create"));
   };
 
   const handleJoinRoom = () => {
@@ -73,7 +84,7 @@ export function FriendPlayModal({ isOpen, onOpenChange }: FriendPlayModalProps) 
     }
 
     onOpenChange(false);
-    router.push(`/friend/room/${code}?source=manual_code`);
+    void withPrincipal(() => router.push(`/friend/room/${code}?source=manual_code`));
   };
 
   const Body = (

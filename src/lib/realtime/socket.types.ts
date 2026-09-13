@@ -43,6 +43,8 @@ export interface LobbyMember {
   rankPoints?: number;
   isReady: boolean;
   isHost: boolean;
+  /** Account-less guest (friend rooms only). */
+  isGuest?: boolean;
 }
 
 export interface MatchParticipant {
@@ -1456,7 +1458,7 @@ export type LobbyCreateResult =
     }
   | {
       ok: false;
-      code: "ALREADY_IN_LOBBY" | "TRANSITION_IN_PROGRESS" | "INVALID_LOBBY_CREATE" | "LOBBY_CREATE_ERROR";
+      code: "CAPABILITY_REQUIRED" | "RATE_LIMITED" | "ALREADY_IN_LOBBY" | "TRANSITION_IN_PROGRESS" | "INVALID_LOBBY_CREATE" | "LOBBY_CREATE_ERROR";
       message: string;
       retryable: boolean;
       correlationId: string;
@@ -1474,6 +1476,10 @@ export type LobbyJoinByCodeResult =
   | {
       ok: false;
       code:
+        | "CAPABILITY_REQUIRED"
+        | "LOBBY_GUEST_LIMIT"
+        | "LOBBY_MODE_REQUIRES_ACCOUNT"
+        | "RATE_LIMITED"
         | "ALREADY_IN_LOBBY"
         | "LOBBY_NOT_FOUND"
         | "LOBBY_FULL"

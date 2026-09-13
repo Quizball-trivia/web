@@ -2,9 +2,8 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
 import { motion } from 'motion/react';
-import { Bot, ScrollText, Swords } from 'lucide-react';
+import { Dumbbell, ScrollText, Swords , Users } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -23,13 +22,14 @@ interface AuctionModeModalProps {
   /** Reserved for when Create Room ships. */
   onCreateRoom?: () => void;
   onFindOnline: () => void;
-  /** Guest mode: when set, a "try the demo" link renders under the online CTA
-   *  (no opponents, no coins) while onFindOnline opens the sign-in dialog. */
-  demoHref?: string;
+  /** Guided training auction (scripted, vs bots): members play it in place, guests on the public Auction page. */
+  onTraining?: () => void;
+  /** Friend room (link or code); open to guests once guest lobbies ship. */
+  onPlayWithFriend?: () => void;
 }
 
 /** Auction mode dialog — icon hero on top → title → rules → yellow CTA. */
-export function AuctionModeModal({ isOpen, onOpenChange, onFindOnline, demoHref }: AuctionModeModalProps) {
+export function AuctionModeModal({ isOpen, onOpenChange, onFindOnline, onTraining, onPlayWithFriend }: AuctionModeModalProps) {
   const { t } = useLocale();
   const [rulesOpen, setRulesOpen] = useState(false);
   return (
@@ -85,16 +85,28 @@ export function AuctionModeModal({ isOpen, onOpenChange, onFindOnline, demoHref 
             {t('play.auctionFindOpponents')}
           </motion.button>
 
-          {/* Guest demo — play vs AI, no coins, no opponents. */}
-          {demoHref && (
-            <Link
-              href={demoHref}
+          {onPlayWithFriend && (
+            <button
+              type="button"
+              onClick={onPlayWithFriend}
               className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-white/10 uppercase text-white transition-colors hover:bg-white/15"
               style={{ fontSize: 'clamp(14px, 2.2vw, 16px)', ...poppins }}
             >
-              <Bot className="size-5" strokeWidth={2.5} />
+              <Users className="size-5" strokeWidth={2.5} />
+              {t('friend.playWithFriend')}
+            </button>
+          )}
+          {/* Training — the scripted tutorial auction (no coins, no opponents). */}
+          {onTraining && (
+            <button
+              type="button"
+              onClick={onTraining}
+              className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-white/10 uppercase text-white transition-colors hover:bg-white/15"
+              style={{ fontSize: 'clamp(14px, 2.2vw, 16px)', ...poppins }}
+            >
+              <Dumbbell className="size-5" strokeWidth={2.5} />
               {t('play.guestDemoCta')}
-            </Link>
+            </button>
           )}
 
           {/* Secondary: the full how-it-works list in its own modal. */}

@@ -251,6 +251,14 @@ export function LobbyHeader({
                   >
                     {member.username}
                   </div>
+                  {member.isGuest && (
+                    <div
+                      className="mt-0.5 rounded-full bg-white/10 px-1.5 py-[1px] uppercase text-white/60"
+                      style={{ fontFamily: poppins, fontWeight: 600, fontSize: 8, letterSpacing: '0.08em' }}
+                    >
+                      {t("friend.guestBadge")}
+                    </div>
+                  )}
                   <div
                     className="mt-0.5 uppercase text-white/45 text-center"
                     style={{ fontFamily: poppins, fontWeight: 600, fontSize: 10, letterSpacing: '0.16em' }}

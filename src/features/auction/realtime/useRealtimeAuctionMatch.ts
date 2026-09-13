@@ -50,7 +50,7 @@ import {
 } from './auction-realtime.reducer';
 
 const POST_CONNECT_AUCTION_HYDRATION_GRACE_MS = 500;
-const LAST_AUCTION_MATCH_KEY = 'auction:last_match_id';
+import { LAST_AUCTION_MATCH_KEY } from '@/stores/auctionActiveMatch.store';
 const VERSION_GAP_RECONNECT_DELAY_MS = 250;
 // If a match is found but no state arrives in this window, reconnect once to
 // force the server's rejoin (which joins the match room and re-emits state).

@@ -1,6 +1,7 @@
 import { io, type Socket } from 'socket.io-client';
 import { API_BASE_URL } from '@/lib/config';
 import { getSupabaseAccessToken, getSupabaseClient } from '@/lib/auth/supabase';
+import { getGuestPrincipalToken, markGuestPrincipalRefused } from './realtime-principal';
 import { logger } from '@/utils/logger';
 import { useAuthStore } from '@/stores/auth.store';
 import { trackSocketConnectionFailed } from '@/lib/analytics/game-events';
@@ -163,6 +164,10 @@ function wait(ms: number): Promise<void> {
 }
 
 async function ensureValidAccessToken(): Promise<string | null> {
+  // A resolved guest principal connects with its opaque guest token (no JWT
+  // refresh dance applies); it only exists while there is no member session.
+  const guestToken = getGuestPrincipalToken();
+  if (guestToken) return guestToken;
   const currentToken = await getSupabaseAccessToken();
   if (!currentToken) return null;
   if (!isTokenExpiredOrExpiringSoon(currentToken)) {
@@ -374,6 +379,14 @@ function createSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
       ...socketSnapshot(socket),
     });
     if (isAuthConnectError(error.message)) {
+      if (getGuestPrincipalToken()) {
+        // The server refused the guest (feature off, session retired, budget hit):
+        // drop the principal so the owner disconnects instead of retrying forever.
+        logger.info('Socket refused the guest principal; dropping it', { message: error.message });
+        markGuestPrincipalRefused();
+        markRealtimeConnectionError(error.message);
+        return;
+      }
       logger.info('Socket auth connect error; retrying after Supabase session settles', { message: error.message });
       void recoverSocketAuthAndReconnect(socket);
       return;

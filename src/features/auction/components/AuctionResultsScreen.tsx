@@ -14,6 +14,8 @@ import {
   getAdjustedProfit,
   getFilledCount,
   isTeamComplete,
+  maxSquadChemistryOf,
+  squadSizeOf,
   lastName,
   POSITION_ORDER,
 } from '../data';
@@ -111,11 +113,16 @@ export function AuctionResultsScreen({
   apEarned,
   forfeited = false,
   removed = false,
+  playAgainLabel,
+  exitLabel,
 }: {
   state: AuctionGameState;
   humanPlayerId: string;
   onPlayAgain: () => void;
   onExit: () => void;
+  /** Button copy overrides (the training auction replays / finishes instead of matchmaking again). */
+  playAgainLabel?: string;
+  exitLabel?: string;
   /** Coins this player earned (500 win / 300 finish). 0/null = none shown. */
   coinsAwarded?: number | null;
   /** Auction Points this player earned (1st +50 / 2nd +30 / 3rd +10). Absent or
@@ -419,9 +426,9 @@ export function AuctionResultsScreen({
 
                 {/* Stat pills */}
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <ChemistryBadge total={player.chemistry} multiplier={player.multiplier} profit={player.profit} />
+                  <ChemistryBadge total={player.chemistry} multiplier={player.multiplier} profit={player.profit} max={maxSquadChemistryOf(state.formation)} />
                   <span className="rounded-md bg-white/8 px-2 py-1 text-[10px] font-bold text-white/70" style={poppins}>
-                    {t('auctionGame.playersFilled', { filled: player.filledCount })}
+                    {t('auctionGame.playersFilled', { filled: player.filledCount, total: squadSizeOf(player.team.formation) })}
                   </span>
                   <span className="rounded-md bg-white/8 px-2 py-1 text-[10px] font-bold text-white/70" style={poppins}>
                     {t('auctionGame.budgetAmount', { amount: formatMoney(player.budget) })}
@@ -457,10 +464,10 @@ export function AuctionResultsScreen({
           className="mx-auto flex w-full max-w-[498px] flex-col items-stretch gap-3 pt-2"
         >
           <AuctionPrimaryButton onClick={onPlayAgain} size="wide">
-            {t('auctionGame.playAgain')}
+            {playAgainLabel ?? t('auctionGame.playAgain')}
           </AuctionPrimaryButton>
           <AuctionPrimaryButton onClick={onExit} size="wide" variant="outline">
-            {t('auctionGame.exit')}
+            {exitLabel ?? t('auctionGame.exit')}
           </AuctionPrimaryButton>
         </motion.div>
       </motion.div>

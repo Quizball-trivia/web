@@ -40,6 +40,18 @@ describe('PenaltyHUD pips', () => {
     expect(opponentPips[0]).toHaveClass('bg-brand-green-light');
     expect(opponentPips[0]).not.toHaveClass('bg-brand-red-soft');
   });
+
+  it('supports a shorter scripted shootout without changing the ranked default', () => {
+    const { rerender } = render(<PenaltyHUD {...baseProps} penaltyTotalRounds={2} />);
+
+    expect(screen.getAllByTestId('penalty-player-pip')).toHaveLength(2);
+    expect(screen.getAllByTestId('penalty-opponent-pip')).toHaveLength(2);
+    expect(screen.getByText(/1\s*\/\s*2/)).toBeInTheDocument();
+
+    rerender(<PenaltyHUD {...baseProps} />);
+    expect(screen.getAllByTestId('penalty-player-pip')).toHaveLength(5);
+    expect(screen.getAllByTestId('penalty-opponent-pip')).toHaveLength(5);
+  });
 });
 
 describe('PenaltyHUD sudden-death pip hold', () => {

@@ -42,6 +42,7 @@ import { ApiError } from "@/lib/api/api";
 import { requestAccountDeletion } from "@/lib/repositories/users.repo";
 import { LOCALES, type Locale } from "@/lib/i18n/messages";
 import { trackLanguageSwitched } from "@/lib/analytics/game-events";
+import { useTrainingCompletion } from "@/features/training/hooks/useTrainingCompletion";
 import {
   DEFAULT_USER_PREFERENCES,
   getUserPreferences,
@@ -61,6 +62,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
   const { logout, user, setAuthenticated } = useAuthStore();
   const { locale, setLocale, t } = useLocale();
   const phoneAuthAvailability = useGeorgianPhoneAuthAvailability();
+  const { resetTraining } = useTrainingCompletion();
 
   // Analytics: fire once per mount so re-renders don't double-count.
   const settingsOpenedTrackedRef = useRef(false);
@@ -302,7 +304,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
   };
 
   const handleResetTraining = () => {
-    storage.remove(STORAGE_KEYS.TRAINING_COMPLETE);
+    resetTraining();
     toast.success(t("settings.resetTrainingSuccess"));
   };
 

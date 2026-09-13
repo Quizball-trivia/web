@@ -44,7 +44,7 @@ export function GoalProgressBar({
 
   if (orientation === 'horizontal') {
     return (
-      <div className="w-full px-3 py-2">
+      <div className="w-full px-3 py-2" data-goal-progress-bar="true">
         <div
           className="mb-1.5 flex items-baseline justify-between font-poppins leading-none"
           style={mirrored ? { flexDirection: 'row-reverse' } : undefined}
@@ -69,7 +69,7 @@ export function GoalProgressBar({
   // the pitch flips, so the goal moves to the bottom and the fill grows down.
   // The score rides on the tip of the fill as it grows.
   return (
-    <div className="flex h-full flex-col items-center py-2">
+    <div className="flex h-full flex-col items-center py-2" data-goal-progress-bar="true">
       {!mirrored && (
         <span className="mb-2 font-poppins text-lg font-black tabular-nums leading-none" style={{ color: GOAL_COLOR }}>
           100

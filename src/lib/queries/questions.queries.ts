@@ -9,12 +9,12 @@ import {
 import { toGameQuestion } from "@/lib/mappers/question.mapper";
 import { queryKeys } from "@/lib/queries/queryKeys";
 
-export const getQuestionsListQuery = (filters?: ListQuestionsQuery) => ({
-  queryKey: queryKeys.questions.list(filters),
+export const getQuestionsListQuery = (filters?: ListQuestionsQuery, locale = "en") => ({
+  queryKey: [...queryKeys.questions.list(filters), "locale", locale] as const,
   queryFn: async (): Promise<QuestionsListDTO> => {
     const data = await listQuestions(filters);
     return {
-      items: data.data.map((question) => toGameQuestion(question)),
+      items: data.data.map((question) => toGameQuestion(question, locale)),
       page: data.page,
       limit: data.limit,
       total: data.total,
@@ -23,8 +23,12 @@ export const getQuestionsListQuery = (filters?: ListQuestionsQuery) => ({
   },
 });
 
-export function useQuestionsList(filters?: ListQuestionsQuery) {
-  return useQuery(getQuestionsListQuery(filters));
+export function useQuestionsList(
+  filters?: ListQuestionsQuery,
+  options?: { enabled?: boolean },
+  locale = "en",
+) {
+  return useQuery({ ...getQuestionsListQuery(filters, locale), ...options });
 }
 
 export const getQuestionQuery = (id: string) => ({

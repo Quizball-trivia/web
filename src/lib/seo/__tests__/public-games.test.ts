@@ -4,7 +4,7 @@ import { ALL_DEMO_MODES } from "@/features/demos/demoModes";
 import { DAILY_COLLECTION_SLUG, PUBLIC_GAMES_FOLDER, gamePagePath, gamePageSlug } from "@/lib/seo/game-pages";
 import { SEO_PAGE_LOCALES } from "@/lib/seo/game-pages";
 import { GAME_PAGE_DETAILS } from "@/lib/seo/game-page-details";
-import { PUBLIC_GAMES, PUBLISHED_PUBLIC_GAMES, cardHref, findPublishedGame, relatedPublishedGames } from "@/lib/seo/public-games";
+import { PUBLIC_GAMES, PUBLISHED_PUBLIC_GAMES, cardHref, findPublishedGame, publishedLocalesOf, relatedPublishedGames } from "@/lib/seo/public-games";
 
 const demoSlugs = new Set(ALL_DEMO_MODES.map((mode) => mode.slug));
 
@@ -30,6 +30,7 @@ describe("public games manifest", () => {
       for (const game of PUBLISHED_PUBLIC_GAMES) {
         expect(gamePageSlug(game, locale)).not.toBe(DAILY_COLLECTION_SLUG[locale]);
         expect(gamePagePath(game, locale).startsWith(`/${locale}/${PUBLIC_GAMES_FOLDER[locale]}/`)).toBe(true);
+        if (!publishedLocalesOf(game).includes(locale)) continue;
         expect(GAME_PAGE_DETAILS[game.slug]?.[locale]?.length ?? 0, `${game.slug} body ${locale}`).toBeGreaterThan(0);
         expect(game.copy[locale].howToPlay.length).toBeGreaterThanOrEqual(3);
       }
@@ -51,8 +52,10 @@ describe("public games manifest", () => {
     expect(findPublishedGame("en", "football-games", "football-timeline")).toBeNull();
   });
 
-  it("a locale without page bodies (tr) is not published and its cards fall back to the English page", () => {
+  it("a locale without a page body (tr for most games) is not published there and its cards fall back to the English page", () => {
     expect(findPublishedGame("tr", "football-games", "auction")).toBeNull();
+    expect(findPublishedGame("tr", "football-games", "ranked")).not.toBeNull();
+    expect(publishedLocalesOf(PUBLISHED_PUBLIC_GAMES.find((g) => g.slug === "ranked")!)).toEqual(["en", "ka", "es", "tr"]);
     const auction = PUBLISHED_PUBLIC_GAMES.find((g) => g.slug === "auction")!;
     expect(cardHref(auction, "tr")).toBe("/en/football-games/auction");
     expect(cardHref(auction, "es")).toBe("/es/juegos-de-futbol/subasta");

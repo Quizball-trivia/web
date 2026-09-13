@@ -12,6 +12,7 @@
  * this hook returns.
  */
 
+import { useRealtimePrincipal } from '@/lib/realtime/realtime-principal';
 import { useEffect, useRef, useState } from 'react';
 import { useShallow } from 'zustand/shallow';
 import { usePathname, useRouter } from 'next/navigation';
@@ -89,9 +90,11 @@ export function useAppShellViewModel() {
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [nowTick, setNowTick] = useState(() => Date.now());
   const lobbyCommands = useLobbyCommandMachine();
+  // One connection owner for members AND resolved guests (friend rooms).
+  const principal = useRealtimePrincipal();
   useRealtimeConnection({
-    enabled: authStatus === 'authenticated' && Boolean(authUser?.id),
-    selfUserId: authUser?.id ?? null,
+    enabled: principal.kind !== 'none',
+    selfUserId: principal.userId,
   });
 
   // Poll /api/v1/system/status as a fallback when the socket is down >10s, so
@@ -125,9 +128,9 @@ export function useAppShellViewModel() {
     suppressLobbyBannerReason !== null ||
     (suppressLobbyBannerUntil !== null && suppressLobbyBannerUntil > nowTick);
   const lobbyIncludesCurrentUser =
-    !!authUser?.id &&
+    !!principal.userId &&
     !!lobby &&
-    lobby.members.some((member) => member.userId === authUser.id);
+    lobby.members.some((member) => member.userId === principal.userId);
   const showLobbyBanner =
     !!lobby &&
     lobbyIncludesCurrentUser &&
