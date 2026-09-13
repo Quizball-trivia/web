@@ -433,6 +433,7 @@ function AuctionRealtimeFlowScreen({ username, avatarSeed, avatarCustomization }
           forfeited
           removed={removedByServer}
         />
+        <div className="mx-auto w-full max-w-[498px] px-4 pb-6"><GuestResultsCta /></div>
       </>
     );
   }

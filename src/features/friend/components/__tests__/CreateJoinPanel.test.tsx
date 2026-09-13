@@ -30,6 +30,7 @@ vi.mock("sonner", () => ({
   toast: {
     info: mocks.toastInfo,
     error: mocks.toastError,
+    dismiss: vi.fn(),
   },
 }));
 

@@ -2,6 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LanguageSwitcher } from "../LanguageSwitcher";
+import { storage, STORAGE_KEYS } from "@/utils/storage";
 
 const navigation = vi.hoisted(() => ({ pathname: "/en/about", search: "" }));
 
@@ -37,6 +38,17 @@ describe("LanguageSwitcher", () => {
       "href",
       "/ka/about",
     );
+  });
+
+  it("persists the chosen language as the explicit app locale", async () => {
+    const user = userEvent.setup();
+    storage.set(STORAGE_KEYS.LOCALE, "ka");
+    render(<LanguageSwitcher locale="ka" />);
+
+    await user.click(screen.getByRole("button", { name: /current language/i }));
+    await user.click(screen.getByRole("menuitem", { name: /english/i }));
+
+    expect(storage.get<string | null>(STORAGE_KEYS.LOCALE, null)).toBe("en");
   });
 
   it("renders only the explicitly allowed locale options", async () => {

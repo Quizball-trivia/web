@@ -1801,6 +1801,16 @@ export function FootballGridFlowScreen() {
     grid.actions.startSearch();
   };
 
+  // A guest with nothing to attach to (direct /tic-tac-toe visit, expired
+  // match) has no search to run: back to the friend hub instead of an idle
+  // search screen. The grace period lets a reload's grid:state snapshot land.
+  const guestIdle = principal.kind === 'guest' && !grid.state && !grid.completed && grid.search.state === 'idle' && !grid.error;
+  useEffect(() => {
+    if (!guestIdle) return;
+    const timer = window.setTimeout(() => router.replace('/play/friend'), 2_500);
+    return () => window.clearTimeout(timer);
+  }, [guestIdle, router]);
+
   // A guest arriving from a room is still resolving its principal for a moment.
   const guestResolving = authStatus === 'anonymous' && principal.kind === 'none' && guestStatus !== 'refused' && GUEST_LOBBIES_ENABLED;
   if (authStatus === 'loading' || guestResolving) {
