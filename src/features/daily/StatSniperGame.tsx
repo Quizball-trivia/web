@@ -30,6 +30,7 @@ export function StatSniperGame({
   session,
   onBack,
   onComplete,
+  practice = false,
   onSaveResult,
   demo = false,
   leaderboardFetcher,
@@ -37,6 +38,8 @@ export function StatSniperGame({
   session: StatSniperSession;
   onBack: () => void;
   onComplete: (score: number, nextPath?: string) => void;
+  /** Sample rounds: skip the member completion modal. */
+  practice?: boolean;
   /** Persists the completion BEFORE the results show, so the leaderboard can include this run. */
   onSaveResult?: (score: number) => Promise<void>;
   /** Demos: no leaderboard fetch. */
@@ -199,6 +202,7 @@ export function StatSniperGame({
 
       <QuitGameDialog open={showQuit} onOpenChange={setShowQuit} onQuit={onBack} />
       <DailyChallengeCompleteModal
+        practice={practice}
         open={done}
         title={t("play.statSniperTitle")}
         correct={accuracy}
