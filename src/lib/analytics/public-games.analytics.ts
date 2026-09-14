@@ -15,8 +15,10 @@ export const trackGameView = (p: { modeId: string; locale: string; access: Acces
 export type SessionKind = "training" | "sample";
 export const trackGameStart = (p: { modeId: string; access: Access; sessionId: string; sessionKind: SessionKind }) =>
   trackEvent("game_start", { mode_id: p.modeId, access_type: p.access, game_session_id: p.sessionId, source_surface: "public_game", session_kind: p.sessionKind });
-export const trackGameComplete = (p: { modeId: string; sessionId: string; score?: number; durationMs: number; sessionKind: SessionKind }) =>
-  trackEvent("game_complete", { mode_id: p.modeId, game_session_id: p.sessionId, outcome: "completed", score: p.score ?? null, active_duration_ms: p.durationMs, session_kind: p.sessionKind });
+/** What a public-page engine reports when a round ends; the coin sneak peeks add the settlement. */
+export type EngineEventDetail = { score?: number; outcome?: "cashed" | "lost"; stake?: number; payout?: number; balance?: number };
+export const trackGameComplete = (p: { modeId: string; sessionId: string; durationMs: number; sessionKind: SessionKind } & EngineEventDetail) =>
+  trackEvent("game_complete", { mode_id: p.modeId, game_session_id: p.sessionId, outcome: p.outcome ?? "completed", score: p.score ?? null, stake_coins: p.stake ?? null, payout_coins: p.payout ?? null, practice_balance: p.balance ?? null, active_duration_ms: p.durationMs, session_kind: p.sessionKind });
 export const trackGameExit = (p: { modeId: string; sessionId: string; sessionKind: SessionKind; stage: "playing" | "results"; durationMs: number }) =>
   trackEvent("game_exit", { mode_id: p.modeId, game_session_id: p.sessionId, session_kind: p.sessionKind, exit_stage: p.stage, active_duration_ms: p.durationMs });
 export const trackGameReplay = (p: { modeId: string; previousSessionId: string }) =>

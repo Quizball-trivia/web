@@ -2422,6 +2422,18 @@
     "fairness": "4 defans oyuncusu ilk seçimin öncesinde sabitlendi ve hash'lendi. Bu tahta hash'idir, tohum tur bittiğinde açıklanır.",
     "fairnessTitle": "Kanıtlanabilir adalet"
   },
+  "coinSample": {
+    "practiceChip": "Ön izleme · alıştırma jetonları",
+    "label": "Ön izleme · 1.000 alıştırma jetonu",
+    "start": "Oyunu dene",
+    "note": "Örnek oranlar ve alıştırma jetonlarıyla sabit bir örnek. Hesap ödülü yok; hiçbir şey kaydedilmez.",
+    "playReal": "Gerçek jetonlarla oyna",
+    "reset": "Alıştırma jetonlarını sıfırla",
+    "outOfCoins": "Alıştırma jetonları bitti",
+    "won": "{amount} kazandın",
+    "lost": "Kasa bahsini aldı",
+    "balance": "Alıştırma jetonları: {coins}"
+  },
   "statSniper": {
     "sampleBoard": "Örnek liderlik tablosu",
     "target": "Hedef {current}/{total}",

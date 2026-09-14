@@ -48,6 +48,8 @@ import { settleOnce, trackMiniGameRoundStarted } from '../analytics/coinGames.an
 
 const BALL_URL = '/assets/brand/goal-ball-small.webp';
 const MIN_STAKE = 5;
+/** Live pots are capped server-side; the sample mirrors it. */
+const SAMPLE_POT_CAP = 50_000;
 const STAKE_PRESETS = [5, 10, 20, 50, 100];
 
 /** Flip to false to fall back to the 2D goal (tag: final-third-2d-stable). */
@@ -201,10 +203,20 @@ interface TickerEntry {
   minutesAgo: number;
 }
 
-export function FinalThird({ backHref, live = false }: { backHref?: string; live?: boolean } = {}) {
+export interface CoinSampleMode {
+  /** Frozen four-language bank in the engine's shape. */
+  questions: TriviaQuestion[];
+  /** Practice coins (in memory only); the engine debits stakes and credits payouts here. */
+  wallet: { coins: number; debit: (amount: number) => boolean; credit: (amount: number) => void; reset: () => void };
+  /** Seeded generator for the round's draws (keeper, survival rolls, question order). */
+  random?: () => number;
+  onSettled?: (result: { stake: number; payout: number; status: "cashed" | "lost" }) => void;
+}
+
+export function FinalThird({ backHref, live = false, sample }: { backHref?: string; live?: boolean; sample?: CoinSampleMode } = {}) {
   const t = useMiniT();
   const miniLocale = useMiniLocale();
-  const trivia = useMemo(() => getTrivia(miniLocale), [miniLocale]);
+  const trivia = useMemo(() => sample?.questions ?? getTrivia(miniLocale), [miniLocale, sample]);
   const { splashProps, fire } = useResultSplash();
 
   const [balance, setBalance] = useState(START_BALANCE);
@@ -239,7 +251,7 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
 
   // ── Live (real-coins) mode ──
   const queryClient = useQueryClient();
-  const { data: wallet, isError: walletError, refetch: refetchWallet } = useStoreWallet();
+  const { data: wallet, isError: walletError, refetch: refetchWallet } = useStoreWallet({ enabled: !sample });
   const liveStateRef = useRef<FreeKicksState | null>(null);
   const liveSettledTrackedRef = useRef<string | null>(null);
   const [liveQuestion, setLiveQuestion] = useState<{
@@ -363,7 +375,7 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
   // ── Fake stadium: live-wins ticker + drifting player count. Demo only —
   // live mode polls /free-kicks/stats instead.
   useEffect(() => {
-    if (live) return;
+    if (live || sample) return;
     const push = () => {
       const rnd = seeded(Date.now() % 1_000_000);
       const mult = [1.2, 1.5, 1.5, 1.875, 1.875, 2.34, 2.93, 4.58][Math.floor(rnd() * 8)];
@@ -382,7 +394,7 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
     push();
     const id = window.setInterval(push, 4200);
     return () => window.clearInterval(id);
-  }, [live]);
+  }, [live, sample]);
 
   useEffect(() => {
     const timers = timersRef.current;
@@ -538,7 +550,7 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
   }, [beat, qIndex, liveQuestion?.id, reading]);
 
   const demoQuestion: TriviaQuestion = trivia[qIndex % trivia.length];
-  const effectiveBalance = live ? (wallet?.coins ?? 0) : balance;
+  const effectiveBalance = live ? (wallet?.coins ?? 0) : sample ? sample.wallet.coins : balance;
   const question: TriviaQuestion = live && liveQuestion
     ? { id: liveQuestion.id, q: liveQuestion.q, options: liveQuestion.options, answer: liveQuestion.answer, difficulty: 'medium' }
     : demoQuestion;
@@ -553,8 +565,10 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
   // Live payouts are integer coins floored in basis points — mirror that math
   // exactly so the quoted "pot → next" equals what the server will credit.
   const potential = useMemo(
-    () => (live ? Math.floor((pot * STATE_MULT_BP[openCount]) / 10_000) : Math.round(pot * mult * 100) / 100),
-    [live, pot, openCount, mult],
+    () => (sample
+      ? Math.min(SAMPLE_POT_CAP, Math.floor((pot * STATE_MULT_BP[openCount]) / 10_000))
+      : live ? Math.floor((pot * STATE_MULT_BP[openCount]) / 10_000) : Math.round(pot * mult * 100) / 100),
+    [live, sample, pot, openCount, mult],
   );
   const runMult = pot > 0 ? Math.round((pot / roundStake) * 100) / 100 : 0;
 
@@ -678,9 +692,10 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
         });
       return;
     }
-    if (balance < stake || stake < MIN_STAKE) return;
+    if (effectiveBalance < stake || stake < MIN_STAKE) return;
+    if (sample && !sample.wallet.debit(stake)) return;
     startCrowd();
-    setBalance((b) => Math.round((b - stake) * 100) / 100);
+    if (!sample) setBalance((b) => Math.round((b - stake) * 100) / 100);
     setPot(stake);
     setRoundStake(stake);
     setAttack(0);
@@ -689,7 +704,7 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
   };
 
   const applyStake = (v: number) => {
-    const clamped = Math.max(MIN_STAKE, Math.min(Math.floor(v), 1000));
+    const clamped = Math.max(MIN_STAKE, Math.min(Math.floor(v), sample ? 500 : 1000));
     setStake(clamped);
     setStakeText(String(clamped));
   };
@@ -763,6 +778,7 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
       if (isSave) {
         setScored(false);
         setBeat('saved');
+        if (sample) sample.onSettled?.({ stake: roundStake, payout: 0, status: 'lost' });
       } else {
         setScored(true);
         setPot(potAfter);
@@ -807,7 +823,7 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
     }
     // Demo: the keeper commits to one of the open zones the moment the ball is
     // struck — exactly 1/k save chance, independent of the player's pick.
-    const keeper = openIds[Math.floor(Math.random() * openIds.length)];
+    const keeper = openIds[Math.floor((sample?.random ?? Math.random)() * openIds.length)];
     resolveShot(zone, keeper, zone.id === keeper, potential);
   };
 
@@ -870,8 +886,9 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
     launchFlight();
     setLastTake(pot);
     setBeat('cashed');
+    if (sample) { sample.wallet.credit(pot); sample.onSettled?.({ stake: roundStake, payout: pot, status: 'cashed' }); }
     later(() => {
-      setBalance((b) => Math.round((b + pot) * 100) / 100);
+      if (!sample) setBalance((b) => Math.round((b + pot) * 100) / 100);
       setStackBump(true);
     }, 520);
     later(() => setStackBump(false), 980);
@@ -981,6 +998,7 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
       subtitle={t('Know football. Read the goal. Take the shot.')}
       accent="#58CC02"
       wide
+      disclaimer={!sample}
       headerRight={
         <div className="flex items-center gap-2">
           <SoundSettings />
@@ -1001,8 +1019,8 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
       {/* Desktop: game on the left, leaderboard rail on the right. */}
       <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start lg:gap-6">
         <div className="min-w-0">
-      {/* Live stadium strip: player count + rotating last win. Cosmetic. */}
-      <div className="mt-1 flex items-center justify-between gap-2 px-1 py-1">
+      {/* Live stadium strip: player count + rotating last win. Cosmetic; not shown in the sneak peek. */}
+      {!sample && <div className="mt-1 flex items-center justify-between gap-2 px-1 py-1">
         <span className="flex items-center gap-1.5 font-poppins text-[10px] font-black uppercase tracking-wide text-brand-red-soft">
           <Radio className="size-3.5 animate-pulse" /> {t('{n} playing now', { n: playingNow.toLocaleString() })}
         </span>
@@ -1023,7 +1041,7 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
             )}
           </AnimatePresence>
         </div>
-      </div>
+      </div>}
 
       {/* HUD stat card — inline on mobile, larger copy in the desktop rail. */}
       <div className="lg:hidden">{renderHud(false)}</div>
@@ -1147,7 +1165,7 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
                         const raw = e.target.value.replace(/[^0-9]/g, '');
                         setStakeText(raw);
                         const v = Number(raw);
-                        if (Number.isFinite(v) && v >= MIN_STAKE) setStake(Math.min(Math.floor(v), 1000));
+                        if (Number.isFinite(v) && v >= MIN_STAKE) setStake(Math.min(Math.floor(v), sample ? 500 : 1000));
                       }}
                       onBlur={() => applyStake(Number(stakeText) || MIN_STAKE)}
                       aria-label={t('Stake')}
@@ -1174,7 +1192,7 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
                 ) : (
                 <button
                   type="button"
-                  onClick={() => setBalance(START_BALANCE)}
+                  onClick={() => (sample ? sample.wallet.reset() : setBalance(START_BALANCE))}
                   className="h-14 w-full rounded-2xl bg-brand-yellow font-poppins text-lg font-black uppercase tracking-wide text-black active:scale-[0.98]"
                 >
                   {t('Top up (demo)')}
@@ -1297,7 +1315,7 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
                   </>
                 )}
               </div>
-              {selected !== null && (
+              {selected !== null && !(sample && selected === question.answer) && (
                 <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-2 text-center font-poppins text-[10px] font-bold uppercase tracking-wide text-white/50">
                   {selected === -1
                     ? t("Time's up — the goal slams back to {n} zones", { n: MIN_OPEN })
@@ -1341,13 +1359,13 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
               >
                 {t('GOAL!')}
               </motion.div>
-              <div className="flex flex-wrap items-center justify-center gap-2 font-poppins text-[10px] font-bold uppercase tracking-wide text-white/50">
+              {!sample && <div className="flex flex-wrap items-center justify-center gap-2 font-poppins text-[10px] font-bold uppercase tracking-wide text-white/50">
                 <span>{t('{pct}% scored', { pct: pulse.scored })}</span>
                 <span>·</span>
                 <span>{t('{pct}% cashed out', { pct: pulse.cashed })}</span>
                 <span>·</span>
                 <span className="text-brand-orange">🔥 {t('{n} going NEXT ATTACK', { n: pulse.going.toLocaleString() })}</span>
-              </div>
+              </div>}
               <div className="flex gap-2">
                 <motion.button
                   type="button"
@@ -1422,7 +1440,7 @@ export function FinalThird({ backHref, live = false }: { backHref?: string; live
         </div>
 
         <div className="mt-4 lg:sticky lg:top-4 lg:mt-1">
-          <StadiumBoard t={t} bestRun={bestRun} liveRows={live ? liveStats?.topRuns ?? [] : null} />
+          {!sample && <StadiumBoard t={t} bestRun={bestRun} liveRows={live ? liveStats?.topRuns ?? [] : null} />}
           <div className="mt-4 hidden lg:block">{renderHud(true)}</div>
         </div>
       </div>

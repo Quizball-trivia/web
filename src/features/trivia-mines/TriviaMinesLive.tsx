@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
@@ -24,14 +24,21 @@ const MAX_STAKE = 500;
 const HEARTBEAT_MS = 10_000;
 
 type Locale = ReturnType<typeof useLocale>["locale"];
-const text = (value: { en: string; ka: string; es?: string }, locale: Locale) => (locale === "ka" ? value.ka : locale === "es" ? value.es ?? value.en : value.en) || value.en;
+const text = (value: { en: string; ka: string; es?: string; tr?: string }, locale: Locale) => (locale === "ka" ? value.ka : locale === "es" ? value.es ?? value.en : locale === "tr" ? value.tr ?? value.en : value.en) || value.en;
 
 /** Trivia Mines, live: the board is held server-side; every pick, scout and cash-out is a request. */
-export function TriviaMinesLive({ backHref = "/play" }: { backHref?: string }) {
+export function TriviaMinesLive({ backHref = "/play", client, sample }: {
+  backHref?: string;
+  /** Round engine; defaults to the live API. The public sneak peek passes a client-side sample engine. */
+  client?: Pick<typeof triviaMinesApi, "start" | "current" | "latest" | "heartbeat" | "stats"> & Omit<typeof triviaMinesApi, "start" | "current" | "latest" | "heartbeat" | "stats">;
+  /** Sneak-peek mode: practice coins instead of the wallet, no heartbeat, no live activity or runs board. */
+  sample?: { coins: number; onPlayAgain?: () => void };
+}) {
+  const api = useMemo(() => client ?? triviaMinesApi, [client]);
   const { t, locale } = useLocale();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { data: wallet } = useStoreWallet();
+  const { data: wallet } = useStoreWallet({ enabled: !sample });
   const [state, setState] = useState<TriviaMinesState | null>(null);
   const [resumed, setResumed] = useState(false);
   const [stake, setStake] = useState(100);
@@ -42,25 +49,25 @@ export function TriviaMinesLive({ backHref = "/play" }: { backHref?: string }) {
   const [answerResult, setAnswerResult] = useState<{ outcome: string; correct: string; flagged: number | null } | null>(null);
   const [topRuns, setTopRuns] = useState<Array<{ nickname: string; run_mult: number }>>([]);
   const [flight, setFlight] = useState<MoneyFlightSpec | null>(null);
-  const fetchStats = useCallback(async () => { const s = await triviaMinesApi.stats(); setTopRuns(s.top_runs ?? []); return s; }, []);
+  const fetchStats = useCallback(async () => { const s = await api.stats(); setTopRuns(s.top_runs ?? []); return s; }, [api]);
   const [qLeft, setQLeft] = useState(0);
   const nonceRef = useRef<string | null>(null);
   const settledTrackedRef = useRef<string | null>(null);
-  useEffect(() => { settleOnce(settledTrackedRef, "trivia_mines", state, state?.opened.length); }, [state]);
+  useEffect(() => { if (!sample) settleOnce(settledTrackedRef, "trivia_mines", state, state?.opened.length); }, [sample, state]);
 
   // Resume an open round (refresh, second tab) before offering a new stake.
   useEffect(() => {
     let cancelled = false;
-    triviaMinesApi.current().then((s) => { if (!cancelled) { if (s) setState(s); setResumed(true); } }).catch(() => { if (!cancelled) setResumed(true); });
+    api.current().then((s) => { if (!cancelled) { if (s) setState(s); setResumed(true); } }).catch(() => { if (!cancelled) setResumed(true); });
     return () => { cancelled = true; };
-  }, []);
+  }, [api]);
 
   const active = state?.status === "active";
   useEffect(() => {
-    if (!active) return;
-    const id = window.setInterval(() => { void triviaMinesApi.heartbeat().catch(() => undefined); }, HEARTBEAT_MS);
+    if (!active || sample) return;
+    const id = window.setInterval(() => { void api.heartbeat().catch(() => undefined); }, HEARTBEAT_MS);
     return () => window.clearInterval(id);
-  }, [active]);
+  }, [active, api, sample]);
 
   // Question countdown, from the server deadline.
   useEffect(() => {
@@ -79,21 +86,21 @@ export function TriviaMinesLive({ backHref = "/play" }: { backHref?: string }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state?.phase, state?.question?.question_id]);
 
-  const fail = (e: unknown) => { setError(e instanceof TriviaMinesApiError ? e.message : t("common.error")); trackMiniGameError("trivia_mines", "request", e instanceof TriviaMinesApiError ? e.status : null); };
-  const refreshWallet = useCallback(() => void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() }), [queryClient]);
+  const fail = (e: unknown) => { setError(e instanceof TriviaMinesApiError ? e.message : t("common.error")); if (!sample) trackMiniGameError("trivia_mines", "request", e instanceof TriviaMinesApiError ? e.status : null); };
+  const refreshWallet = useCallback(() => { if (!sample) void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() }); }, [queryClient, sample]);
   const stateRef = useRef<TriviaMinesState | null>(null);
   useEffect(() => { stateRef.current = state; }, [state]);
   /** Re-sync with the server; when our round is no longer active (sweeper, lost response), fetch it in its settled form. */
   const reconcile = useCallback(async () => {
     try {
-      const cur = await triviaMinesApi.current();
+      const cur = await api.current();
       if (cur) { setState(cur); return; }
       const mine = stateRef.current;
       if (!mine) return;
-      const last = await triviaMinesApi.latest();
+      const last = await api.latest();
       if (last && last.round_id === mine.round_id) { setState(last); if (last.status !== "active") refreshWallet(); }
     } catch { /* keep current state */ }
-  }, [refreshWallet]);
+  }, [api, refreshWallet]);
   const recover = async (e: unknown) => { if (e instanceof TriviaMinesApiError && (e.status === 409 || e.status === 404)) await reconcile(); };
 
   const applyStake = (v: number) => { const next = Math.min(MAX_STAKE, Math.max(MIN_STAKE, Math.floor(v || MIN_STAKE))); setStake(next); setStakeText(String(next)); };
@@ -103,9 +110,9 @@ export function TriviaMinesLive({ backHref = "/play" }: { backHref?: string }) {
     setBusy(true); setError(null); setAnswerResult(null);
     const nonce = nonceRef.current ?? (nonceRef.current = crypto.randomUUID());
     try {
-      const s = await triviaMinesApi.start(stake, nonce);
+      const s = await api.start(stake, nonce);
       nonceRef.current = null; setState(s); refreshWallet();
-      trackMiniGameRoundStarted("trivia_mines", { roundId: s.round_id, stake: s.stake_coins });
+      if (!sample) trackMiniGameRoundStarted("trivia_mines", { roundId: s.round_id, stake: s.stake_coins });
     } catch (e) {
       await recover(e);
       if (e instanceof TriviaMinesApiError && e.status < 500) nonceRef.current = null;
@@ -116,7 +123,7 @@ export function TriviaMinesLive({ backHref = "/play" }: { backHref?: string }) {
   const pick = async (tile: number) => {
     if (!state || busy || state.phase !== "picking" || state.opened.includes(tile) || state.flagged.includes(tile)) return;
     setBusy(true); setError(null);
-    try { const r = await triviaMinesApi.pick(state.round_id, tile, state.state_version); if (r.state.status === "cashed") playCash(); setState(r.state); if (!r.safe || r.state.status !== "active") refreshWallet(); }
+    try { const r = await api.pick(state.round_id, tile, state.state_version); if (r.state.status === "cashed") playCash(); setState(r.state); if (!r.safe || r.state.status !== "active") refreshWallet(); }
     catch (e) { await recover(e); fail(e); }
     finally { setBusy(false); }
   };
@@ -124,7 +131,7 @@ export function TriviaMinesLive({ backHref = "/play" }: { backHref?: string }) {
   const scout = async () => {
     if (!state || busy || state.phase !== "picking" || state.scouts_left <= 0) return;
     setBusy(true); setError(null); setSelected(null); setAnswerResult(null);
-    try { setState(await triviaMinesApi.deal(state.round_id, state.state_version)); }
+    try { setState(await api.deal(state.round_id, state.state_version)); }
     catch (e) { await recover(e); fail(e); }
     finally { setBusy(false); }
   };
@@ -133,7 +140,7 @@ export function TriviaMinesLive({ backHref = "/play" }: { backHref?: string }) {
     if (!state?.question || busy || selected) return;
     setSelected(optionId); setBusy(true);
     try {
-      const r = await triviaMinesApi.answer(state.round_id, state.question.question_id, optionId, state.state_version);
+      const r = await api.answer(state.round_id, state.question.question_id, optionId, state.state_version);
       setAnswerResult({ outcome: r.outcome, correct: r.correct_option_id, flagged: r.flagged_tile });
       window.setTimeout(() => { setState(r.state); setSelected(null); setAnswerResult(null); }, 1400);
     } catch (e) { setSelected(null); await recover(e); fail(e); }
@@ -145,7 +152,7 @@ export function TriviaMinesLive({ backHref = "/play" }: { backHref?: string }) {
     const origin = event.currentTarget;
     setBusy(true); setError(null);
     try {
-      const s = await triviaMinesApi.cashout(state.round_id, state.state_version);
+      const s = await api.cashout(state.round_id, state.state_version);
       playCash();
       setFlight(flightFrom(origin, (s.payout_coins ?? 0) * 17 + 3));
       window.setTimeout(() => setFlight(null), 1200);
@@ -155,7 +162,7 @@ export function TriviaMinesLive({ backHref = "/play" }: { backHref?: string }) {
     finally { setBusy(false); }
   };
 
-  const balance = wallet?.coins ?? 0;
+  const balance = sample ? sample.coins : wallet?.coins ?? 0;
   const settled = state && state.status !== "active";
 
   return (
@@ -199,11 +206,11 @@ export function TriviaMinesLive({ backHref = "/play" }: { backHref?: string }) {
         )}
 
         <div className="mb-1 flex items-center gap-3">
-          <LiveActivityStrip fetchStats={fetchStats} className="min-w-0 flex-1" />
+          {sample ? <span className="min-w-0 flex-1 truncate text-[11px] font-black uppercase tracking-wide text-brand-yellow" style={poppins}>{t("coinSample.practiceChip")}</span> : <LiveActivityStrip fetchStats={fetchStats} className="min-w-0 flex-1" />}
           <span data-money-stack className="flex shrink-0 items-center gap-1 text-sm font-black tabular-nums text-white" style={poppins}><CoinIcon size={14} />{balance.toLocaleString()}</span>
         </div>
 
-        {!state && <RunsBoard runs={topRuns} className="mt-4" />}
+        {!state && !sample && <RunsBoard runs={topRuns} className="mt-4" />}
 
         {/* Board */}
         {state && (
@@ -291,7 +298,7 @@ export function TriviaMinesLive({ backHref = "/play" }: { backHref?: string }) {
                 </motion.div>
               )}
             </AnimatePresence>
-            <RunsBoard runs={topRuns} className="mt-4" />
+            {!sample && <RunsBoard runs={topRuns} className="mt-4" />}
           </div>
 
             {settled && (

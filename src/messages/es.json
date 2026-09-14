@@ -2422,6 +2422,18 @@
     "fairness": "Los 4 defensas se fijaron y se cifraron antes de tu primera elección. Este es el hash del tablero; la semilla se revela al terminar.",
     "fairnessTitle": "Verificable"
   },
+  "coinSample": {
+    "practiceChip": "Adelanto · monedas de práctica",
+    "label": "Adelanto · 1.000 monedas de práctica",
+    "start": "Prueba el juego",
+    "note": "Una muestra fija con probabilidades de muestra y monedas de práctica. Sin recompensas de cuenta; no se guarda nada.",
+    "playReal": "Juega por monedas reales",
+    "reset": "Reiniciar monedas de práctica",
+    "outOfCoins": "Sin monedas de práctica",
+    "won": "Te llevaste {amount}",
+    "lost": "La casa se quedó tu apuesta",
+    "balance": "Monedas de práctica: {coins}"
+  },
   "statSniper": {
     "sampleBoard": "Clasificación de muestra",
     "target": "Objetivo {current}/{total}",

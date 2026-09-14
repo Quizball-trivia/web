@@ -1,5 +1,7 @@
 "use client";
 
+import type { EngineEventDetail } from "@/lib/analytics/public-games.analytics";
+
 import { DemoAuctionTraining } from "@/features/demos/DemoAuctionTraining";
 import { DemoGridTraining } from "@/features/demos/DemoGridTraining";
 import { DemoBackButton } from "@/features/demos/DemoBackButton";
@@ -38,21 +40,31 @@ import { StatSniper } from "@/features/mini-games/components/StatSniper";
 import { Survivor } from "@/features/mini-games/components/Survivor";
 import { TriviaMines } from "@/features/mini-games/components/TriviaMines";
 import { TriviaSpin } from "@/features/mini-games/components/TriviaSpin";
+import { CoinSampleView, type CoinSampleGame } from "@/features/coin-samples/CoinSampleView";
+
+const COIN_SAMPLE_SLUGS: Record<string, CoinSampleGame> = { "mini-trivia-mines": "trivia_mines", "mini-final-third": "free_kicks", "mini-road-to-goal": "road_to_goal", "mini-squad-spin": "squad_spin" };
 
 /**
  * Renders one demo/practice engine by demo-mode slug. Shared by the investor
  * /demos playground and the public game pages, where a guest plays the mode's
  * practice round inline without an account.
  */
-export function DemoModeView({ slug, backHref = "/demos", onExit, onEvent }: {
+export function DemoModeView({ slug, backHref = "/demos", onExit, onEvent, coinSample }: {
   slug: string;
   backHref?: string;
+  /** Public game pages: the coin games run their sneak-peek sample (practice coins, live rules) instead of the prototype. */
+  coinSample?: { modeId: string; playPath: string; onLeaveToRealGame: () => void };
   /** Embedded use: leave the practice round without navigating. */
   onExit?: () => void;
-  onEvent?: (event: "start" | "complete" | "replay", detail?: { score?: number }) => void;
+  onEvent?: (event: "start" | "complete" | "replay", detail?: EngineEventDetail) => void;
 }) {
   const mode = findDemoMode(slug);
   if (!mode) return null;
+
+  const coinGame = COIN_SAMPLE_SLUGS[mode.slug];
+  if (coinSample && coinGame && onExit && onEvent) {
+    return <CoinSampleView game={coinGame} modeId={coinSample.modeId} backHref={backHref} playPath={coinSample.playPath} onExit={onExit} onEvent={onEvent} onLeaveToRealGame={coinSample.onLeaveToRealGame} />;
+  }
 
   if (mode.dailyType) {
     return <DemoDailyChallenge type={mode.dailyType} backHref={backHref} onExit={onExit} onEvent={onEvent} />;
