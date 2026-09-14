@@ -29,7 +29,9 @@ export function StatSniperLeaderboard({ refreshKey = 0, fetcher = getStatSniperL
 
   return (
     <aside className={cn("w-full", className)}>
-      <h3 className="mb-2 text-center font-fun text-[13px] font-black uppercase tracking-[0.12em] text-white md:text-left" style={poppins}>{t("statSniper.leaderboard")}</h3>
+      <h3 className="mb-2 text-center font-fun text-[13px] font-black uppercase tracking-[0.12em] text-white md:text-left" style={poppins}>
+        {board?.challengeDay === "sample" ? t("statSniper.sampleBoard") : t("statSniper.leaderboard")}
+      </h3>
       <div className="grid grid-cols-12 gap-2 px-3 pb-2 text-[10px] font-fun font-black uppercase tracking-[0.18em] text-white/45">
         <div className="col-span-3 text-center">{t("leaderboard.colRank")}</div>
         <div className="col-span-6 text-left">{t("leaderboard.colPlayer")}</div>

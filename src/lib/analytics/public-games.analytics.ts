@@ -12,10 +12,13 @@ export const trackGameCardClick = (p: { modeId: string; surface: PublicSurface; 
   trackEvent("game_card_click", { mode_id: p.modeId, source_surface: p.surface, card_group: p.group, destination: p.destination });
 export const trackGameView = (p: { modeId: string; locale: string; access: Access }) =>
   trackEvent("game_view", { mode_id: p.modeId, locale: p.locale, access_type: p.access, surface: "public" });
-export const trackGameStart = (p: { modeId: string; access: Access; sessionId: string }) =>
-  trackEvent("game_start", { mode_id: p.modeId, access_type: p.access, game_session_id: p.sessionId, source_surface: "public_game" });
-export const trackGameComplete = (p: { modeId: string; sessionId: string; score?: number; durationMs: number }) =>
-  trackEvent("game_complete", { mode_id: p.modeId, game_session_id: p.sessionId, outcome: "completed", score: p.score ?? null, active_duration_ms: p.durationMs });
+export type SessionKind = "training" | "sample";
+export const trackGameStart = (p: { modeId: string; access: Access; sessionId: string; sessionKind: SessionKind }) =>
+  trackEvent("game_start", { mode_id: p.modeId, access_type: p.access, game_session_id: p.sessionId, source_surface: "public_game", session_kind: p.sessionKind });
+export const trackGameComplete = (p: { modeId: string; sessionId: string; score?: number; durationMs: number; sessionKind: SessionKind }) =>
+  trackEvent("game_complete", { mode_id: p.modeId, game_session_id: p.sessionId, outcome: "completed", score: p.score ?? null, active_duration_ms: p.durationMs, session_kind: p.sessionKind });
+export const trackGameExit = (p: { modeId: string; sessionId: string; sessionKind: SessionKind; stage: "playing" | "results"; durationMs: number }) =>
+  trackEvent("game_exit", { mode_id: p.modeId, game_session_id: p.sessionId, session_kind: p.sessionKind, exit_stage: p.stage, active_duration_ms: p.durationMs });
 export const trackGameReplay = (p: { modeId: string; previousSessionId: string }) =>
   trackEvent("game_replay", { mode_id: p.modeId, previous_session_id: p.previousSessionId });
 export const trackSignupPromptView = (p: { modeId?: string; placement: string; destination: string }) =>

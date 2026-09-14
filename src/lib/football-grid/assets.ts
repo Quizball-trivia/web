@@ -26,6 +26,19 @@ function isAllowedFirstPartyUrl(value: string): boolean {
 }
 
 /**
+ * A portrait path relative to the public `imgs` bucket: `players/<id>.webp`
+ * resolves under the Grid CDN release, anything else under the storage root.
+ */
+export function footballGridStorageImageUrl(relativePath: string): string | null {
+  const path = relativePath.replace(/^\/+/, '');
+  if (!path) return null;
+  const url = path.startsWith('players/')
+    ? `${FOOTBALL_GRID_CDN_BASE_URL}/${encodeAssetPath(path)}`
+    : `${supabaseUrl}/storage/v1/object/public/imgs/${encodeAssetPath(path)}`;
+  return isAllowedFirstPartyUrl(url) ? url : null;
+}
+
+/**
  * Resolves a Grid asset to a first-party CDN URL. Third-party URLs and unknown
  * local paths intentionally return null so the UI uses its owned fallback.
  */

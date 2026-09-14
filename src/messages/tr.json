@@ -2420,6 +2420,7 @@
     "fairnessTitle": "Kanıtlanabilir adalet"
   },
   "statSniper": {
+    "sampleBoard": "Örnek liderlik tablosu",
     "target": "Hedef {current}/{total}",
     "lockIn": "Kilitle",
     "bullseye": "Tam isabet!",

@@ -5,6 +5,7 @@ const getCampaignPropertiesMock = vi.fn(() => ({}));
 const clearCampaignAttributionMock = vi.fn();
 
 vi.mock('@/lib/posthog', () => ({
+  registerAccessType: vi.fn(),
   trackEvent: (event: string, props?: Record<string, unknown>) => trackEventMock(event, props),
 }));
 

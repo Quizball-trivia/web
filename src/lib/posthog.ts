@@ -102,6 +102,42 @@ export function stopSessionRecording(): void {
 }
 
 // Track custom events
+/**
+ * Super property on every event (page views included) so any report can be
+ * split by account state: member = signed in, guest = signed out visitor.
+ */
+export type AccessType = 'member' | 'guest';
+let knownAccess: AccessType | null = null;
+
+/**
+ * Best guess before auth resolves: a stored Supabase session means a member is
+ * about to be restored. Used only to stamp events captured before registerAccessType runs.
+ */
+export function currentAccessType(): AccessType {
+  if (knownAccess) return knownAccess;
+  try {
+    for (let i = 0; i < window.localStorage.length; i += 1) {
+      const key = window.localStorage.key(i);
+      if (key && key.startsWith('sb-') && key.endsWith('-auth-token')) return 'member';
+    }
+  } catch {
+    // storage blocked: treat as a signed-out visitor
+  }
+  return 'guest';
+}
+
+export function registerAccessType(access: AccessType): void {
+  knownAccess = access;
+  if (typeof window === 'undefined' || !process.env.NEXT_PUBLIC_POSTHOG_KEY || !isTrackingEnv()) {
+    return;
+  }
+  try {
+    posthog.register({ access_type: access });
+  } catch (error) {
+    console.error('PostHog registerAccessType error:', error);
+  }
+}
+
 export function trackEvent(eventName: string, properties?: AnalyticsProperties): void {
   if (typeof window === 'undefined' || !process.env.NEXT_PUBLIC_POSTHOG_KEY || !isTrackingEnv()) {
     return;

@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const trackEventMock = vi.fn();
 
 vi.mock('@/lib/posthog', () => ({
+  registerAccessType: vi.fn(),
   trackEvent: (...args: unknown[]) => trackEventMock(...args),
 }));
 

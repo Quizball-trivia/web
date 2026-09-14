@@ -1,5 +1,6 @@
 'use client';
 
+import { trainingPortraitUrl } from '../data/gridTrainingPortraits';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { FootballGridCommandResultPayload, FootballGridState, OpponentInfo } from '@/lib/realtime/socket.types';
 import { BOT_AVATAR_CUSTOMIZATION, BOT_NAME } from '@/features/training/constants';
@@ -220,7 +221,7 @@ export function useGridTrainingMatch({ isPaused, onBeat }: { isPaused: boolean; 
     if (turn.who === 'bot') {
       schedule(GRID_TRAINING_BOT_THINK_MS, () => {
         usedRef.current.add(playerIdOf(turn.player));
-        settle({ cellIndex: turn.cell, footballPlayerId: playerIdOf(turn.player), displayName: turn.player, claimantUserId: GRID_TRAINING_BOT_ID, turnNumber: stateRef.current.turnNumber + 1 }, turn.beat, index + 1);
+        settle({ cellIndex: turn.cell, footballPlayerId: playerIdOf(turn.player), displayName: turn.player, imageUrl: trainingPortraitUrl(turn.player), claimantUserId: GRID_TRAINING_BOT_ID, turnNumber: stateRef.current.turnNumber + 1 }, turn.beat, index + 1);
       });
       return;
     }
@@ -282,7 +283,7 @@ export function useGridTrainingMatch({ isPaused, onBeat }: { isPaused: boolean; 
     clearPending();
     usedRef.current.add(playerId!);
     settle(
-      { cellIndex, footballPlayerId: playerId!, displayName: answer!.name, claimantUserId: GRID_TRAINING_HUMAN_ID, turnNumber: s.turnNumber + 1 },
+      { cellIndex, footballPlayerId: playerId!, displayName: answer!.name, imageUrl: trainingPortraitUrl(answer!.name), claimantUserId: GRID_TRAINING_HUMAN_ID, turnNumber: s.turnNumber + 1 },
       turn.expect === 'wrong' ? null : turn.afterBeat,
       turnRef.current + 1,
     );

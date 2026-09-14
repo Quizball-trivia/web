@@ -1,5 +1,6 @@
 'use client';
 
+import { BrandIcon, type BrandIconName } from '@/components/brand/BrandIcon';
 import { useState } from 'react';
 import { ChevronDown, ChevronUp, Megaphone } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
@@ -10,10 +11,10 @@ import type { Locale } from '@/lib/i18n/messages';
 
 type AnnouncementType = AnnouncementItem['type'];
 
-const TYPE_STYLES: Record<AnnouncementType, { bg: string; icon: string }> = {
-  update: { bg: 'bg-brand-blue', icon: '📢' },
-  info: { bg: 'bg-white/5', icon: 'ℹ️' },
-  event: { bg: 'bg-brand-orange', icon: '🏆' },
+const TYPE_STYLES: Record<AnnouncementType, { bg: string; icon: BrandIconName | null }> = {
+  update: { bg: 'bg-brand-blue', icon: 'megaphone' },
+  info: { bg: 'bg-white/5', icon: null },
+  event: { bg: 'bg-brand-orange', icon: 'trophy' },
 };
 
 // Short month names per locale. We format the date ourselves rather than relying
@@ -73,7 +74,7 @@ export function PlayAnnouncements() {
             )}
           >
             <div className="flex items-center gap-2.5">
-              <span className="text-base">{style.icon}</span>
+              {style.icon ? <BrandIcon name={style.icon} className="size-5" /> : <span className="text-base">ℹ️</span>}
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <span className="font-poppins text-sm font-bold text-white">{title}</span>

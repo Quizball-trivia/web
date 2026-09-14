@@ -1,11 +1,12 @@
 'use client';
 
+import { BrandIcon } from '@/components/brand/BrandIcon';
 import { useLocale } from '@/contexts/LocaleContext';
 
 const STEPS = [
-  { n: 1, icon: '🎟️', titleKey: 'weekendLeague.step1Title', bodyKey: 'weekendLeague.step1Body' },
-  { n: 2, icon: '⚽', titleKey: 'weekendLeague.step2Title', bodyKey: 'weekendLeague.step2Body' },
-  { n: 3, icon: '🏆', titleKey: 'weekendLeague.step3Title', bodyKey: 'weekendLeague.step3Body' },
+  { n: 1, icon: 'ticket' as const, titleKey: 'weekendLeague.step1Title', bodyKey: 'weekendLeague.step1Body' },
+  { n: 2, icon: 'ball' as const, titleKey: 'weekendLeague.step2Title', bodyKey: 'weekendLeague.step2Body' },
+  { n: 3, icon: 'trophy' as const, titleKey: 'weekendLeague.step3Title', bodyKey: 'weekendLeague.step3Body' },
 ] as const;
 
 /** Three-step explainer for the weekend format. */
@@ -26,7 +27,7 @@ export function HowItWorks() {
               <span className="flex size-7 items-center justify-center rounded-full bg-brand-blue font-poppins text-sm font-black text-white">
                 {step.n}
               </span>
-              <span className="text-xl leading-none">{step.icon}</span>
+              <BrandIcon name={step.icon} className="size-7" />
             </div>
             <div className="font-poppins text-sm font-black uppercase text-white">{t(step.titleKey)}</div>
             <p className="mt-1 font-poppins text-[12px] font-medium leading-snug text-white/60">

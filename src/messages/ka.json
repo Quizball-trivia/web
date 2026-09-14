@@ -2420,6 +2420,7 @@
     "fairnessTitle": "შემოწმებადი სამართლიანობა"
   },
   "statSniper": {
+    "sampleBoard": "სანიმუშო ლიდერბორდი",
     "target": "სამიზნე {current}/{total}",
     "lockIn": "დაფიქსირება",
     "bullseye": "ზუსტი მოხვედრა!",

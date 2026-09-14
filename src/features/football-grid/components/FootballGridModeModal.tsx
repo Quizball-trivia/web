@@ -2,6 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- icon comes from the reviewed grid CDN registry. */
 
+import { BrandIcon } from '@/components/brand/BrandIcon';
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import { ScrollText, Swords, Dumbbell, Users } from 'lucide-react';
@@ -139,42 +140,44 @@ export function FootballGridModeModal({
       <DialogContent
         className={cn(
           'max-w-md w-[92vw] rounded-[24px] border-0',
-          '!flex flex-col !gap-0 px-6 pt-8 pb-6 sm:px-8',
+          '!flex flex-col !gap-0 px-5 pt-5 pb-5 sm:px-6',
           '[&>button]:hidden',
         )}
         style={{ backgroundColor: GRID_CARD_BG }}
       >
-        <div className="absolute top-5 right-5 z-30">
-          <ModalCloseButton onClose={() => onOpenChange(false)} className="!static" />
+        <div className="absolute top-4 right-4 z-30">
+          <ModalCloseButton onClose={() => onOpenChange(false)} className="!static !size-9 rounded-lg [&>svg]:size-4" />
         </div>
 
-        {iconSrc && (
-          <div className="mb-2 flex justify-center">
+        {/* Compact header: icon beside the title instead of a stacked hero, so
+            the league picker and every action stay on one phone screen. */}
+        <div className="flex items-center gap-3 pr-10">
+          {iconSrc && (
             <img
               src={iconSrc}
               alt=""
-              className="h-28 w-auto object-contain drop-shadow-[0_6px_24px_rgba(0,0,0,0.35)] sm:h-32"
+              className="h-14 w-14 shrink-0 object-contain drop-shadow-[0_4px_14px_rgba(0,0,0,0.35)]"
             />
+          )}
+          <div className="min-w-0">
+            <DialogTitle
+              className="text-left text-2xl uppercase leading-[0.95] text-brand-yellow sm:text-[28px]"
+              style={poppins}
+            >
+              {t('play.footballGridTitle')}
+            </DialogTitle>
+            <DialogDescription className="mt-1 text-left text-[12px] font-medium leading-snug text-white/80">
+              {t('play.gridRulesDescription')}
+            </DialogDescription>
           </div>
-        )}
+        </div>
 
-        <DialogTitle
-          className="text-center text-3xl sm:text-4xl uppercase text-brand-yellow leading-[0.95]"
-          style={poppins}
-        >
-          {t('play.footballGridTitle')}
-        </DialogTitle>
-
-        <DialogDescription className="mx-auto mt-3 mb-4 max-w-[22rem] text-center text-[13px] sm:text-sm font-medium leading-snug text-white/85">
-          {t('play.gridRulesDescription')}
-        </DialogDescription>
-
-        {/* Pack picker — choose which league you play on (Box2Box-style). */}
-        <div className="mb-5">
-          <p className="mb-2 text-center font-poppins text-[10px] font-black uppercase tracking-[0.2em] text-white/60">
+        {/* Pack picker — every league visible, two rows of five. */}
+        <div className="mt-4">
+          <p className="mb-1.5 font-poppins text-[10px] font-black uppercase tracking-[0.2em] text-white/60">
             {t('play.gridPackPickerTitle')}
           </p>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-5 gap-1.5">
             {GRID_PACKS.map((entry) => (
               <button
                 key={entry.key}
@@ -182,14 +185,14 @@ export function FootballGridModeModal({
                 aria-pressed={pack === entry.key}
                 onClick={() => choosePack(entry.key)}
                 className={cn(
-                  'flex flex-col items-center gap-1 rounded-2xl border-2 px-2 py-2.5 transition-colors',
+                  'flex min-h-[58px] flex-col items-center justify-center gap-1 rounded-xl border-2 px-1 py-1.5 transition-colors',
                   pack === entry.key
                     ? 'border-brand-yellow bg-black/30'
                     : 'border-white/15 bg-black/15 hover:border-white/35',
                 )}
               >
-                <span aria-hidden="true" className="text-xl leading-none">{entry.flag}</span>
-                <span className="font-poppins text-[10px] font-black uppercase leading-tight text-white">
+                {entry.key === 'european' ? <BrandIcon name="globe" className="size-5" /> : <span aria-hidden="true" className="text-lg leading-none">{entry.flag}</span>}
+                <span className="line-clamp-2 break-words text-center font-poppins text-[9px] font-black uppercase leading-[1.1] text-white">
                   {t(`play.gridPack_${entry.key}`)}
                 </span>
               </button>
@@ -197,46 +200,54 @@ export function FootballGridModeModal({
           </div>
         </div>
 
-        <div>
+        <div className="mt-4">
           <motion.button
             type="button"
             whileTap={{ scale: 0.97 }}
             onClick={() => onFindOnline(pack)}
-            className="flex h-14 w-full items-center justify-center gap-2.5 rounded-2xl bg-brand-yellow uppercase text-black transition-colors hover:bg-brand-yellow-deep"
-            style={{ fontSize: 'clamp(15px, 2.4vw, 18px)', ...poppins }}
+            className="flex h-12 w-full items-center justify-center gap-2.5 rounded-2xl bg-brand-yellow uppercase text-black transition-colors hover:bg-brand-yellow-deep"
+            style={{ fontSize: 'clamp(14px, 2.4vw, 17px)', ...poppins }}
           >
             <Swords className="size-5" strokeWidth={2.5} />
             {t('play.gridFindOpponents')}
           </motion.button>
 
-          {onPlayWithFriend && (
-            <button
-              type="button"
-              onClick={onPlayWithFriend}
-              className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-white/10 uppercase text-white transition-colors hover:bg-white/15"
-              style={{ fontSize: 'clamp(14px, 2.2vw, 16px)', ...poppins }}
-            >
-              <Users className="size-5" strokeWidth={2.5} />
-              {t('friend.playWithFriend')}
-            </button>
-          )}
-          {/* Training — the scripted tutorial board (no coins, no opponents). */}
-          {onTraining && (
-            <button
-              type="button"
-              onClick={onTraining}
-              className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-white/10 uppercase text-white transition-colors hover:bg-white/15"
-              style={{ fontSize: 'clamp(14px, 2.2vw, 16px)', ...poppins }}
-            >
-              <Dumbbell className="size-5" strokeWidth={2.5} />
-              {t('play.guestDemoCta')}
-            </button>
+          {/* Secondary actions share one row. */}
+          {(onPlayWithFriend || onTraining) && (
+            <div className="mt-2.5 grid grid-cols-2 gap-2.5">
+              {onPlayWithFriend && (
+                <button
+                  type="button"
+                  onClick={onPlayWithFriend}
+                  className="flex h-11 items-center justify-center gap-1.5 rounded-2xl bg-white/10 px-2 uppercase text-white transition-colors hover:bg-white/15"
+                  style={{ fontSize: 'clamp(11px, 2vw, 13px)', ...poppins }}
+                >
+                  <Users className="size-4 shrink-0" strokeWidth={2.5} />
+                  <span className="whitespace-nowrap leading-normal">{t('friend.playWithFriend')}</span>
+                </button>
+              )}
+              {/* Training — the scripted tutorial board (no coins, no opponents). */}
+              {onTraining && (
+                <button
+                  type="button"
+                  onClick={onTraining}
+                  className={cn(
+                    'flex h-11 items-center justify-center gap-1.5 rounded-2xl bg-white/10 px-2 uppercase text-white transition-colors hover:bg-white/15',
+                    !onPlayWithFriend && 'col-span-2',
+                  )}
+                  style={{ fontSize: 'clamp(11px, 2vw, 13px)', ...poppins }}
+                >
+                  <Dumbbell className="size-4 shrink-0" strokeWidth={2.5} />
+                  <span className="whitespace-nowrap leading-normal">{t('play.guestDemoCta')}</span>
+                </button>
+              )}
+            </div>
           )}
 
           <button
             type="button"
             onClick={() => setRulesOpen(true)}
-            className="mx-auto mt-3 flex items-center justify-center gap-1.5 rounded-xl px-4 py-2 font-poppins text-sm font-bold uppercase tracking-wide text-white/85 transition-colors hover:bg-black/20 hover:text-white"
+            className="mx-auto mt-2 flex items-center justify-center gap-1.5 rounded-xl px-4 py-1.5 font-poppins text-[13px] font-bold uppercase tracking-wide text-white/85 transition-colors hover:bg-black/20 hover:text-white"
           >
             <ScrollText className="size-4" strokeWidth={2.5} />
             {t('play.gridRulesButton')}

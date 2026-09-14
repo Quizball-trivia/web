@@ -1,5 +1,6 @@
 'use client';
 
+import { BrandIcon } from '@/components/brand/BrandIcon';
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import Image from 'next/image';
@@ -94,7 +95,7 @@ function PodiumColumn({
         <span className="font-poppins text-lg font-black text-white" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{rank}</span>
         <span className="font-poppins text-sm font-black tabular-nums text-white" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{formatProfit(score)}</span>
         <span className="mt-0.5 font-poppins text-[9px] font-black tabular-nums text-white/90" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
-          ⚡{chemistry}
+          <BrandIcon name="lightning" className="mr-0.5 size-3 align-[-2px]" />{chemistry}
           {/* The multiplier never touches a non-positive score — printing it
               next to a loss claims math that didn't happen. */}
           {score > 0 && multiplier > 1 ? ` · ×${multiplier.toFixed(1)}` : ''}

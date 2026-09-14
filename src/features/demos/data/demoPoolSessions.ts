@@ -1,6 +1,7 @@
 // GENERATED from the published question pool (staging export) — real questions
-// of each native type, pre-resolved per locale. Regenerate via the session
-// export scripts rather than editing content by hand.
+// of each native type, pre-resolved per locale (en/ka by the original export,
+// es/tr by scripts/gen-demo-pool-locales.py matching the same questions on
+// staging). Regenerate rather than editing content by hand.
 import type {
   CareerPathSession,
   CluesSession,
@@ -4544,6 +4545,4585 @@ const SESSIONS = {
         }
       ]
     }
+  },
+  "es": {
+    "trueFalse": {
+      "challengeType": "trueFalse",
+      "title": "Verdadero o falso",
+      "description": "Di si cada afirmación de fútbol es verdadera o falsa",
+      "questionCount": 10,
+      "secondsPerQuestion": 15,
+      "questions": [
+        {
+          "id": "pool-tf-1",
+          "category": "Copa Mundial",
+          "difficulty": "medium",
+          "prompt": "La selección masculina de Italia no se clasificó para la Copa Mundial de la FIFA 2022 en Qatar.",
+          "trueLabel": "Verdadero",
+          "falseLabel": "Falso",
+          "correctAnswer": true
+        },
+        {
+          "id": "pool-tf-2",
+          "category": "Copa Mundial",
+          "difficulty": "medium",
+          "prompt": "Gareth Bale marcó un gol de chilena en la final de la UEFA Champions League de 2018 contra el Liverpool.",
+          "trueLabel": "Verdadero",
+          "falseLabel": "Falso",
+          "correctAnswer": true
+        },
+        {
+          "id": "pool-tf-3",
+          "category": "Copa Mundial",
+          "difficulty": "medium",
+          "prompt": "La primera Copa Mundial de la FIFA masculina en 1930 contó con exactamente 32 equipos participantes.",
+          "trueLabel": "Verdadero",
+          "falseLabel": "Falso",
+          "correctAnswer": false
+        },
+        {
+          "id": "pool-tf-4",
+          "category": "Copa Mundial",
+          "difficulty": "medium",
+          "prompt": "Portugal ganó la final de la Eurocopa 2016 a pesar de que Cristiano Ronaldo fue sustituido lesionado en la primera mitad.",
+          "trueLabel": "Verdadero",
+          "falseLabel": "Falso",
+          "correctAnswer": true
+        },
+        {
+          "id": "pool-tf-5",
+          "category": "Copa Mundial",
+          "difficulty": "medium",
+          "prompt": "Brasil es el único país que ha participado en todos los torneos de la Copa Mundial de la FIFA masculina.",
+          "trueLabel": "Verdadero",
+          "falseLabel": "Falso",
+          "correctAnswer": true
+        },
+        {
+          "id": "pool-tf-6",
+          "category": "Copa Mundial",
+          "difficulty": "medium",
+          "prompt": "Zlatan Ibrahimović ganó el título de la UEFA Champions League durante su etapa en el FC Barcelona.",
+          "trueLabel": "Verdadero",
+          "falseLabel": "Falso",
+          "correctAnswer": false
+        },
+        {
+          "id": "pool-tf-7",
+          "category": "Copa Mundial",
+          "difficulty": "medium",
+          "prompt": "Pep Guardiola ganó la Copa de Europa / UEFA Champions League como jugador y como entrenador con el FC Barcelona.",
+          "trueLabel": "Verdadero",
+          "falseLabel": "Falso",
+          "correctAnswer": true
+        },
+        {
+          "id": "pool-tf-8",
+          "category": "Copa Mundial",
+          "difficulty": "hard",
+          "prompt": "La selección de Uruguay ha ganado la Copa América más veces que la selección de Brasil.",
+          "trueLabel": "Verdadero",
+          "falseLabel": "Falso",
+          "correctAnswer": true
+        },
+        {
+          "id": "pool-tf-9",
+          "category": "Copa Mundial",
+          "difficulty": "medium",
+          "prompt": "El Manchester City ganó la Premier League inglesa con exactamente 100 puntos durante la temporada 2017-2018.",
+          "trueLabel": "Verdadero",
+          "falseLabel": "Falso",
+          "correctAnswer": true
+        },
+        {
+          "id": "pool-tf-10",
+          "category": "Copa Mundial",
+          "difficulty": "medium",
+          "prompt": "La leyenda brasileña Pelé nunca jugó para un club europeo en su carrera profesional.",
+          "trueLabel": "Verdadero",
+          "falseLabel": "Falso",
+          "correctAnswer": true
+        }
+      ]
+    },
+    "clues": {
+      "challengeType": "clues",
+      "title": "¿Quién soy?",
+      "description": "Adivina al jugador por las pistas: menos pistas, más puntos",
+      "questionCount": 5,
+      "secondsPerClueStep": 12,
+      "questions": [
+        {
+          "id": "pool-cl-1",
+          "category": "Copa Mundial",
+          "difficulty": "medium",
+          "displayAnswer": "Kaká",
+          "acceptedAnswers": [
+            "Kaka",
+            "Ricardo Izecson dos Santos Leite",
+            "კაკა",
+            "რიკარდო იზეკსონ დოს სანტოს ლეიტე",
+            "Kaká"
+          ],
+          "clues": [
+            {
+              "type": "text",
+              "content": "Comencé mi carrera en el São Paulo antes de mudarme a Europa en 2003."
+            },
+            {
+              "type": "text",
+              "content": "Proporcioné la impresionante asistencia de larga distancia a Hernán Crespo en la final de la Champions League de 2005 en Estambul."
+            },
+            {
+              "type": "text",
+              "content": "Fui galardonado con el Jugador Mundial de la FIFA y el Balón de Oro en 2007, el último jugador en ganarlo antes de la era Messi-Ronaldo."
+            },
+            {
+              "type": "text",
+              "content": "Gané la Champions League de 2007 con el AC Milan y más tarde me transferí al Real Madrid en 2009."
+            },
+            {
+              "type": "text",
+              "content": "Soy un mediapunta brasileño que usó la camiseta número 22 en el Milan y la número 8 en el Real Madrid, famoso por mi elegante regate."
+            }
+          ]
+        },
+        {
+          "id": "pool-cl-2",
+          "category": "Copa Mundial",
+          "difficulty": "medium",
+          "displayAnswer": "Xavi",
+          "acceptedAnswers": [
+            "Xavi",
+            "Xavi Hernández",
+            "Xavi Hernandez",
+            "ჩავი",
+            "ჩავი ერნანდესი",
+            "ხავი",
+            "ხავი ერნანდესი"
+          ],
+          "clues": [
+            {
+              "type": "text",
+              "content": "Debuté con el primer equipo del FC Barcelona bajo las órdenes de Louis van Gaal en 1998."
+            },
+            {
+              "type": "text",
+              "content": "Registré 20 asistencias en una sola temporada de La Liga en 2008-09 y fui nombrado Jugador del Torneo de la Eurocopa 2008."
+            },
+            {
+              "type": "text",
+              "content": "Fui el metrónomo maestro del estilo \"tiki-taka\" tanto para el FC Barcelona como para España."
+            },
+            {
+              "type": "text",
+              "content": "Gané el Mundial en 2010 y dos Campeonatos de Europa consecutivos en 2008 y 2012."
+            },
+            {
+              "type": "text",
+              "content": "Soy un legendario centrocampista español que vistió el dorsal número 6 en el Barcelona y que más tarde regresó para dirigir al club."
+            }
+          ]
+        },
+        {
+          "id": "pool-cl-3",
+          "category": "Copa Mundial",
+          "difficulty": "medium",
+          "displayAnswer": "Samuel Eto'o",
+          "acceptedAnswers": [
+            "Samuel Eto'o",
+            "სამუელ ეტო'ო",
+            "Eto'o",
+            "Samuel",
+            "ეტო'ო",
+            "სამუელ"
+          ],
+          "clues": [
+            {
+              "type": "text",
+              "content": "Fui fichado por el Real Madrid como jugador juvenil, pero pasé la mayor parte del tiempo cedido antes de prosperar en el Mallorca."
+            },
+            {
+              "type": "text",
+              "content": "Soy el único jugador en la historia en ganar dos tripletes europeos consecutivos con dos clubes diferentes (Barcelona en 2009 e Inter de Milán en 2010)."
+            },
+            {
+              "type": "text",
+              "content": "Marqué en dos finales distintas de la UEFA Champions League (2006 y 2009) para el FC Barcelona."
+            },
+            {
+              "type": "text",
+              "content": "Gané cuatro premios al Futbolista Africano del Año y la medalla de oro olímpica de 2000."
+            },
+            {
+              "type": "text",
+              "content": "Soy un legendario delantero camerunés que lideró el ataque del Barcelona, Inter de Milán y Chelsea."
+            }
+          ]
+        },
+        {
+          "id": "pool-cl-4",
+          "category": "Copa Mundial",
+          "difficulty": "medium",
+          "displayAnswer": "Franck Ribery",
+          "acceptedAnswers": [
+            "Franck Ribery",
+            "ფრანკ რიბერი",
+            "Ribery",
+            "Franck",
+            "რიბერი",
+            "ფრანკ",
+            "ფრანკ რიბერ",
+            "რიბერ"
+          ],
+          "clues": [
+            {
+              "type": "text",
+              "content": "Jugué para el Boulogne, Alès, Brest, Metz y Galatasaray antes de fichar por el Marsella en 2005."
+            },
+            {
+              "type": "text",
+              "content": "Fui nombrado Jugador Francés del Año tres veces y terminé 3º en la votación del Balón de Oro de 2013."
+            },
+            {
+              "type": "text",
+              "content": "Pasé 12 temporadas en el Bayern de Múnich, ganando 9 títulos de Bundesliga y la Champions League de 2013."
+            },
+            {
+              "type": "text",
+              "content": "Formé la legendaria dupla de ataque \"Robbery\" con Arjen Robben."
+            },
+            {
+              "type": "text",
+              "content": "Soy un extremo francés conocido por mi cicatriz facial, mi velocidad explosiva y por llevar el número 7 en el Bayern de Múnich."
+            }
+          ]
+        },
+        {
+          "id": "pool-cl-5",
+          "category": "Copa Mundial",
+          "difficulty": "medium",
+          "displayAnswer": "David Villa",
+          "acceptedAnswers": [
+            "David Villa",
+            "დავიდ ვილია",
+            "Villa",
+            "David",
+            "ვილია",
+            "დავიდ"
+          ],
+          "clues": [
+            {
+              "type": "text",
+              "content": "Comencé mi carrera en el Sporting Gijón y el Real Zaragoza antes de brillar en el Valencia de 2005 a 2010."
+            },
+            {
+              "type": "text",
+              "content": "Gané la Bota de Oro en la Eurocopa 2008 con 4 goles, mientras España ganaba el torneo."
+            },
+            {
+              "type": "text",
+              "content": "Marqué 5 goles en la Copa Mundial de la FIFA 2010, jugando un papel crucial en la victoria de España."
+            },
+            {
+              "type": "text",
+              "content": "Me transferí al Barcelona en 2010 y marqué un gol con efecto en la final de la Champions League de 2011 contra el Manchester United."
+            },
+            {
+              "type": "text",
+              "content": "Soy el máximo goleador histórico de España con 59 goles, apodado \"El Guaje\"."
+            }
+          ]
+        }
+      ]
+    },
+    "countdown": {
+      "challengeType": "countdown",
+      "title": "Cuenta atrás",
+      "description": "Nombra tantas respuestas correctas como puedas antes de que acabe el tiempo",
+      "roundCount": 2,
+      "secondsPerRound": 30,
+      "rounds": [
+        {
+          "id": "pool-cd-1",
+          "category": "Copa Mundial",
+          "prompt": "Todos los capitanes que levantaron el trofeo de la Copa Mundial de la FIFA",
+          "answerGroups": [
+            {
+              "id": "641e6dd4-60f6-4a3c-9ba1-702591b9333c",
+              "display": "Jose Nasazzi",
+              "acceptedAnswers": [
+                "Jose Nasazzi",
+                "Nasazzi",
+                "ხოსე ნასასი"
+              ]
+            },
+            {
+              "id": "787f3eb3-8e18-4b6f-8c37-00bab6dc2632",
+              "display": "Gianpiero Combi",
+              "acceptedAnswers": [
+                "Gianpiero Combi",
+                "Combi",
+                "ჯანპიერო კომბი"
+              ]
+            },
+            {
+              "id": "97a8b60c-f2f9-43bc-97b0-565cf7a23296",
+              "display": "Giuseppe Meazza",
+              "acceptedAnswers": [
+                "Giuseppe Meazza",
+                "Meazza",
+                "ჯუზეპე მეაცა"
+              ]
+            },
+            {
+              "id": "0f48bae0-e9af-4a52-a577-f29df25ac5db",
+              "display": "Obdulio Varela",
+              "acceptedAnswers": [
+                "Obdulio Varela",
+                "Varela",
+                "ობდულიო ვარელა"
+              ]
+            },
+            {
+              "id": "4390dd50-8720-4453-a757-09937d27a500",
+              "display": "Fritz Walter",
+              "acceptedAnswers": [
+                "Fritz Walter",
+                "Walter",
+                "ფრიც ვალტერი"
+              ]
+            },
+            {
+              "id": "82294a5a-7626-4e60-9922-cb5ebce3a868",
+              "display": "Bellini",
+              "acceptedAnswers": [
+                "Bellini",
+                "Hilderaldo Bellini",
+                "ბელინი"
+              ]
+            },
+            {
+              "id": "0ec7e730-261a-4156-bae5-92b24c2405f9",
+              "display": "Mauro",
+              "acceptedAnswers": [
+                "Mauro",
+                "Mauro Ramos",
+                "მაურო"
+              ]
+            },
+            {
+              "id": "69809a40-8648-4d54-bacd-81ea14be10bf",
+              "display": "Bobby Moore",
+              "acceptedAnswers": [
+                "Bobby Moore",
+                "Moore",
+                "ბობი მური"
+              ]
+            },
+            {
+              "id": "4bf64e04-982d-4203-af3e-df1541fd6ec4",
+              "display": "Carlos Alberto",
+              "acceptedAnswers": [
+                "Carlos Alberto",
+                "Carlos Alberto Torres",
+                "კარლოს ალბერტო"
+              ]
+            },
+            {
+              "id": "0b236c65-6209-4976-b315-e2173d40be8a",
+              "display": "Franz Beckenbauer",
+              "acceptedAnswers": [
+                "Franz Beckenbauer",
+                "Beckenbauer",
+                "Der Kaiser",
+                "ფრანც ბეკენბაუერი"
+              ]
+            },
+            {
+              "id": "7d445ceb-4765-4ada-9cea-efb2b40b10b3",
+              "display": "Daniel Passarella",
+              "acceptedAnswers": [
+                "Daniel Passarella",
+                "Passarella",
+                "დანიელ პასარელა"
+              ]
+            },
+            {
+              "id": "0328c7b6-ad3e-4a91-ac20-68f5a039b49f",
+              "display": "Dino Zoff",
+              "acceptedAnswers": [
+                "Dino Zoff",
+                "Zoff",
+                "დინო ძოფი"
+              ]
+            },
+            {
+              "id": "d65a8d36-6dfd-4302-bd72-820689cb07e8",
+              "display": "Diego Maradona",
+              "acceptedAnswers": [
+                "Diego Maradona",
+                "Maradona",
+                "El Diego",
+                "დიეგო მარადონა"
+              ]
+            },
+            {
+              "id": "30dbdf79-f4f7-4b39-a1c5-5822497cd20b",
+              "display": "Lothar Matthaus",
+              "acceptedAnswers": [
+                "Lothar Matthaus",
+                "Matthaus",
+                "ლოთარ მათეუსი"
+              ]
+            },
+            {
+              "id": "c2fe8b02-5551-4ef1-8b09-802f4d2bdc9b",
+              "display": "Dunga",
+              "acceptedAnswers": [
+                "Dunga",
+                "Carlos Caetano Bledorn Verri",
+                "დუნგა"
+              ]
+            },
+            {
+              "id": "ccc447c4-a8b5-47f3-8dc3-a5ff70dd31dc",
+              "display": "Didier Deschamps",
+              "acceptedAnswers": [
+                "Didier Deschamps",
+                "Deschamps",
+                "დიდიე დეშამი"
+              ]
+            },
+            {
+              "id": "2d4d3be7-cea9-481b-8a58-5296192ed5ce",
+              "display": "Cafú",
+              "acceptedAnswers": [
+                "Cafu",
+                "Marcos Evangelista de Morais",
+                "კაფუ",
+                "Cafú"
+              ]
+            },
+            {
+              "id": "40a23e8e-b060-4d17-ad8b-1157c3699b9e",
+              "display": "Fabio Cannavaro",
+              "acceptedAnswers": [
+                "Fabio Cannavaro",
+                "Cannavaro",
+                "ფაბიო კანავარო"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "pool-cd-2",
+          "category": "Copa Mundial",
+          "prompt": "Todos los jugadores que han ganado la Copa Mundial de la FIFA 2 o más veces",
+          "answerGroups": [
+            {
+              "id": "a6802d9d-b9af-42c6-aaa1-3e4f369c4dc8",
+              "display": "Pelé",
+              "acceptedAnswers": [
+                "Pele",
+                "Edson Arantes do Nascimento",
+                "პელე",
+                "Pelé"
+              ]
+            },
+            {
+              "id": "8d65c7ca-8974-4379-bdf4-05345d9a2aa4",
+              "display": "Bellini",
+              "acceptedAnswers": [
+                "Bellini",
+                "Hilderaldo Bellini",
+                "ბელინი"
+              ]
+            },
+            {
+              "id": "9a792ec4-4c8c-4220-99e2-420de24711a7",
+              "display": "Cafú",
+              "acceptedAnswers": [
+                "Cafu",
+                "Marcos Evangelista de Morais",
+                "კაფუ",
+                "Cafú"
+              ]
+            },
+            {
+              "id": "c9666d25-5400-4364-baf8-a83c093590dc",
+              "display": "Castilho",
+              "acceptedAnswers": [
+                "Castilho",
+                "Carlos Jose Castilho",
+                "კასტილიო"
+              ]
+            },
+            {
+              "id": "2b86138e-3128-4b09-b4a3-bb7a83ca608a",
+              "display": "Didi",
+              "acceptedAnswers": [
+                "Didi",
+                "Waldyr Pereira",
+                "დიდი"
+              ]
+            },
+            {
+              "id": "c0e147e7-ed58-45ed-8489-acb3e1123320",
+              "display": "Djalma Santos",
+              "acceptedAnswers": [
+                "Djalma Santos",
+                "Santos",
+                "ჯალმა სანტოსი"
+              ]
+            },
+            {
+              "id": "b6cf6fc4-39ac-46ab-a0be-5dc76b798f9d",
+              "display": "Garrincha",
+              "acceptedAnswers": [
+                "Garrincha",
+                "Manuel Francisco dos Santos",
+                "გარინჩა"
+              ]
+            },
+            {
+              "id": "fd09e5c4-ff77-4d3e-ad27-621de3e336d9",
+              "display": "Gilmar",
+              "acceptedAnswers": [
+                "Gilmar",
+                "Gylmar dos Santos Neves",
+                "ჟილმარი"
+              ]
+            },
+            {
+              "id": "eb674d1a-116a-4783-85b4-70b49b562c64",
+              "display": "Mauro",
+              "acceptedAnswers": [
+                "Mauro",
+                "Mauro Ramos",
+                "მაურო"
+              ]
+            },
+            {
+              "id": "95e22f8d-49f7-4ca1-94c0-c8b389eff7e5",
+              "display": "Nilton Santos",
+              "acceptedAnswers": [
+                "Nilton Santos",
+                "Santos",
+                "ნილტონ სანტოსი"
+              ]
+            },
+            {
+              "id": "f4250d72-0ff3-44c3-9c4e-54eada796605",
+              "display": "Pepe",
+              "acceptedAnswers": [
+                "Pepe",
+                "Jose Macia",
+                "პეპე"
+              ]
+            },
+            {
+              "id": "ce92005b-b05e-4b0b-9c22-d517693e8d6d",
+              "display": "Ronaldo",
+              "acceptedAnswers": [
+                "Ronaldo",
+                "Ronaldo Nazario",
+                "R9",
+                "რონალდო"
+              ]
+            },
+            {
+              "id": "bfa20c3b-49be-4232-9bea-92e532908593",
+              "display": "Vavá",
+              "acceptedAnswers": [
+                "Vava",
+                "Edvaldo Izidio Neto",
+                "ვავა",
+                "Vavá"
+              ]
+            },
+            {
+              "id": "492209b5-ae77-4a9c-ab31-3f81454a5a63",
+              "display": "Zagallo",
+              "acceptedAnswers": [
+                "Zagallo",
+                "Mario Zagallo",
+                "ზაგალო"
+              ]
+            },
+            {
+              "id": "e6891cd2-29d1-474f-88e6-082dd27aacbe",
+              "display": "Zito",
+              "acceptedAnswers": [
+                "Zito",
+                "Jose Ely de Miranda",
+                "ზიტო"
+              ]
+            },
+            {
+              "id": "033eaaa9-cc2e-4209-9623-11564432b647",
+              "display": "Giovanni Ferrari",
+              "acceptedAnswers": [
+                "Giovanni Ferrari",
+                "Ferrari",
+                "ჯოვანი ფერარი"
+              ]
+            },
+            {
+              "id": "66e2eddc-3a38-4db7-9667-7ca6eeb92b55",
+              "display": "Guido Masetti",
+              "acceptedAnswers": [
+                "Guido Masetti",
+                "Masetti",
+                "გუიდო მასეტი"
+              ]
+            },
+            {
+              "id": "5ba9e187-1664-4637-8ed0-8a9712718342",
+              "display": "Giuseppe Meazza",
+              "acceptedAnswers": [
+                "Giuseppe Meazza",
+                "Meazza",
+                "ჯუზეპე მეაცა"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "pool-cd-3",
+          "category": "Copa Mundial",
+          "prompt": "Todas las naciones que alcanzaron las semifinales de la Copa Mundial de la FIFA desde 2002",
+          "answerGroups": [
+            {
+              "id": "03e9926b-1b45-4de5-a506-728ed530cdbe",
+              "display": "Brasil",
+              "acceptedAnswers": [
+                "Brazil",
+                "ბრაზილია",
+                "Brasil"
+              ]
+            },
+            {
+              "id": "a025db72-e262-4ff0-adf9-412001d97e72",
+              "display": "Alemania",
+              "acceptedAnswers": [
+                "Germany",
+                "გერმანია",
+                "Alemania"
+              ]
+            },
+            {
+              "id": "9bd41960-66bc-4d88-8e4c-9bbb67e57cc1",
+              "display": "Turquía",
+              "acceptedAnswers": [
+                "Turkey",
+                "თურქეთი",
+                "Turquía"
+              ]
+            },
+            {
+              "id": "5168d3d6-042e-491d-94ed-cb955ea17ad6",
+              "display": "Corea del Sur",
+              "acceptedAnswers": [
+                "South Korea",
+                "Korea Republic",
+                "სამხრეთ კორეა",
+                "Corea del Sur"
+              ]
+            },
+            {
+              "id": "a6bdbdaf-a2b1-41ea-8ac4-b5a1734407f5",
+              "display": "Italia",
+              "acceptedAnswers": [
+                "Italy",
+                "იტალია",
+                "Italia"
+              ]
+            },
+            {
+              "id": "d31e6eed-ec51-4b72-9566-e16a5bb6ca39",
+              "display": "Francia",
+              "acceptedAnswers": [
+                "France",
+                "საფრანგეთი",
+                "Francia"
+              ]
+            },
+            {
+              "id": "f0856e5a-317a-4e23-84be-7cb31a3cafe4",
+              "display": "Portugal",
+              "acceptedAnswers": [
+                "Portugal",
+                "პორტუგალია"
+              ]
+            },
+            {
+              "id": "e9f42a16-feec-47e5-833e-e981d50c1d7d",
+              "display": "España",
+              "acceptedAnswers": [
+                "Spain",
+                "ესპანეთი",
+                "España"
+              ]
+            },
+            {
+              "id": "3c1a2990-1847-459c-a4f6-52b082ebc6b9",
+              "display": "Países Bajos",
+              "acceptedAnswers": [
+                "Netherlands",
+                "ნიდერლანდები",
+                "Países Bajos"
+              ]
+            },
+            {
+              "id": "371c42c6-18cc-4c3c-b730-401152f4b022",
+              "display": "Uruguay",
+              "acceptedAnswers": [
+                "Uruguay",
+                "ურუგვაი"
+              ]
+            },
+            {
+              "id": "70619804-d46a-4120-acab-00e97b8095d1",
+              "display": "Argentina",
+              "acceptedAnswers": [
+                "Argentina",
+                "არგენტინა"
+              ]
+            },
+            {
+              "id": "e437d383-6847-4b69-bd7a-36d8303731b5",
+              "display": "Croacia",
+              "acceptedAnswers": [
+                "Croatia",
+                "ხორვატია",
+                "Croacia"
+              ]
+            },
+            {
+              "id": "04d95f17-ea43-4c74-b5cf-68c58e3cb7bb",
+              "display": "Bélgica",
+              "acceptedAnswers": [
+                "Belgium",
+                "ბელგია",
+                "Bélgica"
+              ]
+            },
+            {
+              "id": "a11d2b5b-4e85-4db4-bea9-e83be19d2df9",
+              "display": "Inglaterra",
+              "acceptedAnswers": [
+                "England",
+                "ინგლისი",
+                "Inglaterra"
+              ]
+            },
+            {
+              "id": "02af830a-473d-4021-bd28-4a937a00ff50",
+              "display": "Marruecos",
+              "acceptedAnswers": [
+                "Morocco",
+                "მაროკო",
+                "Marruecos"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "pool-cd-4",
+          "category": "Copa Mundial",
+          "prompt": "Todos los jugadores que marcaron 3 o más goles en un solo partido de la Copa Mundial de la FIFA desde 1990",
+          "answerGroups": [
+            {
+              "id": "71cd73b1-bd60-4f7a-a210-c97ad53bbc17",
+              "display": "Michel",
+              "acceptedAnswers": [
+                "Michel",
+                "Jose Miguel Gonzalez Martin del Campo",
+                "მიჩელი"
+              ]
+            },
+            {
+              "id": "f3a874ed-d2db-444a-8633-748a82dd2d3a",
+              "display": "Tomáš Skuhravý",
+              "acceptedAnswers": [
+                "Tomas Skuhravy",
+                "Skuhravy",
+                "ტომაშ სკუჰრავი",
+                "Tomáš Skuhravý"
+              ]
+            },
+            {
+              "id": "1c04b4e7-c43a-4685-a976-2c383c7d587e",
+              "display": "Oleg Salenko",
+              "acceptedAnswers": [
+                "Oleg Salenko",
+                "Salenko",
+                "ოლეგ სალენკო"
+              ]
+            },
+            {
+              "id": "28769775-2ad7-4330-ae7e-d667718f8b28",
+              "display": "Gabriel Batistuta",
+              "acceptedAnswers": [
+                "Gabriel Batistuta",
+                "Batistuta",
+                "Batigol",
+                "გაბრიელ ბატისტუტა"
+              ]
+            },
+            {
+              "id": "fc76787c-f37a-4508-b640-0dbb29fb5237",
+              "display": "Pauleta",
+              "acceptedAnswers": [
+                "Pauleta",
+                "Pedro Pauleta",
+                "პაულეტა"
+              ]
+            },
+            {
+              "id": "9146a037-4053-460d-9db3-b8b2c5d08823",
+              "display": "Miroslav Klose",
+              "acceptedAnswers": [
+                "Miroslav Klose",
+                "Klose",
+                "მიროსლავ კლოზე"
+              ]
+            },
+            {
+              "id": "771ab91c-1ee7-4069-8933-eac7fce62d5c",
+              "display": "Gonzalo Higuaín",
+              "acceptedAnswers": [
+                "Gonzalo Higuain",
+                "Higuain",
+                "Pipita",
+                "გონსალო იგუაინი",
+                "Gonzalo Higuaín"
+              ]
+            },
+            {
+              "id": "cd719e68-aa1c-4c21-901b-33cc41b4d734",
+              "display": "Thomas Müller",
+              "acceptedAnswers": [
+                "Thomas Muller",
+                "Muller",
+                "თომას მიულერი",
+                "Thomas Müller"
+              ]
+            },
+            {
+              "id": "65891bc2-2c6f-4841-a2f1-5a3c36da0d4f",
+              "display": "Xherdan Shaqiri",
+              "acceptedAnswers": [
+                "Xherdan Shaqiri",
+                "Shaqiri",
+                "ჯერდან შაქირი"
+              ]
+            },
+            {
+              "id": "db19fae4-8921-4825-9ee0-c877a6d0cba6",
+              "display": "Cristiano Ronaldo",
+              "acceptedAnswers": [
+                "Cristiano Ronaldo",
+                "Ronaldo",
+                "CR7",
+                "კრიშტიანუ რონალდუ"
+              ]
+            },
+            {
+              "id": "f30c1d95-1516-4c0a-87d9-345d8bc85d8c",
+              "display": "Harry Kane",
+              "acceptedAnswers": [
+                "Harry Kane",
+                "Kane",
+                "ჰარი კეინი"
+              ]
+            },
+            {
+              "id": "ec58c3bf-e780-4865-be09-c48e4a2cf2a0",
+              "display": "Kylian Mbappé",
+              "acceptedAnswers": [
+                "Kylian Mbappe",
+                "Mbappe",
+                "კილიან მბაპე",
+                "Kylian Mbappé"
+              ]
+            },
+            {
+              "id": "1c34274d-8cb1-4738-8db2-ba581bb4d22b",
+              "display": "Goncalo Ramos",
+              "acceptedAnswers": [
+                "Goncalo Ramos",
+                "Ramos",
+                "გონსალუ რამოსი"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "pool-cd-5",
+          "category": "Copa Mundial",
+          "prompt": "Todos los jugadores que marcaron en una final de la Copa Mundial de la FIFA desde 1998",
+          "answerGroups": [
+            {
+              "id": "4a90e271-6272-4452-8643-5599833a0540",
+              "display": "Zinedine Zidane",
+              "acceptedAnswers": [
+                "Zinedine Zidane",
+                "Zidane",
+                "Zizou",
+                "ზინედინ ზიდანი"
+              ]
+            },
+            {
+              "id": "1fd7a05a-9f15-4c1d-8428-a7b41c8e0403",
+              "display": "Emmanuel Petit",
+              "acceptedAnswers": [
+                "Emmanuel Petit",
+                "Petit",
+                "ემანუელ პეტი"
+              ]
+            },
+            {
+              "id": "101b0e9e-1fc7-4d74-9b85-e9a6b1242a3b",
+              "display": "Ronaldo",
+              "acceptedAnswers": [
+                "Ronaldo",
+                "Ronaldo Nazario",
+                "R9",
+                "რონალდო"
+              ]
+            },
+            {
+              "id": "a9dea5f5-eb89-467b-b795-7cd63bec623a",
+              "display": "Marco Materazzi",
+              "acceptedAnswers": [
+                "Marco Materazzi",
+                "Materazzi",
+                "Matrix",
+                "მარკო მატერაცი"
+              ]
+            },
+            {
+              "id": "fbcafd6c-5d83-42c7-9b5c-3600ecaa0d2a",
+              "display": "Andrés Iniesta",
+              "acceptedAnswers": [
+                "Andres Iniesta",
+                "Iniesta",
+                "ანდრეს ინიესტა",
+                "Andrés Iniesta"
+              ]
+            },
+            {
+              "id": "05889171-f733-488d-a682-5b2dc882bb58",
+              "display": "Mario Götze",
+              "acceptedAnswers": [
+                "Mario Gotze",
+                "Gotze",
+                "მარიო გიოტცე",
+                "Mario Götze"
+              ]
+            },
+            {
+              "id": "cf222d7a-b66b-4573-a3ca-97001d8151c6",
+              "display": "Mario Mandžukić",
+              "acceptedAnswers": [
+                "Mario Mandzukic",
+                "Mandzukic",
+                "მარიო მანჯუკიჩი",
+                "Mario Mandžukić"
+              ]
+            },
+            {
+              "id": "fab16a9e-bbe4-4036-b1a1-9fba802eaf66",
+              "display": "Ivan Perisic",
+              "acceptedAnswers": [
+                "Ivan Perisic",
+                "Perisic",
+                "ივან პერიშიჩი"
+              ]
+            },
+            {
+              "id": "907a34c0-9175-42c9-a5b7-7295a06dc23a",
+              "display": "Antoine Griezmann",
+              "acceptedAnswers": [
+                "Antoine Griezmann",
+                "Griezmann",
+                "ანტუან გრიზმანი"
+              ]
+            },
+            {
+              "id": "5030357d-e1d9-45d1-a8f5-30290874fc2a",
+              "display": "Paul Pogba",
+              "acceptedAnswers": [
+                "Paul Pogba",
+                "Pogba",
+                "პოლ პოგბა"
+              ]
+            },
+            {
+              "id": "34d9a023-1d08-4228-a511-27779f045fba",
+              "display": "Kylian Mbappé",
+              "acceptedAnswers": [
+                "Kylian Mbappe",
+                "Mbappe",
+                "კილიან მბაპე",
+                "Kylian Mbappé"
+              ]
+            },
+            {
+              "id": "90b4aaa7-b31b-4015-88e7-61c0da99f1a6",
+              "display": "Lionel Messi",
+              "acceptedAnswers": [
+                "Lionel Messi",
+                "Messi",
+                "Leo Messi",
+                "ლიონელ მესი"
+              ]
+            },
+            {
+              "id": "444c701e-244e-4cdf-8de6-87c919d76cc4",
+              "display": "Ángel Di María",
+              "acceptedAnswers": [
+                "Angel Di Maria",
+                "Di Maria",
+                "ანხელ დი მარია",
+                "Ángel Di María"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "pool-cd-6",
+          "category": "Copa Mundial",
+          "prompt": "Todos los jugadores que participaron en la final de la Copa Mundial de la FIFA 2006",
+          "answerGroups": [
+            {
+              "id": "761f7add-4219-4682-b99a-3570d8fb51c6",
+              "display": "Gianluigi Buffon",
+              "acceptedAnswers": [
+                "Gianluigi Buffon",
+                "Buffon",
+                "Gigi Buffon",
+                "ჯანლუიჯი ბუფონი"
+              ]
+            },
+            {
+              "id": "aa05d9e9-abb4-4e90-a310-298f297ec57c",
+              "display": "Gianluca Zambrotta",
+              "acceptedAnswers": [
+                "Gianluca Zambrotta",
+                "Zambrotta",
+                "ჯანლუკა ძამბროტა"
+              ]
+            },
+            {
+              "id": "04f12dd5-c4bc-4a83-b5e8-aa675a666545",
+              "display": "Fabio Cannavaro",
+              "acceptedAnswers": [
+                "Fabio Cannavaro",
+                "Cannavaro",
+                "ფაბიო კანავარო"
+              ]
+            },
+            {
+              "id": "4223940f-ca69-419e-bff4-8488f509b03e",
+              "display": "Marco Materazzi",
+              "acceptedAnswers": [
+                "Marco Materazzi",
+                "Materazzi",
+                "Matrix",
+                "მარკო მატერაცი"
+              ]
+            },
+            {
+              "id": "63269df2-6d7e-4e67-8ee7-fed83fc1153d",
+              "display": "Fabio Grosso",
+              "acceptedAnswers": [
+                "Fabio Grosso",
+                "Grosso",
+                "ფაბიო გროსო"
+              ]
+            },
+            {
+              "id": "0e785189-efec-44ed-b9fc-a5e5cf18f725",
+              "display": "Mauro Camoranesi",
+              "acceptedAnswers": [
+                "Mauro Camoranesi",
+                "Camoranesi",
+                "მაურო კამორანეზი"
+              ]
+            },
+            {
+              "id": "88c61f53-3f51-406d-8a00-1d9197022777",
+              "display": "Gennaro Gattuso",
+              "acceptedAnswers": [
+                "Gennaro Gattuso",
+                "Gattuso",
+                "Rino Gattuso",
+                "ჯენარო გატუზო"
+              ]
+            },
+            {
+              "id": "f868f04f-e985-4f22-8a54-ac3d345ed2e8",
+              "display": "Andrea Pirlo",
+              "acceptedAnswers": [
+                "Andrea Pirlo",
+                "Pirlo",
+                "ანდრეა პირლო"
+              ]
+            },
+            {
+              "id": "a2ec8927-287d-4a97-80bd-e7a7e8f8c6f9",
+              "display": "Simone Perrotta",
+              "acceptedAnswers": [
+                "Simone Perrotta",
+                "Perrotta",
+                "სიმონე პეროტა"
+              ]
+            },
+            {
+              "id": "d6218bca-f2a6-4999-a38c-ae1f060248d1",
+              "display": "Francesco Totti",
+              "acceptedAnswers": [
+                "Francesco Totti",
+                "Totti",
+                "ფრანჩესკო ტოტი"
+              ]
+            },
+            {
+              "id": "8f80ea91-79d6-4278-be46-3c8e9b475419",
+              "display": "Luca Toni",
+              "acceptedAnswers": [
+                "Luca Toni",
+                "Toni",
+                "ლუკა ტონი"
+              ]
+            },
+            {
+              "id": "84f67da4-aacc-497e-aff2-1be764a3e97b",
+              "display": "Daniele De Rossi",
+              "acceptedAnswers": [
+                "Daniele De Rossi",
+                "De Rossi",
+                "დანიელე დე როსი"
+              ]
+            },
+            {
+              "id": "8a9e86f1-3914-4de2-a27a-c73465fc28ba",
+              "display": "Vincenzo Iaquinta",
+              "acceptedAnswers": [
+                "Vincenzo Iaquinta",
+                "Iaquinta",
+                "ვინჩენცო იაკვინტა"
+              ]
+            },
+            {
+              "id": "7934f4d9-1578-4d85-aa61-0f17611038c2",
+              "display": "Alessandro Del Piero",
+              "acceptedAnswers": [
+                "Alessandro Del Piero",
+                "Del Piero",
+                "ალესანდრო დელ პიერო"
+              ]
+            },
+            {
+              "id": "fc938b4d-eb41-446e-82fc-032efa8f707f",
+              "display": "Fabien Barthez",
+              "acceptedAnswers": [
+                "Fabien Barthez",
+                "Barthez",
+                "ფაბიენ ბარტეზი"
+              ]
+            },
+            {
+              "id": "0fa2d341-21cd-4fea-95f7-50d3742bdb0e",
+              "display": "Willy Sagnol",
+              "acceptedAnswers": [
+                "Willy Sagnol",
+                "Sagnol",
+                "ვილი სანიოლი"
+              ]
+            },
+            {
+              "id": "b52d06b4-269e-4a1b-8ef8-f699d7bcaa55",
+              "display": "Lilian Thuram",
+              "acceptedAnswers": [
+                "Lilian Thuram",
+                "Thuram",
+                "ლილიან ტიურამი"
+              ]
+            },
+            {
+              "id": "daabef11-4158-404a-919c-1e26e7c841d3",
+              "display": "William Gallas",
+              "acceptedAnswers": [
+                "William Gallas",
+                "Gallas",
+                "უილიამ გალასი"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "imposter": {
+      "challengeType": "imposter",
+      "title": "Impostor",
+      "description": "Marca todas las respuestas correctas y evita a los impostores",
+      "questionCount": 10,
+      "secondsPerQuestion": 30,
+      "questions": [
+        {
+          "id": "pool-im-1",
+          "category": "Impostor",
+          "difficulty": "hard",
+          "prompt": "¿Qué jugador de esta lista ha roto oficialmente el récord mundial de la tarifa de transferencia de fútbol más alta durante su carrera?",
+          "options": [
+            {
+              "id": "cd283be0-4a85-4f8e-868e-fb1af1f87e01",
+              "text": "Neymar"
+            },
+            {
+              "id": "8345d674-8713-4e71-9e71-33ad6fc41ca7",
+              "text": "Paul Pogba"
+            },
+            {
+              "id": "2082e185-aab4-4331-a5d4-07d00b36971d",
+              "text": "Gareth Bale"
+            },
+            {
+              "id": "278c1e03-bf9c-4315-9aeb-dc159d57f8d7",
+              "text": "Cristiano Ronaldo"
+            },
+            {
+              "id": "8ef2ce16-488b-4ca1-ba94-db25b816de94",
+              "text": "Zinedine Zidane"
+            },
+            {
+              "id": "d6e9d49e-447e-4e3c-a9fd-fb9e4aea76c0",
+              "text": "Luis Figo"
+            },
+            {
+              "id": "855e1a76-3e79-4234-bffb-0ea77304e4b4",
+              "text": "Kylian Mbappé"
+            },
+            {
+              "id": "0ff5663a-f4c1-419c-b122-e1f89c0a1d41",
+              "text": "Lionel Messi"
+            },
+            {
+              "id": "8c7b9499-8d9f-483a-9d7a-6d2927abddcd",
+              "text": "Erling Haaland"
+            },
+            {
+              "id": "f601f5af-ad31-4b7e-8a5f-a1cfaa647920",
+              "text": "Kevin De Bruyne"
+            }
+          ],
+          "correctOptionIds": [
+            "cd283be0-4a85-4f8e-868e-fb1af1f87e01",
+            "8345d674-8713-4e71-9e71-33ad6fc41ca7",
+            "2082e185-aab4-4331-a5d4-07d00b36971d",
+            "278c1e03-bf9c-4315-9aeb-dc159d57f8d7",
+            "8ef2ce16-488b-4ca1-ba94-db25b816de94",
+            "d6e9d49e-447e-4e3c-a9fd-fb9e4aea76c0"
+          ]
+        },
+        {
+          "id": "pool-im-2",
+          "category": "Impostor",
+          "difficulty": "hard",
+          "prompt": "¿Cuál de estos jugadores ha ganado el Premio FIFA Puskás al gol más estéticamente significativo del año?",
+          "options": [
+            {
+              "id": "1e941467-d22d-4788-883b-9005a09b9a31",
+              "text": "Cristiano Ronaldo"
+            },
+            {
+              "id": "48c0af0a-a39b-4bf3-8ab0-7a3a5fda9829",
+              "text": "Neymar"
+            },
+            {
+              "id": "3cb4d290-d83e-4034-bf2d-f738cb58d1c2",
+              "text": "Zlatan Ibrahimović"
+            },
+            {
+              "id": "9231e525-b0ee-410d-88f1-ac4b589b85b3",
+              "text": "James Rodríguez"
+            },
+            {
+              "id": "bb3e30e8-67c7-42d0-9aa8-e2c6889ff6e9",
+              "text": "Olivier Giroud"
+            },
+            {
+              "id": "8b5e358c-ad2e-47c8-9b3e-dc79d2268330",
+              "text": "Mohamed Salah"
+            },
+            {
+              "id": "971c0f5d-f7ef-47c9-b49e-fdf3e216ff0a",
+              "text": "Lionel Messi"
+            },
+            {
+              "id": "209cc029-54cf-42b0-a3c7-5b97ac0f2a76",
+              "text": "Wayne Rooney"
+            },
+            {
+              "id": "c256f0bd-d46e-466e-acb9-82aee2b4f932",
+              "text": "Gareth Bale"
+            },
+            {
+              "id": "f9192ce0-99cb-48d9-95de-9c5c8abaefdc",
+              "text": "Luis Suárez"
+            }
+          ],
+          "correctOptionIds": [
+            "1e941467-d22d-4788-883b-9005a09b9a31",
+            "48c0af0a-a39b-4bf3-8ab0-7a3a5fda9829",
+            "3cb4d290-d83e-4034-bf2d-f738cb58d1c2",
+            "9231e525-b0ee-410d-88f1-ac4b589b85b3",
+            "bb3e30e8-67c7-42d0-9aa8-e2c6889ff6e9",
+            "8b5e358c-ad2e-47c8-9b3e-dc79d2268330"
+          ]
+        },
+        {
+          "id": "pool-im-3",
+          "category": "Impostor",
+          "difficulty": "medium",
+          "prompt": "¿Qué jugadores han disputado partidos oficiales con el primer equipo tanto del Chelsea como del Arsenal?",
+          "options": [
+            {
+              "id": "6b08478e-c982-43b6-8376-c7c221b97bdc",
+              "text": "Ashley Cole"
+            },
+            {
+              "id": "6f109426-07e3-48c9-99af-b5d14695e83a",
+              "text": "Petr Cech"
+            },
+            {
+              "id": "e43b1bb1-d234-4159-8fca-a1d2ee720d0a",
+              "text": "Olivier Giroud"
+            },
+            {
+              "id": "221f11ba-53da-4bc3-9417-79b799351963",
+              "text": "Cesc Fabregas"
+            },
+            {
+              "id": "fb42f673-b1a7-46e8-8d2c-bf19447cf350",
+              "text": "Pierre-Emerick Aubameyang"
+            },
+            {
+              "id": "4bca8460-be51-4e6b-92c8-5d33cffcee0d",
+              "text": "Kai Havertz"
+            },
+            {
+              "id": "5460a318-e4b8-4491-914d-9e504b4f18eb",
+              "text": "Eden Hazard"
+            },
+            {
+              "id": "dc055843-a012-4f1a-9464-5c83da11c5b2",
+              "text": "Frank Lampard"
+            },
+            {
+              "id": "22998b99-33b7-405e-911b-b68eee1ac8c0",
+              "text": "Mesut Özil"
+            },
+            {
+              "id": "30b280ed-1957-4d4d-a4f5-38fea489a124",
+              "text": "Alexis Sánchez"
+            }
+          ],
+          "correctOptionIds": [
+            "6b08478e-c982-43b6-8376-c7c221b97bdc",
+            "6f109426-07e3-48c9-99af-b5d14695e83a",
+            "e43b1bb1-d234-4159-8fca-a1d2ee720d0a",
+            "221f11ba-53da-4bc3-9417-79b799351963",
+            "fb42f673-b1a7-46e8-8d2c-bf19447cf350",
+            "4bca8460-be51-4e6b-92c8-5d33cffcee0d"
+          ]
+        },
+        {
+          "id": "pool-im-4",
+          "category": "Impostor",
+          "difficulty": "medium",
+          "prompt": "¿Qué jugadores de esta lista han marcado 50 o más goles oficiales para su selección absoluta?",
+          "options": [
+            {
+              "id": "75fe5d1a-6655-4114-ae51-71ce9e5b6bdc",
+              "text": "Cristiano Ronaldo"
+            },
+            {
+              "id": "7b0444f8-ce9c-44fb-962a-94ecb93dddf0",
+              "text": "Lionel Messi"
+            },
+            {
+              "id": "ce07e566-501e-49e9-a084-6bca158b0ccd",
+              "text": "Robert Lewandowski"
+            },
+            {
+              "id": "f3062504-1861-4a55-9e62-07cfdd1d2db3",
+              "text": "Romelu Lukaku"
+            },
+            {
+              "id": "88222b36-997c-4665-8aa1-2cfd4b7969ff",
+              "text": "Harry Kane"
+            },
+            {
+              "id": "202215ba-d933-41db-8f1d-9f3b8646bcc6",
+              "text": "Neymar"
+            },
+            {
+              "id": "5b65f1c5-a06a-40bf-a903-e017e4476f33",
+              "text": "Karim Benzema"
+            },
+            {
+              "id": "23efa1b9-3f20-4b54-8e4a-222ae6d6f90f",
+              "text": "Sergio Agüero"
+            },
+            {
+              "id": "0b25bd03-0772-4bff-bffe-27e2e4918b30",
+              "text": "Eden Hazard"
+            },
+            {
+              "id": "bb5a3905-c255-4b67-ba47-6da2454fc87c",
+              "text": "Diego Maradona"
+            }
+          ],
+          "correctOptionIds": [
+            "75fe5d1a-6655-4114-ae51-71ce9e5b6bdc",
+            "7b0444f8-ce9c-44fb-962a-94ecb93dddf0",
+            "ce07e566-501e-49e9-a084-6bca158b0ccd",
+            "f3062504-1861-4a55-9e62-07cfdd1d2db3",
+            "88222b36-997c-4665-8aa1-2cfd4b7969ff",
+            "202215ba-d933-41db-8f1d-9f3b8646bcc6"
+          ]
+        },
+        {
+          "id": "pool-im-5",
+          "category": "Impostor",
+          "difficulty": "hard",
+          "prompt": "¿Qué jugadores han ganado el Balón de Oro jugando activamente para el Real Madrid?",
+          "options": [
+            {
+              "id": "c2a2bcef-29e4-43e8-a001-7ea0258e701d",
+              "text": "Cristiano Ronaldo"
+            },
+            {
+              "id": "6f6fcb16-b42b-4dde-876e-3e66b66e6746",
+              "text": "Luka Modric"
+            },
+            {
+              "id": "14dc6772-e3c7-4695-bfe8-4ecd6d72f115",
+              "text": "Karim Benzema"
+            },
+            {
+              "id": "3373a54d-5c3b-43e3-a198-d231f6f5103a",
+              "text": "Luis Figo"
+            },
+            {
+              "id": "ba6c9db0-b437-45e5-9d7b-e49062124e06",
+              "text": "Ronaldo Nazario"
+            },
+            {
+              "id": "80d51981-d426-4ccf-904e-e6c6a0cff56a",
+              "text": "Fabio Cannavaro"
+            },
+            {
+              "id": "7c35cd7c-3794-420a-b138-d5960509f0b0",
+              "text": "Zinedine Zidane"
+            },
+            {
+              "id": "36a0e56d-44c7-491c-9487-eb67d28a9b26",
+              "text": "Kaká"
+            },
+            {
+              "id": "81b9afd7-8b48-4585-a04a-66ab87ec1540",
+              "text": "Raúl"
+            },
+            {
+              "id": "f3b6e339-ad21-40ec-aad9-c14f21f97ce8",
+              "text": "Gareth Bale"
+            }
+          ],
+          "correctOptionIds": [
+            "c2a2bcef-29e4-43e8-a001-7ea0258e701d",
+            "6f6fcb16-b42b-4dde-876e-3e66b66e6746",
+            "14dc6772-e3c7-4695-bfe8-4ecd6d72f115",
+            "3373a54d-5c3b-43e3-a198-d231f6f5103a",
+            "ba6c9db0-b437-45e5-9d7b-e49062124e06",
+            "80d51981-d426-4ccf-904e-e6c6a0cff56a"
+          ]
+        },
+        {
+          "id": "pool-im-6",
+          "category": "Impostor",
+          "difficulty": "hard",
+          "prompt": "¿Qué jugador de estos ha marcado un gol para el Liverpool en una final de la UEFA Champions League?",
+          "options": [
+            {
+              "id": "86e4998d-4799-4cf1-a04d-0c124335b490",
+              "text": "Steven Gerrard"
+            },
+            {
+              "id": "cbce1a7f-d147-413a-8e70-3a2db3d792a0",
+              "text": "Xabi Alonso"
+            },
+            {
+              "id": "fc83e7da-54d8-42e4-93bc-5dcf78870902",
+              "text": "Vladimir Smicer"
+            },
+            {
+              "id": "23776345-2186-469a-bdd0-f12af53ca238",
+              "text": "Mohamed Salah"
+            },
+            {
+              "id": "65f09cd2-5a27-49fc-b32a-b44e96126236",
+              "text": "Divock Origi"
+            },
+            {
+              "id": "51b55aaa-c0ee-4bf9-bb9c-ab7db80f3e47",
+              "text": "Sadio Mané"
+            },
+            {
+              "id": "c569d08d-5fb2-478d-b6d1-4b8d48b78a17",
+              "text": "Roberto Firmino"
+            },
+            {
+              "id": "5879509b-72ac-42b8-bb12-6832d49d0ec3",
+              "text": "Fernando Torres"
+            },
+            {
+              "id": "1b42316a-9565-4ac4-a9e0-e66ee915715a",
+              "text": "Luis Suárez"
+            },
+            {
+              "id": "e11e081e-4cbf-41a3-8ed6-782653ffc317",
+              "text": "Michael Owen"
+            }
+          ],
+          "correctOptionIds": [
+            "86e4998d-4799-4cf1-a04d-0c124335b490",
+            "cbce1a7f-d147-413a-8e70-3a2db3d792a0",
+            "fc83e7da-54d8-42e4-93bc-5dcf78870902",
+            "23776345-2186-469a-bdd0-f12af53ca238",
+            "65f09cd2-5a27-49fc-b32a-b44e96126236",
+            "51b55aaa-c0ee-4bf9-bb9c-ab7db80f3e47"
+          ]
+        },
+        {
+          "id": "pool-im-7",
+          "category": "Impostor",
+          "difficulty": "medium",
+          "prompt": "¿Cuál de estos clubes ha ganado la Premier League inglesa (desde su cambio de nombre en la temporada 1992/93)?",
+          "options": [
+            {
+              "id": "db293312-8add-438e-94d4-79052af8761f",
+              "text": "Blackburn Rovers"
+            },
+            {
+              "id": "a94d081b-38c8-44cb-ba52-a4aa15dff7ef",
+              "text": "Leicester City"
+            },
+            {
+              "id": "9844b8d9-eaf0-4e82-9357-a158d0ab5a7e",
+              "text": "Chelsea"
+            },
+            {
+              "id": "11e8c495-80b3-4319-be48-ce20ab4b80d6",
+              "text": "Manchester City"
+            },
+            {
+              "id": "67e686c9-4d25-4e08-8102-6d7b9ebe7a15",
+              "text": "Arsenal"
+            },
+            {
+              "id": "89310ddd-157b-4d0d-8a1b-ff892c086273",
+              "text": "Liverpool"
+            },
+            {
+              "id": "893d9e78-6ea4-49a2-b453-6214fa5cd9ed",
+              "text": "Newcastle United"
+            },
+            {
+              "id": "875f7e24-76e7-43a9-a417-8a6e93b2ed7b",
+              "text": "Tottenham Hotspur"
+            },
+            {
+              "id": "17d3f902-c6c8-4a12-a2ce-beb729941ac0",
+              "text": "Aston Villa"
+            },
+            {
+              "id": "b79019a1-6b6a-47c5-b681-f511d530153f",
+              "text": "Everton"
+            }
+          ],
+          "correctOptionIds": [
+            "db293312-8add-438e-94d4-79052af8761f",
+            "a94d081b-38c8-44cb-ba52-a4aa15dff7ef",
+            "9844b8d9-eaf0-4e82-9357-a158d0ab5a7e",
+            "11e8c495-80b3-4319-be48-ce20ab4b80d6",
+            "67e686c9-4d25-4e08-8102-6d7b9ebe7a15",
+            "89310ddd-157b-4d0d-8a1b-ff892c086273"
+          ]
+        },
+        {
+          "id": "pool-im-8",
+          "category": "Impostor",
+          "difficulty": "hard",
+          "prompt": "¿Cuál de estos jugadores ha ganado el premio European Golden Boy?",
+          "options": [
+            {
+              "id": "91aa0c4d-f7ec-4902-991f-c4569d2c63bf",
+              "text": "Wayne Rooney"
+            },
+            {
+              "id": "d5065fb1-e01e-4fb7-a303-05081ecc936d",
+              "text": "Lionel Messi"
+            },
+            {
+              "id": "bb9e6db3-0a78-4be9-9c91-18049febeaa7",
+              "text": "Kylian Mbappé"
+            },
+            {
+              "id": "21e4a79e-85bb-4bb1-a248-88b10f8152d5",
+              "text": "Erling Haaland"
+            },
+            {
+              "id": "71e512eb-dcb6-41f9-8a99-e781a0864271",
+              "text": "Pedri"
+            },
+            {
+              "id": "3b2ca30a-c068-4fca-8811-423f7a7d0c63",
+              "text": "Jude Bellingham"
+            },
+            {
+              "id": "df25562a-cfad-496d-9513-743d0437a904",
+              "text": "Cristiano Ronaldo"
+            },
+            {
+              "id": "973489f8-7600-4ce8-b689-fe8733c29840",
+              "text": "Neymar"
+            },
+            {
+              "id": "ebb960ef-f3da-456a-96cc-f3f03c1e85f2",
+              "text": "Harry Kane"
+            },
+            {
+              "id": "577bdb16-e146-43b8-8838-87e3ad803754",
+              "text": "Kevin De Bruyne"
+            }
+          ],
+          "correctOptionIds": [
+            "91aa0c4d-f7ec-4902-991f-c4569d2c63bf",
+            "d5065fb1-e01e-4fb7-a303-05081ecc936d",
+            "bb9e6db3-0a78-4be9-9c91-18049febeaa7",
+            "21e4a79e-85bb-4bb1-a248-88b10f8152d5",
+            "71e512eb-dcb6-41f9-8a99-e781a0864271",
+            "3b2ca30a-c068-4fca-8811-423f7a7d0c63"
+          ]
+        },
+        {
+          "id": "pool-im-9",
+          "category": "Impostor",
+          "difficulty": "easy",
+          "prompt": "¿Cuál de estos jugadores ha disputado oficialmente un partido competitivo con el Arsenal FC?",
+          "options": [
+            {
+              "id": "159c9f94-2e3b-42fb-b1c2-1c159896842d",
+              "text": "Cesc Fabregas"
+            },
+            {
+              "id": "aa263574-b7f4-4ca9-ad3d-52caa13b60ed",
+              "text": "Robin van Persie"
+            },
+            {
+              "id": "bbcb32be-beaa-4fb7-a9cb-500aa7cb69a4",
+              "text": "Ashley Cole"
+            },
+            {
+              "id": "5b884a4d-53fd-4f7e-b879-2d98b62362f4",
+              "text": "Samir Nasri"
+            },
+            {
+              "id": "d204d645-b169-45b6-b923-188033a60b07",
+              "text": "Olivier Giroud"
+            },
+            {
+              "id": "6793ba14-c1ef-4432-a891-cecf3d210832",
+              "text": "Alexis Sánchez"
+            },
+            {
+              "id": "e0b71616-2ff1-4cc3-af4a-20256fd12a11",
+              "text": "Gareth Bale"
+            },
+            {
+              "id": "a1ff7a09-866f-4c04-b7ee-454ef1c38c07",
+              "text": "Luka Modric"
+            },
+            {
+              "id": "cca56fc4-9811-43b4-bfdd-a264323f38b6",
+              "text": "Eden Hazard"
+            },
+            {
+              "id": "f3075652-7e6c-48a2-b909-603c9f2bc905",
+              "text": "Kevin De Bruyne"
+            }
+          ],
+          "correctOptionIds": [
+            "159c9f94-2e3b-42fb-b1c2-1c159896842d",
+            "aa263574-b7f4-4ca9-ad3d-52caa13b60ed",
+            "bbcb32be-beaa-4fb7-a9cb-500aa7cb69a4",
+            "5b884a4d-53fd-4f7e-b879-2d98b62362f4",
+            "d204d645-b169-45b6-b923-188033a60b07",
+            "6793ba14-c1ef-4432-a891-cecf3d210832"
+          ]
+        },
+        {
+          "id": "pool-im-10",
+          "category": "Impostor",
+          "difficulty": "medium",
+          "prompt": "¿Qué selecciones nacionales han ganado el Campeonato de Europa de la UEFA (Eurocopa)?",
+          "options": [
+            {
+              "id": "dd7649d9-19c7-4209-b043-1fca69c5c604",
+              "text": "Italia"
+            },
+            {
+              "id": "0a7860ce-6642-49e8-9e32-7d8784beae52",
+              "text": "Portugal"
+            },
+            {
+              "id": "023626b1-d025-421d-871d-e1af8387bc79",
+              "text": "Países Bajos"
+            },
+            {
+              "id": "c81935a6-26fd-4175-84ee-a6271dd8063f",
+              "text": "Grecia"
+            },
+            {
+              "id": "087b074e-ec0d-4140-9cb3-f67ef72fe091",
+              "text": "Dinamarca"
+            },
+            {
+              "id": "85249799-7726-4e18-9754-052dec852365",
+              "text": "España"
+            },
+            {
+              "id": "74c71a4d-3b05-4690-93a3-a61ecc9ae098",
+              "text": "Inglaterra"
+            },
+            {
+              "id": "bee6aa86-fa7d-4e22-beae-4bde2962a19a",
+              "text": "Bélgica"
+            },
+            {
+              "id": "2d36cf35-d987-42aa-a672-4e7a99f8fce5",
+              "text": "Croacia"
+            },
+            {
+              "id": "2225dfa8-2a85-4cd7-b249-0d9a923804db",
+              "text": "Suecia"
+            }
+          ],
+          "correctOptionIds": [
+            "dd7649d9-19c7-4209-b043-1fca69c5c604",
+            "0a7860ce-6642-49e8-9e32-7d8784beae52",
+            "023626b1-d025-421d-871d-e1af8387bc79",
+            "c81935a6-26fd-4175-84ee-a6271dd8063f",
+            "087b074e-ec0d-4140-9cb3-f67ef72fe091",
+            "85249799-7726-4e18-9754-052dec852365"
+          ]
+        }
+      ]
+    },
+    "careerPath": {
+      "challengeType": "careerPath",
+      "title": "Trayectoria",
+      "description": "Adivina al jugador por su historial de traspasos",
+      "questionCount": 10,
+      "secondsPerQuestion": 25,
+      "questions": [
+        {
+          "id": "pool-cp-1",
+          "category": "Copa Mundial",
+          "difficulty": "easy",
+          "prompt": "¿La trayectoria de qué jugador es esta?",
+          "clubs": [
+            "Southampton",
+            "Tottenham Hotspur",
+            "Real Madrid",
+            "Los Angeles FC"
+          ],
+          "displayAnswer": "Gareth Bale",
+          "acceptedAnswers": [
+            "Gareth Bale",
+            "Bale",
+            "გარეთ ბეილი",
+            "Gareth",
+            "ბეილი",
+            "გარეთ",
+            "გარეთ ბეილ",
+            "ბეილ"
+          ]
+        },
+        {
+          "id": "pool-cp-2",
+          "category": "Copa Mundial",
+          "difficulty": "medium",
+          "prompt": "¿La trayectoria de qué jugador es esta?",
+          "clubs": [
+            "Schalke 04",
+            "Werder Bremen",
+            "Real Madrid",
+            "Arsenal",
+            "Fenerbahçe",
+            "Başakşehir"
+          ],
+          "displayAnswer": "Mesut Özil",
+          "acceptedAnswers": [
+            "Mesut Özil",
+            "Ozil",
+            "მესუთ ოზილი",
+            "Mesut",
+            "ოზილი",
+            "მესუთ",
+            "მესუთ ოზილ",
+            "ოზილ"
+          ]
+        },
+        {
+          "id": "pool-cp-3",
+          "category": "Copa Mundial",
+          "difficulty": "easy",
+          "prompt": "¿La trayectoria de qué jugador es esta?",
+          "clubs": [
+            "Znicz Pruszków",
+            "Lech Poznań",
+            "Borussia Dortmund",
+            "Bayern Munich",
+            "Barcelona"
+          ],
+          "displayAnswer": "Robert Lewandowski",
+          "acceptedAnswers": [
+            "Robert Lewandowski",
+            "Lewandowski",
+            "Lewy",
+            "რობერტ ლევანდოვსკი",
+            "Robert",
+            "ლევანდოვსკი",
+            "რობერტ",
+            "რობერტ ლევანდოვსკ",
+            "ლევანდოვსკ"
+          ]
+        },
+        {
+          "id": "pool-cp-4",
+          "category": "Copa Mundial",
+          "difficulty": "easy",
+          "prompt": "¿La trayectoria de qué jugador es esta?",
+          "clubs": [
+            "Barcelona",
+            "Paris Saint-Germain",
+            "Inter Miami"
+          ],
+          "displayAnswer": "Lionel Messi",
+          "acceptedAnswers": [
+            "Lionel Messi",
+            "Messi",
+            "LM10",
+            "ლიონელ მესი",
+            "Lionel",
+            "მესი",
+            "ლიონელ",
+            "ლიონელ მეს",
+            "მეს"
+          ]
+        },
+        {
+          "id": "pool-cp-5",
+          "category": "Copa Mundial",
+          "difficulty": "medium",
+          "prompt": "¿La trayectoria de qué jugador es esta?",
+          "clubs": [
+            "Genk",
+            "Chelsea",
+            "Werder Bremen",
+            "VfL Wolfsburg",
+            "Manchester City",
+            "Napoli"
+          ],
+          "displayAnswer": "Kevin De Bruyne",
+          "acceptedAnswers": [
+            "Kevin De Bruyne",
+            "De Bruyne",
+            "KDB",
+            "კევინ დე ბრუინი",
+            "Bruyne",
+            "Kevin",
+            "დე ბრუინი",
+            "ბრუინი",
+            "კევინ",
+            "კევინ დე ბრუინ",
+            "დე ბრუინ",
+            "ბრუინ"
+          ]
+        },
+        {
+          "id": "pool-cp-6",
+          "category": "Copa Mundial",
+          "difficulty": "easy",
+          "prompt": "¿La trayectoria de qué jugador es esta?",
+          "clubs": [
+            "Birmingham City",
+            "Borussia Dortmund",
+            "Real Madrid"
+          ],
+          "displayAnswer": "Jude Bellingham",
+          "acceptedAnswers": [
+            "Jude Bellingham",
+            "Bellingham",
+            "ჯუდ ბელინგემი",
+            "Jude",
+            "ბელინგემი",
+            "ჯუდ",
+            "ჯუდ ბელინგემ",
+            "ბელინგემ"
+          ]
+        },
+        {
+          "id": "pool-cp-7",
+          "category": "Copa Mundial",
+          "difficulty": "easy",
+          "prompt": "¿La trayectoria de qué jugador es esta?",
+          "clubs": [
+            "Bryne",
+            "Molde",
+            "Red Bull Salzburg",
+            "Borussia Dortmund",
+            "Manchester City"
+          ],
+          "displayAnswer": "Erling Haaland",
+          "acceptedAnswers": [
+            "Erling Haaland",
+            "Haaland",
+            "ერლინგ ჰოლანდი",
+            "Erling",
+            "ჰოლანდი",
+            "ერლინგ",
+            "ერლინგ ჰოლანდ",
+            "ჰოლანდ"
+          ]
+        },
+        {
+          "id": "pool-cp-8",
+          "category": "Copa Mundial",
+          "difficulty": "easy",
+          "prompt": "¿La trayectoria de qué jugador es esta?",
+          "clubs": [
+            "Tottenham Hotspur",
+            "Leyton Orient",
+            "Millwall",
+            "Leicester City",
+            "Norwich City",
+            "Bayern Munich"
+          ],
+          "displayAnswer": "Harry Kane",
+          "acceptedAnswers": [
+            "Harry Kane",
+            "Kane",
+            "ჰარი კეინი",
+            "Harry",
+            "კეინი",
+            "ჰარი",
+            "ჰარი კეინ",
+            "კეინ",
+            "ჰარ"
+          ]
+        },
+        {
+          "id": "pool-cp-9",
+          "category": "Copa Mundial",
+          "difficulty": "medium",
+          "prompt": "¿La trayectoria de qué jugador es esta?",
+          "clubs": [
+            "Bayern Munich",
+            "Bayer Leverkusen",
+            "Real Madrid"
+          ],
+          "displayAnswer": "Toni Kroos",
+          "acceptedAnswers": [
+            "Toni Kroos",
+            "Kroos",
+            "ტონი კროოსი",
+            "Toni",
+            "კროოსი",
+            "ტონი",
+            "ტონი კროოს",
+            "კროოს",
+            "ტონ"
+          ]
+        },
+        {
+          "id": "pool-cp-10",
+          "category": "Copa Mundial",
+          "difficulty": "easy",
+          "prompt": "¿La trayectoria de qué jugador es esta?",
+          "clubs": [
+            "Dinamo Zagreb",
+            "Zrinjski Mostar",
+            "Inter Zaprešić",
+            "Tottenham Hotspur",
+            "Real Madrid"
+          ],
+          "displayAnswer": "Luka Modrić",
+          "acceptedAnswers": [
+            "Luka Modrić",
+            "Modric",
+            "ლუკა მოდრიჩი",
+            "Luka",
+            "მოდრიჩი",
+            "ლუკა",
+            "ლუკა მოდრიჩ",
+            "მოდრიჩ"
+          ]
+        }
+      ]
+    },
+    "highLow": {
+      "challengeType": "highLow",
+      "title": "Más o menos",
+      "description": "Elige el valor más alto para mantener tu racha",
+      "roundCount": 2,
+      "secondsPerRound": 30,
+      "rounds": [
+        {
+          "id": "pool-hl-1",
+          "category": "Copa Mundial",
+          "difficulty": "medium",
+          "prompt": "¿Quién ha marcado más goles en la historia de la Premier League? (El ganador se mantiene)",
+          "statLabel": "Goles históricos en la Premier League",
+          "matchups": [
+            {
+              "id": "m0",
+              "leftName": "Michael Owen",
+              "leftValue": 150,
+              "rightName": "Robin van Persie",
+              "rightValue": 144
+            },
+            {
+              "id": "m1",
+              "leftName": "Michael Owen",
+              "leftValue": 150,
+              "rightName": "Jermain Defoe",
+              "rightValue": 162
+            },
+            {
+              "id": "m2",
+              "leftName": "Thierry Henry",
+              "leftValue": 175,
+              "rightName": "Jermain Defoe",
+              "rightValue": 162
+            },
+            {
+              "id": "m3",
+              "leftName": "Thierry Henry",
+              "leftValue": 175,
+              "rightName": "Sergio Agüero",
+              "rightValue": 184
+            },
+            {
+              "id": "m4",
+              "leftName": "Andrew Cole",
+              "leftValue": 187,
+              "rightName": "Sergio Agüero",
+              "rightValue": 184
+            }
+          ]
+        },
+        {
+          "id": "pool-hl-2",
+          "category": "Copa Mundial",
+          "difficulty": "easy",
+          "prompt": "¿Quién ha marcado más goles en la historia de la UEFA Champions League? (El ganador se queda)",
+          "statLabel": "Goles históricos en la UEFA Champions League",
+          "matchups": [
+            {
+              "id": "m0",
+              "leftName": "Ruud van Nistelrooy",
+              "leftValue": 56,
+              "rightName": "Raúl",
+              "rightValue": 71
+            },
+            {
+              "id": "m1",
+              "leftName": "Karim Benzema",
+              "leftValue": 90,
+              "rightName": "Raúl",
+              "rightValue": 71
+            },
+            {
+              "id": "m2",
+              "leftName": "Karim Benzema",
+              "leftValue": 90,
+              "rightName": "Robert Lewandowski",
+              "rightValue": 94
+            },
+            {
+              "id": "m3",
+              "leftName": "Lionel Messi",
+              "leftValue": 129,
+              "rightName": "Robert Lewandowski",
+              "rightValue": 94
+            },
+            {
+              "id": "m4",
+              "leftName": "Lionel Messi",
+              "leftValue": 129,
+              "rightName": "Cristiano Ronaldo",
+              "rightValue": 140
+            }
+          ]
+        }
+      ]
+    },
+    "putInOrder": {
+      "challengeType": "putInOrder",
+      "title": "Ordénalos",
+      "description": "Arrastra los elementos al orden correcto",
+      "roundCount": 2,
+      "itemsPerRound": 4,
+      "rounds": [
+        {
+          "id": "pool-po-1",
+          "category": "Serie A",
+          "prompt": "Ordena a estos jugadores por el número de apariciones en la Serie A que hicieron en sus carreras, empezando por el menor.",
+          "direction": "asc",
+          "items": [
+            {
+              "id": "d8a6a6b5-d699-4e52-86f7-e6a21ca07709",
+              "label": "Gabriel Batistuta",
+              "details": null,
+              "emoji": null,
+              "sortValue": 1
+            },
+            {
+              "id": "9453f3c4-4681-48db-8b7d-aa133b0e0091",
+              "label": "Alessandro Del Piero",
+              "details": null,
+              "emoji": null,
+              "sortValue": 2
+            },
+            {
+              "id": "3b147471-63f4-45a2-8071-418cbb618954",
+              "label": "Francesco Totti",
+              "details": null,
+              "emoji": null,
+              "sortValue": 3
+            },
+            {
+              "id": "822ce937-06f4-442a-812c-52614b737f5b",
+              "label": "Paolo Maldini",
+              "details": null,
+              "emoji": null,
+              "sortValue": 4
+            }
+          ]
+        },
+        {
+          "id": "pool-po-2",
+          "category": "Mundial Sudáfrica 2010",
+          "prompt": "Ordena estos estadios de la Copa Mundial 2010 por su capacidad oficial (De mayor a menor)",
+          "direction": "desc",
+          "items": [
+            {
+              "id": "015a242f-13db-4971-8327-c534aa3fc65f",
+              "label": "Estadio Loftus Versfeld",
+              "details": null,
+              "emoji": null,
+              "sortValue": 3
+            },
+            {
+              "id": "e694e42b-f8ad-45d7-9382-50e4fd5b6233",
+              "label": "Estadio de Ciudad del Cabo",
+              "details": null,
+              "emoji": null,
+              "sortValue": 2
+            },
+            {
+              "id": "6f926788-ec90-4fb0-8f37-efb61322da4d",
+              "label": "Royal Bafokeng Stadium",
+              "details": null,
+              "emoji": null,
+              "sortValue": 4
+            },
+            {
+              "id": "078741dd-d88d-4163-bdbd-c1195a76b4a1",
+              "label": "Soccer City",
+              "details": null,
+              "emoji": null,
+              "sortValue": 1
+            }
+          ]
+        },
+        {
+          "id": "pool-po-3",
+          "category": "Balón de Oro",
+          "prompt": "Ordena a estos jugadores por su ÚlTIMA victoria del Balón de Oro (de más reciente a más antiguo).",
+          "direction": "desc",
+          "items": [
+            {
+              "id": "d25f1f8c-373a-409c-89d5-230872bbf90e",
+              "label": "Lionel Messi",
+              "details": null,
+              "emoji": null,
+              "sortValue": 1
+            },
+            {
+              "id": "2a3e26db-ccad-4710-8a5d-27dee1864d7c",
+              "label": "Luka Modric",
+              "details": null,
+              "emoji": null,
+              "sortValue": 2
+            },
+            {
+              "id": "cc3e7b9a-b219-4b31-bc98-624dc18b78c7",
+              "label": "Kaká",
+              "details": null,
+              "emoji": null,
+              "sortValue": 3
+            },
+            {
+              "id": "467b7bbb-2037-4953-8861-612ce03fb345",
+              "label": "George Weah",
+              "details": null,
+              "emoji": null,
+              "sortValue": 4
+            }
+          ]
+        },
+        {
+          "id": "pool-po-4",
+          "category": "La era de los 2010",
+          "prompt": "Ordena a estos jugadores por su tarifa de transferencia total durante la década de 2010 (de mayor a menor)",
+          "direction": "desc",
+          "items": [
+            {
+              "id": "5aa5f0bc-1369-4822-ab92-109b63916d93",
+              "label": "Neymar (al PSG)",
+              "details": null,
+              "emoji": null,
+              "sortValue": 1
+            },
+            {
+              "id": "0691cb88-2082-42f6-9e88-f0ec21ad382b",
+              "label": "Kylian Mbappé (al PSG)",
+              "details": null,
+              "emoji": null,
+              "sortValue": 2
+            },
+            {
+              "id": "dde07dcb-64e9-4296-b3ea-996b4180fa62",
+              "label": "Paul Pogba (al Man Utd)",
+              "details": null,
+              "emoji": null,
+              "sortValue": 3
+            },
+            {
+              "id": "b0d919d8-19bf-48c3-a875-bb817a202598",
+              "label": "Alisson Becker (al Liverpool)",
+              "details": null,
+              "emoji": null,
+              "sortValue": 4
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "tr": {
+    "trueFalse": {
+      "challengeType": "trueFalse",
+      "title": "Doğru mu Yanlış mı",
+      "description": "Her futbol ifadesi için doğru ya da yanlış de",
+      "questionCount": 10,
+      "secondsPerQuestion": 15,
+      "questions": [
+        {
+          "id": "pool-tf-1",
+          "category": "Dünya Kupası",
+          "difficulty": "medium",
+          "prompt": "İtalya erkek milli takımı, 2022 FIFA Katar Dünya Kupası'na katılamadı.",
+          "trueLabel": "Doğru",
+          "falseLabel": "Yanlış",
+          "correctAnswer": true
+        },
+        {
+          "id": "pool-tf-2",
+          "category": "Dünya Kupası",
+          "difficulty": "medium",
+          "prompt": "Gareth Bale, 2018 UEFA Şampiyonlar Ligi Finali'nde Liverpool'a karşı röveşata golü atmıştı.",
+          "trueLabel": "Doğru",
+          "falseLabel": "Yanlış",
+          "correctAnswer": true
+        },
+        {
+          "id": "pool-tf-3",
+          "category": "Dünya Kupası",
+          "difficulty": "medium",
+          "prompt": "1930'daki ilk FIFA Dünya Kupası'nda tam olarak 32 takım mücadele etti.",
+          "trueLabel": "Doğru",
+          "falseLabel": "Yanlış",
+          "correctAnswer": false
+        },
+        {
+          "id": "pool-tf-4",
+          "category": "Dünya Kupası",
+          "difficulty": "medium",
+          "prompt": "Portekiz, Cristiano Ronaldo ilk yarıda sakatlanarak oyundan alınmasına rağmen UEFA Euro 2016 Finali'ni kazandı.",
+          "trueLabel": "Doğru",
+          "falseLabel": "Yanlış",
+          "correctAnswer": true
+        },
+        {
+          "id": "pool-tf-5",
+          "category": "Dünya Kupası",
+          "difficulty": "medium",
+          "prompt": "Brezilya, Erkekler FIFA Dünya Kupası turnuvalarının tamamına katılan tek ülkedir.",
+          "trueLabel": "Doğru",
+          "falseLabel": "Yanlış",
+          "correctAnswer": true
+        },
+        {
+          "id": "pool-tf-6",
+          "category": "Dünya Kupası",
+          "difficulty": "medium",
+          "prompt": "Zlatan Ibrahimović, FC Barcelona'da oynadığı dönemde UEFA Şampiyonlar Ligi şampiyonluğunu kazandı.",
+          "trueLabel": "Doğru",
+          "falseLabel": "Yanlış",
+          "correctAnswer": false
+        },
+        {
+          "id": "pool-tf-7",
+          "category": "Dünya Kupası",
+          "difficulty": "medium",
+          "prompt": "Pep Guardiola, hem oyuncu hem de teknik direktör olarak FC Barcelona ile Avrupa Kupası / UEFA Şampiyonlar Ligi'ni kazandı.",
+          "trueLabel": "Doğru",
+          "falseLabel": "Yanlış",
+          "correctAnswer": true
+        },
+        {
+          "id": "pool-tf-8",
+          "category": "Dünya Kupası",
+          "difficulty": "hard",
+          "prompt": "Uruguay milli takımı, Brezilya milli takımından daha fazla Copa América kazanmıştır.",
+          "trueLabel": "Doğru",
+          "falseLabel": "Yanlış",
+          "correctAnswer": true
+        },
+        {
+          "id": "pool-tf-9",
+          "category": "Dünya Kupası",
+          "difficulty": "medium",
+          "prompt": "Manchester City, 2017-2018 sezonunda İngiltere Premier Lig'i tam 100 puanla kazandı.",
+          "trueLabel": "Doğru",
+          "falseLabel": "Yanlış",
+          "correctAnswer": true
+        },
+        {
+          "id": "pool-tf-10",
+          "category": "Dünya Kupası",
+          "difficulty": "medium",
+          "prompt": "Brezilyalı efsane Pelé hiçbir zaman Avrupalı bir takım için profesyonel kulüp futbolu oynamadı.",
+          "trueLabel": "Doğru",
+          "falseLabel": "Yanlış",
+          "correctAnswer": true
+        }
+      ]
+    },
+    "clues": {
+      "challengeType": "clues",
+      "title": "Ben Kimim?",
+      "description": "İpuçlarından oyuncuyu bil — daha az ipucu, daha çok puan",
+      "questionCount": 5,
+      "secondsPerClueStep": 12,
+      "questions": [
+        {
+          "id": "pool-cl-1",
+          "category": "Dünya Kupası",
+          "difficulty": "medium",
+          "displayAnswer": "Kaka",
+          "acceptedAnswers": [
+            "Kaka",
+            "Ricardo Izecson dos Santos Leite",
+            "კაკა",
+            "რიკარდო იზეკსონ დოს სანტოს ლეიტე"
+          ],
+          "clues": [
+            {
+              "type": "text",
+              "content": "Kariyerime São Paulo'da başladım, ardından 2003'te Avrupa'ya geldim."
+            },
+            {
+              "type": "text",
+              "content": "2005 İstanbul'daki Şampiyonlar Ligi finalinde Hernán Crespo'ya nefes kesen uzun mesafeli asisti ben yaptım."
+            },
+            {
+              "type": "text",
+              "content": "2007'de FIFA Yılın Futbolcusu ve Ballon d'Or ödüllerini kazandım, Messi-Ronaldo döneminden önce kazanan son oyuncuyum."
+            },
+            {
+              "type": "text",
+              "content": "2007 Şampiyonlar Ligi'ni Milan ile kazandım ve 2009'da Real Madrid'e transfer oldum."
+            },
+            {
+              "type": "text",
+              "content": "Milan'da 22 numaralı formayı, Real Madrid'de ise 8 numaralı formayı giyen, zarif driplingleriyle ünlü Brezilyalı bir oyun kurucuyum."
+            }
+          ]
+        },
+        {
+          "id": "pool-cl-2",
+          "category": "Dünya Kupası",
+          "difficulty": "medium",
+          "displayAnswer": "Xavi",
+          "acceptedAnswers": [
+            "Xavi",
+            "Xavi Hernández",
+            "Xavi Hernandez",
+            "ჩავი",
+            "ჩავი ერნანდესი",
+            "ხავი",
+            "ხავი ერნანდესი"
+          ],
+          "clues": [
+            {
+              "type": "text",
+              "content": "1998'de Louis van Gaal yönetiminde FC Barcelona formasıyla ilk maçıma çıktım."
+            },
+            {
+              "type": "text",
+              "content": "2008-09 sezonunda La Liga'da tek bir sezonda 20 asist yaptım ve Euro 2008'in Oyuncusu seçildim."
+            },
+            {
+              "type": "text",
+              "content": "Hem Barcelona hem de İspanya için \"tiki-taka\" stilinin ustasıydım."
+            },
+            {
+              "type": "text",
+              "content": "2010 Dünya Kupası'nı ve 2008 ile 2012'de art arda Avrupa Şampiyonaları'nı kazandım."
+            },
+            {
+              "type": "text",
+              "content": "Barcelona'da 6 numaralı formayı giyen ve daha sonra kulübü yönetmek için geri dönen efsanevi bir İspanyol orta saha oyuncusuyum."
+            }
+          ]
+        },
+        {
+          "id": "pool-cl-3",
+          "category": "Dünya Kupası",
+          "difficulty": "medium",
+          "displayAnswer": "Samuel Eto'o",
+          "acceptedAnswers": [
+            "Samuel Eto'o",
+            "სამუელ ეტო'ო",
+            "Eto'o",
+            "Samuel",
+            "ეტო'ო",
+            "სამუელ"
+          ],
+          "clues": [
+            {
+              "type": "text",
+              "content": "Real Madrid'e genç bir oyuncu olarak transfer oldum ancak zamanımın çoğunu kiralık geçirdim ve Mallorca'da parladım."
+            },
+            {
+              "type": "text",
+              "content": "Tarihte iki farklı kulüple art arda iki Avrupa Üçlemesi kazanan tek oyuncuyum (2009'da Barcelona ve 2010'da Inter Milan)."
+            },
+            {
+              "type": "text",
+              "content": "FC Barcelona için iki ayrı UEFA Şampiyonlar Ligi finalinde (2006 ve 2009) gol attım."
+            },
+            {
+              "type": "text",
+              "content": "Dört kez Yılın Afrikalı Futbolcusu seçildim ve 2000 Olimpiyat Altın Madalyası'nı kazandım."
+            },
+            {
+              "type": "text",
+              "content": "Barcelona, Inter Milan ve Chelsea'nin hücum hattında yer almış efsanevi bir Kamerunlu forvetim."
+            }
+          ]
+        },
+        {
+          "id": "pool-cl-4",
+          "category": "Dünya Kupası",
+          "difficulty": "medium",
+          "displayAnswer": "Franck Ribery",
+          "acceptedAnswers": [
+            "Franck Ribery",
+            "ფრანკ რიბერი",
+            "Ribery",
+            "Franck",
+            "რიბერი",
+            "ფრანკ",
+            "ფრანკ რიბერ",
+            "რიბერ"
+          ],
+          "clues": [
+            {
+              "type": "text",
+              "content": "2005'te Marsilya'ya imza atmadan önce Boulogne, Alès, Brest, Metz ve Galatasaray'da oynadım."
+            },
+            {
+              "type": "text",
+              "content": "Üç kez Fransa'da Yılın Futbolcusu seçildim ve 2013 Ballon d'Or oylamasında 3. oldum."
+            },
+            {
+              "type": "text",
+              "content": "12 sezon Bayern Münih'te geçirdim, 9 Bundesliga şampiyonluğu ve 2013 Şampiyonlar Ligi kazandım."
+            },
+            {
+              "type": "text",
+              "content": "Arjen Robben ile efsanevi \"Robbery\" kanat ortaklığını kurdum."
+            },
+            {
+              "type": "text",
+              "content": "Yüzümdeki yara izi, patlayıcı hızı ve Bayern Münih'te 7 numarayı giymemle tanınan Fransız bir kanat oyuncusuyum."
+            }
+          ]
+        },
+        {
+          "id": "pool-cl-5",
+          "category": "Dünya Kupası",
+          "difficulty": "medium",
+          "displayAnswer": "David Villa",
+          "acceptedAnswers": [
+            "David Villa",
+            "დავიდ ვილია",
+            "Villa",
+            "David",
+            "ვილია",
+            "დავიდ"
+          ],
+          "clues": [
+            {
+              "type": "text",
+              "content": "Kariyerime Sporting Gijón ve Real Zaragoza'da başladım, ardından 2005-2010 yılları arasında Valencia'da yıldızlaştım."
+            },
+            {
+              "type": "text",
+              "content": "İspanya turnuvayı kazandığında Euro 2008'de 4 golle Altın Ayakkabı'yı kazandım."
+            },
+            {
+              "type": "text",
+              "content": "2010 FIFA Dünya Kupası'nda İspanya'nın zaferinde kilit rol oynayarak 5 gol attım."
+            },
+            {
+              "type": "text",
+              "content": "2010'da Barcelona'ya transfer oldum ve 2011 Şampiyonlar Ligi Finali'nde Manchester United'a karşı kavisli bir gol attım."
+            },
+            {
+              "type": "text",
+              "content": "59 golle İspanya'nın tüm zamanların en golcü oyuncusuyum, lakabım \"El Guaje\" (Çocuk)."
+            }
+          ]
+        }
+      ]
+    },
+    "countdown": {
+      "challengeType": "countdown",
+      "title": "Geri Sayım",
+      "description": "Süre bitmeden olabildiğince çok doğru cevap say",
+      "roundCount": 2,
+      "secondsPerRound": 30,
+      "rounds": [
+        {
+          "id": "pool-cd-1",
+          "category": "Dünya Kupası",
+          "prompt": "FIFA Dünya Kupası'nı kaldıran tüm kaptanlar",
+          "answerGroups": [
+            {
+              "id": "641e6dd4-60f6-4a3c-9ba1-702591b9333c",
+              "display": "Jose Nasazzi",
+              "acceptedAnswers": [
+                "Jose Nasazzi",
+                "Nasazzi",
+                "ხოსე ნასასი"
+              ]
+            },
+            {
+              "id": "787f3eb3-8e18-4b6f-8c37-00bab6dc2632",
+              "display": "Gianpiero Combi",
+              "acceptedAnswers": [
+                "Gianpiero Combi",
+                "Combi",
+                "ჯანპიერო კომბი"
+              ]
+            },
+            {
+              "id": "97a8b60c-f2f9-43bc-97b0-565cf7a23296",
+              "display": "Giuseppe Meazza",
+              "acceptedAnswers": [
+                "Giuseppe Meazza",
+                "Meazza",
+                "ჯუზეპე მეაცა"
+              ]
+            },
+            {
+              "id": "0f48bae0-e9af-4a52-a577-f29df25ac5db",
+              "display": "Obdulio Varela",
+              "acceptedAnswers": [
+                "Obdulio Varela",
+                "Varela",
+                "ობდულიო ვარელა"
+              ]
+            },
+            {
+              "id": "4390dd50-8720-4453-a757-09937d27a500",
+              "display": "Fritz Walter",
+              "acceptedAnswers": [
+                "Fritz Walter",
+                "Walter",
+                "ფრიც ვალტერი"
+              ]
+            },
+            {
+              "id": "82294a5a-7626-4e60-9922-cb5ebce3a868",
+              "display": "Bellini",
+              "acceptedAnswers": [
+                "Bellini",
+                "Hilderaldo Bellini",
+                "ბელინი"
+              ]
+            },
+            {
+              "id": "0ec7e730-261a-4156-bae5-92b24c2405f9",
+              "display": "Mauro",
+              "acceptedAnswers": [
+                "Mauro",
+                "Mauro Ramos",
+                "მაურო"
+              ]
+            },
+            {
+              "id": "69809a40-8648-4d54-bacd-81ea14be10bf",
+              "display": "Bobby Moore",
+              "acceptedAnswers": [
+                "Bobby Moore",
+                "Moore",
+                "ბობი მური"
+              ]
+            },
+            {
+              "id": "4bf64e04-982d-4203-af3e-df1541fd6ec4",
+              "display": "Carlos Alberto",
+              "acceptedAnswers": [
+                "Carlos Alberto",
+                "Carlos Alberto Torres",
+                "კარლოს ალბერტო"
+              ]
+            },
+            {
+              "id": "0b236c65-6209-4976-b315-e2173d40be8a",
+              "display": "Franz Beckenbauer",
+              "acceptedAnswers": [
+                "Franz Beckenbauer",
+                "Beckenbauer",
+                "Der Kaiser",
+                "ფრანც ბეკენბაუერი"
+              ]
+            },
+            {
+              "id": "7d445ceb-4765-4ada-9cea-efb2b40b10b3",
+              "display": "Daniel Passarella",
+              "acceptedAnswers": [
+                "Daniel Passarella",
+                "Passarella",
+                "დანიელ პასარელა"
+              ]
+            },
+            {
+              "id": "0328c7b6-ad3e-4a91-ac20-68f5a039b49f",
+              "display": "Dino Zoff",
+              "acceptedAnswers": [
+                "Dino Zoff",
+                "Zoff",
+                "დინო ძოფი"
+              ]
+            },
+            {
+              "id": "d65a8d36-6dfd-4302-bd72-820689cb07e8",
+              "display": "Diego Maradona",
+              "acceptedAnswers": [
+                "Diego Maradona",
+                "Maradona",
+                "El Diego",
+                "დიეგო მარადონა"
+              ]
+            },
+            {
+              "id": "30dbdf79-f4f7-4b39-a1c5-5822497cd20b",
+              "display": "Lothar Matthaus",
+              "acceptedAnswers": [
+                "Lothar Matthaus",
+                "Matthaus",
+                "ლოთარ მათეუსი"
+              ]
+            },
+            {
+              "id": "c2fe8b02-5551-4ef1-8b09-802f4d2bdc9b",
+              "display": "Dunga",
+              "acceptedAnswers": [
+                "Dunga",
+                "Carlos Caetano Bledorn Verri",
+                "დუნგა"
+              ]
+            },
+            {
+              "id": "ccc447c4-a8b5-47f3-8dc3-a5ff70dd31dc",
+              "display": "Didier Deschamps",
+              "acceptedAnswers": [
+                "Didier Deschamps",
+                "Deschamps",
+                "დიდიე დეშამი"
+              ]
+            },
+            {
+              "id": "2d4d3be7-cea9-481b-8a58-5296192ed5ce",
+              "display": "Cafu",
+              "acceptedAnswers": [
+                "Cafu",
+                "Marcos Evangelista de Morais",
+                "კაფუ"
+              ]
+            },
+            {
+              "id": "40a23e8e-b060-4d17-ad8b-1157c3699b9e",
+              "display": "Fabio Cannavaro",
+              "acceptedAnswers": [
+                "Fabio Cannavaro",
+                "Cannavaro",
+                "ფაბიო კანავარო"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "pool-cd-2",
+          "category": "Dünya Kupası",
+          "prompt": "FIFA Dünya Kupası'nı 2 veya daha fazla kez kazanan tüm oyuncular",
+          "answerGroups": [
+            {
+              "id": "a6802d9d-b9af-42c6-aaa1-3e4f369c4dc8",
+              "display": "Pele",
+              "acceptedAnswers": [
+                "Pele",
+                "Edson Arantes do Nascimento",
+                "პელე"
+              ]
+            },
+            {
+              "id": "8d65c7ca-8974-4379-bdf4-05345d9a2aa4",
+              "display": "Bellini",
+              "acceptedAnswers": [
+                "Bellini",
+                "Hilderaldo Bellini",
+                "ბელინი"
+              ]
+            },
+            {
+              "id": "9a792ec4-4c8c-4220-99e2-420de24711a7",
+              "display": "Cafu",
+              "acceptedAnswers": [
+                "Cafu",
+                "Marcos Evangelista de Morais",
+                "კაფუ"
+              ]
+            },
+            {
+              "id": "c9666d25-5400-4364-baf8-a83c093590dc",
+              "display": "Castilho",
+              "acceptedAnswers": [
+                "Castilho",
+                "Carlos Jose Castilho",
+                "კასტილიო"
+              ]
+            },
+            {
+              "id": "2b86138e-3128-4b09-b4a3-bb7a83ca608a",
+              "display": "Didi",
+              "acceptedAnswers": [
+                "Didi",
+                "Waldyr Pereira",
+                "დიდი"
+              ]
+            },
+            {
+              "id": "c0e147e7-ed58-45ed-8489-acb3e1123320",
+              "display": "Djalma Santos",
+              "acceptedAnswers": [
+                "Djalma Santos",
+                "Santos",
+                "ჯალმა სანტოსი"
+              ]
+            },
+            {
+              "id": "b6cf6fc4-39ac-46ab-a0be-5dc76b798f9d",
+              "display": "Garrincha",
+              "acceptedAnswers": [
+                "Garrincha",
+                "Manuel Francisco dos Santos",
+                "გარინჩა"
+              ]
+            },
+            {
+              "id": "fd09e5c4-ff77-4d3e-ad27-621de3e336d9",
+              "display": "Gilmar",
+              "acceptedAnswers": [
+                "Gilmar",
+                "Gylmar dos Santos Neves",
+                "ჟილმარი"
+              ]
+            },
+            {
+              "id": "eb674d1a-116a-4783-85b4-70b49b562c64",
+              "display": "Mauro",
+              "acceptedAnswers": [
+                "Mauro",
+                "Mauro Ramos",
+                "მაურო"
+              ]
+            },
+            {
+              "id": "95e22f8d-49f7-4ca1-94c0-c8b389eff7e5",
+              "display": "Nilton Santos",
+              "acceptedAnswers": [
+                "Nilton Santos",
+                "Santos",
+                "ნილტონ სანტოსი"
+              ]
+            },
+            {
+              "id": "f4250d72-0ff3-44c3-9c4e-54eada796605",
+              "display": "Pepe",
+              "acceptedAnswers": [
+                "Pepe",
+                "Jose Macia",
+                "პეპე"
+              ]
+            },
+            {
+              "id": "ce92005b-b05e-4b0b-9c22-d517693e8d6d",
+              "display": "Ronaldo",
+              "acceptedAnswers": [
+                "Ronaldo",
+                "Ronaldo Nazario",
+                "R9",
+                "რონალდო"
+              ]
+            },
+            {
+              "id": "bfa20c3b-49be-4232-9bea-92e532908593",
+              "display": "Vava",
+              "acceptedAnswers": [
+                "Vava",
+                "Edvaldo Izidio Neto",
+                "ვავა"
+              ]
+            },
+            {
+              "id": "492209b5-ae77-4a9c-ab31-3f81454a5a63",
+              "display": "Zagallo",
+              "acceptedAnswers": [
+                "Zagallo",
+                "Mario Zagallo",
+                "ზაგალო"
+              ]
+            },
+            {
+              "id": "e6891cd2-29d1-474f-88e6-082dd27aacbe",
+              "display": "Zito",
+              "acceptedAnswers": [
+                "Zito",
+                "Jose Ely de Miranda",
+                "ზიტო"
+              ]
+            },
+            {
+              "id": "033eaaa9-cc2e-4209-9623-11564432b647",
+              "display": "Giovanni Ferrari",
+              "acceptedAnswers": [
+                "Giovanni Ferrari",
+                "Ferrari",
+                "ჯოვანი ფერარი"
+              ]
+            },
+            {
+              "id": "66e2eddc-3a38-4db7-9667-7ca6eeb92b55",
+              "display": "Guido Masetti",
+              "acceptedAnswers": [
+                "Guido Masetti",
+                "Masetti",
+                "გუიდო მასეტი"
+              ]
+            },
+            {
+              "id": "5ba9e187-1664-4637-8ed0-8a9712718342",
+              "display": "Giuseppe Meazza",
+              "acceptedAnswers": [
+                "Giuseppe Meazza",
+                "Meazza",
+                "ჯუზეპე მეაცა"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "pool-cd-3",
+          "category": "Dünya Kupası",
+          "prompt": "2002'den beri FIFA Dünya Kupası'nda yarı finale yükselen tüm ülkeler",
+          "answerGroups": [
+            {
+              "id": "03e9926b-1b45-4de5-a506-728ed530cdbe",
+              "display": "Brezilya",
+              "acceptedAnswers": [
+                "Brazil",
+                "ბრაზილია",
+                "Brezilya"
+              ]
+            },
+            {
+              "id": "a025db72-e262-4ff0-adf9-412001d97e72",
+              "display": "Almanya",
+              "acceptedAnswers": [
+                "Germany",
+                "გერმანია",
+                "Almanya"
+              ]
+            },
+            {
+              "id": "9bd41960-66bc-4d88-8e4c-9bbb67e57cc1",
+              "display": "Türkiye",
+              "acceptedAnswers": [
+                "Turkey",
+                "თურქეთი",
+                "Türkiye"
+              ]
+            },
+            {
+              "id": "5168d3d6-042e-491d-94ed-cb955ea17ad6",
+              "display": "Güney Kore",
+              "acceptedAnswers": [
+                "South Korea",
+                "Korea Republic",
+                "სამხრეთ კორეა",
+                "Güney Kore"
+              ]
+            },
+            {
+              "id": "a6bdbdaf-a2b1-41ea-8ac4-b5a1734407f5",
+              "display": "İtalya",
+              "acceptedAnswers": [
+                "Italy",
+                "იტალია",
+                "İtalya"
+              ]
+            },
+            {
+              "id": "d31e6eed-ec51-4b72-9566-e16a5bb6ca39",
+              "display": "Fransa",
+              "acceptedAnswers": [
+                "France",
+                "საფრანგეთი",
+                "Fransa"
+              ]
+            },
+            {
+              "id": "f0856e5a-317a-4e23-84be-7cb31a3cafe4",
+              "display": "Portekiz",
+              "acceptedAnswers": [
+                "Portugal",
+                "პორტუგალია",
+                "Portekiz"
+              ]
+            },
+            {
+              "id": "e9f42a16-feec-47e5-833e-e981d50c1d7d",
+              "display": "İspanya",
+              "acceptedAnswers": [
+                "Spain",
+                "ესპანეთი",
+                "İspanya"
+              ]
+            },
+            {
+              "id": "3c1a2990-1847-459c-a4f6-52b082ebc6b9",
+              "display": "Hollanda",
+              "acceptedAnswers": [
+                "Netherlands",
+                "ნიდერლანდები",
+                "Hollanda"
+              ]
+            },
+            {
+              "id": "371c42c6-18cc-4c3c-b730-401152f4b022",
+              "display": "Uruguay",
+              "acceptedAnswers": [
+                "Uruguay",
+                "ურუგვაი"
+              ]
+            },
+            {
+              "id": "70619804-d46a-4120-acab-00e97b8095d1",
+              "display": "Arjantin",
+              "acceptedAnswers": [
+                "Argentina",
+                "არგენტინა",
+                "Arjantin"
+              ]
+            },
+            {
+              "id": "e437d383-6847-4b69-bd7a-36d8303731b5",
+              "display": "Hırvatistan",
+              "acceptedAnswers": [
+                "Croatia",
+                "ხორვატია",
+                "Hırvatistan"
+              ]
+            },
+            {
+              "id": "04d95f17-ea43-4c74-b5cf-68c58e3cb7bb",
+              "display": "Belçika",
+              "acceptedAnswers": [
+                "Belgium",
+                "ბელგია",
+                "Belçika"
+              ]
+            },
+            {
+              "id": "a11d2b5b-4e85-4db4-bea9-e83be19d2df9",
+              "display": "İngiltere",
+              "acceptedAnswers": [
+                "England",
+                "ინგლისი",
+                "İngiltere"
+              ]
+            },
+            {
+              "id": "02af830a-473d-4021-bd28-4a937a00ff50",
+              "display": "Fas",
+              "acceptedAnswers": [
+                "Morocco",
+                "მაროკო",
+                "Fas"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "pool-cd-4",
+          "category": "Dünya Kupası",
+          "prompt": "1990'dan bu yana tek bir FIFA Dünya Kupası maçında 3 veya daha fazla gol atan tüm oyuncular",
+          "answerGroups": [
+            {
+              "id": "71cd73b1-bd60-4f7a-a210-c97ad53bbc17",
+              "display": "Michel",
+              "acceptedAnswers": [
+                "Michel",
+                "Jose Miguel Gonzalez Martin del Campo",
+                "მიჩელი"
+              ]
+            },
+            {
+              "id": "f3a874ed-d2db-444a-8633-748a82dd2d3a",
+              "display": "Tomas Skuhravy",
+              "acceptedAnswers": [
+                "Tomas Skuhravy",
+                "Skuhravy",
+                "ტომაშ სკუჰრავი"
+              ]
+            },
+            {
+              "id": "1c04b4e7-c43a-4685-a976-2c383c7d587e",
+              "display": "Oleg Salenko",
+              "acceptedAnswers": [
+                "Oleg Salenko",
+                "Salenko",
+                "ოლეგ სალენკო"
+              ]
+            },
+            {
+              "id": "28769775-2ad7-4330-ae7e-d667718f8b28",
+              "display": "Gabriel Batistuta",
+              "acceptedAnswers": [
+                "Gabriel Batistuta",
+                "Batistuta",
+                "Batigol",
+                "გაბრიელ ბატისტუტა"
+              ]
+            },
+            {
+              "id": "fc76787c-f37a-4508-b640-0dbb29fb5237",
+              "display": "Pauleta",
+              "acceptedAnswers": [
+                "Pauleta",
+                "Pedro Pauleta",
+                "პაულეტა"
+              ]
+            },
+            {
+              "id": "9146a037-4053-460d-9db3-b8b2c5d08823",
+              "display": "Miroslav Klose",
+              "acceptedAnswers": [
+                "Miroslav Klose",
+                "Klose",
+                "მიროსლავ კლოზე"
+              ]
+            },
+            {
+              "id": "771ab91c-1ee7-4069-8933-eac7fce62d5c",
+              "display": "Gonzalo Higuain",
+              "acceptedAnswers": [
+                "Gonzalo Higuain",
+                "Higuain",
+                "Pipita",
+                "გონსალო იგუაინი"
+              ]
+            },
+            {
+              "id": "cd719e68-aa1c-4c21-901b-33cc41b4d734",
+              "display": "Thomas Müller",
+              "acceptedAnswers": [
+                "Thomas Muller",
+                "Muller",
+                "თომას მიულერი",
+                "Thomas Müller"
+              ]
+            },
+            {
+              "id": "65891bc2-2c6f-4841-a2f1-5a3c36da0d4f",
+              "display": "Xherdan Shaqiri",
+              "acceptedAnswers": [
+                "Xherdan Shaqiri",
+                "Shaqiri",
+                "ჯერდან შაქირი"
+              ]
+            },
+            {
+              "id": "db19fae4-8921-4825-9ee0-c877a6d0cba6",
+              "display": "Cristiano Ronaldo",
+              "acceptedAnswers": [
+                "Cristiano Ronaldo",
+                "Ronaldo",
+                "CR7",
+                "კრიშტიანუ რონალდუ"
+              ]
+            },
+            {
+              "id": "f30c1d95-1516-4c0a-87d9-345d8bc85d8c",
+              "display": "Harry Kane",
+              "acceptedAnswers": [
+                "Harry Kane",
+                "Kane",
+                "ჰარი კეინი"
+              ]
+            },
+            {
+              "id": "ec58c3bf-e780-4865-be09-c48e4a2cf2a0",
+              "display": "Kylian Mbappe",
+              "acceptedAnswers": [
+                "Kylian Mbappe",
+                "Mbappe",
+                "კილიან მბაპე"
+              ]
+            },
+            {
+              "id": "1c34274d-8cb1-4738-8db2-ba581bb4d22b",
+              "display": "Goncalo Ramos",
+              "acceptedAnswers": [
+                "Goncalo Ramos",
+                "Ramos",
+                "გონსალუ რამოსი"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "pool-cd-5",
+          "category": "Dünya Kupası",
+          "prompt": "1998'den beri FIFA Dünya Kupası Finali'nde gol atan tüm oyuncular",
+          "answerGroups": [
+            {
+              "id": "4a90e271-6272-4452-8643-5599833a0540",
+              "display": "Zinedine Zidane",
+              "acceptedAnswers": [
+                "Zinedine Zidane",
+                "Zidane",
+                "Zizou",
+                "ზინედინ ზიდანი"
+              ]
+            },
+            {
+              "id": "1fd7a05a-9f15-4c1d-8428-a7b41c8e0403",
+              "display": "Emmanuel Petit",
+              "acceptedAnswers": [
+                "Emmanuel Petit",
+                "Petit",
+                "ემანუელ პეტი"
+              ]
+            },
+            {
+              "id": "101b0e9e-1fc7-4d74-9b85-e9a6b1242a3b",
+              "display": "Ronaldo",
+              "acceptedAnswers": [
+                "Ronaldo",
+                "Ronaldo Nazario",
+                "R9",
+                "რონალდო"
+              ]
+            },
+            {
+              "id": "a9dea5f5-eb89-467b-b795-7cd63bec623a",
+              "display": "Marco Materazzi",
+              "acceptedAnswers": [
+                "Marco Materazzi",
+                "Materazzi",
+                "Matrix",
+                "მარკო მატერაცი"
+              ]
+            },
+            {
+              "id": "fbcafd6c-5d83-42c7-9b5c-3600ecaa0d2a",
+              "display": "Andrés Iniesta",
+              "acceptedAnswers": [
+                "Andres Iniesta",
+                "Iniesta",
+                "ანდრეს ინიესტა",
+                "Andrés Iniesta"
+              ]
+            },
+            {
+              "id": "05889171-f733-488d-a682-5b2dc882bb58",
+              "display": "Mario Götze",
+              "acceptedAnswers": [
+                "Mario Gotze",
+                "Gotze",
+                "მარიო გიოტცე",
+                "Mario Götze"
+              ]
+            },
+            {
+              "id": "cf222d7a-b66b-4573-a3ca-97001d8151c6",
+              "display": "Mario Mandzukic",
+              "acceptedAnswers": [
+                "Mario Mandzukic",
+                "Mandzukic",
+                "მარიო მანჯუკიჩი"
+              ]
+            },
+            {
+              "id": "fab16a9e-bbe4-4036-b1a1-9fba802eaf66",
+              "display": "Ivan Perisic",
+              "acceptedAnswers": [
+                "Ivan Perisic",
+                "Perisic",
+                "ივან პერიშიჩი"
+              ]
+            },
+            {
+              "id": "907a34c0-9175-42c9-a5b7-7295a06dc23a",
+              "display": "Antoine Griezmann",
+              "acceptedAnswers": [
+                "Antoine Griezmann",
+                "Griezmann",
+                "ანტუან გრიზმანი"
+              ]
+            },
+            {
+              "id": "5030357d-e1d9-45d1-a8f5-30290874fc2a",
+              "display": "Paul Pogba",
+              "acceptedAnswers": [
+                "Paul Pogba",
+                "Pogba",
+                "პოლ პოგბა"
+              ]
+            },
+            {
+              "id": "34d9a023-1d08-4228-a511-27779f045fba",
+              "display": "Kylian Mbappe",
+              "acceptedAnswers": [
+                "Kylian Mbappe",
+                "Mbappe",
+                "კილიან მბაპე"
+              ]
+            },
+            {
+              "id": "90b4aaa7-b31b-4015-88e7-61c0da99f1a6",
+              "display": "Lionel Messi",
+              "acceptedAnswers": [
+                "Lionel Messi",
+                "Messi",
+                "Leo Messi",
+                "ლიონელ მესი"
+              ]
+            },
+            {
+              "id": "444c701e-244e-4cdf-8de6-87c919d76cc4",
+              "display": "Angel Di Maria",
+              "acceptedAnswers": [
+                "Angel Di Maria",
+                "Di Maria",
+                "ანხელ დი მარია"
+              ]
+            }
+          ]
+        },
+        {
+          "id": "pool-cd-6",
+          "category": "Dünya Kupası",
+          "prompt": "2006 FIFA Dünya Kupası Finali'nde oynayan tüm oyuncular",
+          "answerGroups": [
+            {
+              "id": "761f7add-4219-4682-b99a-3570d8fb51c6",
+              "display": "Gianluigi Buffon",
+              "acceptedAnswers": [
+                "Gianluigi Buffon",
+                "Buffon",
+                "Gigi Buffon",
+                "ჯანლუიჯი ბუფონი"
+              ]
+            },
+            {
+              "id": "aa05d9e9-abb4-4e90-a310-298f297ec57c",
+              "display": "Gianluca Zambrotta",
+              "acceptedAnswers": [
+                "Gianluca Zambrotta",
+                "Zambrotta",
+                "ჯანლუკა ძამბროტა"
+              ]
+            },
+            {
+              "id": "04f12dd5-c4bc-4a83-b5e8-aa675a666545",
+              "display": "Fabio Cannavaro",
+              "acceptedAnswers": [
+                "Fabio Cannavaro",
+                "Cannavaro",
+                "ფაბიო კანავარო"
+              ]
+            },
+            {
+              "id": "4223940f-ca69-419e-bff4-8488f509b03e",
+              "display": "Marco Materazzi",
+              "acceptedAnswers": [
+                "Marco Materazzi",
+                "Materazzi",
+                "Matrix",
+                "მარკო მატერაცი"
+              ]
+            },
+            {
+              "id": "63269df2-6d7e-4e67-8ee7-fed83fc1153d",
+              "display": "Fabio Grosso",
+              "acceptedAnswers": [
+                "Fabio Grosso",
+                "Grosso",
+                "ფაბიო გროსო"
+              ]
+            },
+            {
+              "id": "0e785189-efec-44ed-b9fc-a5e5cf18f725",
+              "display": "Mauro Camoranesi",
+              "acceptedAnswers": [
+                "Mauro Camoranesi",
+                "Camoranesi",
+                "მაურო კამორანეზი"
+              ]
+            },
+            {
+              "id": "88c61f53-3f51-406d-8a00-1d9197022777",
+              "display": "Gennaro Gattuso",
+              "acceptedAnswers": [
+                "Gennaro Gattuso",
+                "Gattuso",
+                "Rino Gattuso",
+                "ჯენარო გატუზო"
+              ]
+            },
+            {
+              "id": "f868f04f-e985-4f22-8a54-ac3d345ed2e8",
+              "display": "Andrea Pirlo",
+              "acceptedAnswers": [
+                "Andrea Pirlo",
+                "Pirlo",
+                "ანდრეა პირლო"
+              ]
+            },
+            {
+              "id": "a2ec8927-287d-4a97-80bd-e7a7e8f8c6f9",
+              "display": "Simone Perrotta",
+              "acceptedAnswers": [
+                "Simone Perrotta",
+                "Perrotta",
+                "სიმონე პეროტა"
+              ]
+            },
+            {
+              "id": "d6218bca-f2a6-4999-a38c-ae1f060248d1",
+              "display": "Francesco Totti",
+              "acceptedAnswers": [
+                "Francesco Totti",
+                "Totti",
+                "ფრანჩესკო ტოტი"
+              ]
+            },
+            {
+              "id": "8f80ea91-79d6-4278-be46-3c8e9b475419",
+              "display": "Luca Toni",
+              "acceptedAnswers": [
+                "Luca Toni",
+                "Toni",
+                "ლუკა ტონი"
+              ]
+            },
+            {
+              "id": "84f67da4-aacc-497e-aff2-1be764a3e97b",
+              "display": "Daniele De Rossi",
+              "acceptedAnswers": [
+                "Daniele De Rossi",
+                "De Rossi",
+                "დანიელე დე როსი"
+              ]
+            },
+            {
+              "id": "8a9e86f1-3914-4de2-a27a-c73465fc28ba",
+              "display": "Vincenzo Iaquinta",
+              "acceptedAnswers": [
+                "Vincenzo Iaquinta",
+                "Iaquinta",
+                "ვინჩენცო იაკვინტა"
+              ]
+            },
+            {
+              "id": "7934f4d9-1578-4d85-aa61-0f17611038c2",
+              "display": "Alessandro Del Piero",
+              "acceptedAnswers": [
+                "Alessandro Del Piero",
+                "Del Piero",
+                "ალესანდრო დელ პიერო"
+              ]
+            },
+            {
+              "id": "fc938b4d-eb41-446e-82fc-032efa8f707f",
+              "display": "Fabien Barthez",
+              "acceptedAnswers": [
+                "Fabien Barthez",
+                "Barthez",
+                "ფაბიენ ბარტეზი"
+              ]
+            },
+            {
+              "id": "0fa2d341-21cd-4fea-95f7-50d3742bdb0e",
+              "display": "Willy Sagnol",
+              "acceptedAnswers": [
+                "Willy Sagnol",
+                "Sagnol",
+                "ვილი სანიოლი"
+              ]
+            },
+            {
+              "id": "b52d06b4-269e-4a1b-8ef8-f699d7bcaa55",
+              "display": "Lilian Thuram",
+              "acceptedAnswers": [
+                "Lilian Thuram",
+                "Thuram",
+                "ლილიან ტიურამი"
+              ]
+            },
+            {
+              "id": "daabef11-4158-404a-919c-1e26e7c841d3",
+              "display": "William Gallas",
+              "acceptedAnswers": [
+                "William Gallas",
+                "Gallas",
+                "უილიამ გალასი"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "imposter": {
+      "challengeType": "imposter",
+      "title": "Sahtekâr",
+      "description": "Tüm doğru cevapları seç — sahtekârlardan kaçın",
+      "questionCount": 10,
+      "secondsPerQuestion": 30,
+      "questions": [
+        {
+          "id": "pool-im-1",
+          "category": "Sahtekar",
+          "difficulty": "hard",
+          "prompt": "Bu oyunculardan hangisi kariyerinde resmi olarak en yüksek futbol transfer ücreti dünya rekorunu kırmıştır?",
+          "options": [
+            {
+              "id": "cd283be0-4a85-4f8e-868e-fb1af1f87e01",
+              "text": "Neymar"
+            },
+            {
+              "id": "8345d674-8713-4e71-9e71-33ad6fc41ca7",
+              "text": "Paul Pogba"
+            },
+            {
+              "id": "2082e185-aab4-4331-a5d4-07d00b36971d",
+              "text": "Gareth Bale"
+            },
+            {
+              "id": "278c1e03-bf9c-4315-9aeb-dc159d57f8d7",
+              "text": "Cristiano Ronaldo"
+            },
+            {
+              "id": "8ef2ce16-488b-4ca1-ba94-db25b816de94",
+              "text": "Zinedine Zidane"
+            },
+            {
+              "id": "d6e9d49e-447e-4e3c-a9fd-fb9e4aea76c0",
+              "text": "Luis Figo"
+            },
+            {
+              "id": "855e1a76-3e79-4234-bffb-0ea77304e4b4",
+              "text": "Kylian Mbappe"
+            },
+            {
+              "id": "0ff5663a-f4c1-419c-b122-e1f89c0a1d41",
+              "text": "Lionel Messi"
+            },
+            {
+              "id": "8c7b9499-8d9f-483a-9d7a-6d2927abddcd",
+              "text": "Erling Haaland"
+            },
+            {
+              "id": "f601f5af-ad31-4b7e-8a5f-a1cfaa647920",
+              "text": "Kevin De Bruyne"
+            }
+          ],
+          "correctOptionIds": [
+            "cd283be0-4a85-4f8e-868e-fb1af1f87e01",
+            "8345d674-8713-4e71-9e71-33ad6fc41ca7",
+            "2082e185-aab4-4331-a5d4-07d00b36971d",
+            "278c1e03-bf9c-4315-9aeb-dc159d57f8d7",
+            "8ef2ce16-488b-4ca1-ba94-db25b816de94",
+            "d6e9d49e-447e-4e3c-a9fd-fb9e4aea76c0"
+          ]
+        },
+        {
+          "id": "pool-im-2",
+          "category": "Sahtekar",
+          "difficulty": "hard",
+          "prompt": "Bu oyunculardan hangileri yılın en estetik açıdan önemli golü için FIFA Puskas Ödülü'nü kazandı?",
+          "options": [
+            {
+              "id": "1e941467-d22d-4788-883b-9005a09b9a31",
+              "text": "Cristiano Ronaldo"
+            },
+            {
+              "id": "48c0af0a-a39b-4bf3-8ab0-7a3a5fda9829",
+              "text": "Neymar"
+            },
+            {
+              "id": "3cb4d290-d83e-4034-bf2d-f738cb58d1c2",
+              "text": "Zlatan Ibrahimović"
+            },
+            {
+              "id": "9231e525-b0ee-410d-88f1-ac4b589b85b3",
+              "text": "James Rodriguez"
+            },
+            {
+              "id": "bb3e30e8-67c7-42d0-9aa8-e2c6889ff6e9",
+              "text": "Olivier Giroud"
+            },
+            {
+              "id": "8b5e358c-ad2e-47c8-9b3e-dc79d2268330",
+              "text": "Mohamed Salah"
+            },
+            {
+              "id": "971c0f5d-f7ef-47c9-b49e-fdf3e216ff0a",
+              "text": "Lionel Messi"
+            },
+            {
+              "id": "209cc029-54cf-42b0-a3c7-5b97ac0f2a76",
+              "text": "Wayne Rooney"
+            },
+            {
+              "id": "c256f0bd-d46e-466e-acb9-82aee2b4f932",
+              "text": "Gareth Bale"
+            },
+            {
+              "id": "f9192ce0-99cb-48d9-95de-9c5c8abaefdc",
+              "text": "Luis Suarez"
+            }
+          ],
+          "correctOptionIds": [
+            "1e941467-d22d-4788-883b-9005a09b9a31",
+            "48c0af0a-a39b-4bf3-8ab0-7a3a5fda9829",
+            "3cb4d290-d83e-4034-bf2d-f738cb58d1c2",
+            "9231e525-b0ee-410d-88f1-ac4b589b85b3",
+            "bb3e30e8-67c7-42d0-9aa8-e2c6889ff6e9",
+            "8b5e358c-ad2e-47c8-9b3e-dc79d2268330"
+          ]
+        },
+        {
+          "id": "pool-im-3",
+          "category": "Sahtekar",
+          "difficulty": "medium",
+          "prompt": "Bu oyunculardan hangileri hem Chelsea hem de Arsenal için rekabetçi A takımı maçlarına çıktı?",
+          "options": [
+            {
+              "id": "6b08478e-c982-43b6-8376-c7c221b97bdc",
+              "text": "Ashley Cole"
+            },
+            {
+              "id": "6f109426-07e3-48c9-99af-b5d14695e83a",
+              "text": "Petr Cech"
+            },
+            {
+              "id": "e43b1bb1-d234-4159-8fca-a1d2ee720d0a",
+              "text": "Olivier Giroud"
+            },
+            {
+              "id": "221f11ba-53da-4bc3-9417-79b799351963",
+              "text": "Cesc Fabregas"
+            },
+            {
+              "id": "fb42f673-b1a7-46e8-8d2c-bf19447cf350",
+              "text": "Pierre-Emerick Aubameyang"
+            },
+            {
+              "id": "4bca8460-be51-4e6b-92c8-5d33cffcee0d",
+              "text": "Kai Havertz"
+            },
+            {
+              "id": "5460a318-e4b8-4491-914d-9e504b4f18eb",
+              "text": "Eden Hazard"
+            },
+            {
+              "id": "dc055843-a012-4f1a-9464-5c83da11c5b2",
+              "text": "Frank Lampard"
+            },
+            {
+              "id": "22998b99-33b7-405e-911b-b68eee1ac8c0",
+              "text": "Mesut Özil"
+            },
+            {
+              "id": "30b280ed-1957-4d4d-a4f5-38fea489a124",
+              "text": "Alexis Sanchez"
+            }
+          ],
+          "correctOptionIds": [
+            "6b08478e-c982-43b6-8376-c7c221b97bdc",
+            "6f109426-07e3-48c9-99af-b5d14695e83a",
+            "e43b1bb1-d234-4159-8fca-a1d2ee720d0a",
+            "221f11ba-53da-4bc3-9417-79b799351963",
+            "fb42f673-b1a7-46e8-8d2c-bf19447cf350",
+            "4bca8460-be51-4e6b-92c8-5d33cffcee0d"
+          ]
+        },
+        {
+          "id": "pool-im-4",
+          "category": "Sahtekar",
+          "difficulty": "medium",
+          "prompt": "Bu oyunculardan hangileri A milli takımı için 50 veya daha fazla resmi gol attı?",
+          "options": [
+            {
+              "id": "75fe5d1a-6655-4114-ae51-71ce9e5b6bdc",
+              "text": "Cristiano Ronaldo"
+            },
+            {
+              "id": "7b0444f8-ce9c-44fb-962a-94ecb93dddf0",
+              "text": "Lionel Messi"
+            },
+            {
+              "id": "ce07e566-501e-49e9-a084-6bca158b0ccd",
+              "text": "Robert Lewandowski"
+            },
+            {
+              "id": "f3062504-1861-4a55-9e62-07cfdd1d2db3",
+              "text": "Romelu Lukaku"
+            },
+            {
+              "id": "88222b36-997c-4665-8aa1-2cfd4b7969ff",
+              "text": "Harry Kane"
+            },
+            {
+              "id": "202215ba-d933-41db-8f1d-9f3b8646bcc6",
+              "text": "Neymar"
+            },
+            {
+              "id": "5b65f1c5-a06a-40bf-a903-e017e4476f33",
+              "text": "Karim Benzema"
+            },
+            {
+              "id": "23efa1b9-3f20-4b54-8e4a-222ae6d6f90f",
+              "text": "Sergio Agüero"
+            },
+            {
+              "id": "0b25bd03-0772-4bff-bffe-27e2e4918b30",
+              "text": "Eden Hazard"
+            },
+            {
+              "id": "bb5a3905-c255-4b67-ba47-6da2454fc87c",
+              "text": "Diego Maradona"
+            }
+          ],
+          "correctOptionIds": [
+            "75fe5d1a-6655-4114-ae51-71ce9e5b6bdc",
+            "7b0444f8-ce9c-44fb-962a-94ecb93dddf0",
+            "ce07e566-501e-49e9-a084-6bca158b0ccd",
+            "f3062504-1861-4a55-9e62-07cfdd1d2db3",
+            "88222b36-997c-4665-8aa1-2cfd4b7969ff",
+            "202215ba-d933-41db-8f1d-9f3b8646bcc6"
+          ]
+        },
+        {
+          "id": "pool-im-5",
+          "category": "Sahtekar",
+          "difficulty": "hard",
+          "prompt": "Bu oyunculardan hangisi Real Madrid'de oynarken Ballon d'Or kazanmıştır?",
+          "options": [
+            {
+              "id": "c2a2bcef-29e4-43e8-a001-7ea0258e701d",
+              "text": "Cristiano Ronaldo"
+            },
+            {
+              "id": "6f6fcb16-b42b-4dde-876e-3e66b66e6746",
+              "text": "Luka Modric"
+            },
+            {
+              "id": "14dc6772-e3c7-4695-bfe8-4ecd6d72f115",
+              "text": "Karim Benzema"
+            },
+            {
+              "id": "3373a54d-5c3b-43e3-a198-d231f6f5103a",
+              "text": "Luis Figo"
+            },
+            {
+              "id": "ba6c9db0-b437-45e5-9d7b-e49062124e06",
+              "text": "Ronaldo Nazario"
+            },
+            {
+              "id": "80d51981-d426-4ccf-904e-e6c6a0cff56a",
+              "text": "Fabio Cannavaro"
+            },
+            {
+              "id": "7c35cd7c-3794-420a-b138-d5960509f0b0",
+              "text": "Zinedine Zidane"
+            },
+            {
+              "id": "36a0e56d-44c7-491c-9487-eb67d28a9b26",
+              "text": "Kaka"
+            },
+            {
+              "id": "81b9afd7-8b48-4585-a04a-66ab87ec1540",
+              "text": "Raul"
+            },
+            {
+              "id": "f3b6e339-ad21-40ec-aad9-c14f21f97ce8",
+              "text": "Gareth Bale"
+            }
+          ],
+          "correctOptionIds": [
+            "c2a2bcef-29e4-43e8-a001-7ea0258e701d",
+            "6f6fcb16-b42b-4dde-876e-3e66b66e6746",
+            "14dc6772-e3c7-4695-bfe8-4ecd6d72f115",
+            "3373a54d-5c3b-43e3-a198-d231f6f5103a",
+            "ba6c9db0-b437-45e5-9d7b-e49062124e06",
+            "80d51981-d426-4ccf-904e-e6c6a0cff56a"
+          ]
+        },
+        {
+          "id": "pool-im-6",
+          "category": "Sahtekar",
+          "difficulty": "hard",
+          "prompt": "Bu oyunculardan hangisi UEFA Şampiyonlar Ligi Finalinde Liverpool için gol attı?",
+          "options": [
+            {
+              "id": "86e4998d-4799-4cf1-a04d-0c124335b490",
+              "text": "Steven Gerrard"
+            },
+            {
+              "id": "cbce1a7f-d147-413a-8e70-3a2db3d792a0",
+              "text": "Xabi Alonso"
+            },
+            {
+              "id": "fc83e7da-54d8-42e4-93bc-5dcf78870902",
+              "text": "Vladimir Smicer"
+            },
+            {
+              "id": "23776345-2186-469a-bdd0-f12af53ca238",
+              "text": "Mohamed Salah"
+            },
+            {
+              "id": "65f09cd2-5a27-49fc-b32a-b44e96126236",
+              "text": "Divock Origi"
+            },
+            {
+              "id": "51b55aaa-c0ee-4bf9-bb9c-ab7db80f3e47",
+              "text": "Sadio Mane"
+            },
+            {
+              "id": "c569d08d-5fb2-478d-b6d1-4b8d48b78a17",
+              "text": "Roberto Firmino"
+            },
+            {
+              "id": "5879509b-72ac-42b8-bb12-6832d49d0ec3",
+              "text": "Fernando Torres"
+            },
+            {
+              "id": "1b42316a-9565-4ac4-a9e0-e66ee915715a",
+              "text": "Luis Suarez"
+            },
+            {
+              "id": "e11e081e-4cbf-41a3-8ed6-782653ffc317",
+              "text": "Michael Owen"
+            }
+          ],
+          "correctOptionIds": [
+            "86e4998d-4799-4cf1-a04d-0c124335b490",
+            "cbce1a7f-d147-413a-8e70-3a2db3d792a0",
+            "fc83e7da-54d8-42e4-93bc-5dcf78870902",
+            "23776345-2186-469a-bdd0-f12af53ca238",
+            "65f09cd2-5a27-49fc-b32a-b44e96126236",
+            "51b55aaa-c0ee-4bf9-bb9c-ab7db80f3e47"
+          ]
+        },
+        {
+          "id": "pool-im-7",
+          "category": "Sahtekar",
+          "difficulty": "medium",
+          "prompt": "Aşağıdaki kulüplerden hangisi İngiltere Premier League'i (1992/93 sezonundan beri yeniden markalaştıktan sonra) kazanmıştır?",
+          "options": [
+            {
+              "id": "db293312-8add-438e-94d4-79052af8761f",
+              "text": "Blackburn Rovers"
+            },
+            {
+              "id": "a94d081b-38c8-44cb-ba52-a4aa15dff7ef",
+              "text": "Leicester City"
+            },
+            {
+              "id": "9844b8d9-eaf0-4e82-9357-a158d0ab5a7e",
+              "text": "Chelsea"
+            },
+            {
+              "id": "11e8c495-80b3-4319-be48-ce20ab4b80d6",
+              "text": "Manchester City"
+            },
+            {
+              "id": "67e686c9-4d25-4e08-8102-6d7b9ebe7a15",
+              "text": "Arsenal"
+            },
+            {
+              "id": "89310ddd-157b-4d0d-8a1b-ff892c086273",
+              "text": "Liverpool"
+            },
+            {
+              "id": "893d9e78-6ea4-49a2-b453-6214fa5cd9ed",
+              "text": "Newcastle United"
+            },
+            {
+              "id": "875f7e24-76e7-43a9-a417-8a6e93b2ed7b",
+              "text": "Tottenham Hotspur"
+            },
+            {
+              "id": "17d3f902-c6c8-4a12-a2ce-beb729941ac0",
+              "text": "Aston Villa"
+            },
+            {
+              "id": "b79019a1-6b6a-47c5-b681-f511d530153f",
+              "text": "Everton"
+            }
+          ],
+          "correctOptionIds": [
+            "db293312-8add-438e-94d4-79052af8761f",
+            "a94d081b-38c8-44cb-ba52-a4aa15dff7ef",
+            "9844b8d9-eaf0-4e82-9357-a158d0ab5a7e",
+            "11e8c495-80b3-4319-be48-ce20ab4b80d6",
+            "67e686c9-4d25-4e08-8102-6d7b9ebe7a15",
+            "89310ddd-157b-4d0d-8a1b-ff892c086273"
+          ]
+        },
+        {
+          "id": "pool-im-8",
+          "category": "Sahtekar",
+          "difficulty": "hard",
+          "prompt": "Bu oyunculardan hangileri Avrupa Altın Çocuk ödülünü kazandı?",
+          "options": [
+            {
+              "id": "91aa0c4d-f7ec-4902-991f-c4569d2c63bf",
+              "text": "Wayne Rooney"
+            },
+            {
+              "id": "d5065fb1-e01e-4fb7-a303-05081ecc936d",
+              "text": "Lionel Messi"
+            },
+            {
+              "id": "bb9e6db3-0a78-4be9-9c91-18049febeaa7",
+              "text": "Kylian Mbappe"
+            },
+            {
+              "id": "21e4a79e-85bb-4bb1-a248-88b10f8152d5",
+              "text": "Erling Haaland"
+            },
+            {
+              "id": "71e512eb-dcb6-41f9-8a99-e781a0864271",
+              "text": "Pedri"
+            },
+            {
+              "id": "3b2ca30a-c068-4fca-8811-423f7a7d0c63",
+              "text": "Jude Bellingham"
+            },
+            {
+              "id": "df25562a-cfad-496d-9513-743d0437a904",
+              "text": "Cristiano Ronaldo"
+            },
+            {
+              "id": "973489f8-7600-4ce8-b689-fe8733c29840",
+              "text": "Neymar"
+            },
+            {
+              "id": "ebb960ef-f3da-456a-96cc-f3f03c1e85f2",
+              "text": "Harry Kane"
+            },
+            {
+              "id": "577bdb16-e146-43b8-8838-87e3ad803754",
+              "text": "Kevin De Bruyne"
+            }
+          ],
+          "correctOptionIds": [
+            "91aa0c4d-f7ec-4902-991f-c4569d2c63bf",
+            "d5065fb1-e01e-4fb7-a303-05081ecc936d",
+            "bb9e6db3-0a78-4be9-9c91-18049febeaa7",
+            "21e4a79e-85bb-4bb1-a248-88b10f8152d5",
+            "71e512eb-dcb6-41f9-8a99-e781a0864271",
+            "3b2ca30a-c068-4fca-8811-423f7a7d0c63"
+          ]
+        },
+        {
+          "id": "pool-im-9",
+          "category": "Sahtekar",
+          "difficulty": "easy",
+          "prompt": "Bu oyunculardan hangileri resmi olarak Arsenal FC için bir maça çıktı?",
+          "options": [
+            {
+              "id": "159c9f94-2e3b-42fb-b1c2-1c159896842d",
+              "text": "Cesc Fabregas"
+            },
+            {
+              "id": "aa263574-b7f4-4ca9-ad3d-52caa13b60ed",
+              "text": "Robin van Persie"
+            },
+            {
+              "id": "bbcb32be-beaa-4fb7-a9cb-500aa7cb69a4",
+              "text": "Ashley Cole"
+            },
+            {
+              "id": "5b884a4d-53fd-4f7e-b879-2d98b62362f4",
+              "text": "Samir Nasri"
+            },
+            {
+              "id": "d204d645-b169-45b6-b923-188033a60b07",
+              "text": "Olivier Giroud"
+            },
+            {
+              "id": "6793ba14-c1ef-4432-a891-cecf3d210832",
+              "text": "Alexis Sanchez"
+            },
+            {
+              "id": "e0b71616-2ff1-4cc3-af4a-20256fd12a11",
+              "text": "Gareth Bale"
+            },
+            {
+              "id": "a1ff7a09-866f-4c04-b7ee-454ef1c38c07",
+              "text": "Luka Modric"
+            },
+            {
+              "id": "cca56fc4-9811-43b4-bfdd-a264323f38b6",
+              "text": "Eden Hazard"
+            },
+            {
+              "id": "f3075652-7e6c-48a2-b909-603c9f2bc905",
+              "text": "Kevin De Bruyne"
+            }
+          ],
+          "correctOptionIds": [
+            "159c9f94-2e3b-42fb-b1c2-1c159896842d",
+            "aa263574-b7f4-4ca9-ad3d-52caa13b60ed",
+            "bbcb32be-beaa-4fb7-a9cb-500aa7cb69a4",
+            "5b884a4d-53fd-4f7e-b879-2d98b62362f4",
+            "d204d645-b169-45b6-b923-188033a60b07",
+            "6793ba14-c1ef-4432-a891-cecf3d210832"
+          ]
+        },
+        {
+          "id": "pool-im-10",
+          "category": "Sahtekar",
+          "difficulty": "medium",
+          "prompt": "Aşağıdaki milli takımlardan hangisi UEFA Avrupa Şampiyonası'nı (Euro) kazandı?",
+          "options": [
+            {
+              "id": "dd7649d9-19c7-4209-b043-1fca69c5c604",
+              "text": "İtalya"
+            },
+            {
+              "id": "0a7860ce-6642-49e8-9e32-7d8784beae52",
+              "text": "Portekiz"
+            },
+            {
+              "id": "023626b1-d025-421d-871d-e1af8387bc79",
+              "text": "Hollanda"
+            },
+            {
+              "id": "c81935a6-26fd-4175-84ee-a6271dd8063f",
+              "text": "Yunanistan"
+            },
+            {
+              "id": "087b074e-ec0d-4140-9cb3-f67ef72fe091",
+              "text": "Danimarka"
+            },
+            {
+              "id": "85249799-7726-4e18-9754-052dec852365",
+              "text": "İspanya"
+            },
+            {
+              "id": "74c71a4d-3b05-4690-93a3-a61ecc9ae098",
+              "text": "İngiltere"
+            },
+            {
+              "id": "bee6aa86-fa7d-4e22-beae-4bde2962a19a",
+              "text": "Belçika"
+            },
+            {
+              "id": "2d36cf35-d987-42aa-a672-4e7a99f8fce5",
+              "text": "Hırvatistan"
+            },
+            {
+              "id": "2225dfa8-2a85-4cd7-b249-0d9a923804db",
+              "text": "İsveç"
+            }
+          ],
+          "correctOptionIds": [
+            "dd7649d9-19c7-4209-b043-1fca69c5c604",
+            "0a7860ce-6642-49e8-9e32-7d8784beae52",
+            "023626b1-d025-421d-871d-e1af8387bc79",
+            "c81935a6-26fd-4175-84ee-a6271dd8063f",
+            "087b074e-ec0d-4140-9cb3-f67ef72fe091",
+            "85249799-7726-4e18-9754-052dec852365"
+          ]
+        }
+      ]
+    },
+    "careerPath": {
+      "challengeType": "careerPath",
+      "title": "Kariyer Yolu",
+      "description": "Transfer geçmişinden oyuncuyu bil",
+      "questionCount": 10,
+      "secondsPerQuestion": 25,
+      "questions": [
+        {
+          "id": "pool-cp-1",
+          "category": "Dünya Kupası",
+          "difficulty": "easy",
+          "prompt": "Bu kimin kariyer yolu?",
+          "clubs": [
+            "Southampton",
+            "Tottenham Hotspur",
+            "Real Madrid",
+            "Los Angeles FC"
+          ],
+          "displayAnswer": "Gareth Bale",
+          "acceptedAnswers": [
+            "Gareth Bale",
+            "Bale",
+            "გარეთ ბეილი",
+            "Gareth",
+            "ბეილი",
+            "გარეთ",
+            "გარეთ ბეილ",
+            "ბეილ"
+          ]
+        },
+        {
+          "id": "pool-cp-2",
+          "category": "Dünya Kupası",
+          "difficulty": "medium",
+          "prompt": "Bu kimin kariyer yolu?",
+          "clubs": [
+            "Schalke 04",
+            "Werder Bremen",
+            "Real Madrid",
+            "Arsenal",
+            "Fenerbahçe",
+            "Başakşehir"
+          ],
+          "displayAnswer": "Mesut Özil",
+          "acceptedAnswers": [
+            "Mesut Özil",
+            "Ozil",
+            "მესუთ ოზილი",
+            "Mesut",
+            "ოზილი",
+            "მესუთ",
+            "მესუთ ოზილ",
+            "ოზილ"
+          ]
+        },
+        {
+          "id": "pool-cp-3",
+          "category": "Dünya Kupası",
+          "difficulty": "easy",
+          "prompt": "Bu kimin kariyer yolu?",
+          "clubs": [
+            "Znicz Pruszków",
+            "Lech Poznań",
+            "Borussia Dortmund",
+            "Bayern Münih",
+            "Barcelona"
+          ],
+          "displayAnswer": "Robert Lewandowski",
+          "acceptedAnswers": [
+            "Robert Lewandowski",
+            "Lewandowski",
+            "Lewy",
+            "რობერტ ლევანდოვსკი",
+            "Robert",
+            "ლევანდოვსკი",
+            "რობერტ",
+            "რობერტ ლევანდოვსკ",
+            "ლევანდოვსკ"
+          ]
+        },
+        {
+          "id": "pool-cp-4",
+          "category": "Dünya Kupası",
+          "difficulty": "easy",
+          "prompt": "Bu kimin kariyer yolu?",
+          "clubs": [
+            "Barcelona",
+            "Paris Saint-Germain",
+            "Inter Miami"
+          ],
+          "displayAnswer": "Lionel Messi",
+          "acceptedAnswers": [
+            "Lionel Messi",
+            "Messi",
+            "LM10",
+            "ლიონელ მესი",
+            "Lionel",
+            "მესი",
+            "ლიონელ",
+            "ლიონელ მეს",
+            "მეს"
+          ]
+        },
+        {
+          "id": "pool-cp-5",
+          "category": "Dünya Kupası",
+          "difficulty": "medium",
+          "prompt": "Bu kimin kariyer yolu?",
+          "clubs": [
+            "Genk",
+            "Chelsea",
+            "Werder Bremen",
+            "VfL Wolfsburg",
+            "Manchester City",
+            "Napoli"
+          ],
+          "displayAnswer": "Kevin De Bruyne",
+          "acceptedAnswers": [
+            "Kevin De Bruyne",
+            "De Bruyne",
+            "KDB",
+            "კევინ დე ბრუინი",
+            "Bruyne",
+            "Kevin",
+            "დე ბრუინი",
+            "ბრუინი",
+            "კევინ",
+            "კევინ დე ბრუინ",
+            "დე ბრუინ",
+            "ბრუინ"
+          ]
+        },
+        {
+          "id": "pool-cp-6",
+          "category": "Dünya Kupası",
+          "difficulty": "easy",
+          "prompt": "Bu kimin kariyer yolu?",
+          "clubs": [
+            "Birmingham City",
+            "Borussia Dortmund",
+            "Real Madrid"
+          ],
+          "displayAnswer": "Jude Bellingham",
+          "acceptedAnswers": [
+            "Jude Bellingham",
+            "Bellingham",
+            "ჯუდ ბელინგემი",
+            "Jude",
+            "ბელინგემი",
+            "ჯუდ",
+            "ჯუდ ბელინგემ",
+            "ბელინგემ"
+          ]
+        },
+        {
+          "id": "pool-cp-7",
+          "category": "Dünya Kupası",
+          "difficulty": "easy",
+          "prompt": "Bu kimin kariyer yolu?",
+          "clubs": [
+            "Bryne",
+            "Molde",
+            "Red Bull Salzburg",
+            "Borussia Dortmund",
+            "Manchester City"
+          ],
+          "displayAnswer": "Erling Haaland",
+          "acceptedAnswers": [
+            "Erling Haaland",
+            "Haaland",
+            "ერლინგ ჰოლანდი",
+            "Erling",
+            "ჰოლანდი",
+            "ერლინგ",
+            "ერლინგ ჰოლანდ",
+            "ჰოლანდ"
+          ]
+        },
+        {
+          "id": "pool-cp-8",
+          "category": "Dünya Kupası",
+          "difficulty": "easy",
+          "prompt": "Bu kimin kariyer yolu?",
+          "clubs": [
+            "Tottenham Hotspur",
+            "Leyton Orient",
+            "Millwall",
+            "Leicester City",
+            "Norwich City",
+            "Bayern Münih"
+          ],
+          "displayAnswer": "Harry Kane",
+          "acceptedAnswers": [
+            "Harry Kane",
+            "Kane",
+            "ჰარი კეინი",
+            "Harry",
+            "კეინი",
+            "ჰარი",
+            "ჰარი კეინ",
+            "კეინ",
+            "ჰარ"
+          ]
+        },
+        {
+          "id": "pool-cp-9",
+          "category": "Dünya Kupası",
+          "difficulty": "medium",
+          "prompt": "Bu kimin kariyer yolu?",
+          "clubs": [
+            "Bayern Münih",
+            "Bayer Leverkusen",
+            "Real Madrid"
+          ],
+          "displayAnswer": "Toni Kroos",
+          "acceptedAnswers": [
+            "Toni Kroos",
+            "Kroos",
+            "ტონი კროოსი",
+            "Toni",
+            "კროოსი",
+            "ტონი",
+            "ტონი კროოს",
+            "კროოს",
+            "ტონ"
+          ]
+        },
+        {
+          "id": "pool-cp-10",
+          "category": "Dünya Kupası",
+          "difficulty": "easy",
+          "prompt": "Bu kimin kariyer yolu?",
+          "clubs": [
+            "Dinamo Zagreb",
+            "Zrinjski Mostar",
+            "Inter Zaprešić",
+            "Tottenham Hotspur",
+            "Real Madrid"
+          ],
+          "displayAnswer": "Luka Modrić",
+          "acceptedAnswers": [
+            "Luka Modrić",
+            "Modric",
+            "ლუკა მოდრიჩი",
+            "Luka",
+            "მოდრიჩი",
+            "ლუკა",
+            "ლუკა მოდრიჩ",
+            "მოდრიჩ"
+          ]
+        }
+      ]
+    },
+    "highLow": {
+      "challengeType": "highLow",
+      "title": "Yüksek mi Düşük mü",
+      "description": "Serini sürdürmek için daha yüksek değeri seç",
+      "roundCount": 2,
+      "secondsPerRound": 30,
+      "rounds": [
+        {
+          "id": "pool-hl-1",
+          "category": "Dünya Kupası",
+          "difficulty": "medium",
+          "prompt": "Premier Lig'de tüm zamanlarda daha çok gol atan kim? (Kazanan devam eder)",
+          "statLabel": "Tüm zamanların Premier Lig golleri",
+          "matchups": [
+            {
+              "id": "m0",
+              "leftName": "Michael Owen",
+              "leftValue": 150,
+              "rightName": "Robin van Persie",
+              "rightValue": 144
+            },
+            {
+              "id": "m1",
+              "leftName": "Michael Owen",
+              "leftValue": 150,
+              "rightName": "Jermain Defoe",
+              "rightValue": 162
+            },
+            {
+              "id": "m2",
+              "leftName": "Thierry Henry",
+              "leftValue": 175,
+              "rightName": "Jermain Defoe",
+              "rightValue": 162
+            },
+            {
+              "id": "m3",
+              "leftName": "Thierry Henry",
+              "leftValue": 175,
+              "rightName": "Sergio Agüero",
+              "rightValue": 184
+            },
+            {
+              "id": "m4",
+              "leftName": "Andrew Cole",
+              "leftValue": 187,
+              "rightName": "Sergio Agüero",
+              "rightValue": 184
+            }
+          ]
+        },
+        {
+          "id": "pool-hl-2",
+          "category": "Dünya Kupası",
+          "difficulty": "easy",
+          "prompt": "Tüm zamanlarda daha fazla UEFA Şampiyonlar Ligi golü kimin? (Kazanan devam eder)",
+          "statLabel": "Tüm zamanların UEFA Şampiyonlar Ligi golleri",
+          "matchups": [
+            {
+              "id": "m0",
+              "leftName": "Ruud van Nistelrooy",
+              "leftValue": 56,
+              "rightName": "Raúl",
+              "rightValue": 71
+            },
+            {
+              "id": "m1",
+              "leftName": "Karim Benzema",
+              "leftValue": 90,
+              "rightName": "Raúl",
+              "rightValue": 71
+            },
+            {
+              "id": "m2",
+              "leftName": "Karim Benzema",
+              "leftValue": 90,
+              "rightName": "Robert Lewandowski",
+              "rightValue": 94
+            },
+            {
+              "id": "m3",
+              "leftName": "Lionel Messi",
+              "leftValue": 129,
+              "rightName": "Robert Lewandowski",
+              "rightValue": 94
+            },
+            {
+              "id": "m4",
+              "leftName": "Lionel Messi",
+              "leftValue": 129,
+              "rightName": "Cristiano Ronaldo",
+              "rightValue": 140
+            }
+          ]
+        }
+      ]
+    },
+    "putInOrder": {
+      "challengeType": "putInOrder",
+      "title": "Sıraya Koy",
+      "description": "Öğeleri doğru sıraya sürükle",
+      "roundCount": 2,
+      "itemsPerRound": 4,
+      "rounds": [
+        {
+          "id": "pool-po-1",
+          "category": "Serie A",
+          "prompt": "Bu oyuncuları kariyerlerindeki Serie A maç sayısına göre sırala (Az'dan Çoğa).",
+          "direction": "asc",
+          "items": [
+            {
+              "id": "d8a6a6b5-d699-4e52-86f7-e6a21ca07709",
+              "label": "Gabriel Batistuta",
+              "details": null,
+              "emoji": null,
+              "sortValue": 1
+            },
+            {
+              "id": "9453f3c4-4681-48db-8b7d-aa133b0e0091",
+              "label": "Alessandro Del Piero",
+              "details": null,
+              "emoji": null,
+              "sortValue": 2
+            },
+            {
+              "id": "3b147471-63f4-45a2-8071-418cbb618954",
+              "label": "Francesco Totti",
+              "details": null,
+              "emoji": null,
+              "sortValue": 3
+            },
+            {
+              "id": "822ce937-06f4-442a-812c-52614b737f5b",
+              "label": "Paolo Maldini",
+              "details": null,
+              "emoji": null,
+              "sortValue": 4
+            }
+          ]
+        },
+        {
+          "id": "pool-po-2",
+          "category": "Dünya Kupası Güney Afrika 2010",
+          "prompt": "Bu 2010 Dünya Kupası stadyumlarını resmi kapasitelerine göre (En Büyükten En Küçüğe) sıralayın",
+          "direction": "desc",
+          "items": [
+            {
+              "id": "015a242f-13db-4971-8327-c534aa3fc65f",
+              "label": "Loftus Versfeld Stadyumu",
+              "details": null,
+              "emoji": null,
+              "sortValue": 3
+            },
+            {
+              "id": "e694e42b-f8ad-45d7-9382-50e4fd5b6233",
+              "label": "Cape Town Stadyumu",
+              "details": null,
+              "emoji": null,
+              "sortValue": 2
+            },
+            {
+              "id": "6f926788-ec90-4fb0-8f37-efb61322da4d",
+              "label": "Royal Bafokeng Stadyumu",
+              "details": null,
+              "emoji": null,
+              "sortValue": 4
+            },
+            {
+              "id": "078741dd-d88d-4163-bdbd-c1195a76b4a1",
+              "label": "Soccer City",
+              "details": null,
+              "emoji": null,
+              "sortValue": 1
+            }
+          ]
+        },
+        {
+          "id": "pool-po-3",
+          "category": "Ballon D'or",
+          "prompt": "Bu oyuncuları SON Ballon d'Or kazandıkları yıla göre sıralayın (En Yeni - En Eski)",
+          "direction": "desc",
+          "items": [
+            {
+              "id": "d25f1f8c-373a-409c-89d5-230872bbf90e",
+              "label": "Lionel Messi",
+              "details": null,
+              "emoji": null,
+              "sortValue": 1
+            },
+            {
+              "id": "2a3e26db-ccad-4710-8a5d-27dee1864d7c",
+              "label": "Luka Modric",
+              "details": null,
+              "emoji": null,
+              "sortValue": 2
+            },
+            {
+              "id": "cc3e7b9a-b219-4b31-bc98-624dc18b78c7",
+              "label": "Kaka",
+              "details": null,
+              "emoji": null,
+              "sortValue": 3
+            },
+            {
+              "id": "467b7bbb-2037-4953-8861-612ce03fb345",
+              "label": "George Weah",
+              "details": null,
+              "emoji": null,
+              "sortValue": 4
+            }
+          ]
+        },
+        {
+          "id": "pool-po-4",
+          "category": "2010'lu Yıllar Devri",
+          "prompt": "Bu oyuncuları 2010'lu yıllardaki toplam bonservis bedellerine göre sırala (Yüksekten Düşüğe)",
+          "direction": "desc",
+          "items": [
+            {
+              "id": "5aa5f0bc-1369-4822-ab92-109b63916d93",
+              "label": "Neymar (PSG'ye)",
+              "details": null,
+              "emoji": null,
+              "sortValue": 1
+            },
+            {
+              "id": "0691cb88-2082-42f6-9e88-f0ec21ad382b",
+              "label": "Kylian Mbappe (PSG'ye)",
+              "details": null,
+              "emoji": null,
+              "sortValue": 2
+            },
+            {
+              "id": "dde07dcb-64e9-4296-b3ea-996b4180fa62",
+              "label": "Paul Pogba (Man Utd'a transfer oldu)",
+              "details": null,
+              "emoji": null,
+              "sortValue": 3
+            },
+            {
+              "id": "b0d919d8-19bf-48c3-a875-bb817a202598",
+              "label": "Alisson Becker (Liverpool'a)",
+              "details": null,
+              "emoji": null,
+              "sortValue": 4
+            }
+          ]
+        }
+      ]
+    }
   }
 } as const;
 
@@ -4558,5 +9138,6 @@ type PoolSessions = {
 };
 
 export function getPoolSessions(locale: Locale): PoolSessions {
-  return (locale === "ka" ? SESSIONS.ka : SESSIONS.en) as unknown as PoolSessions;
+  const byLocale = SESSIONS as unknown as Partial<Record<Locale, PoolSessions>>;
+  return byLocale[locale] ?? (SESSIONS.en as unknown as PoolSessions);
 }

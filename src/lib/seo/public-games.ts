@@ -74,10 +74,10 @@ export const PUBLIC_GAME_META: PublicGameMeta[] = [
   { modeId: "putInOrder", slug: "football-timeline", group: "daily", guest: "demo", demoSlug: "daily-putInOrder", page: false, card: false, destination: { kind: "page" }, related: [], order: 12 },
   // The practice prototype (tactical-board animation, multiple choice) is not the real clip game: no page until it is; card opens the app.
   { modeId: "guessTheGoal", slug: "guess-the-goal", group: "solo", guest: "app", page: false, card: true, destination: { kind: "app", path: "/guess-the-goal" }, related: [], order: 0 },
-  { modeId: "triviaMines", slug: "trivia-mines", group: "coins", guest: "demo", demoSlug: "mini-trivia-mines", page: true, card: true, destination: { kind: "page" }, related: ["grid", "moneyDrop", "cardDetective"], order: 0, practiceLocales: ["en", "ka"] },
-  { modeId: "freeKicks", slug: "free-kicks", group: "coins", guest: "demo", demoSlug: "mini-final-third", page: true, card: true, destination: { kind: "page" }, related: ["roadToGoal", "triviaMines", "squadSpin"], order: 1, practiceLocales: ["en", "ka"] },
-  { modeId: "roadToGoal", slug: "road-to-goal", group: "coins", guest: "demo", demoSlug: "mini-road-to-goal", page: true, card: true, destination: { kind: "page" }, related: ["freeKicks", "triviaMines", "squadSpin"], order: 2, practiceLocales: ["en", "ka"] },
-  { modeId: "squadSpin", slug: "squad-spin", group: "coins", guest: "demo", demoSlug: "mini-squad-spin", page: true, card: true, destination: { kind: "page" }, related: ["triviaMines", "freeKicks", "grid"], order: 3, practiceLocales: ["en", "ka"] },
+  { modeId: "triviaMines", slug: "trivia-mines", group: "coins", guest: "demo", demoSlug: "mini-trivia-mines", page: true, card: true, destination: { kind: "page" }, related: ["grid", "moneyDrop", "cardDetective"], order: 0 },
+  { modeId: "freeKicks", slug: "free-kicks", group: "coins", guest: "demo", demoSlug: "mini-final-third", page: true, card: true, destination: { kind: "page" }, related: ["roadToGoal", "triviaMines", "squadSpin"], order: 1 },
+  { modeId: "roadToGoal", slug: "road-to-goal", group: "coins", guest: "demo", demoSlug: "mini-road-to-goal", page: true, card: true, destination: { kind: "page" }, related: ["freeKicks", "triviaMines", "squadSpin"], order: 2 },
+  { modeId: "squadSpin", slug: "squad-spin", group: "coins", guest: "demo", demoSlug: "mini-squad-spin", page: true, card: true, destination: { kind: "page" }, related: ["triviaMines", "freeKicks", "grid"], order: 3 },
 ];
 
 export type PublicGame = GamePageEntry & PublicGameMeta;

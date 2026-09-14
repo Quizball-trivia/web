@@ -38,11 +38,12 @@ export function PassChainGame({
   session,
   onBack,
   onComplete,
-  resolveLink = defaultResolveLink,
-}: {
+  resolveLink = defaultResolveLink, practice = false, }: {
   session: PassChainSession;
   onBack: () => void;
   onComplete: (score: number, nextPath?: string) => void;
+  /** Sample / training round: the completion modal shows no member prompts and runs no member queries. */
+  practice?: boolean;
   /** Demo/prototype override: validate against a local graph instead of the API. */
   resolveLink?: ResolveLink;
 }) {
@@ -260,6 +261,7 @@ export function PassChainGame({
 
       <QuitGameDialog open={showQuit} onOpenChange={setShowQuit} onQuit={onBack} />
       <DailyChallengeCompleteModal
+        practice={practice}
         open={done}
         title={t("play.passChainTitle")}
         correct={solvedCount}

@@ -84,9 +84,8 @@ export function useAppShellViewModel() {
   const startSession = useGameSessionStore((state) => state.startSession);
   const setGameStage = useGameSessionStore((state) => state.setStage);
   const [socketConnected, setSocketConnected] = useState(false);
-  const [rankedGeoHintDebug, setRankedGeoHintDebug] = useState<RankedGeoHint | null>(
-    () => readCachedRankedGeoHint(),
-  );
+  // Read after mount (see the sync effect): the cached hint lives in browser storage, which the server render cannot see.
+  const [rankedGeoHintDebug, setRankedGeoHintDebug] = useState<RankedGeoHint | null>(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [nowTick, setNowTick] = useState(() => Date.now());
   const lobbyCommands = useLobbyCommandMachine();
@@ -263,6 +262,8 @@ export function useAppShellViewModel() {
   useEffect(() => {
     if (!isAuthenticated) return;
     const sync = () => setRankedGeoHintDebug(readCachedRankedGeoHint());
+    // First read after mount (off the effect tick, per the cascading-renders lint rule).
+    queueMicrotask(sync);
     window.addEventListener('storage', sync);
     const intervalId = window.setInterval(sync, 1500);
     return () => {

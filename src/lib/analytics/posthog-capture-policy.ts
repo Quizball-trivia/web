@@ -1,6 +1,7 @@
 import type { CaptureResult } from 'posthog-js';
 import { sanitizePostHogCapture } from './sanitize-url';
 import { isSeoAnalyticsPath } from './seo-routes';
+import { currentAccessType } from '@/lib/posthog';
 
 function isFootballQuizUrl(value: unknown): boolean {
   if (typeof value !== 'string' || value.length === 0) return false;
@@ -19,7 +20,13 @@ function isFootballQuizUrl(value: unknown): boolean {
  */
 export function preparePostHogCapture(result: CaptureResult | null): CaptureResult | null {
   const sanitized = sanitizePostHogCapture(result);
-  if (!sanitized || sanitized.event !== '$web_vitals') return sanitized;
+  if (!sanitized) return sanitized;
+  // Always the current session's classification: a value persisted from a
+  // previous visit (super properties survive reloads) must not outlive a sign-in or sign-out.
+  if (sanitized.properties) {
+    sanitized.properties.access_type = currentAccessType();
+  }
+  if (sanitized.event !== '$web_vitals') return sanitized;
 
   return isFootballQuizUrl(sanitized.properties?.$current_url) ? sanitized : null;
 }

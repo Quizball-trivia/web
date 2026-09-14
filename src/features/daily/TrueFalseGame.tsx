@@ -26,6 +26,8 @@ interface TrueFalseGameProps {
   session: TrueFalseSession;
   onBack: () => void;
   onComplete: (score: number, nextPath?: string) => void;
+  /** Sample / training round: the completion modal shows no member prompts and runs no member queries. */
+  practice?: boolean;
   /** Skip the daily-challenge completion modal and fire onComplete as soon
    *  as the last question resolves (embedded/promo flows). */
   autoComplete?: boolean;
@@ -38,8 +40,7 @@ export function TrueFalseGame({
   onBack,
   onComplete,
   autoComplete = false,
-  embedded,
-}: TrueFalseGameProps) {
+  embedded, practice = false, }: TrueFalseGameProps) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(session.secondsPerQuestion);
   const [selectedAnswer, setSelectedAnswer] = useState<boolean | null>(null);
@@ -276,6 +277,7 @@ export function TrueFalseGame({
       <ResultSplash {...splashProps} />
 
       <DailyChallengeCompleteModal
+        practice={practice}
         open={finished && !autoComplete}
         title={session.title}
         correct={correctCount}

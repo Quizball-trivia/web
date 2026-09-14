@@ -32,9 +32,11 @@ interface CountdownGameProps {
   session: CountdownSession;
   onBack: () => void;
   onComplete: (score: number, nextPath?: string) => void;
+  /** Sample / training round: the completion modal shows no member prompts and runs no member queries. */
+  practice?: boolean;
 }
 
-export function CountdownGame({ session, onBack, onComplete }: CountdownGameProps) {
+export function CountdownGame({ session, onBack, onComplete, practice = false }: CountdownGameProps) {
   const { t } = useLocale();
   const TIME_PER_ROUND = session.secondsPerRound;
   // Daily Countdown is exactly 2 rounds — cap here so it stays consistent even
@@ -202,6 +204,7 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
     return (
       <div className="fixed inset-0 z-40 bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat">
         <DailyChallengeCompleteModal
+        practice={practice}
           open
           title={session.title}
           correct={totalFound}

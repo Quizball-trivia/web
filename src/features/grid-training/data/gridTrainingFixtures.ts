@@ -1,3 +1,4 @@
+import { trainingPortraitUrl } from './gridTrainingPortraits';
 import { GRID_CONFIGS, type GridAnswer } from '@/features/mini-games/data/footballGrid';
 import { matchesName } from '@/features/mini-games/lib/matching';
 import { normalizeGridAnswerText, type GridTypeaheadPreparedPlayer } from '@/lib/football-grid/typeahead';
@@ -88,8 +89,8 @@ export const GRID_TRAINING_ROSTER: GridTypeaheadPreparedPlayer[] = (() => {
   return players.sort((a, b) => a.nameEn.localeCompare(b.nameEn));
 })();
 
-/** "Sample answers" for the results gallery — three cells, three names each (no portraits: the tutorial ships no player images). */
+/** "Sample answers" for the results gallery — three cells, three names each, with the catalogue portraits where one exists. */
 export const GRID_TRAINING_SAMPLES: FootballGridCompletedPayload['samples'] = [3, 5, 8].map((cellIndex) => ({
   cellIndex,
-  players: cellAnswers(cellIndex).slice(0, 3).map((answer) => ({ playerId: playerIdOf(answer.name), name: answer.name, imageUrl: null, imageAssetKey: null })),
+  players: cellAnswers(cellIndex).slice(0, 3).map((answer) => ({ playerId: playerIdOf(answer.name), name: answer.name, imageUrl: trainingPortraitUrl(answer.name), imageAssetKey: null })),
 }));

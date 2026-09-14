@@ -2420,6 +2420,7 @@
     "fairnessTitle": "Provably fair"
   },
   "statSniper": {
+    "sampleBoard": "Sample leaderboard",
     "target": "Target {current}/{total}",
     "lockIn": "Lock it in",
     "bullseye": "Bullseye!",

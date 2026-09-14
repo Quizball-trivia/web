@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { useLocale } from '@/contexts/LocaleContext';
 import { usePlayer } from '@/contexts/PlayerContext';
 import { useAuthStore } from '@/stores/auth.store';
@@ -9,6 +9,9 @@ import { ShowdownScreen } from '@/components/ShowdownScreen';
 import { KickoffCountdownOverlay } from '@/features/possession/components/KickoffCountdownOverlay';
 import { MiniGameShell } from '@/features/mini-games/components/MiniGameShell';
 import { footballGridAssetUrl } from '@/lib/football-grid/assets';
+import { AuctionAudioControl } from '@/features/auction/components/shared/AuctionAudioControl';
+import { useFootballGridAudio } from '@/features/football-grid/hooks/useFootballGridAudio';
+import type { FootballGridCommandResultPayload, FootballGridSearchStatePayload } from '@/lib/realtime/socket.types';
 import {
   FOOTBALL_GRID_COPY,
   FootballGridTurnPanel,
@@ -51,6 +54,18 @@ export function GridTrainingScreen({ onComplete, variant = 'member' }: { onCompl
   const engine = useGridTrainingMatch({ isPaused: tooltips.isPaused, onBeat: tooltips.show });
   const { stage, state, actions, feedback, guidedCell, winningLine, resultsVisible, humanPlayerId, opponent, clockPausedAt } = engine;
   const remaining = useTrainingRemaining(state.turnDeadlineAt ?? state.phaseDeadlineAt, clockPausedAt);
+  // Same conductor as a live game: matchmaking loop while "searching", stadium
+  // loop during play, kickoff whistle, answer cues. The scripted verdicts are
+  // shaped like server command results so the cues fire once per turn.
+  const audioSearch = useMemo<FootballGridSearchStatePayload>(
+    () => ({ state: stage === 'searching' ? 'searching' : 'idle', searchId: null }),
+    [stage],
+  );
+  const audioCommandResult = useMemo<FootballGridCommandResultPayload | null>(
+    () => (feedback ? ({ commandId: `training-${state.turnNumber}-${feedback}`, outcome: feedback } as FootballGridCommandResultPayload) : null),
+    [feedback, state.turnNumber],
+  );
+  useFootballGridAudio({ search: audioSearch, state: stage === 'match' ? state : null, commandResult: audioCommandResult, enabled: !resultsVisible });
 
   const [selectedCell, setSelectedCell] = useState<number | null>(null);
   const [answer, setAnswer] = useState('');
@@ -262,11 +277,13 @@ export function GridTrainingScreen({ onComplete, variant = 'member' }: { onCompl
     <div className="relative min-h-dvh" data-testid="grid-training">
       {/* `inert` keeps keyboard focus out of the screen while a tooltip explains it. */}
       <div inert={tooltips.active ? true : undefined}>{content}</div>
+      <AuctionAudioControl />
+      {/* Sits left of the audio control on phones (it lives top-right there). */}
       {!resultsVisible && !tooltips.active && (
         <button
           type="button"
           onClick={skip}
-          className="fixed right-3 top-3 z-[90] inline-flex h-9 items-center rounded-full bg-black/60 px-3 font-poppins text-xs font-bold uppercase tracking-wide text-white backdrop-blur-sm hover:bg-black/80"
+          className="fixed right-[calc(env(safe-area-inset-right)+3.75rem)] top-[calc(env(safe-area-inset-top)+0.375rem)] z-[90] inline-flex h-9 items-center rounded-full bg-black/60 px-3 font-poppins text-xs font-bold uppercase tracking-wide text-white backdrop-blur-sm hover:bg-black/80 sm:right-3 sm:top-3"
         >
           {t('training.skipTraining')}
         </button>

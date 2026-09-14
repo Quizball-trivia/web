@@ -2,7 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { trackEvent } = vi.hoisted(() => ({ trackEvent: vi.fn() }));
 
-vi.mock('@/lib/posthog', () => ({ trackEvent }));
+vi.mock('@/lib/posthog', () => ({
+  registerAccessType: vi.fn(), trackEvent }));
 
 import {
   trackRoadToGoalCardViewed,

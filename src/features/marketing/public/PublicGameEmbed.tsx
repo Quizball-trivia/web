@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { Play } from "lucide-react";
 import { PracticeLayer, SELF_EXITING_ENGINES } from "./PracticeLayer";
 import { useAuthStore } from "@/stores/auth.store";
-import { trackGameComplete, trackGameReplay, trackGameStart, trackGameView } from "@/lib/analytics/public-games.analytics";
+import { type SessionKind, trackGameComplete, trackGameExit, trackGameReplay, trackGameStart, trackGameView } from "@/lib/analytics/public-games.analytics";
 import type { DailyChallengeType } from "@/lib/domain/dailyChallenge";
 /** Daily engines are a separate on-demand chunk too; nothing game-related loads before Play. */
 const GuestDailyPlay = dynamic(() => import("./GuestDailyPlay").then((m) => m.GuestDailyPlay), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
@@ -22,22 +22,27 @@ const newSessionId = () => (typeof crypto !== "undefined" && "randomUUID" in cry
  * layer portalled to <body> (outside the page's <main>) with its own exit
  * control, and focus moves in and back out. Practice never touches account state.
  */
-export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, engineEmitsEvents, practiceLocalised, copy }: {
+export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, playPath, engineEmitsEvents, practiceLocalised, copy }: {
   modeId: string;
   demoSlug: string;
   locale: string;
   pagePath: string;
+  /** The real game's app route (sample result action). */
+  playPath: string;
   /** Daily engines fire start/complete/replay themselves; others are timed from the Play control. */
   engineEmitsEvents: boolean;
   practiceLocalised: boolean;
-  copy: { start: string; note: string; exit: string; english: string; title: string; loading: string; sampleFallback: string };
+  copy: { start: string; note: string; exit: string; english: string; title: string };
 }) {
-  /** Daily modes play today's real set as a guest; other engines run their practice prototype. */
+  /** Daily modes run their bundled sample (same every day, no backend); other engines run their practice prototype. */
   const dailyType = demoSlug.startsWith("daily-") ? (demoSlug.slice("daily-".length) as DailyChallengeType) : null;
+  // Dailies and the coin mini-games run a fixed sample; the multiplayer/ranked engines run a scripted training.
+  const sessionKind: SessionKind = dailyType || demoSlug.startsWith("mini-") ? "sample" : "training";
   const access = useAuthStore((state) => state.status) === "authenticated" ? "member" : "guest";
   const [playing, setPlaying] = useState(false);
   const sessionRef = useRef<string>("");
   const startedAtRef = useRef(0);
+  const completedRef = useRef(false);
   const launchRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => { trackGameView({ modeId, locale, access }); }, [modeId, locale, access]);
@@ -48,14 +53,24 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, engineEmit
   const start = () => {
     sessionRef.current = newSessionId();
     startedAtRef.current = Date.now();
-    if (!engineEmitsEvents) trackGameStart({ modeId, access, sessionId: sessionRef.current });
+    completedRef.current = false;
+    if (!engineEmitsEvents) trackGameStart({ modeId, access, sessionId: sessionRef.current, sessionKind });
     setPlaying(true);
   };
-  const exit = () => setPlaying(false);
+  const recordExit = () => {
+    if (!sessionRef.current) return;
+    trackGameExit({ modeId, sessionId: sessionRef.current, sessionKind, stage: completedRef.current ? "results" : "playing", durationMs: Date.now() - startedAtRef.current });
+    sessionRef.current = "";
+  };
+  const exit = () => {
+    recordExit();
+    setPlaying(false);
+  };
   const onEngineEvent = (event: "start" | "complete" | "replay", detail?: { score?: number }) => {
-    if (event === "start") trackGameStart({ modeId, access, sessionId: sessionRef.current });
-    if (event === "complete") trackGameComplete({ modeId, sessionId: sessionRef.current, score: detail?.score, durationMs: Date.now() - startedAtRef.current });
-    if (event === "replay") { trackGameReplay({ modeId, previousSessionId: sessionRef.current }); sessionRef.current = newSessionId(); startedAtRef.current = Date.now(); }
+    if (event === "start") trackGameStart({ modeId, access, sessionId: sessionRef.current, sessionKind });
+    if (event === "complete") { completedRef.current = true; } 
+    if (event === "complete") trackGameComplete({ modeId, sessionId: sessionRef.current, score: detail?.score, durationMs: Date.now() - startedAtRef.current, sessionKind });
+    if (event === "replay") { completedRef.current = false; trackGameReplay({ modeId, previousSessionId: sessionRef.current }); sessionRef.current = newSessionId(); startedAtRef.current = Date.now(); }
   };
 
   return (
@@ -78,11 +93,11 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, engineEmit
             <GuestDailyPlay
               type={dailyType}
               modeId={modeId}
-              locale={locale as "en" | "ka" | "es"}
               pagePath={pagePath}
+              playPath={playPath}
               onExit={exit}
               onEvent={onEngineEvent}
-              copy={{ loading: copy.loading, sampleFallback: copy.sampleFallback }}
+              onLeaveToRealGame={recordExit}
             />
           ) : (
             <DemoModeView slug={demoSlug} backHref={pagePath} onExit={exit} onEvent={onEngineEvent} />
