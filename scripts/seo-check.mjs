@@ -15,9 +15,9 @@ check("sitemap excludes /play and /demos", !urls.some((u) => /\/(play|demos)(\/|
 // Expected hreflang clusters: every member must list exactly these, and each member must exist (reciprocity).
 const clusters = [
   { en: "/en", ka: "/ka", es: "/es", tr: "/tr" },
-  { en: "/en/football-games/auction", ka: "/ka/football-games/auction", es: "/es/juegos-de-futbol/subasta" },
+  { en: "/en/football-games/auction", ka: "/ka/football-games/auction", es: "/es/juegos-de-futbol/subasta", tr: "/tr/football-games/auction" },
   { en: "/en/football-games/ranked", ka: "/ka/football-games/ranked", es: "/es/juegos-de-futbol/clasificatoria", tr: "/tr/football-games/ranked" },
-  { en: "/en/football-games/football-tic-tac-toe", ka: "/ka/football-games/football-tic-tac-toe", es: "/es/juegos-de-futbol/tiki-taka-toe" },
+  { en: "/en/football-games/football-tic-tac-toe", ka: "/ka/football-games/football-tic-tac-toe", es: "/es/juegos-de-futbol/tiki-taka-toe", tr: "/tr/football-games/football-tic-tac-toe" },
   { en: "/en/football-games/daily-challenges", ka: "/ka/football-games/daily-challenges", es: "/es/juegos-de-futbol/retos-diarios", tr: "/tr/football-games/daily-challenges" },
 ];
 const expectedAlternates = new Map();
@@ -50,7 +50,7 @@ for (const [path, status, target] of [["/en/football-games", 308, "/en"], ["/es/
   const loc = (res.headers.get("location") ?? "").replace(/^https?:\/\/[^/]+/, "");
   check(`${path} → ${status}${target ? " " + target : ""}`, res.status === status && (!target || loc === target), `${res.status} ${loc}`);
 }
-for (const path of ["/en/games/auction", "/en/daily/money-drop", "/es/football-games/auction", "/en/football-games/football-timeline", "/en/football-games/nope", "/tr/football-games/auction", "/tr/juegos-de-futbol/subasta"]) {
+for (const path of ["/en/games/auction", "/en/daily/money-drop", "/es/football-games/auction", "/en/football-games/football-timeline", "/en/football-games/nope", "/tr/juegos-de-futbol/subasta"]) {
   const res = await get(path);
   check(`${path} 404`, res.status === 404, String(res.status));
 }

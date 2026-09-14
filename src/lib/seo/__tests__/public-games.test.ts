@@ -52,13 +52,20 @@ describe("public games manifest", () => {
     expect(findPublishedGame("en", "football-games", "football-timeline")).toBeNull();
   });
 
-  it("a locale without a page body (tr for most games) is not published there and its cards fall back to the English page", () => {
-    expect(findPublishedGame("tr", "football-games", "auction")).toBeNull();
-    expect(findPublishedGame("tr", "football-games", "ranked")).not.toBeNull();
-    expect(publishedLocalesOf(PUBLISHED_PUBLIC_GAMES.find((g) => g.slug === "ranked")!)).toEqual(["en", "ka", "es", "tr"]);
+  it("every game page is published in all four locales, and cards link to the localized page", () => {
+    for (const game of PUBLISHED_PUBLIC_GAMES.filter((g) => g.page)) {
+      expect(publishedLocalesOf(game), game.slug).toEqual(["en", "ka", "es", "tr"]);
+    }
+    expect(findPublishedGame("tr", "football-games", "auction")).not.toBeNull();
     const auction = PUBLISHED_PUBLIC_GAMES.find((g) => g.slug === "auction")!;
-    expect(cardHref(auction, "tr")).toBe("/en/football-games/auction");
+    expect(cardHref(auction, "tr")).toBe("/tr/football-games/auction");
     expect(cardHref(auction, "es")).toBe("/es/juegos-de-futbol/subasta");
+  });
+
+  it("a locale without a page body is not published there and its cards fall back to the English page", () => {
+    const withoutBody = { ...PUBLISHED_PUBLIC_GAMES.find((g) => g.slug === "auction")!, slug: "no-such-body" };
+    expect(publishedLocalesOf(withoutBody)).toEqual([]);
+    expect(cardHref(withoutBody, "tr")).toBe("/en/football-games/no-such-body");
   });
 
   it("cards link to a page, the owning quiz page, or the app", () => {
