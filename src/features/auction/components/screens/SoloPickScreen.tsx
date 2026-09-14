@@ -1,5 +1,6 @@
 'use client';
 
+import { BrandIcon } from '@/components/brand/BrandIcon';
 import { useEffect } from 'react';
 import { motion } from 'motion/react';
 import type { AuctionGameState } from '../../types';
@@ -74,7 +75,7 @@ export function SoloPickScreen({
             transition={{ duration: 1.5, repeat: Infinity }}
             className="text-4xl mb-3"
           >
-            {pickerIsBot ? '🤖' : '⏳'}
+            {pickerIsBot ? <BrandIcon name="robot" className="size-12" /> : '⏳'}
           </motion.div>
           <div className="font-poppins text-base font-semibold text-white/60">
             {t('auctionGame.opponentPicking', {

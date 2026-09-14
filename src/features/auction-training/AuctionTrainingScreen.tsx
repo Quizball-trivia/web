@@ -9,6 +9,8 @@ import { useAuthPromptStore } from '@/stores/authPrompt.store';
 import { AuctionShowdownScreen } from '@/features/auction/components/AuctionShowdownScreen';
 import { AuctionGameScreen } from '@/features/auction/components/AuctionGameScreen';
 import { AuctionResultsScreen } from '@/features/auction/components/AuctionResultsScreen';
+import { AuctionAudioControl } from '@/features/auction/components/shared/AuctionAudioControl';
+import { useAuctionAudio } from '@/features/auction/hooks/useAuctionAudio';
 import { TrainingTooltip } from '@/features/training/components/TrainingTooltip';
 import { useTrainingCompletion } from '@/features/training/hooks/useTrainingCompletion';
 import { trackTrainingCompleted, trackTrainingSkipped, trackTrainingStarted } from '@/lib/analytics/training.analytics';
@@ -50,6 +52,8 @@ export function AuctionTrainingScreen({ onComplete, variant = 'member' }: { onCo
     onBeat: tooltips.show,
   });
   const { phase } = state;
+  // Same music and cues as a live auction; the searching screen stays quiet like the real lobby.
+  useAuctionAudio({ state, humanPlayerId, enabled: phase !== 'matchmaking' && phase !== 'lobby' });
   const access = isMember ? 'member' : 'guest';
 
   const started = useRef(false);
@@ -101,8 +105,9 @@ export function AuctionTrainingScreen({ onComplete, variant = 'member' }: { onCo
     if (!isMember) openAuthPrompt();
   }, [finish, isMember, openAuthPrompt]);
   useEffect(() => {
+    // A dismissed popover (audio settings) marks its Escape; only a free Escape skips.
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') skip();
+      if (event.key === 'Escape' && !event.defaultPrevented) skip();
     };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
@@ -149,12 +154,14 @@ export function AuctionTrainingScreen({ onComplete, variant = 'member' }: { onCo
     <div className="relative min-h-dvh" data-testid="auction-training">
       {/* `inert` keeps keyboard focus out of the screen while a tooltip explains it. */}
       <div inert={tooltips.active ? true : undefined}>{content}</div>
-      {/* One exit at a time: the open tooltip carries its own skip link. */}
+      <AuctionAudioControl />
+      {/* One exit at a time: the open tooltip carries its own skip link. Sits
+          left of the audio control on phones (it lives top-right there). */}
       {phase !== 'results' && !tooltips.active && (
         <button
           type="button"
           onClick={skip}
-          className="fixed right-3 top-3 z-[90] inline-flex h-9 items-center rounded-full bg-black/60 px-3 font-poppins text-xs font-bold uppercase tracking-wide text-white backdrop-blur-sm hover:bg-black/80"
+          className="fixed right-[calc(env(safe-area-inset-right)+3.75rem)] top-[calc(env(safe-area-inset-top)+0.375rem)] z-[90] inline-flex h-9 items-center rounded-full bg-black/60 px-3 font-poppins text-xs font-bold uppercase tracking-wide text-white backdrop-blur-sm hover:bg-black/80 sm:right-3 sm:top-3"
         >
           {t('training.skipTraining')}
         </button>

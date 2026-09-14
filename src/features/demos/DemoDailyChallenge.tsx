@@ -19,7 +19,7 @@ import { resolveDemoPassChainLink } from "@/features/demos/data/demoDailySession
 import { DailyChallengeIntro } from "@/features/daily/components/DailyChallengeIntro";
 import { useLocale } from "@/contexts/LocaleContext";
 import type { DailyChallengeSession, DailyChallengeType, StatSniperLeaderboard } from "@/lib/domain/dailyChallenge";
-import { buildDemoDailySession } from "./data/demoDailySessions";
+import { buildDemoDailySession, toSneakPeekSession } from "./data/demoDailySessions";
 import { DemoResultScreen } from "./DemoResultScreen";
 import { DemoBackButton } from "./DemoBackButton";
 
@@ -35,12 +35,16 @@ interface DemoDailyChallengeProps {
   onRemoteComplete?: (score: number) => Promise<unknown>;
   /** Guest play: Pass Chain links resolved by the guest endpoint. */
   resolveLink?: ResolveLink;
+  /** Public-page sneak peek: one unit of the mechanic / a handful of questions instead of the full sample. */
+  peek?: boolean;
+  /** Where the real game lives (sample result primary action). */
+  resultCta?: { modeId: string; returnTo: string; onBeforeLeave?: () => void };
   /** Guest play: Stat Sniper board from the public endpoint. */
   leaderboardFetcher?: () => Promise<StatSniperLeaderboard>;
 }
 type ResolveLink = NonNullable<Parameters<typeof PassChainGame>[0]["resolveLink"]>;
 
-export function DemoDailyChallenge({ type, backHref = "/demos", onExit, onEvent, session: sessionOverride, onRemoteComplete, resolveLink, leaderboardFetcher }: DemoDailyChallengeProps) {
+export function DemoDailyChallenge({ type, backHref = "/demos", onExit, onEvent, session: sessionOverride, onRemoteComplete, resolveLink, leaderboardFetcher, peek = false, resultCta }: DemoDailyChallengeProps) {
   const router = useRouter();
   const { locale } = useLocale();
   const [attempt, setAttempt] = useState(0);
@@ -48,8 +52,11 @@ export function DemoDailyChallenge({ type, backHref = "/demos", onExit, onEvent,
   const [finalScore, setFinalScore] = useState<number | null>(null);
 
   const session = useMemo(
-    () => sessionOverride ?? buildDemoDailySession(type, locale),
-    [sessionOverride, type, locale],
+    () => {
+      const built = sessionOverride ?? buildDemoDailySession(type, locale);
+      return peek ? toSneakPeekSession(built) : built;
+    },
+    [sessionOverride, type, locale, peek],
   );
 
   const handleBack = useCallback(() => {
@@ -88,6 +95,7 @@ export function DemoDailyChallenge({ type, backHref = "/demos", onExit, onEvent,
         onReplay={handleReplay}
         onExit={handleBack}
         embedded={Boolean(onExit)}
+        cta={resultCta}
       />
     );
   }
@@ -101,7 +109,8 @@ export function DemoDailyChallenge({ type, backHref = "/demos", onExit, onEvent,
     );
   }
 
-  const gameProps = { onBack: handleBack, onComplete: handleComplete };
+  // Every demo/sample round is practice: no member prompts or queries in the completion modal.
+  const gameProps = { onBack: handleBack, onComplete: handleComplete, practice: true };
 
   switch (session.challengeType) {
     case "moneyDrop":

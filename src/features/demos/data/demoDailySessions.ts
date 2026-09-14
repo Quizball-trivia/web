@@ -10,6 +10,7 @@ import type {
   MoneyDropSession,
 } from "@/lib/domain/dailyChallenge";
 import type { Locale } from "@/lib/i18n/messages";
+import { getI18nText } from "@/lib/utils/i18n";
 import { getPoolSessions } from "./demoPoolSessions";
 import type { FifaCardsSession } from "@/lib/domain/dailyChallenge";
 import { FIFA_CARDS, PLAYABLE_EDITIONS } from "@/features/mini-games/data/guessFifaCard";
@@ -17,10 +18,238 @@ import { DEMO_QUESTIONS } from "./demoQuestions";
 
 type L = Locale;
 
-const pick = (locale: L, en: string, ka: string) => (locale === "ka" ? ka : en);
+const EXTRA = {
+  "Money Drop": {
+    "es": "Money Drop",
+    "tr": "Money Drop"
+  },
+  "Answer correctly to protect your money": {
+    "es": "Responde bien para proteger tu dinero",
+    "tr": "Paranı korumak için doğru cevapla"
+  },
+  "Football Logic": {
+    "es": "Lógica futbolera",
+    "tr": "Futbol Mantığı"
+  },
+  "Decode the player from the two pictures": {
+    "es": "Descifra al jugador a partir de las dos imágenes",
+    "tr": "İki resimden oyuncuyu çöz"
+  },
+  "Transfers": {
+    "es": "Traspasos",
+    "tr": "Transferler"
+  },
+  "Which player connects these two clubs with a world-record €222M transfer?": {
+    "es": "¿Qué jugador une a estos dos clubes con un traspaso récord mundial de 222 M€?",
+    "tr": "Hangi oyuncu bu iki kulübü 222 M€'luk dünya rekoru transferle birbirine bağlar?"
+  },
+  "Neymar": {
+    "es": "Neymar",
+    "tr": "Neymar"
+  },
+  "Neymar moved from Barcelona to PSG for €222M in 2017 — still the world record.": {
+    "es": "Neymar pasó del Barcelona al PSG por 222 M€ en 2017: sigue siendo el récord mundial.",
+    "tr": "Neymar 2017'de 222 M€'ya Barcelona'dan PSG'ye geçti — hâlâ dünya rekoru."
+  },
+  "Which striker famously moved between these two rivals on a free transfer in 2014?": {
+    "es": "¿Qué delantero pasó entre estos dos rivales con un traspaso libre en 2014?",
+    "tr": "Hangi forvet 2014'te bu iki rakip arasında bedelsiz transferle geçti?"
+  },
+  "Robert Lewandowski": {
+    "es": "Robert Lewandowski",
+    "tr": "Robert Lewandowski"
+  },
+  "Lewandowski left Dortmund for Bayern on a free in 2014 and became a Bundesliga legend.": {
+    "es": "Lewandowski dejó el Dortmund por el Bayern gratis en 2014 y se convirtió en leyenda de la Bundesliga.",
+    "tr": "Lewandowski 2014'te Dortmund'dan Bayern'e bedelsiz geçti ve bir Bundesliga efsanesi oldu."
+  },
+  "Which winger made a then-world-record move between these clubs in 2013?": {
+    "es": "¿Qué extremo protagonizó en 2013 un traspaso entonces récord mundial entre estos clubes?",
+    "tr": "Hangi kanat oyuncusu 2013'te bu kulüpler arasında o dönemin dünya rekoru transferini yaptı?"
+  },
+  "Gareth Bale": {
+    "es": "Gareth Bale",
+    "tr": "Gareth Bale"
+  },
+  "Bale joined Real Madrid from Tottenham for ~€100M in 2013 — a world record at the time.": {
+    "es": "Bale fichó por el Real Madrid desde el Tottenham por unos 100 M€ en 2013, récord mundial entonces.",
+    "tr": "Bale 2013'te Tottenham'dan ~100 M€'ya Real Madrid'e katıldı — o dönemde dünya rekoru."
+  },
+  "Which superstar moved between these clubs for a then-record £80M in 2009?": {
+    "es": "¿Qué estrella pasó entre estos clubes por 80 M£, récord entonces, en 2009?",
+    "tr": "Hangi süperstar 2009'da bu kulüpler arasında o dönemin rekoru 80 M£'a geçti?"
+  },
+  "Cristiano Ronaldo": {
+    "es": "Cristiano Ronaldo",
+    "tr": "Cristiano Ronaldo"
+  },
+  "Cristiano Ronaldo's 2009 move from United to Real Madrid was the world record for four years.": {
+    "es": "El traspaso de Cristiano Ronaldo del United al Real Madrid en 2009 fue récord mundial durante cuatro años.",
+    "tr": "Cristiano Ronaldo'nun 2009'da United'dan Real Madrid'e geçişi dört yıl boyunca dünya rekoruydu."
+  },
+  "Which striker left this London club for Barcelona in 2007?": {
+    "es": "¿Qué delantero dejó este club londinense por el Barcelona en 2007?",
+    "tr": "Hangi forvet 2007'de bu Londra kulübünden Barcelona'ya gitti?"
+  },
+  "Thierry Henry": {
+    "es": "Thierry Henry",
+    "tr": "Thierry Henry"
+  },
+  "Arsenal's all-time top scorer joined Barcelona in 2007 and won the treble there in 2009.": {
+    "es": "El máximo goleador histórico del Arsenal fichó por el Barcelona en 2007 y ganó el triplete en 2009.",
+    "tr": "Arsenal'in tüm zamanların en golcü oyuncusu 2007'de Barcelona'ya katıldı ve 2009'da üçlemeyi kazandı."
+  },
+  "Which Georgian star moved between these clubs in January 2025?": {
+    "es": "¿Qué estrella georgiana pasó entre estos clubes en enero de 2025?",
+    "tr": "Hangi Gürcü yıldız Ocak 2025'te bu kulüpler arasında geçti?"
+  },
+  "Khvicha Kvaratskhelia": {
+    "es": "Khvicha Kvaratskhelia",
+    "tr": "Khvicha Kvaratskhelia"
+  },
+  "Kvaradona swapped Naples for Paris in January 2025 and won the Champions League that spring.": {
+    "es": "Kvaradona cambió Nápoles por París en enero de 2025 y ganó la Champions esa primavera.",
+    "tr": "Kvaradona Ocak 2025'te Napoli'yi Paris'le değiştirdi ve o bahar Şampiyonlar Ligi'ni kazandı."
+  },
+  "Which midfielder returned between these clubs for a record £89M in 2016?": {
+    "es": "¿Qué centrocampista regresó entre estos clubes por 89 M£, récord, en 2016?",
+    "tr": "Hangi orta saha 2016'da bu kulüpler arasında rekor 89 M£'a geri döndü?"
+  },
+  "Paul Pogba": {
+    "es": "Paul Pogba",
+    "tr": "Paul Pogba"
+  },
+  "Pogba left United for free in 2012 and returned from Juventus for a then-world-record £89M.": {
+    "es": "Pogba dejó el United gratis en 2012 y volvió desde la Juventus por 89 M£, récord mundial entonces.",
+    "tr": "Pogba 2012'de United'dan bedelsiz ayrıldı ve Juventus'tan o dönemin dünya rekoru 89 M£'a döndü."
+  },
+  "Which Brazilian striker moved between these clubs in 2002 after winning the World Cup?": {
+    "es": "¿Qué delantero brasileño pasó entre estos clubes en 2002 tras ganar el Mundial?",
+    "tr": "Hangi Brezilyalı forvet 2002'de Dünya Kupası'nı kazandıktan sonra bu kulüpler arasında geçti?"
+  },
+  "Ronaldo Nazário": {
+    "es": "Ronaldo Nazário",
+    "tr": "Ronaldo Nazário"
+  },
+  "Fresh off his 2002 World Cup heroics, O Fenômeno joined the Galácticos from Inter.": {
+    "es": "Recién coronado en el Mundial 2002, O Fenômeno llegó a los Galácticos desde el Inter.",
+    "tr": "2002 Dünya Kupası kahramanlığının ardından O Fenômeno Inter'den Galácticos'a katıldı."
+  },
+  "Which French forward moved between these clubs in 2017 for €180M?": {
+    "es": "¿Qué delantero francés pasó entre estos clubes en 2017 por 180 M€?",
+    "tr": "Hangi Fransız forvet 2017'de 180 M€'ya bu kulüpler arasında geçti?"
+  },
+  "Kylian Mbappé": {
+    "es": "Kylian Mbappé",
+    "tr": "Kylian Mbappé"
+  },
+  "The teenage Mbappé left Monaco for PSG in the second-biggest transfer of all time.": {
+    "es": "El adolescente Mbappé dejó el Mónaco por el PSG en el segundo traspaso más caro de la historia.",
+    "tr": "Genç Mbappé, tüm zamanların en pahalı ikinci transferiyle Monaco'dan PSG'ye geçti."
+  },
+  "Which defender rose through this club's academy and later captained the other?": {
+    "es": "¿Qué defensa salió de la cantera de este club y después fue capitán del otro?",
+    "tr": "Hangi savunmacı bu kulübün akademisinden yetişti ve daha sonra diğerinin kaptanı oldu?"
+  },
+  "Sergio Ramos": {
+    "es": "Sergio Ramos",
+    "tr": "Sergio Ramos"
+  },
+  "Ramos left Sevilla for Real Madrid at 19 and captained them to four Champions League titles.": {
+    "es": "Ramos dejó el Sevilla por el Real Madrid a los 19 y lo capitaneó a cuatro Champions.",
+    "tr": "Ramos 19 yaşında Sevilla'dan Real Madrid'e geçti ve kaptan olarak dört Şampiyonlar Ligi kazandı."
+  },
+  "Missing XI": {
+    "es": "XI perdido",
+    "tr": "Kayıp XI"
+  },
+  "Tap a shirt and name the player who started there.": {
+    "es": "Toca una camiseta y nombra al jugador que fue titular ahí.",
+    "tr": "Bir formaya dokun ve orada ilk 11'de başlayan oyuncuyu söyle."
+  },
+  "Stat Sniper": {
+    "es": "Stat Sniper",
+    "tr": "Stat Sniper"
+  },
+  "Slide to your best guess.": {
+    "es": "Desliza hasta tu mejor estimación.",
+    "tr": "En iyi tahminine kaydır."
+  },
+  "Pass Chain": {
+    "es": "Cadena de pases",
+    "tr": "Pas Zinciri"
+  },
+  "Link two players through shared clubs.": {
+    "es": "Conecta a dos jugadores a través de clubes en común.",
+    "tr": "İki oyuncuyu ortak kulüpler üzerinden bağla."
+  },
+  "FIFA Cards": {
+    "es": "Cartas FIFA",
+    "tr": "FIFA Kartları"
+  },
+  "Card Detective": {
+    "es": "Detective de cartas",
+    "tr": "Kart Dedektifi"
+  },
+  "A gold card, stats only — name the player.": {
+    "es": "Una carta dorada, solo estadísticas: nombra al jugador.",
+    "tr": "Altın bir kart, sadece istatistikler — oyuncuyu söyle."
+  },
+  "Everything hidden, 100 clue coins — name the player using the least information.": {
+    "es": "Todo oculto, 100 monedas de pista: nombra al jugador con la menor información posible.",
+    "tr": "Her şey gizli, 100 ipucu jetonu — oyuncuyu en az bilgiyle söyle."
+  }
+} as const satisfies Record<string, { es: string; tr: string }>;
+/** Display labels that the mini-game data keeps in English only. */
+const MATCH_LABELS: Record<string, Record<L, string>> = {
+  "vs Manchester United — 2011 Champions League Final": { en: "vs Manchester United — 2011 Champions League Final", ka: "მანჩესტერ იუნაიტედთან — 2011 ჩემპიონთა ლიგის ფინალი", es: "vs Manchester United — Final de la Champions 2011", tr: "Manchester United'a karşı — 2011 Şampiyonlar Ligi Finali" },
+  "vs Juventus — 2017 Champions League Final": { en: "vs Juventus — 2017 Champions League Final", ka: "იუვენტუსთან — 2017 ჩემპიონთა ლიგის ფინალი", es: "vs Juventus — Final de la Champions 2017", tr: "Juventus'a karşı — 2017 Şampiyonlar Ligi Finali" },
+  "vs France — 2022 World Cup Final": { en: "vs France — 2022 World Cup Final", ka: "საფრანგეთთან — 2022 მსოფლიო ჩემპიონატის ფინალი", es: "vs Francia — Final del Mundial 2022", tr: "Fransa'ya karşı — 2022 Dünya Kupası Finali" },
+};
+export const LEAGUE_LABELS: Record<string, Record<L, string>> = {
+  "Liga Portugal": { en: "Liga Portugal", ka: "პორტუგალიის ლიგა", es: "Liga Portugal", tr: "Portekiz Ligi" },
+  "Portuguese Liga ZON SAGRES": { en: "Portuguese Liga ZON SAGRES", ka: "პორტუგალიის ლიგა", es: "Liga portuguesa", tr: "Portekiz Ligi" },
+  "Ligue 1 McDonald's": { en: "Ligue 1 McDonald's", ka: "ლიგა 1", es: "Ligue 1", tr: "Ligue 1" },
+  "Major League Soccer": { en: "Major League Soccer", ka: "MLS", es: "MLS", tr: "MLS" },
+  "USA Major League Soccer": { en: "USA Major League Soccer", ka: "MLS", es: "MLS", tr: "MLS" },
+  "Pro League": { en: "Pro League", ka: "პრო ლიგა", es: "Pro League", tr: "Pro Lig" },
+  "ROSHN Saudi League": { en: "ROSHN Saudi League", ka: "საუდის პრო ლიგა", es: "Liga Profesional Saudí", tr: "Suudi Pro Ligi" },
+  "Russian Premier League": { en: "Russian Premier League", ka: "რუსეთის პრემიერ ლიგა", es: "Liga Premier rusa", tr: "Rusya Premier Ligi" },
+  "Serie A Enilive": { en: "Serie A Enilive", ka: "სერია A", es: "Serie A", tr: "Serie A" },
+  "Spain Primera Division": { en: "Spain Primera Division", ka: "ლა ლიგა", es: "LaLiga", tr: "La Liga" },
+  "Turkish Süper Lig": { en: "Turkish Süper Lig", ka: "თურქეთის სუპერ ლიგა", es: "Süper Lig turca", tr: "Türkiye Süper Ligi" },
+  "Premier League": { en: "Premier League", ka: "პრემიერ ლიგა", es: "Premier League", tr: "Premier Lig" },
+  "Serie A": { en: "Serie A", ka: "სერია A", es: "Serie A", tr: "Serie A" },
+  "Ligue 1": { en: "Ligue 1", ka: "ლიგა 1", es: "Ligue 1", tr: "Ligue 1" },
+  "LaLiga": { en: "LaLiga", ka: "ლა ლიგა", es: "LaLiga", tr: "LaLiga" },
+  "Eredivisie": { en: "Eredivisie", ka: "ერედივიზიე", es: "Eredivisie", tr: "Eredivisie" },
+  "Primeira Liga": { en: "Primeira Liga", ka: "პრიმეირა ლიგა", es: "Primeira Liga", tr: "Primeira Liga" },
+  "Süper Lig": { en: "Süper Lig", ka: "სუპერ ლიგა", es: "Süper Lig", tr: "Süper Lig" },
+  "Saudi Pro League": { en: "Saudi Pro League", ka: "საუდის პრო ლიგა", es: "Liga Profesional Saudí", tr: "Suudi Pro Ligi" },
+  "MLS": { en: "MLS", ka: "MLS", es: "MLS", tr: "MLS" },
+  "English Premier League": { en: "English Premier League", ka: "ინგლისის პრემიერ ლიგა", es: "Premier League inglesa", tr: "İngiltere Premier Ligi" },
+  "Italian Serie A": { en: "Italian Serie A", ka: "იტალიის სერია A", es: "Serie A italiana", tr: "İtalya Serie A" },
+  "German 1. Bundesliga": { en: "German 1. Bundesliga", ka: "გერმანიის ბუნდესლიგა", es: "Bundesliga alemana", tr: "Almanya Bundesliga" },
+  "Bundesliga": { en: "Bundesliga", ka: "ბუნდესლიგა", es: "Bundesliga", tr: "Bundesliga" },
+  "French Ligue 1": { en: "French Ligue 1", ka: "საფრანგეთის ლიგა 1", es: "Ligue 1 francesa", tr: "Fransa Ligue 1" },
+  "La Liga": { en: "La Liga", ka: "ლა ლიგა", es: "LaLiga", tr: "La Liga" },
+  "LALIGA EA SPORTS": { en: "LALIGA EA SPORTS", ka: "ლა ლიგა", es: "LALIGA EA SPORTS", tr: "LALIGA EA SPORTS" },
+  "Championship": { en: "Championship", ka: "ჩემპიონშიპი", es: "Championship", tr: "Championship" },
+  "Holland Eredivisie": { en: "Holland Eredivisie", ka: "ნიდერლანდების ერედივიზიე", es: "Eredivisie neerlandesa", tr: "Hollanda Eredivisie" },
+  "Argentina Primera División": { en: "Argentina Primera División", ka: "არგენტინის პრიმერა დივიზიონი", es: "Primera División argentina", tr: "Arjantin Primera División" },
+  "Chinese Super League": { en: "Chinese Super League", ka: "ჩინეთის სუპერლიგა", es: "Superliga china", tr: "Çin Süper Ligi" },
+  "Japanese J. League Division 1": { en: "Japanese J. League Division 1", ka: "იაპონიის J-ლიგა", es: "J. League japonesa", tr: "Japonya J. Ligi" },
+};
+const label = (table: Record<string, Record<L, string>>, locale: L, value: string) => table[value]?.[locale] ?? value;
+type ExtraKey = keyof typeof EXTRA;
+/** en/ka inline; es/tr from EXTRA. `en` must be a known key, so an English copy edit without its translations fails to compile. */
+const pick = (locale: L, en: ExtraKey, ka: string): string => {
+  if (locale === "ka") return ka;
+  if (locale === "es" || locale === "tr") return EXTRA[en][locale];
+  return en;
+};
 
 function moneyDropSession(locale: L): MoneyDropSession {
-  const contentLocale = locale === 'ka' ? 'ka' : 'en';
   return {
     challengeType: "moneyDrop",
     title: pick(locale, "Money Drop", "ფულის ვარდნა"),
@@ -34,10 +263,10 @@ function moneyDropSession(locale: L): MoneyDropSession {
     startingMoney: 1000,
     questions: DEMO_QUESTIONS.slice(0, 10).map((q) => ({
       id: q.id,
-      category: q.category[contentLocale],
+      category: getI18nText(q.category, locale),
       difficulty: q.difficulty,
-      prompt: q.prompt[contentLocale],
-      options: q.options.map((option) => option[contentLocale]),
+      prompt: getI18nText(q.prompt, locale),
+      options: q.options.map((option) => getI18nText(option, locale)),
       correctAnswerIndex: q.correctIndex,
       clue: null,
     })),
@@ -286,11 +515,11 @@ export async function resolveDemoPassChainLink(fromPlayerId: string, text: strin
 }
 
 function statSniperSession(locale: Locale): DailyChallengeSession {
-  const rounds = getSniperRounds(locale === "ka" ? "ka" : "en").slice(0, 5);
+  const rounds = getSniperRounds(locale);
   return {
     challengeType: "statSniper",
-    title: locale === "ka" ? "სტატ-სნაიპერი" : "Stat Sniper",
-    description: locale === "ka" ? "მიიტანე სლაიდერი შენს ვარაუდამდე." : "Slide to your best guess.",
+    title: pick(locale, "Stat Sniper", "სტატ-სნაიპერი"),
+    description: pick(locale, "Slide to your best guess.", "მიიტანე სლაიდერი შენს ვარაუდამდე."),
     questionCount: rounds.length,
     secondsPerQuestion: 30,
     questions: rounds.map((r, i) => ({ id: `demo-stat-sniper-${i}`, difficulty: "easy" as const, kind: "demo", prompt: r.prompt, unit: r.unit, value: r.value, min: r.min, max: r.max, step: r.step })),
@@ -315,8 +544,8 @@ function passChainSession(locale: Locale): DailyChallengeSession {
   });
   return {
     challengeType: "passChain",
-    title: locale === "ka" ? "პასების ჯაჭვი" : "Pass Chain",
-    description: locale === "ka" ? "დააკავშირე ორი ფეხბურთელი საერთო კლუბებით." : "Link two players through shared clubs.",
+    title: pick(locale, "Pass Chain", "პასების ჯაჭვი"),
+    description: pick(locale, "Link two players through shared clubs.", "დააკავშირე ორი ფეხბურთელი საერთო კლუბებით."),
     puzzleCount: puzzles.length,
     secondsPerPuzzle: 120,
     puzzles,
@@ -336,7 +565,7 @@ function missingXiSession(locale: Locale): DailyChallengeSession {
       difficulty: "easy",
       team: match.teamName,
       opponent: match.matchLabel.replace(/^vs\s+/, "").split(" — ")[0] ?? "",
-      matchLabel: match.matchLabel,
+      matchLabel: label(MATCH_LABELS, locale, match.matchLabel),
       score: null,
       formation: match.formation,
       slots: match.slots.map((slot) => ({
@@ -405,10 +634,8 @@ function fifaCardsSession(locale: Locale): FifaCardsSession {
     .slice(0, 10);
   return {
     challengeType: "fifaCards",
-    title: locale === "ka" ? "FIFA ბარათები" : "FIFA Cards",
-    description: locale === "ka"
-      ? "ოქროს ბარათი მხოლოდ სტატისტიკით — გამოიცანი მოთამაშე."
-      : "A gold card, stats only — name the player.",
+    title: pick(locale, "FIFA Cards", "FIFA ბარათები"),
+    description: pick(locale, "A gold card, stats only — name the player.", "ოქროს ბარათი მხოლოდ სტატისტიკით — გამოიცანი მოთამაშე."),
     cardCount: cards.length,
     pointsPerSolve: 10,
     cards: cards.map((card) => ({
@@ -421,7 +648,7 @@ function fifaCardsSession(locale: Locale): FifaCardsSession {
       position: card.position,
       nation: card.nation,
       nationCode: card.nationCode,
-      league: card.league,
+      league: label(LEAGUE_LABELS, locale, card.league),
       club: card.club,
       stats: card.stats,
       faceUrl: card.photoId ? `/api/fifa-face?id=${card.photoId}&v=${card.photoVer}` : null,
@@ -435,14 +662,72 @@ function cardDetectiveSession(locale: Locale): CardDetectiveSession {
   const base = fifaCardsSession(locale);
   return {
     challengeType: "cardDetective",
-    title: locale === "ka" ? "ბარათის დეტექტივი" : "Card Detective",
-    description: locale === "ka"
-      ? "ყველაფერი დამალულია, 100 მინიშნების ქოინი — გამოიცანი მოთამაშე მინიმალური ინფორმაციით."
-      : "Everything hidden, 100 clue coins — name the player using the least information.",
+    title: pick(locale, "Card Detective", "ბარათის დეტექტივი"),
+    description: pick(locale, "Everything hidden, 100 clue coins — name the player using the least information.", "ყველაფერი დამალულია, 100 მინიშნების ქოინი — გამოიცანი მოთამაშე მინიმალური ინფორმაციით."),
     cardCount: base.cards.length,
     startCoins: 100,
     clueCosts: { rating: 25, club: 20, league: 15, nation: 10, position: 10, pac: 5, sho: 5, pas: 5, dri: 5, def: 5, phy: 5 },
     wrongGuessCost: 15,
     cards: base.cards,
   };
+}
+
+/**
+ * Sneak-peek lengths for the public game pages: one complete unit of the
+ * mechanic (a squad, a puzzle, a round) or a handful of questions — enough to
+ * understand the format, short enough to finish in a minute. Count fields are
+ * kept consistent with the sliced content so every engine's progress UI is right.
+ */
+const PEEK_QUESTIONS = 5;
+// The page copy promises ten numbers a day; the bundled bank holds exactly ten.
+const PEEK_SNIPER_QUESTIONS = 10;
+const PEEK_CLUES = 2;
+const PEEK_CAREER_PATHS = 3;
+const PEEK_CARDS = 2;
+
+export function toSneakPeekSession(session: DailyChallengeSession): DailyChallengeSession {
+  switch (session.challengeType) {
+    case "moneyDrop":
+    case "trueFalse":
+    case "imposter":
+    case "footballLogic": {
+      const questions = session.questions.slice(0, PEEK_QUESTIONS);
+      return { ...session, questions, questionCount: questions.length } as DailyChallengeSession;
+    }
+    case "statSniper": {
+      const questions = session.questions.slice(0, PEEK_SNIPER_QUESTIONS);
+      return { ...session, questions, questionCount: questions.length } as DailyChallengeSession;
+    }
+    case "clues": {
+      const questions = session.questions.slice(0, PEEK_CLUES);
+      return { ...session, questions, questionCount: questions.length };
+    }
+    case "careerPath": {
+      const questions = session.questions.slice(0, PEEK_CAREER_PATHS);
+      return { ...session, questions, questionCount: questions.length };
+    }
+    case "countdown":
+    case "highLow": {
+      const rounds = session.rounds.slice(0, 1);
+      return { ...session, rounds, roundCount: rounds.length } as DailyChallengeSession;
+    }
+    case "putInOrder": {
+      const rounds = session.rounds.slice(0, 1);
+      return { ...session, rounds, roundCount: rounds.length };
+    }
+    case "missingXi": {
+      const squads = session.squads.slice(0, 1);
+      return { ...session, squads, squadCount: squads.length };
+    }
+    case "passChain": {
+      const puzzles = session.puzzles.slice(0, 1);
+      return { ...session, puzzles, puzzleCount: puzzles.length };
+    }
+    case "cardDetective": {
+      const cards = session.cards.slice(0, PEEK_CARDS);
+      return { ...session, cards, cardCount: cards.length };
+    }
+    case "fifaCards":
+      return session;
+  }
 }

@@ -10,7 +10,8 @@ import { AUCTION_TRAINING_BOT_THINK_MS, AUCTION_TRAINING_REVEAL_BEAT_MS, AUCTION
 const trackEvent = vi.fn();
 // jsdom has no scrollIntoView; the clue list scrolls each new clue into view.
 Element.prototype.scrollIntoView = vi.fn();
-vi.mock('@/lib/posthog', () => ({ trackEvent: (...args: unknown[]) => trackEvent(...args) }));
+vi.mock('@/lib/posthog', () => ({
+  registerAccessType: vi.fn(), trackEvent: (...args: unknown[]) => trackEvent(...args) }));
 vi.mock('@/contexts/LocaleContext', () => ({ useLocale: () => ({ locale: 'en', t: (key: string) => key }) }));
 vi.mock('@/contexts/PlayerContext', () => ({ usePlayer: () => ({ player: { username: 'Taz', avatar: 'avatar-1' } }) }));
 vi.mock('@/hooks/usePlayerAvatar', () => ({ usePlayerAvatar: () => ({ avatarUrl: '', avatarCustomization: null, username: 'Taz' }) }));

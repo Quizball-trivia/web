@@ -26,13 +26,14 @@ interface CareerPathGameProps {
   session: CareerPathSession;
   onBack: () => void;
   onComplete: (score: number, nextPath?: string) => void;
+  /** Sample / training round: the completion modal shows no member prompts and runs no member queries. */
+  practice?: boolean;
 }
 
 export function CareerPathGame({
   session,
   onBack,
-  onComplete,
-}: CareerPathGameProps) {
+  onComplete, practice = false, }: CareerPathGameProps) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(session.secondsPerQuestion);
   const [answer, setAnswer] = useState("");
@@ -171,6 +172,7 @@ export function CareerPathGame({
       <ResultSplash {...splashProps} />
 
       <DailyChallengeCompleteModal
+        practice={practice}
         open={finished}
         title={session.title}
         correct={correctCount}

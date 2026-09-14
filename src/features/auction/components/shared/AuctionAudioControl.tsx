@@ -110,7 +110,7 @@ export function AuctionAudioControl() {
           align="end"
           sideOffset={8}
           collisionPadding={12}
-          className="z-[75] w-[min(18rem,calc(100vw-1.5rem))] rounded-[18px] border-white/15 bg-brand-blue p-3 text-white shadow-[0_20px_60px_rgba(0,0,0,0.55)]"
+          className="z-[125] w-[min(18rem,calc(100vw-1.5rem))] rounded-[18px] border-white/15 bg-brand-blue p-3 text-white shadow-[0_20px_60px_rgba(0,0,0,0.55)]"
         >
           <div className="mb-3 px-1 font-poppins">
             <div className="text-[10px] font-black uppercase tracking-[0.24em] text-brand-yellow">

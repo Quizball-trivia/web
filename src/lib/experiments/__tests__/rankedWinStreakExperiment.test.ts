@@ -11,7 +11,8 @@ const posthogMock = vi.hoisted(() => ({
   },
 }));
 
-vi.mock('@/lib/posthog', () => ({ posthog: posthogMock }));
+vi.mock('@/lib/posthog', () => ({
+  registerAccessType: vi.fn(), posthog: posthogMock }));
 
 import {
   getPostMatchWinStreakCount,

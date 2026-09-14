@@ -2420,6 +2420,7 @@
     "fairnessTitle": "Verificable"
   },
   "statSniper": {
+    "sampleBoard": "Clasificación de muestra",
     "target": "Objetivo {current}/{total}",
     "lockIn": "Confirmar",
     "bullseye": "¡Pleno!",

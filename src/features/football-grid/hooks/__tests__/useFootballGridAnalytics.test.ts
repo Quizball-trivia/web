@@ -2,7 +2,8 @@ import { renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 const trackEvent = vi.fn();
-vi.mock('@/lib/posthog', () => ({ trackEvent: (...args: unknown[]) => trackEvent(...args) }));
+vi.mock('@/lib/posthog', () => ({
+  registerAccessType: vi.fn(), trackEvent: (...args: unknown[]) => trackEvent(...args) }));
 vi.mock('@/lib/analytics/game-events', () => ({
   trackMatchmakingStarted: (mode: string, variant?: string) => trackEvent('matchmaking_started', { mode, variant }),
   trackMatchmakingHumanFound: (mode: string, wait_ms: number) => trackEvent('matchmaking_human_found', { mode, wait_ms }),

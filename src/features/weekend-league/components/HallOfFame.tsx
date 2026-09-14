@@ -5,6 +5,7 @@
 // 2.4x'd per-game scores, so cross-edition point totals are meaningless.
 // Per-edition points are still shown, where they do mean something.
 
+import { BrandIcon } from '@/components/brand/BrandIcon';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Trophy } from 'lucide-react';
@@ -34,7 +35,7 @@ function editionLabel(weekKey: string, locale: string, currentYear: number): str
 function Medals({
   gold, silver, bronze, labels,
 }: { gold: number; silver: number; bronze: number; labels: [string, string, string] }) {
-  const cells: Array<[number, string]> = [[gold, '🥇'], [silver, '🥈'], [bronze, '🥉']];
+  const cells: Array<[number, 'medal-gold' | 'medal-silver' | 'medal-bronze']> = [[gold, 'medal-gold'], [silver, 'medal-silver'], [bronze, 'medal-bronze']];
   return (
     <span className="flex items-center gap-2 tabular-nums">
       {cells.map(([count, icon], i) => (
@@ -43,7 +44,7 @@ function Medals({
           className={`flex items-center gap-0.5 text-[13px] ${count > 0 ? 'text-white' : 'text-white/25'}`}
           style={poppins}
         >
-          <span className={count > 0 ? '' : 'grayscale opacity-50'} aria-hidden>{icon}</span>
+          <BrandIcon name={icon} className="size-4" dimmed={count === 0} />
           {count}
           <span className="sr-only">{labels[i]}</span>
         </span>
@@ -144,7 +145,7 @@ export function HallOfFame({ data }: { data?: WlHallOfFameResponse }) {
                 {edition.podium.map((p) => (
                   <li key={p.rank} className="flex items-center gap-2.5">
                     <span className={`w-5 shrink-0 text-center text-[14px] ${MEDAL_TINT[p.rank - 1]}`}>
-                      {p.rank === 1 ? '🥇' : p.rank === 2 ? '🥈' : '🥉'}
+                      <BrandIcon name={p.rank === 1 ? 'medal-gold' : p.rank === 2 ? 'medal-silver' : 'medal-bronze'} className="size-4" />
                     </span>
                     <span
                       className={`min-w-0 flex-1 truncate text-[14px] ${p.rank === 1 ? 'text-white' : 'text-white/70'}`}

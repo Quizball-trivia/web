@@ -4,7 +4,8 @@ import { Suspense, useEffect } from 'react';
 import type { ReactElement } from 'react';
 import { usePathname, useSearchParams } from 'next/navigation';
 import { consumeExitToPlayPending, trackExitToPlayLanded } from '@/lib/analytics/game-events';
-import { startSessionRecording, stopSessionRecording } from '@/lib/posthog';
+import { registerAccessType, startSessionRecording, stopSessionRecording } from '@/lib/posthog';
+import { useAuthStore } from '@/stores/auth.store';
 import { SEO_QUIZ_PATH, SEO_LANDING_PATH } from '@/lib/analytics/seo-routes';
 import { hasRecentCampaignAttribution } from '@/features/campaign-quiz/campaignAttribution';
 import { rememberUtmFromUrl } from '@/lib/analytics/utmAttribution';
@@ -25,6 +26,13 @@ export function PostHogPageView(): ReactElement {
 function PostHogPageViewInner(): ReactElement {
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const authStatus = useAuthStore((state) => state.status);
+
+  // Every event carries access_type once the session is known (guest = signed out).
+  useEffect(() => {
+    if (authStatus === 'authenticated') registerAccessType('member');
+    else if (authStatus === 'anonymous') registerAccessType('guest');
+  }, [authStatus]);
 
   // ($pageview comes from capture_pageview: 'history_change' in the PostHog
   // init — nothing to do per-route here.)

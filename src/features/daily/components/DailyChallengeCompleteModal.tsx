@@ -55,6 +55,8 @@ interface DailyChallengeCompleteModalProps {
   correct: number;
   total: number;
   onDone: (nextPath?: string) => void;
+  /** Sample / training round: no Weekend League, comeback or reminder prompts, no member queries. */
+  practice?: boolean;
 }
 
 export function DailyChallengeCompleteModal({
@@ -63,11 +65,13 @@ export function DailyChallengeCompleteModal({
   correct,
   total,
   onDone,
+  practice = false,
 }: DailyChallengeCompleteModalProps) {
   if (!open) return null;
 
-  const contentProps = { title, correct, total, onDone };
-  if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) {
+  const contentProps = { title, correct, total, onDone, practice };
+  // Practice rounds never enter the member experiments (reminders, Weekend League prompts).
+  if (practice || !process.env.NEXT_PUBLIC_POSTHOG_KEY) {
     return <DailyChallengeCompleteModalContent {...contentProps} />;
   }
 
@@ -92,6 +96,7 @@ function DailyChallengeCompleteModalExperiment(props: OpenModalProps) {
 }
 
 function DailyChallengeCompleteModalExperimentAssignment({
+  practice = false,
   country,
   createdAt,
   ...props
@@ -104,12 +109,13 @@ function DailyChallengeCompleteModalExperimentAssignment({
     queryKey: queryKeys.weekendLeague.current(),
     queryFn: getWeekendLeagueCurrent,
     staleTime: 30_000,
-    enabled: isEligibleCountry,
+    enabled: !practice && isEligibleCountry,
   });
   const comebackQuery = useQuery({
     queryKey: queryKeys.dailyChallenges.comeback(),
     queryFn: getDailyComebackState,
     staleTime: 30_000,
+    enabled: !practice,
   });
   const tournament = weekendLeagueQuery.data?.tournament ?? null;
   const you = weekendLeagueQuery.data?.you ?? null;
@@ -309,6 +315,7 @@ export function DailyChallengeCompleteModalContent({
   correct,
   total,
   onDone,
+  practice = false,
   weekendLeagueCta,
   comebackCta,
 }: OpenModalProps & {
@@ -544,7 +551,7 @@ export function DailyChallengeCompleteModalContent({
       </motion.div>
 
       {/* Don't end on a dead end — offer the next game, streaming-style. */}
-      <DailyNextUpRow onSelect={(href) => onDone(href)} />
+      {!practice && <DailyNextUpRow onSelect={(href) => onDone(href)} />}
       </div>
     </div>
   );

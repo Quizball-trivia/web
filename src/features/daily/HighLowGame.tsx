@@ -23,13 +23,14 @@ interface HighLowGameProps {
   session: HighLowSession;
   onBack: () => void;
   onComplete: (score: number, nextPath?: string) => void;
+  /** Sample / training round: the completion modal shows no member prompts and runs no member queries. */
+  practice?: boolean;
 }
 
 export function HighLowGame({
   session,
   onBack,
-  onComplete,
-}: HighLowGameProps) {
+  onComplete, practice = false, }: HighLowGameProps) {
   const [currentRoundIndex, setCurrentRoundIndex] = useState(0);
   const [currentMatchupIndex, setCurrentMatchupIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(session.secondsPerRound);
@@ -262,6 +263,7 @@ export function HighLowGame({
       <ResultSplash {...splashProps} />
 
       <DailyChallengeCompleteModal
+        practice={practice}
         open={finished}
         title={session.title}
         correct={roundScore}

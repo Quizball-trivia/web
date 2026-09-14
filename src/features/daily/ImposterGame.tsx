@@ -28,6 +28,8 @@ interface ImposterGameProps {
   session: ImposterSession;
   onBack: () => void;
   onComplete: (score: number, nextPath?: string) => void;
+  /** Sample / training round: the completion modal shows no member prompts and runs no member queries. */
+  practice?: boolean;
   /** Skip the daily-challenge completion modal and fire onComplete as soon
    *  as the last question resolves (embedded/promo flows). */
   autoComplete?: boolean;
@@ -40,8 +42,7 @@ export function ImposterGame({
   onBack,
   onComplete,
   autoComplete = false,
-  embedded,
-}: ImposterGameProps) {
+  embedded, practice = false, }: ImposterGameProps) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOptionIds, setSelectedOptionIds] = useState<string[]>([]);
   const [timeLeft, setTimeLeft] = useState(session.secondsPerQuestion);
@@ -289,6 +290,7 @@ export function ImposterGame({
       <ResultSplash {...splashProps} />
 
       <DailyChallengeCompleteModal
+        practice={practice}
         open={finished && !autoComplete}
         title={session.title}
         correct={correctCount}
