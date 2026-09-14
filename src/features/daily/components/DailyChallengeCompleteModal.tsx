@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "motion/react";
-import { Bell, Check, ChevronRight, Flame, Target, Ticket, Trophy } from "lucide-react";
+import { Bell, Check, ChevronRight, Flame, Target, Ticket } from "lucide-react";
+import { BrandIcon } from "@/components/brand/BrandIcon";
 import { useLocale } from "@/contexts/LocaleContext";
 import { getWeekendLeagueCurrent } from "@/lib/api/endpoints";
 import {
@@ -69,13 +70,26 @@ export function DailyChallengeCompleteModal({
 }: DailyChallengeCompleteModalProps) {
   if (!open) return null;
 
+  // Practice / sample rounds: the sample result card is the one and only end
+  // screen, so this modal finishes immediately instead of stacking on it.
+  if (practice) return <PracticeAutoDone onDone={onDone} />;
+
   const contentProps = { title, correct, total, onDone, practice };
-  // Practice rounds never enter the member experiments (reminders, Weekend League prompts).
-  if (practice || !process.env.NEXT_PUBLIC_POSTHOG_KEY) {
+  if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) {
     return <DailyChallengeCompleteModalContent {...contentProps} />;
   }
 
   return <DailyChallengeCompleteModalExperiment {...contentProps} />;
+}
+
+function PracticeAutoDone({ onDone }: { onDone: (nextPath?: string) => void }) {
+  const doneRef = useRef(false);
+  useEffect(() => {
+    if (doneRef.current) return;
+    doneRef.current = true;
+    onDone();
+  }, [onDone]);
+  return null;
 }
 
 type OpenModalProps = Omit<DailyChallengeCompleteModalProps, "open">;
@@ -360,8 +374,8 @@ export function DailyChallengeCompleteModalContent({
         transition={{ type: "spring", stiffness: 280, damping: 22 }}
         className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-[24px] bg-brand-blue p-7 text-center sm:p-8"
       >
-        <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-white/12">
-          <Trophy className="size-8 text-brand-yellow" />
+        <div className="mx-auto mb-4 flex size-20 items-center justify-center">
+          <BrandIcon name="trophy" className="size-20 drop-shadow-[0_6px_16px_rgba(0,0,0,0.35)]" />
         </div>
 
         <h2 id="daily-challenge-complete-title" className="font-poppins text-[22px] font-semibold uppercase text-white sm:text-[26px]">
