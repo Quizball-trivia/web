@@ -35,7 +35,7 @@ export function DemoResultScreen({ title, score, isMoney, onReplay, onExit, embe
   const playReal = PLAY_REAL[locale as keyof typeof PLAY_REAL] ?? PLAY_REAL.en;
 
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-surface-page px-4">
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat px-4">
       <motion.div
         initial={{ opacity: 0, scale: 0.92 }}
         animate={{ opacity: 1, scale: 1 }}
