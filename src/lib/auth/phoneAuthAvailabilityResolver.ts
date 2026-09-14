@@ -33,6 +33,9 @@ let memory: CachedResult | null = null;
 let inFlight: Promise<PhoneAuthAvailabilityResult | null> | null = null;
 let failedAt = 0;
 let restoredFromStorage = false;
+// Every mounted subscriber hears every settled probe, so a screen that mounted during a failure
+// cooldown still gets the answer when a later mount's probe succeeds.
+const listeners = new Set<Listener>();
 
 function readStorage(now: number): CachedResult | null {
   if (typeof window === "undefined") return null;
@@ -70,10 +73,18 @@ export function peekPhoneAuthAvailability(now = Date.now()): PhoneAuthAvailabili
   return null;
 }
 
+function inFailureCooldown(now: number): boolean {
+  return failedAt > 0 && now - failedAt < PHONE_AVAILABILITY_FAILURE_COOLDOWN_MS;
+}
+
 function isValidResponse(value: unknown): value is { country: string | null; phone_auth_available: boolean } {
   if (typeof value !== "object" || value === null) return false;
   const v = value as Record<string, unknown>;
   return typeof v.phone_auth_available === "boolean" && (v.country === null || v.country === undefined || typeof v.country === "string");
+}
+
+function broadcast(result: PhoneAuthAvailabilityResult | null): void {
+  for (const listener of Array.from(listeners)) listener(result);
 }
 
 function probe(now: number): Promise<PhoneAuthAvailabilityResult | null> {
@@ -98,28 +109,37 @@ function probe(now: number): Promise<PhoneAuthAvailabilityResult | null> {
       clearTimeout(timeout);
       inFlight = null;
     });
+  void inFlight.then(broadcast);
   return inFlight;
 }
 
 /**
- * Resolve for one subscriber. Returns the cached result synchronously through the
- * promise when fresh; otherwise shares the single in-flight probe. `null` means
- * the probe failed (or is in its cooldown) — callers keep the phone option hidden
- * and stop loading; nothing is cached for it.
+ * Resolve once: the fresh cached result, else the single shared probe. `null` means the
+ * probe failed or is in its cooldown — nothing is cached for it, and an expired entry is
+ * never handed out in its place.
  */
 export function resolvePhoneAuthAvailability(now = Date.now()): Promise<PhoneAuthAvailabilityResult | null> {
   const cached = peekPhoneAuthAvailability(now);
   if (cached) return Promise.resolve(cached);
   if (inFlight) return inFlight;
-  if (failedAt && now - failedAt < PHONE_AVAILABILITY_FAILURE_COOLDOWN_MS) return Promise.resolve(memory ?? null);
+  if (inFailureCooldown(now)) return Promise.resolve(null);
   return probe(now);
 }
 
-/** Subscribe without owning the request: unmounting one subscriber never aborts the others. */
+/**
+ * Subscribe for the lifetime of a mount: the listener gets the current answer now (cached,
+ * cooldown → null, or the shared probe's result) and every later settled probe, so a mount
+ * that saw a failure recovers when another mount's probe succeeds. Unsubscribing never aborts
+ * the request for the others.
+ */
 export function subscribePhoneAuthAvailability(listener: Listener, now = Date.now()): () => void {
-  let active = true;
-  void resolvePhoneAuthAvailability(now).then((result) => { if (active) listener(result); });
-  return () => { active = false; };
+  listeners.add(listener);
+  const cached = peekPhoneAuthAvailability(now);
+  if (cached) listener(cached);
+  else if (inFlight) { /* the broadcast on settle reaches this listener */ }
+  else if (inFailureCooldown(now)) listener(null);
+  else void probe(now);
+  return () => { listeners.delete(listener); };
 }
 
 export function __resetPhoneAuthAvailabilityForTests(): void {
@@ -127,4 +147,5 @@ export function __resetPhoneAuthAvailabilityForTests(): void {
   inFlight = null;
   failedAt = 0;
   restoredFromStorage = false;
+  listeners.clear();
 }

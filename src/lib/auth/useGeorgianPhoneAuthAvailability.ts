@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { PHONE_AUTH_ENABLED } from "@/lib/config";
-import { peekPhoneAuthAvailability, subscribePhoneAuthAvailability } from "@/lib/auth/phoneAuthAvailabilityResolver";
+import { subscribePhoneAuthAvailability } from "@/lib/auth/phoneAuthAvailabilityResolver";
 
 interface GeorgianPhoneAuthAvailabilityState {
   country: string | null;
@@ -58,13 +58,12 @@ export function useGeorgianPhoneAuthAvailability(): GeorgianPhoneAuthAvailabilit
 
     const apply = (result: { country: string | null; isAvailable: boolean } | null) => {
       setState((current) => {
-        if (current.isAvailable && !current.isLoading) return current; // sticky for this mount
-        if (!result) return current.isLoading ? { country: current.country, isAvailable: current.isAvailable, isLoading: false } : current;
+        // Sticky for this mount: a phone flow in progress must never lose its option.
+        if (current.isAvailable && !current.isLoading) return current;
+        if (!result) return current.isLoading ? { ...current, isLoading: false } : current;
         return { country: result.country, isAvailable: result.isAvailable, isLoading: false };
       });
     };
-    const cached = peekPhoneAuthAvailability();
-    if (cached) { apply(cached); return; }
     return subscribePhoneAuthAvailability(apply);
   }, []);
 

@@ -9,7 +9,9 @@ on every page) and `/api/geo` (edge, one fetch per consumer). A single guest ses
 - One in-flight request shared by all mounts; an unmount never aborts it for the others.
 - Result cached in memory and in `sessionStorage` (`qb.phoneAuthAvailability.v1`: country, flag,
   timestamp; validated on read, storage errors fall back to memory) for 1 hour → a reload does not probe.
-- Failures are never cached: loading settles, a 30 s cooldown suppresses retries, the next mount after it probes again.
+- Failures are never cached: loading settles, a 30 s cooldown suppresses retries (and never hands out an expired entry
+  in place of an answer), the next mount after it probes again — and every mounted screen hears that result, so a screen
+  that mounted during the failure recovers.
 - Resolver-owned 8 s timeout so a hanging request cannot strand later mounts.
 - Sticky per mount: a mounted screen never flips from available to unavailable (an OTP or phone-linking flow in
   progress is never closed under the user); a later "false" reaches screens mounted after it.
@@ -23,8 +25,10 @@ on every page) and `/api/geo` (edge, one fetch per consumer). A single guest ses
 - `showBetson` and `isGeoExperimentEnabled` had no consumers and are removed from the response.
 
 ## Notes
-- Experiments that read availability at submission time (onboarding, mobile-verification reminder) now see the
-  cached value; eligibility semantics are unchanged, timing is earlier. Annotate the rollout date in their analysis.
+- Freshness changes: a successful answer (true or false) is reused for up to an hour across navigation and reloads. A visitor
+  whose country changes mid-visit (VPN off, border) keeps the earlier answer until the TTL runs out; before, every page probed
+  again. Experiments that read availability at submission time (onboarding, mobile-verification reminder) now see the cached
+  value, earlier. Annotate the rollout date in their analysis.
 - Acceptance on staging: a fresh guest tab shows exactly one phone-availability request, then zero across
   navigation AND a hard reload within the hour; zero `/api/geo` requests.
 - Later, separately: validate `x-vercel-ip-country` against the backend from Georgian connections on both domains

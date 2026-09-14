@@ -33,12 +33,14 @@ function isGeoApiResponse(value: unknown): value is GeoApiResponse {
 let memory: { geo: GeoApiResponse; resolvedAt: number } | null = null;
 let inFlight: Promise<GeoApiResponse | null> | null = null;
 let failedAt = 0;
+const listeners = new Set<(geo: GeoApiResponse | null) => void>();
 
-/** One shared, memory-cached fetch per page for all consumers; failures are not cached. */
-export function resolveGeoEligibility(now = Date.now()): Promise<GeoApiResponse | null> {
-  if (memory && now - memory.resolvedAt <= GEO_TTL_MS) return Promise.resolve(memory.geo);
+function inFailureCooldown(now: number): boolean {
+  return failedAt > 0 && now - failedAt < GEO_FAILURE_COOLDOWN_MS;
+}
+
+function probe(now: number): Promise<GeoApiResponse | null> {
   if (inFlight) return inFlight;
-  if (failedAt && now - failedAt < GEO_FAILURE_COOLDOWN_MS) return Promise.resolve(memory?.geo ?? null);
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), GEO_TIMEOUT_MS);
   inFlight = fetch("/api/geo", { cache: "no-store", signal: controller.signal })
@@ -61,13 +63,33 @@ export function resolveGeoEligibility(now = Date.now()): Promise<GeoApiResponse 
       clearTimeout(timeout);
       inFlight = null;
     });
+  void inFlight.then((geo) => { for (const listener of Array.from(listeners)) listener(geo); });
   return inFlight;
+}
+
+/** One shared, memory-cached fetch per page for all consumers; failures and expired entries are never served. */
+export function resolveGeoEligibility(now = Date.now()): Promise<GeoApiResponse | null> {
+  if (memory && now - memory.resolvedAt <= GEO_TTL_MS) return Promise.resolve(memory.geo);
+  if (inFlight) return inFlight;
+  if (inFailureCooldown(now)) return Promise.resolve(null);
+  return probe(now);
+}
+
+/** Mount-long subscription: current answer now, plus every later settled fetch (recovery after a failure). */
+export function subscribeGeoEligibility(listener: (geo: GeoApiResponse | null) => void, now = Date.now()): () => void {
+  listeners.add(listener);
+  if (memory && now - memory.resolvedAt <= GEO_TTL_MS) listener(memory.geo);
+  else if (inFlight) { /* broadcast on settle */ }
+  else if (inFailureCooldown(now)) listener(null);
+  else void probe(now);
+  return () => { listeners.delete(listener); };
 }
 
 export function __resetGeoEligibilityForTests(): void {
   memory = null;
   inFlight = null;
   failedAt = 0;
+  listeners.clear();
 }
 
 export function useGeoEligibility(): GeoApiResponse {
@@ -75,9 +97,7 @@ export function useGeoEligibility(): GeoApiResponse {
 
   useEffect(() => {
     if (!GEO_CONSUMER_ENABLED) return;
-    let mounted = true;
-    void resolveGeoEligibility().then((result) => { if (mounted && result) setGeo(result); });
-    return () => { mounted = false; };
+    return subscribeGeoEligibility((result) => { if (result) setGeo(result); });
   }, []);
 
   return geo;
