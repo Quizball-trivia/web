@@ -28,6 +28,7 @@ import { MiniGameShell } from './MiniGameShell';
 import { KeeperGlove } from './PenaltyShootout';
 import { getTrivia, type TriviaQuestion } from '../data/trivia';
 import { useMiniLocale, useMiniT } from '../lib/i18n';
+import { useLocale } from '@/contexts/LocaleContext';
 import { getSoundLevels, playCash, playKick, setCrowdLevel, setCrowdMood, setSfxLevel, startCrowd, stopCrowd } from '../lib/crowdAudio';
 import { CoinIcon } from '@/features/store/components/CoinIcon';
 import { MoneyFlight, seeded } from './MoneyFlight';
@@ -216,6 +217,7 @@ export interface CoinSampleMode {
 export function FinalThird({ backHref, live = false, sample }: { backHref?: string; live?: boolean; sample?: CoinSampleMode } = {}) {
   const t = useMiniT();
   const miniLocale = useMiniLocale();
+  const { t: tApp } = useLocale();
   const trivia = useMemo(() => sample?.questions ?? getTrivia(miniLocale), [miniLocale, sample]);
   const { splashProps, fire } = useResultSplash();
 
@@ -1019,7 +1021,10 @@ export function FinalThird({ backHref, live = false, sample }: { backHref?: stri
       {/* Desktop: game on the left, leaderboard rail on the right. */}
       <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start lg:gap-6">
         <div className="min-w-0">
-      {/* Live stadium strip: player count + rotating last win. Cosmetic; not shown in the sneak peek. */}
+      {/* Live stadium strip: player count + rotating last win. Cosmetic; the sneak peek shows its practice chip instead. */}
+      {sample && (
+        <div className="mt-1 px-1 py-1 font-poppins text-[10px] font-black uppercase tracking-wide text-brand-yellow">{tApp('coinSample.practiceChip')}</div>
+      )}
       {!sample && <div className="mt-1 flex items-center justify-between gap-2 px-1 py-1">
         <span className="flex items-center gap-1.5 font-poppins text-[10px] font-black uppercase tracking-wide text-brand-red-soft">
           <Radio className="size-3.5 animate-pulse" /> {t('{n} playing now', { n: playingNow.toLocaleString() })}

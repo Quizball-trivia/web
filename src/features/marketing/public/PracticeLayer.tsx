@@ -4,6 +4,7 @@ import dynamic from "next/dynamic";
 import { useEffect, useRef, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 /** Every engine lives in one client chunk that is fetched only when a visitor presses Play. */
 const DemoModeView = dynamic(() => import("@/features/demos/DemoModeView").then((m) => m.DemoModeView), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
@@ -18,8 +19,11 @@ export const EXIT_LABEL: Record<string, string> = { en: "Exit practice", ka: "áƒ
  * screens, so they open portalled to <body> (outside the app shell's scroll
  * container) with their own exit control; focus moves in and back out.
  */
+/** Engines whose own header owns the top-right corner (balance pill): the exit control drops below it. */
+export const SHELL_HEADER_ENGINES = new Set(["mini-final-third", "mini-road-to-goal"]);
+
 /** `exitControl` false = the engine renders its own way out (the training match has "Skip training"). */
-export function PracticeLayer({ title, exitLabel, onExit, exitControl = true, children }: { title: string; exitLabel: string; onExit: () => void; exitControl?: boolean; children: ReactNode }) {
+export function PracticeLayer({ title, exitLabel, onExit, exitControl = true, exitPlacement = "top", children }: { title: string; exitLabel: string; onExit: () => void; exitControl?: boolean; exitPlacement?: "top" | "below-header"; children: ReactNode }) {
   const exitRef = useRef<HTMLButtonElement>(null);
   useEffect(() => {
     const opener = document.activeElement as HTMLElement | null;
@@ -46,7 +50,7 @@ export function PracticeLayer({ title, exitLabel, onExit, exitControl = true, ch
           ref={exitRef}
           type="button"
           onClick={onExit}
-          className="fixed right-3 top-3 z-[120] inline-flex h-9 items-center gap-1 rounded-full bg-black/60 px-3 text-xs font-bold uppercase tracking-wide text-white backdrop-blur-sm hover:bg-black/80"
+          className={cn("fixed right-3 z-[120] inline-flex h-9 items-center gap-1 rounded-full bg-black/60 px-3 text-xs font-bold uppercase tracking-wide text-white backdrop-blur-sm hover:bg-black/80", exitPlacement === "below-header" ? "top-16" : "top-3")}
         >
           <X className="size-4" /> {exitLabel}
         </button>

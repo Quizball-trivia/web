@@ -189,7 +189,7 @@ const KA: Record<string, string> = {
 
   // Free Kicks (formerly Final Third)
   "Free Kicks": "Free Kicks",
-  "Know football. Read the goal. Take the shot.": "Know football. Read the goal. Take the shot.",
+  "Know football. Read the goal. Take the shot.": "იცოდე ფეხბურთი. წაიკითხე კარი. დაარტყი.",
   "Balance": "ბალანსი",
   "Pot": "ბანკი",
   "Your pot": "შენი ბანკი",

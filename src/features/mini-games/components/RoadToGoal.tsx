@@ -14,6 +14,7 @@ import { ROAD_DECISION_MS, ROAD_QUESTION_MS, didSurvive, payoutForClearedZones, 
 import { playCash } from '../lib/crowdAudio';
 import { LiveActivityStrip } from './LiveActivityStrip';
 import { type MiniLocale, useMiniLocale } from '../lib/i18n';
+import { useLocale } from '@/contexts/LocaleContext';
 import { useStoreWallet } from '@/lib/queries/store.queries';
 import {
   acquireRoadToGoalMutation,
@@ -504,6 +505,7 @@ export function RoadToGoal({
   newRunsEnabled?: boolean;
 } = {}) {
   const locale = useMiniLocale();
+  const { t: tApp } = useLocale();
   const copy = COPY[locale] ?? COPY.en;
   const bank = useMemo(() => sample?.questions ?? getTrivia(locale), [locale, sample]);
   const { data: wallet, isError: walletError, refetch: refetchWallet } = useStoreWallet({ enabled: live });
@@ -1246,6 +1248,9 @@ export function RoadToGoal({
       disclaimer={!sample}
       headerRight={<StatPill label={copy.balance} value={points(effectiveBalance)} color="#FFE500" />}
     >
+      {sample && (
+        <div className="mt-1 px-1 font-poppins text-[10px] font-black uppercase tracking-wide text-brand-yellow">{tApp('coinSample.practiceChip')}</div>
+      )}
       <div className="mt-1.5 grid items-start gap-2.5 sm:mt-2 sm:gap-3 lg:grid-cols-[minmax(0,1fr)_300px] xl:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0 self-start">
           <RoadScene

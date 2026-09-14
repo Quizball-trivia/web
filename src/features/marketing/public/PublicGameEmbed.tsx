@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { Play } from "lucide-react";
-import { PracticeLayer, SELF_EXITING_ENGINES } from "./PracticeLayer";
+import { PracticeLayer, SELF_EXITING_ENGINES, SHELL_HEADER_ENGINES } from "./PracticeLayer";
 import { useAuthStore } from "@/stores/auth.store";
 import { type SessionKind, trackGameComplete, trackGameExit, trackGameReplay, trackGameStart, trackGameView } from "@/lib/analytics/public-games.analytics";
 import type { EngineEventDetail } from "@/lib/analytics/public-games.analytics";
@@ -90,7 +90,7 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, playPath, 
         {!practiceLocalised && <p className="text-sm font-semibold text-brand-yellow">{copy.english}</p>}
       </div>
       {playing && (
-        <PracticeLayer title={copy.title} exitLabel={copy.exit} onExit={exit} exitControl={!SELF_EXITING_ENGINES.has(demoSlug)}>
+        <PracticeLayer title={copy.title} exitLabel={copy.exit} onExit={exit} exitControl={!SELF_EXITING_ENGINES.has(demoSlug)} exitPlacement={SHELL_HEADER_ENGINES.has(demoSlug) ? "below-header" : "top"}>
           {dailyType ? (
             <GuestDailyPlay
               type={dailyType}
