@@ -226,7 +226,7 @@ export function FinalThird({ backHref, live = false, sample }: { backHref?: stri
   const [stake, setStake] = useState(10);
   const [stakeText, setStakeText] = useState('10');
   const [roundStake, setRoundStake] = useState(10);
-  const [qIndex, setQIndex] = useState(() => Math.floor(Math.random() * 1000));
+  const [qIndex, setQIndex] = useState(() => Math.floor((sample?.random ?? Math.random)() * 1000));
   const [selected, setSelected] = useState<number | null>(null);
   const [openCount, setOpenCount] = useState(MIN_OPEN);
   const [answerLocked, setAnswerLocked] = useState(false);

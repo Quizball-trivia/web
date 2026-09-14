@@ -112,3 +112,11 @@ incomplete, the bankroll had no transaction model, the result contract was missi
 6. Squad Spin sample portraits are null (no backend-hosted image requests); Trivia Mines text resolves Turkish.
 7. Free Kicks keeper draw, Road survival roll and question order use the wrapper's seeded generator.
 Tests added: wallet hook (double debit, fractions, reset), deterministic 21-pick auto-bank.
+
+### Round 2 (Codex, 2026-09-14)
+- Fixed: the out-of-coins card could replace an open round (now gated on being between rounds); replay resets the start guard so the
+  next accepted stake emits `game_start`; Free Kicks question order is seeded too.
+- Decision: Squad Spin reel artwork (crests/flags) stays on the public storage bucket — static CDN files, not API calls; the
+  "no backend calls" promise is about the game API and wallet. Portraits stay null.
+- Deferred: out-of-coins threshold is the game's minimum stake (the stake pickers already let a player go lower);
+  `refund/net/reason` fields on the completion event.

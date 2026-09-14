@@ -43,6 +43,8 @@ export function CoinSampleView({ game, modeId, backHref, playPath, onExit, onEve
   const [settled, setSettled] = useState<Settled | null>(null);
   const [attempt, setAttempt] = useState(0);
   const startedRef = useRef(false);
+  // A round is open between the accepted stake and its settlement; the wrapper must not replace the screen meanwhile.
+  const [inRound, setInRound] = useState(false);
   const walletRef = useRef(wallet);
   walletRef.current = wallet;
   const onEventRef = useRef(onEvent);
@@ -53,7 +55,7 @@ export function CoinSampleView({ game, modeId, backHref, playPath, onExit, onEve
     peek: () => walletRef.current.peek(),
     debit: (amount: number) => {
       const ok = walletRef.current.debit(amount);
-      if (ok && !startedRef.current) { startedRef.current = true; onEventRef.current("start"); }
+      if (ok && !startedRef.current) { startedRef.current = true; setInRound(true); onEventRef.current("start"); }
       return ok;
     },
     credit: (amount: number) => walletRef.current.credit(amount),
@@ -61,6 +63,7 @@ export function CoinSampleView({ game, modeId, backHref, playPath, onExit, onEve
   }), []);
   const onSettled = useCallback((r: Settled) => {
     startedRef.current = false;
+    setInRound(false);
     onEventRef.current("complete", { score: r.payout, outcome: r.status, stake: r.stake, payout: r.payout, balance: walletRef.current.peek() });
     setSettled(r);
   }, []);
@@ -80,9 +83,9 @@ export function CoinSampleView({ game, modeId, backHref, playPath, onExit, onEve
   // Stable per balance so the live screens' effects do not re-run on unrelated renders.
   const sampleChip = useMemo(() => ({ coins: wallet.coins }), [wallet.coins]);
 
-  const playAgain = () => { setSettled(null); onEventRef.current("replay"); setEngines(makeEngines()); setAttempt((a) => a + 1); };
+  const playAgain = () => { startedRef.current = false; setInRound(false); setSettled(null); onEventRef.current("replay"); setEngines(makeEngines()); setAttempt((a) => a + 1); };
   const resetAndPlay = () => { wallet.reset(); playAgain(); };
-  const outOfCoins = wallet.coins < MIN_STAKE[game];
+  const outOfCoins = !inRound && wallet.coins < MIN_STAKE[game];
   const cta = { modeId, returnTo: playPath, onBeforeLeave: onLeaveToRealGame, label: t("coinSample.playReal") };
 
   if (settled) {
@@ -100,7 +103,7 @@ export function CoinSampleView({ game, modeId, backHref, playPath, onExit, onEve
     );
   }
 
-  // Below the smallest stake with no round open (also reachable via the games' own "new round"): offer a reset, not a dead start screen.
+  // Between rounds and below the smallest stake: offer a reset, not a dead start screen.
   if (outOfCoins) {
     return (
       <DemoResultScreen
