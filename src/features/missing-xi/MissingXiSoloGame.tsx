@@ -39,10 +39,13 @@ export function MissingXiSoloGame({
   session,
   onBack,
   onComplete,
+  practice = false,
 }: {
   session: MissingXiSession;
   onBack: () => void;
   onComplete: (score: number, nextPath?: string) => void;
+  /** Sample rounds: skip the member completion modal. */
+  practice?: boolean;
 }) {
   const { t } = useLocale();
   const squads = session.squads;
@@ -293,6 +296,7 @@ export function MissingXiSoloGame({
 
       <QuitGameDialog open={showQuit} onOpenChange={setShowQuit} onQuit={onBack} />
       <DailyChallengeCompleteModal
+        practice={practice}
         open={done}
         title={t("play.missingXiTitle")}
         correct={totalNamed}

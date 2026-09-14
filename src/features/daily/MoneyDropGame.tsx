@@ -444,7 +444,15 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
     setTimeLeft(QUESTION_TIME);
   };
 
-  const formatMoney = (amount: number) => `${amount.toLocaleString()} coins`;
+  const formatMoney = (amount: number) => `${amount.toLocaleString()} ${t('dailyGames.coinsSuffix')}`;
+  const difficultyLabel = (difficulty: string) => {
+    switch (difficulty) {
+      case "easy": return t('dailyGames.difficultyEasy');
+      case "medium": return t('dailyGames.difficultyMedium');
+      case "hard": return t('dailyGames.difficultyHard');
+      default: return difficulty;
+    }
+  };
 
   const getDifficultyStyle = (difficulty: string) => {
     switch (difficulty) {
@@ -483,7 +491,7 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
               <div className="flex items-center justify-center gap-2">
                 <span className={cn("px-2.5 py-1 lg:px-3 lg:py-1.5 rounded-full text-xs lg:text-sm font-bold", getDifficultyStyle(currentQuestion.difficulty))}>
-                  {currentQuestion.difficulty.toUpperCase()}
+                  {difficultyLabel(currentQuestion.difficulty).toUpperCase()}
                 </span>
                 <span className="px-2.5 py-1 lg:px-3 lg:py-1.5 rounded-full text-xs lg:text-sm font-bold bg-brand-cyan/15 text-brand-cyan">
                   {currentQuestion.category}
