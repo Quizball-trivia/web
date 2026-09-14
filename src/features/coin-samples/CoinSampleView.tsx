@@ -19,7 +19,7 @@ import { randomSeed, seededRandom } from "./rng";
 
 export type CoinSampleGame = "trivia_mines" | "free_kicks" | "road_to_goal" | "squad_spin";
 const MIN_STAKE: Record<CoinSampleGame, number> = { trivia_mines: 5, free_kicks: 5, road_to_goal: 10, squad_spin: 5 };
-const TITLE: Record<CoinSampleGame, string> = { trivia_mines: "Trivia Mines", free_kicks: "Free Kicks", road_to_goal: "Road to Goal", squad_spin: "Squad Spin" };
+const TITLE_KEY = { trivia_mines: "triviaMines.title", free_kicks: "play.freeKicksTitle", road_to_goal: "play.roadToGoalTitle", squad_spin: "squadSpin.title" } as const;
 
 interface Settled { stake: number; payout: number; status: "cashed" | "lost" }
 
@@ -91,7 +91,7 @@ export function CoinSampleView({ game, modeId, backHref, playPath, onExit, onEve
   if (settled) {
     return (
       <DemoResultScreen
-        title={TITLE[game]}
+        title={t(TITLE_KEY[game])}
         score={settled.payout}
         subtitle={settled.status === "cashed" ? t("coinSample.won", { amount: settled.payout.toLocaleString(miniLocale) }) : t("coinSample.lost")}
         onReplay={outOfCoins ? resetAndPlay : playAgain}
@@ -107,7 +107,7 @@ export function CoinSampleView({ game, modeId, backHref, playPath, onExit, onEve
   if (outOfCoins) {
     return (
       <DemoResultScreen
-        title={TITLE[game]}
+        title={t(TITLE_KEY[game])}
         score={wallet.coins}
         subtitle={t("coinSample.outOfCoins")}
         onReplay={resetAndPlay}

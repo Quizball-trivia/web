@@ -120,3 +120,10 @@ Tests added: wallet hook (double debit, fractions, reset), deterministic 21-pick
   "no backend calls" promise is about the game API and wallet. Portraits stay null.
 - Deferred: out-of-coins threshold is the game's minimum stake (the stake pickers already let a player go lower);
   `refund/net/reason` fields on the completion event.
+
+### Staging browser test (Codex, 2026-09-14) — follow-ups
+- Fixed: practice chip added to Free Kicks and Road to Goal; exit pill sits below the mini-game header for those two (it covered the
+  balance in Georgian); Georgian Free Kicks subtitle translated; result-card titles use the app's title keys.
+- Not bugs: the 30 `/api/` requests are the app shell's phone-auth availability + geo hint (fire on every public page, sample or not);
+  Squad Spin's "×1.25 spin step" next to "next return ×1.08" is the live game's own display (fair step vs. banked pot after the
+  launch haircut) — the sample mirrors it exactly; "Play for real coins" is the intended CTA copy.
