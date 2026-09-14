@@ -1,6 +1,7 @@
 import type { Locale } from '@/lib/i18n/messages';
 import type { Footballer, Formation, PositionGroup, SeasonSnapshot } from '@/features/auction/types';
 import { FOOTBALLERS, SNAPSHOT_STAT_STEPS, getFootballerPlaceholderImage } from '@/features/auction/data';
+import { footballGridStorageImageUrl } from '@/lib/football-grid/assets';
 
 /**
  * Canonical lots for the training auction. Everything the tutorial asserts
@@ -25,6 +26,8 @@ interface LotFixture {
   id: string;
   /** Reuses the live roster's artwork where it exists. */
   artworkId: string;
+  /** Real portrait, relative to the public `imgs` bucket (same ids on every environment) — like the Grid training. */
+  portrait: string;
   name: LocalizedName;
   positionGroup: PositionGroup;
   nationality: string;
@@ -38,6 +41,7 @@ const LOTS: LotFixture[] = [
   {
     id: 'training-fwd-messi',
     artworkId: 'fwd-messi',
+    portrait: 'players/55989ce0-0b52-4553-a11d-42c03f5b9da1.webp',
     name: { en: 'Lionel Messi', ka: 'ლიონელ მესი', es: 'Lionel Messi', tr: 'Lionel Messi' },
     positionGroup: 'FWD',
     nationality: 'Argentina',
@@ -58,6 +62,7 @@ const LOTS: LotFixture[] = [
   {
     id: 'training-mid-zidane',
     artworkId: 'mid-zidane',
+    portrait: 'player-images/e4da368d-83e5-42c1-b1b2-4309d0299309.webp',
     name: { en: 'Zinedine Zidane', ka: 'ზინედინ ზიდანი', es: 'Zinedine Zidane', tr: 'Zinedine Zidane' },
     positionGroup: 'MID',
     nationality: 'France',
@@ -79,6 +84,7 @@ const LOTS: LotFixture[] = [
   {
     id: 'training-mid-iniesta',
     artworkId: 'mid-iniesta',
+    portrait: 'players/a2d0edec-b0f0-4753-82fc-2063465443be.webp',
     name: { en: 'Andrés Iniesta', ka: 'ანდრეს ინიესტა', es: 'Andrés Iniesta', tr: 'Andrés Iniesta' },
     positionGroup: 'MID',
     nationality: 'Spain',
@@ -99,6 +105,7 @@ const LOTS: LotFixture[] = [
   {
     id: 'training-gk-casillas',
     artworkId: 'gk-casillas',
+    portrait: 'players/46f4f931-c4da-4904-a559-eddd40d3aa87.webp',
     name: { en: 'Iker Casillas', ka: 'იკერ კასილიასი', es: 'Iker Casillas', tr: 'Iker Casillas' },
     positionGroup: 'GK',
     nationality: 'Spain',
@@ -133,7 +140,7 @@ export function trainingLotFootballer(index: number, locale: Locale): Footballer
     nationality: lot.nationality,
     club: lot.club,
     league: lot.league,
-    imageUrl: artwork ?? getFootballerPlaceholderImage(lot.artworkId),
+    imageUrl: footballGridStorageImageUrl(lot.portrait) ?? artwork ?? getFootballerPlaceholderImage(lot.artworkId),
   };
 }
 
