@@ -49,6 +49,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Los turnos tienen tiempo. Escribe un nombre: se aceptan apellidos, nombres completos, apodos habituales y erratas pequeñas. Si nadie puede llenar una casilla puedes pasar, y un tablero sin línea ganadora posible es empate. Los partidos igualados se resuelven al mejor de tres.",
       "La ronda de práctica de esta página se juega contra un bot con las mismas reglas. Los jugadores registrados se enfrentan a rivales reales en la app, guardan su historial y ganan puntos de clasificación; la práctica de invitado no otorga nada y no se guarda.",
     ],
+    tr: [
+      "Futbol Tic Tac Toe üçe üç bir ızgarada oynanır. Her satır ve her sütun bir kategori taşır: bir kulüp, bir ülke, bir lig, bir kupa ya da bir teknik direktör. Böylece her kare aynı anda iki kategoriyi temsil eder; kareyi, ikisine de uyan bir futbolcunun adını yazarak alırsın, örneğin Chelsea'de oynamış bir Brezilyalı.",
+      "Turlar süreye bağlıdır. Bir isim yaz; oyun soyadları, tam adları, yaygın lakapları ve küçük yazım hatalarını kabul eder. Kareyi kimse dolduramazsa pas geçebilirsin; kazanan bir çizgi kalmayan tahta beraberliktir. Yakın maçlar, şanslı bir tahta günü belirlemesin diye üç maçlık seri olarak oynanır.",
+      "Bu sayfadaki alıştırma turu aynı kurallarla bir bota karşı oynanır. Giriş yapmış oyuncular uygulamada gerçek rakiplerle karşılaşır, sicilini korur ve dereceli puan kazanır; misafir alıştırması hiçbir şey kazandırmaz ve kaydedilmez.",
+    ],
   },
   auction: {
     en: [
@@ -65,6 +70,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "La subasta de fútbol es un juego de pujas para hasta cuatro mánagers. Los futbolistas salen uno a uno, ocultos tras pistas sobre su carrera, posición y valor. Los mánagers pujan con un presupuesto inicial común; la puja más alta al caer el martillo ficha al jugador y las pistas revelan a quién compraste.",
       "El objetivo es un once completo en la formación elegida. Si pagas de más al principio te superarán en las pujas por los jugadores que necesitas después; si esperas demasiado, los buenos se habrán ido. Cuando todas las plantillas están completas, se valoran los equipos y gana el mejor equipo completo.",
       "La subasta de práctica de esta página se juega contra bots con presupuesto virtual y sin resultado guardado. En la app, los jugadores registrados pujan contra mánagers reales, ganan monedas y suben en el rango de subasta.",
+    ],
+    tr: [
+      "Futbol Müzayedesi dört menajere kadar oynanan bir açık artırma oyunudur. Futbolcular teker teker, kariyerleri, mevkileri ve değerleri hakkındaki ipuçlarının arkasına gizlenmiş olarak gelir. Menajerler ortak bir başlangıç bütçesinden teklif verir; tokmak indiğinde en yüksek teklif oyuncuyu alır ve ipuçları kimi aldığını ortaya çıkarır.",
+      "Amaç, seçilen dizilişte eksiksiz bir kadro kurmaktır. Erken aşamada fazla öde, sonra ihtiyacın olan oyuncularda geride kalırsın; çok bekle, iyiler gider. Her kadro dolduğunda takımlar puanlanır ve en iyi eksiksiz takım turu kazanır.",
+      "Bu sayfadaki alıştırma müzayedesi sanal bütçeyle botlara karşı oynanır ve sonuç kaydedilmez. Uygulamada giriş yapmış oyuncular gerçek menajerlere karşı teklif verir, jeton kazanır ve müzayede sıralamasında yükselir.",
     ],
   },
   "money-drop": {
@@ -83,6 +93,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "La confianza paga: apostarlo todo a una respuesta conserva todo el montón si aciertas y lo pierde todo si fallas. Repartir te protege pero reduce lo que conservas. Los comodines eliminan dos respuestas erróneas, revelan una pista o saltan una pregunta, una vez cada uno.",
       "Tu puntuación es lo que queda tras la quinta caída. La ronda de práctica usa un set de preguntas de muestra; el juego diario de la app trae un set nuevo cada día, da monedas por lo que conservas y cuenta para tu racha.",
     ],
+    tr: [
+      "Money Drop sana sanal bir kasa ve beş futbol sorusu verir. Her sorunun dört olası cevabı vardır ve paranı güvendiğin cevaplara dağıtırsın. Yanlış cevaplara konan para kapaklardan aşağı düşer; doğru cevaptaki para sende kalır.",
+      "Güven kazandırır: her şeyi tek bir cevaba koymak, haklıysan tüm yığını korur, yanılıyorsan hepsini kaybettirir. Bölmek seni korur ama elinde kalanı küçültür. Can simitleri birer kez iki yanlış cevabı eleyebilir, bir ipucu gösterebilir ya da bir soruyu atlayabilir.",
+      "Puanın, beşinci düşüşten sonra elinde kalandır. Alıştırma turu örnek bir soru seti kullanır; uygulamadaki günlük oyunun her gün yeni bir seti vardır, elinde kalan için jeton verir ve serine sayılır.",
+    ],
   },
   "true-or-false-football": {
     en: [
@@ -99,6 +114,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Verdadero o falso es el diario más rápido de Quizball. Aparece una afirmación de fútbol, desde traspasos hasta máximos goleadores, y tienes unos segundos para decidir si es verdadera o falsa. Responde antes de que acabe el tiempo; una respuesta tardía cuenta como fallo.",
       "Las afirmaciones están escritas para sonar creíbles en ambos sentidos, así que el juego premia el conocimiento real sobre la suerte. Cada acierto suma un punto y mantiene viva tu racha.",
       "La ronda de práctica usa una muestra fija. En la app llega un set nuevo cada día, los aciertos dan monedas y tus resultados alimentan la racha diaria.",
+    ],
+    tr: [
+      "Doğru mu Yanlış mı, Quizball'daki en hızlı günlük oyundur. Transfer bilgilerinden rekor golcülere kadar bir futbol ifadesi belirir ve doğru mu yanlış mı olduğuna karar vermek için birkaç saniyen vardır. Süre bitmeden cevapla; geç cevap ıska sayılır.",
+      "İfadeler her iki yönde de inandırıcı görünecek şekilde yazılır, bu yüzden oyun tahmini değil gerçek bilgiyi ödüllendirir. Her doğru karar bir puan getirir ve serini sürdürür; günlük set, başta gösterilen tur kurallarına göre son ifadeden ya da ilk yanlış cevabından sonra biter.",
+      "Buradaki alıştırma turu sabit bir örnek kullanır. Uygulamada her gün yeni bir ifade seti gelir, doğru kararlar jeton kazandırır ve sonuçların günlük serine işlenir.",
     ],
   },
   countdown: {
@@ -117,6 +137,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Los nombres se comparan con generosidad: se aceptan apellidos, formas cortas habituales y pequeños errores de escritura, y una entrada repetida simplemente se ignora. La ronda termina cuando el reloj llega a cero o la lista se completa.",
       "La ronda de práctica usa listas de muestra. La versión diaria de la app cambia las listas cada día, paga monedas por respuesta encontrada y suma a tu racha.",
     ],
+    tr: [
+      "Geri Sayım sana bir futbol listesi ve işleyen bir saat verir. Liste, Zlatan Ibrahimović'in oynadığı tüm kulüpler ya da son on Ballon d'Or kazananı olabilir. Süre bitmeden olabildiğince çok geçerli girdi yaz; kabul edilen her cevap bir puandır.",
+      "İsimler esnek eşleştirilir: soyadları, yaygın kısaltmalar ve küçük yazım hataları kabul edilir; daha önce verdiğin bir girdi yalnızca yok sayılır. Tur, saat sıfıra ulaştığında ya da liste tamamlandığında biter.",
+      "Alıştırma turu örnek listeler kullanır. Uygulamadaki günlük sürüm listeleri her gün değiştirir, bulunan cevap başına jeton öder ve serine ekler.",
+    ],
   },
   "higher-or-lower": {
     en: [
@@ -133,6 +158,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Más o menos enfrenta a dos futbolistas con un número oculto: goles en una temporada, precio de traspaso, internacionalidades, edad o valor de mercado. Ves la cifra del primero y decides si la del segundo es mayor o menor.",
       "Un acierto mantiene la racha y trae la siguiente pareja; el primer fallo termina la ronda. Las rondas son cortas y los números salen de registros verificados, así que el juego va de conocer el deporte, no de suerte.",
       "La ronda de práctica usa parejas de muestra. En la app, el set diario cambia cada día, las rondas superadas dan monedas y los resultados cuentan para tu racha.",
+    ],
+    tr: [
+      "Yüksek mi Düşük mü, iki futbolcuyu gizli bir sayıyla yan yana koyar: bir sezondaki goller, transfer ücreti, millî maç sayısı, yaş ya da piyasa değeri. İlk oyuncunun sayısını görürsün ve ikincininkinin daha yüksek mi yoksa daha düşük mü olduğuna karar verirsin.",
+      "Doğru bir karar seriyi sürdürür ve sonraki ikiliyi getirir; ilk yanlış karar turu bitirir. Turlar kısadır ve sayılar doğrulanmış kayıtlardan gelir, bu yüzden oyun şansla değil sporu bilmekle ilgilidir.",
+      "Alıştırma turu örnek ikililer kullanır. Uygulamada günlük set her gün değişir, geçilen turlar jeton kazandırır ve sonuçlar serine sayılır.",
     ],
   },
   imposter: {
@@ -151,6 +181,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Cada ronda tiene un tema y un número de impostores declarados. Selecciona exactamente a esos jugadores: cada selección correcta cuenta y cada error resta. La ronda se puntúa al confirmar o cuando se agota el tiempo.",
       "La ronda de práctica usa grupos de muestra. En la app los grupos cambian a diario, las rondas correctas dan monedas y tus resultados construyen la racha diaria.",
     ],
+    tr: [
+      "Sahtekâr sana ortak bir şeyi paylaşan bir futbolcu grubu gösterir, örneğin oynadıkları bir kulüp ya da kazandıkları bir kupa; ancak biri ya da ikisi gruba ait değildir. Görevin, süre bitmeden sahtekârları bulup seçmektir.",
+      "Her turun belirtilen bir teması ve belirtilen sayıda sahtekârı vardır. Tam olarak o oyuncuları seç: her doğru seçim sayılır, her yanlış seçim puan kaybettirir. Tur, onayladığında ya da süre bittiğinde puanlanır.",
+      "Alıştırma turu örnek gruplar kullanır. Uygulamada gruplar her gün değişir, doğru turlar jeton kazandırır ve sonuçların günlük serini oluşturur.",
+    ],
   },
   "card-detective": {
     en: [
@@ -167,6 +202,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Detective de cartas te entrega una carta de jugador con todas las casillas bloqueadas: valoración general, posición, club, país, liga y edición de la carta. Cada casilla es una pista con su precio en monedas. Abre las pistas que necesites y nombra al jugador.",
       "Empiezas cada carta con un presupuesto. Las pistas baratas dicen poco, las caras casi lo regalan, así que la habilidad está en saber qué única revelación te permitirá acertar. Nombra bien al jugador y conservas lo que no gastaste; agota el presupuesto y la carta se pierde.",
       "Diez cartas forman un día. La ronda de práctica de esta página usa un set de cartas de muestra; el juego diario de la app cambia las cartas cada día, paga monedas por lo que conservas y cuenta para tu racha.",
+    ],
+    tr: [
+      "Kart Dedektifi sana her alanı kilitli bir oyuncu kartı verir: genel reyting, mevki, kulüp, ülke, lig ve kartın sürümü. Her alan, jeton cinsinden kendi fiyatı olan bir ipucudur. İhtiyacın olan ipuçlarını aç, sonra oyuncunun adını söyle.",
+      "Her karta bir bütçeyle başlarsın. Ucuz ipuçları az şey söyler, pahalı ipuçları neredeyse cevabı verir; beceri, hangi tek açığın tahmin etmeni sağlayacağını bilmektir. Oyuncuyu doğru bilirsen harcamadığını korursun; bütçen biterse kart kaybedilir.",
+      "Bir gün on karttan oluşur. Bu sayfadaki alıştırma turu örnek bir kart seti kullanır; uygulamadaki günlük oyun kartları her gün değiştirir, koruduğun için jeton öder ve serine sayılır.",
     ],
   },
   "guess-the-goal": {
@@ -185,6 +225,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Menos pistas, más puntos: nombra al goleador solo con el clip para el máximo, o revela la temporada, la competición o el club por una recompensa menor. Cinco goles forman una ronda.",
       "La ronda de práctica usa un set fijo de clips. En la app llegan cinco goles nuevos cada día, los nombres correctos dan monedas y los resultados cuentan para tu racha.",
     ],
+    tr: [
+      "Golü Tahmin Et, golü atan gizlenmiş gerçek bir gol klibi oynatır. Hücumu, vuruşu ve sevinci izle, sonra golü atan oyuncunun adını söyle. Klipler son otuz yılın ünlü finallerini, derbilerini ve efsanevi gollerini kapsar.",
+      "Daha az ipucu daha çok puan demektir: en yüksek puan için golcüyü yalnızca klipten bil ya da daha küçük bir ödül için sezonu, turnuvayı veya kulübü aç. Bir tur beş golden oluşur.",
+      "Alıştırma turu sabit bir klip seti kullanır. Uygulamada her gün beş yeni gol gelir, doğru isimler jeton kazandırır ve sonuçlar serine sayılır.",
+    ],
   },
   "trivia-mines": {
     en: [
@@ -201,6 +246,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Minas de trivia es un buscaminas futbolero. Veinticinco casillas esconden cuatro defensas. Eliges una apuesta, abres casillas de una en una y cada casilla segura multiplica el bote por la probabilidad justa de esa elección. Si tocas un defensa la apuesta se pierde; retira antes y el bote es tuyo.",
       "Puedes explorar hasta tres veces por ronda: responde bien una pregunta de fútbol y se marca un defensa oculto. Explorar reduce el riesgo de las siguientes elecciones y los multiplicadores bajan con él, así que el retorno es el mismo juegues como juegues. La casa se queda el tres por ciento al retirar.",
       "En esta página juegas con puntos de práctica que no se pueden retirar ni convertir. En la app, los jugadores registrados apuestan monedas reales de su cartera, entre cinco y quinientas, con un bote limitado.",
+    ],
+    tr: [
+      "Trivia Mines bir futbol mayın tarlasıdır. Yirmi beş karo dört defans oyuncusunu gizler. Bir bahis seçersin, karoları teker teker açarsın ve her güvenli karo potu o seçimin adil oranıyla çarpar. Bir defans oyuncusuna denk gelirsen bahis gider; ondan önce parayı çekersen pot senindir.",
+      "Her turda üç kez keşif yapabilirsin: bir futbol sorusunu doğru cevapla, gizli bir defans oyuncusu işaretlenir. Keşif sonraki seçimlerin riskini düşürür ve çarpanlar da onunla küçülür, böylece nasıl oynarsan oyna beklenen getiri aynı kalır. Para çekişte kasa yüzde üç alır.",
+      "Bu sayfada çekilemeyen ve dönüştürülemeyen alıştırma puanlarıyla oynarsın. Uygulamada giriş yapmış oyuncular cüzdanlarından gerçek jeton yatırır; bahisler beş ile beş yüz arasındadır ve potun üst sınırı vardır.",
     ],
   },
   "football-logic": {
@@ -219,6 +269,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Hay tres tipos: un traspaso contado con dos escudos, una carrera que solo encaja con un jugador, y puro juego de palabras donde las imágenes suenan como un nombre. Se aceptan apellidos y erratas pequeñas; un fallo muestra la respuesta para que aprendas el truco antes del siguiente.",
       "La ronda de práctica usa un set fijo de acertijos. En la app llegan cinco nuevos cada día, cada acierto da monedas y el día cuenta para tu racha.",
     ],
+    tr: [
+      "Futbol Mantığı bir resimli bilmecedir. Yan yana iki görsel belirir: bir kulüp arması yanında bir simge yapı, bir bayrak yanında bir nesne, bir emoji çifti; birlikte tek bir futbolcuya, tek bir transfere ya da tek bir ünlü ana işaret ederler. İkiliyi oku, cevabı yaz ve sonraki bilmece gelsin.",
+      "Bilmeceler üç çeşittir: iki armayla anlatılan bir transfer, yalnızca tek bir oyuncuya uyan bir kariyer ve resimlerin bir ismi seslendirdiği saf kelime oyunu. Soyadları ve küçük yazım hataları kabul edilir; yanlış bir tahmin cevabı gösterir, böylece sonrakinden önce hileyi öğrenirsin.",
+      "Alıştırma turu sabit bir bilmece seti kullanır. Uygulamada her gün beş yeni bilmece gelir, her doğru cevap jeton kazandırır ve gün serine sayılır.",
+    ],
   },
   "missing-xi": {
     en: [
@@ -235,6 +290,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Once perdido muestra una alineación famosa como once camisetas sobre el campo, en la formación real, con todos los nombres ocultos. El partido está identificado, por ejemplo una final de Champions, y tu tarea es nombrar al jugador que salió de inicio en cada posición. Toca una camiseta, escribe el nombre y sigue.",
       "Cada alineación está verificada con el acta oficial del partido, así que la formación y los once titulares son exactos. Los nombres se comparan con generosidad. Puedes saltar una camiseta que no recuerdes; saltarla revela la cara y el nombre para que el once quede completo al final.",
       "Tres alineaciones forman un día. La ronda de práctica usa equipos de muestra; el juego diario de la app cambia las alineaciones cada día, paga monedas por camiseta acertada y cuenta para tu racha.",
+    ],
+    tr: [
+      "Kayıp XI ünlü bir ilk on biri sahada on bir forma olarak, gerçek dizilişte ve her isim gizli şekilde gösterir. Maç adlandırılmıştır, örneğin bir Şampiyonlar Ligi finali; görevin her mevkide maça başlayan oyuncunun adını söylemektir. Bir formaya dokun, ismi yaz, devam et.",
+      "Her ilk on bir resmî maç kaydına göre doğrulanır, bu yüzden diziliş ve on bir oyuncu tam olarak doğrudur. İsimler İngilizce ve Gürcüce yazımlarıyla esnek eşleştirilir. Hatırlayamadığın bir formayı atlayabilirsin; atlamak yüzü ve ismi açar, böylece kadro sonunda yine eksiksiz görünür.",
+      "Bir gün üç ilk on birden oluşur. Alıştırma turu örnek kadrolar kullanır; uygulamadaki günlük oyun kadroları her gün değiştirir, bilinen forma başına jeton öder ve serine sayılır.",
     ],
   },
   "pass-chain": {
@@ -253,6 +313,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Cada eslabón se comprueba contra un grafo de carreras verificado, así que una respuesta solo cuenta si los dos jugadores coincidieron de verdad. Menos eslabones, más puntos: cada puzle tiene una ruta más corta conocida y el objetivo es igualarla o mejorarla. Si te atascas, revela la cadena más corta y sigue.",
       "Dos puzles forman un día, uno de calentamiento y otro que necesita un puente menos evidente. La ronda de práctica usa puzles de muestra; el juego diario de la app los cambia cada día, paga monedas por solución y cuenta para tu racha.",
     ],
+    tr: [
+      "Pas Zinciri sana hiç birlikte oynamamış iki futbolcu verir ve onları bağlamanı ister. Zincirin şu anki ucuyla bir kulübü, bir teknik direktörü ya da bir soyunma odasını paylaşmış bir oyuncu yaz; bağlantı gerçekse zincir bir halka uzar ve yeni oyuncu uç olur. Hedefe ulaştığında bulmaca çözülmüştür.",
+      "Her halka doğrulanmış bir kariyer grafiğine göre kontrol edilir, bu yüzden bir tahmin yalnızca iki oyuncu gerçekten aynı dönemde bulunmuşsa sayılır. Daha az halka daha çok puan getirir: her bulmacanın bilinen bir en kısa yolu vardır ve onu yakalamak ya da geçmek hedeftir. Takılırsan en kısa zinciri açıp devam et.",
+      "Bir gün iki bulmacadan oluşur: bir ısınma ve daha az belirgin bir köprü gerektiren bir tane. Alıştırma turu örnek bulmacalar kullanır; uygulamadaki günlük oyun bulmacaları her gün değiştirir, çözüm başına jeton öder ve serine sayılır.",
+    ],
   },
   "stat-sniper": {
     en: [
@@ -269,6 +334,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Francotirador de datos es un juego de números. Cada pregunta nombra una estadística real del fútbol, como los goles de un jugador en una temporada, el fichaje récord de un club o el aforo de un estadio, y te da un deslizador sobre un rango plausible. Mueve el deslizador hasta tu estimación y fíjala antes de que acabe el tiempo.",
       "Se puntúa por proximidad: el valor exacto vale 100 y los puntos bajan cuanto más lejos caes, hasta cero a un cuarto del recorrido del deslizador. Diez preguntas forman una ronda y tu precisión es la media, así que una serie de estimaciones cercanas gana a un pleno y nueve disparates.",
       "Cada dato es trazable a su conjunto de datos. La ronda de práctica usa un set de muestra; en la app todos reciben las mismas diez preguntas cada día y la clasificación de precisión del día los ordena, con monedas por tu puntuación y un lugar en tu racha.",
+    ],
+    tr: [
+      "Stat Sniper bir sayı oyunudur. Her soru gerçek bir futbol istatistiği söyler, örneğin bir oyuncunun bir sezondaki lig golleri, bir kulübün rekor transfer ücreti ya da bir stadın kapasitesi, ve sana makul bir aralıkta bir kaydırıcı verir. Kaydırıcıyı tahminine getir ve süre bitmeden kilitle.",
+      "Puanlama yakınlığa göredir: tam değer 100 puan verir ve ondan uzaklaştıkça puan azalır, kaydırıcı aralığının dörtte birinde sıfıra iner. Bir tur on sorudan oluşur ve isabetin ortalamadır; bu yüzden bir dizi yakın tahmin, bir tam isabet ve dokuz uzak tahmini yener.",
+      "Her bilgi veri setine kadar izlenebilir. Alıştırma turu örnek bir set kullanır; uygulamada her oyuncu her gün aynı on soruyu alır ve günün isabet liderlik tablosu onları sıralar; puanın için jeton ve serinde bir yer vardır.",
     ],
   },
   "free-kicks": {
@@ -287,6 +357,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Al tirar eliges una zona; el portero se lanza a una de las zonas abiertas y el bote paga según cuántas había abiertas, así que más aciertos significan un tiro más seguro y un multiplicador mayor. Falla y la apuesta se pierde; marca y puedes retirar o jugar otro ataque con el bote en juego.",
       "En esta página juegas con puntos de práctica que no se pueden retirar. En la app, los jugadores registrados apuestan monedas reales de su cartera, con las mismas probabilidades justas y el margen de la casa visible en cada estado.",
     ],
+    tr: [
+      "Serbest Vuruşlar, kale duvarlı bir jeton oyunudur. Jeton yatırırsın ve her hücum bir futbol sorusuyla başlar. Doğru cevap kalenin bir bölümünü daha açar ve sonraki soruyu sorar; yanlış cevap ya da süre aşımı cevaplamayı kilitler, böylece açık ne varsa onunla şut çekmen gerekir.",
+      "Şut çektiğinde bir bölge seçersin; kaleci açık bölgelerden birine uzanır ve pot kaç bölgenin açık olduğuna göre öder; yani daha çok doğru cevap daha güvenli bir şut ve daha büyük bir çarpan demektir. Kaçırırsan bahis gider; gol atarsan parayı çekebilir ya da potu ortaya koyarak yeni bir hücum yapabilirsin.",
+      "Bu sayfada çekilemeyen alıştırma puanlarıyla oynarsın. Uygulamada giriş yapmış oyuncular cüzdanlarından gerçek jeton yatırır; aynı adil oranlar ve her durumda gösterilen kasa payı geçerlidir.",
+    ],
   },
   "road-to-goal": {
     en: [
@@ -304,6 +379,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Tras cada zona decides: retirar lo que vale la escalera hasta ahora o seguir a la siguiente pregunta con todo el bote en juego. Un fallo o el tiempo agotado termina la racha y la apuesta se pierde. Superar las once zonas paga el tope de la escalera.",
       "En esta página juegas solo con puntos de práctica. En la app, los jugadores registrados apuestan monedas reales en cantidades fijas, el orden de las preguntas se fija antes de empezar y la prueba de la ronda puede verificarse después.",
     ],
+    tr: [
+      "Gole Giden Yol, kendi ceza sahandan rakip kaleye on bir bölgelik bir merdivendir. Sabit bir bahis seçersin, sonra on beş saniyelik süre altında bölge başına bir futbol sorusu cevaplarsın. Her doğru cevap seni bir bölge yukarı taşır ve çarpanı yükseltir; kaleye yaklaştıkça sorular zorlaşır.",
+      "Her bölgeden sonra karar verirsin: merdivenin o ana kadarki değerini çek ya da tüm potu riske atarak sonraki soruya devam et. Bir yanlış cevap ya da süre aşımı koşuyu bitirir ve bahis kaybedilir. On bir bölgenin tamamını geçmek merdivenin tepesini öder.",
+      "Bu sayfada yalnızca alıştırma puanlarıyla oynarsın. Uygulamada giriş yapmış oyuncular sabit tutarlarda gerçek jeton yatırır, soru sırası koşu başlamadan önce sabitlenir ve tur kanıtı sonradan doğrulanabilir.",
+    ],
   },
   "squad-spin": {
     en: [
@@ -320,6 +400,11 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Squad Spin es una racha de giros. Cada giro deja tres carretes en un club, una posición y un país, y tienes quince segundos para nombrar un futbolista que encaje en los tres, por ejemplo un delantero brasileño que jugó en el Chelsea. Las rachas de cuatro y cinco carretes añaden liga, entrenador o trofeo y pagan más por giro.",
       "Un acierto multiplica el bote; después eliges retirar o girar de nuevo antes de ver los siguientes carretes, así que nunca puedes mirar primero. Un fallo o el tiempo agotado termina la racha y la apuesta se pierde. Cada combinación tiene al menos una respuesta verificada y los nombres se aceptan con tolerancia a erratas.",
       "En esta página juegas solo con puntos de práctica. En la app, los jugadores registrados apuestan monedas reales, los multiplicadores salen de la precisión medida por nivel de dificultad y las rachas se limitan a diez giros y cuarenta veces la apuesta.",
+    ],
+    tr: [
+      "Kadro Çarkı bir dizi çevirmedir. Her çevirme üç makarayı bir kulüp, bir mevki ve bir ülkeye oturtur ve üçüne de uyan bir futbolcunun adını söylemek için on beş saniyen vardır, örneğin Chelsea'de oynamış Brezilyalı bir forvet. Dört ve beş makaralı koşular bir lig, bir teknik direktör ya da bir kupa ekler ve çevirme başına daha çok öder.",
+      "Doğru cevap potu çarpar; sonra, sonraki makaralar gösterilmeden önce parayı çekmeyi ya da yeniden çevirmeyi seçersin, yani asla önceden bakamazsın. Yanlış cevap ya da süre aşımı koşuyu bitirir ve bahis kaybedilir. Her kombinasyonun en az bir doğrulanmış cevabı vardır; isimler yazım hatası toleransıyla İngilizce ve Gürcüce yazımlarıyla kabul edilir.",
+      "Bu sayfada yalnızca alıştırma puanlarıyla oynarsın. Uygulamada giriş yapmış oyuncular gerçek jeton yatırır, çarpanlar zorluk seviyesi başına ölçülen isabetten gelir ve koşular on çevirme ve bahsin kırk katıyla sınırlıdır.",
     ],
   },
 };
