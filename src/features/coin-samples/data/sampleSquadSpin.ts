@@ -614,130 +614,6 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
     ]
   },
   {
-    "id": "f758165f-4616-474b-91de-4f4d9001601a",
-    "tier": "t3e",
-    "reels": [
-      {
-        "id": "a042882c-7faa-45f1-a655-e905fa4611fa",
-        "family": "club",
-        "key": "club:sporting-cp",
-        "label_en": "Sporting CP",
-        "label_ka": "Sporting CP",
-        "asset_key": "sporting-cp"
-      },
-      {
-        "family": "position",
-        "id": "DEF",
-        "key": "DEF",
-        "label_en": "Defender",
-        "label_ka": "მცველი",
-        "asset_key": null
-      },
-      {
-        "id": "b9049dee-5692-4881-8eb3-5716e4f814bf",
-        "family": "country",
-        "key": "country:nl",
-        "label_en": "Netherlands",
-        "label_ka": "ნიდერლანდები",
-        "asset_key": "nl"
-      }
-    ],
-    "answers": [
-      {
-        "id": "69c80321-d3bd-44fa-9632-8e9aeccedc93",
-        "name_en": "Jeremiah St. Juste",
-        "name_ka": "ჯერემია სენტ-ჯუსტი",
-        "image_url": null
-      },
-      {
-        "id": "dc0346b9-726b-45cd-93b8-83cb99b0c08e",
-        "name_en": "Khalid Boulahrouz",
-        "name_ka": "ხალიდ ბულაჰრუზი",
-        "image_url": null
-      },
-      {
-        "id": "f50c01d5-e1b4-4b1f-b2a2-bad72af78dc4",
-        "name_en": "Douglas",
-        "name_ka": "დუგლასი",
-        "image_url": null
-      }
-    ],
-    "aliases": [
-      {
-        "player_id": "dc0346b9-726b-45cd-93b8-83cb99b0c08e",
-        "alias": "boulahrouz",
-        "locale": "en",
-        "policy": "unique_only"
-      },
-      {
-        "player_id": "dc0346b9-726b-45cd-93b8-83cb99b0c08e",
-        "alias": "boulahrouz khalid",
-        "locale": "en",
-        "policy": "unique_only"
-      },
-      {
-        "player_id": "f50c01d5-e1b4-4b1f-b2a2-bad72af78dc4",
-        "alias": "douglas",
-        "locale": "en",
-        "policy": "exact"
-      },
-      {
-        "player_id": "69c80321-d3bd-44fa-9632-8e9aeccedc93",
-        "alias": "jeremiah",
-        "locale": "en",
-        "policy": "unique_only"
-      },
-      {
-        "player_id": "69c80321-d3bd-44fa-9632-8e9aeccedc93",
-        "alias": "jeremiah st juste",
-        "locale": "en",
-        "policy": "exact"
-      },
-      {
-        "player_id": "69c80321-d3bd-44fa-9632-8e9aeccedc93",
-        "alias": "juste",
-        "locale": "en",
-        "policy": "unique_only"
-      },
-      {
-        "player_id": "69c80321-d3bd-44fa-9632-8e9aeccedc93",
-        "alias": "juste jeremiah st",
-        "locale": "en",
-        "policy": "unique_only"
-      },
-      {
-        "player_id": "dc0346b9-726b-45cd-93b8-83cb99b0c08e",
-        "alias": "khalid",
-        "locale": "en",
-        "policy": "unique_only"
-      },
-      {
-        "player_id": "dc0346b9-726b-45cd-93b8-83cb99b0c08e",
-        "alias": "khalid boulahrouz",
-        "locale": "en",
-        "policy": "exact"
-      },
-      {
-        "player_id": "f50c01d5-e1b4-4b1f-b2a2-bad72af78dc4",
-        "alias": "დუგლას ლუისი",
-        "locale": "ka",
-        "policy": "exact"
-      },
-      {
-        "player_id": "dc0346b9-726b-45cd-93b8-83cb99b0c08e",
-        "alias": "ხალიდ ბულაჰრუზი",
-        "locale": "ka",
-        "policy": "exact"
-      },
-      {
-        "player_id": "69c80321-d3bd-44fa-9632-8e9aeccedc93",
-        "alias": "ჯერემია სენტ ჯუსტი",
-        "locale": "ka",
-        "policy": "exact"
-      }
-    ]
-  },
-  {
     "id": "db37f01c-33b6-45dc-b939-a9dda4967dfd",
     "tier": "t3e",
     "reels": [
@@ -1358,112 +1234,6 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
     ]
   },
   {
-    "id": "16cfc6eb-10da-45c3-8790-26c98532cc90",
-    "tier": "t3e",
-    "reels": [
-      {
-        "id": "e77872a5-e613-4052-b192-e1a926d9c554",
-        "family": "club",
-        "key": "club:sc-braga",
-        "label_en": "SC Braga",
-        "label_ka": "SC Braga",
-        "asset_key": "sc-braga"
-      },
-      {
-        "family": "position",
-        "id": "FWD",
-        "key": "FWD",
-        "label_en": "Forward",
-        "label_ka": "თავდამსხმელი",
-        "asset_key": null
-      },
-      {
-        "id": "1167f154-6b3e-46f4-bacd-f3d916069427",
-        "family": "country",
-        "key": "country:br",
-        "label_en": "Brazil",
-        "label_ka": "ბრაზილია",
-        "asset_key": "br"
-      }
-    ],
-    "answers": [
-      {
-        "id": "4febb57a-a643-42d8-b92f-e6d06973b5b8",
-        "name_en": "Lima",
-        "name_ka": "ლიმა",
-        "image_url": null
-      },
-      {
-        "id": "5e217174-f3a2-446f-90da-8d45ca48f2c9",
-        "name_en": "Michel",
-        "name_ka": "მიჩელი",
-        "image_url": null
-      },
-      {
-        "id": "e1735d8f-e154-4cbf-a052-3c2d195aa13a",
-        "name_en": "Galeno",
-        "name_ka": "გალენო",
-        "image_url": null
-      },
-      {
-        "id": "ea3660e1-ff91-4c47-b1b3-0c2edf74ab38",
-        "name_en": "Alan",
-        "name_ka": "ალან შირერი",
-        "image_url": null
-      }
-    ],
-    "aliases": [
-      {
-        "player_id": "ea3660e1-ff91-4c47-b1b3-0c2edf74ab38",
-        "alias": "alan",
-        "locale": "en",
-        "policy": "exact"
-      },
-      {
-        "player_id": "e1735d8f-e154-4cbf-a052-3c2d195aa13a",
-        "alias": "galeno",
-        "locale": "en",
-        "policy": "exact"
-      },
-      {
-        "player_id": "4febb57a-a643-42d8-b92f-e6d06973b5b8",
-        "alias": "lima",
-        "locale": "en",
-        "policy": "exact"
-      },
-      {
-        "player_id": "5e217174-f3a2-446f-90da-8d45ca48f2c9",
-        "alias": "michel",
-        "locale": "en",
-        "policy": "exact"
-      },
-      {
-        "player_id": "ea3660e1-ff91-4c47-b1b3-0c2edf74ab38",
-        "alias": "ალან შირერი",
-        "locale": "ka",
-        "policy": "exact"
-      },
-      {
-        "player_id": "e1735d8f-e154-4cbf-a052-3c2d195aa13a",
-        "alias": "გალენო",
-        "locale": "ka",
-        "policy": "exact"
-      },
-      {
-        "player_id": "4febb57a-a643-42d8-b92f-e6d06973b5b8",
-        "alias": "ლიმა",
-        "locale": "ka",
-        "policy": "exact"
-      },
-      {
-        "player_id": "5e217174-f3a2-446f-90da-8d45ca48f2c9",
-        "alias": "მიჩელი",
-        "locale": "ka",
-        "policy": "exact"
-      }
-    ]
-  },
-  {
     "id": "86e9968a-f684-44b5-bb37-16b5475df71b",
     "tier": "t3e",
     "reels": [
@@ -1826,6 +1596,344 @@ export const SAMPLE_SQUAD_SPIN_COMBOS: SampleSquadSpinCombo[] = [
       {
         "player_id": "fc39f30b-a21f-469b-be69-7a7ebacc7c33",
         "alias": "ხოაკინ კორეა",
+        "locale": "ka",
+        "policy": "exact"
+      }
+    ]
+  },
+  {
+    "id": "4d96656f-3e39-42b9-a5d3-932c00b9a91b",
+    "tier": "t3e",
+    "reels": [
+      {
+        "id": "3ba2f194-7076-41b1-9d92-278233f8247f",
+        "family": "club",
+        "key": "club:ac-milan",
+        "label_en": "AC Milan",
+        "label_ka": "AC Milan",
+        "asset_key": "ac-milan"
+      },
+      {
+        "family": "position",
+        "id": "FWD",
+        "key": "FWD",
+        "label_en": "Forward",
+        "label_ka": "თავდამსხმელი",
+        "asset_key": null
+      },
+      {
+        "id": "6d6f23c6-3ee4-42f1-87a3-faf78f37242e",
+        "family": "country",
+        "key": "country:hr",
+        "label_en": "Croatia",
+        "label_ka": "ხორვატია",
+        "asset_key": "hr"
+      }
+    ],
+    "answers": [
+      {
+        "id": "342bb29b-3466-44e9-abe5-b3fbcabd0693",
+        "name_en": "Nikola Kalinic",
+        "name_ka": "ნიკოლა კალინიჩი",
+        "image_url": null
+      },
+      {
+        "id": "6d26b2f2-ab25-4be2-900e-4a2d0302e884",
+        "name_en": "Ante Rebić",
+        "name_ka": "ანტე რებიჩი",
+        "image_url": null
+      },
+      {
+        "id": "afacf855-4426-4fca-b2fe-33afe829a562",
+        "name_en": "Mario Mandzukic",
+        "name_ka": "მარიო მანჯუკიჩი",
+        "image_url": null
+      }
+    ],
+    "aliases": [
+      {
+        "player_id": "6d26b2f2-ab25-4be2-900e-4a2d0302e884",
+        "alias": "ante rebic",
+        "locale": "en",
+        "policy": "exact"
+      },
+      {
+        "player_id": "342bb29b-3466-44e9-abe5-b3fbcabd0693",
+        "alias": "kalinic",
+        "locale": "en",
+        "policy": "unique_only"
+      },
+      {
+        "player_id": "342bb29b-3466-44e9-abe5-b3fbcabd0693",
+        "alias": "kalinic nikola",
+        "locale": "en",
+        "policy": "unique_only"
+      },
+      {
+        "player_id": "afacf855-4426-4fca-b2fe-33afe829a562",
+        "alias": "mandzuchic",
+        "locale": "en",
+        "policy": "unique_only"
+      },
+      {
+        "player_id": "afacf855-4426-4fca-b2fe-33afe829a562",
+        "alias": "mandzukic",
+        "locale": "en",
+        "policy": "unique_only"
+      },
+      {
+        "player_id": "afacf855-4426-4fca-b2fe-33afe829a562",
+        "alias": "mandzukic mario",
+        "locale": "en",
+        "policy": "unique_only"
+      },
+      {
+        "player_id": "afacf855-4426-4fca-b2fe-33afe829a562",
+        "alias": "mandzunic",
+        "locale": "en",
+        "policy": "unique_only"
+      },
+      {
+        "player_id": "afacf855-4426-4fca-b2fe-33afe829a562",
+        "alias": "mario mandzukic",
+        "locale": "en",
+        "policy": "exact"
+      },
+      {
+        "player_id": "342bb29b-3466-44e9-abe5-b3fbcabd0693",
+        "alias": "nikola kalinic",
+        "locale": "en",
+        "policy": "exact"
+      },
+      {
+        "player_id": "6d26b2f2-ab25-4be2-900e-4a2d0302e884",
+        "alias": "rebic",
+        "locale": "en",
+        "policy": "unique_only"
+      },
+      {
+        "player_id": "6d26b2f2-ab25-4be2-900e-4a2d0302e884",
+        "alias": "rebic ante",
+        "locale": "en",
+        "policy": "unique_only"
+      },
+      {
+        "player_id": "6d26b2f2-ab25-4be2-900e-4a2d0302e884",
+        "alias": "ანტე რებიჩი",
+        "locale": "ka",
+        "policy": "exact"
+      },
+      {
+        "player_id": "afacf855-4426-4fca-b2fe-33afe829a562",
+        "alias": "მანჯუკიჩ",
+        "locale": "ka",
+        "policy": "unique_only"
+      },
+      {
+        "player_id": "afacf855-4426-4fca-b2fe-33afe829a562",
+        "alias": "მანჯუკიჩი",
+        "locale": "ka",
+        "policy": "unique_only"
+      },
+      {
+        "player_id": "afacf855-4426-4fca-b2fe-33afe829a562",
+        "alias": "მარიო მანჯუკიჩ",
+        "locale": "ka",
+        "policy": "unique_only"
+      },
+      {
+        "player_id": "afacf855-4426-4fca-b2fe-33afe829a562",
+        "alias": "მარიო მანჯუკიჩი",
+        "locale": "ka",
+        "policy": "exact"
+      },
+      {
+        "player_id": "342bb29b-3466-44e9-abe5-b3fbcabd0693",
+        "alias": "ნიკოლა კალინიჩი",
+        "locale": "ka",
+        "policy": "exact"
+      }
+    ]
+  },
+  {
+    "id": "774e7242-5be3-4f78-b485-b96dd72b56dd",
+    "tier": "t3e",
+    "reels": [
+      {
+        "id": "b031040f-a2f1-49e7-9ee8-61352ec250be",
+        "family": "club",
+        "key": "club:liverpool",
+        "label_en": "Liverpool",
+        "label_ka": "Liverpool",
+        "asset_key": "liverpool"
+      },
+      {
+        "family": "position",
+        "id": "FWD",
+        "key": "FWD",
+        "label_en": "Forward",
+        "label_ka": "თავდამსხმელი",
+        "asset_key": null
+      },
+      {
+        "id": "a1425bcb-8faf-4064-8482-ae01e8c84c7c",
+        "family": "country",
+        "key": "country:es",
+        "label_en": "Spain",
+        "label_ka": "ესპანეთი",
+        "asset_key": "es"
+      }
+    ],
+    "answers": [
+      {
+        "id": "544122df-f446-4316-b16f-cde987e7b4d3",
+        "name_en": "Fernando Morientes",
+        "name_ka": "ფერნანდო მორიენტესი",
+        "image_url": null
+      },
+      {
+        "id": "6ac3cea7-1781-4eaa-9f70-6f535bda501a",
+        "name_en": "Sergi Canós",
+        "name_ka": "სერჟი კანოსი",
+        "image_url": null
+      },
+      {
+        "id": "97071d07-75c8-45ab-ac93-b3ebc7435729",
+        "name_en": "Iago Aspas",
+        "name_ka": "იაგო ასპასი",
+        "image_url": null
+      },
+      {
+        "id": "c9692588-f93b-4035-8737-8f625d1ec829",
+        "name_en": "Fernando Torres",
+        "name_ka": "ფერნანდო ტორესი",
+        "image_url": null
+      }
+    ],
+    "aliases": [
+      {
+        "player_id": "97071d07-75c8-45ab-ac93-b3ebc7435729",
+        "alias": "aspas",
+        "locale": "en",
+        "policy": "unique_only"
+      },
+      {
+        "player_id": "97071d07-75c8-45ab-ac93-b3ebc7435729",
+        "alias": "aspas iago",
+        "locale": "en",
+        "policy": "unique_only"
+      },
+      {
+        "player_id": "6ac3cea7-1781-4eaa-9f70-6f535bda501a",
+        "alias": "canos",
+        "locale": "en",
+        "policy": "unique_only"
+      },
+      {
+        "player_id": "6ac3cea7-1781-4eaa-9f70-6f535bda501a",
+        "alias": "canos sergi",
+        "locale": "en",
+        "policy": "unique_only"
+      },
+      {
+        "player_id": "c9692588-f93b-4035-8737-8f625d1ec829",
+        "alias": "el nino",
+        "locale": "en",
+        "policy": "unique_only"
+      },
+      {
+        "player_id": "c9692588-f93b-4035-8737-8f625d1ec829",
+        "alias": "el nino torres",
+        "locale": "en",
+        "policy": "unique_only"
+      },
+      {
+        "player_id": "544122df-f446-4316-b16f-cde987e7b4d3",
+        "alias": "f morientes",
+        "locale": "en",
+        "policy": "unique_only"
+      },
+      {
+        "player_id": "c9692588-f93b-4035-8737-8f625d1ec829",
+        "alias": "fernando jose torres",
+        "locale": "en",
+        "policy": "unique_only"
+      },
+      {
+        "player_id": "544122df-f446-4316-b16f-cde987e7b4d3",
+        "alias": "fernando morientes",
+        "locale": "en",
+        "policy": "exact"
+      },
+      {
+        "player_id": "544122df-f446-4316-b16f-cde987e7b4d3",
+        "alias": "fernando morientes sanchez",
+        "locale": "en",
+        "policy": "unique_only"
+      },
+      {
+        "player_id": "c9692588-f93b-4035-8737-8f625d1ec829",
+        "alias": "fernando torres",
+        "locale": "en",
+        "policy": "exact"
+      },
+      {
+        "player_id": "97071d07-75c8-45ab-ac93-b3ebc7435729",
+        "alias": "iago aspas",
+        "locale": "en",
+        "policy": "exact"
+      },
+      {
+        "player_id": "544122df-f446-4316-b16f-cde987e7b4d3",
+        "alias": "morientes",
+        "locale": "en",
+        "policy": "unique_only"
+      },
+      {
+        "player_id": "544122df-f446-4316-b16f-cde987e7b4d3",
+        "alias": "morientes fernando",
+        "locale": "en",
+        "policy": "unique_only"
+      },
+      {
+        "player_id": "6ac3cea7-1781-4eaa-9f70-6f535bda501a",
+        "alias": "sergi canos",
+        "locale": "en",
+        "policy": "exact"
+      },
+      {
+        "player_id": "c9692588-f93b-4035-8737-8f625d1ec829",
+        "alias": "torres fernando",
+        "locale": "en",
+        "policy": "unique_only"
+      },
+      {
+        "player_id": "97071d07-75c8-45ab-ac93-b3ebc7435729",
+        "alias": "yago aspas",
+        "locale": "en",
+        "policy": "unique_only"
+      },
+      {
+        "player_id": "97071d07-75c8-45ab-ac93-b3ebc7435729",
+        "alias": "იაგო ასპასი",
+        "locale": "ka",
+        "policy": "exact"
+      },
+      {
+        "player_id": "6ac3cea7-1781-4eaa-9f70-6f535bda501a",
+        "alias": "სერჟი კანოსი",
+        "locale": "ka",
+        "policy": "exact"
+      },
+      {
+        "player_id": "544122df-f446-4316-b16f-cde987e7b4d3",
+        "alias": "ფერნანდო მორიენტესი",
+        "locale": "ka",
+        "policy": "exact"
+      },
+      {
+        "player_id": "c9692588-f93b-4035-8737-8f625d1ec829",
+        "alias": "ფერნანდო ტორესი",
         "locale": "ka",
         "policy": "exact"
       }

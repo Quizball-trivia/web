@@ -3,6 +3,9 @@ Usage: python3 scripts/gen-squad-spin-sample.py <file-with-staging-db-url>"""
 import json, pathlib, subprocess, sys
 SDB = open(sys.argv[1]).read().strip()
 PER_TIER = {"t3e": 10, "t3m": 6}
+# Players whose staging record shows a Georgian name the aliases do not accept (Douglas Luiz) or the wrong person (Alan → Shearer);
+# fix the rows, then drop them from here.
+EXCLUDED = ",".join(f"'{i}'" for i in ("f50c01d5-e1b4-4b1f-b2a2-bad72af78dc4", "ea3660e1-ff91-4c47-b1b3-0c2edf74ab38"))
 POSITION_LABELS = {"GK": {"en": "Goalkeeper", "ka": "მეკარე"}, "DEF": {"en": "Defender", "ka": "მცველი"}, "MID": {"en": "Midfielder", "ka": "ნახევარმცველი"}, "FWD": {"en": "Forward", "ka": "თავდამსხმელი"}}
 def q(sql):
     out = subprocess.run(['psql', SDB, '-Atc', sql], capture_output=True, text=True)
@@ -16,6 +19,7 @@ for tier, n in PER_TIER.items():
         'answers', (select json_agg(json_build_object('id', p.id, 'name_en', p.name_en, 'name_ka', p.name_ka, 'image_url', null)) from squad_spin_players p where p.id = any(c.answer_ids)),
         'aliases', (select json_agg(json_build_object('player_id', a.player_id, 'alias', a.normalized_alias, 'locale', a.locale, 'policy', a.acceptance_policy)) from squad_spin_player_aliases a where a.player_id = any(c.answer_ids)))::text
         from squad_spin_combos c where c.active and c.tier='{tier}' and c.n_answers between 2 and 12
+          and not (c.answer_ids && array[{EXCLUDED}]::uuid[])
         order by md5(c.id::text || 'coin-sample-v1') limit {n}""")
     for d in rows:
         crit = {k['id']: k for k in d['criteria']}

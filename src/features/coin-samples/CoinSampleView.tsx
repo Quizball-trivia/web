@@ -93,7 +93,7 @@ export function CoinSampleView({ game, modeId, backHref, playPath, onExit, onEve
       <DemoResultScreen
         title={TITLE[game]}
         score={settled.payout}
-        subtitle={settled.status === "cashed" ? t("coinSample.won", { amount: settled.payout.toLocaleString() }) : t("coinSample.lost")}
+        subtitle={settled.status === "cashed" ? t("coinSample.won", { amount: settled.payout.toLocaleString(miniLocale) }) : t("coinSample.lost")}
         onReplay={outOfCoins ? resetAndPlay : playAgain}
         onExit={onExit}
         embedded

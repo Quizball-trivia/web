@@ -20,6 +20,7 @@ for difficulty, n in PER_DIFFICULTY.items():
     for r in rows:
         d = json.loads(r)
         opts = d['options']
+        if not all(d['prompt'].get(l) for l in ('en', 'ka', 'es', 'tr')): continue
         if not all(all(o['text'].get(l) for l in ('en', 'ka', 'es', 'tr')) for o in opts): continue
         correct = [o['id'] for o in opts if o.get('is_correct')]
         if len(correct) != 1: continue
