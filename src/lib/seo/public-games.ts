@@ -47,7 +47,9 @@ export interface PublicGameMeta {
 }
 
 /** Daily engines report start/complete/replay themselves; other engines are timed from the outer Play control. */
-export const engineEmitsEvents = (demoSlug: string | undefined): boolean => Boolean(demoSlug?.startsWith("daily-"));
+/** Dailies and the coin-game samples fire start/complete/replay themselves; trainings are timed from the Play control. */
+export const engineEmitsEvents = (demoSlug: string | undefined): boolean => Boolean(demoSlug?.startsWith("daily-")) || COIN_SAMPLE_DEMO_SLUGS.has(demoSlug ?? "");
+const COIN_SAMPLE_DEMO_SLUGS = new Set(["mini-trivia-mines", "mini-final-third", "mini-road-to-goal", "mini-squad-spin"]);
 /** Sign-in entry: the Play screen opens its auth dialog for guests when asked to. */
 export const SIGN_IN_PATH = "/play?signin=1";
 

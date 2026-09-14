@@ -18,7 +18,11 @@ interface DemoResultScreenProps {
   /** Public game pages: a guest round, not an investor demo — neutral labels, no "demos". */
   embedded?: boolean;
   /** Sample rounds: the primary action is the real game (sign-in for guests, straight in for members). */
-  cta?: { modeId: string; returnTo: string; onBeforeLeave?: () => void };
+  cta?: { modeId: string; returnTo: string; onBeforeLeave?: () => void; label?: string };
+  /** Coin samples: an explicit outcome line under the number (e.g. "You banked 240" / "The house kept your stake"). */
+  subtitle?: string;
+  /** Coin samples: a secondary action such as "Reset practice coins". */
+  secondary?: { label: string; onClick: () => void };
 }
 
 const COPY = {
@@ -29,7 +33,7 @@ const COPY = {
 } as const;
 const PLAY_REAL = { en: "Play today's real challenge", ka: "ითამაშე დღევანდელი ნამდვილი გამოწვევა", es: "Juega el reto real de hoy", tr: "Bugünün gerçek görevini oyna" } as const;
 
-export function DemoResultScreen({ title, score, isMoney, onReplay, onExit, embedded = false, cta }: DemoResultScreenProps) {
+export function DemoResultScreen({ title, score, isMoney, onReplay, onExit, embedded = false, cta, subtitle, secondary }: DemoResultScreenProps) {
   const { locale } = useLocale();
   const c = COPY[locale as keyof typeof COPY] ?? COPY.en;
   const playReal = PLAY_REAL[locale as keyof typeof PLAY_REAL] ?? PLAY_REAL.en;
@@ -53,7 +57,7 @@ export function DemoResultScreen({ title, score, isMoney, onReplay, onExit, embe
           {isMoney ? `$${score.toLocaleString()}` : score}
         </div>
         <p className="mt-1 text-[12px] uppercase tracking-wide text-white/70" style={poppins}>
-          {isMoney ? c.saved : c.score}
+          {subtitle ?? (isMoney ? c.saved : c.score)}
         </p>
         <div className="mt-7 flex flex-col gap-3">
           {cta && (
@@ -65,7 +69,7 @@ export function DemoResultScreen({ title, score, isMoney, onReplay, onExit, embe
               memberHref={cta.returnTo}
               className="flex h-12 w-full items-center justify-center gap-2 rounded-[28px] bg-brand-yellow text-sm font-semibold uppercase tracking-wide text-black transition-colors hover:bg-brand-yellow-deep"
             >
-              {playReal}
+              {cta.label ?? playReal}
             </SignInLink>
             </span>
           )}
@@ -78,6 +82,16 @@ export function DemoResultScreen({ title, score, isMoney, onReplay, onExit, embe
             <RotateCcw className="h-4 w-4" />
             {c.again}
           </button>
+          {secondary && (
+            <button
+              type="button"
+              onClick={secondary.onClick}
+              className="flex h-11 w-full items-center justify-center gap-2 rounded-[28px] bg-white/14 text-xs font-semibold uppercase tracking-wide text-white transition-colors hover:bg-white/20"
+              style={poppins}
+            >
+              {secondary.label}
+            </button>
+          )}
           <button
             type="button"
             onClick={onExit}

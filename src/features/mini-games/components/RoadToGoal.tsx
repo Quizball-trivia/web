@@ -9,6 +9,8 @@ import { AnimatePresence, motion } from 'motion/react';
 import { Check, Flag, LockKeyhole, Play, RotateCcw, Shield, Timer, Trophy, X } from 'lucide-react';
 import { MiniGameShell, StatPill } from './MiniGameShell';
 import { getTrivia, type TriviaQuestion } from '../data/trivia';
+import type { CoinSampleMode } from './FinalThird';
+import { ROAD_DECISION_MS, ROAD_QUESTION_MS, didSurvive, payoutForClearedZones, survivalOddsForZone } from '@/features/coin-samples/engines/roadToGoalOdds';
 import { playCash } from '../lib/crowdAudio';
 import { LiveActivityStrip } from './LiveActivityStrip';
 import { type MiniLocale, useMiniLocale } from '../lib/i18n';
@@ -229,22 +231,22 @@ function fill(template: string, values: Record<string, string | number>) {
   return template.replace(/\{(\w+)\}/g, (_, key: string) => String(values[key] ?? `{${key}}`));
 }
 
-function shuffled<T>(items: T[]): T[] {
+function shuffled<T>(items: T[], random: () => number = Math.random): T[] {
   const out = [...items];
   for (let i = out.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(random() * (i + 1));
     [out[i], out[j]] = [out[j], out[i]];
   }
   return out;
 }
 
-function buildRun(bank: TriviaQuestion[]): TriviaQuestion[] {
+function buildRun(bank: TriviaQuestion[], random: () => number = Math.random): TriviaQuestion[] {
   const pools: Record<TriviaQuestion['difficulty'], TriviaQuestion[]> = {
-    easy: shuffled(bank.filter((question) => question.difficulty === 'easy')),
-    medium: shuffled(bank.filter((question) => question.difficulty === 'medium')),
-    hard: shuffled(bank.filter((question) => question.difficulty === 'hard')),
+    easy: shuffled(bank.filter((question) => question.difficulty === 'easy'), random),
+    medium: shuffled(bank.filter((question) => question.difficulty === 'medium'), random),
+    hard: shuffled(bank.filter((question) => question.difficulty === 'hard'), random),
   };
-  const fallback = shuffled(bank);
+  const fallback = shuffled(bank, random);
   return DIFFICULTIES.map((difficulty) => pools[difficulty].pop() ?? fallback.pop()!);
 }
 
@@ -492,15 +494,18 @@ function RoadScene(props: RoadSceneProps) {
 export function RoadToGoal({
   backHref,
   live = false,
+  sample,
   newRunsEnabled = true,
 }: {
   backHref?: string;
   live?: boolean;
+  /** Sneak peek: frozen bank, practice wallet, live survival odds, no server. */
+  sample?: CoinSampleMode;
   newRunsEnabled?: boolean;
 } = {}) {
   const locale = useMiniLocale();
   const copy = COPY[locale] ?? COPY.en;
-  const bank = useMemo(() => getTrivia(locale), [locale]);
+  const bank = useMemo(() => sample?.questions ?? getTrivia(locale), [locale, sample]);
   const { data: wallet, isError: walletError, refetch: refetchWallet } = useStoreWallet({ enabled: live });
   const [balance, setBalance] = useState(1_000);
   const [stake, setStake] = useState(25);
@@ -547,6 +552,10 @@ export function RoadToGoal({
   };
 
   useEffect(() => () => timers.current.forEach((id) => window.clearTimeout(id)), []);
+  // Sample-only paths reached from effects: the sneak peek has no page analytics and settles late answers itself.
+  const sampleRef = useRef(sample);
+  sampleRef.current = sample;
+  const sampleLateRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     analyticsStateRef.current.phase = phase;
@@ -558,6 +567,7 @@ export function RoadToGoal({
   }, [liveState?.round_id, phase, progress]);
 
   useEffect(() => {
+    if (sampleRef.current) return;
     const context = analyticsContextRef.current;
     const mountedAt = Date.now();
     let activeStartedAt = document.visibilityState === 'hidden' ? null : mountedAt;
@@ -749,13 +759,14 @@ export function RoadToGoal({
       .finally(() => setResumed(true));
   }, [live, reconcileLive]);
 
+  const questionMs = sample ? ROAD_QUESTION_MS : QUESTION_MS;
   const liveQuestionDeadline = liveState?.question?.deadline_at;
 
   useEffect(() => {
     if (phase !== 'question') return;
     const deadline = live && liveQuestionDeadline
       ? new Date(liveQuestionDeadline).getTime()
-      : Date.now() + QUESTION_MS;
+      : Date.now() + questionMs;
     const serverNow = () => Date.now() + (live ? serverClockOffsetRef.current : 0);
     const interval = window.setInterval(
       () => setRemaining(Math.max(0, deadline - serverNow())),
@@ -779,6 +790,10 @@ export function RoadToGoal({
     const timeout = window.setTimeout(() => {
       if (live) {
         void recoverExpiredQuestion();
+        return;
+      }
+      if (sampleRef.current) {
+        sampleLateRef.current();
         return;
       }
       const timedOutQuestion = run[progress];
@@ -817,7 +832,7 @@ export function RoadToGoal({
       window.clearTimeout(timeout);
       if (recoveryTimeout !== undefined) window.clearTimeout(recoveryTimeout);
     };
-  }, [live, liveQuestionDeadline, phase, progress, reconcileLive, run, stake]);
+  }, [live, liveQuestionDeadline, phase, progress, questionMs, reconcileLive, run, stake]);
 
   const question = live ? liveQuestion : run[progress];
   const currentMultiplier = live
@@ -828,13 +843,13 @@ export function RoadToGoal({
     : MULTIPLIERS[Math.min(progress, ZONES - 1)];
   const currentReturn = live
     ? liveState?.current_return_coins ?? stake
-    : Math.round(stake * currentMultiplier);
+    : sample ? payoutForClearedZones(stake, progress) : Math.round(stake * currentMultiplier);
   const nextReturn = live
     ? liveState?.next_return_coins ?? stake
-    : Math.round(stake * nextMultiplier);
-  const questionDuration = liveState?.question?.duration_ms ?? QUESTION_MS;
+    : sample ? payoutForClearedZones(stake, Math.min(progress + 1, ZONES)) : Math.round(stake * nextMultiplier);
+  const questionDuration = liveState?.question?.duration_ms ?? questionMs;
   const timePercent = Math.min(100, (remaining / questionDuration) * 100);
-  const effectiveBalance = live ? wallet?.coins ?? 0 : balance;
+  const effectiveBalance = live ? wallet?.coins ?? 0 : sample ? sample.wallet.coins : balance;
   const correctAnswer = question && question.answer >= 0
     ? question.options[question.answer]
     : undefined;
@@ -899,7 +914,7 @@ export function RoadToGoal({
 
   const start = async () => {
     if (effectiveBalance < stake || busy) return;
-    trackRoadToGoalStartRequested({
+    if (!sample) trackRoadToGoalStartRequested({
       mode: analyticsMode,
       stakeCoins: stake,
       autoCashoutZone: live ? autoCashoutZone : null,
@@ -963,21 +978,21 @@ export function RoadToGoal({
       return;
     }
     const demoRoundId = `demo-${randomClientValue()}`;
-    demoRoundIdRef.current = demoRoundId;
+    demoRoundIdRef.current = sample ? null : demoRoundId;
     runStartedAtRef.current = Date.now();
     analyticsStateRef.current.runStarted = true;
     analyticsStateRef.current.roundId = demoRoundId;
-    trackRoadToGoalRunStarted({
+    if (!sample) trackRoadToGoalRunStarted({
       mode: 'demo',
       roundId: demoRoundId,
       stakeCoins: stake,
       autoCashoutZone: null,
     });
-    setBalance((value) => value - stake);
-    setRun(buildRun(bank));
+    if (sample) { if (!sample.wallet.debit(stake)) return; } else setBalance((value) => value - stake);
+    setRun(buildRun(bank, sample?.random));
     setProgress(0);
     setSelected(null);
-    setRemaining(QUESTION_MS);
+    setRemaining(questionMs);
     setPayout(0);
     setPhase('question');
   };
@@ -1037,8 +1052,19 @@ export function RoadToGoal({
       }
       return;
     }
-    setSelected(index);
-    const answeredCorrectly = index === question.answer;
+    resolveDemoAnswer(index);
+  };
+
+  // Demo and sample answers; null means the clock ran out. In the sample every answer, a late one
+  // included, is a survival roll against the live odds for this zone (the backend routes late answers
+  // through the wrong-answer roll).
+  const resolveDemoAnswer = (index: number | null) => {
+    if (!question) return;
+    setSelected(index ?? -1);
+    const answeredCorrectly = index !== null && index === question.answer;
+    const survivedSample = sample
+      ? didSurvive(Math.floor((sample.random ?? Math.random)() * 10_000), answeredCorrectly ? survivalOddsForZone(progress).correctSurvivalBp : survivalOddsForZone(progress).wrongSurvivalBp)
+      : answeredCorrectly;
     const demoRoundId = demoRoundIdRef.current;
     if (demoRoundId) {
       trackRoadToGoalQuestionResolved({
@@ -1047,16 +1073,17 @@ export function RoadToGoal({
         zone: progress + 1,
         questionId: question.id,
         difficulty: question.difficulty,
-        outcome: answeredCorrectly ? 'correct' : 'wrong',
+        outcome: index === null ? 'late' : answeredCorrectly ? 'correct' : 'wrong',
         survived: answeredCorrectly,
-        answerDurationMs: QUESTION_MS - remaining,
+        answerDurationMs: index === null ? questionMs : questionMs - remaining,
         stakeCoins: stake,
         terminalStatus: answeredCorrectly ? null : 'lost',
       });
     }
-    if (!answeredCorrectly) {
+    if (!survivedSample) {
       setPhase('tackle');
-      trackDemoSettlement('lost', 'demo_tackle', 0, progress);
+      if (sample) sample.onSettled?.({ stake, payout: 0, status: 'lost' });
+      else trackDemoSettlement('lost', 'demo_tackle', 0, progress);
       later(() => setPhase('tackled'), progress === ZONES - 1 ? ROAD_FINISH_MS : 1_050);
       return;
     }
@@ -1067,16 +1094,17 @@ export function RoadToGoal({
       setProgress(nextProgress);
       setSelected(null);
       if (nextProgress >= ZONES) {
-        const finalPayout = Math.round(stake * MULTIPLIERS[ZONES - 1]);
+        const finalPayout = sample ? payoutForClearedZones(stake, ZONES) : Math.round(stake * MULTIPLIERS[ZONES - 1]);
         setPayout(finalPayout);
-        setBalance((value) => value + finalPayout);
-        trackDemoSettlement('completed', 'demo_complete', finalPayout, ZONES);
+        if (sample) { sample.wallet.credit(finalPayout); sample.onSettled?.({ stake, payout: finalPayout, status: 'cashed' }); }
+        else { setBalance((value) => value + finalPayout); trackDemoSettlement('completed', 'demo_complete', finalPayout, ZONES); }
         setPhase('complete');
       } else {
         setPhase('decision');
       }
     }, progress === ZONES - 1 ? ROAD_FINISH_MS : DRIBBLE_MS);
   };
+  sampleLateRef.current = () => resolveDemoAnswer(null);
 
   const continueRun = async () => {
     if (live) {
@@ -1120,7 +1148,7 @@ export function RoadToGoal({
       return;
     }
     setSelected(null);
-    setRemaining(QUESTION_MS);
+    setRemaining(questionMs);
     setPhase('question');
   };
 
@@ -1165,11 +1193,21 @@ export function RoadToGoal({
       return;
     }
     setPayout(currentReturn);
-    setBalance((value) => value + currentReturn);
+    if (sample) { sample.wallet.credit(currentReturn); sample.onSettled?.({ stake, payout: currentReturn, status: 'cashed' }); }
+    else setBalance((value) => value + currentReturn);
     playCash();
-    trackDemoSettlement('cashed', 'demo_cashout', currentReturn, progress);
+    if (!sample) trackDemoSettlement('cashed', 'demo_cashout', currentReturn, progress);
     setPhase('cashed');
   };
+
+  // Sample: an abandoned decision auto-banks, as the live game does.
+  const cashOutRef = useRef(cashOut);
+  cashOutRef.current = cashOut;
+  useEffect(() => {
+    if (!sample || phase !== 'decision') return;
+    const id = window.setTimeout(() => { void cashOutRef.current(); }, ROAD_DECISION_MS);
+    return () => window.clearTimeout(id);
+  }, [sample, phase]);
 
   const reset = () => {
     if (live) {
@@ -1188,7 +1226,7 @@ export function RoadToGoal({
     setPhase('idle');
     setProgress(0);
     setSelected(null);
-    setRemaining(QUESTION_MS);
+    setRemaining(questionMs);
   };
 
   const answerState = (index: number) => {
@@ -1205,6 +1243,7 @@ export function RoadToGoal({
       subtitle={copy.subtitle}
       accent="#58CC02"
       wide
+      disclaimer={!sample}
       headerRight={<StatPill label={copy.balance} value={points(effectiveBalance)} color="#FFE500" />}
     >
       <div className="mt-1.5 grid items-start gap-2.5 sm:mt-2 sm:gap-3 lg:grid-cols-[minmax(0,1fr)_300px] xl:grid-cols-[minmax(0,1fr)_320px]">

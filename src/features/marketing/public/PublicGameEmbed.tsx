@@ -6,6 +6,7 @@ import { Play } from "lucide-react";
 import { PracticeLayer, SELF_EXITING_ENGINES } from "./PracticeLayer";
 import { useAuthStore } from "@/stores/auth.store";
 import { type SessionKind, trackGameComplete, trackGameExit, trackGameReplay, trackGameStart, trackGameView } from "@/lib/analytics/public-games.analytics";
+import type { EngineEventDetail } from "@/lib/analytics/public-games.analytics";
 import type { DailyChallengeType } from "@/lib/domain/dailyChallenge";
 /** Daily engines are a separate on-demand chunk too; nothing game-related loads before Play. */
 const GuestDailyPlay = dynamic(() => import("./GuestDailyPlay").then((m) => m.GuestDailyPlay), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
@@ -66,11 +67,11 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, playPath, 
     recordExit();
     setPlaying(false);
   };
-  const onEngineEvent = (event: "start" | "complete" | "replay", detail?: { score?: number }) => {
+  const onEngineEvent = (event: "start" | "complete" | "replay", detail?: EngineEventDetail) => {
     // Daily engines emit "start" after their intro: active time is measured from there, not from the Play click.
     if (event === "start") { startedAtRef.current = Date.now(); trackGameStart({ modeId, access, sessionId: sessionRef.current, sessionKind }); }
     if (event === "complete") { completedRef.current = true; } 
-    if (event === "complete") trackGameComplete({ modeId, sessionId: sessionRef.current, score: detail?.score, durationMs: Date.now() - startedAtRef.current, sessionKind });
+    if (event === "complete") trackGameComplete({ modeId, sessionId: sessionRef.current, ...detail, durationMs: Date.now() - startedAtRef.current, sessionKind });
     if (event === "replay") { completedRef.current = false; trackGameReplay({ modeId, previousSessionId: sessionRef.current }); sessionRef.current = newSessionId(); startedAtRef.current = Date.now(); }
   };
 
@@ -101,7 +102,7 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, playPath, 
               onLeaveToRealGame={recordExit}
             />
           ) : (
-            <DemoModeView slug={demoSlug} backHref={pagePath} onExit={exit} onEvent={onEngineEvent} />
+            <DemoModeView slug={demoSlug} backHref={pagePath} onExit={exit} onEvent={onEngineEvent} coinSample={demoSlug.startsWith("mini-") ? { modeId, playPath, onLeaveToRealGame: recordExit } : undefined} />
           )}
         </PracticeLayer>
       )}

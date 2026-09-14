@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- player faces come from the first-party grid CDN */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { AnimatePresence, motion } from "motion/react";
@@ -60,11 +60,18 @@ const playerName = (p: SquadSpinPlayer, locale: Locale) => (locale === "ka" && p
 const faceSrc = (p: SquadSpinPlayer) => optimizeSupabaseImage(p.image_url, { width: 96, height: 96, resize: "cover", quality: 70, format: "webp" });
 
 /** Squad Spin, live: the reels and the answer set are held server-side; every answer, spin and cash-out is a request. */
-export function SquadSpinLive({ backHref = "/play" }: { backHref?: string }) {
+export function SquadSpinLive({ backHref = "/play", client, sample }: {
+  backHref?: string;
+  /** Round engine; defaults to the live API. The public sneak peek passes a client-side sample engine. */
+  client?: Pick<typeof squadSpinApi, "start" | "current" | "latest" | "heartbeat" | "stats"> & Omit<typeof squadSpinApi, "start" | "current" | "latest" | "heartbeat" | "stats">;
+  /** Sneak-peek mode: practice coins instead of the wallet, no heartbeat, no live activity or runs board. */
+  sample?: { coins: number; onPlayAgain?: () => void };
+}) {
+  const api = useMemo(() => client ?? squadSpinApi, [client]);
   const { t, locale } = useLocale();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { data: wallet } = useStoreWallet();
+  const { data: wallet } = useStoreWallet({ enabled: !sample });
   const [state, setState] = useState<SquadSpinState | null>(null);
   const [resumed, setResumed] = useState(false);
   const [stake, setStake] = useState(100);
@@ -84,8 +91,8 @@ export function SquadSpinLive({ backHref = "/play" }: { backHref?: string }) {
   const stateRef = useRef<SquadSpinState | null>(null);
   const reconcilingRef = useRef(false);
   const settledTrackedRef = useRef<string | null>(null);
-  useEffect(() => { settleOnce(settledTrackedRef, "squad_spin", state, state?.spins_cleared); }, [state]);
-  const fetchStats = useCallback(async () => { const s = await squadSpinApi.stats(); setTopRuns(s.top_runs ?? []); return s; }, []);
+  useEffect(() => { if (!sample) settleOnce(settledTrackedRef, "squad_spin", state, state?.spins_cleared); }, [sample, state]);
+  const fetchStats = useCallback(async () => { const s = await api.stats(); setTopRuns(s.top_runs ?? []); return s; }, [api]);
 
   // Responses may arrive out of order: never let an older version of the same round overwrite a newer one.
   const applyState = useCallback((next: SquadSpinState | null) => {
@@ -100,22 +107,22 @@ export function SquadSpinLive({ backHref = "/play" }: { backHref?: string }) {
     let cancelled = false;
     (async () => {
       try {
-        const cur = await squadSpinApi.current();
+        const cur = await api.current();
         if (cur) { if (!cancelled) applyState(cur); return; }
-        const last = await squadSpinApi.latest();
+        const last = await api.latest();
         if (last && last.status !== "active" && Date.now() - new Date(last.server_now).getTime() < RECENT_SETTLED_MS && !cancelled) applyState(last);
       } catch { /* start card */ }
       finally { if (!cancelled) setResumed(true); }
     })();
     return () => { cancelled = true; };
-  }, [applyState]);
+  }, [api, applyState]);
 
   const active = state?.status === "active";
   useEffect(() => {
-    if (!active) return;
-    const id = window.setInterval(() => { void squadSpinApi.heartbeat().catch(() => undefined); }, HEARTBEAT_MS);
+    if (!active || sample) return;
+    const id = window.setInterval(() => { void api.heartbeat().catch(() => undefined); }, HEARTBEAT_MS);
     return () => window.clearInterval(id);
-  }, [active]);
+  }, [active, api, sample]);
 
   // A fresh spin: short reel roll, then focus the input. The countdown follows the server deadline.
   const spinKey = state?.spin ? `${state.round_id}:${state.spin.index}` : null;
@@ -127,22 +134,22 @@ export function SquadSpinLive({ backHref = "/play" }: { backHref?: string }) {
     return () => window.clearTimeout(id);
   }, [spinKey]);
 
-  const refreshWallet = useCallback(() => void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() }), [queryClient]);
+  const refreshWallet = useCallback(() => { if (!sample) void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() }); }, [queryClient, sample]);
 
   /** Re-sync with the server; when our round is no longer active, fetch it in its settled form (sweeper, lost response). */
   const reconcile = useCallback(async () => {
     if (reconcilingRef.current) return;
     reconcilingRef.current = true;
     try {
-      const cur = await squadSpinApi.current();
+      const cur = await api.current();
       if (cur) { applyState(cur); return; }
       const mine = stateRef.current;
       if (!mine) return;
-      const last = await squadSpinApi.latest();
+      const last = await api.latest();
       if (last && last.round_id === mine.round_id) { applyState(last); if (last.status !== "active") refreshWallet(); }
     } catch { /* keep current state */ }
     finally { reconcilingRef.current = false; }
-  }, [applyState, refreshWallet]);
+  }, [api, applyState, refreshWallet]);
 
   // Countdown from the server deadline; at zero, one reconcile per spin (the server may still be inside its grace).
   useEffect(() => {
@@ -170,7 +177,7 @@ export function SquadSpinLive({ backHref = "/play" }: { backHref?: string }) {
     return () => window.clearTimeout(id);
   }, [state?.phase, state?.decision_deadline_at, state?.server_now, reconcile]);
 
-  const fail = (e: unknown) => { setError(e instanceof SquadSpinApiError ? e.message : t("common.error")); trackMiniGameError("squad_spin", "request", e instanceof SquadSpinApiError ? e.status : null); };
+  const fail = (e: unknown) => { setError(e instanceof SquadSpinApiError ? e.message : t("common.error")); if (!sample) trackMiniGameError("squad_spin", "request", e instanceof SquadSpinApiError ? e.status : null); };
   const recover = async (e: unknown) => { if (e instanceof SquadSpinApiError && (e.status === 409 || e.status === 404)) await reconcile(); };
   const applyStake = (v: number) => { const next = Math.min(MAX_STAKE, Math.max(MIN_STAKE, Math.floor(v || MIN_STAKE))); setStake(next); setStakeText(String(next)); };
 
@@ -179,9 +186,9 @@ export function SquadSpinLive({ backHref = "/play" }: { backHref?: string }) {
     setBusy(true); setError(null); setLastHit(null); setLastMiss(null);
     const nonce = nonceRef.current ?? (nonceRef.current = crypto.randomUUID());
     try {
-      const s = await squadSpinApi.start(stake, reels, nonce);
+      const s = await api.start(stake, reels, nonce);
       nonceRef.current = null; applyState(s); refreshWallet();
-      trackMiniGameRoundStarted("squad_spin", { roundId: s.round_id, stake: s.stake_coins, reels: s.reels });
+      if (!sample) trackMiniGameRoundStarted("squad_spin", { roundId: s.round_id, stake: s.stake_coins, reels: s.reels });
     } catch (e) {
       await recover(e);
       if (e instanceof SquadSpinApiError && e.status < 500) nonceRef.current = null;
@@ -193,7 +200,7 @@ export function SquadSpinLive({ backHref = "/play" }: { backHref?: string }) {
     if (!state?.spin || busy || rolling || !input.trim()) return;
     setBusy(true); setError(null);
     try {
-      const r = await squadSpinApi.answer(state.round_id, input.trim(), state.state_version);
+      const r = await api.answer(state.round_id, input.trim(), state.state_version);
       if (r.outcome === "correct") { setLastHit(r.player); setLastMiss(null); if (r.state.status === "cashed") { playCash(); refreshWallet(); } }
       else { setLastMiss(r.outcome); setLastHit(null); refreshWallet(); }
       applyState(r.state);
@@ -204,7 +211,7 @@ export function SquadSpinLive({ backHref = "/play" }: { backHref?: string }) {
   const spinAgain = async () => {
     if (!state || busy || state.phase !== "decision") return;
     setBusy(true); setError(null);
-    try { applyState(await squadSpinApi.continue(state.round_id, state.state_version)); }
+    try { applyState(await api.continue(state.round_id, state.state_version)); }
     catch (e) { await recover(e); fail(e); }
     finally { setBusy(false); }
   };
@@ -214,7 +221,7 @@ export function SquadSpinLive({ backHref = "/play" }: { backHref?: string }) {
     const origin = event.currentTarget;
     setBusy(true); setError(null);
     try {
-      const s = await squadSpinApi.cashout(state.round_id, state.state_version);
+      const s = await api.cashout(state.round_id, state.state_version);
       playCash();
       setFlight(flightFrom(origin, (s.payout_coins ?? 0) * 17 + 3));
       window.setTimeout(() => setFlight(null), 1200);
@@ -223,7 +230,7 @@ export function SquadSpinLive({ backHref = "/play" }: { backHref?: string }) {
     finally { setBusy(false); }
   };
 
-  const balance = wallet?.coins ?? 0;
+  const balance = sample ? sample.coins : wallet?.coins ?? 0;
   const settled = state && state.status !== "active";
   const timerPct = Math.max(0, Math.min(100, (left / QUESTION_S) * 100));
 
@@ -257,7 +264,7 @@ export function SquadSpinLive({ backHref = "/play" }: { backHref?: string }) {
             <p className="text-[10px] font-bold uppercase tracking-wide text-white/60" style={poppins}>{t("triviaMines.stakeRange", { min: String(MIN_STAKE), max: String(MAX_STAKE) })}</p>
             <p className="mt-1 text-[11px] font-black uppercase tracking-wide text-white/75" style={poppins}>{t("squadSpin.reelsLabel")}</p>
             <div className="flex w-full gap-2">
-              {REEL_OPTIONS.map((o) => (
+              {(sample ? REEL_OPTIONS.filter((o) => o.reels === 3) : REEL_OPTIONS).map((o) => (
                 <button key={o.reels} type="button" onClick={() => setReels(o.reels)} className={cn("flex flex-1 flex-col items-center rounded-xl border-2 py-2 transition-colors", reels === o.reels ? "border-brand-yellow bg-brand-yellow text-black" : "border-white/30 bg-white/10 text-white")} style={poppins}>
                   <span className="text-base font-black">{o.reels}</span>
                   <span className="text-[9px] font-black uppercase tracking-wide opacity-75">{t(`squadSpin.${o.key}`)}</span>
@@ -277,11 +284,11 @@ export function SquadSpinLive({ backHref = "/play" }: { backHref?: string }) {
         )}
 
         <div className="mb-1 flex items-center gap-3">
-          <LiveActivityStrip fetchStats={fetchStats} className="min-w-0 flex-1" />
+          {sample ? <span className="min-w-0 flex-1 truncate text-[11px] font-black uppercase tracking-wide text-brand-yellow" style={poppins}>{t("coinSample.practiceChip")}</span> : <LiveActivityStrip fetchStats={fetchStats} className="min-w-0 flex-1" />}
           <span data-money-stack className="flex shrink-0 items-center gap-1 text-sm font-black tabular-nums text-white" style={poppins}><CoinIcon size={14} />{balance.toLocaleString()}</span>
         </div>
 
-        {!state && <RunsBoard runs={topRuns} className="mt-4" />}
+        {!state && !sample && <RunsBoard runs={topRuns} className="mt-4" />}
 
         {state && (
           <div className="mt-4 lg:grid lg:grid-cols-[minmax(0,1fr)_320px] lg:items-start lg:gap-6">
@@ -398,7 +405,7 @@ export function SquadSpinLive({ backHref = "/play" }: { backHref?: string }) {
                   </motion.div>
                 )}
               </AnimatePresence>
-              <RunsBoard runs={topRuns} className="mt-4" />
+              {!sample && <RunsBoard runs={topRuns} className="mt-4" />}
             </div>
           </div>
         )}

@@ -2422,6 +2422,18 @@
     "fairness": "The 4 defenders were fixed and hashed before your first pick. This is the board hash; the seed is revealed when the round ends.",
     "fairnessTitle": "Provably fair"
   },
+  "coinSample": {
+    "practiceChip": "Sneak peek · practice coins",
+    "label": "Sneak peek · 1,000 practice coins",
+    "start": "Try the game",
+    "note": "A fixed sample with sample odds and practice coins. No account rewards; nothing is saved.",
+    "playReal": "Play for real coins",
+    "reset": "Reset practice coins",
+    "outOfCoins": "Out of practice coins",
+    "won": "You banked {amount}",
+    "lost": "The house kept your stake",
+    "balance": "Practice coins: {coins}"
+  },
   "statSniper": {
     "sampleBoard": "Sample leaderboard",
     "target": "Target {current}/{total}",
