@@ -105,7 +105,7 @@ export const HOME_COPY: Record<Locale, HomeCopy> = {
     faq: [
       { q: "Hesap açmadan oynayabilir miyim?", a: "Evet. Buradaki misafir oyunları kaydolmadan oynanabilir. Sıralamalı oyun ve Hafta Sonu Ligi hesap gerektirir." },
       { q: "Gerçek ödül kazanabilir miyim?", a: "Uygun oyuncular, ödül sunan yarışmalarda ödüller için yarışabilir. Mevcut ödüller ve nasıl hak kazanılacağı için güncel Sıralamalı ve Hafta Sonu Ligi kurallarını oku." },
-      { q: "Mini oyun puanları Sıralamalı oyuna sayılır mı?", a: "Misafir mini oyun sonuçları Sıralama puanı vermez ve ödüllerne hak kazandırmaz. Sıralama ilerlemesi rekabet modunun kendi kurallarına göre işler." },
+      { q: "Mini oyun puanları Sıralamalı oyuna sayılır mı?", a: "Misafir mini oyun sonuçları Sıralama puanı vermez ve ödüllere hak kazandırmaz. Sıralama ilerlemesi rekabet modunun kendi kurallarına göre işler." },
       { q: "Bir oyundan sonra kaydolursam ne olur?", a: "Oynadığın oyuna geri dönersin." },
     ],
   },

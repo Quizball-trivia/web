@@ -1,7 +1,7 @@
 """Generate es/tr pool sample sessions from the staging question pool, mirroring the en fixture structure."""
 import json, subprocess, sys, copy, re, pathlib
 SDB = open(sys.argv[1]).read().strip()
-WEB = pathlib.Path('/Users/user/dev/quizball-worktrees/staging-web')
+WEB = pathlib.Path(__file__).resolve().parent.parent
 src = (WEB / 'src/features/demos/data/demoPoolSessions.ts').read_text()
 i = src.index('const SESSIONS = ') + len('const SESSIONS = ')
 depth = 0
@@ -82,7 +82,12 @@ def localize(t, question, row, loc):
     out = copy.deepcopy(question); pay = row['payload']; prompt = row['prompt']
     for field in REQUIRED_FIELDS.get(t, []):
         if field not in pay: raise GenError(f"{t}: source row {row.get('id')} lacks payload.{field}")
-    if 'prompt' in out: out['prompt'] = L(pay.get('prompt'), loc, L(prompt, loc, out['prompt'])) if isinstance(pay.get('prompt'), dict) else L(prompt, loc, out['prompt'])
+    if 'prompt' in out:
+        # The payload prompt wins when it carries the locale; otherwise the question prompt (one MISSING entry at most).
+        prompt_source = pay.get('prompt')
+        if not (isinstance(prompt_source, dict) and prompt_source.get(loc)):
+            prompt_source = prompt
+        out['prompt'] = L(prompt_source, loc, out['prompt'])
     if 'category' in out and row.get('category'): out['category'] = L(row['category'], loc, out['category'])
     if 'displayAnswer' in out and 'display_answer' in pay: out['displayAnswer'] = L(pay['display_answer'], loc, out['displayAnswer'])
     if 'acceptedAnswers' in out:

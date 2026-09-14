@@ -57,13 +57,15 @@ export function GridTrainingScreen({ onComplete, variant = 'member' }: { onCompl
   // Same conductor as a live game: matchmaking loop while "searching", stadium
   // loop during play, kickoff whistle, answer cues. The scripted verdicts are
   // shaped like server command results so the cues fire once per turn.
+  // Replays repeat turn numbers and verdicts; the run id keeps each cue distinct.
+  const [run, setRun] = useState(0);
   const audioSearch = useMemo<FootballGridSearchStatePayload>(
     () => ({ state: stage === 'searching' ? 'searching' : 'idle', searchId: null }),
     [stage],
   );
   const audioCommandResult = useMemo<FootballGridCommandResultPayload | null>(
-    () => (feedback ? ({ commandId: `training-${state.turnNumber}-${feedback}`, outcome: feedback } as FootballGridCommandResultPayload) : null),
-    [feedback, state.turnNumber],
+    () => (feedback ? ({ commandId: `training-${run}-${state.turnNumber}-${feedback}`, outcome: feedback } as FootballGridCommandResultPayload) : null),
+    [feedback, run, state.turnNumber],
   );
   useFootballGridAudio({ search: audioSearch, state: stage === 'match' ? state : null, commandResult: audioCommandResult, enabled: !resultsVisible });
 
@@ -113,6 +115,7 @@ export function GridTrainingScreen({ onComplete, variant = 'member' }: { onCompl
     if (!isMember) openAuthPrompt();
   }, [finish, isMember, openAuthPrompt]);
   const replay = useCallback(() => {
+    setRun((current) => current + 1);
     tooltips.reset();
     setShowdownDone(false);
     setSelectedCell(null);

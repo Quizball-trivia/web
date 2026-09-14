@@ -67,7 +67,8 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, playPath, 
     setPlaying(false);
   };
   const onEngineEvent = (event: "start" | "complete" | "replay", detail?: { score?: number }) => {
-    if (event === "start") trackGameStart({ modeId, access, sessionId: sessionRef.current, sessionKind });
+    // Daily engines emit "start" after their intro: active time is measured from there, not from the Play click.
+    if (event === "start") { startedAtRef.current = Date.now(); trackGameStart({ modeId, access, sessionId: sessionRef.current, sessionKind }); }
     if (event === "complete") { completedRef.current = true; } 
     if (event === "complete") trackGameComplete({ modeId, sessionId: sessionRef.current, score: detail?.score, durationMs: Date.now() - startedAtRef.current, sessionKind });
     if (event === "replay") { completedRef.current = false; trackGameReplay({ modeId, previousSessionId: sessionRef.current }); sessionRef.current = newSessionId(); startedAtRef.current = Date.now(); }

@@ -128,7 +128,7 @@
       }
     },
     {
-      "name": "Guest exits before finishing (by stage)",
+      "name": "Guest exits by stage",
       "query": {
         "kind": "InsightVizNode",
         "source": {
