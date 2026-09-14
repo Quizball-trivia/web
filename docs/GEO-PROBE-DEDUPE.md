@@ -27,7 +27,8 @@ on every page) and `/api/geo` (edge, one fetch per consumer). A single guest ses
 ## Notes
 - Freshness changes: a successful answer (true or false) is reused for up to an hour across navigation and reloads. A visitor
   whose country changes mid-visit (VPN off, border) keeps the earlier answer until the TTL runs out; before, every page probed
-  again. Experiments that read availability at submission time (onboarding, mobile-verification reminder) now see the cached
+  again. Expiry (of the TTL or of a failure cooldown) does not refresh screens by itself: the next mount probes, and its
+  result is broadcast to every screen still mounted. Experiments that read availability at submission time (onboarding, mobile-verification reminder) now see the cached
   value, earlier. Annotate the rollout date in their analysis.
 - Acceptance on staging: a fresh guest tab shows exactly one phone-availability request, then zero across
   navigation AND a hard reload within the hour; zero `/api/geo` requests.

@@ -50,6 +50,19 @@ describe("useGeorgianPhoneAuthAvailability", () => {
     expect(a.result.current.isLoading).toBe(true); // frozen at unmount, no late update
   });
 
+  it("an unsubscribed listener receives nothing from later probes (no leak through the listener set)", async () => {
+    const d = deferred<typeof GE>();
+    probe.mockReturnValue(d.promise);
+    const gone = vi.fn();
+    const kept = vi.fn();
+    const unsubscribe = resolver.subscribePhoneAuthAvailability(gone);
+    resolver.subscribePhoneAuthAvailability(kept);
+    unsubscribe();
+    await act(async () => { d.resolve(GE); });
+    await waitFor(() => expect(kept).toHaveBeenCalledWith(expect.objectContaining({ isAvailable: true })));
+    expect(gone).not.toHaveBeenCalled();
+  });
+
   it("serves later mounts from memory, and a reload from sessionStorage, without a new request", async () => {
     probe.mockResolvedValue(GE);
     const a = renderHook(() => useGeorgianPhoneAuthAvailability());
@@ -133,5 +146,12 @@ describe("useGeorgianPhoneAuthAvailability", () => {
     await act(async () => { vi.advanceTimersByTime(resolver.PHONE_AVAILABILITY_TIMEOUT_MS + 10); });
     await waitFor(() => expect(a.result.current.isLoading).toBe(false));
     expect((probe.mock.calls[0][0] as AbortSignal).aborted).toBe(true);
+    // After the cooldown a new mount probes again and the stranded screen recovers too.
+    vi.setSystemTime(Date.now() + resolver.PHONE_AVAILABILITY_FAILURE_COOLDOWN_MS + 1);
+    probe.mockResolvedValueOnce(GE);
+    const b = renderHook(() => useGeorgianPhoneAuthAvailability());
+    await waitFor(() => expect(b.result.current.isAvailable).toBe(true));
+    expect(probe).toHaveBeenCalledTimes(2);
+    await waitFor(() => expect(a.result.current.isAvailable).toBe(true));
   });
 });
