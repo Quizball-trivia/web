@@ -53,7 +53,7 @@ export function DemoModeView({ slug, backHref = "/demos", onExit, onEvent, coinS
   slug: string;
   backHref?: string;
   /** Public game pages: the coin games run their sneak-peek sample (practice coins, live rules) instead of the prototype. */
-  coinSample?: { modeId: string; playPath: string; onLeaveToRealGame: () => void };
+  coinSample?: { modeId: string; playPath: string; title?: string; onLeaveToRealGame: () => void };
   /** Embedded use: leave the practice round without navigating. */
   onExit?: () => void;
   onEvent?: (event: "start" | "complete" | "replay", detail?: EngineEventDetail) => void;
@@ -63,7 +63,7 @@ export function DemoModeView({ slug, backHref = "/demos", onExit, onEvent, coinS
 
   const coinGame = COIN_SAMPLE_SLUGS[mode.slug];
   if (coinSample && coinGame && onExit && onEvent) {
-    return <CoinSampleView game={coinGame} modeId={coinSample.modeId} backHref={backHref} playPath={coinSample.playPath} onExit={onExit} onEvent={onEvent} onLeaveToRealGame={coinSample.onLeaveToRealGame} />;
+    return <CoinSampleView game={coinGame} modeId={coinSample.modeId} title={coinSample.title} backHref={backHref} playPath={coinSample.playPath} onExit={onExit} onEvent={onEvent} onLeaveToRealGame={coinSample.onLeaveToRealGame} />;
   }
 
   if (mode.dailyType) {

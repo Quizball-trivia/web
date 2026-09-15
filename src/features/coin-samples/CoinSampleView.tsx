@@ -28,9 +28,11 @@ interface Settled { stake: number; payout: number; status: "cashed" | "lost" }
  * with the live rules (frozen snapshot), 1,000 practice coins per visit in
  * memory, and the brand result card after every settlement. No requests.
  */
-export function CoinSampleView({ game, modeId, backHref, playPath, onExit, onEvent, onLeaveToRealGame }: {
+export function CoinSampleView({ game, modeId, title, backHref, playPath, onExit, onEvent, onLeaveToRealGame }: {
   game: CoinSampleGame;
   modeId: string;
+  /** The public page's localized game title, so the result card matches the page it sits on. */
+  title?: string;
   backHref: string;
   playPath: string;
   onExit: () => void;
@@ -78,10 +80,10 @@ export function CoinSampleView({ game, modeId, backHref, playPath, onExit, onEve
   }, [port, onSettled]);
   const [engines, setEngines] = useState(makeEngines);
   const questions = useMemo(() => sampleTriviaQuestions(miniLocale), [miniLocale]);
-  const sampleMode = useMemo(() => ({ questions, wallet: port, random: engines.random, onSettled }), [questions, port, engines.random, onSettled]);
+  const sampleMode = useMemo(() => ({ questions, wallet: port, random: engines.random, onSettled, onExit }), [questions, port, engines.random, onSettled, onExit]);
 
   // Stable per balance so the live screens' effects do not re-run on unrelated renders.
-  const sampleChip = useMemo(() => ({ coins: wallet.coins }), [wallet.coins]);
+  const sampleChip = useMemo(() => ({ coins: wallet.coins, onExit }), [wallet.coins, onExit]);
 
   const playAgain = () => { startedRef.current = false; setInRound(false); setSettled(null); onEventRef.current("replay"); setEngines(makeEngines()); setAttempt((a) => a + 1); };
   const resetAndPlay = () => { wallet.reset(); playAgain(); };
@@ -91,7 +93,7 @@ export function CoinSampleView({ game, modeId, backHref, playPath, onExit, onEve
   if (settled) {
     return (
       <DemoResultScreen
-        title={t(TITLE_KEY[game])}
+        title={title ?? t(TITLE_KEY[game])}
         score={settled.payout}
         subtitle={settled.status === "cashed" ? t("coinSample.won", { amount: settled.payout.toLocaleString(miniLocale) }) : t("coinSample.lost")}
         onReplay={outOfCoins ? resetAndPlay : playAgain}
@@ -107,7 +109,7 @@ export function CoinSampleView({ game, modeId, backHref, playPath, onExit, onEve
   if (outOfCoins) {
     return (
       <DemoResultScreen
-        title={t(TITLE_KEY[game])}
+        title={title ?? t(TITLE_KEY[game])}
         score={wallet.coins}
         subtitle={t("coinSample.outOfCoins")}
         onReplay={resetAndPlay}

@@ -1241,6 +1241,7 @@ export function RoadToGoal({
   return (
     <MiniGameShell
       backHref={backHref}
+      onBack={sample?.onExit}
       title={copy.title}
       subtitle={copy.subtitle}
       accent="#58CC02"

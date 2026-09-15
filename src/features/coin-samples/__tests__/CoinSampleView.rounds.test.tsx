@@ -32,9 +32,10 @@ const wrapper = ({ children }: { children: ReactNode }) => <QueryClientProvider 
 describe("CoinSampleView rounds", () => {
   it("keeps an open round on screen even when the balance drops below the minimum, and re-emits start after replay", async () => {
     const onEvent = vi.fn();
-    render(<CoinSampleView game="trivia_mines" modeId="m" backHref="/b" playPath="/p" onExit={vi.fn()} onEvent={onEvent} onLeaveToRealGame={vi.fn()} />, { wrapper });
+    render(<CoinSampleView game="trivia_mines" modeId="m" title="ტრივია-მაღაროები" backHref="/b" playPath="/p" onExit={vi.fn()} onEvent={onEvent} onLeaveToRealGame={vi.fn()} />, { wrapper });
     await act(async () => { fireEvent.click(screen.getByText("lose500")); });
     await waitFor(() => expect(screen.getByText(/Play again/i)).toBeTruthy());
+    expect(screen.getByText("ტრივია-მაღაროები")).toBeTruthy(); // the page's own title, not the app catalogue
     expect(onEvent.mock.calls.map((c) => c[0])).toEqual(["start", "complete"]);
     expect(onEvent.mock.calls[1][1]).toMatchObject({ outcome: "lost", stake: 500, payout: 0, balance: 500 });
 

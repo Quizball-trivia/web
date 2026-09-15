@@ -212,6 +212,8 @@ export interface CoinSampleMode {
   /** Seeded generator for the round's draws (keeper, survival rolls, question order). */
   random?: () => number;
   onSettled?: (result: { stake: number; payout: number; status: "cashed" | "lost" }) => void;
+  /** The sneak peek's way out: the header back control leaves the sample instead of navigating. */
+  onExit?: () => void;
 }
 
 export function FinalThird({ backHref, live = false, sample }: { backHref?: string; live?: boolean; sample?: CoinSampleMode } = {}) {
@@ -996,6 +998,7 @@ export function FinalThird({ backHref, live = false, sample }: { backHref?: stri
   return (
     <MiniGameShell
       backHref={backHref}
+      onBack={sample?.onExit}
       title={t('Free Kicks')}
       subtitle={t('Know football. Read the goal. Take the shot.')}
       accent="#58CC02"

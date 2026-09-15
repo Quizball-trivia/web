@@ -32,7 +32,7 @@ export function TriviaMinesLive({ backHref = "/play", client, sample }: {
   /** Round engine; defaults to the live API. The public sneak peek passes a client-side sample engine. */
   client?: Pick<typeof triviaMinesApi, "start" | "current" | "latest" | "heartbeat" | "stats"> & Omit<typeof triviaMinesApi, "start" | "current" | "latest" | "heartbeat" | "stats">;
   /** Sneak-peek mode: practice coins instead of the wallet, no heartbeat, no live activity or runs board. */
-  sample?: { coins: number; onPlayAgain?: () => void };
+  sample?: { coins: number; onPlayAgain?: () => void; onExit?: () => void };
 }) {
   const api = useMemo(() => client ?? triviaMinesApi, [client]);
   const { t, locale } = useLocale();
@@ -170,7 +170,7 @@ export function TriviaMinesLive({ backHref = "/play", client, sample }: {
       <MoneyFlight flight={flight} />
       <div className={cn("mx-auto flex w-full flex-1 flex-col px-4 pb-28 pt-4 md:pb-8", state ? "max-w-md lg:max-w-4xl" : "max-w-md")}>
         <div className="mb-3 flex items-center justify-between">
-          <button type="button" onClick={() => router.push(backHref)} aria-label={t("common.back")} className="flex size-10 items-center justify-center rounded-full bg-white/10 text-white"><ArrowLeft className="size-5" /></button>
+          <button type="button" onClick={() => { if (sample?.onExit) sample.onExit(); else router.push(backHref); }} aria-label={t("common.back")} className="flex size-10 items-center justify-center rounded-full bg-white/10 text-white"><ArrowLeft className="size-5" /></button>
         </div>
 
         {/* Start card — same family as the Guess the Goal card, in brand blue */}

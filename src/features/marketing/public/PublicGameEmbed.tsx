@@ -3,7 +3,7 @@
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { Play } from "lucide-react";
-import { PracticeLayer, SELF_EXITING_ENGINES, SHELL_HEADER_ENGINES } from "./PracticeLayer";
+import { OWN_EXIT_ENGINES, PracticeLayer, SELF_EXITING_ENGINES } from "./PracticeLayer";
 import { useAuthStore } from "@/stores/auth.store";
 import { type SessionKind, trackGameComplete, trackGameExit, trackGameReplay, trackGameStart, trackGameView } from "@/lib/analytics/public-games.analytics";
 import type { EngineEventDetail } from "@/lib/analytics/public-games.analytics";
@@ -90,7 +90,7 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, playPath, 
         {!practiceLocalised && <p className="text-sm font-semibold text-brand-yellow">{copy.english}</p>}
       </div>
       {playing && (
-        <PracticeLayer title={copy.title} exitLabel={copy.exit} onExit={exit} exitControl={!SELF_EXITING_ENGINES.has(demoSlug)} exitPlacement={SHELL_HEADER_ENGINES.has(demoSlug) ? "below-header" : "top"}>
+        <PracticeLayer title={copy.title} exitLabel={copy.exit} onExit={exit} exitControl={!SELF_EXITING_ENGINES.has(demoSlug)} exitButton={!OWN_EXIT_ENGINES.has(demoSlug)}>
           {dailyType ? (
             <GuestDailyPlay
               type={dailyType}
@@ -102,7 +102,7 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, playPath, 
               onLeaveToRealGame={recordExit}
             />
           ) : (
-            <DemoModeView slug={demoSlug} backHref={pagePath} onExit={exit} onEvent={onEngineEvent} coinSample={demoSlug.startsWith("mini-") ? { modeId, playPath, onLeaveToRealGame: recordExit } : undefined} />
+            <DemoModeView slug={demoSlug} backHref={pagePath} onExit={exit} onEvent={onEngineEvent} coinSample={demoSlug.startsWith("mini-") ? { modeId, playPath, title: copy.title, onLeaveToRealGame: recordExit } : undefined} />
           )}
         </PracticeLayer>
       )}
