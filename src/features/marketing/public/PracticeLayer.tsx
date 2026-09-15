@@ -24,9 +24,11 @@ export const OWN_EXIT_ENGINES = new Set(["mini-trivia-mines", "mini-final-third"
 /** `exitControl` false = the engine renders its own way out (the training match has "Skip training"). */
 export function PracticeLayer({ title, exitLabel, onExit, exitControl = true, exitButton = true, children }: { title: string; exitLabel: string; onExit: () => void; exitControl?: boolean; /** false = Escape still exits but the engine draws its own exit control. */ exitButton?: boolean; children: ReactNode }) {
   const exitRef = useRef<HTMLButtonElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const opener = document.activeElement as HTMLElement | null;
-    exitRef.current?.focus();
+    // Move focus into the layer: the exit control when drawn, else the dialog itself.
+    (exitRef.current ?? dialogRef.current)?.focus();
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     return () => {
@@ -43,7 +45,7 @@ export function PracticeLayer({ title, exitLabel, onExit, exitControl = true, ex
   }, [exitControl, onExit]);
   if (typeof document === "undefined") return null;
   return createPortal(
-    <div role="dialog" aria-modal="true" aria-label={title} className="fixed inset-0 z-[80] overflow-y-auto bg-surface-page-alt">
+    <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label={title} className="fixed inset-0 z-[80] overflow-y-auto bg-surface-page-alt outline-none">
       {exitControl && exitButton && (
         <button
           ref={exitRef}
