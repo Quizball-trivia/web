@@ -150,7 +150,7 @@ export const CAMPAIGN_QUIZ_CONTENT: Record<string, CampaignQuizPageContent> = {
   'premier-league': {
     slug: 'premier-league',
     title: 'Premier League Football Quiz',
-    metadataTitle: 'Premier League Football Quiz — Play Free | QuizBall',
+    metadataTitle: 'Premier League Football Quiz — Play Now | QuizBall',
     description:
       'Free Premier League football quiz — 10 verified questions on 30+ years of PL history. Instant score, no sign-up to play. Beat real fans in ranked duels.',
     breadcrumbLabel: 'Premier League Quiz',

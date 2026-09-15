@@ -24,7 +24,7 @@ const POPULAR_QUIZ_SLUGS = {
 const HUB_COPY = {
   en: {
     ranked: 'Play Ranked', eyebrow: 'Free football trivia',
-    title: 'Football Quiz — Play Free Football Quizzes & Trivia',
+    title: 'Football Quiz — Play Football Quizzes & Trivia',
     intro: 'Pick a quiz, answer verified football questions and get your score instantly. Every solo quiz is free to start and needs no account.',
     popularHeading: 'Popular football quizzes in the UK',
     popularBody: 'Start with useful football quiz questions on club badges, career paths, Everton and Liverpool — the quizzes UK football fans engage with most.',
@@ -36,7 +36,7 @@ const HUB_COPY = {
     groups: { team: 'Club quizzes', league: 'League quizzes', quiz_type: 'Football challenges', article: 'Football trivia' },
   },
   ka: {
-    ranked: 'ითამაშე რეიტინგული', eyebrow: 'უფასო ფეხბურთის ტრივია', title: 'ფეხბურთის ქვიზი — ითამაშე უფასოდ',
+    ranked: 'ითამაშე რეიტინგული', eyebrow: 'უფასო ფეხბურთის ტრივია', title: 'ფეხბურთის ქვიზი — ითამაშე ახლავე',
     intro: 'აირჩიე ქვიზი, უპასუხე გადამოწმებულ კითხვებს და შედეგი მყისიერად მიიღე.',
     popularHeading: 'პოპულარული ფეხბურთის ქვიზები', popularBody: 'დაიწყე ყველაზე პოპულარული ქვიზებით.',
     playFree: 'ითამაშე უფასოდ', verifiedHeading: 'გადამოწმებული ფეხბურთის ტრივია',
@@ -47,7 +47,7 @@ const HUB_COPY = {
   },
   es: {
     ranked: 'Jugar clasificatoria', eyebrow: 'Trivia de fútbol gratis',
-    title: 'Quiz de Fútbol — Preguntas y Trivia Gratis',
+    title: 'Quiz de Fútbol — Preguntas y Trivia',
     intro: 'Elige un quiz, responde preguntas de fútbol verificadas y recibe tu puntuación al instante. Todos los quizzes individuales son gratis y no necesitan cuenta.',
     popularHeading: 'Quizzes de fútbol populares',
     popularBody: 'Empieza con preguntas de fútbol para adivinar el futbolista, reconocer escudos y poner a prueba cuánto sabes del Real Madrid y el Barcelona.',
