@@ -13,16 +13,21 @@ import { useAuthStore } from "@/stores/auth.store";
  * preference on the profile when signed in, revert if that save fails.
  * Shared by Settings and the shell's language switcher.
  */
+// Shared across instances (Settings and the shell can both be mounted): one save in flight at a time.
+let saveInFlight = false;
+
 export function useChangeLanguage() {
   const { locale, setLocale, t } = useLocale();
   const { user, setAuthenticated } = useAuthStore();
   const [isSaving, setIsSaving] = useState(false);
 
   const changeLanguage = useCallback(async (newLocale: Locale) => {
-    if (isSaving || newLocale === locale) return;
-    trackLanguageSwitched(locale, newLocale);
-    setLocale(newLocale);
+    if (saveInFlight || newLocale === locale) return;
+    const previous = locale;
+    trackLanguageSwitched(previous, newLocale);
+    saveInFlight = true;
     setIsSaving(true);
+    setLocale(newLocale);
     try {
       if (user) {
         const updated = await updateMe({ preferred_language: newLocale });
@@ -30,12 +35,13 @@ export function useChangeLanguage() {
       }
       toast.success(t("settings.languageUpdated"));
     } catch {
-      setLocale(locale);
+      setLocale(previous);
       toast.error(t("settings.languageUpdateFailed"));
     } finally {
+      saveInFlight = false;
       setIsSaving(false);
     }
-  }, [isSaving, locale, setLocale, t, user, setAuthenticated]);
+  }, [locale, setLocale, t, user, setAuthenticated]);
 
   return { changeLanguage, isSaving };
 }

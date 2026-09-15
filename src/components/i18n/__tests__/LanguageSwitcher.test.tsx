@@ -87,6 +87,7 @@ describe("LanguageSwitcher in-place mode", () => {
     expect(item).not.toHaveAttribute("href");
     await user.click(item);
     expect(onSelect).toHaveBeenCalledWith("ka");
-    expect(storage.get(STORAGE_KEYS.LOCALE, null)).toBe("ka");
+    // Persisting is the caller's job (LocaleProvider stores the locale it actually ends up in), so a failed save cannot leave a stale choice behind.
+    expect(storage.get(STORAGE_KEYS.LOCALE, null)).toBeNull();
   });
 });

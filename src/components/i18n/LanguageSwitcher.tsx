@@ -28,6 +28,8 @@ interface LanguageSwitcherProps {
   locale: Locale;
   className?: string;
   locales?: readonly Locale[];
+  /** Also called with the chosen locale (signed-in users persist it on the profile). */
+  onSelect?: (locale: Locale) => void;
 }
 
 const OPTIONS_BY_CODE = Object.fromEntries(
@@ -134,7 +136,7 @@ function LanguageMenu({ activeLocale, locales, className, renderItem }: {
 }
 
 /** Public pages: each language is a link to the localized URL. Reads the URL, so mount it under Suspense. */
-export function LanguageSwitcher({ locale, className, locales = LOCALE_CODES }: LanguageSwitcherProps) {
+export function LanguageSwitcher({ locale, className, locales = LOCALE_CODES, onSelect }: LanguageSwitcherProps) {
   const pathname = usePathname() ?? `/${locale}`;
   const searchParams = useSearchParams();
   const queryString = searchParams.toString();
@@ -157,7 +159,7 @@ export function LanguageSwitcher({ locale, className, locales = LOCALE_CODES }: 
             // An explicit choice: persisted so leaving the localized pages
             // (creating a room, opening a game) keeps this language instead
             // of falling back to an earlier inferred one.
-            onClick={() => storage.set(STORAGE_KEYS.LOCALE, code)}
+            onClick={() => { storage.set(STORAGE_KEYS.LOCALE, code); onSelect?.(code); }}
             aria-current={active ? "page" : undefined}
             className={cn(ITEM_CLASS, active && "bg-brand-blue hover:bg-brand-blue")}
           >
@@ -185,7 +187,7 @@ export function InPlaceLanguageSwitcher({ locale, onSelect, className, locales =
         <button
           type="button"
           lang={code}
-          onClick={() => { storage.set(STORAGE_KEYS.LOCALE, code); onSelect(code); }}
+          onClick={() => onSelect(code)}
           aria-current={active ? "true" : undefined}
           className={cn(ITEM_CLASS, active && "bg-brand-blue hover:bg-brand-blue")}
         >

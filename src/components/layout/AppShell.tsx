@@ -102,7 +102,9 @@ export function AppShell({ children }: AppShellProps) {
           <header className="sticky top-0 z-30 hidden h-16 items-center justify-between bg-background/60 px-6 backdrop-blur-md xl:flex">
             {/* Left: the signed-in language switcher (in place, saved to the profile). Guests get theirs next to Sign in. */}
             <div className="flex items-center">
-              {!isGuest && <InPlaceLanguageSwitcher locale={locale} onSelect={changeLanguage} className="h-10 min-h-0" />}
+              {!isGuest && (publicLocale
+                ? <Suspense fallback={null}><LanguageSwitcher locale={publicLocale} onSelect={changeLanguage} className="h-10 min-h-0" /></Suspense>
+                : <InPlaceLanguageSwitcher locale={locale} onSelect={changeLanguage} className="h-10 min-h-0" />)}
             </div>
 
             <div className="flex items-center gap-4">
@@ -153,7 +155,9 @@ export function AppShell({ children }: AppShellProps) {
                           authUserCountry={authUser?.country}
                           onRequestLogout={() => setShowLogoutConfirm(true)}
                         />
-                        <InPlaceLanguageSwitcher locale={locale} onSelect={changeLanguage} className="h-9 min-h-0 px-2.5" />
+                        {publicLocale
+                          ? <Suspense fallback={null}><LanguageSwitcher locale={publicLocale} onSelect={changeLanguage} className="h-9 min-h-0 px-2.5" /></Suspense>
+                          : <InPlaceLanguageSwitcher locale={locale} onSelect={changeLanguage} className="h-9 min-h-0 px-2.5" />}
                       </>
                     )}
                   </div>
