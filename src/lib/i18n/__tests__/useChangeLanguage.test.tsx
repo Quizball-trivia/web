@@ -13,7 +13,7 @@ vi.mock("@/contexts/LocaleContext", () => ({ useLocale: () => ({ locale: current
 vi.mock("@/lib/analytics/game-events", () => ({ trackLanguageSwitched: vi.fn() }));
 vi.mock("@/lib/api/endpoints", () => ({ updateMe: (...a: unknown[]) => updateMe(...a) }));
 vi.mock("@/stores/auth.store", () => {
-  const useAuthStore = () => ({ user, setAuthenticated });
+  const useAuthStore = (sel?: (s: { user: typeof user; setAuthenticated: typeof setAuthenticated }) => unknown) => (sel ? sel({ user, setAuthenticated }) : { user, setAuthenticated });
   useAuthStore.getState = () => ({ user, setAuthenticated });
   return { useAuthStore };
 });
@@ -59,5 +59,32 @@ describe("useChangeLanguage", () => {
     expect(setLocale).not.toHaveBeenCalled();
     expect(toast.error).not.toHaveBeenCalled();
     expect(setAuthenticated).toHaveBeenLastCalledWith(expect.objectContaining({ preferred_language: "ka" }));
+  });
+
+  it("serialises saves across both paths: an in-place change waits behind a pending navigating save", async () => {
+    const first = deferred<{ preferred_language: string }>();
+    updateMe.mockReturnValueOnce(first.promise).mockResolvedValueOnce({ preferred_language: "en" });
+    const { result } = renderHook(() => useChangeLanguage());
+    const nav = result.current.savePreference("es");
+    let inPlace!: Promise<void>;
+    act(() => { inPlace = result.current.changeLanguage("ka"); });
+    await act(async () => { await Promise.resolve(); });
+    expect(setLocale).toHaveBeenCalledWith("ka"); // the UI switches at once
+    expect(updateMe).toHaveBeenCalledTimes(1); // but its save queues behind the pending one
+    await act(async () => { first.resolve({ preferred_language: "es" }); await nav; await inPlace; });
+    expect(updateMe).toHaveBeenNthCalledWith(2, { preferred_language: "ka" });
+  });
+
+  it("drops queued saves when the account changes before they run, and never patches another account", async () => {
+    const first = deferred<{ preferred_language: string }>();
+    updateMe.mockReturnValueOnce(first.promise);
+    const { result } = renderHook(() => useChangeLanguage());
+    const p1 = result.current.savePreference("es");
+    const p2 = result.current.savePreference("ka");
+    await act(async () => { await Promise.resolve(); }); // the first save is dispatched…
+    user = { id: "u2", preferred_language: "tr" }; // …then someone else signs in
+    await act(async () => { first.resolve({ preferred_language: "es" }); await p1; await p2; });
+    expect(updateMe).toHaveBeenCalledTimes(1); // the second entry was skipped
+    expect(setAuthenticated).not.toHaveBeenCalled(); // and the first response did not patch u2's store
   });
 });
