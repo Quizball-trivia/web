@@ -18,10 +18,21 @@ let persistQueue: Promise<unknown> = Promise.resolve();
 function enqueuePreferenceSave(userId: string, newLocale: Locale): Promise<"saved" | "skipped"> {
   const run = persistQueue.then(async () => {
     if (useAuthStore.getState().user?.id !== userId) return "skipped" as const;
-    const updated = await updateMe({ preferred_language: newLocale });
-    const latest = useAuthStore.getState().user;
-    if (latest?.id === userId) useAuthStore.getState().setAuthenticated({ ...latest, preferred_language: updated.preferred_language ?? newLocale });
-    return "saved" as const;
+    // Bound to the account for the whole request, refresh-and-retry included: if the session
+    // changes mid-flight the request is aborted rather than completed with the next account's token.
+    const controller = new AbortController();
+    const unsubscribe = useAuthStore.subscribe((state) => { if (state.user?.id !== userId) controller.abort(); });
+    try {
+      const updated = await updateMe({ preferred_language: newLocale }, controller.signal);
+      const latest = useAuthStore.getState().user;
+      if (latest?.id === userId) useAuthStore.getState().setAuthenticated({ ...latest, preferred_language: updated.preferred_language ?? newLocale });
+      return "saved" as const;
+    } catch (error) {
+      if (controller.signal.aborted) return "skipped" as const;
+      throw error;
+    } finally {
+      unsubscribe();
+    }
   });
   persistQueue = run.catch(() => undefined);
   return run;

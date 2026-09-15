@@ -12,9 +12,12 @@ vi.mock("sonner", () => ({ toast }));
 vi.mock("@/contexts/LocaleContext", () => ({ useLocale: () => ({ locale: currentLocale, setLocale, t: (k: string) => k }) }));
 vi.mock("@/lib/analytics/game-events", () => ({ trackLanguageSwitched: vi.fn() }));
 vi.mock("@/lib/api/endpoints", () => ({ updateMe: (...a: unknown[]) => updateMe(...a) }));
+const listeners = new Set<(s: { user: typeof user }) => void>();
+const signIn = (next: typeof user) => { user = next; for (const l of Array.from(listeners)) l({ user }); };
 vi.mock("@/stores/auth.store", () => {
   const useAuthStore = (sel?: (s: { user: typeof user; setAuthenticated: typeof setAuthenticated }) => unknown) => (sel ? sel({ user, setAuthenticated }) : { user, setAuthenticated });
   useAuthStore.getState = () => ({ user, setAuthenticated });
+  useAuthStore.subscribe = (l: (s: { user: typeof user }) => void) => { listeners.add(l); return () => listeners.delete(l); };
   return { useAuthStore };
 });
 
@@ -55,7 +58,7 @@ describe("useChangeLanguage", () => {
     await act(async () => { await Promise.resolve(); });
     expect(updateMe).toHaveBeenCalledTimes(1); // the second waits for the first
     await act(async () => { first.reject(new Error("offline")); await p1; await p2; });
-    expect(updateMe).toHaveBeenNthCalledWith(2, { preferred_language: "ka" });
+    expect(updateMe).toHaveBeenNthCalledWith(2, { preferred_language: "ka" }, expect.any(AbortSignal));
     expect(setLocale).not.toHaveBeenCalled();
     expect(toast.error).not.toHaveBeenCalled();
     expect(setAuthenticated).toHaveBeenLastCalledWith(expect.objectContaining({ preferred_language: "ka" }));
@@ -72,7 +75,7 @@ describe("useChangeLanguage", () => {
     expect(setLocale).toHaveBeenCalledWith("ka"); // the UI switches at once
     expect(updateMe).toHaveBeenCalledTimes(1); // but its save queues behind the pending one
     await act(async () => { first.resolve({ preferred_language: "es" }); await nav; await inPlace; });
-    expect(updateMe).toHaveBeenNthCalledWith(2, { preferred_language: "ka" });
+    expect(updateMe).toHaveBeenNthCalledWith(2, { preferred_language: "ka" }, expect.any(AbortSignal));
   });
 
   it("drops queued saves when the account changes before they run, and never patches another account", async () => {
@@ -82,9 +85,11 @@ describe("useChangeLanguage", () => {
     const p1 = result.current.savePreference("es");
     const p2 = result.current.savePreference("ka");
     await act(async () => { await Promise.resolve(); }); // the first save is dispatched…
-    user = { id: "u2", preferred_language: "tr" }; // …then someone else signs in
-    await act(async () => { first.resolve({ preferred_language: "es" }); await p1; await p2; });
+    signIn({ id: "u2", preferred_language: "tr" }); // …then someone else signs in
+    const signal = updateMe.mock.calls[0][1] as AbortSignal;
+    expect(signal.aborted).toBe(true); // the in-flight request (and any refresh-retry) is cut off
+    await act(async () => { first.reject(Object.assign(new Error("aborted"), { name: "AbortError" })); await p1; await p2; });
     expect(updateMe).toHaveBeenCalledTimes(1); // the second entry was skipped
-    expect(setAuthenticated).not.toHaveBeenCalled(); // and the first response did not patch u2's store
+    expect(setAuthenticated).not.toHaveBeenCalled(); // nothing patched u2's store
   });
 });

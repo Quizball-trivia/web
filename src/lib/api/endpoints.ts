@@ -10,9 +10,10 @@ export function getMe() {
   return apiFetch("get", "/api/v1/users/me");
 }
 
-export function updateMe(payload: UpdateMeBody) {
+export function updateMe(payload: UpdateMeBody, signal?: AbortSignal) {
   return apiFetch("put", "/api/v1/users/me", {
     body: payload,
+    signal,
   });
 }
 
