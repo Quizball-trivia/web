@@ -511,20 +511,17 @@ function GameSection({
 }
 
 
-type FinderFilter = "all" | "daily" | "coins" | "solo" | "multiplayer" | "online";
+// The finder lists the daily and coin games only, so a solo/multiplayer/online split would carry no information here.
+type FinderFilter = "all" | "daily" | "coins";
 const FINDER_FILTERS: Array<{ id: FinderFilter } & Record<Locale, string>> = [
   { id: "all", en: "All", ka: "ყველა", es: "Todos", tr: "Tümü" },
   { id: "daily", en: "Daily", ka: "დღიური", es: "Diarios", tr: "Günlük" },
   { id: "coins", en: "Coins", ka: "მონეტები", es: "Monedas", tr: "Jeton" },
-  { id: "solo", en: "Solo", ka: "სოლო", es: "Solo", tr: "Tek kişilik" },
-  { id: "multiplayer", en: "Multiplayer", ka: "მრავალმოთამაშიანი", es: "Multijugador", tr: "Çok oyunculu" },
-  { id: "online", en: "Online", ka: "ონლაინ", es: "En línea", tr: "Online" },
 ];
 
 function matchesFilter(mode: DemoModeCard, section: "daily" | "coins", filter: FinderFilter): boolean {
   if (filter === "all") return true;
-  if (filter === "daily" || filter === "coins") return section === filter;
-  return formatOf(mode.slug) === filter;
+  return section === filter;
 }
 
 // Accent- and case-insensitive so "Gol" finds "Golü" and "sut" finds "Şut" (Turkish ı folds to i).
@@ -667,7 +664,7 @@ export function AllGamesGrid() {
     const all = [...DAILY_CHALLENGE_MODES.map((mode) => ({ mode, section: "daily" as const })), ...PLAY_WITH_COINS_MODES.map((mode) => ({ mode, section: "coins" as const }))]
       .filter(({ mode }) => matchesQuery(mode, query));
     const count = (id: FinderFilter) => all.filter(({ mode, section }) => matchesFilter(mode, section, id)).length;
-    return { all: all.length, daily: count("daily"), coins: count("coins"), solo: count("solo"), multiplayer: count("multiplayer"), online: count("online") };
+    return { all: all.length, daily: count("daily"), coins: count("coins") };
   }, [query]);
   const nothing = visibleDaily.length === 0 && visibleCoins.length === 0;
 
