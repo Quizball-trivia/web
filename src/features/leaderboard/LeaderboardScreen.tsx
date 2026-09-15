@@ -228,7 +228,8 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
               })}
             </div>
 
-            <div className="flex min-w-0 flex-1 items-center justify-end gap-2 pb-2 sm:flex-none">
+            {/* Full width on phones so the selects wrap under the tabs instead of collapsing beside them. */}
+            <div className="flex w-full items-center justify-end gap-2 pb-2 sm:w-auto">
               {/* Seasons are ranked-only; the auction board is all-time. */}
               {!isAuction && seasonOptions.length > 1 && (
                 <LeaderboardSelect
