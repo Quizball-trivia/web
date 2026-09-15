@@ -28,7 +28,7 @@ import { useLocale } from "@/contexts/LocaleContext";
 export function AppShell({ children }: AppShellProps) {
   const vm = useAppShellViewModel();
   const { t, locale } = useLocale();
-  const { changeLanguage } = useChangeLanguage();
+  const { changeLanguage, savePreference } = useChangeLanguage();
   // Guest mode: signed-out visitors browsing the hub get a Sign-in button
   // instead of the profile/coins cluster, and any nav tap that isn't a public
   // surface opens the sign-in dialog instead of navigating.
@@ -103,7 +103,7 @@ export function AppShell({ children }: AppShellProps) {
             {/* Left: the signed-in language switcher (in place, saved to the profile). Guests get theirs next to Sign in. */}
             <div className="flex items-center">
               {!isGuest && (publicLocale
-                ? <Suspense fallback={null}><LanguageSwitcher locale={publicLocale} onSelect={changeLanguage} className="h-10 min-h-0" /></Suspense>
+                ? <Suspense fallback={null}><LanguageSwitcher locale={publicLocale} onSelect={savePreference} className="h-10 min-h-0" /></Suspense>
                 : <InPlaceLanguageSwitcher locale={locale} onSelect={changeLanguage} className="h-10 min-h-0" />)}
             </div>
 
@@ -156,7 +156,7 @@ export function AppShell({ children }: AppShellProps) {
                           onRequestLogout={() => setShowLogoutConfirm(true)}
                         />
                         {publicLocale
-                          ? <Suspense fallback={null}><LanguageSwitcher locale={publicLocale} onSelect={changeLanguage} className="h-9 min-h-0 px-2.5" /></Suspense>
+                          ? <Suspense fallback={null}><LanguageSwitcher locale={publicLocale} onSelect={savePreference} className="h-9 min-h-0 px-2.5" /></Suspense>
                           : <InPlaceLanguageSwitcher locale={locale} onSelect={changeLanguage} className="h-9 min-h-0 px-2.5" />}
                       </>
                     )}

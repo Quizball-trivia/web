@@ -13,8 +13,10 @@ import { useAuthStore } from "@/stores/auth.store";
  * preference on the profile when signed in, revert if that save fails.
  * Shared by Settings and the shell's language switcher.
  */
-// Shared across instances (Settings and the shell can both be mounted): one save in flight at a time.
+// Shared across instances (Settings and the shell can both be mounted): one in-place change at a time.
 let saveInFlight = false;
+// Preference saves for navigating selections run in order, so the last choice is the one left on the profile.
+let preferenceQueue: Promise<void> = Promise.resolve();
 
 export function useChangeLanguage() {
   const { locale, setLocale, t } = useLocale();
@@ -43,5 +45,25 @@ export function useChangeLanguage() {
     }
   }, [locale, setLocale, t, user, setAuthenticated]);
 
-  return { changeLanguage, isSaving };
+  /**
+   * For a selection that navigates to a localized URL (public pages): the page itself changes
+   * the UI language, so only the profile preference is saved — no in-place switch, no rollback
+   * (a rollback would fight the new URL). Saves run in order; a failure leaves the previous preference.
+   */
+  const savePreference = useCallback((newLocale: Locale) => {
+    const current = useAuthStore.getState().user;
+    if (!current) return Promise.resolve();
+    preferenceQueue = preferenceQueue.then(async () => {
+      try {
+        const updated = await updateMe({ preferred_language: newLocale });
+        const latest = useAuthStore.getState().user;
+        if (latest) setAuthenticated({ ...latest, preferred_language: updated.preferred_language ?? newLocale });
+      } catch {
+        // The URL already carries the new language; Settings can retry the preference.
+      }
+    });
+    return preferenceQueue;
+  }, [setAuthenticated]);
+
+  return { changeLanguage, savePreference, isSaving };
 }
