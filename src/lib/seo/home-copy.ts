@@ -18,9 +18,9 @@ export interface HomeCopy {
 
 export const HOME_COPY: Record<Locale, HomeCopy> = {
   en: {
-    metaTitle: "Free Football Games and Multiplayer Online Trivia — QuizBall",
+    metaTitle: "Football Games and Multiplayer Online Trivia — QuizBall",
     metaDescription: "Play football trivia games online, including Tic Tac Toe, Auction and friendly matches. Start as a guest, then join Ranked play and Weekend League.",
-    h1: "Free Football Games and Multiplayer Online Trivia",
+    h1: "Football Games and Multiplayer Online Trivia",
     intro: "Play football trivia games in your browser. Try a practice round of Football Tic Tac Toe or Football Auction without creating an account. Friendly matches, Ranked play and Weekend League need a Quizball account. Ready to compete? Sign up for Ranked play and Weekend League, where eligible players can compete for real prizes under the competition rules.",
     accessLine: "Guest games need no account. Ranked play and Weekend League require sign-in.",
     nav: { games: "Football Games", quizzes: "Football Quizzes", signIn: "Sign in" },
@@ -41,9 +41,9 @@ export const HOME_COPY: Record<Locale, HomeCopy> = {
     ],
   },
   es: {
-    metaTitle: "Juegos de Fútbol Gratis y Trivia Online — QuizBall",
+    metaTitle: "Juegos de Fútbol y Trivia Online — QuizBall",
     metaDescription: "Juega a juegos de trivia de fútbol online: Tiki Taka Toe, subasta y partidos amistosos. Empieza como invitado y luego únete al modo clasificatorio y a la Weekend League.",
-    h1: "Juegos de Fútbol Gratis y Trivia Online",
+    h1: "Juegos de Fútbol y Trivia Online",
     intro: "Juega a juegos de trivia de fútbol en tu navegador. Prueba una ronda de práctica de Tiki Taka Toe o de la subasta sin crear cuenta. Los amistosos, el modo clasificatorio y la Weekend League requieren una cuenta de Quizball. ¿Listo para competir? Regístrate para el modo clasificatorio y la Weekend League, donde los jugadores elegibles compiten por premios según las reglas de cada competición.",
     accessLine: "Los juegos de invitado no necesitan cuenta. El modo clasificatorio y la Weekend League requieren iniciar sesión.",
     nav: { games: "Juegos de fútbol", quizzes: "Quizzes de fútbol", signIn: "Iniciar sesión" },
@@ -64,9 +64,9 @@ export const HOME_COPY: Record<Locale, HomeCopy> = {
     ],
   },
   ka: {
-    metaTitle: "უფასო საფეხბურთო თამაშები და ქვიზები — QuizBall",
+    metaTitle: "საფეხბურთო თამაშები და ქვიზები — QuizBall",
     metaDescription: "ითამაშე საფეხბურთო ტრივია ონლაინ: იქს-ნული, აუქციონი და მეგობრული მატჩები. დაიწყე სტუმრად, შემდეგ შეუერთდი რეიტინგულ თამაშსა და შაბათ-კვირის ლიგას.",
-    h1: "უფასო საფეხბურთო თამაშები და ქვიზები",
+    h1: "საფეხბურთო თამაშები და ქვიზები",
     intro: "ითამაშე საფეხბურთო ტრივია ბრაუზერში. სცადე იქს-ნულის ან აუქციონის სავარჯიშო რაუნდი ანგარიშის გარეშე. მეგობრულ მატჩებს, რეიტინგულ თამაშსა და შაბათ-კვირის ლიგას Quizball-ის ანგარიში სჭირდება. მზად ხარ შეჯიბრისთვის? დარეგისტრირდი რეიტინგული თამაშისა და შაბათ-კვირის ლიგისთვის, სადაც უფლებამოსილი მოთამაშეები კონკურსის წესებით პრიზებზე იბრძვიან.",
     accessLine: "სტუმრის თამაშებს ანგარიში არ სჭირდება. რეიტინგულ თამაშსა და შაბათ-კვირის ლიგას შესვლა სჭირდება.",
     nav: { games: "საფეხბურთო თამაშები", quizzes: "საფეხბურთო ქვიზები", signIn: "შესვლა" },
@@ -87,9 +87,9 @@ export const HOME_COPY: Record<Locale, HomeCopy> = {
     ],
   },
   tr: {
-    metaTitle: "Ücretsiz Futbol Oyunları ve Çok Oyunculu Bilgi Yarışması — QuizBall",
+    metaTitle: "Futbol Oyunları ve Çok Oyunculu Bilgi Yarışması — QuizBall",
     metaDescription: "Futbol bilgi oyunlarını çevrimiçi oyna: Tic Tac Toe, Açık Artırma ve dostluk maçları. Misafir olarak başla, sonra Sıralamalı oyuna ve Hafta Sonu Ligi'ne katıl.",
-    h1: "Ücretsiz Futbol Oyunları ve Çok Oyunculu Bilgi Yarışması",
+    h1: "Futbol Oyunları ve Çok Oyunculu Bilgi Yarışması",
     intro: "Futbol bilgi oyunlarını tarayıcında oyna. Hesap açmadan Futbol Tic Tac Toe ya da Futbol Açık Artırma'da bir alıştırma turu dene. Dostluk maçları, Sıralamalı oyun ve Hafta Sonu Ligi için Quizball hesabı gerekir. Yarışmaya hazır mısın? Sıralamalı oyun ve Hafta Sonu Ligi'ne kaydol; uygun oyuncular yarışma kurallarına göre gerçek ödüller için yarışır.",
     accessLine: "Misafir oyunları için hesap gerekmez. Sıralamalı oyun ve Hafta Sonu Ligi giriş gerektirir.",
     nav: { games: "Futbol Oyunları", quizzes: "Futbol Quizleri", signIn: "Giriş yap" },

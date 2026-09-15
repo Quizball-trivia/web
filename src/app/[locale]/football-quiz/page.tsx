@@ -23,16 +23,16 @@ import {
 } from '@/lib/seo/site';
 import { buildCampaignQuizHubJsonLd, serializeCampaignHubJsonLd } from '@/features/campaign-quiz/campaignQuiz.hub-seo';
 
-const TITLE = 'Football Quiz — Play Free Football Quizzes & Trivia | QuizBall';
+const TITLE = 'Football Quiz — Play Football Quizzes & Trivia | QuizBall';
 const DESCRIPTION = 'Play free football quizzes on clubs, players, badges, career paths and Premier League history. Instant scores, no sign-up needed.';
-const KA_TITLE = 'ფეხბურთის ქვიზი — ითამაშე უფასოდ | QuizBall';
+const KA_TITLE = 'ფეხბურთის ქვიზი — ითამაშე ახლავე | QuizBall';
 const KA_DESCRIPTION = 'ითამაშე უფასო ფეხბურთის ქვიზები კლუბებზე, მოთამაშეებზე, ემბლემებსა და პრემიერ ლიგის ისტორიაზე. მიიღე შედეგი მყისიერად.';
 const POPULAR_QUIZ_SLUGS = ['club-badges', 'career-path', 'everton', 'liverpool'] as const;
 const HUB_COPY = {
   en: {
     playRanked: 'Play Ranked',
     eyebrow: 'Free football trivia',
-    h1: 'Football Quiz — Play Free Football Quizzes & Trivia',
+    h1: 'Football Quiz — Play Football Quizzes & Trivia',
     lede: 'Pick a quiz, answer verified football questions and get your score instantly. Every solo quiz is free to start and needs no account.',
     popularHeading: 'Popular football quizzes in the UK',
     popularBody: 'Start with useful football quiz questions on club badges, career paths, Everton and Liverpool — the quizzes UK football fans are playing most.',
