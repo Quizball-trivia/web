@@ -14,6 +14,8 @@ const GAME_MODE_IMAGE_BASE = SUPABASE_IMAGE_BASE
 // Prompts + audit: docs/artwork/.
 const LOCAL_MODE_IMAGES = new Map([
   ["daily-clues", "daily-clues"],
+  // Owner 2026-09-15: Card Detective gets the same illustrated treatment as the other dailies (Codex-generated).
+  ["daily-cardDetective", "daily-cardDetective"],
   ["daily-putInOrder", "daily-putInOrder"],
   ["daily-fifaCards", "daily-fifaCards"],
   ["mini-guess-fifa-card", "daily-fifaCards"],
@@ -54,6 +56,7 @@ export const ILLUSTRATED_MODE_SLUGS = new Set([
   "mini-stat-sniper",
   "mini-guess-the-goal",
   "daily-moneyDrop",
+  "daily-cardDetective",
   "daily-trueFalse",
   "daily-countdown",
   "daily-imposter",
@@ -99,8 +102,6 @@ export function DemoModeArt({ slug: rawSlug, className = "" }: { slug: string; c
   if (isFifaSlug(slug) || slug === "mini-guess-fifa-card" || slug === "daily-fifaCards") {
     return <FifaModeArt slug={slug === "daily-fifaCards" ? "mini-guess-fifa-card" : slug} className={className} glyph={slug !== "daily-fifaCards"} />;
   }
-  // The Card Detective daily uses the FIFA collection's tile (owner, 2026-09-08).
-  if (slug === "daily-cardDetective") return <FifaModeArt slug="fifa-card-detective" className={className} />;
   // Ranked (the "match" engine) shows the hub hero's trophy on brand green.
   if (slug === "match") {
     return (
