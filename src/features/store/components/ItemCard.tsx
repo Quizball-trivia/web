@@ -151,7 +151,7 @@ export function ItemCard({
       >
         {/* Title */}
         <div
-          className="min-w-0 truncate text-center text-[11px] uppercase leading-none text-white sm:text-[16px]"
+          className="line-clamp-2 min-h-[2.3em] min-w-0 break-words text-center text-[11px] uppercase leading-[1.15] text-white sm:text-[16px]"
           style={poppins}
         >
           {name}
