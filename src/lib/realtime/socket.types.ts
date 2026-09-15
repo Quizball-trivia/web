@@ -1589,7 +1589,7 @@ export interface ClientToServerEvents {
     ack?: (result: WlAnswerAck) => void
   ) => void;
   'lobby:create': (
-    data: { mode: MatchMode; isPublic?: boolean; correlationId?: string },
+    data: { mode: MatchMode; isPublic?: boolean; gameMode?: 'football_grid' | 'auction'; correlationId?: string },
     ack?: (result: LobbyCreateResult) => void
   ) => void;
   'lobby:challenge': (data: { toUserId: string; gameMode?: LobbyChallengeGameMode }) => void;

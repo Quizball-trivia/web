@@ -31,6 +31,7 @@ import { trackWlBannerClicked, trackWlBannerViewed } from '@/lib/analytics/game-
 import { getNextTierBand } from '@/utils/rankedTier';
 import { footballGridAssetUrl } from '@/lib/football-grid/assets';
 import { useAuthPromptStore } from '@/stores/authPrompt.store';
+import { useDirectFriendRoom } from '@/features/friend/hooks/useDirectFriendRoom';
 import { useIsGuest } from '@/lib/auth/useIsGuest';
 import { findPublicGameByModeId, publicGamePath as gamePagePath } from '@/lib/seo/public-games';
 import { PracticeDemo } from '@/features/marketing/public/PracticeLayer';
@@ -348,6 +349,8 @@ export function ModeSelectionScreen({
   // action that needs an account opens the sign-in dialog instead.
   const isGuest = useIsGuest();
   const openAuthPrompt = useAuthPromptStore((state) => state.open);
+  // Auction / Tic Tac Toe "Play with friend": straight into a private room in that mode.
+  const { startFriendRoom } = useDirectFriendRoom({ onFallback: () => setSelectedMode('friendly') });
   // Guest "vs AI" demo runs the practice engine in a full-screen layer; the
   // /demos gallery is not served on production. Auction / Grid guests go to
   // their public pages.
@@ -974,7 +977,7 @@ export function ModeSelectionScreen({
           router.push('/auction');
         }}
         onTraining={startAuctionTraining}
-        onPlayWithFriend={isGuest && !GUEST_LOBBIES_ENABLED ? undefined : () => { setAuctionModalOpen(false); setSelectedMode('friendly'); }}
+        onPlayWithFriend={isGuest && !GUEST_LOBBIES_ENABLED ? undefined : () => { setAuctionModalOpen(false); void startFriendRoom('auction'); }}
       />
       {auctionTraining && (
         <TrainingOfferModal
@@ -1008,7 +1011,7 @@ export function ModeSelectionScreen({
           router.push(`/tic-tac-toe?source=matchmaking&pack=${pack}`);
         }}
         onTraining={startGridTraining}
-        onPlayWithFriend={isGuest && !GUEST_LOBBIES_ENABLED ? undefined : () => { setGridModalOpen(false); setSelectedMode('friendly'); }}
+        onPlayWithFriend={isGuest && !GUEST_LOBBIES_ENABLED ? undefined : () => { setGridModalOpen(false); void startFriendRoom('football_grid'); }}
       />
       {gridTraining && (
         <TrainingOfferModal
