@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { LanguageSwitcher } from "../LanguageSwitcher";
+import { InPlaceLanguageSwitcher, LanguageSwitcher } from "../LanguageSwitcher";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
 
 const navigation = vi.hoisted(() => ({ pathname: "/en/about", search: "" }));
@@ -73,5 +73,20 @@ describe("LanguageSwitcher", () => {
       "href",
       "/es/about?ref=campaign&signup=1",
     );
+  });
+});
+
+describe("LanguageSwitcher in-place mode", () => {
+  it("offers buttons that call onSelect and persist the choice instead of navigating", async () => {
+    const user = userEvent.setup();
+    const onSelect = vi.fn();
+    render(<InPlaceLanguageSwitcher locale="en" onSelect={onSelect} />);
+    await user.click(screen.getByRole("button", { name: /current language: english/i }));
+    const item = screen.getByRole("menuitem", { name: /ქართული/i });
+    expect(item.tagName).toBe("BUTTON");
+    expect(item).not.toHaveAttribute("href");
+    await user.click(item);
+    expect(onSelect).toHaveBeenCalledWith("ka");
+    expect(storage.get(STORAGE_KEYS.LOCALE, null)).toBe("ka");
   });
 });
