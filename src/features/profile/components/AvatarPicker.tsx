@@ -329,7 +329,7 @@ export function AvatarPicker({
                 <div className="relative flex size-20 sm:size-24 items-center justify-center">
                   <Image
                     src={part.asset}
-                    alt={part.name}
+                    alt={translatePartName(part.name, t)}
                     width={96}
                     height={96}
                     unoptimized
