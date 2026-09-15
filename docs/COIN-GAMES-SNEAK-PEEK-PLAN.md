@@ -127,3 +127,9 @@ Tests added: wallet hook (double debit, fractions, reset), deterministic 21-pick
 - Not bugs: the 30 `/api/` requests are the app shell's phone-auth availability + geo hint (fire on every public page, sample or not);
   Squad Spin's "×1.25 spin step" next to "next return ×1.08" is the live game's own display (fair step vs. banked pot after the
   launch haircut) — the sample mirrors it exactly; "Play for real coins" is the intended CTA copy.
+
+### Verification round (Codex, 2026-09-15)
+- Result-card title now comes from the public page (`copy.title` → `coinSample.title`), so it matches the page in every locale (the app
+  catalogue's Georgian names differ from the SEO pages'; aligning those catalogues is a separate content decision).
+- The practice layer draws no exit pill for the four coin games; the game's own header back control leaves the sample (Escape still works).
+- `/en/play` in the test prompt was my mistake (the guest hub is `/en`). Georgian Road scene labels and mobile subtitle truncation are pre-existing.
