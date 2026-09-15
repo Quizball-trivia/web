@@ -184,7 +184,7 @@ function TicketCard({ pack, onBuy }: { pack: TicketPackItem; onBuy: (b: TicketPa
         {/* Top: title + subtitle (centered) */}
         <div className="text-center">
           <div
-            className="truncate text-[11px] uppercase leading-none text-white sm:text-[16px]"
+            className="line-clamp-2 min-h-[2.3em] break-words text-[11px] uppercase leading-[1.15] text-white sm:text-[16px]"
             style={POPPINS_HEADER}
           >
             {pack.title}
