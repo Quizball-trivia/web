@@ -17,7 +17,8 @@ import { AppShellProfileMenu } from "./app-shell/AppShellProfileMenu";
 import { ConnectionQualitySignal } from "@/components/shared/ConnectionQualitySignal";
 import { GuestAuthDialog } from "@/features/auth/GuestAuthDialog";
 import { Suspense } from "react";
-import { LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
+import { InPlaceLanguageSwitcher, LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
+import { useChangeLanguage } from "@/lib/i18n/useChangeLanguage";
 import { useIsGuest } from "@/lib/auth/useIsGuest";
 import { rememberPostAuthRedirect } from "@/lib/auth/postAuthRedirect";
 import { hubPath, isGuestAllowedPath, publicLocaleOf } from "@/lib/routes/publicHub";
@@ -27,6 +28,7 @@ import { useLocale } from "@/contexts/LocaleContext";
 export function AppShell({ children }: AppShellProps) {
   const vm = useAppShellViewModel();
   const { t, locale } = useLocale();
+  const { changeLanguage, savePreference } = useChangeLanguage();
   // Guest mode: signed-out visitors browsing the hub get a Sign-in button
   // instead of the profile/coins cluster, and any nav tap that isn't a public
   // surface opens the sign-in dialog instead of navigating.
@@ -98,9 +100,12 @@ export function AppShell({ children }: AppShellProps) {
         <div className="flex min-h-screen min-w-0 flex-col xl:min-h-0">
           {/* DESKTOP TOPBAR (>= xl) */}
           <header className="sticky top-0 z-30 hidden h-16 items-center justify-between bg-background/60 px-6 backdrop-blur-md xl:flex">
-            {/* Socials + Contact moved into the Sidebar (above the World Cup
-                trophy); spacer keeps the right control cluster right-aligned. */}
-            <div aria-hidden />
+            {/* Left: the signed-in language switcher (in place, saved to the profile). Guests get theirs next to Sign in. */}
+            <div className="flex items-center">
+              {!isGuest && (publicLocale
+                ? <Suspense fallback={null}><LanguageSwitcher locale={publicLocale} onSelect={savePreference} className="h-10 min-h-0" /></Suspense>
+                : <InPlaceLanguageSwitcher locale={locale} onSelect={changeLanguage} className="h-10 min-h-0" />)}
+            </div>
 
             <div className="flex items-center gap-4">
               {showLobbyDebug && (
@@ -143,12 +148,17 @@ export function AppShell({ children }: AppShellProps) {
                       right cluster (incl. the bell) off-screen on narrow phones. */}
                   <div className="z-10 flex min-w-0 items-center gap-2">
                     {!isGuest && (
-                      <AppShellProfileMenu
-                        variant="mobile"
-                        playerStats={playerStats}
-                        authUserCountry={authUser?.country}
-                        onRequestLogout={() => setShowLogoutConfirm(true)}
-                      />
+                      <>
+                        <AppShellProfileMenu
+                          variant="mobile"
+                          playerStats={playerStats}
+                          authUserCountry={authUser?.country}
+                          onRequestLogout={() => setShowLogoutConfirm(true)}
+                        />
+                        {publicLocale
+                          ? <Suspense fallback={null}><LanguageSwitcher locale={publicLocale} onSelect={savePreference} className="h-9 min-h-0 px-2.5" /></Suspense>
+                          : <InPlaceLanguageSwitcher locale={locale} onSelect={changeLanguage} className="h-9 min-h-0 px-2.5" />}
+                      </>
                     )}
                   </div>
 

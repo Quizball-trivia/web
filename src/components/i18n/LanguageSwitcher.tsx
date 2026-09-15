@@ -1,5 +1,7 @@
 "use client";
 
+import type React from "react";
+
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Check, ChevronDown } from "lucide-react";
@@ -26,6 +28,8 @@ interface LanguageSwitcherProps {
   locale: Locale;
   className?: string;
   locales?: readonly Locale[];
+  /** Also called with the chosen locale (signed-in users persist it on the profile). */
+  onSelect?: (locale: Locale) => void;
 }
 
 const OPTIONS_BY_CODE = Object.fromEntries(
@@ -57,14 +61,36 @@ function swapLocale(pathname: string, target: Locale): string {
   return `/${segments.join("/")}`;
 }
 
-export function LanguageSwitcher({ locale, className, locales = LOCALE_CODES }: LanguageSwitcherProps) {
-  const pathname = usePathname() ?? `/${locale}`;
-  const searchParams = useSearchParams();
-  const queryString = searchParams.toString();
-  const firstSegment = pathname.split("/").filter(Boolean)[0];
-  const activeLocale: Locale = isLocale(firstSegment) ? firstSegment : locale;
-  const activeOption = OPTIONS_BY_CODE[activeLocale];
+const ITEM_CLASS = "flex min-h-12 w-full items-center gap-3 rounded-[12px] px-3 text-white outline-none transition-colors hover:bg-white/10 focus:bg-white/10";
 
+function ItemBody({ option, active }: { option: (typeof LOCALE_OPTIONS)[number]; active: boolean }) {
+  return (
+    <>
+      <span
+        className={`fi fi-${option.countryCode} !size-5 rounded-[3px] shadow-[0_0_0_1px_rgba(255,255,255,0.14)]`}
+        aria-hidden
+      />
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-black leading-tight">{option.nativeName}</span>
+        {option.nativeName !== option.name ? (
+          <span className="mt-0.5 block text-[11px] font-semibold text-white/50">
+            {option.name}
+          </span>
+        ) : null}
+      </span>
+      {active ? <Check className="size-4 text-brand-yellow" aria-hidden /> : null}
+    </>
+  );
+}
+
+/** The dropdown chrome shared by both switchers; `renderItem` supplies the link or button per locale. */
+function LanguageMenu({ activeLocale, locales, className, renderItem }: {
+  activeLocale: Locale;
+  locales: readonly Locale[];
+  className?: string;
+  renderItem: (code: Locale, option: (typeof LOCALE_OPTIONS)[number], active: boolean) => React.ReactNode;
+}) {
+  const activeOption = OPTIONS_BY_CODE[activeLocale];
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -99,45 +125,75 @@ export function LanguageSwitcher({ locale, className, locales = LOCALE_CODES }: 
         <DropdownMenuLabel className="px-3 pb-2 pt-1 text-[10px] font-black uppercase tracking-[0.18em] text-white/45">
           Choose language
         </DropdownMenuLabel>
-        {locales.map((code) => {
-          const option = OPTIONS_BY_CODE[code];
-          const active = code === activeLocale;
-          const localePath = swapLocale(pathname, code);
-          const href = queryString ? `${localePath}?${queryString}` : localePath;
-          return (
-            <DropdownMenuItem key={code} asChild className="p-0 focus:bg-transparent">
-              <Link
-                href={href}
-                hrefLang={code}
-                lang={code}
-                // An explicit choice: persisted so leaving the localized pages
-                // (creating a room, opening a game) keeps this language instead
-                // of falling back to an earlier inferred one.
-                onClick={() => storage.set(STORAGE_KEYS.LOCALE, code)}
-                aria-current={active ? "page" : undefined}
-                className={cn(
-                  "flex min-h-12 w-full items-center gap-3 rounded-[12px] px-3 text-white outline-none transition-colors hover:bg-white/10 focus:bg-white/10",
-                  active && "bg-brand-blue hover:bg-brand-blue",
-                )}
-              >
-                <span
-                  className={`fi fi-${option.countryCode} !size-5 rounded-[3px] shadow-[0_0_0_1px_rgba(255,255,255,0.14)]`}
-                  aria-hidden
-                />
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-black leading-tight">{option.nativeName}</span>
-                  {option.nativeName !== option.name ? (
-                    <span className="mt-0.5 block text-[11px] font-semibold text-white/50">
-                      {option.name}
-                    </span>
-                  ) : null}
-                </span>
-                {active ? <Check className="size-4 text-brand-yellow" aria-hidden /> : null}
-              </Link>
-            </DropdownMenuItem>
-          );
-        })}
+        {locales.map((code) => (
+          <DropdownMenuItem key={code} asChild className="p-0 focus:bg-transparent">
+            {renderItem(code, OPTIONS_BY_CODE[code], code === activeLocale)}
+          </DropdownMenuItem>
+        ))}
       </DropdownMenuContent>
     </DropdownMenu>
+  );
+}
+
+/** Public pages: each language is a link to the localized URL. Reads the URL, so mount it under Suspense. */
+export function LanguageSwitcher({ locale, className, locales = LOCALE_CODES, onSelect }: LanguageSwitcherProps) {
+  const pathname = usePathname() ?? `/${locale}`;
+  const searchParams = useSearchParams();
+  const queryString = searchParams.toString();
+  const firstSegment = pathname.split("/").filter(Boolean)[0];
+  const activeLocale: Locale = isLocale(firstSegment) ? firstSegment : locale;
+
+  return (
+    <LanguageMenu
+      activeLocale={activeLocale}
+      locales={locales}
+      className={className}
+      renderItem={(code, option, active) => {
+        const localePath = swapLocale(pathname, code);
+        const href = queryString ? `${localePath}?${queryString}` : localePath;
+        return (
+          <Link
+            href={href}
+            hrefLang={code}
+            lang={code}
+            // An explicit choice: persisted so leaving the localized pages
+            // (creating a room, opening a game) keeps this language instead
+            // of falling back to an earlier inferred one.
+            onClick={() => { storage.set(STORAGE_KEYS.LOCALE, code); onSelect?.(code); }}
+            aria-current={active ? "page" : undefined}
+            className={cn(ITEM_CLASS, active && "bg-brand-blue hover:bg-brand-blue")}
+          >
+            <ItemBody option={option} active={active} />
+          </Link>
+        );
+      }}
+    />
+  );
+}
+
+/** Signed-in app: pick a language in place (no navigation); the caller switches the UI and saves the preference. */
+export function InPlaceLanguageSwitcher({ locale, onSelect, className, locales = LOCALE_CODES }: {
+  locale: Locale;
+  onSelect: (locale: Locale) => void;
+  className?: string;
+  locales?: readonly Locale[];
+}) {
+  return (
+    <LanguageMenu
+      activeLocale={locale}
+      locales={locales}
+      className={className}
+      renderItem={(code, option, active) => (
+        <button
+          type="button"
+          lang={code}
+          onClick={() => onSelect(code)}
+          aria-current={active ? "true" : undefined}
+          className={cn(ITEM_CLASS, active && "bg-brand-blue hover:bg-brand-blue")}
+        >
+          <ItemBody option={option} active={active} />
+        </button>
+      )}
+    />
   );
 }
