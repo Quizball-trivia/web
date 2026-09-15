@@ -223,8 +223,8 @@ export function useLobbyCommandMachine() {
     return null;
   }, [setMachineState, wait]);
 
-  const createLobby = useCallback((payload: { mode: MatchMode; isPublic?: boolean }) => {
-    const commandKey = `create:${payload.mode}:${payload.isPublic === true ? "public" : "private"}`;
+  const createLobby = useCallback((payload: { mode: MatchMode; isPublic?: boolean; gameMode?: 'football_grid' | 'auction' }) => {
+    const commandKey = `create:${payload.mode}:${payload.isPublic === true ? "public" : "private"}${payload.gameMode ? `:${payload.gameMode}` : ""}`;
     return execute<LobbyCreateResult>({
       operation: "create",
       commandKey,
