@@ -5,7 +5,7 @@ import { headers } from 'next/headers';
 import { ArrowRight, Swords } from 'lucide-react';
 import { AppShellPageChrome } from '@/components/layout/app-shell/AppShellPageChrome';
 import { CAMPAIGN_QUIZ_CONTENT } from './campaignQuiz.content';
-import { listCampaignQuizPagesResilient } from './campaignQuiz.api';
+import { listCampaignQuizPagesResilient } from './campaignQuiz.catalog';
 import type { CampaignQuizHubPage } from './campaignQuiz.types';
 import { CampaignQuizHubPageView } from './CampaignQuizHubPageView';
 import { CampaignTrackedLink } from './CampaignTrackedLink';

@@ -9,7 +9,7 @@ import { AppShellPageChrome } from '@/components/layout/app-shell/AppShellPageCh
 import {
   CAMPAIGN_QUIZ_CONTENT,
 } from '@/features/campaign-quiz/campaignQuiz.content';
-import { listCampaignQuizPagesResilient } from '@/features/campaign-quiz/campaignQuiz.api';
+import { listCampaignQuizPagesResilient } from '@/features/campaign-quiz/campaignQuiz.catalog';
 import type { CampaignQuizHubPage } from '@/features/campaign-quiz/campaignQuiz.types';
 import { CampaignQuizHubPageView } from '@/features/campaign-quiz/CampaignQuizHubPageView';
 import { CampaignTrackedLink } from '@/features/campaign-quiz/CampaignTrackedLink';

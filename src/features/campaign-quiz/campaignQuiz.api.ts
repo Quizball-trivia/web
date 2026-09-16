@@ -54,27 +54,6 @@ export async function listCampaignQuizPages(locale: Locale = 'en'): Promise<Camp
   return parseJson<CampaignQuizHubPage[]>(response);
 }
 
-/**
- * The catalog with a last-known-good fallback. The 5-minute entry is the source
- * of truth. A twin request to the same endpoint (its own cache key, refreshed
- * at most daily) is made on every call so its entry stays warm; Next serves a
- * stale entry while a background refresh fails, so during an outage the twin
- * still answers with the catalog as of its last successful refresh. Only when
- * both are unavailable does this throw, so a caller can fail loudly instead of
- * publishing an empty catalog as success. (Cold caches at outage time still fail.)
- */
-export async function listCampaignQuizPagesResilient(locale: Locale = 'en'): Promise<CampaignQuizHubPage[]> {
-  const twin = fetch(`${API_BASE_URL}/api/v1/campaign-quizzes?locale=${locale}&lkg=1`, {
-    next: { revalidate: 86_400 },
-    headers: { Accept: 'application/json' },
-    signal: requestSignal(),
-  }).then((response) => parseJson<CampaignQuizHubPage[]>(response));
-  const [primary, fallback] = await Promise.allSettled([listCampaignQuizPages(locale), twin]);
-  if (primary.status === 'fulfilled') return primary.value;
-  if (fallback.status === 'fulfilled') return fallback.value;
-  throw primary.reason;
-}
-
 export async function resolveCampaignQuizRoute(slug: string): Promise<CampaignQuizRoute> {
   const response = await fetch(`${API_BASE_URL}/api/v1/campaign-quizzes/routes/${encodeURIComponent(slug)}`, {
     next: { revalidate: 300 },
