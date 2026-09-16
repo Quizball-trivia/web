@@ -1,3 +1,4 @@
+import { seoTitle } from "@/lib/seo/title";
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
@@ -30,7 +31,7 @@ export async function generateMetadata({
   const canonical = `${SITE_URL}/${locale}/press`;
 
   return {
-    title: copy.metaTitle,
+    title: seoTitle(copy.metaTitle),
     description: copy.metaDescription,
     alternates: {
       canonical,
