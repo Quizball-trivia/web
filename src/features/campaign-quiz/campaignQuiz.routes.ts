@@ -21,6 +21,13 @@ export const CAMPAIGN_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 export const CAMPAIGN_SLUG_MAX_LENGTH = 80;
 const isValidSlug = (slug: string) => slug.length <= CAMPAIGN_SLUG_MAX_LENGTH && CAMPAIGN_SLUG_PATTERN.test(slug);
 
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** A CMS preview token is a UUID; anything else is ignored rather than sent to the API (whose 422 would surface as a 500). */
+export function sanitizePreview(raw: string | undefined): string | undefined {
+  return raw && UUID_PATTERN.test(raw) ? raw : undefined;
+}
+
 /** Keeps the CMS preview token across a redirect so an editor's preview link still previews. */
 export function withPreview(path: string, preview: string | undefined): string {
   return preview ? `${path}?preview=${encodeURIComponent(preview)}` : path;

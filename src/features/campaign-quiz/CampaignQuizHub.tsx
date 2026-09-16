@@ -33,6 +33,7 @@ const HUB_COPY = {
     methodologyLink: 'How QuizBall checks every question',
     rankedHeading: 'Take your score into ranked duels',
     rankedBody: 'Solo quizzes are the warm-up. Sign up free to face real fans and climb the QuizBall leaderboard.',
+    unavailable: 'The quiz list is temporarily unavailable. Please try again in a few minutes.',
     groups: { team: 'Club quizzes', league: 'League quizzes', quiz_type: 'Football challenges', article: 'Football trivia' },
   },
   ka: {
@@ -43,6 +44,7 @@ const HUB_COPY = {
     verifiedBody: 'QuizBall-ის საჯარო ქვიზები მოიცავს გადამოწმებულ კითხვებს კლუბებზე, ტურნირებსა და მოთამაშეებზე.',
     methodologyLink: 'როგორ ამოწმებს QuizBall კითხვებს',
     rankedHeading: 'გადადი რეიტინგულ დუელებში', rankedBody: 'დარეგისტრირდი უფასოდ და დაუპირისპირდი ნამდვილ გულშემატკივრებს.',
+    unavailable: 'ქვიზების სია დროებით მიუწვდომელია. სცადე რამდენიმე წუთში.',
     groups: { team: 'კლუბების ქვიზები', league: 'ლიგების ქვიზები', quiz_type: 'ფეხბურთის გამოწვევები', article: 'ფეხბურთის ტრივია' },
   },
   es: {
@@ -56,21 +58,22 @@ const HUB_COPY = {
     methodologyLink: 'Cómo revisa QuizBall cada pregunta',
     rankedHeading: 'Lleva tu puntuación a los duelos clasificatorios',
     rankedBody: 'Los quizzes individuales son el calentamiento. Regístrate gratis para enfrentarte a aficionados reales y subir en la clasificación.',
+    unavailable: 'La lista de quizzes no está disponible temporalmente. Vuelve a intentarlo en unos minutos.',
     groups: { team: 'Quizzes de clubes', league: 'Quizzes de ligas', quiz_type: 'Retos de fútbol', article: 'Trivia de fútbol' },
   },
 } as const satisfies Record<CampaignQuizLocale, {
   ranked: string; eyebrow: string; title: string; intro: string; popularHeading: string;
   popularBody: string; playFree: string; verifiedHeading: string; verifiedBody: string;
   methodologyLink: string;
-  rankedHeading: string; rankedBody: string; groups: Record<CampaignQuizHubPage['category'], string>;
+  rankedHeading: string; rankedBody: string; unavailable: string; groups: Record<CampaignQuizHubPage['category'], string>;
 }>;
 
-const loadHubPages = cache(async (locale: CampaignQuizLocale) => {
+const loadHubPages = cache(async (locale: CampaignQuizLocale): Promise<CampaignQuizHubPage[] | null> => {
   try {
     return await listCampaignQuizPagesResilient(locale);
   } catch {
-    // Neither the live catalog nor the last-known-good copy: fail closed, the CMS owns publication state.
-    return [];
+    // Neither the live catalog nor the last-known-good copy: say so (null); the CMS owns publication state.
+    return null;
   }
 });
 
@@ -96,6 +99,16 @@ function QuizCard({ page, locale, label, preload = false }: {
 export async function CampaignQuizHub({ locale }: { locale: CampaignQuizLocale }) {
   const copy = HUB_COPY[locale];
   const pages = await loadHubPages(locale);
+  if (pages === null) {
+    return (
+      <div className="relative min-h-screen bg-surface-page-alt font-poppins text-white">
+        <main className="mx-auto max-w-2xl px-4 py-24 text-center">
+          <h1 className="text-2xl font-black uppercase">{copy.title}</h1>
+          <p className="mt-4 text-white/75">{copy.unavailable}</p>
+        </main>
+      </div>
+    );
+  }
   const popularSlugs = POPULAR_QUIZ_SLUGS[locale];
   const popularSlugSet = new Set<string>(popularSlugs);
   const popularPages = popularSlugs.flatMap((slug) => {
