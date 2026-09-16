@@ -38,8 +38,11 @@ export default async function SpanishCampaignQuizPage({ params, searchParams }: 
   try {
     return await renderCampaignQuizPage(sourceSlug, 'es', preview);
   } catch (error) {
-    if (!(error instanceof CampaignQuizApiError) || error.status >= 500) throw error;
-    if (error.status !== 404) notFound(); // rejected preview token or other validation failure: not a server error
+    if (!(error instanceof CampaignQuizApiError)) throw error;
+    // Only an identifiable preview rejection (a token was sent and the API refused it) becomes a
+    // deliberate 404; every other failure (429, unexpected 4xx, 5xx) still surfaces as an error.
+    if (preview && [400, 401, 403, 422].includes(error.status)) notFound();
+    if (error.status !== 404) throw error;
     const route = await resolveCampaignQuizRoute(sourceSlug).catch(() => null);
     if (route?.kind === 'redirect' && route.target_slug) {
       permanentRedirect(withPreview(campaignQuizPath(route.target_slug, 'es'), preview));
