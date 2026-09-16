@@ -73,7 +73,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     return Number.isNaN(date.getTime()) ? undefined : date;
   };
 
-  // Last-known-good catalog (≤ 24 h) when the API is down; if even that is unavailable the
+  // Last-known-good catalog (the daily-refreshed entry, served stale while the API is down); if even that is unavailable the
   // sitemap fails (a 5xx keeps the previously fetched sitemap at the crawler) rather than
   // publishing a successful sitemap with every quiz page silently missing.
   const campaignPages = await listCampaignQuizPagesResilient('en');

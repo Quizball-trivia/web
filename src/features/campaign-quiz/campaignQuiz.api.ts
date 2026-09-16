@@ -69,10 +69,18 @@ export async function listCampaignQuizPagesResilient(locale: Locale = 'en'): Pro
     headers: { Accept: 'application/json' },
     signal: requestSignal(),
   }).then((response) => parseJson<CampaignQuizHubPage[]>(response));
-  const [primary, fallback] = await Promise.allSettled([listCampaignQuizPages(locale), twin]);
-  if (primary.status === 'fulfilled') return primary.value;
-  if (fallback.status === 'fulfilled') return fallback.value;
-  throw primary.reason;
+  // The twin is issued on every call to stay warm but only awaited when the primary fails,
+  // so a slow or cold twin never delays a healthy response.
+  void twin.catch(() => undefined);
+  try {
+    return await listCampaignQuizPages(locale);
+  } catch (primaryError) {
+    try {
+      return await twin;
+    } catch {
+      throw primaryError;
+    }
+  }
 }
 
 export async function resolveCampaignQuizRoute(slug: string): Promise<CampaignQuizRoute> {
