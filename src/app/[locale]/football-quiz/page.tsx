@@ -48,6 +48,7 @@ const HUB_COPY = {
     methodologyLink: 'How QuizBall checks every question',
     rankedHeading: 'Take your score into ranked duels',
     rankedBody: 'Solo quizzes are the warm-up. Sign up free when you are ready to face real fans, turn correct answers into possession and climb the QuizBall leaderboard.',
+    unavailable: 'The quiz list is temporarily unavailable. Please try again in a few minutes.',
   },
   ka: {
     playRanked: 'ითამაშე რეიტინგული',
@@ -68,6 +69,7 @@ const HUB_COPY = {
     methodologyLink: 'როგორ ამოწმებს QuizBall კითხვებს',
     rankedHeading: 'გადაიტანე შენი შედეგი რეიტინგულ დუელებში',
     rankedBody: 'სოლო ქვიზები გახურებაა. დარეგისტრირდი უფასოდ, დაუპირისპირდი ნამდვილ გულშემატკივრებს და აიწიე QuizBall-ის რეიტინგში.',
+    unavailable: 'ქვიზების სია დროებით მიუწვდომელია. სცადე რამდენიმე წუთში.',
   },
 } as const satisfies Record<'en' | 'ka', {
   playRanked: string;
@@ -82,17 +84,17 @@ const HUB_COPY = {
   checkedBody: string;
   methodologyLink: string;
   rankedHeading: string;
-  rankedBody: string;
+  rankedBody: string; unavailable: string;
 }>;
 
-const loadHubPages = cache(async (locale: 'en' | 'ka'): Promise<CampaignQuizHubPage[]> => {
+const loadHubPages = cache(async (locale: 'en' | 'ka'): Promise<CampaignQuizHubPage[] | null> => {
   try {
     return await listCampaignQuizPagesResilient(locale);
   } catch {
     // Publication state belongs to the CMS. If neither the live catalog nor the
-    // last-known-good copy can be loaded, fail closed rather than resurfacing a
-    // deleted or unpublished legacy page.
-    return [];
+    // last-known-good copy can be loaded, say so (null) rather than resurfacing a
+    // deleted or unpublished legacy page or pretending the catalog is empty.
+    return null;
   }
 });
 
@@ -143,7 +145,7 @@ function QuizCard({
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {
   const { locale } = await params;
   if (locale !== 'en' && locale !== 'ka') return {};
-  const englishPages = await loadHubPages('en');
+  const englishPages = (await loadHubPages('en')) ?? [];
   const hasGeorgianHub = englishPages.some((page) => page.locale_mode === 'en_ka');
   if (locale === 'ka' && !hasGeorgianHub) return {};
   const pageUrl = `${SITE_URL}/${locale}/football-quiz`;
@@ -188,6 +190,16 @@ export default async function FootballQuizHubPage({ params }: { params: Promise<
   const locale = rawLocale as 'en' | 'ka';
   const copy = HUB_COPY[locale];
   const pages = await loadHubPages(locale);
+  if (pages === null) {
+    return (
+      <div className="relative min-h-screen bg-surface-page-alt font-poppins text-white">
+        <main className="mx-auto max-w-2xl px-4 py-24 text-center">
+          <h1 className="text-2xl font-black uppercase">{copy.h1}</h1>
+          <p className="mt-4 text-white/75">{copy.unavailable}</p>
+        </main>
+      </div>
+    );
+  }
   if (pages.length === 0) notFound();
   const popularPages = POPULAR_QUIZ_SLUGS.flatMap((slug) => {
     const page = pages.find((candidate) => candidate.slug === slug);
