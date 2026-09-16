@@ -359,6 +359,22 @@ export function ModeSelectionScreen({
     const game = findPublicGameByModeId(modeId);
     return game?.page ? gamePagePath(game, locale) : undefined;
   };
+  // Signed-out visitors go straight to the public Auction / Tic Tac Toe page
+  // (owner, 2026-09-16); the mode modal is for members. Ranked is untouched.
+  const openAuctionCard = () => {
+    if (isGuest) {
+      const href = publicPageFor('auction');
+      if (href) { router.push(href); return; }
+    }
+    setAuctionModalOpen(true);
+  };
+  const openGridCard = () => {
+    if (isGuest) {
+      const href = publicPageFor('grid');
+      if (href) { router.push(href); return; }
+    }
+    setGridModalOpen(true);
+  };
   // The hero opens the ranked dialog for everyone (same shape as Auction).
   const [rankedModalOpen, setRankedModalOpen] = useState(false);
   const openRankedFlow = () => setRankedModalOpen(true);
@@ -665,11 +681,11 @@ export function ModeSelectionScreen({
         {/* Auction (beta) — spans the mobile 2-col row so it never orphans */}
         {isAuctionCardEnabled && (
           <div
-            onClick={() => setAuctionModalOpen(true)}
+            onClick={openAuctionCard}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                setAuctionModalOpen(true);
+                openAuctionCard();
               }
             }}
             role="button"
@@ -715,11 +731,11 @@ export function ModeSelectionScreen({
         {/* Tic-Tac-Toe — same compact card family as the row above. */}
         {isTicTacToeEnabled && (
           <div
-            onClick={() => setGridModalOpen(true)}
+            onClick={openGridCard}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                setGridModalOpen(true);
+                openGridCard();
               }
             }}
             role="button"

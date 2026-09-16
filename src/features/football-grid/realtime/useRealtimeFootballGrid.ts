@@ -14,6 +14,12 @@ interface UseRealtimeFootballGridOptions {
   /** League pack to queue for; defaults to the full European mix. */
   theme?: string;
   autoStart?: boolean;
+  /**
+   * 'queue' (default) searches for a human with the bot fallback; 'practice_bot'
+   * is the guest "Play now" path — the server pairs a bot immediately. Every
+   * start, retry and reconnect re-emit goes through the same mode.
+   */
+  startMode?: 'queue' | 'practice_bot';
   /** Board artwork warmed — the client only reports ready once it can render the reveal. */
   assetsReady?: boolean;
 }
@@ -36,9 +42,14 @@ export function useRealtimeFootballGrid({
   locale,
   theme = 'european',
   autoStart = true,
+  startMode = 'queue',
   assetsReady = true,
 }: UseRealtimeFootballGridOptions) {
   const socket = useRealtimeMatchSocket({ enabled, selfUserId });
+  const emitStart = useCallback(() => {
+    if (startMode === 'practice_bot') socket.emit('grid:practice_bot_start', { locale, theme });
+    else socket.emit('grid:search_start', { locale, theme });
+  }, [locale, socket, startMode, theme]);
   const search = useFootballGridStore((current) => current.search);
   const state = useFootballGridStore((current) => current.state);
   const opponent = useFootballGridStore((current) => current.opponent);
@@ -66,8 +77,8 @@ export function useRealtimeFootballGrid({
     // last moment the outgoing match id is observable.
     markGridMatchLeftBehind(useFootballGridStore.getState().state?.matchId);
     useFootballGridStore.getState().beginFreshSearch();
-    socket.emit('grid:search_start', { locale, theme });
-  }, [enabled, locale, socket, theme]);
+    emitStart();
+  }, [emitStart, enabled]);
 
   useEffect(() => {
     if (!enabled || !autoStart || autoStartAttemptedRef.current || searchSuppressedRef.current) return;
@@ -88,13 +99,13 @@ export function useRealtimeFootballGrid({
       const timerId = window.setTimeout(() => {
         markGridMatchLeftBehind(useFootballGridStore.getState().state?.matchId);
         useFootballGridStore.getState().beginFreshSearch();
-        socket.emit('grid:search_start', { locale, theme });
+        emitStart();
       }, 250);
       return () => window.clearTimeout(timerId);
     }
     autoStartAttemptedRef.current = true;
-    socket.emit('grid:search_start', { locale, theme });
-  }, [autoStart, completed, enabled, locale, search.state, socket, state, theme]);
+    emitStart();
+  }, [autoStart, completed, emitStart, enabled, search.state, state]);
 
   useEffect(() => {
     if (!enabled) return;
@@ -105,14 +116,14 @@ export function useRealtimeFootballGrid({
       if (latest.state?.matchId) {
         socket.emit('grid:resync', { matchId: latest.state.matchId });
       } else if (latest.search.state === 'searching' && !searchSuppressedRef.current) {
-        socket.emit('grid:search_start', { locale, theme });
+        emitStart();
       }
     };
     socket.on('connect', handleConnect);
     return () => {
       socket.off('connect', handleConnect);
     };
-  }, [enabled, locale, socket, theme]);
+  }, [emitStart, enabled, socket]);
 
   const selfParticipant = state?.players.find((player) => player.userId === selfUserId);
   const barrierEvent = state?.phase === 'handoff' && selfParticipant && !selfParticipant.handoffAcknowledged

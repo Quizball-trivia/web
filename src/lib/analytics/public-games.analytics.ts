@@ -12,7 +12,10 @@ export const trackGameCardClick = (p: { modeId: string; surface: PublicSurface; 
   trackEvent("game_card_click", { mode_id: p.modeId, source_surface: p.surface, card_group: p.group, destination: p.destination });
 export const trackGameView = (p: { modeId: string; locale: string; access: Access }) =>
   trackEvent("game_view", { mode_id: p.modeId, locale: p.locale, access_type: p.access, surface: "public" });
-export type SessionKind = "training" | "sample";
+export type SessionKind = "training" | "sample" | "bot_match";
+/** "Play now" on a public multiplayer page: the visitor leaves for a live bot match in the app. */
+export const trackPlayNowClick = (p: { modeId: string; access: Access; destination: string }) =>
+  trackEvent("play_now_click", { mode_id: p.modeId, access_type: p.access, source_surface: "public_game", destination: p.destination });
 export const trackGameStart = (p: { modeId: string; access: Access; sessionId: string; sessionKind: SessionKind }) =>
   trackEvent("game_start", { mode_id: p.modeId, access_type: p.access, game_session_id: p.sessionId, source_surface: "public_game", session_kind: p.sessionKind });
 /** What a public-page engine reports when a round ends; the coin sneak peeks add the settlement. */

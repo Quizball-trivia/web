@@ -1,6 +1,6 @@
 import { trackEvent } from '@/lib/posthog';
 
-export type FootballGridSurface = 'demo' | 'matchmaking' | 'friend_lobby';
+export type FootballGridSurface = 'demo' | 'matchmaking' | 'friend_lobby' | 'practice_bot';
 export type FootballGridOpponentType = 'human' | 'bot';
 export type FootballGridResult = 'win' | 'loss' | 'draw';
 

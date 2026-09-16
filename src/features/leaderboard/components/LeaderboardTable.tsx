@@ -23,6 +23,11 @@ interface LeaderboardTableProps {
    * the auction board passes its "AP" label instead.
    */
   pointsLabel?: string;
+  /**
+   * Wrap long names instead of clipping them ("PLA…"): the public game pages
+   * render the board in a narrow column. The app leaderboard keeps truncation.
+   */
+  wrapNames?: boolean;
 }
 
 const poppins = {
@@ -32,7 +37,7 @@ const poppins = {
   lineHeight: 1,
 } as const;
 
-export function LeaderboardTable({ entries, currentUserId, onEntryClick, eventMode, pointsLabel }: LeaderboardTableProps) {
+export function LeaderboardTable({ entries, currentUserId, onEntryClick, eventMode, pointsLabel, wrapNames = false }: LeaderboardTableProps) {
   const { t } = useLocale();
   const tierLabelOf = useTierLabel();
   const { isEventMode: regionEventMode } = useActiveEventMode();
@@ -132,7 +137,9 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick, eventMo
                           size="md"
                         />
                       </div>
-                      <span className="truncate text-sm sm:text-base font-fun font-black uppercase text-white">
+                      <span className={wrapNames
+                        ? "min-w-0 whitespace-normal break-words [overflow-wrap:anywhere] text-xs leading-tight sm:text-sm font-fun font-black uppercase text-white"
+                        : "truncate text-sm sm:text-base font-fun font-black uppercase text-white"}>
                         {entry.username}
                       </span>
                     </div>
