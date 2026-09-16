@@ -65,6 +65,22 @@ describe('useRealtimeFootballGrid', () => {
     unmount();
   });
 
+  it('asks for an immediate bot match in practice mode and re-emits the same command on reconnect', async () => {
+    const { unmount } = renderHook(() => useRealtimeFootballGrid({ enabled: true, selfUserId: 'guest', locale: 'en', startMode: 'practice_bot' }));
+
+    await waitFor(() => expect(socket.emit).toHaveBeenCalledWith('grid:practice_bot_start', { locale: 'en', theme: 'european' }));
+    expect(socket.emit).not.toHaveBeenCalledWith('grid:search_start', expect.anything());
+
+    // Reconnect while still searching: the practice command is retried, never the queue one.
+    act(() => useFootballGridStore.setState((current) => ({ search: { ...current.search, state: 'searching', searchId: 'practice-1' } })));
+    socket.emit.mockClear();
+    const connectHandler = socket.on.mock.calls.filter(([event]) => event === 'connect').at(-1)?.[1] as (() => void) | undefined;
+    act(() => connectHandler?.());
+    expect(socket.emit).toHaveBeenCalledWith('grid:practice_bot_start', { locale: 'en', theme: 'european' });
+    expect(socket.emit).not.toHaveBeenCalledWith('grid:search_start', expect.anything());
+    unmount();
+  });
+
   it('persists cancellation intent when the player leaves before a searchId arrives', async () => {
     const { result, unmount } = renderHook(() => useRealtimeFootballGrid({ enabled: true, selfUserId: 'self', locale: 'en' }));
     await waitFor(() => expect(socket.emit).toHaveBeenCalledWith('grid:search_start', { locale: 'en', theme: 'european' }));

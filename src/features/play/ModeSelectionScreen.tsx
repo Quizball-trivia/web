@@ -33,6 +33,7 @@ import { footballGridAssetUrl } from '@/lib/football-grid/assets';
 import { useAuthPromptStore } from '@/stores/authPrompt.store';
 import { useDirectFriendRoom } from '@/features/friend/hooks/useDirectFriendRoom';
 import { useIsGuest } from '@/lib/auth/useIsGuest';
+import { useAuthStore } from '@/stores/auth.store';
 import { findPublicGameByModeId, publicGamePath as gamePagePath } from '@/lib/seo/public-games';
 import { PracticeDemo } from '@/features/marketing/public/PracticeLayer';
 
@@ -348,6 +349,10 @@ export function ModeSelectionScreen({
   // Guest mode: signed-out visitors browse the Play page and try demos, but any
   // action that needs an account opens the sign-in dialog instead.
   const isGuest = useIsGuest();
+  // isGuest is also true while auth is still loading; only a settled anonymous
+  // visitor is routed to the public pages (a returning member keeps the modal).
+  const authStatus = useAuthStore((state) => state.status);
+  const settledGuest = isGuest && authStatus === 'anonymous';
   const openAuthPrompt = useAuthPromptStore((state) => state.open);
   // Auction / Tic Tac Toe "Play with friend": straight into a private room in that mode.
   const { startFriendRoom } = useDirectFriendRoom({ onFallback: () => setSelectedMode('friendly') });
@@ -358,6 +363,22 @@ export function ModeSelectionScreen({
   const publicPageFor = (modeId: string) => {
     const game = findPublicGameByModeId(modeId);
     return game?.page ? gamePagePath(game, locale) : undefined;
+  };
+  // Signed-out visitors go straight to the public Auction / Tic Tac Toe page
+  // (owner, 2026-09-16); the mode modal is for members. Ranked is untouched.
+  const openAuctionCard = () => {
+    if (settledGuest) {
+      const href = publicPageFor('auction');
+      if (href) { router.push(href); return; }
+    }
+    setAuctionModalOpen(true);
+  };
+  const openGridCard = () => {
+    if (settledGuest) {
+      const href = publicPageFor('grid');
+      if (href) { router.push(href); return; }
+    }
+    setGridModalOpen(true);
   };
   // The hero opens the ranked dialog for everyone (same shape as Auction).
   const [rankedModalOpen, setRankedModalOpen] = useState(false);
@@ -665,11 +686,11 @@ export function ModeSelectionScreen({
         {/* Auction (beta) — spans the mobile 2-col row so it never orphans */}
         {isAuctionCardEnabled && (
           <div
-            onClick={() => setAuctionModalOpen(true)}
+            onClick={openAuctionCard}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                setAuctionModalOpen(true);
+                openAuctionCard();
               }
             }}
             role="button"
@@ -715,11 +736,11 @@ export function ModeSelectionScreen({
         {/* Tic-Tac-Toe — same compact card family as the row above. */}
         {isTicTacToeEnabled && (
           <div
-            onClick={() => setGridModalOpen(true)}
+            onClick={openGridCard}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                setGridModalOpen(true);
+                openGridCard();
               }
             }}
             role="button"

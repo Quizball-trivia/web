@@ -1633,7 +1633,13 @@ export function FootballGridFlowScreen() {
   const principal = useRealtimePrincipal();
   const guestStatus = useEnsureGuestPrincipal(locale);
   const selfUserId = principal.userId;
-  const source = searchParams.get('source') === 'friend_lobby' ? 'friend_lobby' : 'matchmaking';
+  const sourceParam = searchParams.get('source');
+  // 'practice_bot' = guest "Play now" from the public page: an immediate bot
+  // match. A member opening that URL simply gets the normal online flow.
+  const source = sourceParam === 'friend_lobby'
+    ? 'friend_lobby'
+    : sourceParam === 'practice_bot' && principal.kind !== 'member' ? 'practice_bot' : 'matchmaking';
+  const practiceBot = source === 'practice_bot' && principal.kind === 'guest';
   const packParam = searchParams?.get('pack') ?? null;
   const theme = ['european', 'england', 'spain', 'italy', 'germany', 'france', 'brazil', 'turkey', 'argentina', 'georgia'].includes(packParam ?? '')
     ? packParam!
@@ -1644,8 +1650,10 @@ export function FootballGridFlowScreen() {
     selfUserId,
     locale: contentLocale,
     theme,
-    // A `source` query never authorizes matchmaking: guests only ever arrive from a room.
-    autoStart: source === 'matchmaking' && principal.kind === 'member',
+    // A `source` query never authorizes matchmaking: guests only ever arrive from
+    // a room — or, for "Play now", start a practice bot match the server gates.
+    autoStart: (source === 'matchmaking' && principal.kind === 'member') || practiceBot,
+    startMode: practiceBot ? 'practice_bot' : 'queue',
     assetsReady: boardPreload.ready,
   });
   useFootballGridAnalytics({
@@ -1704,8 +1712,8 @@ export function FootballGridFlowScreen() {
       viewedRef.current = true;
       visitStartedRef.current = Date.now();
       activeStartedAtRef.current = document.visibilityState === 'visible' ? Date.now() : null;
-      trackFootballGridViewed({ surface: source, gridId: 'pending', opponentType: 'human' });
-      trackFootballGridPlayStarted({ surface: source, gridId: 'pending', opponentType: 'human' });
+      trackFootballGridViewed({ surface: source, gridId: 'pending', opponentType: practiceBot ? 'bot' : 'human' });
+      trackFootballGridPlayStarted({ surface: source, gridId: 'pending', opponentType: practiceBot ? 'bot' : 'human' });
     }
 
     const accrueActiveTime = (now: number) => {
@@ -1752,7 +1760,7 @@ export function FootballGridFlowScreen() {
       window.removeEventListener('pagehide', finishEngagement);
       engagementCleanupTimerRef.current = window.setTimeout(finishEngagement, 0);
     };
-  }, [source]);
+  }, [practiceBot, source]);
 
   useEffect(() => {
     if (!grid.state || grid.state.phase === 'handoff' || grid.state.phase === 'loading') return;
@@ -1804,7 +1812,7 @@ export function FootballGridFlowScreen() {
   // A guest with nothing to attach to (direct /tic-tac-toe visit, expired
   // match) has no search to run: back to the friend hub instead of an idle
   // search screen. The grace period lets a reload's grid:state snapshot land.
-  const guestIdle = principal.kind === 'guest' && !grid.state && !grid.completed && grid.search.state === 'idle' && !grid.error;
+  const guestIdle = principal.kind === 'guest' && !practiceBot && !grid.state && !grid.completed && grid.search.state === 'idle' && !grid.error;
   useEffect(() => {
     if (!guestIdle) return;
     const timer = window.setTimeout(() => router.replace('/play/friend'), 2_500);
@@ -2000,7 +2008,7 @@ export function FootballGridFlowScreen() {
             {/* Hide "find new" while a rematch window is live or the series
                 has already started its next match, so a public search cannot
                 race the pending rematch handoff. */}
-            {source === 'matchmaking' && (!grid.rematch || grid.rematch.status === 'declined' || grid.rematch.status === 'expired') && (
+            {(source === 'matchmaking' || practiceBot) && (!grid.rematch || grid.rematch.status === 'declined' || grid.rematch.status === 'expired') && (
               <button type="button" onClick={handleFindNew} className="w-full rounded-2xl bg-brand-green px-6 py-4 font-black uppercase text-white transition-colors hover:bg-brand-green-deep">{copy.newOpponent}</button>
             )}
             {rematchPending && !accepted && <button type="button" onClick={grid.actions.declineRematch} className="w-full rounded-2xl border border-white/15 px-6 py-4 font-bold text-white/70">{copy.declineRematch}</button>}

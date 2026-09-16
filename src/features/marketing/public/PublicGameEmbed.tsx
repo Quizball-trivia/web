@@ -23,7 +23,7 @@ const newSessionId = () => (typeof crypto !== "undefined" && "randomUUID" in cry
  * layer portalled to <body> (outside the page's <main>) with its own exit
  * control, and focus moves in and back out. Practice never touches account state.
  */
-export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, playPath, engineEmitsEvents, practiceLocalised, copy }: {
+export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, playPath, engineEmitsEvents, practiceLocalised, copy, variant = "card" }: {
   modeId: string;
   demoSlug: string;
   locale: string;
@@ -34,6 +34,8 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, playPath, 
   engineEmitsEvents: boolean;
   practiceLocalised: boolean;
   copy: { start: string; note: string; exit: string; english: string; title: string };
+  /** 'inline' drops the blue card chrome so the launcher can sit inside another card. */
+  variant?: "card" | "inline";
 }) {
   /** Daily modes run their bundled sample (same every day, no backend); other engines run their practice prototype. */
   const dailyType = demoSlug.startsWith("daily-") ? (demoSlug.slice("daily-".length) as DailyChallengeType) : null;
@@ -47,8 +49,12 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, playPath, 
   const launchRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => { trackGameView({ modeId, locale, access }); }, [modeId, locale, access]);
+  // Return focus to the launcher when the practice layer closes — not on first
+  // render, where a programmatic focus only paints a ring on the fresh page.
+  const wasPlayingRef = useRef(false);
   useEffect(() => {
-    if (!playing) launchRef.current?.focus({ preventScroll: true });
+    if (!playing && wasPlayingRef.current) launchRef.current?.focus({ preventScroll: true });
+    wasPlayingRef.current = playing;
   }, [playing]);
 
   const start = () => {
@@ -76,13 +82,13 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, playPath, 
   };
 
   return (
-    <section id="play" aria-label={copy.title} className="mt-6 scroll-mt-24">
-      <div className="flex flex-col items-start gap-3 rounded-2xl bg-brand-blue p-5">
+    <section id="play" aria-label={copy.title} className={variant === "inline" ? "mt-4 scroll-mt-24" : "mt-6 scroll-mt-24"}>
+      <div className={variant === "inline" ? "flex flex-col items-start gap-3" : "flex flex-col items-start gap-3 rounded-2xl bg-brand-blue p-5"}>
         <button
           ref={launchRef}
           type="button"
           onClick={start}
-          className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-brand-yellow px-8 text-base font-bold uppercase tracking-wide text-black transition-colors hover:bg-brand-yellow-deep"
+          className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-brand-yellow-soft px-8 text-base font-bold uppercase tracking-wide text-black transition-colors hover:bg-brand-yellow-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
         >
           <Play className="size-5" /> {copy.start}
         </button>
