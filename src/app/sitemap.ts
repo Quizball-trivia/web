@@ -1,10 +1,15 @@
 import type { MetadataRoute } from "next";
-import { listCampaignQuizPages } from "@/features/campaign-quiz/campaignQuiz.api";
+import { listCampaignQuizPagesResilient } from "@/features/campaign-quiz/campaignQuiz.api";
 import { SITE_URL } from "@/lib/seo/site";
 import { LOCALES } from "@/lib/i18n/locale";
 import { campaignQuizPath } from "@/features/campaign-quiz/campaignQuiz.routes";
 import { SEO_PAGE_LOCALES, dailyCollectionPath, gamePagePath } from "@/lib/seo/game-pages";
 import { PUBLISHED_PUBLIC_GAMES, publishedLocalesOf } from "@/lib/seo/public-games";
+
+// Generated per request (the catalog fetch inside is cached): the build must not
+// depend on the API being reachable, and an outage answers 5xx so crawlers keep
+// the last sitemap instead of one with every quiz page missing.
+export const dynamic = 'force-dynamic';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entry = (
@@ -57,10 +62,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entry(`/${locale}/press`, "monthly", 0.6, editorialContentUpdated),
   );
   // One indexable page per released public game (localized folder + slug) plus the daily collection.
-  const gamePagesUpdated = new Date("2026-09-07T00:00:00.000Z");
+  // No lastModified for the game pages: a single hardcoded date for every page is noise to crawlers.
   const gamePageEntries = SEO_PAGE_LOCALES.flatMap((locale) => [
-    entry(dailyCollectionPath(locale), "daily", 0.8, gamePagesUpdated),
-    ...PUBLISHED_PUBLIC_GAMES.filter((game) => publishedLocalesOf(game).includes(locale)).map((game) => entry(gamePagePath(game, locale), "weekly", 0.8, gamePagesUpdated)),
+    entry(dailyCollectionPath(locale), "daily", 0.8),
+    ...PUBLISHED_PUBLIC_GAMES.filter((game) => publishedLocalesOf(game).includes(locale)).map((game) => entry(gamePagePath(game, locale), "weekly", 0.8)),
   ]);
 
   const validLastModified = (value: string): Date | undefined => {
@@ -68,13 +73,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     return Number.isNaN(date.getTime()) ? undefined : date;
   };
 
-  let campaignPages: Awaited<ReturnType<typeof listCampaignQuizPages>>;
-  try {
-    campaignPages = await listCampaignQuizPages('en');
-  } catch {
-    // Do not revive unpublished/deleted pages from a hardcoded fallback.
-    campaignPages = [];
-  }
+  // Last-known-good catalog (≤ 24 h) when the API is down; if even that is unavailable the
+  // sitemap fails (a 5xx keeps the previously fetched sitemap at the crawler) rather than
+  // publishing a successful sitemap with every quiz page silently missing.
+  const campaignPages = await listCampaignQuizPagesResilient('en');
 
   const campaignEntries: MetadataRoute.Sitemap = [
     entry(

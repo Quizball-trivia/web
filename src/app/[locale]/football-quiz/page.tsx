@@ -9,7 +9,7 @@ import { AppShellPageChrome } from '@/components/layout/app-shell/AppShellPageCh
 import {
   CAMPAIGN_QUIZ_CONTENT,
 } from '@/features/campaign-quiz/campaignQuiz.content';
-import { listCampaignQuizPages } from '@/features/campaign-quiz/campaignQuiz.api';
+import { listCampaignQuizPagesResilient } from '@/features/campaign-quiz/campaignQuiz.api';
 import type { CampaignQuizHubPage } from '@/features/campaign-quiz/campaignQuiz.types';
 import { CampaignQuizHubPageView } from '@/features/campaign-quiz/CampaignQuizHubPageView';
 import { CampaignTrackedLink } from '@/features/campaign-quiz/CampaignTrackedLink';
@@ -87,10 +87,11 @@ const HUB_COPY = {
 
 const loadHubPages = cache(async (locale: 'en' | 'ka'): Promise<CampaignQuizHubPage[]> => {
   try {
-    return await listCampaignQuizPages(locale);
+    return await listCampaignQuizPagesResilient(locale);
   } catch {
-    // Publication state belongs to the CMS. If it cannot be loaded, fail
-    // closed rather than resurfacing a deleted or unpublished legacy page.
+    // Publication state belongs to the CMS. If neither the live catalog nor the
+    // last-known-good copy can be loaded, fail closed rather than resurfacing a
+    // deleted or unpublished legacy page.
     return [];
   }
 });

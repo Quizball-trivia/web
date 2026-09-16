@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 const listCampaignQuizPagesMock = vi.hoisted(() => vi.fn());
 
 vi.mock('@/features/campaign-quiz/campaignQuiz.api', () => ({
-  listCampaignQuizPages: listCampaignQuizPagesMock,
+  listCampaignQuizPages: listCampaignQuizPagesMock, listCampaignQuizPagesResilient: listCampaignQuizPagesMock,
 }));
 
 import { generateMetadata } from '@/app/[locale]/football-quiz/page';
