@@ -55,7 +55,7 @@ export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: S
           <p className="mt-3 text-sm font-semibold text-brand-yellow">{botPlay ? labels.playNowLabel : game.guest === "demo" ? (isCoinSample ? labels.coinLabel : isDaily ? labels.guestDaily : labels.guest) : home.cards.accountRequired}</p>
           {botPlay ? (
             <section aria-label={labels.playNow} className="mt-6 flex flex-col items-start gap-3 rounded-2xl bg-brand-blue p-5">
-              <PlayNowLink modeId={game.modeId} locale={locale} guestHref={playNowGuestHref} memberHref={playNowMemberHref} className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-brand-yellow px-8 text-base font-bold uppercase tracking-wide text-black transition-colors hover:bg-brand-yellow-deep disabled:opacity-70">
+              <PlayNowLink modeId={game.modeId} locale={locale} guestHref={playNowGuestHref} memberHref={playNowMemberHref} className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-brand-yellow-soft px-8 text-base font-bold uppercase tracking-wide text-black transition-colors hover:bg-brand-yellow-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 disabled:opacity-70">
                 {labels.playNow}
               </PlayNowLink>
               <p className="text-sm text-white/85">{labels.playNowNote}</p>

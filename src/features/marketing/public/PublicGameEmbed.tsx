@@ -49,8 +49,12 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, playPath, 
   const launchRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => { trackGameView({ modeId, locale, access }); }, [modeId, locale, access]);
+  // Return focus to the launcher when the practice layer closes — not on first
+  // render, where a programmatic focus only paints a ring on the fresh page.
+  const wasPlayingRef = useRef(false);
   useEffect(() => {
-    if (!playing) launchRef.current?.focus({ preventScroll: true });
+    if (!playing && wasPlayingRef.current) launchRef.current?.focus({ preventScroll: true });
+    wasPlayingRef.current = playing;
   }, [playing]);
 
   const start = () => {
@@ -84,7 +88,7 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, playPath, 
           ref={launchRef}
           type="button"
           onClick={start}
-          className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-brand-yellow px-8 text-base font-bold uppercase tracking-wide text-black transition-colors hover:bg-brand-yellow-deep"
+          className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-brand-yellow-soft px-8 text-base font-bold uppercase tracking-wide text-black transition-colors hover:bg-brand-yellow-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70"
         >
           <Play className="size-5" /> {copy.start}
         </button>
