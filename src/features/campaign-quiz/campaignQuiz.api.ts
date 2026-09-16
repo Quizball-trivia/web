@@ -1,3 +1,4 @@
+import { after } from 'next/server';
 import { API_BASE_URL } from '@/lib/config';
 import type {
   CampaignQuiz,
@@ -70,8 +71,15 @@ export async function listCampaignQuizPagesResilient(locale: Locale = 'en'): Pro
     signal: requestSignal(),
   }).then((response) => parseJson<CampaignQuizHubPage[]>(response));
   // The twin is issued on every call to stay warm but only awaited when the primary fails,
-  // so a slow or cold twin never delays a healthy response.
-  void twin.catch(() => undefined);
+  // so a slow or cold twin never delays a healthy response. `after` keeps the un-awaited
+  // cache fill alive past the response on serverless; outside a request scope (tests,
+  // build) it throws, and the plain promise is enough there.
+  const keepWarm = () => twin.catch(() => undefined);
+  try {
+    after(keepWarm);
+  } catch {
+    void keepWarm();
+  }
   try {
     return await listCampaignQuizPages(locale);
   } catch (primaryError) {
