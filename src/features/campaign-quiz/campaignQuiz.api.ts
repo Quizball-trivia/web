@@ -54,6 +54,27 @@ export async function listCampaignQuizPages(locale: Locale = 'en'): Promise<Camp
   return parseJson<CampaignQuizHubPage[]>(response);
 }
 
+/**
+ * The catalog with a bounded last-known-good fallback: the 5-minute entry is
+ * the source of truth; when the API is unavailable, a twin entry refreshed at
+ * most daily (same endpoint, its own cache key) serves the catalog as it was
+ * within the last 24 h. Only when both are unavailable does this throw, so a
+ * caller can fail loudly instead of publishing an empty catalog as success.
+ */
+export async function listCampaignQuizPagesResilient(locale: Locale = 'en'): Promise<CampaignQuizHubPage[]> {
+  try {
+    return await listCampaignQuizPages(locale);
+  } catch (primaryError) {
+    const response = await fetch(`${API_BASE_URL}/api/v1/campaign-quizzes?locale=${locale}&lkg=1`, {
+      next: { revalidate: 86_400 },
+      headers: { Accept: 'application/json' },
+      signal: requestSignal(),
+    }).catch(() => null);
+    if (!response) throw primaryError;
+    return parseJson<CampaignQuizHubPage[]>(response);
+  }
+}
+
 export async function resolveCampaignQuizRoute(slug: string): Promise<CampaignQuizRoute> {
   const response = await fetch(`${API_BASE_URL}/api/v1/campaign-quizzes/routes/${encodeURIComponent(slug)}`, {
     next: { revalidate: 300 },
