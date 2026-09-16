@@ -1,4 +1,3 @@
-import { after } from 'next/server';
 import { API_BASE_URL } from '@/lib/config';
 import type {
   CampaignQuiz,
@@ -53,42 +52,6 @@ export async function listCampaignQuizPages(locale: Locale = 'en'): Promise<Camp
     signal: requestSignal(),
   });
   return parseJson<CampaignQuizHubPage[]>(response);
-}
-
-/**
- * The catalog with a last-known-good fallback. The 5-minute entry is the source
- * of truth. A twin request to the same endpoint (its own cache key, refreshed
- * at most daily) is made on every call so its entry stays warm; Next serves a
- * stale entry while a background refresh fails, so during an outage the twin
- * still answers with the catalog as of its last successful refresh. Only when
- * both are unavailable does this throw, so a caller can fail loudly instead of
- * publishing an empty catalog as success. (Cold caches at outage time still fail.)
- */
-export async function listCampaignQuizPagesResilient(locale: Locale = 'en'): Promise<CampaignQuizHubPage[]> {
-  const twin = fetch(`${API_BASE_URL}/api/v1/campaign-quizzes?locale=${locale}&lkg=1`, {
-    next: { revalidate: 86_400 },
-    headers: { Accept: 'application/json' },
-    signal: requestSignal(),
-  }).then((response) => parseJson<CampaignQuizHubPage[]>(response));
-  // The twin is issued on every call to stay warm but only awaited when the primary fails,
-  // so a slow or cold twin never delays a healthy response. `after` keeps the un-awaited
-  // cache fill alive past the response on serverless; outside a request scope (tests,
-  // build) it throws, and the plain promise is enough there.
-  const keepWarm = () => twin.catch(() => undefined);
-  try {
-    after(keepWarm);
-  } catch {
-    void keepWarm();
-  }
-  try {
-    return await listCampaignQuizPages(locale);
-  } catch (primaryError) {
-    try {
-      return await twin;
-    } catch {
-      throw primaryError;
-    }
-  }
 }
 
 export async function resolveCampaignQuizRoute(slug: string): Promise<CampaignQuizRoute> {

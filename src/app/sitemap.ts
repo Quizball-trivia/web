@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { listCampaignQuizPagesResilient } from "@/features/campaign-quiz/campaignQuiz.api";
+import { listCampaignQuizPagesResilient } from "@/features/campaign-quiz/campaignQuiz.catalog";
 import { SITE_URL } from "@/lib/seo/site";
 import { LOCALES } from "@/lib/i18n/locale";
 import { campaignQuizPath } from "@/features/campaign-quiz/campaignQuiz.routes";
