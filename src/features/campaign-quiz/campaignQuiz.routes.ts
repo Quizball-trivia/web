@@ -16,6 +16,21 @@ export function campaignHubPath(locale: CampaignQuizLocale): string {
   return locale === 'es' ? '/es/quiz-de-futbol' : `/${locale}/football-quiz`;
 }
 
+/** The API accepts lowercase, hyphen-separated slugs only. */
+export const CAMPAIGN_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+/**
+ * Case/whitespace variants of a valid slug redirect to the canonical spelling
+ * (incoming links such as /football-quiz/Liverpool); anything else is a 404,
+ * never a request to the API (whose validation error would surface as a 500).
+ */
+export function normalizeCampaignSlug(slug: string): { kind: 'ok' } | { kind: 'redirect'; slug: string } | { kind: 'invalid' } {
+  if (CAMPAIGN_SLUG_PATTERN.test(slug)) return { kind: 'ok' };
+  const normalized = slug.trim().toLowerCase();
+  if (normalized !== slug && CAMPAIGN_SLUG_PATTERN.test(normalized)) return { kind: 'redirect', slug: normalized };
+  return { kind: 'invalid' };
+}
+
 export function campaignPublicSlug(sourceSlug: string, locale: CampaignQuizLocale): string {
   return locale === 'es' ? SPANISH_PUBLIC_SLUGS[sourceSlug] ?? sourceSlug : sourceSlug;
 }

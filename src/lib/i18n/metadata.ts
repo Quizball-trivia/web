@@ -1,3 +1,4 @@
+import { seoTitle } from "@/lib/seo/title";
 import type { Metadata } from "next";
 import {
   SITE_NAME,
@@ -46,7 +47,8 @@ export function buildLocalizedMetadata({
   if (defaultPath !== undefined) languages["x-default"] = `${SITE_URL}/${DEFAULT_LOCALE}${normalize(defaultPath)}`;
 
   return {
-    title,
+    // Copy that already names the brand opts out of the root " · Quizball" template.
+    title: seoTitle(title),
     description,
     alternates: {
       canonical,

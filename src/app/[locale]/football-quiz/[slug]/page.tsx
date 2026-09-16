@@ -13,7 +13,7 @@ import {
   resolveCampaignQuizRoute,
 } from '@/features/campaign-quiz/campaignQuiz.api';
 import { SITE_NAME, SITE_URL } from '@/lib/seo/site';
-import { campaignQuizPath } from '@/features/campaign-quiz/campaignQuiz.routes';
+import { campaignQuizPath, normalizeCampaignSlug } from '@/features/campaign-quiz/campaignQuiz.routes';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,6 +36,7 @@ function absoluteImage(url: string): string {
 export async function generateMetadata({ params, searchParams }: CampaignQuizPageProps): Promise<Metadata> {
   const [{ locale, slug }, { preview }] = await Promise.all([params, searchParams]);
   if (locale !== 'en' && locale !== 'ka') return {};
+  if (normalizeCampaignSlug(slug).kind !== 'ok') return {};
 
   try {
     const quiz = await loadQuiz(slug, preview, locale);
@@ -93,6 +94,9 @@ export async function generateMetadata({ params, searchParams }: CampaignQuizPag
 
 export default async function CampaignQuizPage({ params, searchParams }: CampaignQuizPageProps) {
   const [{ locale, slug }, { preview }] = await Promise.all([params, searchParams]);
+  const slugCheck = normalizeCampaignSlug(slug);
+  if (slugCheck.kind === 'invalid') notFound();
+  if (slugCheck.kind === 'redirect') permanentRedirect(`/${locale}/football-quiz/${slugCheck.slug}`);
   if (locale === 'es') permanentRedirect(campaignQuizPath(slug, 'es'));
   if (locale !== 'en' && locale !== 'ka') notFound();
 
