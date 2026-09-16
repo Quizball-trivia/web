@@ -46,12 +46,20 @@ export function useRealtimeFootballGrid({
   assetsReady = true,
 }: UseRealtimeFootballGridOptions) {
   const socket = useRealtimeMatchSocket({ enabled, selfUserId });
+  // A start whose server reply has not arrived yet: a disconnect in that window
+  // would otherwise lose it (the store is still idle, so reconnect would not retry).
+  const startPendingRef = useRef(false);
   const emitStart = useCallback(() => {
+    startPendingRef.current = true;
     if (startMode === 'practice_bot') socket.emit('grid:practice_bot_start', { locale, theme });
     else socket.emit('grid:search_start', { locale, theme });
   }, [locale, socket, startMode, theme]);
   const search = useFootballGridStore((current) => current.search);
   const state = useFootballGridStore((current) => current.state);
+  useEffect(() => {
+    // The server answered (search state or a match): nothing is pending any more.
+    if (search.state !== 'idle' || state) startPendingRef.current = false;
+  }, [search.state, state]);
   const opponent = useFootballGridStore((current) => current.opponent);
   const capabilities = useFootballGridStore((current) => current.capabilities);
   const completed = useFootballGridStore((current) => current.completed);
@@ -115,7 +123,7 @@ export function useRealtimeFootballGrid({
       const latest = useFootballGridStore.getState();
       if (latest.state?.matchId) {
         socket.emit('grid:resync', { matchId: latest.state.matchId });
-      } else if (latest.search.state === 'searching' && !searchSuppressedRef.current) {
+      } else if ((latest.search.state === 'searching' || startPendingRef.current) && !searchSuppressedRef.current) {
         emitStart();
       }
     };
@@ -212,6 +220,7 @@ export function useRealtimeFootballGrid({
 
   const cancelSearch = useCallback(() => {
     searchSuppressedRef.current = true;
+    startPendingRef.current = false;
     const current = useFootballGridStore.getState();
     current.requestSearchCancellation();
     if (current.search.searchId) socket.emit('grid:search_cancel', { searchId: current.search.searchId });

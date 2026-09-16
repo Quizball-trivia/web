@@ -1712,8 +1712,8 @@ export function FootballGridFlowScreen() {
       viewedRef.current = true;
       visitStartedRef.current = Date.now();
       activeStartedAtRef.current = document.visibilityState === 'visible' ? Date.now() : null;
-      trackFootballGridViewed({ surface: source, gridId: 'pending', opponentType: 'human' });
-      trackFootballGridPlayStarted({ surface: source, gridId: 'pending', opponentType: 'human' });
+      trackFootballGridViewed({ surface: source, gridId: 'pending', opponentType: practiceBot ? 'bot' : 'human' });
+      trackFootballGridPlayStarted({ surface: source, gridId: 'pending', opponentType: practiceBot ? 'bot' : 'human' });
     }
 
     const accrueActiveTime = (now: number) => {
@@ -1760,7 +1760,7 @@ export function FootballGridFlowScreen() {
       window.removeEventListener('pagehide', finishEngagement);
       engagementCleanupTimerRef.current = window.setTimeout(finishEngagement, 0);
     };
-  }, [source]);
+  }, [practiceBot, source]);
 
   useEffect(() => {
     if (!grid.state || grid.state.phase === 'handoff' || grid.state.phase === 'loading') return;
