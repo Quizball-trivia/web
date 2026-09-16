@@ -13,7 +13,7 @@ import {
   resolveCampaignQuizRoute,
 } from '@/features/campaign-quiz/campaignQuiz.api';
 import { SITE_NAME, SITE_URL } from '@/lib/seo/site';
-import { campaignQuizPath } from '@/features/campaign-quiz/campaignQuiz.routes';
+import { campaignQuizPath, normalizeCampaignSlug, withPreview } from '@/features/campaign-quiz/campaignQuiz.routes';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,6 +36,7 @@ function absoluteImage(url: string): string {
 export async function generateMetadata({ params, searchParams }: CampaignQuizPageProps): Promise<Metadata> {
   const [{ locale, slug }, { preview }] = await Promise.all([params, searchParams]);
   if (locale !== 'en' && locale !== 'ka') return {};
+  if (normalizeCampaignSlug(slug).kind !== 'ok') return {};
 
   try {
     const quiz = await loadQuiz(slug, preview, locale);
@@ -93,7 +94,10 @@ export async function generateMetadata({ params, searchParams }: CampaignQuizPag
 
 export default async function CampaignQuizPage({ params, searchParams }: CampaignQuizPageProps) {
   const [{ locale, slug }, { preview }] = await Promise.all([params, searchParams]);
-  if (locale === 'es') permanentRedirect(campaignQuizPath(slug, 'es'));
+  const slugCheck = normalizeCampaignSlug(slug);
+  if (slugCheck.kind === 'invalid') notFound();
+  if (slugCheck.kind === 'redirect') permanentRedirect(withPreview(`/${locale}/football-quiz/${slugCheck.slug}`, preview));
+  if (locale === 'es') permanentRedirect(withPreview(campaignQuizPath(slug, 'es'), preview));
   if (locale !== 'en' && locale !== 'ka') notFound();
 
   let quiz;
@@ -103,14 +107,14 @@ export default async function CampaignQuizPage({ params, searchParams }: Campaig
     if (!(error instanceof CampaignQuizApiError) || error.status !== 404) throw error;
     const route = await resolveCampaignQuizRoute(slug).catch(() => null);
     if (route?.kind === 'redirect' && route.target_slug) {
-      permanentRedirect(`/${locale}/football-quiz/${route.target_slug}`);
+      permanentRedirect(withPreview(`/${locale}/football-quiz/${route.target_slug}`, preview));
     }
     notFound();
   }
 
   const content = getCampaignQuizContent(slug, quiz.page, locale);
   if (!content) notFound();
-  if (locale === 'ka' && content.localeMode !== 'en_ka') permanentRedirect(`/en/football-quiz/${content.slug}`);
+  if (locale === 'ka' && content.localeMode !== 'en_ka') permanentRedirect(withPreview(`/en/football-quiz/${content.slug}`, preview));
 
   const headerList = await headers();
   const nonce = headerList.get('x-nonce') ?? undefined;

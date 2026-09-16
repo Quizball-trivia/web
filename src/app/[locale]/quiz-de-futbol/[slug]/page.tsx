@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
-import { notFound, permanentRedirect, redirect } from 'next/navigation';
+import { notFound, permanentRedirect } from 'next/navigation';
 import { CAMPAIGN_QUIZ_SLUGS } from '@/features/campaign-quiz/campaignQuiz.content';
-import { campaignPublicSlug, campaignQuizPath, campaignSourceSlug } from '@/features/campaign-quiz/campaignQuiz.routes';
+import { campaignPublicSlug, campaignQuizPath, campaignSourceSlug, normalizeCampaignSlug, withPreview } from '@/features/campaign-quiz/campaignQuiz.routes';
 import { buildCampaignQuizMetadata, renderCampaignQuizPage } from '@/features/campaign-quiz/CampaignQuizServerPage';
 import { CampaignQuizApiError, resolveCampaignQuizRoute } from '@/features/campaign-quiz/campaignQuiz.api';
 
@@ -19,23 +19,27 @@ export function generateStaticParams() {
 export async function generateMetadata({ params, searchParams }: SpanishCampaignQuizPageProps): Promise<Metadata> {
   const [{ locale, slug }, { preview }] = await Promise.all([params, searchParams]);
   if (locale !== 'es') return {};
+  if (normalizeCampaignSlug(slug).kind !== 'ok') return {};
   const sourceSlug = campaignSourceSlug(slug, 'es');
   return buildCampaignQuizMetadata(sourceSlug, 'es', preview);
 }
 
 export default async function SpanishCampaignQuizPage({ params, searchParams }: SpanishCampaignQuizPageProps) {
   const [{ locale, slug }, { preview }] = await Promise.all([params, searchParams]);
+  const slugCheck = normalizeCampaignSlug(slug);
+  if (slugCheck.kind === 'invalid') notFound();
+  if (slugCheck.kind === 'redirect') permanentRedirect(withPreview(`/${locale}/quiz-de-futbol/${slugCheck.slug}`, preview));
   const sourceSlug = campaignSourceSlug(slug, 'es');
-  if (locale === 'en') redirect(campaignQuizPath(sourceSlug, 'en'));
-  if (locale !== 'es') redirect(campaignQuizPath(sourceSlug, 'en'));
-  if (slug !== campaignPublicSlug(sourceSlug, 'es')) redirect(campaignQuizPath(sourceSlug, 'es'));
+  // Permanent: these mappings (English slug on the Spanish folder, other locales) never depend on the visitor.
+  if (locale !== 'es') permanentRedirect(withPreview(campaignQuizPath(sourceSlug, 'en'), preview));
+  if (slug !== campaignPublicSlug(sourceSlug, 'es')) permanentRedirect(withPreview(campaignQuizPath(sourceSlug, 'es'), preview));
   try {
     return await renderCampaignQuizPage(sourceSlug, 'es', preview);
   } catch (error) {
     if (!(error instanceof CampaignQuizApiError) || error.status !== 404) throw error;
     const route = await resolveCampaignQuizRoute(sourceSlug).catch(() => null);
     if (route?.kind === 'redirect' && route.target_slug) {
-      permanentRedirect(campaignQuizPath(route.target_slug, 'es'));
+      permanentRedirect(withPreview(campaignQuizPath(route.target_slug, 'es'), preview));
     }
     notFound();
   }
