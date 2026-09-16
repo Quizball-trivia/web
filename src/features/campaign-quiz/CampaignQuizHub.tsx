@@ -5,7 +5,7 @@ import { headers } from 'next/headers';
 import { ArrowRight, Swords } from 'lucide-react';
 import { AppShellPageChrome } from '@/components/layout/app-shell/AppShellPageChrome';
 import { CAMPAIGN_QUIZ_CONTENT } from './campaignQuiz.content';
-import { listCampaignQuizPages } from './campaignQuiz.api';
+import { listCampaignQuizPagesResilient } from './campaignQuiz.api';
 import type { CampaignQuizHubPage } from './campaignQuiz.types';
 import { CampaignQuizHubPageView } from './CampaignQuizHubPageView';
 import { CampaignTrackedLink } from './CampaignTrackedLink';
@@ -67,8 +67,9 @@ const HUB_COPY = {
 
 const loadHubPages = cache(async (locale: CampaignQuizLocale) => {
   try {
-    return await listCampaignQuizPages(locale);
+    return await listCampaignQuizPagesResilient(locale);
   } catch {
+    // Neither the live catalog nor the last-known-good copy: fail closed, the CMS owns publication state.
     return [];
   }
 });

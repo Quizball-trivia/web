@@ -7,23 +7,24 @@ describe("listCampaignQuizPagesResilient", () => {
   const ok = (body: unknown) => ({ ok: true, status: 200, json: async () => body });
   const pages = [{ slug: "liverpool", updated_at: "2026-09-01T00:00:00Z" }];
 
-  it("uses the 5-minute catalog when it works", async () => {
-    fetchSpy.mockResolvedValueOnce(ok(pages));
+  it("uses the 5-minute catalog when it works and keeps the daily twin entry warm", async () => {
+    fetchSpy.mockResolvedValue(ok(pages));
     const { listCampaignQuizPagesResilient } = await import("../campaignQuiz.api");
     expect(await listCampaignQuizPagesResilient("en")).toEqual(pages);
-    expect(fetchSpy).toHaveBeenCalledTimes(1);
+    expect(fetchSpy).toHaveBeenCalledTimes(2);
+    const urls = fetchSpy.mock.calls.map((c) => String(c[0]));
+    expect(urls.some((u) => u.includes("lkg=1"))).toBe(true);
+    expect(fetchSpy.mock.calls.find((c) => String(c[0]).includes("lkg=1"))?.[1]).toMatchObject({ next: { revalidate: 86_400 } });
   });
 
   it("falls back to the daily last-known-good entry when the live catalog fails", async () => {
-    fetchSpy.mockRejectedValueOnce(new Error("api down")).mockResolvedValueOnce(ok(pages));
+    fetchSpy.mockImplementation(async (url: string) => { if (String(url).includes("lkg=1")) return ok(pages); throw new Error("api down"); });
     const { listCampaignQuizPagesResilient } = await import("../campaignQuiz.api");
     expect(await listCampaignQuizPagesResilient("en")).toEqual(pages);
-    expect(String(fetchSpy.mock.calls[1][0])).toContain("lkg=1");
-    expect(fetchSpy.mock.calls[1][1]).toMatchObject({ next: { revalidate: 86_400 } });
   });
 
   it("throws (instead of returning an empty catalog) when both are unavailable", async () => {
-    fetchSpy.mockRejectedValueOnce(new Error("api down")).mockRejectedValueOnce(new Error("still down"));
+    fetchSpy.mockImplementation(async (url: string) => { throw new Error(String(url).includes("lkg=1") ? "still down" : "api down"); });
     const { listCampaignQuizPagesResilient } = await import("../campaignQuiz.api");
     await expect(listCampaignQuizPagesResilient("en")).rejects.toThrow("api down");
   });

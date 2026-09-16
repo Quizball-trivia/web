@@ -6,6 +6,11 @@ import { campaignQuizPath } from "@/features/campaign-quiz/campaignQuiz.routes";
 import { SEO_PAGE_LOCALES, dailyCollectionPath, gamePagePath } from "@/lib/seo/game-pages";
 import { PUBLISHED_PUBLIC_GAMES, publishedLocalesOf } from "@/lib/seo/public-games";
 
+// Generated per request (the catalog fetch inside is cached): the build must not
+// depend on the API being reachable, and an outage answers 5xx so crawlers keep
+// the last sitemap instead of one with every quiz page missing.
+export const dynamic = 'force-dynamic';
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entry = (
     path: string,
