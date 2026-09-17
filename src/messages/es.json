@@ -1309,6 +1309,8 @@
     "opponentLockedIn": "El oponente respondió",
     "won": "Ganado",
     "didNotWin": "No ganó",
+    "resultDraw": "Empate",
+    "resultDrawSubtitle": "Igualados tras los penaltis — es un empate.",
     "found": "Encontrado",
     "finding": "Buscando",
     "waiting": "Esperando",

@@ -692,7 +692,7 @@ export function GameStageRouter() {
       // Regulation goals are 0 when the match went to penalty shootout. To
       // avoid the "0:0 VICTORY" confusion, include penalty goals in the
       // displayed score whenever penalties decided it.
-      const wentToPenalties = (final?.winnerDecisionMethod === 'penalty_goals')
+      const wentToPenalties = (final?.winnerDecisionMethod === 'penalty_goals' || final?.winnerDecisionMethod === 'draw')
         || (myStats?.penaltyGoals ?? 0) > 0
         || (opponentStats?.penaltyGoals ?? 0) > 0;
       const playerDisplayScore = (myStats?.goals ?? 0)
@@ -748,6 +748,7 @@ export function GameStageRouter() {
           opponentQuestionResults={opponentQuestionResults}
           selfUserId={selfUserId}
           finalWinnerId={final?.winnerId}
+          isDraw={final?.isDraw}
           winnerDecisionMethod={final?.winnerDecisionMethod ?? null}
           cancelledNoContest={final?.cancelledNoContest === true}
           preMatchRp={stableRankedProfile?.placementStatus === 'placed' ? stableRankedProfile.rp : undefined}

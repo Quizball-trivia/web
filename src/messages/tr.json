@@ -1309,6 +1309,8 @@
     "opponentLockedIn": "Rakip cevapladı",
     "won": "Kazandın",
     "didNotWin": "Kazanmadın",
+    "resultDraw": "Berabere",
+    "resultDrawSubtitle": "Penaltılar sonrası eşitlik — berabere.",
     "found": "Bulundu",
     "finding": "Bulunuyor",
     "waiting": "Bekleniyor",

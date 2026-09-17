@@ -27,6 +27,7 @@ import { trackMatchResultsViewed, trackDivisionPromoted, trackLevelUp } from '@/
 import { logger } from '@/utils/logger';
 import { useLocale } from '@/contexts/LocaleContext';
 import type { RankedMatchOutcomePayload } from '@/lib/realtime/socket.types';
+import { resolveMatchOutcome } from '@/lib/domain/matchOutcome';
 import type { RealtimeResultsScreenProps } from './results.types';
 
 export interface MatchResultViewModel {
@@ -35,6 +36,8 @@ export interface MatchResultViewModel {
   isDraw: boolean;
   isCancelledNoContest: boolean;
   resultHeading: string;
+  /** One-line explanation under the heading (currently only for shootout draws). */
+  resultSubheading: string | null;
   refundedTickets: number;
 
   // Head-to-head label
@@ -97,6 +100,7 @@ export function useMatchResultViewModel(props: RealtimeResultsScreenProps): Matc
     selfUserId,
     finalWinnerId,
     winnerDecisionMethod,
+    isDraw: payloadIsDraw,
     cancelledNoContest = false,
     preMatchRp,
     opponentId,
@@ -106,14 +110,21 @@ export function useMatchResultViewModel(props: RealtimeResultsScreenProps): Matc
     preMatchProgression,
   } = props;
 
-  const hasAuthoritativeWinner = finalWinnerId !== undefined;
-  const playerWon = hasAuthoritativeWinner
-    ? finalWinnerId === selfUserId
-    : playerScore > opponentScore;
-  const isDraw = hasAuthoritativeWinner
-    ? finalWinnerId === null
-    : playerScore === opponentScore;
-  const isCancelledNoContest = cancelledNoContest === true;
+  const outcome = resolveMatchOutcome({
+    winnerUserId: finalWinnerId,
+    selfUserId,
+    winnerDecisionMethod,
+    isDraw: payloadIsDraw,
+    cancelledNoContest,
+    playerScore,
+    opponentScore,
+  });
+  const playerWon = outcome === 'win';
+  const isDraw = outcome === 'draw';
+  const isCancelledNoContest = outcome === 'cancelled';
+  // Only an authoritative shootout draw gets the explanatory line; the
+  // score-comparison fallback draw has no penalty story to tell.
+  const isShootoutDraw = isDraw && (winnerDecisionMethod === 'draw' || payloadIsDraw === true);
 
   // H2H record (already includes this match)
   const { data: h2hSummary } = useHeadToHead(selfUserId, opponentId);
@@ -262,7 +273,8 @@ export function useMatchResultViewModel(props: RealtimeResultsScreenProps): Matc
   const hasServerReveal = myOutcome != null;
   const revealTier = tierFromRp(myOutcome?.newRp ?? newRP);
   const revealTierVisual = getTierVisual(revealTier);
-  const resultHeading = isCancelledNoContest ? t('results.cancelled') : isDraw ? 'DRAW' : playerWon ? 'VICTORY' : 'DEFEAT';
+  const resultHeading = isCancelledNoContest ? t('results.cancelled') : isDraw ? t('possession.resultDraw') : playerWon ? 'VICTORY' : 'DEFEAT';
+  const resultSubheading = isShootoutDraw ? t('possession.resultDrawSubtitle') : null;
   const totalGamesLabel = isCancelledNoContest
     ? t('results.noContest')
     : totalMatches > 0
@@ -288,6 +300,7 @@ export function useMatchResultViewModel(props: RealtimeResultsScreenProps): Matc
     isDraw,
     isCancelledNoContest,
     resultHeading,
+    resultSubheading,
     refundedTickets,
     totalGamesLabel,
     myOutcome,

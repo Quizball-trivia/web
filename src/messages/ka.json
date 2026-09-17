@@ -1357,6 +1357,8 @@
     "opponentLockedIn": "მოწინააღმდეგემ უპასუხა",
     "won": "მოგებულია",
     "didNotWin": "ვერ გაიმარჯვა",
+    "resultDraw": "ფრე",
+    "resultDrawSubtitle": "პენალტების შემდეგ ანგარიში თანაბარია — ფრეა.",
     "found": "ნაპოვნია",
     "finding": "ძიება",
     "waiting": "ლოდინი",

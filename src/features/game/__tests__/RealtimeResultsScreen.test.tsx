@@ -108,6 +108,58 @@ describe('RealtimeResultsScreen — result heading branches', () => {
     expect(screen.getByRole('heading', { level: 1, name: /draw/i })).toBeInTheDocument();
   });
 
+  it('renders a penalty-shootout draw with +10 RP, coins and no win/loss cues', async () => {
+    renderResults({
+      matchType: 'ranked',
+      finalWinnerId: null,
+      winnerDecisionMethod: 'draw',
+      isDraw: true,
+      playerScore: 3,
+      opponentScore: 3,
+      winStreakCount: 4,
+      rankedOutcome: {
+        isPlacement: false,
+        byUserId: {
+          [SELF_ID]: {
+            userId: SELF_ID,
+            oldRp: 1900,
+            newRp: 1910,
+            deltaRp: 10,
+            coinsAwarded: 475,
+            oldTier: 'Key Player',
+            newTier: 'Key Player',
+            placementStatus: 'placed',
+            placementPlayed: 3,
+            placementRequired: 3,
+            isPlacement: false,
+          },
+          [OPP_ID]: {
+            userId: OPP_ID,
+            oldRp: 1900,
+            newRp: 1910,
+            deltaRp: 10,
+            coinsAwarded: 475,
+            oldTier: 'Key Player',
+            newTier: 'Key Player',
+            placementStatus: 'placed',
+            placementPlayed: 3,
+            placementRequired: 3,
+            isPlacement: false,
+          },
+        },
+      },
+    });
+
+    expect(screen.getByRole('heading', { level: 1, name: /^draw$/i })).toBeInTheDocument();
+    expect(screen.getByText("Level after the penalties — it's a draw.")).toBeInTheDocument();
+    expect(screen.getByText('+10')).toBeInTheDocument();
+    // Coin chip counts up via AnimatedCounter after a 1.25s delay (1.1 + 0.15).
+    expect(await screen.findByText('475', {}, { timeout: 3000 })).toBeInTheDocument();
+    expect(screen.queryByTestId('win-streak-prompt')).not.toBeInTheDocument();
+    expect(screen.queryByText(/one win can erase/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { level: 1, name: /defeat/i })).not.toBeInTheDocument();
+  });
+
   it('renders Cancelled for cancelled no-contest results', () => {
     renderResults({
       matchType: 'ranked',
