@@ -17,7 +17,7 @@ import { TacticsBoard2D, BOARD_VIEW_W, BOARD_VIEW_H } from '@/features/mini-game
 import { TACTICS_GOALS } from '@/features/mini-games/data/tacticsGoals';
 import { buildTimeline } from '@/features/mini-games/lib/tacticsEngine';
 import { TD } from '../lib/copy';
-import { TD_DISPLAY, TicketGlyph } from './brand';
+import { TD_DISPLAY, TicketGlyph, OrderGlyph, RoadGlyph } from './brand';
 import { CategoryBand, TurnTimerBar } from './chrome';
 import { claimDailyReward } from '../lib/state';
 
@@ -523,13 +523,61 @@ function TdGuessTheGoal({ onDone }: { onDone: (score: number) => void }) {
 
 /* ── orchestrator + result (with the +1 ticket daily reward) ────── */
 
+const RULES: Record<TdDailyType, { text: string; pill: string }> = {
+  guessTheGoal: { text: TD.dailyRulesGtg, pill: TD.dailyPillGtg },
+  putInOrder: { text: TD.dailyRulesPio, pill: TD.dailyPillPio },
+  careerPath: { text: TD.dailyRulesCp, pill: TD.dailyPillCp },
+};
+
 export function TdDailyGame({ type, onExit }: { type: TdDailyType; onExit: () => void }) {
   const [attempt, setAttempt] = useState(0);
+  const [started, setStarted] = useState(false);
   const [result, setResult] = useState<{ score: number; reward: boolean } | null>(null);
 
   const finish = (score: number) => {
     setResult({ score, reward: claimDailyReward(type) });
   };
+
+  // Rules first, game on start — the clocks only run once the player is in.
+  if (!started) {
+    return (
+      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-4 px-4 pb-6 pt-6">
+        <GameHeader title={TITLES[type]} onExit={onExit} />
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-1 flex-col items-center justify-center gap-5 pb-16 text-center"
+        >
+          {type === 'guessTheGoal' ? (
+            // eslint-disable-next-line @next/next/no-img-element -- official round icon
+            <img src="/assets/table-derby/icon-ball-orange.svg" alt="" className="h-14 w-14 object-contain" />
+          ) : type === 'putInOrder' ? (
+            <OrderGlyph size={56} />
+          ) : (
+            <RoadGlyph size={56} />
+          )}
+          <p className="max-w-xs text-[13px] leading-relaxed text-white/75 md:text-[14px]" style={TD_DISPLAY}>
+            {RULES[type].text}
+          </p>
+          <div
+            className="rounded-full px-4 py-2 text-[11px]"
+            style={{ ...TD_DISPLAY, background: 'var(--td-paper)', color: '#0d0d0d', boxShadow: '3px 3px 0 rgba(0,0,0,0.5)', transform: 'rotate(-1deg)' }}
+          >
+            {RULES[type].pill}
+          </div>
+          <motion.button
+            type="button"
+            whileTap={{ scale: 0.96 }}
+            onClick={() => setStarted(true)}
+            className="w-full max-w-xs rounded-[12px] py-3.5 text-base"
+            style={{ ...TD_DISPLAY, background: 'var(--td-orange)', color: '#0d0d0d', boxShadow: '5px 5px 0 #000' }}
+          >
+            {TD.dailyStart}
+          </motion.button>
+        </motion.div>
+      </div>
+    );
+  }
 
   if (result) {
     return (
