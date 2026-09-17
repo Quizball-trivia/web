@@ -13,6 +13,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { QuitGameDialog } from "./QuitGameDialog";
+import { DailyChallengeCompleteModal } from "./components/DailyChallengeCompleteModal";
 import { DailyChallengeHeader } from "./components/DailyChallengeHeader";
 import { useLocale } from "@/contexts/LocaleContext";
 import {
@@ -38,7 +39,9 @@ import { playSfx } from "@/lib/sounds/gameSounds";
 interface PutInOrderGameProps {
   session: PutInOrderSession;
   onBack: () => void;
-  onComplete: (score: number) => void;
+  onComplete: (score: number, nextPath?: string) => void;
+  /** Sample / training round: the completion modal finishes immediately. */
+  practice?: boolean;
 }
 
 type RoundItem = PutInOrderSession["rounds"][number]["items"][number];
@@ -123,7 +126,7 @@ function SortableItem({
   );
 }
 
-export function PutInOrderGame({ session, onBack, onComplete }: PutInOrderGameProps) {
+export function PutInOrderGame({ session, onBack, onComplete, practice = false }: PutInOrderGameProps) {
   const { t } = useLocale();
   const [currentRound, setCurrentRound] = useState(0);
   const [userOrder, setUserOrder] = useState<RoundItem[]>(session.rounds[0]?.items ?? []);
@@ -131,6 +134,7 @@ export function PutInOrderGame({ session, onBack, onComplete }: PutInOrderGamePr
   const [correctCount, setCorrectCount] = useState(0);
   const [totalCoins, setTotalCoins] = useState(0);
   const [showResults, setShowResults] = useState(false);
+  const [finished, setFinished] = useState(false);
   const [showQuitDialog, setShowQuitDialog] = useState(false);
 
   const round = session.rounds[currentRound];
@@ -186,8 +190,22 @@ export function PutInOrderGame({ session, onBack, onComplete }: PutInOrderGamePr
   };
 
   const handleComplete = () => {
-    onComplete(correctCount * 100);
+    setFinished(true);
   };
+
+  // Rendered on both the results screen and the board: the shared streak /
+  // Weekend League modal is the real end of the run.
+  const completeModal = (
+        <DailyChallengeCompleteModal
+          practice={practice}
+          open={finished}
+          title={session.title}
+          correct={correctCount}
+          total={session.roundCount}
+          challengeType={session.challengeType}
+          onDone={(nextPath) => onComplete(correctCount * 100, nextPath)}
+        />
+  );
 
   if (!round) {
     return null;
@@ -246,6 +264,7 @@ export function PutInOrderGame({ session, onBack, onComplete }: PutInOrderGamePr
             </button>
           </div>
         </div>
+      {completeModal}
       </div>
     );
   }
@@ -329,6 +348,8 @@ export function PutInOrderGame({ session, onBack, onComplete }: PutInOrderGamePr
       </div>
 
       <QuitGameDialog open={showQuitDialog} onOpenChange={setShowQuitDialog} onQuit={onBack} />
+
+      {completeModal}
     </div>
   );
 }

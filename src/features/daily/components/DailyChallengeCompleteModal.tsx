@@ -58,6 +58,11 @@ interface DailyChallengeCompleteModalProps {
   onDone: (nextPath?: string) => void;
   /** Sample / training round: no Weekend League, comeback or reminder prompts, no member queries. */
   practice?: boolean;
+  /** Games scored in coins or points rather than correct answers show this instead of "N / total". */
+  scoreLabel?: string;
+  scoreValue?: string;
+  /** The challenge just finished — kept out of the next-up suggestions (its completion is still being saved). */
+  challengeType?: string;
 }
 
 export function DailyChallengeCompleteModal({
@@ -67,6 +72,9 @@ export function DailyChallengeCompleteModal({
   total,
   onDone,
   practice = false,
+  scoreLabel,
+  scoreValue,
+  challengeType,
 }: DailyChallengeCompleteModalProps) {
   if (!open) return null;
 
@@ -74,7 +82,7 @@ export function DailyChallengeCompleteModal({
   // screen, so this modal finishes immediately instead of stacking on it.
   if (practice) return <PracticeAutoDone onDone={onDone} />;
 
-  const contentProps = { title, correct, total, onDone, practice };
+  const contentProps = { title, correct, total, onDone, practice, scoreLabel, scoreValue, challengeType };
   if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) {
     return <DailyChallengeCompleteModalContent {...contentProps} />;
   }
@@ -330,6 +338,9 @@ export function DailyChallengeCompleteModalContent({
   total,
   onDone,
   practice = false,
+  scoreLabel,
+  scoreValue,
+  challengeType,
   weekendLeagueCta,
   comebackCta,
 }: OpenModalProps & {
@@ -385,12 +396,16 @@ export function DailyChallengeCompleteModalContent({
 
         <div className="mt-5 rounded-[18px] bg-black/18 px-5 py-4">
           <p className="font-poppins text-xs font-semibold uppercase tracking-wide text-white/60">
-            {t("dailyGames.correctAnswers")}
+            {scoreLabel ?? t("dailyGames.correctAnswers")}
           </p>
-          <p className="mt-1 font-poppins text-4xl font-black leading-none text-brand-yellow">
-            {correct}
-            <span className="text-white/55"> / {total}</span>
-          </p>
+          {scoreValue !== undefined ? (
+            <p className="mt-1 font-poppins text-4xl font-black leading-none text-brand-yellow">{scoreValue}</p>
+          ) : (
+            <p className="mt-1 font-poppins text-4xl font-black leading-none text-brand-yellow">
+              {correct}
+              <span className="text-white/55"> / {total}</span>
+            </p>
+          )}
         </div>
 
         <p className="mt-4 font-poppins text-sm font-semibold text-white">
@@ -565,7 +580,7 @@ export function DailyChallengeCompleteModalContent({
       </motion.div>
 
       {/* Don't end on a dead end — offer the next game, streaming-style. */}
-      {!practice && <DailyNextUpRow onSelect={(href) => onDone(href)} />}
+      {!practice && <DailyNextUpRow excludeDailyType={challengeType} onSelect={(href) => onDone(href)} />}
       </div>
     </div>
   );

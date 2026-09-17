@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "motion/react";
 
 import { Slider } from "@/components/ui/slider";
 import { QuitGameDialog } from "./QuitGameDialog";
+import { DailyChallengeCompleteModal } from "./components/DailyChallengeCompleteModal";
 import { DailyGameStage } from "./components/DailyGameStage";
 import { DailyChallengeHeader } from "./components/DailyChallengeHeader";
 import {
@@ -25,7 +26,9 @@ import { playSfx } from "@/lib/sounds/gameSounds";
 interface MoneyDropGameProps {
   session: MoneyDropSession;
   onBack: () => void;
-  onComplete: (finalMoney: number) => void;
+  onComplete: (finalMoney: number, nextPath?: string) => void;
+  /** Sample / training round: the completion modal finishes immediately. */
+  practice?: boolean;
 }
 
 const OPTION_COLORS = [
@@ -181,8 +184,11 @@ function HelpButtons({
 
 /* ── Main Component ── */
 
-export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProps) {
+export function MoneyDropGame({ session, onBack, onComplete, practice = false }: MoneyDropGameProps) {
   const { t } = useLocale();
+  // The run's final bank once it ends; the completion modal reports it and
+  // only then hands the score to the page.
+  const [finalMoney, setFinalMoney] = useState<number | null>(null);
   const STARTING_MONEY = session.startingMoney;
   const QUESTION_TIME = session.secondsPerQuestion;
 
@@ -353,7 +359,7 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
     // manually confirmed a single bet scores 0, whatever the bank shows —
     // otherwise idling through timer-confirmed rounds could bank real coins.
     const finishRun = (score: number) =>
-      onComplete(anyManualConfirmRef.current ? score : 0);
+      setFinalMoney(anyManualConfirmRef.current ? score : 0);
     // A round revealed with NOTHING allocated can only be a timeout — manual
     // confirm requires full allocation. It is not a bet; it's an absent player.
     // Wiping the bank here (old behavior) ended most runs at 0 through
@@ -810,6 +816,18 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
         onQuit={onBack}
         title={t("dailyQuit.quitMoneyDrop")}
         description={`You'll lose your current balance of ${formatMoney(currentMoney)}.`}
+      />
+
+      <DailyChallengeCompleteModal
+        practice={practice}
+        open={finalMoney !== null}
+        title={session.title}
+        correct={0}
+        total={0}
+        scoreLabel={t("dailyGames.hubCoinsEarned")}
+        challengeType={session.challengeType}
+        scoreValue={formatMoney(finalMoney ?? 0)}
+        onDone={(nextPath) => onComplete(finalMoney ?? 0, nextPath)}
       />
     </div>
   );

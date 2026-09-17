@@ -12,6 +12,7 @@ import { getDailyChallengeCopy } from "@/lib/i18n/dailyChallenge";
 import { fuzzyMatchesAnswer } from "@/lib/answerMatching";
 import { playSfx } from "@/lib/sounds/gameSounds";
 import { QuitGameDialog } from "./QuitGameDialog";
+import { DailyChallengeCompleteModal } from "./components/DailyChallengeCompleteModal";
 import { DailyGameStage } from "./components/DailyGameStage";
 import { DailyChallengeHeader } from "./components/DailyChallengeHeader";
 import { EmbeddedCounterPill } from "./components/EmbeddedCounterPill";
@@ -26,9 +27,11 @@ const poppins = {
 interface FootballLogicGameProps {
   session: FootballLogicSession;
   onBack: () => void;
-  onComplete: (score: number) => void;
-  /** Render inline (promo flow): global counter pill, no header/timer/back. */
+  onComplete: (score: number, nextPath?: string) => void;
+  /** Render inline (promo flow): global counter pill, no header/timer/back, no completion modal. */
   embedded?: { current: number; total: number };
+  /** Sample / training round: the completion modal finishes immediately. */
+  practice?: boolean;
 }
 
 export function FootballLogicGame({
@@ -36,6 +39,7 @@ export function FootballLogicGame({
   onBack,
   onComplete,
   embedded,
+  practice = false,
 }: FootballLogicGameProps) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answer, setAnswer] = useState("");
@@ -43,6 +47,7 @@ export function FootballLogicGame({
   const [resolved, setResolved] = useState(false);
   const [correctCount, setCorrectCount] = useState(0);
   const [lastWasCorrect, setLastWasCorrect] = useState(false);
+  const [finished, setFinished] = useState(false);
   const [showQuitDialog, setShowQuitDialog] = useState(false);
   const copy = getDailyChallengeCopy();
 
@@ -50,7 +55,8 @@ export function FootballLogicGame({
 
   const advance = useCallback(() => {
     if (currentQuestionIndex >= session.questions.length - 1) {
-      onComplete(correctCount);
+      if (embedded) onComplete(correctCount);
+      else setFinished(true);
       return;
     }
 
@@ -59,7 +65,7 @@ export function FootballLogicGame({
     setTimeLeft(session.secondsPerQuestion);
     setResolved(false);
     setLastWasCorrect(false);
-  }, [correctCount, currentQuestionIndex, onComplete, session.questions.length, session.secondsPerQuestion]);
+  }, [correctCount, currentQuestionIndex, embedded, onComplete, session.questions.length, session.secondsPerQuestion]);
 
   const submitAnswer = useCallback(() => {
     if (resolved || !currentQuestion) {
@@ -228,6 +234,16 @@ export function FootballLogicGame({
         open={showQuitDialog}
         onOpenChange={setShowQuitDialog}
         onQuit={onBack}
+      />
+
+      <DailyChallengeCompleteModal
+        practice={practice}
+        open={finished}
+        title={session.title}
+        correct={correctCount}
+        total={session.questions.length}
+        challengeType={session.challengeType}
+        onDone={(nextPath) => onComplete(correctCount, nextPath)}
       />
     </div>
   );
