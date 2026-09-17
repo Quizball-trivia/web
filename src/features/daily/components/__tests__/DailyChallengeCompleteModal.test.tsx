@@ -88,6 +88,22 @@ describe('DailyChallengeCompleteModal practice rounds', () => {
     expect(onDone).toHaveBeenCalledTimes(1);
   });
 
+  it('shows a coins score instead of correct answers when the game is scored in coins', () => {
+    render(
+      <DailyChallengeCompleteModalContent
+        title="Money Drop"
+        correct={0}
+        total={0}
+        scoreLabel="Coins Earned"
+        scoreValue="250,000 coins"
+        onDone={vi.fn()}
+      />,
+    );
+    expect(screen.getByText('Coins Earned')).toBeInTheDocument();
+    expect(screen.getByText('250,000 coins')).toBeInTheDocument();
+    expect(screen.queryByText('Correct Answers')).toBeNull();
+  });
+
   it('stays closed while not open', () => {
     const onDone = vi.fn();
     render(<DailyChallengeCompleteModal open={false} practice title="Countdown" correct={3} total={5} onDone={onDone} />);

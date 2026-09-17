@@ -8,6 +8,7 @@ import {
   Lightbulb,
 } from "lucide-react";
 import { QuitGameDialog } from "./QuitGameDialog";
+import { DailyChallengeCompleteModal } from "./components/DailyChallengeCompleteModal";
 import { DailyGameStage } from "./components/DailyGameStage";
 import { CluesBoard } from "@/features/possession/components/live-special/CluesBoard";
 import { DailyChallengeHeader } from "./components/DailyChallengeHeader";
@@ -20,7 +21,9 @@ import { playSfx } from "@/lib/sounds/gameSounds";
 interface ClueGameProps {
   session: CluesSession;
   onBack: () => void;
-  onComplete: (score: number) => void;
+  onComplete: (score: number, nextPath?: string) => void;
+  /** Sample / training round: the completion modal finishes immediately. */
+  practice?: boolean;
 }
 
 function findBestMatch(
@@ -40,13 +43,15 @@ function getPoints(revealedClues: number): number {
   return calculateCluesDisplayPoints(revealedClues);
 }
 
-export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
+export function ClueGame({ session, onBack, onComplete, practice = false }: ClueGameProps) {
   const { t } = useLocale();
   const secondsPerClueStep = session.secondsPerClueStep;
   const questions = session.questions;
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [userAnswer, setUserAnswer] = useState("");
   const [score, setScore] = useState(0);
+  const [correctCount, setCorrectCount] = useState(0);
+  const [finished, setFinished] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
   const [revealedClues, setRevealedClues] = useState(1);
@@ -69,13 +74,10 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
 
   useEffect(() => {
     if (showResult && currentQuestionIndex === questions.length - 1) {
-      const timeout = setTimeout(() => {
-        onComplete(score);
-      }, 1500);
-
+      const timeout = setTimeout(() => setFinished(true), 1500);
       return () => clearTimeout(timeout);
     }
-  }, [showResult, currentQuestionIndex, questions.length, score, onComplete]);
+  }, [showResult, currentQuestionIndex, questions.length]);
 
   useEffect(() => {
     if (showResult || hasSubmitted) {
@@ -121,6 +123,7 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
       setShowResult(true);
 
       setScore((prev) => prev + getPoints(revealedClues));
+      setCorrectCount((prev) => prev + 1);
 
       if (timerRef.current) {
         clearInterval(timerRef.current);
@@ -234,6 +237,15 @@ export function ClueGame({ session, onBack, onComplete }: ClueGameProps) {
         open={showQuitDialog}
         onOpenChange={setShowQuitDialog}
         onQuit={onBack}
+      />
+
+      <DailyChallengeCompleteModal
+        practice={practice}
+        open={finished}
+        title={session.title}
+        correct={correctCount}
+        total={questions.length}
+        onDone={(nextPath) => onComplete(score, nextPath)}
       />
     </div>
   );

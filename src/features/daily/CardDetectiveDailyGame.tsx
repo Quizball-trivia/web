@@ -4,7 +4,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Coins, Flag } from "lucide-react";
 import { DailyChallengeHeader } from "./components/DailyChallengeHeader";
+import { DailyChallengeCompleteModal } from "./components/DailyChallengeCompleteModal";
 import { QuitGameDialog } from "./QuitGameDialog";
+import { useLocale } from "@/contexts/LocaleContext";
 import { useResultSplash } from "./components/useResultSplash";
 import { ResultSplash } from "./components/ResultSplash";
 import { CardDealReel } from "@/features/fifa-universe/components/CardDealReel";
@@ -20,6 +22,8 @@ interface CardDetectiveDailyGameProps {
   session: CardDetectiveSession;
   onBack: () => void;
   onComplete: (score: number, nextPath?: string, outcomes?: DailyChallengeCardOutcome[]) => void;
+  /** Sample / training round: the completion modal finishes immediately. */
+  practice?: boolean;
 }
 
 /**
@@ -29,7 +33,10 @@ interface CardDetectiveDailyGameProps {
  * left, a wrong name costs coins, giving up scores nothing. Completion goes
  * through the shared daily route (score + per-card outcomes) like FIFA Cards.
  */
-export function CardDetectiveDailyGame({ session, onBack, onComplete }: CardDetectiveDailyGameProps) {
+export function CardDetectiveDailyGame({ session, onBack, onComplete, practice = false }: CardDetectiveDailyGameProps) {
+  const { t: lt } = useLocale();
+  // The finished run: coins banked, cards solved, and the per-card outcomes the page persists.
+  const [final, setFinal] = useState<{ coins: number; solved: number; outcomes: DailyChallengeCardOutcome[] } | null>(null);
   const t = useMiniT();
   const reduceMotion = useReducedMotion();
   const cards = session.cards;
@@ -76,14 +83,17 @@ export function CardDetectiveDailyGame({ session, onBack, onComplete }: CardDete
     if (completedRef.current) return;
     completedRef.current = true;
     const outcomes = outcomesRef.current;
-    const total = outcomes.reduce((sum, o) => sum + (o.solved ? (o.coinsLeft ?? 0) : 0), 0);
-    onComplete(total, undefined, outcomes);
-  }, [onComplete]);
+    const coins = outcomes.reduce((sum, o) => sum + (o.solved ? (o.coinsLeft ?? 0) : 0), 0);
+    setFinal({ coins, solved: outcomes.filter((o) => o.solved).length, outcomes });
+  }, []);
 
   // An empty set can't be played — complete immediately so the player isn't stuck.
   useEffect(() => {
-    if (total === 0) finishRound();
-  }, [finishRound, total]);
+    if (total === 0 && !completedRef.current) {
+      completedRef.current = true;
+      onComplete(0, undefined, []);
+    }
+  }, [onComplete, total]);
 
   const nextCard = useCallback(() => {
     clearAdvance();
@@ -205,6 +215,17 @@ export function CardDetectiveDailyGame({ session, onBack, onComplete }: CardDete
 
       <ResultSplash {...splashProps} />
       <QuitGameDialog open={showQuit} onOpenChange={setShowQuit} onQuit={onBack} />
+
+      <DailyChallengeCompleteModal
+        practice={practice}
+        open={final !== null}
+        title={session.title}
+        correct={final?.solved ?? 0}
+        total={total}
+        scoreLabel={lt("dailyGames.hubCoinsEarned")}
+        scoreValue={`${(final?.coins ?? 0).toLocaleString()} ${lt("dailyGames.coinsSuffix")}`}
+        onDone={(nextPath) => onComplete(final?.coins ?? 0, nextPath, final?.outcomes ?? [])}
+      />
     </div>
   );
 }

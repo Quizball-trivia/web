@@ -4,8 +4,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MoneyDropGame } from '../MoneyDropGame';
 import type { MoneyDropSession } from '@/lib/domain/dailyChallenge';
 
+import { useEffect } from 'react';
 vi.mock('@/lib/sounds/gameSounds', () => ({ playSfx: vi.fn() }));
 vi.mock('@/lib/analytics/game-events', () => ({ trackLifelineUsed: vi.fn() }));
+// The completion modal is covered by its own tests; here it hands the score straight through.
+vi.mock('../components/DailyChallengeCompleteModal', () => ({
+  DailyChallengeCompleteModal: ({ open, onDone }: { open: boolean; onDone: () => void }) => {
+    useEffect(() => { if (open) onDone(); }, [open, onDone]);
+    return null;
+  },
+}));
 vi.mock('@/components/ui/slider', () => ({
   Slider: ({
     value,
@@ -85,7 +93,7 @@ describe('MoneyDropGame timeout and bust rules', () => {
     render(<MoneyDropGame session={session(5)} onBack={vi.fn()} onComplete={onComplete} />);
     expireTimer();
     expect(onComplete).toHaveBeenCalledTimes(1);
-    expect(onComplete).toHaveBeenCalledWith(0);
+    expect(onComplete).toHaveBeenCalledWith(0, undefined);
   });
 
   it('a no-bet timeout after an engaged round ends the run keeping the bank', () => {
@@ -97,7 +105,7 @@ describe('MoneyDropGame timeout and bust rules', () => {
     // question 2: idle → timer expires with nothing allocated
     expireTimer();
     expect(onComplete).toHaveBeenCalledTimes(1);
-    expect(onComplete).toHaveBeenCalledWith(250000);
+    expect(onComplete).toHaveBeenCalledWith(250000, undefined);
   });
 
   it('a timer-submitted bust ends the run immediately with 0', () => {
@@ -106,7 +114,7 @@ describe('MoneyDropGame timeout and bust rules', () => {
     betAllOn(2); // all on a wrong answer, never press confirm
     expireTimer(); // timer auto-submits the placed (losing) bet
     expect(onComplete).toHaveBeenCalledTimes(1);
-    expect(onComplete).toHaveBeenCalledWith(0);
+    expect(onComplete).toHaveBeenCalledWith(0, undefined);
   });
 
   it('pressing View Results during a no-bet auto-window still keeps the bank', () => {
@@ -125,7 +133,7 @@ describe('MoneyDropGame timeout and bust rules', () => {
     });
     fireEvent.click(screen.getByRole('button', { name: /next question|view results/i }));
     expect(onComplete).toHaveBeenCalledTimes(1);
-    expect(onComplete).toHaveBeenCalledWith(250000);
+    expect(onComplete).toHaveBeenCalledWith(250000, undefined);
   });
 
   it('a timer-confirmed last-question win with no manual confirm ever scores 0', () => {
@@ -134,7 +142,7 @@ describe('MoneyDropGame timeout and bust rules', () => {
     betAllOn(0); // allocated on the correct answer but never pressed Confirm
     expireTimer(); // timer auto-submits and completes the single-question run
     expect(onComplete).toHaveBeenCalledTimes(1);
-    expect(onComplete).toHaveBeenCalledWith(0);
+    expect(onComplete).toHaveBeenCalledWith(0, undefined);
   });
 
   it('a manually confirmed bust ends the run with 0', () => {
@@ -144,7 +152,7 @@ describe('MoneyDropGame timeout and bust rules', () => {
     confirmBets();
     fireEvent.click(screen.getByRole('button', { name: /next question|view results/i }));
     expect(onComplete).toHaveBeenCalledTimes(1);
-    expect(onComplete).toHaveBeenCalledWith(0);
+    expect(onComplete).toHaveBeenCalledWith(0, undefined);
   });
 
   it('a timer-confirmed win on a non-final round advances instead of completing', () => {
@@ -163,6 +171,6 @@ describe('MoneyDropGame timeout and bust rules', () => {
     confirmBets();
     fireEvent.click(screen.getByRole('button', { name: /view results/i }));
     expect(onComplete).toHaveBeenCalledTimes(1);
-    expect(onComplete).toHaveBeenCalledWith(250000);
+    expect(onComplete).toHaveBeenCalledWith(250000, undefined);
   });
 });
