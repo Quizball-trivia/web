@@ -1357,6 +1357,8 @@
     "savedExclaim": "KURTARILDI!",
     "keeperSavesIt": "Kaleci kurtardı!",
     "youSavedIt": "Sen kurtardın!",
+    "penaltyBothCorrectShooterFaster": "İkisi de doğru — vuran daha hızlıydı",
+    "penaltyBothCorrectKeeperFaster": "İkisi de doğru — kaleci daha hızlıydı",
     "questionCounter": "SORU {current}/{total}",
     "pointsLabel": "puan",
     "questionN": "Soru {n}",

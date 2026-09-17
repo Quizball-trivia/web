@@ -1357,6 +1357,8 @@
     "savedExclaim": "SAVED!",
     "keeperSavesIt": "Keeper saves it!",
     "youSavedIt": "You saved it!",
+    "penaltyBothCorrectShooterFaster": "Both correct — shooter was faster",
+    "penaltyBothCorrectKeeperFaster": "Both correct — keeper was faster",
     "questionCounter": "QUESTION {current}/{total}",
     "pointsLabel": "pts",
     "questionN": "Question {n}",

@@ -8,7 +8,7 @@ import type {
 } from '@/lib/realtime/socket.types';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import type { BarBattleState } from '../components/BarBattleOverlay';
-import { PENALTY_RESULT_DISPLAY_DELAY_MS } from '../realtimePossession.helpers';
+import { PENALTY_RESULT_DISPLAY_DELAY_MS, shouldShowOpponentScore } from '../realtimePossession.helpers';
 
 // ─── Timing constants (ms) ──────────────────────────────────────────────────
 //
@@ -292,7 +292,10 @@ export function useBarBattle({
 
   // ─── Step 2: Opponent answers → show opponent score ─────────────────────
   useEffect(() => {
-    if (!opponentAnswered && !roundResult) return;
+    // answer_ack can flip opponentAnswered before the opponent's points are
+    // known (0 default). Showing/latching 0 here would hide the real value when
+    // opponent_answered lands later, so wait until correctness is known.
+    if (!shouldShowOpponentScore({ opponentAnswered, opponentAnsweredCorrectly, hasRoundResult: Boolean(roundResult) })) return;
 
     // Determine qIndex from whatever source is available
     const qIndex = roundResult?.qIndex ?? answerAck?.qIndex ?? null;

@@ -392,6 +392,16 @@ export interface MatchAnswerAckPayload {
   correctIndex?: number;
   myTotalPoints: number;
   oppAnswered: boolean;
+  /**
+   * Opponent outcome, present only when `oppAnswered` is true AND the backend
+   * already resolved it. Lets the client show the opponent's real points even
+   * when this ack beats `match:opponent_answered` (both answered at the same
+   * moment). Older backends omit these; the client then waits for the event.
+   */
+  opponentPointsEarned?: number;
+  opponentTotalPoints?: number;
+  opponentIsCorrect?: boolean;
+  opponentSelectedIndex?: number | null;
   pointsEarned: number;
   phaseKind?: MatchPhaseKind;
   phaseRound?: number | null;
@@ -440,9 +450,16 @@ export interface MatchRoundResultPlayer {
   clueIndex?: number | null;
 }
 
+/**
+ * Why a penalty resolved the way it did. `*_faster` means both players answered
+ * correctly and speed decided it — the losing side deserves an explanation.
+ */
+export type PenaltyOutcomeReason = 'shooter_missed' | 'keeper_missed' | 'shooter_faster' | 'keeper_faster';
+
 export interface MatchRoundResultDeltas {
   possessionDelta: number;
   penaltyOutcome: 'goal' | 'saved' | null;
+  penaltyOutcomeReason?: PenaltyOutcomeReason;
   goalScoredBySeat: 1 | 2 | null;
   /** Seat holding the 2× speed streak AFTER this round (carries into next). */
   speedStreakHolderSeat?: 1 | 2 | null;
