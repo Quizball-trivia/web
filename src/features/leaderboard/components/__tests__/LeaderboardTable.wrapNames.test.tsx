@@ -24,6 +24,7 @@ describe("LeaderboardTable name wrapping", () => {
     render(<LeaderboardTable entries={[entry]} wrapNames />);
     const name = screen.getByText(entry.username);
     expect(name.className).not.toContain("truncate");
-    expect(name.className).toContain("[overflow-wrap:anywhere]");
+    expect(name.className).toContain("[overflow-wrap:break-word]");
+    expect(name.className).toContain("whitespace-normal");
   });
 });
