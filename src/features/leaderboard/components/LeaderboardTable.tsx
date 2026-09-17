@@ -138,7 +138,7 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick, eventMo
                         />
                       </div>
                       <span className={wrapNames
-                        ? "min-w-0 whitespace-normal break-words [overflow-wrap:anywhere] text-xs leading-tight sm:text-sm font-fun font-black uppercase text-white"
+                        ? "min-w-0 whitespace-normal [overflow-wrap:break-word] [word-break:normal] text-[11px] leading-tight sm:text-sm font-fun font-black uppercase text-white"
                         : "truncate text-sm sm:text-base font-fun font-black uppercase text-white"}>
                         {entry.username}
                       </span>
