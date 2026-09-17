@@ -121,14 +121,33 @@ function DevResultsContent() {
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  const [outcome, setOutcome] = useState<Outcome>('cancelled');
+  // Query-string presets so a state can be linked/screenshotted without the
+  // desktop control panel, e.g. /dev/results?outcome=draw&goals=2-2&correct=8-7&total=12
+  // Read in the state initialisers (same pattern as `qpToast` above); this dev-only
+  // page accepts the SSR/client hydration note that implies.
+  const preset = useMemo(() => {
+    if (typeof window === 'undefined') return null;
+    const q = new URLSearchParams(window.location.search);
+    const pair = (key: string): [number, number] | null => {
+      const m = /^(\d+)-(\d+)$/.exec(q.get(key) ?? '');
+      return m ? [Number(m[1]), Number(m[2])] : null;
+    };
+    const outcomeParam = q.get('outcome');
+    return {
+      outcome: (['win', 'loss', 'draw', 'cancelled'] as Outcome[]).find((o) => o === outcomeParam) ?? null,
+      goals: pair('goals'),
+      correct: pair('correct'),
+      total: q.get('total') ? Number(q.get('total')) : null,
+    };
+  }, []);
+  const [outcome, setOutcome] = useState<Outcome>(preset?.outcome ?? 'cancelled');
   const [preMatchRp, setPreMatchRp] = useState(495);
   const [rpDelta, setRpDelta] = useState(35);
-  const [playerGoals, setPlayerGoals] = useState(0);
-  const [opponentGoals, setOpponentGoals] = useState(0);
-  const [playerCorrect, setPlayerCorrect] = useState(0);
-  const [opponentCorrect, setOpponentCorrect] = useState(0);
-  const [totalQuestions, setTotalQuestions] = useState(0);
+  const [playerGoals, setPlayerGoals] = useState(preset?.goals?.[0] ?? 0);
+  const [opponentGoals, setOpponentGoals] = useState(preset?.goals?.[1] ?? 0);
+  const [playerCorrect, setPlayerCorrect] = useState(preset?.correct?.[0] ?? 0);
+  const [opponentCorrect, setOpponentCorrect] = useState(preset?.correct?.[1] ?? 0);
+  const [totalQuestions, setTotalQuestions] = useState(preset?.total ?? 0);
   const [withAchievements, setWithAchievements] = useState(false);
   // WL acquisition Test A — preselect via /dev/results?qpToast=1
   const [withQpToast, setWithQpToast] = useState(() =>
@@ -165,7 +184,9 @@ function DevResultsContent() {
   }, [withQuestionDots, displayTotalQuestions, displayOpponentCorrect]);
 
   const signedRpDelta = useMemo(() => {
-    if (outcome === 'draw' || outcome === 'cancelled') return 0;
+    if (outcome === 'cancelled') return 0;
+    // Shootout draw mirrors backend SEASON_PENALTY_DRAW_RP (+10 for both).
+    if (outcome === 'draw') return 10;
     // For loss show a negative delta unless the slider is explicitly negative.
     if (outcome === 'loss') return -Math.abs(rpDelta);
     return Math.abs(rpDelta);
@@ -197,8 +218,8 @@ function DevResultsContent() {
           oldRp: preMatchRp,
           newRp,
           deltaRp: signedRpDelta,
-          // Mirrors backend: win 300, anything else (loss/draw) 100.
-          coinsAwarded: outcome === 'win' ? 300 : 100,
+          // Mirrors backend: win 700, draw 475, loss 250.
+          coinsAwarded: outcome === 'win' ? 700 : outcome === 'draw' ? 475 : 250,
           // Weekend League QP: win 25 / loss 10 — previews the +QP chip.
           qpAwarded: outcome === 'win' ? 25 : 10,
           qpWeekTotal: 135 + (outcome === 'win' ? 25 : 10),
@@ -214,7 +235,7 @@ function DevResultsContent() {
           oldRp: opponentPreMatchRp,
           newRp: opponentNewRp,
           deltaRp: opponentSignedRpDelta,
-          coinsAwarded: outcome === 'loss' ? 300 : 100,
+          coinsAwarded: outcome === 'loss' ? 700 : outcome === 'draw' ? 475 : 250,
           oldTier: oppOldTier,
           newTier: oppNewTier,
           placementStatus: 'placed',
@@ -301,7 +322,8 @@ function DevResultsContent() {
             opponentQuestionResults={withQuestionDots && !isCancelled ? opponentQuestionResults : undefined}
             selfUserId={SELF_ID}
             finalWinnerId={finalWinnerId}
-            winnerDecisionMethod={isCancelled ? 'forfeit' : 'goals'}
+            winnerDecisionMethod={isCancelled ? 'forfeit' : outcome === 'draw' ? 'draw' : 'goals'}
+            isDraw={outcome === 'draw'}
             cancelledNoContest={isCancelled}
             preMatchRp={preMatchRp}
             opponentId={OPP_ID}

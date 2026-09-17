@@ -1145,7 +1145,7 @@ export interface paths {
                                 opponentGoals: number;
                                 opponentPenaltyGoals: number;
                                 /** @enum {string|null} */
-                                winnerDecisionMethod: "goals" | "penalty_goals" | "total_points" | "total_points_fallback" | "forfeit" | null;
+                                winnerDecisionMethod: "goals" | "penalty_goals" | "total_points" | "total_points_fallback" | "forfeit" | "draw" | null;
                                 /** @default false */
                                 cancelledNoContest: boolean;
                                 rpDelta: number | null;
@@ -9931,7 +9931,7 @@ export interface components {
                 opponentGoals: number;
                 opponentPenaltyGoals: number;
                 /** @enum {string|null} */
-                winnerDecisionMethod: "goals" | "penalty_goals" | "total_points" | "total_points_fallback" | "forfeit" | null;
+                winnerDecisionMethod: "goals" | "penalty_goals" | "total_points" | "total_points_fallback" | "forfeit" | "draw" | null;
                 /** @default false */
                 cancelledNoContest: boolean;
                 rpDelta: number | null;

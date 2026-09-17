@@ -1398,6 +1398,8 @@
     "opponentLockedIn": "Opponent answered",
     "won": "Won",
     "didNotWin": "Did not win",
+    "resultDraw": "Draw",
+    "resultDrawSubtitle": "Level after the penalties — it's a draw.",
     "found": "Found",
     "finding": "Finding",
     "waiting": "Waiting",

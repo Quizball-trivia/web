@@ -7,3 +7,5 @@ export type { RecentMatchSummary } from "./recentMatch";
 export type { MatchStatsSummary, ModeMatchStatsSummary } from "./matchStatsSummary";
 export type { PublicProfile, PreviousNickname, RankPosition } from "./publicProfile";
 export type { UserProgression } from "./progression";
+export { resolveMatchOutcome } from "./matchOutcome";
+export type { MatchOutcome } from "./matchOutcome";

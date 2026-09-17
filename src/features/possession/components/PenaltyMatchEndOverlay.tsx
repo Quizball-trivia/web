@@ -24,6 +24,8 @@ import type { AvatarCustomization } from '@/types/game';
 export interface PenaltyMatchEndOverlayProps {
   visible: boolean;
   playerWon: boolean;
+  /** Shootout ended level (ranked draw): neutral title instead of won / did-not-win. */
+  isDraw?: boolean;
   /** Final penalty scoreboard from the local player's perspective. */
   myPenaltyGoals: number;
   oppPenaltyGoals: number;
@@ -42,6 +44,7 @@ export interface PenaltyMatchEndOverlayProps {
 export function PenaltyMatchEndOverlay({
   visible,
   playerWon,
+  isDraw = false,
   myPenaltyGoals,
   oppPenaltyGoals,
   playerName,
@@ -58,7 +61,7 @@ export function PenaltyMatchEndOverlay({
   const { t } = useLocale();
   if (!visible) return null;
 
-  const accent = playerWon ? '#38B60E' : '#FB3101'; // brand-green / brand-red
+  const accent = isDraw ? '#FFE500' : playerWon ? '#38B60E' : '#FB3101'; // brand-yellow / brand-green / brand-red
 
   return (
     <motion.div
@@ -92,8 +95,16 @@ export function PenaltyMatchEndOverlay({
             className="text-sm font-black uppercase tracking-[0.35em] sm:text-base"
             style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, letterSpacing: '0.35em', color: accent }}
           >
-            {playerWon ? t('possession.won') : t('possession.didNotWin')}
+            {isDraw ? t('possession.resultDraw') : playerWon ? t('possession.won') : t('possession.didNotWin')}
           </span>
+          {isDraw ? (
+            <div
+              className="mt-2 text-center text-xs font-semibold text-white/60 sm:text-sm"
+              style={{ fontFamily: "'Poppins', sans-serif" }}
+            >
+              {t('possession.resultDrawSubtitle')}
+            </div>
+          ) : null}
         </div>
 
         {/* Score row — identical structure to HalftimeScreen's header, but the

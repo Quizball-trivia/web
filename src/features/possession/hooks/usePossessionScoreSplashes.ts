@@ -7,7 +7,7 @@ import type {
   MatchRoundResultPlayer,
   ResolvedMatchQuestionPayload,
 } from '@/lib/realtime/socket.types';
-import { type SplashVariant } from '../realtimePossession.helpers';
+import { isOpponentPointsKnown, type SplashVariant } from '../realtimePossession.helpers';
 
 interface UsePossessionScoreSplashesParams {
   localQuestion: ResolvedMatchQuestionPayload | null;
@@ -130,7 +130,11 @@ export function usePossessionScoreSplashes({
     const activeQIndex = localQuestion?.qIndex ?? roundResult?.qIndex ?? null;
     if (activeQIndex === null || shownSplashQRef.current.opponent === activeQIndex) return;
 
-    const immediatePoints = opponentAnswered ? opponentRecentPoints : null;
+    // answer_ack can flip opponentAnswered before the opponent's points are
+    // known (0 default); only trust the immediate value once correctness landed.
+    const immediatePoints = isOpponentPointsKnown({ opponentAnswered, opponentAnsweredCorrectly })
+      ? opponentRecentPoints
+      : null;
     const resolvedPoints = opponentRound
       ? resolveFeedbackPoints(opponentRound.pointsEarned, roundResult?.questionKind, opponentRound.foundCount)
       : null;

@@ -1,7 +1,33 @@
 import { describe, expect, it } from 'vitest';
-import { computeMyPossessionPct, toAnswerStates, toRevealAnswerStates } from '../realtimePossession.helpers';
+import {
+  computeMyPossessionPct,
+  isOpponentPointsKnown,
+  shouldShowOpponentScore,
+  toAnswerStates,
+  toRevealAnswerStates,
+} from '../realtimePossession.helpers';
 
 describe('realtimePossession.helpers', () => {
+  it('treats opponent points as known only once correctness has arrived', () => {
+    // answer_ack (oppAnswered: true) before match:opponent_answered
+    expect(isOpponentPointsKnown({ opponentAnswered: true, opponentAnsweredCorrectly: null })).toBe(false);
+    expect(isOpponentPointsKnown({ opponentAnswered: false, opponentAnsweredCorrectly: null })).toBe(false);
+    expect(isOpponentPointsKnown({ opponentAnswered: true, opponentAnsweredCorrectly: true })).toBe(true);
+    expect(isOpponentPointsKnown({ opponentAnswered: true, opponentAnsweredCorrectly: false })).toBe(true);
+    // correctness without the answered flag (e.g. stale) is not "known"
+    expect(isOpponentPointsKnown({ opponentAnswered: false, opponentAnsweredCorrectly: true })).toBe(false);
+  });
+
+  it('shows the opponent bar-battle score once points are known or from the round result', () => {
+    expect(shouldShowOpponentScore({ opponentAnswered: true, opponentAnsweredCorrectly: null, hasRoundResult: false })).toBe(false);
+    expect(shouldShowOpponentScore({ opponentAnswered: false, opponentAnsweredCorrectly: null, hasRoundResult: false })).toBe(false);
+    expect(shouldShowOpponentScore({ opponentAnswered: true, opponentAnsweredCorrectly: false, hasRoundResult: false })).toBe(true);
+    expect(shouldShowOpponentScore({ opponentAnswered: true, opponentAnsweredCorrectly: true, hasRoundResult: false })).toBe(true);
+    // Authoritative round result always shows (bot penalties skip opponent_answered).
+    expect(shouldShowOpponentScore({ opponentAnswered: false, opponentAnsweredCorrectly: null, hasRoundResult: true })).toBe(true);
+  });
+
+
   it('returns 4 answer states for standard multiple-choice questions', () => {
     expect(toAnswerStates(4, 1, true)).toEqual(['disabled', 'correct', 'disabled', 'disabled']);
     expect(toRevealAnswerStates(4, 2, 1)).toEqual(['disabled', 'wrong', 'correct', 'disabled']);
