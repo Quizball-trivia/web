@@ -223,6 +223,7 @@ export function CardDetectiveDailyGame({ session, onBack, onComplete, practice =
         correct={final?.solved ?? 0}
         total={total}
         scoreLabel={lt("dailyGames.hubCoinsEarned")}
+        challengeType={session.challengeType}
         scoreValue={`${(final?.coins ?? 0).toLocaleString()} ${lt("dailyGames.coinsSuffix")}`}
         onDone={(nextPath) => onComplete(final?.coins ?? 0, nextPath, final?.outcomes ?? [])}
       />

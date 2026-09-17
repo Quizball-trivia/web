@@ -193,6 +193,20 @@ export function PutInOrderGame({ session, onBack, onComplete, practice = false }
     setFinished(true);
   };
 
+  // Rendered on both the results screen and the board: the shared streak /
+  // Weekend League modal is the real end of the run.
+  const completeModal = (
+        <DailyChallengeCompleteModal
+          practice={practice}
+          open={finished}
+          title={session.title}
+          correct={correctCount}
+          total={session.roundCount}
+          challengeType={session.challengeType}
+          onDone={(nextPath) => onComplete(correctCount * 100, nextPath)}
+        />
+  );
+
   if (!round) {
     return null;
   }
@@ -250,6 +264,7 @@ export function PutInOrderGame({ session, onBack, onComplete, practice = false }
             </button>
           </div>
         </div>
+      {completeModal}
       </div>
     );
   }
@@ -334,14 +349,7 @@ export function PutInOrderGame({ session, onBack, onComplete, practice = false }
 
       <QuitGameDialog open={showQuitDialog} onOpenChange={setShowQuitDialog} onQuit={onBack} />
 
-      <DailyChallengeCompleteModal
-        practice={practice}
-        open={finished}
-        title={session.title}
-        correct={correctCount}
-        total={session.roundCount}
-        onDone={(nextPath) => onComplete(correctCount * 100, nextPath)}
-      />
+      {completeModal}
     </div>
   );
 }

@@ -242,6 +242,7 @@ export function FootballLogicGame({
         title={session.title}
         correct={correctCount}
         total={session.questions.length}
+        challengeType={session.challengeType}
         onDone={(nextPath) => onComplete(correctCount, nextPath)}
       />
     </div>

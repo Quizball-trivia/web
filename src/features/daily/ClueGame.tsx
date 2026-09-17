@@ -245,6 +245,7 @@ export function ClueGame({ session, onBack, onComplete, practice = false }: Clue
         title={session.title}
         correct={correctCount}
         total={questions.length}
+        challengeType={session.challengeType}
         onDone={(nextPath) => onComplete(score, nextPath)}
       />
     </div>

@@ -825,6 +825,7 @@ export function MoneyDropGame({ session, onBack, onComplete, practice = false }:
         correct={0}
         total={0}
         scoreLabel={t("dailyGames.hubCoinsEarned")}
+        challengeType={session.challengeType}
         scoreValue={formatMoney(finalMoney ?? 0)}
         onDone={(nextPath) => onComplete(finalMoney ?? 0, nextPath)}
       />
