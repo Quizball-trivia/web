@@ -20,11 +20,12 @@ describe("LeaderboardTable name wrapping", () => {
     expect(screen.getByText(entry.username).className).toContain("truncate");
   });
 
-  it("wraps instead of clipping when asked (public Tic Tac Toe / Auction boards)", () => {
-    render(<LeaderboardTable entries={[entry]} wrapNames />);
+  it("compact rows wrap names and tiers instead of clipping (public Tic Tac Toe / Auction boards)", () => {
+    render(<LeaderboardTable entries={[entry]} compact />);
     const name = screen.getByText(entry.username);
     expect(name.className).not.toContain("truncate");
     expect(name.className).toContain("[overflow-wrap:break-word]");
     expect(name.className).toContain("whitespace-normal");
+    expect(screen.getByText("Youth Prospect").className).not.toContain("truncate");
   });
 });
