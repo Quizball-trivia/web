@@ -121,33 +121,33 @@ function DevResultsContent() {
   const router = useRouter();
   const queryClient = useQueryClient();
 
-  const [outcome, setOutcome] = useState<Outcome>('cancelled');
-  const [preMatchRp, setPreMatchRp] = useState(495);
-  const [rpDelta, setRpDelta] = useState(35);
-  const [playerGoals, setPlayerGoals] = useState(0);
-  const [opponentGoals, setOpponentGoals] = useState(0);
-  const [playerCorrect, setPlayerCorrect] = useState(0);
-  const [opponentCorrect, setOpponentCorrect] = useState(0);
-  const [totalQuestions, setTotalQuestions] = useState(0);
   // Query-string presets so a state can be linked/screenshotted without the
   // desktop control panel, e.g. /dev/results?outcome=draw&goals=2-2&correct=8-7&total=12
-  // Applied after mount so SSR and the first client render match.
-  useEffect(() => {
+  // Read in the state initialisers (same pattern as `qpToast` above); this dev-only
+  // page accepts the SSR/client hydration note that implies.
+  const preset = useMemo(() => {
+    if (typeof window === 'undefined') return null;
     const q = new URLSearchParams(window.location.search);
     const pair = (key: string): [number, number] | null => {
       const m = /^(\d+)-(\d+)$/.exec(q.get(key) ?? '');
       return m ? [Number(m[1]), Number(m[2])] : null;
     };
     const outcomeParam = q.get('outcome');
-    const presetOutcome = (['win', 'loss', 'draw', 'cancelled'] as Outcome[]).find((o) => o === outcomeParam);
-    if (presetOutcome) setOutcome(presetOutcome);
-    const goals = pair('goals');
-    if (goals) { setPlayerGoals(goals[0]); setOpponentGoals(goals[1]); }
-    const correct = pair('correct');
-    if (correct) { setPlayerCorrect(correct[0]); setOpponentCorrect(correct[1]); }
-    const total = q.get('total');
-    if (total) setTotalQuestions(Number(total));
+    return {
+      outcome: (['win', 'loss', 'draw', 'cancelled'] as Outcome[]).find((o) => o === outcomeParam) ?? null,
+      goals: pair('goals'),
+      correct: pair('correct'),
+      total: q.get('total') ? Number(q.get('total')) : null,
+    };
   }, []);
+  const [outcome, setOutcome] = useState<Outcome>(preset?.outcome ?? 'cancelled');
+  const [preMatchRp, setPreMatchRp] = useState(495);
+  const [rpDelta, setRpDelta] = useState(35);
+  const [playerGoals, setPlayerGoals] = useState(preset?.goals?.[0] ?? 0);
+  const [opponentGoals, setOpponentGoals] = useState(preset?.goals?.[1] ?? 0);
+  const [playerCorrect, setPlayerCorrect] = useState(preset?.correct?.[0] ?? 0);
+  const [opponentCorrect, setOpponentCorrect] = useState(preset?.correct?.[1] ?? 0);
+  const [totalQuestions, setTotalQuestions] = useState(preset?.total ?? 0);
   const [withAchievements, setWithAchievements] = useState(false);
   // WL acquisition Test A — preselect via /dev/results?qpToast=1
   const [withQpToast, setWithQpToast] = useState(() =>
