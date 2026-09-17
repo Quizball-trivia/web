@@ -129,6 +129,25 @@ function DevResultsContent() {
   const [playerCorrect, setPlayerCorrect] = useState(0);
   const [opponentCorrect, setOpponentCorrect] = useState(0);
   const [totalQuestions, setTotalQuestions] = useState(0);
+  // Query-string presets so a state can be linked/screenshotted without the
+  // desktop control panel, e.g. /dev/results?outcome=draw&goals=2-2&correct=8-7&total=12
+  // Applied after mount so SSR and the first client render match.
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const pair = (key: string): [number, number] | null => {
+      const m = /^(\d+)-(\d+)$/.exec(q.get(key) ?? '');
+      return m ? [Number(m[1]), Number(m[2])] : null;
+    };
+    const outcomeParam = q.get('outcome');
+    const presetOutcome = (['win', 'loss', 'draw', 'cancelled'] as Outcome[]).find((o) => o === outcomeParam);
+    if (presetOutcome) setOutcome(presetOutcome);
+    const goals = pair('goals');
+    if (goals) { setPlayerGoals(goals[0]); setOpponentGoals(goals[1]); }
+    const correct = pair('correct');
+    if (correct) { setPlayerCorrect(correct[0]); setOpponentCorrect(correct[1]); }
+    const total = q.get('total');
+    if (total) setTotalQuestions(Number(total));
+  }, []);
   const [withAchievements, setWithAchievements] = useState(false);
   // WL acquisition Test A — preselect via /dev/results?qpToast=1
   const [withQpToast, setWithQpToast] = useState(() =>
@@ -165,7 +184,9 @@ function DevResultsContent() {
   }, [withQuestionDots, displayTotalQuestions, displayOpponentCorrect]);
 
   const signedRpDelta = useMemo(() => {
-    if (outcome === 'draw' || outcome === 'cancelled') return 0;
+    if (outcome === 'cancelled') return 0;
+    // Shootout draw mirrors backend SEASON_PENALTY_DRAW_RP (+10 for both).
+    if (outcome === 'draw') return 10;
     // For loss show a negative delta unless the slider is explicitly negative.
     if (outcome === 'loss') return -Math.abs(rpDelta);
     return Math.abs(rpDelta);
@@ -197,8 +218,8 @@ function DevResultsContent() {
           oldRp: preMatchRp,
           newRp,
           deltaRp: signedRpDelta,
-          // Mirrors backend: win 300, anything else (loss/draw) 100.
-          coinsAwarded: outcome === 'win' ? 300 : 100,
+          // Mirrors backend: win 700, draw 475, loss 250.
+          coinsAwarded: outcome === 'win' ? 700 : outcome === 'draw' ? 475 : 250,
           // Weekend League QP: win 25 / loss 10 — previews the +QP chip.
           qpAwarded: outcome === 'win' ? 25 : 10,
           qpWeekTotal: 135 + (outcome === 'win' ? 25 : 10),
@@ -214,7 +235,7 @@ function DevResultsContent() {
           oldRp: opponentPreMatchRp,
           newRp: opponentNewRp,
           deltaRp: opponentSignedRpDelta,
-          coinsAwarded: outcome === 'loss' ? 300 : 100,
+          coinsAwarded: outcome === 'loss' ? 700 : outcome === 'draw' ? 475 : 250,
           oldTier: oppOldTier,
           newTier: oppNewTier,
           placementStatus: 'placed',
@@ -301,7 +322,8 @@ function DevResultsContent() {
             opponentQuestionResults={withQuestionDots && !isCancelled ? opponentQuestionResults : undefined}
             selfUserId={SELF_ID}
             finalWinnerId={finalWinnerId}
-            winnerDecisionMethod={isCancelled ? 'forfeit' : 'goals'}
+            winnerDecisionMethod={isCancelled ? 'forfeit' : outcome === 'draw' ? 'draw' : 'goals'}
+            isDraw={outcome === 'draw'}
             cancelledNoContest={isCancelled}
             preMatchRp={preMatchRp}
             opponentId={OPP_ID}
