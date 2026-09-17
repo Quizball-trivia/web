@@ -54,23 +54,27 @@ export function ClueGame({ session, onBack, onComplete, practice = false }: Clue
   const [finished, setFinished] = useState(false);
   const [showResult, setShowResult] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
-  const [revealedClues, setRevealedClues] = useState(1);
-  const [timeRemaining, setTimeRemaining] = useState(secondsPerClueStep);
+  // Ranked model: ONE clock per question (secondsPerClueStep × clues), clues
+  // reveal on a timed cadence and on wrong guesses; whichever is further wins.
+  const [manualRevealCount, setManualRevealCount] = useState(1);
+  const [timeRemaining, setTimeRemaining] = useState(0);
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [showQuitDialog, setShowQuitDialog] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
   const currentQuestion = questions[currentQuestionIndex];
+  const clueCount = currentQuestion.clues.length;
+  const questionDurationSeconds = secondsPerClueStep * Math.max(1, clueCount);
+  const timedRevealCount = Math.min(clueCount, Math.max(1, Math.floor((questionDurationSeconds - timeRemaining) / secondsPerClueStep) + 1));
+  const revealedClues = Math.max(manualRevealCount, timedRevealCount);
+  useEffect(() => { setTimeRemaining(questionDurationSeconds); }, [currentQuestionIndex, questionDurationSeconds]);
   const handleTimeOut = useCallback(() => {
-    if (revealedClues < currentQuestion.clues.length) {
-      return;
-    }
     setIsCorrect(false);
     setShowResult(true);
     if (timerRef.current) {
       clearInterval(timerRef.current);
     }
-  }, [currentQuestion.clues.length, revealedClues]);
+  }, []);
 
   useEffect(() => {
     if (showResult && currentQuestionIndex === questions.length - 1) {
@@ -90,14 +94,8 @@ export function ClueGame({ session, onBack, onComplete, practice = false }: Clue
     timerRef.current = setInterval(() => {
       setTimeRemaining((prev) => {
         if (prev <= 1) {
-          if (revealedClues < currentQuestion.clues.length) {
-            setRevealedClues((r) => r + 1);
-            setHasSubmitted(false);
-            return secondsPerClueStep;
-          } else {
-            handleTimeOut();
-            return 0;
-          }
+          handleTimeOut();
+          return 0;
         }
         return prev - 1;
       });
@@ -108,7 +106,7 @@ export function ClueGame({ session, onBack, onComplete, practice = false }: Clue
         clearInterval(timerRef.current);
       }
     };
-  }, [secondsPerClueStep, revealedClues, showResult, hasSubmitted, currentQuestion.clues.length, handleTimeOut]);
+  }, [showResult, hasSubmitted, handleTimeOut]);
 
   const handleSubmit = () => {
     if (!userAnswer.trim() || hasSubmitted) return;
@@ -129,11 +127,11 @@ export function ClueGame({ session, onBack, onComplete, practice = false }: Clue
         clearInterval(timerRef.current);
       }
     } else {
-      if (revealedClues < currentQuestion.clues.length) {
+      if (revealedClues < clueCount) {
+        // Wrong with clues left: costs a clue; the question clock keeps running.
         setHasSubmitted(true);
-        setRevealedClues((prev) => prev + 1);
+        setManualRevealCount(revealedClues + 1);
         setUserAnswer("");
-        setTimeRemaining(secondsPerClueStep);
         setTimeout(() => {
           setHasSubmitted(false);
         }, 100);
@@ -154,11 +152,10 @@ export function ClueGame({ session, onBack, onComplete, practice = false }: Clue
 
   const handleNext = () => {
     if (currentQuestionIndex < questions.length - 1) {
-      setRevealedClues(1);
+      setManualRevealCount(1);
       setUserAnswer("");
       setShowResult(false);
       setIsCorrect(false);
-      setTimeRemaining(secondsPerClueStep);
       setHasSubmitted(false);
       setCurrentQuestionIndex((prev) => prev + 1);
     }
@@ -227,7 +224,7 @@ export function ClueGame({ session, onBack, onComplete, practice = false }: Clue
 
           {/* Hints */}
           <div className="space-y-1 text-center text-xs text-brand-slate">
-            <p className="flex items-center justify-center gap-1"><Clock className="size-3.5 text-brand-cyan" /> {t('dailyGames.cluesPerStepTip', { seconds: secondsPerClueStep })}</p>
+            <p className="flex items-center justify-center gap-1"><Clock className="size-3.5 text-brand-cyan" /> {t('dailyGames.cluesTotalTimeTip', { seconds: questionDurationSeconds, count: clueCount, step: secondsPerClueStep })}</p>
             <p className="flex items-center justify-center gap-1"><Lightbulb className="size-3.5 text-brand-orange" /> {t('dailyGames.fewerCluesMorePoints')}</p>
           </div>
         </div>
