@@ -608,6 +608,44 @@ describe('useRealtimeGameLogic', () => {
     expect(result.current.state.opponentAnswered).toBe(true);
     expect(result.current.state.opponentScore).toBe(80);
   });
+
+  it('does not dip the held opponent HUD score when only the answered flag is known (ack-first ordering)', async () => {
+    vi.setSystemTime(new Date('2026-05-29T12:30:00.000Z'));
+    seedMatch();
+    const store = useRealtimeMatchStore.getState();
+
+    const { result } = renderHook(() =>
+      useRealtimeGameLogic({ transitionDelayMs: 1600 })
+    );
+
+    // Question still in reveal (not yet playable) so the early-score hold applies.
+    act(() => store.setMatchQuestion({
+      ...makeQuestion(8),
+      playableAt: new Date(Date.now() + 5_000).toISOString(),
+      deadlineAt: new Date(Date.now() + 15_000).toISOString(),
+    }));
+
+    // match:answer_ack (oppAnswered: true) arrived before match:opponent_answered:
+    // the flag is set but the opponent's round points are not known yet.
+    act(() => useRealtimeMatchStore.setState((state) => ({
+      match: {
+        ...state.match!,
+        opponentAnswered: true,
+        opponentAnsweredCorrectly: null,
+        opponentRecentPoints: 80,
+        oppTotalPoints: 80,
+      },
+    })));
+
+    // Unknown points must subtract nothing: the HUD keeps the running total.
+    expect(result.current.state.opponentScore).toBe(80);
+
+    // Once the points are known the usual reveal-phase hold hides them.
+    act(() => useRealtimeMatchStore.setState((state) => ({
+      match: { ...state.match!, opponentAnsweredCorrectly: true },
+    })));
+    expect(result.current.state.opponentScore).toBe(0);
+  });
 });
 
 describe('reveal watchdog', () => {

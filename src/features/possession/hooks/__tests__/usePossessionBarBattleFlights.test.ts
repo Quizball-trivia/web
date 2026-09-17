@@ -308,6 +308,71 @@ describe('usePossessionBarBattleFlights', () => {
     });
   });
 
+  it('waits for known opponent points instead of flying +0 when answer_ack beats opponent_answered', async () => {
+    useRealtimeMatchStore.setState({
+      match: {
+        variant: 'ranked_sim',
+        matchId: MATCH_ID,
+        mySeat: 1,
+        currentQuestionPhase: 'playing',
+        currentQuestion: {
+          matchId: MATCH_ID,
+          qIndex: 15,
+          total: 20,
+          phaseKind: 'penalty',
+          phaseRound: 1,
+          shooterSeat: 2,
+          question: {
+            kind: 'multipleChoice',
+            id: 'penalty-ack-first-q',
+            prompt: 'Penalty question',
+            options: ['A', 'B', 'C', 'D'],
+            categoryName: 'General',
+          },
+          deadlineAt: new Date(Date.now() + 10_000).toISOString(),
+        },
+        possessionState: {
+          phaseKind: 'penalty',
+          shooterSeat: 2,
+        },
+        // answer_ack (oppAnswered: true) arrived before match:opponent_answered:
+        // the opponent answered, but their points are still unknown.
+        opponentAnswered: true,
+        opponentAnsweredCorrectly: null,
+        opponentRecentPoints: 0,
+      } as never,
+    });
+
+    const { result } = renderHook(() => usePossessionBarBattleFlights());
+
+    await act(async () => {
+      vi.advanceTimersByTime(250);
+    });
+
+    expect(result.current.flights).toHaveLength(0);
+
+    // match:opponent_answered lands: points become known.
+    await act(async () => {
+      useRealtimeMatchStore.setState((state) => ({
+        match: {
+          ...state.match,
+          opponentAnsweredCorrectly: true,
+          opponentRecentPoints: 90,
+        } as never,
+      }));
+    });
+    await act(async () => {
+      vi.advanceTimersByTime(250);
+    });
+
+    expect(result.current.flights).toHaveLength(1);
+    expect(result.current.flights[0]).toMatchObject({
+      side: 'opponent',
+      points: 90,
+      failed: false,
+    });
+  });
+
   it('fires penalty round-result flights when opponent_answered is not emitted', async () => {
     useRealtimeMatchStore.getState().setSelfUserId('user-a');
     useRealtimeMatchStore.setState({

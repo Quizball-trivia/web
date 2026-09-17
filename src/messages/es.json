@@ -1446,6 +1446,8 @@
     "savedExclaim": "¡PARADA!",
     "keeperSavesIt": "¡El portero la para!",
     "youSavedIt": "¡La paraste!",
+    "penaltyBothCorrectShooterFaster": "Ambos acertaron — el tirador fue más rápido",
+    "penaltyBothCorrectKeeperFaster": "Ambos acertaron — el portero fue más rápido",
     "questionCounter": "PREGUNTA {current}/{total}",
     "pointsLabel": "pts",
     "questionN": "Pregunta {n}",

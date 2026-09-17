@@ -487,6 +487,12 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
       const existing = state.match.questions[payload.qIndex];
       const fallbackQuestion = existing?.payload ?? state.match.currentQuestion;
       if (!fallbackQuestion) return state;
+      // When both players answer at the same moment this ack can beat
+      // `match:opponent_answered`. Newer backends therefore attach the
+      // opponent's outcome to the ack; apply it exactly like
+      // setOpponentAnswered would. Older backends omit the fields, in which
+      // case the opponent's points stay unknown until the event arrives.
+      const carriesOpponent = payload.oppAnswered;
       return {
         match: {
           ...state.match,
@@ -495,7 +501,27 @@ export const createMatchSlice: StateCreator<RealtimeState, [], [], MatchSlice> =
           opponentCountdownFoundCount: 0,
           cluesGuessAck: null,
           myTotalPoints: payload.myTotalPoints,
-          opponentAnswered: payload.oppAnswered,
+          // A delayed ack (computed before the opponent answered) must not
+          // regress a newer `match:opponent_answered` for the same question;
+          // stale acks are already rejected above, and the flag is reset per
+          // question, so OR-ing is safe.
+          opponentAnswered: state.match.opponentAnswered || payload.oppAnswered,
+          opponentSelectedIndex:
+            carriesOpponent && payload.opponentSelectedIndex !== undefined
+              ? payload.opponentSelectedIndex
+              : state.match.opponentSelectedIndex,
+          oppTotalPoints:
+            carriesOpponent && payload.opponentTotalPoints !== undefined
+              ? payload.opponentTotalPoints
+              : state.match.oppTotalPoints,
+          opponentRecentPoints:
+            carriesOpponent && payload.opponentPointsEarned !== undefined
+              ? payload.opponentPointsEarned
+              : state.match.opponentRecentPoints,
+          opponentAnsweredCorrectly:
+            carriesOpponent && payload.opponentIsCorrect !== undefined
+              ? payload.opponentIsCorrect
+              : state.match.opponentAnsweredCorrectly,
           questions: {
             ...state.match.questions,
             [payload.qIndex]: {

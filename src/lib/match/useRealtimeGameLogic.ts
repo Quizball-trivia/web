@@ -53,6 +53,7 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
     myTotalPoints: state.match?.myTotalPoints ?? 0,
     oppTotalPoints: state.match?.oppTotalPoints ?? 0,
     opponentRecentPoints: state.match?.opponentRecentPoints ?? 0,
+    opponentAnsweredCorrectly: state.match?.opponentAnsweredCorrectly ?? null,
     serverTimeOffsetMs: state.match?.serverTimeOffsetMs ?? null,
     mode: state.match?.mode ?? null,
     variant: state.match?.variant ?? null,
@@ -433,12 +434,17 @@ export function useRealtimeGameLogic(options: UseRealtimeGameLogicOptions = {}) 
 
   const playerScore = matchSlice.myTotalPoints;
   const holdEarlyOpponentScore = questionPhase !== 'playing' && (opponentAnswered || roundResolved);
-  const earlyOpponentPoints = Math.max(
-    0,
-    roundResult
-      ? opponentRoundResult?.pointsEarned ?? 0
-      : matchSlice.opponentRecentPoints
-  );
+  // Only subtract the opponent's round points once they are actually known;
+  // the answered flag alone (ack-first ordering) must not move the HUD.
+  const opponentEarlyPointsKnown = roundResolved || matchSlice.opponentAnsweredCorrectly !== null;
+  const earlyOpponentPoints = opponentEarlyPointsKnown
+    ? Math.max(
+        0,
+        roundResult
+          ? opponentRoundResult?.pointsEarned ?? 0
+          : matchSlice.opponentRecentPoints
+      )
+    : 0;
   const opponentScore = holdEarlyOpponentScore
     ? Math.max(0, matchSlice.oppTotalPoints - earlyOpponentPoints)
     : matchSlice.oppTotalPoints;

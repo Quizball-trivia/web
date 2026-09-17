@@ -1,8 +1,50 @@
 'use client';
 
 import type { GameQuestion } from '@/lib/domain/gameQuestion';
-import type { ResolvedMatchQuestionPayload } from '@/lib/realtime/socket.types';
+import type { MessageKey } from '@/lib/i18n/messages';
+import type { PenaltyOutcomeReason, ResolvedMatchQuestionPayload } from '@/lib/realtime/socket.types';
 import type { AnswerState, AnswerStateArray } from './types/possession.types';
+
+/**
+ * True once the opponent's answer outcome is actually known. `opponentAnswered`
+ * alone is not enough: `match:answer_ack` (oppAnswered: true) can arrive before
+ * `match:opponent_answered`, leaving `opponentRecentPoints` at its 0 default.
+ * Feedback that shows the opponent's points (score flight, splash, bar battle)
+ * must wait for this instead of flying a bogus "+0".
+ */
+export function isOpponentPointsKnown(params: {
+  opponentAnswered: boolean;
+  opponentAnsweredCorrectly: boolean | null;
+}): boolean {
+  return params.opponentAnswered && params.opponentAnsweredCorrectly !== null;
+}
+
+/**
+ * Bar-battle variant of the gate: the authoritative round result always shows
+ * the opponent score (bot penalties skip `match:opponent_answered` entirely).
+ */
+export function shouldShowOpponentScore(params: {
+  opponentAnswered: boolean;
+  opponentAnsweredCorrectly: boolean | null;
+  hasRoundResult: boolean;
+}): boolean {
+  if (params.hasRoundResult) return true;
+  return isOpponentPointsKnown(params);
+}
+
+/**
+ * Explanation line for a penalty the local player lost despite answering
+ * correctly (both correct, speed decided). Returns null for the winning seat
+ * and for outcomes where somebody simply missed.
+ */
+export function getPenaltyBothCorrectReasonKey(
+  reason: PenaltyOutcomeReason | null | undefined,
+  resultShooterIsMe: boolean
+): MessageKey | null {
+  if (reason === 'shooter_faster' && !resultShooterIsMe) return 'possession.penaltyBothCorrectShooterFaster';
+  if (reason === 'keeper_faster' && resultShooterIsMe) return 'possession.penaltyBothCorrectKeeperFaster';
+  return null;
+}
 
 export const TRANSITION_DELAY_MS = 1000;
 export const FIELD_RESULT_COMPARE_MS = 1500;
