@@ -27,8 +27,8 @@ export function PublicTopTen({ board, locale }: { board: Board; locale: string }
   return (
     <section aria-label={TITLE[locale]?.[board] ?? TITLE.en[board]} className="mt-6">
       <h2 className="mb-3 text-lg font-bold uppercase">{TITLE[locale]?.[board] ?? TITLE.en[board]}</h2>
-      {/* Ranked keeps its board as-is; the Tic Tac Toe / Auction pages wrap long names instead of clipping them. */}
-      {entries === undefined ? <div className="h-64 animate-pulse rounded-2xl bg-white/5" /> : <LeaderboardTable entries={entries} wrapNames={board !== "ranked"} />}
+      {/* Ranked keeps its board as-is; the Tic Tac Toe / Auction pages use the compact rows (narrow column, nothing clipped). */}
+      {entries === undefined ? <div className="h-64 animate-pulse rounded-2xl bg-white/5" /> : <LeaderboardTable entries={entries} compact={board !== "ranked"} />}
     </section>
   );
 }
