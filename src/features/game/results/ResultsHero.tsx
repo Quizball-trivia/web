@@ -25,6 +25,7 @@ export function ResultsHero({
   isDraw,
   isCancelledNoContest,
   resultHeading,
+  resultSubheading = null,
   playerUsername,
   playerAvatar,
   playerAvatarCustomization,
@@ -46,6 +47,7 @@ export function ResultsHero({
   isDraw: boolean;
   isCancelledNoContest: boolean;
   resultHeading: string;
+  resultSubheading?: string | null;
   playerUsername: string;
   playerAvatar: string;
   playerAvatarCustomization: AvatarCustomization | null;
@@ -77,6 +79,14 @@ export function ResultsHero({
         >
           {resultHeading}
         </h1>
+        {resultSubheading ? (
+          <p
+            data-testid="result-subheading"
+            className="mt-1 font-poppins text-sm font-semibold uppercase tracking-wide text-white/60 sm:text-base"
+          >
+            {resultSubheading}
+          </p>
+        ) : null}
       </div>
 
       <div className="mx-auto w-full max-w-[1100px]">

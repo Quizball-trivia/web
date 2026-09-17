@@ -61,6 +61,7 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
     isDraw,
     isCancelledNoContest,
     resultHeading,
+    resultSubheading,
     refundedTickets,
     totalGamesLabel,
     showRankedRpCard,
@@ -220,6 +221,7 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
           isDraw={isDraw}
           isCancelledNoContest={isCancelledNoContest}
           resultHeading={resultHeading}
+          resultSubheading={resultSubheading}
           playerUsername={playerUsername}
           playerAvatar={playerAvatar}
           playerAvatarCustomization={playerAvatarCustomization}

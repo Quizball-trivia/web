@@ -19,6 +19,7 @@ import { KickoffCountdownOverlay } from './components/KickoffCountdownOverlay';
 import { PenaltyStartCountdownOverlay } from './components/PenaltyStartCountdownOverlay';
 import { MatchHudIconButton } from './components/MatchHudPrimitives';
 import { PenaltyMatchEndOverlay } from './components/PenaltyMatchEndOverlay';
+import { resolveMatchOutcome } from '@/lib/domain/matchOutcome';
 import { PossessionMatchViewport } from './components/PossessionMatchViewport';
 import { PossessionQuestionArea } from './components/PossessionQuestionArea';
 import { usePossessionBarBattleFlights } from './hooks/usePossessionBarBattleFlights';
@@ -196,7 +197,11 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
       ? t('forfeit.youWinByForfeit')
       : t('forfeit.youLostMatch');
   const penaltyMatchEndOverlay = useMemo(() => {
-    if (!finalResults || finalResults.winnerDecisionMethod !== 'penalty_goals' || !selfUserId) {
+    // A level shootout resolves with decision 'draw' (winnerId null); it still
+    // ends on a penalty kick, so it gets the same match-end beat.
+    const decidedByShootout =
+      finalResults?.winnerDecisionMethod === 'penalty_goals' || finalResults?.winnerDecisionMethod === 'draw';
+    if (!finalResults || !decidedByShootout || !selfUserId) {
       return null;
     }
     const myResult = finalResults.players[selfUserId];
@@ -204,8 +209,16 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
     const opponentResult = opponentEntry?.[1] ?? null;
     if (!myResult || !opponentResult) return null;
 
+    const outcome = resolveMatchOutcome({
+      winnerUserId: finalResults.winnerId,
+      selfUserId,
+      winnerDecisionMethod: finalResults.winnerDecisionMethod,
+      isDraw: finalResults.isDraw,
+      cancelledNoContest: finalResults.cancelledNoContest,
+    });
     return {
-      playerWon: finalResults.winnerId === selfUserId,
+      playerWon: outcome === 'win',
+      isDraw: outcome === 'draw',
       myPenaltyGoals: myResult.penaltyGoals ?? 0,
       oppPenaltyGoals: opponentResult.penaltyGoals ?? 0,
       playerRankPoints: finalResults.rankedOutcome?.byUserId[selfUserId]?.newRp ?? null,
@@ -456,6 +469,7 @@ export function RealtimePossessionMatchScreen(props: RealtimePossessionMatchScre
           <PenaltyMatchEndOverlay
             visible
             playerWon={penaltyMatchEndOverlay.playerWon}
+            isDraw={penaltyMatchEndOverlay.isDraw}
             myPenaltyGoals={penaltyMatchEndOverlay.myPenaltyGoals}
             oppPenaltyGoals={penaltyMatchEndOverlay.oppPenaltyGoals}
             playerName={props.playerUsername}

@@ -583,7 +583,9 @@ export interface MatchFinalResultsPayload {
   unlockedAchievements?: Record<string, AchievementUnlockPayload[]>;
   durationMs: number;
   resultVersion: number;
-  winnerDecisionMethod?: 'goals' | 'penalty_goals' | 'total_points' | 'total_points_fallback' | 'forfeit' | null;
+  winnerDecisionMethod?: 'goals' | 'penalty_goals' | 'total_points' | 'total_points_fallback' | 'forfeit' | 'draw' | null;
+  /** True when a ranked penalty shootout ended level (`winnerId` is null, decision `'draw'`). */
+  isDraw?: boolean;
   cancelledNoContest?: boolean;
   totalPointsFallbackUsed?: boolean;
   rankedOutcome?: RankedMatchOutcomePayload | null;
