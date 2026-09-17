@@ -653,7 +653,6 @@ export function useRealtimePossessionMatchController({
           visible: true,
           result: fieldState.penaltyDisplayResult,
           resultShooterIsMe: fieldState.resultShooterIsMe,
-          reason: state.roundResult?.deltas?.penaltyOutcomeReason ?? null,
           localQuestionIndex,
         }
         : null,

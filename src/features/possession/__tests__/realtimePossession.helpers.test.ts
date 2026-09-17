@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   computeMyPossessionPct,
-  getPenaltyBothCorrectReasonKey,
   isOpponentPointsKnown,
   shouldShowOpponentScore,
   toAnswerStates,
@@ -28,20 +27,6 @@ describe('realtimePossession.helpers', () => {
     expect(shouldShowOpponentScore({ opponentAnswered: false, opponentAnsweredCorrectly: null, hasRoundResult: true })).toBe(true);
   });
 
-  it('maps a both-correct penalty reason to the explanation key for the losing seat', () => {
-    // Keeper answered correctly but the shooter was faster → goal conceded.
-    expect(getPenaltyBothCorrectReasonKey('shooter_faster', false)).toBe('possession.penaltyBothCorrectShooterFaster');
-    // Shooter answered correctly but the keeper was faster → saved.
-    expect(getPenaltyBothCorrectReasonKey('keeper_faster', true)).toBe('possession.penaltyBothCorrectKeeperFaster');
-    // Winning seat gets no line.
-    expect(getPenaltyBothCorrectReasonKey('shooter_faster', true)).toBeNull();
-    expect(getPenaltyBothCorrectReasonKey('keeper_faster', false)).toBeNull();
-    // Someone missed: outcome is self-explanatory.
-    expect(getPenaltyBothCorrectReasonKey('shooter_missed', true)).toBeNull();
-    expect(getPenaltyBothCorrectReasonKey('keeper_missed', false)).toBeNull();
-    expect(getPenaltyBothCorrectReasonKey(undefined, false)).toBeNull();
-    expect(getPenaltyBothCorrectReasonKey(null, true)).toBeNull();
-  });
 
   it('returns 4 answer states for standard multiple-choice questions', () => {
     expect(toAnswerStates(4, 1, true)).toEqual(['disabled', 'correct', 'disabled', 'disabled']);
