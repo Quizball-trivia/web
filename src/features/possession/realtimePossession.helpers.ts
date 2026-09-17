@@ -1,8 +1,7 @@
 'use client';
 
 import type { GameQuestion } from '@/lib/domain/gameQuestion';
-import type { MessageKey } from '@/lib/i18n/messages';
-import type { PenaltyOutcomeReason, ResolvedMatchQuestionPayload } from '@/lib/realtime/socket.types';
+import type { ResolvedMatchQuestionPayload } from '@/lib/realtime/socket.types';
 import type { AnswerState, AnswerStateArray } from './types/possession.types';
 
 /**
@@ -30,20 +29,6 @@ export function shouldShowOpponentScore(params: {
 }): boolean {
   if (params.hasRoundResult) return true;
   return isOpponentPointsKnown(params);
-}
-
-/**
- * Explanation line for a penalty the local player lost despite answering
- * correctly (both correct, speed decided). Returns null for the winning seat
- * and for outcomes where somebody simply missed.
- */
-export function getPenaltyBothCorrectReasonKey(
-  reason: PenaltyOutcomeReason | null | undefined,
-  resultShooterIsMe: boolean
-): MessageKey | null {
-  if (reason === 'shooter_faster' && !resultShooterIsMe) return 'possession.penaltyBothCorrectShooterFaster';
-  if (reason === 'keeper_faster' && resultShooterIsMe) return 'possession.penaltyBothCorrectKeeperFaster';
-  return null;
 }
 
 export const TRANSITION_DELAY_MS = 1000;

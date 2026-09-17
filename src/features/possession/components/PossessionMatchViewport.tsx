@@ -11,8 +11,7 @@ import { PitchVisualization } from './PitchVisualization';
 import { PossessionHUD } from './PossessionHUD';
 import { ShotHUD } from './ShotHUD';
 import { ConnectionQualitySignal } from '@/components/shared/ConnectionQualitySignal';
-import type { PenaltyOutcomeReason } from '@/lib/realtime/socket.types';
-import { getPenaltyBothCorrectReasonKey, type GoalCelebrationState } from '../realtimePossession.helpers';
+import type { GoalCelebrationState } from '../realtimePossession.helpers';
 
 type PitchProps = ComponentProps<typeof PitchVisualization>;
 type PossessionHudProps = ComponentProps<typeof PossessionHUD>;
@@ -28,8 +27,6 @@ interface PenaltySplashModel {
   visible: boolean;
   result: 'goal' | 'saved';
   resultShooterIsMe: boolean;
-  /** Why it resolved this way; only rendered when both were correct and speed decided. */
-  reason?: PenaltyOutcomeReason | null;
   localQuestionIndex: number | null;
 }
 
@@ -108,8 +105,7 @@ function PenaltySplash({
   const { t } = useLocale();
   if (!model?.visible) return null;
 
-  const { localQuestionIndex, result, resultShooterIsMe, reason } = model;
-  const reasonKey = getPenaltyBothCorrectReasonKey(reason, resultShooterIsMe);
+  const { localQuestionIndex, result, resultShooterIsMe } = model;
   return (
     <motion.div
       key={`pen-splash-${localQuestionIndex}`}
@@ -157,15 +153,6 @@ function PenaltySplash({
           ? (resultShooterIsMe ? t('possession.youScored') : t('possession.opponentScored'))
           : (resultShooterIsMe ? t('possession.keeperSavesIt') : t('possession.youSavedIt'))}
       </div>
-      {reasonKey ? (
-        <div
-          data-testid="penalty-outcome-reason"
-          className="mt-1 text-xs font-semibold tracking-wide text-white/50"
-          style={{ fontFamily: "'Poppins', sans-serif" }}
-        >
-          {t(reasonKey)}
-        </div>
-      ) : null}
     </motion.div>
   );
 }

@@ -1405,8 +1405,6 @@
     "savedExclaim": "მოგერიება!",
     "keeperSavesIt": "მეკარემ მოიგერია!",
     "youSavedIt": "შენ მოიგერიე!",
-    "penaltyBothCorrectShooterFaster": "ორივემ სწორად უპასუხა — დამრტყმელი უფრო სწრაფი იყო",
-    "penaltyBothCorrectKeeperFaster": "ორივემ სწორად უპასუხა — მეკარე უფრო სწრაფი იყო",
     "questionCounter": "კითხვა {current}/{total}",
     "pointsLabel": "ქულა",
     "questionN": "კითხვა {n}",
