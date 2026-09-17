@@ -392,6 +392,16 @@ export interface MatchAnswerAckPayload {
   correctIndex?: number;
   myTotalPoints: number;
   oppAnswered: boolean;
+  /**
+   * Opponent outcome, present only when `oppAnswered` is true AND the backend
+   * already resolved it. Lets the client show the opponent's real points even
+   * when this ack beats `match:opponent_answered` (both answered at the same
+   * moment). Older backends omit these; the client then waits for the event.
+   */
+  opponentPointsEarned?: number;
+  opponentTotalPoints?: number;
+  opponentIsCorrect?: boolean;
+  opponentSelectedIndex?: number | null;
   pointsEarned: number;
   phaseKind?: MatchPhaseKind;
   phaseRound?: number | null;
@@ -567,7 +577,9 @@ export interface MatchFinalResultsPayload {
   unlockedAchievements?: Record<string, AchievementUnlockPayload[]>;
   durationMs: number;
   resultVersion: number;
-  winnerDecisionMethod?: 'goals' | 'penalty_goals' | 'total_points' | 'total_points_fallback' | 'forfeit' | null;
+  winnerDecisionMethod?: 'goals' | 'penalty_goals' | 'total_points' | 'total_points_fallback' | 'forfeit' | 'draw' | null;
+  /** True when a ranked penalty shootout ended level (`winnerId` is null, decision `'draw'`). */
+  isDraw?: boolean;
   cancelledNoContest?: boolean;
   totalPointsFallbackUsed?: boolean;
   rankedOutcome?: RankedMatchOutcomePayload | null;

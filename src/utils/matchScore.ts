@@ -27,7 +27,9 @@ export function formatMatchScore(match: Pick<
     return { score: goalScore, suffix: null, badge: "FF", badgeI18nKey: null, badgeVariant: "red" };
   }
 
-  if (match.winnerDecisionMethod === "penalty_goals") {
+  // A ranked shootout that ended level is decided as "draw"; it still went to
+  // penalties, so keep the (P x-x) suffix.
+  if (match.winnerDecisionMethod === "penalty_goals" || match.winnerDecisionMethod === "draw") {
     const penaltyScore = `${match.playerPenaltyGoals}-${match.opponentPenaltyGoals}`;
     return { score: goalScore, suffix: `(P ${penaltyScore})`, badge: null, badgeI18nKey: null, badgeVariant: null };
   }

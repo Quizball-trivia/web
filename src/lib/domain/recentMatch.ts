@@ -1,7 +1,7 @@
 import type { AvatarCustomization } from "@/types/game";
 import type { RankedTier } from "@/utils/rankedTier";
 
-export type WinnerDecisionMethod = "goals" | "penalty_goals" | "total_points" | "total_points_fallback" | "forfeit";
+export type WinnerDecisionMethod = "goals" | "penalty_goals" | "total_points" | "total_points_fallback" | "forfeit" | "draw";
 
 export interface RecentMatchOpponent {
   id: string | null;

@@ -39,6 +39,7 @@ import type {
   MatchAnswerAckPayload,
   MatchRoundResultPayload,
 } from '@/lib/realtime/socket.types';
+import { isOpponentPointsKnown } from '../realtimePossession.helpers';
 
 type Side = 'player' | 'opponent';
 
@@ -583,7 +584,10 @@ export function usePossessionBarBattleFlights() {
   const opponentRecentPoints = barBattleMatch.opponentRecentPoints;
   useEffect(() => {
     if (!enabled) return;
-    if (!opponentAnswered) return;
+    // `opponentAnswered` can flip true via answer_ack (oppAnswered) before the
+    // opponent's points are known; don't fly (or latch) a bogus "+0" — wait for
+    // opponent_answered / the ack's opponent fields to land.
+    if (!isOpponentPointsKnown({ opponentAnswered, opponentAnsweredCorrectly })) return;
     if (barBattleMatch.currentQuestionPhase !== 'playing') return;
     // Fire flights for both correct and wrong opponent answers. The wrong/
     // zero-point case renders a "failed" flight that falls off-screen.

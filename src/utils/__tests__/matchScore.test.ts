@@ -31,6 +31,19 @@ describe('formatMatchScore', () => {
     });
   });
 
+  it('keeps the penalty suffix for a shootout that ended in a draw', () => {
+    expect(
+      formatMatchScore({
+        ...baseMatch,
+        playerGoals: 1,
+        opponentGoals: 1,
+        playerPenaltyGoals: 3,
+        opponentPenaltyGoals: 3,
+        winnerDecisionMethod: 'draw',
+      })
+    ).toMatchObject({ score: '1-1', suffix: '(P 3-3)', badge: null });
+  });
+
   it('keeps penalty score suffixes', () => {
     expect(formatMatchScore({
       ...baseMatch,

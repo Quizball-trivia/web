@@ -30,7 +30,9 @@ export interface RealtimeResultsScreenProps {
   opponentQuestionResults?: Array<'correct' | 'wrong' | null>;
   selfUserId: string;
   finalWinnerId?: string | null;
-  winnerDecisionMethod?: 'goals' | 'penalty_goals' | 'total_points' | 'total_points_fallback' | 'forfeit' | null;
+  winnerDecisionMethod?: 'goals' | 'penalty_goals' | 'total_points' | 'total_points_fallback' | 'forfeit' | 'draw' | null;
+  /** Explicit draw flag from the completion payload (penalty shootout ended level). */
+  isDraw?: boolean;
   cancelledNoContest?: boolean;
   preMatchRp?: number;
   opponentId: string;
