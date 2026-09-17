@@ -157,7 +157,7 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick, eventMo
                           : "block truncate text-[10px] sm:text-sm font-fun font-black uppercase tracking-wide"}
                         style={{ color: (isEventMode && isFirst) || isCurrentUser ? "#FFFFFF" : tierAccent }}
                       >
-                        {entry.tier ? tierLabelOf(entry.tier) : t('profileScreen.unranked')}
+                        {entry.tier || !compact ? tierLabelOf(entry.tier) : t('profileScreen.unranked')}
                       </span>
                     </div>
 
