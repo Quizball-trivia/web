@@ -2515,6 +2515,7 @@
     "family_trophy_award": "Kupa"
   },
   "languageSwitcher": {
+    "title": "Dil seç",
     "chooseLanguage": "Dil seç. Geçerli dil: {language}"
   }
 }

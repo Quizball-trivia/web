@@ -83,6 +83,11 @@ describe("LanguageSwitcher trigger", () => {
     expect(trigger.textContent?.trim()).toBe("");
     expect(trigger.className).toContain("rounded-full");
   });
+
+  it("names the current language the way its speakers do", () => {
+    render(<InPlaceLanguageSwitcher locale="ka" onSelect={vi.fn()} />);
+    expect(screen.getByRole("button", { name: /ქართული/ })).toHaveAttribute("title", "ქართული");
+  });
 });
 
 describe("LanguageSwitcher in-place mode", () => {

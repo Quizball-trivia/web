@@ -120,9 +120,7 @@ function LanguageMenu({ activeLocale, locales, className, renderItem }: {
         sideOffset={8}
         className="w-56 rounded-[18px] border-0 bg-black/70 p-2 font-poppins text-white shadow-[0_12px_40px_rgba(0,0,0,0.35)] backdrop-blur-md"
       >
-        <DropdownMenuLabel className="px-3 pb-2 pt-1 text-[10px] font-black uppercase tracking-[0.18em] text-white/45">
-          Choose language
-        </DropdownMenuLabel>
+        <DropdownMenuLabel className="px-3 pb-2 pt-1 text-[10px] font-black uppercase tracking-[0.18em] text-white/45">{t("languageSwitcher.title")}</DropdownMenuLabel>
         {locales.map((code) => (
           <DropdownMenuItem key={code} asChild className="p-0 focus:bg-transparent">
             {renderItem(code, OPTIONS_BY_CODE[code], code === activeLocale)}

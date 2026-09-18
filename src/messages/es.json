@@ -2515,6 +2515,7 @@
     "family_trophy_award": "Trofeo"
   },
   "languageSwitcher": {
+    "title": "Elegir idioma",
     "chooseLanguage": "Elegir idioma. Idioma actual: {language}"
   }
 }
