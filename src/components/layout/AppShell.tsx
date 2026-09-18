@@ -55,7 +55,7 @@ export function AppShell({ children }: AppShellProps) {
   const signInButton = (
     <div className="flex items-center gap-2" data-chrome="guest">
       {/* Suspense: the switcher reads search params, which must not bail the whole shell out of static rendering. */}
-      {publicLocale && <Suspense fallback={null}><LanguageSwitcher locale={publicLocale} className="h-10 min-h-0" /></Suspense>}
+      {publicLocale && <Suspense fallback={null}><LanguageSwitcher locale={publicLocale} /></Suspense>}
       <button
         type="button"
         onClick={signIn}
@@ -100,11 +100,11 @@ export function AppShell({ children }: AppShellProps) {
         <div className="flex min-h-screen min-w-0 flex-col xl:min-h-0">
           {/* DESKTOP TOPBAR (>= xl) */}
           <header className="sticky top-0 z-30 hidden h-16 items-center justify-between bg-background/60 px-6 backdrop-blur-md xl:flex">
-            {/* Left: the signed-in language switcher (in place, saved to the profile). Guests get theirs next to Sign in. */}
+            {/* Left: the signed-in language switcher (flag only, in place, saved to the profile). Guests get theirs next to Sign in. */}
             <div className="flex items-center">
               {!isGuest && (publicLocale
-                ? <Suspense fallback={null}><LanguageSwitcher locale={publicLocale} onSelect={savePreference} className="h-10 min-h-0" /></Suspense>
-                : <InPlaceLanguageSwitcher locale={locale} onSelect={changeLanguage} className="h-10 min-h-0" />)}
+                ? <Suspense fallback={null}><LanguageSwitcher locale={publicLocale} onSelect={savePreference} /></Suspense>
+                : <InPlaceLanguageSwitcher locale={locale} onSelect={changeLanguage} />)}
             </div>
 
             <div className="flex items-center gap-4">
@@ -155,9 +155,7 @@ export function AppShell({ children }: AppShellProps) {
                           authUserCountry={authUser?.country}
                           onRequestLogout={() => setShowLogoutConfirm(true)}
                         />
-                        {publicLocale
-                          ? <Suspense fallback={null}><LanguageSwitcher locale={publicLocale} onSelect={savePreference} className="h-9 min-h-0 px-2.5" /></Suspense>
-                          : <InPlaceLanguageSwitcher locale={locale} onSelect={changeLanguage} className="h-9 min-h-0 px-2.5" />}
+                        {/* No language switcher on phones: it collided with the profile card; Settings → Language covers it. */}
                       </>
                     )}
                   </div>

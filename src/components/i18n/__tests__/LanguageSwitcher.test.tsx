@@ -76,6 +76,15 @@ describe("LanguageSwitcher", () => {
   });
 });
 
+describe("LanguageSwitcher trigger", () => {
+  it("shows only the flag and keeps the accessible name", () => {
+    render(<InPlaceLanguageSwitcher locale="en" onSelect={vi.fn()} />);
+    const trigger = screen.getByRole("button", { name: /Choose language\. Current language: English/ });
+    expect(trigger.textContent?.trim()).toBe("");
+    expect(trigger.className).toContain("rounded-full");
+  });
+});
+
 describe("LanguageSwitcher in-place mode", () => {
   it("offers buttons that call onSelect and persist the choice instead of navigating", async () => {
     const user = userEvent.setup();

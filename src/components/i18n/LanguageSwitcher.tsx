@@ -4,7 +4,7 @@ import type React from "react";
 
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
-import { Check, ChevronDown } from "lucide-react";
+import { Check } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -97,21 +97,15 @@ function LanguageMenu({ activeLocale, locales, className, renderItem }: {
         <button
           type="button"
           aria-label={`Choose language. Current language: ${activeOption.name}`}
+          title={activeOption.name}
           className={cn(
-            "group inline-flex min-h-10 items-center gap-2 rounded-[14px] border border-white/10 bg-surface-deep px-3 font-poppins text-white shadow-[0_10px_30px_rgba(0,0,0,0.22)] outline-none transition-colors hover:border-white/20 hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-brand-yellow/80",
+            // Flag only, no card: the language name lives in the tooltip and the accessible name (owner, 2026-09-18).
+            "group inline-flex size-10 items-center justify-center rounded-full bg-transparent text-white outline-none transition-colors hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-brand-yellow/60 data-[state=open]:bg-white/10",
             className,
           )}
         >
           <span
-            className={`fi fi-${activeOption.countryCode} !size-[18px] rounded-[3px] shadow-[0_0_0_1px_rgba(255,255,255,0.14)]`}
-            aria-hidden
-          />
-          <span className="hidden text-sm font-black sm:inline">{activeOption.nativeName}</span>
-          <span className="text-xs font-black uppercase tracking-[0.08em] sm:hidden">
-            {activeLocale}
-          </span>
-          <ChevronDown
-            className="size-4 text-white/55 transition-transform group-data-[state=open]:rotate-180"
+            className={`fi fi-${activeOption.countryCode} !h-5 !w-7 rounded-[3px]`}
             aria-hidden
           />
         </button>
@@ -120,7 +114,7 @@ function LanguageMenu({ activeLocale, locales, className, renderItem }: {
       <DropdownMenuContent
         align="end"
         sideOffset={8}
-        className="w-56 rounded-[18px] border border-white/10 bg-surface-deep p-2 font-poppins text-white shadow-[0_22px_60px_rgba(0,0,0,0.5)]"
+        className="w-56 rounded-[18px] border-0 bg-black/70 p-2 font-poppins text-white shadow-[0_12px_40px_rgba(0,0,0,0.35)] backdrop-blur-md"
       >
         <DropdownMenuLabel className="px-3 pb-2 pt-1 text-[10px] font-black uppercase tracking-[0.18em] text-white/45">
           Choose language
