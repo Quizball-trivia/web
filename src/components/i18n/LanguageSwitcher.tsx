@@ -5,6 +5,7 @@ import type React from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { Check } from "lucide-react";
+import { useLocale } from "@/contexts/LocaleContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -91,13 +92,16 @@ function LanguageMenu({ activeLocale, locales, className, renderItem }: {
   renderItem: (code: Locale, option: (typeof LOCALE_OPTIONS)[number], active: boolean) => React.ReactNode;
 }) {
   const activeOption = OPTIONS_BY_CODE[activeLocale];
+  const { t } = useLocale();
+  // Accessible name in the active locale, naming the language the way its speakers do.
+  const label = t("languageSwitcher.chooseLanguage", { language: activeOption.nativeName });
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          aria-label={`Choose language. Current language: ${activeOption.name}`}
-          title={activeOption.name}
+          aria-label={label}
+          title={activeOption.nativeName}
           className={cn(
             // Flag only, no card: the language name lives in the tooltip and the accessible name (owner, 2026-09-18).
             "group inline-flex size-10 items-center justify-center rounded-full bg-transparent text-white outline-none transition-colors hover:bg-white/10 focus-visible:ring-2 focus-visible:ring-brand-yellow/60 data-[state=open]:bg-white/10",

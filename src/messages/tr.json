@@ -2513,5 +2513,8 @@
     "family_league": "Lig",
     "family_manager": "Menajer",
     "family_trophy_award": "Kupa"
+  },
+  "languageSwitcher": {
+    "chooseLanguage": "Dil seç. Geçerli dil: {language}"
   }
 }

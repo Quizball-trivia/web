@@ -2513,5 +2513,8 @@
     "family_league": "League",
     "family_manager": "Manager",
     "family_trophy_award": "Trophy"
+  },
+  "languageSwitcher": {
+    "chooseLanguage": "Choose language. Current language: {language}"
   }
 }

@@ -2513,5 +2513,8 @@
     "family_league": "Liga",
     "family_manager": "Entrenador",
     "family_trophy_award": "Trofeo"
+  },
+  "languageSwitcher": {
+    "chooseLanguage": "Elegir idioma. Idioma actual: {language}"
   }
 }

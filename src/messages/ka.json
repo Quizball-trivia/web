@@ -2513,5 +2513,8 @@
     "family_league": "ლიგა",
     "family_manager": "მწვრთნელი",
     "family_trophy_award": "ტროფეი"
+  },
+  "languageSwitcher": {
+    "chooseLanguage": "ენის არჩევა. მიმდინარე ენა: {language}"
   }
 }
