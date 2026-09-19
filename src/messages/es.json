@@ -1,5 +1,20 @@
 {
-  "season3": {"eyebrow":"TEMPORADA 3 · TU OPINIÓN","voteQuestion":"¿Quitamos estas rondas de la temporada 3? Responde a cada una por separado.","order":"¿Quitamos «Ordenar»?","who":"¿Quitamos «¿Quién soy?»?","remove":"Sí, quitarla","keep":"No, mantenerla","ideaQuestion":"¿Qué modo de juego te gustaría ver en la temporada 3?","placeholder":"Cuéntanos tu idea y cómo funcionaría…","send":"Enviar mi respuesta","sending":"Guardando…","thanks":"¡Gracias por tu opinión!","back":"Volver a jugar","later":"Ahora no","error":"No se pudo guardar. Inténtalo de nuevo."},
+  "season3": {
+    "eyebrow": "TEMPORADA 3 · TU OPINIÓN",
+    "voteQuestion": "¿Quitamos estas rondas de la temporada 3? Responde a cada una por separado.",
+    "order": "¿Quitamos «Ordenar»?",
+    "who": "¿Quitamos «¿Quién soy?»?",
+    "remove": "Sí, quitarla",
+    "keep": "No, mantenerla",
+    "ideaQuestion": "¿Qué modo de juego te gustaría ver en la temporada 3?",
+    "placeholder": "Cuéntanos tu idea y cómo funcionaría…",
+    "send": "Enviar mi respuesta",
+    "sending": "Guardando…",
+    "thanks": "¡Gracias por tu opinión!",
+    "back": "Volver a jugar",
+    "later": "Ahora no",
+    "error": "No se pudo guardar. Inténtalo de nuevo."
+  },
   "common": {
     "back": "Atrás",
     "cancel": "Cancelar",
@@ -768,7 +783,8 @@
     "unavailableTryAgain": "Reintentar",
     "unavailableBack": "Volver",
     "timeUpBankKept": "¡Se acabó el tiempo! — tus {amount} se quedan en el banco",
-    "nextUpTitle": "A continuación"
+    "nextUpTitle": "A continuación",
+    "cluesTotalTimeTip": "{seconds} segundos para las {count} pistas: una pista nueva cada {step} s. ¡Responde pronto para más puntos!"
   },
   "dailyChallenge": {
     "answerPrefix": "Respuesta",
