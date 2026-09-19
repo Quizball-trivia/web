@@ -1,6 +1,8 @@
 export type GeoApiResponse = {
   countryCode: string | null;
   isGeorgia: boolean;
+  isGeoExperimentEnabled: boolean;
+  showBetson: boolean;
   source: "header" | "override" | "unknown";
 };
 
@@ -61,11 +63,14 @@ export function resolveGeo(input: ResolveGeoInput): GeoApiResponse {
   const normalizedOverrideCountry = normalizeCountryCode(input.overrideCountry);
   const useOverride = Boolean(normalizedOverrideCountry && isGeoOverrideAllowed(input));
   const countryCode = useOverride ? normalizedOverrideCountry : normalizedHeaderCountry;
+  const isGeoExperimentEnabled = !isProductionGeoRuntime(input);
   const isGeorgia = countryCode === "GE";
 
   return {
     countryCode,
     isGeorgia,
+    isGeoExperimentEnabled,
+    showBetson: isGeoExperimentEnabled && isGeorgia,
     source: useOverride ? "override" : normalizedHeaderCountry ? "header" : "unknown",
   };
 }

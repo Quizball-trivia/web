@@ -8,7 +8,7 @@ import {
   SITE_URL,
 } from '@/lib/seo/site';
 
-const TITLE = 'Quiz de Fútbol — Preguntas y Trivia | QuizBall';
+const TITLE = 'Quiz de Fútbol — Preguntas y Trivia Gratis | QuizBall';
 const DESCRIPTION = 'Juega quizzes de fútbol gratis sobre clubes, jugadores, escudos, trayectorias y grandes competiciones. Resultado instantáneo y sin registro.';
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }): Promise<Metadata> {

@@ -35,7 +35,6 @@ vi.mock("@/lib/realtime/socket-client", () => ({
 }));
 
 vi.mock("@/lib/posthog", () => ({
-  registerAccessType: vi.fn(),
   identifyUser: (...args: unknown[]) => identifyUserMock(...args),
   resetUser: () => resetUserMock(),
 }));

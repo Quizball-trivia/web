@@ -1,6 +1,5 @@
 "use client";
 
-import { useEnsureGuestPrincipal } from "@/lib/realtime/realtime-principal";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { markSeason3Return } from '@/features/season3/season3.repo';
@@ -24,9 +23,10 @@ import { LoadingScreen } from "@/components/shared/LoadingScreen";
 import { useLocale } from "@/contexts/LocaleContext";
 import { tierFromRp } from "@/utils/rankedTier";
 import { parseRp } from "@/lib/utils";
+import { useEnsureGuestPrincipal } from '@/lib/realtime/realtime-principal';
+import { AuctionTrainingScreen } from '@/features/auction-training/AuctionTrainingScreen';
+import { GridTrainingScreen } from '@/features/grid-training/GridTrainingScreen';
 import { TrainingMatchScreen } from "@/features/training/TrainingMatchScreen";
-import { AuctionTrainingScreen } from "@/features/auction-training/AuctionTrainingScreen";
-import { GridTrainingScreen } from "@/features/grid-training/GridTrainingScreen";
 import { useGameStageState } from "@/features/game/hooks/useGameStageState";
 import { useStoreWallet, getStoreWalletQuery } from "@/lib/queries/store.queries";
 import {
@@ -57,7 +57,6 @@ function isAiOpponentInfo(opponentInfo: { id?: string; isAiOpponent?: boolean } 
 export function GameStageRouter() {
   const router = useRouter();
   const { t, locale } = useLocale();
-  // A guest reloading /game mid friend-room match re-resolves its principal here.
   useEnsureGuestPrincipal(locale);
   const {
     player,
@@ -322,26 +321,6 @@ export function GameStageRouter() {
     recoverRankedBoot,
   ]);
 
-  // DB write outage (INC-2026-07-29): the server refused the queue join before
-  // spending a ticket. Surface the reassuring "ticket wasn't used, retrying"
-  // notice on the matchmaking map. Not a boot abort — no recovery, no toast
-  // error — just a calm inline pill.
-  const lastDbOutageQueueLeftSeqRef = useRef<number | null>(null);
-  useEffect(() => {
-    if (lastDbOutageQueueLeftSeqRef.current === rankedQueueLeftSeq) return;
-    lastDbOutageQueueLeftSeqRef.current = rankedQueueLeftSeq;
-    if (rankedQueueLeftAt !== null && rankedQueueLeftSource === "db_write_outage") {
-      // Defer the setState out of the effect body (matches recoverRankedBoot's
-      // queueMicrotask above; avoids the cascading-render lint).
-      queueMicrotask(() => {
-        setRankedBootNotice({
-          id: `ranked-db-outage-${Date.now()}`,
-          message: t("matchmaking.dbOutagePaused"),
-        });
-      });
-    }
-  }, [rankedQueueLeftAt, rankedQueueLeftSeq, rankedQueueLeftSource, t]);
-
   useEffect(() => {
     const previousSessionState = lastRankedBootSessionStateRef.current;
     lastRankedBootSessionStateRef.current = sessionState?.state ?? null;
@@ -585,12 +564,8 @@ export function GameStageRouter() {
   }
 
   if (config?.mode === "training") {
-    if (config.trainingGame === "auction") {
-      return <AuctionTrainingScreen onComplete={() => exitToPlay("training_complete")} />;
-    }
-    if (config.trainingGame === "grid") {
-      return <GridTrainingScreen onComplete={() => exitToPlay("training_complete")} />;
-    }
+    if (config.trainingGame === "auction") return <AuctionTrainingScreen onComplete={() => exitToPlay("training_complete")} />;
+    if (config.trainingGame === "grid") return <GridTrainingScreen onComplete={() => exitToPlay("training_complete")} />;
     return <TrainingMatchScreen onComplete={() => exitToPlay("training_complete")} />;
   }
 

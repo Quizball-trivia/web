@@ -3,7 +3,6 @@ import { mockCurrentPlayer } from '@/data/mockData';
 import type { PlayerProfile } from '@/lib/domain';
 import { applyXpReward } from '@/lib/domain/matchXp';
 import { useAuthStore } from '@/stores/auth.store';
-import { useGuestPrincipalStore } from '@/lib/realtime/realtime-principal';
 import { useRankedProfile } from '@/lib/queries/ranked.queries';
 
 interface PlayerContextValue {
@@ -18,44 +17,17 @@ interface PlayerContextValue {
 
 const PlayerContext = createContext<PlayerContextValue | null>(null);
 
-const GUEST_BASELINE: Partial<PlayerProfile> = {
-  level: 1,
-  xp: 0,
-  xpToNextLevel: 1000,
-  coins: 0,
-  tickets: 0,
-  totalScore: 0,
-  gamesPlayed: 0,
-  correctAnswers: 0,
-  currentStreak: 0,
-  bestStreak: 0,
-  achievements: [],
-  badges: [],
-  rank: 0,
-  ownedItems: [],
-  rankPoints: 0,
-  completedLevels: [],
-};
-
 export function PlayerProvider({ children }: { children: ReactNode }) {
   const [player, setPlayer] = useState<PlayerProfile>(mockCurrentPlayer);
   const authUser = useAuthStore((state) => state.user);
   const { data: rankedProfile } = useRankedProfile({ enabled: Boolean(authUser) });
-  // Friend-room guests are a real (account-less) identity: their server name
-  // and kit drive every gameplay screen instead of the mock profile.
-  const guest = useGuestPrincipalStore((state) => state.guest);
 
   useEffect(() => {
-    const identity = authUser
-      ? { id: authUser.id, username: authUser.nickname ?? authUser.email?.split('@')[0], avatarCustomization: authUser.avatar_customization }
-      : guest
-        ? { id: guest.userId, username: guest.nickname ?? undefined, avatarCustomization: guest.avatarCustomization }
-        : null;
-    if (!identity) return;
+    if (!authUser) return;
 
-    const newId = identity.id;
-    const newUsername = identity.username;
-    const newAvatarCustomization = identity.avatarCustomization;
+    const newId = authUser.id;
+    const newUsername = authUser.nickname ?? authUser.email?.split('@')[0];
+    const newAvatarCustomization = authUser.avatar_customization;
 
     // Sync auth user changes to player context - intentional synchronization pattern
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -70,15 +42,12 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
 
       return {
         ...prev,
-        // A guest holds nothing: the mock profile's level, coins, RP and
-        // achievements must never show up in a guest's screens.
-        ...(authUser ? {} : GUEST_BASELINE),
         id: newId ?? prev.id,
         username: newUsername ?? prev.username,
         avatarCustomization: newAvatarCustomization ?? undefined,
       };
     });
-  }, [authUser, guest]);
+  }, [authUser]);
 
   const updateCoins = useCallback((delta: number) => {
     setPlayer(p => ({ ...p, coins: Math.max(0, p.coins + delta) }));

@@ -5,7 +5,7 @@ import { logout as logoutService, isBannedAuthError } from "@/lib/auth/auth.serv
 import { ApiError } from "@/lib/api/api";
 import type { User } from "@/lib/types";
 import { logger } from "@/utils/logger";
-import { identifyUser, registerAccessType, resetUser } from "@/lib/posthog";
+import { identifyUser, resetUser } from "@/lib/posthog";
 import { trackLogout } from "@/lib/analytics/game-events";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
 import { getSupabaseSession, signOutLocal } from "@/lib/auth/supabase";
@@ -39,8 +39,6 @@ function syncAnalyticsUser(user: User): void {
 
   // All person properties ride on the $identify call (free) — no separate $set
   // event, which was ~21k billable events/day for what identify already does.
-  // Member before $identify, so the identify call and everything after carry access_type=member.
-  registerAccessType("member");
   identifyUser(
     user.id,
     {
@@ -92,8 +90,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     clearLocalSession();
     clearCampaignAttribution();
     resetUser();
-    // posthog.reset() drops super properties: the signed-out visitor is a guest again.
-    registerAccessType("guest");
     set({ status: "anonymous", user: null, hasBootstrapped: true });
   },
   setBanned: () => {
@@ -103,8 +99,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     clearLocalSession();
     clearCampaignAttribution();
     resetUser();
-    // posthog.reset() drops super properties: the signed-out visitor is a guest again.
-    registerAccessType("guest");
     void signOutLocal().catch(() => {});
     disconnectSocket();
     set({ status: "banned", user: null, hasBootstrapped: true });

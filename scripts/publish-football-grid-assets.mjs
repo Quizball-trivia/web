@@ -33,6 +33,13 @@ if (!/^[a-z0-9][a-z0-9._-]*$/i.test(release)) {
 if (!verifyOnly && !dryRun && !serviceKey) {
   throw new Error('SUPABASE_SERVICE_ROLE_KEY is required to publish Football Grid assets');
 }
+if (!verifyOnly && !dryRun) {
+  const expectedProject = process.env.FOOTBALL_GRID_EXPECTED_PROJECT_REF;
+  if (!/^[a-z]{20}$/.test(expectedProject ?? '') || !process.env.SUPABASE_URL ||
+      supabaseUrl !== `https://${expectedProject}.supabase.co` || !process.env.FOOTBALL_GRID_CDN_RELEASE) {
+    throw new Error('Publishing requires an explicit SUPABASE_URL, matching FOOTBALL_GRID_EXPECTED_PROJECT_REF and FOOTBALL_GRID_CDN_RELEASE');
+  }
+}
 
 const MIME_BY_EXTENSION = new Map([
   ['.jpg', 'image/jpeg'],
@@ -211,7 +218,7 @@ const verificationFailures = await runConcurrent(assets, VERIFY_CONCURRENCY, (as
 ));
 const failures = [...uploadFailures, ...verificationFailures];
 
-if (failures.length === 0) {
+if (failures.length === 0 && !verifyOnly) {
   await mkdir(path.dirname(manifestPath), { recursive: true });
   await writeFile(manifestPath, `${JSON.stringify({
     schemaVersion: 1,

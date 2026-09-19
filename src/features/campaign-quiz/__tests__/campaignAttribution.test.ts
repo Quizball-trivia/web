@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const trackEventMock = vi.fn();
 
 vi.mock('@/lib/posthog', () => ({
-  registerAccessType: vi.fn(),
   trackEvent: (...args: unknown[]) => trackEventMock(...args),
 }));
 
@@ -154,6 +153,29 @@ describe('campaign attribution handoff', () => {
       new TextDecoder().decode(Uint8Array.from(binary, (char) => char.charCodeAt(0))),
     ) as Record<string, unknown>;
     expect(handoff.campaign_conversion_id).toBe(signupProperties.campaign_conversion_id);
+  });
+
+  it('preserves the CTA attribution when the signup URL fallback is processed', () => {
+    vi.mocked(window.crypto.randomUUID)
+      .mockReturnValueOnce('11111111-1111-4111-8111-111111111111')
+      .mockReturnValueOnce('22222222-2222-4222-8222-222222222222');
+    trackCampaignSignupClick('liverpool', 'score', { score: 12, totalQuestions: 15 });
+
+    rememberCampaignAttributionFromSignupUrl(
+      new URL('https://quizball.io/en?signup=1&source=liverpool-quiz'),
+    );
+
+    const encodedHandoff = getCampaignAttributionHeader();
+    expect(encodedHandoff).toBeTruthy();
+    const base64 = encodedHandoff!.replace(/-/g, '+').replace(/_/g, '/');
+    const handoff = JSON.parse(
+      window.atob(base64.padEnd(Math.ceil(base64.length / 4) * 4, '=')),
+    ) as Record<string, unknown>;
+    expect(handoff).toMatchObject({
+      campaign_conversion_id: '11111111-1111-4111-8111-111111111111',
+      quiz_score: 12,
+      quiz_total_questions: 15,
+    });
   });
 
   it('tracks a campaign-scoped hub view with its locale', () => {

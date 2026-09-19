@@ -1,4 +1,3 @@
-import { BrandIcon } from '@/components/brand/BrandIcon';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Coins, TrendingUp } from 'lucide-react';
@@ -46,9 +45,9 @@ export function EventsStatusStrip({ playerCoins, playerRankPoints, playerTier }:
         <CardContent className="p-4 flex items-center gap-4">
            <div className="size-10 rounded-full bg-purple-500/10 flex items-center justify-center text-purple-500">
               <Badge variant="outline" className="border-0 bg-transparent p-0">
-                 {playerTier === 'Bronze' && <BrandIcon name="medal-bronze" />}
-                 {playerTier === 'Silver' && <BrandIcon name="medal-silver" />}
-                 {playerTier === 'Gold' && <BrandIcon name="medal-gold" />}
+                 {playerTier === 'Bronze' && '🥉'}
+                 {playerTier === 'Silver' && '🥈'}
+                 {playerTier === 'Gold' && '🥇'}
                  {playerTier === 'Platinum' && '💎'}
                  {playerTier === 'Diamond' && '💠'}
               </Badge>

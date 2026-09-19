@@ -37,6 +37,7 @@ import { useRouter } from "next/navigation";
 import { MissingXiModeModal } from "@/features/missing-xi/components/MissingXiModeModal";
 import { CoinIcon } from "@/features/store/components/CoinIcon";
 import type { Locale } from "@/lib/i18n/messages";
+import { isMiniGamesEnabled } from "@/lib/features/playModes";
 
 /** Real in-app destinations for the modes that have shipped a page. */
 const REAL_ROUTES: Record<string, string> = {
@@ -134,7 +135,7 @@ const resolveModes = (slugs: string[]): DemoModeCard[] =>
 // Prototype modes (no shipped route yet) stay listed — they are being turned
 // into real games — and open their /demos preview until their route lands.
 const DAILY_CHALLENGE_MODES = resolveModes(DAILY_CHALLENGE_SLUGS);
-const PLAY_WITH_COINS_MODES = resolveModes(PLAY_WITH_COINS_SLUGS);
+const PLAY_WITH_COINS_MODES = isMiniGamesEnabled ? resolveModes(PLAY_WITH_COINS_SLUGS) : [];
 
 // Phones: two cards per row (three crammed the art and titles); tablets up: three.
 const MODAL_SLUGS = new Set(["lab-missing-xi"]);

@@ -29,8 +29,8 @@ vi.mock("@/lib/analytics/game-events", () => ({
 vi.mock("sonner", () => ({
   toast: {
     info: mocks.toastInfo,
-    error: mocks.toastError,
     dismiss: vi.fn(),
+    error: mocks.toastError,
   },
 }));
 

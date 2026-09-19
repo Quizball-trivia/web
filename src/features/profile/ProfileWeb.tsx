@@ -38,8 +38,8 @@ import type { PlayerStats } from '@/types/game';
 import type { MatchStatsSummary, ModeMatchStatsSummary, HeadToHeadSummary, RankPosition, PreviousNickname } from '@/lib/domain';
 import { LOCALES, type MessageKey } from '@/lib/i18n/messages';
 import type { RankedProfileResponse } from '@/lib/repositories/ranked.repo';
-import { shouldShowProfileSeasonSelector } from './profileSeasonControls';
 
+import { getTierVisual } from '@/utils/tierVisuals';
 import { RANKED_TIER_BANDS, getNextTierBand } from '@/utils/rankedTier';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useTierLabel } from '@/hooks/useTierLabel';
@@ -141,6 +141,7 @@ export function ProfileWeb({
   const placementPlayed = rankedProfile?.placementPlayed ?? 0;
   const placementRequired = Math.max(1, rankedProfile?.placementRequired ?? 3);
   const displayRp = isPlacementInProgress ? 0 : (rankedProfile?.rp ?? 0);
+  const tierVisual = rankedProfile ? getTierVisual(rankedProfile.tier) : getTierVisual('Academy');
   const rankedDataReady = !rankedProfileLoading && rankedProfile !== null;
   const showRankTier = rankedDataReady && !isPlacementInProgress;
 
@@ -150,23 +151,15 @@ export function ProfileWeb({
   const { data: seasonsData } = useLeaderboardSeasons();
   const archivedSeasons = seasonsData?.seasons ?? [];
   const currentSeasonNumber = seasonsData?.currentSeasonNumber ?? archivedSeasons.length + 1;
-  const showProfileSeasonSelector = shouldShowProfileSeasonSelector({
-    isSelf,
-    archivedSeasonCount: archivedSeasons.length,
-    rankedProfile,
-    rankedProfileLoading,
-    matchStatsSummary,
-  });
-  const selectedProfileSeasonId = showProfileSeasonSelector ? profileSeasonId : null;
   const { data: archivedRank, isLoading: archivedRankLoading } = useUserRank(
-    isSelf && selectedProfileSeasonId ? player.id : '',
+    isSelf && profileSeasonId ? player.id : '',
     'global',
-    selectedProfileSeasonId ?? undefined,
+    profileSeasonId ?? undefined,
   );
   const { data: archivedCountryRank } = useUserRank(
-    isSelf && selectedProfileSeasonId ? player.id : '',
+    isSelf && profileSeasonId ? player.id : '',
     'country',
-    selectedProfileSeasonId ?? undefined,
+    profileSeasonId ?? undefined,
   );
   const seasonPillClass = (on: boolean) =>
     `inline-flex h-7 items-center justify-center gap-1 rounded-full px-3 text-[10px] sm:text-[11px] font-black uppercase tracking-wide transition-all active:translate-y-[1px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 ${
@@ -628,8 +621,8 @@ export function ProfileWeb({
               className="h-full rounded-[20px] overflow-hidden bg-surface-card/40 backdrop-blur-sm"
             >
               <div className="p-5 flex flex-col items-center">
-                {showProfileSeasonSelector && (
-                  <div className="mb-4 flex flex-wrap items-center justify-center gap-2">
+                {isSelf && archivedSeasons.length > 0 && (
+                  <div className="mb-4 flex items-center justify-center gap-2">
                     <button type="button" onClick={() => setProfileSeasonId(null)} className={seasonPillClass(profileSeasonId === null)}>
                       {t('leaderboard.season', { n: currentSeasonNumber })}
                     </button>
@@ -641,7 +634,7 @@ export function ProfileWeb({
                     ))}
                   </div>
                 )}
-                {selectedProfileSeasonId !== null ? (
+                {profileSeasonId !== null ? (
                   archivedRankLoading ? (
                     <div className="animate-pulse space-y-3 w-full flex flex-col items-center">
                       <div className="h-5 w-32 bg-white/15 rounded" />
@@ -724,16 +717,13 @@ export function ProfileWeb({
                       className="text-xl uppercase text-white"
                       style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, letterSpacing: '0', lineHeight: 1 }}
                     >
-                      {t("profileScreen.unranked")}
+                      Unranked
                     </h2>
                     <p className="font-poppins text-[11px] font-semibold uppercase text-white/50 mt-2 mb-4">
-                      {t("profileScreen.placementProgressShort", {
-                        played: placementPlayed,
-                        required: placementRequired,
-                      })}
+                      Placement {placementPlayed}/{placementRequired}
                     </p>
                     <p className="font-poppins text-xs font-semibold uppercase text-white/70 text-center">
-                      {t("profileScreen.placementRankHint")}
+                      Play placement matches to get your rank.
                     </p>
                   </>
                 )}

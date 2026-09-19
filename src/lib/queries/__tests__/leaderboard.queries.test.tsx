@@ -31,23 +31,21 @@ beforeEach(() => {
 });
 
 describe("leaderboard query auth gating", () => {
-  it("does not fetch while the session is still being resolved", async () => {
-    setStatus("loading");
+  it("fetches the public ranked leaderboard for anonymous visitors", async () => {
+    setStatus("anonymous");
     const { result } = renderHook(() => useLeaderboard("global"), { wrapper });
 
     await new Promise((resolve) => setTimeout(resolve, 20));
 
     expect(result.current.fetchStatus).toBe("idle");
-    expect(getLeaderboardMock).not.toHaveBeenCalled();
+    expect(getLeaderboardMock).toHaveBeenCalledWith("global", 50, 0, undefined);
   });
 
-  it("fetches the public ranked board for signed-out visitors", async () => {
-    setStatus("anonymous");
+  it("waits for the session check before fetching", async () => {
+    setStatus("loading");
     renderHook(() => useLeaderboard("global"), { wrapper });
-
-    await waitFor(() =>
-      expect(getLeaderboardMock).toHaveBeenCalledWith("global", 50, 0, undefined),
-    );
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(getLeaderboardMock).not.toHaveBeenCalled();
   });
 
   it("fetches the ranked leaderboard after authentication", async () => {

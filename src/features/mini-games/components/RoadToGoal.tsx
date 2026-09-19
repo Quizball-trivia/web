@@ -51,7 +51,7 @@ const RoadToGoalPitch = dynamic(
   () => import('./RoadToGoalPitch').then((module) => module.RoadToGoalPitch),
   {
     ssr: false,
-    loading: () => <div className="aspect-[16/9] w-full animate-pulse rounded-[26px] border border-white/10 bg-[#061712]" />,
+    loading: () => <div className="aspect-[16/9] w-full animate-pulse rounded-[26px] border border-white/10 bg-game-pitch-loading" />,
   },
 );
 
@@ -407,13 +407,13 @@ function RoadSceneFallback({ progress, phase, labels }: RoadSceneProps) {
   const stageWidth = FIRST_ZONE_X + ZONES * LANE + 170;
 
   return (
-    <div className="relative min-h-[330px] overflow-hidden rounded-[26px] border border-white/10 bg-[#0A1730] shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_24px_60px_rgba(0,0,0,0.28)] lg:min-h-[520px]">
+    <div className="relative min-h-[330px] overflow-hidden rounded-[26px] border border-white/10 bg-game-stadium-night shadow-[inset_0_1px_0_rgba(255,255,255,0.08),0_24px_60px_rgba(0,0,0,0.28)] lg:min-h-[520px]">
       <div className="absolute inset-x-0 top-0 h-[43%] bg-[linear-gradient(180deg,#111A38_0%,#173C72_72%,#1CB0F6_73%,#0A1730_76%)]" />
       <div className="absolute inset-x-0 top-[12%] h-[20%] opacity-45 [background-image:radial-gradient(circle,#FFE500_1.2px,transparent_1.5px),radial-gradient(circle,#58CC02_1.2px,transparent_1.5px),radial-gradient(circle,#FF9600_1.2px,transparent_1.5px)] [background-position:0_0,11px_7px,23px_2px] [background-size:31px_17px]" />
       <div className="absolute inset-x-0 bottom-0 top-[42%] bg-[linear-gradient(180deg,#159447_0%,#086336_100%)]" />
       <div className="absolute inset-x-0 bottom-0 top-[42%] opacity-35 [background-image:linear-gradient(90deg,rgba(255,255,255,.08)_50%,transparent_50%)] [background-size:208px_100%]" />
       <div className="absolute inset-x-0 top-[42%] h-1 bg-brand-yellow shadow-[0_0_14px_rgba(255,229,0,.65)]" />
-      <div className="absolute left-4 top-4 z-20 flex items-center gap-2 rounded-full border border-white/10 bg-[#07111D]/80 px-3 py-1.5 backdrop-blur">
+      <div className="absolute left-4 top-4 z-20 flex items-center gap-2 rounded-full border border-white/10 bg-game-ink/80 px-3 py-1.5 backdrop-blur">
         <span className="size-2 rounded-full bg-brand-green shadow-[0_0_10px_#58CC02]" />
         <span className="font-poppins text-[9px] font-black uppercase tracking-[0.18em] text-white/65">{labels.liveRoute}</span>
       </div>
@@ -424,7 +424,7 @@ function RoadSceneFallback({ progress, phase, labels }: RoadSceneProps) {
         animate={{ x: -focusX }}
         transition={{ type: 'spring', stiffness: 105, damping: 22, mass: 0.8 }}
       >
-        <div className="absolute bottom-[66px] left-1 h-[170px] w-[74px] rounded-t-full border-[5px] border-b-0 border-[#29385F] bg-[#050B19] shadow-[0_0_28px_rgba(0,0,0,.65)]" />
+        <div className="absolute bottom-[66px] left-1 h-[170px] w-[74px] rounded-t-full border-[5px] border-b-0 border-game-stadium-frame bg-game-stadium-tunnel shadow-[0_0_28px_rgba(0,0,0,.65)]" />
         <div className="absolute bottom-[62px] left-[14px] font-poppins text-[9px] font-black uppercase tracking-widest text-white/30">START</div>
 
         {MULTIPLIERS.map((multiplier, index) => {
@@ -480,7 +480,7 @@ function RoadSceneFallback({ progress, phase, labels }: RoadSceneProps) {
         )}
       </motion.div>
 
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-[#07111D]/85 to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-game-ink/85 to-transparent" />
     </div>
   );
 }
@@ -1277,7 +1277,7 @@ export function RoadToGoal({
                   <p className="mt-2 font-poppins text-[10px] font-semibold leading-relaxed text-white/70">{copy.introBody}</p>
                 </div>
 
-                <div className="rounded-xl border border-white/20 bg-[#071D5B]/45 p-2 sm:p-2.5 backdrop-blur-sm">
+                <div className="rounded-xl border border-white/20 bg-game-stadium-overlay/45 p-2 sm:p-2.5 backdrop-blur-sm">
                   <div className="mb-2 font-poppins text-[9px] font-black uppercase tracking-[0.18em] text-white/65">{copy.stake}</div>
                   <div className="grid grid-cols-3 gap-2">
                     {STAKES.map((value, index) => {
@@ -1310,7 +1310,7 @@ export function RoadToGoal({
                           value={clientSeed}
                           onChange={(event) => setClientSeed(event.target.value.slice(0, 128))}
                           disabled={busy || !newRunsEnabled}
-                          className="h-8 rounded-lg border border-white/15 bg-[#06142E]/65 px-2 text-[9px] normal-case tracking-normal text-white outline-none focus:border-brand-cyan"
+                          className="h-8 rounded-lg border border-white/15 bg-game-stadium-panel/65 px-2 text-[9px] normal-case tracking-normal text-white outline-none focus:border-brand-cyan"
                         />
                       </label>
                       <label className="grid gap-1 font-poppins text-[8px] font-black uppercase tracking-wider text-white/55">
@@ -1319,7 +1319,7 @@ export function RoadToGoal({
                           value={autoCashoutZone ?? 0}
                           onChange={(event) => setAutoCashoutZone(Number(event.target.value) || null)}
                           disabled={busy || !newRunsEnabled}
-                          className="h-8 rounded-lg border border-white/15 bg-[#06142E]/65 px-2 text-[9px] text-white outline-none focus:border-brand-cyan"
+                          className="h-8 rounded-lg border border-white/15 bg-game-stadium-panel/65 px-2 text-[9px] text-white outline-none focus:border-brand-cyan"
                         >
                           <option value={0}>{locale === 'ka' ? 'გამორთულია' : 'Off'}</option>
                           {MULTIPLIERS.slice(0, 10).map((multiplier, index) => (
@@ -1340,7 +1340,7 @@ export function RoadToGoal({
                       || busy
                       || (live && (!newRunsEnabled || !wallet || !resumed))
                     }
-                    className="mt-2.5 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-brand-green px-4 font-poppins text-xs font-black uppercase tracking-wide text-[#07111D] transition-[filter,transform] hover:brightness-105 active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/35"
+                    className="mt-2.5 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-brand-green px-4 font-poppins text-xs font-black uppercase tracking-wide text-game-ink transition-[filter,transform] hover:brightness-105 active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/35"
                   >
                     <Play className="size-4 fill-current" /> {fill(copy.kickOff, { stake: points(stake) })}
                   </button>
@@ -1368,7 +1368,7 @@ export function RoadToGoal({
                       <Timer className="size-3.5" /> {copy.answerFast}
                     </div>
                   </div>
-                  <div className="rounded-xl bg-brand-yellow px-2.5 py-1.5 text-right text-[#07111D]">
+                  <div className="rounded-xl bg-brand-yellow px-2.5 py-1.5 text-right text-game-ink">
                     <div className="font-poppins text-[8px] font-black uppercase tracking-wider opacity-55">{copy.nextReturn}</div>
                     <div className="font-poppins text-sm font-black tabular-nums">{points(nextReturn)} · {nextMultiplier.toFixed(2)}×</div>
                   </div>
@@ -1383,7 +1383,7 @@ export function RoadToGoal({
                 </div>
 
                 {question.image && (
-                  <div className="relative mt-3 aspect-[16/7] max-h-36 overflow-hidden rounded-xl border border-white/10 bg-[#06142E]">
+                  <div className="relative mt-3 aspect-[16/7] max-h-36 overflow-hidden rounded-xl border border-white/10 bg-game-stadium-panel">
                     <Image
                       src={question.image.url}
                       alt=""
@@ -1438,7 +1438,7 @@ export function RoadToGoal({
 
             {phase === 'decision' && (
               <motion.div key="decision" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} className="relative z-10 flex flex-1 flex-col justify-center text-center">
-                <motion.div initial={{ scale: 0.5, rotate: -12 }} animate={{ scale: 1, rotate: 0 }} className="mx-auto flex size-12 items-center justify-center rounded-full bg-brand-green text-[#07111D] shadow-[0_0_35px_rgba(88,204,2,.4)]">
+                <motion.div initial={{ scale: 0.5, rotate: -12 }} animate={{ scale: 1, rotate: 0 }} className="mx-auto flex size-12 items-center justify-center rounded-full bg-brand-green text-game-ink shadow-[0_0_35px_rgba(88,204,2,.4)]">
                   <Check className="size-7" strokeWidth={3.5} />
                 </motion.div>
                 <h2 className="mt-3 font-poppins text-xl font-black uppercase text-brand-green">{copy.clean}</h2>
@@ -1450,10 +1450,10 @@ export function RoadToGoal({
                   <div className="font-poppins text-2xl font-black tabular-nums text-brand-yellow">{points(currentReturn)} <span className="text-sm">· {currentMultiplier.toFixed(2)}×</span></div>
                 </div>
                 <div className="mt-3 grid gap-2">
-                  <button type="button" onClick={continueRun} disabled={busy} className="h-11 rounded-xl bg-brand-orange px-3 font-poppins text-sm font-black uppercase text-[#07111D] transition-[filter,transform] hover:brightness-105 active:scale-[0.99] disabled:opacity-50">
+                  <button type="button" onClick={continueRun} disabled={busy} className="h-11 rounded-xl bg-brand-orange px-3 font-poppins text-sm font-black uppercase text-game-ink transition-[filter,transform] hover:brightness-105 active:scale-[0.99] disabled:opacity-50">
                     {fill(copy.continue, { zone: progress + 1 })}
                   </button>
-                  <button type="button" onClick={cashOut} disabled={busy} className="flex h-11 items-center justify-center gap-2 rounded-xl bg-brand-green px-3 font-poppins text-sm font-black uppercase text-[#07111D] transition-[filter,transform] hover:brightness-105 active:scale-[0.99] disabled:opacity-50">
+                  <button type="button" onClick={cashOut} disabled={busy} className="flex h-11 items-center justify-center gap-2 rounded-xl bg-brand-green px-3 font-poppins text-sm font-black uppercase text-game-ink transition-[filter,transform] hover:brightness-105 active:scale-[0.99] disabled:opacity-50">
                     <LockKeyhole className="size-4" /> {fill(copy.cashOut, { amount: points(currentReturn) })}
                   </button>
                 </div>
@@ -1462,7 +1462,7 @@ export function RoadToGoal({
 
             {phase === 'tackled' && (
               <motion.div key="tackled" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="relative z-10 flex flex-1 flex-col items-center justify-center text-center">
-                <div className="flex size-12 items-center justify-center rounded-full bg-brand-orange text-[#07111D] shadow-[0_0_35px_rgba(255,150,0,.45)]">
+                <div className="flex size-12 items-center justify-center rounded-full bg-brand-orange text-game-ink shadow-[0_0_35px_rgba(255,150,0,.45)]">
                   <Shield className="size-7" />
                 </div>
                 <h2 className="mt-2 font-poppins text-xl font-black uppercase text-brand-orange">{progress === ZONES - 1 ? copy.saved : copy.tackled}</h2>
@@ -1474,7 +1474,7 @@ export function RoadToGoal({
                     {fill(copy.correctWas, { answer: correctAnswer })}
                   </p>
                 )}
-                <button type="button" onClick={reset} className="mt-4 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-brand-green font-poppins text-xs font-black uppercase text-[#07111D] transition-[filter,transform] hover:brightness-105 active:scale-[0.99]">
+                <button type="button" onClick={reset} className="mt-4 flex h-10 w-full items-center justify-center gap-2 rounded-xl bg-brand-green font-poppins text-xs font-black uppercase text-game-ink transition-[filter,transform] hover:brightness-105 active:scale-[0.99]">
                   <RotateCcw className="size-4" /> {copy.newRun}
                 </button>
               </motion.div>
@@ -1482,7 +1482,7 @@ export function RoadToGoal({
 
             {phase === 'cashed' && (
               <motion.div key="cashed" initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} className="relative z-10 flex flex-1 flex-col items-center justify-center text-center">
-                <div className="flex size-16 items-center justify-center rounded-full bg-brand-yellow text-[#07111D] shadow-[0_0_38px_rgba(255,229,0,.42)]">
+                <div className="flex size-16 items-center justify-center rounded-full bg-brand-yellow text-game-ink shadow-[0_0_38px_rgba(255,229,0,.42)]">
                   <LockKeyhole className="size-8" />
                 </div>
                 <h2 className="mt-3 font-poppins text-xl font-black uppercase text-brand-yellow">{copy.cashed}</h2>
@@ -1490,7 +1490,7 @@ export function RoadToGoal({
                   {fill(copy.cashedBody, { zones: progress, mult: currentMultiplier.toFixed(2) })}
                 </p>
                 <div className="mt-3 font-poppins text-3xl font-black tabular-nums text-brand-green">+{points(payout)}</div>
-                <button type="button" onClick={reset} className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-green font-poppins text-sm font-black uppercase text-[#07111D] transition-[filter,transform] hover:brightness-105 active:scale-[0.99]">
+                <button type="button" onClick={reset} className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-brand-green font-poppins text-sm font-black uppercase text-game-ink transition-[filter,transform] hover:brightness-105 active:scale-[0.99]">
                   <RotateCcw className="size-4" /> {copy.startAgain}
                 </button>
               </motion.div>
@@ -1498,12 +1498,12 @@ export function RoadToGoal({
 
             {phase === 'complete' && (
               <motion.div key="complete" initial={{ opacity: 0, scale: 0.88 }} animate={{ opacity: 1, scale: 1 }} className="relative z-10 flex flex-1 flex-col items-center justify-center text-center">
-                <motion.div animate={{ rotate: [0, -8, 8, 0], y: [0, -5, 0] }} transition={{ duration: 1.2, repeat: Infinity, repeatDelay: 0.8 }} className="flex size-20 items-center justify-center rounded-full bg-brand-yellow text-[#07111D] shadow-[0_0_48px_rgba(255,229,0,.55)]">
+                <motion.div animate={{ rotate: [0, -8, 8, 0], y: [0, -5, 0] }} transition={{ duration: 1.2, repeat: Infinity, repeatDelay: 0.8 }} className="flex size-20 items-center justify-center rounded-full bg-brand-yellow text-game-ink shadow-[0_0_48px_rgba(255,229,0,.55)]">
                   <Trophy className="size-10" />
                 </motion.div>
                 <h2 className="mt-4 font-poppins text-3xl font-black uppercase text-brand-yellow">{copy.finalTitle}</h2>
                 <p className="mt-1 max-w-xs font-poppins text-xs font-semibold leading-relaxed text-white/75">{copy.finalBody}</p>
-                <div className="mt-4 rounded-2xl bg-brand-green px-6 py-3 font-poppins text-xl font-black text-[#07111D]">
+                <div className="mt-4 rounded-2xl bg-brand-green px-6 py-3 font-poppins text-xl font-black text-game-ink">
                   {fill(copy.won, { amount: points(payout) })}
                 </div>
                 <button type="button" onClick={reset} className="mt-5 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-white/35 bg-white/10 font-poppins text-sm font-black uppercase text-white transition-[background,transform] hover:bg-white/15 active:scale-[0.99]">
@@ -1520,7 +1520,7 @@ export function RoadToGoal({
           )}
 
           {live && proof && (phase === 'cashed' || phase === 'complete' || phase === 'tackled') && (
-            <details className="relative z-10 mt-2 rounded-lg border border-white/10 bg-[#06142E]/55 px-2.5 py-2 font-poppins text-[8px] text-white/55">
+            <details className="relative z-10 mt-2 rounded-lg border border-white/10 bg-game-stadium-panel/55 px-2.5 py-2 font-poppins text-[8px] text-white/55">
               <summary className="cursor-pointer font-black uppercase tracking-wider text-brand-cyan">
                 {locale === 'ka' ? 'სამართლიანი თამაშის მტკიცებულება' : 'Fair-play proof'}
               </summary>

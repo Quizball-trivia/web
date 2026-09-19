@@ -1,16 +1,12 @@
 import type { MetadataRoute } from "next";
-import { listCampaignQuizPagesResilient } from "@/features/campaign-quiz/campaignQuiz.catalog";
+import { listCampaignQuizPages } from "@/features/campaign-quiz/campaignQuiz.api";
 import { SITE_URL } from "@/lib/seo/site";
 import { LOCALES } from "@/lib/i18n/locale";
 import { campaignQuizPath } from "@/features/campaign-quiz/campaignQuiz.routes";
+
 import { SEO_PAGE_LOCALES, dailyCollectionPath, gamePagePath } from "@/lib/seo/game-pages";
 import { PUBLISHED_PUBLIC_GAMES, publishedLocalesOf } from "@/lib/seo/public-games";
-
-// Generated per request (the catalog fetch inside is cached): the build must not
-// depend on the API being reachable, and an outage answers 5xx so crawlers keep
-// the last sitemap instead of one with every quiz page missing.
 export const dynamic = 'force-dynamic';
-
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entry = (
     path: string,
@@ -73,10 +69,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     return Number.isNaN(date.getTime()) ? undefined : date;
   };
 
-  // Last-known-good catalog (the daily-refreshed entry, served stale while the API is down); if even that is unavailable the
-  // sitemap fails (a 5xx keeps the previously fetched sitemap at the crawler) rather than
-  // publishing a successful sitemap with every quiz page silently missing.
-  const campaignPages = await listCampaignQuizPagesResilient('en');
+  // Fail on an unavailable catalog instead of returning a successful, incomplete sitemap.
+  const campaignPages = await listCampaignQuizPages('en');
 
   const campaignEntries: MetadataRoute.Sitemap = [
     entry(

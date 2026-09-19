@@ -20,6 +20,7 @@ describe("vercel geo resolver", () => {
     ).toMatchObject({
       countryCode: "GE",
       isGeorgia: true,
+      showBetson: true,
       source: "header",
     });
   });
@@ -35,6 +36,7 @@ describe("vercel geo resolver", () => {
     ).toMatchObject({
       countryCode: "GE",
       isGeorgia: true,
+      showBetson: true,
       source: "override",
     });
   });
@@ -50,15 +52,31 @@ describe("vercel geo resolver", () => {
     ).toMatchObject({
       countryCode: "US",
       isGeorgia: false,
+      showBetson: false,
       source: "header",
     });
   });
 
+  it("keeps the Betson experiment disabled in production even for Georgia", () => {
+    expect(
+      resolveGeo({
+        headerCountry: "GE",
+        host: "quizball.io",
+        vercelEnv: "production",
+      }),
+    ).toMatchObject({
+      countryCode: "GE",
+      isGeorgia: true,
+      isGeoExperimentEnabled: false,
+      showBetson: false,
+    });
+  });
 
   it("treats unknown countries as ineligible", () => {
     expect(resolveGeo({ host: "staging.quizball.io", vercelEnv: "preview" })).toMatchObject({
       countryCode: null,
       isGeorgia: false,
+      showBetson: false,
       source: "unknown",
     });
   });

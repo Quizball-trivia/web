@@ -118,7 +118,6 @@ function DailyChallengeCompleteModalExperiment(props: OpenModalProps) {
 }
 
 function DailyChallengeCompleteModalExperimentAssignment({
-  practice = false,
   country,
   createdAt,
   ...props
@@ -131,13 +130,12 @@ function DailyChallengeCompleteModalExperimentAssignment({
     queryKey: queryKeys.weekendLeague.current(),
     queryFn: getWeekendLeagueCurrent,
     staleTime: 30_000,
-    enabled: !practice && isEligibleCountry,
+    enabled: isEligibleCountry,
   });
   const comebackQuery = useQuery({
     queryKey: queryKeys.dailyChallenges.comeback(),
     queryFn: getDailyComebackState,
     staleTime: 30_000,
-    enabled: !practice,
   });
   const tournament = weekendLeagueQuery.data?.tournament ?? null;
   const you = weekendLeagueQuery.data?.you ?? null;

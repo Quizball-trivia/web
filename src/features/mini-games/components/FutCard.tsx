@@ -51,7 +51,6 @@ export function FutCard({
   revealed: { nation: boolean; league: boolean; club: boolean };
   /** Flip the name plate open + show the face (solved or timed out). */
   revealName: boolean;
-  /** Show the face independently of the name (progressive-reveal modes); defaults to revealName. */
   revealFace?: boolean;
   /** Tint the frame after a result. */
   highlight?: 'correct' | 'reveal' | null;

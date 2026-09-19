@@ -13,7 +13,7 @@ import {
   resolveCampaignQuizRoute,
 } from '@/features/campaign-quiz/campaignQuiz.api';
 import { SITE_NAME, SITE_URL } from '@/lib/seo/site';
-import { campaignQuizPath, normalizeCampaignSlug, sanitizePreview, withPreview } from '@/features/campaign-quiz/campaignQuiz.routes';
+import { campaignQuizPath, normalizeCampaignSlug, withPreview } from '@/features/campaign-quiz/campaignQuiz.routes';
 
 export const dynamic = 'force-dynamic';
 
@@ -34,8 +34,7 @@ function absoluteImage(url: string): string {
 }
 
 export async function generateMetadata({ params, searchParams }: CampaignQuizPageProps): Promise<Metadata> {
-  const [{ locale, slug }, { preview: rawPreview }] = await Promise.all([params, searchParams]);
-  const preview = sanitizePreview(rawPreview);
+  const [{ locale, slug }, { preview }] = await Promise.all([params, searchParams]);
   if (locale !== 'en' && locale !== 'ka') return {};
   if (normalizeCampaignSlug(slug).kind !== 'ok') return {};
 
@@ -94,8 +93,7 @@ export async function generateMetadata({ params, searchParams }: CampaignQuizPag
 }
 
 export default async function CampaignQuizPage({ params, searchParams }: CampaignQuizPageProps) {
-  const [{ locale, slug }, { preview: rawPreview }] = await Promise.all([params, searchParams]);
-  const preview = sanitizePreview(rawPreview);
+  const [{ locale, slug }, { preview }] = await Promise.all([params, searchParams]);
   const slugCheck = normalizeCampaignSlug(slug);
   if (slugCheck.kind === 'invalid') notFound();
   if (slugCheck.kind === 'redirect') permanentRedirect(withPreview(`/${locale}/football-quiz/${slugCheck.slug}`, preview));
@@ -106,11 +104,7 @@ export default async function CampaignQuizPage({ params, searchParams }: Campaig
   try {
     quiz = await loadQuiz(slug, preview, locale);
   } catch (error) {
-    if (!(error instanceof CampaignQuizApiError)) throw error;
-    // Only an identifiable preview rejection (a token was sent and the API refused it) becomes a
-    // deliberate 404; every other failure (429, unexpected 4xx, 5xx) still surfaces as an error.
-    if (preview && [400, 401, 403, 422].includes(error.status)) notFound();
-    if (error.status !== 404) throw error;
+    if (!(error instanceof CampaignQuizApiError) || error.status !== 404) throw error;
     const route = await resolveCampaignQuizRoute(slug).catch(() => null);
     if (route?.kind === 'redirect' && route.target_slug) {
       permanentRedirect(withPreview(`/${locale}/football-quiz/${route.target_slug}`, preview));

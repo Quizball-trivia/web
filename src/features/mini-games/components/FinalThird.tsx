@@ -165,7 +165,7 @@ function SoundSettings() {
                 max={100}
                 value={Math.round(levels[key] * 100)}
                 onChange={(e) => apply(key, Number(e.target.value) / 100)}
-                className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-white/25 accent-[#FFE500]"
+                className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-white/25 accent-brand-yellow"
               />
             </div>
           ))}

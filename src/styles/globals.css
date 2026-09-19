@@ -91,7 +91,6 @@
   /* Brand accent variants. */
   --brand-orange-light: 22 100% 62%; /* #FF8A3D — softer orange */
   --brand-orange-deep: 35 100% 43%; /* #DB8200 — orange button press shadow */
-  --brand-orange-event: 24 100% 52%; /* #FF6C0A — event-mode accent (leaderboard, profile, auction) */
   --brand-gold-deep: 43 89% 38%;    /* #B8860B — darker gold */
   --brand-gold-press: 40 100% 40%; /* #CC8800 — gold CTA press shadow */
   --brand-gold-ink: 47 100% 30%;   /* #9A7900 — daily XP pill text */
@@ -192,7 +191,6 @@
   /* Brand accent variants */
   --color-brand-orange-light: hsl(var(--brand-orange-light));
   --color-brand-orange-deep: hsl(var(--brand-orange-deep));
-  --color-brand-orange-event: hsl(var(--brand-orange-event));
   --color-brand-gold-deep: hsl(var(--brand-gold-deep));
   --color-brand-gold-press: hsl(var(--brand-gold-press));
   --color-brand-gold-ink: hsl(var(--brand-gold-ink));
@@ -419,23 +417,24 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+}
 
-  .scrollbar-thin {
-    scrollbar-width: thin;
-    scrollbar-color: rgba(0, 0, 0, 0.18) transparent;
-  }
-
-  .scrollbar-thin::-webkit-scrollbar {
-    width: 4px;
-    height: 4px;
-  }
-
-  .scrollbar-thin::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: rgba(0, 0, 0, 0.18);
-    border-radius: 9999px;
-  }
+/* Artwork palette for the released mini games; keeps their existing colours while sharing named tokens. */
+@theme {
+  --color-game-wheel-hub: #171310;
+  --color-game-art-night: #07111f;
+  --color-game-wheel-rim: #2b2417;
+  --color-game-pitch-loading: #061712;
+  --color-game-stadium-night: #0a1730;
+  --color-game-ink: #07111d;
+  --color-game-stadium-frame: #29385f;
+  --color-game-stadium-tunnel: #050b19;
+  --color-game-stadium-overlay: #071d5b;
+  --color-game-stadium-panel: #06142e;
+  --color-game-pitch-edge: #040b09;
+  --color-game-pitch-sky: #081724;
+  --color-game-pitch-shade: #020805;
+  --color-game-collection-green: #0e2f14;
+  --color-game-collection-purple: #2a1240;
+  --color-game-collection-shadow: #12081f;
 }

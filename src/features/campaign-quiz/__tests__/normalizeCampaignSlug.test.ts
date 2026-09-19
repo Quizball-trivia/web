@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { normalizeCampaignSlug, sanitizePreview, withPreview } from "../campaignQuiz.routes";
+import { normalizeCampaignSlug, withPreview } from "../campaignQuiz.routes";
 
 describe("normalizeCampaignSlug", () => {
   it("accepts canonical slugs", () => {
@@ -17,10 +17,5 @@ describe("normalizeCampaignSlug", () => {
   it("keeps the preview token across redirects", () => {
     expect(withPreview("/en/football-quiz/liverpool", "tok en")).toBe("/en/football-quiz/liverpool?preview=tok%20en");
     expect(withPreview("/en/football-quiz/liverpool", undefined)).toBe("/en/football-quiz/liverpool");
-  });
-  it("ignores preview tokens that are not UUIDs instead of sending them to the API", () => {
-    expect(sanitizePreview("00000000-0000-4000-8000-000000000000")).toBe("00000000-0000-4000-8000-000000000000");
-    for (const bad of ["seo-audit-16b", "", "x".repeat(40), "00000000-0000-4000-8000-00000000000g"]) expect(sanitizePreview(bad)).toBeUndefined();
-    expect(sanitizePreview(undefined)).toBeUndefined();
   });
 });

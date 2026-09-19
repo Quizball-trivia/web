@@ -7,14 +7,16 @@ describe('footballGridAssetUrl', () => {
       .toBe(`${FOOTBALL_GRID_CDN_BASE_URL}/flags/br.svg`);
   });
 
-  it('maps the play-card icon into the Grid CDN UI namespace', () => {
+  it('serves the bundled play-card icons without a separate CDN publish', () => {
     expect(footballGridAssetUrl('/assets/football-grid-card-icon.svg'))
-      .toBe(`${FOOTBALL_GRID_CDN_BASE_URL}/ui/card-icon.svg`);
+      .toBe('/assets/football-grid-card-icon.svg');
+    expect(footballGridAssetUrl('/assets/football-grid/card-icon.png'))
+      .toBe('/assets/football-grid/card-icon.png');
   });
 
-  it('maps the shared pitch texture into the Grid CDN UI namespace', () => {
+  it('serves the shared pitch texture from the app', () => {
     expect(footballGridAssetUrl('/assets/bg-pattern.webp'))
-      .toBe(`${FOOTBALL_GRID_CDN_BASE_URL}/ui/bg-pattern.webp`);
+      .toBe('/assets/bg-pattern.webp');
   });
 
   it('serves shared avatar layers from the app like every other mode', () => {

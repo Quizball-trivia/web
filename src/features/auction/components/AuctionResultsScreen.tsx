@@ -1,6 +1,5 @@
 'use client';
 
-import { BrandIcon } from '@/components/brand/BrandIcon';
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import Image from 'next/image';
@@ -15,8 +14,6 @@ import {
   getAdjustedProfit,
   getFilledCount,
   isTeamComplete,
-  maxSquadChemistryOf,
-  squadSizeOf,
   lastName,
   POSITION_ORDER,
 } from '../data';
@@ -95,7 +92,7 @@ function PodiumColumn({
         <span className="font-poppins text-lg font-black text-white" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{rank}</span>
         <span className="font-poppins text-sm font-black tabular-nums text-white" style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}>{formatProfit(score)}</span>
         <span className="mt-0.5 font-poppins text-[9px] font-black tabular-nums text-white/90" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
-          <BrandIcon name="lightning" className="mr-0.5 size-3 align-[-2px]" />{chemistry}
+          ⚡{chemistry}
           {/* The multiplier never touches a non-positive score — printing it
               next to a loss claims math that didn't happen. */}
           {score > 0 && multiplier > 1 ? ` · ×${multiplier.toFixed(1)}` : ''}
@@ -121,7 +118,6 @@ export function AuctionResultsScreen({
   humanPlayerId: string;
   onPlayAgain: () => void;
   onExit: () => void;
-  /** Button copy overrides (the training auction replays / finishes instead of matchmaking again). */
   playAgainLabel?: string;
   exitLabel?: string;
   /** Coins this player earned (500 win / 300 finish). 0/null = none shown. */
@@ -427,9 +423,9 @@ export function AuctionResultsScreen({
 
                 {/* Stat pills */}
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <ChemistryBadge total={player.chemistry} multiplier={player.multiplier} profit={player.profit} max={maxSquadChemistryOf(state.formation)} />
+                  <ChemistryBadge total={player.chemistry} multiplier={player.multiplier} profit={player.profit} />
                   <span className="rounded-md bg-white/8 px-2 py-1 text-[10px] font-bold text-white/70" style={poppins}>
-                    {t('auctionGame.playersFilled', { filled: player.filledCount, total: squadSizeOf(player.team.formation) })}
+                    {t('auctionGame.playersFilled', { filled: player.filledCount })}
                   </span>
                   <span className="rounded-md bg-white/8 px-2 py-1 text-[10px] font-bold text-white/70" style={poppins}>
                     {t('auctionGame.budgetAmount', { amount: formatMoney(player.budget) })}

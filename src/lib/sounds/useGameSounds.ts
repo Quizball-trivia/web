@@ -1,7 +1,6 @@
 'use client';
 
-import { useContext, useEffect, useRef } from 'react';
-import { GameSoundOverrideContext } from './GameSoundOverrideContext';
+import { useEffect, useRef } from 'react';
 import {
   playBgm,
   playSfx,
@@ -18,7 +17,6 @@ import {
  */
 export function useGameSounds() {
   const initialized = useRef(false);
-  const override = useContext(GameSoundOverrideContext);
 
   useEffect(() => {
     if (!initialized.current) {
@@ -28,11 +26,11 @@ export function useGameSounds() {
   }, []);
 
   return {
-    playSfx: override?.playSfx ?? playSfx,
-    playBgm: override?.playBgm ?? playBgm,
-    stopBgm: override?.stopBgm ?? stopBgm,
+    playSfx,
+    playBgm,
+    stopBgm,
     setBgmVolume,
-    toggleMute: override?.toggleMute ?? toggleMute,
-    isMuted: override?.isMuted ?? isMuted,
+    toggleMute,
+    isMuted,
   };
 }

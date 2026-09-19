@@ -1,3 +1,4 @@
+import { getBarBattleGoalAttackDelayMs } from '../useBarBattle';
 import { act, renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
@@ -355,12 +356,9 @@ describe('usePossessionFieldState', () => {
     expect(result.current.visualMyPossessionPct).toBe(50);
   });
 
-  // TODO(penalties): broken since ba2f935 "work on penalties" — shotMode is no
-  // longer populated at GOAL_ATTACK_START_DELAY_MS for this fixture (the attack
-  // animation gate changed). Needs the penalties author to confirm the intended
-  // timing/gating before re-pinning. Skipped explicitly so the suite stays
-  // green and NEW failures are visible — do not delete.
-  it.skip('keeps the captured shot origin stable even when possession resets after a goal', async () => {
+  // Ranked shots begin after the score-flight handoff; verify the captured
+  // position survives a later server possession update once that gate opens.
+  it('keeps the captured shot origin stable even when possession resets after a goal', async () => {
     const { result, rerender } = renderHook((props: {
       match: MatchStatus;
       roundResult: MatchRoundResultPayload | null;
@@ -396,7 +394,7 @@ describe('usePossessionFieldState', () => {
     await act(async () => {});
 
     await act(async () => {
-      vi.advanceTimersByTime(GOAL_ATTACK_START_DELAY_MS + 50);
+      vi.advanceTimersByTime(getBarBattleGoalAttackDelayMs(0, 0, GOAL_ATTACK_START_DELAY_MS, { includeScoreFlightHandoff: true }) + 50);
     });
 
     expect(result.current.pitchProps.shotMode?.ballOriginX).toBe(352);
@@ -412,7 +410,7 @@ describe('usePossessionFieldState', () => {
     // the captured origin (keyed by qIndex) is still the same 352.
     await act(async () => {});
     await act(async () => {
-      vi.advanceTimersByTime(GOAL_ATTACK_START_DELAY_MS + 50);
+      vi.advanceTimersByTime(getBarBattleGoalAttackDelayMs(0, 0, GOAL_ATTACK_START_DELAY_MS, { includeScoreFlightHandoff: true }) + 50);
     });
 
     expect(result.current.pitchProps.shotMode?.ballOriginX).toBe(352);

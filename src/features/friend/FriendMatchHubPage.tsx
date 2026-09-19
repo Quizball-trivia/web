@@ -8,7 +8,6 @@ import { LobbyBrowsePanel } from "./components/LobbyBrowsePanel";
 import { CreateJoinPanel } from "./components/CreateJoinPanel";
 import { AlreadyInLobbyModal } from "./components/AlreadyInLobbyModal";
 import { useRealtimeConnection } from "@/lib/realtime/useRealtimeConnection";
-import { useAuthStore } from "@/stores/auth.store";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import { useQueryClient } from "@tanstack/react-query";
 import { lobbiesKeys } from "@/lib/queries/lobbies.queries";
@@ -110,7 +109,7 @@ export function FriendMatchHubPage() {
         // code, so we don't have to wait on the lobby:state store update
         // (which won't re-fire the navigation effect if the store was already
         // populated, leaving the button doing nothing).
-        resetLobbyCommand();
+        resetJoinNavigationState();
         router.push(`/friend/room/${result.inviteCode}?source=public_lobby`);
         return;
       }

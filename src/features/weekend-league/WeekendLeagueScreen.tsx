@@ -10,9 +10,6 @@ import type { WeekendLeagueLiveExtras } from './use-weekend-league-live';
 import type { WeekendLeagueState } from './types';
 import { LeagueHeader } from './components/LeagueHeader';
 import { useRouter } from 'next/navigation';
-import { useIsGuest } from '@/lib/auth/useIsGuest';
-import { rememberPostAuthRedirect } from '@/lib/auth/postAuthRedirect';
-import { useAuthPromptStore } from '@/stores/authPrompt.store';
 import { YourStatusCard } from './components/YourStatusCard';
 import { WeekendLeaguePromoCard } from './components/WeekendLeaguePromoCard';
 import { HallOfFame } from './components/HallOfFame';
@@ -56,13 +53,6 @@ export function WeekendLeagueScreen({
   const playable = controller ? controller.playable === true && !controller.live : true;
   const [simulating, setSimulating] = useState(false);
   const router = useRouter();
-  // "Earn QP by playing Ranked": Ranked needs an account, so a signed-out visitor signs in first.
-  const isGuest = useIsGuest();
-  const openAuthPrompt = useAuthPromptStore((state) => state.open);
-  const playRanked = () => {
-    if (isGuest) { rememberPostAuthRedirect('/play'); openAuthPrompt(); return; }
-    router.push('/play');
-  };
   // Owner call 2026-08-30: before a player has entered, the events tab leads
   // with the designed promo card (Figma 1722:253) instead of the header +
   // explainer stack. Entered players keep the personal header (QP, status).
@@ -113,7 +103,7 @@ export function WeekendLeagueScreen({
                   : (wl.qualified ? null : 53)}
                 qpTarget={controller?.qpTarget ?? 200}
                 ctaLabel={canEnterNow ? undefined : t('weekendLeague.promoCtaEarn')}
-                onStart={canEnterNow ? wl.enterLeague : playRanked}
+                onStart={canEnterNow ? wl.enterLeague : () => router.push('/play')}
               />
             </div>
           )}

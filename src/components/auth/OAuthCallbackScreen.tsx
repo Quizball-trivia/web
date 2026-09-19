@@ -16,7 +16,10 @@ import { logger } from '@/utils/logger';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
 import { getPostAuthEntryRoute } from '@/lib/auth/postAuthRedirect';
 import { useLocale } from '@/contexts/LocaleContext';
-import { hydrateCampaignAttributionFromUrl } from '@/features/campaign-quiz/campaignAttribution';
+import {
+  clearCampaignAttribution,
+  hydrateCampaignAttributionFromUrl,
+} from '@/features/campaign-quiz/campaignAttribution';
 
 // Provider error codes that mean "the user backed out", not "auth is broken".
 // These are silently redirected home; every other error surfaces the failure UI.
@@ -164,6 +167,7 @@ export function OAuthCallbackScreen() {
             // quiz for brand-new accounts.
             if (campaignAttribution) {
               await fetchCurrentUser();
+              clearCampaignAttribution();
             }
             logger.info("OAuth callback: redirecting to mobile app");
             window.location.href = deepLink;

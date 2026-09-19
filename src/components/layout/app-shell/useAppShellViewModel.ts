@@ -28,8 +28,6 @@ import { useIncomingFriendRequestCount } from '@/lib/queries/social.queries';
 import { useUnreadNotificationCount } from '@/lib/queries/notifications.queries';
 import { getSocket } from '@/lib/realtime/socket-client';
 import { useRealtimeConnection } from '@/lib/realtime/useRealtimeConnection';
-import { useSystemStatus } from '@/lib/realtime/system-status';
-import { useSystemStatusPoll } from '@/lib/realtime/useSystemStatusPoll';
 import { logger } from '@/utils/logger';
 import { useLobbyCommandMachine } from '@/features/friend/hooks/useLobbyCommandMachine';
 
@@ -66,11 +64,6 @@ export function useAppShellViewModel() {
   const rejoinMatch = useRealtimeMatchStore((state) => state.rejoinMatch);
   const forfeitPending = useRealtimeMatchStore((state) => state.forfeitPending);
   const partyDropout = useRealtimeMatchStore((state) => state.partyDropout);
-  // Read-only DB outage (INC-2026-07-29). While degraded, forfeit/rejoin
-  // banners would LIE to the player ("you forfeited", "rejoin your match")
-  // when the truth is the server can't persist writes for a moment — so we
-  // suppress them and show a single reassuring system banner instead.
-  const { degraded: systemDegraded, recoveredUntilMs: systemRecoveredUntilMs } = useSystemStatus();
   const setForfeitPending = useRealtimeMatchStore((state) => state.setForfeitPending);
   const clearPartyDropout = useRealtimeMatchStore((state) => state.clearPartyDropout);
   const challengeInviteCount = useRealtimeMatchStore((state) => state.challengeInvites.length);
@@ -96,22 +89,12 @@ export function useAppShellViewModel() {
     selfUserId: principal.userId,
   });
 
-  // Poll /api/v1/system/status as a fallback when the socket is down >10s, so
-  // the outage/recovery signal still reaches the client without a live socket.
-  // Guests never connect, so for them the poll would only report "down".
   const isAuthenticated = authStatus === 'authenticated';
-  useSystemStatusPoll(isAuthenticated);
-
-  // Tick once per second so any time-comparison render values stay fresh
-  // without calling Date.now() during render: the lobby banner suppression
-  // deadline AND the system "Back online" recovery pulse both need nowTick to
-  // advance so they auto-dismiss. Run while EITHER is pending.
-  const systemRecoveryPending = systemRecoveredUntilMs !== null;
   useEffect(() => {
-    if (suppressLobbyBannerUntil === null && !systemRecoveryPending) return;
+    if (suppressLobbyBannerUntil === null) return;
     const id = setInterval(() => setNowTick(Date.now()), 1000);
     return () => clearInterval(id);
-  }, [suppressLobbyBannerUntil, systemRecoveryPending]);
+  }, [suppressLobbyBannerUntil]);
 
   const currentPath = pathname ?? '/';
   // A daily-challenge GAME (`/daily/challenges/<type>`) is an immersive fullscreen
@@ -190,7 +173,6 @@ export function useAppShellViewModel() {
     !forfeitPendingForActiveMatch &&
     !partyDropoutForActiveMatch &&
     !inLobbyRoom &&
-    !systemDegraded &&
     !currentPath.startsWith('/game');
   // Auction "still in a live auction — rejoin" banner. Route-gated off /auction
   // (the auction flow screen owns the in-match handshake there) and /game.
@@ -208,14 +190,7 @@ export function useAppShellViewModel() {
       }
     : null;
   const showCompletedMatchBanner = !!completedMatchBanner && !currentPath.startsWith('/game');
-  const showForfeitPendingBanner = !!forfeitPending && !matchBanner.finalResults && !systemDegraded && !currentPath.startsWith('/game');
-  // System outage banner (slot 0). Shown while degraded — and briefly after
-  // recovery for the green "Back online" pulse — but never over the in-game
-  // route, which has its own floating pill.
-  const systemRecoveryActive = !systemDegraded
-    && systemRecoveredUntilMs !== null
-    && systemRecoveredUntilMs > nowTick;
-  const showSystemBanner = (systemDegraded || systemRecoveryActive) && !currentPath.startsWith('/game');
+  const showForfeitPendingBanner = !!forfeitPending && !matchBanner.finalResults && !currentPath.startsWith('/game');
   const showPartyDropoutBanner = !!partyDropout && !matchBanner.finalResults && !currentPath.startsWith('/game');
   const forfeitPendingTitle =
     forfeitPending?.reason === 'self_forfeit'
@@ -474,9 +449,6 @@ export function useAppShellViewModel() {
     showCompletedMatchBanner,
     showForfeitPendingBanner,
     showPartyDropoutBanner,
-    // System outage (slot 0)
-    showSystemBanner,
-    systemDegraded,
     // Currency + badges
     navbarCoins,
     navbarTickets,

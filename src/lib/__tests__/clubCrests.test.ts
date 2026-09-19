@@ -44,7 +44,7 @@ describe('resolveClubCrestByName', () => {
   });
 
   it('returns null (not a guess) for clubs with no crest art anywhere', () => {
-    expect(resolveClubCrestByName('FC Shakhtar Donetsk')).toBeNull();
+    expect(resolveClubCrestByName('Made Up Release Fixture Club')).toBeNull();
     expect(resolveClubCrestByName('Atlético Nacional')).toBeNull();
     expect(resolveClubCrestByName(null)).toBeNull();
     expect(resolveClubCrestByName('')).toBeNull();
