@@ -7,35 +7,30 @@
  * The round logic mirrors what the server state machine will own later.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { matchesName } from '@/features/mini-games/lib/matching';
 import { TD, OPPONENT_NAMES } from './lib/copy';
 import { TD_LIST_CATEGORIES, type TdListCategory } from './data/categories';
-import {
-  TD_DISPLAY,
-  BetssonWordmark,
-  TdLogoSticker,
-  RoundIconsRow,
-  MuralBackdrop,
-  BoltGlyph,
-  StarburstGlyph,
-  TicketGlyph,
-  OrderGlyph,
-  RoadGlyph,
-  PERF_DOTS,
-} from './components/brand';
+import { TD_DISPLAY, BetssonWordmark, TdLogoSticker, MuralBackdrop, BoltGlyph, StarburstGlyph } from './components/brand';
 import { CategoryBand, PlayerBoard, ScorePill, TurnTimerBar } from './components/chrome';
 import { TdDailyGame, type TdDailyType } from './components/DailyGames';
-import { LeagueCountdown } from '@/features/weekend-league/components/LeagueCountdown';
 import { TdLoader } from './components/Loader';
-import { MyAvatar, TdAvatar, TdAvatarCard, TD_AVATAR_COLORS, tdAvatarCustomization } from './components/Avatar';
+import { MyAvatar, TdAvatar, TD_AVATAR_COLORS, tdAvatarCustomization } from './components/Avatar';
 import { AvatarPreview } from '@/components/AvatarPreview';
 import { TdClubSelect } from './components/ClubSelect';
 import { TdProfileCard, opponentProfile } from './components/ProfileCard';
 import { getClub } from '@/lib/clubs';
 
 import { MOCK_USER } from './lib/mockUser';
+import { Shell } from './shell/Shell';
+import type { ShellTab } from './shell/nav';
+import { HomeScreen } from './shell/HomeScreen';
+import { DailyScreen } from './shell/DailyScreen';
+import { SoloScreen } from './shell/SoloScreen';
+import { LeaderboardScreen } from './shell/LeaderboardScreen';
+import { ProfileScreen } from './shell/ProfileScreen';
+import { NoTicketsModal } from './shell/NoTicketsModal';
 import { CardsRound } from './components/CardsRound';
 import { BoxRound } from './components/BoxRound';
 import { BuzzerRound, type BuzzerItem } from './components/BuzzerRound';
@@ -45,16 +40,14 @@ import { TD_WHOAMI } from './data/whoami';
 
 import {
   QP_LOSS,
-  QP_TARGET,
   QP_WIN,
   addQp,
   getQp,
+  clearFavClub,
   getAvatarColor,
   getFavClub,
-  subscribeAvatar,
   getTickets,
   isOnboarded,
-  nextSaturdayMs,
   resetOnboarding,
   resetTickets,
   setAvatarColor,
@@ -65,11 +58,9 @@ import {
 } from './lib/state';
 
 type Phase =
-  | 'home'
+  | 'home' // the shell (tabs)
   | 'onboarding'
   | 'dailyGame'
-  | 'wl'
-  | 'leaderboard'
   | 'matchmaking'
   | 'showdown'
   | 'category'
@@ -106,8 +97,6 @@ function buildPenaltyPool(): BuzzerItem[] {
 type Seat = 'me' | 'op';
 type RpsPick = 'rock' | 'paper' | 'scissors';
 
-/** WL is hidden for now (owner request) — flip to bring the card back. */
-const WL_ENABLED = false;
 
 const TURN_MS = 10_000;
 const LIVES = 3;
@@ -135,25 +124,6 @@ const RPS_META: Record<RpsPick, { label: string; glyph: string; beats: RpsPick }
 
 function categoryAt(idx: number): TdListCategory {
   return TD_LIST_CATEGORIES[idx % TD_LIST_CATEGORIES.length];
-}
-
-function SectionHeader({ title, onBack }: { title: string; onBack: () => void }) {
-  return (
-    <div className="flex w-full items-center gap-3">
-      <button
-        type="button"
-        onClick={onBack}
-        className="flex items-center gap-1 rounded-[10px] px-3 py-2 text-[11px]"
-        style={{ ...TD_DISPLAY, background: 'var(--td-charcoal)', color: 'var(--td-white)', boxShadow: '3px 3px 0 #000' }}
-      >
-        ‹ {TD.back}
-      </button>
-      <h2 className="flex-1 text-center text-xl text-white md:text-2xl" style={TD_DISPLAY}>
-        {title}
-      </h2>
-      <span className="w-[68px]" aria-hidden />
-    </div>
-  );
 }
 
 const LB_MOCK: { name: string; points: number }[] = [
@@ -187,10 +157,10 @@ export function TableDerbyApp() {
   const [qp, setQp] = useState(0);
   const [dailyGame, setDailyGame] = useState<TdDailyType | null>(null);
   const [favClub, setFavClubState] = useState<string | null>(null);
-  const myColor = useSyncExternalStore(subscribeAvatar, getAvatarColor, () => 'green' as ReturnType<typeof getAvatarColor>);
-  const [menuNotice, setMenuNotice] = useState<string | null>(null);
+  const [tab, setTab] = useState<ShellTab>('home');
+  const [matchMode, setMatchMode] = useState<'ranked' | 'solo'>('ranked');
+  const [noTickets, setNoTickets] = useState(false);
   const [qpEarned, setQpEarned] = useState(0); // signed match QP delta
-  const [showAvatarPicker, setShowAvatarPicker] = useState(false);
   const [booting, setBooting] = useState(true);
   const [onbStep, setOnbStep] = useState<0 | 1>(0);
   const [onbAvatar, setOnbAvatar] = useState<TdAvatarColor>('green');
@@ -200,9 +170,18 @@ export function TableDerbyApp() {
   // assets warm up, minimum 5s so the Quizball lockup registers.
   useEffect(() => {
     // dev deep links skip the splash for fast iteration
-    if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('round')) {
-      setBooting(false);
-      return;
+    if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
+      const q = new URLSearchParams(window.location.search);
+      if (q.has('round')) {
+        setBooting(false);
+        return;
+      }
+      const t = q.get('tab');
+      if (t && (['home', 'ranked', 'daily', 'solo', 'profile'] as const).some((k) => k === t)) {
+        setTab(t as ShellTab);
+        setBooting(false);
+        return;
+      }
     }
     const preload = ['/assets/table-derby/logo-paper.svg', '/assets/brand/quizball-logo.webp', '/assets/table-derby/3d/box/box_000.webp']
       .map(
@@ -231,7 +210,6 @@ export function TableDerbyApp() {
   const [penaltyItems, setPenaltyItems] = useState<BuzzerItem[]>([]);
   const [penaltySpare, setPenaltySpare] = useState<BuzzerItem[]>([]);
   const [matchWinner, setMatchWinner] = useState<Seat | null>(null);
-  const [prevQpForResults, setPrevQpForResults] = useState(0);
   const matchAwarded = useRef(false);
 
   // RPS (played on the showdown screen; picks badge onto the cards)
@@ -281,7 +259,7 @@ export function TableDerbyApp() {
   /* ── shell: tickets / QP / daily state ──────────────────────── */
 
   useEffect(() => {
-    if (phase !== 'home' && phase !== 'wl' && phase !== 'leaderboard') return;
+    if (phase !== 'home') return;
     setTickets(getTickets());
     setQp(getQp());
     setFavClubState(getFavClub());
@@ -289,14 +267,16 @@ export function TableDerbyApp() {
 
   /* ── flow: menu → matchmaking → showdown → rps ──────────────── */
 
-  const startMatch = () => {
-    if (getTickets() <= 0) {
-      setMenuNotice(TD.noTickets);
-      setPhase('home');
-      return;
+  const startMatch = (mode: 'ranked' | 'solo' = matchMode) => {
+    if (mode === 'ranked') {
+      if (getTickets() <= 0) {
+        setNoTickets(true);
+        setPhase('home');
+        return;
+      }
+      setTickets(spendTicket());
     }
-    setTickets(spendTicket());
-    setMenuNotice(null);
+    setMatchMode(mode);
     setQpEarned(0);
     setOpponentName(OPPONENT_NAMES[Math.floor(Math.random() * OPPONENT_NAMES.length)]);
     setRoundsWon({ me: 0, op: 0 });
@@ -428,14 +408,15 @@ export function TableDerbyApp() {
   const finishMatch = useCallback((winner: Seat) => {
     if (!matchAwarded.current) {
       matchAwarded.current = true;
-      const delta = winner === 'me' ? QP_WIN : -QP_LOSS;
-      setPrevQpForResults(getQp());
-      setQpEarned(delta);
-      setQp(addQp(delta));
+      if (matchMode === 'ranked') {
+        const delta = winner === 'me' ? QP_WIN : -QP_LOSS;
+        setQpEarned(delta);
+        setQp(addQp(delta));
+      }
     }
     setMatchWinner(winner);
     setPhase('matchEnd');
-  }, []);
+  }, [matchMode]);
 
   const swapCategory = useCallback(() => {
     doFlash('pool');
@@ -571,8 +552,15 @@ export function TableDerbyApp() {
   /* TEMP identity until the Betsson handoff: fall back to mock data so
      every profile surface shows real-looking content in testing. */
   const displayName = MOCK_USER.name;
-  const displayQp = qp > 0 ? qp : MOCK_USER.points;
-  const displayClub = favClub ?? MOCK_USER.club;
+  const displayQp = qp;
+  const displayClub = favClub;
+
+  const leaderboardRows = useMemo(() => buildLeaderboard(displayQp), [displayQp]);
+  const myRank = leaderboardRows.findIndex((r) => r.me) + 1;
+  const openDaily = (key: TdDailyType) => {
+    setDailyGame(key);
+    setPhase('dailyGame');
+  };
 
   /** Whether the match is settled once this round-end screen is confirmed. */
   const matchDecidedNow =
@@ -610,14 +598,14 @@ export function TableDerbyApp() {
               : null;
 
   return (
-    <div className="td-theme relative min-h-dvh overflow-hidden" style={{ background: 'var(--td-bg)' }}>
-      <MuralBackdrop dim={phase === 'home' ? 1 : 0.45} />
+    <div className="td-theme relative min-h-dvh overflow-x-clip" style={{ background: phase === 'home' ? 'var(--bs-page)' : 'var(--td-bg)' }}>
+      {phase !== 'home' && <MuralBackdrop dim={0.45} />}
 
       {/* betsson.sport — top-right like the broadcast; the in-round
           scoreboard (with avatars) owns that zone during gameplay */}
-      {!inRoundPhase && (
+      {!inRoundPhase && phase !== 'home' && (
         <div className="absolute inset-x-0 bottom-4 z-20 flex items-center justify-center gap-2 md:bottom-6">
-          <BetssonWordmark tone={phase === 'home' ? 'orange' : 'white'} size={16} />
+          <BetssonWordmark tone="white" size={16} />
           <span className="text-sm" style={{ ...TD_DISPLAY, color: 'var(--td-orange)' }} aria-hidden>
             ✕
           </span>
@@ -698,260 +686,58 @@ export function TableDerbyApp() {
           </motion.main>
         )}
 
-        {/* ── HOME / MENU ── */}
+        {/* ── SHELL (Betsson-style chrome: tabs on phones, top bar on desktop) ── */}
         {phase === 'home' && (
-          <motion.main
-            key="home"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="relative z-10 mx-auto flex min-h-dvh w-full max-w-2xl flex-col items-center justify-center gap-6 px-4 pb-24 pt-10 md:gap-8"
-          >
-            {/* header, Quizball-style: pinned to the true top-right corner
-                (where the wordmark used to sit); wordmark moved left */}
-            <div className="fixed right-4 top-4 z-20 flex items-center gap-3 md:right-8 md:top-6">
-              <div className="flex items-center gap-2">
-              {process.env.NODE_ENV !== 'production' && (
-                <button
-                  type="button"
-                  onClick={() => setTickets(resetTickets())}
-                  className="rounded-full px-2.5 py-1.5 text-[11px] opacity-60"
-                  style={{ ...TD_DISPLAY, background: 'var(--td-charcoal)', color: 'var(--td-white)', boxShadow: '2px 2px 0 #000' }}
-                  title="dev: reset tickets"
-                >
-                  ↺5
-                </button>
+          <motion.div key="shell" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <Shell tab={tab} onTab={setTab} name={displayName} points={displayQp} tickets={tickets}>
+              {tab === 'home' && (
+                <HomeScreen
+                  onPlayRanked={() => startMatch('ranked')}
+                  onDaily={openDaily}
+                  onSolo={() => setTab('solo')}
+                  onLeaderboard={() => setTab('ranked')}
+                  myRank={myRank}
+                  dailyDone={{}}
+                />
               )}
-              {process.env.NODE_ENV !== 'production' && (
-                <button
-                  type="button"
-                  onClick={() => {
+              {tab === 'ranked' && <LeaderboardScreen rows={leaderboardRows} />}
+              {tab === 'daily' && <DailyScreen onOpen={openDaily} done={{}} />}
+              {tab === 'solo' && <SoloScreen onStart={() => startMatch('solo')} />}
+              {tab === 'profile' && (
+                <ProfileScreen
+                  name={displayName}
+                  points={displayQp}
+                  rank={myRank}
+                  tickets={tickets}
+                  favClub={favClub}
+                  onFavClub={(v) => {
+                    if (v) setFavClub(v);
+                    else clearFavClub();
+                    setFavClubState(v);
+                  }}
+                  onAvatar={setAvatarColor}
+                  onResetTickets={() => setTickets(resetTickets())}
+                  onReplayOnboarding={() => {
                     resetOnboarding();
                     setOnbStep(0);
                     setOnbClub(null);
                     setPhase('onboarding');
                   }}
-                  className="rounded-full px-2.5 py-1.5 text-[11px] opacity-60"
-                  style={{ ...TD_DISPLAY, background: 'var(--td-charcoal)', color: 'var(--td-white)', boxShadow: '2px 2px 0 #000' }}
-                  title="dev: replay onboarding"
-                >
-                  ⟲
-                </button>
-              )}
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowAvatarPicker(true)}
-                aria-label={TD.chooseAvatar}
-                className="flex items-center gap-2.5 text-right"
-              >
-                <span className="flex flex-col items-end gap-1.5">
-                  <span className="whitespace-nowrap text-[16px] text-white" style={TD_DISPLAY}>
-                    {displayName}
-                  </span>
-                  <span className="flex items-center gap-1.5">
-                    <span
-                      className="flex h-8 items-center gap-1 whitespace-nowrap rounded-full px-3"
-                      style={{ ...TD_DISPLAY, background: 'var(--td-orange)', color: '#0d0d0d', fontSize: 13, boxShadow: '2px 2px 0 rgba(0,0,0,0.45)' }}
-                    >
-                      {displayQp} {TD.qpShort}
-                    </span>
-                    <span
-                      className="flex h-8 items-center gap-1.5 rounded-full px-3"
-                      style={{ background: 'var(--td-charcoal)', boxShadow: '2px 2px 0 rgba(0,0,0,0.45)' }}
-                      aria-label={TD.tickets}
-                    >
-                      <TicketGlyph size={14} color="var(--td-orange)" />
-                      <span className="text-[13px] leading-none text-white" style={TD_DISPLAY}>
-                        {tickets ?? '·'}
-                      </span>
-                    </span>
-                    {getClub(displayClub) && (
-                      // eslint-disable-next-line @next/next/no-img-element -- crest from the club registry
-                      <img src={getClub(displayClub)!.logo} alt="" className="h-7 w-7 shrink-0 object-contain" />
-                    )}
-                  </span>
-                </span>
-                <TdAvatarCard color={myColor} width={58} />
-              </button>
-            </div>
-
-            <TdLogoSticker variant="blackOnWhite" scale={1.1} />
-
-            {showAvatarPicker && (
-              <div
-                className="fixed inset-0 z-50 flex items-center justify-center p-6"
-                style={{ background: 'rgba(0,0,0,0.65)' }}
-                onClick={() => setShowAvatarPicker(false)}
-              >
-                <div
-                  className="rounded-[16px] px-6 py-5"
-                  style={{ background: 'var(--td-charcoal)', boxShadow: '6px 6px 0 #000' }}
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <p className="mb-5 text-center text-sm text-white" style={TD_DISPLAY}>
-                    {TD.chooseAvatar}
-                  </p>
-                  <div className="grid grid-cols-3 gap-4">
-                    {TD_AVATAR_COLORS.map((color) => (
-                      <button
-                        key={color}
-                        type="button"
-                        onClick={() => {
-                          setAvatarColor(color);
-                          setShowAvatarPicker(false);
-                        }}
-                        className="flex size-16 items-center justify-center overflow-hidden rounded-full"
-                        style={{ background: 'var(--td-bg)', boxShadow: '3px 3px 0 rgba(0,0,0,0.5)' }}
-                      >
-                        <AvatarPreview customization={tdAvatarCustomization(color)} width={48} className="translate-y-[6%]" />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* hero: the main match */}
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.97 }}
-              onClick={startMatch}
-              className="relative w-full overflow-hidden rounded-[18px] p-6 text-left md:p-8"
-              style={{ background: 'var(--td-orange)', boxShadow: '6px 6px 0 #000', transform: 'rotate(-0.8deg)' }}
-            >
-              <span aria-hidden className="pointer-events-none absolute inset-0" style={PERF_DOTS} />
-              <div className="relative flex flex-col gap-2.5">
-                <span className="text-3xl md:text-4xl" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
-                  {TD.title}
-                </span>
-                <span className="text-[13px] md:text-sm" style={{ ...TD_DISPLAY, color: 'rgba(0,0,0,0.65)' }}>
-                  {TD.menuMatchSub}
-                </span>
-                <div className="mt-2 flex items-center justify-between gap-3">
-                  <RoundIconsRow size={30} tone="black" />
-                  <span
-                    className="flex items-center gap-1.5 rounded-full bg-black/20 px-3.5 py-2 text-[12px]"
-                    style={{ ...TD_DISPLAY, color: '#0d0d0d' }}
-                  >
-                    <TicketGlyph size={12} />
-                    {TD.ticketCost}
-                  </span>
-                </div>
-                <span
-                  className="mt-3 block w-full rounded-[12px] bg-black py-4 text-center text-lg text-white md:text-xl"
-                  style={TD_DISPLAY}
-                >
-                  {TD.playNow}
-                </span>
-              </div>
-            </motion.button>
-
-            {menuNotice && (
-              <p
-                className="rounded-[8px] px-3 py-1.5 text-[11px]"
-                style={{ ...TD_DISPLAY, background: 'var(--td-steel-deep)', color: 'var(--td-white)', boxShadow: '3px 3px 0 rgba(0,0,0,0.5)' }}
-              >
-                {menuNotice}
-              </p>
-            )}
-
-            {/* WL card — second, with the Quizball countdown in TD colors */}
-            {WL_ENABLED && (
-            <button
-              type="button"
-              onClick={() => setPhase('wl')}
-              className="w-full rounded-[16px] px-5 py-5 text-left md:px-6 md:py-6"
-              style={{ background: 'var(--td-charcoal)', boxShadow: '5px 5px 0 #000' }}
-            >
-              <div className="flex items-center justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-xl text-white md:text-2xl" style={TD_DISPLAY}>
-                    {TD.menuWl}
-                  </p>
-                  <p className="mt-1 text-[12px] text-white/55 md:text-[13px]" style={TD_DISPLAY}>
-                    {TD.wlJoin}
-                  </p>
-                </div>
-                <span className="shrink-0 text-lg" style={{ ...TD_DISPLAY, color: 'var(--td-orange)' }}>
-                  {Math.min(qp, QP_TARGET)}/{QP_TARGET}
-                </span>
-              </div>
-              <div className="mt-3 flex items-center gap-3">
-                <span className="text-[11px] text-white/50" style={TD_DISPLAY}>
-                  {TD.wlStartsIn}
-                </span>
-                <LeagueCountdown targetMs={nextSaturdayMs()} size="sm" accent="text-[var(--td-orange)]" />
-              </div>
-              <div className="mt-3 h-2 w-full overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.12)' }}>
-                <div
-                  className="h-full rounded-full"
-                  style={{ background: 'var(--td-orange)', width: `${Math.min(100, Math.round((qp / QP_TARGET) * 100))}%` }}
                 />
-              </div>
-            </button>
+              )}
+            </Shell>
+            {noTickets && (
+              <NoTicketsModal
+                onClose={() => setNoTickets(false)}
+                onSolo={() => {
+                  setNoTickets(false);
+                  startMatch('solo');
+                }}
+              />
             )}
-
-            {/* Daily challenges — section header + horizontal cards */}
-            <div className="w-full">
-              <div className="mb-2.5 flex items-center gap-2">
-                <BoltGlyph size={16} />
-                <h3 className="text-lg text-white md:text-xl" style={TD_DISPLAY}>
-                  {TD.menuDaily}
-                </h3>
-              </div>
-              <div className="-mx-4 flex snap-x gap-3 overflow-x-auto px-4 pb-1">
-                {(
-                  [
-                    { key: 'guessTheGoal', name: TD.dailyGtg },
-                    { key: 'putInOrder', name: TD.dailyPio },
-                    { key: 'careerPath', name: TD.dailyCp },
-                  ] as const
-                ).map((c) => (
-                  <button
-                    key={c.key}
-                    type="button"
-                    onClick={() => {
-                      setDailyGame(c.key);
-                      setPhase('dailyGame');
-                    }}
-                    className="flex w-[31%] shrink-0 snap-start flex-col items-center gap-3 rounded-[14px] px-3 py-4"
-                    style={{ background: 'var(--td-charcoal)', boxShadow: '4px 4px 0 #000' }}
-                  >
-                    {c.key === 'guessTheGoal' ? (
-                      // eslint-disable-next-line @next/next/no-img-element -- official round icon
-                      <img src="/assets/table-derby/icon-ball-orange.svg" alt="" className="h-10 w-10 object-contain" />
-                    ) : c.key === 'putInOrder' ? (
-                      <OrderGlyph size={40} />
-                    ) : (
-                      <RoadGlyph size={40} />
-                    )}
-                    <span className="text-center text-[11px] leading-tight text-white md:text-[12px]" style={TD_DISPLAY}>
-                      {c.name}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Leaderboard card */}
-            <button
-              type="button"
-              onClick={() => setPhase('leaderboard')}
-              className="flex w-full items-center justify-between gap-3 rounded-[16px] px-5 py-5 text-left md:px-6 md:py-6"
-              style={{ background: 'var(--td-charcoal)', boxShadow: '5px 5px 0 #000' }}
-            >
-              <div className="min-w-0">
-                <p className="text-xl text-white md:text-2xl" style={TD_DISPLAY}>
-                  {TD.menuLb}
-                </p>
-              </div>
-              <span className="shrink-0 text-2xl text-white/40" style={TD_DISPLAY}>
-                ›
-              </span>
-            </button>
-          </motion.main>
+          </motion.div>
         )}
+
 
         {/* ── DAILY GAME (Quizball challenges in the TD shell) ── */}
         {phase === 'dailyGame' && dailyGame && (
@@ -963,139 +749,6 @@ export function TableDerbyApp() {
             className="relative z-10"
           >
             <TdDailyGame type={dailyGame} onExit={() => setPhase('home')} />
-          </motion.main>
-        )}
-
-        {/* ── WEEKEND LEAGUE ── */}
-        {phase === 'wl' && (
-          <motion.main
-            key="wl"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="relative z-10 mx-auto flex min-h-dvh w-full max-w-xl flex-col items-center justify-center gap-5 px-4 py-16"
-          >
-            <SectionHeader title={TD.menuWl} onBack={() => setPhase('home')} />
-            <div
-              className="w-full rounded-[16px] px-5 py-6"
-              style={{ background: 'var(--td-charcoal)', boxShadow: '6px 6px 0 #000' }}
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-[11px] text-white/60" style={TD_DISPLAY}>
-                  {TD.wlQpLabel}
-                </span>
-                <span className="text-lg" style={{ ...TD_DISPLAY, color: 'var(--td-orange)' }}>
-                  {Math.min(qp, QP_TARGET)}/{QP_TARGET}
-                </span>
-              </div>
-              <div className="mt-3 h-3 w-full overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.12)' }}>
-                <motion.div
-                  initial={{ width: 0 }}
-                  animate={{ width: `${Math.min(100, Math.round((qp / QP_TARGET) * 100))}%` }}
-                  transition={{ duration: 0.7, ease: 'easeOut' }}
-                  className="h-full rounded-full"
-                  style={{ background: 'var(--td-orange)' }}
-                />
-              </div>
-              <div className="mt-5 flex flex-col gap-2">
-                {[TD.wlHowTo, TD.wlWin, TD.wlLoss, TD.wlSchedule].map((line) => (
-                  <div key={line} className="flex items-center gap-2.5">
-                    <BoltGlyph size={14} />
-                    <span className="text-[11px] text-white/80 md:text-xs" style={TD_DISPLAY}>
-                      {line}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            {qp >= QP_TARGET ? (
-              <div
-                className="rounded-[12px] px-6 py-3.5"
-                style={{ background: 'var(--td-orange)', boxShadow: '5px 5px 0 #000', transform: 'rotate(-2deg)' }}
-              >
-                <span className="text-base" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>
-                  {TD.wlQualified}
-                </span>
-              </div>
-            ) : null}
-            <div
-              className="rounded-full px-5 py-2"
-              style={{ ...TD_DISPLAY, background: 'var(--td-paper)', color: '#0d0d0d', boxShadow: '4px 4px 0 #000', fontSize: 12 }}
-            >
-              {TD.wlPrizes}
-            </div>
-          </motion.main>
-        )}
-
-        {/* ── LEADERBOARD (Quizball layout, TD branding) ── */}
-        {phase === 'leaderboard' && (
-          <motion.main
-            key="lb"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="relative z-10 mx-auto flex min-h-dvh w-full max-w-xl flex-col gap-4 px-4 pb-20 pt-16"
-          >
-            <SectionHeader title={TD.menuLb} onBack={() => setPhase('home')} />
-            <p className="text-center text-[12px] text-white/55" style={TD_DISPLAY}>
-              {TD.lbWeekly}
-            </p>
-            <div className="min-h-0 flex-1 overflow-y-auto rounded-[16px]" style={{ background: 'var(--td-charcoal)', boxShadow: '6px 6px 0 #000' }}>
-              {buildLeaderboard(displayQp).map((row, i) => (
-                <div
-                  key={row.name}
-                  className="flex items-center gap-3 px-4 py-2.5 md:py-3"
-                  style={{ background: row.me ? 'rgba(238,90,34,0.14)' : i % 2 ? 'rgba(255,255,255,0.03)' : 'transparent' }}
-                >
-                  <span className="w-7 text-center text-base" style={{ ...TD_DISPLAY, color: i < 3 ? 'var(--td-orange)' : 'rgba(255,255,255,0.45)' }}>
-                    {i + 1}
-                  </span>
-                  {row.me ? <MyAvatar size={36} /> : <TdAvatar name={row.name} size={36} />}
-                  <span className="min-w-0 flex-1 truncate text-[14px] text-white" style={TD_DISPLAY}>
-                    {row.name}
-                  </span>
-                  {(() => {
-                    const clubValue = row.me ? displayClub : opponentProfile(row.name).clubValue;
-                    const club = clubValue ? getClub(clubValue) : null;
-                    return club ? (
-                      // eslint-disable-next-line @next/next/no-img-element -- crest from the club registry
-                      <img src={club.logo} alt="" className="h-5 w-5 shrink-0 object-contain" />
-                    ) : null;
-                  })()}
-                  <span className="text-[14px] tabular-nums" style={{ ...TD_DISPLAY, color: row.me ? 'var(--td-orange)' : 'rgba(255,255,255,0.75)' }}>
-                    {row.points} {TD.qpShort}
-                  </span>
-                </div>
-              ))}
-            </div>
-            {/* pinned your-rank strip, Quizball's UserRankStrip in TD colors */}
-            {(() => {
-              const rows = buildLeaderboard(displayQp);
-              const myIdx = rows.findIndex((r) => r.me);
-              return (
-                <div
-                  className="flex items-center gap-3 rounded-[12px] border-2 px-4 py-3"
-                  style={{ borderColor: 'var(--td-orange)', background: 'var(--td-bg)', boxShadow: '4px 4px 0 rgba(0,0,0,0.5)' }}
-                >
-                  <MyAvatar size={42} />
-                  <div className="flex min-w-0 flex-1 flex-col">
-                    <span className="flex items-center gap-1.5 truncate text-[14px] text-white" style={TD_DISPLAY}>
-                      {displayName}
-                      {getClub(displayClub) && (
-                        // eslint-disable-next-line @next/next/no-img-element -- crest from the club registry
-                        <img src={getClub(displayClub)!.logo} alt="" className="h-5 w-5 shrink-0 object-contain" />
-                      )}
-                    </span>
-                    <span className="text-[11px] text-white/50" style={TD_DISPLAY}>
-                      {TD.lbYourRank}: #{myIdx + 1}
-                    </span>
-                  </div>
-                  <span className="text-lg" style={{ ...TD_DISPLAY, color: 'var(--td-orange)' }}>
-                    {displayQp} {TD.qpShort}
-                  </span>
-                </div>
-              );
-            })()}
           </motion.main>
         )}
 
@@ -1582,50 +1235,32 @@ export function TableDerbyApp() {
               </div>
             </div>
 
-            {/* QP settlement — ranked-style results card */}
-            <div
-              className="w-full max-w-sm rounded-[16px] px-5 py-5"
-              style={{ background: 'var(--td-charcoal)', boxShadow: '6px 6px 0 #000' }}
-            >
+            {/* RP settlement — Betsson-style results card */}
+            <div className="w-full max-w-sm rounded-[12px] px-5 py-4" style={{ background: 'var(--bs-surface)' }}>
               <div className="flex items-center justify-between">
-                <span className="text-[11px] text-white/60" style={TD_DISPLAY}>
-                  {TD.wlQpLabel}
-                </span>
-                <motion.span
-                  initial={{ scale: 1.6, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: 0.4, type: 'spring', damping: 11 }}
-                  className="text-2xl"
-                  style={{ ...TD_DISPLAY, color: qpEarned >= 0 ? 'var(--td-orange)' : 'var(--td-steel)' }}
-                >
-                  {qpEarned >= 0 ? `+${qpEarned}` : `−${-qpEarned}`}
-                </motion.span>
-              </div>
-              <div className="mt-3 h-3 w-full overflow-hidden rounded-full" style={{ background: 'rgba(255,255,255,0.12)' }}>
-                <motion.div
-                  initial={{ width: `${Math.min(100, Math.round((prevQpForResults / QP_TARGET) * 100))}%` }}
-                  animate={{ width: `${Math.min(100, Math.round((qp / QP_TARGET) * 100))}%` }}
-                  transition={{ delay: 0.7, duration: 0.9, ease: 'easeOut' }}
-                  className="h-full rounded-full"
-                  style={{ background: 'var(--td-orange)' }}
-                />
+                <span className="bs-text text-[12px] text-[var(--bs-text-3)]">{matchMode === 'solo' ? TD.soloNoRp : TD.rpDelta}</span>
+                {matchMode === 'ranked' && (
+                  <motion.span
+                    initial={{ scale: 1.6, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.4, type: 'spring', damping: 11 }}
+                    className="text-2xl"
+                    style={{ ...TD_DISPLAY, color: qpEarned >= 0 ? 'var(--bs-primary)' : 'var(--bs-text-2)' }}
+                  >
+                    {qpEarned >= 0 ? `+${qpEarned}` : `−${-qpEarned}`}
+                  </motion.span>
+                )}
               </div>
               <div className="mt-2 flex items-center justify-between">
-                <span className="text-[11px] tabular-nums text-white/70" style={TD_DISPLAY}>
-                  {Math.min(qp, QP_TARGET)}/{QP_TARGET}
-                </span>
-                {qp >= QP_TARGET && (
-                  <span className="text-[11px]" style={{ ...TD_DISPLAY, color: 'var(--td-orange)' }}>
-                    {TD.wlQualified}
-                  </span>
-                )}
+                <span className="bs-text text-[12px] text-[var(--bs-text-3)]">{TD.rpTotal}</span>
+                <span className="font-[Poppins] text-[15px] font-bold tabular-nums text-[var(--bs-text)]">{qp} {TD.qpShort}</span>
               </div>
             </div>
             <div className="flex gap-3">
               <motion.button
                 type="button"
                 whileTap={{ scale: 0.95 }}
-                onClick={startMatch}
+                onClick={() => startMatch(matchMode)}
                 className="rounded-[12px] px-7 py-3.5 text-sm"
                 style={{ ...TD_DISPLAY, background: 'var(--td-orange)', color: '#0d0d0d', boxShadow: '5px 5px 0 #000' }}
               >

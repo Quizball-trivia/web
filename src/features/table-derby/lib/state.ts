@@ -156,6 +156,14 @@ export function claimDailyReward(game: string): boolean {
   return true;
 }
 
+export function clearFavClub() {
+  try {
+    window.localStorage.removeItem('td.club');
+  } catch {
+    /* storage may be blocked */
+  }
+}
+
 /** Next Saturday 20:00 Georgia time, epoch ms (WL countdown target). */
 export function nextSaturdayMs(now = Date.now()): number {
   const ge = new Date(now + GE_OFFSET_MS);
