@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="520" height="520" viewBox="0 0 520 520">
+  <!-- Table Derby key-art backdrop: tone-on-tone angular maze motifs.
+       Tiles seamlessly (no motif crosses an edge). Colors sit just above
+       the page ground (#141414). -->
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <!-- greek-key spiral -->
+    <path d="M52 168 H196 V56 H92 v62 h56" stroke="#232323" stroke-width="24"/>
+    <!-- open rounded loop -->
+    <path d="M300 64 h132 a24 24 0 0 1 24 24 v84 h-118" stroke="#1f1f1f" stroke-width="24"/>
+    <!-- S-hook -->
+    <path d="M64 316 h96 a20 20 0 0 1 20 20 v52 a20 20 0 0 0 20 20 h64" stroke="#262626" stroke-width="24"/>
+    <!-- L with foot -->
+    <path d="M336 300 v128 h128" stroke="#232323" stroke-width="24"/>
+    <!-- small key nub -->
+    <path d="M236 214 h64 v56 h-34" stroke="#1e1e1e" stroke-width="20"/>
+    <!-- floating square -->
+    <rect x="244" y="452" width="30" height="30" rx="6" fill="#242424" transform="rotate(8 259 467)"/>
+    <rect x="472" y="238" width="26" height="26" rx="6" fill="#202020" transform="rotate(-10 485 251)"/>
+    <!-- short dash -->
+    <path d="M56 470 h84" stroke="#222222" stroke-width="22"/>
+  </g>
+</svg>
