@@ -1,4 +1,5 @@
 import { FeaturedBundleCard } from "./components/FeaturedBundleCard";
+import { affordabilityAllowsConfirm, type BuyModalMode } from "./lib/modalAffordability";
 import { BundleCard, type BundleProps } from "./components/BundleCard";
 import { ItemCard } from "./components/ItemCard";
 import { PurchaseConfirmModal } from "./components/PurchaseConfirmModal";
@@ -89,7 +90,7 @@ interface BuyModalState {
   name: string;
   price: string;
   productSlug?: string;
-  mode: "stripe" | "coins" | "equip" | "none";
+  mode: BuyModalMode;
   /** When set, modal renders the avatar with this part equipped + persists equip on confirm. */
   avatarPart?: AvatarPart;
   /** Avatar customization to use for the preview (built from current user). */
@@ -584,6 +585,9 @@ export function StoreScreen({ localPreview }: { localPreview?: LocalStorePreview
 
   /** Live affordability for the open modal — re-derived when the wallet updates. */
   const modalAffordable = canAffordCoins(modalPriceCoins);
+  // Retain raw coin affordability for purchase analytics; the confirm button
+  // must not consult the wallet for an owned part in equip mode.
+  const modalCanConfirm = affordabilityAllowsConfirm(buyModal?.mode, modalAffordable);
 
   const handleConfirm = () => {
     if (!buyModal || purchasePending) return;
@@ -863,7 +867,7 @@ export function StoreScreen({ localPreview }: { localPreview?: LocalStorePreview
               if (purchasePending) return;
               // Dismissing an unaffordable preview isn't a purchase decision —
               // keep it out of the purchase_cancelled funnel.
-              if (!localPreview && buyModal?.productSlug && modalAffordable) {
+              if (!localPreview && buyModal?.productSlug && modalCanConfirm) {
                 trackPurchaseCancelled(buyModal.productSlug);
               }
               setBuyModal(null);
@@ -881,7 +885,7 @@ export function StoreScreen({ localPreview }: { localPreview?: LocalStorePreview
             priceInCoins={buyModal?.mode === "equip" ? false : buyModal?.priceInCoins ?? false}
             previewCustomization={buyModal?.previewCustomization}
             confirmLabel={buyModal?.mode === "equip" ? t("store.equip") : undefined}
-            affordable={modalAffordable}
+            affordable={modalCanConfirm}
           />
 
         </div>
