@@ -418,3 +418,23 @@
     display: none;
   }
 }
+
+/* Artwork palette for the released mini games; keeps their existing colours while sharing named tokens. */
+@theme {
+  --color-game-wheel-hub: #171310;
+  --color-game-art-night: #07111f;
+  --color-game-wheel-rim: #2b2417;
+  --color-game-pitch-loading: #061712;
+  --color-game-stadium-night: #0a1730;
+  --color-game-ink: #07111d;
+  --color-game-stadium-frame: #29385f;
+  --color-game-stadium-tunnel: #050b19;
+  --color-game-stadium-overlay: #071d5b;
+  --color-game-stadium-panel: #06142e;
+  --color-game-pitch-edge: #040b09;
+  --color-game-pitch-sky: #081724;
+  --color-game-pitch-shade: #020805;
+  --color-game-collection-green: #0e2f14;
+  --color-game-collection-purple: #2a1240;
+  --color-game-collection-shadow: #12081f;
+}

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 
 import { QuitGameDialog } from "./QuitGameDialog";
 import { DailyChallengeHeader } from "./components/DailyChallengeHeader";
+import { DailyGameStage } from "./components/DailyGameStage";
 import { DailyChallengeCompleteModal } from "./components/DailyChallengeCompleteModal";
 import { LoadingScreen } from "@/components/shared/LoadingScreen";
 import { Check, Lightbulb, ArrowRight, Send } from "lucide-react";
@@ -31,9 +32,11 @@ interface CountdownGameProps {
   session: CountdownSession;
   onBack: () => void;
   onComplete: (score: number, nextPath?: string) => void;
+  /** Sample / training round: the completion modal shows no member prompts and runs no member queries. */
+  practice?: boolean;
 }
 
-export function CountdownGame({ session, onBack, onComplete }: CountdownGameProps) {
+export function CountdownGame({ session, onBack, onComplete, practice = false }: CountdownGameProps) {
   const { t } = useLocale();
   const TIME_PER_ROUND = session.secondsPerRound;
   // Daily Countdown is exactly 2 rounds — cap here so it stays consistent even
@@ -201,6 +204,7 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
     return (
       <div className="fixed inset-0 z-40 bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat">
         <DailyChallengeCompleteModal
+        practice={practice}
           open
           title={session.title}
           correct={totalFound}
@@ -223,20 +227,22 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
 
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat font-poppins text-white">
-      <DailyChallengeHeader
-        onQuit={() => setShowQuitDialog(true)}
-        currentIndex={currentRound}
-        total={totalRounds}
-        timeLeft={timeRemaining}
-        centerLabel={t("dailyGames.roundOf", { n: currentRound + 1, total: totalRounds })}
-      />
-
-      {/* Main Content — mirrors the ranked-match LiveCountdownPanel UI/UX. */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="min-h-full p-3 md:p-4 lg:flex lg:flex-col lg:justify-center">
-        <div className="max-w-2xl mx-auto space-y-3 w-full">
+      {/* Header + gameplay travel together inside the shared stage. */}
+      <DailyGameStage
+        header={
+          <DailyChallengeHeader
+            onQuit={() => setShowQuitDialog(true)}
+            currentIndex={currentRound}
+            total={totalRounds}
+            timeLeft={timeRemaining}
+            centerLabel={t("dailyGames.roundOf", { n: currentRound + 1, total: totalRounds })}
+            className="px-0 pt-0"
+          />
+        }
+      >
+        <div className="w-full space-y-2.5">
         {/* Category badge + prompt — plain text, no card chrome (like ranked) */}
-        <div className="space-y-2 px-1 pt-2">
+        <div className="space-y-1.5 px-1 text-center">
           <span className="inline-flex items-center rounded-[7px] bg-brand-cyan px-2.5 py-1 text-[11px] font-fun font-black uppercase tracking-[0.14em] text-white">
             {currentQuestion.category}
           </span>
@@ -310,7 +316,7 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
             </span>
           </div>
           {foundAnswers.length === 0 ? (
-            <p className="py-6 text-center text-xs font-fun font-black uppercase tracking-[0.18em] text-white/30">
+            <p className="py-2.5 text-center text-xs font-fun font-black uppercase tracking-[0.18em] text-white/30">
               {t("dailyGames.noAnswersYet")}
             </p>
           ) : (
@@ -339,8 +345,7 @@ export function CountdownGame({ session, onBack, onComplete }: CountdownGameProp
             : t("dailyGames.skipToNextRound")}
         </button>
         </div>
-        </div>
-      </div>
+      </DailyGameStage>
 
       <QuitGameDialog
         open={showQuitDialog}

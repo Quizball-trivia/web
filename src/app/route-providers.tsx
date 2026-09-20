@@ -29,7 +29,7 @@ export function RouteProviders({
   // describes the first document request, so relying on it after leaving an
   // SEO page can render the signup screen without QueryClientProvider.
   const isCurrentSeoRoute = pathname
-    ? /^\/(en|ka)\/football-quiz(?:\/[^/]+)?\/?$/.test(pathname)
+    ? /^\/(?:(?:en|ka)\/football-quiz|es\/quiz-de-futbol)(?:\/[^/]+)?\/?$/.test(pathname)
     : isSeoRoute;
 
   if (isCurrentSeoRoute) {

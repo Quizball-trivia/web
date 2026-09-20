@@ -23,6 +23,9 @@ import { LoadingScreen } from "@/components/shared/LoadingScreen";
 import { useLocale } from "@/contexts/LocaleContext";
 import { tierFromRp } from "@/utils/rankedTier";
 import { parseRp } from "@/lib/utils";
+import { useEnsureGuestPrincipal } from '@/lib/realtime/realtime-principal';
+import { AuctionTrainingScreen } from '@/features/auction-training/AuctionTrainingScreen';
+import { GridTrainingScreen } from '@/features/grid-training/GridTrainingScreen';
 import { TrainingMatchScreen } from "@/features/training/TrainingMatchScreen";
 import { useGameStageState } from "@/features/game/hooks/useGameStageState";
 import { useStoreWallet, getStoreWalletQuery } from "@/lib/queries/store.queries";
@@ -53,7 +56,8 @@ function isAiOpponentInfo(opponentInfo: { id?: string; isAiOpponent?: boolean } 
 
 export function GameStageRouter() {
   const router = useRouter();
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  useEnsureGuestPrincipal(locale);
   const {
     player,
     authUser,
@@ -560,6 +564,8 @@ export function GameStageRouter() {
   }
 
   if (config?.mode === "training") {
+    if (config.trainingGame === "auction") return <AuctionTrainingScreen onComplete={() => exitToPlay("training_complete")} />;
+    if (config.trainingGame === "grid") return <GridTrainingScreen onComplete={() => exitToPlay("training_complete")} />;
     return <TrainingMatchScreen onComplete={() => exitToPlay("training_complete")} />;
   }
 

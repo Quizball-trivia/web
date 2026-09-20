@@ -6,3 +6,6 @@
  * kill switch is the instant lever.
  */
 export const isAuctionCardEnabled = process.env.NEXT_PUBLIC_AUCTION_CARD_ENABLED === 'true';
+
+export const isMiniGamesEnabled = process.env.NEXT_PUBLIC_MINI_GAMES_ENABLED === 'true';
+export const isTicTacToeEnabled = process.env.NEXT_PUBLIC_TIC_TAC_TOE_ENABLED === 'true';

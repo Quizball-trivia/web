@@ -23,6 +23,12 @@ interface LeaderboardTableProps {
    * the auction board passes its "AP" label instead.
    */
   pointsLabel?: string;
+  /**
+   * Compact rows for the public game pages, whose board sits in a narrow
+   * column: small avatar, wider name column, tier on up to two lines, nothing
+   * clipped. The app leaderboard keeps its full-size layout.
+   */
+  compact?: boolean;
 }
 
 const poppins = {
@@ -32,7 +38,7 @@ const poppins = {
   lineHeight: 1,
 } as const;
 
-export function LeaderboardTable({ entries, currentUserId, onEntryClick, eventMode, pointsLabel }: LeaderboardTableProps) {
+export function LeaderboardTable({ entries, currentUserId, onEntryClick, eventMode, pointsLabel, compact = false }: LeaderboardTableProps) {
   const { t } = useLocale();
   const tierLabelOf = useTierLabel();
   const { isEventMode: regionEventMode } = useActiveEventMode();
@@ -40,11 +46,14 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick, eventMo
   return (
     <div className="relative">
       {/* Column labels */}
-      <div className="grid grid-cols-12 gap-2 sm:gap-4 px-3 sm:px-4 pb-3 text-[10px] sm:text-xs font-fun font-black uppercase tracking-[0.18em] text-white/45">
-        <div className="col-span-3 text-center">{t('leaderboard.colRank')}</div>
-        <div className="col-span-4 text-left">{t('leaderboard.colPlayer')}</div>
-        <div className="col-span-2 sm:col-span-3 text-center">{t('leaderboard.colTier')}</div>
-        <div className="col-span-3 sm:col-span-2 text-center">{pointsLabel ?? t('leaderboard.colRP')}</div>
+      <div className={cn(
+        "grid grid-cols-12 px-3 pb-3 text-[10px] font-fun font-black uppercase tracking-[0.18em] text-white/45",
+        compact ? "gap-2" : "gap-2 sm:gap-4 sm:px-4 sm:text-xs",
+      )}>
+        <div className={cn(compact ? "col-span-2" : "col-span-3", "text-center")}>{t('leaderboard.colRank')}</div>
+        <div className={cn(compact ? "col-span-5" : "col-span-4", "text-left")}>{t('leaderboard.colPlayer')}</div>
+        <div className={cn(compact ? "col-span-3" : "col-span-2 sm:col-span-3", "text-center")}>{t('leaderboard.colTier')}</div>
+        <div className={cn(compact ? "col-span-2" : "col-span-3 sm:col-span-2", "text-center")}>{pointsLabel ?? t('leaderboard.colRP')}</div>
       </div>
 
       {/* Table wrapper */}
@@ -90,7 +99,8 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick, eventMo
                     role={interactive ? "button" : undefined}
                     tabIndex={interactive ? 0 : undefined}
                     className={cn(
-                      "grid grid-cols-12 gap-2 sm:gap-4 items-center px-3 sm:px-4 py-3.5 sm:py-4 transition-colors",
+                      "grid grid-cols-12 items-center transition-colors",
+                      compact ? "gap-2 px-3 py-2.5" : "gap-2 sm:gap-4 px-3 sm:px-4 py-3.5 sm:py-4",
                       isEventMode && isFirst
                         ? "text-white"
                         : isCurrentUser
@@ -101,9 +111,9 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick, eventMo
                     style={isEventMode && isFirst ? { backgroundColor: '#FF6C0A' } : undefined}
                   >
                     {/* Rank */}
-                    <div className="col-span-3 flex items-center justify-center gap-1.5 sm:gap-2">
+                    <div className={cn(compact ? "col-span-2" : "col-span-3", "flex items-center justify-center gap-1.5 sm:gap-2")}>
                       <span
-                        className="text-xl sm:text-2xl tabular-nums font-black text-white"
+                        className={cn(compact ? "text-base" : "text-xl sm:text-2xl", "tabular-nums font-black text-white")}
                         style={poppins}
                       >
                         #{entry.rank}
@@ -111,8 +121,8 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick, eventMo
                     </div>
 
                     {/* Player */}
-                    <div className="col-span-4 flex items-center justify-start gap-2 sm:gap-3 min-w-0">
-                      <div className="block sm:hidden">
+                    <div className={cn(compact ? "col-span-5 gap-2" : "col-span-4 gap-2 sm:gap-3", "flex items-center justify-start min-w-0")}>
+                      <div className={compact ? "block" : "block sm:hidden"}>
                         <TierFrameAvatar
                           tier={entry.tier}
                           frameAlt={tierLabelOf(entry.tier)}
@@ -122,7 +132,7 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick, eventMo
                           size="sm"
                         />
                       </div>
-                      <div className="hidden sm:block">
+                      <div className={compact ? "hidden" : "hidden sm:block"}>
                         <TierFrameAvatar
                           tier={entry.tier}
                           frameAlt={tierLabelOf(entry.tier)}
@@ -132,25 +142,29 @@ export function LeaderboardTable({ entries, currentUserId, onEntryClick, eventMo
                           size="md"
                         />
                       </div>
-                      <span className="truncate text-sm sm:text-base font-fun font-black uppercase text-white">
+                      <span className={compact
+                        ? "min-w-0 whitespace-normal [overflow-wrap:break-word] [word-break:normal] text-xs leading-tight font-fun font-black uppercase text-white"
+                        : "truncate text-sm sm:text-base font-fun font-black uppercase text-white"}>
                         {entry.username}
                       </span>
                     </div>
 
                     {/* Tier */}
-                    <div className="col-span-2 sm:col-span-3 min-w-0 text-center">
+                    <div className={cn(compact ? "col-span-3" : "col-span-2 sm:col-span-3", "min-w-0 text-center")}>
                       <span
-                        className="block truncate text-[10px] sm:text-sm font-fun font-black uppercase tracking-wide"
+                        className={compact
+                          ? "block whitespace-normal text-[10px] leading-tight font-fun font-black uppercase tracking-wide"
+                          : "block truncate text-[10px] sm:text-sm font-fun font-black uppercase tracking-wide"}
                         style={{ color: (isEventMode && isFirst) || isCurrentUser ? "#FFFFFF" : tierAccent }}
                       >
-                        {tierLabelOf(entry.tier)}
+                        {entry.tier || !compact ? tierLabelOf(entry.tier) : t('profileScreen.unranked')}
                       </span>
                     </div>
 
                     {/* RP */}
-                    <div className="col-span-3 sm:col-span-2 text-center">
+                    <div className={cn(compact ? "col-span-2" : "col-span-3 sm:col-span-2", "text-center")}>
                       <span
-                        className="text-sm sm:text-lg tabular-nums font-black text-white"
+                        className={cn(compact ? "text-sm" : "text-sm sm:text-lg", "tabular-nums font-black text-white")}
                         style={poppins}
                       >
                         {entry.rankPoints.toLocaleString()}

@@ -2,11 +2,14 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-import { Input } from "@/components/ui/input";
+import { DailyAnswerInput } from "./components/DailyAnswerInput";
 import type { CareerPathSession } from "@/lib/domain/dailyChallenge";
 import { getDailyChallengeCopy } from "@/lib/i18n/dailyChallenge";
 import { fuzzyMatchesAnswer } from "@/lib/answerMatching";
+import { ArrowRight } from "lucide-react";
+import { CareerChip } from "@/features/weekend-league/gauntlet/RoundViews";
 import { QuitGameDialog } from "./QuitGameDialog";
+import { DailyGameStage } from "./components/DailyGameStage";
 import { DailyChallengeHeader } from "./components/DailyChallengeHeader";
 import { ResultSplash } from "./components/ResultSplash";
 import { useResultSplash } from "./components/useResultSplash";
@@ -23,13 +26,14 @@ interface CareerPathGameProps {
   session: CareerPathSession;
   onBack: () => void;
   onComplete: (score: number, nextPath?: string) => void;
+  /** Sample / training round: the completion modal shows no member prompts and runs no member queries. */
+  practice?: boolean;
 }
 
 export function CareerPathGame({
   session,
   onBack,
-  onComplete,
-}: CareerPathGameProps) {
+  onComplete, practice = false, }: CareerPathGameProps) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(session.secondsPerQuestion);
   const [answer, setAnswer] = useState("");
@@ -41,6 +45,9 @@ export function CareerPathGame({
   const copy = getDailyChallengeCopy();
 
   const currentQuestion = session.questions[currentQuestionIndex];
+  // English names for crest lookup (the generated API type lags the backend field;
+  // regen is not possible in this repo, so widen locally).
+  const clubMatchNames = (currentQuestion as { clubMatchNames?: string[] } | undefined)?.clubMatchNames;
 
   const advance = useCallback(() => {
     if (currentQuestionIndex >= session.questions.length - 1) {
@@ -107,74 +114,39 @@ export function CareerPathGame({
 
   return (
     <div className="fixed inset-0 z-40 flex flex-col bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat text-white">
-      <DailyChallengeHeader
-        onQuit={() => setShowQuitDialog(true)}
-        currentIndex={currentQuestionIndex}
-        total={session.questionCount}
-        timeLeft={timeLeft}
-      />
-
-      {/* Content */}
-      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-4 py-4">
+      {/* Header + gameplay as one centred composition (shared daily stage). */}
+      <DailyGameStage
+        header={
+          <DailyChallengeHeader
+            onQuit={() => setShowQuitDialog(true)}
+            currentIndex={currentQuestionIndex}
+            total={session.questionCount}
+            timeLeft={timeLeft}
+            className="px-0 pt-0"
+          />
+        }
+      >
+        <div className="w-full">
         {/* Club path chips — the question itself (no separate prompt card). */}
         <div className="flex flex-wrap items-center justify-center gap-2.5">
           {currentQuestion.clubs.map((club, index) => (
             <div key={`${club}-${index}`} className="flex items-center gap-2.5">
-              <span
-                className="rounded-[14px] px-5 py-3.5"
-                style={{
-                  ...poppins,
-                  fontSize: 'clamp(16px, 2.2vw, 26px)',
-                  fontWeight: 700,
-                  border: '2px solid #FFE500',
-                  boxShadow: '0 0 6.334px 1.32px rgba(255,229,0,0.15)',
-                }}
-              >
-                {club}
-              </span>
+              <CareerChip item={{ label: club, matchName: clubMatchNames?.[index] ?? club }} />
               {index < currentQuestion.clubs.length - 1 && (
-                <span className="text-2xl text-white/35" style={poppins}>→</span>
+                <ArrowRight className="size-4 shrink-0 text-brand-yellow" />
               )}
             </div>
           ))}
         </div>
 
-        {/* Input + submit */}
-        <div className="mt-4 flex flex-col gap-2.5 md:flex-row">
-          <Input
-            value={answer}
-            disabled={resolved}
-            onChange={(event) => setAnswer(event.target.value)}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                event.preventDefault();
-                submitAnswer();
-              }
-            }}
-            placeholder={copy.typePlayerName}
-            className="h-[48px] sm:h-[56px] rounded-[16px] bg-surface-card-tint border-2 border-surface-card text-white text-center placeholder:text-brand-slate focus:border-brand-cyan focus-visible:border-brand-cyan focus-visible:ring-brand-cyan/50"
-            style={{ ...poppins, fontSize: 'clamp(16px, 1.7vw, 22px)', fontWeight: 500 }}
-            autoFocus
-          />
-          <button
-            type="button"
-            disabled={resolved}
-            onClick={submitAnswer}
-            className="flex items-center justify-center rounded-[16px] px-6 h-[48px] sm:h-[56px] transition-shadow duration-150"
-            style={{
-              ...poppins,
-              fontSize: 'clamp(13px, 1.7vw, 20px)',
-              textTransform: 'uppercase',
-              backgroundColor: '#38B60E',
-              color: '#FFFFFF',
-              boxShadow: '0 1.76px 6.334px 1.32px rgba(56,182,14,0.25)',
-              cursor: resolved ? 'default' : 'pointer',
-              opacity: resolved ? 0.5 : 1,
-            }}
-          >
-            {copy.submit}
-          </button>
-        </div>
+        <DailyAnswerInput
+          value={answer}
+          onChange={setAnswer}
+          onSubmit={submitAnswer}
+          placeholder={copy.typePlayerName}
+          submitLabel={copy.submit}
+          disabled={resolved}
+        />
 
         {/* Reveal the answer on a wrong/timeout result (correct uses the splash). */}
         {resolved && (
@@ -188,7 +160,8 @@ export function CareerPathGame({
           <span className="text-white/55">{copy.score}</span>
           <span className="text-white">{correctCount}</span>
         </div>
-      </div>
+        </div>
+      </DailyGameStage>
 
       <QuitGameDialog
         open={showQuitDialog}
@@ -199,6 +172,7 @@ export function CareerPathGame({
       <ResultSplash {...splashProps} />
 
       <DailyChallengeCompleteModal
+        practice={practice}
         open={finished}
         title={session.title}
         correct={correctCount}

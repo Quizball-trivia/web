@@ -11,6 +11,7 @@ import {
   LEAGUE_CHEM_THRESHOLDS,
   NATION_CHEM_THRESHOLDS,
   MAX_SQUAD_CHEMISTRY,
+  maxSquadChemistryOf,
   getSquadChemistryBreakdown,
   type ChemDimension,
   type ChemLink,
@@ -79,11 +80,14 @@ export function ChemistryBadge({
   total,
   multiplier,
   profit,
+  max = MAX_SQUAD_CHEMISTRY,
   className = '',
 }: {
   total: number;
   multiplier: number;
   profit?: number;
+  /** Denominator — the squad's formation decides it (7 slots × 3 in the live game). */
+  max?: number;
   className?: string;
 }) {
   const tier = chemistryTier(total);
@@ -99,7 +103,7 @@ export function ChemistryBadge({
       style={{ ...poppins, backgroundColor: withAlpha(tier.color, 0.15), color: tier.color }}
     >
       <Zap className="size-3" fill="currentColor" />
-      {total}/{MAX_SQUAD_CHEMISTRY}
+      {total}/{max}
       {showMultiplier && (
         <>
           <span className="opacity-60">·</span>×{multiplier.toFixed(1)}
@@ -166,7 +170,7 @@ export function ChemistryBreakdown({
           <span className="text-lg font-black tabular-nums" style={{ ...poppins, color: tier.color }}>
             {total}
           </span>
-          <span className="text-[10px] font-bold tabular-nums text-white/40">/{MAX_SQUAD_CHEMISTRY}</span>
+          <span className="text-[10px] font-bold tabular-nums text-white/40">/{maxSquadChemistryOf(team.formation)}</span>
           <span
             className="ml-1 rounded px-1.5 py-0.5 text-[10px] font-black tabular-nums"
             style={{ backgroundColor: withAlpha(tier.color, 0.15), color: tier.color }}

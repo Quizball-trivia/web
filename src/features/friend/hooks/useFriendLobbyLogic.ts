@@ -1,3 +1,5 @@
+import { useGuestPrincipalStore, useRealtimePrincipal } from '@/lib/realtime/realtime-principal';
+import { useAuthPromptStore } from '@/stores/authPrompt.store';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -7,6 +9,7 @@ import { useRealtimeConnection } from "@/lib/realtime/useRealtimeConnection";
 import { getSocket } from "@/lib/realtime/socket-client";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import { useAuctionActiveMatchStore } from "@/stores/auctionActiveMatch.store";
+import { useFootballGridStore } from "@/stores/footballGrid.store";
 import { useRankedMatchmakingStore } from "@/stores/rankedMatchmaking.store";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useAuthStore } from "@/stores/auth.store";
@@ -64,6 +67,10 @@ export function parseFriendLobbyInviteSource(value: string | null): FriendLobbyI
 const LOBBY_ERROR_COPY_KEYS: Record<string, MessageKey> = {
   LOBBY_MODE_CAPACITY: "friend.errorModeCapacity",
   MEMBER_BUSY: "friend.errorMemberBusy",
+  LOBBY_GUEST_LIMIT: "friend.errorGuestLimit",
+  LOBBY_MODE_REQUIRES_ACCOUNT: "friend.errorModeRequiresAccount",
+  RATE_LIMITED: "friend.errorRateLimited",
+  CAPABILITY_REQUIRED: "friend.errorCapabilityRequired",
 };
 
 const INVITE_STATE_CONFIRMATION_TIMEOUT_MS = 4_000;
@@ -94,9 +101,9 @@ export function useFriendLobbyLogic({
   const router = useRouter();
   const { t } = useLocale();
   const { player } = usePlayer();
-  const authUser = useAuthStore((state) => state.user);
-  const selfUserId = authUser?.id ?? player.id;
-  const realtimeSelfUserId = authUser?.id ?? null;
+  const principal = useRealtimePrincipal();
+  const selfUserId = principal.userId ?? player.id;
+  const realtimeSelfUserId = principal.userId;
 
   // Stores
   const lobby = useRealtimeMatchStore((state) => state.lobby);
@@ -113,6 +120,9 @@ export function useFriendLobbyLogic({
   const activeAuctionMatchId = useAuctionActiveMatchStore(
     (state) => state.activeAuctionMatch?.matchId ?? null
   );
+  const activeFootballGridMatchId = useFootballGridStore(
+    (state) => state.state && state.state.phase !== 'terminal' ? state.state.matchId : null
+  );
   const startSession = useGameSessionStore((state) => state.startSession);
 
   // Queries
@@ -124,7 +134,18 @@ export function useFriendLobbyLogic({
   const allCategories = categoriesData?.items ?? [];
 
   // Connection
-  useRealtimeConnection({ enabled: Boolean(realtimeSelfUserId), selfUserId: realtimeSelfUserId });
+  useRealtimeConnection({ enabled: principal.kind !== 'none', selfUserId: realtimeSelfUserId });
+  // An anonymous visitor whose guest principal was refused (feature off,
+  // session retired, rate-limited) cannot use the room: offer sign-up once.
+  const authStatus = useAuthStore((state) => state.status);
+  const guestStatus = useGuestPrincipalStore((state) => state.status);
+  const openAuthPrompt = useAuthPromptStore((state) => state.open);
+  const refusalPromptedRef = useRef(false);
+  useEffect(() => {
+    if (authStatus !== 'anonymous' || guestStatus !== 'refused' || refusalPromptedRef.current) return;
+    refusalPromptedRef.current = true;
+    openAuthPrompt();
+  }, [authStatus, guestStatus, openAuthPrompt]);
   const lobbyCommands = useLobbyCommandMachine();
   const {
     createLobby,
@@ -149,7 +170,10 @@ export function useFriendLobbyLogic({
   const [settingsErrorVersion, setSettingsErrorVersion] = useState(0);
   const [isStartingMatch, setIsStartingMatch] = useState(false);
   const [handoffTimedOutCode, setHandoffTimedOutCode] = useState<string | null>(null);
-  const [optimisticReady, setOptimisticReady] = useState<boolean | null>(null);
+  // Bridges the lobby:ready round trip only; tagged with the room so it never
+  // leaks into another lobby. Cleared (during render, per React's derived-state
+  // pattern) once the server agrees or the room changes.
+  const [optimisticReadyState, setOptimisticReadyState] = useState<{ value: boolean; lobbyId: string } | null>(null);
   const [inviteJoinFailureState, setInviteJoinFailure] = useState<InviteJoinFailure | null>(null);
   const [awaitingInviteLobby, setAwaitingInviteLobby] = useState<AwaitingInviteLobbyState | null>(null);
 
@@ -182,6 +206,13 @@ export function useFriendLobbyLogic({
   const lobbyCode = activeLobby?.inviteCode ?? (roomCode === "new" ? "" : normalizedRoomCode ?? roomCode);
   const members = activeLobby?.members ?? [];
   const me = members.find((member) => member.userId === selfUserId);
+  const optimisticReady =
+    optimisticReadyState !== null && optimisticReadyState.lobbyId === activeLobby?.lobbyId ? optimisticReadyState.value : null;
+  if (optimisticReadyState !== null && (optimisticReady === null || me?.isReady === optimisticReady)) {
+    // Server agreed (or the room changed): a later server-side reset (failed
+    // start, party transition) must show instead of a stale "ready".
+    setOptimisticReadyState(null);
+  }
   const otherMembers = members.filter((member) => member.userId !== selfUserId);
   const opponent = otherMembers[0];
 
@@ -246,6 +277,8 @@ export function useFriendLobbyLogic({
   // 2. Socket Initialization
   useEffect(() => {
     if (leavingRef.current) return;
+    // No lobby command before the identity exists: the ACK timeout must not start while the guest principal is still resolving.
+    if (principal.kind === 'none') return;
     if (inviteJoinCancelledRef.current) return;
     if (terminalInviteJoinFailureRef.current) return;
     if (inviteJoinFailure) return;
@@ -344,6 +377,7 @@ export function useFriendLobbyLogic({
       inviteCode: `${roomCode.slice(0, 2)}***`,
     });
   }, [
+    principal.kind,
     awaitingInviteLobby?.retryCount,
     createLobby,
     handoffTimedOutCode,
@@ -495,6 +529,7 @@ export function useFriendLobbyLogic({
   // earlier match would yank a waiting lobby onto `/auction`. `/auction` picks
   // the match up through its own rejoin-on-connect handshake.
   const isAuctionLobby = activeLobby?.settings.gameMode === "auction";
+  const isFootballGridLobby = activeLobby?.settings.gameMode === "football_grid";
   // Hand-off bookkeeping, all read/written inside effects (never during render):
   // - wasAuctionLobby: the snapshot can be cleared out from under us
   //   (session:state IN_ACTIVE_MATCH empties it once the match starts, esp. for
@@ -533,14 +568,28 @@ export function useFriendLobbyLogic({
     router.push("/auction");
   }, [activeAuctionMatchId, activeLobby, clearStartMatchTimeout, isStartingMatch, router]);
 
+  const footballGridHandoffReady =
+    isFootballGridLobby &&
+    Boolean(activeFootballGridMatchId) &&
+    (isStartingMatch || activeLobby?.status === "active");
+
+  useEffect(() => {
+    if (!footballGridHandoffReady) return;
+    clearStartMatchTimeout();
+    logger.info("Football Grid lobby match started, navigating to live grid", {
+      lobbyId: activeLobby?.lobbyId ?? null,
+      matchId: activeFootballGridMatchId,
+    });
+    router.push("/tic-tac-toe?source=friend_lobby");
+  }, [activeFootballGridMatchId, activeLobby?.lobbyId, clearStartMatchTimeout, footballGridHandoffReady, router]);
 
   useEffect(() => {
     if (!draft && !hasActiveMatch) return;
     // An auction lobby never hands off through the possession `/game` route.
-    if (isAuctionLobby) return;
+    if (isAuctionLobby || isFootballGridLobby) return;
     clearStartMatchTimeout();
     router.push("/game");
-  }, [clearStartMatchTimeout, draft, hasActiveMatch, isAuctionLobby, router]);
+  }, [clearStartMatchTimeout, draft, hasActiveMatch, isAuctionLobby, isFootballGridLobby, router]);
 
   useEffect(() => {
     if (!error) return;
@@ -576,9 +625,10 @@ export function useFriendLobbyLogic({
       }, 0);
     }
     clearStartMatchTimeout();
-    const stopStartingTimer = setTimeout(() => {
-      setIsStartingMatch(false);
-    }, 0);
+    // clearError() changes this effect's dependencies immediately. Keep the
+    // recovery update out of the effect cleanup path so it cannot be cancelled
+    // while the host is returning from a failed server-side start.
+    queueMicrotask(() => setIsStartingMatch(false));
     if (!isTransientSettingsBusy && !isInviteTransitionBusy && !isInviteNotFound) {
       // Server messages are raw English. Codes we have localized copy for get it;
       // anything else still surfaces the server's own message rather than nothing.
@@ -591,7 +641,6 @@ export function useFriendLobbyLogic({
       if (timer) {
         clearTimeout(timer);
       }
-      clearTimeout(stopStartingTimer);
     };
   }, [clearError, clearStartMatchTimeout, error, inviteJoinFailure, isPreparingMatch, isResolvingInvite, t]);
 
@@ -610,9 +659,9 @@ export function useFriendLobbyLogic({
   };
 
   const handleReadyToggle = () => {
-    if (!me) return;
+    if (!me || !activeLobby) return;
     const nextReady = !(optimisticReady ?? me.isReady);
-    setOptimisticReady(nextReady);
+    setOptimisticReadyState({ value: nextReady, lobbyId: activeLobby.lobbyId });
     getSocket().emit("lobby:ready", { ready: nextReady });
     logger.info("Socket emit lobby:ready", { ready: nextReady });
   };
@@ -668,6 +717,7 @@ export function useFriendLobbyLogic({
   };
 
   const handleLeaveLobby = () => {
+    useFootballGridStore.getState().clear();
     leavingRef.current = true;
     inviteJoinCancelledRef.current = true;
     createdRef.current = true;
@@ -732,6 +782,7 @@ export function useFriendLobbyLogic({
   return {
     lobby: activeLobby,
     isAuctionLobby,
+    isFootballGridLobby,
     members,
     lobbyCode,
     isResolvingInvite,

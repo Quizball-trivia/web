@@ -7,6 +7,7 @@
 
 import { CalendarDays, Home, Medal, Gem, UserRound } from 'lucide-react';
 import type { MessageKey } from '@/lib/i18n/messages';
+import { isPlaySurface } from '@/lib/routes/publicHub';
 
 export const MOBILE_NAV_ITEMS = [
   { path: '/play', labelKey: 'navigation.home', icon: Home },
@@ -18,6 +19,15 @@ export const MOBILE_NAV_ITEMS = [
 
 export const HIDE_NAV_PATHS = ['/game', '/onboarding'];
 export const HEADER_PATHS = ['/', '/play', '/events', '/leaderboard', '/social', '/profile', '/store', '/career', '/daily'];
+
+/** The mobile header shows on the listed app paths and on the public hub / game pages. */
+export function showsHeader(currentPath: string): boolean {
+  if (isPlaySurface(currentPath)) return true;
+  return HEADER_PATHS.some((p) => (p === '/' ? currentPath === '/' : currentPath.startsWith(p)));
+}
+
+/** Path used for nav highlighting: the public hub and game pages count as Play. */
+export const navPathOf = (currentPath: string): string => (isPlaySurface(currentPath) ? '/play' : currentPath);
 
 type TranslateFn = (key: MessageKey, params?: Record<string, string | number>) => string;
 

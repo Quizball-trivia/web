@@ -1,3 +1,5 @@
+import type { MessageKey } from "@/lib/i18n/messages";
+
 export type TooltipTrigger =
   | { type: "stage"; stage: string }
   | { type: "questionIndex"; index: number }
@@ -8,9 +10,13 @@ export type TooltipTrigger =
 export interface TooltipDefinition {
   id: string;
   trigger: TooltipTrigger;
-  title: string;
-  message: string;
+  titleKey: MessageKey;
+  messageKey: MessageKey;
   position: "top" | "center" | "bottom";
+  /** CSS selector of the element to spotlight while this tooltip is up.
+   *  When multiple matches exist (desktop + mobile layouts), the largest
+   *  visible one is highlighted. Omit for a plain dimmed backdrop. */
+  highlight?: string;
 }
 
 export const TOOLTIP_DEFINITIONS: TooltipDefinition[] = [
@@ -18,83 +24,98 @@ export const TOOLTIP_DEFINITIONS: TooltipDefinition[] = [
   {
     id: "matchmaking",
     trigger: { type: "stage", stage: "matchmaking" },
-    title: "FINDING OPPONENT",
-    message:
-      "We're searching for an opponent. In real matches you'll face real players in a head-to-head trivia battle on the football pitch!",
+    titleKey: "training.tipMatchmakingTitle",
+    messageKey: "training.tipMatchmakingBody",
     position: "center",
   },
   {
     id: "showdown",
     trigger: { type: "stage", stage: "showdown" },
-    title: "MEET YOUR OPPONENT",
-    message:
-      "Here's who you're up against! Each match is a 1v1 battle — answer trivia questions to move the ball and score goals.",
+    titleKey: "training.tipShowdownTitle",
+    messageKey: "training.tipShowdownBody",
     position: "center",
   },
   {
     id: "banning",
     trigger: { type: "stage", stage: "banning" },
-    title: "BAN A CATEGORY",
-    message:
-      "Each player bans one category — questions from banned categories won't appear this half. Ban a topic you're weak in!",
+    titleKey: "training.tipBanningTitle",
+    messageKey: "training.tipBanningBody",
     position: "center",
   },
 
   // ── Playing phase — first questions ───────────────────────
   {
     id: "playing-q1",
+    highlight: "[data-pitch-root]",
     trigger: { type: "questionIndex", index: 0 },
-    title: "HOW POSSESSION WORKS",
-    message:
-      "Both players answer the same question at the same time. If you're correct and your opponent is wrong, you advance toward their goal. If they're correct and you're wrong, they push you back!",
+    titleKey: "training.tipPossessionTitle",
+    messageKey: "training.tipPossessionBody",
     position: "bottom",
   },
+  // Fires right after the player has SEEN their first bar battle + score flight.
   {
-    id: "playing-q2",
+    id: "bar-battle",
+    highlight: "[data-pitch-root]",
     trigger: { type: "questionIndex", index: 1 },
-    title: "SPEED MATTERS",
-    message:
-      "When both players answer correctly, the faster answer gets a bigger advance. Answer quickly to gain the edge! The pitch shows your position — push all the way to the opponent's goal to take a shot.",
+    titleKey: "training.tipBarBattleTitle",
+    messageKey: "training.tipBarBattleBody",
     position: "top",
+  },
+  {
+    id: "goal-meter",
+    highlight: "[data-goal-progress-bar]",
+    trigger: { type: "questionIndex", index: 2 },
+    titleKey: "training.tipGoalMeterTitle",
+    messageKey: "training.tipGoalMeterBody",
+    position: "top",
+  },
+  {
+    id: "speed",
+    highlight: "[data-question-panel]",
+    trigger: { type: "questionIndex", index: 3 },
+    titleKey: "training.tipSpeedTitle",
+    messageKey: "training.tipSpeedBody",
+    position: "bottom",
+  },
+
+  // ── The scripted perfect-round showcase ───────────────────
+  {
+    id: "goal-demo",
+    highlight: "[data-pitch-root]",
+    trigger: { type: "event", event: "goal-demo" },
+    titleKey: "training.tipGoalDemoTitle",
+    messageKey: "training.tipGoalDemoBody",
+    position: "bottom",
   },
 
   // ── Zone triggers ─────────────────────────────────────────
   {
     id: "att-zone",
+    highlight: "[data-pitch-root]",
     trigger: { type: "zone", zone: "ATT" },
-    title: "ATTACK ZONE",
-    message:
-      "You've pushed into the attack zone! Keep answering correctly to build momentum and trigger a shot on goal. The closer you get, the more dangerous you become!",
+    titleKey: "training.tipAttZoneTitle",
+    messageKey: "training.tipAttZoneBody",
     position: "top",
   },
 
   // ── Shot phase ────────────────────────────────────────────
-  {
-    id: "shot-phase",
-    trigger: { type: "phase", phase: "shot" },
-    title: "SHOT ON GOAL!",
-    message:
-      "A shot has been triggered! In real matches, both players answer one more question — the attacker must answer correctly to score. If the defender also answers correctly, the shot is saved!",
-    position: "center",
-  },
-
-  // ── Goal scored ───────────────────────────────────────────
+  // NOTE: deliberately no tooltip on the shot itself — pausing there cuts the
+  // charge → kick → goal sequence in half. The goal/saved tooltips below fire
+  // AFTER the animation lands.
   {
     id: "goal-scored",
+    highlight: "[data-pitch-root]",
     trigger: { type: "phase", phase: "goal" },
-    title: "GOOOL!",
-    message:
-      "The attacker answered correctly and beat the keeper — that's a goal! After a goal, the ball resets to midfield and play continues.",
+    titleKey: "training.tipGoalTitle",
+    messageKey: "training.tipGoalBody",
     position: "center",
   },
-
-  // ── Shot saved ────────────────────────────────────────────
   {
     id: "shot-saved",
+    highlight: "[data-pitch-root]",
     trigger: { type: "phase", phase: "saved" },
-    title: "SAVED!",
-    message:
-      "The keeper answered correctly and stopped the shot! A save pushes the attacker back to midfield. Both answering and defending matter in this game!",
+    titleKey: "training.tipSavedTitle",
+    messageKey: "training.tipSavedBody",
     position: "center",
   },
 
@@ -102,19 +123,50 @@ export const TOOLTIP_DEFINITIONS: TooltipDefinition[] = [
   {
     id: "halftime",
     trigger: { type: "stage", stage: "halftime" },
-    title: "HALF TIME",
-    message:
-      "That's the end of the first half! Now you'll each ban one more category for the second half. In real matches, you can also pick a tactical card to change your play style.",
+    titleKey: "training.tipHalftimeTitle",
+    messageKey: "training.tipHalftimeBody",
     position: "center",
+  },
+
+  // ── Penalties ─────────────────────────────────────────────
+  {
+    id: "penalties",
+    trigger: { type: "stage", stage: "penalties" },
+    titleKey: "training.tipPenaltiesTitle",
+    messageKey: "training.tipPenaltiesBody",
+    position: "center",
+  },
+  {
+    id: "penalty-shooter",
+    highlight: "[data-pitch-root]",
+    trigger: { type: "event", event: "penalty-shooter" },
+    titleKey: "training.tipPenShooterTitle",
+    messageKey: "training.tipPenShooterBody",
+    position: "bottom",
+  },
+  {
+    id: "penalty-keeper",
+    highlight: "[data-pitch-root]",
+    trigger: { type: "event", event: "penalty-keeper" },
+    titleKey: "training.tipPenKeeperTitle",
+    messageKey: "training.tipPenKeeperBody",
+    position: "bottom",
+  },
+  {
+    id: "penalty-sudden-death",
+    highlight: "[data-pitch-root]",
+    trigger: { type: "event", event: "penalty-sudden-death" },
+    titleKey: "training.tipPenSuddenDeathTitle",
+    messageKey: "training.tipPenSuddenDeathBody",
+    position: "bottom",
   },
 
   // ── Results ───────────────────────────────────────────────
   {
     id: "results",
     trigger: { type: "stage", stage: "results" },
-    title: "FULL TIME!",
-    message:
-      "That's the final whistle! The team with the most goals wins. In real ranked matches you'll earn points and climb the leaderboard. Ready to play for real?",
+    titleKey: "training.tipResultsTitle",
+    messageKey: "training.tipResultsBody",
     position: "center",
   },
 ];

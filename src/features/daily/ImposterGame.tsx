@@ -7,7 +7,9 @@ import type { ImposterSession } from "@/lib/domain/dailyChallenge";
 import { getDailyChallengeCopy } from "@/lib/i18n/dailyChallenge";
 import { playSfx } from "@/lib/sounds/gameSounds";
 import { QuitGameDialog } from "./QuitGameDialog";
+import { DailyGameStage } from "./components/DailyGameStage";
 import { DailyChallengeHeader } from "./components/DailyChallengeHeader";
+import { EmbeddedCounterPill } from "./components/EmbeddedCounterPill";
 import { ResultSplash } from "./components/ResultSplash";
 import { useResultSplash } from "./components/useResultSplash";
 import { DailyChallengeCompleteModal } from "./components/DailyChallengeCompleteModal";
@@ -26,13 +28,21 @@ interface ImposterGameProps {
   session: ImposterSession;
   onBack: () => void;
   onComplete: (score: number, nextPath?: string) => void;
+  /** Sample / training round: the completion modal shows no member prompts and runs no member queries. */
+  practice?: boolean;
+  /** Skip the daily-challenge completion modal and fire onComplete as soon
+   *  as the last question resolves (embedded/promo flows). */
+  autoComplete?: boolean;
+  /** Render inline (promo flow): global counter pill, no header/timer/back. */
+  embedded?: { current: number; total: number };
 }
 
 export function ImposterGame({
   session,
   onBack,
   onComplete,
-}: ImposterGameProps) {
+  autoComplete = false,
+  embedded, practice = false, }: ImposterGameProps) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOptionIds, setSelectedOptionIds] = useState<string[]>([]);
   const [timeLeft, setTimeLeft] = useState(session.secondsPerQuestion);
@@ -43,6 +53,13 @@ export function ImposterGame({
   const [finished, setFinished] = useState(false);
   const { splashProps, fire } = useResultSplash();
   const copy = getDailyChallengeCopy();
+
+  // Embedded flows: report completion immediately instead of holding on the
+  // daily-challenge modal ("see you tomorrow" makes no sense there).
+  useEffect(() => {
+    if (autoComplete && finished) onComplete(correctCount);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoComplete, finished]);
 
   const currentQuestion = session.questions[currentQuestionIndex];
   const correctOptionIds = useMemo(
@@ -103,14 +120,15 @@ export function ImposterGame({
 
   useEffect(() => {
     if (resolved) {
+      // Embedded (promo): resolve immediately, operator advances manually.
       const timeout = window.setTimeout(() => {
         advance();
-      }, 1400);
+      }, embedded ? 0 : 1400);
       return () => window.clearTimeout(timeout);
     }
 
     // Pause the countdown while the reveal sting is playing.
-    if (revealing) {
+    if (revealing || embedded) {
       return;
     }
 
@@ -126,7 +144,7 @@ export function ImposterGame({
     }, 1000);
 
     return () => window.clearInterval(timer);
-  }, [advance, handleResolve, resolved, revealing]);
+  }, [advance, handleResolve, resolved, revealing, embedded]);
 
   const toggleOption = (optionId: string) => {
     if (resolved || revealing) {
@@ -145,16 +163,24 @@ export function ImposterGame({
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat text-white">
-      <DailyChallengeHeader
-        onQuit={() => setShowQuitDialog(true)}
-        currentIndex={currentQuestionIndex}
-        total={session.questionCount}
-        timeLeft={timeLeft}
-      />
-
-      {/* Content */}
-      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col px-4 py-4 overflow-y-auto">
+    <div className={embedded ? "flex flex-col text-white" : "fixed inset-0 z-40 flex flex-col bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat text-white"}>
+      {/* Header + gameplay as one centred composition (shared daily stage). */}
+      <DailyGameStage
+        header={
+          embedded ? (
+            <EmbeddedCounterPill current={embedded.current} total={embedded.total} />
+          ) : (
+            <DailyChallengeHeader
+              onQuit={() => setShowQuitDialog(true)}
+              currentIndex={currentQuestionIndex}
+              total={session.questionCount}
+              timeLeft={timeLeft}
+              className="px-0 pt-0"
+            />
+          )
+        }
+      >
+        <div className="w-full">
         {/* Question card */}
         <div
           className="flex flex-col rounded-[24px] border border-white/10 bg-white/5 px-5 py-5 text-white backdrop-blur-sm sm:px-6 sm:py-6"
@@ -165,8 +191,8 @@ export function ImposterGame({
             minHeight: 'clamp(80px, 12vw, 140px)',
           }}
         >
-          <p className="leading-snug">{currentQuestion.prompt}</p>
-          <p className="mt-2 text-white/50" style={{ fontSize: 'clamp(11px, 1.3vw, 16px)', fontWeight: 500 }}>
+          <p className="text-center leading-snug">{currentQuestion.prompt}</p>
+          <p className="mt-2 text-center text-white/50" style={{ fontSize: 'clamp(11px, 1.3vw, 16px)', fontWeight: 500 }}>
             {copy.imposterInstruction}
           </p>
         </div>
@@ -185,7 +211,7 @@ export function ImposterGame({
                 type="button"
                 disabled={resolved || revealing}
                 onClick={() => toggleOption(option.id)}
-                className="relative flex items-center justify-center overflow-hidden rounded-[16px] px-3 transition-shadow duration-150 h-[60px] sm:h-[78px] md:h-[94px]"
+                className="relative flex h-[60px] appearance-none items-center justify-center overflow-hidden rounded-[16px] bg-transparent px-3 transition-shadow duration-150 sm:h-[78px] md:h-[94px]"
                 style={{
                   ...poppins,
                   fontSize: 'clamp(13px, 1.7vw, 22px)',
@@ -227,7 +253,11 @@ export function ImposterGame({
         {/* Submit + score */}
         <div className="mt-4 flex items-center justify-between">
           <p className="text-sm text-white/55" style={poppins}>
-            {copy.score}: <span className="text-white">{correctCount}</span>
+            {!embedded && (
+              <>
+                {copy.score}: <span className="text-white">{correctCount}</span>
+              </>
+            )}
           </p>
           <button
             type="button"
@@ -248,7 +278,8 @@ export function ImposterGame({
             {copy.submitSelection}
           </button>
         </div>
-      </div>
+        </div>
+      </DailyGameStage>
 
       <QuitGameDialog
         open={showQuitDialog}
@@ -259,7 +290,8 @@ export function ImposterGame({
       <ResultSplash {...splashProps} />
 
       <DailyChallengeCompleteModal
-        open={finished}
+        practice={practice}
+        open={finished && !autoComplete}
         title={session.title}
         correct={correctCount}
         total={session.questionCount}

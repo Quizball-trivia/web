@@ -2,6 +2,7 @@ import { getSocket, getSocketDebugSnapshot, logSocketDebug } from './socket-clie
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { useRankedMatchmakingStore } from '@/stores/rankedMatchmaking.store';
 import { useAuctionActiveMatchStore } from '@/stores/auctionActiveMatch.store';
+import { useFootballGridStore } from '@/stores/footballGrid.store';
 import { useGameSessionStore } from '@/stores/gameSession.store';
 import { QueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queries/queryKeys';
@@ -12,6 +13,7 @@ import { translate, normalizeLocale } from '@/lib/i18n/messages';
 import { toast } from 'sonner';
 import { getMe } from '@/lib/api/endpoints';
 import { useAuthStore } from '@/stores/auth.store';
+import { createRealtimeCommandId } from '@/lib/realtime/command-id';
 import type {
   AuctionStatePayload,
   AuctionRejoinAvailablePayload,
@@ -50,12 +52,59 @@ import type {
   LobbyChallengeStatusPayload,
   NotificationPayload,
   NotificationUnreadCountPayload,
+  FootballGridCommandResultPayload,
+  FootballGridCompletedPayload,
+  FootballGridMatchFoundPayload,
+  FootballGridRematchStatePayload,
+  FootballGridSearchStatePayload,
+  FootballGridStatePayload,
+  FootballGridTurnResolvedPayload,
 } from './socket.types';
 
 // Module-level ref so handlers always read the latest queryClient
 // without needing to tear down and re-register all listeners.
 let _queryClient: QueryClient | null = null;
 let _handlersRegistered = false;
+const GRID_RESYNC_THROTTLE_MS = 1_000;
+const GRID_CANCEL_BUSY_MAX_RETRIES = 3;
+const GRID_CANCEL_BUSY_RETRY_MS = 800;
+// Per search: a new search gets a fresh retry budget, and a pending timer for
+// a search that has since resolved is dropped.
+let _gridCancelBusy: { searchId: string; retries: number; timer: ReturnType<typeof setTimeout> | null } | null = null;
+
+function clearGridCancelBusy(): void {
+  if (_gridCancelBusy?.timer) clearTimeout(_gridCancelBusy.timer);
+  _gridCancelBusy = null;
+}
+const _lastGridResyncAtByMatchId = new Map<string, number>();
+/**
+ * Grid matches this client had loaded before the current search started. Only
+ * these may have a late redelivered result suppressed in favour of the PLAY
+ * intent; a match produced BY the current search must always surface.
+ *
+ * Marked by the caller at PLAY time — the store is cleared by beginFreshSearch()
+ * before any server search_state arrives, so it cannot be read back later.
+ */
+const _gridMatchesSeenBeforeSearch = new Set<string>();
+
+/** Call with the outgoing match id immediately BEFORE beginFreshSearch(). */
+export function markGridMatchLeftBehind(matchId: string | null | undefined): void {
+  if (!matchId) return;
+  _gridMatchesSeenBeforeSearch.add(matchId);
+  // Bound the set: only recent departures matter for suppression.
+  if (_gridMatchesSeenBeforeSearch.size > 8) {
+    const oldest = _gridMatchesSeenBeforeSearch.values().next().value;
+    if (oldest) _gridMatchesSeenBeforeSearch.delete(oldest);
+  }
+}
+
+function emitGridResyncThrottled(socket: ReturnType<typeof getSocket>, matchId: string): void {
+  const now = Date.now();
+  const lastEmittedAt = _lastGridResyncAtByMatchId.get(matchId) ?? 0;
+  if (now - lastEmittedAt < GRID_RESYNC_THROTTLE_MS) return;
+  _lastGridResyncAtByMatchId.set(matchId, now);
+  socket.emit('grid:resync', { matchId });
+}
 
 function getQueryClient(): QueryClient | null {
   return _queryClient;
@@ -257,6 +306,8 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
     }
     store.setError(data);
   });
+
+
 
   socket.on('draft:start', (data: DraftState) => {
     logger.info('Socket event draft:start', {
@@ -728,10 +779,189 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       auctionStore.clear();
     }
   });
+
+  // Football Grid is route-independent in the same way as Auction: match
+  // handoff and reconnect snapshots can arrive while the player is still in a
+  // friend lobby or elsewhere in the app. Keep the authoritative payloads in
+  // one global store, then let `/football-grid` render and acknowledge them.
+  socket.on('grid:search_state', (data: FootballGridSearchStatePayload) => {
+    logger.info('Socket event grid:search_state', {
+      state: data.state,
+      searchId: data.searchId,
+    });
+    const gridStore = useFootballGridStore.getState();
+    if (data.state === 'idle' || data.state === 'matched') clearGridCancelBusy();
+    if (gridStore.searchCancellationPending && data.state === 'searching' && data.searchId) {
+      socket.emit('grid:search_cancel', { searchId: data.searchId });
+    }
+    gridStore.setSearchState(data);
+  });
+  socket.on('grid:match_found', (data: FootballGridMatchFoundPayload) => {
+    const gridStore = useFootballGridStore.getState();
+    logger.info('Socket event grid:match_found', {
+      matchId: data.matchId,
+      opponentId: data.opponent.id,
+      stateVersion: data.state.stateVersion,
+    });
+    // If matching won the race against a cancellation, end the just-created
+    // handoff immediately. The route that initiated the search may already be
+    // unmounted, so this cleanup must remain global to avoid stranding the
+    // opponent in the handoff timeout.
+    if (gridStore.searchCancellationPending && !gridStore.supersededMatchIds.includes(data.matchId)) {
+      socket.emit('grid:forfeit', {
+        matchId: data.matchId,
+        commandId: createRealtimeCommandId(),
+        expectedStateVersion: data.state.stateVersion,
+      });
+    }
+    gridStore.setMatchFound(data);
+  });
+  const applyGridState = (eventName: string, data: FootballGridStatePayload) => {
+    logger.info(`Socket event ${eventName}`, {
+      matchId: data.matchId,
+      phase: data.state.phase,
+      stateVersion: data.state.stateVersion,
+    });
+    useFootballGridStore.getState().setState(data);
+  };
+  socket.on('grid:loading_state', (data) => applyGridState('grid:loading_state', data));
+  socket.on('grid:countdown', (data) => applyGridState('grid:countdown', data));
+  socket.on('grid:state', (data) => applyGridState('grid:state', data));
+  socket.on('grid:paused', (data) => applyGridState('grid:paused', data));
+  socket.on('grid:resumed', (data) => applyGridState('grid:resumed', data));
+  socket.on('grid:turn_resolved', (data: FootballGridTurnResolvedPayload) => {
+    logger.info('Socket event grid:turn_resolved', {
+      matchId: data.matchId,
+      stateVersion: data.state.stateVersion,
+      outcome: data.outcome,
+    });
+    useFootballGridStore.getState().setTurnResolved(data);
+  });
+  socket.on('grid:command_result', (data: FootballGridCommandResultPayload) => {
+    logger.info('Socket event grid:command_result', {
+      matchId: data.matchId,
+      commandId: data.commandId,
+      outcome: data.outcome,
+    });
+    useFootballGridStore.getState().setCommandResult(data);
+  });
+  socket.on('grid:completed', (data: FootballGridCompletedPayload) => {
+    logger.info('Socket event grid:completed', {
+      matchId: data.matchId,
+      stateVersion: data.terminalStateVersion,
+      completionReason: data.state.completionReason,
+    });
+    _lastGridResyncAtByMatchId.delete(data.matchId);
+    const gridStore = useFootballGridStore.getState();
+    // Outbox redelivery of a match that ended while the user was away can race
+    // a fresh PLAY press. Suppress ONLY a completion for a match this client
+    // provably left behind — one it had loaded before the current search began.
+    // Inferring staleness from "searching and no local state" would also eat
+    // the result of the match this search just produced, whenever grid:match_found
+    // is delayed or dropped (the client sits at search_state 'matched' with no
+    // state yet, and its real result would vanish along with its rewards and
+    // rematch offer).
+    // Membership in the left-behind set is the whole proof: it is written at
+    // PLAY time, so the search state no longer matters — it is 'idle' for a
+    // moment after beginFreshSearch() and 'pairing'/'matched' before
+    // grid:match_found, and the old result can land in any of those windows.
+    // The result of the previous game in a series that lands after the next
+    // game's handoff: keep the live board, record the score, ACK it here.
+    const previousSeriesGame = gridStore.state?.matchId !== data.matchId
+      && data.series && !data.series.finished
+      && gridStore.series?.seriesId === data.series.seriesId
+      && data.series.gameIndex < gridStore.series.gameIndex;
+    if (previousSeriesGame) {
+      gridStore.recordPreviousGameResult(data);
+      socket.emit('grid:completed_ack', {
+        matchId: data.matchId,
+        terminalStateVersion: data.terminalStateVersion,
+        ackToken: data.ackToken,
+      });
+      return;
+    }
+    const staleWhileSearching = gridStore.state?.matchId !== data.matchId
+      && _gridMatchesSeenBeforeSearch.has(data.matchId);
+    if (staleWhileSearching) {
+      socket.emit('grid:completed_ack', {
+        matchId: data.matchId,
+        terminalStateVersion: data.terminalStateVersion,
+        ackToken: data.ackToken,
+      });
+      return;
+    }
+    gridStore.setCompleted(data);
+    // Ignored old-game deliveries still need their outbox ACK; they must not
+    // recur forever merely because the player is already on a newer board.
+    if (useFootballGridStore.getState().completed?.ackToken !== data.ackToken) {
+      socket.emit('grid:completed_ack', {
+        matchId: data.matchId,
+        terminalStateVersion: data.terminalStateVersion,
+        ackToken: data.ackToken,
+      });
+    }
+  });
+  socket.on('grid:rematch_state', (data: FootballGridRematchStatePayload) => {
+    logger.info('Socket event grid:rematch_state', {
+      seriesId: data.seriesId,
+      seriesVersion: data.seriesVersion,
+      status: data.status,
+      acceptedPlayers: data.acceptedUserIds.length,
+    });
+    useFootballGridStore.getState().setRematch(data);
+  });
+  socket.on('grid:report_received', ({ attemptId }) => {
+    logger.info('Socket event grid:report_received', { attemptId });
+    useFootballGridStore.getState().markAttemptReported(attemptId);
+  });
+  socket.on('grid:error', (data: ErrorPayload) => {
+    logger.warn('Socket event grid:error', {
+      code: data.code,
+      gridCode: data.meta?.gridCode ?? null,
+      message: data.message,
+    });
+    const current = useFootballGridStore.getState();
+    // A cancel sent within ~1s of grid:search_state can find the search-start
+    // path still holding the user session lock. The server never re-emits a
+    // search state after that, so without a retry the player stays queued
+    // while the UI believes the cancel went through.
+    if (data.code === 'GRID_SEARCH_BUSY' && current.searchCancellationPending && current.search.searchId) {
+      const searchId = current.search.searchId;
+      if (_gridCancelBusy?.searchId !== searchId) {
+        clearGridCancelBusy();
+        _gridCancelBusy = { searchId, retries: 0, timer: null };
+      }
+      if (_gridCancelBusy.retries < GRID_CANCEL_BUSY_MAX_RETRIES) {
+        _gridCancelBusy.retries += 1;
+        _gridCancelBusy.timer = setTimeout(() => {
+          if (_gridCancelBusy?.searchId === searchId) _gridCancelBusy.timer = null;
+          const latest = useFootballGridStore.getState();
+          if (latest.searchCancellationPending && latest.search.searchId === searchId) {
+            socket.emit('grid:search_cancel', { searchId });
+          }
+        }, GRID_CANCEL_BUSY_RETRY_MS);
+        return;
+      }
+      // Budget spent: surface the error, but let a later busy response on the
+      // same search (server recovered, user pressed cancel again) retry afresh.
+      clearGridCancelBusy();
+    }
+    current.setError(data);
+    const gridCode = typeof data.meta?.gridCode === 'string' ? data.meta.gridCode : data.code;
+    if (
+      current.state?.matchId &&
+      (gridCode === 'STALE_STATE' || gridCode === 'LATE_COMMAND' || gridCode === 'COMMAND_IN_PROGRESS')
+    ) {
+      emitGridResyncThrottled(socket, current.state.matchId);
+    }
+  });
 }
 
 /** Reset registration state (for testing or socket reconnect). */
 export function resetSocketHandlers(): void {
   _handlersRegistered = false;
+  clearGridCancelBusy();
+  _gridMatchesSeenBeforeSearch.clear();
   _queryClient = null;
+  _lastGridResyncAtByMatchId.clear();
 }

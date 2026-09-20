@@ -36,6 +36,7 @@ export function TurnControls({
   onBid,
   onFold,
   showTurnLabel = false,
+  allowedAction = null,
 }: {
   minBid: number;
   maxBid: number;
@@ -45,6 +46,8 @@ export function TurnControls({
   onBid: (amount: number) => void;
   onFold: () => void;
   showTurnLabel?: boolean;
+  /** Training: only this control is enabled (the quick bid or the fold); the custom amount is hidden. */
+  allowedAction?: { kind: 'bid' | 'fold' } | null;
 }) {
   const { t } = useLocale();
   const [customInput, setCustomInput] = useState('');
@@ -77,9 +80,13 @@ export function TurnControls({
 
   const canAfford = minBid <= maxBid;
   const budgetAfter = currentBudget - minBid;
+  const guided = allowedAction !== null;
+  const foldEnabled = !guided || allowedAction.kind === 'fold';
+  const bidEnabled = canAfford && (!guided || allowedAction.kind === 'bid');
+  const guidedRing = 'ring-4 ring-brand-yellow ring-offset-2 ring-offset-brand-blue animate-pulse';
 
   // Raising above the minimum needs headroom; opening a lot is always exact.
-  const canRaiseAboveMin = canAfford && maxBid > minBid;
+  const canRaiseAboveMin = canAfford && maxBid > minBid && !guided;
   // The hint has to be typeable: formatMoney rounds to 1 decimal, so a
   // 35,050,000 bound renders "$35.0M" — typing that back is below the minimum
   // and gets rejected. Show exact millions, matching the input's own unit.
@@ -96,7 +103,7 @@ export function TurnControls({
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2" data-auction-anchor="turn-controls">
       {showTurnLabel && (
         <div className="text-center font-poppins text-xs font-black uppercase tracking-wide text-brand-yellow">
           {t('auctionGame.yourTurn')}
@@ -105,19 +112,24 @@ export function TurnControls({
       <div className="flex gap-2">
         <button
           type="button"
-          onClick={onFold}
-          className="flex h-11 shrink-0 items-center justify-center rounded-2xl bg-brand-red px-6 font-poppins text-sm font-black uppercase text-white transition-colors hover:bg-brand-red/90"
+          onClick={() => foldEnabled && onFold()}
+          disabled={!foldEnabled}
+          data-auction-anchor="fold-button"
+          className={`flex h-11 shrink-0 items-center justify-center rounded-2xl px-6 font-poppins text-sm font-black uppercase transition-colors ${
+            foldEnabled ? 'bg-brand-red text-white hover:bg-brand-red/90' : 'cursor-not-allowed bg-white/10 text-white/30'
+          } ${guided && foldEnabled ? guidedRing : ''}`}
         >
           {mustOpen ? t('auctionGame.pass') : t('auctionGame.fold')}
         </button>
         <motion.button
           type="button"
-          whileTap={canAfford ? { scale: 0.98 } : undefined}
-          disabled={!canAfford}
-          onClick={() => canAfford && onBid(minBid)}
+          whileTap={bidEnabled ? { scale: 0.98 } : undefined}
+          disabled={!bidEnabled}
+          onClick={() => bidEnabled && onBid(minBid)}
+          data-auction-anchor="bid-button"
           className={`flex h-11 flex-1 flex-col items-center justify-center rounded-2xl font-poppins leading-none transition-colors ${
-            canAfford ? 'bg-brand-green text-white hover:bg-brand-green/90' : 'cursor-not-allowed bg-white/10 text-white/30'
-          }`}
+            bidEnabled ? 'bg-brand-green text-white hover:bg-brand-green/90' : 'cursor-not-allowed bg-white/10 text-white/30'
+          } ${guided && bidEnabled ? guidedRing : ''}`}
         >
           <span className="text-lg font-black uppercase">
             {t('auctionGame.bidAmount', { amount: formatMoney(minBid) })}

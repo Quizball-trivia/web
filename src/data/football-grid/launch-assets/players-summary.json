@@ -1,0 +1,55 @@
+{
+  "auditedAt": "2026-08-20T19:20:45.101Z",
+  "source": "public.football_players",
+  "totalRows": 50245,
+  "usableRows": 49659,
+  "excludedRows": 586,
+  "excludedByStatus": [
+    {
+      "status": "needs_review",
+      "count": 586
+    }
+  ],
+  "primaryPortraits": 49658,
+  "deterministicFallbacks": 1,
+  "fallbackPlayerIds": [
+    "7217ae63-70da-4482-82a7-18129b701733"
+  ],
+  "labelPolicy": {
+    "en": "display_name.en, then canonical name",
+    "ka": "display_name.ka, then official canonical name"
+  },
+  "imagePolicy": {
+    "primary": "validated first-party Supabase CDN URL",
+    "fallback": "Quizball-generated initials portrait on the first-party CDN"
+  },
+  "domains": [
+    {
+      "domain": "nsdfiprfmhdqhbfxfwpv.supabase.co",
+      "count": 49659
+    }
+  ],
+  "externalPortraits": 0,
+  "providerProbes": [
+    {
+      "playerId": "000084ce-98e1-4e68-a342-39f6766c4091",
+      "domain": "nsdfiprfmhdqhbfxfwpv.supabase.co",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "playerId": "0000d2f0-9d90-47e5-b38a-b027702b79ba",
+      "domain": "nsdfiprfmhdqhbfxfwpv.supabase.co",
+      "status": 200,
+      "ok": true
+    },
+    {
+      "playerId": "0001fb33-8a58-49a5-aee7-6a3702adadf9",
+      "domain": "nsdfiprfmhdqhbfxfwpv.supabase.co",
+      "status": 200,
+      "ok": true
+    }
+  ],
+  "malformedImageUrls": [],
+  "runtimeUnresolved": 0
+}

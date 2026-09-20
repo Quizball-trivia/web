@@ -6,7 +6,7 @@ import { ES } from "./i18n.es";
 import { TR } from "./i18n.tr";
 
 /**
- * Lightweight EN→KA copy layer for the mini-game prototypes. Keys are the
+ * Lightweight EN→KA/ES/TR copy layer for the mini-game prototypes. Keys are the
  * English strings themselves (with {slot} placeholders); anything missing
  * from the dictionary falls back to the English key, so untranslated copy
  * renders unchanged rather than breaking.
@@ -189,7 +189,7 @@ const KA: Record<string, string> = {
 
   // Free Kicks (formerly Final Third)
   "Free Kicks": "Free Kicks",
-  "Know football. Read the goal. Take the shot.": "Know football. Read the goal. Take the shot.",
+  "Know football. Read the goal. Take the shot.": "იცოდე ფეხბურთი. აირჩიე კუთხე. დაარტყი.",
   "Balance": "ბალანსი",
   "Pot": "ბანკი",
   "Your pot": "შენი ბანკი",
@@ -526,6 +526,7 @@ const KA: Record<string, string> = {
     "კარი იხსნება 2 ზონით და ერთი დამალული მეკარით. უპასუხე კითხვებს და გახსენი 6-მდე — არასწორი პასუხი ისევ 2-მდე ხურავს.",
   "{k} open · {pct}% · ×{mult}": "{k} ღია · {pct}% · ×{mult}",
   "Zone opened! {k} of {max} in play": "ზონა გაიხსნა! {k} {max}-დან თამაშშია",
+  "Pick your angle and shoot · {pot} → {next}": "აირჩიე კუთხე და დაარტყი · {pot} → {next}",
   "Wrong — goal slams back to {n} zones": "არასწორია — კარი ისევ {n} ზონამდე იხურება",
   "{k} zones open · 1 keeper hidden · {pct}% goal": "{k} ზონა ღიაა · 1 მეკარე იმალება · გოლის შანსი {pct}%",
   "Answer · open zone {n}": "უპასუხე · გახსენი ზონა {n}",
@@ -533,6 +534,7 @@ const KA: Record<string, string> = {
   "More zones = safer shot, smaller payout — the maths favours knowing.":
     "მეტი ზონა = უფრო უსაფრთხო დარტყმა, ნაკლები კოეფიციენტი — მათემატიკა ცოდნის მხარესაა.",
   "Opening the goal…": "კარი იხსნება…",
+  "Read the question…": "წაიკითხე კითხვა…",
   "Time's up — the goal slams back to {n} zones": "დრო ამოიწურა — კარი ისევ {n} ზონამდე იხურება",
   "Wrong — the goal slams back to {n} zones": "არასწორია — კარი ისევ {n} ზონამდე იხურება",
   "{k} zones open — one hides the keeper": "{k} ზონა ღიაა — ერთში მეკარე იმალება",

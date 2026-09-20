@@ -1,0 +1,373 @@
+'use client';
+
+import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useRealtimeMatchSocket } from '@/lib/realtime/useRealtimeConnection';
+import { useFootballGridStore } from '@/stores/footballGrid.store';
+import type { FootballGridState } from '@/lib/realtime/socket.types';
+import { createRealtimeCommandId } from '@/lib/realtime/command-id';
+import { markGridMatchLeftBehind } from '@/lib/realtime/socket-handlers';
+
+interface UseRealtimeFootballGridOptions {
+  enabled: boolean;
+  selfUserId: string | null;
+  locale: 'en' | 'ka';
+  /** League pack to queue for; defaults to the full European mix. */
+  theme?: string;
+  autoStart?: boolean;
+  /**
+   * 'queue' (default) searches for a human with the bot fallback; 'practice_bot'
+   * is the guest "Play now" path — the server pairs a bot immediately. Every
+   * start, retry and reconnect re-emit goes through the same mode.
+   */
+  startMode?: 'queue' | 'practice_bot';
+  /** Board artwork warmed — the client only reports ready once it can render the reveal. */
+  assetsReady?: boolean;
+}
+
+const PENDING_COMMAND_TIMEOUT_MS = 5_000;
+const BARRIER_RETRY_INITIAL_MS = 1_000;
+const BARRIER_RETRY_MAX_MS = 4_000;
+
+function versionedCommand(state: FootballGridState) {
+  return {
+    matchId: state.matchId,
+    commandId: createRealtimeCommandId(),
+    expectedStateVersion: state.stateVersion,
+  };
+}
+
+export function useRealtimeFootballGrid({
+  enabled,
+  selfUserId,
+  locale,
+  theme = 'european',
+  autoStart = true,
+  startMode = 'queue',
+  assetsReady = true,
+}: UseRealtimeFootballGridOptions) {
+  const socket = useRealtimeMatchSocket({ enabled, selfUserId });
+  // A start whose server reply has not arrived yet: a disconnect in that window
+  // would otherwise lose it (the store is still idle, so reconnect would not retry).
+  const startPendingRef = useRef(false);
+  const emitStart = useCallback(() => {
+    startPendingRef.current = true;
+    if (startMode === 'practice_bot') socket.emit('grid:practice_bot_start', { locale, theme });
+    else socket.emit('grid:search_start', { locale, theme });
+  }, [locale, socket, startMode, theme]);
+  const search = useFootballGridStore((current) => current.search);
+  const state = useFootballGridStore((current) => current.state);
+  useEffect(() => {
+    // The server answered (search state or a match): nothing is pending any more.
+    if (search.state !== 'idle' || state) startPendingRef.current = false;
+  }, [search.state, state]);
+  const opponent = useFootballGridStore((current) => current.opponent);
+  const capabilities = useFootballGridStore((current) => current.capabilities);
+  const completed = useFootballGridStore((current) => current.completed);
+  const series = useFootballGridStore((current) => current.series);
+  const lastGameResult = useFootballGridStore((current) => current.lastGameResult);
+  const rematch = useFootballGridStore((current) => current.rematch);
+  const commandResult = useFootballGridStore((current) => current.lastCommandResult);
+  const turnResolved = useFootballGridStore((current) => current.lastTurnResolved);
+  const pendingCommandId = useFootballGridStore((current) => current.pendingCommandId);
+  const reportedAttemptIds = useFootballGridStore((current) => current.reportedAttemptIds);
+  const error = useFootballGridStore((current) => current.error);
+  const serverTimeOffsetMs = useFootballGridStore((current) => current.serverTimeOffsetMs);
+  const autoStartAttemptedRef = useRef(false);
+  const searchSuppressedRef = useRef(false);
+  const barrierCommandRef = useRef<{ key: string; commandId: string } | null>(null);
+  const acknowledgedCompletionTokenRef = useRef<string | null>(null);
+
+  const startSearch = useCallback(() => {
+    if (!enabled) return;
+    searchSuppressedRef.current = false;
+    autoStartAttemptedRef.current = true;
+    // Mark BEFORE the reset: beginFreshSearch() nulls the match, so this is the
+    // last moment the outgoing match id is observable.
+    markGridMatchLeftBehind(useFootballGridStore.getState().state?.matchId);
+    useFootballGridStore.getState().beginFreshSearch();
+    emitStart();
+  }, [emitStart, enabled]);
+
+  useEffect(() => {
+    if (!enabled || !autoStart || autoStartAttemptedRef.current || searchSuppressedRef.current) return;
+    // A terminal state does NOT block auto-start: setCompleted writes both
+    // `completed` and a terminal `state`, so guarding on `state` alone made the
+    // stale-result branch below unreachable and stranded the player on an old
+    // results screen instead of starting the search they asked for.
+    if ((state && state.phase !== 'terminal') || search.state !== 'idle') return;
+    if (completed) {
+      // A redelivered result from a match that terminated while the user was
+      // away (e.g. a disconnect forfeit) landed just as they pressed PLAY.
+      // Let the ack effect commit it first (rAF), then clear it and start the
+      // fresh search — ranked/auction parity: the PLAY intent always wins
+      // over a stale result screen. The guard is set now, not in the timer:
+      // any store write inside the 250ms window re-runs this effect, and the
+      // cleanup would otherwise cancel and re-arm the timer indefinitely.
+      autoStartAttemptedRef.current = true;
+      const timerId = window.setTimeout(() => {
+        markGridMatchLeftBehind(useFootballGridStore.getState().state?.matchId);
+        useFootballGridStore.getState().beginFreshSearch();
+        emitStart();
+      }, 250);
+      return () => window.clearTimeout(timerId);
+    }
+    autoStartAttemptedRef.current = true;
+    emitStart();
+  }, [autoStart, completed, emitStart, enabled, search.state, state]);
+
+  useEffect(() => {
+    if (!enabled) return;
+    const handleConnect = () => {
+      // Reconcile before retrying. The barrier retry keeps its command ID
+      // across reconnects until the authoritative version changes.
+      const latest = useFootballGridStore.getState();
+      if (latest.state?.matchId) {
+        socket.emit('grid:resync', { matchId: latest.state.matchId });
+      } else if ((latest.search.state === 'searching' || startPendingRef.current) && !searchSuppressedRef.current) {
+        emitStart();
+      }
+    };
+    socket.on('connect', handleConnect);
+    return () => {
+      socket.off('connect', handleConnect);
+    };
+  }, [emitStart, enabled, socket]);
+
+  const selfParticipant = state?.players.find((player) => player.userId === selfUserId);
+  const barrierEvent = state?.phase === 'handoff' && selfParticipant && !selfParticipant.handoffAcknowledged
+    ? 'grid:match_found_ack'
+    : state?.phase === 'loading' && selfParticipant && !selfParticipant.ready && assetsReady
+      ? 'grid:client_ready'
+      : null;
+  const barrierMatchId = state?.matchId;
+  const barrierVersion = state?.stateVersion;
+
+  useEffect(() => {
+    if (!enabled || !selfUserId || !barrierEvent || !barrierMatchId || barrierVersion === undefined) return;
+    const key = `${selfUserId}:${barrierEvent}:${barrierMatchId}:${barrierVersion}`;
+    if (barrierCommandRef.current?.key !== key) {
+      barrierCommandRef.current = { key, commandId: createRealtimeCommandId() };
+    }
+    const command = {
+      matchId: barrierMatchId,
+      commandId: barrierCommandRef.current.commandId,
+      expectedStateVersion: barrierVersion,
+    };
+    let retryDelayMs = BARRIER_RETRY_INITIAL_MS;
+    let timerId: number;
+    const send = (retry: boolean) => {
+      const latest = useFootballGridStore.getState().state;
+      const me = latest?.players.find((player) => player.userId === selfUserId);
+      if (latest?.matchId !== barrierMatchId || latest.stateVersion !== barrierVersion || !me) return;
+      const waiting = barrierEvent === 'grid:client_ready'
+        ? latest.phase === 'loading' && !me.ready
+        : latest.phase === 'handoff' && !me.handoffAcknowledged;
+      if (!waiting) return;
+      // Do not accumulate buffered commands while the transport is offline.
+      if (socket.connected) {
+        socket.emit(barrierEvent, command);
+        if (retry) socket.emit('grid:resync', { matchId: barrierMatchId });
+      }
+      timerId = window.setTimeout(() => send(true), retryDelayMs);
+      retryDelayMs = Math.min(retryDelayMs * 2, BARRIER_RETRY_MAX_MS);
+    };
+    send(false);
+    return () => window.clearTimeout(timerId);
+  }, [barrierEvent, barrierMatchId, barrierVersion, enabled, selfUserId, socket]);
+
+  const activeMatchId = state?.matchId ?? null;
+  const activeMatchIsTerminal = state?.phase === 'terminal';
+  const handoffAcknowledged = Boolean(
+    selfUserId && state?.players.find((player) => player.userId === selfUserId)?.handoffAcknowledged,
+  );
+
+  useEffect(() => {
+    if (!enabled || !activeMatchId || activeMatchIsTerminal || !handoffAcknowledged) return;
+    const heartbeat = () => socket.emit('grid:presence_heartbeat', { matchId: activeMatchId });
+    heartbeat();
+    const intervalId = window.setInterval(heartbeat, 5_000);
+    return () => window.clearInterval(intervalId);
+  }, [activeMatchId, activeMatchIsTerminal, enabled, handoffAcknowledged, socket]);
+
+  useEffect(() => {
+    if (!enabled || !pendingCommandId) return;
+    const timerId = window.setTimeout(() => {
+      const latest = useFootballGridStore.getState();
+      if (latest.pendingCommandId !== pendingCommandId) return;
+      latest.markCommandPending(null);
+      if (latest.state?.matchId) {
+        socket.emit('grid:resync', { matchId: latest.state.matchId });
+      }
+    }, PENDING_COMMAND_TIMEOUT_MS);
+    return () => window.clearTimeout(timerId);
+  }, [enabled, pendingCommandId, socket]);
+
+  // The terminal outbox is acknowledged only after React has committed the
+  // full results payload. A reload before this effect simply causes the server
+  // to redeliver it with a fresh token, so results are never lost in transit.
+  useEffect(() => {
+    if (!completed || acknowledgedCompletionTokenRef.current === completed.ackToken) return;
+    const frameId = window.requestAnimationFrame(() => {
+      acknowledgedCompletionTokenRef.current = completed.ackToken;
+      socket.emit('grid:completed_ack', {
+        matchId: completed.matchId,
+        terminalStateVersion: completed.terminalStateVersion,
+        ackToken: completed.ackToken,
+      });
+    });
+    return () => window.cancelAnimationFrame(frameId);
+  }, [completed, socket]);
+
+  const cancelSearch = useCallback(() => {
+    searchSuppressedRef.current = true;
+    startPendingRef.current = false;
+    const current = useFootballGridStore.getState();
+    current.requestSearchCancellation();
+    if (current.search.searchId) socket.emit('grid:search_cancel', { searchId: current.search.searchId });
+  }, [socket]);
+
+  const submitAnswer = useCallback((cellIndex: number, text: string) => {
+    const current = useFootballGridStore.getState();
+    const snapshot = current.state;
+    if (
+      !snapshot ||
+      !selfUserId ||
+      snapshot.phase !== 'turn' ||
+      snapshot.currentPlayerUserId !== selfUserId ||
+      current.pendingCommandId ||
+      snapshot.claims.some((claim) => claim.cellIndex === cellIndex) ||
+      !text.trim()
+    ) return false;
+    const command = versionedCommand(snapshot);
+    current.markCommandPending(command.commandId);
+    socket.emit('grid:submit_answer', {
+      ...command,
+      cellIndex,
+      text: text.trim(),
+      locale,
+    });
+    return true;
+  }, [locale, selfUserId, socket]);
+
+  const pass = useCallback(() => {
+    const current = useFootballGridStore.getState();
+    const snapshot = current.state;
+    if (
+      !snapshot ||
+      !selfUserId ||
+      snapshot.phase !== 'turn' ||
+      snapshot.currentPlayerUserId !== selfUserId ||
+      current.pendingCommandId
+    ) return false;
+    const command = versionedCommand(snapshot);
+    current.markCommandPending(command.commandId);
+    socket.emit('grid:pass', command);
+    return true;
+  }, [selfUserId, socket]);
+
+  const forfeit = useCallback(() => {
+    const current = useFootballGridStore.getState();
+    if (!current.state || current.state.phase === 'terminal' || current.pendingCommandId) return false;
+    const command = versionedCommand(current.state);
+    current.markCommandPending(command.commandId);
+    socket.emit('grid:forfeit', command);
+    return true;
+  }, [socket]);
+
+  /** Offers a draw during a live turn (either player's). Lapses when the turn ends. */
+  const offerDraw = useCallback(() => {
+    const current = useFootballGridStore.getState();
+    const snapshot = current.state;
+    if (!snapshot || !selfUserId || snapshot.phase !== 'turn' || snapshot.drawOffer || current.pendingCommandId) return false;
+    const me = snapshot.players.find((player) => player.userId === selfUserId);
+    if (me && (me.drawOfferLockedUntilTurn ?? 0) > snapshot.turnNumber) return false;
+    const command = versionedCommand(snapshot);
+    current.markCommandPending(command.commandId);
+    socket.emit('grid:draw_offer', command);
+    return true;
+  }, [selfUserId, socket]);
+
+  const respondToDraw = useCallback((accept: boolean) => {
+    const current = useFootballGridStore.getState();
+    const snapshot = current.state;
+    if (!snapshot || !selfUserId || !snapshot.drawOffer || snapshot.drawOffer.byUserId === selfUserId || current.pendingCommandId) return false;
+    const command = versionedCommand(snapshot);
+    current.markCommandPending(command.commandId);
+    socket.emit('grid:draw_respond', { ...command, accept });
+    return true;
+  }, [selfUserId, socket]);
+
+  const reportMissingAnswer = useCallback((attemptId: string) => {
+    const current = useFootballGridStore.getState();
+    if (!attemptId || current.reportedAttemptIds.includes(attemptId)) return false;
+    socket.emit('grid:report_missing_answer', { attemptId });
+    return true;
+  }, [socket]);
+
+  const acceptRematch = useCallback(() => {
+    const current = useFootballGridStore.getState();
+    if (!current.completed || !current.rematch || current.rematch.status !== 'pending') return false;
+    socket.emit('grid:rematch_accept', {
+      matchId: current.completed.matchId,
+      commandId: createRealtimeCommandId(),
+      expectedSeriesVersion: current.rematch.seriesVersion,
+    });
+    return true;
+  }, [socket]);
+
+  const declineRematch = useCallback(() => {
+    const current = useFootballGridStore.getState();
+    if (!current.completed || !current.rematch || current.rematch.status !== 'pending') return false;
+    socket.emit('grid:rematch_decline', {
+      matchId: current.completed.matchId,
+      expectedSeriesVersion: current.rematch.seriesVersion,
+    });
+    return true;
+  }, [socket]);
+
+  const clear = useCallback(() => {
+    searchSuppressedRef.current = true;
+    useFootballGridStore.getState().clear();
+  }, []);
+
+  const clearCommandFeedback = useCallback(() => {
+    useFootballGridStore.getState().clearCommandFeedback();
+  }, []);
+
+  const me = useMemo(
+    () => state?.players.find((player) => player.userId === selfUserId) ?? null,
+    [selfUserId, state],
+  );
+
+  return {
+    search,
+    state,
+    series,
+    lastGameResult,
+    me,
+    opponent,
+    capabilities,
+    completed,
+    rematch,
+    commandResult,
+    turnResolved,
+    pendingCommandId,
+    reportedAttemptIds,
+    error,
+    serverTimeOffsetMs,
+    actions: {
+      startSearch,
+      cancelSearch,
+      submitAnswer,
+      pass,
+      forfeit,
+      offerDraw,
+      respondToDraw,
+      reportMissingAnswer,
+      acceptRematch,
+      declineRematch,
+      clearCommandFeedback,
+      clear,
+    },
+  };
+}

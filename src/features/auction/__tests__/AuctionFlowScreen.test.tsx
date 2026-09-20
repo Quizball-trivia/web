@@ -4,9 +4,15 @@ import type { UseRealtimeAuctionMatchParams } from '../realtime/useRealtimeAucti
 import { AuctionFlowScreen } from '../AuctionFlowScreen';
 
 const pushMock = vi.fn();
+vi.mock('@/lib/realtime/realtime-principal', () => ({
+  useRealtimePrincipal: () => authSnapshot.current.status === 'authenticated' && authSnapshot.current.user ? { kind: 'member', userId: authSnapshot.current.user.id } : { kind: 'none', userId: null },
+  useEnsureGuestPrincipal: () => 'refused',
+}));
+vi.mock('@/features/friend/components/GuestResultsCta', () => ({ GuestResultsCta: () => null }));
 
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: pushMock }),
+  useRouter: () => ({ push: pushMock, replace: pushMock }),
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 vi.mock('@/contexts/LocaleContext', () => ({

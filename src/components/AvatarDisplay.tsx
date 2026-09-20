@@ -14,6 +14,8 @@ interface AvatarDisplayProps {
   countryCode?: string | null;
   /** Frame shape — circle (default) keeps the legacy rounded look, square renders inside a rounded-square frame. */
   shape?: 'circle' | 'square';
+  /** Optional first-party resolver used by surfaces with a dedicated CDN policy. */
+  assetResolver?: (asset: string) => string;
 }
 
 const flagSizeClasses = {
@@ -51,11 +53,13 @@ export function AvatarDisplay({
   className = '',
   countryCode,
   shape = 'circle',
+  assetResolver,
 }: AvatarDisplayProps) {
   const normalizedCountryCode = normalizeCountryCode(countryCode);
 
   const merged = resolveAvatarCustomization(customization);
   const skinAsset = getSkinPart(merged.skin).asset;
+  const resolveAsset = (asset: string) => assetResolver?.(asset) ?? asset;
 
   const cropClass = shape === 'circle' ? 'rounded-full' : 'rounded-2xl';
 
@@ -74,16 +78,16 @@ export function AvatarDisplay({
         {/* Wrapper at canonical Figma aspect ratio so item % positions land precisely.
             h-[88%] leaves ~6% top/bottom margin so the figure's head/feet don't clip the rounded crop. */}
         <div className="relative h-[88%]" style={{ aspectRatio: '495.25 / 543.03' }}>
-          <AvatarLayers customization={merged} placement="back" />
+          <AvatarLayers assetResolver={assetResolver} customization={merged} placement="back" />
       <Image
-            src={skinAsset}
+            src={resolveAsset(skinAsset)}
             alt="Avatar"
             fill
             sizes={imageSizes[size]}
             quality={60}
             className="object-contain"
           />
-          <AvatarLayers customization={merged} />
+          <AvatarLayers assetResolver={assetResolver} customization={merged} />
         </div>
       </div>
 
@@ -95,7 +99,9 @@ export function AvatarDisplay({
           )}
         >
           <Image
-            src={`https://flagcdn.com/w80/${normalizedCountryCode}.png`}
+            src={assetResolver
+              ? resolveAsset(`/assets/football-grid/flags/${normalizedCountryCode}.svg`)
+              : `https://flagcdn.com/w80/${normalizedCountryCode}.png`}
             alt={normalizedCountryCode}
             width={40}
             height={30}

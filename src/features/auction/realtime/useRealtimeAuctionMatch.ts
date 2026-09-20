@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { useRealtimeConnection } from '@/lib/realtime/useRealtimeConnection';
+import { useRealtimeMatchSocket } from '@/lib/realtime/useRealtimeConnection';
 import { reconnectSocket } from '@/lib/realtime/socket-client';
 import { logger } from '@/utils/logger';
 import type { AuctionActions, AuctionPendingTurnAction } from '../hooks/useAuctionGame';
@@ -50,7 +50,7 @@ import {
 } from './auction-realtime.reducer';
 
 const POST_CONNECT_AUCTION_HYDRATION_GRACE_MS = 500;
-const LAST_AUCTION_MATCH_KEY = 'auction:last_match_id';
+import { LAST_AUCTION_MATCH_KEY } from '@/stores/auctionActiveMatch.store';
 const VERSION_GAP_RECONNECT_DELAY_MS = 250;
 // If a match is found but no state arrives in this window, reconnect once to
 // force the server's rejoin (which joins the match room and re-emits state).
@@ -67,7 +67,8 @@ type AuctionConnectionStatus =
 export interface UseRealtimeAuctionMatchParams {
   enabled: boolean;
   autoStart?: boolean;
-  matchmakingMode?: 'ai' | 'search';
+  /** 'practice' = guest "Play now": the server seats anonymous bots immediately (no queue, no AP). */
+  matchmakingMode?: 'ai' | 'search' | 'practice';
   /**
    * Attach to an already-created match instead of starting matchmaking. Set when
    * the screen is entered with a match already running (friend-lobby hand-off, or
@@ -182,7 +183,7 @@ export function useRealtimeAuctionMatch({
   humanAvatarSeed,
   humanAvatarCustomization,
 }: UseRealtimeAuctionMatchParams): UseRealtimeAuctionMatchResult {
-  const socket = useRealtimeConnection({ enabled, selfUserId });
+  const socket = useRealtimeMatchSocket({ enabled, selfUserId });
   const [isConnected, setIsConnected] = useState(() => socket.connected);
   const [realtimeState, setRealtimeState] = useState<AuctionRealtimeState>(
     EMPTY_AUCTION_REALTIME_STATE,
@@ -443,7 +444,8 @@ export function useRealtimeAuctionMatch({
     }
 
     setSearchValue(null);
-    socket.emit('auction:start_ai_match', { locale: locale, formation });
+    if (matchmakingMode === 'practice') socket.emit('auction:practice_bot_start', { locale: locale, formation });
+    else socket.emit('auction:start_ai_match', { locale: locale, formation });
   }, [
     emitAuctionSearchStart,
     enabled,
@@ -470,6 +472,17 @@ export function useRealtimeAuctionMatch({
           Boolean(activeMatchIdRef.current));
       if (belongsToLiveMatch) {
         emitAuctionRejoinForActiveMatch();
+      } else if (
+        enabled &&
+        autoStart &&
+        matchmakingMode === 'practice' &&
+        startRequestedRef.current &&
+        !searchCancelledRef.current &&
+        !publicStateRef.current
+      ) {
+        // A practice start lost to a connection drop is retried: the server
+        // re-attaches the guest to a table that did get created (idempotent).
+        socket.emit('auction:practice_bot_start', { locale: locale, formation });
       } else if (
         enabled &&
         autoStart &&
@@ -507,7 +520,7 @@ export function useRealtimeAuctionMatch({
       socket.off('connect', handleConnect);
       socket.off('disconnect', handleDisconnect);
     };
-  }, [autoStart, emitAuctionRejoinForActiveMatch, emitAuctionSearchStart, emitRevealReadyIfComplete, enabled, matchmakingMode, socket]);
+  }, [autoStart, emitAuctionRejoinForActiveMatch, emitAuctionSearchStart, emitRevealReadyIfComplete, enabled, formation, locale, matchmakingMode, socket]);
 
   useEffect(() => {
     if (!enabled || !selfUserId) {

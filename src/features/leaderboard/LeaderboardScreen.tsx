@@ -12,6 +12,8 @@ import {
   useAuctionUserRank,
   useLeaderboard,
   useLeaderboardSeasons,
+  useTicTacToeLeaderboard,
+  useTicTacToeUserRank,
   useUserRank,
 } from "@/lib/queries/leaderboard.queries";
 import type { LeaderboardType } from "@/lib/domain/leaderboard";
@@ -20,6 +22,8 @@ import { cn } from "@/lib/utils";
 import type { MessageKey } from "@/lib/i18n/messages";
 
 import { useActiveEventMode } from "@/lib/hooks/useActiveEventMode";
+import { useAuthStore } from "@/stores/auth.store";
+import { useAuthPromptStore } from "@/stores/authPrompt.store";
 import { LeaderboardTable } from "./components/LeaderboardTable";
 import { LeaderboardPodium } from "./components/LeaderboardPodium";
 import { LeaderboardSelect, type LeaderboardSelectOption } from "./components/LeaderboardSelect";
@@ -41,13 +45,13 @@ const TABS: { value: LeaderboardType; labelKey: MessageKey }[] = [
   { value: "country", labelKey: "leaderboard.tabCountry" },
 ];
 
-/** Which game mode's board is shown. Ranked keeps seasons + RP; auction is a
- *  single all-time board scored in Auction Points. */
-type LeaderboardMode = "ranked" | "auction";
+/** Ranked keeps seasons + RP. Auction/AP and Tic Tac Toe/TP are all-time. */
+type LeaderboardMode = "ranked" | "auction" | "ticTacToe";
 
 const MODE_TABS: { value: LeaderboardMode; labelKey: MessageKey }[] = [
   { value: "ranked", labelKey: "leaderboard.tabRanked" },
   { value: "auction", labelKey: "leaderboard.tabAuction" },
+  { value: "ticTacToe", labelKey: "leaderboard.tabTicTacToe" },
 ];
 
 /** Stands in for `seasonId === null` (the live season) inside the select, which
@@ -59,37 +63,62 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
   const { t } = useLocale();
   const { isEventMode } = useActiveEventMode();
   const [activeTab, setActiveTab] = useState<LeaderboardType>("global");
+  // Signed-out visitors browse the global boards; the country board and
+  // player profiles need an account, so those open the sign-in dialog.
+  const isGuest = useAuthStore((state) => state.status) !== "authenticated";
+  const openAuthPrompt = useAuthPromptStore((state) => state.open);
+  // A guest always reads the global board, even if the tab state still says country (sign-out mid-visit).
+  const effectiveTab: LeaderboardType = isGuest ? "global" : activeTab;
   const [mode, setMode] = useState<LeaderboardMode>("ranked");
   const [seasonId, setSeasonId] = useState<string | null>(null);
 
   const isAuction = mode === "auction";
+  const isTicTacToe = mode === "ticTacToe";
+  const isRanked = mode === "ranked";
 
   const { data: seasonsData } = useLeaderboardSeasons();
   const archivedSeasons = useMemo(() => seasonsData?.seasons ?? [], [seasonsData]);
   const currentSeasonNumber = seasonsData?.currentSeasonNumber ?? archivedSeasons.length + 1;
   // Seasons are a ranked-only concept; the auction board is all-time.
-  const isArchivedView = !isAuction && seasonId !== null;
+  const isArchivedView = isRanked && seasonId !== null;
 
   // Only the visible mode fetches; switching tabs kicks off the other board.
   const rankedBoard = useLeaderboard(
-    activeTab,
+    effectiveTab,
     currentPlayerId,
     seasonId ?? undefined,
-    !isAuction,
+    isRanked,
   );
-  const auctionBoard = useAuctionLeaderboard(activeTab, currentPlayerId, isAuction);
-  const { data: entries, isLoading, isError } = isAuction ? auctionBoard : rankedBoard;
+  const auctionBoard = useAuctionLeaderboard(effectiveTab, currentPlayerId, isAuction);
+  const ticTacToeBoard = useTicTacToeLeaderboard(effectiveTab, currentPlayerId, isTicTacToe);
+  const activeBoard = isAuction ? auctionBoard : isTicTacToe ? ticTacToeBoard : rankedBoard;
+  const { data: entries, isLoading, isError } = activeBoard;
 
   const rankedUserRank = useUserRank(
     currentPlayerId ?? "",
     activeTab,
     seasonId ?? undefined,
-    !isAuction,
+    isRanked,
   );
   const auctionUserRank = useAuctionUserRank(currentPlayerId ?? "", activeTab, isAuction);
-  const { data: userRank } = isAuction ? auctionUserRank : rankedUserRank;
+  const ticTacToeUserRank = useTicTacToeUserRank(currentPlayerId ?? "", activeTab, isTicTacToe);
+  const activeUserRank = isAuction
+    ? auctionUserRank
+    : isTicTacToe
+      ? ticTacToeUserRank
+      : rankedUserRank;
+  const { data: userRank } = activeUserRank;
 
-  const pointsUnit = isAuction ? t("leaderboard.colAP") : t("leaderboard.colRP");
+  const pointsUnit = isAuction
+    ? t("leaderboard.colAP")
+    : isTicTacToe
+      ? t("leaderboard.colTP")
+      : t("leaderboard.colRP");
+  const subtitle = isAuction
+    ? t("leaderboard.auctionSubtitle")
+    : isTicTacToe
+      ? t("leaderboard.ticTacToeSubtitle")
+      : t("leaderboard.subtitle");
 
   const accentHex = isEventMode ? "#FF6C0A" : undefined;
 
@@ -110,11 +139,12 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
   );
 
   const regionOptions = useMemo<LeaderboardSelectOption<LeaderboardType>[]>(
-    () => TABS.map((tab) => ({ value: tab.value, label: t(tab.labelKey) })),
-    [t],
+    () => TABS.filter((tab) => !isGuest || tab.value === "global").map((tab) => ({ value: tab.value, label: t(tab.labelKey) })),
+    [t, isGuest],
   );
 
   const handleEntryClick = (userId: string) => {
+    if (isGuest) { openAuthPrompt(); return; }
     // Prefer the unique nickname for a shareable URL; ids keep working.
     // profileHandle guards the null-nickname 'Player' fallback rows (review).
     const nickname = entries?.find((e) => e.id === userId)?.username;
@@ -148,7 +178,7 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
               {t("leaderboard.title")}
             </h1>
             <p className="mt-2 text-[11px] sm:text-[13px] font-black uppercase tracking-[0.08em] text-white/70">
-              {isAuction ? t("leaderboard.auctionSubtitle") : t("leaderboard.subtitle")}
+              {subtitle}
             </p>
           </div>
 
@@ -172,7 +202,7 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
             transition={{ duration: 0.35, delay: 0.05 }}
             className="relative"
           >
-            <UserRankStrip userEntry={userEntry} pointsUnit={pointsUnit} hideTier={isAuction} />
+            <UserRankStrip userEntry={userEntry} pointsUnit={pointsUnit} hideTier={!isRanked} />
             {/* Betsson badge — event only, sits on the top-right border edge */}
             {isEventMode && (
               <div
@@ -196,7 +226,7 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
         >
           <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3 border-b border-white/10">
             <div
-              className="flex items-center gap-7"
+                className="flex items-center gap-4 sm:gap-7"
               role="tablist"
               aria-label={t("leaderboard.modeTablistAriaLabel")}
             >
@@ -230,8 +260,8 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
 
             {/* Full width on phones so the selects wrap under the tabs instead of collapsing beside them. */}
             <div className="flex w-full items-center justify-end gap-2 pb-2 sm:w-auto">
-              {/* Seasons are ranked-only; the auction board is all-time. */}
-              {!isAuction && seasonOptions.length > 1 && (
+              {/* Seasons are ranked-only; AP and TP boards are all-time. */}
+              {isRanked && seasonOptions.length > 1 && (
                 <LeaderboardSelect
                   eyebrow={t("leaderboard.seasonEyebrow")}
                   ariaLabel={t("leaderboard.seasonSelectAriaLabel")}
@@ -249,7 +279,7 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
                 ariaLabel={t("leaderboard.regionSelectAriaLabel")}
                 icon={Globe}
                 options={regionOptions}
-                value={activeTab}
+                value={effectiveTab}
                 onChange={setActiveTab}
                 accentHex={accentHex}
               />
@@ -310,10 +340,10 @@ export function LeaderboardScreen({ currentPlayerId }: LeaderboardScreenProps) {
                 {t("leaderboard.rankings")}
               </h2>
 
-              {entries.length === 0 && isAuction ? (
+              {entries.length === 0 && !isRanked ? (
                 <div className="rounded-[10px] border-2 border-white/10 px-4 py-8 text-center">
                   <p className="text-sm font-fun font-black uppercase tracking-wide text-white/60">
-                    {t("leaderboard.auctionEmpty")}
+                    {isAuction ? t("leaderboard.auctionEmpty") : t("leaderboard.ticTacToeEmpty")}
                   </p>
                 </div>
               ) : (

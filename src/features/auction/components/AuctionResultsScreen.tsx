@@ -111,11 +111,15 @@ export function AuctionResultsScreen({
   apEarned,
   forfeited = false,
   removed = false,
+  playAgainLabel,
+  exitLabel,
 }: {
   state: AuctionGameState;
   humanPlayerId: string;
   onPlayAgain: () => void;
   onExit: () => void;
+  playAgainLabel?: string;
+  exitLabel?: string;
   /** Coins this player earned (500 win / 300 finish). 0/null = none shown. */
   coinsAwarded?: number | null;
   /** Auction Points this player earned (1st +50 / 2nd +30 / 3rd +10). Absent or
@@ -457,10 +461,10 @@ export function AuctionResultsScreen({
           className="mx-auto flex w-full max-w-[498px] flex-col items-stretch gap-3 pt-2"
         >
           <AuctionPrimaryButton onClick={onPlayAgain} size="wide">
-            {t('auctionGame.playAgain')}
+            {playAgainLabel ?? t('auctionGame.playAgain')}
           </AuctionPrimaryButton>
           <AuctionPrimaryButton onClick={onExit} size="wide" variant="outline">
-            {t('auctionGame.exit')}
+            {exitLabel ?? t('auctionGame.exit')}
           </AuctionPrimaryButton>
         </motion.div>
       </motion.div>

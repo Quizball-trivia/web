@@ -4,6 +4,9 @@ import { SITE_URL } from "@/lib/seo/site";
 import { LOCALES } from "@/lib/i18n/locale";
 import { campaignQuizPath } from "@/features/campaign-quiz/campaignQuiz.routes";
 
+import { SEO_PAGE_LOCALES, dailyCollectionPath, gamePagePath } from "@/lib/seo/game-pages";
+import { PUBLISHED_PUBLIC_GAMES, publishedLocalesOf } from "@/lib/seo/public-games";
+export const dynamic = 'force-dynamic';
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entry = (
     path: string,
@@ -29,7 +32,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     number,
     Date?,
   ]> = [
-    ["", "daily", 1],
+    // "" = the locale homepage (/en, /ka, /es), which is the Football Games hub.
+    ["", "weekly", 1.0],
     ["/about", "monthly", 0.7, editorialContentUpdated],
     ["/editorial-methodology", "monthly", 0.6, editorialContentUpdated],
     ["/terms", "yearly", 0.3],
@@ -53,19 +57,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const pressResourceEntries = (["en", "es"] as const).map((locale) =>
     entry(`/${locale}/press`, "monthly", 0.6, editorialContentUpdated),
   );
+  // One indexable page per released public game (localized folder + slug) plus the daily collection.
+  // No lastModified for the game pages: a single hardcoded date for every page is noise to crawlers.
+  const gamePageEntries = SEO_PAGE_LOCALES.flatMap((locale) => [
+    entry(dailyCollectionPath(locale), "daily", 0.8),
+    ...PUBLISHED_PUBLIC_GAMES.filter((game) => publishedLocalesOf(game).includes(locale)).map((game) => entry(gamePagePath(game, locale), "weekly", 0.8)),
+  ]);
 
   const validLastModified = (value: string): Date | undefined => {
     const date = new Date(value);
     return Number.isNaN(date.getTime()) ? undefined : date;
   };
 
-  let campaignPages: Awaited<ReturnType<typeof listCampaignQuizPages>>;
-  try {
-    campaignPages = await listCampaignQuizPages('en');
-  } catch {
-    // Do not revive unpublished/deleted pages from a hardcoded fallback.
-    campaignPages = [];
-  }
+  // Fail on an unavailable catalog instead of returning a successful, incomplete sitemap.
+  const campaignPages = await listCampaignQuizPages('en');
 
   const campaignEntries: MetadataRoute.Sitemap = [
     entry(
@@ -118,6 +123,8 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   return [
+    // The homepage: the Play page served at the bare domain (guest state is server-rendered).
+    ...gamePageEntries,
     ...localizedEntries,
     ...researchReportEntries,
     ...pressResourceEntries,

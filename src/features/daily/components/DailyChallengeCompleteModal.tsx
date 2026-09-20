@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "motion/react";
-import { Bell, Check, ChevronRight, Flame, Target, Ticket, Trophy } from "lucide-react";
+import { Bell, Check, ChevronRight, Flame, Target, Ticket } from "lucide-react";
+import { BrandIcon } from "@/components/brand/BrandIcon";
 import { useLocale } from "@/contexts/LocaleContext";
 import { getWeekendLeagueCurrent } from "@/lib/api/endpoints";
 import {
@@ -31,6 +32,7 @@ import {
   setDailyComebackReminder,
 } from "@/lib/repositories/dailyChallenges.repo";
 import { useAuthStore } from "@/stores/auth.store";
+import { DailyNextUpRow } from "./DailyNextUpRow";
 
 export interface DailyChallengeWeekendLeagueCta {
   state: DailyWeekendLeagueCtaState;
@@ -54,6 +56,13 @@ interface DailyChallengeCompleteModalProps {
   correct: number;
   total: number;
   onDone: (nextPath?: string) => void;
+  /** Sample / training round: no Weekend League, comeback or reminder prompts, no member queries. */
+  practice?: boolean;
+  /** Games scored in coins or points rather than correct answers show this instead of "N / total". */
+  scoreLabel?: string;
+  scoreValue?: string;
+  /** The challenge just finished — kept out of the next-up suggestions (its completion is still being saved). */
+  challengeType?: string;
 }
 
 export function DailyChallengeCompleteModal({
@@ -62,15 +71,33 @@ export function DailyChallengeCompleteModal({
   correct,
   total,
   onDone,
+  practice = false,
+  scoreLabel,
+  scoreValue,
+  challengeType,
 }: DailyChallengeCompleteModalProps) {
   if (!open) return null;
 
-  const contentProps = { title, correct, total, onDone };
+  // Practice / sample rounds: the sample result card is the one and only end
+  // screen, so this modal finishes immediately instead of stacking on it.
+  if (practice) return <PracticeAutoDone onDone={onDone} />;
+
+  const contentProps = { title, correct, total, onDone, practice, scoreLabel, scoreValue, challengeType };
   if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) {
     return <DailyChallengeCompleteModalContent {...contentProps} />;
   }
 
   return <DailyChallengeCompleteModalExperiment {...contentProps} />;
+}
+
+function PracticeAutoDone({ onDone }: { onDone: (nextPath?: string) => void }) {
+  const doneRef = useRef(false);
+  useEffect(() => {
+    if (doneRef.current) return;
+    doneRef.current = true;
+    onDone();
+  }, [onDone]);
+  return null;
 }
 
 type OpenModalProps = Omit<DailyChallengeCompleteModalProps, "open">;
@@ -308,6 +335,10 @@ export function DailyChallengeCompleteModalContent({
   correct,
   total,
   onDone,
+  practice = false,
+  scoreLabel,
+  scoreValue,
+  challengeType,
   weekendLeagueCta,
   comebackCta,
 }: OpenModalProps & {
@@ -331,7 +362,18 @@ export function DailyChallengeCompleteModalContent({
     : 0;
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat px-4 py-6">
+      {/* Same backdrop as the app shell (AppShellPageChrome): the stadium
+          pattern plus its radial tint, no extra scrim. */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(circle at top center, rgba(28,176,246,0.08), transparent 32%), radial-gradient(circle at bottom left, rgba(88,204,2,0.06), transparent 28%)",
+        }}
+      />
+      <div className="relative flex w-full max-w-2xl flex-col items-center gap-5">
       <motion.div
         role="dialog"
         aria-modal="true"
@@ -339,10 +381,10 @@ export function DailyChallengeCompleteModalContent({
         initial={{ opacity: 0, scale: 0.9, y: 16 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 280, damping: 22 }}
-        className="max-h-[calc(100dvh-2rem)] w-full max-w-sm overflow-y-auto rounded-[24px] bg-brand-blue p-7 text-center sm:p-8"
+        className="max-h-[calc(100dvh-2rem)] w-full max-w-md overflow-y-auto rounded-[24px] bg-brand-blue p-7 text-center sm:p-8"
       >
-        <div className="mx-auto mb-4 flex size-16 items-center justify-center rounded-full bg-white/12">
-          <Trophy className="size-8 text-brand-yellow" />
+        <div className="mx-auto mb-4 flex size-20 items-center justify-center">
+          <BrandIcon name="trophy" className="size-20 drop-shadow-[0_6px_16px_rgba(0,0,0,0.35)]" />
         </div>
 
         <h2 id="daily-challenge-complete-title" className="font-poppins text-[22px] font-semibold uppercase text-white sm:text-[26px]">
@@ -352,12 +394,16 @@ export function DailyChallengeCompleteModalContent({
 
         <div className="mt-5 rounded-[18px] bg-black/18 px-5 py-4">
           <p className="font-poppins text-xs font-semibold uppercase tracking-wide text-white/60">
-            {t("dailyGames.correctAnswers")}
+            {scoreLabel ?? t("dailyGames.correctAnswers")}
           </p>
-          <p className="mt-1 font-poppins text-4xl font-black leading-none text-brand-yellow">
-            {correct}
-            <span className="text-white/55"> / {total}</span>
-          </p>
+          {scoreValue !== undefined ? (
+            <p className="mt-1 font-poppins text-4xl font-black leading-none text-brand-yellow">{scoreValue}</p>
+          ) : (
+            <p className="mt-1 font-poppins text-4xl font-black leading-none text-brand-yellow">
+              {correct}
+              <span className="text-white/55"> / {total}</span>
+            </p>
+          )}
         </div>
 
         <p className="mt-4 font-poppins text-sm font-semibold text-white">
@@ -530,6 +576,10 @@ export function DailyChallengeCompleteModalContent({
           {t("dailyGames.backToChallenges")}
         </button>
       </motion.div>
+
+      {/* Don't end on a dead end — offer the next game, streaming-style. */}
+      {!practice && <DailyNextUpRow excludeDailyType={challengeType} onSelect={(href) => onDone(href)} />}
+      </div>
     </div>
   );
 }

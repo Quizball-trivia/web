@@ -1,17 +1,19 @@
+import { GUEST_LOBBIES_ENABLED } from '@/lib/config';
 import { cn } from '@/lib/utils';
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
+import { SiteFooter } from '@/components/layout/SiteFooter';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ModeConfirmModal } from '@/components/shared/ModeConfirmModal';
 import { FriendPlayModal } from '@/components/shared/FriendPlayModal';
+import { TrainingOfferModal } from '@/features/training/components/TrainingOfferModal';
 import { AuctionModeModal } from '@/features/auction/components/AuctionModeModal';
-import { isAuctionCardEnabled } from '@/lib/features/playModes';
+import { RankedModeModal } from '@/features/play/RankedModeModal';
+import { FootballGridModeModal } from '@/features/football-grid/components/FootballGridModeModal';
 import { HomeRecentMatches } from '@/components/shared/HomeRecentMatches';
-import { MessageCircle } from 'lucide-react';
-import { SocialLinks } from '@/components/shared/SocialLinks';
-import { ContactModal } from '@/components/shared/ContactModal';
+import { AllGamesGrid } from '@/features/play/AllGamesGrid';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useTierLabel } from '@/hooks/useTierLabel';
 import { getI18nText } from '@/lib/utils/i18n';
@@ -22,15 +24,24 @@ import { useObjectivesEnabled } from '@/lib/hooks/useObjectivesEnabled';
 import { useActiveEventMode } from '@/lib/hooks/useActiveEventMode';
 
 import { colors } from '@/lib/colors';
-import { PlayAnnouncements } from './PlayAnnouncements';
+import { isAuctionCardEnabled, isTicTacToeEnabled } from '@/lib/features/playModes';
 import { WeekendLeagueProgressExperimentRail } from '@/features/weekend-league/components/WeekendLeagueProgressExperimentRail';
 import { trackWlBannerClicked, trackWlBannerViewed } from '@/lib/analytics/game-events';
 
 import { getNextTierBand } from '@/utils/rankedTier';
+import { footballGridAssetUrl } from '@/lib/football-grid/assets';
+import { useAuthPromptStore } from '@/stores/authPrompt.store';
+import { useDirectFriendRoom } from '@/features/friend/hooks/useDirectFriendRoom';
+import { useIsGuest } from '@/lib/auth/useIsGuest';
+import { useAuthStore } from '@/stores/auth.store';
+import { findPublicGameByModeId, publicGamePath as gamePagePath } from '@/lib/seo/public-games';
+import { PracticeDemo } from '@/features/marketing/public/PracticeLayer';
 
 const PLAY_ENTRANCE_SESSION_KEY = 'quizball.playEntranceSeen';
 const PLAY_ENTRANCE_INITIAL = { opacity: 0.88, scale: 0.985 } as const;
 const PLAY_ENTRANCE_ANIMATE = { opacity: 1, scale: 1 } as const;
+// Keyframes from the pre-state: `initial` stays false so the server HTML and the first client render match.
+const PLAY_ENTRANCE_KEYFRAMES = { opacity: [PLAY_ENTRANCE_INITIAL.opacity, 1], scale: [PLAY_ENTRANCE_INITIAL.scale, 1] };
 const PLAY_ENTRANCE_TRANSITION = { duration: 0.22, ease: 'easeOut' } as const;
 
 function shouldPlayEntranceAnimation() {
@@ -89,6 +100,141 @@ function RpProgressBar({ current, target }: { current: number; target: number })
   );
 }
 
+/** Compact mode card (bottom row): title + subtitle, big pictogram icon
+ *  bottom-right, optional NEW pill. The whole card is the tap target. */
+function MiniModeCard({
+  bg,
+  dark = false,
+  title,
+  subtitle,
+  iconSrc,
+  badge,
+  badge2 = null,
+  ctaLabel,
+  className,
+  href,
+  onClick,
+}: {
+  bg: string;
+  /** true = black text (light card colors) */
+  dark?: boolean;
+  title: string;
+  subtitle: string;
+  iconSrc: string;
+  badge?: string | null;
+  /** Second pill next to the first (e.g. NEW + game count). */
+  badge2?: string | null;
+  ctaLabel: string;
+  className?: string;
+  /** Route target — renders a real link (a11y, open-in-new-tab). */
+  href?: string;
+  /** Modal opener — used when there is no href. */
+  onClick?: () => void;
+}) {
+  const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
+  const text = dark ? 'text-black' : 'text-white';
+  const cardClassName = cn(
+    'relative block h-full min-h-[250px] lg:min-h-[300px] cursor-pointer overflow-hidden rounded-[10px] p-3.5 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2',
+    className,
+  );
+  // Phones: pills sit in flow above the title (Georgian titles are too wide to
+  // share the line with a floating badge); desktop keeps them floating.
+  const inner = (
+    <>
+      {(badge || badge2) && (
+        <div className="z-20 mb-1.5 flex items-center gap-1.5 md:absolute md:top-4 md:right-4 md:mb-0">
+          {badge && (
+            <div
+              className="rounded-full bg-brand-yellow px-2.5 py-1 text-[8px] uppercase tracking-wide text-black md:text-[11px]"
+              style={poppins}
+            >
+              {badge}
+            </div>
+          )}
+          {badge2 && (
+            <div
+              className={`rounded-full px-2.5 py-1 text-[8px] md:text-[11px] uppercase tracking-wide ${dark ? 'bg-black text-white' : 'bg-white/20 text-white'}`}
+              style={poppins}
+            >
+              {badge2}
+            </div>
+          )}
+        </div>
+      )}
+      <div className="relative z-10 flex h-full flex-col">
+        {/* keep-all: Georgian has no hyphenation — auto-hyphens split words
+            mid-syllable with no visible hyphen ("გამოწვევ/ა"). */}
+        <h3
+          className={`${badge || badge2 ? 'md:pr-12' : 'pr-1'} text-[1rem] md:text-[clamp(1.4rem,2.2vw,2rem)] leading-[1.12] uppercase [overflow-wrap:normal] [word-break:keep-all] [hyphens:none] ${text}`}
+          style={poppins}
+        >
+          {title}
+        </h3>
+        <p className={`mt-1.5 text-[10px] uppercase md:text-[14px] ${dark ? 'text-black/70' : 'text-white/80'}`} style={poppins}>
+          {subtitle}
+        </p>
+        <div className="mt-2 flex flex-1 items-center justify-center lg:hidden">
+          <Image
+            src={iconSrc}
+            alt=""
+            width={200}
+            height={200}
+            className="pointer-events-none h-[104px] w-[104px] object-contain opacity-90"
+          />
+        </div>
+        <div
+          className="mt-2 flex h-9 w-full items-center justify-center rounded-[8px] bg-black text-[12px] uppercase tracking-wide text-white lg:hidden"
+          style={poppins}
+        >
+          {ctaLabel}
+        </div>
+
+        <div className="mt-auto hidden items-end gap-3 pt-6 lg:flex">
+          <div
+            className="flex h-11 w-[136px] shrink-0 items-center justify-center rounded-[8px] bg-black text-base uppercase tracking-wide text-white"
+            style={poppins}
+          >
+            {ctaLabel}
+          </div>
+          <div className="flex min-w-0 flex-1 justify-end">
+            <Image
+              src={iconSrc}
+              alt=""
+              width={200}
+              height={200}
+              className="pointer-events-none h-24 w-full max-w-24 object-contain object-right opacity-90"
+            />
+          </div>
+        </div>
+      </div>
+    </>
+  );
+  if (href) {
+    return (
+      <Link href={href} className={cardClassName} style={{ backgroundColor: bg }}>
+        {inner}
+      </Link>
+    );
+  }
+  return (
+    <div
+      onClick={onClick}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onClick?.();
+        }
+      }}
+      role="button"
+      tabIndex={0}
+      className={cardClassName}
+      style={{ backgroundColor: bg }}
+    >
+      {inner}
+    </div>
+  );
+}
+
 interface ModeSelectionScreenProps {
   onSelectMode: (mode: 'ranked' | 'friendly' | 'solo') => void;
   /** Optional experiment-owned content immediately below the Weekend League rail. */
@@ -98,22 +244,51 @@ interface ModeSelectionScreenProps {
   /** If provided, called when ranked card is clicked BEFORE the confirm modal opens.
    *  Return `true` to prevent the confirm modal from showing (i.e. the caller handles it). */
   onRankedIntercept?: () => boolean;
+  /** New-player training gate: when `shouldOffer` is true, tapping the ranked card
+   *  first offers a guided training match. Skip marks it seen and continues into
+   *  the normal ranked confirm flow. */
+  trainingOffer?: {
+    shouldOffer: boolean;
+    onPlayTraining: () => void;
+    onSkip: () => void;
+  };
+  /** Auction tutorial gate: offered before the first "Find opponents" in the Auction dialog; "Training" there starts it directly. */
+  auctionTraining?: {
+    shouldOffer: boolean;
+    onPlay: () => void;
+    onSkip: () => void;
+  };
+  /** Tic Tac Toe tutorial gate — same shape, offered before the first "Find opponent" in the Tic Tac Toe dialog. */
+  gridTraining?: {
+    shouldOffer: boolean;
+    onPlay: () => void;
+    onSkip: () => void;
+  };
   ticketsRemaining?: number;
   matchStatsSummary?: MatchStatsSummary | null;
   rankedProfile: RankedProfileResponse | null;
   rankedProfileLoading?: boolean;
+  /** Server-rendered content the public hub places between the cards and the footer. */
+  beforeFooter?: React.ReactNode;
 }
 
+
+// Owner call: Recent Matches is hidden on the Play page for now.
+const SHOW_RECENT_MATCHES = false;
 
 export function ModeSelectionScreen({
   onSelectMode,
   playHomeNotice,
   initialMode,
   onRankedIntercept,
+  trainingOffer,
+  auctionTraining,
+  gridTraining,
   ticketsRemaining = 0,
   matchStatsSummary = null,
   rankedProfile,
   rankedProfileLoading = false,
+  beforeFooter,
 }: ModeSelectionScreenProps) {
   const { t, locale } = useLocale();
   const tierLabelOf = useTierLabel();
@@ -134,7 +309,33 @@ export function ModeSelectionScreen({
     initialMode ?? null,
   );
   const [auctionModalOpen, setAuctionModalOpen] = useState(false);
-  const [playEntranceAnimation] = useState(shouldPlayEntranceAnimation);
+  const [auctionOfferOpen, setAuctionOfferOpen] = useState(false);
+  // The pack chosen before the Tic Tac Toe offer interrupted "Find opponent" — skipping continues with it.
+  const [gridOffer, setGridOffer] = useState<{ pack: string } | null>(null);
+  const [gridModalOpen, setGridModalOpen] = useState(false);
+  // Seeded false so the server and the first client render agree; the
+  // session check runs after hydration and only then triggers the entrance.
+  const [playEntranceAnimation, setPlayEntranceAnimation] = useState(false);
+  useEffect(() => {
+    if (!shouldPlayEntranceAnimation()) return;
+    queueMicrotask(() => setPlayEntranceAnimation(true));
+  }, []);
+  const [trainingOfferOpen, setTrainingOfferOpen] = useState(false);
+
+  // Deep-linked flows (`/play?mode=ranked`) open the ranked confirm modal
+  // directly via `initialMode`, bypassing the card click. If the new-player
+  // training offer is due, swap the confirm modal for the offer. Render-phase
+  // state adjustment (React's recommended pattern) — the condition clears
+  // itself immediately, and skipping flips `shouldOffer` off before the
+  // confirm modal is restored.
+  if (trainingOffer?.shouldOffer && selectedMode === 'ranked') {
+    setSelectedMode(null);
+    setTrainingOfferOpen(true);
+  }
+
+  // Ranked entry point shared by the hero card's click and keyboard handlers:
+  // brand-new players get the training offer first; everyone else goes straight
+  // to the confirm modal.
   const isPlacementInProgress = rankedProfile ? rankedProfile.placementStatus !== 'placed' : false;
   const placementPlayed = rankedProfile?.placementPlayed ?? 0;
   const placementRequired = Math.max(1, rankedProfile?.placementRequired ?? 3);
@@ -145,21 +346,89 @@ export function ModeSelectionScreen({
   const nextTierBand = getNextTierBand(displayRp);
   const nextTierTargetRp = nextTierBand?.minRp ?? null;
   const router = useRouter();
-  const objectivesEnabled = useObjectivesEnabled();
+  // Guest mode: signed-out visitors browse the Play page and try demos, but any
+  // action that needs an account opens the sign-in dialog instead.
+  const isGuest = useIsGuest();
+  // isGuest is also true while auth is still loading; only a settled anonymous
+  // visitor is routed to the public pages (a returning member keeps the modal).
+  const authStatus = useAuthStore((state) => state.status);
+  const settledGuest = isGuest && authStatus === 'anonymous';
+  const openAuthPrompt = useAuthPromptStore((state) => state.open);
+  // Auction / Tic Tac Toe "Play with friend": straight into a private room in that mode.
+  const { startFriendRoom } = useDirectFriendRoom({ onFallback: () => setSelectedMode('friendly') });
+  // Guest "vs AI" demo runs the practice engine in a full-screen layer; the
+  // /demos gallery is not served on production. Auction / Grid guests go to
+  // their public pages.
+  const [rankedDemoOpen, setRankedDemoOpen] = useState(false);
+  const publicPageFor = (modeId: string) => {
+    const game = findPublicGameByModeId(modeId);
+    return game?.page ? gamePagePath(game, locale) : undefined;
+  };
+  // Signed-out visitors go straight to the public Auction / Tic Tac Toe page
+  // (owner, 2026-09-16); the mode modal is for members. Ranked is untouched.
+  const openAuctionCard = () => {
+    if (settledGuest) {
+      const href = publicPageFor('auction');
+      if (href) { router.push(href); return; }
+    }
+    setAuctionModalOpen(true);
+  };
+  const openGridCard = () => {
+    if (settledGuest) {
+      const href = publicPageFor('grid');
+      if (href) { router.push(href); return; }
+    }
+    setGridModalOpen(true);
+  };
+  // The hero opens the ranked dialog for everyone (same shape as Auction).
+  const [rankedModalOpen, setRankedModalOpen] = useState(false);
+  const openRankedFlow = () => setRankedModalOpen(true);
+  // "Find opponents": guests sign in; brand-new members get the training offer first.
+  const findRankedOpponents = () => {
+    setRankedModalOpen(false);
+    if (isGuest) { openAuthPrompt(); return; }
+    if (onRankedIntercept?.()) return;
+    if (trainingOffer?.shouldOffer) {
+      setTrainingOfferOpen(true);
+      return;
+    }
+    setSelectedMode('ranked');
+  };
+  // Auction "Training": guests read the public Auction page (it hosts the same tutorial); members start it in place.
+  const startAuctionTraining = () => {
+    setAuctionModalOpen(false);
+    if (isGuest) {
+      const href = publicPageFor('auction');
+      if (href) router.push(href);
+      return;
+    }
+    auctionTraining?.onPlay();
+  };
+  const startGridTraining = () => {
+    setGridModalOpen(false);
+    if (isGuest) {
+      const href = publicPageFor('grid');
+      if (href) router.push(href);
+      return;
+    }
+    gridTraining?.onPlay();
+  };
+  // "Training": guests read the public Ranked page (it hosts the same match); members start it in place.
+  const startRankedTraining = () => {
+    setRankedModalOpen(false);
+    if (isGuest) {
+      const href = publicPageFor('ranked');
+      if (href) { router.push(href); return; }
+      setRankedDemoOpen(true);
+      return;
+    }
+    if (trainingOffer) { trainingOffer.onPlayTraining(); return; }
+    setRankedDemoOpen(true);
+  };
+  const objectivesFeatureEnabled = useObjectivesEnabled();
+  const objectivesEnabled = objectivesFeatureEnabled && !isGuest;
   const { data: objectivesData, isLoading: objectivesLoading } = useObjectives({ enabled: objectivesEnabled });
   const rankedTitleStyle = {
-    fontFamily: "'Poppins', sans-serif",
-    fontWeight: 600,
-    letterSpacing: "0",
-    lineHeight: 1,
-  } as const;
-  const friendlyTitleStyle = {
-    fontFamily: "'Poppins', sans-serif",
-    fontWeight: 600,
-    letterSpacing: "0",
-    lineHeight: 1,
-  } as const;
-  const dailyTitleStyle = {
     fontFamily: "'Poppins', sans-serif",
     fontWeight: 600,
     letterSpacing: "0",
@@ -180,8 +449,6 @@ export function ModeSelectionScreen({
   }, [playEntranceAnimation]);
 
   const handleConfirm = () => {
-    // Note: 'friendly' never reaches here — the confirm modal is only opened
-    // for non-friendly modes (see its isOpen condition below).
     if (!selectedMode) return;
     // Keep the modal OPEN: the PLAY button switches to its starting spinner
     // while onSelectMode does its pre-navigation work (ranked refetches the
@@ -204,8 +471,8 @@ export function ModeSelectionScreen({
 
   return (
     <motion.div
-      initial={playEntranceAnimation ? PLAY_ENTRANCE_INITIAL : false}
-      animate={PLAY_ENTRANCE_ANIMATE}
+      initial={false}
+      animate={playEntranceAnimation ? PLAY_ENTRANCE_KEYFRAMES : PLAY_ENTRANCE_ANIMATE}
       transition={playEntranceAnimation ? PLAY_ENTRANCE_TRANSITION : { duration: 0 }}
       className="max-w-5xl mx-auto px-4 py-3 space-y-4 md:py-6 md:space-y-5 font-fun"
     >
@@ -221,15 +488,11 @@ export function ModeSelectionScreen({
 
       {/* ─── 1. Ranked Hero Card ─── */}
       <div
-        onClick={() => {
-          if (onRankedIntercept?.()) return;
-          setSelectedMode('ranked');
-        }}
+        onClick={openRankedFlow}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
             e.preventDefault();
-            if (onRankedIntercept?.()) return;
-            setSelectedMode('ranked');
+            openRankedFlow();
           }
         }}
         role="button"
@@ -251,17 +514,17 @@ export function ModeSelectionScreen({
 
         <div className="relative z-10 p-4 md:p-7">
           {/* ── Desktop layout ── */}
-          <div className="hidden lg:flex items-start gap-6">
+          <div className="hidden lg:flex items-stretch gap-6">
             {/* Left: Title + Play. Title is capped at the trophy's left edge
                 (~40% of the card) so long locales (e.g. Georgian) wrap onto a
                 second line instead of running under the absolute trophy. */}
-            <div className="flex-1 min-w-0">
-              <h1
+            <div className="flex flex-1 min-w-0 flex-col">
+              <h2
                 className="max-w-[20rem] text-[clamp(1.75rem,3vw,2.75rem)] uppercase text-white [overflow-wrap:normal] [word-break:keep-all] [hyphens:none]"
                 style={{ ...rankedTitleStyle, lineHeight: 1.15 }}
               >
                 {isEventMode ? t('play.rankedMatchEvent') : t('play.rankedMatch')}
-              </h1>
+              </h2>
               <div className="mt-1.5 text-lg uppercase tracking-wide text-white/90" style={poppins}>
                 {rankedProfileLoading
                   ? t('play.rankedSubtitle')
@@ -270,9 +533,10 @@ export function ModeSelectionScreen({
                     : t('play.rankedSubtitle')}
               </div>
 
-              {/* World Cup event info — event only */}
-              <div className="mt-5">
-                <div className="flex h-[56px] w-[180px] items-center justify-center rounded-[16px] bg-surface-page text-xl uppercase tracking-wide text-white" style={poppins}>
+              {/* Play sits flush with the card's bottom padding, matching the
+                  secondary mode cards. */}
+              <div className="mt-auto pt-5">
+                <div className="flex h-[56px] w-[180px] items-center justify-center rounded-[8px] bg-surface-page text-xl uppercase tracking-wide text-white" style={poppins}>
                   {t('common.play')}
                 </div>
               </div>
@@ -307,6 +571,17 @@ export function ModeSelectionScreen({
                     ? <>{t('play.rpToTier', { rp: Math.max(0, (nextTierTargetRp ?? 0) - displayRp) })}<span className="text-brand-yellow">{tierLabelOf(nextTierBand.tier)}</span></>
                     : t('play.maxRankReached')}
               </div>
+              {/* Betsson badge — in flow below the rank text so it can never
+                  cover it, whatever height the text block reaches. */}
+              {isEventMode && (
+                <div
+                  className="mt-2 inline-flex flex-col items-start rounded-lg px-3 py-1.5"
+                  style={{ backgroundColor: '#1a1a1a', border: '1px solid rgba(255,255,255,0.15)' }}
+                >
+                  <span className="text-[8px] font-bold uppercase tracking-wider text-white/60 leading-none">Powered by</span>
+                  <Image src="/assets/betsson/3.png" alt="Betsson Sport" width={96} height={18} className="h-4 w-auto object-contain mt-0.5" />
+                </div>
+              )}
             </div>
           </div>
 
@@ -315,12 +590,12 @@ export function ModeSelectionScreen({
             {/* Top row: title (left) | RP block (right) */}
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
-                <h1
+                <h2
                   className="text-[1.55rem] leading-[1.05] uppercase text-white [overflow-wrap:normal] [word-break:keep-all] [hyphens:none]"
                   style={rankedTitleStyle}
                 >
                   {t('play.rankedMatch')}
-                </h1>
+                </h2>
                 <div className="mt-1.5 text-[11px] uppercase tracking-wide text-white/90" style={poppins}>
                   {rankedProfileLoading
                     ? t('play.rankedSubtitle')
@@ -380,158 +655,59 @@ export function ModeSelectionScreen({
                   />
                 )}
               </div>
-              <div className="mb-1 flex h-[44px] w-[120px] items-center justify-center rounded-[12px] bg-surface-page text-[15px] uppercase tracking-wide text-white" style={poppins}>
-                {t('common.play')}
+              <div className="flex flex-col items-end gap-2">
+                <div className="mb-1 flex h-[44px] w-[120px] items-center justify-center rounded-[8px] bg-surface-page text-[15px] uppercase tracking-wide text-white" style={poppins}>
+                  {t('common.play')}
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Betsson badge — bottom-right on desktop only, event only */}
-        {isEventMode && (
-          <div
-            className="hidden lg:flex absolute bottom-4 right-4 z-20 flex-col items-start rounded-lg px-3 py-1.5"
-            style={{ backgroundColor: '#1a1a1a', border: '1px solid rgba(255,255,255,0.15)' }}
-          >
-            <span className="text-[8px] font-bold uppercase tracking-wider text-white/60 leading-none">Powered by</span>
-            <Image src="/assets/betsson/3.png" alt="Betsson Sport" width={96} height={18} className="h-4 w-auto object-contain mt-0.5" />
-          </div>
-        )}
       </div>
 
-      {/* ─── 1b. Announcements ─── */}
-      <PlayAnnouncements />
+      {/* ─── 2. Weekend League — the weekly tournament, right under Ranked ─── */}
+      {/* Instrumented at the placement, not inside Rail — the dev gallery
+          mounts every Rail variant and would fire an impression per skin. */}
+      {/* Guests follow the rail too: the league tab explains "play Ranked to earn QP", and Ranked needs an account. */}
+      <div onClickCapture={() => trackWlBannerClicked()}>
+        <WeekendLeagueProgressExperimentRail />
+      </div>
 
-      {/* ─── 2. Secondary Modes Grid ─── */}
-      <div
-        className={cn('grid grid-cols-2 gap-3 md:gap-4', isAuctionCardEnabled && 'lg:grid-cols-3')}
-      >
-        {/* Friendly Match */}
-        <div
-          onClick={() => setSelectedMode('friendly')}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              setSelectedMode('friendly');
-            }
-          }}
-          role="button"
-          tabIndex={0}
-          className="relative cursor-pointer overflow-hidden rounded-[10px] md:min-h-0 p-3 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
-          style={{ backgroundColor: colors.blue.brand }}
-        >
-          {/* Desktop watermark icon (mobile uses inline icon below) */}
-          <Image
-            src="/assets/friendly_match-icon.webp"
-            alt=""
-            width={160}
-            height={160}
-            className="hidden lg:block absolute right-4 bottom-4 h-36 w-36 object-contain opacity-90 pointer-events-none"
-          />
-          <div className="relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left">
-            <h3
-              className="text-[0.95rem] leading-[1.05] uppercase text-white break-words [hyphens:auto] md:text-[clamp(1.5rem,2.4vw,2.25rem)]"
-              style={friendlyTitleStyle}
-            >
-              {t('play.friendlyMatch')}
-            </h3>
-            <p className="mt-1 text-[10px] md:mt-1.5 md:text-base uppercase text-white" style={poppins}>{t('play.friendlySubtitle')}</p>
+      {playHomeNotice}
 
-            {/* Mobile: icon (centered, right under subtitle) + PLAY (bottom, full width) */}
-            <div className="mt-1.5 flex flex-1 items-center justify-center lg:hidden">
-              <Image
-                src="/assets/friendly_match-icon.webp"
-                alt=""
-                width={500}
-                height={500}
-                className="h-[110px] w-[110px] object-contain pointer-events-none"
-              />
-            </div>
-            <div className="mt-1.5 flex h-[36px] w-full items-center justify-center rounded-[8px] bg-black text-[12px] uppercase tracking-wide text-white lg:hidden" style={poppins}>
-              {t('common.play')}
-            </div>
-
-            {/* Desktop: bottom-left PLAY */}
-            <div className="mt-auto hidden pt-8 lg:block">
-              <div className="flex h-11 w-[136px] shrink-0 items-center justify-center rounded-[8px] bg-black text-base uppercase tracking-wide text-white" style={poppins}>
-                {t('common.play')}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Daily Challenge */}
-        <div
-          onClick={() => router.push('/daily/challenges')}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') {
-              e.preventDefault();
-              router.push('/daily/challenges');
-            }
-          }}
-          role="button"
-          tabIndex={0}
-          className="relative cursor-pointer overflow-hidden rounded-[10px] md:min-h-0 p-3 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
-          style={{ backgroundColor: colors.yellow.base }}
-        >
-          {/* Desktop watermark icon (mobile uses inline icon below) */}
-          <Image
-            src="/assets/daily_chllangeicon.webp"
-            alt=""
-            width={160}
-            height={160}
-            className="hidden lg:block absolute right-2 bottom-2 h-40 w-40 object-contain opacity-90 pointer-events-none"
-          />
-          <div className="relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left">
-            <h3
-              className="text-[0.95rem] leading-[1.05] uppercase text-black break-words [hyphens:auto] md:text-[clamp(1.5rem,2.4vw,2.25rem)]"
-              style={dailyTitleStyle}
-            >
-              {t('play.dailyChallenge')}
-            </h3>
-            <p className="mt-1 text-[10px] md:mt-1.5 md:text-base uppercase text-black" style={poppins}>{t('play.dailySubtitle')}</p>
-
-            {/* Mobile: icon (centered, right under subtitle) + PLAY (bottom, full width) */}
-            <div className="mt-1.5 flex flex-1 items-center justify-center lg:hidden">
-              <Image
-                src="/assets/daily_challenge_mobile.webp"
-                alt=""
-                width={528}
-                height={528}
-                className="h-[150px] w-full object-contain pointer-events-none"
-              />
-            </div>
-            <div className="mt-1.5 flex h-[36px] w-full items-center justify-center rounded-[8px] bg-black text-[12px] uppercase tracking-wide text-white lg:hidden" style={poppins}>
-              {t('common.play')}
-            </div>
-
-            {/* Desktop: bottom-left PLAY */}
-            <div className="mt-auto hidden pt-8 lg:block">
-              <div className="flex h-11 w-[136px] shrink-0 items-center justify-center rounded-[8px] bg-black text-base uppercase tracking-wide text-white" style={poppins}>
-                {t('common.play')}
-              </div>
-            </div>
-          </div>
-        </div>
-
+      {/* ─── 2. Mode Cards — Auction + Tic-Tac-Toe (owner call: Friendly
+          Match and Daily Challenge cards removed; every other game now lives
+          in the All Games grid below). */}
+      <div className="grid grid-cols-2 gap-3 md:gap-4 lg:grid-cols-3">
+        {/* Friendly first (owner call) — the original create/join-room card.
+            Spans the mobile row so three cards never leave a dead half-column. */}
+        <MiniModeCard
+          bg={colors.blue.brand}
+          title={t('play.friendlyMatch')}
+          subtitle={t('play.friendlySubtitle')}
+          iconSrc="/assets/friendly_match-icon.webp"
+          ctaLabel={t('common.play')}
+          onClick={() => (isGuest && !GUEST_LOBBIES_ENABLED ? openAuthPrompt() : setSelectedMode('friendly'))}
+          className="col-span-2 lg:col-span-1"
+        />
+        {/* Friendly / Daily / Auction keep the PROD card design (owner call
+            2026-08-28): compact bespoke cards, not the MiniModeCard layout. */}
         {/* Auction (beta) — spans the mobile 2-col row so it never orphans */}
         {isAuctionCardEnabled && (
           <div
-            onClick={() => setAuctionModalOpen(true)}
+            onClick={openAuctionCard}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
-                setAuctionModalOpen(true);
+                openAuctionCard();
               }
             }}
             role="button"
             tabIndex={0}
-            className="relative col-span-2 cursor-pointer overflow-hidden rounded-[10px] md:min-h-0 p-3 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2 lg:col-span-1"
+            className="relative cursor-pointer overflow-hidden rounded-[10px] md:min-h-0 p-3 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
             style={{ backgroundColor: '#6B2FB3' }}
           >
-            <span className="absolute top-2.5 right-2.5 md:top-4 md:right-4 z-20 rounded-full bg-brand-yellow px-2.5 py-1 text-[8px] md:text-[11px] uppercase tracking-wide text-black" style={poppins}>
-              {t('play.auctionNewBadge')}
-            </span>
             <Image
               src="/assets/auction-card-icon.webp"
               alt=""
@@ -550,6 +726,62 @@ export function ModeSelectionScreen({
               <div className="mt-1.5 flex flex-1 items-center justify-center lg:hidden">
                 <Image
                   src="/assets/auction-card-icon.webp"
+                  alt=""
+                  width={500}
+                  height={500}
+                  className="h-[110px] w-[110px] object-contain pointer-events-none"
+                />
+              </div>
+              <div className="mt-1.5 flex h-[36px] w-full items-center justify-center rounded-[8px] bg-black text-[12px] uppercase tracking-wide text-white lg:hidden" style={poppins}>
+                {t('common.play')}
+              </div>
+              <div className="mt-auto hidden pt-8 lg:block">
+                <div className="flex h-11 w-[136px] shrink-0 items-center justify-center rounded-[8px] bg-black text-base uppercase tracking-wide text-white" style={poppins}>
+                  {t('common.play')}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Tic-Tac-Toe — same compact card family as the row above. */}
+        {isTicTacToeEnabled && (
+          <div
+            onClick={openGridCard}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                openGridCard();
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            className="relative cursor-pointer overflow-hidden rounded-[10px] md:min-h-0 p-3 md:p-6 text-left active:translate-y-[2px] transition-all focus-visible:outline-none focus-visible:ring-2"
+            style={{ backgroundColor: colors.red.mid }}
+          >
+            <span
+              className="absolute right-2 top-2.5 z-20 rotate-[8deg] rounded-md bg-brand-yellow px-2 py-0.5 text-[9px] font-black uppercase tracking-wide text-black shadow-[0_3px_10px_rgba(0,0,0,0.35)] md:right-4 md:top-4 md:px-2.5 md:py-1 md:text-[11px]"
+              style={poppins}
+            >
+              {t('play.freeKicksNewBadge')}
+            </span>
+            <Image
+              src={footballGridAssetUrl('/assets/football-grid/card-icon.png')!}
+              alt=""
+              width={160}
+              height={160}
+              className="hidden lg:block absolute right-4 bottom-4 h-36 w-36 object-contain opacity-90 pointer-events-none"
+            />
+            <div className="relative z-10 flex h-full flex-col items-center text-center md:items-start md:text-left">
+              <h3
+                className="text-[0.95rem] leading-[1.05] uppercase text-white break-words [overflow-wrap:normal] [word-break:keep-all] [hyphens:none] md:text-[clamp(1.5rem,2.4vw,2.25rem)]"
+                style={poppins}
+              >
+                {t('play.footballGridTitle')}
+              </h3>
+              <p className="mt-1 text-[10px] md:mt-1.5 md:text-base uppercase text-white" style={poppins}>{t('play.footballGridSubtitle')}</p>
+              <div className="mt-1.5 flex flex-1 items-center justify-center lg:hidden">
+                <Image
+                  src={footballGridAssetUrl('/assets/football-grid/card-icon.png')!}
                   alt=""
                   width={500}
                   height={500}
@@ -721,42 +953,17 @@ export function ModeSelectionScreen({
       </div>
       )}
 
-      {/* ─── 5. Recent Matches ─── */}
-      <HomeRecentMatches collapsedOnly />
-
-      {/* ─── 5b. Socials + contact (mobile only — desktop uses the top-left
-              header cluster in AppShell) ─── */}
-      <div className="mt-6 flex flex-col items-center gap-3 border-t border-white/6 pt-6 xl:hidden">
-        <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-white/35">
-          {t('welcome.followUs')}
-        </p>
-        <div className="flex items-center gap-2.5">
-          <SocialLinks size="sm" className="gap-2.5" />
-          <ContactModal
-            trigger={
-              <button
-                type="button"
-                aria-label={t('feedback.contactUs')}
-                title={t('feedback.contactUs')}
-                className="flex size-9 items-center justify-center rounded-[14px] bg-brand-yellow text-black shadow-[0_4px_0_rgba(0,0,0,0.25)] transition-transform hover:-translate-y-0.5 active:translate-y-0"
-              >
-                <MessageCircle className="size-4" />
-              </button>
-            }
-          />
-        </div>
+      {/* ─── 5. All Games — every mode as an artwork card, 3 per row on
+              desktop / 2 on mobile (owner call). Sits above Recent Matches. ─── */}
+      <div className="mt-6 md:mt-8">
+        <AllGamesGrid />
       </div>
 
+      {/* ─── 6. Recent Matches — hidden per owner call; kept mounted behind
+              this flag so it can be restored in one line. ─── */}
+      {SHOW_RECENT_MATCHES && <HomeRecentMatches collapsedOnly />}
+
       {/* ─── 6. Modals ─── */}
-      <AuctionModeModal
-        isOpen={auctionModalOpen}
-        onOpenChange={setAuctionModalOpen}
-        onCreateRoom={() => {}}
-        onFindOnline={() => {
-          setAuctionModalOpen(false);
-          router.push('/auction');
-        }}
-      />
       <ModeConfirmModal
         mode={selectedMode !== 'friendly' ? selectedMode : null}
         isOpen={!!selectedMode && selectedMode !== 'friendly'}
@@ -764,10 +971,107 @@ export function ModeSelectionScreen({
         onConfirm={handleConfirm}
         ticketsRemaining={ticketsRemaining}
       />
+      {/* Friendly opens the dedicated create/join-room modal (prod parity). */}
       <FriendPlayModal
         isOpen={selectedMode === 'friendly'}
         onOpenChange={(open) => !open && setSelectedMode(null)}
       />
+      {trainingOffer && (
+        <TrainingOfferModal
+          isOpen={trainingOfferOpen}
+          onOpenChange={setTrainingOfferOpen}
+          onPlayTraining={() => {
+            setTrainingOfferOpen(false);
+            trainingOffer.onPlayTraining();
+          }}
+          onSkip={() => {
+            setTrainingOfferOpen(false);
+            trainingOffer.onSkip();
+            setSelectedMode('ranked');
+          }}
+        />
+      )}
+      <AuctionModeModal
+        isOpen={auctionModalOpen}
+        onOpenChange={setAuctionModalOpen}
+        onCreateRoom={() => {}}
+        onFindOnline={() => {
+          setAuctionModalOpen(false);
+          if (isGuest) {
+            openAuthPrompt();
+            return;
+          }
+          if (auctionTraining?.shouldOffer) {
+            setAuctionOfferOpen(true);
+            return;
+          }
+          router.push('/auction');
+        }}
+        onTraining={startAuctionTraining}
+        onPlayWithFriend={isGuest && !GUEST_LOBBIES_ENABLED ? undefined : () => { setAuctionModalOpen(false); void startFriendRoom('auction'); }}
+      />
+      {auctionTraining && (
+        <TrainingOfferModal
+          game="auction"
+          isOpen={auctionOfferOpen}
+          onOpenChange={setAuctionOfferOpen}
+          onPlayTraining={() => {
+            setAuctionOfferOpen(false);
+            auctionTraining.onPlay();
+          }}
+          onSkip={() => {
+            setAuctionOfferOpen(false);
+            auctionTraining.onSkip();
+            router.push('/auction');
+          }}
+        />
+      )}
+      <FootballGridModeModal
+        isOpen={gridModalOpen}
+        onOpenChange={setGridModalOpen}
+        onFindOnline={(pack) => {
+          setGridModalOpen(false);
+          if (isGuest) {
+            openAuthPrompt();
+            return;
+          }
+          if (gridTraining?.shouldOffer) {
+            setGridOffer({ pack });
+            return;
+          }
+          router.push(`/tic-tac-toe?source=matchmaking&pack=${pack}`);
+        }}
+        onTraining={startGridTraining}
+        onPlayWithFriend={isGuest && !GUEST_LOBBIES_ENABLED ? undefined : () => { setGridModalOpen(false); void startFriendRoom('football_grid'); }}
+      />
+      {gridTraining && (
+        <TrainingOfferModal
+          game="grid"
+          isOpen={gridOffer !== null}
+          onOpenChange={(open) => { if (!open) setGridOffer(null); }}
+          onPlayTraining={() => {
+            setGridOffer(null);
+            gridTraining.onPlay();
+          }}
+          onSkip={() => {
+            const pack = gridOffer?.pack ?? 'european';
+            setGridOffer(null);
+            gridTraining.onSkip();
+            router.push(`/tic-tac-toe?source=matchmaking&pack=${pack}`);
+          }}
+        />
+      )}
+      <RankedModeModal
+        isOpen={rankedModalOpen}
+        onOpenChange={setRankedModalOpen}
+        onFindOpponents={findRankedOpponents}
+        onTraining={startRankedTraining}
+      />
+      {rankedDemoOpen && (
+        <PracticeDemo slug="match" title={t('play.guestDemoCta')} locale={locale} backHref="/play" onExit={() => setRankedDemoOpen(false)} />
+      )}
+      {beforeFooter}
+      <SiteFooter />
     </motion.div>
   );
 }

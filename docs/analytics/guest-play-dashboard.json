@@ -1,0 +1,391 @@
+{
+  "dashboard": {
+    "name": "Guest Play — Public games (Production)",
+    "description": "Signed-out visitors on the public game pages: who plays what (sneak-peek samples and trainings), completion, exits, languages, sign-up clicks, and the guest→account funnel. access_type is a super property on every event; session_kind = sample|training."
+  },
+  "insights": [
+    {
+      "name": "Guest players per day (unique, by session kind)",
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "kind": "TrendsQuery",
+          "dateRange": {
+            "date_from": "-30d"
+          },
+          "interval": "day",
+          "series": [
+            {
+              "kind": "EventsNode",
+              "event": "game_start",
+              "math": "dau",
+              "properties": [
+                {
+                  "key": "access_type",
+                  "value": [
+                    "guest"
+                  ],
+                  "operator": "exact",
+                  "type": "event"
+                }
+              ]
+            }
+          ],
+          "trendsFilter": {
+            "display": "ActionsLineGraph"
+          },
+          "breakdownFilter": {
+            "breakdown": "session_kind",
+            "breakdown_type": "event"
+          }
+        }
+      }
+    },
+    {
+      "name": "Guest plays by game (30d)",
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "kind": "TrendsQuery",
+          "dateRange": {
+            "date_from": "-30d"
+          },
+          "interval": "day",
+          "series": [
+            {
+              "kind": "EventsNode",
+              "event": "game_start",
+              "math": "total",
+              "properties": [
+                {
+                  "key": "access_type",
+                  "value": [
+                    "guest"
+                  ],
+                  "operator": "exact",
+                  "type": "event"
+                }
+              ]
+            }
+          ],
+          "trendsFilter": {
+            "display": "ActionsBarValue"
+          },
+          "breakdownFilter": {
+            "breakdown": "mode_id",
+            "breakdown_type": "event"
+          }
+        }
+      }
+    },
+    {
+      "name": "Guest completion rate",
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "kind": "TrendsQuery",
+          "dateRange": {
+            "date_from": "-30d"
+          },
+          "interval": "day",
+          "series": [
+            {
+              "kind": "EventsNode",
+              "event": "game_complete",
+              "math": "total",
+              "properties": [
+                {
+                  "key": "access_type",
+                  "value": [
+                    "guest"
+                  ],
+                  "operator": "exact",
+                  "type": "event"
+                }
+              ]
+            },
+            {
+              "kind": "EventsNode",
+              "event": "game_start",
+              "math": "total",
+              "properties": [
+                {
+                  "key": "access_type",
+                  "value": [
+                    "guest"
+                  ],
+                  "operator": "exact",
+                  "type": "event"
+                }
+              ]
+            }
+          ],
+          "trendsFilter": {
+            "display": "ActionsLineGraph",
+            "formula": "A/B"
+          }
+        }
+      }
+    },
+    {
+      "name": "Guest exits by stage",
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "kind": "TrendsQuery",
+          "dateRange": {
+            "date_from": "-30d"
+          },
+          "interval": "day",
+          "series": [
+            {
+              "kind": "EventsNode",
+              "event": "game_exit",
+              "math": "total",
+              "properties": [
+                {
+                  "key": "access_type",
+                  "value": [
+                    "guest"
+                  ],
+                  "operator": "exact",
+                  "type": "event"
+                }
+              ]
+            }
+          ],
+          "trendsFilter": {
+            "display": "ActionsBarValue"
+          },
+          "breakdownFilter": {
+            "breakdown": "exit_stage",
+            "breakdown_type": "event"
+          }
+        }
+      }
+    },
+    {
+      "name": "Guest plays by language (30d)",
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "kind": "TrendsQuery",
+          "dateRange": {
+            "date_from": "-30d"
+          },
+          "interval": "day",
+          "series": [
+            {
+              "kind": "EventsNode",
+              "event": "game_view",
+              "math": "dau",
+              "properties": [
+                {
+                  "key": "access_type",
+                  "value": [
+                    "guest"
+                  ],
+                  "operator": "exact",
+                  "type": "event"
+                }
+              ]
+            }
+          ],
+          "trendsFilter": {
+            "display": "ActionsBarValue"
+          },
+          "breakdownFilter": {
+            "breakdown": "locale",
+            "breakdown_type": "event"
+          }
+        }
+      }
+    },
+    {
+      "name": "Guest vs member starts on public pages",
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "kind": "TrendsQuery",
+          "dateRange": {
+            "date_from": "-30d"
+          },
+          "interval": "day",
+          "series": [
+            {
+              "kind": "EventsNode",
+              "event": "game_start",
+              "math": "dau"
+            }
+          ],
+          "trendsFilter": {
+            "display": "ActionsLineGraph"
+          },
+          "breakdownFilter": {
+            "breakdown": "access_type",
+            "breakdown_type": "event"
+          }
+        }
+      }
+    },
+    {
+      "name": "Sign-up clicks from public games (by placement)",
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "kind": "TrendsQuery",
+          "dateRange": {
+            "date_from": "-30d"
+          },
+          "interval": "day",
+          "series": [
+            {
+              "kind": "EventsNode",
+              "event": "games_signup_click",
+              "math": "total",
+              "properties": [
+                {
+                  "key": "access_type",
+                  "value": [
+                    "guest"
+                  ],
+                  "operator": "exact",
+                  "type": "event"
+                }
+              ]
+            }
+          ],
+          "trendsFilter": {
+            "display": "ActionsBarValue"
+          },
+          "breakdownFilter": {
+            "breakdown": "prompt_placement",
+            "breakdown_type": "event"
+          }
+        }
+      }
+    },
+    {
+      "name": "Guest friend rooms (invite accepted / join succeeded)",
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "kind": "TrendsQuery",
+          "dateRange": {
+            "date_from": "-30d"
+          },
+          "interval": "day",
+          "series": [
+            {
+              "kind": "EventsNode",
+              "event": "friend_invite_accepted",
+              "math": "total",
+              "properties": [
+                {
+                  "key": "access_type",
+                  "value": [
+                    "guest"
+                  ],
+                  "operator": "exact",
+                  "type": "event"
+                }
+              ]
+            },
+            {
+              "kind": "EventsNode",
+              "event": "friend_invite_join_succeeded",
+              "math": "total",
+              "properties": [
+                {
+                  "key": "access_type",
+                  "value": [
+                    "guest"
+                  ],
+                  "operator": "exact",
+                  "type": "event"
+                }
+              ]
+            }
+          ],
+          "trendsFilter": {
+            "display": "ActionsLineGraph"
+          }
+        }
+      }
+    },
+    {
+      "name": "Guest funnel: view → start → complete → sign-up click → account created",
+      "query": {
+        "kind": "InsightVizNode",
+        "source": {
+          "kind": "FunnelsQuery",
+          "dateRange": {
+            "date_from": "-30d"
+          },
+          "series": [
+            {
+              "kind": "EventsNode",
+              "event": "game_view",
+              "math": "total",
+              "properties": [
+                {
+                  "key": "access_type",
+                  "value": [
+                    "guest"
+                  ],
+                  "operator": "exact",
+                  "type": "event"
+                }
+              ]
+            },
+            {
+              "kind": "EventsNode",
+              "event": "game_start",
+              "math": "total",
+              "properties": [
+                {
+                  "key": "access_type",
+                  "value": [
+                    "guest"
+                  ],
+                  "operator": "exact",
+                  "type": "event"
+                }
+              ]
+            },
+            {
+              "kind": "EventsNode",
+              "event": "game_complete",
+              "math": "total",
+              "properties": [
+                {
+                  "key": "access_type",
+                  "value": [
+                    "guest"
+                  ],
+                  "operator": "exact",
+                  "type": "event"
+                }
+              ]
+            },
+            {
+              "kind": "EventsNode",
+              "event": "games_signup_click",
+              "math": "total"
+            },
+            {
+              "kind": "EventsNode",
+              "event": "account_created",
+              "math": "total"
+            }
+          ],
+          "funnelsFilter": {
+            "funnelWindowInterval": 7,
+            "funnelWindowIntervalUnit": "day",
+            "funnelVizType": "steps"
+          }
+        }
+      }
+    }
+  ]
+}

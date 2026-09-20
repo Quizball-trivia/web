@@ -1,5 +1,6 @@
 "use client";
 
+import { useEnsureGuestPrincipal } from "@/lib/realtime/realtime-principal";
 import { AlertCircle, ArrowLeft, CheckCircle2, Loader2, LogOut, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LobbyHeader } from "./LobbyHeader";
@@ -15,10 +16,12 @@ interface FriendLobbyScreenProps {
 }
 
 export function FriendLobbyScreen({ roomCode, isHost, inviteSource }: FriendLobbyScreenProps) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  useEnsureGuestPrincipal(locale);
   const {
     lobby,
     isAuctionLobby,
+    isFootballGridLobby,
     members,
     lobbyCode,
     isResolvingInvite,
@@ -44,19 +47,22 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource }: FriendLobb
   const isCurrentHost = Boolean(me?.isHost) || (isHost && roomCode.trim().toLowerCase() === "new");
   const allReady = members.length > 0 && members.every((member) => member.isReady);
   const isPartyMode =
-    settings?.gameMode === "friendly_party_quiz" || (members.length > 2 && !isAuctionLobby);
+    settings?.gameMode === "friendly_party_quiz" || (members.length > 2 && !isAuctionLobby && !isFootballGridLobby);
   // Lobby capacity by mode: party quiz holds up to 6; auction seats 3 (empty
   // seats become bots); classic + ranked sim are 1v1 (2).
   const lobbyMaxMembers =
     settings?.gameMode === "friendly_party_quiz" ? 6 : isAuctionLobby ? 3 : 2;
-  // Auction generates its own match content — lobby quiz categories do not
-  // apply to it.
+  // Auction and Football Grid generate their own match content — lobby quiz
+  // categories do not apply to either mode.
   const hasFriendlyCategories =
     isAuctionLobby ||
+    isFootballGridLobby ||
     settings?.friendlyRandom ||
     Boolean(settings?.friendlyCategoryAId);
   const readyCopy = isAuctionLobby
     ? t("friend.readyCopyAuction")
+    : isFootballGridLobby
+      ? t("friend.readyCopyFootballGrid")
     : settings?.gameMode === "ranked_sim"
       ? t("friend.readyCopyRanked")
       : isPartyMode
@@ -65,7 +71,8 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource }: FriendLobb
   const isHostStartableMode =
     settings?.gameMode === "friendly_possession" ||
     settings?.gameMode === "friendly_party_quiz" ||
-    isAuctionLobby;
+    isAuctionLobby ||
+    isFootballGridLobby;
   const canStartMatch =
     Boolean(
       isCurrentHost &&
@@ -77,6 +84,8 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource }: FriendLobb
     );
   const startLabel = isAuctionLobby
     ? t("friend.startAuction")
+    : isFootballGridLobby
+      ? t("friend.startFootballGrid")
     : isPartyMode
       ? t("friend.startPartyQuiz")
       : t("friend.startMatch");

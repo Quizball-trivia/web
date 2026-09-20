@@ -1,5 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { DEFAULT_LOCALE } from "@/lib/i18n/locale";
+import { DAILY_CHALLENGE_SLUGS } from "@/lib/domain/dailyChallengeSlugs";
+import { PUBLIC_GAMES_FOLDER, dailyCollectionPath, gamePageSlug } from "@/lib/seo/game-pages";
+import { PUBLISHED_PUBLIC_GAMES } from "@/lib/seo/public-games";
 import { API_BASE_URL } from "@/lib/config";
 import type { CampaignQuizRoute } from "@/features/campaign-quiz/campaignQuiz.types";
 
@@ -7,10 +10,31 @@ import type { CampaignQuizRoute } from "@/features/campaign-quiz/campaignQuiz.ty
 // pages are localized; everything else (app, auth, game) is intentionally
 // locale-less and stays unchanged.
 const REDIRECT_FROM_ROOT: Record<string, string> = {
-  "/": `/${DEFAULT_LOCALE}`,
+  // The locale homepage IS the Football Games hub; bare marketing paths go to the default locale.
+  "/daily": dailyCollectionPath(DEFAULT_LOCALE),
+  "/games": `/${DEFAULT_LOCALE}`,
+  "/football-games": `/${DEFAULT_LOCALE}`,
   "/about": `/${DEFAULT_LOCALE}/about`,
   "/terms": `/${DEFAULT_LOCALE}/terms`,
   "/privacy": `/${DEFAULT_LOCALE}/privacy`,
+  // Bare game page URLs → default-locale variant (indexable pages).
+  ...Object.fromEntries(
+    PUBLISHED_PUBLIC_GAMES.map((page) => [
+      `/${PUBLIC_GAMES_FOLDER[DEFAULT_LOCALE]}/${gamePageSlug(page, DEFAULT_LOCALE)}`,
+      `/${DEFAULT_LOCALE}/${PUBLIC_GAMES_FOLDER[DEFAULT_LOCALE]}/${gamePageSlug(page, DEFAULT_LOCALE)}`,
+    ]),
+  ),
+  // Legacy camelCase game routes (old links, bookmarks) → public slugs.
+  ...Object.fromEntries(
+    Object.entries(DAILY_CHALLENGE_SLUGS)
+      // Types whose slug equals the type (imposter, countdown) would redirect to themselves.
+      .filter(([type, slug]) => type !== slug)
+      .map(([type, slug]) => [`/daily/challenges/${type}`, `/daily/challenges/${slug}`]),
+  ),
+  // Card Detective replaces the retired FIFA Cards runtime. Keep old bookmarks
+  // on a playable game; its public marketing page has a separate route.
+  "/daily/challenges/fifaCards": "/daily/challenges/card-detective",
+  "/daily/challenges/guess-the-card": "/daily/challenges/card-detective",
 };
 
 function originFromEnv(name: string): string | null {
@@ -75,7 +99,7 @@ function buildCsp(nonce: string): string {
     "style-src 'self' 'unsafe-inline'",
     `script-src ${scriptSrc.join(" ")}`,
     `connect-src ${connectSrc.join(" ")}`,
-    "frame-src 'self' https://accounts.google.com https://*.facebook.com https://www.facebook.com",
+    "frame-src 'self' https://accounts.google.com https://*.facebook.com https://www.facebook.com https://www.youtube-nocookie.com",
     "worker-src 'self' blob:",
     "media-src 'self' blob: data: https:",
     "manifest-src 'self'",
@@ -91,20 +115,42 @@ export async function middleware(req: NextRequest) {
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("Content-Security-Policy", csp);
 
+  // The bare domain sends visitors to their locale homepage (the Football Games
+  // hub): Georgia → /ka, everyone else → /en, x-default stays /en. Temporary and
+  // uncacheable because the target depends on the visitor's location. Members
+  // reach the app through the homepage's "Open play" control or /play directly.
+  if (pathname === "/") {
+    const url = req.nextUrl.clone();
+    const country = req.headers.get("x-vercel-ip-country")?.trim().toUpperCase() ?? "";
+    url.pathname = `/${country === "GE" ? "ka" : DEFAULT_LOCALE}`;
+    const res = NextResponse.redirect(url, 307);
+    res.headers.set("Content-Security-Policy", csp);
+    res.headers.set("Cache-Control", "private, no-store");
+    return res;
+  }
+
   const redirectTarget = REDIRECT_FROM_ROOT[pathname];
   if (redirectTarget) {
     const url = req.nextUrl.clone();
     // Geo-aware landing locale: send visitors physically in Georgia to /ka,
     // everyone else to the default (/en). Only the bare entry routes here are
     // affected; an explicit /en or /ka URL is never rewritten.
-    const country =
-      req.headers.get("x-vercel-ip-country")?.trim().toUpperCase() ?? "";
-    const landingLocale = country === "GE" ? "ka" : DEFAULT_LOCALE;
-    url.pathname = redirectTarget.replace(`/${DEFAULT_LOCALE}`, `/${landingLocale}`);
+    // Deterministic: a permanent redirect must not depend on the visitor's
+    // location (browsers and caches keep 308s), so aliases always land on the
+    // default-locale page; only the bare "/" above is geo-aware.
+    url.pathname = redirectTarget;
     const res = NextResponse.redirect(url, 308);
     res.headers.set("Content-Security-Policy", csp);
     res.headers.set("x-pathname", url.pathname);
     return res;
+  }
+
+  // A games folder belongs to exactly one locale (/en|ka/football-games,
+  // /es/juegos-de-futbol). The other combinations never existed: answer 404
+  // here, deterministically, instead of relying on a streamed notFound().
+  const folderMatch = pathname.match(/^\/(en|ka|es|tr)\/(football-games|juegos-de-futbol)(?:\/|$)/);
+  if (folderMatch && (folderMatch[1] === "es") !== (folderMatch[2] === "juegos-de-futbol")) {
+    return new NextResponse("Not found", { status: 404, headers: { "Content-Type": "text/plain; charset=utf-8", "Content-Security-Policy": csp } });
   }
 
   // Slug changes and retired CMS quiz pages are resolved before Next renders.

@@ -5,13 +5,17 @@ import type { components } from "@/types/api.generated";
 export type I18nField = components["schemas"]["I18nField"];
 
 export type MatchMode = 'friendly' | 'ranked';
-export type LobbyGameMode = 'friendly_possession' | 'friendly_party_quiz' | 'ranked_sim' | 'auction';
+export type LobbyGameMode = 'friendly_possession' | 'friendly_party_quiz' | 'football_grid' | 'ranked_sim' | 'auction';
 /**
  * Variant of a possession/quiz match handled by the `/game` realtime layer.
  * Deliberately excludes 'auction': auction matches run on their own socket
  * protocol and route (`/auction`), never through the possession reducers.
  */
-export type MatchVariant = Exclude<LobbyGameMode, 'auction'>;
+export type MatchVariant = Exclude<LobbyGameMode, 'auction' | 'football_grid'>;
+export type LobbyChallengeGameMode = Extract<
+  LobbyGameMode,
+  'friendly_possession' | 'friendly_party_quiz' | 'football_grid'
+>;
 export type LobbyStatus = 'waiting' | 'active' | 'closed';
 export type MatchPhase =
   | 'NORMAL_PLAY'
@@ -39,6 +43,8 @@ export interface LobbyMember {
   rankPoints?: number;
   isReady: boolean;
   isHost: boolean;
+  /** Account-less guest (friend rooms only). */
+  isGuest?: boolean;
 }
 
 export interface MatchParticipant {
@@ -931,6 +937,211 @@ export interface AuctionSearchStartPayload {
   locale?: 'en' | 'ka' | 'es' | 'tr';
 }
 
+export type FootballGridDifficulty = 'easy' | 'normal' | 'hard';
+export type FootballGridStatus =
+  | 'handoff'
+  | 'loading'
+  | 'countdown'
+  | 'active'
+  | 'paused'
+  | 'completed'
+  | 'forfeited'
+  | 'cancelled';
+export type FootballGridPhase =
+  | 'handoff'
+  | 'loading'
+  | 'countdown'
+  | 'turn'
+  | 'paused'
+  | 'service_interruption'
+  | 'terminal';
+export type FootballGridCompletionReason =
+  | 'line'
+  | 'board_full'
+  | 'board_dead'
+  | 'draw_agreed'
+  | 'turn_limit'
+  | 'forfeit'
+  | 'no_action_timeouts'
+  | 'disconnect_timeout'
+  | 'loading_no_show'
+  | 'simultaneous_disconnect'
+  | 'administrative_cancel';
+
+export interface FootballGridCriterionView {
+  id: string;
+  key: string;
+  family: 'club' | 'country' | 'league' | 'manager' | 'teammate' | 'trophy_award' | 'wildcard';
+  labelEn: string;
+  labelKa: string;
+  labelEs?: string | null;
+  labelTr?: string | null;
+  assetKey: string | null;
+  difficulty: FootballGridDifficulty;
+}
+
+export interface FootballGridBoardView {
+  boardId: string;
+  boardVersion: number;
+  checksum: string;
+  rows: [FootballGridCriterionView, FootballGridCriterionView, FootballGridCriterionView];
+  columns: [FootballGridCriterionView, FootballGridCriterionView, FootballGridCriterionView];
+}
+
+export interface FootballGridPlayerState {
+  userId: string;
+  seat: 1 | 2;
+  isBot: boolean;
+  handoffAcknowledged: boolean;
+  ready: boolean;
+  noActionTimeouts: number;
+  pauseBudgetRemainingMs: number;
+  /** A declined draw offer locks the offerer out until this turn number. */
+  drawOfferLockedUntilTurn?: number;
+}
+
+export interface FootballGridDrawOffer {
+  byUserId: string;
+  turnNumber: number;
+  offeredAt: string;
+}
+
+/** Best-of-N progress, attached to state and completion payloads. */
+export interface FootballGridSeriesInfo {
+  seriesId: string;
+  format: 'single' | 'bo3';
+  gameIndex: number;
+  targetWins: number;
+  wins: Record<string, number>;
+  draws: number;
+  winnerUserId: string | null;
+  finished: boolean;
+}
+
+export interface FootballGridClaimState {
+  cellIndex: number;
+  footballPlayerId: string;
+  displayName?: string;
+  imageUrl?: string | null;
+  claimantUserId: string;
+  turnNumber: number;
+}
+
+export interface FootballGridState {
+  matchId: string;
+  status: FootballGridStatus;
+  phase: FootballGridPhase;
+  board: FootballGridBoardView;
+  players: [FootballGridPlayerState, FootballGridPlayerState];
+  openerUserId: string;
+  currentPlayerUserId: string | null;
+  winnerUserId: string | null;
+  turnNumber: number;
+  stateVersion: number;
+  wrongAnswerVisibility?: boolean;
+  claims: FootballGridClaimState[];
+  phaseDeadlineAt: string | null;
+  turnDeadlineAt: string | null;
+  turnRemainingMs: number | null;
+  pausedAt: string | null;
+  pausedFromPhase?: 'countdown' | 'turn' | null;
+  reconnectDeadlineAt: string | null;
+  completionReason: FootballGridCompletionReason | null;
+  drawOffer?: FootballGridDrawOffer | null;
+}
+
+export interface FootballGridSearchStartPayload {
+  locale?: 'en' | 'ka';
+  /** League pack to queue for; server defaults to 'european'. */
+  theme?: string;
+}
+
+export interface FootballGridVersionedCommandPayload {
+  matchId: string;
+  commandId: string;
+  expectedStateVersion: number;
+}
+
+export interface FootballGridSubmitAnswerPayload extends FootballGridVersionedCommandPayload {
+  cellIndex: number;
+  text: string;
+  locale: 'en' | 'ka';
+}
+
+export interface FootballGridSearchStatePayload {
+  state: 'idle' | 'searching' | 'pairing' | 'matched';
+  searchId: string | null;
+  queuedAt?: string;
+  fallbackAt?: string;
+}
+
+export interface FootballGridMatchFoundPayload {
+  matchId: string;
+  state: FootballGridState;
+  series?: FootballGridSeriesInfo | null;
+  opponent: OpponentInfo;
+  capabilities: {
+    canAddFriend: boolean;
+    canChallenge: boolean;
+  };
+  serverNow: string;
+}
+
+export interface FootballGridStatePayload {
+  matchId: string;
+  state: FootballGridState;
+  serverNow: string;
+  series?: FootballGridSeriesInfo | null;
+}
+
+export interface FootballGridCommandResultPayload {
+  matchId: string;
+  commandId: string;
+  outcome: 'correct' | 'wrong' | 'ambiguous' | 'already_used' | 'pass' | 'draw_offered' | 'draw_accepted' | 'draw_declined';
+  stateVersion: number;
+  resolvedPlayerId: string | null;
+  attemptId: string | null;
+  duplicate: boolean;
+}
+
+export interface FootballGridTurnResolvedPayload extends FootballGridStatePayload {
+  actorUserId: string;
+  outcome: 'correct' | 'wrong' | 'already_used' | 'pass' | 'timeout';
+  cellIndex: number | null;
+  resolvedPlayerId: string | null;
+}
+
+export interface FootballGridCompletedPayload extends FootballGridStatePayload {
+  terminalStateVersion: number;
+  ackToken: string;
+  samples: Array<{
+    cellIndex: number;
+    players: Array<{
+      playerId: string;
+      name: string;
+      imageUrl: string | null;
+      imageAssetKey: string | null;
+    }>;
+  }>;
+  /** `tp` = Tic Tac Toe Points (mode leaderboard currency); optional so older backends stay compatible. */
+  rewards?: { xp: number; coins: number; tp?: number; eligibilityReason?: string };
+  rematch?: {
+    seriesId: string;
+    seriesVersion: number;
+    eligible: boolean;
+    expiresAt: string | null;
+    acceptedUserIds: string[];
+  } | null;
+}
+
+export interface FootballGridRematchStatePayload {
+  seriesId: string;
+  seriesVersion: number;
+  status: 'pending' | 'started' | 'declined' | 'expired';
+  acceptedUserIds: string[];
+  expiresAt: string | null;
+}
+
 export interface AuctionBidPayload {
   matchId: string;
   amount: number;
@@ -1259,7 +1470,7 @@ export type LobbyCreateResult =
     }
   | {
       ok: false;
-      code: "ALREADY_IN_LOBBY" | "TRANSITION_IN_PROGRESS" | "INVALID_LOBBY_CREATE" | "LOBBY_CREATE_ERROR";
+      code: "CAPABILITY_REQUIRED" | "RATE_LIMITED" | "ALREADY_IN_LOBBY" | "TRANSITION_IN_PROGRESS" | "INVALID_LOBBY_CREATE" | "LOBBY_CREATE_ERROR";
       message: string;
       retryable: boolean;
       correlationId: string;
@@ -1277,6 +1488,10 @@ export type LobbyJoinByCodeResult =
   | {
       ok: false;
       code:
+        | "CAPABILITY_REQUIRED"
+        | "LOBBY_GUEST_LIMIT"
+        | "LOBBY_MODE_REQUIRES_ACCOUNT"
+        | "RATE_LIMITED"
         | "ALREADY_IN_LOBBY"
         | "LOBBY_NOT_FOUND"
         | "LOBBY_FULL"
@@ -1311,6 +1526,18 @@ export interface ErrorPayload {
   meta?: Record<string, unknown>;
 }
 
+/**
+ * Server read-only DB breaker status (INC-2026-07-29). Broadcast on state edges
+ * and sent to each socket on connect. Mirrors the backend SystemStatusPayload.
+ */
+export interface SystemStatusPayload {
+  degraded: boolean;
+  reason: 'db_write_outage' | null;
+  matchmaking: 'available' | 'paused';
+  sinceMs: number | null;
+  serverTimeMs: number;
+}
+
 export interface LobbyChallengeUser {
   id: string;
   username: string;
@@ -1324,6 +1551,7 @@ export interface LobbyChallengeInvitePayload {
   inviteCode: string;
   fromUser: LobbyChallengeUser;
   expiresAt: string;
+  gameMode: LobbyChallengeGameMode;
 }
 
 export interface LobbyChallengeCreatedPayload {
@@ -1331,6 +1559,7 @@ export interface LobbyChallengeCreatedPayload {
   lobbyId: string;
   inviteCode: string;
   toUserId: string;
+  gameMode: LobbyChallengeGameMode;
 }
 
 export interface LobbyChallengeStatusPayload {
@@ -1372,10 +1601,10 @@ export interface ClientToServerEvents {
     ack?: (result: WlAnswerAck) => void
   ) => void;
   'lobby:create': (
-    data: { mode: MatchMode; isPublic?: boolean; correlationId?: string },
+    data: { mode: MatchMode; isPublic?: boolean; gameMode?: 'football_grid' | 'auction'; correlationId?: string },
     ack?: (result: LobbyCreateResult) => void
   ) => void;
-  'lobby:challenge': (data: { toUserId: string }) => void;
+  'lobby:challenge': (data: { toUserId: string; gameMode?: LobbyChallengeGameMode }) => void;
   'lobby:challenge_accept': (data: { invitationId: string }) => void;
   'lobby:challenge_decline': (data: { invitationId: string }) => void;
   'lobby:join_by_code': (
@@ -1396,6 +1625,8 @@ export interface ClientToServerEvents {
   'ranked:queue_join': (data?: RankedQueueJoinPayload) => void;
   'ranked:queue_leave': () => void;
   'auction:start_ai_match': (data?: AuctionStartAiMatchPayload) => void;
+  /** Guest "Play now" (public Auction page): anonymous table against bots, no rewards. */
+  'auction:practice_bot_start': (data?: AuctionStartAiMatchPayload) => void;
   'auction:search_start': (data?: AuctionSearchStartPayload) => void;
   'auction:search_cancel': () => void;
   'auction:bid': (data: AuctionBidPayload) => void;
@@ -1404,6 +1635,23 @@ export interface ClientToServerEvents {
   'auction:ui_ready': (data: AuctionUiReadyPayload) => void;
   'auction:forfeit': (data: { matchId: string }) => void;
   'auction:rejoin': (data: { matchId: string }) => void;
+  'grid:search_start': (data?: FootballGridSearchStartPayload) => void;
+  /** Guest "Play now" (public Tic Tac Toe page): immediate bot pairing, no queue, no rewards. */
+  'grid:practice_bot_start': (data?: FootballGridSearchStartPayload) => void;
+  'grid:search_cancel': (data: { searchId: string }) => void;
+  'grid:match_found_ack': (data: FootballGridVersionedCommandPayload) => void;
+  'grid:client_ready': (data: FootballGridVersionedCommandPayload) => void;
+  'grid:submit_answer': (data: FootballGridSubmitAnswerPayload) => void;
+  'grid:pass': (data: FootballGridVersionedCommandPayload) => void;
+  'grid:draw_offer': (data: FootballGridVersionedCommandPayload) => void;
+  'grid:draw_respond': (data: FootballGridVersionedCommandPayload & { accept: boolean }) => void;
+  'grid:resync': (data: { matchId: string }) => void;
+  'grid:completed_ack': (data: { matchId: string; terminalStateVersion: number; ackToken: string }) => void;
+  'grid:forfeit': (data: FootballGridVersionedCommandPayload) => void;
+  'grid:report_missing_answer': (data: { attemptId: string }) => void;
+  'grid:rematch_accept': (data: { matchId: string; commandId: string; expectedSeriesVersion: number }) => void;
+  'grid:rematch_decline': (data: { matchId: string; expectedSeriesVersion: number }) => void;
+  'grid:presence_heartbeat': (data: { matchId: string }) => void;
   'draft:rejoin': (data?: { lobbyId?: string }) => void;
   'draft:ui_ready': (data: { lobbyId: string; turnUserId: string; banCount: number }) => void;
   'draft:ban': (data: { categoryId: string }) => void;
@@ -1629,6 +1877,7 @@ export interface ServerToClientEvents {
   'notification:new': (data: NotificationPayload) => void;
   'notification:unread_count': (data: NotificationUnreadCountPayload) => void;
   'session:state': (data: SessionStatePayload) => void;
+  'system:status': (data: SystemStatusPayload) => void;
   'session:blocked': (data: SessionBlockedPayload) => void;
   'auth:force_logout': (data: ForceLogoutPayload) => void;
   'lobby:state': (data: LobbyState) => void;
@@ -1687,6 +1936,19 @@ export interface ServerToClientEvents {
   'auction:solo_pick_started': (data: AuctionSoloPickStartedPayload) => void;
   'auction:solo_pick_selected': (data: AuctionSoloPickSelectedPayload) => void;
   'auction:match_finished': (data: AuctionMatchFinishedPayload) => void;
+  'grid:error': (data: ErrorPayload) => void;
+  'grid:search_state': (data: FootballGridSearchStatePayload) => void;
+  'grid:match_found': (data: FootballGridMatchFoundPayload) => void;
+  'grid:loading_state': (data: FootballGridStatePayload) => void;
+  'grid:countdown': (data: FootballGridStatePayload & { countdownEndsAt: string }) => void;
+  'grid:state': (data: FootballGridStatePayload) => void;
+  'grid:command_result': (data: FootballGridCommandResultPayload) => void;
+  'grid:turn_resolved': (data: FootballGridTurnResolvedPayload) => void;
+  'grid:paused': (data: FootballGridStatePayload) => void;
+  'grid:resumed': (data: FootballGridStatePayload) => void;
+  'grid:completed': (data: FootballGridCompletedPayload) => void;
+  'grid:report_received': (data: { reportId: string; attemptId: string }) => void;
+  'grid:rematch_state': (data: FootballGridRematchStatePayload) => void;
   'warmup:state': (data: WarmupStatePayload) => void;
   'warmup:tapped': (data: WarmupTappedPayload) => void;
   'warmup:over': (data: WarmupOverPayload) => void;

@@ -10,7 +10,8 @@ import {
   computeSquadChemistry,
   chemistryMultiplier,
   orderPlayersHumanCentered,
-  AUCTION_SQUAD_SIZE,
+  squadSizeOf,
+  maxSquadChemistryOf,
 } from '../../data';
 import { useLocale } from '@/contexts/LocaleContext';
 import { SquadPitch } from '../pitch/SquadPitch';
@@ -65,7 +66,7 @@ function StadiumColumn({
         </div>
         <div className="flex items-center gap-2 font-poppins text-xs font-black tabular-nums md:text-sm">
           <span className="text-brand-yellow">{formatMoney(player.budget)}</span>
-          <ChemistryBadge total={chem} multiplier={mult} className="text-[11px] md:text-xs" />
+          <ChemistryBadge total={chem} multiplier={mult} max={maxSquadChemistryOf(state.formation)} className="text-[11px] md:text-xs" />
         </div>
       </div>
 
@@ -93,7 +94,7 @@ function StadiumColumn({
 
       {/* Progress dots */}
       <div className="mt-1 shrink-0">
-        <ProgressDots filled={filled} total={AUCTION_SQUAD_SIZE} size="xs" />
+        <ProgressDots filled={filled} total={squadSizeOf(state.formation)} size="xs" />
       </div>
     </div>
   );

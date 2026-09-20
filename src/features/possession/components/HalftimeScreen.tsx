@@ -36,6 +36,7 @@ interface HalftimeScreenProps {
   firstBanSeat?: 1 | 2 | null;
   myBan?: string | null;
   opponentBan?: string | null;
+  guidedCategoryId?: string | null;
   onBanCategory?: (categoryId: string) => void;
   onBanPhaseShown?: () => void;
   /** When true this is the pre-penalty category ban — shows a "Penalties" heading. */
@@ -105,6 +106,7 @@ export function HalftimeScreen({
   firstBanSeat = null,
   myBan = null,
   opponentBan = null,
+  guidedCategoryId = null,
   onBanCategory,
   onBanPhaseShown,
   isPenaltyBan = false,
@@ -350,7 +352,8 @@ export function HalftimeScreen({
                 const isOpponentBan = opponentBan === category.id;
                 const isBanned = isMyBan || isOpponentBan;
                 const isRemaining = bothBansSubmitted && !isMyBan && !isOpponentBan && remainingCategory?.id === category.id;
-                const disabled = isBanned || !canBan;
+                const isGuidedBlocked = guidedCategoryId !== null && category.id !== guidedCategoryId;
+                const disabled = isBanned || !canBan || isGuidedBlocked;
 
                 return (
                   <BanCategoryCard
@@ -361,6 +364,7 @@ export function HalftimeScreen({
                     isBanned={isBanned}
                     isRemaining={isRemaining}
                     disabled={disabled}
+                    fadedOut={isGuidedBlocked && !myBan}
                     onClick={onBanCategory}
                   />
                 );

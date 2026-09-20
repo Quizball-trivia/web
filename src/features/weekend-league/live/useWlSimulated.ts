@@ -51,7 +51,7 @@ const BREAK_MS = 14_000;
 type I18n = { en: string; ka: string };
 const i18n = (en: string, ka: string): I18n => ({ en, ka });
 
-interface SimQuestion {
+export interface SimQuestion {
   kind: WlDispatchEventPayload['kind'];
   question: Record<string, unknown>;
   evaluation: Record<string, unknown>;
@@ -147,16 +147,16 @@ type SimStep =
   | { kind: 'break'; game: number; ms: number }
   | { kind: 'final'; ms: number };
 
-function buildScript(): SimStep[] {
+function buildScript(games: number, rounds: number): SimStep[] {
   const steps: SimStep[] = [];
-  for (let g = 0; g < 3; g += 1) {
-    for (let r = 0; r < QUESTIONS.length; r += 1) {
+  for (let g = 0; g < games; g += 1) {
+    for (let r = 0; r < rounds; r += 1) {
       steps.push({ kind: 'question', game: g, round: r, ms: QUESTION_MS });
       const lastOfRound = true; // one question per kind in the sim script
       steps.push({ kind: 'reveal', game: g, round: r, ms: lastOfRound ? ROUND_END_REVEAL_MS : REVEAL_MS });
     }
     steps.push({ kind: 'game_result', game: g, ms: RESULT_MS });
-    if (g < 2) steps.push({ kind: 'break', game: g, ms: BREAK_MS });
+    if (g < games - 1) steps.push({ kind: 'break', game: g, ms: BREAK_MS });
   }
   steps.push({ kind: 'final', ms: Number.POSITIVE_INFINITY });
   return steps;
@@ -181,8 +181,8 @@ function simBoard(game: number, round: number, myScore: number): WlBoardRow[] {
   return rows.slice(0, 24).map((r, i) => ({ ...r, rank: i + 1 }));
 }
 
-function dispatchFor(game: number, round: number, now: number): WlDispatchEventPayload {
-  const q = QUESTIONS[round];
+function dispatchFor(bank: SimQuestion[], game: number, round: number, now: number): WlDispatchEventPayload {
+  const q = bank[round];
   return {
     tournamentId: 'simulated',
     seq: game * 100 + round,
@@ -200,8 +200,8 @@ function dispatchFor(game: number, round: number, now: number): WlDispatchEventP
   };
 }
 
-function revealFor(game: number, round: number, now: number, board: WlBoardRow[]): WlRevealEventPayload {
-  const q = QUESTIONS[round];
+function revealFor(bank: SimQuestion[], game: number, round: number, now: number, board: WlBoardRow[]): WlRevealEventPayload {
+  const q = bank[round];
   const correctKey = typeof q.evaluation['correct_id'] === 'string'
     ? (q.evaluation['correct_id'] as string)
     : Number(q.evaluation['left_value']) > Number(q.evaluation['right_value']) ? 'left' : 'right';
@@ -239,8 +239,16 @@ export interface WlSimControls {
   stepLabel: string;
 }
 
-export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
-  const script = useMemo(() => buildScript(), []);
+export function useWlSimulated(options?: {
+  /** Replace the built-in walkthrough questions (e.g. a real event's set). */
+  questions?: SimQuestion[];
+  /** How many games the script plays (default 3, like the real gauntlet). */
+  games?: number;
+}): { live: WlLiveState; sim: WlSimControls } {
+  const questionsOverride = options?.questions;
+  const bank = useMemo(() => questionsOverride ?? QUESTIONS, [questionsOverride]);
+  const games = options?.games ?? 3;
+  const script = useMemo(() => buildScript(games, bank.length), [games, bank]);
   // One state object with pure functional transitions — StrictMode-safe.
   const [st, setSt] = useState(() => ({
     stepIndex: 0,
@@ -305,7 +313,7 @@ export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
     if (pendingRef.current != null) return;
     const cur = script[st.stepIndex];
     if (cur.kind !== 'question' || st.ack != null) return;
-    const q = QUESTIONS[cur.round];
+    const q = bank[cur.round];
     let correct = false;
     let carry: number | undefined;
     if (q.kind === 'money_drop') {
@@ -342,25 +350,25 @@ export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
         score: prev.ack == null && correct ? prev.score + earned : prev.score,
       }));
     }, 350);
-  }, [script, st.stepIndex, st.ack]);
+  }, [script, bank, st.stepIndex, st.ack]);
 
   const serverNow = useCallback(() => Date.now(), []);
 
   const board = useMemo(() => {
     const g = 'game' in step ? step.game : 2;
-    const r = step.kind === 'question' || step.kind === 'reveal' ? step.round : QUESTIONS.length - 1;
+    const r = step.kind === 'question' || step.kind === 'reveal' ? step.round : bank.length - 1;
     return simBoard(g, r, st.score);
-  }, [step, st.score]);
+  }, [step, bank, st.score]);
 
   const screen: WlLiveScreen = useMemo(() => {
     switch (step.kind) {
       case 'question':
-        return { kind: 'question', attempt: dispatchFor(step.game, step.round, st.startedAt), answer: st.ack };
+        return { kind: 'question', attempt: dispatchFor(bank, step.game, step.round, st.startedAt), answer: st.ack };
       case 'reveal':
         return {
           kind: 'reveal',
-          attempt: dispatchFor(step.game, step.round, st.startedAt - QUESTION_MS),
-          reveal: revealFor(step.game, step.round, st.startedAt, board),
+          attempt: dispatchFor(bank, step.game, step.round, st.startedAt - QUESTION_MS),
+          reveal: revealFor(bank, step.game, step.round, st.startedAt, board),
           answer: st.ack,
         };
       case 'game_result':
@@ -396,7 +404,7 @@ export function useWlSimulated(): { live: WlLiveState; sim: WlSimControls } {
           champion: true,
         };
     }
-  }, [step, st.startedAt, st.ack, board]);
+  }, [step, bank, st.startedAt, st.ack, board]);
 
   const live: WlLiveState = useMemo(() => ({
     connected: true,

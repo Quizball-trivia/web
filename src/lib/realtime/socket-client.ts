@@ -2,6 +2,7 @@ import { io, type Socket } from 'socket.io-client';
 import { API_BASE_URL } from '@/lib/config';
 import { getSupabaseAccessToken, getSupabaseClient } from '@/lib/auth/supabase';
 import { logger } from '@/utils/logger';
+import { getGuestPrincipalToken, markGuestPrincipalRefused } from './realtime-principal';
 import { trackSocketConnectionFailed, trackSocketReconnected } from '@/lib/analytics/game-events';
 import {
   markRealtimeConnected,
@@ -163,6 +164,8 @@ function wait(ms: number): Promise<void> {
 }
 
 async function ensureValidAccessToken(): Promise<string | null> {
+  const guestToken = getGuestPrincipalToken();
+  if (guestToken) return guestToken;
   const currentToken = await getSupabaseAccessToken();
   if (!currentToken) return null;
   if (!isTokenExpiredOrExpiringSoon(currentToken)) {
@@ -359,6 +362,11 @@ function createSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
       ...socketSnapshot(socket),
     });
     if (isAuthConnectError(error.message)) {
+      if (getGuestPrincipalToken()) {
+        markGuestPrincipalRefused();
+        markRealtimeConnectionError(error.message);
+        return;
+      }
       logger.info('Socket auth connect error; retrying after Supabase session settles', { message: error.message });
       void recoverSocketAuthAndReconnect(socket);
       return;

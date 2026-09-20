@@ -1,0 +1,80 @@
+{
+  "tool": "built-in image_gen",
+  "date": "2026-09-05",
+  "style": "Use case: style-transfer. Asset type: Quizball football game card illustration, 16:9 landscape, intended display 1600x900.\nInput images: existing Quizball card illustrations, STYLE REFERENCES ONLY. Create a different scene for the requested mode; keep the same visual language as the reference series.\nStyle/medium: polished 2D cartoon with softly shaded depth, smooth confident outlines, simple friendly dot eyes and rounded football characters, expressive but uncluttered. Deep midnight navy football interiors/stadium, saturated royal blue, cyan and purple accents, warm gold highlights, dramatic localized glowing light. Match the existing artwork rather than photorealism or plastic 3D.\nComposition: full-bleed 16:9 landscape, one obvious game mechanic, large readable foreground props and characters, meaningful scene fills frame, clean enough to read at small card size. Keep main focal objects within central 80%.\nConstraints: no heading, no captions, no lettering, no words, no numbers unless explicitly requested below, no real logos, no watermarks, no card UI border. Friendly football trivia atmosphere.",
+  "assets": [
+    {
+      "slug": "daily-fifaCards",
+      "title": "FIFA Cards",
+      "subject": "In a dark blue football locker room, a curious young woman football fan in a blue jersey studies one giant glowing golden football player card at center-right. The gold card features an anonymous dark navy player silhouette with a single luminous question-mark symbol, and small orderly gold stat bars beneath it; three small clue medallions with generic nation flag, league trophy, and club shield symbols hover nearby. Her hand points at one revealed clue. A football at the bottom provides context. Gold spotlight and cyan edge light. This is guessing one mystery player, not opening a pack.",
+      "ref": "mini-squad-collection"
+    },
+    {
+      "slug": "daily-clues",
+      "title": "Who Am I?",
+      "subject": "Inside a midnight blue football detective room, a smiling curly-haired boy in a teal jersey uses a magnifying glass to inspect three glowing clue cards spread across a desk: a generic football shirt, a globe/flag symbol, and a golden trophy symbol. The clues are connected by luminous cyan lines to a large anonymous footballer silhouette on a board at right with one golden question mark over the chest. Reveal clues and deduce the mystery footballer. Warm desk lamp, blue rim light, simple bold props.",
+      "ref": "daily-imposter"
+    },
+    {
+      "slug": "daily-putInOrder",
+      "title": "Put In Order",
+      "subject": "A friendly young woman in a purple football jersey stands beside a chunky glowing blue tactics board, rearranging four oversized football-player portrait tiles into descending stepped slots. One tile visibly floats in her hand above the empty slot; short gold up/down arrows indicate ranking. Portraits are generic diverse cartoon footballers, with stat bars of clearly different lengths rather than numbers. Football on a low shelf, dark navy locker room, cyan slot outlines, gold successful placement glow. Readable ordered stack as the dominant mechanic.",
+      "ref": "daily-careerPath"
+    },
+    {
+      "slug": "lab-own-goal",
+      "title": "Own Goal",
+      "subject": "Two friendly football captains, one in royal blue at left and one in coral red at right, look across a large tabletop grid of chunky illustrated football meme cards, some blue and some red. Each card has a simple humorous football face or a football prop pictogram. One dangerous black card at the center has a football rolling backward into its own tiny red goal, glowing warning red; a blue captain's hand hesitates above it. Dark navy stadium club lounge, playful deduction game, cyan blue and red team glows. Show claiming cards while avoiding the own-goal trap.",
+      "ref": "mini-quiz-board"
+    },
+    {
+      "slug": "lab-say-it-with-memes",
+      "title": "Say It With Memes",
+      "subject": "In a dark blue football clubhouse, an amused girl football fan in violet jersey fans out three oversized illustrated meme cards toward her teammate in a blue jersey. Cards show expressive generic cartoon football faces: astonished eyes, laughing face, dramatic crying face; no letters. The teammate thinks of a hidden footballer represented by a small glowing navy silhouette card with a gold question mark floating behind them. A gently glowing crossed-out speech bubble pictogram signals no words. Cyan and magenta lights, friendly playful expressions, card-based guessing as focal point.",
+      "ref": "mini-squad-collection"
+    },
+    {
+      "slug": "lab-draft-battle",
+      "title": "Draft Battle",
+      "subject": "Two cheerful football managers, a brown-skinned woman in purple and a man in royal blue, draft generic golden player cards onto opposing halves of a luminous green football formation board on a table. One manager places the final card into a cyan outlined slot. A chunky golden championship cup stands at the rear center as the prize, and three oversized legendary squad cards glow behind it. The formation and card choice dominate, dark midnight blue locker room, warm gold highlights and cyan rim light. No auction gavel and no lettering.",
+      "ref": "mini-squad-collection"
+    },
+    {
+      "slug": "lab-top-10-knockout",
+      "title": "Top 10 Knockout",
+      "subject": "A football quiz showdown in a navy blue stadium gameshow: two friendly contestants at blue and purple buzzer podiums face a towering central board with exactly ten chunky horizontal answer slots. A few slots reveal generic football player portraits, remaining slots are dark with glowing question-mark symbols. Each podium has exactly three small glowing heart lamps representing lives, with one heart dimmed on one podium. Gold spotlight on the next revealed portrait, cyan and violet board edges. Show a hidden top-ten list and competitive guessing. No text or digits.",
+      "ref": "mini-quiz-board",
+      "revisionPrompt": "Use case: precise-object-edit. Edit this Quizball game-card illustration. Change ONLY the central answer board: it currently has nine horizontal slots; it MUST have exactly TEN horizontal slots, equally spaced and fully visible. Make each row slightly shorter vertically to fit ten rows inside the existing frame. Keep three revealed football-player portraits and seven hidden question-mark rows, totaling 10 rows; a revealed gold row among them. Keep the left contestant, right robot, two podiums, heart lamps, stadium lighting, palette, 16:9 framing, and cartoon drawing style unchanged. No heading, row numbers, captions, or extra elements."
+    },
+    {
+      "slug": "lab-missing-xi",
+      "title": "Missing XI",
+      "subject": "A friendly curly-haired football coach in blue jersey stands at left of a large upright green football tactics board. On the board exactly eleven football shirt positions form a recognizable 4-3-3 formation; ten are small generic blue shirts and one central attacking slot is a glowing golden outlined mystery shirt with a question mark. The coach holds a matching blue shirt tile just off the board, completing a legendary starting lineup. Navy locker room behind, gold spotlight on missing position and cyan edge lighting, no names or shirt numbers.",
+      "ref": "mini-squad-collection"
+    },
+    {
+      "slug": "lab-ball-knowledge",
+      "title": "Ball Knowledge",
+      "subject": "In a midnight blue football museum quiz room, a friendly knowledgeable girl with round glasses and purple football jersey proudly discovers a rare glowing golden football-player silhouette card behind a cluster of ordinary blue silhouette cards. Small piles of gold reward coins beside the rare card, only one coin beside the ordinary cards show rare answers scoring more. A football under her arm and a softly lit wall of unbranded shirts provide context. One clear oversized rare card, cyan and gold glow, confident delighted expression. No words or digits.",
+      "ref": "daily-careerPath"
+    },
+    {
+      "slug": "lab-bingo-battle",
+      "title": "Bingo Battle",
+      "subject": "Two friendly football fans with blue and coral jerseys play on a large luminous blue bingo board, a clearly regular 3 by 3 grid. Grid cells show simple generic football symbols such as shirts, balls, boots, trophies, and player portraits. Exactly three cells across one diagonal glow gold as a completed winning line, linked by a single gold beam. One smiling fan places a round football token on the final corner cell, other fan reacts playfully. Deep navy football club room, cyan and violet glow, board fills most of the scene. No numbers or text.",
+      "ref": "mini-quiz-board"
+    },
+    {
+      "slug": "lab-connections-race",
+      "title": "Connections Race",
+      "subject": "Two friendly football quiz rivals lean over a large tilted tabletop board with sixteen chunky player portrait tiles in a 4 by 4 arrangement. Four color-coded groups are suggested by glowing cyan, purple, green, and gold outlines around sets of four portraits, with one quartet lifting together as the solved group. The portraits are generic cartoon footballers with distinct hairstyles and jersey colors, no real people. A small glowing hourglass at the side suggests the race. Dark navy stadium lounge, dramatic cyan and gold lighting, tile grouping is the main focus. No text or numbers.",
+      "ref": "mini-quiz-board"
+    },
+    {
+      "slug": "lab-stat-501",
+      "title": "Stat 501",
+      "subject": "A friendly footballer in a blue jersey and a friendly football-shaped robot opponent play a football statistics darts challenge inside a midnight blue stadium arcade. Large circular dartboard at center-right has alternating blue and navy wedges with a luminous gold bullseye, no numbers around rim. A dart with football-patterned flight hits near the bullseye. Beside it a chunky luminous scoreboard displays exactly '501' above a downward cyan arrow; this is the ONLY text in the image. Foreground generic player stat cards have simple colored bar charts, no lettering. Cyan light and golden sparks, friendly quiz atmosphere.",
+      "ref": "mini-quiz-board"
+    }
+  ]
+}

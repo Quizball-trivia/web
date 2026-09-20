@@ -15,13 +15,16 @@ export function CountdownTimer({
   endsAt,
   totalMs = RAISE_TURN_MS,
   urgentLabel,
+  pausedAt = null,
 }: {
   endsAt: number;
   totalMs?: number;
   /** Announced to screen readers and shown under the puck when time is short. */
   urgentLabel?: string;
+  /** Training: the clock is frozen at this instant (a tooltip is open); the engine shifts `endsAt` on resume. */
+  pausedAt?: number | null;
 }) {
-  const remainingMs = () => Math.max(0, endsAt - Date.now());
+  const remainingMs = () => Math.max(0, endsAt - (pausedAt ?? Date.now()));
   const [secondsLeft, setSecondsLeft] = useState(() => Math.ceil(remainingMs() / 1000));
   // Captured once per `endsAt` so the bar animates from wherever the clock
   // ACTUALLY is. Starting at 100% made a mid-turn mount (reload, rejoin,
@@ -32,10 +35,11 @@ export function CountdownTimer({
   useEffect(() => {
     const update = () => setSecondsLeft(Math.ceil(remainingMs() / 1000));
     update();
+    if (pausedAt !== null) return;
     const interval = setInterval(update, 200);
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- remainingMs reads endsAt
-  }, [endsAt]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- remainingMs reads endsAt/pausedAt
+  }, [endsAt, pausedAt]);
 
   const isUrgent = secondsLeft <= URGENT_AT_SECONDS;
   // Traffic-light bar: green while comfortable, yellow past halfway, red when
@@ -64,13 +68,17 @@ export function CountdownTimer({
         </span>
       </motion.div>
       <div className="h-1 w-full overflow-hidden rounded-full bg-black/15">
-        <motion.div
-          key={`bar-${endsAt}`}
-          initial={{ width: `${startFraction * 100}%` }}
-          animate={{ width: '0%' }}
-          transition={{ duration: (startFraction * totalMs) / 1000, ease: 'linear' }}
-          className={`h-full rounded-full transition-colors duration-500 ${barColor}`}
-        />
+        {pausedAt !== null ? (
+          <div className={`h-full rounded-full ${barColor}`} style={{ width: `${fraction * 100}%` }} />
+        ) : (
+          <motion.div
+            key={`bar-${endsAt}`}
+            initial={{ width: `${startFraction * 100}%` }}
+            animate={{ width: '0%' }}
+            transition={{ duration: (startFraction * totalMs) / 1000, ease: 'linear' }}
+            className={`h-full rounded-full transition-colors duration-500 ${barColor}`}
+          />
+        )}
       </div>
     </div>
   );

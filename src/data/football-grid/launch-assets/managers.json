@@ -1,0 +1,1887 @@
+[
+  {
+    "id": "pep-guardiola",
+    "labelEn": "Pep Guardiola",
+    "labelKa": "პეპ გვარდიოლა",
+    "wikipediaTitle": "Pep Guardiola",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/pep-guardiola.jpg",
+      "sha256": "b0cf6e8b65ac1f5aa665150b47073368baa80a4e3e2e106b291ba2b6cd32fad5",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 828,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Pep_Guardiola",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Josep_Guardiola_2023-10-04_Fu%C3%9Fball,_M%C3%A4nner,_UEFA_Champions_League,_RB_Leipzig_-_Manchester_City_FC_1DX_2797_(cropped).jpg",
+        "artist": "<a href=\"//commons.wikimedia.org/wiki/User:Stepro\" title=\"User:Stepro\">Steffen Prößdorf</a>",
+        "credit": "<span class=\"int-own-work\">Self-photographed</span>",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+        "usageTerms": "Creative Commons Attribution-Share Alike 4.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/pep-guardiola-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "carlo-ancelotti",
+    "labelEn": "Carlo Ancelotti",
+    "labelKa": "კარლო ანჩელოტი",
+    "wikipediaTitle": "Carlo Ancelotti",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/carlo-ancelotti.jpg",
+      "sha256": "da932468ea3f9d986d92486e96c3c823dca74e083319d79914d1e2d76eaf5769",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 960,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Carlo_Ancelotti",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Carlo_Ancelotti_Brazil_V_Morocco_13_June_2026-47.jpg",
+        "artist": "<a href=\"//commons.wikimedia.org/wiki/User:Berlination\" title=\"User:Berlination\">Bryan Berlin</a>",
+        "credit": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+        "usageTerms": "Creative Commons Attribution-Share Alike 4.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/carlo-ancelotti-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "jose-mourinho",
+    "labelEn": "José Mourinho",
+    "labelKa": "ჟოზე მოურინიო",
+    "wikipediaTitle": "José Mourinho",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/jose-mourinho.jpg",
+      "sha256": "50a2e29367e602eb8e063bb668525d894fc61dc669641585eea491e6edcbf89a",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 803,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Jos%C3%A9_Mourinho",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Jos%C3%A9_Mourinho_20250206_(1).jpg",
+        "artist": "<div class=\"fn value\">\n<a href=\"//commons.wikimedia.org/wiki/User:Zafer\" title=\"User:Zafer\">Zafer</a></div>",
+        "credit": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "license": "CC BY 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+        "usageTerms": "Creative Commons Attribution 4.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/jose-mourinho-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "jurgen-klopp",
+    "labelEn": "Jürgen Klopp",
+    "labelKa": "იურგენ კლოპი",
+    "wikipediaTitle": "Jürgen Klopp",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/jurgen-klopp.jpg",
+      "sha256": "d6c03db579f1334f82ab831bad92846fcc85fc916d2025f38727d12be9481a3d",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 1017,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/J%C3%BCrgen_Klopp",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:2022-07-21_Fu%C3%9Fball,_M%C3%A4nner,Freundschaftsspiel,_RB_Leipzig_-_FC_Liverpool_1DX_2243_by_Stepro_(cropped)_(cropped).jpg",
+        "artist": "<b>Derivative work: </b> <a href=\"//commons.wikimedia.org/w/index.php?title=User:EndzoneEnthusiast&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:EndzoneEnthusiast (page does not exist)\">EndzoneEnthusiast</a>",
+        "credit": "<span class=\"int-own-work\">Self-photographed</span>",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+        "usageTerms": "Creative Commons Attribution-Share Alike 4.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/jurgen-klopp-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "arsene-wenger",
+    "labelEn": "Arsène Wenger",
+    "labelKa": "არსენ ვენგერი",
+    "wikipediaTitle": "Arsène Wenger",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/arsene-wenger.jpg",
+      "sha256": "26fb342ae18d03327e8955db904eaa1639f3c9d4c36fc1f586a1768aabd42994",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 863,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Ars%C3%A8ne_Wenger",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:25th_Laureus_World_Sports_Awards_-_Red_Carpet_-_Ars%C3%A8ne_Wenger_-_240422_192850_(cropped).jpg",
+        "artist": "<a href=\"//commons.wikimedia.org/wiki/User:Barcex\" title=\"User:Barcex\">Barcex</a>",
+        "credit": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+        "usageTerms": "Creative Commons Attribution-Share Alike 4.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/arsene-wenger-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "alex-ferguson",
+    "labelEn": "Sir Alex Ferguson",
+    "labelKa": "სერ ალექს ფერგიუსონი",
+    "wikipediaTitle": "Alex Ferguson",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/alex-ferguson.jpg",
+      "sha256": "a98a213a90552e07fbd3371c76fb201d22552020c28064e12a0688f3fe6e8683",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 840,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Alex_Ferguson",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Alex_Ferguson_2012.jpg",
+        "artist": "<a href=\"//commons.wikimedia.org/w/index.php?title=User:Richardpell79&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:Richardpell79 (page does not exist)\">Richardpell79</a>",
+        "credit": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "license": "CC BY-SA 3.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+        "usageTerms": "Creative Commons Attribution-Share Alike 3.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/alex-ferguson-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "zinedine-zidane",
+    "labelEn": "Zinedine Zidane",
+    "labelKa": "ზინედინ ზიდანი",
+    "wikipediaTitle": "Zinedine Zidane",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/zinedine-zidane.jpg",
+      "sha256": "3ac37e5975be3dea05909f24e66dea382710c0e031a64263c79e0774181dc676",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 849,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Zinedine_Zidane",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Zinedine_Zidane_by_Tasnim_03.jpg",
+        "artist": "Hadi Abyar",
+        "credit": "<a rel=\"nofollow\" class=\"external free\" href=\"https://newsmedia.tasnimnews.ir/Tasnim/Uploaded/Image/1396/09/22/1396092209314019412768864.jpg\">https://newsmedia.tasnimnews.ir/Tasnim/Uploaded/Image/1396/09/22/1396092209314019412768864.jpg</a>",
+        "license": "CC BY 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+        "usageTerms": "Creative Commons Attribution 4.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/zinedine-zidane-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "luis-enrique",
+    "labelEn": "Luis Enrique",
+    "labelKa": "ლუის ენრიკე",
+    "wikipediaTitle": "Luis Enrique",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/luis-enrique.jpg",
+      "sha256": "9d33eff2b66576cd22f4a84aea96cef7828c5e8795fd647a27a7d83cbbca0822",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 1060,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Luis_Enrique",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Luis_Enrique_2014.jpg",
+        "artist": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.flickr.com/people/33754598@N06\">Lluís</a> from Sabadell (Barcelona), España",
+        "credit": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.flickr.com/photos/198671919@N02/53023695685/in/dateposted-public/\">LFS_13335</a>",
+        "license": "CC BY 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+        "usageTerms": "Creative Commons Attribution 2.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/luis-enrique-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "diego-simeone",
+    "labelEn": "Diego Simeone",
+    "labelKa": "დიეგო სიმეონე",
+    "wikipediaTitle": "Diego Simeone",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/diego-simeone.jpg",
+      "sha256": "42b0b7cd7c30465a39b7a5b8b99c1dd35a347de9f420e19d045704e23bc16f89",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 854,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Diego_Simeone",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:25th_Laureus_World_Sports_Awards_-_Red_Carpet_-_Diego_Simeone_-_240422_192621-2_(cropped).jpg",
+        "artist": "<a href=\"//commons.wikimedia.org/wiki/User:Barcex\" title=\"User:Barcex\">Barcex</a>",
+        "credit": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+        "usageTerms": "Creative Commons Attribution-Share Alike 4.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/diego-simeone-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "antonio-conte",
+    "labelEn": "Antonio Conte",
+    "labelKa": "ანტონიო კონტე",
+    "wikipediaTitle": "Antonio Conte",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/antonio-conte.jpg",
+      "sha256": "4b7ec07d8a545b2a2d66fac1281de05eacc588334029b2c4e1795519d5a557eb",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 835,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Antonio_Conte",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:20150616_Antonio_Conte.jpg",
+        "artist": "Clément Bucco-Lechat",
+        "credit": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "license": "CC BY-SA 3.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+        "usageTerms": "Creative Commons Attribution-Share Alike 3.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/antonio-conte-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "thomas-tuchel",
+    "labelEn": "Thomas Tuchel",
+    "labelKa": "თომას ტუხელი",
+    "wikipediaTitle": "Thomas Tuchel",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/thomas-tuchel.jpg",
+      "sha256": "5e770d14ef522a839cf23b623198ea289335abae5c5f4c1ee28d343946d8c6d4",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 960,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Thomas_Tuchel",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Thomas_Tuchel_England_v_Ghana_23_June_2026-081.jpg",
+        "artist": "<a href=\"//commons.wikimedia.org/wiki/User:Berlination\" title=\"User:Berlination\">Bryan Berlin</a>",
+        "credit": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+        "usageTerms": "Creative Commons Attribution-Share Alike 4.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/thomas-tuchel-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "hansi-flick",
+    "labelEn": "Hansi Flick",
+    "labelKa": "ჰანსი ფლიკი",
+    "wikipediaTitle": "Hansi Flick",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/hansi-flick.jpg",
+      "sha256": "4a1f8f7ac787a52e39b2210011fb996566ae62b5b2221b0e223670519d3ae460",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 943,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Hansi_Flick",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:2022_Hansi_Flick_(cropped).jpg",
+        "artist": "<a href=\"//commons.wikimedia.org/wiki/User:Stepro\" title=\"User:Stepro\">Steffen Prößdorf</a>",
+        "credit": "<span class=\"int-own-work\">Self-photographed</span>",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+        "usageTerms": "Creative Commons Attribution-Share Alike 4.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/hansi-flick-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "xabi-alonso",
+    "labelEn": "Xabi Alonso",
+    "labelKa": "ჩაბი ალონსო",
+    "wikipediaTitle": "Xabi Alonso",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/xabi-alonso.jpg",
+      "sha256": "bf5ca58bf68f89fd3c7d401756d60c396e652f27e9f1529def73c5d9ae4c2e62",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 961,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Xabi_Alonso",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Los_Caminos_del_f%C3%BAtbol._Xabi_Alonso_(39666778464)_(cropped).jpg",
+        "artist": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.flickr.com/people/43860468@N02\">DONOSTIA KULTURA</a>",
+        "credit": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.flickr.com/photos/donostiakultura/39666778464/\">Los Caminos del fútbol. Xabi Alonso</a>",
+        "license": "CC BY-SA 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+        "usageTerms": "Creative Commons Attribution-Share Alike 2.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/xabi-alonso-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "mikel-arteta",
+    "labelEn": "Mikel Arteta",
+    "labelKa": "მიკელ არტეტა",
+    "wikipediaTitle": "Mikel Arteta",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/mikel-arteta.png",
+      "sha256": "b436472c610c4fd22ca7a39da3ca8d60f720eefe864efd73cff776973c9e3b23",
+      "mime": "image/png",
+      "width": 640,
+      "height": 874,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Mikel_Arteta",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Mikel_Arteta_2021_(cropped).png",
+        "artist": "Prime Video AU &amp; NZ",
+        "credit": "<bdi lang=\"en\" dir=\"ltr\"><a href=\"//commons.wikimedia.org/wiki/Commons:YouTube_files\" title=\"Commons:YouTube files\">YouTube</a>: <a rel=\"nofollow\" class=\"external text\" href=\"https://www.youtube.com/watch?v=4o2YVBGWsYY\"><bdi lang=\"\">All or Nothing: Arsenal - Official Trailer</bdi></a> – View/save archived versions on <a rel=\"nofollow\" class=\"external text\" href=\"https://web.archive.org/web/*/https://www.youtube.com/watch?v=4o2YVBGWsYY\">archive.org</a></bdi>",
+        "license": "CC BY 3.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+        "usageTerms": "Creative Commons Attribution 3.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/mikel-arteta-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "unai-emery",
+    "labelEn": "Unai Emery",
+    "labelKa": "უნაი ემერი",
+    "wikipediaTitle": "Unai Emery",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/unai-emery.jpg",
+      "sha256": "afb4d71cb5a8aae45c62325afd22d3035db262cc6d6d2a0d16b473f0a3918477",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 808,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Unai_Emery",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Unai_Emery_-_Sevilla_(cropped).jpg",
+        "artist": "Aleksandr Osipov",
+        "credit": "<a rel=\"nofollow\" class=\"external free\" href=\"https://www.flickr.com/photos/da_belkin/26568227970/\">https://www.flickr.com/photos/da_belkin/26568227970/</a>",
+        "license": "CC BY-SA 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+        "usageTerms": "Creative Commons Attribution-Share Alike 2.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/unai-emery-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "roberto-mancini",
+    "labelEn": "Roberto Mancini",
+    "labelKa": "რობერტო მანჩინი",
+    "wikipediaTitle": "Roberto Mancini",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/roberto-mancini.jpg",
+      "sha256": "73b2c38417f784aa05fc43e76b892ffc04ee62477771b452eac15b0700a0167b",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 839,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Roberto_Mancini",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Roberto_Mancini_Saudi_Arabia-South_Korea_match_2023_AFC_Asian_Cup.jpg",
+        "artist": "M.Sadegh Nikgostar",
+        "credit": "<a rel=\"nofollow\" class=\"external free\" href=\"https://media.farsnews.ir/Uploaded/Files/Images/1402/11/10/14021110000949638422488529256741_36404_PhotoT.jpg\">https://media.farsnews.ir/Uploaded/Files/Images/1402/11/10/14021110000949638422488529256741_36404_PhotoT.jpg</a>",
+        "license": "CC BY 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+        "usageTerms": "Creative Commons Attribution 4.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/roberto-mancini-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "massimiliano-allegri",
+    "labelEn": "Massimiliano Allegri",
+    "labelKa": "მასიმილიანო ალეგრი",
+    "wikipediaTitle": "Massimiliano Allegri",
+    "primary": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/massimiliano-allegri-fallback.svg",
+      "source": {
+        "provider": "Quizball",
+        "license": "proprietary",
+        "rightsStatus": "owned"
+      }
+    },
+    "providerCandidate": {
+      "assetPath": "/assets/football-grid/managers/massimiliano-allegri.jpg",
+      "sha256": "cb288bef92cb00a6e873d69b83c838add48715bcfbfe3f5f11e0acbce3af037a",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 879,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Massimiliano_Allegri",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Incontro_con_le_squadre_finaliste_della_Coppa_Italia_di_calcio_Frecciarossa_Atalanta_-_Juventus_01_-_Massimiliano_Allegri_(cropped).jpg",
+        "artist": "<b>Original: </b> Quirinale / <b>Derivative work: </b> <a href=\"//commons.wikimedia.org/w/index.php?title=User:Danyele&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:Danyele (page does not exist)\">Danyele</a>",
+        "credit": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.quirinale.it/elementi/111381\">quirinale.it</a> (<a href=\"//commons.wikimedia.org/wiki/File:Incontro_con_le_squadre_finaliste_della_Coppa_Italia_di_calcio_Frecciarossa_Atalanta_-_Juventus_01.jpg\" title=\"File:Incontro con le squadre finaliste della Coppa Italia di calcio Frecciarossa Atalanta - Juventus 01.jpg\">original photo</a>)",
+        "license": "Attribution",
+        "licenseUrl": null,
+        "usageTerms": null,
+        "rightsStatus": "metadata-captured-review-required"
+      }
+    },
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/_launch-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "luciano-spalletti",
+    "labelEn": "Luciano Spalletti",
+    "labelKa": "ლუჩანო სპალეტი",
+    "wikipediaTitle": "Luciano Spalletti",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/luciano-spalletti.jpg",
+      "sha256": "d5ca49f85540df5f5a7159c02b020c4efd561fb9433be33d545169c74223306e",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 779,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Luciano_Spalletti",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Norway_Italy_-_June_2025_A_44_(Luciano_Spalletti).jpg",
+        "artist": "<a href=\"//commons.wikimedia.org/wiki/User:MichaelEmilio\" title=\"User:MichaelEmilio\">MichaelEmilio</a>",
+        "credit": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "license": "CC BY 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+        "usageTerms": "Creative Commons Attribution 4.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/luciano-spalletti-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "rafael-benitez",
+    "labelEn": "Rafael Benítez",
+    "labelKa": "რაფაელ ბენიტესი",
+    "wikipediaTitle": "Rafael Benítez",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/rafael-benitez.jpg",
+      "sha256": "56abb3f54b487265424b8ac866db8931ec0646a9fd1fca18987ef02701ac25e3",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 609,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Rafael_Ben%C3%ADtez",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Shahter-Reak_M_2015_(2).jpg",
+        "artist": "Дмитрий Журавель",
+        "credit": "<a rel=\"nofollow\" class=\"external text\" href=\"http://football.ua/gallery/2444.html\">Football.ua</a>",
+        "license": "CC BY-SA 3.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+        "usageTerms": "Creative Commons Attribution-Share Alike 3.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/rafael-benitez-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "didier-deschamps",
+    "labelEn": "Didier Deschamps",
+    "labelKa": "დიდიე დეშამი",
+    "wikipediaTitle": "Didier Deschamps",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/didier-deschamps.jpg",
+      "sha256": "10a54adcd376d9d905d836fe0b9ee851222776fa6417dbc3eae4a87118aa9ff7",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 960,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Didier_Deschamps",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Didier_Deschamps_France_v_Senegal_16_June_2026-294.jpg",
+        "artist": "<a href=\"//commons.wikimedia.org/wiki/User:Berlination\" title=\"User:Berlination\">Bryan Berlin</a>",
+        "credit": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+        "usageTerms": "Creative Commons Attribution-Share Alike 4.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/didier-deschamps-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "joachim-low",
+    "labelEn": "Joachim Löw",
+    "labelKa": "იოახიმ ლიოვი",
+    "wikipediaTitle": "Joachim Löw",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/joachim-low.jpg",
+      "sha256": "92b80683eab4c136b30c2cd90e5b8d77f201fc29f2e00b957152cf908e019ef2",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 960,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Joachim_L%C3%B6w",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:20180602_FIFA_Friendly_Match_Austria_vs._Germany_Jogi_L%C3%B6w_850_1386.jpg",
+        "artist": "<a href=\"//commons.wikimedia.org/wiki/User:Granada\" title=\"User:Granada\">Granada</a>",
+        "credit": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+        "usageTerms": "Creative Commons Attribution-Share Alike 4.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/joachim-low-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "vicente-del-bosque",
+    "labelEn": "Vicente del Bosque",
+    "labelKa": "ვისენტე დელ ბოსკე",
+    "wikipediaTitle": "Vicente del Bosque",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/vicente-del-bosque.jpg",
+      "sha256": "a5b15c981065ee3ae1b37f44cc50c2930ad8044462d23e15444dbe325b4225da",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 965,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Vicente_del_Bosque",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Vicente_del_Bosque_Euro_2012_final.jpg",
+        "artist": "Илья Хохлов",
+        "credit": "<a rel=\"nofollow\" class=\"external text\" href=\"http://2012.football.ua/Default.aspx?menu_id=gallery&amp;id=728&amp;photo_id=46155\">Football.ua</a>",
+        "license": "CC BY-SA 3.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+        "usageTerms": "Creative Commons Attribution-Share Alike 3.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/vicente-del-bosque-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "fabio-capello",
+    "labelEn": "Fabio Capello",
+    "labelKa": "ფაბიო კაპელო",
+    "wikipediaTitle": "Fabio Capello",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/fabio-capello.jpg",
+      "sha256": "ca3a02aafd7d16a80e5d8634d68eef487f664a4575c4c4d687debd3465a7b759",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 743,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Fabio_Capello",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:25th_Laureus_World_Sports_Awards_-_Red_Carpet_-_Fabio_Capello_-_240422_181452_(cropped).jpg",
+        "artist": "<a href=\"//commons.wikimedia.org/wiki/User:Barcex\" title=\"User:Barcex\">Barcex</a>",
+        "credit": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+        "usageTerms": "Creative Commons Attribution-Share Alike 4.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/fabio-capello-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "marcello-lippi",
+    "labelEn": "Marcello Lippi",
+    "labelKa": "მარჩელო ლიპი",
+    "wikipediaTitle": "Marcello Lippi",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/marcello-lippi.jpg",
+      "sha256": "04c93de439d1784213b2bcacbc9203985ae3c6143ac9ae7fcb8b9bca5d5a9e8e",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 787,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Marcello_Lippi",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Marcello_Lippi_at_China-Iran_press_conference_20190123.jpg",
+        "artist": "Mojnews",
+        "credit": "<a rel=\"nofollow\" class=\"external free\" href=\"https://www.mojnews.com/%D8%A8%D8%AE%D8%B4-%D8%B9%DA%A9%D8%B3-95/261782-%D9%86%D8%B4%D8%B3%D8%AA-%D8%AE%D8%A8%D8%B1%DB%8C-%D8%AA%D9%85%D8%B1%DB%8C%D9%86-%D8%AA%DB%8C%D9%85-%D9%85%D9%84%DB%8C-%D9%81%D9%88%D8%AA%D8%A8%D8%A7%D9%84-%D9%82%D8%A8%D9%84-%D8%A7%D8%B2-%D8%AF%DB%8C%D8%AF%D8%A7%D8%B1-%D8%A8%D8%A7-%DA%86%DB%8C%D9%86\">https://www.mojnews.com/%D8%A8%D8%AE%D8%B4-%D8%B9%DA%A9%D8%B3-95/261782-%D9%86%D8%B4%D8%B3%D8%AA-%D8%AE%D8%A8%D8%B1%DB%8C-%D8%AA%D9%85%D8%B1%DB%8C%D9%86-%D8%AA%DB%8C%D9%85-%D9%85%D9%84%DB%8C-%D9%81%D9%88%D8%AA%D8%A8%D8%A7%D9%84-%D9%82%D8%A8%D9%84-%D8%A7%D8%B2-%D8%AF%DB%8C%D8%AF%D8%A7%D8%B1-%D8%A8%D8%A7-%DA%86%DB%8C%D9%86</a>",
+        "license": "CC BY 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+        "usageTerms": "Creative Commons Attribution 4.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/marcello-lippi-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "louis-van-gaal",
+    "labelEn": "Louis van Gaal",
+    "labelKa": "ლუი ვან გაალი",
+    "wikipediaTitle": "Louis van Gaal",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/louis-van-gaal.jpg",
+      "sha256": "2292304de4dbb0c4bbb48710342ba7b68fc3a456bb3c1d3c948b4ab8fd5919a1",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 966,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Louis_van_Gaal",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Louis_van_Gaal_2014.jpg",
+        "artist": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.flickr.com/people/95144634@N07\">Congres in Beeld</a> from Eindhoven, The Netherlands",
+        "credit": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.flickr.com/photos/wvdo/13817274925/\">WVDO_2014041286.jpg</a>",
+        "license": "CC BY-SA 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+        "usageTerms": "Creative Commons Attribution-Share Alike 2.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/louis-van-gaal-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "guus-hiddink",
+    "labelEn": "Guus Hiddink",
+    "labelKa": "გუს ჰიდინკი",
+    "wikipediaTitle": "Guus Hiddink",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/guus-hiddink.jpg",
+      "sha256": "2d99805010bf5d62a7520830fd4bec7b6a45093b2caa783b42d585f325c7c9ba",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 673,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Guus_Hiddink",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Guus_Hiddink_2012.jpg",
+        "artist": "Степиньш Ольга",
+        "credit": "<a rel=\"nofollow\" class=\"external free\" href=\"http://soccer.ru/gallery/49007\">http://soccer.ru/gallery/49007</a>",
+        "license": "CC BY-SA 3.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+        "usageTerms": "Creative Commons Attribution-Share Alike 3.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/guus-hiddink-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "ronald-koeman",
+    "labelEn": "Ronald Koeman",
+    "labelKa": "რონალდ კუმანი",
+    "wikipediaTitle": "Ronald Koeman",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/ronald-koeman.jpg",
+      "sha256": "c4fcf2918f8416ad86d121e36fdbcea2be358926c7853b4f5b71e6fbd2554916",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 900,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Ronald_Koeman",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:%D0%9C%D0%B0%D1%82%D1%87_%C2%AB%D0%94%D0%B8%D0%BD%D0%B0%D0%BC%D0%BE%C2%BB_-_%C2%AB%D0%91%D0%B0%D1%80%D1%81%D0%B5%D0%BB%D0%BE%D0%BD%D0%B0%C2%BB_0-4._24_%D0%BD%D0%BE%D1%8F%D0%B1%D1%80%D1%8F_2020_%D0%B3%D0%BE%D0%B4%D0%B0_%E2%80%94_1166990_(Ronald_Koeman).jpg",
+        "artist": "<bdi><a href=\"https://www.wikidata.org/wiki/Q131344231\" class=\"extiw\" title=\"d:Q131344231\"><span title=\"Ukrainian photographer\">Olga Shcherbytska</span></a></bdi>",
+        "credit": "<a rel=\"nofollow\" class=\"external free\" href=\"https://www.dynamomania.com/album/2056-dinamo---barselona-04-24-noyabrya-2020-goda/1166990\">https://www.dynamomania.com/album/2056-dinamo---barselona-04-24-noyabrya-2020-goda/1166990</a>",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+        "usageTerms": "Creative Commons Attribution-Share Alike 4.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/ronald-koeman-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "frank-rijkaard",
+    "labelEn": "Frank Rijkaard",
+    "labelKa": "ფრანკ რაიკარდი",
+    "wikipediaTitle": "Frank Rijkaard",
+    "primary": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/frank-rijkaard-fallback.svg",
+      "source": {
+        "provider": "Quizball",
+        "license": "proprietary",
+        "rightsStatus": "owned"
+      }
+    },
+    "providerCandidate": {
+      "assetPath": "/assets/football-grid/managers/frank-rijkaard.jpg",
+      "sha256": "020c9a42fb99129e7831d59d16673abbb544d07ede020334c6b6dafac15b8db3",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 574,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Frank_Rijkaard",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:FrankRijkaard2.jpg",
+        "artist": null,
+        "credit": null,
+        "license": "CC BY-SA 3.0",
+        "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+        "usageTerms": "Creative Commons Attribution-Share Alike 3.0",
+        "rightsStatus": "metadata-captured-review-required"
+      }
+    },
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/_launch-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "mauricio-pochettino",
+    "labelEn": "Mauricio Pochettino",
+    "labelKa": "მაურისიო პოჩეტინო",
+    "wikipediaTitle": "Mauricio Pochettino",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/mauricio-pochettino.jpg",
+      "sha256": "a69757eb5ab73d67cf98a8e9b4ed4948f0d542942f2253623f808c682b819136",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 853,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Mauricio_Pochettino",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Mauricio_Pochettino_USMNT_v_Belgium_Mar_28_2026-2.jpg",
+        "artist": "<a href=\"//commons.wikimedia.org/wiki/User:Berlination\" title=\"User:Berlination\">Bryan Berlin</a>",
+        "credit": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+        "usageTerms": "Creative Commons Attribution-Share Alike 4.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/mauricio-pochettino-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "erik-ten-hag",
+    "labelEn": "Erik ten Hag",
+    "labelKa": "ერიკ ტენ ჰაგი",
+    "wikipediaTitle": "Erik ten Hag",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/erik-ten-hag.jpg",
+      "sha256": "257c1ee94f75796f5b711988ff39bbe0fd49089f0c4180c189e69d3bd098a811",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 932,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Erik_ten_Hag",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:%D0%9E%D1%82%D0%BA%D1%80%D1%8B%D1%82%D0%B0%D1%8F_%D1%82%D1%80%D0%B5%D0%BD%D0%B8%D1%80%D0%BE%D0%B2%D0%BA%D0%B0_%C2%AB%D0%90%D1%8F%D0%BA%D1%81%D0%B0%C2%BB_%D0%BF%D0%B5%D1%80%D0%B5%D0%B4_%D0%BC%D0%B0%D1%82%D1%87%D0%B5%D0%BC_%D1%81_%C2%AB%D0%94%D0%B8%D0%BD%D0%B0%D0%BC%D0%BE%C2%BB._27_%D0%B0%D0%B2%D0%B3%D1%83%D1%81%D1%82%D0%B0_2018_%D0%B3%D0%BE%D0%B4%D0%B0_%E2%80%94_900304_(Erik_ten_Hag).jpg",
+        "artist": "<bdi><a href=\"https://www.wikidata.org/wiki/Q131344231\" class=\"extiw\" title=\"d:Q131344231\"><span title=\"Ukrainian photographer\">Olga Shcherbytska</span></a></bdi>",
+        "credit": "<a rel=\"nofollow\" class=\"external free\" href=\"https://www.dynamomania.com/album/1842-otkrytaya-trenirovka-ayaksa-pered-matchem-s-dinamo-27-avgusta-2018-goda/900304\">https://www.dynamomania.com/album/1842-otkrytaya-trenirovka-ayaksa-pered-matchem-s-dinamo-27-avgusta-2018-goda/900304</a>",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+        "usageTerms": "Creative Commons Attribution-Share Alike 4.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/erik-ten-hag-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "ruben-amorim",
+    "labelEn": "Rúben Amorim",
+    "labelKa": "რუბენ ამორიმი",
+    "wikipediaTitle": "Rúben Amorim",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/ruben-amorim.png",
+      "sha256": "3d4b0cf531dbba113e31efb39f64b6d5cf87178ea6ae88c58fce966fd82fc01a",
+      "mime": "image/png",
+      "width": 640,
+      "height": 908,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/R%C3%BAben_Amorim",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:RubenAmorim4.png",
+        "artist": "Agência Lusa",
+        "credit": "<bdi lang=\"en\" dir=\"ltr\"><a href=\"//commons.wikimedia.org/wiki/Commons:YouTube_files\" title=\"Commons:YouTube files\">YouTube</a>: <a rel=\"nofollow\" class=\"external text\" href=\"https://www.youtube.com/watch?v=pa7kvubJxHE\"><bdi lang=\"\">Amorim assume responsabilidade perante expectativas altas no United</bdi></a> – View/save archived versions on <a rel=\"nofollow\" class=\"external text\" href=\"https://web.archive.org/web/*/https://www.youtube.com/watch?v=pa7kvubJxHE\">archive.org</a></bdi>",
+        "license": "CC BY 3.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+        "usageTerms": "Creative Commons Attribution 3.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/ruben-amorim-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "roberto-de-zerbi",
+    "labelEn": "Roberto De Zerbi",
+    "labelKa": "რობერტო დე ძერბი",
+    "wikipediaTitle": "Roberto De Zerbi",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/roberto-de-zerbi.jpg",
+      "sha256": "2163e3518d7a527afc9fb67cdfd7d14137c8e6f03970c5e0b9a1707a18b5c796",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 773,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Roberto_De_Zerbi",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:%D0%9C%D0%B0%D1%82%D1%87_%C2%AB%D0%94%D0%B8%D0%BD%D0%B0%D0%BC%D0%BE%C2%BB_-_%C2%AB%D0%A8%D0%B0%D1%85%D1%82%D0%B0%D1%80%C2%BB_0-0._3_%D0%B6%D0%BE%D0%B2%D1%82%D0%BD%D1%8F_2021_%D1%80%D0%BE%D0%BA%D1%83_%E2%80%94_1279025_(cropped).jpg",
+        "artist": "<bdi><a href=\"https://www.wikidata.org/wiki/Q131344231\" class=\"extiw\" title=\"d:Q131344231\"><span title=\"Ukrainian photographer\">Olga Shcherbytska</span></a></bdi>",
+        "credit": "<a rel=\"nofollow\" class=\"external free\" href=\"https://www.dynamomania.com/album/2173-dinamo---shahter-00-3-oktyabrya-2021-goda/1279025\">https://www.dynamomania.com/album/2173-dinamo---shahter-00-3-oktyabrya-2021-goda/1279025</a>",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+        "usageTerms": "Creative Commons Attribution-Share Alike 4.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/roberto-de-zerbi-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "simone-inzaghi",
+    "labelEn": "Simone Inzaghi",
+    "labelKa": "სიმონე ინძაგი",
+    "wikipediaTitle": "Simone Inzaghi",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/simone-inzaghi.jpg",
+      "sha256": "27977cc9d55b43f927da90ed84010f8dfe7833c826ae9174354c9e5a82e596a0",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 708,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Simone_Inzaghi",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:FC_Salzburg_gegen_Inter_Mailand_(UEFA_Championsleague_2023-11-08)_48.jpg",
+        "artist": "<a href=\"//commons.wikimedia.org/wiki/User:Werner100359\" title=\"User:Werner100359\">Werner100359</a>",
+        "credit": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+        "usageTerms": "Creative Commons Attribution-Share Alike 4.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/simone-inzaghi-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "gian-piero-gasperini",
+    "labelEn": "Gian Piero Gasperini",
+    "labelKa": "ჯან პიერო გასპერინი",
+    "wikipediaTitle": "Gian Piero Gasperini",
+    "primary": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/gian-piero-gasperini-fallback.svg",
+      "source": {
+        "provider": "Quizball",
+        "license": "proprietary",
+        "rightsStatus": "owned"
+      }
+    },
+    "providerCandidate": {
+      "assetPath": "/assets/football-grid/managers/gian-piero-gasperini.jpg",
+      "sha256": "aa25996efb74a737e0742ae104d26a6834596ea8c791b46ace6f41598f6f22da",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 1174,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Gian_Piero_Gasperini",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Gian_Piero_Gasperini,_2024.jpg",
+        "artist": "Quirinale",
+        "credit": "<a rel=\"nofollow\" class=\"external free\" href=\"https://www.quirinale.it/elementi/111381\">https://www.quirinale.it/elementi/111381</a>",
+        "license": "Attribution",
+        "licenseUrl": null,
+        "usageTerms": null,
+        "rightsStatus": "metadata-captured-review-required"
+      }
+    },
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/_launch-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "claudio-ranieri",
+    "labelEn": "Claudio Ranieri",
+    "labelKa": "კლაუდიო რანიერი",
+    "wikipediaTitle": "Claudio Ranieri",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/claudio-ranieri.png",
+      "sha256": "90f2ba32c1d2c87c7af3a8ffd035f679d8a498102f4581602b11d118f1f338d6",
+      "mime": "image/png",
+      "width": 640,
+      "height": 913,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Claudio_Ranieri",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Ranieri2023_(cropped).png",
+        "artist": "<a href=\"//commons.wikimedia.org/w/index.php?title=User:Sandrino_14&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:Sandrino 14 (page does not exist)\">Sandrino 14</a>",
+        "credit": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+        "usageTerms": "Creative Commons Attribution-Share Alike 4.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/claudio-ranieri-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "maurizio-sarri",
+    "labelEn": "Maurizio Sarri",
+    "labelKa": "მაურიციო სარი",
+    "wikipediaTitle": "Maurizio Sarri",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/maurizio-sarri.jpg",
+      "sha256": "b27f52a299bac65c773b7bf8ae2a1c1eb7f140a2a55d4ae24adb0e63400fcd07",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 960,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Maurizio_Sarri",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Maurizio_Sarri_2019_(cropped).jpg",
+        "artist": "Анна Нэсси",
+        "credit": "<a rel=\"nofollow\" class=\"external free\" href=\"https://www.soccer.ru/galery/1148602/photo/835689\">https://www.soccer.ru/galery/1148602/photo/835689</a>",
+        "license": "CC BY-SA 3.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+        "usageTerms": "Creative Commons Attribution-Share Alike 3.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/maurizio-sarri-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "nuno-espirito-santo",
+    "labelEn": "Nuno Espírito Santo",
+    "labelKa": "ნუნუ ეშპირიტუ სანტუ",
+    "wikipediaTitle": "Nuno Espírito Santo",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/nuno-espirito-santo.jpg",
+      "sha256": "da1ec78f40d51c2b02a3f0aa07d1d434e00a3e11bdacc1e0d91921d4df4b4920",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 912,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Nuno_Esp%C3%ADrito_Santo",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Nuno_Esp%C3%ADrito_Santo_(cropped).jpg",
+        "artist": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.flickr.com/people/128909295@N05\">Carla Cortés</a>",
+        "credit": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.flickr.com/photos/carlacortes_noaasoka/16261864543/\">Elche CF 0-4 Valencia CF</a>",
+        "license": "CC BY 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+        "usageTerms": "Creative Commons Attribution 2.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/nuno-espirito-santo-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "brendan-rodgers",
+    "labelEn": "Brendan Rodgers",
+    "labelKa": "ბრენდან როჯერსი",
+    "wikipediaTitle": "Brendan Rodgers",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/brendan-rodgers.jpg",
+      "sha256": "7cddb6ce8a37b045b21fa4303292fed6e7f283d00cf30db635d9f6f820744617",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 869,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Brendan_Rodgers",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Brendan_Rodgers_2021_(cropped).jpg",
+        "artist": "Антон Зайцев",
+        "credit": "<a rel=\"nofollow\" class=\"external free\" href=\"https://www.soccer.ru/galery/1287367/photo/932208\">https://www.soccer.ru/galery/1287367/photo/932208</a>",
+        "license": "CC BY-SA 3.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+        "usageTerms": "Creative Commons Attribution-Share Alike 3.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/brendan-rodgers-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "david-moyes",
+    "labelEn": "David Moyes",
+    "labelKa": "დევიდ მოიესი",
+    "wikipediaTitle": "David Moyes",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/david-moyes.jpg",
+      "sha256": "9ea5bc7cb46569a8eba07daa3ff587b95192586050e73e1147887c891985e458",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 808,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/David_Moyes",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:David_Moyes_2025.jpg",
+        "artist": "Toffee TV",
+        "credit": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.youtube.com/watch?v=1FRDZjgitcM\">Everton 2-0 Brighton &amp; Hove Albion | David Moyes' Reaction </a>",
+        "license": "CC BY 3.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+        "usageTerms": "Creative Commons Attribution 3.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/david-moyes-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "eddie-howe",
+    "labelEn": "Eddie Howe",
+    "labelKa": "ედი ჰაუ",
+    "wikipediaTitle": "Eddie Howe",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/eddie-howe.jpg",
+      "sha256": "5aef44ecdfde9a25d2decd9cd6597b670646681445c376cc2422d66ac6665298",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 732,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Eddie_Howe",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Eddie_Howe_24052026_(1).jpg",
+        "artist": "<a href=\"//commons.wikimedia.org/wiki/User:Timmy96\" title=\"User:Timmy96\">Timmy96</a>",
+        "credit": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "license": "CC0",
+        "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+        "usageTerms": "Creative Commons Zero, Public Domain Dedication",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/eddie-howe-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "gareth-southgate",
+    "labelEn": "Gareth Southgate",
+    "labelKa": "გარეთ საუთგეიტი",
+    "wikipediaTitle": "Gareth Southgate",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/gareth-southgate.jpg",
+      "sha256": "68c84cd1df35596b3d9e848b230cc3eff76e21aa80f09c12b559ce7f8becc494",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 868,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Gareth_Southgate",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Southgate_2023.jpg",
+        "artist": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.flickr.com/photos/number10gov/\">Number 10</a>",
+        "credit": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.flickr.com/photos/49707497@N06/53248476300/\">The Prime Minister visits St George's Park</a>",
+        "license": "CC BY 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+        "usageTerms": "Creative Commons Attribution 2.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/gareth-southgate-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "sven-goran-eriksson",
+    "labelEn": "Sven-Göran Eriksson",
+    "labelKa": "სვენ-გორან ერიქსონი",
+    "wikipediaTitle": "Sven-Göran Eriksson",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/sven-goran-eriksson.jpg",
+      "sha256": "27d2d13ddf542f146491bdd20f2b9e4edf858ace22b53dc1fa888e248bfec744",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 976,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Sven-G%C3%B6ran_Eriksson",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Sven-Goran_Eriksson_2012.jpg",
+        "artist": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.flickr.com/people/66463488@N06\">Doha Stadium Plus Qatar</a>",
+        "credit": "<a href=\"//commons.wikimedia.org/wiki/Flickr\" class=\"mw-redirect\" title=\"Flickr\">Flickr</a>: <a rel=\"nofollow\" class=\"external text\" href=\"https://www.flickr.com/photos/66463488@N06/6770993141\">Sven Goran Eriksson</a>",
+        "license": "CC BY 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+        "usageTerms": "Creative Commons Attribution 2.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/sven-goran-eriksson-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "ottmar-hitzfeld",
+    "labelEn": "Ottmar Hitzfeld",
+    "labelKa": "ოტმარ ჰიცფელდი",
+    "wikipediaTitle": "Ottmar Hitzfeld",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/ottmar-hitzfeld.jpg",
+      "sha256": "87ed01ee22789f239040b2c3c8c614458e2abbfa53d8038b50736ed5add89878",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 960,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Ottmar_Hitzfeld",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Otmar_Hitzfeld_in_Bulgaria_(cropped).jpg",
+        "artist": "<a href=\"//commons.wikimedia.org/wiki/User:Biso\" title=\"User:Biso\">Biso</a>",
+        "credit": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "license": "CC BY 3.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+        "usageTerms": "Creative Commons Attribution 3.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/ottmar-hitzfeld-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "jupp-heynckes",
+    "labelEn": "Jupp Heynckes",
+    "labelKa": "იუპ ჰაინკესი",
+    "wikipediaTitle": "Jupp Heynckes",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/jupp-heynckes.jpg",
+      "sha256": "f1edd57de3ed3ebfb7ea881ed02a26e066b76aed03ec469ba6e93bcb946f4698",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 969,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Jupp_Heynckes",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Jupp_Heynckes_2013-01-04_(cropped).jpg",
+        "artist": "<p><a rel=\"nofollow\" class=\"external text\" href=\"https://www.flickr.com/people/66463488@N06\">Doha Stadium Plus Qatar</a>\n</p>\n<ul><li><b>Photograph: </b> Mohan (<a rel=\"nofollow\" class=\"external text\" href=\"http://www.dohastadiumplusqatar.com\">www.dohastadiumplusqatar.com</a>)</li></ul>",
+        "credit": "<a href=\"//commons.wikimedia.org/wiki/Flickr\" class=\"mw-redirect\" title=\"Flickr\">Flickr</a>: <a rel=\"nofollow\" class=\"external text\" href=\"https://www.flickr.com/photos/66463488@N06/8423433421\">Jupp Heynckes</a>",
+        "license": "CC BY 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+        "usageTerms": "Creative Commons Attribution 2.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/jupp-heynckes-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "bobby-robson",
+    "labelEn": "Bobby Robson",
+    "labelKa": "ბობი რობსონი",
+    "wikipediaTitle": "Bobby Robson",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/bobby-robson.jpg",
+      "sha256": "6a7d9d28cbe63a58e041d8337ac2dbcadc2d2029adf9b6d4bd0004ce983cc191",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 853,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Bobby_Robson",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Anefo_934-2658,_Bobby_Robson,_Netherlands,_14-06-1988.jpg",
+        "artist": "<a href=\"//commons.wikimedia.org/wiki/Category:Rob_Bogaerts\" title=\"Category:Rob Bogaerts\">Rob Bogaerts</a> for <a href=\"//commons.wikimedia.org/wiki/Category:Anefo\" title=\"Category:Anefo\">Anefo</a>",
+        "credit": "<a rel=\"nofollow\" class=\"external text\" href=\"http://proxy.handle.net/10648/ad6b2794-d0b4-102d-bcf8-003048976d84\">Gahetna in het nationaal archief</a>",
+        "license": "CC0",
+        "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+        "usageTerms": "Creative Commons Zero, Public Domain Dedication",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/bobby-robson-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "arrigo-sacchi",
+    "labelEn": "Arrigo Sacchi",
+    "labelKa": "არიგო საკი",
+    "wikipediaTitle": "Arrigo Sacchi",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/arrigo-sacchi.jpg",
+      "sha256": "7da3923abb6a80c6046e32c8a57a3a37dcf56a0a4c4a7a831f9061d6235dcd69",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 853,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Arrigo_Sacchi",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Arrigo_Sacchi_2007_(cropped).jpg",
+        "artist": "Elena Torre",
+        "credit": "<a rel=\"nofollow\" class=\"external free\" href=\"https://www.flickr.com/photos/elenatorre/1156533345/\">https://www.flickr.com/photos/elenatorre/1156533345/</a>",
+        "license": "CC BY-SA 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+        "usageTerms": "Creative Commons Attribution-Share Alike 2.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/arrigo-sacchi-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "gerard-houllier",
+    "labelEn": "Gérard Houllier",
+    "labelKa": "ჟერარ ულიე",
+    "wikipediaTitle": "Gérard Houllier",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/gerard-houllier.jpg",
+      "sha256": "26f05054aa46d34a24216531b9bb520d9a316e4829b5cdad5c5e556c57ffc825",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 427,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/G%C3%A9rard_Houllier",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Houllier,_G%C3%A9rard.jpg",
+        "artist": "<a href=\"//commons.wikimedia.org/w/index.php?title=User:Stew_jones&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:Stew jones (page does not exist)\">Stew jones</a>",
+        "credit": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "license": "CC BY-SA 3.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+        "usageTerms": "Creative Commons Attribution-Share Alike 3.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/gerard-houllier-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "valeriy-lobanovskyi",
+    "labelEn": "Valeriy Lobanovskyi",
+    "labelKa": "ვალერი ლობანოვსკი",
+    "wikipediaTitle": "Valeriy Lobanovskyi",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/valeriy-lobanovskyi.jpg",
+      "sha256": "89957d5485aeee1086e4e61da7fd1a4eb64187ecec00f6db2a9c1e70a4b1a497",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 853,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Valeriy_Lobanovskyi",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Valeri_Lobanovsky.jpg",
+        "artist": "Rob Croes, Nationaal Archief, Den Haag, Rijksfotoarchief: Fotocollectie Algemeen Nederlands Fotopersbureau (ANEFO), 1945-1989 - negatiefstroken zwart/wit, nummer toegang 2.24.01.05, bestanddeelnummer 933-4255",
+        "credit": "<a rel=\"nofollow\" class=\"external text\" href=\"http://www.gahetna.nl/collectie/afbeeldingen/fotocollectie/zoeken/weergave/gallery/start/0/tstart/0/q/zoekterm/933-4255/q/commentaar/1/\">Nationaal Archief Fotocollectie Anefo</a>",
+        "license": "CC0",
+        "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+        "usageTerms": "Creative Commons Zero, Public Domain Dedication",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/valeriy-lobanovskyi-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "mircea-lucescu",
+    "labelEn": "Mircea Lucescu",
+    "labelKa": "მირჩა ლუჩესკუ",
+    "wikipediaTitle": "Mircea Lucescu",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/mircea-lucescu.jpg",
+      "sha256": "fd0e1cc00e441d8152308cf7b2aff57a33e55dbc5f3901d4d2218d2cfb631a16",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 907,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Mircea_Lucescu",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Mircea_Lucescu_2009.jpg",
+        "artist": "ИЛЬЯ ХОХЛОВ",
+        "credit": "<a rel=\"nofollow\" class=\"external free\" href=\"http://football.ua/gallery/14.html\">http://football.ua/gallery/14.html</a>",
+        "license": "CC BY-SA 3.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+        "usageTerms": "Creative Commons Attribution-Share Alike 3.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/mircea-lucescu-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "fatih-terim",
+    "labelEn": "Fatih Terim",
+    "labelKa": "ფათიჰ თერიმი",
+    "wikipediaTitle": "Fatih Terim",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/fatih-terim.jpg",
+      "sha256": "d4ead57dcdd692cfadeaea6f0269ba87d2c49fed531ea4ed301ad1a46d834b97",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 961,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Fatih_Terim",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Fatih_Terim_2018.jpg",
+        "artist": "Ирина Рыбакова",
+        "credit": "<a rel=\"nofollow\" class=\"external free\" href=\"https://www.soccer.ru/galery/1081715/photo/764456\">https://www.soccer.ru/galery/1081715/photo/764456</a>",
+        "license": "CC BY-SA 3.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+        "usageTerms": "Creative Commons Attribution-Share Alike 3.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/fatih-terim-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "fernando-santos",
+    "labelEn": "Fernando Santos",
+    "labelKa": "ფერნანდუ სანტუში",
+    "wikipediaTitle": "Fernando Santos (Portuguese football manager)",
+    "wikimediaFile": "20150616 - Portugal - Italie - Genève - Fernando Santos.jpg",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/fernando-santos.jpg",
+      "sha256": "2c727339bb5aae888ffd645ff57ade71101c7a2938bba578aee468d99305015d",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 640,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Fernando_Santos_(Portuguese_football_manager)",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:20150616_-_Portugal_-_Italie_-_Gen%C3%A8ve_-_Fernando_Santos.jpg",
+        "artist": "Clément Bucco-Lechat",
+        "credit": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "license": "CC BY-SA 3.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+        "usageTerms": "Creative Commons Attribution-Share Alike 3.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/fernando-santos-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "luiz-felipe-scolari",
+    "labelEn": "Luiz Felipe Scolari",
+    "labelKa": "ლუის ფელიპე სკოლარი",
+    "wikipediaTitle": "Luiz Felipe Scolari",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/luiz-felipe-scolari.jpg",
+      "sha256": "b2824f519b38cd2e5a783cfa8db96f00f9e8989f7560de4f87f37c80bb73de83",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 799,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Luiz_Felipe_Scolari",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Felip%C3%A3o_cropped.jpg",
+        "artist": "Danilo Borges",
+        "credit": "<a href=\"//commons.wikimedia.org/wiki/File:Training_Brazilian_national_team_before_the_match_against_Croatia_at_the_FIFA_World_Cup_2014-06-11_(2_full).jpg\" title=\"File:Training Brazilian national team before the match against Croatia at the FIFA World Cup 2014-06-11 (2 full).jpg\">File:Training Brazilian national team before the match against Croatia at the FIFA World Cup 2014-06-11 (2 full).jpg</a> cropped",
+        "license": "CC BY 3.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+        "usageTerms": "Creative Commons Attribution 3.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/luiz-felipe-scolari-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "carlos-alberto-parreira",
+    "labelEn": "Carlos Alberto Parreira",
+    "labelKa": "კარლოს ალბერტო პარეირა",
+    "wikipediaTitle": "Carlos Alberto Parreira",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/carlos-alberto-parreira.jpg",
+      "sha256": "00c86121de25a0d4015eeb8c112e01d13c30316689008a65b660d4a853e8b7db",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 436,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Carlos_Alberto_Parreira",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Carlos_Alberto_Parreira_at_University_of_the_Witwatersrand_2010-06-04_4.jpg",
+        "artist": "Marcello Casal Jr/ABr",
+        "credit": "<a rel=\"nofollow\" class=\"external text\" href=\"http://agenciabrasil.ebc.com.br/ultimasfotos?p_p_id=galeria&amp;p_p_lifecycle=0&amp;p_p_state=normal&amp;p_p_mode=view&amp;p_p_col_id=column-1&amp;p_p_col_count=1&amp;_galeria_railsRoute=%2Fgerenciador_galeria%2Fgaleria%2Fshow%3Fid%3D840#http://agenciabrasil.ebc.com.br/galeriaimagens/images/fotos/6199/normal?p_p_id=galeria\">ABr</a>",
+        "license": "CC BY 3.0 br",
+        "licenseUrl": "https://creativecommons.org/licenses/by/3.0/br/deed.en",
+        "usageTerms": "Creative Commons Attribution 3.0 br",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/carlos-alberto-parreira-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "marcelo-bielsa",
+    "labelEn": "Marcelo Bielsa",
+    "labelKa": "მარსელო ბიელსა",
+    "wikipediaTitle": "Marcelo Bielsa",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/marcelo-bielsa.jpg",
+      "sha256": "f3b38b94aff851079ee210390c44b5c66d279498d5dd887860ba4fda1b671c12",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 850,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Marcelo_Bielsa",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Marcelo_Bielsa_2018_(cropped).jpg",
+        "artist": "Newell's Old Boys",
+        "credit": "<a rel=\"nofollow\" class=\"external text\" href=\"https://www.youtube.com/watch?v=sDfHSXvABwo\">Marcelo Bielsa: \"Nada me emociona más cada día que evocar a Newell's\"</a>",
+        "license": "CC BY 3.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+        "usageTerms": "Creative Commons Attribution 3.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/marcelo-bielsa-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "jorge-sampaoli",
+    "labelEn": "Jorge Sampaoli",
+    "labelKa": "ხორხე სამპაოლი",
+    "wikipediaTitle": "Jorge Sampaoli",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/jorge-sampaoli.jpg",
+      "sha256": "5d06bf67498e2612e689b7159de1210e904cf17a4f808b837797f09d7bf167cf",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 960,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Jorge_Sampaoli",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Jorge_Sampaoli_2018.jpg",
+        "artist": "Кирилл Венедиктов",
+        "credit": "<a rel=\"nofollow\" class=\"external free\" href=\"https://www.soccer.ru/galery/1055457/photo/733459\">https://www.soccer.ru/galery/1055457/photo/733459</a>",
+        "license": "CC BY-SA 3.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+        "usageTerms": "Creative Commons Attribution-Share Alike 3.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/jorge-sampaoli-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "lionel-scaloni",
+    "labelEn": "Lionel Scaloni",
+    "labelKa": "ლიონელ სკალონი",
+    "wikipediaTitle": "Lionel Scaloni",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/lionel-scaloni.jpg",
+      "sha256": "2e75541b56d8545d57d49212287479fca2b9187baf6db4e2be294a198c2c808a",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 960,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Lionel_Scaloni",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Lionel_Scaloni_Argentina_v_Spain_19_July_2026-239_(cropped).jpg",
+        "artist": "<a href=\"//commons.wikimedia.org/wiki/User:Berlination\" title=\"User:Berlination\">Bryan Berlin</a>",
+        "credit": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+        "usageTerms": "Creative Commons Attribution-Share Alike 4.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/lionel-scaloni-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "tite",
+    "labelEn": "Tite",
+    "labelKa": "ტიტე",
+    "wikipediaTitle": "Tite (football manager)",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/tite.jpg",
+      "sha256": "0c7f69650b7b4c9174030c501f6cbc2deb628a1a57f9fdbe89706c3b3f920458",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 960,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Tite_(football_manager)",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:20180610_FIFA_Friendly_Match_Austria_vs._Brazil_Tite_850_0231.jpg",
+        "artist": "<a href=\"//commons.wikimedia.org/wiki/User:Granada\" title=\"User:Granada\">Granada</a>",
+        "credit": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+        "usageTerms": "Creative Commons Attribution-Share Alike 4.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/tite-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "andoni-iraola",
+    "labelEn": "Andoni Iraola",
+    "labelKa": "ანდონი ირაოლა",
+    "wikipediaTitle": "Andoni Iraola",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/andoni-iraola.jpg",
+      "sha256": "39220b2ac581d15813526aded385ea912bc4cc069fe5a1d5fdcf12a145b29dc0",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 881,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Andoni_Iraola",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Andoni_Iraola_2023.jpg",
+        "artist": "AFC Bournemouth",
+        "credit": "<bdi lang=\"en\" dir=\"ltr\"><a href=\"//commons.wikimedia.org/wiki/Commons:YouTube_files\" title=\"Commons:YouTube files\">YouTube</a>: <a rel=\"nofollow\" class=\"external text\" href=\"https://www.youtube.com/watch?v=zkk1QnbOT9k\"><bdi lang=\"\">Andoni Iraola: The First Interview</bdi></a> – View/save archived versions on <a rel=\"nofollow\" class=\"external text\" href=\"https://web.archive.org/web/*/https://www.youtube.com/watch?v=zkk1QnbOT9k\">archive.org</a></bdi>",
+        "license": "CC BY 3.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+        "usageTerms": "Creative Commons Attribution 3.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/andoni-iraola-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "vincent-kompany",
+    "labelEn": "Vincent Kompany",
+    "labelKa": "ვენსან კომპანი",
+    "wikipediaTitle": "Vincent Kompany",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/vincent-kompany.jpg",
+      "sha256": "08de71f36a70716119b4163de8c3cf532a8410f261d715f886bbf940245451d4",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 818,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Vincent_Kompany",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Vincent_Kompany_Bayern_Munich_(cropped).jpg",
+        "artist": "<a href=\"//commons.wikimedia.org/w/index.php?title=User:ManuluxWiki&amp;action=edit&amp;redlink=1\" class=\"new\" title=\"User:ManuluxWiki (page does not exist)\">ManuluxWiki</a>",
+        "credit": "<span class=\"int-own-work\" lang=\"en\">Own work</span>",
+        "license": "CC BY-SA 4.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+        "usageTerms": "Creative Commons Attribution-Share Alike 4.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/vincent-kompany-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  },
+  {
+    "id": "graham-potter",
+    "labelEn": "Graham Potter",
+    "labelKa": "გრემ პოტერი",
+    "wikipediaTitle": "Graham Potter",
+    "primary": {
+      "assetPath": "/assets/football-grid/managers/graham-potter.jpg",
+      "sha256": "742aa9434d2a900a9c28af7c48265d0c5ad3b8d1bdd0a2ceb4fa50580451b8bb",
+      "mime": "image/jpeg",
+      "width": 640,
+      "height": 981,
+      "source": {
+        "provider": "Wikimedia / Wikipedia",
+        "pageUrl": "https://en.wikipedia.org/wiki/Graham_Potter",
+        "fileUrl": "https://commons.wikimedia.org/wiki/File:Graham_Potter,_Brighton_%26_Hove_Albion_vs_RCD_Espanyol,_30_July_2022_(1)_(cropped).jpg",
+        "artist": "jamesboyes",
+        "credit": "<a rel=\"nofollow\" class=\"external free\" href=\"https://www.flickr.com/photos/37972999@N07/52251448277/\">https://www.flickr.com/photos/37972999@N07/52251448277/</a>",
+        "license": "CC BY 2.0",
+        "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+        "usageTerms": "Creative Commons Attribution 2.0",
+        "rightsStatus": "cleared-for-launch"
+      }
+    },
+    "providerCandidate": null,
+    "fallback": {
+      "type": "quizball-manager-badge",
+      "assetPath": "/assets/football-grid/managers/graham-potter-fallback.svg"
+    },
+    "primaryError": null,
+    "runtimeResolved": true
+  }
+]

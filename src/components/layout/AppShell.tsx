@@ -15,19 +15,65 @@ import { AppShellLobbyDebugBadge } from "./app-shell/AppShellLobbyDebugBadge";
 import { AppShellMobileBottomNav } from "./app-shell/AppShellMobileBottomNav";
 import { AppShellProfileMenu } from "./app-shell/AppShellProfileMenu";
 import { ConnectionQualitySignal } from "@/components/shared/ConnectionQualitySignal";
+import { Suspense } from "react";
+import { InPlaceLanguageSwitcher, LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
+import { useChangeLanguage } from "@/lib/i18n/useChangeLanguage";
+import { useIsGuest } from "@/lib/auth/useIsGuest";
+import { rememberPostAuthRedirect } from "@/lib/auth/postAuthRedirect";
+import { hubPath, isGuestAllowedPath, publicLocaleOf } from "@/lib/routes/publicHub";
+import { useAuthPromptStore } from "@/stores/authPrompt.store";
+import { useLocale } from "@/contexts/LocaleContext";
 
 export function AppShell({ children }: AppShellProps) {
   const vm = useAppShellViewModel();
+  const { t, locale } = useLocale();
+  const { changeLanguage, savePreference } = useChangeLanguage();
+  // Guest mode: signed-out visitors browsing the hub get a Sign-in button
+  // instead of the profile/coins cluster, and any nav tap that isn't a public
+  // surface opens the sign-in dialog instead of navigating.
+  const isGuest = useIsGuest();
+  const openAuthPrompt = useAuthPromptStore((state) => state.open);
+  // Signed-out visitors stay on their locale hub; the geo redirect on "/" is
+  // never the logo target, and members go to their Play.
+  const publicLocale = publicLocaleOf(vm.currentPath);
+  const homeHref = isGuest ? hubPath(publicLocale ?? locale) : "/play";
+  const guestNavGuard = (event: React.MouseEvent) => {
+    if (!isGuest) return;
+    const href = (event.target as HTMLElement).closest("a")?.getAttribute("href");
+    if (!href || isGuestAllowedPath(href.split(/[?#]/)[0])) return;
+    event.preventDefault();
+    event.stopPropagation();
+    // Return to what they asked for after sign-in (non-returnable paths fall through to /play).
+    rememberPostAuthRedirect(href);
+    openAuthPrompt();
+  };
+  const signIn = () => {
+    rememberPostAuthRedirect(vm.currentPath);
+    openAuthPrompt();
+  };
+  const signInButton = (
+    <div className="flex items-center gap-2" data-chrome="guest">
+      {/* Suspense: the switcher reads search params, which must not bail the whole shell out of static rendering. */}
+      {publicLocale && <Suspense fallback={null}><LanguageSwitcher locale={publicLocale} /></Suspense>}
+      <button
+        type="button"
+        onClick={signIn}
+        className="flex h-10 items-center justify-center rounded-xl bg-brand-yellow px-5 font-poppins text-sm font-black uppercase tracking-wide text-black transition-colors hover:bg-brand-yellow-deep"
+      >
+        {t("welcome.signInTab")}
+      </button>
+    </div>
+  );
   const {
     playerStats,
     authUser,
-    currentPath,
     showHeader,
     showNav,
     isPathActive,
     navbarCoins,
     navbarTickets,
     socialBadgeCount,
+    bellBadgeCount,
     showLobbyDebug,
     lobbyDebugMismatch,
     localWaitingLobbyId,
@@ -40,22 +86,25 @@ export function AppShell({ children }: AppShellProps) {
   } = vm;
 
   return (
-    <div className="relative min-h-screen text-foreground">
+    <div className="relative min-h-screen text-foreground" data-shell="app">
       <ChallengeInvitePrompt />
       <AppShellPageChrome />
 
       <div className="relative z-10 flex min-h-screen flex-col xl:grid xl:h-dvh xl:grid-cols-[auto_minmax(0,1fr)] xl:overflow-hidden">
         {/* DESKTOP SIDEBAR (>= xl) */}
-        <div className="hidden xl:block">
-          <Sidebar currentPath={currentPath} socialBadgeCount={socialBadgeCount} />
+        <div className="hidden xl:block" onClickCapture={guestNavGuard}>
+          <Sidebar currentPath={vm.navPath} homeHref={homeHref} socialBadgeCount={socialBadgeCount} />
         </div>
 
         <div className="flex min-h-screen min-w-0 flex-col xl:min-h-0">
           {/* DESKTOP TOPBAR (>= xl) */}
           <header className="sticky top-0 z-30 hidden h-16 items-center justify-between bg-background/60 px-6 backdrop-blur-md xl:flex">
-            {/* Socials + Contact moved into the Sidebar (above the World Cup
-                trophy); spacer keeps the right control cluster right-aligned. */}
-            <div aria-hidden />
+            {/* Left: the signed-in language switcher (flag only, in place, saved to the profile). Guests get theirs next to Sign in. */}
+            <div className="flex items-center">
+              {!isGuest && (publicLocale
+                ? <Suspense fallback={null}><LanguageSwitcher locale={publicLocale} onSelect={savePreference} /></Suspense>
+                : <InPlaceLanguageSwitcher locale={locale} onSelect={changeLanguage} />)}
+            </div>
 
             <div className="flex items-center gap-4">
               {showLobbyDebug && (
@@ -68,18 +117,24 @@ export function AppShell({ children }: AppShellProps) {
                 />
               )}
               <ConnectionQualitySignal />
-              <AppShellCurrencyPills variant="desktop" coins={navbarCoins} tickets={navbarTickets} />
+              {isGuest ? (
+                signInButton
+              ) : (
+                <>
+                  <AppShellCurrencyPills variant="desktop" coins={navbarCoins} tickets={navbarTickets} />
 
-              <div className="h-6 w-px bg-border/50" />
+                  <div className="h-6 w-px bg-border/50" />
 
-              <NotificationsDropdown badgeCount={socialBadgeCount} />
+                  <NotificationsDropdown badgeCount={bellBadgeCount} />
 
-              <AppShellProfileMenu
-                variant="desktop"
-                playerStats={playerStats}
-                authUserCountry={authUser?.country}
-                onRequestLogout={() => setShowLogoutConfirm(true)}
-              />
+                  <AppShellProfileMenu
+                    variant="desktop"
+                    playerStats={playerStats}
+                    authUserCountry={authUser?.country}
+                    onRequestLogout={() => setShowLogoutConfirm(true)}
+                  />
+                </>
+              )}
             </div>
           </header>
 
@@ -91,20 +146,31 @@ export function AppShell({ children }: AppShellProps) {
                   {/* min-w-0 lets a long username truncate rather than push the
                       right cluster (incl. the bell) off-screen on narrow phones. */}
                   <div className="z-10 flex min-w-0 items-center gap-2">
-                    <AppShellProfileMenu
-                      variant="mobile"
-                      playerStats={playerStats}
-                      authUserCountry={authUser?.country}
-                      onRequestLogout={() => setShowLogoutConfirm(true)}
-                    />
+                    {!isGuest && (
+                      <>
+                        <AppShellProfileMenu
+                          variant="mobile"
+                          playerStats={playerStats}
+                          authUserCountry={authUser?.country}
+                          onRequestLogout={() => setShowLogoutConfirm(true)}
+                        />
+                        {/* No language switcher on phones: it collided with the profile card; Settings → Language covers it. */}
+                      </>
+                    )}
                   </div>
 
                   {/* No ping pill on mobile — it crowded the row / pushed the
                       card down. It stays on desktop and in-match. shrink-0 keeps
                       coins/tickets/bell intact. */}
                   <div className="z-10 flex shrink-0 items-center gap-2">
-                    <AppShellCurrencyPills variant="mobile" coins={navbarCoins} tickets={navbarTickets} />
-                    <NotificationsDropdown badgeCount={socialBadgeCount} />
+                    {isGuest ? (
+                      signInButton
+                    ) : (
+                      <>
+                        <AppShellCurrencyPills variant="mobile" coins={navbarCoins} tickets={navbarTickets} />
+                        <NotificationsDropdown badgeCount={bellBadgeCount} />
+                      </>
+                    )}
                   </div>
                 </div>
               </div>
@@ -127,9 +193,10 @@ export function AppShell({ children }: AppShellProps) {
 
       {/* MOBILE / TABLET BOTTOM NAV (< xl) */}
       {showNav && (
-        <div className="xl:hidden">
+        <div className="xl:hidden" onClickCapture={guestNavGuard}>
           <AppShellMobileBottomNav
             isPathActive={isPathActive}
+            homeHref={homeHref}
             socialBadgeCount={socialBadgeCount}
           />
         </div>

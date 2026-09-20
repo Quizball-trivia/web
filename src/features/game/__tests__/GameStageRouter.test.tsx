@@ -122,6 +122,7 @@ const playerState = {
 };
 
 const authState = {
+  status: 'authenticated',
   user: {
     id: 'self-1',
     avatar_url: null,
@@ -168,6 +169,7 @@ vi.mock('@/stores/rankedMatchmaking.store', () => ({
 
 vi.mock('@/lib/realtime/useRealtimeConnection', () => ({
   useRealtimeConnection: () => socket,
+  useRealtimeMatchSocket: () => socket,
 }));
 
 vi.mock('@/lib/realtime/socket-client', () => ({

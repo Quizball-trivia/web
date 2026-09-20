@@ -90,11 +90,17 @@ export function StadiumBiddingScreen({
   actions,
   humanPlayerId,
   disconnectedSeatIds = [],
+  clockPausedAt = null,
+  allowedAction = null,
 }: {
   state: AuctionGameState;
   actions: AuctionActions;
   humanPlayerId: string;
   disconnectedSeatIds?: readonly string[];
+  /** Training: clocks freeze at this instant while a tooltip is open. */
+  clockPausedAt?: number | null;
+  /** Training: the one control the guided step allows. */
+  allowedAction?: { kind: 'bid' | 'fold' } | null;
 }) {
   const { t } = useLocale();
   const posLabel = usePositionLabel();
@@ -150,7 +156,7 @@ export function StadiumBiddingScreen({
       </AnimatePresence>
 
       {/* Stadiums row — full formation visible, never covered by the panel. */}
-      <div className="min-h-0 flex-1 pt-2 md:pt-3">
+      <div className="min-h-0 flex-1 pt-2 md:pt-3" data-auction-anchor="squads">
         <StadiumBoard
           state={state}
           humanPlayerId={humanPlayerId}
@@ -166,6 +172,7 @@ export function StadiumBiddingScreen({
           initial={{ y: 24, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={SPRING.settle}
+          data-auction-anchor="lot-card"
           className="relative mx-auto flex max-h-[54dvh] w-full max-w-lg flex-col overflow-y-auto rounded-t-[24px] border-2 border-white/15 bg-brand-blue px-3.5 pt-2 pb-2.5 shadow-[0_-8px_36px_rgba(0,0,0,0.5)] md:rounded-[24px]"
         >
           <div className="mx-auto mb-2 h-1 w-10 shrink-0 rounded-full bg-white/20 md:hidden" />
@@ -174,11 +181,12 @@ export function StadiumBiddingScreen({
               round chip up top, the mystery-player line beneath, live turn
               countdown floating top-right. */}
           {isBidding && round.turnEndsAt && round.currentTurnId && (
-            <div className="absolute right-3 top-3 z-20">
+            <div className="absolute right-3 top-3 z-20" data-auction-anchor="turn-timer">
               <CountdownTimer
                 key={round.currentTurnId + String(round.turnEndsAt)}
                 endsAt={round.turnEndsAt}
                 totalMs={round.highestBidderId ? RAISE_TURN_MS : OPENING_TURN_MS}
+                pausedAt={clockPausedAt}
               />
             </div>
           )}
@@ -222,7 +230,7 @@ export function StadiumBiddingScreen({
               bidder line + gap + controls ≈ 106px) or bidding overflows. */}
           <div className="mt-2 flex h-[108px] shrink-0 flex-col justify-end gap-2">
             {studyEndsAt ? (
-              <StudyCountdown endsAt={studyEndsAt} variant="panel" />
+              <StudyCountdown endsAt={studyEndsAt} variant="panel" pausedAt={clockPausedAt} />
             ) : isBidding ? (
               <BidStatusBar
                 label={hasBids ? t('auctionGame.highestBid') : t('auctionGame.startingPriceLabel')}
@@ -234,7 +242,7 @@ export function StadiumBiddingScreen({
                 outbidLabel={t('auctionGame.outbid')}
               />
             ) : (
-              <div className="flex items-center justify-between gap-2 border-t border-white/15 pt-3">
+              <div className="flex items-center justify-between gap-2 border-t border-white/15 pt-3" data-auction-anchor="starting-price">
                 <span className="font-poppins text-[11px] font-black uppercase tracking-wide text-white/80">
                   {t('auctionGame.startingPriceLabel')}
                 </span>
@@ -255,6 +263,7 @@ export function StadiumBiddingScreen({
                   pendingTurnAction={pendingTurnAction}
                   onBid={actions.placeBid}
                   onFold={actions.fold}
+                  allowedAction={allowedAction}
                 />
               ) : (
                 <SitOutWaiting
@@ -347,7 +356,7 @@ function BidStatusBar({
           )}
         </AnimatePresence>
       </div>
-      <div className="text-right">
+      <div className="text-right" data-auction-anchor="budget">
         <div className="font-poppins text-[9px] font-black uppercase tracking-wide text-white/70">{budgetLabel}</div>
         <div className="font-poppins text-lg font-black tabular-nums leading-none text-white">{budget}</div>
       </div>

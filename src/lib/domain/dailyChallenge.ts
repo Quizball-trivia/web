@@ -60,10 +60,31 @@ export type HighLowSession = Extract<
   { challengeType: "highLow" }
 >;
 
+export type MissingXiSession = Extract<
+  DailyChallengeSession,
+  { challengeType: "missingXi" }
+>;
 export type FootballLogicSession = Extract<
   DailyChallengeSession,
   { challengeType: "footballLogic" }
 >;
+
+export type PassChainSession = Extract<
+  DailyChallengeSession,
+  { challengeType: "passChain" }
+>;
+export type PassChainPuzzle = PassChainSession["puzzles"][number];
+export type PassChainPlayer = PassChainPuzzle["start"];
+export type PassChainLinkResult =
+  paths["/api/v1/daily-challenges/pass-chain/link"]["post"]["responses"][200]["content"]["application/json"];
+
+export type StatSniperSession = Extract<
+  DailyChallengeSession,
+  { challengeType: "statSniper" }
+>;
+export type StatSniperQuestion = StatSniperSession["questions"][number];
+export type StatSniperLeaderboard =
+  paths["/api/v1/daily-challenges/stat-sniper/leaderboard"]["get"]["responses"][200]["content"]["application/json"];
 
 export type FifaCardsSession = Extract<
   DailyChallengeSession,

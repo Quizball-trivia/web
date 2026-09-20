@@ -19,11 +19,14 @@ function render(ui: ReactElement) {
 // ---------------------------------------------------------------------------
 
 // next/navigation: usePathname + useRouter
+vi.mock('@/components/i18n/LanguageSwitcher', () => ({ LanguageSwitcher: () => null, InPlaceLanguageSwitcher: () => null }));
+vi.mock('@/lib/i18n/useChangeLanguage', () => ({ useChangeLanguage: () => ({ changeLanguage: vi.fn(), savePreference: vi.fn() }) }));
 const pathnameMock = vi.fn(() => '/');
 const routerPushMock = vi.fn();
 const routerReplaceMock = vi.fn();
 vi.mock('next/navigation', () => ({
   usePathname: () => pathnameMock(),
+  useSearchParams: () => new URLSearchParams(),
   useRouter: () => ({ push: routerPushMock, replace: routerReplaceMock }),
 }));
 
@@ -194,10 +197,12 @@ vi.mock('@/components/ui/alert-dialog', () => {
 // ---------------------------------------------------------------------------
 
 interface AuthState {
+  status: 'authenticated' | 'anonymous' | 'loading';
   user: { id: string; country?: string } | null;
   logout: () => Promise<void>;
 }
 const defaultAuth = {
+  status: 'authenticated' as const,
   user: { id: 'self-user', country: 'us' },
   logout: vi.fn(async () => {}),
 };
@@ -319,11 +324,11 @@ describe('AppShell — children + chrome', () => {
     expect(sidebar.getAttribute('data-social-badge')).toBe('2');
   });
 
-  it('forwards the social badge count to NotificationsDropdown', () => {
+  it('forwards only unread notifications to NotificationsDropdown', () => {
     renderShell();
     const dropdowns = screen.getAllByTestId('notifications');
     expect(dropdowns.length).toBeGreaterThan(0);
-    expect(dropdowns[0].getAttribute('data-badge')).toBe('2');
+    expect(dropdowns[0].getAttribute('data-badge')).toBe('0');
   });
 });
 
@@ -903,7 +908,7 @@ describe('AppShell — logout dialog wiring', () => {
     // logout is async; wait a microtask for the await to settle.
     await Promise.resolve();
     expect(logoutSpy).toHaveBeenCalledTimes(1);
-    expect(routerReplaceMock).toHaveBeenCalledWith('/');
+    expect(routerReplaceMock).toHaveBeenCalledWith('/play');
   });
 });
 

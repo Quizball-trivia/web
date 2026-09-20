@@ -28,11 +28,17 @@ export function BiddingScreen({
   actions,
   humanPlayerId,
   disconnectedSeatIds = [],
+  clockPausedAt = null,
+  allowedAction = null,
 }: {
   state: AuctionGameState;
   actions: AuctionActions;
   humanPlayerId: string;
   disconnectedSeatIds?: readonly string[];
+  /** Training: clocks freeze at this instant while a tooltip is open. */
+  clockPausedAt?: number | null;
+  /** Training: the one control the guided step allows. */
+  allowedAction?: { kind: 'bid' | 'fold' } | null;
 }) {
   const { t } = useLocale();
   const posLabel = usePositionLabel();
@@ -85,6 +91,7 @@ export function BiddingScreen({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
+            data-auction-anchor="lot-card"
             className="relative w-full rounded-[20px] border-2 border-white/15 bg-brand-blue p-4 sm:p-5"
             style={isCluePhase ? { boxShadow: `0 0 40px ${posColor}08` } : undefined}
           >
@@ -104,11 +111,12 @@ export function BiddingScreen({
 
             {/* Turn countdown — shows the active player's clock, top-right */}
             {isBidding && round.turnEndsAt && round.currentTurnId && (
-              <div className="absolute right-3 top-3 z-20">
+              <div className="absolute right-3 top-3 z-20" data-auction-anchor="turn-timer">
                 <CountdownTimer
                   key={round.currentTurnId + String(round.turnEndsAt)}
                   endsAt={round.turnEndsAt}
                   totalMs={round.highestBidderId ? RAISE_TURN_MS : OPENING_TURN_MS}
+                  pausedAt={clockPausedAt}
                 />
               </div>
             )}
@@ -158,12 +166,12 @@ export function BiddingScreen({
             {/* Study countdown — all clues are out, bidding opens when it hits 0. */}
             {studyEndsAt && (
               <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="mt-4">
-                <StudyCountdown endsAt={studyEndsAt} variant="card" />
+                <StudyCountdown endsAt={studyEndsAt} variant="card" pausedAt={clockPausedAt} />
               </motion.div>
             )}
 
             {/* Starting price — own row below the clues (no overlap) */}
-            <div className="mt-3 flex items-center justify-between gap-2 border-t border-white/15 pt-3">
+            <div className="mt-3 flex items-center justify-between gap-2 border-t border-white/15 pt-3" data-auction-anchor="starting-price">
               <span className="font-poppins text-[11px] font-black uppercase tracking-wide text-white/80">
                 {t('auctionGame.startingPriceLabel')}
               </span>
@@ -214,7 +222,7 @@ export function BiddingScreen({
                           )}
                         </div>
 
-                        <div className="text-right">
+                        <div className="text-right" data-auction-anchor="budget">
                           <div className="font-poppins text-[11px] font-black uppercase text-white/70 mb-1">
                             {t('auctionGame.budgetLabel')}
                           </div>
@@ -272,6 +280,7 @@ export function BiddingScreen({
                     onBid={actions.placeBid}
                     onFold={actions.fold}
                     showTurnLabel
+                    allowedAction={allowedAction}
                   />
                 </motion.div>
               ) : isBidding ? (
@@ -290,7 +299,7 @@ export function BiddingScreen({
         </div>
 
         {/* All squads — sits directly below the bidding controls */}
-        <div className="px-4 pb-5 pt-1">
+        <div className="px-4 pb-5 pt-1" data-auction-anchor="squads">
           <AllSquads
             state={state}
             humanPlayerId={humanPlayerId}

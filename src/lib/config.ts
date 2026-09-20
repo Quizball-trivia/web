@@ -17,3 +17,6 @@ export const API_BASE_URL = nonBlank(
  * ON for now — being tested on staging. Flip to `false` to hide.
  */
 export const PHONE_AUTH_ENABLED = true;
+
+/** Guest friend lobbies (play Tic Tac Toe / Auction / Ranked sim with a friend without an account). Off = no route or socket change for guests. */
+export const GUEST_LOBBIES_ENABLED = process.env.NEXT_PUBLIC_GUEST_LOBBIES === "true" || process.env.NEXT_PUBLIC_GUEST_LOBBIES === "1";

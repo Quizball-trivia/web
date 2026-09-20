@@ -8,12 +8,12 @@
 // this, the playground AND live play all change together.
 
 import { useEffect, useState } from 'react';
-import { FastForward, RotateCcw, X } from 'lucide-react';
+import { Eye, FastForward, Play, RotateCcw, X } from 'lucide-react';
 import { GauntletBackdrop } from '../gauntlet/RoundViews';
 import { GauntletLobby } from '../gauntlet/GauntletScreens';
 import { buildGames } from '../gauntlet/gauntlet.data';
 import { WlLiveFlowView } from './WlLiveFlow';
-import { SIM_SELF_ID, useWlSimulated, type SimJumpTarget } from './useWlSimulated';
+import { SIM_SELF_ID, useWlSimulated, type SimJumpTarget, type SimQuestion } from './useWlSimulated';
 
 /** Every designed screen, addressable from the sim bar. */
 const SCREENS: { label: string; go: SimJumpTarget | 'lobby' | 'checkin' }[] = [
@@ -21,12 +21,17 @@ const SCREENS: { label: string; go: SimJumpTarget | 'lobby' | 'checkin' }[] = [
   { label: 'lobby', go: 'lobby' },
   { label: 'check-in', go: 'checkin' },
   { label: 'intro', go: { kind: 'question', round: 0 } },
+  // Round 0 stacks the GAME intro on top, so the round overlay gets its own
+  // jump on a mid-game round where it shows alone.
+  { label: 'round', go: { kind: 'question', round: 1 } },
   { label: 'T/F', go: { kind: 'question', round: 0, skipIntro: true } },
   { label: 'order', go: { kind: 'question', round: 1, skipIntro: true } },
   { label: 'MCQ', go: { kind: 'question', round: 2, skipIntro: true } },
   { label: 'career', go: { kind: 'question', round: 3, skipIntro: true } },
   { label: 'who am i', go: { kind: 'question', round: 4, skipIntro: true } },
   { label: 'reveal', go: { kind: 'reveal', round: 2 } },
+  // The order reveal has its own comparison layout — worth reaching directly.
+  { label: 'order reveal', go: { kind: 'reveal', round: 1 } },
   { label: 'result', go: { kind: 'game_result' } },
   { label: 'break', go: { kind: 'break' } },
   { label: 'champion', go: { kind: 'final' } },
@@ -35,11 +40,53 @@ const SCREENS: { label: string; go: SimJumpTarget | 'lobby' | 'checkin' }[] = [
 const CHECKIN_WINDOW_MS = 25_000;
 const SIM_FIELD = 600;
 
-export function WlLiveSimFlow({ onExit }: { onExit: () => void }) {
-  const { live, sim } = useWlSimulated();
+type SimRole = 'player' | 'spectator';
+
+/** Player/spectator switch — the whole sim re-renders in the chosen role. */
+function RoleToggle({ role, onChange }: { role: SimRole; onChange: (r: SimRole) => void }) {
+  return (
+    <div className="flex items-center gap-1 rounded-lg bg-white/[0.06] p-0.5">
+      {(['player', 'spectator'] as const).map((r) => (
+        <button
+          key={r}
+          type="button"
+          aria-pressed={role === r}
+          onClick={() => onChange(r)}
+          className={`flex items-center gap-1 rounded-md px-2 py-1 font-poppins text-[10px] font-black uppercase tracking-wide transition-colors ${
+            role === r ? 'bg-brand-green text-white' : 'text-white/55 hover:bg-white/10'
+          }`}
+        >
+          {r === 'spectator' ? <Eye className="size-3" /> : <Play className="size-3 fill-current" />}
+          {r}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export function WlLiveSimFlow({
+  onExit,
+  questions,
+  games,
+  showControls = true,
+  checkInWindowMs = CHECKIN_WINDOW_MS,
+}: {
+  onExit: () => void;
+  /** Replace the walkthrough questions (e.g. a real event's set). */
+  questions?: SimQuestion[];
+  /** Games the script plays (default 3). */
+  games?: number;
+  /** Hide the dev screen-picker bar (demo mode keeps only Skip + exit). */
+  showControls?: boolean;
+  checkInWindowMs?: number;
+}) {
+  const { live, sim } = useWlSimulated({ questions, games });
   const [phase, setPhase] = useState<'lobby' | 'checkin' | 'playing'>('lobby');
   const [checkedIn, setCheckedIn] = useState(false);
-  const [kickoffMs, setKickoffMs] = useState(() => Date.now() + CHECKIN_WINDOW_MS);
+  const [kickoffMs, setKickoffMs] = useState(() => Date.now() + checkInWindowMs);
+  // Spectators get a different flow at every screen (no answering, board rail,
+  // delayed reveals), so the picker drives the SAME script in either role.
+  const [role, setRole] = useState<'player' | 'spectator'>('player');
 
   // Kickoff when the simulated check-in window closes (checked in or not —
   // the sim always lets you watch the games). The scripted driver ticks from
@@ -62,9 +109,9 @@ export function WlLiveSimFlow({ onExit }: { onExit: () => void }) {
           games={buildGames(SIM_FIELD)}
           registered={SIM_FIELD}
           kickoffMs={kickoffMs}
-          canPlay
-          onEnter={() => { setKickoffMs(Date.now() + CHECKIN_WINDOW_MS); setPhase('checkin'); }}
-          onWatch={() => { setKickoffMs(Date.now() + CHECKIN_WINDOW_MS); setPhase('checkin'); }}
+          canPlay={role === 'player'}
+          onEnter={() => { setRole('player'); setKickoffMs(Date.now() + checkInWindowMs); setPhase('checkin'); }}
+          onWatch={() => { setRole('spectator'); setKickoffMs(Date.now() + checkInWindowMs); setPhase('checkin'); }}
         />
         <button
           type="button"
@@ -74,6 +121,12 @@ export function WlLiveSimFlow({ onExit }: { onExit: () => void }) {
         >
           <X className="size-5" />
         </button>
+        {showControls && (
+          <div className="fixed bottom-4 left-1/2 z-[60] flex -translate-x-1/2 items-center gap-2 rounded-2xl border-2 border-brand-purple/40 bg-black/85 px-3 py-2 backdrop-blur">
+            <span className="font-poppins text-[10px] font-black uppercase tracking-widest text-brand-purple">SIM</span>
+            <RoleToggle role={role} onChange={setRole} />
+          </div>
+        )}
       </GauntletBackdrop>
     );
   }
@@ -81,15 +134,18 @@ export function WlLiveSimFlow({ onExit }: { onExit: () => void }) {
   return (
     <>
       <WlLiveFlowView
+        // Remount on role switch: question-local picks/typed guesses from the
+        // player run must not bleed into the spectator preview (Codex review).
+        key={role}
         live={live}
-        selfUserId={SIM_SELF_ID}
-        role="player"
+        selfUserId={role === 'spectator' ? null : SIM_SELF_ID}
+        role={role}
         status={phase === 'checkin' ? 'checkin' : 'game_live'}
-        checkedIn={checkedIn}
+        checkedIn={role === 'spectator' ? false : checkedIn}
         checkinPending={false}
         onCheckin={() => setCheckedIn(true)}
         onExit={onExit}
-        onSpectate={onExit}
+        onSpectate={() => setRole('spectator')}
         kickoffMs={kickoffMs}
         registered={SIM_FIELD}
         checkedInCount={Math.min(SIM_FIELD, 512 + (checkedIn ? 1 : 0))}
@@ -98,11 +154,28 @@ export function WlLiveSimFlow({ onExit }: { onExit: () => void }) {
         currentGameIndex={live.gameIndex}
       />
 
+      {/* Demo mode: no dev bar — just a floating Skip so a walkthrough never stalls. */}
+      {!showControls && (
+        <button
+          type="button"
+          onClick={() => sim.skip()}
+          className="fixed bottom-4 right-4 z-[60] flex items-center gap-1 rounded-full bg-black/60 px-4 py-2.5 font-poppins text-[12px] font-black uppercase text-white/85 backdrop-blur hover:bg-black/80"
+        >
+          <FastForward className="size-4" /> Skip
+        </button>
+      )}
+
       {/* Sim controls — float above the real UI, never part of it. */}
+      {showControls && (
       <div className="fixed bottom-4 left-1/2 z-[60] flex max-w-[95vw] -translate-x-1/2 flex-wrap items-center justify-center gap-1.5 rounded-2xl border-2 border-brand-purple/40 bg-black/85 px-3 py-2 backdrop-blur">
         <span className="font-poppins text-[10px] font-black uppercase tracking-widest text-brand-purple">
           SIM
         </span>
+
+        {/* Role switch — every screen below renders in whichever role is
+            selected, so the spectator flow is walkable with the same jumps. */}
+        <RoleToggle role={role} onChange={setRole} />
+
         {/* Screen picker: jump straight to any designed screen. */}
         {SCREENS.map((sc) => {
           // The lobby returns early, so only check-in / playing reach here.
@@ -157,6 +230,7 @@ export function WlLiveSimFlow({ onExit }: { onExit: () => void }) {
           <X className="size-3.5" />
         </button>
       </div>
+      )}
     </>
   );
 }

@@ -1,11 +1,12 @@
 "use client";
 
+import { useRealtimePrincipal } from '@/lib/realtime/realtime-principal';
 import { useEffect, useMemo, useState } from "react";
 import { useShallow } from "zustand/shallow";
 import { useGameSessionStore } from "@/stores/gameSession.store";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useAuthStore } from "@/stores/auth.store";
-import { useRealtimeConnection } from "@/lib/realtime/useRealtimeConnection";
+import { useRealtimeMatchSocket } from "@/lib/realtime/useRealtimeConnection";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import { useRankedMatchmakingStore } from "@/stores/rankedMatchmaking.store";
 import { resolveAvatarUrl } from "@/lib/avatars";
@@ -109,11 +110,13 @@ export function useGameStageState() {
     progression: UserProgression;
   } | null>(null);
 
-  const isMultiplayer = config?.mode !== "solo" && !!config;
-  const selfUserId = connectedSelfUserId ?? authUser?.id ?? player.id;
-  const realtimeSelfUserId = authUser?.id ?? null;
-  const socket = useRealtimeConnection({
-    enabled: isMultiplayer && Boolean(realtimeSelfUserId),
+  // Training is a fully local scripted match — never open the realtime socket for it.
+  const isMultiplayer = !!config && config.mode !== "solo" && config.mode !== "training";
+  const principal = useRealtimePrincipal();
+  const selfUserId = connectedSelfUserId ?? principal.userId ?? player.id;
+  const realtimeSelfUserId = principal.userId;
+  const socket = useRealtimeMatchSocket({
+    enabled: isMultiplayer && principal.kind !== 'none',
     selfUserId: realtimeSelfUserId,
   });
   const [socketConnected, setSocketConnected] = useState(() => socket.connected);

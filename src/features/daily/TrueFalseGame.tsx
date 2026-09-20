@@ -9,6 +9,8 @@ import { getDailyChallengeCopy } from "@/lib/i18n/dailyChallenge";
 import { useLocale } from "@/contexts/LocaleContext";
 import { QuitGameDialog } from "./QuitGameDialog";
 import { DailyChallengeHeader } from "./components/DailyChallengeHeader";
+import { DailyGameStage } from "./components/DailyGameStage";
+import { EmbeddedCounterPill } from "./components/EmbeddedCounterPill";
 import { ResultSplash } from "./components/ResultSplash";
 import { useResultSplash } from "./components/useResultSplash";
 import { DailyChallengeCompleteModal } from "./components/DailyChallengeCompleteModal";
@@ -24,13 +26,21 @@ interface TrueFalseGameProps {
   session: TrueFalseSession;
   onBack: () => void;
   onComplete: (score: number, nextPath?: string) => void;
+  /** Sample / training round: the completion modal shows no member prompts and runs no member queries. */
+  practice?: boolean;
+  /** Skip the daily-challenge completion modal and fire onComplete as soon
+   *  as the last question resolves (embedded/promo flows). */
+  autoComplete?: boolean;
+  /** Render inline (promo flow): global counter pill, no header/timer/back. */
+  embedded?: { current: number; total: number };
 }
 
 export function TrueFalseGame({
   session,
   onBack,
   onComplete,
-}: TrueFalseGameProps) {
+  autoComplete = false,
+  embedded, practice = false, }: TrueFalseGameProps) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(session.secondsPerQuestion);
   const [selectedAnswer, setSelectedAnswer] = useState<boolean | null>(null);
@@ -41,6 +51,13 @@ export function TrueFalseGame({
   const { splashProps, fire } = useResultSplash();
   const copy = getDailyChallengeCopy();
   const { t } = useLocale();
+
+  // Embedded flows: report completion immediately instead of holding on the
+  // daily-challenge modal ("see you tomorrow" makes no sense there).
+  useEffect(() => {
+    if (autoComplete && finished) onComplete(correctCount);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoComplete, finished]);
 
   const currentQuestion = session.questions[currentQuestionIndex];
   const answerOptions = useMemo(
@@ -109,7 +126,7 @@ export function TrueFalseGame({
   );
 
   useEffect(() => {
-    if (showResult || !currentQuestion) {
+    if (showResult || !currentQuestion || embedded) {
       return;
     }
 
@@ -125,38 +142,50 @@ export function TrueFalseGame({
     }, 1000);
 
     return () => window.clearInterval(timer);
-  }, [currentQuestion, handleAnswer, showResult]);
+  }, [currentQuestion, handleAnswer, showResult, embedded]);
 
   useEffect(() => {
     if (!showResult) {
       return;
     }
+    // Embedded (promo): a single question per round, so resolve immediately
+    // and let the operator advance manually — never auto-advance.
+    const delay = embedded ? 0 : 1200;
 
     const timeout = window.setTimeout(() => {
       goToNextQuestion();
-    }, 1200);
+    }, delay);
 
     return () => window.clearTimeout(timeout);
-  }, [goToNextQuestion, showResult]);
+  }, [goToNextQuestion, showResult, embedded]);
 
   if (!currentQuestion) {
     return null;
   }
 
   return (
-    <div className="fixed inset-0 z-40 flex flex-col bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat text-white">
-      <DailyChallengeHeader
-        onQuit={() => setShowQuitDialog(true)}
-        currentIndex={currentQuestionIndex}
-        total={session.questionCount}
-        timeLeft={timeLeft}
-      />
-
-      {/* Content */}
-      <div className="mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center px-4 py-4">
+    <div className={embedded ? "flex flex-col text-white" : "fixed inset-0 z-40 flex flex-col bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat text-white"}>
+      {/* Header + question + answers are ONE centred composition (the shared
+          daily stage) so the counter/timer never floats away from the game. */}
+      <DailyGameStage
+        header={
+          embedded ? (
+            <EmbeddedCounterPill current={embedded.current} total={embedded.total} />
+          ) : (
+            <DailyChallengeHeader
+              onQuit={() => setShowQuitDialog(true)}
+              currentIndex={currentQuestionIndex}
+              total={session.questionCount}
+              timeLeft={timeLeft}
+              className="px-0 pt-0"
+            />
+          )
+        }
+      >
+        <div className="w-full">
         {/* Question card */}
         <div
-          className="flex items-center rounded-[24px] border border-white/10 bg-white/5 px-5 py-5 text-white backdrop-blur-sm sm:px-6 sm:py-6"
+          className="flex items-center justify-center rounded-[24px] border border-white/10 bg-white/5 px-5 py-5 text-center text-white backdrop-blur-sm sm:px-6 sm:py-6"
           style={{
             fontFamily: "'Poppins', sans-serif",
             fontWeight: 700,
@@ -229,12 +258,15 @@ export function TrueFalseGame({
           })}
         </div>
 
-        {/* Score */}
-        <div className="mt-4 flex items-center justify-between text-sm" style={poppins}>
-          <span className="text-white/55">{copy.correctAnswers}</span>
-          <span className="text-white">{correctCount}</span>
+        {/* Score (hidden in embedded flows — the shell owns the score) */}
+        {!embedded && (
+          <div className="mt-4 flex items-center justify-between text-sm" style={poppins}>
+            <span className="text-white/55">{copy.correctAnswers}</span>
+            <span className="text-white">{correctCount}</span>
+          </div>
+        )}
         </div>
-      </div>
+      </DailyGameStage>
 
       <QuitGameDialog
         open={showQuitDialog}
@@ -245,7 +277,8 @@ export function TrueFalseGame({
       <ResultSplash {...splashProps} />
 
       <DailyChallengeCompleteModal
-        open={finished}
+        practice={practice}
+        open={finished && !autoComplete}
         title={session.title}
         correct={correctCount}
         total={session.questionCount}

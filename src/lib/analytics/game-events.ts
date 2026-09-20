@@ -928,3 +928,8 @@ export function trackMatchLoadError(matchId: string | undefined, errorCode: stri
 // `trackMatchCompleted` / lobby-join flow. Removed to keep the event surface
 // minimal — if a future use case appears, prefer extending the canonical
 // match_started / match_completed events instead of introducing new ones.
+
+/** A game card on the hub was selected. */
+export function trackPlayCardClicked(props: { slug: string; group: "daily" | "coins" | "other"; destination: "route" | "demo" | "modal" | "auth" | "public_page" }) {
+  trackEvent("play_card_clicked", props);
+}

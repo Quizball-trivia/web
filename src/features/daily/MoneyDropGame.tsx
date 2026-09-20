@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from "motion/react";
 
 import { Slider } from "@/components/ui/slider";
 import { QuitGameDialog } from "./QuitGameDialog";
+import { DailyChallengeCompleteModal } from "./components/DailyChallengeCompleteModal";
+import { DailyGameStage } from "./components/DailyGameStage";
 import { DailyChallengeHeader } from "./components/DailyChallengeHeader";
 import {
   ArrowRight,
@@ -24,7 +26,9 @@ import { playSfx } from "@/lib/sounds/gameSounds";
 interface MoneyDropGameProps {
   session: MoneyDropSession;
   onBack: () => void;
-  onComplete: (finalMoney: number) => void;
+  onComplete: (finalMoney: number, nextPath?: string) => void;
+  /** Sample / training round: the completion modal finishes immediately. */
+  practice?: boolean;
 }
 
 const OPTION_COLORS = [
@@ -157,10 +161,15 @@ function HelpButtons({
         <Split className="size-3.5 lg:size-4" />
         <span className={cn(fiftyFiftyUsed && "line-through")}>{t('dailyGames.fiftyFifty')}</span>
       </button>
-      <button onClick={onClue} disabled={clueUsed || clueDisabled || disabled} className={cn(btnBase, clueUsed || clueDisabled ? btnUsed : btnActive)}>
-        <Lightbulb className="size-3.5 lg:size-4" />
-        <span className={cn(clueUsed && "line-through")}>{t('dailyGames.clue')}</span>
-      </button>
+      {/* Under 2% of the MCQ pool carries an explanation, so an always-visible
+          lifeline was a dead control on nearly every question: show it only
+          when this question actually has a clue to reveal. */}
+      {!clueDisabled && (
+        <button onClick={onClue} disabled={clueUsed || disabled} className={cn(btnBase, clueUsed ? btnUsed : btnActive)}>
+          <Lightbulb className="size-3.5 lg:size-4" />
+          <span className={cn(clueUsed && "line-through")}>{t('dailyGames.clue')}</span>
+        </button>
+      )}
       <button
         onClick={onChangeQuestion}
         disabled={changeQuestionUsed || changeQuestionDisabled || disabled}
@@ -175,8 +184,11 @@ function HelpButtons({
 
 /* ── Main Component ── */
 
-export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProps) {
+export function MoneyDropGame({ session, onBack, onComplete, practice = false }: MoneyDropGameProps) {
   const { t } = useLocale();
+  // The run's final bank once it ends; the completion modal reports it and
+  // only then hands the score to the page.
+  const [finalMoney, setFinalMoney] = useState<number | null>(null);
   const STARTING_MONEY = session.startingMoney;
   const QUESTION_TIME = session.secondsPerQuestion;
 
@@ -347,7 +359,7 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
     // manually confirmed a single bet scores 0, whatever the bank shows —
     // otherwise idling through timer-confirmed rounds could bank real coins.
     const finishRun = (score: number) =>
-      onComplete(anyManualConfirmRef.current ? score : 0);
+      setFinalMoney(anyManualConfirmRef.current ? score : 0);
     // A round revealed with NOTHING allocated can only be a timeout — manual
     // confirm requires full allocation. It is not a bet; it's an absent player.
     // Wiping the bank here (old behavior) ended most runs at 0 through
@@ -438,7 +450,15 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
     setTimeLeft(QUESTION_TIME);
   };
 
-  const formatMoney = (amount: number) => `${amount.toLocaleString()} coins`;
+  const formatMoney = (amount: number) => `${amount.toLocaleString()} ${t('dailyGames.coinsSuffix')}`;
+  const difficultyLabel = (difficulty: string) => {
+    switch (difficulty) {
+      case "easy": return t('dailyGames.difficultyEasy');
+      case "medium": return t('dailyGames.difficultyMedium');
+      case "hard": return t('dailyGames.difficultyHard');
+      default: return difficulty;
+    }
+  };
 
   const getDifficultyStyle = (difficulty: string) => {
     switch (difficulty) {
@@ -452,18 +472,21 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
   return (
     <div className="fixed inset-0 z-40 flex flex-col font-poppins bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat">
 
-      <DailyChallengeHeader
-        onQuit={() => setShowQuitDialog(true)}
-        currentIndex={currentQuestionIndex}
-        total={questions.length}
-        timeLeft={timeLeft}
-        hideTimer={showResult || isAnimating}
-      />
-
-      {/* ── Content ── */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="min-h-full lg:flex lg:flex-col lg:justify-center">
-        <div className="max-w-3xl lg:max-w-4xl mx-auto px-3 md:px-4 lg:px-6 py-4 md:py-5 lg:py-6 pb-24 space-y-3 md:space-y-4 lg:space-y-5 w-full">
+      {/* Header + gameplay as one centred composition (shared daily stage). */}
+      <DailyGameStage
+        header={
+          <DailyChallengeHeader
+            onQuit={() => setShowQuitDialog(true)}
+            currentIndex={currentQuestionIndex}
+            total={questions.length}
+            timeLeft={timeLeft}
+            hideTimer={showResult || isAnimating}
+            className="px-0 pt-0"
+          />
+        }
+        contentClassName="max-w-[900px]"
+      >
+        <div className="w-full space-y-3 md:space-y-4 lg:space-y-5">
 
           {/* Question + help row */}
           <motion.div
@@ -472,9 +495,9 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
             className="rounded-[20px] bg-surface-card/40 backdrop-blur-sm p-4 md:p-6 lg:p-8"
           >
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-3">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center justify-center gap-2">
                 <span className={cn("px-2.5 py-1 lg:px-3 lg:py-1.5 rounded-full text-xs lg:text-sm font-bold", getDifficultyStyle(currentQuestion.difficulty))}>
-                  {currentQuestion.difficulty.toUpperCase()}
+                  {difficultyLabel(currentQuestion.difficulty).toUpperCase()}
                 </span>
                 <span className="px-2.5 py-1 lg:px-3 lg:py-1.5 rounded-full text-xs lg:text-sm font-bold bg-brand-cyan/15 text-brand-cyan">
                   {currentQuestion.category}
@@ -492,7 +515,7 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
                 disabled={showResult || isAnimating || hasConfirmed}
               />
             </div>
-            <p className="text-white text-lg md:text-xl lg:text-2xl font-bold leading-snug">
+            <p className="text-center text-white text-lg md:text-xl lg:text-2xl font-bold leading-snug">
               {currentQuestion.prompt}
             </p>
           </motion.div>
@@ -785,8 +808,7 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
             </div>
           )}
         </div>
-        </div>
-      </div>
+      </DailyGameStage>
 
       <QuitGameDialog
         open={showQuitDialog}
@@ -794,6 +816,18 @@ export function MoneyDropGame({ session, onBack, onComplete }: MoneyDropGameProp
         onQuit={onBack}
         title={t("dailyQuit.quitMoneyDrop")}
         description={`You'll lose your current balance of ${formatMoney(currentMoney)}.`}
+      />
+
+      <DailyChallengeCompleteModal
+        practice={practice}
+        open={finalMoney !== null}
+        title={session.title}
+        correct={0}
+        total={0}
+        scoreLabel={t("dailyGames.hubCoinsEarned")}
+        challengeType={session.challengeType}
+        scoreValue={formatMoney(finalMoney ?? 0)}
+        onDone={(nextPath) => onComplete(finalMoney ?? 0, nextPath)}
       />
     </div>
   );

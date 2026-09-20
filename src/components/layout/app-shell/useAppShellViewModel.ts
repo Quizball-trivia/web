@@ -12,6 +12,7 @@
  * this hook returns.
  */
 
+import { useRealtimePrincipal } from '@/lib/realtime/realtime-principal';
 import { useEffect, useRef, useState } from 'react';
 import { useShallow } from 'zustand/shallow';
 import { usePathname, useRouter } from 'next/navigation';
@@ -32,9 +33,10 @@ import { useLobbyCommandMachine } from '@/features/friend/hooks/useLobbyCommandM
 
 import { readCachedRankedGeoHint, type RankedGeoHint } from '@/lib/match/rankedGeoHint';
 import {
-  HEADER_PATHS,
   HIDE_NAV_PATHS,
   isPathActive as isPathActiveHelper,
+  navPathOf,
+  showsHeader,
 } from './appShell.helpers';
 
 export function useAppShellViewModel() {
@@ -74,21 +76,20 @@ export function useAppShellViewModel() {
   const activeAuctionMatch = useAuctionActiveMatchStore((state) => state.activeAuctionMatch);
   const startSession = useGameSessionStore((state) => state.startSession);
   const setGameStage = useGameSessionStore((state) => state.setStage);
-  const [socketConnected, setSocketConnected] = useState(() => getSocket().connected);
-  const [rankedGeoHintDebug, setRankedGeoHintDebug] = useState<RankedGeoHint | null>(
-    () => readCachedRankedGeoHint(),
-  );
+  const [socketConnected, setSocketConnected] = useState(false);
+  // Read after mount (see the sync effect): the cached hint lives in browser storage, which the server render cannot see.
+  const [rankedGeoHintDebug, setRankedGeoHintDebug] = useState<RankedGeoHint | null>(null);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [nowTick, setNowTick] = useState(() => Date.now());
   const lobbyCommands = useLobbyCommandMachine();
+  // One connection owner for members AND resolved guests (friend rooms).
+  const principal = useRealtimePrincipal();
   useRealtimeConnection({
-    enabled: authStatus === 'authenticated' && Boolean(authUser?.id),
-    selfUserId: authUser?.id ?? null,
+    enabled: principal.kind !== 'none',
+    selfUserId: principal.userId,
   });
 
-  // Tick once per second so any time-comparison render values
-  // (e.g. lobby banner suppression deadline) stay fresh without
-  // calling Date.now() during render.
+  const isAuthenticated = authStatus === 'authenticated';
   useEffect(() => {
     if (suppressLobbyBannerUntil === null) return;
     const id = setInterval(() => setNowTick(Date.now()), 1000);
@@ -101,16 +102,17 @@ export function useAppShellViewModel() {
   // can't be reached and content can't scroll behind them. The hub
   // (`/daily/challenges`) keeps both.
   const inDailyChallengeGame = currentPath.startsWith('/daily/challenges/');
-  const showHeader = !inDailyChallengeGame && HEADER_PATHS.some((p) => (p === '/' ? currentPath === '/' : currentPath.startsWith(p)));
+  const showHeader = !inDailyChallengeGame && showsHeader(currentPath);
+  const navPath = navPathOf(currentPath);
   const showNav = !inDailyChallengeGame && !HIDE_NAV_PATHS.some((path) => currentPath.startsWith(path));
   const inLobbyRoom = currentPath.startsWith('/friend/room');
   const lobbyBannerSuppressed =
     suppressLobbyBannerReason !== null ||
     (suppressLobbyBannerUntil !== null && suppressLobbyBannerUntil > nowTick);
   const lobbyIncludesCurrentUser =
-    !!authUser?.id &&
+    !!principal.userId &&
     !!lobby &&
-    lobby.members.some((member) => member.userId === authUser.id);
+    lobby.members.some((member) => member.userId === principal.userId);
   const showLobbyBanner =
     !!lobby &&
     lobbyIncludesCurrentUser &&
@@ -210,10 +212,18 @@ export function useAppShellViewModel() {
   const sessionStateLabel = sessionState?.state ?? 'NO_SESSION';
   const navbarCoins = storeWallet?.coins ?? 0;
   const navbarTickets = storeWallet?.tickets ?? 0;
-  const socialBadgeCount = incomingFriendRequestCount + challengeInviteCount + unreadNotificationCount;
+  // Two separate badges: the SOCIAL tab counts what that tab resolves (friend
+  // requests + challenge invites); the BELL counts general notifications. The
+  // old combined number double-badged every WL notification on both icons.
+  const socialBadgeCount = incomingFriendRequestCount + challengeInviteCount;
+  const bellBadgeCount = unreadNotificationCount;
 
+  // The socket manager and the debug poll exist for members only: a guest on
+  // the public hub must not construct a socket or run timers.
   useEffect(() => {
+    if (!isAuthenticated) return;
     const socket = getSocket();
+    setSocketConnected(socket.connected);
     const handleConnect = () => setSocketConnected(true);
     const handleDisconnect = () => setSocketConnected(false);
     socket.on('connect', handleConnect);
@@ -222,24 +232,28 @@ export function useAppShellViewModel() {
       socket.off('connect', handleConnect);
       socket.off('disconnect', handleDisconnect);
     };
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
+    if (!isAuthenticated) return;
     const sync = () => setRankedGeoHintDebug(readCachedRankedGeoHint());
+    // First read after mount (off the effect tick, per the cascading-renders lint rule).
+    queueMicrotask(sync);
     window.addEventListener('storage', sync);
     const intervalId = window.setInterval(sync, 1500);
     return () => {
       window.removeEventListener('storage', sync);
       window.clearInterval(intervalId);
     };
-  }, []);
+  }, [isAuthenticated]);
 
   const handleLogout = async () => {
     await logout();
-    router.replace('/');
+    // Land on the guest Play page — the landing no longer exists.
+    router.replace('/play');
   };
 
-  const isPathActive = (path: string, exact?: boolean) => isPathActiveHelper(currentPath, path, exact);
+  const isPathActive = (path: string, exact?: boolean) => isPathActiveHelper(navPath, path, exact);
 
   const handleReturnToLobby = () => {
     if (!lobbyCode) return;
@@ -407,6 +421,7 @@ export function useAppShellViewModel() {
     authUser,
     // Route
     currentPath,
+    navPath,
     showHeader,
     showNav,
     isPathActive,
@@ -416,6 +431,7 @@ export function useAppShellViewModel() {
     draftOpponent,
     activeDraftBanner,
     activeMatchBanner,
+    activeAuctionMatch,
     completedMatchBanner,
     forfeitPending,
     partyDropout,
@@ -429,9 +445,7 @@ export function useAppShellViewModel() {
     showRankedLobbyBanner,
     showDraftBanner,
     showRejoinBanner,
-    activeAuctionMatch,
     showAuctionRejoinBanner,
-    handleRejoinAuction,
     showCompletedMatchBanner,
     showForfeitPendingBanner,
     showPartyDropoutBanner,
@@ -439,6 +453,7 @@ export function useAppShellViewModel() {
     navbarCoins,
     navbarTickets,
     socialBadgeCount,
+    bellBadgeCount,
     // Realtime
     socketConnected,
     // Debug
@@ -457,6 +472,7 @@ export function useAppShellViewModel() {
     handleReturnToRankedLobby,
     handleLeaveLobby,
     handleRejoinMatch,
+    handleRejoinAuction,
     handleReturnToDraft,
     handleForfeitRejoin,
     handleViewCompletedMatch,

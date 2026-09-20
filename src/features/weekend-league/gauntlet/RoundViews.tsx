@@ -180,7 +180,7 @@ export function CareerPathCard({ heading, items }: { heading: string; items: Car
 
 /** One club in the chain: crest when we can resolve one (with the name under
  *  it), a text chip otherwise — never a bare unlabelled logo. */
-function CareerChip({ item }: { item: CareerItem }) {
+export function CareerChip({ item }: { item: CareerItem }) {
   const club = item.imageSrc ? null : findClubByName(item.matchName ?? item.label);
   const src = item.imageSrc ?? club?.logo ?? null;
   if (src == null) {

@@ -1,12 +1,13 @@
 "use client";
 
+import { useEnsureGuestPrincipal } from '@/lib/realtime/realtime-principal';
+import { useRealtimePrincipal } from '@/lib/realtime/realtime-principal';
 import { useState, useEffect, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { LobbyBrowsePanel } from "./components/LobbyBrowsePanel";
 import { CreateJoinPanel } from "./components/CreateJoinPanel";
 import { AlreadyInLobbyModal } from "./components/AlreadyInLobbyModal";
 import { useRealtimeConnection } from "@/lib/realtime/useRealtimeConnection";
-import { useAuthStore } from "@/stores/auth.store";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import { useQueryClient } from "@tanstack/react-query";
 import { lobbiesKeys } from "@/lib/queries/lobbies.queries";
@@ -16,17 +17,18 @@ import { useLocale } from "@/contexts/LocaleContext";
 import { useLobbyCommandMachine } from "./hooks/useLobbyCommandMachine";
 
 export function FriendMatchHubPage() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  useEnsureGuestPrincipal(locale);
   const router = useRouter();
   const searchParams = useSearchParams();
   const initialTab = searchParams.get('tab') === 'create' ? 'create' : 'browse';
   
-  const authUser = useAuthStore((state) => state.user);
-  const realtimeSelfUserId = authUser?.id ?? null;
+  const principal = useRealtimePrincipal();
+  const realtimeSelfUserId = principal.userId;
   const queryClient = useQueryClient();
   
-  // Realtime connection
-  useRealtimeConnection({ enabled: Boolean(realtimeSelfUserId), selfUserId: realtimeSelfUserId });
+  // Realtime connection (members and resolved guests alike)
+  useRealtimeConnection({ enabled: principal.kind !== 'none', selfUserId: realtimeSelfUserId });
   
   const lobby = useRealtimeMatchStore(state => state.lobby);
   const sessionState = useRealtimeMatchStore(state => state.sessionState);
@@ -95,8 +97,9 @@ export function FriendMatchHubPage() {
     }
 
     handleActionTriggered('public_lobby');
-    toast.info(t('friend.toastJoiningCode', { code: targetCode }));
+    const joiningToast = toast.info(t('friend.toastJoiningCode', { code: targetCode }));
     void joinByCode(targetCode).then((result) => {
+      toast.dismiss(joiningToast);
       if (!result) {
         resetJoinNavigationState();
         return;

@@ -26,7 +26,7 @@ vi.mock('@/contexts/LocaleContext', () => ({
   }),
 }));
 
-import { DailyChallengeCompleteModalContent } from '../DailyChallengeCompleteModal';
+import { DailyChallengeCompleteModal, DailyChallengeCompleteModalContent } from '../DailyChallengeCompleteModal';
 
 describe('DailyChallengeCompleteModalContent comeback treatment', () => {
   it('shows real server values and schedules the reminder through its callback', async () => {
@@ -71,5 +71,42 @@ describe('DailyChallengeCompleteModalContent comeback treatment', () => {
     );
 
     expect(screen.queryByRole('button', { name: /remind me tomorrow/i })).not.toBeInTheDocument();
+  });
+});
+
+describe('DailyChallengeCompleteModal practice rounds', () => {
+  it('finishes immediately without rendering the member modal', async () => {
+    const onDone = vi.fn();
+    const { container, rerender } = render(
+      <DailyChallengeCompleteModal open practice title="Countdown" correct={3} total={5} onDone={onDone} />,
+    );
+    await waitFor(() => expect(onDone).toHaveBeenCalledTimes(1));
+    expect(onDone).toHaveBeenCalledWith();
+    expect(container).toBeEmptyDOMElement();
+    // A re-render with the same open state does not finish twice.
+    rerender(<DailyChallengeCompleteModal open practice title="Countdown" correct={3} total={5} onDone={onDone} />);
+    expect(onDone).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows a coins score instead of correct answers when the game is scored in coins', () => {
+    render(
+      <DailyChallengeCompleteModalContent
+        title="Money Drop"
+        correct={0}
+        total={0}
+        scoreLabel="Coins Earned"
+        scoreValue="250,000 coins"
+        onDone={vi.fn()}
+      />,
+    );
+    expect(screen.getByText('Coins Earned')).toBeInTheDocument();
+    expect(screen.getByText('250,000 coins')).toBeInTheDocument();
+    expect(screen.queryByText('Correct Answers')).toBeNull();
+  });
+
+  it('stays closed while not open', () => {
+    const onDone = vi.fn();
+    render(<DailyChallengeCompleteModal open={false} practice title="Countdown" correct={3} total={5} onDone={onDone} />);
+    expect(onDone).not.toHaveBeenCalled();
   });
 });

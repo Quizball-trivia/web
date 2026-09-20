@@ -17,12 +17,12 @@ import {
 } from "@/lib/mappers/question.mapper";
 import { queryKeys } from "@/lib/queries/queryKeys";
 
-export const getCategoriesListQuery = (filters?: ListCategoriesQuery) => ({
-  queryKey: queryKeys.categories.list(filters),
+export const getCategoriesListQuery = (filters?: ListCategoriesQuery, locale = "en") => ({
+  queryKey: [...queryKeys.categories.list(filters), "locale", locale] as const,
   queryFn: async (): Promise<CategoriesListDTO> => {
     const data = await listCategories(filters);
     return {
-      items: data.data.map((category) => toCategorySummary(category)),
+      items: data.data.map((category) => toCategorySummary(category, locale)),
       page: data.page,
       limit: data.limit,
       total: data.total,
@@ -31,8 +31,12 @@ export const getCategoriesListQuery = (filters?: ListCategoriesQuery) => ({
   },
 });
 
-export function useCategoriesList(filters?: ListCategoriesQuery) {
-  return useQuery(getCategoriesListQuery(filters));
+export function useCategoriesList(
+  filters?: ListCategoriesQuery,
+  options?: { enabled?: boolean },
+  locale = "en",
+) {
+  return useQuery({ ...getCategoriesListQuery(filters, locale), ...options });
 }
 
 export const getAllCategoriesListQuery = (filters?: ListCategoriesQuery) => ({

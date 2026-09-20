@@ -4,10 +4,9 @@ import { ApiError } from "@/lib/api/api";
 import type { LeaderboardType } from "@/lib/domain/leaderboard";
 import type { AvatarCustomization } from "@/types/game";
 
-// The ranked endpoints send rp/tier/trend; the auction endpoints send
-// auctionPoints and omit the ranked-only fields. One response type serves
-// both, so everything mode-specific is optional here and the mapper fills
-// the gaps.
+// Ranked sends RP, Auction sends AP, and Football Tic Tac Toe sends TP. One
+// response type serves all three boards so the shared podium/table UI can map
+// the active mode's score into `rankPoints`.
 export interface LeaderboardEntryResponse {
   userId: string;
   rank: number;
@@ -16,6 +15,7 @@ export interface LeaderboardEntryResponse {
   avatarCustomization: AvatarCustomization | null;
   rp?: number;
   auctionPoints?: number;
+  ticTacToePoints?: number;
   tier?: string;
   country: string | null;
   trend?: 'up' | 'down' | 'same';
@@ -46,6 +46,7 @@ export interface UserRankResponse {
   country: string | null;
   rp?: number;
   auctionPoints?: number;
+  ticTacToePoints?: number;
   tier?: string;
   rank: number;
   total: number;
@@ -116,6 +117,26 @@ export async function getAuctionUserRank(type: LeaderboardType = "global") {
   const scope = scopeFromType(type);
   const data = await requestJson<UserRankResponse | null>(
     `/api/v1/auction/leaderboard/me?scope=${scope}`
+  );
+  return { data, error: null };
+}
+
+export async function getTicTacToeLeaderboard(
+  type: LeaderboardType = "global",
+  limit = 50,
+  offset = 0,
+) {
+  const scope = scopeFromType(type);
+  const data = await requestJson<LeaderboardApiResponse>(
+    `/api/v1/football-grid/leaderboard?scope=${scope}&limit=${limit}&offset=${offset}`
+  );
+  return { data: data.entries, error: null };
+}
+
+export async function getTicTacToeUserRank(type: LeaderboardType = "global") {
+  const scope = scopeFromType(type);
+  const data = await requestJson<UserRankResponse | null>(
+    `/api/v1/football-grid/leaderboard/me?scope=${scope}`
   );
   return { data, error: null };
 }

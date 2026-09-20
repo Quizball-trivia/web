@@ -1,8 +1,11 @@
 'use client';
 
+import { GuestResultsCta } from '@/features/friend/components/GuestResultsCta';
+import { GUEST_LOBBIES_ENABLED } from '@/lib/config';
+import { useEnsureGuestPrincipal, useRealtimePrincipal } from '@/lib/realtime/realtime-principal';
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useAuthStore } from '@/stores/auth.store';
 import { useAuctionActiveMatchStore } from '@/stores/auctionActiveMatch.store';
@@ -165,6 +168,9 @@ function AuctionMockFlowScreen({ username, avatarSeed }: Omit<AuctionFlowScreenP
 
 function AuctionRealtimeFlowScreen({ username, avatarSeed, avatarCustomization }: Omit<AuctionFlowScreenProps, 'mode'>) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  // Guest "Play now" from the public Auction page: an anonymous bot table.
+  const practiceBotSource = searchParams.get('source') === 'practice_bot';
   const { locale, t } = useLocale();
   // A match already exists when we arrive from a friend lobby or the app-shell
   // "still in an auction" banner. Captured once on mount: the store is cleared
@@ -195,10 +201,16 @@ function AuctionRealtimeFlowScreen({ username, avatarSeed, avatarCustomization }
   const authUser = useAuthStore((store) => store.user);
   const authStatus = useAuthStore((store) => store.status);
   const connectionHealth = useRealtimeConnectionHealth();
+  // Guests reach the live auction only through a friend room (resolved principal).
+  const principal = useRealtimePrincipal();
+  const guestStatus = useEnsureGuestPrincipal(locale);
+  // Anonymous visitors are refused unless guest lobbies are on and a guest principal is (still) resolving.
   const authRequired =
-    authStatus === 'anonymous' ||
-    (authStatus === 'authenticated' && !authUser?.id);
-  const realtimeEnabled = authStatus === 'authenticated' && Boolean(authUser?.id);
+    principal.kind === 'none' &&
+    authStatus !== 'loading' &&
+    (authStatus !== 'anonymous' || !GUEST_LOBBIES_ENABLED || guestStatus === 'refused');
+  const realtimeEnabled = principal.kind !== 'none';
+  const practiceBot = practiceBotSource && principal.kind === 'guest';
   const {
     state,
     actions,
@@ -220,15 +232,27 @@ function AuctionRealtimeFlowScreen({ username, avatarSeed, avatarCustomization }
     restoringFromReload,
   } = useRealtimeAuctionMatch({
     enabled: realtimeEnabled,
-    autoStart: auctionStarted,
-    matchmakingMode: 'search',
+    // Matchmaking is member-only; a guest only attaches to its room's match —
+    // or starts a practice bot table ("Play now"), which the server gates.
+    autoStart: auctionStarted && (principal.kind !== 'guest' || practiceBot),
+    matchmakingMode: practiceBot ? 'practice' : 'search',
     attachMatchId,
-    selfUserId: authUser?.id ?? null,
+    selfUserId: principal.userId,
     locale,
     formation: LIVE_AUCTION_FORMATION_NAME,
     humanAvatarSeed: avatarSeed,
     humanAvatarCustomization: avatarCustomization,
   });
+
+  // A guest with no match to attach to (direct /auction visit, stale or expired
+  // rejoin) has nothing to search for: back to the friend hub instead of an
+  // endless search screen. Derived from the hook's own recovery state so a
+  // failed rejoin re-evaluates it.
+  useEffect(() => {
+    if (principal.kind !== 'guest' || practiceBot || state || restoringFromReload) return;
+    if (attachMatchId && !attachUnavailable) return;
+    router.replace('/play/friend');
+  }, [attachMatchId, attachUnavailable, practiceBot, principal.kind, restoringFromReload, router, state]);
 
   const currentJoined = search?.phase === 'match_found' ? 3 : Math.max(search?.queuedUserCount ?? 1, 1);
 
@@ -414,6 +438,7 @@ function AuctionRealtimeFlowScreen({ username, avatarSeed, avatarCustomization }
           forfeited
           removed={removedByServer}
         />
+        <div className="mx-auto w-full max-w-[498px] px-4 pb-6"><GuestResultsCta /></div>
       </>
     );
   }
@@ -472,7 +497,7 @@ function AuctionRealtimeFlowScreen({ username, avatarSeed, avatarCustomization }
         players={search?.queuedPlayers}
         botCount={search?.botCount ?? 0}
         botPlayers={search?.botPlayers}
-        selfUserId={authUser?.id ?? null}
+        selfUserId={principal.userId}
         selfDisplayName={username}
         selfAvatarSeed={avatarSeed}
         selfAvatarCustomization={avatarCustomization}
@@ -499,7 +524,7 @@ function AuctionRealtimeFlowScreen({ username, avatarSeed, avatarCustomization }
           players={search?.queuedPlayers}
           botCount={search?.botCount ?? 0}
           botPlayers={search?.botPlayers}
-          selfUserId={authUser?.id ?? null}
+          selfUserId={principal.userId}
           selfDisplayName={username}
           selfAvatarSeed={avatarSeed}
           selfAvatarCustomization={avatarCustomization}
@@ -594,6 +619,7 @@ function AuctionRealtimeFlowScreen({ username, avatarSeed, avatarCustomization }
           coinsAwarded={coinsAwarded}
           apEarned={apEarned}
         />
+        <div className="mx-auto w-full max-w-[498px] px-4 pb-6"><GuestResultsCta /></div>
         <AnimatePresence>
           {!resultsRevealed && sawLivePhase && (
             <AuctionStatusOverlay

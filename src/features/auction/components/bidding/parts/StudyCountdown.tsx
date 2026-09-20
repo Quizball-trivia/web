@@ -15,9 +15,11 @@ import { CountdownTimer } from '../CountdownTimer';
 export function StudyCountdown({
   endsAt,
   variant,
+  pausedAt = null,
 }: {
   endsAt: number;
   variant: 'card' | 'panel';
+  pausedAt?: number | null;
 }) {
   const { t } = useLocale();
   // Both variants sit on the brand-blue card: dark inset + bright text, so the
@@ -26,6 +28,7 @@ export function StudyCountdown({
 
   return (
     <div
+      data-auction-anchor="study-countdown"
       className={cn(
         'flex flex-col items-center gap-1.5 rounded-[16px] bg-black/25 px-4 py-2 text-center',
       )}
@@ -38,7 +41,7 @@ export function StudyCountdown({
         <Clock className="size-3.5" strokeWidth={2.5} />
         {t('auctionGame.biddingOpensIn')}
       </div>
-      <CountdownTimer key={String(endsAt)} endsAt={endsAt} totalMs={CLUE_STUDY_MS} />
+      <CountdownTimer key={String(endsAt)} endsAt={endsAt} totalMs={CLUE_STUDY_MS} pausedAt={pausedAt} />
     </div>
   );
 }

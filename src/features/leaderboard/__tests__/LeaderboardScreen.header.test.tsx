@@ -67,8 +67,8 @@ describe('LeaderboardScreen — header bar', () => {
     expect(seasonTrigger).toHaveTextContent('Season 2');
     expect(screen.getByRole('button', { name: 'Select region' })).toHaveTextContent('Global');
 
-    // The old pill rows were `role="tab"` — only the two mode tabs remain.
-    expect(screen.getAllByRole('tab')).toHaveLength(2);
+    // The old pill rows were `role="tab"` — the three game-mode tabs remain.
+    expect(screen.getAllByRole('tab')).toHaveLength(3);
   });
 
   it('switches season from the dropdown and refetches that season', async () => {
