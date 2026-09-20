@@ -41,7 +41,7 @@ function TopBar({ locale }: { locale: Locale }) {
   const { setLocale } = useLocale();
 
   return (
-    <div className="sticky top-0 z-30 border-b border-white/5 bg-[#0b1017]/80 backdrop-blur-md">
+    <div className="sticky top-0 z-30 border-b border-white/5 bg-surface-page-alt/80 backdrop-blur-md">
       <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
         <div className="flex min-w-0 items-center gap-3">
           <AppLogo size="sm" className="shrink-0" />
