@@ -1693,6 +1693,9 @@
     "finalizingResult": "Sonuç tamamlanıyor..."
   },
   "training": {
+    "loadError": "Öğretici soruları yüklenemedi. Lütfen tekrar deneyin.",
+    "retryLoading": "Tekrar dene",
+    "exitLoading": "Öğreticiden çık",
     "you": "SEN",
     "foe": "RAKİP",
     "yourTurn": "Sıra sende",

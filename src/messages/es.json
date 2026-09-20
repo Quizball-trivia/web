@@ -1693,6 +1693,9 @@
     "finalizingResult": "Finalizando resultado..."
   },
   "training": {
+    "loadError": "No se pudieron cargar las preguntas del tutorial. Inténtalo de nuevo.",
+    "retryLoading": "Reintentar",
+    "exitLoading": "Salir del tutorial",
     "you": "TÚ",
     "foe": "RIVAL",
     "yourTurn": "Tu turno",

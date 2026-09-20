@@ -1693,6 +1693,9 @@
     "finalizingResult": "Finalizing result..."
   },
   "training": {
+    "loadError": "Could not load the tutorial questions. Please try again.",
+    "retryLoading": "Try again",
+    "exitLoading": "Exit tutorial",
     "you": "YOU",
     "foe": "FOE",
     "yourTurn": "Your Turn",
