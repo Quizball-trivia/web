@@ -6,6 +6,7 @@ type AnalyticsValue = string | number | boolean | null | undefined;
 type AnalyticsProperties = Record<string, AnalyticsValue>;
 
 let lastIdentifySignature: string | null = null;
+let accessType: 'guest' | 'member' | 'unknown' = 'unknown';
 
 // PostHog runs wherever a project key is configured — which is prod ONLY
 // (staging/dev have no key, so all analytics are skipped there). Gating on the
@@ -36,6 +37,7 @@ export function identifyUser(
   }
 
   try {
+    accessType = 'member';
     const signature = `${userId}:${JSON.stringify(properties ?? {})}:${JSON.stringify(setOnce ?? {})}`;
     if (lastIdentifySignature === signature) {
       return;
@@ -51,6 +53,7 @@ export function identifyUser(
 
 // Reset user when they log out
 export function resetUser(): void {
+  accessType = 'guest';
   if (typeof window === 'undefined' || !process.env.NEXT_PUBLIC_POSTHOG_KEY || !isTrackingEnv()) {
     return;
   }
@@ -108,7 +111,11 @@ export function trackEvent(eventName: string, properties?: AnalyticsProperties):
   }
 
   try {
-    posthog.capture(eventName, properties);
+    posthog.capture(eventName, {
+      ...properties,
+      access_type: properties?.access_type ?? accessType,
+      event_source: 'web',
+    });
   } catch (error) {
     console.error('PostHog trackEvent error:', error);
   }

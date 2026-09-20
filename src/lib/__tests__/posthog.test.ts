@@ -4,13 +4,14 @@ const posthogMocks = vi.hoisted(() => ({
   _isIdentified: vi.fn(),
   identify: vi.fn(),
   reset: vi.fn(),
+  capture: vi.fn(),
 }));
 
 vi.mock('posthog-js', () => ({
   default: posthogMocks,
 }));
 
-import { identifyUser, resetUser } from '../posthog';
+import { identifyUser, resetUser, trackEvent } from '../posthog';
 
 describe('PostHog identity', () => {
   beforeEach(() => {
@@ -28,6 +29,29 @@ describe('PostHog identity', () => {
     resetUser();
 
     expect(posthogMocks.reset).not.toHaveBeenCalled();
+  });
+
+  it('labels gameplay through guest, login and logout without mixing the audiences', () => {
+    resetUser();
+    trackEvent('game_complete', { mode_id: 'freeKicks' });
+    identifyUser('member-transition');
+    trackEvent('mini_game_round_settled', { game: 'free_kicks' });
+    resetUser();
+    trackEvent('game_exit', { mode_id: 'freeKicks' });
+    expect(posthogMocks.capture.mock.calls.map(([event, props]) => [event, props.access_type, props.event_source])).toEqual([
+      ['game_complete', 'guest', 'web'],
+      ['mini_game_round_settled', 'member', 'web'],
+      ['game_exit', 'guest', 'web'],
+    ]);
+  });
+
+  it('retains explicit public-session access and does not capture without a project key', () => {
+    identifyUser('member-explicit');
+    trackEvent('game_start', { access_type: 'guest', mode_id: 'ranked' });
+    expect(posthogMocks.capture).toHaveBeenLastCalledWith('game_start', expect.objectContaining({ access_type: 'guest' }));
+    vi.stubEnv('NEXT_PUBLIC_POSTHOG_KEY', '');
+    trackEvent('game_complete');
+    expect(posthogMocks.capture).toHaveBeenCalledTimes(1);
   });
 
   it('resets an identified identity once', () => {
