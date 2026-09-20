@@ -31,6 +31,10 @@ const REDIRECT_FROM_ROOT: Record<string, string> = {
       .filter(([type, slug]) => type !== slug)
       .map(([type, slug]) => [`/daily/challenges/${type}`, `/daily/challenges/${slug}`]),
   ),
+  // Card Detective replaces the retired FIFA Cards runtime. Keep old bookmarks
+  // on a playable game; its public marketing page has a separate route.
+  "/daily/challenges/fifaCards": "/daily/challenges/card-detective",
+  "/daily/challenges/guess-the-card": "/daily/challenges/card-detective",
 };
 
 function originFromEnv(name: string): string | null {
