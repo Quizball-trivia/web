@@ -17,11 +17,9 @@ describe("APP_ROUTE_METADATA", () => {
     expect(googleBot).toMatchObject({ index: false, follow: false });
   });
 
-  it("does not pin a canonical (each app route is non-indexable, not a homepage duplicate)", () => {
-    // The bug we fixed was app pages inheriting the root layout's
-    // `canonical: "/"`. We deliberately set NO canonical here: a noindex page
-    // has no business asserting a canonical, and leaving it unset stops the
-    // "/play canonical = /" duplicate-content signal.
-    expect(APP_ROUTE_METADATA.alternates?.canonical).toBeUndefined();
+  it("explicitly clears inherited alternates on non-indexable app routes", () => {
+    // Undefined inherits the root layout's canonical in Next.js; only an
+    // explicit null clears it. Public pages keep their own locale canonicals.
+    expect(APP_ROUTE_METADATA).toHaveProperty("alternates", null);
   });
 });
