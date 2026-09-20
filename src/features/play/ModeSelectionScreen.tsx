@@ -14,6 +14,7 @@ import { RankedModeModal } from '@/features/play/RankedModeModal';
 import { FootballGridModeModal } from '@/features/football-grid/components/FootballGridModeModal';
 import { HomeRecentMatches } from '@/components/shared/HomeRecentMatches';
 import { AllGamesGrid } from '@/features/play/AllGamesGrid';
+import { PlayAnnouncements } from '@/features/play/PlayAnnouncements';
 import { useLocale } from '@/contexts/LocaleContext';
 import { useTierLabel } from '@/hooks/useTierLabel';
 import { getI18nText } from '@/lib/utils/i18n';
@@ -666,15 +667,7 @@ export function ModeSelectionScreen({
 
       </div>
 
-      {/* ─── 2. Weekend League — the weekly tournament, right under Ranked ─── */}
-      {/* Instrumented at the placement, not inside Rail — the dev gallery
-          mounts every Rail variant and would fire an impression per skin. */}
-      {/* Guests follow the rail too: the league tab explains "play Ranked to earn QP", and Ranked needs an account. */}
-      <div onClickCapture={() => trackWlBannerClicked()}>
-        <WeekendLeagueProgressExperimentRail />
-      </div>
-
-      {playHomeNotice}
+      <PlayAnnouncements />
 
       {/* ─── 2. Mode Cards — Auction + Tic-Tac-Toe (owner call: Friendly
           Match and Daily Challenge cards removed; every other game now lives
