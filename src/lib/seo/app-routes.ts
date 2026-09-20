@@ -14,6 +14,9 @@ import type { Metadata } from "next";
 // a `noindex` tag only works if Googlebot is allowed to fetch the page and
 // see it. See src/app/robots.ts.
 export const APP_ROUTE_METADATA: Metadata = {
+  // Omitting this field inherits the root canonical in Next.js. Explicitly
+  // clear alternates so non-indexable app screens do not claim to be homepages.
+  alternates: null,
   robots: {
     index: false,
     follow: false,
