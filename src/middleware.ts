@@ -4,6 +4,7 @@ import { DAILY_CHALLENGE_SLUGS } from "@/lib/domain/dailyChallengeSlugs";
 import { PUBLIC_GAMES_FOLDER, dailyCollectionPath, gamePageSlug } from "@/lib/seo/game-pages";
 import { PUBLISHED_PUBLIC_GAMES } from "@/lib/seo/public-games";
 import { API_BASE_URL } from "@/lib/config";
+import { canAccessDemos } from "@/lib/demos-access";
 import type { CampaignQuizRoute } from "@/features/campaign-quiz/campaignQuiz.types";
 
 // Routes that must redirect to the default-locale variant. Only marketing/legal
@@ -114,6 +115,19 @@ export async function middleware(req: NextRequest) {
   requestHeaders.set("x-pathname", pathname);
   requestHeaders.set("x-nonce", nonce);
   requestHeaders.set("Content-Security-Policy", csp);
+
+  // Return a real 404 before streaming; the layout also protects this tree.
+  if (pathname === "/demos" || pathname.startsWith("/demos/")) {
+    const demoHeaders = {
+      "Content-Security-Policy": csp,
+      "X-Robots-Tag": "noindex, nofollow",
+      "Cache-Control": "private, no-store",
+    };
+    if (!canAccessDemos(req.headers.get("host"))) {
+      return new NextResponse("Not found", { status: 404, headers: demoHeaders });
+    }
+    return NextResponse.next({ request: { headers: requestHeaders }, headers: demoHeaders });
+  }
 
   // The bare domain sends visitors to their locale homepage (the Football Games
   // hub): Georgia → /ka, everyone else → /en, x-default stays /en. Temporary and
