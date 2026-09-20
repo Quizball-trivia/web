@@ -44,10 +44,6 @@ export interface LiveSpecialQuestionPanelProps {
   showOptions: boolean;
   timeRemaining: number;
   questionDurationSeconds: number;
-  /** Clock-free modes (promo capture) keep the counter pill but drop the timer. */
-  hideTimer?: boolean;
-  /** Single-player modes (promo capture): hide every opponent-facing element. */
-  soloMode?: boolean;
   roundResolved: boolean;
   answerAck: MatchAnswerAckPayload | null;
   roundResult: MatchRoundResultPayload | null;
@@ -169,8 +165,7 @@ export function SpecialResultSummary({
   visible: boolean;
   tone: SpecialSummaryTone;
   player: SpecialSummarySide;
-  /** null = single-player mode; the card renders only the player side. */
-  opponent: SpecialSummarySide | null;
+  opponent: SpecialSummarySide;
 }) {
   const { t } = useLocale();
   if (!visible) return null;
@@ -179,55 +174,7 @@ export function SpecialResultSummary({
   // them) but no longer drive any visual — the per-side status pills were
   // removed in favor of the flat dark card.
   void tone;
-  const sides = opponent ? [player, opponent] : [player];
-
-  // Single-player card: no side label, everything centered.
-  if (!opponent) {
-    const safeTotal = Math.max(1, player.total);
-    const safeCount = player.count == null ? null : clampCount(player.count, safeTotal);
-    const singleAnswerRound = player.total <= 1;
-    const pointsText = player.points == null ? null : `${player.points > 0 ? '+' : ''}${player.points} ${t('possession.pointsLabel')}`;
-    return (
-      <motion.div
-        aria-live="polite"
-        initial={{ opacity: 0, y: 12, scale: 0.98 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: 0.28, ease: 'easeOut' }}
-        className="flex flex-col items-center gap-1 rounded-[30px] bg-surface-card-deeper p-5 text-center"
-      >
-        <div className="flex items-end justify-center gap-1 tabular-nums text-brand-yellow">
-          {singleAnswerRound ? (
-            <>
-              <span className="font-poppins leading-none" style={{ fontWeight: 700, fontSize: 'clamp(26px, 7vw, 40px)' }}>
-                {player.points ?? 0}
-              </span>
-              <span className="font-poppins pb-1 leading-none text-brand-yellow/70" style={{ fontWeight: 500, fontSize: 'clamp(12px, 2.6vw, 17px)' }}>
-                {t('possession.pts')}
-              </span>
-            </>
-          ) : (
-            <>
-              <span className="font-poppins leading-none" style={{ fontWeight: 700, fontSize: 'clamp(26px, 7vw, 40px)' }}>
-                {safeCount == null ? '-' : safeCount}
-              </span>
-              <span className="font-poppins pb-1 leading-none text-brand-yellow/70" style={{ fontWeight: 500, fontSize: 'clamp(12px, 2.6vw, 17px)' }}>
-                /{safeTotal}
-              </span>
-            </>
-          )}
-        </div>
-        <p className="text-[11px] font-fun font-black uppercase leading-tight text-white/50">{player.detail}</p>
-        {!singleAnswerRound && pointsText && (
-          <span
-            className="font-poppins tabular-nums text-brand-yellow"
-            style={{ fontWeight: 700, fontSize: 'clamp(15px, 3.5vw, 20px)', letterSpacing: '0.02em' }}
-          >
-            {pointsText.toUpperCase()}
-          </span>
-        )}
-      </motion.div>
-    );
-  }
+  const sides = [player, opponent];
 
   return (
     <motion.div

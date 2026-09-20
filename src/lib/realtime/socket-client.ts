@@ -1,10 +1,9 @@
 import { io, type Socket } from 'socket.io-client';
 import { API_BASE_URL } from '@/lib/config';
 import { getSupabaseAccessToken, getSupabaseClient } from '@/lib/auth/supabase';
-import { getGuestPrincipalToken, markGuestPrincipalRefused } from './realtime-principal';
 import { logger } from '@/utils/logger';
-import { useAuthStore } from '@/stores/auth.store';
-import { trackSocketConnectionFailed } from '@/lib/analytics/game-events';
+import { getGuestPrincipalToken, markGuestPrincipalRefused } from './realtime-principal';
+import { trackSocketConnectionFailed, trackSocketReconnected } from '@/lib/analytics/game-events';
 import {
   markRealtimeConnected,
   markRealtimeConnecting,
@@ -16,6 +15,7 @@ import {
 } from './connection-health';
 import type { ClientToServerEvents, ServerToClientEvents } from './socket.types';
 
+let lastDisconnectAtMs: number | null = null;
 let connectionPingIntervalId: ReturnType<typeof setInterval> | null = null;
 let connectionPingMonitorRunId = 0;
 let connectionPingInMatch = false;
@@ -164,8 +164,6 @@ function wait(ms: number): Promise<void> {
 }
 
 async function ensureValidAccessToken(): Promise<string | null> {
-  // A resolved guest principal connects with its opaque guest token (no JWT
-  // refresh dance applies); it only exists while there is no member session.
   const guestToken = getGuestPrincipalToken();
   if (guestToken) return guestToken;
   const currentToken = await getSupabaseAccessToken();
@@ -206,7 +204,7 @@ async function waitForTokenToSettle(token: string): Promise<void> {
 }
 
 async function recoverSocketAuthAndReconnect(
-  socket: Socket<ServerToClientEvents, ClientToServerEvents>,
+  socket: Socket<ServerToClientEvents, ClientToServerEvents>
 ): Promise<void> {
   if (authRecoveryState && !authRecoveryState.cancelled) {
     return authRecoveryState.promise;
@@ -221,7 +219,6 @@ async function recoverSocketAuthAndReconnect(
   authRecoveryConsecutiveFailures += 1;
   socketDebug('auth recovery retry scheduled', {
     attemptId: recovery.id,
-    consecutiveFailures: authRecoveryConsecutiveFailures,
     delayMs: retryDelayMs,
     ...socketSnapshot(socket),
   });
@@ -236,28 +233,8 @@ async function recoverSocketAuthAndReconnect(
       return;
     }
     if (!token) {
-      // A transiently unavailable client-side session (supabase-js lock
-      // contention) is indistinguishable from a real sign-out by token alone.
-      // A hard socket.disconnect() permanently stops auto-reconnect — observed
-      // as a match frozen at countdown while HTTP auth kept succeeding — so
-      // retry instead. But SIGNED_OUT only flips the auth store to anonymous
-      // (it does not disconnect), so without this check a signed-out tab would
-      // keep an authenticated socket alive and poll forever.
-      // 'loading' is transient and keeps the session (bootstrap retries), so
-      // only a positively signed-out/banned store may stop the recovery loop.
-      const authStatus = useAuthStore.getState().status;
-      if (authStatus === 'anonymous' || authStatus === 'banned') {
-        logger.info('Socket auth recovery stopping: session is no longer authenticated', { authStatus });
-        socket.disconnect();
-        return;
-      }
-      logger.warn('Socket auth recovery found no Supabase session; retrying', {
-        consecutiveFailures: authRecoveryConsecutiveFailures,
-      });
-      if (authRecoveryState?.id === recovery.id) {
-        authRecoveryState = null;
-      }
-      void recoverSocketAuthAndReconnect(socket);
+      logger.warn('Socket auth recovery failed: no Supabase session');
+      socket.disconnect();
       return;
     }
 
@@ -363,6 +340,11 @@ function createSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
     socketDebug('socket authenticated/connected', socketSnapshot(socket));
     logger.info('Socket connected', { socketId: socket.id });
     markRealtimeConnected();
+    if (lastDisconnectAtMs !== null) {
+      const downtimeSec = Math.max(0, Math.round((Date.now() - lastDisconnectAtMs) / 1000));
+      lastDisconnectAtMs = null;
+      try { trackSocketReconnected(downtimeSec); } catch { /* best-effort */ }
+    }
   });
   socket.on('disconnect', (reason) => {
     socketDebug('socket disconnected', {
@@ -371,6 +353,7 @@ function createSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
     });
     logger.warn('Socket disconnected', { reason });
     markRealtimeDisconnected(reason);
+    lastDisconnectAtMs = Date.now();
   });
   socket.on('connect_error', (error) => {
     socketDebug('connect_error', {
@@ -380,9 +363,6 @@ function createSocket(): Socket<ServerToClientEvents, ClientToServerEvents> {
     });
     if (isAuthConnectError(error.message)) {
       if (getGuestPrincipalToken()) {
-        // The server refused the guest (feature off, session retired, budget hit):
-        // drop the principal so the owner disconnects instead of retrying forever.
-        logger.info('Socket refused the guest principal; dropping it', { message: error.message });
         markGuestPrincipalRefused();
         markRealtimeConnectionError(error.message);
         return;

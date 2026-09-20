@@ -1,6 +1,5 @@
 'use client';
 
-import { BrandIcon, type BrandIconName } from '@/components/brand/BrandIcon';
 import { poppins } from '../constants';
 import type { LeaguePhase } from '../types';
 
@@ -21,9 +20,6 @@ const TONE_ACCENT: Record<Tone, string> = {
   red: 'text-brand-red-soft',
   cyan: 'text-brand-cyan',
 };
-
-/** States that have a brand illustration; the rest keep their glyph. */
-const STATUS_ICONS: Record<string, BrandIconName> = { '📅': 'calendar', '🎟️': 'ticket' };
 
 function resolve(
   phase: LeaguePhase,
@@ -72,7 +68,7 @@ export function YourStatusCard({
   const { emoji, headline, sub, tone } = resolve(phase, hasEntered, qualified, yourRank);
   return (
     <div className={`flex items-center gap-3 rounded-2xl border-2 px-4 py-3.5 ${TONE_CLASS[tone]}`}>
-      {STATUS_ICONS[emoji] ? <BrandIcon name={STATUS_ICONS[emoji]} className="size-8" /> : <span className="text-2xl leading-none">{emoji}</span>}
+      <span className="text-2xl leading-none">{emoji}</span>
       <div className="min-w-0">
         <div className={`font-poppins text-base font-black uppercase ${TONE_ACCENT[tone]}`} style={poppins}>{headline}</div>
         <div className="mt-0.5 font-poppins text-[12px] font-semibold leading-snug text-white/60">{sub}</div>

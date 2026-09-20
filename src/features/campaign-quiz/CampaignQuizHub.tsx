@@ -5,7 +5,7 @@ import { headers } from 'next/headers';
 import { ArrowRight, Swords } from 'lucide-react';
 import { AppShellPageChrome } from '@/components/layout/app-shell/AppShellPageChrome';
 import { CAMPAIGN_QUIZ_CONTENT } from './campaignQuiz.content';
-import { listCampaignQuizPagesResilient } from './campaignQuiz.catalog';
+import { listCampaignQuizPages } from './campaignQuiz.api';
 import type { CampaignQuizHubPage } from './campaignQuiz.types';
 import { CampaignQuizHubPageView } from './CampaignQuizHubPageView';
 import { CampaignTrackedLink } from './CampaignTrackedLink';
@@ -24,7 +24,7 @@ const POPULAR_QUIZ_SLUGS = {
 const HUB_COPY = {
   en: {
     ranked: 'Play Ranked', eyebrow: 'Free football trivia',
-    title: 'Football Quiz — Play Football Quizzes & Trivia',
+    title: 'Football Quiz — Play Free Football Quizzes & Trivia',
     intro: 'Pick a quiz, answer verified football questions and get your score instantly. Every solo quiz is free to start and needs no account.',
     popularHeading: 'Popular football quizzes in the UK',
     popularBody: 'Start with useful football quiz questions on club badges, career paths, Everton and Liverpool — the quizzes UK football fans engage with most.',
@@ -33,23 +33,21 @@ const HUB_COPY = {
     methodologyLink: 'How QuizBall checks every question',
     rankedHeading: 'Take your score into ranked duels',
     rankedBody: 'Solo quizzes are the warm-up. Sign up free to face real fans and climb the QuizBall leaderboard.',
-    unavailable: 'The quiz list is temporarily unavailable. Please try again in a few minutes.',
     groups: { team: 'Club quizzes', league: 'League quizzes', quiz_type: 'Football challenges', article: 'Football trivia' },
   },
   ka: {
-    ranked: 'ითამაშე რეიტინგული', eyebrow: 'უფასო ფეხბურთის ტრივია', title: 'ფეხბურთის ქვიზი — ითამაშე ახლავე',
+    ranked: 'ითამაშე რეიტინგული', eyebrow: 'უფასო ფეხბურთის ტრივია', title: 'ფეხბურთის ქვიზი — ითამაშე უფასოდ',
     intro: 'აირჩიე ქვიზი, უპასუხე გადამოწმებულ კითხვებს და შედეგი მყისიერად მიიღე.',
     popularHeading: 'პოპულარული ფეხბურთის ქვიზები', popularBody: 'დაიწყე ყველაზე პოპულარული ქვიზებით.',
     playFree: 'ითამაშე უფასოდ', verifiedHeading: 'გადამოწმებული ფეხბურთის ტრივია',
     verifiedBody: 'QuizBall-ის საჯარო ქვიზები მოიცავს გადამოწმებულ კითხვებს კლუბებზე, ტურნირებსა და მოთამაშეებზე.',
     methodologyLink: 'როგორ ამოწმებს QuizBall კითხვებს',
     rankedHeading: 'გადადი რეიტინგულ დუელებში', rankedBody: 'დარეგისტრირდი უფასოდ და დაუპირისპირდი ნამდვილ გულშემატკივრებს.',
-    unavailable: 'ქვიზების სია დროებით მიუწვდომელია. სცადე რამდენიმე წუთში.',
     groups: { team: 'კლუბების ქვიზები', league: 'ლიგების ქვიზები', quiz_type: 'ფეხბურთის გამოწვევები', article: 'ფეხბურთის ტრივია' },
   },
   es: {
     ranked: 'Jugar clasificatoria', eyebrow: 'Trivia de fútbol gratis',
-    title: 'Quiz de Fútbol — Preguntas y Trivia',
+    title: 'Quiz de Fútbol — Preguntas y Trivia Gratis',
     intro: 'Elige un quiz, responde preguntas de fútbol verificadas y recibe tu puntuación al instante. Todos los quizzes individuales son gratis y no necesitan cuenta.',
     popularHeading: 'Quizzes de fútbol populares',
     popularBody: 'Empieza con preguntas de fútbol para adivinar el futbolista, reconocer escudos y poner a prueba cuánto sabes del Real Madrid y el Barcelona.',
@@ -58,22 +56,20 @@ const HUB_COPY = {
     methodologyLink: 'Cómo revisa QuizBall cada pregunta',
     rankedHeading: 'Lleva tu puntuación a los duelos clasificatorios',
     rankedBody: 'Los quizzes individuales son el calentamiento. Regístrate gratis para enfrentarte a aficionados reales y subir en la clasificación.',
-    unavailable: 'La lista de quizzes no está disponible temporalmente. Vuelve a intentarlo en unos minutos.',
     groups: { team: 'Quizzes de clubes', league: 'Quizzes de ligas', quiz_type: 'Retos de fútbol', article: 'Trivia de fútbol' },
   },
 } as const satisfies Record<CampaignQuizLocale, {
   ranked: string; eyebrow: string; title: string; intro: string; popularHeading: string;
   popularBody: string; playFree: string; verifiedHeading: string; verifiedBody: string;
   methodologyLink: string;
-  rankedHeading: string; rankedBody: string; unavailable: string; groups: Record<CampaignQuizHubPage['category'], string>;
+  rankedHeading: string; rankedBody: string; groups: Record<CampaignQuizHubPage['category'], string>;
 }>;
 
-const loadHubPages = cache(async (locale: CampaignQuizLocale): Promise<CampaignQuizHubPage[] | null> => {
+const loadHubPages = cache(async (locale: CampaignQuizLocale) => {
   try {
-    return await listCampaignQuizPagesResilient(locale);
+    return await listCampaignQuizPages(locale);
   } catch {
-    // Neither the live catalog nor the last-known-good copy: say so (null); the CMS owns publication state.
-    return null;
+    return [];
   }
 });
 
@@ -99,16 +95,6 @@ function QuizCard({ page, locale, label, preload = false }: {
 export async function CampaignQuizHub({ locale }: { locale: CampaignQuizLocale }) {
   const copy = HUB_COPY[locale];
   const pages = await loadHubPages(locale);
-  if (pages === null) {
-    return (
-      <div className="relative min-h-screen bg-surface-page-alt font-poppins text-white">
-        <main className="mx-auto max-w-2xl px-4 py-24 text-center">
-          <h1 className="text-2xl font-black uppercase">{copy.title}</h1>
-          <p className="mt-4 text-white/75">{copy.unavailable}</p>
-        </main>
-      </div>
-    );
-  }
   const popularSlugs = POPULAR_QUIZ_SLUGS[locale];
   const popularSlugSet = new Set<string>(popularSlugs);
   const popularPages = popularSlugs.flatMap((slug) => {

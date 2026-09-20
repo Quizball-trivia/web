@@ -320,27 +320,16 @@ export function usePossessionRoundTransition({
   // round transition. The next penalty question may arrive as a buffered
   // `pendingQuestion` OR be promoted straight to `localQuestion` (no buffering),
   // so accept either — otherwise the overlay silently never fires and the
-  // shootout "snaps" between questions with no intro. Only a question PAST the
-  // resolved round counts: the just-resolved localQuestion is still
-  // `phaseKind === 'penalty'` and would title the overlay with the OLD round
-  // for a beat, then flip when the real next question lands (the visible
-  // "Penalty 3 → 4" glitch).
-  const resolvedPenaltyQIndex = roundResult?.phaseKind === 'penalty' && typeof roundResult.qIndex === 'number'
-    ? roundResult.qIndex
-    : null;
-  const nextPenaltyQuestion = resolvedPenaltyQIndex !== null
-    ? (pendingQuestion?.phaseKind === 'penalty' && pendingQuestion.qIndex > resolvedPenaltyQIndex
-      ? pendingQuestion
-      : localQuestion?.phaseKind === 'penalty' && localQuestion.qIndex > resolvedPenaltyQIndex
-        ? localQuestion
-        : null)
-    : null;
+  // shootout "snaps" between questions with no intro.
+  const hasNextPenaltyQuestion = pendingQuestion?.phaseKind === 'penalty'
+    || localQuestion?.phaseKind === 'penalty';
   const showPenaltyTransition = !firstQuestionIntroVisible
     && !penaltyCountdownActive
     && !goalCelebration
     && phase !== 'COMPLETED'
     && roundResultHoldDone
-    && nextPenaltyQuestion !== null;
+    && roundResult?.phaseKind === 'penalty'
+    && hasNextPenaltyQuestion;
 
   const roundTransitionCapture: TransitionCapture | null = showRoundTransition
     ? (() => {
@@ -388,16 +377,14 @@ export function usePossessionRoundTransition({
     : null;
   const renderedShowRoundTransition = showRoundTransition && roundTransitionCapture !== null;
 
-  const penaltyTransitionCapture: TransitionCapture | null = showPenaltyTransition && nextPenaltyQuestion
+  const penaltyTransitionCapture: TransitionCapture | null = showPenaltyTransition
     ? (() => {
-      const penaltyRound = nextPenaltyQuestion.phaseRound
+      const penaltyRound = pendingQuestion?.phaseRound
+        ?? (localQuestion?.phaseKind === 'penalty' ? localQuestion.phaseRound : undefined)
         ?? (typeof roundResult?.phaseRound === 'number' ? roundResult.phaseRound + 1 : undefined)
         ?? 1;
       return {
-        // Keyed on the RESOLVED round, not the announced number: the freeze
-        // must survive payload refreshes mid-overlay. A genuinely new round
-        // arrives with a new roundResult, which re-keys and re-captures.
-        captureKey: `penalty-after:${resolvedPenaltyQIndex}`,
+        captureKey: `penalty:${penaltyRound}`,
         snapshot: {
           // No `categoryName`: in Georgian both `penaltyShootout` and `shootout`
           // translate to the same "პენალტების სერია", so showing it as the top
@@ -406,7 +393,8 @@ export function usePossessionRoundTransition({
           title: t('possession.penaltyN', { n: penaltyRound }),
           categoryName: '',
           subtitle: penaltySuddenDeath ? t('possession.suddenDeath') : t('possession.shootout'),
-          upcomingQIndex: nextPenaltyQuestion.qIndex,
+          upcomingQIndex: pendingQuestion?.qIndex
+            ?? (localQuestion?.phaseKind === 'penalty' ? localQuestion.qIndex : null),
         },
       };
     })()

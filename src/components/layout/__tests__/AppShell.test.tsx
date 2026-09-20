@@ -19,11 +19,14 @@ function render(ui: ReactElement) {
 // ---------------------------------------------------------------------------
 
 // next/navigation: usePathname + useRouter
+vi.mock('@/components/i18n/LanguageSwitcher', () => ({ LanguageSwitcher: () => null, InPlaceLanguageSwitcher: () => null }));
+vi.mock('@/lib/i18n/useChangeLanguage', () => ({ useChangeLanguage: () => ({ changeLanguage: vi.fn(), savePreference: vi.fn() }) }));
 const pathnameMock = vi.fn(() => '/');
 const routerPushMock = vi.fn();
 const routerReplaceMock = vi.fn();
 vi.mock('next/navigation', () => ({
   usePathname: () => pathnameMock(),
+  useSearchParams: () => new URLSearchParams(),
   useRouter: () => ({ push: routerPushMock, replace: routerReplaceMock }),
 }));
 
@@ -194,6 +197,7 @@ vi.mock('@/components/ui/alert-dialog', () => {
 // ---------------------------------------------------------------------------
 
 interface AuthState {
+  status: 'authenticated' | 'anonymous' | 'loading';
   user: { id: string; country?: string } | null;
   logout: () => Promise<void>;
 }
@@ -320,12 +324,10 @@ describe('AppShell — children + chrome', () => {
     expect(sidebar.getAttribute('data-social-badge')).toBe('2');
   });
 
-  it('feeds the bell the NOTIFICATION count, not the social count', () => {
+  it('forwards only unread notifications to NotificationsDropdown', () => {
     renderShell();
     const dropdowns = screen.getAllByTestId('notifications');
     expect(dropdowns.length).toBeGreaterThan(0);
-    // Friend requests / invites badge the social tab only; with no unread
-    // notifications mocked, the bell shows 0 — the counts are independent.
     expect(dropdowns[0].getAttribute('data-badge')).toBe('0');
   });
 });
@@ -896,7 +898,7 @@ describe('AppShell — logout dialog wiring', () => {
     expect(screen.getByRole('alertdialog')).toBeInTheDocument();
   });
 
-  it('confirming logout ends the session and returns to the play page', async () => {
+  it('confirming the logout calls the auth store logout and routes home', async () => {
     const logoutSpy = vi.fn(async () => {});
     seedAuth({ logout: logoutSpy });
     renderShell();

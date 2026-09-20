@@ -1,8 +1,7 @@
 'use client';
 
-import { type ComponentProps, type ReactNode, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { type ComponentProps, type ReactNode, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { GameSoundOverrideContext } from '@/lib/sounds/GameSoundOverrideContext';
 import { cn } from '@/lib/utils';
 import { useLocale } from '@/contexts/LocaleContext';
 import { GoalCelebrationOverlay } from './GoalCelebrationOverlay';
@@ -35,8 +34,6 @@ export interface PossessionViewportModel {
   showMainUI: boolean;
   hud: PossessionHudModel;
   pitchProps: PitchProps;
-  /** Optional meter value when the pitch itself is intentionally field-locked. */
-  goalProgressPosition?: number;
   goalCelebration: GoalCelebrationState | null;
   penaltySplash: PenaltySplashModel | null;
   muted: boolean;
@@ -162,22 +159,8 @@ function PenaltySplash({
 
 export function PossessionMatchViewport({ model, children, onPenaltySplashComplete }: PossessionMatchViewportProps) {
   const { t } = useLocale();
-  const {
-    showMainUI,
-    hud,
-    pitchProps,
-    goalProgressPosition = pitchProps.playerPosition,
-    goalCelebration,
-    penaltySplash,
-    muted,
-    autoScrollKey,
-  } = model;
+  const { showMainUI, hud, pitchProps, goalCelebration, penaltySplash, muted, autoScrollKey } = model;
   const celebrationOwnsBall = Boolean(goalCelebration);
-  const soundOverride = useContext(GameSoundOverrideContext);
-  const cueRef = useRef(soundOverride?.playEvent);
-  useEffect(() => { cueRef.current = soundOverride?.playEvent; }, [soundOverride]);
-  const visibleResult = goalCelebration ? 'goal' : penaltySplash?.visible ? (penaltySplash.result === 'goal' ? 'goal' : 'save') : null;
-  useEffect(() => { if (visibleResult) cueRef.current?.(visibleResult); }, [visibleResult]);
   const {
     containerRef: desktopPitchRef,
     ballSizePx: desktopBallSizePx,
@@ -205,7 +188,7 @@ export function PossessionMatchViewport({ model, children, onPenaltySplashComple
         <div className="hidden lg:flex lg:w-[42%] lg:items-center lg:gap-3 lg:py-4 relative">
           <div className="h-full max-h-[calc(100dvh-2rem)] py-6">
             {hud.kind !== 'penalty' && (
-              <GoalProgressBar position={goalProgressPosition} orientation="vertical" mirrored={pitchProps.mirrored} />
+              <GoalProgressBar position={pitchProps.playerPosition} orientation="vertical" mirrored={pitchProps.mirrored} />
             )}
           </div>
           <div ref={desktopPitchRef} className="relative h-full w-full max-h-[calc(100dvh-2rem)]">
@@ -265,7 +248,7 @@ export function PossessionMatchViewport({ model, children, onPenaltySplashComple
 
             {hud.kind !== 'penalty' && (
               <div className="lg:hidden">
-                <GoalProgressBar position={goalProgressPosition} orientation="horizontal" mirrored={pitchProps.mirrored} />
+                <GoalProgressBar position={pitchProps.playerPosition} orientation="horizontal" mirrored={pitchProps.mirrored} />
               </div>
             )}
 

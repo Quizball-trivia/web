@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useMemo, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useTrainingMatch } from "./hooks/useTrainingMatch";
 import { useTrainingTooltips } from "./hooks/useTrainingTooltips";
 import { useTrainingCompletion } from "./hooks/useTrainingCompletion";
@@ -30,6 +30,9 @@ type TrainingContextValue = {
   banCategories: CategorySummary[];
   /** True once both surviving categories have enough real questions to play. */
   questionsReady: boolean;
+  loadingFailed: boolean;
+  retryLoading: () => void;
+  onExit: () => void;
   /** Category-backed penalty questions (local only for explicit offline overrides). */
   penaltyQuestions: GameQuestion[];
   /** Disables canned special rounds when the real category pool is active. */
@@ -73,7 +76,7 @@ export function TrainingMatchProvider({
   const { locale } = useLocale();
 
   // The pinned tutorial categories, from the playable catalog (active, never campaign-only).
-  const { data: categoriesData, isError: categoriesError } = useCategoriesList(
+  const categoriesQuery = useCategoriesList(
     {
       limit: 10,
       page: 1,
@@ -84,6 +87,8 @@ export function TrainingMatchProvider({
     { enabled: !banCategoriesOverride },
     locale,
   );
+
+  const { data: categoriesData, isError: categoriesError } = categoriesQuery;
 
   // Use the real category catalog and artwork. The pool is no longer shuffled:
   // the tutorial scripts the displayed positions, not fake category content.
@@ -146,7 +151,30 @@ export function TrainingMatchProvider({
   const matchQuestions = questionsOverride ?? categoryQuestionPool?.matchQuestions;
   const penaltyQuestions = categoryQuestionPool?.penaltyQuestions ?? TRAINING_PENALTY_QUESTIONS;
 
-  const match = useTrainingMatch(tooltips.isPaused, matchQuestions);
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const [loadingTimedOut, setLoadingTimedOut] = useState(false);
+  useEffect(() => {
+    if (questionsReady) return;
+    const timer = setTimeout(() => setLoadingTimedOut(true), 30_000);
+    return () => clearTimeout(timer);
+  }, [questionsReady, loadAttempt]);
+
+  const catalogUnavailable = !banCategoriesOverride && !categoriesQuery.isFetching &&
+    (categoriesError || (categoriesQuery.isFetched && banCategories.length < BAN_CATEGORY_COUNT));
+  const questionRequestFailed = !questionsOverride && [firstHalfQuery, secondHalfQuery]
+    .some(query => query.isError && !query.isFetching);
+  const poolTooSmall = !questionsOverride && firstHalfQuery.isSuccess && secondHalfQuery.isSuccess &&
+    !firstHalfQuery.isFetching && !secondHalfQuery.isFetching && !usingCategoryQuestions;
+  const loadingFailed = !questionsReady &&
+    (loadingTimedOut || catalogUnavailable || questionRequestFailed || poolTooSmall);
+  const retryLoading = () => {
+    setLoadingTimedOut(false);
+    setLoadAttempt(attempt => attempt + 1);
+    if (!banCategoriesOverride) void categoriesQuery.refetch();
+    if (shouldFetchCategoryQuestions && firstHalfCategory?.id) void firstHalfQuery.refetch();
+    if (shouldFetchCategoryQuestions && secondHalfCategory?.id) void secondHalfQuery.refetch();
+  };
+  const match = useTrainingMatch(tooltips.isPaused || loadingFailed, matchQuestions);
 
   // Warm the ban-category images while the match plays so the ban phase is instant.
   const banImageUrls = useMemo(() => banCategories.map((c) => c.imageUrl ?? null), [banCategories]);
@@ -164,6 +192,9 @@ export function TrainingMatchProvider({
       completion,
       banCategories,
       questionsReady,
+      loadingFailed,
+      retryLoading,
+      onExit: onComplete,
       penaltyQuestions,
       usingCategoryQuestions,
       onSkip,

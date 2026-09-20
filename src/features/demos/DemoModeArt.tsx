@@ -4,10 +4,9 @@ import { DemoModeIcon } from "./DemoModeIcon";
 import { FifaModeArt } from "@/features/fifa-universe/FifaModeArt";
 import { isFifaSlug } from "@/features/fifa-universe/registry";
 
-const SUPABASE_IMAGE_BASE = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim().replace(/\/$/, "");
-const GAME_MODE_IMAGE_BASE = SUPABASE_IMAGE_BASE
-  ? `${SUPABASE_IMAGE_BASE}/storage/v1/object/public/imgs/demos/game-modes/2026-08-17`
-  : "/assets/demos/game-modes";
+// Every illustrated tile ships in public/. Do not derive artwork locations
+// from the authentication server: another environment may not have that bucket.
+const GAME_MODE_IMAGE_BASE = "/assets/demos/game-modes";
 
 // Artwork generated 2026-09-05 ships with the app: the dated CDN collection
 // does not contain these files. Both FIFA Cards entries share one illustration.
@@ -112,7 +111,7 @@ export function DemoModeArt({ slug: rawSlug, className = "" }: { slug: string; c
   }
   if (ILLUSTRATED_MODE_SLUGS.has(slug)) {
     return (
-      <div className={`relative overflow-hidden bg-[#07111f] ${className}`} aria-hidden>
+      <div className={`relative overflow-hidden bg-game-art-night ${className}`} aria-hidden>
         <Image
           src={LOCAL_MODE_IMAGES.has(slug)
             ? `/assets/demos/game-modes/${LOCAL_MODE_IMAGES.get(slug)}.webp`

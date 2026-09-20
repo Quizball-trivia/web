@@ -2,9 +2,8 @@ import { describe, expect, it, vi } from 'vitest';
 
 const listCampaignQuizPagesMock = vi.hoisted(() => vi.fn());
 
-vi.mock('@/features/campaign-quiz/campaignQuiz.catalog', () => ({ listCampaignQuizPagesResilient: listCampaignQuizPagesMock }));
 vi.mock('@/features/campaign-quiz/campaignQuiz.api', () => ({
-  listCampaignQuizPages: listCampaignQuizPagesMock, listCampaignQuizPagesResilient: listCampaignQuizPagesMock,
+  listCampaignQuizPages: listCampaignQuizPagesMock,
 }));
 
 import { generateMetadata } from '@/app/[locale]/football-quiz/page';

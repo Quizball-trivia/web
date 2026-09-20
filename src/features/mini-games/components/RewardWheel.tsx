@@ -52,7 +52,7 @@ export function RewardWheel({
       </motion.div>
 
       {/* Static outer rim with carnival lights */}
-      <div className="absolute inset-[-10px] z-20 rounded-full border-[3px] border-[#2b2417] bg-transparent shadow-[0_14px_44px_rgba(0,0,0,0.55),inset_0_2px_10px_rgba(255,229,0,0.15)]" style={{ background: 'radial-gradient(circle, transparent 62%, #171310 63%)' }}>
+      <div className="absolute inset-[-10px] z-20 rounded-full border-[3px] border-game-wheel-rim bg-transparent shadow-[0_14px_44px_rgba(0,0,0,0.55),inset_0_2px_10px_rgba(255,229,0,0.15)]" style={{ background: 'radial-gradient(circle, transparent 62%, #171310 63%)' }}>
         {lights.map((deg, i) => (
           <motion.span
             key={deg}
@@ -66,7 +66,7 @@ export function RewardWheel({
 
       {/* Wheel — overshoots past the target then ratchets back */}
       <motion.div
-        className="absolute inset-0 rounded-full border-[6px] border-[#171310]"
+        className="absolute inset-0 rounded-full border-[6px] border-game-wheel-hub"
         style={{ background: gradient }}
         animate={{ rotate: spinning ? [null, rotation + slice * 0.42, rotation] : rotation }}
         transition={
@@ -117,7 +117,7 @@ export function RewardWheel({
       </motion.div>
 
       {/* Hub */}
-      <div className="absolute left-1/2 top-1/2 z-10 flex size-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-4 border-brand-yellow/80 bg-[#171310] text-xl shadow-[0_2px_10px_rgba(0,0,0,0.6),inset_0_1px_4px_rgba(255,229,0,0.3)]">
+      <div className="absolute left-1/2 top-1/2 z-10 flex size-14 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-4 border-brand-yellow/80 bg-game-wheel-hub text-xl shadow-[0_2px_10px_rgba(0,0,0,0.6),inset_0_1px_4px_rgba(255,229,0,0.3)]">
         ⚽
       </div>
     </div>

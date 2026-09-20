@@ -15,7 +15,6 @@ import { AppShellLobbyDebugBadge } from "./app-shell/AppShellLobbyDebugBadge";
 import { AppShellMobileBottomNav } from "./app-shell/AppShellMobileBottomNav";
 import { AppShellProfileMenu } from "./app-shell/AppShellProfileMenu";
 import { ConnectionQualitySignal } from "@/components/shared/ConnectionQualitySignal";
-import { GuestAuthDialog } from "@/features/auth/GuestAuthDialog";
 import { Suspense } from "react";
 import { InPlaceLanguageSwitcher, LanguageSwitcher } from "@/components/i18n/LanguageSwitcher";
 import { useChangeLanguage } from "@/lib/i18n/useChangeLanguage";
@@ -202,10 +201,6 @@ export function AppShell({ children }: AppShellProps) {
           />
         </div>
       )}
-
-      {/* Sign-in dialog for guests — summoned from the header button, gated
-          nav taps, and auth-gated game entries via useAuthPromptStore. */}
-      {isGuest && <GuestAuthDialog />}
 
       <AppShellLogoutDialog
         open={showLogoutConfirm}

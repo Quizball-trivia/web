@@ -1,5 +1,3 @@
-'use client';
-
 import { DevAnimationsContent } from '../animations/DevAnimationsContent';
 
 export default function PenaltyScoreBugPage() {

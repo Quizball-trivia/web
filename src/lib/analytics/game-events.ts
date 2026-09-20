@@ -558,15 +558,6 @@ export function trackModeSelected(mode: string) {
   trackEvent('mode_selected', { mode });
 }
 
-/** A card on the Play screen was tapped: which game, which shelf, and where the tap led. */
-export function trackPlayCardClicked(props: {
-  slug: string;
-  group: 'daily' | 'coins' | 'other';
-  destination: 'route' | 'demo' | 'modal' | 'auth' | 'public_page';
-}) {
-  trackEvent('play_card_clicked', { slug: props.slug, group: props.group, destination: props.destination });
-}
-
 // ── Weekend League funnel ────────────────────────────────────────────────────
 // banner viewed → banner clicked → tab viewed → entry → check-in. The DB holds
 // the authoritative entry/check-in truth; these exist so the top of the funnel
@@ -920,6 +911,10 @@ export function trackSocketConnectionFailed(error: string) {
   trackEvent('socket_connection_failed', { error });
 }
 
+export function trackSocketReconnected(downtimeSec: number) {
+  trackEvent('socket_reconnected', { downtime_sec: downtimeSec });
+}
+
 export function trackApiError(endpoint: string, status: number, code?: string) {
   trackEvent('api_error', { endpoint, status, code });
 }
@@ -933,3 +928,8 @@ export function trackMatchLoadError(matchId: string | undefined, errorCode: stri
 // `trackMatchCompleted` / lobby-join flow. Removed to keep the event surface
 // minimal — if a future use case appears, prefer extending the canonical
 // match_started / match_completed events instead of introducing new ones.
+
+/** A game card on the hub was selected. */
+export function trackPlayCardClicked(props: { slug: string; group: "daily" | "coins" | "other"; destination: "route" | "demo" | "modal" | "auth" | "public_page" }) {
+  trackEvent("play_card_clicked", props);
+}

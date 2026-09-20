@@ -1,5 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { hubLocaleOf, isGuestAllowedPath, isPlaySurface, isPublicGamePath, publicLocaleOf } from "../publicHub";
+
+vi.mock("@/lib/config", () => ({ GUEST_LOBBIES_ENABLED: false }));
 
 describe("public hub paths", () => {
   it("recognises the locale hubs exactly", () => {

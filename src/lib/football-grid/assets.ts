@@ -46,10 +46,12 @@ export function footballGridAssetUrl(value: string | null | undefined): string |
   const source = value?.trim();
   if (!source) return null;
   if (/^https:\/\//i.test(source)) return isAllowedFirstPartyUrl(source) ? source : null;
-  if (source === '/assets/football-grid-card-icon.svg') return `${FOOTBALL_GRID_CDN_BASE_URL}/ui/card-icon.svg`;
+  // These shared UI illustrations are bundled with the web release. Loading
+  // them from the app avoids a separate CDN publish and works in isolated QA.
+  if (source === '/assets/football-grid-card-icon.svg') return source;
   // Play-hub card icon shared with the mobile app's bundled artwork.
-  if (source === '/assets/football-grid/card-icon.png') return `${FOOTBALL_GRID_CDN_BASE_URL}/ui/card-icon.png`;
-  if (source === '/assets/bg-pattern.webp') return `${FOOTBALL_GRID_CDN_BASE_URL}/ui/bg-pattern.webp`;
+  if (source === '/assets/football-grid/card-icon.png') return source;
+  if (source === '/assets/bg-pattern.webp') return source;
   // Avatar store assets are app-served everywhere else (store, profile, matches);
   // serving them the same way here means new catalog assets need no CDN publish.
   const avatarPrefix = '/assets/store/';

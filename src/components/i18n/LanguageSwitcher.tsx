@@ -138,6 +138,7 @@ export function LanguageSwitcher({ locale, className, locales = LOCALE_CODES, on
   const queryString = searchParams.toString();
   const firstSegment = pathname.split("/").filter(Boolean)[0];
   const activeLocale: Locale = isLocale(firstSegment) ? firstSegment : locale;
+  const activeOption = OPTIONS_BY_CODE[activeLocale];
 
   return (
     <LanguageMenu

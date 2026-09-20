@@ -425,7 +425,8 @@ export function ModeSelectionScreen({
     if (trainingOffer) { trainingOffer.onPlayTraining(); return; }
     setRankedDemoOpen(true);
   };
-  const objectivesEnabled = useObjectivesEnabled();
+  const objectivesFeatureEnabled = useObjectivesEnabled();
+  const objectivesEnabled = objectivesFeatureEnabled && !isGuest;
   const { data: objectivesData, isLoading: objectivesLoading } = useObjectives({ enabled: objectivesEnabled });
   const rankedTitleStyle = {
     fontFamily: "'Poppins', sans-serif",
@@ -475,6 +476,15 @@ export function ModeSelectionScreen({
       transition={playEntranceAnimation ? PLAY_ENTRANCE_TRANSITION : { duration: 0 }}
       className="max-w-5xl mx-auto px-4 py-3 space-y-4 md:py-6 md:space-y-5 font-fun"
     >
+
+      {/* ─── 0. Weekend League — the weekly objective, aligned to the mode cards ─── */}
+      {/* Instrumented at the placement, not inside Rail — the dev gallery
+          mounts every Rail variant and would fire an impression per skin. */}
+      <div onClickCapture={trackWlBannerClicked}>
+        <WeekendLeagueProgressExperimentRail />
+      </div>
+
+      {playHomeNotice}
 
       {/* ─── 1. Ranked Hero Card ─── */}
       <div

@@ -20,6 +20,16 @@ describe('post-auth redirect helpers', () => {
     localStorage.removeItem(STORAGE_KEYS.POST_AUTH_REDIRECT);
   });
 
+  it('returns Turkish visitors to their original page without allowing external redirects', () => {
+    expect(normalizePostAuthRedirect('/tr')).toBe('/tr');
+    expect(normalizePostAuthRedirect('/tr/football-quiz/arsenal?next=https://evil.test')).toBe('/tr/football-quiz/arsenal');
+    expect(normalizePostAuthRedirect('//evil.test/tr')).toBeNull();
+    expect(normalizePostAuthRedirect('/tr/../../auth')).toBeNull();
+    rememberPostAuthRedirect('/tr/football-quiz/arsenal');
+    expect(getPostAuthEntryRoute(completeUser)).toBe('/tr/football-quiz/arsenal');
+    expect(peekPostAuthRedirect()).toBeNull();
+  });
+
   it('normalizes friend room invite paths', () => {
     expect(normalizePostAuthRedirect('/friend/room/abc123')).toBe('/friend/room/ABC123');
     expect(normalizePostAuthRedirect('/friend/room/ABC123/')).toBe('/friend/room/ABC123');

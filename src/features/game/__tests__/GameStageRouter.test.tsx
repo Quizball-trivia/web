@@ -122,6 +122,7 @@ const playerState = {
 };
 
 const authState = {
+  status: 'authenticated',
   user: {
     id: 'self-1',
     avatar_url: null,

@@ -1,6 +1,5 @@
 "use client";
 
-import { BrandIcon } from "@/components/brand/BrandIcon";
 import { use, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Loader2 } from "lucide-react";
@@ -76,7 +75,7 @@ function ProfileErrorState({ is404 }: { is404: boolean }) {
         {t("common.back")}
       </button>
       <div className="text-center py-20 rounded-2xl bg-card border-2 border-border border-b-4">
-        <div className="mb-3 flex justify-center text-4xl">{is404 ? <BrandIcon name="player-silhouette" className="size-16" /> : "⚠️"}</div>
+        <div className="text-4xl mb-3">{is404 ? "👤" : "⚠️"}</div>
         <h2 className="text-xl font-black mb-1">
           {is404 ? t("profileScreen.playerNotFound") : t("errors.INTERNAL_ERROR")}
         </h2>

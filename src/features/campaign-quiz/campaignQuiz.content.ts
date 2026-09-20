@@ -32,7 +32,7 @@ export interface CampaignQuizPageContent {
 }
 
 const CATEGORY_IMAGE_BASE =
-  `${process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, '') ?? 'https://nsdfiprfmhdqhbfxfwpv.supabase.co'}/storage/v1/object/public/imgs/categories`;
+  `${process.env.NEXT_PUBLIC_SUPABASE_URL?.trim().replace(/\/$/, '') ?? 'https://nsdfiprfmhdqhbfxfwpv.supabase.co'}/storage/v1/object/public/imgs/categories`;
 
 interface ManualClubQuizContent extends Omit<CampaignQuizPageContent, 'heroImage'> {
   heroImageFile: string;
@@ -150,7 +150,7 @@ export const CAMPAIGN_QUIZ_CONTENT: Record<string, CampaignQuizPageContent> = {
   'premier-league': {
     slug: 'premier-league',
     title: 'Premier League Football Quiz',
-    metadataTitle: 'Premier League Football Quiz — Play Now | QuizBall',
+    metadataTitle: 'Premier League Football Quiz — Play Free | QuizBall',
     description:
       'Free Premier League football quiz — 10 verified questions on 30+ years of PL history. Instant score, no sign-up to play. Beat real fans in ranked duels.',
     breadcrumbLabel: 'Premier League Quiz',

@@ -70,7 +70,7 @@ const COPY: Record<KnowledgeIndexLocale, PressResourcesCopy> = {
     reportLink: "Football Knowledge Index 2026",
     methodologyLink: "Editorial methodology",
     aboutLink: "About QuizBall",
-    quizzesLink: "Football quizzes",
+    quizzesLink: "Free football quizzes",
     contactHeading: "Questions or verification requests",
     contactBody:
       "For product facts, corrections or permission questions, contact support@quizball.io. Please include the page or claim you want verified.",
@@ -115,7 +115,7 @@ const COPY: Record<KnowledgeIndexLocale, PressResourcesCopy> = {
     reportLink: "Índice de conocimiento futbolístico 2026",
     methodologyLink: "Metodología editorial",
     aboutLink: "Acerca de QuizBall",
-    quizzesLink: "Quizzes de fútbol",
+    quizzesLink: "Quizzes de fútbol gratis",
     contactHeading: "Preguntas o solicitudes de verificación",
     contactBody:
       "Para verificar datos, comunicar correcciones o consultar permisos, escribe a support@quizball.io e incluye la página o afirmación correspondiente.",

@@ -16,7 +16,7 @@ const expected = {
   managers: 60,
   leagues: 15,
   competitions: 24,
-  wildcards: 12,
+  wildcards: 16,
 };
 const failures = [];
 const warnings = [];

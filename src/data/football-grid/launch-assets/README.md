@@ -24,7 +24,7 @@ Asset families:
 - `managers.json`: 60 launch managers and portrait provenance;
 - `leagues.json`: 15 launch leagues;
 - `competitions.json`: 24 launch trophies/competitions;
-- `wildcards.json`: 12 launch wildcard criteria;
+- `wildcards.json`: 16 launch wildcard criteria;
 - `coverage.json`: generated gate totals. Every `runtimeUnresolved` value must
   be zero and every `rightsCleared` value must equal its family total before
   launch.

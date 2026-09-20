@@ -4872,7 +4872,7 @@ export interface paths {
         };
         /**
          * Get category dependencies
-         * @description Returns child categories, associated questions, and featured status. Requires admin role.
+         * @description Returns child categories, associated questions, and featured status
          */
         get: {
             parameters: {
@@ -4894,7 +4894,7 @@ export interface paths {
                         "application/json": components["schemas"]["CategoryDependenciesResponse"];
                     };
                 };
-                /** @description Not authenticated */
+                /** @description Authentication required */
                 401: {
                     headers: {
                         [name: string]: unknown;
@@ -4903,7 +4903,7 @@ export interface paths {
                         "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
-                /** @description Insufficient permissions (admin role required) */
+                /** @description Admin role required */
                 403: {
                     headers: {
                         [name: string]: unknown;
@@ -7599,8 +7599,6 @@ export interface paths {
                             engine?: "live" | "stub";
                             /** @default false */
                             free_entry?: boolean;
-                            /** @default false */
-                            single_game?: boolean;
                             qp_target?: number;
                             question_time_ms?: number;
                             dispatch_lead_ms?: number;
@@ -9030,7 +9028,7 @@ export interface paths {
                     "application/json": {
                         text: string;
                         /** @enum {string} */
-                        locale: "en" | "ka" | "es";
+                        locale: "en" | "ka" | "es" | "tr";
                         /** @default cms-import */
                         promptVersion?: string;
                         /**
@@ -9109,7 +9107,7 @@ export interface paths {
                 content: {
                     "application/json": {
                         /** @enum {string} */
-                        locale: "en" | "ka" | "es";
+                        locale: "en" | "ka" | "es" | "tr";
                         /** @default cms-import */
                         promptVersion?: string;
                         /**

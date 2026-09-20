@@ -119,7 +119,7 @@ export function StatSniper({ backHref }: { backHref?: string } = {}) {
                     step={round.step}
                     value={guess}
                     onChange={(e) => setGuess(Number(e.target.value))}
-                    className="h-2 min-w-0 flex-1 cursor-pointer appearance-none rounded-full bg-white/10 accent-[#FFD700]"
+                    className="h-2 min-w-0 flex-1 cursor-pointer appearance-none rounded-full bg-white/10 accent-brand-gold"
                   />
                   <button type="button" onClick={() => nudge(1)} aria-label="+" className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] text-white/70">
                     <Plus className="size-4" />

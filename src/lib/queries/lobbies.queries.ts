@@ -15,7 +15,6 @@ export function usePublicLobbies() {
       const normalizeGameMode = (gameMode: string): PublicLobby["gameMode"] => {
         if (gameMode === "ranked_sim") return "ranked_sim";
         if (gameMode === "friendly_party_quiz") return "friendly_party_quiz";
-        if (gameMode === "football_grid") return "football_grid";
         if (gameMode === "auction") return "auction";
         return "friendly_possession";
       };

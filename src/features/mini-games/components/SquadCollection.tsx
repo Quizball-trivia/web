@@ -86,7 +86,7 @@ export function SquadCollection({ backHref }: { backHref?: string } = {}) {
       headerRight={<StatPill label={t('Squad')} value={`${collected}/${TOTAL}`} color="#CE82FF" />}
     >
       {/* Formation grid */}
-      <div className="mt-2 rounded-2xl border border-white/[0.08] bg-gradient-to-b from-[#0e2f14]/40 to-transparent p-3">
+      <div className="mt-2 rounded-2xl border border-white/[0.08] bg-gradient-to-b from-game-collection-green/40 to-transparent p-3">
         <div className="space-y-2">
           {FORMATION.map((row) => (
             <div key={row.pos} className="flex justify-center gap-2">
@@ -151,7 +151,7 @@ export function SquadCollection({ backHref }: { backHref?: string } = {}) {
               <motion.div
                 animate={{ scale: [1, 1.04, 1], boxShadow: ['0 0 20px rgba(206,130,255,0.3)', '0 0 45px rgba(206,130,255,0.6)', '0 0 20px rgba(206,130,255,0.3)'] }}
                 transition={{ duration: 1.2, repeat: Infinity }}
-                className="flex h-56 w-40 items-center justify-center rounded-2xl border-2 border-brand-purple/60 bg-gradient-to-b from-[#2a1240] to-[#12081f]"
+                className="flex h-56 w-40 items-center justify-center rounded-2xl border-2 border-brand-purple/60 bg-gradient-to-b from-game-collection-purple to-game-collection-shadow"
               >
                 <span className="font-poppins text-6xl font-black text-brand-purple/70">?</span>
               </motion.div>

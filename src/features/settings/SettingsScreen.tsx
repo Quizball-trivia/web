@@ -34,15 +34,14 @@ import {
   trackMobileVerificationStarted,
   trackSettingsOpened,
 } from "@/lib/analytics/game-events";
-import { resetOwnOnboarding } from "@/lib/api/endpoints";
+import { resetOwnOnboarding, updateMe } from "@/lib/api/endpoints";
 import { startGeorgianPhoneLink, resetPassword, verifyGeorgianPhoneLink } from "@/lib/auth/auth.service";
 import { normalizeGeorgianPhone, validateGeorgianPhone, validateOtp } from "@/lib/auth/validation";
 import { useGeorgianPhoneAuthAvailability } from "@/lib/auth/useGeorgianPhoneAuthAvailability";
 import { ApiError } from "@/lib/api/api";
 import { requestAccountDeletion } from "@/lib/repositories/users.repo";
-import { LOCALES } from "@/lib/i18n/messages";
-import { useChangeLanguage } from "@/lib/i18n/useChangeLanguage";
-import { useTrainingCompletion } from "@/features/training/hooks/useTrainingCompletion";
+import { LOCALES, type Locale } from "@/lib/i18n/messages";
+import { trackLanguageSwitched } from "@/lib/analytics/game-events";
 import {
   DEFAULT_USER_PREFERENCES,
   getUserPreferences,
@@ -60,9 +59,8 @@ function elapsedSince(startedAt: number): number {
 
 export function SettingsScreen({ onBack }: SettingsScreenProps) {
   const { logout, user, setAuthenticated } = useAuthStore();
-  const { locale, t } = useLocale();
+  const { locale, setLocale, t } = useLocale();
   const phoneAuthAvailability = useGeorgianPhoneAuthAvailability();
-  const { resetTraining } = useTrainingCompletion();
 
   // Analytics: fire once per mount so re-renders don't double-count.
   const settingsOpenedTrackedRef = useRef(false);
@@ -78,6 +76,7 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
   const [invitesEnabled, setInvitesEnabled] = useState(DEFAULT_USER_PREFERENCES.invitesEnabled);
   const [questAlertsEnabled, setQuestAlertsEnabled] = useState(DEFAULT_USER_PREFERENCES.questAlertsEnabled);
   const [pingIndicatorEnabled, setPingIndicatorEnabled] = useState(DEFAULT_USER_PREFERENCES.pingIndicatorEnabled);
+  const [isLanguageSaving, setIsLanguageSaving] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState("");
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
@@ -303,11 +302,32 @@ export function SettingsScreen({ onBack }: SettingsScreenProps) {
   };
 
   const handleResetTraining = () => {
-    resetTraining();
+    storage.remove(STORAGE_KEYS.TRAINING_COMPLETE);
     toast.success(t("settings.resetTrainingSuccess"));
   };
 
-  const { changeLanguage, isSaving: isLanguageSaving } = useChangeLanguage();
+  const changeLanguage = async (newLocale: Locale) => {
+    if (isLanguageSaving || newLocale === locale) {
+      return;
+    }
+
+    trackLanguageSwitched(locale, newLocale);
+    setLocale(newLocale);
+    setIsLanguageSaving(true);
+
+    try {
+      if (user) {
+        const updated = await updateMe({ preferred_language: newLocale });
+        setAuthenticated({ ...user, preferred_language: updated.preferred_language ?? newLocale });
+      }
+      toast.success(t("settings.languageUpdated"));
+    } catch {
+      setLocale(locale as Locale);
+      toast.error(t("settings.languageUpdateFailed"));
+    } finally {
+      setIsLanguageSaving(false);
+    }
+  };
 
   return (
     <div className="container mx-auto max-w-2xl px-4 py-6 pb-20 animate-in fade-in duration-500 sm:px-5 xl:px-0">

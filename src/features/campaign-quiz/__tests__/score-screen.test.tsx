@@ -6,8 +6,7 @@ vi.mock('@/features/campaign-quiz/campaignQuiz.api', () => ({
     correct: true, correct_option_id: 'a', explanation: null,
   }),
 }));
-vi.mock('@/lib/posthog', () => ({
-  registerAccessType: vi.fn(), trackEvent: vi.fn() }));
+vi.mock('@/lib/posthog', () => ({ trackEvent: vi.fn() }));
 
 import { CampaignQuizGame } from '@/features/campaign-quiz/CampaignQuizGame';
 

@@ -4,21 +4,15 @@ import type { UseRealtimeAuctionMatchParams } from '../realtime/useRealtimeAucti
 import { AuctionFlowScreen } from '../AuctionFlowScreen';
 
 const pushMock = vi.fn();
-
-const searchParamsMock = vi.hoisted(() => ({ current: new URLSearchParams() }));
-vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: pushMock, replace: vi.fn() }),
-  useSearchParams: () => searchParamsMock.current,
-}));
-
-// Principal follows the auth snapshot unless a test pins a guest.
-const principalMock = vi.hoisted(() => ({ current: null as null | { kind: 'guest'; userId: string } }));
 vi.mock('@/lib/realtime/realtime-principal', () => ({
-  useRealtimePrincipal: () => principalMock.current
-    ?? (authSnapshot.current.status === 'authenticated'
-      ? { kind: 'member', userId: authSnapshot.current.user?.id ?? null }
-      : { kind: 'none', userId: null }),
-  useEnsureGuestPrincipal: () => (principalMock.current ? 'ready' : 'idle'),
+  useRealtimePrincipal: () => authSnapshot.current.status === 'authenticated' && authSnapshot.current.user ? { kind: 'member', userId: authSnapshot.current.user.id } : { kind: 'none', userId: null },
+  useEnsureGuestPrincipal: () => 'refused',
+}));
+vi.mock('@/features/friend/components/GuestResultsCta', () => ({ GuestResultsCta: () => null }));
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: pushMock, replace: pushMock }),
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 vi.mock('@/contexts/LocaleContext', () => ({
@@ -254,8 +248,6 @@ vi.mock('../components/AuctionResultsScreen', () => ({
 describe('AuctionFlowScreen live mode', () => {
   beforeEach(() => {
     pushMock.mockClear();
-    searchParamsMock.current = new URLSearchParams();
-    principalMock.current = null;
     realtimeMock.calls = [];
     realtimeMock.cancelSearch.mockClear();
     realtimeMock.result = null;
@@ -295,30 +287,6 @@ describe('AuctionFlowScreen live mode', () => {
       locale: 'en',
       formation: '2-2-2',
     });
-  });
-
-  it('starts a practice bot table for a guest arriving from "Play now" (source=practice_bot)', () => {
-    authSnapshot.current = { status: 'anonymous', user: null };
-    principalMock.current = { kind: 'guest', userId: 'guest-1' };
-    searchParamsMock.current = new URLSearchParams('source=practice_bot');
-
-    render(<AuctionFlowScreen username="Masked Keeper 4321" avatarSeed="avatar-1" mode="live" />);
-
-    expect(realtimeMock.calls.at(-1)).toMatchObject({
-      enabled: true,
-      autoStart: true,
-      matchmakingMode: 'practice',
-      selfUserId: 'guest-1',
-    });
-  });
-
-  it('never auto-starts for a guest without the practice source (friend-room guests only attach)', () => {
-    authSnapshot.current = { status: 'anonymous', user: null };
-    principalMock.current = { kind: 'guest', userId: 'guest-1' };
-
-    render(<AuctionFlowScreen username="Masked Keeper 4321" avatarSeed="avatar-1" mode="live" />);
-
-    expect(realtimeMock.calls.at(-1)).toMatchObject({ enabled: true, autoStart: false, matchmakingMode: 'search' });
   });
 
   it('shows auth-required copy for unauthenticated live Auction users', () => {
