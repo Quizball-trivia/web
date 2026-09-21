@@ -92,7 +92,7 @@ function hash(input: string): number {
  * a screenshot. `className` controls the aspect ratio.
  */
 // The daily reuses the prototype card's artwork.
-const ART_ALIAS: Record<string, string> = { "daily-passChain": "mini-pass-chain", "daily-statSniper": "mini-stat-sniper" };
+const ART_ALIAS: Record<string, string> = { "daily-missingXi": "lab-missing-xi", "daily-passChain": "mini-pass-chain", "daily-statSniper": "mini-stat-sniper" };
 
 export function DemoModeArt({ slug: rawSlug, className = "" }: { slug: string; className?: string }) {
   const slug = ART_ALIAS[rawSlug] ?? rawSlug;
