@@ -1,0 +1,1289 @@
+[
+  {
+    "label": "AEK Athens",
+    "criterionKeys": [
+      "club-aek-athens"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/e94165b65720c02a.webp",
+    "sha256": "e94165b65720c02a08638b1726512dd428d225ad9ea44ef994c546d28143885f",
+    "sourcePage": "https://en.wikipedia.org/wiki/AEK_Athens_F.C.",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/0/04/AEK_Athens_FC_logo.svg/330px-AEK_Athens_FC_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "1899 Hoffenheim",
+    "criterionKeys": [
+      "club-1899-hoffenheim"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/709d08133b459761.webp",
+    "sha256": "709d08133b4597616eb35c308dd1af1b2bf598253d2ff77ffd9c3f1b0e89c8cb",
+    "sourcePage": "https://en.wikipedia.org/wiki/TSG_1899_Hoffenheim",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e7/Logo_TSG_Hoffenheim.svg/330px-Logo_TSG_Hoffenheim.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "AGF Aarhus",
+    "criterionKeys": [
+      "club-agf-aarhus"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/72a2f80e508e3404.webp",
+    "sha256": "72a2f80e508e340436b08dcec0e2b2cdc36401905c5a303564520c9465170b00",
+    "sourcePage": "https://en.wikipedia.org/wiki/Aarhus_Gymnastikforening",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/a/ac/AGF_Aarhus_logo.svg/330px-AGF_Aarhus_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Al-Jazira",
+    "criterionKeys": [
+      "club-al-jazira"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/cb5273e4bc2f0182.webp",
+    "sha256": "cb5273e4bc2f01829fcea5ca1b0d2b088216e3f9680956e081dcc69d8cb4d3b1",
+    "sourcePage": "https://en.wikipedia.org/wiki/Al_Jazira_Club",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/f/ff/Al_Jazira_Club_logo_en_%282021%29.svg/330px-Al_Jazira_Club_logo_en_%282021%29.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Argentinos Juniors",
+    "criterionKeys": [
+      "club-argentinos-juniors"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/11ab05efdf48854c.webp",
+    "sha256": "11ab05efdf48854c743e48d6f356eac8f5fb70c0a9a17ffeca705010e0c07b83",
+    "sourcePage": "https://en.wikipedia.org/wiki/Argentinos_Juniors",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5e/Asociaci%C3%B3n_Atl%C3%A9tica_Argentinos_Juniors_logo.svg/330px-Asociaci%C3%B3n_Atl%C3%A9tica_Argentinos_Juniors_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Atlanta United",
+    "criterionKeys": [
+      "club-atlanta-united"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/661d1fca42d3df65.webp",
+    "sha256": "661d1fca42d3df65959824946e0b5e82b53dc38d55446e5d96b45aa0fed7c720",
+    "sourcePage": "https://en.wikipedia.org/wiki/Atlanta_United_FC",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/b/bb/Atlanta_MLS.svg/330px-Atlanta_MLS.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "APOEL",
+    "criterionKeys": [
+      "club-apoel"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/19fd35ab5fa98227.webp",
+    "sha256": "19fd35ab5fa982274e05abbe63765465c3ba6fe9014547df9be026e81a14c5a6",
+    "sourcePage": "https://en.wikipedia.org/wiki/APOEL_FC",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/93/APOEL_%28logo_with_stars%29.svg/330px-APOEL_%28logo_with_stars%29.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Atalanta",
+    "criterionKeys": [
+      "club-atalanta"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/f01bc3d7490f8784.webp",
+    "sha256": "f01bc3d7490f87844b1076708bdfbe3f3748d8b14d7d8d03f153ece16c1502e1",
+    "sourcePage": "https://en.wikipedia.org/wiki/Atalanta_BC",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/f/f2/Atalanta_BC_new_logo.svg/330px-Atalanta_BC_new_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "AZ",
+    "criterionKeys": [
+      "club-az"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/3ab45d13cd36c825.webp",
+    "sha256": "3ab45d13cd36c82585cbe955ea0520224345bd44459bce763a70a52c9fff659d",
+    "sourcePage": "https://en.wikipedia.org/wiki/AZ_Alkmaar",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e0/AZ_Alkmaar.svg/330px-AZ_Alkmaar.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "AZ Alkmaar",
+    "criterionKeys": [
+      "club-az-alkmaar"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/3ab45d13cd36c825.webp",
+    "sha256": "3ab45d13cd36c82585cbe955ea0520224345bd44459bce763a70a52c9fff659d",
+    "sourcePage": "https://en.wikipedia.org/wiki/AZ_Alkmaar",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e0/AZ_Alkmaar.svg/330px-AZ_Alkmaar.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Atlético Paranaense",
+    "criterionKeys": [
+      "club-atletico-paranaense"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/a6922aefa3edaeeb.webp",
+    "sha256": "a6922aefa3edaeeb895dea19838d87797023d4f4f998ed9d0a97c3a6f3fb2de5",
+    "sourcePage": "https://en.wikipedia.org/wiki/Club_Athletico_Paranaense",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/43/Athletico_Paranaense_%28Logo_2019%29.svg/330px-Athletico_Paranaense_%28Logo_2019%29.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Cagliari",
+    "criterionKeys": [
+      "club-cagliari"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/6acd94b9ed44e52b.webp",
+    "sha256": "6acd94b9ed44e52b11db387986aed457f5ae50d591205234d8db1d9a0a41c566",
+    "sourcePage": "https://en.wikipedia.org/wiki/Cagliari_Calcio",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/6/61/Cagliari_Calcio_1920.svg/330px-Cagliari_Calcio_1920.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Club América",
+    "criterionKeys": [
+      "club-club-america"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/cb3d38b6f6db7e26.webp",
+    "sha256": "cb3d38b6f6db7e2627e6a1382828813a67da782e4baa9faef2a8317c997ebea1",
+    "sourcePage": "https://en.wikipedia.org/wiki/Club_Am%C3%A9rica",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/c/c1/Club_Am%C3%A9rica_crest.svg/330px-Club_Am%C3%A9rica_crest.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Columbus Crew",
+    "criterionKeys": [
+      "club-columbus-crew"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/a4ab172f57000441.webp",
+    "sha256": "a4ab172f5700044107c83d8d29585b0ae8d80177bfa2c4954be74a6203884c8f",
+    "sourcePage": "https://en.wikipedia.org/wiki/Columbus_Crew",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/dc/Columbus_Crew_logo_2021.svg/330px-Columbus_Crew_logo_2021.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Chornomorets Odesa",
+    "criterionKeys": [
+      "club-chornomorets-odesa"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/93e46b687aefc4ec.webp",
+    "sha256": "93e46b687aefc4ec1561db2ac8e2306170237b1193c4fbe0d5954994dc97b7af",
+    "sourcePage": "https://en.wikipedia.org/wiki/FC_Chornomorets_Odesa",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/3/32/Chornomorets_Odessa_Logo_2021.svg/330px-Chornomorets_Odessa_Logo_2021.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Club Brugge",
+    "criterionKeys": [
+      "club-club-brugge"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/d4a6796dfbe6acc1.webp",
+    "sha256": "d4a6796dfbe6acc1367ba78a16bba67b1687f3c9cbfb73ae42f6d19fb00144e2",
+    "sourcePage": "https://en.wikipedia.org/wiki/Club_Brugge_KV",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/97/Club_brugge.png/330px-Club_brugge.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Copenhagen",
+    "criterionKeys": [
+      "club-copenhagen"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/a9455557c83598ca.webp",
+    "sha256": "a9455557c83598ca091cfbd0836904e637cabe592a8d724dd16b1149578b91f4",
+    "sourcePage": "https://en.wikipedia.org/wiki/F.C._Copenhagen",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/2/26/FC_Copenhagen_logo.svg/330px-FC_Copenhagen_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Cracovia",
+    "criterionKeys": [
+      "club-cracovia"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/e000b1a8d5cf7cb7.webp",
+    "sha256": "e000b1a8d5cf7cb70d015adb6c56acd47157f826e7d709488dd4f81cf8a9e942",
+    "sourcePage": "https://en.wikipedia.org/wiki/KS_Cracovia",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/b/b9/Cracovia_%28football_club%29_logo.svg/330px-Cracovia_%28football_club%29_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Cremonese",
+    "criterionKeys": [
+      "club-cremonese"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/7bea3dd9679aa07e.webp",
+    "sha256": "7bea3dd9679aa07ed1f35c4ffd077f5fdfddb23ce2da9f6b316cef6eb0c8d482",
+    "sourcePage": "https://en.wikipedia.org/wiki/US_Cremonese",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/e/e1/US_Cremonese_logo.svg/330px-US_Cremonese_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Coritiba",
+    "criterionKeys": [
+      "club-coritiba"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/69431aa3ab6d2268.webp",
+    "sha256": "69431aa3ab6d2268d0a6090c111db8e3b214048022ecaeed5663f347601e9691",
+    "sourcePage": "https://en.wikipedia.org/wiki/Coritiba_Foot_Ball_Club",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bd/Coritiba_Foot_Ball_Club_logo.svg/330px-Coritiba_Foot_Ball_Club_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Cruz Azul",
+    "criterionKeys": [
+      "club-cruz-azul"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/da0b06d2416df22d.webp",
+    "sha256": "da0b06d2416df22d3a408a97f05bf106aa114b25c2ce78a2a0322cabc9b0bc71",
+    "sourcePage": "https://en.wikipedia.org/wiki/Cruz_Azul",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/15/Cruz_Azul_2026.png/330px-Cruz_Azul_2026.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Deportes Tolima",
+    "criterionKeys": [
+      "club-deportes-tolima"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/9aa0a970ed3abdb5.webp",
+    "sha256": "9aa0a970ed3abdb5e50b8bb6433b715d6e7d4ef88fb4ad09000247847343e755",
+    "sourcePage": "https://en.wikipedia.org/wiki/Deportes_Tolima",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6b/Tolima_Campe%C3%B3n_2018.png/330px-Tolima_Campe%C3%B3n_2018.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Defensor Sporting",
+    "criterionKeys": [
+      "club-defensor-sporting"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/8f915d278450f49e.webp",
+    "sha256": "8f915d278450f49e9a7d9cbbce250e9bbfef3dd28f7a54cfc75a9814f85bd483",
+    "sourcePage": "https://en.wikipedia.org/wiki/Defensor_Sporting",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/78/Defensor_Sporting.svg/330px-Defensor_Sporting.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Deportivo Cali",
+    "criterionKeys": [
+      "club-deportivo-cali"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/96c5ebec7d8ca532.webp",
+    "sha256": "96c5ebec7d8ca53221d1544c467b7f3b1dbc58147b54becbd331174bab032e35",
+    "sourcePage": "https://en.wikipedia.org/wiki/Deportivo_Cali",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8b/Deportivo_Cali.svg/330px-Deportivo_Cali.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Defensa y Justicia",
+    "criterionKeys": [
+      "club-defensa-y-justicia"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/2eecd03f9013cbd2.webp",
+    "sha256": "2eecd03f9013cbd2d1d414ce78c779231dd7887a338cf67375281638f06262ad",
+    "sourcePage": "https://en.wikipedia.org/wiki/Defensa_y_Justicia",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/70/Escudo_del_Club_Social_y_Deportivo_Defensa_y_Justicia.svg/330px-Escudo_del_Club_Social_y_Deportivo_Defensa_y_Justicia.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "FC Copenhagen",
+    "criterionKeys": [
+      "club-fc-copenhagen"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/a9455557c83598ca.webp",
+    "sha256": "a9455557c83598ca091cfbd0836904e637cabe592a8d724dd16b1149578b91f4",
+    "sourcePage": "https://en.wikipedia.org/wiki/F.C._Copenhagen",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/2/26/FC_Copenhagen_logo.svg/330px-FC_Copenhagen_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Dundee",
+    "criterionKeys": [
+      "club-dundee"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/adc63aac7d8d0764.webp",
+    "sha256": "adc63aac7d8d0764eabb7fbe9f3ec7842674592184bc81b0e250d0e35e128fb7",
+    "sourcePage": "https://en.wikipedia.org/wiki/Dundee_F.C.",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/3/3b/Dundee_FC_2025_Crest.svg/330px-Dundee_FC_2025_Crest.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Hull City",
+    "criterionKeys": [
+      "club-hull-city"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/981cc3b48de82eb0.webp",
+    "sha256": "981cc3b48de82eb06983043e255991e1981fa242be6b236a5155c0ed72da9da2",
+    "sourcePage": "https://en.wikipedia.org/wiki/Hull_City_A.F.C.",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/5/54/Hull_City_A.F.C._logo.svg/330px-Hull_City_A.F.C._logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Huracán",
+    "criterionKeys": [
+      "club-huracan"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/6b06489b6f5e3ad8.webp",
+    "sha256": "6b06489b6f5e3ad804153402135344ff9f8c4f2498b2834242a3df900a9c359d",
+    "sourcePage": "https://en.wikipedia.org/wiki/Club_Atl%C3%A9tico_Hurac%C3%A1n",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/dd/Emblema_oficial_del_Club_Atl%C3%A9tico_Hurac%C3%A1n.svg/330px-Emblema_oficial_del_Club_Atl%C3%A9tico_Hurac%C3%A1n.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Győri ETO",
+    "criterionKeys": [
+      "club-gyori-eto"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/6dfbaacc022e5874.webp",
+    "sha256": "6dfbaacc022e58741dedd2973146a74b348585c2ef56a186259a1db1d003f7d6",
+    "sourcePage": "https://en.wikipedia.org/wiki/Gy%C5%91ri_ETO_FC",
+    "sourceImage": "https://upload.wikimedia.org/wikipedia/en/d/de/ETO_FC_Gy%C5%91r.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Independiente Santa Fe",
+    "criterionKeys": [
+      "club-independiente-santa-fe"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/837caf788b0dd530.webp",
+    "sha256": "837caf788b0dd530972eb21f0383604aa5e055d1b51803a563aa50df6f75c1b3",
+    "sourcePage": "https://en.wikipedia.org/wiki/Independiente_Santa_Fe",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/43/Independiente_Santa_Fe_logo.svg/330px-Independiente_Santa_Fe_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Legia Warsaw",
+    "criterionKeys": [
+      "club-legia-warsaw"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/0651d308863cf723.webp",
+    "sha256": "0651d308863cf723b16d7a0caa4d5df81018408e542663766853c413ffa40f63",
+    "sourcePage": "https://en.wikipedia.org/wiki/Legia_Warsaw",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/6/6d/Legia_Warsaw_logo.svg/330px-Legia_Warsaw_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Middlesbrough",
+    "criterionKeys": [
+      "club-middlesbrough"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/f5829bf38c5d6733.webp",
+    "sha256": "f5829bf38c5d673308efc6c7f139ccdc5eeb92605f084cd1033a959d7858e64a",
+    "sourcePage": "https://en.wikipedia.org/wiki/Middlesbrough_F.C.",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/2/2c/Middlesbrough_FC_crest.svg/330px-Middlesbrough_FC_crest.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Partizan",
+    "criterionKeys": [
+      "club-partizan"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/6df41686df0ed429.webp",
+    "sha256": "6df41686df0ed429bc3b019d6de0cd4428d479b44ebdcb41916dbdbb314a37fb",
+    "sourcePage": "https://en.wikipedia.org/wiki/FK_Partizan",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/e/ed/FK_Partizan.svg/330px-FK_Partizan.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Pafos FC",
+    "criterionKeys": [
+      "club-pafos-fc"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/73255945307cb9df.webp",
+    "sha256": "73255945307cb9dfc67aabc02283449fe3980895bd3ec06f1cbd89820a697003",
+    "sourcePage": "https://en.wikipedia.org/wiki/Pafos_FC",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/9/9b/Pafos_FC_crest.svg/330px-Pafos_FC_crest.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Peñarol",
+    "criterionKeys": [
+      "club-penarol"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/f053eb39afcea9db.webp",
+    "sha256": "f053eb39afcea9db7ae8be11d7edeb590314d927d69575074f02895bdd4978a7",
+    "sourcePage": "https://en.wikipedia.org/wiki/Pe%C3%B1arol",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e9/Escudo_del_Club_Atl%C3%A9tico_Pe%C3%B1arol.svg/330px-Escudo_del_Club_Atl%C3%A9tico_Pe%C3%B1arol.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Pogoń Szczecin",
+    "criterionKeys": [
+      "club-pogon-szczecin"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/281cd634c00b76ae.webp",
+    "sha256": "281cd634c00b76aee6121d575e18380a8ca8add2f8adb13ea176413f50c4b6a2",
+    "sourcePage": "https://en.wikipedia.org/wiki/Pogo%C5%84_Szczecin",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/5/55/Pogon_Szczecin_logo.svg/330px-Pogon_Szczecin_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Portuguesa",
+    "criterionKeys": [
+      "club-portuguesa"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/22445b72535458ec.webp",
+    "sha256": "22445b72535458eccbc5fb67034d972f0bf1f610056ad52b69a2b1e137187d69",
+    "sourcePage": "https://en.wikipedia.org/wiki/Associa%C3%A7%C3%A3o_Portuguesa_de_Desportos",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/61/Associa%C3%A7%C3%A3o_Portuguesa_de_Desportos.svg/330px-Associa%C3%A7%C3%A3o_Portuguesa_de_Desportos.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Qarabağ",
+    "criterionKeys": [
+      "club-qarabag"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/c82f942e0f3aa14e.webp",
+    "sha256": "c82f942e0f3aa14e3eca005fcfa638104a813e4714461c8a0e0e3fa78d623ee6",
+    "sourcePage": "https://en.wikipedia.org/wiki/Qaraba%C4%9F_FK",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/f/fe/Qaraba%C4%9F_FK_logo.svg/330px-Qaraba%C4%9F_FK_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Philadelphia Union",
+    "criterionKeys": [
+      "club-philadelphia-union"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/993fe777327a7345.webp",
+    "sha256": "993fe777327a73456184c9a9bb5eb609f96212e8f316b80cde96094a5fa885f5",
+    "sourcePage": "https://en.wikipedia.org/wiki/Philadelphia_Union",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/4/46/Philadelphia_Union_2018_logo.svg/330px-Philadelphia_Union_2018_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Reading",
+    "criterionKeys": [
+      "club-reading"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/50946e4cdcc080ee.webp",
+    "sha256": "50946e4cdcc080ee9459cf5c6c968116c483fa75d01470b61a65bb06153b0ffb",
+    "sourcePage": "https://en.wikipedia.org/wiki/Reading_F.C.",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/1/11/Reading_FC.svg/330px-Reading_FC.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Seattle Sounders",
+    "criterionKeys": [
+      "club-seattle-sounders"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/bbeaed3c8795b06d.webp",
+    "sha256": "bbeaed3c8795b06d0d51b2c646b25731ea69dbfef36b1749a93938af058310dc",
+    "sourcePage": "https://en.wikipedia.org/wiki/Seattle_Sounders_FC",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/2/27/Seattle_Sounders_FC.svg/330px-Seattle_Sounders_FC.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Slavia Prague",
+    "criterionKeys": [
+      "club-slavia-prague"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/6df2de7ee9f55fce.webp",
+    "sha256": "6df2de7ee9f55fcee2ce1a17453c96e1a3404ece2e045c4ee45e138fa649c997",
+    "sourcePage": "https://en.wikipedia.org/wiki/SK_Slavia_Prague",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2b/SK_Slavia_Praha_full_logo.svg/330px-SK_Slavia_Praha_full_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Spartak Nalchik",
+    "criterionKeys": [
+      "club-spartak-nalchik"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/790d66b1cc166d82.webp",
+    "sha256": "790d66b1cc166d82e983d277d508c9b73e8b5ea240b2319279209254f1b2cc6f",
+    "sourcePage": "https://en.wikipedia.org/wiki/PFC_Spartak_Nalchik",
+    "sourceImage": "https://upload.wikimedia.org/wikipedia/en/0/0a/Spnalchik.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Dnipro",
+    "criterionKeys": [
+      "club-dnipro"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/f31b3e8c7c310433.webp",
+    "sha256": "f31b3e8c7c310433d6d568b000e1e2ace1bf50b612b0d03b1ccf638402f56ecb",
+    "sourcePage": "https://en.wikipedia.org/wiki/FC_Dnipro",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/0/01/FC_Dnipro_Dnipropetrovsk.svg/330px-FC_Dnipro_Dnipropetrovsk.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Dnipro Dnipropetrovsk",
+    "criterionKeys": [
+      "club-dnipro-dnipropetrovsk"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/f31b3e8c7c310433.webp",
+    "sha256": "f31b3e8c7c310433d6d568b000e1e2ace1bf50b612b0d03b1ccf638402f56ecb",
+    "sourcePage": "https://en.wikipedia.org/wiki/FC_Dnipro",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/0/01/FC_Dnipro_Dnipropetrovsk.svg/330px-FC_Dnipro_Dnipropetrovsk.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Empoli",
+    "criterionKeys": [
+      "club-empoli"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/395caeeccccd4a2b.webp",
+    "sha256": "395caeeccccd4a2b7f7fb935899c717cafa4879ad9909a194c52c3e5f2b99ad1",
+    "sourcePage": "https://en.wikipedia.org/wiki/Empoli_FC",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/f/fb/Empoli_FC_crest.svg/330px-Empoli_FC_crest.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Esbjerg fB",
+    "criterionKeys": [
+      "club-esbjerg-fb"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/29b0b191a8fb889e.webp",
+    "sha256": "29b0b191a8fb889e9e830e01164e70b7795d6f3589ade34335e53f1725ccdcd7",
+    "sourcePage": "https://en.wikipedia.org/wiki/Esbjerg_fB",
+    "sourceImage": "https://upload.wikimedia.org/wikipedia/en/f/fb/Esbjerg_forenede_Boldklubber_logo.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Estoril",
+    "criterionKeys": [
+      "club-estoril"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/92a313df04afabbe.webp",
+    "sha256": "92a313df04afabbe700b1ae070f4cd4f2fdd8c2c9e41d9c3d8fc785d2a9db51b",
+    "sourcePage": "https://en.wikipedia.org/wiki/G.D._Estoril_Praia",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/9/94/GD_Estoril_Praia_logo.svg/330px-GD_Estoril_Praia_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "FC Famalicão",
+    "criterionKeys": [
+      "club-fc-famalicao"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/f4eb8108457f2af5.webp",
+    "sha256": "f4eb8108457f2af5f5a2afcf0e72740a138effc1f194faa1620857e237e003b3",
+    "sourcePage": "https://en.wikipedia.org/wiki/F.C._Famalic%C3%A3o",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/0/0e/F.C._Famalic%C3%A3o_logo.svg/330px-F.C._Famalic%C3%A3o_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "FC Krasnodar",
+    "criterionKeys": [
+      "club-fc-krasnodar"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/de6efadd0ddd50ce.webp",
+    "sha256": "de6efadd0ddd50ce8d4468116112c1a587c1c0ee177d72f530a0c6aa822004a2",
+    "sourcePage": "https://en.wikipedia.org/wiki/FC_Krasnodar",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/3/30/FC_Krasnodar_logo.svg/330px-FC_Krasnodar_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "FC Twente",
+    "criterionKeys": [
+      "club-fc-twente"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/f2d06ad80bc176b9.webp",
+    "sha256": "f2d06ad80bc176b9023c8ff46c91ce6cae720f440cd7a94523db06f52558db9b",
+    "sourcePage": "https://en.wikipedia.org/wiki/FC_Twente",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/e/e3/FC_Twente.svg/330px-FC_Twente.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Ferencváros",
+    "criterionKeys": [
+      "club-ferencvaros"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/86f3d810e678a31d.webp",
+    "sha256": "86f3d810e678a31d86c7feeaae034064d507ee116ffe309bcd6a300599ee69e8",
+    "sourcePage": "https://en.wikipedia.org/wiki/Ferencv%C3%A1rosi_TC",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/37/Ferencvarosi_TC.svg/330px-Ferencvarosi_TC.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Frosinone",
+    "criterionKeys": [
+      "club-frosinone"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/b9bb8e7eb881f1dd.webp",
+    "sha256": "b9bb8e7eb881f1dd96dd18ca2a1073d2529d44ed3997f1986670dbf1cc68b218",
+    "sourcePage": "https://en.wikipedia.org/wiki/Frosinone_Calcio",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/0/0b/Frosinone_Calcio_logo.svg/330px-Frosinone_Calcio_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Gent",
+    "criterionKeys": [
+      "club-gent"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/5055fbd4739156c1.webp",
+    "sha256": "5055fbd4739156c1665a905d866204c344731fffc9a9a33a93e10d0876384964",
+    "sourcePage": "https://en.wikipedia.org/wiki/KAA_Gent",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/f/f4/KAA_Gent_logo.svg/330px-KAA_Gent_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Getafe",
+    "criterionKeys": [
+      "club-getafe"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/b5c113fa6d6c9192.webp",
+    "sha256": "b5c113fa6d6c919235edd7e710e1828ef11be24619fc667118a5bd81e3eb8a28",
+    "sourcePage": "https://en.wikipedia.org/wiki/Getafe_CF",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/4/46/Getafe_logo.svg/330px-Getafe_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Gil Vicente",
+    "criterionKeys": [
+      "club-gil-vicente"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/40011dbab0a415b7.webp",
+    "sha256": "40011dbab0a415b7cdd66774895e18df0cd46489de2a331addb239b437808f8a",
+    "sourcePage": "https://en.wikipedia.org/wiki/Gil_Vicente_F.C.",
+    "sourceImage": "https://upload.wikimedia.org/wikipedia/en/8/8f/Gil_Vicente_F.C.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Gimnasia La Plata",
+    "criterionKeys": [
+      "club-gimnasia-la-plata"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/179687998af25796.webp",
+    "sha256": "179687998af2579628f421ce3fbabeee5a04c023f3a889d84fb74e7736c8a0ff",
+    "sourcePage": "https://en.wikipedia.org/wiki/Club_de_Gimnasia_y_Esgrima_La_Plata",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/6/6d/Gimnasia_Esgrima_LP_logo.svg/330px-Gimnasia_Esgrima_LP_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Gimnàstic",
+    "criterionKeys": [
+      "club-gimnastic"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/376a3c8966111c51.webp",
+    "sha256": "376a3c8966111c519acff34de2ab3c849776aaae813ca71f627a594dec2f6baa",
+    "sourcePage": "https://en.wikipedia.org/wiki/Gimn%C3%A0stic_de_Tarragona",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/b/be/Gimn%C3%A0stic_de_Tarragona_logo.svg/330px-Gimn%C3%A0stic_de_Tarragona_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Goiás",
+    "criterionKeys": [
+      "club-goias"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/c9e62d4a6f5c95ce.webp",
+    "sha256": "c9e62d4a6f5c95ce36c9722722a0be5e121b20674cb305895b9d0f01447f755c",
+    "sourcePage": "https://en.wikipedia.org/wiki/Goi%C3%A1s_Esporte_Clube",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4a/Goi%C3%A1s_Esporte_Clube_logo.svg/330px-Goi%C3%A1s_Esporte_Clube_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Guaraní",
+    "criterionKeys": [
+      "club-guarani"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/bf7431734b5367aa.webp",
+    "sha256": "bf7431734b5367aa9b543d1a8b719e415edd6b88c96abfbdf7af726c1adcd415",
+    "sourcePage": "https://en.wikipedia.org/wiki/Club_Guaran%C3%AD",
+    "sourceImage": "https://upload.wikimedia.org/wikipedia/commons/1/1a/Guaran%C3%AD_Logo_2018.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Hatayspor",
+    "criterionKeys": [
+      "club-hatayspor"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/18d69b322b076bfd.webp",
+    "sha256": "18d69b322b076bfd483d7f81479ec2300b5bce425f1b66dd628e6934e242c9e7",
+    "sourcePage": "https://en.wikipedia.org/wiki/Hatayspor",
+    "sourceImage": "https://upload.wikimedia.org/wikipedia/en/f/fe/Hatayspor_crest.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Heracles Almelo",
+    "criterionKeys": [
+      "club-heracles-almelo"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/79c74b0925eced25.webp",
+    "sha256": "79c74b0925eced25304314ea1ba90cbacc439d4d741683290da6f4ef7bd9fd1c",
+    "sourcePage": "https://en.wikipedia.org/wiki/Heracles_Almelo",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/9/9e/Heracles_Almelo_logo.svg/330px-Heracles_Almelo_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "IFK Göteborg",
+    "criterionKeys": [
+      "club-ifk-goteborg"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/ac6a218dfff5bb6b.webp",
+    "sha256": "ac6a218dfff5bb6b4432c6429c0894a7178b38862261d11aa205cdb3748b29c2",
+    "sourcePage": "https://en.wikipedia.org/wiki/IFK_G%C3%B6teborg",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/a/a6/IFK_Goteborg_logo.svg/330px-IFK_Goteborg_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Independiente Medellín",
+    "criterionKeys": [
+      "club-independiente-medellin"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/b3b66c797db1712f.webp",
+    "sha256": "b3b66c797db1712f8b080df9132c0b9f88a6fed6b301e6a20fa389d073e69c12",
+    "sourcePage": "https://en.wikipedia.org/wiki/Independiente_Medell%C3%ADn",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/44/Deportivo_Independiente_Medell%C3%ADn_logo_%282026%2C_official%29.svg/330px-Deportivo_Independiente_Medell%C3%ADn_logo_%282026%2C_official%29.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Junior",
+    "criterionKeys": [
+      "club-junior"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/33f640e8c294374c.webp",
+    "sha256": "33f640e8c294374c54d1ee3d05a18c8a52ee80bc191ceebfd27217388494bce2",
+    "sourcePage": "https://en.wikipedia.org/wiki/Atl%C3%A9tico_Junior",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/12/Junior_Barranquilla_logo.svg/330px-Junior_Barranquilla_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Kartalspor",
+    "criterionKeys": [
+      "club-kartalspor"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/c32379222faf3ab5.webp",
+    "sha256": "c32379222faf3ab5221999aba7f095f87179ad668330d37d532f53ed3694bea5",
+    "sourcePage": "https://en.wikipedia.org/wiki/Kartal_S.K.",
+    "sourceImage": "https://upload.wikimedia.org/wikipedia/en/8/86/Kartalspor.JPG?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Kashima Antlers",
+    "criterionKeys": [
+      "club-kashima-antlers"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/5249a7631eef177f.webp",
+    "sha256": "5249a7631eef177f63ecb6f4ce5720d6db6332b5254072a2a71affabc4a6e717",
+    "sourcePage": "https://en.wikipedia.org/wiki/Kashima_Antlers",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/3/37/Kashima_Antlers.svg/330px-Kashima_Antlers.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Kayserispor",
+    "criterionKeys": [
+      "club-kayserispor"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/3a1d66bfad3545ad.webp",
+    "sha256": "3a1d66bfad3545adb241aa4b5189d3f0697983c61a1ca9826932321c950692d4",
+    "sourcePage": "https://en.wikipedia.org/wiki/Kayserispor",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/f/f4/Kayserispor_logo.svg/330px-Kayserispor_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Levante",
+    "criterionKeys": [
+      "club-levante"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/547d48d5cab7368a.webp",
+    "sha256": "547d48d5cab7368a661924f89651f2ba4b69dee72edc4af1b3f8b2deeb11125d",
+    "sourcePage": "https://en.wikipedia.org/wiki/Levante_UD",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/7/7b/Levante_Uni%C3%B3n_Deportiva%2C_S.A.D._logo.svg/330px-Levante_Uni%C3%B3n_Deportiva%2C_S.A.D._logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Libertad",
+    "criterionKeys": [
+      "club-libertad"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/910ab954a9e9c00b.webp",
+    "sha256": "910ab954a9e9c00b25d1807f833d2952f291e5305ea2a5f45f3d5c2f471b6bc9",
+    "sourcePage": "https://en.wikipedia.org/wiki/Club_Libertad",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/e/ee/Club_Libertad_logo.png/330px-Club_Libertad_logo.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Liverpool Montevideo",
+    "criterionKeys": [
+      "club-liverpool-montevideo"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/4189191c3265e408.webp",
+    "sha256": "4189191c3265e40868dc5c04a5039d6b5a5b234a3e11eecbe3ff1a56e5c108e3",
+    "sourcePage": "https://en.wikipedia.org/wiki/Liverpool_F.C._(Montevideo)",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/3/3d/Liverpool_F.C._%28Montevideo%29_logo.svg/330px-Liverpool_F.C._%28Montevideo%29_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Lokomotiv Moscow",
+    "criterionKeys": [
+      "club-lokomotiv-moscow"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/4b89ae2021d7407b.webp",
+    "sha256": "4b89ae2021d7407bedf7fe814773a35a81b60871dfc9916d736c0965f63342e9",
+    "sourcePage": "https://en.wikipedia.org/wiki/FC_Lokomotiv_Moscow",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/9/93/FC_Lokomotiv_Moscow_logo.svg/330px-FC_Lokomotiv_Moscow_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Maccabi Haifa",
+    "criterionKeys": [
+      "club-maccabi-haifa"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/6e024322a7ebc46c.webp",
+    "sha256": "6e024322a7ebc46c0235b0cf88b0a8c38bae62c12e8a2e20f76faf961cb63a0e",
+    "sourcePage": "https://en.wikipedia.org/wiki/Maccabi_Haifa_F.C.",
+    "sourceImage": "https://upload.wikimedia.org/wikipedia/en/1/15/Maccabi_Haifa_FC_Logo_2023.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "MSV Duisburg",
+    "criterionKeys": [
+      "club-msv-duisburg"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/816060ced991d797.webp",
+    "sha256": "816060ced991d79798416391f8b3ed4d8d3050999581b40c6f0a0146b6d1f33c",
+    "sourcePage": "https://en.wikipedia.org/wiki/MSV_Duisburg",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/c/c8/Msv_duisburg%28new%29.svg/330px-Msv_duisburg%28new%29.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "NAC Breda",
+    "criterionKeys": [
+      "club-nac-breda"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/79ad61a5f8fc575e.webp",
+    "sha256": "79ad61a5f8fc575eaf03d956a1fa08aad5f18b756c52d5a5c8a16baff7c84a93",
+    "sourcePage": "https://en.wikipedia.org/wiki/NAC_Breda",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c9/Logo_NAC_Breda.svg/330px-Logo_NAC_Breda.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Nantes",
+    "criterionKeys": [
+      "club-nantes"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/052d28b9b5927d1b.webp",
+    "sha256": "052d28b9b5927d1be0457dd2c84a1f0c11eb67987ecdb1dda7584afe30acb964",
+    "sourcePage": "https://en.wikipedia.org/wiki/FC_Nantes",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/45/Logo_FC_Nantes_%28avec_fond%29_-_2019.svg/330px-Logo_FC_Nantes_%28avec_fond%29_-_2019.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "NEC Nijmegen",
+    "criterionKeys": [
+      "club-nec-nijmegen"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/ac4734d446301719.webp",
+    "sha256": "ac4734d446301719c195ce6278bf5513a80c5cec046266ed7ec1b36cb4867f6a",
+    "sourcePage": "https://en.wikipedia.org/wiki/NEC_Nijmegen",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/3/38/NEC_Nijmegen_logo.svg/330px-NEC_Nijmegen_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "New York Cosmos",
+    "criterionKeys": [
+      "club-new-york-cosmos"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/5fb9531af18ba0c1.webp",
+    "sha256": "5fb9531af18ba0c12b9e1116c380bf843acd1e7e9f943bab96fa66a745f5845e",
+    "sourcePage": "https://en.wikipedia.org/wiki/New_York_Cosmos_(1971%E2%80%931985)",
+    "sourceImage": "https://upload.wikimedia.org/wikipedia/en/9/93/New_York_Cosmos_77.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Newcastle Jets",
+    "criterionKeys": [
+      "club-newcastle-jets"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/089d39da83eb220e.webp",
+    "sha256": "089d39da83eb220ee1d586ffe4fac7b09876547195986c4cf98ec7b903f30b7a",
+    "sourcePage": "https://en.wikipedia.org/wiki/Newcastle_Jets_FC",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/d/d5/Newcastle_United_Jets_Logo.svg/330px-Newcastle_United_Jets_Logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Olimpia",
+    "criterionKeys": [
+      "club-olimpia"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/2cb43e58c7fce1d1.webp",
+    "sha256": "2cb43e58c7fce1d17c9e42752fbbc5877c4254ac9c23cfe152c4fb525654faad",
+    "sourcePage": "https://en.wikipedia.org/wiki/Club_Olimpia",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/4/45/Club_Olimpia_logo.svg/330px-Club_Olimpia_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Persepolis",
+    "criterionKeys": [
+      "club-persepolis"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/4411964093777e25.webp",
+    "sha256": "4411964093777e25609e80d31e719f830c944d1913dacc73867f2b46f57b94fd",
+    "sourcePage": "https://en.wikipedia.org/wiki/Persepolis_F.C.",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/0/05/FC_Persepolis_Official_Logo.svg/330px-FC_Persepolis_Official_Logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Randers FC",
+    "criterionKeys": [
+      "club-randers-fc"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/9cc8396759a08353.webp",
+    "sha256": "9cc8396759a083532cd0d6a3a5e51e0883ec3b229101a59b94c2e22ae6a363c6",
+    "sourcePage": "https://en.wikipedia.org/wiki/Randers_FC",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/b/b7/Randers_FC_logo.svg/330px-Randers_FC_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Rapid Vienna",
+    "criterionKeys": [
+      "club-rapid-vienna"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/acf414d13a7e1099.webp",
+    "sha256": "acf414d13a7e1099ba510a5d0c00a0fdd4f79293716fb26e5a9885c8d3efbfa3",
+    "sourcePage": "https://en.wikipedia.org/wiki/SK_Rapid_Wien",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bf/SK_Rapid_Wien_Logo.svg/330px-SK_Rapid_Wien_Logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Rostov",
+    "criterionKeys": [
+      "club-rostov"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/dc0acf45258e4a56.webp",
+    "sha256": "dc0acf45258e4a56127e9c336267a9a13255ffae8526e4ccbe9c26d977713f69",
+    "sourcePage": "https://en.wikipedia.org/wiki/FC_Rostov",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/a/a2/FC_Rostov_logo.svg/330px-FC_Rostov_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Royal Antwerp",
+    "criterionKeys": [
+      "club-royal-antwerp"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/6ef15f11a4dd3b8f.webp",
+    "sha256": "6ef15f11a4dd3b8f0dbeca39110d87898f46e522235bd660e2f4a8d65dc8d5dc",
+    "sourcePage": "https://en.wikipedia.org/wiki/Royal_Antwerp_FC",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/0/0b/Royal_Antwerp_Football_Club_logo.svg/330px-Royal_Antwerp_Football_Club_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "San Jose Earthquakes",
+    "criterionKeys": [
+      "club-san-jose-earthquakes"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/da0c9fe292af9dc2.webp",
+    "sha256": "da0c9fe292af9dc2b01dc52257872f18210da68f1b95c5d628581fe61384eebb",
+    "sourcePage": "https://en.wikipedia.org/wiki/San_Jose_Earthquakes",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/9/98/San_Jose_Earthquakes_2014.svg/330px-San_Jose_Earthquakes_2014.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Sepahan",
+    "criterionKeys": [
+      "club-sepahan"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/0f103e647a7172cd.webp",
+    "sha256": "0f103e647a7172cdbf56e242faeae3092119fae7ac9f1937f0cd4a58eb4b6c59",
+    "sourcePage": "https://en.wikipedia.org/wiki/Sepahan_S.C.",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/8/80/Sepahan_New_Logo.svg/330px-Sepahan_New_Logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Sevilla Atlético",
+    "criterionKeys": [
+      "club-sevilla-atletico"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/34ff37b881a5ac1f.webp",
+    "sha256": "34ff37b881a5ac1f2157fae88b2f784e2f1412d427269feb16f27125fac3d4d4",
+    "sourcePage": "https://en.wikipedia.org/wiki/Sevilla_Atl%C3%A9tico",
+    "sourceImage": "https://upload.wikimedia.org/wikipedia/en/e/e3/Sevilla_Atletico.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Sinop",
+    "criterionKeys": [
+      "club-sinop"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/82c698a025943feb.webp",
+    "sha256": "82c698a025943febd488740d1bce24b681d7f55944485db60b439b14d81e71e1",
+    "sourcePage": "https://en.wikipedia.org/wiki/Sinop_Futebol_Clube",
+    "sourceImage": "https://upload.wikimedia.org/wikipedia/en/5/5e/Sinop_Futebol_Clube.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "SKA-Khabarovsk",
+    "criterionKeys": [
+      "club-ska-khabarovsk"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/50f6a3962629267a.webp",
+    "sha256": "50f6a3962629267acf12641e7049ce6c964b052f29329f04bc49bd66644c2692",
+    "sourcePage": "https://en.wikipedia.org/wiki/FC_SKA-Khabarovsk",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/e/ee/FC_ska_khabarovsk_logo.png/330px-FC_ska_khabarovsk_logo.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Skonto FC",
+    "criterionKeys": [
+      "club-skonto-fc"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/807a49b11753c724.webp",
+    "sha256": "807a49b11753c724ab698369cfed576000625630ca528d75db1cdaa04c7301a7",
+    "sourcePage": "https://en.wikipedia.org/wiki/Skonto_FC",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/7/71/Skonto_FC_logo.svg/330px-Skonto_FC_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Slovan Bratislava",
+    "criterionKeys": [
+      "club-slovan-bratislava"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/b6a0a03d8e5c6c31.webp",
+    "sha256": "b6a0a03d8e5c6c31c6ad47d03e8383fa08f776cb4197179e0c00da81973e9d2b",
+    "sourcePage": "https://en.wikipedia.org/wiki/%C5%A0K_Slovan_Bratislava",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/01/SK_Slovan_Bratislava_logo.svg/330px-SK_Slovan_Bratislava_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Sochaux",
+    "criterionKeys": [
+      "club-sochaux"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/5953ecb864478cd2.webp",
+    "sha256": "5953ecb864478cd240ea142d03046d2f30e9ce37a49e54415a4efa4eab534e43",
+    "sourcePage": "https://en.wikipedia.org/wiki/FC_Sochaux-Montb%C3%A9liard",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/7/7c/FC_Sochaux-Montbeliard_logo.svg/330px-FC_Sochaux-Montbeliard_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Sparta Rotterdam",
+    "criterionKeys": [
+      "club-sparta-rotterdam"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/7a93df6998e6dd51.webp",
+    "sha256": "7a93df6998e6dd5123228ce39f4f1835c98134ae20cb20d6b701b08b7ac508d8",
+    "sourcePage": "https://en.wikipedia.org/wiki/Sparta_Rotterdam",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/9/9f/Sparta_Rotterdam_logo.svg/330px-Sparta_Rotterdam_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Stabæk",
+    "criterionKeys": [
+      "club-stab-k"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/3f6280ab97fed8dc.webp",
+    "sha256": "3f6280ab97fed8dc3822bc8ec9bc877261fedd9ae28cf984ffba3291fcd51419",
+    "sourcePage": "https://en.wikipedia.org/wiki/Stab%C3%A6k_Fotball",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/7/71/Stabaek_IF_logo.svg/330px-Stabaek_IF_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Standard Liège",
+    "criterionKeys": [
+      "club-standard-liege"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/45b41c66237e8f12.webp",
+    "sha256": "45b41c66237e8f12a3238e70cbc68a6f94c48afc63e596243c94cc78905d4a82",
+    "sourcePage": "https://en.wikipedia.org/wiki/Standard_Li%C3%A8ge",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/7/7e/Standard_Li%C3%A8ge_logo.svg/330px-Standard_Li%C3%A8ge_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Strasbourg",
+    "criterionKeys": [
+      "club-strasbourg"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/d81f75eb5e934ab6.webp",
+    "sha256": "d81f75eb5e934ab679e8e1b3b1ac292658bd9fb821de814aa30e9687ee087820",
+    "sourcePage": "https://en.wikipedia.org/wiki/RC_Strasbourg_Alsace",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/8/80/Racing_Club_de_Strasbourg_logo.svg/330px-Racing_Club_de_Strasbourg_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Sturm Graz",
+    "criterionKeys": [
+      "club-sturm-graz"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/8afbba25e97cb37f.webp",
+    "sha256": "8afbba25e97cb37f3b952c6997c9279b2e160b7d40102e4f11a8c9db04dac64c",
+    "sourcePage": "https://en.wikipedia.org/wiki/SK_Sturm_Graz",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/9/91/SK_Sturm_Graz_logo.svg/330px-SK_Sturm_Graz_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Swansea City",
+    "criterionKeys": [
+      "club-swansea-city"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/9a00527c5c099055.webp",
+    "sha256": "9a00527c5c09905533ab94f465b5028251b4fa18166a0494ccf716e7592b6800",
+    "sourcePage": "https://en.wikipedia.org/wiki/Swansea_City_A.F.C.",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/f/f9/Swansea_City_AFC_logo.svg/330px-Swansea_City_AFC_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Tobol Kostanay",
+    "criterionKeys": [
+      "club-tobol-kostanay"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/78b69d09f49b33a8.webp",
+    "sha256": "78b69d09f49b33a80b84dfd54680883cbdeb5e0944c4136fc4f21d96b50c580f",
+    "sourcePage": "https://en.wikipedia.org/wiki/FC_Tobol",
+    "sourceImage": "https://upload.wikimedia.org/wikipedia/en/4/49/FC_Tobyl_logo.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Torpedo Moscow",
+    "criterionKeys": [
+      "club-torpedo-moscow"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/a3ad35bf12722c44.webp",
+    "sha256": "a3ad35bf12722c44235ec16bcd17d54dfa39fe92058787f62fe0ec5854c38d14",
+    "sourcePage": "https://en.wikipedia.org/wiki/FC_Torpedo_Moscow",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/6/6e/FC_Torpedo_Moscow_logo.svg/330px-FC_Torpedo_Moscow_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Ulsan Hyundai",
+    "criterionKeys": [
+      "club-ulsan-hyundai"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/8d22a8e382498003.webp",
+    "sha256": "8d22a8e382498003a8c3e673d087177e2a1f7caa7fe44886ecfdf33cd0c80476",
+    "sourcePage": "https://en.wikipedia.org/wiki/Ulsan_HD_FC",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/b/b5/Ulsan_Hyundai_FC.svg/330px-Ulsan_Hyundai_FC.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Union Berlin",
+    "criterionKeys": [
+      "club-union-berlin"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/0b22b6162839e2a2.webp",
+    "sha256": "0b22b6162839e2a2cd8fe8fb41c92be700d1bd71fdddf5469eb8cd1a32dc17fb",
+    "sourcePage": "https://en.wikipedia.org/wiki/1._FC_Union_Berlin",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/44/1._FC_Union_Berlin_Logo.svg/330px-1._FC_Union_Berlin_Logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Universidad Católica",
+    "criterionKeys": [
+      "club-universidad-catolica"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/a8f994fc71e62939.webp",
+    "sha256": "a8f994fc71e629390a6367cb8a0a690984b8d3629603ec5991ecf275df2779b7",
+    "sourcePage": "https://en.wikipedia.org/wiki/Club_Deportivo_Universidad_Cat%C3%B3lica",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/ca/Escudo_Club_Deportivo_Universidad_Cat%C3%B3lica.svg/330px-Escudo_Club_Deportivo_Universidad_Cat%C3%B3lica.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Universidad de Chile",
+    "criterionKeys": [
+      "club-universidad-de-chile"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/388ff9e60b0038a6.webp",
+    "sha256": "388ff9e60b0038a6aa1c714fa2cf19db5ccdf6312dd41c0cba81afe57fc10e68",
+    "sourcePage": "https://en.wikipedia.org/wiki/Club_Universidad_de_Chile",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2d/Emblema_del_Club_Universidad_de_Chile.png/330px-Emblema_del_Club_Universidad_de_Chile.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Universitatea Craiova",
+    "criterionKeys": [
+      "club-universitatea-craiova"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/78de0d44816ea9d5.webp",
+    "sha256": "78de0d44816ea9d501d1ce04fd8de80815df879a1c82a09ebc76d3d3acb0a08c",
+    "sourcePage": "https://en.wikipedia.org/wiki/CS_Universitatea_Craiova",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/0/02/CS_Universitatea_Craiova_logo.svg/330px-CS_Universitatea_Craiova_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Ural Yekaterinburg",
+    "criterionKeys": [
+      "club-ural-yekaterinburg"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/703474bc11fc63f5.webp",
+    "sha256": "703474bc11fc63f5a6461ea5d462b453386c00b089e8f42df7b31c543691ab45",
+    "sourcePage": "https://en.wikipedia.org/wiki/FC_Ural_Yekaterinburg",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/8/8f/FC_Ural_Yekaterinburg_logo.svg/330px-FC_Ural_Yekaterinburg_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Vélez Sarsfield",
+    "criterionKeys": [
+      "club-velez-sarsfield"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/a5c336ab18f70add.webp",
+    "sha256": "a5c336ab18f70add0c4cb8dcead912a2d7877909119274ded2f3e8cbf7263be2",
+    "sourcePage": "https://en.wikipedia.org/wiki/Club_Atl%C3%A9tico_V%C3%A9lez_Sarsfield",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/21/Escudo_del_Club_Atl%C3%A9tico_V%C3%A9lez_Sarsfield.svg/330px-Escudo_del_Club_Atl%C3%A9tico_V%C3%A9lez_Sarsfield.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Vitesse",
+    "criterionKeys": [
+      "club-vitesse"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/d6793ae42ddb5a63.webp",
+    "sha256": "d6793ae42ddb5a63871796608ffb16e87e9477d4355632bcd6a2a30d20f4906c",
+    "sourcePage": "https://en.wikipedia.org/wiki/SBV_Vitesse",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/c/c8/SBV_Vitesse_logo.svg/330px-SBV_Vitesse_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Watford",
+    "criterionKeys": [
+      "club-watford"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/7c1e2213dcc94a08.webp",
+    "sha256": "7c1e2213dcc94a0846e1e45a09a92f6827f9b694b8d28579d8df5d848eb2bdcf",
+    "sourcePage": "https://en.wikipedia.org/wiki/Watford_F.C.",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/e/e2/Watford.svg/330px-Watford.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Wolfsberger AC",
+    "criterionKeys": [
+      "club-wolfsberger-ac"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/b114c1c94f769f1e.webp",
+    "sha256": "b114c1c94f769f1eb8fbdaa9829e4a95d7f8d9558dd8d851f55b3038a269cf00",
+    "sourcePage": "https://en.wikipedia.org/wiki/Wolfsberger_AC",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/c/cd/Wolfsberger_AC_logo.svg/330px-Wolfsberger_AC_logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Zenit Saint Petersburg",
+    "criterionKeys": [
+      "club-zenit-saint-petersburg"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/0eb8246eb3e61db7.webp",
+    "sha256": "0eb8246eb3e61db72259254acf6537dd52b9328ee1869907b9a77920c733f09a",
+    "sourcePage": "https://en.wikipedia.org/wiki/FC_Zenit_Saint_Petersburg",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/e/eb/FC_Zenit_Saint_Petersburg_crest.svg/330px-FC_Zenit_Saint_Petersburg_crest.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Zestaponi",
+    "criterionKeys": [
+      "club-zestaponi"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/cfc1034e2da2cbef.webp",
+    "sha256": "cfc1034e2da2cbefc186cee4c6208faeddf35ebbbe5bd2a3380ae972d64f0efe",
+    "sourcePage": "https://en.wikipedia.org/wiki/FC_Zestaponi",
+    "sourceImage": "https://upload.wikimedia.org/wikipedia/en/d/db/FC_Zestafoni_Logo.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Nacional",
+    "criterionKeys": [
+      "club-nacional"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/505e44cd9fb53455.webp",
+    "sha256": "505e44cd9fb53455f045664fbfe9db729b3ac319575d2886553a54f58df19c87",
+    "sourcePage": "https://en.wikipedia.org/wiki/Club_Nacional_de_Football",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e6/Club_Nacional_de_Football.png/330px-Club_Nacional_de_Football.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Karpaty Lviv",
+    "criterionKeys": [
+      "club-karpaty-lviv"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/1967ed05bfe33f8d.webp",
+    "sha256": "1967ed05bfe33f8d3ea2b3fca87d623e6a90ccfedb0c9891e41294668faa9584",
+    "sourcePage": "https://en.wikipedia.org/wiki/FC_Karpaty_Lviv",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/en/thumb/a/a3/FC_Karpaty_Lviv.svg/330px-FC_Karpaty_Lviv.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  },
+  {
+    "label": "Atlético Nacional",
+    "criterionKeys": [
+      "club-atletico-nacional"
+    ],
+    "assetPath": "/assets/football-grid/reviewed-clubs/f9a311d1a440665e.webp",
+    "sha256": "f9a311d1a440665e9b85f28fd3678a0a231192b32237fbd061b4ff5486fbb2df",
+    "sourcePage": "https://en.wikipedia.org/wiki/Atl%C3%A9tico_Nacional",
+    "sourceImage": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ae/Atletico_Nacional_Logo.svg/330px-Atletico_Nacional_Logo.svg.png?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail",
+    "reviewedOn": "2026-09-21"
+  }
+]

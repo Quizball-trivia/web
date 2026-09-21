@@ -1,0 +1,566 @@
+[
+  {
+    "playerId": "0077bb4e-f548-4618-81c3-ef73ddf04bed",
+    "name": "Thiago",
+    "reason": "Provider has no photograph",
+    "sourcePage": "https://www.transfermarkt.com/-/profil/spieler/37623"
+  },
+  {
+    "playerId": "007a98f7-9cab-4608-9dcb-dc8559a19528",
+    "name": "Patrick",
+    "reason": "Provider has no photograph",
+    "sourcePage": "https://www.transfermarkt.com/-/profil/spieler/1130054"
+  },
+  {
+    "playerId": "044b96ac-df4c-4748-a2ad-f969184a514c",
+    "name": "Alex",
+    "reason": "Provider has no photograph",
+    "sourcePage": "https://www.transfermarkt.com/-/profil/spieler/140957"
+  },
+  {
+    "playerId": "126e7058-b58a-4b89-84a4-bc2fa87acd91",
+    "name": "Riquelme",
+    "reason": "Provider has no photograph",
+    "sourcePage": "https://www.transfermarkt.com/-/profil/spieler/1366040"
+  },
+  {
+    "playerId": "12753bd7-f2e9-4413-a179-a26ab5d71fb4",
+    "name": "Marcão",
+    "reason": "Provider has no photograph",
+    "sourcePage": "https://www.transfermarkt.com/-/profil/spieler/89561"
+  },
+  {
+    "playerId": "0080f9c3-4de6-4ee7-8125-f6caceb938cd",
+    "name": "Edwin Cardona",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Edwin_Cardona"
+  },
+  {
+    "playerId": "02644407-fba6-49af-87c6-96972c6acd9b",
+    "name": "Márcio Amoroso",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Márcio_Amoroso"
+  },
+  {
+    "playerId": "0a060a9d-b1a3-4d5d-913c-62cf70cca9af",
+    "name": "Levan Tskitishvili",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Levan_Tskitishvili"
+  },
+  {
+    "playerId": "11c9b9e8-5994-48f4-830c-e1c8a46b4477",
+    "name": "Federico Insúa",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Federico_Ins%C3%BAa"
+  },
+  {
+    "playerId": "1b047a78-63fa-4a17-ad84-457aa94e0a10",
+    "name": "Levan Khmaladze",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Levan_Khmaladze"
+  },
+  {
+    "playerId": "212efd0e-17a9-446b-8d55-914627c60b88",
+    "name": "Omar Migineishvili",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Omar_Migineishvili"
+  },
+  {
+    "playerId": "25fd9a71-28e5-4d4c-9787-ca561bae9274",
+    "name": "Ezequiel Bullaude",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Ezequiel_Bullaude"
+  },
+  {
+    "playerId": "26becf3f-34ac-4be0-983a-2d5d43bf75c3",
+    "name": "Lasha Parunashvili",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Lasha_Parunashvili"
+  },
+  {
+    "playerId": "2812bcbc-8aec-437d-9a99-0c7b1fcc114a",
+    "name": "Nika Sandokhadze",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Nika_Sandokhadze"
+  },
+  {
+    "playerId": "2fab1be9-8128-4d39-bac2-45605a791cc1",
+    "name": "Lazare Kupatadze",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Lazare_Kupatadze"
+  },
+  {
+    "playerId": "339c451f-104f-4cb3-972d-dccbf6774b34",
+    "name": "Julián Carranza",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Juli%C3%A1n_Carranza"
+  },
+  {
+    "playerId": "4462431d-b00b-4cc2-8310-301e00bf2eda",
+    "name": "Levan Kharabadze",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Levan_Kharabadze"
+  },
+  {
+    "playerId": "61660003-1f46-47e7-86a6-ef55ffff194a",
+    "name": "Gabriel Sigua",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Gabriel_Sigua"
+  },
+  {
+    "playerId": "636b5a76-fd01-43cc-857f-ca9b00e9ec8d",
+    "name": "Murtaz Shelia",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Murtaz_Shelia"
+  },
+  {
+    "playerId": "6ad399d3-7fb1-4177-9841-156fa24cf279",
+    "name": "Giorgi Arabidze",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Giorgi_Arabidze"
+  },
+  {
+    "playerId": "714fc5d2-d7a8-4c96-8538-72bdef8034a5",
+    "name": "Julio Cruz",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Julio_Cruz_(Argentine_footballer)"
+  },
+  {
+    "playerId": "7e2eafc6-fce9-4572-829e-e137b1641e01",
+    "name": "Tengiz Sulakvelidze",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Tengiz_Sulakvelidze"
+  },
+  {
+    "playerId": "7fe1f0a7-4b02-4de5-9034-e3b99b441099",
+    "name": "Giorgi Gadrani",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Giorgi_Gadrani"
+  },
+  {
+    "playerId": "8689a702-6f6e-4edd-a8da-f6100693344d",
+    "name": "Luka Lakvekheliani",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Luka_Lakvekheliani"
+  },
+  {
+    "playerId": "8716cb1b-c61f-4ad0-9f82-b0a28674c8c2",
+    "name": "Mate Tsintsadze",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Mate_Tsintsadze"
+  },
+  {
+    "playerId": "8bf874c8-bf60-4ff9-bddc-0c66fdf0a452",
+    "name": "Valeri Abramidze",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Valeri_Abramidze"
+  },
+  {
+    "playerId": "a2cac979-503c-4468-970f-ee23f2563593",
+    "name": "Georgi Nemsadze",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Georgi_Nemsadze"
+  },
+  {
+    "playerId": "a3604322-73ff-4eb3-9e5b-b9ab35cb241c",
+    "name": "Pablo Migliore",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Pablo_Migliore"
+  },
+  {
+    "playerId": "b1896627-dad0-425f-b2f0-a623171156a7",
+    "name": "Kakhaber Kacharava",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Kakhaber_Kacharava"
+  },
+  {
+    "playerId": "bb9b8149-0138-4165-b453-83a1aa37b587",
+    "name": "Archil Arveladze",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Archil_Arveladze"
+  },
+  {
+    "playerId": "c8973b26-5c73-44bf-89a8-95a3a05df364",
+    "name": "Kakhaber Tskhadadze",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Kakhaber_Tskhadadze"
+  },
+  {
+    "playerId": "cb9b14fb-78a0-4dad-90ef-97f0e1cc0a60",
+    "name": "Vitali Daraselia Jr.",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Vitali_Daraselia_Jr."
+  },
+  {
+    "playerId": "cbe31a5c-8ec4-43f0-ad8b-04a5a3eba6ae",
+    "name": "Nikoloz Gelashvili",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Nikoloz_Gelashvili"
+  },
+  {
+    "playerId": "cc2c9acd-4a79-436d-9a2e-036be9585e20",
+    "name": "Tornike Kapanadze",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Tornike_Kapanadze"
+  },
+  {
+    "playerId": "dea950e7-817d-42c7-96bb-126fccf77c35",
+    "name": "Gocha Jamarauli",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Gocha_Jamarauli"
+  },
+  {
+    "playerId": "df110919-d708-45cc-8d5d-34cfaf8f431b",
+    "name": "Dimitri Kudinov",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Dimitri_Kudinov"
+  },
+  {
+    "playerId": "e237aa86-ccec-4843-8fcf-92cb2478df1e",
+    "name": "Ramaz Shengelia",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Ramaz_Shengelia"
+  },
+  {
+    "playerId": "e9b8bf5c-9ac0-4704-bac9-17b609736e2e",
+    "name": "Gastón Ávila",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Gast%C3%B3n_%C3%81vila"
+  },
+  {
+    "playerId": "e580f2eb-0b50-4dbf-898a-da84aa0a46ed",
+    "name": "Otar Khizaneishvili",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Otar_Khizaneishvili"
+  },
+  {
+    "playerId": "e9ffdc5b-ca72-4532-ad7c-b2b2833185f7",
+    "name": "Juninho Paulista",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Juninho_Paulista"
+  },
+  {
+    "playerId": "e9eeafc4-8564-4022-bd10-4dab2f941077",
+    "name": "Levan Kutalia",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Levan_Kutalia"
+  },
+  {
+    "playerId": "ebc79aa5-5b20-45f1-8635-afe38cc8f360",
+    "name": "Boris Paichadze",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Boris_Paichadze"
+  },
+  {
+    "playerId": "ecf4b933-61cd-47d1-bcdc-3c115368327b",
+    "name": "Irakli Sikharulidze",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Irakli_Sikharulidze"
+  },
+  {
+    "playerId": "f0efc1d1-cece-47fc-9f52-e1f0dc8694a8",
+    "name": "Paulo Díaz",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Paulo_D%C3%ADaz"
+  },
+  {
+    "playerId": "f6daa9d6-5365-481b-a668-2b13e0709251",
+    "name": "Lasha Shindagoridze",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Lasha_Shindagoridze"
+  },
+  {
+    "playerId": "f762d272-1944-40aa-83bb-79c02b97783f",
+    "name": "Alberto Acosta",
+    "reason": "Provider HTTP 403",
+    "sourcePage": "https://en.wikipedia.org/wiki/Alberto_Acosta"
+  },
+  {
+    "playerId": "13a35d20-65ea-40e7-86c2-bffe5f08acaa",
+    "name": "Robinho",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "1d592ea3-d58c-4bf4-be37-843eace1cfd6",
+    "name": "Alan",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "1eb626ba-e90a-47bc-b43a-ba9ebcb28069",
+    "name": "Martin Albrechtsen",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "252d6910-4a27-494e-ac6e-04e00c690f1e",
+    "name": "Ramires",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "25868ec1-968e-4507-8831-52e4c4184f85",
+    "name": "Luís Figo",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "30b8ac34-0417-46a0-bf1a-52ab79b064a1",
+    "name": "Julio César",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "37599ccf-3bf1-465d-b3ae-0857c00addd7",
+    "name": "Mané",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "3f61156e-8685-41ed-ae30-494649aed28f",
+    "name": "Cláudio",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "41e554ed-6e31-44e1-beff-c7cb9cac8ba9",
+    "name": "Dejan Stankovic",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "4f686b06-ee9c-4a82-9791-accc905279ed",
+    "name": "Raí",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "5688438b-6436-44d5-a582-aa001200c6e8",
+    "name": "Ricardo",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "5ac2aa32-8c68-4617-8401-40523479e726",
+    "name": "Thiago",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "6747e0e1-d11b-4ed2-8a66-06ad6003f3b0",
+    "name": "Cláudio",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "70960f60-a033-4dfd-b5fb-3627c6a459ba",
+    "name": "Pedro",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "70b6ed6a-8183-4df4-ad33-6ed753c12b15",
+    "name": "Jota",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "72240a4e-da47-4b04-b614-598726093672",
+    "name": "Christopher",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "772ea114-9ffa-4d45-83a9-7ebf360fa51a",
+    "name": "Eduardo",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "7cf1c771-3883-4688-8bf1-63f4cec89040",
+    "name": "Riquelme",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "807ce2a2-dfb6-4630-a0a4-d51353186288",
+    "name": "Tiago Silva",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "8618e806-ffc0-495f-930e-ebb8dcd2d717",
+    "name": "Lúcio",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "8b7e1fe6-db39-40a6-9005-bc922101457a",
+    "name": "Alex Ferguson",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "8dc28dac-fe8c-4deb-b427-b7e790113fde",
+    "name": "Enzo",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "99b0cd43-c998-4497-b7b6-25bd7c618517",
+    "name": "Fabinho",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "9f8547d2-0906-4d8f-b5e5-009fea60287d",
+    "name": "Marquinhos",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "a1af2927-4921-47c3-90ab-ab5f697ce65b",
+    "name": "Patrick",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "a6f54d96-3c7d-4e38-812a-982645c205f5",
+    "name": "Didi",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "acbe0afe-01ae-49a0-a462-8a7ed96f0ac0",
+    "name": "Felix",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "ade6a923-f142-4a16-8eef-e2e1fde88e3b",
+    "name": "Tiago Silva",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "b24ac7b2-b9d2-4028-9a1d-fe78ca6ce783",
+    "name": "André Silva",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "b28e8f60-a625-452d-903a-9d5751ae8c53",
+    "name": "Gonçalo",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "b60a4c95-40f9-4aa5-a8e3-b02256527168",
+    "name": "Samuel",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "b8f5efc1-ecb0-4df3-bca2-5f8bcd8d4616",
+    "name": "Eduardo",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "bd9ce898-c4fe-4153-b8d9-aa5e94ed25a9",
+    "name": "Julio Cesar",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "c138e922-bdd6-4948-93ad-dfb0f6816f88",
+    "name": "Stephen McManus",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "c6acae73-2e2f-41e5-bc38-07b2563a772b",
+    "name": "Paulo Assunção",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "d4220867-b23b-4d84-9722-8ebe52ab4778",
+    "name": "Tiago Silva",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "d8291186-b273-4fd2-8109-b59cee363b45",
+    "name": "Totti",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "dc501cff-df4d-4155-b821-693158f12805",
+    "name": "Luciano Galletti",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "e28dc2f0-162a-4ee1-b58c-f9a057a8c821",
+    "name": "Santos",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "e54ce4e7-851f-432a-983f-7f9b560852ee",
+    "name": "Alex",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "e6bac470-2986-44e9-99be-bfd801c84d8b",
+    "name": "Rivaldo",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "e87ef776-d498-4590-b059-df8d79272e79",
+    "name": "Zubi",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "e8d4ff48-1d5b-44f4-b805-441bfab623b8",
+    "name": "Denílson",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "ed60a3be-8c6c-4d47-9c6e-2b92d78f7ef2",
+    "name": "Enzo",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "f247f7b4-a2e3-48e7-8c71-8ca456556e11",
+    "name": "Michel",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "f4657822-69d8-41a4-be0d-ba00d3091e85",
+    "name": "Adriano",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "f9927bdc-e497-4da7-a0ae-53deb56311ab",
+    "name": "Ibrahim Toraman",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  },
+  {
+    "playerId": "fb34f6b7-df26-45d7-9099-479495a6ee86",
+    "name": "Kim",
+    "reason": "Provider HTTP 403",
+    "sourcePage": null
+  }
+]

@@ -1,6 +1,7 @@
 'use client';
 
 import { useDevGameAudio } from '@/lib/sounds/dev/DevGameAudio';
+import Link from 'next/link';
 import type { DevSoundEvent } from '@/lib/sounds/dev/profiles';
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -131,6 +132,8 @@ const PREVIEW_RESULT_SAMPLES: FootballGridCompletedPayload['samples'] = [
 ];
 
 type ScenarioId =
+  | 'board-labels'
+  | 'long-labels'
   | 'searching'
   | 'pairing'
   | 'handoff'
@@ -159,6 +162,8 @@ const SCENARIOS: Array<{
   group: 'Matchmaking' | 'Match' | 'Feedback' | 'System' | 'Results' | 'Content';
   icon: typeof Search;
 }> = [
+  { id: 'board-labels', label: 'Labels + La Liga logo', group: 'Match', icon: LayoutGrid },
+  { id: 'long-labels', label: 'Long clues + portraits', group: 'Match', icon: LayoutGrid },
   { id: 'packs', label: 'League packs (draft release)', group: 'Content', icon: LayoutGrid },
   { id: 'mode-modal', label: 'Mode modal + league picker', group: 'Content', icon: Flag },
   { id: 'searching', label: 'Finding opponent', group: 'Matchmaking', icon: Search },
@@ -198,6 +203,26 @@ function stateForScenario(scenario: ScenarioId): FootballGridState {
             : 'turn';
   return {
     ...PREVIEW_STATE,
+    ...(scenario === 'board-labels' || scenario === 'long-labels' ? {
+      claims: [],
+      board: {
+        ...PREVIEW_STATE.board,
+        columns: [
+          criterion('born-1990s', 'wildcard', 'Born in the 1990s', 'დაბადებული 1990-იანებში', 'born-1990s'),
+          criterion('born-1980s', 'wildcard', 'Born in the 1980s', 'დაბადებული 1980-იანებში', 'born-1980s'),
+          criterion('la-liga', 'league', 'La Liga', 'ლა ლიგა', '/assets/football-grid/leagues/la-liga-fallback.svg'),
+        ],
+        rows: scenario === 'long-labels' ? [
+          criterion('del-piero', 'teammate', 'Club teammate of Alessandro Del Piero', 'ერთ კლუბში ითამაშა ალესანდრო დელ პიერო-სთან', '/assets/football-grid/players/56740d17-5ee9-4ef2-8ad4-766dbea01ec3.webp'),
+          criterion('titles-multiple-countries', 'wildcard', 'League champion in multiple countries', 'ჩემპიონი რამდენიმე ქვეყანაში', 'titles-multiple-countries'),
+          criterion('croatia', 'country', 'Croatia', 'ხორვატია', 'hr'),
+        ] : [
+          criterion('croatia', 'country', 'Croatia', 'ხორვატია', 'hr'),
+          criterion('champions-league-2plus', 'wildcard', '2+ Champions League titles', 'ჩემპიონთა ლიგის 2+ ტიტული', 'champions-league-2plus'),
+          criterion('ballon-dor-winner', 'wildcard', 'Ballon d’Or winner', 'ოქროს ბურთის მფლობელი', 'ballon-dor-winner'),
+        ],
+      },
+    } : {}),
     phase,
     status: phase === 'paused' || phase === 'service_interruption'
       ? 'paused'
@@ -262,6 +287,7 @@ function MatchScenario({ scenario }: { scenario: ScenarioId }) {
           answer={answer}
           onAnswerChange={setAnswer}
           onSubmit={handleSubmit}
+          onCancel={() => setSelectedCell(null)}
           feedback={feedback}
           reportableAttempt={feedback && feedback !== 'correct' ? 'preview-attempt' : null}
           onReport={() => undefined}
@@ -538,8 +564,9 @@ function ModeModalScenario() {
 
 export function FootballGridDevPreview() {
   const audio = useDevGameAudio();
-  const [scenario, setScenario] = useState<ScenarioId>('searching');
-  const [panelOpen, setPanelOpen] = useState(true);
+  const { locale, setLocale } = useLocale();
+  const [scenario, setScenario] = useState<ScenarioId>('board-labels');
+  const [panelOpen, setPanelOpen] = useState(false);
   const selected = SCENARIOS.find((item) => item.id === scenario)!;
 
   return (
@@ -561,11 +588,21 @@ export function FootballGridDevPreview() {
             <p className="font-poppins text-[10px] font-black uppercase tracking-[0.22em] text-brand-yellow">Development route</p>
             <h1 className="mt-1 font-poppins text-xl font-black uppercase leading-tight">Tic Tac Toe UI workshop</h1>
             <p className="mt-2 text-xs leading-relaxed text-white/45">Choose any screen or match state. This panel is never included in production.</p>
+            <Link href="/dev/tic-tac-toe/clues" className="mt-4 block rounded-xl bg-brand-yellow px-3 py-3 text-center text-sm font-bold text-black">Review all clues ↗</Link>
           </div>
 
           <div className="mt-5 rounded-2xl border border-brand-blue-light/30 bg-brand-blue/10 p-3">
             <p className="text-[10px] font-black uppercase tracking-wider text-brand-blue-light">Now previewing</p>
             <p className="mt-1 font-poppins text-sm font-black uppercase">{selected.label}</p>
+          </div>
+
+          <div className="mt-4 flex gap-2" aria-label="Preview language">
+            {(['en', 'ka', 'es', 'tr'] as const).map((language) => (
+              <button key={language} type="button" aria-pressed={locale === language} onClick={() => setLocale(language)}
+                className={cn('rounded-lg px-3 py-2 text-xs font-bold uppercase', locale === language ? 'bg-brand-yellow text-black' : 'bg-white/10 text-white')}>
+                {language}
+              </button>
+            ))}
           </div>
 
           <div className="mt-5 space-y-5">
