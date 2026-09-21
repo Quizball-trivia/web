@@ -54,7 +54,8 @@ import { CoinRewardChip, RewardChip } from '@/features/game/results/RankedProgre
 import { CriterionAsset } from './components/CriterionAsset';
 import { useRealtimeFootballGrid } from './realtime/useRealtimeFootballGrid';
 import type { Locale } from '@/lib/i18n/messages';
-import { criterionLabel as localizedCriterionLabel } from './criterionLabel';
+import { criterionLabel as localizedCriterionLabel, compactCriterionLabel } from './criterionLabel';
+import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 
 export const FOOTBALL_GRID_COPY = {
   en: {
@@ -680,7 +681,7 @@ const BOARD_BUILD_ITEM = {
   visible: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring', stiffness: 380, damping: 26 } },
 } as const;
 
-function CriterionHeader({
+export function CriterionHeader({
   criterion,
   locale,
   axis,
@@ -691,26 +692,23 @@ function CriterionHeader({
 }) {
   const label = localizedCriterionLabel(criterion, locale);
   const portrait = criterion.family === 'manager' || criterion.family === 'teammate';
-  if (axis === 'row') {
-    return (
-      <div
-        title={label}
-        className="flex min-w-0 items-center justify-center overflow-hidden rounded-[20px] border border-white/10 bg-gradient-to-b from-brand-blue to-brand-blue/75 p-1.5 shadow-[0_10px_24px_rgba(11,51,190,.28)]"
-      >
-        <span className={cn('grid size-11 place-items-center sm:size-14', portrait && 'overflow-hidden rounded-full')}>
-          <CriterionAsset criterion={criterion} className={portrait ? 'size-full' : 'size-9 sm:size-11'} />
-        </span>
-        <span className="sr-only">{label}</span>
-      </div>
-    );
-  }
   return (
-    <div className="flex min-h-[78px] min-w-0 flex-col items-center justify-center gap-1 rounded-[20px] border border-yellow-200/40 bg-gradient-to-b from-brand-yellow-soft to-brand-yellow px-1.5 py-2 text-center shadow-[0_10px_24px_rgba(255,214,0,.13)] sm:min-h-[82px]">
-      <span className={cn('grid size-11 place-items-center sm:size-12', portrait && 'overflow-hidden rounded-full')}>
-        <CriterionAsset criterion={criterion} className={portrait ? 'size-full' : 'size-9 sm:size-10'} />
-      </span>
-      <span lang={locale} className="line-clamp-3 hyphens-auto break-words font-poppins text-[9px] font-black uppercase leading-[1.1] text-black/80 [overflow-wrap:anywhere] sm:text-[10px]">{label}</span>
-    </div>
+    <Popover>
+      <PopoverTrigger asChild>
+        <button type="button" aria-label={label} title={label} className={cn(
+          'flex min-h-[78px] min-w-0 flex-col items-center justify-center gap-1 rounded-[20px] border px-1.5 py-2 text-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
+          axis === 'row' ? 'border-white/10 bg-gradient-to-b from-brand-blue to-brand-blue/75 text-white' : 'border-yellow-200/40 bg-gradient-to-b from-brand-yellow-soft to-brand-yellow text-black/80',
+        )}>
+          <span className={cn('grid size-9 shrink-0 place-items-center sm:size-11', portrait && 'overflow-hidden rounded-full')}>
+            <CriterionAsset criterion={criterion} className={portrait ? 'size-full' : 'size-8 sm:size-10'} />
+          </span>
+          <span lang={locale} className="hyphens-auto break-words font-poppins text-[9px] font-black uppercase leading-tight [overflow-wrap:anywhere] sm:text-[10px]">{compactCriterionLabel(criterion, locale)}</span>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent side="top" className="max-w-[calc(100vw-2rem)] border-white/20 bg-surface-card text-center text-sm font-bold text-white">
+        <span lang={locale} className="break-words">{label}</span>
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -795,7 +793,7 @@ export function MatchBoard({
       // the countdown phase reveals the board and fires the build-in stagger.
       animate={state.phase === 'handoff' || state.phase === 'loading' ? 'hidden' : 'visible'}
       data-grid-anchor="board"
-      className="grid grid-cols-[50px_repeat(3,minmax(0,1fr))] gap-2 sm:grid-cols-[64px_repeat(3,minmax(0,1fr))]"
+      className="grid grid-cols-[72px_repeat(3,minmax(0,1fr))] gap-1.5 sm:grid-cols-[88px_repeat(3,minmax(0,1fr))] sm:gap-2"
     >
       <div />
       {state.board.columns.map((criterion) => <CriterionHeader key={criterion.id} criterion={criterion} locale={locale} axis="column" />)}
@@ -1250,7 +1248,7 @@ export function FootballGridTurnPanel({
                       <div className="grid size-12 shrink-0 place-items-center rounded-xl bg-white/90 p-1.5">
                         <CriterionAsset criterion={criterion} className="size-full text-surface-card ring-0" />
                       </div>
-                      <span className="line-clamp-2 font-poppins text-[11px] font-black uppercase leading-tight text-white">
+                      <span className="break-words font-poppins text-[11px] font-black uppercase leading-tight text-white [overflow-wrap:anywhere]">
                         {criterionLabel(criterion)}
                       </span>
                     </div>

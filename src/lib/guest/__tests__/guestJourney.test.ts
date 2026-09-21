@@ -9,6 +9,42 @@ beforeEach(() => {
 });
 afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers(); });
 describe('guest conversion client', () => {
+  it('deduplicates repeated sign-in notifications and stops after eight transient failures', async () => {
+    vi.useFakeTimers();
+    mocks.fetch.mockResolvedValue({ ok: false, status: 503 });
+    const { linkGuestJourney, flushGuestJourney } = await import('../guestJourney');
+    linkGuestJourney('member-1'); linkGuestJourney('member-1');
+    await flushGuestJourney();
+    expect(mocks.fetch).toHaveBeenCalledTimes(1);
+    for (let attempt = 0; attempt < 12; attempt++) {
+      linkGuestJourney('member-1');
+      await vi.advanceTimersByTimeAsync(15_000);
+      await flushGuestJourney();
+    }
+    expect(mocks.fetch).toHaveBeenCalledTimes(8);
+    expect(mocks.retireGuestToken).not.toHaveBeenCalled();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+  it('does not retry terminal authorization failures', async () => {
+    vi.useFakeTimers();
+    mocks.fetch.mockResolvedValue({ ok: false, status: 401 });
+    const { linkGuestJourney, flushGuestJourney } = await import('../guestJourney');
+    linkGuestJourney('member-1'); await flushGuestJourney();
+    await vi.advanceTimersByTimeAsync(60_000);
+    linkGuestJourney('member-1'); await flushGuestJourney();
+    expect(mocks.fetch).toHaveBeenCalledTimes(1);
+    expect(mocks.retireGuestToken).not.toHaveBeenCalled();
+  });
+  it('cancels a scheduled link retry on logout', async () => {
+    vi.useFakeTimers();
+    mocks.fetch.mockRejectedValue(new Error('offline'));
+    const { linkGuestJourney, resetGuestJourneyMember, flushGuestJourney } = await import('../guestJourney');
+    linkGuestJourney('member-1'); await flushGuestJourney();
+    resetGuestJourneyMember();
+    await vi.advanceTimersByTimeAsync(60_000); await flushGuestJourney();
+    expect(mocks.fetch).toHaveBeenCalledTimes(1);
+    expect(vi.getTimerCount()).toBe(0);
+  });
   it('covers each game start family without mistaking views for play', async () => {
     const { journeyStep } = await import('../guestJourney');
     for (const event of ['game_start','match_started','daily_challenge_started','mini_game_round_started','road_to_goal_run_started','ggt_session_started','quiz_start','training_started','party_quiz_started']) {

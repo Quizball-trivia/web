@@ -1,7 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { FootballGridState } from '@/lib/realtime/socket.types';
-import { DrawOfferPrompt, FOOTBALL_GRID_COPY, GridHud, SeriesSplash } from '../FootballGridFlowScreen';
+import { CriterionHeader, DrawOfferPrompt, FOOTBALL_GRID_COPY, GridHud, SeriesSplash } from '../FootballGridFlowScreen';
 
 vi.mock('@/components/AvatarDisplay', () => ({ AvatarDisplay: () => <div data-testid="avatar" /> }));
 vi.mock('@/features/possession/components/MatchHudPrimitives', () => ({ MatchHudAvatar: () => <div data-testid="avatar" /> }));
@@ -44,6 +44,18 @@ function turnState(overrides: Partial<FootballGridState> = {}): FootballGridStat
 
 const series = { seriesId: 's1', format: 'bo3' as const, gameIndex: 2, targetWins: 2, wins: { me: 1, opp: 0 }, draws: 0, winnerUserId: null, finished: false };
 const opponent = { id: 'opp', username: 'Rival', avatarUrl: null };
+
+describe('CriterionHeader', () => {
+  it('shows a row label and opens the full localized clue on tap', async () => {
+    const clue = { ...criterion('teammate'), family: 'teammate' as const, labelEn: 'Club teammate of Alessandro Del Piero', labelKa: 'ალესანდრო დელ პიეროს თანაგუნდელი კლუბში' };
+    render(<CriterionHeader criterion={clue} locale="en" axis="row" />);
+    expect(screen.getByText('Club teammate · Alessandro Del Piero').className).not.toContain('sr-only');
+    fireEvent.click(screen.getByRole('button', { name: clue.labelEn }));
+    expect(await screen.findByRole('dialog')).toHaveTextContent(clue.labelEn);
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+});
 
 describe('GridHud', () => {
   it('shows the series score, game index, turn pill, clock and both actions on my turn', () => {
