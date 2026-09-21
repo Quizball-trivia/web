@@ -20,3 +20,11 @@ export function criterionLabel(criterion: LabelledCriterion, locale: Locale): st
       return criterion.labelEn;
   }
 }
+
+/** Shorten the relationship wording without dropping the club-only distinction. */
+export function compactCriterionLabel(criterion: LabelledCriterion, locale: Locale): string {
+  return criterionLabel(criterion, locale)
+    .replace(/^Club teammate of (.+)$/, 'Club teammate · $1')
+    .replace(/^Compañero de club de (.+)$/, 'Compañero de club · $1')
+    .replace(/^(.+) ile aynı kulüpte oynadı$/, '$1 · aynı kulüp');
+}
