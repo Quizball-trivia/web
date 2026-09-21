@@ -1,3 +1,5 @@
+import { flushGuestJourney } from "@/lib/guest/guestJourney";
+import { peekGuestToken } from "@/lib/guest/guestSession";
 import { API_BASE_URL } from "@/lib/config";
 import { getSupabaseAccessToken } from "@/lib/auth/supabase";
 import { trackApiError } from "@/lib/analytics/game-events";
@@ -133,6 +135,14 @@ async function request<M extends HttpMethod, P extends PathsWithMethod<M>>(
   options: ApiRequestOptions<M, P> = {},
 ): Promise<ApiResponse<M, P>> {
   const headers = new Headers(options.headers);
+  if (String(path).startsWith("/api/v1/auth/") || String(path) === "/api/v1/users/me") {
+    // Give preceding play events a bounded chance to persist before signup claims the journey.
+    await Promise.race([flushGuestJourney(), new Promise<void>(resolve => setTimeout(resolve, 1500))]);
+  }
+  const guestToken = peekGuestToken();
+  if (guestToken && (String(path).startsWith("/api/v1/auth/") || String(path) === "/api/v1/users/me")) {
+    headers.set("x-guest-token", guestToken);
+  }
   if (options.auth !== false && !headers.has("Authorization")) {
     const accessToken = typeof window !== "undefined" ? await getSupabaseAccessToken() : null;
     if (accessToken) {

@@ -1,3 +1,4 @@
+import { recordGuestJourney } from "@/lib/guest/guestJourney";
 import posthog from 'posthog-js';
 
 export { posthog };
@@ -26,6 +27,7 @@ export function identifyUser(
   properties?: AnalyticsProperties,
   setOnce?: AnalyticsProperties,
 ): void {
+  accessType = 'member';
   if (typeof window === 'undefined' || !process.env.NEXT_PUBLIC_POSTHOG_KEY || !isTrackingEnv()) {
     return;
   }
@@ -106,6 +108,7 @@ export function stopSessionRecording(): void {
 
 // Track custom events
 export function trackEvent(eventName: string, properties?: AnalyticsProperties): void {
+  recordGuestJourney(eventName, properties ?? {}, String(properties?.access_type ?? properties?.access ?? accessType));
   if (typeof window === 'undefined' || !process.env.NEXT_PUBLIC_POSTHOG_KEY || !isTrackingEnv()) {
     return;
   }

@@ -52,6 +52,9 @@ export async function getGuestToken(locale: string): Promise<string> {
   return inflight;
 }
 
+/** Existing token only: safe to attach to authentication without inventing a guest visit. */
+export function peekGuestToken(): string | null { return current ?? readStored(); }
+
 /** Drops a token the server rejected — only if it is still the one this tab uses. */
 export function forgetGuestToken(rejected: string): void {
   if (current !== rejected) return;
@@ -75,4 +78,10 @@ export async function guestFetch<T>(path: string, init: { method?: "GET" | "POST
     throw new GuestApiError(message, res.status);
   }
   return payload as T;
+}
+
+/** Retire a linked/expired browser credential without cancelling another tab's in-progress game. */
+export function retireGuestToken(token: string): void {
+  if (current === token) current = null;
+  try { if (readStored() === token) window.localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
 }
