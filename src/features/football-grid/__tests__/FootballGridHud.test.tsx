@@ -49,7 +49,8 @@ describe('CriterionHeader', () => {
   it('shows a row label and opens the full localized clue on tap', async () => {
     const clue = { ...criterion('teammate'), family: 'teammate' as const, labelEn: 'Club teammate of Alessandro Del Piero', labelKa: 'ალესანდრო დელ პიეროს თანაგუნდელი კლუბში' };
     render(<CriterionHeader criterion={clue} locale="en" axis="row" />);
-    expect(screen.getByText('Club teammate · Alessandro Del Piero').className).not.toContain('sr-only');
+    expect(screen.getByText('A. Del Piero')).toBeVisible();
+    expect(screen.getByText('Club teammate')).toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: clue.labelEn }));
     expect(await screen.findByRole('dialog')).toHaveTextContent(clue.labelEn);
     fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
