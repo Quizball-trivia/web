@@ -1,3 +1,4 @@
+import { linkGuestJourney, resetGuestJourneyMember } from "@/lib/guest/guestJourney";
 import { create } from "zustand";
 import { fetchCurrentUser } from "@/lib/auth/session";
 import { clearTokens } from "@/lib/auth/tokenStorage";
@@ -35,6 +36,7 @@ function syncAnalyticsUser(user: User): void {
     return;
   }
 
+  linkGuestJourney(user.id);
   const displayName = user.nickname ?? user.email ?? user.id;
 
   // All person properties ride on the $identify call (free) — no separate $set
@@ -74,6 +76,7 @@ function isAuthFailure(error: unknown): boolean {
 }
 
 function clearLocalSession(): void {
+  resetGuestJourneyMember();
   clearTokens();
   storage.remove(STORAGE_KEYS.STORE_WALLET);
 }
