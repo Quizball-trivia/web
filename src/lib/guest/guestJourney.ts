@@ -12,6 +12,8 @@ let work: Promise<void> = Promise.resolve();
 let retry: ReturnType<typeof setTimeout> | undefined;
 let memberId: string | null = null;
 let generation = 0;
+type LinkOperation = { userId: string; generation: number; attempts: number; timer?: ReturnType<typeof setTimeout> };
+let linkOperation: LinkOperation | undefined;
 function pending(): Item[] {
   try { const rows: unknown = JSON.parse(sessionStorage.getItem(QUEUE_KEY) ?? JSON.stringify(memoryPending)); return Array.isArray(rows) ? rows.filter(row => typeof row?.id === 'string' && typeof row?.createdAt === 'number') as Item[] : memoryPending; } catch { return memoryPending; }
 }
@@ -50,21 +52,42 @@ export function flushGuestJourney(): Promise<void> {
   work = work.then(drain, drain);
   return work;
 }
-export function resetGuestJourneyMember(): void { memberId = null; generation++; }
+export function resetGuestJourneyMember(): void {
+  memberId = null; generation++;
+  if (linkOperation?.timer) clearTimeout(linkOperation.timer);
+  linkOperation = undefined;
+}
 /** Does not block sign-in. Retry uses the same token; server ownership never changes. */
 export function linkGuestJourney(userId: string): void {
   memberId = userId;
-  const capturedGeneration = generation;
+  if (linkOperation?.userId === userId && linkOperation.generation === generation) return;
+  if (linkOperation?.timer) clearTimeout(linkOperation.timer);
+  const operation: LinkOperation = { userId, generation, attempts: 0 };
+  linkOperation = operation;
+  attemptGuestLink(operation);
+}
+function attemptGuestLink(operation: LinkOperation): void {
+  const current = () => linkOperation === operation && memberId === operation.userId && generation === operation.generation;
   work = work.then(async () => {
+    if (!current()) return;
     await drain();
     const token = peekGuestToken();
-    if (!token || memberId !== userId || generation !== capturedGeneration) return;
+    if (!current()) return;
+    if (!token) { linkOperation = undefined; return; }
+    operation.attempts++;
     try {
-      const res = await send('link', {}, token, true, userId);
+      const res = await send('link', {}, token, true, operation.userId);
+      // Ordinary client errors are terminal; timeout and throttling may recover.
+      if (res.status >= 400 && res.status < 500 && ![408, 429].includes(res.status)) return;
       if (!res.ok) throw new Error('Retry guest link');
       retireGuestToken(token);
     } catch {
-      setTimeout(() => { if (memberId === userId && generation === capturedGeneration) linkGuestJourney(userId); }, 15_000);
+      if (current() && operation.attempts < 8) {
+        operation.timer = setTimeout(() => {
+          operation.timer = undefined;
+          if (current()) attemptGuestLink(operation);
+        }, 15_000);
+      }
     }
   }).catch(() => undefined);
 }

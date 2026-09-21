@@ -31,6 +31,16 @@ describe('PostHog identity', () => {
     expect(posthogMocks.reset).not.toHaveBeenCalled();
   });
 
+  it('keeps guest attribution when identify receives an invalid identity', () => {
+    const warning = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    resetUser();
+    identifyUser('   ');
+    trackEvent('game_exit', { mode_id: 'missingXi' });
+    expect(posthogMocks.identify).not.toHaveBeenCalled();
+    expect(posthogMocks.capture).toHaveBeenLastCalledWith('game_exit', expect.objectContaining({ access_type: 'guest' }));
+    warning.mockRestore();
+  });
+
   it('labels gameplay through guest, login and logout without mixing the audiences', () => {
     resetUser();
     trackEvent('game_complete', { mode_id: 'freeKicks' });
