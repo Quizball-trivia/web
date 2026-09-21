@@ -45,7 +45,22 @@ export function footballGridStorageImageUrl(relativePath: string): string | null
 export function footballGridAssetUrl(value: string | null | undefined): string | null {
   const source = value?.trim();
   if (!source) return null;
-  if (/^https:\/\//i.test(source)) return isAllowedFirstPartyUrl(source) ? source : null;
+  if (/^https:\/\//i.test(source)) {
+    if (isAllowedFirstPartyUrl(source)) return source;
+    // In-flight matches and reversible old releases retain their original
+    // staging portrait keys. Those Grid assets were mirrored before cutover.
+    // Resolve only this known legacy prefix against the configured CDN; never
+    // permit arbitrary storage origins or unrelated staging bucket objects.
+    try {
+      const legacy = new URL(source);
+      const prefix = `/storage/v1/object/public/imgs/football-grid/${FOOTBALL_GRID_CDN_RELEASE}/`;
+      if (legacy.origin === DEFAULT_SUPABASE_URL && legacy.pathname.startsWith(prefix)) {
+        const mapped = `${FOOTBALL_GRID_CDN_BASE_URL}/${legacy.pathname.slice(prefix.length)}`;
+        return isAllowedFirstPartyUrl(mapped) ? mapped : null;
+      }
+    } catch { /* malformed URLs use the normal owned fallback */ }
+    return null;
+  }
   // These shared UI illustrations are bundled with the web release. Loading
   // them from the app avoids a separate CDN publish and works in isolated QA.
   if (source === '/assets/football-grid-card-icon.svg') return source;
