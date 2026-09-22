@@ -20,6 +20,14 @@ describe('FootballGridPortrait', () => {
     expect(container.querySelector('img')).toBeNull();
   });
 
+  it.each([null, 'https://legacy.example/matic.jpg'])('finds the Grid portrait for a claim with unavailable legacy source %s', (source) => {
+    const id = '38c53038-eb5a-47cb-8c69-166559677ac0';
+    const { container } = render(<FootballGridPortrait playerId={id} source={source} />);
+    expect(container.querySelector('img')?.getAttribute('src')).toContain(`/football-grid/v1/players/${id}.webp`);
+    fireEvent.error(container.querySelector('img')!);
+    expect(container.querySelector('img')?.getAttribute('src')).toContain(`/imgs/player-images/${id}.webp`);
+  });
+
   it('does not retain a failed image state when the cell shows another player', () => {
     const { container, rerender } = render(<FootballGridPortrait source="/assets/football-grid/players/old.webp" />);
     fireEvent.error(container.querySelector('img')!);
