@@ -124,8 +124,8 @@ describe('useRealtimeFootballGrid', () => {
     unmount();
   });
 
-  it('submits only on the local turn and pins the authoritative state version', () => {
-    const { result, unmount } = renderHook(() => useRealtimeFootballGrid({ enabled: true, selfUserId: 'self', locale: 'en', autoStart: false }));
+  it.each(['en', 'ka', 'es', 'tr'] as const)('submits in %s and pins the authoritative state version', (locale) => {
+    const { result, unmount } = renderHook(() => useRealtimeFootballGrid({ enabled: true, selfUserId: 'self', locale, autoStart: false }));
     act(() => {
       useFootballGridStore.getState().setState({
         matchId: 'match-1',
@@ -145,7 +145,7 @@ describe('useRealtimeFootballGrid', () => {
       expectedStateVersion: 7,
       cellIndex: 4,
       text: 'Thierry Henry',
-      locale: 'en',
+      locale,
     }));
     expect(useFootballGridStore.getState().pendingCommandId).toEqual(expect.any(String));
     unmount();

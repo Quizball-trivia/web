@@ -1076,7 +1076,7 @@ export function FootballGridTurnPanel({
   const [highlightIndex, setHighlightIndex] = useState(-1);
   const [suggestionsDismissed, setSuggestionsDismissed] = useState(false);
   const suggestions = useMemo(() => (
-    pending || suggestionsDismissed ? [] : searchGridPlayers(roster, answer, locale === 'ka' ? 'ka' : 'en', 6)
+    pending || suggestionsDismissed ? [] : searchGridPlayers(roster, answer, locale, 6)
   ), [roster, answer, locale, pending, suggestionsDismissed]);
 
   // Picking a suggestion FILLS the box; the player still presses submit. The
@@ -1606,7 +1606,6 @@ export function FootballGridFlowScreen() {
   const searchParams = useSearchParams();
   const { locale } = useLocale();
   const copy = FOOTBALL_GRID_COPY[locale];
-  const contentLocale = locale === 'ka' ? 'ka' : 'en';
   const { player } = usePlayer();
   const authStatus = useAuthStore((current) => current.status);
   const principal = useRealtimePrincipal();
@@ -1627,7 +1626,7 @@ export function FootballGridFlowScreen() {
   const grid = useRealtimeFootballGrid({
     enabled: principal.kind !== 'none',
     selfUserId,
-    locale: contentLocale,
+    locale,
     theme,
     // A `source` query never authorizes matchmaking: guests only ever arrive from
     // a room — or, for "Play now", start a practice bot match the server gates.
