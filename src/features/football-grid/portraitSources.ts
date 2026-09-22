@@ -7,9 +7,13 @@ export function footballGridPortraitSources(source: string | null | undefined, p
   const pathId = resolved?.match(/\/players\/([a-f0-9-]{36})\.webp$/i)?.[1];
   const id = playerId ?? pathId;
   const reviewed = id ? (portraits as Record<string, string>)[id] : null;
-  const roster = id && /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(id)
+  const validId = id && /^[a-f0-9]{8}(?:-[a-f0-9]{4}){3}-[a-f0-9]{12}$/i.test(id);
+  // Claims can carry a missing or blocked legacy roster URL even though the
+  // same player's Grid portrait exists in the release's first-party bucket.
+  const grid = validId ? footballGridStorageImageUrl(`players/${id}.webp`) : null;
+  const roster = validId
     ? footballGridStorageImageUrl(`player-images/${id}.webp`)
     : null;
-  return [reviewed, resolved, roster]
+  return [reviewed, resolved, grid, roster]
     .filter((value, index, values): value is string => Boolean(value) && values.indexOf(value) === index);
 }
