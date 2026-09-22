@@ -54,7 +54,7 @@ describe('CriterionHeader', () => {
     fireEvent.click(screen.getByRole('button', { name: clue.labelEn }));
     expect(await screen.findByRole('dialog')).toHaveTextContent(clue.labelEn);
     expect(screen.getByRole('dialog')).toHaveTextContent('Being national-team teammates alone does not count.');
-    expect(screen.getByRole('dialog')).toHaveTextContent('The same player must also match the clue on the other side');
+    expect(screen.getByRole('dialog')).toHaveTextContent('Both clues must fit the same player, but they can refer to different seasons');
     fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
     expect(screen.queryByRole('dialog')).toBeNull();
   });

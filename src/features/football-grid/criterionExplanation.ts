@@ -5,10 +5,10 @@ import { wildcardKey } from './criterionPresentation';
 type Translations = Record<Locale, string>;
 
 export const BOTH_CLUES_EXPLANATION: Translations = {
-  en: 'The same player must also match the clue on the other side of the square.',
-  ka: 'იგივე ფეხბურთელი უჯრის მეორე მხარეს მოცემულ პირობასაც უნდა აკმაყოფილებდეს.',
-  es: 'El mismo jugador también debe cumplir la pista del otro lado de la casilla.',
-  tr: 'Aynı oyuncu, karenin diğer tarafındaki ipucuna da uymalı.',
+  en: 'Both clues must fit the same player, but they can refer to different seasons of their career.',
+  ka: 'ერთმა ფეხბურთელმა ორივე პირობა უნდა დააკმაყოფილოს — ეს სხვადასხვა სეზონშიც შეიძლება მომხდარიყო.',
+  es: 'El mismo jugador debe cumplir ambas pistas, aunque pueden corresponder a distintas temporadas de su carrera.',
+  tr: 'İki ipucu da aynı oyuncuya uymalı, ancak kariyerinin farklı sezonlarıyla ilgili olabilir.',
 };
 
 // These describe the published membership rules, not the player's current club
