@@ -25,10 +25,10 @@ export function normalizeGridAnswerText(value: string): string {
   return value
     .normalize('NFKC')
     .toLocaleLowerCase('und')
-    .replace(/[’'`´]/g, '')
-    .replace(/[._,;:!?()[\]{}\-/\\]+/g, ' ')
+    .replace(/['’ʻ`´]/g, '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
     .normalize('NFC')
     .replace(/ı/g, 'i')
     .replace(/ß/g, 'ss')

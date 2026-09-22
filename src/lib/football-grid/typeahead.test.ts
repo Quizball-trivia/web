@@ -30,6 +30,7 @@ describe('Grid name suggestions across interface languages', () => {
   it('uses locale-independent case handling and stable punctuation rules', () => {
     expect(normalizeGridAnswerText('  ÁNGEL  Di-María! ')).toBe('angel di maria');
     expect(normalizeGridAnswerText("N'Golo Kanté")).toBe('ngolo kante');
+    expect(normalizeGridAnswerText('NʻGolo Kanté')).toBe('ngolo kante');
     expect(normalizeGridAnswerText('IŞIK')).toBe('isik');
   });
 });
