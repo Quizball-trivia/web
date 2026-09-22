@@ -699,12 +699,12 @@ export function CriterionHeader({
     <Popover>
       <PopoverTrigger asChild>
         <button type="button" aria-label={label} className={cn(
-          'relative grid h-full w-full min-h-0 min-w-0 grid-rows-[30px_minmax(0,1fr)] justify-items-center gap-1 overflow-hidden rounded-2xl border px-2 pb-2 pt-2.5 text-center [container-type:inline-size] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
+          'relative grid h-full w-full min-h-0 min-w-0 grid-rows-[auto_minmax(0,1fr)] justify-items-center gap-1 overflow-hidden rounded-2xl border px-2 pb-2 pt-2.5 text-center [container-type:inline-size] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
           axis === 'row' ? 'border-white/10 bg-gradient-to-b from-brand-blue to-brand-blue/75 text-white' : 'border-yellow-200/40 bg-gradient-to-b from-brand-yellow-soft to-brand-yellow text-black/80',
         )}>
           <span aria-hidden="true" className="absolute right-1.5 top-1 text-[9px] font-bold opacity-45">ⓘ</span>
-          <span className={cn('grid size-[30px] min-h-0 min-w-0 place-items-center overflow-hidden', portrait && 'rounded-full')}>
-            <CriterionAsset criterion={criterion} className="size-full" />
+          <span className={cn('relative block h-[clamp(32px,46cqw,44px)] min-h-0 min-w-0 overflow-hidden', portrait ? 'w-[clamp(32px,46cqw,44px)] rounded-full' : 'w-full max-w-[72px]', criterion.family === 'league' && 'rounded-md bg-white px-1 py-0.5')}>
+            <CriterionAsset criterion={criterion} className="absolute inset-0 size-full" />
           </span>
           <span lang={locale} className="flex h-full w-full min-h-0 min-w-0 flex-col items-center justify-center gap-0.5 overflow-hidden font-poppins">
             {presentation.eyebrow && <span className="line-clamp-2 w-full min-w-0 text-[8px] font-medium leading-[1.15] opacity-75 [overflow-wrap:anywhere]">{presentation.eyebrow}</span>}
