@@ -52,6 +52,7 @@ import { AnimatedCounter } from '@/features/game/results/AnimatedCounter';
 import { CoinRewardChip, RewardChip } from '@/features/game/results/RankedProgressionPanel';
 import { CriterionAsset } from './components/CriterionAsset';
 import { criterionPresentation } from './criterionPresentation';
+import { BOTH_CLUES_EXPLANATION, criterionExplanation } from './criterionExplanation';
 import { useRealtimeFootballGrid } from './realtime/useRealtimeFootballGrid';
 import type { Locale } from '@/lib/i18n/messages';
 import { criterionLabel as localizedCriterionLabel } from './criterionLabel';
@@ -692,6 +693,7 @@ export function CriterionHeader({
 }) {
   const label = localizedCriterionLabel(criterion, locale);
   const presentation = criterionPresentation(criterion, locale);
+  const explanation = criterionExplanation(criterion, locale);
   const portrait = criterion.family === 'manager' || criterion.family === 'teammate';
   return (
     <Popover>
@@ -710,8 +712,11 @@ export function CriterionHeader({
           </span>
         </button>
       </PopoverTrigger>
-      <PopoverContent side="top" className="max-w-[calc(100vw-2rem)] border-white/20 bg-surface-card text-center text-sm font-bold text-white">
-        <span lang={locale} className="break-words">{label}</span>
+      <PopoverContent side="top" collisionPadding={12} aria-label={label} lang={locale}
+        className="max-h-[var(--radix-popover-content-available-height)] w-80 max-w-[calc(100vw-1.5rem)] overflow-y-auto border-white/20 bg-surface-card p-4 text-left text-sm text-white shadow-xl">
+        <h3 className="break-words font-bold leading-snug">{label}</h3>
+        {explanation && <p className="mt-2 break-words font-normal leading-relaxed text-white/90">{explanation}</p>}
+        <p className="mt-3 border-t border-white/15 pt-3 text-xs font-normal leading-relaxed text-white/65">{BOTH_CLUES_EXPLANATION[locale]}</p>
       </PopoverContent>
     </Popover>
   );
