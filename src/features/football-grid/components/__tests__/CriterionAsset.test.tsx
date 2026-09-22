@@ -1,4 +1,5 @@
-import { fireEvent, render } from '@testing-library/react';
+import { act, fireEvent, render } from '@testing-library/react';
+import { Suspense, startTransition, useState } from 'react';
 import { describe, expect, it } from 'vitest';
 import { FOOTBALL_GRID_CDN_BASE_URL } from '@/lib/football-grid/assets';
 import type { FootballGridCriterionView } from '@/lib/realtime/socket.types';
@@ -62,6 +63,34 @@ describe('CriterionAsset', () => {
     })} />);
     expect(container.querySelector('svg')?.getAttribute('viewBox')).toBe('85 14 97 122');
     expect(container.querySelector('image')?.getAttribute('href')).toBe('/assets/football-grid/leagues/ligue-1.png');
+  });
+
+  it('keeps committed failures when a different clue render suspends and is abandoned', async () => {
+    const original = criterion({ id: 'la-liga', key: 'league:la-liga', family: 'league',
+      labelEn: 'La Liga', assetKey: '/assets/football-grid/leagues/la-liga.svg' });
+    const pending = new Promise(() => {});
+    function SuspendAfterArt({ blocked }: { blocked: boolean }) {
+      if (blocked) throw pending;
+      return null;
+    }
+    function Preview() {
+      const [value, setValue] = useState(original);
+      return <>
+        <button onClick={() => startTransition(() => setValue({ ...original, id: 'next-clue' }))}>Next clue</button>
+        <button onClick={() => setValue({ ...original })}>Keep current clue</button>
+        <Suspense fallback={<span>Loading</span>}>
+          <CriterionAsset criterion={value} />
+          <SuspendAfterArt blocked={value.id !== original.id} />
+        </Suspense>
+      </>;
+    }
+    const { container, getByText } = render(<Preview />);
+    fireEvent.error(container.querySelector('image')!);
+    expect(container.querySelector('img')?.getAttribute('src')).toContain('/imgs/league-logos/la-liga.webp');
+    await act(async () => { fireEvent.click(getByText('Next clue')); });
+    fireEvent.click(getByText('Keep current clue'));
+    expect(container.querySelector('image')).toBeNull();
+    expect(container.querySelector('img')?.getAttribute('src')).toContain('/imgs/league-logos/la-liga.webp');
   });
 
   it('ships an original royal cup for Copa del Rey without storage dependencies', () => {

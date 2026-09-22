@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- Grid criterion art is resolved from a reviewed runtime registry. */
 
-import { useMemo, useState, useRef } from 'react';
+import { useMemo, useState } from 'react';
 import clubs from '@/data/football-grid/launch-assets/clubs.json';
 import countries from '@/data/football-grid/launch-assets/countries.json';
 import leagues from '@/data/football-grid/launch-assets/leagues.json';
@@ -228,12 +228,13 @@ export function CriterionAsset({ criterion, className }: CriterionAssetProps) {
   // Every state broadcast carries fresh criterion objects; resolve per identity.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const sources = useMemo(() => criterionAssetSources(criterion), [identity]);
-  const [failedSources, setFailedSources] = useState<string[]>([]);
-  const failedForRef = useRef(identity);
-  if (failedForRef.current !== identity) {
-    failedForRef.current = identity;
-    if (failedSources.length > 0) setFailedSources([]);
+  const [failures, setFailures] = useState({ identity, sources: [] as string[] });
+  // Keep identity and failures in the same React snapshot. An abandoned render
+  // must not reset the committed clue's failures through a surviving ref write.
+  if (failures.identity !== identity) {
+    setFailures({ identity, sources: [] });
   }
+  const failedSources = failures.identity === identity ? failures.sources : [];
   const source = sources.find((candidate) => !failedSources.includes(candidate)) ?? null;
 
 
@@ -242,7 +243,8 @@ export function CriterionAsset({ criterion, className }: CriterionAssetProps) {
 
   if (source) {
     const bounds = (logoViewboxes as Record<string, { width: number; height: number; viewBox: string }>)[source];
-    const onError = () => setFailedSources((current) => current.includes(source) ? current : [...current, source]);
+    const onError = () => setFailures((current) => current.identity !== identity || current.sources.includes(source)
+      ? current : { identity, sources: [...current.sources, source] });
     if (bounds) return (
       <svg aria-hidden="true" viewBox={bounds.viewBox} className={className} preserveAspectRatio="xMidYMid meet">
         <image href={source} width={bounds.width} height={bounds.height} onError={onError} />
