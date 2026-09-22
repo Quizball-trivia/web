@@ -8,6 +8,9 @@ import { trackPlayNowClick } from "@/lib/analytics/public-games.analytics";
 import { ensureGuestPrincipal } from "@/lib/realtime/realtime-principal";
 import { SIGN_IN_PATH } from "@/lib/seo/public-games";
 import { useAuthStore } from "@/stores/auth.store";
+import { useLocale } from "@/contexts/LocaleContext";
+import { isSupportedLocale } from "@/lib/i18n/messages";
+import { storage, STORAGE_KEYS } from "@/utils/storage";
 
 /**
  * "Play now" on the public Tic Tac Toe / Auction pages. A guest gets a server
@@ -20,6 +23,7 @@ export function PlayNowLink({ modeId, locale, guestHref, memberHref, className, 
 }) {
   const router = useRouter();
   const pathname = usePathname();
+  const { setLocale } = useLocale();
   const authStatus = useAuthStore((state) => state.status);
   const isMember = authStatus === "authenticated";
   // Until auth has hydrated a returning member would be mistaken for a guest.
@@ -41,6 +45,12 @@ export function PlayNowLink({ modeId, locale, guestHref, memberHref, className, 
         trackPlayNowClick({ modeId, access: "guest", destination: SIGN_IN_PATH });
         router.push(SIGN_IN_PATH);
         return;
+      }
+      // Guest games use an unprefixed route and may mount a new provider.
+      // Carry the language of the page the visitor explicitly chose to play.
+      if (isSupportedLocale(locale)) {
+        storage.set(STORAGE_KEYS.LOCALE, locale);
+        setLocale(locale);
       }
       trackPlayNowClick({ modeId, access: "guest", destination: guestHref });
       router.push(guestHref);

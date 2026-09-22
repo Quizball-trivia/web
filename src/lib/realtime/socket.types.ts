@@ -1051,7 +1051,7 @@ export interface FootballGridState {
 }
 
 export interface FootballGridSearchStartPayload {
-  locale?: 'en' | 'ka';
+  locale?: 'en' | 'ka' | 'es' | 'tr';
   /** League pack to queue for; server defaults to 'european'. */
   theme?: string;
 }
@@ -1065,7 +1065,7 @@ export interface FootballGridVersionedCommandPayload {
 export interface FootballGridSubmitAnswerPayload extends FootballGridVersionedCommandPayload {
   cellIndex: number;
   text: string;
-  locale: 'en' | 'ka';
+  locale: 'en' | 'ka' | 'es' | 'tr';
 }
 
 export interface FootballGridSearchStatePayload {

@@ -10,10 +10,15 @@ import leagues from '@/data/football-grid/launch-assets/leagues.json';
 import managers from '@/data/football-grid/launch-assets/managers.json';
 import competitions from '@/data/football-grid/launch-assets/competitions.json';
 import wildcards from '@/data/football-grid/launch-assets/wildcards.json';
+import reviewedArt from '@/data/football-grid/criterion-art-overrides.json';
 import { footballGridAssetUrl, footballGridClubLogoUrl, footballGridRealLogoUrl } from '@/lib/football-grid/assets';
 import masterClubs from '@/data/clubs.json';
 import type { FootballGridCriterionView } from '@/lib/realtime/socket.types';
 import { cn } from '@/lib/utils';
+import { resolveClubCrestByName } from '@/lib/clubs';
+import { wildcardKey } from '../criterionPresentation';
+import { footballGridPortraitSources } from '../portraitSources';
+import { CriterionIllustration } from './CriterionIllustration';
 
 type RegistryItem = {
   id: string;
@@ -27,6 +32,7 @@ type RegistryItem = {
     source?: { rightsStatus?: string };
   };
   fallback?: { assetPath?: string };
+  providerCandidate?: { assetPath?: string } | null;
 };
 
 const MASTER_CLUB_LOGO_BY_ID = new Map(
@@ -43,8 +49,7 @@ const GRID_EXTRA_CLUB_LOGOS: Record<string, string> = {
   'santos': 'santos-fc-brazil.png',
 };
 
-// Label/id lookup across BOTH registries for clubs, with the same suffix
-// tolerance the launch-registry matcher uses ("Santos" ↔ "santos-fc").
+// Exact aliases only: suffix matching confused Nacional with Atlético Nacional.
 const MASTER_CLUB_LOGO_BY_COMPARABLE = new Map<string, string>();
 for (const club of masterClubs as Array<{ id: string; label?: string; logo?: string }>) {
   if (!club.logo) continue;
@@ -59,11 +64,6 @@ function masterClubLogoFor(candidates: string[]): string | null {
   for (const candidate of candidates) {
     const direct = MASTER_CLUB_LOGO_BY_COMPARABLE.get(candidate);
     if (direct) return direct;
-  }
-  for (const candidate of candidates) {
-    for (const [key, logo] of MASTER_CLUB_LOGO_BY_COMPARABLE) {
-      if (key.endsWith(`-${candidate}`) || candidate.endsWith(`-${key}`)) return logo;
-    }
   }
   return null;
 }
@@ -88,10 +88,18 @@ function comparable(value: string | null | undefined): string {
 
 // Criterion labels that differ from the registry's canonical label.
 const LABEL_ALIASES: Record<string, string[]> = {
+  barcelona: ['fc-barcelona'],
   turkey: ['turkiye'],
   'ivory-coast': ['cote-d-ivoire'],
   'united-states': ['usa', 'united-states-of-america'],
   'czech-republic': ['czechia'],
+};
+
+const LOCAL_CLUB_ART: Record<string, string> = {
+  toulouse: '/clubs/fc-toulouse.webp',
+  '1-fc-heidenheim': '/clubs/1-fc-heidenheim-1846.webp',
+  // Official club identity page; source recorded beside the local asset.
+  'america-de-cali': '/assets/football-grid/clubs/america-de-cali-official.png',
 };
 
 function isLaunchClearedPrimary(item: RegistryItem): boolean {
@@ -101,14 +109,39 @@ function isLaunchClearedPrimary(item: RegistryItem): boolean {
 
 /** Ordered candidate URLs for a criterion's artwork — the first that loads wins. */
 export function criterionAssetSources(criterion: FootballGridCriterionView): string[] {
+  if (wildcardKey(criterion)) return [];
   return resolveRegistryAssets(criterion);
 }
 
 function resolveRegistryAssets(criterion: FootballGridCriterionView): string[] {
   const key = criterion.assetKey?.trim() ?? '';
-  if (key.startsWith('/')) {
-    const resolved = footballGridAssetUrl(key);
-    return resolved ? [resolved] : [];
+  const suppliedAsset = footballGridAssetUrl(key);
+  // Keys are from reviewed release snapshots; never infer a different club
+  // from a partial name. These files ship with the app in both environments.
+  const reviewed = (reviewedArt as Record<string, string>)[criterion.key];
+  if (reviewed) return [reviewed];
+  if (criterion.family === 'country') {
+    const flag = countries.find((item) => item.assetPath === key
+      || [item.id, item.labelEn, item.labelKa].some((value) =>
+        [key, criterion.labelEn, criterion.labelKa].some((label) => comparable(value) === comparable(label))));
+    if (flag) return [flag.assetPath];
+  }
+  const preferRealLogo = ['club', 'league', 'trophy_award', 'manager'].includes(criterion.family);
+  // Published boards can carry a generated badge's full path. That path must
+  // not bypass the registry's real crest/logo preference. Portraits and flags
+  // still use their supplied asset directly.
+  if (suppliedAsset && !preferRealLogo) {
+    return criterion.family === 'teammate' ? footballGridPortraitSources(key) : [suppliedAsset];
+  }
+
+  if (criterion.family === 'club') {
+    const local = LOCAL_CLUB_ART[comparable(criterion.labelEn)];
+    const existing = resolveClubCrestByName(criterion.labelEn)?.logo;
+    // Reuse the app's reviewed crest lookup, including packaged clubs and its
+    // explicit exclusion of corrupt provider placeholders.
+    const crest = local ?? (existing?.startsWith('/clubs/') ? existing
+      : footballGridAssetUrl(existing) ?? footballGridClubLogoUrl(existing?.replace(/^\//, '')));
+    if (crest) return [crest, ...(suppliedAsset ? [suppliedAsset] : [])];
   }
 
   const candidates = [key, criterion.key, criterion.id, criterion.labelEn, criterion.labelKa]
@@ -121,20 +154,28 @@ function resolveRegistryAssets(criterion: FootballGridCriterionView): string[] {
   );
   const item = registry.find((candidate) => (
     candidates.some((value) => valuesOf(candidate).includes(value))
-  )) ?? registry.find((candidate) => (
+  )) ?? (criterion.family === 'club' ? undefined : registry.find((candidate) => (
     candidates.some((value) => valuesOf(candidate).some((registryValue) => (
       registryValue.endsWith(`-${value}`) || value.endsWith(`-${registryValue}`)
     )))
-  ));
+  )));
   if (!item) {
     // Clubs added by roster expansion exist only as criteria; resolve their
     // crest straight from the master/extra registries.
     if (criterion.family === 'club') {
       const logo = masterClubLogoFor(candidates);
       const url = footballGridClubLogoUrl(logo);
-      if (url) return [url];
+      if (url) return [url, ...(suppliedAsset ? [suppliedAsset] : [])];
     }
-    return [];
+    return suppliedAsset ? [suppliedAsset] : [];
+  }
+
+  if (criterion.family === 'manager') {
+    const bundledPortrait = [item.providerCandidate?.assetPath, item.primary?.assetPath]
+      .filter((path) => path && /\.(?:jpg|jpeg|png|webp)$/i.test(path));
+    return [...bundledPortrait, footballGridAssetUrl(item.primary?.publicUrl), suppliedAsset,
+      ...[item.assetPath, item.primary?.assetPath, item.fallback?.assetPath].map(footballGridAssetUrl)]
+      .filter((value, index, values): value is string => Boolean(value) && values.indexOf(value) === index);
   }
 
   // Owner decision 2026-08-27: render the real club crests, accepting the
@@ -147,6 +188,7 @@ function resolveRegistryAssets(criterion: FootballGridCriterionView): string[] {
     const masterClub = MASTER_CLUB_LOGO_BY_ID.get(item.id);
     return [
       footballGridClubLogoUrl(masterClub),
+      suppliedAsset,
       ...[
         isLaunchClearedPrimary(item) ? item.primary?.publicUrl ?? item.primary?.assetPath : null,
         item.fallback?.assetPath,
@@ -160,7 +202,10 @@ function resolveRegistryAssets(criterion: FootballGridCriterionView): string[] {
     : criterion.family === 'league'
       ? footballGridRealLogoUrl('league-logos', item.id)
       : null;
-  return [realLogo, ...[item.assetPath, item.primary?.assetPath, item.fallback?.assetPath].map(footballGridAssetUrl)]
+  // These reviewed logos are also shipped in public/. A missing environment's
+  // storage object should not replace an available real logo with a monogram.
+  const bundledLogo = realLogo ? item.providerCandidate?.assetPath : null;
+  return [realLogo, bundledLogo, suppliedAsset, ...[item.assetPath, item.primary?.assetPath, item.fallback?.assetPath].map(footballGridAssetUrl)]
     .filter((value, index, values): value is string => Boolean(value) && values.indexOf(value) === index);
 }
 
@@ -193,6 +238,8 @@ export function CriterionAsset({ criterion, className }: CriterionAssetProps) {
   const source = sources.find((candidate) => !failedSources.includes(candidate)) ?? null;
   const Icon = FAMILY_ICONS[criterion.family];
 
+  if (wildcardKey(criterion)) return <CriterionIllustration criterion={criterion} className={className} />;
+
   if (source) {
     return (
       <img
@@ -202,6 +249,7 @@ export function CriterionAsset({ criterion, className }: CriterionAssetProps) {
           criterion.family === 'manager' || criterion.family === 'teammate'
             ? 'rounded-full object-cover'
             : 'object-contain',
+          criterion.family === 'manager' && 'object-top',
           className,
         )}
         onError={() => setFailedSources((current) => current.includes(source) ? current : [...current, source])}

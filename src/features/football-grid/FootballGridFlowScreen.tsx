@@ -1,18 +1,17 @@
 'use client';
 
-/* eslint-disable @next/next/no-img-element -- Player art is restricted to the reviewed first-party Grid CDN. */
-
 import { GuestResultsCta } from '@/features/friend/components/GuestResultsCta';
 import { GUEST_LOBBIES_ENABLED } from '@/lib/config';
 import { useEnsureGuestPrincipal, useRealtimePrincipal } from '@/lib/realtime/realtime-principal';
 import { FormEvent, Fragment, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { AlertTriangle, Check, LoaderCircle, UserRound, UserRoundSearch } from 'lucide-react';
+import { AlertTriangle, Check, LoaderCircle, UserRoundSearch } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { QuitMatchModal } from '@/components/match/QuitMatchModal';
 import { useLocale } from '@/contexts/LocaleContext';
 import { footballGridAssetUrl } from '@/lib/football-grid/assets';
+import { FootballGridPortrait } from './components/FootballGridPortrait';
 import {
   loadGridTypeaheadRoster,
   searchGridPlayers,
@@ -52,9 +51,11 @@ import { useRealtimeConnectionHealth } from '@/lib/realtime/connection-health';
 import { AnimatedCounter } from '@/features/game/results/AnimatedCounter';
 import { CoinRewardChip, RewardChip } from '@/features/game/results/RankedProgressionPanel';
 import { CriterionAsset } from './components/CriterionAsset';
+import { criterionPresentation } from './criterionPresentation';
+import { BOTH_CLUES_EXPLANATION, criterionExplanation } from './criterionExplanation';
 import { useRealtimeFootballGrid } from './realtime/useRealtimeFootballGrid';
 import type { Locale } from '@/lib/i18n/messages';
-import { criterionLabel as localizedCriterionLabel, compactCriterionLabel } from './criterionLabel';
+import { criterionLabel as localizedCriterionLabel } from './criterionLabel';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 
 export const FOOTBALL_GRID_COPY = {
@@ -691,50 +692,33 @@ export function CriterionHeader({
   axis: 'column' | 'row';
 }) {
   const label = localizedCriterionLabel(criterion, locale);
+  const presentation = criterionPresentation(criterion, locale);
+  const explanation = criterionExplanation(criterion, locale);
   const portrait = criterion.family === 'manager' || criterion.family === 'teammate';
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button type="button" aria-label={label} title={label} className={cn(
-          'flex min-h-[78px] min-w-0 flex-col items-center justify-center gap-1 rounded-[20px] border px-1.5 py-2 text-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
+        <button type="button" aria-label={label} className={cn(
+          'relative grid h-full w-full min-h-0 min-w-0 grid-rows-[30px_minmax(0,1fr)] justify-items-center gap-1 overflow-hidden rounded-2xl border px-2 pb-2 pt-2.5 text-center [container-type:inline-size] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white',
           axis === 'row' ? 'border-white/10 bg-gradient-to-b from-brand-blue to-brand-blue/75 text-white' : 'border-yellow-200/40 bg-gradient-to-b from-brand-yellow-soft to-brand-yellow text-black/80',
         )}>
-          <span className={cn('grid size-9 shrink-0 place-items-center sm:size-11', portrait && 'overflow-hidden rounded-full')}>
-            <CriterionAsset criterion={criterion} className={portrait ? 'size-full' : 'size-8 sm:size-10'} />
+          <span aria-hidden="true" className="absolute right-1.5 top-1 text-[9px] font-bold opacity-45">ⓘ</span>
+          <span className={cn('grid size-[30px] min-h-0 min-w-0 place-items-center overflow-hidden', portrait && 'rounded-full')}>
+            <CriterionAsset criterion={criterion} className="size-full" />
           </span>
-          <span lang={locale} className="hyphens-auto break-words font-poppins text-[9px] font-black uppercase leading-tight [overflow-wrap:anywhere] sm:text-[10px]">{compactCriterionLabel(criterion, locale)}</span>
+          <span lang={locale} className="flex h-full w-full min-h-0 min-w-0 flex-col items-center justify-center gap-0.5 overflow-hidden font-poppins">
+            {presentation.eyebrow && <span className="line-clamp-2 w-full min-w-0 text-[8px] font-medium leading-[1.15] opacity-75 [overflow-wrap:anywhere]">{presentation.eyebrow}</span>}
+            <span className={cn('w-full min-w-0 text-[clamp(9px,12cqw,11px)] font-extrabold leading-[1.15] [overflow-wrap:anywhere]', presentation.eyebrow ? 'line-clamp-2' : 'line-clamp-3')}>{presentation.title}</span>
+          </span>
         </button>
       </PopoverTrigger>
-      <PopoverContent side="top" className="max-w-[calc(100vw-2rem)] border-white/20 bg-surface-card text-center text-sm font-bold text-white">
-        <span lang={locale} className="break-words">{label}</span>
+      <PopoverContent side="top" collisionPadding={12} aria-label={label} lang={locale}
+        className="max-h-[var(--radix-popover-content-available-height)] w-80 max-w-[calc(100vw-1.5rem)] overflow-y-auto border-white/20 bg-surface-card p-4 text-left text-sm text-white shadow-xl">
+        <h3 className="break-words font-bold leading-snug">{label}</h3>
+        {explanation && <p className="mt-2 break-words font-normal leading-relaxed text-white/90">{explanation}</p>}
+        <p className="mt-3 border-t border-white/15 pt-3 text-xs font-normal leading-relaxed text-white/65">{BOTH_CLUES_EXPLANATION[locale]}</p>
       </PopoverContent>
     </Popover>
-  );
-}
-
-function FootballGridPortrait({
-  source,
-  className,
-}: {
-  source: string | null | undefined;
-  className?: string;
-}) {
-  const [failed, setFailed] = useState(false);
-  const resolved = footballGridAssetUrl(source);
-  if (!resolved || failed) {
-    return (
-      <span aria-hidden="true" className={cn('grid place-items-center rounded-full bg-white/10 text-white/55 ring-2 ring-white/15', className)}>
-        <UserRound className="size-1/2" />
-      </span>
-    );
-  }
-  return (
-    <img
-      src={resolved}
-      alt=""
-      className={cn('rounded-full object-cover ring-2 ring-white/25', className)}
-      onError={() => setFailed(true)}
-    />
   );
 }
 
@@ -748,6 +732,7 @@ function ClaimedCell({ claim, isMine, claimedLabel }: { claim: FootballGridClaim
     >
       <FootballGridPortrait
         source={claim.imageUrl}
+        playerId={claim.footballPlayerId}
         className="size-11 shadow-[0_5px_15px_rgba(0,0,0,.35)] sm:size-12"
       />
       <span className={cn('line-clamp-3 text-center font-poppins text-[9px] font-black leading-tight sm:text-[10px]', isMine ? 'text-brand-cyan' : 'text-brand-red-soft')}>
@@ -793,9 +778,9 @@ export function MatchBoard({
       // the countdown phase reveals the board and fires the build-in stagger.
       animate={state.phase === 'handoff' || state.phase === 'loading' ? 'hidden' : 'visible'}
       data-grid-anchor="board"
-      className="grid grid-cols-[72px_repeat(3,minmax(0,1fr))] gap-1.5 sm:grid-cols-[88px_repeat(3,minmax(0,1fr))] sm:gap-2"
+      className="grid grid-cols-4 gap-1.5 sm:gap-2"
     >
-      <div />
+      <div className="min-h-[96px] sm:min-h-[104px]" />
       {state.board.columns.map((criterion) => <CriterionHeader key={criterion.id} criterion={criterion} locale={locale} axis="column" />)}
       {state.board.rows.flatMap((row, rowIndex) => [
         <CriterionHeader key={`row-${row.id}`} criterion={row} locale={locale} axis="row" />,
@@ -814,7 +799,7 @@ export function MatchBoard({
               aria-label={`${localizedCriterionLabel(row, locale)} × ${localizedCriterionLabel(column, locale)}`}
               data-grid-anchor={`cell-${cellIndex}`}
               className={cn(
-                'relative aspect-square overflow-hidden rounded-[18px] border-2 p-1 text-center transition-colors sm:rounded-[20px]',
+                'relative aspect-square min-h-[96px] w-full overflow-hidden rounded-[18px] border-2 p-1 text-center transition-colors sm:min-h-[104px] sm:rounded-[20px]',
                 guided && selectable && 'animate-pulse ring-4 ring-brand-yellow ring-offset-2 ring-offset-surface-page-alt',
                 highlightCells?.includes(cellIndex) && 'ring-4 ring-brand-green shadow-[0_0_24px_rgba(56,182,14,0.6)]',
                 claim && (claim.claimantUserId === selfUserId
@@ -966,6 +951,7 @@ export function ResultSampleGallery({
             <div key={answerItem.playerId} className="flex min-w-0 items-center gap-2.5 rounded-[18px] bg-black/25 p-1.5 pr-2.5">
               <FootballGridPortrait
                 source={answerItem.imageUrl ?? answerItem.imageAssetKey}
+                playerId={answerItem.playerId}
                 className="size-12 shrink-0 bg-surface-input shadow-[0_5px_16px_rgba(0,0,0,.3)] sm:size-14"
               />
               <span className="line-clamp-2 min-w-0 font-poppins text-[11px] font-bold leading-tight text-white/90 sm:text-xs">
@@ -1095,7 +1081,7 @@ export function FootballGridTurnPanel({
   const [highlightIndex, setHighlightIndex] = useState(-1);
   const [suggestionsDismissed, setSuggestionsDismissed] = useState(false);
   const suggestions = useMemo(() => (
-    pending || suggestionsDismissed ? [] : searchGridPlayers(roster, answer, locale === 'ka' ? 'ka' : 'en', 6)
+    pending || suggestionsDismissed ? [] : searchGridPlayers(roster, answer, locale, 6)
   ), [roster, answer, locale, pending, suggestionsDismissed]);
 
   // Picking a suggestion FILLS the box; the player still presses submit. The
@@ -1625,7 +1611,6 @@ export function FootballGridFlowScreen() {
   const searchParams = useSearchParams();
   const { locale } = useLocale();
   const copy = FOOTBALL_GRID_COPY[locale];
-  const contentLocale = locale === 'ka' ? 'ka' : 'en';
   const { player } = usePlayer();
   const authStatus = useAuthStore((current) => current.status);
   const principal = useRealtimePrincipal();
@@ -1646,7 +1631,7 @@ export function FootballGridFlowScreen() {
   const grid = useRealtimeFootballGrid({
     enabled: principal.kind !== 'none',
     selfUserId,
-    locale: contentLocale,
+    locale,
     theme,
     // A `source` query never authorizes matchmaking: guests only ever arrive from
     // a room — or, for "Play now", start a practice bot match the server gates.
