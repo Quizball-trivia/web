@@ -53,8 +53,17 @@ describe('CriterionHeader', () => {
     expect(screen.getByText('Club teammate')).toBeVisible();
     fireEvent.click(screen.getByRole('button', { name: clue.labelEn }));
     expect(await screen.findByRole('dialog')).toHaveTextContent(clue.labelEn);
+    expect(screen.getByRole('dialog')).toHaveTextContent('Being national-team teammates alone does not count.');
+    expect(screen.getByRole('dialog')).toHaveTextContent('Both clues must fit the same player, but they can refer to different seasons');
     fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
     expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('explains the Georgian defender clue instead of just repeating its title', async () => {
+    const clue = { ...criterion('wildcard:position-def'), family: 'wildcard' as const, labelEn: 'Defender', labelKa: 'მცველი' };
+    render(<CriterionHeader criterion={clue} locale="ka" axis="column" />);
+    fireEvent.click(screen.getByRole('button', { name: 'მცველი' }));
+    expect(await screen.findByRole('dialog', { name: 'მცველი' })).toHaveTextContent('ცენტრალური ან განაპირა მცველი');
   });
 });
 

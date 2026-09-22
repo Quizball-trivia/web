@@ -6,6 +6,7 @@ import { useLocale } from '@/contexts/LocaleContext';
 import type { FootballGridCriterionView } from '@/lib/realtime/socket.types';
 import { CriterionHeader } from '../FootballGridFlowScreen';
 import { criterionLabel } from '../criterionLabel';
+import { criterionExplanation } from '../criterionExplanation';
 import { cn } from '@/lib/utils';
 import snapshot from './criteria-review.json';
 
@@ -47,7 +48,7 @@ export function CriterionGallery() {
         <Link href="/dev/tic-tac-toe" className="text-sm font-bold text-brand-yellow">← Back to board preview</Link>
         <p className="mt-7 text-xs font-bold uppercase tracking-widest text-brand-yellow">Tic Tac Toe · Local review</p>
         <h1 className="mt-2 font-poppins text-3xl font-black">Every clue, both ways.</h1>
-        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/65">Compare the yellow top header with the blue left header. Tap either one for the complete clue. The full clue wording is also shown below each pair.</p>
+        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-white/65">Compare the yellow top header with the blue left header. Tap either one to see what qualifies. The full clue and its explanation are also shown below each pair.</p>
 
         <div className="mt-6 space-y-4 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
           <div className="flex flex-wrap items-center gap-2">
@@ -100,6 +101,7 @@ export function CriterionGallery() {
               </div>)}
             </div>
             <p lang={locale} className="mt-5 break-words text-center text-sm font-semibold leading-relaxed">{criterionLabel(clue, locale)}</p>
+            <p lang={locale} className="mt-2 break-words text-sm leading-relaxed text-white/75">{criterionExplanation(clue, locale)}</p>
             {locale !== 'en' && <p className="mt-1 text-center text-xs leading-relaxed text-white/45">{clue.labelEn}</p>}
           </article>)}
         </div>
