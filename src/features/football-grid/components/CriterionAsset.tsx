@@ -3,7 +3,6 @@
 /* eslint-disable @next/next/no-img-element -- Grid criterion art is resolved from a reviewed runtime registry. */
 
 import { useMemo, useState, useRef } from 'react';
-import { Award, Globe2, Shield, Trophy, UserRound, UsersRound, Zap } from 'lucide-react';
 import clubs from '@/data/football-grid/launch-assets/clubs.json';
 import countries from '@/data/football-grid/launch-assets/countries.json';
 import leagues from '@/data/football-grid/launch-assets/leagues.json';
@@ -11,6 +10,7 @@ import managers from '@/data/football-grid/launch-assets/managers.json';
 import competitions from '@/data/football-grid/launch-assets/competitions.json';
 import wildcards from '@/data/football-grid/launch-assets/wildcards.json';
 import reviewedArt from '@/data/football-grid/criterion-art-overrides.json';
+import logoViewboxes from '@/data/football-grid/logo-viewboxes.json';
 import { footballGridAssetUrl, footballGridClubLogoUrl, footballGridRealLogoUrl } from '@/lib/football-grid/assets';
 import masterClubs from '@/data/clubs.json';
 import type { FootballGridCriterionView } from '@/lib/realtime/socket.types';
@@ -19,6 +19,7 @@ import { resolveClubCrestByName } from '@/lib/clubs';
 import { wildcardKey } from '../criterionPresentation';
 import { footballGridPortraitSources } from '../portraitSources';
 import { CriterionIllustration } from './CriterionIllustration';
+import { CriterionFallbackArt } from './CriterionFallbackArt';
 
 type RegistryItem = {
   id: string;
@@ -100,6 +101,9 @@ const LOCAL_CLUB_ART: Record<string, string> = {
   '1-fc-heidenheim': '/clubs/1-fc-heidenheim-1846.webp',
   // Official club identity page; source recorded beside the local asset.
   'america-de-cali': '/assets/football-grid/clubs/america-de-cali-official.png',
+  'locomotive-tbilisi': '/assets/football-grid/clubs/locomotive-tbilisi.png',
+  'saburtalo-tbilisi': '/assets/football-grid/clubs/saburtalo-tbilisi.png',
+  'san-lorenzo': '/assets/football-grid/clubs/san-lorenzo.png',
 };
 
 function isLaunchClearedPrimary(item: RegistryItem): boolean {
@@ -109,8 +113,9 @@ function isLaunchClearedPrimary(item: RegistryItem): boolean {
 
 /** Ordered candidate URLs for a criterion's artwork — the first that loads wins. */
 export function criterionAssetSources(criterion: FootballGridCriterionView): string[] {
-  if (wildcardKey(criterion)) return [];
-  return resolveRegistryAssets(criterion);
+  if (wildcardKey(criterion) || criterion.family === 'trophy_award') return [];
+  // Never resurrect the old initials-on-a-shield artwork after an image fails.
+  return resolveRegistryAssets(criterion).filter((source) => !isLegacyBadge(source));
 }
 
 function resolveRegistryAssets(criterion: FootballGridCriterionView): string[] {
@@ -182,8 +187,8 @@ function resolveRegistryAssets(criterion: FootballGridCriterionView): string[] {
   // trademark exposure the launch-rights gate previously blocked. The real
   // artwork lives in the legacy imgs/club-logos bucket keyed by the master
   // registry's logo filename (the grid CDN's clubs/<id>.svg files are
-  // generated monograms). Cleared primaries and the monogram remain as
-  // onError fallbacks so a missing file still degrades gracefully.
+  // generated monograms). The public resolver filters those legacy badges;
+  // missing originals use original Quizball illustrations instead.
   if (criterion.family === 'club') {
     const masterClub = MASTER_CLUB_LOGO_BY_ID.get(item.id);
     return [
@@ -195,29 +200,23 @@ function resolveRegistryAssets(criterion: FootballGridCriterionView): string[] {
       ].map(footballGridAssetUrl),
     ].filter((value): value is string => Boolean(value));
   }
-  // Owner decision 2026-09-03: same call for competitions and leagues — the
-  // real logo first, the drawn Quizball badge only as an onError fallback.
+  // Packaged originals are stable and have measured optical bounds. Remote
+  // originals remain a fallback; old generated letter shields are not artwork.
   const realLogo = criterion.family === 'trophy_award'
     ? footballGridRealLogoUrl('competition-logos', item.id)
     : criterion.family === 'league'
       ? footballGridRealLogoUrl('league-logos', item.id)
       : null;
-  // These reviewed logos are also shipped in public/. A missing environment's
-  // storage object should not replace an available real logo with a monogram.
   const bundledLogo = realLogo ? item.providerCandidate?.assetPath : null;
-  return [realLogo, bundledLogo, suppliedAsset, ...[item.assetPath, item.primary?.assetPath, item.fallback?.assetPath].map(footballGridAssetUrl)]
+  return [bundledLogo, realLogo, suppliedAsset, ...[item.assetPath, item.primary?.assetPath, item.fallback?.assetPath].map(footballGridAssetUrl)]
     .filter((value, index, values): value is string => Boolean(value) && values.indexOf(value) === index);
 }
 
-const FAMILY_ICONS = {
-  club: Shield,
-  country: Globe2,
-  league: Trophy,
-  manager: UserRound,
-  teammate: UsersRound,
-  trophy_award: Award,
-  wildcard: Zap,
-} satisfies Record<FootballGridCriterionView['family'], typeof Shield>;
+function isLegacyBadge(source: string): boolean {
+  // Flags are real SVG artwork. All legacy badge families below were generated
+  // with initials; published content can still point at these historical paths.
+  return /\/(?:clubs|leagues|competitions|managers|wildcards)\/[^/?]+\.svg(?:[?#]|$)/i.test(source);
+}
 
 interface CriterionAssetProps {
   criterion: FootballGridCriterionView;
@@ -228,7 +227,7 @@ export function CriterionAsset({ criterion, className }: CriterionAssetProps) {
   const identity = `${criterion.family}:${criterion.id}:${criterion.assetKey ?? ''}`;
   // Every state broadcast carries fresh criterion objects; resolve per identity.
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const sources = useMemo(() => resolveRegistryAssets(criterion), [identity]);
+  const sources = useMemo(() => criterionAssetSources(criterion), [identity]);
   const [failedSources, setFailedSources] = useState<string[]>([]);
   const failedForRef = useRef(identity);
   if (failedForRef.current !== identity) {
@@ -236,11 +235,19 @@ export function CriterionAsset({ criterion, className }: CriterionAssetProps) {
     if (failedSources.length > 0) setFailedSources([]);
   }
   const source = sources.find((candidate) => !failedSources.includes(candidate)) ?? null;
-  const Icon = FAMILY_ICONS[criterion.family];
+
 
   if (wildcardKey(criterion)) return <CriterionIllustration criterion={criterion} className={className} />;
+  if (criterion.family === 'trophy_award') return <CriterionFallbackArt criterion={criterion} className={className} />;
 
   if (source) {
+    const bounds = (logoViewboxes as Record<string, { width: number; height: number; viewBox: string }>)[source];
+    const onError = () => setFailedSources((current) => current.includes(source) ? current : [...current, source]);
+    if (bounds) return (
+      <svg aria-hidden="true" viewBox={bounds.viewBox} className={className} preserveAspectRatio="xMidYMid meet">
+        <image href={source} width={bounds.width} height={bounds.height} onError={onError} />
+      </svg>
+    );
     return (
       <img
         src={source}
@@ -252,20 +259,10 @@ export function CriterionAsset({ criterion, className }: CriterionAssetProps) {
           criterion.family === 'manager' && 'object-top',
           className,
         )}
-        onError={() => setFailedSources((current) => current.includes(source) ? current : [...current, source])}
+        onError={onError}
       />
     );
   }
 
-  return (
-    <span
-      aria-hidden="true"
-      className={cn(
-        'grid place-items-center rounded-full bg-white/10 text-white/80 ring-1 ring-inset ring-white/15',
-        className,
-      )}
-    >
-      <Icon className="size-1/2" strokeWidth={2.2} />
-    </span>
-  );
+  return <CriterionFallbackArt criterion={criterion} className={className} />;
 }

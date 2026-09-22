@@ -42,16 +42,36 @@ describe('CriterionAsset', () => {
     const { container } = render(<CriterionAsset criterion={criterion({ labelEn: name, assetKey: null })} />);
     expect(container.querySelector('img')?.getAttribute('src')).toBe(source);
   });
-  it('uses the bundled real league logo when storage is missing, before the published badge', () => {
+  it('uses a packaged real logo first and never falls back to a letter shield', () => {
     const { container } = render(<CriterionAsset criterion={criterion({
       id: 'league-id', key: 'league:la-liga', family: 'league', labelEn: 'La Liga', labelKa: 'ლა ლიგა',
       assetKey: '/assets/football-grid/leagues/la-liga-fallback.svg',
     })} />);
+    expect(container.querySelector('image')?.getAttribute('href')).toBe('/assets/football-grid/leagues/la-liga.png');
+    fireEvent.error(container.querySelector('image')!);
     expect(container.querySelector('img')?.getAttribute('src')).toContain('/imgs/league-logos/la-liga.webp');
     fireEvent.error(container.querySelector('img')!);
-    expect(container.querySelector('img')?.getAttribute('src')).toBe('/assets/football-grid/leagues/la-liga.png');
-    fireEvent.error(container.querySelector('img')!);
-    expect(container.querySelector('img')?.getAttribute('src')).toBe(`${FOOTBALL_GRID_CDN_BASE_URL}/leagues/la-liga-fallback.svg`);
+    expect(container.querySelector('img')).toBeNull();
+    expect(container.querySelector('[data-quizball-art]')).toBeTruthy();
+  });
+
+  it('fits the visible Ligue 1 logo to the frame instead of its transparent canvas', () => {
+    const { container } = render(<CriterionAsset criterion={criterion({
+      id: 'ligue-1', key: 'league:ligue-1', family: 'league', labelEn: 'Ligue 1',
+      assetKey: '/assets/football-grid/leagues/ligue-1.svg',
+    })} />);
+    expect(container.querySelector('svg')?.getAttribute('viewBox')).toBe('85 14 97 122');
+    expect(container.querySelector('image')?.getAttribute('href')).toBe('/assets/football-grid/leagues/ligue-1.png');
+  });
+
+  it('ships an original royal cup for Copa del Rey without storage dependencies', () => {
+    const { container } = render(<CriterionAsset criterion={criterion({
+      id: 'copa-del-rey', key: 'trophy:copa-del-rey', family: 'trophy_award',
+      labelEn: 'Copa del Rey winner', assetKey: '/assets/football-grid/competitions/copa-del-rey.svg',
+    })} />);
+    expect(container.querySelector('img')).toBeNull();
+    expect(container.querySelector('[data-quizball-art="royal-cup"]')).toBeTruthy();
+    expect(container.querySelector('text')).toBeNull();
   });
 
   it('keeps a supplied teammate portrait instead of resolving a generic badge', () => {
