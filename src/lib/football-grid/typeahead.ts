@@ -18,19 +18,20 @@ interface PreparedPlayer extends GridTypeaheadPlayer {
   wordsKa: string[];
 }
 
-/**
- * Mirror of the server's normalizeFootballGridAnswer: the suggestion filter
- * must accept exactly the spellings the resolver accepts, or a suggestion the
- * user picked could resolve differently than it matched.
+/** Search normalization follows the resolver's accents and Turkish keyboard fallback.
+ * Suggestions are name discovery only; cell validity is decided by the server.
  */
 export function normalizeGridAnswerText(value: string): string {
   return value
     .normalize('NFKC')
-    .toLocaleLowerCase()
-    .replace(/['’ʻ`´]/g, '')
+    .toLocaleLowerCase('und')
+    .replace(/[’'`´]/g, '')
+    .replace(/[._,;:!?()[\]{}\-/\\]+/g, ' ')
     .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .replace(/[\u0300-\u036f]/g, '')
+    .normalize('NFC')
+    .replace(/ı/g, 'i')
+    .replace(/ß/g, 'ss')
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -107,7 +108,7 @@ export function loadGridTypeaheadRoster(): Promise<PreparedPlayer[]> {
 export function searchGridPlayers(
   roster: PreparedPlayer[],
   query: string,
-  locale: 'en' | 'ka',
+  locale: 'en' | 'ka' | 'es' | 'tr',
   limit = 6,
 ): GridTypeaheadPlayer[] {
   const queryWords = normalizeGridAnswerText(query).split(' ').filter(Boolean);
