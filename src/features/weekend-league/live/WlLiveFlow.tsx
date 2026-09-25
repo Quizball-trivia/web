@@ -89,7 +89,7 @@ export interface WlLiveFlowUiProps {
   onSpectate?: () => void;
   /** Saturday kickoff (qualifier start) — drives the waiting countdown. */
   kickoffMs?: number | null;
-  registered?: number;
+  registered?: number | null;
   /** Live checked-in count for the ready meter (public payload). */
   checkedInCount?: number;
   /** Server break deadline (epoch ms) — drives the designed break screen. */
