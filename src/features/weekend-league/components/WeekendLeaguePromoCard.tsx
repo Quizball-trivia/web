@@ -79,7 +79,9 @@ export function WeekendLeaguePromoCard({
   onStart,
   onClose,
 }: {
-  registeredCount: number;
+  /** null = unknown (e.g. logged-out visitor: /current is authenticated).
+   *  Hide the line rather than claim "0 players registered". */
+  registeredCount: number | null;
   /** Game-1 kickoff; null renders a 00:00:00:00 placeholder. */
   kickoffMs: number | null;
   finalists?: number;
@@ -119,9 +121,11 @@ export function WeekendLeaguePromoCard({
       <h2 className="text-[28px] uppercase leading-tight text-white" style={poppins}>
         {t('weekendLeague.promoTitle')}
       </h2>
-      <p className="mt-1 text-[13px] text-white/50" style={poppins}>
-        {t('weekendLeague.promoRegistered', { n: registeredCount })}
-      </p>
+      {registeredCount != null && (
+        <p className="mt-1 text-[13px] text-white/50" style={poppins}>
+          {t('weekendLeague.promoRegistered', { n: registeredCount })}
+        </p>
+      )}
 
       <p className="mt-4 text-[13px] text-white" style={poppins}>
         {t('weekendLeague.promoFormat', { finalists })}

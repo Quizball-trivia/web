@@ -319,7 +319,10 @@ export function useWeekendLeagueLive(): WeekendLeagueLiveController {
     })),
     yourRank: 0,
     bracket: null,
-    registered: tournament?.registered_count ?? 0,
+    // null (not 0) when the tournament is unknown — logged-out visitors have
+    // no /current access and must not see "0 players registered" (418 were
+    // entered while the page claimed 0, 2026-09-25).
+    registered: tournament ? tournament.registered_count ?? 0 : null,
     checkedInCount: tournament?.checked_in_count ?? 0,
     breakUntilMs: tournament?.break_until_ms ?? null,
     spectatorDelayMs: tournament?.spectator_delay_ms ?? 30_000,
