@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { matchesName } from '@/features/mini-games/lib/matching';
 import { TD } from '../lib/copy';
+import { BsButton } from '../shell/ui';
 import { TD_BOX_CARDS, type TdBoxQuestion } from '../data/box';
 import { TD_DISPLAY } from './brand';
 import { ScorePill, TurnTimerBar } from './chrome';
@@ -315,7 +316,7 @@ export function BoxRound({
               type="button"
               data-card-id={card.remaining.length > 0 ? card.id : undefined}
               disabled={!canPick || card.remaining.length === 0}
-              className="absolute flex flex-col items-start justify-between overflow-hidden rounded-[6px] px-2 py-1 text-left transition-opacity duration-200"
+              className="absolute flex flex-col items-center justify-center gap-1 overflow-hidden rounded-[6px] px-2 py-1 text-center transition-opacity duration-200"
               style={{
                 ...POCKETS[j],
                 opacity: snapped ? 1 : 0,
@@ -326,17 +327,18 @@ export function BoxRound({
                 <span aria-hidden className="absolute inset-0 rounded-[6px]" style={{ background: 'rgba(0,0,0,0.55)' }} />
               )}
               <span
-                className="relative text-[11px] leading-tight md:text-[13px]"
-                style={{ ...TD_DISPLAY, color: CARD_TEXT[(lf * 2 + j) % CARD_TEXT.length] }}
+                className="relative text-[11px] md:text-[13px]"
+                style={{ ...TD_DISPLAY, lineHeight: 1.15, color: CARD_TEXT[(lf * 2 + j) % CARD_TEXT.length] }}
               >
                 {card.title}
               </span>
               <span
-                className="relative shrink-0 rounded-full px-1.5 py-0.5 text-[8px] md:text-[9px]"
+                className="relative shrink-0 text-[9px] md:text-[10px]"
                 style={{
                   ...TD_DISPLAY,
-                  background: 'rgba(0,0,0,0.8)',
-                  color: card.remaining.length > 0 ? 'var(--td-white)' : 'rgba(255,255,255,0.6)',
+                  lineHeight: 1.2,
+                  color: CARD_TEXT[(lf * 2 + j) % CARD_TEXT.length],
+                  opacity: card.remaining.length > 0 ? 0.85 : 0.5,
                 }}
               >
                 {card.remaining.length} {TD.questionsLeftSuffix}
@@ -416,18 +418,11 @@ export function BoxRound({
             autoCorrect="off"
             spellCheck={false}
             enterKeyHint="send"
-            className="h-14 min-w-0 flex-1 rounded-[10px] border-0 px-4 text-base text-white outline-none placeholder:text-white/35 disabled:opacity-50"
-            style={{ background: 'var(--td-charcoal)', boxShadow: '4px 4px 0 rgba(0,0,0,0.5)', fontFamily: "'Noto Sans Georgian', sans-serif", fontWeight: 600 }}
+            className="bs-input min-w-0 flex-1"
           />
-          <motion.button
-            type="submit"
-            whileTap={{ scale: 0.95 }}
-            disabled={!myInput}
-            className="h-14 shrink-0 rounded-[10px] px-6 text-base disabled:opacity-40"
-            style={{ ...TD_DISPLAY, background: 'var(--td-orange)', color: '#0d0d0d', boxShadow: '4px 4px 0 rgba(0,0,0,0.5)' }}
-          >
+          <BsButton type="submit" size="sm" disabled={!myInput} className="h-12 shrink-0 px-5">
             {TD.submit}
-          </motion.button>
+          </BsButton>
         </form>
         <AnimatePresence>
           {flash && (

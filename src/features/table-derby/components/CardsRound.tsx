@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { matchesName } from '@/features/mini-games/lib/matching';
 import { TD } from '../lib/copy';
+import { BsButton } from '../shell/ui';
 import type { TdCard, TdCardCategory } from '../data/cards';
 import { TD_DISPLAY, BoltGlyph, BetssonWordmark } from './brand';
 import { CategoryBand, ScorePill, TurnTimerBar } from './chrome';
@@ -194,7 +195,7 @@ export function CardsRound({
       <div className="fixed inset-x-0 top-0 z-30 flex justify-center pb-4 pt-4" style={{ background: 'linear-gradient(to bottom, rgba(30,30,30,0.92) 55%, transparent)' }}>
         <ScorePill roundsMe={roundsWon.me} roundsOp={roundsWon.op} inRoundMe={scores.me} inRoundOp={scores.op} left={<MyAvatar size={54} active={myActive} />} right={<TdAvatar name={opponentName} size={54} active={opActive} />} />
       </div>
-      <CategoryBand prompt={`${TD.round2Name} · ${category.prompt}`} compact />
+      <CategoryBand prompt={`${TD.roundCardsName} · ${category.prompt}`} compact />
 
       <p className="text-center text-[14px] md:text-base" style={{ ...TD_DISPLAY, color: cphase === 'stealMe' ? 'var(--td-orange)' : 'rgba(255,255,255,0.7)' }}>
         {statusText}
@@ -217,10 +218,10 @@ export function CardsRound({
               }
             >
               {!sl.gone && (
-                <span className="flex h-full flex-col items-center justify-center gap-1">
+                <span className="flex h-full flex-col items-center justify-center gap-1.5">
                   <BoltGlyph size={24} />
-                  <span className="scale-75 opacity-60">
-                    <BetssonWordmark size={8} />
+                  <span className="opacity-85 md:scale-125">
+                    <BetssonWordmark size={11} />
                   </span>
                 </span>
               )}
@@ -301,18 +302,11 @@ export function CardsRound({
             autoCorrect="off"
             spellCheck={false}
             enterKeyHint="send"
-            className="h-14 min-w-0 flex-1 rounded-[10px] border-0 px-4 text-base text-white outline-none placeholder:text-white/35 disabled:opacity-50"
-            style={{ background: 'var(--td-charcoal)', boxShadow: '4px 4px 0 rgba(0,0,0,0.5)', fontFamily: "'Noto Sans Georgian', sans-serif", fontWeight: 600 }}
+            className="bs-input min-w-0 flex-1"
           />
-          <motion.button
-            type="submit"
-            whileTap={{ scale: 0.95 }}
-            disabled={!myInput}
-            className="h-14 shrink-0 rounded-[10px] px-6 text-base disabled:opacity-40"
-            style={{ ...TD_DISPLAY, background: 'var(--td-orange)', color: '#0d0d0d', boxShadow: '4px 4px 0 rgba(0,0,0,0.5)' }}
-          >
+          <BsButton type="submit" size="sm" disabled={!myInput} className="h-12 shrink-0 px-5">
             {TD.submit}
-          </motion.button>
+          </BsButton>
         </form>
         <AnimatePresence>
           {flash && (

@@ -113,6 +113,19 @@ export function OrderGlyph({ size = 40 }: { size?: number }) {
   );
 }
 
+/** Football Logic — two linked rings with a question mark. */
+export function LogicGlyph({ size = 40 }: { size?: number }) {
+  return (
+    <svg viewBox="0 0 48 48" width={size} height={size} aria-hidden>
+      <circle cx="17" cy="24" r="11" stroke="var(--td-orange)" strokeWidth="5" fill="none" />
+      <circle cx="31" cy="24" r="11" stroke="var(--td-orange)" strokeWidth="5" fill="none" opacity="0.7" />
+      <text x="24" y="29" textAnchor="middle" fontSize="15" fontWeight="900" fill="var(--td-orange)" fontFamily="Poppins, sans-serif">
+        ?
+      </text>
+    </svg>
+  );
+}
+
 /** Career Path — winding road with a center dash. */
 export function RoadGlyph({ size = 40 }: { size?: number }) {
   return (

@@ -1,7 +1,8 @@
 'use client';
 
 /** Daily challenges rebuilt in Betsson/TD branding (Quizball's demo data
- *  + engines, TD gameplay UI). All three run against timers; the first
+ *  + engines, TD gameplay UI): Football Logic, Put in Order, Career Path.
+ *  All three run against timers; the first
  *  completion of each challenge per Georgian day earns +1 ticket. */
 
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -12,21 +13,20 @@ import { CSS } from '@dnd-kit/utilities';
 import { matchesName } from '@/features/mini-games/lib/matching';
 import { findClubByName } from '@/lib/clubs';
 import { buildDemoDailySession } from '@/features/demos/data/demoDailySessions';
-import type { PutInOrderSession, CareerPathSession } from '@/lib/domain/dailyChallenge';
-import { TacticsBoard2D, BOARD_VIEW_W, BOARD_VIEW_H } from '@/features/mini-games/components/TacticsBoard2D';
-import { TACTICS_GOALS } from '@/features/mini-games/data/tacticsGoals';
-import { buildTimeline } from '@/features/mini-games/lib/tacticsEngine';
+import type { PutInOrderSession, CareerPathSession, FootballLogicSession } from '@/lib/domain/dailyChallenge';
 import { TD } from '../lib/copy';
-import { TD_DISPLAY, TicketGlyph, OrderGlyph, RoadGlyph } from './brand';
+import { BsButton } from '../shell/ui';
+import { TD_DISPLAY, TicketGlyph, OrderGlyph, RoadGlyph, LogicGlyph } from './brand';
 import { CategoryBand, TurnTimerBar } from './chrome';
+import { ClubCrest } from './ClubCrest';
 import { claimDailyReward } from '../lib/state';
 
-export type TdDailyType = 'putInOrder' | 'careerPath' | 'guessTheGoal';
+export type TdDailyType = 'putInOrder' | 'careerPath' | 'footballLogic';
 
 const TITLES: Record<TdDailyType, string> = {
   putInOrder: TD.dailyPio,
   careerPath: TD.dailyCp,
-  guessTheGoal: TD.dailyGtg,
+  footballLogic: TD.dailyFl,
 };
 
 /* ── shared chrome ──────────────────────────────────────────────── */
@@ -59,14 +59,9 @@ function Flash({ flash }: { flash: { key: number; text: string; good: boolean } 
 function GameHeader({ title, onExit }: { title: string; onExit: () => void }) {
   return (
     <div className="flex w-full items-center gap-3">
-      <button
-        type="button"
-        onClick={onExit}
-        className="flex items-center gap-1 rounded-[10px] px-3 py-2 text-[11px]"
-        style={{ ...TD_DISPLAY, background: 'var(--td-charcoal)', color: 'var(--td-white)', boxShadow: '3px 3px 0 #000' }}
-      >
+      <BsButton variant="ghost" size="sm" onClick={onExit} className="h-9 px-3">
         ‹ {TD.back}
-      </button>
+      </BsButton>
       <h2 className="flex-1 text-center text-lg text-white md:text-xl" style={TD_DISPLAY}>
         {title}
       </h2>
@@ -173,15 +168,7 @@ function TdPutInOrder({ onDone }: { onDone: (score: number) => void }) {
       </DndContext>
       <TurnTimerBar turnKey={`pio-${roundIdx}`} ms={PIO_ROUND_MS} running />
       <div className="relative">
-        <motion.button
-          type="button"
-          whileTap={{ scale: 0.96 }}
-          onClick={submit}
-          className="w-full rounded-[12px] py-3.5 text-base"
-          style={{ ...TD_DISPLAY, background: 'var(--td-orange)', color: '#0d0d0d', boxShadow: '4px 4px 0 rgba(0,0,0,0.5)' }}
-        >
-          {TD.confirmOrder}
-        </motion.button>
+        <BsButton onClick={submit}>{TD.confirmOrder}</BsButton>
         <Flash flash={flash} />
       </div>
       <p className="text-center text-[11px] text-white/50" style={TD_DISPLAY}>
@@ -291,10 +278,7 @@ function TdCareerPath({ onDone }: { onDone: (score: number) => void }) {
             >
               {i + 1}
             </span>
-            {i < revealed && crests[i] && (
-              /* eslint-disable-next-line @next/next/no-img-element -- registry crest */
-              <img src={crests[i]!} alt="" className="size-7 shrink-0 object-contain" draggable={false} />
-            )}
+            {i < revealed && crests[i] && <ClubCrest src={crests[i]!} size={30} />}
             <span className="text-[13px] text-white md:text-[15px]" style={TD_DISPLAY}>
               {i < revealed ? club : '???'}
             </span>
@@ -320,18 +304,11 @@ function TdCareerPath({ onDone }: { onDone: (score: number) => void }) {
             autoCorrect="off"
             spellCheck={false}
             enterKeyHint="send"
-            className="h-12 min-w-0 flex-1 rounded-[10px] border-0 px-4 text-[15px] text-white outline-none placeholder:text-white/35 disabled:opacity-50"
-            style={{ background: 'var(--td-charcoal)', boxShadow: '4px 4px 0 rgba(0,0,0,0.5)', fontFamily: "'Noto Sans Georgian', sans-serif", fontWeight: 600 }}
+            className="bs-input min-w-0 flex-1"
           />
-          <motion.button
-            type="submit"
-            whileTap={{ scale: 0.95 }}
-            disabled={locked}
-            className="h-12 shrink-0 rounded-[10px] px-5 text-sm disabled:opacity-40"
-            style={{ ...TD_DISPLAY, background: 'var(--td-orange)', color: '#0d0d0d', boxShadow: '4px 4px 0 rgba(0,0,0,0.5)' }}
-          >
+          <BsButton type="submit" size="sm" disabled={locked} className="h-12 shrink-0 px-5">
             {TD.submit}
-          </motion.button>
+          </BsButton>
         </form>
         <Flash flash={flash} />
       </div>
@@ -342,197 +319,146 @@ function TdCareerPath({ onDone }: { onDone: (score: number) => void }) {
   );
 }
 
-/* ── Guess the Goal — tactics-board replay, answer fast for points ── */
+/* ── Football Logic: two clubs + a riddle → name the player ──────── */
 
-const GTG_MAX = 100;
-const GTG_MIN = 40;
-const GTG_ROUND_MS = 35_000;
-const GTG_LOOP_HOLD = 1.6;
+const FL_MAX = 100;
+const FL_MIN = 40;
 
-/** The ACTUAL goal footage per demo goal (embeddable YouTube clips, verified
- *  manually) — shown in place of the board the moment the answer lands, the
- *  same as Quizball's live Guess the Goal. `end` trims long clips to the
- *  goal moment. */
-const GTG_VIDEOS: Record<string, { id: string; start?: number; end?: number }> = {
-  'carlos-alberto-1970': { id: 'rrOe_VzGevw' },
-  'maradona-1986': { id: '1wVho3I0NtU', end: 60 },
-  'messi-getafe-2007': { id: 'FtdoIg3Do-k', end: 60 },
-  'bergkamp-1998': { id: 'XsZkCFoqSBs' },
-  'cambiasso-2006': { id: 'COe5Y29-BZY', end: 75 },
-};
-
-function gtgPotential(revealed: number, mainCount: number, looped: boolean): number {
-  if (looped) return GTG_MIN;
-  const step = Math.max(0, Math.min(revealed - 1, mainCount - 1));
-  return Math.round(GTG_MAX - ((GTG_MAX - GTG_MIN) * step) / Math.max(1, mainCount - 1));
-}
-
-function TdGuessTheGoal({ onDone }: { onDone: (score: number) => void }) {
-  const [roundIdx, setRoundIdx] = useState(0);
-  const [time, setTime] = useState(0);
-  const [maxReveal, setMaxReveal] = useState(1);
-  const [looped, setLooped] = useState(false);
-  const [picked, setPicked] = useState<number | null>(null);
+function TdFootballLogic({ onDone }: { onDone: (score: number) => void }) {
+  const session = useMemo(() => buildDemoDailySession('footballLogic', 'ka') as FootballLogicSession, []);
+  const roundMs = session.secondsPerQuestion * 1000;
+  const [qIdx, setQIdx] = useState(0);
+  const [input, setInput] = useState('');
   const [score, setScore] = useState(0);
-  const timeRef = useRef(0);
+  const [locked, setLocked] = useState(false);
+  const [startedAt, setStartedAt] = useState(() => Date.now());
+  const [flash, setFlash] = useState<{ key: number; text: string; good: boolean } | null>(null);
+  const q = session.questions[qIdx];
   const done = useRef(false);
 
-  const goal = TACTICS_GOALS[roundIdx];
-  const timeline = useMemo(() => buildTimeline(goal), [goal]);
-  const video = GTG_VIDEOS[goal.id];
-
-  const goNext = () => {
-    if (roundIdx + 1 >= TACTICS_GOALS.length) {
+  const advance = (total: number) => {
+    if (qIdx + 1 >= session.questions.length) {
       done.current = true;
-      onDone(score);
+      setTimeout(() => onDone(total), 1100);
     } else {
-      setRoundIdx((i) => i + 1);
-      setPicked(null);
-      setLooped(false);
-      setMaxReveal(1);
-      timeRef.current = 0;
-      setTime(0);
+      setTimeout(() => {
+        setQIdx((i) => i + 1);
+        setLocked(false);
+        setInput('');
+        setStartedAt(Date.now());
+      }, 1400);
     }
   };
 
-  // Replay clock — loops with a short hold while guessing; freezes on answer
-  // (the frame flips to the real footage instead).
-  useEffect(() => {
-    if (picked !== null) return;
-    let raf = 0;
-    let last = performance.now();
-    const tick = (now: number) => {
-      const dt = Math.min(0.05, (now - last) / 1000);
-      last = now;
-      let next = timeRef.current + dt;
-      if (next > timeline.duration + GTG_LOOP_HOLD) {
-        next = 0;
-        setLooped(true);
-      }
-      timeRef.current = next;
-      setTime(next);
-      setMaxReveal((prev) => {
-        let revealed = 0;
-        for (const step of timeline.steps) if (step.main && step.start <= next) revealed += 1;
-        return Math.max(prev, Math.max(1, revealed));
-      });
-      raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [timeline, picked, roundIdx]);
-
-  const pick = (i: number) => {
-    if (picked !== null || done.current) return;
-    setScore((prev) => (i === goal.answerIndex ? prev + gtgPotential(maxReveal, timeline.mainCount, looped) : prev));
-    setPicked(i);
+  const miss = () => {
+    if (locked || done.current) return;
+    setLocked(true);
+    setFlash({ key: Date.now(), text: `${TD.answerWas} ${q.displayAnswer}`, good: false });
+    advance(score);
   };
-
-  const pickRef = useRef(pick);
+  const missRef = useRef(miss);
   useEffect(() => {
-    pickRef.current = pick;
+    missRef.current = miss;
   });
   useEffect(() => {
-    const t = setTimeout(() => {
-      // round clock expired — counts as a miss
-      if (pickRef.current) pickRef.current(-1);
-    }, GTG_ROUND_MS);
+    if (locked) return;
+    const t = setTimeout(() => missRef.current(), roundMs);
     return () => clearTimeout(t);
-  }, [roundIdx]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- restart per question
+  }, [qIdx, locked]);
+
+  const submit = () => {
+    if (locked || done.current) return;
+    const value = input.trim();
+    if (!value) return;
+    setInput('');
+    if (matchesName(value, [...q.acceptedAnswers, q.displayAnswer]).ok) {
+      const elapsed = Math.min(1, (Date.now() - startedAt) / roundMs);
+      const pts = Math.round(FL_MAX - (FL_MAX - FL_MIN) * elapsed);
+      setLocked(true);
+      setFlash({ key: Date.now(), text: `${TD.correct} +${pts}`, good: true });
+      const total = score + pts;
+      setScore(total);
+      advance(total);
+    } else {
+      setFlash({ key: Date.now(), text: TD.wrong, good: false });
+    }
+  };
 
   return (
     <div className="flex w-full flex-col gap-3">
-      <div
-        className="relative w-full overflow-hidden rounded-[14px]"
-        style={{ aspectRatio: `${BOARD_VIEW_W} / ${BOARD_VIEW_H}`, boxShadow: '4px 5px 0 rgba(0,0,0,0.55)' }}
-      >
-        {picked !== null && video ? (
-          // The real goal moment, on the spot — muted so autoplay always fires.
-          <iframe
-            src={`https://www.youtube-nocookie.com/embed/${video.id}?autoplay=1&mute=1&rel=0&playsinline=1${video.start ? `&start=${video.start}` : ''}${video.end ? `&end=${video.end}` : ''}`}
-            title={goal.title}
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-            allowFullScreen
-            className="absolute inset-0 h-full w-full border-0 bg-black"
-          />
-        ) : (
-          <TacticsBoard2D goal={goal} timeline={timeline} t={time} goalFlash={picked !== null && time > timeline.duration - 0.5} />
-        )}
-        {picked === null && (
-          <>
-            <div
-              className="absolute left-2 top-2 rounded-full px-3 py-1.5 text-[11px]"
-              style={{ ...TD_DISPLAY, background: 'rgba(0,0,0,0.6)', color: 'var(--td-white)' }}
-            >
-              {Math.min(maxReveal, timeline.mainCount)}/{timeline.mainCount}
-            </div>
-            <div
-              className="absolute right-2 top-2 rounded-full px-3 py-1.5 text-[11px]"
-              style={{ ...TD_DISPLAY, background: 'var(--td-orange)', color: '#0d0d0d' }}
-            >
-              {gtgPotential(maxReveal, timeline.mainCount, looped)}
-            </div>
-          </>
-        )}
+      <div className="flex items-center justify-between px-1">
+        <span className="text-[11px] text-white/60" style={TD_DISPLAY}>
+          {qIdx + 1} / {session.questions.length} · {q.category}
+        </span>
+        <span className="text-[13px]" style={{ ...TD_DISPLAY, color: 'var(--td-orange)' }}>
+          {score}
+        </span>
       </div>
-      {picked !== null && (
-        <motion.button
-          type="button"
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.6 }}
-          whileTap={{ scale: 0.96 }}
-          onClick={goNext}
-          className="w-full rounded-[12px] py-3 text-[14px]"
-          style={{ ...TD_DISPLAY, background: 'var(--td-orange)', color: '#0d0d0d', boxShadow: '4px 4px 0 rgba(0,0,0,0.5)' }}
+      <div className="grid grid-cols-2 gap-3">
+        {[q.imageAUrl, q.imageBUrl].map((src, i) => (
+          <div
+            key={`${q.id}-${i}`}
+            className="flex aspect-square items-center justify-center rounded-[12px] p-4"
+            style={{ background: 'var(--td-paper)', boxShadow: '4px 4px 0 rgba(0,0,0,0.55)', transform: `rotate(${i ? 1 : -1}deg)` }}
+          >
+            {src ? (
+              // eslint-disable-next-line @next/next/no-img-element -- demo clue image
+              <img src={src} alt="" className="max-h-full max-w-full object-contain" draggable={false} />
+            ) : (
+              <span className="text-4xl" style={{ ...TD_DISPLAY, color: '#0d0d0d' }}>?</span>
+            )}
+          </div>
+        ))}
+      </div>
+      <CategoryBand prompt={q.prompt ?? ''} compact />
+      <TurnTimerBar turnKey={`fl-${qIdx}`} ms={roundMs} running={!locked} />
+      <div className="relative">
+        <Flash flash={flash} />
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            submit();
+          }}
+          className="flex gap-2"
         >
-          {roundIdx + 1 >= TACTICS_GOALS.length ? TD.dailyFinish : TD.onbNext} ›
-        </motion.button>
-      )}
-      <TurnTimerBar turnKey={`gtg-${roundIdx}`} ms={GTG_ROUND_MS} running={picked === null} />
-      <div className="grid grid-cols-1 gap-2">
-        {goal.options.map((opt, i) => {
-          const state =
-            picked === null ? 'idle' : i === goal.answerIndex ? 'correct' : i === picked ? 'wrong' : 'dim';
-          return (
-            <button
-              key={opt}
-              type="button"
-              disabled={picked !== null}
-              onClick={() => pick(i)}
-              className="rounded-[10px] px-3.5 py-3 text-left text-[12px] leading-snug transition-opacity md:text-[13px]"
-              style={{
-                ...TD_DISPLAY,
-                background: state === 'correct' ? 'var(--td-orange)' : state === 'wrong' ? 'var(--td-steel-deep)' : 'var(--td-charcoal)',
-                color: state === 'correct' ? '#0d0d0d' : 'var(--td-white)',
-                boxShadow: '3px 3px 0 rgba(0,0,0,0.5)',
-                opacity: state === 'dim' ? 0.45 : 1,
-              }}
-            >
-              {opt}
-            </button>
-          );
-        })}
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            disabled={locked}
+            placeholder={TD.answerPlaceholder}
+            autoComplete="off"
+            autoCapitalize="off"
+            className="bs-input min-w-0 flex-1"
+          />
+          <BsButton type="submit" size="sm" disabled={locked} className="h-12 shrink-0 px-5">
+            {TD.submit}
+          </BsButton>
+        </form>
       </div>
-      <p className="text-center text-[11px] text-white/50" style={TD_DISPLAY}>
-        {roundIdx + 1}/{TACTICS_GOALS.length} · {score}
-      </p>
     </div>
   );
 }
 
-/* ── orchestrator + result (with the +1 ticket daily reward) ────── */
-
 const RULES: Record<TdDailyType, { text: string; pill: string }> = {
-  guessTheGoal: { text: TD.dailyRulesGtg, pill: TD.dailyPillGtg },
+  footballLogic: { text: TD.dailyRulesFl, pill: TD.dailyPillFl },
   putInOrder: { text: TD.dailyRulesPio, pill: TD.dailyPillPio },
   careerPath: { text: TD.dailyRulesCp, pill: TD.dailyPillCp },
 };
 
-export function TdDailyGame({ type, onExit }: { type: TdDailyType; onExit: () => void }) {
+export function TdDailyGame({
+  type,
+  onExit,
+  presetResult,
+}: {
+  type: TdDailyType;
+  onExit: () => void;
+  /** Dev playground: open straight on the result screen. */
+  presetResult?: { score: number; reward: boolean } | null;
+}) {
   const [attempt, setAttempt] = useState(0);
-  const [started, setStarted] = useState(false);
-  const [result, setResult] = useState<{ score: number; reward: boolean } | null>(null);
+  const [started, setStarted] = useState(!!presetResult);
+  const [result, setResult] = useState<{ score: number; reward: boolean } | null>(presetResult ?? null);
 
   const finish = (score: number) => {
     setResult({ score, reward: claimDailyReward(type) });
@@ -548,9 +474,8 @@ export function TdDailyGame({ type, onExit }: { type: TdDailyType; onExit: () =>
           animate={{ opacity: 1, y: 0 }}
           className="flex flex-1 flex-col items-center justify-center gap-5 pb-16 text-center"
         >
-          {type === 'guessTheGoal' ? (
-            // eslint-disable-next-line @next/next/no-img-element -- official round icon
-            <img src="/assets/table-derby/icon-ball-orange.svg" alt="" className="h-14 w-14 object-contain" />
+          {type === 'footballLogic' ? (
+            <LogicGlyph size={56} />
           ) : type === 'putInOrder' ? (
             <OrderGlyph size={56} />
           ) : (
@@ -559,21 +484,12 @@ export function TdDailyGame({ type, onExit }: { type: TdDailyType; onExit: () =>
           <p className="max-w-xs text-[13px] leading-relaxed text-white/75 md:text-[14px]" style={TD_DISPLAY}>
             {RULES[type].text}
           </p>
-          <div
-            className="rounded-full px-4 py-2 text-[11px]"
-            style={{ ...TD_DISPLAY, background: 'var(--td-paper)', color: '#0d0d0d', boxShadow: '3px 3px 0 rgba(0,0,0,0.5)', transform: 'rotate(-1deg)' }}
-          >
+          <div className="bs-body-medium rounded-full px-4 py-2 text-[12px]" style={{ background: 'var(--bs-surface)', color: 'var(--bs-text-2)' }}>
             {RULES[type].pill}
           </div>
-          <motion.button
-            type="button"
-            whileTap={{ scale: 0.96 }}
-            onClick={() => setStarted(true)}
-            className="w-full max-w-xs rounded-[12px] py-3.5 text-base"
-            style={{ ...TD_DISPLAY, background: 'var(--td-orange)', color: '#0d0d0d', boxShadow: '5px 5px 0 #000' }}
-          >
+          <BsButton onClick={() => setStarted(true)} className="max-w-xs">
             {TD.dailyStart}
-          </motion.button>
+          </BsButton>
         </motion.div>
       </div>
     );
@@ -610,28 +526,18 @@ export function TdDailyGame({ type, onExit }: { type: TdDailyType; onExit: () =>
             </span>
           </motion.div>
         )}
-        <div className="flex gap-3">
-          <motion.button
-            type="button"
-            whileTap={{ scale: 0.95 }}
+        <div className="flex w-full max-w-sm flex-col gap-3">
+          <BsButton
             onClick={() => {
               setResult(null);
               setAttempt((n) => n + 1);
             }}
-            className="rounded-[12px] px-7 py-3.5 text-sm"
-            style={{ ...TD_DISPLAY, background: 'var(--td-orange)', color: '#0d0d0d', boxShadow: '5px 5px 0 #000' }}
           >
             {TD.playAgain}
-          </motion.button>
-          <motion.button
-            type="button"
-            whileTap={{ scale: 0.95 }}
-            onClick={onExit}
-            className="rounded-[12px] px-7 py-3.5 text-sm"
-            style={{ ...TD_DISPLAY, background: 'var(--td-charcoal)', color: 'var(--td-white)', boxShadow: '5px 5px 0 #000' }}
-          >
+          </BsButton>
+          <BsButton variant="ghost" onClick={onExit}>
             {TD.backHome}
-          </motion.button>
+          </BsButton>
         </div>
       </div>
     );
@@ -646,7 +552,7 @@ export function TdDailyGame({ type, onExit }: { type: TdDailyType; onExit: () =>
         ) : type === 'careerPath' ? (
           <TdCareerPath onDone={finish} />
         ) : (
-          <TdGuessTheGoal onDone={finish} />
+          <TdFootballLogic onDone={finish} />
         )}
       </div>
     </div>

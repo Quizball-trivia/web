@@ -5,7 +5,7 @@
  *  with the same sections and no bottom tabs. */
 
 import type { ReactNode } from 'react';
-import { TicketGlyph } from '../components/brand';
+import { TD_LATIN, TicketGlyph } from '../components/brand';
 import { MyAvatar } from '../components/Avatar';
 import { TD } from '../lib/copy';
 import { type ShellTab, TabBar, TopBar } from './nav';
@@ -59,8 +59,17 @@ export function Shell({
   children: ReactNode;
 }) {
   const logo = (
-    // eslint-disable-next-line @next/next/no-img-element -- local brand SVG
-    <img src="/assets/table-derby/logo-paper.svg" alt={TD.title} className="h-[52px] w-auto md:h-[40px]" />
+    <span className="flex flex-col items-center gap-1">
+      {/* eslint-disable-next-line @next/next/no-img-element -- local brand SVG */}
+      <img src="/assets/table-derby/logo-paper.svg" alt={TD.title} className="h-[46px] w-auto md:h-[34px]" />
+      {/* same lockup as the boot loader's "powered by Quizball" line */}
+      <span
+        className="whitespace-nowrap text-[7px] font-semibold uppercase leading-none md:text-[7.5px]"
+        style={{ ...TD_LATIN, letterSpacing: '0.22em', color: 'rgba(255,255,255,0.55)' }}
+      >
+        {TD.poweredByQuizball}
+      </span>
+    </span>
   );
   const profile = <ProfileCluster name={name} points={points} tickets={tickets} onClick={() => onTab('profile')} />;
   return (

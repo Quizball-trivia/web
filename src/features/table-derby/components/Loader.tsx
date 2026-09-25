@@ -5,6 +5,7 @@
  *  მაგიდის დერბი ✕ QUIZBALL, powered-by line, brand loading bar. */
 
 import { motion } from 'motion/react';
+import { TD } from '../lib/copy';
 import { MuralBackdrop, TdLogoSticker, TD_DISPLAY, TD_LATIN } from './brand';
 
 export function TdLoader() {
@@ -54,7 +55,7 @@ export function TdLoader() {
         className="absolute bottom-8 z-10 text-[11px] uppercase"
         style={{ ...TD_LATIN, letterSpacing: '0.28em', color: 'rgba(255,255,255,0.55)' }}
       >
-        powered by Quizball
+        {TD.poweredByQuizball}
       </span>
     </motion.div>
   );

@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { matchesName } from '@/features/mini-games/lib/matching';
 import { TD } from '../lib/copy';
+import { BsButton } from '../shell/ui';
 import { TD_DISPLAY } from './brand';
 import { ScorePill, TurnTimerBar } from './chrome';
 import { MyAvatar, TdAvatar } from './Avatar';
@@ -192,7 +193,7 @@ export function BuzzerRound({
       </div>
       <div className="flex items-center gap-2.5">
         <span className="text-[13px] text-white/60" style={TD_DISPLAY}>
-          {penaltyMode ? TD.penaltiesName : TD.round4Name}
+          {penaltyMode ? TD.penaltiesName : TD.roundBuzzerName}
         </span>
         <span
           className="rounded-full px-3 py-1 text-[13px]"
@@ -252,17 +253,11 @@ export function BuzzerRound({
               autoCorrect="off"
               spellCheck={false}
               enterKeyHint="send"
-              className="h-14 min-w-0 flex-1 rounded-[10px] border-0 px-4 text-base text-white outline-none placeholder:text-white/35"
-              style={{ background: 'var(--td-charcoal)', boxShadow: '4px 4px 0 rgba(0,0,0,0.5)', fontFamily: "'Noto Sans Georgian', sans-serif", fontWeight: 600 }}
+              className="bs-input min-w-0 flex-1"
             />
-            <motion.button
-              type="submit"
-              whileTap={{ scale: 0.95 }}
-              className="h-14 shrink-0 rounded-[10px] px-6 text-base"
-              style={{ ...TD_DISPLAY, background: 'var(--td-orange)', color: '#0d0d0d', boxShadow: '4px 4px 0 rgba(0,0,0,0.5)' }}
-            >
+            <BsButton type="submit" size="sm" className="h-12 shrink-0 px-5">
               {TD.submit}
-            </motion.button>
+            </BsButton>
           </form>
         </div>
       ) : (

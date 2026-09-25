@@ -71,12 +71,17 @@ export function BsButton({
   children,
   onClick,
   variant = 'primary',
+  size = 'md',
+  type = 'button',
   disabled,
   className,
 }: {
   children: ReactNode;
   onClick?: () => void;
+  type?: 'button' | 'submit';
   variant?: 'primary' | 'ghost' | 'danger';
+  /** md = Figma "Active" (fixed 48px, full width); sm = Figma "Small" (hugs content). */
+  size?: 'md' | 'sm';
   disabled?: boolean;
   className?: string;
 }) {
@@ -88,29 +93,21 @@ export function BsButton({
         : { background: 'var(--bs-surface)', color: 'var(--bs-text)' };
   return (
     <button
-      type="button"
+      type={type}
       onClick={onClick}
       disabled={disabled}
+      // Betsson Figma button: radius 8, padding 12/16, gap 10, Mein Color
+      // fill, white label in Body/Body Medium (545 · 14/19).
       className={cn(
-        'bs-text w-full rounded-[8px] px-4 py-3.5 text-[14px] font-bold transition-transform active:scale-[0.98]',
+        'bs-body-medium inline-flex items-center justify-center gap-2.5 rounded-[8px] px-4 py-3 normal-case transition-transform active:scale-[0.98]',
+        size === 'md' ? 'h-12 w-full' : 'w-auto',
         disabled && 'cursor-not-allowed',
         className,
       )}
-      style={disabled ? { background: 'var(--bs-border)', color: 'var(--bs-text-3)' } : styles}
+      style={disabled ? { background: 'var(--bs-frame)', color: 'var(--bs-text-3)' } : styles}
     >
       {children}
     </button>
-  );
-}
-
-export function NewBadge({ children }: { children: ReactNode }) {
-  return (
-    <span
-      className="inline-flex items-center rounded-full px-1.5 py-px text-[9px] font-bold leading-[14px] text-white"
-      style={{ background: 'var(--bs-new)' }}
-    >
-      {children}
-    </span>
   );
 }
 

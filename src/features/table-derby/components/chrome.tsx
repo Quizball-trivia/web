@@ -175,7 +175,7 @@ export function PlayerBoard({
           <svg viewBox="0 0 24 40" width="8" height="13" fill="var(--td-orange)" aria-hidden>
             <path d="M14 0 0 22h8L6 40 24 15h-9L21 0h-7Z" />
           </svg>
-          <span className="truncate text-[12px] md:text-[15px]" style={{ ...TD_DISPLAY, color: 'var(--td-orange)' }}>
+          <span className="truncate py-0.5 text-[12px] md:text-[15px]" style={{ ...TD_DISPLAY, lineHeight: 1.3, color: 'var(--td-orange)' }}>
             {name}
           </span>
         </div>
@@ -215,16 +215,17 @@ export function PlayerBoard({
 
 /* ── Turn timer bar (10s) ───────────────────────────────────────── */
 
+/** Betsson Figma "Progress Bars": 7px tall, full width, rounded track. */
 export function TurnTimerBar({ turnKey, ms, running }: { turnKey: string; ms: number; running: boolean }) {
   return (
-    <div className="h-2 w-full overflow-hidden rounded-full md:h-2.5" style={{ background: 'rgba(255,255,255,0.12)' }}>
+    <div className="h-[7px] w-full overflow-hidden rounded-full" style={{ background: 'var(--bs-border)' }}>
       <motion.div
         key={turnKey}
         initial={{ width: '100%' }}
         animate={{ width: running ? '0%' : '100%' }}
         transition={{ duration: running ? ms / 1000 : 0, ease: 'linear' }}
         className="h-full rounded-full"
-        style={{ background: 'var(--td-orange)' }}
+        style={{ background: 'var(--bs-primary)' }}
       />
     </div>
   );

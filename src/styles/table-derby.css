@@ -121,16 +121,67 @@
   --bs-surface-2: #1f2021;
   --bs-input: #232424;
   --bs-border: #2b2c2e;
-  --bs-text: #ffffff;
+  --bs-text: #ffffff; /* Dark Version/Text/Mein Text Color */
   --bs-text-2: #cfcfcf;
   --bs-text-3: #8f8f90;
-  --bs-primary: #f15a22;
+  --bs-primary: #f15a22; /* White Version/Static Colors/Mein Color */
   --bs-primary-deep: #b8471d;
   --bs-on-primary: #ffffff;
   --bs-new: #099d80;
   --bs-danger: #ff3c3c;
   --bs-toggle-off: #3a3a3a;
   --bs-divider: rgba(255, 255, 255, 0.08);
+  /* Europop Quiz screen (Figma): answer states + frames */
+  --bs-green: #369d34; /* White Version/Secondary/Green — correct answers */
+  --bs-red: #ff3b3b; /* White Version/Secondary/Red — errors, wrong answers */
+  --bs-frame: #333334; /* Dark Version/Dark BG/Frame Color; Button/Not Active */
+  --bs-disable: #777777; /* Dark Version/Text/Disable */
+  /* Betsson platform typeface (Figma: "November GeLC", 400). Commercial
+     font — files not in the repo yet; add an @font-face for them and this
+     token picks them up. Until then text falls back to Noto Sans Georgian. */
+  --bs-font: 'November GeLC', 'November', 'Noto Sans Georgian', 'Poppins', sans-serif;
+}
+
+/* Betsson text styles (Figma names in comments). November is a variable
+   font — 545 is a real weight there; the Noto fallback rounds it to 500. */
+.bs-headline {
+  /* Headlines · 700 · 24/31 · Dark Version/Text/Mein Text Color */
+  font-family: var(--bs-font);
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 31px;
+  color: var(--bs-text);
+}
+.bs-input {
+  text-transform: none;
+  /* flat answer field paired with BsButton: 48px, radius 8, no shadow;
+     16px text so iOS doesn't zoom on focus */
+  height: 48px;
+  border: 0;
+  border-radius: 8px;
+  padding: 0 16px;
+  background: var(--bs-input);
+  color: var(--bs-text);
+  font-family: var(--bs-font);
+  font-weight: 545;
+  font-size: 16px;
+  outline: none;
+}
+.bs-input::placeholder {
+  color: var(--bs-text-3);
+}
+.bs-input:focus-visible {
+  box-shadow: inset 0 0 0 1.5px var(--bs-primary);
+}
+.bs-input:disabled {
+  opacity: 0.5;
+}
+.bs-body-medium {
+  /* Body/Body Medium · 545 · 14/19 */
+  font-family: var(--bs-font);
+  font-weight: 545;
+  font-size: 14px;
+  line-height: 19px;
 }
 
 .bs-display {
@@ -139,7 +190,7 @@
   line-height: 1.05;
 }
 .bs-text {
-  font-family: var(--td-font-body);
+  font-family: var(--bs-font);
   font-weight: 500;
 }
 .bs-group {

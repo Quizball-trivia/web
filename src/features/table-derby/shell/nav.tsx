@@ -6,14 +6,13 @@
 import type { ReactNode } from 'react';
 import { CalendarDays, Home, Trophy, User, Zap } from 'lucide-react';
 import { TD } from '../lib/copy';
-import { NewBadge } from './ui';
 
-export type ShellTab = 'home' | 'ranked' | 'daily' | 'solo' | 'profile';
+export type ShellTab = 'home' | 'leaderboard' | 'daily' | 'solo' | 'profile';
 
-export const SHELL_TABS: { key: ShellTab; label: string; icon: typeof Home; badge?: string }[] = [
+export const SHELL_TABS: { key: ShellTab; label: string; icon: typeof Home }[] = [
   { key: 'home', label: TD.tabHome, icon: Home },
-  { key: 'ranked', label: TD.tabRanked, icon: Trophy },
-  { key: 'daily', label: TD.tabDaily, icon: CalendarDays, badge: TD.badgeNew },
+  { key: 'leaderboard', label: TD.menuLb, icon: Trophy },
+  { key: 'daily', label: TD.tabDaily, icon: CalendarDays },
   { key: 'solo', label: TD.tabSolo, icon: Zap },
   { key: 'profile', label: TD.tabProfile, icon: User },
 ];
@@ -25,7 +24,7 @@ export function TabBar({ tab, onTab }: { tab: ShellTab; onTab: (t: ShellTab) => 
       className="fixed inset-x-0 bottom-0 z-30 flex justify-around border-t px-1 pb-[max(env(safe-area-inset-bottom),10px)] pt-2.5 md:hidden"
       style={{ background: 'var(--bs-page)', borderColor: 'var(--bs-border)' }}
     >
-      {SHELL_TABS.map(({ key, label, icon: Icon, badge }) => (
+      {SHELL_TABS.map(({ key, label, icon: Icon }) => (
         <button
           key={key}
           type="button"
@@ -35,11 +34,6 @@ export function TabBar({ tab, onTab }: { tab: ShellTab; onTab: (t: ShellTab) => 
         >
           <Icon size={24} strokeWidth={1.8} />
           <span className={`bs-text text-[10px] ${tab === key ? 'font-bold' : ''}`}>{label}</span>
-          {badge && (
-            <span className="absolute -top-1.5 right-0">
-              <NewBadge>{badge}</NewBadge>
-            </span>
-          )}
         </button>
       ))}
     </nav>
@@ -67,7 +61,7 @@ export function TopBar({
       </button>
       <span className="h-6 w-px" style={{ background: 'var(--bs-border)' }} aria-hidden />
       <nav aria-label={TD.navLabel} className="flex items-center gap-1">
-        {SHELL_TABS.filter((t) => t.key !== 'profile').map(({ key, label, icon: Icon, badge }) => (
+        {SHELL_TABS.filter((t) => t.key !== 'profile').map(({ key, label, icon: Icon }) => (
           <button
             key={key}
             type="button"
@@ -77,7 +71,6 @@ export function TopBar({
           >
             <Icon size={18} strokeWidth={1.8} />
             <span className={tab === key ? 'font-bold' : ''}>{label}</span>
-            {badge && <NewBadge>{badge}</NewBadge>}
           </button>
         ))}
       </nav>

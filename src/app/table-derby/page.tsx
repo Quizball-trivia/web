@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import '@fontsource/noto-sans-georgian/500.css';
+import '@fontsource/noto-sans-georgian/600.css'; // closest static match for Betsson's 545
 import '@fontsource/noto-sans-georgian/700.css';
 import '@fontsource/noto-sans-georgian/900.css';
 import '@/styles/table-derby.css';

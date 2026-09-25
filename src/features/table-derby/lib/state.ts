@@ -181,3 +181,104 @@ export function dailyCategoryIndex(total: number): number {
   for (const ch of day) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
   return h % total;
 }
+
+/* ── Match history + stats (prototype: last 50 on this device) ────── */
+
+export interface MatchRecord {
+  at: number;
+  mode: 'ranked' | 'solo';
+  won: boolean;
+  me: number; // match points
+  op: number;
+  opponent: string;
+  rpDelta: number;
+  penalties: boolean; // decided on penalties
+}
+
+const MATCHES_KEY = 'td.matches';
+const MATCHES_MAX = 50;
+
+export function getMatches(): MatchRecord[] {
+  const v = read<MatchRecord[]>(MATCHES_KEY);
+  return Array.isArray(v) ? v : [];
+}
+
+export function recordMatch(m: MatchRecord) {
+  write(MATCHES_KEY, [m, ...getMatches()].slice(0, MATCHES_MAX));
+}
+
+export interface MatchStats {
+  played: number;
+  wins: number;
+  winRate: number; // 0–100
+  streak: number; // current ranked win streak
+  bestStreak: number;
+}
+
+/** Ranked only — solo is practice and never counts. */
+export function matchStats(matches: MatchRecord[]): MatchStats {
+  const ranked = matches.filter((m) => m.mode === 'ranked');
+  const wins = ranked.filter((m) => m.won).length;
+  let streak = 0;
+  for (const m of ranked) {
+    if (!m.won) break;
+    streak++;
+  }
+  let best = 0;
+  let run = 0;
+  for (const m of [...ranked].reverse()) {
+    run = m.won ? run + 1 : 0;
+    best = Math.max(best, run);
+  }
+  return {
+    played: ranked.length,
+    wins,
+    winRate: ranked.length ? Math.round((wins / ranked.length) * 100) : 0,
+    streak,
+    bestStreak: best,
+  };
+}
+
+/** Dev helper: a plausible recent history for the profile screen. */
+export function seedMatches() {
+  const names = ['ლუკა წ.', 'ნიკა კ.', 'გიორგი მ.', 'სანდრო ბ.', 'დათო ხ.', 'თორნიკე გ.'];
+  const now = Date.now();
+  const rows: MatchRecord[] = [
+    [true, 3, 1, 'ranked', false], [true, 2, 2, 'ranked', true], [true, 4, 0, 'ranked', false],
+    [false, 1, 3, 'ranked', false], [true, 3, 1, 'solo', false], [true, 3, 1, 'ranked', false],
+    [false, 2, 2, 'ranked', true], [true, 4, 0, 'ranked', false],
+  ].map(([won, me, op, mode, pen], i) => ({
+    at: now - (i * 7 + 2) * 3600_000,
+    mode: mode as 'ranked' | 'solo',
+    won: won as boolean,
+    me: me as number,
+    op: op as number,
+    opponent: names[i % names.length],
+    rpDelta: mode === 'solo' ? 0 : won ? QP_WIN : -QP_LOSS,
+    penalties: pen as boolean,
+  }));
+  write(MATCHES_KEY, rows);
+}
+
+/* ── Practice streak (prototype: local only) ──────────────────────── */
+
+export interface StreakRecord {
+  best: number;
+  last: number | null;
+  lastAt: number | null;
+}
+
+const STREAK_KEY = 'td.streak';
+
+export function getStreakRecord(): StreakRecord {
+  const v = read<StreakRecord>(STREAK_KEY);
+  return v && typeof v.best === 'number' ? v : { best: 0, last: null, lastAt: null };
+}
+
+/** Saves a finished run; returns whether it set a new best. */
+export function saveStreakRun(score: number): boolean {
+  const prev = getStreakRecord();
+  const isRecord = score > prev.best;
+  write(STREAK_KEY, { best: Math.max(prev.best, score), last: score, lastAt: Date.now() } satisfies StreakRecord);
+  return isRecord;
+}

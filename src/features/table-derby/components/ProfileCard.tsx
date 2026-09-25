@@ -12,6 +12,7 @@ import { AVATAR_COLORS } from '@/lib/avatars';
 import { TD } from '../lib/copy';
 import { TD_DISPLAY } from './brand';
 import { tdAvatarCustomization } from './Avatar';
+import { ClubCrest } from './ClubCrest';
 
 function hashName(name: string): number {
   let h = 0;
@@ -59,15 +60,8 @@ export function TdProfileCard({
         transform: `rotate(${mirror ? 1.5 : -1.5}deg)`,
       }}
     >
-      {/* favorite club crest */}
-      {club && (
-        // eslint-disable-next-line @next/next/no-img-element -- crest from the club registry
-        <img
-          src={club.logo}
-          alt={club.label}
-          className="absolute right-2.5 top-2.5 h-8 w-8 object-contain md:h-9 md:w-9"
-        />
-      )}
+      {/* favourite club crest — a chip on the card's corner, clear of the avatar */}
+      {club && <ClubCrest src={club.logo} size={40} className="absolute -right-3 -top-3 z-10" />}
       <div className={mirror ? '-scale-x-100' : undefined}>
         <AvatarPreview customization={tdAvatarCustomization(color)} width={104} />
       </div>
@@ -78,7 +72,9 @@ export function TdProfileCard({
       >
         {points} {TD.qpShort}
       </div>
-      <p className="mt-1.5 w-full truncate text-center text-[14px] text-white md:text-[15px]" style={TD_DISPLAY}>
+      {/* Mtavruli caps are taller than the display leading; truncate clips
+          overflow, so this line gets room of its own */}
+      <p className="mt-1.5 w-full truncate py-0.5 text-center text-[14px] text-white md:text-[15px]" style={{ ...TD_DISPLAY, lineHeight: 1.3 }}>
         {name}
       </p>
     </motion.div>

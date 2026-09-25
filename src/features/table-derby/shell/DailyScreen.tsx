@@ -1,23 +1,20 @@
 'use client';
 
-import { OrderGlyph, RoadGlyph } from '../components/brand';
+import { LogicGlyph, OrderGlyph, RoadGlyph } from '../components/brand';
 import type { TdDailyType } from '../components/DailyGames';
 import { TD } from '../lib/copy';
-import { NewBadge, SectionTitle } from './ui';
+import { SectionTitle } from './ui';
 
 export type DailyKey = TdDailyType;
 
 const DAILY: { key: DailyKey; name: string }[] = [
-  { key: 'guessTheGoal', name: TD.dailyGtg },
+  { key: 'footballLogic', name: TD.dailyFl },
   { key: 'putInOrder', name: TD.dailyPio },
   { key: 'careerPath', name: TD.dailyCp },
 ];
 
 function DailyIcon({ k }: { k: DailyKey }) {
-  if (k === 'guessTheGoal') {
-    // eslint-disable-next-line @next/next/no-img-element -- official round icon
-    return <img src="/assets/table-derby/icon-ball-orange.svg" alt="" className="size-10 object-contain md:size-12" />;
-  }
+  if (k === 'footballLogic') return <LogicGlyph size={40} />;
   return k === 'putInOrder' ? <OrderGlyph size={40} /> : <RoadGlyph size={40} />;
 }
 
@@ -52,7 +49,7 @@ export function DailyCards({ onOpen, done }: { onOpen: (k: DailyKey) => void; do
 export function DailyScreen({ onOpen, done }: { onOpen: (k: DailyKey) => void; done: Partial<Record<DailyKey, string>> }) {
   return (
     <>
-      <SectionTitle badge={<NewBadge>{TD.badgeNew}</NewBadge>}>{TD.tabDaily}</SectionTitle>
+      <SectionTitle>{TD.tabDaily}</SectionTitle>
       <p className="bs-text -mt-2 text-[12px] text-[var(--bs-text-3)]">{TD.dailySub}</p>
       <DailyCards onOpen={onOpen} done={done} />
     </>

@@ -9,13 +9,13 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
-import { matchesName } from '@/features/mini-games/lib/matching';
 import { TD, OPPONENT_NAMES } from './lib/copy';
-import { TD_LIST_CATEGORIES, type TdListCategory } from './data/categories';
 import { TD_DISPLAY, BetssonWordmark, TdLogoSticker, MuralBackdrop, BoltGlyph, StarburstGlyph } from './components/brand';
-import { CategoryBand, PlayerBoard, ScorePill, TurnTimerBar } from './components/chrome';
+import { CategoryBand } from './components/chrome';
 import { TdDailyGame, type TdDailyType } from './components/DailyGames';
 import { TdLoader } from './components/Loader';
+import { ElapsedTimer } from './components/ElapsedTimer';
+import { ClubCrest } from './components/ClubCrest';
 import { MyAvatar, TdAvatar, TD_AVATAR_COLORS, tdAvatarCustomization } from './components/Avatar';
 import { AvatarPreview } from '@/components/AvatarPreview';
 import { TdClubSelect } from './components/ClubSelect';
@@ -25,12 +25,15 @@ import { getClub } from '@/lib/clubs';
 import { MOCK_USER } from './lib/mockUser';
 import { Shell } from './shell/Shell';
 import type { ShellTab } from './shell/nav';
+import { readNavFromUrl, useShellHistory } from './shell/useShellHistory';
 import { HomeScreen } from './shell/HomeScreen';
 import { DailyScreen } from './shell/DailyScreen';
-import { SoloScreen } from './shell/SoloScreen';
+import { PracticeScreen } from './streak/PracticeScreen';
+import { StreakGame } from './streak/StreakGame';
 import { LeaderboardScreen } from './shell/LeaderboardScreen';
 import { ProfileScreen } from './shell/ProfileScreen';
 import { NoTicketsModal } from './shell/NoTicketsModal';
+import { BsButton } from './shell/ui';
 import { CardsRound } from './components/CardsRound';
 import { BoxRound } from './components/BoxRound';
 import { BuzzerRound, type BuzzerItem } from './components/BuzzerRound';
@@ -53,6 +56,7 @@ import {
   setAvatarColor,
   type TdAvatarColor,
   setFavClub,
+  recordMatch,
   setOnboarded,
   spendTicket,
 } from './lib/state';
@@ -61,10 +65,10 @@ type Phase =
   | 'home' // the shell (tabs)
   | 'onboarding'
   | 'dailyGame'
+  | 'streak' // practice: streak tournament
   | 'matchmaking'
   | 'showdown'
   | 'category'
-  | 'play'
   | 'cards'
   | 'box'
   | 'buzzer'
@@ -98,22 +102,35 @@ type Seat = 'me' | 'op';
 type RpsPick = 'rock' | 'paper' | 'scissors';
 
 
-const TURN_MS = 10_000;
-const LIVES = 3;
-
-interface RoundState {
-  categoryIdx: number;
-  usedCategoryIdxs: number[];
-  found: { display: string; by: Seat }[];
-  lives: Record<Seat, number>;
-  count: Record<Seat, number>;
-  turn: Seat;
-  turnNo: number;
+/** Betsson format (2026-09-16): three rounds worth 1, 1 and 2 points;
+ *  equal points after the last round go to penalties. A tied round scores
+ *  nobody (pending Betsson's ruling). */
+type RoundGame = 'cards' | 'buzzer' | 'box';
+type MatchStage = RoundGame | 'penalties';
+const MATCH_ROUNDS: { game: RoundGame; points: number }[] = [
+  { game: 'cards', points: 1 },
+  { game: 'buzzer', points: 1 },
+  { game: 'box', points: 2 },
+];
+const PENALTIES = 'penalties' as const;
+const ROUND_NAMES: Record<MatchStage, string> = {
+  cards: TD.roundCardsName,
+  buzzer: TD.roundBuzzerName,
+  box: TD.round3Name,
+  penalties: TD.penaltiesName,
+};
+/** Prefer a photo-backed category — the show's cards carry pictures. */
+function pickCardCategory(): TdCardCategory {
+  const photoCats = TD_CARD_CATEGORIES.filter((cat) => cat.cards.some((card) => card.photo));
+  const pool = photoCats.length > 0 ? photoCats : TD_CARD_CATEGORIES;
+  return pool[Math.floor(Math.random() * pool.length)];
 }
 
-interface Flash {
-  key: number;
-  kind: 'correct' | 'wrong' | 'duplicate' | 'timeUp' | 'pool';
+function roundIndex(stage: MatchStage): number {
+  return MATCH_ROUNDS.findIndex((r) => r.game === stage);
+}
+function roundPoints(stage: MatchStage): number {
+  return MATCH_ROUNDS.find((r) => r.game === stage)?.points ?? 0;
 }
 
 const RPS_META: Record<RpsPick, { label: string; glyph: string; beats: RpsPick }> = {
@@ -121,10 +138,6 @@ const RPS_META: Record<RpsPick, { label: string; glyph: string; beats: RpsPick }
   paper: { label: TD.rpsPaper, glyph: '✋', beats: 'rock' },
   scissors: { label: TD.rpsScissors, glyph: '✌️', beats: 'paper' },
 };
-
-function categoryAt(idx: number): TdListCategory {
-  return TD_LIST_CATEGORIES[idx % TD_LIST_CATEGORIES.length];
-}
 
 const LB_MOCK: { name: string; points: number }[] = [
   { name: 'ლუკა ბერიძე', points: 480 },
@@ -143,14 +156,16 @@ function buildLeaderboard(myQp: number): { name: string; points: number; me?: bo
   return rows.sort((a, b) => b.points - a.points).slice(0, 10);
 }
 
+const DAILY_KEYS = ['putInOrder', 'careerPath', 'footballLogic'] as const;
+function isDailyKey(v: string | null | undefined): v is TdDailyType {
+  return !!v && DAILY_KEYS.some((k) => k === v);
+}
+
 export function TableDerbyApp() {
   const [phase, setPhase] = useState<Phase>('home');
   const [opponentName, setOpponentName] = useState<string>(OPPONENT_NAMES[0]);
   const [roundsWon, setRoundsWon] = useState<Record<Seat, number>>({ me: 0, op: 0 });
   const [roundWinner, setRoundWinner] = useState<Seat | 'tie' | null>(null);
-  const [round, setRound] = useState<RoundState | null>(null);
-  const [flash, setFlash] = useState<Flash | null>(null);
-  const [input, setInput] = useState('');
 
   // Shell state (localStorage-backed; read after mount to stay SSR-safe).
   const [tickets, setTickets] = useState<number | null>(null);
@@ -158,6 +173,9 @@ export function TableDerbyApp() {
   const [dailyGame, setDailyGame] = useState<TdDailyType | null>(null);
   const [favClub, setFavClubState] = useState<string | null>(null);
   const [tab, setTab] = useState<ShellTab>('home');
+  const devRoundLink = useRef(false);
+  const [devDailyResult, setDevDailyResult] = useState<{ score: number; reward: boolean } | null>(null);
+  const [devStreakResult, setDevStreakResult] = useState<{ score: number; best: number; isRecord: boolean } | null>(null);
   const [matchMode, setMatchMode] = useState<'ranked' | 'solo'>('ranked');
   const [noTickets, setNoTickets] = useState(false);
   const [qpEarned, setQpEarned] = useState(0); // signed match QP delta
@@ -169,16 +187,33 @@ export function TableDerbyApp() {
   // Boot loader (Betsson WebView/iframe entry): brand splash while key
   // assets warm up, minimum 5s so the Quizball lockup registers.
   useEffect(() => {
+    // restore the tab from the URL (reload / shared link keeps the screen)
+    const urlNav = typeof window !== 'undefined' ? readNavFromUrl(window.location.search) : null;
+    if (urlNav) {
+      setTab(urlNav.tab);
+      if (isDailyKey(urlNav.game)) {
+        setDailyGame(urlNav.game);
+        setPhase('dailyGame');
+      } else if (urlNav.game === 'streak') {
+        setPhase('streak');
+      }
+    }
     // dev deep links skip the splash for fast iteration
     if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
       const q = new URLSearchParams(window.location.search);
-      if (q.has('round')) {
-        setBooting(false);
+      if (q.has('round') || q.has('scene')) {
+        devRoundLink.current = true;
+        if (q.get('scene') !== 'loader') setBooting(false);
         return;
       }
-      const t = q.get('tab');
-      if (t && (['home', 'ranked', 'daily', 'solo', 'profile'] as const).some((k) => k === t)) {
-        setTab(t as ShellTab);
+      if (urlNav) {
+        const preset = q.get('result');
+        if (preset !== null) setDevDailyResult({ score: Number(preset) || 0, reward: q.get('reward') === '1' });
+        const streak = q.get('streak');
+        if (streak !== null) {
+          const n = Number(streak) || 0;
+          setDevStreakResult({ score: n, best: q.get('record') === '1' ? n : Math.max(n, 12), isRecord: q.get('record') === '1' });
+        }
         setBooting(false);
         return;
       }
@@ -203,7 +238,7 @@ export function TableDerbyApp() {
   }, []);
 
   // Multi-round match flow.
-  const [currentRound, setCurrentRound] = useState(1); // 1..4, 5 = penalties
+  const [currentRound, setCurrentRound] = useState<MatchStage>('cards');
   const [starterSeat, setStarterSeat] = useState<Seat>('me');
   const [cardCategory, setCardCategory] = useState<TdCardCategory | null>(null);
   const [buzzerItems, setBuzzerItems] = useState<BuzzerItem[]>([]);
@@ -227,34 +262,68 @@ export function TableDerbyApp() {
   }, []);
   useEffect(() => () => timeouts.current.forEach(clearTimeout), []);
 
-  const category = round ? categoryAt(round.categoryIdx) : null;
-  const remaining = useMemo(() => {
-    if (!round || !category) return [];
-    const found = new Set(round.found.map((f) => f.display));
-    return category.answers.filter((a) => !found.has(a.display));
-  }, [round, category]);
-
-  /* Dev deep link: /table-derby?round=1|2|3|4|penalties boots straight
-     into that segment vs the scripted opponent (no ticket spent). */
+  /* Dev deep links (see /table-derby/dev for the playground):
+     ?round=1|2|3|penalties|sudden[&starter=op] boots straight into a live
+     round vs the scripted opponent (no ticket spent);
+     ?scene=<name> freezes a single screen so it can be iterated on. */
   useEffect(() => {
     if (typeof window === 'undefined' || process.env.NODE_ENV === 'production') return;
-    const p = new URLSearchParams(window.location.search).get('round');
-    if (!p) return;
+    const q = new URLSearchParams(window.location.search);
+    const starter: Seat = q.get('starter') === 'op' ? 'op' : 'me';
     setOpponentName(OPPONENT_NAMES[0]);
-    if (p === '1') beginRound('me');
-    else if (p === '2') startLaterRound(2, 'me');
-    else if (p === '3') startLaterRound(3, 'me');
-    else if (p === '4') startLaterRound(4, 'me');
-    else if (p === 'penalties') startLaterRound(5, 'me');
+    const p = q.get('round');
+    if (p) {
+      if (p === 'sudden') startLaterRound(PENALTIES, starter, { suddenDeath: true });
+      const game = p === 'penalties' ? PENALTIES : MATCH_ROUNDS[Number(p) - 1]?.game;
+      if (game) startLaterRound(game, starter);
+      return;
+    }
+    const scene = q.get('scene');
+    if (!scene) return;
+    const intro = (stage: MatchStage, sudden = false) => {
+      setCurrentRound(stage);
+      if (stage === 'cards') setCardCategory(pickCardCategory());
+      setSuddenDeath(sudden);
+      setPhase('category');
+    };
+    const roundEnd = (stage: MatchStage, winner: Seat | 'tie', score: Record<Seat, number>) => {
+      setCurrentRound(stage);
+      setRoundsWon(score);
+      setRoundWinner(winner);
+      setPhase('roundEnd');
+    };
+    const matchEnd = (mode: 'ranked' | 'solo', winner: Seat, score: Record<Seat, number>) => {
+      matchAwarded.current = true;
+      setMatchMode(mode);
+      setRoundsWon(score);
+      setMatchWinner(winner);
+      setQpEarned(mode === 'solo' ? 0 : winner === 'me' ? QP_WIN : -QP_LOSS);
+      setPhase('matchEnd');
+    };
+    const scenes: Record<string, () => void> = {
+      onboarding: () => setPhase('onboarding'),
+      'no-tickets': () => setNoTickets(true),
+      matchmaking: () => setPhase('matchmaking'),
+      showdown: () => {
+        setRpsReady(true);
+        setPhase('showdown');
+      },
+      'intro-1': () => intro('cards'),
+      'intro-2': () => intro('buzzer'),
+      'intro-3': () => intro('box'),
+      'intro-penalties': () => intro(PENALTIES),
+      'intro-sudden': () => intro(PENALTIES, true),
+      'round-end-win': () => roundEnd('cards', 'me', { me: 1, op: 0 }),
+      'round-end-lose': () => roundEnd('buzzer', 'op', { me: 1, op: 1 }),
+      'round-end-tie-last': () => roundEnd('box', 'tie', { me: 1, op: 1 }),
+      'round-end-decider': () => roundEnd('box', 'me', { me: 3, op: 1 }),
+      'match-end-win': () => matchEnd('ranked', 'me', { me: 3, op: 1 }),
+      'match-end-lose': () => matchEnd('ranked', 'op', { me: 1, op: 3 }),
+      'match-end-solo': () => matchEnd('solo', 'me', { me: 2, op: 2 }),
+    };
+    scenes[scene]?.();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- boot-once dev hook
   }, []);
-
-  // Dev-only e2e hook: leak the current expected answer for test scripts.
-  useEffect(() => {
-    if (process.env.NODE_ENV !== 'production' && typeof window !== 'undefined') {
-      (window as unknown as { __tdAnswer?: string }).__tdAnswer = remaining[0]?.display;
-    }
-  });
 
   /* ── shell: tickets / QP / daily state ──────────────────────── */
 
@@ -277,12 +346,13 @@ export function TableDerbyApp() {
       setTickets(spendTicket());
     }
     setMatchMode(mode);
+    roundInstance.current += 1; // callbacks from any previous match are now stale
     setQpEarned(0);
     setOpponentName(OPPONENT_NAMES[Math.floor(Math.random() * OPPONENT_NAMES.length)]);
     setRoundsWon({ me: 0, op: 0 });
     setRoundWinner(null);
     setMatchWinner(null);
-    setCurrentRound(1);
+    setCurrentRound('cards');
     matchAwarded.current = false;
     setPhase('matchmaking');
     // Created on the click (user gesture) so the delayed play is allowed.
@@ -308,52 +378,26 @@ export function TableDerbyApp() {
     later(() => setRpsReady(true), 4400);
   };
 
-  const beginRound = useCallback(
-    (starter: Seat) => {
-      const firstIdx = Math.floor(Math.random() * TD_LIST_CATEGORIES.length);
-      setCurrentRound(1);
-      setStarterSeat(starter);
-      roundClosed.current = false;
-      setRound({
-        categoryIdx: firstIdx,
-        usedCategoryIdxs: [firstIdx],
-        found: [],
-        lives: { me: LIVES, op: LIVES },
-        count: { me: 0, op: 0 },
-        turn: starter,
-        turnNo: 1,
-      });
-      setInput('');
-      setPhase('category');
-      later(() => setPhase('play'), 3000);
-    },
-    [later],
-  );
-
-  /** Rounds 2-4 and penalties share the intro → play cadence. */
+  /** Every round and the penalties share the intro → play cadence. */
   const startLaterRound = useCallback(
-    (roundNum: number, starter: Seat) => {
-      setCurrentRound(roundNum);
+    (stage: MatchStage, starter: Seat, opts: { suddenDeath?: boolean } = {}) => {
+      roundInstance.current += 1;
+      setActiveInstance(roundInstance.current);
+      setCurrentRound(stage);
       setStarterSeat(starter);
       setRoundWinner(null);
-      roundClosed.current = false;
-      if (roundNum === 2) {
-        // Prefer a photo-backed category — the show's cards carry pictures.
-        const photoCats = TD_CARD_CATEGORIES.filter((cat) => cat.cards.some((card) => card.photo));
-        const pool = photoCats.length > 0 ? photoCats : TD_CARD_CATEGORIES;
-        setCardCategory(pool[Math.floor(Math.random() * pool.length)]);
-      }
-      if (roundNum === 4) setBuzzerItems(shuffleList(TD_WHOAMI));
-      if (roundNum === 5) {
+      if (stage === 'cards') setCardCategory(pickCardCategory());
+      if (stage === 'buzzer') setBuzzerItems(shuffleList(TD_WHOAMI));
+      if (stage === 'penalties') {
+        // Regulation is 10 questions; after a tied set, one question at a time.
         const pool = buildPenaltyPool();
-        setPenaltyItems(pool.slice(0, 10));
-        setPenaltySpare(pool.slice(10));
+        const first = opts.suddenDeath ? 1 : 10;
+        setSuddenDeath(!!opts.suddenDeath);
+        setPenaltyItems(pool.slice(0, first));
+        setPenaltySpare(pool.slice(first));
       }
       setPhase('category');
-      later(
-        () => setPhase(roundNum === 2 ? 'cards' : roundNum === 3 ? 'box' : roundNum === 4 ? 'buzzer' : 'penalties'),
-        3000,
-      );
+      later(() => setPhase(stage), 3000);
     },
     [later],
   );
@@ -377,7 +421,7 @@ export function TableDerbyApp() {
           setMyPick(null);
           setOpPick(null);
           setRpsResult(null);
-          beginRound(result);
+          startLaterRound(MATCH_ROUNDS[0].game, result);
         }, 1800);
       }
     }, 800);
@@ -385,19 +429,21 @@ export function TableDerbyApp() {
 
   /* ── round engine ───────────────────────────────────────────── */
 
-  const doFlash = useCallback((kind: Flash['kind']) => {
-    setFlash({ key: Date.now(), kind });
-  }, []);
-
-  // Guards against a skipped round's component still firing its own onEnd.
-  const roundClosed = useRef(false);
+  /* Each started round/penalty set gets an instance number. Round components
+     keep timers after a dev skip or unmount, so their onEnd is bound to the
+     instance they were mounted for; stale or repeated calls are ignored. */
+  const roundInstance = useRef(0);
+  const [activeInstance, setActiveInstance] = useState(0);
+  const settledInstance = useRef(-1);
+  const [suddenDeath, setSuddenDeath] = useState(false);
 
   const endRound = useCallback(
-    (winner: Seat | 'tie') => {
-      if (roundClosed.current) return;
-      roundClosed.current = true;
+    (winner: Seat | 'tie', instance: number, stage: MatchStage) => {
+      if (instance !== roundInstance.current || settledInstance.current === instance) return;
+      settledInstance.current = instance;
       setRoundWinner(winner);
-      if (winner !== 'tie') setRoundsWon((s) => ({ ...s, [winner]: s[winner] + 1 }));
+      const pts = roundPoints(stage);
+      if (winner !== 'tie') setRoundsWon((s) => ({ ...s, [winner]: s[winner] + pts }));
       later(() => setPhase('roundEnd'), 1100);
     },
     [later],
@@ -405,128 +451,45 @@ export function TableDerbyApp() {
 
   /** Match settlement — QP like Quizball ranked: win +25, loss −10 (floor 0).
    *  Real product: server-side at settlement. */
+  // latest score/opponent for settlement without re-creating finishMatch
+  const settleCtx = useRef({ score: roundsWon, opponent: opponentName, stage: currentRound });
+  useEffect(() => {
+    settleCtx.current = { score: roundsWon, opponent: opponentName, stage: currentRound };
+  });
+
   const finishMatch = useCallback((winner: Seat) => {
-    if (!matchAwarded.current) {
-      matchAwarded.current = true;
-      if (matchMode === 'ranked') {
-        const delta = winner === 'me' ? QP_WIN : -QP_LOSS;
-        setQpEarned(delta);
-        setQp(addQp(delta));
-      }
+    if (matchAwarded.current) return; // a match settles exactly once
+    matchAwarded.current = true;
+    const delta = matchMode === 'ranked' ? (winner === 'me' ? QP_WIN : -QP_LOSS) : 0;
+    if (matchMode === 'ranked') {
+      setQpEarned(delta);
+      setQp(addQp(delta));
     }
+    const ctx = settleCtx.current;
+    recordMatch({
+      at: Date.now(),
+      mode: matchMode,
+      won: winner === 'me',
+      me: ctx.score.me,
+      op: ctx.score.op,
+      opponent: ctx.opponent,
+      rpDelta: delta,
+      penalties: ctx.stage === PENALTIES,
+    });
     setMatchWinner(winner);
     setPhase('matchEnd');
   }, [matchMode]);
 
-  const swapCategory = useCallback(() => {
-    doFlash('pool');
-    later(() => {
-      setRound((r) => {
-        if (!r) return r;
-        const unused = TD_LIST_CATEGORIES.map((_, i) => i).filter((i) => !r.usedCategoryIdxs.includes(i));
-        const nextIdx = unused.length > 0 ? unused[Math.floor(Math.random() * unused.length)] : Math.floor(Math.random() * TD_LIST_CATEGORIES.length);
-        return {
-          ...r,
-          categoryIdx: nextIdx,
-          usedCategoryIdxs: [...r.usedCategoryIdxs, nextIdx],
-          found: [],
-          // Owner ruling: exhausted pool = tie → fresh category; lives reset
-          // (SPEC assumption), correct-counts keep accumulating.
-          lives: { me: LIVES, op: LIVES },
-          turnNo: r.turnNo + 1,
-        };
-      });
-      setPhase('category');
-      later(() => setPhase('play'), 2600);
-    }, 1400);
-  }, [doFlash, later]);
-
-  const applyCorrect = useCallback(
-    (seat: Seat, display: string) => {
-      let exhausted = false;
-      setRound((r) => {
-        if (!r) return r;
-        const found = [...r.found, { display, by: seat }];
-        exhausted = found.length >= categoryAt(r.categoryIdx).answers.length;
-        return {
-          ...r,
-          found,
-          count: { ...r.count, [seat]: r.count[seat] + 1 },
-          turn: seat === 'me' ? 'op' : 'me',
-          turnNo: r.turnNo + 1,
-        };
-      });
-      if (seat === 'me') doFlash('correct');
-      // setState is sync-queued; schedule the exhaustion check right after.
-      later(() => {
-        if (exhausted) swapCategory();
-      }, 50);
-    },
-    [doFlash, later, swapCategory],
-  );
-
-  const applyMiss = useCallback(
-    (seat: Seat, reason: 'wrong' | 'duplicate' | 'timeUp') => {
-      let eliminated = false;
-      setRound((r) => {
-        if (!r) return r;
-        const lives = { ...r.lives, [seat]: Math.max(0, r.lives[seat] - 1) };
-        eliminated = lives[seat] === 0;
-        return { ...r, lives, turn: seat === 'me' ? 'op' : 'me', turnNo: r.turnNo + 1 };
-      });
-      if (seat === 'me') doFlash(reason === 'wrong' ? 'wrong' : reason === 'duplicate' ? 'duplicate' : 'timeUp');
-      later(() => {
-        if (eliminated) endRound(seat === 'me' ? 'op' : 'me');
-      }, 50);
-    },
-    [doFlash, endRound, later],
-  );
-
-  // Opponent (scripted): acts within the 10s window.
-  useEffect(() => {
-    if (phase !== 'play' || !round || round.turn !== 'op') return;
-    if (roundWinner) return;
-    const delay = 1600 + Math.random() * 3600;
-    const t = setTimeout(() => {
-      const pool = remaining;
-      const successP = pool.length <= 2 ? 0.55 : 0.72;
-      if (pool.length > 0 && Math.random() < successP) {
-        const pick = pool[Math.floor(Math.random() * pool.length)];
-        applyCorrect('op', pick.display);
-      } else {
-        applyMiss('op', 'wrong');
-      }
-    }, delay);
-    return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed by turnNo; `remaining` is derived from the same state snapshot
-  }, [phase, round?.turn, round?.turnNo, roundWinner]);
-
-  // My 10s turn clock.
-  useEffect(() => {
-    if (phase !== 'play' || !round || round.turn !== 'me') return;
-    if (roundWinner) return;
-    const t = setTimeout(() => applyMiss('me', 'timeUp'), TURN_MS);
-    return () => clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed by turnNo
-  }, [phase, round?.turn, round?.turnNo, roundWinner]);
-
-  const submit = () => {
-    if (!round || !category || round.turn !== 'me' || phase !== 'play') return;
-    const value = input.trim();
-    if (!value) return;
-    setInput('');
-    const foundSet = round.found.map((f) => f.display);
-    // Duplicate = wrong in the show's rules — costs a life, own message.
-    const dup = category.answers.some(
-      (a) => foundSet.includes(a.display) && matchesName(value, a.aliases).ok,
-    );
-    if (dup) {
-      applyMiss('me', 'duplicate');
+  /** Penalties end: a winner settles the match; running out of questions
+   *  with scores level starts another sudden-death set (never a default win). */
+  const settlePenalties = (winner: Seat | 'tie', instance: number) => {
+    if (instance !== roundInstance.current || settledInstance.current === instance) return;
+    settledInstance.current = instance;
+    if (winner === 'tie') {
+      startLaterRound(PENALTIES, starterSeat === 'me' ? 'op' : 'me', { suddenDeath: true });
       return;
     }
-    const hit = remaining.find((a) => matchesName(value, a.aliases).ok);
-    if (hit) applyCorrect('me', hit.display);
-    else applyMiss('me', 'wrong');
+    finishMatch(winner);
   };
 
   /** After the round-end screen: next round, penalties, or results. */
@@ -534,16 +497,13 @@ export function TableDerbyApp() {
     // Loser starts the next round; a tied round flips the previous starter.
     const nextStart: Seat =
       roundWinner === 'me' ? 'op' : roundWinner === 'op' ? 'me' : starterSeat === 'me' ? 'op' : 'me';
-    if (roundsWon.me >= 3 || roundsWon.op >= 3) {
-      finishMatch(roundsWon.me > roundsWon.op ? 'me' : 'op');
-      return;
-    }
-    if (currentRound < 4) {
-      startLaterRound(currentRound + 1, nextStart);
+    const next = MATCH_ROUNDS[roundIndex(currentRound) + 1];
+    if (next) {
+      startLaterRound(next.game, nextStart);
       return;
     }
     if (roundsWon.me === roundsWon.op) {
-      startLaterRound(5, nextStart); // penalties
+      startLaterRound(PENALTIES, nextStart);
       return;
     }
     finishMatch(roundsWon.me > roundsWon.op ? 'me' : 'op');
@@ -562,48 +522,60 @@ export function TableDerbyApp() {
     setPhase('dailyGame');
   };
 
+  useShellHistory({
+    active: !booting && phase !== 'onboarding' && !devRoundLink.current,
+    nav: useMemo(
+      () => ({ tab, game: phase === 'dailyGame' ? dailyGame : phase === 'streak' ? 'streak' : phase === 'home' ? null : 'match' }),
+      [tab, phase, dailyGame],
+    ),
+    onPop: (target) => {
+      timeouts.current.forEach(clearTimeout);
+      setTab(target.tab);
+      if (isDailyKey(target.game)) {
+        setDailyGame(target.game);
+        setPhase('dailyGame');
+        return { tab: target.tab, game: target.game };
+      }
+      if (target.game === 'streak') {
+        setPhase('streak');
+        return { tab: target.tab, game: 'streak' };
+      }
+      // A match can't be resumed from history; land on the shell instead.
+      roundInstance.current += 1;
+      setRoundWinner(null);
+      setPhase('home');
+      return { tab: target.tab, game: null };
+    },
+  });
+
   /** Whether the match is settled once this round-end screen is confirmed. */
-  const matchDecidedNow =
-    roundsWon.me >= 3 || roundsWon.op >= 3 || (currentRound >= 4 && roundsWon.me !== roundsWon.op);
+  const matchDecidedNow = roundIndex(currentRound) === MATCH_ROUNDS.length - 1 && roundsWon.me !== roundsWon.op;
 
   /* Dev-only quick skip: force the current round's outcome. */
-  const inRoundPhase = phase === 'play' || phase === 'cards' || phase === 'box' || phase === 'buzzer' || phase === 'penalties';
+  const inRoundPhase = phase === 'cards' || phase === 'box' || phase === 'buzzer' || phase === 'penalties';
   const devSkip = (result: Seat | 'tie') => {
     if (phase === 'penalties') {
-      finishMatch(result === 'op' ? 'op' : 'me');
+      settlePenalties(result, roundInstance.current);
       return;
     }
-    endRound(result);
+    endRound(result, roundInstance.current, currentRound);
   };
 
   const resetToHome = () => {
-    setRound(null);
+    roundInstance.current += 1;
     setRoundWinner(null);
     setPhase('home');
   };
 
   /* ── screens ────────────────────────────────────────────────── */
 
-  const flashText =
-    flash?.kind === 'correct'
-      ? TD.correct
-      : flash?.kind === 'wrong'
-        ? TD.wrong
-        : flash?.kind === 'duplicate'
-          ? TD.duplicate
-          : flash?.kind === 'timeUp'
-            ? TD.timeUp
-            : flash?.kind === 'pool'
-              ? TD.poolExhausted
-              : null;
-
   return (
-    <div className="td-theme relative min-h-dvh overflow-x-clip" style={{ background: phase === 'home' ? 'var(--bs-page)' : 'var(--td-bg)' }}>
-      {phase !== 'home' && <MuralBackdrop dim={0.45} />}
+    <div className="td-theme relative min-h-dvh overflow-x-clip" style={{ background: phase === 'home' || phase === 'streak' ? 'var(--bs-page)' : 'var(--td-bg)' }}>
+      {phase !== 'home' && phase !== 'streak' && <MuralBackdrop dim={0.45} />}
 
       {/* betsson.sport — top-right like the broadcast; the in-round
           scoreboard (with avatars) owns that zone during gameplay */}
-      {!inRoundPhase && phase !== 'home' && (
+      {!inRoundPhase && phase !== 'home' && phase !== 'streak' && (
         <div className="absolute inset-x-0 bottom-4 z-20 flex items-center justify-center gap-2 md:bottom-6">
           <BetssonWordmark tone="white" size={16} />
           <span className="text-sm" style={{ ...TD_DISPLAY, color: 'var(--td-orange)' }} aria-hidden>
@@ -664,9 +636,7 @@ export function TableDerbyApp() {
                 <span key={i} className="size-2 rounded-full" style={{ background: onbStep === i ? 'var(--td-orange)' : 'rgba(255,255,255,0.25)' }} />
               ))}
             </div>
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.95 }}
+            <BsButton
               disabled={onbStep === 1 && !onbClub}
               onClick={() => {
                 if (onbStep === 0) {
@@ -678,11 +648,10 @@ export function TableDerbyApp() {
                   setPhase('home');
                 }
               }}
-              className="rounded-[12px] px-10 py-3.5 text-base disabled:opacity-40"
-              style={{ ...TD_DISPLAY, background: 'var(--td-orange)', color: '#0d0d0d', boxShadow: '5px 5px 0 #000' }}
+              className="max-w-xs"
             >
               {onbStep === 0 ? TD.onbNext : TD.onbStart}
-            </motion.button>
+            </BsButton>
           </motion.main>
         )}
 
@@ -695,14 +664,12 @@ export function TableDerbyApp() {
                   onPlayRanked={() => startMatch('ranked')}
                   onDaily={openDaily}
                   onSolo={() => setTab('solo')}
-                  onLeaderboard={() => setTab('ranked')}
-                  myRank={myRank}
                   dailyDone={{}}
                 />
               )}
-              {tab === 'ranked' && <LeaderboardScreen rows={leaderboardRows} />}
+              {tab === 'leaderboard' && <LeaderboardScreen rows={leaderboardRows} />}
               {tab === 'daily' && <DailyScreen onOpen={openDaily} done={{}} />}
-              {tab === 'solo' && <SoloScreen onStart={() => startMatch('solo')} />}
+              {tab === 'solo' && <PracticeScreen onStart={() => setPhase('streak')} />}
               {tab === 'profile' && (
                 <ProfileScreen
                   name={displayName}
@@ -731,13 +698,20 @@ export function TableDerbyApp() {
                 onClose={() => setNoTickets(false)}
                 onSolo={() => {
                   setNoTickets(false);
-                  startMatch('solo');
+                  setTab('solo');
                 }}
               />
             )}
           </motion.div>
         )}
 
+
+        {/* ── PRACTICE: streak tournament (Betsson REQ.1.8–1.10) ── */}
+        {phase === 'streak' && (
+          <motion.main key="streak" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="relative z-10">
+            <StreakGame onExit={() => window.history.back()} preset={devStreakResult} />
+          </motion.main>
+        )}
 
         {/* ── DAILY GAME (Quizball challenges in the TD shell) ── */}
         {phase === 'dailyGame' && dailyGame && (
@@ -748,7 +722,7 @@ export function TableDerbyApp() {
             exit={{ opacity: 0 }}
             className="relative z-10"
           >
-            <TdDailyGame type={dailyGame} onExit={() => setPhase('home')} />
+            <TdDailyGame type={dailyGame} onExit={() => window.history.back()} presetResult={devDailyResult} />
           </motion.main>
         )}
 
@@ -780,6 +754,10 @@ export function TableDerbyApp() {
                 ...
               </motion.span>
             </div>
+            <ElapsedTimer
+              className="rounded-full px-5 py-2 font-[Poppins] text-[22px] font-bold tabular-nums text-white md:text-[26px]"
+              style={{ background: 'var(--bs-surface)', boxShadow: 'inset 0 0 0 1.5px var(--bs-border)' }}
+            />
           </motion.main>
         )}
 
@@ -918,7 +896,7 @@ export function TableDerbyApp() {
         {/* ── ROUND INTRO ── */}
         {phase === 'category' && (
           <motion.main
-            key={`cat-${currentRound}-${round?.usedCategoryIdxs.length ?? 0}`}
+            key={`cat-${currentRound}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -927,135 +905,35 @@ export function TableDerbyApp() {
             <div className="flex items-center gap-3">
               <StarburstGlyph size={20} />
               <span className="text-lg text-white md:text-xl" style={TD_DISPLAY}>
-                {currentRound === 5
+                {currentRound === PENALTIES
                   ? TD.penaltiesName
-                  : `${TD.roundLabel} ${currentRound} · ${
-                      currentRound === 1
-                        ? TD.round1Name
-                        : currentRound === 2
-                          ? TD.round2Name
-                          : currentRound === 3
-                            ? TD.round3Name
-                            : TD.round4Name
-                    }`}
+                  : `${TD.roundLabel} ${roundIndex(currentRound) + 1} · ${ROUND_NAMES[currentRound]}`}
               </span>
               <StarburstGlyph size={20} rotate={20} />
             </div>
+            {currentRound !== PENALTIES && (
+              <span
+                className="rounded-full px-4 py-1.5 text-[12px]"
+                style={{ ...TD_DISPLAY, background: 'var(--td-orange)', color: '#0d0d0d', lineHeight: 1.2 }}
+              >
+                {TD.roundWorth(roundPoints(currentRound))}
+              </span>
+            )}
             <motion.div
               initial={{ y: 60, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ type: 'spring', damping: 16 }}
               className="w-full max-w-2xl"
             >
-              {currentRound === 1 && category && <CategoryBand prompt={category.prompt} />}
-              {currentRound === 2 && cardCategory && <CategoryBand prompt={cardCategory.prompt} />}
-              {currentRound === 3 && <CategoryBand prompt={TD.rollBox} />}
-              {currentRound === 4 && <CategoryBand prompt={`${TD.buzzRules} · +10 / −10`} />}
-              {currentRound === 5 && <CategoryBand prompt={TD.penaltiesIntro} />}
+              {currentRound === 'cards' && cardCategory && <CategoryBand prompt={cardCategory.prompt} />}
+              {currentRound === 'box' && <CategoryBand prompt={TD.rollBox} />}
+              {currentRound === 'buzzer' && <CategoryBand prompt={`${TD.buzzRules} · +10 / −10`} />}
+              {currentRound === PENALTIES && <CategoryBand prompt={suddenDeath ? TD.suddenDeath : TD.penaltiesIntro} />}
             </motion.div>
           </motion.main>
         )}
 
-        {/* ── PLAY ── */}
-        {phase === 'play' && round && category && (
-          <motion.main
-            key="play"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="relative z-10 mx-auto flex min-h-dvh w-full max-w-4xl flex-col justify-center gap-3 px-3 pb-4 pt-24 md:gap-5 md:px-8"
-          >
-            <div className="fixed inset-x-0 top-0 z-30 flex justify-center pb-4 pt-4" style={{ background: 'linear-gradient(to bottom, rgba(30,30,30,0.92) 55%, transparent)' }}>
-              <ScorePill
-                roundsMe={roundsWon.me}
-                roundsOp={roundsWon.op}
-                inRoundMe={round.count.me}
-                inRoundOp={round.count.op}
-                left={<MyAvatar size={54} active={round.turn === 'me'} />}
-                right={<TdAvatar name={opponentName} size={54} active={round.turn === 'op'} />}
-              />
-            </div>
-            <CategoryBand prompt={category.prompt} compact />
-
-            <div className="flex items-end gap-3 md:gap-6">
-              <PlayerBoard
-                name={displayName}
-                side="left"
-                lives={round.lives.me}
-                count={round.count.me}
-                answers={round.found.filter((f) => f.by === 'me').map((f) => f.display)}
-                active={round.turn === 'me'}
-              />
-              <PlayerBoard
-                name={opponentName}
-                side="right"
-                lives={round.lives.op}
-                count={round.count.op}
-                answers={round.found.filter((f) => f.by === 'op').map((f) => f.display)}
-                active={round.turn === 'op'}
-                thinking={round.turn === 'op' ? TD.opponentTurn : undefined}
-              />
-            </div>
-
-            <TurnTimerBar turnKey={`t-${round.turnNo}`} ms={TURN_MS} running={!roundWinner} />
-
-            <div className="relative">
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  submit();
-                }}
-                className="flex gap-2"
-              >
-                <input
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  disabled={round.turn !== 'me' || !!roundWinner}
-                  placeholder={round.turn === 'me' ? TD.answerPlaceholder : TD.opponentTurn}
-                  autoFocus
-                  autoComplete="off"
-                  autoCorrect="off"
-                  spellCheck={false}
-                  enterKeyHint="send"
-                  className="h-14 min-w-0 flex-1 rounded-[10px] border-0 px-4 text-base text-white outline-none placeholder:text-white/35 disabled:opacity-50"
-                  style={{ background: 'var(--td-charcoal)', boxShadow: '4px 4px 0 rgba(0,0,0,0.5)', fontFamily: "'Noto Sans Georgian', sans-serif", fontWeight: 600 }}
-                />
-                <motion.button
-                  type="submit"
-                  whileTap={{ scale: 0.95 }}
-                  disabled={round.turn !== 'me' || !!roundWinner}
-                  className="h-14 shrink-0 rounded-[10px] px-6 text-base disabled:opacity-40"
-                  style={{ ...TD_DISPLAY, background: 'var(--td-orange)', color: '#0d0d0d', boxShadow: '4px 4px 0 rgba(0,0,0,0.5)' }}
-                >
-                  {TD.submit}
-                </motion.button>
-              </form>
-              <AnimatePresence>
-                {flash && flashText && (
-                  <motion.div
-                    key={flash.key}
-                    initial={{ opacity: 0, y: 6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.2 }}
-                    onAnimationComplete={() => later(() => setFlash((f) => (f?.key === flash.key ? null : f)), 1300)}
-                    className="pointer-events-none absolute -top-9 left-1/2 -translate-x-1/2 rounded-[8px] px-3 py-1 text-[12px]"
-                    style={{
-                      ...TD_DISPLAY,
-                      background: flash.kind === 'correct' ? 'var(--td-orange)' : flash.kind === 'pool' ? 'var(--td-white)' : 'var(--td-steel-deep)',
-                      color: flash.kind === 'correct' || flash.kind === 'pool' ? '#0d0d0d' : 'var(--td-white)',
-                      boxShadow: '3px 3px 0 rgba(0,0,0,0.5)',
-                    }}
-                  >
-                    {flashText}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
-          </motion.main>
-        )}
-
-        {/* ── ROUND 2: CARDS ── */}
+        {/* ── ROUND I: CARDS (1 point) ── */}
         {phase === 'cards' && cardCategory && (
           <motion.main
             key="cards"
@@ -1065,16 +943,17 @@ export function TableDerbyApp() {
             className="relative z-10 flex min-h-dvh w-full flex-col justify-center px-3 py-4 md:px-8"
           >
             <CardsRound
+              key={activeInstance}
               category={cardCategory}
               starter={starterSeat}
               roundsWon={roundsWon}
               opponentName={opponentName}
-              onEnd={(w) => endRound(w)}
+              onEnd={(w) => endRound(w, activeInstance, 'cards')}
             />
           </motion.main>
         )}
 
-        {/* ── ROUND 3: PAPA CARLO'S BOX ── */}
+        {/* ── ROUND III: PAPA CARLO'S BOX (2 points) ── */}
         {phase === 'box' && (
           <motion.main
             key="box"
@@ -1083,11 +962,17 @@ export function TableDerbyApp() {
             exit={{ opacity: 0 }}
             className="relative z-10 flex min-h-dvh w-full flex-col justify-center px-3 py-4 md:px-8"
           >
-            <BoxRound starter={starterSeat} roundsWon={roundsWon} opponentName={opponentName} onEnd={(w) => endRound(w)} />
+            <BoxRound
+              key={activeInstance}
+              starter={starterSeat}
+              roundsWon={roundsWon}
+              opponentName={opponentName}
+              onEnd={(w) => endRound(w, activeInstance, 'box')}
+            />
           </motion.main>
         )}
 
-        {/* ── ROUND 4: WHO AM I (BUZZER) ── */}
+        {/* ── ROUND II: HELLO, MY NAME IS (BUZZER, 1 point) ── */}
         {phase === 'buzzer' && buzzerItems.length > 0 && (
           <motion.main
             key="buzzer"
@@ -1097,10 +982,11 @@ export function TableDerbyApp() {
             className="relative z-10 flex min-h-dvh w-full flex-col justify-center px-3 py-4 md:px-8"
           >
             <BuzzerRound
+              key={activeInstance}
               items={buzzerItems}
               roundsWon={roundsWon}
               opponentName={opponentName}
-              onEnd={(w) => endRound(w)}
+              onEnd={(w) => endRound(w, activeInstance, 'buzzer')}
             />
           </motion.main>
         )}
@@ -1115,12 +1001,13 @@ export function TableDerbyApp() {
             className="relative z-10 flex min-h-dvh w-full flex-col justify-center px-3 py-4 md:px-8"
           >
             <BuzzerRound
+              key={activeInstance}
               items={penaltyItems}
               extraPool={penaltySpare}
               penaltyMode
               roundsWon={roundsWon}
               opponentName={opponentName}
-              onEnd={(w) => finishMatch(w === 'op' ? 'op' : 'me')}
+              onEnd={(w) => settlePenalties(w, activeInstance)}
             />
           </motion.main>
         )}
@@ -1152,6 +1039,11 @@ export function TableDerbyApp() {
                 {roundWinner === 'me' ? TD.roundWon : roundWinner === 'tie' ? TD.roundTie : TD.roundLost}
               </span>
             </motion.div>
+            {roundWinner !== 'tie' && (
+              <span className="text-[13px] text-white/80" style={{ ...TD_DISPLAY, lineHeight: 1.3 }}>
+                {roundWinner === 'me' ? TD.pointsYou(roundPoints(currentRound)) : TD.pointsOpponent(roundPoints(currentRound))}
+              </span>
+            )}
             <div className="flex items-center gap-3">
               <span className="text-sm text-white/70" style={TD_DISPLAY}>
                 {TD.matchScore}
@@ -1160,15 +1052,13 @@ export function TableDerbyApp() {
                 {roundsWon.me} - {roundsWon.op}
               </span>
             </div>
-            <motion.button
-              type="button"
-              whileTap={{ scale: 0.95 }}
-              onClick={continueAfterRound}
-              className="rounded-[12px] px-8 py-3.5"
-              style={{ ...TD_DISPLAY, background: 'var(--td-white)', color: '#0d0d0d', boxShadow: '5px 5px 0 #000', fontSize: 15 }}
-            >
-              {matchDecidedNow ? TD.seeResults : TD.nextRound}
-            </motion.button>
+            <BsButton onClick={continueAfterRound} className="max-w-xs">
+              {matchDecidedNow
+                ? TD.seeResults
+                : roundIndex(currentRound) === MATCH_ROUNDS.length - 1
+                  ? TD.penaltiesName
+                  : TD.nextRound}
+            </BsButton>
           </motion.main>
         )}
 
@@ -1210,10 +1100,7 @@ export function TableDerbyApp() {
                   <MyAvatar size={48} />
                   <span className="flex items-center gap-1 text-[11px] text-white/85" style={TD_DISPLAY}>
                     {displayName}
-                    {getClub(displayClub) && (
-                      // eslint-disable-next-line @next/next/no-img-element -- crest from the club registry
-                      <img src={getClub(displayClub)!.logo} alt="" className="h-4 w-4 object-contain" />
-                    )}
+                    {getClub(displayClub) && <ClubCrest src={getClub(displayClub)!.logo} size={22} />}
                   </span>
                 </div>
                 <span className="mt-2 text-3xl text-white" style={TD_DISPLAY}>
@@ -1225,10 +1112,7 @@ export function TableDerbyApp() {
                     {opponentName}
                     {(() => {
                       const club = opponentProfile(opponentName).clubValue ? getClub(opponentProfile(opponentName).clubValue!) : null;
-                      return club ? (
-                        // eslint-disable-next-line @next/next/no-img-element -- crest from the club registry
-                        <img src={club.logo} alt="" className="h-4 w-4 object-contain" />
-                      ) : null;
+                      return club ? <ClubCrest src={club.logo} size={22} /> : null;
                     })()}
                   </span>
                 </div>
@@ -1256,25 +1140,11 @@ export function TableDerbyApp() {
                 <span className="font-[Poppins] text-[15px] font-bold tabular-nums text-[var(--bs-text)]">{qp} {TD.qpShort}</span>
               </div>
             </div>
-            <div className="flex gap-3">
-              <motion.button
-                type="button"
-                whileTap={{ scale: 0.95 }}
-                onClick={() => startMatch(matchMode)}
-                className="rounded-[12px] px-7 py-3.5 text-sm"
-                style={{ ...TD_DISPLAY, background: 'var(--td-orange)', color: '#0d0d0d', boxShadow: '5px 5px 0 #000' }}
-              >
-                {TD.playAgain}
-              </motion.button>
-              <motion.button
-                type="button"
-                whileTap={{ scale: 0.95 }}
-                onClick={resetToHome}
-                className="rounded-[12px] px-7 py-3.5 text-sm"
-                style={{ ...TD_DISPLAY, background: 'var(--td-charcoal)', color: 'var(--td-white)', boxShadow: '5px 5px 0 #000' }}
-              >
+            <div className="flex w-full max-w-sm flex-col gap-3">
+              <BsButton onClick={() => startMatch(matchMode)}>{TD.playAgain}</BsButton>
+              <BsButton variant="ghost" onClick={resetToHome}>
                 {TD.backHome}
-              </motion.button>
+              </BsButton>
             </div>
           </motion.main>
         )}
