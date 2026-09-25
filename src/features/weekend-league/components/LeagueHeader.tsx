@@ -49,7 +49,7 @@ export function LeagueHeader({
   /** Entry window is open right now — off, the claim CTA renders locked. */
   canEnter?: boolean;
   hasEntered?: boolean;
-  registered?: number;
+  registered?: number | null;
   /** Set once the Saturday qualifier is done — switches the card to the result
       state. `rank` ≤ 0 means the rank isn't known (live mode without standings). */
   result?: { qualified: boolean; rank: number; cutoff: number } | null;

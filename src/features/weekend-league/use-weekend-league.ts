@@ -136,7 +136,7 @@ export function useWeekendLeague(initial?: Partial<WeekendLeagueState>) {
     leaderboard,
     yourRank,
     bracket,
-    registered,
+    registered: registered as number | null,
     session,
     playedOutcome,
     playoffOutcome,
