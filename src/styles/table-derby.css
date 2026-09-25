@@ -1,0 +1,226 @@
+/**
+ * Table Derby (Betsson Sport white-label) — design tokens.
+ *
+ * Derived ONLY from the show's brand references (key art, in-show set still,
+ * season IV announcement). Do not add colours that don't appear in the refs;
+ * if a state has no ref colour (see win/lose note), it must stay inside this
+ * palette until Betsson brand guidance says otherwise.
+ *
+ * Scope: applied via the `td-theme` class on the Table Derby module root so
+ * the base Quizball theme is untouched. On the forked Betsson deploy the same
+ * block can move to :root.
+ */
+
+.td-theme {
+  /* ── Core palette ─────────────────────────────────────────────── */
+  /* Betsson/show orange — sampled from the official vector logo assets
+     (branding-refs/table-derby-logos.pdf). */
+  --td-orange: #ee5a22;
+  --td-orange-deep: #c9491a;      /* pressed / shadow side of orange     */
+  --td-orange-soft: #f4713b;      /* hover lift on orange surfaces       */
+
+  /* Set + key-art ground: near-black charcoal with tone-on-tone pattern. */
+  --td-black: #141414;            /* page ground                          */
+  --td-charcoal: #1e1e1e;         /* elevated surface (cards, table)      */
+  --td-charcoal-pattern: #232323; /* tone-on-tone typographic texture     */
+  --td-line: rgba(255, 255, 255, 0.12);
+
+  /* Print/paper whites — lower-third "VS" cards, logo lockups. */
+  --td-white: #ffffff;
+  --td-paper: #f4f1ec;            /* warm white of the printed cards      */
+
+  /* Season-poster secondary: desaturated steel-blue print collage. */
+  --td-steel: #6c8ba4;
+  --td-steel-deep: #2c3e50;
+
+  /* ── Semantic ─────────────────────────────────────────────────── */
+  /* Ground matches the official mural panel's baked-in background
+     (#282828) so the artwork blends seamlessly at any scale. */
+  --td-bg: #282828;
+  --td-surface: var(--td-charcoal);
+  --td-surface-inverse: var(--td-paper); /* white sticker cards           */
+  --td-primary: var(--td-orange);
+  --td-on-primary: #000000;       /* black text on orange, always         */
+  --td-text: var(--td-white);
+  --td-text-muted: rgba(255, 255, 255, 0.72);
+
+  /* Refs contain no green/red: win = brand orange (hot), lose = steel
+   * (cold), draw/neutral = charcoal. Pending Betsson brand sign-off. */
+  --td-win: var(--td-orange);
+  --td-on-win: #000000;
+  --td-lose: var(--td-steel-deep);
+  --td-on-lose: rgba(255, 255, 255, 0.85);
+
+  /* ── Typography ───────────────────────────────────────────────── */
+  /* Show display type is custom heavy blocky Georgian Mtavruli caps;
+   * closest web equivalent: Noto Sans Georgian Black, tight leading.
+   * Latin/numerals (betsson.sport-style geometric sans): Poppins, which
+   * the app already loads. */
+  --td-font-display: 'Noto Sans Georgian', 'Poppins', sans-serif;
+  --td-font-body: 'Noto Sans Georgian', 'Poppins', sans-serif;
+  --td-display-weight: 900;
+  --td-display-leading: 0.95;
+
+  /* ── Shape language ───────────────────────────────────────────── */
+  /* Angled print/sticker aesthetic: skewed panels, hard offset shadows,
+   * flat fills (no gradients), grunge texture overlays. */
+  --td-skew: -6deg;               /* key-art panel/lower-third angle      */
+  --td-tilt: -2deg;               /* sticker tilt for logos/badges        */
+  --td-radius: 10px;              /* cards; pills use 999px               */
+  --td-shadow-offset: 6px;        /* hard black offset, no blur           */
+  --td-shadow: var(--td-shadow-offset) var(--td-shadow-offset) 0 #000000;
+}
+
+/* ── Recurring motifs ────────────────────────────────────────────── */
+
+/* Angled panel — the key-art parallelogram crop. */
+.td-panel {
+  transform: skewX(var(--td-skew));
+}
+.td-panel > * {
+  transform: skewX(calc(-1 * var(--td-skew))); /* keep content upright */
+}
+
+/* White sticker card — lower-third "VS" treatment. */
+.td-sticker {
+  background: var(--td-surface-inverse);
+  color: #000;
+  border-radius: var(--td-radius);
+  box-shadow: var(--td-shadow);
+}
+
+/* Circular orange icon chip — the round glyphs (mug/ball/cards/target). */
+.td-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--td-primary);
+  color: var(--td-on-primary);
+}
+
+/* Stage pill — "1/8 ფინალი" style. */
+.td-stage-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+  border-radius: 999px;
+  background: var(--td-white);
+  color: #000;
+  font-weight: 800;
+}
+
+/* ── Betsson platform tokens (shell chrome) ─────────────────────────
+   Sampled from Betsson Sport's Fantasy Figma (2026-09-19). The shell —
+   tabs, header, cards, settings, modals — uses these so the embed reads
+   as native inside betsson.sport; the match keeps the show's sticker
+   language above. See docs/TABLE-DERBY-BETSSON-DESIGN-REFERENCE.md. */
+.td-theme {
+  --bs-page: #0d0e0f;
+  --bs-surface: #1c1c1d;
+  --bs-surface-2: #1f2021;
+  --bs-input: #232424;
+  --bs-border: #2b2c2e;
+  --bs-text: #ffffff; /* Dark Version/Text/Mein Text Color */
+  --bs-text-2: #cfcfcf;
+  --bs-text-3: #8f8f90;
+  --bs-primary: #f15a22; /* White Version/Static Colors/Mein Color */
+  --bs-primary-deep: #b8471d;
+  --bs-on-primary: #ffffff;
+  --bs-new: #099d80;
+  --bs-danger: #ff3c3c;
+  --bs-toggle-off: #3a3a3a;
+  --bs-divider: rgba(255, 255, 255, 0.08);
+  /* Europop Quiz screen (Figma): answer states + frames */
+  --bs-green: #369d34; /* White Version/Secondary/Green — correct answers */
+  --bs-red: #ff3b3b; /* White Version/Secondary/Red — errors, wrong answers */
+  --bs-frame: #333334; /* Dark Version/Dark BG/Frame Color; Button/Not Active */
+  --bs-disable: #777777; /* Dark Version/Text/Disable */
+  /* Betsson platform typeface (Figma: "November GeLC", 400). Commercial
+     font — files not in the repo yet; add an @font-face for them and this
+     token picks them up. Until then text falls back to Noto Sans Georgian. */
+  --bs-font: 'November GeLC', 'November', 'Noto Sans Georgian', 'Poppins', sans-serif;
+}
+
+/* Betsson text styles (Figma names in comments). November is a variable
+   font — 545 is a real weight there; the Noto fallback rounds it to 500. */
+.bs-headline {
+  /* Headlines · 700 · 24/31 · Dark Version/Text/Mein Text Color */
+  font-family: var(--bs-font);
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 31px;
+  color: var(--bs-text);
+}
+.bs-input {
+  text-transform: none;
+  /* flat answer field paired with BsButton: 48px, radius 8, no shadow;
+     16px text so iOS doesn't zoom on focus */
+  height: 48px;
+  border: 0;
+  border-radius: 8px;
+  padding: 0 16px;
+  background: var(--bs-input);
+  color: var(--bs-text);
+  font-family: var(--bs-font);
+  font-weight: 545;
+  font-size: 16px;
+  outline: none;
+}
+.bs-input::placeholder {
+  color: var(--bs-text-3);
+}
+.bs-input:focus-visible {
+  box-shadow: inset 0 0 0 1.5px var(--bs-primary);
+}
+.bs-input:disabled {
+  opacity: 0.5;
+}
+.bs-body-medium {
+  /* Body/Body Medium · 545 · 14/19 */
+  font-family: var(--bs-font);
+  font-weight: 545;
+  font-size: 14px;
+  line-height: 19px;
+}
+
+.bs-display {
+  font-family: var(--td-font-display);
+  font-weight: var(--td-display-weight);
+  line-height: 1.05;
+}
+.bs-text {
+  font-family: var(--bs-font);
+  font-weight: 500;
+}
+.bs-group {
+  background: var(--bs-surface);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.bs-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 14px;
+  text-align: left;
+  color: var(--bs-text);
+  border-bottom: 1px solid var(--bs-divider);
+}
+.bs-row:last-child {
+  border-bottom: 0;
+}
+button.bs-row:active {
+  background: var(--bs-surface-2);
+}
+.bs-tab {
+  color: var(--bs-text-2);
+}
+.bs-tab[aria-current='page'] {
+  color: var(--bs-text);
+}
+.bs-tab[aria-current='page'] svg {
+  color: var(--bs-primary);
+}

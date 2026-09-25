@@ -56,8 +56,11 @@ function generateNonce(): string {
   return btoa(binary);
 }
 
-function buildCsp(nonce: string): string {
+function buildCsp(nonce: string, pathname = ""): string {
   const isDevelopment = process.env.NODE_ENV === "development";
+  // Local-only: the Table Derby dev playground (/table-derby/dev) previews
+  // the app in a same-origin iframe. Production keeps frame-ancestors 'none'.
+  const allowSelfFraming = isDevelopment && pathname.startsWith("/table-derby");
   const apiOrigin = originFromEnv("NEXT_PUBLIC_API_URL");
   const supabaseOrigin = originFromEnv("NEXT_PUBLIC_SUPABASE_URL");
   const posthogOrigin = originFromEnv("NEXT_PUBLIC_POSTHOG_HOST");
@@ -93,7 +96,7 @@ function buildCsp(nonce: string): string {
     "default-src 'self'",
     "base-uri 'none'",
     "object-src 'none'",
-    "frame-ancestors 'none'",
+    allowSelfFraming ? "frame-ancestors 'self'" : "frame-ancestors 'none'",
     "form-action 'self'",
     "img-src 'self' data: blob: https:",
     "font-src 'self' data:",
@@ -110,7 +113,7 @@ function buildCsp(nonce: string): string {
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const nonce = generateNonce();
-  const csp = buildCsp(nonce);
+  const csp = buildCsp(nonce, pathname);
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set("x-pathname", pathname);
   requestHeaders.set("x-nonce", nonce);

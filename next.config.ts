@@ -139,6 +139,12 @@ const nextConfig: NextConfig = {
           { key: "X-Robots-Tag", value: "noindex, nofollow" },
         ],
       },
+      // Local-only: the Table Derby dev playground frames the app from the
+      // same origin (matching CSP relaxation in middleware.ts). Later rules
+      // override earlier ones for the same header key.
+      ...(process.env.NODE_ENV === "development"
+        ? [{ source: "/table-derby", headers: [{ key: "X-Frame-Options", value: "SAMEORIGIN" }] }]
+        : []),
     ];
   },
 };
