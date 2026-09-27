@@ -156,6 +156,7 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
       trackActionError({ puzzleId: day, action: key.length > 8 ? "tap" : key, status: error instanceof BuscaminasApiError ? error.status : null, code: error instanceof BuscaminasApiError ? error.message : null });
       const code = error instanceof BuscaminasApiError ? error.message : null;
       const status = error instanceof BuscaminasApiError ? error.status : null;
+      const newer = code === "stale_state" && run ? loadRun(day, contentVersion, owner) : null;
       if (code === "day_over") {
         // Argentine midnight passed mid-run: that board is closed (its token is useless), move on to today's.
         clearRun(day, owner);
@@ -173,11 +174,10 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
       } else if (status === 503) {
         setView(run ? view : "intro");
         setNotice(c.maintenance);
-      } else if (code === "stale_state" && run && loadRun(day, contentVersion, owner)?.token !== run.token) {
+      } else if (code === "stale_state" && run && newer && newer.token !== run.token) {
         // Another tab moved this run on: continue from its newer copy instead of wiping it.
-        const newer = loadRun(day, contentVersion, owner);
         setRun(newer);
-        setView(newer?.state.done ? "end" : "play");
+        setView(newer.state.done ? "end" : "play");
       } else if (code === "stale_state" && run?.state.ranked) {
         // The server's copy of a ranked run is authoritative: re-sync from it.
         try {

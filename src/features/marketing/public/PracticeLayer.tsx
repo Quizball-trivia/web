@@ -49,7 +49,7 @@ export function PracticeLayer({ title, exitLabel, onExit, exitControl = true, ex
       const dialog = dialogRef.current;
       if (event.key !== "Tab" || !dialog) return;
       const focusable = Array.from(dialog.querySelectorAll<HTMLElement>('a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])'))
-        .filter((el) => !el.hasAttribute("disabled") && el.offsetParent !== null);
+        .filter((el) => !el.hasAttribute("disabled") && el.getClientRects().length > 0);
       if (focusable.length === 0) { event.preventDefault(); dialog.focus(); return; }
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
