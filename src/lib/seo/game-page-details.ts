@@ -231,6 +231,28 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Alıştırma turu sabit bir klip seti kullanır. Uygulamada her gün beş yeni gol gelir, doğru isimler jeton kazandırır ve sonuçlar serine sayılır.",
     ],
   },
+  "football-minesweeper": {
+    en: [
+      "Football Minesweeper turns a football quiz into a minesweeper board made of players. Every round has one clue and sixteen portrait cards. Twelve players fit the clue and four are mines. The clues range from a club's season and the matchday squad of a famous final to where a player was born or which World Cup he scored in.",
+      "Each correct tap adds a point to the round's pot. Stepping on a mine ends the round and wipes that pot, so the real decision is when to bank. Finding all twelve is a perfect round worth fifteen points. A full day is twenty rounds that get harder as you go, for a maximum of three hundred points.",
+      "A new board arrives every day at midnight Argentina time, and past days stay playable. You need no account: your progress and streak are kept on this device. At the end you get a grid of twenty coloured squares to share with friends.",
+    ],
+    ka: [
+      "„საფეხბურთო მაღაროები“ საფეხბურთო ვიქტორინას მოთამაშეებისგან შემდგარ მაღაროების დაფად აქცევს. ყოველ რაუნდში ერთი პირობა და თექვსმეტი ბარათია. თორმეტი მოთამაშე პირობას შეესაბამება, ოთხი მაღაროა.",
+      "ყოველი სწორი არჩევანი რაუნდის ბანკს ერთ ქულას უმატებს. მაღარო რაუნდს ამთავრებს და ბანკს აქრობს, ამიტომ მთავარი გადაწყვეტილებაა, როდის შეინახო. თორმეტივეს პოვნა თხუთმეტ ქულას იძლევა. დღეში ოცი რაუნდია, მაქსიმუმ სამასი ქულა.",
+      "ახალი დაფა ყოველდღე შუაღამისას ჩნდება (არგენტინის დროით), წინა დღეები კი ხელმისაწვდომი რჩება. ანგარიში არ გჭირდება: პროგრესი და სერია ამ მოწყობილობაზე ინახება. თამაშის ბოლოს ოცი ფერადი კვადრატი გეძლევა გასაზიარებლად.",
+    ],
+    es: [
+      "El buscaminas futbolero convierte un quiz de fútbol en un tablero de minas hecho de jugadores. Cada ronda tiene una consigna y dieciséis cartas con cara y nombre. Doce futbolistas la cumplen y cuatro son minas. Las consignas van desde la temporada de un club y la planilla de una final famosa hasta dónde nació un jugador o en qué Mundial hizo un gol.",
+      "Cada acierto suma un punto al pozo de la ronda. Pisar una mina termina la ronda y borra ese pozo, así que la decisión de verdad es cuándo plantarse. Encontrar a los doce es una ronda perfecta que vale quince puntos. Un día completo son veinte rondas que se ponen cada vez más difíciles, con un máximo de trescientos puntos.",
+      "Cada día a la medianoche de Argentina llega un tablero nuevo, y los días anteriores se pueden seguir jugando. No hace falta cuenta: tu progreso y tu racha quedan guardados en este dispositivo. Al final te llevás una grilla de veinte cuadraditos de colores para compartir con tus amigos.",
+    ],
+    tr: [
+      "Futbol Mayın Tarlası, futbol bilgi yarışmasını oyunculardan oluşan bir mayın tarlasına çevirir. Her turda bir ipucu ve on altı oyuncu kartı vardır. On iki oyuncu ipucuna uyar, dördü mayındır.",
+      "Her doğru seçim turun kasasına bir puan ekler. Mayına basmak turu bitirir ve kasayı siler; asıl karar ne zaman kasaya alacağındır. On ikisinin hepsini bulmak on beş puanlık mükemmel bir turdur. Bir gün yirmi turdur ve en fazla üç yüz puan kazanılır.",
+      "Her gün Arjantin saatiyle gece yarısı yeni bir tahta gelir, önceki günler oynanabilir kalır. Hesap gerekmez: ilerlemen ve serin bu cihazda saklanır. Sonunda arkadaşlarınla paylaşmak için yirmi renkli kareden oluşan bir tablo alırsın.",
+    ],
+  },
   "trivia-mines": {
     en: [
       "Trivia Mines is a football minesweeper. Twenty-five tiles hide four defenders. You choose a stake, open tiles one at a time and every safe tile multiplies the pot by the fair odds of that pick. Hit a defender and the stake is gone; cash out before that and the pot is yours.",
@@ -243,7 +265,7 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "ამ გვერდზე სავარჯიშო ქულებით თამაშობ, რომელთა გამოტანა ან გადაცვლა შეუძლებელია. აპლიკაციაში ავტორიზებული მოთამაშეები საფულის ნამდვილ ქოინებს დებენ, ხუთიდან ხუთასამდე, შეზღუდული ბანკით.",
     ],
     es: [
-      "Minas de trivia es un buscaminas futbolero. Veinticinco casillas esconden cuatro defensas. Eliges una apuesta, abres casillas de una en una y cada casilla segura multiplica el bote por la probabilidad justa de esa elección. Si tocas un defensa la apuesta se pierde; retira antes y el bote es tuyo.",
+      "Minas de trivia es un juego de casillas con preguntas de fútbol. Veinticinco casillas esconden cuatro defensas. Eliges una apuesta, abres casillas de una en una y cada casilla segura multiplica el bote por la probabilidad justa de esa elección. Si tocas un defensa la apuesta se pierde; retira antes y el bote es tuyo.",
       "Puedes explorar hasta tres veces por ronda: responde bien una pregunta de fútbol y se marca un defensa oculto. Explorar reduce el riesgo de las siguientes elecciones y los multiplicadores bajan con él, así que el retorno es el mismo juegues como juegues. La casa se queda el tres por ciento al retirar.",
       "En esta página juegas con puntos de práctica que no se pueden retirar ni convertir. En la app, los jugadores registrados apuestan monedas reales de su cartera, entre cinco y quinientas, con un bote limitado.",
     ],

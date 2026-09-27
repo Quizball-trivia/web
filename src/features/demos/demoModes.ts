@@ -16,6 +16,18 @@ export interface DemoModeCard {
 // continued as a separate feature. The /demos/match route (DemoTraining)
 // stays wired so it can still be reached directly.
 const HIDDEN_DEMO_MODES: DemoModeCard[] = [
+  // Buscaminas futbolero runs on its own public page and /buscaminas, not through the demo hub.
+  {
+    slug: "buscaminas",
+    title: { en: "Football Minesweeper", ka: "საფეხბურთო მაღაროები", es: "Buscaminas futbolero", tr: "Futbol Mayın Tarlası", },
+    description: {
+      en: "16 players, 12 fit the clue, 4 are mines. 20 rounds a day.",
+      ka: "16 მოთამაშე, 12 შეესაბამება, 4 მაღაროა. დღეში 20 რაუნდი.",
+      es: "16 jugadores, 12 cumplen la consigna, 4 son minas. 20 rondas por día.",
+      tr: "16 oyuncu, 12'si uyar, 4'ü mayın. Günde 20 tur.",
+    },
+    group: "daily",
+  },
   {
     slug: "match",
     title: { en: "1v1 Match", ka: "1v1 მატჩი", es: "Partido 1v1", tr: "1v1 Maç", },

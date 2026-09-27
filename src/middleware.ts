@@ -36,6 +36,9 @@ const REDIRECT_FROM_ROOT: Record<string, string> = {
   // on a playable game; its public marketing page has a separate route.
   "/daily/challenges/fifaCards": "/daily/challenges/card-detective",
   "/daily/challenges/guess-the-card": "/daily/challenges/card-detective",
+  // Google sends "buscaminas futbolero" searches to this URL; that intent is the
+  // player-card game, so it now lives there. Trivia Mines moved to minas-con-preguntas.
+  "/es/juegos-de-futbol/minas-de-trivia": "/es/juegos-de-futbol/buscaminas-futbolero",
 };
 
 function originFromEnv(name: string): string | null {
