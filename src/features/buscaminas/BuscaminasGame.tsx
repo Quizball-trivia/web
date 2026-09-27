@@ -69,6 +69,8 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
   const contentVersion = content?.contentVersion ?? 1;
   const state = run?.state ?? null;
   useEffect(() => { currentDayRef.current = day; }, [day]);
+  // Leaving the game invalidates any start still in flight (no run or funnel event after exit).
+  useEffect(() => () => { currentDayRef.current = null; }, []);
 
   useEffect(() => {
     const check = () => setToday(releaseDay());
