@@ -161,6 +161,8 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
         setView("intro");
         setNotice(c.dayOver);
       } else if (code === "sign_in_for_today") {
+        clearRun(day, owner);
+        setRun(null);
         setView("intro");
         setNotice(c.guestYesterday);
       } else if (status === 503) {
