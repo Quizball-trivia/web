@@ -3,7 +3,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import { decodeShare, SHARE_COPY } from "@/features/buscaminas/buscaminas.share";
 import { SITE_OG_IMAGE_PATH, SITE_URL } from "@/lib/seo/site";
 
-export const runtime = "edge";
+// Edge fails on Vercel with this deployment setup (process.env.NEXT_DEPLOYMENT_ID); the Node runtime renders ImageResponse too.
+export const runtime = "nodejs";
 
 const COLOR = { perfect: "#58CC02", banked: "#FFE500", mine: "#FF4B4B" } as const;
 
