@@ -28,3 +28,13 @@ describe("buscaminas saved runs", () => {
     expect(finishedScores(["2026-09-27"], "guest")).toEqual({});
   });
 });
+
+describe("buscaminas archive versions", () => {
+  beforeEach(() => window.localStorage.clear());
+
+  it("skips results whose day was corrected, using the published index", () => {
+    saveRun("2026-09-27", 7, run(true, 90), "guest");
+    saveRun("2026-09-28", 5, run(true, 60), "guest");
+    expect(finishedScores(["2026-09-27", "2026-09-28"], "guest", { "2026-09-27": 8, "2026-09-28": 5 })).toEqual({ "2026-09-28": 60 });
+  });
+});

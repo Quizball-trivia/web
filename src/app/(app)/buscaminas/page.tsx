@@ -16,7 +16,7 @@ function BuscaminasRoute() {
   const onEvent = useCallback((event: "start" | "complete" | "replay", detail?: EngineEventDetail) => {
     session.current ??= { id: crypto.randomUUID(), startedAt: Date.now() };
     const s = session.current;
-    if (event === "start") { s.startedAt = Date.now(); trackGameStart({ modeId: "buscaminas", access, sessionId: s.id, sessionKind: "full_game" }); }
+    if (event === "start") { s.startedAt = Date.now(); trackGameStart({ modeId: "buscaminas", access, sessionId: s.id, sessionKind: "full_game", surface: "app" }); }
     if (event === "complete") trackGameComplete({ modeId: "buscaminas", sessionId: s.id, sessionKind: "full_game", durationMs: Date.now() - s.startedAt, ...detail });
     if (event === "replay") { trackGameReplay({ modeId: "buscaminas", previousSessionId: s.id }); session.current = { id: crypto.randomUUID(), startedAt: Date.now() }; }
   }, [access]);

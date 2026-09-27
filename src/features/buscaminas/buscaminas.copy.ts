@@ -63,6 +63,9 @@ const es = {
   actionError: "Se cortó la conexión. Probá de nuevo.",
   restarted: "Tu partida cambió (otro dispositivo o una corrección). La recargamos.",
   dayOver: "Terminó el día en Argentina: ya está el tablero nuevo.",
+  guestYesterday: "Estás jugando el tablero de ayer. Creá tu cuenta para jugar el de hoy y entrar al ranking.",
+  playToday: "Jugar el de hoy",
+  maintenance: "El juego está en mantenimiento. Volvé en un rato.",
   sessionChanged: "Cambió tu sesión. Arrancá de nuevo el tablero.",
   board: {
     title: "Ranking del día",
@@ -142,6 +145,9 @@ const en: Copy = {
   actionError: "Connection lost. Try again.",
   restarted: "Your run changed (another device or a correction). We reloaded it.",
   dayOver: "The day ended in Argentina: the new board is ready.",
+  guestYesterday: "You're playing yesterday's board. Create an account to play today's and get ranked.",
+  playToday: "Play today's board",
+  maintenance: "The game is under maintenance. Please come back soon.",
   sessionChanged: "Your session changed. Start the board again.",
   board: {
     title: "Today's leaderboard",
@@ -219,6 +225,9 @@ const ka: Copy = {
   actionError: "კავშირი გაწყდა. სცადე თავიდან.",
   restarted: "შენი თამაში შეიცვალა (სხვა მოწყობილობა ან შესწორება). თავიდან ჩავტვირთეთ.",
   dayOver: "არგენტინაში დღე დასრულდა: ახალი დაფა მზადაა.",
+  guestYesterday: "გუშინდელ დაფას თამაშობ. შექმენი ანგარიში, რომ დღევანდელი ითამაშო და რეიტინგში მოხვდე.",
+  playToday: "დღევანდელის თამაში",
+  maintenance: "თამაში დროებით მიუწვდომელია. ცოტა ხანში დაბრუნდი.",
   sessionChanged: "შენი სესია შეიცვალა. დაფა თავიდან დაიწყე.",
   board: {
     title: "დღის რეიტინგი",
@@ -296,6 +305,9 @@ const tr: Copy = {
   actionError: "Bağlantı koptu. Tekrar dene.",
   restarted: "Oyunun değişti (başka cihaz veya düzeltme). Yeniden yükledik.",
   dayOver: "Arjantin'de gün bitti: yeni tahta hazır.",
+  guestYesterday: "Dünün tahtasını oynuyorsun. Bugününkünü oynamak ve sıralamaya girmek için hesap oluştur.",
+  playToday: "Bugününkünü oyna",
+  maintenance: "Oyun bakımda. Birazdan tekrar dene.",
   sessionChanged: "Oturumun değişti. Tahtaya yeniden başla.",
   board: {
     title: "Günün sıralaması",

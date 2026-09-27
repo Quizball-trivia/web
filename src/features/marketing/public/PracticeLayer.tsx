@@ -43,6 +43,24 @@ export function PracticeLayer({ title, exitLabel, onExit, exitControl = true, ex
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [exitControl, onExit]);
+  // aria-modal only describes the dialog; keep Tab/Shift+Tab inside it so the page behind stays unreachable.
+  useEffect(() => {
+    const onTab = (event: KeyboardEvent) => {
+      const dialog = dialogRef.current;
+      if (event.key !== "Tab" || !dialog) return;
+      const focusable = Array.from(dialog.querySelectorAll<HTMLElement>('a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])'))
+        .filter((el) => !el.hasAttribute("disabled") && el.offsetParent !== null);
+      if (focusable.length === 0) { event.preventDefault(); dialog.focus(); return; }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+      if (!active || !dialog.contains(active)) { event.preventDefault(); first.focus(); return; }
+      if (event.shiftKey && (active === first || active === dialog)) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && active === last) { event.preventDefault(); first.focus(); }
+    };
+    document.addEventListener("keydown", onTab);
+    return () => document.removeEventListener("keydown", onTab);
+  }, []);
   if (typeof document === "undefined") return null;
   return createPortal(
     <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label={title} className="fixed inset-0 z-[80] overflow-y-auto bg-surface-page-alt outline-none">

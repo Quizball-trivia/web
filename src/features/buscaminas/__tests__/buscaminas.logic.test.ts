@@ -47,3 +47,16 @@ describe("buscaminas calendar", () => {
     expect(streakFrom(days, {})).toBe(0);
   });
 });
+
+describe("buscaminas guest board", () => {
+  it("sends guests to yesterday's board while today's is live, and accounts to today's", async () => {
+    const { defaultDayFor, GUESTS_PLAY_LIVE } = await import("../buscaminas.logic");
+    expect(GUESTS_PLAY_LIVE).toBe(false);
+    expect(defaultDayFor("2026-09-30", true)).toBe("2026-09-30");
+    expect(defaultDayFor("2026-09-30", false)).toBe("2026-09-29");
+    // Launch day has no yesterday: guests see the launch board (the server answers sign_in_for_today).
+    expect(defaultDayFor("2026-09-26", false)).toBe("2026-09-26");
+    // After the last published day nothing is live, so guests play the last board.
+    expect(defaultDayFor("2027-01-10", false)).toBe("2026-12-24");
+  });
+});

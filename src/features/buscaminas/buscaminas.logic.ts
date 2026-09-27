@@ -81,3 +81,20 @@ export function playableDays(today: string): string[] {
 }
 
 export const puzzleNumber = (day: string) => dayNumber(day);
+
+/**
+ * Guests play the previous (closed) board; today's board and its ranking need an account.
+ * Must match the backend's BUSCAMINAS_GUESTS_PLAY_LIVE (default false).
+ */
+export const GUESTS_PLAY_LIVE = false;
+
+/** Today's board is live (ranked) only inside the published range. */
+export const isLiveDay = (day: string, today: string) => day === today && dayNumber(today) >= 1 && dayNumber(today) <= PUBLISHED_DAYS;
+
+/** The board a player lands on: today's for accounts, yesterday's for guests while today's is live. */
+export function defaultDayFor(today: string, signedIn: boolean): string {
+  const live = puzzleDayFor(today);
+  if (signedIn || GUESTS_PLAY_LIVE || !isLiveDay(live, today)) return live;
+  const yesterday = addDays(live, -1);
+  return dayNumber(yesterday) >= 1 ? yesterday : live;
+}

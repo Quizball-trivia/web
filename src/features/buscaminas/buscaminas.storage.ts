@@ -51,13 +51,15 @@ export function clearRun(day: string, owner: string): void {
 }
 
 /** Finished-day scores on this device, for the archive list and the streak. */
-export function finishedScores(days: readonly string[], owner: string): Record<string, number> {
+/** `versions` (published index) drops results from before a content correction without opening each day. */
+export function finishedScores(days: readonly string[], owner: string, versions?: Record<string, number>): Record<string, number> {
   const out: Record<string, number> = {};
   for (const day of days) {
     try {
       const raw = window.localStorage.getItem(key(day, owner));
       if (!raw) continue;
       const saved = JSON.parse(raw) as Saved;
+      if (versions?.[day] !== undefined && saved.contentVersion !== versions[day]) continue;
       if (isRun(saved.run) && saved.run.state.done) out[day] = saved.run.state.score;
     } catch {
       // Ignore a corrupt entry.
@@ -67,13 +69,14 @@ export function finishedScores(days: readonly string[], owner: string): Record<s
 }
 
 /** Days with a started run that has not reached the result screen yet. */
-export function inProgressDays(days: readonly string[], owner: string): Set<string> {
+export function inProgressDays(days: readonly string[], owner: string, versions?: Record<string, number>): Set<string> {
   const out = new Set<string>();
   for (const day of days) {
     try {
       const raw = window.localStorage.getItem(key(day, owner));
       if (!raw) continue;
       const saved = JSON.parse(raw) as Saved;
+      if (versions?.[day] !== undefined && saved.contentVersion !== versions[day]) continue;
       if (isRun(saved.run) && !saved.run.state.done) out.add(day);
     } catch {
       // Ignore a corrupt entry.

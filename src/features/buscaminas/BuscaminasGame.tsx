@@ -13,11 +13,12 @@ import type { EngineEventDetail } from "@/lib/analytics/public-games.analytics";
 import { findPublicGameByModeId, publicPagePathFor } from "@/lib/seo/public-games";
 import type { Locale } from "@/lib/i18n/locale";
 import {
-  MAX_SCORE, TARGETS_PER_ROUND, playableDays, puzzleDayFor, puzzleNumber, releaseDay, resultGrid,
+  MAX_SCORE, TARGETS_PER_ROUND, addDays, defaultDayFor, isLiveDay, playableDays, puzzleDayFor, puzzleNumber, releaseDay, resultGrid,
   type BuscaminasCard, type BuscaminasDay, type BuscaminasRound, type RoundResult,
 } from "./buscaminas.logic";
 import { clearRun, finishedScores, inProgressDays, loadRun, saveRun, streakFrom } from "./buscaminas.storage";
 import { BuscaminasLeaderboard } from "./BuscaminasLeaderboard";
+import { SignInLink } from "@/features/marketing/public/PublicLinks";
 import { BuscaminasApiError, buscaminasApi, type BuscaminasRun, type BuscaminasRunState } from "@/lib/repositories/buscaminas.repo";
 import { buscaminasCopy, promptFor } from "./buscaminas.copy";
 import { encodeShare } from "./buscaminas.share";
@@ -40,12 +41,18 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
   // An archive pick or a started board stays put; otherwise the screen follows today's puzzle across midnight.
   const [chosenDay, setChosenDay] = useState<string | null>(() => (initialDay && playableDays(releaseDay()).includes(initialDay) ? initialDay : null));
   const [lockedDay, setLockedDay] = useState<string | null>(null);
-  const day = chosenDay ?? lockedDay ?? puzzleDayFor(today);
   const scrollRef = useRef<HTMLDivElement>(null);
   const startedRef = useRef(false);
+  const replayPendingRef = useRef(false);
   const authStatus = useAuthStore((s) => s.status);
   const userId = useAuthStore((s) => s.user?.id);
   const owner = authStatus === "authenticated" && userId ? userId : "guest";
+  const liveDay = puzzleDayFor(today);
+  const day = chosenDay ?? lockedDay ?? defaultDayFor(today, owner !== "guest");
+  const guestOnPastBoard = owner === "guest" && !isLiveDay(day, today) && isLiveDay(liveDay, today);
+  // Guests can't open today's live board; they see it listed as needing an account instead.
+  const openableDays = useMemo(() => (owner === "guest" && isLiveDay(liveDay, today) ? days.filter((d) => d !== liveDay) : days), [days, liveDay, owner, today]);
+  const [versions, setVersions] = useState<Record<string, number> | undefined>(undefined);
   const authReady = authStatus !== "loading";
   const [attempt, setAttempt] = useState(0);
   const loadKey = `${day}#${attempt}#${owner}`;
@@ -67,6 +74,15 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
     document.addEventListener("visibilitychange", check);
     window.addEventListener("focus", check);
     return () => { window.clearInterval(timer); document.removeEventListener("visibilitychange", check); window.removeEventListener("focus", check); };
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetch("/buscaminas/v1/index.json", { signal: controller.signal })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data: { days?: Record<string, number> } | null) => { if (data?.days) setVersions(data.days); })
+      .catch(() => {});
+    return () => controller.abort();
   }, []);
 
   useEffect(() => {
@@ -136,12 +152,20 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
       const code = error instanceof BuscaminasApiError ? error.message : null;
       const status = error instanceof BuscaminasApiError ? error.status : null;
       if (code === "day_over") {
-        // Argentine midnight passed mid-run: that board is closed, move on to today's.
+        // Argentine midnight passed mid-run: that board is closed (its token is useless), move on to today's.
+        clearRun(day, owner);
+        setToday((t) => (t > day ? t : addDays(day, 1)));
         setLockedDay(null);
         setChosenDay(null);
         setRun(null);
         setView("intro");
         setNotice(c.dayOver);
+      } else if (code === "sign_in_for_today") {
+        setView("intro");
+        setNotice(c.guestYesterday);
+      } else if (status === 503) {
+        setView(run ? view : "intro");
+        setNotice(c.maintenance);
       } else if (code === "stale_state" && run && loadRun(day, contentVersion, owner)?.token !== run.token) {
         // Another tab moved this run on: continue from its newer copy instead of wiping it.
         const newer = loadRun(day, contentVersion, owner);
@@ -153,8 +177,8 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
           const current = await buscaminasApi.start(day, contentVersion);
           setRun(current);
           setView(current.state.done ? "end" : "play");
-        } catch {
-          setNotice(c.actionError);
+        } catch (resyncError) {
+          setNotice(resyncError instanceof BuscaminasApiError && resyncError.status === 503 ? c.maintenance : c.actionError);
         }
       } else if (code === "too_many_runs") {
         setView("intro");
@@ -175,6 +199,7 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
   };
 
   const start = () => {
+    if (replayPendingRef.current) { replayPendingRef.current = false; onEvent?.("replay"); }
     if (!startedRef.current) { startedRef.current = true; onEvent?.("start"); }
     setLockedDay(day);
     if (run) {
@@ -198,8 +223,9 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
   const openDay = (target: string) => {
     trackArchiveOpen({ puzzleId: target, daysBack: days.indexOf(target) });
     // A finished day opens on its result: that is a look back, not a new session.
-    if (target !== day && !(target in finishedScores([target], owner))) {
-      onEvent?.("replay");
+    if (target !== day && !(target in finishedScores([target], owner, versions))) {
+      // Counted when this day's board is actually started, not on browsing.
+      replayPendingRef.current = startedRef.current;
       startedRef.current = false;
     }
     setChosenDay(target);
@@ -219,11 +245,11 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
         ) : !content ? (
           <Centered><p className="animate-pulse text-sm text-white/70">{c.loading}</p></Centered>
         ) : view === "archive" ? (
-          <Archive locale={locale} days={days} today={today} current={day} currentState={state} onBack={() => setView(state?.done ? "end" : "intro")} onOpen={openDay} />
+          <Archive locale={locale} days={openableDays} lockedLiveDay={openableDays.length !== days.length ? liveDay : null} versions={versions} today={today} current={day} currentState={state} onBack={() => setView(state?.done ? "end" : "intro")} onOpen={openDay} />
         ) : view === "end" && state ? (
-          <EndScreen locale={locale} day={day} state={state} days={days} boardRefresh={boardRefresh} rankedDay={day === puzzleDayFor(today)} onArchive={() => setView("archive")} onExit={onExit} />
+          <EndScreen locale={locale} day={day} liveDay={isLiveDay(liveDay, today) ? liveDay : null} state={state} days={days} versions={versions} boardRefresh={boardRefresh} onArchive={() => setView("archive")} onExit={onExit} />
         ) : view === "intro" || !round || !state ? (
-          <Intro locale={locale} number={puzzleNumber(day)} state={state} busy={pending === "start"} notice={notice} onStart={start} onArchive={() => setView("archive")} onExit={onExit} />
+          <Intro locale={locale} number={puzzleNumber(day)} state={state} busy={pending === "start"} notice={notice} guestOnPastBoard={guestOnPastBoard} onStart={start} onArchive={() => setView("archive")} onExit={onExit} />
         ) : (
           <Board locale={locale} content={content} round={round} state={state} pending={pending} notice={notice} onPick={pick} onBank={bank} onNext={advance} onExit={onExit} />
         )}
@@ -249,7 +275,7 @@ function Brand({ locale, className }: { locale: Locale; className?: string }) {
   );
 }
 
-function Intro({ locale, number, state, busy, notice, onStart, onArchive, onExit }: { locale: Locale; number: number; state: BuscaminasRunState | null; busy: boolean; notice: string | null; onStart: () => void; onArchive: () => void; onExit?: () => void }) {
+function Intro({ locale, number, state, busy, notice, guestOnPastBoard, onStart, onArchive, onExit }: { locale: Locale; number: number; state: BuscaminasRunState | null; busy: boolean; notice: string | null; guestOnPastBoard: boolean; onStart: () => void; onArchive: () => void; onExit?: () => void }) {
   const c = buscaminasCopy(locale);
   const inProgress = Boolean(state && (state.round > 0 || state.picked.length > 0 || state.results.length > 0));
   return (
@@ -260,6 +286,12 @@ function Intro({ locale, number, state, busy, notice, onStart, onArchive, onExit
       <div className="flex flex-1 flex-col justify-center">
         <Brand locale={locale} className="text-3xl leading-none" />
         <p className="mt-2 text-sm font-bold text-white/60" style={poppins}>#{number}</p>
+        {guestOnPastBoard && notice !== buscaminasCopy(locale).guestYesterday && (
+          <div className="mt-4 rounded-2xl border border-brand-yellow/60 bg-brand-yellow/10 px-4 py-3">
+            <p className="text-sm text-white/90">{c.guestYesterday}</p>
+            <SignInLink placement="buscaminas_intro" modeId="buscaminas" returnTo="/buscaminas" className="mt-2 inline-flex h-9 items-center rounded-full bg-brand-yellow px-4 text-xs font-black uppercase text-black hover:bg-brand-yellow-deep">{c.playToday}</SignInLink>
+          </div>
+        )}
         <div className="relative mt-5 aspect-video w-full overflow-hidden rounded-2xl bg-game-art-night" aria-hidden>
           <Image
             src="/assets/demos/game-modes/buscaminas.webp"
@@ -434,7 +466,8 @@ function PlayerCard({ card, index, picked, mine, revealOk, revealMine, revealed,
   );
 }
 
-function EndScreen({ locale, day, state, days, boardRefresh, rankedDay, onArchive, onExit }: { locale: Locale; day: string; state: BuscaminasRunState; days: string[]; boardRefresh: number; rankedDay: boolean; onArchive: () => void; onExit?: () => void }) {
+function EndScreen({ locale, day, liveDay, state, days, versions, boardRefresh, onArchive, onExit }: { locale: Locale; day: string; liveDay: string | null; state: BuscaminasRunState; days: string[]; versions?: Record<string, number>; boardRefresh: number; onArchive: () => void; onExit?: () => void }) {
+  const rankedDay = day === liveDay;
   const c = buscaminasCopy(locale);
   const results: RoundResult[] = state.results;
   const score = state.score;
@@ -444,7 +477,7 @@ function EndScreen({ locale, day, state, days, boardRefresh, rankedDay, onArchiv
   const grid = resultGrid(results);
   // This day's result may not be persisted yet when the screen first renders.
   const owner = useAuthStore((s) => (s.status === "authenticated" && s.user?.id ? s.user.id : "guest"));
-  const [streak] = useState(() => streakFrom(days, { ...finishedScores(days, owner), [day]: score }));
+  const [streak] = useState(() => streakFrom(days, { ...finishedScores(days, owner, versions), [day]: score }));
   const [copied, setCopied] = useState(false);
   const guest = useAuthStore((s) => s.status) !== "authenticated";
   const sharePath = `/r/${encodeShare(number, results, locale)}`;
@@ -491,7 +524,7 @@ function EndScreen({ locale, day, state, days, boardRefresh, rankedDay, onArchiv
         {state.ranked && state.rank ? (
           <p className="mx-auto mt-3 w-fit rounded-full bg-brand-yellow px-4 py-1 text-sm font-black text-black" style={poppins}>{c.board.rank(state.rank)}</p>
         ) : (
-          <p className="mt-3 text-xs text-white/70">{rankedDay ? (guest ? c.board.guestPlay : null) : c.board.unranked}</p>
+          <p className="mt-3 text-xs text-white/70">{guest ? c.guestYesterday : rankedDay ? null : c.board.unranked}</p>
         )}
         <p aria-hidden className="mt-4 whitespace-pre text-xl leading-snug tracking-[0.12em]">{grid}</p>
         <dl className="mt-4 grid grid-cols-3 gap-2 text-center">
@@ -518,7 +551,7 @@ function EndScreen({ locale, day, state, days, boardRefresh, rankedDay, onArchiv
       {isToday && <p className="mt-3 text-center text-sm text-white/60">{c.end.comeBack}</p>}
       <button type="button" onClick={onArchive} className="mt-3 h-11 rounded-full border border-white/15 text-sm font-bold uppercase tracking-wide text-white/85 hover:bg-white/10" style={poppins}>{c.end.past}</button>
 
-      {rankedDay && <BuscaminasLeaderboard locale={locale} day={day} refreshKey={boardRefresh} placement="end" className="mt-4" />}
+      {liveDay && <BuscaminasLeaderboard locale={locale} day={liveDay} refreshKey={boardRefresh} placement="end" className="mt-4" />}
 
       <div className="mt-4">
         <p className="text-xs font-bold uppercase tracking-wide text-white/50">{c.end.more}</p>
@@ -540,16 +573,22 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function Archive({ locale, days, today, current, currentState, onBack, onOpen }: { locale: Locale; days: string[]; today: string; current: string; currentState: BuscaminasRunState | null; onBack: () => void; onOpen: (day: string) => void }) {
+function Archive({ locale, days, lockedLiveDay, versions, today, current, currentState, onBack, onOpen }: { locale: Locale; days: string[]; lockedLiveDay: string | null; versions?: Record<string, number>; today: string; current: string; currentState: BuscaminasRunState | null; onBack: () => void; onOpen: (day: string) => void }) {
   const c = buscaminasCopy(locale);
   const owner = useAuthStore((s) => (s.status === "authenticated" && s.user?.id ? s.user.id : "guest"));
-  const [scores] = useState(() => finishedScores(days, owner));
-  const [unfinished] = useState(() => inProgressDays(days, owner));
+  const [scores] = useState(() => finishedScores(days, owner, versions));
+  const [unfinished] = useState(() => inProgressDays(days, owner, versions));
   const todayPuzzle = puzzleDayFor(today);
   return (
     <div className="flex flex-1 flex-col">
       <button type="button" onClick={onBack} aria-label={c.archive.back} className="flex size-10 items-center justify-center rounded-full bg-white/10 hover:bg-white/20"><ArrowLeft className="size-5" /></button>
       <h2 className="mt-3 text-2xl font-black uppercase" style={poppins}>{c.archive.title}</h2>
+      {lockedLiveDay && (
+        <div className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-brand-yellow/60 bg-brand-yellow/10 px-4 py-3">
+          <span className="font-black" style={poppins}>#{puzzleNumber(lockedLiveDay)} <span className="ml-2 text-xs font-bold text-white/55">{c.archive.today}</span></span>
+          <SignInLink placement="buscaminas_archive" modeId="buscaminas" returnTo="/buscaminas" className="inline-flex h-9 items-center rounded-full bg-brand-yellow px-4 text-xs font-black uppercase text-black hover:bg-brand-yellow-deep">{c.playToday}</SignInLink>
+        </div>
+      )}
       <ul className="mt-4 flex flex-col gap-2">
         {days.map((d) => {
           const score = d === current && currentState?.done ? currentState.score : scores[d];
