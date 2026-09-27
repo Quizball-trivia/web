@@ -44,6 +44,7 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
   const scrollRef = useRef<HTMLDivElement>(null);
   const startedRef = useRef(false);
   const replayPendingRef = useRef(false);
+  const currentDayRef = useRef<string | null>(null);
   const authStatus = useAuthStore((s) => s.status);
   const userId = useAuthStore((s) => s.user?.id);
   const owner = authStatus === "authenticated" && userId ? userId : "guest";
@@ -67,6 +68,7 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
   const [boardRefresh, setBoardRefresh] = useState(0);
   const contentVersion = content?.contentVersion ?? 1;
   const state = run?.state ?? null;
+  useEffect(() => { currentDayRef.current = day; }, [day]);
 
   useEffect(() => {
     const check = () => setToday(releaseDay());
@@ -141,12 +143,13 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
   };
 
   /** One server action at a time; a forked or outdated run is dropped and restarted from the server's copy. */
-  const act = async (key: string, call: () => Promise<BuscaminasRun>, r: BuscaminasRound | null) => {
+  const act = async (key: string, call: () => Promise<BuscaminasRun | null>, r: BuscaminasRound | null) => {
     if (pending) return;
     setPending(key);
     setNotice(null);
     try {
-      apply(await call(), r);
+      const result = await call();
+      if (result) apply(result, r);
     } catch (error) {
       trackActionError({ puzzleId: day, action: key.length > 8 ? "tap" : key, status: error instanceof BuscaminasApiError ? error.status : null, code: error instanceof BuscaminasApiError ? error.message : null });
       const code = error instanceof BuscaminasApiError ? error.message : null;
@@ -200,18 +203,26 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
     }
   };
 
-  const start = () => {
+  /** Funnel events fire once a board is really open (resumed locally or confirmed by the server). */
+  const markStarted = () => {
     if (replayPendingRef.current) { replayPendingRef.current = false; onEvent?.("replay"); }
     if (!startedRef.current) { startedRef.current = true; onEvent?.("start"); }
-    setLockedDay(day);
+  };
+  const start = () => {
+    const requestedDay = day;
+    setLockedDay(requestedDay);
     if (run) {
-      trackRunStart({ puzzleId: day, contentVersion, ranked: run.state.ranked, resumed: true, round: run.state.round + 1 });
+      markStarted();
+      trackRunStart({ puzzleId: requestedDay, contentVersion, ranked: run.state.ranked, resumed: true, round: run.state.round + 1 });
       setView(run.state.done ? "end" : "play");
       return;
     }
     void act("start", async () => {
-      const fresh = await buscaminasApi.start(day, contentVersion);
-      trackRunStart({ puzzleId: day, contentVersion, ranked: fresh.state.ranked, resumed: fresh.state.round > 0 || fresh.state.results.length > 0, round: fresh.state.round + 1 });
+      const fresh = await buscaminasApi.start(requestedDay, contentVersion);
+      // The player switched boards while this was in flight: never attach day A's run to day B.
+      if (currentDayRef.current !== requestedDay) return null;
+      markStarted();
+      trackRunStart({ puzzleId: requestedDay, contentVersion, ranked: fresh.state.ranked, resumed: fresh.state.round > 0 || fresh.state.results.length > 0, round: fresh.state.round + 1 });
       setView(fresh.state.done ? "end" : "play");
       return fresh;
     }, null);
@@ -312,7 +323,7 @@ function Intro({ locale, number, state, busy, notice, guestOnPastBoard, onStart,
         <button type="button" onClick={onStart} disabled={busy} className="mt-8 h-14 rounded-full bg-brand-green text-base font-black uppercase tracking-wide text-white hover:bg-brand-green-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 disabled:opacity-60" style={poppins}>
           {busy ? c.loading : inProgress && state ? c.intro.resume(state.round + 1) : c.intro.start}
         </button>
-        <button type="button" onClick={onArchive} className="mt-3 h-11 rounded-full bg-white/10 text-sm font-bold uppercase tracking-wide text-white/85 hover:bg-white/15" style={poppins}>{c.intro.past}</button>
+        <button type="button" onClick={onArchive} disabled={busy} className="mt-3 h-11 rounded-full bg-white/10 text-sm font-bold uppercase tracking-wide text-white/85 hover:bg-white/15 disabled:opacity-50" style={poppins}>{c.intro.past}</button>
         <p className="mt-4 text-center text-xs text-white/50">{c.intro.newBoard}</p>
       </div>
     </div>
@@ -479,7 +490,7 @@ function EndScreen({ locale, day, liveDay, state, days, versions, boardRefresh, 
   const grid = resultGrid(results);
   // This day's result may not be persisted yet when the screen first renders.
   const owner = useAuthStore((s) => (s.status === "authenticated" && s.user?.id ? s.user.id : "guest"));
-  const [streak] = useState(() => streakFrom(days, { ...finishedScores(days, owner, versions), [day]: score }));
+  const streak = useMemo(() => streakFrom(days, { ...finishedScores(days, owner, versions), [day]: score }), [day, days, owner, score, versions]);
   const [copied, setCopied] = useState(false);
   const guest = useAuthStore((s) => s.status) !== "authenticated";
   const sharePath = `/r/${encodeShare(number, results, locale)}`;
@@ -578,8 +589,8 @@ function Stat({ label, value }: { label: string; value: string }) {
 function Archive({ locale, days, lockedLiveDay, versions, today, current, currentState, onBack, onOpen }: { locale: Locale; days: string[]; lockedLiveDay: string | null; versions?: Record<string, number>; today: string; current: string; currentState: BuscaminasRunState | null; onBack: () => void; onOpen: (day: string) => void }) {
   const c = buscaminasCopy(locale);
   const owner = useAuthStore((s) => (s.status === "authenticated" && s.user?.id ? s.user.id : "guest"));
-  const [scores] = useState(() => finishedScores(days, owner, versions));
-  const [unfinished] = useState(() => inProgressDays(days, owner, versions));
+  const scores = useMemo(() => finishedScores(days, owner, versions), [days, owner, versions]);
+  const unfinished = useMemo(() => inProgressDays(days, owner, versions), [days, owner, versions]);
   const todayPuzzle = puzzleDayFor(today);
   return (
     <div className="flex flex-1 flex-col">
