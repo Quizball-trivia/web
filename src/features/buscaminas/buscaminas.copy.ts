@@ -14,7 +14,7 @@ const es = {
   finish: "Ver resultado",
   perfect: (n: number) => `¡Ronda perfecta! +${n}`,
   banked: (n: number) => `Te plantaste: +${n}`,
-  mine: (lost: number) => (lost > 0 ? `¡Mina! Perdiste los ${lost} de esta ronda` : "¡Mina!"),
+  mine: (lost: number) => (lost > 1 ? `¡Mina! Perdiste los ${lost} puntos de esta ronda` : lost === 1 ? "¡Mina! Perdiste el punto de esta ronda" : "¡Mina!"),
   mineCard: "Mina",
   fitCard: "Cumplía la consigna",
   revealLater: "Las respuestas de hoy se ven mañana en «Días anteriores».",
@@ -22,7 +22,7 @@ const es = {
   intro: {
     title: (n: number) => `Buscaminas futbolero #${n}`,
     lines: [
-      "20 rondas, de fácil a difícil.",
+      "20 rondas que se ponen cada vez más difíciles.",
       "Cada ronda tiene 16 jugadores: 12 cumplen la consigna y 4 son minas.",
       "Tocá a los que cumplen. Si tocás una mina, perdés los puntos de esa ronda.",
       "Plantate cuando quieras para guardar tus aciertos. Los 12 dan +3 de bonus.",
@@ -96,7 +96,7 @@ const en: Copy = {
   finish: "See result",
   perfect: (n) => `Perfect round! +${n}`,
   banked: (n) => `Banked: +${n}`,
-  mine: (lost) => (lost > 0 ? `Mine! You lost this round's ${lost}` : "Mine!"),
+  mine: (lost) => (lost > 1 ? `Mine! You lost this round's ${lost} points` : lost === 1 ? "Mine! You lost this round's point" : "Mine!"),
   mineCard: "Mine",
   fitCard: "Fit the clue",
   revealLater: "Today's answers show up tomorrow in “Previous days”.",
@@ -104,7 +104,7 @@ const en: Copy = {
   intro: {
     title: (n) => `Football Minesweeper #${n}`,
     lines: [
-      "20 rounds, from easy to hard.",
+      "20 rounds that get harder as you go.",
       "Each round shows 16 players: 12 fit the clue and 4 are mines.",
       "Tap the ones that fit. Hit a mine and you lose that round's points.",
       "Bank whenever you like to keep your hits. All 12 earn a +3 bonus.",
@@ -184,7 +184,7 @@ const ka: Copy = {
   intro: {
     title: (n) => `საფეხბურთო მაღაროები #${n}`,
     lines: [
-      "20 რაუნდი, მარტივიდან რთულამდე.",
+      "20 რაუნდი, რომლებიც თანდათან რთულდება.",
       "ყოველ რაუნდში 16 მოთამაშეა: 12 პირობას აკმაყოფილებს, 4 მაღაროა.",
       "დააჭირე მათ, ვინც შეესაბამება. მაღაროზე დაჭერით რაუნდის ქულებს კარგავ.",
       "შეინახე ქულები ნებისმიერ დროს. 12-ვე სწორი +3 ბონუსს იძლევა.",
@@ -264,7 +264,7 @@ const tr: Copy = {
   intro: {
     title: (n) => `Futbol Mayın Tarlası #${n}`,
     lines: [
-      "20 tur, kolaydan zora.",
+      "Giderek zorlaşan 20 tur.",
       "Her turda 16 oyuncu var: 12'si ipucuna uyar, 4'ü mayın.",
       "Uyanlara dokun. Mayına basarsan o turun puanlarını kaybedersin.",
       "İstediğin an kasaya al. 12'sini de bulursan +3 bonus.",

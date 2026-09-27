@@ -235,22 +235,22 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
     en: [
       "Football Minesweeper turns a football quiz into a minesweeper board made of players. Every round has one clue and sixteen portrait cards. Twelve players fit the clue and four are mines. The clues range from a club's season and the matchday squad of a famous final to where a player was born or which World Cup he scored in.",
       "Each correct tap adds a point to the round's pot. Stepping on a mine ends the round and wipes that pot, so the real decision is when to bank. Finding all twelve is a perfect round worth fifteen points. A full day is twenty rounds that get harder as you go, for a maximum of three hundred points.",
-      "A new board arrives every day at midnight Argentina time, and past days stay playable. You need no account: your progress and streak are kept on this device. At the end you get a grid of twenty coloured squares to share with friends.",
+      "A new board arrives every day at midnight Argentina time. Without an account you play the previous day's board and see every answer after each round; signed-in players get today's board, one ranked run on the daily leaderboard and their streak. At the end you get a grid of twenty coloured squares to share with friends.",
     ],
     ka: [
       "„საფეხბურთო მაღაროები“ საფეხბურთო ვიქტორინას მოთამაშეებისგან შემდგარ მაღაროების დაფად აქცევს. ყოველ რაუნდში ერთი პირობა და თექვსმეტი ბარათია. თორმეტი მოთამაშე პირობას შეესაბამება, ოთხი მაღაროა.",
       "ყოველი სწორი არჩევანი რაუნდის ბანკს ერთ ქულას უმატებს. მაღარო რაუნდს ამთავრებს და ბანკს აქრობს, ამიტომ მთავარი გადაწყვეტილებაა, როდის შეინახო. თორმეტივეს პოვნა თხუთმეტ ქულას იძლევა. დღეში ოცი რაუნდია, მაქსიმუმ სამასი ქულა.",
-      "ახალი დაფა ყოველდღე შუაღამისას ჩნდება (არგენტინის დროით), წინა დღეები კი ხელმისაწვდომი რჩება. ანგარიში არ გჭირდება: პროგრესი და სერია ამ მოწყობილობაზე ინახება. თამაშის ბოლოს ოცი ფერადი კვადრატი გეძლევა გასაზიარებლად.",
+      "ახალი დაფა ყოველდღე შუაღამისას ჩნდება (არგენტინის დროით). ანგარიშის გარეშე წინა დღის დაფას თამაშობ და ყოველი რაუნდის შემდეგ პასუხებს ხედავ; ანგარიშით — დღევანდელ დაფას, დღის რეიტინგს და სერიას. ბოლოს ოცი ფერადი კვადრატი გეძლევა გასაზიარებლად.",
     ],
     es: [
       "El buscaminas futbolero convierte un quiz de fútbol en un tablero de minas hecho de jugadores. Cada ronda tiene una consigna y dieciséis cartas con cara y nombre. Doce futbolistas la cumplen y cuatro son minas. Las consignas van desde la temporada de un club y la planilla de una final famosa hasta dónde nació un jugador o en qué Mundial hizo un gol.",
       "Cada acierto suma un punto al pozo de la ronda. Pisar una mina termina la ronda y borra ese pozo, así que la decisión de verdad es cuándo plantarse. Encontrar a los doce es una ronda perfecta que vale quince puntos. Un día completo son veinte rondas que se ponen cada vez más difíciles, con un máximo de trescientos puntos.",
-      "Cada día a la medianoche de Argentina llega un tablero nuevo, y los días anteriores se pueden seguir jugando. No hace falta cuenta: tu progreso y tu racha quedan guardados en este dispositivo. Al final te llevás una grilla de veinte cuadraditos de colores para compartir con tus amigos.",
+      "Cada día a la medianoche de Argentina llega un tablero nuevo. Sin cuenta jugás el tablero del día anterior y ves todas las respuestas al terminar cada ronda; con tu cuenta jugás el de hoy, entrás al ranking del día y sumás racha. Al final te llevás una grilla de veinte cuadraditos de colores para compartir con tus amigos.",
     ],
     tr: [
       "Futbol Mayın Tarlası, futbol bilgi yarışmasını oyunculardan oluşan bir mayın tarlasına çevirir. Her turda bir ipucu ve on altı oyuncu kartı vardır. On iki oyuncu ipucuna uyar, dördü mayındır.",
       "Her doğru seçim turun kasasına bir puan ekler. Mayına basmak turu bitirir ve kasayı siler; asıl karar ne zaman kasaya alacağındır. On ikisinin hepsini bulmak on beş puanlık mükemmel bir turdur. Bir gün yirmi turdur ve en fazla üç yüz puan kazanılır.",
-      "Her gün Arjantin saatiyle gece yarısı yeni bir tahta gelir, önceki günler oynanabilir kalır. Hesap gerekmez: ilerlemen ve serin bu cihazda saklanır. Sonunda arkadaşlarınla paylaşmak için yirmi renkli kareden oluşan bir tablo alırsın.",
+      "Her gün Arjantin saatiyle gece yarısı yeni bir tahta gelir. Hesapsız bir önceki günün tahtasını oynar, her turdan sonra tüm cevapları görürsün; hesabınla bugünün tahtasını oynar, günün sıralamasına girer ve serini sürdürürsün. Sonunda arkadaşlarınla paylaşmak için yirmi renkli kareden oluşan bir tablo alırsın.",
     ],
   },
   "trivia-mines": {
