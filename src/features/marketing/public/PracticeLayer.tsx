@@ -19,7 +19,7 @@ export const EXIT_LABEL: Record<string, string> = { en: "Exit practice", ka: "áƒ
  * container) with their own exit control; focus moves in and back out.
  */
 /** The coin sneak peeks leave through their own header back control; the layer keeps Escape but draws no exit pill. */
-export const OWN_EXIT_ENGINES = new Set(["mini-trivia-mines", "mini-final-third", "mini-road-to-goal", "mini-squad-spin"]);
+export const OWN_EXIT_ENGINES = new Set(["buscaminas", "mini-trivia-mines", "mini-final-third", "mini-road-to-goal", "mini-squad-spin"]);
 
 /** `exitControl` false = the engine renders its own way out (the training match has "Skip training"). */
 export function PracticeLayer({ title, exitLabel, onExit, exitControl = true, exitButton = true, children }: { title: string; exitLabel: string; onExit: () => void; exitControl?: boolean; /** false = Escape still exits but the engine draws its own exit control. */ exitButton?: boolean; children: ReactNode }) {
@@ -43,6 +43,24 @@ export function PracticeLayer({ title, exitLabel, onExit, exitControl = true, ex
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [exitControl, onExit]);
+  // aria-modal only describes the dialog; keep Tab/Shift+Tab inside it so the page behind stays unreachable.
+  useEffect(() => {
+    const onTab = (event: KeyboardEvent) => {
+      const dialog = dialogRef.current;
+      if (event.key !== "Tab" || !dialog) return;
+      const focusable = Array.from(dialog.querySelectorAll<HTMLElement>('a[href], button, input, select, textarea, [tabindex]:not([tabindex="-1"])'))
+        .filter((el) => !el.hasAttribute("disabled") && el.getClientRects().length > 0);
+      if (focusable.length === 0) { event.preventDefault(); dialog.focus(); return; }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+      if (!active || !dialog.contains(active)) { event.preventDefault(); first.focus(); return; }
+      if (event.shiftKey && (active === first || active === dialog)) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && active === last) { event.preventDefault(); first.focus(); }
+    };
+    document.addEventListener("keydown", onTab);
+    return () => document.removeEventListener("keydown", onTab);
+  }, []);
   if (typeof document === "undefined") return null;
   return createPortal(
     <div ref={dialogRef} tabIndex={-1} role="dialog" aria-modal="true" aria-label={title} className="fixed inset-0 z-[80] overflow-y-auto bg-surface-page-alt outline-none">

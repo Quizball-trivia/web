@@ -59,7 +59,8 @@ const LOCALIZED_SLUGS: Record<string, Partial<Record<Locale, string>>> = {
   ranked: { es: "clasificatoria" },
   "free-kicks": { es: "tiros-libres" },
   "road-to-goal": { es: "camino-al-gol" },
-  "trivia-mines": { es: "minas-de-trivia" },
+  "trivia-mines": { es: "minas-con-preguntas" },
+  "football-minesweeper": { es: "buscaminas-futbolero" },
   "squad-spin": { es: "ruleta-de-plantilla" },
 };
 
@@ -786,6 +787,40 @@ export const GAME_PAGES: GamePageEntry[] = [
       reward: "Oynadığın her gün jeton ve XP kazan.",
     },
   }),
+  mode("football-minesweeper", "/buscaminas", "buscaminas", {
+    en: {
+      metaTitle: "Football Minesweeper — Find the 12, Dodge the 4 Mines | QuizBall",
+      metaDescription: "A daily football minesweeper: 20 rounds of 16 players. Tap the 12 who fit the clue and avoid the 4 mines. A new board every day.",
+      title: "Football Minesweeper",
+      intro: "Each round shows 16 footballers and one clue. Twelve fit it, four are mines. Find the right ones, bank your hits before you step on a mine, and survive 20 rounds that get harder as you go.",
+      howToPlay: ["Read the clue: a club season, a final's matchday squad, a birthplace…", "Tap the players who fit. Each hit adds a point to the round's pot.", "Hit a mine and you lose that round's points. Bank whenever you like to keep them.", "Find all 12 for a perfect round and a +3 bonus. Share your 20 squares."],
+      reward: "Play yesterday's board without an account; sign in to play today's board, keep your streak and get on the daily leaderboard.",
+    },
+    ka: {
+      metaTitle: "საფეხბურთო მაღაროები — იპოვე 12, აარიდე 4 მაღაროს | QuizBall",
+      metaDescription: "ყოველდღიური საფეხბურთო მაღაროების მძებნელი: 20 რაუნდი, 16 მოთამაშე. მონიშნე 12, ვინც პირობას აკმაყოფილებს, და აარიდე 4 მაღაროს. ყოველდღე ახალი დაფა.",
+      title: "საფეხბურთო მაღაროები",
+      intro: "ყოველ რაუნდში 16 ფეხბურთელი და ერთი პირობაა. თორმეტი შეესაბამება, ოთხი მაღაროა. იპოვე სწორები, შეინახე ქულები მაღაროზე დაბიჯებამდე და გაიარე 20 რაუნდი.",
+      howToPlay: ["წაიკითხე პირობა: კლუბის სეზონი, ფინალის შემადგენლობა, დაბადების ადგილი…", "დააჭირე მოთამაშეებს, ვინც შეესაბამება. ყოველი სწორი რაუნდის ბანკს ქულას უმატებს.", "მაღარო რაუნდის ქულებს გაკარგვინებს. შეინახე ნებისმიერ დროს.", "იპოვე 12-ვე — სრულყოფილი რაუნდი და +3 ბონუსი."],
+      reward: "გუშინდელი დაფა ანგარიშის გარეშე ითამაშე; დღევანდელისთვის, სერიისა და დღის რეიტინგისთვის შედი ანგარიშში.",
+    },
+    es: {
+      metaTitle: "Buscaminas futbolero — Encontrá a los 12 y esquivá las 4 minas | QuizBall",
+      metaDescription: "El buscaminas futbolero de jugadores: 20 rondas de 16 futbolistas. Tocá a los 12 que cumplen la consigna y esquivá las 4 minas. Un tablero nuevo cada día.",
+      title: "Buscaminas futbolero",
+      intro: "Cada ronda muestra 16 futbolistas y una consigna. Doce la cumplen y cuatro son minas. Encontrá a los correctos, plantate antes de pisar una mina y sobreviví 20 rondas que se ponen cada vez más difíciles.",
+      howToPlay: ["Leé la consigna: una temporada de un club, la planilla de una final, dónde nacieron…", "Tocá a los jugadores que la cumplen. Cada acierto suma un punto al pozo de la ronda.", "Si tocás una mina perdés los puntos de esa ronda. Plantate cuando quieras para guardarlos.", "Encontrá a los 12 para una ronda perfecta con +3 de bonus. Compartí tus 20 cuadraditos."],
+      reward: "Sin cuenta jugás el tablero de ayer; con tu cuenta, el de hoy, tu racha y el ranking del día.",
+    },
+    tr: {
+      metaTitle: "Futbol Mayın Tarlası — 12'yi Bul, 4 Mayından Kaç | QuizBall",
+      metaDescription: "Günlük futbol mayın tarlası: 16 oyunculu 20 tur. İpucuna uyan 12 oyuncuyu seç, 4 mayından kaç. Giderek zorlaşan turlar, her gün yeni tahta.",
+      title: "Futbol Mayın Tarlası",
+      intro: "Her turda 16 futbolcu ve bir ipucu var. On ikisi uyar, dördü mayındır. Doğruları bul, mayına basmadan puanlarını kasaya al ve giderek zorlaşan 20 turu tamamla.",
+      howToPlay: ["İpucunu oku: bir kulüp sezonu, bir finalin maç kadrosu, doğum yeri…", "Uyan oyunculara dokun. Her isabet turun kasasına bir puan ekler.", "Mayına basarsan o turun puanlarını kaybedersin. İstediğin an kasaya al.", "12'sini de bul: mükemmel tur ve +3 bonus."],
+      reward: "Dünün tahtasını hesapsız oyna; bugünün tahtası, seri ve günün sıralaması için giriş yap.",
+    },
+  }),
   mode("trivia-mines", "/trivia-mines", "mini-trivia-mines", {
     en: {
       metaTitle: "Trivia Mines — Football Minesweeper with Questions | QuizBall",
@@ -804,7 +839,7 @@ export const GAME_PAGES: GamePageEntry[] = [
       reward: "ნამდვილ ქოინებს ანგარიში სჭირდება; სტუმრის რაუნდი სავარჯიშოა.",
     },
     es: {
-      metaTitle: "Minas de trivia — buscaminas futbolero | QuizBall",
+      metaTitle: "Minas de trivia — esquivá a los defensas con preguntas de fútbol | QuizBall",
       metaDescription: "Abre casillas, esquiva a los cuatro defensas y haz crecer el bote. Responde preguntas de fútbol para descubrir dónde se esconden. Practica como invitado, juega por monedas con cuenta.",
       title: "Minas de trivia",
       intro: "Veinticinco casillas esconden cuatro defensas. Abre casillas seguras, responde preguntas para explorar y retira antes de que te entren.",
