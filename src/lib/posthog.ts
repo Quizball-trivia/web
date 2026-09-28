@@ -107,7 +107,10 @@ export function stopSessionRecording(): void {
 
 // Track custom events
 export function trackEvent(eventName: string, properties?: AnalyticsProperties): void {
-  recordGuestJourney(eventName, properties ?? {}, String(properties?.access_type ?? properties?.access ?? accessType));
+  // Analytics must never interrupt the action that triggered it.
+  try {
+    recordGuestJourney(eventName, properties ?? {}, String(properties?.access_type ?? properties?.access ?? accessType));
+  } catch { /* the journey is best-effort */ }
   if (typeof window === 'undefined' || !process.env.NEXT_PUBLIC_POSTHOG_KEY || !isTrackingEnv()) {
     return;
   }

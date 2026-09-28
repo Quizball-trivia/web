@@ -2,6 +2,7 @@ import { API_BASE_URL } from '@/lib/config';
 import { getGuestToken, peekGuestToken, retireGuestToken } from './guestSession';
 import { getSupabaseAccessToken } from '@/lib/auth/supabase';
 import { timeoutSignal } from '@/lib/timeoutSignal';
+import { createRealtimeCommandId } from '@/lib/realtime/command-id';
 
 type Props = Record<string, string | number | boolean | null | undefined>;
 const STARTS = new Set(['game_start', 'match_started', 'daily_challenge_started', 'mini_game_round_started', 'road_to_goal_run_started', 'ggt_session_started', 'quiz_start', 'training_started', 'party_quiz_started']);
@@ -106,7 +107,7 @@ export function recordGuestJourney(event: string, props: Props, access: string):
   if (typeof window === 'undefined' || window.location.pathname.includes('/demos') || !['guest', 'member'].includes(access)) return;
   const activity = journeyStep(event, props, access);
   if (!activity || (activity.step === 'signup_started' && !peekGuestToken())) return;
-  const id = crypto.randomUUID();
+  const id = createRealtimeCommandId();
   const capturedMember = memberId;
   const capturedGeneration = generation;
   work = work.then(async () => {

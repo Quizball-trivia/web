@@ -6,6 +6,7 @@ import { trackGameComplete, trackGameReplay, trackGameStart, type EngineEventDet
 import { BuscaminasGame } from "@/features/buscaminas/BuscaminasGame";
 import { useLocale } from "@/contexts/LocaleContext";
 import { useAuthStore } from "@/stores/auth.store";
+import { createRealtimeCommandId } from "@/lib/realtime/command-id";
 
 function BuscaminasRoute() {
   const router = useRouter();
@@ -14,11 +15,11 @@ function BuscaminasRoute() {
   const access = useAuthStore((s) => (s.status === "authenticated" ? "member" : "guest"));
   const session = useRef<{ id: string; startedAt: number } | null>(null);
   const onEvent = useCallback((event: "start" | "complete" | "replay", detail?: EngineEventDetail) => {
-    session.current ??= { id: crypto.randomUUID(), startedAt: Date.now() };
+    session.current ??= { id: createRealtimeCommandId(), startedAt: Date.now() };
     const s = session.current;
     if (event === "start") { s.startedAt = Date.now(); trackGameStart({ modeId: "buscaminas", access, sessionId: s.id, sessionKind: "full_game", surface: "app" }); }
     if (event === "complete") trackGameComplete({ modeId: "buscaminas", sessionId: s.id, sessionKind: "full_game", durationMs: Date.now() - s.startedAt, ...detail });
-    if (event === "replay") { trackGameReplay({ modeId: "buscaminas", previousSessionId: s.id }); session.current = { id: crypto.randomUUID(), startedAt: Date.now() }; }
+    if (event === "replay") { trackGameReplay({ modeId: "buscaminas", previousSessionId: s.id }); session.current = { id: createRealtimeCommandId(), startedAt: Date.now() }; }
   }, [access]);
   return <BuscaminasGame key={day ?? "today"} locale={locale} initialDay={day} onEvent={onEvent} onExit={() => router.push("/play")} />;
 }

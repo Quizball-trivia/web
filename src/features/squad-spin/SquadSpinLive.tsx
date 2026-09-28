@@ -25,6 +25,7 @@ import managersRegistry from "@/data/football-grid/launch-assets/managers.json";
 import competitionsRegistry from "@/data/football-grid/launch-assets/competitions.json";
 import { settleOnce, trackMiniGameError, trackMiniGameRoundStarted } from "@/features/mini-games/analytics/coinGames.analytics";
 import { squadSpinApi, SquadSpinApiError, type SquadSpinPlayer, type SquadSpinReel, type SquadSpinState } from "@/lib/repositories/squadSpin.repo";
+import { createRealtimeCommandId } from "@/lib/realtime/command-id";
 
 const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
 const STAKES = [50, 100, 250];
@@ -184,7 +185,7 @@ export function SquadSpinLive({ backHref = "/play", client, sample }: {
   const start = async () => {
     if (busy || !resumed) return;
     setBusy(true); setError(null); setLastHit(null); setLastMiss(null);
-    const nonce = nonceRef.current ?? (nonceRef.current = crypto.randomUUID());
+    const nonce = nonceRef.current ?? (nonceRef.current = createRealtimeCommandId());
     try {
       const s = await api.start(stake, reels, nonce);
       nonceRef.current = null; applyState(s); refreshWallet();

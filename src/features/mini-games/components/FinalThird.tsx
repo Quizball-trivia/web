@@ -46,6 +46,7 @@ import {
   type FreeKicksZone,
 } from '@/lib/repositories/freeKicks.repo';
 import { settleOnce, trackMiniGameRoundStarted } from '../analytics/coinGames.analytics';
+import { createRealtimeCommandId } from '@/lib/realtime/command-id';
 
 const BALL_URL = '/assets/brand/goal-ball-small.webp';
 const MIN_STAKE = 5;
@@ -670,7 +671,7 @@ export function FinalThird({ backHref, live = false, sample }: { backHref?: stri
       startCrowd();
       // Reuse the nonce across retries: if the first attempt debited but the
       // response was lost, the retry must dedupe, not stake twice.
-      const nonce = startNonceRef.current ?? (startNonceRef.current = crypto.randomUUID());
+      const nonce = startNonceRef.current ?? (startNonceRef.current = createRealtimeCommandId());
       freeKicksApi
         .start(stake, nonce)
         .then((state) => {
@@ -905,7 +906,7 @@ export function FinalThird({ backHref, live = false, sample }: { backHref?: stri
       if (!state || liveBusyRef.current) return;
       liveBusyRef.current = true;
       setLiveError(null);
-      const nonce = nextNonceRef.current ?? (nextNonceRef.current = crypto.randomUUID());
+      const nonce = nextNonceRef.current ?? (nextNonceRef.current = createRealtimeCommandId());
       freeKicksApi
         .nextAttack(state.state_version, nonce)
         .then((next) => {

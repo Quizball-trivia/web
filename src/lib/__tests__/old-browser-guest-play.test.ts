@@ -40,3 +40,16 @@ describe("guest play on browsers without AbortSignal.timeout", () => {
     expect(new Headers(init.headers).get("x-guest-token")).toBe(TOKEN);
   });
 });
+
+describe("analytics on browsers without crypto.randomUUID (Safari < 15.4)", () => {
+  const nativeUUID = crypto.randomUUID;
+  afterEach(() => { crypto.randomUUID = nativeUUID; });
+
+  it("tracking a guest game start never throws", async () => {
+    // @ts-expect-error simulating a browser that predates crypto.randomUUID
+    delete crypto.randomUUID;
+    Object.defineProperty(crypto, "randomUUID", { value: undefined, configurable: true, writable: true });
+    const { trackEvent } = await import("@/lib/posthog");
+    expect(() => trackEvent("game_start", { mode_id: "buscaminas", access_type: "guest", game_session_id: "s" })).not.toThrow();
+  });
+});
