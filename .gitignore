@@ -65,3 +65,10 @@ next-env.d.ts
 # Local agent instructions (not shared)
 CLAUDE.md
 dev-server.log
+
+# Buscaminas content pipeline: answers, evidence and the generator stay out of this public repo.
+/scripts/buscaminas/
+
+# Buscaminas boards are served by the backend only once their day opens; never commit day files.
+/public/buscaminas/v1/days/
+/public/buscaminas/v1/index.json

@@ -4,10 +4,12 @@ import { DemoModeArt } from "@/features/demos/DemoModeArt";
 import type { SeoPageLocale } from "@/lib/seo/game-pages";
 import { GAME_PAGE_DETAILS } from "@/lib/seo/game-page-details";
 import { HOME_COPY } from "@/lib/seo/home-copy";
-import { engineEmitsEvents, publicGamePath, relatedPublishedGames, type PublicGame } from "@/lib/seo/public-games";
+import { FULL_GAME_DEMO_SLUG, engineEmitsEvents, findPublicGameByModeId, publicGamePath, relatedPublishedGames, type PublicGame } from "@/lib/seo/public-games";
 import { PublicCardGrid, PublicPageFrame } from "./public/PublicCards";
 import { PublicGameEmbed } from "./public/PublicGameEmbed";
 import { PlayNowLink } from "./public/PlayNowLink";
+import { BuscaminasBanner } from "./public/BuscaminasBanner";
+import { BuscaminasLeaderboard } from "@/features/buscaminas/BuscaminasLeaderboard";
 import { SignInLink } from "./public/PublicLinks";
 import { PublicTopTen } from "./public/PublicTopTen";
 
@@ -16,6 +18,14 @@ const L: Record<SeoPageLocale, { compete: string; competeText: string; howTo: st
   tr: { compete: "Çevrimiçi oyna", competeText: "Kaydol, çevrimiçi gerçek rakiplerle oyna, dereceli puan kazan ve liderlik tablolarına gir.", howTo: "Nasıl oynanır", details: "Kurallar ve ayrıntılar", related: "Benzer oyunlar", all: "Tüm futbol oyunları", account: "Gerçeğini oyna", accountText: "Yukarıdaki alıştırma turu bir örnektir. Bugünün gerçek oyununu oynamak, sonuçlarını saklamak ve jeton kazanmak için giriş yap.", start: "Antrenmanı oyna", note: "Hesap gerekmez. Örnek içerik, gerektiğinde bot rakipler, yalnızca sanal puan, hiçbir şey kaydedilmez.", exit: "Alıştırmadan çık", guest: "Misafir alıştırması", guestDaily: "Ön izleme", startDaily: "Oyunu dene", accountDaily: "Jeton için oyna", member: "Oyna", english: "Alıştırma turu şimdilik İngilizce.", noteDaily: "Her gün aynı olan sabit bir örnek tur. Hesap gerekmez; örnek puanın kaydedilmez.", accountTextDaily: "Bugünün gerçek görevini jeton için oynamak ve serini korumak için giriş yap.", loading: "Bugünün seti yükleniyor…", sampleFallback: "Örnek tur (bugünün seti yüklenemedi)" , coinLabel: "Ön izleme · 1.000 alıştırma jetonu", coinStart: "Oyunu dene", coinNote: "Örnek oranlar ve alıştırma jetonlarıyla sabit bir örnek. Hesap ödülü yok; hiçbir şey kaydedilmez.", coinAccountText: "Cüzdanından gerçek jeton yatırmak, canlı oranlar ve günün liderlik tablolarıyla oynamak için giriş yap.", playNow: "Hemen oyna", playNowLabel: "Hızlı maç", playNowNote: "Hesap gerekmez. Doğrudan bir maça gir; hiçbir şey sıralamaya sayılmaz.", training: "Antrenmanı oyna", trainingText: "Oynamadan önce kısa bir rehberli turda kuralları öğren.", ranked: "Dereceli oyna", rankedText: "Kaydol, dereceli puan kazan ve liderlik tablosuna gir." },
   es: { compete: "Juega online", competeText: "Regístrate para jugar contra rivales reales online, ganar puntos y entrar en las clasificaciones.", howTo: "Cómo jugar", details: "Reglas y detalles", related: "Juegos relacionados", all: "Todos los juegos de fútbol", account: "Juega la versión real", accountText: "La ronda de práctica de arriba es una muestra. Inicia sesión para jugar el juego real de hoy, guardar tus resultados y ganar monedas.", start: "Jugar el entrenamiento", note: "Sin cuenta. Contenido de muestra, rivales bot donde aplica, solo puntos virtuales, no se guarda nada.", exit: "Salir de la práctica", guest: "Práctica de invitado", guestDaily: "Adelanto", startDaily: "Prueba el juego", accountDaily: "Juega por monedas", member: "Jugar", english: "La ronda de práctica está en inglés por ahora.", noteDaily: "Una ronda de muestra fija, la misma cada día. Sin cuenta; tu puntuación de muestra no se guarda.", accountTextDaily: "Inicia sesión para jugar el reto real de hoy por monedas y mantener tu racha.", loading: "Cargando el set de hoy…", sampleFallback: "Ronda de muestra (no se pudo cargar el set de hoy)" , coinLabel: "Adelanto · 1.000 monedas de práctica", coinStart: "Prueba el juego", coinNote: "Una muestra fija con probabilidades de muestra y monedas de práctica. Sin recompensas de cuenta; no se guarda nada.", coinAccountText: "Inicia sesión para apostar monedas reales de tu cartera, con las probabilidades en vivo y las clasificaciones del día.", playNow: "Jugar ahora", playNowLabel: "Partida rápida", playNowNote: "Sin cuenta. Entra directamente en una partida; nada cuenta para las clasificaciones.", training: "Jugar el entrenamiento", trainingText: "Aprende las reglas en una ronda guiada corta antes de jugar.", ranked: "Jugar clasificatoria", rankedText: "Regístrate para ganar puntos de clasificación y entrar en la tabla." },
   ka: { compete: "ითამაშე ონლაინ", competeText: "დარეგისტრირდი, ითამაშე ნამდვილ მეტოქეებთან ონლაინ, დააგროვე რეიტინგული ქულები და მოხვდი ლიდერბორდზე.", howTo: "როგორ ვითამაშო", details: "წესები და დეტალები", related: "მსგავსი თამაშები", all: "ყველა საფეხბურთო თამაში", account: "ითამაშე ნამდვილი", accountText: "ზემოთ სავარჯიშო რაუნდია — ნიმუში. შედი ანგარიშში, რომ ითამაშო დღევანდელი ნამდვილი თამაში, შეინახო შედეგები და დააგროვო ქოინები.", start: "ითამაშე ვარჯიში", note: "ანგარიშის გარეშე. სანიმუშო შინაარსი, ბოტი მეტოქე სადაც საჭიროა, მხოლოდ ვირტუალური ქულები, არაფერი ინახება.", exit: "სავარჯიშოდან გასვლა", guest: "სტუმრის სავარჯიშო", guestDaily: "გასინჯე", startDaily: "სცადე თამაში", accountDaily: "ითამაშე ქოინებზე", member: "ითამაშე", english: "სავარჯიშო რაუნდი ჯერჯერობით ინგლისურადაა.", noteDaily: "ფიქსირებული სანიმუშო რაუნდი — ყოველდღე ერთი და იგივე. ანგარიში არ სჭირდება; სანიმუშო ქულა არ ინახება.", accountTextDaily: "შედი ანგარიშში, რომ დღევანდელი ნამდვილი გამოწვევა ქოინებზე ითამაშო და სერია შეინარჩუნო.", loading: "დღევანდელი ნაკრები იტვირთება…", sampleFallback: "სანიმუშო რაუნდი (დღევანდელი ნაკრები ვერ ჩაიტვირთა)" , coinLabel: "გასინჯე · 1,000 სავარჯიშო ქოინი", coinStart: "სცადე თამაში", coinNote: "ფიქსირებული ნიმუში სანიმუშო შანსებით და სავარჯიშო ქოინებით. ანგარიშის ჯილდოები არ არის; არაფერი ინახება.", coinAccountText: "შედი ანგარიშში, რომ საფულედან ნამდვილი ქოინები დადო, ცოცხალი შანსებითა და დღის ლიდერბორდებით.", playNow: "ითამაშე ახლა", playNowLabel: "სწრაფი მატჩი", playNowNote: "ანგარიშის გარეშე. პირდაპირ მატჩში შედიხარ; არაფერი ითვლება რეიტინგში.", training: "ითამაშე ვარჯიში", trainingText: "წესები მოკლე, გზამკვლევიან რაუნდში ისწავლე თამაშამდე.", ranked: "ითამაშე რეიტინგული", rankedText: "დარეგისტრირდი, დააგროვე რეიტინგული ქულები და მოხვდი ლიდერბორდზე." },
+};
+
+/** Buscaminas futbolero plays the real daily board on its page: no "sample" or "play for coins" framing. */
+const FULL_GAME: Record<SeoPageLocale, { label: string; start: string; note: string; account: string; accountText: string }> = {
+  en: { label: "New board every day · no account needed", start: "Play now", note: "20 rounds. As a guest you play yesterday's board; with an account, today's board and the leaderboard.", account: "More football games", accountText: "Create an account to play Tic Tac Toe, Auction and ranked matches against real opponents, and earn coins." },
+  ka: { label: "ყოველდღე ახალი დაფა · ანგარიშის გარეშე", start: "თამაში", note: "20 რაუნდი. სტუმრად გუშინდელ დაფას თამაშობ; ანგარიშით — დღევანდელს და რეიტინგს.", account: "მეტი საფეხბურთო თამაში", accountText: "შექმენი ანგარიში, ითამაშე Tic Tac Toe, აუქციონი და რეიტინგული მატჩები ნამდვილ მეტოქეებთან და დააგროვე ქოინები." },
+  es: { label: "Tablero nuevo cada día · sin cuenta", start: "Jugar ahora", note: "20 rondas. Sin cuenta jugás el tablero de ayer; con cuenta, el de hoy y el ranking.", account: "Más juegos de fútbol", accountText: "Creá tu cuenta para jugar Tiki Taka Toe, la Subasta y partidas clasificatorias contra rivales reales, y ganar monedas." },
+  tr: { label: "Her gün yeni tahta · hesap gerekmez", start: "Oyna", note: "20 tur. Misafir olarak dünün tahtasını oynarsın; hesapla bugününkünü ve sıralamayı.", account: "Daha fazla futbol oyunu", accountText: "Tic Tac Toe, Açık Artırma ve gerçek rakiplere karşı dereceli maçlar oynamak ve jeton kazanmak için hesap oluştur." },
 };
 
 /** One public game page: server-rendered content first, the practice engine on demand below it. */
@@ -29,6 +39,9 @@ export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: S
   const competitive = game.group === "multiplayer" || game.group === "competitive";
   const isDaily = Boolean(game.demoSlug?.startsWith("daily-"));
   const isCoinSample = game.group === "coins";
+  const fullGame = game.demoSlug === FULL_GAME_DEMO_SLUG ? FULL_GAME[locale] : null;
+  const crossLinkGame = game.modeId === "triviaMines" ? findPublicGameByModeId("buscaminas") : game.modeId === "buscaminas" ? findPublicGameByModeId("triviaMines") : null;
+  const crossLinkHref = crossLinkGame ? publicGamePath(crossLinkGame, locale) : null;
   // Tic Tac Toe and Auction (owner, 2026-09-16): the hero is "Play now" (a live
   // match against bots for guests), the bottom card hosts the scripted training,
   // and "Play ranked" above the Top 10 is the sign-up CTA. Ranked keeps its layout.
@@ -52,7 +65,8 @@ export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: S
         <div className="md:col-start-1 md:row-start-1">
           <h1 className="text-3xl font-black uppercase leading-tight md:text-5xl">{copy.title}</h1>
           <p className="mt-4 text-base leading-relaxed text-white/80 md:text-lg">{copy.intro}</p>
-          <p className="mt-3 text-sm font-semibold text-brand-yellow">{botPlay ? labels.playNowLabel : game.guest === "demo" ? (isCoinSample ? labels.coinLabel : isDaily ? labels.guestDaily : labels.guest) : home.cards.accountRequired}</p>
+          {crossLinkHref && crossLinkGame && <BuscaminasBanner locale={locale} href={crossLinkHref} target={crossLinkGame.modeId === "triviaMines" ? "triviaMines" : "buscaminas"} />}
+          <p className="mt-3 text-sm font-semibold text-brand-yellow">{fullGame ? fullGame.label : botPlay ? labels.playNowLabel : game.guest === "demo" ? (isCoinSample ? labels.coinLabel : isDaily ? labels.guestDaily : labels.guest) : home.cards.accountRequired}</p>
           {botPlay ? (
             <section aria-label={labels.playNow} className="mt-6 flex flex-col items-start gap-3">
               <PlayNowLink modeId={game.modeId} locale={locale} guestHref={playNowGuestHref} memberHref={playNowMemberHref} className="inline-flex h-14 items-center justify-center gap-2 rounded-full bg-brand-green text-white hover:bg-brand-green-deep px-8 text-base font-bold uppercase tracking-wide transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 disabled:opacity-70">
@@ -61,7 +75,7 @@ export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: S
               <p className="text-sm text-white/75">{labels.playNowNote}</p>
             </section>
           ) : game.guest === "demo" && game.demoSlug ? (
-            <PublicGameEmbed modeId={game.modeId} demoSlug={game.demoSlug} locale={locale} pagePath={path} playPath={game.playPath} engineEmitsEvents={engineEmitsEvents(game.demoSlug)} practiceLocalised={!game.practiceLocales || game.practiceLocales.includes(locale)} copy={{ start: isCoinSample ? labels.coinStart : isDaily ? labels.startDaily : labels.start, note: isCoinSample ? labels.coinNote : isDaily ? labels.noteDaily : labels.note, exit: labels.exit, english: labels.english, title: copy.title }} />
+            <PublicGameEmbed modeId={game.modeId} demoSlug={game.demoSlug} locale={locale} pagePath={path} playPath={game.playPath} engineEmitsEvents={engineEmitsEvents(game.demoSlug)} practiceLocalised={!game.practiceLocales || game.practiceLocales.includes(locale)} copy={{ start: fullGame ? fullGame.start : isCoinSample ? labels.coinStart : isDaily ? labels.startDaily : labels.start, note: fullGame ? fullGame.note : isCoinSample ? labels.coinNote : isDaily ? labels.noteDaily : labels.note, exit: labels.exit, english: labels.english, title: copy.title }} />
           ) : (
             <SignInLink placement="game_page_hero" modeId={game.modeId} returnTo={game.playPath} className="mt-6 inline-flex h-14 items-center justify-center rounded-full bg-brand-yellow px-8 text-base font-bold uppercase tracking-wide text-black hover:bg-brand-yellow-deep">{home.nav.signIn}</SignInLink>
           )}
@@ -78,6 +92,7 @@ export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: S
             </section>
           )}
           {(game.modeId === "ranked" || game.modeId === "grid" || game.modeId === "auction") && <PublicTopTen board={game.modeId} locale={locale} />}
+          {fullGame && <BuscaminasLeaderboard locale={locale} className="mt-6" />}
         </div>
 
         <div className="md:col-start-1 md:row-start-2">
@@ -111,9 +126,9 @@ export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: S
         </section>
       ) : (
         <section className="mt-12 max-w-3xl rounded-2xl bg-brand-blue p-5">
-          <h2 className="text-lg font-bold uppercase">{competitive ? labels.compete : isDaily || isCoinSample ? labels.accountDaily : labels.account}</h2>
-          <p className="mt-2 text-sm text-white/85">{competitive ? labels.competeText : isCoinSample ? labels.coinAccountText : isDaily ? labels.accountTextDaily : labels.accountText}</p>
-          <SignInLink placement="game_page_account" modeId={game.modeId} returnTo={game.playPath} className="mt-4 inline-flex h-11 items-center rounded-full bg-brand-yellow px-6 text-sm font-bold uppercase tracking-wide text-black hover:bg-brand-yellow-deep">{labels.member}</SignInLink>
+          <h2 className="text-lg font-bold uppercase">{fullGame ? fullGame.account : competitive ? labels.compete : isDaily || isCoinSample ? labels.accountDaily : labels.account}</h2>
+          <p className="mt-2 text-sm text-white/85">{fullGame ? fullGame.accountText : competitive ? labels.competeText : isCoinSample ? labels.coinAccountText : isDaily ? labels.accountTextDaily : labels.accountText}</p>
+          <SignInLink placement="game_page_account" modeId={game.modeId} returnTo={fullGame ? "/play" : game.playPath} className="mt-4 inline-flex h-11 items-center rounded-full bg-brand-yellow px-6 text-sm font-bold uppercase tracking-wide text-black hover:bg-brand-yellow-deep">{labels.member}</SignInLink>
         </section>
       )}
 

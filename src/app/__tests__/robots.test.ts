@@ -33,7 +33,7 @@ describe("robots.ts", () => {
   it("allows crawling and disallows only never-crawl paths in production", async () => {
     const robots = await loadRobots("production");
     const rule = Array.isArray(robots.rules) ? robots.rules[0] : robots.rules;
-    expect(rule).toMatchObject({ userAgent: "*", allow: "/" });
+    expect(rule).toMatchObject({ userAgent: "*", allow: ["/", "/api/og/"] });
     expect(rule?.disallow).toEqual(["/dev/", "/api/", "/auth/", "/onboarding/", "/game"]);
   });
 

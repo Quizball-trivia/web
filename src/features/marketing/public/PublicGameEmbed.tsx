@@ -8,10 +8,13 @@ import { useAuthStore } from "@/stores/auth.store";
 import { type SessionKind, trackGameComplete, trackGameExit, trackGameReplay, trackGameStart, trackGameView } from "@/lib/analytics/public-games.analytics";
 import type { EngineEventDetail } from "@/lib/analytics/public-games.analytics";
 import type { DailyChallengeType } from "@/lib/domain/dailyChallenge";
+import type { Locale } from "@/lib/i18n/locale";
+import { FULL_GAME_DEMO_SLUG } from "@/lib/seo/public-games";
 /** Daily engines are a separate on-demand chunk too; nothing game-related loads before Play. */
 const GuestDailyPlay = dynamic(() => import("./GuestDailyPlay").then((m) => m.GuestDailyPlay), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 
 /** Every engine lives in one client chunk that is fetched only when a visitor presses Play. */
+const BuscaminasGame = dynamic(() => import("@/features/buscaminas/BuscaminasGame").then((m) => m.BuscaminasGame), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 const DemoModeView = dynamic(() => import("@/features/demos/DemoModeView").then((m) => m.DemoModeView), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 
 const newSessionId = () => (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`);
@@ -40,7 +43,7 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, playPath, 
   /** Daily modes run their bundled sample (same every day, no backend); other engines run their practice prototype. */
   const dailyType = demoSlug.startsWith("daily-") ? (demoSlug.slice("daily-".length) as DailyChallengeType) : null;
   // Dailies and the coin mini-games run a fixed sample; the multiplayer/ranked engines run a scripted training.
-  const sessionKind: SessionKind = dailyType || demoSlug.startsWith("mini-") ? "sample" : "training";
+  const sessionKind: SessionKind = demoSlug === FULL_GAME_DEMO_SLUG ? "full_game" : dailyType || demoSlug.startsWith("mini-") ? "sample" : "training";
   const access = useAuthStore((state) => state.status) === "authenticated" ? "member" : "guest";
   const [playing, setPlaying] = useState(false);
   const sessionRef = useRef<string>("");
@@ -97,7 +100,9 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, playPath, 
       </div>
       {playing && (
         <PracticeLayer title={copy.title} exitLabel={copy.exit} onExit={exit} exitControl={!SELF_EXITING_ENGINES.has(demoSlug)} exitButton={!OWN_EXIT_ENGINES.has(demoSlug)}>
-          {dailyType ? (
+          {demoSlug === FULL_GAME_DEMO_SLUG ? (
+            <BuscaminasGame locale={locale as Locale} onExit={exit} onEvent={onEngineEvent} />
+          ) : dailyType ? (
             <GuestDailyPlay
               type={dailyType}
               modeId={modeId}

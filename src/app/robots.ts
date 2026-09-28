@@ -13,7 +13,8 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: "*",
-        allow: "/",
+        // Share-card images live under /api/og/; chat and social crawlers that honor robots.txt must reach them.
+        allow: ["/", "/api/og/"],
         // Only truly-never-crawl paths belong here. App product pages
         // (/play, /profile, /settings, /leaderboard, /store, ...) are NOT
         // disallowed: they carry a `noindex` tag (see src/lib/seo/app-routes.ts),
