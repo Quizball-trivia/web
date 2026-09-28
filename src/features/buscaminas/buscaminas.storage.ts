@@ -1,6 +1,6 @@
 import type { BuscaminasRun } from "@/lib/repositories/buscaminas.repo";
 
-const SCHEMA = 2;
+const SCHEMA = 3;
 /** Runs are signed for one player: a guest run and each account's run live under their own key. */
 const key = (day: string, owner: string) => `qb.buscaminas.v${SCHEMA}.${day}.${owner}`;
 
@@ -13,7 +13,7 @@ interface Saved {
 function isRun(value: unknown): value is BuscaminasRun {
   if (!value || typeof value !== "object") return false;
   const run = value as BuscaminasRun;
-  return typeof run.token === "string" && Boolean(run.state) && Array.isArray(run.state.results) && typeof run.state.done === "boolean";
+  return typeof run.run?.id === "string" && typeof run.run?.version === "number" && Boolean(run.state) && Array.isArray(run.state.results) && typeof run.state.done === "boolean";
 }
 
 /** The signed run for a day on this device. A content correction (new contentVersion) drops it. */

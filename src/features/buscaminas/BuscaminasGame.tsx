@@ -178,14 +178,14 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
       } else if (status === 503) {
         setView(run ? view : "intro");
         setNotice(c.maintenance);
-      } else if (code === "stale_state" && run && newer && newer.token !== run.token) {
-        // Another tab moved this run on: continue from its newer copy instead of wiping it.
+      } else if (code === "stale_state" && run && newer && newer.run.version > run.run.version) {
+        // Another tab moved this run on: continue from its newer copy.
         setRun(newer);
         setView(newer.state.done ? "end" : "play");
-      } else if (code === "stale_state" && run?.state.ranked) {
-        // The server's copy of a ranked run is authoritative: re-sync from it.
+      } else if (code === "stale_state" && run) {
+        // Every run is a server row: re-sync from it.
         try {
-          const current = await buscaminasApi.start(day, contentVersion);
+          const current = await buscaminasApi.start(day, contentVersion, locale);
           setRun(current);
           setView(current.state.done ? "end" : "play");
         } catch (resyncError) {
@@ -224,7 +224,7 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
       return;
     }
     void act("start", async () => {
-      const fresh = await buscaminasApi.start(requestedDay, contentVersion);
+      const fresh = await buscaminasApi.start(requestedDay, contentVersion, locale);
       // The player switched boards while this was in flight: never attach day A's run to day B.
       if (currentDayRef.current !== requestedDay) return null;
       markStarted();
@@ -233,11 +233,11 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
       return fresh;
     }, null);
   };
-  const pick = (card: BuscaminasCard) => { if (run && round) void act(card.id, () => buscaminasApi.tap(run.token, card.id), round); };
-  const bank = () => { if (run && round) void act("bank", () => buscaminasApi.bank(run.token), round); };
+  const pick = (card: BuscaminasCard) => { if (run && round) void act(card.id, () => buscaminasApi.tap(run, card.id, locale), round); };
+  const bank = () => { if (run && round) void act("bank", () => buscaminasApi.bank(run, locale), round); };
   const advance = () => {
     if (!run) return;
-    void act("next", () => buscaminasApi.next(run.token), null).then(() => scrollRef.current?.scrollTo({ top: 0 }));
+    void act("next", () => buscaminasApi.next(run, locale), null).then(() => scrollRef.current?.scrollTo({ top: 0 }));
   };
   const openDay = (target: string) => {
     trackArchiveOpen({ puzzleId: target, daysBack: days.indexOf(target) });
