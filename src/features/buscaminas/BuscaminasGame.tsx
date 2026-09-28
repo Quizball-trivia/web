@@ -188,8 +188,13 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
         setView("intro");
         setNotice(c.dayOver);
       } else if (code === "sign_in_for_today") {
+        // Today's board needs an account: move the guest to yesterday's, the board the notice describes.
         clearRun(day, owner);
         setRun(null);
+        if (days.includes(addDays(day, -1))) {
+          setChosenDay(addDays(day, -1));
+          setLockedDay(null);
+        }
         setView("intro");
         setNotice(c.guestYesterday);
       } else if (status === 503) {
@@ -215,6 +220,9 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
         setNotice(c.tooManyRuns);
       } else if (status === 409 || status === 401 || status === 403 || status === 404) {
         // 404: the run is gone (e.g. its guest session expired and was purged); retrying the same id never recovers.
+        // Starting over is a new session, as when opening another day.
+        replayPendingRef.current = startedRef.current;
+        startedRef.current = false;
         clearRun(day, owner);
         setRun(null);
         setView("intro");
