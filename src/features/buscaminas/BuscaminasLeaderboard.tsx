@@ -36,7 +36,7 @@ export function BuscaminasLeaderboard({ locale, day, refreshKey = 0, limit = 10,
   useEffect(() => {
     if (authStatus === "loading") return;
     let cancelled = false;
-    buscaminasApi.leaderboard(boardDay)
+    buscaminasApi.leaderboard(boardDay, locale)
       .then((data) => {
         if (cancelled) return;
         setBoard(data);
@@ -44,7 +44,7 @@ export function BuscaminasLeaderboard({ locale, day, refreshKey = 0, limit = 10,
       })
       .catch(() => { if (!cancelled) setBoard(null); });
     return () => { cancelled = true; };
-  }, [boardDay, refreshKey, authStatus, placement]);
+  }, [boardDay, refreshKey, authStatus, placement, locale]);
 
   if (board === null) return null;
   const entries = board?.top.slice(0, limit).map((row) => toEntry(row, myId)) ?? [];

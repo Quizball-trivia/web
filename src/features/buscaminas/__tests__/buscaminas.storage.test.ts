@@ -3,7 +3,7 @@ import { clearRun, finishedScores, loadRun, saveRun } from "../buscaminas.storag
 import type { BuscaminasRun } from "@/lib/repositories/buscaminas.repo";
 
 const run = (done: boolean, score = 42): BuscaminasRun => ({
-  token: `t-${score}`,
+  run: { id: `r-${score}`, version: score },
   state: { day: "2026-09-27", round: done ? 19 : 3, picked: [], found: 0, mine: null, settled: null, results: [], done, score, ranked: false },
 });
 
@@ -13,8 +13,8 @@ describe("buscaminas saved runs", () => {
   it("keeps a guest run and each account's run apart", () => {
     saveRun("2026-09-27", 7, run(false, 1), "guest");
     saveRun("2026-09-27", 7, run(false, 2), "user-a");
-    expect(loadRun("2026-09-27", 7, "guest")?.token).toBe("t-1");
-    expect(loadRun("2026-09-27", 7, "user-a")?.token).toBe("t-2");
+    expect(loadRun("2026-09-27", 7, "guest")?.run.id).toBe("r-1");
+    expect(loadRun("2026-09-27", 7, "user-a")?.run.id).toBe("r-2");
     expect(loadRun("2026-09-27", 7, "user-b")).toBeNull();
     clearRun("2026-09-27", "guest");
     expect(loadRun("2026-09-27", 7, "guest")).toBeNull();
