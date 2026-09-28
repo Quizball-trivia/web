@@ -57,6 +57,7 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
   const liveDay = puzzleDayFor(today);
   const day = chosenDay ?? lockedDay ?? defaultDayFor(today, owner !== "guest");
   const guestOnPastBoard = owner === "guest" && !isLiveDay(day, today) && isLiveDay(liveDay, today);
+  const guestOnYesterday = guestOnPastBoard && day === addDays(liveDay, -1);
   // Guests can't open today's live board; they see it listed as needing an account instead.
   const openableDays = useMemo(() => (owner === "guest" && isLiveDay(liveDay, today) ? days.filter((d) => d !== liveDay) : days), [days, liveDay, owner, today]);
   const [versions, setVersions] = useState<Record<string, number> | undefined>(undefined);
@@ -212,7 +213,8 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
       } else if (code === "too_many_runs") {
         setView("intro");
         setNotice(c.tooManyRuns);
-      } else if (status === 409 || status === 401 || status === 403) {
+      } else if (status === 409 || status === 401 || status === 403 || status === 404) {
+        // 404: the run is gone (e.g. its guest session expired and was purged); retrying the same id never recovers.
         clearRun(day, owner);
         setRun(null);
         setView("intro");
@@ -285,9 +287,9 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
         ) : view === "archive" ? (
           <Archive locale={locale} days={openableDays} lockedLiveDay={openableDays.length !== days.length ? liveDay : null} versions={versions} today={today} current={day} currentState={state} onBack={() => setView(state?.done ? "end" : "intro")} onOpen={openDay} />
         ) : view === "end" && state ? (
-          <EndScreen locale={locale} day={day} liveDay={isLiveDay(liveDay, today) ? liveDay : null} state={state} days={days} versions={versions} boardRefresh={boardRefresh} onArchive={() => setView("archive")} onExit={onExit} />
+          <EndScreen locale={locale} day={day} liveDay={isLiveDay(liveDay, today) ? liveDay : null} guestOnYesterday={guestOnYesterday} state={state} days={days} versions={versions} boardRefresh={boardRefresh} onArchive={() => setView("archive")} onExit={onExit} />
         ) : view === "intro" || !round || !state ? (
-          <Intro locale={locale} number={puzzleNumber(day)} state={state} busy={pending === "start"} notice={notice} guestOnPastBoard={guestOnPastBoard} onStart={start} onArchive={() => setView("archive")} onExit={onExit} />
+          <Intro locale={locale} number={puzzleNumber(day)} state={state} busy={pending === "start"} notice={notice} guestOnPastBoard={guestOnPastBoard} guestOnYesterday={guestOnYesterday} onStart={start} onArchive={() => setView("archive")} onExit={onExit} />
         ) : (
           <Board locale={locale} content={content} round={round} state={state} pending={pending} notice={notice} onPick={pick} onBank={bank} onNext={advance} onExit={onExit} />
         )}
@@ -313,7 +315,7 @@ function Brand({ locale, className }: { locale: Locale; className?: string }) {
   );
 }
 
-function Intro({ locale, number, state, busy, notice, guestOnPastBoard, onStart, onArchive, onExit }: { locale: Locale; number: number; state: BuscaminasRunState | null; busy: boolean; notice: string | null; guestOnPastBoard: boolean; onStart: () => void; onArchive: () => void; onExit?: () => void }) {
+function Intro({ locale, number, state, busy, notice, guestOnPastBoard, guestOnYesterday, onStart, onArchive, onExit }: { locale: Locale; number: number; state: BuscaminasRunState | null; busy: boolean; notice: string | null; guestOnPastBoard: boolean; guestOnYesterday: boolean; onStart: () => void; onArchive: () => void; onExit?: () => void }) {
   const c = buscaminasCopy(locale);
   const inProgress = Boolean(state && (state.round > 0 || state.picked.length > 0 || state.results.length > 0));
   return (
@@ -326,7 +328,7 @@ function Intro({ locale, number, state, busy, notice, guestOnPastBoard, onStart,
         <p className="mt-2 text-sm font-bold text-white/60" style={poppins}>#{number}</p>
         {guestOnPastBoard && notice !== buscaminasCopy(locale).guestYesterday && (
           <div className="mt-4 rounded-2xl border border-brand-yellow/60 bg-brand-yellow/10 px-4 py-3">
-            <p className="text-sm text-white/90">{c.guestYesterday}</p>
+            <p className="text-sm text-white/90">{guestOnYesterday ? c.guestYesterday : c.board.guestPlay}</p>
             <SignInLink placement="buscaminas_intro" modeId="buscaminas" returnTo="/buscaminas" className="mt-2 inline-flex h-9 items-center rounded-full bg-brand-yellow px-4 text-xs font-black uppercase text-black hover:bg-brand-yellow-deep">{c.playToday}</SignInLink>
           </div>
         )}
@@ -504,7 +506,7 @@ function PlayerCard({ card, index, picked, mine, revealOk, revealMine, revealed,
   );
 }
 
-function EndScreen({ locale, day, liveDay, state, days, versions, boardRefresh, onArchive, onExit }: { locale: Locale; day: string; liveDay: string | null; state: BuscaminasRunState; days: string[]; versions?: Record<string, number>; boardRefresh: number; onArchive: () => void; onExit?: () => void }) {
+function EndScreen({ locale, day, liveDay, guestOnYesterday, state, days, versions, boardRefresh, onArchive, onExit }: { locale: Locale; day: string; liveDay: string | null; guestOnYesterday: boolean; state: BuscaminasRunState; days: string[]; versions?: Record<string, number>; boardRefresh: number; onArchive: () => void; onExit?: () => void }) {
   const rankedDay = day === liveDay;
   const c = buscaminasCopy(locale);
   const results: RoundResult[] = state.results;
@@ -562,7 +564,7 @@ function EndScreen({ locale, day, liveDay, state, days, versions, boardRefresh, 
         {state.ranked && state.rank ? (
           <p className="mx-auto mt-3 w-fit rounded-full bg-brand-yellow px-4 py-1 text-sm font-black text-black" style={poppins}>{c.board.rank(state.rank)}</p>
         ) : (
-          <p className="mt-3 text-xs text-white/70">{guest ? c.guestYesterday : rankedDay ? null : c.board.unranked}</p>
+          <p className="mt-3 text-xs text-white/70">{guest ? (guestOnYesterday ? c.guestYesterday : c.board.guestPlay) : rankedDay ? null : c.board.unranked}</p>
         )}
         <p aria-hidden className="mt-4 whitespace-pre text-xl leading-snug tracking-[0.12em]">{grid}</p>
         <dl className="mt-4 grid grid-cols-3 gap-2 text-center">
