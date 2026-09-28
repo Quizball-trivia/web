@@ -55,10 +55,9 @@ export async function getGuestToken(locale: string): Promise<string> {
 /** Existing token only: safe to attach to authentication without inventing a guest visit. */
 export function peekGuestToken(): string | null { return current ?? readStored(); }
 
-/** Drops a token the server rejected — only if it is still the one this tab uses. */
+/** Drops a token the server rejected, from memory and storage, wherever it is still the one in use. */
 export function forgetGuestToken(rejected: string): void {
-  if (current !== rejected) return;
-  current = null;
+  if (current === rejected) current = null;
   try { if (readStored() === rejected) window.localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
 }
 

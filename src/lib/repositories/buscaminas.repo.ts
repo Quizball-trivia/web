@@ -86,7 +86,8 @@ async function call<T>(path: string, method: "GET" | "POST", body: unknown, loca
   if (response.status === 401 && guestToken) {
     // An expired guest session: drop it and try once with a fresh one.
     forgetGuestToken(guestToken);
-    if (!retried && identity === "player") return call<T>(path, method, body, locale, identity, true);
+    // Players retry with a fresh session; read-only calls retry without one (never minting).
+    if (!retried) return call<T>(path, method, body, locale, identity, true);
   }
   const payload = await response.json().catch(() => null);
   if (!response.ok) {
