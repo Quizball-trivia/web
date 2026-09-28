@@ -268,6 +268,7 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
       replayPendingRef.current = startedRef.current;
       startedRef.current = false;
     }
+    if (target !== day) setNotice(null);
     setChosenDay(target);
     setLockedDay(null);
     setView(target === day && state?.done ? "end" : "intro");
