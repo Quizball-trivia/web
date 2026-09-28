@@ -1,4 +1,5 @@
 import { API_BASE_URL } from "@/lib/config";
+import { timeoutSignal } from "@/lib/timeoutSignal";
 
 /**
  * Guest identity for the public game pages. The server mints an opaque token;
@@ -29,7 +30,7 @@ function store(token: string): void {
 }
 
 async function mint(locale: string): Promise<string> {
-  const res = await fetch(`${API_BASE_URL}/api/v1/guest/session`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ locale }), signal: AbortSignal.timeout(10_000) });
+  const res = await fetch(`${API_BASE_URL}/api/v1/guest/session`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ locale }), signal: timeoutSignal(10_000) });
   if (!res.ok) throw new GuestApiError(`Guest session failed (${res.status})`, res.status);
   const { token } = (await res.json()) as { token: string };
   store(token);
@@ -68,7 +69,7 @@ export async function guestFetch<T>(path: string, init: { method?: "GET" | "POST
     method: init.method ?? "GET",
     headers: { "Content-Type": "application/json", [GUEST_TOKEN_HEADER]: token },
     body: init.body === undefined ? undefined : JSON.stringify(init.body),
-    signal: AbortSignal.timeout(15_000),
+    signal: timeoutSignal(15_000),
   });
   if (res.status === 401) forgetGuestToken(token);
   const payload = await res.json().catch(() => null);

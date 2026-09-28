@@ -3,6 +3,7 @@ import { getSupabaseAccessToken } from "@/lib/auth/supabase";
 import { GUEST_TOKEN_HEADER, forgetGuestToken, getGuestToken, peekGuestToken } from "@/lib/guest/guestSession";
 import { useAuthStore } from "@/stores/auth.store";
 import type { RoundResult } from "@/features/buscaminas/buscaminas.logic";
+import { timeoutSignal } from "@/lib/timeoutSignal";
 
 export interface BuscaminasSettled extends RoundResult {
   /** Null while the day is live: today's answers are never revealed. */
@@ -81,7 +82,7 @@ async function call<T>(path: string, method: "GET" | "POST", body: unknown, loca
     method,
     headers,
     body: body === undefined ? undefined : JSON.stringify(body),
-    signal: AbortSignal.timeout(15_000),
+    signal: timeoutSignal(15_000),
   });
   if (response.status === 401 && guestToken) {
     // An expired guest session: drop it and try once with a fresh one.
