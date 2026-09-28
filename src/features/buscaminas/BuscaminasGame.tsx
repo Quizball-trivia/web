@@ -96,7 +96,8 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
     // The saved run belongs to a guest or an account; wait until we know which.
     if (!authReady) return;
     const controller = new AbortController();
-    fetch(dayUrl(day), { signal: controller.signal })
+    // A retry after a content correction must not get the old board back from the HTTP cache.
+    fetch(attempt > 0 ? `${dayUrl(day)}?r=${attempt}` : dayUrl(day), { signal: controller.signal, cache: attempt > 0 ? "no-store" : "default" })
       .then(async (res) => {
         if (!res.ok) throw Object.assign(new Error("load"), { status: res.status });
         const data = (await res.json()) as BuscaminasDay;
@@ -111,7 +112,7 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
         trackLoadError({ puzzleId: day, status: error?.status ?? null });
       });
     return () => controller.abort();
-  }, [authReady, day, loadKey, owner]);
+  }, [attempt, authReady, day, loadKey, owner]);
 
   useEffect(() => {
     if (content && run) saveRun(day, contentVersion, run, owner);
