@@ -2,15 +2,16 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { motion } from "motion/react";
 import { ArrowLeft, Bomb, Check, Copy, Flag, Share2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { API_BASE_URL } from "@/lib/config";
 import { useAuthStore } from "@/stores/auth.store";
 import { useUserPreferences } from "@/lib/preferences/userPreferences";
 import { playSfx } from "@/lib/sounds/gameSounds";
 import type { EngineEventDetail } from "@/lib/analytics/public-games.analytics";
-import { findPublicGameByModeId, publicPagePathFor } from "@/lib/seo/public-games";
+import { findPublicGameByModeId, relatedPublishedGames } from "@/lib/seo/public-games";
+import { PublicCardGrid } from "@/features/marketing/public/PublicCards";
 import type { Locale } from "@/lib/i18n/locale";
 import {
   MAX_SCORE, TARGETS_PER_ROUND, addDays, defaultDayFor, isLiveDay, playableDays, puzzleDayFor, puzzleNumber, releaseDay, resultGrid,
@@ -25,7 +26,9 @@ import { encodeShare } from "./buscaminas.share";
 import { trackActionError, trackArchiveOpen, trackLoadError, trackReport, trackRoundEnd, trackRunComplete, trackRunStart, trackShare } from "./buscaminas.analytics";
 
 const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
-const dayUrl = (day: string) => `/buscaminas/v1/days/${day}.json`;
+// Boards come from the backend, which serves a day only once it is playable (future boards stay private).
+const boardsUrl = `${API_BASE_URL}/api/v1/buscaminas/boards`;
+const dayUrl = (day: string) => `${boardsUrl}/${day}`;
 type View = "intro" | "play" | "end" | "archive";
 
 export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
@@ -82,7 +85,7 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch("/buscaminas/v1/index.json", { signal: controller.signal })
+    fetch(boardsUrl, { signal: controller.signal })
       .then((res) => (res.ok ? res.json() : null))
       .then((data: { days?: Record<string, number> } | null) => { if (data?.days) setVersions(data.days); })
       .catch(() => {});
@@ -93,7 +96,8 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
     // The saved run belongs to a guest or an account; wait until we know which.
     if (!authReady) return;
     const controller = new AbortController();
-    fetch(dayUrl(day), { signal: controller.signal })
+    // A retry after a content correction must not get the old board back from the HTTP cache.
+    fetch(attempt > 0 ? `${dayUrl(day)}?r=${attempt}` : dayUrl(day), { signal: controller.signal, cache: attempt > 0 ? "no-store" : "default" })
       .then(async (res) => {
         if (!res.ok) throw Object.assign(new Error("load"), { status: res.status });
         const data = (await res.json()) as BuscaminasDay;
@@ -108,7 +112,7 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
         trackLoadError({ puzzleId: day, status: error?.status ?? null });
       });
     return () => controller.abort();
-  }, [authReady, day, loadKey, owner]);
+  }, [attempt, authReady, day, loadKey, owner]);
 
   useEffect(() => {
     if (content && run) saveRun(day, contentVersion, run, owner);
@@ -499,8 +503,8 @@ function EndScreen({ locale, day, liveDay, state, days, versions, boardRefresh, 
   const shareUrl = typeof window === "undefined" ? sharePath : `${window.location.origin}${sharePath}`;
   const text = c.shareText(number, score, grid, shareUrl);
   const canNativeShare = typeof navigator !== "undefined" && typeof navigator.share === "function";
-  const trivia = findPublicGameByModeId("triviaMines");
-  const ticTacToe = findPublicGameByModeId("grid");
+  const self = findPublicGameByModeId("buscaminas");
+  const related = self ? relatedPublishedGames(self) : [];
 
   const whatsapp = () => {
     trackShare({ puzzleId: day, method: "whatsapp", result: "attempted", score });
@@ -568,13 +572,12 @@ function EndScreen({ locale, day, liveDay, state, days, versions, boardRefresh, 
 
       {liveDay && <BuscaminasLeaderboard locale={locale} day={liveDay} refreshKey={boardRefresh} placement="end" className="mt-4" />}
 
-      <div className="mt-4">
-        <p className="text-xs font-bold uppercase tracking-wide text-white/50">{c.end.more}</p>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {trivia && <Link href={publicPagePathFor(trivia, locale)} className="rounded-full bg-white/10 px-4 py-2 text-sm font-bold hover:bg-white/15">{c.end.trivia}</Link>}
-          {ticTacToe && <Link href={publicPagePathFor(ticTacToe, locale)} className="rounded-full bg-white/10 px-4 py-2 text-sm font-bold hover:bg-white/15">{c.end.grid}</Link>}
-        </div>
-      </div>
+      {related.length > 0 && (
+        <section className="mt-6">
+          <h2 className="mb-3 text-lg font-bold uppercase" style={poppins}>{c.end.more}</h2>
+          <PublicCardGrid games={related} locale={locale} surface="game_result" />
+        </section>
+      )}
     </div>
   );
 }

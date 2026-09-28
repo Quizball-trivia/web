@@ -5,7 +5,7 @@ import { trackEvent } from "@/lib/posthog";
  * completion → registration. Mode ids are the manifest's stable ids, never
  * translated display text, so locales roll up into one report.
  */
-export type PublicSurface = "hub" | "public_home" | "public_game" | "daily_collection";
+export type PublicSurface = "hub" | "public_home" | "public_game" | "daily_collection" | "game_result";
 type Access = "guest" | "member";
 
 export const trackGameCardClick = (p: { modeId: string; surface: PublicSurface; group: string; destination: string }) =>
