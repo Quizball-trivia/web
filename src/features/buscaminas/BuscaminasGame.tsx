@@ -221,7 +221,7 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
       } else if (status === 409 || status === 401 || status === 403 || status === 404) {
         // 404: the run is gone (e.g. its guest session expired and was purged); retrying the same id never recovers.
         // Starting over is a new session, as when opening another day.
-        replayPendingRef.current = startedRef.current;
+        replayPendingRef.current ||= startedRef.current;
         startedRef.current = false;
         clearRun(day, owner);
         setRun(null);
@@ -273,7 +273,7 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
     // A finished day opens on its result: that is a look back, not a new session.
     if (target !== day && !(target in finishedScores([target], owner, versions))) {
       // Counted when this day's board is actually started, not on browsing.
-      replayPendingRef.current = startedRef.current;
+      replayPendingRef.current ||= startedRef.current;
       startedRef.current = false;
     }
     if (target !== day) setNotice(null);
