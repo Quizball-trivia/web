@@ -16,6 +16,7 @@ import { RunsBoard } from "@/features/mini-games/components/RunsBoard";
 import { MoneyFlight, flightFrom, type MoneyFlightSpec } from "@/features/mini-games/components/MoneyFlight";
 import { settleOnce, trackMiniGameError, trackMiniGameRoundStarted } from "@/features/mini-games/analytics/coinGames.analytics";
 import { triviaMinesApi, TriviaMinesApiError, type TriviaMinesState } from "@/lib/repositories/triviaMines.repo";
+import { createRealtimeCommandId } from "@/lib/realtime/command-id";
 
 const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
 const STAKES = [50, 100, 250];
@@ -108,7 +109,7 @@ export function TriviaMinesLive({ backHref = "/play", client, sample }: {
   const start = async () => {
     if (busy || !resumed) return;
     setBusy(true); setError(null); setAnswerResult(null);
-    const nonce = nonceRef.current ?? (nonceRef.current = crypto.randomUUID());
+    const nonce = nonceRef.current ?? (nonceRef.current = createRealtimeCommandId());
     try {
       const s = await api.start(stake, nonce);
       nonceRef.current = null; setState(s); refreshWallet();

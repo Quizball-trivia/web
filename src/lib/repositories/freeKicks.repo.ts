@@ -1,5 +1,6 @@
 import { API_BASE_URL } from "@/lib/config";
 import { getSupabaseAccessToken } from "@/lib/auth/supabase";
+import { timeoutSignal } from "@/lib/timeoutSignal";
 
 /**
  * Free Kicks (real-coins solo mode) API client.
@@ -89,7 +90,7 @@ async function call<T>(path: string, method: "GET" | "POST", body?: unknown): Pr
     // A hung request must not wedge the busy lock on a real-money screen;
     // a timeout surfaces as a non-FreeKicksApiError, i.e. "maybe committed",
     // and the caller reconciles via GET current.
-    signal: AbortSignal.timeout(15_000),
+    signal: timeoutSignal(15_000),
   });
   if (response.status === 204) return undefined as T;
   const payload = await response.json().catch(() => null);

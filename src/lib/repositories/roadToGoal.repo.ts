@@ -1,6 +1,7 @@
 import { API_BASE_URL } from "@/lib/config";
 import { getSupabaseAccessToken } from "@/lib/auth/supabase";
 import type { components } from "@/types/api.generated";
+import { timeoutSignal } from "@/lib/timeoutSignal";
 
 export type RoadToGoalState = components["schemas"]["RoadToGoalStateResponse"];
 export type RoadToGoalCommitment = components["schemas"]["RoadToGoalCommitmentResponse"];
@@ -24,7 +25,7 @@ async function call<T>(path: string, method: "GET" | "POST", body?: unknown): Pr
     headers,
     body: body === undefined ? undefined : JSON.stringify(body),
     credentials: "include",
-    signal: AbortSignal.timeout(15_000),
+    signal: timeoutSignal(15_000),
   });
   if (response.status === 204) return undefined as T;
   const payload = await response.json().catch(() => null);
