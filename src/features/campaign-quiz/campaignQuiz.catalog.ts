@@ -3,6 +3,7 @@ import { API_BASE_URL } from '@/lib/config';
 import { listCampaignQuizPages } from './campaignQuiz.api';
 import type { CampaignQuizHubPage } from './campaignQuiz.types';
 import type { Locale } from '@/lib/i18n/locale';
+import { timeoutSignal } from '@/lib/timeoutSignal';
 
 const CAMPAIGN_QUIZ_REQUEST_TIMEOUT_MS = 5_000;
 
@@ -22,7 +23,7 @@ export async function listCampaignQuizPagesResilient(locale: Locale = 'en'): Pro
   const twin = fetch(`${API_BASE_URL}/api/v1/campaign-quizzes?locale=${locale}&lkg=1`, {
     next: { revalidate: 86_400 },
     headers: { Accept: 'application/json' },
-    signal: AbortSignal.timeout(CAMPAIGN_QUIZ_REQUEST_TIMEOUT_MS),
+    signal: timeoutSignal(CAMPAIGN_QUIZ_REQUEST_TIMEOUT_MS),
   }).then(async (response) => {
     if (!response.ok) throw new Error(`Catalog fallback failed with ${response.status}`);
     return (await response.json()) as CampaignQuizHubPage[];

@@ -24,6 +24,10 @@ export const trackRunComplete = (p: { puzzleId: string; ranked: boolean; score: 
 export const trackLeaderboardView = (p: { puzzleId: string; placement: "page" | "end"; players: number; hasMe: boolean }) =>
   trackEvent("buscaminas_leaderboard_view", { puzzle_id: p.puzzleId, placement: p.placement, players: p.players, has_own_row: p.hasMe });
 
+const NAMED_MOVES = new Set(["start", "bank", "next"]);
+/** The action an error happened in: taps are keyed by card id (a short Transfermarkt number), the other moves by name. */
+export const actionOf = (key: string): string => (NAMED_MOVES.has(key) ? key : "tap");
+
 export const trackActionError = (p: { puzzleId: string; action: string; status: number | null; code: string | null }) =>
   trackEvent("buscaminas_action_error", { puzzle_id: p.puzzleId, action: p.action, http_status: p.status, error_code: p.code });
 

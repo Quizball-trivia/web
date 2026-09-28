@@ -7,6 +7,7 @@ import { GUEST_TOKEN_HEADER, forgetGuestToken, getGuestToken } from "@/lib/guest
 import { useAuthStore } from "@/stores/auth.store";
 import type { AvatarCustomization } from "@/types/game";
 import { logger } from "@/utils/logger";
+import { timeoutSignal } from "@/lib/timeoutSignal";
 
 /**
  * Who the realtime socket connects as. Members are the Supabase session; a
@@ -51,7 +52,7 @@ async function resolveOnce(locale: string, token: string): Promise<GuestPrincipa
   const res = await fetch(`${API_BASE_URL}/api/v1/guest/principal`, {
     method: "POST",
     headers: { "Content-Type": "application/json", [GUEST_TOKEN_HEADER]: token },
-    signal: AbortSignal.timeout(10_000),
+    signal: timeoutSignal(10_000),
   });
   if (res.status === 401) {
     forgetGuestToken(token);

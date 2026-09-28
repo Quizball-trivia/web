@@ -1,5 +1,6 @@
 import { API_BASE_URL } from "@/lib/config";
 import { getSupabaseAccessToken } from "@/lib/auth/supabase";
+import { timeoutSignal } from "@/lib/timeoutSignal";
 
 /**
  * Guess the Goal (server-authoritative mini-game) API client.
@@ -172,7 +173,7 @@ async function call<T>(path: string, method: "GET" | "POST" | "DELETE", body?: u
     // A timeout surfaces as a non-GuessTheGoalApiError, i.e. "maybe
     // committed" — the caller reconciles via GET current or a same-option
     // retry (mutations replay their stored result server-side).
-    signal: AbortSignal.timeout(15_000),
+    signal: timeoutSignal(15_000),
   });
   if (response.status === 204) return undefined as T;
   const payload = await response.json().catch(() => null);

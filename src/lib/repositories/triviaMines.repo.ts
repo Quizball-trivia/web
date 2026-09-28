@@ -1,5 +1,6 @@
 import { API_BASE_URL } from "@/lib/config";
 import { getSupabaseAccessToken } from "@/lib/auth/supabase";
+import { timeoutSignal } from "@/lib/timeoutSignal";
 
 /** Trivia Mines (real-coins solo mini game) API client. Hand-typed; shapes mirror
  *  backend-node/src/modules/trivia-mines/trivia-mines.service.ts. */
@@ -54,7 +55,7 @@ async function call<T>(path: string, method: "GET" | "POST", body?: unknown): Pr
     headers,
     body: body === undefined ? undefined : JSON.stringify(body),
     credentials: "include",
-    signal: AbortSignal.timeout(15_000),
+    signal: timeoutSignal(15_000),
   });
   if (response.status === 204) return undefined as T;
   const payload = await response.json().catch(() => null);

@@ -7,6 +7,7 @@ import type {
   CampaignQuizRoute,
 } from './campaignQuiz.types';
 import type { Locale } from '@/lib/i18n/messages';
+import { timeoutSignal } from '@/lib/timeoutSignal';
 
 export class CampaignQuizApiError extends Error {
   constructor(public readonly status: number) {
@@ -17,7 +18,7 @@ export class CampaignQuizApiError extends Error {
 const CAMPAIGN_QUIZ_REQUEST_TIMEOUT_MS = 5_000;
 
 function requestSignal(): AbortSignal {
-  return AbortSignal.timeout(CAMPAIGN_QUIZ_REQUEST_TIMEOUT_MS);
+  return timeoutSignal(CAMPAIGN_QUIZ_REQUEST_TIMEOUT_MS);
 }
 
 async function parseJson<T>(response: Response): Promise<T> {

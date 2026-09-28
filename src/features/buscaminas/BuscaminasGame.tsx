@@ -23,7 +23,7 @@ import { SignInLink } from "@/features/marketing/public/PublicLinks";
 import { BuscaminasApiError, buscaminasApi, type BuscaminasRun, type BuscaminasRunState } from "@/lib/repositories/buscaminas.repo";
 import { buscaminasCopy, promptFor } from "./buscaminas.copy";
 import { encodeShare } from "./buscaminas.share";
-import { trackActionError, trackArchiveOpen, trackLoadError, trackReport, trackRoundEnd, trackRunComplete, trackRunStart, trackShare } from "./buscaminas.analytics";
+import { actionOf, trackActionError, trackArchiveOpen, trackLoadError, trackReport, trackRoundEnd, trackRunComplete, trackRunStart, trackShare } from "./buscaminas.analytics";
 
 const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
 // Boards come from the backend, which serves a day only once it is playable (future boards stay private).
@@ -174,7 +174,7 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
       if (result) apply(result, r);
     } catch (error) {
       if (!stillCurrent(requestOwner, requestDay)) return;
-      trackActionError({ puzzleId: day, action: key.length > 8 ? "tap" : key, status: error instanceof BuscaminasApiError ? error.status : null, code: error instanceof BuscaminasApiError ? error.message : null });
+      trackActionError({ puzzleId: day, action: actionOf(key), status: error instanceof BuscaminasApiError ? error.status : null, code: error instanceof BuscaminasApiError ? error.message : null });
       const code = error instanceof BuscaminasApiError ? error.message : null;
       const status = error instanceof BuscaminasApiError ? error.status : null;
       const newer = code === "stale_state" && run ? loadRun(day, contentVersion, owner) : null;
