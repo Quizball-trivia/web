@@ -5,7 +5,8 @@ import { useAuthStore } from "@/stores/auth.store";
 import type { RoundResult } from "@/features/buscaminas/buscaminas.logic";
 
 export interface BuscaminasSettled extends RoundResult {
-  reveal: { ok: string[]; mines: string[] };
+  /** Null while the day is live: today's answers are never revealed. */
+  reveal: { ok: string[]; mines: string[] } | null;
 }
 
 /** Server-held run state: answers of the current round are never sent before it is settled. */

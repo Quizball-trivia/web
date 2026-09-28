@@ -49,6 +49,8 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
   const replayPendingRef = useRef(false);
   const currentDayRef = useRef<string | null>(null);
   const currentOwnerRef = useRef<string | null>(null);
+  /** True while the player and board a request was made for are still the ones on screen. */
+  const stillCurrent = (requestOwner: string, requestDay: string) => currentOwnerRef.current === requestOwner && currentDayRef.current === requestDay;
   const authStatus = useAuthStore((s) => s.status);
   const userId = useAuthStore((s) => s.user?.id);
   const owner = authStatus === "authenticated" && userId ? userId : "guest";
@@ -167,10 +169,10 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
     try {
       const result = await call();
       // The player changed (sign-in/out) or left this board while the request was in flight.
-      if (currentOwnerRef.current !== requestOwner || currentDayRef.current !== requestDay) return;
+      if (!stillCurrent(requestOwner, requestDay)) return;
       if (result) apply(result, r);
     } catch (error) {
-      if (currentOwnerRef.current !== requestOwner || currentDayRef.current !== requestDay) return;
+      if (!stillCurrent(requestOwner, requestDay)) return;
       trackActionError({ puzzleId: day, action: key.length > 8 ? "tap" : key, status: error instanceof BuscaminasApiError ? error.status : null, code: error instanceof BuscaminasApiError ? error.message : null });
       const code = error instanceof BuscaminasApiError ? error.message : null;
       const status = error instanceof BuscaminasApiError ? error.status : null;
@@ -199,10 +201,12 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
       } else if (code === "stale_state" && run) {
         // Every run is a server row: re-sync from it.
         try {
-          const current = await buscaminasApi.start(day, contentVersion, locale);
+          const current = await buscaminasApi.start(requestDay, contentVersion, locale);
+          if (!stillCurrent(requestOwner, requestDay)) return;
           setRun(current);
           setView(current.state.done ? "end" : "play");
         } catch (resyncError) {
+          if (!stillCurrent(requestOwner, requestDay)) return;
           setNotice(resyncError instanceof BuscaminasApiError && resyncError.status === 503 ? c.maintenance : c.actionError);
         }
       } else if (code === "too_many_runs") {
@@ -230,6 +234,7 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
   };
   const start = () => {
     const requestedDay = day;
+    const requestOwner = owner;
     setLockedDay(requestedDay);
     if (run) {
       markStarted();
@@ -240,7 +245,7 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
     void act("start", async () => {
       const fresh = await buscaminasApi.start(requestedDay, contentVersion, locale);
       // The player switched boards while this was in flight: never attach day A's run to day B.
-      if (currentDayRef.current !== requestedDay) return null;
+      if (!stillCurrent(requestOwner, requestedDay)) return null;
       markStarted();
       trackRunStart({ puzzleId: requestedDay, contentVersion, ranked: fresh.state.ranked, resumed: fresh.state.round > 0 || fresh.state.results.length > 0, round: fresh.state.round + 1 });
       setView(fresh.state.done ? "end" : "play");
