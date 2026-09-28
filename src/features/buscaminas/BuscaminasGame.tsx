@@ -48,6 +48,7 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
   const startedRef = useRef(false);
   const replayPendingRef = useRef(false);
   const currentDayRef = useRef<string | null>(null);
+  const currentOwnerRef = useRef<string | null>(null);
   const authStatus = useAuthStore((s) => s.status);
   const userId = useAuthStore((s) => s.user?.id);
   const owner = authStatus === "authenticated" && userId ? userId : "guest";
@@ -72,6 +73,14 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
   const contentVersion = content?.contentVersion ?? 1;
   const state = run?.state ?? null;
   useEffect(() => { currentDayRef.current = day; }, [day]);
+  // Signing in or out mid-visit is a new player: drop in-flight results and start a fresh funnel session.
+  useEffect(() => {
+    if (currentOwnerRef.current !== null && currentOwnerRef.current !== owner) {
+      startedRef.current = false;
+      replayPendingRef.current = false;
+    }
+    currentOwnerRef.current = owner;
+  }, [owner]);
   // Leaving the game invalidates any start still in flight (no run or funnel event after exit).
   useEffect(() => () => { currentDayRef.current = null; }, []);
 
@@ -153,10 +162,15 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
     if (pending) return;
     setPending(key);
     setNotice(null);
+    const requestOwner = owner;
+    const requestDay = day;
     try {
       const result = await call();
+      // The player changed (sign-in/out) or left this board while the request was in flight.
+      if (currentOwnerRef.current !== requestOwner || currentDayRef.current !== requestDay) return;
       if (result) apply(result, r);
     } catch (error) {
+      if (currentOwnerRef.current !== requestOwner || currentDayRef.current !== requestDay) return;
       trackActionError({ puzzleId: day, action: key.length > 8 ? "tap" : key, status: error instanceof BuscaminasApiError ? error.status : null, code: error instanceof BuscaminasApiError ? error.message : null });
       const code = error instanceof BuscaminasApiError ? error.message : null;
       const status = error instanceof BuscaminasApiError ? error.status : null;

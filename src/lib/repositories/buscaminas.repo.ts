@@ -1,6 +1,7 @@
 import { API_BASE_URL } from "@/lib/config";
 import { getSupabaseAccessToken } from "@/lib/auth/supabase";
 import { GUEST_TOKEN_HEADER, forgetGuestToken, getGuestToken, peekGuestToken } from "@/lib/guest/guestSession";
+import { useAuthStore } from "@/stores/auth.store";
 import type { RoundResult } from "@/features/buscaminas/buscaminas.logic";
 
 export interface BuscaminasSettled extends RoundResult {
@@ -62,7 +63,10 @@ type Identity = "player" | "optional";
  */
 async function call<T>(path: string, method: "GET" | "POST", body: unknown, locale: string, identity: Identity = "player", retried = false): Promise<T> {
   const headers = new Headers({ "Content-Type": "application/json" });
+  const member = useAuthStore.getState().status === "authenticated";
   const bearer = await getSupabaseAccessToken().catch(() => null);
+  // A signed-in player whose session can't be read right now must not quietly become a guest.
+  if (member && !bearer) throw new BuscaminasApiError("session_unavailable", 0);
   let guestToken: string | null = null;
   if (bearer) headers.set("Authorization", `Bearer ${bearer}`);
   else if (identity === "player") {
