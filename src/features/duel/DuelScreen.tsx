@@ -13,11 +13,13 @@ import { useActiveDuelStore } from "@/stores/activeDuel.store";
 import type { DuelSeatPayload, DuelStatePayload } from "@/lib/realtime/socket.types";
 import { duelCopy, type DuelCopy } from "./duel.copy";
 import { SEAT_BG, SEAT_TEXT } from "./duel.seats";
-import type { BuscaminasDuelView, PistasDuelView, Seat } from "./duel.views";
+import type { BuscaminasDuelView, PistasDuelView, Seat, UltimoDuelView } from "./duel.views";
 import { BuscaminasDuelBoard } from "./BuscaminasDuelBoard";
 import { PistasDuelBoard } from "./PistasDuelBoard";
+import { UltimoDuelBoard } from "./UltimoDuelBoard";
 import { useDuel, useSecondsLeft } from "./useDuel";
 import { DuelIntro } from "./DuelIntro";
+import { DuelAvatar, seatAvatar } from "./DuelAvatar";
 
 const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
 /** Without a first snapshot by then, the loading screen offers retry / exit instead of spinning forever. */
@@ -114,14 +116,19 @@ function DuelRoom({ matchId }: { matchId: string }) {
 
   const mySeat = snapshot.mySeat as Seat;
   const names = seatNames(snapshot, copy);
-  const view = snapshot.view as BuscaminasDuelView | PistasDuelView | null;
-  const turnSeat = snapshot.game === "buscaminas" && view && (view as BuscaminasDuelView).phase === "turn" ? (view as BuscaminasDuelView).turn : null;
+  const view = snapshot.view as BuscaminasDuelView | PistasDuelView | UltimoDuelView | null;
+  const turnSeat = (snapshot.game === "buscaminas" || snapshot.game === "ultimo") && view && (view as BuscaminasDuelView | UltimoDuelView).phase === "turn"
+    ? (view as BuscaminasDuelView | UltimoDuelView).turn : null;
   // The clock is shown only while someone can act; a reveal's few seconds are not a countdown to worry about.
-  const actionable = snapshot.status === "active" && !!view && ((snapshot.game === "buscaminas" && (view as BuscaminasDuelView).phase === "turn") || (snapshot.game === "pistas" && (view as PistasDuelView).phase === "clue"));
+  const actionable = snapshot.status === "active" && !!view && (
+    ((snapshot.game === "buscaminas" || snapshot.game === "ultimo") && (view as BuscaminasDuelView | UltimoDuelView).phase === "turn")
+    || (snapshot.game === "pistas" && (view as PistasDuelView).phase === "clue"));
   const introPhase = snapshot.status === "ready" || snapshot.status === "countdown" || (snapshot.status === "paused" && snapshot.pausedFrom === "countdown");
   const awaySeat = snapshot.status === "paused" ? snapshot.seats.find((s) => !s.connected) : undefined;
   const finished = snapshot.status === "completed" || snapshot.status === "cancelled";
-  const idle = !view ? 0 : snapshot.game === "buscaminas" ? (view as BuscaminasDuelView).timeouts[mySeat] : (view as PistasDuelView).idle[mySeat] >= 2 ? 1 : 0;
+  // Último has no idle rule: a seat that stops answering simply loses each category to the clock.
+  const idle = !view || snapshot.game === "ultimo" ? 0
+    : snapshot.game === "buscaminas" ? (view as BuscaminasDuelView).timeouts[mySeat] : (view as PistasDuelView).idle[mySeat] >= 2 ? 1 : 0;
 
   return (
     <Shell>
@@ -142,6 +149,11 @@ function DuelRoom({ matchId }: { matchId: string }) {
         {view && !introPhase && snapshot.game === "buscaminas" && (
           <BuscaminasDuelBoard view={view as BuscaminasDuelView} mySeat={mySeat} names={names} copy={copy} finished={finished || snapshot.status === "paused"}
             onPick={(cardId) => duel.send({ type: "pick", round: (view as BuscaminasDuelView).round, at: (view as BuscaminasDuelView).pickIndex, cardId })} />
+        )}
+        {view && !introPhase && snapshot.game === "ultimo" && (
+          <UltimoDuelBoard key={(view as UltimoDuelView).category} view={view as UltimoDuelView} mySeat={mySeat} names={names} copy={copy} finished={finished || snapshot.status === "paused"}
+            secondsLeft={secondsLeft}
+            onAnswer={(text) => duel.send({ type: "answer", cat: (view as UltimoDuelView).category, k: (view as UltimoDuelView).k, text })} />
         )}
         {view && !introPhase && snapshot.game === "pistas" && (
           <PistasDuelBoard key={(view as PistasDuelView).round} view={view as PistasDuelView} mySeat={mySeat} names={names} copy={copy} locale={locale as Locale} finished={finished || snapshot.status === "paused"}
@@ -204,7 +216,8 @@ function Scoreboard({ snapshot, names, turnSeat, copy }: { snapshot: DuelStatePa
         const side = me ? "me" : "rival";
         return (
           <div key={seat} className={cn("flex items-center gap-2.5 rounded-2xl px-3 py-2 transition-colors", turnSeat === seat ? SEAT_BG[side] : "bg-white/[0.05]", !me && "flex-row-reverse text-right")}>
-            <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-sm font-black uppercase", SEAT_TEXT[side])} style={poppins}>{names[seat].slice(0, 1)}</span>
+            <DuelAvatar size="xs" ringClassName={me ? "ring-brand-green-light/80" : "ring-sky-300/80"}
+              customization={seatAvatar(snapshot.seats.find((s) => s.seat === seat) ?? { userId: `seat-${seat}`, avatarCustomization: null, avatarUrl: null, isGuest: true })} />
             <div className="min-w-0 flex-1">
               <p className={cn("truncate text-xs font-bold", SEAT_TEXT[side])}>{me ? copy.you : names[seat]}</p>
               <p className="text-2xl font-black leading-none tabular-nums" style={poppins}>{scores[seat]}</p>

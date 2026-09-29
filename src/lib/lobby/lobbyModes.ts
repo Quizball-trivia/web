@@ -28,12 +28,13 @@ export const LOBBY_MODES: Readonly<Record<LobbyGameMode, LobbyModeCapabilities>>
   duel: { capacity: 2, playable: 2, guestAllowed: true, hostStart: { min: 2, max: 2 }, needsCategories: false, promotesToPartyQuiz: false },
 };
 
-export const DUEL_GAMES: readonly DuelGameId[] = ["buscaminas", "pistas"];
+export const DUEL_GAMES: readonly DuelGameId[] = ["buscaminas", "pistas", "ultimo"];
 
-/** "Buscaminas futbolero · duelo" / "Pistas futboleras · duelo". */
+/** "Buscaminas futbolero · duelo" / "Pistas futboleras · duelo" / "Último en pie futbolero · duelo". */
 export const DUEL_GAME_LABEL_KEYS: Readonly<Record<DuelGameId, MessageKey>> = {
   buscaminas: "friend.duelBuscaminas",
   pistas: "friend.duelPistas",
+  ultimo: "friend.duelUltimo",
 };
 
 export function lobbyModeCapabilities(mode: LobbyGameMode | null | undefined): LobbyModeCapabilities {

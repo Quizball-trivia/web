@@ -40,6 +40,17 @@ const HIDDEN_DEMO_MODES: DemoModeCard[] = [
     group: "daily",
   },
   {
+    slug: "ultimo",
+    title: { en: "Last Answer Standing", ka: "ბოლომდე დარჩენილი", es: "Último en pie futbolero", tr: "Son Kalan Futbol", },
+    description: {
+      en: "5 football lists a day. Name answers before the shrinking clock runs out.",
+      ka: "დღეში 5 საფეხბურთო სია. დაასახელე პასუხები, სანამ დრო ამოიწურება.",
+      es: "5 listas futboleras por día. Nombrá respuestas antes de que se acabe el reloj.",
+      tr: "Günde 5 futbol listesi. Kısalan süre bitmeden cevapları say.",
+    },
+    group: "daily",
+  },
+  {
     slug: "match",
     title: { en: "1v1 Match", ka: "1v1 მატჩი", es: "Partido 1v1", tr: "1v1 Maç", },
     description: {

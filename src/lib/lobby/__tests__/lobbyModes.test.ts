@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  DUEL_GAMES,
+  DUEL_GAME_LABEL_KEYS,
   LOBBY_MODES,
   canHostStart,
   isDuelGameEnabled,
@@ -36,10 +38,19 @@ describe("lobby mode capability map (web mirror)", () => {
     expect(isDuelGameEnabled("buscaminas", ["pistas"])).toBe(false);
     expect(isDuelGameEnabled("chess", ["pistas"])).toBe(false);
     expect(isDuelGameEnabled(null, ["pistas"])).toBe(false);
+    expect(isDuelGameEnabled("ultimo", ["ultimo"])).toBe(true);
+    expect(isDuelGameEnabled("ultimo", ["buscaminas", "pistas"])).toBe(false);
+  });
+
+  it("every duel game has a label", () => {
+    expect(DUEL_GAMES).toEqual(["buscaminas", "pistas", "ultimo"]);
+    expect(DUEL_GAME_LABEL_KEYS.ultimo).toBe("friend.duelUltimo");
+    for (const game of DUEL_GAMES) expect(DUEL_GAME_LABEL_KEYS[game]).toBeTruthy();
   });
 
   it("each duel game is its own picker choice", () => {
     expect(modeChoiceKey({ gameMode: "duel", duelGame: "pistas" })).toBe("duel:pistas");
+    expect(modeChoiceKey({ gameMode: "duel", duelGame: "ultimo" })).toBe("duel:ultimo");
     expect(modeChoiceKey({ gameMode: "auction", duelGame: null })).toBe("auction");
   });
 });

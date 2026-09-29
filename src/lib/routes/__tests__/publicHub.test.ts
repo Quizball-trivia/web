@@ -19,7 +19,7 @@ describe("public hub paths", () => {
     expect(publicLocaleOf("/leaderboard")).toBeNull();
   });
   it("lets guests through only on the public surface, Play and the read-only leaderboard", () => {
-    for (const p of ["/", "/play", "/en", "/es/juegos-de-futbol/subasta", "/leaderboard", "/events", "/weekend-league"]) expect(isGuestAllowedPath(p)).toBe(true);
+    for (const p of ["/", "/play", "/en", "/es/juegos-de-futbol/subasta", "/leaderboard", "/events", "/weekend-league", "/buscaminas", "/pistas", "/ultimo"]) expect(isGuestAllowedPath(p)).toBe(true);
     for (const p of ["/play/friend", "/en/about", "/en/privacy", "/store", "/profile", "/leaderboard/x", "/social", "/events/x"]) expect(isGuestAllowedPath(p)).toBe(false);
   });
   it("highlights Play on the hub and game pages", () => {

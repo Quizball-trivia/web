@@ -4,7 +4,7 @@ import type { DuelGameId, LobbyGameMode, LobbyState } from "@/lib/realtime/socke
 
 vi.mock("@/lib/config", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/config")>()),
-  DUEL_GAMES_ENABLED: ["buscaminas", "pistas"],
+  DUEL_GAMES_ENABLED: ["buscaminas", "pistas", "ultimo"],
 }));
 vi.mock("@/contexts/LocaleContext", () => ({
   useLocale: () => ({ t: (key: string) => key }),
@@ -54,6 +54,21 @@ describe("LobbySettings duel rooms", () => {
   it("labels a Pistas duel as such", () => {
     renderSettings(makeLobby("duel", "pistas"));
     expect(screen.getByText("friend.duelPistas")).toBeTruthy();
+  });
+
+  it("labels an Último duel and explains its own rules instead of most points wins", () => {
+    renderSettings(makeLobby("duel", "ultimo", [{}, {}]));
+    expect(screen.getByText("friend.duelUltimo")).toBeTruthy();
+    expect(screen.getByText("friend.duelDescriptionUltimo")).toBeTruthy();
+    expect(screen.queryByText("friend.duelDescription")).toBeNull();
+    expect(screen.getByRole("button", { name: "friend.duelTabUltimo" }).getAttribute("aria-pressed")).toBe("true");
+  });
+
+  it("the host can pick Último from the duel tabs", async () => {
+    const onUpdate = renderSettings(makeLobby("friendly_possession", null, [{}, {}]));
+    await act(() => new Promise((resolve) => setTimeout(resolve, 0)));
+    fireEvent.click(screen.getByRole("button", { name: "friend.duelTabUltimo" }));
+    await waitFor(() => expect(onUpdate).toHaveBeenCalledWith({ gameMode: "duel", duelGame: "ultimo" }));
   });
 
   it("the host can switch a room into a duel game (and between duel games)", async () => {

@@ -1347,9 +1347,12 @@
     "guestKeepResults": "Sign up to save your next results and play ranked",
     "duelBuscaminas": "Football Minesweeper · duel",
     "duelPistas": "Football Clues · duel",
+    "duelUltimo": "Last Answer Standing · duel",
     "duelTabBuscaminas": "Minesweeper",
     "duelTabPistas": "Clues",
+    "duelTabUltimo": "Last Answer Standing",
     "duelDescription": "A 1-vs-1 duel with content of its own. Most points wins. No coins or RP at stake.",
+    "duelDescriptionUltimo": "A 1-vs-1 duel: take turns naming answers from the same list. Whoever is left standing wins the category, and the first to win 3 categories wins the duel. No coins or RP at stake.",
     "readyCopyDuel": "When both players are ready, the host can start the duel.",
     "startDuel": "Start duel",
     "errorDuelUnavailable": "This game can't be played as a duel right now."

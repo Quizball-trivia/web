@@ -62,6 +62,7 @@ const LOCALIZED_SLUGS: Record<string, Partial<Record<Locale, string>>> = {
   "trivia-mines": { es: "minas-con-preguntas" },
   "football-minesweeper": { es: "buscaminas-futbolero" },
   "football-clues": { es: "pistas-futboleras" },
+  "last-answer-standing": { es: "ultimo-en-pie-futbolero" },
   "squad-spin": { es: "ruleta-de-plantilla" },
 };
 
@@ -854,6 +855,40 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Gizli bir futbolcu ve zordan kolaya giden on ipucu. İpuçlarını tek tek aç, bildiğinde soyadını yaz ve oyuncu başına 10 puana kadar kazan.",
       howToPlay: ["İlk ipucu bedava.", "Açtığın her ipucu oyundaki puanı 10'dan 1'e düşürür.", "Soyadını yaz. Yanlış tahminden sonra 1 hakkın ve en fazla 3 ipucun kalır.", "Günde on oyuncu, en fazla 100 puan."],
       reward: "Önceki günleri hesapsız oyna; bugünün ipuçları, seri ve günün sıralaması için giriş yap.",
+    },
+  }),
+  mode("last-answer-standing", "/ultimo", "ultimo", {
+    en: {
+      metaTitle: "Last Answer Standing — Name Every Answer Before the Clock Runs Out | QuizBall",
+      metaDescription: "A daily football list game: 5 categories with closed lists, like a World Cup squad or Libertadores champions. Name answers as the clock shrinks from 20 to 6 seconds, or duel a friend 1v1.",
+      title: "Last Answer Standing",
+      intro: "Every day brings five football categories with a closed list: a World Cup squad, the Copa Libertadores champions, a club's top scorers. Name the answers one after another while the clock gets shorter with each one, from 20 seconds down to 6. Three misses in a row or a timeout ends the category.",
+      howToPlay: ["Read the category: the list is closed, so every answer is either right or wrong.", "Name answers one after another. The clock starts at 20 seconds and shrinks with every answer, down to 6.", "Three misses in a row or a timeout ends the category. Each answer scores 1 point.", "Name the whole list for a +5 bonus. Share your five squares."],
+      reward: "Play past days without an account; sign in for today's categories, your streak and the daily leaderboard.",
+    },
+    ka: {
+      metaTitle: "ბოლომდე დარჩენილი — დაასახელე პასუხები, სანამ დრო ამოიწურება | QuizBall",
+      metaDescription: "ყოველდღიური საფეხბურთო თამაში: 5 კატეგორია დახურული სიით, მაგალითად მსოფლიო ჩემპიონატის შემადგენლობა. დრო 20-დან 6 წამამდე მცირდება. ითამაშე მეგობართანაც.",
+      title: "ბოლომდე დარჩენილი",
+      intro: "ყოველდღე ხუთი საფეხბურთო კატეგორიაა დახურული სიით: მსოფლიო ჩემპიონატის შემადგენლობა, ლიბერტადორესის ჩემპიონები, კლუბის ბომბარდირები. დაასახელე პასუხები ერთმანეთის მიყოლებით, ხოლო დრო ყოველ პასუხზე მცირდება — 20 წამიდან 6-მდე. სამი შეცდომა ზედიზედ ან დროის ამოწურვა კატეგორიას ამთავრებს.",
+      howToPlay: ["წაიკითხე კატეგორია: სია დახურულია, ამიტომ ყოველი პასუხი ან სწორია, ან არა.", "დაასახელე პასუხები სათითაოდ. საათი 20 წამით იწყება და ყოველ პასუხზე მცირდება, 6 წამამდე.", "სამი შეცდომა ზედიზედ ან დროის ამოწურვა კატეგორიას ამთავრებს. ყოველი პასუხი 1 ქულაა.", "მთელი სიის დასახელება +5 ბონუსს გაძლევს. გააზიარე შენი ხუთი კვადრატი."],
+      reward: "წინა დღეები ანგარიშის გარეშე ითამაშე; დღევანდელისთვის, სერიისა და დღის რეიტინგისთვის შედი ანგარიშში.",
+    },
+    es: {
+      metaTitle: "Último en pie futbolero — Nombrá todas las respuestas | QuizBall",
+      metaDescription: "5 categorías por día con listas cerradas: un plantel mundialista, los campeones de la Libertadores. Nombrá respuestas con el reloj cada vez más corto, o jugá 1 vs 1 con un amigo.",
+      title: "Último en pie futbolero",
+      intro: "Cada día llegan cinco categorías futboleras con lista cerrada: un plantel mundialista, los campeones de la Libertadores, los goleadores de un club. Nombrá las respuestas una tras otra mientras el reloj se acorta con cada acierto, de 20 segundos a 6. Tres errores seguidos o el reloj en cero y se termina la categoría.",
+      howToPlay: ["Leé la categoría: la lista es cerrada, así que cada respuesta está bien o está mal.", "Nombrá respuestas una tras otra. El reloj arranca en 20 segundos y se acorta con cada acierto, hasta 6.", "Tres errores seguidos o el reloj en cero terminan la categoría. Cada respuesta suma 1 punto.", "Nombrá la lista completa y te llevás +5 de bonus. Compartí tus cinco cuadraditos."],
+      reward: "Sin cuenta jugás los días anteriores; con tu cuenta, las categorías de hoy, tu racha y el ranking del día.",
+    },
+    tr: {
+      metaTitle: "Son Kalan Futbol — Süre Bitmeden Listeyi Say | QuizBall",
+      metaDescription: "Günlük futbol liste oyunu: her gün kapalı listeli 5 kategori, örneğin bir Dünya Kupası kadrosu. Süre 20 saniyeden 6'ya kısalırken cevapları say ya da bir arkadaşınla 1'e 1 oyna.",
+      title: "Son Kalan Futbol",
+      intro: "Her gün kapalı listeli beş futbol kategorisi gelir: bir Dünya Kupası kadrosu, Libertadores şampiyonları, bir kulübün en çok gol atanları. Cevapları art arda say; süre her cevapla kısalır, 20 saniyeden 6'ya iner. Üst üste üç yanlış ya da süre bitince kategori sona erer.",
+      howToPlay: ["Kategoriyi oku: liste kapalıdır, yani her cevap ya doğrudur ya yanlış.", "Cevapları art arda say. Süre 20 saniyeyle başlar ve her cevapla kısalır, 6 saniyeye kadar.", "Üst üste üç yanlış ya da süre bitince kategori sona erer. Her cevap 1 puan.", "Listenin tamamını say, +5 bonus kazan. Beş karelik sonucunu paylaş."],
+      reward: "Önceki günleri hesapsız oyna; bugünün kategorileri, seri ve günün sıralaması için giriş yap.",
     },
   }),
   mode("trivia-mines", "/trivia-mines", "mini-trivia-mines", {

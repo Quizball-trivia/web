@@ -3,20 +3,28 @@ import { notFound } from "next/navigation";
 import { decodeShare, SHARE_COPY } from "@/features/buscaminas/buscaminas.share";
 import { decodePistasShare, PISTAS_SHARE_COPY } from "@/features/pistas/pistas.share";
 import { CONTENT_START, addDays } from "@/features/pistas/pistas.logic";
+import { decodeUltimoShare, ULTIMO_SHARE_COPY } from "@/features/ultimo/ultimo.share";
+import { CONTENT_START as ULTIMO_CONTENT_START, addDays as addUltimoDays } from "@/features/ultimo/ultimo.logic";
 import { findPublicGameByModeId, publicPagePathFor } from "@/lib/seo/public-games";
 import { SITE_URL } from "@/lib/seo/site";
 import { ShareRedirect } from "./ShareRedirect";
 
 type Params = Promise<{ code: string }>;
 
-function target(locale: string, modeId: "buscaminas" | "pistas" = "buscaminas"): string {
+function target(locale: string, modeId: "buscaminas" | "pistas" | "ultimo" = "buscaminas"): string {
   const game = findPublicGameByModeId(modeId);
   const path = game ? publicPagePathFor(game, locale === "es" || locale === "ka" || locale === "tr" ? locale : "en") : "/";
   return `${path}?utm_source=share&utm_medium=${modeId}`;
 }
 
-/** Pistas codes carry a `pf-` prefix; anything else is a Buscaminas code. */
+/** Último codes carry a `ue-` prefix and Pistas codes a `pf-` prefix; anything else is a Buscaminas code. */
 function resolve(code: string) {
+  const ultimo = decodeUltimoShare(code);
+  if (ultimo) {
+    const copy = ULTIMO_SHARE_COPY[ultimo.locale];
+    const dia = addUltimoDays(ULTIMO_CONTENT_START, ultimo.number - 1);
+    return { title: copy.title(ultimo.number, ultimo.score), description: copy.description, open: copy.open, og: "ultimo", href: `${target(ultimo.locale, "ultimo")}&dia=${dia}` };
+  }
   const pistas = decodePistasShare(code);
   if (pistas) {
     const copy = PISTAS_SHARE_COPY[pistas.locale];
