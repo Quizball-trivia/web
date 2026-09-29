@@ -59,7 +59,7 @@ export function UltimoDuelBoard({ view, mySeat, names, copy, finished, secondsLe
       {view.phase === "turn" && (
         <div className={cn("mt-3 rounded-2xl px-4 py-3 text-white shadow-lg shadow-black/20", SIDE[side(view.turn)].solid)}>
           <div className="flex items-center justify-between">
-            <p className="text-sm font-black uppercase tracking-wide" style={poppins}>{myTurn ? copy.yourTurn : copy.theirTurn(names[view.turn])}</p>
+            <p className="text-sm font-black uppercase tracking-wide" style={poppins}>{view.turn === mySeat ? copy.yourTurn : copy.theirTurn(names[view.turn])}</p>
             <span className="flex items-center gap-1.5">
               <span className="text-[11px] font-bold uppercase tracking-wide text-white/75">{c.errors}</span>
               {Array.from({ length: 3 }, (_, i) => (
