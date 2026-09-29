@@ -10,12 +10,13 @@ import { getSocket } from "@/lib/realtime/socket-client";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import { useAuctionActiveMatchStore } from "@/stores/auctionActiveMatch.store";
 import { useFootballGridStore } from "@/stores/footballGrid.store";
+import { useFriendDuelHandoffStore } from "@/stores/friendDuelHandoff.store";
 import { useRankedMatchmakingStore } from "@/stores/rankedMatchmaking.store";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useAuthStore } from "@/stores/auth.store";
 import { useGameSessionStore } from "@/stores/gameSession.store";
 import { logger } from "@/utils/logger";
-import type { LobbySettings as LobbySettingsState } from "@/lib/realtime/socket.types";
+import type { DuelGameId, LobbySettings as LobbySettingsState } from "@/lib/realtime/socket.types";
 import { useCategoriesList } from "@/lib/queries/categories.queries";
 import { copyToClipboard } from "@/utils/clipboard";
 import {
@@ -35,6 +36,8 @@ interface UseFriendLobbyLogicProps {
   roomCode: string;
   isHost: boolean;
   inviteSource?: FriendLobbyInviteSource;
+  /** `/friend/room/new?duel=<game>`: the new room opens as a duel of that game. */
+  newRoomDuelGame?: DuelGameId | null;
 }
 
 export type FriendLobbyInviteSource =
@@ -71,7 +74,14 @@ const LOBBY_ERROR_COPY_KEYS: Record<string, MessageKey> = {
   LOBBY_MODE_REQUIRES_ACCOUNT: "friend.errorModeRequiresAccount",
   RATE_LIMITED: "friend.errorRateLimited",
   CAPABILITY_REQUIRED: "friend.errorCapabilityRequired",
+  DUEL_UNAVAILABLE: "friend.errorDuelUnavailable",
 };
+
+/**
+ * A duel:found this recent may still be the one the room is about to show as active (the
+ * found can beat the room's lobby:state). Older ones for a waiting room are finished duels.
+ */
+const DUEL_HANDOFF_FRESH_MS = 5_000;
 
 const INVITE_STATE_CONFIRMATION_TIMEOUT_MS = 4_000;
 const INVITE_STATE_CONFIRMATION_MAX_RETRIES = 2;
@@ -97,6 +107,7 @@ export function useFriendLobbyLogic({
   roomCode,
   isHost,
   inviteSource = "shared_link",
+  newRoomDuelGame = null,
 }: UseFriendLobbyLogicProps) {
   const router = useRouter();
   const { t } = useLocale();
@@ -291,13 +302,18 @@ export function useFriendLobbyLogic({
       if (initActionRef.current === "create") return;
       initActionRef.current = "create";
       createdRef.current = true;
-      void createLobby({ mode: "friendly" }).then((result) => {
+      void createLobby(
+        newRoomDuelGame
+          ? { mode: "friendly", isPublic: false, gameMode: "duel", duelGame: newRoomDuelGame }
+          : { mode: "friendly" },
+      ).then((result) => {
         if (!result || result.ok || leavingRef.current || inviteJoinCancelledRef.current) return;
         createdRef.current = false;
         initActionRef.current = null;
-        toast.error(result.message);
+        const localizedKey = LOBBY_ERROR_COPY_KEYS[result.code];
+        toast.error(localizedKey ? t(localizedKey) : result.message);
       });
-      logger.info("Socket emit lobby:create via command machine", { mode: "friendly" });
+      logger.info("Socket emit lobby:create via command machine", { mode: "friendly", duelGame: newRoomDuelGame });
       return;
     }
 
@@ -389,6 +405,7 @@ export function useFriendLobbyLogic({
     joinByCode,
     lobby?.inviteCode,
     lobby,
+    newRoomDuelGame,
     normalizedRoomCode,
     pendingLobbyHandoffCode,
     roomCode,
@@ -530,6 +547,7 @@ export function useFriendLobbyLogic({
   // the match up through its own rejoin-on-connect handshake.
   const isAuctionLobby = activeLobby?.settings.gameMode === "auction";
   const isFootballGridLobby = activeLobby?.settings.gameMode === "football_grid";
+  const isDuelLobby = activeLobby?.settings.gameMode === "duel";
   // Hand-off bookkeeping, all read/written inside effects (never during render):
   // - wasAuctionLobby: the snapshot can be cleared out from under us
   //   (session:state IN_ACTIVE_MATCH empties it once the match starts, esp. for
@@ -583,13 +601,30 @@ export function useFriendLobbyLogic({
     router.push("/tic-tac-toe?source=friend_lobby");
   }, [activeFootballGridMatchId, activeLobby?.lobbyId, clearStartMatchTimeout, footballGridHandoffReady, router]);
 
+  // Duel hand-off: the server announces the duel of THIS room with duel:found (at start, and
+  // again on reconnect while it is live). A found left over from a finished duel is dropped.
+  const duelHandoff = useFriendDuelHandoffStore((state) => state.found);
+  const consumeDuelHandoff = useFriendDuelHandoffStore((state) => state.consume);
+  useEffect(() => {
+    if (!duelHandoff || !activeLobby || duelHandoff.lobbyId !== activeLobby.lobbyId) return;
+    consumeDuelHandoff(duelHandoff.matchId);
+    const fresh = Date.now() - duelHandoff.receivedAt < DUEL_HANDOFF_FRESH_MS;
+    if (activeLobby.status !== "active" && !isStartingMatch && !fresh) return;
+    clearStartMatchTimeout();
+    logger.info("Duel room match started, navigating to the duel", {
+      lobbyId: activeLobby.lobbyId,
+      matchId: duelHandoff.matchId,
+    });
+    router.push(`/duelo/${duelHandoff.matchId}`);
+  }, [activeLobby, clearStartMatchTimeout, consumeDuelHandoff, duelHandoff, isStartingMatch, router]);
+
   useEffect(() => {
     if (!draft && !hasActiveMatch) return;
-    // An auction lobby never hands off through the possession `/game` route.
-    if (isAuctionLobby || isFootballGridLobby) return;
+    // Auction, grid and duel rooms never hand off through the possession `/game` route.
+    if (isAuctionLobby || isFootballGridLobby || isDuelLobby) return;
     clearStartMatchTimeout();
     router.push("/game");
-  }, [clearStartMatchTimeout, draft, hasActiveMatch, isAuctionLobby, isFootballGridLobby, router]);
+  }, [clearStartMatchTimeout, draft, hasActiveMatch, isAuctionLobby, isDuelLobby, isFootballGridLobby, router]);
 
   useEffect(() => {
     if (!error) return;
@@ -603,9 +638,10 @@ export function useFriendLobbyLogic({
       error.code === "LOBBY_NOT_FOUND" ||
       error.code === "NOT_IN_LOBBY" ||
       error.code === "TRANSITION_IN_PROGRESS" ||
-      // Rejected mode switch (too many members for the target mode) — rolls the
-      // optimistic tab back to whatever the server still holds.
-      error.code === "LOBBY_MODE_CAPACITY";
+      // Rejected mode switch (too many members for the target mode, or a duel
+      // game switched off) — rolls the optimistic tab back to what the server holds.
+      error.code === "LOBBY_MODE_CAPACITY" ||
+      error.code === "DUEL_UNAVAILABLE";
     const isTransientSettingsBusy = error.code === "LOBBY_SETTINGS_LOCKED";
     const isInviteTransitionBusy = isResolvingInvite && error.code === "TRANSITION_IN_PROGRESS";
     const isInviteNotFound =
@@ -673,9 +709,12 @@ export function useFriendLobbyLogic({
       ...activeLobby.settings,
       ...updates,
     };
+    // Only a duel carries its game; leaving a duel drops it.
+    const duelGame = nextSettings.gameMode === "duel" ? nextSettings.duelGame ?? null : null;
     const emit = {
       lobbyId: activeLobby.lobbyId,
       gameMode: nextSettings.gameMode,
+      ...(duelGame && { duelGame }),
       friendlyRandom: nextSettings.friendlyRandom,
       friendlyCategoryAId: nextSettings.friendlyCategoryAId,
       friendlyCategoryBId: nextSettings.friendlyCategoryBId ?? null,
@@ -684,6 +723,7 @@ export function useFriendLobbyLogic({
 
     const settingsUnchanged =
       emit.gameMode === activeLobby.settings.gameMode &&
+      duelGame === (activeLobby.settings.duelGame ?? null) &&
       emit.friendlyRandom === activeLobby.settings.friendlyRandom &&
       emit.friendlyCategoryAId === activeLobby.settings.friendlyCategoryAId &&
       emit.friendlyCategoryBId === (activeLobby.settings.friendlyCategoryBId ?? null);
@@ -783,6 +823,7 @@ export function useFriendLobbyLogic({
     lobby: activeLobby,
     isAuctionLobby,
     isFootballGridLobby,
+    isDuelLobby,
     members,
     lobbyCode,
     isResolvingInvite,

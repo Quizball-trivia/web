@@ -132,6 +132,7 @@ function makeLobby(lobbyId = NEW_LOBBY_ID): LobbyState {
     hostUserId: USER_A,
     settings: {
       gameMode: 'ranked_sim',
+      duelGame: null,
       friendlyRandom: false,
       friendlyCategoryAId: null,
       friendlyCategoryBId: null,

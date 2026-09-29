@@ -9,12 +9,13 @@ import { type SessionKind, trackGameComplete, trackGameExit, trackGameReplay, tr
 import type { EngineEventDetail } from "@/lib/analytics/public-games.analytics";
 import type { DailyChallengeType } from "@/lib/domain/dailyChallenge";
 import type { Locale } from "@/lib/i18n/locale";
-import { FULL_GAME_DEMO_SLUG } from "@/lib/seo/public-games";
+import { isFullGameDemo } from "@/lib/seo/public-games";
 /** Daily engines are a separate on-demand chunk too; nothing game-related loads before Play. */
 const GuestDailyPlay = dynamic(() => import("./GuestDailyPlay").then((m) => m.GuestDailyPlay), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 
 /** Every engine lives in one client chunk that is fetched only when a visitor presses Play. */
 const BuscaminasGame = dynamic(() => import("@/features/buscaminas/BuscaminasGame").then((m) => m.BuscaminasGame), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
+const PistasGame = dynamic(() => import("@/features/pistas/PistasGame").then((m) => m.PistasGame), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 const DemoModeView = dynamic(() => import("@/features/demos/DemoModeView").then((m) => m.DemoModeView), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 
 const newSessionId = () => (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`);
@@ -26,6 +27,17 @@ const newSessionId = () => (typeof crypto !== "undefined" && "randomUUID" in cry
  * layer portalled to <body> (outside the page's <main>) with its own exit
  * control, and focus moves in and back out. Practice never touches account state.
  */
+/** Marks (or unmarks) the page URL as having its full game open, without a navigation. */
+function setPlayUrl(open: boolean): void {
+  const url = new URL(window.location.href);
+  if (open) url.searchParams.set("jugar", "1");
+  else {
+    url.searchParams.delete("jugar");
+    url.searchParams.delete("dia");
+  }
+  window.history.replaceState(window.history.state, "", url);
+}
+
 export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, playPath, engineEmitsEvents, practiceLocalised, copy, variant = "card" }: {
   modeId: string;
   demoSlug: string;
@@ -43,9 +55,11 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, playPath, 
   /** Daily modes run their bundled sample (same every day, no backend); other engines run their practice prototype. */
   const dailyType = demoSlug.startsWith("daily-") ? (demoSlug.slice("daily-".length) as DailyChallengeType) : null;
   // Dailies and the coin mini-games run a fixed sample; the multiplayer/ranked engines run a scripted training.
-  const sessionKind: SessionKind = demoSlug === FULL_GAME_DEMO_SLUG ? "full_game" : dailyType || demoSlug.startsWith("mini-") ? "sample" : "training";
+  const sessionKind: SessionKind = isFullGameDemo(demoSlug) ? "full_game" : dailyType || demoSlug.startsWith("mini-") ? "sample" : "training";
   const access = useAuthStore((state) => state.status) === "authenticated" ? "member" : "guest";
   const [playing, setPlaying] = useState(false);
+  /** A shared result link (/r/…) lands here with ?dia= so the full game opens that puzzle. */
+  const [sharedDay, setSharedDay] = useState<string | null>(null);
   const sessionRef = useRef<string>("");
   const startedAtRef = useRef(0);
   const completedRef = useRef(false);
@@ -65,7 +79,22 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, playPath, 
     startedAtRef.current = Date.now();
     completedRef.current = false;
     if (!engineEmitsEvents) trackGameStart({ modeId, access, sessionId: sessionRef.current, sessionKind });
+    setSharedDay(new URLSearchParams(window.location.search).get("dia"));
     setPlaying(true);
+    if (sessionKind === "full_game") setPlayUrl(true);
+  };
+  // A full game open on this page survives a reload: the URL says so (?jugar=1, plus the puzzle's ?dia=).
+  const startRef = useRef(start);
+  useEffect(() => { startRef.current = start; });
+  useEffect(() => {
+    if (sessionKind !== "full_game" || new URLSearchParams(window.location.search).get("jugar") !== "1") return;
+    queueMicrotask(() => startRef.current());
+  }, [sessionKind]);
+  const onDay = (day: string) => {
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("dia") === day) return;
+    url.searchParams.set("dia", day);
+    window.history.replaceState(window.history.state, "", url);
   };
   const recordExit = () => {
     if (!sessionRef.current) return;
@@ -75,6 +104,7 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, playPath, 
   const exit = () => {
     recordExit();
     setPlaying(false);
+    if (sessionKind === "full_game") setPlayUrl(false);
   };
   const onEngineEvent = (event: "start" | "complete" | "replay", detail?: EngineEventDetail) => {
     // Daily engines emit "start" after their intro: active time is measured from there, not from the Play click.
@@ -100,8 +130,10 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, playPath, 
       </div>
       {playing && (
         <PracticeLayer title={copy.title} exitLabel={copy.exit} onExit={exit} exitControl={!SELF_EXITING_ENGINES.has(demoSlug)} exitButton={!OWN_EXIT_ENGINES.has(demoSlug)}>
-          {demoSlug === FULL_GAME_DEMO_SLUG ? (
+          {demoSlug === "buscaminas" ? (
             <BuscaminasGame locale={locale as Locale} onExit={exit} onEvent={onEngineEvent} />
+          ) : demoSlug === "pistas" ? (
+            <PistasGame locale={locale as Locale} initialDay={sharedDay} onExit={exit} onEvent={onEngineEvent} onDay={onDay} />
           ) : dailyType ? (
             <GuestDailyPlay
               type={dailyType}

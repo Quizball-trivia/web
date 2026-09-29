@@ -5,13 +5,15 @@ import type { components } from "@/types/api.generated";
 export type I18nField = components["schemas"]["I18nField"];
 
 export type MatchMode = 'friendly' | 'ranked';
-export type LobbyGameMode = 'friendly_possession' | 'friendly_party_quiz' | 'football_grid' | 'ranked_sim' | 'auction';
+export type LobbyGameMode = 'friendly_possession' | 'friendly_party_quiz' | 'football_grid' | 'ranked_sim' | 'auction' | 'duel';
+/** Daily mini-games that can be played as a friend duel (lobby game mode 'duel'). */
+export type DuelGameId = 'buscaminas' | 'pistas';
 /**
  * Variant of a possession/quiz match handled by the `/game` realtime layer.
  * Deliberately excludes 'auction': auction matches run on their own socket
  * protocol and route (`/auction`), never through the possession reducers.
  */
-export type MatchVariant = Exclude<LobbyGameMode, 'auction' | 'football_grid'>;
+export type MatchVariant = Exclude<LobbyGameMode, 'auction' | 'football_grid' | 'duel'>;
 export type LobbyChallengeGameMode = Extract<
   LobbyGameMode,
   'friendly_possession' | 'friendly_party_quiz' | 'football_grid'
@@ -72,6 +74,8 @@ export interface LobbyState {
 
 export interface LobbySettings {
   gameMode: LobbyGameMode;
+  /** The game of a duel room; null for every other mode. */
+  duelGame: DuelGameId | null;
   friendlyRandom: boolean;
   friendlyCategoryAId: string | null;
   friendlyCategoryBId: string | null;
@@ -1442,8 +1446,11 @@ export type SessionStateKind =
 
 export interface SessionStatePayload {
   state: SessionStateKind;
+  /** A `matches` row only; a live friend duel is `activeDuel`. */
   activeMatchId: string | null;
   waitingLobbyId: string | null;
+  /** The live duel of the player's active duel room (absent on older servers). */
+  activeDuel?: { matchId: string; lobbyId: string; game: DuelGameId } | null;
   queueSearchId: string | null;
   openLobbyIds: string[];
   resolvedAt: string;
@@ -1470,7 +1477,7 @@ export type LobbyCreateResult =
     }
   | {
       ok: false;
-      code: "CAPABILITY_REQUIRED" | "RATE_LIMITED" | "ALREADY_IN_LOBBY" | "TRANSITION_IN_PROGRESS" | "INVALID_LOBBY_CREATE" | "LOBBY_CREATE_ERROR";
+      code: "CAPABILITY_REQUIRED" | "RATE_LIMITED" | "ALREADY_IN_LOBBY" | "TRANSITION_IN_PROGRESS" | "INVALID_LOBBY_CREATE" | "LOBBY_CREATE_ERROR" | "DUEL_UNAVAILABLE";
       message: string;
       retryable: boolean;
       correlationId: string;
@@ -1590,6 +1597,59 @@ export type MatchCluesAnswerPayload =
   | MatchCluesAnswerGuessPayload
   | MatchCluesAnswerGiveUpPayload;
 
+export interface DuelSeatPayload {
+  seat: 0 | 1;
+  userId: string;
+  username: string;
+  avatarUrl: string | null;
+  avatarCustomization: AvatarCustomization | null;
+  isGuest: boolean;
+  ready: boolean;
+  /** False while the seat has no socket (after the server's disconnect debounce). */
+  connected: boolean;
+  absenceBudgetMs: number;
+}
+
+export type DuelStatus = 'ready' | 'countdown' | 'active' | 'paused' | 'completed' | 'cancelled';
+
+export interface DuelResultPayload {
+  scores: [number, number];
+  winnerSeat: 0 | 1 | null;
+  reason: 'score' | 'forfeit' | 'idle' | 'disconnect' | 'cancelled';
+  leftSeat: 0 | 1 | null;
+}
+
+/** Full snapshot of a duel for one seat; `view` is game-specific (see features/duel). */
+export interface DuelStatePayload {
+  matchId: string;
+  lobbyId: string | null;
+  game: DuelGameId;
+  stateVersion: number;
+  status: DuelStatus;
+  phaseToken: number;
+  phaseDeadlineAt: string | null;
+  serverNow: string;
+  mySeat: 0 | 1;
+  seats: DuelSeatPayload[];
+  view: unknown;
+  /** While paused: the phase that resumes when every seat is back; phaseDeadlineAt is then the reconnect deadline. */
+  pausedFrom: 'countdown' | 'active' | null;
+  result: DuelResultPayload | null;
+}
+
+export interface DuelFoundPayload {
+  matchId: string;
+  game: DuelGameId;
+  lobbyId: string | null;
+}
+
+export interface DuelCommandResultPayload {
+  matchId: string;
+  commandId: string;
+  ok: boolean;
+  code?: string;
+}
+
 export interface ClientToServerEvents {
   'wl:subscribe': (
     data: { tournament_id: string; role: 'player' | 'spectator'; last_seq?: number },
@@ -1601,7 +1661,14 @@ export interface ClientToServerEvents {
     ack?: (result: WlAnswerAck) => void
   ) => void;
   'lobby:create': (
-    data: { mode: MatchMode; isPublic?: boolean; gameMode?: 'football_grid' | 'auction'; correlationId?: string },
+    data: {
+      mode: MatchMode;
+      isPublic?: boolean;
+      gameMode?: 'football_grid' | 'auction' | 'duel';
+      /** Required with gameMode 'duel'. */
+      duelGame?: DuelGameId;
+      correlationId?: string;
+    },
     ack?: (result: LobbyCreateResult) => void
   ) => void;
   'lobby:challenge': (data: { toUserId: string; gameMode?: LobbyChallengeGameMode }) => void;
@@ -1616,6 +1683,8 @@ export interface ClientToServerEvents {
   'lobby:update_settings': (data: {
     lobbyId?: string;
     gameMode: LobbyGameMode;
+    /** Required with gameMode 'duel'; omitted or null otherwise. */
+    duelGame?: DuelGameId | null;
     friendlyRandom?: boolean;
     friendlyCategoryAId?: string | null;
     friendlyCategoryBId?: string | null;
@@ -1635,6 +1704,10 @@ export interface ClientToServerEvents {
   'auction:ui_ready': (data: AuctionUiReadyPayload) => void;
   'auction:forfeit': (data: { matchId: string }) => void;
   'auction:rejoin': (data: { matchId: string }) => void;
+  'duel:ready': (data: { matchId: string; locale?: string }) => void;
+  'duel:command': (data: { matchId: string; commandId: string; command: unknown }) => void;
+  'duel:resync': (data: { matchId: string; locale?: string }) => void;
+  'duel:forfeit': (data: { matchId: string; commandId: string }) => void;
   'grid:search_start': (data?: FootballGridSearchStartPayload) => void;
   /** Guest "Play now" (public Tic Tac Toe page): immediate bot pairing, no queue, no rewards. */
   'grid:practice_bot_start': (data?: FootballGridSearchStartPayload) => void;
@@ -1938,6 +2011,12 @@ export interface ServerToClientEvents {
   'auction:match_finished': (data: AuctionMatchFinishedPayload) => void;
   'grid:error': (data: ErrorPayload) => void;
   'grid:search_state': (data: FootballGridSearchStatePayload) => void;
+  'duel:found': (data: DuelFoundPayload) => void;
+  /** Sent on every connect: the player's live duel, or null (a remembered duel has ended). */
+  'duel:active': (data: DuelFoundPayload | null) => void;
+  'duel:state': (data: DuelStatePayload) => void;
+  'duel:command_result': (data: DuelCommandResultPayload) => void;
+  'duel:error': (data: ErrorPayload & { matchId?: string }) => void;
   'grid:match_found': (data: FootballGridMatchFoundPayload) => void;
   'grid:loading_state': (data: FootballGridStatePayload) => void;
   'grid:countdown': (data: FootballGridStatePayload & { countdownEndsAt: string }) => void;

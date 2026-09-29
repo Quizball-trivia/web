@@ -231,26 +231,56 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Alıştırma turu sabit bir klip seti kullanır. Uygulamada her gün beş yeni gol gelir, doğru isimler jeton kazandırır ve sonuçlar serine sayılır.",
     ],
   },
+  "football-clues": {
+    en: [
+      "Football Clues is a guess-the-player game built on a clue ladder. Every day there are ten hidden footballers, and each one comes with ten clues that start vague — the continent they play for, their position, their stronger foot — and end with the details that give them away: a famous final, a transfer, a record.",
+      "You decide how many clues you need. A correct surname on the first clue is worth ten points, and every clue you reveal lowers the points in play by one, down to a single point on the tenth. A wrong guess isn't the end: you get one more try, with at most three more clues to fix it.",
+      "Ten new players arrive every day at midnight Argentina time. Without an account you play the previous days and see every answer; signed-in players get today's clues, one ranked run on the daily leaderboard and their streak. At the end you get ten coloured squares to share.",
+      "You can also play Football Clues 1v1 against a friend online: send them the room link, you both see the same clues at the same time and the first to type the right surname takes the points. Miss, and your rival gets at most three more clues to get it.",
+    ],
+    ka: [
+      "„საფეხბურთო მინიშნებები“ მოთამაშის გამოცნობის თამაშია. ყოველდღე ათი დამალული ფეხბურთელია, თითოეულს ათი მინიშნება ახლავს — ბუნდოვანიდან (კონტინენტი, პოზიცია, ფეხი) ზუსტამდე.",
+      "შენ წყვეტ, რამდენი მინიშნება გჭირდება. პირველივე მინიშნებით სწორი გვარი ათ ქულას იძლევა, ყოველი ახალი მინიშნება ერთ ქულას აკლებს. შეცდომის შემდეგ კიდევ ერთი მცდელობა და მაქსიმუმ სამი მინიშნება გრჩება.",
+      "ათი ახალი მოთამაშე ყოველდღე შუაღამისას ჩნდება (არგენტინის დროით). ანგარიშის გარეშე წინა დღეებს თამაშობ; ანგარიშით — დღევანდელს, დღის რეიტინგს და სერიას.",
+      "საფეხბურთო მინიშნებები შეგიძლია მეგობართან ერთადაც ითამაშო ონლაინ, პირისპირ: გაუგზავნე ოთახის ბმული, ორივე ერთსა და იმავე მინიშნებებს ხედავთ და ვინც პირველი ჩაწერს სწორ გვარს, ქულებს ის იღებს.",
+    ],
+    es: [
+      "Pistas futboleras es un juego de adivinar el jugador con una escalera de pistas. Cada día hay diez futbolistas ocultos y cada uno tiene diez pistas que arrancan vagas —de qué continente es, en qué puesto juega, con qué pierna le pega— y terminan con los datos que lo delatan: una final famosa, un pase, un récord.",
+      "Vos decidís cuántas pistas necesitás. Si escribís el apellido correcto con la primera pista ganás diez puntos, y cada pista que revelás baja un punto lo que está en juego, hasta un solo punto con la décima. Errarle no es el final: tenés un intento más y como máximo tres pistas para corregirlo.",
+      "Cada día a la medianoche (hora de Argentina) llegan diez jugadores nuevos. Sin cuenta jugás las pistas de los días anteriores y ves todas las respuestas; con tu cuenta jugás las de hoy, entrás al ranking del día y sumás racha. Al final tenés diez cuadraditos de colores para compartir.",
+      "También podés jugar Pistas futboleras 1 contra 1 con un amigo online: mandale el link de la sala, ven las mismas pistas al mismo tiempo y el primero que escribe el apellido correcto se lleva los puntos. Si le errás, tu rival tiene como máximo tres pistas más para sacarlo.",
+    ],
+    tr: [
+      "Futbol İpuçları, bir ipucu merdiveniyle oyuncu tahmin etme oyunudur. Her gün on gizli futbolcu var ve her birinin belirsizden kesine giden on ipucu var.",
+      "Kaç ipucuna ihtiyacın olduğuna sen karar verirsin. İlk ipucunda doğru soyadı on puan eder, açtığın her ipucu oyundaki puanı bir azaltır. Yanlış tahminden sonra bir hakkın ve en fazla üç ipucun daha olur.",
+      "Her gün gece yarısı (Arjantin saati) on yeni oyuncu gelir. Hesapsız önceki günleri oynarsın; hesapla bugünün ipuçlarını, günün sıralamasını ve serini.",
+      "Futbol İpuçları'nı bir arkadaşınla çevrimiçi 1'e 1 de oynayabilirsin: oda linkini gönder, ikiniz aynı ipuçlarını aynı anda görürsünüz ve doğru soyadını ilk yazan puanları alır.",
+    ],
+  },
   "football-minesweeper": {
     en: [
       "Football Minesweeper turns a football quiz into a minesweeper board made of players. Every round has one clue and sixteen portrait cards. Twelve players fit the clue and four are mines. The clues range from a club's season and the matchday squad of a famous final to where a player was born or which World Cup he scored in.",
       "Each correct tap adds a point to the round's pot. Stepping on a mine ends the round and wipes that pot, so the real decision is when to bank. Finding all twelve is a perfect round worth fifteen points. A full day is twenty rounds that get harder as you go, for a maximum of three hundred points.",
       "A new board arrives every day at midnight Argentina time. Without an account you play the previous day's board and see every answer after each round; signed-in players get today's board, one ranked run on the daily leaderboard and their streak. At the end you get a grid of twenty coloured squares to share with friends.",
+      "Football Minesweeper can also be played 1v1 against a friend online, like on the streams: you take turns picking players, and whoever hits an impostor hands the round's points to the rival. Find all 12 and you both score.",
     ],
     ka: [
       "„საფეხბურთო მაღაროები“ საფეხბურთო ვიქტორინას მოთამაშეებისგან შემდგარ მაღაროების დაფად აქცევს. ყოველ რაუნდში ერთი პირობა და თექვსმეტი ბარათია. თორმეტი მოთამაშე პირობას შეესაბამება, ოთხი მაღაროა.",
       "ყოველი სწორი არჩევანი რაუნდის ბანკს ერთ ქულას უმატებს. მაღარო რაუნდს ამთავრებს და ბანკს აქრობს, ამიტომ მთავარი გადაწყვეტილებაა, როდის შეინახო. თორმეტივეს პოვნა თხუთმეტ ქულას იძლევა. დღეში ოცი რაუნდია, მაქსიმუმ სამასი ქულა.",
       "ახალი დაფა ყოველდღე შუაღამისას ჩნდება (არგენტინის დროით). ანგარიშის გარეშე წინა დღის დაფას თამაშობ და ყოველი რაუნდის შემდეგ პასუხებს ხედავ; ანგარიშით — დღევანდელ დაფას, დღის რეიტინგს და სერიას. ბოლოს ოცი ფერადი კვადრატი გეძლევა გასაზიარებლად.",
+      "საფეხბურთო მაღაროები მეგობართან ერთადაც ითამაშება ონლაინ, პირისპირ: რიგრიგობით ირჩევთ მოთამაშეებს და ვინც მატყუარას აირჩევს, რაუნდის ქულებს მეტოქეს აძლევს.",
     ],
     es: [
       "El buscaminas futbolero convierte un quiz de fútbol en un tablero de minas hecho de jugadores. Cada ronda tiene una consigna y dieciséis cartas con cara y nombre. Doce futbolistas la cumplen y cuatro son minas. Las consignas van desde la temporada de un club y la planilla de una final famosa hasta dónde nació un jugador o en qué Mundial hizo un gol.",
       "Cada acierto suma un punto al pozo de la ronda. Pisar una mina termina la ronda y borra ese pozo, así que la decisión de verdad es cuándo plantarse. Encontrar a los doce es una ronda perfecta que vale quince puntos. Un día completo son veinte rondas que se ponen cada vez más difíciles, con un máximo de trescientos puntos.",
       "Cada día a la medianoche de Argentina llega un tablero nuevo. Sin cuenta jugás el tablero del día anterior y ves todas las respuestas al terminar cada ronda; con tu cuenta jugás el de hoy, entrás al ranking del día y sumás racha. Al final te llevás una grilla de veinte cuadraditos de colores para compartir con tus amigos.",
+      "El buscaminas futbolero también se juega 1 contra 1 con un amigo online, como en los streams: eligen jugadores por turnos y el que toca un impostor le regala los puntos de la ronda al rival. Si encuentran a los 12, suman los dos.",
     ],
     tr: [
       "Futbol Mayın Tarlası, futbol bilgi yarışmasını oyunculardan oluşan bir mayın tarlasına çevirir. Her turda bir ipucu ve on altı oyuncu kartı vardır. On iki oyuncu ipucuna uyar, dördü mayındır.",
       "Her doğru seçim turun kasasına bir puan ekler. Mayına basmak turu bitirir ve kasayı siler; asıl karar ne zaman kasaya alacağındır. On ikisinin hepsini bulmak on beş puanlık mükemmel bir turdur. Bir gün yirmi turdur ve en fazla üç yüz puan kazanılır.",
       "Her gün Arjantin saatiyle gece yarısı yeni bir tahta gelir. Hesapsız bir önceki günün tahtasını oynar, her turdan sonra tüm cevapları görürsün; hesabınla bugünün tahtasını oynar, günün sıralamasına girer ve serini sürdürürsün. Sonunda arkadaşlarınla paylaşmak için yirmi renkli kareden oluşan bir tablo alırsın.",
+      "Futbol Mayın Tarlası bir arkadaşla çevrimiçi 1'e 1 de oynanır: sırayla oyuncu seçersiniz ve sahtekâra basan, turun puanlarını rakibine verir. 12'sini de bulursanız ikiniz de puan alırsınız.",
     ],
   },
   "trivia-mines": {

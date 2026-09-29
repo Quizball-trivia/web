@@ -29,6 +29,7 @@ function makeLobby(gameMode: LobbyGameMode, memberCount = 1): LobbyState {
     hostUserId: "user-1",
     settings: {
       gameMode,
+      duelGame: null,
       friendlyRandom: false,
       friendlyCategoryAId: null,
       friendlyCategoryBId: null,

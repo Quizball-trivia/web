@@ -29,6 +29,17 @@ const HIDDEN_DEMO_MODES: DemoModeCard[] = [
     group: "daily",
   },
   {
+    slug: "pistas",
+    title: { en: "Football Clues", ka: "საფეხბურთო მინიშნებები", es: "Pistas futboleras", tr: "Futbol İpuçları", },
+    description: {
+      en: "10 players a day, 10 clues each. Guess early for more points.",
+      ka: "დღეში 10 მოთამაშე, თითოეულს 10 მინიშნება. რაც ადრე გამოიცნობ, მით მეტი ქულა.",
+      es: "10 jugadores por día, 10 pistas cada uno. Adiviná antes y sumás más.",
+      tr: "Günde 10 oyuncu, her birine 10 ipucu. Erken bil, daha çok puan al.",
+    },
+    group: "daily",
+  },
+  {
     slug: "match",
     title: { en: "1v1 Match", ka: "1v1 მატჩი", es: "Partido 1v1", tr: "1v1 Maç", },
     description: {

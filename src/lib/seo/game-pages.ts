@@ -61,6 +61,7 @@ const LOCALIZED_SLUGS: Record<string, Partial<Record<Locale, string>>> = {
   "road-to-goal": { es: "camino-al-gol" },
   "trivia-mines": { es: "minas-con-preguntas" },
   "football-minesweeper": { es: "buscaminas-futbolero" },
+  "football-clues": { es: "pistas-futboleras" },
   "squad-spin": { es: "ruleta-de-plantilla" },
 };
 
@@ -819,6 +820,40 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Her turda 16 futbolcu ve bir ipucu var. On ikisi uyar, dördü mayındır. Doğruları bul, mayına basmadan puanlarını kasaya al ve giderek zorlaşan 20 turu tamamla.",
       howToPlay: ["İpucunu oku: bir kulüp sezonu, bir finalin maç kadrosu, doğum yeri…", "Uyan oyunculara dokun. Her isabet turun kasasına bir puan ekler.", "Mayına basarsan o turun puanlarını kaybedersin. İstediğin an kasaya al.", "12'sini de bul: mükemmel tur ve +3 bonus."],
       reward: "Dünün tahtasını hesapsız oyna; bugünün tahtası, seri ve günün sıralaması için giriş yap.",
+    },
+  }),
+  mode("football-clues", "/pistas", "pistas", {
+    en: {
+      metaTitle: "Football Clues — Guess the Player from 10 Clues | QuizBall",
+      metaDescription: "A daily football clues game: 10 hidden players, 10 clues each. Guess on the first clue for 10 points, or play 1v1 against a friend online.",
+      title: "Football Clues",
+      intro: "One hidden footballer and ten clues that go from hardest to easiest. Reveal them one at a time, type the surname when you know it and score up to 10 points per player. Ten new players every day.",
+      howToPlay: ["The first clue is free: nationality, position, a vague fact…", "Reveal clues one at a time. Every clue you open lowers the points in play from 10 to 1.", "Type the surname (accents don't matter). A wrong guess leaves you one more try and at most three more clues.", "Ten players a day, 100 points maximum. Share your ten squares."],
+      reward: "Play past days without an account; sign in for today's clues, your streak and the daily leaderboard.",
+    },
+    ka: {
+      metaTitle: "საფეხბურთო მინიშნებები — გამოიცანი მოთამაშე 10 მინიშნებით | QuizBall",
+      metaDescription: "ყოველდღიური საფეხბურთო თამაში: 10 დამალული მოთამაშე, თითოეულს 10 მინიშნება რთულიდან მარტივისკენ. პირველივე მინიშნებით გამოცნობა 10 ქულაა.",
+      title: "საფეხბურთო მინიშნებები",
+      intro: "ერთი დამალული ფეხბურთელი და ათი მინიშნება — რთულიდან მარტივისკენ. გახსენი სათითაოდ, ჩაწერე გვარი, როცა მიხვდები, და მიიღე 10 ქულამდე თითო მოთამაშეზე.",
+      howToPlay: ["პირველი მინიშნება უფასოა.", "ყოველი გახსნილი მინიშნება ქულას 10-დან 1-მდე ამცირებს.", "ჩაწერე გვარი. შეცდომის შემდეგ გაქვს კიდევ 1 მცდელობა და მაქსიმუმ 3 მინიშნება.", "დღეში ათი მოთამაშე, მაქსიმუმ 100 ქულა."],
+      reward: "წინა დღეები ანგარიშის გარეშე ითამაშე; დღევანდელისთვის, სერიისა და დღის რეიტინგისთვის შედი ანგარიშში.",
+    },
+    es: {
+      metaTitle: "Pistas futboleras — Adiviná el jugador con 10 pistas | QuizBall",
+      metaDescription: "Pistas futboleras online: 10 jugadores por día con 10 pistas cada uno. Adiviná con la primera y ganás 10 puntos, o jugá 1 vs 1 contra un amigo.",
+      title: "Pistas futboleras",
+      intro: "Un futbolista oculto y diez pistas que van de lo más difícil a lo más fácil. Pedí las pistas de a una, escribí el apellido cuando lo tengas y sumá hasta 10 puntos por jugador. Diez jugadores nuevos cada día.",
+      howToPlay: ["La primera pista es gratis: de dónde es, en qué puesto juega, un dato vago…", "Revelá pistas de a una. Cada pista que abrís baja los puntos en juego de 10 a 1.", "Escribí el apellido (las tildes no importan). Si le errás, tenés un intento más y como máximo tres pistas.", "Diez jugadores por día, 100 puntos como máximo. Compartí tus diez cuadraditos."],
+      reward: "Sin cuenta jugás los días anteriores; con tu cuenta, las pistas de hoy, tu racha y el ranking del día.",
+    },
+    tr: {
+      metaTitle: "Futbol İpuçları — Oyuncuyu 10 İpucuyla Bil | QuizBall",
+      metaDescription: "Günlük futbol ipucu oyunu: her gün 10 gizli oyuncu, her birine zordan kolaya 10 ipucu. İlk ipucunda bilirsen 10 puan.",
+      title: "Futbol İpuçları",
+      intro: "Gizli bir futbolcu ve zordan kolaya giden on ipucu. İpuçlarını tek tek aç, bildiğinde soyadını yaz ve oyuncu başına 10 puana kadar kazan.",
+      howToPlay: ["İlk ipucu bedava.", "Açtığın her ipucu oyundaki puanı 10'dan 1'e düşürür.", "Soyadını yaz. Yanlış tahminden sonra 1 hakkın ve en fazla 3 ipucun kalır.", "Günde on oyuncu, en fazla 100 puan."],
+      reward: "Önceki günleri hesapsız oyna; bugünün ipuçları, seri ve günün sıralaması için giriş yap.",
     },
   }),
   mode("trivia-mines", "/trivia-mines", "mini-trivia-mines", {

@@ -4,12 +4,13 @@ import { DemoModeArt } from "@/features/demos/DemoModeArt";
 import type { SeoPageLocale } from "@/lib/seo/game-pages";
 import { GAME_PAGE_DETAILS } from "@/lib/seo/game-page-details";
 import { HOME_COPY } from "@/lib/seo/home-copy";
-import { FULL_GAME_DEMO_SLUG, engineEmitsEvents, findPublicGameByModeId, publicGamePath, relatedPublishedGames, type PublicGame } from "@/lib/seo/public-games";
+import { engineEmitsEvents, findPublicGameByModeId, publicGamePath, relatedPublishedGames, type PublicGame } from "@/lib/seo/public-games";
 import { PublicCardGrid, PublicPageFrame } from "./public/PublicCards";
 import { PublicGameEmbed } from "./public/PublicGameEmbed";
 import { PlayNowLink } from "./public/PlayNowLink";
 import { BuscaminasBanner } from "./public/BuscaminasBanner";
 import { BuscaminasLeaderboard } from "@/features/buscaminas/BuscaminasLeaderboard";
+import { PistasLeaderboard } from "@/features/pistas/PistasLeaderboard";
 import { SignInLink } from "./public/PublicLinks";
 import { PublicTopTen } from "./public/PublicTopTen";
 
@@ -20,13 +21,24 @@ const L: Record<SeoPageLocale, { compete: string; competeText: string; howTo: st
   ka: { compete: "ითამაშე ონლაინ", competeText: "დარეგისტრირდი, ითამაშე ნამდვილ მეტოქეებთან ონლაინ, დააგროვე რეიტინგული ქულები და მოხვდი ლიდერბორდზე.", howTo: "როგორ ვითამაშო", details: "წესები და დეტალები", related: "მსგავსი თამაშები", all: "ყველა საფეხბურთო თამაში", account: "ითამაშე ნამდვილი", accountText: "ზემოთ სავარჯიშო რაუნდია — ნიმუში. შედი ანგარიშში, რომ ითამაშო დღევანდელი ნამდვილი თამაში, შეინახო შედეგები და დააგროვო ქოინები.", start: "ითამაშე ვარჯიში", note: "ანგარიშის გარეშე. სანიმუშო შინაარსი, ბოტი მეტოქე სადაც საჭიროა, მხოლოდ ვირტუალური ქულები, არაფერი ინახება.", exit: "სავარჯიშოდან გასვლა", guest: "სტუმრის სავარჯიშო", guestDaily: "გასინჯე", startDaily: "სცადე თამაში", accountDaily: "ითამაშე ქოინებზე", member: "ითამაშე", english: "სავარჯიშო რაუნდი ჯერჯერობით ინგლისურადაა.", noteDaily: "ფიქსირებული სანიმუშო რაუნდი — ყოველდღე ერთი და იგივე. ანგარიში არ სჭირდება; სანიმუშო ქულა არ ინახება.", accountTextDaily: "შედი ანგარიშში, რომ დღევანდელი ნამდვილი გამოწვევა ქოინებზე ითამაშო და სერია შეინარჩუნო.", loading: "დღევანდელი ნაკრები იტვირთება…", sampleFallback: "სანიმუშო რაუნდი (დღევანდელი ნაკრები ვერ ჩაიტვირთა)" , coinLabel: "გასინჯე · 1,000 სავარჯიშო ქოინი", coinStart: "სცადე თამაში", coinNote: "ფიქსირებული ნიმუში სანიმუშო შანსებით და სავარჯიშო ქოინებით. ანგარიშის ჯილდოები არ არის; არაფერი ინახება.", coinAccountText: "შედი ანგარიშში, რომ საფულედან ნამდვილი ქოინები დადო, ცოცხალი შანსებითა და დღის ლიდერბორდებით.", playNow: "ითამაშე ახლა", playNowLabel: "სწრაფი მატჩი", playNowNote: "ანგარიშის გარეშე. პირდაპირ მატჩში შედიხარ; არაფერი ითვლება რეიტინგში.", training: "ითამაშე ვარჯიში", trainingText: "წესები მოკლე, გზამკვლევიან რაუნდში ისწავლე თამაშამდე.", ranked: "ითამაშე რეიტინგული", rankedText: "დარეგისტრირდი, დააგროვე რეიტინგული ქულები და მოხვდი ლიდერბორდზე." },
 };
 
-/** Buscaminas futbolero plays the real daily board on its page: no "sample" or "play for coins" framing. */
-const FULL_GAME: Record<SeoPageLocale, { label: string; start: string; note: string; account: string; accountText: string }> = {
+type FullGameCopy = { label: string; start: string; note: string; account: string; accountText: string };
+
+/** Full daily games play the real board on their page: no "sample" or "play for coins" framing. */
+const BUSCAMINAS_PAGE: Record<SeoPageLocale, FullGameCopy> = {
   en: { label: "New board every day · no account needed", start: "Play now", note: "20 rounds. As a guest you play yesterday's board; with an account, today's board and the leaderboard.", account: "More football games", accountText: "Create an account to play Tic Tac Toe, Auction and ranked matches against real opponents, and earn coins." },
   ka: { label: "ყოველდღე ახალი დაფა · ანგარიშის გარეშე", start: "თამაში", note: "20 რაუნდი. სტუმრად გუშინდელ დაფას თამაშობ; ანგარიშით — დღევანდელს და რეიტინგს.", account: "მეტი საფეხბურთო თამაში", accountText: "შექმენი ანგარიში, ითამაშე Tic Tac Toe, აუქციონი და რეიტინგული მატჩები ნამდვილ მეტოქეებთან და დააგროვე ქოინები." },
   es: { label: "Tablero nuevo cada día · sin cuenta", start: "Jugar ahora", note: "20 rondas. Sin cuenta jugás el tablero de ayer; con cuenta, el de hoy y el ranking.", account: "Más juegos de fútbol", accountText: "Creá tu cuenta para jugar Tiki Taka Toe, la Subasta y partidas clasificatorias contra rivales reales, y ganar monedas." },
   tr: { label: "Her gün yeni tahta · hesap gerekmez", start: "Oyna", note: "20 tur. Misafir olarak dünün tahtasını oynarsın; hesapla bugününkünü ve sıralamayı.", account: "Daha fazla futbol oyunu", accountText: "Tic Tac Toe, Açık Artırma ve gerçek rakiplere karşı dereceli maçlar oynamak ve jeton kazanmak için hesap oluştur." },
 };
+
+const PISTAS_PAGE: Record<SeoPageLocale, FullGameCopy> = {
+  en: { label: "10 new players every day · no account needed", start: "Play now", note: "10 players, 10 clues each. As a guest you play past days; with an account, today's clues and the leaderboard.", account: "More football games", accountText: "Create an account to play Tic Tac Toe, Auction and ranked matches against real opponents, and earn coins." },
+  ka: { label: "ყოველდღე 10 ახალი მოთამაშე · ანგარიშის გარეშე", start: "თამაში", note: "10 მოთამაშე, თითოეულს 10 მინიშნება. სტუმრად წინა დღეებს თამაშობ; ანგარიშით — დღევანდელს და რეიტინგს.", account: "მეტი საფეხბურთო თამაში", accountText: "შექმენი ანგარიში, ითამაშე Tic Tac Toe, აუქციონი და რეიტინგული მატჩები ნამდვილ მეტოქეებთან და დააგროვე ქოინები." },
+  es: { label: "10 jugadores nuevos cada día · sin cuenta", start: "Jugar ahora", note: "10 jugadores, 10 pistas cada uno. Sin cuenta jugás los días anteriores; con cuenta, las pistas de hoy y el ranking.", account: "Más juegos de fútbol", accountText: "Creá tu cuenta para jugar Tiki Taka Toe, la Subasta y partidas clasificatorias contra rivales reales, y ganar monedas." },
+  tr: { label: "Her gün 10 yeni oyuncu · hesap gerekmez", start: "Oyna", note: "10 oyuncu, her birine 10 ipucu. Misafir olarak önceki günleri oynarsın; hesapla bugünün ipuçlarını ve sıralamayı.", account: "Daha fazla futbol oyunu", accountText: "Tic Tac Toe, Açık Artırma ve gerçek rakiplere karşı dereceli maçlar oynamak ve jeton kazanmak için hesap oluştur." },
+};
+
+const FULL_GAME_PAGES: Record<string, Record<SeoPageLocale, FullGameCopy>> = { buscaminas: BUSCAMINAS_PAGE, pistas: PISTAS_PAGE };
 
 /** One public game page: server-rendered content first, the practice engine on demand below it. */
 export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: SeoPageLocale }) {
@@ -39,7 +51,7 @@ export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: S
   const competitive = game.group === "multiplayer" || game.group === "competitive";
   const isDaily = Boolean(game.demoSlug?.startsWith("daily-"));
   const isCoinSample = game.group === "coins";
-  const fullGame = game.demoSlug === FULL_GAME_DEMO_SLUG ? FULL_GAME[locale] : null;
+  const fullGame = game.demoSlug ? FULL_GAME_PAGES[game.demoSlug]?.[locale] ?? null : null;
   const crossLinkGame = game.modeId === "triviaMines" ? findPublicGameByModeId("buscaminas") : game.modeId === "buscaminas" ? findPublicGameByModeId("triviaMines") : null;
   const crossLinkHref = crossLinkGame ? publicGamePath(crossLinkGame, locale) : null;
   // Tic Tac Toe and Auction (owner, 2026-09-16): the hero is "Play now" (a live
@@ -92,7 +104,7 @@ export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: S
             </section>
           )}
           {(game.modeId === "ranked" || game.modeId === "grid" || game.modeId === "auction") && <PublicTopTen board={game.modeId} locale={locale} />}
-          {fullGame && <BuscaminasLeaderboard locale={locale} className="mt-6" />}
+          {fullGame && (game.modeId === "pistas" ? <PistasLeaderboard locale={locale} className="mt-6" /> : <BuscaminasLeaderboard locale={locale} className="mt-6" />)}
         </div>
 
         <div className="md:col-start-1 md:row-start-2">

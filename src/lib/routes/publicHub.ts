@@ -46,14 +46,15 @@ export function isGuestLobbyPath(pathname: string): boolean {
     pathname.startsWith("/friend/room/") ||
     pathname === "/auction" ||
     pathname === "/tic-tac-toe" ||
-    pathname === "/game"
+    pathname === "/game" ||
+    pathname.startsWith("/duelo/")
   );
 }
 
 export function isGuestAllowedPath(pathname: string | null | undefined): boolean {
   if (!pathname) return false;
   if (pathname === "/" || pathname === "/play") return true;
-  if (pathname === "/leaderboard" || pathname === "/events" || pathname === "/weekend-league" || pathname === "/buscaminas") return true;
+  if (pathname === "/leaderboard" || pathname === "/events" || pathname === "/weekend-league" || pathname === "/buscaminas" || pathname === "/pistas") return true;
   if (GUEST_LOBBIES_ENABLED && isGuestLobbyPath(pathname)) return true;
   return isHubPath(pathname) || isPublicGamePath(pathname);
 }
