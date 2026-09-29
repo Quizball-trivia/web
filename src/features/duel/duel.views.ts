@@ -43,7 +43,31 @@ export interface PistasDuelView {
   idle: [number, number];
 }
 
+export interface UltimoDuelView {
+  phase: "reveal" | "turn" | "catEnd" | "over";
+  category: number;
+  totalCategories: number;
+  target: number;
+  difficulty: "easy" | "medium" | "hard";
+  title: string;
+  hint: string;
+  total: number;
+  turn: Seat;
+  starter: Seat;
+  /** The category's attempt count: a command names it, so a double submit is stale, never a second miss. */
+  k: number;
+  misses: number;
+  turnMs: number;
+  said: Array<{ seat: Seat; name: string }>;
+  last: null | { seat: Seat; kind: "ok" | "wrong" | "repeat" | "ambiguous"; text: string; name: string | null };
+  /** The names nobody said, once the category is over. */
+  missing: string[] | null;
+  scores: Scores;
+  results: Array<{ winner: Seat | null; reason: "time" | "misses" | "complete"; said: number; named: [number, number] }>;
+}
+
 export type DuelCommand =
   | { type: "pick"; round: number; at: number; cardId: string }
   | { type: "guess"; round: number; text: string }
-  | { type: "pass"; round: number; clue: number };
+  | { type: "pass"; round: number; clue: number }
+  | { type: "answer"; cat: number; k: number; text: string };

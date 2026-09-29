@@ -25,6 +25,25 @@ export interface DuelCopy {
     found: (n: number, of: number) => string;
     impostor: string;
   };
+  ul: {
+    category: (n: number, total: number) => string;
+    perTurn: (s: number) => string;
+    left: (n: number, total: number) => string;
+    starts: (name: string) => string;
+    errors: string;
+    placeholder: string;
+    say: string;
+    wrong: (who: string, text: string) => string;
+    repeat: (who: string, text: string) => string;
+    ambiguous: (text: string) => string;
+    youStand: string;
+    rivalStands: (name: string) => string;
+    both: string;
+    outTime: (name: string, me: boolean) => string;
+    outMisses: (name: string, me: boolean) => string;
+    complete: string;
+    left2: (n: number) => string;
+  };
   pf: {
     pointsInPlay: string;
     nextClue: string;
@@ -68,7 +87,7 @@ export interface DuelCopy {
 }
 
 const es: DuelCopy = {
-  games: { buscaminas: "Buscaminas futbolero", pistas: "Pistas futboleras" },
+  games: { buscaminas: "Buscaminas futbolero", pistas: "Pistas futboleras", ultimo: "Último en pie futbolero" },
   playWithFriend: "Jugar con un amigo",
   playWithFriendHint: "Mandale el link y juegan en vivo, cara a cara.",
   you: "Vos",
@@ -90,6 +109,25 @@ const es: DuelCopy = {
     cleared: (pts) => `¡Encontraron los 12! +${pts} para los dos`,
     found: (n, of) => `${n}/${of} encontrados`,
     impostor: "Impostor",
+  },
+  ul: {
+    category: (n, total) => `Categoría ${n} de ${total}`,
+    perTurn: (s) => `${s} s por turno`,
+    left: (n, total) => `quedan ${n} de ${total}`,
+    starts: (name) => `Arranca ${name}`,
+    errors: "errores",
+    placeholder: "Escribí una respuesta",
+    say: "Decir",
+    wrong: (who, t) => `✗ ${who}: “${t}” no está en la lista`,
+    repeat: (who, t) => `↺ ${who}: “${t}” ya se dijo`,
+    ambiguous: (t) => `¿Cuál “${t}”? Escribí el nombre completo`,
+    youStand: "¡Quedaste en pie!",
+    rivalStands: (name) => `${name} queda en pie`,
+    both: "¡Lista completa! Punto para los dos",
+    outTime: (name, me) => (me ? "Se te acabó el tiempo" : `A ${name} se le acabó el tiempo`),
+    outMisses: (name, me) => (me ? "Erraste 3 veces" : `${name} erró 3 veces`),
+    complete: "No quedó ninguna sin nombrar",
+    left2: (n) => `Quedaban ${n}`,
   },
   pf: {
     pointsInPlay: "puntos en juego",
@@ -132,6 +170,7 @@ const es: DuelCopy = {
     rules: {
       pistas: ["Las mismas pistas para los dos, una por vez.", "El primero que lo saca suma 11 − pistas.", "Si le errás, tu rival tiene hasta 3 pistas más."],
       buscaminas: ["Elijan jugadores por turnos.", "Si tocás un impostor, suma tu rival.", "Si encuentran los 12, suman los dos."],
+      ultimo: ["Por turnos, digan respuestas de la categoría, sin repetir.", "20 s por turno, cada vez menos. Si se te acaba o errás 3 veces, pierde la categoría.", "Gana el primero en llevarse 3 categorías."],
     },
   },
   pause: {
@@ -154,7 +193,7 @@ const es: DuelCopy = {
 };
 
 const en: DuelCopy = {
-  games: { buscaminas: "Football Minesweeper", pistas: "Football Clues" },
+  games: { buscaminas: "Football Minesweeper", pistas: "Football Clues", ultimo: "Last Answer Standing" },
   playWithFriend: "Play with a friend",
   playWithFriendHint: "Send the link and play live, head to head.",
   you: "You",
@@ -176,6 +215,25 @@ const en: DuelCopy = {
     cleared: (pts) => `All 12 found! +${pts} each`,
     found: (n, of) => `${n}/${of} found`,
     impostor: "Impostor",
+  },
+  ul: {
+    category: (n, total) => `Category ${n} of ${total}`,
+    perTurn: (s) => `${s} s per turn`,
+    left: (n, total) => `${n} of ${total} left`,
+    starts: (name) => `${name} starts`,
+    errors: "misses",
+    placeholder: "Type an answer",
+    say: "Say",
+    wrong: (who, t) => `✗ ${who}: “${t}” isn't on the list`,
+    repeat: (who, t) => `↺ ${who}: “${t}” was already said`,
+    ambiguous: (t) => `Which “${t}”? Type the full name`,
+    youStand: "You're the last one standing!",
+    rivalStands: (name) => `${name} is the last one standing`,
+    both: "List complete! A point each",
+    outTime: (name, me) => (me ? "You ran out of time" : `${name} ran out of time`),
+    outMisses: (name, me) => (me ? "You missed 3 times" : `${name} missed 3 times`),
+    complete: "Nothing left unnamed",
+    left2: (n) => `${n} left unnamed`,
   },
   pf: {
     pointsInPlay: "points in play",
@@ -218,6 +276,7 @@ const en: DuelCopy = {
     rules: {
       pistas: ["Same clues for both of you, one at a time.", "First to get it scores 11 − clues.", "Miss, and your rival gets up to 3 more clues."],
       buscaminas: ["Take turns picking players.", "Hit an impostor and your rival scores.", "Find all 12 and you both score."],
+      ultimo: ["Take turns naming answers of the category, no repeats.", "20 s per turn, less each time. Run out or miss 3 times and you lose the category.", "First to win 3 categories wins."],
     },
   },
   pause: {
@@ -240,7 +299,7 @@ const en: DuelCopy = {
 };
 
 const ka: DuelCopy = {
-  games: { buscaminas: "საფეხბურთო მაღაროები", pistas: "საფეხბურთო მინიშნებები" },
+  games: { buscaminas: "საფეხბურთო მაღაროები", pistas: "საფეხბურთო მინიშნებები", ultimo: "ბოლომდე დარჩენილი" },
   playWithFriend: "მეგობართან ერთად თამაში",
   playWithFriendHint: "გაუგზავნე ბმული და ითამაშეთ პირისპირ.",
   you: "შენ",
@@ -262,6 +321,25 @@ const ka: DuelCopy = {
     cleared: (pts) => `12-ივე ნაპოვნია! +${pts} ორივეს`,
     found: (n, of) => `ნაპოვნია ${n}/${of}`,
     impostor: "მატყუარა",
+  },
+  ul: {
+    category: (n, total) => `კატეგორია ${n} / ${total}`,
+    perTurn: (s) => `${s} წმ სვლაზე`,
+    left: (n, total) => `დარჩა ${n} / ${total}`,
+    starts: (name) => `იწყებს ${name}`,
+    errors: "შეცდომა",
+    placeholder: "ჩაწერე პასუხი",
+    say: "თქმა",
+    wrong: (who, t) => `✗ ${who}: „${t}“ სიაში არ არის`,
+    repeat: (who, t) => `↺ ${who}: „${t}“ უკვე ითქვა`,
+    ambiguous: (t) => `რომელი „${t}“? ჩაწერე სრული სახელი`,
+    youStand: "შენ დარჩი ბოლომდე!",
+    rivalStands: (name) => `${name} დარჩა ბოლომდე`,
+    both: "სია სრულია! ქულა ორივეს",
+    outTime: (name, me) => (me ? "დრო ამოგეწურა" : `${name}-ს დრო ამოეწურა`),
+    outMisses: (name, me) => (me ? "3-ჯერ შეცდი" : `${name} 3-ჯერ შეცდა`),
+    complete: "არცერთი არ დარჩა დაუსახელებელი",
+    left2: (n) => `დარჩა ${n}`,
   },
   pf: {
     pointsInPlay: "ქულა თამაშშია",
@@ -304,6 +382,7 @@ const ka: DuelCopy = {
     rules: {
       pistas: ["ორივეს ერთი და იგივე მინიშნებები, თითო-თითოდ.", "ვინც პირველი გამოიცნობს, იღებს 11 − მინიშნება ქულას.", "თუ შეცდი, მეტოქეს მაქსიმუმ 3 მინიშნება დარჩება."],
       buscaminas: ["მოთამაშეებს რიგრიგობით ირჩევთ.", "თუ მატყუარას აირჩევ, ქულას მეტოქე იღებს.", "თუ 12-ივეს იპოვით, ორივე იღებთ ქულას."],
+      ultimo: ["მორიგეობით დაასახელეთ კატეგორიის პასუხები, გამეორების გარეშე.", "20 წამი სვლაზე, ყოველ ჯერზე ნაკლები. თუ დრო ამოგეწურა ან 3-ჯერ შეცდი, კატეგორია წააგე.", "იგებს ის, ვინც პირველი მოიგებს 3 კატეგორიას."],
     },
   },
   pause: {
@@ -326,7 +405,7 @@ const ka: DuelCopy = {
 };
 
 const tr: DuelCopy = {
-  games: { buscaminas: "Futbol Mayın Tarlası", pistas: "Futbol İpuçları" },
+  games: { buscaminas: "Futbol Mayın Tarlası", pistas: "Futbol İpuçları", ultimo: "Son Kalan Futbol" },
   playWithFriend: "Arkadaşınla oyna",
   playWithFriendHint: "Linki gönder, kafa kafaya canlı oynayın.",
   you: "Sen",
@@ -348,6 +427,25 @@ const tr: DuelCopy = {
     cleared: (pts) => `12'si de bulundu! İkinize de +${pts}`,
     found: (n, of) => `${n}/${of} bulundu`,
     impostor: "Sahtekâr",
+  },
+  ul: {
+    category: (n, total) => `Kategori ${n} / ${total}`,
+    perTurn: (s) => `Tur başına ${s} sn`,
+    left: (n, total) => `${total} içinden ${n} kaldı`,
+    starts: (name) => `${name} başlıyor`,
+    errors: "hata",
+    placeholder: "Bir cevap yaz",
+    say: "Söyle",
+    wrong: (who, t) => `✗ ${who}: “${t}” listede yok`,
+    repeat: (who, t) => `↺ ${who}: “${t}” zaten söylendi`,
+    ambiguous: (t) => `Hangi “${t}”? Tam adı yaz`,
+    youStand: "Ayakta kalan sensin!",
+    rivalStands: (name) => `Ayakta kalan ${name}`,
+    both: "Liste tamam! İkinize de puan",
+    outTime: (name, me) => (me ? "Süren doldu" : `${name}'in süresi doldu`),
+    outMisses: (name, me) => (me ? "3 kez yanıldın" : `${name} 3 kez yanıldı`),
+    complete: "Söylenmeyen kalmadı",
+    left2: (n) => `${n} tanesi kaldı`,
   },
   pf: {
     pointsInPlay: "puan oyunda",
@@ -390,6 +488,7 @@ const tr: DuelCopy = {
     rules: {
       pistas: ["İkinize de aynı ipuçları, teker teker.", "İlk bilen 11 − ipucu puan alır.", "Bilemezsen rakibine en fazla 3 ipucu daha kalır."],
       buscaminas: ["Sırayla oyuncu seçin.", "Sahtekâra basarsan puanı rakibin alır.", "12'sini de bulursanız ikiniz de puan alırsınız."],
+      ultimo: ["Sırayla kategorinin cevaplarını söyleyin, tekrar yok.", "Tur başına 20 sn, her seferinde daha az. Süre biterse ya da 3 kez yanılırsan kategoriyi kaybedersin.", "3 kategoriyi ilk kazanan maçı kazanır."],
     },
   },
   pause: {

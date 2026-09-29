@@ -41,6 +41,8 @@ describe('post-auth redirect helpers', () => {
   it('accepts internal game entry points and public locale pages, nothing else', () => {
     expect(normalizePostAuthRedirect('/play')).toBe('/play');
     expect(normalizePostAuthRedirect('/auction')).toBe('/auction');
+    expect(normalizePostAuthRedirect('/pistas')).toBe('/pistas');
+    expect(normalizePostAuthRedirect('/ultimo')).toBe('/ultimo');
     expect(normalizePostAuthRedirect('/en/football-games/auction')).toBe('/en/football-games/auction');
     expect(normalizePostAuthRedirect('/es/juegos-de-futbol/subasta/')).toBe('/es/juegos-de-futbol/subasta');
     expect(normalizePostAuthRedirect('/daily/challenges/money-drop')).toBe('/daily/challenges/money-drop');
