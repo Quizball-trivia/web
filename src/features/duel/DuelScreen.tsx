@@ -24,12 +24,12 @@ const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
 const LOADING_LIMIT_MS = 8_000;
 
 /**
- * Everything on the duel screen belongs to one principal: signing in or out mid-match remounts it, so a
- * previous identity's snapshot and unacknowledged commands can never be shown to (or replayed as) the next one.
+ * Everything on the duel screen belongs to one principal and one match: signing in or out, or moving to another
+ * duel, remounts it, so a previous snapshot and unacknowledged commands can never be shown to (or replayed as) the next.
  */
 export function DuelScreen({ matchId }: { matchId: string }) {
   const principal = useRealtimePrincipal();
-  return <DuelRoom key={`${principal.kind}:${principal.userId ?? "none"}`} matchId={matchId} />;
+  return <DuelRoom key={`${principal.kind}:${principal.userId ?? "none"}:${matchId}`} matchId={matchId} />;
 }
 
 function DuelRoom({ matchId }: { matchId: string }) {
