@@ -12,6 +12,7 @@ import { inviteEnvironment, mobileInviteUrl, QUIZBALL_APP_STORE_URL } from '@/li
 import { FriendLobbyScreen } from './FriendLobbyScreen';
 import { parseFriendLobbyInviteSource } from '../hooks/useFriendLobbyLogic';
 import { inviteLandingCopy } from '../inviteLandingCopy';
+import { isDuelGameEnabled } from '@/lib/lobby/lobbyModes';
 
 export function FriendInviteEntry() {
   const params = useParams<{ code: string }>();
@@ -22,12 +23,17 @@ export function FriendInviteEntry() {
   const raw = params.code?.trim() ?? '';
   const isHost = raw.toLowerCase() === 'new';
   const code = isHost ? 'new' : normalizeFriendInviteCode(raw);
+  // Public game pages have no socket: their "Jugar con un amigo" links here with ?duel=<game>.
+  const duelParam = search.get('duel');
+  const newRoomDuelGame = isHost && isDuelGameEnabled(duelParam) ? duelParam : null;
   const copy = inviteLandingCopy[locale] ?? inviteLandingCopy.en;
 
   if (!code) return <main className="min-h-dvh grid place-items-center p-6"><p role="alert">{t('inviteCode.invalid')}</p></main>;
-  if (isHost || playOnWeb || status === 'authenticated' || status === 'banned') {
+  // Someone coming back to their own room (after a duel, a rematch) already chose the browser: no chooser again.
+  const returning = ['rematch', 'current_lobby', 'create'].includes(search.get('source') ?? '');
+  if (isHost || playOnWeb || returning || status === 'authenticated' || status === 'banned') {
     return <AppAuthGate><AppShell><FriendLobbyScreen roomCode={code} isHost={isHost}
-      inviteSource={parseFriendLobbyInviteSource(search.get('source'))} /></AppShell></AppAuthGate>;
+      inviteSource={parseFriendLobbyInviteSource(search.get('source'))} newRoomDuelGame={newRoomDuelGame} /></AppShell></AppAuthGate>;
   }
 
   return <main className="min-h-dvh flex items-center justify-center bg-surface-deep px-5 py-12">

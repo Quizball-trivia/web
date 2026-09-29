@@ -1337,12 +1337,20 @@
     "secondHalfOptional": "2. yarı (isteğe bağlı)",
     "pickSecondHalfHint": "2. yarıyı ayarlamak için başka bir kategoriye dokun",
     "errorGuestLimit": "Bir odada en fazla 3 misafir olabilir.",
-    "errorModeRequiresAccount": "Misafirler yalnızca Tic Tac Toe, Müzayede ve Dereceli simülasyon oynayabilir. Tüm modlar için kaydol.",
+    "errorModeRequiresAccount": "Misafirler yalnızca Tic Tac Toe, Müzayede, Dereceli simülasyon ve düello oynayabilir. Tüm modlar için kaydol.",
     "errorRateLimited": "Çok fazla oda oluşturuldu. Lütfen biraz bekle.",
     "errorCapabilityRequired": "Bunun için bir hesap gerekli. Devam etmek için kaydol.",
     "guestBadge": "Misafir",
     "playWithFriend": "Bir arkadaşla oyna",
-    "guestKeepResults": "Sonraki sonuçlarını kaydetmek ve dereceli oynamak için kaydol"
+    "guestKeepResults": "Sonraki sonuçlarını kaydetmek ve dereceli oynamak için kaydol",
+    "duelBuscaminas": "Futbol Mayın Tarlası · düello",
+    "duelPistas": "Futbol İpuçları · düello",
+    "duelTabBuscaminas": "Mayın Tarlası",
+    "duelTabPistas": "İpuçları",
+    "duelDescription": "Kendine ait içerikle 1’e 1 düello. En çok puanı toplayan kazanır. Jeton ya da RP yok.",
+    "readyCopyDuel": "İki oyuncu da hazır olduğunda ev sahibi düelloyu başlatabilir.",
+    "startDuel": "Düelloyu başlat",
+    "errorDuelUnavailable": "Bu oyun şu anda düello olarak oynanamıyor."
   },
   "possession": {
     "cluesGuessedAtClue": "ipucu {index}",

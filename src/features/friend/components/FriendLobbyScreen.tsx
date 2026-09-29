@@ -8,20 +8,25 @@ import { LobbySettings } from "./LobbySettings";
 import { type FriendLobbyInviteSource, useFriendLobbyLogic } from "../hooks/useFriendLobbyLogic";
 import { AlreadyInLobbyModal } from "./AlreadyInLobbyModal";
 import { useLocale } from "@/contexts/LocaleContext";
+import type { DuelGameId } from "@/lib/realtime/socket.types";
+import { canHostStart, lobbyModeCapabilities } from "@/lib/lobby/lobbyModes";
 
 interface FriendLobbyScreenProps {
   roomCode: string;
   isHost: boolean;
   inviteSource?: FriendLobbyInviteSource;
+  /** `/friend/room/new?duel=<game>`: open the new room as a duel of that game. */
+  newRoomDuelGame?: DuelGameId | null;
 }
 
-export function FriendLobbyScreen({ roomCode, isHost, inviteSource }: FriendLobbyScreenProps) {
+export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelGame }: FriendLobbyScreenProps) {
   const { t, locale } = useLocale();
   useEnsureGuestPrincipal(locale);
   const {
     lobby,
     isAuctionLobby,
     isFootballGridLobby,
+    isDuelLobby,
     members,
     lobbyCode,
     isResolvingInvite,
@@ -36,7 +41,7 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource }: FriendLobb
     isLeaving,
     optimisticReady,
     actions
-  } = useFriendLobbyLogic({ roomCode, isHost, inviteSource });
+  } = useFriendLobbyLogic({ roomCode, isHost, inviteSource, newRoomDuelGame });
   const displayedReady = optimisticReady ?? me?.isReady ?? false;
   // Host has local `isStartingMatch`; non-host members infer "preparing"
   // from the broadcast lobby status flipping to "active" (server emits this
@@ -44,41 +49,37 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource }: FriendLobb
   const matchIsStarting = isStartingMatch || lobby?.status === "active";
 
   const settings = lobby?.settings;
+  const modeCaps = lobbyModeCapabilities(settings?.gameMode);
   const isCurrentHost = Boolean(me?.isHost) || (isHost && roomCode.trim().toLowerCase() === "new");
   const allReady = members.length > 0 && members.every((member) => member.isReady);
   const isPartyMode =
-    settings?.gameMode === "friendly_party_quiz" || (members.length > 2 && !isAuctionLobby && !isFootballGridLobby);
-  // Lobby capacity by mode: party quiz holds up to 6; auction seats 3 (empty
-  // seats become bots); classic + ranked sim are 1v1 (2).
-  const lobbyMaxMembers =
-    settings?.gameMode === "friendly_party_quiz" ? 6 : isAuctionLobby ? 3 : 2;
-  // Auction and Football Grid generate their own match content — lobby quiz
-  // categories do not apply to either mode.
+    settings?.gameMode === "friendly_party_quiz" || (members.length > 2 && modeCaps.promotesToPartyQuiz);
+  // Seats shown by mode (lib/lobby/lobbyModes): party quiz 6, auction 3 (empty
+  // seats become bots), every 1v1 mode 2.
+  const lobbyMaxMembers = modeCaps.playable;
+  // Auction, grid and duels bring their own content: lobby quiz categories do not apply.
   const hasFriendlyCategories =
-    isAuctionLobby ||
-    isFootballGridLobby ||
+    !modeCaps.needsCategories ||
     settings?.friendlyRandom ||
     Boolean(settings?.friendlyCategoryAId);
   const readyCopy = isAuctionLobby
     ? t("friend.readyCopyAuction")
     : isFootballGridLobby
       ? t("friend.readyCopyFootballGrid")
+    : isDuelLobby
+      ? t("friend.readyCopyDuel")
     : settings?.gameMode === "ranked_sim"
       ? t("friend.readyCopyRanked")
       : isPartyMode
         ? t("friend.readyCopyParty")
         : t("friend.readyCopyClassic");
-  const isHostStartableMode =
-    settings?.gameMode === "friendly_possession" ||
-    settings?.gameMode === "friendly_party_quiz" ||
-    isAuctionLobby ||
-    isFootballGridLobby;
+  const isHostStartableMode = Boolean(settings) && modeCaps.hostStart !== null;
   const canStartMatch =
     Boolean(
       isCurrentHost &&
         allReady &&
         lobby?.status === "waiting" &&
-        isHostStartableMode &&
+        canHostStart(settings?.gameMode, members.length) &&
         hasFriendlyCategories &&
         !isStartingMatch
     );
@@ -86,6 +87,8 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource }: FriendLobb
     ? t("friend.startAuction")
     : isFootballGridLobby
       ? t("friend.startFootballGrid")
+    : isDuelLobby
+      ? t("friend.startDuel")
     : isPartyMode
       ? t("friend.startPartyQuiz")
       : t("friend.startMatch");

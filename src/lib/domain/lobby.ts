@@ -1,4 +1,5 @@
 import type { AvatarCustomization } from "@/types/game";
+import type { DuelGameId, LobbyGameMode } from "@/lib/realtime/socket.types";
 
 export interface PublicLobby {
   lobbyId: string;
@@ -13,6 +14,8 @@ export interface PublicLobby {
   memberCount: number;
   maxMembers: number;
   createdAt: string;
-  gameMode: 'friendly_possession' | 'friendly_party_quiz' | 'football_grid' | 'ranked_sim' | 'auction';
+  gameMode: LobbyGameMode;
+  /** The game of a duel room; null for every other mode. */
+  duelGame: DuelGameId | null;
   isPublic: boolean;
 }

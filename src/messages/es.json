@@ -1337,12 +1337,20 @@
     "secondHalfOptional": "2.ª parte (opcional)",
     "pickSecondHalfHint": "Toca otra categoría para la segunda parte",
     "errorGuestLimit": "Una sala admite como máximo 3 invitados.",
-    "errorModeRequiresAccount": "Los invitados solo pueden jugar Tic Tac Toe, Subasta y Simulación clasificatoria. Regístrate para desbloquear todos los modos.",
+    "errorModeRequiresAccount": "Los invitados solo pueden jugar Tic Tac Toe, Subasta, Simulación clasificatoria y duelos. Regístrate para desbloquear todos los modos.",
     "errorRateLimited": "Has creado demasiadas salas. Espera un momento.",
     "errorCapabilityRequired": "Para eso hace falta una cuenta. Regístrate para continuar.",
     "guestBadge": "Invitado",
     "playWithFriend": "Jugar con un amigo",
-    "guestKeepResults": "Regístrate para guardar tus próximos resultados y jugar clasificatorias"
+    "guestKeepResults": "Regístrate para guardar tus próximos resultados y jugar clasificatorias",
+    "duelBuscaminas": "Buscaminas futbolero · duelo",
+    "duelPistas": "Pistas futboleras · duelo",
+    "duelTabBuscaminas": "Buscaminas",
+    "duelTabPistas": "Pistas",
+    "duelDescription": "Un duelo 1 contra 1 con contenido propio. Gana quien sume más puntos. Sin monedas ni RP en juego.",
+    "readyCopyDuel": "Cuando ambos jugadores estén listos, el anfitrión puede iniciar el duelo.",
+    "startDuel": "Empezar duelo",
+    "errorDuelUnavailable": "Este juego no está disponible como duelo ahora mismo."
   },
   "possession": {
     "cluesGuessedAtClue": "pista {index}",

@@ -3,6 +3,8 @@ import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { useRankedMatchmakingStore } from '@/stores/rankedMatchmaking.store';
 import { useAuctionActiveMatchStore } from '@/stores/auctionActiveMatch.store';
 import { useFootballGridStore } from '@/stores/footballGrid.store';
+import { useFriendDuelHandoffStore } from '@/stores/friendDuelHandoff.store';
+import { useActiveDuelStore } from '@/stores/activeDuel.store';
 import { useGameSessionStore } from '@/stores/gameSession.store';
 import { QueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queries/queryKeys';
@@ -20,6 +22,7 @@ import type {
   AuctionMatchFinishedPayload,
   AuctionPlayerForfeitedPayload,
   DraftState,
+  DuelFoundPayload,
   ErrorPayload,
   ForceLogoutPayload,
   MatchCluesGuessAckPayload,
@@ -59,6 +62,7 @@ import type {
   FootballGridSearchStatePayload,
   FootballGridStatePayload,
   FootballGridTurnResolvedPayload,
+  DuelStatePayload,
 } from './socket.types';
 
 // Module-level ref so handlers always read the latest queryClient
@@ -217,6 +221,23 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       return;
     }
     store.setLobby(data);
+  });
+
+  // A friend room's duel started (or a reconnect points back at a live one): the room screen
+  // hands off to /duelo/<matchId>. The duel screen keeps its own listeners for the match itself.
+  socket.on('duel:found', (data: DuelFoundPayload) => {
+    logger.info('Socket event duel:found', data);
+    useActiveDuelStore.getState().set(data, useRealtimeMatchStore.getState().selfUserId);
+    if (data.lobbyId) useFriendDuelHandoffStore.getState().setFound(data);
+  });
+  // Sent on every connect: the authoritative answer to "do I still have a live duel?".
+  socket.on('duel:active', (data: DuelFoundPayload | null) => {
+    if (data) useActiveDuelStore.getState().set(data, useRealtimeMatchStore.getState().selfUserId);
+    else useActiveDuelStore.getState().clear();
+  });
+  // Only the end of a duel matters here (the duel screen keeps its own listeners for everything else).
+  socket.on('duel:state', (data: DuelStatePayload) => {
+    if (data.status === 'completed' || data.status === 'cancelled') useActiveDuelStore.getState().clear(data.matchId);
   });
 
   socket.on('lobby:challenge_received', (data: LobbyChallengeInvitePayload) => {

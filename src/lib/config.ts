@@ -1,3 +1,5 @@
+import type { DuelGameId } from "@/lib/realtime/socket.types";
+
 function nonBlank(value: string | undefined, fallback: string): string {
   const trimmed = value?.trim();
   return trimmed && trimmed.length > 0 ? trimmed : fallback;
@@ -20,3 +22,12 @@ export const PHONE_AUTH_ENABLED = true;
 
 /** Guest friend lobbies (play Tic Tac Toe / Auction / Ranked sim with a friend without an account). Off = no route or socket change for guests. */
 export const GUEST_LOBBIES_ENABLED = process.env.NEXT_PUBLIC_GUEST_LOBBIES === "true" || process.env.NEXT_PUBLIC_GUEST_LOBBIES === "1";
+
+/**
+ * Daily mini-games offered as a friend duel ("Jugar con un amigo"), comma-separated, e.g. "buscaminas,pistas".
+ * Mirrors the backend kill switch DUEL_GAMES_ENABLED; empty = no duel rooms offered.
+ */
+export const DUEL_GAMES_ENABLED: readonly DuelGameId[] = (process.env.NEXT_PUBLIC_DUEL_GAMES ?? "")
+  .split(",")
+  .map((game) => game.trim())
+  .filter((game): game is DuelGameId => game === "buscaminas" || game === "pistas");

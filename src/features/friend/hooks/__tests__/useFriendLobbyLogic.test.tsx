@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { useFriendLobbyLogic } from '../useFriendLobbyLogic';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { useAuctionActiveMatchStore } from '@/stores/auctionActiveMatch.store';
+import { useFriendDuelHandoffStore } from '@/stores/friendDuelHandoff.store';
 import type { LobbyState } from '@/lib/realtime/socket.types';
 
 const mocks = vi.hoisted(() => ({
@@ -95,6 +96,7 @@ function makeLobby(inviteCode: string): LobbyState {
     hostUserId: 'user-1',
     settings: {
       gameMode: 'friendly_possession',
+      duelGame: null,
       friendlyRandom: true,
       friendlyCategoryAId: null,
       friendlyCategoryBId: null,
@@ -649,5 +651,104 @@ describe('useFriendLobbyLogic auction hand-off', () => {
       expect(mocks.routerPush).toHaveBeenCalledWith('/game');
     });
     expect(mocks.routerPush).not.toHaveBeenCalledWith('/auction');
+  });
+});
+
+describe('useFriendLobbyLogic duel rooms', () => {
+  function duelLobby(status: LobbyState['status'] = 'waiting'): LobbyState {
+    const base = makeLobby('DUEL01');
+    return {
+      ...base,
+      status,
+      settings: { ...base.settings, gameMode: 'duel', duelGame: 'pistas' },
+      members: [
+        { ...base.members[0], isReady: true },
+        { userId: 'user-2', username: 'Friend', avatarUrl: null, isReady: true, isHost: false },
+      ],
+    };
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.socketEmit.mockImplementation(() => undefined);
+    useRealtimeMatchStore.getState().reset();
+    useFriendDuelHandoffStore.setState({ found: null });
+  });
+
+  it("hands off to /duelo/<matchId> when this room's duel is found", async () => {
+    useRealtimeMatchStore.getState().setLobby(duelLobby());
+    const { result } = renderHook(() => useFriendLobbyLogic({ roomCode: 'DUEL01', isHost: true }));
+    expect(result.current.isDuelLobby).toBe(true);
+
+    act(() => {
+      useFriendDuelHandoffStore.getState().setFound({ matchId: 'duel-1', game: 'pistas', lobbyId: 'lobby-DUEL01' });
+    });
+
+    await waitFor(() => expect(mocks.routerPush).toHaveBeenCalledWith('/duelo/duel-1'));
+    expect(mocks.routerPush).not.toHaveBeenCalledWith('/game');
+    expect(useFriendDuelHandoffStore.getState().found).toBeNull();
+  });
+
+  it("ignores another room's duel", async () => {
+    useRealtimeMatchStore.getState().setLobby(duelLobby());
+    renderHook(() => useFriendLobbyLogic({ roomCode: 'DUEL01', isHost: true }));
+    act(() => {
+      useFriendDuelHandoffStore.getState().setFound({ matchId: 'duel-9', game: 'pistas', lobbyId: 'lobby-OTHER' });
+    });
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(mocks.routerPush).not.toHaveBeenCalled();
+  });
+
+  it('drops a leftover found from a finished duel when the room is back to waiting', async () => {
+    useFriendDuelHandoffStore.setState({
+      found: { matchId: 'old-duel', game: 'pistas', lobbyId: 'lobby-DUEL01', receivedAt: Date.now() - 60_000 },
+    });
+    useRealtimeMatchStore.getState().setLobby(duelLobby('waiting'));
+    renderHook(() => useFriendLobbyLogic({ roomCode: 'DUEL01', isHost: true }));
+    await waitFor(() => expect(useFriendDuelHandoffStore.getState().found).toBeNull());
+    expect(mocks.routerPush).not.toHaveBeenCalled();
+  });
+
+  it('follows a found that arrived before the room screen while the duel is live (reconnect)', async () => {
+    useFriendDuelHandoffStore.setState({
+      found: { matchId: 'live-duel', game: 'pistas', lobbyId: 'lobby-DUEL01', receivedAt: Date.now() - 60_000 },
+    });
+    useRealtimeMatchStore.getState().setLobby(duelLobby('active'));
+    renderHook(() => useFriendLobbyLogic({ roomCode: 'DUEL01', isHost: false }));
+    await waitFor(() => expect(mocks.routerPush).toHaveBeenCalledWith('/duelo/live-duel'));
+  });
+
+  it('never falls back to /game for a duel room', async () => {
+    useRealtimeMatchStore.getState().setLobby(duelLobby('active'));
+    useRealtimeMatchStore.setState({ draft: { lobbyId: 'lobby-DUEL01' } as never });
+    renderHook(() => useFriendLobbyLogic({ roomCode: 'DUEL01', isHost: true }));
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(mocks.routerPush).not.toHaveBeenCalledWith('/game');
+  });
+
+  it('sends the duel game with a switch into a duel and drops it when leaving one', () => {
+    useRealtimeMatchStore.getState().setLobby(makeLobby('DUEL01'));
+    const { result, rerender } = renderHook(() => useFriendLobbyLogic({ roomCode: 'DUEL01', isHost: true }));
+    act(() => result.current.actions.handleUpdateSettings({ gameMode: 'duel', duelGame: 'buscaminas' }));
+    expect(mocks.socketEmit).toHaveBeenCalledWith('lobby:update_settings', expect.objectContaining({
+      lobbyId: 'lobby-DUEL01', gameMode: 'duel', duelGame: 'buscaminas',
+    }));
+
+    mocks.socketEmit.mockClear();
+    act(() => useRealtimeMatchStore.getState().setLobby(duelLobby()));
+    rerender();
+    act(() => result.current.actions.handleUpdateSettings({ gameMode: 'auction' }));
+    const emitted = mocks.socketEmit.mock.calls.find(([event]) => event === 'lobby:update_settings')?.[1];
+    expect(emitted).toMatchObject({ gameMode: 'auction' });
+    expect(emitted).not.toHaveProperty('duelGame');
+  });
+
+  it('opens /friend/room/new?duel=<game> as a private duel of that game', async () => {
+    renderHook(() => useFriendLobbyLogic({ roomCode: 'new', isHost: true, newRoomDuelGame: 'pistas' }));
+    await waitFor(() => {
+      expect(mocks.socketEmit).toHaveBeenCalledWith('lobby:create', expect.objectContaining({
+        mode: 'friendly', isPublic: false, gameMode: 'duel', duelGame: 'pistas',
+      }), expect.any(Function));
+    });
   });
 });

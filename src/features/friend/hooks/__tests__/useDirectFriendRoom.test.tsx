@@ -39,6 +39,23 @@ describe("useDirectFriendRoom", () => {
     expect(onFallback).not.toHaveBeenCalled();
   });
 
+  it("opens a daily game's duel room with its game", async () => {
+    createLobby.mockResolvedValue({ ok: true, lobbyId: "l1", inviteCode: "DUEL01", correlationId: "c" });
+    const { result } = renderHook(() => useDirectFriendRoom({ onFallback: vi.fn() }));
+    await act(async () => { await result.current.startFriendRoom({ gameMode: "duel", duelGame: "pistas" }); });
+    expect(createLobby).toHaveBeenCalledWith({ mode: "friendly", isPublic: false, gameMode: "duel", duelGame: "pistas" });
+    expect(push).toHaveBeenCalledWith("/friend/room/DUEL01?source=create");
+  });
+
+  it("explains a duel game that is switched off", async () => {
+    createLobby.mockResolvedValue({ ok: false, code: "DUEL_UNAVAILABLE", message: "raw server text", retryable: false, correlationId: "c" });
+    const onFallback = vi.fn();
+    const { result } = renderHook(() => useDirectFriendRoom({ onFallback }));
+    await act(async () => { await result.current.startFriendRoom({ gameMode: "duel", duelGame: "buscaminas" }); });
+    expect(toast.error).toHaveBeenCalledWith("friend.errorDuelUnavailable");
+    expect(onFallback).toHaveBeenCalledTimes(1);
+  });
+
   it("falls back to the friend hub with the error when the room cannot be created", async () => {
     createLobby.mockResolvedValue({ ok: false, code: "ALREADY_IN_LOBBY", message: "You are already in a room", retryable: false, correlationId: "c" });
     const onFallback = vi.fn();

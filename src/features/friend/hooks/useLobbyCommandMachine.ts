@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { connectSocket, getSocket } from "@/lib/realtime/socket-client";
 import type {
+  DuelGameId,
   LobbyCreateResult,
   LobbyJoinByCodeResult,
   LobbyLeaveResult,
@@ -10,6 +11,11 @@ import { extractFriendInviteCode } from "@/lib/friend/inviteCode";
 import { logger } from "@/utils/logger";
 
 type LobbyCommandOperation = "create" | "join" | "leave";
+
+/** A room opened straight in a friend-playable mode; a duel names its game. */
+export type LobbyCreatePayload =
+  | { mode: MatchMode; isPublic?: boolean; gameMode?: "football_grid" | "auction"; duelGame?: undefined }
+  | { mode: "friendly"; isPublic?: boolean; gameMode: "duel"; duelGame: DuelGameId };
 type LobbyCommandStatus = "idle" | "creating" | "joining" | "leaving" | "success" | "failed";
 
 export interface LobbyCommandError {
@@ -223,8 +229,8 @@ export function useLobbyCommandMachine() {
     return null;
   }, [setMachineState, wait]);
 
-  const createLobby = useCallback((payload: { mode: MatchMode; isPublic?: boolean; gameMode?: 'football_grid' | 'auction' }) => {
-    const commandKey = `create:${payload.mode}:${payload.isPublic === true ? "public" : "private"}${payload.gameMode ? `:${payload.gameMode}` : ""}`;
+  const createLobby = useCallback((payload: LobbyCreatePayload) => {
+    const commandKey = `create:${payload.mode}:${payload.isPublic === true ? "public" : "private"}${payload.gameMode ? `:${payload.gameMode}` : ""}${payload.duelGame ? `:${payload.duelGame}` : ""}`;
     return execute<LobbyCreateResult>({
       operation: "create",
       commandKey,

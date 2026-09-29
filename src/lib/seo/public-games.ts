@@ -48,9 +48,10 @@ export interface PublicGameMeta {
 
 /** Daily engines report start/complete/replay themselves; other engines are timed from the outer Play control. */
 /** Dailies and the coin-game samples fire start/complete/replay themselves; trainings are timed from the Play control. */
-export const engineEmitsEvents = (demoSlug: string | undefined): boolean => Boolean(demoSlug?.startsWith("daily-")) || COIN_SAMPLE_DEMO_SLUGS.has(demoSlug ?? "") || demoSlug === FULL_GAME_DEMO_SLUG;
-/** Buscaminas futbolero: the page runs the real daily board (not a sample), and the engine owns its exit. */
-export const FULL_GAME_DEMO_SLUG = "buscaminas";
+export const engineEmitsEvents = (demoSlug: string | undefined): boolean => Boolean(demoSlug?.startsWith("daily-")) || COIN_SAMPLE_DEMO_SLUGS.has(demoSlug ?? "") || isFullGameDemo(demoSlug);
+/** Buscaminas and Pistas futboleras: the page runs the real daily board (not a sample), and the engine owns its exit. */
+export const FULL_GAME_DEMO_SLUGS = new Set(["buscaminas", "pistas"]);
+export const isFullGameDemo = (demoSlug: string | undefined): boolean => FULL_GAME_DEMO_SLUGS.has(demoSlug ?? "");
 const COIN_SAMPLE_DEMO_SLUGS = new Set(["mini-trivia-mines", "mini-final-third", "mini-road-to-goal", "mini-squad-spin"]);
 /** Sign-in entry: the Play screen opens its auth dialog for guests when asked to. */
 export const SIGN_IN_PATH = "/play?signin=1";
@@ -65,7 +66,8 @@ export const PUBLIC_GAME_META: PublicGameMeta[] = [
   { modeId: "clues", slug: "who-am-i", group: "daily", guest: "demo", demoSlug: "daily-clues", page: false, card: true, destination: { kind: "quiz", sourceSlug: "guess-the-player" }, related: [], order: 0 },
   { modeId: "careerPath", slug: "career-path", group: "daily", guest: "demo", demoSlug: "daily-careerPath", page: false, card: true, destination: { kind: "quiz", sourceSlug: "career-path" }, related: [], order: 4 },
   // Full daily game in the browser (no account, progress on the device): its page plays the real board, not a sample.
-  { modeId: "buscaminas", slug: "football-minesweeper", group: "daily", guest: "demo", demoSlug: "buscaminas", page: true, card: true, destination: { kind: "page" }, related: ["triviaMines", "grid", "cardDetective"], order: -1 },
+  { modeId: "buscaminas", slug: "football-minesweeper", group: "daily", guest: "demo", demoSlug: "buscaminas", page: true, card: true, destination: { kind: "page" }, related: ["pistas", "triviaMines", "grid"], order: -1 },
+  { modeId: "pistas", slug: "football-clues", group: "daily", guest: "demo", demoSlug: "pistas", page: true, card: true, destination: { kind: "page" }, related: ["buscaminas", "cardDetective", "grid"], order: -0.5 },
   { modeId: "moneyDrop", slug: "money-drop", group: "daily", guest: "demo", demoSlug: "daily-moneyDrop", page: true, card: true, destination: { kind: "page" }, related: ["trueFalse", "countdown", "highLow"], order: 1 },
   { modeId: "trueFalse", slug: "true-or-false-football", group: "daily", guest: "demo", demoSlug: "daily-trueFalse", page: true, card: true, destination: { kind: "page" }, related: ["moneyDrop", "highLow", "imposter"], order: 2 },
   { modeId: "countdown", slug: "countdown", group: "daily", guest: "demo", demoSlug: "daily-countdown", page: true, card: true, destination: { kind: "page" }, related: ["moneyDrop", "imposter", "cardDetective"], order: 3 },

@@ -22,6 +22,7 @@ import { ArrowRight, Gamepad2, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useLocale } from '@/contexts/LocaleContext';
 import { formatRejoinCopy } from './appShell.helpers';
+import { ActiveDuelBanner } from '@/features/duel/ActiveDuelBanner';
 import type { useAppShellViewModel } from './useAppShellViewModel';
 
 type AppShellViewModel = ReturnType<typeof useAppShellViewModel>;
@@ -107,6 +108,7 @@ export function AppShellBanners({ variant, vm }: AppShellBannersProps) {
 
   return (
     <>
+      <ActiveDuelBanner className={pad} />
       {showForfeitPendingBanner && forfeitPending && (
         <div className={pad}>
           <div className={`rounded-2xl border-2 border-brand-red-soft bg-brand-red-soft/10 ${card}`}>

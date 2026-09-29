@@ -4,8 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import type { PublicLobby } from "@/lib/domain/lobby";
-import { ArrowRight, Grid3X3, Loader2, Trophy, Users } from "lucide-react";
+import { ArrowRight, Grid3X3, Loader2, Swords, Trophy, Users } from "lucide-react";
 import { AvatarDisplay } from "@/components/AvatarDisplay";
+import { useLocale } from "@/contexts/LocaleContext";
+import { DUEL_GAME_LABEL_KEYS } from "@/lib/lobby/lobbyModes";
 
 const poppins = { fontFamily: "'Poppins', sans-serif", fontWeight: 600 } as const;
 
@@ -16,6 +18,7 @@ interface LobbyCardProps {
 }
 
 export function LobbyCard({ lobby, onJoin, isJoining }: LobbyCardProps) {
+  const { t } = useLocale();
   const isFull = lobby.memberCount >= lobby.maxMembers;
 
   // Optimistic press: keep the spinner up for a minimum window so a fast
@@ -60,6 +63,11 @@ export function LobbyCard({ lobby, onJoin, isJoining }: LobbyCardProps) {
              {lobby.gameMode === 'football_grid' && (
                 <Badge variant="secondary" className="h-5 gap-1 border-brand-blue/20 bg-brand-blue/10 px-1.5 py-0 text-[10px] text-brand-blue-light">
                    <Grid3X3 className="size-3" /> Grid
+                </Badge>
+             )}
+             {lobby.gameMode === 'duel' && lobby.duelGame && (
+                <Badge variant="secondary" className="h-5 gap-1 border-brand-blue/20 bg-brand-blue/10 px-1.5 py-0 text-[10px] text-brand-blue-light">
+                   <Swords className="size-3" /> {t(DUEL_GAME_LABEL_KEYS[lobby.duelGame])}
                 </Badge>
              )}
            </div>

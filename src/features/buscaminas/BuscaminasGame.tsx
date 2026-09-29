@@ -24,6 +24,7 @@ import { BuscaminasApiError, buscaminasApi, describeFailure, isNetworkFailure, t
 import { buscaminasCopy, promptFor } from "./buscaminas.copy";
 import { encodeShare } from "./buscaminas.share";
 import { actionOf, trackActionError, trackActionRecovered, trackArchiveOpen, trackLoadError, trackReport, trackRoundEnd, trackRunComplete, trackRunStart, trackShare } from "./buscaminas.analytics";
+import { PlayWithFriendButton } from "@/features/duel/PlayWithFriendButton";
 
 const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
 // Boards come from the backend, which serves a day only once it is playable (future boards stay private).
@@ -428,6 +429,7 @@ function Intro({ locale, number, state, busy, notice, guestOnPastBoard, guestOnY
         <button type="button" onClick={onStart} disabled={busy} className="mt-8 h-14 rounded-full bg-brand-green text-base font-black uppercase tracking-wide text-white hover:bg-brand-green-deep focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/70 disabled:opacity-60" style={poppins}>
           {busy ? c.loading : inProgress && state ? c.intro.resume(state.round + 1) : c.intro.start}
         </button>
+        <PlayWithFriendButton game="buscaminas" locale={locale} className="mt-3" />
         <button type="button" onClick={onArchive} disabled={busy} className="mt-3 h-11 rounded-full bg-white/10 text-sm font-bold uppercase tracking-wide text-white/85 hover:bg-white/15 disabled:opacity-50" style={poppins}>{c.intro.past}</button>
         <p className="mt-4 text-center text-xs text-white/50">{c.intro.newBoard}</p>
       </div>
@@ -667,6 +669,7 @@ function EndScreen({ locale, day, liveDay, guestOnYesterday, state, days, versio
       </div>
 
       {isToday && <p className="mt-3 text-center text-sm text-white/60">{c.end.comeBack}</p>}
+      <PlayWithFriendButton game="buscaminas" locale={locale} className="mt-3" />
       <button type="button" onClick={onArchive} className="mt-3 h-11 rounded-full border border-white/15 text-sm font-bold uppercase tracking-wide text-white/85 hover:bg-white/10" style={poppins}>{c.end.past}</button>
 
       {liveDay && <BuscaminasLeaderboard locale={locale} day={liveDay} refreshKey={boardRefresh} placement="end" className="mt-4" />}
