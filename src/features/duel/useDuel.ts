@@ -9,6 +9,7 @@ import type { DuelCommandResultPayload, DuelStatePayload, ErrorPayload } from "@
 import { QUIET_ERRORS } from "./duel.copy";
 
 const FATAL_ERRORS = new Set(["duel_not_found", "not_in_match"]);
+const STATE_WAIT_MS = 1_500;
 import type { DuelCommand } from "./duel.views";
 
 /**
@@ -27,9 +28,17 @@ export function useDuel(matchId: string) {
   const latest = useRef<{ version: number; serverNowMs: number } | null>(null);
   const [connected, setConnected] = useState(false);
   const offsetRef = useRef(0);
-  const pending = useRef(new Map<string, DuelCommand>());
-  /** Commands sent and not answered yet (a board can hold its input until the server has judged the last one). */
+  /** Sent and not answered yet, re-sent on reconnect; `live` until an error means no answer is coming on this connection. */
+  const pending = useRef(new Map<string, { command: DuelCommand; version: number; live: boolean }>());
+  /** Accepted commands whose state has not arrived yet (the server answers first, then broadcasts): the version that shows them. */
+  const awaiting = useRef(new Map<string, number>());
+  /** A board holds its input while this is above 0: until the server has judged the last command and its state is on screen. */
   const [inFlight, setInFlight] = useState(0);
+  const recount = useCallback(() => {
+    let live = 0;
+    for (const entry of pending.current.values()) if (entry.live) live += 1;
+    setInFlight(live + awaiting.current.size);
+  }, []);
   const readySent = useRef<string | null>(null);
 
   const resync = useCallback(() => {
@@ -46,25 +55,45 @@ export function useDuel(matchId: string) {
       if (seen && (payload.stateVersion < seen.version || (payload.stateVersion === seen.version && serverNowMs < seen.serverNowMs))) return;
       latest.current = { version: payload.stateVersion, serverNowMs };
       offsetRef.current = serverNowMs - Date.now();
+      for (const [commandId, version] of awaiting.current) if (payload.stateVersion >= version) awaiting.current.delete(commandId);
+      recount();
       setFatal(null);
       setSnapshot(payload);
     };
     const onResult = (payload: DuelCommandResultPayload) => {
       if (payload.matchId !== matchId) return;
+      const sent = pending.current.get(payload.commandId);
       pending.current.delete(payload.commandId);
-      setInFlight(pending.current.size);
+      if (payload.ok && sent && (latest.current?.version ?? -1) <= sent.version) {
+        const { commandId } = payload;
+        awaiting.current.set(commandId, sent.version + 1);
+        // A lost broadcast must not hold the input: ask for the state instead.
+        window.setTimeout(() => {
+          if (!awaiting.current.delete(commandId)) return;
+          recount();
+          if (socket.connected) socket.emit("duel:resync", { matchId, locale });
+        }, STATE_WAIT_MS);
+      }
+      recount();
       if (!payload.ok && payload.code && !QUIET_ERRORS.has(payload.code)) setError(payload.code);
     };
     const onError = (payload: ErrorPayload & { matchId?: string }) => {
       if (payload.matchId && payload.matchId !== matchId) return;
       if (FATAL_ERRORS.has(payload.code)) setFatal(payload.code);
       else setError(payload.code);
+      // A failed command is never answered on this connection: free the input (a reconnect still re-sends it).
+      for (const entry of pending.current.values()) entry.live = false;
+      recount();
     };
     const onConnect = () => {
       setConnected(true);
       readySent.current = null;
       socket.emit("duel:resync", { matchId, locale });
-      for (const [commandId, command] of pending.current) socket.emit("duel:command", { matchId, commandId, command });
+      for (const [commandId, entry] of pending.current) {
+        entry.live = true;
+        socket.emit("duel:command", { matchId, commandId, command: entry.command });
+      }
+      recount();
     };
     const onDisconnect = () => setConnected(false);
     socket.on("duel:state", onState);
@@ -80,7 +109,7 @@ export function useDuel(matchId: string) {
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
     };
-  }, [socket, matchId, locale]);
+  }, [socket, matchId, locale, recount]);
 
   // Coming back to the tab: the snapshot may be minutes old.
   useEffect(() => {
@@ -117,11 +146,11 @@ export function useDuel(matchId: string) {
   const send = useCallback((command: DuelCommand) => {
     if (!socket) return;
     const commandId = createRealtimeCommandId();
-    pending.current.set(commandId, command);
-    setInFlight(pending.current.size);
+    pending.current.set(commandId, { command, version: latest.current?.version ?? -1, live: true });
+    recount();
     setError(null);
     socket.emit("duel:command", { matchId, commandId, command });
-  }, [socket, matchId]);
+  }, [socket, matchId, recount]);
 
   const forfeit = useCallback(() => {
     socket?.emit("duel:forfeit", { matchId, commandId: createRealtimeCommandId() });

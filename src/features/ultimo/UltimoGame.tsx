@@ -90,6 +90,7 @@ export function UltimoGame({ locale, onExit, onEvent, initialDay, onDay }: {
   /** The server's clock sampled with each response, against the monotonic clock: countdowns ignore device-clock jumps. */
   const [firstClock] = useState<ServerClock>(() => ({ serverMs: Date.now(), perfMs: performance.now() }));
   const clockRef = useRef<ServerClock>(firstClock);
+  const clockSyncedRef = useRef(false);
   const [clock, setClock] = useState<ServerClock>(firstClock);
   const runRef = useRef<UltimoRun | null>(null);
   const inFlightRef = useRef(false);
@@ -97,9 +98,15 @@ export function UltimoGame({ locale, onExit, onEvent, initialDay, onDay }: {
   const queueRef = useRef<string[]>([]);
   /** The clock ran out while a move was in flight: re-sync right after it. */
   const expiryDueRef = useRef(false);
+  /** The newest render's pump: timers and finished calls from older renders reach it (and its owner and day). */
+  const pumpRef = useRef<() => void>(() => {});
   const startedRef = useRef(false);
   const currentRef = useRef({ owner, day });
-  useEffect(() => { currentRef.current = { owner, day }; }, [owner, day]);
+  useEffect(() => {
+    currentRef.current = { owner, day };
+    queueRef.current = [];
+    expiryDueRef.current = false;
+  }, [owner, day]);
   useEffect(() => { runRef.current = run; }, [run]);
   const stillCurrent = (o: string, d: string) => currentRef.current.owner === o && currentRef.current.day === d;
   const serverNow = () => clockRef.current.serverMs + (performance.now() - clockRef.current.perfMs);
@@ -134,6 +141,8 @@ export function UltimoGame({ locale, onExit, onEvent, initialDay, onDay }: {
       })
       .catch(() => {});
     return () => { cancelled = true; };
+    // accept only reads and writes refs (and the clock state): it must not re-run this read.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authReady, contentVersion, day, locale, owner]);
 
   const onDayRef = useRef(onDay);
@@ -150,17 +159,23 @@ export function UltimoGame({ locale, onExit, onEvent, initialDay, onDay }: {
   const accept = (next: UltimoRun): boolean => {
     const current = runRef.current;
     if (current && current.run.id === next.run.id && next.run.version < current.run.version) return false;
-    clockRef.current = { serverMs: Date.parse(next.state.serverNow), perfMs: performance.now() };
-    setClock(clockRef.current);
+    // Every response is late by its trip, so the one that puts the server furthest ahead is the best sample.
+    const sample = { serverMs: Date.parse(next.state.serverNow), perfMs: performance.now() };
+    if (!clockSyncedRef.current || sample.serverMs > serverNow()) {
+      clockSyncedRef.current = true;
+      clockRef.current = sample;
+      setClock(sample);
+    }
     if (current && (current.run.id !== next.run.id || current.state.category !== next.state.category || !next.state.open)) queueRef.current = [];
     runRef.current = next;
     return true;
   };
 
-  const apply = (next: UltimoRun, result?: UltimoAnswerResult, typed?: string) => {
+  /** `o`/`d`: the player and board the call was made for (a closure from an older render must not re-label it). */
+  const apply = (next: UltimoRun, o: string, d: string, result?: UltimoAnswerResult, typed?: string) => {
     const before = runRef.current?.state ?? null;
     if (!accept(next)) return;
-    if (day) setEntry({ owner, day, run: next });
+    setEntry({ owner: o, day: d, run: next });
     if (result && result !== "ok") {
       setFeedback({ id: ++feedbackId.current, kind: result, text: typed ?? "", misses: next.state.misses });
       if (result === "wrong" || result === "repeat") sfx("wrongAnswer");
@@ -212,7 +227,7 @@ export function UltimoGame({ locale, onExit, onEvent, initialDay, onDay }: {
     for (let attempt = 0; attempt < 3; attempt += 1) {
       try {
         const current = await ultimoApi.start(d, contentVersion, locale, RESYNC_TIMEOUT_MS);
-        if (stillCurrent(o, d)) { apply(current); setNotice(null); }
+        if (stillCurrent(o, d)) { apply(current, o, d); setNotice(null); }
         return;
       } catch (error) {
         if (!stillCurrent(o, d)) return;
@@ -224,18 +239,23 @@ export function UltimoGame({ locale, onExit, onEvent, initialDay, onDay }: {
     if (stillCurrent(o, d)) setNotice(c.actionError);
   };
 
-  /** Next in line once nothing is in flight: an expiry re-sync first, then the typed answers in order. */
+  /** Next in line once nothing is in flight: an expiry re-sync first (unless a move since reset the clock), then the typed answers in order. */
   const pump = () => {
     if (inFlightRef.current) return;
     if (expiryDueRef.current) {
       expiryDueRef.current = false;
-      void exclusive("sync", async () => { const { owner: o, day: d } = currentRef.current; if (d) await resync(o, d); });
-      return;
+      const s = runRef.current?.state;
+      if (s?.open && s.deadline && serverNow() >= Date.parse(s.deadline) + GRACE_MS) {
+        void exclusive("sync", async () => { const { owner: o, day: d } = currentRef.current; if (d) await resync(o, d); });
+        return;
+      }
     }
     const text = queueRef.current.shift();
     const current = runRef.current;
     if (text && current?.state.open) void act("answer", () => ultimoApi.answer(current, text, locale), text);
   };
+
+  useEffect(() => { pumpRef.current = pump; });
 
   /** One server call at a time (moves and re-syncs alike). */
   const exclusive = async <T,>(key: string, fn: () => Promise<T>): Promise<T | null> => {
@@ -247,7 +267,7 @@ export function UltimoGame({ locale, onExit, onEvent, initialDay, onDay }: {
     } finally {
       inFlightRef.current = false;
       setPending(null);
-      window.setTimeout(pump, 0);
+      window.setTimeout(() => pumpRef.current(), 0);
     }
   };
 
@@ -259,7 +279,7 @@ export function UltimoGame({ locale, onExit, onEvent, initialDay, onDay }: {
       setNotice(null);
       try {
         const result = await call();
-        if (result && stillCurrent(o, d)) apply(result, result.result, typed);
+        if (result && stillCurrent(o, d)) apply(result, o, d, result.result, typed);
         return result;
       } catch (error) {
         if (!stillCurrent(o, d)) return null;
@@ -288,11 +308,14 @@ export function UltimoGame({ locale, onExit, onEvent, initialDay, onDay }: {
     if (freshCategory(fresh.state)) await begin();
   };
 
-  const say = (text: string) => {
+  /** False when the answer was not taken (the queue is full): the box keeps it. */
+  const say = (text: string): boolean => {
     const value = text.trim();
-    if (!value || !runRef.current?.state.open) return;
-    if (queueRef.current.length < MAX_QUEUED) queueRef.current.push(value);
-    pump();
+    if (!value || !runRef.current?.state.open) return false;
+    if (queueRef.current.length >= MAX_QUEUED) return false;
+    queueRef.current.push(value);
+    pumpRef.current();
+    return true;
   };
 
   const nextCategory = async () => {
@@ -309,10 +332,8 @@ export function UltimoGame({ locale, onExit, onEvent, initialDay, onDay }: {
   useEffect(() => {
     if (!deadline || !day) return;
     const wait = Date.parse(deadline) + GRACE_MS + 250 - serverNow();
-    const timer = window.setTimeout(() => { expiryDueRef.current = true; pump(); }, Math.max(0, wait));
+    const timer = window.setTimeout(() => { expiryDueRef.current = true; pumpRef.current(); }, Math.max(0, wait));
     return () => window.clearTimeout(timer);
-    // pump reads the latest refs; the deadline is what matters.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deadline, day, owner]);
 
   const openDay = (target: string) => {
@@ -345,7 +366,7 @@ export function UltimoGame({ locale, onExit, onEvent, initialDay, onDay }: {
           <EndScreen locale={locale} day={day} today={today} state={state} boardRefresh={boardRefresh} guestOnPastBoard={guestOnPastBoard} onArchive={() => setView("archive")} onExit={onExit} />
         ) : view === "play" && state && run ? (
           <Play key={run.run.id} locale={locale} state={state} clock={clock} pending={pending} notice={notice} feedback={feedback}
-            onBegin={() => void begin()} onSay={(t) => void say(t)} onNext={() => void nextCategory()} onResult={() => setView("end")} onExit={onExit} />
+            onBegin={() => void begin()} onSay={say} onNext={() => void nextCategory()} onResult={() => setView("end")} onExit={onExit} />
         ) : (
           <Intro locale={locale} number={puzzleNumber(day)} state={state} busy={pending !== null} notice={notice} guestOnPastBoard={guestOnPastBoard} guestLockedOut={guestLockedOut}
             onStart={() => void play()} onArchive={() => setView("archive")} onExit={onExit} />
@@ -438,7 +459,7 @@ function usePlayerAvatar() {
 
 function Play({ locale, state, clock, pending, notice, feedback, onBegin, onSay, onNext, onResult, onExit }: {
   locale: Locale; state: UltimoRunState; clock: ServerClock; pending: string | null; notice: string | null; feedback: Feedback | null;
-  onBegin: () => void; onSay: (text: string) => void; onNext: () => void; onResult: () => void; onExit?: () => void;
+  onBegin: () => void; onSay: (text: string) => boolean; onNext: () => void; onResult: () => void; onExit?: () => void;
 }) {
   const c = ultimoCopy(locale);
   const avatar = usePlayerAvatar();
@@ -597,13 +618,12 @@ function SaidChips({ names }: { names: string[] }) {
 }
 
 /** The app's typed-answer look (DailyAnswerInput / Who Am I board): blue pill input, green pill button, stacked. */
-function AnswerBox({ placeholder, say, onSubmit }: { placeholder: string; say: string; onSubmit: (text: string) => void }) {
+function AnswerBox({ placeholder, say, onSubmit }: { placeholder: string; say: string; onSubmit: (text: string) => boolean }) {
   const [draft, setDraft] = useState("");
   const input = useRef<HTMLInputElement>(null);
   useEffect(() => { input.current?.focus({ preventScroll: true }); }, []);
   const submit = () => {
-    if (!draft.trim()) return;
-    onSubmit(draft);
+    if (!draft.trim() || !onSubmit(draft)) return;
     setDraft("");
     input.current?.focus({ preventScroll: true });
   };
