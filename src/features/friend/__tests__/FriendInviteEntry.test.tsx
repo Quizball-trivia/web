@@ -1,19 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
-const state = vi.hoisted(() => ({ code: 'AB1234', status: 'anonymous', locale: 'en' }));
-vi.mock('next/navigation', () => ({ useParams: () => ({ code: state.code }), useSearchParams: () => new URLSearchParams('source=share') }));
+const state = vi.hoisted(() => ({ code: 'AB1234', status: 'anonymous', locale: 'en', search: 'source=share' }));
+vi.mock('next/navigation', () => ({ useParams: () => ({ code: state.code }), useSearchParams: () => new URLSearchParams(state.search) }));
 vi.mock('@/contexts/LocaleContext', () => ({ useLocale: () => ({ locale: state.locale, t: (s: string) => s }) }));
 vi.mock('@/stores/auth.store', () => ({ useAuthStore: (select: (s: unknown) => unknown) => select({ status: state.status }) }));
 vi.mock('@/components/auth/AppAuthGate', () => ({ default: ({ children }: { children: React.ReactNode }) => <div data-testid="auth-gate">{children}</div> }));
 vi.mock('@/components/layout/AppShell', () => ({ AppShell: ({ children }: { children: React.ReactNode }) => <>{children}</> }));
-vi.mock('../components/FriendLobbyScreen', () => ({ FriendLobbyScreen: ({ roomCode, isHost }: { roomCode: string; isHost: boolean }) => <div data-testid="lobby">{roomCode}:{String(isHost)}</div> }));
+vi.mock('../components/FriendLobbyScreen', () => ({ FriendLobbyScreen: ({ roomCode, isHost, newRoomDuelGame }: { roomCode: string; isHost: boolean; newRoomDuelGame?: string | null }) => <div data-testid="lobby">{roomCode}:{String(isHost)}{newRoomDuelGame ? `:${newRoomDuelGame}` : ''}</div> }));
+vi.mock('@/lib/config', async (importOriginal) => ({ ...(await importOriginal<typeof import('@/lib/config')>()), DUEL_GAMES_ENABLED: ['buscaminas'] }));
 vi.mock('../hooks/useFriendLobbyLogic', () => ({ parseFriendLobbyInviteSource: (s: string) => s }));
 import { FriendInviteEntry } from '../components/FriendInviteEntry';
 import { mobileInviteUrl } from '@/lib/friend/mobileInvite';
 import { GET } from '@/app/.well-known/apple-app-site-association/route';
 
 beforeEach(() => {
-  state.code = 'ab1234'; state.status = 'anonymous'; state.locale = 'en';
+  state.code = 'ab1234'; state.status = 'anonymous'; state.locale = 'en'; state.search = 'source=share';
   vi.stubEnv('NEXT_PUBLIC_API_URL', 'https://api-staging.quizball.io');
 });
 describe('public invite handoff', () => {
@@ -36,6 +37,19 @@ describe('public invite handoff', () => {
   it('keeps signed-in players and host creation in the existing protected lobby flow', () => {
     state.status = 'authenticated'; render(<FriendInviteEntry />);
     expect(screen.getByTestId('lobby')).toHaveTextContent('AB1234:false');
+  });
+  it('a public game page link (/friend/room/new?duel=<game>) opens a duel room for an enabled game only', () => {
+    state.code = 'new'; state.search = 'duel=buscaminas';
+    const { unmount } = render(<FriendInviteEntry />);
+    expect(screen.getByTestId('lobby')).toHaveTextContent('new:true:buscaminas');
+    unmount();
+    state.search = 'duel=pistas';
+    const second = render(<FriendInviteEntry />);
+    expect(screen.getByTestId('lobby')).toHaveTextContent(/^new:true$/);
+    second.unmount();
+    state.code = 'ab1234'; state.status = 'authenticated'; state.search = 'duel=buscaminas';
+    render(<FriendInviteEntry />);
+    expect(screen.getByTestId('lobby')).toHaveTextContent(/^AB1234:false$/);
   });
   it('does not turn new-room creation into a join invitation', () => {
     state.code = 'new'; render(<FriendInviteEntry />);

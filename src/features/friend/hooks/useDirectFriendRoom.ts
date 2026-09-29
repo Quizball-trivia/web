@@ -6,11 +6,14 @@ import { toast } from "sonner";
 import { useLocale } from "@/contexts/LocaleContext";
 import { useIsGuest } from "@/lib/auth/useIsGuest";
 import { ensureGuestPrincipal } from "@/lib/realtime/realtime-principal";
+import type { DuelGameId } from "@/lib/realtime/socket.types";
 import { useAuthPromptStore } from "@/stores/authPrompt.store";
 import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
-import { useLobbyCommandMachine } from "./useLobbyCommandMachine";
+import { useLobbyCommandMachine, type LobbyCreatePayload } from "./useLobbyCommandMachine";
 
 export type DirectFriendGameMode = "auction" | "football_grid";
+/** A daily mini-game's "Jugar con un amigo": a two-seat duel room for that game. */
+export type DirectFriendDuel = { gameMode: "duel"; duelGame: DuelGameId };
 
 /**
  * "Play with friend" from a game's modal: create a private room already in that
@@ -28,14 +31,17 @@ export function useDirectFriendRoom({ onFallback }: { onFallback: () => void }) 
   const lobbyCommands = useLobbyCommandMachine();
   const { createLobby, isBusy } = lobbyCommands;
 
-  const startFriendRoom = useCallback(async (gameMode: DirectFriendGameMode) => {
+  const startFriendRoom = useCallback(async (target: DirectFriendGameMode | DirectFriendDuel) => {
     if (isBusy) return;
     if (isGuest) {
       const guest = await ensureGuestPrincipal(locale);
       if (!guest) { openAuthPrompt(); return; }
     }
+    const payload: LobbyCreatePayload = typeof target === "string"
+      ? { mode: "friendly", isPublic: false, gameMode: target }
+      : { mode: "friendly", isPublic: false, gameMode: "duel", duelGame: target.duelGame };
     const creating = toast.info(t("friend.creatingRoom"));
-    const result = await createLobby({ mode: "friendly", isPublic: false, gameMode });
+    const result = await createLobby(payload);
     toast.dismiss(creating);
     if (result?.ok && result.inviteCode) {
       // The room's state arrives by server push: mark the handoff so the room page waits for it instead of joining by code.
@@ -43,7 +49,7 @@ export function useDirectFriendRoom({ onFallback }: { onFallback: () => void }) 
       router.push(`/friend/room/${result.inviteCode}?source=create`);
       return;
     }
-    if (result && !result.ok) toast.error(result.message);
+    if (result && !result.ok) toast.error(result.code === "DUEL_UNAVAILABLE" ? t("friend.errorDuelUnavailable") : result.message);
     onFallback();
   }, [beginLobbyHandoff, createLobby, isBusy, isGuest, locale, onFallback, openAuthPrompt, router, t]);
 

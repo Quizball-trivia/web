@@ -14,7 +14,7 @@ const { LobbySettings } = await import("../LobbySettings");
 
 const lobby = (members: LobbyState["members"]): LobbyState => ({
   lobbyId: "L", mode: "friendly", status: "waiting", inviteCode: "ABC123", displayName: "Room", isPublic: false, hostUserId: "host",
-  settings: { gameMode: "football_grid", friendlyRandom: true, friendlyCategoryAId: null, friendlyCategoryBId: null },
+  settings: { gameMode: "football_grid", duelGame: null, friendlyRandom: true, friendlyCategoryAId: null, friendlyCategoryBId: null },
   members,
 });
 const member = (userId: string, isGuest = false, isHost = false): LobbyState["members"][number] => ({ userId, username: userId, avatarUrl: null, isReady: false, isHost, isGuest });

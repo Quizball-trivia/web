@@ -119,6 +119,7 @@ function makeLobby(memberCount: number, readyFlags: boolean[]): LobbyState {
     hostUserId: SELF_ID,
     settings: {
       gameMode: 'friendly_party_quiz',
+      duelGame: null,
       friendlyRandom: true,
       friendlyCategoryAId: null,
       friendlyCategoryBId: null,

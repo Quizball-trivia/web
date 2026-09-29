@@ -3,6 +3,7 @@ import { queryKeys } from '@/lib/queries/queryKeys';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { useRankedMatchmakingStore } from '@/stores/rankedMatchmaking.store';
 import { useGameSessionStore } from '@/stores/gameSession.store';
+import { useFriendDuelHandoffStore } from '@/stores/friendDuelHandoff.store';
 import { __setSocketOverride } from '../socket-client';
 import type { Socket } from 'socket.io-client';
 import type { ServerToClientEvents, ClientToServerEvents } from '../socket.types';
@@ -247,6 +248,7 @@ describe('registerSocketHandlers', () => {
       hostUserId: 'self-1',
       settings: {
         gameMode: 'ranked_sim',
+        duelGame: null,
         friendlyRandom: true,
         friendlyCategoryAId: null,
         friendlyCategoryBId: null,
@@ -258,6 +260,17 @@ describe('registerSocketHandlers', () => {
     });
 
     expect(useRealtimeMatchStore.getState().lobby).toBeNull();
+  });
+
+  it('keeps a friend room duel:found for the room screen hand-off', () => {
+    useFriendDuelHandoffStore.setState({ found: null });
+    registerSocketHandlers();
+    mockSocket.fire('duel:found', { matchId: 'duel-1', game: 'pistas', lobbyId: 'lobby-1' });
+    expect(useFriendDuelHandoffStore.getState().found).toMatchObject({ matchId: 'duel-1', lobbyId: 'lobby-1', receivedAt: expect.any(Number) });
+    useFriendDuelHandoffStore.getState().consume('other');
+    expect(useFriendDuelHandoffStore.getState().found?.matchId).toBe('duel-1');
+    useFriendDuelHandoffStore.getState().consume('duel-1');
+    expect(useFriendDuelHandoffStore.getState().found).toBeNull();
   });
 
   it('ignores lobby state when the current user is not a lobby member', () => {
@@ -274,6 +287,7 @@ describe('registerSocketHandlers', () => {
       hostUserId: 'old-user',
       settings: {
         gameMode: 'friendly_party_quiz',
+        duelGame: null,
         friendlyRandom: true,
         friendlyCategoryAId: null,
         friendlyCategoryBId: null,
