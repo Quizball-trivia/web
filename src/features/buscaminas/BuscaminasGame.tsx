@@ -20,16 +20,19 @@ import {
 import { clearRun, finishedScores, inProgressDays, loadRun, saveRun, streakFrom } from "./buscaminas.storage";
 import { BuscaminasLeaderboard } from "./BuscaminasLeaderboard";
 import { SignInLink } from "@/features/marketing/public/PublicLinks";
-import { BuscaminasApiError, buscaminasApi, type BuscaminasRun, type BuscaminasRunState } from "@/lib/repositories/buscaminas.repo";
+import { BuscaminasApiError, buscaminasApi, describeFailure, isNetworkFailure, type BuscaminasRun, type BuscaminasRunState } from "@/lib/repositories/buscaminas.repo";
 import { buscaminasCopy, promptFor } from "./buscaminas.copy";
 import { encodeShare } from "./buscaminas.share";
-import { actionOf, trackActionError, trackArchiveOpen, trackLoadError, trackReport, trackRoundEnd, trackRunComplete, trackRunStart, trackShare } from "./buscaminas.analytics";
+import { actionOf, trackActionError, trackActionRecovered, trackArchiveOpen, trackLoadError, trackReport, trackRoundEnd, trackRunComplete, trackRunStart, trackShare } from "./buscaminas.analytics";
 
 const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
 // Boards come from the backend, which serves a day only once it is playable (future boards stay private).
 const boardsUrl = `${API_BASE_URL}/api/v1/buscaminas/boards`;
 const dayUrl = (day: string) => `${boardsUrl}/${day}`;
 type View = "intro" | "play" | "end" | "archive";
+/** A dropped connection usually comes back within a second or two: wait before re-syncing or resending. */
+const RECOVERY_DELAY_MS = 800;
+const LOAD_RETRY_DELAY_MS = 1500;
 
 export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
   locale: Locale;
@@ -104,10 +107,12 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
     return () => controller.abort();
   }, []);
 
+  const loadRetriedRef = useRef(new Set<string>());
   useEffect(() => {
     // The saved run belongs to a guest or an account; wait until we know which.
     if (!authReady) return;
     const controller = new AbortController();
+    let retryTimer: number | undefined;
     // A retry after a content correction must not get the old board back from the HTTP cache.
     fetch(attempt > 0 ? `${dayUrl(day)}?r=${attempt}` : dayUrl(day), { signal: controller.signal, cache: attempt > 0 ? "no-store" : "default" })
       .then(async (res) => {
@@ -120,10 +125,17 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
       })
       .catch((error: { name?: string; status?: number }) => {
         if (error?.name === "AbortError") return;
+        // A dropped connection gets one quiet retry per board before the error screen.
+        const retrying = error instanceof TypeError && !loadRetriedRef.current.has(`${day}#${owner}`);
+        trackLoadError({ puzzleId: day, status: error?.status ?? null, retrying, ...describeFailure(error) });
+        if (retrying) {
+          loadRetriedRef.current.add(`${day}#${owner}`);
+          retryTimer = window.setTimeout(() => setAttempt((n) => n + 1), LOAD_RETRY_DELAY_MS);
+          return;
+        }
         setFailedKey(loadKey);
-        trackLoadError({ puzzleId: day, status: error?.status ?? null });
       });
-    return () => controller.abort();
+    return () => { controller.abort(); window.clearTimeout(retryTimer); };
   }, [attempt, authReady, day, loadKey, owner]);
 
   useEffect(() => {
@@ -168,13 +180,28 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
     const requestOwner = owner;
     const requestDay = day;
     try {
-      const result = await call();
+      let result: BuscaminasRun | null;
+      try {
+        result = await call();
+      } catch (error) {
+        if (!isNetworkFailure(error) || !stillCurrent(requestOwner, requestDay)) throw error;
+        // No answer: the move may still have reached the server. Ask for the run, and resend only if it did not.
+        trackActionError({ puzzleId: day, action: actionOf(key), status: null, code: null, ...describeFailure(error) });
+        await new Promise((resolve) => window.setTimeout(resolve, RECOVERY_DELAY_MS));
+        if (!stillCurrent(requestOwner, requestDay)) return;
+        const current = key !== "start" && run ? await buscaminasApi.start(requestDay, contentVersion, locale) : null;
+        if (!stillCurrent(requestOwner, requestDay)) return;
+        const applied = current !== null && run !== null && (current.run.id !== run.run.id || current.run.version > run.run.version);
+        // The version check on the server makes a resend safe: a move it already applied comes back as stale_state.
+        result = applied ? current : await call();
+        trackActionRecovered({ puzzleId: day, action: actionOf(key), via: applied ? "resync" : "retry" });
+      }
       // The player changed (sign-in/out) or left this board while the request was in flight.
       if (!stillCurrent(requestOwner, requestDay)) return;
       if (result) apply(result, r);
     } catch (error) {
       if (!stillCurrent(requestOwner, requestDay)) return;
-      trackActionError({ puzzleId: day, action: actionOf(key), status: error instanceof BuscaminasApiError ? error.status : null, code: error instanceof BuscaminasApiError ? error.message : null });
+      trackActionError({ puzzleId: day, action: actionOf(key), status: error instanceof BuscaminasApiError ? error.status : null, code: error instanceof BuscaminasApiError ? error.message : null, ...describeFailure(error) });
       const code = error instanceof BuscaminasApiError ? error.message : null;
       const status = error instanceof BuscaminasApiError ? error.status : null;
       const newer = code === "stale_state" && run ? loadRun(day, contentVersion, owner) : null;

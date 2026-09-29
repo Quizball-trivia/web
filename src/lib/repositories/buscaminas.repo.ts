@@ -98,6 +98,23 @@ async function call<T>(path: string, method: "GET" | "POST", body: unknown, loca
   return payload as T;
 }
 
+/** No HTTP answer at all: the connection dropped or the request timed out (never a server refusal). */
+export function isNetworkFailure(error: unknown): boolean {
+  if (error instanceof BuscaminasApiError) return false;
+  const name = (error as { name?: unknown } | null)?.name;
+  return error instanceof TypeError || name === "AbortError" || name === "TimeoutError";
+}
+
+/** The browser's error name and message for analytics; server refusals are already described by their code. */
+export function describeFailure(error: unknown): { errorName: string | null; errorMessage: string | null } {
+  if (error instanceof BuscaminasApiError) return { errorName: null, errorMessage: null };
+  const e = error as { name?: unknown; message?: unknown } | null;
+  return {
+    errorName: typeof e?.name === "string" ? e.name : null,
+    errorMessage: typeof e?.message === "string" ? e.message.slice(0, 160) : null,
+  };
+}
+
 const move = (run: BuscaminasRun) => ({ runId: run.run.id, version: run.run.version });
 
 export const buscaminasApi = {

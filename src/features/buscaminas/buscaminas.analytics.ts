@@ -28,8 +28,15 @@ const NAMED_MOVES = new Set(["start", "bank", "next"]);
 /** The action an error happened in: taps are keyed by card id (a short Transfermarkt number), the other moves by name. */
 export const actionOf = (key: string): string => (NAMED_MOVES.has(key) ? key : "tap");
 
-export const trackActionError = (p: { puzzleId: string; action: string; status: number | null; code: string | null }) =>
-  trackEvent("buscaminas_action_error", { puzzle_id: p.puzzleId, action: p.action, http_status: p.status, error_code: p.code });
+/** For failures without an HTTP answer: the browser's own error ("TypeError: Load failed", "TimeoutError"). */
+type FailureDetail = { errorName?: string | null; errorMessage?: string | null };
 
-export const trackLoadError = (p: { puzzleId: string; status: number | null }) =>
-  trackEvent("buscaminas_load_error", { puzzle_id: p.puzzleId, http_status: p.status });
+export const trackActionError = (p: { puzzleId: string; action: string; status: number | null; code: string | null } & FailureDetail) =>
+  trackEvent("buscaminas_action_error", { puzzle_id: p.puzzleId, action: p.action, http_status: p.status, error_code: p.code, error_name: p.errorName ?? null, error_message: p.errorMessage ?? null });
+
+/** A move that got no answer but went through after a re-sync with the server or one resend. */
+export const trackActionRecovered = (p: { puzzleId: string; action: string; via: "resync" | "retry" }) =>
+  trackEvent("buscaminas_action_recovered", { puzzle_id: p.puzzleId, action: p.action, via: p.via });
+
+export const trackLoadError = (p: { puzzleId: string; status: number | null; retrying: boolean } & FailureDetail) =>
+  trackEvent("buscaminas_load_error", { puzzle_id: p.puzzleId, http_status: p.status, retrying: p.retrying, error_name: p.errorName ?? null, error_message: p.errorMessage ?? null });
