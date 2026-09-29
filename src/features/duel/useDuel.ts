@@ -9,7 +9,12 @@ import type { DuelCommandResultPayload, DuelStatePayload, ErrorPayload } from "@
 import { QUIET_ERRORS } from "./duel.copy";
 
 const FATAL_ERRORS = new Set(["duel_not_found", "not_in_match"]);
+/** An accepted command's state is asked for after this, and the input is never held longer than the give-up. */
 const STATE_WAIT_MS = 1_500;
+const STATE_GIVE_UP_MS = 5_000;
+
+/** Whether a snapshot shows what a command did (the server answers a command before it broadcasts the state). */
+export type ShowsCommand = (snapshot: DuelStatePayload) => boolean;
 import type { DuelCommand } from "./duel.views";
 
 /**
@@ -29,9 +34,10 @@ export function useDuel(matchId: string) {
   const [connected, setConnected] = useState(false);
   const offsetRef = useRef(0);
   /** Sent and not answered yet, re-sent on reconnect; `live` until an error means no answer is coming on this connection. */
-  const pending = useRef(new Map<string, { command: DuelCommand; version: number; live: boolean }>());
-  /** Accepted commands whose state has not arrived yet (the server answers first, then broadcasts): the version that shows them. */
-  const awaiting = useRef(new Map<string, number>());
+  const pending = useRef(new Map<string, { command: DuelCommand; shows?: ShowsCommand; live: boolean }>());
+  /** Accepted commands whose state is not on screen yet. */
+  const awaiting = useRef(new Map<string, ShowsCommand>());
+  const shown = useRef<DuelStatePayload | null>(null);
   /** A board holds its input while this is above 0: until the server has judged the last command and its state is on screen. */
   const [inFlight, setInFlight] = useState(0);
   const recount = useCallback(() => {
@@ -55,7 +61,8 @@ export function useDuel(matchId: string) {
       if (seen && (payload.stateVersion < seen.version || (payload.stateVersion === seen.version && serverNowMs < seen.serverNowMs))) return;
       latest.current = { version: payload.stateVersion, serverNowMs };
       offsetRef.current = serverNowMs - Date.now();
-      for (const [commandId, version] of awaiting.current) if (payload.stateVersion >= version) awaiting.current.delete(commandId);
+      shown.current = payload;
+      for (const [commandId, shows] of awaiting.current) if (shows(payload)) awaiting.current.delete(commandId);
       recount();
       setFatal(null);
       setSnapshot(payload);
@@ -64,15 +71,12 @@ export function useDuel(matchId: string) {
       if (payload.matchId !== matchId) return;
       const sent = pending.current.get(payload.commandId);
       pending.current.delete(payload.commandId);
-      if (payload.ok && sent && (latest.current?.version ?? -1) <= sent.version) {
+      if (payload.ok && sent?.shows && !(shown.current && sent.shows(shown.current))) {
         const { commandId } = payload;
-        awaiting.current.set(commandId, sent.version + 1);
-        // A lost broadcast must not hold the input: ask for the state instead.
-        window.setTimeout(() => {
-          if (!awaiting.current.delete(commandId)) return;
-          recount();
-          if (socket.connected) socket.emit("duel:resync", { matchId, locale });
-        }, STATE_WAIT_MS);
+        awaiting.current.set(commandId, sent.shows);
+        // A lost broadcast must not hold the input: ask for the state, and give up waiting eventually.
+        window.setTimeout(() => { if (awaiting.current.has(commandId) && socket.connected) socket.emit("duel:resync", { matchId, locale }); }, STATE_WAIT_MS);
+        window.setTimeout(() => { if (awaiting.current.delete(commandId)) recount(); }, STATE_GIVE_UP_MS);
       }
       recount();
       if (!payload.ok && payload.code && !QUIET_ERRORS.has(payload.code)) setError(payload.code);
@@ -143,10 +147,11 @@ export function useDuel(matchId: string) {
     socket.emit("duel:resync", { matchId, locale });
   }, [socket, snapshot, matchId, locale, connected]);
 
-  const send = useCallback((command: DuelCommand) => {
+  /** `shows`: when the board may take the next command — the input waits for the state, not just the acknowledgement. */
+  const send = useCallback((command: DuelCommand, shows?: ShowsCommand) => {
     if (!socket) return;
     const commandId = createRealtimeCommandId();
-    pending.current.set(commandId, { command, version: latest.current?.version ?? -1, live: true });
+    pending.current.set(commandId, { command, shows, live: true });
     recount();
     setError(null);
     socket.emit("duel:command", { matchId, commandId, command });

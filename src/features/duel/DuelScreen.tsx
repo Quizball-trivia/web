@@ -153,7 +153,14 @@ function DuelRoom({ matchId }: { matchId: string }) {
         {view && !introPhase && snapshot.game === "ultimo" && (
           <UltimoDuelBoard key={(view as UltimoDuelView).category} view={view as UltimoDuelView} mySeat={mySeat} names={names} copy={copy} finished={finished || snapshot.status === "paused"}
             secondsLeft={secondsLeft} busy={duel.inFlight > 0}
-            onAnswer={(text) => duel.send({ type: "answer", cat: (view as UltimoDuelView).category, k: (view as UltimoDuelView).k, text })} />
+            onAnswer={(text) => {
+              const { category, k } = view as UltimoDuelView;
+              // Held until a snapshot shows the answer judged (a new attempt, another category, or the end).
+              duel.send({ type: "answer", cat: category, k, text }, (next) => {
+                const shownView = next.view as UltimoDuelView | null;
+                return !shownView || shownView.category !== category || shownView.k !== k || shownView.phase !== "turn";
+              });
+            }} />
         )}
         {view && !introPhase && snapshot.game === "pistas" && (
           <PistasDuelBoard key={(view as PistasDuelView).round} view={view as PistasDuelView} mySeat={mySeat} names={names} copy={copy} locale={locale as Locale} finished={finished || snapshot.status === "paused"}
