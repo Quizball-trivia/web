@@ -14,7 +14,7 @@ import { findPublicGameByModeId, relatedPublishedGames } from "@/lib/seo/public-
 import { PublicCardGrid } from "@/features/marketing/public/PublicCards";
 import { SignInLink } from "@/features/marketing/public/PublicLinks";
 import type { Locale } from "@/lib/i18n/locale";
-import { PistasApiError, pistasApi, type PistasReview, type PistasRun, type PistasRunState } from "@/lib/repositories/pistas.repo";
+import { PistasApiError, isNetworkFailure, pistasApi, type PistasReview, type PistasRun, type PistasRunState } from "@/lib/repositories/pistas.repo";
 import {
   CLUES_PER_ROUND, MAX_SCORE, addDays, isClosedDay, isLiveDay, playableDays, pointsFor, puzzleNumber, releaseDay, resultGrid, resultTone,
   type PistasClue, type ResultTone, type RoundResult,
@@ -29,6 +29,8 @@ import { trackActionError, trackArchiveOpen, trackLoadError, trackReport, trackR
 
 const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
 type View = "intro" | "play" | "end" | "archive";
+/** A dropped connection usually comes back within a second or two: wait before re-syncing or resending. */
+const RECOVERY_DELAY_MS = 800;
 
 const startedOn = (state: PistasRunState): boolean => state.round > 0 || state.revealed > 1 || state.results.length > 0 || state.wrongGuesses > 0;
 
@@ -177,7 +179,39 @@ export function PistasGame({ locale, onExit, onEvent, initialDay, onDay }: {
     const requestOwner = owner;
     const requestDay = day;
     try {
-      const result = await call();
+      let result: PistasRun | null;
+      try {
+        result = await call();
+      } catch (error) {
+        if (!isNetworkFailure(error) || key === "start" || !run || !stillCurrent(requestOwner, requestDay)) throw error;
+        // No answer: the move may still have reached the server. Look at the run, and resend only if it did not
+        // (a resend is safe: every move is version-checked, so one already applied comes back stale_state).
+        trackActionError({ puzzleId: day, action: key, status: null, code: null });
+        await new Promise((resolve) => window.setTimeout(resolve, RECOVERY_DELAY_MS));
+        if (!stillCurrent(requestOwner, requestDay)) return;
+        const before = run;
+        const look = async () => {
+          const current = await pistasApi.start(requestDay, contentVersion, locale);
+          const landed = current.run.id === before.run.id && current.run.version === before.run.version + 1;
+          const unchanged = current.run.id === before.run.id && current.run.version === before.run.version;
+          return { current, landed, unchanged };
+        };
+        let seen = await look();
+        if (!stillCurrent(requestOwner, requestDay)) return;
+        if (seen.unchanged) {
+          try {
+            result = await call();
+          } catch (resendError) {
+            if (!(resendError instanceof PistasApiError && resendError.message === "stale_state") || !stillCurrent(requestOwner, requestDay)) throw resendError;
+            seen = await look();
+            if (!stillCurrent(requestOwner, requestDay)) return;
+            if (seen.unchanged) throw resendError;
+            result = seen.current;
+          }
+        } else {
+          result = seen.current;
+        }
+      }
       if (!stillCurrent(requestOwner, requestDay)) return;
       if (result) apply(result);
     } catch (error) {

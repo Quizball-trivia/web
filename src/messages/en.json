@@ -1217,6 +1217,8 @@
     "roomCodePlaceholder": "ROOM CODE",
     "createTimedOut": "Create request timed out. Please retry.",
     "enterValidCode": "Please enter a valid code",
+    "inviteFullTitle": "This room is full",
+    "inviteFullDescription": "Room {code} has no free seat. Ask the person who invited you to open a new room.",
     "inviteJoinFailedTitle": "Could not join lobby",
     "inviteJoinFailedDescription": "Invite {code} is no longer available. Ask the host for a new link or code.",
     "inviteExpiredTitle": "Lobby link expired",

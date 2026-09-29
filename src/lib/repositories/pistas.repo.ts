@@ -109,6 +109,13 @@ async function call<T>(path: string, method: "GET" | "POST", body: unknown, loca
 
 const move = (run: PistasRun) => ({ runId: run.run.id, version: run.run.version });
 
+/** No answer at all (dropped connection, timeout): the move may or may not have reached the server. */
+export function isNetworkFailure(error: unknown): boolean {
+  if (error instanceof PistasApiError) return false;
+  const name = (error as { name?: unknown } | null)?.name;
+  return error instanceof TypeError || name === "AbortError" || name === "TimeoutError";
+}
+
 export const pistasApi = {
   /** `fresh` skips the HTTP cache: after a correction the cached index would hand back the old version. */
   boards: (fresh = false) => call<{ days: Record<string, number>; rankedFrom?: string }>(fresh ? `/boards?r=${Date.now()}` : "/boards", "GET", undefined, "es", "none"),

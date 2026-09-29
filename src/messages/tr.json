@@ -1217,6 +1217,8 @@
     "roomCodePlaceholder": "ODA KODU",
     "createTimedOut": "Oluşturma isteği zaman aşımına uğradı. Lütfen tekrar dene.",
     "enterValidCode": "Lütfen geçerli bir kod gir",
+    "inviteFullTitle": "Oda dolu",
+    "inviteFullDescription": "{code} odasında boş yer yok. Seni davet eden kişiden yeni bir oda açmasını iste.",
     "inviteJoinFailedTitle": "Odaya katılamadı",
     "inviteJoinFailedDescription": "Davetiye {code} artık mevcut değil. Yeni bir bağlantı veya kod için ev sahibine sor.",
     "inviteExpiredTitle": "Oda bağlantısı süresi doldu",

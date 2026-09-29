@@ -1217,6 +1217,8 @@
     "roomCodePlaceholder": "CÓDIGO DE SALA",
     "createTimedOut": "Tiempo de espera agotado. Inténtalo de nuevo.",
     "enterValidCode": "Introduce un código válido",
+    "inviteFullTitle": "La sala está llena",
+    "inviteFullDescription": "La sala {code} ya no tiene lugar. Pedile a quien te invitó que abra una sala nueva.",
     "inviteJoinFailedTitle": "No se pudo unir a la sala",
     "inviteJoinFailedDescription": "La invitación {code} ya no está disponible. Pide al anfitrión un nuevo enlace o código.",
     "inviteExpiredTitle": "Enlace de sala caducado",

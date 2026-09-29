@@ -169,6 +169,8 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
   if (inviteJoinFailure) {
     const code = inviteJoinFailure.inviteCode || targetInviteCode || lobbyCode;
     const isExpiredInvite = inviteJoinFailure.reasonCode === "LOBBY_NOT_FOUND";
+    // A full room is not a broken link: say it plainly (and never show the server's English detail for it).
+    const isFullRoom = inviteJoinFailure.reasonCode === "LOBBY_FULL";
 
     return (
       <div className="container mx-auto max-w-5xl px-3 py-6 animate-in fade-in lg:px-0">
@@ -179,22 +181,26 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
               className="text-white uppercase"
               style={{ fontFamily: poppins, fontWeight: 700, fontSize: 24, letterSpacing: '0.04em' }}
             >
-              {t(isExpiredInvite ? "friend.inviteExpiredTitle" : "friend.inviteJoinFailedTitle")}
+              {t(isFullRoom ? "friend.inviteFullTitle" : isExpiredInvite ? "friend.inviteExpiredTitle" : "friend.inviteJoinFailedTitle")}
             </h1>
             <p
               className="text-white/65"
               style={{ fontFamily: poppins, fontWeight: 500, fontSize: 14, lineHeight: 1.45 }}
             >
-              {isExpiredInvite
-                ? t("friend.inviteExpiredDescription")
-                : t("friend.inviteJoinFailedDescription", { code })}
+              {isFullRoom
+                ? t("friend.inviteFullDescription", { code })
+                : isExpiredInvite
+                  ? t("friend.inviteExpiredDescription")
+                  : t("friend.inviteJoinFailedDescription", { code })}
             </p>
-            <p
-              className="text-white/45 uppercase"
-              style={{ fontFamily: poppins, fontWeight: 600, fontSize: 11, letterSpacing: '0.08em' }}
-            >
-              {inviteJoinFailure.message}
-            </p>
+            {!isFullRoom && (
+              <p
+                className="text-white/45 uppercase"
+                style={{ fontFamily: poppins, fontWeight: 600, fontSize: 11, letterSpacing: '0.08em' }}
+              >
+                {inviteJoinFailure.message}
+              </p>
+            )}
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
             {inviteJoinFailure.retryable && (

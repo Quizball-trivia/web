@@ -1265,6 +1265,8 @@
     "roomCodePlaceholder": "ოთახის კოდი",
     "createTimedOut": "შექმნის მოთხოვნას დრო ამოეწურა. გთხოვთ, სცადოთ თავიდან.",
     "enterValidCode": "გთხოვთ, შეიყვანოთ ვალიდური კოდი",
+    "inviteFullTitle": "ოთახი სავსეა",
+    "inviteFullDescription": "ოთახში {code} ადგილი აღარ არის. სთხოვე, ვინც მოგიწვია, ახალი ოთახი გახსნას.",
     "inviteJoinFailedTitle": "ოთახში შესვლა ვერ მოხერხდა",
     "inviteJoinFailedDescription": "მოწვევა {code} აღარ არის ხელმისაწვდომი. სთხოვე ჰოსტს ახალი ბმული ან კოდი.",
     "inviteExpiredTitle": "მოსაწვევი ბმული აღარ მოქმედებს",
