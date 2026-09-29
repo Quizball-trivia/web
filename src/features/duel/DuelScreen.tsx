@@ -64,6 +64,8 @@ function DuelRoom({ matchId }: { matchId: string }) {
     return () => window.clearTimeout(id);
   }, [error, clearError, hasSnapshot]);
 
+  useEffect(() => { if (fatal && !hasSnapshot) clearActive(matchId); }, [fatal, hasSnapshot, clearActive, matchId]);
+
   const [stalled, setStalled] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const loading = !hasSnapshot && !fatal;
@@ -85,7 +87,6 @@ function DuelRoom({ matchId }: { matchId: string }) {
   };
 
   if (!snapshot) {
-    if (fatal) clearActive(matchId);
     const stuck = fatal ?? (error || stalled || duel.guestStatus === "refused" ? error ?? "default" : null);
     const retry = () => {
       clearError();

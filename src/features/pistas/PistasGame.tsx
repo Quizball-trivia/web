@@ -243,7 +243,8 @@ export function PistasGame({ locale, onExit, onEvent, initialDay, onDay }: {
         try {
           const current = await pistasApi.start(requestDay, contentVersion, locale);
           if (!stillCurrent(requestOwner, requestDay)) return;
-          setRun(current);
+          // Through apply: a run that finished elsewhere still counts as completed here (analytics, board refresh).
+          apply(current);
           setView(current.state.done ? "end" : "play");
         } catch {
           if (stillCurrent(requestOwner, requestDay)) setNotice(c.actionError);

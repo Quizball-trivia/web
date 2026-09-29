@@ -124,8 +124,9 @@ export function useDuel(matchId: string) {
   }, [socket, matchId]);
 
   const nowMs = useCallback(() => Date.now() + offsetRef.current, []);
+  const clearError = useCallback(() => setError(null), []);
 
-  return { snapshot, error, fatal, clearError: () => setError(null), connected, send, forfeit, nowMs, principal, guestStatus, resync };
+  return { snapshot, error, fatal, clearError, connected, send, forfeit, nowMs, principal, guestStatus, resync };
 }
 
 /** Seconds left on the server deadline, ticking on the synced clock (never the device clock alone). */
