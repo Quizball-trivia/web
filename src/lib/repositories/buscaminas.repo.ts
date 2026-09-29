@@ -90,12 +90,35 @@ async function call<T>(path: string, method: "GET" | "POST", body: unknown, loca
     // Players retry with a fresh session; read-only calls retry without one (never minting).
     if (!retried) return call<T>(path, method, body, locale, identity, true);
   }
-  const payload = await response.json().catch(() => null);
+  let payload: unknown = null;
+  try {
+    payload = await response.json();
+  } catch (error) {
+    // A success whose body never fully arrived is a dropped connection, not an empty answer; error bodies may be empty.
+    if (response.ok) throw isNetworkFailure(error) ? error : new TypeError("Incomplete response");
+  }
   if (!response.ok) {
     const data = payload as { code?: string; message?: string; error?: { code?: string } } | null;
     throw new BuscaminasApiError(data?.code ?? data?.error?.code ?? data?.message ?? `Request failed (${response.status})`, response.status);
   }
   return payload as T;
+}
+
+/** No HTTP answer at all: the connection dropped or the request timed out (never a server refusal). */
+export function isNetworkFailure(error: unknown): boolean {
+  if (error instanceof BuscaminasApiError) return false;
+  const name = (error as { name?: unknown } | null)?.name;
+  return error instanceof TypeError || name === "AbortError" || name === "TimeoutError";
+}
+
+/** The browser's error name and message for analytics; server refusals are already described by their code. */
+export function describeFailure(error: unknown): { errorName: string | null; errorMessage: string | null } {
+  if (error instanceof BuscaminasApiError) return { errorName: null, errorMessage: null };
+  const e = error as { name?: unknown; message?: unknown } | null;
+  return {
+    errorName: typeof e?.name === "string" ? e.name : null,
+    errorMessage: typeof e?.message === "string" ? e.message.slice(0, 160) : null,
+  };
 }
 
 const move = (run: BuscaminasRun) => ({ runId: run.run.id, version: run.run.version });
