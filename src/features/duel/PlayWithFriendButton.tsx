@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { GUEST_LOBBIES_ENABLED } from "@/lib/config";
+import { useAuthStore } from "@/stores/auth.store";
 import type { Locale } from "@/lib/i18n/locale";
 import type { DuelGameId } from "@/lib/realtime/socket.types";
 import { storage, STORAGE_KEYS } from "@/utils/storage";
@@ -15,7 +17,9 @@ const ENABLED = (process.env.NEXT_PUBLIC_DUEL_GAMES ?? "").split(",").map((game)
  * works on the public game pages too (they have no socket); the room page creates the room, guests included.
  */
 export function PlayWithFriendButton({ game, locale, className }: { game: DuelGameId; locale: Locale; className?: string }) {
-  if (!ENABLED.includes(game)) return null;
+  const authStatus = useAuthStore((state) => state.status);
+  // Without guest rooms a signed-out player would only be bounced off the room page.
+  if (!ENABLED.includes(game) || (!GUEST_LOBBIES_ENABLED && authStatus !== "authenticated")) return null;
   const c = duelCopy(locale);
   return (
     // App routes read the stored language, not the SEO page's URL: keep the room in the language the player is reading.

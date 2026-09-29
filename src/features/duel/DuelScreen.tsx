@@ -20,6 +20,8 @@ import { useDuel, useSecondsLeft } from "./useDuel";
 import { DuelIntro } from "./DuelIntro";
 
 const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
+/** Without a first snapshot by then, the loading screen offers retry / exit instead of spinning forever. */
+const LOADING_LIMIT_MS = 8_000;
 
 /**
  * Everything on the duel screen belongs to one principal: signing in or out mid-match remounts it, so a
@@ -54,11 +56,22 @@ function DuelRoom({ matchId }: { matchId: string }) {
     else setActive({ matchId, game, lobbyId }, owner);
   }, [status, game, lobbyId, matchId, owner, setActive, clearActive]);
 
+  // Before the first snapshot an error is the whole screen, so it stays until a retry.
+  const hasSnapshot = snapshot !== null;
   useEffect(() => {
-    if (!error) return;
+    if (!error || !hasSnapshot) return;
     const id = window.setTimeout(clearError, 3_000);
     return () => window.clearTimeout(id);
-  }, [error, clearError]);
+  }, [error, clearError, hasSnapshot]);
+
+  const [stalled, setStalled] = useState(false);
+  const [attempt, setAttempt] = useState(0);
+  const loading = !hasSnapshot && !fatal;
+  useEffect(() => {
+    if (!loading) return;
+    const id = window.setTimeout(() => setStalled(true), LOADING_LIMIT_MS);
+    return () => window.clearTimeout(id);
+  }, [loading, attempt]);
 
   const live = snapshot?.status === "active" || snapshot?.status === "countdown" || snapshot?.status === "paused";
   const exit = () => {
@@ -73,14 +86,23 @@ function DuelRoom({ matchId }: { matchId: string }) {
 
   if (!snapshot) {
     if (fatal) clearActive(matchId);
+    const stuck = fatal ?? (error || stalled || duel.guestStatus === "refused" ? error ?? "default" : null);
+    const retry = () => {
+      clearError();
+      setStalled(false);
+      setAttempt((n) => n + 1);
+      // A socket that never came up cannot resync; a fresh page load re-runs the whole connection.
+      if (duel.connected) duel.resync();
+      else window.location.reload();
+    };
     return (
       <Shell>
         <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
-          {fatal ? <p className="text-white/80">{copy.errors[fatal] ?? copy.errors.default}</p> : <Loader2 className="size-8 animate-spin text-white/60" />}
-          {!fatal && <p className="text-sm text-white/60">{copy.connecting}</p>}
-          {fatal && (
+          {stuck ? <p className="text-white/80">{copy.errors[stuck] ?? copy.errors.default}</p> : <Loader2 className="size-8 animate-spin text-white/60" />}
+          {!stuck && <p className="text-sm text-white/60">{copy.connecting}</p>}
+          {stuck && (
             <div className="flex gap-2">
-              <button type="button" onClick={duel.resync} className="h-11 rounded-full bg-white/10 px-6 text-sm font-bold uppercase" style={poppins}>{copy.retry}</button>
+              <button type="button" onClick={retry} className="h-11 rounded-full bg-white/10 px-6 text-sm font-bold uppercase" style={poppins}>{copy.retry}</button>
               <button type="button" onClick={() => router.push("/play")} className="h-11 rounded-full bg-white/10 px-6 text-sm font-bold uppercase" style={poppins}>{copy.result.exit}</button>
             </div>
           )}
