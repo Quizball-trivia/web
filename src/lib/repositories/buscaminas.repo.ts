@@ -90,7 +90,13 @@ async function call<T>(path: string, method: "GET" | "POST", body: unknown, loca
     // Players retry with a fresh session; read-only calls retry without one (never minting).
     if (!retried) return call<T>(path, method, body, locale, identity, true);
   }
-  const payload = await response.json().catch(() => null);
+  let payload: unknown = null;
+  try {
+    payload = await response.json();
+  } catch (error) {
+    // A success whose body never fully arrived is a dropped connection, not an empty answer; error bodies may be empty.
+    if (response.ok) throw isNetworkFailure(error) ? error : new TypeError("Incomplete response");
+  }
   if (!response.ok) {
     const data = payload as { code?: string; message?: string; error?: { code?: string } } | null;
     throw new BuscaminasApiError(data?.code ?? data?.error?.code ?? data?.message ?? `Request failed (${response.status})`, response.status);

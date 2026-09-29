@@ -34,6 +34,16 @@ type View = "intro" | "play" | "end" | "archive";
 const RECOVERY_DELAY_MS = 800;
 const LOAD_RETRY_DELAY_MS = 1500;
 
+/** Whether a re-synced run is exactly this move applied, and not progress made elsewhere (another tab). */
+function moveLanded(key: string, before: BuscaminasRun, after: BuscaminasRun): boolean {
+  if (after.run.id !== before.run.id || after.run.version !== before.run.version + 1) return false;
+  const [b, a] = [before.state, after.state];
+  if (key === "bank") return a.round === b.round && !b.settled && a.settled?.outcome === "banked";
+  if (key === "next") return a.round === b.round + 1 || (a.done && !b.done);
+  // A tap is keyed by the card id.
+  return a.round === b.round && (a.picked.includes(key) || a.mine === key);
+}
+
 export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
   locale: Locale;
   onExit?: () => void;
@@ -119,6 +129,7 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
         if (!res.ok) throw Object.assign(new Error("load"), { status: res.status });
         const data = (await res.json()) as BuscaminasDay;
         const saved = loadRun(day, data.contentVersion ?? 1, owner);
+        loadRetriedRef.current.delete(`${day}#${owner}`);
         setLoaded({ key: loadKey, data });
         setRun(saved);
         setView(saved?.state.done ? "end" : "intro");
@@ -181,6 +192,7 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
     const requestDay = day;
     try {
       let result: BuscaminasRun | null;
+      let recoveredVia: "resync" | "retry" | null = null;
       try {
         result = await call();
       } catch (error) {
@@ -189,16 +201,46 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
         trackActionError({ puzzleId: day, action: actionOf(key), status: null, code: null, ...describeFailure(error) });
         await new Promise((resolve) => window.setTimeout(resolve, RECOVERY_DELAY_MS));
         if (!stillCurrent(requestOwner, requestDay)) return;
-        const current = key !== "start" && run ? await buscaminasApi.start(requestDay, contentVersion, locale) : null;
+        const before = run;
+        const look = async (): Promise<{ seen: "landed" | "moved"; current: BuscaminasRun } | { seen: "unchanged" }> => {
+          if (key === "start" || !before) return { seen: "unchanged" };
+          const current = await buscaminasApi.start(requestDay, contentVersion, locale);
+          if (moveLanded(key, before, current)) return { seen: "landed", current };
+          if (current.run.id !== before.run.id || current.run.version > before.run.version) return { seen: "moved", current };
+          return { seen: "unchanged" };
+        };
+        let found = await look();
         if (!stillCurrent(requestOwner, requestDay)) return;
-        const applied = current !== null && run !== null && (current.run.id !== run.run.id || current.run.version > run.run.version);
-        // The version check on the server makes a resend safe: a move it already applied comes back as stale_state.
-        result = applied ? current : await call();
-        trackActionRecovered({ puzzleId: day, action: actionOf(key), via: applied ? "resync" : "retry" });
+        result = null;
+        if (found.seen === "unchanged") {
+          try {
+            // The server's version check makes a resend safe: a move it already applied comes back as stale_state.
+            result = await call();
+            recoveredVia = "retry";
+          } catch (resendError) {
+            // The original request can land after the look: the resend then meets stale_state. Look once more.
+            if (!(resendError instanceof BuscaminasApiError && resendError.message === "stale_state") || !stillCurrent(requestOwner, requestDay)) throw resendError;
+            found = await look();
+            if (!stillCurrent(requestOwner, requestDay)) return;
+            if (found.seen === "unchanged") throw resendError;
+          }
+        }
+        if (found.seen === "landed") {
+          result = found.current;
+          recoveredVia = "resync";
+        } else if (found.seen === "moved") {
+          // Progress made elsewhere: show it without counting it as this move.
+          setRun(found.current);
+          setView(found.current.state.done ? "end" : "play");
+          return;
+        }
       }
       // The player changed (sign-in/out) or left this board while the request was in flight.
       if (!stillCurrent(requestOwner, requestDay)) return;
-      if (result) apply(result, r);
+      if (result) {
+        apply(result, r);
+        if (recoveredVia) trackActionRecovered({ puzzleId: day, action: actionOf(key), via: recoveredVia });
+      }
     } catch (error) {
       if (!stillCurrent(requestOwner, requestDay)) return;
       trackActionError({ puzzleId: day, action: actionOf(key), status: error instanceof BuscaminasApiError ? error.status : null, code: error instanceof BuscaminasApiError ? error.message : null, ...describeFailure(error) });

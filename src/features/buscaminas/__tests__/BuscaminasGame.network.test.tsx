@@ -85,6 +85,46 @@ describe("Buscaminas when a move gets no answer from the server", () => {
   });
 });
 
+describe("Buscaminas recovery edge cases", () => {
+  const mineOn = (version: number, cardId: string, extra: string[] = []) => ({
+    run: { id: "run-1", version },
+    state: { day: "d", round: 0, picked: extra, found: extra.length, mine: cardId, settled: { outcome: "mine", found: extra.length, points: 0, reveal: null }, results: [], done: false, score: 0, ranked: false },
+  });
+
+  it("progress made elsewhere (another tab) is shown but not counted as this move", async () => {
+    api.tap.mockRejectedValueOnce(offline());
+    api.start.mockResolvedValueOnce(runState(0, [])).mockResolvedValueOnce(mineOn(3, "r0c5", ["r0c1", "r0c2"]));
+    await openBoardAndTap();
+    await waitFor(() => expect(api.start).toHaveBeenCalledTimes(2), { timeout: 4000 });
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    expect(analytics.trackRoundEnd).not.toHaveBeenCalled();
+    expect(api.tap).toHaveBeenCalledTimes(1);
+    expect(connectionLost()).toBeNull();
+  });
+
+  it("a late original request that settles the round still counts once (resend meets stale_state)", async () => {
+    const { BuscaminasApiError } = await vi.importActual<typeof import("@/lib/repositories/buscaminas.repo")>("@/lib/repositories/buscaminas.repo");
+    api.tap.mockRejectedValueOnce(offline()).mockRejectedValueOnce(new BuscaminasApiError("stale_state", 409));
+    api.start.mockResolvedValueOnce(runState(0, [])).mockResolvedValueOnce(runState(0, [])).mockResolvedValueOnce(mineOn(1, "r0c0"));
+    await openBoardAndTap();
+    await waitFor(() => expect(analytics.trackRoundEnd).toHaveBeenCalledTimes(1), { timeout: 4000 });
+    expect(analytics.trackRoundEnd).toHaveBeenCalledWith(expect.objectContaining({ outcome: "mine" }));
+    expect(analytics.trackActionRecovered).toHaveBeenCalledTimes(1);
+    expect(connectionLost()).toBeNull();
+  });
+
+  it("a recovery that finishes after the player left is not counted", async () => {
+    let resolveResend: (value: unknown) => void = () => {};
+    api.tap.mockRejectedValueOnce(offline()).mockImplementationOnce(() => new Promise((resolve) => { resolveResend = resolve; }));
+    api.start.mockResolvedValueOnce(runState(0, [])).mockResolvedValueOnce(runState(0, []));
+    await openBoardAndTap();
+    await waitFor(() => expect(api.tap).toHaveBeenCalledTimes(2), { timeout: 4000 });
+    cleanup();
+    await act(async () => { resolveResend({ ...runState(1, ["r0c0"]), ok: true }); });
+    expect(analytics.trackActionRecovered).not.toHaveBeenCalled();
+  });
+});
+
 describe("Buscaminas when the server refuses a move", () => {
   it("never resends or re-syncs: the refusal is handled as before", async () => {
     const { BuscaminasApiError } = await vi.importActual<typeof import("@/lib/repositories/buscaminas.repo")>("@/lib/repositories/buscaminas.repo");
