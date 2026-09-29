@@ -78,7 +78,9 @@ export const ultimoApi = {
   /** `fresh` skips the HTTP cache: after a correction the cached index would hand back the old version. */
   boards: (fresh = false) => call<{ days: Record<string, number>; rankedFrom?: string }>(fresh ? `/boards?r=${Date.now()}` : "/boards", "GET", undefined, "es", "none"),
   current: (day: string, locale: string) => call<UltimoRun | { run: null }>(`/current?day=${encodeURIComponent(day)}`, "GET", undefined, locale, "optional"),
-  start: (day: string, contentVersion: number | undefined, locale: string) => call<UltimoRun>("/start", "POST", { day, ...(contentVersion ? { contentVersion } : {}) }, locale),
+  /** `timeoutMs`: a re-sync in the middle of a category must answer within the turn. */
+  start: (day: string, contentVersion: number | undefined, locale: string, timeoutMs?: number) =>
+    call<UltimoRun>("/start", "POST", { day, ...(contentVersion ? { contentVersion } : {}) }, locale, "player", timeoutMs),
   begin: (run: UltimoRun, locale: string) => call<UltimoRun>("/begin", "POST", move(run), locale, "player", MOVE_TIMEOUT_MS),
   answer: (run: UltimoRun, answer: string, locale: string) =>
     call<UltimoRun & { result: UltimoAnswerResult }>("/answer", "POST", { ...move(run), answer }, locale, "player", MOVE_TIMEOUT_MS),

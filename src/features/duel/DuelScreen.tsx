@@ -152,7 +152,7 @@ function DuelRoom({ matchId }: { matchId: string }) {
         )}
         {view && !introPhase && snapshot.game === "ultimo" && (
           <UltimoDuelBoard key={(view as UltimoDuelView).category} view={view as UltimoDuelView} mySeat={mySeat} names={names} copy={copy} finished={finished || snapshot.status === "paused"}
-            secondsLeft={secondsLeft}
+            secondsLeft={secondsLeft} busy={duel.inFlight > 0}
             onAnswer={(text) => duel.send({ type: "answer", cat: (view as UltimoDuelView).category, k: (view as UltimoDuelView).k, text })} />
         )}
         {view && !introPhase && snapshot.game === "pistas" && (

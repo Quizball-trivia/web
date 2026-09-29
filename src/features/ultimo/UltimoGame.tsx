@@ -26,8 +26,13 @@ import { UltimoLeaderboard } from "./UltimoLeaderboard";
 
 const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
 type View = "intro" | "play" | "end" | "archive";
-/** A dropped connection usually comes back within a second: wait before re-syncing. */
-const RECOVERY_DELAY_MS = 600;
+/** A dropped connection usually comes back within a second: wait briefly before re-syncing (turns can be six seconds). */
+const RECOVERY_DELAY_MS = 300;
+const RESYNC_TIMEOUT_MS = 4_000;
+/** Answers a fast typist can have waiting behind the one in flight. */
+const MAX_QUEUED = 5;
+
+interface ServerClock { serverMs: number; perfMs: number }
 /** The server keeps an answer valid this long past its deadline; after it, the category is over. */
 const GRACE_MS = 1_500;
 
@@ -82,17 +87,22 @@ export function UltimoGame({ locale, onExit, onEvent, initialDay, onDay }: {
   const [feedback, setFeedback] = useState<Feedback | null>(null);
   const [boardRefresh, setBoardRefresh] = useState(0);
   const feedbackId = useRef(0);
-  /** serverNow − Date.now(): every countdown runs on the server's clock. */
-  const offsetRef = useRef(0);
-  const [offset, setOffset] = useState(0);
+  /** The server's clock sampled with each response, against the monotonic clock: countdowns ignore device-clock jumps. */
+  const [firstClock] = useState<ServerClock>(() => ({ serverMs: Date.now(), perfMs: performance.now() }));
+  const clockRef = useRef<ServerClock>(firstClock);
+  const [clock, setClock] = useState<ServerClock>(firstClock);
   const runRef = useRef<UltimoRun | null>(null);
   const inFlightRef = useRef(false);
-  const queuedRef = useRef<string | null>(null);
+  /** Answers typed while a move is in flight, sent in order; cleared when the category or run changes. */
+  const queueRef = useRef<string[]>([]);
+  /** The clock ran out while a move was in flight: re-sync right after it. */
+  const expiryDueRef = useRef(false);
   const startedRef = useRef(false);
   const currentRef = useRef({ owner, day });
   useEffect(() => { currentRef.current = { owner, day }; }, [owner, day]);
   useEffect(() => { runRef.current = run; }, [run]);
   const stillCurrent = (o: string, d: string) => currentRef.current.owner === o && currentRef.current.day === d;
+  const serverNow = () => clockRef.current.serverMs + (performance.now() - clockRef.current.perfMs);
 
   useEffect(() => {
     const check = () => setToday(releaseDay());
@@ -118,9 +128,7 @@ export function UltimoGame({ locale, onExit, onEvent, initialDay, onDay }: {
     let cancelled = false;
     ultimoApi.current(day, locale)
       .then((data) => {
-        if (cancelled || !("state" in data)) return;
-        offsetRef.current = Date.parse(data.state.serverNow) - Date.now();
-        setOffset(offsetRef.current);
+        if (cancelled || !("state" in data) || !accept(data)) return;
         setEntry({ owner, day, run: data });
         if (data.state.done) setView((v) => (v === "intro" ? "end" : v));
       })
@@ -135,11 +143,23 @@ export function UltimoGame({ locale, onExit, onEvent, initialDay, onDay }: {
   const { soundEnabled } = useUserPreferences();
   const sfx = useCallback((name: "correctRanked" | "wrongAnswer" | "whistle") => { if (soundEnabled) playSfx(name); }, [soundEnabled]);
 
+  /**
+   * The one gate every response passes: only a newer version of this run (or another run) replaces what is shown, so a
+   * slow read can never rewind a category whose clock already runs.
+   */
+  const accept = (next: UltimoRun): boolean => {
+    const current = runRef.current;
+    if (current && current.run.id === next.run.id && next.run.version < current.run.version) return false;
+    clockRef.current = { serverMs: Date.parse(next.state.serverNow), perfMs: performance.now() };
+    setClock(clockRef.current);
+    if (current && (current.run.id !== next.run.id || current.state.category !== next.state.category || !next.state.open)) queueRef.current = [];
+    runRef.current = next;
+    return true;
+  };
+
   const apply = (next: UltimoRun, result?: UltimoAnswerResult, typed?: string) => {
     const before = runRef.current?.state ?? null;
-    offsetRef.current = Date.parse(next.state.serverNow) - Date.now();
-    setOffset(offsetRef.current);
-    runRef.current = next;
+    if (!accept(next)) return;
     if (day) setEntry({ owner, day, run: next });
     if (result && result !== "ok") {
       setFeedback({ id: ++feedbackId.current, kind: result, text: typed ?? "", misses: next.state.misses });
@@ -155,62 +175,104 @@ export function UltimoGame({ locale, onExit, onEvent, initialDay, onDay }: {
     }
   };
 
-  /** The server's copy of the run: after a lost answer, a stale version or an expired clock. Never a blind resend. */
-  const resync = async (o: string, d: string) => {
-    const current = await ultimoApi.start(d, contentVersion, locale);
-    if (stillCurrent(o, d)) apply(current);
+  /** What a refused move means for the screen (every move and every re-sync ends up here). */
+  const handleError = (error: unknown, d: string) => {
+    const code = error instanceof UltimoApiError ? error.message : null;
+    const status = error instanceof UltimoApiError ? error.status : null;
+    queueRef.current = [];
+    if (code === "day_over") {
+      setToday((t) => (t > d ? t : addDays(d, 1)));
+      setChosenDay(null);
+      setEntry(null);
+      setView("intro");
+      setNotice(c.dayOver);
+    } else if (code === "sign_in_for_today") {
+      setEntry(null);
+      setView("intro");
+      setNotice(c.guestYesterday);
+    } else if (status === 503) {
+      setNotice(c.maintenance);
+    } else if (code === "content_changed") {
+      setEntry(null);
+      setView("intro");
+      setNotice(c.restarted);
+      setVersions(undefined);
+      setBoardsAttempt((n) => n + 1);
+    } else if (status === 401 || status === 403) {
+      setEntry(null);
+      setView("intro");
+      setNotice(c.sessionChanged);
+    } else {
+      setNotice(c.actionError);
+    }
   };
 
-  /** One server action at a time. */
-  const act = async (key: string, call: () => Promise<(UltimoRun & { result?: UltimoAnswerResult }) | null>, typed?: string) => {
-    if (inFlightRef.current || !day) return null;
+  /** The server's copy of the run (after a lost answer, a stale version or an expired clock), retried; never a blind resend. */
+  const resync = async (o: string, d: string) => {
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+      try {
+        const current = await ultimoApi.start(d, contentVersion, locale, RESYNC_TIMEOUT_MS);
+        if (stillCurrent(o, d)) { apply(current); setNotice(null); }
+        return;
+      } catch (error) {
+        if (!stillCurrent(o, d)) return;
+        if (!isNetworkFailure(error)) { handleError(error, d); return; }
+        setNotice(c.connection);
+        await new Promise((resolve) => window.setTimeout(resolve, RECOVERY_DELAY_MS * (attempt + 1)));
+      }
+    }
+    if (stillCurrent(o, d)) setNotice(c.actionError);
+  };
+
+  /** Next in line once nothing is in flight: an expiry re-sync first, then the typed answers in order. */
+  const pump = () => {
+    if (inFlightRef.current) return;
+    if (expiryDueRef.current) {
+      expiryDueRef.current = false;
+      void exclusive("sync", async () => { const { owner: o, day: d } = currentRef.current; if (d) await resync(o, d); });
+      return;
+    }
+    const text = queueRef.current.shift();
+    const current = runRef.current;
+    if (text && current?.state.open) void act("answer", () => ultimoApi.answer(current, text, locale), text);
+  };
+
+  /** One server call at a time (moves and re-syncs alike). */
+  const exclusive = async <T,>(key: string, fn: () => Promise<T>): Promise<T | null> => {
+    if (inFlightRef.current) return null;
     inFlightRef.current = true;
     setPending(key);
-    setNotice(null);
-    const o = owner;
-    const d = day;
     try {
-      const result = await call();
-      if (result && stillCurrent(o, d)) apply(result, result.result, typed);
-      return result;
-    } catch (error) {
-      if (!stillCurrent(o, d)) return null;
-      const code = error instanceof UltimoApiError ? error.message : null;
-      const status = error instanceof UltimoApiError ? error.status : null;
-      if (isNetworkFailure(error) || code === "stale_state") {
-        if (isNetworkFailure(error)) setNotice(c.connection);
-        await new Promise((resolve) => window.setTimeout(resolve, RECOVERY_DELAY_MS));
-        await resync(o, d).then(() => setNotice(null)).catch(() => setNotice(c.actionError));
-      } else if (code === "day_over") {
-        setToday((t) => (t > d ? t : addDays(d, 1)));
-        setChosenDay(null);
-        setEntry(null);
-        setView("intro");
-        setNotice(c.dayOver);
-      } else if (code === "sign_in_for_today") {
-        setEntry(null);
-        setView("intro");
-        setNotice(c.guestYesterday);
-      } else if (status === 503) {
-        setNotice(c.maintenance);
-      } else if (code === "content_changed") {
-        setEntry(null);
-        setView("intro");
-        setNotice(c.restarted);
-        setVersions(undefined);
-        setBoardsAttempt((n) => n + 1);
-      } else if (status === 401 || status === 403) {
-        setEntry(null);
-        setView("intro");
-        setNotice(c.sessionChanged);
-      } else {
-        setNotice(c.actionError);
-      }
-      return null;
+      return await fn();
     } finally {
       inFlightRef.current = false;
       setPending(null);
+      window.setTimeout(pump, 0);
     }
+  };
+
+  const act = (key: string, call: () => Promise<(UltimoRun & { result?: UltimoAnswerResult }) | null>, typed?: string) => {
+    if (!day) return Promise.resolve(null);
+    const o = owner;
+    const d = day;
+    return exclusive(key, async () => {
+      setNotice(null);
+      try {
+        const result = await call();
+        if (result && stillCurrent(o, d)) apply(result, result.result, typed);
+        return result;
+      } catch (error) {
+        if (!stillCurrent(o, d)) return null;
+        if (isNetworkFailure(error) || (error instanceof UltimoApiError && error.message === "stale_state")) {
+          if (isNetworkFailure(error)) setNotice(c.connection);
+          await new Promise((resolve) => window.setTimeout(resolve, RECOVERY_DELAY_MS));
+          await resync(o, d);
+        } else {
+          handleError(error, d);
+        }
+        return null;
+      }
+    });
   };
 
   const begin = () => act("begin", () => (runRef.current ? ultimoApi.begin(runRef.current, locale) : Promise.resolve(null)));
@@ -226,16 +288,11 @@ export function UltimoGame({ locale, onExit, onEvent, initialDay, onDay }: {
     if (freshCategory(fresh.state)) await begin();
   };
 
-  const say = async (text: string) => {
+  const say = (text: string) => {
     const value = text.trim();
-    if (!value) return;
-    if (inFlightRef.current) { queuedRef.current = value; return; }
-    const current = runRef.current;
-    if (!current?.state.open) return;
-    await act("answer", () => ultimoApi.answer(current, value, locale), value);
-    const queued = queuedRef.current;
-    queuedRef.current = null;
-    if (queued && runRef.current?.state.open) await say(queued);
+    if (!value || !runRef.current?.state.open) return;
+    if (queueRef.current.length < MAX_QUEUED) queueRef.current.push(value);
+    pump();
   };
 
   const nextCategory = async () => {
@@ -247,16 +304,14 @@ export function UltimoGame({ locale, onExit, onEvent, initialDay, onDay }: {
     if (moved && freshCategory(moved.state)) await begin();
   };
 
-  // The clock ran out (past the grace): the server settles it; ask for its copy once per deadline.
+  // The clock ran out (past the grace): the server settles it. Ask for its copy (after any move in flight).
   const deadline = state?.open ? state.deadline : null;
   useEffect(() => {
     if (!deadline || !day) return;
-    const o = owner;
-    const d = day;
-    const wait = Date.parse(deadline) + GRACE_MS + 250 - (Date.now() + offsetRef.current);
-    const timer = window.setTimeout(() => { if (!inFlightRef.current) void resync(o, d).catch(() => {}); }, Math.max(0, wait));
+    const wait = Date.parse(deadline) + GRACE_MS + 250 - serverNow();
+    const timer = window.setTimeout(() => { expiryDueRef.current = true; pump(); }, Math.max(0, wait));
     return () => window.clearTimeout(timer);
-    // resync reads the latest refs; the deadline is what matters.
+    // pump reads the latest refs; the deadline is what matters.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deadline, day, owner]);
 
@@ -289,7 +344,7 @@ export function UltimoGame({ locale, onExit, onEvent, initialDay, onDay }: {
         ) : view === "end" && state?.done ? (
           <EndScreen locale={locale} day={day} today={today} state={state} boardRefresh={boardRefresh} guestOnPastBoard={guestOnPastBoard} onArchive={() => setView("archive")} onExit={onExit} />
         ) : view === "play" && state && run ? (
-          <Play key={run.run.id} locale={locale} state={state} offset={offset} pending={pending} notice={notice} feedback={feedback}
+          <Play key={run.run.id} locale={locale} state={state} clock={clock} pending={pending} notice={notice} feedback={feedback}
             onBegin={() => void begin()} onSay={(t) => void say(t)} onNext={() => void nextCategory()} onResult={() => setView("end")} onExit={onExit} />
         ) : (
           <Intro locale={locale} number={puzzleNumber(day)} state={state} busy={pending !== null} notice={notice} guestOnPastBoard={guestOnPastBoard} guestLockedOut={guestLockedOut}
@@ -359,16 +414,17 @@ function Intro({ locale, number, state, busy, notice, guestOnPastBoard, guestLoc
   );
 }
 
-/** Ticks on the server's clock while a category is open. */
-function useServerNow(active: boolean, offset: number): number {
-  const [now, setNow] = useState(() => Date.now() + offset);
+/** Ticks on the server's clock (its last sample plus monotonic time since) while a category is open. */
+function useServerNow(active: boolean, clock: ServerClock): number {
+  const read = () => clock.serverMs + (performance.now() - clock.perfMs);
+  const [now, setNow] = useState(read);
   useEffect(() => {
     if (!active) return;
-    const tick = () => setNow(Date.now() + offset);
+    const tick = () => setNow(clock.serverMs + (performance.now() - clock.perfMs));
     const first = window.setTimeout(tick, 0);
     const id = window.setInterval(tick, 100);
     return () => { window.clearTimeout(first); window.clearInterval(id); };
-  }, [active, offset]);
+  }, [active, clock]);
   return now;
 }
 
@@ -380,13 +436,13 @@ function usePlayerAvatar() {
   return seatAvatar({ userId: signedIn ? userId ?? "member" : guestSeed, avatarCustomization: signedIn ? player?.avatarCustomization ?? null : null, avatarUrl: null, isGuest: !signedIn });
 }
 
-function Play({ locale, state, offset, pending, notice, feedback, onBegin, onSay, onNext, onResult, onExit }: {
-  locale: Locale; state: UltimoRunState; offset: number; pending: string | null; notice: string | null; feedback: Feedback | null;
+function Play({ locale, state, clock, pending, notice, feedback, onBegin, onSay, onNext, onResult, onExit }: {
+  locale: Locale; state: UltimoRunState; clock: ServerClock; pending: string | null; notice: string | null; feedback: Feedback | null;
   onBegin: () => void; onSay: (text: string) => void; onNext: () => void; onResult: () => void; onExit?: () => void;
 }) {
   const c = ultimoCopy(locale);
   const avatar = usePlayerAvatar();
-  const now = useServerNow(state.open, offset);
+  const now = useServerNow(state.open, clock);
   const msLeft = state.open && state.deadline ? Date.parse(state.deadline) - now : 0;
   // The first answer's clock includes the reveal: while more than a turn is left, the title is being revealed.
   const revealing = state.open && state.said.length === 0 && msLeft > state.turnMs;

@@ -19,17 +19,16 @@ const SIDE = {
  * and the category's end (who is left standing, and the names nobody said). The runtime owns the intro, pauses,
  * forfeits and the result card; the header shows the clock.
  */
-export function UltimoDuelBoard({ view, mySeat, names, copy, finished, secondsLeft, onAnswer }: {
+export function UltimoDuelBoard({ view, mySeat, names, copy, finished, secondsLeft, busy, onAnswer }: {
   view: UltimoDuelView; mySeat: Seat; names: [string, string]; copy: DuelCopy; finished: boolean; secondsLeft: number | null;
+  /** A command of ours is still unanswered: the next waits for its judgement (a refused one frees the input too). */
+  busy: boolean;
   onAnswer: (text: string) => void;
 }) {
   const c = copy.ul;
   const side = (seat: Seat) => (seat === mySeat ? "me" : "rival");
   const nameOf = (seat: Seat) => (seat === mySeat ? copy.you : names[seat]);
   const myTurn = !finished && view.phase === "turn" && view.turn === mySeat;
-  // One submission per attempt: the next is allowed once the server has judged this one (the attempt count moved).
-  const [sentAt, setSentAt] = useState<number | null>(null);
-  const waiting = sentAt !== null && sentAt === view.k;
   const share = view.phase === "turn" && secondsLeft !== null ? Math.max(0, Math.min(1, (secondsLeft * 1000) / view.turnMs)) : 0;
   const last = view.results.length > view.category ? view.results[view.category] : undefined;
 
@@ -122,8 +121,7 @@ export function UltimoDuelBoard({ view, mySeat, names, copy, finished, secondsLe
 
       <div className="flex-1" />
       {view.phase === "turn" && !finished && (
-        <AnswerBox enabled={myTurn && !waiting} placeholder={myTurn ? c.placeholder : copy.theirTurn(names[view.turn])} say={c.say}
-          onSubmit={(text) => { setSentAt(view.k); onAnswer(text); }} />
+        <AnswerBox enabled={myTurn && !busy} placeholder={myTurn ? c.placeholder : copy.theirTurn(names[view.turn])} say={c.say} onSubmit={onAnswer} />
       )}
     </div>
   );
@@ -134,8 +132,10 @@ function AnswerBox({ enabled, placeholder, say, onSubmit }: { enabled: boolean; 
   const [draft, setDraft] = useState("");
   const input = useRef<HTMLInputElement>(null);
   useEffect(() => { if (enabled) input.current?.focus({ preventScroll: true }); }, [enabled]);
+  // The server only takes an answer with a letter or digit; anything else would just be refused.
+  const valid = /[\p{L}\p{N}]/u.test(draft);
   const submit = () => {
-    if (!enabled || !draft.trim()) return;
+    if (!enabled || !valid) return;
     onSubmit(draft.trim());
     setDraft("");
   };
@@ -145,7 +145,7 @@ function AnswerBox({ enabled, placeholder, say, onSubmit }: { enabled: boolean; 
         placeholder={placeholder} aria-label={placeholder}
         className={cn("font-poppins h-14 w-full rounded-[20px] border-none bg-brand-blue px-5 text-center text-base uppercase text-white outline-none placeholder:text-white/55 placeholder:uppercase placeholder:tracking-[0.08em] focus:outline-none", !enabled && "opacity-50")}
         style={{ fontWeight: 600, letterSpacing: "0.08em", boxShadow: "0 1.76px 6.334px 1.32px rgba(22, 69, 255, 0.25)" }} />
-      <button type="submit" disabled={!enabled || !draft.trim()}
+      <button type="submit" disabled={!enabled || !valid}
         className="font-poppins h-14 w-full rounded-[20px] bg-brand-green uppercase text-white outline-none transition-colors hover:bg-brand-green-deep disabled:cursor-not-allowed disabled:opacity-40"
         style={{ fontWeight: 600, fontSize: 16, letterSpacing: "0.06em", boxShadow: "0 1.76px 6.334px 1.32px rgba(56, 182, 14, 0.25)" }}>
         {say}

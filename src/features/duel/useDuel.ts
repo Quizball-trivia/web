@@ -28,6 +28,8 @@ export function useDuel(matchId: string) {
   const [connected, setConnected] = useState(false);
   const offsetRef = useRef(0);
   const pending = useRef(new Map<string, DuelCommand>());
+  /** Commands sent and not answered yet (a board can hold its input until the server has judged the last one). */
+  const [inFlight, setInFlight] = useState(0);
   const readySent = useRef<string | null>(null);
 
   const resync = useCallback(() => {
@@ -50,6 +52,7 @@ export function useDuel(matchId: string) {
     const onResult = (payload: DuelCommandResultPayload) => {
       if (payload.matchId !== matchId) return;
       pending.current.delete(payload.commandId);
+      setInFlight(pending.current.size);
       if (!payload.ok && payload.code && !QUIET_ERRORS.has(payload.code)) setError(payload.code);
     };
     const onError = (payload: ErrorPayload & { matchId?: string }) => {
@@ -115,6 +118,7 @@ export function useDuel(matchId: string) {
     if (!socket) return;
     const commandId = createRealtimeCommandId();
     pending.current.set(commandId, command);
+    setInFlight(pending.current.size);
     setError(null);
     socket.emit("duel:command", { matchId, commandId, command });
   }, [socket, matchId]);
@@ -126,7 +130,7 @@ export function useDuel(matchId: string) {
   const nowMs = useCallback(() => Date.now() + offsetRef.current, []);
   const clearError = useCallback(() => setError(null), []);
 
-  return { snapshot, error, fatal, clearError, connected, send, forfeit, nowMs, principal, guestStatus, resync };
+  return { snapshot, error, fatal, clearError, connected, inFlight, send, forfeit, nowMs, principal, guestStatus, resync };
 }
 
 /** Seconds left on the server deadline, ticking on the synced clock (never the device clock alone). */
