@@ -17,7 +17,7 @@ import { DuelAvatar, seatAvatar } from "@/features/duel/DuelAvatar";
 import { PlayWithFriendButton } from "@/features/duel/PlayWithFriendButton";
 import { UltimoApiError, isNetworkFailure, ultimoApi, type UltimoAnswerResult, type UltimoRun, type UltimoRunState } from "@/lib/repositories/ultimo.repo";
 import {
-  CATEGORIES_PER_DAY, MAX_MISSES, REVEAL_MS, TIER_EMOJI, addDays, isClosedDay, isLiveDay, playableDays, puzzleNumber, releaseDay, tierOf,
+  CATEGORIES_PER_DAY, MAX_MISSES, TIER_EMOJI, addDays, isClosedDay, isLiveDay, playableDays, puzzleNumber, releaseDay, tierOf,
   type CategoryResult, type Tier,
 } from "./ultimo.logic";
 import { textFor, ultimoCopy } from "./ultimo.copy";
@@ -758,7 +758,6 @@ function Archive({ locale, days, today, current, onBack, onOpen }: { locale: Loc
         ))}
       </ul>
       <p className="mt-4 text-center text-xs text-white/50">{c.intro.newBoard}</p>
-      <span className="sr-only">{REVEAL_MS}</span>
     </div>
   );
 }
