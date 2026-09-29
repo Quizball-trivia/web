@@ -5,7 +5,9 @@ import { Check, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { DuelStatePayload } from "@/lib/realtime/socket.types";
 import type { DuelCopy } from "./duel.copy";
+import type { AvatarCustomization } from "@/types/game";
 import { SEAT_TEXT } from "./duel.seats";
+import { DuelAvatar, seatAvatar } from "./DuelAvatar";
 
 const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
 
@@ -20,15 +22,19 @@ export function DuelIntro({ snapshot, names, copy, secondsLeft }: {
   const rival = me === 0 ? 1 : 0;
   const seat = (s: 0 | 1) => snapshot.seats.find((x) => x.seat === s);
   const counting = snapshot.status === "countdown";
+  const avatarOf = (s: 0 | 1) => {
+    const found = seat(s);
+    return seatAvatar(found ?? { userId: `seat-${s}`, avatarCustomization: null, avatarUrl: null, isGuest: true });
+  };
   const number = counting && secondsLeft !== null && secondsLeft <= 3 ? secondsLeft : null;
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center text-center">
       <div className="flex w-full items-center justify-between gap-2">
-        <Player name={copy.you} initial={names[me].slice(0, 1)} side="me" ready={seat(me)?.ready ?? false} showReady={!counting} />
+        <Player name={copy.you} avatar={avatarOf(me)} side="me" ready={seat(me)?.ready ?? false} showReady={!counting} />
         <motion.span initial={{ scale: 0.6, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: "spring", stiffness: 260, damping: 16 }}
           className="shrink-0 text-4xl font-black italic text-brand-yellow" style={poppins}>{copy.intro.vs}</motion.span>
-        <Player name={names[rival]} initial={names[rival].slice(0, 1)} side="rival" ready={seat(rival)?.ready ?? false} showReady={!counting} />
+        <Player name={names[rival]} avatar={avatarOf(rival)} side="rival" ready={seat(rival)?.ready ?? false} showReady={!counting} />
       </div>
 
       <ul className="mt-8 w-full space-y-2 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-left">
@@ -56,14 +62,13 @@ export function DuelIntro({ snapshot, names, copy, secondsLeft }: {
   );
 }
 
-function Player({ name, initial, side, ready, showReady }: { name: string; initial: string; side: "me" | "rival"; ready: boolean; showReady: boolean }) {
+function Player({ name, avatar, side, ready, showReady }: { name: string; avatar: AvatarCustomization; side: "me" | "rival"; ready: boolean; showReady: boolean }) {
   return (
     <motion.div initial={{ x: side === "me" ? -24 : 24, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="flex min-w-0 flex-1 flex-col items-center gap-2">
-      <span className={cn("relative flex size-20 items-center justify-center rounded-full border-2 bg-white/[0.06] text-3xl font-black uppercase",
-        side === "me" ? "border-brand-green-light text-brand-green-light" : "border-sky-300 text-sky-300")} style={poppins}>
-        {initial}
+      <span className="relative">
+        <DuelAvatar customization={avatar} size="lg" ringClassName={side === "me" ? "ring-brand-green-light" : "ring-sky-300"} />
         {showReady && ready && (
-          <span className="absolute -bottom-1 -right-1 flex size-6 items-center justify-center rounded-full bg-brand-green-light text-black"><Check className="size-4" strokeWidth={3} /></span>
+          <span className="absolute -bottom-1 -right-1 flex size-7 items-center justify-center rounded-full bg-brand-green-light text-black ring-2 ring-surface-page-alt"><Check className="size-4" strokeWidth={3} /></span>
         )}
       </span>
       <span className={cn("max-w-full truncate text-sm font-bold", SEAT_TEXT[side])}>{name}</span>
