@@ -201,6 +201,8 @@ export function UltimoGame({ locale, onExit, onEvent, initialDay, onDay }: {
     const code = error instanceof UltimoApiError ? error.message : null;
     const status = error instanceof UltimoApiError ? error.status : null;
     queueRef.current = [];
+    // The server answered: whatever it said, this is no longer a connection to wait for.
+    needsRecoveryRef.current = false;
     if (code === "day_over") {
       setToday((t) => (t > d ? t : addDays(d, 1)));
       setChosenDay(null);
