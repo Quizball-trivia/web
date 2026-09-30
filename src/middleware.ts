@@ -59,8 +59,10 @@ function generateNonce(): string {
   return btoa(binary);
 }
 
-function buildCsp(nonce: string): string {
+function buildCsp(nonce: string, pathname = ""): string {
   const isDevelopment = process.env.NODE_ENV === "development";
+  // Local development only: the games playground frames its own preview page.
+  const framable = isDevelopment && pathname.startsWith("/dev/games/preview");
   const apiOrigin = originFromEnv("NEXT_PUBLIC_API_URL");
   const supabaseOrigin = originFromEnv("NEXT_PUBLIC_SUPABASE_URL");
   const posthogOrigin = originFromEnv("NEXT_PUBLIC_POSTHOG_HOST");
@@ -96,7 +98,7 @@ function buildCsp(nonce: string): string {
     "default-src 'self'",
     "base-uri 'none'",
     "object-src 'none'",
-    "frame-ancestors 'none'",
+    framable ? "frame-ancestors 'self'" : "frame-ancestors 'none'",
     "form-action 'self'",
     "img-src 'self' data: blob: https:",
     "font-src 'self' data:",
@@ -113,7 +115,7 @@ function buildCsp(nonce: string): string {
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const nonce = generateNonce();
-  const csp = buildCsp(nonce);
+  const csp = buildCsp(nonce, pathname);
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set("x-pathname", pathname);
   requestHeaders.set("x-nonce", nonce);

@@ -307,3 +307,5 @@ function ResultCard({ snapshot, names, copy, onRoom, onExit }: { snapshot: DuelS
     </>
   );
 }
+
+export { Shell as DuelShell };

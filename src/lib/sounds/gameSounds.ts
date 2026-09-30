@@ -3,7 +3,7 @@
 import { Howl, Howler } from "howler";
 
 // ─── Sound file paths (place MP3s in /public/sounds/) ────────────
-const SOUND_FILES = {
+export const SOUND_FILES = {
   whistle: "/sounds/whistle.mp3",
   kick: "/sounds/kick.mp3",
   pass: "/sounds/pass.mp3",
