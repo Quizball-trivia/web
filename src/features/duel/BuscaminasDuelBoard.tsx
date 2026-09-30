@@ -38,7 +38,7 @@ export function BuscaminasDuelBoard({ view, mySeat, names, copy, finished, onPic
       {status && (
         <div className={cn("mt-3 rounded-xl px-3 py-2 text-center text-sm font-bold", view.phase !== "turn"
           ? "bg-white/[0.06] text-white/85"
-          : myTurn ? "bg-brand-green text-white" : "bg-white/[0.06] text-white/60")}>
+          : myTurn ? "bg-brand-green/20 text-white" : "bg-white/[0.06] text-white/60")}>
           {status}
         </div>
       )}

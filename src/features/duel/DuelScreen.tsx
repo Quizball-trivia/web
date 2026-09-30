@@ -227,7 +227,7 @@ function Scoreboard({ snapshot, names, turnSeat, copy }: { snapshot: DuelStatePa
               customization={seatAvatar(snapshot.seats.find((s) => s.seat === seat) ?? { userId: `seat-${seat}`, avatarCustomization: null, avatarUrl: null, isGuest: true })} />
             <div className="min-w-0 flex-1">
               <p className={cn("truncate text-xs font-bold", SEAT_LABEL[side])}>{me ? copy.you : names[seat]}</p>
-              <p className={cn("text-2xl font-black leading-none tabular-nums", SEAT_TEXT[side])} style={poppins}>{scores[seat]}</p>
+              <p className="text-2xl font-black leading-none tabular-nums" style={poppins}>{scores[seat]}</p>
             </div>
           </div>
         );
