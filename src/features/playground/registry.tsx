@@ -42,17 +42,18 @@ const duelScreen = (id: string, name: string, snapshot: DuelStatePayload, extra:
   });
 
 /** The screens every duel game shares (intro, pause, connection, forfeit, every result), for one game's board. */
-function commonDuel(game: DuelGameId, view: unknown, finalScores: [number, number]): Scenario<never>[] {
+/** `live` = a board mid-play (for pause, offline, forfeit, error); `over` = the finished board behind every result. */
+function commonDuel(game: DuelGameId, live: unknown, over: unknown, finalScores: [number, number]): Scenario<never>[] {
   const done = (id: string, name: string, result: DuelStatePayload["result"]) =>
-    duelScreen(id, name, snap(game, result?.reason === "cancelled" ? "cancelled" : "completed", view, { result }), { secondsLeft: null });
+    duelScreen(id, name, snap(game, result?.reason === "cancelled" ? "cancelled" : "completed", over, { result }), { secondsLeft: null });
   return [
     duelScreen("intro-ready", "VS intro · waiting for the rival", snap(game, "ready", null), { secondsLeft: null }),
     duelScreen("intro-countdown", "VS intro · 3-2-1", snap(game, "countdown", null), { secondsLeft: 3 }),
-    duelScreen("pause-rival", "Paused · rival disconnected", snap(game, "paused", view, { away: 1 }), { secondsLeft: 24 }),
-    duelScreen("pause-me", "Paused · you disconnected", snap(game, "paused", view, { away: 0 }), { secondsLeft: 24 }),
-    duelScreen("offline", "Your connection dropped", snap(game, "active", view), { connected: false }),
-    duelScreen("forfeit-confirm", "Leave? (forfeit confirmation)", snap(game, "active", view), { confirmLeave: true }),
-    duelScreen("error", "Error toast", snap(game, "active", view), { error: "duel_unavailable" }),
+    duelScreen("pause-rival", "Paused · rival disconnected", snap(game, "paused", live, { away: 1 }), { secondsLeft: 24 }),
+    duelScreen("pause-me", "Paused · you disconnected", snap(game, "paused", live, { away: 0 }), { secondsLeft: 24 }),
+    duelScreen("offline", "Your connection dropped", snap(game, "active", live), { connected: false }),
+    duelScreen("forfeit-confirm", "Leave? (forfeit confirmation)", snap(game, "active", live), { confirmLeave: true }),
+    duelScreen("error", "Error toast", snap(game, "active", live), { error: "duel_unavailable" }),
     done("result-win", "Result · you won", { scores: finalScores, winnerSeat: 0, reason: "score", leftSeat: null }),
     done("result-lose", "Result · you lost", { scores: [finalScores[1], finalScores[0]], winnerSeat: 1, reason: "score", leftSeat: null }),
     done("result-draw", "Result · draw", { scores: [finalScores[0], finalScores[0]], winnerSeat: null, reason: "score", leftSeat: null }),
@@ -162,7 +163,7 @@ export const GAMES: GameEntry[] = [
         ultimoPlay("cat-end-won", "Category end · you stand", { phase: "catEnd", misses: 3, turn: 1, missing: PLAYERS.slice(4, 11) as unknown as string[], results: [{ winner: 0, reason: "misses", said: 6, named: [4, 2] }, { winner: 0, reason: "misses", said: 4, named: [3, 1] }], scores: [2, 0] }, { secondsLeft: 6 }),
         ultimoPlay("cat-end-time", "Category end · rival ran out of time", { phase: "catEnd", turn: 1, missing: PLAYERS.slice(4, 11) as unknown as string[], results: [{ winner: 0, reason: "misses", said: 6, named: [4, 2] }, { winner: 0, reason: "time", said: 4, named: [2, 2] }] }),
         ultimoPlay("cat-end-complete", "Category end · whole list named (both score)", { phase: "catEnd", said: PLAYERS.slice(0, 11).map((name, i) => ({ seat: (i % 2) as Seat, name })), missing: [], results: [{ winner: 0, reason: "misses", said: 6, named: [4, 2] }, { winner: null, reason: "complete", said: 11, named: [6, 5] }], scores: [2, 1] }),
-        ...commonDuel("ultimo", ultimoView({ phase: "over", missing: PLAYERS.slice(4, 11) as unknown as string[], scores: [3, 1] }), [3, 1]),
+        ...commonDuel("ultimo", ultimoView({}), ultimoView({ phase: "over", missing: PLAYERS.slice(4, 11) as unknown as string[], scores: [3, 1] }), [3, 1]),
       ],
     },
   },
@@ -174,7 +175,7 @@ export const GAMES: GameEntry[] = [
         buscaminasPlay("my-turn", "Your pick", {}),
         buscaminasPlay("their-turn", "Rival's pick", { turn: 1 }),
         buscaminasPlay("mine", "Someone hit a mine", { phase: "reveal", cards: buscaminasBase.cards.map((c, i) => (i === 9 ? { ...c, pick: { seat: 1, auto: false }, fits: false } : c)), results: [...buscaminasBase.results, { outcome: "mine", by: 1, points: [2, 0] }] }),
-        ...commonDuel("buscaminas", { ...buscaminasBase, phase: "over", scores: [9, 4] }, [9, 4]),
+        ...commonDuel("buscaminas", buscaminasBase, { ...buscaminasBase, phase: "over", scores: [9, 4] }, [9, 4]),
       ],
     },
   },
@@ -189,7 +190,7 @@ export const GAMES: GameEntry[] = [
         pistasPlay("i-passed", "You passed", { seats: [{ locked: false, passed: true, wrong: null }, { locked: false, passed: false, wrong: null }] }),
         pistasPlay("wrong", "Your wrong guess", { seats: [{ locked: false, passed: false, wrong: "Dante Ferrolo" }, { locked: false, passed: false, wrong: null }] }),
         pistasPlay("settled", "Round won", { phase: "reveal", settled: { winner: 0, clue: 4, points: 7, answer: PLAYERS[6] } }),
-        ...commonDuel("pistas", { ...pistasBase, phase: "over", scores: [31, 24] }, [31, 24]),
+        ...commonDuel("pistas", pistasBase, { ...pistasBase, phase: "over", scores: [31, 24] }, [31, 24]),
       ],
     },
   },
