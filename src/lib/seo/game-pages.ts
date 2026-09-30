@@ -49,7 +49,7 @@ const LOCALIZED_SLUGS: Record<string, Partial<Record<Locale, string>>> = {
   auction: { es: "subasta" },
   friendly: { es: "partido-amistoso" },
   "true-or-false-football": { es: "verdadero-o-falso" },
-  "higher-or-lower": { es: "mas-o-menos" },
+  "higher-or-lower": { es: "higher-or-lower-futbolero" },
   "card-detective": { es: "cartas-de-jugadores" },
   "guess-the-goal": { es: "adivina-el-gol" },
   "who-am-i": { es: "quien-soy" },
@@ -71,6 +71,7 @@ const LOCALIZED_SLUGS: Record<string, Partial<Record<Locale, string>>> = {
 
 /** Earlier ES slugs; the middleware 308s them so indexed pages keep their ranking. */
 const PREVIOUS_SLUGS: Record<string, Partial<Record<Locale, string>>> = {
+  "higher-or-lower": { es: "mas-o-menos" },
   "missing-xi": { es: "once-perdido" },
   "pass-chain": { es: "cadena-de-pases" },
   "stat-sniper": { es: "francotirador-de-datos" },
@@ -620,8 +621,8 @@ export const GAME_PAGES: GamePageEntry[] = [
       reward: "ქოინების ჯილდოებს და რეიტინგს ანგარიში სჭირდება; სტუმრის აუქციონი სავარჯიშოა.",
     },
     es: {
-      metaTitle: "Subasta futbolera online: puja y arma tu equipo | QuizBall",
-      metaDescription: "Juega a la subasta futbolera de Quizball online. Puja por futbolistas y forma tu equipo, con partidas de invitado sin crear cuenta.",
+      metaTitle: "Subasta futbolera: juego de subasta de jugadores de fútbol | QuizBall",
+      metaDescription: "Juega a la subasta futbolera online, la subasta de jugadores de fútbol: puja por futbolistas y forma tu equipo, con partidas de invitado sin crear cuenta.",
       title: "Subasta futbolera",
       intro: "Forma un equipo de fútbol en una subasta. Haz tus pujas, vigila el presupuesto y elige a los jugadores que quieres. Lee las reglas de la ronda antes de empezar y juega como invitado.",
       howToPlay: ["Los jugadores salen uno a uno con pistas sobre quiénes son.", "Puja contra los demás mánagers; la puja más alta ficha al jugador.", "Completa tu once dentro del presupuesto.", "Gana el equipo completo mejor valorado."],
