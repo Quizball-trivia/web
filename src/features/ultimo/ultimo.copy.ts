@@ -269,8 +269,8 @@ const ka: UltimoCopy = {
 
 const tr: UltimoCopy = {
   ...en,
-  brandA: "Son Kalan",
-  brandB: "Futbol",
+  brandA: "Futbolcu",
+  brandB: "Sayma",
   loading: "Yükleniyor…",
   loadError: "Kategoriler yüklenemedi. Tekrar dene.",
   retry: "Tekrar dene",

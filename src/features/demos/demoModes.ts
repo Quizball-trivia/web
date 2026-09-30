@@ -30,7 +30,7 @@ const HIDDEN_DEMO_MODES: DemoModeCard[] = [
   },
   {
     slug: "pistas",
-    title: { en: "Football Clues", ka: "საფეხბურთო მინიშნებები", es: "Pistas futboleras", tr: "Futbol İpuçları", },
+    title: { en: "Football Clues", ka: "საფეხბურთო მინიშნებები", es: "Pistas futboleras", tr: "Futbolcu Tahmin Etme Oyunu", },
     description: {
       en: "10 players a day, 10 clues each. Guess early for more points.",
       ka: "დღეში 10 მოთამაშე, თითოეულს 10 მინიშნება. რაც ადრე გამოიცნობ, მით მეტი ქულა.",
@@ -41,7 +41,7 @@ const HIDDEN_DEMO_MODES: DemoModeCard[] = [
   },
   {
     slug: "ultimo",
-    title: { en: "Last Answer Standing", ka: "ბოლომდე დარჩენილი", es: "Último en pie futbolero", tr: "Son Kalan Futbol", },
+    title: { en: "Last Answer Standing", ka: "ბოლომდე დარჩენილი", es: "Último en pie futbolero", tr: "Futbolcu Sayma Oyunu", },
     description: {
       en: "5 football lists a day. Name answers before the shrinking clock runs out.",
       ka: "დღეში 5 საფეხბურთო სია. დაასახელე პასუხები, სანამ დრო ამოიწურება.",
@@ -77,7 +77,7 @@ export const FEATURED_DEMO_MODES: DemoModeCard[] = [
   },
   {
     slug: "auction",
-    title: { en: "Auction", ka: "აუქციონი", es: "Subasta", tr: "Müzayede", },
+    title: { en: "Auction", ka: "აუქციონი", es: "Subasta futbolera", tr: "Müzayede", },
     description: {
       en: "Bid against rivals to sign mystery footballers and build the best squad.",
       ka: "ივაჭრე მეტოქეების წინააღმდეგ იდუმალ ფეხბურთელებზე და ააწყვე საუკეთესო გუნდი.",
@@ -115,7 +115,7 @@ const ALL_MINI_GAME_DEMO_MODES: DemoModeCard[] = [
   },
   {
     slug: "mini-squad-spin",
-    title: { en: "Squad Spin", ka: "Squad Spin", es: "Squad Spin", tr: "Squad Spin", },
+    title: { en: "Squad Spin", ka: "Squad Spin", es: "Ruleta futbolera", tr: "Futbol Çarkı", },
     description: {
       en: "Spin the reels — club, position, nation — then name a player who fits.",
       ka: "დაატრიალე — კლუბი, პოზიცია, ქვეყანა — და დაასახელე შესაბამისი ფეხბურთელი.",
@@ -159,7 +159,7 @@ const ALL_MINI_GAME_DEMO_MODES: DemoModeCard[] = [
   },
   {
     slug: "mini-pass-chain",
-    title: { en: "Pass Chain", ka: "Pass Chain", es: "Pass Chain", tr: "Pass Chain", },
+    title: { en: "Pass Chain", ka: "Pass Chain", es: "Conectando jugadores", tr: "Futbolcu Bağlantı Zinciri", },
     description: {
       en: "Link two players through shared clubs — fewer links score higher.",
       ka: "დააკავშირე ორი ფეხბურთელი საერთო კლუბებით — ნაკლები რგოლი, მეტი ქულა.",
@@ -225,7 +225,7 @@ const ALL_MINI_GAME_DEMO_MODES: DemoModeCard[] = [
   },
   {
     slug: "mini-football-grid",
-    title: { en: "Football Tic Tac Toe", ka: "საფეხბურთო იქს-ნული", es: "Fútbol Tres en Raya", tr: "Futbol Tik Tak Toe", },
+    title: { en: "Football Tic Tac Toe", ka: "საფეხბურთო იქს-ნული", es: "Tic Tac Toe futbolero", tr: "Futbol XOX", },
     description: {
       en: "Tic-tac-toe on a club × nation grid — claim cells by naming players.",
       ka: "იქს-ნული კლუბი × ქვეყანა ბადეზე — დაიკავე უჯრები ფეხბურთელების დასახელებით.",
@@ -313,7 +313,7 @@ const ALL_MINI_GAME_DEMO_MODES: DemoModeCard[] = [
   },
   {
     slug: "mini-stat-sniper",
-    title: { en: "Stat Sniper", ka: "სტატ-სნაიპერი", es: "Stat Sniper", tr: "Stat Sniper", },
+    title: { en: "Stat Sniper", ka: "სტატ-სნაიპერი", es: "Aproximado futbolero", tr: "Stat Sniper", },
     description: {
       en: "No options — slide to your best guess and score on proximity.",
       ka: "ვარიანტების გარეშე — გაასრიალე შენი ვარაუდი და დააგროვე სიზუსტით.",
@@ -392,7 +392,7 @@ export const LAB_DEMO_MODES: DemoModeCard[] = [
   {
     slug: "lab-missing-xi",
     dailyType: "missingXi",
-    title: { en: "Missing XI", ka: "დაკარგული XI", es: "XI Faltante", tr: "Eksik XI", },
+    title: { en: "Missing XI", ka: "დაკარგული XI", es: "Adivina el 11", tr: "İlk 11 Tahmin Etme", },
     description: {
       en: "Rebuild a legendary starting XI shirt by shirt against a rival.",
       ka: "აღადგინე ლეგენდარული შემადგენლობა პოზიცია-პოზიცია მეტოქესთან ბრძოლაში.",
@@ -458,7 +458,7 @@ const DAILY_DEMO_COPY: Record<DailyChallengeType, { title: DemoI18nText; descrip
     },
   },
   trueFalse: {
-    title: { en: "True or False", ka: "მართალია თუ ტყუილი", es: "Verdadero o Falso", tr: "Doğru mu Yanlış mı", },
+    title: { en: "True or False", ka: "მართალია თუ ტყუილი", es: "Verdadero o falso futbolero", tr: "Doğru mu Yanlış mı", },
     description: {
       en: "Quick-fire football statements — call them true or false.",
       ka: "სწრაფი საფეხბურთო მტკიცებები — მართალია თუ ტყუილი?",
@@ -476,7 +476,7 @@ const DAILY_DEMO_COPY: Record<DailyChallengeType, { title: DemoI18nText; descrip
     },
   },
   countdown: {
-    title: { en: "Countdown", ka: "უკუთვლა", es: "Cuenta atrás", tr: "Geri Sayım", },
+    title: { en: "Countdown", ka: "უკუთვლა", es: "Contrarreloj futbolera", tr: "Geri Sayım", },
     description: {
       en: "Name as many correct answers as you can before the clock hits zero.",
       ka: "დაასახელე რაც შეიძლება მეტი სწორი პასუხი, სანამ დრო ამოიწურება.",
@@ -512,7 +512,7 @@ const DAILY_DEMO_COPY: Record<DailyChallengeType, { title: DemoI18nText; descrip
     },
   },
   highLow: {
-    title: { en: "Higher or Lower", ka: "მეტი თუ ნაკლები", es: "Más alto o más bajo", tr: "Yüksek mi Alçak mı", },
+    title: { en: "Higher or Lower", ka: "მეტი თუ ნაკლები", es: "Higher or Lower futbolero", tr: "Higher or Lower Futbolcu", },
     description: {
       en: "Compare the stats — pick which side is higher and keep the chain alive.",
       ka: "შეადარე სტატისტიკა — აირჩიე მეტი და შეინარჩუნე ჯაჭვი.",
@@ -521,7 +521,7 @@ const DAILY_DEMO_COPY: Record<DailyChallengeType, { title: DemoI18nText; descrip
     },
   },
   footballLogic: {
-    title: { en: "Football Logic", ka: "საფეხბურთო ლოგიკა", es: "Lógica Futbolística", tr: "Futbol Mantığı", },
+    title: { en: "Football Logic", ka: "საფეხბურთო ლოგიკა", es: "Acertijos de fútbol", tr: "Futbol Bilmeceleri", },
     description: {
       en: "Two pictures, one player — decode the visual riddle.",
       ka: "ორი სურათი, ერთი ფეხბურთელი — ამოხსენი ვიზუალური თავსატეხი.",
@@ -530,7 +530,7 @@ const DAILY_DEMO_COPY: Record<DailyChallengeType, { title: DemoI18nText; descrip
     },
   },
   cardDetective: {
-    title: { en: "Card Detective", ka: "ბარათის დეტექტივი", es: "Detective de Cartas", tr: "Kart Dedektifi", },
+    title: { en: "Card Detective", ka: "ბარათის დეტექტივი", es: "Adivina el jugador por su carta", tr: "Kart Dedektifi", },
     description: {
       en: "Every slot on the card is a locked clue with a price — name the player with the most coins left.",
       ka: "ბარათის ყველა უჯრა დახურული მინიშნებაა ფასით — გამოიცანი მოთამაშე რაც შეიძლება მეტი ქოინის შენარჩუნებით.",
@@ -539,7 +539,7 @@ const DAILY_DEMO_COPY: Record<DailyChallengeType, { title: DemoI18nText; descrip
     },
   },
   statSniper: {
-    title: { en: "Stat Sniper", ka: "სტატ-სნაიპერი", es: "Stat Sniper", tr: "Stat Sniper", },
+    title: { en: "Stat Sniper", ka: "სტატ-სნაიპერი", es: "Aproximado futbolero", tr: "Stat Sniper", },
     description: {
       en: "Ten football numbers — slide to your guess, the closer the better.",
       ka: "დღეში ათი რიცხვი — მიიტანე სლაიდერი ვარაუდამდე, რაც უფრო ახლოს, მით უკეთესი.",
@@ -548,7 +548,7 @@ const DAILY_DEMO_COPY: Record<DailyChallengeType, { title: DemoI18nText; descrip
     },
   },
   passChain: {
-    title: { en: "Pass Chain", ka: "პასების ჯაჭვი", es: "Pass Chain", tr: "Pass Chain", },
+    title: { en: "Pass Chain", ka: "პასების ჯაჭვი", es: "Conectando jugadores", tr: "Futbolcu Bağlantı Zinciri", },
     description: {
       en: "Link two players through shared clubs — fewer links score higher.",
       ka: "დააკავშირე ორი ფეხბურთელი საერთო კლუბებით — ნაკლები რგოლი, მეტი ქულა.",
@@ -557,7 +557,7 @@ const DAILY_DEMO_COPY: Record<DailyChallengeType, { title: DemoI18nText; descrip
     },
   },
   missingXi: {
-    title: { en: "Missing XI", ka: "დაკარგული XI", es: "XI Faltante", tr: "Eksik XI", },
+    title: { en: "Missing XI", ka: "დაკარგული XI", es: "Adivina el 11", tr: "İlk 11 Tahmin Etme", },
     description: {
       en: "Three famous line-ups a day — tap a shirt, name the starter.",
       ka: "დღეში სამი ცნობილი შემადგენლობა — დააჭირე მაისურს, დაასახელე ფეხბურთელი.",

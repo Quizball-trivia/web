@@ -21,7 +21,7 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "ამ გვერდის საწვრთნელი მატჩი ზუსტად ამ პროცესის მინიშნებებიანი ვერსიაა: იგივე ბანის ფაზა, იგივე ფლობის რაუნდები და პენალტების სერია CoachBot-ის წინააღმდეგ. ის არაფერს გაძლევს და არ ინახება. თავად რეიტინგულს ანგარიში სჭირდება.",
     ],
     es: [
-      "Clasificatoria es el modo competitivo de Quizball: un partido de trivia de fútbol uno contra uno, en vivo, contra un rival real, jugado por puntos de clasificación (RP). Se sortean tres categorías del catálogo; cada jugador veta una y el partido se juega en la que sobrevive. Doce preguntas en dos tiempos, con un nuevo sorteo de categoría en el descanso.",
+      "«¿Quién sabe más de fútbol? 1v1» es el modo competitivo de Quizball: un partido de trivia de fútbol uno contra uno, en vivo, contra un rival real, jugado por puntos de clasificación (RP). Se sortean tres categorías del catálogo; cada jugador veta una y el partido se juega en la que sobrevive. Doce preguntas en dos tiempos, con un nuevo sorteo de categoría en el descanso.",
       "Cada pregunta es una batalla por la posesión. Los dos responden la misma pregunta; la respuesta correcta más rápida gana terreno en el campo. Lleva el balón hasta la línea de gol del rival para ganar un disparo, y un disparo que supera al portero es gol. Si el marcador está igualado al final, el partido se decide en los penaltis: una pregunta decide cada lanzamiento.",
       "Ganar da RP y te sube de nivel, desde Academia hasta las divisiones más altas; perder resta RP. Una cuenta nueva juega tres partidos de colocación antes de recibir un nivel. Tus partidos, tu porcentaje de victorias y tu puesto aparecen en la clasificación, y la competición del fin de semana toma sus puntos de clasificación del modo clasificatorio.",
       "El partido de entrenamiento de esta página es una versión guiada de ese mismo flujo: la misma fase de vetos, las mismas rondas de posesión y una tanda de penaltis contra CoachBot, con pistas en cada paso. No otorga nada y no se guarda. El modo clasificatorio en sí requiere una cuenta.",
@@ -111,7 +111,7 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "სავარჯიშო რაუნდი ფიქსირებულ ნიმუშს იყენებს. აპლიკაციაში ყოველდღე ახალი განცხადებები მოდის, სწორი პასუხები ქოინებს იძლევა და შედეგები ყოველდღიურ სერიაში ითვლება.",
     ],
     es: [
-      "Verdadero o falso es el diario más rápido de Quizball. Aparece una afirmación de fútbol, desde traspasos hasta máximos goleadores, y tienes unos segundos para decidir si es verdadera o falsa. Responde antes de que acabe el tiempo; una respuesta tardía cuenta como fallo.",
+      "Verdadero o falso futbolero es el diario más rápido de Quizball. Aparece una afirmación de fútbol, desde traspasos hasta máximos goleadores, y tienes unos segundos para decidir si es verdadera o falsa. Responde antes de que acabe el tiempo; una respuesta tardía cuenta como fallo.",
       "Las afirmaciones están escritas para sonar creíbles en ambos sentidos, así que el juego premia el conocimiento real sobre la suerte. Cada acierto suma un punto y mantiene viva tu racha.",
       "La ronda de práctica usa una muestra fija. En la app llega un set nuevo cada día, los aciertos dan monedas y tus resultados alimentan la racha diaria.",
     ],
@@ -133,7 +133,7 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "სავარჯიშო რაუნდი სანიმუშო სიებს იყენებს. აპლიკაციის ყოველდღიური ვერსია სიებს ყოველდღე ცვლის, ნაპოვნ პასუხზე ქოინებს იხდის და სერიაში ითვლება.",
     ],
     es: [
-      "Countdown te da una lista futbolera y un reloj en marcha. La lista puede ser todos los clubes en los que jugó Zlatan Ibrahimović o los últimos diez ganadores del Balón de Oro. Escribe tantas entradas válidas como puedas antes de que acabe el tiempo; cada respuesta aceptada vale un punto.",
+      "Contrarreloj futbolera te da una lista futbolera y un reloj en marcha. La lista puede ser todos los clubes en los que jugó Zlatan Ibrahimović o los últimos diez ganadores del Balón de Oro. Escribe tantas entradas válidas como puedas antes de que acabe el tiempo; cada respuesta aceptada vale un punto.",
       "Los nombres se comparan con generosidad: se aceptan apellidos, formas cortas habituales y pequeños errores de escritura, y una entrada repetida simplemente se ignora. La ronda termina cuando el reloj llega a cero o la lista se completa.",
       "La ronda de práctica usa listas de muestra. La versión diaria de la app cambia las listas cada día, paga monedas por respuesta encontrada y suma a tu racha.",
     ],
@@ -155,7 +155,7 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "სავარჯიშო რაუნდი სანიმუშო წყვილებს იყენებს. აპლიკაციაში ყოველდღიური ნაკრები ყოველდღე იცვლება, გავლილი რაუნდები ქოინებს იძლევა და შედეგები სერიაში ითვლება.",
     ],
     es: [
-      "Más o menos enfrenta a dos futbolistas con un número oculto: goles en una temporada, precio de traspaso, internacionalidades, edad o valor de mercado. Ves la cifra del primero y decides si la del segundo es mayor o menor.",
+      "Higher or Lower futbolero enfrenta a dos futbolistas con un número oculto: goles en una temporada, precio de traspaso, internacionalidades, edad o valor de mercado. Ves la cifra del primero y decides si la del segundo es mayor o menor.",
       "Un acierto mantiene la racha y trae la siguiente pareja; el primer fallo termina la ronda. Las rondas son cortas y los números salen de registros verificados, así que el juego va de conocer el deporte, no de suerte.",
       "La ronda de práctica usa parejas de muestra. En la app, el set diario cambia cada día, las rondas superadas dan monedas y los resultados cuentan para tu racha.",
     ],
@@ -199,7 +199,7 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "დღეს ათი ბარათი ქმნის. ამ გვერდის სავარჯიშო რაუნდი სანიმუშო ბარათებს იყენებს; აპლიკაციის ყოველდღიური თამაში ბარათებს ყოველდღე ცვლის, შენარჩუნებულ ქოინებს გაძლევს და სერიაში ითვლება.",
     ],
     es: [
-      "Detective de cartas te entrega una carta de jugador con todas las casillas bloqueadas: valoración general, posición, club, país, liga y edición de la carta. Cada casilla es una pista con su precio en monedas. Abre las pistas que necesites y nombra al jugador.",
+      "«Adivina el jugador por su carta» te entrega una carta de jugador con todas las casillas bloqueadas: valoración general, posición, club, país, liga y edición de la carta. Cada casilla es una pista con su precio en monedas. Abre las pistas que necesites y nombra al jugador.",
       "Empiezas cada carta con un presupuesto. Las pistas baratas dicen poco, las caras casi lo regalan, así que la habilidad está en saber qué única revelación te permitirá acertar. Nombra bien al jugador y conservas lo que no gastaste; agota el presupuesto y la carta se pierde.",
       "Diez cartas forman un día. La ronda de práctica de esta página usa un set de cartas de muestra; el juego diario de la app cambia las cartas cada día, paga monedas por lo que conservas y cuenta para tu racha.",
     ],
@@ -251,10 +251,10 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "También podés jugar Pistas futboleras 1 contra 1 con un amigo online: mandale el link de la sala, ven las mismas pistas al mismo tiempo y el primero que escribe el apellido correcto se lleva los puntos. Si le errás, tu rival tiene como máximo tres pistas más para sacarlo.",
     ],
     tr: [
-      "Futbol İpuçları, bir ipucu merdiveniyle oyuncu tahmin etme oyunudur. Her gün on gizli futbolcu var ve her birinin belirsizden kesine giden on ipucu var.",
+      "Futbolcu Tahmin Etme Oyunu, ipucu merdiveniyle oynanan bir futbolcu tahmin oyunudur. Her gün on gizli futbolcu var ve her birinin belirsizden kesine giden on ipucu var.",
       "Kaç ipucuna ihtiyacın olduğuna sen karar verirsin. İlk ipucunda doğru soyadı on puan eder, açtığın her ipucu oyundaki puanı bir azaltır. Yanlış tahminden sonra bir hakkın ve en fazla üç ipucun daha olur.",
       "Her gün gece yarısı (Arjantin saati) on yeni oyuncu gelir. Hesapsız önceki günleri oynarsın; hesapla bugünün ipuçlarını, günün sıralamasını ve serini.",
-      "Futbol İpuçları'nı bir arkadaşınla çevrimiçi 1'e 1 de oynayabilirsin: oda linkini gönder, ikiniz aynı ipuçlarını aynı anda görürsünüz ve doğru soyadını ilk yazan puanları alır.",
+      "Futbolcu Tahmin Etme Oyunu'nu bir arkadaşınla çevrimiçi 1'e 1 de oynayabilirsin: oda linkini gönder, ikiniz aynı ipuçlarını aynı anda görürsünüz ve doğru soyadını ilk yazan puanları alır.",
     ],
   },
   "last-answer-standing": {
@@ -277,10 +277,10 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "También podés jugar Último en pie futbolero 1 contra 1 con un amigo online, como en los streams: mandale el link de la sala y se turnan para nombrar respuestas de la misma lista. El que queda en pie gana la categoría y el primero en ganar 3 categorías se lleva el duelo.",
     ],
     tr: [
-      "Son Kalan Futbol bir liste oyunudur. Her gün beş futbol kategorisi vardır ve her biri kapalı bir listedir: bir Dünya Kupası kadrosu, Copa Libertadores'in tüm şampiyonları, bir kulübün en çok gol atanları. Cevapları art arda sayarsın ve her doğru cevap bir puandır.",
+      "Futbolcu Sayma Oyunu bir liste oyunudur. Her gün beş futbol kategorisi vardır ve her biri kapalı bir listedir: bir Dünya Kupası kadrosu, Copa Libertadores'in tüm şampiyonları, bir kulübün en çok gol atanları. Cevapları art arda sayarsın ve her doğru cevap bir puandır.",
       "Zorluk saatten gelir. İlk cevap için 20 saniyen var ve saydığın her cevap bir sonraki süreyi kısaltır, 6 saniyeye kadar. Üst üste üç yanlış ya da biten süre kategoriyi bitirir. Listenin tamamını sayarsan puanlara +5 bonus eklenir.",
       "Her gün gece yarısı (Arjantin saati) yeni kategoriler gelir. Hesapsız önceki günleri oynar ve tüm cevapları görürsün; hesabınla bugünün kategorilerini oynar, günün sıralamasına girer ve serini sürdürürsün. Sonunda paylaşmak için beş renkli kare alırsın: sarı tam liste, yeşil yarısı ya da fazlası, mavi birkaçı, siyah hiçbiri.",
-      "Son Kalan Futbol bir arkadaşla çevrimiçi 1'e 1 de oynanır, tıpkı yayınlardaki gibi: oda linkini gönder ve aynı listeden sırayla cevap sayın. Ayakta kalan kategoriyi kazanır, 3 kategoriyi ilk kazanan düelloyu alır.",
+      "Futbolcu Sayma Oyunu bir arkadaşla çevrimiçi 1'e 1 de oynanır, tıpkı yayınlardaki gibi: oda linkini gönder ve aynı listeden sırayla cevap sayın. Ayakta kalan kategoriyi kazanır, 3 kategoriyi ilk kazanan düelloyu alır.",
     ],
   },
   "football-minesweeper": {
@@ -343,12 +343,12 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "სავარჯიშო რაუნდი ფიქსირებულ თავსატეხებს იყენებს. აპლიკაციაში ყოველდღე ხუთი ახალი თავსატეხი მოდის, ყოველი სწორი პასუხი ქოინებს იძლევა და დღე სერიაში ითვლება.",
     ],
     es: [
-      "Lógica futbolera es un acertijo visual. Aparecen dos imágenes juntas, un escudo junto a un monumento, una bandera junto a un objeto, un par de emojis, y entre las dos apuntan a un futbolista, un traspaso o un momento famoso. Lee el par, escribe la respuesta y llega el siguiente acertijo.",
+      "Cada reto de Acertijos de fútbol es un acertijo visual. Aparecen dos imágenes juntas, un escudo junto a un monumento, una bandera junto a un objeto, un par de emojis, y entre las dos apuntan a un futbolista, un traspaso o un momento famoso. Lee el par, escribe la respuesta y llega el siguiente acertijo.",
       "Hay tres tipos: un traspaso contado con dos escudos, una carrera que solo encaja con un jugador, y puro juego de palabras donde las imágenes suenan como un nombre. Se aceptan apellidos y erratas pequeñas; un fallo muestra la respuesta para que aprendas el truco antes del siguiente.",
       "La ronda de práctica usa un set fijo de acertijos. En la app llegan cinco nuevos cada día, cada acierto da monedas y el día cuenta para tu racha.",
     ],
     tr: [
-      "Futbol Mantığı bir resimli bilmecedir. Yan yana iki görsel belirir: bir kulüp arması yanında bir simge yapı, bir bayrak yanında bir nesne, bir emoji çifti; birlikte tek bir futbolcuya, tek bir transfere ya da tek bir ünlü ana işaret ederler. İkiliyi oku, cevabı yaz ve sonraki bilmece gelsin.",
+      "Futbol Bilmeceleri'nde her soru resimli bir bilmecedir. Yan yana iki görsel belirir: bir kulüp arması yanında bir simge yapı, bir bayrak yanında bir nesne, bir emoji çifti; birlikte tek bir futbolcuya, tek bir transfere ya da tek bir ünlü ana işaret ederler. İkiliyi oku, cevabı yaz ve sonraki bilmece gelsin.",
       "Bilmeceler üç çeşittir: iki armayla anlatılan bir transfer, yalnızca tek bir oyuncuya uyan bir kariyer ve resimlerin bir ismi seslendirdiği saf kelime oyunu. Soyadları ve küçük yazım hataları kabul edilir; yanlış bir tahmin cevabı gösterir, böylece sonrakinden önce hileyi öğrenirsin.",
       "Alıştırma turu sabit bir bilmece seti kullanır. Uygulamada her gün beş yeni bilmece gelir, her doğru cevap jeton kazandırır ve gün serine sayılır.",
     ],
@@ -387,12 +387,12 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "დღეს ორი თავსატეხი ქმნის — გასახურებელი და ისეთი, რომელსაც ნაკლებად აშკარა ხიდი სჭირდება. სავარჯიშო რაუნდი სანიმუშო თავსატეხებს იყენებს; აპლიკაციის ყოველდღიური თამაში თავსატეხებს ყოველდღე ცვლის, ამოხსნაზე ქოინებს იხდის და სერიაში ითვლება.",
     ],
     es: [
-      "Cadena de pases te da dos futbolistas que nunca jugaron juntos y te pide conectarlos. Escribe un jugador que compartió club, entrenador o vestuario con el extremo actual de la cadena; si el vínculo es real, la cadena crece en uno y el nuevo jugador pasa a ser el extremo. Llega al objetivo y el puzle está resuelto.",
+      "Conectando jugadores te da dos futbolistas que nunca jugaron juntos y te pide conectarlos. Escribe un jugador que compartió club, entrenador o vestuario con el extremo actual de la cadena; si el vínculo es real, la cadena crece en uno y el nuevo jugador pasa a ser el extremo. Llega al objetivo y el puzle está resuelto.",
       "Cada eslabón se comprueba contra un grafo de carreras verificado, así que una respuesta solo cuenta si los dos jugadores coincidieron de verdad. Menos eslabones, más puntos: cada puzle tiene una ruta más corta conocida y el objetivo es igualarla o mejorarla. Si te atascas, revela la cadena más corta y sigue.",
       "Dos puzles forman un día, uno de calentamiento y otro que necesita un puente menos evidente. La ronda de práctica usa puzles de muestra; el juego diario de la app los cambia cada día, paga monedas por solución y cuenta para tu racha.",
     ],
     tr: [
-      "Pas Zinciri sana hiç birlikte oynamamış iki futbolcu verir ve onları bağlamanı ister. Zincirin şu anki ucuyla bir kulübü, bir teknik direktörü ya da bir soyunma odasını paylaşmış bir oyuncu yaz; bağlantı gerçekse zincir bir halka uzar ve yeni oyuncu uç olur. Hedefe ulaştığında bulmaca çözülmüştür.",
+      "Futbolcu Bağlantı Zinciri sana hiç birlikte oynamamış iki futbolcu verir ve onları bağlamanı ister. Zincirin şu anki ucuyla bir kulübü, bir teknik direktörü ya da bir soyunma odasını paylaşmış bir oyuncu yaz; bağlantı gerçekse zincir bir halka uzar ve yeni oyuncu uç olur. Hedefe ulaştığında bulmaca çözülmüştür.",
       "Her halka doğrulanmış bir kariyer grafiğine göre kontrol edilir, bu yüzden bir tahmin yalnızca iki oyuncu gerçekten aynı dönemde bulunmuşsa sayılır. Daha az halka daha çok puan getirir: her bulmacanın bilinen bir en kısa yolu vardır ve onu yakalamak ya da geçmek hedeftir. Takılırsan en kısa zinciri açıp devam et.",
       "Bir gün iki bulmacadan oluşur: bir ısınma ve daha az belirgin bir köprü gerektiren bir tane. Alıştırma turu örnek bulmacalar kullanır; uygulamadaki günlük oyun bulmacaları her gün değiştirir, çözüm başına jeton öder ve serine sayılır.",
     ],
@@ -409,7 +409,7 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "ყოველი ფაქტი თავის მონაცემთა ბაზამდე მიდის. სავარჯიშო რაუნდი სანიმუშო ნაკრებს იყენებს; აპლიკაციაში ყველა მოთამაშე ყოველდღე ერთსა და იმავე ათ კითხვას იღებს და დღის სიზუსტის ლიდერბორდი მათ ალაგებს, ქოინებით შენი ქულისთვის და ადგილით სერიაში.",
     ],
     es: [
-      "Francotirador de datos es un juego de números. Cada pregunta nombra una estadística real del fútbol, como los goles de un jugador en una temporada, el fichaje récord de un club o el aforo de un estadio, y te da un deslizador sobre un rango plausible. Mueve el deslizador hasta tu estimación y fíjala antes de que acabe el tiempo.",
+      "Aproximado futbolero es un juego de números. Cada pregunta nombra una estadística real del fútbol, como los goles de un jugador en una temporada, el fichaje récord de un club o el aforo de un estadio, y te da un deslizador sobre un rango plausible. Mueve el deslizador hasta tu estimación y fíjala antes de que acabe el tiempo.",
       "Se puntúa por proximidad: el valor exacto vale 100 y los puntos bajan cuanto más lejos caes, hasta cero a un cuarto del recorrido del deslizador. Diez preguntas forman una ronda y tu precisión es la media, así que una serie de estimaciones cercanas gana a un pleno y nueve disparates.",
       "Cada dato es trazable a su conjunto de datos. La ronda de práctica usa un set de muestra; en la app todos reciben las mismas diez preguntas cada día y la clasificación de precisión del día los ordena, con monedas por tu puntuación y un lugar en tu racha.",
     ],
@@ -475,7 +475,7 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "ამ გვერდზე მხოლოდ სავარჯიშო ქულებით თამაშობ. აპლიკაციაში ავტორიზებული მოთამაშეები ნამდვილ ქოინებს დებენ, მულტიპლიკატორები სირთულის დონეების გაზომილი სიზუსტიდან მოდის და სერია ათ ტრიალსა და ფსონის ორმოცმაგზე ჩერდება.",
     ],
     es: [
-      "Squad Spin es una racha de giros. Cada giro deja tres carretes en un club, una posición y un país, y tienes quince segundos para nombrar un futbolista que encaje en los tres, por ejemplo un delantero brasileño que jugó en el Chelsea. Las rachas de cuatro y cinco carretes añaden liga, entrenador o trofeo y pagan más por giro.",
+      "Ruleta futbolera es una racha de giros. Cada giro deja tres carretes en un club, una posición y un país, y tienes quince segundos para nombrar un futbolista que encaje en los tres, por ejemplo un delantero brasileño que jugó en el Chelsea. Las rachas de cuatro y cinco carretes añaden liga, entrenador o trofeo y pagan más por giro.",
       "Un acierto multiplica el bote; después eliges retirar o girar de nuevo antes de ver los siguientes carretes, así que nunca puedes mirar primero. Un fallo o el tiempo agotado termina la racha y la apuesta se pierde. Cada combinación tiene al menos una respuesta verificada y los nombres se aceptan con tolerancia a erratas.",
       "En esta página juegas solo con puntos de práctica. En la app, los jugadores registrados apuestan monedas reales, los multiplicadores salen de la precisión medida por nivel de dificultad y las rachas se limitan a diez giros y cuarenta veces la apuesta.",
     ],

@@ -62,7 +62,7 @@ describe("public games manifest", () => {
     expect(ultimo.copy.es.title).toBe("Último en pie futbolero");
     expect(ultimo.copy.en.title).toBe("Last Answer Standing");
     expect(ultimo.copy.ka.title).toBe("ბოლომდე დარჩენილი");
-    expect(ultimo.copy.tr.title).toBe("Son Kalan Futbol");
+    expect(ultimo.copy.tr.title).toBe("Futbolcu Sayma Oyunu");
   });
 
   it("Último copy avoids free wording in every locale", () => {

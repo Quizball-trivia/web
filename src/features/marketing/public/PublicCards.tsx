@@ -23,7 +23,7 @@ function GameCard({ game, locale, surface }: { game: PublicGame; locale: Locale;
         <span className="absolute left-2 top-2 rounded-full bg-black/60 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white">{badge}</span>
       </div>
       <div className="p-3">
-        <h3 className="truncate text-sm font-semibold uppercase md:text-base">{text.title}</h3>
+        <h3 className="line-clamp-2 text-sm font-semibold uppercase md:text-base">{text.title}</h3>
         <p className="mt-1 line-clamp-2 text-xs text-white/70 md:text-sm">{text.intro}</p>
         <span className="mt-2 inline-block text-xs font-bold uppercase tracking-wide text-brand-yellow">
           {game.destination.kind === "quiz" ? copy.quizPage : game.guest === "demo" ? copy.guest : copy.playLabel}

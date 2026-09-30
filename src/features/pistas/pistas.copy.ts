@@ -246,8 +246,8 @@ const ka: Copy = {
 };
 
 const tr: Copy = {
-  brandA: "Futbol",
-  brandB: "İpuçları",
+  brandA: "Futbolcu",
+  brandB: "Tahmin",
   player: (n, total) => `Oyuncu ${n} / ${total}`,
   pointsInPlay: "Oyundaki puan",
   score: "Puanın",
@@ -300,7 +300,7 @@ const tr: Copy = {
     clues: (n) => `${n} ipucu`,
   },
   archive: { title: "Önceki günler", played: (s) => `${s} puan`, inProgress: "Devam ediyor", notPlayed: "Oynanmadı", today: "Bugün", back: "Geri" },
-  shareText: (n, score, grid, url) => `Futbol İpuçları #${n} — ${score}/100\n${grid}\nBeni geçebilir misin? ${url}`,
+  shareText: (n, score, grid, url) => `Futbolcu Tahmin #${n} — ${score}/100\n${grid}\nBeni geçebilir misin? ${url}`,
   report: "İpucunda hata bildir",
   reported: "Teşekkürler! Kontrol edeceğiz.",
   exit: "Çıkış",

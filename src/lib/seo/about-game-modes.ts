@@ -168,7 +168,7 @@ export const ABOUT_GAME_MODES_COPY: Record<Locale, AboutGameModesCopy> = {
       },
       {
         id: "auction",
-        title: "Subasta de fútbol",
+        title: "Subasta futbolera",
         body:
           "Usa un presupuesto de $350M para pujar por futbolistas misteriosos y crear una plantilla de siete jugadores. El precio, el beneficio y la química deciden al ganador.",
       },
@@ -206,7 +206,7 @@ export const ABOUT_GAME_MODES_COPY: Record<Locale, AboutGameModesCopy> = {
     modes: [
       {
         id: "ranked",
-        title: "Dereceli 1v1",
+        title: "1v1 Futbol Bilgi Yarışması",
         body:
           "Canlı bir karşılaşma oyna, doğru cevaplarla topu kazan, gol at ve QuizBall sıralamasında yükselmek için RP kazan.",
       },
@@ -230,7 +230,7 @@ export const ABOUT_GAME_MODES_COPY: Record<Locale, AboutGameModesCopy> = {
       },
     ],
     rankedEyebrow: "Rekabetçi mod",
-    rankedTitle: "Dereceli 1v1 nasıl işler",
+    rankedTitle: "1v1 Futbol Bilgi Yarışması nasıl işler",
     rankedIntro:
       "Dereceli mod, aynı futbol sorularını başka bir oyuncuya karşı kısa bir canlı maça dönüştürür.",
     rankedSteps: [

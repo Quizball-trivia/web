@@ -50,7 +50,7 @@ const es = {
     signupButton: "Crear cuenta",
     more: "Más juegos",
     trivia: "Minas de trivia",
-    grid: "Tiki Taka Toe",
+    grid: "Tic Tac Toe futbolero",
   },
   archive: { title: "Días anteriores", played: (s: number) => `${s} pts`, inProgress: "En curso", notPlayed: "Sin jugar", today: "Hoy", back: "Volver" },
   shareText: (n: number, score: number, grid: string, url: string) => `Buscaminas futbolero #${n} — ${score} pts\n${grid}\n¿Me superás? ${url}`,
