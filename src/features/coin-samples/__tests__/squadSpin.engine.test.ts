@@ -21,13 +21,25 @@ describe("Squad Spin sample engine (frozen pricing snapshot)", () => {
     expect(cashoutValue(125_000, SAMPLE_STEPS.margin)).toBe(Math.floor((125_000 * 8_730) / 10_000 / 1_000));
   });
 
-  it("resolves answers like live: exact aliases in any script, typos only through safe_typo aliases", () => {
-    const a = combo(1).aliases;
-    expect(resolveSampleAnswer("Andrés Iniesta", a)).toBe("p1");
-    expect(resolveSampleAnswer("ინიესტა", a)).toBe("p1");
-    expect(resolveSampleAnswer("inesta", a)).toBe("p1"); // one edit against the safe_typo alias
-    expect(resolveSampleAnswer("andres inesta", a)).toBeNull(); // the exact-only alias tolerates no typos
-    expect(resolveSampleAnswer("xavi", a)).toBeNull();
+  it("resolves answers like live: aliases and name forms in any script, with typo tolerance", () => {
+    const c = combo(1);
+    expect(resolveSampleAnswer("Andrés Iniesta", c.aliases, c.answers)).toBe("p1");
+    expect(resolveSampleAnswer("ინიესტა", c.aliases, c.answers)).toBe("p1");
+    expect(resolveSampleAnswer("inesta", c.aliases, c.answers)).toBe("p1"); // one edit
+    expect(resolveSampleAnswer("andres inesta", c.aliases, c.answers)).toBe("p1"); // typos count against every form now
+    expect(resolveSampleAnswer("xavi", c.aliases, c.answers)).toBeNull();
+  });
+
+  it("accepts a typed surname even when the alias release lacks a surname alias", () => {
+    const c = combo(1);
+    const sparse: SampleSquadSpinCombo = {
+      ...c,
+      answers: [{ id: "p2", name_en: "Ramiro Funes Mori", name_ka: null, image_url: null }],
+      aliases: [{ player_id: "p2", alias: "ramiro funes mori", locale: "en", policy: "exact" }],
+    };
+    expect(resolveSampleAnswer("funes mori", sparse.aliases, sparse.answers)).toBe("p2");
+    expect(resolveSampleAnswer("FUNES MORI", sparse.aliases, sparse.answers)).toBe("p2");
+    expect(resolveSampleAnswer("mori", sparse.aliases, sparse.answers)).toBe("p2");
   });
 
   it("debits at start, decides before the next reveal, banks once on cash-out", async () => {
