@@ -2,8 +2,6 @@
  * Each player has one colour everywhere on the duel screen: you in brand green, your rival in brand blue.
  * Brand blue is too dark for small text on the dark screen, so small labels stay white on the seat's tint or ring.
  */
-/** Only on the result card's large score, on the darkest surface (brand blue there is ~3:1, the large-text minimum). */
-export const SEAT_TEXT = { me: "text-brand-green", rival: "text-brand-blue" } as const;
 export const SEAT_LABEL = { me: "text-white", rival: "text-white" } as const;
 export const SEAT_DOT = { me: "bg-brand-green", rival: "bg-brand-blue" } as const;
 export const SEAT_RING = {
