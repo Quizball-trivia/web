@@ -302,7 +302,7 @@ function ResultCard({ snapshot, names, copy, onRoom, onExit }: { snapshot: DuelS
       )}
       {reason && <p className="mt-3 text-center text-sm text-white/85">{reason}</p>}
       <button type="button" onClick={onRoom} className="mt-5 h-14 w-full rounded-full bg-brand-green text-base font-black uppercase tracking-wide text-white hover:bg-brand-green-deep" style={poppins}>{copy.result.backToRoom}</button>
-      <button type="button" onClick={onExit} className="mt-2 h-11 w-full rounded-full bg-white/15 text-sm font-bold uppercase text-white hover:bg-white/20" style={poppins}>{copy.result.exit}</button>
+      <button type="button" onClick={onExit} className="mt-2 h-11 w-full rounded-full bg-white/15 text-sm font-bold uppercase text-white hover:bg-black/15" style={poppins}>{copy.result.exit}</button>
     </motion.div>
     </>
   );
