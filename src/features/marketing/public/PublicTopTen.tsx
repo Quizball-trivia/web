@@ -11,7 +11,7 @@ const TITLE: Record<string, Record<Board, string>> = {
   en: { ranked: "Top 10 — Ranked", grid: "Top 10 — Tic Tac Toe", auction: "Top 10 — Auction" },
   ka: { ranked: "ტოპ 10 — რეიტინგული", grid: "ტოპ 10 — იქს-ნული", auction: "ტოპ 10 — აუქციონი" },
   es: { ranked: "Top 10 — ¿Quién sabe más de fútbol?", grid: "Top 10 — Tic Tac Toe futbolero", auction: "Top 10 — Subasta futbolera" },
-  tr: { ranked: "İlk 10 — 1v1 Bilgi Yarışması", grid: "İlk 10 — Futbol XOX", auction: "İlk 10 — Açık Artırma" },
+  tr: { ranked: "İlk 10 — 1v1 Futbol Bilgi Yarışması", grid: "İlk 10 — Futbol XOX", auction: "İlk 10 — Açık Artırma" },
 };
 
 /** The same rows the leaderboard tab shows, ten of them, read from the public board endpoints. */

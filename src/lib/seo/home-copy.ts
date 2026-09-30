@@ -88,9 +88,9 @@ export const HOME_COPY: Record<Locale, HomeCopy> = {
   },
   tr: {
     metaTitle: "Futbol Oyunları ve Çok Oyunculu Bilgi Yarışması — QuizBall",
-    metaDescription: "Futbol bilgi oyunlarını çevrimiçi oyna: Tic Tac Toe, Açık Artırma ve dostluk maçları. Misafir olarak başla, sonra Sıralamalı oyuna ve Hafta Sonu Ligi'ne katıl.",
+    metaDescription: "Futbol bilgi oyunlarını çevrimiçi oyna: Futbol XOX (Tic Tac Toe), Açık Artırma ve dostluk maçları. Misafir olarak başla, sonra Sıralamalı oyuna ve Hafta Sonu Ligi'ne katıl.",
     h1: "Futbol Oyunları ve Çok Oyunculu Bilgi Yarışması",
-    intro: "Futbol bilgi oyunlarını tarayıcında oyna. Hesap açmadan Futbol Tic Tac Toe ya da Futbol Açık Artırma'da bir alıştırma turu dene. Sıralamalı oyun ve Hafta Sonu Ligi için Quizball hesabı gerekir. Yarışmaya hazır mısın? Sıralamalı oyun ve Hafta Sonu Ligi'ne kaydol; uygun oyuncular yarışma kurallarına göre gerçek ödüller için yarışır.",
+    intro: "Futbol bilgi oyunlarını tarayıcında oyna. Hesap açmadan Futbol XOX (Tic Tac Toe) ya da Futbol Açık Artırma'da bir alıştırma turu dene. Sıralamalı oyun ve Hafta Sonu Ligi için Quizball hesabı gerekir. Yarışmaya hazır mısın? Sıralamalı oyun ve Hafta Sonu Ligi'ne kaydol; uygun oyuncular yarışma kurallarına göre gerçek ödüller için yarışır.",
     accessLine: "Misafir oyunları için hesap gerekmez. Sıralamalı oyun ve Hafta Sonu Ligi giriş gerektirir.",
     nav: { games: "Futbol Oyunları", quizzes: "Futbol Quizleri", signIn: "Giriş yap" },
     sections: { competitive: "Ödüller için yarış", daily: "Günlük görevler", dailyHint: "Her gün yeni bir set. Burada alıştır, gerçeğini uygulamada oyna.", dailyAll: "Tüm günlük görevler", whyAccount: "Neden Quizball hesabı açmalısın", quizzes: "Futbol quizleri", faq: "Sorular" },
@@ -100,7 +100,7 @@ export const HOME_COPY: Record<Locale, HomeCopy> = {
       "Sıralamanı yükselt, puan tablosunu takip et ve her yarışmanın kurallarına göre sunulan ödüller için yarış. Katılmadan önce güncel uygunluk, takvim ve ödül ayrıntılarını kontrol et.",
       "Misafir alıştırma sonuçları Sıralama puanı, jeton ya da ödül hakkı kazandırmaz.",
     ],
-    about: { title: "Oyunlar hakkında", text: "Quizball futbol bilgisini çevrimiçi oynayabileceğin oyunlara dönüştürür. Futbol Tic Tac Toe'da oyuncuları kategorilerle eşleştir, Açık Artırma'da seçimlerini yap ya da bir dostluk maçında futbol sorularını cevapla. Sevdiğin formatı seç ve kurallarını oyun sayfasında oku. Oyuncular, kulüpler ve ligler hakkındaki futbol quizlerini de keşfedebilir, hazır olduğunda hesap gerektiren yarışmalara geçebilirsin." },
+    about: { title: "Oyunlar hakkında", text: "Quizball futbol bilgisini çevrimiçi oynayabileceğin oyunlara dönüştürür. Futbol XOX oyununda oyuncuları kategorilerle eşleştir, Açık Artırma'da seçimlerini yap ya da bir dostluk maçında futbol sorularını cevapla. Sevdiğin formatı seç ve kurallarını oyun sayfasında oku. Oyuncular, kulüpler ve ligler hakkındaki futbol quizlerini de keşfedebilir, hazır olduğunda hesap gerektiren yarışmalara geçebilirsin." },
     quizLinks: { hub: "Tüm futbol quizleri", guessPlayer: "Oyuncuyu Tahmin Et", careerPath: "Kariyer Yolu quizi" },
     faq: [
       { q: "Hesap açmadan oynayabilir miyim?", a: "Evet. Buradaki misafir oyunları kaydolmadan oynanabilir. Sıralamalı oyun ve Hafta Sonu Ligi hesap gerektirir." },

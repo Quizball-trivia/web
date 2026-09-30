@@ -292,7 +292,7 @@ const tr: Copy = {
     signupButton: "Kaydol",
     more: "Daha fazla oyun",
     trivia: "Bilgi Mayınları",
-    grid: "Tic Tac Toe",
+    grid: "Futbol XOX",
   },
   archive: { title: "Önceki günler", played: (s) => `${s} puan`, inProgress: "Devam ediyor", notPlayed: "Oynanmadı", today: "Bugün", back: "Geri" },
   shareText: (n, score, grid, url) => `Futbol Mayın Tarlası #${n} — ${score} puan\n${grid}\nBeni geçebilir misin? ${url}`,

@@ -27,7 +27,7 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "El partido de entrenamiento de esta página es una versión guiada de ese mismo flujo: la misma fase de vetos, las mismas rondas de posesión y una tanda de penaltis contra CoachBot, con pistas en cada paso. No otorga nada y no se guarda. El modo clasificatorio en sí requiere una cuenta.",
     ],
     tr: [
-      "Dereceli, Quizball'un rekabet modudur: gerçek bir rakibe karşı canlı, bire bir futbol bilgi maçı, dereceli puan (RP) için oynanır. Katalogdan üç kategori çekilir; her oyuncu birini yasaklar ve maç kalan kategoride oynanır. İki devrede on iki soru, devre arasında yeni kategori çekilişiyle.",
+      "1v1 Futbol Bilgi Yarışması, Quizball'un dereceli rekabet modudur: gerçek bir rakibe karşı canlı, bire bir futbol bilgi maçı, dereceli puan (RP) için oynanır. Katalogdan üç kategori çekilir; her oyuncu birini yasaklar ve maç kalan kategoride oynanır. İki devrede on iki soru, devre arasında yeni kategori çekilişiyle.",
       "Her soru bir top hakimiyeti mücadelesidir. İki oyuncu da aynı soruyu cevaplar; daha hızlı doğru cevap sahada yer kazandırır. Topu rakibin kale çizgisine kadar götürerek şut hakkı kazan; kaleciyi geçen şut goldür. Maç sonunda skor eşitse penaltılara gidilir: her vuruşu bir soru belirler.",
       "Kazanmak RP kazandırır ve seni Akademi'den üst liglere doğru yükseltir; kaybetmek RP götürür. Yeni hesaplar bir kademe almadan önce üç yerleştirme maçı oynar. Maçların, kazanma oranın ve sıran liderlik tablosunda görünür; hafta sonu yarışması da katılım puanlarını dereceli maçlardan alır.",
       "Bu sayfadaki antrenman maçı tam olarak bu akışın yönlendirmeli sürümüdür: aynı yasak aşaması, aynı top hakimiyeti turları ve CoachBot'a karşı bir penaltı serisi, her adımda ipuçlarıyla. Hiçbir şey kazandırmaz ve kaydedilmez. Dereceli modun kendisi hesap gerektirir.",
@@ -50,7 +50,7 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "La ronda de práctica de esta página se juega contra un bot con las mismas reglas. Los jugadores registrados se enfrentan a rivales reales en la app, guardan su historial y ganan puntos de clasificación; la práctica de invitado no otorga nada y no se guarda.",
     ],
     tr: [
-      "Futbol Tic Tac Toe üçe üç bir ızgarada oynanır. Her satır ve her sütun bir kategori taşır: bir kulüp, bir ülke, bir lig, bir kupa ya da bir teknik direktör. Böylece her kare aynı anda iki kategoriyi temsil eder; kareyi, ikisine de uyan bir futbolcunun adını yazarak alırsın, örneğin Chelsea'de oynamış bir Brezilyalı.",
+      "Futbol XOX (Tic Tac Toe) üçe üç bir ızgarada oynanır. Her satır ve her sütun bir kategori taşır: bir kulüp, bir ülke, bir lig, bir kupa ya da bir teknik direktör. Böylece her kare aynı anda iki kategoriyi temsil eder; kareyi, ikisine de uyan bir futbolcunun adını yazarak alırsın, örneğin Chelsea'de oynamış bir Brezilyalı.",
       "Turlar süreye bağlıdır. Bir isim yaz; oyun soyadları, tam adları, yaygın lakapları ve küçük yazım hatalarını kabul eder. Kareyi kimse dolduramazsa pas geçebilirsin; kazanan bir çizgi kalmayan tahta beraberliktir. Yakın maçlar, şanslı bir tahta günü belirlemesin diye üç maçlık seri olarak oynanır.",
       "Bu sayfadaki alıştırma turu aynı kurallarla bir bota karşı oynanır. Giriş yapmış oyuncular uygulamada gerçek rakiplerle karşılaşır, sicilini korur ve dereceli puan kazanır; misafir alıştırması hiçbir şey kazandırmaz ve kaydedilmez.",
     ],
@@ -160,7 +160,7 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "La ronda de práctica usa parejas de muestra. En la app, el set diario cambia cada día, las rondas superadas dan monedas y los resultados cuentan para tu racha.",
     ],
     tr: [
-      "Yüksek mi Düşük mü, iki futbolcuyu gizli bir sayıyla yan yana koyar: bir sezondaki goller, transfer ücreti, millî maç sayısı, yaş ya da piyasa değeri. İlk oyuncunun sayısını görürsün ve ikincininkinin daha yüksek mi yoksa daha düşük mü olduğuna karar verirsin.",
+      "Higher or Lower Futbolcu, iki futbolcuyu gizli bir sayıyla yan yana koyar: bir sezondaki goller, transfer ücreti, millî maç sayısı, yaş ya da piyasa değeri. İlk oyuncunun sayısını görürsün ve ikincininkinin daha yüksek mi yoksa daha düşük mü olduğuna karar verirsin.",
       "Doğru bir karar seriyi sürdürür ve sonraki ikiliyi getirir; ilk yanlış karar turu bitirir. Turlar kısadır ve sayılar doğrulanmış kayıtlardan gelir, bu yüzden oyun şansla değil sporu bilmekle ilgilidir.",
       "Alıştırma turu örnek ikililer kullanır. Uygulamada günlük set her gün değişir, geçilen turlar jeton kazandırır ve sonuçlar serine sayılır.",
     ],
@@ -365,12 +365,12 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "დღეს სამი შემადგენლობა ქმნის. სავარჯიშო რაუნდი სანიმუშო გუნდებს იყენებს; აპლიკაციის ყოველდღიური თამაში შემადგენლობებს ყოველდღე ცვლის, დასახელებულ მაისურზე ქოინებს იხდის და სერიაში ითვლება.",
     ],
     es: [
-      "Once perdido muestra una alineación famosa como once camisetas sobre el campo, en la formación real, con todos los nombres ocultos. El partido está identificado, por ejemplo una final de Champions, y tu tarea es nombrar al jugador que salió de inicio en cada posición. Toca una camiseta, escribe el nombre y sigue.",
+      "Adivina el 11 muestra una alineación famosa como once camisetas sobre el campo, en la formación real, con todos los nombres ocultos. El partido está identificado, por ejemplo una final de Champions, y tu tarea es nombrar al jugador que salió de inicio en cada posición. Toca una camiseta, escribe el nombre y sigue.",
       "Cada alineación está verificada con el acta oficial del partido, así que la formación y los once titulares son exactos. Los nombres se comparan con generosidad. Puedes saltar una camiseta que no recuerdes; saltarla revela la cara y el nombre para que el once quede completo al final.",
       "Tres alineaciones forman un día. La ronda de práctica usa equipos de muestra; el juego diario de la app cambia las alineaciones cada día, paga monedas por camiseta acertada y cuenta para tu racha.",
     ],
     tr: [
-      "Kayıp XI ünlü bir ilk on biri sahada on bir forma olarak, gerçek dizilişte ve her isim gizli şekilde gösterir. Maç adlandırılmıştır, örneğin bir Şampiyonlar Ligi finali; görevin her mevkide maça başlayan oyuncunun adını söylemektir. Bir formaya dokun, ismi yaz, devam et.",
+      "İlk 11 Tahmin Etme ünlü bir ilk on biri sahada on bir forma olarak, gerçek dizilişte ve her isim gizli şekilde gösterir. Maç adlandırılmıştır, örneğin bir Şampiyonlar Ligi finali; görevin her mevkide maça başlayan oyuncunun adını söylemektir. Bir formaya dokun, ismi yaz, devam et.",
       "Her ilk on bir resmî maç kaydına göre doğrulanır, bu yüzden diziliş ve on bir oyuncu tam olarak doğrudur. İsimler İngilizce ve Gürcüce yazımlarıyla esnek eşleştirilir. Hatırlayamadığın bir formayı atlayabilirsin; atlamak yüzü ve ismi açar, böylece kadro sonunda yine eksiksiz görünür.",
       "Bir gün üç ilk on birden oluşur. Alıştırma turu örnek kadrolar kullanır; uygulamadaki günlük oyun kadroları her gün değiştirir, bilinen forma başına jeton öder ve serine sayılır.",
     ],
@@ -480,7 +480,7 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "En esta página juegas solo con puntos de práctica. En la app, los jugadores registrados apuestan monedas reales, los multiplicadores salen de la precisión medida por nivel de dificultad y las rachas se limitan a diez giros y cuarenta veces la apuesta.",
     ],
     tr: [
-      "Kadro Çarkı bir dizi çevirmedir. Her çevirme üç makarayı bir kulüp, bir mevki ve bir ülkeye oturtur ve üçüne de uyan bir futbolcunun adını söylemek için on beş saniyen vardır, örneğin Chelsea'de oynamış Brezilyalı bir forvet. Dört ve beş makaralı koşular bir lig, bir teknik direktör ya da bir kupa ekler ve çevirme başına daha çok öder.",
+      "Futbol Çarkı bir dizi çevirmedir. Her çevirme üç makarayı bir kulüp, bir mevki ve bir ülkeye oturtur ve üçüne de uyan bir futbolcunun adını söylemek için on beş saniyen vardır, örneğin Chelsea'de oynamış Brezilyalı bir forvet. Dört ve beş makaralı koşular bir lig, bir teknik direktör ya da bir kupa ekler ve çevirme başına daha çok öder.",
       "Doğru cevap potu çarpar; sonra, sonraki makaralar gösterilmeden önce parayı çekmeyi ya da yeniden çevirmeyi seçersin, yani asla önceden bakamazsın. Yanlış cevap ya da süre aşımı koşuyu bitirir ve bahis kaybedilir. Her kombinasyonun en az bir doğrulanmış cevabı vardır; isimler yazım hatası toleransıyla İngilizce ve Gürcüce yazımlarıyla kabul edilir.",
       "Bu sayfada yalnızca alıştırma puanlarıyla oynarsın. Uygulamada giriş yapmış oyuncular gerçek jeton yatırır, çarpanlar zorluk seviyesi başına ölçülen isabetten gelir ve koşular on çevirme ve bahsin kırk katıyla sınırlıdır.",
     ],

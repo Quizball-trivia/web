@@ -247,7 +247,7 @@ const ka: Copy = {
 
 const tr: Copy = {
   brandA: "Futbolcu",
-  brandB: "Tahmin",
+  brandB: "Tahmini",
   player: (n, total) => `Oyuncu ${n} / ${total}`,
   pointsInPlay: "Oyundaki puan",
   score: "Puanın",
@@ -300,7 +300,7 @@ const tr: Copy = {
     clues: (n) => `${n} ipucu`,
   },
   archive: { title: "Önceki günler", played: (s) => `${s} puan`, inProgress: "Devam ediyor", notPlayed: "Oynanmadı", today: "Bugün", back: "Geri" },
-  shareText: (n, score, grid, url) => `Futbolcu Tahmin #${n} — ${score}/100\n${grid}\nBeni geçebilir misin? ${url}`,
+  shareText: (n, score, grid, url) => `Futbolcu Tahmin Etme Oyunu #${n} — ${score}/100\n${grid}\nBeni geçebilir misin? ${url}`,
   report: "İpucunda hata bildir",
   reported: "Teşekkürler! Kontrol edeceğiz.",
   exit: "Çıkış",

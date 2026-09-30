@@ -503,7 +503,7 @@ const DAILY_DEMO_COPY: Record<DailyChallengeType, { title: DemoI18nText; descrip
     },
   },
   careerPath: {
-    title: { en: "Career Path", ka: "კარიერის გზა", es: "Trayectoria Profesional", tr: "Kariyer Yolu", },
+    title: { en: "Career Path", ka: "კარიერის გზა", es: "Trayectoria", tr: "Kariyer Yolu", },
     description: {
       en: "Follow the transfer trail and name the player behind the career.",
       ka: "მიჰყევი ტრანსფერების კვალს და გამოიცანი ვისი კარიერაა.",
