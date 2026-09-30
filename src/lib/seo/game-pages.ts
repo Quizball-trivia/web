@@ -416,8 +416,8 @@ export const GAME_PAGES: GamePageEntry[] = [
       reward: "დააგროვე მონეტები და XP ყოველი დახურული ჯაჭვისთვის.",
     },
     es: {
-      metaTitle: "Conectando jugadores — Conecta a dos futbolistas por sus clubes",
-      metaDescription: "Dos cadenas al día. Conecta al jugador inicial con el objetivo a través de compañeros que compartieron club. Menos eslabones, más puntos.",
+      metaTitle: "Conectando jugadores de fútbol — Conecta a dos futbolistas por sus clubes",
+      metaDescription: "Conecta jugadores de fútbol: dos cadenas al día. Une al jugador inicial con el objetivo a través de compañeros que compartieron club. Menos eslabones, más puntos.",
       title: "Conectando jugadores",
       intro: "Dos jugadores, una cadena. Pasa por compañeros que compartieron club hasta llegar al objetivo.",
       howToPlay: ["Escribe un jugador que compartió club con el último de la cadena.", "Sigue pasando hasta que alguien de la cadena comparta club con el objetivo.", "Iguala el par, la cadena más corta posible, para la puntuación perfecta."],
@@ -451,7 +451,7 @@ export const GAME_PAGES: GamePageEntry[] = [
     },
     es: {
       metaTitle: "Adivina el 11 — Completa las alineaciones famosas",
-      metaDescription: "Tres onces iniciales famosos al día. Toca una camiseta, nombra al titular y completa la alineación antes de que acabe el tiempo.",
+      metaDescription: "Adivina el once titular de tres alineaciones famosas al día. Toca una camiseta, nombra al titular y completa la alineación antes de que acabe el tiempo.",
       title: "Adivina el 11",
       intro: "Una alineación legendaria con los nombres ocultos. Rellena cada camiseta de memoria.",
       howToPlay: ["Toca una camiseta vacía en el campo.", "Escribe quién fue titular ahí; basta con el apellido.", "Completa las 11 antes de que se acabe el tiempo o los tres fallos."],
@@ -688,8 +688,8 @@ export const GAME_PAGES: GamePageEntry[] = [
       reward: "რეიტინგული ჯილდოებისთვის ანგარიშია საჭირო; სტუმრის თამაში სავარჯიშოა.",
     },
     es: {
-      metaTitle: "Tiki Taka Toe: tic tac toe futbolero y tatetí de fútbol online | QuizBall",
-      metaDescription: "Juega al Tiki Taka Toe, el tic tac toe futbolero (tatetí o tres en raya de fútbol), online. Nombra jugadores que cumplan ambas categorías, conquista casillas y consigue tres en línea. Empieza sin cuenta.",
+      metaTitle: "Tic Tac Toe futbolero (tatetí y tres en raya) online | QuizBall",
+      metaDescription: "Juega al tic tac toe futbolero online, también llamado Tiki Taka Toe, tatetí o tres en raya de fútbol. Nombra jugadores que cumplan ambas categorías, conquista casillas y consigue tres en línea. Empieza sin cuenta.",
       title: "Tic Tac Toe futbolero",
       intro: "Pon a prueba tu fútbol contra la cuadrícula. Elige una casilla, nombra un jugador que encaje en ambas categorías y busca tres en línea. Empieza como invitado.",
       howToPlay: ["Elige una casilla: su fila y su columna son dos categorías, por ejemplo un club y un país.", "Nombra un jugador que cumpla ambas. Se aceptan apellidos y erratas pequeñas.", "Un nombre correcto conquista la casilla; tres en línea gana.", "Los partidos igualados se deciden al mejor de tres."],
@@ -825,7 +825,7 @@ export const GAME_PAGES: GamePageEntry[] = [
     },
     es: {
       metaTitle: "Buscaminas futbolero — Encontrá a los 12 y esquivá las 4 minas | QuizBall",
-      metaDescription: "El buscaminas futbolero de jugadores: 20 rondas de 16 futbolistas. Tocá a los 12 que cumplen la consigna y esquivá las 4 minas. Un tablero nuevo cada día.",
+      metaDescription: "El buscaminas futbolero de jugadores (buscaminas de fútbol): 20 rondas de 16 futbolistas. Tocá a los 12 que cumplen la consigna y esquivá las 4 minas. Un tablero nuevo cada día.",
       title: "Buscaminas futbolero",
       intro: "Cada ronda muestra 16 futbolistas y una consigna. Doce la cumplen y cuatro son minas. Encontrá a los correctos, plantate antes de pisar una mina y sobreviví 20 rondas que se ponen cada vez más difíciles.",
       howToPlay: ["Leé la consigna: una temporada de un club, la planilla de una final, dónde nacieron…", "Tocá a los jugadores que la cumplen. Cada acierto suma un punto al pozo de la ronda.", "Si tocás una mina perdés los puntos de esa ronda. Plantate cuando quieras para guardarlos.", "Encontrá a los 12 para una ronda perfecta con +3 de bonus. Compartí tus 20 cuadraditos."],
@@ -961,7 +961,7 @@ export const GAME_PAGES: GamePageEntry[] = [
     },
     es: {
       metaTitle: "Ruleta futbolera — nombra un jugador que encaje en cada carrete | QuizBall",
-      metaDescription: "Gira club, posición y país y nombra en 15 segundos un futbolista que encaje en los tres. Practica como invitado; monedas reales con cuenta.",
+      metaDescription: "La ruleta futbolera, también llamada ruleta mágica: gira club, posición y país y nombra en 15 segundos un futbolista que encaje en los tres. Practica como invitado; monedas reales con cuenta.",
       title: "Ruleta futbolera",
       intro: "Los carretes caen en un club, una posición y un país. Nombra un jugador que encaje en todos antes de que acabe el tiempo; cada acierto multiplica el bote.",
       howToPlay: ["Elige 3, 4 o 5 carretes: más carretes, mayor multiplicador.", "Escribe en 15 segundos un jugador que cumpla todos los carretes.", "Retira o vuelve a girar antes de ver los siguientes carretes.", "Un fallo termina la racha."],
