@@ -4,7 +4,7 @@ import { ALL_DEMO_MODES } from "@/features/demos/demoModes";
 import { DAILY_COLLECTION_SLUG, PUBLIC_GAMES_FOLDER, gamePagePath, gamePageSlug } from "@/lib/seo/game-pages";
 import { SEO_PAGE_LOCALES } from "@/lib/seo/game-pages";
 import { GAME_PAGE_DETAILS } from "@/lib/seo/game-page-details";
-import { PUBLIC_GAMES, PUBLISHED_PUBLIC_GAMES, cardHref, findPublishedGame, publishedLocalesOf, relatedPublishedGames } from "@/lib/seo/public-games";
+import { PUBLIC_GAMES, PUBLISHED_PUBLIC_GAMES, cardHref, findPublicGameByModeId, findPublishedGame, isFullGameDemo, publishedLocalesOf, relatedPublishedGames } from "@/lib/seo/public-games";
 
 const demoSlugs = new Set(ALL_DEMO_MODES.map((mode) => mode.slug));
 
@@ -42,6 +42,34 @@ describe("public games manifest", () => {
       const related = relatedPublishedGames(game);
       expect(related.length).toBe(3);
       for (const r of related) { expect(r.page).toBe(true); expect(r.slug).not.toBe(game.slug); }
+    }
+  });
+
+  it("publishes Último en pie futbolero under its Spanish and English slugs, related to Pistas and Buscaminas", () => {
+    const ultimo = findPublicGameByModeId("ultimo")!;
+    expect(ultimo.page).toBe(true);
+    expect(ultimo.playPath).toBe("/ultimo");
+    expect(ultimo.demoSlug).toBe("ultimo");
+    expect(gamePagePath(ultimo, "es")).toBe("/es/juegos-de-futbol/ultimo-en-pie-futbolero");
+    for (const locale of ["en", "ka", "tr"] as const) expect(gamePagePath(ultimo, locale)).toBe(`/${locale}/football-games/last-answer-standing`);
+    expect(findPublishedGame("es", "juegos-de-futbol", "ultimo-en-pie-futbolero")?.modeId).toBe("ultimo");
+    expect(findPublishedGame("es", "juegos-de-futbol", "last-answer-standing")).toBeNull();
+    expect(findPublishedGame("tr", "football-games", "last-answer-standing")?.modeId).toBe("ultimo");
+    expect(isFullGameDemo("ultimo")).toBe(true);
+    expect(relatedPublishedGames(ultimo).map((g) => g.modeId)).toEqual(["pistas", "buscaminas", "grid"]);
+    expect(relatedPublishedGames(findPublicGameByModeId("pistas")!).map((g) => g.modeId)).toContain("ultimo");
+    expect(relatedPublishedGames(findPublicGameByModeId("buscaminas")!).map((g) => g.modeId)).toContain("ultimo");
+    expect(ultimo.copy.es.title).toBe("Último en pie futbolero");
+    expect(ultimo.copy.en.title).toBe("Last Answer Standing");
+    expect(ultimo.copy.ka.title).toBe("ბოლომდე დარჩენილი");
+    expect(ultimo.copy.tr.title).toBe("Son Kalan Futbol");
+  });
+
+  it("Último copy avoids free wording in every locale", () => {
+    const ultimo = findPublicGameByModeId("ultimo")!;
+    for (const locale of SEO_PAGE_LOCALES) {
+      const text = [...Object.values(ultimo.copy[locale]).flat(), ...(GAME_PAGE_DETAILS[ultimo.slug]?.[locale] ?? [])].join(" ");
+      expect(text, locale).not.toMatch(/\b(free|gratis|gratuit)|უფასო|ücretsiz|bedava/i);
     }
   });
 

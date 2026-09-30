@@ -24,10 +24,10 @@ export const PHONE_AUTH_ENABLED = true;
 export const GUEST_LOBBIES_ENABLED = process.env.NEXT_PUBLIC_GUEST_LOBBIES === "true" || process.env.NEXT_PUBLIC_GUEST_LOBBIES === "1";
 
 /**
- * Daily mini-games offered as a friend duel ("Jugar con un amigo"), comma-separated, e.g. "buscaminas,pistas".
+ * Daily mini-games offered as a friend duel ("Jugar con un amigo"), comma-separated, e.g. "buscaminas,pistas,ultimo".
  * Mirrors the backend kill switch DUEL_GAMES_ENABLED; empty = no duel rooms offered.
  */
 export const DUEL_GAMES_ENABLED: readonly DuelGameId[] = (process.env.NEXT_PUBLIC_DUEL_GAMES ?? "")
   .split(",")
   .map((game) => game.trim())
-  .filter((game): game is DuelGameId => game === "buscaminas" || game === "pistas");
+  .filter((game): game is DuelGameId => game === "buscaminas" || game === "pistas" || game === "ultimo");

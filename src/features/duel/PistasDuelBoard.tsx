@@ -7,7 +7,7 @@ import type { Locale } from "@/lib/i18n/locale";
 import { pistasCopy } from "@/features/pistas/pistas.copy";
 import type { DuelCopy } from "./duel.copy";
 import type { PistasDuelClue, PistasDuelView, Seat } from "./duel.views";
-import { SEAT_TEXT } from "./duel.seats";
+import { SEAT_DOT } from "./duel.seats";
 
 const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
 const GUESS_MAX = 60;
@@ -94,7 +94,9 @@ export function PistasDuelBoard({ view, mySeat, names, copy, locale, finished, o
           {notes.length > 0 && (
             <ul className="mb-2 flex flex-col gap-1">
               {notes.map((note) => (
-                <li key={note.key} className={cn("text-xs font-semibold", note.tone === "rival" ? SEAT_TEXT.rival : note.tone === "me" ? SEAT_TEXT.me : "text-white/70")}>{note.text}</li>
+                <li key={note.key} className={cn("flex items-center gap-1.5 text-xs font-semibold", note.tone === "rival" || note.tone === "me" ? "text-white" : "text-white/70")}>
+                  {(note.tone === "rival" || note.tone === "me") && <span aria-hidden className={cn("size-1.5 shrink-0 rounded-full", SEAT_DOT[note.tone])} />}{note.text}
+                </li>
               ))}
             </ul>
           )}

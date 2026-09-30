@@ -42,6 +42,7 @@ const BASE_MODE_TABS: ReadonlyArray<ModeTab> = [
 const DUEL_TAB_LABEL_KEYS: Record<DuelGameId, MessageKey> = {
   buscaminas: 'friend.duelTabBuscaminas',
   pistas: 'friend.duelTabPistas',
+  ultimo: 'friend.duelTabUltimo',
 };
 
 /** The existing modes plus one tab per enabled duel game (and the room's own duel game, if it has one). */
@@ -62,6 +63,11 @@ const MODE_DESCRIPTION_KEYS: Record<LobbyGameMode, MessageKey> = {
   ranked_sim: 'friend.rankedSimDescription',
   auction: 'friend.auctionDescription',
   duel: 'friend.duelDescription',
+};
+
+/** Duel games whose rules differ from "most points wins" carry their own description. */
+const DUEL_DESCRIPTION_KEYS: Partial<Record<DuelGameId, MessageKey>> = {
+  ultimo: 'friend.duelDescriptionUltimo',
 };
 
 export function LobbySettings({
@@ -624,7 +630,7 @@ export function LobbySettings({
           >
             {isPartyLocked
               ? t("friend.partyDescription")
-              : t(MODE_DESCRIPTION_KEYS[mode])}
+              : t((mode === 'duel' && duelGame && DUEL_DESCRIPTION_KEYS[duelGame]) || MODE_DESCRIPTION_KEYS[mode])}
           </p>
         </div>
 

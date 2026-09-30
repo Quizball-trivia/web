@@ -16,6 +16,7 @@ const GuestDailyPlay = dynamic(() => import("./GuestDailyPlay").then((m) => m.Gu
 /** Every engine lives in one client chunk that is fetched only when a visitor presses Play. */
 const BuscaminasGame = dynamic(() => import("@/features/buscaminas/BuscaminasGame").then((m) => m.BuscaminasGame), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 const PistasGame = dynamic(() => import("@/features/pistas/PistasGame").then((m) => m.PistasGame), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
+const UltimoGame = dynamic(() => import("@/features/ultimo/UltimoGame").then((m) => m.UltimoGame), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 const DemoModeView = dynamic(() => import("@/features/demos/DemoModeView").then((m) => m.DemoModeView), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 
 const newSessionId = () => (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`);
@@ -134,6 +135,8 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, playPath, 
             <BuscaminasGame locale={locale as Locale} onExit={exit} onEvent={onEngineEvent} />
           ) : demoSlug === "pistas" ? (
             <PistasGame locale={locale as Locale} initialDay={sharedDay} onExit={exit} onEvent={onEngineEvent} onDay={onDay} />
+          ) : demoSlug === "ultimo" ? (
+            <UltimoGame locale={locale as Locale} initialDay={sharedDay} onExit={exit} onEvent={onEngineEvent} onDay={onDay} />
           ) : dailyType ? (
             <GuestDailyPlay
               type={dailyType}

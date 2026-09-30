@@ -257,6 +257,32 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Futbol İpuçları'nı bir arkadaşınla çevrimiçi 1'e 1 de oynayabilirsin: oda linkini gönder, ikiniz aynı ipuçlarını aynı anda görürsünüz ve doğru soyadını ilk yazan puanları alır.",
     ],
   },
+  "last-answer-standing": {
+    en: [
+      "Last Answer Standing is a list game. Every day there are five football categories, and each one is a closed list: a World Cup squad, every Copa Libertadores champion, a club's top scorers. You name answers one after another and every correct answer is worth a point.",
+      "The clock is the twist. Your first answer gets 20 seconds, and every answer you name shortens the next clock, down to 6 seconds. Three misses in a row or a clock that runs out ends the category. Name the entire list and you earn a +5 bonus on top of the points.",
+      "New categories arrive every day at midnight Argentina time. Without an account you play the previous days and see every answer; signed-in players get today's categories, one ranked run on the daily leaderboard and their streak. At the end you get five coloured squares to share: yellow for a whole list, green for half or more, blue for some and black for none.",
+      "You can also play Last Answer Standing 1v1 against a friend online, like on the streams: send them the room link and take turns naming answers from the same list. Whoever is left standing wins the category, and the first to win 3 categories wins the duel.",
+    ],
+    ka: [
+      "„ბოლომდე დარჩენილი“ სიების თამაშია. ყოველდღე ხუთი საფეხბურთო კატეგორიაა და თითოეული დახურული სიაა: მსოფლიო ჩემპიონატის შემადგენლობა, ლიბერტადორესის ყველა ჩემპიონი, კლუბის ბომბარდირები. ასახელებ პასუხებს სათითაოდ და ყოველი სწორი პასუხი ერთი ქულაა.",
+      "საათი აძნელებს თამაშს. პირველ პასუხზე 20 წამი გაქვს, ყოველი დასახელებული პასუხი შემდეგ საათს ამოკლებს — 6 წამამდე. სამი შეცდომა ზედიზედ ან ამოწურული დრო კატეგორიას ამთავრებს. მთელი სიის დასახელება ქულებს +5 ბონუსს უმატებს.",
+      "ახალი კატეგორიები ყოველდღე შუაღამისას ჩნდება (არგენტინის დროით). ანგარიშის გარეშე წინა დღეებს თამაშობ და ყველა პასუხს ხედავ; ანგარიშით — დღევანდელს, დღის რეიტინგს და სერიას. ბოლოს ხუთი ფერადი კვადრატი გეძლევა გასაზიარებლად: ყვითელი — სრული სია, მწვანე — ნახევარი ან მეტი, ლურჯი — რამდენიმე, შავი — არცერთი.",
+      "„ბოლომდე დარჩენილი“ მეგობართან ერთადაც ითამაშება ონლაინ, პირისპირ, როგორც სტრიმებზე: გაუგზავნე ოთახის ბმული და რიგრიგობით დაასახელეთ პასუხები ერთი და იმავე სიიდან. ვინც ბოლომდე დარჩება, კატეგორიას იგებს, ხოლო პირველი, ვინც 3 კატეგორიას მოიგებს, დუელს იგებს.",
+    ],
+    es: [
+      "Último en pie futbolero es un juego de listas. Cada día hay cinco categorías futboleras y cada una es una lista cerrada: un plantel mundialista, todos los campeones de la Copa Libertadores, los goleadores de un club. Nombrás respuestas una tras otra y cada acierto vale un punto.",
+      "El reloj es lo que lo hace difícil. Para la primera respuesta tenés 20 segundos y cada respuesta que nombrás acorta el reloj siguiente, hasta 6 segundos. Tres errores seguidos o un reloj que llega a cero terminan la categoría. Si nombrás la lista entera, te llevás +5 de bonus sobre los puntos.",
+      "Cada día a la medianoche (hora de Argentina) llegan categorías nuevas. Sin cuenta jugás los días anteriores y ves todas las respuestas; con tu cuenta jugás las de hoy, entrás al ranking del día y sumás racha. Al final tenés cinco cuadraditos de colores para compartir: amarillo por una lista completa, verde por la mitad o más, azul por algunas y negro por ninguna.",
+      "También podés jugar Último en pie futbolero 1 contra 1 con un amigo online, como en los streams: mandale el link de la sala y se turnan para nombrar respuestas de la misma lista. El que queda en pie gana la categoría y el primero en ganar 3 categorías se lleva el duelo.",
+    ],
+    tr: [
+      "Son Kalan Futbol bir liste oyunudur. Her gün beş futbol kategorisi vardır ve her biri kapalı bir listedir: bir Dünya Kupası kadrosu, Copa Libertadores'in tüm şampiyonları, bir kulübün en çok gol atanları. Cevapları art arda sayarsın ve her doğru cevap bir puandır.",
+      "Zorluk saatten gelir. İlk cevap için 20 saniyen var ve saydığın her cevap bir sonraki süreyi kısaltır, 6 saniyeye kadar. Üst üste üç yanlış ya da biten süre kategoriyi bitirir. Listenin tamamını sayarsan puanlara +5 bonus eklenir.",
+      "Her gün gece yarısı (Arjantin saati) yeni kategoriler gelir. Hesapsız önceki günleri oynar ve tüm cevapları görürsün; hesabınla bugünün kategorilerini oynar, günün sıralamasına girer ve serini sürdürürsün. Sonunda paylaşmak için beş renkli kare alırsın: sarı tam liste, yeşil yarısı ya da fazlası, mavi birkaçı, siyah hiçbiri.",
+      "Son Kalan Futbol bir arkadaşla çevrimiçi 1'e 1 de oynanır, tıpkı yayınlardaki gibi: oda linkini gönder ve aynı listeden sırayla cevap sayın. Ayakta kalan kategoriyi kazanır, 3 kategoriyi ilk kazanan düelloyu alır.",
+    ],
+  },
   "football-minesweeper": {
     en: [
       "Football Minesweeper turns a football quiz into a minesweeper board made of players. Every round has one clue and sixteen portrait cards. Twelve players fit the clue and four are mines. The clues range from a club's season and the matchday squad of a famous final to where a player was born or which World Cup he scored in.",

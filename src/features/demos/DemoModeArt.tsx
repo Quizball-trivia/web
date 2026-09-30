@@ -14,6 +14,7 @@ const GAME_MODE_IMAGE_BASE = "/assets/demos/game-modes";
 const LOCAL_MODE_IMAGES = new Map([
   ["buscaminas", "buscaminas"],
   ["pistas", "pistas"],
+  ["ultimo", "ultimo"],
   ["daily-clues", "daily-clues"],
   // Owner 2026-09-15: Card Detective gets the same illustrated treatment as the other dailies (Codex-generated).
   ["daily-cardDetective", "daily-cardDetective"],
