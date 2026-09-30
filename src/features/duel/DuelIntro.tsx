@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import type { DuelStatePayload } from "@/lib/realtime/socket.types";
 import type { DuelCopy } from "./duel.copy";
 import type { AvatarCustomization } from "@/types/game";
-import { SEAT_TEXT } from "./duel.seats";
+import { SEAT_AVATAR_RING, SEAT_LABEL } from "./duel.seats";
 import { DuelAvatar, seatAvatar } from "./DuelAvatar";
 
 const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
@@ -39,7 +39,7 @@ export function DuelIntro({ snapshot, names, copy, secondsLeft }: {
 
       <ul className="mt-8 w-full space-y-2 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-left">
         {copy.intro.rules[snapshot.game].map((line) => (
-          <li key={line} className="flex gap-2.5 text-sm leading-snug text-white/85"><span aria-hidden className="mt-1.5 size-1.5 shrink-0 rounded-full bg-brand-green-light" />{line}</li>
+          <li key={line} className="flex gap-2.5 text-sm leading-snug text-white/85"><span aria-hidden className="mt-1.5 size-1.5 shrink-0 rounded-full bg-brand-green" />{line}</li>
         ))}
       </ul>
 
@@ -66,12 +66,12 @@ function Player({ name, avatar, side, ready, showReady }: { name: string; avatar
   return (
     <motion.div initial={{ x: side === "me" ? -24 : 24, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="flex min-w-0 flex-1 flex-col items-center gap-2">
       <span className="relative">
-        <DuelAvatar customization={avatar} size="lg" ringClassName={side === "me" ? "ring-brand-green-light" : "ring-sky-300"} />
+        <DuelAvatar customization={avatar} size="lg" ringClassName={SEAT_AVATAR_RING[side]} />
         {showReady && ready && (
-          <span className="absolute -bottom-1 -right-1 flex size-7 items-center justify-center rounded-full bg-brand-green-light text-black ring-2 ring-surface-page-alt"><Check className="size-4" strokeWidth={3} /></span>
+          <span className="absolute -bottom-1 -right-1 flex size-7 items-center justify-center rounded-full bg-brand-green text-white ring-2 ring-surface-page-alt"><Check className="size-4" strokeWidth={3} /></span>
         )}
       </span>
-      <span className={cn("max-w-full truncate text-sm font-bold", SEAT_TEXT[side])}>{name}</span>
+      <span className={cn("max-w-full truncate text-sm font-bold", SEAT_LABEL[side])}>{name}</span>
     </motion.div>
   );
 }

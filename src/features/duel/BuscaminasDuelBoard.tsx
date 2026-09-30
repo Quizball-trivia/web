@@ -7,7 +7,7 @@ import { Bomb, Check, Shuffle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { DuelCopy } from "./duel.copy";
 import type { BuscaminasDuelView, Seat } from "./duel.views";
-import { SEAT_TEXT, SEAT_RING } from "./duel.seats";
+import { SEAT_LABEL, SEAT_RING } from "./duel.seats";
 
 const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
 
@@ -38,7 +38,7 @@ export function BuscaminasDuelBoard({ view, mySeat, names, copy, finished, onPic
       {status && (
         <div className={cn("mt-3 rounded-xl px-3 py-2 text-center text-sm font-bold", view.phase !== "turn"
           ? "bg-white/[0.06] text-white/85"
-          : myTurn ? "bg-brand-green/20 text-brand-green-light" : "bg-white/[0.06] text-white/60")}>
+          : myTurn ? "bg-brand-green text-white" : "bg-white/[0.06] text-white/60")}>
           {status}
         </div>
       )}
@@ -77,7 +77,7 @@ function DuelCard({ card, index, mySeat, copy, enabled, onPick }: {
         mine && picked ? "border-brand-red-soft shadow-[0_0_14px_rgba(255,75,75,0.45)]"
           : picked ? seatRing
           : revealedOnly && mine ? "border-brand-red-soft/60 opacity-80"
-          : revealedOnly ? "border-dashed border-brand-green-light/50 opacity-70"
+          : revealedOnly ? "border-dashed border-brand-green/60 opacity-70"
           : enabled ? "border-white/15 hover:border-white/40" : "border-white/10",
       )}
     >
@@ -89,7 +89,7 @@ function DuelCard({ card, index, mySeat, copy, enabled, onPick }: {
         )}
         {mine && picked && <div className="absolute inset-0 bg-brand-red-soft/35" />}
         {(picked || (revealedOnly && mine)) && (
-          <span className={cn("absolute right-1 top-1 flex size-5 items-center justify-center rounded-full", mine ? "bg-brand-red-soft text-white" : "bg-brand-green-light text-black")}>
+          <span className={cn("absolute right-1 top-1 flex size-5 items-center justify-center rounded-full", mine ? "bg-brand-red-soft text-white" : "bg-brand-green text-white")}>
             {mine ? <Bomb className="size-3" strokeWidth={2.5} /> : <Check className="size-3.5" strokeWidth={3.5} />}
           </span>
         )}
@@ -101,7 +101,7 @@ function DuelCard({ card, index, mySeat, copy, enabled, onPick }: {
       </div>
       <span className={cn("flex min-h-[26px] items-center justify-center px-1 py-0.5 text-center font-black uppercase leading-[1.1] [overflow-wrap:anywhere]",
         card.name.length > 11 ? "text-[9px]" : "text-[10px]",
-        mine && picked ? "text-brand-red-soft" : card.pick ? SEAT_TEXT[card.pick.seat === mySeat ? "me" : "rival"] : "text-white")} style={poppins}>
+        mine && picked ? "text-brand-red-soft" : card.pick ? SEAT_LABEL[card.pick.seat === mySeat ? "me" : "rival"] : "text-white")} style={poppins}>
         {card.name}
       </span>
     </motion.button>

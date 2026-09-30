@@ -12,7 +12,7 @@ import { useRealtimePrincipal } from "@/lib/realtime/realtime-principal";
 import { useActiveDuelStore } from "@/stores/activeDuel.store";
 import type { DuelSeatPayload, DuelStatePayload } from "@/lib/realtime/socket.types";
 import { duelCopy, type DuelCopy } from "./duel.copy";
-import { SEAT_BG, SEAT_TEXT } from "./duel.seats";
+import { SEAT_AVATAR_RING, SEAT_BG, SEAT_LABEL, SEAT_TEXT } from "./duel.seats";
 import type { BuscaminasDuelView, PistasDuelView, Seat, UltimoDuelView } from "./duel.views";
 import { BuscaminasDuelBoard } from "./BuscaminasDuelBoard";
 import { PistasDuelBoard } from "./PistasDuelBoard";
@@ -223,11 +223,11 @@ function Scoreboard({ snapshot, names, turnSeat, copy }: { snapshot: DuelStatePa
         const side = me ? "me" : "rival";
         return (
           <div key={seat} className={cn("flex items-center gap-2.5 rounded-2xl px-3 py-2 transition-colors", turnSeat === seat ? SEAT_BG[side] : "bg-white/[0.05]", !me && "flex-row-reverse text-right")}>
-            <DuelAvatar size="xs" ringClassName={me ? "ring-brand-green-light/80" : "ring-sky-300/80"}
+            <DuelAvatar size="xs" ringClassName={SEAT_AVATAR_RING[side]}
               customization={seatAvatar(snapshot.seats.find((s) => s.seat === seat) ?? { userId: `seat-${seat}`, avatarCustomization: null, avatarUrl: null, isGuest: true })} />
             <div className="min-w-0 flex-1">
-              <p className={cn("truncate text-xs font-bold", SEAT_TEXT[side])}>{me ? copy.you : names[seat]}</p>
-              <p className="text-2xl font-black leading-none tabular-nums" style={poppins}>{scores[seat]}</p>
+              <p className={cn("truncate text-xs font-bold", SEAT_LABEL[side])}>{me ? copy.you : names[seat]}</p>
+              <p className={cn("text-2xl font-black leading-none tabular-nums", SEAT_TEXT[side])} style={poppins}>{scores[seat]}</p>
             </div>
           </div>
         );
@@ -251,7 +251,7 @@ function PauseOverlay({ mine, name, copy, secondsLeft }: { mine: boolean; name: 
   return (
     <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/60 p-6" role="status" aria-live="polite">
       <div className="w-full max-w-sm rounded-3xl bg-surface-page-deep p-6 text-center">
-        <Loader2 className="mx-auto size-7 animate-spin text-sky-300" />
+        <Loader2 className="mx-auto size-7 animate-spin text-brand-blue" />
         {mine ? (
           <p className="mt-3 text-base font-bold">{copy.pause.reconnecting}</p>
         ) : (
@@ -287,7 +287,7 @@ function ResultCard({ snapshot, names, copy, onRoom, onExit }: { snapshot: DuelS
     <div aria-hidden className="fixed inset-0 z-30 bg-black/55" />
     <motion.div role="dialog" aria-modal="true" initial={{ y: 40 }} animate={{ y: 0 }}
       className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-md rounded-t-3xl border-t border-white/10 bg-surface-page-deep px-5 pb-[max(env(safe-area-inset-bottom),20px)] pt-5 shadow-[0_-12px_40px_rgba(0,0,0,0.5)]">
-      <p className={cn("text-center text-3xl font-black uppercase", won ? "text-brand-green-light" : "text-white")} style={poppins}>{headline}</p>
+      <p className={cn("text-center text-3xl font-black uppercase", won ? "text-brand-green" : "text-white")} style={poppins}>{headline}</p>
       {result && result.reason !== "cancelled" && (
         <p className="mt-1 text-center text-4xl font-black tabular-nums" style={poppins}>
           <span className={SEAT_TEXT.me}>{result.scores[me]}</span>
