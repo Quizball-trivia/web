@@ -3,7 +3,7 @@ import type { GameId, PlayMode } from "./types";
 
 export const PLAYGROUND = "qb-playground";
 
-export type ToPreview = { source: typeof PLAYGROUND; type: "render"; game: GameId; mode: PlayMode; scenario: string; data: unknown; locale: Locale; key: string };
+export type ToPreview = { source: typeof PLAYGROUND; type: "render"; game: GameId; mode: PlayMode; scenario: string; data: unknown; locale: Locale; key: string; applied: number };
 export type FromPreview =
   | { source: typeof PLAYGROUND; type: "ready" }
   | { source: typeof PLAYGROUND; type: "action"; action: string; args: unknown[] }

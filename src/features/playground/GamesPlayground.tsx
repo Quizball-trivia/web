@@ -40,6 +40,8 @@ export function GamesPlayground() {
   const [drafts, setDrafts] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string | null>>({});
   const [resets, setResets] = useState(0);
+  /** Bumps on every Apply: clears a render error once a corrected state is applied. */
+  const [applied, setApplied] = useState(0);
   const data = scenarioKey in overrides ? overrides[scenarioKey] : scenario?.data;
   const draft = drafts[scenarioKey] ?? pretty(data);
   const draftError = errors[scenarioKey] ?? null;
@@ -57,10 +59,10 @@ export function GamesPlayground() {
   const send = useCallback(() => {
     if (!scenario || previewReady === 0) return;
     frame.current?.contentWindow?.postMessage(
-      { source: PLAYGROUND, type: "render", game: game.id, mode, scenario: scenario.id, data, locale, key: renderKey },
+      { source: PLAYGROUND, type: "render", game: game.id, mode, scenario: scenario.id, data, locale, key: renderKey, applied },
       window.location.origin,
     );
-  }, [scenario, previewReady, game.id, mode, data, locale, renderKey]);
+  }, [scenario, previewReady, game.id, mode, data, locale, renderKey, applied]);
   useEffect(() => { send(); }, [send]);
 
   useEffect(() => {
@@ -96,6 +98,7 @@ export function GamesPlayground() {
       const missing = expected ? Object.keys(expected).filter((k) => !(k in parsed)) : [];
       if (missing.length) throw new Error(`Missing field(s): ${missing.join(", ")}`);
       setOverrides((o) => ({ ...o, [scenarioKey]: parsed }));
+      setApplied((n) => n + 1);
       setErrors((e) => ({ ...e, [scenarioKey]: null }));
     } catch (error) {
       setErrors((e) => ({ ...e, [scenarioKey]: (error as Error).message }));

@@ -40,7 +40,7 @@ export function PreviewHost() {
   if (!frame) return <div className="min-h-dvh bg-surface-page-alt" />;
   // The key remounts the screen on Reset and on every scenario switch: no draft, copied state or image failure carries over.
   return (
-    <Boundary resetKey={frame.key}>
+    <Boundary resetKey={`${frame.key}@${frame.applied}`}>
       <ScenarioView key={frame.key} frame={frame} />
     </Boundary>
   );
