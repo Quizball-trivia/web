@@ -28,8 +28,8 @@ const EXTRA = {
     "tr": "Paranı korumak için doğru cevapla"
   },
   "Football Logic": {
-    "es": "Lógica futbolera",
-    "tr": "Futbol Mantığı"
+    "es": "Acertijos de fútbol",
+    "tr": "Futbol Bilmeceleri"
   },
   "Decode the player from the two pictures": {
     "es": "Descifra al jugador a partir de las dos imágenes",
@@ -160,15 +160,15 @@ const EXTRA = {
     "tr": "Ramos 19 yaşında Sevilla'dan Real Madrid'e geçti ve kaptan olarak dört Şampiyonlar Ligi kazandı."
   },
   "Missing XI": {
-    "es": "XI perdido",
-    "tr": "Kayıp XI"
+    "es": "Adivina el 11",
+    "tr": "İlk 11 Tahmin Etme"
   },
   "Tap a shirt and name the player who started there.": {
     "es": "Toca una camiseta y nombra al jugador que fue titular ahí.",
     "tr": "Bir formaya dokun ve orada ilk 11'de başlayan oyuncuyu söyle."
   },
   "Stat Sniper": {
-    "es": "Stat Sniper",
+    "es": "Aproximado futbolero",
     "tr": "Stat Sniper"
   },
   "Slide to your best guess.": {
@@ -176,8 +176,8 @@ const EXTRA = {
     "tr": "En iyi tahminine kaydır."
   },
   "Pass Chain": {
-    "es": "Cadena de pases",
-    "tr": "Pas Zinciri"
+    "es": "Conectando jugadores",
+    "tr": "Futbolcu Bağlantı Zinciri"
   },
   "Link two players through shared clubs.": {
     "es": "Conecta a dos jugadores a través de clubes en común.",
@@ -188,7 +188,7 @@ const EXTRA = {
     "tr": "FIFA Kartları"
   },
   "Card Detective": {
-    "es": "Detective de cartas",
+    "es": "Adivina el jugador por su carta",
     "tr": "Kart Dedektifi"
   },
   "A gold card, stats only — name the player.": {
