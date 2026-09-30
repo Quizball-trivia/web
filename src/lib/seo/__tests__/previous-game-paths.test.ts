@@ -14,7 +14,8 @@ describe("renamed public game URLs", () => {
     expect(redirects["/es/juegos-de-futbol/once-perdido"]).toBe("/es/juegos-de-futbol/adivina-el-11");
     expect(redirects["/es/juegos-de-futbol/cadena-de-pases"]).toBe("/es/juegos-de-futbol/conectando-jugadores");
     expect(redirects["/es/juegos-de-futbol/ruleta-de-plantilla"]).toBe("/es/juegos-de-futbol/ruleta-futbolera");
-    expect(Object.keys(redirects).filter((from) => from.startsWith("/es/"))).toHaveLength(5);
+    expect(redirects["/es/juegos-de-futbol/mas-o-menos"]).toBe("/es/juegos-de-futbol/higher-or-lower-futbolero");
+    expect(Object.keys(redirects).filter((from) => from.startsWith("/es/"))).toHaveLength(6);
   });
 
   it("moves every Turkish page out of the English folder", () => {
