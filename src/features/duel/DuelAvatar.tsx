@@ -27,16 +27,14 @@ export function seatAvatar(source: AvatarSource): AvatarCustomization {
   return randomBotAvatar(source.userId);
 }
 
-export function DuelAvatar({ customization, size, ringClassName, className }: {
+export function DuelAvatar({ customization, size, className }: {
   customization: AvatarCustomization;
   size: "xs" | "sm" | "md" | "lg";
-  /** The seat's colour, drawn as a ring around the avatar. */
-  ringClassName: string;
   className?: string;
 }) {
   return (
-    <span className={cn("inline-flex shrink-0 rounded-full ring-[3px]", ringClassName, className)}>
-      <AvatarDisplay customization={customization} size={size} className="rounded-full" />
+    <span className={cn("inline-flex shrink-0", className)}>
+      <AvatarDisplay customization={customization} size={size} />
     </span>
   );
 }
