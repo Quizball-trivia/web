@@ -6,7 +6,8 @@ import { preparePostHogCapture } from '@/lib/analytics/posthog-capture-policy';
 // nothing). Gating on the key — not VERCEL_ENV — because NEXT_PUBLIC_VERCEL_ENV
 // does not reliably inline at build on the prod Vercel build, which silently
 // disabled all browser analytics on prod.
-if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_POSTHOG_KEY) {
+// The local games playground (/dev/games) is dev tooling and never initializes analytics.
+if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_POSTHOG_KEY && !/^\/dev\/games(\/|$)/.test(window.location.pathname)) {
   try {
     posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
       api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,

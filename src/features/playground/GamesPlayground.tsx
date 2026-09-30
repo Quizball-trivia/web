@@ -46,7 +46,8 @@ export function GamesPlayground() {
   const setDraft = (text: string) => setDrafts((d) => ({ ...d, [scenarioKey]: text }));
   const [log, setLog] = useState<LogLine[]>([]);
   const renderKey = `${scenarioKey}#${resets}`;
-  const [previewReady, setPreviewReady] = useState(false);
+  /** Bumps on every "ready" from the preview (a reload included), which re-sends the current screen. */
+  const [previewReady, setPreviewReady] = useState(0);
   const frame = useRef<HTMLIFrameElement>(null);
   const stage = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(1);
@@ -54,7 +55,7 @@ export function GamesPlayground() {
   const [playing, setPlaying] = useState<string | null>(null);
 
   const send = useCallback(() => {
-    if (!scenario || !previewReady) return;
+    if (!scenario || previewReady === 0) return;
     frame.current?.contentWindow?.postMessage(
       { source: PLAYGROUND, type: "render", game: game.id, mode, scenario: scenario.id, data, locale, key: renderKey },
       window.location.origin,
@@ -66,7 +67,7 @@ export function GamesPlayground() {
     const onMessage = (event: MessageEvent) => {
       if (!isPlaygroundMessage(event)) return;
       const message = event.data as FromPreview;
-      if (message.type === "ready") setPreviewReady(true);
+      if (message.type === "ready") setPreviewReady((n) => n + 1);
       if (message.type === "action") setLog((l) => [{ at: new Date().toLocaleTimeString(), text: `${message.action}(${message.args.map((a) => JSON.stringify(a)).join(", ")})` }, ...l].slice(0, 50));
       if (message.type === "error") setLog((l) => [{ at: new Date().toLocaleTimeString(), text: `render error: ${message.message}` }, ...l].slice(0, 50));
     };
@@ -89,6 +90,11 @@ export function GamesPlayground() {
   const apply = () => {
     try {
       const parsed: unknown = JSON.parse(draft);
+      // A screen's state is always an object shaped like its fixture: anything else is refused, the last valid state stays.
+      const expected = scenario?.data as Record<string, unknown> | undefined;
+      if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) throw new Error("The state must be a JSON object");
+      const missing = expected ? Object.keys(expected).filter((k) => !(k in parsed)) : [];
+      if (missing.length) throw new Error(`Missing field(s): ${missing.join(", ")}`);
       setOverrides((o) => ({ ...o, [scenarioKey]: parsed }));
       setErrors((e) => ({ ...e, [scenarioKey]: null }));
     } catch (error) {
@@ -157,7 +163,7 @@ export function GamesPlayground() {
         </div>
         <div ref={stage} className="flex min-h-0 flex-1 items-center justify-center overflow-hidden">
           <div style={{ width: w * scale, height: h * scale }}>
-            <iframe ref={frame} title="Game preview" src="/dev/games/preview" onLoad={() => setPreviewReady(false)}
+            <iframe ref={frame} title="Game preview" src="/dev/games/preview" onLoad={() => frame.current?.contentWindow?.postMessage({ source: PLAYGROUND, type: "hello" }, window.location.origin)}
               style={{ width: w, height: h, transform: `scale(${scale})`, transformOrigin: "top left" }}
               className="rounded-[28px] border border-white/15 bg-black shadow-2xl" />
           </div>

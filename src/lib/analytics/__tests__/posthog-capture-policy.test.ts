@@ -50,4 +50,12 @@ describe('PostHog capture policy', () => {
       'https://quizball.io/en/football-quiz/liverpool?utm_source=google',
     );
   });
+
+  it('drops every event from the local games playground (dev tooling)', () => {
+    for (const url of ['http://localhost:3010/dev/games', 'http://localhost:3010/dev/games/preview?x=1']) {
+      expect(preparePostHogCapture({ uuid: 'e', event: '$pageview', properties: { $current_url: url } })).toBeNull();
+      expect(preparePostHogCapture({ uuid: 'e', event: 'pistas_run_start', properties: { $current_url: url } })).toBeNull();
+    }
+    expect(preparePostHogCapture({ uuid: 'e', event: '$pageview', properties: { $current_url: 'https://quizball.io/dev/gamesX' } })).not.toBeNull();
+  });
 });
