@@ -89,7 +89,7 @@ function DuelCard({ card, index, mySeat, copy, enabled, onPick }: {
         )}
         {mine && picked && <div className="absolute inset-0 bg-brand-red-soft/35" />}
         {(picked || (revealedOnly && mine)) && (
-          <span className={cn("absolute right-1 top-1 flex size-5 items-center justify-center rounded-full", mine ? "bg-brand-red-soft text-white" : "bg-brand-green text-white")}>
+          <span className={cn("absolute right-1 top-1 flex size-5 items-center justify-center rounded-full", mine ? "bg-brand-red-soft text-white" : "bg-brand-green text-black")}>
             {mine ? <Bomb className="size-3" strokeWidth={2.5} /> : <Check className="size-3.5" strokeWidth={3.5} />}
           </span>
         )}

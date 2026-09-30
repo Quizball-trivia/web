@@ -68,7 +68,7 @@ function Player({ name, avatar, side, ready, showReady }: { name: string; avatar
       <span className="relative">
         <DuelAvatar customization={avatar} size="lg" ringClassName={SEAT_AVATAR_RING[side]} />
         {showReady && ready && (
-          <span className="absolute -bottom-1 -right-1 flex size-7 items-center justify-center rounded-full bg-brand-green text-white ring-2 ring-surface-page-alt"><Check className="size-4" strokeWidth={3} /></span>
+          <span className="absolute -bottom-1 -right-1 flex size-7 items-center justify-center rounded-full bg-brand-green text-black ring-2 ring-surface-page-alt"><Check className="size-4" strokeWidth={3} /></span>
         )}
       </span>
       <span className={cn("max-w-full truncate text-sm font-bold", SEAT_LABEL[side])}>{name}</span>
