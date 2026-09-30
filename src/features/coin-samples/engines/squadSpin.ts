@@ -12,8 +12,9 @@ import type { SampleWalletPort } from "./triviaMines";
  * the 1,000 bp skill gap (capped at 99%), the launch-haircut margin (97% × 90%),
  * milli-coin pots, run cap = min(50,000, 40 × stake) on the FAIR pot, ten
  * correct answers auto-bank, decision before the next combo is shown.
- * Answers resolve like live: exact normalized alias, typo tolerance only
- * through `safe_typo` aliases with a 0/1/2 edit limit by length.
+ * Answers resolve like live: exact match against aliases and name forms (the
+ * full name plus every token suffix, so surnames always work), with typo
+ * tolerance against all of them at a 0/1/2 edit limit by length.
  */
 export const MIN_STAKE = 5;
 export const MAX_STAKE = 500;
@@ -49,19 +50,40 @@ export function typoDistanceLimit(normalizedInput: string): number {
   if (normalizedInput.length <= 7) return 1;
   return 2;
 }
-export function resolveSampleAnswer(text: string, aliases: SampleSquadSpinCombo["aliases"]): string | null {
+/** The full normalized name plus every token suffix ("ramiro funes mori" →
+ *  "funes mori" → "mori"): the alias release lacks surname forms for many
+ *  players, so live matches name forms directly — mirrored here. */
+function nameForms(playerId: string, name: string | null): Array<{ player_id: string; text: string }> {
+  const normalized = name ? normalizeGridAnswerText(name) : "";
+  if (!normalized) return [];
+  const tokens = normalized.split(" ");
+  const forms: Array<{ player_id: string; text: string }> = [];
+  for (let i = 0; i < tokens.length; i += 1) {
+    const text = tokens.slice(i).join(" ");
+    if (text.length >= 2) forms.push({ player_id: playerId, text });
+  }
+  return forms;
+}
+export function resolveSampleAnswer(
+  text: string,
+  aliases: SampleSquadSpinCombo["aliases"],
+  answers: SampleSquadSpinCombo["answers"] = [],
+): string | null {
   const input = normalizeGridAnswerText(text);
   if (!input) return null;
-  const exact = aliases.find((a) => a.alias === input);
+  const candidates = [
+    ...aliases.map((a) => ({ player_id: a.player_id, text: a.alias })),
+    ...answers.flatMap((p) => [...nameForms(p.id, p.name_en), ...nameForms(p.id, p.name_ka)]),
+  ];
+  const exact = candidates.find((c) => c.text === input);
   if (exact) return exact.player_id;
   const limit = typoDistanceLimit(input);
   if (limit === 0) return null;
   let best: { playerId: string; distance: number } | null = null;
-  for (const alias of aliases) {
-    if (alias.policy !== "safe_typo") continue;
-    if (Math.abs(alias.alias.length - input.length) > limit) continue;
-    const distance = levenshtein(input, alias.alias);
-    if (distance <= limit && (!best || distance < best.distance)) best = { playerId: alias.player_id, distance };
+  for (const candidate of candidates) {
+    if (Math.abs(candidate.text.length - input.length) > limit) continue;
+    const distance = levenshtein(input, candidate.text);
+    if (distance <= limit && (!best || distance < best.distance)) best = { playerId: candidate.player_id, distance };
   }
   return best?.playerId ?? null;
 }
@@ -145,7 +167,7 @@ export function createSquadSpinSample(input: { combos: SampleSquadSpinCombo[]; w
       if (r.phase !== "question" || !r.combo) throw new SampleError("No spin is pending", 409);
       const combo = r.combo;
       const late = now() > r.deadlineAt;
-      const playerId = late ? null : resolveSampleAnswer(text, combo.aliases);
+      const playerId = late ? null : resolveSampleAnswer(text, combo.aliases, combo.answers);
       if (!playerId) {
         r.lostCombo = combo; settle(r, "lost");
         return { outcome: late ? "late" : "wrong", player: null, answers: combo.answers.slice(0, 1), state: toState(r) };
