@@ -1,7 +1,4 @@
-import { BuscaminasDuelBoard } from "@/features/duel/BuscaminasDuelBoard";
-import { DuelIntro } from "@/features/duel/DuelIntro";
-import { PistasDuelBoard } from "@/features/duel/PistasDuelBoard";
-import { UltimoDuelBoard } from "@/features/duel/UltimoDuelBoard";
+import { DuelMatchView } from "@/features/duel/DuelMatchView";
 import { duelCopy } from "@/features/duel/duel.copy";
 import type { BuscaminasDuelView, PistasDuelView, Seat, UltimoDuelView } from "@/features/duel/duel.views";
 import type { DuelGameId, DuelStatePayload } from "@/lib/realtime/socket.types";
@@ -15,57 +12,66 @@ import { randomBotAvatar } from "@/features/auction/data/botAvatars";
 import { cn } from "@/lib/utils";
 import { DEADLINE, finished, playing, settled } from "./fixtures/ultimo-solo";
 import { NAMES, PLAYERS } from "./fixtures/universe";
-import { scenario, type GameEntry, type ScenarioContext } from "./types";
+import { scenario, type GameEntry, type Scenario, type ScenarioContext } from "./types";
 
-/** Board props every duel scenario edits: the engine view plus the screen's own state. */
-interface BoardData<View> { view: View; mySeat: Seat; finished: boolean; secondsLeft: number | null; busy: boolean }
-const board = <View,>(view: View, extra: Partial<BoardData<View>> = {}): BoardData<View> =>
-  ({ view, mySeat: 0, finished: false, secondsLeft: 12, busy: false, ...extra });
+/** A full duel screen: the snapshot (status, view, seats, result) plus the screen's own flags. */
+interface DuelData { snapshot: DuelStatePayload; secondsLeft: number | null; connected: boolean; busy: boolean; error: string | null; confirmLeave: boolean }
 
-const ultimo = (id: string, name: string, view: Partial<UltimoDuelView>, extra: Partial<BoardData<UltimoDuelView>> = {}, note?: string) =>
-  scenario<BoardData<UltimoDuelView>>({
-    id, name, note, data: board({ ...ultimoBase, ...view }, extra),
-    render: (d, ctx) => (
-      <UltimoDuelBoard view={d.view} mySeat={d.mySeat} names={NAMES} copy={duelCopy(ctx.locale)} finished={d.finished}
-        secondsLeft={d.secondsLeft} busy={d.busy} onAnswer={(text) => ctx.log("onAnswer", text)} />
-    ),
-  });
-
-const buscaminas = (id: string, name: string, view: Partial<BuscaminasDuelView>, extra: Partial<BoardData<BuscaminasDuelView>> = {}) =>
-  scenario<BoardData<BuscaminasDuelView>>({
-    id, name, data: board({ ...buscaminasBase, ...view }, extra),
-    render: (d, ctx) => (
-      <BuscaminasDuelBoard view={d.view} mySeat={d.mySeat} names={NAMES} copy={duelCopy(ctx.locale)} finished={d.finished}
-        onPick={(cardId) => ctx.log("onPick", cardId)} />
-    ),
-  });
-
-const pistas = (id: string, name: string, view: Partial<PistasDuelView>, extra: Partial<BoardData<PistasDuelView>> = {}) =>
-  scenario<BoardData<PistasDuelView>>({
-    id, name, data: board({ ...pistasBase, ...view }, extra),
-    render: (d, ctx) => (
-      <PistasDuelBoard view={d.view} mySeat={d.mySeat} names={NAMES} copy={duelCopy(ctx.locale)} locale={ctx.locale} finished={d.finished}
-        onGuess={(text) => ctx.log("onGuess", text)} onPass={() => ctx.log("onPass")} />
-    ),
-  });
-
-function introSnapshot(game: DuelGameId, status: "ready" | "countdown"): DuelStatePayload {
+function snap(game: DuelGameId, status: DuelStatePayload["status"], view: unknown, extra: Partial<DuelStatePayload> & { away?: Seat } = {}): DuelStatePayload {
+  const { away, ...rest } = extra;
   return {
-    matchId: "playground", lobbyId: null, game, stateVersion: 1, status, phaseToken: 1, phaseDeadlineAt: null,
-    serverNow: "2031-05-01T12:00:00.000Z", mySeat: 0, view: null, pausedFrom: null, result: null,
+    matchId: "playground", lobbyId: null, game, stateVersion: 1, status, phaseToken: 1, phaseDeadlineAt: "2031-05-01T12:00:20.000Z",
+    serverNow: "2031-05-01T12:00:08.000Z", mySeat: 0, view, pausedFrom: status === "paused" ? "active" : null, result: null,
     seats: [
-      { seat: 0, userId: "pg-me", username: NAMES[0], avatarUrl: null, avatarCustomization: null, isGuest: true, ready: true, connected: true, absenceBudgetMs: 60_000 },
-      { seat: 1, userId: "pg-rival", username: NAMES[1], avatarUrl: null, avatarCustomization: null, isGuest: true, ready: status === "countdown", connected: true, absenceBudgetMs: 60_000 },
+      { seat: 0, userId: "pg-me", username: NAMES[0], avatarUrl: null, avatarCustomization: null, isGuest: true, ready: true, connected: away !== 0, absenceBudgetMs: 60_000 },
+      { seat: 1, userId: "pg-rival", username: NAMES[1], avatarUrl: null, avatarCustomization: null, isGuest: true, ready: status !== "ready", connected: away !== 1, absenceBudgetMs: 60_000 },
     ],
+    ...rest,
   };
 }
-const intro = (game: DuelGameId, status: "ready" | "countdown") =>
-  scenario<{ snapshot: DuelStatePayload; secondsLeft: number | null }>({
-    id: `intro-${status}`, name: status === "ready" ? "VS intro · waiting for the rival" : "VS intro · 3-2-1",
-    data: { snapshot: introSnapshot(game, status), secondsLeft: status === "countdown" ? 3 : null },
-    render: (d, ctx: ScenarioContext) => <DuelIntro snapshot={d.snapshot} names={NAMES} copy={duelCopy(ctx.locale)} secondsLeft={d.secondsLeft} />,
+
+const duelScreen = (id: string, name: string, snapshot: DuelStatePayload, extra: Partial<Omit<DuelData, "snapshot">> = {}) =>
+  scenario<DuelData>({
+    id, name,
+    data: { snapshot, secondsLeft: 12, connected: true, busy: false, error: null, confirmLeave: false, ...extra },
+    render: (d, ctx) => (
+      <DuelMatchView snapshot={d.snapshot} locale={ctx.locale} copy={duelCopy(ctx.locale)} secondsLeft={d.secondsLeft} connected={d.connected} busy={d.busy}
+        error={d.error} confirmLeave={d.confirmLeave} onSend={(command) => ctx.log("onSend", command)} onExit={() => ctx.log("onExit")}
+        onConfirmForfeit={() => ctx.log("onConfirmForfeit")} onCancelForfeit={() => ctx.log("onCancelForfeit")} onRoom={() => ctx.log("onRoom")} onLeave={() => ctx.log("onLeave")} />
+    ),
   });
 
+/** The screens every duel game shares (intro, pause, connection, forfeit, every result), for one game's board. */
+/** `live` = a board mid-play (for pause, offline, forfeit, error); `over` = the finished board behind every result. */
+function commonDuel(game: DuelGameId, live: unknown, over: unknown, finalScores: [number, number]): Scenario<never>[] {
+  const done = (id: string, name: string, result: DuelStatePayload["result"]) =>
+    duelScreen(id, name, snap(game, result?.reason === "cancelled" ? "cancelled" : "completed", over, { result }), { secondsLeft: null });
+  return [
+    duelScreen("intro-ready", "VS intro · waiting for the rival", snap(game, "ready", null), { secondsLeft: null }),
+    duelScreen("intro-countdown", "VS intro · 3-2-1", snap(game, "countdown", null), { secondsLeft: 3 }),
+    duelScreen("pause-rival", "Paused · rival disconnected", snap(game, "paused", live, { away: 1 }), { secondsLeft: 24 }),
+    duelScreen("pause-me", "Paused · you disconnected", snap(game, "paused", live, { away: 0 }), { secondsLeft: 24 }),
+    duelScreen("offline", "Your connection dropped", snap(game, "active", live), { connected: false }),
+    duelScreen("forfeit-confirm", "Leave? (forfeit confirmation)", snap(game, "active", live), { confirmLeave: true }),
+    duelScreen("error", "Error toast", snap(game, "active", live), { error: "duel_unavailable" }),
+    done("result-win", "Result · you won", { scores: finalScores, winnerSeat: 0, reason: "score", leftSeat: null }),
+    done("result-lose", "Result · you lost", { scores: [finalScores[1], finalScores[0]], winnerSeat: 1, reason: "score", leftSeat: null }),
+    done("result-draw", "Result · draw", { scores: [finalScores[0], finalScores[0]], winnerSeat: null, reason: "score", leftSeat: null }),
+    done("result-rival-left", "Result · rival forfeited", { scores: [0, 0], winnerSeat: 0, reason: "forfeit", leftSeat: 1 }),
+    done("result-you-left", "Result · you forfeited", { scores: [0, 0], winnerSeat: 1, reason: "forfeit", leftSeat: 0 }),
+    done("result-disconnect", "Result · rival disconnected", { scores: [1, 0], winnerSeat: 0, reason: "disconnect", leftSeat: 1 }),
+    done("result-idle", "Result · rival stopped playing", { scores: [2, 1], winnerSeat: 0, reason: "idle", leftSeat: 1 }),
+    done("result-cancelled", "Result · cancelled", { scores: [0, 0], winnerSeat: null, reason: "cancelled", leftSeat: null }),
+  ];
+}
+
+const ultimoView = (v: Partial<UltimoDuelView>): UltimoDuelView => ({ ...ultimoBase, ...v });
+const ultimoPlay = (id: string, name: string, v: Partial<UltimoDuelView>, extra: Partial<Omit<DuelData, "snapshot">> = {}) =>
+  duelScreen(id, name, snap("ultimo", "active", ultimoView(v)), extra);
+const buscaminasPlay = (id: string, name: string, v: Partial<BuscaminasDuelView>) =>
+  duelScreen(id, name, snap("buscaminas", "active", { ...buscaminasBase, ...v }));
+const pistasPlay = (id: string, name: string, v: Partial<PistasDuelView>) =>
+  duelScreen(id, name, snap("pistas", "active", { ...pistasBase, ...v }));
 
 /** Stand-ins for the connected widgets a view shows (the real ones sign in, navigate or fetch). */
 const slotsFor = (ctx: ScenarioContext): UltimoSlots => ({
@@ -147,19 +153,17 @@ export const GAMES: GameEntry[] = [
     scenarios: {
       solo: ULTIMO_SOLO,
       duel: [
-        intro("ultimo", "ready"),
-        intro("ultimo", "countdown"),
-        ultimo("reveal", "Category reveal (you start)", { phase: "reveal", said: [], last: null, k: 0, category: 0, results: [], scores: [0, 0] }, { secondsLeft: 3 }),
-        ultimo("my-turn", "Your turn · fresh clock", {}),
-        ultimo("my-turn-urgent", "Your turn · 2 misses, 4 s left", { misses: 2, last: { seat: 0, kind: "wrong", text: "Nadie Inventado", name: null } }, { secondsLeft: 4 }),
-        ultimo("their-turn", "Rival's turn", { turn: 1, last: { seat: 0, kind: "ok", text: PLAYERS[2], name: PLAYERS[2] } }),
-        ultimo("repeat", "You repeated a name", { misses: 1, last: { seat: 0, kind: "repeat", text: PLAYERS[0], name: null } }),
-        ultimo("ambiguous", "Ambiguous surname (no miss)", { last: { seat: 0, kind: "ambiguous", text: "Varelo", name: null } }),
-        ultimo("busy", "Answer sent, waiting for the server", {}, { busy: true }),
-        ultimo("cat-end-won", "Category end · you stand", { phase: "catEnd", misses: 3, turn: 1, missing: PLAYERS.slice(4, 11) as unknown as string[], results: [{ winner: 0, reason: "misses", said: 6, named: [4, 2] }, { winner: 0, reason: "misses", said: 4, named: [3, 1] }], scores: [2, 0] }, { secondsLeft: 6 }),
-        ultimo("cat-end-time", "Category end · rival ran out of time", { phase: "catEnd", turn: 1, missing: PLAYERS.slice(4, 11) as unknown as string[], results: [{ winner: 0, reason: "misses", said: 6, named: [4, 2] }, { winner: 0, reason: "time", said: 4, named: [2, 2] }] }),
-        ultimo("cat-end-complete", "Category end · whole list named (both score)", { phase: "catEnd", said: PLAYERS.slice(0, 11).map((name, i) => ({ seat: (i % 2) as Seat, name })), missing: [], results: [{ winner: 0, reason: "misses", said: 6, named: [4, 2] }, { winner: null, reason: "complete", said: 11, named: [6, 5] }], scores: [2, 1] }),
-        ultimo("over", "Match over (final point)", { phase: "over", missing: PLAYERS.slice(4, 11) as unknown as string[], scores: [3, 1], results: [{ winner: 0, reason: "misses", said: 6, named: [4, 2] }, { winner: 1, reason: "time", said: 3, named: [1, 2] }, { winner: 0, reason: "misses", said: 5, named: [3, 2] }, { winner: 0, reason: "time", said: 4, named: [2, 2] }] }, { finished: true }),
+        ultimoPlay("reveal", "Category reveal (you start)", { phase: "reveal", said: [], last: null, k: 0, category: 0, results: [], scores: [0, 0] }, { secondsLeft: 3 }),
+        ultimoPlay("my-turn", "Your turn · fresh clock", {}),
+        ultimoPlay("my-turn-urgent", "Your turn · 2 misses, 4 s left", { misses: 2, last: { seat: 0, kind: "wrong", text: "Nadie Inventado", name: null } }, { secondsLeft: 4 }),
+        ultimoPlay("their-turn", "Rival's turn", { turn: 1, last: { seat: 0, kind: "ok", text: PLAYERS[2], name: PLAYERS[2] } }),
+        ultimoPlay("repeat", "You repeated a name", { misses: 1, last: { seat: 0, kind: "repeat", text: PLAYERS[0], name: null } }),
+        ultimoPlay("ambiguous", "Ambiguous surname (no miss)", { last: { seat: 0, kind: "ambiguous", text: "Varelo", name: null } }),
+        ultimoPlay("busy", "Answer sent, waiting for the server", {}, { busy: true }),
+        ultimoPlay("cat-end-won", "Category end · you stand", { phase: "catEnd", misses: 3, turn: 1, missing: PLAYERS.slice(4, 11) as unknown as string[], results: [{ winner: 0, reason: "misses", said: 6, named: [4, 2] }, { winner: 0, reason: "misses", said: 4, named: [3, 1] }], scores: [2, 0] }, { secondsLeft: 6 }),
+        ultimoPlay("cat-end-time", "Category end · rival ran out of time", { phase: "catEnd", turn: 1, missing: PLAYERS.slice(4, 11) as unknown as string[], results: [{ winner: 0, reason: "misses", said: 6, named: [4, 2] }, { winner: 0, reason: "time", said: 4, named: [2, 2] }] }),
+        ultimoPlay("cat-end-complete", "Category end · whole list named (both score)", { phase: "catEnd", said: PLAYERS.slice(0, 11).map((name, i) => ({ seat: (i % 2) as Seat, name })), missing: [], results: [{ winner: 0, reason: "misses", said: 6, named: [4, 2] }, { winner: null, reason: "complete", said: 11, named: [6, 5] }], scores: [2, 1] }),
+        ...commonDuel("ultimo", ultimoView({}), ultimoView({ phase: "over", missing: PLAYERS.slice(4, 11) as unknown as string[], scores: [3, 1] }), [3, 1]),
       ],
     },
   },
@@ -168,12 +172,10 @@ export const GAMES: GameEntry[] = [
     name: "Buscaminas futbolero",
     scenarios: {
       duel: [
-        intro("buscaminas", "ready"),
-        intro("buscaminas", "countdown"),
-        buscaminas("my-turn", "Your pick", {}),
-        buscaminas("their-turn", "Rival's pick", { turn: 1 }),
-        buscaminas("mine", "Someone hit a mine", { phase: "reveal", cards: buscaminasBase.cards.map((c, i) => (i === 9 ? { ...c, pick: { seat: 1, auto: false }, fits: false } : c)), results: [...buscaminasBase.results, { outcome: "mine", by: 1, points: [2, 0] }] }),
-        buscaminas("over", "Match over", { phase: "over", scores: [9, 4] }, { finished: true }),
+        buscaminasPlay("my-turn", "Your pick", {}),
+        buscaminasPlay("their-turn", "Rival's pick", { turn: 1 }),
+        buscaminasPlay("mine", "Someone hit a mine", { phase: "reveal", cards: buscaminasBase.cards.map((c, i) => (i === 9 ? { ...c, pick: { seat: 1, auto: false }, fits: false } : c)), results: [...buscaminasBase.results, { outcome: "mine", by: 1, points: [2, 0] }] }),
+        ...commonDuel("buscaminas", buscaminasBase, { ...buscaminasBase, phase: "over", scores: [9, 4] }, [9, 4]),
       ],
     },
   },
@@ -182,15 +184,13 @@ export const GAMES: GameEntry[] = [
     name: "Pistas futboleras",
     scenarios: {
       duel: [
-        intro("pistas", "ready"),
-        intro("pistas", "countdown"),
-        pistas("first-clue", "First clue", { clue: 1, clues: pistasBase.clues.slice(0, 1), pointsInPlay: 10 }),
-        pistas("clues", "Four clues in", {}),
-        pistas("rival-locked", "Rival locked an answer", { seats: [{ locked: false, passed: false, wrong: null }, { locked: true, passed: false, wrong: null }] }),
-        pistas("i-passed", "You passed", { seats: [{ locked: false, passed: true, wrong: null }, { locked: false, passed: false, wrong: null }] }),
-        pistas("wrong", "Your wrong guess", { seats: [{ locked: false, passed: false, wrong: "Dante Ferrolo" }, { locked: false, passed: false, wrong: null }] }),
-        pistas("settled", "Round won", { phase: "reveal", settled: { winner: 0, clue: 4, points: 7, answer: PLAYERS[6] } }),
-        pistas("over", "Match over", { phase: "over", scores: [31, 24] }, { finished: true }),
+        pistasPlay("first-clue", "First clue", { clue: 1, clues: pistasBase.clues.slice(0, 1), pointsInPlay: 10 }),
+        pistasPlay("clues", "Four clues in", {}),
+        pistasPlay("rival-locked", "Rival locked an answer", { seats: [{ locked: false, passed: false, wrong: null }, { locked: true, passed: false, wrong: null }] }),
+        pistasPlay("i-passed", "You passed", { seats: [{ locked: false, passed: true, wrong: null }, { locked: false, passed: false, wrong: null }] }),
+        pistasPlay("wrong", "Your wrong guess", { seats: [{ locked: false, passed: false, wrong: "Dante Ferrolo" }, { locked: false, passed: false, wrong: null }] }),
+        pistasPlay("settled", "Round won", { phase: "reveal", settled: { winner: 0, clue: 4, points: 7, answer: PLAYERS[6] } }),
+        ...commonDuel("pistas", pistasBase, { ...pistasBase, phase: "over", scores: [31, 24] }, [31, 24]),
       ],
     },
   },

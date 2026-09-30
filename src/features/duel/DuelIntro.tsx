@@ -37,7 +37,7 @@ export function DuelIntro({ snapshot, names, copy, secondsLeft }: {
         <Player name={names[rival]} avatar={avatarOf(rival)} side="rival" ready={seat(rival)?.ready ?? false} showReady={!counting} />
       </div>
 
-      <ul className="mt-8 w-full space-y-2 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-left">
+      <ul className="mt-8 w-full space-y-2 rounded-2xl border border-white/10 bg-transparent px-4 py-3 text-left">
         {copy.intro.rules[snapshot.game].map((line) => (
           <li key={line} className="flex gap-2.5 text-sm leading-snug text-white/85"><span aria-hidden className="mt-1.5 size-1.5 shrink-0 rounded-full bg-brand-green" />{line}</li>
         ))}
