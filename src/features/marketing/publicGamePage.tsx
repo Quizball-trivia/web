@@ -12,7 +12,7 @@ import { DailyCollectionScreen } from "./DailyCollectionScreen";
 
 type Params = Promise<{ locale: string; slug: string }>;
 
-/** Locales served by a folder (en + ka share football-games, es has juegos-de-futbol). */
+/** Locales served by a folder (en + ka share football-games, es has juegos-de-futbol, tr futbol-oyunlari). */
 const localesForFolder = (folder: string): Locale[] => SEO_PAGE_LOCALES.filter((locale) => PUBLIC_GAMES_FOLDER[locale] === folder);
 const afterLocale = (path: string, locale: Locale) => path.slice(`/${locale}`.length);
 

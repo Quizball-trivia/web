@@ -36,13 +36,16 @@ export const SEO_PAGE_LOCALES = ["en", "ka", "es", "tr"] as const satisfies read
 export type SeoPageLocale = (typeof SEO_PAGE_LOCALES)[number];
 export const isSeoPageLocale = (locale: Locale): locale is SeoPageLocale => (SEO_PAGE_LOCALES as readonly Locale[]).includes(locale);
 
-/** Public games live under a localized folder: /en/football-games/…, /es/juegos-de-futbol/…. */
-export const PUBLIC_GAMES_FOLDER: Record<Locale, string> = { en: "football-games", ka: "football-games", es: "juegos-de-futbol", tr: "football-games" };
-export const DAILY_COLLECTION_SLUG: Record<Locale, string> = { en: "daily-challenges", ka: "daily-challenges", es: "retos-diarios", tr: "daily-challenges" };
+/** Public games live under a localized folder: /en/football-games/…, /es/juegos-de-futbol/…, /tr/futbol-oyunlari/…. */
+export const PUBLIC_GAMES_FOLDER: Record<Locale, string> = { en: "football-games", ka: "football-games", es: "juegos-de-futbol", tr: "futbol-oyunlari" };
+export const DAILY_COLLECTION_SLUG: Record<Locale, string> = { en: "daily-challenges", ka: "daily-challenges", es: "retos-diarios", tr: "gunluk-futbol-gorevleri" };
 
-/** ES slugs from the September keyword map; KA follows EN. */
+/**
+ * Slugs follow docs/SEO-GAME-NAMING-AUDIT-2026-09-30.md: ES renames only where the old slug matched no
+ * search intent, TR localizes only the searched names; KA follows EN. tiki-taka-toe stays (ranking URL).
+ */
 const LOCALIZED_SLUGS: Record<string, Partial<Record<Locale, string>>> = {
-  "football-tic-tac-toe": { es: "tiki-taka-toe" },
+  "football-tic-tac-toe": { es: "tiki-taka-toe", tr: "futbol-xox" },
   auction: { es: "subasta" },
   friendly: { es: "partido-amistoso" },
   "true-or-false-football": { es: "verdadero-o-falso" },
@@ -53,17 +56,31 @@ const LOCALIZED_SLUGS: Record<string, Partial<Record<Locale, string>>> = {
   "career-path": { es: "trayectoria-del-jugador" },
   "football-timeline": { es: "linea-de-tiempo" },
   "football-logic": { es: "logica-futbolera" },
+  "missing-xi": { es: "adivina-el-11" },
+  "pass-chain": { es: "conectando-jugadores" },
+  "stat-sniper": { es: "aproximado-futbolero" },
+  ranked: { es: "quien-sabe-mas-de-futbol" },
+  "free-kicks": { es: "tiros-libres" },
+  "road-to-goal": { es: "camino-al-gol" },
+  "trivia-mines": { es: "minas-con-preguntas" },
+  "football-minesweeper": { es: "buscaminas-futbolero", tr: "futbol-mayin-tarlasi" },
+  "football-clues": { es: "pistas-futboleras", tr: "futbolcu-tahmin-etme-oyunu" },
+  "last-answer-standing": { es: "ultimo-en-pie-futbolero", tr: "futbolcu-sayma-oyunu" },
+  "squad-spin": { es: "ruleta-futbolera", tr: "futbol-carki" },
+};
+
+/** Earlier ES slugs; the middleware 308s them so indexed pages keep their ranking. */
+const PREVIOUS_SLUGS: Record<string, Partial<Record<Locale, string>>> = {
   "missing-xi": { es: "once-perdido" },
   "pass-chain": { es: "cadena-de-pases" },
   "stat-sniper": { es: "francotirador-de-datos" },
   ranked: { es: "clasificatoria" },
-  "free-kicks": { es: "tiros-libres" },
-  "road-to-goal": { es: "camino-al-gol" },
-  "trivia-mines": { es: "minas-con-preguntas" },
-  "football-minesweeper": { es: "buscaminas-futbolero" },
-  "football-clues": { es: "pistas-futboleras" },
-  "last-answer-standing": { es: "ultimo-en-pie-futbolero" },
   "squad-spin": { es: "ruleta-de-plantilla" },
+};
+
+/** TR pages used the EN folder and slugs until 2026-09-30. */
+const PREVIOUS_FOLDER: Partial<Record<Locale, { folder: string; dailyCollection: string }>> = {
+  tr: { folder: "football-games", dailyCollection: "daily-challenges" },
 };
 
 const cta = { en: "Play now", ka: "ითამაშე ახლავე", es: "Jugar ahora", tr: "Hemen oyna" } as const;
@@ -671,8 +688,8 @@ export const GAME_PAGES: GamePageEntry[] = [
       reward: "რეიტინგული ჯილდოებისთვის ანგარიშია საჭირო; სტუმრის თამაში სავარჯიშოა.",
     },
     es: {
-      metaTitle: "Tic Tac Toe futbolero (tatetí y tres en raya) online | QuizBall",
-      metaDescription: "Juega al tic tac toe futbolero (tatetí, tres en raya) online. Nombra jugadores que cumplan ambas categorías, conquista casillas y consigue tres en línea. Empieza sin cuenta.",
+      metaTitle: "Tiki Taka Toe: tic tac toe futbolero y tatetí de fútbol online | QuizBall",
+      metaDescription: "Juega al Tiki Taka Toe, el tic tac toe futbolero (tatetí o tres en raya de fútbol), online. Nombra jugadores que cumplan ambas categorías, conquista casillas y consigue tres en línea. Empieza sin cuenta.",
       title: "Tic Tac Toe futbolero",
       intro: "Pon a prueba tu fútbol contra la cuadrícula. Elige una casilla, nombra un jugador que encaje en ambas categorías y busca tres en línea. Empieza como invitado.",
       howToPlay: ["Elige una casilla: su fila y su columna son dos categorías, por ejemplo un club y un país.", "Nombra un jugador que cumpla ambas. Se aceptan apellidos y erratas pequeñas.", "Un nombre correcto conquista la casilla; tres en línea gana.", "Los partidos igualados se deciden al mejor de tres."],
@@ -976,6 +993,26 @@ export function gamePagePath(entry: GamePageEntry, locale: Locale): string {
 
 export function dailyCollectionPath(locale: Locale): string {
   return `/${locale}/${PUBLIC_GAMES_FOLDER[locale]}/${DAILY_COLLECTION_SLUG[locale]}`;
+}
+
+/** Retired public URL → current URL, for every published page whose folder or slug changed. */
+export function previousGamePagePaths(pages: readonly GamePageEntry[]): Record<string, string> {
+  const redirects: Record<string, string> = {};
+  for (const locale of SEO_PAGE_LOCALES) {
+    const moved = PREVIOUS_FOLDER[locale];
+    const folder = moved?.folder ?? PUBLIC_GAMES_FOLDER[locale];
+    for (const entry of pages) {
+      const slug = PREVIOUS_SLUGS[entry.slug]?.[locale] ?? (moved ? entry.slug : undefined);
+      if (!slug) continue;
+      const from = `/${locale}/${folder}/${slug}`;
+      if (from !== gamePagePath(entry, locale)) redirects[from] = gamePagePath(entry, locale);
+    }
+    if (moved) {
+      redirects[`/${locale}/${moved.folder}`] = `/${locale}`;
+      redirects[`/${locale}/${moved.folder}/${moved.dailyCollection}`] = dailyCollectionPath(locale);
+    }
+  }
+  return redirects;
 }
 
 /** Resolves a localized public URL (folder must match the locale) to its manifest entry. */
