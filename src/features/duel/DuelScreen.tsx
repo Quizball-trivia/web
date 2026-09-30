@@ -12,7 +12,7 @@ import { useRealtimePrincipal } from "@/lib/realtime/realtime-principal";
 import { useActiveDuelStore } from "@/stores/activeDuel.store";
 import type { DuelSeatPayload, DuelStatePayload } from "@/lib/realtime/socket.types";
 import { duelCopy, type DuelCopy } from "./duel.copy";
-import { SEAT_BG, SEAT_LABEL, SEAT_TEXT } from "./duel.seats";
+import { SEAT_BG, SEAT_LABEL } from "./duel.seats";
 import type { BuscaminasDuelView, PistasDuelView, Seat, UltimoDuelView } from "./duel.views";
 import { BuscaminasDuelBoard } from "./BuscaminasDuelBoard";
 import { PistasDuelBoard } from "./PistasDuelBoard";
@@ -281,23 +281,28 @@ function ResultCard({ snapshot, names, copy, onRoom, onExit }: { snapshot: DuelS
     : result.reason === "idle" ? (byMe ? copy.result.youIdle : copy.result.idle(leftName))
     : result.reason === "disconnect" ? (byMe ? copy.result.youDisconnect : copy.result.disconnect(leftName))
     : result.reason === "cancelled" ? (byMe ? copy.result.youNoShow : copy.result.noShow(leftName)) : null;
-  const won = result?.winnerSeat === me && result.reason !== "cancelled";
   return (
     <>
     <div aria-hidden className="fixed inset-0 z-30 bg-black/55" />
     <motion.div role="dialog" aria-modal="true" initial={{ y: 40 }} animate={{ y: 0 }}
-      className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-md rounded-t-3xl border-t border-white/10 bg-surface-page-deep px-5 pb-[max(env(safe-area-inset-bottom),20px)] pt-5 shadow-[0_-12px_40px_rgba(0,0,0,0.5)]">
-      <p className={cn("text-center text-3xl font-black uppercase", won ? "text-brand-green" : "text-white")} style={poppins}>{headline}</p>
+      className="fixed inset-x-0 bottom-0 z-40 mx-auto w-full max-w-md rounded-t-3xl bg-brand-blue px-5 pb-[max(env(safe-area-inset-bottom),20px)] pt-5 text-white shadow-[0_-12px_40px_rgba(0,0,0,0.5)]">
+      <p className="text-center text-3xl font-black uppercase" style={poppins}>{headline}</p>
       {result && result.reason !== "cancelled" && (
-        <p className="mt-1 text-center text-4xl font-black tabular-nums" style={poppins}>
-          <span className={SEAT_TEXT.me}>{result.scores[me]}</span>
-          <span className="mx-2 text-white/30">–</span>
-          <span className={SEAT_TEXT.rival}>{result.scores[me === 0 ? 1 : 0]}</span>
-        </p>
+        <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-start gap-3 text-center">
+          <div className="min-w-0">
+            <p className="text-4xl font-black leading-none tabular-nums" style={poppins}>{result.scores[me]}</p>
+            <p className="mt-1 truncate text-xs font-bold uppercase text-white/75">{copy.you}</p>
+          </div>
+          <span className="text-4xl font-black leading-none text-white/40" style={poppins}>–</span>
+          <div className="min-w-0">
+            <p className="text-4xl font-black leading-none tabular-nums" style={poppins}>{result.scores[me === 0 ? 1 : 0]}</p>
+            <p className="mt-1 truncate text-xs font-bold uppercase text-white/75">{names[me === 0 ? 1 : 0]}</p>
+          </div>
+        </div>
       )}
-      {reason && <p className="mt-1 text-center text-sm text-white/65">{reason}</p>}
+      {reason && <p className="mt-3 text-center text-sm text-white/85">{reason}</p>}
       <button type="button" onClick={onRoom} className="mt-5 h-14 w-full rounded-full bg-brand-green text-base font-black uppercase tracking-wide text-white hover:bg-brand-green-deep" style={poppins}>{copy.result.backToRoom}</button>
-      <button type="button" onClick={onExit} className="mt-2 h-11 w-full rounded-full bg-white/10 text-sm font-bold uppercase text-white/85 hover:bg-white/15" style={poppins}>{copy.result.exit}</button>
+      <button type="button" onClick={onExit} className="mt-2 h-11 w-full rounded-full bg-white/15 text-sm font-bold uppercase text-white hover:bg-white/25" style={poppins}>{copy.result.exit}</button>
     </motion.div>
     </>
   );
