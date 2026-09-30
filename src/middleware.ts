@@ -45,6 +45,15 @@ const REDIRECT_FROM_ROOT: Record<string, string> = {
 
 const GAME_FOLDERS = new Set(Object.values(PUBLIC_GAMES_FOLDER));
 
+// Next decodes route params, so /tr/football-games/%61uction used to render; match its redirect too.
+function decodedPath(pathname: string): string {
+  try {
+    return decodeURIComponent(pathname);
+  } catch {
+    return pathname;
+  }
+}
+
 function originFromEnv(name: string): string | null {
   const value = process.env[name]?.trim();
   if (!value) return null;
@@ -152,7 +161,7 @@ export async function middleware(req: NextRequest) {
     return res;
   }
 
-  const redirectTarget = REDIRECT_FROM_ROOT[pathname];
+  const redirectTarget = REDIRECT_FROM_ROOT[pathname] ?? REDIRECT_FROM_ROOT[decodedPath(pathname)];
   if (redirectTarget) {
     const url = req.nextUrl.clone();
     // Geo-aware landing locale: send visitors physically in Georgia to /ka,

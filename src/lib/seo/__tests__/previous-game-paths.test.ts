@@ -48,6 +48,12 @@ describe("renamed public game URLs", () => {
     expect(location.searchParams.get("utm_source")).toBe("google");
   });
 
+  it("redirects a percent-encoded old URL too", async () => {
+    const response = await middleware(new NextRequest("https://quizball.io/tr/football-games/%61uction"));
+    expect(response.status).toBe(308);
+    expect(new URL(response.headers.get("location")!).pathname).toBe("/tr/futbol-oyunlari/auction");
+  });
+
   it("404s a games folder under the wrong locale", async () => {
     expect((await middleware(new NextRequest("https://quizball.io/tr/football-games/no-such-page"))).status).toBe(404);
     expect((await middleware(new NextRequest("https://quizball.io/es/futbol-oyunlari/futbol-xox"))).status).toBe(404);
