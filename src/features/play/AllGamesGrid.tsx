@@ -278,7 +278,7 @@ function GameCard({
           </div>
         </div>
         <div className="flex flex-1 flex-col p-2.5 md:p-3">
-          <h3 className="truncate font-poppins text-[12px] font-semibold uppercase text-white/70 md:text-[15px]">
+          <h3 className="line-clamp-2 font-poppins text-[12px] font-semibold uppercase text-white/70 md:text-[15px]">
             {title}
           </h3>
           {unlockLabel && (
@@ -363,7 +363,7 @@ function GameCard({
       </div>
 
       <div className="flex flex-1 flex-col p-2.5 md:p-3">
-        <h3 className="truncate font-poppins text-[12px] font-semibold uppercase text-white md:text-[15px]">
+        <h3 className="line-clamp-2 font-poppins text-[12px] font-semibold uppercase text-white md:text-[15px]">
           {title}
         </h3>
         <p className="mt-1 line-clamp-2 font-poppins text-[10px] leading-snug text-white/70 md:text-[12px]">

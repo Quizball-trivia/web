@@ -4549,7 +4549,7 @@ const SESSIONS = {
   "es": {
     "trueFalse": {
       "challengeType": "trueFalse",
-      "title": "Verdadero o falso",
+      "title": "Verdadero o falso futbolero",
       "description": "Di si cada afirmación de fútbol es verdadera o falsa",
       "questionCount": 10,
       "secondsPerQuestion": 15,
@@ -4839,7 +4839,7 @@ const SESSIONS = {
     },
     "countdown": {
       "challengeType": "countdown",
-      "title": "Cuenta atrás",
+      "title": "Contrarreloj futbolera",
       "description": "Nombra tantas respuestas correctas como puedas antes de que acabe el tiempo",
       "roundCount": 2,
       "secondsPerRound": 30,
@@ -6591,7 +6591,7 @@ const SESSIONS = {
     },
     "highLow": {
       "challengeType": "highLow",
-      "title": "Más o menos",
+      "title": "Higher or Lower futbolero",
       "description": "Elige el valor más alto para mantener tu racha",
       "roundCount": 2,
       "secondsPerRound": 30,
@@ -8876,7 +8876,7 @@ const SESSIONS = {
     },
     "highLow": {
       "challengeType": "highLow",
-      "title": "Yüksek mi Düşük mü",
+      "title": "Higher or Lower Futbolcu",
       "description": "Serini sürdürmek için daha yüksek değeri seç",
       "roundCount": 2,
       "secondsPerRound": 30,

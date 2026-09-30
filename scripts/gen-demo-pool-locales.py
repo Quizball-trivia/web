@@ -137,13 +137,13 @@ def localize(t, question, row, loc):
                 m['leftName'] = L(pm.get('left_name'), loc, m['leftName']); m['rightName'] = L(pm.get('right_name'), loc, m['rightName'])
     return out
 TITLES = {
- 'trueFalse': {'es': ('Verdadero o falso', 'Di si cada afirmación de fútbol es verdadera o falsa'), 'tr': ('Doğru mu Yanlış mı', 'Her futbol ifadesi için doğru ya da yanlış de')},
+ 'trueFalse': {'es': ('Verdadero o falso futbolero', 'Di si cada afirmación de fútbol es verdadera o falsa'), 'tr': ('Doğru mu Yanlış mı', 'Her futbol ifadesi için doğru ya da yanlış de')},
  'clues': {'es': ('¿Quién soy?', 'Adivina al jugador por las pistas: menos pistas, más puntos'), 'tr': ('Ben Kimim?', 'İpuçlarından oyuncuyu bil — daha az ipucu, daha çok puan')},
- 'countdown': {'es': ('Cuenta atrás', 'Nombra tantas respuestas correctas como puedas antes de que acabe el tiempo'), 'tr': ('Geri Sayım', 'Süre bitmeden olabildiğince çok doğru cevap say')},
+ 'countdown': {'es': ('Contrarreloj futbolera', 'Nombra tantas respuestas correctas como puedas antes de que acabe el tiempo'), 'tr': ('Geri Sayım', 'Süre bitmeden olabildiğince çok doğru cevap say')},
  'putInOrder': {'es': ('Ordénalos', 'Arrastra los elementos al orden correcto'), 'tr': ('Sıraya Koy', 'Öğeleri doğru sıraya sürükle')},
  'imposter': {'es': ('Impostor', 'Marca todas las respuestas correctas y evita a los impostores'), 'tr': ('Sahtekâr', 'Tüm doğru cevapları seç — sahtekârlardan kaçın')},
  'careerPath': {'es': ('Trayectoria', 'Adivina al jugador por su historial de traspasos'), 'tr': ('Kariyer Yolu', 'Transfer geçmişinden oyuncuyu bil')},
- 'highLow': {'es': ('Más o menos', 'Elige el valor más alto para mantener tu racha'), 'tr': ('Yüksek mi Düşük mü', 'Serini sürdürmek için daha yüksek değeri seç')},
+ 'highLow': {'es': ('Higher or Lower futbolero', 'Elige el valor más alto para mantener tu racha'), 'tr': ('Higher or Lower Futbolcu', 'Serini sürdürmek için daha yüksek değeri seç')},
 }
 result = {}; stats = []
 for loc in ['es', 'tr']:

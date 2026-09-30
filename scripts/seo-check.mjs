@@ -15,10 +15,10 @@ check("sitemap excludes /play and /demos", !urls.some((u) => /\/(play|demos)(\/|
 // Expected hreflang clusters: every member must list exactly these, and each member must exist (reciprocity).
 const clusters = [
   { en: "/en", ka: "/ka", es: "/es", tr: "/tr" },
-  { en: "/en/football-games/auction", ka: "/ka/football-games/auction", es: "/es/juegos-de-futbol/subasta", tr: "/tr/football-games/auction" },
-  { en: "/en/football-games/ranked", ka: "/ka/football-games/ranked", es: "/es/juegos-de-futbol/clasificatoria", tr: "/tr/football-games/ranked" },
-  { en: "/en/football-games/football-tic-tac-toe", ka: "/ka/football-games/football-tic-tac-toe", es: "/es/juegos-de-futbol/tiki-taka-toe", tr: "/tr/football-games/football-tic-tac-toe" },
-  { en: "/en/football-games/daily-challenges", ka: "/ka/football-games/daily-challenges", es: "/es/juegos-de-futbol/retos-diarios", tr: "/tr/football-games/daily-challenges" },
+  { en: "/en/football-games/auction", ka: "/ka/football-games/auction", es: "/es/juegos-de-futbol/subasta", tr: "/tr/futbol-oyunlari/auction" },
+  { en: "/en/football-games/ranked", ka: "/ka/football-games/ranked", es: "/es/juegos-de-futbol/quien-sabe-mas-de-futbol", tr: "/tr/futbol-oyunlari/ranked" },
+  { en: "/en/football-games/football-tic-tac-toe", ka: "/ka/football-games/football-tic-tac-toe", es: "/es/juegos-de-futbol/tiki-taka-toe", tr: "/tr/futbol-oyunlari/futbol-xox" },
+  { en: "/en/football-games/daily-challenges", ka: "/ka/football-games/daily-challenges", es: "/es/juegos-de-futbol/retos-diarios", tr: "/tr/futbol-oyunlari/gunluk-futbol-gorevleri" },
 ];
 const expectedAlternates = new Map();
 for (const cluster of clusters) for (const path of Object.values(cluster)) expectedAlternates.set(path, { ...cluster, "x-default": cluster.en });
@@ -45,17 +45,17 @@ const rootGe = await fetch(base + "/", { redirect: "manual", headers: { "x-verce
 check("/ → /ka for Georgia", rootGe.status === 307 && (rootGe.headers.get("location") ?? "").endsWith("/ka"), `${rootGe.status} ${rootGe.headers.get("location")}`);
 const rootUs = await fetch(base + "/", { redirect: "manual", headers: { "x-vercel-ip-country": "US" } });
 check("/ → /en elsewhere, uncacheable", rootUs.status === 307 && (rootUs.headers.get("location") ?? "").endsWith("/en") && /no-store/.test(rootUs.headers.get("cache-control") ?? ""), `${rootUs.status} ${rootUs.headers.get("location")} ${rootUs.headers.get("cache-control")}`);
-for (const [path, status, target] of [["/en/football-games", 308, "/en"], ["/es/juegos-de-futbol", 308, "/es"], ["/football-games/auction", 308, "/en/football-games/auction"], ["/games", 308, "/en"], ["/daily", 308, "/en/football-games/daily-challenges"]]) {
+for (const [path, status, target] of [["/en/football-games", 308, "/en"], ["/es/juegos-de-futbol", 308, "/es"], ["/football-games/auction", 308, "/en/football-games/auction"], ["/games", 308, "/en"], ["/daily", 308, "/en/football-games/daily-challenges"], ["/tr/futbol-oyunlari", 308, "/tr"], ["/tr/football-games", 308, "/tr"], ["/tr/football-games/auction", 308, "/tr/futbol-oyunlari/auction"], ["/tr/football-games/daily-challenges", 308, "/tr/futbol-oyunlari/gunluk-futbol-gorevleri"], ["/es/juegos-de-futbol/clasificatoria", 308, "/es/juegos-de-futbol/quien-sabe-mas-de-futbol"], ["/es/juegos-de-futbol/francotirador-de-datos", 308, "/es/juegos-de-futbol/aproximado-futbolero"]]) {
   const res = await get(path);
   const loc = (res.headers.get("location") ?? "").replace(/^https?:\/\/[^/]+/, "");
   check(`${path} → ${status}${target ? " " + target : ""}`, res.status === status && (!target || loc === target), `${res.status} ${loc}`);
 }
-for (const path of ["/en/games/auction", "/en/daily/money-drop", "/es/football-games/auction", "/en/football-games/football-timeline", "/en/football-games/nope", "/tr/juegos-de-futbol/subasta"]) {
+for (const path of ["/en/games/auction", "/en/daily/money-drop", "/es/football-games/auction", "/en/football-games/football-timeline", "/en/football-games/nope", "/tr/juegos-de-futbol/subasta", "/tr/football-games/nope", "/es/futbol-oyunlari/auction", "/en/futbol-oyunlari/auction"]) {
   const res = await get(path);
   check(`${path} 404`, res.status === 404, String(res.status));
 }
 // Every published game page from the sitemap: self-canonical, indexable, one H1, and an exact reciprocal hreflang cluster.
-const gamePaths = urls.map((u) => u.replace(/^https?:\/\/[^/]+/, "")).filter((p) => /^\/(en|ka|es|tr)\/(football-games|juegos-de-futbol)\//.test(p) && !pages.includes(p));
+const gamePaths = urls.map((u) => u.replace(/^https?:\/\/[^/]+/, "")).filter((p) => /^\/(en|ka|es|tr)\/(football-games|juegos-de-futbol|futbol-oyunlari)\//.test(p) && !pages.includes(p));
 const alternatesOf = new Map();
 const readAlternates = async (path) => {
   if (alternatesOf.has(path)) return alternatesOf.get(path);
@@ -90,7 +90,7 @@ for (const path of ["/en", "/ka", "/es", "/tr"]) {
   check(`${path} has no /demos links`, !/href="\/demos\//.test(html));
   check(`${path} server HTML is the guest variant`, /data-chrome="guest"/.test(html) && !/data-chrome="member"/.test(html));
   // Every locale-folder link on the hub must resolve (a locale without that page links to the English one).
-  const localLinks = [...new Set([...html.matchAll(/href="(\/(?:en|ka|es|tr)\/(?:football-games|juegos-de-futbol)\/[a-z-]+)"/g)].map((m) => m[1]))];
+  const localLinks = [...new Set([...html.matchAll(/href="(\/(?:en|ka|es|tr)\/(?:football-games|juegos-de-futbol|futbol-oyunlari)\/[a-z0-9-]+)"/g)].map((m) => m[1]))];
   const dead = [];
   for (const link of localLinks) { if ((await get(link)).status !== 200) dead.push(link); }
   check(`${path} hub links resolve`, dead.length === 0, dead.join(", "));

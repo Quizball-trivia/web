@@ -405,7 +405,7 @@ const ka: DuelCopy = {
 };
 
 const tr: DuelCopy = {
-  games: { buscaminas: "Futbol Mayın Tarlası", pistas: "Futbol İpuçları", ultimo: "Son Kalan Futbol" },
+  games: { buscaminas: "Futbol Mayın Tarlası", pistas: "Futbolcu Tahmin Etme Oyunu", ultimo: "Futbolcu Sayma Oyunu" },
   playWithFriend: "Arkadaşınla oyna",
   playWithFriendHint: "Linki gönder, kafa kafaya canlı oynayın.",
   you: "Sen",

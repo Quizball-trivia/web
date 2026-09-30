@@ -36,13 +36,16 @@ export const SEO_PAGE_LOCALES = ["en", "ka", "es", "tr"] as const satisfies read
 export type SeoPageLocale = (typeof SEO_PAGE_LOCALES)[number];
 export const isSeoPageLocale = (locale: Locale): locale is SeoPageLocale => (SEO_PAGE_LOCALES as readonly Locale[]).includes(locale);
 
-/** Public games live under a localized folder: /en/football-games/…, /es/juegos-de-futbol/…. */
-export const PUBLIC_GAMES_FOLDER: Record<Locale, string> = { en: "football-games", ka: "football-games", es: "juegos-de-futbol", tr: "football-games" };
-export const DAILY_COLLECTION_SLUG: Record<Locale, string> = { en: "daily-challenges", ka: "daily-challenges", es: "retos-diarios", tr: "daily-challenges" };
+/** Public games live under a localized folder: /en/football-games/…, /es/juegos-de-futbol/…, /tr/futbol-oyunlari/…. */
+export const PUBLIC_GAMES_FOLDER: Record<Locale, string> = { en: "football-games", ka: "football-games", es: "juegos-de-futbol", tr: "futbol-oyunlari" };
+export const DAILY_COLLECTION_SLUG: Record<Locale, string> = { en: "daily-challenges", ka: "daily-challenges", es: "retos-diarios", tr: "gunluk-futbol-gorevleri" };
 
-/** ES slugs from the September keyword map; KA follows EN. */
+/**
+ * Slugs follow docs/SEO-GAME-NAMING-AUDIT-2026-09-30.md: ES renames only where the old slug matched no
+ * search intent, TR localizes only the searched names; KA follows EN. tiki-taka-toe stays (ranking URL).
+ */
 const LOCALIZED_SLUGS: Record<string, Partial<Record<Locale, string>>> = {
-  "football-tic-tac-toe": { es: "tiki-taka-toe" },
+  "football-tic-tac-toe": { es: "tiki-taka-toe", tr: "futbol-xox" },
   auction: { es: "subasta" },
   friendly: { es: "partido-amistoso" },
   "true-or-false-football": { es: "verdadero-o-falso" },
@@ -53,17 +56,31 @@ const LOCALIZED_SLUGS: Record<string, Partial<Record<Locale, string>>> = {
   "career-path": { es: "trayectoria-del-jugador" },
   "football-timeline": { es: "linea-de-tiempo" },
   "football-logic": { es: "logica-futbolera" },
+  "missing-xi": { es: "adivina-el-11" },
+  "pass-chain": { es: "conectando-jugadores" },
+  "stat-sniper": { es: "aproximado-futbolero" },
+  ranked: { es: "quien-sabe-mas-de-futbol" },
+  "free-kicks": { es: "tiros-libres" },
+  "road-to-goal": { es: "camino-al-gol" },
+  "trivia-mines": { es: "minas-con-preguntas" },
+  "football-minesweeper": { es: "buscaminas-futbolero", tr: "futbol-mayin-tarlasi" },
+  "football-clues": { es: "pistas-futboleras", tr: "futbolcu-tahmin-etme-oyunu" },
+  "last-answer-standing": { es: "ultimo-en-pie-futbolero", tr: "futbolcu-sayma-oyunu" },
+  "squad-spin": { es: "ruleta-futbolera", tr: "futbol-carki" },
+};
+
+/** Earlier ES slugs; the middleware 308s them so indexed pages keep their ranking. */
+const PREVIOUS_SLUGS: Record<string, Partial<Record<Locale, string>>> = {
   "missing-xi": { es: "once-perdido" },
   "pass-chain": { es: "cadena-de-pases" },
   "stat-sniper": { es: "francotirador-de-datos" },
   ranked: { es: "clasificatoria" },
-  "free-kicks": { es: "tiros-libres" },
-  "road-to-goal": { es: "camino-al-gol" },
-  "trivia-mines": { es: "minas-con-preguntas" },
-  "football-minesweeper": { es: "buscaminas-futbolero" },
-  "football-clues": { es: "pistas-futboleras" },
-  "last-answer-standing": { es: "ultimo-en-pie-futbolero" },
   "squad-spin": { es: "ruleta-de-plantilla" },
+};
+
+/** TR pages used the EN folder and slugs until 2026-09-30. */
+const PREVIOUS_FOLDER: Partial<Record<Locale, { folder: string; dailyCollection: string }>> = {
+  tr: { folder: "football-games", dailyCollection: "daily-challenges" },
 };
 
 const cta = { en: "Play now", ka: "ითამაშე ახლავე", es: "Jugar ahora", tr: "Hemen oyna" } as const;
@@ -195,9 +212,9 @@ export const GAME_PAGES: GamePageEntry[] = [
       reward: "დააგროვე მონეტები და XP ყოველდღე.",
     },
     es: {
-      metaTitle: "Verdadero o falso — Quiz diario de fútbol",
+      metaTitle: "Verdadero o falso futbolero — Quiz diario de fútbol",
       metaDescription: "Datos de fútbol rápidos, quince segundos cada uno. ¿Verdadero o falso? Un set nuevo cada día.",
-      title: "Verdadero o falso",
+      title: "Verdadero o falso futbolero",
       intro: "Una afirmación de fútbol, quince segundos, dos botones. Confía en tu instinto y acumula aciertos.",
       howToPlay: ["Lee la afirmación.", "Pulsa Verdadero o Falso antes de que acabe el tiempo.", "Cada acierto suma a tu puntuación diaria."],
       reward: "Gana monedas y XP cada día que juegues.",
@@ -213,7 +230,7 @@ export const GAME_PAGES: GamePageEntry[] = [
   }),
   daily("countdown", {
     en: {
-      metaTitle: "Countdown — Name as Many as You Can",
+      metaTitle: "Name as Many Football Players as You Can — Countdown",
       metaDescription: "Beat the clock: type as many valid football answers as you can for each category. A new Countdown every day.",
       title: "Countdown",
       intro: "A category, a ticking clock, and a blank box. Type every valid answer you can think of before time runs out.",
@@ -229,9 +246,9 @@ export const GAME_PAGES: GamePageEntry[] = [
       reward: "დააგროვე მონეტები და XP ყოველდღე.",
     },
     es: {
-      metaTitle: "Countdown — Nombra tantos como puedas",
-      metaDescription: "Vence al reloj: escribe tantas respuestas válidas de fútbol como puedas por categoría. Un Countdown nuevo cada día.",
-      title: "Countdown",
+      metaTitle: "Contrarreloj — Nombra todos los jugadores que puedas",
+      metaDescription: "Vence al reloj: escribe tantas respuestas válidas de fútbol como puedas por categoría. Una contrarreloj nueva cada día.",
+      title: "Contrarreloj futbolera",
       intro: "Una categoría, un reloj en marcha y una casilla vacía. Escribe todas las respuestas válidas que recuerdes antes de que se acabe el tiempo.",
       howToPlay: ["Lee la categoría, por ejemplo el once del Manchester United en la final de 2008.", "Escribe respuestas una a una; cada acierto aparece en tu lista.", "La puntuación es el número de respuestas válidas en todas las rondas."],
       reward: "Gana monedas y XP cada día que juegues.",
@@ -297,17 +314,17 @@ export const GAME_PAGES: GamePageEntry[] = [
       reward: "დააგროვე მონეტები და XP ყოველდღე.",
     },
     es: {
-      metaTitle: "Más o menos — Juego de estadísticas de fútbol",
-      metaDescription: "Dos jugadores, una estadística. ¿Cuál es mayor? Mantén la racha en el reto diario Más o menos.",
-      title: "Más o menos",
+      metaTitle: "Higher or Lower futbolero — ¿Más o menos? Juego de fútbol",
+      metaDescription: "Dos jugadores, una estadística. ¿Cuál es mayor? Mantén la racha en el reto diario Higher or Lower futbolero.",
+      title: "Higher or Lower futbolero",
       intro: "Dos futbolistas lado a lado y una estadística. Di cuál es mayor y construye tu racha.",
       howToPlay: ["Lee la estadística que se compara.", "Elige al jugador que crees que tiene el valor más alto.", "Los aciertos continúan la ronda."],
       reward: "Gana monedas y XP cada día que juegues.",
     },
     tr: {
-      metaTitle: "Daha Yüksek mi Düşük mü — Futbol İstatistik Oyunu",
-      metaDescription: "İki oyuncu, bir istatistik. Hangisi daha yüksek? Günlük Daha Yüksek mi Düşük mü görevinde seriyi sürdür.",
-      title: "Daha Yüksek mi Düşük mü",
+      metaTitle: "Higher or Lower Futbolcu — Hangisi Daha Yüksek?",
+      metaDescription: "İki oyuncu, bir istatistik. Hangisi daha yüksek? Günlük Higher or Lower görevinde seriyi sürdür.",
+      title: "Higher or Lower Futbolcu",
       intro: "Yan yana iki futbolcu ve bir istatistik. Hangisinin daha yüksek olduğunu söyle ve serini büyüt.",
       howToPlay: ["Karşılaştırılan istatistiği oku.", "Değerinin daha yüksek olduğunu düşündüğün oyuncuyu seç.", "Doğru seçimler turu sürdürür."],
       reward: "Oynadığın her gün jeton ve XP kazan.",
@@ -349,7 +366,7 @@ export const GAME_PAGES: GamePageEntry[] = [
   }),
   daily("statSniper", {
     en: {
-      metaTitle: "Stat Sniper — Guess the Football Number",
+      metaTitle: "Football Stats Guessing Game — Stat Sniper",
       metaDescription: "Ten football numbers a day: transfer fees, season goals, final attendances. Slide to your guess; the closer you land, the more you score.",
       title: "Stat Sniper",
       intro: "Ten real football numbers. Slide to your best guess and land as close as you can.",
@@ -365,9 +382,9 @@ export const GAME_PAGES: GamePageEntry[] = [
       reward: "დააგროვე მონეტები და XP სიზუსტისთვის და აიწიე დღის ლიდერბორდში.",
     },
     es: {
-      metaTitle: "Francotirador de datos — Adivina la cifra del fútbol",
+      metaTitle: "Aproximado futbolero — Adivina la cifra del fútbol",
       metaDescription: "Diez cifras del fútbol al día: traspasos, goles por temporada, asistencia a finales. Desliza hasta tu estimación; cuanto más cerca, más puntos.",
-      title: "Francotirador de datos",
+      title: "Aproximado futbolero",
       intro: "Diez cifras reales del fútbol. Desliza hasta tu mejor estimación y acércate todo lo que puedas.",
       howToPlay: ["Lee el dato y arrastra el deslizador hasta tu estimación.", "Confírmala: se revela la cifra real con tus puntos.", "Cuanto más cerca, más puntos; el pleno da bonus."],
       reward: "Gana monedas y XP por tu precisión y sube en la clasificación del día.",
@@ -383,7 +400,7 @@ export const GAME_PAGES: GamePageEntry[] = [
   }),
   daily("passChain", {
     en: {
-      metaTitle: "Pass Chain — Link Two Footballers Through Shared Clubs",
+      metaTitle: "Connect Footballers Through Teammates — Pass Chain",
       metaDescription: "Two chains a day. Connect the start player to the target through team-mates who shared a club. Fewer links score higher.",
       title: "Pass Chain",
       intro: "Two players, one chain. Pass through team-mates who shared a club until you reach the target.",
@@ -399,17 +416,17 @@ export const GAME_PAGES: GamePageEntry[] = [
       reward: "დააგროვე მონეტები და XP ყოველი დახურული ჯაჭვისთვის.",
     },
     es: {
-      metaTitle: "Cadena de pases — Conecta a dos futbolistas por clubes compartidos",
-      metaDescription: "Dos cadenas al día. Conecta al jugador inicial con el objetivo a través de compañeros que compartieron club. Menos eslabones, más puntos.",
-      title: "Cadena de pases",
+      metaTitle: "Conectando jugadores de fútbol — Conecta a dos futbolistas por sus clubes",
+      metaDescription: "Conecta jugadores de fútbol: dos cadenas al día. Une al jugador inicial con el objetivo a través de compañeros que compartieron club. Menos eslabones, más puntos.",
+      title: "Conectando jugadores",
       intro: "Dos jugadores, una cadena. Pasa por compañeros que compartieron club hasta llegar al objetivo.",
       howToPlay: ["Escribe un jugador que compartió club con el último de la cadena.", "Sigue pasando hasta que alguien de la cadena comparta club con el objetivo.", "Iguala el par, la cadena más corta posible, para la puntuación perfecta."],
       reward: "Gana monedas y XP por cada cadena que cierres.",
     },
     tr: {
-      metaTitle: "Pas Zinciri — İki Futbolcuyu Ortak Kulüplerle Bağla",
+      metaTitle: "Futbolcu Bağlantı Zinciri — İki Futbolcuyu Ortak Kulüplerle Bağla",
       metaDescription: "Günde iki zincir. Başlangıç oyuncusunu aynı kulüpte oynamış takım arkadaşları üzerinden hedefe bağla. Daha az halka, daha yüksek puan.",
-      title: "Pas Zinciri",
+      title: "Futbolcu Bağlantı Zinciri",
       intro: "İki oyuncu, bir zincir. Hedefe ulaşana kadar aynı kulüpte oynamış takım arkadaşları üzerinden pas ver.",
       howToPlay: ["Zincirdeki son oyuncuyla aynı kulüpte oynamış bir oyuncu yaz.", "Zincirdeki biri hedefle aynı kulüpte oynayana kadar pas vermeye devam et.", "Mükemmel skor için mümkün olan en kısa zincir olan par'ı tuttur."],
       reward: "Kapattığın her zincir için jeton ve XP kazan.",
@@ -433,17 +450,17 @@ export const GAME_PAGES: GamePageEntry[] = [
       reward: "დააგროვე მონეტები და XP ყოველი გამოცნობილი მაისურისთვის.",
     },
     es: {
-      metaTitle: "XI perdido — Adivina las alineaciones famosas",
-      metaDescription: "Tres onces iniciales famosos al día. Toca una camiseta, nombra al titular y completa la alineación antes de que acabe el tiempo.",
-      title: "XI perdido",
+      metaTitle: "Adivina el 11 — Completa las alineaciones famosas",
+      metaDescription: "Adivina el once titular de tres alineaciones famosas al día. Toca una camiseta, nombra al titular y completa la alineación antes de que acabe el tiempo.",
+      title: "Adivina el 11",
       intro: "Una alineación legendaria con los nombres ocultos. Rellena cada camiseta de memoria.",
       howToPlay: ["Toca una camiseta vacía en el campo.", "Escribe quién fue titular ahí; basta con el apellido.", "Completa las 11 antes de que se acabe el tiempo o los tres fallos."],
       reward: "Gana monedas y XP por cada camiseta que aciertes.",
     },
     tr: {
-      metaTitle: "Eksik XI — Ünlü İlk On Birleri Say",
+      metaTitle: "İlk 11 Tahmin Etme — Efsane Kadroları Bil",
       metaDescription: "Günde üç ünlü ilk on bir. Bir formaya dokun, orada başlayan oyuncuyu söyle ve süre bitmeden kadroyu tamamla.",
-      title: "Eksik XI",
+      title: "İlk 11 Tahmin Etme",
       intro: "İsimleri gizlenmiş efsanevi bir kadro. Her formayı hafızandan doldur.",
       howToPlay: ["Sahadaki boş bir formaya dokun.", "Orada başlayan oyuncuyu yaz — soyadı yeterli.", "Süre veya üç hata hakkın bitmeden 11'ini de tamamla."],
       reward: "Söylediğin her forma için jeton ve XP kazan.",
@@ -451,7 +468,7 @@ export const GAME_PAGES: GamePageEntry[] = [
   }),
   daily("footballLogic", {
     en: {
-      metaTitle: "Football Logic — Visual Football Riddles",
+      metaTitle: "Guess the Footballer from Pictures — Football Logic",
       metaDescription: "Two pictures point to one footballer. Decode the visual riddle in the daily Football Logic challenge.",
       title: "Football Logic",
       intro: "Two images, one hidden footballer. Put the clues together and type the name.",
@@ -467,17 +484,17 @@ export const GAME_PAGES: GamePageEntry[] = [
       reward: "დააგროვე მონეტები და XP ყოველდღე.",
     },
     es: {
-      metaTitle: "Lógica futbolera — Acertijos visuales de fútbol",
+      metaTitle: "Acertijos de fútbol — Adivina al futbolista con dos imágenes",
       metaDescription: "Dos imágenes señalan a un futbolista. Descifra el acertijo visual en el reto diario.",
-      title: "Lógica futbolera",
+      title: "Acertijos de fútbol",
       intro: "Dos imágenes, un futbolista oculto. Une las pistas y escribe el nombre.",
       howToPlay: ["Observa ambas imágenes.", "Deduce al jugador al que apuntan.", "Escribe el nombre antes de que acabe el tiempo."],
       reward: "Gana monedas y XP cada día que juegues.",
     },
     tr: {
-      metaTitle: "Futbol Mantığı — Görsel Futbol Bilmeceleri",
-      metaDescription: "İki resim bir futbolcuyu işaret eder. Günlük Futbol Mantığı görevinde görsel bilmeceyi çöz.",
-      title: "Futbol Mantığı",
+      metaTitle: "Futbol Bilmeceleri — Resimden Futbolcuyu Tahmin Et",
+      metaDescription: "İki resim bir futbolcuyu işaret eder. Günlük Futbol Bilmeceleri görevinde görsel bilmeceyi çöz.",
+      title: "Futbol Bilmeceleri",
       intro: "İki görsel, bir gizli futbolcu. İpuçlarını birleştir ve ismi yaz.",
       howToPlay: ["İki resme de bak.", "İşaret ettikleri oyuncuyu bul.", "Süre bitmeden ismi yaz."],
       reward: "Oynadığın her gün jeton ve XP kazan.",
@@ -519,7 +536,7 @@ export const GAME_PAGES: GamePageEntry[] = [
   }),
   daily("cardDetective", {
     en: {
-      metaTitle: "Card Detective — Unlock Clues, Name the Footballer",
+      metaTitle: "Guess the Player from His Card — Card Detective",
       metaDescription: "Every slot on the player card is a locked clue with a price. Buy the clues you need and name the footballer with the most coins left. Ten cards a day.",
       title: "Card Detective",
       intro: "A player card with every slot locked. Each clue costs coins: reveal as little as you can, then name the player.",
@@ -535,9 +552,9 @@ export const GAME_PAGES: GamePageEntry[] = [
       reward: "დააგროვე მონეტები და XP ყოველდღე.",
     },
     es: {
-      metaTitle: "Detective de cartas — Desbloquea pistas y nombra al futbolista",
+      metaTitle: "Adivina el jugador por su carta — Desbloquea pistas y nómbralo",
       metaDescription: "Cada casilla de la carta es una pista bloqueada con precio. Compra las pistas que necesites y nombra al futbolista con más monedas restantes. Diez cartas al día.",
-      title: "Detective de cartas",
+      title: "Adivina el jugador por su carta",
       intro: "Una carta de jugador con todas las casillas bloqueadas. Cada pista cuesta monedas: revela lo mínimo y nombra al jugador.",
       howToPlay: ["Abre una pista: valoración, posición, club o país tienen su precio.", "Escribe el jugador en cuanto lo sepas.", "Cuantas más monedas conserves, más puntos."],
       reward: "Gana monedas y XP cada día que juegues.",
@@ -569,9 +586,9 @@ export const GAME_PAGES: GamePageEntry[] = [
       reward: "დააგროვე რეიტინგული ქულები, მონეტები და XP მატჩზე.",
     },
     es: {
-      metaTitle: "Trivia de fútbol 1v1 clasificatoria — Partidos en vivo",
+      metaTitle: "¿Quién sabe más de fútbol? Trivia 1v1 en vivo",
       metaDescription: "Enfréntate a un rival real en trivia de fútbol 1v1 en vivo. Rondas de posesión, penaltis, puntos y clasificación.",
-      title: "Clasificatoria 1v1",
+      title: "¿Quién sabe más de fútbol? 1v1",
       intro: "El corazón de QuizBall: trivia de fútbol en vivo contra un rival real, con posesión, penaltis y una escalera clasificatoria.",
       howToPlay: ["Entra en la cola y emparéjate en segundos.", "Responde más rápido y mejor para mantener la posesión.", "Gana para subir de división y en la clasificación."],
       reward: "Gana puntos, monedas y XP por partido.",
@@ -579,7 +596,7 @@ export const GAME_PAGES: GamePageEntry[] = [
     tr: {
       metaTitle: "1v1 Futbol Bilgi Yarışması — Dereceli Canlı Maçlar",
       metaDescription: "Canlı 1v1 futbol bilgi yarışmasında gerçek bir rakiple karşılaş. Top hakimiyeti turları, penaltılar, dereceli puanlar ve liderlik tabloları.",
-      title: "Dereceli 1v1",
+      title: "1v1 Futbol Bilgi Yarışması",
       intro: "QuizBall'un özü: gerçek bir rakibe karşı top hakimiyeti, penaltılar ve dereceli bir sıralamayla canlı futbol bilgi yarışması.",
       howToPlay: ["Sıraya gir ve saniyeler içinde eşleş.", "Topu elinde tutmak için daha hızlı ve daha doğru cevapla.", "Liglerde ve liderlik tablosunda yükselmek için kazan."],
       reward: "Maç başına dereceli puan, jeton ve XP kazan.",
@@ -603,9 +620,9 @@ export const GAME_PAGES: GamePageEntry[] = [
       reward: "ქოინების ჯილდოებს და რეიტინგს ანგარიში სჭირდება; სტუმრის აუქციონი სავარჯიშოა.",
     },
     es: {
-      metaTitle: "Juego de subasta de fútbol | QuizBall",
-      metaDescription: "Juega a la subasta de fútbol de Quizball online. Puja por futbolistas y forma tu equipo, con partidas de invitado sin crear cuenta.",
-      title: "Subasta de fútbol",
+      metaTitle: "Subasta futbolera online: puja y arma tu equipo | QuizBall",
+      metaDescription: "Juega a la subasta futbolera de Quizball online. Puja por futbolistas y forma tu equipo, con partidas de invitado sin crear cuenta.",
+      title: "Subasta futbolera",
       intro: "Forma un equipo de fútbol en una subasta. Haz tus pujas, vigila el presupuesto y elige a los jugadores que quieres. Lee las reglas de la ronda antes de empezar y juega como invitado.",
       howToPlay: ["Los jugadores salen uno a uno con pistas sobre quiénes son.", "Puja contra los demás mánagers; la puja más alta ficha al jugador.", "Completa tu once dentro del presupuesto.", "Gana el equipo completo mejor valorado."],
       reward: "Las monedas y el rango requieren cuenta; las subastas de invitado son de práctica.",
@@ -671,17 +688,17 @@ export const GAME_PAGES: GamePageEntry[] = [
       reward: "რეიტინგული ჯილდოებისთვის ანგარიშია საჭირო; სტუმრის თამაში სავარჯიშოა.",
     },
     es: {
-      metaTitle: "Tiki Taka Toe: tres en raya futbolero online | QuizBall",
-      metaDescription: "Juega al tres en raya futbolero online. Nombra jugadores que cumplan ambas categorías, conquista casillas y consigue tres en línea. Empieza sin cuenta.",
-      title: "Tiki Taka Toe",
+      metaTitle: "Tic Tac Toe futbolero (tatetí y tres en raya) online | QuizBall",
+      metaDescription: "Juega al tic tac toe futbolero online, también llamado Tiki Taka Toe, tatetí o tres en raya de fútbol. Nombra jugadores que cumplan ambas categorías, conquista casillas y consigue tres en línea. Empieza sin cuenta.",
+      title: "Tic Tac Toe futbolero",
       intro: "Pon a prueba tu fútbol contra la cuadrícula. Elige una casilla, nombra un jugador que encaje en ambas categorías y busca tres en línea. Empieza como invitado.",
       howToPlay: ["Elige una casilla: su fila y su columna son dos categorías, por ejemplo un club y un país.", "Nombra un jugador que cumpla ambas. Se aceptan apellidos y erratas pequeñas.", "Un nombre correcto conquista la casilla; tres en línea gana.", "Los partidos igualados se deciden al mejor de tres."],
       reward: "Las recompensas de puntos requieren cuenta; las partidas de invitado son de práctica.",
     },
     tr: {
-      metaTitle: "Futbol Tic Tac Toe (Tiki-Taka-Toe) — 1v1 Izgara Oyunu",
+      metaTitle: "Futbol XOX — Futbol Tic Tac Toe Oyna (1v1)",
       metaDescription: "Canlı 1v1 futbol tic tac toe: her hücre iki kriteri kesiştirir, ikisine de uyan bir oyuncu söyle, üçü yan yana kazanır. Üç maçın en iyisi.",
-      title: "Futbol Tic Tac Toe (Tiki-Taka-Toe)",
+      title: "Futbol XOX",
       intro: "Kulüpler, ülkeler, kupalar ve takım arkadaşlarından oluşan 3×3 bir ızgara. İki kritere de uyan bir futbolcu söyleyerek hücreyi al. Üçü yan yana tahtayı, üç maçın en iyisi seriyi kazanır.",
       howToPlay: ["Sıran geldiğinde boş bir hücre seç.", "Satıra ve sütuna uyan bir oyuncu yaz.", "Doğru cevap hücreyi alır; bir sırada üç kazanır."],
       reward: "Seri başına jeton ve Tic Tac Toe puanı kazan.",
@@ -808,7 +825,7 @@ export const GAME_PAGES: GamePageEntry[] = [
     },
     es: {
       metaTitle: "Buscaminas futbolero — Encontrá a los 12 y esquivá las 4 minas | QuizBall",
-      metaDescription: "El buscaminas futbolero de jugadores: 20 rondas de 16 futbolistas. Tocá a los 12 que cumplen la consigna y esquivá las 4 minas. Un tablero nuevo cada día.",
+      metaDescription: "El buscaminas futbolero de jugadores (buscaminas de fútbol): 20 rondas de 16 futbolistas. Tocá a los 12 que cumplen la consigna y esquivá las 4 minas. Un tablero nuevo cada día.",
       title: "Buscaminas futbolero",
       intro: "Cada ronda muestra 16 futbolistas y una consigna. Doce la cumplen y cuatro son minas. Encontrá a los correctos, plantate antes de pisar una mina y sobreviví 20 rondas que se ponen cada vez más difíciles.",
       howToPlay: ["Leé la consigna: una temporada de un club, la planilla de una final, dónde nacieron…", "Tocá a los jugadores que la cumplen. Cada acierto suma un punto al pozo de la ronda.", "Si tocás una mina perdés los puntos de esa ronda. Plantate cuando quieras para guardarlos.", "Encontrá a los 12 para una ronda perfecta con +3 de bonus. Compartí tus 20 cuadraditos."],
@@ -825,7 +842,7 @@ export const GAME_PAGES: GamePageEntry[] = [
   }),
   mode("football-clues", "/pistas", "pistas", {
     en: {
-      metaTitle: "Football Clues — Guess the Player from 10 Clues | QuizBall",
+      metaTitle: "Guess the Footballer from 10 Clues — Football Clues | QuizBall",
       metaDescription: "A daily football clues game: 10 hidden players, 10 clues each. Guess on the first clue for 10 points, or play 1v1 against a friend online.",
       title: "Football Clues",
       intro: "One hidden footballer and ten clues that go from hardest to easiest. Reveal them one at a time, type the surname when you know it and score up to 10 points per player. Ten new players every day.",
@@ -849,9 +866,9 @@ export const GAME_PAGES: GamePageEntry[] = [
       reward: "Sin cuenta jugás los días anteriores; con tu cuenta, las pistas de hoy, tu racha y el ranking del día.",
     },
     tr: {
-      metaTitle: "Futbol İpuçları — Oyuncuyu 10 İpucuyla Bil | QuizBall",
+      metaTitle: "Futbolcu Tahmin Etme Oyunu — 10 İpucuyla Oyuncuyu Bil | QuizBall",
       metaDescription: "Günlük futbol ipucu oyunu: her gün 10 gizli oyuncu, her birine zordan kolaya 10 ipucu. İlk ipucunda bilirsen 10 puan.",
-      title: "Futbol İpuçları",
+      title: "Futbolcu Tahmin Etme Oyunu",
       intro: "Gizli bir futbolcu ve zordan kolaya giden on ipucu. İpuçlarını tek tek aç, bildiğinde soyadını yaz ve oyuncu başına 10 puana kadar kazan.",
       howToPlay: ["İlk ipucu bedava.", "Açtığın her ipucu oyundaki puanı 10'dan 1'e düşürür.", "Soyadını yaz. Yanlış tahminden sonra 1 hakkın ve en fazla 3 ipucun kalır.", "Günde on oyuncu, en fazla 100 puan."],
       reward: "Önceki günleri hesapsız oyna; bugünün ipuçları, seri ve günün sıralaması için giriş yap.",
@@ -883,9 +900,9 @@ export const GAME_PAGES: GamePageEntry[] = [
       reward: "Sin cuenta jugás los días anteriores; con tu cuenta, las categorías de hoy, tu racha y el ranking del día.",
     },
     tr: {
-      metaTitle: "Son Kalan Futbol — Süre Bitmeden Listeyi Say | QuizBall",
+      metaTitle: "Futbolcu Sayma Oyunu — Süre Bitmeden Listeyi Say | QuizBall",
       metaDescription: "Günlük futbol liste oyunu: her gün kapalı listeli 5 kategori, örneğin bir Dünya Kupası kadrosu. Süre 20 saniyeden 6'ya kısalırken cevapları say ya da bir arkadaşınla 1'e 1 oyna.",
-      title: "Son Kalan Futbol",
+      title: "Futbolcu Sayma Oyunu",
       intro: "Her gün kapalı listeli beş futbol kategorisi gelir: bir Dünya Kupası kadrosu, Libertadores şampiyonları, bir kulübün en çok gol atanları. Cevapları art arda say; süre her cevapla kısalır, 20 saniyeden 6'ya iner. Üst üste üç yanlış ya da süre bitince kategori sona erer.",
       howToPlay: ["Kategoriyi oku: liste kapalıdır, yani her cevap ya doğrudur ya yanlış.", "Cevapları art arda say. Süre 20 saniyeyle başlar ve her cevapla kısalır, 6 saniyeye kadar.", "Üst üste üç yanlış ya da süre bitince kategori sona erer. Her cevap 1 puan.", "Listenin tamamını say, +5 bonus kazan. Beş karelik sonucunu paylaş."],
       reward: "Önceki günleri hesapsız oyna; bugünün kategorileri, seri ve günün sıralaması için giriş yap.",
@@ -927,7 +944,7 @@ export const GAME_PAGES: GamePageEntry[] = [
   }),
   mode("squad-spin", "/squad-spin", "mini-squad-spin", {
     en: {
-      metaTitle: "Squad Spin — Name a Player Who Fits Every Reel | QuizBall",
+      metaTitle: "Spin the Wheel Football Game — Squad Spin | QuizBall",
       metaDescription: "Spin club, position and nation, then name a footballer who fits all three within 15 seconds. Practice as a guest; real coins with an account.",
       title: "Squad Spin",
       intro: "The reels land on a club, a position and a nation. Name a player who fits every reel before the clock runs out; each correct answer multiplies the pot.",
@@ -943,17 +960,17 @@ export const GAME_PAGES: GamePageEntry[] = [
       reward: "ნამდვილ ქოინებს ანგარიში სჭირდება; სტუმრის სერია სავარჯიშოა.",
     },
     es: {
-      metaTitle: "Squad Spin — nombra un jugador que encaje en cada carrete | QuizBall",
-      metaDescription: "Gira club, posición y país y nombra en 15 segundos un futbolista que encaje en los tres. Practica como invitado; monedas reales con cuenta.",
-      title: "Squad Spin",
+      metaTitle: "Ruleta futbolera — nombra un jugador que encaje en cada carrete | QuizBall",
+      metaDescription: "La ruleta futbolera, también llamada ruleta mágica: gira club, posición y país y nombra en 15 segundos un futbolista que encaje en los tres. Practica como invitado; monedas reales con cuenta.",
+      title: "Ruleta futbolera",
       intro: "Los carretes caen en un club, una posición y un país. Nombra un jugador que encaje en todos antes de que acabe el tiempo; cada acierto multiplica el bote.",
       howToPlay: ["Elige 3, 4 o 5 carretes: más carretes, mayor multiplicador.", "Escribe en 15 segundos un jugador que cumpla todos los carretes.", "Retira o vuelve a girar antes de ver los siguientes carretes.", "Un fallo termina la racha."],
       reward: "Las monedas reales requieren cuenta; las rachas de invitado usan puntos de práctica.",
     },
     tr: {
-      metaTitle: "Squad Spin — Her Makaraya Uyan Oyuncuyu Söyle | QuizBall",
+      metaTitle: "Futbol Çarkı — Çarkı Çevir, Futbolcuyu Bul | QuizBall",
       metaDescription: "Kulüp, mevki ve ülkeyi çevir, 15 saniye içinde üçüne de uyan bir futbolcu söyle. Misafir olarak alıştır; hesapla gerçek jeton.",
-      title: "Squad Spin",
+      title: "Futbol Çarkı",
       intro: "Makaralar bir kulüp, bir mevki ve bir ülkede durur. Süre bitmeden her makaraya uyan bir oyuncu söyle; her doğru cevap kasayı katlar.",
       howToPlay: ["3, 4 ya da 5 makara seç: daha çok makara, daha dar ipucu, daha büyük çarpan.", "15 saniye içinde her makaraya uyan bir oyuncu yaz.", "Sonraki makaralar görünmeden kasayı al ya da tekrar çevir.", "Tek bir hata seriyi bitirir."],
       reward: "Gerçek jeton hesap gerektirir; misafir serileri yalnızca alıştırma puanı kullanır.",
@@ -976,6 +993,26 @@ export function gamePagePath(entry: GamePageEntry, locale: Locale): string {
 
 export function dailyCollectionPath(locale: Locale): string {
   return `/${locale}/${PUBLIC_GAMES_FOLDER[locale]}/${DAILY_COLLECTION_SLUG[locale]}`;
+}
+
+/** Retired public URL → current URL, for every published page whose folder or slug changed. */
+export function previousGamePagePaths(pages: readonly GamePageEntry[]): Record<string, string> {
+  const redirects: Record<string, string> = {};
+  for (const locale of SEO_PAGE_LOCALES) {
+    const moved = PREVIOUS_FOLDER[locale];
+    const folder = moved?.folder ?? PUBLIC_GAMES_FOLDER[locale];
+    for (const entry of pages) {
+      const slug = PREVIOUS_SLUGS[entry.slug]?.[locale] ?? (moved ? entry.slug : undefined);
+      if (!slug) continue;
+      const from = `/${locale}/${folder}/${slug}`;
+      if (from !== gamePagePath(entry, locale)) redirects[from] = gamePagePath(entry, locale);
+    }
+    if (moved) {
+      redirects[`/${locale}/${moved.folder}`] = `/${locale}`;
+      redirects[`/${locale}/${moved.folder}/${moved.dailyCollection}`] = dailyCollectionPath(locale);
+    }
+  }
+  return redirects;
 }
 
 /** Resolves a localized public URL (folder must match the locale) to its manifest entry. */

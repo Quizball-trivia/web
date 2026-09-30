@@ -51,10 +51,12 @@ describe("public games manifest", () => {
     expect(ultimo.playPath).toBe("/ultimo");
     expect(ultimo.demoSlug).toBe("ultimo");
     expect(gamePagePath(ultimo, "es")).toBe("/es/juegos-de-futbol/ultimo-en-pie-futbolero");
-    for (const locale of ["en", "ka", "tr"] as const) expect(gamePagePath(ultimo, locale)).toBe(`/${locale}/football-games/last-answer-standing`);
+    for (const locale of ["en", "ka"] as const) expect(gamePagePath(ultimo, locale)).toBe(`/${locale}/football-games/last-answer-standing`);
+    expect(gamePagePath(ultimo, "tr")).toBe("/tr/futbol-oyunlari/futbolcu-sayma-oyunu");
     expect(findPublishedGame("es", "juegos-de-futbol", "ultimo-en-pie-futbolero")?.modeId).toBe("ultimo");
     expect(findPublishedGame("es", "juegos-de-futbol", "last-answer-standing")).toBeNull();
-    expect(findPublishedGame("tr", "football-games", "last-answer-standing")?.modeId).toBe("ultimo");
+    expect(findPublishedGame("tr", "futbol-oyunlari", "futbolcu-sayma-oyunu")?.modeId).toBe("ultimo");
+    expect(findPublishedGame("tr", "football-games", "last-answer-standing")).toBeNull();
     expect(isFullGameDemo("ultimo")).toBe(true);
     expect(relatedPublishedGames(ultimo).map((g) => g.modeId)).toEqual(["pistas", "buscaminas", "grid"]);
     expect(relatedPublishedGames(findPublicGameByModeId("pistas")!).map((g) => g.modeId)).toContain("ultimo");
@@ -62,7 +64,7 @@ describe("public games manifest", () => {
     expect(ultimo.copy.es.title).toBe("Último en pie futbolero");
     expect(ultimo.copy.en.title).toBe("Last Answer Standing");
     expect(ultimo.copy.ka.title).toBe("ბოლომდე დარჩენილი");
-    expect(ultimo.copy.tr.title).toBe("Son Kalan Futbol");
+    expect(ultimo.copy.tr.title).toBe("Futbolcu Sayma Oyunu");
   });
 
   it("Último copy avoids free wording in every locale", () => {
@@ -84,9 +86,9 @@ describe("public games manifest", () => {
     for (const game of PUBLISHED_PUBLIC_GAMES.filter((g) => g.page)) {
       expect(publishedLocalesOf(game), game.slug).toEqual(["en", "ka", "es", "tr"]);
     }
-    expect(findPublishedGame("tr", "football-games", "auction")).not.toBeNull();
+    expect(findPublishedGame("tr", "futbol-oyunlari", "auction")).not.toBeNull();
     const auction = PUBLISHED_PUBLIC_GAMES.find((g) => g.slug === "auction")!;
-    expect(cardHref(auction, "tr")).toBe("/tr/football-games/auction");
+    expect(cardHref(auction, "tr")).toBe("/tr/futbol-oyunlari/auction");
     expect(cardHref(auction, "es")).toBe("/es/juegos-de-futbol/subasta");
   });
 
