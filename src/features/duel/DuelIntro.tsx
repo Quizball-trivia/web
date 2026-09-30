@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import type { DuelStatePayload } from "@/lib/realtime/socket.types";
 import type { DuelCopy } from "./duel.copy";
 import type { AvatarCustomization } from "@/types/game";
-import { SEAT_AVATAR_RING, SEAT_LABEL } from "./duel.seats";
+import { SEAT_LABEL } from "./duel.seats";
 import { DuelAvatar, seatAvatar } from "./DuelAvatar";
 
 const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
@@ -66,7 +66,7 @@ function Player({ name, avatar, side, ready, showReady }: { name: string; avatar
   return (
     <motion.div initial={{ x: side === "me" ? -24 : 24, opacity: 0 }} animate={{ x: 0, opacity: 1 }} className="flex min-w-0 flex-1 flex-col items-center gap-2">
       <span className="relative">
-        <DuelAvatar customization={avatar} size="lg" ringClassName={SEAT_AVATAR_RING[side]} />
+        <DuelAvatar customization={avatar} size="lg" />
         {showReady && ready && (
           <span className="absolute -bottom-1 -right-1 flex size-7 items-center justify-center rounded-full bg-brand-green text-black ring-2 ring-surface-page-alt"><Check className="size-4" strokeWidth={3} /></span>
         )}

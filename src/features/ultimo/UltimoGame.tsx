@@ -502,7 +502,7 @@ function Play({ locale, state, clock, pending, notice, feedback, onBegin, onSay,
       </header>
 
       <div className={cn("mt-3 flex items-center gap-3 rounded-2xl px-3 py-2 transition-colors", playing ? "bg-brand-green/15 ring-2 ring-brand-green" : "bg-white/[0.05]")}>
-        <DuelAvatar customization={avatar} size="xs" ringClassName="ring-brand-green" />
+        <DuelAvatar customization={avatar} size="xs" />
         <div className="min-w-0 flex-1">
           <p className="text-xs font-bold text-white/80">{c.you}</p>
           <p className="text-2xl font-black leading-none tabular-nums" style={poppins}>{livePoints}<span className="ml-1 text-xs font-bold text-white/55">{c.pts}</span></p>

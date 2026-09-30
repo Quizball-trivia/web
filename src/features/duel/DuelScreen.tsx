@@ -12,7 +12,7 @@ import { useRealtimePrincipal } from "@/lib/realtime/realtime-principal";
 import { useActiveDuelStore } from "@/stores/activeDuel.store";
 import type { DuelSeatPayload, DuelStatePayload } from "@/lib/realtime/socket.types";
 import { duelCopy, type DuelCopy } from "./duel.copy";
-import { SEAT_AVATAR_RING, SEAT_BG, SEAT_LABEL, SEAT_TEXT } from "./duel.seats";
+import { SEAT_BG, SEAT_LABEL, SEAT_TEXT } from "./duel.seats";
 import type { BuscaminasDuelView, PistasDuelView, Seat, UltimoDuelView } from "./duel.views";
 import { BuscaminasDuelBoard } from "./BuscaminasDuelBoard";
 import { PistasDuelBoard } from "./PistasDuelBoard";
@@ -223,7 +223,7 @@ function Scoreboard({ snapshot, names, turnSeat, copy }: { snapshot: DuelStatePa
         const side = me ? "me" : "rival";
         return (
           <div key={seat} className={cn("flex items-center gap-2.5 rounded-2xl px-3 py-2 transition-colors", turnSeat === seat ? SEAT_BG[side] : "bg-white/[0.05]", !me && "flex-row-reverse text-right")}>
-            <DuelAvatar size="xs" ringClassName={SEAT_AVATAR_RING[side]}
+            <DuelAvatar size="xs"
               customization={seatAvatar(snapshot.seats.find((s) => s.seat === seat) ?? { userId: `seat-${seat}`, avatarCustomization: null, avatarUrl: null, isGuest: true })} />
             <div className="min-w-0 flex-1">
               <p className={cn("truncate text-xs font-bold", SEAT_LABEL[side])}>{me ? copy.you : names[seat]}</p>
