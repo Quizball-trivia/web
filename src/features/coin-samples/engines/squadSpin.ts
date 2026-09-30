@@ -78,9 +78,12 @@ export function resolveSampleAnswer(
   const exact = candidates.find((c) => c.text === input);
   if (exact) return exact.player_id;
   const limit = typoDistanceLimit(input);
-  if (limit === 0) return null;
+  // Like live: short strings ("kane"/"mori") sit one edit from unrelated real
+  // players, so only inputs and candidates of length >= 5 absorb typos.
+  if (limit === 0 || input.length < 5) return null;
   let best: { playerId: string; distance: number } | null = null;
   for (const candidate of candidates) {
+    if (candidate.text.length < 5) continue;
     if (Math.abs(candidate.text.length - input.length) > limit) continue;
     const distance = levenshtein(input, candidate.text);
     if (distance <= limit && (!best || distance < best.distance)) best = { playerId: candidate.player_id, distance };
