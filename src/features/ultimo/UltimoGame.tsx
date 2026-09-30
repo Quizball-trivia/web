@@ -29,6 +29,8 @@ type View = "intro" | "play" | "end" | "archive";
 /** A dropped connection usually comes back within a second: wait briefly before re-syncing (turns can be six seconds). */
 const RECOVERY_DELAY_MS = 300;
 const RESYNC_TIMEOUT_MS = 4_000;
+/** While the connection is down, the run is re-fetched this often (and at once when the browser is back online). */
+const OFFLINE_RETRY_MS = 5_000;
 /** Answers a fast typist can have waiting behind the one in flight. */
 const MAX_QUEUED = 5;
 
@@ -100,12 +102,16 @@ export function UltimoGame({ locale, onExit, onEvent, initialDay, onDay }: {
   const expiryDueRef = useRef(false);
   /** The newest render's pump: timers and finished calls from older renders reach it (and its owner and day). */
   const pumpRef = useRef<() => void>(() => {});
+  /** A re-sync failed on the network every time: the run is fetched again once the browser is back online. */
+  const needsRecoveryRef = useRef(false);
+  const recoverRef = useRef<() => void>(() => {});
   const startedRef = useRef(false);
   const currentRef = useRef({ owner, day });
   useEffect(() => {
     currentRef.current = { owner, day };
     queueRef.current = [];
     expiryDueRef.current = false;
+    needsRecoveryRef.current = false;
   }, [owner, day]);
   useEffect(() => { runRef.current = run; }, [run]);
   const stillCurrent = (o: string, d: string) => currentRef.current.owner === o && currentRef.current.day === d;
@@ -195,6 +201,8 @@ export function UltimoGame({ locale, onExit, onEvent, initialDay, onDay }: {
     const code = error instanceof UltimoApiError ? error.message : null;
     const status = error instanceof UltimoApiError ? error.status : null;
     queueRef.current = [];
+    // The server answered: whatever it said, this is no longer a connection to wait for.
+    needsRecoveryRef.current = false;
     if (code === "day_over") {
       setToday((t) => (t > d ? t : addDays(d, 1)));
       setChosenDay(null);
@@ -227,7 +235,7 @@ export function UltimoGame({ locale, onExit, onEvent, initialDay, onDay }: {
     for (let attempt = 0; attempt < 3; attempt += 1) {
       try {
         const current = await ultimoApi.start(d, contentVersion, locale, RESYNC_TIMEOUT_MS);
-        if (stillCurrent(o, d)) { apply(current, o, d); setNotice(null); }
+        if (stillCurrent(o, d)) { needsRecoveryRef.current = false; apply(current, o, d); setNotice(null); }
         return;
       } catch (error) {
         if (!stillCurrent(o, d)) return;
@@ -236,8 +244,22 @@ export function UltimoGame({ locale, onExit, onEvent, initialDay, onDay }: {
         await new Promise((resolve) => window.setTimeout(resolve, RECOVERY_DELAY_MS * (attempt + 1)));
       }
     }
-    if (stillCurrent(o, d)) setNotice(c.actionError);
+    // Every try failed on the network: say so, and recover as soon as the connection is back.
+    if (stillCurrent(o, d)) { needsRecoveryRef.current = true; setNotice(c.connection); }
   };
+
+  const recover = () => {
+    if (!needsRecoveryRef.current || inFlightRef.current) return;
+    const { owner: o, day: d } = currentRef.current;
+    if (d) void exclusive("sync", () => resync(o, d));
+  };
+  useEffect(() => { recoverRef.current = recover; });
+  useEffect(() => {
+    const onBack = () => recoverRef.current();
+    window.addEventListener("online", onBack);
+    const timer = window.setInterval(onBack, OFFLINE_RETRY_MS);
+    return () => { window.removeEventListener("online", onBack); window.clearInterval(timer); };
+  }, []);
 
   /** Next in line once nothing is in flight: an expiry re-sync first (unless a move since reset the clock), then the typed answers in order. */
   const pump = () => {
