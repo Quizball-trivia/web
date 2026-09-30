@@ -291,18 +291,18 @@ function ResultCard({ snapshot, names, copy, onRoom, onExit }: { snapshot: DuelS
         <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-start gap-3 text-center">
           <div className="min-w-0">
             <p className="text-4xl font-black leading-none tabular-nums" style={poppins}>{result.scores[me]}</p>
-            <p className="mt-1 truncate text-xs font-bold uppercase text-white/75">{copy.you}</p>
+            <p className="mt-1 truncate text-xs font-bold uppercase text-white/85">{copy.you}</p>
           </div>
           <span className="text-4xl font-black leading-none text-white/40" style={poppins}>–</span>
           <div className="min-w-0">
             <p className="text-4xl font-black leading-none tabular-nums" style={poppins}>{result.scores[me === 0 ? 1 : 0]}</p>
-            <p className="mt-1 truncate text-xs font-bold uppercase text-white/75">{names[me === 0 ? 1 : 0]}</p>
+            <p className="mt-1 truncate text-xs font-bold uppercase text-white/85">{names[me === 0 ? 1 : 0]}</p>
           </div>
         </div>
       )}
       {reason && <p className="mt-3 text-center text-sm text-white/85">{reason}</p>}
       <button type="button" onClick={onRoom} className="mt-5 h-14 w-full rounded-full bg-brand-green text-base font-black uppercase tracking-wide text-white hover:bg-brand-green-deep" style={poppins}>{copy.result.backToRoom}</button>
-      <button type="button" onClick={onExit} className="mt-2 h-11 w-full rounded-full bg-white/15 text-sm font-bold uppercase text-white hover:bg-white/25" style={poppins}>{copy.result.exit}</button>
+      <button type="button" onClick={onExit} className="mt-2 h-11 w-full rounded-full bg-white/15 text-sm font-bold uppercase text-white hover:bg-white/20" style={poppins}>{copy.result.exit}</button>
     </motion.div>
     </>
   );
