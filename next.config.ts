@@ -139,6 +139,10 @@ const nextConfig: NextConfig = {
           { key: "X-Robots-Tag", value: "noindex, nofollow" },
         ],
       },
+      // Local development only: the games playground shows its preview page in a same-origin iframe.
+      ...(process.env.NODE_ENV === "development"
+        ? [{ source: "/dev/games/preview", headers: [{ key: "X-Frame-Options", value: "SAMEORIGIN" }] }]
+        : []),
     ];
   },
 };

@@ -36,6 +36,11 @@ export function RouteProviders({
     return <SeoProviders>{children}</SeoProviders>;
   }
 
+  // The local games playground renders game components from fixtures: no auth, profile, socket or analytics providers.
+  if (process.env.NODE_ENV === "development" && pathname?.startsWith("/dev/games")) {
+    return <>{children}</>;
+  }
+
   return (
     <FullProviders
       initialLocale={initialLocale}
