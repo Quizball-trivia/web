@@ -31,7 +31,7 @@ describe('public invite handoff', () => {
   it('offers the App Store only for production invitations', () => {
     vi.stubEnv('NEXT_PUBLIC_API_URL', 'https://api.quizball.io');
     render(<FriendInviteEntry />);
-    expect(screen.getByRole('link', { name: 'View on the App Store' })).toHaveAttribute('href', 'https://apps.apple.com/app/id6810230727');
+    expect(screen.getByRole('link', { name: 'View on the App Store' })).toHaveAttribute('href', 'https://apps.apple.com/app/id6817809479');
     expect(mobileInviteUrl('ab1234')).toContain('environment=production');
   });
   it('keeps signed-in players and host creation in the existing protected lobby flow', () => {
@@ -70,6 +70,9 @@ describe('public invite handoff', () => {
     const response = GET();
     expect(response.status).toBe(200);
     expect(response.headers.get('content-type')).toContain('application/json');
-    expect((await response.json()).applinks.details[0]).toEqual({ appID: 'D52VX5574L.io.quizball.mobile', paths: ['NOT /friend/room/new', '/friend/room/*', '/play'] });
+    expect((await response.json()).applinks.details).toEqual([
+      { appID: 'D52VX5574L.io.quizball.mobile', paths: ['NOT /friend/room/new', '/friend/room/*', '/play'] },
+      { appID: 'N9TWV36HUN.io.quizball.app', paths: ['NOT /friend/room/new', '/friend/room/*', '/play'] },
+    ]);
   });
 });

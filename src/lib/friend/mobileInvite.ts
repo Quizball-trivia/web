@@ -13,4 +13,4 @@ export function mobileInviteUrl(rawCode: string) {
   return code && code !== 'NEW' ? `quizball:///friend/room/${code}?environment=${inviteEnvironment()}` : null;
 }
 
-export const QUIZBALL_APP_STORE_URL = 'https://apps.apple.com/app/id6810230727';
+export const QUIZBALL_APP_STORE_URL = 'https://apps.apple.com/app/id6817809479';

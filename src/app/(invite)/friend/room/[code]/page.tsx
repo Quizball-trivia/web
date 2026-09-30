@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: { params: Promise<{ code: str
     title: 'Join your friend on Quizball',
     description: 'Open your Quizball invitation in the app or play in your browser.',
     robots: { index: false, follow: false },
-    ...(code && inviteEnvironment() === 'production' ? { itunes: { appId: '6810230727', appArgument: `${inviteWebOrigin()}/friend/room/${code}` } } : {}),
+    ...(code && inviteEnvironment() === 'production' ? { itunes: { appId: '6817809479', appArgument: `${inviteWebOrigin()}/friend/room/${code}` } } : {}),
   };
 }
 
