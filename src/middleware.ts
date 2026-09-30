@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { DEFAULT_LOCALE } from "@/lib/i18n/locale";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/locale";
 import { DAILY_CHALLENGE_SLUGS } from "@/lib/domain/dailyChallengeSlugs";
-import { PUBLIC_GAMES_FOLDER, dailyCollectionPath, gamePageSlug } from "@/lib/seo/game-pages";
+import { PUBLIC_GAMES_FOLDER, dailyCollectionPath, gamePageSlug, previousGamePagePaths } from "@/lib/seo/game-pages";
 import { PUBLISHED_PUBLIC_GAMES } from "@/lib/seo/public-games";
 import { API_BASE_URL } from "@/lib/config";
 import { canAccessDemos } from "@/lib/demos-access";
@@ -39,7 +39,20 @@ const REDIRECT_FROM_ROOT: Record<string, string> = {
   // Google sends "buscaminas futbolero" searches to this URL; that intent is the
   // player-card game, so it now lives there. Trivia Mines moved to minas-con-preguntas.
   "/es/juegos-de-futbol/minas-de-trivia": "/es/juegos-de-futbol/buscaminas-futbolero",
+  // Renamed pages (searched names, 2026-09-30): old ES slugs and the old TR folder.
+  ...previousGamePagePaths(PUBLISHED_PUBLIC_GAMES),
 };
+
+const GAME_FOLDERS = new Set(Object.values(PUBLIC_GAMES_FOLDER));
+
+// Next decodes route params, so /tr/football-games/%61uction used to render; match its redirect too.
+function decodedPath(pathname: string): string {
+  try {
+    return decodeURIComponent(pathname);
+  } catch {
+    return pathname;
+  }
+}
 
 function originFromEnv(name: string): string | null {
   const value = process.env[name]?.trim();
@@ -148,7 +161,7 @@ export async function middleware(req: NextRequest) {
     return res;
   }
 
-  const redirectTarget = REDIRECT_FROM_ROOT[pathname];
+  const redirectTarget = REDIRECT_FROM_ROOT[pathname] ?? REDIRECT_FROM_ROOT[decodedPath(pathname)];
   if (redirectTarget) {
     const url = req.nextUrl.clone();
     // Geo-aware landing locale: send visitors physically in Georgia to /ka,
@@ -164,11 +177,11 @@ export async function middleware(req: NextRequest) {
     return res;
   }
 
-  // A games folder belongs to exactly one locale (/en|ka/football-games,
-  // /es/juegos-de-futbol). The other combinations never existed: answer 404
+  // A games folder belongs to its own locales (/en|ka/football-games,
+  // /es/juegos-de-futbol, /tr/futbol-oyunlari). Other combinations answer 404
   // here, deterministically, instead of relying on a streamed notFound().
-  const folderMatch = pathname.match(/^\/(en|ka|es|tr)\/(football-games|juegos-de-futbol)(?:\/|$)/);
-  if (folderMatch && (folderMatch[1] === "es") !== (folderMatch[2] === "juegos-de-futbol")) {
+  const folderMatch = pathname.match(/^\/(en|ka|es|tr)\/([a-z-]+)(?:\/|$)/);
+  if (folderMatch && GAME_FOLDERS.has(folderMatch[2]) && PUBLIC_GAMES_FOLDER[folderMatch[1] as Locale] !== folderMatch[2]) {
     return new NextResponse("Not found", { status: 404, headers: { "Content-Type": "text/plain; charset=utf-8", "Content-Security-Policy": csp } });
   }
 
