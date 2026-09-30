@@ -754,7 +754,8 @@ function EndScreen({ locale, day, today, state, boardRefresh, guestOnPastBoard, 
       </div>
       <PlayWithFriendButton game="ultimo" locale={locale} className="mt-3" />
       <button type="button" onClick={onArchive} className="mt-3 h-11 rounded-full bg-white/10 text-sm font-bold uppercase tracking-wide text-white/85 hover:bg-white/15" style={poppins}>{c.intro.past}</button>
-      {isLiveDay(day, today) && <UltimoLeaderboard locale={locale} day={day} refreshKey={boardRefresh} placement="end" className="mt-6" />}
+      {/* Like Pistas: a past (or pre-launch) board ends on today's leaderboard, the one there is still a rank to win on. */}
+      <UltimoLeaderboard locale={locale} day={isLiveDay(day, today) ? day : undefined} refreshKey={boardRefresh} placement="end" className="mt-6" />
     </div>
   );
 }
