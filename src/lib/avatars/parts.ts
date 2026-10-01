@@ -49,6 +49,8 @@ export interface AvatarPart {
   name: string;
   asset: string;
   localOnly?: boolean;
+  /** Earned, never sold: hidden from the store and shown in the picker only once owned. */
+  rewardOnly?: boolean;
   group?: string;
   hideHair?: boolean;
   hairFrontPercent?: number;
@@ -687,8 +689,42 @@ export const JERSEY_DESIGN_PARTS: AvatarPart[] = [
   },
 ];
 
-export const JERSEY_PARTS: AvatarPart[] = [...JERSEY_COLOR_PARTS, ...JERSEY_DESIGN_PARTS];
+/** Weekend League podium jerseys ("Retro Playmaker" edition). Asset paths are
+ *  versioned and never overwritten, so past winners keep the art they earned. */
+export const REWARD_JERSEY_PARTS: AvatarPart[] = [
+  {
+    id: "jersey_wl_retro_home",
+    slot: "jersey",
+    name: "Retro Playmaker Home",
+    asset: "/assets/store/rewards/wl-retro-playmaker/home-v3.webp",
+    rewardOnly: true,
+    productSlug: "avatar_jersey_wl_retro_home",
+    position: { top: 43, left: 13, width: 70 },
+  },
+  {
+    id: "jersey_wl_retro_away",
+    slot: "jersey",
+    name: "Retro Playmaker Away",
+    asset: "/assets/store/rewards/wl-retro-playmaker/away-v2.webp",
+    rewardOnly: true,
+    productSlug: "avatar_jersey_wl_retro_away",
+    position: { top: 43, left: 13, width: 70 },
+  },
+  {
+    id: "jersey_wl_retro_training",
+    slot: "jersey",
+    name: "Retro Playmaker Training",
+    asset: "/assets/store/rewards/wl-retro-playmaker/training-v4.webp",
+    rewardOnly: true,
+    productSlug: "avatar_jersey_wl_retro_training",
+    position: { top: 41, left: 13, width: 70 },
+  },
+];
+
+export const JERSEY_PARTS: AvatarPart[] = [...JERSEY_COLOR_PARTS, ...JERSEY_DESIGN_PARTS, ...REWARD_JERSEY_PARTS];
 export const JERSEY_IDS = JERSEY_PARTS.map((part) => part.id) as readonly AvatarJerseyId[];
+/** For generated avatars (bots, placeholders): never an earn-only jersey. */
+export const RANDOM_JERSEY_IDS = JERSEY_PARTS.filter((part) => !part.rewardOnly).map((part) => part.id) as readonly AvatarJerseyId[];
 
 /** Default ids used when nothing's been configured yet. */
 export const DEFAULT_JERSEY_ID = "jersey_green";
