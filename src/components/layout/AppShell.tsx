@@ -10,6 +10,7 @@ import { AppShellPageChrome } from "./app-shell/AppShellPageChrome";
 import { AppShellLogoutDialog } from "./app-shell/AppShellLogoutDialog";
 import { AppShellBanners } from "./app-shell/AppShellBanners";
 import { EventAwardCeremony } from "@/components/shared/EventAwardCeremony";
+import { WlRewardCeremonyHost } from "@/features/weekend-league/rewards/WlRewardCeremonyHost";
 import { AppShellCurrencyPills } from "./app-shell/AppShellCurrencyPills";
 import { AppShellLobbyDebugBadge } from "./app-shell/AppShellLobbyDebugBadge";
 import { AppShellMobileBottomNav } from "./app-shell/AppShellMobileBottomNav";
@@ -187,6 +188,7 @@ export function AppShell({ children }: AppShellProps) {
             </div>
             <main className="xl:p-6">{children}</main>
             <EventAwardCeremony />
+            <WlRewardCeremonyHost />
           </div>
         </div>
       </div>

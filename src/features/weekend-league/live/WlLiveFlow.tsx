@@ -46,6 +46,8 @@ import { playBgm, stopBgm } from '@/lib/sounds/gameSounds';
 import { useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/queries/queryKeys';
 import { useWlLive, type WlLiveScreen, type WlLiveState } from './useWlLive';
+import { WlFinalRewards } from '../rewards/WlFinalRewards';
+import { rewardSession } from '../rewards/rewardSession';
 
 const WHO_AM_I_CLUES = 5;
 // Ranked-parity scoring (2026-08-25): the puzzle is worth one ranked
@@ -105,12 +107,28 @@ export interface WlLiveFlowUiProps {
    *  join the running game (missed check-in, window open). */
   lateJoinUntilMs?: number | null;
   onLateJoin?: () => void;
+  /** "Your rewards" block for the final result screen. The simulator omits it. */
+  finalRewards?: React.ReactNode;
 }
 
 export function WlLiveFlow({ tournamentId, ...ui }: WlLiveFlowUiProps & { tournamentId: string }) {
   const live = useWlLive(tournamentId, ui.role);
   const selfUserId = useAuthStore((s) => s.user?.id ?? null);
-  return <WlLiveFlowView live={live} selfUserId={selfUserId} {...ui} />;
+  // Rewards settle just after the final. A player's is tracked by the result
+  // screen's own rewards block; this covers eliminated players watching as
+  // spectators, who are owed one too and have no such block.
+  const watchedToTheEnd = live.screen.kind === 'final_result' && ui.role !== 'player';
+  useEffect(() => {
+    if (watchedToTheEnd && selfUserId) rewardSession.expect(tournamentId);
+  }, [watchedToTheEnd, selfUserId, tournamentId]);
+  return (
+    <WlLiveFlowView
+      live={live}
+      selfUserId={selfUserId}
+      finalRewards={ui.role === 'player' ? <WlFinalRewards tournamentId={tournamentId} /> : undefined}
+      {...ui}
+    />
+  );
 }
 
 /** The full live-game UI with an injectable driver — the real socket state in
@@ -134,6 +152,7 @@ export function WlLiveFlowView({
   lastGameRank,
   lateJoinUntilMs,
   onLateJoin,
+  finalRewards,
 }: WlLiveFlowUiProps & { live: WlLiveState; selfUserId: string | null }) {
   const { t, locale } = useLocale();
 
@@ -424,6 +443,7 @@ export function WlLiveFlowView({
             rankInfo={rankInfo}
             onExit={onExit}
             onSpectate={onSpectate ?? onExit}
+            finalRewards={finalRewards}
           />
         </motion.div>
       </AnimatePresence>
@@ -637,7 +657,7 @@ function Shell({ children, onExit }: { children: React.ReactNode; onExit: () => 
 
 
 function ScreenBody({
-  screen, role, locale, serverNow, submitAnswer, retryNonce, board, selfUserId, score, rank, breakUntilMs, moneyBudget, mdSheets, onMdSheet, lastResult, checkedInCount, checkedIn, currentGameIndex, lastGameRank, rankInfo, splashProps, onExit, onSpectate,
+  screen, role, locale, serverNow, submitAnswer, retryNonce, board, selfUserId, score, rank, breakUntilMs, moneyBudget, mdSheets, onMdSheet, lastResult, checkedInCount, checkedIn, currentGameIndex, lastGameRank, rankInfo, splashProps, onExit, onSpectate, finalRewards,
 }: {
   screen: WlLiveScreen;
   /** Score splash, rendered inside the round shell so it anchors to the
@@ -668,6 +688,7 @@ function ScreenBody({
   rankInfo: RankInfo | null;
   onExit: () => void;
   onSpectate: () => void;
+  finalRewards?: React.ReactNode;
 }) {
   const { t } = useLocale();
   const yourRank = rank ?? (selfUserId ? board.find((r) => r.user_id === selfUserId)?.rank ?? null : null);
@@ -862,7 +883,7 @@ function ScreenBody({
     case 'final_result': {
       const { champion } = screen;
       return (
-        <ChampionScreen champion={champion} finalRank={yourRank} score={score} onExit={onExit}>
+        <ChampionScreen champion={champion} finalRank={yourRank} score={score} onExit={onExit} rewards={finalRewards}>
           <BoardStrip board={board} selfUserId={selfUserId} rows={10} />
         </ChampionScreen>
       );

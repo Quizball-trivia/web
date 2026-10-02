@@ -312,7 +312,7 @@ export function AvatarPicker({
             )}
           </button>
 
-          {parts.filter((part) => localPreview || !part.localOnly).map((part) => {
+          {parts.filter((part) => (localPreview || !part.localOnly) && (!part.rewardOnly || ownedPartIds.has(part.id))).map((part) => {
             const owned = ownedPartIds.has(part.id);
             const selected = currentValue === part.id;
             return (

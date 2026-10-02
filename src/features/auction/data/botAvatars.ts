@@ -1,7 +1,7 @@
 import type { AvatarCustomization } from '@/types/game';
 import {
   SKIN_IDS,
-  JERSEY_IDS,
+  RANDOM_JERSEY_IDS,
   HAIR_IDS,
   GLASSES_IDS,
   FACIAL_HAIR_IDS,
@@ -36,7 +36,7 @@ export function randomBotAvatar(seed: string): AvatarCustomization {
   // always wore glasses + facial hair.
   const avatar: AvatarCustomization = {
     skin: pick(SKIN_IDS, h),
-    jersey: pick(JERSEY_IDS, h >>> 3),
+    jersey: pick(RANDOM_JERSEY_IDS, h >>> 3),
     hair: pick(HAIR_IDS, h >>> 7),
   };
   // ~40% of bots wear glasses, ~40% have facial hair — varied but not on everyone.

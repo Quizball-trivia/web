@@ -567,12 +567,15 @@ export function ChampionScreen({
   finalRank,
   score,
   onExit,
+  rewards,
   children,
 }: {
   champion: boolean;
   finalRank: number | null;
   score: number;
   onExit: () => void;
+  /** "Your rewards" slot, shown between the score and the board. */
+  rewards?: React.ReactNode;
   /** Board strip slot — the caller owns the standings data shape. */
   children?: React.ReactNode;
 }) {
@@ -598,6 +601,7 @@ export function ChampionScreen({
       <div className="mt-2 font-poppins text-[13px] font-black uppercase tracking-wide text-white/55">
         {t('weekendLeague.gTotalScore')} <span className="tabular-nums text-white">{score}</span>
       </div>
+      {rewards}
       {children}
       <button
         type="button"
