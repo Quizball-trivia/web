@@ -7,6 +7,7 @@ import { WlChampionUnlockOverlay } from '@/components/shared/WlChampionUnlockOve
 import { isWlAwardSlug, wlAwardWeekLabel } from '@/components/shared/WlChampionAchievementCard';
 import { useAckEventAward, useMyEventAwards } from '@/lib/queries/eventAwards.queries';
 import { useLocale } from '@/contexts/LocaleContext';
+import { rewardSession, useRewardSessionVersion } from '@/features/weekend-league/rewards/rewardSession';
 
 /**
  * Plays the one-time podium unlock ceremony after login: the first unseen
@@ -17,14 +18,19 @@ export function EventAwardCeremony() {
   const { data: awards } = useMyEventAwards();
   const ack = useAckEventAward();
   const [dismissedIds, setDismissedIds] = useState<string[]>([]);
+  useRewardSessionVersion();
 
   const pending = (awards ?? []).find(
     (award) => !award.seen && !dismissedIds.includes(award.id),
   );
-  if (!pending) return null;
+  // A badge that arrives while a Weekend League reward reveal is already on
+  // screen waits for it, so two full-screen ceremonies never overlap.
+  if (!pending || rewardSession.claimedBy() !== null) return null;
 
   const close = () => {
     setDismissedIds((ids) => [...ids, pending.id]);
+    // The Weekend League reward reveal waits its turn behind this ceremony.
+    rewardSession.noteBadgeDismissed(pending.id);
     ack.mutate(pending.id);
   };
   // Each event family keeps its own medal + ceremony; the queue/ack flow is

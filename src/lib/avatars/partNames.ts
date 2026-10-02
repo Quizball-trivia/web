@@ -5,6 +5,9 @@ import type { MessageKey } from "@/lib/i18n/messages";
 // jerseys are proper nouns and intentionally absent so they fall through to the
 // raw name. Shared by the store and the avatar picker so both translate alike.
 const PART_NAME_KEY_MAP: Record<string, MessageKey> = {
+  "Retro Playmaker Home": "wlRewards.jerseyHome",
+  "Retro Playmaker Away": "wlRewards.jerseyAway",
+  "Retro Playmaker Training": "wlRewards.jerseyTraining",
   "Chelsea": "store.collection_jersey_chelsea",
   "Tottenham": "store.collection_jersey_tottenham",
   "Benfica": "store.collection_jersey_benfica",

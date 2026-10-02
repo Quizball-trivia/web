@@ -15,7 +15,8 @@ describe('local store preview', () => {
       state = store.purchaseLocalPart(state, `avatar_${id}`);
       state = { ...state, customization: { ...state.customization, [slot]: id } };
     }
-    expect(state.coins).toBe(1935000);
+    // 2,000,000 - (kit 10,000 + hair 6,000 + glasses 4,000)
+    expect(state.coins).toBe(1980000);
     expect(store.purchaseLocalPart(state, 'avatar_jersey_celtic')).toBe(state);
     expect(store.readLocalStore(store.serializeLocalStore(state))).toEqual(state);
   });
