@@ -138,7 +138,7 @@ const en: LocaleCopy = {
       },
       {
         title: "6. Data Retention and Deletion",
-        body: "You can request deletion of your QuizBall account and associated personal data by signing in, opening Settings, going to Account & Safety, and selecting Delete Account. Your account is disabled immediately and scheduled for deletion. You may also contact us at privacy@quizball.com for help with deletion requests.",
+        body: "You can request deletion of your QuizBall account and associated personal data by signing in, opening Settings, going to Account & Safety, and selecting Delete Account. Your account is disabled immediately and scheduled for deletion. You may also contact us at nika@quizball.io for help with deletion requests.",
       },
     ],
   },
@@ -251,7 +251,7 @@ const ka: LocaleCopy = {
       },
       {
         title: "6. მონაცემთა შენახვა და წაშლა",
-        body: "თქვენ შეგიძლიათ მოითხოვოთ თქვენი QuizBall ანგარიშისა და მასთან დაკავშირებული პერსონალური მონაცემების წაშლა: შედით ანგარიშში, გახსენით Settings, გადადით Account & Safety განყოფილებაში და აირჩიეთ Delete Account. თქვენი ანგარიში დაუყოვნებლივ გაითიშება და დაიგეგმება წაშლისთვის. წაშლის მოთხოვნებთან დაკავშირებით დახმარებისთვის ასევე შეგიძლიათ დაგვიკავშირდეთ მისამართზე privacy@quizball.com.",
+        body: "თქვენ შეგიძლიათ მოითხოვოთ თქვენი QuizBall ანგარიშისა და მასთან დაკავშირებული პერსონალური მონაცემების წაშლა: შედით ანგარიშში, გახსენით Settings, გადადით Account & Safety განყოფილებაში და აირჩიეთ Delete Account. თქვენი ანგარიში დაუყოვნებლივ გაითიშება და დაიგეგმება წაშლისთვის. წაშლის მოთხოვნებთან დაკავშირებით დახმარებისთვის ასევე შეგიძლიათ დაგვიკავშირდეთ მისამართზე nika@quizball.io.",
       },
     ],
   },
@@ -363,7 +363,7 @@ const es: LocaleCopy = {
       },
       {
         title: "6. Retención y eliminación de datos",
-        body: "Puedes solicitar la eliminación de tu cuenta de QuizBall y los datos personales asociados iniciando sesión, abriendo Configuración, entrando en Cuenta y seguridad y seleccionando Eliminar cuenta. Tu cuenta se deshabilita inmediatamente y se programa para su eliminación. También puedes contactarnos en privacy@quizball.io para obtener ayuda.",
+        body: "Puedes solicitar la eliminación de tu cuenta de QuizBall y los datos personales asociados iniciando sesión, abriendo Configuración, entrando en Cuenta y seguridad y seleccionando Eliminar cuenta. Tu cuenta se deshabilita inmediatamente y se programa para su eliminación. También puedes contactarnos en nika@quizball.io para obtener ayuda.",
       },
     ],
   },
@@ -475,7 +475,7 @@ const tr: LocaleCopy = {
       },
       {
         title: "6. Verilerin Saklanması ve Silinmesi",
-        body: "QuizBall hesabının ve ilişkili kişisel verilerinin silinmesini, giriş yapıp Ayarlar'ı açarak, Hesap ve Güvenlik bölümüne gidip Hesabı Sil'i seçerek talep edebilirsin. Hesabın hemen devre dışı bırakılır ve silinmek üzere planlanır. Silme talepleriyle ilgili yardım için privacy@quizball.com adresinden de bize ulaşabilirsin.",
+        body: "QuizBall hesabının ve ilişkili kişisel verilerinin silinmesini, giriş yapıp Ayarlar'ı açarak, Hesap ve Güvenlik bölümüne gidip Hesabı Sil'i seçerek talep edebilirsin. Hesabın hemen devre dışı bırakılır ve silinmek üzere planlanır. Silme talepleriyle ilgili yardım için nika@quizball.io adresinden de bize ulaşabilirsin.",
       },
     ],
   },
