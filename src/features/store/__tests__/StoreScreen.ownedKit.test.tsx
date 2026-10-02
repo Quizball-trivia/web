@@ -97,3 +97,14 @@ describe("StoreScreen: owned kit with a wallet below its price", () => {
     expect(screen.getByRole("button", { name: "store.needMoreCoins" })).toBeDisabled();
   });
 });
+
+describe("StoreScreen: section order", () => {
+  it("lists kits straight after tickets, ahead of the smaller cosmetics", () => {
+    renderStore();
+    const titles = screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent);
+    const at = (key: string) => titles.indexOf(key);
+
+    expect(at("store.jerseysTitle")).toBe(at("store.ticketsTitle") + 1);
+    expect(at("store.jerseysTitle")).toBeLessThan(at("store.hairTitle"));
+  });
+});

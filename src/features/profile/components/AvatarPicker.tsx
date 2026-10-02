@@ -276,6 +276,13 @@ export function AvatarPicker({
     </div>
   );
 
+  /** What a slot's grid lists: earned (never sold) parts only once owned, and
+   *  those first, so a Weekend League jersey is not buried under sixty kits. */
+  const visibleParts = (parts: AvatarPart[]) => {
+    const listed = parts.filter((part) => (localPreview || !part.localOnly) && (!part.rewardOnly || ownedPartIds.has(part.id)));
+    return [...listed.filter((part) => part.rewardOnly), ...listed.filter((part) => !part.rewardOnly)];
+  };
+
   /** Generic owned-parts grid for jersey/hair/glasses/facialHair. */
   const renderSlotGrid = (
     slot: AvatarSlot,
@@ -312,9 +319,10 @@ export function AvatarPicker({
             )}
           </button>
 
-          {parts.filter((part) => (localPreview || !part.localOnly) && (!part.rewardOnly || ownedPartIds.has(part.id))).map((part) => {
+          {visibleParts(parts).map((part) => {
             const owned = ownedPartIds.has(part.id);
             const selected = currentValue === part.id;
+            const earned = Boolean(part.rewardOnly);
             return (
               <button
                 key={part.id}
@@ -323,9 +331,14 @@ export function AvatarPicker({
                 onClick={() => handleSelectPart(slot, part)}
                 className="group relative flex flex-col items-center gap-2 rounded-2xl bg-surface-card py-3 transition-all active:translate-y-[1px]"
                 style={{
-                  border: `2px solid ${selected ? PURPLE : "rgba(255,255,255,0.1)"}`,
+                  border: `2px solid ${selected ? PURPLE : earned ? "rgba(255,215,0,0.55)" : "rgba(255,255,255,0.1)"}`,
                 }}
               >
+                {earned && (
+                  <span className="absolute -top-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-brand-gold px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-black">
+                    {t("wlRewards.eyebrow")}
+                  </span>
+                )}
                 <div className="relative flex size-20 sm:size-24 items-center justify-center">
                   <Image
                     src={part.asset}
@@ -342,7 +355,7 @@ export function AvatarPicker({
                   )}
                 </div>
                 <div className="flex items-center gap-1">
-                  <span className="max-w-[96px] text-center text-[10px] font-black uppercase tracking-wider leading-tight text-white/70 line-clamp-2">
+                  <span className={`max-w-[96px] text-center text-[10px] font-black uppercase tracking-wider leading-tight ${earned ? "text-brand-gold" : "text-white/70 line-clamp-2"}`}>
                     {translatePartName(part.name, t)}
                   </span>
                   {!owned && partPriceCoins(part) && (
