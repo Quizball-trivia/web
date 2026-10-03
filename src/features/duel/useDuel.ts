@@ -166,6 +166,14 @@ export function useDuel(matchId: string) {
   /** `shows`: when the board may take the next command — the input waits for the state, not just the acknowledgement. */
   const send = useCallback((command: DuelCommand, shows?: ShowsCommand) => {
     if (!socket) return;
+    // A retry replaces an unanswered Minuto guess locally; reconnect must not send both guesses for the round.
+    if (command.type === "guess" && "minute" in command) {
+      for (const [id, entry] of pending.current) {
+        if (entry.command.type !== "guess" || !("minute" in entry.command) || entry.command.round !== command.round) continue;
+        if (entry.live) return;
+        pending.current.delete(id);
+      }
+    }
     const commandId = createRealtimeCommandId();
     pending.current.set(commandId, { command, shows, live: true, attempt: 0 });
     recount();

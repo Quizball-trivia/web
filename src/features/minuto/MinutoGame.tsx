@@ -333,12 +333,12 @@ export function MinutoGame({ locale, onExit, onEvent, initialDay, onDay }: {
     }).catch(() => {});
   };
   const onDayRef = useRef(onDay);
-  onDayRef.current = onDay;
+  useEffect(() => { onDayRef.current = onDay; });
   useEffect(() => { if (day) onDayRef.current?.(day); }, [day]);
 
   // The resume goes through /start like a click, so the server state (another tab, a correction) wins over the cache.
   const startLatest = useRef(start);
-  startLatest.current = start;
+  useEffect(() => { startLatest.current = start; });
   useEffect(() => {
     if (view !== "intro" || pending || !day || resumeKey !== `${owner}:${day}`) return;
     setResumeKey(null);
