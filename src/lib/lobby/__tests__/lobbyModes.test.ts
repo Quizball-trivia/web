@@ -43,8 +43,9 @@ describe("lobby mode capability map (web mirror)", () => {
   });
 
   it("every duel game has a label", () => {
-    expect(DUEL_GAMES).toEqual(["buscaminas", "pistas", "ultimo"]);
+    expect(DUEL_GAMES).toEqual(["buscaminas", "pistas", "ultimo", "minuto"]);
     expect(DUEL_GAME_LABEL_KEYS.ultimo).toBe("friend.duelUltimo");
+    expect(DUEL_GAME_LABEL_KEYS.minuto).toBe("friend.duelMinuto");
     for (const game of DUEL_GAMES) expect(DUEL_GAME_LABEL_KEYS[game]).toBeTruthy();
   });
 
