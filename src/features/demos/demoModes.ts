@@ -40,6 +40,17 @@ const HIDDEN_DEMO_MODES: DemoModeCard[] = [
     group: "daily",
   },
   {
+    slug: "minuto",
+    title: { en: "What Minute?", ka: "რომელ წუთზე?", es: "¿En qué minuto?", tr: "Kaçıncı Dakika?", },
+    description: {
+      en: "10 famous goals a day: guess the minute each one went in.",
+      ka: "დღეში 10 ცნობილი გოლი: გამოიცანი, რომელ წუთზე გავიდა.",
+      es: "10 goles famosos por día: adiviná en qué minuto entró cada uno.",
+      tr: "Her gün 10 ünlü gol: kaçıncı dakikada atıldığını tahmin et.",
+    },
+    group: "daily",
+  },
+  {
     slug: "ultimo",
     title: { en: "Last Answer Standing", ka: "ბოლომდე დარჩენილი", es: "Último en pie futbolero", tr: "Futbolcu Sayma Oyunu", },
     description: {

@@ -66,12 +66,15 @@ const LOCALIZED_SLUGS: Record<string, Partial<Record<Locale, string>>> = {
   "football-minesweeper": { es: "buscaminas-futbolero", tr: "futbol-mayin-tarlasi" },
   "football-clues": { es: "pistas-futboleras", tr: "futbolcu-tahmin-etme-oyunu" },
   "last-answer-standing": { es: "ultimo-en-pie-futbolero", tr: "futbolcu-sayma-oyunu" },
+  "guess-the-goal-minute": { es: "adivina-el-minuto-exacto-del-gol", tr: "gol-dakikasi-tahmin-oyunu" },
   "squad-spin": { es: "ruleta-futbolera", tr: "futbol-carki" },
 };
 
 /** Earlier ES slugs; the middleware 308s them so indexed pages keep their ranking. */
 const PREVIOUS_SLUGS: Record<string, Partial<Record<Locale, string>>> = {
   "higher-or-lower": { es: "mas-o-menos" },
+  // The in-game title ("¿En qué minuto?") as a second address: it 308s to the one page that ranks.
+  "guess-the-goal-minute": { es: "en-que-minuto-futbolero" },
   "missing-xi": { es: "once-perdido" },
   "pass-chain": { es: "cadena-de-pases" },
   "stat-sniper": { es: "francotirador-de-datos" },
@@ -873,6 +876,40 @@ export const GAME_PAGES: GamePageEntry[] = [
       intro: "Gizli bir futbolcu ve zordan kolaya giden on ipucu. İpuçlarını tek tek aç, bildiğinde soyadını yaz ve oyuncu başına 10 puana kadar kazan.",
       howToPlay: ["İlk ipucu bedava.", "Açtığın her ipucu oyundaki puanı 10'dan 1'e düşürür.", "Soyadını yaz. Yanlış tahminden sonra 1 hakkın ve en fazla 3 ipucun kalır.", "Günde on oyuncu, en fazla 100 puan."],
       reward: "Önceki günleri hesapsız oyna; bugünün ipuçları, seri ve günün sıralaması için giriş yap.",
+    },
+  }),
+  mode("guess-the-goal-minute", "/minuto", "minuto", {
+    en: {
+      metaTitle: "Guess the Minute of the Goal — What Minute? Football Quiz | QuizBall",
+      metaDescription: "An online football game: 10 famous goals a day from the World Cup, the Champions League and the Copa América. Guess the minute each goal went in: the exact minute scores 3 points. Play alone or 1v1 with a friend.",
+      title: "Guess the Minute of the Goal",
+      intro: "A famous goal, the match and the scorer: you say the minute. Ten goals a day from World Cup finals, Champions League nights and Copa América classics. The exact minute is worth 3 points, a near miss still scores, and you can challenge a friend to a 1v1 duel where the closest guess wins the goal.",
+      howToPlay: ["Read the card: the match, the final score, the stage and who scored.", "Type the minute you think the goal went in. Added time counts on: 90+3 is minute 93.", "Exact minute: 3 points. Within 2 minutes: 2. Within 5: 1.", "Ten goals a day, 30 points at most. Share your ten squares or duel a friend 1v1."],
+      reward: "Play past days without an account; sign in for today's goals, your streak and the daily leaderboard.",
+    },
+    ka: {
+      metaTitle: "გამოიცანი გოლის წუთი — რომელ წუთზე? საფეხბურთო ქვიზი | QuizBall",
+      metaDescription: "ონლაინ საფეხბურთო თამაში: დღეში 10 ცნობილი გოლი მსოფლიო ჩემპიონატიდან, ჩემპიონთა ლიგიდან და კოპა ამერიკიდან. გამოიცანი, რომელ წუთზე გავიდა თითოეული. ითამაშე მეგობართანაც.",
+      title: "გამოიცანი გოლის წუთი",
+      intro: "ცნობილი გოლი, მატჩი და ავტორი: შენ ასახელებ წუთს. დღეში ათი გოლი მსოფლიო ჩემპიონატის ფინალებიდან, ჩემპიონთა ლიგიდან და კოპა ამერიკიდან. ზუსტი წუთი 3 ქულაა, ახლოს მოხვედრაც ითვლება, ხოლო მეგობართან დუელში უახლოესი პასუხი იგებს გოლს.",
+      howToPlay: ["წაიკითხე ბარათი: მატჩი, საბოლოო ანგარიში, ეტაპი და გოლის ავტორი.", "ჩაწერე წუთი, როცა გოლი გავიდა. დამატებითი დრო ემატება: 90+3 არის 93-ე წუთი.", "ზუსტი წუთი: 3 ქულა. 2 წუთის სიზუსტით: 2. 5 წუთის სიზუსტით: 1.", "დღეში ათი გოლი, მაქსიმუმ 30 ქულა. გააზიარე შედეგი ან გამოიწვიე მეგობარი."],
+      reward: "წინა დღეები ანგარიშის გარეშე ითამაშე; დღევანდელისთვის, სერიისა და დღის რეიტინგისთვის შედი ანგარიშში.",
+    },
+    es: {
+      metaTitle: "Adivina el minuto exacto del gol — ¿En qué minuto? futbolero | QuizBall",
+      metaDescription: "Juego online de fútbol: 10 goles famosos por día del Mundial, la Champions y la Copa América. Adiviná en qué minuto entró cada gol: el minuto exacto vale 3 puntos. Jugá solo o 1 vs 1 con un amigo.",
+      title: "Adivina el minuto exacto del gol",
+      intro: "¿En qué minuto? Un gol famoso, el partido y el goleador: vos decís el minuto. Diez goles por día de finales del Mundial, noches de Champions y clásicos de la Copa América. El minuto exacto vale 3 puntos, quedar cerca también suma, y podés desafiar a un amigo a un duelo 1 vs 1 donde el que más se acerca se lleva el gol.",
+      howToPlay: ["Mirá la tarjeta: el partido, el resultado final, la instancia y quién hizo el gol.", "Escribí el minuto en que creés que entró. El tiempo añadido se suma: 90+3 es el minuto 93.", "Minuto exacto: 3 puntos. A 2 minutos o menos: 2. A 5 o menos: 1.", "Diez goles por día, 30 puntos como máximo. Compartí tus diez cuadraditos o jugá 1 vs 1 con un amigo."],
+      reward: "Sin cuenta jugás los días anteriores; con tu cuenta, los goles de hoy, tu racha y el ranking del día.",
+    },
+    tr: {
+      metaTitle: "Gol Dakikası Tahmin Oyunu — Kaçıncı Dakika? | QuizBall",
+      metaDescription: "Online futbol oyunu: her gün Dünya Kupası, Şampiyonlar Ligi ve Copa América'dan 10 ünlü gol. Her golün kaçıncı dakikada atıldığını tahmin et: tam dakika 3 puan. Tek başına ya da bir arkadaşınla 1'e 1 oyna.",
+      title: "Gol Dakikası Tahmin Oyunu",
+      intro: "Ünlü bir gol, maç ve golü atan: dakikayı sen söylersin. Her gün Dünya Kupası finallerinden, Şampiyonlar Ligi gecelerinden ve Copa América klasiklerinden on gol. Tam dakika 3 puan, yakın tahmin de puan getirir; bir arkadaşınla 1'e 1 düelloda en yakın tahmin golü kazanır.",
+      howToPlay: ["Kartı oku: maç, final skoru, tur ve golü atan.", "Golün atıldığını düşündüğün dakikayı yaz. Uzatma eklenir: 90+3, 93. dakikadır.", "Tam dakika: 3 puan. En fazla 2 dakika fark: 2. En fazla 5 dakika fark: 1.", "Günde on gol, en fazla 30 puan. Sonucunu paylaş ya da bir arkadaşınla 1'e 1 oyna."],
+      reward: "Önceki günleri hesapsız oyna; bugünün golleri, seri ve günün sıralaması için giriş yap.",
     },
   }),
   mode("last-answer-standing", "/ultimo", "ultimo", {

@@ -66,8 +66,24 @@ export interface UltimoDuelView {
   results: Array<{ winner: Seat | null; reason: "time" | "misses" | "complete"; said: number; named: [number, number] }>;
 }
 
+/** "¿En qué minuto?": the goal card (never its minute before the reveal), your own guess, and only whether the rival answered. */
+export interface MinutoDuelView {
+  phase: "guess" | "reveal" | "over";
+  round: number;
+  totalRounds: number;
+  goal: import("@/features/minuto/minuto.logic").MinutoGoalCard;
+  me: { answered: boolean; guess: number | null } | null;
+  rival: { answered: boolean } | null;
+  answered: [boolean, boolean];
+  settled: { guesses: [number | null, number | null]; answer: { base: number; added: number }; points: Scores } | null;
+  results: Array<{ guesses: [number | null, number | null]; answer: { base: number; added: number }; points: Scores }>;
+  scores: Scores;
+  idle: [number, number];
+}
+
 export type DuelCommand =
   | { type: "pick"; round: number; at: number; cardId: string }
   | { type: "guess"; round: number; text: string }
   | { type: "pass"; round: number; clue: number }
-  | { type: "answer"; cat: number; k: number; text: string };
+  | { type: "answer"; cat: number; k: number; text: string }
+  | { type: "guess"; round: number; minute: number };
