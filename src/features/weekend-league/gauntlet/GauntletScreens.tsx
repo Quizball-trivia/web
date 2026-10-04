@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Check, Crown, Eye, Play, Trophy, Users } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useLocale } from '@/contexts/LocaleContext';
+import { formatStageWhen, useWlKickoffTimes, useWlTimeZone } from '../wlTime';
 import { useWeekendLeaguePrizes } from '../use-weekend-league-prizes';
 import { poppins } from '../constants';
 import { LeagueCountdown } from '../components/LeagueCountdown';
@@ -426,7 +427,9 @@ export function GameResult({
 }) {
   void onContinue; // break auto-advances; the explicit CTA was removed (owner)
 
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const timeZone = useWlTimeZone();
+  const kickoff = useWlKickoffTimes();
   const prizes = useWeekendLeaguePrizes();
   if (survived && isLastGame) {
     return (
@@ -448,7 +451,7 @@ export function GameResult({
           </div>
         )}
         <div className="mt-4 space-y-1 font-poppins text-[13px] font-black uppercase tracking-wide text-white/60">
-          <div>{t('weekendLeague.gSunday')}</div>
+          <div>{t('weekendLeague.gSunday', { when: formatStageWhen(kickoff.finalMs, locale, timeZone) })}</div>
           <div>{t('weekendLeague.gFinalists', { n: game.advance })}</div>
           <div className="flex items-center justify-center gap-1.5 text-brand-gold">
             <Trophy className="size-4" strokeWidth={2.5} /> {t(prizes.championRewardKey)}

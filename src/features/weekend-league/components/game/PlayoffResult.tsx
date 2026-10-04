@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'motion/react';
+import { useLocale } from '@/contexts/LocaleContext';
 import { TierFrameAvatar } from '@/components/TierFrameAvatar';
 import { poppins } from '../../constants';
 import type { LeaguePlayer } from '../../types';
@@ -22,13 +23,14 @@ export function PlayoffResult({
   won: boolean;
   onContinue: () => void;
 }) {
+  const { t } = useLocale();
   const isFinal = round.nextName === null;
   const champion = won && isFinal;
 
   const headline = champion ? '🏆 Champion!' : won ? 'You won!' : 'Knocked out';
   const headlineColor = won ? 'text-brand-gold' : 'text-brand-red-soft';
   const verdict = champion
-    ? 'You won the Weekend League. Prizes are on the way.'
+    ? t('weekendLeague.prizesPayoutNote')
     : won
       ? `Through to the ${round.nextName}.`
       : `You finish ${round.eliminationPlacement}. So close.`;

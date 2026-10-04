@@ -66,7 +66,7 @@ export function VariantProgressStrip() {
         <div className="flex shrink-0 items-center gap-4">
           <div className="flex items-center gap-1.5 text-white/70">
             <Clock className="size-4 text-brand-yellow" />
-            <span className="text-sm uppercase" style={poppins}>Sat 14:00</span>
+            <span className="text-sm uppercase" style={poppins}>Sat</span>
           </div>
           <span
             className="flex h-10 items-center gap-2 rounded-[8px] bg-brand-green-light px-4 text-[13px] uppercase tracking-wide text-black"
@@ -113,7 +113,7 @@ export function VariantTicketLedge() {
 
         <div className="shrink-0 text-right">
           <div className="text-sm uppercase text-brand-yellow lg:text-base" style={poppins}>
-            Sat 14:00
+            Sat
           </div>
           <span
             className="mt-2 flex h-10 items-center justify-center gap-1.5 rounded-[8px] bg-brand-green-light px-4 text-[13px] uppercase tracking-wide text-black"
@@ -161,7 +161,7 @@ export function VariantBigNumber() {
             Weekend League
           </h2>
           <p className="mt-1.5 text-[12px] uppercase tracking-wide text-white/55 lg:text-sm" style={poppins}>
-            Sat 14:00 · Win ranked to earn QP
+            Sat · Win ranked to earn QP
           </p>
           <div className="mt-3 h-1.5 max-w-md overflow-hidden rounded-full bg-white/10">
             <div className="h-full rounded-full bg-brand-green-light" style={{ width: `${PCT}%` }} />
@@ -209,7 +209,7 @@ export function VariantMinimalRail() {
         </div>
 
         <span className="whitespace-nowrap text-[13px] uppercase text-brand-yellow" style={poppins}>
-          Sat 14:00
+          Sat
         </span>
         <ArrowRight className="size-4 shrink-0 text-white/70 transition-transform group-hover:translate-x-0.5" />
       </div>
@@ -250,7 +250,7 @@ export function VariantMinimalRailNavy() {
         </div>
 
         <span className="whitespace-nowrap text-[13px] uppercase text-brand-yellow" style={poppins}>
-          Sat 14:00
+          Sat
         </span>
         <ArrowRight className="size-4 shrink-0 text-white/50 transition-transform group-hover:translate-x-0.5" />
       </div>

@@ -50,7 +50,7 @@ export function QualifierResult({
         </div>
         <p className="mx-auto mt-1 max-w-xs font-poppins text-[13px] font-semibold text-white/60">
           {qualified
-            ? `You're in the top ${PLAYOFF_CUTOFF}. Come back Sunday 14:00 for the knockout.`
+            ? `You're in the top ${PLAYOFF_CUTOFF}. Come back Sunday for the knockout.`
             : `Only the top ${PLAYOFF_CUTOFF} advance. Enter again next week and go one better.`}
         </p>
       </div>

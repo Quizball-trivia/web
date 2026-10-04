@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { ChevronDown, ChevronUp, Eye, X } from 'lucide-react';
 import { motion } from 'motion/react';
 import { useLocale } from '@/contexts/LocaleContext';
+import { formatStageWhen, useWlKickoffTimes, useWlTimeZone } from '../wlTime';
 import { poppins } from '../constants';
 import {
   answerDistribution,
@@ -35,7 +36,9 @@ const SPECTATOR_BREAK_SECONDS = 20;
  * the prototype simulates both modes (the badge changes, the sim is local).
  */
 export function SpectatorFlow({ onExit }: { onExit: () => void }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const timeZone = useWlTimeZone();
+  const kickoff = useWlKickoffTimes();
   const [screen, setScreen] = useState<SpectatorScreen>('lobby');
   const [gameIndex, setGameIndex] = useState(0);
   const [roundIndex, setRoundIndex] = useState(0);
@@ -215,7 +218,7 @@ export function SpectatorFlow({ onExit }: { onExit: () => void }) {
                   {t('weekendLeague.sQualifierComplete')}
                 </div>
                 <div className="mx-auto mt-2 max-w-sm font-poppins text-[15px] font-black uppercase leading-snug tracking-wide text-white/70">
-                  {t('weekendLeague.sTop25Final')}
+                  {t('weekendLeague.sTop25Final', { when: formatStageWhen(kickoff.finalMs, locale, timeZone) })}
                 </div>
                 <button
                   type="button"

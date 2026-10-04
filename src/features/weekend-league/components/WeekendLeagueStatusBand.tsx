@@ -86,7 +86,7 @@ interface WeekendLeagueStatusBandProps {
 export function WeekendLeagueStatusBand({
   qp = 650,
   status = 'qualifying',
-  kickoffLabel = 'SAT 14:00',
+  kickoffLabel = 'SAT',
   leagueHref = '/events?tab=weekend-league',
   onPlayRanked,
 }: WeekendLeagueStatusBandProps) {

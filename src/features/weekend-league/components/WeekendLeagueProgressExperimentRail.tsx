@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useLocale } from '@/contexts/LocaleContext';
+import { formatStageWhen, useWlKickoffTimes, useWlTimeZone } from '../wlTime';
 import { getWeekendLeagueCurrent } from '@/lib/api/endpoints';
 import { trackWeekendLeagueProgressRail } from '@/lib/analytics/game-events';
 import {
@@ -28,7 +29,9 @@ function formatCountdown(remainingMs: number): string {
 }
 
 export function WeekendLeagueProgressExperimentRail() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const timeZone = useWlTimeZone();
+  const kickoff = useWlKickoffTimes();
   const country = useAuthStore((state) => state.user?.country);
   const createdAt = useAuthStore((state) => state.user?.created_at);
   const isGeorgia = country?.trim().toUpperCase() === 'GE';
@@ -133,7 +136,7 @@ export function WeekendLeagueProgressExperimentRail() {
         state={state}
         currentQp={analyticsProps.currentQp}
         targetQp={analyticsProps.targetQp}
-        countdownLabel={targetAt ? formatCountdown(remainingMs) : t('weekendLeague.qualifierShort')}
+        countdownLabel={targetAt ? formatCountdown(remainingMs) : (kickoff.fromRow ? formatStageWhen(kickoff.qualifierMs, locale, timeZone) : t('weekendLeague.railSeeTimes'))}
       />
     </div>
   );
