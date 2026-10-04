@@ -68,6 +68,9 @@ export function RankFrameCard({
       : tierLabel.length <= 12
         ? "text-[10.5cqw]"
         : "text-[9cqw]";
+  // A Weekend League frame's laurels narrow the label zone.
+  const framedNameSize =
+    tierLabel.length <= 7 ? "text-[12cqw]" : tierLabel.length <= 12 ? "text-[9.5cqw]" : "text-[8cqw]";
   // Single-word names (WORLD-CLASS, STARTING11) must stay on one line per
   // Figma — hyphens would otherwise create a break point. Multi-word names
   // (e.g. Georgian "ახალგაზრდა ტალანტი") are allowed to wrap to two lines.
@@ -121,7 +124,7 @@ export function RankFrameCard({
           className={cn(
             "mt-[3.5cqw] max-w-[92%] font-poppins font-semibold uppercase leading-none text-white [text-shadow:0_1.9cqw_1cqw_rgba(0,0,0,0.25)]",
             singleWord && "whitespace-nowrap",
-            nameSize,
+            framePlace ? framedNameSize : nameSize,
           )}
         >
           {tierLabel}
