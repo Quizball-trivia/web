@@ -130,7 +130,7 @@ export function MinutoDuelBoard({ view, mySeat, names, avatars, copy, locale, fi
       </div>
 
       <SeatMinute name={copy.you} heading={c.minuteBox} answered={meAnswered || myGuess !== null} minute={myGuess} revealed={Boolean(settled)} side="me" points={settled ? settled.points[mySeat] : null}
-        status={settled ? (myGuess === null ? copy.md.noAnswer : `${myGuess}'`) : meAnswered ? copy.md.answered : copy.md.thinking}
+        status={settled ? (myGuess === null ? copy.md.noAnswer : `${myGuess}'`) : myGuess !== null ? `${myGuess}'` : meAnswered ? copy.md.answered : copy.md.thinking}
         className="relative col-start-1 row-start-2 lg:mx-4" />
       <SeatMinute name={names[rival]} heading={c.minuteBox} answered={rivalAnswered || theirGuess !== null} minute={theirGuess} revealed={Boolean(settled)} side="rival" points={settled ? settled.points[rival] : null}
         status={settled ? (theirGuess === null ? copy.md.noAnswer : `${theirGuess}'`) : rivalAnswered ? copy.md.answered : copy.md.thinking}
