@@ -35,11 +35,13 @@ import { queryKeys } from "@/lib/queries/queryKeys";
 import { ApiError } from "@/lib/api/api";
 import { useLocale } from "@/contexts/LocaleContext";
 import { translatePartName } from "@/lib/avatars/partNames";
+import { WL_FRAME_PARTS, wlFramePlace } from "@/lib/avatars/frames";
+import { WlFrameArt, WlFrameAvatar } from "@/features/weekend-league/rewards/WlFrame";
 import type { AvatarCustomization } from "@/types/game";
 
-type SlotTab = "skin" | AvatarSlot;
+type SlotTab = "skin" | AvatarSlot | "frame";
 
-const TAB_ORDER: SlotTab[] = ["skin", "jersey", "hair", "glasses", "facialHair", ...EXTRA_SLOTS];
+const TAB_ORDER: SlotTab[] = ["skin", "jersey", "frame", "hair", "glasses", "facialHair", ...EXTRA_SLOTS];
 
 const PURPLE = "#BA02E8";
 
@@ -86,6 +88,7 @@ export function AvatarPicker({
     hair: t('profile.avatarPicker.tabHair'),
     glasses: t('profile.avatarPicker.tabGlasses'),
     facialHair: t('profile.avatarPicker.tabFacialHair'),
+    frame: t('wlRewards.framesTab'),
   };
   const [pendingPurchase, setPendingPurchase] = useState<{
     type: "skin" | "part";
@@ -127,6 +130,8 @@ export function AvatarPicker({
     for (const entry of (localPreview ? [] : inventoryData?.items ?? [])) {
       const part = ALL_AVATAR_PARTS.find((p) => p.productSlug === entry.slug);
       if (part) set.add(part.id);
+      const frame = WL_FRAME_PARTS.find((f) => f.productSlug === entry.slug);
+      if (frame) set.add(frame.id);
       const skin = SKIN_PARTS.find((s) => s.productSlug === entry.slug);
       if (skin) set.add(skin.id);
     }
@@ -276,6 +281,62 @@ export function AvatarPicker({
     </div>
   );
 
+  /** Frames tab: won frames are equipped like parts; the rest stay visible,
+   *  locked, with how to win them (owner call 2026-10-04). Never purchasable. */
+  const FramesTab = (
+    <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+      <button
+        type="button"
+        disabled={isSaving}
+        onClick={() => setDraft((d) => ({ ...d, frame: undefined }))}
+        className="group relative flex flex-col items-center justify-center gap-2 rounded-2xl bg-surface-card py-3 transition-all active:translate-y-[1px]"
+        style={{ border: `2px solid ${!wlFramePlace(draft.frame) ? PURPLE : "rgba(255,255,255,0.1)"}` }}
+      >
+        <div className="flex h-[96px] w-[60px] items-center justify-center rounded-xl border-2 border-dashed border-white/20">
+          <X className="size-7 text-white/40" strokeWidth={2.5} />
+        </div>
+        <span className="text-[10px] font-black uppercase tracking-wider text-white/70">{t('profile.avatarPicker.none')}</span>
+        {!wlFramePlace(draft.frame) && (
+          <div className="absolute right-2 top-2 flex size-5 items-center justify-center rounded-full" style={{ backgroundColor: PURPLE }}>
+            <Check className="size-3 text-white" strokeWidth={3} />
+          </div>
+        )}
+      </button>
+      {WL_FRAME_PARTS.map((frame) => {
+        const owned = ownedPartIds.has(frame.id);
+        const selected = draft.frame === frame.id;
+        return (
+          <button
+            key={frame.id}
+            type="button"
+            disabled={isSaving || !owned}
+            aria-label={owned ? t(frame.nameKey) : `${t(frame.nameKey)} — ${t(frame.unlockKey)}`}
+            onClick={() => setDraft((d) => ({ ...d, frame: frame.id }))}
+            className="group relative flex flex-col items-center gap-2 rounded-2xl bg-surface-card px-1 py-3 transition-all active:translate-y-[1px] disabled:cursor-default"
+            style={{ border: `2px solid ${selected ? PURPLE : owned ? "rgba(255,215,0,0.55)" : "rgba(255,255,255,0.1)"}` }}
+          >
+            {owned && (
+              <span className="absolute -top-2 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full bg-brand-gold px-2 py-0.5 text-[8px] font-black uppercase tracking-wider text-black">
+                {t("wlRewards.eyebrow")}
+              </span>
+            )}
+            <div className={owned ? "" : "opacity-35 grayscale"}><WlFrameArt place={frame.place} width={60} /></div>
+            {!owned && <Lock className="absolute top-[52px] size-5 text-white/70" />}
+            {selected && (
+              <div className="absolute right-2 top-2 flex size-5 items-center justify-center rounded-full" style={{ backgroundColor: PURPLE }}>
+                <Check className="size-3 text-white" strokeWidth={3} />
+              </div>
+            )}
+            <span className={`text-center text-[10px] font-black uppercase leading-tight tracking-wider ${owned ? "text-brand-gold" : "text-white/50"}`}>
+              {t(frame.nameKey)}
+            </span>
+            {!owned && <span className="text-center text-[9px] leading-tight text-white/40">{t(frame.unlockKey)}</span>}
+          </button>
+        );
+      })}
+    </div>
+  );
+
   /** What a slot's grid lists: earned (never sold) parts only once owned, and
    *  those first, so a Weekend League jersey is not buried under sixty kits. */
   const visibleParts = (parts: AvatarPart[]) => {
@@ -385,7 +446,11 @@ export function AvatarPicker({
       {/* Live preview of the avatar — solid panel, lifted above the store-card
           modal bg so dark assets (black hair etc.) stay visible. */}
       <div className="flex justify-center rounded-2xl border border-white/10 bg-surface-card pt-1 pb-2">
-        <AvatarPreview customization={draft} width={isMobile ? 140 : 160} />
+        {activeTab === "frame" && wlFramePlace(draft.frame) ? (
+          <div className="py-2"><WlFrameAvatar place={wlFramePlace(draft.frame)!} customization={draft} size="lg" /></div>
+        ) : (
+          <AvatarPreview customization={draft} width={isMobile ? 140 : 160} />
+        )}
       </div>
 
       {TabBar}
@@ -402,6 +467,7 @@ export function AvatarPicker({
         {(EXTRA_SLOTS as readonly string[]).includes(activeTab) && renderSlotGrid(activeTab as AvatarSlot, getPartsBySlot(activeTab as AvatarSlot))}
         {activeTab === "skin" && SkinTab}
         {activeTab === "jersey" && renderSlotGrid("jersey", JERSEY_PARTS)}
+        {activeTab === "frame" && FramesTab}
         {activeTab === "hair" && renderSlotGrid("hair", HAIR_PARTS)}
         {activeTab === "glasses" && renderSlotGrid("glasses", GLASSES_PARTS)}
         {activeTab === "facialHair" && renderSlotGrid("facialHair", FACIAL_HAIR_PARTS)}

@@ -32,6 +32,8 @@ export interface AvatarCustomization extends StoredAvatarCustomization {
   armwear?: string;
   wristwear?: string;
   facePaint?: string;
+  /** Weekend League podium frame drawn around the avatar (see lib/avatars/frames). */
+  frame?: string;
   hairColor?: "natural" | "platinum" | "ginger" | "silver" | "blue_tips" | "pink_streaks";
   /**
    * Legacy field kept so external URLs (Google avatar) and qb-avatar URIs can pass through.

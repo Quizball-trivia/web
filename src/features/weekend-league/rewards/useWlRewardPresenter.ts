@@ -36,14 +36,14 @@ export function useWlRewardPresenter(receipt: WlRewardReceipt | undefined) {
     void queryClient.invalidateQueries({ queryKey: queryKeys.store.inventory() });
   }, [receipt, queryClient]);
 
-  const equip = useCallback(async (item: WlRewardItem) => {
+  const equip = useCallback(async (items: WlRewardItem[]) => {
     // Read the account at the moment of the tap, and merge the result into
     // whatever it is when the request returns: the profile can change (or the
     // player can sign out) while the save is in flight.
     const before = useAuthStore.getState().user;
     if (!before) throw new Error("Not signed in");
     const current = before.avatar_customization ?? customizationFromAvatarValue(before.avatar_url);
-    const next: AvatarCustomization = { ...current, [item.slot]: item.avatarPartId };
+    const next = items.reduce<AvatarCustomization>((c, item) => ({ ...c, [item.slot]: item.avatarPartId }), { ...current });
     const updated = await updateMe({ avatar_customization: next });
     const latest = useAuthStore.getState();
     if (latest.user && latest.user.id === before.id) {

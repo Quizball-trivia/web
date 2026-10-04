@@ -2481,7 +2481,8 @@
     "frameUnlock1": "Weekend League’i kazan",
     "frameUnlock2": "Weekend League’de 2. ol",
     "frameUnlock3": "Weekend League’de 3. ol",
-    "kitFrameCoins": "Forma + çerçeve + coin"
+    "kitFrameCoins": "Forma + çerçeve + coin",
+    "exclusiveFrame": "Özel çerçeve"
   },
   "triviaMines": {
     "modalDescription": "Kutuları aç, 4 savunmacıdan kaç, potu büyüt. Nerede saklandıklarını keşfetmek için futbol sorularını yanıtla.",

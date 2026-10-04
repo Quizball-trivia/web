@@ -5,7 +5,7 @@ export type WlRewardBand = "participant" | "finalist" | "top10" | "third" | "sec
 export interface WlRewardItem {
   slug: string;
   avatarPartId: string;
-  slot: "jersey";
+  slot: "jersey" | "frame";
 }
 
 /** A reward the server has already granted. Opening it only reveals it. */

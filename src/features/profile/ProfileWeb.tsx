@@ -490,6 +490,7 @@ export function ProfileWeb({
                         <RankFrameCard
                           tier={currentTier}
                           caption={t("profileScreen.current")}
+                          rewardFrame
                           tierLabel={tierLabelOf(currentTier)}
                           rpLabel={`${displayRp}RP`}
                           customization={avatarCustomization}
@@ -502,6 +503,7 @@ export function ProfileWeb({
                       <RankFrameCard
                         tier={currentTier}
                         caption={t("profileScreen.current")}
+                          rewardFrame
                         tierLabel={tierLabelOf(currentTier)}
                         rpLabel={`${displayRp}RP`}
                         customization={avatarCustomization}

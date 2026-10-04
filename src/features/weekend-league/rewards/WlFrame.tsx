@@ -5,7 +5,9 @@ import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { useLocale } from '@/contexts/LocaleContext';
 import type { AvatarCustomization } from '@/types/game';
 
-export type WlFramePlace = 1 | 2 | 3;
+import type { WlFramePlace } from '@/lib/avatars/frames';
+
+export type { WlFramePlace };
 
 /** Metal and trim per podium place: gold, silver, bronze. */
 const METAL: Record<WlFramePlace, { light: string; mid: string; dark: string; glow: string; ink: string }> = {
@@ -14,7 +16,9 @@ const METAL: Record<WlFramePlace, { light: string; mid: string; dark: string; gl
   3: { light: '#F8D9B6', mid: '#D99B64', dark: '#7E4B22', glow: '#D99B64', ink: '#2E1806' },
 };
 
-const TITLE_KEY = {
+export const WL_FRAME_INK: Record<WlFramePlace, string> = { 1: '#3A2A00', 2: '#1F2733', 3: '#2E1806' };
+
+export const TITLE_KEY = {
   1: 'wlRewards.frameTitle1',
   2: 'wlRewards.frameTitle2',
   3: 'wlRewards.frameTitle3',
@@ -41,12 +45,12 @@ function Laurel({ color }: { color: string }) {
   );
 }
 
-/** The frame artwork alone, scaled to `width`. */
-export function WlFrameArt({ place, width }: { place: WlFramePlace; width: number }) {
+/** The frame artwork alone, `width` px wide — or filling its box when `fill`. */
+export function WlFrameArt({ place, width = 100, fill = false }: { place: WlFramePlace; width?: number; fill?: boolean }) {
   const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
   const m = METAL[place];
   return (
-    <svg width={width} height={Math.round(width * 1.6)} viewBox="0 0 200 320" aria-hidden className="block">
+    <svg width={fill ? '100%' : width} height={fill ? '100%' : Math.round(width * 1.6)} viewBox="0 0 200 320" preserveAspectRatio="xMidYMid meet" aria-hidden className="block">
       <defs>
         <linearGradient id={`metal${uid}`} x1="0" y1="0" x2="1" y2="1">
           <stop offset="0" stopColor={m.light} />
@@ -93,8 +97,9 @@ export function WlFrameArt({ place, width }: { place: WlFramePlace; width: numbe
 }
 
 const SIZES = {
-  sm: { width: 56, avatar: 'sm' as const, title: false },
-  md: { width: 84, avatar: 'md' as const, title: true },
+  xs: { width: 44, avatar: 'xs' as const, title: false },
+  sm: { width: 58, avatar: 'sm' as const, title: false },
+  md: { width: 84, avatar: 'md' as const, title: false },
   lg: { width: 128, avatar: 'lg' as const, title: true },
   xl: { width: 176, avatar: 'xl' as const, title: true },
 };

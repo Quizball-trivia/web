@@ -2,7 +2,7 @@ import { PRIZES } from './mock-data';
 
 /** Podium packs carry the matching frame once frames are granted by the
  *  backend (reward policy v2). Until then the card shows kit + coins only. */
-export const WL_PACK_HAS_FRAME = false;
+export const WL_PACK_HAS_FRAME = true;
 
 export const WEEKEND_COIN_REWARDS = [
   { id: 'winner', coins: 40000, labelKey: 'weekendLeague.coinWinner' },

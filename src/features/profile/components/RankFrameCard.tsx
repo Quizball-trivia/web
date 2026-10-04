@@ -3,6 +3,9 @@
 import Image from "next/image";
 
 import { AvatarPreview } from "@/components/AvatarPreview";
+import { useLocale } from "@/contexts/LocaleContext";
+import { wlFramePlace } from "@/lib/avatars/frames";
+import { TITLE_KEY, WL_FRAME_INK, WlFrameArt } from "@/features/weekend-league/rewards/WlFrame";
 import { cn } from "@/lib/utils";
 import { getTierAccent, getTierFrameSrc } from "@/utils/tierVisuals";
 import type { AvatarCustomization } from "@/types/game";
@@ -16,6 +19,9 @@ interface RankFrameCardProps {
   rpLabel?: string;
   /** Player avatar layered inside the frame. */
   customization: AvatarCustomization;
+  /** Draw the player's equipped Weekend League frame instead of the tier art
+   *  (the player's own "current" card only — never a next-tier preview). */
+  rewardFrame?: boolean;
   /** Optional small chip at the top of the card ("Current" / "Next" / "Achieved"). */
   caption?: string;
   /** Flip the avatar horizontally (opponent side on match screens). */
@@ -49,9 +55,12 @@ export function RankFrameCard({
   blurred = false,
   glow = false,
   sizes = "(min-width: 640px) 160px, 96px",
+  rewardFrame = false,
   className,
 }: RankFrameCardProps) {
+  const { t } = useLocale();
   const frameSrc = getTierFrameSrc(tier);
+  const framePlace = rewardFrame ? wlFramePlace(customization.frame) : null;
   // Figma shrinks long tier names (e.g. WORLD-CLASS, two-line Georgian names).
   const nameSize =
     tierLabel.length <= 8
@@ -82,15 +91,21 @@ export function RankFrameCard({
             : undefined
         }
       >
-        <Image
-          src={frameSrc}
-          alt=""
-          fill
-          sizes={sizes}
-          className="object-contain"
-        />
+        {framePlace ? (
+          <div className="absolute inset-0"><WlFrameArt place={framePlace} fill /></div>
+        ) : (
+          <Image
+            src={frameSrc}
+            alt=""
+            fill
+            sizes={sizes}
+            className="object-contain"
+          />
+        )}
         {/* Character: Figma x23 y37 w152 of 200×320 */}
-        <div className="absolute left-1/2 top-[11.5%] w-[76%] -translate-x-1/2">
+        {/* A Weekend League frame keeps its bottom ribbon for the title, so the
+            figure and the rank text sit higher and a little smaller. */}
+        <div className={cn("absolute left-1/2 -translate-x-1/2", framePlace ? "top-[8%] w-[62%]" : "top-[11.5%] w-[76%]")}>
           <AvatarPreview
             customization={customization}
             width="100%"
@@ -100,7 +115,7 @@ export function RankFrameCard({
       </div>
 
       {/* Label zone — Figma: divider y206, name y216, RP y248. Kept crisp when blurred. */}
-      <div className="absolute inset-x-0 top-[64.4%] flex flex-col items-center text-center">
+      <div className={cn("absolute inset-x-0 flex flex-col items-center text-center", framePlace ? "top-[52%]" : "top-[64.4%]")}>
         <div className="h-[1.5cqw] min-h-px w-[70%] bg-brand-yellow" />
         <div
           className={cn(
@@ -117,6 +132,15 @@ export function RankFrameCard({
           </div>
         ) : null}
       </div>
+
+      {framePlace ? (
+        <span
+          className="absolute inset-x-0 top-[77.5%] flex h-[8.75%] items-center justify-center overflow-hidden whitespace-nowrap font-poppins text-[5.4cqw] font-black uppercase tracking-[0.04em]"
+          style={{ color: WL_FRAME_INK[framePlace] }}
+        >
+          {t(TITLE_KEY[framePlace])}
+        </span>
+      ) : null}
 
       {/* Context chip (profile: CURRENT / NEXT / ACHIEVED) */}
       {caption ? (
