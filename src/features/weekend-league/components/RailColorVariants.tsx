@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, Clock3 } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
+import { formatStageWhen, useWlKickoffTimes, useWlTimeZone } from '../wlTime';
 import { LAUNCH_EDITION, poppins, QP_TARGET } from '../constants';
 import { colors } from '@/lib/colors';
 import { LEAGUE_TAB_HREF } from './StatusBandVariants';
@@ -34,7 +35,9 @@ interface RailSkin {
 }
 
 function Rail({ skin }: { skin: RailSkin }) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const timeZone = useWlTimeZone();
+  const kickoff = useWlKickoffTimes();
   return (
     <Link
       href={LEAGUE_TAB_HREF}
@@ -79,7 +82,7 @@ function Rail({ skin }: { skin: RailSkin }) {
           </span>
 
           <span className={`shrink-0 whitespace-nowrap text-[13px] uppercase ${skin.time}`} style={poppins}>
-            {t('weekendLeague.qualifierShort')}
+            {kickoff.fromRow ? formatStageWhen(kickoff.qualifierMs, locale, timeZone) : t('weekendLeague.railSeeTimes')}
           </span>
           <ArrowRight className={`size-4 shrink-0 transition-transform group-hover:translate-x-0.5 ${skin.arrow}`} />
         </div>

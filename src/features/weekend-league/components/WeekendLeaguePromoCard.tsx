@@ -2,14 +2,13 @@
 
 // Weekend League promo card — Figma node 1722:253 (owner design, 2026-08-30).
 // Blue gradient card: title, registered count, format line, three stage
-// mini-cards, voucher artwork + prize note, countdown to game 1, start CTA.
+// mini-cards, rare collection preview, countdown to game 1, start CTA.
 
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
 import { useQuery } from '@tanstack/react-query';
 import { X } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
-import { useWeekendLeaguePrizes } from '../use-weekend-league-prizes';
+import { RareRewardsBoard } from './RareRewardsBoard';
 import { getWeekendLeagueCurrent } from '@/lib/api/endpoints';
 import { queryKeys } from '@/lib/queries/queryKeys';
 import { useAuthStore } from '@/stores/auth.store';
@@ -94,7 +93,6 @@ export function WeekendLeaguePromoCard({
   onClose?: () => void;
 }) {
   const { t } = useLocale();
-  const prizes = useWeekendLeaguePrizes();
   const stages = [
     { title: t('weekendLeague.promoStage1'), highlight: '1/3', prefix: t('weekendLeague.promoAdvancePrefix'), suffix: t('weekendLeague.promoAdvanceSuffix') },
     { title: t('weekendLeague.promoStage2'), highlight: '1/3', prefix: t('weekendLeague.promoAdvancePrefix'), suffix: t('weekendLeague.promoAdvanceSuffix') },
@@ -144,30 +142,7 @@ export function WeekendLeaguePromoCard({
         ))}
       </div>
 
-      {/* Prize: voucher artwork overlapping the white note card, as designed. */}
-      <div className="relative mt-5 flex items-center">
-        <Image
-          src={prizes.artwork}
-          alt=""
-          width={prizes.artworkWidth}
-          height={prizes.artworkHeight}
-          priority
-          sizes="(max-width: 640px) 46vw, 200px"
-          className="relative z-10 -ml-3 w-[46%] shrink-0 -rotate-2 object-contain"
-        />
-        <div className="-ml-6 flex-1 rounded-[14px] bg-white py-4 pl-9 pr-3 text-center">
-          <p className="text-[12px] leading-snug text-black" style={poppins}>
-            {t('weekendLeague.promoWinnerGets')}
-          </p>
-          <p className="my-0.5 text-[19px] uppercase leading-tight" style={{ ...poppins, fontWeight: 800 }}>
-            <span className="text-brand-green">{prizes.heroAmount}{' '}</span>
-            <span className="text-black">{t(prizes.voucherKey)}</span>
-          </p>
-          <p className="text-[12px] leading-snug text-black" style={poppins}>
-            {t(prizes.storesKey)}
-          </p>
-        </div>
-      </div>
+      <RareRewardsBoard compact />
 
       <p className="mt-5 text-[14px] text-white" style={poppins}>
         {t('weekendLeague.promoStartsIn')}

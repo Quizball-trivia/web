@@ -1,6 +1,8 @@
 'use client';
 
 import { useLocale } from '@/contexts/LocaleContext';
+import { formatStageWhen, useWlKickoffTimes, useWlTimeZone } from '../wlTime';
+import { LocalTimeNote } from './LocalTimeNote';
 
 const STEPS = [
   { n: 1, icon: '🎟️', titleKey: 'weekendLeague.step1Title', bodyKey: 'weekendLeague.step1Body' },
@@ -10,7 +12,14 @@ const STEPS = [
 
 /** Three-step explainer for the weekend format. */
 export function HowItWorks() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const timeZone = useWlTimeZone();
+  const kickoff = useWlKickoffTimes();
+  const when: Record<(typeof STEPS)[number]['n'], Record<string, string>> = {
+    1: { deadline: formatStageWhen(kickoff.entryClosesMs, locale, timeZone) },
+    2: { when: formatStageWhen(kickoff.qualifierMs, locale, timeZone) },
+    3: { when: formatStageWhen(kickoff.finalMs, locale, timeZone) },
+  };
   return (
     <section>
       <h2 className="mb-3 font-poppins text-lg font-black uppercase tracking-wide text-white">
@@ -30,11 +39,16 @@ export function HowItWorks() {
             </div>
             <div className="font-poppins text-sm font-black uppercase text-white">{t(step.titleKey)}</div>
             <p className="mt-1 font-poppins text-[12px] font-medium leading-snug text-white/60">
-              {t(step.bodyKey)}
+              {t(step.bodyKey, when[step.n])}
             </p>
           </div>
         ))}
       </div>
+      <LocalTimeNote
+        kickoffMs={kickoff.qualifierMs}
+        timeZone={timeZone}
+        className="mt-2.5 px-1 font-poppins text-[11px] font-medium text-white/50"
+      />
     </section>
   );
 }

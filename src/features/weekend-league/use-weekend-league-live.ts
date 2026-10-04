@@ -60,16 +60,6 @@ function phaseFromStatus(status: WlStatus | undefined): LeaguePhase {
   }
 }
 
-const GE_TIME = new Intl.DateTimeFormat('en-GB', {
-  timeZone: 'Asia/Tbilisi',
-  hour: '2-digit',
-  minute: '2-digit',
-});
-const GE_DAY = new Intl.DateTimeFormat('en-US', {
-  timeZone: 'Asia/Tbilisi',
-  weekday: 'long',
-});
-
 function toMilestone(
   key: Milestone['key'],
   label: string,
@@ -79,13 +69,7 @@ function toMilestone(
   if (!iso) return fallback;
   const targetMs = Date.parse(iso);
   if (Number.isNaN(targetMs)) return fallback;
-  return {
-    key,
-    label,
-    dayLabel: GE_DAY.format(targetMs),
-    timeLabel: GE_TIME.format(targetMs),
-    targetMs,
-  };
+  return { key, label, targetMs };
 }
 
 /** Live-only signals layered on top of the prototype controller contract. */
