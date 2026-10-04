@@ -2470,7 +2470,18 @@
     "jerseyHome": "Retro Playmaker local",
     "jerseyAway": "Retro Playmaker visitante",
     "jerseyTraining": "Retro Playmaker de entrenamiento",
-    "ceremonyLabel": "Recompensas de Weekend League"
+    "ceremonyLabel": "Recompensas de Weekend League",
+    "frameTitle1": "Campeón del finde",
+    "frameTitle2": "Subcampeón del finde",
+    "frameTitle3": "Podio del finde",
+    "frameName1": "Marco de campeón",
+    "frameName2": "Marco de subcampeón",
+    "frameName3": "Marco de podio",
+    "framesTab": "Marcos",
+    "frameUnlock1": "Gana la Weekend League",
+    "frameUnlock2": "Termina 2.º en la Weekend League",
+    "frameUnlock3": "Termina 3.º en la Weekend League",
+    "kitFrameCoins": "Camiseta + marco + monedas"
   },
   "triviaMines": {
     "modalDescription": "Abre casillas, esquiva a los 4 defensas y haz crecer el bote. Responde preguntas de fútbol para descubrir dónde se esconden.",

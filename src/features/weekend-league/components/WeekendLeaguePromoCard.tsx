@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { X } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
-import { RareRewardsBoard } from './RareRewardsBoard';
+import { WlPrizeCard } from './WlPrizeCard';
 import { getWeekendLeagueCurrent } from '@/lib/api/endpoints';
 import { queryKeys } from '@/lib/queries/queryKeys';
 import { useAuthStore } from '@/stores/auth.store';
@@ -142,7 +142,7 @@ export function WeekendLeaguePromoCard({
         ))}
       </div>
 
-      <RareRewardsBoard compact />
+      <div className="mt-5"><WlPrizeCard surface="blue" /></div>
 
       <p className="mt-5 text-[14px] text-white" style={poppins}>
         {t('weekendLeague.promoStartsIn')}
