@@ -33,7 +33,7 @@ function FramesTab() {
     <div className="w-full max-w-[400px] rounded-[20px] bg-surface-card-deep p-4">
       <div className="mb-3 flex gap-2 font-poppins text-[11px] font-black uppercase">
         {['avatarPicker.tabs.jersey', 'wlRewards.framesTab'].map((key, i) => (
-          <span key={key} className={`rounded-full px-3 py-1.5 ${i === 1 ? 'bg-[#BA02E8] text-white' : 'bg-white/8 text-white/60'}`}>
+          <span key={key} className={`rounded-full px-3 py-1.5 ${i === 1 ? 'bg-brand-purple text-white' : 'bg-white/8 text-white/60'}`}>
             {i === 0 ? 'Kit' : t(key as MessageKey)}
           </span>
         ))}
@@ -56,7 +56,7 @@ function FramesTab() {
               )}
               <div className={`relative ${owned ? '' : 'opacity-35 grayscale'}`}><WlFrameArt place={place} width={60} /></div>
               {owned ? (
-                <span className="absolute right-2 top-2 flex size-5 items-center justify-center rounded-full bg-[#BA02E8]"><Check className="size-3 text-white" strokeWidth={3} /></span>
+                <span className="absolute right-2 top-2 flex size-5 items-center justify-center rounded-full bg-brand-purple"><Check className="size-3 text-white" strokeWidth={3} /></span>
               ) : (
                 <Lock className="absolute top-[52px] size-5 text-white/70" />
               )}
@@ -117,8 +117,8 @@ export default function WlPrizeCardPage() {
       <Section id="card" title="Prize card">
         <div className="flex flex-wrap items-start gap-6">
           {[
-            { id: 'c2-blue', label: 'On the blue promo card', bg: 'bg-gradient-to-b from-[#2d42ff] to-[#1e2fd0]', node: <WlPrizeCard surface="blue" /> },
-            { id: 'c2-gold', label: 'On the gold header (entered)', bg: 'bg-[#FFC800]', node: <WlPrizeCard surface="gold" /> },
+            { id: 'c2-blue', label: 'On the blue promo card', bg: 'bg-brand-blue', node: <WlPrizeCard surface="blue" /> },
+            { id: 'c2-gold', label: 'On the gold header (entered)', bg: 'bg-brand-yellow', node: <WlPrizeCard surface="gold" /> },
             { id: 'c2-dark', label: 'On the page after the qualifier, as 2nd', bg: 'bg-surface-page', node: <WlPrizeCard surface="dark" highlightRank={2} /> },
           ].map((v) => (
             <div key={v.id} data-variant={v.id} className={card}>

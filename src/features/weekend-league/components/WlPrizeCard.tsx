@@ -150,7 +150,7 @@ export function WlPrizeCard({ surface = 'blue', highlightRank = null }: { surfac
 export function WeekendLeagueRewardDetails() {
   const { t } = useLocale();
   return (
-    <div data-testid="weekend-inline-rules" className="mt-3.5 space-y-2 font-poppins text-[11px] font-medium leading-relaxed text-[#afc3dd]">
+    <div data-testid="weekend-inline-rules" className="mt-3.5 space-y-2 font-poppins text-[11px] font-medium leading-relaxed text-white/70">
       <p>{t('weekendLeague.rewardEntryRule')}</p>
       <p>{t('weekendLeague.rewardScoringRule')}</p>
       <p>{t('weekendLeague.rewardParticipationRule')}</p>
