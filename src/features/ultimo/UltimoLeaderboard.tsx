@@ -36,19 +36,21 @@ export function UltimoLeaderboard({ locale, day, refreshKey = 0, limit = 10, pla
     window.addEventListener("focus", check);
     return () => { window.clearInterval(timer); window.removeEventListener("focus", check); };
   }, [day]);
-  const boardDay = day ?? latestDay(today);
   const [board, setBoard] = useState<Board | null | undefined>(undefined);
+  // With no day asked for, the server picks the board (today's while it is ranked, else the last released day's)
+  // and says which; until it answers, today's number stands in.
+  const boardDay = day ?? board?.day ?? latestDay(today);
   const authStatus = useAuthStore((s) => s.status);
   const myId = useAuthStore((s) => s.user?.id);
 
   useEffect(() => {
-    if (authStatus === "loading" || !boardDay) return;
+    if (authStatus === "loading") return;
     let cancelled = false;
-    ultimoApi.leaderboard(boardDay, locale)
+    ultimoApi.leaderboard(day, locale)
       .then((data) => { if (!cancelled) setBoard(data); })
       .catch(() => { if (!cancelled) setBoard(null); });
     return () => { cancelled = true; };
-  }, [boardDay, refreshKey, authStatus, locale]);
+  }, [day, today, refreshKey, authStatus, locale]);
 
   if (board === null || !boardDay) return null;
   const entries = board?.top.slice(0, limit).map((row) => toEntry(row, myId)) ?? [];

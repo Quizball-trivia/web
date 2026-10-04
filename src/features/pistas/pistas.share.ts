@@ -11,7 +11,7 @@ const POINTS_OF: Record<string, readonly [min: number, max: number]> = {
   r: [0, 0],
 };
 /** `pf-` keeps these apart from Buscaminas codes on the shared /r/ route. */
-const CODE = /^pf-(\d{1,3})-(\d{1,3})-([gyor]{10})-(es|en|ka|tr)$/;
+const CODE = /^pf-(\d{1,5})-(\d{1,3})-([gyor]{10})-(es|en|ka|tr)$/;
 
 export interface PistasShareResult {
   number: number;

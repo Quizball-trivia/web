@@ -3,13 +3,15 @@ export const MAX_SCORE = GOALS_PER_DAY * 3;
 export const MIN_MINUTE = 1;
 export const MAX_MINUTE = 130;
 
-/** Same calendar as the backend (minuto.days.ts): boards land at Argentine midnight, never ahead of time. */
+/**
+ * Same calendar as the backend (minuto.days.ts): boards land at Argentine midnight, never ahead of time. It has no
+ * fixed length: the server's board index (/boards) lists the released days, and the game offers only those.
+ */
 export const RELEASE_TIME_ZONE = "America/Argentina/Buenos_Aires";
 /** First playable (archive) day: guests need closed days to play on launch day. */
 export const CONTENT_START = "2026-09-29";
 /** First ranked day. */
 export const RANKED_START = "2026-10-02";
-export const PUBLISHED_DAYS = 75;
 
 export type MinutoLocale = "es" | "en" | "ka" | "tr";
 export type LocalizedName = Record<MinutoLocale, string>;
@@ -82,13 +84,11 @@ export function addDays(day: string, delta: number): string {
   return new Date(Date.parse(`${day}T00:00:00Z`) + delta * DAY_MS).toISOString().slice(0, 10);
 }
 
-export const LAST_DAY = addDays(CONTENT_START, PUBLISHED_DAYS - 1);
-
 export const puzzleNumber = (day: string) => Math.round((Date.parse(`${day}T00:00:00Z`) - Date.parse(`${CONTENT_START}T00:00:00Z`)) / DAY_MS) + 1;
 
+/** Newest board the calendar can hold: today's. Null before the first board. Whether it is released is the board index's to say. */
 export function latestDay(today: string): string | null {
-  if (today < CONTENT_START) return null;
-  return today > LAST_DAY ? LAST_DAY : today;
+  return today < CONTENT_START ? null : today;
 }
 
 export function playableDays(today: string): string[] {
@@ -99,7 +99,7 @@ export function playableDays(today: string): string[] {
   return days;
 }
 
-export const isLiveDay = (day: string, today: string) => day === today && day >= RANKED_START && day <= LAST_DAY;
+export const isLiveDay = (day: string, today: string) => day === today && day >= RANKED_START;
 export const isClosedDay = (day: string, today: string) => day < today;
 
 /** Whole minutes only; added time is typed as base + added (45+2 → 47). Null for anything else. */

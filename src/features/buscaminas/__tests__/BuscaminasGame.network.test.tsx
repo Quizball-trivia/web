@@ -14,6 +14,7 @@ vi.mock("@/lib/repositories/buscaminas.repo", async (importOriginal) => ({ ...(a
 
 import { BuscaminasGame } from "../BuscaminasGame";
 import * as analytics from "../buscaminas.analytics";
+import { LAUNCH_DAY, addDays, releaseDay } from "../buscaminas.logic";
 import { useAuthStore } from "@/stores/auth.store";
 
 const board = (day: string) => ({
@@ -27,6 +28,13 @@ const runState = (version: number, picked: string[]) => ({
   run: { id: "run-1", version },
   state: { day: "d", round: 0, picked, found: picked.length, mine: null, settled: null, results: [], done: false, score: 0, ranked: false },
 });
+/** The board index as the server answers it: every released day from launch to today, with its content version. */
+const index = () => {
+  const days: Record<string, number> = {};
+  for (let d = LAUNCH_DAY; d <= releaseDay(); d = addDays(d, 1)) days[d] = 7;
+  return { days };
+};
+const isIndex = (url: string) => /\/boards(\?|$)/.test(url);
 const json = (body: unknown) => new Response(JSON.stringify(body), { status: 200, headers: { "Content-Type": "application/json" } });
 const offline = () => new TypeError("Load failed");
 const fetchMock = vi.fn();
@@ -36,7 +44,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   Object.values(api).forEach((fn) => fn.mockReset());
   useAuthStore.setState({ status: "anonymous", user: null } as never);
-  fetchMock.mockImplementation(async (url: string) => (url.endsWith("/boards") ? json({ days: {} }) : json(board(url.split("/").pop()!.split("?")[0]))));
+  fetchMock.mockImplementation(async (url: string) => (isIndex(url) ? json(index()) : json(board(url.split("/").pop()!.split("?")[0]))));
   vi.stubGlobal("fetch", fetchMock);
   api.start.mockResolvedValue(runState(0, []));
 });
@@ -142,7 +150,7 @@ describe("Buscaminas when the board download gets no answer", () => {
   it("retries once on its own before showing an error", async () => {
     let boardCalls = 0;
     fetchMock.mockImplementation(async (url: string) => {
-      if (url.endsWith("/boards")) return json({ days: {} });
+      if (isIndex(url)) return json(index());
       boardCalls += 1;
       if (boardCalls === 1) throw offline();
       return json(board(url.split("/").pop()!.split("?")[0]));
@@ -152,3 +160,54 @@ describe("Buscaminas when the board download gets no answer", () => {
     expect(screen.queryByText("No pudimos cargar el tablero. Probá de nuevo en un rato.")).toBeNull();
   });
 });
+
+describe("Buscaminas and the board index (the calendar)", () => {
+  const boardRequests = () => fetchMock.mock.calls.map(([url]) => String(url)).filter((url) => !isIndex(url));
+  const failure = () => screen.queryByText("No pudimos cargar el tablero. Probá de nuevo en un rato.");
+
+  it("an index that lists no board shows the error screen and requests no board", async () => {
+    fetchMock.mockImplementation(async (url: string) => (isIndex(url) ? json({ days: {} }) : json(board(url.split("/").pop()!.split("?")[0]))));
+    render(<BuscaminasGame locale="es" />);
+    await waitFor(() => expect(failure()).not.toBeNull(), { timeout: 4000 });
+    // The optimistic first request (before the index answered) is the only one a board ever got.
+    expect(boardRequests().length).toBeLessThanOrEqual(1);
+  });
+
+  it("reads the index again after a failed read, and then offers the board", async () => {
+    let indexCalls = 0;
+    fetchMock.mockImplementation(async (url: string) => {
+      if (isIndex(url)) { indexCalls += 1; if (indexCalls === 1) throw offline(); return json(index()); }
+      return json(board(url.split("/").pop()!.split("?")[0]));
+    });
+    render(<BuscaminasGame locale="es" />);
+    expect(await screen.findByRole("button", { name: "Jugar" }, { timeout: 4000 })).toBeInTheDocument();
+    await waitFor(() => expect(indexCalls).toBeGreaterThanOrEqual(2), { timeout: 4000 });
+  });
+
+  it("a slow index does not reload the board or throw the player out of a run that has started", async () => {
+    let releaseIndex: () => void = () => undefined;
+    const indexReady = new Promise<void>((resolve) => { releaseIndex = resolve; });
+    fetchMock.mockImplementation(async (url: string) => {
+      if (isIndex(url)) { await indexReady; return json(index()); }
+      return json(board(url.split("/").pop()!.split("?")[0]));
+    });
+    render(<BuscaminasGame locale="es" />);
+    fireEvent.click(await screen.findByRole("button", { name: "Jugar" }));
+    expect(await screen.findByRole("button", { name: /Jugador 0-0/ })).toBeInTheDocument();
+    await act(async () => { releaseIndex(); await indexReady; });
+    await waitFor(() => expect(fetchMock.mock.calls.some(([url]) => isIndex(String(url)))).toBe(true));
+    expect(screen.getByRole("button", { name: /Jugador 0-0/ })).toBeInTheDocument();
+    expect(boardRequests()).toHaveLength(1);
+  });
+
+  it("the calendar ends at the last released day: a guest lands on it once today has no board", async () => {
+    // The index stops two days ago (no new content): nothing is live, so the guest gets that last board, not a 404.
+    const last = addDays(releaseDay(), -2);
+    const ended = () => { const all = index(); for (const d of Object.keys(all.days)) if (d > last) delete all.days[d]; return all; };
+    fetchMock.mockImplementation(async (url: string) => (isIndex(url) ? json(ended()) : json(board(url.split("/").pop()!.split("?")[0]))));
+    render(<BuscaminasGame locale="es" />);
+    await waitFor(() => expect(boardRequests().some((url) => url.includes(`/boards/${last}`))).toBe(true), { timeout: 4000 });
+    expect(await screen.findByRole("button", { name: "Jugar" }, { timeout: 4000 })).toBeInTheDocument();
+  });
+});
+
