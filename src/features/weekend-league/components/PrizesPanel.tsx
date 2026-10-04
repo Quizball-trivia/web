@@ -1,20 +1,20 @@
 'use client';
 import { useLocale } from '@/contexts/LocaleContext';
-import { useWeekendLeaguePrizes } from '../use-weekend-league-prizes';
-import { RareRewardsBoard, WeekendLeagueRewardDetails } from './RareRewardsBoard';
+import { WlPrizeCard, WeekendLeagueRewardDetails } from './WlPrizeCard';
 
-/** Placement rewards and essential event details on one screen. */
-export function PrizesPanel({ highlightRank }: { highlightRank?: number | null }) {
+/**
+ * Reward rules, plus the prize board when nothing above already shows it.
+ * Before kickoff and after the final the promo card / header carries the
+ * board, so a second copy here only repeated it (owner, 2026-10-04).
+ */
+export function PrizesPanel({ highlightRank, showBoard = true }: { highlightRank?: number | null; showBoard?: boolean }) {
   const { t } = useLocale();
-  const prizes = useWeekendLeaguePrizes();
   return <section>
-    <RareRewardsBoard highlightRank={highlightRank} />
-    <div className="mt-3 flex flex-col gap-2">
-      {prizes.tiers.map(prize => <p key={prize.id} className="font-poppins text-xs leading-relaxed text-white/85">
-        <strong>{t(prize.rankKey)}</strong> — <span>{t(prize.prizeKey)}</span>
-      </p>)}
-    </div>
-    <p className="mt-3 font-poppins text-xs leading-relaxed text-white/60">{t('weekendLeague.prizesNote')}</p>
+    {showBoard ? (
+      <WlPrizeCard surface="dark" highlightRank={highlightRank} />
+    ) : (
+      <h2 className="mb-1 font-poppins text-lg font-black uppercase tracking-wide text-white">{t('weekendLeague.prizes')}</h2>
+    )}
     <WeekendLeagueRewardDetails />
   </section>;
 }

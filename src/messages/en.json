@@ -2470,7 +2470,18 @@
     "jerseyHome": "Retro Playmaker Home",
     "jerseyAway": "Retro Playmaker Away",
     "jerseyTraining": "Retro Playmaker Training",
-    "ceremonyLabel": "Weekend League rewards"
+    "ceremonyLabel": "Weekend League rewards",
+    "frameTitle1": "Weekend Champion",
+    "frameTitle2": "Weekend Runner-up",
+    "frameTitle3": "Weekend Podium",
+    "frameName1": "Champion frame",
+    "frameName2": "Runner-up frame",
+    "frameName3": "Podium frame",
+    "framesTab": "Frames",
+    "frameUnlock1": "Win the Weekend League",
+    "frameUnlock2": "Finish 2nd in the Weekend League",
+    "frameUnlock3": "Finish 3rd in the Weekend League",
+    "kitFrameCoins": "Kit + frame + coins"
   },
   "triviaMines": {
     "modalDescription": "Open tiles, dodge the 4 defenders, grow the pot. Answer football questions to scout where they hide.",

@@ -222,7 +222,7 @@ function PhaseContent({
     return (
       <>
         <HowItWorks />
-        <PrizesPanel />
+        <PrizesPanel showBoard={false} />
         <HallOfFame data={hallOfFame} />
       </>
     );
@@ -372,7 +372,7 @@ function PhaseContent({
           yourRank={wl.yourRank}
           title={t('weekendLeague.finalStandings')}
         />
-        <PrizesPanel highlightRank={wl.qualified ? wl.yourRank : null} />
+        <PrizesPanel showBoard={false} />
       </>
     );
   }
