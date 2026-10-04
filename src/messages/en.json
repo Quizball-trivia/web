@@ -2481,7 +2481,8 @@
     "frameUnlock1": "Win the Weekend League",
     "frameUnlock2": "Finish 2nd in the Weekend League",
     "frameUnlock3": "Finish 3rd in the Weekend League",
-    "kitFrameCoins": "Kit + frame + coins"
+    "kitFrameCoins": "Kit + frame + coins",
+    "exclusiveFrame": "Exclusive frame"
   },
   "triviaMines": {
     "modalDescription": "Open tiles, dodge the 4 defenders, grow the pot. Answer football questions to scout where they hide.",

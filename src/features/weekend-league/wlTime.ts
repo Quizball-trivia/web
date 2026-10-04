@@ -89,17 +89,30 @@ export interface WlKickoffTimes {
  * the calendar). It only reads the cache — it never issues a request, and it
  * works without a QueryClientProvider (component previews, public pages).
  */
-export function useWlKickoffTimes(): WlKickoffTimes {
+/** The tournament row already in the query cache, if any. Never fetches. */
+function useCachedWlTournament() {
   const client = useContext(QueryClientContext);
   const subscribe = useCallback(
     (onChange: () => void) => (client ? client.getQueryCache().subscribe(onChange) : subscribeNever()),
     [client],
   );
-  const cached = useSyncExternalStore(
+  return useSyncExternalStore(
     subscribe,
     () => client?.getQueryData<WlCurrent>(queryKeys.weekendLeague.current())?.tournament ?? null,
     () => null,
   );
+}
+
+/** Whether podium packs include the place frame — the backend's
+ *  WL_REWARD_FRAMES_ENABLED, so the card never promises a frame the payout
+ *  will not grant. False until a row says otherwise. */
+export function useWlPackHasFrame(): boolean {
+  const cached = useCachedWlTournament() as { reward_frames?: unknown } | null;
+  return cached?.reward_frames === true;
+}
+
+export function useWlKickoffTimes(): WlKickoffTimes {
+  const cached = useCachedWlTournament();
   const [nowMs] = useState(() => Date.now());
   const live = cached && cached.status !== 'cancelled' && cached.status !== 'voided' ? cached : null;
   const entryClosesAt = live?.entry_closes_at;

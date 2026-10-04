@@ -2481,7 +2481,8 @@
     "frameUnlock1": "Gana la Weekend League",
     "frameUnlock2": "Termina 2.º en la Weekend League",
     "frameUnlock3": "Termina 3.º en la Weekend League",
-    "kitFrameCoins": "Camiseta + marco + monedas"
+    "kitFrameCoins": "Camiseta + marco + monedas",
+    "exclusiveFrame": "Marco exclusivo"
   },
   "triviaMines": {
     "modalDescription": "Abre casillas, esquiva a los 4 defensas y haz crecer el bote. Responde preguntas de fútbol para descubrir dónde se esconden.",

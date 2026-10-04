@@ -37,7 +37,8 @@ export function WlRewardsEarnedCard({ receipt, none = false, onOpen }: WlRewards
 
   const place = wlPackPlace(receipt);
   const accent = place ? WL_PLACE_ACCENT[place].main : "#FFD700";
-  const jersey = receipt.items[0] ? getAvatarPart(receipt.items[0].avatarPartId) : null;
+  const jerseyItem = receipt.items.find((item) => item.slot === "jersey");
+  const jersey = jerseyItem ? getAvatarPart(jerseyItem.avatarPartId) : null;
 
   return (
     <motion.div

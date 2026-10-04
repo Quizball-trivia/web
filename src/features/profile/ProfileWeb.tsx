@@ -25,6 +25,7 @@ function countryCodeToName(code: string): string {
 import { TierFrameAvatar } from '@/components/TierFrameAvatar';
 import { CountryFlag } from '@/components/CountryFlag';
 import { AvatarPicker } from './components/AvatarPicker';
+import { wlFramePlace } from '@/lib/avatars/frames';
 import { RankFrameCard } from './components/RankFrameCard';
 import { WorldCupAchievementCard } from '@/components/shared/WorldCupAchievementCard';
 import { useUserEventAwards } from '@/lib/queries/eventAwards.queries';
@@ -490,6 +491,7 @@ export function ProfileWeb({
                         <RankFrameCard
                           tier={currentTier}
                           caption={t("profileScreen.current")}
+                          rewardFrame
                           tierLabel={tierLabelOf(currentTier)}
                           rpLabel={`${displayRp}RP`}
                           customization={avatarCustomization}
@@ -502,6 +504,7 @@ export function ProfileWeb({
                       <RankFrameCard
                         tier={currentTier}
                         caption={t("profileScreen.current")}
+                          rewardFrame
                         tierLabel={tierLabelOf(currentTier)}
                         rpLabel={`${displayRp}RP`}
                         customization={avatarCustomization}
@@ -513,7 +516,19 @@ export function ProfileWeb({
                        button so the avatar picker remains reachable (the old
                        hero-avatar entry point was removed). */
                     (() => {
-                      const unrankedCard = (
+                      // A won Weekend League frame stays on show during placements
+                      // (a season reset must not hide it); rank text reads Unranked.
+                      const unrankedCard = wlFramePlace(avatarCustomization.frame) ? (
+                        <RankFrameCard
+                          tier="Academy"
+                          caption={t("profileScreen.current")}
+                          tierLabel={t("profileScreen.unranked")}
+                          rpLabel={`${displayRp}RP`}
+                          customization={avatarCustomization}
+                          rewardFrame
+                          className="shrink-0"
+                        />
+                      ) : (
                         <div className="flex w-[84px] sm:w-[160px] flex-col items-center justify-center gap-1.5 sm:gap-2 rounded-[16px] sm:rounded-[20px] bg-brand-blue p-2.5 sm:p-4">
                           <TrophyPh className="size-9 sm:size-16 text-brand-yellow" weight="light" />
                           <div className="text-center">

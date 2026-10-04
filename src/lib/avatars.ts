@@ -1,3 +1,4 @@
+import { wlFramePlace } from "@/lib/avatars/frames";
 import type { AvatarCustomization } from "@/types/game";
 import {
   EXTRA_SLOTS,
@@ -98,6 +99,7 @@ export function encodeAvatarCustomization(c: AvatarCustomization): string {
   if (c.glasses) params.set("glasses", c.glasses);
   if (c.facialHair) params.set("facial", c.facialHair);
   for (const slot of EXTRA_SLOTS) if (c[slot]) params.set(slot, c[slot]!);
+  if (wlFramePlace(c.frame)) params.set("frame", c.frame!);
   if (c.hairColor && c.hairColor !== "natural") params.set("hairColor", c.hairColor);
   const qs = params.toString();
   return `${AVATAR_URI_PREFIX}${c.skin}${qs ? `?${qs}` : ""}`;
@@ -123,6 +125,7 @@ export function decodeAvatarCustomization(value: string | null | undefined): Ava
       return id && getAvatarPart(id)?.slot === slot ? [[slot, id]] : [];
     })),
     ...(readKnownParam(params.get("hairColor"), HAIR_COLORS) ? { hairColor: readKnownParam(params.get("hairColor"), HAIR_COLORS) } : {}),
+    ...(wlFramePlace(params.get("frame")) ? { frame: params.get("frame")! } : {}),
   };
 }
 
@@ -174,6 +177,6 @@ export const HAIR_COLORS = ['natural', 'platinum', 'ginger', 'silver', 'blue_tip
 /** Preserve explicit empty slots and all local wardrobe fields in every renderer. */
 export function resolveAvatarCustomization(c: AvatarCustomization): AvatarCustomization {
   const defaults = customizationFromAvatarValue(c.base);
-  const structured = ['skin', 'jersey', 'hair', 'glasses', 'facialHair', ...EXTRA_SLOTS].some(slot => Object.prototype.hasOwnProperty.call(c, slot));
+  const structured = ['skin', 'jersey', 'hair', 'glasses', 'facialHair', 'frame', ...EXTRA_SLOTS].some(slot => Object.prototype.hasOwnProperty.call(c, slot));
   return structured ? { ...c, skin: c.skin ?? defaults.skin } : { ...defaults, ...c };
 }
