@@ -7,7 +7,7 @@ export type I18nField = components["schemas"]["I18nField"];
 export type MatchMode = 'friendly' | 'ranked';
 export type LobbyGameMode = 'friendly_possession' | 'friendly_party_quiz' | 'football_grid' | 'ranked_sim' | 'auction' | 'duel';
 /** Daily mini-games that can be played as a friend duel (lobby game mode 'duel'). */
-export type DuelGameId = 'buscaminas' | 'pistas' | 'ultimo';
+export type DuelGameId = 'buscaminas' | 'pistas' | 'ultimo' | 'minuto';
 /**
  * Variant of a possession/quiz match handled by the `/game` realtime layer.
  * Deliberately excludes 'auction': auction matches run on their own socket

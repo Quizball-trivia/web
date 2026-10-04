@@ -50,7 +50,7 @@ export interface PublicGameMeta {
 /** Dailies and the coin-game samples fire start/complete/replay themselves; trainings are timed from the Play control. */
 export const engineEmitsEvents = (demoSlug: string | undefined): boolean => Boolean(demoSlug?.startsWith("daily-")) || COIN_SAMPLE_DEMO_SLUGS.has(demoSlug ?? "") || isFullGameDemo(demoSlug);
 /** Buscaminas, Pistas futboleras and Último en pie futbolero: the page runs the real daily board (not a sample), and the engine owns its exit. */
-export const FULL_GAME_DEMO_SLUGS = new Set(["buscaminas", "pistas", "ultimo"]);
+export const FULL_GAME_DEMO_SLUGS = new Set(["buscaminas", "pistas", "ultimo", "minuto"]);
 export const isFullGameDemo = (demoSlug: string | undefined): boolean => FULL_GAME_DEMO_SLUGS.has(demoSlug ?? "");
 const COIN_SAMPLE_DEMO_SLUGS = new Set(["mini-trivia-mines", "mini-final-third", "mini-road-to-goal", "mini-squad-spin"]);
 /** Sign-in entry: the Play screen opens its auth dialog for guests when asked to. */
@@ -68,6 +68,7 @@ export const PUBLIC_GAME_META: PublicGameMeta[] = [
   // Full daily game in the browser (no account, progress on the device): its page plays the real board, not a sample.
   { modeId: "buscaminas", slug: "football-minesweeper", group: "daily", guest: "demo", demoSlug: "buscaminas", page: true, card: true, destination: { kind: "page" }, related: ["pistas", "ultimo", "triviaMines", "grid"], order: -1 },
   { modeId: "pistas", slug: "football-clues", group: "daily", guest: "demo", demoSlug: "pistas", page: true, card: true, destination: { kind: "page" }, related: ["buscaminas", "ultimo", "cardDetective", "grid"], order: -0.5 },
+  { modeId: "minuto", slug: "guess-the-goal-minute", group: "daily", guest: "demo", demoSlug: "minuto", page: true, card: true, destination: { kind: "page" }, related: ["pistas", "ultimo", "buscaminas", "grid"], order: -0.75 },
   { modeId: "ultimo", slug: "last-answer-standing", group: "daily", guest: "demo", demoSlug: "ultimo", page: true, card: true, destination: { kind: "page" }, related: ["pistas", "buscaminas", "grid"], order: -0.25 },
   { modeId: "moneyDrop", slug: "money-drop", group: "daily", guest: "demo", demoSlug: "daily-moneyDrop", page: true, card: true, destination: { kind: "page" }, related: ["trueFalse", "countdown", "highLow"], order: 1 },
   { modeId: "trueFalse", slug: "true-or-false-football", group: "daily", guest: "demo", demoSlug: "daily-trueFalse", page: true, card: true, destination: { kind: "page" }, related: ["moneyDrop", "highLow", "imposter"], order: 2 },

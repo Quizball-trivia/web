@@ -12,6 +12,7 @@ import { BuscaminasBanner } from "./public/BuscaminasBanner";
 import { BuscaminasLeaderboard } from "@/features/buscaminas/BuscaminasLeaderboard";
 import { PistasLeaderboard } from "@/features/pistas/PistasLeaderboard";
 import { UltimoLeaderboard } from "@/features/ultimo/UltimoLeaderboard";
+import { MinutoLeaderboard } from "@/features/minuto/MinutoLeaderboard";
 import { SignInLink } from "./public/PublicLinks";
 import { PublicTopTen } from "./public/PublicTopTen";
 
@@ -46,7 +47,14 @@ const ULTIMO_PAGE: Record<SeoPageLocale, FullGameCopy> = {
   tr: { label: "Her gün 5 yeni kategori · hesap gerekmez", start: "Oyna", note: "5 liste, kısalan bir süre. Misafir olarak önceki günleri oynarsın; hesapla bugünün kategorilerini ve sıralamayı.", account: "Daha fazla futbol oyunu", accountText: "Futbol XOX, Açık Artırma ve gerçek rakiplere karşı dereceli maçlar oynamak ve jeton kazanmak için hesap oluştur." },
 };
 
-const FULL_GAME_PAGES: Record<string, Record<SeoPageLocale, FullGameCopy>> = { buscaminas: BUSCAMINAS_PAGE, pistas: PISTAS_PAGE, ultimo: ULTIMO_PAGE };
+const MINUTO_PAGE: Record<SeoPageLocale, FullGameCopy> = {
+  en: { label: "10 famous goals every day · no account needed", start: "Play now", note: "Guess the minute of 10 famous goals. As a guest you play past days; with an account, today's goals and the leaderboard.", account: "More football games", accountText: "Create an account to play Tic Tac Toe, Auction and ranked matches against real opponents, and earn coins." },
+  ka: { label: "ყოველდღე 10 ცნობილი გოლი · ანგარიშის გარეშე", start: "თამაში", note: "გამოიცანი 10 ცნობილი გოლის წუთი. სტუმრად წინა დღეებს თამაშობ; ანგარიშით — დღევანდელს და რეიტინგს.", account: "მეტი საფეხბურთო თამაში", accountText: "შექმენი ანგარიში, ითამაშე Tic Tac Toe, აუქციონი და რეიტინგული მატჩები ნამდვილ მეტოქეებთან და დააგროვე ქოინები." },
+  es: { label: "10 goles famosos cada día · sin cuenta", start: "Jugar ahora", note: "Adiviná el minuto de 10 goles famosos. Sin cuenta jugás los días anteriores; con cuenta, los goles de hoy y el ranking.", account: "Más juegos de fútbol", accountText: "Creá tu cuenta para jugar el Tic Tac Toe futbolero, la Subasta futbolera y ¿Quién sabe más de fútbol? 1v1 contra rivales reales, y ganar monedas." },
+  tr: { label: "Her gün 10 ünlü gol · hesap gerekmez", start: "Oyna", note: "10 ünlü golün dakikasını tahmin et. Misafir olarak önceki günleri oynarsın; hesapla bugünün gollerini ve sıralamayı.", account: "Daha fazla futbol oyunu", accountText: "Futbol XOX, Açık Artırma ve gerçek rakiplere karşı dereceli maçlar oynamak ve jeton kazanmak için hesap oluştur." },
+};
+
+const FULL_GAME_PAGES: Record<string, Record<SeoPageLocale, FullGameCopy>> = { buscaminas: BUSCAMINAS_PAGE, pistas: PISTAS_PAGE, ultimo: ULTIMO_PAGE, minuto: MINUTO_PAGE };
 
 /** One public game page: server-rendered content first, the practice engine on demand below it. */
 export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: SeoPageLocale }) {
@@ -112,7 +120,7 @@ export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: S
             </section>
           )}
           {(game.modeId === "ranked" || game.modeId === "grid" || game.modeId === "auction") && <PublicTopTen board={game.modeId} locale={locale} />}
-          {fullGame && (game.modeId === "pistas" ? <PistasLeaderboard locale={locale} className="mt-6" /> : game.modeId === "ultimo" ? <UltimoLeaderboard locale={locale} className="mt-6" /> : <BuscaminasLeaderboard locale={locale} className="mt-6" />)}
+          {fullGame && (game.modeId === "pistas" ? <PistasLeaderboard locale={locale} className="mt-6" /> : game.modeId === "ultimo" ? <UltimoLeaderboard locale={locale} className="mt-6" /> : game.modeId === "minuto" ? <MinutoLeaderboard locale={locale} className="mt-6" /> : <BuscaminasLeaderboard locale={locale} className="mt-6" />)}
         </div>
 
         <div className="md:col-start-1 md:row-start-2">

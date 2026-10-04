@@ -44,6 +44,22 @@ export interface DuelCopy {
     complete: string;
     left2: (n: number) => string;
   };
+  md: {
+    question: string;
+    waitingRival: (name: string) => string;
+    revealing: string;
+    youExact: string;
+    rivalExact: (name: string) => string;
+    bothExact: string;
+    youCloser: string;
+    rivalCloser: (name: string) => string;
+    tie: string;
+    nobody: string;
+    was: (minute: string) => string;
+    answered: string;
+    thinking: string;
+    noAnswer: string;
+  };
   pf: {
     pointsInPlay: string;
     nextClue: string;
@@ -87,7 +103,7 @@ export interface DuelCopy {
 }
 
 const es: DuelCopy = {
-  games: { buscaminas: "Buscaminas futbolero", pistas: "Pistas futboleras", ultimo: "Último en pie futbolero" },
+  games: { buscaminas: "Buscaminas futbolero", pistas: "Pistas futboleras", ultimo: "Último en pie futbolero", minuto: "¿En qué minuto?" },
   playWithFriend: "Jugar con un amigo",
   playWithFriendHint: "Mandale el link y juegan en vivo, cara a cara.",
   you: "Vos",
@@ -128,6 +144,22 @@ const es: DuelCopy = {
     outMisses: (name, me) => (me ? "Erraste 3 veces" : `${name} erró 3 veces`),
     complete: "No quedó ninguna sin nombrar",
     left2: (n) => `Quedaban ${n}`,
+  },
+  md: {
+    question: "¿En qué minuto?",
+    waitingRival: (name) => `Respondiste · esperando a ${name}…`,
+    revealing: "¡Los dos respondieron!",
+    youExact: "¡Minuto exacto! +3",
+    rivalExact: (name) => `${name} lo clavó: +3`,
+    bothExact: "¡Los dos lo clavaron! +3 cada uno",
+    youCloser: "Quedaste más cerca: +1",
+    rivalCloser: (name) => `${name} quedó más cerca: +1`,
+    tie: "Igual de cerca: +1 para los dos",
+    nobody: "Nadie respondió",
+    was: (minute) => `Fue en el ${minute}`,
+    answered: "Respondió",
+    thinking: "Pensando…",
+    noAnswer: "Sin respuesta",
   },
   pf: {
     pointsInPlay: "puntos en juego",
@@ -171,6 +203,7 @@ const es: DuelCopy = {
       pistas: ["Las mismas pistas para los dos, una por vez.", "El primero que lo saca suma 11 − pistas.", "Si le errás, tu rival tiene hasta 3 pistas más."],
       buscaminas: ["Elijan jugadores por turnos.", "Si tocás un impostor, suma tu rival.", "Si encuentran los 12, suman los dos."],
       ultimo: ["Por turnos, digan respuestas de la categoría, sin repetir.", "20 s por turno, cada vez menos. Si se te acaba o errás 3 veces, pierde la categoría.", "Gana el primero en llevarse 3 categorías."],
+      minuto: ["El mismo gol para los dos: escriban el minuto.", "Minuto exacto: 3 puntos. Si no, el que queda más cerca suma 1.", "Nadie ve el minuto del otro hasta que responden los dos."],
     },
   },
   pause: {
@@ -188,12 +221,14 @@ const es: DuelCopy = {
     duel_not_found: "No encontramos esta partida",
     not_in_match: "Esta partida no es tuya",
     empty_guess: "Escribí un apellido",
+    already_answered: "Ya respondiste este gol",
+    stale_round: "Ese gol ya pasó",
     default: "Algo falló. Probá de nuevo.",
   },
 };
 
 const en: DuelCopy = {
-  games: { buscaminas: "Football Minesweeper", pistas: "Football Clues", ultimo: "Last Answer Standing" },
+  games: { buscaminas: "Football Minesweeper", pistas: "Football Clues", ultimo: "Last Answer Standing", minuto: "What Minute?" },
   playWithFriend: "Play with a friend",
   playWithFriendHint: "Send the link and play live, head to head.",
   you: "You",
@@ -234,6 +269,22 @@ const en: DuelCopy = {
     outMisses: (name, me) => (me ? "You missed 3 times" : `${name} missed 3 times`),
     complete: "Nothing left unnamed",
     left2: (n) => `${n} left unnamed`,
+  },
+  md: {
+    question: "What minute?",
+    waitingRival: (name) => `Answer in · waiting for ${name}…`,
+    revealing: "Both answered!",
+    youExact: "Exact minute! +3",
+    rivalExact: (name) => `${name} nailed it: +3`,
+    bothExact: "You both nailed it! +3 each",
+    youCloser: "You were closer: +1",
+    rivalCloser: (name) => `${name} was closer: +1`,
+    tie: "Equally close: +1 each",
+    nobody: "Nobody answered",
+    was: (minute) => `It was ${minute}`,
+    answered: "Answered",
+    thinking: "Thinking…",
+    noAnswer: "No answer",
   },
   pf: {
     pointsInPlay: "points in play",
@@ -277,6 +328,7 @@ const en: DuelCopy = {
       pistas: ["Same clues for both of you, one at a time.", "First to get it scores 11 − clues.", "Miss, and your rival gets up to 3 more clues."],
       buscaminas: ["Take turns picking players.", "Hit an impostor and your rival scores.", "Find all 12 and you both score."],
       ultimo: ["Take turns naming answers of the category, no repeats.", "20 s per turn, less each time. Run out or miss 3 times and you lose the category.", "First to win 3 categories wins."],
+      minuto: ["The same goal for both: type the minute.", "Exact minute: 3 points. Otherwise the closer guess scores 1.", "Neither sees the other's minute until you both answer."],
     },
   },
   pause: {
@@ -294,12 +346,14 @@ const en: DuelCopy = {
     duel_not_found: "We couldn't find this match",
     not_in_match: "This match isn't yours",
     empty_guess: "Type a surname",
+    already_answered: "You already answered this goal",
+    stale_round: "That goal is over",
     default: "Something went wrong. Try again.",
   },
 };
 
 const ka: DuelCopy = {
-  games: { buscaminas: "საფეხბურთო მაღაროები", pistas: "საფეხბურთო მინიშნებები", ultimo: "ბოლომდე დარჩენილი" },
+  games: { buscaminas: "საფეხბურთო მაღაროები", pistas: "საფეხბურთო მინიშნებები", ultimo: "ბოლომდე დარჩენილი", minuto: "რომელ წუთზე?" },
   playWithFriend: "მეგობართან ერთად თამაში",
   playWithFriendHint: "გაუგზავნე ბმული და ითამაშეთ პირისპირ.",
   you: "შენ",
@@ -340,6 +394,22 @@ const ka: DuelCopy = {
     outMisses: (name, me) => (me ? "3-ჯერ შეცდი" : `${name} 3-ჯერ შეცდა`),
     complete: "არცერთი არ დარჩა დაუსახელებელი",
     left2: (n) => `დარჩა ${n}`,
+  },
+  md: {
+    question: "რომელ წუთზე?",
+    waitingRival: (name) => `უპასუხე · ველოდებით: ${name}…`,
+    revealing: "ორივემ უპასუხა!",
+    youExact: "ზუსტი წუთი! +3",
+    rivalExact: (name) => `${name} ზუსტად მოარტყა: +3`,
+    bothExact: "ორივემ ზუსტად მოარტყით! +3 თითოეულს",
+    youCloser: "შენ უფრო ახლოს იყავი: +1",
+    rivalCloser: (name) => `${name} უფრო ახლოს იყო: +1`,
+    tie: "თანაბრად ახლოს: +1 ორივეს",
+    nobody: "არავინ უპასუხა",
+    was: (minute) => `იყო ${minute}`,
+    answered: "უპასუხა",
+    thinking: "ფიქრობს…",
+    noAnswer: "პასუხი არ არის",
   },
   pf: {
     pointsInPlay: "ქულა თამაშშია",
@@ -383,6 +453,7 @@ const ka: DuelCopy = {
       pistas: ["ორივეს ერთი და იგივე მინიშნებები, თითო-თითოდ.", "ვინც პირველი გამოიცნობს, იღებს 11 − მინიშნება ქულას.", "თუ შეცდი, მეტოქეს მაქსიმუმ 3 მინიშნება დარჩება."],
       buscaminas: ["მოთამაშეებს რიგრიგობით ირჩევთ.", "თუ მატყუარას აირჩევ, ქულას მეტოქე იღებს.", "თუ 12-ივეს იპოვით, ორივე იღებთ ქულას."],
       ultimo: ["მორიგეობით დაასახელეთ კატეგორიის პასუხები, გამეორების გარეშე.", "20 წამი სვლაზე, ყოველ ჯერზე ნაკლები. თუ დრო ამოგეწურა ან 3-ჯერ შეცდი, კატეგორია წააგე.", "იგებს ის, ვინც პირველი მოიგებს 3 კატეგორიას."],
+      minuto: ["ორივეს ერთი გოლი: ჩაწერეთ წუთი.", "ზუსტი წუთი: 3 ქულა. თუ არა, უფრო ახლო პასუხი 1 ქულას იღებს.", "მეტოქის წუთს ვერ ხედავ, სანამ ორივე არ უპასუხებთ."],
     },
   },
   pause: {
@@ -400,12 +471,14 @@ const ka: DuelCopy = {
     duel_not_found: "ეს მატჩი ვერ ვიპოვეთ",
     not_in_match: "ეს მატჩი შენი არ არის",
     empty_guess: "ჩაწერე გვარი",
+    already_answered: "ამ გოლზე უკვე უპასუხე",
+    stale_round: "ეს გოლი უკვე დასრულდა",
     default: "რაღაც შეცდომა მოხდა. სცადე თავიდან.",
   },
 };
 
 const tr: DuelCopy = {
-  games: { buscaminas: "Futbol Mayın Tarlası", pistas: "Futbolcu Tahmin Etme Oyunu", ultimo: "Futbolcu Sayma Oyunu" },
+  games: { buscaminas: "Futbol Mayın Tarlası", pistas: "Futbolcu Tahmin Etme Oyunu", ultimo: "Futbolcu Sayma Oyunu", minuto: "Kaçıncı Dakika?" },
   playWithFriend: "Arkadaşınla oyna",
   playWithFriendHint: "Linki gönder, kafa kafaya canlı oynayın.",
   you: "Sen",
@@ -446,6 +519,22 @@ const tr: DuelCopy = {
     outMisses: (name, me) => (me ? "3 kez yanıldın" : `${name} 3 kez yanıldı`),
     complete: "Söylenmeyen kalmadı",
     left2: (n) => `${n} tanesi kaldı`,
+  },
+  md: {
+    question: "Kaçıncı dakika?",
+    waitingRival: (name) => `Cevap verildi · ${name} bekleniyor…`,
+    revealing: "İkiniz de cevap verdiniz!",
+    youExact: "Tam dakika! +3",
+    rivalExact: (name) => `${name} tam bildi: +3`,
+    bothExact: "İkiniz de tam bildiniz! Her birine +3",
+    youCloser: "Sen daha yakındın: +1",
+    rivalCloser: (name) => `${name} daha yakındı: +1`,
+    tie: "Eşit yakınlık: ikinize de +1",
+    nobody: "Kimse cevap vermedi",
+    was: (minute) => `Gol ${minute} dakikada`,
+    answered: "Cevapladı",
+    thinking: "Düşünüyor…",
+    noAnswer: "Cevap yok",
   },
   pf: {
     pointsInPlay: "puan oyunda",
@@ -489,6 +578,7 @@ const tr: DuelCopy = {
       pistas: ["İkinize de aynı ipuçları, teker teker.", "İlk bilen 11 − ipucu puan alır.", "Bilemezsen rakibine en fazla 3 ipucu daha kalır."],
       buscaminas: ["Sırayla oyuncu seçin.", "Sahtekâra basarsan puanı rakibin alır.", "12'sini de bulursanız ikiniz de puan alırsınız."],
       ultimo: ["Sırayla kategorinin cevaplarını söyleyin, tekrar yok.", "Tur başına 20 sn, her seferinde daha az. Süre biterse ya da 3 kez yanılırsan kategoriyi kaybedersin.", "3 kategoriyi ilk kazanan maçı kazanır."],
+      minuto: ["İkinize aynı gol: dakikayı yazın.", "Tam dakika: 3 puan. Değilse en yakın tahmin 1 puan alır.", "İkiniz de cevap verene kadar kimse diğerinin dakikasını görmez."],
     },
   },
   pause: {
@@ -506,6 +596,8 @@ const tr: DuelCopy = {
     duel_not_found: "Bu maçı bulamadık",
     not_in_match: "Bu maç senin değil",
     empty_guess: "Bir soyadı yaz",
+    already_answered: "Bu gole zaten cevap verdin",
+    stale_round: "O gol geçti",
     default: "Bir şeyler ters gitti. Tekrar dene.",
   },
 };
