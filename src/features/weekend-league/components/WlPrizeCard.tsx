@@ -21,17 +21,31 @@ export type PrizeCardSurface = 'blue' | 'gold' | 'dark';
 const SURFACE: Record<PrizeCardSurface, { kicker: string; title: string; text: string; muted: string; line: string; divide: string; coins: string; glow: string }> = {
   blue: { kicker: 'text-brand-gold', title: 'text-white', text: 'text-white', muted: 'text-white/70', line: 'bg-white/20', divide: 'divide-white/20', coins: 'text-brand-gold', glow: 'rgba(255,255,255,0.18)' },
   dark: { kicker: 'text-brand-gold', title: 'text-white', text: 'text-white', muted: 'text-white/60', line: 'bg-white/12', divide: 'divide-white/12', coins: 'text-brand-gold', glow: 'rgba(241,203,112,0.2)' },
-  gold: { kicker: 'text-black/55', title: 'text-black/90', text: 'text-black/90', muted: 'text-black/60', line: 'bg-black/15', divide: 'divide-black/15', coins: 'text-black/85', glow: 'rgba(255,255,255,0.35)' },
+  gold: { kicker: 'text-black/70', title: 'text-black/90', text: 'text-black/90', muted: 'text-black/60', line: 'bg-black/15', divide: 'divide-black/15', coins: 'text-black/85', glow: 'rgba(255,255,255,0.35)' },
 };
 
 const kitSrc = (kit: string) => `/assets/store/rewards/wl-retro-playmaker/${kit}.webp`;
 
+/** "8000" → "8.000" with the locale's own separator. */
+export function groupDigits(value: number, separator: string): string {
+  return Math.trunc(value).toString().replace(/\B(?=(\d{3})+(?!\d))/g, separator);
+}
+
 /** Grouped in every locale: es/ka/tr skip grouping for four-digit numbers by
- *  default, which printed "8000" next to "40.000" on the same card. */
+ *  default, which printed "8000" next to "40.000" on the same card. Engines
+ *  older than Intl.NumberFormat v3 read 'always' as plain `true` (the default),
+ *  so they get the locale's separator inserted by hand. */
+export function coinFormatter(locale: string): (coins: number) => string {
+  const tag = locale === 'ka' ? 'ka-GE' : locale;
+  const always = new Intl.NumberFormat(tag, { useGrouping: 'always' } as Intl.NumberFormatOptions);
+  if (always.format(1000).length > 4) return (coins) => always.format(coins);
+  const separator = new Intl.NumberFormat(tag).formatToParts(100000).find((part) => part.type === 'group')?.value ?? ',';
+  return (coins) => groupDigits(coins, separator);
+}
+
 function useCoinFormat() {
   const { locale } = useLocale();
-  const format = new Intl.NumberFormat(locale === 'ka' ? 'ka-GE' : locale, { useGrouping: 'always' } as Intl.NumberFormatOptions);
-  return (coins: number) => format.format(coins);
+  return coinFormatter(locale);
 }
 
 function CoinAmount({ coins, color, className, size }: { coins: number; color: string; className: string; size: number }) {
@@ -47,7 +61,7 @@ function CoinAmount({ coins, color, className, size }: { coins: number; color: s
 /** The kit in front, its podium frame tucked behind to the right. */
 function PackArt({ kit, alt, place, withFrame, big = false }: { kit: string; alt: string; place: WlFramePlace; withFrame: boolean; big?: boolean }) {
   return (
-    <div className={`relative shrink-0 ${big ? (withFrame ? 'w-[132px] sm:w-[156px]' : 'w-[112px] sm:w-[136px]') : (withFrame ? 'w-[76px]' : 'w-[58px]')}`}>
+    <div className={`relative shrink-0 ${big ? (withFrame ? 'w-[104px] @[22rem]:w-[132px] sm:w-[156px]' : 'w-[88px] @[22rem]:w-[112px] sm:w-[136px]') : (withFrame ? 'w-[76px]' : 'w-[58px]')}`}>
       {withFrame && (
         <div className="absolute right-0 top-1/2 -translate-y-1/2 rotate-[8deg]">
           <WlFrameArt place={place} width={big ? 58 : 30} />
@@ -58,7 +72,7 @@ function PackArt({ kit, alt, place, withFrame, big = false }: { kit: string; alt
         alt={alt}
         width={700}
         height={580}
-        className={`relative object-contain drop-shadow-[0_6px_10px_rgba(0,0,0,0.45)] ${big ? 'h-[104px] w-[112px] sm:h-[128px] sm:w-[136px]' : 'h-[54px] w-[58px]'}`}
+        className={`relative object-contain drop-shadow-[0_6px_10px_rgba(0,0,0,0.45)] ${big ? 'h-[84px] w-[88px] @[22rem]:h-[104px] @[22rem]:w-[112px] sm:h-[128px] sm:w-[136px]' : 'h-[54px] w-[58px]'}`}
       />
     </div>
   );
@@ -76,7 +90,7 @@ export function WlPrizeCard({ surface = 'blue', highlightRank = null }: { surfac
     </span>
   );
   return (
-    <section data-testid="weekend-rare-drop" className="w-full text-left">
+    <section data-testid="weekend-rare-drop" className="@container w-full text-left">
       <div className="text-center">
         <p className={`font-poppins text-[10px] font-bold uppercase tracking-[0.18em] ${c.kicker}`}>{t('weekendLeague.rewardDropKicker')}</p>
         <h2 className={`mt-1.5 font-poppins text-[19px] font-black leading-tight sm:text-[22px] ${c.title}`}>{t('weekendLeague.rewardDropTitle')}</h2>
@@ -99,7 +113,7 @@ export function WlPrizeCard({ surface = 'blue', highlightRank = null }: { surfac
       <div className={`my-3.5 h-px ${c.line}`} />
       <div className={`grid grid-cols-2 divide-x ${c.divide}`}>
         {[second, third].map((p) => (
-          <div key={p.place} data-place={p.place} data-selected={highlightRank === p.place} className="flex items-center gap-2.5 px-2 first:pl-0 last:pr-0">
+          <div key={p.place} data-place={p.place} data-selected={highlightRank === p.place} className="flex min-w-0 flex-col items-center gap-1 px-2 text-center first:pl-0 last:pr-0 @[22rem]:flex-row @[22rem]:gap-2.5 @[22rem]:text-left">
             <PackArt kit={p.kit} alt={t(p.nameKey)} place={p.place} withFrame={WL_PACK_HAS_FRAME} />
             <div className="min-w-0">
               <div className={`whitespace-nowrap font-poppins text-[12px] font-black ${surface === 'gold' ? 'text-black/70' : ''}`} style={surface === 'gold' ? undefined : { color: p.accent }}>
@@ -139,6 +153,7 @@ export function WeekendLeagueRewardDetails() {
     <div data-testid="weekend-inline-rules" className="mt-3.5 space-y-2 font-poppins text-[11px] font-medium leading-relaxed text-[#afc3dd]">
       <p>{t('weekendLeague.rewardEntryRule')}</p>
       <p>{t('weekendLeague.rewardScoringRule')}</p>
+      <p>{t('weekendLeague.rewardParticipationRule')}</p>
       <p>{t('weekendLeague.rewardNonCash')}</p>
       <p>{t('weekendLeague.prizesPayoutNote')}</p>
       <p>{t('weekendLeague.rewardContact')}</p>

@@ -5,7 +5,7 @@ import { getWeekendLeaguePrizes, WEEKEND_COIN_REWARDS, WL_PACK_HAS_FRAME } from 
 import { PrizesPanel } from '../components/PrizesPanel';
 import { WeekendLeaguePromoCard } from '../components/WeekendLeaguePromoCard';
 import { LeagueHeader } from '../components/LeagueHeader';
-import { WlPrizeCard } from '../components/WlPrizeCard';
+import { WlPrizeCard, coinFormatter, groupDigits } from '../components/WlPrizeCard';
 
 const settings = vi.hoisted(() => ({ locale: 'en' as Locale }));
 vi.mock('@/contexts/LocaleContext', () => ({
@@ -104,7 +104,7 @@ describe('Weekend League prize placements', () => {
     settings.locale = locale;
     const wl = messages[locale].weekendLeague;
     const { rerender } = render(<PrizesPanel showBoard={false} />);
-    for (const key of ['rewardEntryRule', 'rewardScoringRule', 'rewardNonCash', 'prizesPayoutNote'] as const) {
+    for (const key of ['rewardEntryRule', 'rewardScoringRule', 'rewardParticipationRule', 'rewardNonCash', 'prizesPayoutNote'] as const) {
       expect(screen.getByText(wl[key])).toBeInTheDocument();
     }
     expect(screen.queryByTestId('weekend-rare-drop')).toBeNull();
@@ -114,5 +114,19 @@ describe('Weekend League prize placements', () => {
     // nothing tells winners to claim through support or mentions Apple.
     expect(wl.prizesPayoutNote).not.toMatch(/Help|Ayuda|Yardım|დახმარება/);
     expect(document.body.textContent).not.toMatch(/Apple/);
+  });
+});
+
+describe('coin grouping', () => {
+  it('groups four-digit amounts in every app language', () => {
+    for (const locale of LOCALES) expect(coinFormatter(locale)(8000)).not.toBe('8000');
+    expect(coinFormatter('es')(8000)).toBe('8.000');
+  });
+
+  it('the fallback for older engines inserts the separator by hand', () => {
+    expect(groupDigits(8000, '.')).toBe('8.000');
+    expect(groupDigits(40000, '\u00a0')).toBe('40\u00a0000');
+    expect(groupDigits(1500, ',')).toBe('1,500');
+    expect(groupDigits(999, '.')).toBe('999');
   });
 });
