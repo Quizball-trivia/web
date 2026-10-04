@@ -2,7 +2,7 @@
 // no module-load Date.now) so SSR and client render identically. All of this is
 // throwaway demo content the real backend will replace.
 
-import { PLAYOFF_CUTOFF, QUIZ_LENGTH, nextGeorgianOccurrence } from './constants';
+import { PLAYOFF_CUTOFF, QUIZ_LENGTH, WL_KICKOFF_HOUR_GE, nextGeorgianOccurrence } from './constants';
 import type {
   Bracket,
   BracketMatch,
@@ -17,9 +17,8 @@ import type {
 export const REGISTERED_COUNT = 1_240;
 
 // ── Prize ladder (football-themed digital prizes) ───────────────────────────
-// Prizes are TOP-3 ONLY: store vouchers (Wolt / Zoommer / PlayStation Store,
-// winner's choice) valued by final place — ₾200 / ₾100 / ₾50 for Georgia.
-// prizes.ts selects Amazon $50 / $25 / $10 for other saved profile countries.
+// Rewards are TOP-3 ONLY: weekly rare cosmetic packs and bonus in-game coins.
+// Country and interface language do not change the reward ladder.
 export const PRIZES: PrizeTier[] = [
   { id: 'p1', labelKey: 'weekendLeague.prize1Label', rankKey: 'weekendLeague.prize1Rank', rankFrom: 1, rankTo: 1, prizeKey: 'weekendLeague.prize1Reward', icon: '🏆', accent: 'gold' },
   { id: 'p2', labelKey: 'weekendLeague.prize2Label', rankKey: 'weekendLeague.prize2Rank', rankFrom: 2, rankTo: 2, prizeKey: 'weekendLeague.prize2Reward', icon: '🥈', accent: 'silver' },
@@ -33,16 +32,16 @@ export function getMilestones(nowMs: number): Record<'entry' | 'qualifier' | 'pl
   // this week's entry window is over (Friday 24:00 GE, exclusive), the whole
   // rail rolls to NEXT Saturday — mirroring the backend's entry-cutoff rule.
   const DAY = 24 * 60 * 60_000;
-  let saturdayMs = nextGeorgianOccurrence(6, 14, nowMs);
-  let entryCloseMs = saturdayMs - 14 * 60 * 60_000; // Fri 24:00 GE (Sat 00:00)
+  let saturdayMs = nextGeorgianOccurrence(6, WL_KICKOFF_HOUR_GE, nowMs);
+  let entryCloseMs = saturdayMs - WL_KICKOFF_HOUR_GE * 60 * 60_000; // Fri 24:00 GE (Sat 00:00)
   if (nowMs >= entryCloseMs) {
     saturdayMs += 7 * DAY;
     entryCloseMs += 7 * DAY;
   }
   return {
-    entry: { key: 'entry', label: 'Entry closes', dayLabel: 'Friday', timeLabel: '24:00', targetMs: entryCloseMs },
-    qualifier: { key: 'qualifier', label: 'Qualifier', dayLabel: 'Saturday', timeLabel: '14:00', targetMs: saturdayMs },
-    playoffs: { key: 'playoffs', label: 'Playoffs', dayLabel: 'Sunday', timeLabel: '14:00', targetMs: saturdayMs + DAY },
+    entry: { key: 'entry', label: 'Entry closes', targetMs: entryCloseMs },
+    qualifier: { key: 'qualifier', label: 'Qualifier', targetMs: saturdayMs },
+    playoffs: { key: 'playoffs', label: 'Playoffs', targetMs: saturdayMs + DAY },
   };
 }
 

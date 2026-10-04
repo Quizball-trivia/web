@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Eye, Play } from 'lucide-react';
 import { useLocale } from '@/contexts/LocaleContext';
+import { useWlKickoffTimes, useWlTimeZone, formatWlTime } from './wlTime';
 import { PLAYOFF_CUTOFF, poppins } from './constants';
 import { useWeekendLeague, type WeekendLeagueController } from './use-weekend-league';
 import type { WeekendLeagueLiveExtras } from './use-weekend-league-live';
@@ -45,6 +46,8 @@ export function WeekendLeagueScreen({
   onWatchLive?: () => void;
 }) {
   const { t } = useLocale();
+  const timeZone = useWlTimeZone();
+  const kickoff = useWlKickoffTimes();
   const mock = useWeekendLeague(initial);
   const wl = controller ?? mock;
   // Without a live controller (the /dev/wl playground) every play/watch action
@@ -165,7 +168,7 @@ export function WeekendLeagueScreen({
                 {controller.checkedIn ? t('weekendLeague.gCheckedIn') : t('weekendLeague.gCheckinTitle')}
               </div>
               <p className="mx-auto mt-1 max-w-xs font-poppins text-[13px] font-semibold text-white/60">
-                {controller.checkedIn ? t('weekendLeague.gWaitingKickoff') : t('weekendLeague.gCheckinBody')}
+                {controller.checkedIn ? t('weekendLeague.gWaitingKickoff') : t('weekendLeague.gCheckinBody', { time: formatWlTime(wl.milestones?.playoffs.targetMs ?? kickoff.finalMs, timeZone) })}
               </p>
               <motion.button
                 type="button"
@@ -212,7 +215,7 @@ function PhaseContent({
   const { phase } = wl;
 
   // The promo hero leads pre-entry, but the full prize ladder and the
-  // how-it-works explainer stay below it — the card's one-line voucher blurb
+  // how-it-works explainer stay below it — the card's one-line reward blurb
   // is a hook, not the story (owner call 2026-08-31, restoring the pre-promo
   // stack).
   if (phase === 'upcoming' || phase === 'entry_open') {

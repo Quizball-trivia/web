@@ -63,6 +63,10 @@ export const ACCENT_BG: Record<PrizeAccent, string> = {
   green: 'bg-brand-green/10',
 };
 
+/** Kickoff hour (Georgia time) of the Saturday qualifier and the Sunday final
+ *  on the fixed weekly calendar — mirrors the backend's WL_KICKOFF_HOUR_GE. */
+export const WL_KICKOFF_HOUR_GE = 22;
+
 /**
  * Epoch ms of the next occurrence of a given Georgian-time weekday + hour.
  * weekday: 0=Sun … 6=Sat. Computed in UTC so it is independent of the viewer's

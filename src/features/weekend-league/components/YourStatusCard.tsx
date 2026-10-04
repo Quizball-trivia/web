@@ -1,6 +1,7 @@
 'use client';
 
 import { poppins } from '../constants';
+import { useLocale } from '@/contexts/LocaleContext';
 import type { LeaguePhase } from '../types';
 
 type Tone = 'neutral' | 'green' | 'gold' | 'red' | 'cyan';
@@ -32,15 +33,15 @@ function resolve(
       return { emoji: '📅', headline: 'Get ready', sub: 'Claim your free entry before Friday midnight to compete for prizes.', tone: 'neutral' };
     case 'entry_open':
       return hasEntered
-        ? { emoji: '✅', headline: "You're entered", sub: 'Qualifier starts Saturday 14:00. Be there — it starts for everyone at once.', tone: 'green' }
-        : { emoji: '🎟️', headline: "Don't miss out", sub: 'Claim your free entry before Saturday 14:00.', tone: 'gold' };
+        ? { emoji: '✅', headline: "You're entered", sub: 'Qualifier starts Saturday. Be there — it starts for everyone at once.', tone: 'green' }
+        : { emoji: '🎟️', headline: "Don't miss out", sub: 'Claim your free entry before Saturday.', tone: 'gold' };
     case 'qualifier_live':
       return hasEntered
         ? { emoji: '🔴', headline: 'Qualifier is live', sub: 'Play now to set your score and climb the leaderboard.', tone: 'cyan' }
         : { emoji: '⌛', headline: "You didn't enter this week", sub: 'Entry closed at kickoff. Come back next Friday to claim your spot.', tone: 'neutral' };
     case 'qualifier_done':
       return qualified
-        ? { emoji: '🎉', headline: yourRank > 0 ? `You qualified — #${yourRank}` : 'You qualified!', sub: 'You made the top 24. Playoffs are Sunday 14:00.', tone: 'gold' }
+        ? { emoji: '🎉', headline: yourRank > 0 ? `You qualified — #${yourRank}` : 'You qualified!', sub: 'You made the top 24. Playoffs are Sunday.', tone: 'gold' }
         : { emoji: '😔', headline: yourRank > 0 ? `So close — finished #${yourRank}` : 'So close — missed the cut', sub: 'Only the top 24 advance. Come back next week and go again.', tone: 'red' };
     case 'playoffs_live':
       return qualified
@@ -48,7 +49,7 @@ function resolve(
         : { emoji: '👀', headline: 'The final is live', sub: 'Watch the top 24 play for the title.', tone: 'neutral' };
     case 'completed':
       return qualified
-        ? { emoji: '🏆', headline: "You're the champion!", sub: 'You won the Weekend League. Prizes are on the way.', tone: 'gold' }
+        ? { emoji: '🏆', headline: "You're the champion!", sub: '', tone: 'gold' }
         : { emoji: '🏁', headline: 'Weekend wrapped', sub: yourRank > 0 ? `You finished #${yourRank}.` : 'See you next weekend.', tone: 'neutral' };
   }
 }
@@ -65,13 +66,15 @@ export function YourStatusCard({
   qualified: boolean;
   yourRank: number;
 }) {
+  const { t } = useLocale();
   const { emoji, headline, sub, tone } = resolve(phase, hasEntered, qualified, yourRank);
+  const description = phase === 'completed' && qualified ? t('weekendLeague.prizesPayoutNote') : sub;
   return (
     <div className={`flex items-center gap-3 rounded-2xl border-2 px-4 py-3.5 ${TONE_CLASS[tone]}`}>
       <span className="text-2xl leading-none">{emoji}</span>
       <div className="min-w-0">
         <div className={`font-poppins text-base font-black uppercase ${TONE_ACCENT[tone]}`} style={poppins}>{headline}</div>
-        <div className="mt-0.5 font-poppins text-[12px] font-semibold leading-snug text-white/60">{sub}</div>
+        <div className="mt-0.5 font-poppins text-[12px] font-semibold leading-snug text-white/60">{description}</div>
       </div>
     </div>
   );

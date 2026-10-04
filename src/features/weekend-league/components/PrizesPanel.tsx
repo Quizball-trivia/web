@@ -1,54 +1,20 @@
 'use client';
-
 import { useLocale } from '@/contexts/LocaleContext';
 import { useWeekendLeaguePrizes } from '../use-weekend-league-prizes';
-import { ACCENT_BG, ACCENT_BORDER, ACCENT_TEXT } from '../constants';
+import { RareRewardsBoard, WeekendLeagueRewardDetails } from './RareRewardsBoard';
 
-/** The prize ladder — rank bands → reward. Optionally highlights the viewer's band. */
+/** Placement rewards and essential event details on one screen. */
 export function PrizesPanel({ highlightRank }: { highlightRank?: number | null }) {
   const { t } = useLocale();
   const prizes = useWeekendLeaguePrizes();
-  return (
-    <section>
-      <h2 className="mb-3 font-poppins text-lg font-black uppercase tracking-wide text-white">
-        {t('weekendLeague.prizes')}
-      </h2>
-      <div className="flex flex-col gap-2">
-        {prizes.tiers.map((prize) => {
-          const mine = highlightRank != null && highlightRank >= prize.rankFrom && highlightRank <= prize.rankTo;
-          return (
-            <div
-              key={prize.id}
-              className={`flex items-center gap-3 rounded-2xl border-2 px-3.5 py-3 ${
-                mine ? `${ACCENT_BORDER[prize.accent]} ${ACCENT_BG[prize.accent]}` : 'border-white/12'
-              }`}
-            >
-              <span className="text-2xl leading-none">{prize.icon}</span>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-2">
-                  <span className={`font-poppins text-sm font-black uppercase ${ACCENT_TEXT[prize.accent]}`}>{t(prize.rankKey)}</span>
-                  <span className="font-poppins text-[11px] font-bold uppercase tracking-wide text-white/45">{t(prize.labelKey)}</span>
-                  {mine && (
-                    <span className="rounded-full bg-white/10 px-2 py-0.5 font-poppins text-[9px] font-black uppercase tracking-wide text-white">
-                      {t('weekendLeague.you')}
-                    </span>
-                  )}
-                </div>
-                <div className="mt-0.5 font-poppins text-[13px] font-semibold text-white/85">{t(prize.prizeKey)}</div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-      <p className="mt-2.5 px-1 font-poppins text-[11px] font-medium text-white/50">
-        {t(prizes.countryRuleKey)}
-      </p>
-      <p className="mt-2.5 px-1 font-poppins text-[11px] font-medium text-white/35">
-        {t('weekendLeague.prizesNote')}
-      </p>
-      <p className="mt-1 px-1 font-poppins text-[11px] font-medium text-white/50">
-        {t('weekendLeague.prizesPayoutNote')}
-      </p>
-    </section>
-  );
+  return <section>
+    <RareRewardsBoard highlightRank={highlightRank} />
+    <div className="mt-3 flex flex-col gap-2">
+      {prizes.tiers.map(prize => <p key={prize.id} className="font-poppins text-xs leading-relaxed text-white/85">
+        <strong>{t(prize.rankKey)}</strong> — <span>{t(prize.prizeKey)}</span>
+      </p>)}
+    </div>
+    <p className="mt-3 font-poppins text-xs leading-relaxed text-white/60">{t('weekendLeague.prizesNote')}</p>
+    <WeekendLeagueRewardDetails />
+  </section>;
 }

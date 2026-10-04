@@ -1,8 +1,8 @@
 // Weekend League — a weekly synchronized tournament.
 //
 // The week runs: entry closes Friday 24:00 → everyone plays the same qualifier
-// Saturday 14:00 (Georgian time) → the top 24 return for a knockout playoff
-// Sunday 14:00. This file types the whole thing; it is a FRONTEND PROTOTYPE
+// Saturday 22:00 (Georgian time) → the top 24 return for a knockout playoff
+// Sunday 22:00. This file types the whole thing; it is a FRONTEND PROTOTYPE
 // driven by mock data (see mock-data.ts) so the flow can be demoed end to end
 // before the backend exists.
 
@@ -11,9 +11,9 @@ import type { MessageKey } from '@/lib/i18n/messages';
 export type LeaguePhase =
   | 'upcoming' // before entry closes (before Fri 24:00)
   | 'entry_open' // Mon → Fri 24:00: claim your one weekly entry
-  | 'qualifier_live' // Sat 14:00: the qualifier quiz is running
+  | 'qualifier_live' // Sat 22:00 GE: the qualifier quiz is running
   | 'qualifier_done' // qualifier finished, top 24 known, waiting for Sunday
-  | 'playoffs_live' // Sun 14:00: knockout bracket for the top 24
+  | 'playoffs_live' // Sun 22:00 GE: knockout bracket for the top 24
   | 'completed'; // champion decided
 
 export type MilestoneKey = 'entry' | 'qualifier' | 'playoffs';
@@ -22,11 +22,8 @@ export interface Milestone {
   key: MilestoneKey;
   /** Short action label, e.g. "Entry opens". */
   label: string;
-  /** Weekday, e.g. "Friday". */
-  dayLabel: string;
-  /** Wall-clock time in Georgian time, e.g. "21:00". */
-  timeLabel: string;
-  /** Absolute target as epoch ms (next occurrence), for live countdowns. */
+  /** Absolute target as epoch ms (next occurrence), for countdowns and for
+   *  printing the stage time on the viewer's clock (see wlTime.ts). */
   targetMs: number;
 }
 
