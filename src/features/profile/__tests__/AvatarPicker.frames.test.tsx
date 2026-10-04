@@ -11,7 +11,11 @@ vi.mock('@/components/AvatarPreview', () => ({ AvatarPreview: () => null }));
 vi.mock('@/components/AvatarDisplay', () => ({ AvatarDisplay: () => null }));
 // eslint-disable-next-line @next/next/no-img-element -- test stub for next/image
 vi.mock('next/image', () => ({ default: ({ src, alt }: { src: unknown; alt?: string }) => <img src={typeof src === 'string' ? src : ''} alt={alt ?? ''} /> }));
-vi.mock('@/lib/queries/store.queries', () => ({ useStoreProducts: () => ({ data: undefined }), useStoreInventory: () => ({ data: undefined }) }));
+const inventory = vi.hoisted(() => ({ items: [] as Array<{ slug: string }> }));
+vi.mock('@/lib/queries/store.queries', () => ({
+  useStoreProducts: () => ({ data: undefined }),
+  useStoreInventory: () => ({ data: { items: inventory.items } }),
+}));
 
 function openFrames(ownedPartIds: string[], onSelect = vi.fn()) {
   render(
@@ -42,6 +46,21 @@ describe('AvatarPicker: Frames tab', () => {
     for (const n of [1, 2, 3]) {
       expect(screen.getByRole('button', { name: `wlRewards.frameName${n} — wlRewards.frameUnlock${n}` })).toBeDisabled();
     }
+  });
+});
+
+describe('AvatarPicker: frame ownership from the real inventory', () => {
+  it('unlocks the frame whose product the inventory holds, and only that one', () => {
+    inventory.items = [{ slug: 'avatar_frame_wl_runnerup' }];
+    render(
+      <QueryClientProvider client={new QueryClient()}>
+        <AvatarPicker open onOpenChange={vi.fn()} onSelect={vi.fn()} currentCustomization={{ skin: 'skin_male_white' }} />
+      </QueryClientProvider>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'wlRewards.framesTab' }));
+    expect(screen.getByRole('button', { name: 'wlRewards.frameName2' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'wlRewards.frameName1 — wlRewards.frameUnlock1' })).toBeDisabled();
+    inventory.items = [];
   });
 });
 
