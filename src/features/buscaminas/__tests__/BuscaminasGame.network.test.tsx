@@ -200,6 +200,16 @@ describe("Buscaminas and the board index (the calendar)", () => {
     expect(boardRequests()).toHaveLength(1);
   });
 
+  it("a linked day the index does not list is dropped: the player lands on the last released board", async () => {
+    useAuthStore.setState({ status: "authenticated", user: { id: "u1" } } as never);
+    const last = addDays(releaseDay(), -2);
+    const ended = () => { const all = index(); for (const d of Object.keys(all.days)) if (d > last) delete all.days[d]; return all; };
+    fetchMock.mockImplementation(async (url: string) => (isIndex(url) ? json(ended()) : json(board(url.split("/").pop()!.split("?")[0]))));
+    render(<BuscaminasGame locale="es" initialDay={releaseDay()} />);
+    await waitFor(() => expect(boardRequests().some((url) => url.includes(`/boards/${last}`))).toBe(true), { timeout: 4000 });
+    expect(await screen.findByRole("button", { name: "Jugar" }, { timeout: 4000 })).toBeInTheDocument();
+  });
+
   it("the calendar ends at the last released day: a guest lands on it once today has no board", async () => {
     // The index stops two days ago (no new content): nothing is live, so the guest gets that last board, not a 404.
     const last = addDays(releaseDay(), -2);

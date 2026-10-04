@@ -65,15 +65,12 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
   // An archive pick or a started board stays put; otherwise the screen follows today's puzzle across midnight.
   const [pickedDay, setChosenDay] = useState<string | null>(() => (initialDay && playableDays(releaseDay()).includes(initialDay) ? initialDay : null));
   const [startedDay, setLockedDay] = useState<string | null>(null);
-  // A day the index turned out not to list (not released) is never opened…
+  // A day the index turned out not to list (not released) is never opened, and is forgotten for good when the index
+  // arrives, so it cannot come back and take over the board being played once it is released.
   const chosenDay = pickedDay && days.includes(pickedDay) ? pickedDay : null;
   const lockedDay = startedDay && days.includes(startedDay) ? startedDay : null;
-  // …and is forgotten for good, so it cannot come back and take over the board being played once it is released.
-  useEffect(() => {
-    if (lastDay === undefined) return;
-    if (pickedDay && !days.includes(pickedDay)) setChosenDay(null);
-    if (startedDay && !days.includes(startedDay)) setLockedDay(null);
-  }, [days, lastDay, pickedDay, startedDay]);
+  // The index lists no board at all: there is nothing to load (the error screen's Retry re-reads the index).
+  const noCalendar = lastDay === null;
   const scrollRef = useRef<HTMLDivElement>(null);
   const startedRef = useRef(false);
   const replayPendingRef = useRef(false);
@@ -96,7 +93,7 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
   const [loaded, setLoaded] = useState<{ key: string; data: BuscaminasDay } | null>(null);
   const [failedKey, setFailedKey] = useState<string | null>(null);
   const content = loaded?.key === loadKey ? loaded.data : null;
-  const loadFailed = failedKey === loadKey;
+  const loadFailed = noCalendar || failedKey === loadKey;
   const [run, setRun] = useState<BuscaminasRun | null>(null);
   const [view, setView] = useState<View>("intro");
   const [pending, setPending] = useState<string | null>(null);
@@ -133,7 +130,13 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
     const fresh = today !== firstTodayRef.current || indexAttempt > 0 || attempt > 0;
     fetch(fresh ? `${boardsUrl}?r=${Date.now()}` : boardsUrl, { signal: controller.signal })
       .then((res) => (res.ok ? res.json() : null))
-      .then((data: { days?: Record<string, number> } | null) => { if (data?.days) setVersions(data.days); else retry(); })
+      .then((data: { days?: Record<string, number> } | null) => {
+        if (!data?.days) { retry(); return; }
+        const released = playableDays(today, lastReleasedDay(Object.keys(data.days)));
+        setChosenDay((d) => (d && released.includes(d) ? d : null));
+        setLockedDay((d) => (d && released.includes(d) ? d : null));
+        setVersions(data.days);
+      })
       .catch((error: { name?: string }) => { if (error?.name !== "AbortError") retry(); });
     return () => { controller.abort(); window.clearTimeout(retryTimer); };
     // `attempt` is the board's Retry: it re-reads the calendar too.
@@ -141,12 +144,10 @@ export function BuscaminasGame({ locale, onExit, onEvent, initialDay }: {
 
   const loadRetriedRef = useRef(new Set<string>());
   // Only "no board at all" matters to the board load: the calendar arriving must not re-fetch (and reset) a loaded board.
-  const noCalendar = lastDay === null;
   useEffect(() => {
     // The saved run belongs to a guest or an account; wait until we know which.
     if (!authReady) return;
-    // The index lists no board at all: there is nothing to load (the error screen's Retry re-reads the index).
-    if (noCalendar) { setFailedKey(loadKey); return; }
+    if (noCalendar) return;
     const controller = new AbortController();
     let retryTimer: number | undefined;
     // A retry after a content correction must not get the old board back from the HTTP cache.
