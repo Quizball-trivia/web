@@ -1,7 +1,9 @@
 import { cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { messages, translate, type Locale, type MessageKey } from '@/lib/i18n/messages';
-import { getWeekendLeaguePrizes, WEEKEND_COIN_REWARDS, WL_PACK_HAS_FRAME } from '../prizes';
+import { getWeekendLeaguePrizes, WEEKEND_COIN_REWARDS } from '../prizes';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/queries/queryKeys';
 import { PrizesPanel } from '../components/PrizesPanel';
 import { WeekendLeaguePromoCard } from '../components/WeekendLeaguePromoCard';
 import { LeagueHeader } from '../components/LeagueHeader';
@@ -57,10 +59,24 @@ describe('WlPrizeCard', () => {
     expect(container.textContent).not.toMatch(/Amazon|Wolt|Zoommer|₾\s?\d|\$50/);
   });
 
-  it('claims a frame only once packs carry one', () => {
+  it('claims a frame only when the backend says packs carry one', () => {
+    const withRow = (rewardFrames: boolean | undefined) => {
+      const client = new QueryClient();
+      client.setQueryData(queryKeys.weekendLeague.current(), { tournament: { id: 't', status: 'entry_open', reward_frames: rewardFrames }, you: null });
+      return render(<QueryClientProvider client={client}><WlPrizeCard /></QueryClientProvider>);
+    };
+    const on = withRow(true);
+    expect(screen.getByText(messages.en.wlRewards.kitFrameCoins)).toBeInTheDocument();
+    on.unmount();
+    for (const value of [false, undefined]) {
+      const off = withRow(value);
+      expect(screen.getByText(messages.en.wlRewards.exclusiveJersey)).toBeInTheDocument();
+      expect(screen.queryByText(messages.en.wlRewards.kitFrameCoins)).toBeNull();
+      off.unmount();
+    }
+    // No row in the cache (or no query client): no frame claim.
     render(<WlPrizeCard />);
-    const line = WL_PACK_HAS_FRAME ? messages.en.wlRewards.kitFrameCoins : messages.en.wlRewards.exclusiveJersey;
-    expect(screen.getByText(line)).toBeInTheDocument();
+    expect(screen.getByText(messages.en.wlRewards.exclusiveJersey)).toBeInTheDocument();
   });
 
   it.each([[1, '1'], [2, '2'], [3, '3']] as const)('marks the viewer’s podium place %s, and nothing else', (rank, place) => {
