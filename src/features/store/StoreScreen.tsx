@@ -741,6 +741,34 @@ export function StoreScreen({ localPreview }: { localPreview?: LocalStorePreview
             </div>
           </motion.section>}
 
+          {/* Kits are the headline items: straight after tickets, before the smaller cosmetics. */}
+          <motion.section hidden={!showCategory("jerseys")}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.25 }}
+          >
+            <SectionHeader title={t("store.jerseysTitle")} />
+            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+              {JERSEY_DESIGN_PARTS.filter((p) => localPreview || !p.localOnly).filter(matchesSearch).map((part, i) => (
+                <motion.div
+                  key={part.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.25 + i * 0.04 }}
+                >
+                  <ItemCard
+                    name={translatePartName(part.name)}
+                    asset={part.asset}
+                    price={partPriceCoins(part) ? partPriceCoins(part)!.toLocaleString() : "—"}
+                    imageSize="lg"
+                    owned={ownedPartIds.has(part.id)}
+                    onBuy={() => openAvatarPartModal(part)}
+                  />
+                </motion.div>
+              ))}
+            </div>
+          </motion.section>
+
           <motion.section hidden={!showCategory("hair")}
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -826,33 +854,6 @@ export function StoreScreen({ localPreview }: { localPreview?: LocalStorePreview
                     asset={part.asset}
                     price={partPriceCoins(part) ? partPriceCoins(part)!.toLocaleString() : "—"}
                     mannequinPart={part}
-                    owned={ownedPartIds.has(part.id)}
-                    onBuy={() => openAvatarPartModal(part)}
-                  />
-                </motion.div>
-              ))}
-            </div>
-          </motion.section>
-
-          <motion.section hidden={!showCategory("jerseys")}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.45 }}
-          >
-            <SectionHeader title={t("store.jerseysTitle")} />
-            <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
-              {JERSEY_DESIGN_PARTS.filter((p) => localPreview || !p.localOnly).filter(matchesSearch).map((part, i) => (
-                <motion.div
-                  key={part.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.45 + i * 0.04 }}
-                >
-                  <ItemCard
-                    name={translatePartName(part.name)}
-                    asset={part.asset}
-                    price={partPriceCoins(part) ? partPriceCoins(part)!.toLocaleString() : "—"}
-                    imageSize="lg"
                     owned={ownedPartIds.has(part.id)}
                     onBuy={() => openAvatarPartModal(part)}
                   />
