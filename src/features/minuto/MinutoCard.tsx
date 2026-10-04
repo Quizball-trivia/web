@@ -23,7 +23,7 @@ const FLAG_FILL = { position: "absolute", inset: 0, width: "100%", height: "100%
 
 /** `fluid` sizes from the enclosing `@container` (the picture), so the badges shrink with it instead of overflowing. */
 function TeamBadge({ team, size = "md" }: { team: MinutoTeam; size?: "sm" | "md" | "fluid" }) {
-  const [failed, setFailed] = useState(false);
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const flagBox = { sm: "h-7 w-10", md: "h-12 w-[4.5rem] lg:h-16 lg:w-24", fluid: "aspect-[3/2] w-[20cqw]" }[size];
   const crestBox = { sm: "size-7", md: "size-14 lg:size-20", fluid: "size-[17cqw]" }[size];
   if (team.kind === "nation") {
@@ -36,12 +36,12 @@ function TeamBadge({ team, size = "md" }: { team: MinutoTeam; size?: "sm" | "md"
     );
   }
   const src = team.crest ? footballGridStorageImageUrl(team.crest) : null;
-  if (!src || failed) {
+  if (!src || failedSrc === src) {
     const initials = team.name.en.split(/\s+/).filter((w) => !/^(fc|cf|ac|sc|afc|club)$/i.test(w)).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
     const text = { sm: "text-[10px]", md: "text-base lg:text-xl", fluid: "text-[5cqw]" }[size];
     return <span aria-hidden className={cn("flex items-center justify-center rounded-full bg-surface-page font-black text-white", crestBox, text)} style={poppins}>{initials}</span>;
   }
-  return <img src={src} alt="" aria-hidden className={cn("object-contain drop-shadow", crestBox)} onError={() => setFailed(true)} />;
+  return <img src={src} alt="" aria-hidden className={cn("object-contain drop-shadow", crestBox)} onError={() => setFailedSrc(src)} />;
 }
 
 /** The match scoreline: "(4) 1-1 (2)" after a shootout; on narrow phones the shootout goes under the score to leave the names room. */
@@ -111,8 +111,8 @@ export function GoalCard({ goal, locale, minute, className }: { goal: MinutoGoal
  * scorer's face between them. `minute` (after the reveal) is stamped in the corner, like the stream.
  */
 export function GoalPicture({ goal, locale, minute = null, className }: { goal: MinutoGoalCard; locale: Locale; minute?: MinuteValue | null; className?: string }) {
-  const [failed, setFailed] = useState(false);
-  const [faceFailed, setFaceFailed] = useState(false);
+  const [failedPhoto, setFailedPhoto] = useState<string | null>(null);
+  const [failedFace, setFailedFace] = useState<string | null>(null);
   const photo = goal.image ? footballGridStorageImageUrl(goal.image.src) : null;
   const credit = goal.image ? `${goal.image.credit} · ${goal.image.license}` : "";
   const face = goal.scorer.photo ? footballGridStorageImageUrl(goal.scorer.photo) : null;
@@ -123,14 +123,16 @@ export function GoalPicture({ goal, locale, minute = null, className }: { goal: 
       {formatMinute(minute)}
     </motion.span>
   );
-  if (photo && !failed) {
+  if (photo && failedPhoto !== photo) {
     return (
-      <figure className={cn("@container relative aspect-video w-full overflow-hidden rounded-3xl bg-black ring-1 ring-white/10", className)}>
+      <figure className={cn("@container relative flex aspect-video w-full flex-col overflow-hidden rounded-3xl bg-black ring-1 ring-white/10", className)}>
         {/* Any shape fits whole and centred; a blurred copy fills the sides (a portrait photo is not cut to a torso). */}
-        <img src={photo} alt="" aria-hidden className="absolute inset-0 size-full scale-110 object-cover opacity-60 blur-xl" />
-        <img src={photo} alt={scorer} className="relative size-full object-contain" onError={() => setFailed(true)} />
-        <figcaption className="absolute bottom-1 left-2 rounded bg-black/40 px-1 text-[9px] text-white/80">{credit}</figcaption>
-        {stamp}
+        <div className="relative min-h-0 flex-1 overflow-hidden">
+          <img src={photo} alt="" aria-hidden className="absolute inset-0 size-full scale-110 object-cover opacity-60 blur-xl" />
+          <img src={photo} alt={scorer} className="relative size-full object-contain object-center" onError={() => setFailedPhoto(photo)} />
+          {stamp}
+        </div>
+        <figcaption className="shrink-0 break-words px-2 py-1 text-[9px] leading-tight text-white/80">{credit}</figcaption>
       </figure>
     );
   }
@@ -141,8 +143,8 @@ export function GoalPicture({ goal, locale, minute = null, className }: { goal: 
       <div className="relative grid w-full grid-cols-[1fr_auto_1fr] items-center gap-[3cqw] px-[4cqw]">
         <div className={cn("flex justify-center transition-opacity", scorerSide === "home" ? "opacity-100" : "opacity-60")}><TeamBadge team={goal.home} size="fluid" /></div>
         <div className="flex flex-col items-center gap-[1.5cqw]">
-          {face && !faceFailed ? (
-            <img src={face} alt={scorer} onError={() => setFaceFailed(true)} className="size-[28cqw] rounded-full bg-white/15 object-cover shadow-2xl ring-[0.8cqw] ring-brand-orange" />
+          {face && failedFace !== face ? (
+            <img src={face} alt={scorer} onError={() => setFailedFace(face)} className="size-[28cqw] rounded-full bg-white/15 object-cover shadow-2xl ring-[0.8cqw] ring-brand-orange" />
           ) : (
             <span aria-hidden className="flex size-[28cqw] items-center justify-center rounded-full bg-white/15 text-[12cqw] ring-[0.8cqw] ring-brand-orange">⚽</span>
           )}

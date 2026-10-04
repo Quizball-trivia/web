@@ -10,7 +10,7 @@ const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
 
 /**
  * The minute box from the stream ("MINUTO ?'"): a big numeric field and a confirm button. Accepts "93" or "90+3".
- * `tone` colours it like the seat it belongs to (you = brand green).
+ * The answer field uses brand blue and matches the confirm button's size.
  */
 export function MinuteInput({ locale, busy, onSubmit, autoFocus = true, id = "minuto-guess", stackOnDesktop = false, className }: {
   locale: Locale; busy: boolean; onSubmit: (minute: number) => void; autoFocus?: boolean; id?: string;
@@ -38,8 +38,8 @@ export function MinuteInput({ locale, busy, onSubmit, autoFocus = true, id = "mi
   return (
     <form onSubmit={submit} className={cn("flex flex-col gap-2", className)}>
       <label htmlFor={id} className="text-center text-[11px] font-black uppercase tracking-[0.2em] text-white/70" style={poppins}>{c.inputLabel}</label>
-      <div className={cn("flex gap-2", stackOnDesktop && "lg:flex-col")}>
-        <div className={cn("relative flex h-16 min-w-0 flex-1 items-center rounded-2xl border-[3px] bg-brand-green/15 transition-colors", invalid ? "border-brand-red-soft" : "border-brand-green focus-within:border-brand-green-light")}>
+      <div className={cn("grid grid-cols-2 gap-2", stackOnDesktop && "lg:grid-cols-1")}>
+        <div className={cn("relative flex h-16 min-w-0 w-full items-center rounded-2xl border-[3px] bg-brand-blue transition-colors", invalid ? "border-brand-red-soft" : "border-brand-blue focus-within:border-white/60")}>
           <input
             id={id}
             ref={inputRef}
@@ -57,7 +57,7 @@ export function MinuteInput({ locale, busy, onSubmit, autoFocus = true, id = "mi
           />
           <span aria-hidden className="pointer-events-none absolute right-3 top-2 text-2xl font-black text-white/60">&apos;</span>
         </div>
-        <button type="submit" disabled={busy || text.trim() === ""} className="h-14 shrink-0 rounded-2xl sm:h-16 bg-brand-green px-5 text-sm font-black uppercase tracking-wide text-white hover:bg-brand-green-deep disabled:opacity-45" style={poppins}>
+        <button type="submit" disabled={busy || text.trim() === ""} className="h-16 min-w-0 w-full rounded-2xl bg-brand-green px-2 text-sm font-black uppercase tracking-wide text-white hover:bg-brand-green-deep disabled:opacity-45" style={poppins}>
           {busy ? "…" : c.confirm}
         </button>
       </div>
