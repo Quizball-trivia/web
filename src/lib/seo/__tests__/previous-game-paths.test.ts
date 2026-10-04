@@ -15,7 +15,9 @@ describe("renamed public game URLs", () => {
     expect(redirects["/es/juegos-de-futbol/cadena-de-pases"]).toBe("/es/juegos-de-futbol/conectando-jugadores");
     expect(redirects["/es/juegos-de-futbol/ruleta-de-plantilla"]).toBe("/es/juegos-de-futbol/ruleta-futbolera");
     expect(redirects["/es/juegos-de-futbol/mas-o-menos"]).toBe("/es/juegos-de-futbol/higher-or-lower-futbolero");
-    expect(Object.keys(redirects).filter((from) => from.startsWith("/es/"))).toHaveLength(6);
+    // The in-game title of "¿En qué minuto?" is a second address for its one page.
+    expect(redirects["/es/juegos-de-futbol/en-que-minuto-futbolero"]).toBe("/es/juegos-de-futbol/adivina-el-minuto-exacto-del-gol");
+    expect(Object.keys(redirects).filter((from) => from.startsWith("/es/"))).toHaveLength(7);
   });
 
   it("moves every Turkish page out of the English folder", () => {

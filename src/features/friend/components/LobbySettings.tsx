@@ -43,6 +43,7 @@ const DUEL_TAB_LABEL_KEYS: Record<DuelGameId, MessageKey> = {
   buscaminas: 'friend.duelTabBuscaminas',
   pistas: 'friend.duelTabPistas',
   ultimo: 'friend.duelTabUltimo',
+  minuto: 'friend.duelTabMinuto',
 };
 
 /** The existing modes plus one tab per enabled duel game (and the room's own duel game, if it has one). */

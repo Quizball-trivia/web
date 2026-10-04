@@ -7,11 +7,12 @@ import type { Locale } from "@/lib/i18n/locale";
 import type { DuelSeatPayload, DuelStatePayload } from "@/lib/realtime/socket.types";
 import type { DuelCopy } from "./duel.copy";
 import { SEAT_BG, SEAT_LABEL } from "./duel.seats";
-import type { BuscaminasDuelView, DuelCommand, PistasDuelView, Seat, UltimoDuelView } from "./duel.views";
+import type { BuscaminasDuelView, DuelCommand, MinutoDuelView, PistasDuelView, Seat, UltimoDuelView } from "./duel.views";
 import type { ShowsCommand } from "./useDuel";
 import { BuscaminasDuelBoard } from "./BuscaminasDuelBoard";
 import { PistasDuelBoard } from "./PistasDuelBoard";
 import { UltimoDuelBoard } from "./UltimoDuelBoard";
+import { MinutoDuelBoard } from "./MinutoDuelBoard";
 import { DuelIntro } from "./DuelIntro";
 import { DuelAvatar, seatAvatar } from "./DuelAvatar";
 
@@ -47,22 +48,27 @@ export function DuelMatchView({ snapshot, locale, copy, secondsLeft, connected, 
   const live = snapshot.status === "active" || snapshot.status === "countdown" || snapshot.status === "paused";
   const mySeat = snapshot.mySeat as Seat;
   const names = seatNames(snapshot, copy);
-  const view = snapshot.view as BuscaminasDuelView | PistasDuelView | UltimoDuelView | null;
+  const view = snapshot.view as BuscaminasDuelView | PistasDuelView | UltimoDuelView | MinutoDuelView | null;
   const turnSeat = (snapshot.game === "buscaminas" || snapshot.game === "ultimo") && view && (view as BuscaminasDuelView | UltimoDuelView).phase === "turn"
     ? (view as BuscaminasDuelView | UltimoDuelView).turn : null;
   // The clock is shown only while someone can act; a reveal's few seconds are not a countdown to worry about.
   const actionable = snapshot.status === "active" && !!view && (
     ((snapshot.game === "buscaminas" || snapshot.game === "ultimo") && (view as BuscaminasDuelView | UltimoDuelView).phase === "turn")
-    || (snapshot.game === "pistas" && (view as PistasDuelView).phase === "clue"));
+    || (snapshot.game === "pistas" && (view as PistasDuelView).phase === "clue")
+    || (snapshot.game === "minuto" && (view as MinutoDuelView).phase === "guess"));
   const introPhase = snapshot.status === "ready" || snapshot.status === "countdown" || (snapshot.status === "paused" && snapshot.pausedFrom === "countdown");
   const awaySeat = snapshot.status === "paused" ? snapshot.seats.find((s) => !s.connected) : undefined;
   const finished = snapshot.status === "completed" || snapshot.status === "cancelled";
   // Último has no idle rule: a seat that stops answering simply loses each category to the clock.
   const idle = !view || snapshot.game === "ultimo" ? 0
-    : snapshot.game === "buscaminas" ? (view as BuscaminasDuelView).timeouts[mySeat] : (view as PistasDuelView).idle[mySeat] >= 2 ? 1 : 0;
+    : snapshot.game === "buscaminas" ? (view as BuscaminasDuelView).timeouts[mySeat] : (view as PistasDuelView | MinutoDuelView).idle[mySeat] >= 2 ? 1 : 0;
+
+  const avatarOf = (seat: Seat) => seatAvatar(snapshot.seats.find((s) => s.seat === seat) ?? { userId: `seat-${seat}`, avatarCustomization: null, avatarUrl: null, isGuest: true });
+  // Minuto spreads out on desktop like the stream: a panel per player either side of the goal (scores live there).
+  const wide = snapshot.game === "minuto";
 
   return (
-    <Shell>
+    <Shell wide={wide}>
       <header className="relative z-40 flex items-center gap-3">
         <button type="button" onClick={onExit} aria-label={live ? copy.forfeit.button : copy.result.exit} className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 hover:bg-white/20"><X className="size-4" /></button>
         <p className="min-w-0 flex-1 truncate text-[13px] font-black uppercase tracking-wide" style={poppins}>{copy.games[snapshot.game]}</p>
@@ -71,7 +77,7 @@ export function DuelMatchView({ snapshot, locale, copy, secondsLeft, connected, 
 
       {!connected && live && <p role="status" className="mt-2 rounded-xl bg-brand-orange/15 px-3 py-2 text-center text-xs font-semibold text-brand-orange-light">{copy.offline}</p>}
 
-      {!introPhase && <Scoreboard snapshot={snapshot} names={names} turnSeat={turnSeat} copy={copy} />}
+      {!introPhase && <div className={cn(wide && "lg:hidden")}><Scoreboard snapshot={snapshot} names={names} turnSeat={turnSeat} copy={copy} /></div>}
 
       {live && idle > 0 && <p className="mt-2 rounded-xl bg-brand-orange/15 px-3 py-2 text-center text-xs font-semibold text-brand-orange-light">{copy.idleWarning}</p>}
 
@@ -90,6 +96,18 @@ export function DuelMatchView({ snapshot, locale, copy, secondsLeft, connected, 
               onSend({ type: "answer", cat: category, k, text }, (next) => {
                 const shownView = next.view as UltimoDuelView | null;
                 return !shownView || shownView.category !== category || shownView.k !== k || shownView.phase !== "turn";
+              });
+            }} />
+        )}
+        {view && !introPhase && snapshot.game === "minuto" && (
+          <MinutoDuelBoard key={(view as MinutoDuelView).round} view={view as MinutoDuelView} mySeat={mySeat} names={names} avatars={[avatarOf(0), avatarOf(1)]} copy={copy} locale={locale}
+            finished={finished} paused={snapshot.status === "paused"} busy={busy}
+            onGuess={(minute) => {
+              const { round } = view as MinutoDuelView;
+              // Held until a snapshot shows the guess stored (or the round over).
+              onSend({ type: "guess", round, minute }, (next) => {
+                const shownView = next.view as MinutoDuelView | null;
+                return !shownView || shownView.round !== round || shownView.phase !== "guess" || shownView.me?.answered === true;
               });
             }} />
         )}
@@ -130,10 +148,10 @@ export function DuelMatchView({ snapshot, locale, copy, secondsLeft, connected, 
   );
 }
 
-export function Shell({ children }: { children: React.ReactNode }) {
+export function Shell({ children, wide = false }: { children: React.ReactNode; wide?: boolean }) {
   return (
     <div className="min-h-dvh bg-surface-page-alt text-white">
-      <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 pb-4 pt-[max(env(safe-area-inset-top),16px)]">{children}</div>
+      <div className={cn("mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 pb-4 pt-[max(env(safe-area-inset-top),16px)]", wide && "lg:max-w-7xl lg:px-8")}>{children}</div>
     </div>
   );
 }

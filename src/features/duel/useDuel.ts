@@ -34,7 +34,7 @@ export function useDuel(matchId: string) {
   const [connected, setConnected] = useState(false);
   const offsetRef = useRef(0);
   /** Sent and not answered yet, re-sent on reconnect; `live` until an error means no answer is coming on this connection. */
-  const pending = useRef(new Map<string, { command: DuelCommand; shows?: ShowsCommand; live: boolean }>());
+  const pending = useRef(new Map<string, { command: DuelCommand; shows?: ShowsCommand; live: boolean; attempt: number }>());
   /** Accepted commands whose state is not on screen yet. */
   const awaiting = useRef(new Map<string, ShowsCommand>());
   const shown = useRef<DuelStatePayload | null>(null);
@@ -51,6 +51,18 @@ export function useDuel(matchId: string) {
     if (socket?.connected) socket.emit("duel:resync", { matchId, locale });
   }, [socket, matchId, locale]);
 
+  /** No answer to this send in time: stop holding the input and ask for the state (a reconnect still re-sends it). */
+  const giveUpLater = useCallback((commandId: string) => {
+    const attempt = pending.current.get(commandId)?.attempt;
+    window.setTimeout(() => {
+      const entry = pending.current.get(commandId);
+      if (!entry?.live || entry.attempt !== attempt) return;
+      entry.live = false;
+      recount();
+      if (socket?.connected) socket.emit("duel:resync", { matchId, locale });
+    }, STATE_GIVE_UP_MS);
+  }, [socket, matchId, locale, recount]);
+
   useEffect(() => {
     if (!socket) return;
     const onState = (payload: DuelStatePayload) => {
@@ -63,6 +75,8 @@ export function useDuel(matchId: string) {
       offsetRef.current = serverNowMs - Date.now();
       shown.current = payload;
       for (const [commandId, shows] of awaiting.current) if (shows(payload)) awaiting.current.delete(commandId);
+      // A command whose effect is already on screen needs no answer (its acknowledgement may have been lost).
+      for (const [commandId, entry] of pending.current) if (entry.shows?.(payload)) pending.current.delete(commandId);
       recount();
       setFatal(null);
       setSnapshot(payload);
@@ -95,7 +109,9 @@ export function useDuel(matchId: string) {
       socket.emit("duel:resync", { matchId, locale });
       for (const [commandId, entry] of pending.current) {
         entry.live = true;
+        entry.attempt += 1;
         socket.emit("duel:command", { matchId, commandId, command: entry.command });
+        giveUpLater(commandId);
       }
       recount();
     };
@@ -113,7 +129,7 @@ export function useDuel(matchId: string) {
       socket.off("connect", onConnect);
       socket.off("disconnect", onDisconnect);
     };
-  }, [socket, matchId, locale, recount]);
+  }, [socket, matchId, locale, recount, giveUpLater]);
 
   // Coming back to the tab: the snapshot may be minutes old.
   useEffect(() => {
@@ -150,12 +166,21 @@ export function useDuel(matchId: string) {
   /** `shows`: when the board may take the next command — the input waits for the state, not just the acknowledgement. */
   const send = useCallback((command: DuelCommand, shows?: ShowsCommand) => {
     if (!socket) return;
+    // A retry replaces an unanswered Minuto guess locally; reconnect must not send both guesses for the round.
+    if (command.type === "guess" && "minute" in command) {
+      for (const [id, entry] of pending.current) {
+        if (entry.command.type !== "guess" || !("minute" in entry.command) || entry.command.round !== command.round) continue;
+        if (entry.live) return;
+        pending.current.delete(id);
+      }
+    }
     const commandId = createRealtimeCommandId();
-    pending.current.set(commandId, { command, shows, live: true });
+    pending.current.set(commandId, { command, shows, live: true, attempt: 0 });
     recount();
     setError(null);
     socket.emit("duel:command", { matchId, commandId, command });
-  }, [socket, matchId, recount]);
+    giveUpLater(commandId);
+  }, [socket, matchId, recount, giveUpLater]);
 
   const forfeit = useCallback(() => {
     socket?.emit("duel:forfeit", { matchId, commandId: createRealtimeCommandId() });

@@ -257,6 +257,32 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
       "Futbolcu Tahmin Etme Oyunu'nu bir arkadaşınla çevrimiçi 1'e 1 de oynayabilirsin: oda linkini gönder, ikiniz aynı ipuçlarını aynı anda görürsünüz ve doğru soyadını ilk yazan puanları alır.",
     ],
   },
+  "guess-the-goal-minute": {
+    en: [
+      "Guess the Minute of the Goal is the game from the streams: a famous goal appears on screen with the match, the final score, the stage and the scorer, and you say the minute it went in. Ten goals a day from World Cup finals and knockout nights, Champions League ties, the Euro and the Copa América.",
+      "The exact minute is worth 3 points. Within two minutes you still get 2, within five minutes 1, and anything further scores nothing, so a perfect day is 30 points. Added time counts on to the minute: a goal at 90+3 is minute 93 and a goal at 45+2 is minute 47.",
+      "Every minute is checked against two independent match records before a goal is used. Ten new goals arrive every day at midnight Argentina time. Without an account you play the previous days; signed-in players get today's goals, one ranked run on the daily leaderboard and their streak. At the end you get ten coloured squares to share.",
+      "You can also play it 1v1 against a friend online, like on the streams: send them the room link and you both see the same goal at the same time. Each of you types a minute without seeing the other's, then both are revealed: the exact minute takes 3 points, otherwise the closer guess takes 1.",
+    ],
+    ka: [
+      "„გამოიცანი გოლის წუთი“ სტრიმების თამაშია: ეკრანზე ცნობილი გოლი ჩნდება მატჩით, საბოლოო ანგარიშით, ეტაპით და ავტორით, შენ კი ასახელებ წუთს, როცა ის გავიდა. დღეში ათი გოლი მსოფლიო ჩემპიონატის ფინალებიდან, ჩემპიონთა ლიგიდან, ევროდან და კოპა ამერიკიდან.",
+      "ზუსტი წუთი 3 ქულაა. ორი წუთის სიზუსტით 2 ქულას იღებ, ხუთი წუთის სიზუსტით 1-ს, უფრო შორს კი — არაფერს, ასე რომ, იდეალური დღე 30 ქულაა. დამატებითი დრო წუთს ემატება: 90+3 წუთზე გატანილი გოლი 93-ე წუთია.",
+      "ყოველი წუთი ორ დამოუკიდებელ წყაროსთან მოწმდება. ათი ახალი გოლი ყოველდღე შუაღამისას ჩნდება (არგენტინის დროით). ანგარიშის გარეშე წინა დღეებს თამაშობ; ანგარიშით — დღევანდელს, დღის რეიტინგს და სერიას.",
+      "შეგიძლია მეგობართან ერთადაც ითამაშო ონლაინ, პირისპირ: გაუგზავნე ოთახის ბმული და ორივე ერთსა და იმავე გოლს ხედავთ. თითოეული წერს წუთს ისე, რომ მეორისას ვერ ხედავს, შემდეგ ორივე პასუხი ჩანს: ზუსტი წუთი 3 ქულაა, თუ არა — უფრო ახლო პასუხი 1 ქულას იღებს.",
+    ],
+    es: [
+      "Adivina el minuto exacto del gol es el juego de los streams: aparece un gol famoso con el partido, el resultado final, la instancia y el goleador, y vos decís en qué minuto entró. ¿En qué minuto? Diez goles por día de finales y eliminatorias del Mundial, cruces de Champions, la Eurocopa y la Copa América.",
+      "El minuto exacto vale 3 puntos. Si quedás a dos minutos o menos sumás 2, a cinco o menos 1, y más lejos no suma, así que un día perfecto son 30 puntos. El tiempo añadido se suma al minuto: un gol en el 90+3 es el minuto 93 y uno en el 45+2 es el 47.",
+      "Cada minuto se comprueba con dos registros independientes del partido antes de usar el gol. Cada día a la medianoche (hora de Argentina) llegan diez goles nuevos. Sin cuenta jugás los días anteriores; con tu cuenta jugás los de hoy, entrás al ranking del día y sumás racha. Al final tenés diez cuadraditos de colores para compartir.",
+      "También podés jugarlo 1 contra 1 con un amigo online, como en los streams: mandale el link de la sala y los dos ven el mismo gol al mismo tiempo. Cada uno escribe su minuto sin ver el del otro y después se revelan los dos: el minuto exacto se lleva 3 puntos y, si no, el que quedó más cerca se lleva 1.",
+    ],
+    tr: [
+      "Gol Dakikası Tahmin Oyunu yayınlardaki oyundur: ekranda maçı, final skoru, turu ve golü atanla birlikte ünlü bir gol belirir ve sen golün kaçıncı dakikada atıldığını söylersin. Her gün Dünya Kupası finallerinden ve eleme gecelerinden, Şampiyonlar Ligi'nden, EURO'dan ve Copa América'dan on gol.",
+      "Tam dakika 3 puan eder. En fazla iki dakika farkla 2, en fazla beş dakika farkla 1 puan alırsın, daha uzağı puan getirmez; yani mükemmel bir gün 30 puandır. Uzatma dakikaya eklenir: 90+3'te atılan gol 93. dakikadır.",
+      "Her dakika, gol kullanılmadan önce iki bağımsız maç kaydıyla kontrol edilir. Her gün gece yarısı (Arjantin saati) on yeni gol gelir. Hesapsız önceki günleri oynarsın; hesapla bugünün gollerini, günün sıralamasını ve serini.",
+      "Bir arkadaşınla çevrimiçi 1'e 1 de oynayabilirsin: oda linkini gönder, ikiniz aynı golü aynı anda görürsünüz. Herkes diğerininkini görmeden dakikasını yazar, sonra ikisi birden açılır: tam dakika 3 puan, değilse en yakın tahmin 1 puan alır.",
+    ],
+  },
   "last-answer-standing": {
     en: [
       "Last Answer Standing is a list game. Every day there are five football categories, and each one is a closed list: a World Cup squad, every Copa Libertadores champion, a club's top scorers. You name answers one after another and every correct answer is worth a point.",

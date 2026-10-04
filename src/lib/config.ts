@@ -30,4 +30,4 @@ export const GUEST_LOBBIES_ENABLED = process.env.NEXT_PUBLIC_GUEST_LOBBIES === "
 export const DUEL_GAMES_ENABLED: readonly DuelGameId[] = (process.env.NEXT_PUBLIC_DUEL_GAMES ?? "")
   .split(",")
   .map((game) => game.trim())
-  .filter((game): game is DuelGameId => game === "buscaminas" || game === "pistas" || game === "ultimo");
+  .filter((game): game is DuelGameId => game === "buscaminas" || game === "pistas" || game === "ultimo" || game === "minuto");
