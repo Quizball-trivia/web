@@ -26,7 +26,7 @@ describe("MinutoDuelBoard", () => {
   it("before the reveal the rival is only 'answered', in words for screen readers, never a minute", () => {
     board(view({ me: { answered: true, guess: 61 }, rival: { answered: true }, answered: [true, true] }));
     expect(screen.getByLabelText("Rival: Answered")).toBeTruthy();
-    expect(screen.getByLabelText("You: Answered")).toBeTruthy();
+    expect(screen.getByLabelText("You: 61'")).toBeTruthy();
     expect(screen.getByText("61'")).toBeTruthy();
     expect(document.body.textContent).not.toMatch(/\b7[0-9]'/);
     expect(screen.queryByRole("textbox")).toBeNull();
