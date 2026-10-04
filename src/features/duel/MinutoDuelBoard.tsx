@@ -11,12 +11,12 @@ import { formatMinute } from "@/features/minuto/minuto.logic";
 import { minutoCopy } from "@/features/minuto/minuto.copy";
 import type { DuelCopy } from "./duel.copy";
 import type { MinutoDuelView, Seat } from "./duel.views";
-import { SEAT_BG, SEAT_RING } from "./duel.seats";
 import { DuelAvatar } from "./DuelAvatar";
 
 const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
 type Side = "me" | "rival";
 const SEAT_TOP: Record<Side, string> = { me: "border-t-brand-green", rival: "border-t-brand-blue" };
+const SEAT_BORDER: Record<Side, string> = { me: "border-brand-green", rival: "border-brand-blue" };
 
 /**
  * One seat's minute box, like the stream's "MINUTO" boxes under each camera: hidden until the reveal. The box grows
@@ -26,7 +26,7 @@ function SeatMinute({ name, heading, answered, minute, revealed, side, points, s
   name: string; heading: string; answered: boolean; minute: number | null; revealed: boolean; side: Side; points: number | null; status: string; className?: string;
 }) {
   return (
-    <div role="group" aria-label={`${name}: ${status}`} className={cn("flex min-w-0 flex-col items-center gap-1 rounded-2xl border-2 px-2 py-2 lg:py-4", answered ? SEAT_RING[side] : "border-white/15", answered && SEAT_BG[side], className)}>
+    <div role="group" aria-label={`${name}: ${status}`} className={cn("flex min-w-0 flex-col items-center gap-1 rounded-2xl border-2 bg-transparent px-2 py-2 lg:py-4", answered ? SEAT_BORDER[side] : "border-white/15", className)}>
       <span className="sr-only" aria-live="polite">{`${name}: ${status}`}</span>
       <span aria-hidden className="w-full truncate text-center text-[11px] font-black uppercase tracking-wide text-white/80 lg:hidden" style={poppins}>{name}</span>
       <span aria-hidden className="hidden w-full truncate text-center text-xs font-black uppercase tracking-[0.2em] text-white/80 lg:block" style={poppins}>{heading}</span>
@@ -112,8 +112,8 @@ export function MinutoDuelBoard({ view, mySeat, names, avatars, copy, locale, fi
   return (
     <div className="grid flex-1 grid-cols-2 grid-rows-[auto_auto_1fr] gap-x-2 gap-y-3 lg:flex-none lg:grid-cols-[minmax(0,1fr)_minmax(0,2.6fr)_minmax(0,1fr)] lg:grid-rows-[auto_auto_auto_1fr_auto] lg:items-start lg:gap-x-6 lg:gap-y-4">
       {/* Desktop column cards behind each player's header, box (and, for you, the input). */}
-      <div aria-hidden className={cn("hidden rounded-3xl border-t-4 bg-white/[0.06] lg:col-start-1 lg:row-span-3 lg:row-start-1 lg:block lg:self-stretch", SEAT_TOP.me)} />
-      <div aria-hidden className={cn("hidden rounded-3xl border-t-4 bg-white/[0.06] lg:col-start-3 lg:row-span-2 lg:row-start-1 lg:block lg:self-stretch", SEAT_TOP.rival)} />
+      <div aria-hidden className={cn("hidden rounded-3xl border border-t-4 border-white/15 bg-transparent lg:col-start-1 lg:row-span-3 lg:row-start-1 lg:block lg:self-stretch", SEAT_TOP.me)} />
+      <div aria-hidden className={cn("hidden rounded-3xl border border-t-4 border-white/15 bg-transparent lg:col-start-3 lg:row-span-2 lg:row-start-1 lg:block lg:self-stretch", SEAT_TOP.rival)} />
 
       <SeatHeader name={copy.you} avatar={avatars[mySeat]} score={view.scores[mySeat]} scoreLabel={c.seatScore(copy.you, view.scores[mySeat])} className="relative lg:col-start-1 lg:row-start-1 lg:mx-4 lg:mt-5" />
       <SeatHeader name={names[rival]} avatar={avatars[rival]} score={view.scores[rival]} scoreLabel={c.seatScore(names[rival], view.scores[rival])} className="relative lg:col-start-3 lg:row-start-1 lg:mx-4 lg:mt-5" />
