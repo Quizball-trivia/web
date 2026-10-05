@@ -81,8 +81,8 @@ export default function WlPrizeCardPage() {
       <Section id="card" title="Prize card">
         <div className="flex flex-wrap items-start gap-6">
           {[
-            { id: 'c2-blue', label: 'On the blue promo card', bg: 'bg-brand-blue', node: <WlPrizeCard surface="blue" withFrames /> },
-            { id: 'c2-gold', label: 'On the gold header (entered)', bg: 'bg-brand-yellow', node: <WlPrizeCard surface="gold" withFrames /> },
+            { id: 'c2-blue', label: 'On the blue promo card', bg: 'bg-brand-blue', node: <WlPrizeCard surface="blue" /> },
+            { id: 'c2-gold', label: 'On the gold header (entered)', bg: 'bg-brand-yellow', node: <WlPrizeCard surface="gold" /> },
             { id: 'c2-dark', label: 'On the page after the qualifier, as 2nd', bg: 'bg-surface-page', node: <WlPrizeCard surface="dark" highlightRank={2} /> },
           ].map((v) => (
             <div key={v.id} data-variant={v.id} className={card}>

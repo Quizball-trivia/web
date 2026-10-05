@@ -3,7 +3,6 @@
 import Image from 'next/image';
 import { useLocale } from '@/contexts/LocaleContext';
 import { WEEKEND_COIN_REWARDS } from '../prizes';
-import { useWlPackHasFrame } from '../wlTime';
 import { WlFrameArt, type WlFramePlace } from '../rewards/WlFrame';
 
 const PODIUM = [
@@ -60,14 +59,12 @@ function CoinAmount({ coins, color, className, size }: { coins: number; color: s
 }
 
 /** The kit in front, its podium frame tucked behind to the right. */
-function PackArt({ kit, alt, place, withFrame, big = false }: { kit: string; alt: string; place: WlFramePlace; withFrame: boolean; big?: boolean }) {
+function PackArt({ kit, alt, place, big = false }: { kit: string; alt: string; place: WlFramePlace; big?: boolean }) {
   return (
-    <div className={`relative shrink-0 ${big ? (withFrame ? 'w-[104px] @[22rem]:w-[132px] sm:w-[156px]' : 'w-[88px] @[22rem]:w-[112px] sm:w-[136px]') : (withFrame ? 'w-[76px]' : 'w-[58px]')}`}>
-      {withFrame && (
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 rotate-[8deg]">
-          <WlFrameArt place={place} width={big ? 58 : 30} />
-        </div>
-      )}
+    <div className={`relative shrink-0 ${big ? 'w-[104px] @[22rem]:w-[132px] sm:w-[156px]' : 'w-[76px]'}`}>
+      <div className="absolute right-0 top-1/2 -translate-y-1/2 rotate-[8deg]">
+        <WlFrameArt place={place} width={big ? 58 : 30} />
+      </div>
       <Image
         src={kitSrc(kit)}
         alt={alt}
@@ -81,15 +78,8 @@ function PackArt({ kit, alt, place, withFrame, big = false }: { kit: string; alt
 
 /** What each Weekend League place wins: the champion's pack first, 2nd and
  *  3rd beside each other, then the coin ladder — hairlines, no boxes. */
-export function WlPrizeCard({ surface = 'blue', highlightRank = null, withFrames }: {
-  surface?: PrizeCardSurface;
-  highlightRank?: number | null;
-  /** Override for previews; otherwise the backend says whether packs carry frames. */
-  withFrames?: boolean;
-}) {
+export function WlPrizeCard({ surface = 'blue', highlightRank = null }: { surface?: PrizeCardSurface; highlightRank?: number | null }) {
   const { t } = useLocale();
-  const packHasFrame = useWlPackHasFrame();
-  const frames = withFrames ?? packHasFrame;
   const c = SURFACE[surface];
   const [first, second, third] = PODIUM;
   const you = (
@@ -106,14 +96,14 @@ export function WlPrizeCard({ surface = 'blue', highlightRank = null, withFrames
 
       <div data-place={1} data-selected={highlightRank === 1} className="relative mt-4 flex items-center gap-4">
         <div className="pointer-events-none absolute -left-4 top-1/2 h-40 w-48 -translate-y-1/2 rounded-full blur-2xl" style={{ background: c.glow }} />
-        <PackArt kit={first.kit} alt={t(first.nameKey)} place={1} withFrame={frames} big />
+        <PackArt kit={first.kit} alt={t(first.nameKey)} place={1} big />
         <div className="relative min-w-0">
           <span className="whitespace-nowrap rounded-full px-2.5 py-0.5 font-poppins text-[11px] font-black text-black" style={{ background: surface === 'gold' ? '#FFFFFF' : first.accent }}>
             {t(first.rankKey)}
           </span>
           {highlightRank === 1 && you}
           <div className={`mt-2 font-poppins text-[16px] font-black leading-tight sm:text-[18px] ${c.text}`}>{t(first.packKey)}</div>
-          <div className={`mt-0.5 font-poppins text-[11px] ${c.muted}`}>{t(frames ? 'wlRewards.kitFrameCoins' : 'wlRewards.exclusiveJersey')}</div>
+          <div className={`mt-0.5 font-poppins text-[11px] ${c.muted}`}>{t('wlRewards.kitFrameCoins')}</div>
           <CoinAmount coins={first.coins} color={c.coins} className="mt-2 text-[19px]" size={20} />
         </div>
       </div>
@@ -122,7 +112,7 @@ export function WlPrizeCard({ surface = 'blue', highlightRank = null, withFrames
       <div className={`grid grid-cols-2 divide-x ${c.divide}`}>
         {[second, third].map((p) => (
           <div key={p.place} data-place={p.place} data-selected={highlightRank === p.place} className="flex min-w-0 flex-col items-center gap-1 px-2 text-center first:pl-0 last:pr-0 @[22rem]:flex-row @[22rem]:gap-2.5 @[22rem]:text-left">
-            <PackArt kit={p.kit} alt={t(p.nameKey)} place={p.place} withFrame={frames} />
+            <PackArt kit={p.kit} alt={t(p.nameKey)} place={p.place} />
             <div className="min-w-0">
               <div className={`whitespace-nowrap font-poppins text-[12px] font-black ${surface === 'gold' ? 'text-black/70' : ''}`} style={surface === 'gold' ? undefined : { color: p.accent }}>
                 {t(p.rankKey)}
