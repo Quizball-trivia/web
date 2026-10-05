@@ -58,11 +58,6 @@ export function getWeekendLeagueHallOfFame(): Promise<WlHallOfFameResponse> {
   return apiFetch("get", "/api/v1/weekend-league/hall-of-fame" as never) as Promise<WlHallOfFameResponse>;
 }
 
-/** Public: whether this week's podium packs include the place frame. */
-export function getWeekendLeagueRewardPolicy() {
-  return apiFetch("get", "/api/v1/weekend-league/reward-policy" as never, { auth: false } as never) as Promise<{ reward_frames: boolean }>;
-}
-
 export function getWeekendLeagueQp() {
   return apiFetch("get", "/api/v1/weekend-league/qp");
 }

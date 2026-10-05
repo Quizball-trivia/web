@@ -2,8 +2,6 @@ import { cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { messages, translate, type Locale, type MessageKey } from '@/lib/i18n/messages';
 import { getWeekendLeaguePrizes, WEEKEND_COIN_REWARDS } from '../prizes';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { queryKeys } from '@/lib/queries/queryKeys';
 import { PrizesPanel } from '../components/PrizesPanel';
 import { WeekendLeaguePromoCard } from '../components/WeekendLeaguePromoCard';
 import { LeagueHeader } from '../components/LeagueHeader';
@@ -15,12 +13,7 @@ vi.mock('@/contexts/LocaleContext', () => ({
     t: (key: MessageKey, params?: Record<string, string | number>) => translate(settings.locale, key, params),
   }),
 }));
-const policy = vi.hoisted(() => ({ fetch: vi.fn(async () => ({ reward_frames: true })) }));
-vi.mock('@/lib/api/endpoints', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/lib/api/endpoints')>()),
-  getWeekendLeagueRewardPolicy: () => policy.fetch(),
-}));
-afterEach(() => { cleanup(); settings.locale = 'en'; policy.fetch.mockClear(); });
+afterEach(() => { cleanup(); settings.locale = 'en'; });
 
 const LOCALES = ['en', 'ka', 'es', 'tr'] as const;
 const grouped = (locale: Locale, coins: number) =>
@@ -64,47 +57,12 @@ describe('WlPrizeCard', () => {
     expect(container.textContent).not.toMatch(/Amazon|Wolt|Zoommer|₾\s?\d|\$50/);
   });
 
-  it('claims a frame only when the backend says packs carry one', () => {
-    const withRow = (rewardFrames: boolean | undefined) => {
-      const client = new QueryClient();
-      client.setQueryData(queryKeys.weekendLeague.current(), { tournament: { id: 't', status: 'entry_open', reward_frames: rewardFrames }, you: null });
-      return render(<QueryClientProvider client={client}><WlPrizeCard /></QueryClientProvider>);
-    };
-    const on = withRow(true);
+  it('every podium pack is kit + frame + coins, with the frame drawn behind each kit', () => {
+    const { container } = render(<WlPrizeCard />);
     expect(screen.getByText(messages.en.wlRewards.kitFrameCoins)).toBeInTheDocument();
-    on.unmount();
-    for (const value of [false, undefined]) {
-      const off = withRow(value);
-      expect(screen.getByText(messages.en.wlRewards.exclusiveJersey)).toBeInTheDocument();
-      expect(screen.queryByText(messages.en.wlRewards.kitFrameCoins)).toBeNull();
-      off.unmount();
+    for (const place of ['1', '2', '3']) {
+      expect(container.querySelector(`[data-place="${place}"] svg`)).not.toBeNull();
     }
-    // No query client at all (previews): no claim, nothing fetched.
-    render(<WlPrizeCard />);
-    expect(screen.getByText(messages.en.wlRewards.exclusiveJersey)).toBeInTheDocument();
-  });
-
-  it('without a signed-in row (logged out) asks the public reward policy, once', async () => {
-    const client = new QueryClient();
-    render(<QueryClientProvider client={client}><WlPrizeCard /><WlPrizeCard surface="dark" /></QueryClientProvider>);
-    expect(await screen.findAllByText(messages.en.wlRewards.kitFrameCoins)).toHaveLength(2);
-    expect(policy.fetch).toHaveBeenCalledTimes(1);
-  });
-
-  it('a row that says no frames wins over the policy, and nothing is fetched', async () => {
-    const client = new QueryClient();
-    client.setQueryData(queryKeys.weekendLeague.current(), { tournament: { id: 't', status: 'entry_open', reward_frames: false }, you: null });
-    render(<QueryClientProvider client={client}><WlPrizeCard /></QueryClientProvider>);
-    expect(screen.getByText(messages.en.wlRewards.exclusiveJersey)).toBeInTheDocument();
-    expect(policy.fetch).not.toHaveBeenCalled();
-  });
-
-  it('a failing policy request leaves the claim off', async () => {
-    policy.fetch.mockRejectedValueOnce(new Error('offline'));
-    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-    render(<QueryClientProvider client={client}><WlPrizeCard /></QueryClientProvider>);
-    await new Promise((resolve) => setTimeout(resolve, 20));
-    expect(screen.getByText(messages.en.wlRewards.exclusiveJersey)).toBeInTheDocument();
   });
 
   it.each([[1, '1'], [2, '2'], [3, '3']] as const)('marks the viewer’s podium place %s, and nothing else', (rank, place) => {
