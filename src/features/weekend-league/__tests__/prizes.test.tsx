@@ -15,7 +15,12 @@ vi.mock('@/contexts/LocaleContext', () => ({
     t: (key: MessageKey, params?: Record<string, string | number>) => translate(settings.locale, key, params),
   }),
 }));
-afterEach(() => { cleanup(); settings.locale = 'en'; });
+const policy = vi.hoisted(() => ({ fetch: vi.fn(async () => ({ reward_frames: true })) }));
+vi.mock('@/lib/api/endpoints', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/api/endpoints')>()),
+  getWeekendLeagueRewardPolicy: () => policy.fetch(),
+}));
+afterEach(() => { cleanup(); settings.locale = 'en'; policy.fetch.mockClear(); });
 
 const LOCALES = ['en', 'ka', 'es', 'tr'] as const;
 const grouped = (locale: Locale, coins: number) =>
@@ -74,8 +79,31 @@ describe('WlPrizeCard', () => {
       expect(screen.queryByText(messages.en.wlRewards.kitFrameCoins)).toBeNull();
       off.unmount();
     }
-    // No row in the cache (or no query client): no frame claim.
+    // No query client at all (previews): no claim, nothing fetched.
     render(<WlPrizeCard />);
+    expect(screen.getByText(messages.en.wlRewards.exclusiveJersey)).toBeInTheDocument();
+  });
+
+  it('without a signed-in row (logged out) asks the public reward policy, once', async () => {
+    const client = new QueryClient();
+    render(<QueryClientProvider client={client}><WlPrizeCard /><WlPrizeCard surface="dark" /></QueryClientProvider>);
+    expect(await screen.findAllByText(messages.en.wlRewards.kitFrameCoins)).toHaveLength(2);
+    expect(policy.fetch).toHaveBeenCalledTimes(1);
+  });
+
+  it('a row that says no frames wins over the policy, and nothing is fetched', async () => {
+    const client = new QueryClient();
+    client.setQueryData(queryKeys.weekendLeague.current(), { tournament: { id: 't', status: 'entry_open', reward_frames: false }, you: null });
+    render(<QueryClientProvider client={client}><WlPrizeCard /></QueryClientProvider>);
+    expect(screen.getByText(messages.en.wlRewards.exclusiveJersey)).toBeInTheDocument();
+    expect(policy.fetch).not.toHaveBeenCalled();
+  });
+
+  it('a failing policy request leaves the claim off', async () => {
+    policy.fetch.mockRejectedValueOnce(new Error('offline'));
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    render(<QueryClientProvider client={client}><WlPrizeCard /></QueryClientProvider>);
+    await new Promise((resolve) => setTimeout(resolve, 20));
     expect(screen.getByText(messages.en.wlRewards.exclusiveJersey)).toBeInTheDocument();
   });
 

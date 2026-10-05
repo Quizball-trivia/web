@@ -1,6 +1,6 @@
-import { useCallback, useContext, useMemo, useState, useSyncExternalStore } from 'react';
-import { QueryClientContext } from '@tanstack/react-query';
-import type { getWeekendLeagueCurrent } from '@/lib/api/endpoints';
+import { useCallback, useContext, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
+import { QueryClientContext, type QueryClient } from '@tanstack/react-query';
+import { getWeekendLeagueRewardPolicy, type getWeekendLeagueCurrent } from '@/lib/api/endpoints';
 import { queryKeys } from '@/lib/queries/queryKeys';
 import { getMilestones } from './mock-data';
 
@@ -89,13 +89,17 @@ export interface WlKickoffTimes {
  * the calendar). It only reads the cache — it never issues a request, and it
  * works without a QueryClientProvider (component previews, public pages).
  */
-/** The tournament row already in the query cache, if any. Never fetches. */
-function useCachedWlTournament() {
-  const client = useContext(QueryClientContext);
-  const subscribe = useCallback(
+function useQueryCacheSubscription(client: QueryClient | undefined) {
+  return useCallback(
     (onChange: () => void) => (client ? client.getQueryCache().subscribe(onChange) : subscribeNever()),
     [client],
   );
+}
+
+/** The tournament row already in the query cache, if any. Never fetches. */
+function useCachedWlTournament() {
+  const client = useContext(QueryClientContext);
+  const subscribe = useQueryCacheSubscription(client);
   return useSyncExternalStore(
     subscribe,
     () => client?.getQueryData<WlCurrent>(queryKeys.weekendLeague.current())?.tournament ?? null,
@@ -103,12 +107,32 @@ function useCachedWlTournament() {
   );
 }
 
-/** Whether podium packs include the place frame — the backend's
- *  WL_REWARD_FRAMES_ENABLED, so the card never promises a frame the payout
- *  will not grant. False until a row says otherwise. */
+/**
+ * Whether podium packs include the place frame — the backend's
+ * WL_REWARD_FRAMES_ENABLED, so the card never promises a frame the payout
+ * will not grant. Read from the signed-in tournament row when one is cached;
+ * otherwise (logged out, or before that load) from the public reward-policy
+ * endpoint, fetched once. False until either answers.
+ */
 export function useWlPackHasFrame(): boolean {
-  const cached = useCachedWlTournament() as { reward_frames?: unknown } | null;
-  return cached?.reward_frames === true;
+  const client = useContext(QueryClientContext);
+  const subscribe = useQueryCacheSubscription(client);
+  const row = useCachedWlTournament() as { reward_frames?: unknown } | null;
+  const fromRow = typeof row?.reward_frames === 'boolean' ? row.reward_frames : null;
+  const fromPolicy = useSyncExternalStore(
+    subscribe,
+    () => client?.getQueryData<{ reward_frames: boolean }>(queryKeys.weekendLeague.rewardPolicy())?.reward_frames ?? null,
+    () => null,
+  );
+  useEffect(() => {
+    if (fromRow !== null || !client) return;
+    void client.prefetchQuery({
+      queryKey: queryKeys.weekendLeague.rewardPolicy(),
+      queryFn: getWeekendLeagueRewardPolicy,
+      staleTime: 5 * 60_000,
+    });
+  }, [fromRow, client]);
+  return fromRow ?? fromPolicy ?? false;
 }
 
 export function useWlKickoffTimes(): WlKickoffTimes {
