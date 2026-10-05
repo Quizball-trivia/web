@@ -1,5 +1,7 @@
 "use client";
 
+import { wlFramePart, wlFramePlace } from "@/lib/avatars/frames";
+import { WlFrameAvatar } from "./WlFrame";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
@@ -36,7 +38,8 @@ interface WlRewardCeremonyProps {
   customization: AvatarCustomization;
   weekLabel?: string;
   /** Persists the equip through the normal owned-item profile update. */
-  onEquip?: (item: WlRewardItem) => Promise<void>;
+  /** Equips every item of the pack in one profile save. */
+  onEquip?: (items: WlRewardItem[]) => Promise<void>;
   onClose: () => void;
   /** Dev preview override; real use follows the OS setting. */
   forceReducedMotion?: boolean;
@@ -157,19 +160,22 @@ export function WlRewardCeremony({
     if (step.kind === "coins") playSfx("auctionBid");
   }, [open, step.kind, playSfx]);
 
-  const firstItem = receipt.items[0];
+  const hasItems = receipt.items.length > 0;
   const equippedCustomization = useMemo<AvatarCustomization>(
-    () => (firstItem ? { ...customization, [firstItem.slot]: firstItem.avatarPartId } : customization),
-    [customization, firstItem],
+    () => receipt.items.reduce<AvatarCustomization>((c, item) => ({ ...c, [item.slot]: item.avatarPartId }), customization),
+    [customization, receipt.items],
   );
-  const alreadyWearing = firstItem ? customization[firstItem.slot] === firstItem.avatarPartId : false;
-  const canEquip = Boolean(firstItem && onEquip) && equip !== "done" && !alreadyWearing;
+  const alreadyWearing = hasItems && receipt.items.every((item) => customization[item.slot] === item.avatarPartId);
+  const canEquip = hasItems && Boolean(onEquip) && equip !== "done" && !alreadyWearing;
+  const packJersey = receipt.items.find((item) => item.slot === "jersey");
+  const wearingPack = (c: AvatarCustomization): AvatarCustomization =>
+    (packJersey ? { ...c, jersey: packJersey.avatarPartId } : c);
 
   const handleEquip = async () => {
-    if (!firstItem || !onEquip || equip === "saving") return;
+    if (!hasItems || !onEquip || equip === "saving") return;
     setEquip("saving");
     try {
-      await onEquip(firstItem);
+      await onEquip(receipt.items);
       setEquip("done");
     } catch {
       setEquip("failed");
@@ -182,6 +188,8 @@ export function WlRewardCeremony({
   };
 
   const itemName = (item: WlRewardItem) => {
+    const frame = wlFramePart(item.avatarPartId);
+    if (frame) return t(frame.nameKey);
     const part = getAvatarPart(item.avatarPartId);
     return part ? translatePartName(part.name, t) : item.slug;
   };
@@ -357,10 +365,14 @@ export function WlRewardCeremony({
                     animate={{ scale: 1, rotate: 0 }}
                     transition={{ type: "spring", stiffness: 240, damping: 16 }}
                   >
-                    <AvatarPreview customization={{ ...customization, [step.item.slot]: step.item.avatarPartId }} width={210} />
+                    {wlFramePlace(step.item.avatarPartId) ? (
+                      <div className="pb-4"><WlFrameAvatar place={wlFramePlace(step.item.avatarPartId)!} customization={wearingPack(customization)} size="lg" /></div>
+                    ) : (
+                      <AvatarPreview customization={{ ...customization, [step.item.slot]: step.item.avatarPartId }} width={210} />
+                    )}
                   </motion.div>
                   <div className="mt-6 font-poppins text-[11px] font-bold uppercase tracking-[0.3em]" style={{ color: accent }}>
-                    {t("wlRewards.exclusiveJersey")}
+                    {t(step.item.slot === "frame" ? "wlRewards.exclusiveFrame" : "wlRewards.exclusiveJersey")}
                   </div>
                   <h3 className="mt-1 font-poppins text-2xl font-black uppercase leading-tight text-white">
                     {itemName(step.item)}
@@ -417,7 +429,11 @@ export function WlRewardCeremony({
                     {t("wlRewards.summaryTitle")}
                   </h2>
                   <div className="mt-4">
-                    <AvatarPreview customization={equippedCustomization} width={170} />
+                    {wlFramePlace(equippedCustomization.frame) && receipt.items.some((item) => item.slot === "frame") ? (
+                      <WlFrameAvatar place={wlFramePlace(equippedCustomization.frame)!} customization={equippedCustomization} size="lg" />
+                    ) : (
+                      <AvatarPreview customization={equippedCustomization} width={170} />
+                    )}
                   </div>
                   <ul className="mt-4 w-full space-y-2 text-left">
                     {receipt.items.map((item) => (
@@ -440,7 +456,7 @@ export function WlRewardCeremony({
                     <p className="mt-3 text-sm font-semibold text-brand-red-light">{t("wlRewards.equipFailed")}</p>
                   )}
                   <div className="mt-6 flex w-full flex-col items-center gap-2.5">
-                    {firstItem && (equip === "done" || alreadyWearing) && (
+                    {hasItems && (equip === "done" || alreadyWearing) && (
                       <div className="flex h-12 min-w-[200px] items-center justify-center gap-2 rounded-[14px] border-2 border-brand-green-light/60 px-8 font-poppins text-sm font-bold uppercase tracking-wide text-brand-green-light">
                         <Check className="size-4" strokeWidth={3} /> {t("wlRewards.equipped")}
                       </div>

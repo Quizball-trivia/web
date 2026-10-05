@@ -6,7 +6,7 @@ import { Check, Ticket, Users } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
 import { useLocale } from '@/contexts/LocaleContext';
 import { formatStageWhen, useWlKickoffTimes, useWlTimeZone } from '../wlTime';
-import { RareRewardsBoard } from './RareRewardsBoard';
+import { WlPrizeCard } from './WlPrizeCard';
 import { colors } from '@/lib/colors';
 import { LAUNCH_EDITION, poppins, QP_TARGET } from '../constants';
 import type { LeaguePhase, Milestone } from '../types';
@@ -385,7 +385,7 @@ export function LeagueHeader({
         {(phase === 'upcoming' || phase === 'entry_open' || phase === 'completed') && (
           <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.35, ease: 'easeOut' }} className="px-4">
-            <RareRewardsBoard compact />
+            <div className="pb-2 pt-3"><WlPrizeCard surface={gold ? 'gold' : 'blue'} /></div>
           </motion.div>
         )}
       </div>

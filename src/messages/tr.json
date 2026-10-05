@@ -2470,7 +2470,19 @@
     "jerseyHome": "Retro Playmaker İç Saha",
     "jerseyAway": "Retro Playmaker Deplasman",
     "jerseyTraining": "Retro Playmaker Antrenman",
-    "ceremonyLabel": "Weekend League ödülleri"
+    "ceremonyLabel": "Weekend League ödülleri",
+    "frameTitle1": "Hafta Sonu Şampiyonu",
+    "frameTitle2": "Hafta Sonu İkincisi",
+    "frameTitle3": "Hafta Sonu Podyumu",
+    "frameName1": "Şampiyon çerçevesi",
+    "frameName2": "İkincilik çerçevesi",
+    "frameName3": "Podyum çerçevesi",
+    "framesTab": "Çerçeveler",
+    "frameUnlock1": "Weekend League’i kazan",
+    "frameUnlock2": "Weekend League’de 2. ol",
+    "frameUnlock3": "Weekend League’de 3. ol",
+    "kitFrameCoins": "Forma + çerçeve + coin",
+    "exclusiveFrame": "Özel çerçeve"
   },
   "triviaMines": {
     "modalDescription": "Kutuları aç, 4 savunmacıdan kaç, potu büyüt. Nerede saklandıklarını keşfetmek için futbol sorularını yanıtla.",

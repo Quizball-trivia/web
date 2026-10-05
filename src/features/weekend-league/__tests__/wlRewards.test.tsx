@@ -15,6 +15,7 @@ vi.mock('@/contexts/LocaleContext', () => ({
 vi.mock('@/lib/sounds/useGameSounds', () => ({ useGameSounds: () => ({ playSfx: vi.fn() }) }));
 
 const JERSEY = { slug: 'avatar_jersey_wl_retro_home', avatarPartId: 'jersey_wl_retro_home', slot: 'jersey' as const };
+const FRAME = { slug: 'avatar_frame_wl_champion', avatarPartId: 'frame_wl_champion', slot: 'frame' as const };
 
 function receipt(band: WlRewardBand, coins: number, overrides: Partial<WlRewardReceipt> = {}): WlRewardReceipt {
   const podium = band === 'winner' || band === 'second' || band === 'third';
@@ -64,7 +65,7 @@ describe('Weekend League reward ceremony', () => {
     expect(onClose).not.toHaveBeenCalled();
 
     await act(async () => { click('Equip now'); });
-    expect(onEquip).toHaveBeenCalledWith(JERSEY);
+    expect(onEquip).toHaveBeenCalledWith([JERSEY]);
     expect(screen.getByText('Equipped')).toBeTruthy();
     click('Done');
     expect(onClose).toHaveBeenCalledTimes(1);
@@ -90,6 +91,36 @@ describe('Weekend League reward ceremony', () => {
 
   it('shows the jersey as already equipped when the player is wearing it', async () => {
     renderCeremony(receipt('winner', 40000), { customization: { jersey: 'jersey_wl_retro_home' } });
+    click('Skip');
+    expect(await screen.findByText('Equipped', undefined, WAIT)).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Equip now' })).toBeNull();
+  });
+
+  it('a v2 pack reveals the jersey, then the frame, and equips both in one save', async () => {
+    const { onEquip } = renderCeremony(receipt('winner', 40000, { items: [JERSEY, FRAME] }));
+    fireEvent.click(screen.getAllByRole('button', { name: 'Open pack' }).at(-1)!);
+    expect(await screen.findByText('Retro Playmaker Home', undefined, WAIT)).toBeTruthy();
+    click('Next');
+    expect(await screen.findByText('Champion frame', undefined, WAIT)).toBeTruthy();
+    expect(screen.getByText('Exclusive frame')).toBeTruthy();
+    // The frame is shown on the player wearing the pack's jersey, titled.
+    expect(screen.getByText('Weekend Champion')).toBeTruthy();
+    click('Next');
+    expect(await screen.findByText('+40,000', undefined, WAIT)).toBeTruthy();
+    click('Next');
+    await screen.findByText('Your rewards', undefined, WAIT);
+    await act(async () => { click('Equip now'); });
+    expect(onEquip).toHaveBeenCalledWith([JERSEY, FRAME]);
+  });
+
+  it('still offers Equip when only the jersey is on, and shows Equipped once both are', async () => {
+    renderCeremony(receipt('winner', 40000, { items: [JERSEY, FRAME] }), { customization: { jersey: 'jersey_wl_retro_home' } });
+    click('Skip');
+    expect(await screen.findByRole('button', { name: 'Equip now' }, WAIT)).toBeTruthy();
+    cleanup();
+    renderCeremony(receipt('winner', 40000, { items: [JERSEY, FRAME] }), {
+      customization: { jersey: 'jersey_wl_retro_home', frame: 'frame_wl_champion' },
+    });
     click('Skip');
     expect(await screen.findByText('Equipped', undefined, WAIT)).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Equip now' })).toBeNull();

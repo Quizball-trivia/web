@@ -1,5 +1,7 @@
 "use client";
 
+import { wlFramePlace } from "@/lib/avatars/frames";
+import { WlFrameAvatar } from "@/features/weekend-league/rewards/WlFrame";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
@@ -137,6 +139,15 @@ function CardShell({
 
 function CardAvatar({ player }: { player: SocialPlayer }) {
   const tier = player.ranked?.tier ?? 'Academy';
+  const framePlace = wlFramePlace(player.avatarCustomization?.frame);
+  if (framePlace && player.avatarCustomization) {
+    return (
+      <div className="shrink-0">
+        <div className="block sm:hidden"><WlFrameAvatar place={framePlace} customization={player.avatarCustomization} size="xs" /></div>
+        <div className="hidden sm:block"><WlFrameAvatar place={framePlace} customization={player.avatarCustomization} size="sm" /></div>
+      </div>
+    );
+  }
   return (
     <div className="shrink-0">
       <div className="block sm:hidden">

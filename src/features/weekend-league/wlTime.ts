@@ -1,5 +1,5 @@
 import { useCallback, useContext, useMemo, useState, useSyncExternalStore } from 'react';
-import { QueryClientContext } from '@tanstack/react-query';
+import { QueryClientContext, type QueryClient } from '@tanstack/react-query';
 import type { getWeekendLeagueCurrent } from '@/lib/api/endpoints';
 import { queryKeys } from '@/lib/queries/queryKeys';
 import { getMilestones } from './mock-data';
@@ -89,17 +89,26 @@ export interface WlKickoffTimes {
  * the calendar). It only reads the cache — it never issues a request, and it
  * works without a QueryClientProvider (component previews, public pages).
  */
-export function useWlKickoffTimes(): WlKickoffTimes {
-  const client = useContext(QueryClientContext);
-  const subscribe = useCallback(
+function useQueryCacheSubscription(client: QueryClient | undefined) {
+  return useCallback(
     (onChange: () => void) => (client ? client.getQueryCache().subscribe(onChange) : subscribeNever()),
     [client],
   );
-  const cached = useSyncExternalStore(
+}
+
+/** The tournament row already in the query cache, if any. Never fetches. */
+function useCachedWlTournament() {
+  const client = useContext(QueryClientContext);
+  const subscribe = useQueryCacheSubscription(client);
+  return useSyncExternalStore(
     subscribe,
     () => client?.getQueryData<WlCurrent>(queryKeys.weekendLeague.current())?.tournament ?? null,
     () => null,
   );
+}
+
+export function useWlKickoffTimes(): WlKickoffTimes {
+  const cached = useCachedWlTournament();
   const [nowMs] = useState(() => Date.now());
   const live = cached && cached.status !== 'cancelled' && cached.status !== 'voided' ? cached : null;
   const entryClosesAt = live?.entry_closes_at;

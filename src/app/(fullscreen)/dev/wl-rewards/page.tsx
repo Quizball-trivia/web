@@ -18,6 +18,7 @@ import type { WlBoardRow } from '@/lib/realtime/socket.types';
 import type { AvatarCustomization } from '@/types/game';
 
 const SELF = 'dev-self';
+const FRAME_FOR: Record<string, string> = { home: 'frame_wl_champion', away: 'frame_wl_runnerup', training: 'frame_wl_podium' };
 
 const BANDS: Array<{ band: WlRewardBand; label: string; rank: number | null; coins: number; jersey?: string }> = [
   { band: 'winner', label: '1st — Champion', rank: 1, coins: 40000, jersey: 'home' },
@@ -44,7 +45,10 @@ function receiptFor(index: number, seen: boolean): WlRewardReceipt {
     finalRank: def.rank,
     coins: def.coins,
     items: def.jersey
-      ? [{ slug: `avatar_jersey_wl_retro_${def.jersey}`, avatarPartId: `jersey_wl_retro_${def.jersey}`, slot: 'jersey' }]
+      ? [
+          { slug: `avatar_jersey_wl_retro_${def.jersey}`, avatarPartId: `jersey_wl_retro_${def.jersey}`, slot: 'jersey' },
+          { slug: `avatar_${FRAME_FOR[def.jersey]}`, avatarPartId: FRAME_FOR[def.jersey], slot: 'frame' },
+        ]
       : [],
     grantedAt: '2026-10-04T12:00:00Z',
     seen,
@@ -176,9 +180,9 @@ export default function DevWlRewardsPage() {
         customization={customization}
         weekLabel="3 Oct"
         forceReducedMotion={reduced || undefined}
-        onEquip={async (item) => {
+        onEquip={async (items) => {
           await new Promise((resolve) => setTimeout(resolve, 600));
-          setEquipped(item.avatarPartId);
+          setEquipped(items.find((item) => item.slot === 'jersey')?.avatarPartId ?? null);
         }}
         onClose={() => { setOpen(false); setSeen(true); }}
       />
