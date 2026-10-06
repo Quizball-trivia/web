@@ -10,6 +10,7 @@ import { PublicGameEmbed } from "./public/PublicGameEmbed";
 import { PlayNowLink } from "./public/PlayNowLink";
 import { BuscaminasBanner } from "./public/BuscaminasBanner";
 import { BuscaminasLeaderboard } from "@/features/buscaminas/BuscaminasLeaderboard";
+import { StatSniperPageBoard } from "./public/StatSniperPageBoard";
 import { PistasLeaderboard } from "@/features/pistas/PistasLeaderboard";
 import { UltimoLeaderboard } from "@/features/ultimo/UltimoLeaderboard";
 import { MinutoLeaderboard } from "@/features/minuto/MinutoLeaderboard";
@@ -127,7 +128,7 @@ export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: S
             </section>
           )}
           {(game.modeId === "ranked" || game.modeId === "grid" || game.modeId === "auction") && <PublicTopTen board={game.modeId} locale={locale} />}
-          {fullGame && (game.modeId === "pistas" ? <PistasLeaderboard locale={locale} className="mt-6" /> : game.modeId === "ultimo" ? <UltimoLeaderboard locale={locale} className="mt-6" /> : game.modeId === "minuto" ? <MinutoLeaderboard locale={locale} className="mt-6" /> : game.modeId === "buscaminas" ? <BuscaminasLeaderboard locale={locale} className="mt-6" /> : null)}
+          {fullGame && (game.modeId === "pistas" ? <PistasLeaderboard locale={locale} className="mt-6" /> : game.modeId === "ultimo" ? <UltimoLeaderboard locale={locale} className="mt-6" /> : game.modeId === "minuto" ? <MinutoLeaderboard locale={locale} className="mt-6" /> : game.modeId === "buscaminas" ? <BuscaminasLeaderboard locale={locale} className="mt-6" /> : game.modeId === "statSniper" ? <StatSniperPageBoard locale={locale} modeId={game.modeId} playPath={game.playPath} className="mt-6" /> : null)}
         </div>
 
         <div className="md:col-start-1 md:row-start-2">
