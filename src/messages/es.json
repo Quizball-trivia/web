@@ -1524,6 +1524,7 @@
     "opponentFallback": "Rival",
     "preparingMatch": "Preparando partido...",
     "opponentNoShow": "El rival no se presentó",
+    "alreadyInGame": "Ya estás en otra partida o sala. Terminala o salí antes de jugar un clasificatorio.",
     "dbOutagePaused": "El matchmaking está pausado por un momento — tu ticket no se usó. Reintentando…",
     "matchSetupStuck": "Error al configurar el partido",
     "matchSetupStuckDescription": "Reinicia la búsqueda. Si el problema persiste, el servidor sigue fallando al preparar el draft.",

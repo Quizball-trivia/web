@@ -38,15 +38,19 @@ interface DemoDailyChallengeProps {
   /** Public-page sneak peek: one unit of the mechanic / a handful of questions instead of the full sample. */
   peek?: boolean;
   /** Where the real game lives (sample result primary action). */
-  resultCta?: { modeId: string; returnTo: string; onBeforeLeave?: () => void };
+  resultCta?: { modeId: string; returnTo: string; onBeforeLeave?: () => void; label?: string };
   /** Under the result's primary action (e.g. play it with friends). */
   resultExtra?: React.ReactNode;
   /** Guest play: Stat Sniper board from the public endpoint. */
   leaderboardFetcher?: () => Promise<StatSniperLeaderboard>;
+  /** Stat Sniper: shown in place of the leaderboard. */
+  boardSlot?: React.ReactNode;
+  /** Stat Sniper: false = its back arrow exits without the quit dialog. */
+  confirmQuit?: boolean;
 }
 type ResolveLink = NonNullable<Parameters<typeof PassChainGame>[0]["resolveLink"]>;
 
-export function DemoDailyChallenge({ type, backHref = "/demos", onExit, onEvent, session: sessionOverride, onRemoteComplete, resolveLink, leaderboardFetcher, peek = false, resultCta, resultExtra }: DemoDailyChallengeProps) {
+export function DemoDailyChallenge({ type, backHref = "/demos", onExit, onEvent, session: sessionOverride, onRemoteComplete, resolveLink, leaderboardFetcher, boardSlot, confirmQuit, peek = false, resultCta, resultExtra }: DemoDailyChallengeProps) {
   const router = useRouter();
   const { locale } = useLocale();
   const [attempt, setAttempt] = useState(0);
@@ -141,6 +145,6 @@ export function DemoDailyChallenge({ type, backHref = "/demos", onExit, onEvent,
     case "passChain":
       return <PassChainGame key={attempt} session={session} resolveLink={resolveLink ?? resolveDemoPassChainLink} {...gameProps} />;
     case "statSniper":
-      return <StatSniperGame key={attempt} session={session} demo={!leaderboardFetcher} leaderboardFetcher={leaderboardFetcher} onSaveResult={onRemoteComplete ? submitOnce : undefined} {...gameProps} />;
+      return <StatSniperGame key={attempt} session={session} demo={!leaderboardFetcher} leaderboardFetcher={leaderboardFetcher} boardSlot={boardSlot} confirmQuit={confirmQuit} onSaveResult={onRemoteComplete ? submitOnce : undefined} {...gameProps} />;
   }
 }

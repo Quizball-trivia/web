@@ -2,10 +2,11 @@
 
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Play } from "lucide-react";
 import { OWN_EXIT_ENGINES, PracticeLayer, SELF_EXITING_ENGINES } from "./PracticeLayer";
 import { useAuthStore } from "@/stores/auth.store";
-import { type SessionKind, trackGameComplete, trackGameExit, trackGameReplay, trackGameStart, trackGameView } from "@/lib/analytics/public-games.analytics";
+import { type SessionKind, trackPlayNowClick, trackGameComplete, trackGameExit, trackGameReplay, trackGameStart, trackGameView } from "@/lib/analytics/public-games.analytics";
 import type { EngineEventDetail } from "@/lib/analytics/public-games.analytics";
 import type { DailyChallengeType } from "@/lib/domain/dailyChallenge";
 import type { Locale } from "@/lib/i18n/locale";
@@ -19,6 +20,7 @@ const BuscaminasGame = dynamic(() => import("@/features/buscaminas/BuscaminasGam
 const PistasGame = dynamic(() => import("@/features/pistas/PistasGame").then((m) => m.PistasGame), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 const MinutoGame = dynamic(() => import("@/features/minuto/MinutoGame").then((m) => m.MinutoGame), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 const UltimoGame = dynamic(() => import("@/features/ultimo/UltimoGame").then((m) => m.UltimoGame), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
+const StatSniperPublicPlay = dynamic(() => import("./StatSniperPublicPlay").then((m) => m.StatSniperPublicPlay), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 const DemoModeView = dynamic(() => import("@/features/demos/DemoModeView").then((m) => m.DemoModeView), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 
 const newSessionId = () => (typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`);
@@ -59,7 +61,9 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, playPath, 
   const dailyType = demoSlug.startsWith("daily-") ? (demoSlug.slice("daily-".length) as DailyChallengeType) : null;
   // Dailies and the coin mini-games run a fixed sample; the multiplayer/ranked engines run a scripted training.
   const sessionKind: SessionKind = isFullGameDemo(demoSlug) ? "full_game" : dailyType || demoSlug.startsWith("mini-") ? "sample" : "training";
-  const access = useAuthStore((state) => state.status) === "authenticated" ? "member" : "guest";
+  const authStatus = useAuthStore((state) => state.status);
+  const access = authStatus === "authenticated" ? "member" : "guest";
+  const router = useRouter();
   const [playing, setPlaying] = useState(false);
   /** A shared result link (/r/…) lands here with ?dia= so the full game opens that puzzle. */
   const [sharedDay, setSharedDay] = useState<string | null>(null);
@@ -77,7 +81,15 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, playPath, 
     wasPlayingRef.current = playing;
   }, [playing]);
 
+  /** Members play the real Stat Sniper in the app, where the score counts for coins, streak and the leaderboard. */
+  const playInApp = () => {
+    trackPlayNowClick({ modeId, access: "member", destination: playPath });
+    // Drop ?jugar=1 first: Back from the app must land on the page, not auto-start and bounce forward again.
+    setPlayUrl(false);
+    router.push(playPath);
+  };
   const start = () => {
+    if (dailyType === "statSniper" && authStatus === "authenticated") { playInApp(); return; }
     sessionRef.current = newSessionId();
     startedAtRef.current = Date.now();
     completedRef.current = false;
@@ -144,6 +156,8 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, playPath, 
             <MinutoGame locale={locale as Locale} initialDay={sharedDay} onExit={exit} onEvent={onEngineEvent} onDay={onDay} />
           ) : demoSlug === "ultimo" ? (
             <UltimoGame locale={locale as Locale} initialDay={sharedDay} onExit={exit} onEvent={onEngineEvent} onDay={onDay} />
+          ) : dailyType === "statSniper" ? (
+            <StatSniperPublicPlay locale={locale as Locale} modeId={modeId} pagePath={pagePath} playPath={playPath} onExit={exit} onEvent={onEngineEvent} onLeaveToRealGame={recordExit} onMember={() => { recordExit(); playInApp(); }} />
           ) : dailyType ? (
             <GuestDailyPlay
               type={dailyType}

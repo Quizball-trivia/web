@@ -121,6 +121,9 @@ const nextConfig: NextConfig = {
     ],
   },
   async headers() {
+    // Brand images are embedded by email clients and other sites: the site-wide same-origin CORP would block them.
+    // Listed after the site-wide rule, so this value wins for these paths.
+    const brandAssets = { source: "/assets/brand/:path*", headers: [{ key: "Cross-Origin-Resource-Policy", value: "cross-origin" }] };
     // Block preview/branch deploys from search indexes even for
     // non-HTML responses (sitemap.xml, JSON, etc.).
     if (IS_PRODUCTION_DEPLOYMENT) {
@@ -129,6 +132,7 @@ const nextConfig: NextConfig = {
           source: "/:path*",
           headers: SECURITY_HEADERS,
         },
+        brandAssets,
       ];
     }
     return [
@@ -139,6 +143,7 @@ const nextConfig: NextConfig = {
           { key: "X-Robots-Tag", value: "noindex, nofollow" },
         ],
       },
+      brandAssets,
       // Local development only: the games playground shows its preview page in a same-origin iframe.
       ...(process.env.NODE_ENV === "development"
         ? [{ source: "/dev/games/preview", headers: [{ key: "X-Frame-Options", value: "SAMEORIGIN" }] }]

@@ -203,6 +203,8 @@ interface GameStageTransitionOptions {
   realtimeDraft: DraftStatus | null;
   realtimeMatch: GameStageRealtimeMatchSlice;
   setStage: (stage: GameStage) => void;
+  /** The server refused the ranked join outright (`session:blocked` for ranked:queue_join: a seat in a live room game). */
+  onRankedBlocked?: () => void;
 }
 
 export function useGameStageTransitions({
@@ -213,7 +215,10 @@ export function useGameStageTransitions({
   realtimeDraft,
   realtimeMatch,
   setStage,
+  onRankedBlocked,
 }: GameStageTransitionOptions) {
+  const onRankedBlockedRef = useRef(onRankedBlocked);
+  useEffect(() => { onRankedBlockedRef.current = onRankedBlocked; });
   const rankedRequestRef = useRef(false);
   const rankedSearchAckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const rankedRetryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -229,6 +234,7 @@ export function useGameStageTransitions({
   const rankedSearchStartedAt = useRankedMatchmakingStore((state) => state.rankedSearchStartedAt);
   const rankedFoundOpponent = useRankedMatchmakingStore((state) => state.rankedFoundOpponent);
   const sessionState = useRealtimeMatchStore((state) => state.sessionState);
+  const realtimeErrorMeta = useRealtimeMatchStore((state) => state.error?.meta as { source?: string; reason?: string; operation?: string | null } | undefined);
   const realtimeErrorCode = useRealtimeMatchStore((state) => state.error?.code ?? null);
 
   useEffect(() => {
@@ -597,6 +603,20 @@ export function useGameStageTransitions({
     socket,
     stage,
   ]);
+
+  // Only the server's definite refusal (a seat in a live room game) stops the search screen: IN_WAITING_LOBBY alone is
+  // also how a ranked lobby forms, and TRANSITION_IN_PROGRESS for the same operation is a retryable busy lock.
+  const rankedJoinBlocked = realtimeErrorMeta?.source === "session:blocked"
+    && realtimeErrorMeta.reason === "ACTIVE_MATCH"
+    && realtimeErrorMeta.operation === "ranked:queue_join";
+  useEffect(() => {
+    if (!isMultiplayer || config?.matchType !== "ranked" || stage !== "matchmaking" || !rankedJoinBlocked) return;
+    logger.warn("Ranked queue join refused by the server: player is seated in a live room game");
+    rankedRequestRef.current = false;
+    clearRankedAckTimer();
+    clearRankedRetryTimer();
+    onRankedBlockedRef.current?.();
+  }, [clearRankedAckTimer, clearRankedRetryTimer, config?.matchType, isMultiplayer, rankedJoinBlocked, stage]);
 
   useEffect(() => {
     if (!isMultiplayer || config?.matchType !== "ranked") return;

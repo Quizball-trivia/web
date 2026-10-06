@@ -16,6 +16,7 @@ export type ExitToPlaySource =
   | 'party_results_main_menu'
   | 'match_quit'
   | 'matchmaking_exit'
+  | 'ranked_blocked'
   | 'training_complete'
   | 'generic';
 

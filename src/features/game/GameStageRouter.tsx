@@ -210,6 +210,14 @@ export function GameStageRouter() {
     !realtimeMatch.matchId &&
     (!realtimeDraft || !hasLiveLobby);
 
+  // Declared before the hook so its ranked guard can leave matchmaking; exitToPlay is defined below.
+  const exitToPlayRef = useRef<(source?: ExitToPlaySource) => void>(() => {});
+  const handleRankedBlocked = useCallback(() => {
+    // The search never started: leave the screen only. No queue/lobby leave — that would pull the player out of their room.
+    toast.error(t("matchmaking.alreadyInGame"));
+    exitToPlayRef.current("ranked_blocked");
+  }, [t]);
+
   useGameStageTransitions({
     isMultiplayer,
     stage,
@@ -218,6 +226,7 @@ export function GameStageRouter() {
     realtimeDraft,
     realtimeMatch,
     setStage,
+    onRankedBlocked: handleRankedBlocked,
   });
 
   const showdownType = matchType === "ranked" ? "ranked" : "friendly";
@@ -267,6 +276,7 @@ export function GameStageRouter() {
     socket,
     stage,
   ]);
+  useEffect(() => { exitToPlayRef.current = exitToPlay; }, [exitToPlay]);
 
   const showRankedBootAbortNotice = useCallback(() => {
     const message = t("matchmaking.opponentNoShow");

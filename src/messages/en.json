@@ -1524,6 +1524,7 @@
     "opponentFallback": "Opponent",
     "preparingMatch": "Preparing match...",
     "opponentNoShow": "Opponent didn't show up",
+    "alreadyInGame": "You're already in another game or room. Finish or leave it before playing ranked.",
     "dbOutagePaused": "Matchmaking is paused for a moment — your ticket was not used. Retrying…",
     "matchSetupStuck": "Match setup got stuck",
     "matchSetupStuckDescription": "Restart matchmaking and try again. If it keeps happening, the backend is still failing while preparing the draft.",

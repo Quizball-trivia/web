@@ -1524,6 +1524,7 @@
     "opponentFallback": "Rakip",
     "preparingMatch": "Maç hazırlanıyor...",
     "opponentNoShow": "Rakip gelmedi",
+    "alreadyInGame": "Zaten başka bir oyunda veya odadasın. Dereceli oynamadan önce onu bitir ya da ayrıl.",
     "dbOutagePaused": "Eşleştirme bir süreliğine duraklatıldı — biletin kullanılmadı. Tekrar deneniyor…",
     "matchSetupStuck": "Maç kurulumu takıldı",
     "matchSetupStuckDescription": "Eşleştirmeyi yeniden başlat ve tekrar dene. Sorun devam ederse, arka uç taslağı hazırlarken hala hata veriyor demektir.",
