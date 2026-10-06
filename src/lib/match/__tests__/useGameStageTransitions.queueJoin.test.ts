@@ -212,64 +212,75 @@ describe('ranked matchmaking initial queue join', () => {
     }
   });
 
-  it('stops searching when the server keeps ignoring the join because the player sits in another room', async () => {
+  function renderWithBlockedHandler(socket: Socket, onRankedBlocked: () => void, requestId: string) {
+    window.sessionStorage.setItem(
+      'quizball.ranked_queue.intent',
+      JSON.stringify({ source: 'mode_select', clientRequestId: requestId, createdAtMs: Date.now() })
+    );
+    useRealtimeMatchStore.setState({ sessionState: null });
+    return renderHook(() =>
+      useGameStageTransitions({
+        isMultiplayer: true, stage: 'matchmaking', config: RANKED_CONFIG, socket,
+        realtimeDraft: null, realtimeMatch: { matchId: null } as never, setStage: vi.fn(), onRankedBlocked,
+      })
+    );
+  }
+  const emitted = (socket: TestSocket, event: string) =>
+    (socket.emit as ReturnType<typeof vi.fn>).mock.calls.filter(([name]) => name === event).length;
+
+  it('leaves the search screen when the server refuses the join (seat in a live room game), without leaving anything', async () => {
     vi.useFakeTimers();
     try {
-      window.sessionStorage.setItem(
-        'quizball.ranked_queue.intent',
-        JSON.stringify({ source: 'mode_select', clientRequestId: 'client-request-room-seat', createdAtMs: Date.now() })
-      );
-      useRealtimeMatchStore.setState({ sessionState: null });
       const socket = createSocket();
       const onRankedBlocked = vi.fn();
-      renderHook(() =>
-        useGameStageTransitions({
-          isMultiplayer: true, stage: 'matchmaking', config: RANKED_CONFIG, socket,
-          realtimeDraft: null, realtimeMatch: { matchId: null } as never, setStage: vi.fn(), onRankedBlocked,
-        })
-      );
-      // The server ignores each join and answers with the player's live room (an Aproximado match in another tab).
-      const serverReplies = (at: string) => act(() => {
+      renderWithBlockedHandler(socket, onRankedBlocked, 'client-request-room-seat');
+      const joinsBefore = emitted(socket, 'ranked:queue_join');
+      act(() => {
         useRealtimeMatchStore.setState({
-          sessionState: { state: 'IN_WAITING_LOBBY', activeMatchId: null, waitingLobbyId: 'room-lobby', queueSearchId: null, openLobbyIds: ['room-lobby'], resolvedAt: at } as never,
+          sessionState: { state: 'IN_WAITING_LOBBY', activeMatchId: null, waitingLobbyId: 'room-lobby', queueSearchId: null, openLobbyIds: ['room-lobby'] } as never,
+          error: { code: 'ACTIVE_MATCH', message: 'You are already in a room game', meta: { source: 'session:blocked', reason: 'ACTIVE_MATCH', operation: 'ranked:queue_join' } } as never,
         });
       });
-      serverReplies('2026-10-06T17:00:00.000Z');
-      await vi.advanceTimersByTimeAsync(2600);
-      expect(onRankedBlocked).not.toHaveBeenCalled(); // one retry first: the state may be transient
-      serverReplies('2026-10-06T17:00:02.700Z');
-      await vi.advanceTimersByTimeAsync(2600);
       expect(onRankedBlocked).toHaveBeenCalledTimes(1);
-      (socket.emit as ReturnType<typeof vi.fn>).mockClear();
-      await vi.advanceTimersByTimeAsync(8000);
-      expect(socket.emit).not.toHaveBeenCalledWith('ranked:queue_join', expect.anything());
-      expect(socket.emit).not.toHaveBeenCalledWith('lobby:leave');
+      await vi.advanceTimersByTimeAsync(10_000);
+      expect(emitted(socket, 'ranked:queue_join')).toBe(joinsBefore); // no retries after the refusal
+      expect(emitted(socket, 'ranked:queue_leave')).toBe(0);
+      expect(emitted(socket, 'lobby:leave')).toBe(0);
     } finally {
       vi.useRealTimers();
     }
   });
 
-  it('keeps retrying (no blocked exit) while the server reports IDLE', async () => {
+  it('keeps a forming ranked lobby (IN_WAITING_LOBBY, no refusal) in matchmaking', async () => {
     vi.useFakeTimers();
     try {
-      window.sessionStorage.setItem(
-        'quizball.ranked_queue.intent',
-        JSON.stringify({ source: 'mode_select', clientRequestId: 'client-request-idle', createdAtMs: Date.now() })
-      );
-      useRealtimeMatchStore.setState({ sessionState: null });
       const socket = createSocket();
       const onRankedBlocked = vi.fn();
-      renderHook(() =>
-        useGameStageTransitions({
-          isMultiplayer: true, stage: 'matchmaking', config: RANKED_CONFIG, socket,
-          realtimeDraft: null, realtimeMatch: { matchId: null } as never, setStage: vi.fn(), onRankedBlocked,
-        })
-      );
-      await vi.advanceTimersByTimeAsync(2600 * 3);
+      renderWithBlockedHandler(socket, onRankedBlocked, 'client-request-forming');
+      for (const at of ['2026-10-06T17:00:00.000Z', '2026-10-06T17:00:02.700Z', '2026-10-06T17:00:05.400Z']) {
+        act(() => {
+          useRealtimeMatchStore.setState({
+            sessionState: { state: 'IN_WAITING_LOBBY', activeMatchId: null, waitingLobbyId: 'ranked-lobby', queueSearchId: null, openLobbyIds: ['ranked-lobby'], resolvedAt: at } as never,
+          });
+        });
+        await vi.advanceTimersByTimeAsync(2600);
+      }
       expect(onRankedBlocked).not.toHaveBeenCalled();
     } finally {
       vi.useRealTimers();
     }
+  });
+
+  it('ignores a refusal that belongs to another queue', () => {
+    const socket = createSocket();
+    const onRankedBlocked = vi.fn();
+    renderWithBlockedHandler(socket, onRankedBlocked, 'client-request-other-op');
+    act(() => {
+      useRealtimeMatchStore.setState({
+        error: { code: 'ACTIVE_MATCH', message: 'blocked', meta: { source: 'session:blocked', reason: 'ACTIVE_MATCH', operation: 'auction:search_start' } } as never,
+      });
+    });
+    expect(onRankedBlocked).not.toHaveBeenCalled();
   });
 
   it('re-joins after a silent search loss (acked search + server says IDLE, no error code)', async () => {
