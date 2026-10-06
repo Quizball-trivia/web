@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { motion } from "motion/react";
 import { Crosshair, Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -36,6 +36,8 @@ export function StatSniperGame({
   onSaveResult,
   demo = false,
   leaderboardFetcher,
+  boardSlot,
+  confirmQuit = true,
 }: {
   session: StatSniperSession;
   onBack: () => void;
@@ -48,6 +50,10 @@ export function StatSniperGame({
   demo?: boolean;
   /** Guest play: read the board from the public endpoint. */
   leaderboardFetcher?: () => Promise<StatSniperLeaderboardData>;
+  /** Shown where the leaderboard sits (guests on the public page get a sign-up card instead of the board). */
+  boardSlot?: ReactNode;
+  /** false = the back arrow leaves at once (public page: the quit dialog would open beneath its layer). */
+  confirmQuit?: boolean;
 }) {
   const { t, locale } = useLocale();
   const numberLocale = locale === "ka" ? "ka-GE" : locale === "es" ? "es-ES" : locale === "tr" ? "tr-TR" : "en-GB";
@@ -125,7 +131,7 @@ export function StatSniperGame({
       <DailyGameStage
         header={
           <DailyChallengeHeader
-            onQuit={() => setShowQuit(true)}
+            onQuit={() => (confirmQuit ? setShowQuit(true) : onBack())}
             currentIndex={index}
             total={questions.length}
             timeLeft={Math.max(0, timeLeft)}
@@ -198,7 +204,7 @@ export function StatSniperGame({
             )}
           </div>
 
-          {!demo && <StatSniperLeaderboard refreshKey={boardKey} fetcher={leaderboardFetcher} className="mt-6 lg:mt-0" />}
+          {boardSlot ?? (!demo && <StatSniperLeaderboard refreshKey={boardKey} fetcher={leaderboardFetcher} className="mt-6 lg:mt-0" />)}
         </div>
       </DailyGameStage>
 

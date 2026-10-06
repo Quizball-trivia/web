@@ -49,8 +49,8 @@ export interface PublicGameMeta {
 /** Daily engines report start/complete/replay themselves; other engines are timed from the outer Play control. */
 /** Dailies and the coin-game samples fire start/complete/replay themselves; trainings are timed from the Play control. */
 export const engineEmitsEvents = (demoSlug: string | undefined): boolean => Boolean(demoSlug?.startsWith("daily-")) || COIN_SAMPLE_DEMO_SLUGS.has(demoSlug ?? "") || isFullGameDemo(demoSlug);
-/** Buscaminas, Pistas futboleras and Último en pie futbolero: the page runs the real daily board (not a sample), and the engine owns its exit. */
-export const FULL_GAME_DEMO_SLUGS = new Set(["buscaminas", "pistas", "ultimo", "minuto"]);
+/** Buscaminas, Pistas, Último, Minuto and Stat Sniper (Aproximado): the page runs the real daily (not a sample), and the engine owns its exit. */
+export const FULL_GAME_DEMO_SLUGS = new Set(["buscaminas", "pistas", "ultimo", "minuto", "daily-statSniper"]);
 export const isFullGameDemo = (demoSlug: string | undefined): boolean => FULL_GAME_DEMO_SLUGS.has(demoSlug ?? "");
 const COIN_SAMPLE_DEMO_SLUGS = new Set(["mini-trivia-mines", "mini-final-third", "mini-road-to-goal", "mini-squad-spin"]);
 /** Sign-in entry: the Play screen opens its auth dialog for guests when asked to. */
