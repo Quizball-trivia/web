@@ -7,7 +7,7 @@ vi.mock("next/navigation", () => ({ usePathname: () => "/es/juegos-de-futbol/apr
 vi.mock("@/stores/auth.store", () => ({ useAuthStore: (selector: (s: { status: string }) => unknown) => selector({ status: authStatus }) }));
 vi.mock("@/lib/posthog", () => ({ trackEvent: vi.fn() }));
 vi.mock("@/features/daily/StatSniperLeaderboard", () => ({
-  StatSniperLeaderboard: ({ fetcher }: { fetcher?: unknown }) => <div data-testid="board" data-fetcher={fetcher === fetchPublicStatSniperBoard ? "public" : fetcher ? "other" : "member"} />,
+  StatSniperLeaderboard: ({ fetcher, pollMs }: { fetcher?: unknown; pollMs?: number }) => <div data-testid="board" data-poll={String(pollMs ?? "")} data-fetcher={fetcher === fetchPublicStatSniperBoard ? "public" : fetcher ? "other" : "member"} />,
 }));
 
 describe("Aproximado page leaderboard", () => {
@@ -18,6 +18,20 @@ describe("Aproximado page leaderboard", () => {
     render(<StatSniperPageBoard locale="es" modeId="statSniper" playPath="/daily/challenges/stat-sniper" />);
     expect(screen.getByTestId("board")).toHaveAttribute("data-fetcher", "public");
     expect(screen.getByRole("link", { name: "Crear cuenta" })).toHaveAttribute("href", "/play?signin=1");
+  });
+
+  it("while auth is still loading: public board, no sign-up card yet", async () => {
+    authStatus = "loading";
+    const { StatSniperPageBoard } = await import("../public/StatSniperPageBoard");
+    render(<StatSniperPageBoard locale="es" modeId="statSniper" playPath="/daily/challenges/stat-sniper" />);
+    expect(screen.getByTestId("board")).toHaveAttribute("data-fetcher", "public");
+    expect(screen.queryByRole("link", { name: "Crear cuenta" })).toBeNull();
+  });
+
+  it("the public board refreshes every minute, not every 15 s", async () => {
+    const { StatSniperPageBoard } = await import("../public/StatSniperPageBoard");
+    render(<StatSniperPageBoard locale="es" modeId="statSniper" playPath="/daily/challenges/stat-sniper" />);
+    expect(screen.getByTestId("board")).toHaveAttribute("data-poll", "60000");
   });
 
   it("members see their own board (with their rank) and no sign-up", async () => {
