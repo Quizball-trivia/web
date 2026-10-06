@@ -2569,6 +2569,7 @@
     "you": "Tú",
     "yourRank": "Tu puesto: n.º {rank} de {total}",
     "empty": "Nadie ha jugado hoy todavía. Marca el listón.",
+    "unavailable": "El ranking no está disponible ahora.",
     "skip": "Saltar"
   },
   "passChain": {

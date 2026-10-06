@@ -17,11 +17,22 @@ export function StatSniperLeaderboard({ refreshKey = 0, fetcher = getStatSniperL
   const { t } = useLocale();
   const { player } = usePlayer();
   const [board, setBoard] = useState<Board | null>(null);
+  const [failed, setFailed] = useState(false);
 
   // Refetch on demand (a saved result) and every `pollMs` while visible, so the table moves live.
   useEffect(() => {
     let cancelled = false;
-    const load = () => fetcher().then((b) => { if (!cancelled) setBoard(b); }).catch(() => undefined);
+    const load = () => fetcher().then((b) => {
+      if (cancelled) return;
+      setBoard(b);
+      setFailed(false);
+    }).catch(() => {
+      if (cancelled) return;
+      setFailed(true);
+      // A failed refresh keeps today's rows, but never shows an earlier day's board under today's heading.
+      const today = new Date().toISOString().slice(0, 10);
+      setBoard((current) => (current && /^\d{4}-\d{2}-\d{2}$/.test(current.challengeDay) && current.challengeDay !== today ? null : current));
+    });
     void load();
     const id = window.setInterval(() => void load(), pollMs);
     return () => { cancelled = true; window.clearInterval(id); };
@@ -40,6 +51,9 @@ export function StatSniperLeaderboard({ refreshKey = 0, fetcher = getStatSniperL
       <div className="overflow-hidden rounded-[10px] border-2" style={{ borderColor: "#38B60E" }}>
         {board && board.entries.length === 0 && (
           <p className="px-3 py-4 text-center text-xs text-white/55" style={poppins}>{t("statSniper.empty")}</p>
+        )}
+        {!board && failed && (
+          <p role="status" className="px-3 py-4 text-center text-xs text-white/55" style={poppins}>{t("statSniper.unavailable")}</p>
         )}
         <div className="divide-y divide-brand-green/25">
           {board?.entries.map((entry) => {
