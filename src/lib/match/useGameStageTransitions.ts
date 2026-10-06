@@ -203,6 +203,8 @@ interface GameStageTransitionOptions {
   realtimeDraft: DraftStatus | null;
   realtimeMatch: GameStageRealtimeMatchSlice;
   setStage: (stage: GameStage) => void;
+  /** The server ignored the ranked join because the player is seated elsewhere (e.g. a live room game in another tab). */
+  onRankedBlocked?: () => void;
 }
 
 export function useGameStageTransitions({
@@ -213,7 +215,10 @@ export function useGameStageTransitions({
   realtimeDraft,
   realtimeMatch,
   setStage,
+  onRankedBlocked,
 }: GameStageTransitionOptions) {
+  const onRankedBlockedRef = useRef(onRankedBlocked);
+  useEffect(() => { onRankedBlockedRef.current = onRankedBlocked; });
   const rankedRequestRef = useRef(false);
   const rankedSearchAckTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const rankedRetryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -551,6 +556,18 @@ export function useGameStageTransitions({
         latest.sessionState,
       );
       if (hasAck) return;
+      // A join the server keeps ignoring while it reports the player in another lobby/room (no search behind it):
+      // one retry rules out a transient state, then stop "searching" instead of spinning forever.
+      const blocking = latest.sessionState;
+      if (rankedRetryCountRef.current >= 1 && blocking?.state === "IN_WAITING_LOBBY" && blocking.waitingLobbyId && !blocking.queueSearchId && onRankedBlockedRef.current) {
+        logger.warn("Ranked queue join refused: player is seated in another lobby or room", {
+          retryCount: rankedRetryCountRef.current,
+          waitingLobbyId: blocking.waitingLobbyId,
+        });
+        rankedRequestRef.current = false;
+        onRankedBlockedRef.current();
+        return;
+      }
       if (rankedRetryCountRef.current >= RANKED_QUEUE_MAX_RETRIES) {
         logger.warn("Ranked queue join pending without acknowledgement (retry limit reached)", {
           retryCount: rankedRetryCountRef.current,
