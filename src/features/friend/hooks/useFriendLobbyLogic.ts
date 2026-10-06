@@ -11,12 +11,15 @@ import { useRealtimeMatchStore } from "@/stores/realtimeMatch.store";
 import { useAuctionActiveMatchStore } from "@/stores/auctionActiveMatch.store";
 import { useFootballGridStore } from "@/stores/footballGrid.store";
 import { useFriendDuelHandoffStore } from "@/stores/friendDuelHandoff.store";
+import { roomReceiptMark, useFriendRoomHandoffStore } from "@/stores/friendRoomHandoff.store";
+import { ROOM_GAMES_ENABLED } from "@/lib/config";
 import { useRankedMatchmakingStore } from "@/stores/rankedMatchmaking.store";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useAuthStore } from "@/stores/auth.store";
 import { useGameSessionStore } from "@/stores/gameSession.store";
 import { logger } from "@/utils/logger";
-import type { DuelGameId, LobbySettings as LobbySettingsState } from "@/lib/realtime/socket.types";
+import type { DuelGameId, LobbyJoinRoomInfo, LobbySettings as LobbySettingsState, RoomGameId } from "@/lib/realtime/socket.types";
+import { buildFriendInvitePath, rememberPostAuthRedirect } from "@/lib/auth/postAuthRedirect";
 import { useCategoriesList } from "@/lib/queries/categories.queries";
 import { copyToClipboard } from "@/utils/clipboard";
 import {
@@ -24,6 +27,7 @@ import {
   trackFriendInviteJoinFailed,
   trackFriendInviteJoinSucceeded,
   trackFriendInviteLinkOpened,
+  trackFriendInviteRecovery,
   trackFriendInviteSent,
   trackLobbyCreated,
   trackLobbyJoined,
@@ -31,6 +35,7 @@ import {
 import { useHeadToHead } from "@/lib/queries/stats.queries";
 import { normalizeFriendInviteCode } from "@/lib/friend/inviteCode";
 import { useLobbyCommandMachine } from "./useLobbyCommandMachine";
+import { inviteFailureKind } from "../components/InviteFailureScreen";
 
 interface UseFriendLobbyLogicProps {
   roomCode: string;
@@ -38,6 +43,10 @@ interface UseFriendLobbyLogicProps {
   inviteSource?: FriendLobbyInviteSource;
   /** `/friend/room/new?duel=<game>`: the new room opens as a duel of that game. */
   newRoomDuelGame?: DuelGameId | null;
+  /** `/friend/room/new?room=<game>`: the new room opens as that 2–6 player room game. */
+  newRoomRoomGame?: RoomGameId | null;
+  /** `/friend/room/new?game=auction|football_grid`: the new room opens in that game. */
+  newRoomGameMode?: "auction" | "football_grid" | null;
 }
 
 export type FriendLobbyInviteSource =
@@ -71,10 +80,12 @@ const LOBBY_ERROR_COPY_KEYS: Record<string, MessageKey> = {
   LOBBY_MODE_CAPACITY: "friend.errorModeCapacity",
   MEMBER_BUSY: "friend.errorMemberBusy",
   LOBBY_GUEST_LIMIT: "friend.errorGuestLimit",
+  LOBBY_FULL: "friend.inviteFullTitle",
   LOBBY_MODE_REQUIRES_ACCOUNT: "friend.errorModeRequiresAccount",
   RATE_LIMITED: "friend.errorRateLimited",
   CAPABILITY_REQUIRED: "friend.errorCapabilityRequired",
   DUEL_UNAVAILABLE: "friend.errorDuelUnavailable",
+  ROOM_GAME_UNAVAILABLE: "friend.errorRoomGameUnavailable",
 };
 
 /**
@@ -82,6 +93,23 @@ const LOBBY_ERROR_COPY_KEYS: Record<string, MessageKey> = {
  * found can beat the room's lobby:state). Older ones for a waiting room are finished duels.
  */
 const DUEL_HANDOFF_FRESH_MS = 5_000;
+/** The room screen asks the server again this often while its "where do I stand" question has no answer. */
+const ROOM_POINTER_RETRY_MS = 3_000;
+const ROOM_POINTER_TRIES = 5;
+/** How long a "not found" invite join waits for the player's own (active) room behind that code before failing. */
+const OWN_ROOM_WAIT_MS = 2_500;
+
+/**
+ * The server's own echoes of a failed invite join (it also answers the join itself, which this screen reports): its
+ * refusal errors name the invite code, and "blocked" with INVALID_INVITE / LOBBY_NOT_FOUND only comes from joins.
+ * Other room errors (settings, start on a vanished room) carry neither and keep their toast and rollback.
+ */
+function isJoinEcho(error: { code: string; meta?: unknown }, inviteCode: string | null): boolean {
+  const meta = (error.meta ?? {}) as { inviteCode?: string; source?: string; reason?: string };
+  // Join refusals (not found, full, account-only, guest limit) name the invite code; other room errors never do.
+  if (typeof meta.inviteCode === "string") return meta.inviteCode.toUpperCase() === inviteCode;
+  return meta.source === "session:blocked" && (meta.reason === "INVALID_INVITE" || meta.reason === "LOBBY_NOT_FOUND");
+}
 
 const INVITE_STATE_CONFIRMATION_TIMEOUT_MS = 4_000;
 const INVITE_STATE_CONFIRMATION_MAX_RETRIES = 2;
@@ -90,11 +118,29 @@ const INVITE_STATE_CONFIRMATION_MAX_RETRIES = 2;
 // questionCount field, so this is the single source of truth client-side.
 const FRIENDLY_QUESTION_COUNT = 10;
 
+/** Copy for a failed invite join, by code: our own text for every code, never the server's English. */
+function inviteFailureKey(code: string): MessageKey {
+  if (code === "LOBBY_NOT_FOUND") return "friend.inviteExpiredReason";
+  if (code === "LOBBY_STATE_TIMEOUT") return "friend.inviteStateTimeoutReason";
+  return LOBBY_ERROR_COPY_KEYS[code] ?? "friend.toastJoinFailed";
+}
+
 interface InviteJoinFailure {
   inviteCode: string;
   reasonCode: string;
-  message: string;
+  /** Translated when shown (the language can change while the screen is up). */
+  messageKey: MessageKey;
   retryable: boolean;
+  /** What the server says about the room behind the code (absent on older servers). */
+  room: LobbyJoinRoomInfo | null;
+}
+
+/** "Start a new room" after a refused invite: a new room in the same game where that game can be opened directly. */
+export function newRoomPathFor(room: LobbyJoinRoomInfo | null): string {
+  if (room?.gameMode === "auction" || room?.gameMode === "football_grid") return `/friend/room/new?game=${room.gameMode}`;
+  if (room?.gameMode === "duel" && room.duelGame) return `/friend/room/new?duel=${room.duelGame}`;
+  if (room?.gameMode === "room_game") return "/friend/room/new?room=aproximado";
+  return "/friend/room/new";
 }
 
 interface AwaitingInviteLobbyState {
@@ -108,9 +154,25 @@ export function useFriendLobbyLogic({
   isHost,
   inviteSource = "shared_link",
   newRoomDuelGame = null,
+  newRoomRoomGame = null,
+  newRoomGameMode = null,
 }: UseFriendLobbyLogicProps) {
   const router = useRouter();
   const { t } = useLocale();
+  // Socket replies land in callbacks created earlier: they read the current translator through this.
+  const tRef = useRef(t);
+  // The invite join's "is it my own room?" wait; replies and waits do nothing once this screen is gone.
+  const ownRoomWaitRef = useRef<number | null>(null);
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
+  useLayoutEffect(() => {
+    tRef.current = t;
+  }, [t]);
   const { player } = usePlayer();
   const principal = useRealtimePrincipal();
   const selfUserId = principal.userId ?? player.id;
@@ -146,6 +208,19 @@ export function useFriendLobbyLogic({
 
   // Connection
   useRealtimeConnection({ enabled: principal.kind !== 'none', selfUserId: realtimeSelfUserId });
+  // Who this screen joins as. A guest who signs up on this page becomes a member: earlier replies (and a failure shown
+  // to the guest, e.g. "needs an account") are dropped and the join runs again as the member.
+  const principalKey = `${principal.kind}:${principal.userId ?? ''}`;
+  const principalKeyRef = useRef(principalKey);
+  // Layout effect: runs before the join effect in the same commit, so a join is always sent as the current identity.
+  useLayoutEffect(() => {
+    principalKeyRef.current = principalKey;
+  }, [principalKey]);
+  const switchSeenRef = useRef(principalKey);
+  const autoRetriedRef = useRef<string | null>(null);
+  const inviteRetryRef = useRef<() => void>(() => {});
+  // Bumped by a retry: re-runs the join even when nothing else it depends on changed (no failure was shown yet).
+  const [joinRetryNonce, setJoinRetryNonce] = useState(0);
   // An anonymous visitor whose guest principal was refused (feature off,
   // session retired, rate-limited) cannot use the room: offer sign-up once.
   const authStatus = useAuthStore((state) => state.status);
@@ -155,8 +230,10 @@ export function useFriendLobbyLogic({
   useEffect(() => {
     if (authStatus !== 'anonymous' || guestStatus !== 'refused' || refusalPromptedRef.current) return;
     refusalPromptedRef.current = true;
+    // After sign-up, come back to this invite (not the default /play).
+    if (roomCode.trim().toLowerCase() !== 'new') rememberPostAuthRedirect(buildFriendInvitePath(roomCode));
     openAuthPrompt();
-  }, [authStatus, guestStatus, openAuthPrompt]);
+  }, [authStatus, guestStatus, openAuthPrompt, roomCode]);
   const lobbyCommands = useLobbyCommandMachine();
   const {
     createLobby,
@@ -167,6 +244,7 @@ export function useFriendLobbyLogic({
 
   const startedRef = useRef(false);
   const createdRef = useRef(false);
+  const createInFlightRef = useRef(false);
   const leavingRef = useRef(false);
   const inviteJoinCancelledRef = useRef(false);
   const terminalInviteJoinFailureRef = useRef(false);
@@ -201,6 +279,11 @@ export function useFriendLobbyLogic({
   useLayoutEffect(() => {
     activeInviteCodeRef.current = normalizedRoomCode;
   }, [normalizedRoomCode]);
+  // A pending own-room wait never outlives this screen or its invite code.
+  useEffect(() => () => {
+    if (ownRoomWaitRef.current !== null) window.clearTimeout(ownRoomWaitRef.current);
+    ownRoomWaitRef.current = null;
+  }, [normalizedRoomCode]);
   const inviteJoinFailure =
     inviteJoinFailureState?.inviteCode === normalizedRoomCode ? inviteJoinFailureState : null;
   const expectsInviteLobby = Boolean(normalizedRoomCode);
@@ -212,7 +295,23 @@ export function useFriendLobbyLogic({
     (hasActiveMatch ||
       Boolean(draft) ||
       (sessionState?.state === "IN_ACTIVE_MATCH" && Boolean(sessionState.activeMatchId)));
-  const isPreparingMatch = Boolean(isStartingMatch || activeLobby?.status === "active" || isActiveMatchHandoff);
+  // Back in the room while its room game runs without this player (left it, or left out at the gate): the room
+  // shows (and can be left), never the "preparing match" hand-off.
+  const roomSittingOut = useFriendRoomHandoffStore((state) => state.sittingOut);
+  // The server's latest answer to this screen's "where do I stand" said: no live seat. A room still shown as active is
+  // then either sat out or a match whose end was missed — either way the room (and its Leave) shows, not a spinner;
+  // the room's next state corrects it.
+  const roomAnswers = useFriendRoomHandoffStore((state) => state.answers);
+  const roomAnswerLive = useFriendRoomHandoffStore((state) => state.lastAnswerLive);
+  const [roomAskMark, setRoomAskMark] = useState<{ key: string; answers: number } | null>(null);
+  const roomNoSeat = Boolean(
+    activeLobby && roomAskMark?.key === `${activeLobby.lobbyId}:${activeLobby.status}` && roomAnswers > roomAskMark.answers && !roomAnswerLive,
+  );
+  const isSittingOutRoomGame = Boolean(
+    activeLobby?.status === "active" && activeLobby.settings.gameMode === "room_game"
+      && (roomSittingOut?.lobbyId === activeLobby.lobbyId || roomNoSeat),
+  );
+  const isPreparingMatch = Boolean(isStartingMatch || (activeLobby?.status === "active" && !isSittingOutRoomGame) || isActiveMatchHandoff);
   const isResolvingInvite = expectsInviteLobby && !activeLobby && !inviteJoinFailure && !isPreparingMatch;
   const lobbyCode = activeLobby?.inviteCode ?? (roomCode === "new" ? "" : normalizedRoomCode ?? roomCode);
   const members = activeLobby?.members ?? [];
@@ -258,6 +357,8 @@ export function useFriendLobbyLogic({
     if (isPreparingMatch) return;
     if (activeLobby || draft || hasActiveMatch) return;
     if (leavingRef.current) return;
+    // A room being created has no lobby yet: resetting now (a re-run of this effect, StrictMode) would create a second.
+    if (createInFlightRef.current) return;
     startedRef.current = false;
     createdRef.current = false;
     analyticsTrackedRef.current = false;
@@ -302,18 +403,26 @@ export function useFriendLobbyLogic({
       if (initActionRef.current === "create") return;
       initActionRef.current = "create";
       createdRef.current = true;
+      createInFlightRef.current = true;
       void createLobby(
         newRoomDuelGame
           ? { mode: "friendly", isPublic: false, gameMode: "duel", duelGame: newRoomDuelGame }
-          : { mode: "friendly" },
+          : newRoomRoomGame
+            ? { mode: "friendly", isPublic: false, gameMode: "room_game", roomGame: newRoomRoomGame }
+            : newRoomGameMode
+              ? { mode: "friendly", isPublic: false, gameMode: newRoomGameMode }
+              : { mode: "friendly" },
       ).then((result) => {
+        // null = skipped as a duplicate of the create still in flight: that one clears the flag when it answers.
+        if (result) createInFlightRef.current = false;
+        // Left the page before the answer (e.g. its 10 s deadline): no toast on another screen.
+        if (!mountedRef.current) return;
         if (!result || result.ok || leavingRef.current || inviteJoinCancelledRef.current) return;
         createdRef.current = false;
         initActionRef.current = null;
-        const localizedKey = LOBBY_ERROR_COPY_KEYS[result.code];
-        toast.error(localizedKey ? t(localizedKey) : result.message);
+        toast.error(tRef.current(LOBBY_ERROR_COPY_KEYS[result.code] ?? "friend.toastCreateFailed"));
       });
-      logger.info("Socket emit lobby:create via command machine", { mode: "friendly", duelGame: newRoomDuelGame });
+      logger.info("Socket emit lobby:create via command machine", { mode: "friendly", duelGame: newRoomDuelGame, roomGame: newRoomRoomGame });
       return;
     }
 
@@ -340,7 +449,12 @@ export function useFriendLobbyLogic({
         attemptNumber: inviteJoinAttemptRef.current,
       });
     }
+    const attempt = inviteJoinAttemptRef.current;
+    const identity = principalKeyRef.current;
     void joinByCode(roomCode).then((result) => {
+      if (!mountedRef.current) return;
+      // Sent as the previous identity (the guest who then signed up): the new account joins on its own.
+      if (identity !== principalKeyRef.current) return;
       if (activeInviteCodeRef.current !== targetCode) return;
       if (leavingRef.current || inviteJoinCancelledRef.current) return;
       if (!result) return;
@@ -366,34 +480,65 @@ export function useFriendLobbyLogic({
         });
         return;
       }
-      terminalInviteJoinFailureRef.current = true;
-      inviteJoinCancelledRef.current = true;
-      setAwaitingInviteLobby(null);
-      if (shouldTrackSharedInvite) {
-        trackFriendInviteJoinFailed({
-          failureCode: result.code,
-          retryable: result.retryable,
-          correlationId: result.correlationId,
-          attemptNumber: inviteJoinAttemptRef.current,
-        });
+      const room = ("room" in result ? result.room : undefined) ?? null;
+      // The room became open between the server's two lookups (its game just returned to it): try once more.
+      if (result.code === "LOBBY_NOT_FOUND" && room?.roomState === "open" && autoRetriedRef.current !== targetCode) {
+        autoRetriedRef.current = targetCode;
+        inviteRetryRef.current();
+        return;
       }
-      const message =
-        result.code === "LOBBY_NOT_FOUND"
-          ? t("friend.inviteExpiredReason")
-          : result.message;
-      setInviteJoinFailure({
-        inviteCode: targetCode ?? roomCode.toUpperCase(),
-        reasonCode: result.code,
-        message,
-        retryable: result.retryable,
-      });
-      toast.error(message);
+      const fail = () => {
+        terminalInviteJoinFailureRef.current = true;
+        inviteJoinCancelledRef.current = true;
+        setAwaitingInviteLobby(null);
+        if (shouldTrackSharedInvite) {
+          trackFriendInviteJoinFailed({
+            failureCode: result.code,
+            retryable: result.retryable,
+            correlationId: result.correlationId,
+            attemptNumber: inviteJoinAttemptRef.current,
+            roomState: room?.roomState ?? null,
+            principalKind: principal.kind,
+          });
+        }
+        const messageKey = inviteFailureKey(result.code);
+        setInviteJoinFailure({
+          inviteCode: targetCode ?? roomCode.toUpperCase(),
+          reasonCode: result.code,
+          messageKey,
+          retryable: result.retryable,
+          room,
+        });
+        // The full-page screen explains the known reasons; only an unexplained failure also toasts. The reply can
+        // arrive after a language switch: translate with the current language, not the one at send time.
+        if (inviteFailureKind({ reasonCode: result.code, room }) === "failed") toast.error(tRef.current(messageKey));
+      };
+      // Reopening the invite of your own room while its match runs: the join only finds waiting rooms, so it says
+      // "not found" — but the player still has that room (the server's snapshot lists it as open). Wait briefly for
+      // its state: when it is this code's room, the room screen hands off to the match and no failure is shown.
+      const isOwnRoom = () => useRealtimeMatchStore.getState().lobby?.inviteCode?.toUpperCase() === targetCode;
+      if (result.code === "LOBBY_NOT_FOUND" && (isOwnRoom() || ("stateSnapshot" in result && (result.stateSnapshot?.openLobbyIds.length ?? 0) > 0))) {
+        const startedAt = Date.now();
+        const check = () => {
+          ownRoomWaitRef.current = null;
+          // A newer attempt, another code, leaving, or this screen gone: this wait no longer speaks for anything.
+          if (!mountedRef.current || attempt !== inviteJoinAttemptRef.current || activeInviteCodeRef.current !== targetCode) return;
+          if (leavingRef.current || inviteJoinCancelledRef.current) return;
+          if (isOwnRoom()) return;
+          if (Date.now() - startedAt >= OWN_ROOM_WAIT_MS) fail();
+          else ownRoomWaitRef.current = window.setTimeout(check, 250);
+        };
+        check();
+        return;
+      }
+      fail();
     });
     logger.info("Socket emit lobby:join_by_code via command machine", {
       inviteCode: `${roomCode.slice(0, 2)}***`,
     });
   }, [
     principal.kind,
+    joinRetryNonce,
     awaitingInviteLobby?.retryCount,
     createLobby,
     handoffTimedOutCode,
@@ -406,6 +551,8 @@ export function useFriendLobbyLogic({
     lobby?.inviteCode,
     lobby,
     newRoomDuelGame,
+    newRoomRoomGame,
+    newRoomGameMode,
     normalizedRoomCode,
     pendingLobbyHandoffCode,
     roomCode,
@@ -444,7 +591,6 @@ export function useFriendLobbyLogic({
 
       terminalInviteJoinFailureRef.current = true;
       inviteJoinCancelledRef.current = true;
-      const message = t("friend.inviteStateTimeoutReason");
       if (shouldTrackSharedInvite) {
         trackFriendInviteJoinFailed({
           failureCode: "LOBBY_STATE_TIMEOUT",
@@ -457,11 +603,12 @@ export function useFriendLobbyLogic({
       setInviteJoinFailure({
         inviteCode: awaitingInviteLobby.inviteCode,
         reasonCode: "LOBBY_STATE_TIMEOUT",
-        message,
+        messageKey: inviteFailureKey("LOBBY_STATE_TIMEOUT"),
         retryable: true,
+        room: null,
       });
       setAwaitingInviteLobby(null);
-      toast.error(message);
+      toast.error(tRef.current(inviteFailureKey("LOBBY_STATE_TIMEOUT")));
     }, INVITE_STATE_CONFIRMATION_TIMEOUT_MS);
 
     return () => clearTimeout(timer);
@@ -548,6 +695,7 @@ export function useFriendLobbyLogic({
   const isAuctionLobby = activeLobby?.settings.gameMode === "auction";
   const isFootballGridLobby = activeLobby?.settings.gameMode === "football_grid";
   const isDuelLobby = activeLobby?.settings.gameMode === "duel";
+  const isRoomGameLobby = activeLobby?.settings.gameMode === "room_game";
   // Hand-off bookkeeping, all read/written inside effects (never during render):
   // - wasAuctionLobby: the snapshot can be cleared out from under us
   //   (session:state IN_ACTIVE_MATCH empties it once the match starts, esp. for
@@ -618,17 +766,84 @@ export function useFriendLobbyLogic({
     router.push(`/duelo/${duelHandoff.matchId}`);
   }, [activeLobby, clearStartMatchTimeout, consumeDuelHandoff, duelHandoff, isStartingMatch, router]);
 
+  // Room-game hand-off, to /sala/<matchId>. Only a pointer the server sent AFTER this screen last asked is followed
+  // (the start's room:found, or the answer to room:pointer): one kept from earlier (a missed end, a reconnect) is never
+  // trusted by its age. The screen asks whenever it shows a room-game room or that room's status changes, and asks
+  // again while no answer comes.
+  const roomHandoff = useFriendRoomHandoffStore((state) => state.found);
+  const consumeRoomHandoff = useFriendRoomHandoffStore((state) => state.consume);
+  const roomPointerAsked = useRef<{ key: string; answers: number; mark: number } | null>(null);
+  // Keyed by the values that matter (an identical lobby:state must not cancel a pending retry).
+  const roomPointerKey = activeLobby?.settings.gameMode === "room_game" ? `${activeLobby.lobbyId}:${activeLobby.status}` : null;
+  // Every question unanswered (the start broadcast and each answer lost): Retry / Leave instead of an endless spinner.
+  // Recorded only when the last retry runs out (never set from an effect); a retry, a reconnect or any later answer
+  // makes it stale by itself, since it names the round and the answer count it stalled at.
+  const [roomPointerRound, setRoomPointerRound] = useState(0);
+  const [roomPointerStall, setRoomPointerStall] = useState<{ key: string; round: number; answers: number } | null>(null);
+  useEffect(() => {
+    if (!roomPointerKey) return;
+    const key = roomPointerKey;
+    const round = roomPointerRound;
+    const ask = (tries: number) => {
+      const answers = useFriendRoomHandoffStore.getState().answers;
+      roomPointerAsked.current = { key, answers, mark: roomReceiptMark() };
+      if (tries === 0) setRoomAskMark({ key, answers });
+      getSocket().emit("room:pointer");
+      return window.setTimeout(() => {
+        if (roomPointerAsked.current?.key !== key) return;
+        const now = useFriendRoomHandoffStore.getState().answers;
+        if (now > roomPointerAsked.current.answers) return;
+        if (tries >= ROOM_POINTER_TRIES - 1) setRoomPointerStall({ key, round, answers: now });
+        else timer = ask(tries + 1);
+      }, ROOM_POINTER_RETRY_MS);
+    };
+    let timer = ask(0);
+    return () => window.clearTimeout(timer);
+  }, [roomPointerKey, roomPointerRound]);
+  const roomHandoffStalled = Boolean(
+    roomPointerKey && roomPointerStall?.key === roomPointerKey && roomPointerStall.round === roomPointerRound && roomPointerStall.answers === roomAnswers,
+  );
+  // A reconnect while stalled asks again by itself.
+  useEffect(() => {
+    if (!roomHandoffStalled) return;
+    const socket = getSocket();
+    const again = () => setRoomPointerRound((n) => n + 1);
+    socket.on("connect", again);
+    return () => { socket.off("connect", again); };
+  }, [roomHandoffStalled]);
+  const handleRoomHandoffRetry = () => setRoomPointerRound((n) => n + 1);
+  // Not lobby:leave: the server refuses it while this player still holds a live seat (the match they never reached).
+  // Back to the menu; that unused seat is withdrawn by the match's own absence rules.
+  const handleRoomHandoffExit = () => router.push("/play");
+  useEffect(() => {
+    if (!roomHandoff || !activeLobby || roomHandoff.lobbyId !== activeLobby.lobbyId) return;
+    // Only a room-game room follows it. A room showing another mode keeps the pointer for now (its next state may
+    // be the room game); a finished match never comes back (the store drops ended ids).
+    if (activeLobby.settings.gameMode !== "room_game") return;
+    // A late pointer to the match this player sits out never sends them back into it.
+    if (roomSittingOut?.matchId === roomHandoff.matchId) {
+      consumeRoomHandoff(roomHandoff.matchId);
+      return;
+    }
+    // Not consumed when followed: it stays the player's live match until it ends (the store drops it on the terminal
+    // state or a "no live seat" answer), so coming back to the room while it runs (browser Back) re-asks and returns.
+    const asked = roomPointerAsked.current;
+    if (!asked || asked.key !== `${activeLobby.lobbyId}:${activeLobby.status}` || roomHandoff.seq <= asked.mark) return;
+    clearStartMatchTimeout();
+    logger.info("Room game started, navigating to the room match", { lobbyId: activeLobby.lobbyId, matchId: roomHandoff.matchId });
+    router.push(`/sala/${roomHandoff.matchId}`);
+  }, [activeLobby, clearStartMatchTimeout, consumeRoomHandoff, roomHandoff, roomSittingOut, isStartingMatch, router]);
+
   useEffect(() => {
     if (!draft && !hasActiveMatch) return;
     // Auction, grid and duel rooms never hand off through the possession `/game` route.
-    if (isAuctionLobby || isFootballGridLobby || isDuelLobby) return;
+    if (isAuctionLobby || isFootballGridLobby || isDuelLobby || isRoomGameLobby) return;
     clearStartMatchTimeout();
     router.push("/game");
-  }, [clearStartMatchTimeout, draft, hasActiveMatch, isAuctionLobby, isDuelLobby, isFootballGridLobby, router]);
+  }, [clearStartMatchTimeout, draft, hasActiveMatch, isAuctionLobby, isDuelLobby, isFootballGridLobby, isRoomGameLobby, router]);
 
   useEffect(() => {
     if (!error) return;
-    let timer: ReturnType<typeof setTimeout> | null = null;
 
     const isLobbySettingsError =
       error.code === "LOBBY_READY_LOCKED" ||
@@ -641,12 +856,15 @@ export function useFriendLobbyLogic({
       // Rejected mode switch (too many members for the target mode, or a duel
       // game switched off) — rolls the optimistic tab back to what the server holds.
       error.code === "LOBBY_MODE_CAPACITY" ||
-      error.code === "DUEL_UNAVAILABLE";
+      error.code === "DUEL_UNAVAILABLE" ||
+      error.code === "ROOM_GAME_UNAVAILABLE";
     const isTransientSettingsBusy = error.code === "LOBBY_SETTINGS_LOCKED";
     const isInviteTransitionBusy = isResolvingInvite && error.code === "TRANSITION_IN_PROGRESS";
+    // On an invite route the join's own reply reports a missing room (or finds the player's own active room behind the
+    // code), so the server's duplicate "not found" event never toasts on its own.
     const isInviteNotFound =
-      error.code === "LOBBY_NOT_FOUND" &&
-      (isResolvingInvite || inviteJoinFailure?.reasonCode === "LOBBY_NOT_FOUND");
+      (error.code === "LOBBY_NOT_FOUND" && (isResolvingInvite || inviteJoinFailure?.reasonCode === "LOBBY_NOT_FOUND"))
+      || (expectsInviteLobby && isJoinEcho(error, normalizedRoomCode));
     const isMatchHandoffJoinError =
       isPreparingMatch &&
       (error.code === "ALREADY_IN_LOBBY" || error.code === "ACTIVE_MATCH");
@@ -656,9 +874,8 @@ export function useFriendLobbyLogic({
       return;
     }
     if (isLobbySettingsError && !isInviteTransitionBusy && !isInviteNotFound) {
-      timer = setTimeout(() => {
-        setSettingsErrorVersion((current) => current + 1);
-      }, 0);
+      // Out of the cleanup path (clearError() below re-runs this effect at once), so the rollback always lands.
+      queueMicrotask(() => setSettingsErrorVersion((current) => current + 1));
     }
     clearStartMatchTimeout();
     // clearError() changes this effect's dependencies immediately. Keep the
@@ -666,19 +883,11 @@ export function useFriendLobbyLogic({
     // while the host is returning from a failed server-side start.
     queueMicrotask(() => setIsStartingMatch(false));
     if (!isTransientSettingsBusy && !isInviteTransitionBusy && !isInviteNotFound) {
-      // Server messages are raw English. Codes we have localized copy for get it;
-      // anything else still surfaces the server's own message rather than nothing.
-      const localizedKey = LOBBY_ERROR_COPY_KEYS[error.code];
-      toast.error(localizedKey ? t(localizedKey) : error.message);
+      // Server messages are raw English: every code gets our own copy (a join failure, or a generic room error).
+      toast.error(t(error.code === "LOBBY_JOIN_ERROR" ? inviteFailureKey(error.code) : LOBBY_ERROR_COPY_KEYS[error.code] ?? "friend.toastLobbyError"));
     }
     clearError();
-
-    return () => {
-      if (timer) {
-        clearTimeout(timer);
-      }
-    };
-  }, [clearError, clearStartMatchTimeout, error, inviteJoinFailure, isPreparingMatch, isResolvingInvite, t]);
+  }, [clearError, clearStartMatchTimeout, error, expectsInviteLobby, inviteJoinFailure, isPreparingMatch, isResolvingInvite, normalizedRoomCode, t]);
 
   // 3. Actions
   const copyCode = async () => {
@@ -686,7 +895,7 @@ export function useFriendLobbyLogic({
     const success = await copyToClipboard(lobbyCode);
     if (success) {
       try {
-        trackFriendInviteSent('link_copy', activeLobby?.lobbyId);
+        trackFriendInviteSent('code_copy', activeLobby?.lobbyId);
       } catch (error) {
         logger.error('Analytics trackFriendInviteSent failed', error);
       }
@@ -709,12 +918,14 @@ export function useFriendLobbyLogic({
       ...activeLobby.settings,
       ...updates,
     };
-    // Only a duel carries its game; leaving a duel drops it.
+    // Only a duel carries its game; leaving a duel drops it. Same for a room game.
     const duelGame = nextSettings.gameMode === "duel" ? nextSettings.duelGame ?? null : null;
+    const roomGame = nextSettings.gameMode === "room_game" ? nextSettings.roomGame ?? ROOM_GAMES_ENABLED[0] ?? "aproximado" : null;
     const emit = {
       lobbyId: activeLobby.lobbyId,
       gameMode: nextSettings.gameMode,
       ...(duelGame && { duelGame }),
+      ...(roomGame && { roomGame }),
       friendlyRandom: nextSettings.friendlyRandom,
       friendlyCategoryAId: nextSettings.friendlyCategoryAId,
       friendlyCategoryBId: nextSettings.friendlyCategoryBId ?? null,
@@ -724,6 +935,7 @@ export function useFriendLobbyLogic({
     const settingsUnchanged =
       emit.gameMode === activeLobby.settings.gameMode &&
       duelGame === (activeLobby.settings.duelGame ?? null) &&
+      roomGame === (activeLobby.settings.roomGame ?? null) &&
       emit.friendlyRandom === activeLobby.settings.friendlyRandom &&
       emit.friendlyCategoryAId === activeLobby.settings.friendlyCategoryAId &&
       emit.friendlyCategoryBId === (activeLobby.settings.friendlyCategoryBId ?? null);
@@ -769,7 +981,7 @@ export function useFriendLobbyLogic({
       if (!result) return;
       if (!result.ok) {
         leavingRef.current = false;
-        toast.error(result.message);
+        toast.error(tRef.current(LOBBY_ERROR_COPY_KEYS[result.code] ?? "friend.toastLeaveFailed"));
         return;
       }
       logger.info("Socket ack lobby:leave", {
@@ -789,6 +1001,7 @@ export function useFriendLobbyLogic({
 
   const handleInviteRetry = () => {
     if (!normalizedRoomCode) return;
+    setJoinRetryNonce((n) => n + 1);
     inviteJoinCancelledRef.current = false;
     terminalInviteJoinFailureRef.current = false;
     createdRef.current = false;
@@ -797,6 +1010,39 @@ export function useFriendLobbyLogic({
     setAwaitingInviteLobby(null);
     resetLobbyCommand();
   };
+
+  /** A guest refused by an account-only mode: sign up, then land back on this invite and join. */
+  const handleInviteSignUp = () => {
+    if (inviteJoinFailure) trackFriendInviteRecovery({ action: "sign_up", failureCode: inviteJoinFailure.reasonCode, roomState: inviteJoinFailure.room?.roomState ?? null });
+    rememberPostAuthRedirect(buildFriendInvitePath(roomCode));
+    openAuthPrompt("signup");
+  };
+
+  /** A refused invite (ended, full, mid-game): open a new room, in the same game when it can be opened directly. */
+  const handleInviteNewRoom = () => {
+    if (inviteJoinFailure) trackFriendInviteRecovery({ action: "new_room", failureCode: inviteJoinFailure.reasonCode, roomState: inviteJoinFailure.room?.roomState ?? null });
+    // The room screen is keyed by its code, so /friend/room/new mounts fresh and creates the room.
+    router.push(newRoomPathFor(inviteJoinFailure?.room ?? null));
+  };
+
+  /** The room is mid-game: try the same code again (it opens again once the game returns to the room). */
+  const handleInviteTryAgain = () => {
+    if (inviteJoinFailure) trackFriendInviteRecovery({ action: "try_again", failureCode: inviteJoinFailure.reasonCode, roomState: inviteJoinFailure.room?.roomState ?? null });
+    handleInviteRetry();
+  };
+
+  useLayoutEffect(() => {
+    inviteRetryRef.current = handleInviteRetry;
+  });
+  useEffect(() => {
+    // Signing in goes guest → (no identity while loading) → member: remember the last real identity across the gap.
+    if (principalKey.startsWith('none:')) return;
+    const previous = switchSeenRef.current;
+    switchSeenRef.current = principalKey;
+    // The first real identity, or the same one again, is not a switch to rejoin for.
+    if (previous === principalKey || previous.startsWith('none:')) return;
+    if (normalizedRoomCode) inviteRetryRef.current();
+  }, [principalKey, normalizedRoomCode]);
 
   const handleInviteBack = () => {
     inviteJoinCancelledRef.current = true;
@@ -824,10 +1070,12 @@ export function useFriendLobbyLogic({
     isAuctionLobby,
     isFootballGridLobby,
     isDuelLobby,
+    isSittingOutRoomGame,
     members,
     lobbyCode,
     isResolvingInvite,
     isPreparingMatch,
+    roomHandoffStalled: isPreparingMatch && roomHandoffStalled,
     inviteJoinFailure,
     targetInviteCode: normalizedRoomCode,
     me,
@@ -846,6 +1094,11 @@ export function useFriendLobbyLogic({
       handleLeaveLobby,
       handleInviteRetry,
       handleInviteBack,
+      handleInviteSignUp,
+      handleInviteNewRoom,
+      handleInviteTryAgain,
+      handleRoomHandoffRetry,
+      handleRoomHandoffExit,
     },
   };
 }

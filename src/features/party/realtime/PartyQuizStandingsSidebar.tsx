@@ -19,18 +19,21 @@ import { cn } from '@/lib/utils';
 import { useLocale } from '@/contexts/LocaleContext';
 
 import type { PartyStandingViewModel } from './partyQuizScreen.types';
-import { getRankStyle, getStandingDotStatus } from './partyQuizScreen.helpers';
+import { getRankStyle, getStandingDotStatus, type RankPalette } from './partyQuizScreen.helpers';
 
 interface PartyQuizStandingsSidebarProps {
   standings: PartyStandingViewModel[];
   roundResolved: boolean;
   showOptions: boolean;
+  /** 'medals': gold / silver / bronze for the top three (other games reusing these standings). */
+  palette?: RankPalette;
 }
 
 export function PartyQuizStandingsSidebar({
   standings,
   roundResolved,
   showOptions,
+  palette = 'medals',
 }: PartyQuizStandingsSidebarProps) {
   const { t } = useLocale();
 
@@ -49,7 +52,7 @@ export function PartyQuizStandingsSidebar({
                 answered: player.answered,
                 showOptions,
               });
-          const rankStyle = getRankStyle(player.rank);
+          const rankStyle = getRankStyle(player.rank, palette);
           return (
             <motion.div
               key={player.userId}
@@ -60,7 +63,7 @@ export function PartyQuizStandingsSidebar({
             >
               <div
                 className={cn(
-                  'relative flex flex-1 items-center gap-3 rounded-2xl px-3 py-2.5 transition-colors border-2',
+                  'relative flex min-w-0 flex-1 items-center gap-3 rounded-2xl px-3 py-2.5 transition-colors border-2',
                   rankStyle.border,
                   isDropped && 'opacity-60 grayscale',
                   player.isSelf ? rankStyle.tint : 'bg-transparent',
@@ -99,7 +102,7 @@ export function PartyQuizStandingsSidebar({
                     {player.isLeader && <Crown className="size-4 shrink-0 text-brand-yellow-deep" />}
                     {isDropped && (
                       <span className="rounded-full bg-white/10 px-1.5 py-0.5 text-[9px] font-black uppercase tracking-[0.08em] text-white/70">
-                        {t('partyResults.dropped')}
+                        {player.statusLabel ?? t('partyResults.dropped')}
                       </span>
                     )}
                   </div>
@@ -145,7 +148,7 @@ export function PartyQuizStandingsSidebar({
                     className="pointer-events-none absolute -right-2 -top-2 -rotate-[8deg] rounded-lg bg-brand-orange px-2 py-0.5 text-[11px] font-black uppercase tracking-wider text-white"
                     style={{ boxShadow: '0 1.76px 6.334px 1.32px rgba(255,150,0,0.4)' }}
                   >
-                    You
+                    {t('common.you')}
                   </span>
                 )}
               </div>

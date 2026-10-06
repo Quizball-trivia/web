@@ -80,7 +80,7 @@ export function LobbyHeader({
     const success = await copyToClipboard(lobbyCode);
     if (success) {
       try {
-        trackFriendInviteSent('link_copy');
+        trackFriendInviteSent('code_copy');
       } catch (error) {
         console.error('Analytics trackFriendInviteSent failed', error);
       }

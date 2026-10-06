@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { connectSocket, getSocket } from "@/lib/realtime/socket-client";
 import type {
   DuelGameId,
+  RoomGameId,
   LobbyCreateResult,
   LobbyJoinByCodeResult,
   LobbyLeaveResult,
@@ -15,7 +16,8 @@ type LobbyCommandOperation = "create" | "join" | "leave";
 /** A room opened straight in a friend-playable mode; a duel names its game. */
 export type LobbyCreatePayload =
   | { mode: MatchMode; isPublic?: boolean; gameMode?: "football_grid" | "auction"; duelGame?: undefined }
-  | { mode: "friendly"; isPublic?: boolean; gameMode: "duel"; duelGame: DuelGameId };
+  | { mode: "friendly"; isPublic?: boolean; gameMode: "duel"; duelGame: DuelGameId }
+  | { mode: "friendly"; isPublic?: boolean; gameMode: "room_game"; roomGame: RoomGameId; duelGame?: undefined };
 type LobbyCommandStatus = "idle" | "creating" | "joining" | "leaving" | "success" | "failed";
 
 export interface LobbyCommandError {
@@ -87,7 +89,8 @@ export function useLobbyCommandMachine() {
   const stateRef = useRef(state);
   const sequenceRef = useRef(0);
   const mountedRef = useRef(true);
-  const timersRef = useRef(new Set<ReturnType<typeof setTimeout>>());
+  // Backoff waits, with their resolvers: cancelling one settles it (never a forever-pending command).
+  const waitsRef = useRef(new Map<ReturnType<typeof setTimeout>, () => void>());
 
   const setMachineState = useCallback((nextState: LobbyCommandState) => {
     stateRef.current = nextState;
@@ -99,19 +102,26 @@ export function useLobbyCommandMachine() {
   const wait = useCallback((ms: number) => {
     return new Promise<void>((resolve) => {
       const timer = setTimeout(() => {
-        timersRef.current.delete(timer);
+        waitsRef.current.delete(timer);
         resolve();
       }, ms);
-      timersRef.current.add(timer);
+      waitsRef.current.set(timer, resolve);
     });
   }, []);
 
   useEffect(() => {
-    const timers = timersRef.current;
+    // StrictMode replays mount → unmount → mount: the replayed mount must be live again.
+    mountedRef.current = true;
+    const waits = waitsRef.current;
     return () => {
       mountedRef.current = false;
-      timers.forEach((timer) => clearTimeout(timer));
-      timers.clear();
+      // Backoff waits are cut short and settled (the loop then sees it is unmounted and stops). A command's ACK
+      // deadline keeps running so its promise always settles (a cleared deadline with a lost ACK would hang forever).
+      waits.forEach((resolve, timer) => {
+        clearTimeout(timer);
+        resolve();
+      });
+      waits.clear();
     };
   }, []);
 
@@ -121,7 +131,6 @@ export function useLobbyCommandMachine() {
   ): Promise<T | LobbyCommandError> => {
     return new Promise((resolve) => {
       const timeout = setTimeout(() => {
-        timersRef.current.delete(timeout);
         resolve({
           ok: false,
           code: "LOBBY_ACK_TIMEOUT",
@@ -130,18 +139,15 @@ export function useLobbyCommandMachine() {
           correlationId,
         });
       }, COMMAND_ACK_TIMEOUT_MS);
-      timersRef.current.add(timeout);
 
       try {
         connectSocket();
         emit(correlationId, (result) => {
           clearTimeout(timeout);
-          timersRef.current.delete(timeout);
           resolve(result);
         });
       } catch (error) {
         clearTimeout(timeout);
-        timersRef.current.delete(timeout);
         logger.error("Lobby command emit failed", { error, correlationId });
         resolve({
           ok: false,
@@ -184,9 +190,12 @@ export function useLobbyCommandMachine() {
       error: null,
     });
 
+    // A reset (another code, leaving, an identity switch) or unmount ends this command: nothing is sent or applied after.
+    const superseded = () => sequenceRef.current !== sequence || !mountedRef.current;
     for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
+      if (superseded()) return null;
       const result = await send(correlationId);
-      if (sequenceRef.current !== sequence) return null;
+      if (superseded()) return null;
 
       logger.info("Lobby command ack received", {
         operation,
@@ -212,6 +221,7 @@ export function useLobbyCommandMachine() {
 
       if (result.retryable && attempt < maxRetries) {
         await wait(220 + attempt * 140);
+        if (superseded()) return null;
         continue;
       }
 
@@ -230,7 +240,7 @@ export function useLobbyCommandMachine() {
   }, [setMachineState, wait]);
 
   const createLobby = useCallback((payload: LobbyCreatePayload) => {
-    const commandKey = `create:${payload.mode}:${payload.isPublic === true ? "public" : "private"}${payload.gameMode ? `:${payload.gameMode}` : ""}${payload.duelGame ? `:${payload.duelGame}` : ""}`;
+    const commandKey = `create:${payload.mode}:${payload.isPublic === true ? "public" : "private"}${payload.gameMode ? `:${payload.gameMode}` : ""}${payload.duelGame ? `:${payload.duelGame}` : ""}${payload.gameMode === "room_game" ? `:${payload.roomGame}` : ""}`;
     return execute<LobbyCreateResult>({
       operation: "create",
       commandKey,

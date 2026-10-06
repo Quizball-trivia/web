@@ -12,7 +12,7 @@ import { inviteEnvironment, mobileInviteUrl, QUIZBALL_APP_STORE_URL } from '@/li
 import { FriendLobbyScreen } from './FriendLobbyScreen';
 import { parseFriendLobbyInviteSource } from '../hooks/useFriendLobbyLogic';
 import { inviteLandingCopy } from '../inviteLandingCopy';
-import { isDuelGameEnabled } from '@/lib/lobby/lobbyModes';
+import { isDuelGameEnabled, isRoomGameEnabled } from '@/lib/lobby/lobbyModes';
 
 export function FriendInviteEntry() {
   const params = useParams<{ code: string }>();
@@ -26,14 +26,20 @@ export function FriendInviteEntry() {
   // Public game pages have no socket: their "Jugar con un amigo" links here with ?duel=<game>.
   const duelParam = search.get('duel');
   const newRoomDuelGame = isHost && isDuelGameEnabled(duelParam) ? duelParam : null;
+  // ...and the 2–6 player room games with ?room=<game>.
+  const roomParam = search.get('room');
+  const newRoomRoomGame = isHost && !newRoomDuelGame && isRoomGameEnabled(roomParam) ? roomParam : null;
+  // ...and "start a new room" after a finished friend game, in that game: ?game=auction|football_grid.
+  const gameParam = search.get('game');
+  const newRoomGameMode = isHost && !newRoomDuelGame && !newRoomRoomGame && (gameParam === 'auction' || gameParam === 'football_grid') ? gameParam : null;
   const copy = inviteLandingCopy[locale] ?? inviteLandingCopy.en;
 
   if (!code) return <main className="min-h-dvh grid place-items-center p-6"><p role="alert">{t('inviteCode.invalid')}</p></main>;
   // Someone coming back to their own room (after a duel, a rematch) already chose the browser: no chooser again.
   const returning = ['rematch', 'current_lobby', 'create'].includes(search.get('source') ?? '');
   if (isHost || playOnWeb || returning || status === 'authenticated' || status === 'banned') {
-    return <AppAuthGate><AppShell><FriendLobbyScreen roomCode={code} isHost={isHost}
-      inviteSource={parseFriendLobbyInviteSource(search.get('source'))} newRoomDuelGame={newRoomDuelGame} /></AppShell></AppAuthGate>;
+    return <AppAuthGate><AppShell><FriendLobbyScreen key={code} roomCode={code} isHost={isHost}
+      inviteSource={parseFriendLobbyInviteSource(search.get('source'))} newRoomDuelGame={newRoomDuelGame} newRoomRoomGame={newRoomRoomGame} newRoomGameMode={newRoomGameMode} /></AppShell></AppAuthGate>;
   }
 
   return <main className="min-h-dvh flex items-center justify-center bg-surface-deep px-5 py-12">

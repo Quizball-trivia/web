@@ -14,6 +14,7 @@ import { useFootballGridStore } from '@/stores/footballGrid.store';
 import { LAST_AUCTION_MATCH_KEY, useAuctionActiveMatchStore } from '@/stores/auctionActiveMatch.store';
 import { useGameSessionStore } from '@/stores/gameSession.store';
 import { useActiveDuelStore } from '@/stores/activeDuel.store';
+import { useFriendRoomHandoffStore } from '@/stores/friendRoomHandoff.store';
 import { useQueryClient } from '@tanstack/react-query';
 import { logger } from '@/utils/logger';
 
@@ -46,6 +47,7 @@ function clearIdentityScopedState(): void {
   useAuctionActiveMatchStore.getState().clear();
   useGameSessionStore.getState().reset();
   useActiveDuelStore.getState().reset();
+  useFriendRoomHandoffStore.getState().reset();
   try {
     window.sessionStorage.removeItem(LAST_AUCTION_MATCH_KEY);
   } catch {

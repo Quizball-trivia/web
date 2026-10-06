@@ -4,6 +4,7 @@ import { useRankedMatchmakingStore } from '@/stores/rankedMatchmaking.store';
 import { useAuctionActiveMatchStore } from '@/stores/auctionActiveMatch.store';
 import { useFootballGridStore } from '@/stores/footballGrid.store';
 import { useFriendDuelHandoffStore } from '@/stores/friendDuelHandoff.store';
+import { useFriendRoomHandoffStore } from '@/stores/friendRoomHandoff.store';
 import { useActiveDuelStore } from '@/stores/activeDuel.store';
 import { useGameSessionStore } from '@/stores/gameSession.store';
 import { QueryClient } from '@tanstack/react-query';
@@ -23,6 +24,10 @@ import type {
   AuctionPlayerForfeitedPayload,
   DraftState,
   DuelFoundPayload,
+  RoomFoundPayload,
+  RoomPointerMeta,
+  RoomSittingOutPayload,
+  RoomStatePayload,
   ErrorPayload,
   ForceLogoutPayload,
   MatchCluesGuessAckPayload,
@@ -81,6 +86,12 @@ function clearGridCancelBusy(): void {
   _gridCancelBusy = null;
 }
 const _lastGridResyncAtByMatchId = new Map<string, number>();
+/** Accepted lobby:state updates (a counter): did the server speak about the lobby since we asked? */
+let lobbyStateReceipts = 0;
+/** A room match end seen while its room still shows active: reopen it only on the server's confirming answer. */
+let pendingRoomReopen: { lobbyId: string; endedAt: number; lobbyMark: number } | null = null;
+/** The room:active of the read whose room:sitting_out comes next (same `asOf`), and whether it was taken. */
+let lastActiveRead: { asOf: number; live: boolean; accepted: boolean } | null = null;
 /**
  * Grid matches this client had loaded before the current search started. Only
  * these may have a late redelivered result suppressed in favour of the PLAY
@@ -220,6 +231,7 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
       });
       return;
     }
+    lobbyStateReceipts += 1;
     store.setLobby(data);
   });
 
@@ -234,6 +246,67 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
   socket.on('duel:active', (data: DuelFoundPayload | null) => {
     if (data) useActiveDuelStore.getState().set(data, useRealtimeMatchStore.getState().selfUserId);
     else useActiveDuelStore.getState().clear();
+  });
+  // A friend room's room game started (or a reconnect points back at a live one): the room screen hands off to /sala.
+  socket.on('room:found', (data: RoomFoundPayload) => {
+    logger.info('Socket event room:found', data);
+    if (data.lobbyId) useFriendRoomHandoffStore.getState().setFound(data);
+    // A new match in that room: an earlier match's end says nothing about it any more.
+    if (pendingRoomReopen && data.lobbyId === pendingRoomReopen.lobbyId) pendingRoomReopen = null;
+  });
+  // The server's answer to "where do I stand" (every connect, and the room screen's room:pointer): the live match
+  // to go to, or none (no older pointer may route the room screen anywhere).
+  socket.on('room:active', (data: RoomFoundPayload | null, meta?: RoomPointerMeta) => {
+    const handoff = useFriendRoomHandoffStore.getState();
+    lastActiveRead = meta?.asOf != null ? { asOf: meta.asOf, live: Boolean(data), accepted: false } : null;
+    // Answers only move forward: one read earlier than an answer already taken (a slower replica) says nothing new,
+    // and one read before the start this tab knows of cannot speak about that room any more (live or not).
+    if (meta?.asOf != null && handoff.lastAnswerAsOf != null && meta.asOf < handoff.lastAnswerAsOf) return;
+    const fence = handoff.found;
+    if (meta?.asOf != null && fence?.startedAt != null && meta.asOf < fence.startedAt && data?.matchId !== fence.matchId) return;
+    if (data?.lobbyId) {
+      handoff.setFound(data);
+      if (pendingRoomReopen && data.lobbyId === pendingRoomReopen.lobbyId) pendingRoomReopen = null;
+    } else if (!data) {
+      handoff.ended();
+    }
+    if (lastActiveRead) lastActiveRead.accepted = true;
+    useFriendRoomHandoffStore.getState().answered(Boolean(data), meta?.asOf ?? null);
+  });
+  // Sent on every connect: the server's word on whether this player sits out their room's running match.
+  socket.on('room:sitting_out', (data: RoomSittingOutPayload | null, meta?: RoomPointerMeta) => {
+    // The second half of one read: applied only when its room:active (same asOf) was taken; a stale read changes nothing.
+    const read = lastActiveRead;
+    if (meta?.asOf != null && !(read && read.asOf === meta.asOf && read.accepted)) return;
+    useFriendRoomHandoffStore.getState().setSittingOut(data ? { matchId: data.matchId, lobbyId: data.lobbyId } : null);
+    // Every answer is room:active then room:sitting_out from one read: settle a pending "reopen the room?" here, with
+    // an answer read at or after the end only (an older one neither confirms nor uses it up).
+    const pending = pendingRoomReopen;
+    if (!pending || meta?.asOf == null || meta.asOf < pending.endedAt) return;
+    pendingRoomReopen = null;
+    const lobby = useRealtimeMatchStore.getState().lobby;
+    const confirmed = !data && read !== null && !read.live;
+    if (confirmed && lobbyStateReceipts === pending.lobbyMark && lobby && lobby.lobbyId === pending.lobbyId
+      && lobby.status === 'active' && lobby.settings.gameMode === 'room_game') {
+      useRealtimeMatchStore.getState().setLobby({ ...lobby, status: 'waiting', members: lobby.members.map((m) => ({ ...m, isReady: false })) });
+    }
+  });
+  socket.on('room:state', (data: RoomStatePayload) => {
+    if (data.status !== 'completed' && data.status !== 'cancelled') return;
+    const handoff = useFriendRoomHandoffStore.getState();
+    const firstEnd = !handoff.endedIds.includes(data.matchId);
+    // A newer match of the same room is known (started after this one): this end says nothing about the room now.
+    const newer = [handoff.found, handoff.sittingOut].some((p) => p && p.lobbyId === data.lobbyId && p.matchId !== data.matchId);
+    handoff.ended(data.matchId);
+    // The server ends a room match and reopens its room in one transaction. A room still shown as active may have
+    // missed that update (a rematch must not be blocked), or this end may be an older match's, seen late while a newer
+    // one runs. So never guess: ask where this player stands, and reopen only if the server, reading at or after this
+    // end, says no live match, and no room update arrived meanwhile (that one is the server's own, fresher, word).
+    const lobby = useRealtimeMatchStore.getState().lobby;
+    if (firstEnd && !newer && lobby && data.lobbyId === lobby.lobbyId && lobby.status === 'active' && lobby.settings.gameMode === 'room_game') {
+      pendingRoomReopen = { lobbyId: lobby.lobbyId, endedAt: Date.parse(data.serverNow), lobbyMark: lobbyStateReceipts };
+      socket.emit('room:pointer');
+    }
   });
   // Only the end of a duel matters here (the duel screen keeps its own listeners for everything else).
   socket.on('duel:state', (data: DuelStatePayload) => {
@@ -981,6 +1054,8 @@ export function registerSocketHandlers(queryClient?: QueryClient): void {
 /** Reset registration state (for testing or socket reconnect). */
 export function resetSocketHandlers(): void {
   _handlersRegistered = false;
+  pendingRoomReopen = null;
+  lastActiveRead = null;
   clearGridCancelBusy();
   _gridMatchesSeenBeforeSearch.clear();
   _queryClient = null;

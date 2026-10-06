@@ -16,6 +16,7 @@ vi.mock("../socket-handlers", () => ({ registerSocketHandlers: vi.fn() }));
 const { useRealtimeConnection } = await import("../useRealtimeConnection");
 const { useGameSessionStore } = await import("@/stores/gameSession.store");
 const { useAuctionActiveMatchStore } = await import("@/stores/auctionActiveMatch.store");
+const { useFriendRoomHandoffStore } = await import("@/stores/friendRoomHandoff.store");
 
 const wrapper = ({ children }: { children: ReactNode }) => (
   <QueryClientProvider client={new QueryClient()}>{children}</QueryClientProvider>
@@ -49,5 +50,15 @@ describe("useRealtimeConnection — identity-scoped state", () => {
     expect(useGameSessionStore.getState().stage).not.toBe("playing");
     expect(window.sessionStorage.getItem("auction:last_match_id")).toBeNull();
     expect(useAuctionActiveMatchStore.getState().activeAuctionMatch).toBeNull();
+  });
+
+  it("review 2026-10-06 W3: a guest's room hand-off (a match they sat out, a pointer) does not carry over to the account they sign in to", () => {
+    const first = renderHook(() => useRealtimeConnection({ enabled: true, selfUserId: "guest-3" }), { wrapper });
+    useFriendRoomHandoffStore.getState().setSittingOut({ matchId: "M", lobbyId: "L" });
+    useFriendRoomHandoffStore.getState().setFound({ matchId: "M", game: "aproximado", lobbyId: "L" });
+    first.rerender();
+    renderHook(() => useRealtimeConnection({ enabled: true, selfUserId: "member-4" }), { wrapper });
+    expect(useFriendRoomHandoffStore.getState().sittingOut).toBeNull();
+    expect(useFriendRoomHandoffStore.getState().found).toBeNull();
   });
 });

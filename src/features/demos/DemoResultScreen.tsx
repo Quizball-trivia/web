@@ -23,6 +23,8 @@ interface DemoResultScreenProps {
   subtitle?: string;
   /** Coin samples: a secondary action such as "Reset practice coins". */
   secondary?: { label: string; onClick: () => void };
+  /** Shown under the primary action (Stat Sniper sample: play it with friends). */
+  extra?: React.ReactNode;
 }
 
 const COPY = {
@@ -33,7 +35,7 @@ const COPY = {
 } as const;
 const PLAY_REAL = { en: "Play today's real challenge", ka: "ითამაშე დღევანდელი ნამდვილი გამოწვევა", es: "Juega el reto real de hoy", tr: "Bugünün gerçek görevini oyna" } as const;
 
-export function DemoResultScreen({ title, score, isMoney, onReplay, onExit, embedded = false, cta, subtitle, secondary }: DemoResultScreenProps) {
+export function DemoResultScreen({ title, score, isMoney, onReplay, onExit, embedded = false, cta, subtitle, secondary, extra }: DemoResultScreenProps) {
   const { locale } = useLocale();
   const c = COPY[locale as keyof typeof COPY] ?? COPY.en;
   const playReal = PLAY_REAL[locale as keyof typeof PLAY_REAL] ?? PLAY_REAL.en;
@@ -43,7 +45,7 @@ export function DemoResultScreen({ title, score, isMoney, onReplay, onExit, embe
       <motion.div
         initial={{ opacity: 0, scale: 0.92 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-sm rounded-[24px] bg-brand-blue p-8 text-center shadow-2xl shadow-black/40"
+        className="max-h-[calc(100dvh-2rem)] w-full max-w-sm overflow-y-auto rounded-[24px] bg-brand-blue p-8 text-center shadow-2xl shadow-black/40"
       >
         {/* Brand-style cup (generated in the card-icon art style), not an emoji. */}
         <Image src="/assets/brand/result-trophy.webp" alt="" width={485} height={512} className="mx-auto h-24 w-auto object-contain drop-shadow-[0_8px_20px_rgba(0,0,0,0.35)]" />
@@ -73,6 +75,7 @@ export function DemoResultScreen({ title, score, isMoney, onReplay, onExit, embe
             </SignInLink>
             </span>
           )}
+          {extra}
           <button
             type="button"
             onClick={onReplay}

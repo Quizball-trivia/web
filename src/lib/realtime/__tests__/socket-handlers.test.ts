@@ -25,6 +25,7 @@ vi.mock('@/stores/auth.store', () => ({
 }));
 
 import { registerSocketHandlers, resetSocketHandlers } from '../socket-handlers';
+import { useFriendRoomHandoffStore } from '@/stores/friendRoomHandoff.store';
 
 // ---------------------------------------------------------------------------
 // Minimal mock socket that tracks .on() listeners so we can fire them
@@ -78,6 +79,7 @@ describe('registerSocketHandlers', () => {
     // Reset store to clean state
     useRealtimeMatchStore.getState().reset();
     useRealtimeMatchStore.setState({ selfUserId: null });
+    useFriendRoomHandoffStore.getState().reset();
     useGameSessionStore.getState().reset();
     useRankedMatchmakingStore.setState({
       rankedSearchDurationMs: null,
@@ -509,4 +511,135 @@ describe('registerSocketHandlers', () => {
       resultVersion: 456,
     });
   });
+
+  const roomLobby = (lobbyId: string) => ({
+    lobbyId, mode: 'friendly', status: 'active', inviteCode: 'ROOM01', displayName: 'Room', isPublic: false, hostUserId: 'u1',
+    settings: { gameMode: 'room_game', duelGame: null, roomGame: 'aproximado', friendlyRandom: true, friendlyCategoryAId: null, friendlyCategoryBId: null },
+    members: [{ userId: 'u1', username: 'A', avatarUrl: null, isReady: true, isHost: true }, { userId: 'u2', username: 'B', avatarUrl: null, isReady: true, isHost: false }],
+  });
+  const ENDED_AT = '2026-10-06T10:00:00.000Z';
+  const T = Date.parse(ENDED_AT);
+
+  it('the end of a room match reopens its room on screen once the server confirms no live match (its own update was missed)', () => {
+    registerSocketHandlers();
+    useRealtimeMatchStore.getState().setLobby(roomLobby('L') as never);
+    mockSocket.fire('room:state' as never, { matchId: 'M', lobbyId: 'L', status: 'completed', serverNow: ENDED_AT } as never);
+    // Not on a guess: it asks the server where this player stands.
+    expect(useRealtimeMatchStore.getState().lobby!.status).toBe('active');
+    expect(mockSocket.socket.emit).toHaveBeenCalledWith('room:pointer');
+    mockSocket.fire('room:active' as never, null as never, { asOf: T + 50 } as never);
+    mockSocket.fire('room:sitting_out' as never, null as never, { asOf: T + 50 } as never);
+    const after = useRealtimeMatchStore.getState().lobby!;
+    expect(after.status).toBe('waiting');
+    expect(after.members.every((m) => !m.isReady)).toBe(true);
+    // Another room's match, or a live state, changes nothing.
+    useRealtimeMatchStore.getState().setLobby(roomLobby('L') as never);
+    mockSocket.fire('room:state' as never, { matchId: 'X', lobbyId: 'OTHER', status: 'completed', serverNow: ENDED_AT } as never);
+    mockSocket.fire('room:state' as never, { matchId: 'M', lobbyId: 'L', status: 'active', serverNow: ENDED_AT } as never);
+    expect(useRealtimeMatchStore.getState().lobby!.status).toBe('active');
+  });
+
+  it('review 2026-10-06 W5: an old match\'s end seen after the newer match\'s room update never reopens the room by itself', () => {
+    registerSocketHandlers();
+    useRealtimeMatchStore.getState().setLobby(roomLobby('L5') as never); // M2 is running (its room update arrived)
+    mockSocket.fire('room:state' as never, { matchId: 'M1', lobbyId: 'L5', status: 'completed', serverNow: ENDED_AT } as never); // M1's end, first seen now
+    expect(useRealtimeMatchStore.getState().lobby!.status).toBe('active');
+    expect(useRealtimeMatchStore.getState().lobby!.members.every((m) => m.isReady)).toBe(true);
+    // The server's answer points at M2: nothing to reopen.
+    mockSocket.fire('room:active' as never, { matchId: 'M2', game: 'aproximado', lobbyId: 'L5' } as never, { asOf: T + 50 } as never);
+    mockSocket.fire('room:sitting_out' as never, null as never, { asOf: T + 50 } as never);
+    expect(useRealtimeMatchStore.getState().lobby!.status).toBe('active');
+  });
+
+  it('review 2026-10-06 W5: a "no live match" answer older than the end, or a fresher room update in between, reopens nothing', () => {
+    registerSocketHandlers();
+    useRealtimeMatchStore.getState().setLobby(roomLobby('L6') as never);
+    mockSocket.fire('room:state' as never, { matchId: 'N1', lobbyId: 'L6', status: 'completed', serverNow: ENDED_AT } as never);
+    mockSocket.fire('room:active' as never, null as never, { asOf: T - 500 } as never); // read before the end
+    mockSocket.fire('room:sitting_out' as never, null as never, { asOf: T - 500 } as never);
+    expect(useRealtimeMatchStore.getState().lobby!.status).toBe('active');
+    mockSocket.fire('room:state' as never, { matchId: 'N2', lobbyId: 'L6', status: 'completed', serverNow: ENDED_AT } as never);
+    mockSocket.fire('lobby:state' as never, { ...roomLobby('L6'), members: roomLobby('L6').members } as never); // the server's own word, after the ask
+    mockSocket.fire('room:active' as never, null as never, { asOf: T + 50 } as never);
+    mockSocket.fire('room:sitting_out' as never, null as never, { asOf: T + 50 } as never);
+    expect(useRealtimeMatchStore.getState().lobby!.status).toBe('active');
+  });
+
+  it('review 2026-10-06 W6: a stale "no live seat" answer never cancels a start already heard', () => {
+    registerSocketHandlers();
+    useFriendRoomHandoffStore.getState().setFound({ matchId: 'S2', game: 'aproximado', lobbyId: 'L7', startedAt: 10_000 } as never);
+    const answers = useFriendRoomHandoffStore.getState().answers;
+    mockSocket.fire('room:active' as never, null as never, { asOf: 9_500 } as never); // read on another replica before the start
+    expect(useFriendRoomHandoffStore.getState().found?.matchId).toBe('S2');
+    expect(useFriendRoomHandoffStore.getState().answers).toBe(answers); // not an answer: the screen keeps asking
+    mockSocket.fire('room:active' as never, null as never, { asOf: 30_000 } as never); // a real "none", well after the start
+    expect(useFriendRoomHandoffStore.getState().found).toBeNull();
+    expect(useFriendRoomHandoffStore.getState().answers).toBe(answers + 1);
+  });
+
+  it('a replayed end of an earlier match never reopens the room of the newer one', () => {
+    registerSocketHandlers();
+    const lobby = {
+      lobbyId: 'L2', mode: 'friendly', status: 'active', inviteCode: 'ROOM02', displayName: 'Room', isPublic: false, hostUserId: 'u1',
+      settings: { gameMode: 'room_game', duelGame: null, roomGame: 'aproximado', friendlyRandom: true, friendlyCategoryAId: null, friendlyCategoryBId: null },
+      members: [{ userId: 'u1', username: 'A', avatarUrl: null, isReady: true, isHost: true }],
+    };
+    mockSocket.fire('room:state' as never, { matchId: 'M1', lobbyId: 'L2', status: 'completed' } as never); // first sight of M1's end
+    useRealtimeMatchStore.getState().setLobby(lobby as never); // M2 started
+    mockSocket.fire('room:state' as never, { matchId: 'M1', lobbyId: 'L2', status: 'completed' } as never); // a focus resync replays M1
+    expect(useRealtimeMatchStore.getState().lobby!.status).toBe('active');
+    useFriendRoomHandoffStore.getState().setFound({ matchId: 'M2', game: 'aproximado', lobbyId: 'L2' });
+    mockSocket.fire('room:state' as never, { matchId: 'M0', lobbyId: 'L2', status: 'cancelled' } as never); // an end first seen late
+    expect(useRealtimeMatchStore.getState().lobby!.status).toBe('active');
+  });
+
+  it('review round 4 (#3): a confirmed pointer keeps the start fence, and an answer older than one already taken is ignored', () => {
+    registerSocketHandlers();
+    useFriendRoomHandoffStore.getState().setFound({ matchId: 'P2', game: 'aproximado', lobbyId: 'L8', startedAt: 10_000 } as never);
+    mockSocket.fire('room:active' as never, { matchId: 'P2', game: 'aproximado', lobbyId: 'L8' } as never, { asOf: 12_000 } as never);
+    mockSocket.fire('room:active' as never, null as never, { asOf: 11_000 } as never); // an older read, delivered late
+    expect(useFriendRoomHandoffStore.getState().found?.matchId).toBe('P2');
+  });
+
+  it('review round 4 (#4): an answer older than the end neither confirms nor uses up the pending reopen', () => {
+    registerSocketHandlers();
+    useRealtimeMatchStore.getState().setLobby(roomLobby('L9') as never);
+    mockSocket.fire('room:state' as never, { matchId: 'Q1', lobbyId: 'L9', status: 'completed', serverNow: ENDED_AT } as never);
+    mockSocket.fire('room:active' as never, null as never, { asOf: T - 500 } as never);
+    mockSocket.fire('room:sitting_out' as never, null as never, { asOf: T - 500 } as never);
+    expect(useRealtimeMatchStore.getState().lobby!.status).toBe('active');
+    mockSocket.fire('room:active' as never, null as never, { asOf: T + 50 } as never); // the answer to our question
+    mockSocket.fire('room:sitting_out' as never, null as never, { asOf: T + 50 } as never);
+    expect(useRealtimeMatchStore.getState().lobby!.status).toBe('waiting');
+  });
+
+  it('review round 4 (#4): a newer match starting in the room cancels the pending reopen', () => {
+    registerSocketHandlers();
+    useRealtimeMatchStore.getState().setLobby(roomLobby('L10') as never);
+    mockSocket.fire('room:state' as never, { matchId: 'R1', lobbyId: 'L10', status: 'completed', serverNow: ENDED_AT } as never);
+    mockSocket.fire('room:found' as never, { matchId: 'R2', game: 'aproximado', lobbyId: 'L10', startedAt: T + 1_000 } as never);
+    mockSocket.fire('room:active' as never, null as never, { asOf: T + 500 } as never); // stale: read before R2 started
+    mockSocket.fire('room:sitting_out' as never, null as never, { asOf: T + 500 } as never);
+    expect(useRealtimeMatchStore.getState().lobby!.status).toBe('active');
+    expect(useFriendRoomHandoffStore.getState().found?.matchId).toBe('R2');
+  });
+
+  it('review round 5 (#3): a delayed live reply for an older match never replaces a newer start', () => {
+    registerSocketHandlers();
+    mockSocket.fire('room:active' as never, { matchId: 'OLD', game: 'aproximado', lobbyId: 'L11' } as never, { asOf: 9_000 } as never);
+    mockSocket.fire('room:found' as never, { matchId: 'NEW', game: 'aproximado', lobbyId: 'L11', startedAt: 12_000 } as never);
+    mockSocket.fire('room:active' as never, { matchId: 'OLD', game: 'aproximado', lobbyId: 'L11' } as never, { asOf: 11_000 } as never);
+    expect(useFriendRoomHandoffStore.getState().found?.matchId).toBe('NEW');
+  });
+
+  it('review round 5 (#4): the sitting-out half of an ignored (older) reply changes nothing', () => {
+    registerSocketHandlers();
+    mockSocket.fire('room:active' as never, null as never, { asOf: 20_000 } as never);
+    mockSocket.fire('room:sitting_out' as never, { matchId: 'S', lobbyId: 'L12', reason: 'left' } as never, { asOf: 20_000 } as never);
+    expect(useFriendRoomHandoffStore.getState().sittingOut).toEqual({ matchId: 'S', lobbyId: 'L12' });
+    mockSocket.fire('room:active' as never, null as never, { asOf: 15_000 } as never); // an older read, late
+    mockSocket.fire('room:sitting_out' as never, null as never, { asOf: 15_000 } as never);
+    expect(useFriendRoomHandoffStore.getState().sittingOut).toEqual({ matchId: 'S', lobbyId: 'L12' });
+  });
 });
+

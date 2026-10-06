@@ -613,8 +613,13 @@ export function trackLobbyJoined(lobbyId: string, inviteCode?: string) {
   });
 }
 
-export function trackFriendInviteSent(method: 'link_copy' | 'social_share', lobbyId?: string) {
+export function trackFriendInviteSent(method: 'link_copy' | 'code_copy' | 'social_share', lobbyId?: string) {
   trackEvent('friend_lobby_invite_sent', { method, lobby_id: lobbyId });
+}
+
+/** A refused invite's way forward was tapped (sign up, new room, try again). */
+export function trackFriendInviteRecovery(props: { action: 'sign_up' | 'new_room' | 'try_again'; failureCode: string; roomState: string | null }) {
+  trackEvent('friend_lobby_invite_recovery_click', { action: props.action, failure_code: props.failureCode, room_state: props.roomState });
 }
 
 export function trackFriendInviteAccepted(lobbyId: string) {
@@ -643,6 +648,9 @@ export function trackFriendInviteJoinFailed(props: {
   correlationId?: string | null;
   attemptNumber: number;
   stateConfirmationTimedOut?: boolean;
+  /** What the server said about the room (open / in_progress / ended / unknown), when it said. */
+  roomState?: string | null;
+  principalKind?: string;
 }) {
   trackEvent('friend_lobby_invite_join_failed', {
     source: 'shared_link',
@@ -651,6 +659,8 @@ export function trackFriendInviteJoinFailed(props: {
     correlation_id: props.correlationId ?? null,
     attempt_number: props.attemptNumber,
     state_confirmation_timed_out: Boolean(props.stateConfirmationTimedOut),
+    room_state: props.roomState ?? null,
+    principal_kind: props.principalKind ?? null,
   });
 }
 

@@ -16,18 +16,21 @@ import { cn } from '@/lib/utils';
 import { useLocale } from '@/contexts/LocaleContext';
 
 import type { PartyStandingViewModel } from './partyQuizScreen.types';
-import { getRankStyle, getStandingDotStatus } from './partyQuizScreen.helpers';
+import { getRankStyle, getStandingDotStatus, type RankPalette } from './partyQuizScreen.helpers';
 
 interface PartyQuizMobileStandingsBarProps {
   standings: PartyStandingViewModel[];
   roundResolved: boolean;
   showOptions: boolean;
+  /** 'medals': gold / silver / bronze for the top three (other games reusing these standings). */
+  palette?: RankPalette;
 }
 
 export function PartyQuizMobileStandingsBar({
   standings,
   roundResolved,
   showOptions,
+  palette = 'medals',
 }: PartyQuizMobileStandingsBarProps) {
   const { t } = useLocale();
   return (
@@ -43,7 +46,7 @@ export function PartyQuizMobileStandingsBar({
                 showOptions,
               });
           const hasAnswered = dotStatus === 'correct';
-          const rankStyle = getRankStyle(player.rank);
+          const rankStyle = getRankStyle(player.rank, palette);
           return (
             <motion.div
               key={player.userId}
@@ -79,7 +82,7 @@ export function PartyQuizMobileStandingsBar({
                     className="absolute -top-1.5 -right-1.5 -rotate-[8deg] rounded-md bg-brand-orange px-1 py-[1px] text-white shadow-[0_1px_3px_rgba(0,0,0,0.35)] font-poppins font-black uppercase"
                     style={{ fontSize: 7, letterSpacing: '0.06em', lineHeight: 1 }}
                   >
-                    You
+                    {t('common.you')}
                   </span>
                 )}
                 {/* Answered check overlay on avatar */}
@@ -100,7 +103,7 @@ export function PartyQuizMobileStandingsBar({
               </span>
               {isDropped && (
                 <span className="rounded-full bg-white/10 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-[0.08em] text-white/70">
-                  {t('partyResults.dropped')}
+                  {player.statusLabel ?? t('partyResults.dropped')}
                 </span>
               )}
               <span className="text-xs font-black tabular-nums text-white/70">

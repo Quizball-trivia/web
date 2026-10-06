@@ -81,7 +81,7 @@ export interface RealtimePartyQuizViewModel {
 }
 
 export function useRealtimePartyQuizViewModel({
-  mobileStandingsPlacement = 'bottom-bar',
+  mobileStandingsPlacement = 'leader-pill',
   disableBgm = false,
 }: Pick<RealtimePartyQuizScreenProps, 'mobileStandingsPlacement' | 'disableBgm'>): RealtimePartyQuizViewModel {
   const { locale, t } = useLocale();

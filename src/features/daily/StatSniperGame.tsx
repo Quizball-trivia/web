@@ -5,9 +5,11 @@ import { motion } from "motion/react";
 import { Crosshair, Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/contexts/LocaleContext";
+import type { Locale } from "@/lib/i18n/locale";
 import { DailyGameStage } from "@/features/daily/components/DailyGameStage";
 import { DailyChallengeHeader } from "@/features/daily/components/DailyChallengeHeader";
 import { DailyChallengeCompleteModal } from "@/features/daily/components/DailyChallengeCompleteModal";
+import { PlayRoomWithFriendsButton } from "@/features/aproximado/PlayRoomWithFriendsButton";
 import { QuitGameDialog } from "@/features/daily/QuitGameDialog";
 import { StatSniperLeaderboard } from "@/features/daily/StatSniperLeaderboard";
 import { playSfx } from "@/lib/sounds/gameSounds";
@@ -207,6 +209,10 @@ export function StatSniperGame({
         title={t("play.statSniperTitle")}
         correct={accuracy}
         total={100}
+        friendAction={(
+          <PlayRoomWithFriendsButton locale={locale as Locale} tone="white" showHint
+            onNavigate={(href) => { setBoardKey((k) => k + 1); onComplete(accuracy, href); }} />
+        )}
         onDone={(next) => { setBoardKey((k) => k + 1); onComplete(accuracy, next); }}
       />
     </>

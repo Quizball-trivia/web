@@ -78,7 +78,8 @@ const RANK_HEX: Record<number, string> = {
 export const PARTY_SUCCESS_FLIGHT_MS = 1150;
 export const PARTY_FAILED_FLIGHT_MS = 2000;
 
-export function getRankHex(rank: number): string {
+export function getRankHex(rank: number, palette: RankPalette = 'medals'): string {
+  if (palette === 'medals' && (rank === 1 || rank === 2 || rank === 3)) return MEDAL_HEX[rank];
   return RANK_HEX[rank] ?? RANK_HEX[6]!;
 }
 
@@ -92,15 +93,25 @@ export function isUsableScoreAnchor(element: HTMLElement): boolean {
   return styles.display !== 'none' && styles.visibility !== 'hidden' && Number(styles.opacity) > 0;
 }
 
+/** The leaderboard's medal colours for the top three (gold, silver, bronze); 4th and below as in the party palette. */
+const MEDAL_STYLE: Record<1 | 2 | 3, { border: string; pillBg: string; glow: string; tint: string; selfGlow: string }> = {
+  1: { border: 'border-brand-gold', pillBg: 'bg-brand-gold text-surface-page', glow: '0 1.76px 6.334px 1.32px rgba(255,215,0,0.3)', tint: 'bg-brand-gold/[0.08]', selfGlow: '0 0 18px rgba(255,215,0,0.55), 0 0 36px rgba(255,215,0,0.25)' },
+  2: { border: 'border-brand-silver', pillBg: 'bg-brand-silver text-surface-page', glow: '0 1.76px 6.334px 1.32px rgba(199,203,209,0.3)', tint: 'bg-brand-silver/[0.08]', selfGlow: '0 0 18px rgba(199,203,209,0.5), 0 0 36px rgba(199,203,209,0.22)' },
+  3: { border: 'border-brand-bronze', pillBg: 'bg-brand-bronze', glow: '0 1.76px 6.334px 1.32px rgba(205,127,50,0.3)', tint: 'bg-brand-bronze/[0.08]', selfGlow: '0 0 18px rgba(205,127,50,0.55), 0 0 36px rgba(205,127,50,0.25)' },
+};
+export const MEDAL_HEX: Record<1 | 2 | 3, string> = { 1: '#FFD700', 2: '#C7CBD1', 3: '#CD7F32' };
+export type RankPalette = 'party' | 'medals';
+
 // Per-rank styling — outlined card + pill colour rotate through the brand
 // palette so each row reads as a distinct "slot" with a subtle matching tint.
-export function getRankStyle(rank: number): {
+export function getRankStyle(rank: number, palette: RankPalette = 'medals'): {
   border: string;
   pillBg: string;
   glow: string;
   tint: string;
   selfGlow: string;
 } {
+  if (palette === 'medals' && (rank === 1 || rank === 2 || rank === 3)) return MEDAL_STYLE[rank];
   switch (rank) {
     case 1:
       return {

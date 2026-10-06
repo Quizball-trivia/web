@@ -4,6 +4,7 @@ import { useFriendLobbyLogic } from '../useFriendLobbyLogic';
 import { useRealtimeMatchStore } from '@/stores/realtimeMatch.store';
 import { useAuctionActiveMatchStore } from '@/stores/auctionActiveMatch.store';
 import { useFriendDuelHandoffStore } from '@/stores/friendDuelHandoff.store';
+import { useFriendRoomHandoffStore } from '@/stores/friendRoomHandoff.store';
 import type { LobbyState } from '@/lib/realtime/socket.types';
 
 const mocks = vi.hoisted(() => ({
@@ -19,6 +20,8 @@ const mocks = vi.hoisted(() => ({
   trackInviteJoinSucceeded: vi.fn(),
   toastError: vi.fn(),
   retryFailureJoinCount: 0,
+  authUserId: 'user-1' as string,
+  openRoomJoins: 0,
 }));
 
 vi.mock('next/navigation', () => ({
@@ -34,7 +37,7 @@ vi.mock('@/contexts/PlayerContext', () => ({
 
 vi.mock('@/stores/auth.store', () => ({
   useAuthStore: (selector?: (state: { user: { id: string } }) => unknown) => {
-    const state = { status: 'authenticated', user: { id: 'user-1' } };
+    const state = { status: 'authenticated', user: { id: mocks.authUserId } };
     return selector ? selector(state) : state;
   },
 }));
@@ -52,7 +55,7 @@ vi.mock('@/lib/realtime/useRealtimeConnection', () => ({
 
 vi.mock('@/lib/realtime/socket-client', () => ({
   connectSocket: () => ({ emit: mocks.socketEmit }),
-  getSocket: () => ({ emit: mocks.socketEmit }),
+  getSocket: () => ({ emit: mocks.socketEmit, on: () => {}, off: () => {} }),
 }));
 
 vi.mock('@/lib/queries/categories.queries', () => ({
@@ -65,6 +68,7 @@ vi.mock('@/lib/queries/stats.queries', () => ({
 
 vi.mock('@/lib/analytics/game-events', () => ({
   trackFriendInviteSent: vi.fn(),
+  trackFriendInviteRecovery: vi.fn(),
   trackFriendInviteLinkOpened: (...args: unknown[]) => mocks.trackInviteLinkOpened(...args),
   trackFriendInviteJoinAttempted: (...args: unknown[]) => mocks.trackInviteJoinAttempted(...args),
   trackFriendInviteJoinFailed: (...args: unknown[]) => mocks.trackInviteJoinFailed(...args),
@@ -136,6 +140,41 @@ describe('useFriendLobbyLogic invite links', () => {
           payload && typeof payload === 'object' && 'inviteCode' in payload
             ? String((payload as { inviteCode: unknown }).inviteCode)
             : 'JOINED';
+        if (inviteCode === 'OPEN01' && (mocks.openRoomJoins += 1) === 1) {
+          // The room reopened between the server's two lookups: "not found", but it is open now.
+          ack({ ok: false, code: 'LOBBY_NOT_FOUND', message: 'Invalid invite code', retryable: false, correlationId,
+            room: { roomState: 'open', gameMode: 'auction', duelGame: null, hostNickname: 'Lionel' } });
+          return;
+        }
+        if (inviteCode === 'ACCT01' && mocks.authUserId === 'user-1') {
+          ack({ ok: false, code: 'LOBBY_MODE_REQUIRES_ACCOUNT', message: 'needs an account', retryable: false, correlationId,
+            room: { roomState: 'open', gameMode: 'friendly_possession', duelGame: null, hostNickname: 'Lionel' } });
+          return;
+        }
+        if (inviteCode === 'SLOW01') {
+          // The reply lands after the screen is gone.
+          setTimeout(() => ack({
+            ok: false,
+            code: 'LOBBY_NOT_FOUND',
+            message: 'Invalid invite code',
+            retryable: false,
+            correlationId,
+            stateSnapshot: { state: 'IN_WAITING_LOBBY', activeMatchId: null, waitingLobbyId: 'own-lobby', queueSearchId: null, openLobbyIds: ['own-lobby'], resolvedAt: '2026-10-05T00:00:00Z' },
+          }), 300);
+          return;
+        }
+        if (inviteCode === 'MINE01' || inviteCode === 'GONE01') {
+          // Not found, but the player still has an open room (its own active room, or some other room).
+          ack({
+            ok: false,
+            code: 'LOBBY_NOT_FOUND',
+            message: 'Invalid invite code',
+            retryable: false,
+            correlationId,
+            stateSnapshot: { state: 'IN_WAITING_LOBBY', activeMatchId: null, waitingLobbyId: 'own-lobby', queueSearchId: null, openLobbyIds: ['own-lobby'], resolvedAt: '2026-10-05T00:00:00Z' },
+          });
+          return;
+        }
         if (inviteCode === 'MISSING') {
           ack({
             ok: false,
@@ -234,6 +273,51 @@ describe('useFriendLobbyLogic invite links', () => {
     expect(mocks.startSession).not.toHaveBeenCalled();
   });
 
+  it('a "not found" for a player who still has another open room fails only after the own-room wait, and never after unmount', async () => {
+    const { result } = renderHook(() => useFriendLobbyLogic({ roomCode: 'GONE01', isHost: false }));
+    await waitFor(() => expect(mocks.socketEmit).toHaveBeenCalledWith('lobby:join_by_code', expect.objectContaining({ inviteCode: 'GONE01' }), expect.any(Function)));
+    expect(result.current.inviteJoinFailure).toBeNull();
+    await waitFor(() => expect(result.current.inviteJoinFailure).toEqual(expect.objectContaining({ reasonCode: 'LOBBY_NOT_FOUND' })), { timeout: 4000 });
+
+    mocks.toastError.mockClear();
+    const second = renderHook(() => useFriendLobbyLogic({ roomCode: 'MINE01', isHost: false }));
+    await waitFor(() => expect(mocks.socketEmit).toHaveBeenCalledWith('lobby:join_by_code', expect.objectContaining({ inviteCode: 'MINE01' }), expect.any(Function)));
+    second.unmount();
+    await new Promise((resolve) => setTimeout(resolve, 3000));
+    expect(mocks.toastError).not.toHaveBeenCalled();
+
+    // A reply that arrives after the screen unmounted starts nothing either.
+    const third = renderHook(() => useFriendLobbyLogic({ roomCode: 'SLOW01', isHost: false }));
+    await waitFor(() => expect(mocks.socketEmit).toHaveBeenCalledWith('lobby:join_by_code', expect.objectContaining({ inviteCode: 'SLOW01' }), expect.any(Function)));
+    third.unmount();
+    await new Promise((resolve) => setTimeout(resolve, 3300));
+    expect(mocks.toastError).not.toHaveBeenCalled();
+  }, 20_000);
+
+  it('a room that reopened mid-lookup is joined by one automatic retry (no spinner, no failure)', async () => {
+    mocks.openRoomJoins = 0;
+    const { result } = renderHook(() => useFriendLobbyLogic({ roomCode: 'OPEN01', isHost: false }));
+    await waitFor(() => expect(mocks.openRoomJoins).toBe(2));
+    expect(result.current.inviteJoinFailure).toBeNull();
+  });
+
+  it('after signing up on a refused invite, the new identity joins again (no stale failure)', async () => {
+    mocks.authUserId = 'user-1';
+    const { result, rerender } = renderHook(() => useFriendLobbyLogic({ roomCode: 'ACCT01', isHost: false }));
+    await waitFor(() => expect(result.current.inviteJoinFailure).toEqual(expect.objectContaining({
+      reasonCode: 'LOBBY_MODE_REQUIRES_ACCOUNT', room: expect.objectContaining({ hostNickname: 'Lionel' }),
+    })));
+    const joinsBefore = mocks.socketEmit.mock.calls.filter(([event]) => event === 'lobby:join_by_code').length;
+    // A real sign-in passes through "no identity" while the session loads.
+    mocks.authUserId = '';
+    rerender();
+    mocks.authUserId = 'user-2';
+    rerender();
+    await waitFor(() => expect(result.current.inviteJoinFailure).toBeNull());
+    await waitFor(() => expect(mocks.socketEmit.mock.calls.filter(([event]) => event === 'lobby:join_by_code').length).toBe(joinsBefore + 1));
+    mocks.authUserId = 'user-1';
+  });
+
   it('stops resolving and exposes a terminal invite failure when the lobby is gone', async () => {
     const { result } = renderHook(() =>
       useFriendLobbyLogic({ roomCode: 'MISSING', isHost: false }),
@@ -250,13 +334,15 @@ describe('useFriendLobbyLogic invite links', () => {
       expect(result.current.inviteJoinFailure).toEqual({
         inviteCode: 'MISSING',
         reasonCode: 'LOBBY_NOT_FOUND',
-        message: 'This link can’t be used anymore.',
+        messageKey: 'friend.inviteExpiredReason',
         retryable: false,
+        room: null,
       });
     });
 
     expect(result.current.isResolvingInvite).toBe(false);
-    expect(mocks.toastError).toHaveBeenCalledWith('This link can’t be used anymore.');
+    // The full-page screen explains a dead link: no extra toast.
+    expect(mocks.toastError).not.toHaveBeenCalled();
     expect(mocks.trackInviteLinkOpened).toHaveBeenCalledTimes(1);
     expect(mocks.trackInviteJoinAttempted).toHaveBeenCalledWith({
       attemptNumber: 1,
@@ -276,7 +362,8 @@ describe('useFriendLobbyLogic invite links', () => {
     await waitFor(() => {
       expect(useRealtimeMatchStore.getState().error).toBeNull();
     });
-    expect(mocks.toastError).toHaveBeenCalledTimes(1);
+    // Neither the dead link (explained on screen) nor its stray echo toasts.
+    expect(mocks.toastError).not.toHaveBeenCalled();
     expect(result.current.settingsErrorVersion).toBe(0);
   });
 
@@ -396,7 +483,7 @@ describe('useFriendLobbyLogic invite links', () => {
 
     expect(result.current.inviteJoinFailure).toEqual(expect.objectContaining({
       reasonCode: 'LOBBY_NOT_FOUND',
-      message: 'This link can’t be used anymore.',
+      messageKey: 'friend.inviteExpiredReason',
       retryable: false,
     }));
     expect(mocks.trackInviteJoinFailed).toHaveBeenCalledTimes(1);
@@ -752,3 +839,221 @@ describe('useFriendLobbyLogic duel rooms', () => {
     });
   });
 });
+
+describe('useFriendLobbyLogic room-game rooms', () => {
+  function roomLobby(status: 'waiting' | 'active' = 'waiting'): LobbyState {
+    const base = makeLobby('ROOM01');
+    return {
+      ...base,
+      status,
+      settings: { ...base.settings, gameMode: 'room_game', duelGame: null, roomGame: 'aproximado' },
+      members: [
+        { ...base.members[0], isReady: true },
+        { userId: 'user-2', username: 'Friend', avatarUrl: null, isReady: true, isHost: false },
+        { userId: 'user-3', username: 'Third', avatarUrl: null, isReady: true, isHost: false },
+      ],
+    };
+  }
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.socketEmit.mockImplementation(() => undefined);
+    useRealtimeMatchStore.getState().reset();
+    useFriendRoomHandoffStore.setState({ found: null, sittingOut: null, endedIds: [], answers: 0, lastAnswerLive: false });
+  });
+
+  it("hands off to /sala/<matchId> when this room's game starts", async () => {
+    useRealtimeMatchStore.getState().setLobby(roomLobby());
+    renderHook(() => useFriendLobbyLogic({ roomCode: 'ROOM01', isHost: true }));
+    act(() => useFriendRoomHandoffStore.getState().setFound({ matchId: 'room-1', game: 'aproximado', lobbyId: 'lobby-ROOM01' }));
+    await waitFor(() => expect(mocks.routerPush).toHaveBeenCalledWith('/sala/room-1'));
+    expect(mocks.routerPush).not.toHaveBeenCalledWith('/game');
+  });
+
+  it('coming back to the room while its match runs (browser Back) asks the server, and returns to the match', async () => {
+    useRealtimeMatchStore.getState().setLobby(roomLobby('active'));
+    useFriendRoomHandoffStore.setState({ found: { matchId: 'room-1', game: 'aproximado', lobbyId: 'lobby-ROOM01', receivedAt: Date.now() - 60_000, seq: 0 } });
+    renderHook(() => useFriendLobbyLogic({ roomCode: 'ROOM01', isHost: true }));
+    expect(mocks.socketEmit).toHaveBeenCalledWith('room:pointer');
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(mocks.routerPush).not.toHaveBeenCalled(); // an old pointer alone is not trusted
+    act(() => useFriendRoomHandoffStore.getState().setFound({ matchId: 'room-1', game: 'aproximado', lobbyId: 'lobby-ROOM01' })); // the answer
+    await waitFor(() => expect(mocks.routerPush).toHaveBeenCalledWith('/sala/room-1'));
+  });
+
+  it('a pointer kept from a match whose end was missed never hijacks the next start', async () => {
+    useRealtimeMatchStore.getState().setLobby(roomLobby('waiting'));
+    useFriendRoomHandoffStore.setState({ found: { matchId: 'room-old', game: 'aproximado', lobbyId: 'lobby-ROOM01', receivedAt: Date.now() - 60_000, seq: 0 } });
+    const { result } = renderHook(() => useFriendLobbyLogic({ roomCode: 'ROOM01', isHost: true }));
+    act(() => result.current.actions.handleStartMatch());
+    act(() => useRealtimeMatchStore.getState().setLobby(roomLobby('active')));
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(mocks.routerPush).not.toHaveBeenCalledWith('/sala/room-old');
+    act(() => useFriendRoomHandoffStore.getState().setFound({ matchId: 'room-new', game: 'aproximado', lobbyId: 'lobby-ROOM01' }));
+    await waitFor(() => expect(mocks.routerPush).toHaveBeenCalledWith('/sala/room-new'));
+  });
+
+  it('a pointer to an earlier room match never routes a reused room that now plays another mode', async () => {
+    useRealtimeMatchStore.getState().setLobby({ ...roomLobby('active'), settings: { ...roomLobby().settings, gameMode: 'duel', duelGame: 'pistas', roomGame: null } });
+    useFriendRoomHandoffStore.setState({ found: { matchId: 'old-room', game: 'aproximado', lobbyId: 'lobby-ROOM01', receivedAt: Date.now(), seq: 0 } });
+    renderHook(() => useFriendLobbyLogic({ roomCode: 'ROOM01', isHost: true }));
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(mocks.routerPush).not.toHaveBeenCalledWith('/sala/old-room');
+  });
+
+  it('a found that lands while the room still shows its previous mode is kept, re-confirmed once the room game shows, then followed', async () => {
+    useRealtimeMatchStore.getState().setLobby({ ...roomLobby(), settings: { ...roomLobby().settings, gameMode: 'friendly_party_quiz', roomGame: null } });
+    renderHook(() => useFriendLobbyLogic({ roomCode: 'ROOM01', isHost: true }));
+    act(() => useFriendRoomHandoffStore.getState().setFound({ matchId: 'room-2', game: 'aproximado', lobbyId: 'lobby-ROOM01' }));
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(useFriendRoomHandoffStore.getState().found).toMatchObject({ matchId: 'room-2' });
+    act(() => useRealtimeMatchStore.getState().setLobby(roomLobby('active')));
+    await waitFor(() => expect(mocks.socketEmit).toHaveBeenCalledWith('room:pointer'));
+    expect(mocks.routerPush).not.toHaveBeenCalled();
+    act(() => useFriendRoomHandoffStore.getState().setFound({ matchId: 'room-2', game: 'aproximado', lobbyId: 'lobby-ROOM01' }));
+    await waitFor(() => expect(mocks.routerPush).toHaveBeenCalledWith('/sala/room-2'));
+  });
+
+  it('an unanswered pointer question is asked again', async () => {
+    vi.useFakeTimers();
+    useRealtimeMatchStore.getState().setLobby(roomLobby('active'));
+    renderHook(() => useFriendLobbyLogic({ roomCode: 'ROOM01', isHost: true }));
+    const asks = () => mocks.socketEmit.mock.calls.filter(([event]) => event === 'room:pointer').length;
+    expect(asks()).toBe(1);
+    act(() => { vi.advanceTimersByTime(1_000); });
+    act(() => useRealtimeMatchStore.getState().setLobby(roomLobby('active'))); // an identical update must not cancel it
+    act(() => { vi.advanceTimersByTime(2_100); });
+    expect(asks()).toBe(2);
+    act(() => useFriendRoomHandoffStore.getState().answered(true));
+    act(() => { vi.advanceTimersByTime(3_100); });
+    expect(asks()).toBe(2);
+    vi.useRealTimers();
+  });
+
+  it('review 2026-10-06 W4: when every pointer question goes unanswered, the spinner turns into Retry / Leave, and Retry asks again', async () => {
+    vi.useFakeTimers();
+    try {
+    useRealtimeMatchStore.getState().setLobby(roomLobby('active'));
+    const { result } = renderHook(() => useFriendLobbyLogic({ roomCode: 'ROOM01', isHost: false }));
+    const asks = () => mocks.socketEmit.mock.calls.filter(([event]) => event === 'room:pointer').length;
+    expect(result.current.isPreparingMatch).toBe(true);
+    expect(result.current.roomHandoffStalled).toBe(false);
+    act(() => { vi.advanceTimersByTime(16_000); }); // the whole retry budget, no answer
+    expect(asks()).toBe(5);
+    expect(result.current.roomHandoffStalled).toBe(true);
+    act(() => result.current.actions.handleRoomHandoffRetry());
+    expect(asks()).toBe(6);
+    expect(result.current.roomHandoffStalled).toBe(false);
+    act(() => useFriendRoomHandoffStore.getState().answered(true));
+    act(() => { vi.advanceTimersByTime(16_000); });
+    expect(result.current.roomHandoffStalled).toBe(false);
+    // Round 4 (#7): the way out cannot be lobby:leave (refused while the player still holds a live seat): it goes
+    // back to the menu; the unused seat is withdrawn by the match's own absence rules.
+    act(() => result.current.actions.handleRoomHandoffExit());
+    expect(mocks.routerPush).toHaveBeenCalledWith('/play');
+    expect(mocks.socketEmit.mock.calls.filter(([event]) => event === 'lobby:leave')).toHaveLength(0);
+    } finally { vi.useRealTimers(); }
+  });
+
+  it('"no live seat" for a room still shown as active (a missed end) shows the room with its Leave, not the spinner', async () => {
+    useRealtimeMatchStore.getState().setLobby(roomLobby('active'));
+    const { result } = renderHook(() => useFriendLobbyLogic({ roomCode: 'ROOM01', isHost: false }));
+    expect(result.current.isPreparingMatch).toBe(true);
+    act(() => { useFriendRoomHandoffStore.getState().ended(); useFriendRoomHandoffStore.getState().answered(false); });
+    await waitFor(() => expect(result.current.isPreparingMatch).toBe(false));
+    expect(result.current.isSittingOutRoomGame).toBe(true);
+  });
+
+  it('a pointer refreshed just before a missed end is not followed before the server answers', async () => {
+    useFriendRoomHandoffStore.getState().setFound({ matchId: 'room-old', game: 'aproximado', lobbyId: 'lobby-ROOM01' }); // 0 s old
+    useRealtimeMatchStore.getState().setLobby(roomLobby('waiting'));
+    renderHook(() => useFriendLobbyLogic({ roomCode: 'ROOM01', isHost: true }));
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(mocks.routerPush).not.toHaveBeenCalled();
+    act(() => useFriendRoomHandoffStore.getState().ended()); // the answer: no live seat
+    expect(useFriendRoomHandoffStore.getState().found).toBeNull();
+  });
+
+  it('a room whose active state arrives late asks again, and follows the confirmed match', async () => {
+    useFriendRoomHandoffStore.setState({ found: { matchId: 'room-3', game: 'aproximado', lobbyId: 'lobby-ROOM01', receivedAt: Date.now() - 60_000, seq: 0 } });
+    useRealtimeMatchStore.getState().setLobby(roomLobby('waiting'));
+    renderHook(() => useFriendLobbyLogic({ roomCode: 'ROOM01', isHost: false }));
+    act(() => useRealtimeMatchStore.getState().setLobby(roomLobby('active')));
+    await waitFor(() => expect(mocks.socketEmit.mock.calls.filter(([event]) => event === 'room:pointer')).toHaveLength(2));
+    act(() => useFriendRoomHandoffStore.getState().setFound({ matchId: 'room-3', game: 'aproximado', lobbyId: 'lobby-ROOM01' }));
+    await waitFor(() => expect(mocks.routerPush).toHaveBeenCalledWith('/sala/room-3'));
+  });
+
+  it('a late found for a match that already ended is ignored', () => {
+    useFriendRoomHandoffStore.getState().ended('room-old');
+    useFriendRoomHandoffStore.getState().setFound({ matchId: 'room-old', game: 'aproximado', lobbyId: 'lobby-ROOM01' });
+    expect(useFriendRoomHandoffStore.getState().found).toBeNull();
+  });
+
+  it("the server's sitting-out word (sent on every connect) sets and clears the marker; an ended match never comes back", () => {
+    useFriendRoomHandoffStore.getState().setSittingOut({ matchId: 'room-1', lobbyId: 'lobby-ROOM01' });
+    expect(useFriendRoomHandoffStore.getState().sittingOut).toMatchObject({ matchId: 'room-1' });
+    useFriendRoomHandoffStore.getState().setSittingOut(null);
+    expect(useFriendRoomHandoffStore.getState().sittingOut).toBeNull();
+    useFriendRoomHandoffStore.getState().ended('room-1');
+    useFriendRoomHandoffStore.getState().setSittingOut({ matchId: 'room-1', lobbyId: 'lobby-ROOM01' });
+    expect(useFriendRoomHandoffStore.getState().sittingOut).toBeNull();
+  });
+
+  it('a late pointer to the match this player sits out does not send them back into it', async () => {
+    useRealtimeMatchStore.getState().setLobby(roomLobby('active'));
+    useFriendRoomHandoffStore.getState().setSittingOut({ matchId: 'room-1', lobbyId: 'lobby-ROOM01' });
+    renderHook(() => useFriendLobbyLogic({ roomCode: 'ROOM01', isHost: false }));
+    act(() => useFriendRoomHandoffStore.getState().setFound({ matchId: 'room-1', game: 'aproximado', lobbyId: 'lobby-ROOM01' }));
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(mocks.routerPush).not.toHaveBeenCalledWith('/sala/room-1');
+  });
+
+  it('a finished match clears its pointer, so coming back to the room does not route into it', () => {
+    useFriendRoomHandoffStore.getState().setFound({ matchId: 'room-1', game: 'aproximado', lobbyId: 'lobby-ROOM01' });
+    useFriendRoomHandoffStore.getState().ended('room-1');
+    expect(useFriendRoomHandoffStore.getState().found).toBeNull();
+  });
+
+  it('"no live seat" on reconnect drops pointers but keeps sitting the running match out; its end clears that too', () => {
+    useFriendRoomHandoffStore.getState().setFound({ matchId: 'room-1', game: 'aproximado', lobbyId: 'lobby-ROOM01' });
+    useFriendRoomHandoffStore.getState().setSittingOut({ matchId: 'room-1', lobbyId: 'lobby-ROOM01' });
+    useFriendRoomHandoffStore.getState().ended();
+    expect(useFriendRoomHandoffStore.getState().found).toBeNull();
+    expect(useFriendRoomHandoffStore.getState().sittingOut).toMatchObject({ matchId: 'room-1' });
+    useFriendRoomHandoffStore.getState().ended('room-1');
+    expect(useFriendRoomHandoffStore.getState().sittingOut).toBeNull();
+  });
+
+  it('a player sitting the running match out sees the room (not the preparing spinner)', () => {
+    useRealtimeMatchStore.getState().setLobby(roomLobby('active'));
+    const { result, rerender } = renderHook(() => useFriendLobbyLogic({ roomCode: 'ROOM01', isHost: false }));
+    expect(result.current.isPreparingMatch).toBe(true);
+    act(() => useFriendRoomHandoffStore.getState().setSittingOut({ matchId: 'room-1', lobbyId: 'lobby-ROOM01' }));
+    rerender();
+    expect(result.current.isSittingOutRoomGame).toBe(true);
+    expect(result.current.isPreparingMatch).toBe(false);
+  });
+
+  it('sends the room game with a switch into it and drops it when leaving', () => {
+    useRealtimeMatchStore.getState().setLobby(makeLobby('ROOM01'));
+    const { result, rerender } = renderHook(() => useFriendLobbyLogic({ roomCode: 'ROOM01', isHost: true }));
+    act(() => result.current.actions.handleUpdateSettings({ gameMode: 'room_game' }));
+    expect(mocks.socketEmit).toHaveBeenCalledWith('lobby:update_settings', expect.objectContaining({ gameMode: 'room_game', roomGame: 'aproximado' }));
+    mocks.socketEmit.mockClear();
+    act(() => useRealtimeMatchStore.getState().setLobby(roomLobby()));
+    rerender();
+    act(() => result.current.actions.handleUpdateSettings({ gameMode: 'auction' }));
+    const sent = mocks.socketEmit.mock.calls.find(([event]) => event === 'lobby:update_settings')?.[1] as Record<string, unknown>;
+    expect(sent).toMatchObject({ gameMode: 'auction' });
+    expect(sent).not.toHaveProperty('roomGame');
+  });
+
+  it('a refused switch (game unavailable) rolls the settings back', async () => {
+    useRealtimeMatchStore.getState().setLobby(makeLobby('ROOM01'));
+    const { result } = renderHook(() => useFriendLobbyLogic({ roomCode: 'ROOM01', isHost: true }));
+    act(() => useRealtimeMatchStore.getState().setError({ code: 'ROOM_GAME_UNAVAILABLE', message: 'raw' }));
+    await waitFor(() => expect(result.current.settingsErrorVersion).toBe(1));
+  });
+});
+

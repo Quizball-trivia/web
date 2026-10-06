@@ -51,6 +51,8 @@
   --brand-orange: 36 100% 50%;      /* #FF9600 — warm accent / warning */
   --brand-purple: 273 100% 75%;     /* #CE82FF — special-mode accent */
   --brand-gold: 51 100% 50%;        /* #FFD700 — RP / leaderboard highlight */
+  --brand-silver: 216 10% 80%;      /* #C7CBD1 — 2nd place (leaderboard podium) */
+  --brand-bronze: 30 61% 50%;       /* #CD7F32 — 3rd place (leaderboard podium) */
   --brand-slate: 200 16% 47%;       /* #56707A — muted text / secondary metadata */
 
   /* Surface palette — dark teal layered backgrounds. */
@@ -151,6 +153,8 @@
   --color-brand-orange: hsl(var(--brand-orange));
   --color-brand-purple: hsl(var(--brand-purple));
   --color-brand-gold: hsl(var(--brand-gold));
+  --color-brand-silver: hsl(var(--brand-silver));
+  --color-brand-bronze: hsl(var(--brand-bronze));
   --color-brand-slate: hsl(var(--brand-slate));
 
   /* Surface palette */

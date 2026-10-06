@@ -12,7 +12,7 @@ import { isPlaygroundMessage, PLAYGROUND, type FromPreview } from "./protocol";
 import type { GameId, PlayMode } from "./types";
 
 const LOCALES: Locale[] = ["es", "en", "ka", "tr"];
-const DEVICES = { phone: { w: 390, h: 844, label: "Phone 390×844" }, tablet: { w: 768, h: 1024, label: "Tablet 768" }, desktop: { w: 1280, h: 800, label: "Desktop 1280" } } as const;
+const DEVICES = { small: { w: 320, h: 640, label: "Small phone 320×640" }, phone: { w: 390, h: 844, label: "Phone 390×844" }, tablet: { w: 768, h: 1024, label: "Tablet 768" }, desktop: { w: 1280, h: 800, label: "Desktop 1280" } } as const;
 type Device = keyof typeof DEVICES;
 type Tab = "state" | "actions" | "sounds";
 
@@ -25,7 +25,7 @@ const pretty = (value: unknown) => JSON.stringify(value, null, 2);
  * device's real viewport), with live-editable state, a log of what each button would do, and the sounds each moment plays.
  */
 export function GamesPlayground() {
-  const [gameId, setGameId] = useState<GameId>("ultimo");
+  const [gameId, setGameId] = useState<GameId>("aproximado");
   const [mode, setMode] = useState<PlayMode>("solo");
   const game = GAMES.find((g) => g.id === gameId) ?? GAMES[0];
   const scenarios = useMemo(() => game.scenarios[mode] ?? [], [game, mode]);
@@ -128,14 +128,15 @@ export function GamesPlayground() {
         <p className="px-4 pb-2 pt-4 text-xs font-black uppercase tracking-widest text-white/50">Games playground</p>
         <nav className="space-y-1 px-2">
           {GAMES.map((g) => (
-            <button key={g.id} type="button" onClick={() => { setGameId(g.id); setScenarioId(""); }}
+            // A game opens on a mode it has (Último/Pistas/Buscaminas have no "room"), never on an empty list.
+            <button key={g.id} type="button" onClick={() => { setGameId(g.id); setScenarioId(""); if (!g.scenarios[mode]?.length) setMode((["solo", "duel", "room"] as const).find((m) => g.scenarios[m]?.length) ?? "duel"); }}
               className={cn("w-full rounded-lg px-3 py-2 text-left text-sm font-bold", g.id === game.id ? "bg-brand-blue" : "hover:bg-white/5")}>{g.name}</button>
           ))}
         </nav>
-        <div className="mx-2 mt-4 grid grid-cols-2 gap-1 rounded-lg bg-white/5 p-1">
-          {(["solo", "duel"] as const).map((m) => (
+        <div className="mx-2 mt-4 flex gap-1 rounded-lg bg-white/5 p-1">
+          {(["solo", "duel", "room"] as const).filter((m) => game.scenarios[m]?.length).map((m) => (
             <button key={m} type="button" onClick={() => { setMode(m); setScenarioId(""); }}
-              className={cn("rounded-md py-1.5 text-xs font-black uppercase", mode === m ? "bg-brand-green" : "text-white/60")}>{m}</button>
+              className={cn("flex-1 rounded-md py-1.5 text-xs font-black uppercase", mode === m ? "bg-brand-green" : "text-white/60")}>{m}</button>
           ))}
         </div>
         <p className="px-4 pb-1 pt-4 text-[11px] font-bold uppercase tracking-wide text-white/40">Screens</p>

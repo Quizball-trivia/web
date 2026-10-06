@@ -10,6 +10,7 @@ import type { EngineEventDetail } from "@/lib/analytics/public-games.analytics";
 import type { DailyChallengeType } from "@/lib/domain/dailyChallenge";
 import type { Locale } from "@/lib/i18n/locale";
 import { isFullGameDemo } from "@/lib/seo/public-games";
+import { PlayRoomWithFriendsButton } from "@/features/aproximado/PlayRoomWithFriendsButton";
 /** Daily engines are a separate on-demand chunk too; nothing game-related loads before Play. */
 const GuestDailyPlay = dynamic(() => import("./GuestDailyPlay").then((m) => m.GuestDailyPlay), { ssr: false, loading: () => <div className="m-6 h-40 animate-pulse rounded-2xl bg-white/5" /> });
 
@@ -127,6 +128,9 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, playPath, 
         >
           <Play className="size-5" /> {copy.start}
         </button>
+        {dailyType === "statSniper" && (
+          <PlayRoomWithFriendsButton locale={locale as Locale} tone={variant === "inline" ? "blue" : "white"} className="w-auto max-w-sm" />
+        )}
         <p className="text-sm text-white/85">{copy.note}</p>
         {!practiceLocalised && <p className="text-sm font-semibold text-brand-yellow">{copy.english}</p>}
       </div>

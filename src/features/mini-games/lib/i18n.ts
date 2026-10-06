@@ -476,7 +476,7 @@ const KA: Record<string, string> = {
   "Race again": "კიდევ ირბოლე",
 
   // Stat Sniper
-  "Stat Sniper": "სტატ-სნაიპერი",
+  "Closest Wins": "სტატ სნაიპერი",
   "No options, no help — land your guess on the number": "ვარიანტების გარეშე — მიიტანე ვარაუდი ზუსტ რიცხვამდე",
   "Score": "ქულა",
   "{n} numeric stats — slide to your best guess. The closer you land, the more you score; a perfect hit pays a bullseye bonus.":

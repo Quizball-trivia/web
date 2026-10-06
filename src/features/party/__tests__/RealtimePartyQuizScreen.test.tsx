@@ -389,6 +389,15 @@ describe('RealtimePartyQuizScreen — standings rendering', () => {
     expect(inlineAnchors.length).toBe(0);
   });
 
+  it('by default shows the party-kit "me vs leader" pill on phones: me and the leader, not the whole bar', () => {
+    renderScreen({ mobileStandingsPlacement: undefined });
+    const bottomAnchors = [...document.querySelectorAll<HTMLElement>('[data-party-score-anchor-placement="mobile-bottom"]')].map((el) => el.dataset.partyScoreAnchor);
+    expect(document.querySelectorAll('[data-party-score-anchor-placement="mobile-inline"]').length).toBe(0);
+    expect(bottomAnchors.length).toBeGreaterThanOrEqual(1);
+    expect(bottomAnchors.length).toBeLessThanOrEqual(2);
+    expect(screen.getByRole('button', { name: /see all standings|partyResults.seeAllStandings/i })).toBeTruthy();
+  });
+
   it('keeps dropped players visible with a dropped badge', () => {
     storeSnapshot.current = makeStore({
       partyState: buildPartyState({

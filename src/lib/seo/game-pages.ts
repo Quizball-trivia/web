@@ -1,4 +1,4 @@
-import type { Locale } from "@/lib/i18n/locale";
+import { DEFAULT_LOCALE, type Locale } from "@/lib/i18n/locale";
 import { DAILY_CHALLENGE_SLUGS, dailyChallengePlayPath } from "@/lib/domain/dailyChallengeSlugs";
 
 /**
@@ -58,7 +58,8 @@ const LOCALIZED_SLUGS: Record<string, Partial<Record<Locale, string>>> = {
   "football-logic": { es: "logica-futbolera" },
   "missing-xi": { es: "adivina-el-11" },
   "pass-chain": { es: "conectando-jugadores" },
-  "stat-sniper": { es: "aproximado-futbolero" },
+  // en/tr renamed 2026-10-05 to what people search ("closest wins", "en yakın tahmin oyunu"); ka keeps the brand slug.
+  "stat-sniper": { es: "aproximado-futbolero", en: "closest-wins", tr: "en-yakin-tahmin-oyunu" },
   ranked: { es: "quien-sabe-mas-de-futbol" },
   "free-kicks": { es: "tiros-libres" },
   "road-to-goal": { es: "camino-al-gol" },
@@ -77,7 +78,7 @@ const PREVIOUS_SLUGS: Record<string, Partial<Record<Locale, string>>> = {
   "guess-the-goal-minute": { es: "en-que-minuto-futbolero" },
   "missing-xi": { es: "once-perdido" },
   "pass-chain": { es: "cadena-de-pases" },
-  "stat-sniper": { es: "francotirador-de-datos" },
+  "stat-sniper": { es: "francotirador-de-datos", en: "stat-sniper", tr: "stat-sniper" },
   ranked: { es: "clasificatoria" },
   "squad-spin": { es: "ruleta-de-plantilla" },
 };
@@ -370,36 +371,36 @@ export const GAME_PAGES: GamePageEntry[] = [
   }),
   daily("statSniper", {
     en: {
-      metaTitle: "Football Stats Guessing Game — Stat Sniper",
-      metaDescription: "Ten football numbers a day: transfer fees, season goals, final attendances. Slide to your guess; the closer you land, the more you score.",
-      title: "Stat Sniper",
-      intro: "Ten real football numbers. Slide to your best guess and land as close as you can.",
-      howToPlay: ["Read the stat and drag the slider to your guess.", "Lock it in — the true number is revealed with your points.", "The closer you land, the more you score; a bullseye pays extra."],
-      reward: "Earn coins and XP for your accuracy, and climb the day's leaderboard.",
+      metaTitle: "Closest Wins Football Quiz — Guess the Transfer Fee & Stats",
+      metaDescription: "Guess real football numbers: transfer fees, market values, season goals, attendances. Play the daily solo, or live with 2–6 friends where the closest guess wins.",
+      title: "Closest Wins: Football Stats Guessing Game",
+      intro: "Ten real football numbers, from transfer fees to cup-final crowds. Guess as close as you can: solo in the daily, or against friends, where the closest guess takes the round.",
+      howToPlay: ["Read the number question: a transfer fee, a market value, a player's goals, a crowd.", "Give your guess: slide to it in the daily, type it when you play friends.", "The closest guess scores most; an exact hit pays extra."],
+      reward: "Earn coins and XP in the daily and climb its leaderboard; with friends you play for the podium.",
     },
     ka: {
-      metaTitle: "სტატ-სნაიპერი — გამოიცანი ფეხბურთის რიცხვი",
-      metaDescription: "დღეში ათი ფეხბურთის რიცხვი: ტრანსფერის ფასები, სეზონის გოლები, ფინალის დამსწრეები. მიიტანე სლაიდერი შენს ვარაუდამდე — რაც უფრო ახლოს, მით მეტი ქულა.",
-      title: "სტატ-სნაიპერი",
-      intro: "ათი ნამდვილი ფეხბურთის რიცხვი. მიიტანე სლაიდერი შენს ვარაუდამდე და მოხვდი რაც შეიძლება ახლოს.",
-      howToPlay: ["წაიკითხე სტატისტიკა და გადაიტანე სლაიდერი შენს ვარაუდზე.", "დააფიქსირე — ნამდვილი რიცხვი და შენი ქულა გამოჩნდება.", "რაც უფრო ახლოს, მით მეტი ქულა; ზუსტი მოხვედრა ბონუსია."],
-      reward: "დააგროვე მონეტები და XP სიზუსტისთვის და აიწიე დღის ლიდერბორდში.",
+      metaTitle: "სტატ სნაიპერი — ფეხბურთის ქვიზი: გამოიცანი ტრანსფერის ფასი და გოლები",
+      metaDescription: "ქვიზი ფეხბურთზე რიცხვებით: ტრანსფერის ფასები, საბაზრო ღირებულებები, სეზონის გოლები, დამსწრეები. ითამაშე ყოველდღიური გამოწვევა ან 2–6 მეგობართან ერთად — იგებს, ვინც უფრო ახლოსაა.",
+      title: "სტატ სნაიპერი",
+      intro: "ათი ნამდვილი ფეხბურთის რიცხვი — ტრანსფერის ფასიდან ფინალის დამსწრეებამდე. ეს ქვიზი ფეხბურთზე რიცხვებით თამაშდება: მარტო ყოველდღიურ გამოწვევაში ან მეგობრებთან, სადაც რაუნდს ყველაზე ახლოს მოხვედრილი იგებს.",
+      howToPlay: ["წაიკითხე კითხვა: ტრანსფერის ფასი, საბაზრო ღირებულება, გოლები ან დამსწრეები.", "დაასახელე რიცხვი: ყოველდღიურ თამაშში სლაიდერით, მეგობრებთან — ჩაწერით.", "ყველაზე ახლოს მყოფი მეტ ქულას იღებს; ზუსტი მოხვედრა ბონუსია."],
+      reward: "ყოველდღიურ თამაშში დააგროვე მონეტები და XP და აიწიე ლიდერბორდში; მეგობრებთან პოდიუმისთვის თამაშობ.",
     },
     es: {
-      metaTitle: "Aproximado futbolero — Adivina la cifra del fútbol",
-      metaDescription: "Diez cifras del fútbol al día: traspasos, goles por temporada, asistencia a finales. Desliza hasta tu estimación; cuanto más cerca, más puntos.",
+      metaTitle: "Aproximado futbolero — Juego online: gana el que más se acerca",
+      metaDescription: "Adivina cifras reales del fútbol: el precio de los fichajes, valores de mercado, goles por temporada, asistencia. Juega el reto diario o con 2 a 6 amigos: quién se acerca más gana.",
       title: "Aproximado futbolero",
-      intro: "Diez cifras reales del fútbol. Desliza hasta tu mejor estimación y acércate todo lo que puedas.",
-      howToPlay: ["Lee el dato y arrastra el deslizador hasta tu estimación.", "Confírmala: se revela la cifra real con tus puntos.", "Cuanto más cerca, más puntos; el pleno da bonus."],
-      reward: "Gana monedas y XP por tu precisión y sube en la clasificación del día.",
+      intro: "Diez cifras reales del fútbol, del precio justo de un fichaje al público de una final. Acércate todo lo que puedas: solo en el reto diario o contra tus amigos, donde gana el que más se acerca.",
+      howToPlay: ["Lee la pregunta: el precio de un jugador, un valor de mercado, unos goles, un aforo.", "Da tu cifra: deslízala en el reto diario o escríbela cuando juegas con amigos.", "El que más se acerca suma más; el pleno da bonus."],
+      reward: "Gana monedas y XP en el reto diario y sube en su clasificación; con amigos se juega por el podio.",
     },
     tr: {
-      metaTitle: "Stat Sniper — Futbol Sayısını Tahmin Et",
-      metaDescription: "Günde on futbol sayısı: transfer ücretleri, sezon golleri, final seyirci sayıları. Tahminine kaydır; ne kadar yaklaşırsan o kadar çok puan.",
-      title: "Stat Sniper",
-      intro: "On gerçek futbol sayısı. En iyi tahminine kaydır ve olabildiğince yaklaş.",
-      howToPlay: ["İstatistiği oku ve kaydırıcıyı tahminine sürükle.", "Kilitle — gerçek sayı puanınla birlikte açıklanır.", "Ne kadar yaklaşırsan o kadar çok puan; tam isabet ekstra kazandırır."],
-      reward: "İsabetin için jeton ve XP kazan, günün liderlik tablosunda yüksel.",
+      metaTitle: "En Yakın Tahmin Oyunu — Futbol: Bonservis, Gol, Piyasa Değeri",
+      metaDescription: "Gerçek futbol sayılarını tahmin et: bonservis bedelleri, piyasa değerleri, sezon golleri, seyirci sayıları. Günlük oyunu tek başına ya da 2–6 arkadaşla oyna: en yakın tahmin eden kazanır.",
+      title: "En Yakın Tahmin Oyunu: Futbol Sayılarını Tahmin Et",
+      intro: "Bonservis bedelinden final seyircisine on gerçek futbol sayısı. Olabildiğince yaklaş: günlük oyunda tek başına ya da arkadaşlarınla, en yakın tahmin eden turu kazanır.",
+      howToPlay: ["Soruyu oku: bir bonservis bedeli, piyasa değeri, gol sayısı ya da seyirci.", "Tahminini ver: günlük oyunda kaydır, arkadaşlarla oynarken yaz.", "En yakın tahmin en çok puanı alır; tam isabet ekstra kazandırır."],
+      reward: "Günlük oyunda jeton ve XP kazan, liderlik tablosunda yüksel; arkadaşlarla kürsü için oynarsın.",
     },
   }),
   daily("passChain", {
@@ -1040,10 +1041,16 @@ export function previousGamePagePaths(pages: readonly GamePageEntry[]): Record<s
     const moved = PREVIOUS_FOLDER[locale];
     const folder = moved?.folder ?? PUBLIC_GAMES_FOLDER[locale];
     for (const entry of pages) {
-      const slug = PREVIOUS_SLUGS[entry.slug]?.[locale] ?? (moved ? entry.slug : undefined);
+      const previous = PREVIOUS_SLUGS[entry.slug]?.[locale];
+      const slug = previous ?? (moved ? entry.slug : undefined);
       if (!slug) continue;
-      const from = `/${locale}/${folder}/${slug}`;
-      if (from !== gamePagePath(entry, locale)) redirects[from] = gamePagePath(entry, locale);
+      // A locale whose folder moved: the old folder redirects, and a slug renamed after the move also redirects from
+      // the current folder (e.g. /tr/futbol-oyunlari/stat-sniper → its new Turkish slug).
+      const froms = [`/${locale}/${folder}/${slug}`];
+      if (moved && previous) froms.push(`/${locale}/${PUBLIC_GAMES_FOLDER[locale]}/${previous}`);
+      // Bare default-locale URLs (/football-games/<slug>) existed for the old slug too.
+      if (locale === DEFAULT_LOCALE && previous) froms.push(`/${PUBLIC_GAMES_FOLDER[locale]}/${previous}`);
+      for (const from of froms) if (from !== gamePagePath(entry, locale)) redirects[from] = gamePagePath(entry, locale);
     }
     if (moved) {
       redirects[`/${locale}/${moved.folder}`] = `/${locale}`;

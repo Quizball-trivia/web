@@ -27,12 +27,24 @@ describe("renamed public game URLs", () => {
     expect(gamePagePath(GAME_PAGES.find((entry) => entry.slug === "football-clues")!, "tr")).toBe("/tr/futbol-oyunlari/futbolcu-tahmin-etme-oyunu");
   });
 
-  it("never redirects a live page, never chains, and leaves English and Georgian alone", () => {
+  it("never redirects a live page, never chains, and touches English and Georgian only where a page was renamed", () => {
     for (const [from, to] of Object.entries(redirects)) {
       expect(livePaths.has(from), from).toBe(false);
       expect(redirects[to], `${from} → ${to} chains`).toBeUndefined();
-      expect(from.startsWith("/en/") || from.startsWith("/ka/"), from).toBe(false);
+      expect(from.startsWith("/ka/"), from).toBe(false);
     }
+    expect(Object.keys(redirects).filter((from) => from.startsWith("/en/"))).toEqual(["/en/football-games/stat-sniper"]);
+  });
+
+  it("moves Stat Sniper to the searched names in English and Turkish (and keeps the Spanish and Georgian ones)", () => {
+    expect(redirects["/en/football-games/stat-sniper"]).toBe("/en/football-games/closest-wins");
+    expect(redirects["/football-games/stat-sniper"]).toBe("/en/football-games/closest-wins");
+    // Renamed after the Turkish folder move: both the old folder and the current folder redirect.
+    expect(redirects["/tr/futbol-oyunlari/stat-sniper"]).toBe("/tr/futbol-oyunlari/en-yakin-tahmin-oyunu");
+    expect(redirects["/tr/football-games/stat-sniper"]).toBe("/tr/futbol-oyunlari/en-yakin-tahmin-oyunu");
+    const entry = GAME_PAGES.find((page) => page.slug === "stat-sniper")!;
+    expect(gamePagePath(entry, "es")).toBe("/es/juegos-de-futbol/aproximado-futbolero");
+    expect(gamePagePath(entry, "ka")).toBe("/ka/football-games/stat-sniper");
   });
 
   it("lands every old game URL on a published page", () => {

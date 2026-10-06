@@ -72,7 +72,7 @@ export function StatSniper({ backHref }: { backHref?: string } = {}) {
   return (
     <MiniGameShell
       backHref={backHref}
-      title={t('Stat Sniper')}
+      title={t('Closest Wins')}
       subtitle={t('No options, no help — land your guess on the number')}
       accent="#FFD700"
       headerRight={<StatPill label={t('Score')} value={score} color="#FFD700" />}
@@ -81,7 +81,7 @@ export function StatSniper({ backHref }: { backHref?: string } = {}) {
         {phase === 'idle' && (
           <motion.div key="idle" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
             <Crosshair className="size-12 text-brand-gold" />
-            <div className="font-poppins text-xl font-black uppercase text-brand-gold">{t('Stat Sniper')}</div>
+            <div className="font-poppins text-xl font-black uppercase text-brand-gold">{t('Closest Wins')}</div>
             <p className="max-w-xs font-poppins text-sm font-semibold leading-snug text-white/60">
               {t('{n} numeric stats — slide to your best guess. The closer you land, the more you score; a perfect hit pays a bullseye bonus.', { n: ROUNDS })}
             </p>

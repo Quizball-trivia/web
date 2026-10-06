@@ -397,7 +397,7 @@ export const TR: Record<string, string> = {
   "You win the race!": "Yarışı sen kazandın!",
   "Rival wins": "Rakip kazandı",
   "Race again": "Tekrar yarış",
-  "Stat Sniper": "Stat Sniper",
+  "Closest Wins": "En Yakın Tahmin",
   "No options, no help — land your guess on the number": "Seçenek yok, yardım yok — tahminini sayıya denk getir",
   "Score": "Skor",
   "{n} numeric stats — slide to your best guess. The closer you land, the more you score; a perfect hit pays a bullseye bonus.": "{n} sayısal istatistik — en iyi tahminine kaydır. Ne kadar yaklaşırsan o kadar çok puan alırsın; tam isabet bonus kazandırır.",

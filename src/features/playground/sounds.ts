@@ -8,6 +8,14 @@ import type { GameId, PlayMode } from "./types";
 export interface SoundEvent { moment: string; sound: string | null; where: string }
 
 export const SOUND_EVENTS: Record<GameId, Partial<Record<PlayMode, SoundEvent[]>>> = {
+  aproximado: {
+    solo: [
+      { moment: "Lock in, 60+ accuracy points", sound: "dailyCorrect", where: "StatSniperGame lock-in" },
+      { moment: "Lock in, under 60 points", sound: "wrongAnswer", where: "StatSniperGame lock-in" },
+    ],
+    duel: [{ moment: "Any 1v1 moment", sound: null, where: "prototype: no sounds yet" }],
+    room: [{ moment: "Any room moment", sound: null, where: "prototype: no sounds yet" }],
+  },
   ultimo: {
     // Read from the map the game plays from: a change in ultimo.sounds.ts shows here and plays in the game.
     solo: [

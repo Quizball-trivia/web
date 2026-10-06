@@ -397,7 +397,7 @@ export const ES: Record<string, string> = {
   "You win the race!": "¡Ganas la carrera!",
   "Rival wins": "El rival gana",
   "Race again": "Volver a correr",
-  "Stat Sniper": "Stat Sniper",
+  "Closest Wins": "Aproximado futbolero",
   "No options, no help — land your guess on the number": "Sin opciones, sin ayuda: acierta el número",
   "Score": "Puntuación",
   "{n} numeric stats — slide to your best guess. The closer you land, the more you score; a perfect hit pays a bullseye bonus.": "Estadísticas numéricas de {n}: desliza para adivinar lo mejor posible. Cuanto más te acerques, más puntos obtendrás; un acierto perfecto te da un bonus de diana.",
