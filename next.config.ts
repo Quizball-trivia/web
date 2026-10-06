@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { partnerHostPattern } from "./src/features/partner/partnerHosts";
 
 // Only the canonical production deployment should be indexable. Vercel
 // sets VERCEL_ENV at build time — "production" on quizball.io, "preview"
@@ -9,16 +10,8 @@ const IS_PRODUCTION_DEPLOYMENT = process.env.VERCEL_ENV === "production";
 const SECURITY_HEADERS = [
   // CSP is generated in middleware so scripts can use a per-request nonce.
   {
-    key: "Referrer-Policy",
-    value: "strict-origin-when-cross-origin",
-  },
-  {
     key: "X-Content-Type-Options",
     value: "nosniff",
-  },
-  {
-    key: "X-Frame-Options",
-    value: "DENY",
   },
   {
     key: "Strict-Transport-Security",
@@ -37,6 +30,24 @@ const SECURITY_HEADERS = [
     value: "camera=(), microphone=(), geolocation=()",
   },
 ];
+
+// Partner hosts are embedded by the partner (CSP frame-ancestors, set in middleware from the same host list).
+// Every other host keeps DENY, so the two headers can never disagree about who may frame a page.
+const QUIZBALL_HOST_RULE = {
+  source: "/:path*",
+  missing: [{ type: "host" as const, value: partnerHostPattern() }],
+  headers: [
+    { key: "X-Frame-Options", value: "DENY" },
+    { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  ],
+};
+
+// The partner launch URL carries a one-time token; no request from that page may repeat it in a Referer.
+const PARTNER_HOST_RULE = {
+  source: "/:path*",
+  has: [{ type: "host" as const, value: partnerHostPattern() }],
+  headers: [{ key: "Referrer-Policy", value: "no-referrer" }],
+};
 
 const nextConfig: NextConfig = {
   productionBrowserSourceMaps: true,
@@ -132,6 +143,8 @@ const nextConfig: NextConfig = {
           source: "/:path*",
           headers: SECURITY_HEADERS,
         },
+        QUIZBALL_HOST_RULE,
+        PARTNER_HOST_RULE,
         brandAssets,
       ];
     }
@@ -143,6 +156,8 @@ const nextConfig: NextConfig = {
           { key: "X-Robots-Tag", value: "noindex, nofollow" },
         ],
       },
+      QUIZBALL_HOST_RULE,
+      PARTNER_HOST_RULE,
       brandAssets,
       // Local development only: the games playground shows its preview page in a same-origin iframe.
       ...(process.env.NODE_ENV === "development"

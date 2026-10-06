@@ -23,6 +23,8 @@ import {
   buildSiteStructuredData,
   serializeJsonLd,
 } from "@/lib/seo/structured-data";
+import { partnerFromHost } from "@/features/partner/partnerHosts";
+import { PARTNER_LAUNCH_CAPTURE_SCRIPT } from "@/features/partner/partnerLaunchToken";
 import "../styles/globals.css";
 
 export const metadata: Metadata = {
@@ -128,6 +130,8 @@ export default async function RootLayout({
   // geo signal so first-time visitors in Georgia default to Georgian — without
   // overriding a saved choice, account preference, or explicit URL locale.
   const geoCountry = headerList.get("x-vercel-ip-country");
+  // Host decides the provider tree: a partner host never changes during client navigation (another origin).
+  const partner = partnerFromHost(headerList.get("host"));
   const isFootballQuizRoute = /^\/(?:(?:en|ka)\/football-quiz|es\/quiz-de-futbol)(?:\/[^/]+)?\/?$/.test(pathname);
 
   return (
@@ -137,14 +141,27 @@ export default async function RootLayout({
         style={{ fontFamily: "'Poppins', sans-serif" }}
         suppressHydrationWarning
       >
+        {partner && (
+          // First in <body>: inline scripts run in document order, and Next cannot build its router state (which
+          // copies window.location) before the later __next_f payload scripts have run.
+          <script
+            id="partner-launch-capture"
+            nonce={cspNonce}
+            suppressHydrationWarning
+            dangerouslySetInnerHTML={{ __html: PARTNER_LAUNCH_CAPTURE_SCRIPT }}
+          />
+        )}
         {/* JSON-LD in <body> not <head> to avoid hydration collision with Messenger's pcm.js injection. */}
-        <script
-          nonce={cspNonce}
-          type="application/ld+json"
-          suppressHydrationWarning
-          dangerouslySetInnerHTML={{ __html: serializeJsonLd(buildSiteStructuredData()) }}
-        />
+        {!partner && (
+          <script
+            nonce={cspNonce}
+            type="application/ld+json"
+            suppressHydrationWarning
+            dangerouslySetInnerHTML={{ __html: serializeJsonLd(buildSiteStructuredData()) }}
+          />
+        )}
         <RouteProviders
+          partner={partner}
           isSeoRoute={isFootballQuizRoute}
           initialLocale={explicitLocale}
           geoCountry={geoCountry}

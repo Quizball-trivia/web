@@ -107,6 +107,24 @@ describe('registerSocketHandlers', () => {
     __setSocketOverride(null);
   });
 
+  // A partner ranked entry rebuilds the socket (token source); leaving and entering again must not leave the new
+  // socket without listeners, while the same socket never gets duplicates.
+  it('registers once per socket instance: enter → exit → enter gets listeners on the rebuilt socket', () => {
+    registerSocketHandlers();
+    registerSocketHandlers();
+    const first = mockSocket.socket.on as unknown as ReturnType<typeof vi.fn>;
+    const firstCount = first.mock.calls.filter(([event]) => event === 'match:question').length;
+    expect(firstCount).toBe(1);
+
+    const rebuilt = createMockSocket();
+    __setSocketOverride(rebuilt.socket);
+    registerSocketHandlers();
+    registerSocketHandlers();
+    const second = rebuilt.socket.on as unknown as ReturnType<typeof vi.fn>;
+    expect(second.mock.calls.filter(([event]) => event === 'match:question')).toHaveLength(1);
+    expect(second.mock.calls.filter(([event]) => event === 'ranked:match_found')).toHaveLength(1);
+  });
+
   // Regression: the error handler must read selfUserId fresh via getState(),
   // not from a stale snapshot captured at registration time.
   it('reads fresh selfUserId when reverting draft ban on BAN_FAILED error', () => {

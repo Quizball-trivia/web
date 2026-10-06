@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { motion } from 'motion/react';
 
 import { useLocale } from '@/contexts/LocaleContext';
 import {
@@ -25,6 +24,7 @@ import { useAuthStore } from '@/stores/auth.store';
 import { RankedProgressionPanel } from './results/RankedProgressionPanel';
 import { ResultsActions } from './results/ResultsActions';
 import { ResultsHero } from './results/ResultsHero';
+import { ResultsScreenFrame } from './results/ResultsScreenFrame';
 import type { RealtimeResultsScreenProps } from './results/results.types';
 import { useMatchResultViewModel } from './results/useMatchResultViewModel';
 
@@ -197,108 +197,90 @@ export function RealtimeResultsScreen(props: RealtimeResultsScreenProps) {
       : null);
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-surface-page-alt p-3 md:p-6">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 bg-surface-page-alt bg-[url('/assets/bg-pattern.webp')] bg-cover bg-center bg-no-repeat"
+    <ResultsScreenFrame>
+      <ResultsHero
+        playerWon={playerWon}
+        isDraw={isDraw}
+        isCancelledNoContest={isCancelledNoContest}
+        resultHeading={resultHeading}
+        resultSubheading={resultSubheading}
+        playerUsername={playerUsername}
+        playerAvatar={playerAvatar}
+        playerAvatarCustomization={playerAvatarCustomization}
+        opponentUsername={opponentUsername}
+        opponentAvatar={opponentAvatar}
+        opponentAvatarCustomization={opponentAvatarCustomization}
+        opponentId={opponentId}
+        showAddFriendButton={matchType === 'ranked' && !isCancelledNoContest}
+        playerScore={playerScore}
+        opponentScore={opponentScore}
+        totalGamesLabel={totalGamesLabel}
+        preMatchRankedProfile={preMatchRankedProfile}
+        playerTier={playerTier}
+        playerDisplayRp={playerDisplayRp}
+        opponentTier={opponentTier}
+        opponentDisplayRp={opponentDisplayRp}
       />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background:
-            "radial-gradient(circle at top center, rgba(28,176,246,0.08), transparent 32%), radial-gradient(circle at bottom left, rgba(88,204,2,0.06), transparent 28%)",
+
+      <RankedProgressionPanel
+        matchType={matchType}
+        t={t}
+        avatarCustomization={playerAvatarCustomization ?? { base: playerAvatar }}
+        showRankedRpCard={showRankedRpCard}
+        isCancelledNoContest={isCancelledNoContest}
+        rpChange={rpChange}
+        coinsAwarded={coinsAwarded}
+        qpAwarded={qpAwarded}
+        refundedTickets={refundedTickets}
+        oldRP={oldRP}
+        newRP={newRP}
+        rpTierInfo={rpTierInfo}
+        oldRpTierInfo={oldRpTierInfo}
+        tierChanged={tierChanged}
+        tierPromoted={tierPromoted}
+        nextTierBand={nextTierBand}
+        isPlacementMatch={isPlacementMatch}
+        placementPlayed={placementPlayed}
+        placementRequired={placementRequired}
+        placementMatchesLeft={placementMatchesLeft}
+        justPlaced={justPlaced}
+        hasServerReveal={hasServerReveal}
+        revealTier={revealTier}
+        revealTierVisual={revealTierVisual}
+        showRankReveal={showRankReveal}
+        tierTransitionPhase={tierTransitionPhase}
+      />
+
+      {qpToast}
+
+      <ResultsActions
+        t={t}
+        unlockedAchievements={unlockedAchievements}
+        accuracy={accuracy}
+        playerCorrect={playerCorrect}
+        opponentCorrect={opponentCorrect}
+        totalQuestions={totalQuestions}
+        playerScore={playerScore}
+        opponentScore={opponentScore}
+        xpEarned={xpEarned}
+        level={projectedProgression?.level ?? null}
+        xpToNextLevel={projectedProgression ? xpToNextLevelAfterMatch : null}
+        playerQuestionResults={playerQuestionResults}
+        opponentQuestionResults={opponentQuestionResults}
+        playAgainDisabled={playAgainDisabled}
+        playAgainHint={playAgainHint}
+        winStreakCount={playerWon ? winStreakCount : null}
+        lossRecoveryCue={visibleLossRecoveryCue}
+        onPlayAgain={() => {
+          if (visibleLossRecoveryCue) {
+            trackRankedLossRecoveryPlayAgainClicked({
+              rpToRecover: visibleLossRecoveryCue.rpToRecover,
+            });
+          }
+          return onPlayAgain();
         }}
+        onMainMenu={onMainMenu}
       />
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="relative z-10 w-full max-w-[1280px] space-y-4 font-poppins md:space-y-6"
-      >
-        <ResultsHero
-          playerWon={playerWon}
-          isDraw={isDraw}
-          isCancelledNoContest={isCancelledNoContest}
-          resultHeading={resultHeading}
-          resultSubheading={resultSubheading}
-          playerUsername={playerUsername}
-          playerAvatar={playerAvatar}
-          playerAvatarCustomization={playerAvatarCustomization}
-          opponentUsername={opponentUsername}
-          opponentAvatar={opponentAvatar}
-          opponentAvatarCustomization={opponentAvatarCustomization}
-          opponentId={opponentId}
-          showAddFriendButton={matchType === 'ranked' && !isCancelledNoContest}
-          playerScore={playerScore}
-          opponentScore={opponentScore}
-          totalGamesLabel={totalGamesLabel}
-          preMatchRankedProfile={preMatchRankedProfile}
-          playerTier={playerTier}
-          playerDisplayRp={playerDisplayRp}
-          opponentTier={opponentTier}
-          opponentDisplayRp={opponentDisplayRp}
-        />
-
-        <RankedProgressionPanel
-          matchType={matchType}
-          t={t}
-          avatarCustomization={playerAvatarCustomization ?? { base: playerAvatar }}
-          showRankedRpCard={showRankedRpCard}
-          isCancelledNoContest={isCancelledNoContest}
-          rpChange={rpChange}
-          coinsAwarded={coinsAwarded}
-          qpAwarded={qpAwarded}
-          refundedTickets={refundedTickets}
-          oldRP={oldRP}
-          newRP={newRP}
-          rpTierInfo={rpTierInfo}
-          oldRpTierInfo={oldRpTierInfo}
-          tierChanged={tierChanged}
-          tierPromoted={tierPromoted}
-          nextTierBand={nextTierBand}
-          isPlacementMatch={isPlacementMatch}
-          placementPlayed={placementPlayed}
-          placementRequired={placementRequired}
-          placementMatchesLeft={placementMatchesLeft}
-          justPlaced={justPlaced}
-          hasServerReveal={hasServerReveal}
-          revealTier={revealTier}
-          revealTierVisual={revealTierVisual}
-          showRankReveal={showRankReveal}
-          tierTransitionPhase={tierTransitionPhase}
-        />
-
-        {qpToast}
-
-        <ResultsActions
-          t={t}
-          unlockedAchievements={unlockedAchievements}
-          accuracy={accuracy}
-          playerCorrect={playerCorrect}
-          opponentCorrect={opponentCorrect}
-          totalQuestions={totalQuestions}
-          playerScore={playerScore}
-          opponentScore={opponentScore}
-          xpEarned={xpEarned}
-          level={projectedProgression?.level ?? null}
-          xpToNextLevel={projectedProgression ? xpToNextLevelAfterMatch : null}
-          playerQuestionResults={playerQuestionResults}
-          opponentQuestionResults={opponentQuestionResults}
-          playAgainDisabled={playAgainDisabled}
-          playAgainHint={playAgainHint}
-          winStreakCount={playerWon ? winStreakCount : null}
-          lossRecoveryCue={visibleLossRecoveryCue}
-          onPlayAgain={() => {
-            if (visibleLossRecoveryCue) {
-              trackRankedLossRecoveryPlayAgainClicked({
-                rpToRecover: visibleLossRecoveryCue.rpToRecover,
-              });
-            }
-            return onPlayAgain();
-          }}
-          onMainMenu={onMainMenu}
-        />
-      </motion.div>
-    </div>
+    </ResultsScreenFrame>
   );
 }

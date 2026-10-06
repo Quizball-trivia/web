@@ -12,6 +12,7 @@ import { useTierLabel } from '@/hooks/useTierLabel';
 import { playBgm } from '@/lib/sounds/gameSounds';
 import { tierFromRp } from '@/utils/rankedTier';
 import type { AvatarCustomization } from '@/types/game';
+import { useHideRank } from '@/contexts/HideRankContext';
 
 type CountdownPhase = 'kickoff' | 'resume';
 
@@ -165,6 +166,7 @@ function KickoffPlayerCard({
   const isOpponent = align === 'right';
   const { t } = useLocale();
   const tierLabelOf = useTierLabel();
+  const hideRank = useHideRank();
   const tier = tierFromRp(rankPoints ?? 0);
 
   return (
@@ -203,8 +205,8 @@ function KickoffPlayerCard({
         )}
         <RankFrameCard
           tier={tier}
-          tierLabel={tierLabelOf(tier)}
-          rpLabel={`${rankPoints ?? 0}RP`}
+          tierLabel={hideRank ? '' : tierLabelOf(tier)}
+          rpLabel={hideRank ? '' : `${rankPoints ?? 0}RP`}
           customization={avatarCustomization}
           mirrored={isOpponent}
           sizes="(min-width: 1024px) 224px, (min-width: 640px) 168px, 136px"

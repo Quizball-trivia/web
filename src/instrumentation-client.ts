@@ -1,5 +1,6 @@
 import posthog from 'posthog-js';
 import { preparePostHogCapture } from '@/lib/analytics/posthog-capture-policy';
+import { partnerFromHost } from '@/features/partner/partnerHosts';
 
 // PostHog runs on PROD ONLY: NEXT_PUBLIC_POSTHOG_KEY exists solely in the
 // Production Vercel env (staging's key removed 2026-08-19 — staging must send
@@ -7,7 +8,13 @@ import { preparePostHogCapture } from '@/lib/analytics/posthog-capture-policy';
 // does not reliably inline at build on the prod Vercel build, which silently
 // disabled all browser analytics on prod.
 // The local games playground (/dev/games) is dev tooling and never initializes analytics.
-if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_POSTHOG_KEY && !/^\/dev\/games(\/|$)/.test(window.location.pathname)) {
+// Partner hosts (Freecroco) never initialize it either: their players are not Quizball users.
+if (
+  typeof window !== 'undefined'
+  && process.env.NEXT_PUBLIC_POSTHOG_KEY
+  && !/^\/dev\/games(\/|$)/.test(window.location.pathname)
+  && !partnerFromHost(window.location.host)
+) {
   try {
     posthog.init(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
       api_host: process.env.NEXT_PUBLIC_POSTHOG_HOST,

@@ -2,10 +2,10 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Check, X, Zap } from 'lucide-react';
 import { MiniGameShell, StatPill } from './MiniGameShell';
 import { getTrivia, type TriviaQuestion } from '../data/trivia';
 import { money } from '../lib/odds';
+import { QuizBoardAiCard, QuizBoardBanner, QuizBoardGrid, QuizBoardOverCard, QuizBoardQuestionCard, QUIZ_BOARD_ACCENT } from './quizBoardUi';
 import { useMiniLocale, useMiniT } from '../lib/i18n';
 
 const VALUES: Record<TriviaQuestion['difficulty'], number> = { easy: 100, medium: 200, hard: 300 };
@@ -158,15 +158,13 @@ export function QuizBoard({ backHref }: { backHref?: string } = {}) {
     }, 1500);
   };
 
-  const result = youBank > aiBank ? 'you' : aiBank > youBank ? 'ai' : 'draw';
-
   return (
     <MiniGameShell
       backHref={backHref}
       title={t('Quiz Board')}
       subtitle={t('Pick tiles, bank the value — steal when the AI slips')}
-      accent="#CE82FF"
-      headerRight={<StatPill label={t('You · AI')} value={`${money(youBank)} · ${money(aiBank)}`} color="#CE82FF" />}
+      accent={QUIZ_BOARD_ACCENT}
+      headerRight={<StatPill label={t('You · AI')} value={`${money(youBank)} · ${money(aiBank)}`} color={QUIZ_BOARD_ACCENT} />}
     >
       {phase === 'idle' ? (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
@@ -181,119 +179,60 @@ export function QuizBoard({ backHref }: { backHref?: string } = {}) {
         </motion.div>
       ) : (
         <div className="mt-2 flex flex-1 flex-col">
-          {/* Board */}
-          <div className="grid grid-cols-3 gap-1.5">
-            {CATEGORY_KEYS.map((cat) => (
-              <div key={cat} className="rounded-lg bg-white/[0.05] py-1.5 text-center font-poppins text-[9px] font-black uppercase tracking-wider text-brand-purple">
-                {t(cat)}
-              </div>
-            ))}
-            {ROWS.map((diff, row) =>
-              CATEGORY_KEYS.map((_, cat) => {
-                const i = cat * 3 + row;
-                const isUsed = used.has(i);
-                const isActive = active === i;
-                return (
-                  <button
-                    key={i}
-                    type="button"
-                    disabled={phase !== 'pick' || isUsed}
-                    onClick={() => pickTile(i)}
-                    className={`flex h-12 items-center justify-center rounded-lg border-2 font-poppins text-base font-black tabular-nums transition-colors ${
-                      isActive
-                        ? 'border-brand-purple bg-brand-purple/25 text-brand-purple'
-                        : isUsed
-                          ? 'border-white/5 bg-white/[0.01] text-white/15'
-                          : phase === 'pick'
-                            ? 'border-brand-purple/30 bg-brand-purple/[0.06] text-white hover:border-brand-purple'
-                            : 'border-white/10 bg-white/[0.03] text-white/50'
-                    }`}
-                  >
-                    {isUsed ? '' : VALUES[diff]}
-                  </button>
-                );
-              }),
-            )}
-          </div>
+          <QuizBoardGrid
+            categories={CATEGORY_KEYS.map((cat) => t(cat))}
+            tiles={board.map((b, i) => ({ tile: i, value: b.value, owner: used.has(i) ? 'none' : null }))}
+            activeTile={active}
+            canPick={phase === 'pick'}
+            onPick={pickTile}
+          />
 
           {/* Action panel */}
           <div className="mt-3 flex-1">
             <AnimatePresence mode="wait">
               {phase === 'pick' && (
-                <motion.div key="pick" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="rounded-2xl border-2 border-brand-purple/30 bg-brand-purple/[0.07] p-3 text-center">
-                  <span className="font-poppins text-sm font-black uppercase tracking-wide text-brand-purple">{t('Your board — pick a tile')}</span>
+                <motion.div key="pick" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <QuizBoardBanner tone="player">{t('Your board — pick a tile')}</QuizBoardBanner>
                 </motion.div>
               )}
 
               {phase === 'ai-pick' && (
-                <motion.div key="ai-pick" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="rounded-2xl border-2 border-brand-red-soft/30 bg-brand-red-soft/[0.06] p-3 text-center">
-                  <span className="font-poppins text-sm font-black uppercase tracking-wide text-brand-red-soft">{t('AI is picking a tile…')}</span>
+                <motion.div key="ai-pick" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <QuizBoardBanner tone="ai">{t('AI is picking a tile…')}</QuizBoardBanner>
                 </motion.div>
               )}
 
               {phase === 'ai-answer' && tile && (
-                <motion.div key={`ai-${active}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="rounded-2xl border-2 border-brand-red-soft/30 bg-white/[0.03] p-3">
-                  <div className="mb-1.5 font-poppins text-[10px] font-black uppercase tracking-wider text-brand-red-soft">
-                    {t('AI plays for {v}', { v: tile.value })}
-                  </div>
-                  <p className="mb-2 font-poppins text-[13px] font-bold leading-snug text-white">{tile.question.q}</p>
-                  <div className={`py-2 text-center font-poppins text-sm font-black uppercase ${aiResult === 'correct' ? 'text-brand-red-soft' : aiResult === 'wrong' ? 'text-brand-yellow' : 'text-white/40'}`}>
-                    {aiResult === 'correct' ? t('AI banks it') : aiResult === 'wrong' ? t('AI is wrong — steal it!') : t('AI answering…')}
-                  </div>
+                <motion.div key={`ai-${active}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                  <QuizBoardAiCard value={tile.value} prompt={tile.question.q} result={aiResult} />
                 </motion.div>
               )}
 
               {phase === 'answer' && tile && (
-                <motion.div key={`q-${active}-${isSteal}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className={`rounded-2xl border-2 p-3 ${isSteal ? 'border-brand-yellow/50 bg-brand-yellow/[0.05]' : 'border-brand-purple/40 bg-white/[0.03]'}`}>
-                  <div className={`mb-1.5 flex items-center gap-1.5 font-poppins text-[10px] font-black uppercase tracking-wider ${isSteal ? 'text-brand-yellow' : 'text-brand-purple'}`}>
-                    {isSteal && <Zap className="size-3.5" />}
-                    {isSteal ? t('STEAL for {v}!', { v: tile.value }) : t('For {v}', { v: tile.value })}
-                  </div>
-                  <p className="mb-2 font-poppins text-[13px] font-bold leading-snug text-white">{tile.question.q}</p>
-                  <div className="grid grid-cols-1 gap-1.5">
-                    {tile.question.options.map((opt, i) => {
-                      const isAnswer = i === tile.question.answer;
-                      const isPicked = selected === i;
-                      const state = selected === null ? 'idle' : isAnswer ? 'correct' : isPicked ? 'wrong' : 'dim';
-                      return (
-                        <button
-                          key={i}
-                          type="button"
-                          disabled={selected !== null}
-                          onClick={() => answer(i)}
-                          className={`flex items-center justify-between rounded-lg border-2 px-3 py-2 text-left font-poppins text-xs font-bold transition-colors ${
-                            state === 'idle'
-                              ? 'border-white/10 bg-white/[0.03] text-white hover:border-brand-purple/60'
-                              : state === 'correct'
-                                ? 'border-brand-green bg-brand-green/15 text-white'
-                                : state === 'wrong'
-                                  ? 'border-brand-red bg-brand-red/15 text-white'
-                                  : 'border-white/5 bg-white/[0.02] text-white/35'
-                          }`}
-                        >
-                          <span className="min-w-0 truncate">{opt}</span>
-                          {state === 'correct' && <Check className="size-3.5 shrink-0 text-brand-green" />}
-                          {state === 'wrong' && <X className="size-3.5 shrink-0 text-brand-red" />}
-                        </button>
-                      );
-                    })}
-                  </div>
+                <motion.div key={`q-${active}-${isSteal}`} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+                  <QuizBoardQuestionCard
+                    value={tile.value}
+                    steal={isSteal}
+                    prompt={tile.question.q}
+                    options={tile.question.options}
+                    selected={selected}
+                    correctIndex={selected === null ? null : tile.question.answer}
+                    onAnswer={answer}
+                  />
                 </motion.div>
               )}
 
               {phase === 'over' && (
-                <motion.div key="over" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center gap-2 rounded-2xl border-2 border-white/10 bg-white/[0.04] p-4 text-center">
-                  <div className="text-3xl">{result === 'you' ? '🏆' : result === 'ai' ? '🤖' : '🤝'}</div>
-                  <div className={`font-poppins text-xl font-black uppercase ${result === 'you' ? 'text-brand-green-light' : result === 'ai' ? 'text-brand-red' : 'text-white/70'}`}>
-                    {result === 'you' ? t('You win!') : result === 'ai' ? t('AI wins') : t('Draw')}
-                  </div>
-                  <p className="font-poppins text-xs font-semibold text-white/50">
-                    {t('Final banks — you {a}, AI {b}.', { a: money(youBank), b: money(aiBank) })}
-                  </p>
-                  <button type="button" onClick={start} className="mt-1 h-12 w-full rounded-2xl bg-brand-purple font-poppins text-base font-black uppercase text-black">
-                    {t('New board')}
-                  </button>
-                </motion.div>
+                <QuizBoardOverCard
+                  key="over"
+                  you={youBank}
+                  ai={aiBank}
+                  action={
+                    <button type="button" onClick={start} className="mt-1 h-12 w-full rounded-2xl bg-brand-purple font-poppins text-base font-black uppercase text-black">
+                      {t('New board')}
+                    </button>
+                  }
+                />
               )}
             </AnimatePresence>
           </div>

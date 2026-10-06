@@ -4,10 +4,10 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import { Heart, RotateCw, Send, Trophy, type LucideIcon } from 'lucide-react';
 import { MiniGameShell, StatPill } from '@/features/mini-games/components/MiniGameShell';
-import { footballGridAssetUrl } from '@/lib/football-grid/assets';
 import { useMiniT } from '@/features/mini-games/lib/i18n';
 import { matchesName } from '@/features/mini-games/lib/matching';
 import { ALL_NAMES, fmtPoints } from '../lib/data';
+export { Flag, flagUrl } from './Flag';
 
 export const GOLD = '#FFD54A';
 export const GREEN = '#38B60E';
@@ -411,17 +411,6 @@ export function RivalBar({
 }
 
 /** Tiny flag from the football-grid CDN. */
-export function Flag({ code, width = 22, height = 15, className = '' }: { code: string; width?: number; height?: number; className?: string }) {
-  if (!code) return null;
-  return (
-    <span className={`inline-block shrink-0 overflow-hidden rounded-[3px] shadow-[0_1px_2px_rgba(0,0,0,0.4)] ${className}`} style={{ width, height }}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={flagUrl(code)} alt="" width={width * 2} height={height * 2} className="block h-full w-full object-cover" />
-    </span>
-  );
-}
-
-export const flagUrl = (code: string) => footballGridAssetUrl(`/assets/football-grid/flags/${code}.svg`) ?? '';
 
 /** Big stage-style headline that pops in (e.g. "⚡ PACE"). */
 export function Callout({ children, color = GOLD, k }: { children: ReactNode; color?: string; k: string | number }) {

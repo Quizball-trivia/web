@@ -42,7 +42,6 @@ export function CareerPathGame({
   const [showQuitDialog, setShowQuitDialog] = useState(false);
   const [finished, setFinished] = useState(false);
   const { splashProps, fire } = useResultSplash();
-  const copy = getDailyChallengeCopy();
 
   const currentQuestion = session.questions[currentQuestionIndex];
   // English names for crest lookup (the generated API type lags the backend field;
@@ -126,41 +125,16 @@ export function CareerPathGame({
           />
         }
       >
-        <div className="w-full">
-        {/* Club path chips — the question itself (no separate prompt card). */}
-        <div className="flex flex-wrap items-center justify-center gap-2.5">
-          {currentQuestion.clubs.map((club, index) => (
-            <div key={`${club}-${index}`} className="flex items-center gap-2.5">
-              <CareerChip item={{ label: club, matchName: clubMatchNames?.[index] ?? club }} />
-              {index < currentQuestion.clubs.length - 1 && (
-                <ArrowRight className="size-4 shrink-0 text-brand-yellow" />
-              )}
-            </div>
-          ))}
-        </div>
-
-        <DailyAnswerInput
-          value={answer}
-          onChange={setAnswer}
+        <CareerPathBoard
+          clubs={currentQuestion.clubs}
+          clubMatchNames={clubMatchNames}
+          answer={answer}
+          onAnswerChange={setAnswer}
           onSubmit={submitAnswer}
-          placeholder={copy.typePlayerName}
-          submitLabel={copy.submit}
           disabled={resolved}
+          revealedAnswer={resolved ? currentQuestion.displayAnswer : null}
+          score={correctCount}
         />
-
-        {/* Reveal the answer on a wrong/timeout result (correct uses the splash). */}
-        {resolved && (
-          <p className="mt-3 text-center text-white/55" style={{ ...poppins, fontSize: 'clamp(12px, 1.4vw, 16px)' }}>
-            {`${copy.answerPrefix}: ${currentQuestion.displayAnswer}`}
-          </p>
-        )}
-
-        {/* Score */}
-        <div className="mt-4 flex items-center justify-between text-sm" style={poppins}>
-          <span className="text-white/55">{copy.score}</span>
-          <span className="text-white">{correctCount}</span>
-        </div>
-        </div>
       </DailyGameStage>
 
       <QuitGameDialog
@@ -179,6 +153,69 @@ export function CareerPathGame({
         total={session.questionCount}
         onDone={(nextPath) => onComplete(correctCount, nextPath)}
       />
+    </div>
+  );
+}
+
+export interface CareerPathBoardProps {
+  clubs: string[];
+  clubMatchNames?: string[];
+  answer: string;
+  onAnswerChange: (value: string) => void;
+  onSubmit: () => void;
+  disabled: boolean;
+  /** Shown once the question is resolved. */
+  revealedAnswer: string | null;
+  score: number;
+}
+
+/** Club path, answer input and reveal, shared by the daily game and its Freecroco partner version. */
+export function CareerPathBoard({
+  clubs,
+  clubMatchNames,
+  answer,
+  onAnswerChange,
+  onSubmit,
+  disabled,
+  revealedAnswer,
+  score,
+}: CareerPathBoardProps) {
+  const copy = getDailyChallengeCopy();
+  return (
+    <div className="w-full">
+    {/* Club path chips — the question itself (no separate prompt card). */}
+    <div className="flex flex-wrap items-center justify-center gap-2.5">
+      {clubs.map((club, index) => (
+        <div key={`${club}-${index}`} className="flex items-center gap-2.5">
+          <CareerChip item={{ label: club, matchName: clubMatchNames?.[index] ?? club }} />
+          {index < clubs.length - 1 && (
+            <ArrowRight className="size-4 shrink-0 text-brand-yellow" />
+          )}
+        </div>
+      ))}
+    </div>
+
+    <DailyAnswerInput
+      value={answer}
+      onChange={onAnswerChange}
+      onSubmit={onSubmit}
+      placeholder={copy.typePlayerName}
+      submitLabel={copy.submit}
+      disabled={disabled}
+    />
+
+    {/* Reveal the answer on a wrong/timeout result (correct uses the splash). */}
+    {revealedAnswer !== null && (
+      <p className="mt-3 text-center text-white/55" style={{ ...poppins, fontSize: 'clamp(12px, 1.4vw, 16px)' }}>
+        {`${copy.answerPrefix}: ${revealedAnswer}`}
+      </p>
+    )}
+
+    {/* Score */}
+    <div className="mt-4 flex items-center justify-between text-sm" style={poppins}>
+      <span className="text-white/55">{copy.score}</span>
+      <span className="text-white">{score}</span>
+    </div>
     </div>
   );
 }

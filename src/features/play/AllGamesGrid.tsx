@@ -16,11 +16,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { trackPlayCardClicked } from "@/lib/analytics/game-events";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { CheckCircle2, ChevronLeft, ChevronRight, Clock3, Play, RotateCcw, Search, User, Users, Wifi, X } from "lucide-react";
+import { CheckCircle2, Clock3, Play, RotateCcw, Search, User, Users, Wifi, X } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import { DemoModeArt } from "@/features/demos/DemoModeArt";
+import { CARD_WIDTH, CardScroller } from "@/features/play/CardScroller";
 import { ALL_DEMO_MODES, type DemoModeCard, demoText } from "@/features/demos/demoModes";
 import { useDailyChallenges, useResetDailyChallengeDev } from "@/lib/queries/dailyChallenges.queries";
 import { queryKeys } from "@/lib/queries/queryKeys";
@@ -142,14 +143,10 @@ const resolveModes = (slugs: string[]): DemoModeCard[] =>
 const DAILY_CHALLENGE_MODES = resolveModes(DAILY_CHALLENGE_SLUGS);
 const PLAY_WITH_COINS_MODES = isMiniGamesEnabled ? resolveModes(PLAY_WITH_COINS_SLUGS) : [];
 
-// Phones: two cards per row (three crammed the art and titles); tablets up: three.
 const STAT_SNIPER_ROOMS = ROOM_GAMES_ENABLED.includes("aproximado");
 const MODAL_SLUGS = new Set(["lab-missing-xi", ...(STAT_SNIPER_ROOMS ? ["daily-statSniper"] : [])]);
 // Their dialog also offers a way to play once today's daily is done (Stat Sniper: friends), so the done tile opens it.
 const MODAL_WHEN_COMPLETED = new Set(STAT_SNIPER_ROOMS ? ["daily-statSniper"] : []);
-
-const CARD_WIDTH =
-  "w-[calc((100%_-_0.625rem)/2)] shrink-0 snap-start md:w-[calc((100%_-_2rem)/3)]";
 
 /** ms until the next 00:00 UTC — the daily-challenge reset boundary. */
 function msUntilUtcReset(): number {
@@ -387,77 +384,6 @@ function GameCard({
         </p>
       </div>
     </Link>
-    </div>
-  );
-}
-
-/** Horizontal card row with desktop arrow controls — a mouse has no swipe, so
- *  without these the cards past the fold were unreachable on the web. Arrows
- *  appear only when there is something to scroll to, and only on pointer
- *  devices (touch keeps the clean swipe surface). */
-function CardScroller({ children }: { children: React.ReactNode }) {
-  const scrollerRef = useRef<HTMLDivElement | null>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
-
-  const syncArrows = useCallback(() => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    const max = el.scrollWidth - el.clientWidth;
-    setCanScrollLeft(el.scrollLeft > 4);
-    setCanScrollRight(el.scrollLeft < max - 4);
-  }, []);
-
-  useEffect(() => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    syncArrows();
-    const observer = new ResizeObserver(syncArrows);
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [syncArrows]);
-  // Filtering changes scrollWidth without resizing the scroller; re-check after every render.
-  useEffect(syncArrows);
-
-  const scrollByPage = (direction: 1 | -1) => {
-    const el = scrollerRef.current;
-    if (!el) return;
-    // One "page" is just under a viewport width so a card always peeks through.
-    el.scrollBy({ left: direction * el.clientWidth * 0.85, behavior: "smooth" });
-  };
-
-  const arrowBase =
-    "absolute top-1/2 z-20 hidden size-9 -translate-y-1/2 place-items-center rounded-full bg-brand-yellow text-black shadow-lg transition-colors hover:bg-brand-yellow/90 md:grid";
-
-  return (
-    <div className="relative">
-      {canScrollLeft && (
-        <button
-          type="button"
-          aria-label="Scroll left"
-          onClick={() => scrollByPage(-1)}
-          className={`${arrowBase} left-0 -translate-x-1/2`}
-        >
-          <ChevronLeft className="size-5" />
-        </button>
-      )}
-      <div
-        ref={scrollerRef}
-        onScroll={syncArrows}
-        className="-mx-4 flex snap-x gap-2.5 overflow-x-auto scrollbar-hide px-4 pb-1 md:gap-4"
-      >
-        {children}
-      </div>
-      {canScrollRight && (
-        <button
-          type="button"
-          aria-label="Scroll right"
-          onClick={() => scrollByPage(1)}
-          className={`${arrowBase} right-0 translate-x-1/2`}
-        >
-          <ChevronRight className="size-5" />
-        </button>
-      )}
     </div>
   );
 }
