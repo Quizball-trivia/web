@@ -84,6 +84,8 @@ export function PublicGameEmbed({ modeId, demoSlug, locale, pagePath, playPath, 
   /** Members play the real Stat Sniper in the app, where the score counts for coins, streak and the leaderboard. */
   const playInApp = () => {
     trackPlayNowClick({ modeId, access: "member", destination: playPath });
+    // Drop ?jugar=1 first: Back from the app must land on the page, not auto-start and bounce forward again.
+    setPlayUrl(false);
     router.push(playPath);
   };
   const start = () => {

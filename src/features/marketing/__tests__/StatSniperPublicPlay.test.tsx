@@ -113,8 +113,10 @@ describe("Aproximado on its public page", () => {
       <PublicGameEmbed modeId="statSniper" demoSlug="daily-statSniper" locale="es" pagePath="/es/juegos-de-futbol/aproximado-futbolero" playPath="/daily/challenges/stat-sniper" engineEmitsEvents practiceLocalised
         copy={{ start: "Jugar ahora", note: "", exit: "Salir", english: "", title: "Aproximado futbolero" }} />,
     );
+    window.history.replaceState(null, "", "/es/juegos-de-futbol/aproximado-futbolero?jugar=1&dia=2026-10-05");
     fireEvent.click(screen.getByRole("button", { name: "Jugar ahora" }));
     expect(push).toHaveBeenCalledWith("/daily/challenges/stat-sniper");
+    expect(window.location.search).toBe("");
     expect(trackPlayNowClick).toHaveBeenCalledWith({ modeId: "statSniper", access: "member", destination: "/daily/challenges/stat-sniper" });
     expect(screen.queryByRole("dialog")).toBeNull();
   });
