@@ -271,6 +271,19 @@ describe('ranked matchmaking initial queue join', () => {
     }
   });
 
+  it('keeps searching on a retryable busy-lock refusal for the same join', () => {
+    const socket = createSocket();
+    const onRankedBlocked = vi.fn();
+    renderWithBlockedHandler(socket, onRankedBlocked, 'client-request-busy');
+    act(() => {
+      useRealtimeMatchStore.setState({
+        sessionState: { state: 'IDLE', activeMatchId: null, waitingLobbyId: null, queueSearchId: null, openLobbyIds: [] } as never,
+        error: { code: 'TRANSITION_IN_PROGRESS', message: 'busy', meta: { source: 'session:blocked', reason: 'TRANSITION_IN_PROGRESS', operation: 'ranked:queue_join' } } as never,
+      });
+    });
+    expect(onRankedBlocked).not.toHaveBeenCalled();
+  });
+
   it('ignores a refusal that belongs to another queue', () => {
     const socket = createSocket();
     const onRankedBlocked = vi.fn();
