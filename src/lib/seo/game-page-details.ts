@@ -425,24 +425,24 @@ export const GAME_PAGE_DETAILS: Record<string, Partial<Record<SeoPageLocale, str
   },
   "stat-sniper": {
     en: [
-      "Stat Sniper is a numbers game. Each question names a real football statistic, such as a player's league goals in a season, a club's record transfer fee or a stadium's capacity, and gives you a slider across a plausible range. Move the slider to your guess and lock it in before the timer runs out.",
-      "Scoring is by proximity: the exact value scores 100, and points fall away the further you land from it, reaching zero at a quarter of the slider's span. Ten questions make a round and your accuracy is the average, so a run of close guesses beats one bullseye and nine wild swings.",
-      "Every fact is traceable to its dataset. The practice round uses a sample set; in the app every player gets the same ten questions each day and the day's accuracy leaderboard ranks them, with coins for your score and a place in your streak.",
+      "Closest Wins is a football numbers game. Each question names a real figure: a transfer fee, a player's peak market value, his league goals in a season, his games for a club, his height or the crowd at a big European night. You give a number, and the closer it is to the truth, the better.",
+      "Solo, it is a daily: ten questions, a slider across a plausible range, and points by proximity (the exact value scores 100, a quarter of the range away scores nothing), with the day's accuracy leaderboard. With friends, 2 to 6 players type their guesses at the same time and the closest takes the round: in a 1v1 the closest scores, with three or more there is a podium, and an exact answer earns a bonus.",
+      "It is the same idea as the price-is-right and \"closest wins\" tie-breaker of a pub quiz, built on football: guess the transfer fee, guess the market value, guess the attendance. Every number comes from a traceable dataset, and the friend rooms use their own question pool, so nobody can learn the answers from the daily.",
     ],
     ka: [
-      "„სტატ-სნაიპერი“ რიცხვების თამაშია. ყოველი კითხვა ნამდვილ საფეხბურთო სტატისტიკას ასახელებს — ფეხბურთელის გოლები სეზონში, კლუბის რეკორდული ტრანსფერი, სტადიონის ტევადობა — და სლაიდერს გაძლევს სავარაუდო დიაპაზონზე. მიიტანე სლაიდერი ვარაუდამდე და დააფიქსირე დროის ამოწურვამდე.",
-      "ქულა სიახლოვით ითვლება: ზუსტი მნიშვნელობა 100 ქულაა და ქულები მცირდება, რაც უფრო შორს ხარ, სლაიდერის მეოთხედზე ნულამდე. ათი კითხვა რაუნდია და სიზუსტე საშუალოა, ამიტომ ახლო ვარაუდების სერია ერთ ზუსტსა და ცხრა შორს სჯობს.",
-      "ყოველი ფაქტი თავის მონაცემთა ბაზამდე მიდის. სავარჯიშო რაუნდი სანიმუშო ნაკრებს იყენებს; აპლიკაციაში ყველა მოთამაშე ყოველდღე ერთსა და იმავე ათ კითხვას იღებს და დღის სიზუსტის ლიდერბორდი მათ ალაგებს, ქოინებით შენი ქულისთვის და ადგილით სერიაში.",
+      "„სტატ სნაიპერი“ ფეხბურთის რიცხვების ქვიზია. ყოველი კითხვა ნამდვილ რიცხვს ეხება: ტრანსფერის ფასს, ფეხბურთელის პიკურ საბაზრო ღირებულებას, გოლებს სეზონში, მატჩებს კლუბში, სიმაღლეს ან დამსწრეთა რაოდენობას დიდ ევროპულ მატჩზე. ასახელებ რიცხვს — რაც უფრო ახლოსაა სიმართლესთან, მით უკეთესი.",
+      "მარტო ეს ყოველდღიური გამოწვევაა: ათი კითხვა, სლაიდერი სავარაუდო დიაპაზონზე და ქულა სიახლოვით (ზუსტი მნიშვნელობა 100 ქულაა, დიაპაზონის მეოთხედით დაშორება — ნული) და დღის ლიდერბორდი. მეგობრებთან 2–6 მოთამაშე ერთდროულად წერს თავის რიცხვს და რაუნდს ყველაზე ახლოს მოხვედრილი იგებს: 1-ზე-1 თამაშში ქულას ყველაზე ახლოს მყოფი იღებს, სამიდან — პოდიუმია, ზუსტი პასუხი კი ბონუსს იძლევა.",
+      "ყოველი რიცხვი მონაცემთა ბაზამდე მიდის, ხოლო მეგობრების ოთახებს საკუთარი კითხვების ნაკრები აქვს, ამიტომ ყოველდღიური თამაშიდან პასუხებს ვერავინ ისწავლის.",
     ],
     es: [
-      "Aproximado futbolero es un juego de números. Cada pregunta nombra una estadística real del fútbol, como los goles de un jugador en una temporada, el fichaje récord de un club o el aforo de un estadio, y te da un deslizador sobre un rango plausible. Mueve el deslizador hasta tu estimación y fíjala antes de que acabe el tiempo.",
-      "Se puntúa por proximidad: el valor exacto vale 100 y los puntos bajan cuanto más lejos caes, hasta cero a un cuarto del recorrido del deslizador. Diez preguntas forman una ronda y tu precisión es la media, así que una serie de estimaciones cercanas gana a un pleno y nueve disparates.",
-      "Cada dato es trazable a su conjunto de datos. La ronda de práctica usa un set de muestra; en la app todos reciben las mismas diez preguntas cada día y la clasificación de precisión del día los ordena, con monedas por tu puntuación y un lugar en tu racha.",
+      "Aproximado futbolero es un juego de cifras del fútbol. Cada pregunta nombra un número real: el precio de un fichaje, el valor de mercado máximo de un jugador, sus goles en liga en una temporada, sus partidos en un club, su altura o el público de una gran noche europea. Das una cifra, y cuanto más se acerque a la real, mejor.",
+      "Solo es un reto diario: diez preguntas, un deslizador sobre un rango plausible y puntos por proximidad (el valor exacto vale 100, a un cuarto del rango no suma), con la clasificación de precisión del día. Con amigos, de 2 a 6 jugadores escriben su cifra a la vez y gana la ronda el que más se acerca: en un 1 contra 1 suma el más cercano, con tres o más hay podio, y el pleno da bonus.",
+      "Es el mismo espíritu del precio justo y del clásico \"quién se acerca más gana\", con fútbol: adivina el precio del jugador, su valor de mercado o el público de un partido. Cada dato es trazable a su conjunto de datos, y las salas con amigos usan su propio banco de preguntas, así que nadie puede aprenderse las respuestas del reto diario.",
     ],
     tr: [
-      "Stat Sniper bir sayı oyunudur. Her soru gerçek bir futbol istatistiği söyler, örneğin bir oyuncunun bir sezondaki lig golleri, bir kulübün rekor transfer ücreti ya da bir stadın kapasitesi, ve sana makul bir aralıkta bir kaydırıcı verir. Kaydırıcıyı tahminine getir ve süre bitmeden kilitle.",
-      "Puanlama yakınlığa göredir: tam değer 100 puan verir ve ondan uzaklaştıkça puan azalır, kaydırıcı aralığının dörtte birinde sıfıra iner. Bir tur on sorudan oluşur ve isabetin ortalamadır; bu yüzden bir dizi yakın tahmin, bir tam isabet ve dokuz uzak tahmini yener.",
-      "Her bilgi veri setine kadar izlenebilir. Alıştırma turu örnek bir set kullanır; uygulamada her oyuncu her gün aynı on soruyu alır ve günün isabet liderlik tablosu onları sıralar; puanın için jeton ve serinde bir yer vardır.",
+      "En Yakın Tahmin, bir futbol sayıları oyunudur. Her soru gerçek bir sayıyı sorar: bir bonservis bedeli, bir oyuncunun en yüksek piyasa değeri, bir sezondaki lig golleri, bir kulüpteki maç sayısı, boyu ya da büyük bir Avrupa gecesindeki seyirci sayısı. Bir sayı söylersin; gerçeğe ne kadar yakınsa o kadar iyi.",
+      "Tek başına bir günlük oyundur: on soru, makul bir aralıkta bir kaydırıcı ve yakınlığa göre puan (tam değer 100 puan, aralığın dörtte biri kadar uzak tahmin sıfır) ve günün isabet liderlik tablosu. Arkadaşlarla 2–6 oyuncu tahminini aynı anda yazar ve turu en yakın tahmin eden kazanır: 1v1'de en yakın olan puan alır, üç ve daha fazla oyuncuda kürsü vardır, tam isabet bonus kazandırır.",
+      "Her sayı izlenebilir bir veri setinden gelir ve arkadaş odaları kendi soru havuzunu kullanır; böylece kimse cevapları günlük oyundan ezberleyemez.",
     ],
   },
   "free-kicks": {

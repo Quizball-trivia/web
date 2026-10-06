@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuthStore } from "@/stores/auth.store";
 import { getPostAuthEntryRoute } from "@/lib/auth/postAuthRedirect";
 import { AccountBannedScreen } from "@/features/auth/AccountBannedScreen";
@@ -17,6 +17,10 @@ type PublicOnlyGateProps = {
 // brief flash of the landing, which is acceptable and rare.
 export default function PublicOnlyGate({ children }: PublicOnlyGateProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  // The OAuth callback navigates on its own (and consumes the saved return path): redirecting here too would find
+  // that path already used and send the player to /play instead of where they were going.
+  const callbackOwnsNavigation = pathname?.startsWith("/auth/callback") ?? false;
   const status = useAuthStore((state) => state.status);
   const user = useAuthStore((state) => state.user);
   const bootstrap = useAuthStore((state) => state.bootstrap);
@@ -29,12 +33,12 @@ export default function PublicOnlyGate({ children }: PublicOnlyGateProps) {
   }, [bootstrap]);
 
   useEffect(() => {
-    if (status === "authenticated") {
+    if (status === "authenticated" && !callbackOwnsNavigation) {
       router.replace(getPostAuthEntryRoute(user));
     }
-  }, [status, user, router]);
+  }, [status, user, router, callbackOwnsNavigation]);
 
-  if (status === "authenticated") {
+  if (status === "authenticated" && !callbackOwnsNavigation) {
     return null;
   }
 

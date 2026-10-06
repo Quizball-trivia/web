@@ -13,6 +13,7 @@ import { CancelledMatchScreen } from "./CancelledMatchScreen";
 import { RealtimePossessionMatchScreen } from "@/features/possession/RealtimePossessionMatchScreen";
 import { RealtimePartyQuizScreen } from "@/features/party/RealtimePartyQuizScreen";
 import { PartyQuizResultsScreen } from "@/features/party/PartyQuizResultsScreen";
+import { usePartyRewards } from "@/features/party/usePartyRewards";
 import { getSocket } from "@/lib/realtime/socket-client";
 import { logger } from "@/utils/logger";
 import { useGameStageTransitions } from "@/lib/match/useGameStageTransitions";
@@ -113,6 +114,7 @@ export function GameStageRouter() {
 
   const finalResults = realtimeMatch.finalResults;
   const resultMatchId = finalResults?.matchId ?? realtimeMatch.matchId ?? null;
+  const partyRewards = usePartyRewards(resultMatchId, selfUserId, isPartyQuizMatch && Boolean(finalResults));
   const eligibleWinStreakCount = getPostMatchWinStreakCount({
     matchType,
     winnerId: finalResults?.winnerId,
@@ -606,7 +608,7 @@ export function GameStageRouter() {
           <RealtimePartyQuizScreen
             onQuit={handleQuit}
             onForfeit={handleForfeit}
-            mobileStandingsPlacement="below-options"
+            mobileStandingsPlacement="leader-pill"
           />
         );
       }
@@ -666,6 +668,7 @@ export function GameStageRouter() {
             selfUserId={selfUserId}
             unlockedAchievements={unlockedAchievements}
             preMatchProgression={stableProgression}
+            rewards={partyRewards}
             onPlayAgain={() => {
               if (!realtimeMatch?.matchId) {
                 logger.warn("Play Again clicked for friendly party quiz without an active match id");

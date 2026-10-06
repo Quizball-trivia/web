@@ -35,6 +35,9 @@ import { dailyChallengePlayPath } from "@/lib/domain/dailyChallengeSlugs";
 import { useLocale } from "@/contexts/LocaleContext";
 import { useRouter } from "next/navigation";
 import { MissingXiModeModal } from "@/features/missing-xi/components/MissingXiModeModal";
+import { StatSniperModeModal } from "@/features/aproximado/StatSniperModeModal";
+import { ROOM_GAMES_ENABLED } from "@/lib/config";
+import { storage, STORAGE_KEYS } from "@/utils/storage";
 import { CoinIcon } from "@/features/store/components/CoinIcon";
 import type { Locale } from "@/lib/i18n/messages";
 import { isMiniGamesEnabled } from "@/lib/features/playModes";
@@ -140,7 +143,10 @@ const DAILY_CHALLENGE_MODES = resolveModes(DAILY_CHALLENGE_SLUGS);
 const PLAY_WITH_COINS_MODES = isMiniGamesEnabled ? resolveModes(PLAY_WITH_COINS_SLUGS) : [];
 
 // Phones: two cards per row (three crammed the art and titles); tablets up: three.
-const MODAL_SLUGS = new Set(["lab-missing-xi"]);
+const STAT_SNIPER_ROOMS = ROOM_GAMES_ENABLED.includes("aproximado");
+const MODAL_SLUGS = new Set(["lab-missing-xi", ...(STAT_SNIPER_ROOMS ? ["daily-statSniper"] : [])]);
+// Their dialog also offers a way to play once today's daily is done (Stat Sniper: friends), so the done tile opens it.
+const MODAL_WHEN_COMPLETED = new Set(STAT_SNIPER_ROOMS ? ["daily-statSniper"] : []);
 
 const CARD_WIDTH =
   "w-[calc((100%_-_0.625rem)/2)] shrink-0 snap-start md:w-[calc((100%_-_2rem)/3)]";
@@ -289,6 +295,11 @@ function GameCard({
             </p>
           )}
         </div>
+        {onOpenMode && !isGuest && MODAL_WHEN_COMPLETED.has(mode.slug) && (
+          <button type="button" className="absolute inset-0 z-[5] rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-white/70"
+            aria-label={`${title} — ${t("play.completed")}`} aria-haspopup="dialog"
+            onClick={() => { trackPlayCardClicked({ slug: mode.slug, group: "daily", destination: "modal" }); onOpenMode(mode.slug); }} />
+        )}
       </div>
     );
   }
@@ -629,7 +640,7 @@ function GamesFinder({
 /** Named AllGamesGrid for backwards-compat with its single import; renders the
  *  two curated horizontal-scroll sections rather than a searchable grid. */
 export function AllGamesGrid() {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const isGuest = useIsGuest();
   // Admin-only replay control (hidden for everyone else, including in prod).
   const canUseDevReset = useAuthStore((state) => state.user?.role) === "admin";
@@ -639,8 +650,9 @@ export function AllGamesGrid() {
   const completedByType = new Map(
     dailyChallenges.map((challenge) => [challenge.challengeType, challenge.completedToday]),
   );
+  // A guest never has a completed daily (an account's cached list can outlive a logout).
   const isDailyCompleted = (mode: DemoModeCard): boolean =>
-    mode.dailyType ? (completedByType.get(mode.dailyType) ?? false) : false;
+    !isGuest && mode.dailyType ? (completedByType.get(mode.dailyType) ?? false) : false;
 
   // Completion is over the cards actually shown in this row, not the backend's
   // active-challenge count (which is smaller — e.g. inactive/hidden types).
@@ -652,8 +664,10 @@ export function AllGamesGrid() {
   const [filter, setFilter] = useState<FinderFilter>("all");
   const router = useRouter();
   const [missingXiOpen, setMissingXiOpen] = useState(false);
+  const [statSniperOpen, setStatSniperOpen] = useState(false);
   const openMode = useCallback((slug: string) => {
     if (slug === "lab-missing-xi") setMissingXiOpen(true);
+    if (slug === "daily-statSniper") setStatSniperOpen(true);
   }, []);
   const visibleDaily = useMemo(
     () => DAILY_CHALLENGE_MODES.filter((mode) => matchesFilter(mode, "daily", filter) && matchesQuery(mode, query)),
@@ -683,6 +697,21 @@ export function AllGamesGrid() {
           router.push(dailyChallengePlayPath("missingXi"));
         }}
       />
+      {STAT_SNIPER_ROOMS && !isGuest && (
+        <StatSniperModeModal
+          isOpen={statSniperOpen}
+          onOpenChange={setStatSniperOpen}
+          completed={completedByType.get("statSniper") ?? false}
+          unlockLabel={unlockLabel}
+          onPlaySolo={() => { setStatSniperOpen(false); router.push(dailyChallengePlayPath("statSniper")); }}
+          onPlayWithFriends={() => {
+            setStatSniperOpen(false);
+            // App routes read the stored language: keep the room in the language the player is reading.
+            storage.set(STORAGE_KEYS.LOCALE, locale);
+            router.push("/friend/room/new?room=aproximado");
+          }}
+        />
+      )}
       {nothing && (
         <p className="font-poppins text-sm text-white/55">{t("play.finderNoMatches")}</p>
       )}

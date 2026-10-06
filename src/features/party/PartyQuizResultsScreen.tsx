@@ -6,14 +6,17 @@ import { AnimatePresence, motion } from 'motion/react';
 
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { LoadingScreen } from '@/components/shared/LoadingScreen';
+import { MEDAL_HEX, type RankPalette } from './realtime/partyQuizScreen.helpers';
 import type { AchievementUnlockPayload, MatchFinalResultsPayload, MatchParticipant, MatchStandingPayload } from '@/lib/realtime/socket.types';
 import { cn } from '@/lib/utils';
 import { AchievementUnlockStrip } from '@/components/match/AchievementUnlockStrip';
 import { AppShellPageChrome } from '@/components/layout/app-shell/AppShellPageChrome';
 import { useLocale } from '@/contexts/LocaleContext';
 import type { AvatarCustomization } from '@/types/game';
-import { applyXpReward, getMatchXpReward } from '@/lib/domain/matchXp';
+import { applyXpReward } from '@/lib/domain/matchXp';
 import type { UserProgression } from '@/lib/domain/progression';
+import { PartyRewardNotice } from './PartyRewardNotice';
+import type { PartyRewardsView } from './usePartyRewards';
 
 interface PartyQuizResultsScreenProps {
   finalResults: MatchFinalResultsPayload;
@@ -21,8 +24,21 @@ interface PartyQuizResultsScreenProps {
   selfUserId: string;
   unlockedAchievements?: AchievementUnlockPayload[];
   preMatchProgression?: UserProgression | null;
+  rewards?: PartyRewardsView | null;
   onPlayAgain: () => void;
   onMainMenu: () => void;
+  /** Other games reusing this screen (room games): their own headline, no XP row, their own second stat. */
+  headline?: string;
+  hideXp?: boolean;
+  correctLabel?: string;
+  /** Keep the ranks and order in `finalResults.standings` (shared places) instead of re-ranking by points. */
+  useGivenRanks?: boolean;
+  /** 'medals': gold / silver / bronze podium and rows (the leaderboard's colours). */
+  palette?: RankPalette;
+  /** Players kept in the table but never on the podium (e.g. they left the match). */
+  notOnPodium?: readonly string[];
+  /** A short per-player line under the name (room games: rounds won · average error), by userId. */
+  rowDetail?: Readonly<Record<string, string>>;
 }
 
 interface StandingRow extends MatchStandingPayload {
@@ -43,6 +59,8 @@ function seededRandom(seed: number): number {
 const CONFETTI_COLORS = ['#FFE500', '#38B60E', '#1645FF', '#CE82FF', '#FF9600', '#FF4B4B'];
 
 function CelebrationBurst() {
+  // Decorative only: none for a player who asked for reduced motion (read like AproximadoParty's score flights).
+  const [reducedMotion] = useState(() => typeof window !== 'undefined' && Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches));
   const particles = useMemo(() => {
     return Array.from({ length: 30 }, (_, i) => ({
       id: i,
@@ -57,6 +75,7 @@ function CelebrationBurst() {
     }));
   }, []);
 
+  if (reducedMotion) return null;
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
       {particles.map((p) => (
@@ -99,11 +118,17 @@ const RANK_HEX: Record<number, string> = {
   6: '#CE82FF',
 };
 
-function getRankHex(rank: number): string {
+function getRankHex(rank: number, palette: RankPalette = 'medals'): string {
+  if (palette === 'medals' && (rank === 1 || rank === 2 || rank === 3)) return MEDAL_HEX[rank];
   return RANK_HEX[rank] ?? RANK_HEX[6]!;
 }
 
-function getRankClasses(rank: number): { border: string; pillBg: string; pillText: string; tint: string } {
+function getRankClasses(rank: number, palette: RankPalette = 'medals'): { border: string; pillBg: string; pillText: string; tint: string } {
+  if (palette === 'medals') {
+    if (rank === 1) return { border: 'border-brand-gold', pillBg: 'bg-brand-gold', pillText: 'text-surface-page', tint: 'bg-brand-gold/[0.08]' };
+    if (rank === 2) return { border: 'border-brand-silver', pillBg: 'bg-brand-silver', pillText: 'text-surface-page', tint: 'bg-brand-silver/[0.08]' };
+    if (rank === 3) return { border: 'border-brand-bronze', pillBg: 'bg-brand-bronze', pillText: 'text-white', tint: 'bg-brand-bronze/[0.08]' };
+  }
   switch (rank) {
     case 1:
       return { border: 'border-brand-yellow', pillBg: 'bg-brand-yellow', pillText: 'text-surface-page', tint: 'bg-brand-yellow/[0.08]' };
@@ -137,13 +162,15 @@ const PODIUM_COLUMN_ORDER: Record<1 | 2 | 3, string> = {
   3: 'order-3',
 };
 
-function PodiumBlock({ standing, displayIndex }: { standing: StandingRow; displayIndex: number }) {
+function PodiumBlock({ standing, displayIndex, palette = 'medals', detail }: { standing: StandingRow; displayIndex: number; palette?: RankPalette; detail?: string }) {
+  const { t } = useLocale();
   const rank = standing.rank as 1 | 2 | 3;
-  const colorHex = getRankHex(rank);
+  const colorHex = getRankHex(rank, palette);
   const heightClass = PODIUM_HEIGHT_CLASS[rank] ?? PODIUM_HEIGHT_CLASS[3];
   const orderClass = PODIUM_COLUMN_ORDER[rank] ?? PODIUM_COLUMN_ORDER[3];
-  const nameTextOnBlock = rank === 2 ? 'text-black' : 'text-white';
-  const scoreTextOnBlock = rank === 2 ? 'text-black' : 'text-brand-yellow';
+  // Medal blocks (gold, silver, bronze) carry dark text like the leaderboard podium.
+  const nameTextOnBlock = palette === 'medals' || rank === 2 ? 'text-black' : 'text-white';
+  const scoreTextOnBlock = palette === 'medals' || rank === 2 ? 'text-black' : 'text-brand-yellow';
 
   return (
     <motion.div
@@ -200,9 +227,14 @@ function PodiumBlock({ standing, displayIndex }: { standing: StandingRow; displa
         <div className={cn('font-poppins text-3xl font-extrabold tabular-nums leading-none sm:text-4xl', scoreTextOnBlock)}>
           {standing.totalPoints}
         </div>
+        {detail && (
+          <div className={cn('w-full break-words px-1 text-center font-poppins text-[10px] font-semibold leading-tight opacity-75 [overflow-wrap:anywhere] sm:text-xs', scoreTextOnBlock)}>
+            {detail}
+          </div>
+        )}
         {standing.isSelf && (
           <span className="rounded-full bg-brand-orange px-3 py-[3px] font-poppins text-[11px] font-semibold uppercase leading-none tracking-wider text-white sm:text-xs">
-            You
+            {t('common.you')}
           </span>
         )}
       </div>
@@ -212,9 +244,10 @@ function PodiumBlock({ standing, displayIndex }: { standing: StandingRow; displa
 
 // ─── Standings row (rank 4+) — mirrors the in-match standings sidebar ──────
 
-function RankRow({ standing, displayIndex }: { standing: StandingRow; displayIndex: number }) {
-  const rs = getRankClasses(standing.rank);
-  const colorHex = getRankHex(standing.rank);
+function RankRow({ standing, displayIndex, palette = 'medals', detail }: { standing: StandingRow; displayIndex: number; palette?: RankPalette; detail?: string }) {
+  const { t } = useLocale();
+  const rs = getRankClasses(standing.rank, palette);
+  const colorHex = getRankHex(standing.rank, palette);
   const selfGlow = standing.isSelf
     ? `0 0 18px ${colorHex}88, 0 0 36px ${colorHex}44`
     : undefined;
@@ -228,7 +261,7 @@ function RankRow({ standing, displayIndex }: { standing: StandingRow; displayInd
     >
       <div
         className={cn(
-          'relative flex flex-1 items-center gap-3 rounded-2xl px-3 py-2.5 border-2',
+          'relative flex min-w-0 flex-1 items-center gap-3 rounded-2xl px-3 py-2.5 border-2',
           rs.border,
           standing.isSelf ? rs.tint : 'bg-transparent',
         )}
@@ -256,6 +289,7 @@ function RankRow({ standing, displayIndex }: { standing: StandingRow; displayInd
           <span className="block truncate font-poppins text-base font-semibold text-white">
             {standing.username}
           </span>
+          {detail && <span className="block font-poppins text-xs font-medium leading-tight text-white/60">{detail}</span>}
         </div>
 
         <span className="font-poppins text-base font-extrabold tabular-nums text-white shrink-0">
@@ -269,7 +303,7 @@ function RankRow({ standing, displayIndex }: { standing: StandingRow; displayInd
             className="pointer-events-none absolute -right-2 -top-2 -rotate-[8deg] rounded-lg bg-brand-orange px-2 py-0.5 font-poppins text-[11px] font-extrabold uppercase tracking-wider text-white"
             style={{ boxShadow: '0 1.76px 6.334px 1.32px rgba(255,150,0,0.4)' }}
           >
-            You
+            {t('common.you')}
           </span>
         )}
       </div>
@@ -285,8 +319,16 @@ export function PartyQuizResultsScreen({
   selfUserId,
   unlockedAchievements = [],
   preMatchProgression = null,
+  rewards = null,
   onPlayAgain,
   onMainMenu,
+  headline,
+  hideXp = false,
+  correctLabel,
+  useGivenRanks = false,
+  palette = 'medals',
+  notOnPodium = [],
+  rowDetail,
 }: PartyQuizResultsScreenProps) {
   const { t } = useLocale();
   const [isReturningToLobby, setIsReturningToLobby] = useState(false);
@@ -306,6 +348,19 @@ export function PartyQuizResultsScreen({
       ]),
     );
 
+    if (useGivenRanks) {
+      return (finalResults.standings ?? []).map((standing) => {
+        const participant = participantMap.get(standing.userId);
+        return {
+          ...standing,
+          username: participant?.username ?? 'Player',
+          avatarUrl: participant?.avatarUrl ?? null,
+          avatarCustomization: participant?.avatarCustomization ?? null,
+          isSelf: standing.userId === selfUserId,
+          isWinner: finalResults.winnerId === standing.userId,
+        };
+      });
+    }
     return userIds
       .map((userId) => {
         const stats = finalResults.players[userId];
@@ -335,16 +390,20 @@ export function PartyQuizResultsScreen({
         return left.userId.localeCompare(right.userId);
       })
       .map((standing, index) => ({ ...standing, rank: index + 1 }));
-  }, [finalResults.players, finalResults.standings, finalResults.winnerId, participants, selfUserId]);
+  }, [finalResults.players, finalResults.standings, finalResults.winnerId, participants, selfUserId, useGivenRanks]);
 
-  const podium = standings.filter((standing) => standing.rank <= 3);
-  const rest = standings.filter((standing) => standing.rank > 3);
+  // Given ranks can be shared: the podium takes whole places, top down, while they fit in three blocks, and never splits
+  // a tie (a tie that does not fit leaves everyone in the rows, which keep the medal colours). Ineligible players stay in
+  // the rows only.
+  const podium = useGivenRanks ? podiumByPlaces(standings, notOnPodium) : standings.filter((standing) => standing.rank <= 3);
+  const rest = standings.filter((standing) => !podium.includes(standing));
   const selfWon = finalResults.winnerId === selfUserId;
   const selfStanding = standings.find((standing) => standing.userId === selfUserId) ?? null;
-  const isDraw = finalResults.winnerId === null;
-  const matchResult: 'win' | 'loss' | 'draw' = isDraw ? 'draw' : selfWon ? 'win' : 'loss';
-  const xpEarned = getMatchXpReward({ mode: 'friendly', result: matchResult });
-  const projectedProgression = preMatchProgression
+  const ownRewards = rewards?.matchId === finalResults.matchId ? rewards : null;
+  const showRewards = !hideXp && ownRewards !== null && ownRewards.status !== 'ineligible';
+  const xpEarned = ownRewards?.xpEarned ?? 0;
+  const xpConfirmed = typeof ownRewards?.xpEarned === 'number';
+  const projectedProgression = preMatchProgression && xpConfirmed
     ? applyXpReward(preMatchProgression, xpEarned)
     : null;
   const leveledUp = Boolean(
@@ -354,11 +413,11 @@ export function PartyQuizResultsScreen({
     ? Math.max(0, projectedProgression.xpForNextLevel - projectedProgression.currentLevelXp)
     : 0;
 
-  const resultLabel = selfWon
+  const resultLabel = headline ?? (selfWon
     ? t('partyResults.youWonPartyQuiz')
     : finalResults.winnerId
       ? t('partyResults.takesFirst', { winner: standings.find((s) => s.userId === finalResults.winnerId)?.username ?? t('partyResults.winnerFallback') })
-      : t('partyResults.tied');
+      : t('partyResults.tied'));
 
   return (
     <div className="relative min-h-dvh overflow-hidden bg-surface-page-alt text-white">
@@ -398,7 +457,7 @@ export function PartyQuizResultsScreen({
             )}
           >
             {podium.map((standing, index) => (
-              <PodiumBlock key={standing.userId} standing={standing} displayIndex={index} />
+              <PodiumBlock key={standing.userId} standing={standing} displayIndex={index} palette={palette} detail={rowDetail?.[standing.userId]} />
             ))}
           </div>
         )}
@@ -407,7 +466,7 @@ export function PartyQuizResultsScreen({
         {rest.length > 0 && (
           <div className="mt-8 space-y-2">
             {rest.map((standing, index) => (
-              <RankRow key={standing.userId} standing={standing} displayIndex={index} />
+              <RankRow key={standing.userId} standing={standing} displayIndex={index} palette={palette} detail={rowDetail?.[standing.userId]} />
             ))}
           </div>
         )}
@@ -415,7 +474,7 @@ export function PartyQuizResultsScreen({
         <AchievementUnlockStrip achievements={unlockedAchievements} className="mt-6" />
 
         {/* ─── Personal stats + XP footer ─── */}
-        {(selfStanding || xpEarned > 0) && (
+        {(selfStanding || showRewards) && (
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -429,7 +488,7 @@ export function PartyQuizResultsScreen({
                   value={`#${selfStanding.rank}`}
                 />
                 <PartyStatCell
-                  label={t('partyResults.statCorrect')}
+                  label={correctLabel ?? t('partyResults.statCorrect')}
                   value={String(selfStanding.correctAnswers ?? 0)}
                 />
                 <PartyStatCell
@@ -438,7 +497,7 @@ export function PartyQuizResultsScreen({
                 />
               </div>
             )}
-            <div className="flex flex-wrap items-center justify-center gap-x-2 border-t border-white/10 px-4 py-2.5 text-center">
+            {showRewards && <div className="flex min-h-12 flex-wrap items-center justify-center gap-x-2 border-t border-white/10 px-4 py-2.5 text-center" data-testid="party-rewards">
               {xpEarned > 0 ? (
                 <>
                   <span className="text-xs font-bold uppercase tracking-wider text-white/55">
@@ -458,12 +517,13 @@ export function PartyQuizResultsScreen({
                     </span>
                   )}
                 </>
-              ) : (
+              ) : xpConfirmed ? (
                 <span className="text-[11px] font-semibold uppercase tracking-wide text-white/40">
                   {t('results.noXpEarned')}
                 </span>
-              )}
-            </div>
+              ) : null}
+              <PartyRewardNotice key={finalResults.matchId} rewards={ownRewards!} />
+            </div>}
           </motion.div>
         )}
 
@@ -508,6 +568,17 @@ export function PartyQuizResultsScreen({
       </AnimatePresence>
     </div>
   );
+}
+
+function podiumByPlaces<T extends { userId: string; rank: number }>(standings: T[], notOnPodium: readonly string[]): T[] {
+  const eligible = standings.filter((standing) => standing.rank <= 3 && !notOnPodium.includes(standing.userId));
+  const podium: T[] = [];
+  for (const place of [...new Set(eligible.map((standing) => standing.rank))].sort((a, b) => a - b)) {
+    const group = eligible.filter((standing) => standing.rank === place);
+    if (podium.length + group.length > 3) break;
+    podium.push(...group);
+  }
+  return podium;
 }
 
 function PartyStatCell({ label, value }: { label: string; value: string }) {

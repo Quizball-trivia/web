@@ -47,7 +47,8 @@ export function isGuestLobbyPath(pathname: string): boolean {
     pathname === "/auction" ||
     pathname === "/tic-tac-toe" ||
     pathname === "/game" ||
-    pathname.startsWith("/duelo/")
+    pathname.startsWith("/duelo/") ||
+    pathname.startsWith("/sala/")
   );
 }
 

@@ -1,14 +1,15 @@
 "use client";
 
 import { useEnsureGuestPrincipal } from "@/lib/realtime/realtime-principal";
-import { AlertCircle, ArrowLeft, CheckCircle2, Loader2, LogOut, RotateCcw } from "lucide-react";
+import { CheckCircle2, Loader2, LogOut, RotateCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LobbyHeader } from "./LobbyHeader";
 import { LobbySettings } from "./LobbySettings";
 import { type FriendLobbyInviteSource, useFriendLobbyLogic } from "../hooks/useFriendLobbyLogic";
 import { AlreadyInLobbyModal } from "./AlreadyInLobbyModal";
+import { InviteFailureScreen } from "./InviteFailureScreen";
 import { useLocale } from "@/contexts/LocaleContext";
-import type { DuelGameId } from "@/lib/realtime/socket.types";
+import type { DuelGameId, RoomGameId } from "@/lib/realtime/socket.types";
 import { canHostStart, lobbyModeCapabilities } from "@/lib/lobby/lobbyModes";
 
 interface FriendLobbyScreenProps {
@@ -17,9 +18,13 @@ interface FriendLobbyScreenProps {
   inviteSource?: FriendLobbyInviteSource;
   /** `/friend/room/new?duel=<game>`: open the new room as a duel of that game. */
   newRoomDuelGame?: DuelGameId | null;
+  /** `/friend/room/new?room=<game>`: open the new room as that room game. */
+  newRoomRoomGame?: RoomGameId | null;
+  /** `/friend/room/new?game=auction|football_grid`: open the new room in that game. */
+  newRoomGameMode?: "auction" | "football_grid" | null;
 }
 
-export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelGame }: FriendLobbyScreenProps) {
+export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelGame, newRoomRoomGame, newRoomGameMode }: FriendLobbyScreenProps) {
   const { t, locale } = useLocale();
   useEnsureGuestPrincipal(locale);
   const {
@@ -27,10 +32,12 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
     isAuctionLobby,
     isFootballGridLobby,
     isDuelLobby,
+    isSittingOutRoomGame,
     members,
     lobbyCode,
     isResolvingInvite,
     isPreparingMatch,
+    roomHandoffStalled,
     inviteJoinFailure,
     targetInviteCode,
     me,
@@ -41,12 +48,12 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
     isLeaving,
     optimisticReady,
     actions
-  } = useFriendLobbyLogic({ roomCode, isHost, inviteSource, newRoomDuelGame });
+  } = useFriendLobbyLogic({ roomCode, isHost, inviteSource, newRoomDuelGame, newRoomRoomGame, newRoomGameMode });
   const displayedReady = optimisticReady ?? me?.isReady ?? false;
   // Host has local `isStartingMatch`; non-host members infer "preparing"
   // from the broadcast lobby status flipping to "active" (server emits this
   // right after creating the match, before the match-start countdown fires).
-  const matchIsStarting = isStartingMatch || lobby?.status === "active";
+  const matchIsStarting = isStartingMatch || (lobby?.status === "active" && !isSittingOutRoomGame);
 
   const settings = lobby?.settings;
   const modeCaps = lobbyModeCapabilities(settings?.gameMode);
@@ -68,6 +75,8 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
       ? t("friend.readyCopyFootballGrid")
     : isDuelLobby
       ? t("friend.readyCopyDuel")
+    : settings?.gameMode === "room_game"
+      ? t("friend.readyCopyRoomGame")
     : settings?.gameMode === "ranked_sim"
       ? t("friend.readyCopyRanked")
       : isPartyMode
@@ -89,24 +98,67 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
       ? t("friend.startFootballGrid")
     : isDuelLobby
       ? t("friend.startDuel")
+    : settings?.gameMode === "room_game"
+      ? t("friend.startRoomGame")
     : isPartyMode
       ? t("friend.startPartyQuiz")
       : t("friend.startMatch");
-  const statusCopy = isAuctionLobby
+  const statusCopy = isSittingOutRoomGame
+    ? t("friend.roomGameInProgress")
+    : isAuctionLobby
     ? allReady
       ? t("friend.everyoneReady")
       : t("friend.waitingEveryoneReady")
     : allReady
-    ? isPartyMode
+    ? isPartyMode || settings?.gameMode === "room_game"
       ? t("friend.everyoneReady")
       : t("friend.bothPlayersReady")
     : members.length <= 1
       ? t("friend.waitingMorePlayers")
-      : isPartyMode
+      : isPartyMode || settings?.gameMode === "room_game"
         ? t("friend.waitingEveryoneReady")
         : t("friend.waitingBothReady");
 
   const poppins = "'Poppins', sans-serif";
+
+  if (isPreparingMatch && roomHandoffStalled) {
+    // The match started but this screen never heard where to go: say so and offer a way on, never an endless spinner.
+    return (
+      <div className="container mx-auto max-w-5xl px-3 py-6 animate-in fade-in lg:px-0">
+        <div className="flex min-h-[420px] flex-col items-center justify-center gap-5 rounded-[20px] border border-white/10 bg-white/[0.03] px-6 text-center">
+          <div className="space-y-2">
+            <h1
+              className="text-white uppercase"
+              style={{ fontFamily: poppins, fontWeight: 700, fontSize: 24, letterSpacing: '0.04em' }}
+            >
+              {t("friend.handoffStalledTitle")}
+            </h1>
+            <p className="max-w-sm text-sm text-white/65" style={{ fontFamily: poppins }}>
+              {t("friend.handoffStalledText")}
+            </p>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <button
+              onClick={actions.handleRoomHandoffRetry}
+              className="flex h-12 items-center justify-center gap-2 rounded-[16px] bg-brand-blue px-5 text-white uppercase transition-all hover:bg-brand-blue/90 active:scale-[0.98]"
+              style={{ fontFamily: poppins, fontWeight: 600, fontSize: 13, letterSpacing: '0.04em' }}
+            >
+              <RotateCw className="size-4" />
+              {t("friend.handoffRetry")}
+            </button>
+            <button
+              onClick={actions.handleRoomHandoffExit}
+              className="flex h-12 items-center justify-center gap-2 rounded-[16px] bg-brand-red px-5 text-white uppercase transition-all hover:bg-brand-red/90 active:scale-[0.98]"
+              style={{ fontFamily: poppins, fontWeight: 600, fontSize: 13, letterSpacing: '0.04em' }}
+            >
+              <LogOut className="size-4" />
+              {t("friend.handoffExit")}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (isPreparingMatch) {
     return (
@@ -167,63 +219,10 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
   }
 
   if (inviteJoinFailure) {
-    const code = inviteJoinFailure.inviteCode || targetInviteCode || lobbyCode;
-    const isExpiredInvite = inviteJoinFailure.reasonCode === "LOBBY_NOT_FOUND";
-    // A full room is not a broken link: say it plainly (and never show the server's English detail for it).
-    const isFullRoom = inviteJoinFailure.reasonCode === "LOBBY_FULL";
-
     return (
-      <div className="container mx-auto max-w-5xl px-3 py-6 animate-in fade-in lg:px-0">
-        <div className="flex min-h-[420px] flex-col items-center justify-center gap-5 rounded-[20px] border border-brand-red/40 bg-brand-red/10 px-6 text-center">
-          <AlertCircle className="size-10 text-brand-red" />
-          <div className="max-w-md space-y-3">
-            <h1
-              className="text-white uppercase"
-              style={{ fontFamily: poppins, fontWeight: 700, fontSize: 24, letterSpacing: '0.04em' }}
-            >
-              {t(isFullRoom ? "friend.inviteFullTitle" : isExpiredInvite ? "friend.inviteExpiredTitle" : "friend.inviteJoinFailedTitle")}
-            </h1>
-            <p
-              className="text-white/65"
-              style={{ fontFamily: poppins, fontWeight: 500, fontSize: 14, lineHeight: 1.45 }}
-            >
-              {isFullRoom
-                ? t("friend.inviteFullDescription", { code })
-                : isExpiredInvite
-                  ? t("friend.inviteExpiredDescription")
-                  : t("friend.inviteJoinFailedDescription", { code })}
-            </p>
-            {!isFullRoom && (
-              <p
-                className="text-white/45 uppercase"
-                style={{ fontFamily: poppins, fontWeight: 600, fontSize: 11, letterSpacing: '0.08em' }}
-              >
-                {inviteJoinFailure.message}
-              </p>
-            )}
-          </div>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            {inviteJoinFailure.retryable && (
-              <button
-                onClick={actions.handleInviteRetry}
-                className="flex h-12 items-center justify-center gap-2 rounded-[16px] bg-brand-green px-5 text-white uppercase transition-all hover:bg-brand-green-deep active:scale-[0.98]"
-                style={{ fontFamily: poppins, fontWeight: 600, fontSize: 13, letterSpacing: '0.04em' }}
-              >
-                <RotateCcw className="size-4" />
-                {t("friend.retry")}
-              </button>
-            )}
-            <button
-              onClick={actions.handleInviteBack}
-              className="flex h-12 items-center justify-center gap-2 rounded-[16px] bg-white/10 px-5 text-white uppercase transition-all hover:bg-white/15 active:scale-[0.98]"
-              style={{ fontFamily: poppins, fontWeight: 600, fontSize: 13, letterSpacing: '0.04em' }}
-            >
-              <ArrowLeft className="size-4" />
-              {t("friend.backToFriendHub")}
-            </button>
-          </div>
-        </div>
-      </div>
+      <InviteFailureScreen failure={inviteJoinFailure} code={inviteJoinFailure.inviteCode || targetInviteCode || lobbyCode}
+        onRetry={actions.handleInviteRetry} onBack={actions.handleInviteBack} onSignUp={actions.handleInviteSignUp}
+        onNewRoom={actions.handleInviteNewRoom} onTryAgain={actions.handleInviteTryAgain} />
     );
   }
 
@@ -275,7 +274,7 @@ export function FriendLobbyScreen({ roomCode, isHost, inviteSource, newRoomDuelG
 
               <button
                 onClick={actions.handleReadyToggle}
-                disabled={!lobby}
+                disabled={!lobby || isSittingOutRoomGame}
                 className={cn(
                   "w-full min-h-14 rounded-[20px] uppercase transition-colors flex items-center justify-center gap-3 py-3 px-4 disabled:opacity-60 active:scale-[0.98]",
                   displayedReady

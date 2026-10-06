@@ -11,7 +11,8 @@ import type { AvatarCustomization } from '@/types/game';
 export interface RealtimePartyQuizScreenProps {
   onQuit: () => void;
   onForfeit: () => void;
-  mobileStandingsPlacement?: 'bottom-bar' | 'below-options';
+  /** 'leader-pill' (default): the party-kit "me vs leader" bar. The older list under the options and scrolling bar stay available. */
+  mobileStandingsPlacement?: 'leader-pill' | 'bottom-bar' | 'below-options';
   disableBgm?: boolean;
 }
 
@@ -24,6 +25,8 @@ export interface PartyStandingViewModel {
   totalPoints: number;
   answered: boolean;
   status: 'active' | 'dropped';
+  /** Badge for a dropped row; defaults to "partyResults.dropped" (a room tells away from left). */
+  statusLabel?: string;
   isLeader: boolean;
   isSelf: boolean;
   rankShift: number;

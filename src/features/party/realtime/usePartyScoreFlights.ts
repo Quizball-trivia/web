@@ -38,7 +38,7 @@ import {
 } from './partyQuizScreen.helpers';
 
 interface UsePartyScoreFlightsArgs {
-  mobileStandingsPlacement: 'bottom-bar' | 'below-options';
+  mobileStandingsPlacement: 'leader-pill' | 'bottom-bar' | 'below-options';
   partyState: MatchPartyStatePayload | null;
   currentQuestion: ResolvedMatchQuestionPayload | null;
   answerAck: MatchAnswerAckPayload | null;

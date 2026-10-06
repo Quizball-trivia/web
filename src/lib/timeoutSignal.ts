@@ -8,3 +8,17 @@ export function timeoutSignal(ms: number): AbortSignal {
   setTimeout(() => controller.abort(new DOMException("The operation timed out.", "TimeoutError")), ms);
   return controller.signal;
 }
+
+/** AbortSignal.any for the same browsers (Safari < 17.4, Chrome < 116 lack it): aborts when any of the signals does. */
+export function anySignal(signals: AbortSignal[]): AbortSignal {
+  if (typeof AbortSignal.any === "function") return AbortSignal.any(signals);
+  const controller = new AbortController();
+  for (const signal of signals) {
+    if (signal.aborted) {
+      controller.abort(signal.reason);
+      break;
+    }
+    signal.addEventListener("abort", () => controller.abort(signal.reason), { once: true });
+  }
+  return controller.signal;
+}

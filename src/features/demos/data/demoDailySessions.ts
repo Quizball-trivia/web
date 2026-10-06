@@ -167,9 +167,9 @@ const EXTRA = {
     "es": "Toca una camiseta y nombra al jugador que fue titular ahí.",
     "tr": "Bir formaya dokun ve orada ilk 11'de başlayan oyuncuyu söyle."
   },
-  "Stat Sniper": {
+  "Closest Wins": {
     "es": "Aproximado futbolero",
-    "tr": "Stat Sniper"
+    "tr": "En Yakın Tahmin"
   },
   "Slide to your best guess.": {
     "es": "Desliza hasta tu mejor estimación.",
@@ -518,7 +518,7 @@ function statSniperSession(locale: Locale): DailyChallengeSession {
   const rounds = getSniperRounds(locale);
   return {
     challengeType: "statSniper",
-    title: pick(locale, "Stat Sniper", "სტატ-სნაიპერი"),
+    title: pick(locale, "Closest Wins", "სტატ სნაიპერი"),
     description: pick(locale, "Slide to your best guess.", "მიიტანე სლაიდერი შენს ვარაუდამდე."),
     questionCount: rounds.length,
     secondsPerQuestion: 30,

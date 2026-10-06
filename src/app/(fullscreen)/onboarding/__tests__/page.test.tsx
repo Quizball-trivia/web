@@ -72,7 +72,12 @@ vi.mock('@/lib/experiments/mobileVerificationExperiment', () => ({
 vi.mock('@/lib/api/endpoints', () => ({ updateMe: vi.fn() }));
 vi.mock('@/lib/api/client', () => ({ apiFetch: vi.fn() }));
 vi.mock('@/lib/analytics/game-events', () => ({ trackOnboardingCompleted: vi.fn() }));
-vi.mock('@/lib/auth/postAuthRedirect', () => ({ consumePostAuthRedirect: vi.fn(() => null) }));
+const redirect = vi.hoisted(() => ({ saved: null as string | null }));
+// The page reads the saved invite without consuming it (AppAuthGate consumes it after onboarding).
+vi.mock('@/lib/auth/postAuthRedirect', () => ({
+  peekPostAuthRedirect: vi.fn(() => redirect.saved),
+  consumePostAuthRedirect: vi.fn(() => null),
+}));
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
 describe('OnboardingPage mobile verification experiment gate', () => {
@@ -128,5 +133,18 @@ describe('OnboardingPage mobile verification experiment gate', () => {
 
     await waitFor(() => expect(apiFetch).toHaveBeenCalledTimes(1));
     expect(loadMobileVerificationExperimentVariant).not.toHaveBeenCalled();
+  });
+
+  it('review 2026-10-06 W10: after onboarding it goes to the saved invite, else to /play', async () => {
+    vi.mocked(loadMobileVerificationExperimentVariant).mockResolvedValue('control');
+    redirect.saved = '/friend/room/ABC123';
+    const first = render(<OnboardingPage />);
+    fireEvent.click(screen.getByRole('button', { name: 'Finish profile' }));
+    await waitFor(() => expect(replaceMock).toHaveBeenLastCalledWith('/friend/room/ABC123'));
+    first.unmount();
+    redirect.saved = null;
+    render(<OnboardingPage />);
+    fireEvent.click(screen.getByRole('button', { name: 'Finish profile' }));
+    await waitFor(() => expect(replaceMock).toHaveBeenLastCalledWith('/play'));
   });
 });

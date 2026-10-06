@@ -395,7 +395,7 @@ export function PossessionQuestionPanel({
         data-mcq-options-grid="true"
         className={`mt-2.5 gap-2.5 ${
           stackedAnswers ? 'flex flex-col' : 'grid grid-cols-2 items-stretch'
-        } ${showOptions ? 'pointer-events-auto' : 'pointer-events-none'} scroll-mb-[calc(env(safe-area-inset-bottom)+1.5rem)]`}
+        } ${showOptions ? 'pointer-events-auto' : 'pointer-events-none'} scroll-mb-[calc(env(safe-area-inset-bottom)+var(--party-dock-height,1.5rem))]`}
         aria-hidden={!showOptions}
       >
         {question.options.map((opt, i) => {

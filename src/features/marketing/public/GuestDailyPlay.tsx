@@ -2,6 +2,9 @@
 
 import { useCallback } from "react";
 import { DemoDailyChallenge } from "@/features/demos/DemoDailyChallenge";
+import { PlayRoomWithFriendsButton } from "@/features/aproximado/PlayRoomWithFriendsButton";
+import { useLocale } from "@/contexts/LocaleContext";
+import type { Locale } from "@/lib/i18n/locale";
 import type { DailyChallengeType, StatSniperLeaderboard } from "@/lib/domain/dailyChallenge";
 
 /** Fixed board for the Stat Sniper sample, so the screen matches the real one; nothing is fetched or saved. */
@@ -39,6 +42,7 @@ export function GuestDailyPlay({ type, modeId, pagePath, playPath, onExit, onEve
   /** The result screen's primary action navigates away: record it like an exit. */
   onLeaveToRealGame: () => void;
 }) {
+  const { locale } = useLocale();
   const leaderboardFetcher = useCallback(() => Promise.resolve(SAMPLE_STAT_SNIPER_BOARD), []);
   return (
     <DemoDailyChallenge
@@ -49,6 +53,7 @@ export function GuestDailyPlay({ type, modeId, pagePath, playPath, onExit, onEve
       leaderboardFetcher={type === "statSniper" ? leaderboardFetcher : undefined}
       peek
       resultCta={{ modeId, returnTo: playPath, onBeforeLeave: onLeaveToRealGame }}
+      resultExtra={type === "statSniper" ? <PlayRoomWithFriendsButton locale={locale as Locale} tone="white" onBeforeLeave={onLeaveToRealGame} /> : undefined}
     />
   );
 }

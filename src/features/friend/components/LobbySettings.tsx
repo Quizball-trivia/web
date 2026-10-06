@@ -5,13 +5,13 @@ import { useAuthPromptStore } from "@/stores/authPrompt.store";
 import { optimizedRemoteImageProps } from "@/lib/images/remoteImage";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { Check, Eye, EyeOff, Gavel, Grid3X3, Lock, Search, Shuffle, Swords, Trophy } from "lucide-react";
+import { Check, Crosshair, Eye, EyeOff, Gavel, Grid3X3, Lock, Search, Shuffle, Swords, Trophy } from "lucide-react";
 import { toast } from "sonner";
 
 import { cn } from "@/lib/utils";
 import { CategorySummary } from "@/lib/domain";
 import type { DuelGameId, LobbyGameMode, LobbySettings as LobbySettingsState, LobbyState } from "@/lib/realtime/socket.types";
-import { DUEL_GAMES_ENABLED } from "@/lib/config";
+import { DUEL_GAMES_ENABLED, ROOM_GAMES_ENABLED } from "@/lib/config";
 import { DUEL_GAME_LABEL_KEYS, LOBBY_MODES, type LobbyModeChoice, modeChoiceKey } from "@/lib/lobby/lobbyModes";
 import { logger } from "@/utils/logger";
 import { useLocale } from "@/contexts/LocaleContext";
@@ -47,13 +47,14 @@ const DUEL_TAB_LABEL_KEYS: Record<DuelGameId, MessageKey> = {
 };
 
 /** The existing modes plus one tab per enabled duel game (and the room's own duel game, if it has one). */
-function modeTabs(currentDuelGame: DuelGameId | null): ModeTab[] {
+function modeTabs(currentDuelGame: DuelGameId | null, currentMode: LobbyGameMode): ModeTab[] {
   const duelGames = currentDuelGame && !DUEL_GAMES_ENABLED.includes(currentDuelGame)
     ? [...DUEL_GAMES_ENABLED, currentDuelGame]
     : DUEL_GAMES_ENABLED;
   return [
     ...BASE_MODE_TABS,
     ...duelGames.map((duelGame): ModeTab => ({ choice: { gameMode: 'duel', duelGame }, labelKey: DUEL_TAB_LABEL_KEYS[duelGame] })),
+    ...(ROOM_GAMES_ENABLED.length > 0 || currentMode === 'room_game' ? [{ choice: { gameMode: 'room_game', duelGame: null }, labelKey: 'friend.roomTabAproximado' } satisfies ModeTab] : []),
   ];
 }
 
@@ -64,6 +65,7 @@ const MODE_DESCRIPTION_KEYS: Record<LobbyGameMode, MessageKey> = {
   ranked_sim: 'friend.rankedSimDescription',
   auction: 'friend.auctionDescription',
   duel: 'friend.duelDescription',
+  room_game: 'friend.roomGameDescription',
 };
 
 /** Duel games whose rules differ from "most points wins" carry their own description. */
@@ -87,7 +89,8 @@ export function LobbySettings({
   // Only party quiz seats more than 3, so past that the tabs disappear
   // entirely; at exactly 3 the tabs stay and per-tab capacity gating below
   // decides what's switchable (party ⇄ auction both seat 3+).
-  const isPartyLocked = memberCount > 3;
+  // With room games on, a full room can still pick between party quiz and a 2–6 room game (capacity gating below).
+  const isPartyLocked = memberCount > 3 && ROOM_GAMES_ENABLED.length === 0 && serverMode !== 'room_game';
   // A room holding a guest may only play the guest-allowed modes (the server enforces the same rule).
   const hasGuest = Boolean(lobby?.members.some((member) => member.isGuest));
   const openAuthPrompt = useAuthPromptStore((state) => state.open);
@@ -585,7 +588,7 @@ export function LobbySettings({
             </div>
           ) : (
             <div className="grid grid-cols-2 bg-surface-deep rounded-[14px] p-1 gap-1">
-              {modeTabs(serverDuelGame).map(({ choice, labelKey }) => {
+              {modeTabs(serverDuelGame, serverMode).map(({ choice, labelKey }) => {
                 const key = modeChoiceKey(choice);
                 const overCapacity = memberCount > LOBBY_MODES[choice.gameMode].playable;
                 const guestLocked = hasGuest && !LOBBY_MODES[choice.gameMode].guestAllowed;
@@ -889,6 +892,20 @@ export function LobbySettings({
               style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 16, letterSpacing: '0.04em' }}
             >
               {t(DUEL_GAME_LABEL_KEYS[duelGame])}
+            </h4>
+          </div>
+        )}
+
+        {mode === 'room_game' && (
+          <div className="flex flex-col items-center gap-2.5 rounded-[14px] border border-brand-blue/30 bg-brand-blue/10 p-5 text-center">
+            <div className="flex size-14 items-center justify-center rounded-2xl bg-brand-blue">
+              <Crosshair className="size-7 text-brand-yellow" strokeWidth={2.5} />
+            </div>
+            <h4
+              className="uppercase text-white"
+              style={{ fontFamily: "'Poppins', sans-serif", fontWeight: 600, fontSize: 16, letterSpacing: '0.04em' }}
+            >
+              {t("friend.roomAproximado")}
             </h4>
           </div>
         )}

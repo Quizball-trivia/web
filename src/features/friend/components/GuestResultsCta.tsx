@@ -16,7 +16,7 @@ export function GuestResultsCta({ className = "" }: { className?: string }) {
   return (
     <button
       type="button"
-      onClick={openAuthPrompt}
+      onClick={() => openAuthPrompt("signup")}
       data-testid="guest-results-cta"
       className={`w-full rounded-2xl bg-brand-yellow px-6 py-4 font-poppins text-sm font-black uppercase tracking-wide text-black transition-colors hover:bg-brand-yellow-deep ${className}`}
     >

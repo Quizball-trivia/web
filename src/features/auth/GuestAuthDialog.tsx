@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useLayoutEffect, useRef } from "react";
+
 /**
  * The landing page's full sign-in flow (Google / Facebook / email / phone OTP,
  * forgot-password, auth notices, in-app-browser guard) repackaged as a
@@ -20,8 +22,16 @@ import { useAuthPromptStore } from "@/stores/authPrompt.store";
 
 export function GuestAuthDialog() {
   const isOpen = useAuthPromptStore((state) => state.isOpen);
+  const intent = useAuthPromptStore((state) => state.intent);
   const close = useAuthPromptStore((state) => state.close);
   const auth = useWelcomeAuthController();
+  // Each opening shows the panel its button asked for (create account or sign in), once: a tab the player picks
+  // afterwards stays picked, and a later plain "sign in" never reopens on a registration left from before.
+  const setModeRef = useRef(auth.handleAuthModeChange);
+  useLayoutEffect(() => { setModeRef.current = auth.handleAuthModeChange; });
+  useEffect(() => {
+    if (isOpen) setModeRef.current(intent === "signup" ? "signup" : "signin");
+  }, [isOpen, intent]);
   const phoneAuthAvailability = useGeorgianPhoneAuthAvailability();
 
   return (

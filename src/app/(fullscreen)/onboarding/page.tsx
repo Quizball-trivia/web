@@ -14,7 +14,7 @@ import { useAuthStore } from "@/stores/auth.store";
 import { DEFAULT_HAIR_ID, DEFAULT_JERSEY_ID, DEFAULT_SKIN_ID } from "@/lib/avatars/parts";
 import type { AvatarCustomization } from "@/types/game";
 import { trackOnboardingCompleted } from "@/lib/analytics/game-events";
-import { consumePostAuthRedirect } from "@/lib/auth/postAuthRedirect";
+import { peekPostAuthRedirect } from "@/lib/auth/postAuthRedirect";
 import { useGeorgianPhoneAuthAvailability } from "@/lib/auth/useGeorgianPhoneAuthAvailability";
 import { loadMobileVerificationExperimentVariant } from "@/lib/experiments/mobileVerificationExperiment";
 import { MobileVerificationStep } from "@/features/onboarding/MobileVerificationStep";
@@ -41,7 +41,9 @@ export default function OnboardingPage() {
     } catch (error) {
       logger.error('Analytics trackOnboardingCompleted failed', error);
     }
-    router.replace(consumePostAuthRedirect() ?? "/play");
+    // Read, not consume: AppAuthGate (wrapping this page) consumes it when the account turns complete and navigates to
+    // the same place; consuming here made the gate fall back to /play and win the race.
+    router.replace(peekPostAuthRedirect() ?? "/play");
     toast.success(t('onboarding.toastWelcome'), {
       description: t('onboarding.toastWelcomeDescription'),
     });

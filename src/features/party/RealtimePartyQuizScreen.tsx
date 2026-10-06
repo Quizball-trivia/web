@@ -18,13 +18,14 @@ import { PartyQuizOverlays } from './realtime/PartyQuizOverlays';
 import { PartyQuizQuestionPanel } from './realtime/PartyQuizQuestionPanel';
 import { PartyQuizStandingsSidebar } from './realtime/PartyQuizStandingsSidebar';
 import { PartyQuizMobileStandingsBar } from './realtime/PartyQuizMobileStandingsBar';
+import { PartyStandingsPill } from '@/features/party-kit/PartyStandingsPill';
 import { PartyQuizScoreFlights } from './realtime/PartyQuizScoreFlights';
 import { PartyQuizQuitModal } from './realtime/PartyQuizQuitModal';
 
 export function RealtimePartyQuizScreen({
   onQuit,
   onForfeit,
-  mobileStandingsPlacement = 'bottom-bar',
+  mobileStandingsPlacement = 'leader-pill',
   disableBgm = false,
 }: RealtimePartyQuizScreenProps) {
   const {
@@ -153,7 +154,7 @@ export function RealtimePartyQuizScreen({
       {/* ================================================================= */}
       <div className={cn(
         'relative z-10 mx-auto flex min-h-dvh w-full max-w-5xl flex-col px-3 pt-4 sm:px-5 lg:px-8 lg:pb-6',
-        showMobileStandingsBelowOptions ? 'pb-6' : 'pb-20',
+        showMobileStandingsBelowOptions ? 'pb-6' : 'pb-28',
       )}>
 
         {/* ─── 2-column layout: question + standings ─── */}
@@ -190,13 +191,13 @@ export function RealtimePartyQuizScreen({
         </div>
       </div>
 
-      {!showMobileStandingsBelowOptions && (
+      {mobileStandingsPlacement === 'bottom-bar' ? (
         <PartyQuizMobileStandingsBar
           standings={standings}
           roundResolved={state.roundResolved}
           showOptions={state.showOptions}
         />
-      )}
+      ) : !showMobileStandingsBelowOptions && <PartyStandingsPill standings={standings} flyingTo={scoreFlights.map((f) => f.userId)} />}
 
       <PartyQuizScoreFlights scoreFlights={scoreFlights} />
 
