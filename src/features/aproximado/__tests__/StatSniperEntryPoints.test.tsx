@@ -23,6 +23,16 @@ describe("Stat Sniper: play with friends entry points", () => {
     expect(link.getAttribute("aria-describedby")).toBe(screen.getByText(/sala privada/i).id);
   });
 
+  it("PR review (W2): inside a daily's results it goes through the completion (which retries a failed save), not straight to the room", () => {
+    const onNavigate = vi.fn();
+    render(<PlayRoomWithFriendsButton locale="es" onNavigate={onNavigate} />);
+    const link = screen.getByRole("link", { name: /jugar con amigos/i });
+    const click = new MouseEvent("click", { bubbles: true, cancelable: true });
+    link.dispatchEvent(click);
+    expect(onNavigate).toHaveBeenCalledWith("/friend/room/new?room=aproximado");
+    expect(click.defaultPrevented).toBe(true);
+  });
+
   it("the button hides when room games are off, or for guests without guest lobbies", () => {
     config.ROOM_GAMES_ENABLED = [];
     const { unmount } = render(<PlayRoomWithFriendsButton locale="es" />);

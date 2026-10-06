@@ -1397,7 +1397,7 @@ export interface paths {
                                 inviteCode: string;
                                 displayName: string;
                                 /** @enum {string} */
-                                gameMode: "friendly_possession" | "friendly_party_quiz" | "football_grid" | "auction" | "ranked_sim";
+                                gameMode: "friendly_possession" | "friendly_party_quiz" | "football_grid" | "auction" | "ranked_sim" | "duel" | "room_game";
                                 isPublic: boolean;
                                 /** Format: date-time */
                                 createdAt: string;
@@ -1421,6 +1421,10 @@ export interface paths {
                                         hairColor?: "natural" | "platinum" | "ginger" | "silver" | "blue_tips" | "pink_streaks";
                                     } | null;
                                 };
+                                /** @enum {string|null} */
+                                duelGame: "buscaminas" | "pistas" | "ultimo" | "minuto" | null;
+                                /** @enum {string|null} */
+                                roomGame: "aproximado" | null;
                             }[];
                         };
                     };
