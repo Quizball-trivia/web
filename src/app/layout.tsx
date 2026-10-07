@@ -26,6 +26,7 @@ import {
 import { partnerFromHost } from "@/features/partner/partnerHosts";
 import { PARTNER_LAUNCH_CAPTURE_SCRIPT } from "@/features/partner/partnerLaunchToken";
 import "../styles/globals.css";
+import { isLightweightSeoRoute } from "@/lib/seo/lightweight-routes";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -132,7 +133,7 @@ export default async function RootLayout({
   const geoCountry = headerList.get("x-vercel-ip-country");
   // Host decides the provider tree: a partner host never changes during client navigation (another origin).
   const partner = partnerFromHost(headerList.get("host"));
-  const isFootballQuizRoute = /^\/(?:(?:en|ka)\/football-quiz|es\/quiz-de-futbol)(?:\/[^/]+)?\/?$/.test(pathname);
+  const isSeoRoute = isLightweightSeoRoute(pathname);
 
   return (
     <html lang={locale} className="dark" suppressHydrationWarning>
@@ -162,7 +163,7 @@ export default async function RootLayout({
         )}
         <RouteProviders
           partner={partner}
-          isSeoRoute={isFootballQuizRoute}
+          isSeoRoute={isSeoRoute}
           initialLocale={explicitLocale}
           geoCountry={geoCountry}
           cspNonce={cspNonce}

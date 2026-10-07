@@ -6,6 +6,7 @@ import { HOME_COPY } from "@/lib/seo/home-copy";
 import { campaignLocaleOf, dailyCollectionPath, quizHubHref } from "@/lib/seo/public-games";
 import { isSeoPageLocale } from "@/lib/seo/game-pages";
 import { SignInLink } from "./public/PublicLinks";
+import { DOWNLOAD_COPY, GOOGLE_PLAY_URL, downloadPath } from "@/lib/seo/app-download";
 
 const h2 = "font-poppins text-lg font-bold uppercase md:text-xl";
 const pill = "rounded-full border border-white/20 px-4 py-2 text-sm font-semibold hover:border-white";
@@ -52,6 +53,12 @@ export function HubBody({ locale }: { locale: Locale }) {
       <section className="max-w-3xl">
         <h2 className={h2}>{copy.about.title}</h2>
         <p className="mt-3 text-sm leading-relaxed text-white/75 md:text-base">{copy.about.text}</p>
+      </section>
+
+      <section className="max-w-3xl border-l-4 border-brand-yellow pl-5">
+        <h2 className={h2}><Link href={downloadPath(locale)} className="hover:text-brand-yellow">{DOWNLOAD_COPY[locale].homeCta}</Link></h2>
+        <p className="mt-2 text-sm text-white/75">{DOWNLOAD_COPY[locale].free}</p>
+        <a href={GOOGLE_PLAY_URL} className="mt-4 inline-flex min-h-11 items-center rounded-full bg-brand-yellow px-5 py-2 text-sm font-bold text-black hover:bg-brand-yellow-deep focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-yellow">{DOWNLOAD_COPY[locale].storeCta} →</a>
       </section>
 
       <section className="max-w-3xl">

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import type { Locale } from "@/lib/i18n/messages";
 import type { PartnerSlug } from "@/features/partner/partnerHosts";
 import { SeoProviders } from "./seo-providers";
+import { isLightweightSeoRoute } from "@/lib/seo/lightweight-routes";
 
 const FullProviders = dynamic(() =>
   import("./providers").then((module) => module.Providers),
@@ -42,7 +43,7 @@ export function RouteProviders({
   // describes the first document request, so relying on it after leaving an
   // SEO page can render the signup screen without QueryClientProvider.
   const isCurrentSeoRoute = pathname
-    ? /^\/(?:(?:en|ka)\/football-quiz|es\/quiz-de-futbol)(?:\/[^/]+)?\/?$/.test(pathname)
+    ? isLightweightSeoRoute(pathname)
     : isSeoRoute;
 
   if (isCurrentSeoRoute) {

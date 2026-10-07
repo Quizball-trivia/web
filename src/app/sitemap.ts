@@ -35,6 +35,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // "" = the locale homepage (/en, /ka, /es), which is the Football Games hub.
     ["", "weekly", 1.0],
     ["/about", "monthly", 0.7, editorialContentUpdated],
+    ["/download", "monthly", 0.8],
     ["/editorial-methodology", "monthly", 0.6, editorialContentUpdated],
     ["/terms", "yearly", 0.3],
     ["/privacy", "yearly", 0.3],
