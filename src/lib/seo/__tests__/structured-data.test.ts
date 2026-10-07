@@ -32,6 +32,7 @@ describe("site structured data", () => {
     });
     expect(game).toMatchObject({
       "@type": "Game",
+      sameAs: "https://play.google.com/store/apps/details?id=io.quizball.mobile",
       publisher: { "@id": SITE_SCHEMA_IDS.organization },
       isPartOf: { "@id": SITE_SCHEMA_IDS.website },
     });

@@ -1,5 +1,6 @@
 import type { Locale } from "@/lib/i18n/locale";
 import { SOCIAL_LINKS } from "@/lib/social-links";
+import { GOOGLE_PLAY_URL } from "./app-links";
 import {
   SITE_DESCRIPTION,
   SITE_ICON_PATH,
@@ -81,6 +82,7 @@ export function buildSiteStructuredData() {
         "@type": "Game",
         "@id": SITE_SCHEMA_IDS.game,
         name: SITE_NAME,
+        sameAs: GOOGLE_PLAY_URL,
         alternateName: "QuizBall",
         description: SITE_DESCRIPTION,
         url: SITE_URL,

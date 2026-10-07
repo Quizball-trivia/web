@@ -1,0 +1,93 @@
+import type { Metadata } from 'next';
+import Image from 'next/image';
+import Link from 'next/link';
+import { headers } from 'next/headers';
+import { notFound } from 'next/navigation';
+import { ArrowLeft, ArrowUpRight, Smartphone } from 'lucide-react';
+import { LOCALES, isLocale } from '@/lib/i18n/locale';
+import { LOCALES as LANGUAGE_OPTIONS } from '@/lib/i18n/messages';
+import { buildLocalizedMetadata } from '@/lib/i18n/metadata';
+import { DOWNLOAD_COPY, GOOGLE_PLAY_URL, buildDownloadStructuredData, downloadPath } from '@/lib/seo/app-download';
+import { serializeJsonLd } from '@/lib/seo/structured-data';
+
+type Params = Promise<{ locale: string }>;
+
+export function generateStaticParams() {
+  return LOCALES.map((locale) => ({ locale }));
+}
+
+export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
+  const { locale } = await params;
+  if (!isLocale(locale)) notFound();
+  const copy = DOWNLOAD_COPY[locale];
+  return buildLocalizedMetadata({ locale, path: '/download', title: copy.metaTitle, description: copy.description });
+}
+
+export default async function DownloadPage({ params }: { params: Params }) {
+  const { locale } = await params;
+  if (!isLocale(locale)) notFound();
+  const copy = DOWNLOAD_COPY[locale];
+  const nonce = (await headers()).get('x-nonce') ?? undefined;
+
+  return (
+    <div className="min-h-screen bg-surface-page-alt font-poppins text-white">
+      <script nonce={nonce} type="application/ld+json" suppressHydrationWarning dangerouslySetInnerHTML={{ __html: serializeJsonLd(buildDownloadStructuredData(locale)) }} />
+      <header className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-5 md:px-8">
+        <Link href={`/${locale}`} aria-label={copy.homeLabel} className="flex min-h-11 items-center gap-3 rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-brand-yellow">
+          <ArrowLeft className="size-5" aria-hidden />
+          <Image src="/assets/brand/quizball-logo.webp" alt="Quizball" width={218} height={64} className="h-10 w-auto" />
+        </Link>
+        <nav aria-label={copy.languagesLabel} className="flex flex-wrap gap-1">
+          {LANGUAGE_OPTIONS.map((option) => (
+            <Link key={option.code} href={downloadPath(option.code)} hrefLang={option.code} lang={option.code} aria-current={option.code === locale ? 'page' : undefined}
+              className={`inline-flex min-h-11 items-center rounded-full px-3 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-brand-yellow ${option.code === locale ? 'bg-brand-yellow text-black' : 'text-white/75 hover:bg-white/10 hover:text-white'}`}>
+              {option.nativeName}
+            </Link>
+          ))}
+        </nav>
+      </header>
+
+      <main className="mx-auto max-w-6xl px-4 pb-12 md:px-8 md:pb-16">
+        <section className="relative isolate overflow-hidden rounded-[24px] bg-brand-blue px-6 py-10 md:px-12 md:py-16">
+          <Image src="/assets/ranked-icon.webp" alt="" width={360} height={360} sizes="360px" className="pointer-events-none absolute -right-12 top-16 -z-10 hidden rotate-12 opacity-15 md:block" />
+          <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-brand-yellow">
+            <Smartphone className="size-4 shrink-0" aria-hidden /> {copy.eyebrow}
+          </p>
+          <h1 className="mt-6 max-w-3xl text-4xl font-black leading-[1.1] tracking-tight [overflow-wrap:anywhere] md:text-6xl">
+            {copy.title}<br /><span className="text-brand-yellow">{copy.highlight}</span>
+          </h1>
+          <p className="mt-6 max-w-2xl text-sm leading-7 text-white/90 md:text-base">{copy.description}</p>
+          <div className="mt-8 flex flex-col items-start gap-4 sm:flex-row sm:flex-wrap sm:items-center">
+            <a href={GOOGLE_PLAY_URL} className="inline-flex min-h-14 max-w-full items-center justify-center gap-3 rounded-2xl bg-brand-yellow px-6 py-4 text-sm font-bold text-black transition-colors hover:bg-brand-yellow-deep focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
+              <span>{copy.storeCta}</span><ArrowUpRight className="size-5 shrink-0" aria-hidden />
+            </a>
+            <Link href={`/${locale}`} className="inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-4 hover:text-brand-yellow focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">{copy.browserCta}</Link>
+          </div>
+          <p className="mt-5 text-xs font-medium leading-5 text-white/80">{copy.free}</p>
+        </section>
+
+        <section className="pt-10 md:pt-14" aria-labelledby="download-features">
+          <h2 id="download-features" className="text-xl font-bold md:text-2xl">{copy.featuresTitle}</h2>
+          <div className="mt-6 grid gap-6 border-y border-white/15 py-6 md:grid-cols-3 md:gap-8">
+            {copy.features.map((feature, index) => (
+              <div key={feature.title}>
+                <p className="text-xs font-bold text-brand-yellow" aria-hidden>0{index + 1}</p>
+                <h3 className="mt-3 text-base font-bold">{feature.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-white/75">{feature.body}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-6 max-w-3xl text-sm leading-6 text-white/70">{copy.accountNote}</p>
+        </section>
+      </main>
+
+      <footer className="mx-auto flex max-w-6xl flex-wrap justify-between gap-4 border-t border-white/10 px-5 py-6 text-xs text-white/70 md:px-8">
+        <p>© 2026 Quizball</p>
+        <nav className="flex flex-wrap gap-5">
+          <Link href={`/${locale}/privacy`} className="hover:text-brand-yellow focus-visible:outline-2 focus-visible:outline-brand-yellow">{copy.privacy}</Link>
+          <Link href={`/${locale}/terms`} className="hover:text-brand-yellow focus-visible:outline-2 focus-visible:outline-brand-yellow">{copy.terms}</Link>
+        </nav>
+      </footer>
+    </div>
+  );
+}
