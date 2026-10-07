@@ -32,6 +32,8 @@ export interface PartnerGameTile {
   playsLeft: number;
   maxScore: number | null;
   available: boolean;
+  /** A started play not finished yet: the tile reopens it even with no plays left. */
+  inProgress: boolean;
 }
 
 export interface MeGamesResponse {

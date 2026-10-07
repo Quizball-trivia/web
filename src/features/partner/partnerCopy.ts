@@ -25,6 +25,7 @@ interface PartnerCopy {
   playsLeft: (count: number) => string;
   upToPoints: (points: string) => string;
   doneForToday: string;
+  continuePlay: string;
   comeBackTomorrow: string;
   comingSoon: string;
   moreGames: string;
@@ -58,6 +59,7 @@ export const PARTNER_COPY: Record<PartnerLocale, PartnerCopy> = {
     playsLeft: (count) => (count === 1 ? "1 play left" : `${count} plays left`),
     upToPoints: (points) => `Up to ${points} pts`,
     doneForToday: "Done for today",
+    continuePlay: "Continue",
     comeBackTomorrow: "Come back tomorrow",
     comingSoon: "Coming soon",
     moreGames: "More games",
@@ -101,6 +103,7 @@ export const PARTNER_COPY: Record<PartnerLocale, PartnerCopy> = {
     playsLeft: (count) => `დარჩა ${count} თამაში`,
     upToPoints: (points) => `მაქს. ${points} ქულა`,
     doneForToday: "დღეისთვის დასრულდა",
+    continuePlay: "გაგრძელება",
     comeBackTomorrow: "დაბრუნდი ხვალ",
     comingSoon: "მალე",
     moreGames: "სხვა თამაშები",
