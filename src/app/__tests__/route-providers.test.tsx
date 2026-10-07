@@ -64,4 +64,15 @@ describe('RouteProviders', () => {
     expect(screen.getByText('signup ready')).toBeInTheDocument();
     expect(screen.queryByTestId('seo-providers')).not.toBeInTheDocument();
   });
+
+  it.each(['en', 'ka', 'es', 'tr'])('renders download without app/auth providers for %s', (locale) => {
+    navigation.pathname = `/${locale}/download`;
+    const view = render(<RouteProviders isSeoRoute={false}><p>download ready</p></RouteProviders>);
+    expect(screen.getByTestId('seo-providers')).toBeInTheDocument();
+    // The persistent root must switch back to full providers when browser play is opened.
+    navigation.pathname = `/${locale}`;
+    view.rerender(<RouteProviders isSeoRoute><QueryClientProbe /></RouteProviders>);
+    expect(screen.getByText('signup ready')).toBeInTheDocument();
+    expect(screen.queryByTestId('seo-providers')).not.toBeInTheDocument();
+  });
 });

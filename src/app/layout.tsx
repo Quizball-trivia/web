@@ -24,6 +24,7 @@ import {
   serializeJsonLd,
 } from "@/lib/seo/structured-data";
 import "../styles/globals.css";
+import { isLightweightSeoRoute } from "@/lib/seo/lightweight-routes";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -128,7 +129,7 @@ export default async function RootLayout({
   // geo signal so first-time visitors in Georgia default to Georgian — without
   // overriding a saved choice, account preference, or explicit URL locale.
   const geoCountry = headerList.get("x-vercel-ip-country");
-  const isFootballQuizRoute = /^\/(?:(?:en|ka)\/football-quiz|es\/quiz-de-futbol)(?:\/[^/]+)?\/?$/.test(pathname);
+  const isSeoRoute = isLightweightSeoRoute(pathname);
 
   return (
     <html lang={locale} className="dark" suppressHydrationWarning>
@@ -145,7 +146,7 @@ export default async function RootLayout({
           dangerouslySetInnerHTML={{ __html: serializeJsonLd(buildSiteStructuredData()) }}
         />
         <RouteProviders
-          isSeoRoute={isFootballQuizRoute}
+          isSeoRoute={isSeoRoute}
           initialLocale={explicitLocale}
           geoCountry={geoCountry}
           cspNonce={cspNonce}

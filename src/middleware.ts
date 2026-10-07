@@ -18,6 +18,7 @@ const REDIRECT_FROM_ROOT: Record<string, string> = {
   "/about": `/${DEFAULT_LOCALE}/about`,
   "/terms": `/${DEFAULT_LOCALE}/terms`,
   "/privacy": `/${DEFAULT_LOCALE}/privacy`,
+  "/download": `/${DEFAULT_LOCALE}/download`,
   // Bare game page URLs → default-locale variant (indexable pages).
   ...Object.fromEntries(
     PUBLISHED_PUBLIC_GAMES.map((page) => [

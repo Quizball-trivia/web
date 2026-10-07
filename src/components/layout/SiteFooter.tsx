@@ -9,6 +9,7 @@ import { ContactModal } from '@/components/shared/ContactModal';
 import { campaignHubPath } from '@/features/campaign-quiz/campaignQuiz.routes';
 import { PUBLIC_GAMES, cardHref } from '@/lib/seo/public-games';
 import type { Locale } from '@/lib/i18n/locale';
+import { DOWNLOAD_COPY, downloadPath } from '@/lib/seo/app-download';
 
 const SECTION: Record<Locale, { games: string; daily: string; company: string; methodology: string; press: string; index: string }> = {
   en: { games: 'Game modes', daily: 'Daily challenges', company: 'QuizBall', methodology: 'Editorial methodology', press: 'Press', index: 'Football Knowledge Index' },
@@ -43,6 +44,7 @@ export function SiteFooter({ locale: forcedLocale }: { locale?: Locale } = {}) {
     {
       title: labels.company,
       items: [
+        { href: downloadPath(locale), label: DOWNLOAD_COPY[locale].homeCta },
         { href: `/${locale}/about`, label: t('welcome.aboutUs') },
         { href: quizzesHref, label: t('welcome.quizzes') },
         { href: `/${locale}/editorial-methodology`, label: labels.methodology },
