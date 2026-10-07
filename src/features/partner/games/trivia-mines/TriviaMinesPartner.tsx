@@ -50,6 +50,8 @@ export function TriviaMinesPartner({ api, onFinished, onExit }: PartnerGameScree
           // Only a scored run has a score event; a returned or cancelled one is never reported as points.
           if (run && (run.status === "cashed" || run.status === "lost") && run.score !== null) {
             onFinished({ playId: run.play_id, score: run.score });
+          } else {
+            onExit();
           }
         },
         onExit: () => {

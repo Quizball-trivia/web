@@ -249,6 +249,7 @@ function PartnerRankedResultView({
     if (!matchId) return;
     let active = true;
     let attempts = 0;
+    let timer: number | undefined;
     const poll = async () => {
       attempts += 1;
       try {
@@ -261,11 +262,12 @@ function PartnerRankedResultView({
       }
       if (!active) return;
       if (attempts >= RESULT_POLL_ATTEMPTS) setGaveUp(true);
-      else window.setTimeout(() => void poll(), RESULT_POLL_MS);
+      else timer = window.setTimeout(() => void poll(), RESULT_POLL_MS);
     };
     void poll();
     return () => {
       active = false;
+      window.clearTimeout(timer);
     };
   }, [api, matchId]);
 

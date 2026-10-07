@@ -175,6 +175,10 @@ describe("partner origins", () => {
     ]);
   });
 
+  it("drops wildcard hosts, so a CSP can only name explicit origins", () => {
+    expect(parseOriginList("https://* https://*.example.com https://ok.example.com")).toEqual(["https://ok.example.com"]);
+  });
+
   it("posts to freecroco.com unless the environment configures its parent origins", () => {
     expect(partnerParentOrigins(undefined)).toEqual(["https://freecroco.com"]);
     expect(partnerParentOrigins("https://test.freecroco.dev")).toEqual(["https://test.freecroco.dev"]);

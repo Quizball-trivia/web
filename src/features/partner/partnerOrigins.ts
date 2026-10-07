@@ -1,7 +1,7 @@
 export const FREECROCO_ORIGIN = "https://freecroco.com";
 
 // The result is pasted into a CSP header, so anything beyond scheme://host[:port] is rejected outright.
-const SAFE_ORIGIN = /^https?:\/\/[a-z0-9*.-]+(?::\d{1,5})?$/;
+const SAFE_ORIGIN = /^https?:\/\/[a-z0-9.-]+(?::\d{1,5})?$/;
 
 /** Parses a comma/space separated origin list; drops anything that is not a plain https origin (http for localhost). */
 export function parseOriginList(raw: string | null | undefined): string[] {

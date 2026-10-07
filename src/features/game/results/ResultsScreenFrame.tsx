@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { motion } from 'motion/react';
+import { motion, MotionConfig } from 'motion/react';
 
 /** Post-match results backdrop (pattern + glow) and the content's scale-in entrance. */
 export function ResultsScreenFrame({ children }: { children: ReactNode }) {
@@ -19,13 +19,16 @@ export function ResultsScreenFrame({ children }: { children: ReactNode }) {
             "radial-gradient(circle at top center, rgba(28,176,246,0.08), transparent 32%), radial-gradient(circle at bottom left, rgba(88,204,2,0.06), transparent 28%)",
         }}
       />
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="relative z-10 w-full max-w-[1280px] space-y-4 font-poppins md:space-y-6"
-      >
-        {children}
-      </motion.div>
+      {/* Reduced motion keeps the fade and drops the scale. */}
+      <MotionConfig reducedMotion="user">
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="relative z-10 w-full max-w-[1280px] space-y-4 font-poppins md:space-y-6"
+        >
+          {children}
+        </motion.div>
+      </MotionConfig>
     </div>
   );
 }

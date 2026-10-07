@@ -32,6 +32,8 @@ export function RoadToGoalPartner({
             // Only a scored run has a score event; a cancelled one is never reported as points.
             if (run && run.status !== "active" && run.status !== "cancelled" && run.score !== null) {
               onFinished({ playId: run.play_id, score: run.score });
+            } else {
+              onExit();
             }
           },
           onExit: () => {

@@ -966,11 +966,13 @@ export function GuessTheGoalScreen({ backHref, deps }: { backHref?: string; deps
       try {
         const result = await partner.expire(session.session_id);
         if (!current()) return;
-        if (result.bonus) {
-          const bonus = result.bonus;
-          setBonusOutcome(bonus);
-          setOutcome((prev) => withFootage(prev, bonus));
-        }
+        // The settled play comes back here: without it (no bonus outcome) "See my points" would have nothing to show.
+        const bonus = result.bonus;
+        if (bonus) setBonusOutcome(bonus);
+        setOutcome((prev) => {
+          const settled = { ...prev, ...result.outcome, finished: result.finished };
+          return bonus ? withFootage(settled, bonus) : settled;
+        });
         setPhase('bonus_done');
       } catch (err) {
         if (!current()) return;
