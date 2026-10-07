@@ -2,7 +2,9 @@ import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { PartnerGameTile } from "../api/partnerApi.types";
 
-const games = vi.hoisted(() => ({ value: { isFetchedAfterMount: true, data: { games: [] as PartnerGameTile[] } } }));
+type Games = { isFetchedAfterMount: boolean; isFetching?: boolean; isError?: boolean; data: { resetsAt: string; games: PartnerGameTile[] } };
+const tomorrow = () => new Date(Date.now() + 3_600_000).toISOString();
+const games = vi.hoisted(() => ({ value: {} as Games }));
 vi.mock("../hooks/usePartnerGames", () => ({ partnerGamesQueryKey: ["partner", "me", "games"], usePartnerGames: () => games.value }));
 vi.mock("../PartnerSessionProvider", () => ({ usePartnerSession: () => ({ api: { game: vi.fn() } }) }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
@@ -18,8 +20,18 @@ const tile = (overrides: Partial<PartnerGameTile>): PartnerGameTile => ({
 const Screen = () => <div data-testid="game-screen">game</div>;
 
 describe("partner game host on open", () => {
+  it("a failed refresh or a stale day never shows an old result: the game opens", () => {
+    games.value = { isFetchedAfterMount: true, isError: true, data: { resetsAt: tomorrow(), games: [tile({ lastResult: { playId: "p1", score: 0 } })] } };
+    const { unmount } = render(<PartnerGameHost gameId="road-to-goal" registry={{ "road-to-goal": Screen }} />);
+    expect(screen.getByTestId("game-screen")).toBeTruthy();
+    unmount();
+    games.value = { isFetchedAfterMount: true, data: { resetsAt: new Date(Date.now() - 1000).toISOString(), games: [tile({ lastResult: { playId: "p1", score: 0 } })] } };
+    render(<PartnerGameHost gameId="road-to-goal" registry={{ "road-to-goal": Screen }} />);
+    expect(screen.getByTestId("game-screen")).toBeTruthy();
+  });
+
   beforeEach(() => {
-    games.value = { isFetchedAfterMount: true, data: { games: [] } };
+    games.value = { isFetchedAfterMount: true, data: { resetsAt: tomorrow(), games: [] } };
   });
 
   it("a play that ended while away (stale Continue) opens on its result, not on the game", () => {
@@ -40,7 +52,7 @@ describe("partner game host on open", () => {
   });
 
   it("waits for a fresh games list before deciding", () => {
-    games.value = { isFetchedAfterMount: false, data: { games: [tile({ lastResult: { playId: "p1", score: 0 } })] } };
+    games.value = { isFetchedAfterMount: false, data: { resetsAt: tomorrow(), games: [tile({ lastResult: { playId: "p1", score: 0 } })] } };
     render(<PartnerGameHost gameId="road-to-goal" registry={{ "road-to-goal": Screen }} />);
     expect(screen.queryByTestId("game-screen")).toBeNull();
     expect(screen.queryByText(/back to games/i)).toBeNull();

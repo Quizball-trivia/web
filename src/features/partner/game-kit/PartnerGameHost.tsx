@@ -28,8 +28,10 @@ export function PartnerGameHost({ gameId, registry }: { gameId: PartnerGameId; r
   // Continue) shows its result rather than an intro whose start would find no plays left. Ranked has its own flow.
   const games = usePartnerGames();
   const [opened, setOpened] = useState(gameId === "ranked");
-  if (!opened && games.isFetchedAfterMount) {
-    const tile = games.data?.games.find((g) => g.gameId === gameId);
+  if (!opened && games.isFetchedAfterMount && !games.isFetching) {
+    // Only a successful, current-day answer can turn the game into a result; anything else just opens the game.
+    const fresh = !games.isError && games.data && Date.parse(games.data.resetsAt) > Date.now();
+    const tile = fresh ? games.data?.games.find((g) => g.gameId === gameId) : undefined;
     if (tile && tile.playsLeft === 0 && !tile.inProgress && tile.lastResult) {
       setFinished({ playId: tile.lastResult.playId, score: tile.lastResult.score });
     }

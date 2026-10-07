@@ -8,7 +8,7 @@ vi.mock("@/contexts/LocaleContext", () => ({ useLocale: () => ({ locale: locale.
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
 vi.mock("../../hooks/usePartnerGames", () => ({
   partnerGamesQueryKey: ["partner", "me", "games"],
-  usePartnerGames: () => ({ isFetchedAfterMount: true, data: { games: [] } }),
+  usePartnerGames: () => ({ isFetchedAfterMount: true, data: { resetsAt: new Date(Date.now() + 3_600_000).toISOString(), games: [] } }),
 }));
 vi.mock("../../PartnerSessionProvider", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../../PartnerSessionProvider")>()),
