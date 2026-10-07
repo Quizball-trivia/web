@@ -51,6 +51,19 @@ describe("partner game host on open", () => {
     expect(screen.getByTestId("game-screen")).toBeTruthy();
   });
 
+  it("after waiting, the arrived list decides once: spinner, then the result", () => {
+    games.value = { isFetchedAfterMount: false, isFetching: true, data: { resetsAt: tomorrow(), games: [] } };
+    const { rerender } = render(<PartnerGameHost gameId="road-to-goal" registry={{ "road-to-goal": Screen }} />);
+    expect(screen.queryByTestId("game-screen")).toBeNull();
+    games.value = { isFetchedAfterMount: true, isFetching: false, data: { resetsAt: tomorrow(), games: [tile({ lastResult: { playId: "p1", score: 40 } })] } };
+    rerender(<PartnerGameHost gameId="road-to-goal" registry={{ "road-to-goal": Screen }} />);
+    expect(screen.getByText(/back to games/i)).toBeTruthy();
+    // A later refresh does not flip the decided screen back to the game.
+    games.value = { isFetchedAfterMount: true, data: { resetsAt: tomorrow(), games: [tile({ playsLeft: 1, playsUsed: 0 })] } };
+    rerender(<PartnerGameHost gameId="road-to-goal" registry={{ "road-to-goal": Screen }} />);
+    expect(screen.queryByTestId("game-screen")).toBeNull();
+  });
+
   it("waits for a fresh games list before deciding", () => {
     games.value = { isFetchedAfterMount: false, data: { resetsAt: tomorrow(), games: [tile({ lastResult: { playId: "p1", score: 0 } })] } };
     render(<PartnerGameHost gameId="road-to-goal" registry={{ "road-to-goal": Screen }} />);
