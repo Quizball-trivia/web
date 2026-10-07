@@ -25,6 +25,11 @@ describe('sitemap lastModified signals', () => {
     const liverpool = entries.find((entry) => entry.url.endsWith('/en/football-quiz/liverpool'));
 
     expect(englishHome?.lastModified).toBeUndefined();
+    for (const locale of ['en', 'ka', 'es', 'tr']) {
+      const downloads = entries.filter((entry) => entry.url === `https://quizball.io/${locale}/download`);
+      expect(downloads).toHaveLength(1);
+      expect(downloads[0].lastModified).toBeUndefined();
+    }
     expect(entries.find((entry) => entry.url.endsWith('/en/about'))?.lastModified)
       .toEqual(new Date('2026-08-30T00:00:00.000Z'));
     expect(entries.find((entry) => entry.url.endsWith('/es/editorial-methodology'))?.lastModified)
