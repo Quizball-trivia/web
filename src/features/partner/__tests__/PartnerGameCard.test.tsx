@@ -19,6 +19,8 @@ describe("partner game card", () => {
     expect(partnerTileState(tile({ inProgress: true }))).toBe("playable");
     expect(partnerTileState(tile())).toBe("done");
     expect(partnerTileState(tile({ available: false, inProgress: true }))).toBe("coming_soon");
+    // Ranked resumes through its own card; the flag does not turn a spent ranked tile playable.
+    expect(partnerTileState(tile({ gameId: "ranked", inProgress: true }))).toBe("done");
   });
 
   it("shows Continue and links into the game", () => {

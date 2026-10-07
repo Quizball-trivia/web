@@ -13,8 +13,9 @@ export type PartnerTileState = "playable" | "done" | "coming_soon";
 
 export function partnerTileState(tile: PartnerGameTile): PartnerTileState {
   if (!tile.available) return "coming_soon";
-  // A play left midway (reload, relaunch) is reopened from its tile, whatever is left today.
-  return tile.playsLeft > 0 || tile.inProgress ? "playable" : "done";
+  // A play left midway (reload, relaunch) is reopened from its tile, whatever is left today. Ranked has its own resume.
+  const resumable = tile.inProgress && tile.gameId !== "ranked";
+  return tile.playsLeft > 0 || resumable ? "playable" : "done";
 }
 
 export function formatPartnerPoints(points: number, locale: PartnerLocale): string {
@@ -29,7 +30,7 @@ export function PartnerGameCard({ tile, locale, index }: { tile: PartnerGameTile
   const statusLabel =
     state === "done" ? copy.doneForToday
     : state === "coming_soon" ? copy.comingSoon
-    : tile.inProgress ? copy.continuePlay
+    : tile.inProgress && tile.gameId !== "ranked" ? copy.continuePlay
     : copy.playsLeft(tile.playsLeft);
 
   const body = (

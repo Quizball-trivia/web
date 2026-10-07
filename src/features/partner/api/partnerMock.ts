@@ -16,7 +16,7 @@ const SEEDED_GAMES: Array<Omit<PartnerGameTile, "playsLeft">> = [
   { gameId: "countdown", playsLimit: 1, playsUsed: 0, maxScore: null, available: true, inProgress: false },
   { gameId: "pick-em", playsLimit: 1, playsUsed: 0, maxScore: 500, available: true, inProgress: false },
   { gameId: "career-path", playsLimit: 2, playsUsed: 0, maxScore: 300, available: true, inProgress: false },
-  { gameId: "higher-lower", playsLimit: 1, playsUsed: 1, maxScore: 400, available: true, inProgress: false },
+  { gameId: "higher-lower", playsLimit: 1, playsUsed: 1, maxScore: 400, available: true, inProgress: true },
   { gameId: "card-detective", playsLimit: 1, playsUsed: 0, maxScore: 1000, available: true, inProgress: false },
   { gameId: "road-to-goal", playsLimit: 1, playsUsed: 0, maxScore: 400, available: true, inProgress: false },
   { gameId: "trivia-mines", playsLimit: 1, playsUsed: 0, maxScore: null, available: false, inProgress: false },
