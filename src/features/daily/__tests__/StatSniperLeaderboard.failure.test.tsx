@@ -14,21 +14,17 @@ describe("StatSniperLeaderboard when loading fails", () => {
     expect(await screen.findByRole("status")).toHaveTextContent(/available|disponible|მიუწვდომელია|kullanılamıyor/i);
   });
 
-  it("drops an earlier day's rows on a failed refresh, keeps today's", async () => {
+  it("keeps recent rows through a failed refresh, drops them once unconfirmed for 5 minutes", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     try {
-      const old = vi.fn().mockResolvedValueOnce(board("2020-01-01")).mockRejectedValue(new Error("503"));
-      const { unmount } = render(<StatSniperLeaderboard fetcher={old} pollMs={1000} />);
+      const fetcher = vi.fn().mockResolvedValueOnce(board(today)).mockRejectedValue(new Error("503"));
+      render(<StatSniperLeaderboard fetcher={fetcher} pollMs={60_000} />);
       expect(await screen.findByText("KAKA007")).toBeInTheDocument();
-      await act(async () => { await vi.advanceTimersByTimeAsync(1100); });
+      await act(async () => { await vi.advanceTimersByTimeAsync(60_000); });
+      expect(screen.getByText("KAKA007")).toBeInTheDocument(); // one failure, still recent
+      await act(async () => { await vi.advanceTimersByTimeAsync(5 * 60_000); });
       expect(screen.queryByText("KAKA007")).toBeNull();
-      unmount();
-
-      const fresh = vi.fn().mockResolvedValueOnce(board(today)).mockRejectedValue(new Error("503"));
-      render(<StatSniperLeaderboard fetcher={fresh} pollMs={1000} />);
-      expect(await screen.findByText("KAKA007")).toBeInTheDocument();
-      await act(async () => { await vi.advanceTimersByTimeAsync(1100); });
-      expect(screen.getByText("KAKA007")).toBeInTheDocument();
+      expect(screen.getByRole("status")).toBeInTheDocument();
     } finally {
       vi.useRealTimers();
     }
