@@ -2569,6 +2569,7 @@
     "you": "You",
     "yourRank": "Your rank: #{rank} of {total}",
     "empty": "No one has played yet today. Set the bar.",
+    "unavailable": "The leaderboard isn't available right now.",
     "skip": "Skip"
   },
   "passChain": {

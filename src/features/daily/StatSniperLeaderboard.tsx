@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/contexts/LocaleContext";
 import { usePlayer } from "@/contexts/PlayerContext";
@@ -11,21 +11,36 @@ import type { AvatarCustomization } from "@/types/game";
 
 const poppins = { fontFamily: "'Poppins', sans-serif" } as const;
 
+const STALE_AFTER_MS = 5 * 60_000;
+
 /** Today's most accurate Stat Sniper players — the main leaderboard's table styling
  *  (green frame, big rank, uppercase names, own row in green) with only rank / player / accuracy. */
-export function StatSniperLeaderboard({ refreshKey = 0, fetcher = getStatSniperLeaderboard, className }: { refreshKey?: number; /** Guest play reads the public board. */ fetcher?: () => Promise<Board>; className?: string }) {
+export function StatSniperLeaderboard({ refreshKey = 0, fetcher = getStatSniperLeaderboard, pollMs = 15_000, className }: { refreshKey?: number; /** Guest play reads the public board. */ fetcher?: () => Promise<Board>; /** The public board is cached server-side; it refreshes less often. */ pollMs?: number; className?: string }) {
   const { t } = useLocale();
   const { player } = usePlayer();
   const [board, setBoard] = useState<Board | null>(null);
+  const [failed, setFailed] = useState(false);
+  const lastLoadedAt = useRef(0);
 
-  // Refetch on demand (a saved result) and every 15s while visible, so the table moves live.
+  // Refetch on demand (a saved result) and every `pollMs` while visible, so the table moves live.
   useEffect(() => {
     let cancelled = false;
-    const load = () => fetcher().then((b) => { if (!cancelled) setBoard(b); }).catch(() => undefined);
+    const load = () => fetcher().then((b) => {
+      if (cancelled) return;
+      setBoard(b);
+      setFailed(false);
+      lastLoadedAt.current = Date.now();
+    }).catch(() => {
+      if (cancelled) return;
+      setFailed(true);
+      // A failed refresh keeps recent rows, but a board unconfirmed for STALE_AFTER_MS (it may be yesterday's) is
+      // dropped. Elapsed time, not dates: the device clock may disagree with the server's day.
+      if (Date.now() - lastLoadedAt.current > STALE_AFTER_MS) setBoard(null);
+    });
     void load();
-    const id = window.setInterval(() => void load(), 15_000);
+    const id = window.setInterval(() => void load(), pollMs);
     return () => { cancelled = true; window.clearInterval(id); };
-  }, [refreshKey, fetcher]);
+  }, [refreshKey, fetcher, pollMs]);
 
   return (
     <aside className={cn("w-full", className)}>
@@ -40,6 +55,9 @@ export function StatSniperLeaderboard({ refreshKey = 0, fetcher = getStatSniperL
       <div className="overflow-hidden rounded-[10px] border-2" style={{ borderColor: "#38B60E" }}>
         {board && board.entries.length === 0 && (
           <p className="px-3 py-4 text-center text-xs text-white/55" style={poppins}>{t("statSniper.empty")}</p>
+        )}
+        {!board && failed && (
+          <p role="status" className="px-3 py-4 text-center text-xs text-white/55" style={poppins}>{t("statSniper.unavailable")}</p>
         )}
         <div className="divide-y divide-brand-green/25">
           {board?.entries.map((entry) => {

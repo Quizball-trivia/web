@@ -18,6 +18,7 @@ vi.mock("@/lib/guest/guestSession", () => ({ guestFetch: (...args: unknown[]) =>
 vi.mock("@/lib/posthog", () => ({ trackEvent: vi.fn() }));
 vi.mock("@/lib/analytics/public-games.analytics", async (orig) => ({ ...(await orig<object>()), trackPlayNowClick: (...args: unknown[]) => trackPlayNowClick(...args) }));
 vi.mock("@/features/aproximado/PlayRoomWithFriendsButton", () => ({ PlayRoomWithFriendsButton: () => <button type="button">friends</button> }));
+vi.mock("@/features/daily/StatSniperLeaderboard", () => ({ StatSniperLeaderboard: ({ fetcher }: { fetcher?: unknown }) => <div data-testid="board" data-public={fetcher ? "yes" : "no"} /> }));
 vi.mock("@/features/demos/DemoDailyChallenge", () => ({
   DemoDailyChallenge: ({ session, boardSlot, onRemoteComplete, resultCta, onEvent, confirmQuit }: { session: { questions: unknown[] }; boardSlot: React.ReactNode; onRemoteComplete: (score: number) => Promise<unknown>; resultCta: { label?: string }; onEvent: (e: "replay") => void; confirmQuit?: boolean }) => (
     <div data-confirm-quit={String(confirmQuit)}>
@@ -54,7 +55,8 @@ describe("Aproximado on its public page", () => {
     await renderPlay();
     expect(await screen.findByTestId("questions")).toHaveTextContent("2");
     expect(guestFetch).toHaveBeenCalledWith("/api/v1/guest/daily-challenges/statSniper/session?locale=es", { method: "POST", locale: "es" });
-    expect(screen.getByRole("region", { name: "Ranking de hoy" })).toBeInTheDocument();
+    // The real board (public endpoint) where the leaderboard sits, plus the way onto it.
+    expect(screen.getByTestId("board")).toHaveAttribute("data-public", "yes");
     expect(screen.getByRole("link", { name: "Crear cuenta" }).getAttribute("href")).toBe("/play?signin=1");
     expect(screen.getByTestId("result-cta")).toHaveTextContent("Creá tu cuenta y entrá al ranking");
     expect(document.body.textContent).not.toMatch(/BOBBIGOL|TIKI_TAKA/);

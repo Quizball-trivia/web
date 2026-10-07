@@ -2569,6 +2569,7 @@
     "you": "Sen",
     "yourRank": "Senin sıralaman: {total} içinde #{rank}",
     "empty": "Bugün henüz kimse oynamadı. İlk sen ol.",
+    "unavailable": "Sıralama şu anda kullanılamıyor.",
     "skip": "Atla"
   },
   "passChain": {
