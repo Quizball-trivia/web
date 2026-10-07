@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { FriendLobbyScreen } from "../FriendLobbyScreen";
+import type { MessageKey } from "@/lib/i18n/messages";
 
 const mocks = vi.hoisted(() => ({
   useFriendLobbyLogic: vi.fn(),
@@ -24,7 +25,7 @@ vi.mock("../LobbySettings", () => ({ LobbySettings: () => null }));
 vi.mock("../AlreadyInLobbyModal", () => ({ AlreadyInLobbyModal: () => null }));
 
 function makeHookResult(
-  failure: { inviteCode: string; reasonCode: string; message: string; retryable: boolean },
+  failure: { inviteCode: string; reasonCode: string; messageKey: MessageKey; retryable: boolean; room?: null },
 ) {
   return {
     lobby: null,
@@ -64,7 +65,7 @@ describe("FriendLobbyScreen invite failures", () => {
       makeHookResult({
         inviteCode: "MISSING",
         reasonCode: "LOBBY_NOT_FOUND",
-        message: "friend.inviteExpiredReason",
+        messageKey: "friend.inviteExpiredReason",
         retryable: false,
       }),
     );
@@ -73,8 +74,9 @@ describe("FriendLobbyScreen invite failures", () => {
 
     expect(screen.getByText("friend.inviteExpiredTitle")).toBeInTheDocument();
     expect(screen.getByText("friend.inviteExpiredDescription")).toBeInTheDocument();
-    expect(screen.getByText("friend.inviteExpiredReason")).toBeInTheDocument();
     expect(screen.queryByText("friend.retry")).not.toBeInTheDocument();
+    // A dead link offers a new room instead.
+    expect(screen.getByText("friend.inviteNewRoom")).toBeInTheDocument();
 
     fireEvent.click(screen.getByText("friend.backToFriendHub"));
     expect(mocks.handleInviteBack).toHaveBeenCalledOnce();
@@ -85,7 +87,7 @@ describe("FriendLobbyScreen invite failures", () => {
       makeHookResult({
         inviteCode: "SLOW01",
         reasonCode: "LOBBY_STATE_TIMEOUT",
-        message: "friend.inviteStateTimeoutReason",
+        messageKey: "friend.inviteStateTimeoutReason",
         retryable: true,
       }),
     );
@@ -114,7 +116,7 @@ describe("FriendLobbyScreen duel rooms", () => {
       members,
     };
     return {
-      ...makeHookResult({ inviteCode: "DUEL01", reasonCode: "", message: "", retryable: false }),
+      ...makeHookResult({ inviteCode: "DUEL01", reasonCode: "", messageKey: "friend.toastJoinFailed", retryable: false }),
       inviteJoinFailure: null,
       lobby,
       isDuelLobby: true,

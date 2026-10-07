@@ -34,13 +34,102 @@ import { useAuthStore } from '@/stores/auth.store';
 import { CoinIcon } from '@/features/store/components/CoinIcon';
 import {
   guessTheGoalApi,
-  GuessTheGoalApiError,
   type GgtGuessOutcome,
   type GgtBonusOutcome,
   type GgtGallery,
   type GgtI18nText,
   type GgtSession,
 } from '@/lib/repositories/guessTheGoal.repo';
+
+/** What a partner play adds to the shared payloads (backend partners/games/guess-the-goal). */
+export interface GgtPlayEnd {
+  play_id: string;
+  score: number;
+  sent: boolean;
+}
+export type GgtLiveSession = GgtSession & { bonus_deadline?: string | null };
+export type GgtLiveGuessOutcome = GgtGuessOutcome & {
+  timed_out?: boolean;
+  bonus_deadline?: string | null;
+  finished?: GgtPlayEnd | null;
+};
+export type GgtLiveBonusOutcome = GgtBonusOutcome & {
+  timed_out?: boolean;
+  finished?: GgtPlayEnd | null;
+  /** Partner plays send the footage and fun fact only once the bonus is closed (they can give its answer away). */
+  fun_fact?: GgtGuessOutcome['fun_fact'];
+  video_url?: string | null;
+  clip_start_s?: number | null;
+  clip_end_s?: number | null;
+};
+
+function withFootage(outcome: GgtLiveGuessOutcome | null, bonus: GgtLiveBonusOutcome): GgtLiveGuessOutcome | null {
+  if (!outcome || bonus.video_url === undefined) return outcome;
+  return {
+    ...outcome,
+    fun_fact: bonus.fun_fact ?? null,
+    video_url: bonus.video_url,
+    clip_start_s: bonus.clip_start_s ?? null,
+    clip_end_s: bonus.clip_end_s ?? null,
+  };
+}
+
+export interface GgtPlayView {
+  session: GgtLiveSession | null;
+  finished: GgtPlayEnd | null;
+  outcome: GgtLiveGuessOutcome | null;
+  bonus: GgtLiveBonusOutcome | null;
+}
+
+export interface GgtScreenApi {
+  current(): Promise<GgtLiveSession | null>;
+  start(clientNonce: string): Promise<GgtLiveSession>;
+  guess(sessionId: string, optionId: string): Promise<GgtLiveGuessOutcome>;
+  bonus(sessionId: string, optionId: string): Promise<GgtLiveBonusOutcome>;
+  gallery?(): Promise<GgtGallery>;
+  devResetToday?(): Promise<unknown>;
+  devAllGoals?(): ReturnType<typeof guessTheGoalApi.devAllGoals>;
+}
+
+/** Freecroco mode: points instead of coins, deadlines, one play, and the host's result screen at the end. */
+export interface GgtPartnerMode {
+  /** Settles a play whose bonus time ran out; resolves to the timed-out outcome. */
+  expire(sessionId: string): Promise<{ finished: GgtPlayEnd; outcome: GgtLiveGuessOutcome; bonus: GgtLiveBonusOutcome | null }>;
+  /** The play behind a session, finished ones included: recovers a lost or refused response. */
+  lookup(sessionId: string): Promise<GgtPlayView>;
+  onFinished(play: GgtPlayEnd): void;
+  onExit(): void;
+  copy: {
+    subtitle: string;
+    intro: string;
+    seeResult: string;
+    timeLeft: (seconds: number) => string;
+    timeUp: string;
+    noPlaysLeft: string;
+  };
+}
+
+export interface GgtScreenDeps {
+  api: GgtScreenApi;
+  /** Coins / XP the server granted (quizball.io only). */
+  onRewards?: (awards: GgtGuessOutcome['awards']) => void;
+  track?: (event: string, properties?: Record<string, unknown>) => void;
+  isAdmin?: boolean;
+  partner?: GgtPartnerMode;
+}
+
+const noTrack = () => {};
+
+/** Status and machine code of either client's errors (quizball.io GuessTheGoalApiError, partner PartnerApiError). */
+function apiError(err: unknown): { status: number; code: string | null } | null {
+  const e = err as { status?: unknown; code?: unknown } | null;
+  return e && typeof e.status === 'number' ? { status: e.status, code: typeof e.code === 'string' ? e.code : null } : null;
+}
+
+function secondsUntil(deadline: string | null | undefined, offsetMs: number): number | null {
+  if (!deadline) return null;
+  return Math.max(0, Math.ceil((new Date(deadline).getTime() - (Date.now() + offsetMs)) / 1000));
+}
 
 type Phase =
   | 'loading'
@@ -269,6 +358,8 @@ function GgtGalleryPanel({
                 src={`https://www.youtube-nocookie.com/embed/${(watch.goal.video_url.match(/(?:watch\?v=|youtu\.be\/|shorts\/|embed\/)([A-Za-z0-9_-]{6,20})/) ?? [])[1] ?? ''}?autoplay=1&rel=0${watch.goal.clip_start_s ? `&start=${watch.goal.clip_start_s}` : ''}${watch.goal.clip_end_s ? `&end=${watch.goal.clip_end_s}` : ''}`}
                 title={watch.title}
                 allow="autoplay; encrypted-media"
+                // The partner host sends no referrer by default; YouTube embeds refuse to play without one.
+                referrerPolicy="strict-origin-when-cross-origin"
                 allowFullScreen
                 className="aspect-video w-full rounded-2xl bg-black"
               />
@@ -319,14 +410,33 @@ function toBoardGoal(session: GgtSession): TacticsGoalDef {
 }
 
 export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
+  const queryClient = useQueryClient();
+  const { addXP } = usePlayer();
+  const deps = useMemo<GgtScreenDeps>(
+    () => ({
+      api: guessTheGoalApi,
+      onRewards: (awards) => {
+        if (awards.coins > 0) void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
+        if (awards.xp > 0) addXP(awards.xp);
+      },
+      track: (event, properties) => trackEvent(event, properties as Parameters<typeof trackEvent>[1]),
+      isAdmin: useAuthStore.getState().user?.role === 'admin',
+    }),
+    [queryClient, addXP]
+  );
+  return <GuessTheGoalScreen backHref={backHref} deps={deps} />;
+}
+
+export function GuessTheGoalScreen({ backHref, deps }: { backHref?: string; deps: GgtScreenDeps }) {
   const t = useMiniT();
   const locale = useMiniLocale();
-  const queryClient = useQueryClient();
+  const { api, partner } = deps;
+  const trackEvent = deps.track ?? noTrack;
 
   const [phase, setPhase] = useState<Phase>('loading');
-  const [session, setSession] = useState<GgtSession | null>(null);
-  const [outcome, setOutcome] = useState<GgtGuessOutcome | null>(null);
-  const [bonusOutcome, setBonusOutcome] = useState<GgtBonusOutcome | null>(null);
+  const [session, setSession] = useState<GgtLiveSession | null>(null);
+  const [outcome, setOutcome] = useState<GgtLiveGuessOutcome | null>(null);
+  const [bonusOutcome, setBonusOutcome] = useState<GgtLiveBonusOutcome | null>(null);
   const [picked, setPicked] = useState<string | null>(null);
   const [bonusPicked, setBonusPicked] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -344,7 +454,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
   const dailyLimit = gallery?.daily_goal_limit ?? null;
   const goalsToday = gallery?.goals_today ?? 0;
   const dailyLimitReached = gallery?.daily_limit_reached ?? false;
-  const isAdmin = useAuthStore.getState().user?.role === 'admin';
+  const isAdmin = deps.isAdmin ?? false;
   /** Admin content browser: the whole pool rendered through the normal
    *  collection panel, every card unlocked. */
   const [devAll, setDevAll] = useState<GgtGallery | null>(null);
@@ -354,7 +464,8 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
       return;
     }
     try {
-      const { goals } = await guessTheGoalApi.devAllGoals();
+      if (!api.devAllGoals) return;
+      const { goals } = await api.devAllGoals();
       setDevAll({
         solved: goals.length,
         total: goals.length,
@@ -378,12 +489,11 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
     } catch {
       setError(t('Something went wrong — try again'));
     }
-  }, [devAll, t]);
+  }, [api, devAll, t]);
 
   const goalsLeftToday = dailyLimit === null ? null : Math.max(0, dailyLimit - goalsToday);
   const [showGallery, setShowGallery] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { addXP } = usePlayer();
   const [time, setTime] = useState(0);
   /** serverNow - clientNow at payload receipt; keeps our clock honest. */
   const offsetRef = useRef(0);
@@ -402,8 +512,9 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
   const boardGoal = useMemo(() => (session ? toBoardGoal(session) : null), [session]);
   const timeline = useMemo(() => (boardGoal ? buildTimeline(boardGoal) : null), [boardGoal]);
 
-  const adoptSession = useCallback((next: GgtSession, resumed = false) => {
-    offsetRef.current = new Date(next.server_now).getTime() - Date.now();
+  const adoptSession = useCallback((next: GgtLiveSession, resumed = false, offsetMs?: number) => {
+    // A session resumed from memory carries an old server_now: keep the offset measured when it arrived.
+    offsetRef.current = offsetMs ?? new Date(next.server_now).getTime() - Date.now();
     setTime(0);
     setSession(next);
     setOutcome(next.outcome ?? null);
@@ -425,11 +536,11 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
       solved: next.progress.solved,
       total_goals: next.progress.total,
     });
-  }, []);
+  }, [trackEvent]);
 
   const loadCurrent = useCallback(
     (track = true) => {
-      guessTheGoalApi
+      api
         .current()
         .then((existing) => {
           if (existing) {
@@ -437,6 +548,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
             // the open goal waits behind the button instead of swallowing
             // the navigation. Kick off resumes it — nothing is abandoned.
             resumableRef.current = existing;
+            resumableOffsetRef.current = new Date(existing.server_now).getTime() - Date.now();
             setPhase('idle');
             if (track) trackEvent('ggt_screen_viewed', { entry: 'resumable' });
           } else {
@@ -445,7 +557,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
           }
         })
         .catch((err) => {
-          if (err instanceof GuessTheGoalApiError && err.status === 503) {
+          if (apiError(err)?.status === 503) {
             setPhase('disabled');
             if (track) trackEvent('ggt_screen_viewed', { entry: 'disabled' });
           } else {
@@ -455,7 +567,36 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
           void err;
         });
     },
-    [adoptSession]
+    [api, trackEvent]
+  );
+
+  /** Freecroco: after a refused or unanswered request the play itself decides the screen — its result if it ended
+   *  (the start screen would only answer "no plays left"), the open goal otherwise. False when it could not tell. */
+  const reconcilePartner = useCallback(
+    async (sessionId: string, gen: number): Promise<boolean> => {
+      if (!partner) return false;
+      try {
+        const view = await partner.lookup(sessionId);
+        if (gen !== genRef.current) return true;
+        if (view.session) {
+          adoptSession(view.session, true);
+          return true;
+        }
+        if (!view.finished) return false;
+        if (!view.finished.sent || !view.outcome) {
+          partner.onExit();
+          return true;
+        }
+        setOutcome(view.bonus ? withFootage(view.outcome, view.bonus) : view.outcome);
+        setBonusOutcome(view.bonus);
+        setError(null);
+        setPhase(view.bonus ? 'bonus_done' : 'reveal');
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    [partner, adoptSession]
   );
 
   const retryLoad = useCallback(() => {
@@ -466,7 +607,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
 
   const devResetToday = useCallback(async () => {
     try {
-      await guessTheGoalApi.devResetToday();
+      await api.devResetToday?.();
       genRef.current += 1;
       resumableRef.current = null;
       setSession(null);
@@ -478,11 +619,11 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
       // change alone leaves a stale 'Continue' label on screen).
       setPhase('loading');
       loadCurrent(false);
-      guessTheGoalApi.gallery().then(setGallery).catch(() => {});
+      api.gallery?.().then(setGallery).catch(() => {});
     } catch {
       setError(t('Something went wrong — try again'));
     }
-  }, [t, loadCurrent]);
+  }, [api, t, loadCurrent]);
 
   const loadedOnceRef = useRef(false);
   useEffect(() => {
@@ -500,9 +641,10 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
     // and bonus_done refresh it so the numbers are current after every solve,
     // and opening the overlay always refetches so it can never show stale
     // totals from before the last solve.
+    if (!api.gallery) return;
     if (!showGallery && phase !== 'idle' && phase !== 'reveal' && phase !== 'bonus_done') return;
     let cancelled = false;
-    guessTheGoalApi
+    api
       .gallery()
       .then((data) => {
         if (!cancelled) setGallery(data);
@@ -511,7 +653,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
     return () => {
       cancelled = true;
     };
-  }, [phase, showGallery]);
+  }, [api, phase, showGallery]);
 
   useEffect(() => {
     if (!showGallery) return;
@@ -552,7 +694,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
     if (resumableRef.current) {
       const resume = resumableRef.current;
       resumableRef.current = null;
-      adoptSession(resume, true);
+      adoptSession(resume, true, resumableOffsetRef.current);
       return;
     }
     setBusy(true);
@@ -564,34 +706,40 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
     // The nonce survives retries so a lost response can't mint two sessions.
     if (!nonceRef.current) nonceRef.current = newNonce();
     try {
-      const next = await guessTheGoalApi.start(nonceRef.current);
+      const next = await api.start(nonceRef.current);
       nonceRef.current = null;
       if (gen !== genRef.current) return;
       adoptSession(next);
     } catch (err) {
       if (gen !== genRef.current) return;
-      if (err instanceof GuessTheGoalApiError) {
-        if (err.status === 503) {
+      const failure = apiError(err);
+      if (failure) {
+        if (failure.status === 503) {
           setPhase('disabled');
           return;
         }
         // Only a definite 4xx invalidates the nonce; a 5xx/timeout may have
         // committed, and retrying with a FRESH nonce would abandon that
         // committed session (free-kicks precedent).
-        if (err.status >= 400 && err.status < 500) {
+        if (failure.status >= 400 && failure.status < 500) {
           nonceRef.current = null;
-          if (err.status === 409) {
-            if (err.code === 'GGT_DAILY_LIMIT_REACHED') {
+          if (failure.status === 409) {
+            if (partner && failure.code === 'quota_exhausted') {
+              setPhase('idle');
+              setError(partner.copy.noPlaysLeft);
+              return;
+            }
+            if (failure.code === 'GGT_DAILY_LIMIT_REACHED') {
               // The idle card disables PLAY, so reaching here means its
               // gallery data was stale — refresh it so the card catches up.
               setPhase('idle');
               setError(t('All {limit} goals played — come back tomorrow', {
                 limit: gallery?.daily_goal_limit ?? 5,
               }));
-              guessTheGoalApi.gallery().then(setGallery).catch(() => {});
+              api.gallery?.().then(setGallery).catch(() => {});
               return;
             }
-            const existing = await guessTheGoalApi.current().catch(() => null);
+            const existing = await api.current().catch(() => null);
             if (gen !== genRef.current) return;
             if (existing) {
               adoptSession(existing, true);
@@ -606,7 +754,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
     } finally {
       setBusy(false);
     }
-  }, [busy, adoptSession, t, gallery?.daily_goal_limit]);
+  }, [api, partner, trackEvent, busy, adoptSession, t, gallery?.daily_goal_limit]);
 
   const submitGuess = useCallback(
     async (optionId: string) => {
@@ -620,14 +768,11 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
       try {
         // Same-option retries replay the stored result server-side, so a
         // timeout here is safe to re-submit.
-        const result = await guessTheGoalApi.guess(session.session_id, optionId);
+        const result = await api.guess(session.session_id, optionId);
         if (gen !== genRef.current) return;
         setOutcome(result);
         setPhase('reveal');
-        if (result.awards.coins > 0) {
-          void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
-        }
-        if (result.awards.xp > 0) addXP(result.awards.xp);
+        deps.onRewards?.(result.awards);
         trackEvent('ggt_guess_submitted', {
           correct: result.correct,
           points: result.points,
@@ -643,9 +788,11 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
         });
       } catch (err) {
         if (gen !== genRef.current) return;
-        if (err instanceof GuessTheGoalApiError && err.status >= 400 && err.status < 500) {
+        const failure = apiError(err);
+        if (failure && failure.status >= 400 && failure.status < 500) {
           // Definite rejection (session gone/answered in another tab): a
           // same-option retry can never succeed — reconcile with the server.
+          if (await reconcilePartner(session.session_id, gen)) return;
           setPhase('loading');
           loadCurrent(false);
           return;
@@ -659,7 +806,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
         setBusy(false);
       }
     },
-    [session, busy, phase, queryClient, addXP, t, serverElapsed, loadCurrent]
+    [api, deps, trackEvent, session, busy, phase, t, serverElapsed, loadCurrent, reconcilePartner]
   );
 
   const submitBonus = useCallback(
@@ -670,14 +817,12 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
       setBonusPicked(optionId);
       const gen = genRef.current;
       try {
-        const result = await guessTheGoalApi.bonus(session.session_id, optionId);
+        const result = await api.bonus(session.session_id, optionId);
         if (gen !== genRef.current) return;
         setBonusOutcome(result);
+        setOutcome((current) => withFootage(current, result));
         setPhase('bonus_done');
-        if (result.awards.coins > 0) {
-          void queryClient.invalidateQueries({ queryKey: queryKeys.store.wallet() });
-        }
-        if (result.awards.xp > 0) addXP(result.awards.xp);
+        deps.onRewards?.(result.awards);
         trackEvent('ggt_bonus_answered', {
           correct: result.correct,
           bonus_points: result.bonus_points,
@@ -687,7 +832,9 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
         });
       } catch (err) {
         if (gen !== genRef.current) return;
-        if (err instanceof GuessTheGoalApiError && err.status >= 400 && err.status < 500) {
+        const failure = apiError(err);
+        if (failure && failure.status >= 400 && failure.status < 500) {
+          if (await reconcilePartner(session.session_id, gen)) return;
           setPhase('loading');
           loadCurrent(false);
           return;
@@ -699,7 +846,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
         setBusy(false);
       }
     },
-    [session, busy, queryClient, addXP, t, loadCurrent]
+    [api, deps, trackEvent, session, busy, t, loadCurrent, reconcilePartner]
   );
 
   const mainMoves = session?.goal.main_moves ?? 1;
@@ -774,7 +921,8 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
   // Once per session: pressing back must not re-trigger the flip.
   const autoFlippedForRef = useRef<string | null>(null);
   const [videoMuted, setVideoMuted] = useState(false);
-  const resumableRef = useRef<GgtSession | null>(null);
+  const resumableRef = useRef<GgtLiveSession | null>(null);
+  const resumableOffsetRef = useRef(0);
   /** Bumped whenever the user backs out or resets: in-flight start/guess/bonus
    *  responses from before the bump must not reopen the game. */
   const genRef = useRef(0);
@@ -791,6 +939,76 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
   }, [phase, hasVideo, session]);
 
   const inGame = phase === 'watch' || phase === 'reveal' || phase === 'bonus' || phase === 'bonus_done';
+
+  // Freecroco bonus deadline: a tick drives the countdown; at 0 the server settles the play as timed out. The main
+  // answer has no time limit (contract §7.4).
+  const [, setClockTick] = useState(0);
+  const bonusPending = outcome?.session_state === 'guessed' && Boolean(outcome.bonus) && !bonusOutcome;
+  const timed = Boolean(partner) && bonusPending && (phase === 'reveal' || phase === 'bonus');
+  useEffect(() => {
+    if (!timed) return undefined;
+    const id = window.setInterval(() => setClockTick((n) => n + 1), 500);
+    return () => window.clearInterval(id);
+  }, [timed]);
+  const bonusLeft =
+    timed && bonusPicked === null ? secondsUntil(outcome?.bonus_deadline ?? session?.bonus_deadline, offsetRef.current) : null;
+  const finishedPlay = bonusOutcome?.finished ?? outcome?.finished ?? null;
+  const expiryKey = partner && session && bonusLeft === 0 ? `${session.session_id}:bonus` : null;
+  useEffect(() => {
+    if (!partner || !session || !expiryKey) return undefined;
+    // Every retry and response checks it still belongs to this session's open bonus: an answer that won the race
+    // (or a new session) cancels it, and leaving the stage clears the pending retry.
+    let cancelled = false;
+    let retry: number | null = null;
+    const gen = genRef.current;
+    const current = () => !cancelled && gen === genRef.current;
+    const run = async (attempt: number): Promise<void> => {
+      try {
+        const result = await partner.expire(session.session_id);
+        if (!current()) return;
+        // The settled play comes back here: without it (no bonus outcome) "See my points" would have nothing to show.
+        const bonus = result.bonus;
+        if (bonus) setBonusOutcome(bonus);
+        setOutcome((prev) => {
+          const settled = { ...prev, ...result.outcome, finished: result.finished };
+          return bonus ? withFootage(settled, bonus) : settled;
+        });
+        setPhase('bonus_done');
+      } catch (err) {
+        if (!current()) return;
+        // The server's clock decides: asked a moment early (inside the 1 s grace), ask again.
+        if (apiError(err)?.code === 'invalid_request' && attempt < 5) {
+          retry = window.setTimeout(() => void run(attempt + 1), 1_000);
+          return;
+        }
+        // Anything else (no answer, refused) may have settled the play: ask the play for its result.
+        if ((await reconcilePartner(session.session_id, gen)) || !current()) return;
+        setPhase('loading');
+        loadCurrent(false);
+      }
+    };
+    void run(0);
+    return () => {
+      cancelled = true;
+      if (retry !== null) window.clearTimeout(retry);
+    };
+    // session is read through expiryKey (its id); depending on the object would restart the request on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [partner, expiryKey, loadCurrent, reconcilePartner]);
+
+  // Freecroco: the bonus clock runs from the right answer, so go straight to the question.
+  useEffect(() => {
+    if (!partner || phase !== 'reveal' || !bonusPending) return undefined;
+    const id = window.setTimeout(() => setPhase((p) => (p === 'reveal' ? 'bonus' : p)), 1_500);
+    return () => window.clearTimeout(id);
+  }, [partner, phase, bonusPending]);
+
+  const finishPartner = () => {
+    if (!partner) return;
+    // A play cancelled by a block has no points to show: back to the partner home.
+    if (finishedPlay?.sent) partner.onFinished(finishedPlay);
+    else partner.onExit();
+  };
   const activeKind = useMemo<TacticsStepKind | null>(() => {
     if (phase !== 'watch' || !timeline) return null;
     let current: TacticsStepKind | null = null;
@@ -809,7 +1027,9 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
     <div className="flex flex-col gap-1.5 lg:flex-[3]">
       <div className="flex items-center justify-between gap-2 px-1">
         <span className="shrink-0 font-poppins text-[11px] font-black uppercase tracking-wider text-white/45">
-          {t('Solved {n}/{total}', { n: session.progress.solved, total: session.progress.total })}
+          {partner
+            ? ''
+            : t('Solved {n}/{total}', { n: session.progress.solved, total: session.progress.total })}
         </span>
         {phase === 'watch' ? (
           <span className="shrink-0 font-poppins text-[11px] font-black uppercase tracking-wider text-brand-yellow">
@@ -819,7 +1039,11 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
           <span
             className={`font-poppins text-[11px] font-black uppercase tracking-wider ${outcome.correct ? 'text-brand-green-bright' : 'text-brand-red'}`}
           >
-            {outcome.correct ? t('+{points} points', { points: outcome.points }) : t('Missed')}
+            {outcome.correct
+              ? t('+{points} points', { points: outcome.points })
+              : partner && outcome.timed_out
+                ? partner.copy.timeUp
+                : t('Missed')}
           </span>
         ) : null}
       </div>
@@ -862,6 +1086,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
             src={`https://www.youtube-nocookie.com/embed/${video.id}?autoplay=1&rel=0${video.start ? `&start=${video.start}` : ''}${video.end ? `&end=${video.end}` : ''}`}
             title={pick(outcome?.title)}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            referrerPolicy="strict-origin-when-cross-origin"
             allowFullScreen
             className="absolute inset-0 h-full w-full"
           />
@@ -925,7 +1150,16 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
       <div className="mx-auto flex min-h-[calc(100dvh-4rem)] max-w-[430px] flex-col px-4 py-6 md:px-8 md:py-8 lg:max-w-6xl">
         <div className="mb-4 md:mb-6">
           <div className="flex items-center gap-3 md:gap-4">
-            {phase === 'idle' || phase === 'disabled' || phase === 'load_error' ? (
+            {partner && (phase === 'idle' || phase === 'disabled' || phase === 'load_error') ? (
+              <button
+                type="button"
+                aria-label={t('Back')}
+                onClick={partner.onExit}
+                className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 md:size-11"
+              >
+                <ArrowLeft className="size-5 md:size-6" />
+              </button>
+            ) : phase === 'idle' || phase === 'disabled' || phase === 'load_error' ? (
               <Link
                 href={backHref ?? '/mini-games'}
                 aria-label={t('Back')}
@@ -944,6 +1178,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
                   // 'guessed' session so resume lands on the bonus question.
                   genRef.current += 1;
                   setError(null);
+                  resumableOffsetRef.current = offsetRef.current;
                   if (session && !outcome) {
                     resumableRef.current = session;
                   } else if (
@@ -964,7 +1199,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
                   setSession(null);
                   setOutcome(null);
                   setPhase('idle');
-                  guessTheGoalApi.gallery().then(setGallery).catch(() => {});
+                  api.gallery?.().then(setGallery).catch(() => {});
                 }}
                 className="flex size-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 md:size-11"
               >
@@ -976,7 +1211,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
             </h1>
           </div>
           <p className="mt-1.5 pl-12 text-[11px] font-black uppercase tracking-[0.04em] text-white/55 md:pl-[60px] md:text-sm md:tracking-[0.08em]">
-            {t('Name the iconic goal — real rewards, server-scored')}
+            {partner ? partner.copy.subtitle : t('Name the iconic goal — real rewards, server-scored')}
           </p>
         </div>
       {phase === 'loading' && (
@@ -1029,7 +1264,9 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
               {t('Guess the Goal')}
             </h2>
             <p className="max-w-xs text-sm font-semibold leading-relaxed text-black/80">
-              {poolExhausted
+              {partner
+                ? partner.copy.intro
+                : poolExhausted
                 ? t(
                     'You have solved every goal in the library. Replays keep your mind sharp — no repeat rewards, all glory.'
                   )
@@ -1059,6 +1296,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
               type="button"
               onClick={start}
               disabled={busy || (dailyLimitReached && !resumableRef.current)}
+              data-testid="ggt-kickoff"
               className="font-poppins mt-2 inline-flex h-[50px] min-w-[200px] items-center justify-center gap-2 rounded-[20px] bg-black px-8 text-[20px] uppercase tracking-wide text-white transition-all hover:brightness-110 active:translate-y-[2px] disabled:opacity-60"
             >
               <Play className="size-5 fill-current" />{' '}
@@ -1178,6 +1416,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
                           type="button"
                           disabled={phase !== 'watch' || busy || (picked !== null && picked !== option.id)}
                           onClick={() => submitGuess(option.id)}
+                          data-testid="ggt-option"
                           className={GGT_OPTION_CLASS}
                           style={ggtOptionStyle(state)}
                         >
@@ -1216,7 +1455,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
                           )}
                         </p>
                       )}
-                      {outcome.correct && !outcome.awards.first_solve && (
+                      {!partner && outcome.correct && !outcome.awards.first_solve && (
                         <p className="px-1 font-poppins text-[11px] font-bold uppercase text-white/40">
                           {t('Already solved before — no repeat rewards')}
                         </p>
@@ -1228,11 +1467,20 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
                         type="button"
                         disabled={busy}
                         onClick={() =>
-                          outcome.session_state === 'guessed' && outcome.bonus ? setPhase('bonus') : start()
+                          outcome.session_state === 'guessed' && outcome.bonus
+                            ? setPhase('bonus')
+                            : partner
+                              ? finishPartner()
+                              : start()
                         }
+                        data-testid="ggt-reveal-next"
                         className="flex h-12 items-center justify-center gap-1.5 rounded-2xl bg-brand-green-bright font-poppins text-sm font-black uppercase tracking-wide text-black disabled:opacity-60"
                       >
-                        {outcome.session_state === 'guessed' ? t('Bonus question') : t('Next goal')}
+                        {outcome.session_state === 'guessed'
+                          ? t('Bonus question')
+                          : partner
+                            ? partner.copy.seeResult
+                            : t('Next goal')}
                         <ChevronRight className="size-4" />
                       </button>
                     </motion.div>
@@ -1250,6 +1498,9 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
                 >
                   <p className="flex items-baseline px-1 font-poppins text-[11px] font-black uppercase tracking-wider text-brand-yellow">
                     {t('Bonus question')}
+                    {bonusLeft !== null && partner && (
+                      <span className="ml-2 text-white/70" data-testid="ggt-bonus-timer">· {partner.copy.timeLeft(bonusLeft)}</span>
+                    )}
                   </p>
                   <p className="px-1 pb-1 font-poppins text-sm font-black uppercase leading-snug text-white">
                     {pick((outcome?.bonus ?? session.bonus)?.question)}
@@ -1276,6 +1527,7 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
                           type="button"
                           disabled={phase !== 'bonus' || busy || (bonusPicked !== null && bonusPicked !== option.id)}
                           onClick={() => submitBonus(option.id)}
+                          data-testid="ggt-bonus-option"
                           className={GGT_OPTION_CLASS}
                           style={ggtOptionStyle(state)}
                         >
@@ -1305,11 +1557,12 @@ export function GuessTheGoalLive({ backHref }: { backHref?: string } = {}) {
                       <button
                         type="button"
                         disabled={busy}
-                        onClick={start}
+                        onClick={partner ? finishPartner : start}
+                        data-testid="ggt-bonus-next"
                         className="flex h-12 items-center justify-center gap-1.5 rounded-2xl bg-brand-green-bright font-poppins text-sm font-black uppercase tracking-wide text-black disabled:opacity-60"
                       >
-                        {t('Next goal')}
-                        <RotateCcw className="size-4" />
+                        {partner ? partner.copy.seeResult : t('Next goal')}
+                        {partner ? <ChevronRight className="size-4" /> : <RotateCcw className="size-4" />}
                       </button>
                     </motion.div>
                   )}

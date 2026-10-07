@@ -1,3 +1,4 @@
+import type { Locale } from "@/lib/i18n/locale";
 import { DuelMatchView } from "@/features/duel/DuelMatchView";
 import { duelCopy } from "@/features/duel/duel.copy";
 import type { BuscaminasDuelView, PistasDuelView, Seat, UltimoDuelView } from "@/features/duel/duel.views";
@@ -12,6 +13,15 @@ import { randomBotAvatar } from "@/features/auction/data/botAvatars";
 import { cn } from "@/lib/utils";
 import { DEADLINE, finished, playing, settled } from "./fixtures/ultimo-solo";
 import { NAMES, PLAYERS } from "./fixtures/universe";
+import { AproximadoBoard, AproximadoFrame, AproximadoIntro, AproximadoNotice, AproximadoPodium } from "@/features/aproximado/AproximadoRoom";
+import { AproximadoPartyResults } from "@/features/aproximado/AproximadoParty";
+import type { AproximadoRoomView } from "@/features/aproximado/aproximado.views";
+import { StatSniperGame } from "@/features/daily/StatSniperGame";
+import { FixedLocaleProvider } from "@/contexts/LocaleContext";
+import { buildDemoDailySession } from "@/features/demos/data/demoDailySessions";
+import type { StatSniperSession } from "@/lib/domain/dailyChallenge";
+import { AproximadoSim, type SimConfig } from "./AproximadoSim";
+import { roomView } from "./fixtures/aproximado";
 import { scenario, type GameEntry, type Scenario, type ScenarioContext } from "./types";
 
 /** A full duel screen: the snapshot (status, view, seats, result) plus the screen's own flags. */
@@ -146,7 +156,100 @@ const ULTIMO_SOLO = [
   solo("archive", "Archive of past days", "archive", { state: playing(0, 0) }),
 ];
 
+
+/** A Stat Sniper room screen from a full view; the clock stands still at `secondsLeft`. */
+interface RoomData {
+  view: AproximadoRoomView; secondsLeft: number | null; busy: boolean;
+  connected?: boolean; error?: string | null; leaveConfirm?: boolean; notice?: "cancelled" | "left" | "excluded" | null;
+  /** "party" (default): Party Quiz standings sidebar / phone bar and results screen. "classic": the seat strip + podium. */
+  layout?: "party" | "classic";
+}
+const room = (id: string, name: string, make: (locale: string) => AproximadoRoomView, extra: Partial<Omit<RoomData, "view">> = {}, note?: string) =>
+  scenario<RoomData>({
+    id, name, note: note ?? "Fixture prompts are Spanish; edit the view JSON (seats, guesses, statuses, scores) and Apply",
+    data: { view: make("es"), secondsLeft: 12, busy: false, layout: "party", ...extra },
+    render: (data, ctx) => {
+      const v = data.view;
+      const party = data.layout !== "classic";
+      if (party && v.phase === "over" && !data.notice) return <FixedLocaleProvider locale={ctx.locale as Locale}><AproximadoPartyResults view={v} locale={ctx.locale} onRoom={() => ctx.log("onRoom")} onExit={() => ctx.log("onExit")} /></FixedLocaleProvider>;
+      return (
+        <FixedLocaleProvider locale={ctx.locale as Locale}>
+        <AproximadoFrame wide={party && !data.notice && v.phase !== "intro"}>
+          {data.notice ? <AproximadoNotice kind={data.notice} locale={ctx.locale} onRoom={() => ctx.log("onRoom")} />
+            : v.phase === "intro" ? <AproximadoIntro seats={v.seats} mySeat={v.mySeat} scoring={v.scoring} locale={ctx.locale} secondsLeft={data.secondsLeft} />
+              : v.phase === "over" ? <AproximadoPodium view={v} locale={ctx.locale} onRoom={() => ctx.log("onRoom")} onExit={() => ctx.log("onExit")} />
+                : <AproximadoBoard view={v} locale={ctx.locale} secondsLeft={data.secondsLeft} busy={data.busy} onGuess={(value) => ctx.log("onGuess", value)}
+                    connected={data.connected ?? true} error={data.error ?? null} onLeave={() => ctx.log("onLeave")} leaveConfirmOpen={data.leaveConfirm ?? false} layout={party ? "party" : "classic"} />}
+        </AproximadoFrame>
+        </FixedLocaleProvider>
+      );
+    },
+  });
+const live = (id: string, name: string, config: SimConfig, note: string) =>
+  scenario<SimConfig>({ id, name, note, data: config, render: (d, ctx) => <FixedLocaleProvider locale={ctx.locale as Locale}><AproximadoSim key={JSON.stringify(d)} config={d} locale={ctx.locale} log={ctx.log} /></FixedLocaleProvider> });
+
+function roomScreens(n: number): Scenario<never>[] {
+  const v = (o: Omit<Parameters<typeof roomView>[0], "n" | "locale">) => (locale: string) => roomView({ n, locale, ...o });
+  return [
+    room("intro", "Intro · players + rules", v({ phase: "intro" }), { secondsLeft: 3 }),
+    room("guess-fresh", "Question · nobody answered", v({ phase: "guess" })),
+    room("guess-some", "Question · some answered", v({ phase: "guess", answered: n === 2 ? [1] : [1, 3] })),
+    room("guess-mine", "Question · you answered, waiting", v({ phase: "guess", answered: [0, 2], myGuess: 58.5 })),
+    room("guess-urgent", "Question · 4 s left", v({ phase: "guess", answered: [0], myGuess: 70 }), { secondsLeft: 4 }),
+    room("guess-busy", "Question · guess in flight", v({ phase: "guess" }), { busy: true }),
+    room("reveal-spread", "Reveal · spread out", v({ phase: "reveal", pattern: "spread" }), { secondsLeft: null }),
+    room("reveal-tie", "Reveal · tie at the top", v({ phase: "reveal", pattern: "tie" }), { secondsLeft: null }),
+    room("reveal-exact", "Reveal · you hit it exactly", v({ phase: "reveal", pattern: "exact" }), { secondsLeft: null }),
+    room("reveal-missing", "Reveal · some did not answer", v({ phase: "reveal", pattern: "missing" }), { secondsLeft: null }),
+    ...(n > 2 ? [
+      room("seats-away", "Question · one disconnected, one left, one idle", v({ phase: "guess", answered: [1], statuses: { 2: "away", 3: "withdrawn" }, idle: n > 4 ? [4] : [] })),
+    ] : [room("seats-away", "Question · rival disconnected", v({ phase: "guess", statuses: { 1: "away" } }))]),
+    room("over", "Final result", v({ phase: "over" })),
+    room("over-tie", "Final result · tied for first", v({ phase: "over", pastPattern: "tie" })),
+    room("reveal-same", "Reveal · everyone typed the same number", v({ phase: "reveal", pattern: "same" }), { secondsLeft: null }),
+    room("reveal-none", "Reveal · nobody answered", v({ phase: "reveal", pattern: "none" }), { secondsLeft: null }),
+    room("offline", "Question · your connection dropped", v({ phase: "guess", answered: [1] }), { connected: false }),
+    room("refused-late", "Question · your answer arrived too late", v({ phase: "guess", answered: [1] }), { error: "not_open" }),
+    room("leave-confirm", "Leave? (confirmation)", v({ phase: "guess" }), { leaveConfirm: true }),
+    room("you-left", "You left the match", v({ phase: "guess" }), { notice: "left" }),
+    room("excluded", "Match started without you (not ready in time)", v({ phase: "intro" }), { notice: "excluded" }),
+    room("cancelled", "Match cancelled", v({ phase: "intro" }), { notice: "cancelled" }),
+  ];
+}
+
+const soloSession = (locale: string) => buildDemoDailySession("statSniper", locale as never) as StatSniperSession;
+const APROXIMADO_SOLO: Scenario<never>[] = [
+  scenario<null>({
+    id: "daily", name: "Today's daily (sliders, current game)", note: "The live Stat Sniper daily, demo session: what solo players get today",
+    data: null,
+    // practice: no member completion modal (it needs app providers the preview leaves out); the language follows the preview.
+    render: (_d, ctx) => (
+      <FixedLocaleProvider locale={ctx.locale}>
+        <StatSniperGame key={ctx.locale} session={soloSession(ctx.locale)} demo practice onBack={() => ctx.log("onBack")} onComplete={(score) => ctx.log("onComplete", score)} />
+      </FixedLocaleProvider>
+    ),
+  }),
+];
+
 export const GAMES: GameEntry[] = [
+  {
+    id: "aproximado",
+    name: "Closest Wins · Aproximado",
+    scenarios: {
+      solo: APROXIMADO_SOLO,
+      duel: [
+        live("live-1v1", "▶ Play a 1v1 vs a bot", { seats: 2, scoring: "closest", speed: 1, events: [] }, "Live: real rules + screens, a bot rival. Edit seats/scoring/speed/events and press Reset"),
+        ...roomScreens(2),
+      ],
+      room: [
+        live("live-4", "▶ Play with 3 bots", { seats: 4, scoring: "podium", speed: 1, events: [{ round: 3, seat: 2, do: "away" }, { round: 5, seat: 2, do: "back" }] }, "Live: 4 players, one bot drops at question 3 and is back at 5. Seat 0 = you ({ seat: 0, do: \"away\" } = your connection drops). Edit and Reset"),
+        live("live-6", "▶ Play with 5 bots (one leaves)", { seats: 6, scoring: "podium", speed: 1, events: [{ round: 4, seat: 5, do: "leave" }] }, "Live: 6 players, a bot leaves at question 4"),
+        ...roomScreens(4).map((sc) => ({ ...sc, id: `4-${sc.id}`, name: `4p · ${sc.name}` })),
+        ...roomScreens(6).map((sc) => ({ ...sc, id: `6-${sc.id}`, name: `6p · ${sc.name}` })),
+        ...roomScreens(3).filter((sc) => ["intro", "reveal-spread", "over"].includes(sc.id)).map((sc) => ({ ...sc, id: `3-${sc.id}`, name: `3p · ${sc.name}` })),
+      ],
+    },
+  },
   {
     id: "ultimo",
     name: "Último en pie",

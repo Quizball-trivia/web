@@ -324,7 +324,7 @@ const ALL_MINI_GAME_DEMO_MODES: DemoModeCard[] = [
   },
   {
     slug: "mini-stat-sniper",
-    title: { en: "Stat Sniper", ka: "სტატ-სნაიპერი", es: "Aproximado futbolero", tr: "Stat Sniper", },
+    title: { en: "Closest Wins", ka: "სტატ სნაიპერი", es: "Aproximado futbolero", tr: "En Yakın Tahmin", },
     description: {
       en: "No options — slide to your best guess and score on proximity.",
       ka: "ვარიანტების გარეშე — გაასრიალე შენი ვარაუდი და დააგროვე სიზუსტით.",
@@ -550,7 +550,7 @@ const DAILY_DEMO_COPY: Record<DailyChallengeType, { title: DemoI18nText; descrip
     },
   },
   statSniper: {
-    title: { en: "Stat Sniper", ka: "სტატ-სნაიპერი", es: "Aproximado futbolero", tr: "Stat Sniper", },
+    title: { en: "Closest Wins", ka: "სტატ სნაიპერი", es: "Aproximado futbolero", tr: "En Yakın Tahmin", },
     description: {
       en: "Ten football numbers — slide to your guess, the closer the better.",
       ka: "დღეში ათი რიცხვი — მიიტანე სლაიდერი ვარაუდამდე, რაც უფრო ახლოს, მით უკეთესი.",

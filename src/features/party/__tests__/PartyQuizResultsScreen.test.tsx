@@ -1,5 +1,6 @@
-import { render, screen, within } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { FixedLocaleProvider } from '@/contexts/LocaleContext';
 
 import type { MatchFinalResultsPayload, MatchParticipant } from '@/lib/realtime/socket.types';
 
@@ -40,6 +41,55 @@ function makeFinalResults(): MatchFinalResultsPayload {
 }
 
 describe('PartyQuizResultsScreen', () => {
+  afterEach(() => { cleanup(); vi.useRealTimers(); });
+  it('shows the score and usable navigation immediately, then a delayed saving message without estimated XP', () => {
+    vi.useFakeTimers();
+    const onMainMenu = vi.fn();
+    const props = { finalResults: makeFinalResults(), participants, selfUserId: 'high-score', onPlayAgain: vi.fn(), onMainMenu };
+    const { rerender } = render(<PartyQuizResultsScreen {...props} rewards={{ matchId: 'party-match-1', status: 'pending', xpEarned: null }} />);
+    expect(screen.getByText('You won the party quiz!')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Play Again' })).toBeEnabled();
+    expect(screen.queryByText('+70')).not.toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    act(() => vi.advanceTimersByTime(2_000));
+    expect(screen.getByRole('status')).toHaveTextContent('Saving your rewards… You can keep playing.');
+    fireEvent.click(screen.getByRole('button', { name: 'Main Menu' }));
+    expect(onMainMenu).toHaveBeenCalledOnce();
+    rerender(<PartyQuizResultsScreen {...props} rewards={{ matchId: 'party-match-1', status: 'complete', xpEarned: 37 }} />);
+    expect(screen.getByText('+37')).toBeInTheDocument();
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+  it('never flashes saving for a fast completion and hides rewards for ineligible players', () => {
+    vi.useFakeTimers();
+    const props = { finalResults: makeFinalResults(), participants, selfUserId: 'high-score', onPlayAgain: vi.fn(), onMainMenu: vi.fn() };
+    const { rerender } = render(<PartyQuizResultsScreen {...props} rewards={{ matchId: 'party-match-1', status: 'pending', xpEarned: null }} />);
+    act(() => vi.advanceTimersByTime(500));
+    rerender(<PartyQuizResultsScreen {...props} rewards={{ matchId: 'party-match-1', status: 'complete', xpEarned: 70 }} />);
+    act(() => vi.advanceTimersByTime(3_000));
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.getByText('+70')).toBeInTheDocument();
+    rerender(<PartyQuizResultsScreen {...props} rewards={{ matchId: 'party-match-1', status: 'ineligible', xpEarned: null }} />);
+    expect(screen.queryByTestId('party-rewards')).not.toBeInTheDocument();
+  });
+  it('does not reuse a receipt from a different match and does not call a failed job saving', () => {
+    const props = { finalResults: makeFinalResults(), participants, selfUserId: 'high-score', onPlayAgain: vi.fn(), onMainMenu: vi.fn() };
+    const { rerender } = render(<PartyQuizResultsScreen {...props} rewards={{ matchId: 'old-match', status: 'complete', xpEarned: 70 }} />);
+    expect(screen.queryByText('+70')).not.toBeInTheDocument();
+    rerender(<PartyQuizResultsScreen {...props} rewards={{ matchId: 'party-match-1', status: 'failed', xpEarned: 37 }} />);
+    expect(screen.getByText('+37')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Some rewards could not be saved. Please contact support.');
+  });
+  it.each([
+    ['en', 'Saving your rewards'], ['es', 'Guardando tus recompensas'],
+    ['ka', 'ჯილდოები ინახება'], ['tr', 'Ödüllerin kaydediliyor'],
+  ] as const)('translates the delayed status in %s', (locale, message) => {
+    vi.useFakeTimers();
+    render(<FixedLocaleProvider locale={locale}><PartyQuizResultsScreen finalResults={makeFinalResults()} participants={participants}
+      selfUserId="high-score" onPlayAgain={vi.fn()} onMainMenu={vi.fn()}
+      rewards={{ matchId: 'party-match-1', status: 'pending', xpEarned: null }} /></FixedLocaleProvider>);
+    act(() => vi.advanceTimersByTime(2_000));
+    expect(screen.getByRole('status')).toHaveTextContent(message);
+  });
   it('renders the highest score as the tallest first-place podium block', () => {
     render(
       <PartyQuizResultsScreen
@@ -64,9 +114,9 @@ describe('PartyQuizResultsScreen', () => {
     expect(firstPlace).toHaveClass('min-h-44', 'sm:min-h-52');
     expect(secondPlace).toHaveClass('min-h-36', 'sm:min-h-44');
     expect(thirdPlace).toHaveClass('min-h-32', 'sm:min-h-40');
-    expect(firstPlace).toHaveStyle({ backgroundColor: '#38B60E' });
-    expect(secondPlace).toHaveStyle({ backgroundColor: '#FFE500' });
-    expect(thirdPlace).toHaveStyle({ backgroundColor: '#1645FF' });
+    expect(firstPlace).toHaveStyle({ backgroundColor: '#FFD700' }); // gold
+    expect(secondPlace).toHaveStyle({ backgroundColor: '#C7CBD1' }); // silver
+    expect(thirdPlace).toHaveStyle({ backgroundColor: '#CD7F32' }); // bronze
 
     expect(firstPlace.parentElement).toHaveClass('order-2');
     expect(secondPlace.parentElement).toHaveClass('order-1');

@@ -139,7 +139,7 @@ export function PartyQuizQuestionPanel({
                       showOptions,
                     });
                 const hasAnswered = dotStatus === 'correct';
-                const rankStyle = getRankStyle(player.rank);
+                const rankStyle = getRankStyle(player.rank, 'medals');
                 return (
                   <motion.div
                     key={player.userId}
@@ -191,13 +191,13 @@ export function PartyQuizQuestionPanel({
                         </span>
                         {player.isSelf && (
                           <span className="rounded-full bg-brand-orange px-1.5 py-0.5 font-poppins text-[8px] font-black uppercase tracking-[0.08em] text-white">
-                            You
+                            {t('common.you')}
                           </span>
                         )}
                         {player.isLeader && <Crown className="size-3.5 shrink-0 text-brand-yellow-deep" />}
                         {isDropped && (
                           <span className="rounded-full bg-white/10 px-1.5 py-0.5 font-poppins text-[8px] font-black uppercase tracking-[0.08em] text-white/70">
-                            {t('partyResults.dropped')}
+                            {player.statusLabel ?? t('partyResults.dropped')}
                           </span>
                         )}
                       </div>

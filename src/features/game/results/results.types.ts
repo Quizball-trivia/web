@@ -53,3 +53,25 @@ export interface RealtimeResultsScreenProps {
   onPlayAgain: () => void | Promise<void>;
   onMainMenu: () => void;
 }
+
+/** The finished match itself (players, score, answers, winner) without any Quizball progression. */
+export type MatchResultSummary = Pick<
+  RealtimeResultsScreenProps,
+  | 'selfUserId'
+  | 'playerUsername'
+  | 'playerAvatar'
+  | 'playerAvatarCustomization'
+  | 'opponentUsername'
+  | 'opponentAvatar'
+  | 'opponentAvatarCustomization'
+  | 'playerScore'
+  | 'opponentScore'
+  | 'playerCorrect'
+  | 'opponentCorrect'
+  | 'totalQuestions'
+  | 'playerQuestionResults'
+  | 'opponentQuestionResults'
+  | 'finalWinnerId'
+  | 'isDraw'
+  | 'winnerDecisionMethod'
+>;

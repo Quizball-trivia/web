@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "motion/react";
 import { Bell, Check, ChevronRight, Flame, Target, Ticket } from "lucide-react";
@@ -63,6 +63,8 @@ interface DailyChallengeCompleteModalProps {
   scoreValue?: string;
   /** The challenge just finished — kept out of the next-up suggestions (its completion is still being saved). */
   challengeType?: string;
+  /** A game's own next step shown under the score (Stat Sniper: play the same game with friends). */
+  friendAction?: ReactNode;
 }
 
 export function DailyChallengeCompleteModal({
@@ -75,6 +77,7 @@ export function DailyChallengeCompleteModal({
   scoreLabel,
   scoreValue,
   challengeType,
+  friendAction,
 }: DailyChallengeCompleteModalProps) {
   if (!open) return null;
 
@@ -82,7 +85,7 @@ export function DailyChallengeCompleteModal({
   // screen, so this modal finishes immediately instead of stacking on it.
   if (practice) return <PracticeAutoDone onDone={onDone} />;
 
-  const contentProps = { title, correct, total, onDone, practice, scoreLabel, scoreValue, challengeType };
+  const contentProps = { title, correct, total, onDone, practice, scoreLabel, scoreValue, challengeType, friendAction };
   if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) {
     return <DailyChallengeCompleteModalContent {...contentProps} />;
   }
@@ -339,6 +342,7 @@ export function DailyChallengeCompleteModalContent({
   scoreLabel,
   scoreValue,
   challengeType,
+  friendAction,
   weekendLeagueCta,
   comebackCta,
 }: OpenModalProps & {
@@ -409,6 +413,8 @@ export function DailyChallengeCompleteModalContent({
         <p className="mt-4 font-poppins text-sm font-semibold text-white">
           {t("dailyGames.completionGreat")}
         </p>
+
+        {friendAction && <div className="mt-5">{friendAction}</div>}
 
         {comebackCta && (
           <motion.div

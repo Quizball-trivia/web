@@ -180,105 +180,25 @@ export function ImposterGame({
           )
         }
       >
-        <div className="w-full">
-        {/* Question card */}
-        <div
-          className="flex flex-col rounded-[24px] border border-white/10 bg-white/5 px-5 py-5 text-white backdrop-blur-sm sm:px-6 sm:py-6"
-          style={{
-            fontFamily: "'Poppins', sans-serif",
-            fontWeight: 700,
-            fontSize: 'clamp(15px, 1.9vw, 26px)',
-            minHeight: 'clamp(80px, 12vw, 140px)',
-          }}
-        >
-          <p className="text-center leading-snug">{currentQuestion.prompt}</p>
-          <p className="mt-2 text-center text-white/50" style={{ fontSize: 'clamp(11px, 1.3vw, 16px)', fontWeight: 500 }}>
-            {copy.imposterInstruction}
-          </p>
-        </div>
-
-        {/* Options — 2 column grid, yellow border like ranked MC */}
-        <div className="mt-3 grid grid-cols-2 gap-2.5">
-          {currentQuestion.options.map((option) => {
-            const isSelected = selectedOptionIds.includes(option.id);
-            const isCorrect = currentQuestion.correctOptionIds.includes(option.id);
-            const isRevealCorrect = resolved && isCorrect;
-            const isRevealWrong = resolved && isSelected && !isCorrect;
-
-            return (
-              <button
-                key={option.id}
-                type="button"
-                disabled={resolved || revealing}
-                onClick={() => toggleOption(option.id)}
-                className="relative flex h-[60px] appearance-none items-center justify-center overflow-hidden rounded-[16px] bg-transparent px-3 transition-shadow duration-150 sm:h-[78px] md:h-[94px]"
-                style={{
-                  ...poppins,
-                  fontSize: 'clamp(13px, 1.7vw, 22px)',
-                  textTransform: 'uppercase',
-                  color: isRevealWrong ? '#FB3101' : '#FFFFFF',
-                  backgroundColor: isRevealCorrect
-                    ? '#38B60E'
-                    : isSelected && !resolved
-                      ? 'rgba(255,229,0,0.18)'
-                      : 'transparent',
-                  border: isRevealCorrect
-                    ? 'none'
-                    : isRevealWrong
-                      ? '2px solid #FB3101'
-                      : isSelected
-                        ? '3px solid #FFE500'
-                        : '2px solid rgba(255,229,0,0.4)',
-                  boxShadow: isRevealCorrect
-                    ? '0 1.76px 6.334px 1.32px rgba(56,182,14,0.25)'
-                    : isRevealWrong
-                      ? '0 1.76px 6.334px 1.32px rgba(251,49,1,0.25)'
-                      : isSelected
-                        ? '0 0 12px 2px rgba(255,229,0,0.55)'
-                        : '0 0 6.334px 1.32px rgba(255,229,0,0.18)',
-                  cursor: resolved ? 'default' : 'pointer',
-                }}
-              >
-                <div className="flex items-center gap-2">
-                  <span className="text-center leading-tight">{option.text}</span>
-                  {(isSelected || isRevealCorrect) && (
-                    <CheckCircle2 className="size-5 shrink-0" />
-                  )}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Submit + score */}
-        <div className="mt-4 flex items-center justify-between">
-          <p className="text-sm text-white/55" style={poppins}>
-            {!embedded && (
+        <ImposterBoard
+          prompt={currentQuestion.prompt}
+          instruction={copy.imposterInstruction}
+          options={currentQuestion.options}
+          selectedOptionIds={selectedOptionIds}
+          correctOptionIds={currentQuestion.correctOptionIds}
+          resolved={resolved}
+          locked={resolved || revealing}
+          onToggle={toggleOption}
+          onSubmit={handleResolve}
+          submitLabel={copy.submitSelection}
+          scoreSlot={
+            !embedded && (
               <>
                 {copy.score}: <span className="text-white">{correctCount}</span>
               </>
-            )}
-          </p>
-          <button
-            type="button"
-            disabled={resolved || revealing}
-            onClick={handleResolve}
-            className="flex items-center justify-center rounded-[16px] px-6 h-[40px] sm:h-[48px] transition-shadow duration-150"
-            style={{
-              ...poppins,
-              fontSize: 'clamp(13px, 1.7vw, 20px)',
-              textTransform: 'uppercase',
-              backgroundColor: '#38B60E',
-              color: '#FFFFFF',
-              boxShadow: '0 1.76px 6.334px 1.32px rgba(56,182,14,0.25)',
-              cursor: resolved || revealing ? 'default' : 'pointer',
-              opacity: resolved || revealing ? 0.5 : 1,
-            }}
-          >
-            {copy.submitSelection}
-          </button>
-        </div>
-        </div>
+            )
+          }
+        />
       </DailyGameStage>
 
       <QuitGameDialog
@@ -297,6 +217,136 @@ export function ImposterGame({
         total={session.questionCount}
         onDone={(nextPath) => onComplete(correctCount, nextPath)}
       />
+    </div>
+  );
+}
+
+export interface ImposterBoardProps {
+  prompt: string;
+  instruction: string;
+  options: Array<{ id: string; text: string }>;
+  selectedOptionIds: string[];
+  /** Null while the browser does not know them (partner play: revealed by the server after answering). */
+  correctOptionIds: string[] | null;
+  resolved: boolean;
+  locked: boolean;
+  onToggle: (optionId: string) => void;
+  onSubmit: () => void;
+  submitLabel: string;
+  scoreSlot?: React.ReactNode;
+}
+
+/** Question card, option grid and submit row, shared by the daily game and its Freecroco partner version. */
+export function ImposterBoard({
+  prompt,
+  instruction,
+  options,
+  selectedOptionIds,
+  correctOptionIds,
+  resolved,
+  locked,
+  onToggle,
+  onSubmit,
+  submitLabel,
+  scoreSlot,
+}: ImposterBoardProps) {
+  return (
+    <div className="w-full">
+    {/* Question card */}
+    <div
+      className="flex flex-col rounded-[24px] border border-white/10 bg-white/5 px-5 py-5 text-white backdrop-blur-sm sm:px-6 sm:py-6"
+      style={{
+        fontFamily: "'Poppins', sans-serif",
+        fontWeight: 700,
+        fontSize: 'clamp(15px, 1.9vw, 26px)',
+        minHeight: 'clamp(80px, 12vw, 140px)',
+      }}
+    >
+      <p className="text-center leading-snug">{prompt}</p>
+      <p className="mt-2 text-center text-white/50" style={{ fontSize: 'clamp(11px, 1.3vw, 16px)', fontWeight: 500 }}>
+        {instruction}
+      </p>
+    </div>
+
+    {/* Options — 2 column grid, yellow border like ranked MC */}
+    <div className="mt-3 grid grid-cols-2 gap-2.5">
+      {options.map((option) => {
+        const isSelected = selectedOptionIds.includes(option.id);
+        const isCorrect = correctOptionIds?.includes(option.id) ?? false;
+        const isRevealCorrect = resolved && isCorrect;
+        const isRevealWrong = resolved && isSelected && !isCorrect;
+
+        return (
+          <button
+            key={option.id}
+            data-testid="daily-imposter-option"
+            type="button"
+            disabled={locked}
+            onClick={() => onToggle(option.id)}
+            className="relative flex h-[60px] appearance-none items-center justify-center overflow-hidden rounded-[16px] bg-transparent px-3 transition-shadow duration-150 sm:h-[78px] md:h-[94px]"
+            style={{
+              ...poppins,
+              fontSize: 'clamp(13px, 1.7vw, 22px)',
+              textTransform: 'uppercase',
+              color: isRevealWrong ? '#FB3101' : '#FFFFFF',
+              backgroundColor: isRevealCorrect
+                ? '#38B60E'
+                : isSelected && !resolved
+                  ? 'rgba(255,229,0,0.18)'
+                  : 'transparent',
+              border: isRevealCorrect
+                ? 'none'
+                : isRevealWrong
+                  ? '2px solid #FB3101'
+                  : isSelected
+                    ? '3px solid #FFE500'
+                    : '2px solid rgba(255,229,0,0.4)',
+              boxShadow: isRevealCorrect
+                ? '0 1.76px 6.334px 1.32px rgba(56,182,14,0.25)'
+                : isRevealWrong
+                  ? '0 1.76px 6.334px 1.32px rgba(251,49,1,0.25)'
+                  : isSelected
+                    ? '0 0 12px 2px rgba(255,229,0,0.55)'
+                    : '0 0 6.334px 1.32px rgba(255,229,0,0.18)',
+              cursor: resolved ? 'default' : 'pointer',
+            }}
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-center leading-tight">{option.text}</span>
+              {(isSelected || isRevealCorrect) && (
+                <CheckCircle2 className="size-5 shrink-0" />
+              )}
+            </div>
+          </button>
+        );
+      })}
+    </div>
+
+    {/* Submit + score */}
+    <div className="mt-4 flex items-center justify-between">
+      <p className="text-sm text-white/55" style={poppins}>
+        {scoreSlot}
+      </p>
+      <button
+        type="button"
+        disabled={locked}
+        onClick={onSubmit}
+        data-testid="daily-imposter-submit"
+        className="flex items-center justify-center rounded-[16px] px-6 h-[40px] sm:h-[48px] transition-shadow duration-150"
+        style={{
+          ...poppins,
+          fontSize: 'clamp(13px, 1.7vw, 20px)',
+          textTransform: 'uppercase',
+          backgroundColor: '#38B60E',
+          color: '#FFFFFF',
+          boxShadow: '0 1.76px 6.334px 1.32px rgba(56,182,14,0.25)',
+          cursor: locked ? 'default' : 'pointer',
+          opacity: locked ? 0.5 : 1,
+        }}
+      >
+        {submitLabel}
+      </button>
+    </div>
     </div>
   );
 }

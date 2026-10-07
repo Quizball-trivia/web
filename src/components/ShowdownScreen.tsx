@@ -15,6 +15,7 @@ import { getClub } from '@/lib/clubs';
 import { normalizeCountryCode } from '@/lib/geo/countryCode';
 import { useIsMobile } from '@/hooks/useMobile';
 import { cn } from '@/lib/utils';
+import { useHideRank } from '@/contexts/HideRankContext';
 
 // Standing avatar character displayed inside its tier rank frame. The frame IS
 // the card; the flag sits top-left and the club badge top-right, both inside
@@ -198,6 +199,7 @@ function PlayerSide({
    *  appear to look down at the player below. */
   reversed?: boolean;
 }) {
+  const hideRank = useHideRank();
   const countryCode = normalizeCountryCode(info.countryCode ?? info.country);
   const club = getClub(info.favoriteClub ?? null);
   const tierAccent = info.tier ? getTierAccent(info.tier) : '#FFE500';
@@ -285,7 +287,7 @@ function PlayerSide({
 
       {/* RP pill — bigger top margin in vertical so there's breathing room
           between the avatar card and the start of the stats block. */}
-      {info.rankPoints !== undefined && (
+      {info.rankPoints !== undefined && !hideRank && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -317,7 +319,7 @@ function PlayerSide({
       </motion.div>
 
       {/* Tier name (replaces the fan-text from the figma) */}
-      {info.tier && (
+      {info.tier && !hideRank && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

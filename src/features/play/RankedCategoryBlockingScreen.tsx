@@ -24,6 +24,7 @@ import { useLocale } from '@/contexts/LocaleContext';
 import type { AvatarCustomization } from '@/types/game';
 import type { I18nField } from '@/lib/realtime/socket.types';
 import { getI18nText } from '@/lib/utils/i18n';
+import { useHideRank } from '@/contexts/HideRankContext';
 
 const poppins = {
   fontFamily: "'Poppins', sans-serif",
@@ -85,6 +86,7 @@ function PlayerHeader({
   dimmed: boolean;
 }) {
   const isLeft = align === 'left';
+  const hideRank = useHideRank();
   return (
     <div
       className={cn(
@@ -115,13 +117,15 @@ function PlayerHeader({
             !isLeft && 'flex-row-reverse'
           )}
         >
+          {!hideRank && (
           <span
             className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] tabular-nums"
             style={{ backgroundColor: '#FFE500', color: '#1a1800' }}
           >
             {info.rankPoints != null ? `${info.rankPoints} RP` : '— RP'}
           </span>
-          {info.tier && (
+          )}
+          {info.tier && !hideRank && (
             <span
               className="text-[10px] uppercase tracking-[0.08em]"
               style={{ ...poppins, color: tierColor }}

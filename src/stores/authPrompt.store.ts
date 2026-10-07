@@ -8,12 +8,15 @@ import { create } from "zustand";
  */
 interface AuthPromptState {
   isOpen: boolean;
-  open: () => void;
+  /** Which panel the dialog opens on: a "create account" button opens registration. */
+  intent: "signin" | "signup";
+  open: (intent?: "signin" | "signup") => void;
   close: () => void;
 }
 
 export const useAuthPromptStore = create<AuthPromptState>((set) => ({
   isOpen: false,
-  open: () => set({ isOpen: true }),
+  intent: "signin",
+  open: (intent = "signin") => set({ isOpen: true, intent }),
   close: () => set({ isOpen: false }),
 }));

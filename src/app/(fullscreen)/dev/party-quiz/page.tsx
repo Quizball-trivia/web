@@ -334,6 +334,7 @@ function DevPartyQuizContent() {
   const [qIndex, setQIndex] = useState(0);
   const [revealed, setRevealed] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  const [rewardPreview, setRewardPreview] = useState<'pending' | 'complete' | 'failed' | 'ineligible'>('pending');
   const [panelOpen, setPanelOpen] = useState(true);
   const [restartKey, setRestartKey] = useState(0);
   const [totals, setTotals] = useState<Record<string, number>>({});
@@ -665,6 +666,7 @@ function DevPartyQuizContent() {
             finalResults={finalResults}
             participants={makeParticipants(playerCount)}
             selfUserId={SELF_ID}
+            rewards={{ matchId: finalResults.matchId, status: rewardPreview, xpEarned: rewardPreview === 'complete' ? 70 : null }}
             onPlayAgain={restartMatch}
             onMainMenu={() => {
               clearSimulationTimers();
@@ -677,7 +679,7 @@ function DevPartyQuizContent() {
           <RealtimePartyQuizScreen
             onQuit={() => setMode('lobby')}
             onForfeit={() => setMode('lobby')}
-            mobileStandingsPlacement="below-options"
+            mobileStandingsPlacement="leader-pill"
             disableBgm
           />
         )}
@@ -823,6 +825,14 @@ function DevPartyQuizContent() {
                 >
                   End → Show Podium
                 </button>
+                {showResults && <label className="text-xs text-white">
+                  Reward state
+                  <select aria-label="Reward state" className="ml-2 rounded bg-surface-page p-2" value={rewardPreview}
+                    onChange={(event) => setRewardPreview(event.target.value as typeof rewardPreview)}>
+                    <option value="pending">Saving</option><option value="complete">Saved +70 XP</option>
+                    <option value="failed">Failed</option><option value="ineligible">Guest / no rewards</option>
+                  </select>
+                </label>}
               </div>
             </div>
 

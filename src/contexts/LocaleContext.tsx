@@ -180,6 +180,12 @@ export function LocaleProvider({ children, initialLocale, geoCountry }: LocalePr
   );
 }
 
+/** A locale fixed by the caller (dev previews, tests): no storage, account or URL sync, follows `locale` as it changes. */
+export function FixedLocaleProvider({ locale, children }: { locale: Locale; children: React.ReactNode }) {
+  const value = useMemo<LocaleContextType>(() => ({ locale, setLocale: () => {}, t: (key, params) => translate(locale, key, params) }), [locale]);
+  return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;
+}
+
 export function useLocale() {
   return useContext(LocaleContext);
 }

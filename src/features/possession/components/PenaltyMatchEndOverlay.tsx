@@ -4,6 +4,7 @@ import { motion } from 'motion/react';
 import { AvatarDisplay } from '@/components/AvatarDisplay';
 import { useLocale } from '@/contexts/LocaleContext';
 import type { AvatarCustomization } from '@/types/game';
+import { useHideRank } from '@/contexts/HideRankContext';
 
 /**
  * Shown after the FINAL, match-deciding penalty kick has FULLY played out (the
@@ -58,6 +59,7 @@ export function PenaltyMatchEndOverlay({
   playerRankPoints,
   opponentRankPoints,
 }: PenaltyMatchEndOverlayProps) {
+  const hideRank = useHideRank();
   const { t } = useLocale();
   if (!visible) return null;
 
@@ -123,12 +125,14 @@ export function PenaltyMatchEndOverlay({
               <div className="max-w-[140px] truncate text-[13px] font-black uppercase text-white sm:text-sm">
                 {playerName}
               </div>
+              {!hideRank && (
               <span
                 className="mt-1.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] tabular-nums"
                 style={{ backgroundColor: '#FFE500', color: '#1a1800' }}
               >
                 {playerRankPoints != null ? `${playerRankPoints} RP` : '— RP'}
               </span>
+              )}
             </div>
           </div>
 
@@ -157,12 +161,14 @@ export function PenaltyMatchEndOverlay({
               <div className="max-w-[140px] truncate text-[13px] font-black uppercase text-white sm:text-sm">
                 {opponentName}
               </div>
+              {!hideRank && (
               <span
                 className="mt-1.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] tabular-nums"
                 style={{ backgroundColor: '#FFE500', color: '#1a1800' }}
               >
                 {opponentRankPoints != null ? `${opponentRankPoints} RP` : '— RP'}
               </span>
+              )}
             </div>
           </div>
         </div>

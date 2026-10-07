@@ -4,7 +4,7 @@ import {
   DUEL_GAME_LABEL_KEYS,
   LOBBY_MODES,
   canHostStart,
-  isDuelGameEnabled,
+  isDuelGameEnabled, isRoomGameEnabled,
   lobbyModeCapabilities,
   modeChoiceKey,
 } from "../lobbyModes";
@@ -18,10 +18,20 @@ describe("lobby mode capability map (web mirror)", () => {
 
   it("keeps the existing seat counts and guest rules", () => {
     expect(Object.fromEntries(Object.entries(LOBBY_MODES).map(([mode, caps]) => [mode, caps.playable]))).toEqual({
-      friendly_possession: 2, friendly_party_quiz: 6, football_grid: 2, auction: 3, ranked_sim: 2, duel: 2,
+      friendly_possession: 2, friendly_party_quiz: 6, football_grid: 2, auction: 3, ranked_sim: 2, duel: 2, room_game: 6,
     });
     expect(Object.entries(LOBBY_MODES).filter(([, caps]) => caps.guestAllowed).map(([mode]) => mode).sort())
-      .toEqual(["auction", "duel", "football_grid", "ranked_sim"]);
+      .toEqual(["auction", "duel", "football_grid", "ranked_sim", "room_game"]);
+  });
+
+  it("a room game takes 2 to 6 players and must be known and enabled", () => {
+    expect(canHostStart("room_game", 1)).toBe(false);
+    expect(canHostStart("room_game", 2)).toBe(true);
+    expect(canHostStart("room_game", 6)).toBe(true);
+    expect(canHostStart("room_game", 7)).toBe(false);
+    expect(isRoomGameEnabled("aproximado", ["aproximado"])).toBe(true);
+    expect(isRoomGameEnabled("aproximado", [])).toBe(false);
+    expect(isRoomGameEnabled("chess", ["aproximado"])).toBe(false);
   });
 
   it("host start needs the mode's member count", () => {

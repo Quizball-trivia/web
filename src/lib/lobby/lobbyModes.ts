@@ -1,6 +1,6 @@
-import { DUEL_GAMES_ENABLED } from "@/lib/config";
+import { DUEL_GAMES_ENABLED, ROOM_GAMES_ENABLED } from "@/lib/config";
 import type { MessageKey } from "@/lib/i18n/messages";
-import type { DuelGameId, LobbyGameMode } from "@/lib/realtime/socket.types";
+import type { DuelGameId, LobbyGameMode, RoomGameId } from "@/lib/realtime/socket.types";
 
 /**
  * What each friend-room mode allows. Mirrors the backend map (backend-node
@@ -26,7 +26,14 @@ export const LOBBY_MODES: Readonly<Record<LobbyGameMode, LobbyModeCapabilities>>
   auction: { capacity: 3, playable: 3, guestAllowed: true, hostStart: { min: 1, max: 3 }, needsCategories: false, promotesToPartyQuiz: false },
   ranked_sim: { capacity: 6, playable: 2, guestAllowed: true, hostStart: null, needsCategories: false, promotesToPartyQuiz: true },
   duel: { capacity: 2, playable: 2, guestAllowed: true, hostStart: { min: 2, max: 2 }, needsCategories: false, promotesToPartyQuiz: false },
+  room_game: { capacity: 6, playable: 6, guestAllowed: true, hostStart: { min: 2, max: 6 }, needsCategories: false, promotesToPartyQuiz: false },
 };
+
+export const ROOM_GAMES: readonly RoomGameId[] = ["aproximado"];
+
+export function isRoomGameEnabled(value: unknown, enabled: readonly RoomGameId[] = ROOM_GAMES_ENABLED): value is RoomGameId {
+  return ROOM_GAMES.includes(value as RoomGameId) && enabled.includes(value as RoomGameId);
+}
 
 export const DUEL_GAMES: readonly DuelGameId[] = ["buscaminas", "pistas", "ultimo", "minuto"];
 

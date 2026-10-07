@@ -10,6 +10,7 @@ import { PublicGameEmbed } from "./public/PublicGameEmbed";
 import { PlayNowLink } from "./public/PlayNowLink";
 import { BuscaminasBanner } from "./public/BuscaminasBanner";
 import { BuscaminasLeaderboard } from "@/features/buscaminas/BuscaminasLeaderboard";
+import { StatSniperPageBoard } from "./public/StatSniperPageBoard";
 import { PistasLeaderboard } from "@/features/pistas/PistasLeaderboard";
 import { UltimoLeaderboard } from "@/features/ultimo/UltimoLeaderboard";
 import { MinutoLeaderboard } from "@/features/minuto/MinutoLeaderboard";
@@ -54,7 +55,14 @@ const MINUTO_PAGE: Record<SeoPageLocale, FullGameCopy> = {
   tr: { label: "Her gün 10 ünlü gol · hesap gerekmez", start: "Oyna", note: "10 ünlü golün dakikasını tahmin et. Misafir olarak önceki günleri oynarsın; hesapla bugünün gollerini ve sıralamayı.", account: "Daha fazla futbol oyunu", accountText: "Futbol XOX, Açık Artırma ve gerçek rakiplere karşı dereceli maçlar oynamak ve jeton kazanmak için hesap oluştur." },
 };
 
-const FULL_GAME_PAGES: Record<string, Record<SeoPageLocale, FullGameCopy>> = { buscaminas: BUSCAMINAS_PAGE, pistas: PISTAS_PAGE, ultimo: ULTIMO_PAGE, minuto: MINUTO_PAGE };
+const STAT_SNIPER_PAGE: Record<SeoPageLocale, FullGameCopy> = {
+  en: { ...MINUTO_PAGE.en, label: "10 new football numbers every day · no account needed", note: "10 real football numbers. As a guest you play today's; with an account your score goes on the leaderboard." },
+  ka: { ...MINUTO_PAGE.ka, label: "ყოველდღე ფეხბურთის 10 ახალი რიცხვი · ანგარიშის გარეშე", note: "ფეხბურთის 10 ნამდვილი რიცხვი. სტუმრად დღევანდელს თამაშობ; ანგარიშით შენი ქულა რეიტინგში ხვდება." },
+  es: { ...MINUTO_PAGE.es, label: "10 cifras nuevas del fútbol cada día · sin cuenta", note: "10 cifras reales del fútbol. Sin cuenta jugás las de hoy; con cuenta, tu puntaje entra al ranking." },
+  tr: { ...MINUTO_PAGE.tr, label: "Her gün 10 yeni futbol sayısı · hesap gerekmez", note: "10 gerçek futbol sayısı. Misafir olarak bugününkünü oynarsın; hesapla puanın sıralamaya girer." },
+};
+
+const FULL_GAME_PAGES: Record<string, Record<SeoPageLocale, FullGameCopy>> = { buscaminas: BUSCAMINAS_PAGE, pistas: PISTAS_PAGE, ultimo: ULTIMO_PAGE, minuto: MINUTO_PAGE, "daily-statSniper": STAT_SNIPER_PAGE };
 
 /** One public game page: server-rendered content first, the practice engine on demand below it. */
 export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: SeoPageLocale }) {
@@ -120,7 +128,7 @@ export function PublicGameScreen({ game, locale }: { game: PublicGame; locale: S
             </section>
           )}
           {(game.modeId === "ranked" || game.modeId === "grid" || game.modeId === "auction") && <PublicTopTen board={game.modeId} locale={locale} />}
-          {fullGame && (game.modeId === "pistas" ? <PistasLeaderboard locale={locale} className="mt-6" /> : game.modeId === "ultimo" ? <UltimoLeaderboard locale={locale} className="mt-6" /> : game.modeId === "minuto" ? <MinutoLeaderboard locale={locale} className="mt-6" /> : <BuscaminasLeaderboard locale={locale} className="mt-6" />)}
+          {fullGame && (game.modeId === "pistas" ? <PistasLeaderboard locale={locale} className="mt-6" /> : game.modeId === "ultimo" ? <UltimoLeaderboard locale={locale} className="mt-6" /> : game.modeId === "minuto" ? <MinutoLeaderboard locale={locale} className="mt-6" /> : game.modeId === "buscaminas" ? <BuscaminasLeaderboard locale={locale} className="mt-6" /> : game.modeId === "statSniper" ? <StatSniperPageBoard locale={locale} modeId={game.modeId} playPath={game.playPath} className="mt-6" /> : null)}
         </div>
 
         <div className="md:col-start-1 md:row-start-2">

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '../ui/button';
 import { AlertCircle, ArrowLeft, RotateCcw } from 'lucide-react';
@@ -106,8 +106,13 @@ export function OAuthCallbackScreen() {
   const [pendingRestoreAvailable, setPendingRestoreAvailable] = useState(false);
   const [restoreSubmitting, setRestoreSubmitting] = useState(false);
   const [restoreError, setRestoreError] = useState<string | null>(null);
+  // The callback runs once per page load: applying the account's language (a new `t`) or a StrictMode replay re-runs
+  // this effect, and a second pass would consume the saved return path again and land on /play.
+  const processedRef = useRef(false);
 
   useEffect(() => {
+    if (processedRef.current) return;
+    processedRef.current = true;
     const processCallback = async () => {
       try {
         const hash = window.location.hash || "";

@@ -1,4 +1,4 @@
-import type { DuelGameId } from "@/lib/realtime/socket.types";
+import type { DuelGameId, RoomGameId } from "@/lib/realtime/socket.types";
 
 function nonBlank(value: string | undefined, fallback: string): string {
   const trimmed = value?.trim();
@@ -27,6 +27,12 @@ export const GUEST_LOBBIES_ENABLED = process.env.NEXT_PUBLIC_GUEST_LOBBIES === "
  * Daily mini-games offered as a friend duel ("Jugar con un amigo"), comma-separated, e.g. "buscaminas,pistas,ultimo".
  * Mirrors the backend kill switch DUEL_GAMES_ENABLED; empty = no duel rooms offered.
  */
+/** Room games (2–6 players) offered in friend rooms, e.g. "aproximado". Mirrors the backend ROOM_GAMES_ENABLED. */
+export const ROOM_GAMES_ENABLED: readonly RoomGameId[] = (process.env.NEXT_PUBLIC_ROOM_GAMES ?? "")
+  .split(",")
+  .map((game) => game.trim())
+  .filter((game): game is RoomGameId => game === "aproximado");
+
 export const DUEL_GAMES_ENABLED: readonly DuelGameId[] = (process.env.NEXT_PUBLIC_DUEL_GAMES ?? "")
   .split(",")
   .map((game) => game.trim())

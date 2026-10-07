@@ -1,13 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { motion } from "motion/react";
 import { Crosshair, Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLocale } from "@/contexts/LocaleContext";
+import type { Locale } from "@/lib/i18n/locale";
 import { DailyGameStage } from "@/features/daily/components/DailyGameStage";
 import { DailyChallengeHeader } from "@/features/daily/components/DailyChallengeHeader";
 import { DailyChallengeCompleteModal } from "@/features/daily/components/DailyChallengeCompleteModal";
+import { PlayRoomWithFriendsButton } from "@/features/aproximado/PlayRoomWithFriendsButton";
 import { QuitGameDialog } from "@/features/daily/QuitGameDialog";
 import { StatSniperLeaderboard } from "@/features/daily/StatSniperLeaderboard";
 import { playSfx } from "@/lib/sounds/gameSounds";
@@ -34,6 +36,8 @@ export function StatSniperGame({
   onSaveResult,
   demo = false,
   leaderboardFetcher,
+  boardSlot,
+  confirmQuit = true,
 }: {
   session: StatSniperSession;
   onBack: () => void;
@@ -46,6 +50,10 @@ export function StatSniperGame({
   demo?: boolean;
   /** Guest play: read the board from the public endpoint. */
   leaderboardFetcher?: () => Promise<StatSniperLeaderboardData>;
+  /** Shown where the leaderboard sits (guests on the public page get a sign-up card instead of the board). */
+  boardSlot?: ReactNode;
+  /** false = the back arrow leaves at once (public page: the quit dialog would open beneath its layer). */
+  confirmQuit?: boolean;
 }) {
   const { t, locale } = useLocale();
   const numberLocale = locale === "ka" ? "ka-GE" : locale === "es" ? "es-ES" : locale === "tr" ? "tr-TR" : "en-GB";
@@ -123,7 +131,7 @@ export function StatSniperGame({
       <DailyGameStage
         header={
           <DailyChallengeHeader
-            onQuit={() => setShowQuit(true)}
+            onQuit={() => (confirmQuit ? setShowQuit(true) : onBack())}
             currentIndex={index}
             total={questions.length}
             timeLeft={Math.max(0, timeLeft)}
@@ -196,7 +204,7 @@ export function StatSniperGame({
             )}
           </div>
 
-          {!demo && <StatSniperLeaderboard refreshKey={boardKey} fetcher={leaderboardFetcher} className="mt-6 lg:mt-0" />}
+          {boardSlot ?? (!demo && <StatSniperLeaderboard refreshKey={boardKey} fetcher={leaderboardFetcher} className="mt-6 lg:mt-0" />)}
         </div>
       </DailyGameStage>
 
@@ -207,6 +215,10 @@ export function StatSniperGame({
         title={t("play.statSniperTitle")}
         correct={accuracy}
         total={100}
+        friendAction={(
+          <PlayRoomWithFriendsButton locale={locale as Locale} tone="white" showHint
+            onNavigate={(href) => { setBoardKey((k) => k + 1); onComplete(accuracy, href); }} />
+        )}
         onDone={(next) => { setBoardKey((k) => k + 1); onComplete(accuracy, next); }}
       />
     </>

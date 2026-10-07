@@ -7,9 +7,9 @@ import { ClubCrest } from '@/features/mini-games/components/Badges';
 import { LeagueBadge } from '@/features/mini-games/components/FutCard';
 import { useMiniT } from '@/features/mini-games/lib/i18n';
 import type { FifaCardStats } from '@/features/mini-games/data/guessFifaCard';
-import { STAT_SHORT, type StatKey } from '../lib/data';
-import { Silhouette } from './MiniFutCard';
-import { Flag } from './ui';
+import { STAT_SHORT, type StatKey } from '../lib/stats';
+import { Silhouette } from './Silhouette';
+import { Flag } from './Flag';
 
 export type ClueKey = 'nation' | 'position' | 'club' | 'league' | 'rating' | StatKey;
 export type ClueCosts = Record<ClueKey, number>;
@@ -95,10 +95,12 @@ export function DetectiveCard({
         <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: 'linear-gradient(116deg, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 24%, rgba(255,255,255,0) 60%, rgba(255,255,255,0.32) 78%, rgba(255,255,255,0) 100%)', mixBlendMode: 'soft-light' }} />
         <div aria-hidden className="pointer-events-none absolute inset-[5px] rounded-[17px] border border-fut-border/25" style={{ boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.35)' }} />
 
-        {/* the edition is free information */}
-        <div className="absolute right-3.5 top-3.5 z-30">
-          <span className="rounded-lg bg-fut-badge/85 px-3 py-1.5 font-poppins text-[15px] font-black uppercase tracking-wider text-fut-gold-light shadow-sm">{card.editionLabel}</span>
-        </div>
+        {/* the edition is free information on quizball.io; the partner game withholds it until the card is resolved */}
+        {card.editionLabel && (
+          <div className="absolute right-3.5 top-3.5 z-30">
+            <span className="rounded-lg bg-fut-badge/85 px-3 py-1.5 font-poppins text-[15px] font-black uppercase tracking-wider text-fut-gold-light shadow-sm">{card.editionLabel}</span>
+          </div>
+        )}
 
         <div className="relative h-[264px]">
           {/* portrait: silhouette while investigating, the face once resolved */}

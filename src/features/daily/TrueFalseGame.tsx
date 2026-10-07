@@ -50,7 +50,6 @@ export function TrueFalseGame({
   const [finished, setFinished] = useState(false);
   const { splashProps, fire } = useResultSplash();
   const copy = getDailyChallengeCopy();
-  const { t } = useLocale();
 
   // Embedded flows: report completion immediately instead of holding on the
   // daily-challenge modal ("see you tomorrow" makes no sense there).
@@ -182,90 +181,24 @@ export function TrueFalseGame({
           )
         }
       >
-        <div className="w-full">
-        {/* Question card */}
-        <div
-          className="flex items-center justify-center rounded-[24px] border border-white/10 bg-white/5 px-5 py-5 text-center text-white backdrop-blur-sm sm:px-6 sm:py-6"
-          style={{
-            fontFamily: "'Poppins', sans-serif",
-            fontWeight: 700,
-            fontSize: 'clamp(15px, 1.9vw, 26px)',
-            minHeight: 'clamp(108px, 15vw, 176px)',
-          }}
-        >
-          <p className="leading-snug">{currentQuestion.prompt}</p>
-        </div>
-
-        {/* Timeout-only inline note (correct/wrong use the fly-in splash). */}
-        {showResult && resultTone === "timeout" && (
-          <div
-            className="mt-3 flex items-center justify-between gap-4 rounded-[16px] px-4 py-3"
-            style={{
-              ...poppins,
-              fontSize: 'clamp(13px, 1.7vw, 20px)',
-              backgroundColor: 'rgba(255,150,0,0.15)',
-              border: '2px solid rgba(255,150,0,0.5)',
-              color: '#FF9600',
-            }}
-          >
-            <span>{t('dailyGames.timesUp')}</span>
-            <span className="text-white/70" style={{ fontSize: 'clamp(11px, 1.4vw, 16px)' }}>
-              {t('dailyGames.answerColon', { answer: currentQuestion.correctAnswer ? currentQuestion.trueLabel : currentQuestion.falseLabel })}
-            </span>
-          </div>
-        )}
-
-        {/* Answer buttons — 2 column grid matching ranked style */}
-        <div className="mt-3 grid grid-cols-2 gap-2.5">
-          {answerOptions.map((option) => {
-            const isSelected = selectedAnswer === option.value;
-            const shouldShowCorrect = showResult && option.value === currentQuestion.correctAnswer;
-            const shouldShowWrong = showResult && isSelected && option.value !== currentQuestion.correctAnswer;
-
-            return (
-              <button
-                key={String(option.value)}
-                type="button"
-                disabled={showResult}
-                onClick={() => handleAnswer(option.value)}
-                className="relative flex items-center justify-center overflow-hidden rounded-[16px] px-3 transition-shadow duration-150 h-[60px] sm:h-[78px] md:h-[94px]"
-                style={{
-                  ...poppins,
-                  fontSize: 'clamp(14px, 2vw, 28px)',
-                  textTransform: 'uppercase',
-                  color: shouldShowWrong ? '#FB3101' : '#FFFFFF',
-                  backgroundColor: shouldShowCorrect ? '#38B60E' : 'transparent',
-                  border: shouldShowCorrect
-                    ? 'none'
-                    : shouldShowWrong
-                      ? '2px solid #FB3101'
-                      : '2px solid #FFE500',
-                  boxShadow: shouldShowCorrect
-                    ? '0 1.76px 6.334px 1.32px rgba(56,182,14,0.25)'
-                    : shouldShowWrong
-                      ? '0 1.76px 6.334px 1.32px rgba(251,49,1,0.25)'
-                      : '0 0 6.334px 1.32px rgba(255,229,0,0.25)',
-                  cursor: showResult ? 'default' : 'pointer',
-                }}
-              >
-                <div className="flex items-center gap-3">
-                  <span>{option.label}</span>
-                  {showResult && shouldShowCorrect && <CheckCircle2 className="size-6" />}
-                  {showResult && shouldShowWrong && <XCircle className="size-6" />}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Score (hidden in embedded flows — the shell owns the score) */}
-        {!embedded && (
-          <div className="mt-4 flex items-center justify-between text-sm" style={poppins}>
-            <span className="text-white/55">{copy.correctAnswers}</span>
-            <span className="text-white">{correctCount}</span>
-          </div>
-        )}
-        </div>
+        <TrueFalseBoard
+          prompt={currentQuestion.prompt}
+          options={answerOptions}
+          selected={selectedAnswer}
+          correctAnswer={currentQuestion.correctAnswer}
+          showResult={showResult}
+          timedOut={resultTone === "timeout"}
+          timeoutAnswerLabel={currentQuestion.correctAnswer ? currentQuestion.trueLabel : currentQuestion.falseLabel}
+          onAnswer={handleAnswer}
+          footer={
+            !embedded && (
+              <div className="mt-4 flex items-center justify-between text-sm" style={poppins}>
+                <span className="text-white/55">{copy.correctAnswers}</span>
+                <span className="text-white">{correctCount}</span>
+              </div>
+            )
+          }
+        />
       </DailyGameStage>
 
       <QuitGameDialog
@@ -284,6 +217,117 @@ export function TrueFalseGame({
         total={session.questionCount}
         onDone={(nextPath) => onComplete(correctCount, nextPath)}
       />
+    </div>
+  );
+}
+
+export interface TrueFalseBoardProps {
+  prompt: string;
+  options: Array<{ value: boolean; label: string }>;
+  selected: boolean | null;
+  /** Null while the answer is not known to the browser (partner play: revealed by the server after answering). */
+  correctAnswer: boolean | null;
+  showResult: boolean;
+  timedOut: boolean;
+  timeoutAnswerLabel: string | null;
+  onAnswer: (value: boolean) => void;
+  disabled?: boolean;
+  footer?: React.ReactNode;
+}
+
+/** The question card and the two answer buttons, shared by the daily game and its Freecroco partner version. */
+export function TrueFalseBoard({
+  prompt,
+  options,
+  selected,
+  correctAnswer,
+  showResult,
+  timedOut,
+  timeoutAnswerLabel,
+  onAnswer,
+  disabled = false,
+  footer,
+}: TrueFalseBoardProps) {
+  const { t } = useLocale();
+  return (
+    <div className="w-full">
+    {/* Question card */}
+    <div
+      className="flex items-center justify-center rounded-[24px] border border-white/10 bg-white/5 px-5 py-5 text-center text-white backdrop-blur-sm sm:px-6 sm:py-6"
+      style={{
+        fontFamily: "'Poppins', sans-serif",
+        fontWeight: 700,
+        fontSize: 'clamp(15px, 1.9vw, 26px)',
+        minHeight: 'clamp(108px, 15vw, 176px)',
+      }}
+    >
+      <p className="leading-snug">{prompt}</p>
+    </div>
+
+    {/* Timeout-only inline note (correct/wrong use the fly-in splash). */}
+    {showResult && timedOut && (
+      <div
+        className="mt-3 flex items-center justify-between gap-4 rounded-[16px] px-4 py-3"
+        style={{
+          ...poppins,
+          fontSize: 'clamp(13px, 1.7vw, 20px)',
+          backgroundColor: 'rgba(255,150,0,0.15)',
+          border: '2px solid rgba(255,150,0,0.5)',
+          color: '#FF9600',
+        }}
+      >
+        <span>{t('dailyGames.timesUp')}</span>
+        <span className="text-white/70" style={{ fontSize: 'clamp(11px, 1.4vw, 16px)' }}>
+          {timeoutAnswerLabel !== null && t('dailyGames.answerColon', { answer: timeoutAnswerLabel })}
+        </span>
+      </div>
+    )}
+
+    {/* Answer buttons — 2 column grid matching ranked style */}
+    <div className="mt-3 grid grid-cols-2 gap-2.5">
+      {options.map((option) => {
+        const isSelected = selected === option.value;
+        const shouldShowCorrect = showResult && option.value === correctAnswer;
+        const shouldShowWrong = showResult && isSelected && correctAnswer !== null && option.value !== correctAnswer;
+
+        return (
+          <button
+            key={String(option.value)}
+            data-testid="daily-tf-option"
+            type="button"
+            disabled={showResult || disabled}
+            onClick={() => onAnswer(option.value)}
+            className="relative flex items-center justify-center overflow-hidden rounded-[16px] px-3 transition-shadow duration-150 h-[60px] sm:h-[78px] md:h-[94px]"
+            style={{
+              ...poppins,
+              fontSize: 'clamp(14px, 2vw, 28px)',
+              textTransform: 'uppercase',
+              color: shouldShowWrong ? '#FB3101' : '#FFFFFF',
+              backgroundColor: shouldShowCorrect ? '#38B60E' : 'transparent',
+              border: shouldShowCorrect
+                ? 'none'
+                : shouldShowWrong
+                  ? '2px solid #FB3101'
+                  : '2px solid #FFE500',
+              boxShadow: shouldShowCorrect
+                ? '0 1.76px 6.334px 1.32px rgba(56,182,14,0.25)'
+                : shouldShowWrong
+                  ? '0 1.76px 6.334px 1.32px rgba(251,49,1,0.25)'
+                  : '0 0 6.334px 1.32px rgba(255,229,0,0.25)',
+              cursor: showResult ? 'default' : 'pointer',
+            }}
+          >
+            <div className="flex items-center gap-3">
+              <span>{option.label}</span>
+              {showResult && shouldShowCorrect && <CheckCircle2 className="size-6" />}
+              {showResult && shouldShowWrong && <XCircle className="size-6" />}
+            </div>
+          </button>
+        );
+      })}
+    </div>
+
+    {footer}
     </div>
   );
 }
