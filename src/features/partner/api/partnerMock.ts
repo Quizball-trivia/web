@@ -10,17 +10,17 @@ const MOCK_SESSION_MS = 10 * 60 * 1000;
 
 /** Default rule version order (§3), with a mix of states so every tile variant renders. */
 const SEEDED_GAMES: Array<Omit<PartnerGameTile, "playsLeft">> = [
-  { gameId: "ranked", playsLimit: 10, playsUsed: 3, maxScore: 500, available: true, inProgress: false },
-  { gameId: "guess-the-goal", playsLimit: 1, playsUsed: 0, maxScore: 140, available: true, inProgress: false },
-  { gameId: "true-false", playsLimit: 1, playsUsed: 1, maxScore: 200, available: true, inProgress: false },
-  { gameId: "countdown", playsLimit: 1, playsUsed: 0, maxScore: null, available: true, inProgress: false },
-  { gameId: "pick-em", playsLimit: 1, playsUsed: 0, maxScore: 500, available: true, inProgress: false },
-  { gameId: "career-path", playsLimit: 2, playsUsed: 0, maxScore: 300, available: true, inProgress: false },
-  { gameId: "higher-lower", playsLimit: 1, playsUsed: 1, maxScore: 400, available: true, inProgress: true },
-  { gameId: "card-detective", playsLimit: 1, playsUsed: 0, maxScore: 1000, available: true, inProgress: false },
-  { gameId: "road-to-goal", playsLimit: 1, playsUsed: 0, maxScore: 400, available: true, inProgress: false },
-  { gameId: "trivia-mines", playsLimit: 1, playsUsed: 0, maxScore: null, available: false, inProgress: false },
-  { gameId: "quiz-board", playsLimit: 1, playsUsed: 0, maxScore: 1800, available: false, inProgress: false },
+  { gameId: "ranked", playsLimit: 10, playsUsed: 3, maxScore: 500, available: true, inProgress: false, lastResult: null },
+  { gameId: "guess-the-goal", playsLimit: 1, playsUsed: 0, maxScore: 140, available: true, inProgress: false, lastResult: null },
+  { gameId: "true-false", playsLimit: 1, playsUsed: 1, maxScore: 200, available: true, inProgress: false, lastResult: null },
+  { gameId: "countdown", playsLimit: 1, playsUsed: 0, maxScore: null, available: true, inProgress: false, lastResult: null },
+  { gameId: "pick-em", playsLimit: 1, playsUsed: 0, maxScore: 500, available: true, inProgress: false, lastResult: null },
+  { gameId: "career-path", playsLimit: 2, playsUsed: 0, maxScore: 300, available: true, inProgress: false, lastResult: null },
+  { gameId: "higher-lower", playsLimit: 1, playsUsed: 1, maxScore: 400, available: true, inProgress: true, lastResult: null },
+  { gameId: "card-detective", playsLimit: 1, playsUsed: 0, maxScore: 1000, available: true, inProgress: false, lastResult: null },
+  { gameId: "road-to-goal", playsLimit: 1, playsUsed: 0, maxScore: 400, available: true, inProgress: false, lastResult: null },
+  { gameId: "trivia-mines", playsLimit: 1, playsUsed: 0, maxScore: null, available: false, inProgress: false, lastResult: null },
+  { gameId: "quiz-board", playsLimit: 1, playsUsed: 0, maxScore: 1800, available: false, inProgress: false, lastResult: null },
 ];
 
 const REDEEM_ERRORS: Record<string, PartnerTransportResponse> = {

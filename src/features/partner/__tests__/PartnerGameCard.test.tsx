@@ -11,6 +11,7 @@ const tile = (overrides: Partial<PartnerGameTile> = {}): PartnerGameTile => ({
   maxScore: 200,
   available: true,
   inProgress: false,
+  lastResult: null,
   ...overrides,
 });
 

@@ -33,6 +33,7 @@ const tile = (gameId: PartnerGameTile["gameId"], overrides: Partial<PartnerGameT
   maxScore: 400,
   available: true,
   inProgress: false,
+  lastResult: null,
   ...overrides,
 });
 
