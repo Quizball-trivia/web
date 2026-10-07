@@ -34,6 +34,8 @@ export interface PartnerGameTile {
   available: boolean;
   /** A started play not finished yet: the tile reopens it even with no plays left. */
   inProgress: boolean;
+  /** Today's latest finished play, shown when the game is opened after it ended (e.g. settled while away). */
+  lastResult: { playId: string; score: number } | null;
 }
 
 export interface MeGamesResponse {

@@ -6,6 +6,10 @@ import type { PartnerGameScreenProps } from "../types";
 const locale = vi.hoisted(() => ({ value: "en" }));
 vi.mock("@/contexts/LocaleContext", () => ({ useLocale: () => ({ locale: locale.value, t: (key: string) => key }) }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }));
+vi.mock("../../hooks/usePartnerGames", () => ({
+  partnerGamesQueryKey: ["partner", "me", "games"],
+  usePartnerGames: () => ({ isFetchedAfterMount: true, dataUpdatedAt: Date.now(), data: { resetsAt: new Date(Date.now() + 3_600_000).toISOString(), games: [] } }),
+}));
 vi.mock("../../PartnerSessionProvider", async (importOriginal) => ({
   ...(await importOriginal<typeof import("../../PartnerSessionProvider")>()),
   usePartnerSession: () => ({ api: { game: vi.fn() } }),

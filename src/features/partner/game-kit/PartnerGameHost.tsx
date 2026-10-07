@@ -10,7 +10,7 @@ import type { PartnerGameId } from "../api/partnerApi.types";
 import { usePartnerSession } from "../PartnerSessionProvider";
 import { partnerCopy, toPartnerLocale } from "../partnerCopy";
 import { FREECROCO_HOME_PATH, partnerGameTitle } from "../partnerGames";
-import { partnerGamesQueryKey } from "../hooks/usePartnerGames";
+import { partnerGamesQueryKey, usePartnerGames } from "../hooks/usePartnerGames";
 import { PartnerGamePlaceholder } from "../components/PartnerGamePlaceholder";
 import { PartnerPointsCount } from "../components/PartnerPointsCount";
 import type { PartnerFinishedPlay, PartnerGameApi, PartnerGameScreenProps } from "./types";
@@ -24,6 +24,20 @@ export function PartnerGameHost({ gameId, registry }: { gameId: PartnerGameId; r
   const queryClient = useQueryClient();
   const [finished, setFinished] = useState<PartnerFinishedPlay | null>(null);
   const Screen = registry[gameId];
+  // Decided once, on open, from a fresh games list: a play that ended while the player was away (its card still said
+  // Continue) shows its result rather than an intro whose start would find no plays left. Ranked has its own flow.
+  const games = usePartnerGames();
+  const [opened, setOpened] = useState(gameId === "ranked");
+  if (!opened && games.isFetchedAfterMount && !games.isFetching) {
+    // Only a successful, current-day answer can turn the game into a result; anything else just opens the game.
+    // A day that had already ended when the answer arrived (a request straddling Tbilisi midnight) is not current.
+    const fresh = !games.isError && games.data && Date.parse(games.data.resetsAt) > games.dataUpdatedAt;
+    const tile = fresh ? games.data?.games.find((g) => g.gameId === gameId) : undefined;
+    if (tile && tile.playsLeft === 0 && !tile.inProgress && tile.lastResult) {
+      setFinished({ playId: tile.lastResult.playId, score: tile.lastResult.score });
+    }
+    setOpened(true);
+  }
 
   const gameApi = useMemo<PartnerGameApi>(
     () => ({
@@ -35,6 +49,13 @@ export function PartnerGameHost({ gameId, registry }: { gameId: PartnerGameId; r
 
   if (!Screen) return <PartnerGamePlaceholder gameId={gameId} />;
   if (finished) return <PartnerPlayResult gameId={gameId} play={finished} />;
+  if (!opened) {
+    return (
+      <div className="mt-16 flex justify-center" aria-busy="true">
+        <span className="size-8 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+      </div>
+    );
+  }
 
   return (
     <Screen
